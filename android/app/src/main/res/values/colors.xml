@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App launch / splash background — matches the web AuthScreen bg
+         (#FAFCFE) so the system splash flows seamlessly into React. -->
+    <color name="splash_background">#FAFCFE</color>
+</resources>

@@ -1,0 +1,223 @@
+{
+  "name": "cumora",
+  "private": true,
+  "version": "0.1.64",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "bin": {
+    "cumora": "./bin/cumora"
+  },
+  "description": "Where agent teams gather. Cross-platform team chat with AI agents as first-class participants.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yetone/cumora.git"
+  },
+  "homepage": "https://cumora.ai",
+  "author": {
+    "name": "yetone",
+    "email": "yetoneful@gmail.com"
+  },
+  "scripts": {
+    "dev": "vite --port 5180 --strictPort",
+    "dev:all": "concurrently -k -n web,api -c blue,magenta \"npm:dev\" \"npm:server:dev\"",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host --port 5180",
+    "typecheck": "tsc --noEmit",
+    "server:dev": "tsx watch server/src/index.ts",
+    "server:start": "tsx server/src/index.ts",
+    "server:typecheck": "tsc -p server/tsconfig.json --noEmit",
+    "guard:big-brain": "node scripts/guard-big-brain.mjs",
+    "guard:llm-tracked": "node scripts/guard-llm-tracked.mjs",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "test": "node --import tsx --test \"server/src/__tests__/**/*.test.ts\" \"workers/**/*.test.ts\"",
+    "test:integration": "node server/run-integration-tests.mjs",
+    "migrate": "tsx server/src/migrate-bin.ts",
+    "icons": "python3 scripts-make-mac-icon.py && npx -y electron-icon-builder -i build/icon.png -o build --flatten && node scripts-sync-electron-dev-icon.mjs",
+    "electron:dev": "concurrently -k -n web,api,electron -c blue,magenta,cyan \"npm:dev\" \"npm:server:dev\" \"wait-on tcp:5180 tcp:5181 && cross-env-shell ELECTRON_RENDERER_URL=http://localhost:5180 electron .\"",
+    "electron:start": "electron .",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:linux": "npm run build && electron-builder --linux",
+    "mobile:sync": "npm run build && npx cap sync",
+    "mobile:ios": "npm run mobile:sync && npx cap open ios",
+    "mobile:ios:run": "npm run mobile:sync && npx cap run ios",
+    "mobile:android": "npm run mobile:sync && npx cap open android",
+    "mobile:android:run": "npm run mobile:sync && npx cap run android"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1045.0",
+    "@aws-sdk/s3-request-presigner": "^3.1045.0",
+    "@capacitor/android": "^8.3.3",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/cli": "^8.3.3",
+    "@capacitor/core": "^8.3.3",
+    "@capacitor/haptics": "^8.0.0",
+    "@capacitor/ios": "^8.3.3",
+    "@capacitor/keyboard": "^8.0.0",
+    "@capacitor/push-notifications": "^8.1.1",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
+    "@tiptap/core": "3.23.4",
+    "@tiptap/extension-collaboration": "3.23.4",
+    "@tiptap/extension-collaboration-caret": "3.23.4",
+    "@tiptap/extension-image": "3.23.4",
+    "@tiptap/extension-link": "3.23.4",
+    "@tiptap/extension-mention": "3.23.4",
+    "@tiptap/extension-placeholder": "3.23.4",
+    "@tiptap/extension-table": "3.23.4",
+    "@tiptap/pm": "3.23.4",
+    "@tiptap/react": "3.23.4",
+    "@tiptap/starter-kit": "3.23.4",
+    "@tiptap/suggestion": "3.23.4",
+    "@tiptap/y-tiptap": "3.0.3",
+    "@types/compression": "^1.8.1",
+    "clsx": "^2.1.1",
+    "compression": "^1.8.1",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "electron-updater": "^6.8.3",
+    "emoji-regex": "^10.6.0",
+    "express": "^5.2.1",
+    "framer-motion": "^11.11.17",
+    "highlight.js": "^11.11.1",
+    "ioredis": "^5.10.1",
+    "lib0": "^0.2.117",
+    "openai": "^6.37.0",
+    "pg": "^8.20.0",
+    "posthog-js": "^1.373.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "react-virtuoso": "^4.18.7",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^2.5.4",
+    "tsx": "^4.21.0",
+    "unist-util-visit": "^5.1.0",
+    "ws": "^8.20.0",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.30",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.8",
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
+    "drizzle-kit": "^0.31.10",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "wait-on": "^8.0.5"
+  },
+  "build": {
+    "appId": "io.cumora.app",
+    "productName": "Cumora",
+    "asar": true,
+    "protocols": [
+      {
+        "name": "Cumora",
+        "schemes": [
+          "cumora"
+        ]
+      }
+    ],
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "build/icon.png",
+      "build/tray-template*.png",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://updates.cumora.ai",
+        "channel": "latest",
+        "useMultipleRangeRequest": false
+      },
+      {
+        "provider": "github",
+        "owner": "yetone",
+        "repo": "cumora-releases",
+        "releaseType": "release",
+        "publishAutoUpdate": true
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icons/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": true,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icons/icon.ico"
+    },
+    "nsis": {
+      "artifactName": "Cumora-Setup-${version}.${ext}"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Network",
+      "icon": "build/icon.png",
+      "maintainer": "yetone <yetoneful@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+  <title>Privacy Policy · Cumora</title>
+  <style>
+    :root {
+      --ink-900: #0A1B2E;
+      --ink-700: #233A53;
+      --ink-500: #5B7186;
+      --ink-100: #E5ECF2;
+      --paper:   #FAFCFE;
+      --skype:   #00A8F0;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Manrope", sans-serif;
+      background: var(--paper);
+      color: var(--ink-700);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 64px 24px 96px;
+    }
+    h1 {
+      font-family: -apple-system, "SF Pro Display", "Manrope", sans-serif;
+      font-weight: 600;
+      font-size: 32px;
+      color: var(--ink-900);
+      margin: 0 0 8px;
+      letter-spacing: -0.012em;
+    }
+    .updated { color: var(--ink-500); font-size: 13px; font-style: italic; margin-bottom: 36px; }
+    h2 {
+      font-family: -apple-system, "SF Pro Display", "Manrope", sans-serif;
+      font-weight: 600;
+      font-size: 20px;
+      color: var(--ink-900);
+      margin: 40px 0 12px;
+    }
+    p { margin: 12px 0; font-size: 15px; }
+    ul { padding-left: 22px; }
+    li { margin: 6px 0; font-size: 15px; }
+    a { color: var(--skype); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      font-family: "SF Mono", ui-monospace, monospace;
+      background: var(--ink-100);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .back {
+      display: inline-block;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: var(--ink-500);
+    }
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--ink-100);
+      font-size: 13px;
+      color: var(--ink-500);
+    }
+  </style>
+</head>
+<body>
+<main>
+  <a href="/" class="back">← Back to cumora.ai</a>
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: 2026-08-17</div>
+
+  <p>
+    Cumora ("we", "us", "our") provides a workspace for humans and AI agents
+    to collaborate. This policy explains what data the Cumora apps (iOS,
+    Android, Desktop, and Web at <a href="https://cumora.ai">cumora.ai</a>)
+    collect, how we use it, and what choices you have. We collect only the
+    data we need to make the product work and we never sell it.
+  </p>
+
+  <h2>What we collect</h2>
+  <p>
+    <strong>Account information.</strong> When you sign in we receive your
+    email address and display name from the third-party provider you chose
+    (Google, GitHub, or Apple). For Sign in with Apple you may use Apple's
+    "Hide my email" relay; we accept it. We store: your email, name, an
+    avatar URL mirrored from the provider, and an opaque per-provider user
+    identifier (used only to recognize you on return visits).
+  </p>
+  <p>
+    <strong>Content you create.</strong> Messages, documents, kanban cards,
+    calendar events, agent definitions, and reactions are stored on our
+    servers so that you and your workspace teammates can see them. This
+    content is scoped to the workspace you create it in; it is not visible
+    to users outside that workspace and it is not used to train any model.
+  </p>
+  <p>
+    <strong>Push notification tokens.</strong> If you allow notifications,
+    we store the device token your phone gives us — APNs on iOS, FCM on
+    Android — so Apple's or Google's push servers can deliver our
+    notifications to your device. The token is rotated by the OS and is
+    removed when you sign out.
+  </p>
+  <p>
+    <strong>Diagnostic logs.</strong> We log standard server access metadata
+    (timestamps, IP addresses, user agents, error traces) for security and
+    debugging. These logs are retained up to 30 days and are not used for
+    advertising or sold to anyone.
+  </p>
+  <p>
+    <strong>Usage analytics.</strong> The apps send product-usage events
+    (screens opened, features used) to PostHog so we can understand what
+    to improve. These events are tied to your account, never include
+    message or document content, and are not used for advertising or
+    shared with anyone else.
+  </p>
+
+  <h2>What we do NOT collect</h2>
+  <ul>
+    <li>We do not track your location.</li>
+    <li>We do not use third-party advertising trackers.</li>
+    <li>We do not access your contacts, camera roll, or microphone unless you explicitly share an attachment.</li>
+    <li>We do not sell your personal information to anyone, ever.</li>
+    <li>We do not use your messages or documents to train AI models.</li>
+  </ul>
+
+  <h2>Who we share data with</h2>
+  <p>
+    The data above is shared only with the infrastructure providers we need
+    to operate the service:
+  </p>
+  <ul>
+    <li><strong>Google Cloud</strong> (GKE, Cloud SQL) — server hosting.</li>
+    <li><strong>Cloudflare</strong> — static-site hosting, attachment storage and delivery (R2 / CDN), and inbound email routing.</li>
+    <li><strong>Apple Push Notification service / Firebase Cloud Messaging</strong> — delivering notifications to iOS / Android.</li>
+    <li><strong>Resend</strong> — sending email on behalf of your workspace's agents.</li>
+    <li><strong>PostHog</strong> — product analytics (usage events as described above).</li>
+    <li><strong>OAuth providers</strong> (Google, GitHub, Apple) — verifying your sign-in.</li>
+    <li><strong>LLM providers</strong> (OpenAI / Anthropic / xAI, etc.) — when your agents make an LLM call. Each workspace owner can configure or BYO their own provider keys.</li>
+  </ul>
+  <p>
+    We do not share data with advertisers or data brokers. We disclose
+    data only when legally compelled and only the specific records
+    required.
+  </p>
+
+  <h2>Your rights</h2>
+  <p>
+    <strong>Account deletion.</strong> You can permanently delete your
+    Cumora account from the Me tab in the mobile app or from your account
+    settings on the web. Deletion immediately invalidates all your sign-in
+    sessions, removes your OAuth linkages, clears your name / email / avatar
+    from our database, and marks you as departed in every workspace you
+    belong to. Content you co-authored in shared rooms (messages, etc.) is
+    preserved with an anonymized author label so the rest of your team's
+    history stays intact.
+  </p>
+  <p>
+    <strong>Access and correction.</strong> You can view and edit your
+    profile fields (name, avatar) at any time from the Me tab. For copies
+    of audit logs or a full data export, email us at the address below.
+  </p>
+  <p>
+    <strong>Push notifications.</strong> You can revoke notification
+    permission at any time from your device's notification settings
+    (iOS: Settings → Cumora → Notifications; Android: App info →
+    Notifications), or from the in-app toggle in Me → Preferences.
+  </p>
+
+  <h2>Children</h2>
+  <p>
+    Cumora is not designed for children under 13. If you believe a child
+    has signed up, contact us and we will delete the account.
+  </p>
+
+  <h2>Changes</h2>
+  <p>
+    We may update this policy as the product evolves. We'll change the
+    "Last updated" date at the top whenever we do. Material changes will
+    be announced inside the app before they take effect.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    For privacy questions, data requests, or anything else, email
+    <a href="mailto:privacy@cumora.ai">privacy@cumora.ai</a>.
+  </p>
+
+  <footer>
+    © Cumora. Open-source project at
+    <a href="https://github.com/yetone/cumora">github.com/yetone/cumora</a>.
+  </footer>
+</main>
+</body>
+</html>

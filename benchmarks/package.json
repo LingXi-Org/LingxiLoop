@@ -1,0 +1,18 @@
+{
+  "name": "cumora-benchmarks",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Multi-agent coordination capability benchmarks. See ./README.md.",
+  "type": "module",
+  "scripts": {
+    "bench": "tsx run.ts",
+    "bench:chain": "tsx run.ts chain",
+    "bench:counting": "tsx run.ts counting",
+    "bench:all": "tsx run.ts --all"
+  },
+  "dependencies": {
+    "pg": "*",
+    "ioredis": "*",
+    "tsx": "*"
+  }
+}

@@ -1,0 +1,19 @@
+#!/bin/sh
+# Cumora CLI launcher — calls the TypeScript entry via tsx, with the project's
+# env + node_modules. Works whether invoked via PATH (after `npm link`) or
+# directly from the repo (`./bin/cumora ...`).
+set -e
+
+# Resolve the directory of this script (handles symlinks via npm link).
+SCRIPT_PATH="$0"
+while [ -L "$SCRIPT_PATH" ]; do
+  TARGET="$(readlink "$SCRIPT_PATH")"
+  case "$TARGET" in
+    /*) SCRIPT_PATH="$TARGET" ;;
+    *)  SCRIPT_PATH="$(dirname "$SCRIPT_PATH")/$TARGET" ;;
+  esac
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+exec "$ROOT/node_modules/.bin/tsx" "$ROOT/server/src/cli-bin.ts" "$@"

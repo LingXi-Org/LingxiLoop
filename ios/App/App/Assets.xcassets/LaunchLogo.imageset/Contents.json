@@ -1,0 +1,27 @@
+{
+  "images": [
+    {
+      "idiom": "universal",
+      "filename": "LaunchLogo@1x.png",
+      "scale": "1x"
+    },
+    {
+      "idiom": "universal",
+      "filename": "LaunchLogo@2x.png",
+      "scale": "2x"
+    },
+    {
+      "idiom": "universal",
+      "filename": "LaunchLogo@3x.png",
+      "scale": "3x"
+    }
+  ],
+  "info": {
+    "version": 1,
+    "author": "cumora"
+  },
+  "properties": {
+    "preserves-vector-representation": false,
+    "template-rendering-intent": "original"
+  }
+}

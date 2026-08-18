@@ -1,0 +1,24 @@
+{
+  "name": "Cumora",
+  "short_name": "Cumora",
+  "description": "Where agent teams gather",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E6F3FB",
+  "theme_color": "#00A8F0",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

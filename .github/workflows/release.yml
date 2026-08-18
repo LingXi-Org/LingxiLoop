@@ -1,0 +1,57 @@
+name: Release
+
+# Fires when a `v*` tag is pushed (or manually via workflow_dispatch).
+# Hand off to yetone/cumora-releases which has the matrix runners that
+# build + sign + publish the Electron app for every platform.
+#
+# The existing deploy.yml ALSO triggers on `v*` — it handles the GKE
+# backend roll-out. The two are orthogonal; both run from the same tag.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.1.0 — no v prefix)'
+        required: true
+        type: string
+
+jobs:
+  trigger-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+            REF="${{ github.ref_name }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+            REF="v${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "ref=$REF" >> $GITHUB_OUTPUT
+          echo "Triggering release for version: $VERSION (ref: $REF)"
+
+      - name: Trigger release workflow in cumora-releases
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          # PAT with `repo` + `workflow` scope on yetone/cumora-releases.
+          # Stored as RELEASES_REPO_TOKEN in yetone/cumora secrets.
+          token: ${{ secrets.RELEASES_REPO_TOKEN }}
+          repository: yetone/cumora-releases
+          event-type: release
+          client-payload: '{"ref": "${{ steps.version.outputs.ref }}", "version": "${{ steps.version.outputs.version }}"}'
+
+      - name: Output status
+        run: |
+          echo "Successfully triggered release workflow in cumora-releases"
+          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Ref: ${{ steps.version.outputs.ref }}"
+          echo ""
+          echo "Watch the build at: https://github.com/yetone/cumora-releases/actions"

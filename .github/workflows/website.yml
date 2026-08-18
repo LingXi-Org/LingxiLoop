@@ -1,0 +1,48 @@
+# Deploy the marketing site (cumora.ai) to Cloudflare Pages.
+#
+# The Pages project `cumora` is NOT git-connected on Cloudflare's side —
+# we ship from CI so the deploy is reproducible and gated on `main`.
+# Requires two repo secrets:
+#   CLOUDFLARE_API_TOKEN     — Pages:Edit + Account:Read scope
+#   CLOUDFLARE_ACCOUNT_ID    — 787d1726b5b2844b0d2decd4767a4b62
+
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - '.github/workflows/website.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: wrangler pages deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: production
+      url: https://cumora.ai
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy website --project-name=cumora --branch=main --commit-hash=${{ github.sha }}
+
+      - name: Summary
+        run: |
+          echo "### cumora.ai" >> $GITHUB_STEP_SUMMARY
+          echo "- commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- live: https://cumora.ai" >> $GITHUB_STEP_SUMMARY

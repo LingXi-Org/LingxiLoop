@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cumora</string>
+    <string name="title_activity_main">Cumora</string>
+    <string name="package_name">io.cumora.app</string>
+    <string name="custom_url_scheme">io.cumora.app</string>
+</resources>

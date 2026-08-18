@@ -1,0 +1,124 @@
+import { useEffect, useState } from 'react'
+import { useWhispers } from '@/stores/whispers'
+import { useParticipants } from '@/stores/participants'
+import { WhisperRoom } from '@/components/WhisperRoom'
+import { HiveAvatar } from '@/components/HiveAvatar'
+import { ResizeHandle } from '@/components/ResizeHandle'
+import { cn } from '@/lib/utils'
+import { useResizableWidth } from '@/lib/useResizableWidth'
+import type { Participant } from '@/types'
+
+function StubRoom() {
+  return (
+    <main className="grid place-items-center text-center"
+      style={{
+        background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(210, 201, 233, 0.30), transparent 60%), linear-gradient(180deg, var(--paper) 0%, var(--whisper-50) 100%)',
+      }}>
+      <div>
+        <div className="font-display font-medium text-[28px] text-ink-900 mb-2" style={{ letterSpacing: '-0.02em' }}>
+          No whispers yet
+        </div>
+        <div className="font-display italic text-[14px] text-ink-500 max-w-md leading-relaxed">
+          Whispers form when an agent decides — after their public reply — that they need to align with another teammate privately.
+        </div>
+      </div>
+    </main>
+  )
+}
+
+export function WhispersView() {
+  const list = useWhispers((s) => s.list)
+  const byId = useParticipants((s) => s.byId)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const { width, onResizeStart } = useResizableWidth('sidebar:whispers', 320, { min: 240, max: 520 })
+
+  useEffect(() => {
+    void useWhispers.getState().loadList()
+  }, [])
+
+  useEffect(() => {
+    if (!selectedId && list[0]) setSelectedId(list[0].id)
+  }, [list, selectedId])
+
+  return (
+    <div className="grid h-full overflow-hidden"
+      style={{ gridTemplateColumns: `${width}px 1fr` }}>
+      <aside className="relative flex flex-col overflow-hidden border-r border-ink-100 bg-paper">
+        <div className="px-[18px] pt-[18px] pb-3">
+          <h1 className="font-display font-medium text-[26px] tracking-tight text-ink-900 leading-none mb-1">
+            Whispers
+          </h1>
+          <div className="text-[12px] text-ink-500 font-display italic">
+            channels you can peek into · <b className="not-italic text-whisper-deep font-semibold">{list.length}</b>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-2 pb-[18px]">
+          {list.length === 0 && (
+            <div className="px-3 py-4 text-[12px] text-ink-300 italic font-display">
+              Send a message in a group to nudge an agent to whisper.
+            </div>
+          )}
+          {list.map((w) => {
+            // Resolve every member to a participant record. Skip rows where
+            // any member hasn't loaded yet (they'll reappear on next refresh).
+            const ms = w.members
+              .map((id) => byId[id])
+              .filter((p): p is Participant => Boolean(p))
+            if (ms.length < 2) return null
+            const isSelected = w.id === selectedId
+            const isGroup = w.kind === 'group' || ms.length > 2
+            // Compact "A, B & N more" label so the row truncates gracefully.
+            const namesLabel = ms.length <= 2
+              ? null
+              : ms.length === 3
+                ? `${ms[0].name}, ${ms[1].name} & 1 more`
+                : `${ms[0].name}, ${ms[1].name} & ${ms.length - 2} more`
+            return (
+              <button
+                key={w.id}
+                onClick={() => setSelectedId(w.id)}
+                className={cn(
+                  // Avatar column and gap mirror ConversationsPane so a
+                  // whisper row visually matches a conversation row.
+                  'w-full text-left grid grid-cols-[44px_1fr_auto] gap-[11px] py-2.5 px-3 rounded-[12px] items-center transition mb-0.5',
+                  !isSelected && 'hover:bg-whisper-50',
+                )}
+                style={isSelected ? {
+                  background: 'var(--whisper-50)',
+                  boxShadow: 'inset 0 0 0 1px var(--whisper-100)',
+                } : undefined}
+              >
+                <HiveAvatar ps={ms} size={44} ringColor="var(--paper)" />
+                <div className="min-w-0">
+                  <div className="text-[13.5px] font-semibold text-ink-900 mb-0.5 truncate flex items-center gap-1.5">
+                    {isGroup ? (
+                      <span className="truncate">{w.title || namesLabel}</span>
+                    ) : (
+                      <>
+                        <span className="truncate">{ms[0].name}</span>
+                        <span className="text-whisper text-[11px] shrink-0">↔</span>
+                        <span className="truncate">{ms[1].name}</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="text-[11.5px] text-ink-500 leading-[1.4] truncate font-display italic">
+                    {isGroup && namesLabel
+                      ? namesLabel
+                      : (w.about ?? 'private thread')}
+                    <span className="not-italic text-ink-300"> · {w.msgCount}</span>
+                  </div>
+                </div>
+                <div className="text-[10.5px] text-ink-300 tabular-nums">
+                  {new Date(w.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+        <ResizeHandle onMouseDown={onResizeStart} />
+      </aside>
+
+      {selectedId ? <WhisperRoom pairId={selectedId} /> : <StubRoom />}
+    </div>
+  )
+}

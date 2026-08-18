@@ -1,0 +1,26 @@
+# cumora-server image build context — server runtime + the web SPA bundle.
+# The same pod serves api.cumora.ai (JSON) AND app.cumora.ai (HTML+JS), so
+# the build pulls in both the server source and the frontend source. The
+# frontend gets compiled in a dedicated multi-stage build inside the
+# Dockerfile (full devDeps install, `npm run build`); the result lands as
+# /app/dist in the runtime image.
+*
+!package.json
+!package-lock.json
+!server/**
+!bin/**
+# Frontend sources needed to build the SPA bundle inside the image.
+!src/**
+!public/**
+!index.html
+!vite.config.ts
+!tsconfig.json
+!tsconfig.node.json
+!postcss.config.js
+!tailwind.config.ts
+# Don't bake source maps / built assets / huge logs into the layer.
+server/**/*.log
+server/**/dist
+# Local frontend build outputs — we always rebuild inside the image.
+dist
+node_modules

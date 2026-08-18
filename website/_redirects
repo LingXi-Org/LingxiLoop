@@ -1,0 +1,12 @@
+# Cloudflare Pages SPA fallback. Single-page marketing site for now;
+# any future /docs, /blog, etc. paths gracefully route to index.html
+# until they get their own files.
+#
+# NOTE: explicit /privacy → /privacy.html rules were dropped. Cloudflare
+# Pages strips `.html` extensions automatically AND serves `<path>.html`
+# when the user requests `<path>` — both behaviors combined to form an
+# infinite redirect loop when our `_redirects` rule fought them. The
+# privacy.html file in this directory is now served at /privacy via
+# Cloudflare's default behavior, no rule needed. The SPA catch-all
+# below only fires for paths that don't have a matching file.
+/*  /index.html  200

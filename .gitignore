@@ -1,0 +1,71 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.claude/
+
+# Dependencies
+node_modules
+dist
+dist-ssr
+
+# Wrangler local cache (workers/*/.wrangler/) — build artifacts + auth state
+.wrangler/
+
+# Tauri / Capacitor
+src-tauri/target
+android/.gradle
+android/build
+ios/build
+ios/App/build
+ios/App/DerivedData
+ios/App/Pods
+ios/App/App/public
+ios/.swiftpm
+ios/App/App.xcodeproj/xcuserdata
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata
+ios/App/.symlinks
+.cap-tmp/
+
+# TestFlight archive / IPA outputs from `xcodebuild archive`
+/build/Cumora.xcarchive
+/build/ipa
+/build/sim
+
+# Electron builder output
+release/
+
+# Runtime-generated user content (AI portraits + image uploads)
+server/uploads/
+
+# Backup files left by one-off scripts (e.g. icon regeneration)
+*.prev.png
+
+# Local env / secrets
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
+
+# tsc emissions of vite.config.ts (build artifacts)
+vite.config.js
+vite.config.d.ts
+*.tsbuildinfo
+server/k8s/*.prod.yaml
+docs/HANDOFF.md
+android/app/google-services.json

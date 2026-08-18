@@ -1,0 +1,110 @@
+# Multi-agent coordination capability benchmark.
+#
+# This workflow runs the suite in `benchmarks/` against a real BYOA daemon
+# with real claude / codex CLIs — i.e. it CONSUMES API quota every run.
+# Because of that:
+#
+#   - It runs on a SELF-HOSTED runner (the operator's machine, where the
+#     local claude/codex CLIs are authenticated and the BYOA daemon is
+#     active). GitHub-hosted runners don't have these and can't be used.
+#   - It runs on a SCHEDULE (weekly by default), not on every PR. Add
+#     `workflow_dispatch` to fire it manually for a regression check.
+#   - Results are uploaded as a workflow artifact AND committed to a
+#     `benchmarks/history/` directory on a separate branch for trend
+#     tracking. Don't commit them to `main` — they'd pollute the diff.
+#
+# Setup (one-time, on the self-hosted runner):
+#   - Run `npx cumora agent computer` daemon in a tmux window. The
+#     workflow does NOT spawn the daemon — it just observes what happens.
+#   - Set up the env vars below as GitHub Actions secrets (Settings →
+#     Secrets → Actions): DATABASE_URL, REDIS_URL, BENCH_USER, BENCH_COMPANY.
+#     These point at the cumora server's DB/Redis (the same one the daemon
+#     talks to via api.cumora.ai), so test convos appear in the same
+#     environment the daemon is paired against.
+#
+# Cost guidance (Opus 4.7 pricing, 2026-Q2):
+#   - chain: ~$3-5 per trial × 3 trials = $9-15 per cycle
+#   - counting: ~$1-2 per trial × 3 trials = $3-6 per cycle
+#   - werewolf, kanban (when implemented): TBD
+#   - WEEKLY at this scope: ~$50-100/month. Tune `BENCH_*_TRIALS` env
+#     vars or change the cron cadence to control spend.
+
+name: Coordination Benchmark
+
+on:
+  schedule:
+    # Sundays 02:00 UTC — off-peak, low contention with prod traffic.
+    # Change to a faster cadence at your own cost.
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: 'Space-separated scenario ids, or empty for all'
+        required: false
+        default: 'chain counting'
+
+permissions:
+  contents: write  # for committing results to history branch
+
+jobs:
+  bench:
+    runs-on: [self-hosted, cumora-bench]
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve scenarios
+        id: scn
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ids=${{ github.event.inputs.scenarios || 'chain counting' }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ids=chain counting" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Capture context
+        id: ctx
+        run: |
+          echo "version=$(node -p "require('./agent-cli/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "stamp=$(date -u +%Y-%m-%dT%H-%M-%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Install benchmark deps
+        working-directory: benchmarks
+        run: npm install --no-audit --no-fund
+
+      - name: Run benchmarks
+        working-directory: benchmarks
+        env:
+          DATABASE_URL: ${{ secrets.BENCH_DATABASE_URL }}
+          REDIS_URL: ${{ secrets.BENCH_REDIS_URL }}
+          BENCH_USER: ${{ secrets.BENCH_USER }}
+          BENCH_COMPANY: ${{ secrets.BENCH_COMPANY }}
+          CUMORA_DAEMON_VERSION: ${{ steps.ctx.outputs.version }}
+          CUMORA_SERVER_SHA: ${{ steps.ctx.outputs.sha }}
+        run: npx tsx run.ts ${{ steps.scn.outputs.ids }}
+
+      - name: Upload result artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-${{ steps.ctx.outputs.stamp }}
+          path: benchmarks/results/
+          retention-days: 90
+
+      - name: Commit results to benchmarks-history branch
+        if: always() && github.event_name == 'schedule'
+        run: |
+          git config user.name "cumora-bench-bot"
+          git config user.email "bench@cumora.ai"
+          # Park the result files on a long-lived history branch so the
+          # main-line diff stays clean. Each run appends; we never rewrite.
+          git fetch origin benchmarks-history:benchmarks-history || \
+            git branch benchmarks-history "$(git rev-list --max-parents=0 HEAD | tail -1)"
+          git checkout benchmarks-history
+          mkdir -p history/${{ steps.ctx.outputs.stamp }}
+          cp benchmarks/results/*.json history/${{ steps.ctx.outputs.stamp }}/ || true
+          git add history/
+          git commit -m "bench: ${{ steps.ctx.outputs.stamp }} on ${{ steps.ctx.outputs.sha }} (${{ steps.ctx.outputs.version }})" || echo "no result files to commit"
+          git push origin benchmarks-history

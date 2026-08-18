@@ -1,0 +1,35 @@
+# Cloudflare Worker fronting cdn.cumora.ai — HMAC-gated R2 reads.
+#
+# Routes: every request to `cdn.cumora.ai/*` flows through this worker
+# instead of going straight to R2's custom-domain handler. The worker
+# validates a server-signed query string before reading the bucket via
+# its R2 binding, then proxies the bytes back to the client (with CDN
+# caching on hits).
+#
+# Deploy:
+#   cd workers/r2-gate
+#   npx wrangler login          # one-time, browser auth
+#   npx wrangler deploy
+#   npx wrangler secret put R2_URL_SIGNING_SECRET   # paste the same value as the server's .env
+#
+# Anything under `avatars/` is served unsigned (portraits are not private).
+# Anything under `attachments/` requires a valid `?exp&sig` pair signed by
+# the Cumora server with the same `R2_URL_SIGNING_SECRET`.
+
+name = "cumora-r2-gate"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+account_id = "787d1726b5b2844b0d2decd4767a4b62"
+
+# Bind the bucket directly — reads use the Workers Runtime API
+# (`env.BUCKET.get(key)`), no S3 hop.
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "cumora-attachments"
+
+# Take over the cdn.cumora.ai hostname. The bucket's "Custom Domain"
+# setup created the DNS + TLS; this route layers our auth logic on top
+# of it.
+[[routes]]
+pattern = "cdn.cumora.ai/*"
+zone_name = "cumora.ai"

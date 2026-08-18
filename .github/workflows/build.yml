@@ -1,0 +1,255 @@
+# Auto-build + push images on every push to main.
+#
+# Server image: rebuilt on every push (so even a renderer-only change
+#   still produces a fresh tagged server image we can pin to).
+# Agent-computer image: rebuilt ONLY when files that affect the bundled
+#   agent runtime change — its build dominates the workflow time and
+#   the agent runtime is unaffected by typical UI / docs / k8s changes.
+#
+# This workflow ONLY builds. Deploy is a separate manual workflow
+# (deploy.yml) so a bad commit on main doesn't auto-ship to prod —
+# trade-off chosen explicitly: "手动触发" / tag push.
+
+name: Build
+
+on:
+  push:
+    branches: [main]
+  # Allow running this manually too (e.g. force a rebuild of a tag).
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false  # finish in-flight builds; cheaper than wasted Docker layers
+
+env:
+  GCP_PROJECT: cumora
+  AR_REGION: us-west2
+  AR_REPO: cumora
+
+# WIF requires id-token write to mint the OIDC assertion.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      agent: ${{ steps.f.outputs.agent }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: f
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            agent:
+              - 'server/src/agents/**'
+              - 'server/src/scripts/build-agent-bundle.mjs'
+              - 'server/docker/agent-computer.Dockerfile'
+              - 'server/docker/agent-computer.Dockerfile.dockerignore'
+              - 'server/docker/agent-computer-cumora.sh'
+              - 'server/docker/agent-computer-entrypoint.sh'
+              - 'agent-fuse/**'
+              - '.github/workflows/build.yml'
+              - 'package.json'
+              - 'package-lock.json'
+
+  typecheck:
+    # Direct pushes to main bypass pr.yml entirely — and the Docker
+    # build doesn't run `tsc` against server sources (Dockerfile
+    # CMD is `tsx server/src/index.ts`, no AOT compile). Without
+    # this gate, a commit that adds `import { foo } from '../bar'`
+    # but forgets to stage the matching `export function foo` in
+    # bar.ts builds a "successful" image that crashloops on first
+    # start. That exact bug took prod down for ~7h in mid-May 2026
+    # (dcd8e87 → 16c7fdf). Fail-fast HERE so we never publish a
+    # broken image, instead of discovering it minutes later via
+    # k8s rollout timeout.
+    name: Typecheck (server + client)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - name: tsc (client)
+        run: npx tsc --noEmit
+      - name: tsc (server)
+        run: npm run server:typecheck
+
+  quality:
+    name: Guards + unit + integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: cumora
+          POSTGRES_PASSWORD: cumora
+          POSTGRES_DB: cumora_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cumora -d cumora_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      INTEGRATION_DATABASE_URL: postgres://cumora:cumora@localhost:5432/cumora_test
+      DATABASE_URL: postgres://cumora:cumora@localhost:5432/cumora_test
+      REDIS_URL: redis://localhost:6379
+      RESEND_API_KEY: ''
+      EMAIL_DOMAIN: cumora.local
+      EMAIL_INBOUND_HMAC_SECRET: ci-test-secret
+      AUTH_SECRET: ci-test-auth-secret
+      OPENAI_API_KEY: ci-test-openai-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - name: Install Email Worker dependencies
+        run: npm ci --prefix workers/email-gate
+      - name: Lint (Biome)
+        run: npm run lint
+      - name: Static safety guards
+        run: npm run guard:big-brain && npm run guard:llm-tracked
+      - name: Unit tests
+        run: npm test --silent
+      - name: Enable pgvector extension
+        run: PGPASSWORD=cumora psql -h localhost -U cumora -d cumora_test -c "CREATE EXTENSION IF NOT EXISTS vector"
+      - name: Integration tests
+        run: npm run test:integration
+
+  server:
+    name: Build server image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [changes, typecheck, quality]
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        name: Compute image tag
+        run: |
+          # Short SHA — same convention as our local builds (e.g. d1389e2).
+          SHA=$(git rev-parse --short HEAD)
+          echo "tag=$SHA" >> $GITHUB_OUTPUT
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.AR_REGION }}-docker.pkg.dev --quiet
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: push
+        name: buildx build + push (server)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/docker/cumora-server.Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            VITE_PUBLIC_POSTHOG_KEY=${{ secrets.VITE_PUBLIC_POSTHOG_KEY }}
+            VITE_PUBLIC_POSTHOG_HOST=${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}
+          tags: |
+            ${{ env.AR_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.AR_REPO }}/server:${{ steps.meta.outputs.tag }}
+            ${{ env.AR_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.AR_REPO }}/server:latest
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,scope=server,mode=max
+
+      - name: Summary
+        run: |
+          echo "### Server image" >> $GITHUB_STEP_SUMMARY
+          echo "- tag: \`${{ steps.meta.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- digest: \`${{ steps.push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Pinned reference for kubectl set image:" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ env.AR_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.AR_REPO }}/server@${{ steps.push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+
+  agent:
+    name: Build agent-computer image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [changes, typecheck, quality]
+    if: needs.changes.outputs.agent == 'true'
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Bundle agent CLI
+        run: node server/src/scripts/build-agent-bundle.mjs
+
+      - id: meta
+        name: Compute image tag
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          echo "tag=$SHA" >> $GITHUB_OUTPUT
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.AR_REGION }}-docker.pkg.dev --quiet
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: push
+        name: buildx build + push (agent-computer)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/docker/agent-computer.Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.AR_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.AR_REPO }}/agent-computer:${{ steps.meta.outputs.tag }}
+            ${{ env.AR_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.AR_REPO }}/agent-computer:latest
+          cache-from: type=gha,scope=agent
+          cache-to: type=gha,scope=agent,mode=max
+
+      - name: Summary
+        run: |
+          echo "### Agent-computer image" >> $GITHUB_STEP_SUMMARY
+          echo "- tag: \`${{ steps.meta.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- digest: \`${{ steps.push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,228 @@
+/**
+ * Integration tests for the poll feature.
+ *
+ * Polls are kind='poll' rows in messages with a structured payload + a
+ * separate poll_votes table for tallies. Both humans (via /api/polls)
+ * and agents (via the shared core in server/src/polls.ts) reach the
+ * same code path — these tests exercise the HTTP surface and the
+ * vote-change / multi-choice / expiration semantics.
+ */
+import { test, before, beforeEach, after } from 'node:test'
+import assert from 'node:assert/strict'
+import { createServer, type Server } from 'node:http'
+import {
+  buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll,
+} from './_helpers.js'
+import { pool } from '../db/pool.js'
+import { castVote, closePoll, sweepExpiredPolls } from '../polls.js'
+
+const ME = 'u-me'
+const PEER = 'u-peer'
+const AGENT = 'a-aurora'
+const COMPANY = 'c-polls'
+const CONVO = 'co-polls'
+let server: Server
+let baseUrl = ''
+
+before(async () => {
+  await ensureSchemaOnce()
+  const app = await buildApiTestApp(ME)
+  await new Promise<void>((resolve) => {
+    server = createServer(app).listen(0, () => {
+      const addr = server.address()
+      if (addr && typeof addr === 'object') baseUrl = `http://127.0.0.1:${addr.port}`
+      resolve()
+    })
+  })
+})
+
+beforeEach(async () => {
+  await resetAllTables()
+  await seedWorld()
+})
+
+after(async () => {
+  await teardownAll(server)
+})
+
+async function seedWorld(): Promise<void> {
+  await pool.query(
+    `INSERT INTO companies (id, name, slug, owner_user_id) VALUES ($1, 'Polls Co', 'polls-co', $2)`,
+    [COMPANY, ME],
+  )
+  await seedUserMembership(ME, COMPANY)
+  await seedUserMembership(PEER, COMPANY, { displayName: 'Peer', email: 'peer@test.local' })
+  await pool.query(
+    `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, system_prompt)
+     VALUES ($1, $2, 'agent', 'Aurora', 'agent', 'A', '#abcdef', 'avail', 'a test agent prompt')`,
+    [AGENT, COMPANY],
+  )
+  await pool.query(
+    `INSERT INTO conversations (id, kind, title, members, tag, company_id)
+     VALUES ($1, 'group', 'Polls Group', $2::jsonb, 'group', $3)`,
+    [CONVO, JSON.stringify([ME, PEER, AGENT]), COMPANY],
+  )
+}
+
+async function createPollViaHttp(body: Record<string, unknown>): Promise<{ status: number; body: any }> {
+  const res = await fetch(`${baseUrl}/api/polls`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': COMPANY },
+    body: JSON.stringify(body),
+  })
+  return { status: res.status, body: await res.json().catch(() => null) }
+}
+
+async function voteViaHttp(messageId: string, optionIds: string[]): Promise<{ status: number; body: any }> {
+  const res = await fetch(`${baseUrl}/api/polls/${encodeURIComponent(messageId)}/vote`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': COMPANY },
+    body: JSON.stringify({ optionIds }),
+  })
+  return { status: res.status, body: await res.json().catch(() => null) }
+}
+
+test('[integration] POST /polls creates a poll message with structured payload', async () => {
+  const { status, body } = await createPollViaHttp({
+    conversationId: CONVO,
+    question: 'Lunch?',
+    mode: 'single',
+    options: ['Ramen', 'Hotpot', 'Noodles'],
+  })
+  assert.equal(status, 201)
+  assert.ok(body.messageId)
+  assert.equal(body.poll.mode, 'single')
+  assert.equal(body.poll.options.length, 3)
+  assert.equal(body.poll.closedAt, null)
+
+  // The poll is also a real messages row that other queries see.
+  const { rows } = await pool.query<{ kind: string; poll: { question: string } | null }>(
+    `SELECT kind, poll FROM messages WHERE id = $1`, [body.messageId],
+  )
+  assert.equal(rows[0].kind, 'poll')
+  assert.equal(rows[0].poll?.question, 'Lunch?')
+})
+
+test('[integration] POST /polls rejects fewer than 2 distinct options', async () => {
+  const { status, body } = await createPollViaHttp({
+    conversationId: CONVO,
+    question: 'Lunch?',
+    mode: 'single',
+    options: ['Ramen', 'ramen', '', '   '],   // dedupes case-insensitive + drops blanks
+  })
+  assert.equal(status, 400)
+  assert.match(String(body.error), /at least 2/)
+})
+
+test('[integration] vote tally aggregates across voters & changing a vote is idempotent', async () => {
+  const created = (await createPollViaHttp({
+    conversationId: CONVO, question: 'Lunch?', mode: 'single',
+    options: ['Ramen', 'Hotpot'],
+  })).body
+  const ramen = created.poll.options[0].id
+  const hotpot = created.poll.options[1].id
+
+  // ME votes Ramen via HTTP. Agent votes Hotpot via the shared core
+  // (this is the same path the CLI takes).
+  const first = await voteViaHttp(created.messageId, [ramen])
+  assert.equal(first.status, 200)
+  await castVote({
+    messageId: created.messageId, companyId: COMPANY,
+    voterParticipantId: AGENT, voterKind: 'agent', optionIds: [hotpot],
+  })
+
+  // Change ME's vote from Ramen → Hotpot. The DELETE/INSERT inside the
+  // transaction means Ramen now has 0, Hotpot has 2.
+  const changed = await voteViaHttp(created.messageId, [hotpot])
+  assert.equal(changed.status, 200)
+  const tallies: Array<{ optionId: string; count: number; voterIds: string[] }> = changed.body.tallies
+  const hotpotTally = tallies.find((t) => t.optionId === hotpot)
+  assert.equal(hotpotTally?.count, 2)
+  assert.deepEqual(hotpotTally?.voterIds.sort(), [AGENT, ME].sort())
+  assert.equal(tallies.find((t) => t.optionId === ramen), undefined)
+})
+
+test('[integration] single-choice rejects more than one option', async () => {
+  const created = (await createPollViaHttp({
+    conversationId: CONVO, question: 'Lunch?', mode: 'single',
+    options: ['A', 'B', 'C'],
+  })).body
+  const ids = created.poll.options.map((o: { id: string }) => o.id).slice(0, 2)
+  const res = await voteViaHttp(created.messageId, ids)
+  assert.equal(res.status, 400)
+  assert.match(String(res.body.error), /at most one/)
+})
+
+test('[integration] multi-choice persists every chosen option', async () => {
+  const created = (await createPollViaHttp({
+    conversationId: CONVO, question: 'Snacks?', mode: 'multi',
+    options: ['Chips', 'Olives', 'Cheese'],
+  })).body
+  const ids: string[] = created.poll.options.map((o: { id: string }) => o.id)
+  const res = await voteViaHttp(created.messageId, [ids[0], ids[2]])
+  assert.equal(res.status, 200)
+  const tallies: Array<{ optionId: string; count: number }> = res.body.tallies
+  assert.equal(tallies.find((t) => t.optionId === ids[0])?.count, 1)
+  assert.equal(tallies.find((t) => t.optionId === ids[2])?.count, 1)
+  assert.equal(tallies.find((t) => t.optionId === ids[1]), undefined)
+})
+
+test('[integration] retracting via empty optionIds drops all of voter\'s rows', async () => {
+  const created = (await createPollViaHttp({
+    conversationId: CONVO, question: 'Snacks?', mode: 'multi',
+    options: ['Chips', 'Olives'],
+  })).body
+  const ids: string[] = created.poll.options.map((o: { id: string }) => o.id)
+  await voteViaHttp(created.messageId, ids)   // vote both
+  const retract = await voteViaHttp(created.messageId, [])
+  assert.equal(retract.status, 200)
+  const { rows } = await pool.query<{ n: number }>(
+    `SELECT COUNT(*)::int AS n FROM poll_votes WHERE message_id = $1 AND voter_participant_id = $2`,
+    [created.messageId, ME],
+  )
+  assert.equal(rows[0].n, 0)
+})
+
+test('[integration] closing a poll blocks further votes; only author can close', async () => {
+  const created = (await createPollViaHttp({
+    conversationId: CONVO, question: 'Lunch?', mode: 'single',
+    options: ['A', 'B'],
+  })).body
+
+  // Peer cannot close — they aren't the author.
+  await assert.rejects(
+    () => closePoll({ messageId: created.messageId, companyId: COMPANY, actorId: PEER, reason: 'manual' }),
+    /only the poll author/,
+  )
+
+  // Author (= ME) closes successfully.
+  const ev = await closePoll({ messageId: created.messageId, companyId: COMPANY, actorId: ME, reason: 'manual' })
+  assert.ok(ev)
+  assert.equal(ev!.poll.closedReason, 'manual')
+
+  // Further votes are rejected.
+  const vote = await voteViaHttp(created.messageId, [created.poll.options[0].id])
+  assert.equal(vote.status, 409)
+})
+
+test('[integration] sweepExpiredPolls auto-closes polls past expiresAt', async () => {
+  const created = (await createPollViaHttp({
+    conversationId: CONVO, question: 'Now?', mode: 'single',
+    options: ['Yes', 'No'],
+  })).body
+
+  // Backdate the expiration to a second ago so the sweeper picks it up.
+  await pool.query(
+    `UPDATE messages
+        SET poll = jsonb_set(poll, '{expiresAt}', to_jsonb((NOW() - INTERVAL '1 second')::text), true)
+      WHERE id = $1`,
+    [created.messageId],
+  )
+  const closed = await sweepExpiredPolls()
+  assert.ok(closed >= 1)
+  const { rows } = await pool.query<{ poll: { closedAt: string | null; closedReason: string | null } }>(
+    `SELECT poll FROM messages WHERE id = $1`, [created.messageId],
+  )
+  assert.ok(rows[0].poll.closedAt)
+  assert.equal(rows[0].poll.closedReason, 'expired')
+})

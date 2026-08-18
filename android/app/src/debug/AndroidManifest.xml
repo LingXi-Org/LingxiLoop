@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DEBUG-ONLY manifest overlay. Points the application at the debug
+  network-security config (which permits cleartext to the local dev server)
+  via a manifest-merger replace. Only applies to debug builds — the release
+  build keeps its default (cleartext blocked).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:replace="android:networkSecurityConfig" />
+</manifest>
