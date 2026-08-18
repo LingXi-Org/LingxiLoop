@@ -186,6 +186,10 @@ export interface WorklogEntry {
 /** The full surface area the agent loop needs. Phase 2b ships an
  *  InProc impl + a stub HTTP impl; later sessions fill the HTTP impl
  *  in as the corresponding `/cli/*` server endpoints land. */
+import type { CliResult } from '../cli-result.js'
+
+export type SystemPromptMode = 'legacy' | 'communication'
+
 export interface AgentRuntimeClient {
   // === Read agent state ===
   /** Resolve the agent's persona (name / role / style / model / company).
@@ -214,7 +218,23 @@ export interface AgentRuntimeClient {
   // === Identity (system prompt) ===
   /** Full system prompt incl. IDENTITY.md / SOUL.md, persona, global
    *  rules, and team roster. Null when the agent isn't a real persona. */
-  buildSystemPrompt(agentId: string): Promise<string | null>
+  buildSystemPrompt(agentId: string, mode?: SystemPromptMode): Promise<string | null>
+
+  /** Execute one canonical communication action as the JWT-pinned agent. */
+  executeCli(agentId: string, argv: string[]): Promise<CliResult>
+
+  /** Persist model usage produced outside the Node OpenAI client (LingxiGraph). */
+  recordExternalLlmCall(args: {
+    runId: string
+    agentId: string
+    companyId?: string | null
+    model: string
+    usage: RuntimeTokenUsage | null
+    latencyMs: number
+    status: 'ok' | 'rate_limited' | 'timeout' | 'failed'
+    error?: string | null
+    extras?: Record<string, unknown>
+  }): Promise<void>
 
   // === Status + presence ===
   /** Set the agent's status pill ('avail' / 'thinking' / 'working' / etc).

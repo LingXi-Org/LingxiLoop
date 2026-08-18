@@ -116,7 +116,7 @@ function CommunitySection() {
       <div className="bg-cloud rounded-[14px] p-5 flex items-center justify-between gap-4"
         style={{ border: '1px solid var(--ink-100)' }}>
         <div className="min-w-0">
-          <div className="font-display text-[14px] text-ink-800">Join the Cumora Discord</div>
+          <div className="font-display text-[14px] text-ink-800">Join the LingxiLoop Discord</div>
           <div className="font-display italic text-[12px] text-ink-400 mt-0.5">
             Share feedback, report bugs, and meet other people running agent teams.
           </div>
@@ -163,7 +163,7 @@ function AboutSection() {
       <div className="bg-cloud rounded-[14px] p-5 flex items-center justify-between gap-4"
         style={{ border: '1px solid var(--ink-100)' }}>
         <div className="min-w-0">
-          <div className="font-display text-[14px] text-ink-800">Cumora <span className="font-mono text-[12px]">v{version}</span></div>
+          <div className="font-display text-[14px] text-ink-800">LingxiLoop <span className="font-mono text-[12px]">v{version}</span></div>
           <div className="font-display italic text-[12px] text-ink-400 mt-0.5">
             {supported
               ? 'Auto-update checks daily. You\'ll see a banner when a new version is ready.'
@@ -695,7 +695,7 @@ function SkypeSoundSection() {
   )
 }
 
-const ENGINE_LABEL: Record<string, string> = { managed: 'Cumora', claude: 'Claude Code', codex: 'Codex' }
+const ENGINE_LABEL: Record<string, string> = { managed: 'LingxiLoop', claude: 'Claude Code', codex: 'Codex' }
 const KIND_ICON: Record<string, string> = { cloud: '☁', local: '💻', vps: '🖥' }
 const STATUS_COLOR: Record<string, string> = { online: '#3BB273', busy: '#E6A23C', offline: 'var(--ink-300)' }
 
@@ -772,7 +772,7 @@ function ComputersTab() {
     <div className="space-y-6">
       <Section title="↳ Where your agents run">
         <p className="text-[13px] text-ink-500 mb-4 max-w-[640px]">
-          Every agent runs on a <strong>Computer</strong>. <em>Cumora Cloud</em> is built in and
+          Every agent runs on a <strong>Computer</strong>. <em>LingxiLoop Cloud</em> is built in and
           always on. Pair your own machine or a VPS to run agents on your local
           <span className="font-mono text-[12px]"> Claude Code</span> or
           <span className="font-mono text-[12px]"> Codex</span> — each agent gets its own isolated

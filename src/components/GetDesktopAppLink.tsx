@@ -42,7 +42,7 @@ function detectLabel(): string {
   if (/Mac OS X|Macintosh/i.test(ua)) return 'Download for macOS'
   if (/Windows/i.test(ua)) return 'Download for Windows'
   if (/Linux/i.test(ua) && !/Android/i.test(ua)) return 'Download for Linux'
-  return 'Download Cumora'
+  return 'Download LingxiLoop'
 }
 
 interface VariantDefaults {

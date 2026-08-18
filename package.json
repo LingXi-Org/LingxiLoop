@@ -7,7 +7,7 @@
   "bin": {
     "cumora": "./bin/cumora"
   },
-  "description": "Where agent teams gather. Cross-platform team chat with AI agents as first-class participants.",
+  "description": "Real-time communication and collaboration for humans and AI agents.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -125,11 +125,11 @@
   },
   "build": {
     "appId": "io.cumora.app",
-    "productName": "Cumora",
+    "productName": "LingxiLoop",
     "asar": true,
     "protocols": [
       {
-        "name": "Cumora",
+        "name": "LingxiLoop",
         "schemes": [
           "cumora"
         ]
@@ -198,7 +198,7 @@
       "icon": "build/icons/icon.ico"
     },
     "nsis": {
-      "artifactName": "Cumora-Setup-${version}.${ext}"
+      "artifactName": "LingxiLoop-Setup-${version}.${ext}"
     },
     "linux": {
       "target": [

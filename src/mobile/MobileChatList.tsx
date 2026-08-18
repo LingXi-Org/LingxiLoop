@@ -494,7 +494,7 @@ export function MobileChatList() {
         <div className="px-4 pt-2 pb-3 flex items-center gap-2.5">
           <CloudLogo size={26} />
           <h1 className="font-display font-medium text-[26px] tracking-tight text-ink-900 leading-none">
-            Cumora
+            LingxiLoop
           </h1>
           <Pressable
             onClick={() => { setSearchOpen((v) => !v); if (searchOpen) setSearchQ('') }}

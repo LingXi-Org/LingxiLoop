@@ -50,6 +50,7 @@ import { effectiveCostUsd, priceFor, usageFromOpenAI, EMPTY_USAGE, type TokenUsa
 export type LlmCallPurpose =
   // Big-model real tasks (sanctioned by model-policy.ts).
   | 'agent-turn'
+  | 'lingxigraph-agent-turn'
   | 'convene-speech'
   // Small-model cerebellum classifiers — the gpt-5.4-mini hot path.
   | 'inbox-triage'

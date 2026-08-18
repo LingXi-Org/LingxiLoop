@@ -52,6 +52,7 @@ import { compactHistoryWithSummary, estimateHistoryTokens, estimateTokens } from
 import { usageFromOpenAI, addUsage, EMPTY_USAGE, type TokenUsage } from './cost.js'
 import { recordLlmCall, classifyLlmCallError, readStreamUsage, readStreamReasoningTokens } from './llm-ledger.js'
 import { resolveDeclaredAutoRelayTarget } from './auto-relay.js'
+import { executeCommunicationActions, runLingxiGraph } from './lingxigraph-adapter.js'
 import {
   canDrainSteer,
   drainSteer,
@@ -1539,6 +1540,7 @@ Treat the output as a private memo that will be appended to the agent's input. E
 }
 
 export async function runAgentTurn(agentId: string, options: AgentTurnOptions = {}): Promise<void> {
+  const useLingxiGraph = env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph'
   const persona = await runtime.loadPersona(agentId)
   if (!persona) return
 
@@ -1810,11 +1812,11 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
     // Steering: discard any stale items left over from a previous turn
     // — between turns, any steer that arrives is also in the messages
     // table, so the new turn's loadInbox covers it.
-    resetSteerForAgent(agentId)
+    if (!useLingxiGraph) resetSteerForAgent(agentId)
     // Start the busy-lease heartbeat as soon as we know we're going to
     // run. Even if we end up in the "fingerprint match → skip" branch
     // below, the lease lifetime is bounded by the 5s TTL anyway.
-    startBusyHeartbeat()
+    if (!useLingxiGraph) startBusyHeartbeat()
     await runtime.recordEvent({
       runId, agentId, companyId: runCompanyId,
       kind: 'turn.started',
@@ -1901,14 +1903,16 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
     // write_file / edit_file tools all operate on this namespace; the
     // diff vs. its initial state is committed back to agent_workspace
     // in the `finally` below. See runtime/fs-namespace.ts.
-    namespace = await hydrateFs(agentId, runId)
-    await runtime.recordEvent({
-      runId, agentId, companyId: runCompanyId,
-      kind: 'fs.hydrated',
-      title: `FS namespace ready (${namespace.baseline.size} file${namespace.baseline.size === 1 ? '' : 's'})`,
-      data: { rootDir: namespace.rootDir, fileCount: namespace.baseline.size },
-      stage: 'building_prompt',
-    })
+    if (!useLingxiGraph) {
+      namespace = await hydrateFs(agentId, runId)
+      await runtime.recordEvent({
+        runId, agentId, companyId: runCompanyId,
+        kind: 'fs.hydrated',
+        title: `FS namespace ready (${namespace.baseline.size} file${namespace.baseline.size === 1 ? '' : 's'})`,
+        data: { rootDir: namespace.rootDir, fileCount: namespace.baseline.size },
+        stage: 'building_prompt',
+      })
+    }
 
     // Pull the recent thread of every conversation that has unread items, so the
     // LLM can see what has already been said (including its own past replies)
@@ -1946,7 +1950,7 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
     loadMemory(agentId, memoryQuery),
     loadClimate(agentId),
     loadTextExcerpts(inbox),
-    runtime.loadSkillsIndex(agentId),
+    useLingxiGraph ? Promise.resolve([]) : runtime.loadSkillsIndex(agentId),
   ])
   await runtime.recordEvent({
     runId, agentId, companyId: runCompanyId,
@@ -2004,7 +2008,7 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
     }
   }
 
-  const instructions = await runtime.buildSystemPrompt(agentId)
+  const instructions = await runtime.buildSystemPrompt(agentId, useLingxiGraph ? 'communication' : 'legacy')
   if (!instructions) {
     finalStatus = 'skipped'
     finalSummary = 'No system prompt/persona instructions available'
@@ -2023,7 +2027,8 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
     title: 'System prompt ready',
     data: {
       model: persona.model ?? env.OPENAI_MODEL,
-      toolCount: TOOL_DEFS_RESPONSES.length,
+      toolCount: useLingxiGraph ? 0 : TOOL_DEFS_RESPONSES.length,
+      reasoningRuntime: useLingxiGraph ? 'lingxigraph' : 'legacy',
       instructions: traceText(instructions),
     },
     stage: 'thinking',
@@ -2093,6 +2098,106 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
   }
 
   const renderedConversationContext = renderContext(context, inbox.length, convoIds.length, textExcerpts, agentId)
+
+  if (useLingxiGraph) {
+    const model = enforceModelPolicy(realTaskModel(persona.model), 'agent-turn')
+    const triggerBrief = isBackgroundScanWake
+      ? `Background scan: ${options.backgroundBrief?.title ?? ''}\n${options.backgroundBrief?.body ?? ''}`
+      : isIdleWake
+        ? `Idle heartbeat: ${options.idleReason ?? 'idle heartbeat'}`
+        : isPollUpdateWake && options.pollBrief
+          ? `Poll update: ${options.pollBrief.question} (${options.pollBrief.phase}, ${options.pollBrief.totalVotes} votes)`
+          : 'New conversation activity'
+    const contextPrompt = `Now: ${nowStr}
+
+Trigger:
+${triggerBrief}
+
+Triage:
+${triageNote || '(none)'}
+
+Recent conversation context:
+${renderedConversationContext}
+
+Private memory relevant to this turn:
+${renderMemory(memory)}
+
+Relationship climate:
+${renderClimate(climate)}
+
+${peerWorkBlock}`.trim()
+
+    await runtime.recordEvent({
+      runId, agentId, companyId: runCompanyId,
+      kind: 'lingxigraph.started', title: 'LingxiGraph stateless run started',
+      data: { model, contextChars: contextPrompt.length }, stage: 'thinking',
+    })
+    const startedAt = Date.now()
+    const result = await runLingxiGraph({
+      version: 1, runId,
+      agent: { id: persona.id, name: persona.name, role: persona.role, model },
+      trigger: options.trigger ?? 'message.new', systemPrompt: instructions, contextPrompt,
+    }, {
+      timeoutMs: env.LINGXIGRAPH_RUN_TIMEOUT_MS,
+      maxOutputBytes: env.LINGXIGRAPH_MAX_OUTPUT_BYTES,
+    })
+    const elapsedMs = Date.now() - startedAt
+    const perCallLatency = result.modelCalls.length > 0 ? Math.round(elapsedMs / result.modelCalls.length) : elapsedMs
+    for (const call of result.modelCalls) {
+      if (call.usage) {
+        turnUsage = addUsage(turnUsage, call.usage)
+        totalTokensThisTurn += call.usage.inputTokens + call.usage.outputTokens
+      } else {
+        missingUsageHopCount++
+      }
+      await runtime.recordExternalLlmCall({
+        runId, agentId, companyId: runCompanyId, model: call.model,
+        usage: call.usage, latencyMs: perCallLatency, status: 'ok',
+        extras: { runtime: 'lingxigraph', aggregateRunnerLatencyMs: elapsedMs },
+      })
+    }
+
+    const execution = await executeCommunicationActions(
+      result.actions,
+      (argv) => runtime.executeCli(agentId, argv),
+      env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
+    )
+    toolCallCount += execution.results.length
+    for (const cliResult of execution.results) {
+      cliSideEffectsThisTurn.push(...(cliResult.sideEffects ?? []))
+    }
+    if (!execution.completed) {
+      finalStatus = 'failed'
+      finalError = execution.error ?? `Communication action ${execution.failedActionIndex ?? 0} failed`
+      finalSummary = `LingxiGraph action execution stopped: ${finalError}`
+      await runtime.recordEvent({
+        runId, agentId, companyId: runCompanyId,
+        kind: 'lingxigraph.action_failed', level: 'error', title: finalSummary,
+        data: { failedActionIndex: execution.failedActionIndex, executedActions: execution.results.length },
+        stage: 'failed',
+      })
+      return
+    }
+
+    const readTargets = new Map<string, string>()
+    for (const msg of inbox) readTargets.set(msg.conversation_id, msg.id)
+    await Promise.all([...readTargets.entries()].map(([conversationId, upToMessageId]) =>
+      runtime.markConversationRead({ agentId, conversationId, upToMessageId }),
+    ))
+    lastCompletedInbox.set(agentId, fingerprint)
+    finalStatus = 'completed'
+    finalSummary = result.actions.length === 0
+      ? `LingxiGraph completed silently: ${result.reason}`
+      : `LingxiGraph completed ${result.actions.length} communication action${result.actions.length === 1 ? '' : 's'}: ${result.reason}`
+    await runtime.recordEvent({
+      runId, agentId, companyId: runCompanyId,
+      kind: 'lingxigraph.completed', title: finalSummary,
+      data: { status: result.status, actionCount: result.actions.length, modelCalls: result.modelCalls.length },
+      stage: 'completed',
+    })
+    return
+  }
+
   const wakeContext = isPollUpdateWake && options.pollBrief
     ? renderPollUpdateWakeContext(options.pollBrief, renderedConversationContext)
     : isBackgroundScanWake

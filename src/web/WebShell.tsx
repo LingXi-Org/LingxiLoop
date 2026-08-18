@@ -75,7 +75,7 @@ function WebHandoff() {
         <div className="space-y-1">
           <div className="font-display text-[22px] text-ink-900">You're signed in</div>
           <div className="font-display italic text-[13px] text-ink-400">
-            Opening Cumora on your desktop…
+            Opening LingxiLoop on your desktop…
           </div>
         </div>
         <div className="w-full flex flex-col gap-2.5">
@@ -86,7 +86,7 @@ function WebHandoff() {
               background: 'var(--skype)',
               boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
             }}
-          >Open in Cumora desktop</button>
+          >Open in LingxiLoop desktop</button>
           <GetDesktopAppLink variant="button-secondary" />
           <button
             onClick={() => void signOut()}
@@ -94,7 +94,7 @@ function WebHandoff() {
           >Sign out</button>
         </div>
         <div className="text-[11px] text-ink-300 font-display italic">
-          Cumora only runs as a desktop app — open it or install it to continue.
+          LingxiLoop only runs as a desktop app — open it or install it to continue.
         </div>
       </div>
     </div>
@@ -130,7 +130,7 @@ function WebLanding() {
       <div className="w-[360px] flex flex-col items-center gap-7">
         <CloudLogo size={64} />
         <div className="text-center space-y-1">
-          <div className="font-display text-[22px] text-ink-900">Cumora is a desktop app</div>
+          <div className="font-display text-[22px] text-ink-900">LingxiLoop is a desktop app</div>
           <div className="font-display italic text-[13px] text-ink-400">
             Sign in to join, or open the desktop app if it's already installed
           </div>
@@ -171,7 +171,7 @@ function WebLanding() {
             onClick={() => tryDeepLink('cumora://open')}
             className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-ink-700 transition"
             style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
-          >Open in Cumora desktop</button>
+          >Open in LingxiLoop desktop</button>
           <GetDesktopAppLink
             variant="button-secondary"
             gateBypass={approvedEntry}

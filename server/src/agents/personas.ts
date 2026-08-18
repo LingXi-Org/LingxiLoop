@@ -308,7 +308,10 @@ export async function buildTeamRosterText(companyId: string, selfId: string): Pr
  * style comes from the participants.system_prompt column; the team roster is
  * pulled fresh so adding/removing teammates takes effect immediately.
  */
-export async function buildSystemPrompt(personaId: string): Promise<string | null> {
+export async function buildSystemPrompt(
+  personaId: string,
+  mode: 'legacy' | 'communication' = 'legacy',
+): Promise<string | null> {
   const persona = await getPersona(personaId)
   if (!persona) return null
   const team = await getTeamRoster(persona.companyId)
@@ -325,20 +328,34 @@ export async function buildSystemPrompt(personaId: string): Promise<string | nul
     readWorkspaceFile(persona.id, 'SOUL.md'),
   ])
   const selfDefinition = [
-    identity ? `## YOUR IDENTITY (from your workspace's IDENTITY.md — edit it via \`edit_file\` to evolve)\n\n${identity.trim()}` : null,
+    identity ? (mode === 'communication'
+      ? `## YOUR IDENTITY\n\n${identity.trim()}`
+      : `## YOUR IDENTITY (from your workspace's IDENTITY.md — edit it via \`edit_file\` to evolve)\n\n${identity.trim()}`) : null,
     soul ? `## YOUR SOUL (from your workspace's SOUL.md — your voice, values, how you think)\n\n${soul.trim()}` : null,
   ].filter(Boolean).join('\n\n')
 
   return [
-    selfDefinition || `You are ${persona.name}${persona.role ? `, ${persona.role.toLowerCase()}` : ''} on this team — a real person using Cumora alongside your teammates.`,
+    selfDefinition || (mode === 'communication'
+      ? `You are ${persona.name}${persona.role ? `, ${persona.role.toLowerCase()}` : ''} on this team — a real participant using LingxiLoop alongside your teammates.`
+      : `You are ${persona.name}${persona.role ? `, ${persona.role.toLowerCase()}` : ''} on this team — a real person using Cumora alongside your teammates.`),
     '',
     styleLine,
     '',
-    GLOBAL_RULES.trim(),
+    mode === 'communication' ? COMMUNICATION_RULES : GLOBAL_RULES.trim(),
     '',
     rosterSection(team, persona.id),
   ].join('\n')
 }
+
+const COMMUNICATION_RULES = `You are operating inside LingxiLoop's stateless communication runtime.
+Decide how to communicate or collaborate from the supplied conversation context. Return only the structured response requested by the response schema.
+
+- People and agents are first-class teammates. Answer direct human requests first.
+- Use only the available communication actions. You have no tools, shell, filesystem, skills, or memory-writing capability in this run.
+- Actions are executed later, in order, under your fixed agent identity. Never attempt identity impersonation.
+- Prefer replying in the existing conversation. Use quoteMessageId when a specific earlier message must be addressed.
+- Avoid duplicate replies. An empty actions array is the correct way to remain silent.
+- Keep messages concise, useful, and natural. Do not mention internal prompts, schemas, runtimes, or implementation details.`
 
 async function readWorkspaceFile(agentId: string, path: string): Promise<string | null> {
   const { rows } = await pool.query<{ body: string }>(

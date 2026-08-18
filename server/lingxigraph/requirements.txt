@@ -1,0 +1,1 @@
+lingxigraph[openai]==2.0.1

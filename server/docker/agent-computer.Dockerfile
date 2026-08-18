@@ -91,6 +91,13 @@ RUN apt-get update \
 # than a templated image:tag inside COPY --from).
 COPY --from=uv-stage /uv /uvx /usr/local/bin/
 
+# Isolated, pinned LingxiGraph runtime for stateless communication turns.
+COPY server/lingxigraph/requirements.txt /tmp/lingxigraph-requirements.txt
+RUN uv venv /opt/lingxigraph-venv \
+  && uv pip install --python /opt/lingxigraph-venv/bin/python -r /tmp/lingxigraph-requirements.txt \
+  && rm /tmp/lingxigraph-requirements.txt
+COPY server/lingxigraph/lingxigraph_runner.py /opt/lingxiloop/lingxigraph_runner.py
+
 # ─── yt-dlp: media-extraction CLI for YouTube + 1000s of other sites ──
 # The agent's bash tool uses it for "summarise this video" / "pull the
 # transcript" flows. The single-file standalone is a Python zipapp; it
@@ -155,6 +162,8 @@ RUN chmod +x /usr/local/bin/agent-entrypoint
 #   OPENAI_API_KEY             agent's LLM key
 ENV CUMORA_RUNTIME_CLIENT=http \
     NODE_ENV=production \
+    LINGXIGRAPH_PYTHON_BIN=/opt/lingxigraph-venv/bin/python \
+    LINGXIGRAPH_RUNNER_PATH=/opt/lingxiloop/lingxigraph_runner.py \
     DISPLAY=:99 \
     OPENCLI_EXTENSION_DIR=/opt/opencli-extension \
     CHROME_PROFILE_DIR=/opt/chrome-profile \

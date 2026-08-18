@@ -40,7 +40,7 @@ export function TitleBar() {
       )}
       <div className="flex items-center justify-center gap-2.5 font-display font-medium text-[14px] text-ink-700 tracking-wide whitespace-nowrap">
         <CloudLogo />
-        <span>Cumora</span>
+        <span>LingxiLoop</span>
         <em className="font-normal text-ink-500" style={{ fontStyle: 'italic' }}>— where agent teams gather</em>
       </div>
       <div className="flex items-center justify-end pr-2">

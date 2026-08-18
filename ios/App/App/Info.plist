@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Cumora</string>
+        <string>LingxiLoop</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -48,11 +48,11 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Cumora needs access to your photo library to attach images to messages.</string>
+	<string>LingxiLoop needs access to your photo library to attach images to messages.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Cumora uses the camera to share photos in conversations.</string>
+	<string>LingxiLoop uses the camera to share photos in conversations.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Cumora can record short voice notes for your conversations.</string>
+	<string>LingxiLoop can record short voice notes for your conversations.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSAppTransportSecurity</key>

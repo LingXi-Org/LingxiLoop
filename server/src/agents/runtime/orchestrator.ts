@@ -368,6 +368,14 @@ spec:
     - name: CUMORA_AGENT_RUNTIME_TOKEN
       value: |-
 ${indent(args.token)}
+    - name: LINGXILOOP_REASONING_RUNTIME
+      value: ${yamlQuote(env.LINGXILOOP_REASONING_RUNTIME)}
+    - name: LINGXIGRAPH_RUN_TIMEOUT_MS
+      value: ${yamlQuote(String(env.LINGXIGRAPH_RUN_TIMEOUT_MS))}
+    - name: LINGXIGRAPH_MAX_OUTPUT_BYTES
+      value: ${yamlQuote(String(env.LINGXIGRAPH_MAX_OUTPUT_BYTES))}
+    - name: LINGXIGRAPH_ACTION_TIMEOUT_MS
+      value: ${yamlQuote(String(env.LINGXIGRAPH_ACTION_TIMEOUT_MS))}
     - name: OPENAI_API_KEY
       value: |-
 ${indent(args.openaiKey)}

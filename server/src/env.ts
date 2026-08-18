@@ -42,6 +42,12 @@ export const env = {
    * the UI — no env vars are keyed by agent id.
    */
   OPENAI_MODEL: DEFAULT_MODEL,
+  /** Managed-agent reasoning path. Compatibility default stays legacy. */
+  LINGXILOOP_REASONING_RUNTIME: (process.env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph'
+    ? 'lingxigraph' : 'legacy') as 'legacy' | 'lingxigraph',
+  LINGXIGRAPH_RUN_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 120_000),
+  LINGXIGRAPH_MAX_OUTPUT_BYTES: Number(process.env.LINGXIGRAPH_MAX_OUTPUT_BYTES ?? 1_048_576),
+  LINGXIGRAPH_ACTION_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_ACTION_TIMEOUT_MS ?? 30_000),
   /**
    * "Cerebellum" model — JSON classifiers, palette, gender inference,
    * heartbeat agenda pre-check. Cheap/fast; quality matters less than

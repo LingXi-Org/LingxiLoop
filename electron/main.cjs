@@ -231,7 +231,7 @@ const AUTH_DONE_HTML = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cumora — Signed in</title>
+<title>LingxiLoop — Signed in</title>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -302,12 +302,12 @@ const AUTH_DONE_HTML = `<!doctype html>
     <h1 id="h1">You're signed in</h1>
     <p class="sub" id="sub">Ready when you are.</p>
     <button id="open" class="btn">
-      <span id="btn-label">Open Cumora</span>
+      <span id="btn-label">Open LingxiLoop</span>
       <svg class="btn-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M9 6l6 6-6 6"/>
       </svg>
     </button>
-    <p class="hint" id="hint">You can close this tab after Cumora opens.</p>
+    <p class="hint" id="hint">You can close this tab after LingxiLoop opens.</p>
     <p class="err" id="err" style="display:none"></p>
   </div>
 <script>
@@ -358,7 +358,7 @@ const AUTH_DONE_HTML = `<!doctype html>
   }
   if (!token) {
     h1.textContent = 'No session token';
-    sub.textContent = 'Try signing in again from Cumora.';
+    sub.textContent = 'Try signing in again from LingxiLoop.';
     btn.style.display = 'none';
     hint.style.display = 'none';
     return;
@@ -382,12 +382,12 @@ const AUTH_DONE_HTML = `<!doctype html>
     // Optimistic confirmation — the OS handler is fire-and-forget. If
     // the app fails to open (e.g. uninstalled), the user can still
     // click again; we re-enable after a short delay.
-    label.innerHTML = '<span class="ok">✓</span> Opening Cumora…';
+    label.innerHTML = '<span class="ok">✓</span> Opening LingxiLoop…';
     btn.disabled = true;
     setTimeout(() => {
       opened = false;
       btn.disabled = false;
-      label.textContent = 'Open Cumora again';
+      label.textContent = 'Open LingxiLoop again';
     }, 2500);
   });
 })();
@@ -799,9 +799,9 @@ function toggleMainWindowVisibility() {
 
 function buildTrayMenu() {
   return Menu.buildFromTemplate([
-    { label: `Cumora v${app.getVersion()}`, enabled: false },
+    { label: `LingxiLoop v${app.getVersion()}`, enabled: false },
     { type: 'separator' },
-    { label: 'Open Cumora', click: () => {
+    { label: 'Open LingxiLoop', click: () => {
       if (!mainWindow || mainWindow.isDestroyed()) { createWindow(); return }
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.show()
@@ -811,7 +811,7 @@ function buildTrayMenu() {
       if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) mainWindow.hide()
     } },
     { type: 'separator' },
-    { label: 'Quit Cumora', click: () => {
+    { label: 'Quit LingxiLoop', click: () => {
       // before-quit will set appIsQuitting=true and tear down the
       // notification window + auth loopback server; this is the only
       // legitimate exit path that bypasses the close-to-hide trap.
@@ -828,7 +828,7 @@ function createTray() {
     return
   }
   tray = new Tray(img)
-  tray.setToolTip('Cumora')
+  tray.setToolTip('LingxiLoop')
   // macOS: don't `setContextMenu` — Electron's docs are explicit that
   // doing so swallows the `click` event entirely, making left-click
   // toggle-window impossible. Instead handle `click` ourselves and

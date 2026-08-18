@@ -26,7 +26,9 @@ import type {
   SkillIndexEntry,
   WorklogEntry,
   WorkTaskType,
+  SystemPromptMode,
 } from './client.js'
+import type { CliResult } from '../cli-result.js'
 import { notifyAlert } from '../../alerting.js'
 
 /** Per-process failure counter for the busy heartbeat. The heartbeat
@@ -164,9 +166,26 @@ export class HttpRuntimeClient implements AgentRuntimeClient {
     return out.rows
   }
 
-  async buildSystemPrompt(_agentId: string): Promise<string | null> {
-    const out = await this.call<{ prompt: string | null }>('GET', '/system-prompt')
+  async buildSystemPrompt(_agentId: string, mode: SystemPromptMode = 'legacy'): Promise<string | null> {
+    const out = await this.call<{ prompt: string | null }>('GET', `/system-prompt?mode=${encodeURIComponent(mode)}`)
     return out.prompt
+  }
+
+  async executeCli(_agentId: string, argv: string[]): Promise<CliResult> {
+    return this.call<CliResult>('POST', '/cli', { argv })
+  }
+
+  async recordExternalLlmCall(args: {
+    runId: string; agentId: string; companyId?: string | null; model: string
+    usage: RuntimeTokenUsage | null; latencyMs: number
+    status: 'ok' | 'rate_limited' | 'timeout' | 'failed'
+    error?: string | null; extras?: Record<string, unknown>
+  }): Promise<void> {
+    await this.call<{ ok: true }>('POST', '/llm-calls', {
+      runId: args.runId, model: args.model, usage: args.usage,
+      latencyMs: args.latencyMs, status: args.status,
+      error: args.error ?? null, extras: args.extras ?? {},
+    })
   }
 
   // ─── status + presence ────────────────────────────────────────────

@@ -272,7 +272,7 @@ export function AgentEditor({ agent, onClose }: Props) {
 
           <Field
             label="Runs on"
-            hint="Which computer executes this agent. Cumora Cloud is managed; a computer you've paired runs it on your local Claude Code or Codex."
+            hint="Which computer executes this agent. LingxiLoop Cloud is managed; a computer you've paired runs it on your local Claude Code or Codex."
           >
             <Select
               ariaLabel="Runs on"
@@ -292,7 +292,7 @@ export function AgentEditor({ agent, onClose }: Props) {
                       + (c.kind !== 'cloud' && c.status !== 'online' ? ' (offline)' : ''),
                   })),
                 ...(isFreeTier && !isNativePlatform()
-                  ? [{ value: '__cloud_pro__', label: '☁ Cumora Cloud — upgrade to Pro', disabled: true }]
+                  ? [{ value: '__cloud_pro__', label: '☁ LingxiLoop Cloud — upgrade to Pro', disabled: true }]
                   : []),
               ]}
             />

@@ -105,6 +105,26 @@ runtimeRouter.post('/cli', withAgent(async (c, req, res) => {
   })
 }))
 
+runtimeRouter.post('/llm-calls', withAgent(async (c, req, res) => {
+  const body = req.body as Record<string, unknown> | undefined
+  if (!body || typeof body.runId !== 'string' || typeof body.model !== 'string') {
+    res.status(400).json({ error: 'runId and model required' }); return
+  }
+  const status = body.status
+  if (!['ok', 'rate_limited', 'timeout', 'failed'].includes(String(status))) {
+    res.status(400).json({ error: 'invalid status' }); return
+  }
+  await inprocClient.recordExternalLlmCall({
+    runId: body.runId, agentId: c.sub, companyId: c.companyId,
+    model: body.model, usage: (body.usage ?? null) as never,
+    latencyMs: typeof body.latencyMs === 'number' ? body.latencyMs : 0,
+    status: status as 'ok' | 'rate_limited' | 'timeout' | 'failed',
+    error: typeof body.error === 'string' ? body.error : null,
+    extras: body.extras && typeof body.extras === 'object' ? body.extras as Record<string, unknown> : {},
+  })
+  res.json({ ok: true })
+}))
+
 // ─── reads ──────────────────────────────────────────────────────────
 
 runtimeRouter.get('/persona', withAgent(async (c, _req, res) => {
@@ -271,8 +291,9 @@ runtimeRouter.post('/faces', withAgent(async (_c, req, res) => {
   res.json({ rows })
 }))
 
-runtimeRouter.get('/system-prompt', withAgent(async (c, _req, res) => {
-  res.json({ prompt: await inprocClient.buildSystemPrompt(c.sub) })
+runtimeRouter.get('/system-prompt', withAgent(async (c, req, res) => {
+  const mode = req.query.mode === 'communication' ? 'communication' : 'legacy'
+  res.json({ prompt: await inprocClient.buildSystemPrompt(c.sub, mode) })
 }))
 
 // The live team roster (names + roles + ids), scoped to the agent's company.

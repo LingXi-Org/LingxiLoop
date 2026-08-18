@@ -137,7 +137,7 @@ export function CloudLogo({ size = 22 }: { size?: number }) {
   return (
     <img
       src="/logo.png"
-      alt="Cumora"
+      alt="LingxiLoop"
       draggable={false}
       width={size}
       height={size}

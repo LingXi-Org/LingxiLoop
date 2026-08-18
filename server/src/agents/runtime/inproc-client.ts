@@ -70,7 +70,11 @@ import type {
   SkillIndexEntry,
   WorklogEntry,
   WorkTaskType,
+  SystemPromptMode,
 } from './client.js'
+import type { CliResult } from '../cli-result.js'
+import { runCli } from '../cli.js'
+import { recordLlmCall } from '../llm-ledger.js'
 
 interface MemoryQueryRow {
   path: string
@@ -438,8 +442,26 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
    *  global rules, team roster. Returns null for non-persona ids.
    *  Heavy lifting lives in personas.ts since it joins participants +
    *  agent_workspace + the rendered team roster. */
-  async buildSystemPrompt(agentId: string): Promise<string | null> {
-    return buildSystemPromptImpl(agentId)
+  async buildSystemPrompt(agentId: string, mode: SystemPromptMode = 'legacy'): Promise<string | null> {
+    return buildSystemPromptImpl(agentId, mode)
+  }
+
+  async executeCli(agentId: string, argv: string[]): Promise<CliResult> {
+    return runCli(['--as', agentId, ...argv])
+  }
+
+  async recordExternalLlmCall(args: {
+    runId: string; agentId: string; companyId?: string | null; model: string
+    usage: RuntimeTokenUsage | null; latencyMs: number
+    status: 'ok' | 'rate_limited' | 'timeout' | 'failed'
+    error?: string | null; extras?: Record<string, unknown>
+  }): Promise<void> {
+    await recordLlmCall({
+      source: 'cloud', purpose: 'lingxigraph-agent-turn', runId: args.runId,
+      agentId: args.agentId, companyId: args.companyId ?? null, model: args.model,
+      usage: args.usage, latencyMs: args.latencyMs, status: args.status,
+      error: args.error ?? null, extras: args.extras ?? {},
+    })
   }
 
   // ─── status + presence ────────────────────────────────────────────

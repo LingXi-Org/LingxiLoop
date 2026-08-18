@@ -44,7 +44,7 @@ export function SuspendedScreen({ email, reason }: { email: string | null; reaso
         <div className="cumora-waitlist-title">Your account is suspended</div>
         <div className="cumora-waitlist-sub" style={{ marginBottom: reason ? 16 : 24 }}>
           Access for <span className="cumora-waitlist-email">{email ?? 'your account'}</span> has been
-          temporarily disabled by a Cumora administrator.
+          temporarily disabled by a LingxiLoop administrator.
         </div>
         {reason ? (
           <div className="cumora-suspended-reason" role="note">

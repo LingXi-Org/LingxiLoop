@@ -160,7 +160,7 @@ export function UpdateBanner({ forceOpen, onOpen }: BannerProps) {
       </span>
       <div className="flex-1 min-w-0">
         <div className="text-[13px] font-semibold text-ink-900 truncate">
-          {isDownloaded ? 'Update ready' : isDownloading ? 'Updating Cumora' : 'New Cumora available'}
+          {isDownloaded ? 'Update ready' : isDownloading ? 'Updating LingxiLoop' : 'New LingxiLoop available'}
           {version && <span className="ml-1.5 text-ink-500 font-normal">v{version}</span>}
         </div>
         {isDownloading && status.percent !== undefined && (
@@ -232,7 +232,7 @@ export function UpdaterDialog({ open, onClose }: DialogProps) {
       >
         <div className="px-6 py-5 border-b border-ink-100">
           <h2 className="font-display font-medium text-[18px] tracking-tight text-ink-900">
-            Cumora Update
+            LingxiLoop Update
           </h2>
           <div className="mt-1 text-[12.5px] text-ink-500 italic font-display">
             {kind === 'idle' && 'You\'re on the latest version.'}
@@ -304,7 +304,7 @@ export function UpdaterDialog({ open, onClose }: DialogProps) {
               style={{ background: 'rgba(110, 197, 106, 0.08)', color: '#2d8c72', border: '1px solid rgba(110, 197, 106, 0.25)' }}
             >
               <span className="font-bold">✓</span>
-              <span>Ready to install — Cumora will restart at the new version.</span>
+              <span>Ready to install — LingxiLoop will restart at the new version.</span>
             </div>
           )}
 

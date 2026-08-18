@@ -190,7 +190,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   }, [tokenStr, preview, busy, accept, joinedCompany])
 
   const inv = preview?.invitation
-  const companyName = inv?.company.name ?? 'Cumora'
+  const companyName = inv?.company.name ?? 'LingxiLoop'
   const inviter = inv?.inviterName ?? 'Someone'
   const signedIn = !!tokenStr && !!tokenUserId
 
@@ -365,7 +365,7 @@ function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
           Welcome to {companyName}
         </h1>
         <p className="text-[12.5px] text-ink-500 font-display italic">
-          You're in. Cumora works best as a desktop app — pick how to keep going.
+          You're in. LingxiLoop works best as a desktop app — pick how to keep going.
         </p>
       </div>
       <div className="w-full flex flex-col gap-2.5">
@@ -376,7 +376,7 @@ function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
             background: 'var(--skype)',
             boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
           }}
-        >Open in Cumora app</button>
+        >Open in LingxiLoop app</button>
         <GetDesktopAppLink variant="button-secondary" />
         {!isWebAppHost && (
           <button
@@ -403,7 +403,7 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
     <div className="flex flex-col items-center gap-5 text-center w-full">
       <h1 className="font-display text-[20px] text-ink-900">You're already in {companyName}</h1>
       <p className="text-[12.5px] text-ink-500 font-display italic -mt-2">
-        Pick up where you left off — on this device or anywhere you've installed Cumora.
+        Pick up where you left off — on this device or anywhere you've installed LingxiLoop.
       </p>
       <div className="w-full flex flex-col gap-2.5">
         <button
@@ -413,7 +413,7 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
             background: 'var(--skype)',
             boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
           }}
-        >Open in Cumora desktop</button>
+        >Open in LingxiLoop desktop</button>
         <GetDesktopAppLink variant="button-secondary" />
         {!isWebAppHost && (
           <button
@@ -437,7 +437,7 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
           onClick={onDismiss}
           className="px-4 py-2 rounded-[10px] text-[12.5px] font-semibold text-ink-700 transition"
           style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
-        >Continue to Cumora</button>
+        >Continue to LingxiLoop</button>
       )}
     </div>
   )
@@ -498,7 +498,7 @@ function SignInToAccept({ token }: { token: string }) {
       </div>
       <div className="text-[11.5px] text-ink-400 text-center font-display italic pt-1">
         Don't have the desktop app yet?{' '}
-        <GetDesktopAppLink variant="text" label="Get Cumora" />
+        <GetDesktopAppLink variant="text" label="Get LingxiLoop" />
       </div>
     </div>
   )

@@ -109,7 +109,7 @@ export function ShippingWorkspace({ compact = false }: { compact?: boolean }) {
               )
             })}
             {overview.features.length === 0 && (
-              <div className="px-6 py-16 text-center"><IShip className="mx-auto h-9 w-9 text-ink-300" /><div className="mt-3 text-[13px] font-semibold text-ink-700">No shipping contracts yet</div><p className="mt-1 text-[11px] leading-relaxed text-ink-400">Start with the problem, desired outcome, and builders. Cumora will seed the non-negotiable evidence squares.</p></div>
+              <div className="px-6 py-16 text-center"><IShip className="mx-auto h-9 w-9 text-ink-300" /><div className="mt-3 text-[13px] font-semibold text-ink-700">No shipping contracts yet</div><p className="mt-1 text-[11px] leading-relaxed text-ink-400">Start with the problem, desired outcome, and builders. LingxiLoop will seed the non-negotiable evidence squares.</p></div>
             )}
           </div>
         </aside>

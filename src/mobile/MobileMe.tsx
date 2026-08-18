@@ -306,7 +306,7 @@ function PushStatusTile() {
           <div className="font-semibold text-[13px] text-ink-900 leading-tight">iOS permission</div>
           <div className="font-display italic text-[11px] text-ink-500 mt-0.5">
             {perm === 'denied'
-              ? 'Open iOS Settings → Cumora → Notifications to re-enable.'
+              ? 'Open iOS Settings → LingxiLoop → Notifications to re-enable.'
               : perm === 'granted'
                 ? 'iOS will deliver alerts when the app is in background.'
                 : perm === 'unknown'
@@ -386,7 +386,7 @@ function DeleteAccountButton() {
         style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
       >
         Delete account
-        <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">permanently remove this Cumora account</span>
+        <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">permanently remove this LingxiLoop account</span>
       </button>
     )
   }
