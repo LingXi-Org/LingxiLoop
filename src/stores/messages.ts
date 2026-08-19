@@ -545,7 +545,18 @@ export const useMessages = create<MessagesState>((set, get) => ({
             x.id === rootId ? { ...x, replyCount: (x.replyCount ?? 0) + 1 } : x,
           )
         }
-        const { [m.id]: _drop, ...rest } = s.streaming
+        // Drop the matching streaming entry. Streaming rows are keyed by a
+        // synthetic `live:${runId}:${callId}` id, not the real DB message
+        // id, so an id-only match here is a no-op — the stale streaming
+        // entry lingers (rendered alongside the now-finalized message)
+        // until its 10s stale-timer fires. Only one live reply per
+        // author/conversation runs at a time, so match on that too.
+        const rest = Object.fromEntries(
+          Object.entries(s.streaming).filter(([id, x]) =>
+            id !== m.id
+            && !(x.conversationId === e.conversationId && x.authorId === m.authorId),
+          ),
+        )
         return {
           streaming: rest,
           typing: withoutTypingAgent(s.typing, e.conversationId, m.authorId),
@@ -627,7 +638,17 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
   if (!convoId) return EMPTY_MESSAGES
   const base = s.byConvo[convoId] ?? EMPTY_MESSAGES
   const streaming = Object.entries(s.streaming)
-    .filter(([id, x]) => x.conversationId === convoId && !base.some((m) => m.id === id))
+    .filter(([id, x]) => x.conversationId === convoId
+      // A streaming row's synthetic id never equals a real DB message id, so
+      // this also has to check for a finalized message from the same author
+      // that landed at or after the streaming point (only one live reply per
+      // author/conversation is ever in flight) — otherwise a dropped `done`
+      // delta leaves the full text rendered twice. Compare by sequence, not
+      // just authorId, so an older finalized message from the same author
+      // doesn't wrongly suppress an unrelated newer streaming entry.
+      && !base.some((m) => m.id === id
+        || (m.authorId === x.authorId
+          && ((m as { sequence?: number }).sequence ?? 0) >= (x.sequence ?? 0))))
     .map(([id, x]) => ({
       id,
       conversationId: convoId,
