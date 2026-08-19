@@ -9,7 +9,8 @@
  *
  *   2. Else (sub2api unconfigured, or new tenant without a provisioned
  *      key yet) → legacy single `env.OPENAI_API_KEY` client pointed at
- *      OpenAI directly. No quotas — same behavior as pre-sub2api.
+ *      `OPENAI_BASE_URL` when configured, otherwise OpenAI directly.
+ *      No quotas — same behavior as pre-sub2api for the default case.
  *
  * Callers pass `tenant` (= company_id). When `tenant` is null (e.g.
  * platform-wide tasks like the avatar regen of a seeded agent before
@@ -118,6 +119,7 @@ let _legacy: OpenAI | null = null
 function legacyClient(): OpenAI {
   if (!_legacy) _legacy = new OpenAI({
     apiKey: env.OPENAI_API_KEY,
+    ...(process.env.OPENAI_BASE_URL ? { baseURL: process.env.OPENAI_BASE_URL } : {}),
     maxRetries: SDK_MAX_RETRIES,
     timeout: SDK_TIMEOUT_MS,
   })
