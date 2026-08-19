@@ -95,6 +95,10 @@ services:
       # .env; see .env.example.
       - AGENT_RUNTIME_SECRET=${AGENT_RUNTIME_SECRET:?AGENT_RUNTIME_SECRET is required in .env — see .env.example (openssl rand -hex 32)}
       - OPENAI_API_KEY
+      # Keep the provider base consistent between LingxiGraph and the
+      # LingxiLoop server-side support/triage client. Unset means the OpenAI
+      # SDK default endpoint; set it for any OpenAI-compatible provider.
+      - OPENAI_BASE_URL
       # Bare-name passthrough (see lingxigraph-runtime above for why): an
       # unset OPENAI_MODEL / OPENAI_MODEL_SUPPORT must stay UNSET so
       # env.ts's own `?? 'gpt-5.5'` / `?? 'gpt-5.4-mini'` defaults apply,
