@@ -121,8 +121,8 @@ function PillField({
   }
 
   return (
-    <div className="relative grid grid-cols-[60px_1fr] gap-2 items-start py-2 px-3 border-b border-ink-100">
-      <span className="text-[10.5px] font-bold text-ink-300 uppercase tracking-wider pt-1.5">{label}</span>
+    <div className="email-composer-row relative grid grid-cols-[60px_1fr] items-start gap-2 px-4 py-2.5">
+      <span className="pt-1.5 text-[10.5px] font-bold uppercase tracking-wider text-ink-secondary">{label}</span>
       <div
         className="flex flex-wrap gap-1.5 items-center min-h-[28px] cursor-text"
         onClick={() => inputRef.current?.focus()}
@@ -130,10 +130,10 @@ function PillField({
         {entries.map((e) => (
           <span
             key={e.raw}
-            className="inline-flex items-center gap-1 py-0.5 pl-1 pr-1.5 rounded-full bg-sky2-50 border border-sky2-100 text-[12px] text-skype-deep"
+            className="inline-flex items-center gap-1 rounded-full border border-sky2-100 bg-sky2-50 py-0.5 pl-1 pr-1.5 text-[12px] text-skype-deep"
           >
             {e.participant && (
-              <Avatar p={e.participant} size={16} ringColor="var(--cloud)" showStatus={false} />
+              <Avatar p={e.participant} size={18} ringColor="var(--raised)" showStatus={false} />
             )}
             <span className="leading-none">{e.display}</span>
             <button
@@ -153,16 +153,12 @@ function PillField({
           onKeyDown={onKey}
           onBlur={() => setTimeout(() => setOpenSuggest(false), 120)}
           placeholder={entries.length === 0 ? placeholder : ''}
-          className="flex-1 min-w-[140px] outline-none border-0 bg-transparent text-[13px] text-ink-900 placeholder:text-ink-300"
+          className="min-w-[140px] flex-1 border-0 bg-transparent text-[13px] text-ink placeholder:text-ink-secondary outline-none"
         />
       </div>
       {openSuggest && suggestions.length > 0 && (
         <div
-          className="absolute z-10 left-[68px] right-2 top-full mt-1 bg-cloud rounded-[10px] py-1 max-h-[220px] overflow-y-auto"
-          style={{
-            border: '1px solid var(--ink-100)',
-            boxShadow: '0 12px 32px -10px rgba(10, 30, 60, 0.22), 0 6px 14px -6px rgba(10, 30, 60, 0.14)',
-          }}
+          className="absolute left-[72px] right-3 top-full z-10 mt-1 max-h-[220px] overflow-y-auto rounded-xl border border-hairline bg-card py-1 shadow-2xl"
         >
           {suggestions.map((p) => (
             <button
@@ -170,9 +166,9 @@ function PillField({
               type="button"
               // mousedown not click — onBlur fires before click, eating the event.
               onMouseDown={(e) => { e.preventDefault(); commit(p.id) }}
-              className="w-full text-left flex items-center gap-2.5 py-1.5 px-2.5 hover:bg-sky2-50 transition"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition hover:bg-raised"
             >
-              <Avatar p={p} size={28} ringColor="var(--cloud)" showStatus={false} />
+              <Avatar p={p} size={30} ringColor="var(--card)" showStatus={false} />
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-semibold text-ink-900 truncate">{p.name}</div>
                 <div className="text-[11px] text-ink-500 truncate font-mono">{p.email ?? p.id}</div>
@@ -378,20 +374,16 @@ export function EmailComposer() {
   }
 
   return (
-    <div className="fixed inset-0 z-[55] grid place-items-end pointer-events-none" aria-modal="true">
+    <div className="fixed inset-0 z-[55] grid place-items-end p-3 pointer-events-none" aria-modal="true">
       {/* Click-outside backdrop. Click anywhere outside the panel to close. */}
       <button
         aria-label="Close composer backdrop"
         onClick={close}
-        className="absolute inset-0 bg-ink-900/15 pointer-events-auto animate-fade-in"
+        className="email-composer-backdrop absolute inset-0 pointer-events-auto animate-fade-in"
         style={{ animationDuration: '120ms' }}
       />
       <div
-        className="relative pointer-events-auto w-full max-w-[640px] h-full flex flex-col animate-slide-in-right"
-        style={{
-          background: 'linear-gradient(180deg, #FBF8F0, #F4EEDD)',
-          boxShadow: '-12px 0 32px -10px rgba(60, 50, 30, 0.18)',
-        }}
+        className="email-composer-panel relative flex h-full w-full max-w-[660px] flex-col overflow-hidden rounded-[22px] border border-hairline bg-panel pointer-events-auto animate-slide-in-right"
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
         onDragOver={onDragOver}
@@ -404,29 +396,30 @@ export function EmailComposer() {
             // child drop target keeps receiving the event.
             className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none animate-fade-in"
             style={{
-              background: 'rgba(0, 168, 240, 0.12)',
+              background: 'color-mix(in srgb, var(--accent) 12%, var(--panel))',
               border: '2px dashed var(--skype)',
-              borderRadius: '4px',
+              borderRadius: '22px',
               animationDuration: '120ms',
             }}
           >
             <div
-              className="px-5 py-3 rounded-[10px] bg-cloud border border-sky2-200 text-skype-deep font-semibold text-[13px] flex items-center gap-2"
-              style={{ boxShadow: '0 8px 24px -8px rgba(0, 168, 240, 0.35)' }}
+              className="flex items-center gap-2 rounded-xl border border-sky2-200 bg-raised px-5 py-3 text-[13px] font-semibold text-skype-deep shadow-xl"
             >
               📎 Drop to attach
             </div>
           </div>
         )}
-        <div className="flex items-center gap-2 py-3 px-4 border-b border-[rgba(120,110,95,0.25)]">
-          <IMail className="w-4 h-4 text-[#7A6A3F]" strokeWidth={2} />
-          <h2 className="text-[14px] font-semibold text-ink-900 tracking-tight">
+        <div className="flex items-center gap-2.5 border-b border-hairline bg-card px-4 py-3.5">
+          <span className="grid size-8 place-items-center rounded-xl bg-sky2-100 text-skype-deep">
+            <IMail className="h-4 w-4" strokeWidth={2} />
+          </span>
+          <h2 className="text-[14px] font-semibold tracking-tight text-ink">
             {isReply ? 'Reply by email' : 'New email'}
           </h2>
           <button
             type="button"
             onClick={close}
-            className="ml-auto w-7 h-7 rounded-full grid place-items-center text-ink-500 hover:bg-cloud transition"
+            className="ml-auto grid size-8 place-items-center rounded-xl text-ink-secondary transition hover:bg-raised hover:text-ink"
             aria-label="Close composer"
           >×</button>
         </div>
@@ -449,7 +442,7 @@ export function EmailComposer() {
             autocompletePool={pool}
           />
         ) : (
-          <div className="py-1.5 px-3 border-b border-ink-100 text-right">
+          <div className="email-composer-row px-4 py-2 text-right">
             <button
               type="button"
               onClick={() => setShowCc(true)}
@@ -458,19 +451,19 @@ export function EmailComposer() {
           </div>
         ))}
         {!isReply && (
-          <div className="grid grid-cols-[60px_1fr] gap-2 items-center py-2 px-3 border-b border-[rgba(120,110,95,0.25)]">
-            <span className="text-[10.5px] font-bold text-ink-300 uppercase tracking-wider">Subject</span>
+          <div className="email-composer-row grid grid-cols-[60px_1fr] items-center gap-2 px-4 py-3">
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-ink-secondary">Subject</span>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="What's this about?"
-              className="outline-none border-0 bg-transparent text-[15px] text-ink-900 placeholder:text-ink-300 font-display"
+              className="border-0 bg-transparent font-display text-[15px] text-ink placeholder:text-ink-secondary outline-none"
             />
           </div>
         )}
         {isReply && replyOriginal?.email && (
-          <div className="py-2 px-3 border-b border-[rgba(120,110,95,0.18)] bg-[rgba(120,110,95,0.04)] text-[11.5px] text-ink-500">
+          <div className="email-composer-row bg-inset px-4 py-2.5 text-[11.5px] text-ink-secondary">
             <div className="flex items-baseline gap-2">
               <span className="font-bold text-ink-300 uppercase tracking-wider text-[10px]">Re:</span>
               <span className="text-ink-700 font-medium">{replyOriginal.email.subject || '(no subject)'}</span>
@@ -494,12 +487,12 @@ export function EmailComposer() {
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={isReply ? 'Write your reply…' : 'Write your message…'}
-          className="flex-1 outline-none border-0 bg-transparent py-3 px-4 text-[14px] leading-[1.55] text-ink-700 placeholder:text-ink-300 resize-none font-sans"
+          className="email-composer-body m-3 flex-1 resize-none rounded-2xl border border-hairline bg-inset px-4 py-3.5 font-sans text-[14px] leading-[1.6] text-ink outline-none placeholder:text-ink-secondary"
           autoFocus
         />
 
         {attachments.length > 0 && (
-          <div className="py-2 px-3 border-t border-[rgba(120,110,95,0.18)] space-y-1">
+          <div className="mx-3 mb-2 space-y-1 rounded-xl border border-hairline bg-card px-3 py-2">
             {attachments.map((a) => (
               <div key={a.localId} className="flex items-center gap-2 text-[12px]">
                 <span className="text-[14px] leading-none">
@@ -525,12 +518,12 @@ export function EmailComposer() {
         )}
 
         {error && (
-          <div className="py-2 px-4 text-[12px] text-coral-deep border-t border-[rgba(196,60,50,0.25)]" style={{ background: 'rgba(196, 60, 50, 0.06)' }}>
+          <div className="mx-3 mb-2 rounded-xl border border-coral/25 bg-coral-soft px-4 py-2 text-[12px] text-coral-deep">
             {error}
           </div>
         )}
 
-        <div className="flex items-center gap-2 py-3 px-4 border-t border-[rgba(120,110,95,0.25)]">
+        <div className="email-composer-footer flex items-center gap-2 border-t border-hairline bg-card px-4 py-3">
           <input
             ref={fileInputRef}
             type="file"
@@ -542,7 +535,7 @@ export function EmailComposer() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={sending}
-            className="py-2 px-2.5 text-[12px] font-semibold text-ink-700 bg-cloud border border-ink-100 rounded-[7px] hover:border-sky2-200 hover:text-skype-deep transition disabled:opacity-50"
+            className="rounded-xl border border-hairline bg-raised px-3 py-2 text-[12px] font-semibold text-ink transition hover:border-sky2-200 hover:text-skype-deep disabled:opacity-50"
             title="Attach a file"
           >📎 Attach</button>
           <span className="text-[11px] text-ink-300 mr-auto">
@@ -552,19 +545,15 @@ export function EmailComposer() {
             type="button"
             onClick={close}
             disabled={sending}
-            className="py-2 px-3 text-[12px] font-semibold text-ink-700 hover:text-ink-900 transition disabled:opacity-50"
+            className="rounded-xl px-3 py-2 text-[12px] font-semibold text-ink-secondary transition hover:bg-raised hover:text-ink disabled:opacity-50"
           >Cancel</button>
           <button
             type="button"
             onClick={submit}
             disabled={sending}
             className={cn(
-              'py-2 px-4 text-[12px] font-semibold text-white rounded-[9px] transition disabled:opacity-50',
+              'rounded-xl bg-accent px-4 py-2 text-[12px] font-semibold text-white transition hover:brightness-110 disabled:opacity-50',
             )}
-            style={{
-              background: 'var(--skype)',
-              boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.45)',
-            }}
           >{sending ? 'Sending…' : isReply ? 'Send reply' : 'Send'}</button>
         </div>
       </div>

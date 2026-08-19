@@ -6,6 +6,7 @@ import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { api } from '@/api/client'
 import { remarkCumora } from '@/lib/remarkCumora'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
 import { cn, parseBlocks, parseBody } from '@/lib/utils'
 import { useApp } from '@/stores/app'
@@ -37,7 +38,7 @@ function MentionChip({ id }: { id: string }) {
   const ref = useRef<HTMLSpanElement | null>(null)
 
   // `@all` is a broadcast token — no participant to resolve. Renders as a
-  // coral chip with the shared community portrait inline, so it visually
+  // coral chip with the shared broadcast Bloub inline, so it visually
   // matches participant mention chips (avatar + label) while still reading
   // as "addressed to the whole room".
   if (id === 'all') {
@@ -46,7 +47,13 @@ function MentionChip({ id }: { id: string }) {
         className="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full font-semibold text-coral-deep bg-coral-soft"
         style={{ verticalAlign: '-0.15em' }}
       >
-        <img src="/everyone.png" alt="" className="w-4 h-4 rounded-full object-cover" />
+        <Avatar
+          p={EVERYONE_BLOUB_PARTICIPANT}
+          size={18}
+          showStatus={false}
+          animated={false}
+          ringColor="transparent"
+        />
         <span style={{ lineHeight: '16px' }}>@all</span>
       </span>
     )
@@ -1640,7 +1647,7 @@ function QuoteCard({ msg }: { msg: Message }) {
     return (
       <button
         onClick={jump}
-        className="mb-1 max-w-[min(100%,580px)] flex items-stretch gap-2 text-left rounded-md bg-cloud/60 border border-ink-100 hover:border-ink-200 px-2 py-1.5 transition-colors"
+        className="openmaus-quote-card mb-2 flex max-w-[min(100%,580px)] items-stretch gap-2 rounded-xl px-3 py-2 text-left transition-colors"
       >
         <span className="w-[3px] rounded bg-ink-200" />
         <span className="min-w-0 text-[11.5px] text-ink-400 italic">[message deleted]</span>
@@ -1654,7 +1661,7 @@ function QuoteCard({ msg }: { msg: Message }) {
   return (
     <button
       onClick={jump}
-      className="mb-1 max-w-[min(100%,580px)] flex items-stretch gap-2 text-left rounded-md bg-cloud/60 border border-ink-100 hover:border-ink-200 hover:bg-cloud px-2 py-1.5 transition-colors"
+      className="openmaus-quote-card mb-2 flex max-w-[min(100%,580px)] items-stretch gap-2 rounded-xl px-3 py-2 text-left transition-colors"
       title="Jump to original"
     >
       <span className="w-[3px] rounded bg-skype" />
@@ -1737,7 +1744,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
         </button>
       )}
       <div className={cn('min-w-0', openMaus && 'max-w-[70%]', openMaus && isMine && 'flex flex-col items-end')}>
-        <div className={cn('mb-1 flex items-baseline gap-2', openMaus && isMine && 'justify-end')}>
+        <div className={cn('mb-1 flex gap-2', openMaus ? 'items-baseline' : 'items-center', openMaus && isMine && 'justify-end')}>
           <span className="font-bold text-[13.5px] text-ink-900">{author.name}</span>
           {author.role && !isHuman && (
             <span className="text-[10.5px] text-ink-300 font-semibold tracking-wider uppercase">{author.role}</span>

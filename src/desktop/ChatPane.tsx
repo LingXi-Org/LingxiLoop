@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow, TypingRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
@@ -932,7 +933,7 @@ export function Composer({
         />
       )}
       <div className={cn(
-        'chat-composer mx-auto max-w-[900px] rounded-3xl px-3.5 pb-2 pt-3 transition',
+        'chat-composer mx-auto max-w-[900px] rounded-3xl px-3 pb-2 pt-2.5 transition',
         // In thread mode the parent drawer footer is already bg-cloud, so use
         // bg-paper inside for visual separation from the surrounding panel.
         isThread ? 'bg-paper' : '',
@@ -969,7 +970,7 @@ export function Composer({
           </div>
         )}
         {showReplyingPill && (
-          <div className="mb-2 flex items-stretch gap-2 rounded-md bg-sky2-50 border border-sky2-100 pl-2 pr-1 py-1.5 min-w-0">
+          <div className="openmaus-reply-preview mb-2 flex min-w-0 items-stretch gap-2 rounded-xl py-2 pl-3 pr-1.5">
             <div className="w-[3px] rounded bg-skype shrink-0" />
             <div className="min-w-0 flex-1 flex flex-col gap-0.5">
               <div className="text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
@@ -1092,10 +1093,12 @@ export function Composer({
                         active ? 'bg-sky2-50' : 'hover:bg-sky2-50',
                       )}
                     >
-                      <img
-                        src="/everyone.png"
-                        alt=""
-                        className="w-[26px] h-[26px] rounded-full object-cover"
+                      <Avatar
+                        p={EVERYONE_BLOUB_PARTICIPANT}
+                        size={28}
+                        ringColor="transparent"
+                        showStatus={false}
+                        animated={false}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="text-[12.5px] font-semibold text-ink-900 truncate">所有人</div>

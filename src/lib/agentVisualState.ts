@@ -11,6 +11,18 @@ export const STATUS_TO_BLOUB_STATE: Record<Status, StateId> = {
   resting: 'sleep',
 }
 
+/** Synthetic Bloub identity used by the broadcast mention. It deliberately
+ * lives outside the participant store: @all is a wire token, not a member. */
+export const EVERYONE_BLOUB_PARTICIPANT: Participant = {
+  id: 'lingxiloop-everyone',
+  kind: 'agent',
+  name: '所有人',
+  role: 'broadcast',
+  initial: '@',
+  avatarBg: '#1084fe',
+  status: 'avail',
+}
+
 const SHAPES: ShapeId[] = ['cercle', 'galet', 'squircle', 'capsule', 'triangle', 'hexagone', 'nuage', 'goutte']
 const COLORS: ColorId[] = ['bleu', 'violet', 'turquoise', 'orange', 'rose', 'vert', 'ambre', 'rouge']
 const EXPRESSIONS: ExpressionId[] = ['neutre', 'attentif', 'curieux', 'heureux', 'fier', 'timide', 'mefiant', 'confus']
@@ -43,4 +55,3 @@ export function getBloubIdentity(participant: Pick<Participant, 'id'>): BloubIde
 export function getBloubState(status: string | null | undefined): StateId {
   return STATUS_TO_BLOUB_STATE[status as Status] ?? 'idle'
 }
-

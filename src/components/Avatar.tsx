@@ -96,17 +96,16 @@ export function AvatarMini({ p, size = 28, ringColor = 'var(--cloud)' }: { p: Pa
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
   return (
     <div
-      className="rounded-full grid place-items-center font-display font-medium text-white relative"
+      className="relative grid shrink-0 place-items-center rounded-full font-display font-medium text-white"
       style={{
         width: size,
         height: size,
         background: p.kind === 'agent' || showImg ? 'transparent' : p.avatarBg,
-        border: `2.5px solid ${ringColor}`,
         fontSize: Math.round(size * 0.4),
       }}
     >
       {p.kind === 'agent'
-        ? <BloubAvatar participant={p} status={status} size={Math.max(8, size - 5)} paper={ringColor} animated={false} />
+        ? <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={false} />
         : showImg
         ? <img
             key={imgKey}
@@ -122,23 +121,31 @@ export function AvatarMini({ p, size = 28, ringColor = 'var(--cloud)' }: { p: Pa
 }
 
 export function AvatarStack({ ps, size = 28, max = 4 }: { ps: Participant[]; size?: number; max?: number }) {
-  const visible = ps.slice(0, max)
+  // The overflow badge occupies one of the advertised slots; otherwise
+  // `max={3}` could render three portraits PLUS a fourth badge and overflow.
+  const visibleLimit = Math.max(0, max - (ps.length > max ? 1 : 0))
+  const visible = ps.slice(0, visibleLimit)
   const overflow = ps.length - visible.length
+  const itemCount = visible.length + (overflow > 0 ? 1 : 0)
+  // The old fixed -10px overlap still produced a 76px-wide row for three
+  // 34px avatars inside a 56px conversation slot. A bounded step keeps the
+  // whole cluster compact at every call-site, including tablet headers.
+  const step = Math.min(11, Math.max(7, Math.round(size * 0.32)))
+  const width = itemCount > 0 ? size + (itemCount - 1) * step : 0
   return (
-    <div className="flex">
+    <div className="relative shrink-0" style={{ width, height: size }}>
       {visible.map((p, i) => (
-        <div key={p.id} style={{ marginLeft: i === 0 ? 0 : -10 }}>
+        <div key={p.id} className="absolute top-0" style={{ left: i * step, zIndex: itemCount - i }}>
           <AvatarMini p={p} size={size} />
         </div>
       ))}
       {overflow > 0 && (
         <div
-          className="rounded-full grid place-items-center text-ink-500 text-[10px] font-bold"
+          className="absolute top-0 grid place-items-center rounded-xl bg-raised text-[10px] font-bold text-ink-secondary"
           style={{
             width: size, height: size,
-            background: 'var(--ink-100)',
-            border: '2.5px solid var(--cloud)',
-            marginLeft: -10,
+            left: visible.length * step,
+            zIndex: 0,
           }}
         >+{overflow}</div>
       )}

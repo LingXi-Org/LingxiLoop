@@ -36,6 +36,11 @@ const STATIC_PHASE: Record<StateId, number> = {
   swirl: 0.7,
 }
 
+// Bloub's original 316-unit canvas leaves generous exhibition padding. Chat
+// avatars are much smaller, so scale the artwork—not its containing box—to
+// make the face readable without reintroducing a circular frame.
+const CHAT_AVATAR_SCALE = 1.08
+
 function useReducedMotion() {
   const [reduced, setReduced] = useState(() => (
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -163,24 +168,26 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
         ))}
       </defs>
 
-      <g fill="none" strokeLinecap="round">
-        {frame.arcs.map((arc) => (
-          <path key={`back-${arc.id}`} d={arc.back} stroke={`url(#${uid}-${arc.id})`} strokeWidth={arc.width} opacity={arc.opacity} />
-        ))}
-      </g>
-      {frame.dotsBehind && <g>{renderDots('behind')}</g>}
-      <g opacity={frame.bodyAlpha}>
-        <path d={frame.bodyPath} fill={paper} />
-        <g mask={`url(#${maskId})`}>
-          <rect x={-DEMI_VIEWBOX} y={-DEMI_VIEWBOX} width={DEMI_VIEWBOX * 2} height={DEMI_VIEWBOX * 2} fill={ink} />
+      <g transform={`scale(${CHAT_AVATAR_SCALE})`}>
+        <g fill="none" strokeLinecap="round">
+          {frame.arcs.map((arc) => (
+            <path key={`back-${arc.id}`} d={arc.back} stroke={`url(#${uid}-${arc.id})`} strokeWidth={arc.width} opacity={arc.opacity} />
+          ))}
         </g>
-      </g>
-      {!frame.dotsBehind && <g>{renderDots('front')}</g>}
-      {frame.notif && <circle cx={frame.notif.x} cy={frame.notif.y} r={frame.notif.r} fill={NOTIF_BLUE} />}
-      <g fill="none" strokeLinecap="round">
-        {frame.arcs.map((arc) => (
-          <path key={`front-${arc.id}`} d={arc.front} stroke={`url(#${uid}-${arc.id})`} strokeWidth={arc.width} opacity={arc.opacity} />
-        ))}
+        {frame.dotsBehind && <g>{renderDots('behind')}</g>}
+        <g opacity={frame.bodyAlpha}>
+          <path d={frame.bodyPath} fill={paper} />
+          <g mask={`url(#${maskId})`}>
+            <rect x={-DEMI_VIEWBOX} y={-DEMI_VIEWBOX} width={DEMI_VIEWBOX * 2} height={DEMI_VIEWBOX * 2} fill={ink} />
+          </g>
+        </g>
+        {!frame.dotsBehind && <g>{renderDots('front')}</g>}
+        {frame.notif && <circle cx={frame.notif.x} cy={frame.notif.y} r={frame.notif.r} fill={NOTIF_BLUE} />}
+        <g fill="none" strokeLinecap="round">
+          {frame.arcs.map((arc) => (
+            <path key={`front-${arc.id}`} d={arc.front} stroke={`url(#${uid}-${arc.id})`} strokeWidth={arc.width} opacity={arc.opacity} />
+          ))}
+        </g>
       </g>
     </svg>
   )

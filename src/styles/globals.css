@@ -59,8 +59,8 @@
   --hairline: rgba(15, 23, 42, 0.11);
   --ink: #111318;
   --ink-secondary: #626873;
-  --bubble-user: #202329;
-  --bubble-user-ink: #FFFFFF;
+  --bubble-user: #DCEBFB;
+  --bubble-user-ink: #173A5E;
   --bubble-agent: #F1F2F4;
   --accent: #3B82F6;
   --code-bg: #E9EBEF;
@@ -308,8 +308,8 @@ body {
   --hairline: rgba(15, 23, 42, 0.12);
   --ink: #111318;
   --ink-secondary: rgba(17, 19, 24, 0.58);
-  --bubble-user: #202329;
-  --bubble-user-ink: #ffffff;
+  --bubble-user: #dcebfb;
+  --bubble-user-ink: #173a5e;
   --bubble-agent: #f1f2f4;
   --code-bg: #e9ebef;
   --paper: #f4f5f7;
@@ -574,7 +574,17 @@ input, textarea { font: inherit; }
   pointer-events: none;
   white-space: pre-wrap;
 }
-.rich-input { outline: none; word-break: break-word; overflow-wrap: anywhere; }
+.rich-input {
+  outline: none;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  caret-color: var(--accent);
+}
+.rich-input::selection,
+.rich-input *::selection {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--ink-900);
+}
 
 /* OpenMausBot-inspired conversation skin. These classes deliberately sit on
  * existing LingxiLoop components: message schema, parsers and send flow stay
@@ -582,14 +592,47 @@ input, textarea { font: inherit; }
 .chat-surface { background: var(--panel); color: var(--ink); }
 .chat-composer-shell { background: var(--panel); border-color: var(--hairline); }
 .chat-composer {
-  background: var(--raised);
-  border: 1px solid var(--hairline);
-  border-radius: 18px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  /* OpenMaus Composer: one quiet raised surface with a very light keyline. */
+  background: color-mix(in srgb, var(--raised) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hairline) 40%, transparent);
+  border-radius: 24px;
+  box-shadow: none;
 }
 .chat-composer:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.openmaus-reply-preview,
+.openmaus-quote-card {
+  background: color-mix(in srgb, var(--inset) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hairline) 65%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.openmaus-quote-card:hover {
+  background: color-mix(in srgb, var(--raised) 72%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--hairline));
+}
+.email-composer-backdrop {
+  background: color-mix(in srgb, var(--app) 58%, transparent);
+  backdrop-filter: blur(3px);
+}
+.email-composer-panel {
+  box-shadow: -18px 0 56px -22px rgba(0, 0, 0, 0.48);
+}
+.email-composer-row {
+  border-bottom: 1px solid var(--hairline);
+}
+.email-composer-row:focus-within {
+  background: color-mix(in srgb, var(--raised) 45%, transparent);
+}
+.email-composer-body:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.email-composer-body::selection,
+.email-composer-panel input::selection {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--ink);
 }
 .message-bubble {
   border: 1px solid var(--hairline);

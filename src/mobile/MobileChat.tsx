@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { IAt, IBack, IClip, IConvene, IMore, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow, TypingRow } from '@/components/Message'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
@@ -683,7 +684,7 @@ export function MobileChat() {
           </div>
         )}
         {replyingToId && convoId && (
-          <div className="mb-2 flex items-stretch gap-2 rounded-md bg-sky2-50 border border-sky2-100 pl-2 pr-1 py-1.5">
+          <div className="openmaus-reply-preview mb-2 flex items-stretch gap-2 rounded-xl py-2 pl-3 pr-1.5">
             <div className="w-[3px] rounded bg-skype shrink-0" />
             <div className="min-w-0 flex-1 flex flex-col gap-0.5">
               <div className="text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
@@ -731,7 +732,13 @@ export function MobileChat() {
                       active ? 'bg-sky2-50' : 'active:bg-sky2-50',
                     )}
                   >
-                    <img src="/everyone.png" alt="" className="w-[28px] h-[28px] rounded-full object-cover" />
+                    <Avatar
+                      p={EVERYONE_BLOUB_PARTICIPANT}
+                      size={30}
+                      ringColor="transparent"
+                      showStatus={false}
+                      animated={false}
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-semibold text-ink-900 truncate">Everyone</div>
                       <div className="text-[11px] text-ink-500 truncate">Notify all members of this room</div>
@@ -953,7 +960,7 @@ function StreamHeader({ context }: { context?: StreamCtx }) {
   const hasMoreOlder = context?.hasMoreOlder ?? false
   const loadingOlder = context?.loadingOlder ?? false
   return (
-    <div className="px-3 pt-4 flex flex-col gap-3">
+    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-3 px-4 pt-4">
       {hasMoreOlder ? (
         <div className="self-center py-1 px-2.5 rounded-full text-[10.5px] font-medium text-ink-400">
           {loadingOlder ? 'Loading earlier…' : ' '}
@@ -1003,7 +1010,7 @@ function MessageRowMobileShell({
   const press = useLongPress(onLongPress)
   return (
     <div
-      className="px-3 py-2"
+      className="mx-auto w-full max-w-[760px] px-4 py-2"
       style={{
         userSelect: 'none',
         WebkitUserSelect: 'none',

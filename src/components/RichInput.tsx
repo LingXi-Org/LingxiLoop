@@ -22,6 +22,8 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { findSkypeByKey, findSkypeByShortcode, SKYPE_SHORTCODE_RE, skypeEmojiUrl } from '@/lib/skypeEmojis'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
+import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 
 export interface MentionInfo {
   /** Display name shown after the `@` inside the chip. */
@@ -159,23 +161,13 @@ function makeMentionNode(id: string, info: MentionInfo): HTMLSpanElement {
   avatar.style.lineHeight = '1'
   avatar.style.overflow = 'hidden'
   avatar.style.flexShrink = '0'
-  if (id === 'all') {
-    const img = document.createElement('img')
-    img.src = '/everyone.png'
-    img.alt = ''
-    img.style.width = '100%'
-    img.style.height = '100%'
-    img.style.borderRadius = '50%'
-    img.style.objectFit = 'cover'
-    avatar.appendChild(img)
-  } else if (info.avatarUrl) {
+  if (info.avatarUrl) {
     const img = document.createElement('img')
     img.src = info.avatarUrl
     img.alt = ''
     img.style.width = '100%'
     img.style.height = '100%'
-    img.style.borderRadius = '50%'
-    img.style.objectFit = 'cover'
+    img.style.objectFit = 'contain'
     avatar.appendChild(img)
   } else {
     avatar.style.background = info.avatarBg || 'var(--ink-300)'
@@ -325,7 +317,13 @@ function inflate(value: string, target: HTMLElement, resolveMention?: (id: strin
       const atIdx = m[0].lastIndexOf('@')
       const lead = m[0].slice(0, atIdx)
       const info = mentionId === 'all'
-        ? { name: 'all', initial: 'A', avatarBg: 'var(--coral-soft)', kind: 'human' as const }
+        ? {
+            name: 'all',
+            initial: '@',
+            avatarBg: 'transparent',
+            kind: 'agent' as const,
+            avatarUrl: staticBloubAvatarUrl(EVERYONE_BLOUB_PARTICIPANT),
+          }
         : (resolveMention?.(mentionId) ?? null)
       if (info) {
         if (m.index + atIdx > last) appendText(target, value.slice(last, m.index) + lead)
