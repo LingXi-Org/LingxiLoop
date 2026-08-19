@@ -10,6 +10,22 @@ directly.
 
 ## Production architecture
 
+### Steering ownership
+
+For `LINGXILOOP_REASONING_RUNTIME=lingxigraph`, LingxiGraph is the canonical
+owner of runtime steering. LingxiLoop resolves a trusted active run and maps a
+new stored chat message to `POST /v1/runs/{run_id}/steer`, using the stable
+message ID as the idempotency key. Accepted and duplicate events remain in the
+current run; terminal/finalizing runs and permanent adapter rejections fall
+back to the normal wake/new-turn path. Ambiguous transient failures do not
+immediately create a second turn (the original message remains durable in
+Loop), so a message is never both steered and immediately started as a second
+turn. LingxiGraph owns ordering, durable inbox storage,
+safe-point consumption, recovery, and steering lifecycle events.
+
+The local `server/src/agents/steer.ts` queue is legacy-runtime compatibility
+only and is not a steering source of truth for the LingxiGraph server path.
+
 ```text
 Web browser ─────────────┐
                         ├─ HTTPS / WebSocket ─ Reverse proxy ─ 127.0.0.1:5181

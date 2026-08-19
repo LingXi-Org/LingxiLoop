@@ -50,6 +50,25 @@ export interface LingxiGraphAdapterOptions {
   fetchImpl?: typeof fetch
 }
 
+export interface LingxiGraphSteerRequest {
+  runId: string
+  kind: string
+  payload: Record<string, unknown>
+  metadata?: Record<string, unknown>
+  idempotencyKey: string
+}
+
+export type LingxiGraphSteerResult =
+  | { outcome: 'accepted' | 'duplicate'; eventId: string | null }
+  | { outcome: 'terminal'; eventId: null; reason: string }
+
+export class LingxiGraphSteerError extends Error {
+  constructor(message: string, readonly transient: boolean, readonly status?: number) {
+    super(message)
+    this.name = 'LingxiGraphSteerError'
+  }
+}
+
 export interface CommunicationExecutionResult {
   completed: boolean
   results: CliResult[]
@@ -380,6 +399,61 @@ export async function runLingxiGraph(
     } catch (error) {
       throw new Error(`invalid LingxiGraph runtime response: ${error instanceof Error ? error.message : String(error)}`)
     }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/** Submit communication input to LingxiGraph's durable steering inbox. */
+export async function steerLingxiGraphRun(
+  request: LingxiGraphSteerRequest,
+  options: LingxiGraphAdapterOptions = {},
+): Promise<LingxiGraphSteerResult> {
+  const baseUrl = options.url ?? process.env.LINGXIGRAPH_URL
+  if (!baseUrl) throw new LingxiGraphSteerError('LINGXIGRAPH_URL is required to reach the LingxiGraph runtime', false)
+  if (!request.runId.trim() || !request.idempotencyKey.trim()) throw new LingxiGraphSteerError('runId and idempotencyKey are required', false)
+  const token = options.token ?? process.env.LINGXIGRAPH_TOKEN
+  const timeoutMs = options.timeoutMs ?? Number(process.env.LINGXIGRAPH_STEER_TIMEOUT_MS ?? 10_000)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    let response: Response
+    try {
+      response = await (options.fetchImpl ?? fetch)(new URL(`/v1/runs/${encodeURIComponent(request.runId)}/steer`, baseUrl), {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'idempotency-key': request.idempotencyKey,
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          kind: request.kind,
+          payload: request.payload,
+          ...(request.metadata ? { metadata: request.metadata } : {}),
+          idempotencyKey: request.idempotencyKey,
+        }),
+        signal: controller.signal,
+      })
+    } catch (error) {
+      const timedOut = error instanceof Error && error.name === 'AbortError'
+      throw new LingxiGraphSteerError(timedOut ? `LingxiGraph steering timed out after ${timeoutMs}ms` : `LingxiGraph steering request failed: ${error instanceof Error ? error.message : String(error)}`, true)
+    }
+    const text = await response.text().catch((error) => { throw new LingxiGraphSteerError(`LingxiGraph steering response failed: ${String(error)}`, true, response.status) })
+    let body: Record<string, unknown> = {}
+    if (text) {
+      try { const parsed = JSON.parse(text); if (isRecord(parsed)) body = parsed } catch { /* status remains authoritative */ }
+    }
+    const state = String(body.status ?? body.outcome ?? body.code ?? '').toLowerCase()
+    const eventId = typeof body.eventId === 'string' ? body.eventId : typeof body.event_id === 'string' ? body.event_id : null
+    // Some runtimes report an idempotent replay as 409 while others use
+    // 200/202. In either form it was already durably accepted and must not
+    // fall through into a second turn.
+    if (state.includes('duplicate')) return { outcome: 'duplicate', eventId }
+    if (response.ok) return { outcome: 'accepted', eventId }
+    if ([409, 410, 422].includes(response.status) && /(terminal|finaliz|completed|not.?running|closed)/.test(`${state} ${text}`.toLowerCase())) {
+      return { outcome: 'terminal', eventId: null, reason: text || `run rejected steering (${response.status})` }
+    }
+    throw new LingxiGraphSteerError(`LingxiGraph steering responded ${response.status}${text ? `: ${text}` : ''}`, response.status === 408 || response.status === 429 || response.status >= 500, response.status)
   } finally {
     clearTimeout(timer)
   }

@@ -32,6 +32,7 @@ import { inprocClient, isAgentBusy } from './runtime/inproc-client.js'
 import { classifyInboxTriage, type InboxTriageVerdict } from './inbox-triage.js'
 import type { AgentTurnOptions } from './turn.js'
 import { scheduleManagedAgentTurn } from './managed-executor.js'
+import { routeLingxiGraphSteering } from './lingxigraph-steering-router.js'
 import { Semaphore } from '../concurrency.js'
 import { parseMentions } from '../mentions.js'
 import { resolveAgentRecipients } from './message-routing.js'
@@ -50,6 +51,7 @@ export interface SteerWakePayload {
   messageId: string
   conversationId: string
   authorName: string
+  authorId?: string
   body: string
   /** Tenant tag so the steer-ack typing broadcast routes to clients instead of
    *  being dropped as "untagged". Sourced from the message-new event. Optional
@@ -308,6 +310,14 @@ async function wakeOne(
     // managed-executor.ts, keyed by agentId.
     if (env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server' && env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph') {
       const turnOptions: AgentTurnOptions = { trigger: reason, ...options }
+      if (steerPayload) {
+        const routed = await routeLingxiGraphSteering(agentId, steerPayload)
+        if (routed.handled) {
+          console.info(`[scheduler] message ${steerPayload.messageId} -> agent ${agentId} -> run ${routed.runId} -> steering ${routed.result?.eventId ?? routed.result?.outcome} (${routed.result?.outcome})`)
+          return
+        }
+        if (routed.runId) console.info(`[scheduler] run ${routed.runId} rejected/failed steering; message ${steerPayload.messageId} falls back to a new turn`)
+      }
       void scheduleManagedAgentTurn(agentId, turnOptions).catch((err) =>
         console.error(`[scheduler] scheduleManagedAgentTurn(${agentId}) failed:`,
           err instanceof Error ? err.message : String(err)),
@@ -562,7 +572,7 @@ async function wake(payload: MessageNewEvent): Promise<void> {
   let steerPayload: SteerWakePayload | null = null
   if (messageKind !== 'system' && messageBody && messageBody.length > 0) {
     const authorName = await resolveAuthorName(authorId)
-    steerPayload = { messageId, conversationId, authorName, body: messageBody, companyId: payload.companyId ?? '' }
+    steerPayload = { messageId, conversationId, authorId, authorName, body: messageBody, companyId: payload.companyId ?? '' }
   }
 
   const { rows: convoRows } = await pool.query<{ members: string[]; kind: string; leader_id: string | null; muted_agent_ids: string[] }>(

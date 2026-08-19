@@ -9,6 +9,8 @@ import {
   executeCommunicationActions,
   parseLingxiGraphRunResult,
   runLingxiGraph,
+  steerLingxiGraphRun,
+  LingxiGraphSteerError,
 } from '../agents/lingxigraph-adapter.js'
 
 const result = (actions: unknown[]) => ({
@@ -17,6 +19,40 @@ const result = (actions: unknown[]) => ({
   reason: 'handled',
   actions,
   modelCalls: [{ model: 'test-model', usage: null }],
+})
+
+test('steering adapter posts a stable idempotency key and recognizes duplicates', async () => {
+  let seenUrl = ''
+  let seenInit: RequestInit = {}
+  const output = await steerLingxiGraphRun({
+    runId: 'run/one', kind: 'message.new', payload: { messageId: 'm1' }, idempotencyKey: 'm1',
+  }, {
+    url: 'http://runtime.local:8124', token: 'secret',
+    fetchImpl: fakeFetch((url, init) => {
+      seenUrl = url; seenInit = init
+      return new Response(JSON.stringify({ status: 'duplicate', eventId: 'evt-1' }), { status: 200 })
+    }),
+  })
+  assert.equal(seenUrl, 'http://runtime.local:8124/v1/runs/run%2Fone/steer')
+  assert.equal((seenInit.headers as Record<string, string>)['idempotency-key'], 'm1')
+  assert.deepEqual(output, { outcome: 'duplicate', eventId: 'evt-1' })
+})
+
+test('steering adapter classifies terminal rejection and transient failures', async () => {
+  const terminal = await steerLingxiGraphRun({ runId: 'r1', kind: 'message.new', payload: {}, idempotencyKey: 'm1' }, {
+    url: 'http://runtime.local', fetchImpl: fakeFetch(() => new Response(JSON.stringify({ code: 'run_finalizing' }), { status: 409 })),
+  })
+  assert.equal(terminal.outcome, 'terminal')
+  await assert.rejects(steerLingxiGraphRun({ runId: 'r1', kind: 'message.new', payload: {}, idempotencyKey: 'm1' }, {
+    url: 'http://runtime.local', fetchImpl: fakeFetch(() => new Response('unavailable', { status: 503 })),
+  }), (error: unknown) => error instanceof LingxiGraphSteerError && error.transient)
+})
+
+test('steering adapter recognizes a 409 duplicate as already handled', async () => {
+  const duplicate = await steerLingxiGraphRun({ runId: 'r1', kind: 'message.new', payload: {}, idempotencyKey: 'm1' }, {
+    url: 'http://runtime.local', fetchImpl: fakeFetch(() => new Response(JSON.stringify({ status: 'duplicate', event_id: 'e1' }), { status: 409 })),
+  })
+  assert.deepEqual(duplicate, { outcome: 'duplicate', eventId: 'e1' })
 })
 
 test('strictly validates actions before execution', () => {

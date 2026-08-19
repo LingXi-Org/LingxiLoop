@@ -2149,7 +2149,11 @@ ${peerWorkBlock}`.trim()
       data: { model, contextChars: contextPrompt.length }, stage: 'thinking',
     })
     const startedAt = Date.now()
-    const result = await runLingxiGraph({
+    const { registerActiveLingxiGraphRun, clearActiveLingxiGraphRun } = await import('./lingxigraph-active-runs.js')
+    registerActiveLingxiGraphRun({ runId, agentId, companyId: runCompanyId })
+    let result
+    try {
+      result = await runLingxiGraph({
       version: 1, runId,
       agent: { id: persona.id, name: persona.name, role: persona.role, model },
       trigger: options.trigger ?? 'message.new', systemPrompt: instructions, contextPrompt,
@@ -2157,7 +2161,10 @@ ${peerWorkBlock}`.trim()
       url: env.LINGXIGRAPH_URL,
       token: env.LINGXIGRAPH_TOKEN,
       timeoutMs: env.LINGXIGRAPH_RUN_TIMEOUT_MS,
-    })
+      })
+    } finally {
+      clearActiveLingxiGraphRun(agentId, runId)
+    }
     const elapsedMs = Date.now() - startedAt
     const perCallLatency = result.modelCalls.length > 0 ? Math.round(elapsedMs / result.modelCalls.length) : elapsedMs
     for (const call of result.modelCalls) {
