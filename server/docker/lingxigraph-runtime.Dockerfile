@@ -12,11 +12,18 @@
 #     -t quay.io/yetoneful/lingxigraph-runtime:dev \
 #     .
 
-FROM python:3.12-slim-bookworm
+ARG PYTHON_BASE_IMAGE=docker.m.daocloud.io/library/python:3.12-slim-bookworm
+ARG APT_MIRROR=http://mirrors.aliyun.com
+ARG PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple
+
+FROM ${PYTHON_BASE_IMAGE}
+ARG APT_MIRROR
+ARG PIP_INDEX_URL
 
 # curl — used by the container HEALTHCHECK below.
 # ca-certificates — TLS to the configured OpenAI-compatible provider.
-RUN apt-get update \
+RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g; s|https://deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
+  && apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        curl \
        ca-certificates \
@@ -25,7 +32,7 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY server/lingxigraph/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --index-url "${PIP_INDEX_URL}" -r requirements.txt
 
 COPY server/lingxigraph/lingxigraph_runner.py server/lingxigraph/server.py ./
 

@@ -7,7 +7,7 @@
 
 services:
   postgres:
-    image: pgvector/pgvector:pg16
+    image: ${PGVECTOR_IMAGE:-docker.m.daocloud.io/pgvector/pgvector:pg16}
     restart: unless-stopped
     environment:
       POSTGRES_USER: lingxiloop
@@ -24,7 +24,7 @@ services:
     networks: [lingxiloop-mvp]
 
   redis:
-    image: redis:7-alpine
+    image: ${REDIS_IMAGE:-docker.m.daocloud.io/library/redis:7-alpine}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -38,6 +38,10 @@ services:
     build:
       context: .
       dockerfile: server/docker/lingxigraph-runtime.Dockerfile
+      args:
+        PYTHON_BASE_IMAGE: ${PYTHON_BASE_IMAGE:-docker.m.daocloud.io/library/python:3.12-slim-bookworm}
+        APT_MIRROR: ${APT_MIRROR:-http://mirrors.aliyun.com}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple}
     restart: unless-stopped
     environment:
       - OPENAI_API_KEY
@@ -57,6 +61,10 @@ services:
     build:
       context: .
       dockerfile: server/docker/cumora-server.Dockerfile
+      args:
+        NODE_BASE_IMAGE: ${NODE_BASE_IMAGE:-docker.m.daocloud.io/library/node:20-bookworm-slim}
+        APT_MIRROR: ${APT_MIRROR:-http://mirrors.aliyun.com}
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
     restart: unless-stopped
     depends_on:
       postgres:

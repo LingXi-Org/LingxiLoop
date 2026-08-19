@@ -21,7 +21,12 @@
 # OrbStack auto-loads into its K8s.
 
 # ─── stage 1: install runtime node deps (prod only) ─────────────────
-FROM node:20-bookworm-slim AS deps
+ARG NODE_BASE_IMAGE=docker.m.daocloud.io/library/node:20-bookworm-slim
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+ARG APT_MIRROR=http://mirrors.aliyun.com
+
+FROM ${NODE_BASE_IMAGE} AS deps
+ARG NPM_REGISTRY
 WORKDIR /app
 COPY package.json package-lock.json ./
 # `--omit=dev` skips devDependencies — that's electron, vite,
@@ -29,7 +34,7 @@ COPY package.json package-lock.json ./
 # whose postinstall fails on linux/arm64), etc. Server runtime only
 # needs the actual runtime deps + tsx (moved out of devDeps for
 # exactly this reason).
-RUN npm ci --omit=dev --no-audit --no-fund --prefer-offline
+RUN npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer-offline
 
 # ─── stage 2: build the web SPA bundle ──────────────────────────────
 # Separate stage with FULL devDeps installed so vite + tsc + tailwind +
@@ -41,7 +46,8 @@ RUN npm ci --omit=dev --no-audit --no-fund --prefer-offline
 # as api.cumora.ai), so relative URLs (`/api/...`) work without any
 # baked origin. Builders pointing the SPA at a remote API (e.g. for a
 # separate Cloudflare Pages deploy) should override via --build-arg.
-FROM node:20-bookworm-slim AS spa-build
+FROM ${NODE_BASE_IMAGE} AS spa-build
+ARG NPM_REGISTRY
 WORKDIR /app
 ARG VITE_CUMORA_API_BASE=""
 ARG VITE_PUBLIC_POSTHOG_KEY=""
@@ -57,7 +63,7 @@ COPY package.json package-lock.json ./
 # need any postinstall (esbuild's platform native lands via
 # optionalDependencies, not a script), so skipping all postinstall
 # scripts is safe in this stage AND faster than apt-get'ing bzip2.
-RUN npm ci --no-audit --no-fund --prefer-offline --ignore-scripts
+RUN npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
 COPY src ./src
 COPY public ./public
 COPY index.html ./
@@ -69,9 +75,11 @@ COPY tailwind.config.ts ./
 RUN npm run build
 
 # ─── stage 3: runtime ───────────────────────────────────────────────
-FROM node:20-bookworm-slim
+FROM ${NODE_BASE_IMAGE}
+ARG APT_MIRROR
 
-RUN apt-get update \
+RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g; s|https://deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
+  && apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        tini \
        ca-certificates \
