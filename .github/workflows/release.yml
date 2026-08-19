@@ -1,35 +1,93 @@
-name: Desktop Release
+name: Web Release
 
-# LingxiLoop owns its artifacts. Tags never dispatch into a donor repository.
+# Current LingxiLoop distribution target is Web/server only.
+# Updating VERSION on main validates the Web/server build, creates the matching
+# v* tag on that exact commit, and publishes a GitHub Release in this repo.
+# It deliberately does NOT build Electron/mobile artifacts and does not deploy
+# or mutate a running server.
 on:
   push:
-    tags: ['v*']
-  workflow_dispatch:
+    branches: [main]
+    paths: ['VERSION']
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            target: mac
-          - os: windows-latest
-            target: win
-          - os: ubuntu-latest
-            target: linux
-    runs-on: ${{ matrix.os }}
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          if [[ -z "$VERSION" || "$VERSION" == v* ]]; then
+            echo "::error::VERSION must be a non-empty version without the v prefix"
+            exit 1
+          fi
+          TAG="v${VERSION}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
       - run: npm ci
-      - name: Build and publish to this repository
+
+      - name: Validate Web + server build
+        run: |
+          npm run typecheck
+          npm run server:typecheck
+          npm run build
+
+      - name: Create release tag if needed
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
+            EXISTING="$(git rev-list -n 1 "$TAG")"
+            if [[ "$EXISTING" != "$GITHUB_SHA" ]]; then
+              echo "::error::$TAG already resolves to $EXISTING, not release commit $GITHUB_SHA"
+              exit 1
+            fi
+            echo "$TAG already resolves to this release commit"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" "$GITHUB_SHA" -m "LingxiLoop $TAG"
+            git push origin "$TAG"
+          fi
+
+      - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --${{ matrix.target }} --publish always
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if [[ "$TAG" == *-* ]]; then
+            EXTRA+=(--prerelease)
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; nothing to create."
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "LingxiLoop $TAG" \
+            --generate-notes \
+            "${EXTRA[@]}"

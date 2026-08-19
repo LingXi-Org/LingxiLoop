@@ -1,23 +1,9 @@
-# MVP single-server Docker Compose deployment (issue #9).
+# MVP single-server Docker Compose deployment.
 #
-# Brings up the full Human → Agent → LingxiGraph → action loop on ONE
-# machine, without Kubernetes and without a per-Agent Pod:
+# Browser -> lingxiloop (SPA + API + WebSocket) -> Postgres / Redis
+#                                             -> LingxiGraph Runtime
 #
-#   browser → lingxiloop (API + WS) → postgres / redis
-#                        └─ HTTP /v1/turn → lingxigraph-runtime
-#
-# This is the MVP topology only:
-#   - one `lingxiloop` API replica (server-side managed agent dispatch is
-#     in-process only — see LINGXILOOP_MANAGED_AGENT_EXECUTION in .env.example)
-#   - one `lingxigraph-runtime` replica
-#   - no Kubernetes, no per-Agent Pod, no distributed lock/queue
-#
-# Quickstart:
-#   cp .env.example .env            # fill in OPENAI_API_KEY at minimum
-#   docker compose -f docker-compose.mvp.yml build
-#   docker compose -f docker-compose.mvp.yml up -d
-#   docker compose -f docker-compose.mvp.yml ps
-#   npm run mvp:smoke               # Human → Agent → LingxiGraph smoke (see README)
+# Web/server mode only: one LingxiLoop replica, no Kubernetes/per-Agent Pod.
 
 services:
   postgres:
@@ -54,12 +40,6 @@ services:
       dockerfile: server/docker/lingxigraph-runtime.Dockerfile
     restart: unless-stopped
     environment:
-      # Bare-name entries pass the value through from the shell/.env ONLY
-      # when it's actually set there — unlike `${VAR:-}`, an unset var is
-      # left unset in the container instead of being forced to "". That
-      # matters here: lingxigraph_runner.py does
-      # `os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")`, so an
-      # explicit empty string would defeat that default.
       - OPENAI_API_KEY
       - OPENAI_BASE_URL
       - LINGXIGRAPH_TOKEN
@@ -90,30 +70,56 @@ services:
       - PORT=5181
       - DATABASE_URL=postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
       - REDIS_URL=redis://redis:6379
-      # Required — env.ts refuses to boot in production on the public dev
-      # default. Generate one with `openssl rand -hex 32` and put it in
-      # .env; see .env.example.
-      - AGENT_RUNTIME_SECRET=${AGENT_RUNTIME_SECRET:?AGENT_RUNTIME_SECRET is required in .env — see .env.example (openssl rand -hex 32)}
+      - AGENT_RUNTIME_SECRET=${AGENT_RUNTIME_SECRET:?AGENT_RUNTIME_SECRET is required in .env — generate with openssl rand -hex 32}
+
+      # Model/provider configuration.
       - OPENAI_API_KEY
-      # Keep the provider base consistent between LingxiGraph and the
-      # LingxiLoop server-side support/triage client. Unset means the OpenAI
-      # SDK default endpoint; set it for any OpenAI-compatible provider.
       - OPENAI_BASE_URL
-      # Bare-name passthrough (see lingxigraph-runtime above for why): an
-      # unset OPENAI_MODEL / OPENAI_MODEL_SUPPORT must stay UNSET so
-      # env.ts's own `?? 'gpt-5.5'` / `?? 'gpt-5.4-mini'` defaults apply,
-      # not get short-circuited by an explicit "".
       - OPENAI_MODEL
       - OPENAI_MODEL_SUPPORT
-      # MVP-fixed reasoning + dispatch mode — see .env.example for the full
-      # explanation of why these two go together and why replicas must stay
-      # at 1 in `server` execution mode.
+      - OPENAI_COMPACTION_MODEL
+      - OPENAI_IMAGE_MODEL
+
+      # Web production origin / OAuth. Bare-name passthrough means values stay
+      # unset unless configured in .env; server defaults remain intact for dev.
+      - CUMORA_PUBLIC_ORIGIN
+      - CUMORA_AUTH_DONE_URL
+      - CUMORA_AUTH_RETURN_ALLOWLIST
+      - CUMORA_INVITE_BASE_URL
+      - CUMORA_CORS_ORIGINS
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      - GITHUB_CLIENT_ID
+      - GITHUB_CLIENT_SECRET
+
+      # Public upload/object-storage configuration. Local mode is persisted by
+      # the named volume below; R2/S3 can be enabled by setting all core R2 vars.
+      - PUBLIC_HOST
+      - R2_ENDPOINT
+      - R2_BUCKET
+      - R2_ACCESS_KEY_ID
+      - R2_SECRET_ACCESS_KEY
+      - R2_PUBLIC_BASE
+      - R2_URL_SIGNING_SECRET
+      - R2_URL_TTL_SECONDS
+
+      # Optional integrations useful to the Web/server deployment.
+      - SKILLHUB_URL
+      - RESEND_API_KEY
+      - EMAIL_DOMAIN
+      - EMAIL_INBOUND_HMAC_SECRET
+
+      # MVP-fixed reasoning + dispatch mode.
       - LINGXILOOP_REASONING_RUNTIME=lingxigraph
       - LINGXILOOP_MANAGED_AGENT_EXECUTION=server
       - LINGXIGRAPH_URL=http://lingxigraph-runtime:8124
       - LINGXIGRAPH_TOKEN
     ports:
-      - "${LINGXILOOP_PORT:-5181}:5181"
+      # Safe default for same-host Caddy/Nginx. Override only when an external
+      # load balancer/network explicitly needs to reach the container port.
+      - "${LINGXILOOP_BIND_ADDRESS:-127.0.0.1}:${LINGXILOOP_PORT:-5181}:5181"
+    volumes:
+      - lingxiloop-uploads:/app/server/uploads
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 5s
@@ -127,3 +133,4 @@ networks:
 
 volumes:
   lingxiloop-postgres-data: {}
+  lingxiloop-uploads: {}
