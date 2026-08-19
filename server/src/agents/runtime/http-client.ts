@@ -172,7 +172,7 @@ export class HttpRuntimeClient implements AgentRuntimeClient {
     return out.prompt
   }
 
-  async executeCli(_agentId: string, argv: string[], internal?: { idempotencyKey?: string }): Promise<CliResult> {
+  async executeCli(_agentId: string, argv: string[], internal?: { idempotencyKey?: string; deferReadCursor?: boolean }): Promise<CliResult> {
     // The `/cli` server route only accepts `{ argv }` — it has no channel
     // for out-of-band context, and deliberately so (issue #7: the whole
     // point of `internal` is that it must NOT be settable by anything a
@@ -181,7 +181,7 @@ export class HttpRuntimeClient implements AgentRuntimeClient {
     // InProcRuntimeClient, never through this HTTP client — so getting
     // here with a key set would mean a caller bug, not a real crash-retry
     // path. Fail loudly rather than silently executing without dedup.
-    if (internal?.idempotencyKey) {
+    if (internal?.idempotencyKey || internal?.deferReadCursor) {
       throw new Error('HttpRuntimeClient.executeCli does not support idempotency keys — communication-action execution must run against InProcRuntimeClient')
     }
     return this.call<CliResult>('POST', '/cli', { argv })

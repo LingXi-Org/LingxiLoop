@@ -24,6 +24,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import type { ResponseStreamEvent } from 'openai/resources/responses/responses'
 import { runCli } from '../agents/cli.js'
+import { inprocClient } from '../agents/runtime/inproc-client.js'
 import { __setPodToolOverrideForTesting } from '../agents/runtime/pod-tools.js'
 import type { ToolResult } from '../agents/tools-shared.js'
 import { tBash } from '../agents/tools-shared.js'
@@ -970,4 +971,36 @@ test('[integration] conversation cursor advances after an explicit reply — inb
   assert.equal(replyRows.length, 1, 'agent reply exists')
   assert.equal(rows[0].last_read_message_id, replyRows[0].id, 'cursor id is the committed reply')
   assert.equal(cursor, new Date(replyRows[0].created_at).getTime(), 'cursor time is the committed reply timestamp')
+})
+
+test('[integration] structured reply does not skip a peer message that arrived after inbox load', async () => {
+  const { companyId, agentId, humanId, conversationId } = await seedDirect()
+  const m1 = await postHuman({ conversationId, companyId, humanId, body: 'first', sequence: 1 })
+  await pool.query(
+    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at, last_read_message_id)
+     VALUES ($1, $2, '1970-01-01T00:00:00Z'::timestamptz, '')`,
+    [agentId, conversationId],
+  )
+
+  // M1 is the stable input snapshot. M2 lands while Graph is reasoning,
+  // before its structured message.send commits.
+  await delay(5)
+  const m2 = await postHuman({ conversationId, companyId, humanId, body: 'second', sequence: 2 })
+  const reply = await runCli(['--as', agentId, 'reply', conversationId, 'answer to first'], {
+    idempotencyKey: `structured-${randomUUID()}`,
+    deferReadCursor: true,
+  })
+  assert.equal(reply.ok, true, `structured reply failed: ${reply.text}`)
+
+  const { rows: beforeCommit } = await pool.query<{ last_read_message_id: string }>(
+    `SELECT last_read_message_id FROM conversation_reads WHERE user_id = $1 AND conversation_id = $2`,
+    [agentId, conversationId],
+  )
+  assert.equal(beforeCommit[0].last_read_message_id, '', 'message sink must not own the structured-turn cursor')
+
+  // The successful batch coordinator acknowledges exactly what Graph saw.
+  await inprocClient.markConversationRead({ agentId, conversationId, upToMessageId: m1 })
+  const unread = await inprocClient.loadInbox(agentId)
+  assert.equal(unread.some((message) => message.id === m1), false, 'M1 is acknowledged')
+  assert.equal(unread.some((message) => message.id === m2), true, 'M2 remains unread for the next wake')
 })

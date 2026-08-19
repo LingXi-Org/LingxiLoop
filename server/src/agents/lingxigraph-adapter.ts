@@ -244,7 +244,7 @@ export interface CommunicationExecutionContext {
    *  argv is caller-controllable — a legacy bash-tool agent, human CLI, or
    *  BYOA pod could set an argv flag directly, letting them spoof or reuse
    *  a key across conversations). Only this executor ever populates it. */
-  executeCli: (argv: string[], internal?: { idempotencyKey?: string }) => Promise<CliResult>
+  executeCli: (argv: string[], internal?: { idempotencyKey?: string; deferReadCursor?: boolean }) => Promise<CliResult>
   timeoutMs?: number
   /** Durable replay-detection ledger (Postgres-backed in production —
    *  see action-ledger.ts). Optional so callers/tests that don't care
@@ -298,7 +298,12 @@ export async function executeCommunicationActions(
         timer = setTimeout(() => reject(new Error(`communication action timed out after ${timeoutMs}ms`)), timeoutMs)
       })
       const result = await Promise.race([
-        ctx.executeCli(communicationActionToArgv(action), sinkOwned ? { idempotencyKey: key } : undefined),
+        ctx.executeCli(
+          communicationActionToArgv(action),
+          sinkOwned
+            ? { idempotencyKey: key, ...(action.type === 'message.send' ? { deferReadCursor: true } : {}) }
+            : undefined,
+        ),
         timeout,
       ]).finally(() => { if (timer) clearTimeout(timer) })
       results.push(result)
