@@ -72,11 +72,11 @@ function WebHandoff() {
       style={{ background: 'var(--paper)' }}
     >
       <div className="w-[360px] flex flex-col items-center gap-7 text-center">
-        <CloudLogo size={64} />
+        <CloudLogo size={64} rounded />
         <div className="space-y-1">
-          <div className="font-display text-[22px] text-ink-900">You're signed in</div>
+          <div className="font-display text-[22px] text-ink-900">您已登录</div>
           <div className="font-display italic text-[13px] text-ink-400">
-            Opening LingxiLoop on your desktop…
+            在桌面上打开 LingxiLoop...
           </div>
         </div>
         <div className="w-full flex flex-col gap-2.5">
@@ -87,27 +87,26 @@ function WebHandoff() {
               background: 'var(--skype)',
               boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
             }}
-          >Open in LingxiLoop desktop</button>
+          >在 LingxiLoop 桌面端打开</button>
           <GetDesktopAppLink variant="button-secondary" />
           <button
             onClick={() => void signOut()}
             className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-          >Sign out</button>
+          >退出登录</button>
         </div>
         <div className="text-[11px] text-ink-300 font-display italic">
-          LingxiLoop is available here in your browser.
+          LingxiLoop 可在您的浏览器中找到。
         </div>
       </div>
     </div>
   )
 }
-
 /** Unauthenticated landing. Sign-in kicks the standard OAuth round-trip;
  *  the result lands back here either as a signed-in session (→ Handoff),
  *  as a waitlist verdict (→ WaitlistConfirmedScreen, handled in App.tsx),
  *  or as a suspended verdict (→ SuspendedScreen, also App.tsx). */
 function WebLanding() {
-  const [busy, setBusy] = useState<'google' | 'github' | null>(null)
+  const [busy, setBusy] = useState<'lingxi' | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const approvedEntry = new URLSearchParams(location.search).has('approved')
 
@@ -117,10 +116,10 @@ function WebLanding() {
     if (error) setErr(decodeURIComponent(error))
   }, [])
 
-  const go = (provider: 'google' | 'github') => {
-    setBusy(provider); setErr(null)
+  const go = () => {
+    setBusy('lingxi'); setErr(null)
     const returnUrl = `${location.origin}${location.pathname}`
-    location.assign(api.authStartUrl(provider, { returnUrl }))
+    location.assign(api.authStartUrl('lingxi', { returnUrl }))
   }
 
   return (
@@ -129,31 +128,21 @@ function WebLanding() {
       style={{ background: 'var(--paper)' }}
     >
       <div className="w-[360px] flex flex-col items-center gap-7">
-        <CloudLogo size={64} />
+        <CloudLogo size={64} rounded />
         <div className="text-center space-y-1">
-          <div className="font-display text-[22px] text-ink-900">LingxiLoop works on the Web</div>
+          <div className="font-display text-[22px] text-ink-900">在网页中使用 LingxiLoop</div>
           <div className="font-display italic text-[13px] text-ink-400">
-            Sign in to enter your workspace
+            登录以进入您的工作区
           </div>
         </div>
         <div className="w-full flex flex-col gap-3">
           <button
             type="button"
-            onClick={() => go('google')}
+            onClick={go}
             disabled={busy !== null}
-            className="h-11 rounded-[10px] border border-ink-200 bg-white hover:bg-cloud transition-colors flex items-center justify-center gap-3 text-[14px] text-ink-800 disabled:opacity-60"
+            className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
           >
-            <GoogleMark />
-            {busy === 'google' ? 'Redirecting…' : 'Continue with Google'}
-          </button>
-          <button
-            type="button"
-            onClick={() => go('github')}
-            disabled={busy !== null}
-            className="h-11 rounded-[10px] bg-[#1f2328] hover:bg-[#2a3037] text-white transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
-          >
-            <GitHubMark />
-            {busy === 'github' ? 'Redirecting…' : 'Continue with GitHub'}
+            {busy === 'lingxi' ? '正在跳转…' : '使用 LingxiIdentity 继续'}
           </button>
         </div>
         {err && (
@@ -163,7 +152,7 @@ function WebLanding() {
         )}
         <div className="w-full flex items-center gap-3 text-[11px] text-ink-300 font-display italic">
           <div className="flex-1 h-px bg-ink-100" />
-          or
+          或
           <div className="flex-1 h-px bg-ink-100" />
         </div>
         <div className="w-full flex flex-col gap-2.5">
@@ -172,7 +161,7 @@ function WebLanding() {
             onClick={() => tryDeepLink('lingxiloop://open')}
             className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-ink-700 transition"
             style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
-          >Open in LingxiLoop desktop</button>
+          >在 LingxiLoop 桌面端打开</button>
           <GetDesktopAppLink
             variant="button-secondary"
             gateBypass={approvedEntry}
@@ -181,28 +170,9 @@ function WebLanding() {
           />
         </div>
         <div className="text-[11px] text-ink-300 text-center font-display italic">
-          We use your provider only to verify it's you — no posting, no scope creep.
+          我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
         </div>
       </div>
     </div>
-  )
-}
-
-function GoogleMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
-  )
-}
-
-function GitHubMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1-.02-1.95-3.2.69-3.88-1.54-3.88-1.54-.52-1.32-1.28-1.67-1.28-1.67-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18.92-.26 1.91-.39 2.9-.39.99 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.12 3.06.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.4-5.25 5.68.41.36.78 1.07.78 2.16 0 1.56-.01 2.81-.01 3.19 0 .31.21.67.8.55C20.22 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/>
-    </svg>
   )
 }

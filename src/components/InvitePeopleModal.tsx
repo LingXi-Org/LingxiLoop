@@ -116,10 +116,10 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
       >
         <div className="px-6 py-5 border-b border-ink-100 shrink-0">
           <h2 className="font-display font-medium text-[20px] tracking-tight">
-            Invite to {companyName}
+            邀请参加 {companyName}
           </h2>
           <div className="text-[12.5px] text-ink-500 italic font-display mt-0.5">
-            Add humans to this workspace. Share a link or invite by email.
+            将人员添加到此工作区。通过电子邮件分享链接或邀请。
           </div>
         </div>
 
@@ -139,7 +139,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                     color: on ? 'white' : 'var(--ink-500)',
                   }}
                 >
-                  {t === 'link' ? 'Invite link' : 'By email'}
+                  {t === 'link' ? "邀请链接" : "通过电子邮件"}
                 </button>
               )
             })}
@@ -150,10 +150,10 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
             <div className="space-y-3">
               <div>
                 <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">
-                  Email
+                  电子邮件
                 </label>
                 <div className="text-[11.5px] text-ink-300 mb-1.5 font-display italic">
-                  Single-use, locked to this address. They must sign in with the same email to redeem.
+                  一次性使用，锁定到该地址。他们必须使用同一电子邮件登录才能兑换。
                 </div>
                 <input
                   type="email"
@@ -177,11 +177,11 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                   />
                   <span className="flex-1 min-w-0">
                     <span className="block text-[12.5px] font-semibold text-ink-800">
-                      Email this invite to them
+                      通过电子邮件将此邀请发送给他们
                     </span>
                     <span className="block text-[11.5px] text-ink-400 font-display italic mt-0.5 leading-snug">
-                      We'll send a short invitation email with your name on it.
-                      Replies go to your inbox. Uncheck if you'd rather share the link yourself.
+                      我们将发送一条短信 <b className="not-italic text-ink-600">邀请@cumora.ai</b> 上面有你的名字。
+                      回复将发送至您的收件箱。如果您愿意自己分享链接，请取消选中。
                     </span>
                   </span>
                 </label>
@@ -191,14 +191,14 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
 
           {tab === 'link' && (
             <div className="rounded-[10px] p-3 text-[12px] text-ink-500 font-display italic" style={{ background: 'var(--paper)', border: '1px dashed var(--ink-200)' }}>
-              Anyone with the link can join. Use this for a small team — the link expires in 7 days and can be revoked anytime.
+              知道链接的任何人都可以加入。将此用于小型团队 - 该链接将在 7 天后过期，并且可以随时撤销。
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">
-                Role
+                角色
               </label>
               <div className="flex gap-1.5">
                 {(['member', 'admin'] as const).map((r) => {
@@ -215,7 +215,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                         border: '1px solid var(--ink-100)',
                       }}
                     >
-                      {r === 'member' ? 'Member' : 'Admin'}
+                      {r === 'member' ? "会员" : "管理员"}
                     </button>
                   )
                 })}
@@ -224,15 +224,15 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
 
             <div>
               <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">
-                Note
-                <span className="ml-1.5 text-ink-300 normal-case font-medium tracking-normal">— optional</span>
+                注意
+                <span className="ml-1.5 text-ink-300 normal-case font-medium tracking-normal">— 可选</span>
               </label>
               <input
                 type="text"
                 maxLength={120}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="What's this invite for?"
+                placeholder="这个邀请有什么用？"
                 className="ip-input"
               />
             </div>
@@ -256,9 +256,9 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                 boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
               }}
             >
-              {busy ? 'Creating…'
-                : tab === 'email' ? 'Create email invite'
-                : 'Create invite link'}
+              {busy ? "正在创建..."
+                : tab === 'email' ? "创建电子邮件邀请"
+                : "创建邀请链接"}
             </button>
           </div>
 
@@ -266,15 +266,15 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
           <div className="pt-2">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-[12.5px] font-bold tracking-wide uppercase text-ink-500">
-                Pending invitations
+                待处理的邀请
               </h3>
               <span className="text-[11px] text-ink-300">{activeInvitations.length}</span>
             </div>
             {loadingList && (
-              <div className="text-[12px] text-ink-300 italic font-display py-4 text-center">loading…</div>
+              <div className="text-[12px] text-ink-300 italic font-display py-4 text-center">加载中...</div>
             )}
             {!loadingList && activeInvitations.length === 0 && (
-              <div className="text-[12.5px] text-ink-400 italic font-display py-3">No pending invitations.</div>
+              <div className="text-[12.5px] text-ink-400 italic font-display py-3">没有待处理的邀请。</div>
             )}
             <div className="flex flex-col gap-1.5">
               {activeInvitations.map((inv) => (
@@ -284,7 +284,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
             {historicalInvitations.length > 0 && (
               <details className="mt-3">
                 <summary className="text-[11.5px] text-ink-400 cursor-pointer font-display italic hover:text-ink-600">
-                  Show {historicalInvitations.length} past invitation{historicalInvitations.length === 1 ? '' : 's'}
+                  显示 {historicalInvitations.length} 过去的邀请{historicalInvitations.length === 1 ? '' : 's'}
                 </summary>
                 <div className="flex flex-col gap-1.5 mt-2">
                   {historicalInvitations.map((inv) => (
@@ -301,34 +301,18 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
 
         <div className="px-6 py-4 border-t border-ink-100 flex items-center gap-2 bg-paper shrink-0">
           <div className="text-[11.5px] text-ink-300 italic font-display">
-            Invitations expire after 7 days.
+            邀请将在 7 天后过期。
           </div>
           <div className="flex-1" />
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >Done</button>
+          >完成</button>
         </div>
       </div>
 
-      <style>{`
-        .ip-input {
-          width: 100%;
-          padding: 8px 12px;
-          font-size: 13.5px;
-          background: var(--paper);
-          border: 1.5px solid var(--ink-100);
-          border-radius: 10px;
-          outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s;
-          color: var(--ink-900);
-        }
-        .ip-input:focus {
-          border-color: var(--sky2-300);
-          box-shadow: 0 0 0 3px var(--sky-50);
-        }
-      `}</style>
+      <style>{".ip-输入 {\n          宽度：100%；\n          内边距：8 像素 12 像素；\n          字体大小：13.5px；\n          背景：var(--paper);\n          边框：1.5px 实心 var(--ink-100);\n          边框半径：10px；\n          概要：无；\n          过渡：边框颜色0.15s，框阴影0.15s；\n          颜色：var(--ink-900)；\n        }\n        .ip-输入：焦点{\n          边框颜色：var(--sky2-300);\n          盒子阴影：0 0 0 3px var(--sky-50);\n        }"}</style>
     </div>
   )
 }
@@ -362,20 +346,20 @@ function CreatedInviteCard({ invite, onDone }: { invite: ApiInvitationWithToken;
       <div className="text-[11.5px] text-ink-500 italic font-display">
         {invite.email
           ? delivery?.attempted && delivery.ok
-            ? <>Email delivered to <b className="not-italic text-ink-700">{invite.email}</b>. The link below is the same one we sent — copy it if you want to nudge them on another channel.</>
-            : <>Locked to <b className="not-italic text-ink-700">{invite.email}</b> — they must sign in with that email.</>
-          : <>Anyone with this link can join as a {invite.role}.</>}
+            ? <>电子邮件已发送至 <b className="not-italic text-ink-700">{invite.email}</b>。下面的链接与我们发送的链接相同 - 如果您想将它们推送到另一个频道，请复制该链接。</>
+            : <>锁定至 <b className="not-italic text-ink-700">{invite.email}</b> — 他们必须使用该电子邮件登录。</>
+          : <>知道此链接的任何人都可以作为 {invite.role}.</>}
       </div>
       {delivery && delivery.attempted && !delivery.ok && (
         <div className="text-[11.5px] py-1.5 px-2.5 rounded-[8px]"
              style={{ background: 'var(--coral-soft)', color: 'var(--coral-deep)', border: '1px solid var(--coral-deep)' }}>
-          Email send failed: {delivery.error ?? 'unknown error'}. Copy the link and share it manually.
+          电子邮件发送失败： {delivery.error ?? 'unknown error'}。复制链接并手动共享。
         </div>
       )}
       {delivery?.skipped === 'no_email_config' && (
         <div className="text-[11.5px] text-ink-500 py-1.5 px-2.5 rounded-[8px]"
              style={{ background: 'var(--cloud)', border: '1px dashed var(--ink-200)' }}>
-          This server isn't set up for outbound email — copy the link and share it manually.
+          此服务器未设置用于出站电子邮件 - 复制链接并手动共享。
         </div>
       )}
       <div className="flex items-stretch gap-2">
@@ -390,13 +374,13 @@ function CreatedInviteCard({ invite, onDone }: { invite: ApiInvitationWithToken;
           onClick={copy}
           className="px-3 py-2 rounded-[8px] text-[12px] font-semibold text-white transition"
           style={{ background: copied ? 'var(--leaf-700, #2d8c72)' : 'var(--ink-700)' }}
-        >{copied ? 'Copied' : 'Copy'}</button>
+        >{copied ? "已复制" : "复制"}</button>
       </div>
       <div className="flex justify-end">
         <button
           onClick={onDone}
           className="text-[11.5px] text-ink-400 hover:text-ink-700 transition"
-        >Dismiss</button>
+        >驳回</button>
       </div>
     </div>
   )
@@ -414,8 +398,8 @@ function InvitationRow({
   const expiresDistance = useMemo(() => relativeFrom(inv.expiresAt), [inv.expiresAt])
   const statusLabel: Record<typeof inv.status, { label: string; bg: string; fg: string }> = {
     active:   { label: inv.email ? 'awaiting' : 'shareable', bg: 'var(--sky-50)', fg: 'var(--sky2-700, #2466a5)' },
-    revoked:  { label: 'revoked', bg: 'var(--cloud)', fg: 'var(--ink-400)' },
-    expired:  { label: 'expired', bg: 'var(--cloud)', fg: 'var(--ink-400)' },
+    revoked:  { label: "已撤销", bg: 'var(--cloud)', fg: 'var(--ink-400)' },
+    expired:  { label: "已过期\n使用", bg: 'var(--cloud)', fg: 'var(--ink-400)' },
     consumed: { label: 'used',    bg: 'var(--cloud)', fg: 'var(--ink-400)' },
   }
   const pill = statusLabel[inv.status]
@@ -427,7 +411,7 @@ function InvitationRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 min-w-0">
           <div className="text-[13px] font-semibold text-ink-900 truncate">
-            {inv.email ?? <span className="text-ink-500 italic font-display">Shareable link</span>}
+            {inv.email ?? <span className="text-ink-500 italic font-display">可分享链接</span>}
           </div>
           <span
             className="px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
@@ -439,9 +423,9 @@ function InvitationRow({
           {!inv.email && (
             <span>{inv.useCount}/{inv.maxUses} used</span>
           )}
-          {inv.status === 'active' && <span>· expires {expiresDistance}</span>}
+          {inv.status === 'active' && <span>· 过期 {expiresDistance}</span>}
           {inv.status === 'consumed' && inv.lastAcceptedAt && (
-            <span>· last accepted {relativeFrom(inv.lastAcceptedAt)}</span>
+            <span>·最后接受 {relativeFrom(inv.lastAcceptedAt)}</span>
           )}
           {inv.note && <span>· {inv.note}</span>}
         </div>
@@ -453,7 +437,7 @@ function InvitationRow({
             onClick={onRevoke}
             className="px-2 py-1.5 text-[11.5px] font-semibold rounded-[8px] transition"
             style={{ color: 'var(--coral-deep)', border: '1px solid var(--ink-100)' }}
-          >Revoke</button>
+          >撤销</button>
         </div>
       )}
     </div>
@@ -477,10 +461,10 @@ function CopyLinkButton({ inviteId }: { inviteId: string }) {
   return (
     <button
       onClick={onClick}
-      title="Copy invite reference (the original link cannot be re-fetched — issue a new invite if you've lost it)"
+      title="复制邀请参考（无法重新获取原始链接 - 如果您丢失了邀请，请发出新的邀请）"
       className="px-2 py-1.5 text-[11.5px] font-semibold rounded-[8px] transition"
       style={{ color: 'var(--ink-500)', border: '1px solid var(--ink-100)' }}
-    >{copied ? 'Copied' : 'Copy ref'}</button>
+    >{copied ? "已复制" : "复制参考"}</button>
   )
 }
 

@@ -16,10 +16,10 @@ function StubRoom() {
       }}>
       <div>
         <div className="font-display font-medium text-[28px] text-ink-900 mb-2" style={{ letterSpacing: '-0.02em' }}>
-          No whispers yet
+          还没有私聊
         </div>
         <div className="font-display italic text-[14px] text-ink-500 max-w-md leading-relaxed">
-          Whispers form when an agent decides — after their public reply — that they need to align with another teammate privately.
+          当特工在公开回复后决定他们需要私下与另一位队友保持一致时，私语就会形成。
         </div>
       </div>
     </main>
@@ -46,16 +46,16 @@ export function WhispersView() {
       <aside className="relative flex flex-col overflow-hidden border-r border-ink-100 bg-paper">
         <div className="px-[18px] pt-[18px] pb-3">
           <h1 className="font-display font-medium text-[26px] tracking-tight text-ink-900 leading-none mb-1">
-            Whispers
+            私聊
           </h1>
           <div className="text-[12px] text-ink-500 font-display italic">
-            channels you can peek into · <b className="not-italic text-whisper-deep font-semibold">{list.length}</b>
+            可以查看的频道· <b className="not-italic text-whisper-deep font-semibold">{list.length}</b>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-[18px]">
           {list.length === 0 && (
             <div className="px-3 py-4 text-[12px] text-ink-300 italic font-display">
-              Send a message in a group to nudge an agent to whisper.
+              在群组中发送消息以促使客服人员私聊。
             </div>
           )}
           {list.map((w) => {

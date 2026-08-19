@@ -61,22 +61,22 @@ interface PurposeMeta {
 
 const PURPOSE_META: Record<LlmCallPurpose, PurposeMeta> = {
   // Big-model real tasks — sky family (these are the sanctioned spend).
-  'agent-turn':           { label: 'Agent turn',         blurb: "Main reasoning hop per turn — the agent's actual reply work.", swatch: '#0078C8' },
-  'convene-speech':       { label: 'Convene speech',     blurb: 'One agent speaking inside a live convene session.',           swatch: '#4FC2F4' },
+  'agent-turn':           { label: "特工转",         blurb: "Main reasoning hop per turn — the agent's actual reply work.", swatch: '#0078C8' },
+  'convene-speech':       { label: "召集讲话",     blurb: 'One agent speaking inside a live convene session.',           swatch: '#4FC2F4' },
   // Cerebellum gates — coral family (these shield the big brain).
-  'inbox-triage':         { label: 'Inbox triage',       blurb: 'Cloud gate that decides whether a human message wakes the brain.', swatch: '#FF7A6B' },
-  'synthetic-wake-gate':  { label: 'Synthetic-wake gate',blurb: 'Gate for idle / background-scan / poll-update wakes.',         swatch: '#FFA39A' },
-  'agenda':               { label: 'Agenda check',       blurb: "Heartbeat classifier on cards / events / stalls.",            swatch: '#C84E3F' },
+  'inbox-triage':         { label: "收件箱分类",       blurb: 'Cloud gate that decides whether a human message wakes the brain.', swatch: '#FF7A6B' },
+  'synthetic-wake-gate':  { label: "合成尾流门",blurb: 'Gate for idle / background-scan / poll-update wakes.',         swatch: '#FFA39A' },
+  'agenda':               { label: "议程检查",       blurb: "Heartbeat classifier on cards / events / stalls.",            swatch: '#C84E3F' },
   // Mid-turn cerebellum — wisteria family (auxiliary judgment on big-turn work).
-  'compaction':           { label: 'Auto-compaction',    blurb: 'Summarizes earlier tool work when history nears the context cap.', swatch: '#9B7BD4' },
-  'completion-verify':    { label: 'Completion verify',  blurb: 'Re-checks an agent’s terminal status against side effects.',   swatch: '#7A5BB8' },
-  'steer-summary':        { label: 'Steer summary',      blurb: 'Digests mid-turn messages so the agent can react without history blow-up.', swatch: '#B898DD' },
-  'convene-decision':     { label: 'Convene decision',   blurb: '"Did the convene reach a decision?" closer.',                 swatch: '#D4B3FF' },
+  'compaction':           { label: "自动压缩",    blurb: 'Summarizes earlier tool work when history nears the context cap.', swatch: '#9B7BD4' },
+  'completion-verify':    { label: "完成验证",  blurb: 'Re-checks an agent’s terminal status against side effects.',   swatch: '#7A5BB8' },
+  'steer-summary':        { label: "转向总结",      blurb: 'Digests mid-turn messages so the agent can react without history blow-up.', swatch: '#B898DD' },
+  'convene-decision':     { label: "召开决定",   blurb: '"Did the convene reach a decision?" closer.',                 swatch: '#D4B3FF' },
   // One-shot utilities — gold family.
-  'palette':              { label: 'Palette tool',       blurb: 'Agent-invoked 5-color palette generator.',                    swatch: '#F4B740' },
-  'gender':               { label: 'Gender inference',   blurb: 'Avatar-pipeline gender pick.',                                swatch: '#BA8418' },
-  'avatar-image':         { label: 'Avatar image',       blurb: 'Image gen at agent creation / regeneration.',                 swatch: '#D49520' },
-  'agent-image':          { label: 'Agent image tool',   blurb: 'Image gen invoked by an agent mid-turn.',                     swatch: '#E8A030' },
+  'palette':              { label: "调色板工具",       blurb: 'Agent-invoked 5-color palette generator.',                    swatch: '#F4B740' },
+  'gender':               { label: "性别推断",   blurb: 'Avatar-pipeline gender pick.',                                swatch: '#BA8418' },
+  'avatar-image':         { label: "头像图像",       blurb: 'Image gen at agent creation / regeneration.',                 swatch: '#D49520' },
+  'agent-image':          { label: "智能体图像工具",   blurb: 'Image gen invoked by an agent mid-turn.',                     swatch: '#E8A030' },
 }
 
 const FALLBACK_SWATCH = '#94A8BC'
@@ -116,7 +116,7 @@ const fmtPct = (n: number, places = 1): string => `${(n * 100).toFixed(places)}%
 // regardless of unit.
 type Unit = 'tokens' | 'usd'
 const UNITS: Array<{ key: Unit; label: string }> = [
-  { key: 'tokens', label: 'Tokens' },
+  { key: 'tokens', label: "代币" },
   { key: 'usd',    label: 'USD $' },
 ]
 /** Total billable tokens across every bucket of a row, cached input included
@@ -142,10 +142,10 @@ const RANGES: Array<{ label: string; days: number }> = [
 // the same numbers — but it matches the "live dashboard" expectation and the
 // drill-down (raw rows) IS live.
 const REFRESH_INTERVALS: Array<{ label: string; ms: number }> = [
-  { label: 'Auto-refresh: Off', ms: 0 },
-  { label: 'Every 30s', ms: 30_000 },
-  { label: 'Every 1m',  ms: 60_000 },
-  { label: 'Every 5m',  ms: 300_000 },
+  { label: "自动刷新：关闭", ms: 0 },
+  { label: "每 30 秒", ms: 30_000 },
+  { label: "每 1m",  ms: 60_000 },
+  { label: "每 5m",  ms: 300_000 },
 ]
 
 // ─── Source filter ───────────────────────────────────────────────────────
@@ -163,8 +163,8 @@ const REFRESH_INTERVALS: Array<{ label: string; ms: number }> = [
 // and "Cloud vs BYOA" is the split that matters.
 type SourceFilter = 'all' | 'cloud' | 'byoa'
 const SOURCE_FILTERS: Array<{ key: SourceFilter; label: string }> = [
-  { key: 'all',   label: 'All' },
-  { key: 'cloud', label: 'Cloud' },
+  { key: 'all',   label: "全部" },
+  { key: 'cloud', label: "云" },
   { key: 'byoa',  label: 'BYOA' },
 ]
 const isByoaSource = (s: string): boolean => s === 'byoa-claude' || s === 'byoa-codex'
@@ -281,16 +281,16 @@ export function ObservabilityPage() {
     <div className="admin-page obs-page">
       <header className="admin-page-head">
         <div>
-          <h1 className="admin-h1">Observability</h1>
+          <h1 className="admin-h1">可观察性</h1>
           <div className="admin-sub">
-            Every LLM call — cloud AND BYOA — attributed to the business logic that spent it.
+            每个 LLM 调用（云和 BYOA）都归因于使用它的业务逻辑。
             {data?.summary && (
-              <> Window: last {data.summary.sinceDays}d · {fmtInt(data.summary.activeTenants)} active tenants.</>
+              <> 窗口：最后一个 {data.summary.sinceDays}d · {fmtInt(data.summary.activeTenants)} 活跃租户。</>
             )}
           </div>
         </div>
         <div className="admin-filters obs-filters">
-          <div className="obs-pills" role="tablist" aria-label="Time range">
+          <div className="obs-pills" role="tablist" aria-label="时间范围">
             {RANGES.map((r) => (
               <button
                 key={r.days}
@@ -301,7 +301,7 @@ export function ObservabilityPage() {
               >{r.label}</button>
             ))}
           </div>
-          <div className="obs-pills" role="tablist" aria-label="Source">
+          <div className="obs-pills" role="tablist" aria-label="来源">
             {SOURCE_FILTERS.map((s) => (
               <button
                 key={s.key}
@@ -314,7 +314,7 @@ export function ObservabilityPage() {
           </div>
           {/* Unit toggle — $ are seeded estimates; tokens are the platform-
               neutral truth (the whole reason BYOA can't trust the $). */}
-          <div className="obs-pills" role="tablist" aria-label="Unit">
+          <div className="obs-pills" role="tablist" aria-label="单位">
             {UNITS.map((u) => (
               <button
                 key={u.key}
@@ -322,13 +322,13 @@ export function ObservabilityPage() {
                 aria-selected={unit === u.key}
                 className={`obs-pill${unit === u.key ? ' is-active' : ''}`}
                 onClick={() => setUnit(u.key)}
-                title={u.key === 'usd' ? 'Cost in USD — seeded per-model estimates, not your real platform rate' : 'Raw token counts — exact, platform-independent'}
+                title={u.key === 'usd' ? "USD 中的成本 — 每个模型的种子估算值，而不是您的真实平台费率" : "原始代币计数 — 准确、独立于平台"}
               >{u.label}</button>
             ))}
           </div>
           <input
             className="admin-input obs-model-input"
-            placeholder="Filter model (e.g. gpt-5.4-mini)"
+            placeholder="过滤器型号（例如 gpt-5.4-mini）"
             value={modelFilter}
             onChange={(e) => setModelFilter(e.target.value)}
           />
@@ -346,8 +346,8 @@ export function ObservabilityPage() {
               className="obs-refresh-btn"
               onClick={triggerRefresh}
               disabled={refreshing}
-              title={lastUpdated ? `Last updated ${new Date(lastUpdated).toLocaleTimeString()} — click to refresh` : 'Refresh'}
-              aria-label="Refresh now"
+              title={lastUpdated ? `Last updated ${new Date(lastUpdated).toLocaleTimeString()} — click to refresh` : "刷新"}
+              aria-label="立即刷新"
             >
               <span className={`obs-refresh-icon${refreshing ? ' is-spinning' : ''}`} aria-hidden>↻</span>
             </button>
@@ -362,14 +362,14 @@ export function ObservabilityPage() {
         </div>
         {lastUpdated && (
           <div className="obs-updated" aria-live="polite">
-            Updated {new Date(lastUpdated).toLocaleTimeString()}
-            {autoRefreshMs > 0 && <> · auto every {REFRESH_INTERVALS.find((r) => r.ms === autoRefreshMs)?.label.replace('Every ', '')}</>}
-            {refreshing && <> · refreshing…</>}
+            已更新 {new Date(lastUpdated).toLocaleTimeString()}
+            {autoRefreshMs > 0 && <> · 自动每隔 {REFRESH_INTERVALS.find((r) => r.ms === autoRefreshMs)?.label.replace('Every ', '')}</>}
+            {refreshing && <> ·令人耳目一新……</>}
           </div>
         )}
       </header>
 
-      {error && <div className="obs-error">Failed to load: {error}</div>}
+      {error && <div className="obs-error">加载失败： {error}</div>}
 
       {/* Hero KPIs — paper-toned, with one richly-treated "Spend" tile as
           the visual anchor. The four cards always render so the page doesn't
@@ -377,7 +377,7 @@ export function ObservabilityPage() {
       <section className="obs-hero">
         <HeroSpendCard summary={data?.summary} unit={unit} loading={loading} />
         <HeroStatCard
-          label="Total calls"
+          label="通话总数"
           value={data?.summary ? fmtInt(data.summary.totalCalls) : '—'}
           sub={data?.summary
             ? `${fmtInt(data.summary.rateLimitedCalls)} rate-limited`
@@ -385,7 +385,7 @@ export function ObservabilityPage() {
           loading={loading}
         />
         <HeroStatCard
-          label="Top burner"
+          label="顶部燃烧器"
           value={topBurner ? metaFor(topBurner.purpose).label : '—'}
           sub={topBurner
             ? `${fmtAmount(unit, topBurner.usd, topBurner.tokens)} of the window`
@@ -394,7 +394,7 @@ export function ObservabilityPage() {
           loading={loading}
         />
         <HeroStatCard
-          label="Failure rate"
+          label="故障率"
           value={data?.summary ? fmtPct(data.summary.failureRate) : '—'}
           sub={data?.summary
             ? `${fmtTokens(data.summary.totalOutputTokens)} out · ${fmtTokens(data.summary.totalCachedInputTokens)} cached in`
@@ -410,8 +410,8 @@ export function ObservabilityPage() {
       <section className="obs-card obs-trend-card">
         <div className="obs-card-head">
           <div>
-            <div className="obs-card-title">{unit === 'usd' ? 'Daily cost by purpose' : 'Daily input tokens by purpose'}</div>
-            <div className="obs-card-sub">UTC days · stacked by purpose · {modelFilter ? `model = ${modelFilter}` : 'all models'}{unit !== 'usd' && ' · cached + uncached input'}</div>
+            <div className="obs-card-title">{unit === 'usd' ? "按用途划分的每日费用" : "按用途划分的每日输入令牌"}</div>
+            <div className="obs-card-sub">UTC 天·按目的堆叠· {modelFilter ? `model = ${modelFilter}` : "所有型号"}{unit !== 'usd' && ' · cached + uncached input'}</div>
           </div>
         </div>
         <TrendChart buckets={data?.trend ?? []} unit={unit} loading={loading} />
@@ -427,10 +427,10 @@ export function ObservabilityPage() {
       <section className="obs-card">
         <div className="obs-card-head">
           <div>
-            <div className="obs-card-title">{unit === 'usd' ? 'Spend' : 'Tokens'} by purpose × model × source</div>
+            <div className="obs-card-title">{unit === 'usd' ? "花费" : "代币"} 按用途 × 型号 × 来源</div>
             <div className="obs-card-sub">
-              Sorted by {unit === 'usd' ? 'cost' : 'tokens'} desc · click a column to re-sort
-              {sourceFilter !== 'all' && <> · filtered to <strong>{SOURCE_FILTERS.find((s) => s.key === sourceFilter)?.label}</strong></>}
+              排序依据 {unit === 'usd' ? "成本" : "令牌"} desc · 单击某列重新排序
+              {sourceFilter !== 'all' && <> · 过滤为 <strong>{SOURCE_FILTERS.find((s) => s.key === sourceFilter)?.label}</strong></>}
             </div>
           </div>
         </div>
@@ -448,8 +448,8 @@ export function ObservabilityPage() {
       <section className="obs-card">
         <div className="obs-card-head">
           <div>
-            <div className="obs-card-title">Top spenders</div>
-            <div className="obs-card-sub">By agent · top 20 over the window</div>
+            <div className="obs-card-title">支出最高者</div>
+            <div className="obs-card-sub">智能体·橱窗前20名</div>
           </div>
         </div>
         <TopAgentsTable
@@ -468,8 +468,8 @@ export function ObservabilityPage() {
       <section className="obs-card">
         <div className="obs-card-head">
           <div>
-            <div className="obs-card-title">By daemon version</div>
-            <div className="obs-card-sub">Spend × cache behaviour per agent-cli release · drill into a row to see its calls</div>
+            <div className="obs-card-title">按守护进程版本</div>
+            <div className="obs-card-sub">每个 agent-cli 版本花费 × 缓存行为 · 钻取一行以查看其调用</div>
           </div>
         </div>
         <DaemonVersionTable
@@ -511,13 +511,13 @@ function HeroSpendCard({ summary, unit, loading }: { summary: LlmObservabilityPa
   return (
     <div className="obs-hero-card obs-hero-spend">
       <div className="obs-hero-spend-shine" aria-hidden />
-      <div className="obs-hero-label">{unit === 'usd' ? 'Spend' : 'Tokens'} · last {summary?.sinceDays ?? 30}d</div>
+      <div className="obs-hero-label">{unit === 'usd' ? "花费" : "代币"} ·最后 {summary?.sinceDays ?? 30}d</div>
       <div className="obs-hero-value">{loading ? '—' : unit === 'usd' ? fmtUsd(totalUsd, totalUsd < 100 ? 4 : 2) : fmtTokens(totalTok)}</div>
       <div className="obs-hero-sub">
         {summary
           ? (unit === 'usd'
-              ? <>{fmtTokens(uncachedIn + cachedIn)} input · {fmtTokens(out)} output</>
-              : <>{fmtTokens(uncachedIn)} in · {fmtTokens(cachedIn)} cached · {fmtTokens(out)} out</>)
+              ? <>{fmtTokens(uncachedIn + cachedIn)} 输入· {fmtTokens(out)} 输出</>
+              : <>{fmtTokens(uncachedIn)} 在· {fmtTokens(cachedIn)} 已缓存· {fmtTokens(out)} 出</>)
           : <> </>}
       </div>
     </div>
@@ -584,8 +584,8 @@ function TrendChart({ buckets, unit, loading }: { buckets: LlmTrendBucket[]; uni
     return { purposes, series, totalByDay, maxStack }
   }, [buckets, days, unit])
 
-  if (loading) return <div className="obs-chart-empty">Loading…</div>
-  if (days.length === 0) return <div className="obs-chart-empty">No data in this window.</div>
+  if (loading) return <div className="obs-chart-empty">加载中…</div>
+  if (days.length === 0) return <div className="obs-chart-empty">该窗口中没有数据。</div>
 
   const innerW = W - PADL - PADR
   const innerH = H - PADT - PADB
@@ -638,7 +638,7 @@ function TrendChart({ buckets, unit, loading }: { buckets: LlmTrendBucket[]; uni
 
   return (
     <div className="obs-chart">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="Daily cost by purpose">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="按用途划分的每日费用">
         {/* Grid */}
         {ticks.map((t, i) => (
           <g key={i}>
@@ -757,32 +757,32 @@ function CacheHealthCard({ summary, trend, rollup, unit, loading }: {
     <section className="obs-card obs-cache-card">
       <div className="obs-card-head">
         <div>
-          <div className="obs-card-title">Cache health</div>
+          <div className="obs-card-title">缓存运行状况</div>
           <div className="obs-card-sub">
-            How much you're paying for tokens the cache could have served.
+            您为缓存本可以提供的令牌支付了多少费用。
           </div>
         </div>
       </div>
 
       <div className="obs-cache-hero">
         <div className="obs-cache-hero-main">
-          <div className="obs-cache-hero-label">Overall hit rate</div>
+          <div className="obs-cache-hero-label">总体命中率</div>
           <div className={`obs-cache-hero-value ${cacheToneClass(hit)}`}>
             {hit != null ? fmtPct(hit, 1) : '—'}
           </div>
           <div className="obs-cache-hero-sub">
             {hit != null
-              ? <>of {fmtTokens((summary?.totalInputTokens ?? 0) + (summary?.totalCachedInputTokens ?? 0))} input tokens served from cache</>
+              ? <>的 {fmtTokens((summary?.totalInputTokens ?? 0) + (summary?.totalCachedInputTokens ?? 0))} 从缓存提供的输入令牌</>
               : '—'}
           </div>
         </div>
         <div className="obs-cache-hero-aside">
-          <div className="obs-cache-hero-label">{unit === 'usd' ? 'Money on the table' : 'Cacheable tokens'}</div>
+          <div className="obs-cache-hero-label">{unit === 'usd' ? "桌上的钱" : "可缓存令牌"}</div>
           <div className="obs-cache-hero-value obs-cache-tone-warn">
             {loading ? '—' : unit === 'usd' ? fmtUsd(savable, savable < 1 ? 4 : 2) : fmtTokens(summary?.totalInputTokens ?? 0)}
           </div>
           <div className="obs-cache-hero-sub">
-            upper bound · {unit === 'usd' ? 'if every input were cached' : 'uncached input tokens'}
+            上限· {unit === 'usd' ? "如果每个输入都被缓存" : "未缓存的输入标记"}
           </div>
         </div>
       </div>
@@ -790,8 +790,8 @@ function CacheHealthCard({ summary, trend, rollup, unit, loading }: {
       <CacheDailyChart days={daily} loading={loading} />
 
       <div className="obs-cache-bars">
-        <div className="obs-cache-bars-head">By purpose · sorted by {unit === 'usd' ? 'savable $' : 'cacheable tokens'}</div>
-        {perPurpose.length === 0 && <div className="obs-empty">No input traffic in this window.</div>}
+        <div className="obs-cache-bars-head">按目的·排序 {unit === 'usd' ? "可保存 $" : "可缓存令牌"}</div>
+        {perPurpose.length === 0 && <div className="obs-empty">此窗口中没有输入流量。</div>}
         {perPurpose.map((p) => (
           <CachePurposeBar key={p.purpose} {...p} unit={unit} />
         ))}
@@ -821,8 +821,8 @@ function CacheDailyChart({ days, loading }: {
   const innerW = W - PADL - PADR
   const innerH = H - PADT - PADB
 
-  if (loading) return <div className="obs-chart-empty obs-cache-chart-empty">Loading…</div>
-  if (days.length === 0) return <div className="obs-chart-empty obs-cache-chart-empty">No daily data yet.</div>
+  if (loading) return <div className="obs-chart-empty obs-cache-chart-empty">加载中…</div>
+  if (days.length === 0) return <div className="obs-chart-empty obs-cache-chart-empty">尚无每日数据。</div>
 
   // Points; skip nulls (no traffic) so the line interpolates instead of dropping to 0.
   const points = days
@@ -852,7 +852,7 @@ function CacheDailyChart({ days, loading }: {
 
   return (
     <div className="obs-cache-chart">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="Daily cache hit rate">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="每日缓存命中率">
         <defs>
           <linearGradient id="obsCacheGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--skype-deep)" stopOpacity={0.18} />
@@ -917,11 +917,11 @@ function CachePurposeBar({ purpose, hitRate, savableUsd, costUsd, uncachedIn, ca
         {unit === 'usd'
           ? <>
               {savableUsd > 0 ? <span className="obs-cache-bar-savable-amt">{fmtUsd(savableUsd, savableUsd < 1 ? 4 : 2)}</span> : <span className="obs-cache-bar-savable-na">—</span>}
-              <span className="obs-cache-bar-savable-sub"> of {fmtUsd(costUsd, costUsd < 1 ? 4 : 2)}</span>
+              <span className="obs-cache-bar-savable-sub"> 的 {fmtUsd(costUsd, costUsd < 1 ? 4 : 2)}</span>
             </>
           : <>
               {uncachedIn > 0 ? <span className="obs-cache-bar-savable-amt">{fmtTokens(uncachedIn)}</span> : <span className="obs-cache-bar-savable-na">—</span>}
-              <span className="obs-cache-bar-savable-sub"> of {fmtTokens(uncachedIn + cachedIn)} in</span>
+              <span className="obs-cache-bar-savable-sub"> 的 {fmtTokens(uncachedIn + cachedIn)} 在</span>
             </>}
       </div>
     </div>
@@ -963,14 +963,14 @@ function RollupTable({ rows, unit, loading, onDrill }: { rows: LlmRollupRow[]; u
     </button>
   )
 
-  if (loading && rows.length === 0) return <div className="obs-empty">Loading…</div>
-  if (!loading && rows.length === 0) return <div className="obs-empty">No spend in this window. (Either no traffic, or the ledger hasn’t recorded any calls yet.)</div>
+  if (loading && rows.length === 0) return <div className="obs-empty">加载中…</div>
+  if (!loading && rows.length === 0) return <div className="obs-empty">此窗口中没有支出。 （要么没有流量，要么账本还没有记录任何呼叫。）</div>
 
   return (
     <div className="obs-table">
       <div className="obs-thead">
-        <div className="obs-th-left">Purpose</div>
-        <div className="obs-th-left">Model · source</div>
+        <div className="obs-th-left">目的</div>
+        <div className="obs-th-left">模型·来源</div>
         <div>{unit === 'usd' ? head('Cost', 'costUsd') : head('Tokens', 'totalTok')}</div>
         <div>{head('Calls', 'calls')}</div>
         <div>{head('Input', 'inputTokens')}</div>
@@ -986,7 +986,7 @@ function RollupTable({ rows, unit, loading, onDrill }: { rows: LlmRollupRow[]; u
             className="obs-row obs-row-button"
             key={`${r.purpose}-${r.model}-${r.source}-${i}`}
             onClick={() => onDrill(r)}
-            title="Click to see every call in this bucket"
+            title="单击可查看此存储桶中的每个呼叫"
           >
             <div className="obs-cell-purpose">
               <span className="obs-dot" style={{ background: m.swatch }} aria-hidden />
@@ -1003,15 +1003,15 @@ function RollupTable({ rows, unit, loading, onDrill }: { rows: LlmRollupRow[]; u
                     cost on the metered API. The operator's actual bill is a
                     flat subscription. Flagging this on the row keeps the $
                     column honest without hiding the comparable signal. */}
-                {unit === 'usd' && isByoaSource(r.source) && <span className="obs-meter-flag" title="BYOA spend is meter-equivalent (what these tokens would cost on the metered API) — operator's actual bill is a flat subscription">·meter</span>}
-                {unit === 'usd' && r.costEstimated && <span className="obs-est-flag" title="Cost computed from a seeded estimate, not an operator-supplied rate">·est</span>}
+                {unit === 'usd' && isByoaSource(r.source) && <span className="obs-meter-flag" title="BYOA 支出与计量等价（这些代币在计量 API 上的花费） - 运营商的实际账单是固定订阅">·米</span>}
+                {unit === 'usd' && r.costEstimated && <span className="obs-est-flag" title="根据种子估算计算的成本，而不是运营商提供的费率">·est</span>}
               </div>
             </div>
             <div className="obs-cell-num obs-cell-cost">{unit === 'usd' ? fmtUsd(r.costUsd, r.costUsd < 1 ? 4 : 2) : fmtTokens(r.totalTok)}</div>
             <div className="obs-cell-num">{fmtInt(r.calls)}</div>
             <div className="obs-cell-num">
               {fmtTokens(r.inputTokens + r.cachedInputTokens)}
-              {r.cachedInputTokens > 0 && <span className="obs-cell-sub"> · {fmtTokens(r.cachedInputTokens)} cached</span>}
+              {r.cachedInputTokens > 0 && <span className="obs-cell-sub"> · {fmtTokens(r.cachedInputTokens)} 已缓存</span>}
             </div>
             <div className="obs-cell-num">{fmtTokens(r.outputTokens)}</div>
             <div className="obs-cell-num">{r.cacheHitRate > 0 ? fmtPct(r.cacheHitRate, 0) : '—'}</div>
@@ -1019,7 +1019,7 @@ function RollupTable({ rows, unit, loading, onDrill }: { rows: LlmRollupRow[]; u
               {r.failureRate > 0
                 ? <span style={{ color: r.failureRate > 0.1 ? 'var(--coral-deep)' : 'var(--ink-700)' }}>{fmtPct(r.failureRate, 1)}</span>
                 : '—'}
-              {r.rateLimitedCalls > 0 && <span className="obs-cell-sub"> · {r.rateLimitedCalls} rl</span>}
+              {r.rateLimitedCalls > 0 && <span className="obs-cell-sub"> · {r.rateLimitedCalls} RL</span>}
             </div>
           </button>
         )
@@ -1050,15 +1050,15 @@ function TopAgentsTable({ rows, unit, loading, onDrill }: { rows: LlmObservabili
     () => unit === 'usd' ? rows : [...rows].sort((a, b) => totalTokens(b) - totalTokens(a)),
     [rows, unit],
   )
-  if (loading && rows.length === 0) return <div className="obs-empty">Loading…</div>
-  if (!loading && rows.length === 0) return <div className="obs-empty">No agent-attributed spend in this window.</div>
+  if (loading && rows.length === 0) return <div className="obs-empty">加载中…</div>
+  if (!loading && rows.length === 0) return <div className="obs-empty">此窗口中没有智能体归因的支出。</div>
   return (
     <div className="obs-table obs-table-compact">
       <div className="obs-thead obs-thead-compact">
-        <div className="obs-th-left">Agent</div>
-        <div className="obs-th-left">Company</div>
-        <div className="obs-th-right">{unit === 'usd' ? 'Cost' : 'Tokens'}</div>
-        <div className="obs-th-right">Calls</div>
+        <div className="obs-th-left">智能体</div>
+        <div className="obs-th-left">公司</div>
+        <div className="obs-th-right">{unit === 'usd' ? "成本" : "代币"}</div>
+        <div className="obs-th-right">通话</div>
       </div>
       {sorted.map((r, i) => (
         <button
@@ -1067,7 +1067,7 @@ function TopAgentsTable({ rows, unit, loading, onDrill }: { rows: LlmObservabili
           key={`${r.agentId ?? 'anon'}-${i}`}
           onClick={() => r.agentId && onDrill(r)}
           disabled={!r.agentId}
-          title={r.agentId ? "Click to see every call this agent made" : "Anonymous bucket — not drillable"}
+          title={r.agentId ? "单击查看该客服人员拨打的每个电话" : "匿名存储桶 — 不可钻取"}
         >
           <div className="obs-cell-agent">
             {r.agentId && <AgentAvatar url={r.agentAvatarUrl} initial={r.agentInitial} bg={r.agentAvatarBg} />}
@@ -1081,7 +1081,7 @@ function TopAgentsTable({ rows, unit, loading, onDrill }: { rows: LlmObservabili
           </div>
           <div className="obs-cell-num obs-cell-cost">
             {unit === 'usd' ? fmtUsd(r.costUsd, r.costUsd < 1 ? 4 : 2) : fmtTokens(totalTokens(r))}
-            {unit !== 'usd' && r.cachedInputTokens > 0 && <span className="obs-cell-sub"> · {fmtTokens(r.cachedInputTokens)} cached</span>}
+            {unit !== 'usd' && r.cachedInputTokens > 0 && <span className="obs-cell-sub"> · {fmtTokens(r.cachedInputTokens)} 已缓存</span>}
           </div>
           <div className="obs-cell-num">{fmtInt(r.calls)}</div>
         </button>
@@ -1107,23 +1107,23 @@ function DaemonVersionTable({ rows, unit, loading }: {
   unit: Unit
   loading: boolean
 }) {
-  if (loading && rows.length === 0) return <div className="obs-empty">Loading…</div>
+  if (loading && rows.length === 0) return <div className="obs-empty">加载中…</div>
   if (!loading && rows.length === 0) return (
     <div className="obs-empty">
-      No daemon-version data yet. Operators' daemons start populating this once they upgrade to the version that reports it.
+      尚无守护程序版本数据。一旦操作员的守护进程升级到报告它的版本，它们就会开始填充它。
     </div>
   )
   return (
     <div className="obs-table obs-table-daemon">
       <div className="obs-thead obs-thead-daemon">
-        <div className="obs-th-left">Version</div>
-        <div className="obs-th-left">Source</div>
-        <div className="obs-th-right">Calls</div>
-        <div className="obs-th-right">{unit === 'usd' ? 'Cost' : 'Tokens'}</div>
-        <div className="obs-th-right">Cache hit</div>
-        <div className="obs-th-right">Avg / call</div>
-        <div className="obs-th-right">Failed</div>
-        <div className="obs-th-right">Last seen</div>
+        <div className="obs-th-left">版本</div>
+        <div className="obs-th-left">来源</div>
+        <div className="obs-th-right">通话</div>
+        <div className="obs-th-right">{unit === 'usd' ? "成本" : "代币"}</div>
+        <div className="obs-th-right">缓存命中</div>
+        <div className="obs-th-right">平均/调用</div>
+        <div className="obs-th-right">失败</div>
+        <div className="obs-th-right">最后出现</div>
       </div>
       {rows.map((r, i) => {
         const totalIn = r.inputTokens + r.cachedInputTokens
@@ -1136,7 +1136,7 @@ function DaemonVersionTable({ rows, unit, loading }: {
             <div className="obs-cell-version">
               <span className="obs-cell-purpose-label">v{r.daemonVersion}</span>
             </div>
-            <div className="obs-cell-source">{r.source}{isByoaSource(r.source) && <span className="obs-meter-flag">·meter</span>}</div>
+            <div className="obs-cell-source">{r.source}{isByoaSource(r.source) && <span className="obs-meter-flag">·米</span>}</div>
             <div className="obs-cell-num">{fmtInt(r.calls)}</div>
             <div className="obs-cell-num obs-cell-cost">{unit === 'usd' ? fmtUsd(r.costUsd, r.costUsd < 1 ? 4 : 2) : fmtTokens(totalTok)}</div>
             <div className="obs-cell-num">{hitRate != null ? <span className={cacheToneClass(hitRate)}>{fmtPct(hitRate, 1)}</span> : '—'}</div>
@@ -1251,11 +1251,11 @@ function DrillPanel({ drill, sinceDays, companyId, unit, refreshSignal, onClose,
               <div className="obs-drill-sub">{subtitle}</div>
             </div>
           </div>
-          <button type="button" className="obs-drill-close" onClick={onClose} aria-label="Close">×</button>
+          <button type="button" className="obs-drill-close" onClick={onClose} aria-label="关闭">×</button>
         </header>
 
         <div className="obs-drill-sortbar">
-          <span className="obs-drill-sortbar-label">Sort</span>
+          <span className="obs-drill-sortbar-label">排序</span>
           {(['cost', 'latency', 'hop', 'created'] as CallSort[]).map((s) => (
             <button
               key={s}
@@ -1267,9 +1267,9 @@ function DrillPanel({ drill, sinceDays, companyId, unit, refreshSignal, onClose,
         </div>
 
         <div className="obs-drill-body">
-          {err && <div className="obs-error">Failed to load: {err}</div>}
-          {loading && !rows && <div className="obs-empty">Loading…</div>}
-          {rows && rows.length === 0 && <div className="obs-empty">No calls in this window.</div>}
+          {err && <div className="obs-error">加载失败： {err}</div>}
+          {loading && !rows && <div className="obs-empty">加载中…</div>}
+          {rows && rows.length === 0 && <div className="obs-empty">此窗口中没有呼叫。</div>}
           {rows && rows.map((c) => (
             <DrillCallCard
               key={c.id}
@@ -1326,7 +1326,7 @@ function DrillCallCard({ call, unit, onJumpToRun, onJumpToAgent }: {
             <span className="obs-mono">{call.model}</span>
             <span> · {call.source}</span>
             {unit === 'usd' && call.costEstimated && <span className="obs-est-flag">·est</span>}
-            {unit === 'usd' && isByoaSource(call.source) && <span className="obs-meter-flag">·meter</span>}
+            {unit === 'usd' && isByoaSource(call.source) && <span className="obs-meter-flag">·米</span>}
             {call.daemonVersion && (
               <span className="obs-version-flag" title={`Recorded by daemon (npm lingxiloop) version ${call.daemonVersion}`}>
                 · v{call.daemonVersion}
@@ -1342,31 +1342,31 @@ function DrillCallCard({ call, unit, onJumpToRun, onJumpToAgent }: {
           (hop index → tool calls → output mix → compaction diagnostic), so
           the eye scans the bottleneck first. */}
       <div className="obs-drill-chips">
-        {hopIndex != null  && <Chip label="hop"      value={`#${hopIndex}`} />}
-        {toolUses != null  && <Chip label="tools"    value={fmtInt(toolUses)} />}
-        {textChars != null && <Chip label="text"     value={`${fmtInt(textChars)}c`} />}
-        {compressionRatio  && <Chip label="compress" value={`${compressionRatio}×`} title="inputTokensBefore / outputTokens" />}
-        {itemsDropped != null && <Chip label="dropped" value={fmtInt(itemsDropped)} />}
-        {call.latencyMs && call.latencyMs > 0 && <Chip label="latency" value={`${(call.latencyMs / 1000).toFixed(1)}s`} />}
+        {hopIndex != null  && <Chip label="跳"      value={`#${hopIndex}`} />}
+        {toolUses != null  && <Chip label="工具"    value={fmtInt(toolUses)} />}
+        {textChars != null && <Chip label="文本"     value={`${fmtInt(textChars)}c`} />}
+        {compressionRatio  && <Chip label="压缩" value={`${compressionRatio}×`} title="inputTokensBefore / outputTokens" />}
+        {itemsDropped != null && <Chip label="已删除" value={fmtInt(itemsDropped)} />}
+        {call.latencyMs && call.latencyMs > 0 && <Chip label="延迟" value={`${(call.latencyMs / 1000).toFixed(1)}s`} />}
       </div>
 
       <div className="obs-drill-numgrid">
-        <NumCell label="input" value={fmtTokens(call.inputTokens)} />
-        <NumCell label="cached" value={fmtTokens(call.cachedInputTokens)} hint={cacheHit != null ? fmtPct(cacheHit, 0) : undefined} />
-        <NumCell label="output" value={fmtTokens(call.outputTokens)} />
-        <NumCell label="reasoning" value={call.reasoningTokens > 0 ? fmtTokens(call.reasoningTokens) : '—'} />
+        <NumCell label="输入" value={fmtTokens(call.inputTokens)} />
+        <NumCell label="已缓存" value={fmtTokens(call.cachedInputTokens)} hint={cacheHit != null ? fmtPct(cacheHit, 0) : undefined} />
+        <NumCell label="输出" value={fmtTokens(call.outputTokens)} />
+        <NumCell label="推理" value={call.reasoningTokens > 0 ? fmtTokens(call.reasoningTokens) : '—'} />
       </div>
 
       {call.error && (
         <div className="obs-drill-err">
-          <div className="obs-drill-err-label">error</div>
+          <div className="obs-drill-err-label">错误</div>
           <div className="obs-drill-err-body">{call.error}</div>
         </div>
       )}
 
       {otherExtras.length > 0 && (
         <details className="obs-drill-rawextras">
-          <summary>extras ({otherExtras.length})</summary>
+          <summary>额外内容 ({otherExtras.length})</summary>
           <dl>
             {otherExtras.map(([k, v]) => (
               <div key={k} className="obs-drill-kv">
@@ -1381,12 +1381,12 @@ function DrillCallCard({ call, unit, onJumpToRun, onJumpToAgent }: {
       <footer className="obs-drill-card-foot">
         {call.runId && (
           <button type="button" className="obs-drill-link" onClick={() => onJumpToRun(call.runId!)}>
-            run trail <span className="obs-mono">{call.runId.slice(0, 8)}…</span>
+            跑步轨迹 <span className="obs-mono">{call.runId.slice(0, 8)}…</span>
           </button>
         )}
         {call.agentId && (
           <button type="button" className="obs-drill-link" onClick={() => onJumpToAgent(call.agentId!, call.agentName)}>
-            agent {call.agentName ?? <span className="obs-mono">{call.agentId.slice(0, 8)}…</span>}
+            智能体 {call.agentName ?? <span className="obs-mono">{call.agentId.slice(0, 8)}…</span>}
           </button>
         )}
       </footer>
@@ -1460,7 +1460,7 @@ function TenantPicker({ tenants, value, unit, onChange }: {
       onValueChange={onChange}
       options={options}
       ariaLabel="Filter by tenant"
-      placeholder="All accounts"
+      placeholder="所有帐户"
       searchPlaceholder="Search workspaces…"
       className="w-[320px]"
     />

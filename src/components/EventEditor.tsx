@@ -213,28 +213,28 @@ export function EventEditor({ event, prefill, onClose }: Props) {
       >
         <div className="px-6 py-5 border-b border-ink-100 shrink-0">
           <h2 className="font-display font-medium text-[20px] tracking-tight">
-            {isEdit ? 'Edit event' : 'New event'}
+            {isEdit ? "编辑事件" : "新活动"}
           </h2>
           <div className="text-[12.5px] text-ink-500 italic font-display mt-0.5">
             {kind === 'agent_task'
-              ? 'Pick an agent and a time. When it fires, your prompt lands in the conversation and wakes them.'
-              : 'A personal time marker — no agent gets pinged.'}
+              ? "选择智能体和时间。当它触发时，你的提示会出现在对话中并唤醒他们。"
+              : "个人时间标记 — 没有智能体被 ping 到。"}
           </div>
         </div>
 
         <div className="px-6 py-5 overflow-y-auto overflow-x-hidden flex-1 min-h-0 space-y-5">
-          <Field label="Title">
+          <Field label="标题">
             <Input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Daily standup digest"
+              placeholder="例如每日站立文摘"
               autoFocus
               maxLength={200}
             />
           </Field>
 
-          <Field label="Kind" hint="Agent task fires a prompt; personal is just a time marker.">
+          <Field label="种类" hint="智能体任务触发提示；个人只是一个时间标记。">
             <div className="flex gap-2">
               {(['agent_task', 'personal'] as const).map((k) => (
                 <button
@@ -247,23 +247,23 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     color: kind === k ? 'white' : 'var(--ink-700)',
                     border: '1.5px solid ' + (kind === k ? 'var(--skype)' : 'var(--ink-100)'),
                   }}
-                >{k === 'agent_task' ? 'Agent task' : 'Personal'}</button>
+                >{k === 'agent_task' ? "智能体任务" : "个人"}</button>
               ))}
             </div>
           </Field>
 
-          <Field label="When">
+          <Field label="当">
             <label className="flex items-center gap-2 text-[13px] text-ink-700 mb-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={allDay}
                 onChange={(e) => setAllDay(e.target.checked)}
               />
-              All-day
+              全天
             </label>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <div className="text-[10px] uppercase tracking-wider text-ink-400 mb-1">Starts</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-400 mb-1">开始</div>
                 <DateTimePicker
                   mode={allDay ? 'date' : 'datetime'}
                   value={startAt}
@@ -275,7 +275,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wider text-ink-400 mb-1">
-                  Ends <span className="normal-case text-ink-300">— optional</span>
+                  结束 <span className="normal-case text-ink-300">— 可选</span>
                 </div>
                 <DateTimePicker
                   mode={allDay ? 'date' : 'datetime'}
@@ -291,19 +291,19 @@ export function EventEditor({ event, prefill, onClose }: Props) {
             </div>
           </Field>
 
-          <Field label="Repeat" hint="Leave off for a one-shot event.">
+          <Field label="重复" hint="离开去参加一次性活动。">
             <label className="flex items-center gap-2 text-[13px] text-ink-700 mb-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={recurEnabled}
                 onChange={(e) => setRecurEnabled(e.target.checked)}
               />
-              Recurring
+              重复出现
             </label>
             {recurEnabled && (
               <div className="space-y-2 pl-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[12.5px] text-ink-500">every</span>
+                  <span className="text-[12.5px] text-ink-500">每</span>
                   <Input
                     type="number"
                     min={1}
@@ -317,10 +317,10 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     className="ev-input"
                     style={{ width: 'auto' }}
                   >
-                    <option value="daily">day{recur.interval > 1 ? 's' : ''}</option>
-                    <option value="weekly">week{recur.interval > 1 ? 's' : ''}</option>
-                    <option value="monthly">month{recur.interval > 1 ? 's' : ''}</option>
-                    <option value="yearly">year{recur.interval > 1 ? 's' : ''}</option>
+                    <option value="daily">日{recur.interval > 1 ? 's' : ''}</option>
+                    <option value="weekly">周{recur.interval > 1 ? 's' : ''}</option>
+                    <option value="monthly">月{recur.interval > 1 ? 's' : ''}</option>
+                    <option value="yearly">年{recur.interval > 1 ? 's' : ''}</option>
                   </select>
                 </div>
                 {recur.freq === 'weekly' && (
@@ -350,13 +350,13 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                 )}
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="text-[11.5px] text-ink-500 flex items-center gap-1.5">
-                    <span>until</span>
+                    <span>直到</span>
                     <div style={{ width: 180 }}>
                       <DateTimePicker
                         mode="date"
                         value={recur.until ? `${recur.until.slice(0, 10)}T00:00` : ''}
                         allowClear
-                        placeholder="never"
+                        placeholder="从来没有"
                         onChange={(v) => setRecur({
                           ...recur,
                           until: v ? new Date(`${v.slice(0, 10)}T00:00:00`).toISOString() : null,
@@ -365,7 +365,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     </div>
                   </div>
                   <label className="text-[11.5px] text-ink-500 flex items-center gap-1.5">
-                    or max
+                    或最大值
                     <Input
                       type="number"
                       min={1}
@@ -374,21 +374,21 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                       onChange={(e) => setRecur({ ...recur, count: e.target.value ? Math.max(1, Number(e.target.value)) : null })}
                       style={{ width: 80 }}
                     />
-                    times
+                    次
                   </label>
                 </div>
               </div>
             )}
           </Field>
 
-          <Field label="Reminder" hint="Heads-up to you (and any human assignee) before each occurrence.">
+          <Field label="提醒" hint="在每次发生之前向您（以及任何人工受让人）发出警告。">
             <label className="flex items-center gap-2 text-[13px] text-ink-700 mb-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={reminderEnabled}
                 onChange={(e) => setReminderEnabled(e.target.checked)}
               />
-              Remind me before
+              之前提醒我
             </label>
             {reminderEnabled && (
               <div className="space-y-2 pl-1">
@@ -412,7 +412,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                       )
                     })}
                   </div>
-                  <span className="text-[11.5px] text-ink-400">or</span>
+                  <span className="text-[11.5px] text-ink-400">或</span>
                   <Input
                     type="number"
                     min={0}
@@ -420,7 +420,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     onChange={(e) => setReminderMinutes(Math.max(0, Number(e.target.value) || 0))}
                     style={{ width: 80 }}
                   />
-                  <span className="text-[11.5px] text-ink-500">minutes before</span>
+                  <span className="text-[11.5px] text-ink-500">分钟前</span>
                 </div>
                 <div className="flex gap-1.5">
                   {(['toast', 'email', 'both'] as const).map((ch) => {
@@ -436,7 +436,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                           color: on ? 'white' : 'var(--ink-700)',
                           border: '1.5px solid ' + (on ? 'var(--skype)' : 'var(--ink-100)'),
                         }}
-                      >{ch === 'toast' ? 'Toast' : ch === 'email' ? 'Email' : 'Both'}</button>
+                      >{ch === 'toast' ? "吐司" : ch === 'email' ? "电子邮件" : "两者"}</button>
                     )
                   })}
                 </div>
@@ -446,7 +446,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
           {kind === 'agent_task' && (
             <>
-              <Field label="Assign to" hint="The agent (or human) who'll receive the dispatch.">
+              <Field label="分配给" hint="将接收调度的智能体（或人员）。">
                 <div className="grid grid-cols-1 gap-1 max-h-[200px] overflow-auto pr-1">
                   {candidates.map((p) => {
                     const on = assigneeId === p.id
@@ -476,30 +476,30 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                   })}
                   {candidates.length === 0 && (
                     <div className="text-[12.5px] text-ink-500 italic font-display py-4 text-center">
-                      No teammates available — add an agent first.
+                      没有可用的队友 - 首先添加智能体。
                     </div>
                   )}
                 </div>
               </Field>
 
-              <Field label="Post in" hint="Where the dispatch message lands when it fires. Leave blank to use your DM with the assignee.">
+              <Field label="发表于" hint="调度消息触发时到达的位置。留空可与受让人一起使用您的 DM。">
                 <select
                   value={targetConversationId ?? ''}
                   onChange={(e) => setTargetConversationId(e.target.value || null)}
                   className="ev-input"
                 >
-                  <option value="">— Direct message with assignee —</option>
+                  <option value="">— 与受让人的直接消息 —</option>
                   {targetConvos.map((c) => (
                     <option key={c.id} value={c.id}>{c.title}</option>
                   ))}
                 </select>
               </Field>
 
-              <Field label="Prompt" hint="What the agent should do each time. Plain text — agents see it as a system message.">
+              <Field label="提示" hint="智能体每次应该做什么。纯文本——智能体将其视为系统消息。">
                 <TextArea
                   value={agentPrompt}
                   onChange={(e) => setAgentPrompt(e.target.value)}
-                  placeholder="e.g. Summarize the past 24h of conversation activity and post the digest here."
+                  placeholder="例如总结过去 24 小时的对话活动并在此处发布摘要。"
                   rows={4}
                   maxLength={8000}
                 />
@@ -507,22 +507,22 @@ export function EventEditor({ event, prefill, onClose }: Props) {
             </>
           )}
 
-          <Field label="Privacy" hint="Private events only show up for the creator and the assignee. The workspace owner can still see private events that involve an agent, for supervision. Default: shared with everyone in the workspace.">
+          <Field label="隐私" hint="私人事件仅对创建者和受让人显示。工作区所有者仍然可以查看涉及智能体的私人事件以进行监督。默认：与工作区中的每个人共享。">
             <label className="flex items-center gap-2 text-[13px] text-ink-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isPrivate}
                 onChange={(e) => setIsPrivate(e.target.checked)}
               />
-              <span>🔒 Private — hide from the shared calendar</span>
+              <span>🔒 私人 — 从共享日历中隐藏</span>
             </label>
           </Field>
 
-          <Field label="Notes" hint="Optional context — shown alongside the prompt on dispatch.">
+          <Field label="注释" hint="可选上下文 - 显示在调度提示旁边。">
             <TextArea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Anything else worth knowing…"
+              placeholder="还有什么值得知道的......"
               rows={2}
               maxLength={4000}
             />
@@ -540,7 +540,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               disabled={busy}
               className="px-3 py-2 rounded-[9px] text-[12.5px] font-semibold text-coral-deep bg-cloud hover:bg-coral-soft transition"
               style={{ border: '1px solid var(--ink-100)' }}
-            >Delete</button>
+            >删除</button>
           )}
           {isEdit && event!.kind === 'agent_task' && event!.status === 'active' && (
             <button
@@ -548,8 +548,8 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               disabled={busy}
               className="px-3 py-2 rounded-[9px] text-[12.5px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-100 transition"
               style={{ border: '1px solid var(--ink-100)' }}
-              title="Fire this event right now, without waiting for its next scheduled time"
-            >Run now</button>
+              title="立即触发此事件，无需等待下一个预定时间"
+            >立即运行</button>
           )}
           <div className="flex-1" />
           <button
@@ -557,7 +557,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
             disabled={busy}
             className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >Cancel</button>
+          >取消</button>
           <button
             onClick={submit}
             disabled={busy}
@@ -566,27 +566,11 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               background: 'var(--skype)',
               boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
             }}
-          >{busy ? 'Saving…' : isEdit ? 'Save' : 'Schedule'}</button>
+          >{busy ? "正在保存..." : isEdit ? "保存" : "时间表"}</button>
         </div>
       </div>
 
-      <style>{`
-        .ev-input {
-          width: 100%;
-          padding: 8px 12px;
-          font-size: 13.5px;
-          background: var(--paper);
-          border: 1.5px solid var(--ink-100);
-          border-radius: 10px;
-          outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s;
-          color: var(--ink-900);
-        }
-        .ev-input:focus {
-          border-color: var(--sky2-300);
-          box-shadow: 0 0 0 3px var(--sky-50);
-        }
-      `}</style>
+      <style>{".ev-输入 {\n          宽度：100%；\n          内边距：8 像素 12 像素；\n          字体大小：13.5px；\n          背景：var(--paper);\n          边框：1.5px 实心 var(--ink-100);\n          边框半径：10px；\n          概要：无；\n          过渡：边框颜色0.15s，框阴影0.15s；\n          颜色：var(--ink-900)；\n        }\n        .ev-输入：焦点{\n          边框颜色：var(--sky2-300);\n          盒子阴影：0 0 0 3px var(--sky-50);\n        }"}</style>
     </div>
   )
 }

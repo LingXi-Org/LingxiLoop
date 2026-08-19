@@ -36,9 +36,9 @@ export function Pager({ total, pageSize, offset, loading, onPage }: {
 
   return (
     <div className="admin-pager">
-      <span>{offset + 1}–{Math.min(offset + pageSize, total)} of {total}</span>
+      <span>{offset + 1}–{Math.min(offset + pageSize, total)} 的 {total}</span>
       <div className="admin-pager-btns">
-        <button className="btn-ghost" disabled={current === 0 || loading} onClick={() => go(current - 1)}>Prev</button>
+        <button className="btn-ghost" disabled={current === 0 || loading} onClick={() => go(current - 1)}>上一页</button>
         {cells.map((c, i) => c === 'gap'
           ? <span key={`gap-${i}`} className="admin-pager-ellipsis">…</span>
           : (
@@ -52,7 +52,7 @@ export function Pager({ total, pageSize, offset, loading, onPage }: {
               {c + 1}
             </button>
           ))}
-        <button className="btn-ghost" disabled={current >= pages - 1 || loading} onClick={() => go(current + 1)}>Next</button>
+        <button className="btn-ghost" disabled={current >= pages - 1 || loading} onClick={() => go(current + 1)}>下一页</button>
       </div>
     </div>
   )

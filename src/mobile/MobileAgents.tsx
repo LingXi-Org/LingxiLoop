@@ -63,10 +63,10 @@ export function MobileAgents() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)', background: 'rgba(250, 252, 254, 0.95)' }}>
         <div className="px-4 pt-2 pb-3">
           <h1 className="font-display font-medium text-[26px] tracking-tight text-ink-900 leading-none">
-            Your team <em className="not-italic text-skype-deep" style={{ fontStyle: 'italic', fontWeight: 400 }}>of {agents.length}</em>
+            你的团队 <em className="not-italic text-skype-deep" style={{ fontStyle: 'italic', fontWeight: 400 }}>的 {agents.length}</em>
           </h1>
           <div className="text-[12.5px] text-ink-500 mt-0.5 font-display italic">
-            agents work on their own, loop you in when needed
+            智能体自行工作，在需要时将您纳入其中
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ export function MobileAgents() {
         <div className="space-y-2.5">
           {agents.length === 0 && (
             <div className="text-center text-ink-300 italic font-display py-12 text-[13px]">
-              No agents in this workspace yet. Hire one below.
+              此工作区中还没有智能体。雇用下面的一个。
             </div>
           )}
           {agents.map((p) => (
@@ -137,8 +137,8 @@ export function MobileAgents() {
               <IPlus className="w-5 h-5" strokeWidth={2} />
             </div>
             <div className="text-left">
-              <div className="font-display font-medium text-[15px] text-ink-900" style={{ letterSpacing: '-0.01em' }}>Hire an agent</div>
-              <div className="font-display italic text-[11.5px] text-ink-500">design a new teammate</div>
+              <div className="font-display font-medium text-[15px] text-ink-900" style={{ letterSpacing: '-0.01em' }}>聘请智能体</div>
+              <div className="font-display italic text-[11.5px] text-ink-500">设计一个新队友</div>
             </div>
           </button>
         </div>
@@ -149,7 +149,7 @@ export function MobileAgents() {
 
         {humans.length > 0 && (
           <>
-            <div className="px-2 pt-6 pb-2 text-[10px] font-bold text-ink-300 tracking-[0.12em] uppercase">Human teammates</div>
+            <div className="px-2 pt-6 pb-2 text-[10px] font-bold text-ink-300 tracking-[0.12em] uppercase">人类队友</div>
             <div className="space-y-2">
               {humans.map((p) => (
                 <div key={p.id} className="bg-cloud rounded-[12px] p-3.5 flex items-center gap-3"

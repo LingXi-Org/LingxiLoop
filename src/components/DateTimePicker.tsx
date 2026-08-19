@@ -220,7 +220,7 @@ export function DateTimePicker({
                 type="button"
                 onClick={() => setCursorMonth(new Date(cursorMonth.getFullYear(), cursorMonth.getMonth() - 1, 1))}
                 className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100 transition"
-                aria-label="Previous month"
+                aria-label="上个月"
               >‹</button>
               <span className="text-[13px] font-semibold text-ink-900 mx-1 min-w-[120px] text-center">
                 {cursorMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
@@ -229,7 +229,7 @@ export function DateTimePicker({
                 type="button"
                 onClick={() => setCursorMonth(new Date(cursorMonth.getFullYear(), cursorMonth.getMonth() + 1, 1))}
                 className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100 transition"
-                aria-label="Next month"
+                aria-label="下个月"
               >›</button>
             </div>
             <div className="flex items-center gap-2">
@@ -246,13 +246,13 @@ export function DateTimePicker({
                   }
                 }}
                 className="text-[11.5px] font-medium text-skype-deep hover:underline px-1"
-              >Today</button>
+              >今天</button>
               {allowClear && value && (
                 <button
                   type="button"
                   onClick={() => { onChange(''); setOpen(false) }}
                   className="text-[11.5px] font-medium text-ink-400 hover:text-coral-deep transition px-1"
-                >Clear</button>
+                >清除</button>
               )}
             </div>
           </div>
@@ -297,13 +297,13 @@ export function DateTimePicker({
             {mode === 'datetime' && (
               <div className="flex gap-1 border-l border-ink-100 pl-3">
                 <Column
-                  label="hr"
+                  label="小时"
                   values={Array.from({ length: 24 }, (_, h) => h)}
                   selected={hour}
                   onPick={pickHour}
                 />
                 <Column
-                  label="min"
+                  label="分钟"
                   values={MINUTE_STEPS}
                   // Highlight the closest 5-min step so picker stays useful
                   // even when the value was set to, say, :17 via the API.
@@ -387,17 +387,7 @@ function Column({ label, values, selected, onPick }: {
           )
         })}
       </div>
-      <style>{`
-        .dtp-scroll {
-          scrollbar-width: thin;
-          scrollbar-color: var(--ink-200) transparent;
-        }
-        .dtp-scroll::-webkit-scrollbar { width: 4px; }
-        .dtp-scroll::-webkit-scrollbar-thumb {
-          background: var(--ink-200);
-          border-radius: 2px;
-        }
-      `}</style>
+      <style>{".dtp-滚动{\n          滚动条宽度：细；\n          滚动条颜色：var(--ink-200) 透明；\n        }\n        .dtp-scroll::-webkit-scrollbar { 宽度：4px; }\n        .dtp-scroll::-webkit-scrollbar-thumb {\n          背景：var(--ink-200);\n          边框半径：2px；\n        }"}</style>
     </div>
   )
 }

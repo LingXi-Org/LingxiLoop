@@ -67,7 +67,7 @@ export function InfoPane() {
     >
       <button
         onClick={close}
-        aria-label="Close info pane"
+        aria-label="关闭信息窗格"
         className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full grid place-items-center text-ink-500 hover:bg-cloud hover:text-ink-900 transition border border-ink-100 bg-cloud/70 backdrop-blur-sm"
       >×</button>
       <div
@@ -98,16 +98,16 @@ export function InfoPane() {
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          {opening ? 'Opening…' : 'DM'}
+          {opening ? "开幕..." : 'DM'}
         </button>
         {/* Whisper / Convene are agent-team rituals; humans use plain DM. */}
         {isAgent && (
           <>
             <button className="flex-1 py-2.5 px-3 bg-skype-ink text-white rounded-[9px] text-[12px] font-semibold inline-flex items-center justify-center gap-1.5">
-              Whisper
+              私聊
             </button>
             <button className="flex-1 py-2.5 px-3 bg-cloud border border-ink-100 rounded-[9px] text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 hover:border-sky2-200 hover:text-skype-deep">
-              Convene
+              召开
             </button>
           </>
         )}
@@ -116,18 +116,18 @@ export function InfoPane() {
       {agent.email && (
         <div className="py-4 px-[22px] border-b border-ink-100">
           <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-2.5">
-            Email
+            电子邮件
           </h4>
           <button
             type="button"
             onClick={copyEmail}
             className="w-full py-2 px-2.5 bg-cloud border border-ink-100 rounded-[9px] flex items-center gap-2 text-[12px] text-ink-700 font-mono hover:border-sky2-200 hover:text-skype-deep transition text-left"
-            title={copied ? 'Copied!' : 'Click to copy'}
+            title={copied ? "已复制！" : "点击复制"}
           >
             <IMail className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
             <span className="truncate flex-1">{agent.email}</span>
             <span className="text-[10px] uppercase tracking-wider text-ink-300 shrink-0">
-              {copied ? 'copied' : 'copy'}
+              {copied ? "已复制" : "复制"}
             </span>
           </button>
         </div>
@@ -141,7 +141,7 @@ export function InfoPane() {
         <>
           <div className="py-4 px-[22px] border-b border-ink-100">
             <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-2.5">
-              Tools enabled
+              工具已启用
             </h4>
             <div className="grid grid-cols-2 gap-1.5">
               {(agent.tools ?? []).map((t) => (
@@ -155,7 +155,7 @@ export function InfoPane() {
 
           <div className="py-4 px-[22px] border-b border-ink-100">
             <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-2.5">
-              About {agent.name}
+              关于 {agent.name}
             </h4>
             <div
               className="py-3 px-3.5 rounded-r-lg font-display italic font-normal text-[13px] leading-[1.55] text-ink-700"

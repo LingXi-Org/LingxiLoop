@@ -93,7 +93,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
           }}
         >
           <div className="px-3 py-1 text-[10.5px] uppercase tracking-wide text-ink-300 font-display">
-            {zh ? '切换工作区' : 'Switch workspace'}
+            {zh ? '切换工作区' : "切换工作空间"}
           </div>
           {companies.map((c) => (
             <button
@@ -126,7 +126,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
                 className="w-5 h-5 rounded grid place-items-center shrink-0 text-[11px]"
                 style={{ background: 'var(--sky-50)', color: 'var(--skype)' }}
               >+</span>
-              <span className="flex-1">{zh ? '邀请成员加入' : 'Invite people to'} <b className="font-semibold">{active.name}</b></span>
+              <span className="flex-1">{zh ? '邀请成员加入' : "邀请人们"} <b className="font-semibold">{active.name}</b></span>
             </button>
           )}
 
@@ -137,7 +137,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') void submitNew() }}
-                placeholder={zh ? '工作区名称' : 'Workspace name'}
+                placeholder={zh ? '工作区名称' : "工作区名称"}
                 className="w-full px-2 py-1.5 text-[12.5px] rounded outline-none"
                 style={{ border: '1.5px solid var(--ink-100)', background: 'var(--paper)' }}
               />
@@ -148,11 +148,11 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
                   disabled={!newName.trim() || busy}
                   className="flex-1 py-1.5 rounded text-[12px] font-semibold text-white disabled:opacity-50"
                   style={{ background: 'var(--skype)' }}
-                >{busy ? '…' : (zh ? '创建' : 'Create')}</button>
+                >{busy ? '…' : (zh ? '创建' : "创建")}</button>
                 <button
                   onClick={() => { setCreating(false); setNewName(''); setErr(null) }}
                   className="px-3 py-1.5 rounded text-[12px] text-ink-500 hover:bg-cloud"
-                >{zh ? '取消' : 'Cancel'}</button>
+                >{zh ? '取消' : "取消"}</button>
               </div>
             </div>
           ) : (
@@ -161,7 +161,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
               className="w-full px-3 py-1.5 flex items-center gap-2 text-left hover:bg-cloud transition text-[12px] text-ink-700"
             >
               <span className="w-5 h-5 rounded grid place-items-center text-ink-500 shrink-0" style={{ border: '1px dashed var(--ink-100)' }}>+</span>
-              {zh ? '创建新工作区' : 'Create new workspace'}
+              {zh ? '创建新工作区' : "创建新工作区"}
             </button>
           )}
         </div>

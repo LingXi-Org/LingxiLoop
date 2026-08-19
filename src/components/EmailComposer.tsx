@@ -377,7 +377,7 @@ export function EmailComposer() {
     <div className="fixed inset-0 z-[55] grid place-items-end p-3 pointer-events-none" aria-modal="true">
       {/* Click-outside backdrop. Click anywhere outside the panel to close. */}
       <button
-        aria-label="Close composer backdrop"
+        aria-label="关闭作曲家背景"
         onClick={close}
         className="email-composer-backdrop absolute inset-0 pointer-events-auto animate-fade-in"
         style={{ animationDuration: '120ms' }}
@@ -405,7 +405,7 @@ export function EmailComposer() {
             <div
               className="flex items-center gap-2 rounded-xl border border-sky2-200 bg-raised px-5 py-3 text-[13px] font-semibold text-skype-deep shadow-xl"
             >
-              📎 Drop to attach
+              📎 拖放以附加
             </div>
           </div>
         )}
@@ -414,31 +414,31 @@ export function EmailComposer() {
             <IMail className="h-4 w-4" strokeWidth={2} />
           </span>
           <h2 className="text-[14px] font-semibold tracking-tight text-ink">
-            {isReply ? 'Reply by email' : 'New email'}
+            {isReply ? "通过电子邮件回复" : "新电子邮件"}
           </h2>
           <button
             type="button"
             onClick={close}
             className="ml-auto grid size-8 place-items-center rounded-xl text-ink-secondary transition hover:bg-raised hover:text-ink"
-            aria-label="Close composer"
+            aria-label="关闭作曲家"
           >×</button>
         </div>
 
         {!isReply && (
           <PillField
-            label="To"
+            label="至"
             entries={to}
             onChange={setTo}
-            placeholder="address or @id, comma to add"
+            placeholder="地址或@id，逗号添加"
             autocompletePool={pool}
           />
         )}
         {!isReply && (showCc || cc.length > 0 ? (
           <PillField
-            label="Cc"
+            label="抄送"
             entries={cc}
             onChange={setCc}
-            placeholder="optional"
+            placeholder="可选"
             autocompletePool={pool}
           />
         ) : (
@@ -447,17 +447,17 @@ export function EmailComposer() {
               type="button"
               onClick={() => setShowCc(true)}
               className="text-[11px] text-skype-deep hover:underline"
-            >+ Cc</button>
+            >+ 抄送</button>
           </div>
         ))}
         {!isReply && (
           <div className="email-composer-row grid grid-cols-[60px_1fr] items-center gap-2 px-4 py-3">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-ink-secondary">Subject</span>
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-ink-secondary">主题</span>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="What's this about?"
+              placeholder="这是关于什么的？"
               className="border-0 bg-transparent font-display text-[15px] text-ink placeholder:text-ink-secondary outline-none"
             />
           </div>
@@ -465,20 +465,20 @@ export function EmailComposer() {
         {isReply && replyOriginal?.email && (
           <div className="email-composer-row bg-inset px-4 py-2.5 text-[11.5px] text-ink-secondary">
             <div className="flex items-baseline gap-2">
-              <span className="font-bold text-ink-300 uppercase tracking-wider text-[10px]">Re:</span>
+              <span className="font-bold text-ink-300 uppercase tracking-wider text-[10px]">回复：</span>
               <span className="text-ink-700 font-medium">{replyOriginal.email.subject || '(no subject)'}</span>
             </div>
             <div className="mt-0.5 truncate">
-              from <span className="text-ink-700">{replyOriginal.email.from}</span>
+              来自 <span className="text-ink-700">{replyOriginal.email.from}</span>
             </div>
           </div>
         )}
         {isReply && (
           <PillField
-            label="Cc"
+            label="抄送"
             entries={cc}
             onChange={setCc}
-            placeholder="add anyone to cc (optional)"
+            placeholder="将任何人添加到抄送（可选）"
             autocompletePool={pool}
           />
         )}
@@ -486,7 +486,7 @@ export function EmailComposer() {
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder={isReply ? 'Write your reply…' : 'Write your message…'}
+          placeholder={isReply ? "写下你的回复..." : "写下您的信息..."}
           className="email-composer-body m-3 flex-1 resize-none rounded-2xl border border-hairline bg-inset px-4 py-3.5 font-sans text-[14px] leading-[1.6] text-ink outline-none placeholder:text-ink-secondary"
           autoFocus
         />
@@ -536,17 +536,17 @@ export function EmailComposer() {
             onClick={() => fileInputRef.current?.click()}
             disabled={sending}
             className="rounded-xl border border-hairline bg-raised px-3 py-2 text-[12px] font-semibold text-ink transition hover:border-sky2-200 hover:text-skype-deep disabled:opacity-50"
-            title="Attach a file"
-          >📎 Attach</button>
+            title="附加文件"
+          >📎 附上</button>
           <span className="text-[11px] text-ink-300 mr-auto">
-            from <span className="font-mono text-ink-500">{me?.email ?? '(no auth email)'}</span>
+            来自 <span className="font-mono text-ink-500">{me?.email ?? '(no auth email)'}</span>
           </span>
           <button
             type="button"
             onClick={close}
             disabled={sending}
             className="rounded-xl px-3 py-2 text-[12px] font-semibold text-ink-secondary transition hover:bg-raised hover:text-ink disabled:opacity-50"
-          >Cancel</button>
+          >取消</button>
           <button
             type="button"
             onClick={submit}
@@ -554,7 +554,7 @@ export function EmailComposer() {
             className={cn(
               'rounded-xl bg-accent px-4 py-2 text-[12px] font-semibold text-white transition hover:brightness-110 disabled:opacity-50',
             )}
-          >{sending ? 'Sending…' : isReply ? 'Send reply' : 'Send'}</button>
+          >{sending ? "正在发送..." : isReply ? "发送回复" : "发送"}</button>
         </div>
       </div>
     </div>

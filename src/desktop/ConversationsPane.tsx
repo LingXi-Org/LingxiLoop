@@ -222,7 +222,7 @@ export function ConversationsPane() {
 
   return (
     <aside className="relative flex h-full min-h-0 flex-col border-r border-hairline bg-panel text-ink">
-      <div className="omb-drag flex h-12 shrink-0 items-center justify-between px-4 pt-1">
+      <div className="desktop-window-toolbar omb-drag flex h-12 shrink-0 items-center justify-between px-4 pt-1">
         {!isElectron ? (
           <div className="flex items-center gap-2"><span className="size-3 rounded-full bg-[#ff5f57]" /><span className="size-3 rounded-full bg-[#febc2e]" /><span className="size-3 rounded-full bg-[#28c840]" /></div>
         ) : isMac ? <div className="w-[72px]" /> : <div />}

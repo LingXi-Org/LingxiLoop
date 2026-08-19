@@ -34,7 +34,7 @@ import { CloudLogo } from './Avatar'
 import { GetDesktopAppLink } from './GetDesktopAppLink'
 import { WindowDragStrip } from './WindowDragStrip'
 
-const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
+const INVITE_TOKEN_KEY = 'cumora.pending-invite'
 
 /** Look at the URL (path / hash / query) for an invite token. Returns
  *  the token + a no-op cleanup that scrubs it from the URL so a refresh
@@ -116,7 +116,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const [busy, setBusy] = useState(false)
   const [acceptErr, setAcceptErr] = useState<string | null>(null)
   // After a successful accept in the WEB build, we stop on a success
-  // screen with "Open in LingxiLoop app" + "Download" CTAs instead of
+  // screen with "Open in Cumora app" + "Download" CTAs instead of
   // dropping the user straight into the SPA. The desktop app skips
   // this — they're already in the app, so we route them in.
   const [joinedCompany, setJoinedCompany] = useState<{ id: string; name: string; slug: string } | null>(null)
@@ -192,12 +192,12 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
       <div
         className="w-full max-w-[420px] rounded-[18px] p-8 flex flex-col items-center gap-6"
         style={{
-          background: 'white',
+          background: 'var(--cloud)',
           border: '1px solid var(--ink-100)',
           boxShadow: '0 30px 60px -30px rgba(10, 30, 60, 0.20), 0 0 0 1px rgba(0, 80, 140, 0.04)',
         }}
       >
-        <CloudLogo size={56} />
+        <CloudLogo size={56} rounded />
 
         {joinedCompany && (
           <JoinedSuccessBlock
@@ -208,61 +208,61 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
 
         {!joinedCompany && previewErr && (
           <ErrorBlock
-            title="Couldn't load this invitation"
+            title="无法加载此邀请"
             body={previewErr}
             onDismiss={() => { clearPendingInvite(); onDone() }}
           />
         )}
 
         {!joinedCompany && !preview && !previewErr && (
-          <div className="text-[13px] text-ink-400 italic font-display">checking your invitation…</div>
+          <div className="text-[13px] text-ink-400 italic font-display">正在检查您的邀请...</div>
         )}
 
         {!joinedCompany && preview && preview.status === 'not_found' && (
           <ErrorBlock
-            title="That invite link doesn't work"
-            body="It may have been mistyped. Ask the person who invited you to send a fresh link."
+            title="该邀请链接无效"
+            body="链接可能输入有误。请让邀请人重新发送一条新的邀请链接。"
             onDismiss={() => { clearPendingInvite(); onDone() }}
           />
         )}
 
         {!joinedCompany && preview && preview.status === 'revoked' && (
           <ErrorBlock
-            title="This invitation was revoked"
-            body={`The owners of ${companyName} cancelled it. Ask them to send a new invite.`}
+            title="该邀请已被撤销"
+            body={`${companyName} 的所有者已取消此邀请。请让他们发送新的邀请。`}
             onDismiss={() => { clearPendingInvite(); onDone() }}
           />
         )}
 
         {!joinedCompany && preview && preview.status === 'expired' && (
           <ErrorBlock
-            title="This invitation expired"
-            body={`Invitations to ${companyName} expire after 7 days. Ask for a fresh one.`}
+            title="该邀请已过期"
+            body={`${companyName} 的邀请会在 7 天后过期。请索取新的邀请。`}
             onDismiss={() => { clearPendingInvite(); onDone() }}
           />
         )}
 
         {!joinedCompany && preview && preview.status === 'consumed' && (
           <ErrorBlock
-            title="This invitation was already used"
-            body={`The link to ${companyName} is single-use and someone already redeemed it.`}
+            title="该邀请已被使用"
+            body={`前往 ${companyName} 的链接只能使用一次，已被其他人使用。`}
             onDismiss={() => { clearPendingInvite(); onDone() }}
           />
         )}
 
         {!joinedCompany && preview && preview.status === 'wrong_email' && inv && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <h1 className="font-display text-[20px] text-ink-900">Wrong account</h1>
+            <h1 className="font-display text-[20px] text-ink-900">账号错误</h1>
             <p className="text-[13px] text-ink-500 font-display italic leading-relaxed">
-              This invite to <b className="not-italic text-ink-900">{companyName}</b> is reserved for{' '}
-              <b className="not-italic text-ink-900">{inv.email}</b>, but you're signed in as{' '}
-              <b className="not-italic text-ink-900">{user?.email}</b>. Sign out and back in with the right email.
+              此邀请 <b className="not-italic text-ink-900">{companyName}</b> 保留用于{' '}
+              <b className="not-italic text-ink-900">{inv.email}</b>，但您登录的身份为{' '}
+              <b className="not-italic text-ink-900">{user?.email}</b>。注销并使用正确的电子邮件重新登录。
             </p>
             <button
               onClick={() => { useAuth.getState().clear() }}
               className="px-4 py-2 rounded-[10px] text-[13px] font-semibold transition"
               style={{ background: 'var(--ink-700)', color: 'white' }}
-            >Sign out</button>
+            >退出登录</button>
           </div>
         )}
 
@@ -281,7 +281,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           <div className="flex flex-col items-center gap-5 text-center w-full">
             <div className="space-y-1">
               <div className="text-[12.5px] text-ink-400 font-display italic">
-                {inviter} invited you to
+                {inviter} 邀请您
               </div>
               <h1 className="font-display text-[24px] tracking-tight text-ink-900">
                 {companyName}
@@ -306,11 +306,11 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
                     background: 'var(--skype)',
                     boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
                   }}
-                >{busy ? 'Joining…' : `Join ${companyName} as ${inv.role}`}</button>
+                >{busy ? '正在加入…' : `以 ${inv.role} 身份加入 ${companyName}`}</button>
                 <button
                   onClick={() => { clearPendingInvite(); onDone() }}
                   className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic"
-                >Not now</button>
+                >暂不</button>
               </>
             )}
 
@@ -325,17 +325,16 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     </div>
   )
 }
-
-/** Best-effort lingxiloop:// deep link. If the OS protocol handler isn't
+/** Best-effort cumora:// deep link. If the OS protocol handler isn't
  *  registered, browsers fail silently (no broken-page) and the user just
  *  stays put — at which point the visible Download button below is the
  *  next thing they reach for. */
 function tryOpenDesktopApp() {
-  try { location.href = 'lingxiloop://open' } catch { /* swallow */ }
+  try { location.href = 'cumora://open' } catch { /* swallow */ }
 }
 
 /** Success state shown after a successful accept in the WEB build. Offers
- *  "Open in LingxiLoop app" (best-effort lingxiloop:// deep link) and a download
+ *  "Open in Cumora app" (best-effort cumora:// deep link) and a download
  *  CTA, with "continue in browser" as the soft fallback. */
 function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
   companyName: string
@@ -354,10 +353,10 @@ function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
       </div>
       <div className="space-y-1">
         <h1 className="font-display text-[22px] tracking-tight text-ink-900">
-          Welcome to {companyName}
+          欢迎来到 {companyName}
         </h1>
         <p className="text-[12.5px] text-ink-500 font-display italic">
-          You're in. Continue directly to your LingxiLoop workspace.
+          您已进入。直接继续前往您的 LingxiLoop 工作区。
         </p>
       </div>
       <div className="w-full flex flex-col gap-2.5">
@@ -368,13 +367,13 @@ function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
             background: 'var(--skype)',
             boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
           }}
-        >Open in LingxiLoop app</button>
+        >在 LingxiLoop 应用程序中打开</button>
         <GetDesktopAppLink variant="button-secondary" />
         {!isWebAppHost && (
           <button
             onClick={onContinueInBrowser}
             className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-          >Continue in browser</button>
+          >在浏览器中继续</button>
         )}
       </div>
     </div>
@@ -393,9 +392,9 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
 }) {
   return (
     <div className="flex flex-col items-center gap-5 text-center w-full">
-      <h1 className="font-display text-[20px] text-ink-900">You're already in {companyName}</h1>
+      <h1 className="font-display text-[20px] text-ink-900">你已经在 {companyName}</h1>
       <p className="text-[12.5px] text-ink-500 font-display italic -mt-2">
-        Pick up where you left off — on this device or anywhere you've installed LingxiLoop.
+        从您上次停下的地方继续 - 在此设备上或您安装了 LingxiLoop 的任何地方。
       </p>
       <div className="w-full flex flex-col gap-2.5">
         <button
@@ -405,12 +404,12 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
             background: 'var(--skype)',
             boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
           }}
-        >Open in LingxiLoop desktop</button>
+        >在LingxiLoop桌面中打开</button>
         <GetDesktopAppLink variant="button-secondary" />
         <button
           onClick={onSwitchInBrowser}
           className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-        >Continue in browser</button>
+        >在浏览器中继续</button>
       </div>
     </div>
   )
@@ -427,24 +426,21 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
           onClick={onDismiss}
           className="px-4 py-2 rounded-[10px] text-[12.5px] font-semibold text-ink-700 transition"
           style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
-        >Continue to LingxiLoop</button>
+        >继续LingxiLoop</button>
       )}
     </div>
   )
 }
 
 function SignInToAccept({ token }: { token: string }) {
-  const [busy, setBusy] = useState<'lingxi' | 'google' | 'github' | null>(null)
-  const [signInError, setSignInError] = useState<string | null>(null)
-  const go = (provider: 'lingxi' | 'google' | 'github') => {
+  const [busy, setBusy] = useState<'lingxi' | null>(null)
+  const go = (provider: 'lingxi') => {
     setBusy(provider)
-    setSignInError(null)
     // Persist BEFORE redirect so the post-OAuth landing can resume here.
     stashPendingInvite(token)
     if (isElectron && window.lingxiloop?.auth) {
       const origin = getServerOrigin()
       if (!origin) {
-        setSignInError('No LingxiLoop server is configured for this desktop build.')
         setBusy(null)
         return
       }
@@ -468,61 +464,23 @@ function SignInToAccept({ token }: { token: string }) {
   return (
     <div className="w-full flex flex-col gap-2.5">
       <div className="text-[12.5px] text-ink-500 font-display italic text-center">
-        Sign in to accept this invite
+        登录以接受此邀请
       </div>
-      {signInError && <div className="text-[12px] text-coral text-center">{signInError}</div>}
       <button
         type="button"
         onClick={() => go('lingxi')}
         disabled={busy !== null}
-        className="h-11 rounded-[10px] bg-ink-900 hover:bg-ink-800 text-white transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
+        className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
       >
-        {busy === 'lingxi' ? 'Redirecting…' : 'Continue with LingxiIdentity'}
-      </button>
-      <button
-        type="button"
-        onClick={() => go('google')}
-        disabled={busy !== null}
-        className="h-11 rounded-[10px] border border-ink-200 bg-white hover:bg-cloud transition-colors flex items-center justify-center gap-3 text-[14px] text-ink-800 disabled:opacity-60"
-      >
-        <GoogleMark />
-        {busy === 'google' ? 'Redirecting…' : 'Continue with Google'}
-      </button>
-      <button
-        type="button"
-        onClick={() => go('github')}
-        disabled={busy !== null}
-        className="h-11 rounded-[10px] bg-[#1f2328] hover:bg-[#2a3037] text-white transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
-      >
-        <GitHubMark />
-        {busy === 'github' ? 'Redirecting…' : 'Continue with GitHub'}
+        {busy === 'lingxi' ? '正在跳转…' : '使用 LingxiIdentity 继续'}
       </button>
       <div className="text-[10.5px] text-ink-300 text-center font-display italic">
-        We use your provider only to verify it's you — no posting, no scope creep.
+        我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
       </div>
       <div className="text-[11.5px] text-ink-400 text-center font-display italic pt-1">
-        Don't have the desktop app yet?{' '}
-        <GetDesktopAppLink variant="text" label="Get LingxiLoop" />
+        还没有桌面应用程序？{' '}
+        <GetDesktopAppLink variant="text" label="获取 LingxiLoop" />
       </div>
     </div>
-  )
-}
-
-function GoogleMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
-  )
-}
-
-function GitHubMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1-.02-1.95-3.2.69-3.88-1.54-3.88-1.54-.52-1.32-1.28-1.67-1.28-1.67-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18.92-.26 1.91-.39 2.9-.39.99 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.12 3.06.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.4-5.25 5.68.41.36.78 1.07.78 2.16 0 1.56-.01 2.81-.01 3.19 0 .31.21.67.8.55C20.22 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/>
-    </svg>
   )
 }

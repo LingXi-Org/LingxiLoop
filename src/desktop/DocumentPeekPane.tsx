@@ -33,7 +33,7 @@ export function DocumentPeekPane() {
           <div className="w-12 h-12 rounded-[12px] grid place-items-center bg-sky2-50 text-skype-deep">
             <IDoc className="w-5 h-5" />
           </div>
-          <div className="text-[12.5px] font-display italic">Opening document…</div>
+          <div className="text-[12.5px] font-display italic">打开文档...</div>
         </div>
       </aside>
     )
@@ -46,16 +46,16 @@ export function DocumentPeekPane() {
           <div className="mx-auto w-12 h-12 rounded-[12px] grid place-items-center bg-coral-soft/45 text-coral-deep">
             <IDoc className="w-5 h-5" />
           </div>
-          <div className="mt-3 text-[14px] font-semibold text-ink-900">Document unavailable</div>
+          <div className="mt-3 text-[14px] font-semibold text-ink-900">文档不可用</div>
           <div className="mt-1 text-[12px] text-ink-500 leading-relaxed">
-            This artifact may have been deleted or moved out of this workspace.
+            此工件可能已被删除或移出此工作区。
           </div>
           <button
             type="button"
             onClick={closeDocumentPeek}
             className="mt-4 h-8 px-3 rounded-[8px] text-[12px] font-semibold text-ink-600 border border-ink-100 hover:bg-sky2-50 transition"
           >
-            Close
+            关闭
           </button>
         </div>
       </aside>

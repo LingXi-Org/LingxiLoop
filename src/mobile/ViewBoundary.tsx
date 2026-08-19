@@ -42,7 +42,7 @@ export class ViewBoundary extends Component<Props, State> {
         <div className="absolute inset-0 grid place-items-center bg-paper p-8 text-center">
           <div className="max-w-[280px]">
             <div className="font-display text-[18px] text-ink-900 mb-2">
-              {this.props.name} hit a snag.
+              {this.props.name} 遇到了障碍。
             </div>
             <div className="font-display italic text-[13px] text-ink-500 leading-snug mb-5">
               {this.state.error.message || 'An unexpected error occurred while rendering this tab.'}
@@ -52,7 +52,7 @@ export class ViewBoundary extends Component<Props, State> {
               onClick={() => this.setState({ error: null })}
               className="h-10 px-5 rounded-[10px] text-[13px] font-semibold text-white"
               style={{ background: 'var(--skype)' }}
-            >Try again</button>
+            >再试一次</button>
           </div>
         </div>
       )

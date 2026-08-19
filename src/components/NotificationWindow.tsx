@@ -307,7 +307,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); onDismiss() }}
-        aria-label="Dismiss"
+        aria-label="驳回"
         className="absolute grid place-items-center rounded-full text-ink-500 hover:bg-ink-100 hover:text-ink-900 transition"
         style={{
           top: 6, right: 6,

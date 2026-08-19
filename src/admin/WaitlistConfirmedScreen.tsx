@@ -40,19 +40,19 @@ export function WaitlistConfirmedScreen({ email }: { email: string | null }) {
     return null
   }
   return (
-    <div className="lingxiloop-waitlist-screen">
-      <div className="lingxiloop-waitlist-card">
-        <div className="lingxiloop-waitlist-emoji">⏳</div>
-        <div className="lingxiloop-waitlist-title">You're on the waitlist</div>
-        <div className="lingxiloop-waitlist-sub" style={{ marginBottom: 18 }}>
-          We saved <span className="lingxiloop-waitlist-email">{email ?? 'your email'}</span> and will let you know
-          the moment your account is ready. No further action needed.
+    <div className="cumora-waitlist-screen">
+      <div className="cumora-waitlist-card">
+        <div className="cumora-waitlist-emoji">⏳</div>
+        <div className="cumora-waitlist-title">您在候补名单上</div>
+        <div className="cumora-waitlist-sub" style={{ marginBottom: 18 }}>
+          我们保存了 <span className="cumora-waitlist-email">{email ?? 'your email'}</span> 会让你知道
+          当您的帐户准备就绪时。无需采取进一步行动。
         </div>
         <div style={{ marginBottom: 24, fontSize: 12.5, color: 'var(--ink-400)', fontStyle: 'italic' }}>
-          Want to get a head start? <GetDesktopAppLink variant="text" /> — you'll be one click from your workspace the second you're approved.
+          想要抢占先机吗？ <GetDesktopAppLink variant="text" /> — 一旦获得批准，您只需在工作区中单击一下即可。
         </div>
         <button className="btn-ghost" onClick={() => setDismissed(true)}>
-          Done
+          完成
         </button>
       </div>
     </div>

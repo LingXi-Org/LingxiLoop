@@ -16,7 +16,7 @@ export function HumanBadge() {
         boxShadow: 'inset 0 0.5px 0 rgba(255,255,255,0.7)',
       }}
     >
-      human
+      成员
     </span>
   )
 }

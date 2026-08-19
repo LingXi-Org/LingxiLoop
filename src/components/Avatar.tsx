@@ -163,7 +163,7 @@ export function AvatarStack({ ps, size = 28, max = 4 }: { ps: Participant[]; siz
   )
 }
 
-export function CloudLogo({ size = 22 }: { size?: number }) {
+export function CloudLogo({ size = 22, rounded = false }: { size?: number; rounded?: boolean }) {
   return (
     <img
       src="/logo.svg"
@@ -177,6 +177,7 @@ export function CloudLogo({ size = 22 }: { size?: number }) {
         display: 'inline-block',
         verticalAlign: 'middle',
         userSelect: 'none',
+        borderRadius: rounded ? Math.max(6, Math.round(size * 0.22)) : undefined,
       }}
     />
   )
