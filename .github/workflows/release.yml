@@ -9,7 +9,6 @@ on:
   push:
     branches: [main]
     paths: ['VERSION']
-  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -56,12 +55,13 @@ jobs:
         run: |
           set -euo pipefail
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-            EXISTING="$(git ls-remote --tags origin "refs/tags/$TAG" | awk '{print $1}')"
+            git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
+            EXISTING="$(git rev-list -n 1 "$TAG")"
             if [[ "$EXISTING" != "$GITHUB_SHA" ]]; then
-              echo "::error::$TAG already exists at $EXISTING, not release commit $GITHUB_SHA"
+              echo "::error::$TAG already resolves to $EXISTING, not release commit $GITHUB_SHA"
               exit 1
             fi
-            echo "$TAG already points at this release commit"
+            echo "$TAG already resolves to this release commit"
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
