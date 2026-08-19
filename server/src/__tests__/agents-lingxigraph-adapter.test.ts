@@ -198,7 +198,10 @@ test('computeActionKey ignores JSON key order (canonical serialization)', () => 
   assert.equal(keyA, keyB)
 })
 
-/* ─── issue #7: ledger-backed replay skips the real executor ─────────── */
+/* ─── issue #7: ledger-backed replay skips the real executor ─────────── *
+ * Only for action types WITHOUT their own sink-level idempotency — see
+ * the "single-owner" tests further down for message.send / reaction.toggle,
+ * which must bypass this generic ledger entirely (PR review P0-1). */
 
 function fakeLedger(): { port: ActionLedgerPort; claims: string[] } {
   const store = new Map<string, ActionLedgerClaim & { key: string }>()
@@ -220,7 +223,9 @@ function fakeLedger(): { port: ActionLedgerPort; claims: string[] } {
 
 test('a succeeded ledger entry replays its stored result without calling the real executor again', async () => {
   const { port: ledger } = fakeLedger()
-  const actions: CommunicationAction[] = [{ type: 'message.send', conversationId: 'c1', body: 'hello' }]
+  // conversation.leave has no sink-level idempotency of its own, so it's
+  // the generic ledger's job (not the sink's) to prevent a replay.
+  const actions: CommunicationAction[] = [{ type: 'conversation.leave', conversationId: 'c1' }]
   let executeCliCalls = 0
 
   const first = await executeCommunicationActions({
@@ -230,7 +235,7 @@ test('a succeeded ledger entry replays its stored result without calling the rea
     ledger,
     executeCli: async () => {
       executeCliCalls++
-      return { ok: true, exitCode: 0, text: 'sent (m-1, seq 1)' }
+      return { ok: true, exitCode: 0, text: 'left c1' }
     },
   })
   assert.equal(first.completed, true)
@@ -246,17 +251,17 @@ test('a succeeded ledger entry replays its stored result without calling the rea
     ledger,
     executeCli: async () => {
       executeCliCalls++
-      return { ok: true, exitCode: 0, text: 'sent (m-2, seq 2)' }
+      return { ok: true, exitCode: 0, text: 'left c1 (again)' }
     },
   })
   assert.equal(retry.completed, true)
   assert.equal(executeCliCalls, 1, 'succeeded ledger replay must skip the real executor')
-  assert.deepEqual(retry.results[0], { ok: true, exitCode: 0, text: 'sent (m-1, seq 1)' })
+  assert.deepEqual(retry.results[0], { ok: true, exitCode: 0, text: 'left c1' })
 })
 
 test('a new input scope is free to repeat the same action content as a fresh execution', async () => {
   const { port: ledger } = fakeLedger()
-  const actions: CommunicationAction[] = [{ type: 'message.send', conversationId: 'c1', body: 'hello' }]
+  const actions: CommunicationAction[] = [{ type: 'conversation.leave', conversationId: 'c1' }]
   let executeCliCalls = 0
   const run = (inputScopeKey: string) => executeCommunicationActions({
     agentId: 'agent-1',
@@ -265,7 +270,7 @@ test('a new input scope is free to repeat the same action content as a fresh exe
     ledger,
     executeCli: async () => {
       executeCliCalls++
-      return { ok: true, exitCode: 0, text: `sent (m-${executeCliCalls}, seq ${executeCliCalls})` }
+      return { ok: true, exitCode: 0, text: `left c1 (${executeCliCalls})` }
     },
   })
 
@@ -274,13 +279,47 @@ test('a new input scope is free to repeat the same action content as a fresh exe
   assert.equal(executeCliCalls, 2, 'a genuinely new inbox scope must not be deduped against an old one')
 })
 
-test('communicationActionToArgv only carries the internal idempotency key on the P0 sink action types', () => {
-  const send = communicationActionToArgv({ type: 'message.send', conversationId: 'c1', body: 'hi' }, 'key-1')
-  assert.deepEqual(send, ['reply', 'c1', 'hi', '--idempotency-key', 'key-1'])
+/* ─── issue #7 review (P0-1 / P0-2): single-owner sink idempotency ────── */
 
-  const react = communicationActionToArgv({ type: 'reaction.toggle', messageId: 'm1', emoji: '✅' }, 'key-2')
-  assert.deepEqual(react, ['react', 'm1', '✅', '--idempotency-key', 'key-2'])
+test('communicationActionToArgv never carries the idempotency key — it must travel out-of-band, not via argv', () => {
+  // Regression for PR review P0-2: an argv flag is settable by any
+  // legacy/bash-tool caller, human CLI, or BYOA pod, not just the trusted
+  // executor. There must be no code path that puts the key in argv.
+  const send = communicationActionToArgv({ type: 'message.send', conversationId: 'c1', body: 'hi' })
+  assert.deepEqual(send, ['reply', 'c1', 'hi'])
+  assert.equal(send.some((a) => a.includes('idempotency')), false)
 
-  const dm = communicationActionToArgv({ type: 'conversation.dm.create', participantId: 'p2', topic: 't', openingMessage: 'hi' }, 'key-3')
-  assert.deepEqual(dm, ['dm', 'p2', 't', 'hi'], 'non-P0 action types must not carry the internal flag')
+  const react = communicationActionToArgv({ type: 'reaction.toggle', messageId: 'm1', emoji: '✅' })
+  assert.deepEqual(react, ['react', 'm1', '✅'])
+})
+
+test('message.send and reaction.toggle receive the idempotency key via the internal (out-of-band) executeCli param, and skip the generic ledger entirely', async () => {
+  const { port: ledger, claims } = fakeLedger()
+  const actions: CommunicationAction[] = [
+    { type: 'message.send', conversationId: 'c1', body: 'hi' },
+    { type: 'reaction.toggle', messageId: 'm1', emoji: '✅' },
+  ]
+  const calls: Array<{ argv: string[]; internal?: { idempotencyKey?: string } }> = []
+
+  await executeCommunicationActions({
+    agentId: 'agent-1',
+    inputScopeKey: 'scope-1',
+    actions,
+    ledger,
+    executeCli: async (argv, internal) => {
+      calls.push({ argv, internal })
+      return { ok: true, exitCode: 0, text: 'ok' }
+    },
+  })
+
+  assert.equal(calls.length, 2)
+  for (const call of calls) {
+    assert.equal(call.argv.some((a) => a.includes('idempotency')), false, 'argv must never carry the key')
+    assert.ok(call.internal?.idempotencyKey, 'the internal param must carry the key for a P0 sink-owned action')
+  }
+  // PR review P0-1: the generic ledger must never be consulted for these
+  // two action types — claiming here BEFORE the sink's own transaction
+  // would pre-insert a 'pending' row that the sink's atomic claim then
+  // finds already taken, self-conflicting on the very first execution.
+  assert.deepEqual(claims, [], 'the generic ledger must not be claimed for sink-owned action types')
 })

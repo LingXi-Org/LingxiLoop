@@ -1501,7 +1501,7 @@ async function cmdKick(parsed: ParsedArgs): Promise<CliResult> {
   }])
 }
 
-async function cmdReply(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const me = resolveAs(parsed)
   const convoId = parsed.positional[0]
   // Strip any hallucinated <tool_call> XML on the way in too — defense in depth.
@@ -1520,14 +1520,13 @@ async function cmdReply(parsed: ParsedArgs): Promise<CliResult> {
   // quotes would leak content, so the server-side path enforces that too.
   const quoteFlag = parsed.flags.quote ?? parsed.flags.q
   const quotedMessageId = quoteFlag ? String(quoteFlag).trim() : null
-  // Internal, LingxiLoop-generated idempotency key (issue #7) — set only by
-  // the communication-action executor (executeCommunicationActions →
-  // communicationActionToArgv), never by the model. Enforced via a unique
-  // index on messages.idempotency_key: a retried/duplicate-waked send with
-  // the SAME key lands on the SAME row instead of inserting a second
-  // message. Not part of the documented CLI usage above on purpose.
-  const idempotencyKeyFlag = parsed.flags['idempotency-key']
-  const idempotencyKey = typeof idempotencyKeyFlag === 'string' && idempotencyKeyFlag.trim() ? idempotencyKeyFlag.trim() : null
+  // Internal, LingxiLoop-generated idempotency key (issue #7) — arrives ONLY
+  // via the out-of-band `internal` context (see RunCliInternalContext),
+  // never as an argv flag. No CLI caller (human, legacy bash-tool agent,
+  // BYOA pod) can set or spoof this. Enforced via a unique index on
+  // messages.idempotency_key: a retried/duplicate-waked send with the SAME
+  // key lands on the SAME row instead of inserting a second message.
+  const idempotencyKey = internal.idempotencyKey?.trim() || null
   if (!convoId || (!body && !hasAttachFlag)) {
     return err('usage: reply <convo_id> "<body>" [--quote <msg_id>] [--attach <url> | --generate-image "<prompt>" [--size square|wide|tall] | --attach-text "<filename>" "<content>" | --attach-bytes "<filename>" --bytes-b64 "<base64>" [--bytes-mime "<mime>"]]')
   }
@@ -5460,11 +5459,7 @@ function buildToolArgs(toolName: string, parsed: ParsedArgs): { argsJson: string
       const messageId = pos[0]
       const emoji = pos[1]
       if (!messageId || !emoji) return { error: 'usage: react <message_id> <emoji>' }
-      // Internal idempotency key (issue #7) — see the matching comment in
-      // cmdReply. Only ever set by the communication-action executor.
-      const idempotencyKeyFlag = f['idempotency-key']
-      const idempotencyKey = typeof idempotencyKeyFlag === 'string' && idempotencyKeyFlag.trim() ? idempotencyKeyFlag.trim() : undefined
-      return { argsJson: JSON.stringify({ message_id: messageId, emoji, ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}) }) }
+      return { argsJson: JSON.stringify({ message_id: messageId, emoji }) }
     }
     case 'dm_with': {
       const partnerId = pos[0]
@@ -5904,13 +5899,17 @@ async function cmdDoc(parsed: ParsedArgs): Promise<CliResult> {
   return err(`unknown doc op: ${op}\nusage: doc {ls|create|read|append|prepend|image|image-delete|replace|rename|delete} ...`)
 }
 
-async function runTool(toolName: string, parsed: ParsedArgs): Promise<CliResult> {
+async function runTool(toolName: string, parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const built = buildToolArgs(toolName, parsed)
   if ('error' in built) return err(built.error)
   const me = resolveAs(parsed)
 
   const { executeTool } = await import('./tools.js')
-  const r = await executeTool({ agentId: me, name: toolName, argsJson: built.argsJson })
+  // Internal idempotency key (issue #7) — out-of-band only, see
+  // RunCliInternalContext. Passed as a first-class executeTool param
+  // rather than folded into argsJson so it can never be confused with
+  // (or overridden by) a model/CLI-supplied tool argument.
+  const r = await executeTool({ agentId: me, name: toolName, argsJson: built.argsJson, idempotencyKey: internal.idempotencyKey })
   const sideEffects = cliToolSideEffects(toolName, r.output, me)
   if (parsed.flags.json) {
     return r.ok
@@ -5963,7 +5962,18 @@ function cliToolSideEffects(toolName: string, output: unknown, agentId: string):
 
 /* ============== entry point ============== */
 
-export async function runCli(argv: string[]): Promise<CliResult> {
+/** Trusted, out-of-band execution context that never travels through argv
+ *  (issue #7 review: a plain `--idempotency-key` argv flag is settable by
+ *  any legacy/bash-tool caller, human CLI, or BYOA pod — none of which
+ *  should be able to spoof a LingxiLoop-generated idempotency key). Only
+ *  `executeCommunicationActions()` (via `AgentRuntimeClient.executeCli`'s
+ *  `internal` param) ever supplies this — there is no argv flag, CLI help
+ *  text, or parseArgs path that can set it. */
+export interface RunCliInternalContext {
+  idempotencyKey?: string
+}
+
+export async function runCli(argv: string[], internal: RunCliInternalContext = {}): Promise<CliResult> {
   // Pull a leading global `--as <id>` (or `--as=<id>`) off. Runtime `/cli`
   // prepends identity this way, and direct dev/test callers often do too.
   // Re-attach it to the subcommand args so per-command parsers still see
@@ -6017,7 +6027,7 @@ export async function runCli(argv: string[]): Promise<CliResult> {
       case 'mute':                return await cmdMute(parsed)
       case 'follow':              return await cmdFollow(parsed)
       case 'ship':                return await cmdShip(parsed)
-      case 'reply':               return await cmdReply(parsed)
+      case 'reply':               return await cmdReply(parsed, internal)
       case 'leave':               return await cmdLeave(parsed)
       case 'kick':                return await cmdKick(parsed)
       case 'invite':              return await cmdInvite(parsed)
@@ -6053,7 +6063,7 @@ export async function runCli(argv: string[]): Promise<CliResult> {
       case 'kanban':              return await cmdBoard(parsed)
       case 'card':                return await cmdCard(parsed)
       case 'doc':                 return await cmdDoc(parsed)
-      case 'react':               return await runTool('react', parsed)
+      case 'react':               return await runTool('react', parsed, internal)
       case 'dm':                  return await runTool('dm_with', parsed)
       case 'pull-group':          return await runTool('pull_group', parsed)
       case 'palette':             return await runTool('palette', parsed)

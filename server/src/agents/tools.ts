@@ -53,6 +53,10 @@ export async function executeTool(args: {
    *  Optional so other call sites (rehire, manual replay) can keep
    *  running without a namespace. */
   ns?: FsNamespace | null
+  /** Internal, LingxiLoop-generated idempotency key (issue #7) — passed
+   *  out-of-band from `runCli`'s trusted `internal` context, never from
+   *  model/CLI-controllable args. Only consumed by `react` today. */
+  idempotencyKey?: string
 }): Promise<ToolResult> {
   const t0 = Date.now()
   const id = `t-${randomUUID()}`
@@ -78,7 +82,7 @@ export async function executeTool(args: {
       case 'set_turn_status':    result = tSetTurnStatus(parsed); break
       case 'shell':
       case 'bash':               result = await tBash(parsed, args.agentId, args.ns ?? null); break
-      case 'react':              result = await tReact(parsed, args.agentId); break
+      case 'react':              result = await tReact(parsed, args.agentId, args.idempotencyKey); break
       // Native FS tools — require an active per-turn namespace. Reject
       // gracefully if called outside a turn (shouldn't happen via the
       // normal LLM path; defensive).
@@ -177,7 +181,7 @@ function noNamespace(toolName: string, displayName: string): ToolResult {
   }
 }
 
-async function tReact(args: Record<string, unknown>, agentId: string): Promise<ToolResult> {
+async function tReact(args: Record<string, unknown>, agentId: string, idempotencyKeyArg?: string): Promise<ToolResult> {
   const t0 = Date.now()
   const messageId = String(args.message_id ?? '').trim()
   const emoji = String(args.emoji ?? '').trim()
@@ -185,10 +189,12 @@ async function tReact(args: Record<string, unknown>, agentId: string): Promise<T
     return { ok: false, output: null, error: 'message_id and emoji required', durationMs: Date.now() - t0,
       display: { name: 'react', arg: '', status: 'error', detail: 'missing args' } }
   }
-  // Internal, LingxiLoop-generated idempotency key (issue #7) — only ever
-  // set by the communication-action executor, never by the model.
-  const idempotencyKey = typeof args.idempotency_key === 'string' && args.idempotency_key.trim()
-    ? args.idempotency_key.trim() : null
+  // Internal, LingxiLoop-generated idempotency key (issue #7) — arrives ONLY
+  // via the out-of-band `idempotencyKeyArg` param (threaded from runCli's
+  // trusted `internal` context through executeTool), never from `args`
+  // (the tool's model/CLI-controllable JSON args) — so no caller can spoof
+  // or collide a key across conversations.
+  const idempotencyKey = idempotencyKeyArg?.trim() || null
 
   // reaction.toggle is NOT naturally idempotent — replaying it flips state
   // back. When an idempotency key is present, claim-and-mutate atomically

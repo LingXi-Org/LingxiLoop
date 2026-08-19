@@ -74,10 +74,16 @@ export const pgActionLedger: ActionLedgerPort = {
   },
 
   async markFailed(key, error): Promise<void> {
+    // Guard against downgrading an already-succeeded row: a caller can
+    // race a timeout against a slow-but-ultimately-successful execution
+    // (the CLI call keeps running server-side after the caller's own
+    // Promise.race timed out and called markFailed) — if that execution
+    // then commits 'succeeded' a moment later, this must not overwrite it
+    // back to 'failed'.
     await pool.query(
       `UPDATE agent_action_executions
           SET status = 'failed', error = $2, updated_at = NOW()
-        WHERE idempotency_key = $1`,
+        WHERE idempotency_key = $1 AND status <> 'succeeded'`,
       [key, error],
     )
   },

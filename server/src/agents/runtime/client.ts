@@ -220,8 +220,13 @@ export interface AgentRuntimeClient {
    *  rules, and team roster. Null when the agent isn't a real persona. */
   buildSystemPrompt(agentId: string, mode?: SystemPromptMode): Promise<string | null>
 
-  /** Execute one canonical communication action as the JWT-pinned agent. */
-  executeCli(agentId: string, argv: string[]): Promise<CliResult>
+  /** Execute one canonical communication action as the JWT-pinned agent.
+   *  `internal` is an out-of-band, trusted execution context (issue #7) —
+   *  currently just an idempotency key for message.send / reaction.toggle.
+   *  It never travels through `argv`, so no CLI/model-controllable input
+   *  can set or spoof it. Only `executeCommunicationActions()` populates
+   *  it; ordinary bash-tool calls never pass it. */
+  executeCli(agentId: string, argv: string[], internal?: { idempotencyKey?: string }): Promise<CliResult>
 
   /** Persist model usage produced outside the Node OpenAI client (LingxiGraph). */
   recordExternalLlmCall(args: {

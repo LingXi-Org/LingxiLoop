@@ -15,9 +15,9 @@
  * over HTTP.
  */
 import { randomUUID } from 'node:crypto'
+import { notifyAlert } from '../../alerting.js'
 import { pool } from '../../db/pool.js'
 import { CH_MESSAGE_NEW, CH_TYPING, publish, redis } from '../../redis.js'
-import { notifyAlert } from '../../alerting.js'
 import { freshenAttachmentUrl, type StoredAttachment } from '../../storage.js'
 
 /** Re-sign attachment download URLs just-in-time when loading messages for an
@@ -44,19 +44,22 @@ async function refreshAttachmentUrls(rows: ReadonlyArray<{ attachment?: unknown 
  *  only for the affected agent. */
 const inprocBusyHeartbeatFailures = new Map<string, number>()
 const INPROC_BUSY_HEARTBEAT_ALERT_THRESHOLD = 5
-import { companyIdForConversation } from '../../tenant.js'
-import { nextConversationSequence } from '../membership.js'
-import { getPersona } from '../personas.js'
+
 import {
-  setStatus as setStatusImpl,
   heartbeatStatus as heartbeatStatusImpl,
+  setStatus as setStatusImpl,
 } from '../../status.js'
+import { companyIdForConversation } from '../../tenant.js'
+import { runCli } from '../cli.js'
+import type { CliResult } from '../cli-result.js'
+import { recordLlmCall } from '../llm-ledger.js'
+import { nextConversationSequence } from '../membership.js'
 import {
   createAgentRun,
-  recordAgentEvent,
   finishAgentRun,
+  recordAgentEvent,
 } from '../observability.js'
-import { buildSystemPrompt as buildSystemPromptImpl } from '../personas.js'
+import { buildSystemPrompt as buildSystemPromptImpl, getPersona } from '../personas.js'
 import { loadSkillsIndex as loadSkillsIndexImpl } from '../skills.js'
 import type {
   AgentRuntimeClient,
@@ -68,13 +71,10 @@ import type {
   PersonaRow,
   RuntimeTokenUsage,
   SkillIndexEntry,
+  SystemPromptMode,
   WorklogEntry,
   WorkTaskType,
-  SystemPromptMode,
 } from './client.js'
-import type { CliResult } from '../cli-result.js'
-import { runCli } from '../cli.js'
-import { recordLlmCall } from '../llm-ledger.js'
 
 interface MemoryQueryRow {
   path: string
@@ -446,8 +446,8 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
     return buildSystemPromptImpl(agentId, mode)
   }
 
-  async executeCli(agentId: string, argv: string[]): Promise<CliResult> {
-    return runCli(['--as', agentId, ...argv])
+  async executeCli(agentId: string, argv: string[], internal?: { idempotencyKey?: string }): Promise<CliResult> {
+    return runCli(['--as', agentId, ...argv], internal)
   }
 
   async recordExternalLlmCall(args: {

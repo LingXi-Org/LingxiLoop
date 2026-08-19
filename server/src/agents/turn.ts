@@ -2172,7 +2172,7 @@ ${peerWorkBlock}`.trim()
       agentId,
       inputScopeKey,
       actions: result.actions,
-      executeCli: (argv) => runtime.executeCli(agentId, argv),
+      executeCli: (argv, internal) => runtime.executeCli(agentId, argv, internal),
       timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
       ledger: pgActionLedger,
     })
