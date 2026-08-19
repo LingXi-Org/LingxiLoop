@@ -148,7 +148,7 @@ function AboutSection() {
   const [supported, setSupported] = useState<boolean>(false)
 
   useEffect(() => {
-    const bridge = typeof window !== 'undefined' ? window.cumora?.update : undefined
+    const bridge = typeof window !== 'undefined' ? window.lingxiloop?.update : undefined
     if (!bridge) return
     void bridge.getAppInfo().then((info) => {
       setVersion(info.version)

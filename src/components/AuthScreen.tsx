@@ -67,20 +67,25 @@ export function AuthScreen() {
 
   function go(provider: 'lingxi') {
     setBusy(provider); setErr(null)
-    if (isElectron && window.cumora?.auth) {
+    if (isElectron && window.lingxiloop?.auth) {
       // Open the user's real browser (Safari / Chrome) so they see the
       // provider's authentic URL bar and so Google's embedded-webview
       // bans don't bite us. We pass `?return=http://127.0.0.1:47823/auth/done`
       // — the loopback HTTP server in main.cjs serves a styled
       // "Signed in" page that POSTs the fragment back to the main
       // process, which IPCs the renderer (see AuthGate's onToken).
-      const origin = getServerOrigin() || 'https://api.cumora.ai'
+      const origin = getServerOrigin()
+      if (!origin) {
+        setErr('此桌面端构建尚未配置 LingxiLoop 服务器。')
+        setBusy(null)
+        return
+      }
       // Arm a single-use nonce and thread it through the return URL. The server
       // round-trips it back onto /auth/done, the loopback page carries it into
       // the cumora:// deep link, and main accepts the token only if the nonce
       // matches — so a drive-by deep link the app never initiated is rejected
       // (anti session-fixation). arm() is Electron-only.
-      const auth = window.cumora.auth
+      const auth = window.lingxiloop.auth
       void (async () => {
         let ret = 'http://127.0.0.1:47823/auth/done'
         try {
@@ -98,13 +103,18 @@ export function AuthScreen() {
       // (our WebAuthPlugin). It hands the final cumora://auth#... callback
       // straight back to us — no SFSafariViewController, no broken 302
       // redirect to a custom URL scheme.
-      const origin = getServerOrigin() || 'https://api.cumora.ai'
-      const ret = encodeURIComponent('cumora://auth')
+      const origin = getServerOrigin()
+      if (!origin) {
+        setErr('此移动端构建尚未配置 LingxiLoop 服务器。')
+        setBusy(null)
+        return
+      }
+      const ret = encodeURIComponent('lingxiloop://auth')
       void (async () => {
         try {
           const callbackUrl = await runOAuth({
             url: `${origin}/api/auth/start/${provider}?return=${ret}`,
-            callbackScheme: 'cumora',
+            callbackScheme: 'lingxiloop',
           })
           if (!callbackUrl) {
             // User cancelled — re-enable the button.
@@ -122,7 +132,7 @@ export function AuthScreen() {
             return
           }
           history.replaceState(null, '', location.pathname + location.search + hash)
-          window.dispatchEvent(new CustomEvent('cumora:oauth-token', { detail: hash }))
+          window.dispatchEvent(new CustomEvent('lingxiloop:oauth-token', { detail: hash }))
         } catch (err) {
           setErr(err instanceof Error ? err.message : '登录失败')
           setBusy(null)

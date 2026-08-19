@@ -27,7 +27,7 @@
  *   • not_found — bad link.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { api, type ApiInvitationPreview } from '@/api/client'
+import { api, getServerOrigin, type ApiInvitationPreview } from '@/api/client'
 import { useAuth } from '@/stores/auth'
 import { isElectron, isWebAppHost } from '@/lib/runtime'
 import { CloudLogo } from './Avatar'
@@ -438,14 +438,16 @@ function SignInToAccept({ token }: { token: string }) {
     setBusy(provider)
     // Persist BEFORE redirect so the post-OAuth landing can resume here.
     stashPendingInvite(token)
-    if (isElectron && window.cumora?.auth) {
-      const origin = (typeof localStorage !== 'undefined' && localStorage.getItem('cumora.serverUrl'))
-        || (import.meta.env.VITE_CUMORA_API_BASE as string | undefined)
-        || 'https://api.cumora.ai'
+    if (isElectron && window.lingxiloop?.auth) {
+      const origin = getServerOrigin()
+      if (!origin) {
+        setBusy(null)
+        return
+      }
       const inv = encodeURIComponent(token)
       // Arm a single-use nonce (anti session-fixation — see AuthScreen). The
       // nonce rides the return URL's query and must match on the inbound token.
-      const auth = window.cumora.auth
+      const auth = window.lingxiloop.auth
       void (async () => {
         let done = 'http://127.0.0.1:47823/auth/done'
         try {
