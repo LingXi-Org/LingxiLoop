@@ -376,6 +376,32 @@ async function mutateReaction(
   }
 }
 
+const DEFAULT_ACK_REACTIONS = new Set(['👀', '✅'])
+
+/** Guarantees every reply is paired with an acknowledgement reaction
+ *  (👀 or ✅) even if the model didn't call `react` itself — prompt
+ *  compliance for this was found to be inconsistent (agents mostly
+ *  treat reacting as optional / an alternative to replying rather than
+ *  a required accompaniment). Called after a `lingxiloop reply` side
+ *  effect is observed; a no-op if the agent already reacted with 👀 or
+ *  ✅ on this message (so an intentional react isn't clobbered). Never
+ *  throws — this is a best-effort fallback, not something that should
+ *  fail the turn. */
+export async function ensureAckReaction(messageId: string, agentId: string): Promise<void> {
+  try {
+    const { rows } = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM message_reactions
+        WHERE message_id = $1 AND user_id = $2 AND emoji = ANY($3::text[])`,
+      [messageId, agentId, [...DEFAULT_ACK_REACTIONS]],
+    )
+    if (Number(rows[0]?.count ?? '0') > 0) return
+    const { broadcast } = await mutateReaction(pool, messageId, '👀', agentId)
+    await broadcast()
+  } catch (err) {
+    console.warn('[tools] ensureAckReaction failed', err instanceof Error ? err.message : err)
+  }
+}
+
 async function tPalette(args: Record<string, unknown>, companyId: string | null, agentId: string): Promise<ToolResult> {
   const t0 = Date.now()
   const brief = String(args.brief ?? '').trim()

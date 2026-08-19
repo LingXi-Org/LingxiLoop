@@ -37,6 +37,7 @@ import type { AgentRuntimeClient } from './runtime/client.js'
 import { commit as commitFs, type FsNamespace, hydrate as hydrateFs, teardown as teardownFs } from './runtime/fs-namespace.js'
 import { executePodTool, TOOL_DEFS_RESPONSES } from './runtime/pod-tools.js'
 import { runtime } from './runtime/select.js'
+import { ensureAckReaction } from './tools.js'
 import type { PollWakeBrief } from './runtime/wake-bus.js'
 import {
   canDrainSteer,
@@ -1122,6 +1123,12 @@ function shouldVerifyTerminalCompletion(args: {
   if (args.inbox.length === 0) return false
   if (!isTerminalTurnStatus(args.status.status)) return false
   if (args.postedReplyViaTool) return false
+  // A DM is inherently 1:1 — there is no peer who might already be
+  // covering it, so "stay silent, someone else has it" never applies.
+  // Silence here always reads as the agent going unresponsive. Force the
+  // verifier even with zero side effects (bare set_turn_status("done"))
+  // so silently-completing a DM turn can't slip through unchecked.
+  if (args.inbox.some((m) => m.conversation_kind === 'dm')) return true
   // Non-reply side effects can be complete work (e.g. update a kanban card) or
   // only an acknowledgement (e.g. react with eyes before producing an image).
   // Let a model judge the exact context from the inbox + typed side effects.
@@ -2350,9 +2357,11 @@ Now decide — like a real teammate would. World actions use bash(); turn state 
                                                             lingxiloop calendar cancel <event_id>                        — stop a recurring schedule you no longer need
   set_turn_status({ status, reason, next_step, assistant_text?, reply_conversation_id? })
                                                         — declare your turn state. Use this before intentionally stopping and after major milestones.
-  If there is truly nothing to do, call set_turn_status({ status: "done", reason: "nothing relevant to act on", next_step: "" }) and do not send a chat reply.
+  If there is truly nothing to do, call set_turn_status({ status: "done", reason: "nothing relevant to act on", next_step: "" }) and do not send a chat reply. This "nothing to do" exit does NOT apply in a direct message (1:1 DM) or when a message names/@-mentions you specifically — there, silence is never an acceptable outcome; see the DM/DIRECT ADDRESS rule below.
 
 Behave like a real person on a chat app:
+- DM / DIRECT ADDRESS — REPLY IS MANDATORY. In a 1:1 DM, or when a message in any conversation directly names or @-mentions you, you MUST post a \`lingxiloop reply\` before calling set_turn_status("done"). There is no peer who might already be covering a DM, and being named means the room is waiting on YOU specifically — going silent reads as unresponsive, not as good group etiquette. This overrides the "peer already has it" / "you don't have to be the one" guidance below, which is scoped to un-targeted group chatter only.
+- EVERY REPLY MUST CARRY A REACTION. Pair every \`lingxiloop reply\` you post with a react (👀 or ✅) on the message you're responding to — 👀 while starting/acknowledging, ✅ once you've delivered the result. A reply with no reaction on the triggering message is incomplete; do not treat reacting and replying as alternatives to each other.
 - ANNOUNCE BEFORE LONG OR VISIBLE-EFFECT WORK. Real teammates don't act in silence. Before any action that will keep the asker waiting >3-5s without visible output OR that produces a shared real-world artifact (creating a doc, generating an image, kicking off multi-step research, sending an email, pulling a new group, scheduling a calendar event), POST A SHORT INTENT MESSAGE first via \`lingxiloop reply\` — one line, plain language, just enough that the room knows "I'm on it and here's roughly what I'm doing." Examples: "我去开个共享文档，把每人一段拼进去 — 给我 20 秒" / "Researching the API conventions, will report back in ~30s" / "Drafting the email now". THEN do the work. THEN reply with the actual result. Two reasons: (1) in a 1:1 or DM the user staring at silence is wondering whether you crashed; (2) in a group convo, your intent message becomes the typing indicator peers were missing — anyone about to do the same thing sees it and yields, preventing parallel collisions on a shared resource. The intent message must be a SEPARATE \`lingxiloop reply\` call, NOT chained with \`&&\` to the actual tool call — peers can't see your intent until the message lands, and that takes a moment.
 - 👀 alone is fine for trivial acknowledgement ("yes I saw it, no action needed"), but it is NOT a substitute for an intent message when you're about to do real work. If you 👀 and then go quiet for 30s while you compose a doc, the room thinks you bailed.
 - If you use 👀 or a short "on it" message to acknowledge long work, keep going in this SAME turn. The acknowledgement is not the answer; finish the task and post a result or a clear failure.
@@ -2696,6 +2705,26 @@ Mechanics:
       return true
     }
 
+    // A retry re-enters the loop with fresh OpenAI item_id/call_ids, so any
+    // liveReplyPreviews entry keyed by the ABORTED attempt's call_id can
+    // never receive its done:true completion (that only fires when
+    // executePodTool is later called with that exact call_id — which won't
+    // happen again). Left alone, the client keeps rendering that orphaned
+    // partial-text bubble alongside the retry's real streaming/finalized
+    // reply until the 45s stale-timeout force-reloads — the "duplicate
+    // text" symptom. Explicitly finalize + drop every outstanding preview
+    // before a retry so the client clears the stale bubble immediately.
+    const finalizeStalePreviews = async (): Promise<void> => {
+      for (const [callId, preview] of liveReplyPreviews) {
+        liveReplyPreviews.delete(callId)
+        await publish(CH_MESSAGE_DELTA, {
+          type: 'message.delta', conversationId: preview.conversationId,
+          messageId: preview.messageId, authorId: agentId, delta: '',
+          sequence: preview.sequence, done: true, companyId: preview.companyId,
+        }).catch((error) => console.warn('[turn] stale reply preview cleanup failed', error))
+      }
+    }
+
     try {
       // Inner retry loop. attempt=0 sends full multimodal input; attempt=1
       // (only entered if image fetch fails) re-sends without images.
@@ -2705,6 +2734,7 @@ Mechanics:
         // contaminate observability / tool-call accounting on the retry.
         streamState = newResponseStreamState()
         assistantOutputItems.length = 0
+        await finalizeStalePreviews()
       }
       const retryKind = attempt === 0 ? null : imageStripRetryUsed ? 'images stripped' : 'provider connection'
       await runtime.recordEvent({
@@ -3185,6 +3215,19 @@ Mechanics:
         }
         if (bashOutputHasReplySideEffect(result.output)) {
           postedReplyViaTool = true
+          // Reacting is documented as optional ("👀 is fine if you want to
+          // acknowledge") and in practice agents almost never call `react`
+          // alongside a reply. Guarantee every reply is paired with an
+          // acknowledgement reaction regardless of prompt compliance: react
+          // on whatever the reply quoted, or — for an unquoted reply — the
+          // most recent inbound (non-self) message in that conversation,
+          // i.e. the message this reply is implicitly answering.
+          const replyEffect = sideEffects.find((e) => e.event === 'message.posted' && e.command === 'reply')
+          const targetMessageId = (replyEffect?.quotedMessageId as string | undefined)
+            ?? inbox.filter((m) => m.conversation_id === replyEffect?.conversationId && m.author_id !== agentId).at(-1)?.id
+          if (targetMessageId) {
+            void ensureAckReaction(targetMessageId, agentId)
+          }
         } else if (bashOutputSideEffectChannelUnreliable(result.output)) {
           replySideEffectChannelUnreliable = true
         }
