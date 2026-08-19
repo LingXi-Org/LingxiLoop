@@ -254,6 +254,93 @@ body {
   overflow: hidden;
 }
 
+/* Desktop conversation shell — intentionally scoped so the existing mobile,
+   auth, admin and notification surfaces retain their current visual system. */
+.desktop-openmaus {
+  --app: #070707;
+  --panel: #111111;
+  --card: #262626;
+  --raised: #2f2f2f;
+  --raised-hover: #3d3d3d;
+  --inset: #191919;
+  --hairline: rgba(255, 255, 255, 0.13);
+  --ink: #fcfcfc;
+  --ink-secondary: rgba(252, 252, 252, 0.6);
+  --accent: #1084fe;
+  --bubble-user: #5a5a5a;
+  --bubble-user-ink: #ffffff;
+  --bubble-agent: #262626;
+  --code-bg: #191919;
+
+  /* Compatibility aliases used by the existing rich-message components. */
+  --skype: #1084fe;
+  --skype-deep: #459ffe;
+  --skype-ink: #dbeafe;
+  --sky-50: rgba(16, 132, 254, 0.08);
+  --sky-100: rgba(16, 132, 254, 0.14);
+  --sky-200: rgba(69, 159, 254, 0.24);
+  --sky-300: #459ffe;
+  --sky2-50: var(--sky-50);
+  --sky2-100: var(--sky-100);
+  --sky2-200: var(--sky-200);
+  --sky2-300: var(--sky-300);
+  --paper: #070707;
+  --cloud: #262626;
+  --ink-900: #fcfcfc;
+  --ink-700: rgba(252, 252, 252, 0.86);
+  --ink-500: rgba(252, 252, 252, 0.6);
+  --ink-300: rgba(252, 252, 252, 0.38);
+  --ink-200: rgba(252, 252, 252, 0.22);
+  --ink-100: rgba(252, 252, 252, 0.12);
+
+  color: var(--ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme='light'] .desktop-openmaus {
+  --app: #f4f5f7;
+  --panel: #ffffff;
+  --card: #f1f2f4;
+  --raised: #e8eaed;
+  --raised-hover: #dde0e4;
+  --inset: #eceef1;
+  --hairline: rgba(15, 23, 42, 0.12);
+  --ink: #111318;
+  --ink-secondary: rgba(17, 19, 24, 0.58);
+  --bubble-user: #202329;
+  --bubble-user-ink: #ffffff;
+  --bubble-agent: #f1f2f4;
+  --code-bg: #e9ebef;
+  --paper: #f4f5f7;
+  --cloud: #ffffff;
+  --ink-900: #111318;
+  --ink-700: rgba(17, 19, 24, 0.84);
+  --ink-500: rgba(17, 19, 24, 0.58);
+  --ink-300: rgba(17, 19, 24, 0.38);
+  --ink-200: rgba(17, 19, 24, 0.22);
+  --ink-100: rgba(17, 19, 24, 0.11);
+}
+
+.desktop-openmaus ::selection { background: rgba(16, 132, 254, 0.45); color: var(--ink); }
+.desktop-openmaus ::-webkit-scrollbar { width: 8px; height: 8px; }
+.desktop-openmaus ::-webkit-scrollbar-thumb { background: var(--raised-hover); border-radius: 4px; }
+.desktop-openmaus ::-webkit-scrollbar-track { background: transparent; }
+.desktop-openmaus :focus-visible { outline: 2px solid #459ffe; outline-offset: 2px; }
+.omb-drag { -webkit-app-region: drag; user-select: none; }
+.omb-no-drag, .omb-no-drag * { -webkit-app-region: no-drag; }
+.desktop-openmaus[data-electron='true'] .omb-titlebar-safe {
+  padding-right: max(20px, calc(100vw - env(titlebar-area-x, 100vw) - env(titlebar-area-width, 0px)));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-openmaus *, .desktop-openmaus *::before, .desktop-openmaus *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Browser-mode atmospheric backdrop (skipped in Electron via :has() check) */
 @media (min-width: 768px) {
   body:not(.electron) {

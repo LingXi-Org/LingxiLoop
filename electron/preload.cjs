@@ -29,6 +29,11 @@ contextBridge.exposeInMainWorld('cumora', {
     setUnreadDot: (visible) => ipcRenderer.send('dock:set-unread-dot', !!visible),
   },
 
+  /** Keep native Windows/Linux window controls legible in both themes. */
+  windowChrome: {
+    setTheme: (theme) => ipcRenderer.send('window-chrome:set-theme', theme),
+  },
+
   /**
    * Notification window plumbing. Two consumers:
    *  - the MAIN window's React app calls `notify.push(payload)` when a

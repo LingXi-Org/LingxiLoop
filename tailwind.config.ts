@@ -5,6 +5,26 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        app: 'var(--app)',
+        panel: 'var(--panel)',
+        card: 'var(--card)',
+        raised: {
+          DEFAULT: 'var(--raised)',
+          hover: 'var(--raised-hover)',
+        },
+        inset: 'var(--inset)',
+        hairline: 'var(--hairline)',
+        ink: {
+          DEFAULT: 'var(--ink)',
+          secondary: 'var(--ink-secondary)',
+          900: 'var(--ink-900)',
+          700: 'var(--ink-700)',
+          500: 'var(--ink-500)',
+          300: 'var(--ink-300)',
+          200: 'var(--ink-200)',
+          100: 'var(--ink-100)',
+        },
+        accent: 'var(--accent)',
         skype: {
           DEFAULT: 'var(--skype)',
           deep: 'var(--skype-deep)',
@@ -32,14 +52,6 @@ const config: Config = {
           50: '#F6F3FF',
           100: '#ECE5FF',
           200: '#D9CCFF',
-        },
-        ink: {
-          900: 'var(--ink-900)',
-          700: 'var(--ink-700)',
-          500: 'var(--ink-500)',
-          300: 'var(--ink-300)',
-          200: 'var(--ink-200)',
-          100: 'var(--ink-100)',
         },
         cloud: 'var(--cloud)',
         paper: 'var(--paper)',

@@ -1019,9 +1019,18 @@ function createWindow() {
     minWidth: isDev ? 320 : 900,
     minHeight: isDev ? 480 : 600,
     show: false,
-    backgroundColor: '#E6F3FB',
+    backgroundColor: '#070707',
     icon: ICON_PATH,
-    titleBarStyle: process.platform === 'darwin' ? 'hidden' : 'default',
+    titleBarStyle: 'hidden',
+    ...(process.platform !== 'darwin'
+      ? {
+          titleBarOverlay: {
+            color: '#070707',
+            symbolColor: '#FCFCFC',
+            height: 44,
+          },
+        }
+      : {}),
     trafficLightPosition: { x: 16, y: 15 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -1207,6 +1216,16 @@ ipcMain.on('notification:push', (_event, payload) => {
 
 ipcMain.on('dock:set-unread-dot', (_event, visible) => {
   setDockUnreadDot(!!visible)
+})
+
+ipcMain.on('window-chrome:set-theme', (_event, theme) => {
+  if (!mainWindow || mainWindow.isDestroyed() || process.platform === 'darwin') return
+  const dark = theme !== 'light'
+  mainWindow.setTitleBarOverlay({
+    color: dark ? '#070707' : '#F4F5F7',
+    symbolColor: dark ? '#FCFCFC' : '#111318',
+    height: 44,
+  })
 })
 
 // Renderer mounted + subscribed to onPush. Flush queued pushes, but

@@ -2,15 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
-import { IAt, IClip, IConvene, IPin, ISearch, ISend, ISmile } from '@/components/icons'
-import { MembersPopover } from '@/components/MembersPopover'
+import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow, TypingRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { TwEmoji } from '@/components/TwEmoji'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
@@ -28,7 +26,7 @@ import type { Participant } from '@/types'
 /** Soft "Coming soon" popover anchored beneath the trigger. Auto-dismisses
  *  after a beat; also closes on outside-click or Escape. The sparkle
  *  drifts gently so the bubble feels alive rather than static. */
-function ComingSoonPop({ onClose }: { onClose: () => void }) {
+function _ComingSoonPop({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     // Defer outside-click + key listeners by one tick so the click that
     // opened the bubble doesn't immediately close it again.
@@ -105,14 +103,6 @@ function ChatHeader({
   const [topicDraft, setTopicDraft] = useState('')
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
-  const [membersAnchor, setMembersAnchor] = useState<DOMRect | null>(null)
-  const [showConveneSoon, setShowConveneSoon] = useState(false)
-  const memberStackRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    setMembersAnchor(null)
-  }, [convoId])
-
   if (!c) return null
 
   const memberPs = c.members
@@ -121,12 +111,6 @@ function ChatHeader({
   const agentMembers = memberPs.filter((p) => p.kind === 'agent')
   const agentNames = agentMembers.map((p) => p.name).join(', ')
   const humanCount = memberPs.filter((p) => p.kind === 'human').length
-
-  const onClickStack = () => {
-    const trigger = memberStackRef.current
-    if (!trigger || memberPs.length === 0) return
-    setMembersAnchor((cur) => cur ? null : trigger.getBoundingClientRect())
-  }
 
   // Group rename — only group chats; a DM/whisper title is derived from the
   // other person. Mirrors the topic editor (optimistic update + rollback).
@@ -177,10 +161,11 @@ function ChatHeader({
   }
 
   return (
-    <div className="py-2.5 pl-[22px] pr-6 border-b border-ink-100 flex items-center gap-4">
-      <div className="flex-1 min-w-0">
-        <h2 className="font-display font-medium text-[19px] tracking-tight leading-[1.35] flex items-center gap-2 min-w-0">
-          <span className="text-gold text-[14px] shrink-0">★</span>
+    <div className="omb-titlebar-safe omb-drag flex min-h-[56px] items-center gap-4 px-5 py-2.5">
+      <div className="omb-no-drag flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-1 py-0.5">
+        <div className="hidden shrink-0 sm:block"><AvatarStack ps={agentMembers} size={28} max={3} /></div>
+        <div className="min-w-0 flex-1">
+        <h2 className="flex min-w-0 items-center gap-2 text-[15px] font-semibold leading-[1.35] text-ink">
           {/* Title truncates at narrow widths instead of wrapping to a
               second line — wrapping interacts badly with the topic input
               right beneath it. min-w-0 on the flex parents is what lets
@@ -200,12 +185,12 @@ function ChatHeader({
                 if (e.key === 'Escape') setEditingTitle(false)
               }}
               maxLength={80}
-              className="flex-1 min-w-0 bg-transparent outline-none border-b border-skype-deep font-display font-medium text-[19px] tracking-tight text-ink-900 pb-0.5"
+              className="min-w-0 flex-1 border-b border-accent bg-transparent pb-0.5 text-[15px] font-semibold text-ink outline-none"
             />
           ) : (
             <span
               className={cn('truncate', canRename && 'cursor-text hover:text-skype-deep transition')}
-              title={canRename ? 'Click to rename group' : c.title}
+              title={canRename ? '点击重命名群聊' : c.title}
               onClick={canRename ? startEditTitle : undefined}
             >{c.title}</span>
           )}
@@ -217,16 +202,16 @@ function ChatHeader({
                 color: c.projectColor ? 'white' : 'var(--ink-700)',
                 border: c.projectColor ? 'none' : '1px solid var(--ink-100)',
               }}
-              title={`Part of project: ${c.projectName}`}
+              title={`所属项目：${c.projectName}`}
             >{c.projectName}</span>
           )}
         </h2>
-        <div className="text-[12px] text-ink-500 flex items-center gap-1.5 min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5 text-[12px] text-ink-secondary">
           <span className="truncate">{agentNames || '—'}</span>
           {humanCount > 0 && (
             <>
               <span className="w-1 h-1 rounded-full bg-ink-300 shrink-0" />
-              <span className="shrink-0">+ {humanCount === 1 ? 'you' : `${humanCount} humans`}</span>
+              <span className="shrink-0">+ {humanCount === 1 ? '你' : `${humanCount} 位成员`}</span>
             </>
           )}
           {!c.topic && !editingTopic && (
@@ -235,8 +220,8 @@ function ChatHeader({
               <button
                 onClick={startEditTopic}
                 className="text-ink-300 italic font-display hover:text-skype-deep transition shrink-0"
-                title="Set a topic"
-              >+ topic</button>
+                title="设置话题"
+              >+ 话题</button>
             </>
           )}
         </div>
@@ -254,7 +239,7 @@ function ChatHeader({
               if (e.key === 'Enter') { e.preventDefault(); void saveTopic() }
               if (e.key === 'Escape') setEditingTopic(false)
             }}
-            placeholder="What's this group for?"
+            placeholder="这个群聊用于讨论什么？"
             className="mt-0.5 w-full bg-transparent text-[12px] text-ink-700 italic placeholder:text-ink-300 outline-none border-b border-sky2-200 focus:border-skype-deep transition pb-0.5"
             maxLength={200}
           />
@@ -266,91 +251,25 @@ function ChatHeader({
             // final character. pr-1 + max-w-full keeps the layout
             // honest while leaving room for the slant.
             className="mt-0.5 text-[12px] text-ink-500 italic hover:text-skype-deep transition truncate text-left max-w-full font-display pr-1 block leading-[1.5]"
-            title="Click to edit topic"
+            title="点击编辑话题"
           >
             {c.topic}
           </button>
         ) : null}
+        </div>
       </div>
-      {/* Avatar stack — hidden once the pane gets cramped (sub-lg). Title
-          already lists the names below it, so this is a redundant visual
-          worth dropping when space is tight. */}
-      <button
-        ref={memberStackRef}
-        onClick={onClickStack}
-        aria-haspopup="dialog"
-        aria-expanded={membersAnchor ? true : undefined}
-        className={cn(
-          'rounded-full transition hover:opacity-80 active:scale-95 shrink-0 hidden lg:block focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky2-300',
-          membersAnchor && 'opacity-100',
-        )}
-        title="Show conversation members"
-      >
-        <AvatarStack ps={agentMembers} size={28} max={4} />
-      </button>
-      {membersAnchor && (
-        <MembersPopover
-          members={memberPs}
-          anchor={membersAnchor}
-          triggerRef={memberStackRef}
-          onClose={() => setMembersAnchor(null)}
-        />
-      )}
-      {/* Action group — never shrinks (`shrink-0`). At narrow widths Search
-          + Pin drop off but Convene stays full-text — it's the primary
-          action in this header. */}
-      <div className="flex gap-1 text-ink-500 shrink-0">
-        <ThemeToggle className="h-9 w-9" />
+      <div className="omb-no-drag flex shrink-0 gap-1 text-ink-secondary">
         <button
           onClick={onToggleSearch}
-          title="Search in this conversation"
-          aria-label="Search in this conversation"
+          title="搜索当前会话"
+          aria-label="搜索当前会话"
           className={cn(
-            'w-9 h-9 rounded-[9px] hidden md:grid place-items-center transition',
-            searchOpen ? 'bg-sky2-100 text-skype-deep' : 'hover:bg-sky2-50 hover:text-skype-deep',
+            'grid size-8 place-items-center rounded-md transition',
+            searchOpen ? 'bg-raised text-accent' : 'hover:bg-raised hover:text-ink',
           )}
         >
-          <ISearch className="w-[19px] h-[19px]" />
+          <ISearch className="size-[18px]" />
         </button>
-        <button
-          onClick={async () => {
-            // Optimistic flip so the icon updates instantly; reload to sync
-            // pinned-order in the sidebar. Mirrors the conversations-pane flow.
-            const next = !c.pinned
-            useConversations.setState((s) => ({
-              list: s.list.map((x) => x.id === c.id ? { ...x, pinned: next } : x),
-            }))
-            try { await api.togglePin(c.id, next); await useConversations.getState().reload() }
-            catch (err) {
-              console.warn('[pin] toggle failed', err)
-              useConversations.setState((s) => ({
-                list: s.list.map((x) => x.id === c.id ? { ...x, pinned: !next } : x),
-              }))
-            }
-          }}
-          title={c.pinned ? 'Unpin from top' : 'Pin to top'}
-          aria-label={c.pinned ? 'Unpin from top' : 'Pin to top'}
-          className={cn(
-            'w-9 h-9 rounded-[9px] hidden md:grid place-items-center transition',
-            c.pinned ? 'bg-gold/15 text-gold-deep' : 'hover:bg-sky2-50 hover:text-skype-deep',
-          )}
-        >
-          <IPin className="w-[19px] h-[19px]" />
-        </button>
-        <div className="relative">
-          <button
-            onClick={() => setShowConveneSoon((v) => !v)}
-            title="Convene"
-            className="px-3.5 inline-flex items-center gap-1.5 font-semibold text-[12.5px] rounded-full text-white"
-            style={{ height: 36, background: 'var(--skype)', boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)' }}
-          >
-            <IConvene className="w-4 h-4" />
-            <span>Convene</span>
-          </button>
-          {showConveneSoon && (
-            <ComingSoonPop onClose={() => setShowConveneSoon(false)} />
-          )}
-        </div>
       </div>
     </div>
   )
@@ -993,7 +912,7 @@ export function Composer({
   const canSend = (draft.trim().length > 0 || attachment !== null) && !uploading
 
   return (
-    <div className={isThread ? '' : 'px-[22px] pt-1.5 pb-[18px]'}
+    <div className={isThread ? '' : 'px-5 pb-5 pt-2'}
       // Composer wrapper is FULLY transparent — the parent <main>'s radial
       // washes (sky from top-left, coral from bottom-right) bleed through
       // uninterrupted, so there's no longer a hard boundary where the
@@ -1001,8 +920,8 @@ export function Composer({
       onDragOver={(e) => { e.preventDefault() }}
       onDrop={onDrop}>
       {!isThread && (
-        <div className="px-1 pb-1">
-          <TypingRow names={typingNames} />
+        <div className="mx-auto max-w-[900px] px-1 pb-1">
+          <TypingRow names={typingNames} zh />
         </div>
       )}
       {pollComposerOpen && !isThread && (
@@ -1013,7 +932,7 @@ export function Composer({
         />
       )}
       <div className={cn(
-        'chat-composer rounded-[18px] py-3 px-3.5 pb-2 transition',
+        'chat-composer mx-auto max-w-[900px] rounded-3xl px-3.5 pb-2 pt-3 transition',
         // In thread mode the parent drawer footer is already bg-cloud, so use
         // bg-paper inside for visual separation from the surrounding panel.
         isThread ? 'bg-paper' : '',
@@ -1037,12 +956,12 @@ export function Composer({
             <button
               onClick={() => setAttachment(null)}
               className="ml-1 w-6 h-6 rounded-md grid place-items-center text-ink-500 hover:bg-cloud hover:text-ink-900 transition shrink-0"
-              aria-label="Remove attachment"
+              aria-label="移除附件"
             >×</button>
           </div>
         )}
         {uploading && (
-          <div className="mb-2 text-[11.5px] text-ink-500 italic">uploading…</div>
+          <div className="mb-2 text-[11.5px] text-ink-500">正在上传…</div>
         )}
         {uploadError && (
           <div className="mb-2 text-[11.5px] py-1 px-2 rounded-md text-coral-deep bg-coral-soft inline-block max-w-full truncate">
@@ -1054,7 +973,7 @@ export function Composer({
             <div className="w-[3px] rounded bg-skype shrink-0" />
             <div className="min-w-0 flex-1 flex flex-col gap-0.5">
               <div className="text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
-                Replying to {byId[replyingToMsg?.authorId ?? '']?.name ?? replyingToMsg?.authorId ?? '…'}
+                回复 {byId[replyingToMsg?.authorId ?? '']?.name ?? replyingToMsg?.authorId ?? '…'}
               </div>
               {/* CJK text has no whitespace, so `truncate` (white-space: nowrap)
                   blocks any soft break and the flex item's min-content equals
@@ -1068,14 +987,14 @@ export function Composer({
               >
                 {replyingToMsg
                   ? <PreviewText body={replyingToMsg.body.slice(0, 140).replace(/\n/g, ' ')} />
-                  : '(loading…)'}
+                  : '（正在加载…）'}
               </div>
             </div>
             <button
               onClick={() => setReplyingTo(convoId, null)}
               className="w-6 h-6 rounded-md grid place-items-center text-ink-500 hover:bg-cloud hover:text-ink-900 transition shrink-0 self-center"
-              aria-label="Cancel reply"
-              title="Cancel reply (Esc)"
+              aria-label="取消回复"
+              title="取消回复（Esc）"
             >×</button>
           </div>
         )}
@@ -1083,8 +1002,8 @@ export function Composer({
           <RichInput
             ref={editorRef}
             defaultValue={draft}
-            placeholder={placeholder ?? 'Message the team. Type @ to summon, drop a file to attach.'}
-            ariaLabel="Message composer"
+            placeholder={placeholder ?? '输入消息，使用 @ 提及成员，或拖入文件作为附件'}
+            ariaLabel="消息输入框"
             className="rich-input whitespace-pre-wrap w-full bg-transparent text-[14px] text-ink-900 leading-[1.5]"
             style={{ minHeight: '1.5em' }}
             maxHeight={200}
@@ -1117,7 +1036,7 @@ export function Composer({
               onMouseDown={(e) => e.preventDefault()}
             >
               <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-300">
-                Slash command {slashQuery ? `· "/${slashQuery}"` : ''}
+                快捷命令 {slashQuery ? `· "/${slashQuery}"` : ''}
               </div>
               {filteredSlashCommands.map((cmd, i) => {
                 const active = i === slashIndex
@@ -1157,7 +1076,7 @@ export function Composer({
               onMouseDown={(e) => e.preventDefault()}
             >
               <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-300">
-                Mention {mention.query ? `· "${mention.query}"` : ''}
+                提及成员 {mention.query ? `· "${mention.query}"` : ''}
               </div>
               {filteredMentions.map((entry, i) => {
                 const active = i === mentionIndex
@@ -1179,8 +1098,8 @@ export function Composer({
                         className="w-[26px] h-[26px] rounded-full object-cover"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-[12.5px] font-semibold text-ink-900 truncate">Everyone</div>
-                        <div className="text-[10.5px] text-ink-500 truncate">Notify all members of this room</div>
+                        <div className="text-[12.5px] font-semibold text-ink-900 truncate">所有人</div>
+                        <div className="text-[10.5px] text-ink-500 truncate">通知会话中的全部成员</div>
                       </div>
                     </button>
                   )
@@ -1222,13 +1141,13 @@ export function Composer({
           <button
             onClick={() => fileRef.current?.click()}
             className="w-7 h-7 rounded-[7px] grid place-items-center hover:bg-sky2-50 hover:text-skype-deep transition"
-            title="Attach file"
+            title="添加附件"
           ><IClip className="w-[17px] h-[17px]" /></button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => insertAtCursor('@')}
             className="w-7 h-7 rounded-[7px] grid place-items-center hover:bg-sky2-50 hover:text-skype-deep transition"
-            title="Mention"
+            title="提及成员"
           ><IAt className="w-[17px] h-[17px]" /></button>
           <div className="relative">
             <button
@@ -1237,7 +1156,7 @@ export function Composer({
                 'w-7 h-7 rounded-[7px] grid place-items-center hover:bg-sky2-50 hover:text-skype-deep transition',
                 emojiOpen && 'bg-sky2-50 text-skype-deep',
               )}
-              title="Emoji"
+              title="表情"
             ><ISmile className="w-[17px] h-[17px]" /></button>
             {emojiOpen && (
               <EmojiPopover
@@ -1255,7 +1174,7 @@ export function Composer({
               boxShadow: canSend ? '0 4px 12px -3px rgba(0, 168, 240, 0.5)' : 'none',
             }}
           >
-            Send <ISend className="w-3.5 h-3.5" strokeWidth={2} />
+            发送 <ISend className="w-3.5 h-3.5" strokeWidth={2} />
           </button>
         </div>
       </div>
@@ -1295,7 +1214,7 @@ function ThreadLoader() {
           </div>
         </div>
         <div className="font-display italic text-[13px] text-ink-500 tracking-tight">
-          Gathering messages…
+          正在加载消息…
         </div>
       </div>
     </div>
@@ -1339,7 +1258,7 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
           </svg>
         </div>
         <div className="font-display font-medium text-[15px] tracking-tight text-ink-700">
-          Couldn't load messages
+          无法加载消息
         </div>
         <div className="text-[12.5px] text-ink-500 leading-relaxed break-words">
           {message}
@@ -1356,7 +1275,7 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
           {retrying ? (
             <>
               <span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-              Retrying…
+              正在重试…
             </>
           ) : (
             <>
@@ -1366,7 +1285,7 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
                   stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
                 />
               </svg>
-              Try again
+              重试
             </>
           )}
         </button>
@@ -1375,7 +1294,7 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
   )
 }
 
-function EmptyConversationState() {
+function _EmptyConversationState() {
   // Live counts pulled straight from the store so the empty stage carries
   // one tiny piece of "alive" data at the bottom — matches the inline
   // italic counter pattern in WhispersView's sidebar header.
@@ -1672,6 +1591,21 @@ function EmptyConversationState() {
   )
 }
 
+function OpenMausEmptyConversationState() {
+  const total = useConversations((s) => s.list.filter((c) => c.kind !== 'whisper').length)
+  return (
+    <main className="chat-surface omb-titlebar-safe omb-drag grid h-full min-w-0 place-items-center">
+      <div className="omb-no-drag flex max-w-sm flex-col items-center gap-3 px-8 text-center">
+        <img src="/logo.png" alt="" className="size-14 rounded-2xl opacity-90" draggable={false} />
+        <h1 className="text-[17px] font-semibold text-ink">选择一个会话开始交流</h1>
+        <p className="text-[13px] leading-6 text-ink-secondary">
+          {total > 0 ? `左侧共有 ${total} 个会话。你也可以搜索消息，或新建群聊。` : '新消息和 Agent 的实时进度会显示在这里。'}
+        </p>
+      </div>
+    </main>
+  )
+}
+
 export function ChatPane() {
   const convoId = useApp((s) => s.selectedConversationId)
   const setView = useApp((s) => s.setView)
@@ -1902,7 +1836,7 @@ export function ChatPane() {
   // a render while the new tenant's conversations are loading; requiring
   // `c` here keeps the composer from flashing before the cloud appears.
   if (!convoId || !c) {
-    return <EmptyConversationState />
+    return <OpenMausEmptyConversationState />
   }
 
   const onConvene = async () => {
@@ -1929,8 +1863,8 @@ export function ChatPane() {
         searchOpen={searchOpen}
       />
       {searchOpen && (
-        <div className="px-[22px] py-2 border-b border-ink-100 bg-paper/60 backdrop-blur-sm flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-2 px-3 py-1.5 bg-cloud border border-ink-100 rounded-[10px] focus-within:border-sky2-300 text-ink-500 text-[13px]">
+        <div className="flex items-center gap-2 border-b border-hairline bg-panel px-5 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-lg bg-raised/70 px-3 py-1.5 text-[13px] text-ink-secondary focus-within:ring-1 focus-within:ring-accent">
             <ISearch className="w-3.5 h-3.5" strokeWidth={2} />
             <input
               ref={searchInputRef}
@@ -1944,12 +1878,12 @@ export function ChatPane() {
                 if ((e.key === 'Enter' && e.shiftKey) || e.key === 'ArrowUp') { e.preventDefault(); setMatchIdx((i) => (i - 1 + n) % n); return }
                 if (e.key === 'ArrowDown') { e.preventDefault(); setMatchIdx((i) => (i + 1) % n) }
               }}
-              placeholder="Search in this conversation…"
+              placeholder="搜索当前会话…"
               className="flex-1 min-w-0 bg-transparent outline-none text-ink-900 placeholder:text-ink-300"
             />
             <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-300">
               {matchedIds.length === 0
-                ? (searchQuery.trim() ? 'no matches' : '')
+                ? (searchQuery.trim() ? '无匹配' : '')
                 : `${matchIdx + 1} / ${matchedIds.length}`}
             </span>
           </div>
@@ -1957,7 +1891,7 @@ export function ChatPane() {
             type="button"
             onClick={() => setMatchIdx((i) => (i - 1 + matchedIds.length) % Math.max(1, matchedIds.length))}
             disabled={matchedIds.length === 0}
-            title="Previous match (Shift+Enter / ↑)"
+            title="上一个匹配项（Shift+Enter / ↑）"
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:bg-sky2-50 hover:text-skype-deep transition disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-500"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -1968,7 +1902,7 @@ export function ChatPane() {
             type="button"
             onClick={() => setMatchIdx((i) => (i + 1) % Math.max(1, matchedIds.length))}
             disabled={matchedIds.length === 0}
-            title="Next match (Enter / ↓)"
+            title="下一个匹配项（Enter / ↓）"
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:bg-sky2-50 hover:text-skype-deep transition disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-500"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -1978,7 +1912,7 @@ export function ChatPane() {
           <button
             type="button"
             onClick={() => { setSearchOpen(false); setSearchQuery('') }}
-            title="Close (Esc)"
+            title="关闭（Esc）"
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:bg-sky2-50 transition"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="w-4 h-4">
@@ -2023,15 +1957,15 @@ export function ChatPane() {
             increaseViewportBy={{ top: 800, bottom: 800 }}
             components={{
               Header: () => (
-                <div className="px-6 pt-6 flex flex-col gap-2">
+                <div className="mx-auto flex w-full max-w-[900px] flex-col gap-2 px-5 pt-6">
                   {hasMoreOlder ? (
                     <div className="self-center py-1 px-2.5 rounded-full text-[10.5px] font-medium text-ink-400">
-                      {loadingOlder ? 'Loading earlier…' : ' '}
+                      {loadingOlder ? '正在加载更早的消息…' : ' '}
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 text-ink-300 text-[11px] font-bold tracking-[0.08em] uppercase">
                       <span className="flex-1 h-px bg-gradient-to-r from-transparent via-ink-100 to-transparent" />
-                      Beginning
+                      会话开始
                       <span className="flex-1 h-px bg-gradient-to-r from-transparent via-ink-100 to-transparent" />
                     </div>
                   )}
@@ -2058,12 +1992,12 @@ export function ChatPane() {
                 <div
                   data-msg-id={m.id}
                   className={cn(
-                    'px-6 py-[9px] rounded-[10px] transition-shadow',
+                    'mx-auto w-full max-w-[900px] rounded-[10px] px-5 py-[9px] transition-shadow',
                     isMatch && 'ring-1 ring-gold/40',
                     isCurrent && 'ring-2 ring-gold shadow-[0_0_24px_-4px_rgba(244,183,64,0.55)]',
                   )}
                 >
-                  <MessageRow msg={m} author={author} delay={delay} animate={firstAnimation} />
+                  <MessageRow msg={m} author={author} delay={delay} animate={firstAnimation} openMaus />
                 </div>
               )
             }}
@@ -2072,7 +2006,7 @@ export function ChatPane() {
         {/* Bottom-right "scroll to latest" pill — appears once the user has
             scrolled up off the bottom. Fades in (animate-rise), tucks against
             the composer's top edge so it doesn't fight the typing area. */}
-        <ScrollToLatestButton visible={!atBottom} onClick={scrollToLatest} />
+        <ScrollToLatestButton visible={!atBottom} onClick={scrollToLatest} zh />
       </div>
       <Composer convoId={convoId} typingNames={typingAgents.map((a) => a.name)} />
     </main>

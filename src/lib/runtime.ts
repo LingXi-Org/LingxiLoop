@@ -41,6 +41,10 @@ interface CumoraBridge {
   dock?: {
     setUnreadDot: (visible: boolean) => void
   }
+  /** Appearance-only bridge for Electron's native title-bar controls. */
+  windowChrome?: {
+    setTheme: (theme: 'light' | 'dark') => void
+  }
   notify?: {
     /** Main → notification window: show this toast. */
     push: (p: NotificationPushPayload) => void

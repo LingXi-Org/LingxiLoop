@@ -26,16 +26,17 @@ interface Props {
    *  positioned ancestor — mobile uses a larger value to clear the composer
    *  + safe-area; desktop's default sits just above the composer line. */
   bottomOffset?: number
+  zh?: boolean
 }
 
-export function ScrollToLatestButton({ visible, onClick, bottomOffset = 16 }: Props) {
+export function ScrollToLatestButton({ visible, onClick, bottomOffset = 16, zh = false }: Props) {
   if (!visible) return null
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label="Scroll to latest message"
-      title="Latest message"
+      aria-label={zh ? '回到最新消息' : 'Scroll to latest message'}
+      title={zh ? '回到最新消息' : 'Latest message'}
       className={cn(
         // Positioning: absolute within the chat stream's relative container.
         'absolute right-4 z-20 grid place-items-center',

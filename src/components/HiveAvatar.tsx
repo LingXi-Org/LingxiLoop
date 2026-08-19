@@ -12,7 +12,7 @@
  */
 import type { CSSProperties } from 'react'
 import type { Participant } from '@/types'
-import { AVATAR_IMG_LOADING, useAvatarImg, useCachedAvatarSrc } from '@/lib/avatarCache'
+import { Avatar } from './Avatar'
 
 interface Pos {
   /** center x (0–1, fraction of container) */
@@ -156,39 +156,6 @@ function tileStyle(container: number, cx: number, cy: number, d: number, ringCol
   }
 }
 
-/** A single portrait that NEVER shows the WKWebView broken-image glyph
- *  (the blue "?" tile): on load failure — or a missing / unreachable /
- *  ATS-blocked URL — it falls back to the colored initial, exactly like
- *  <Avatar>. Routes through the shared avatar cache so it invalidates on
- *  `participants.avatar` WS events like every other avatar in the app. */
-function PortraitFill({ p, fontSize, imgClassName = 'w-full h-full object-cover' }: {
-  p: Participant
-  fontSize: number
-  imgClassName?: string
-}) {
-  const cachedSrc = useCachedAvatarSrc(p.id, p.avatarUrl)
-  // Bounded retry + foreground/online revival, shared with <Avatar> —
-  // one transient failure must not latch the letter for the session.
-  const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
-  if (!showImg) {
-    return (
-      <span className="font-display font-medium text-white" style={{ letterSpacing: '-0.02em', fontSize }}>
-        {p.initial}
-      </span>
-    )
-  }
-  return (
-    <img
-      key={imgKey}
-      src={cachedSrc ?? ''}
-      alt={p.name}
-      className={imgClassName}
-      loading={AVATAR_IMG_LOADING}
-      onError={onError}
-    />
-  )
-}
-
 function Tile({ p, container, cx, cy, d, ringColor }: {
   p: Participant
   container: number
@@ -198,15 +165,12 @@ function Tile({ p, container, cx, cy, d, ringColor }: {
   ringColor: string
 }) {
   const px = d * container
-  const fontSize = Math.max(8, Math.round(px * 0.42))
-  // Colored bg sits behind the portrait: covered when the image loads,
-  // and the visible backdrop for the initial when it doesn't.
   return (
     <div
-      style={{ ...tileStyle(container, cx, cy, d, ringColor), background: p.avatarBg }}
+      style={tileStyle(container, cx, cy, d, ringColor)}
       className="grid place-items-center"
     >
-      <PortraitFill p={p} fontSize={fontSize} />
+      <Avatar p={p} size={px} ringColor={ringColor} showStatus={false} animated={false} />
     </div>
   )
 }
@@ -240,42 +204,5 @@ function SingleTile({ p, size, ringColor, showStatus }: {
   ringColor: string
   showStatus: boolean
 }) {
-  const dotSize = Math.max(8, Math.round(size * 0.27))
-  const fontSize = Math.round(size * 0.36)
-  return (
-    <div
-      className="relative inline-grid place-items-center rounded-full font-display font-medium text-white shrink-0"
-      style={{
-        width: size,
-        height: size,
-        background: p.avatarBg,
-        fontSize,
-      }}
-    >
-      <PortraitFill p={p} fontSize={fontSize} imgClassName="absolute inset-0 w-full h-full object-cover rounded-full" />
-      {showStatus && (
-        <span
-          className="absolute rounded-full z-[1]"
-          style={{
-            width: dotSize,
-            height: dotSize,
-            background: statusColor(p.status),
-            boxShadow: `0 0 0 ${Math.max(2, dotSize / 5)}px ${ringColor}`,
-            bottom: -1,
-            right: -1,
-          }}
-        />
-      )}
-    </div>
-  )
-}
-
-function statusColor(s: string): string {
-  switch (s) {
-    case 'avail':    return 'var(--avail)'
-    case 'working':  return 'var(--working)'
-    case 'thinking': return 'var(--thinking)'
-    case 'waiting':  return 'var(--waiting)'
-    default:         return 'var(--resting)'
-  }
+  return <Avatar p={p} size={size} ringColor={ringColor} showStatus={showStatus} />
 }

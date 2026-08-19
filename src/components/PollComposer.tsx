@@ -147,12 +147,12 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
             <rect x="17" y="14" width="4" height="6" rx="1" />
           </svg>
         </span>
-        <span className="font-semibold text-ink-700">New poll</span>
+        <span className="font-semibold text-ink-700">新建投票</span>
         <button
           type="button"
           onClick={onCancel}
           className="ml-auto px-2 py-0.5 text-ink-500 rounded-full hover:bg-ink-50 transition"
-          aria-label="Cancel poll"
+          aria-label="取消投票"
         >×</button>
       </div>
 
@@ -160,7 +160,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
         ref={questionRef}
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
-        placeholder="Ask the room a question…"
+        placeholder="输入投票问题…"
         maxLength={280}
         className="w-full px-2 py-2 text-[14px] font-semibold text-ink-900 placeholder-ink-300 bg-transparent border-b border-ink-50 focus:border-sky2-200 outline-none transition"
         onKeyDown={(e) => {
@@ -195,7 +195,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
                 type="button"
                 onClick={() => removeOption(i)}
                 className="opacity-0 group-hover:opacity-100 transition w-5 h-5 rounded-full text-ink-400 hover:bg-ink-50 hover:text-coral-deep grid place-items-center"
-                aria-label="Remove option"
+                aria-label="移除选项"
               >×</button>
             )}
           </div>

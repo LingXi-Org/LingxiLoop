@@ -4,6 +4,7 @@ import { cn, statusColor } from '@/lib/utils'
 import { AVATAR_IMG_LOADING, useAvatarImg, useCachedAvatarSrc } from '@/lib/avatarCache'
 import { useAuth } from '@/stores/auth'
 import { useComputers } from '@/stores/computers'
+import { BloubAvatar } from './BloubAvatar'
 
 interface Props {
   p: Participant
@@ -12,11 +13,11 @@ interface Props {
   statusOverride?: string
   ringColor?: string
   className?: string
+  /** Disable continuous motion for dense composite surfaces such as HiveAvatar. */
+  animated?: boolean
 }
 
-export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringColor = 'var(--paper)', className }: Props) {
-  const dotSize = Math.max(10, Math.round(size * 0.27))
-  const fontSize = Math.round(size * 0.36)
+function useResolvedAvatarStatus(p: Participant, statusOverride?: string) {
   // From your own perspective you're definitionally online — the app is
   // on your screen right now. The server-side status comes from real WS
   // presence and races the boot/reconnect flow (setStatus(avail) is fired
@@ -34,24 +35,33 @@ export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringCo
   const host = useComputers((s) => (p.computerId ? s.byId[p.computerId] : undefined))
   const hostOffline = !!host && host.kind !== 'cloud' && host.status !== 'online'
   const ownStatus = p.id === selfId && p.kind === 'human' ? 'avail' : (hostOffline ? 'resting' : p.status)
-  const status = statusOverride ?? ownStatus
-  // Route the image through the local cache so it survives re-mounts
-  // and gets invalidated on participants.avatar WS events + the 5-min
-  // ticker. Falls back to raw URL while the first fetch is in flight.
-  const cachedSrc = useCachedAvatarSrc(p.id, p.avatarUrl)
+  return statusOverride ?? ownStatus
+}
+
+export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringColor = 'var(--paper)', className, animated = true }: Props) {
+  const dotSize = Math.max(10, Math.round(size * 0.27))
+  const fontSize = Math.round(size * 0.36)
+  const status = useResolvedAvatarStatus(p, statusOverride)
+  // Route human images through the local cache so they survive re-mounts.
+  // Agent portrait URLs are intentionally ignored: their single source of
+  // visual identity is the deterministic Bloub renderer. Human cache entries
+  // are still invalidated by participant avatar events and the refresh ticker.
+  const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : p.avatarUrl)
   // Bounded retry so one transient load failure doesn't permanently fall
   // back to the initial letter (see useAvatarImg).
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
   const style: CSSProperties = {
     width: size,
     height: size,
-    background: showImg ? 'transparent' : p.avatarBg,
+    background: p.kind === 'agent' || showImg ? 'transparent' : p.avatarBg,
     fontSize,
   }
 
   return (
     <div className={cn('relative inline-grid place-items-center rounded-full font-display font-medium text-white tracking-tight shrink-0', className)} style={style}>
-      {showImg ? (
+      {p.kind === 'agent' ? (
+        <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} />
+      ) : showImg ? (
         <img
           key={imgKey}
           src={cachedSrc ?? ''}
@@ -81,7 +91,8 @@ export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringCo
 }
 
 export function AvatarMini({ p, size = 28, ringColor = 'var(--cloud)' }: { p: Participant; size?: number; ringColor?: string }) {
-  const cachedSrc = useCachedAvatarSrc(p.id, p.avatarUrl)
+  const status = useResolvedAvatarStatus(p)
+  const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : p.avatarUrl)
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
   return (
     <div
@@ -89,12 +100,14 @@ export function AvatarMini({ p, size = 28, ringColor = 'var(--cloud)' }: { p: Pa
       style={{
         width: size,
         height: size,
-        background: showImg ? 'transparent' : p.avatarBg,
+        background: p.kind === 'agent' || showImg ? 'transparent' : p.avatarBg,
         border: `2.5px solid ${ringColor}`,
         fontSize: Math.round(size * 0.4),
       }}
     >
-      {showImg
+      {p.kind === 'agent'
+        ? <BloubAvatar participant={p} status={status} size={Math.max(8, size - 5)} paper={ringColor} animated={false} />
+        : showImg
         ? <img
             key={imgKey}
             src={cachedSrc ?? ''}

@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 
 interface Props {
   msg: Message
+  zh?: boolean
 }
 
 function timeRemaining(iso: string | null): string | null {
@@ -37,7 +38,7 @@ function timeRemaining(iso: string | null): string | null {
   return `${days}d`
 }
 
-export function PollBubble({ msg }: Props) {
+export function PollBubble({ msg, zh = false }: Props) {
   const meId = useMe()
   const byId = useParticipants((s) => s.byId)
   const poll = msg.poll
@@ -145,16 +146,16 @@ export function PollBubble({ msg }: Props) {
             <rect x="17" y="14" width="4" height="6" rx="1" />
           </svg>
         </span>
-        <span className="font-semibold text-ink-700">Poll</span>
+        <span className="font-semibold text-ink-700">{zh ? '投票' : 'Poll'}</span>
         <span className="text-ink-300">·</span>
         <span>{author?.name ?? msg.authorId}</span>
         {poll.mode === 'multi' && (
-          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">multi</span>
+          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">{zh ? '多选' : 'multi'}</span>
         )}
         <span className="ml-auto text-ink-400 tabular-nums">
           {isClosed
-            ? (poll.closedReason === 'expired' ? 'expired' : 'closed')
-            : (remaining ? `${remaining} left` : 'open')}
+            ? (poll.closedReason === 'expired' ? (zh ? '已过期' : 'expired') : (zh ? '已结束' : 'closed'))
+            : (remaining ? (zh ? `剩余 ${remaining}` : `${remaining} left`) : (zh ? '进行中' : 'open'))}
         </span>
       </div>
 
@@ -229,7 +230,7 @@ export function PollBubble({ msg }: Props) {
               <span className="relative z-[1] flex-1 min-w-0 text-[13.5px] text-ink-800 truncate">
                 {opt.text}
                 {isWinner && (
-                  <span className="ml-1.5 text-[11px] text-skype-deep" title="winning option">★</span>
+                  <span className="ml-1.5 text-[11px] text-skype-deep" title={zh ? '当前领先' : 'winning option'}>★</span>
                 )}
               </span>
               <span className="relative z-[1] flex items-center gap-1.5 text-[11.5px] tabular-nums text-ink-500">
@@ -245,12 +246,14 @@ export function PollBubble({ msg }: Props) {
       {/* Footer / multi-choice submit */}
       <div className="px-3.5 pb-3 pt-1 flex items-center gap-2 text-[11.5px] text-ink-500 min-h-[28px]">
         <span className="tabular-nums">
-          {totalVotes === 0 ? 'no votes yet' : `${totalVotes} ${totalVotes === 1 ? 'vote' : 'votes'}`}
+          {totalVotes === 0
+            ? (zh ? '暂无投票' : 'no votes yet')
+            : (zh ? `${totalVotes} 票` : `${totalVotes} ${totalVotes === 1 ? 'vote' : 'votes'}`)}
         </span>
         {!isClosed && myCurrentVotes.size > 0 && (
           <>
             <span className="text-ink-300">·</span>
-            <span>you voted</span>
+            <span>{zh ? '你已投票' : 'you voted'}</span>
           </>
         )}
         {errorMsg && (
@@ -264,7 +267,7 @@ export function PollBubble({ msg }: Props) {
               disabled={submitting}
               className="px-2 py-0.5 rounded-full text-ink-500 hover:bg-ink-50 transition"
             >
-              reset
+              {zh ? '重置' : 'reset'}
             </button>
             <button
               type="button"
@@ -272,7 +275,7 @@ export function PollBubble({ msg }: Props) {
               disabled={submitting}
               className="px-2.5 py-0.5 rounded-full bg-skype-deep text-white font-semibold tracking-wide hover:brightness-105 transition disabled:opacity-50"
             >
-              {submitting ? 'saving…' : 'submit'}
+              {submitting ? (zh ? '保存中…' : 'saving…') : (zh ? '提交' : 'submit')}
             </button>
           </span>
         )}

@@ -1342,6 +1342,9 @@ interface MessageRowProps {
    *  scroll-back remounts an off-screen row and replays its fade,
    *  which reads as flicker. */
   animate?: boolean
+  /** Desktop-only OpenMaus presentation. Shared/mobile callers keep the
+   *  established message layout when this flag is omitted. */
+  openMaus?: boolean
 }
 
 const QUICK_REACTIONS = ['👍', '❤️', '👀', '🌤️', '🔥', '👏', '✅', '🎯', '📌']
@@ -1515,7 +1518,7 @@ function ReactionTooltip({ emoji, names, anchorX, anchorY }: {
  * shaped `{ body: string }` works (covers both Message and
  * ApiWhisperMessage without a type adapter).
  */
-export function SystemRow({ msg, delay = 0, animate = true }: { msg: { body: string }; delay?: number; animate?: boolean }) {
+export function SystemRow({ msg, delay = 0, animate = true, openMaus = false }: { msg: { body: string }; delay?: number; animate?: boolean; openMaus?: boolean }) {
   const byId = useParticipants((s) => s.byId)
   const openAgentInfo = useApp((s) => s.openAgentInfo)
   // Same animate-once contract as MessageRow: don't replay the rise-in fade on
@@ -1553,13 +1556,15 @@ export function SystemRow({ msg, delay = 0, animate = true }: { msg: { body: str
   }
 
   if (payload.kind === 'calendar_event') {
-    const title = typeof payload.title === 'string' && payload.title.trim() ? payload.title.trim() : 'Calendar event'
+    const title = typeof payload.title === 'string' && payload.title.trim()
+      ? payload.title.trim()
+      : (openMaus ? '日历事件' : 'Calendar event')
     return (
       <div className={cn('flex justify-center my-3', riseCls)} style={riseStyle}>
         <div className="max-w-[min(100%,540px)] flex items-center gap-2 px-3 py-1.5 rounded-md bg-skype/10 border border-skype/20 text-skype text-[11.5px] font-display">
           <span className="leading-[1.4] shrink-0">📅</span>
-          <span className="leading-[1.4]">Calendar fired: {title}</span>
-          {typeof payload.eventId === 'string' && <CalendarLink id={payload.eventId} />}
+          <span className="leading-[1.4]">{openMaus ? '日历提醒：' : 'Calendar fired: '}{title}</span>
+          {!openMaus && typeof payload.eventId === 'string' && <CalendarLink id={payload.eventId} />}
         </div>
       </div>
     )
@@ -1573,7 +1578,7 @@ export function SystemRow({ msg, delay = 0, animate = true }: { msg: { body: str
   // the participants store catches up.
   if (!subject) return null
   // Open InfoPane for whoever was clicked — works for humans too now.
-  const onClick = () => openAgentInfo(subject.id)
+  const onClick = () => { if (!openMaus) openAgentInfo(subject.id) }
 
   // 'kicked' rows additionally name the actor (who did the kicking).
   // Other kinds are subject-only.
@@ -1584,17 +1589,17 @@ export function SystemRow({ msg, delay = 0, animate = true }: { msg: { body: str
       <div className="text-[11.5px] text-ink-300 italic font-display flex items-center gap-1.5 flex-wrap justify-center">
         {payload.kind === 'kicked' && actor ? (
           <>
-            <SystemActor p={actor} onClick={() => openAgentInfo(actor.id)} />
-            <span>— removed</span>
-            <SystemActor p={subject} onClick={onClick} />
-            <span>from the group</span>
+            <SystemActor p={actor} onClick={() => { if (!openMaus) openAgentInfo(actor.id) }} disabled={openMaus} />
+            <span>— {openMaus ? '将' : 'removed'}</span>
+            <SystemActor p={subject} onClick={onClick} disabled={openMaus} />
+            <span>{openMaus ? '移出群聊' : 'from the group'}</span>
           </>
         ) : (
           <>
-            <SystemActor p={subject} onClick={onClick} />
-            <span>— {payload.kind === 'joined' ? 'joined the group'
-              : payload.kind === 'left'     ? 'left the group'
-              : payload.kind ?? 'updated the group'}</span>
+            <SystemActor p={subject} onClick={onClick} disabled={openMaus} />
+            <span>— {payload.kind === 'joined' ? (openMaus ? '加入了群聊' : 'joined the group')
+              : payload.kind === 'left' ? (openMaus ? '退出了群聊' : 'left the group')
+              : openMaus ? '更新了群聊' : payload.kind ?? 'updated the group'}</span>
           </>
         )}
       </div>
@@ -1604,11 +1609,11 @@ export function SystemRow({ msg, delay = 0, animate = true }: { msg: { body: str
 
 /** Small subject pill — avatar + name, clickable when it's an agent (opens
  *  the info pane). Centralized so SystemRow's variants stay readable. */
-function SystemActor({ p, onClick }: { p: Participant; onClick: () => void }) {
+function SystemActor({ p, onClick, disabled = false }: { p: Participant; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       onClick={onClick}
-      disabled={p.kind !== 'agent'}
+      disabled={disabled || p.kind !== 'agent'}
       className="inline-flex items-center gap-1.5 not-italic font-semibold text-ink-500 hover:text-skype-deep transition disabled:cursor-default disabled:hover:text-ink-500"
     >
       <Avatar p={p} size={16} ringColor="var(--paper)" showStatus={false} />
@@ -1664,14 +1669,14 @@ function QuoteCard({ msg }: { msg: Message }) {
 /** Tiny reply icon — appears on hover, sets app.replyingTo so the composer
  *  picks up the quote draft. Composers are responsible for wiring this into
  *  the actual sendUserMessage call. */
-function ReplyIconButton({ msg }: { msg: Message }) {
+function ReplyIconButton({ msg, zh = false }: { msg: Message; zh?: boolean }) {
   const setReplyingTo = useApp((s) => s.setReplyingTo)
   return (
     <button
       onClick={() => setReplyingTo(msg.conversationId, msg.id)}
       className="w-6 h-6 rounded-full hover:bg-sky2-50 grid place-items-center text-ink-400 hover:text-skype-deep"
-      title="Reply"
-      aria-label="Reply to this message"
+      title={zh ? '回复' : 'Reply'}
+      aria-label={zh ? '回复这条消息' : 'Reply to this message'}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="9 17 4 12 9 7" />
@@ -1681,7 +1686,7 @@ function ReplyIconButton({ msg }: { msg: Message }) {
   )
 }
 
-function MessageRowImpl({ msg, author, delay = 0, animate = true }: MessageRowProps) {
+function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = false }: MessageRowProps) {
   const openAgentInfo = useApp((s) => s.openAgentInfo)
   const openThreadView = useApp((s) => s.openThreadView)
   const meId = useMe()
@@ -1690,7 +1695,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true }: MessageRowPr
   // notice, authored by CALENDAR_SYSTEM_AUTHOR_ID) renders instead of being
   // dropped by the missing-author guard.
   if (msg.kind === 'whisper-link') return <WhisperLink msg={msg} />
-  if (msg.kind === 'system') return <SystemRow msg={msg} delay={delay} animate={animate} />
+  if (msg.kind === 'system') return <SystemRow msg={msg} delay={delay} animate={animate} openMaus={openMaus} />
   if (!author) return null
   const isHuman = author.kind === 'human'
   const isMine = msg.authorId === meId
@@ -1703,32 +1708,36 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true }: MessageRowPr
     () => artifactRefsForMessage(msg),
     [msg.body, msg.tool?.arg, msg.tool?.detail],
   )
-  // Avatar click opens InfoPane for both kinds — humans now have profile
-  // cards (their auth email is the most useful new piece). The "yourself"
-  // case is gated below via the disabled prop.
   const onAvatarClick = () => {
     if (!isMine) openAgentInfo(author.id)
   }
-
   return (
     <div
       id={`m-${msg.id}`}
       className={cn(
-        'group grid grid-cols-[38px_1fr] gap-3 items-start scroll-mt-20',
+        'group gap-3 items-start scroll-mt-20',
+        openMaus ? 'flex' : 'grid grid-cols-[38px_1fr]',
+        openMaus && isMine && 'flex-row-reverse',
         animate && 'animate-rise',
       )}
       style={animate ? { animationDelay: `${delay}ms` } : undefined}
     >
-      <button
-        onClick={onAvatarClick}
-        disabled={isMine}
-        className={cn('rounded-full transition', !isMine && 'hover:opacity-80 active:scale-95 cursor-pointer')}
-        title={isMine ? undefined : `Show ${author.name}'s info`}
-      >
-        <Avatar p={author} size={38} ringColor="var(--cloud)" />
-      </button>
-      <div className="min-w-0">
-        <div className="flex items-baseline gap-2 mb-1">
+      {openMaus ? (
+        <div className={cn('shrink-0', isMine && 'hidden')}>
+          <Avatar p={author} size={38} ringColor="var(--cloud)" />
+        </div>
+      ) : (
+        <button
+          onClick={onAvatarClick}
+          disabled={isMine}
+          className={cn('rounded-full transition', !isMine && 'hover:opacity-80 active:scale-95 cursor-pointer')}
+          title={isMine ? undefined : `Show ${author.name}'s info`}
+        >
+          <Avatar p={author} size={38} ringColor="var(--cloud)" />
+        </button>
+      )}
+      <div className={cn('min-w-0', openMaus && 'max-w-[70%]', openMaus && isMine && 'flex flex-col items-end')}>
+        <div className={cn('mb-1 flex items-baseline gap-2', openMaus && isMine && 'justify-end')}>
           <span className="font-bold text-[13.5px] text-ink-900">{author.name}</span>
           {author.role && !isHuman && (
             <span className="text-[10.5px] text-ink-300 font-semibold tracking-wider uppercase">{author.role}</span>
@@ -1742,7 +1751,8 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true }: MessageRowPr
         {!isToolOnly && !isAttachOnly && !isPoll && (
           <div
             className={cn(
-              'message-bubble inline-block py-2.5 px-3.5 text-[14px] max-w-[min(100%,620px)] break-words',
+              'message-bubble inline-block break-words py-2.5',
+              openMaus ? 'max-w-full px-4 text-[15px]' : 'max-w-[min(100%,620px)] px-3.5 text-[14px]',
               isMine
                 ? 'message-bubble-user'
                 : 'message-bubble-agent'
@@ -1763,7 +1773,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true }: MessageRowPr
           return linkUrl ? <LinkPreview url={linkUrl} /> : null
         })()}
 
-        {isPoll && <PollBubble msg={msg} />}
+        {isPoll && <PollBubble msg={msg} zh={openMaus} />}
 
         {msg.kind === 'tool' && <ToolCard msg={msg} />}
         {artifactRefs.length > 0 && (
@@ -1789,22 +1799,22 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true }: MessageRowPr
           // attachment / quote; Dismiss just drops the bubble locally
           // so it stops clogging the bottom of the conversation.
           <div className="mt-1 flex items-center gap-2 text-[11px] text-coral-deep">
-            <span>Failed to send</span>
+            <span>{openMaus ? '发送失败' : 'Failed to send'}</span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); void retryFailedMessage(msg.conversationId, msg.id) }}
               className="font-semibold underline underline-offset-2 hover:text-coral-700"
-            >Retry</button>
+            >{openMaus ? '重试' : 'Retry'}</button>
             <span className="text-ink-300">·</span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); discardFailedMessage(msg.conversationId, msg.id) }}
               className="font-semibold underline underline-offset-2 hover:text-coral-700"
-            >Dismiss</button>
+            >{openMaus ? '移除' : 'Dismiss'}</button>
           </div>
         )}
 
-        {(msg.replyCount ?? 0) > 0 && (
+        {!openMaus && (msg.replyCount ?? 0) > 0 && (
           <button
             onClick={() => openThreadView(msg.conversationId, msg.id)}
             className="mt-1 text-[11.5px] text-skype-deep hover:underline flex items-center gap-1"
@@ -1831,7 +1841,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true }: MessageRowPr
             {QUICK_REACTIONS.filter((e) => !(msg.reactions ?? []).some((r) => r.emoji === e && r.mine)).slice(0, 5).map((e) => (
               <QuickReactionButton key={e} msgId={msg.id} emoji={e} />
             ))}
-            <ReplyIconButton msg={msg} />
+            <ReplyIconButton msg={msg} zh={openMaus} />
           </div>
         </div>
       </div>
@@ -1854,20 +1864,33 @@ export const MessageRow = memo(MessageRowImpl)
  * fades in/out. Supports any number of typers ("Iris is typing…",
  * "Iris and Bram are typing…", "Iris, Bram and 2 more are typing…").
  */
-export function TypingRow({ names }: { names: string[] }) {
+export function TypingRow({ names, zh = false }: { names: string[]; zh?: boolean }) {
   const visible = names.length > 0
   let body: React.ReactNode = null
-  if (names.length === 1) {
+  if (!zh && names.length === 1) {
     body = <><b className="text-ink-700 font-semibold">{names[0]}</b> is typing…</>
-  } else if (names.length === 2) {
+  } else if (!zh && names.length === 2) {
     body = <><b className="text-ink-700 font-semibold">{names[0]}</b> and <b className="text-ink-700 font-semibold">{names[1]}</b> are typing…</>
-  } else if (names.length >= 3) {
+  } else if (!zh && names.length >= 3) {
     body = (
       <>
         <b className="text-ink-700 font-semibold">{names[0]}</b>, <b className="text-ink-700 font-semibold">{names[1]}</b>
         {names.length === 3
           ? <> and <b className="text-ink-700 font-semibold">{names[2]}</b> are typing…</>
           : <> and <b className="text-ink-700 font-semibold">{names.length - 2} more</b> are typing…</>}
+      </>
+    )
+  } else if (names.length === 1) {
+    body = <><b className="text-ink-700 font-semibold">{names[0]}</b> 正在输入…</>
+  } else if (names.length === 2) {
+    body = <><b className="text-ink-700 font-semibold">{names[0]}</b> 和 <b className="text-ink-700 font-semibold">{names[1]}</b> 正在输入…</>
+  } else if (names.length >= 3) {
+    body = (
+      <>
+        <b className="text-ink-700 font-semibold">{names[0]}</b>, <b className="text-ink-700 font-semibold">{names[1]}</b>
+        {names.length === 3
+          ? <>、<b className="text-ink-700 font-semibold">{names[2]}</b> 正在输入…</>
+          : <> 等 <b className="text-ink-700 font-semibold">{names.length} 人</b> 正在输入…</>}
       </>
     )
   }
