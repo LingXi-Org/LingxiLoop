@@ -19,52 +19,53 @@
  */
 import type { ResponseInputItem, ResponseStreamEvent } from 'openai/resources/responses/responses'
 import { env } from '../env.js'
+import { getLlmClient } from '../llm.js'
 import { redis } from '../redis.js'
-import { classifyInboxTriage, gateSyntheticWake } from './inbox-triage.js'
+import { BUSY_STATUS_HEARTBEAT_MS } from '../status.js'
+import { pgActionLedger } from './action-ledger.js'
+import { resolveDeclaredAutoRelayTarget } from './auto-relay.js'
+import { addUsage, EMPTY_USAGE, type TokenUsage, usageFromOpenAI } from './cost.js'
 import { GLANCE_YIELD_RULES } from './glance-protocol.js'
-import { TOOL_DEFS_RESPONSES, executePodTool } from './runtime/pod-tools.js'
+import { materializeImage } from './image-fetcher.js'
+import { classifyInboxTriage, gateSyntheticWake } from './inbox-triage.js'
+import { computeInputScopeKey, executeCommunicationActions, runLingxiGraph } from './lingxigraph-adapter.js'
+import { classifyLlmCallError, readStreamReasoningTokens, readStreamUsage, recordLlmCall } from './llm-ledger.js'
+import { enforceModelPolicy, realTaskModel, supportModel } from './model-policy.js'
+import { type AgentRunStatus, errorText } from './observability.js'
+import type { AgentRuntimeClient } from './runtime/client.js'
+import { commit as commitFs, type FsNamespace, hydrate as hydrateFs, teardown as teardownFs } from './runtime/fs-namespace.js'
+import { executePodTool, TOOL_DEFS_RESPONSES } from './runtime/pod-tools.js'
+import { runtime } from './runtime/select.js'
+import type { PollWakeBrief } from './runtime/wake-bus.js'
 import {
-  TURN_STATUS_VALUES,
+  canDrainSteer,
+  clearActiveToolBatch,
+  drainSteer,
+  isSteerByteBudgetExhausted,
+  isSteerSaturated,
+  recordSteerBytes,
+  registerActiveToolBatch,
+  resetSteerForAgent,
+  SUMMARIZE_THRESHOLD as STEER_SUMMARIZE_THRESHOLD,
+  type SteerItem,
+} from './steer.js'
+import {
   bashOutputHasReplySideEffect,
-  bashOutputSideEffects,
   bashOutputSideEffectChannelUnreliable,
+  bashOutputSideEffects,
   type CliSideEffect,
   type ToolResult,
+  TURN_STATUS_VALUES,
   type TurnStatusOutput,
   type TurnStatusValue,
 } from './tools-shared.js'
-import { hydrate as hydrateFs, commit as commitFs, teardown as teardownFs, type FsNamespace } from './runtime/fs-namespace.js'
-import type { PollWakeBrief } from './runtime/wake-bus.js'
-import { runtime } from './runtime/select.js'
-import type { AgentRuntimeClient } from './runtime/client.js'
-import { BUSY_STATUS_HEARTBEAT_MS } from '../status.js'
-import { errorText, type AgentRunStatus } from './observability.js'
-import { getLlmClient } from '../llm.js'
-import { enforceModelPolicy, realTaskModel, supportModel } from './model-policy.js'
-import { materializeImage } from './image-fetcher.js'
+import { compactHistoryWithSummary, estimateHistoryTokens, estimateTokens } from './turn-compaction.js'
 import {
   applyResponseStreamEvent,
   consumeResponseStream,
   newResponseStreamState,
   type ResponseStreamState,
 } from './turn-stream.js'
-import { compactHistoryWithSummary, estimateHistoryTokens, estimateTokens } from './turn-compaction.js'
-import { usageFromOpenAI, addUsage, EMPTY_USAGE, type TokenUsage } from './cost.js'
-import { recordLlmCall, classifyLlmCallError, readStreamUsage, readStreamReasoningTokens } from './llm-ledger.js'
-import { resolveDeclaredAutoRelayTarget } from './auto-relay.js'
-import { executeCommunicationActions, runLingxiGraph } from './lingxigraph-adapter.js'
-import {
-  canDrainSteer,
-  drainSteer,
-  resetSteerForAgent,
-  isSteerSaturated,
-  isSteerByteBudgetExhausted,
-  recordSteerBytes,
-  registerActiveToolBatch,
-  clearActiveToolBatch,
-  SUMMARIZE_THRESHOLD as STEER_SUMMARIZE_THRESHOLD,
-  type SteerItem,
-} from './steer.js'
 
 interface InboxAttachment {
   url: string
@@ -2158,11 +2159,23 @@ ${peerWorkBlock}`.trim()
       })
     }
 
-    const execution = await executeCommunicationActions(
-      result.actions,
-      (argv) => runtime.executeCli(agentId, argv),
-      env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
-    )
+    // For an ordinary message-driven wake, the scope is the stable set of
+    // input message ids — a crash/retry against the SAME inbox reproduces
+    // the SAME scope key, so replayed actions dedupe (issue #7 §1). Idle /
+    // background-scan / poll-update wakes have no input messages; their
+    // `fingerprint` already embeds a timestamp, so it's scoped uniquely
+    // per wake — acceptable here since P0 targets the mailbox path.
+    const inputScopeKey = inbox.length > 0
+      ? computeInputScopeKey(inbox.map((m) => m.id))
+      : fingerprint
+    const execution = await executeCommunicationActions({
+      agentId,
+      inputScopeKey,
+      actions: result.actions,
+      executeCli: (argv) => runtime.executeCli(agentId, argv),
+      timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
+      ledger: pgActionLedger,
+    })
     toolCallCount += execution.results.length
     for (const cliResult of execution.results) {
       cliSideEffectsThisTurn.push(...(cliResult.sideEffects ?? []))

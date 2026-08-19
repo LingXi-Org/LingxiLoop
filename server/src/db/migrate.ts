@@ -129,6 +129,42 @@ CREATE TABLE IF NOT EXISTS message_reactions (
   PRIMARY KEY (message_id, user_id, emoji)
 );
 
+-- ============== Communication action idempotency (issue #7) ==============
+-- Sink-level dedup for message.send: a nullable, internally-set key that
+-- lets a retried/duplicate-waked action land on the SAME row instead of
+-- inserting a second message. Never exposed as a model-controllable CLI
+-- arg — only the LingxiGraph action executor sets it. Partial unique index
+-- (WHERE NOT NULL) so ordinary human/legacy sends (no key) are unaffected.
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_idempotency_key
+  ON messages(idempotency_key) WHERE idempotency_key IS NOT NULL;
+
+-- Durable ledger of communication-action executions, keyed by a
+-- LingxiLoop-generated (not model-controlled) idempotency key — see
+-- lingxigraph-adapter.ts computeActionKey(). Used by
+-- executeCommunicationActions() for replay detection: a succeeded row
+-- lets a retried/duplicate-waked action skip the real executor entirely.
+-- NOT the sole exactly-once guarantee — sink-level idempotency (the
+-- messages.idempotency_key unique index above, and the atomic
+-- claim+mutate transaction in tReact()) is what actually prevents a
+-- duplicate side effect if a crash lands between "claimed" and "marked
+-- succeeded" here.
+CREATE TABLE IF NOT EXISTS agent_action_executions (
+  idempotency_key TEXT PRIMARY KEY,
+  agent_id        TEXT NOT NULL,
+  input_scope_key TEXT NOT NULL,
+  action_index    INTEGER NOT NULL,
+  action_type     TEXT NOT NULL,
+  action_hash     TEXT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'pending',  -- 'pending' | 'succeeded' | 'failed'
+  result_json     JSONB,
+  error           TEXT,
+  created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_agent_action_executions_scope
+  ON agent_action_executions(agent_id, input_scope_key);
+
 -- ============== Tool execution log ==============
 CREATE TABLE IF NOT EXISTS tool_calls (
   id          TEXT PRIMARY KEY,
