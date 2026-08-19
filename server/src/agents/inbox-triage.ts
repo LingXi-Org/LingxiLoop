@@ -5,6 +5,7 @@ import { inprocClient } from './runtime/inproc-client.js'
 import { buildTriageRequest, parseTriage, finalizeTriage, isRateLimited, type InboxTriageVerdict, type ClaimsByConvo } from './triage-core.js'
 import { recordTriage } from './observability.js'
 import { usageFromOpenAI } from './cost.js'
+import { createSupportJson } from './support-completion.js'
 
 export type { ResponseMode, InboxTriageVerdict } from './triage-core.js'
 export { buildTriageRequest } from './triage-core.js'
@@ -64,13 +65,11 @@ export async function classifyInboxTriage(args: {
   })
 
   try {
-    const r = await client.responses.create({
+    const r = await createSupportJson(client, {
       model: env.OPENAI_MODEL_SUPPORT,
-      instructions: req.instructions,
-      input: req.input,
-      text: { format: { type: 'json_object' } },
-      max_output_tokens: 500,
-      reasoning: { effort: 'low' },
+      instructions: req.instructions!,
+      input: req.input!,
+      maxTokens: 500,
     }, {
       // Triage is a fast GATE. Do NOT retry — a rate-limited model retried (or
       // escalated to the big brain on fail-open) is exactly what burned users'
@@ -166,13 +165,11 @@ export async function gateSyntheticWake(args: {
       companyId: args.companyId,
       extras: { kind: args.kind, persona: args.personaName },
     })
-    const r = await client.responses.create({
+    const r = await createSupportJson(client, {
       model: env.OPENAI_MODEL_SUPPORT,
       instructions,
       input,
-      text: { format: { type: 'json_object' } },
-      max_output_tokens: 300,
-      reasoning: { effort: 'low' },
+      maxTokens: 300,
     }, { maxRetries: 0, timeout: 8_000 })
     const parsed = JSON.parse(r.output_text ?? '{}') as { act?: unknown; reason?: unknown; note?: unknown }
     return {

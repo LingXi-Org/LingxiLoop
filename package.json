@@ -1,22 +1,21 @@
 {
-  "name": "cumora",
+  "name": "lingxiloop",
   "private": true,
   "version": "0.1.64",
   "type": "module",
   "main": "electron/main.cjs",
   "bin": {
-    "cumora": "./bin/cumora"
+    "lingxiloop": "./bin/cumora"
   },
   "description": "Real-time communication and collaboration for humans and AI agents.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yetone/cumora.git"
+    "url": "https://github.com/LingXi-Org/LingxiLoop.git"
   },
-  "homepage": "https://cumora.ai",
+  "homepage": "https://github.com/LingXi-Org/LingxiLoop",
   "author": {
-    "name": "yetone",
-    "email": "yetoneful@gmail.com"
+    "name": "LingXi-Org"
   },
   "scripts": {
     "dev": "vite --port 5180 --strictPort",
@@ -132,14 +131,14 @@
     "wait-on": "^8.0.5"
   },
   "build": {
-    "appId": "io.cumora.app",
+    "appId": "org.lingxi.loop",
     "productName": "LingxiLoop",
     "asar": true,
     "protocols": [
       {
         "name": "LingxiLoop",
         "schemes": [
-          "cumora"
+          "lingxiloop"
         ]
       }
     ],
@@ -154,21 +153,13 @@
       "output": "release",
       "buildResources": "build"
     },
-    "publish": [
-      {
-        "provider": "generic",
-        "url": "https://updates.cumora.ai",
-        "channel": "latest",
-        "useMultipleRangeRequest": false
-      },
-      {
-        "provider": "github",
-        "owner": "yetone",
-        "repo": "cumora-releases",
-        "releaseType": "release",
-        "publishAutoUpdate": true
-      }
-    ],
+    "publish": {
+      "provider": "github",
+      "owner": "LingXi-Org",
+      "repo": "LingxiLoop",
+      "releaseType": "release",
+      "publishAutoUpdate": true
+    },
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "build/icons/icon.icns",
@@ -225,7 +216,7 @@
       ],
       "category": "Network",
       "icon": "build/icon.png",
-      "maintainer": "yetone <yetoneful@gmail.com>"
+      "maintainer": "LingXi-Org"
     }
   }
 }

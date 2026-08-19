@@ -1,4 +1,4 @@
-# Publish the `cumora` BYOA CLI to npm.
+# Publish the legacy BYOA CLI package declared by agent-cli/package.json.
 #
 # Why this exists: the npm account has 2FA (auth + writes), so a manual
 # `npm publish` prompts for an interactive OTP every release. An npm
@@ -12,7 +12,7 @@
 # workflow no-ops cleanly (it does NOT fail), so adding the file is safe.
 #
 # Behaviour: on a push to main that touches agent-cli/ (typically the
-# `chore(agent-cli): release cumora@X` version bump), publish that version
+# an explicit CLI version bump), publish that version
 # — but only if it isn't already on the registry, so re-pushes are no-ops.
 
 name: Publish CLI
@@ -32,7 +32,7 @@ concurrency:
 
 jobs:
   publish:
-    name: npm publish cumora
+    name: npm publish BYOA CLI
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

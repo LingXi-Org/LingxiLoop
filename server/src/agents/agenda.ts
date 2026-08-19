@@ -29,6 +29,7 @@
  */
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import { createSupportJson } from './support-completion.js'
 import { getTrackedLlmClient } from './llm-ledger.js'
 import { redis } from '../redis.js'
 
@@ -428,13 +429,11 @@ Reply as strict JSON.`
         persona: persona.name,
       },
     })
-    const r = await client.responses.create({
+    const r = await createSupportJson(client, {
       model: env.OPENAI_MODEL_SUPPORT,
       instructions,
       input,
-      text: { format: { type: 'json_object' } },
-      max_output_tokens: 300,
-      reasoning: { effort: 'low' },
+      maxTokens: 300,
     })
     const parsed = JSON.parse(r.output_text ?? '{}') as {
       actionable?: unknown; focus?: unknown; reason?: unknown

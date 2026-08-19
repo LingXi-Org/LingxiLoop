@@ -9,12 +9,8 @@
 #   npm run server:start  →  tsx server/src/index.ts  (main runtime)
 #   npm run migrate       →  tsx server/src/migrate-bin.ts  (init container)
 #
-# Why it ships kubectl: the orchestrator
-# (server/src/agents/runtime/orchestrator.ts) shells out to kubectl
-# to create / delete agent-computer Pods. Inside the cluster it uses
-# the projected ServiceAccount token at
-# /var/run/secrets/kubernetes.io/serviceaccount/token — kubectl
-# auto-detects this and authenticates.
+# The MVP server image intentionally does not ship kubectl. Kubernetes cloud
+# agents are optional; ordinary server-mode builds require no cluster tooling.
 #
 # Build (from repo root):
 #   docker build \
@@ -72,15 +68,7 @@ COPY postcss.config.js ./
 COPY tailwind.config.ts ./
 RUN npm run build
 
-# ─── stage 3: kubectl ──────────────────────────────────────────────
-FROM debian:bookworm-slim AS kubectl-build
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl \
-  && curl -fsSL -o /out-kubectl \
-       "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/$(dpkg --print-architecture)/kubectl" \
-  && chmod +x /out-kubectl
-
-# ─── stage 4: runtime ───────────────────────────────────────────────
+# ─── stage 3: runtime ───────────────────────────────────────────────
 FROM node:20-bookworm-slim
 
 RUN apt-get update \
@@ -88,8 +76,6 @@ RUN apt-get update \
        tini \
        ca-certificates \
   && rm -rf /var/lib/apt/lists/*
-
-COPY --from=kubectl-build /out-kubectl /usr/local/bin/kubectl
 
 WORKDIR /app
 

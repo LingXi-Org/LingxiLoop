@@ -289,6 +289,9 @@ export async function getTrackedLlmClient(ctx: LlmCallContext): Promise<OpenAI> 
         })
       }
       if (prop === 'chat') {
+        // Test/embedded clients may implement only the Responses surface.
+        // Let compatibility callers detect that instead of proxying undefined.
+        if (!target.chat) return undefined
         return new Proxy(target.chat as object, {
           get(ct: object, p: string | symbol, cr: unknown): unknown {
             if (p === 'completions') {

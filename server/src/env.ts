@@ -35,6 +35,8 @@ export const env = {
   DATABASE_URL: required('DATABASE_URL', `postgres://${process.env.USER ?? 'postgres'}@localhost:5432/cumora`),
   REDIS_URL: required('REDIS_URL', 'redis://localhost:6379'),
   OPENAI_API_KEY: required('OPENAI_API_KEY'),
+  /** Optional OpenAI-compatible endpoint, e.g. DeepSeek's /v1 API. */
+  OPENAI_BASE_URL: process.env.OPENAI_BASE_URL?.trim() || undefined,
   /**
    * "Brain" model — the agent's main reasoning loop and convene speech.
    * Default model used when an agent's `participants.model` is NULL.
