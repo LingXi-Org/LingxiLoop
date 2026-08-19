@@ -2,7 +2,7 @@
  * Integration test: POST /webhooks/email/inbound end-to-end.
  *
  * Requires a real Postgres + Redis. Run via:
- *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test \
+ *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \
  *     npm run test:integration
  *
  * What we verify here — the bits a unit test on a pure function CAN'T:
@@ -50,7 +50,7 @@ async function postInbound(body: unknown, opts?: { signature?: string }): Promis
   const sig = opts?.signature ?? signInboundPayload(raw)
   const res = await fetch(`${baseUrl}/webhooks/email/inbound`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-cumora-signature': sig },
+    headers: { 'content-type': 'application/json', 'x-lingxiloop-signature': sig },
     body: raw,
   })
   const text = await res.text()
@@ -64,7 +64,7 @@ test('[integration] rejects requests with a bad HMAC signature', async () => {
     {
       messageId: 'mid@host',
       from: 'alice@external.com',
-      to: ['anyone@cumora.local'],
+      to: ['anyone@lingxiloop.local'],
       subject: 'hello',
       text: 'body',
     },
@@ -74,7 +74,7 @@ test('[integration] rejects requests with a bad HMAC signature', async () => {
 })
 
 test('[integration] rejects requests missing the signature header', async () => {
-  const raw = JSON.stringify({ messageId: 'mid@host', from: 'alice@external.com', to: ['x@cumora.local'] })
+  const raw = JSON.stringify({ messageId: 'mid@host', from: 'alice@external.com', to: ['x@lingxiloop.local'] })
   const res = await fetch(`${baseUrl}/webhooks/email/inbound`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -84,11 +84,11 @@ test('[integration] rejects requests missing the signature header', async () => 
 })
 
 test('[integration] returns 404 when no recipient resolves to a known agent', async () => {
-  await seedCompanyWithAgent({ agentEmail: 'aurora@cumora.local' })
+  await seedCompanyWithAgent({ agentEmail: 'aurora@lingxiloop.local' })
   const r = await postInbound({
     messageId: 'never-delivered@host',
     from: 'alice@external.com',
-    to: ['nobody@cumora.local'],
+    to: ['nobody@lingxiloop.local'],
     subject: 'hi',
     text: 'body',
   })
@@ -172,7 +172,7 @@ test('[integration] flags inbound auto_submitted when worker forwarded the heade
 })
 
 test('[integration] inbound SES boomerang is deduplicated against the outbound row', async () => {
-  // SES rewrites Message-ID on the wire, so when we send to a cumora-domain
+  // SES rewrites Message-ID on the wire, so when we send to a lingxiloop-domain
   // address the boomerang inbound carries an SES-minted id that doesn't
   // match the smtp_message_id we stored on the outbound. Without echo
   // dedup, this creates a second conversation with the same message —

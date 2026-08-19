@@ -2,7 +2,7 @@
  * Integration coverage for the parts of the agent Harness that
  * `agent-turn.test.ts` doesn't already exercise:
  *
- *   - image generation through `cumora reply --generate-image` (b64_json
+ *   - image generation through `lingxiloop reply --generate-image` (b64_json
  *     happy path; upstream image-API error path)
  *   - representative CLI tools driven directly via `runCli`: react,
  *     reply with --quote, kanban ls
@@ -14,7 +14,7 @@
  *     going rather than short-circuiting
  *
  * Run via:
- *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test \
+ *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \
  *     npm run test:integration
  */
 
@@ -314,7 +314,7 @@ test('[integration] react inserts a row in message_reactions for this agent', as
   assert.equal(reads.rowCount, 0, 'react must not clear unfinished work from the agent inbox')
 })
 
-test('[integration] bash cumora PATH shim uses ambient identity instead of a spoofed --as', async () => {
+test('[integration] bash lingxiloop PATH shim uses ambient identity instead of a spoofed --as', async () => {
   const { companyId, agentId } = await seedDirect()
   const spoofId = `spoof-${randomUUID().slice(0, 8)}`
   await pool.query(
@@ -323,8 +323,8 @@ test('[integration] bash cumora PATH shim uses ambient identity instead of a spo
     [spoofId, companyId, `Spoof ${spoofId}`],
   )
 
-  const res = await tBash({ command: `cumora --as ${spoofId} whoami --json` }, agentId, null)
-  assert.equal(res.ok, true, `tBash cumora failed: ${res.error ?? ''}`)
+  const res = await tBash({ command: `lingxiloop --as ${spoofId} whoami --json` }, agentId, null)
+  assert.equal(res.ok, true, `tBash lingxiloop failed: ${res.error ?? ''}`)
   const output = res.output as { stdout: string }
   const start = output.stdout.indexOf('{')
   const end = output.stdout.lastIndexOf('}')
@@ -333,7 +333,7 @@ test('[integration] bash cumora PATH shim uses ambient identity instead of a spo
   const parsed = JSON.parse(output.stdout.slice(start, end + 1)) as { id: string }
   assert.equal(parsed.id, agentId)
 
-  // This intentionally covers the supported `cumora ...` path, not an
+  // This intentionally covers the supported `lingxiloop ...` path, not an
   // unsandboxed local shell executing arbitrary repo binaries. Production
   // impersonation defense lives in /runtime/cli, where the server strips
   // caller --as flags and injects the JWT subject.
@@ -376,22 +376,22 @@ test('[integration] parallel tool calls in one hop both run and produce matched 
     { type: 'response.created', response: { id: 'resp_parallel', status: 'in_progress' } } as unknown as ResponseStreamEvent,
     { type: 'response.output_item.added', item: { id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent,
     { type: 'response.output_item.added', item: { id: 'fc_2', type: 'function_call', call_id: 'call_2', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent,
-    { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: JSON.stringify({ command: 'cumora kanban ls' }) } as unknown as ResponseStreamEvent,
-    { type: 'response.function_call_arguments.done', item_id: 'fc_2', arguments: JSON.stringify({ command: 'cumora workspace ls' }) } as unknown as ResponseStreamEvent,
+    { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: JSON.stringify({ command: 'lingxiloop kanban ls' }) } as unknown as ResponseStreamEvent,
+    { type: 'response.function_call_arguments.done', item_id: 'fc_2', arguments: JSON.stringify({ command: 'lingxiloop workspace ls' }) } as unknown as ResponseStreamEvent,
     {
       type: 'response.completed',
       response: {
         status: 'completed',
         output: [
-          { id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: JSON.stringify({ command: 'cumora kanban ls' }) },
-          { id: 'fc_2', type: 'function_call', call_id: 'call_2', name: 'bash', arguments: JSON.stringify({ command: 'cumora workspace ls' }) },
+          { id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: JSON.stringify({ command: 'lingxiloop kanban ls' }) },
+          { id: 'fc_2', type: 'function_call', call_id: 'call_2', name: 'bash', arguments: JSON.stringify({ command: 'lingxiloop workspace ls' }) },
         ],
         usage: { input_tokens: 200, output_tokens: 30 },
       },
     } as unknown as ResponseStreamEvent,
   ]
   // Hop 2: model declares the turn done via set_turn_status. We assert at
-  // the events level rather than via cumora reply because all we care
+  // the events level rather than via lingxiloop reply because all we care
   // about here is that both bash call_ids appeared in tool.started +
   // tool.finished events.
   installLlmStub({
@@ -420,7 +420,7 @@ test('[integration] parallel tool calls in one hop both run and produce matched 
   const bashCalls = tools.calls.filter((c) => c.name === 'bash')
   assert.equal(bashCalls.length, 2, 'both parallel bash calls were dispatched')
   const cmds = bashCalls.map((c) => String(c.parsed.command ?? '')).sort()
-  assert.deepEqual(cmds, ['cumora kanban ls', 'cumora workspace ls'])
+  assert.deepEqual(cmds, ['lingxiloop kanban ls', 'lingxiloop workspace ls'])
   assert.equal(bashStartTimes.length, 2)
   assert.ok(
     Math.max(...bashStartTimes) - Math.min(...bashStartTimes) < 100,
@@ -473,12 +473,12 @@ test('[integration] auto-compaction: a hop past the 150K (75% context) threshold
   const fatHop1: ResponseStreamEvent[] = [
     { type: 'response.created', response: { id: 'resp_fat1', status: 'in_progress' } } as unknown as ResponseStreamEvent,
     { type: 'response.output_item.added', item: { id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent,
-    { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: JSON.stringify({ command: 'cumora kanban ls' }) } as unknown as ResponseStreamEvent,
+    { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: JSON.stringify({ command: 'lingxiloop kanban ls' }) } as unknown as ResponseStreamEvent,
     {
       type: 'response.completed',
       response: {
         status: 'completed',
-        output: [{ id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: JSON.stringify({ command: 'cumora kanban ls' }) }],
+        output: [{ id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: JSON.stringify({ command: 'lingxiloop kanban ls' }) }],
         // Push totalTokensThisTurn past COMPACT_THRESHOLD_TOKENS = 150_000.
         usage: { input_tokens: 160_000, output_tokens: 1_000 },
       },
@@ -555,12 +555,12 @@ test('[integration] auto-compaction: threshold crossing with nothing compactable
   const hop1: ResponseStreamEvent[] = [
     { type: 'response.created', response: { id: 'resp_noop', status: 'in_progress' } } as unknown as ResponseStreamEvent,
     { type: 'response.output_item.added', item: { id: 'fc_noop', type: 'function_call', call_id: 'call_noop', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent,
-    { type: 'response.function_call_arguments.done', item_id: 'fc_noop', arguments: JSON.stringify({ command: 'cumora whoami' }) } as unknown as ResponseStreamEvent,
+    { type: 'response.function_call_arguments.done', item_id: 'fc_noop', arguments: JSON.stringify({ command: 'lingxiloop whoami' }) } as unknown as ResponseStreamEvent,
     {
       type: 'response.completed',
       response: {
         status: 'completed',
-        output: [{ id: 'fc_noop', type: 'function_call', call_id: 'call_noop', name: 'bash', arguments: JSON.stringify({ command: 'cumora whoami' }) }],
+        output: [{ id: 'fc_noop', type: 'function_call', call_id: 'call_noop', name: 'bash', arguments: JSON.stringify({ command: 'lingxiloop whoami' }) }],
         usage: { input_tokens: 160_000, output_tokens: 10 },
       },
     } as unknown as ResponseStreamEvent,

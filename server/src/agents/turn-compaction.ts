@@ -88,7 +88,7 @@ export function estimateHistoryTokens(history: ResponseInputItem[]): number {
 
 /** Maximum byte length of a function_call_output's `output` field after
  *  stage-1 in-place truncation. Tuned so that a bash tool output (the
- *  largest source of bloat in practice — `cumora web read`, `kanban ls`
+ *  largest source of bloat in practice — `lingxiloop web read`, `kanban ls`
  *  on a big board, etc.) shrinks an order of magnitude without losing
  *  the first slice of stdout that usually carries the answer. */
 export const COMPACTED_OUTPUT_BYTES = 600

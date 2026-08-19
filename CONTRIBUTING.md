@@ -1,6 +1,6 @@
-# Contributing to Cumora
+# Contributing to LingxiLoop
 
-Thanks for your interest in Cumora. This guide covers how to get set up, the
+Thanks for your interest in LingxiLoop. This guide covers how to get set up, the
 checks your change needs to pass, and a couple of architecture invariants that
 are enforced in CI so you don't get surprised.
 
@@ -13,7 +13,7 @@ You need **Node ≥ 18** (CI runs on Node 24), plus **Postgres** and **Redis**
 running locally.
 
 ```bash
-createdb -h localhost cumora
+createdb -h localhost lingxiloop
 export OPENAI_API_KEY=sk-...        # the only hard-required env var
 
 npm install

@@ -7,7 +7,7 @@
  *
  * Cases here cover every failure mode this loop has produced in
  * production plus the obvious boundaries:
- *  - normal: model calls `cumora reply` → message lands in conversation
+ *  - normal: model calls `lingxiloop reply` → message lands in conversation
  *  - multi-hop: bash → reply → message lands, history accumulates
  *    function_call ↔ function_call_output pairs correctly
  *  - unsent assistant text: model must continue and explicitly send/drop it
@@ -22,7 +22,7 @@
  *  - MAX_HOPS: loop caps out gracefully
  *
  * Run via:
- *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test \
+ *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \
  *     npm run test:integration
  */
 import { test, before, beforeEach, after } from 'node:test'
@@ -354,7 +354,7 @@ test('[integration] idle wake with empty inbox runs the normal turn protocol', a
   const prompt = flattenInput(llm.capturedInputs[0] ?? [])
   assert.match(prompt, /idle heartbeat/, 'model sees idle wake context')
   assert.match(prompt, /There is no new chat message demanding a reply/, 'idle wake is not disguised as inbox activity')
-  assert.match(prompt, /cumora inbox/, 'model gets normal inspection tools instead of an idle-only action grammar')
+  assert.match(prompt, /lingxiloop inbox/, 'model gets normal inspection tools instead of an idle-only action grammar')
 
   const { rows: runs } = await pool.query<{ status: string; trigger: Record<string, unknown>; inbox_count: number }>(
     `SELECT status, trigger, inbox_count FROM agent_runs WHERE agent_id = $1`,
@@ -376,18 +376,18 @@ test('[integration] idle wake with empty inbox runs the normal turn protocol', a
   assert.equal(messageCount, 0, 'idle status declaration alone should not create chat messages')
 })
 
-test('[integration] normal direct reply: bash → cumora reply → message lands in conversation', async () => {
+test('[integration] normal direct reply: bash → lingxiloop reply → message lands in conversation', async () => {
   const { companyId, agentId, humanId, conversationId } = await seedConvo({ kind: 'direct' })
   await postHumanMessage({ conversationId, companyId, humanId, body: 'hi nova' })
 
   const replyBody = 'hello! how can I help?'
   const llm = makeLlmStub([
-    // Hop 1: model fires `cumora reply <convo> '<body>'`.
+    // Hop 1: model fires `lingxiloop reply <convo> '<body>'`.
     streamWithToolCall({
       fcId: 'fc_reply',
       callId: 'call_reply',
       name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} '${replyBody}'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} '${replyBody}'` }),
     }),
     streamWithToolCall({
       fcId: 'fc_status',
@@ -400,15 +400,15 @@ test('[integration] normal direct reply: bash → cumora reply → message lands
 
   const tools = makeToolStub({
     bash: (parsed) => {
-      // Stub treats every `cumora reply` call as if it really posted (the
+      // Stub treats every `lingxiloop reply` call as if it really posted (the
       // real CLI does this via inproc DB write) and returns the typed CLI
       // side effect the turn loop uses for double-post suppression.
       const cmd = String(parsed.command ?? '')
       // For "explicit reply" tests we want production semantics: when
-      // `cumora reply` is invoked, simulate a successful post so the next
+      // `lingxiloop reply` is invoked, simulate a successful post so the next
       // assertion (no auto-relay) holds. We still post a real DB row from
       // within the stub so the conversation-state assertion below passes.
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'/)
       if (matched) {
         const [, convoId, body] = matched
         return (async () => {
@@ -441,7 +441,7 @@ test('[integration] normal direct reply: bash → cumora reply → message lands
   // No auto_relay event — the model called the tool itself.
   const ev = await eventsForAgent(agentId)
   const autoRelay = ev.filter((e) => e.kind.startsWith('turn.auto_relay'))
-  assert.equal(autoRelay.length, 0, 'auto_relay must not fire when model already called cumora reply')
+  assert.equal(autoRelay.length, 0, 'auto_relay must not fire when model already called lingxiloop reply')
 })
 
 test('[integration] unsent assistant text is returned to the model instead of auto-routed', async () => {
@@ -455,7 +455,7 @@ test('[integration] unsent assistant text is returned to the model instead of au
       fcId: 'fc_reply',
       callId: 'call_reply',
       name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} '${answer}'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} '${answer}'` }),
     }),
     streamWithToolCall({
       fcId: 'fc_status',
@@ -469,7 +469,7 @@ test('[integration] unsent assistant text is returned to the model instead of au
   const tools = makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -521,7 +521,7 @@ test('[integration] declared assistant-text relay posts the exact draft to the d
   const tools = makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (!matched) throw new Error(`unexpected bash invocation: ${cmd}`)
       const [, convoId, body] = matched
       const messageId = `m-${randomUUID()}`
@@ -590,8 +590,8 @@ test('[integration] declared assistant-text relay rejects a target outside the c
   assert.match(runs[0].error ?? '', /Rejected declared assistant-text relay target/)
 })
 
-test('[integration] auto-relay suppressed when model already called cumora reply this turn', async () => {
-  // The "double-reply" guard: model fires `cumora reply` in hop 1, then emits
+test('[integration] auto-relay suppressed when model already called lingxiloop reply this turn', async () => {
+  // The "double-reply" guard: model fires `lingxiloop reply` in hop 1, then emits
   // assistant text. Even if it asks to relay that draft, the typed CLI reply
   // side effect from hop 1 keeps the runtime from double-posting.
   const { companyId, agentId, humanId, conversationId } = await seedConvo({ kind: 'direct' })
@@ -601,7 +601,7 @@ test('[integration] auto-relay suppressed when model already called cumora reply
   const llm = makeLlmStub([
     streamWithToolCall({
       fcId: 'fc_1', callId: 'call_1', name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} '${replyBody}'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} '${replyBody}'` }),
     }),
     // Hop 2: model babbles more text but doesn't call any tool.
     streamWithJustText('also — checking back in soon'),
@@ -623,7 +623,7 @@ test('[integration] auto-relay suppressed when model already called cumora reply
   const tools = makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -658,7 +658,7 @@ test('[integration] unreliable CLI side-effect channel suppresses assistant-text
   const llm = makeLlmStub([
     streamWithToolCall({
       fcId: 'fc_1', callId: 'call_1', name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} '${replyBody}'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} '${replyBody}'` }),
     }),
     streamWithJustText('also relay this stale draft'),
     streamWithToolCall({
@@ -679,7 +679,7 @@ test('[integration] unreliable CLI side-effect channel suppresses assistant-text
   makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (!matched) throw new Error(`unexpected bash invocation: ${cmd}`)
       const [, convoId, body] = matched
       const messageId = `m-${randomUUID()}`
@@ -732,7 +732,7 @@ test('[integration] missing status after acknowledgement is handled by main-mode
       fcId: 'fc_react',
       callId: 'call_react',
       name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora react ${askingMessageId} 👀` }),
+      argsJson: JSON.stringify({ command: `lingxiloop react ${askingMessageId} 👀` }),
     }),
     streamWithJustText(''),
     streamWithToolCall({
@@ -740,7 +740,7 @@ test('[integration] missing status after acknowledgement is handled by main-mode
       callId: 'call_reply',
       name: 'bash',
       argsJson: JSON.stringify({
-        command: `cumora reply ${conversationId} '${replyBody}' --generate-image '一张可爱的熊猫照片，柔和自然光，真实摄影风格'`,
+        command: `lingxiloop reply ${conversationId} '${replyBody}' --generate-image '一张可爱的熊猫照片，柔和自然光，真实摄影风格'`,
       }),
     }),
     streamWithToolCall({
@@ -755,7 +755,7 @@ test('[integration] missing status after acknowledgement is handled by main-mode
   const tools = makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      if (/^cumora\s+react\s+\S+\s+👀$/.test(cmd)) {
+      if (/^lingxiloop\s+react\s+\S+\s+👀$/.test(cmd)) {
         return {
           ok: true,
           output: { stdout: 'react → added\n\n👀 is only an acknowledgement for long work.', stderr: '', exitCode: 0 },
@@ -763,7 +763,7 @@ test('[integration] missing status after acknowledgement is handled by main-mode
           display: { name: 'bash', arg: cmd, status: 'ok', detail: '' },
         }
       }
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*?)'\s+--generate-image\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*?)'\s+--generate-image\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -897,7 +897,7 @@ test('[integration] user-visible reply without final turn status is inferred com
       fcId: 'fc_reply',
       callId: 'call_reply',
       name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} '${replyBody}'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} '${replyBody}'` }),
     }),
     streamNoTools(),
     streamNoTools(),
@@ -907,7 +907,7 @@ test('[integration] user-visible reply without final turn status is inferred com
   makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (!matched) throw new Error(`unexpected bash invocation: ${cmd}`)
       const [, convoId, body] = matched
       const messageId = `m-${randomUUID()}`
@@ -987,7 +987,7 @@ test('[integration] structured turn status done terminates without an extra no-t
       fcId: 'fc_reply',
       callId: 'call_reply',
       name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} '${replyBody}'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} '${replyBody}'` }),
     }),
     streamWithToolCall({
       fcId: 'fc_status',
@@ -1001,7 +1001,7 @@ test('[integration] structured turn status done terminates without an extra no-t
   const tools = makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (!matched) throw new Error(`unexpected bash invocation: ${cmd}`)
       const [, convoId, body] = matched
       const messageId = `m-${randomUUID()}`
@@ -1088,7 +1088,7 @@ test('[integration] structured turn status continue keeps the loop alive until a
       fcId: 'fc_react',
       callId: 'call_react',
       name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora react ${askingMessageId} 👀` }),
+      argsJson: JSON.stringify({ command: `lingxiloop react ${askingMessageId} 👀` }),
     }),
     streamWithToolCall({
       fcId: 'fc_continue',
@@ -1105,7 +1105,7 @@ test('[integration] structured turn status continue keeps the loop alive until a
       callId: 'call_reply',
       name: 'bash',
       argsJson: JSON.stringify({
-        command: `cumora reply ${conversationId} '${replyBody}' --generate-image '一张可爱的熊猫照片，柔和自然光，真实摄影风格'`,
+        command: `lingxiloop reply ${conversationId} '${replyBody}' --generate-image '一张可爱的熊猫照片，柔和自然光，真实摄影风格'`,
       }),
     }),
     streamWithToolCall({
@@ -1120,7 +1120,7 @@ test('[integration] structured turn status continue keeps the loop alive until a
   const tools = makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      if (cmd === `cumora react ${askingMessageId} 👀`) {
+      if (cmd === `lingxiloop react ${askingMessageId} 👀`) {
         return {
           ok: true,
           output: { stdout: 'react -> added', stderr: '', exitCode: 0 },
@@ -1128,7 +1128,7 @@ test('[integration] structured turn status continue keeps the loop alive until a
           display: { name: 'bash', arg: cmd, status: 'ok', detail: '' },
         }
       }
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*?)'\s+--generate-image\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*?)'\s+--generate-image\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -1183,7 +1183,7 @@ test('[integration] reaction-only terminal done is semantically rejected and the
       fcId: 'fc_react_only',
       callId: 'call_react_only',
       name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora react ${askingMessageId} 👀` }),
+      argsJson: JSON.stringify({ command: `lingxiloop react ${askingMessageId} 👀` }),
     }),
     streamWithToolCall({
       fcId: 'fc_wrong_done',
@@ -1201,7 +1201,7 @@ test('[integration] reaction-only terminal done is semantically rejected and the
       callId: 'call_reply_photo',
       name: 'bash',
       argsJson: JSON.stringify({
-        command: `cumora reply ${conversationId} '${replyBody}' --generate-image '真实摄影风格的团队团建大合照，自然光，不要手绘感'`,
+        command: `lingxiloop reply ${conversationId} '${replyBody}' --generate-image '真实摄影风格的团队团建大合照，自然光，不要手绘感'`,
       }),
     }),
     streamWithToolCall({
@@ -1216,7 +1216,7 @@ test('[integration] reaction-only terminal done is semantically rejected and the
   makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      if (cmd === `cumora react ${askingMessageId} 👀`) {
+      if (cmd === `lingxiloop react ${askingMessageId} 👀`) {
         return {
           ok: true,
           output: {
@@ -1237,7 +1237,7 @@ test('[integration] reaction-only terminal done is semantically rejected and the
           display: { name: 'bash', arg: cmd, status: 'ok', detail: '' },
         }
       }
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*?)'\s+--generate-image\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*?)'\s+--generate-image\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -1291,7 +1291,7 @@ test('[integration] action-only terminal done is semantically verified before th
       fcId: 'fc_move_card',
       callId: 'call_move_card',
       name: 'bash',
-      argsJson: JSON.stringify({ command: 'cumora kanban card move launch Done' }),
+      argsJson: JSON.stringify({ command: 'lingxiloop kanban card move launch Done' }),
     }),
     streamWithToolCall({
       fcId: 'fc_done',
@@ -1310,7 +1310,7 @@ test('[integration] action-only terminal done is semantically verified before th
   makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      assert.equal(cmd, 'cumora kanban card move launch Done')
+      assert.equal(cmd, 'lingxiloop kanban card move launch Done')
       return {
         ok: true,
         output: {
@@ -1347,18 +1347,18 @@ test('[integration] action-only terminal done is semantically verified before th
   assert.equal(reads[0].last_read_message_id, askingMessageId)
 })
 
-test('[integration] multi-hop tool use: hop1 bash informational → hop2 cumora reply → message posted', async () => {
+test('[integration] multi-hop tool use: hop1 bash informational → hop2 lingxiloop reply → message posted', async () => {
   const { companyId, agentId, humanId, conversationId } = await seedConvo({ kind: 'direct' })
   await postHumanMessage({ conversationId, companyId, humanId, body: 'list kanban ids' })
 
   const llm = makeLlmStub([
     streamWithToolCall({
       fcId: 'fc_1', callId: 'call_1', name: 'bash',
-      argsJson: JSON.stringify({ command: 'cumora kanban ls' }),
+      argsJson: JSON.stringify({ command: 'lingxiloop kanban ls' }),
     }),
     streamWithToolCall({
       fcId: 'fc_2', callId: 'call_2', name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} 'board-1, board-2'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} 'board-1, board-2'` }),
     }),
     streamWithToolCall({
       fcId: 'fc_status',
@@ -1375,7 +1375,7 @@ test('[integration] multi-hop tool use: hop1 bash informational → hop2 cumora 
       if (cmd.includes('kanban ls')) {
         return { ok: true, output: { stdout: 'board-1\nboard-2', stderr: '', exitCode: 0 }, durationMs: 1, display: { name: 'bash', arg: cmd, status: 'ok' , detail: '' } }
       }
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -1408,12 +1408,12 @@ test('[integration] tool failure: function_call_output carries error, agent reco
     // Hop 1: model calls a tool that we'll have fail.
     streamWithToolCall({
       fcId: 'fc_1', callId: 'call_1', name: 'bash',
-      argsJson: JSON.stringify({ command: 'cumora doesnotexist' }),
+      argsJson: JSON.stringify({ command: 'lingxiloop doesnotexist' }),
     }),
     // Hop 2: model sees the failure output and recovers by replying.
     streamWithToolCall({
       fcId: 'fc_2', callId: 'call_2', name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} 'sorry — that did not work'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} 'sorry — that did not work'` }),
     }),
     streamWithToolCall({
       fcId: 'fc_status',
@@ -1428,9 +1428,9 @@ test('[integration] tool failure: function_call_output carries error, agent reco
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
       if (cmd.includes('doesnotexist')) {
-        return { ok: false, output: { stdout: '', stderr: 'cumora: unknown subcommand', exitCode: 127 }, error: 'exit 127', durationMs: 1, display: { name: 'bash', arg: cmd, status: 'exit 127' , detail: '' } }
+        return { ok: false, output: { stdout: '', stderr: 'lingxiloop: unknown subcommand', exitCode: 127 }, error: 'exit 127', durationMs: 1, display: { name: 'bash', arg: cmd, status: 'exit 127' , detail: '' } }
       }
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -1468,7 +1468,7 @@ test('[integration] huge tool output is self-described before the next model hop
       fcId: 'fc_huge',
       callId: 'call_huge',
       name: 'bash',
-      argsJson: JSON.stringify({ command: 'cumora kanban show huge-board' }),
+      argsJson: JSON.stringify({ command: 'lingxiloop kanban show huge-board' }),
     }),
     streamWithToolCall({
       fcId: 'fc_status',
@@ -1524,13 +1524,13 @@ test('[integration] response.completed.output:[] with streamed tool call — pen
     [
       { type: 'response.created', response: { id: 'resp_a', status: 'in_progress' } } as unknown as ResponseStreamEvent,
       { type: 'response.output_item.added', item: { id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent,
-      { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: JSON.stringify({ command: 'cumora kanban ls' }) } as unknown as ResponseStreamEvent,
+      { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: JSON.stringify({ command: 'lingxiloop kanban ls' }) } as unknown as ResponseStreamEvent,
       { type: 'response.completed', response: { status: 'completed', output: [], usage: { input_tokens: 100, output_tokens: 20 } } } as unknown as ResponseStreamEvent,
     ],
     // Hop 2: model replies normally.
     streamWithToolCall({
       fcId: 'fc_2', callId: 'call_2', name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} 'two boards: A and B'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} 'two boards: A and B'` }),
     }),
     streamWithToolCall({
       fcId: 'fc_status',
@@ -1547,7 +1547,7 @@ test('[integration] response.completed.output:[] with streamed tool call — pen
       if (cmd.includes('kanban ls')) {
         return { ok: true, output: { stdout: 'A\nB', stderr: '', exitCode: 0 }, durationMs: 1, display: { name: 'bash', arg: cmd, status: 'ok' , detail: '' } }
       }
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -1620,7 +1620,7 @@ test('[integration] MAX_HOPS: model that keeps requesting tools is capped withou
   for (let i = 1; i <= 201; i++) {
     streams.push(streamWithToolCall({
       fcId: `fc_${i}`, callId: `call_${i}`, name: 'bash',
-      argsJson: JSON.stringify({ command: 'cumora kanban ls' }),
+      argsJson: JSON.stringify({ command: 'lingxiloop kanban ls' }),
     }))
   }
   const llm = makeLlmStub(streams)

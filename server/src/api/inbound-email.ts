@@ -107,9 +107,9 @@ function verifySignature(rawBody: Buffer, signature: string): boolean {
 }
 
 /** Resolve a single recipient address to (companyId, participant).
- *  Works for BOTH agents and humans — both have cumora addresses on
+ *  Works for BOTH agents and humans — both have lingxiloop addresses on
  *  the same scheme (`<id>.<slug>@<EMAIL_DOMAIN>`), so an external
- *  reply to a human's cumora address (sent via the compose drawer)
+ *  reply to a human's lingxiloop address (sent via the compose drawer)
  *  routes back into their workspace inbox same as an agent's.
  *
  *  Returns null when the address doesn't belong to any tenant — the
@@ -213,7 +213,7 @@ async function resolveSender(args: {
 
 inboundEmailRouter.post('/inbound', async (req: Request, res: Response) => {
   const raw = (req as Request & { rawBody?: Buffer }).rawBody
-  const sig = String(req.headers['x-cumora-signature'] ?? '')
+  const sig = String(req.headers['x-lingxiloop-signature'] ?? '')
   if (!raw || !sig) {
     res.status(400).json({ error: 'missing signature or body' })
     return
@@ -276,7 +276,7 @@ inboundEmailRouter.post('/inbound', async (req: Request, res: Response) => {
     return
   }
 
-  // Echo dedup: SES rewrites Message-ID, so when we send to a cumora-domain
+  // Echo dedup: SES rewrites Message-ID, so when we send to a lingxiloop-domain
   // recipient (e.g. agent-in-same-workspace), the email boomerangs back
   // through our own CF email worker → /webhooks/email/inbound carrying
   // SES's id, not the id we minted + stored on the outbound row. The
@@ -356,7 +356,7 @@ inboundEmailRouter.post('/inbound', async (req: Request, res: Response) => {
   }
 
   // Fan out to every recipient that resolves to an agent in some tenant.
-  // Cross-tenant deliveries land in each tenant separately; cumora has no
+  // Cross-tenant deliveries land in each tenant separately; lingxiloop has no
   // notion of "the same conversation across tenants" because tenants
   // can't read each other's data anyway.
   const inserts: Array<{ companyId: string; conversationId: string; messageId: string }> = []

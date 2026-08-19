@@ -353,7 +353,7 @@ function CollaborativeEditor({ session, synced, userName, userColor, documentId,
             img.src = url
           }
         })
-        .catch(() => { /* non-Cumora or not-yet-deployed refresh endpoint */ })
+        .catch(() => { /* non-LingxiLoop or not-yet-deployed refresh endpoint */ })
         .finally(() => refreshingImagesRef.current.delete(refreshId))
     }
     const onError = (event: Event) => {

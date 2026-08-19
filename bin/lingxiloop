@@ -1,7 +1,7 @@
 #!/bin/sh
-# Cumora CLI launcher — calls the TypeScript entry via tsx, with the project's
+# LingxiLoop CLI launcher — calls the TypeScript entry via tsx, with the project's
 # env + node_modules. Works whether invoked via PATH (after `npm link`) or
-# directly from the repo (`./bin/cumora ...`).
+# directly from the repo (`./bin/lingxiloop ...`).
 set -e
 
 # Resolve the directory of this script (handles symlinks via npm link).

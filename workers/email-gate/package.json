@@ -1,8 +1,8 @@
 {
-  "name": "cumora-email-gate",
+  "name": "lingxiloop-email-gate",
   "version": "0.1.0",
   "private": true,
-  "description": "Cloudflare Email Worker that parses inbound MIME and POSTs it to cumora-server.",
+  "description": "Cloudflare Email Worker that parses inbound MIME and POSTs it to lingxiloop-server.",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",

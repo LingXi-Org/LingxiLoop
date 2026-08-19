@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "io.cumora.app"
+    namespace = "cn.lingxilearn.loop"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "io.cumora.app"
+        applicationId "cn.lingxilearn.loop"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

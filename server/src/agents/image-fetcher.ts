@@ -20,7 +20,7 @@
  * Tradeoff vs. HEAD-probe + raw URL: ~33% larger request body to OpenAI
  * (base64 overhead). Image *tokens* are identical (computed from decoded
  * pixel dimensions, not wire format), so billing is unchanged; only the
- * cumora-server ↔ OpenAI hop pays. Worth it — HEAD-probe still leaks
+ * lingxiloop-server ↔ OpenAI hop pays. Worth it — HEAD-probe still leaks
  * failures via TOCTOU (200 on HEAD, 4xx on the GET OpenAI does later) and
  * via OpenAI's fetcher hitting different network conditions than ours.
  *

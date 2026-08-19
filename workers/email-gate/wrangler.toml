@@ -2,8 +2,8 @@
 #
 # Receives every inbound email for *.<EMAIL_DOMAIN> via Cloudflare Email
 # Routing. Parses raw MIME with `postal-mime`, builds a JSON payload,
-# HMAC-signs it with EMAIL_INBOUND_HMAC_SECRET (shared with cumora-server),
-# and POSTs to <CUMORA_INBOUND_URL>. The server resolves recipients to
+# HMAC-signs it with EMAIL_INBOUND_HMAC_SECRET (shared with lingxiloop-server),
+# and POSTs to <LINGXILOOP_INBOUND_URL>. The server resolves recipients to
 # agents, writes messages + email_messages, and wakes the agent pods.
 #
 # Setup (one-time per environment):
@@ -11,7 +11,7 @@
 #   2. npx wrangler login
 #   3. Open Cloudflare dashboard → your zone → Email → Email Routing
 #      • Enable Email Routing
-#      • Catch-all address: route to "Send to a Worker" → cumora-email-gate
+#      • Catch-all address: route to "Send to a Worker" → lingxiloop-email-gate
 #   4. npx wrangler deploy
 #   5. npx wrangler secret put EMAIL_INBOUND_HMAC_SECRET
 #      (paste the same value as the server's .env)
@@ -23,19 +23,18 @@
 #
 # Outbound goes through Resend (server-side), NOT this worker.
 
-name = "cumora-email-gate"
+name = "lingxiloop-email-gate"
 main = "src/index.ts"
 compatibility_date = "2024-09-01"
 
-# Where to POST parsed inbound messages. In prod this is api.cumora.ai;
-# locally point at a tunnel (cloudflared tunnel --url http://localhost:5181)
-# so the worker can reach your dev server.
+# Example only. This Worker is retained as source and is not deployed by CI.
+# Set these values explicitly before a manual deployment.
 [vars]
-CUMORA_INBOUND_URL = "https://api.cumora.ai/webhooks/email/inbound"
+LINGXILOOP_INBOUND_URL = "https://loop.example.com/webhooks/email/inbound"
 # Comma-separated list of root domains we accept mail for. The worker
 # rejects (with 550) any RCPT outside this list, so we don't relay
-# random misdirected mail to the cumora server.
-EMAIL_ROOT_DOMAINS = "cumora.ai"
+# random misdirected mail to the lingxiloop server.
+EMAIL_ROOT_DOMAINS = "mail.loop.example.com"
 
 # EMAIL_INBOUND_HMAC_SECRET is set via:
 #   npx wrangler secret put EMAIL_INBOUND_HMAC_SECRET

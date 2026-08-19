@@ -1,7 +1,7 @@
 /**
  * Shared membership-change plumbing.
  *
- * Both the agent-side CLI (`cumora invite / leave / kick`) and the
+ * Both the agent-side CLI (`lingxiloop invite / leave / kick`) and the
  * human-side HTTP endpoints (`POST /conversations/:id/members`, `POST
  * /conversations/:id/leave`) need to do the same two things on every
  * membership mutation:
@@ -22,7 +22,7 @@ import { pool } from '../db/pool.js'
 import { CH_MESSAGE_NEW, publish } from '../redis.js'
 
 /** Atomically claim the next sequence number for a conversation.
- *  Same UPSERT pattern as the human reply path and `cumora reply`. */
+ *  Same UPSERT pattern as the human reply path and `lingxiloop reply`. */
 export async function nextConversationSequence(conversationId: string): Promise<number> {
   const { rows } = await pool.query<{ seq: number }>(
     `INSERT INTO conversation_counters (conversation_id, next_sequence)

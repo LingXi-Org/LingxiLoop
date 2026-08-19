@@ -1,0 +1,17 @@
+name: LingxiLoop CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: lingxiloop-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: ./.github/workflows/_quality.yml

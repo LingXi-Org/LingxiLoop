@@ -3,7 +3,7 @@
 # source for stage 1's `go build`.
 *
 !dist/agent/agent-computer.cjs
-!server/docker/agent-computer-cumora.sh
-!server/docker/agent-computer-cumora-web.sh
+!server/docker/agent-computer-lingxiloop.sh
+!server/docker/agent-computer-lingxiloop-web.sh
 !server/docker/agent-computer-entrypoint.sh
 !agent-fuse/**

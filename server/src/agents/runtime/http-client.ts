@@ -1,10 +1,10 @@
 /**
  * HttpRuntimeClient — `AgentRuntimeClient` impl that talks to the
- * cumora server's `/runtime/*` endpoints over HTTP.
+ * lingxiloop server's `/runtime/*` endpoints over HTTP.
  *
  * Used inside agent-runner pods. The pod's process gets:
- *   - `CUMORA_AGENT_RUNTIME_URL` — server origin (e.g. http://host.docker.internal:5181)
- *   - `CUMORA_AGENT_RUNTIME_TOKEN` — signed JWT pinning agentId + companyId
+ *   - `LINGXILOOP_AGENT_RUNTIME_URL` — server origin (e.g. http://host.docker.internal:5181)
+ *   - `LINGXILOOP_AGENT_RUNTIME_TOKEN` — signed JWT pinning agentId + companyId
  *
  * No DB or Redis access — that's the whole point. The pod's only side
  * channel is the storage layer for attachment downloads (signed URLs).
@@ -49,7 +49,7 @@ export function _resetBusyHeartbeatStateForTests(): void {
 }
 
 export interface HttpClientOptions {
-  /** Origin of the cumora server (no trailing slash). */
+  /** Origin of the lingxiloop server (no trailing slash). */
   baseUrl: string
   /** Signed agent-runtime JWT — sent on every request. */
   token: string
@@ -279,7 +279,7 @@ export class HttpRuntimeClient implements AgentRuntimeClient {
     data?: Record<string, unknown>
     stage?: string
   }): Promise<void> {
-    // Observability is best-effort. A transient fetch failure (cumora-
+    // Observability is best-effort. A transient fetch failure (lingxiloop-
     // server mid-restart, NEG cutover, DNS blip) MUST NOT propagate
     // out and kill the agent turn — production agents have crashed
     // mid-task that way. We log and swallow.

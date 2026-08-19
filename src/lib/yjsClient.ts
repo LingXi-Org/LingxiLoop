@@ -6,7 +6,7 @@
  * are emitted as `doc.update` envelopes, inbound `doc.update` /
  * `doc.sync` / `doc.awareness` frames are applied locally.
  *
- * We deliberately don't use y-websocket — the existing Cumora WS path
+ * We deliberately don't use y-websocket — the existing LingxiLoop WS path
  * already handles auth + reconnect + tenant scoping, so an extra socket
  * would just duplicate state. Yjs binary updates are b64-wrapped so
  * they fit the JSON envelope the rest of the app speaks.

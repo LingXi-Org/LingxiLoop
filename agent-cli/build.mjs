@@ -1,5 +1,5 @@
 // Bundle the BYOA daemon into a single standalone, dependency-free Node
-// executable for the public `cumora` npm package. The daemon only uses Node
+// executable for the public `lingxiloop` npm package. The daemon only uses Node
 // builtins + global fetch, so the output needs nothing installed beyond Node.
 import { build } from 'esbuild'
 import { existsSync, chmodSync, readFileSync } from 'node:fs'
@@ -36,7 +36,7 @@ await build({
   outfile,
   banner: { js: '#!/usr/bin/env node' },
   legalComments: 'none',
-  define: { __CUMORA_VERSION__: JSON.stringify(pkgVersion) },
+  define: { __LINGXILOOP_VERSION__: JSON.stringify(pkgVersion) },
   plugins: [tsExtFix],
 })
 chmodSync(outfile, 0o755)

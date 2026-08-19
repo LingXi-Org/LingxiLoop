@@ -6,8 +6,8 @@ import { getAnalyticsSurface, isPostHogConfigured } from '@/lib/observability'
 import { isElectron, isNotificationWindow } from '@/lib/runtime'
 
 function currentUrlForAnalytics(view: string): string {
-  if (isElectron) return `cumora://${view}`
-  if (typeof location === 'undefined') return `cumora://${view}`
+  if (isElectron) return `lingxiloop://${view}`
+  if (typeof location === 'undefined') return `lingxiloop://${view}`
   return `${location.pathname}${location.search}${location.hash}`
 }
 

@@ -1,7 +1,7 @@
 # Email — real external mail per agent
 
 Every agent has a real address (`<participantId>.<companySlug>@<EMAIL_DOMAIN>`)
-and can both send and receive mail. Agents use it via the `cumora email …`
+and can both send and receive mail. Agents use it via the `lingxiloop email …`
 CLI subcommands (shelled through the engine's bash tool). Inbound mail
 wakes the recipient agent like any other message; idle-heartbeat wakes
 give a quiet agent the chance to decide on its own to send / reply /
@@ -11,7 +11,7 @@ start a thread.
 
 ```
 ┌──────────────┐  MIME    ┌────────────────────────┐  HMAC-signed JSON   ┌──────────────────┐
-│  Sender MTA  │ ───────► │  Cloudflare            │ ──────────────────► │  cumora-server   │
+│  Sender MTA  │ ───────► │  Cloudflare            │ ──────────────────► │  lingxiloop-server   │
 │ (gmail, etc) │   MX     │  Email Routing +       │   POST /webhooks/   │  /webhooks/email │
 └──────────────┘          │  workers/email-gate    │   email/inbound     │  /inbound        │
                           └────────────────────────┘                     └──────────────────┘
@@ -23,7 +23,7 @@ start a thread.
                                                                          │  turn, replies   │
                                                                          └──────────────────┘
                                                                                  │
-                                                                                 ▼ cumora email send/reply
+                                                                                 ▼ lingxiloop email send/reply
                                                                          ┌──────────────────┐
                                                                          │  Resend HTTP API │
                                                                          └──────────────────┘
@@ -64,14 +64,14 @@ subject as title.
 ## Address scheme
 
 `<sanitized participantId>.<companySlug>@<EMAIL_DOMAIN>` — e.g.
-`aurora.acme@cumora.ai`. The `participants.email` column is filled
+`aurora.acme@mail.loop.example.com`. The `participants.email` column is filled
 lazily the first time anything touches the agent's address; existing
 agents pick up an address on their next email-related action without
 needing a backfill migration.
 
 Apex domain on purpose. Earlier iterations used per-tenant subdomains
-(`aurora@acme.cumora.ai`) but that meant verifying every new
-`<slug>.cumora.ai` at Resend with its own DKIM, which doesn't scale
+(`aurora@acme.mail.loop.example.com`) but that meant verifying every new
+`<slug>.mail.loop.example.com` at Resend with its own DKIM, which doesn't scale
 without per-tenant automation that calls Resend's domain API + writes
 DNS records. The dot-apex form keeps the visual structure
 ("`<who>` at `<where>`") while collapsing operational cost to a single
@@ -93,7 +93,7 @@ Add to `.env`:
 
 ```
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
-EMAIL_DOMAIN=cumora.ai
+EMAIL_DOMAIN=mail.loop.example.com
 EMAIL_INBOUND_HMAC_SECRET=<openssl rand -hex 32>
 ```
 
@@ -104,7 +104,7 @@ automatically and adds the `participants.email`, `email_messages`,
 ### 2. Resend
 
 1. Resend dashboard → API Keys → create one.
-2. Add a sending domain `cumora.ai`.
+2. Add a sending domain such as `mail.loop.example.com`.
 3. Copy the SPF + DKIM TXT records into your DNS (Cloudflare).
 4. Wait until Resend marks the domain "Verified".
 
@@ -121,18 +121,18 @@ npx wrangler deploy
 Cloudflare dashboard → your zone → **Email → Email Routing**:
 
 1. Enable Email Routing (this writes apex MX records).
-2. **Catch-all** → "Send to a Worker" → `cumora-email-gate`.
+2. **Catch-all** → "Send to a Worker" → `lingxiloop-email-gate`.
 
 That's it — every `*@<EMAIL_DOMAIN>` lands in the worker, which decodes
 the local-part to (id, slug). No per-tenant DNS work.
 
 ### 4. Verify end-to-end
 
-- Send mail to `<known-agent-id>.<company-slug>@cumora.ai` from gmail.
+- Send mail to `<known-agent-id>.<company-slug>@mail.loop.example.com` from gmail.
 - `wrangler tail` shows the worker accepting + POSTing.
 - Server logs show `[inbound-email] delivered`.
 - The agent wakes within a few seconds. The agent's next turn sees
-  the email in `cumora email inbox` and decides whether to reply.
+  the email in `lingxiloop email inbox` and decides whether to reply.
 
 ## Tests
 
@@ -153,14 +153,14 @@ End-to-end against a REAL Postgres + Redis. Skipped by default —
 
 ```bash
 # Pick whichever Postgres you have handy:
-createdb cumora_test
+createdb lingxiloop_test
 # or via Docker:
 docker run -d --name pg-test -p 5433:5432 \
-  -e POSTGRES_USER=cumora -e POSTGRES_PASSWORD=cumora \
-  -e POSTGRES_DB=cumora_test postgres:16-alpine
+  -e POSTGRES_USER=lingxiloop -e POSTGRES_PASSWORD=lingxiloop \
+  -e POSTGRES_DB=lingxiloop_test postgres:16-alpine
 
 # Run the suite (the runner refuses to TRUNCATE non-test-looking URLs):
-INTEGRATION_DATABASE_URL=postgres://cumora:cumora@localhost:5433/cumora_test \
+INTEGRATION_DATABASE_URL=postgres://lingxiloop:lingxiloop@localhost:5433/lingxiloop_test \
   npm run test:integration
 ```
 
@@ -203,7 +203,7 @@ RESEND_LIVE_TEST=1 \
 The harness refuses to enter live mode without both `RESEND_API_KEY` and
 a `EMAIL_DOMAIN`; without `RESEND_LIVE_TEST=1` set the live specs
 register as `skipped` rather than running. Sends carry a
-`[CUMORA-LIVE-TEST]` subject prefix so they're identifiable in the
+`[LINGXILOOP-LIVE-TEST]` subject prefix so they're identifiable in the
 Resend dashboard.
 
 What live tests catch that mock-mode tests don't:
@@ -221,24 +221,24 @@ webhook, not in the same request).
 
 You don't need a real domain to develop. Two paths:
 
-- **Mock mode**: leave `RESEND_API_KEY` blank. `cumora email send` will
+- **Mock mode**: leave `RESEND_API_KEY` blank. `lingxiloop email send` will
   log + return a fake id. Inbound is harder — there's no good local
   Email Worker emulator. Use the curl recipe in
   `workers/email-gate/README.md` to fire mock inbound deliveries.
 
 - **Tunneled real mode**: `cloudflared tunnel --url http://localhost:5181`,
-  point the worker's `CUMORA_INBOUND_URL` at the tunnel, deploy the worker.
+  point the worker's `LINGXILOOP_INBOUND_URL` at the tunnel, deploy the worker.
   Real mail to your test domain hits your laptop.
 
 ## Commands available to agents
 
 ```
-cumora email whoami                              # your address
-cumora email contacts                            # everyone you can write to
-cumora email inbox [--unread] [--limit N]        # your email threads
-cumora email show <conversation_id>              # full thread
-cumora email send --to <addr|id>[,...] [--cc ...] --subject "..." --body "..."
-cumora email reply <message_id> --body "..." [--cc ...]
+lingxiloop email whoami                              # your address
+lingxiloop email contacts                            # everyone you can write to
+lingxiloop email inbox [--unread] [--limit N]        # your email threads
+lingxiloop email show <conversation_id>              # full thread
+lingxiloop email send --to <addr|id>[,...] [--cc ...] --subject "..." --body "..."
+lingxiloop email reply <message_id> --body "..." [--cc ...]
 ```
 
 `--to` and `--cc` accept either real addresses (`someone@example.com`) or

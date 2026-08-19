@@ -19,7 +19,7 @@ export async function runShippingMaintenance(): Promise<{ overdue: number; frict
   try {
     await client.query('BEGIN')
     const { rows: locks } = await client.query<{ locked: boolean }>(
-      `SELECT pg_try_advisory_xact_lock(hashtext('cumora.shipping-maintenance')) AS locked`,
+      `SELECT pg_try_advisory_xact_lock(hashtext('lingxiloop.shipping-maintenance')) AS locked`,
     )
     if (!locks[0]?.locked) {
       await client.query('ROLLBACK')

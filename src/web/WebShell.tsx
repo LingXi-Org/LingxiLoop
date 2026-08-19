@@ -1,9 +1,10 @@
 /**
- * WebShell — the entire UI surface that ships on app.cumora.ai (and any
- * other public `app.*` hostname). Cumora is a desktop-only product, so
+ * WebShell — the optional handoff-only surface for an operator-selected
+ * public `app.*` hostname. The primary production origin uses the full Web UI;
+ * this alternate client is intentionally minimal, so
  * the web client is intentionally minimal: it can sign a user in via
  * OAuth, surface the waitlist verdict, and hand the session off to the
- * desktop app via the `cumora://` deep link. Nothing else — no chat,
+ * desktop app via the `lingxiloop://` deep link. Nothing else — no chat,
  * no admin, no in-browser fallback.
  *
  * App.tsx routes here when `isWebAppHost` is true. Authenticated visitors
@@ -31,7 +32,7 @@ function buildAuthDeepLink(token: string, companyId: string | null): string {
   const frag = new URLSearchParams()
   frag.set('token', token)
   if (companyId) frag.set('companyId', companyId)
-  return `cumora://auth#${frag.toString()}`
+  return `lingxiloop://auth#${frag.toString()}`
 }
 
 export function WebShell() {
@@ -42,7 +43,7 @@ export function WebShell() {
   )
 }
 
-/** Signed-in handoff screen. Auto-fires the cumora:// deep link once on
+/** Signed-in handoff screen. Auto-fires the lingxiloop:// deep link once on
  *  mount; the manual button is a re-arm in case the browser swallowed
  *  the first attempt (e.g. user was tabbed away). */
 function WebHandoff() {
@@ -157,7 +158,7 @@ function WebLanding() {
         <div className="w-full flex flex-col gap-2.5">
           <button
             type="button"
-            onClick={() => tryDeepLink('cumora://open')}
+            onClick={() => tryDeepLink('lingxiloop://open')}
             className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-ink-700 transition"
             style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
           >在 LingxiLoop 桌面端打开</button>

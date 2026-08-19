@@ -1,5 +1,5 @@
 /**
- * TipTap mention extension wired to Cumora's participant store.
+ * TipTap mention extension wired to LingxiLoop's participant store.
  *
  * Suggestion strategy:
  *  - Trigger character `@` opens a popup of matching participants.

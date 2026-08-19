@@ -1,11 +1,11 @@
 /**
  * Assistant-text relay validation. Plain assistant text emitted by the model
- * is not directly visible in Cumora; normally the model should use
- * `cumora reply`. When it explicitly declares that a draft should be relayed,
+ * is not directly visible in LingxiLoop; normally the model should use
+ * `lingxiloop reply`. When it explicitly declares that a draft should be relayed,
  * this module validates the declared conversation id against the current
  * inbox. It does not infer routing from inbox shape.
  *
- * Side effects (the actual `cumora reply` shell-out, the recordEvent call,
+ * Side effects (the actual `lingxiloop reply` shell-out, the recordEvent call,
  * the tool-call counter bump) live in turn.ts where they have access to the
  * runtime client.
  */

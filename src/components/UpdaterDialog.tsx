@@ -13,7 +13,7 @@
  *   any → error
  *   unsupported (terminal, dev / PWA mode)
  *
- * Inspired by alma's UpdaterDialog but rebuilt for cumora's brand —
+ * Inspired by alma's UpdaterDialog but rebuilt for lingxiloop's brand —
  * skype-blue palette, paper backgrounds, Manrope display font.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -45,7 +45,7 @@ export function useUpdater(): UpdaterState & {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    const bridge = typeof window !== 'undefined' ? window.cumora?.update : undefined
+    const bridge = typeof window !== 'undefined' ? window.lingxiloop?.update : undefined
     if (!bridge) {
       setStatus({ status: 'unsupported', detail: 'browser mode' })
       setReady(true)
@@ -81,17 +81,17 @@ export function useUpdater(): UpdaterState & {
   }, [])
 
   const check = useCallback(async () => {
-    const bridge = window.cumora?.update
+    const bridge = window.lingxiloop?.update
     if (!bridge) return
     await bridge.check()
   }, [])
   const download = useCallback(async () => {
-    const bridge = window.cumora?.update
+    const bridge = window.lingxiloop?.update
     if (!bridge) return
     await bridge.download()
   }, [])
   const install = useCallback(async () => {
-    const bridge = window.cumora?.update
+    const bridge = window.lingxiloop?.update
     if (!bridge) return
     await bridge.install()
   }, [])

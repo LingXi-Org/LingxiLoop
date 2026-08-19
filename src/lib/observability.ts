@@ -5,8 +5,8 @@ import { isElectron, isNotificationWindow, isWebAppHost } from '@/lib/runtime'
 
 async function getAppVersion(): Promise<string> {
   try {
-    if (window.cumora?.update) {
-      const info = await window.cumora.update.getAppInfo()
+    if (window.lingxiloop?.update) {
+      const info = await window.lingxiloop.update.getAppInfo()
       if (info.version) return info.version
     }
   } catch {

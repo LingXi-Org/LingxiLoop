@@ -391,7 +391,7 @@ test('podManifest: malicious agentId is sanitized AND quoted — cannot escape t
   // strings and inject arbitrary YAML keys. The layered defense:
   //   1. safeName collapses special chars to '-' before they reach
   //      the label position (DNS-1123 sanitization).
-  //   2. yamlQuote wraps every CUMORA_AGENT_ID env value in a quoted
+  //   2. yamlQuote wraps every LINGXILOOP_AGENT_ID env value in a quoted
   //      scalar, so even if the sanitizer missed something, JSON
   //      escaping would block YAML key injection.
   const m = podManifest({
@@ -410,7 +410,7 @@ test('podManifest: malicious agentId is sanitized AND quoted — cannot escape t
   // escaped — no unescaped `"` followed by a YAML-keyish thing.
   // We grep for the spoofed top-level injection: `injected: "yes`
   // outside a quoted string. The whole raw agentId only appears
-  // inside the CUMORA_AGENT_ID env value (which uses yamlQuote).
+  // inside the LINGXILOOP_AGENT_ID env value (which uses yamlQuote).
   const rawAppearances = m.match(/iris" injected: "yes/g) ?? []
   // It DOES appear inside the escaped env value — but always
   // surrounded by JSON-escaped quotes (\")
@@ -435,14 +435,14 @@ test('podManifest: well-formed inputs produce a parseable manifest with the slug
     noWorkMs: 90_000,
   })
   assert.match(m, /name: agent-iris-0c97/)
-  assert.match(m, /cumora.agent: "iris-0c97"/)
-  assert.match(m, /CUMORA_AGENT_ID/)
+  assert.match(m, /lingxiloop.agent: "iris-0c97"/)
+  assert.match(m, /LINGXILOOP_AGENT_ID/)
   assert.match(m, /value: "iris-0c97"/)
-  assert.match(m, /CUMORA_AGENT_IDLE_MS/)
+  assert.match(m, /LINGXILOOP_AGENT_IDLE_MS/)
   assert.match(m, /value: "600000"/)
-  assert.match(m, /CUMORA_AGENT_NO_WORK_MS/)
+  assert.match(m, /LINGXILOOP_AGENT_NO_WORK_MS/)
   assert.match(m, /value: "90000"/)
-  assert.match(m, /CUMORA_AGENT_RUNTIME_TOKEN/)
+  assert.match(m, /LINGXILOOP_AGENT_RUNTIME_TOKEN/)
   assert.match(m, /jwt\.token\.part/)
   // Resource targets are pinned against measured in-container working-
   // set + CPU figures: idle ≈ 380MiB, peak ≈ 1230MiB across 4 sites,
@@ -462,8 +462,8 @@ test('podManifest: well-formed inputs produce a parseable manifest with the slug
   assert.match(m, /volumes:\n\s+- name: chrome-profile\n\s+persistentVolumeClaim:\n\s+claimName: "agent-iris-0c97-chrome"/)
 })
 
-test('podManifest: image with embedded quote is escaped (CUMORA_AGENT_COMPUTER_IMAGE env is user-set)', () => {
-  // An attacker who controlled CUMORA_AGENT_COMPUTER_IMAGE could
+test('podManifest: image with embedded quote is escaped (LINGXILOOP_AGENT_COMPUTER_IMAGE env is user-set)', () => {
+  // An attacker who controlled LINGXILOOP_AGENT_COMPUTER_IMAGE could
   // historically have tried `legit-image"\ninjected: yaml` to break
   // the manifest. yamlQuote wrapping makes it a literal string.
   const m = podManifest({

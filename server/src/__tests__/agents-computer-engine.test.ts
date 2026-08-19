@@ -19,7 +19,7 @@ afterEach(async () => {
 })
 
 test('local engine failure returns stderr tail for observability', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'cumora-engine-'))
+  const root = await mkdtemp(join(tmpdir(), 'lingxiloop-engine-'))
   tempDirs.push(root)
   const binDir = join(root, 'bin')
   const home = join(root, 'home')
@@ -52,7 +52,7 @@ test('local engine failure returns stderr tail for observability', async () => {
 })
 
 test('persistent Claude startup failure keeps stderr for first send', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'cumora-engine-session-'))
+  const root = await mkdtemp(join(tmpdir(), 'lingxiloop-engine-session-'))
   tempDirs.push(root)
   const binDir = join(root, 'bin')
   const home = join(root, 'home')
@@ -95,9 +95,9 @@ test('persistent Claude startup failure keeps stderr for first send', async () =
   // (`#!/bin/sh` wrapper) alongside the real `.cmd`. The OLD resolveSpawn iterated
   // `['', ...PATHEXT]` → matched the shim first → returned `shell:false` → Node
   // could not exec the shim and every BYOA turn died with ENOENT.
-  // See https://github.com/yetone/cumora/issues/5
+  // See https://github.com/LingXi-Org/LingxiLoop/issues/5
   test('resolveSpawn prefers .cmd over extensionless shim on Windows', { skip: !IS_WIN }, async () => {
-    const root = await mkdtemp(join(tmpdir(), 'cumora-resolve-'))
+    const root = await mkdtemp(join(tmpdir(), 'lingxiloop-resolve-'))
     tempDirs.push(root)
     const binDir = join(root, 'bin')
     await mkdir(binDir)

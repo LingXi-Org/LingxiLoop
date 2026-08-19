@@ -11,7 +11,7 @@
  * What the verified claims tell us:
  *   - `iss` is `https://appleid.apple.com` (we check this)
  *   - `aud` is the iOS app's bundle id (we check this — must match
- *      `io.cumora.app`)
+ *      `cn.lingxilearn.loop`)
  *   - `sub` is a STABLE per-(user, team) opaque identifier — same on
  *      every sign-in for the lifetime of the Apple ID's relationship
  *      with our app. This is what we link `user_identities` rows to.

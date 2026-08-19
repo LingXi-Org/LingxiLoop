@@ -9,7 +9,7 @@ export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 }
 
 /**
- * Canonical Cumora multi-line text field. Shares the Input chrome (paper bg,
+ * Canonical LingxiLoop multi-line text field. Shares the Input chrome (paper bg,
  * 1.5px ink-100 border, 10px radius, sky focus ring) and adds vertical resize
  * + 1.5 line-height suited for prose.
  */

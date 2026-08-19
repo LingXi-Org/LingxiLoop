@@ -5,22 +5,12 @@
  * detection, the gate-bypass flag, and the wording stay in lockstep
  * across the app.
  *
- * The URL deliberately carries `?download=1` so the marketing site's
- * waitlist gate (see website/index.html) doesn't intercept users who
- * are already past the gate or who don't have a path to Join Waitlist
- * to begin with (e.g. an invited user, or a recently-approved user
- * coming through the welcome email).
+ * Installers are published by the signed desktop GitHub Release workflow.
  */
 import type { CSSProperties } from 'react'
 
-// `?download=1` tells the marketing site to skip its waitlist gate. We
-// pass it from every surface where the viewer has *some* claim to the
-// product (signed in, on the waitlist already, invited, etc.) so
-// they're never bounced from a Download CTA back to Join Waitlist.
-// WebLanding opts out for anonymous visitors, but opts back in for
-// approved-entry links coming from the welcome email.
-const DOWNLOAD_URL_BYPASS = 'https://cumora.ai/?download=1#download'
-const DOWNLOAD_URL_GATED  = 'https://cumora.ai/#download'
+const DOWNLOAD_URL_BYPASS = 'https://github.com/LingXi-Org/LingxiLoop/releases/latest'
+const DOWNLOAD_URL_GATED = DOWNLOAD_URL_BYPASS
 
 export type GetDesktopAppLinkVariant = 'button-primary' | 'button-secondary' | 'text'
 

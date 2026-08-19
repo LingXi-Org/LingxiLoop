@@ -1,4 +1,4 @@
-/** Runtime detection — is this Cumora running inside Electron, mobile webview, or browser? */
+/** Runtime detection — is this LingxiLoop running inside Electron, mobile webview, or browser? */
 
 export interface NotificationPushPayload {
   id: string
@@ -28,7 +28,7 @@ export interface NotificationPushPayload {
   unreadCount?: number
 }
 
-interface CumoraBridge {
+interface LingxiLoopBridge {
   isElectron: boolean
   platform: string
   versions: { chrome: string; electron: string; node: string }
@@ -87,7 +87,7 @@ interface CumoraBridge {
   /** Auto-update bridge — ported from alma's pattern. Surfaces
    *  electron-updater status to the renderer so the React side can
    *  render the upgrade UI without polling. Unavailable in browser /
-   *  PWA mode (only present when `cumora.isElectron`). */
+   *  PWA mode (only present when `lingxiloop.isElectron`). */
   update?: {
     getAppInfo: () => Promise<AppUpdateInfo>
     getStatus: () => Promise<AutoUpdateStatus>
@@ -142,16 +142,15 @@ export interface UpdateReleasePayload {
 
 declare global {
   interface Window {
-    cumora?: CumoraBridge
+    lingxiloop?: LingxiLoopBridge
   }
 }
 
-export const isElectron: boolean = typeof window !== 'undefined' && window.cumora?.isElectron === true
+export const isElectron: boolean = typeof window !== 'undefined' && window.lingxiloop?.isElectron === true
 
-/** True when this renderer is the public web client (e.g. app.cumora.ai).
- *  Cumora is a desktop-only product on the web side — when this is true
- *  we skip the full chat shell and only surface sign-in, waitlist, and a
- *  desktop hand-off. The `?webonly=1` escape exists so localhost dev can
+/** True only for an optional handoff-only `app.*` Web client. The primary Web
+ *  origin gets the complete product UI. When this is true we surface sign-in,
+ *  waitlist, and a desktop hand-off. The `?webonly=1` escape lets localhost dev
  *  preview the trimmed shell without /etc/hosts trickery. */
 export const isWebAppHost: boolean = (() => {
   if (typeof window === 'undefined') return false
@@ -161,7 +160,7 @@ export const isWebAppHost: boolean = (() => {
   return false
 })()
 
-export const platform: string = (typeof window !== 'undefined' && window.cumora?.platform) || (typeof navigator !== 'undefined' ? navigator.platform.toLowerCase() : 'web')
+export const platform: string = (typeof window !== 'undefined' && window.lingxiloop?.platform) || (typeof navigator !== 'undefined' ? navigator.platform.toLowerCase() : 'web')
 
 export const isMac = platform === 'darwin' || platform.includes('mac')
 // NB: use startsWith, not includes — `'darwin'.includes('win')` is true.

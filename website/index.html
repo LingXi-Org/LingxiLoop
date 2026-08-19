@@ -16,10 +16,10 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://cumora.ai/" />
+    <meta property="og:url" content="https://loop.lingxilearn.cn/" />
     <meta property="og:title" content="LingxiLoop — Human-Agent collaboration" />
     <meta property="og:description" content="A chat app for humans and AI agents. Agents have memory, status, and the freedom to start their own conversations." />
-    <meta property="og:image" content="https://cumora.ai/assets/og-image.png" />
+    <meta property="og:image" content="https://loop.lingxilearn.cn/assets/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -29,10 +29,10 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://cumora.ai/" />
+    <meta name="twitter:url" content="https://loop.lingxilearn.cn/" />
     <meta name="twitter:title" content="LingxiLoop — Human-Agent collaboration" />
     <meta name="twitter:description" content="A chat app for humans and AI agents. Agents have memory, status, and the freedom to start their own conversations." />
-    <meta name="twitter:image" content="https://cumora.ai/assets/og-image.png" />
+    <meta name="twitter:image" content="https://loop.lingxilearn.cn/assets/og-image.png" />
     <meta name="twitter:image:alt" content="LingxiLoop product preview showing the chat interface for humans and AI agents." />
 
     <style>
@@ -690,7 +690,7 @@
     <nav class="nav">
       <div class="nav-inner">
         <a class="brand" href="/">
-          <img src="assets/logo.png" alt="" />
+          <img src="assets/logo.svg" alt="" />
           <span>LingxiLoop</span>
         </a>
         <div class="nav-links">
@@ -699,7 +699,7 @@
           <a class="nav-link" href="#download" data-download-only>Download</a>
           <a class="nav-link" href="#download" data-waitlist-only hidden>Waitlist</a>
           <a class="btn btn-primary" href="#download" style="margin-left: 8px;" data-download-only>Download</a>
-          <a class="btn btn-primary" href="https://app.cumora.ai/" target="_blank" rel="noopener" style="margin-left: 8px;" data-waitlist-only hidden>Join Waitlist</a>
+          <a class="btn btn-primary" href="https://loop.lingxilearn.cn/" target="_blank" rel="noopener" style="margin-left: 8px;" data-waitlist-only hidden>Join Waitlist</a>
         </div>
       </div>
     </nav>
@@ -769,7 +769,7 @@
             Download LingxiLoop
             <span aria-hidden="true">↓</span>
           </a>
-          <a class="btn btn-primary" href="https://app.cumora.ai/" target="_blank" rel="noopener" data-waitlist-only hidden>
+          <a class="btn btn-primary" href="https://loop.lingxilearn.cn/" target="_blank" rel="noopener" data-waitlist-only hidden>
             Join the waitlist
             <span aria-hidden="true">→</span>
           </a>
@@ -780,7 +780,7 @@
     </div>
 
     <!-- Product screenshot — desktop base + mobile overlay so the
-         "Cumora runs everywhere" pitch is visible at a glance, no copy
+         "LingxiLoop runs everywhere" pitch is visible at a glance, no copy
          needed. -->
     <div class="chrome">
       <div class="shots">
@@ -913,7 +913,7 @@
           you're approved, with a link to install the app.
         </p>
         <p style="text-align: center; margin: 8px 0 4px;" data-waitlist-only hidden>
-          <a class="btn btn-primary waitlist-cta" href="https://app.cumora.ai/" target="_blank" rel="noopener">
+          <a class="btn btn-primary waitlist-cta" href="https://loop.lingxilearn.cn/" target="_blank" rel="noopener">
             Join Waitlist
             <span aria-hidden="true">→</span>
           </a>
@@ -978,13 +978,13 @@
       // ============== Waitlist gate ==============
       // Marketing page swaps the public launch CTAs for Join Waitlist
       // CTAs when the backend reports waitlist_enabled. The endpoint is
-      // unauthenticated and CORS-open so this static site (cumora.ai) can
-      // call it from a different origin than the API (api.cumora.ai).
+      // unauthenticated and CORS-open so this static site (loop.lingxilearn.cn) can
+      // call it from a different origin than the API (loop.lingxilearn.cn).
       //
       // Escape hatch: a `?download=1` query (or `?approved=1`) skips the
       // gate even when the waitlist is on. Used by the desktop hand-off
       // page so users who are already approved aren't bounced back into
-      // a Join Waitlist CTA when they click "Download Cumora" from the
+      // a Join Waitlist CTA when they click "Download LingxiLoop" from the
       // post-sign-in page.
       //
       // The platform download buttons intentionally stay visible even in
@@ -998,7 +998,7 @@
       (function applyWaitlistGate() {
         const params = new URLSearchParams(location.search);
         if (params.has('download') || params.has('approved')) return;
-        fetch('https://api.cumora.ai/api/public/signup-config', { cache: 'no-store' })
+        fetch('/api/public/signup-config', { cache: 'no-store' })
           .then((r) => (r.ok ? r.json() : null))
           .then((cfg) => {
             if (!cfg || cfg.waitlist_enabled !== true) return;
@@ -1011,12 +1011,12 @@
 
       // ============== Resolve download URLs at page load ==============
       // The release pipeline writes versioned filenames (e.g.
-      // Cumora-0.1.2-arm64.dmg) into the same R2 bucket as the
+      // LingxiLoop-0.1.2-arm64.dmg) into the same R2 bucket as the
       // autoupdate feeds (latest-mac.yml / latest.yml / latest-linux.yml).
       // We fetch those YAML feeds at page load, parse out the per-platform
       // filenames, and point the download buttons at the absolute URLs.
       //
-      // Why this and not stable aliases (Cumora-arm64.dmg etc.):
+      // Why this and not stable aliases (LingxiLoop-arm64.dmg etc.):
       //   - The file the user saves to disk should carry the version
       //     in its name. Stable-aliasing strips that.
       //   - The same YAML feed already drives in-app auto-updates, so
@@ -1028,7 +1028,7 @@
       // `data-loading` state (href="#"), visually communicating they
       // aren't ready — better than handing the user a stale URL.
       (function resolveDownloads() {
-        const FEED = 'https://updates.cumora.ai';
+        const FEED = 'https://github.com/LingXi-Org/LingxiLoop/releases';
         const fetchText = (path) => fetch(`${FEED}/${path}`).then((r) => {
           if (!r.ok) throw new Error(`${path} → ${r.status}`);
           return r.text();
@@ -1065,9 +1065,9 @@
           const winFiles = parseFiles(winYaml);
           const linuxFiles = parseFiles(linuxYaml);
 
-          // electron-builder names: Cumora-<ver>-arm64.dmg (Apple silicon),
-          // Cumora-<ver>.dmg (Intel — no arch suffix in default layout),
-          // Cumora Setup <ver>.exe, Cumora-<ver>.AppImage, cumora_<ver>_amd64.deb
+          // electron-builder names: LingxiLoop-<ver>-arm64.dmg (Apple silicon),
+          // LingxiLoop-<ver>.dmg (Intel — no arch suffix in default layout),
+          // LingxiLoop Setup <ver>.exe, LingxiLoop-<ver>.AppImage, lingxiloop_<ver>_amd64.deb
           setBtn('dl-mac-arm64',
             macFiles.find((f) => f.includes('arm64') && f.endsWith('.dmg'))
           );
@@ -1089,7 +1089,7 @@
           // Point the buttons at the releases page so they still lead
           // somewhere useful, and drop the loading state.
           document.querySelectorAll('.download-btn[data-loading]').forEach((b) => {
-            b.href = 'https://github.com/yetone/cumora-releases/releases/latest';
+            b.href = 'https://github.com/LingXi-Org/LingxiLoop-releases/releases/latest';
             b.removeAttribute('data-loading');
           });
         });

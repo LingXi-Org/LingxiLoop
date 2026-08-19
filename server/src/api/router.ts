@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import { storage, UPLOAD_DIR, freshenAttachmentUrl, normalizeStorageKey, storageKeyFromPublicUrl } from '../storage.js'
 import { pool } from '../db/pool.js'
-import { CH_MESSAGE_NEW, CH_REACTIONS, CH_CONVO_UPDATED, CH_DOCS, CH_TYPING, CH_CALENDAR_EVENTS, publish } from '../redis.js'
+import { CH_MESSAGE_NEW, CH_REACTIONS, CH_CONVO_UPDATED, CH_DOCS, CH_TYPING, CH_CALENDAR_EVENTS, publish, redis } from '../redis.js'
 import { createPoll, castVote, closePoll, PollError } from '../polls.js'
 import { env } from '../env.js'
 import { startConvene, getActiveConvene } from '../agents/convene.js'
@@ -254,7 +254,7 @@ async function requireCompany(req: Request & AuthedRequest): Promise<{ userId: s
   return { userId, companyId: rows[0].company_id }
 }
 
-const DEVTOOLS_HEADER = 'x-cumora-dev-mode'
+const DEVTOOLS_HEADER = 'x-lingxiloop-dev-mode'
 const DEVTOOLS_ROLES = new Set(['owner', 'admin'])
 /** Privileged role set used for owner/admin gates on agent + project mutations
  *  and any other "shared workspace resource" write paths. Kept as a Set so
@@ -517,7 +517,7 @@ api.post('/uploads/refresh-url', safe(async (req, res) => {
   const url = String(req.body?.url ?? '').trim()
   const requestedKey = String(req.body?.key ?? '').trim()
   const key = normalizeStorageKey(requestedKey) ?? (url ? storageKeyFromPublicUrl(url) : null)
-  if (!key) throw new HttpError(400, 'not a Cumora storage URL')
+  if (!key) throw new HttpError(400, 'not a LingxiLoop storage URL')
   res.json({ key, url: await storage.publicUrl(key) })
 }))
 
@@ -527,6 +527,15 @@ api.post('/uploads/refresh-url', safe(async (req, res) => {
 // the same exhausted pool, timed out, and pods were SIGTERM-killed (exit 143),
 // shedding capacity exactly when it was needed. Point the livenessProbe here.
 api.get('/livez', (_req, res) => { res.json({ ok: true, ts: Date.now() }) })
+
+api.get('/meta', (_req, res) => {
+  res.json({
+    product: 'LingxiLoop',
+    version: env.APP_VERSION,
+    commitSha: env.COMMIT_SHA,
+    reasoningRuntime: env.LINGXILOOP_REASONING_RUNTIME,
+  })
+})
 
 // Readiness: "can this pod serve?" — checks DB reachability, but FAILS FAST.
 // Capped at 1s so the probe gets a deterministic 200/503 instead of hanging on
@@ -543,6 +552,32 @@ api.get('/health', async (_req, res) => {
   } catch (e) {
     res.status(503).json({ ok: false, error: String(e) })
   }
+})
+
+// Production dependency readiness used by the scheduled public smoke. It
+// exercises the real database connection, Redis command path, and the
+// configured LingxiGraph Runtime without exposing credentials or internals.
+api.get('/health/dependencies', async (_req, res) => {
+  const checks = { database: false, redis: false, lingxigraph: false }
+  await Promise.allSettled([
+    Promise.race([
+      pool.query('SELECT 1').then(() => { checks.database = true }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('database timeout')), 2_000)),
+    ]),
+    Promise.race([
+      redis.ping().then(() => { checks.redis = true }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('redis timeout')), 2_000)),
+    ]),
+    fetch(`${env.LINGXIGRAPH_URL.replace(/\/+$/, '')}/health`, {
+      headers: env.LINGXIGRAPH_TOKEN ? { authorization: `Bearer ${env.LINGXIGRAPH_TOKEN}` } : undefined,
+      signal: AbortSignal.timeout(3_000),
+    }).then((response) => {
+      checks.lingxigraph = response.ok
+      if (!response.ok) throw new Error(`LingxiGraph health returned ${response.status}`)
+    }),
+  ])
+  const ok = Object.values(checks).every(Boolean)
+  res.status(ok ? 200 : 503).json({ ok, dependencies: checks, ts: Date.now() })
 })
 
 /* GET /api/og?url=<encoded url> — Open-Graph / link-preview proxy.
@@ -583,7 +618,7 @@ api.get('/og', async (req, res) => {
 })
 
 /* GET /api/public/signup-config — unauthenticated read of the bits of
- * app_settings that govern what the marketing page (cumora.ai) should
+ * app_settings that govern what the marketing page (loop.lingxilearn.cn) should
  * offer brand-new visitors. Today that's just `waitlist_enabled`: when
  * true, the landing page hides the desktop download buttons and shows
  * a "Join Waitlist" CTA instead, so visitors don't install an app they
@@ -644,7 +679,7 @@ api.get('/metrics', async (req, res) => {
  *  callback to defend against CSRF + cross-provider mixups.
  *
  *  `?return=<url>` is the post-callback redirect target. Must startsWith
- *  one of CUMORA_AUTH_RETURN_ALLOWLIST entries; otherwise rejected so we
+ *  one of LINGXILOOP_AUTH_RETURN_ALLOWLIST entries; otherwise rejected so we
  *  can't be turned into an open redirect. Omit to use AUTH_DONE_URL. */
 api.get('/auth/start/:provider', safe(async (req, res) => {
   const provider = req.params.provider as Provider
@@ -701,7 +736,7 @@ api.get('/auth/callback/:provider', safe(async (req, res) => {
   }
   if (!code || !state) {
     console.warn(`[auth] ${provider} callback missing code/state; expected callback ${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`)
-    res.redirect(errorUrl(null, 'OAuth callback missing code or state; verify CUMORA_PUBLIC_ORIGIN and the registered callback URL')); return
+    res.redirect(errorUrl(null, 'OAuth callback missing code or state; verify LINGXILOOP_PUBLIC_ORIGIN and the registered callback URL')); return
   }
   const claimed = await consumeState(state)
   if (!claimed || claimed.provider !== provider) {
@@ -744,7 +779,7 @@ api.post('/auth/apple/native', safe(async (req, res) => {
       fallbackName,
       // Only our bundle id is accepted. If we later ship an Android
       // app or web SIWA fallback they'll get distinct audiences.
-      audiences: ['io.cumora.app'],
+      audiences: ['cn.lingxilearn.loop'],
       inviteToken,
       ip, userAgent: ua,
     })
@@ -806,7 +841,7 @@ api.delete('/me/account', safe(async (req, res) => {
     const email = pre[0].email
 
     // 1. Stamp deleted_at + scrub PII fields. We move email to a
-    //    sentinel `deleted+<userid>@cumora.invalid` so the UNIQUE
+    //    sentinel `deleted+<userid>@lingxiloop.invalid` so the UNIQUE
     //    constraint stays satisfied (NULL would too, but a sentinel
     //    keeps the audit trail showing "an account existed here").
     await client.query(
@@ -818,7 +853,7 @@ api.delete('/me/account', safe(async (req, res) => {
               avatar_url = NULL,
               email_verified_at = NULL
         WHERE id = $1`,
-      [userId, `deleted+${userId}@cumora.invalid`, 'Deleted user'],
+      [userId, `deleted+${userId}@lingxiloop.invalid`, 'Deleted user'],
     )
 
     // 2. Burn all sessions immediately. CASCADE would handle this on
@@ -923,7 +958,7 @@ api.use('/admin', adminRouter)
  * Surfaces the same daily/weekly/monthly used + limit numbers that
  * sub2api enforces at the gateway. Returns `{ configured: false }` when
  * the deployment doesn't talk to sub2api, and `{ configured: true,
- * snapshot: null }` when the user exists in cumora but was never
+ * snapshot: null }` when the user exists in lingxiloop but was never
  * provisioned (or sub2api lost their subscription). Either case is fine
  * — the client shows an "unavailable" affordance rather than erroring. */
 api.get('/me/quota', safe(async (req, res) => {
@@ -1025,9 +1060,9 @@ api.post('/companies', async (req, res) => {
   res.status(500).json({ error: 'failed to create company after retries' })
 })
 
-/* ============== Computers (agent hosts: Cumora Cloud + BYOA) ============== */
+/* ============== Computers (agent hosts: LingxiLoop Cloud + BYOA) ============== */
 
-// List computers visible in the active company (Cumora Cloud + paired ones).
+// List computers visible in the active company (LingxiLoop Cloud + paired ones).
 api.get('/computers', safe(async (req, res) => {
   const { companyId } = await requireCompany(req)
   res.json(await listComputers(companyId))
@@ -1058,7 +1093,7 @@ api.delete('/computers/:id', safe(async (req, res) => {
   res.json({ ok: true })
 }))
 
-// Assign an agent to a computer (move between Cumora Cloud and a paired
+// Assign an agent to a computer (move between LingxiLoop Cloud and a paired
 // machine), choosing its engine (owner/admin).
 api.post('/agents/:id/computer', safe(async (req, res) => {
   const { companyId } = await requireCompanyRole(req)
@@ -1227,11 +1262,11 @@ async function requireCompanyAdmin(req: Request & AuthedRequest, companyId: stri
 }
 
 /** Build the public-facing accept URL for an invite — always an https web
- *  origin (e.g. https://app.cumora.ai/invite/<token>). The web bundle hosted
- *  there has its API origin baked in at build time (VITE_CUMORA_API_BASE), so
+ *  origin (e.g. https://loop.example.com/invite/<token>). The web bundle hosted
+ *  there has its API origin baked in at build time (VITE_LINGXILOOP_API_BASE), so
  *  the link is self-routing: any recipient who opens it lands on the right
  *  API automatically, even from Electron (the OS hands https URLs to the
- *  default browser). We deliberately do NOT mint cumora:// deep links — each
+ *  default browser). We deliberately do NOT mint lingxiloop:// deep links — each
  *  API server is tied to exactly one web origin, so an `?api=` query param
  *  would be redundant. */
 function buildInviteUrl(token: string): string {
@@ -1466,7 +1501,7 @@ api.get('/invitations/:token', safe(async (req, res) => {
 }))
 
 /** Accept an invitation. Auth required — the joiner must already have a
- *  Cumora account (sign in / sign up via OAuth first). Atomically:
+ *  LingxiLoop account (sign in / sign up via OAuth first). Atomically:
  *    1. Re-checks the invite state under FOR UPDATE so two simultaneous
  *       redemptions on a single-use invite can't both win.
  *    2. Inserts a company_members row (idempotent on conflict).
@@ -3350,7 +3385,7 @@ api.post('/conversations/:id/messages', async (req, res) => {
 
   // Email conversations: auto-promote a "chat-style" reply into a real
   // email reply. Without this, typing in the chat input of an email
-  // thread (or an agent calling `cumora reply` from its CLI) would just
+  // thread (or an agent calling `lingxiloop reply` from its CLI) would just
   // write a kind='text' row that the external recipient never sees.
   if (convo.kind === 'email') {
     if (!body) {
@@ -3502,7 +3537,7 @@ api.post('/conversations/:id/messages', async (req, res) => {
 /* ============== Polls ====================================================
  * A poll is a kind='poll' messages row with a structured payload + a
  * separate poll_votes table for tallies. Both humans (via this HTTP API)
- * and agents (via `cumora poll …` in agents/cli.ts) share the same core
+ * and agents (via `lingxiloop poll …` in agents/cli.ts) share the same core
  * in ../polls.ts so the WS broadcast + validation stay in lockstep. */
 
 function pollHttpError(res: Response, e: unknown): void {
@@ -3577,7 +3612,7 @@ api.post('/polls/:messageId/close', async (req, res) => {
 })
 
 /* ============== Email send / reply (human → external & in-tenant) ============
- * Mirror of the agent CLI's `cumora email send/reply` so a human in the
+ * Mirror of the agent CLI's `lingxiloop email send/reply` so a human in the
  * UI's compose drawer can write real email. The server-side flow is the
  * same shared pipeline (resolve recipient → mintMessageId → sendViaProvider
  * → persistEmailMessage) — the only difference is `authorId = caller user`
@@ -3633,9 +3668,9 @@ async function resolveHttpRecipient(raw: string, ctx: EmailRecipientResolveCtx):
   const direct = parseAddress(raw)
   if (direct) return direct
   // Treat raw as a participant id. Two delivery targets depending on kind:
-  //   - agent  → their cumora address (only place an agent exists)
+  //   - agent  → their lingxiloop address (only place an agent exists)
   //   - human  → their personal auth email (so the message lands in their
-  //              real inbox; they ALSO see it in cumora because they're
+  //              real inbox; they ALSO see it in lingxiloop because they're
   //              already a conversation member, so the SSE wake covers
   //              the in-app notification)
   const { rows: pa } = await pool.query<{ name: string; email: string | null; kind: string }>(
@@ -3694,7 +3729,7 @@ api.post('/email/send', async (req, res) => {
     }
 
     // Sender = the calling human as a participant of THIS company.
-    // We need a cumora-domain address (Resend won't accept From: yourgmail
+    // We need a lingxiloop-domain address (Resend won't accept From: yourgmail
     // because we don't own gmail.com). ensureParticipantAddress mints
     // <userId>.<slug>@<EMAIL_DOMAIN> if the column was still null.
     const sender = await ensureParticipantAddress(me, tenant)
@@ -3866,7 +3901,7 @@ api.post('/email/reply/:messageId', async (req, res) => {
       persistEmailMessage, mintMessageId, normalizeMessageId,
       ensureParticipantAddress, sanitizeSubject, splitReplyAddresses,
     } = await import('../email.js')
-    // Sender must use a cumora-domain From line (Resend won't accept
+    // Sender must use a lingxiloop-domain From line (Resend won't accept
     // user's gmail/outlook). Same scheme as agents.
     const sender = await ensureParticipantAddress(me, tenant)
     if (!sender) { res.status(400).json({ error: 'no email address available for your account in this workspace' }); return }
@@ -3878,7 +3913,7 @@ api.post('/email/reply/:messageId', async (req, res) => {
     const userAuthEmail = ue[0]?.email ?? null
 
     // Reply-all split: TO = original From, CC = original To+Cc minus self.
-    // Self is identified by EITHER the cumora address OR the auth email —
+    // Self is identified by EITHER the lingxiloop address OR the auth email —
     // the original may list me under either (or both, if I CC'd myself
     // externally).
     const selfAddrs = [sender.email.toLowerCase()]
@@ -4733,7 +4768,7 @@ api.get('/agents/autonomy', async (req, res) => {
 /* ============== Kanban boards ==============
  *
  * AI-native: every endpoint here is just as useful from the desktop
- * client as it is from an agent's `cumora board` / `cumora card` CLI
+ * client as it is from an agent's `lingxiloop board` / `lingxiloop card` CLI
  * subcommand. Auth + tenant scoping is the same shape as the rest of
  * this file — `requireCompany(req)` gates the caller into a single
  * workspace, and every row already carries `company_id` (boards) or is

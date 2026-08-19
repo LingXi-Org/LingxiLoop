@@ -172,46 +172,53 @@ async function main(): Promise<void> {
   await waitForHealth()
   log('API health check passed')
 
-  const { companyId, conversationId, agentId, token } = await (async () => {
+  const { companyId, userId, conversationId, agentId, token } = await (async () => {
     const { companyId, userId, token } = await seedCompany('mvp-smoke')
     log(`seeded company ${companyId} / owner ${userId}`)
     const dm = await findOwnerDm(companyId, userId)
     log(`using DM ${dm.conversationId} with agent ${dm.agentId}`)
-    return { companyId, ...dm, token }
+    return { companyId, userId, ...dm, token }
   })()
+  try {
+    const cursorBefore = await getUnreadCursor(agentId, conversationId)
 
-  const cursorBefore = await getUnreadCursor(agentId, conversationId)
+    let humanMessageId = ''
+    const wsReply = await triggerAndWaitForMessageBroadcast(
+      token,
+      { conversationId, authorId: agentId },
+      async () => {
+        humanMessageId = await postMessage(token, conversationId, 'Hello, agent! (mvp docker-compose smoke)')
+        log(`human message posted: ${humanMessageId}`)
+      },
+      REPLY_TIMEOUT_MS,
+    )
+    log(`WebSocket observed agent reply broadcast: ${wsReply.message.id}`)
 
-  let humanMessageId = ''
-  const wsReply = await triggerAndWaitForMessageBroadcast(
-    token,
-    { conversationId, authorId: agentId },
-    async () => {
-      humanMessageId = await postMessage(token, conversationId, 'Hello, agent! (mvp docker-compose smoke)')
-      log(`human message posted: ${humanMessageId}`)
-    },
-    REPLY_TIMEOUT_MS,
-  )
-  log(`WebSocket observed agent reply broadcast: ${wsReply.message.id}`)
+    const reply = await waitForAgentReply(token, conversationId, agentId, REPLY_TIMEOUT_MS)
+    log(`agent reply received: ${reply.id} — "${reply.body}"`)
 
-  const reply = await waitForAgentReply(token, conversationId, agentId, REPLY_TIMEOUT_MS)
-  log(`agent reply received: ${reply.id} — "${reply.body}"`)
+    // markConversationRead() runs AFTER message.send commits, so the cursor
+    // write can trail the reply becoming visible by a beat — poll instead of
+    // a single point-in-time read.
+    const cursorAfter = await waitForCursorAdvance(agentId, conversationId, cursorBefore)
+    if (cursorAfter === cursorBefore) {
+      await dumpAgentRunDiagnostics(agentId)
+      throw new Error(`agent unread cursor did not advance (still "${cursorBefore}") despite a completed turn`)
+    }
+    log(`agent unread cursor advanced: "${cursorBefore}" -> "${cursorAfter}"`)
+    log('PASS: Human -> Agent -> LingxiGraph -> message.send -> observable reply, full loop verified')
 
-  // markConversationRead() runs AFTER message.send commits, so the cursor
-  // write can trail the reply becoming visible by a beat — poll instead of
-  // a single point-in-time read.
-  const cursorAfter = await waitForCursorAdvance(agentId, conversationId, cursorBefore)
-  if (cursorAfter === cursorBefore) {
-    await dumpAgentRunDiagnostics(agentId)
-    throw new Error(`agent unread cursor did not advance (still "${cursorBefore}") despite a completed turn`)
-  }
-  log(`agent unread cursor advanced: "${cursorBefore}" -> "${cursorAfter}"`)
-  log('PASS: Human -> Agent -> LingxiGraph -> message.send -> observable reply, full loop verified')
+    await runAgentToAgentCheck(companyId)
 
-  await runAgentToAgentCheck(companyId)
-
-  if (process.env.MVP_SMOKE_SKIP_FAULT_CHECK !== '1') {
-    await runInvalidResponseFaultCheck(token, conversationId, agentId)
+    if (process.env.MVP_SMOKE_SKIP_FAULT_CHECK !== '1') {
+      await runInvalidResponseFaultCheck(token, conversationId, agentId)
+    }
+  } finally {
+    if (process.env.MVP_SMOKE_CLEANUP === '1') {
+      await pool.query('DELETE FROM companies WHERE id = $1', [companyId])
+      await pool.query('DELETE FROM users WHERE id = $1', [userId])
+      log(`cleaned up throwaway company ${companyId}`)
+    }
   }
 
   await pool.end()

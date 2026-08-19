@@ -6,7 +6,7 @@
 
   Allows cleartext HTTP to the local dev server reached from the Android
   emulator (10.0.2.2 is the host-loopback alias) so a debug build baked with
-  VITE_CUMORA_API_BASE=http://10.0.2.2:5181 can register push tokens against
+  VITE_LINGXILOOP_API_BASE=http://10.0.2.2:5181 can register push tokens against
   the local server. localhost is included for adb-reverse setups.
 -->
 <network-security-config>

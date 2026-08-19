@@ -102,7 +102,7 @@ export async function seedCompanyWithAgent(opts?: {
 }): Promise<{ companyId: string; agentId: string; agentEmail: string }> {
   const companyId = opts?.companyId ?? `c-${randomUUID().slice(0, 8)}`
   const agentId = opts?.agentId ?? `a-${randomUUID().slice(0, 8)}`
-  const dom = env.EMAIL_DOMAIN || 'cumora.local'
+  const dom = env.EMAIL_DOMAIN || 'lingxiloop.local'
   const agentEmail = opts?.agentEmail ?? `${agentId}.${companyId}@${dom}`
   await pool.query(
     `INSERT INTO companies (id, name, slug, owner_user_id)
@@ -158,7 +158,7 @@ export async function buildApiTestApp(userId: string): Promise<import('express')
 /** Insert a user + company_members row so requireCompany resolves to the
  *  given tenant. ALSO inserts a corresponding participants row, matching
  *  what production onboarding does — human users get a participants
- *  entry so they can have a minted cumora email, climate signals,
+ *  entry so they can have a minted lingxiloop email, climate signals,
  *  /participants visibility, etc. Without this, ensureParticipantAddress
  *  returns null and email-reply paths 500. */
 export async function seedUserMembership(userId: string, companyId: string, opts?: {

@@ -1,5 +1,5 @@
 /**
- * cumora-email-gate — Cloudflare Email Worker.
+ * lingxiloop-email-gate — Cloudflare Email Worker.
  *
  * For every inbound email Cloudflare Email Routing routes to this worker:
  *   1. Reject (550) if the recipient domain isn't in EMAIL_ROOT_DOMAINS.
@@ -7,7 +7,7 @@
  *   3. Build a JSON payload (message-id, in-reply-to, references, from,
  *      to, cc, subject, text, html, raw size).
  *   4. Sign with HMAC-SHA256(EMAIL_INBOUND_HMAC_SECRET, body) and POST
- *      to CUMORA_INBOUND_URL.
+ *      to LINGXILOOP_INBOUND_URL.
  *   5. Reject (550) if the server says "no recipient resolved" so the
  *      sending MTA gets a real bounce instead of a silent black hole.
  *
@@ -18,8 +18,8 @@ import PostalMime from 'postal-mime'
 
 interface Env {
   EMAIL_INBOUND_HMAC_SECRET: string
-  CUMORA_INBOUND_URL: string
-  /** Comma-separated. e.g. "cumora.ai,cumora.dev". The recipient must
+  LINGXILOOP_INBOUND_URL: string
+  /** Comma-separated. e.g. "mail.loop.example.com,lingxiloop.dev". The recipient must
    *  end with `.<root>` (subdomain) OR equal `<root>` (apex). */
   EMAIL_ROOT_DOMAINS: string
 }
@@ -132,9 +132,9 @@ export default {
       message.setReject('Recipient domain not served')
       return
     }
-    if (!env.EMAIL_INBOUND_HMAC_SECRET || !env.CUMORA_INBOUND_URL) {
+    if (!env.EMAIL_INBOUND_HMAC_SECRET || !env.LINGXILOOP_INBOUND_URL) {
       message.setReject('Email gate misconfigured')
-      console.error('[email-gate] missing EMAIL_INBOUND_HMAC_SECRET or CUMORA_INBOUND_URL')
+      console.error('[email-gate] missing EMAIL_INBOUND_HMAC_SECRET or LINGXILOOP_INBOUND_URL')
       return
     }
     // Read the raw RFC 5322 message into a Buffer-equivalent we can both
@@ -184,7 +184,7 @@ export default {
     const referencesHeader = getHeader(parsed.headers, 'References')
     // RFC 3834: "no" or missing → human, anything else (auto-replied /
     // auto-generated / auto-notified) → automation. Vacation responders,
-    // ticket-system bots, AND other cumora installations all set this.
+    // ticket-system bots, AND other lingxiloop installations all set this.
     const autoSubmittedRaw = (getHeader(parsed.headers, 'Auto-Submitted') ?? '').trim().toLowerCase()
     const autoSubmitted = autoSubmittedRaw && autoSubmittedRaw !== 'no' ? autoSubmittedRaw : null
     const payload: InboundPayload = {
@@ -208,7 +208,7 @@ export default {
       // Fabricate one — server's dedup index requires a non-null id.
       // Including the recipient + a coarse timestamp keeps re-deliveries
       // of the same physical message from creating duplicates per agent.
-      payload.messageId = `synth-${Date.now().toString(36)}.${crypto.randomUUID()}@cumora-email-gate`
+      payload.messageId = `synth-${Date.now().toString(36)}.${crypto.randomUUID()}@lingxiloop-email-gate`
     }
 
     const body = JSON.stringify(payload)
@@ -216,11 +216,11 @@ export default {
 
     let res: Response
     try {
-      res = await fetch(env.CUMORA_INBOUND_URL, {
+      res = await fetch(env.LINGXILOOP_INBOUND_URL, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          'x-cumora-signature': `sha256=${sig}`,
+          'x-lingxiloop-signature': `sha256=${sig}`,
         },
         body,
       })

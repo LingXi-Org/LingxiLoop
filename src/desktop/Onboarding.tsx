@@ -6,7 +6,7 @@ import { TitleBar } from '@/desktop/TitleBar'
 
 /**
  * First-run gate for free-tier users: their agents run on their own machine
- * (BYOA), so before they can use Cumora they must pair a computer. Once any
+ * (BYOA), so before they can use LingxiLoop they must pair a computer. Once any
  * non-cloud computer comes online, the parent (AuthedApp) clears this gate
  * automatically — there's no explicit "done" button, the WS status event does
  * it. Starter agents are seeded server-side onto that computer at pair time.
@@ -38,7 +38,7 @@ export function Onboarding() {
   const origin = getPairingServerOrigin()
   const engineFlag = engine === 'codex' ? ' --engine codex' : ''
   const serviceFlag = asService ? ' --install-service' : ''
-  const cmd = code ? `npx cumora@latest agent computer --pair ${code}${origin ? ` --server ${origin}` : ''}${engineFlag}${serviceFlag}` : ''
+  const cmd = code ? `npx lingxiloop@latest agent computer --pair ${code}${origin ? ` --server ${origin}` : ''}${engineFlag}${serviceFlag}` : ''
 
   async function getCode() {
     setErr(null); setBusy(true)

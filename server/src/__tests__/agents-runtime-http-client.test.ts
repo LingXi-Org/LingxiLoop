@@ -9,7 +9,7 @@
  *       at HttpRuntimeClient.recordEvent
  *       at runAgentTurn
  *       at drain  ← whole turn died because an observability event
- *                   couldn't be posted to cumora-server (mid-restart,
+ *                   couldn't be posted to lingxiloop-server (mid-restart,
  *                   NEG cutover, DNS blip, whatever)
  *
  * After this fix, recordEvent / finishRun / setStatus / heartbeatStatus
@@ -42,7 +42,7 @@ afterEach(() => {
 })
 
 /** Build a client whose underlying fetch always rejects with the
- *  given error — simulates the "cumora-server unreachable" failure
+ *  given error — simulates the "lingxiloop-server unreachable" failure
  *  mode we keep hitting in production. */
 function makeClientThatAlwaysFails(reason = 'fetch failed (simulated)'): HttpRuntimeClient {
   const stubFetch = ((async () => {

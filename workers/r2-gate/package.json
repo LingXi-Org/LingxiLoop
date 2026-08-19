@@ -1,8 +1,8 @@
 {
-  "name": "cumora-r2-gate",
+  "name": "lingxiloop-r2-gate",
   "version": "0.1.0",
   "private": true,
-  "description": "Cloudflare Worker fronting cdn.cumora.ai with HMAC-gated R2 reads.",
+  "description": "Cloudflare Worker fronting cdn.example.com with HMAC-gated R2 reads.",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",

@@ -22,7 +22,7 @@ import { registerPlugin } from '@capacitor/core'
  * OAuth flow. Custom plugin (Swift) lives in
  * `ios/App/App/WebAuthPlugin.swift`. We use it instead of
  * `@capacitor/browser` (SFSafariViewController) because the latter
- * silently drops 302 redirects to custom URL schemes like `cumora://`,
+ * silently drops 302 redirects to custom URL schemes like `lingxiloop://`,
  * which is exactly what the OAuth callback chain depends on.
  */
 interface WebAuthPlugin {
@@ -142,7 +142,7 @@ export async function bootNative(): Promise<void> {
   // Hardware Android back button — let the renderer intercept first.
   try {
     App.addListener('backButton', ({ canGoBack }) => {
-      const ev = new CustomEvent('cumora:hardware-back', { cancelable: true })
+      const ev = new CustomEvent('lingxiloop:hardware-back', { cancelable: true })
       const handled = !window.dispatchEvent(ev)
       if (!handled && !canGoBack) void App.exitApp()
     })
@@ -152,8 +152,8 @@ export async function bootNative(): Promise<void> {
 
   // Deep-link callback for OAuth.
   //
-  // Cumora signs in by opening Google/GitHub in SFSafariViewController
-  // and asking the server to redirect to `cumora://auth#token=...`. iOS
+  // LingxiLoop signs in by opening Google/GitHub in SFSafariViewController
+  // and asking the server to redirect to `lingxiloop://auth#token=...`. iOS
   // routes that URL to @capacitor/app's `appUrlOpen` event — we strip the
   // fragment, fire a window event that AuthGate consumes, and dismiss the
   // browser sheet so the user lands back on the (now-signed-in) shell.
@@ -169,25 +169,25 @@ export async function bootNative(): Promise<void> {
 }
 
 /**
- * Consume a deep link the OS handed us via the cumora:// scheme.
+ * Consume a deep link the OS handed us via the lingxiloop:// scheme.
  *
  * Two flows today:
- *   - `cumora://auth#token=...&companyId=...` — OAuth callback. We plant
- *     the fragment on our own location and dispatch a `cumora:oauth-token`
+ *   - `lingxiloop://auth#token=...&companyId=...` — OAuth callback. We plant
+ *     the fragment on our own location and dispatch a `lingxiloop:oauth-token`
  *     event AuthGate listens for, then close the SFSafariViewController
  *     so the user re-emerges on the chat shell.
- *   - any other `cumora://...` — surfaced as `cumora:deep-link` so future
+ *   - any other `lingxiloop://...` — surfaced as `lingxiloop:deep-link` so future
  *     handlers (invite acceptance, share-to-chat) can opt in.
  */
 async function handleDeepLink(rawUrl: string): Promise<void> {
   try {
-    if (!rawUrl.startsWith('cumora:')) return
+    if (!rawUrl.startsWith('lingxiloop:')) return
     // Match the auth callback on the RAW string, not via `new URL().hostname`:
     // Android's WebView Chromium parses the host of a non-special scheme like
-    // `cumora://auth` differently from Node/iOS (hostname can come back empty,
+    // `lingxiloop://auth` differently from Node/iOS (hostname can come back empty,
     // pathname `//auth`), so the host-based check silently missed and the OAuth
     // token was dropped on Android. The string match is parser-independent.
-    if (/^cumora:\/\/auth(?:[/?#]|$)/i.test(rawUrl)) {
+    if (/^lingxiloop:\/\/auth(?:[/?#]|$)/i.test(rawUrl)) {
       // Pull the fragment (or a query-shaped token) straight out of the raw
       // URL so we don't depend on the parser splitting host vs path correctly.
       const hashIdx = rawUrl.indexOf('#')
@@ -198,12 +198,12 @@ async function handleDeepLink(rawUrl: string): Promise<void> {
       console.log('[native] OAuth deep link, hash=', hash)
       if (hash) {
         history.replaceState(null, '', location.pathname + location.search + hash)
-        window.dispatchEvent(new CustomEvent('cumora:oauth-token', { detail: hash }))
+        window.dispatchEvent(new CustomEvent('lingxiloop:oauth-token', { detail: hash }))
       }
       await Browser.close().catch(() => undefined)
       return
     }
-    window.dispatchEvent(new CustomEvent('cumora:deep-link', { detail: rawUrl }))
+    window.dispatchEvent(new CustomEvent('lingxiloop:deep-link', { detail: rawUrl }))
   } catch (err) {
     console.warn('[native] deep-link parse failed', rawUrl, err)
   }
@@ -235,7 +235,7 @@ export async function openExternalBrowser(url: string): Promise<void> {
  * the web we fall back to a full-page `location.assign` since the
  * browser handles redirects to its own origin without a wrapper.
  *
- * Returns the callback URL (e.g. `cumora://auth#token=...`) on
+ * Returns the callback URL (e.g. `lingxiloop://auth#token=...`) on
  * success, or `null` if the user cancelled.
  */
 export async function runOAuth(opts: {
@@ -248,9 +248,9 @@ export async function runOAuth(opts: {
   }
   // Android has no ASWebAuthenticationSession, and the WebAuth plugin is
   // iOS-only — so open the OAuth URL in a Custom Tab via @capacitor/browser.
-  // The server's redirect to `cumora://auth#token=...` is routed back to the
+  // The server's redirect to `lingxiloop://auth#token=...` is routed back to the
   // app by the manifest's BROWSABLE intent-filter and caught by the global
-  // `appUrlOpen` listener (see `handleDeepLink` → `cumora:oauth-token` →
+  // `appUrlOpen` listener (see `handleDeepLink` → `lingxiloop:oauth-token` →
   // AuthGate), which finishes sign-in and closes the tab. We resolve `null`
   // because completion is event-driven here, not carried by this promise.
   if (nativePlatform() === 'android') {

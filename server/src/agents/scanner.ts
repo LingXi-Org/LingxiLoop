@@ -138,7 +138,7 @@ function buildBackgroundScanBrief(args: {
 This is not a direct user request. Default to no action. Only interrupt people when your own persona and judgment say there is a concrete, timely reason.
 
 If you pull a group, use the normal tool yourself:
-  bash("cumora pull-group '<title>' --members id1,id2,id3 --reason '<why now>' --say '<opening message with concrete evidence>'")
+  bash("lingxiloop pull-group '<title>' --members id1,id2,id3 --reason '<why now>' --say '<opening message with concrete evidence>'")
 
 For brand / voice / cross-project collision scans, require specific evidence:
 - quote at least two concrete message snippets or message ids from different parts of the activity

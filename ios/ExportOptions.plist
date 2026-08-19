@@ -12,8 +12,8 @@
 	<string>Apple Distribution</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>io.cumora.app</key>
-		<string>Cumora App Store</string>
+		<key>cn.lingxilearn.loop</key>
+		<string>LingxiLoop App Store</string>
 	</dict>
 	<key>stripSwiftSymbols</key>
 	<true/>

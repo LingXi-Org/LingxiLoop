@@ -1,5 +1,5 @@
 /**
- * Integration test: `cumora contacts [<query>]` lookup.
+ * Integration test: `lingxiloop contacts [<query>]` lookup.
  *
  * Surfaces the bug the user hit: Nova was asked to email "Wey Gu" and
  * silently produced empty output because Wey Gu wasn't in
@@ -40,7 +40,7 @@ test('[integration] contacts lists same-tenant agents (no query)', async () => {
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
      VALUES ('bram', $1, 'agent', 'Bram', 'engineer', 'B', '#abcdef', 'avail', $2)
      ON CONFLICT DO NOTHING`,
-    [(await pool.query('SELECT company_id FROM participants WHERE id = $1', [agentId])).rows[0].company_id, 'bram.test@cumora.local'],
+    [(await pool.query('SELECT company_id FROM participants WHERE id = $1', [agentId])).rows[0].company_id, 'bram.test@lingxiloop.local'],
   )
   const text = await runCliText(['contacts', '--as', agentId])
   assert.match(text, /bram/i, `expected the other agent in the list; got:\n${text}`)
@@ -55,7 +55,7 @@ test('[integration] contacts shows each agent\'s role/function (the directory bu
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
      VALUES ('iris', $1, 'agent', 'Iris', 'Designer', 'I', '#abcdef', 'avail', $2)
      ON CONFLICT DO NOTHING`,
-    [companyId, 'iris.test@cumora.local'],
+    [companyId, 'iris.test@lingxiloop.local'],
   )
   const text = await runCliText(['contacts', '--as', agentId])
   assert.match(text, /Iris/, `expected Iris in the list; got:\n${text}`)
@@ -71,13 +71,13 @@ test('[integration] contacts <query> filters by name substring', async () => {
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
      VALUES ('weygu', $1, 'agent', 'Wey Gu', 'analyst', 'W', '#abcdef', 'avail', $2)
      ON CONFLICT DO NOTHING`,
-    [companyId, 'weygu.test@cumora.local'],
+    [companyId, 'weygu.test@lingxiloop.local'],
   )
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
      VALUES ('atlas', $1, 'agent', 'Atlas', 'engineer', 'A', '#abcdef', 'avail', $2)
      ON CONFLICT DO NOTHING`,
-    [companyId, 'atlas.test@cumora.local'],
+    [companyId, 'atlas.test@lingxiloop.local'],
   )
   const hit = await runCliText(['contacts', 'wey', '--as', agentId])
   assert.match(hit, /Wey Gu/, `wey query must find Wey Gu; got:\n${hit}`)
@@ -110,14 +110,14 @@ test('[integration] contacts <query> with no match returns the "ask the user" hi
 })
 
 test('[integration] email contacts <query> works the same way (alias)', async () => {
-  // Back-compat: `cumora email contacts <query>` should behave identically
-  // to the new top-level `cumora contacts <query>`.
+  // Back-compat: `lingxiloop email contacts <query>` should behave identically
+  // to the new top-level `lingxiloop contacts <query>`.
   const { agentId, companyId } = await seedCompanyWithAgent({ agentId: 'aurora' })
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
      VALUES ('weygu', $1, 'agent', 'Wey Gu', 'analyst', 'W', '#abcdef', 'avail', $2)
      ON CONFLICT DO NOTHING`,
-    [companyId, 'weygu.test@cumora.local'],
+    [companyId, 'weygu.test@lingxiloop.local'],
   )
   const direct = await runCliText(['contacts', 'wey', '--as', agentId])
   const aliased = await runCliText(['email', 'contacts', 'wey', '--as', agentId])

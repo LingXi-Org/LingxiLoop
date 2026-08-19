@@ -1,4 +1,4 @@
-module github.com/cumora/agent-fuse
+module github.com/LingXi-Org/LingxiLoop/agent-fuse
 
 go 1.24
 

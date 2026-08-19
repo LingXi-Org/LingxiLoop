@@ -3,7 +3,7 @@
  * auto-promoted into real email replies (sendViaProvider path).
  *
  * The bug this guards: before round 15, typing into the chat input of
- * an email thread — or an agent calling `cumora reply` from its CLI —
+ * an email thread — or an agent calling `lingxiloop reply` from its CLI —
  * just wrote a kind='text' row. The external recipient never saw the
  * reply, so users assumed the email feature was half-broken. Now both
  * paths converge on replyInEmailConversation, which builds reply
@@ -174,7 +174,7 @@ test('[integration] reply continues the thread when the latest row is our own ou
     `follow-up TO should preserve the parent's recipients, got: ${JSON.stringify(rows[0].to_addrs)}`)
 })
 
-test('[integration] cumora reply CLI on an email convo auto-promotes via sendViaProvider mock', async () => {
+test('[integration] lingxiloop reply CLI on an email convo auto-promotes via sendViaProvider mock', async () => {
   // Mirror of the HTTP-side auto-promote test, but exercising the
   // `runCli` entrypoint that the agent's `bash` tool actually shells
   // into. Pre-fix this used to silently write a kind='text' row and
@@ -216,7 +216,7 @@ test('[integration] cumora reply CLI on an email convo auto-promotes via sendVia
   assert.equal(msgRows[0].kind, 'email', 'messages row mirrors the email shape, not a plain text row')
 })
 
-test('[integration] cumora reply CLI on a non-email convo writes a plain text row (no auto-promote)', async () => {
+test('[integration] lingxiloop reply CLI on a non-email convo writes a plain text row (no auto-promote)', async () => {
   // Mirror of the HTTP-side regression test. A direct chat reply
   // through the CLI must NOT accidentally trigger the email path.
   const { runCli } = await import('../agents/cli.js')

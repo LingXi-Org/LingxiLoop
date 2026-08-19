@@ -2,11 +2,11 @@ export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' 
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
 
-/** Where an agent runs. 'cloud' = the built-in Cumora Cloud (managed engine);
+/** Where an agent runs. 'cloud' = the built-in LingxiLoop Cloud (managed engine);
  *  'local'/'vps' = a computer the user paired, running the BYOA daemon. */
 export type ComputerKind = 'cloud' | 'local' | 'vps'
 export type ComputerStatus = 'online' | 'offline' | 'busy'
-/** Engine an agent's host runs it on. 'managed' = Cumora's server-side loop. */
+/** Engine an agent's host runs it on. 'managed' = LingxiLoop's server-side loop. */
 export type EngineId = 'managed' | 'claude' | 'codex'
 
 export interface Computer {
@@ -17,7 +17,7 @@ export interface Computer {
   availableEngines: EngineId[]
   lastSeenAt?: string | null
   pairedAt?: string | null
-  /** The cumora daemon version this computer is running (null = cloud / unknown). */
+  /** The lingxiloop daemon version this computer is running (null = cloud / unknown). */
   daemonVersion?: string | null
   /** How the daemon runs: true = installed service (launchd/systemd),
    *  false = manually-run foreground command, null = cloud / unknown. */
@@ -48,7 +48,7 @@ export interface Participant {
   model?: string | null
   /** small-brain (fast/auxiliary) model override */
   fastModel?: string | null
-  /** id of the Computer this agent runs on (null/undefined = Cumora Cloud) */
+  /** id of the Computer this agent runs on (null/undefined = LingxiLoop Cloud) */
   computerId?: string | null
   /** engine the agent's host runs it on ('managed' for cloud agents) */
   engine?: EngineId | null

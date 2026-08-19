@@ -497,7 +497,7 @@ ALTER TABLE participants ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ALTER TABLE participants ADD COLUMN IF NOT EXISTS model TEXT;
 
 -- A free-form topic/purpose line per conversation — the answer to "what's
--- this group for?". Editable by any member (incl. agents via the cumora CLI),
+-- this group for?". Editable by any member (incl. agents via the lingxiloop CLI),
 -- surfaced in the chat header and inlined in agents' wake prompts so they
 -- always know what the room is about.
 ALTER TABLE conversations ADD COLUMN IF NOT EXISTS topic TEXT;
@@ -805,9 +805,9 @@ END$$;
 --   affinity ∈ [-1, 1]    -1 = hostile / 0 = neutral / 1 = warm
 --   trust    ∈ [-1, 1]    -1 = unreliable / 0 = unknown / 1 = trusted
 --
--- Updated by the agent themselves via "cumora climate note" (when something
+-- Updated by the agent themselves via "lingxiloop climate note" (when something
 -- noteworthy happens) or implicitly when they read someone's recent
--- behavior. Read via "cumora climate read".
+-- behavior. Read via "lingxiloop climate read".
 CREATE TABLE IF NOT EXISTS agent_climate (
   agent_id    TEXT NOT NULL,
   about_id    TEXT NOT NULL,
@@ -877,12 +877,12 @@ DROP TABLE IF EXISTS password_reset_tokens;
 DROP TABLE IF EXISTS email_verification_tokens;
 
 -- ============== sub2api quota gateway link =================================
--- Each cumora user is mirrored as a sub2api user so their LLM calls go
+-- Each lingxiloop user is mirrored as a sub2api user so their LLM calls go
 -- through that user's quota group (free / pro / max). We store:
 --   tier             — soft label for the renderer (free|pro|max)
 --   sub2api_user_id  — numeric id from sub2api's admin API, for tier swaps
 --                       via POST /api/v1/admin/users/:id/replace-group
---   sub2api_api_key  — the user-scoped key cumora-server uses when calling
+--   sub2api_api_key  — the user-scoped key lingxiloop-server uses when calling
 --                       the OpenAI-compatible base on sub2api. NEVER show
 --                       to the renderer — it'd grant LLM access to anyone
 --                       who steals it for the lifetime of the key.
@@ -991,7 +991,7 @@ CREATE INDEX IF NOT EXISTS idx_company_invitations_email
 -- ============== Admin panel: is_admin + settings + waitlist ===============
 -- Admin is a per-user flag, not a separate role table — there are only ever a
 -- handful of admins and we want to flip the bit from the panel itself. The
--- bootstrap allow-list (CUMORA_ADMIN_EMAILS) is reconciled on each boot in
+-- bootstrap allow-list (LINGXILOOP_ADMIN_EMAILS) is reconciled on each boot in
 -- admin.ts so new env additions take effect without manual SQL.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_users_is_admin ON users(is_admin) WHERE is_admin = TRUE;
@@ -1067,7 +1067,7 @@ CREATE INDEX IF NOT EXISTS idx_waitlist_status ON waitlist(status, requested_at)
 CREATE INDEX IF NOT EXISTS idx_waitlist_email ON waitlist(LOWER(email));
 
 -- ============== Email: real external mail per agent ========================
--- Each agent gets a real address (<participantId>.<companySlug>@cumora.ai by
+-- Each agent gets a real address (<participantId>.<companySlug>@<EMAIL_DOMAIN> by
 -- default). Outbound goes through Resend; inbound is fronted by a Cloudflare
 -- Email Worker that POSTs parsed JSON to /webhooks/email/inbound.
 --
@@ -1080,7 +1080,7 @@ CREATE INDEX IF NOT EXISTS idx_waitlist_email ON waitlist(LOWER(email));
 --
 -- Address column on participants: nullable so non-email participants stay
 -- unaffected. Uniqueness is global across the cluster — two different
--- companies can't both claim aurora.acme@cumora.ai. lower(email) so case
+-- companies can't both claim the same configured-domain address. lower(email) so case
 -- doesn't matter.
 ALTER TABLE participants ADD COLUMN IF NOT EXISTS email TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_participants_email
@@ -1182,7 +1182,7 @@ CREATE INDEX IF NOT EXISTS idx_email_attachments_conv
   ON email_attachments(conversation_id, created_at DESC);
 
 -- Optional inbox table: external sender addresses we've seen for which there's
--- no matching cumora user — used to rate-limit unknown senders and for the
+-- no matching lingxiloop user — used to rate-limit unknown senders and for the
 -- "contacts you've corresponded with" hint in the agent's heartbeat prompt.
 -- Gets upserted on every inbound delivery.
 CREATE TABLE IF NOT EXISTS email_contacts (
@@ -1201,7 +1201,7 @@ CREATE INDEX IF NOT EXISTS idx_email_contacts_seen
 -- 'agent_task' events fire on their occurrence times, posting a typed Calendar
 -- system dispatch into the target conversation that wakes the assignee via the normal
 -- mailbox / wake-bus path. Agents can also (eventually) read + create events
--- via the cumora CLI — same table, same rules.
+-- via the lingxiloop CLI — same table, same rules.
 --
 -- Recurrence is stored as a small JSON rule (freq + interval + byweekday +
 -- until + count) rather than an external RRULE string to keep the tick logic
@@ -1328,7 +1328,7 @@ CREATE INDEX IF NOT EXISTS idx_calendar_reminders_event
 
 -- ============== Kanban boards ==============
 -- A workspace-scoped Trello-style board. AI-native: agents and humans
--- alike create/move/mention via the cumora CLI, the REST API, or the
+-- alike create/move/mention via the lingxiloop CLI, the REST API, or the
 -- Boards view in the desktop client. Every mutation broadcasts on the
 -- boards channel so every connected member sees moves in real time.
 CREATE TABLE IF NOT EXISTS boards (
@@ -1388,7 +1388,7 @@ CREATE INDEX IF NOT EXISTS idx_board_card_comments_card
   ON board_card_comments(card_id, created_at ASC);
 
 -- Per-participant read cursor for kanban @-mentions. Same shape as
--- conversation_reads: lets the cumora-kanban-mentions CLI list only
+-- conversation_reads: lets the lingxiloop-kanban-mentions CLI list only
 -- "what is new" since the last time this id checked. Default 1970
 -- so a brand-new agent sees every still-current mention on first run.
 CREATE TABLE IF NOT EXISTS board_mention_reads (
@@ -1511,18 +1511,18 @@ CREATE INDEX IF NOT EXISTS idx_push_devices_user
   WHERE disabled_at IS NULL;
 
 -- ============================== Computers ==============================
--- A "Computer" is the host an agent runs on. Cumora Cloud is a built-in,
+-- A "Computer" is the host an agent runs on. LingxiLoop Cloud is a built-in,
 -- managed computer (engine = the server-side turn.ts loop); BYOA agents
 -- run on computers the user pairs (their Mac, a VPS) via the
--- "cumora agent computer" daemon. Every agent references exactly one
+-- "lingxiloop agent computer" daemon. Every agent references exactly one
 -- computer; the scheduler branches on kind to decide pod vs. local
 -- wake. company_id / owner_user_id are soft references (TEXT, no FK),
 -- matching the rest of the schema.
 CREATE TABLE IF NOT EXISTS computers (
   id                TEXT PRIMARY KEY,
   company_id        TEXT NOT NULL,
-  owner_user_id     TEXT,                                  -- NULL for the managed Cumora Cloud row
-  name              TEXT NOT NULL,                         -- "Cumora Cloud", "MacBook Pro", "prod-vps-01"
+  owner_user_id     TEXT,                                  -- NULL for the managed LingxiLoop Cloud row
+  name              TEXT NOT NULL,                         -- "LingxiLoop Cloud", "MacBook Pro", "prod-vps-01"
   kind              TEXT NOT NULL,                         -- 'cloud' | 'local' | 'vps'
   available_engines JSONB NOT NULL DEFAULT '[]'::jsonb,    -- ['claude','codex']; ['managed'] for cloud
   status            TEXT NOT NULL DEFAULT 'offline',       -- 'online' | 'offline' | 'busy'
@@ -1533,11 +1533,11 @@ CREATE TABLE IF NOT EXISTS computers (
   created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_computers_company ON computers(company_id);
--- The cumora daemon's running version (semver string), reported on pair +
+-- The lingxiloop daemon's running version (semver string), reported on pair +
 -- heartbeat. NULL = a pre-version-reporting (old) daemon → treated as outdated.
 ALTER TABLE computers ADD COLUMN IF NOT EXISTS daemon_version TEXT;
 -- HOW the daemon runs: TRUE = under the --install-service supervisor
--- (launchd / systemd, CUMORA_SUPERVISED=1), FALSE = a manually-run foreground
+-- (launchd / systemd, LINGXILOOP_SUPERVISED=1), FALSE = a manually-run foreground
 -- command, NULL = an old daemon that doesn't report it. Reported on pair +
 -- heartbeat; lets the app show run-mode-specific update instructions.
 ALTER TABLE computers ADD COLUMN IF NOT EXISTS daemon_supervised BOOLEAN;
@@ -1761,7 +1761,7 @@ CREATE TABLE IF NOT EXISTS shipping_events (
 CREATE INDEX IF NOT EXISTS idx_shipping_events_feature
   ON shipping_events(feature_id, created_at ASC);
 
--- Back-fill: one managed Cumora Cloud computer per existing PAID company. The
+-- Back-fill: one managed LingxiLoop Cloud computer per existing PAID company. The
 -- id is deterministic ('cloud-' || company_id) so this is idempotent and
 -- so other code can resolve it without a lookup. New companies get theirs
 -- created at company-creation time (see api/router.ts).
@@ -1769,7 +1769,7 @@ CREATE INDEX IF NOT EXISTS idx_shipping_events_feature
 -- default LingxiGraph server runtime does not require a Computer row, so Free
 -- workspaces intentionally remain unassigned and are still fully managed.
 INSERT INTO computers (id, company_id, name, kind, available_engines, status)
-SELECT 'cloud-' || c.id, c.id, 'Cumora Cloud', 'cloud', '["managed"]'::jsonb, 'online'
+SELECT 'cloud-' || c.id, c.id, 'LingxiLoop Cloud', 'cloud', '["managed"]'::jsonb, 'online'
   FROM companies c
   JOIN users o ON o.id = c.owner_user_id
  WHERE COALESCE(o.tier, 'free') <> 'free'
@@ -2139,7 +2139,7 @@ export async function ensureSchema(): Promise<void> {
       // IS designed to be cross-workspace — but agents are supposed to
       // be per-workspace and globally unique). The runtime resolves
       // agents by id alone in many paths (persona cache, pod dedupe,
-      // `cumora doc ls` / `cumora kanban ls` company resolution), so
+      // `lingxiloop doc ls` / `lingxiloop kanban ls` company resolution), so
       // any cross-tenant agent id collision causes the wrong tenant's
       // library to be returned. Fix: rename the colliding rows so each
       // agent id is globally unique, then enforce that with a partial

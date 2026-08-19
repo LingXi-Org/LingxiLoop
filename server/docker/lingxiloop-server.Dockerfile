@@ -1,4 +1,4 @@
-# cumora-server — the API + scheduler + orchestrator process.
+# lingxiloop-server — the API + scheduler + orchestrator process.
 #
 # Serves THREE surfaces from the same Node process:
 #   /api/*        — JSON API (Express router)
@@ -9,13 +9,13 @@
 #   npm run server:start  →  tsx server/src/index.ts  (main runtime)
 #   npm run migrate       →  tsx server/src/migrate-bin.ts  (init container)
 #
-# The MVP server image intentionally does not ship kubectl. Kubernetes cloud
-# agents are optional; ordinary server-mode builds require no cluster tooling.
+# The server image intentionally ships no cluster tooling. Managed turns run
+# in the API process and call the separate LingxiGraph Runtime over HTTP.
 #
 # Build (from repo root):
 #   docker build \
-#     -f server/docker/cumora-server.Dockerfile \
-#     -t quay.io/yetoneful/cumora-server:dev \
+#     -f server/docker/lingxiloop-server.Dockerfile \
+#     -t ghcr.io/lingxi-org/lingxiloop-server:dev \
 #     .
 #
 # OrbStack auto-loads into its K8s.
@@ -41,18 +41,17 @@ RUN npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer
 # postcss are available. The output (dist/) is copied into the runtime
 # image; nothing from this stage's node_modules makes it through.
 #
-# VITE_CUMORA_API_BASE is intentionally NOT baked here — the SPA serves
-# from the SAME origin as the API in prod (app.cumora.ai → same backend
-# as api.cumora.ai), so relative URLs (`/api/...`) work without any
+# VITE_LINGXILOOP_API_BASE is intentionally NOT baked here — the SPA serves
+# from the SAME origin as the API in production, so relative URLs (`/api/...`) work without any
 # baked origin. Builders pointing the SPA at a remote API (e.g. for a
 # separate Cloudflare Pages deploy) should override via --build-arg.
 FROM ${NODE_BASE_IMAGE} AS spa-build
 ARG NPM_REGISTRY
 WORKDIR /app
-ARG VITE_CUMORA_API_BASE=""
+ARG VITE_LINGXILOOP_API_BASE=""
 ARG VITE_PUBLIC_POSTHOG_KEY=""
 ARG VITE_PUBLIC_POSTHOG_HOST=""
-ENV VITE_CUMORA_API_BASE=${VITE_CUMORA_API_BASE}
+ENV VITE_LINGXILOOP_API_BASE=${VITE_LINGXILOOP_API_BASE}
 ENV VITE_PUBLIC_POSTHOG_KEY=${VITE_PUBLIC_POSTHOG_KEY}
 ENV VITE_PUBLIC_POSTHOG_HOST=${VITE_PUBLIC_POSTHOG_HOST}
 COPY package.json package-lock.json ./
@@ -77,6 +76,8 @@ RUN npm run build
 # ─── stage 3: runtime ───────────────────────────────────────────────
 FROM ${NODE_BASE_IMAGE}
 ARG APT_MIRROR
+ARG LINGXILOOP_VERSION=0.0.0-dev
+ARG LINGXILOOP_COMMIT_SHA=dev
 
 RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g; s|https://deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
   && apt-get update \
@@ -92,7 +93,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY server ./server
-# Keep `bin/cumora` available for any in-process CLI calls the server
+# Keep `bin/lingxiloop` available for any in-process CLI calls the server
 # itself might make (e.g. from the test endpoints).
 COPY bin ./bin
 # Web SPA bundle — read by server/src/index.ts at boot via existsSync().
@@ -100,9 +101,11 @@ COPY bin ./bin
 # back to a JSON `/` response.
 COPY --from=spa-build /app/dist ./dist
 
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \
+    LINGXILOOP_COMMIT_SHA=${LINGXILOOP_COMMIT_SHA}
 
 # tini for PID-1 reaping. Default command runs the server; the
-# init-container in our k8s manifests overrides to `npm run migrate`.
+# production Compose migration job overrides this with `npm run migrate`.
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["npm", "run", "server:start"]

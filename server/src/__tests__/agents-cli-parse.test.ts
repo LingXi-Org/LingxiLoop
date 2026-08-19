@@ -51,7 +51,7 @@ test('parseArgs: boolean flag followed by another flag', () => {
 })
 
 test('parseArgs: interleaved positionals and flags', () => {
-  // Real production shape: `cumora reply <convo> '<body>' --quote <id>`
+  // Real production shape: `lingxiloop reply <convo> '<body>' --quote <id>`
   const r = parseArgs(['reply', 'convo-1', 'hello world', '--quote', 'm-abc'])
   assert.deepEqual(r.positional, ['reply', 'convo-1', 'hello world'])
   assert.deepEqual(r.flags, { quote: 'm-abc' })
@@ -188,26 +188,26 @@ test('unescapeChat: a lone trailing backslash stays as-is', () => {
 // ── tokenize ─────────────────────────────────────────────────────────────
 
 test('tokenize: simple whitespace-separated tokens', () => {
-  assert.deepEqual(tokenize('cumora kanban ls'), ['cumora', 'kanban', 'ls'])
+  assert.deepEqual(tokenize('lingxiloop kanban ls'), ['lingxiloop', 'kanban', 'ls'])
 })
 
 test('tokenize: collapses runs of whitespace', () => {
-  assert.deepEqual(tokenize('cumora   kanban\t ls'), ['cumora', 'kanban', 'ls'])
+  assert.deepEqual(tokenize('lingxiloop   kanban\t ls'), ['lingxiloop', 'kanban', 'ls'])
 })
 
 test('tokenize: single-quoted body keeps its spaces as ONE token', () => {
-  // Production shape: `cumora reply <convo> '<body with spaces>'`.
+  // Production shape: `lingxiloop reply <convo> '<body with spaces>'`.
   // The body is one token, not three.
   assert.deepEqual(
-    tokenize(`cumora reply convo-1 'hello world from iris'`),
-    ['cumora', 'reply', 'convo-1', 'hello world from iris'],
+    tokenize(`lingxiloop reply convo-1 'hello world from iris'`),
+    ['lingxiloop', 'reply', 'convo-1', 'hello world from iris'],
   )
 })
 
 test('tokenize: double-quoted token keeps its spaces', () => {
   assert.deepEqual(
-    tokenize(`cumora reply convo-1 "hello world"`),
-    ['cumora', 'reply', 'convo-1', 'hello world'],
+    tokenize(`lingxiloop reply convo-1 "hello world"`),
+    ['lingxiloop', 'reply', 'convo-1', 'hello world'],
   )
 })
 
@@ -215,8 +215,8 @@ test('tokenize: nested single quotes inside double-quoted body are preserved lit
   // `"it's done"` → `it's done`. The inner `'` does NOT close a quote
   // context because we're inside `"…"`. Matches bash semantics.
   assert.deepEqual(
-    tokenize(`cumora reply convo-1 "it's done"`),
-    ['cumora', 'reply', 'convo-1', "it's done"],
+    tokenize(`lingxiloop reply convo-1 "it's done"`),
+    ['lingxiloop', 'reply', 'convo-1', "it's done"],
   )
 })
 
@@ -229,7 +229,7 @@ test('tokenize: whitespace-only input returns empty array', () => {
 })
 
 test('tokenize: a single bare token at the end of the line', () => {
-  assert.deepEqual(tokenize('cumora'), ['cumora'])
+  assert.deepEqual(tokenize('lingxiloop'), ['lingxiloop'])
 })
 
 test('tokenize: quote characters themselves are stripped (not included in token)', () => {
@@ -242,7 +242,7 @@ test('tokenize: unterminated quote consumes everything to EOL into one token', (
   // Bash would error; we silently treat the trailing chars as part
   // of the quoted token. Pinning current behaviour so a future fix
   // (e.g. surface a parse error) can land deliberately.
-  assert.deepEqual(tokenize(`cumora reply 'unterminated body`), ['cumora', 'reply', 'unterminated body'])
+  assert.deepEqual(tokenize(`lingxiloop reply 'unterminated body`), ['lingxiloop', 'reply', 'unterminated body'])
 })
 
 test('tokenize: tab separator behaves like a space', () => {

@@ -82,7 +82,7 @@ test('tBash reads CLI side effects from the out-of-band result path', async () =
   })
   const escaped = payload.replace(/'/g, "'\\''")
   const result = await tBash({
-    command: `printf '%s\\n' '${escaped}' >> "$CUMORA_CLI_RESULT_PATH"; printf visible-output`,
+    command: `printf '%s\\n' '${escaped}' >> "$LINGXILOOP_CLI_RESULT_PATH"; printf visible-output`,
   }, 'agent-1', null)
 
   assert.equal(result.ok, true)
@@ -96,7 +96,7 @@ test('tBash reads CLI side effects from the out-of-band result path', async () =
 
 test('tBash marks malformed side-effect result files as unreliable', async () => {
   const result = await tBash({
-    command: `printf '%s\\n' 'not json' >> "$CUMORA_CLI_RESULT_PATH"; printf visible-output`,
+    command: `printf '%s\\n' 'not json' >> "$LINGXILOOP_CLI_RESULT_PATH"; printf visible-output`,
   }, 'agent-1', null)
 
   assert.equal(result.ok, true)

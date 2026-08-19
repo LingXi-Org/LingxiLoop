@@ -1,9 +1,9 @@
 /**
  * Computer registry — server-side state + auth for BYOA "Computers".
  *
- * A Computer is the host an agent runs on (see docs/BYOA.md). Cumora Cloud
+ * A Computer is the host an agent runs on (see docs/BYOA.md). LingxiLoop Cloud
  * is the built-in managed computer; the user pairs their own machines (a
- * Mac, a VPS) which run the `cumora agent computer` daemon and a local
+ * Mac, a VPS) which run the `lingxiloop agent computer` daemon and a local
  * engine (Claude Code / Codex).
  *
  * This module owns the data-access + credential plumbing so the route
@@ -59,7 +59,7 @@ export interface ComputerRow {
   paired_at: string | null
   revoked_at: string | null
   created_at: string
-  /** The cumora daemon's reported version; NULL for cloud or a pre-version daemon. */
+  /** The lingxiloop daemon's reported version; NULL for cloud or a pre-version daemon. */
   daemon_version: string | null
   /** TRUE = runs under the --install-service supervisor (launchd/systemd),
    *  FALSE = a manually-run foreground command, NULL = cloud / an old daemon
@@ -69,7 +69,7 @@ export interface ComputerRow {
 
 /** A computer plus the computed upgrade signal the app uses to show the banner. */
 export interface ComputerWithUpgrade extends ComputerRow {
-  /** The newest published cumora version (npm 'latest'), or null if unknown. */
+  /** The newest published lingxiloop version (npm 'latest'), or null if unknown. */
   latest_daemon_version: string | null
   /** True iff this is a BYOA daemon running behind the latest version (or one so
    *  old it never reported a version). Cloud computers are never outdated. */
@@ -88,7 +88,7 @@ function versionGt(a: string, b: string): boolean {
   return false
 }
 
-// Newest published cumora version, cached so listComputers doesn't hit npm on
+// Newest published lingxiloop version, cached so listComputers doesn't hit npm on
 // every call. Refreshes hourly; fail-safe (keeps the last good value, or null
 // when never fetched — and null means we never flag anyone outdated).
 let latestCache: { version: string | null; at: number } = { version: null, at: 0 }
@@ -97,7 +97,7 @@ async function getLatestDaemonVersion(): Promise<string | null> {
   const now = Date.now()
   if (latestCache.version && now - latestCache.at < LATEST_TTL_MS) return latestCache.version
   try {
-    const res = await fetch('https://registry.npmjs.org/cumora/latest', { headers: { Accept: 'application/json' } })
+    const res = await fetch('https://registry.npmjs.org/lingxiloop/latest', { headers: { Accept: 'application/json' } })
     if (res.ok) {
       const v = (await res.json() as { version?: string })?.version
       if (typeof v === 'string' && v) latestCache = { version: v, at: now }
@@ -112,18 +112,18 @@ function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('base64url')
 }
 
-/** Deterministic id for a company's managed Cumora Cloud computer, so it can
+/** Deterministic id for a company's managed LingxiLoop Cloud computer, so it can
  *  be resolved without a lookup and stays idempotent across migrations. */
 export function cloudComputerId(companyId: string): string {
   return `cloud-${companyId}`
 }
 
-/** Idempotently create the managed Cumora Cloud computer for a company.
+/** Idempotently create the managed LingxiLoop Cloud computer for a company.
  *  Called at company-creation time (the migration back-fills existing ones). */
 export async function ensureCloudComputer(companyId: string): Promise<void> {
   await pool.query(
     `INSERT INTO computers (id, company_id, name, kind, available_engines, status)
-     VALUES ($1, $2, 'Cumora Cloud', 'cloud', '["managed"]'::jsonb, 'online')
+     VALUES ($1, $2, 'LingxiLoop Cloud', 'cloud', '["managed"]'::jsonb, 'online')
      ON CONFLICT (id) DO NOTHING`,
     [cloudComputerId(companyId), companyId],
   )
@@ -325,7 +325,7 @@ export async function resolveDevice(token: string): Promise<{ computerId: string
 /** Mint a short-lived per-agent runtime JWT for a paired device — but only if
  *  the agent is actually assigned to that device's computer (same company).
  *  This is the credential the daemon uses for the agent's wake-stream SSE and
- *  as CUMORA_AGENT_RUNTIME_TOKEN for the `cumora` shim. */
+ *  as LINGXILOOP_AGENT_RUNTIME_TOKEN for the `lingxiloop` shim. */
 export async function mintAgentRuntimeToken(args: {
   computerId: string
   agentId: string
@@ -349,7 +349,7 @@ export async function mintAgentRuntimeToken(args: {
  *  overrides so the daemon can pass them to the engine.
  *
  *  When a row has no explicit model, fall back to the deploy-level default
- *  (CUMORA_DEFAULT_CLAUDE_MODEL / CUMORA_DEFAULT_CODEX_MODEL) so every BYOA
+ *  (LINGXILOOP_DEFAULT_CLAUDE_MODEL / LINGXILOOP_DEFAULT_CODEX_MODEL) so every BYOA
  *  daemon gets a consistent pin — independent of whatever model the local
  *  `claude` / `codex` CLI happens to default to today. Critical: a model
  *  upgrade in the underlying CLI (e.g. claude 4.7 → 4.8) silently changes
@@ -363,8 +363,8 @@ export async function listAgentsForComputer(computerId: string): Promise<
       ORDER BY name ASC`,
     [computerId],
   )
-  const claudeDefault = process.env.CUMORA_DEFAULT_CLAUDE_MODEL?.trim() || null
-  const codexDefault = process.env.CUMORA_DEFAULT_CODEX_MODEL?.trim() || null
+  const claudeDefault = process.env.LINGXILOOP_DEFAULT_CLAUDE_MODEL?.trim() || null
+  const codexDefault = process.env.LINGXILOOP_DEFAULT_CODEX_MODEL?.trim() || null
   return rows.map((r) => {
     if (r.model) return r
     const dflt = r.engine === 'codex' ? codexDefault : r.engine === 'claude' ? claudeDefault : null
@@ -372,9 +372,9 @@ export async function listAgentsForComputer(computerId: string): Promise<
   })
 }
 
-/** All computers visible to a company (Cumora Cloud + the user's paired ones),
+/** All computers visible to a company (LingxiLoop Cloud + the user's paired ones),
  *  each annotated with whether its daemon is outdated vs the latest published
- *  cumora version — so the app can surface an upgrade banner. */
+ *  lingxiloop version — so the app can surface an upgrade banner. */
 export async function listComputers(companyId: string): Promise<ComputerWithUpgrade[]> {
   const { rows } = await pool.query<ComputerRow>(
     `SELECT id, company_id, owner_user_id, name, kind, available_engines, status,
@@ -426,7 +426,7 @@ export function isByoaKind(kind: ComputerKind | null): boolean {
   return kind === 'local' || kind === 'vps'
 }
 
-/** Assign an agent to a computer (move it between Cumora Cloud and a paired
+/** Assign an agent to a computer (move it between LingxiLoop Cloud and a paired
  *  machine). Resolves the engine: 'managed' for cloud, else the requested
  *  engine if the computer advertises it, else the computer's first engine.
  *  Returns the resolved { kind, engine } or null if the computer/agent is

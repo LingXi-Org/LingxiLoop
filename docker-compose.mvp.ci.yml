@@ -82,7 +82,7 @@ services:
   lingxiloop:
     build:
       context: .
-      dockerfile: server/docker/cumora-server.Dockerfile
+      dockerfile: server/docker/lingxiloop-server.Dockerfile
     depends_on:
       postgres:
         condition: service_healthy

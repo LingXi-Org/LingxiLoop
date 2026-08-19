@@ -4,7 +4,7 @@
  *
  *   scheduler hears  CH_MESSAGE_NEW (Redis pubsub)
  *      ↓
- *   bus.deliver(agentId, event)              [publishes to cumora:wake:<agentId>]
+ *   bus.deliver(agentId, event)              [publishes to lingxiloop:wake:<agentId>]
  *      ↓
  *   server holding that agent's SSE          [subscribed to the channel]
  *      ↓
@@ -12,7 +12,7 @@
  *      `event: wake\n`
  *      `data: {...}\n\n`
  *
- * Multi-instance: Redis pubsub. We subscribe to `cumora:wake:<agentId>`
+ * Multi-instance: Redis pubsub. We subscribe to `lingxiloop:wake:<agentId>`
  * the moment we get our first local SSE attach for that agent, and
  * unsubscribe when the last local SSE drops. `deliver` publishes; the
  * publish count tells the scheduler whether ANY server in the cluster
@@ -58,7 +58,7 @@ interface WakeEventBase {
 
 /** Snapshot of a poll's state delivered alongside a `poll.updated` wake so
  *  the agent author can react in real time (watch, nudge, summarize)
- *  without first calling `cumora poll show`. Sized small — the agent can
+ *  without first calling `lingxiloop poll show`. Sized small — the agent can
  *  still fetch fuller voter details from the CLI when it cares. */
 export interface PollWakeBrief {
   messageId: string
@@ -128,7 +128,7 @@ interface WakeKindSteer {
 
 /** Per-agent Redis channel. Keep the prefix short — every PUBLISH
  *  command carries this on the wire. */
-const CH_WAKE_PREFIX = 'cumora:wake:'
+const CH_WAKE_PREFIX = 'lingxiloop:wake:'
 
 interface Subscriber {
   agentId: string

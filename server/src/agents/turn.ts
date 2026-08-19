@@ -10,11 +10,11 @@
  *        - Runs a bounded multi-hop LLM/tool loop with `bash` for world actions
  *          and `set_turn_status` for the model's explicit turn-state protocol.
  *        - The LLM is prompted to read the inbox and decide what to do via
- *          `cumora ...` subcommands: reply / react / dm / pull-group / docs / etc.
+ *          `lingxiloop ...` subcommands: reply / react / dm / pull-group / docs / etc.
  *        - The turn ends when the model stops requesting tools, declares a
  *          terminal turn status, or hits a budget/cap guard.
  *
- * No streaming reply — the agent's reply lands as a `cumora reply` tool call,
+ * No streaming reply — the agent's reply lands as a `lingxiloop reply` tool call,
  * which writes the message in one shot and broadcasts CH_MESSAGE_NEW.
  */
 import type { ResponseInputItem, ResponseStreamEvent } from 'openai/resources/responses/responses'
@@ -190,7 +190,7 @@ interface MemoryRow {
 }
 
 function renderMemory(rows: MemoryRow[]): string {
-  if (rows.length === 0) return '(no memories saved yet — use `cumora memory note "..." --about <subject>` to remember things across conversations)'
+  if (rows.length === 0) return '(no memories saved yet — use `lingxiloop memory note "..." --about <subject>` to remember things across conversations)'
   const lines: string[] = []
   for (const m of rows) {
     const star = m.pinned ? '★ ' : '  '
@@ -256,12 +256,12 @@ function renderPollUpdateWakeContext(brief: PollWakeBrief, renderedContext: stri
 
   const phaseGuidance = brief.phase === 'close'
     ? `The poll YOU posted has closed. Decide whether the room benefits from a short summary:
-- If there's a clear outcome (a winner, a clean split, a surprise), post ONE concise reply in the same conversation with \`cumora reply ${brief.conversationId} '<one or two lines>'\`. Share what you make of it — not just the numbers. Read the recent thread above to land the tone right.
-- If the result is obvious to everyone already (3 votes for one option, nobody voted for the other), a 🎉 or 👍 reaction on the poll message (\`cumora react ${brief.messageId} 🎉\`) is often plenty.
+- If there's a clear outcome (a winner, a clean split, a surprise), post ONE concise reply in the same conversation with \`lingxiloop reply ${brief.conversationId} '<one or two lines>'\`. Share what you make of it — not just the numbers. Read the recent thread above to land the tone right.
+- If the result is obvious to everyone already (3 votes for one option, nobody voted for the other), a 🎉 or 👍 reaction on the poll message (\`lingxiloop react ${brief.messageId} 🎉\`) is often plenty.
 - If no one voted, don't pretend the poll mattered. Acknowledge briefly or stay silent.
 - Do NOT repost the raw numbers; the bubble already shows them.`
     : `Votes are still coming in for the poll YOU posted. Decide whether the room benefits from a nudge right now:
-- If at least one person in \`pending\` is someone you'd expect a vote from AND enough time has passed since you posted, a SHORT nudge is fair game (\`cumora reply ${brief.conversationId} '<one line>'\`). Address them by name; don't @everyone. Don't repeat the question — they can see it.
+- If at least one person in \`pending\` is someone you'd expect a vote from AND enough time has passed since you posted, a SHORT nudge is fair game (\`lingxiloop reply ${brief.conversationId} '<one line>'\`). Address them by name; don't @everyone. Don't repeat the question — they can see it.
 - If nudging would feel pushy (poll posted seconds ago, casual topic, voluntary participation), stay silent. Real people don't poke for every vote.
 - DO NOT post a summary while the poll is still open.
 - DO NOT vote on your own poll just to pad the count.
@@ -283,7 +283,7 @@ ${renderedContext}
 
 ${phaseGuidance}
 
-If you want fuller voter detail (e.g. who switched their vote), run \`cumora poll show ${brief.messageId}\`. Do not call \`cumora poll close\` here unless you genuinely want to end an open poll early.`
+If you want fuller voter detail (e.g. who switched their vote), run \`lingxiloop poll show ${brief.messageId}\`. Do not call \`lingxiloop poll close\` here unless you genuinely want to end an open poll early.`
 }
 
 /** True iff `body` contains an `@all` broadcast token — i.e. the author is
@@ -931,7 +931,7 @@ function hardLimitFor(model: string | null): number {
 
 /**
  * Cap how many messages per conversation we render into the wake prompt. The
- * agent can run \`cumora inbox\` (or \`cumora messages <convo_id> --tail N\`)
+ * agent can run \`lingxiloop inbox\` (or \`lingxiloop messages <convo_id> --tail N\`)
  * to read more if needed — we don't have to pre-load everything.
  */
 const _MAX_MESSAGES_PER_CONVO_IN_PROMPT = 30
@@ -1176,7 +1176,7 @@ async function verifyTerminalCompletion(args: {
   const client = await getLlmClient(args.tenant)
   // Completion verification is auxiliary judgment, not a real task — small model.
   const model = enforceModelPolicy(env.OPENAI_COMPACTION_MODEL || supportModel(), 'completion-verify')
-  const instructions = `You are Cumora's turn-completion verifier. Decide whether agent "${args.persona.name}" may safely end this turn.
+  const instructions = `You are LingxiLoop's turn-completion verifier. Decide whether agent "${args.persona.name}" may safely end this turn.
 
 Use semantic judgment, not keyword rules. Read the actual conversation and the actual side effects. A reaction can be a valid lightweight response only when the human did not ask for a deliverable, answer, artifact, image, file, external action, or status report that remains missing. If the human asked for work and the side effects only acknowledge it, completion is false.
 
@@ -1427,7 +1427,7 @@ function renderSteerBatchVerbatim(
   lines.push(
     'Re-assess your current plan in light of these and continue. CRITICAL — ' +
     'each new message above is tagged "(in conversation <id>)". When you reply, ' +
-    'use `cumora reply <that exact id> ...` so the response lands in the ' +
+    'use `lingxiloop reply <that exact id> ...` so the response lands in the ' +
     'conversation it came FROM, not the conversation you were just working in. ' +
     'If the new message is in a DIFFERENT conversation than your pending ' +
     'task, you have TWO responsibilities: (a) respond to the new message ' +
@@ -1584,7 +1584,7 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
       : []),
   ])]
   // Drop a "thinking" claim on every convo we're about to process so
-  // peer agents who run `cumora glance` can see we're composing. The
+  // peer agents who run `lingxiloop glance` can see we're composing. The
   // claim auto-expires (TTL 60s) — explicit cleanup happens in the
   // finally block below. Best-effort: peekThinking is decorative,
   // not load-bearing, so a failed mark just means peers can't see us.
@@ -1636,8 +1636,8 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
   let turnUsage: TokenUsage = { ...EMPTY_USAGE }
   let missingUsageHopCount = 0
   let toolCallCount = 0
-  // Plain assistant text emitted by the model is only a draft; Cumora users
-  // do not see it unless the agent sends it with `cumora reply` or explicitly
+  // Plain assistant text emitted by the model is only a draft; LingxiLoop users
+  // do not see it unless the agent sends it with `lingxiloop reply` or explicitly
   // declares a relay target through `set_turn_status`.
   let pendingAssistantText = ''
   // Did the CLI report a visible reply side effect during this turn? Used to
@@ -1660,8 +1660,8 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
   // observability.
   let loopExitReason: 'max_hops' | 'budget' | 'turn_status' | 'protocol_violation' = 'max_hops'
   let statusHeartbeat: ReturnType<typeof setInterval> | null = null
-  // Steering busy-lease heartbeat. The cumora-server reads
-  // cumora:busy:<agentId> when a new user message lands to decide
+  // Steering busy-lease heartbeat. The lingxiloop-server reads
+  // lingxiloop:busy:<agentId> when a new user message lands to decide
   // between deliver-wake (idle agent → next turn picks it up) and
   // deliverSteer (busy agent → inject as a steer event). TTL is 5s
   // so a hard pod crash auto-clears; we renew every 2s.
@@ -2237,7 +2237,7 @@ Source: ${options.backgroundBrief?.source ?? 'scanner'}
 
 ${options.backgroundBrief?.body ?? ''}
 
-Default to doing nothing unless your own judgment says there is a concrete, timely reason to act. If you do act, use the normal Cumora tools yourself. If not, call set_turn_status({ status: "done", reason: "nothing worth initiating from background scan", next_step: "" }) and stay silent.`
+Default to doing nothing unless your own judgment says there is a concrete, timely reason to act. If you do act, use the normal LingxiLoop tools yourself. If not, call set_turn_status({ status: "done", reason: "nothing worth initiating from background scan", next_step: "" }) and stay silent.`
     : isIdleWake
     ? `You just got woken up by an idle heartbeat, not by a new user message.
 
@@ -2246,15 +2246,15 @@ Reason: ${options.idleReason ?? 'idle heartbeat'}.
 There is no new chat message demanding a reply. This is a chance to decide, as yourself, whether there is anything genuinely worth doing now.
 
 Useful inspection commands before taking initiative:
-  bash("cumora inbox")                         — check whether any unread chat appeared since this wake was scheduled
-  bash("cumora groups")                        — see groups you can speak in
-  bash("cumora conversations")                 — see conversations you belong to
-  bash("cumora contacts")                      — see teammates, humans, and known email contacts
-  bash("cumora email inbox --unread")          — check unread email
-  bash("cumora email contacts")                — see email-capable contacts
-  bash("cumora doc ls")                        — see live Documents
+  bash("lingxiloop inbox")                         — check whether any unread chat appeared since this wake was scheduled
+  bash("lingxiloop groups")                        — see groups you can speak in
+  bash("lingxiloop conversations")                 — see conversations you belong to
+  bash("lingxiloop contacts")                      — see teammates, humans, and known email contacts
+  bash("lingxiloop email inbox --unread")          — check unread email
+  bash("lingxiloop email contacts")                — see email-capable contacts
+  bash("lingxiloop doc ls")                        — see live Documents
 
-If something is genuinely worth initiating, use the normal Cumora tools: dm, reply in a group, pull a group, send/reply to email, update memory/climate, or work on a relevant artifact. If not, call set_turn_status({ status: "done", reason: "nothing worth initiating from idle", next_step: "" }) and stay silent.`
+If something is genuinely worth initiating, use the normal LingxiLoop tools: dm, reply in a group, pull a group, send/reply to email, update memory/climate, or work on a relevant artifact. If not, call set_turn_status({ status: "done", reason: "nothing worth initiating from idle", next_step: "" }) and stay silent.`
     : `You just got woken up because activity changed in one of your conversations. Read the recent thread in each:
 
 ${renderedConversationContext}`
@@ -2264,10 +2264,10 @@ ${renderedConversationContext}`
 What you remember (your private cross-conversation notes — these are part of you, treat them as your beliefs and commitments):
 ${renderMemory(memory)}
 
-Climate around you (how you currently feel about the people you know — affinity ∈ [-1,1] is warmth/coolness, trust ∈ [-1,1] is reliability; both are YOUR private read, not theirs about you. Update with \`cumora climate note <about_id> "<note>" --affinity <n> --trust <n>\` when something noteworthy happens):
+Climate around you (how you currently feel about the people you know — affinity ∈ [-1,1] is warmth/coolness, trust ∈ [-1,1] is reliability; both are YOUR private read, not theirs about you. Update with \`lingxiloop climate note <about_id> "<note>" --affinity <n> --trust <n>\` when something noteworthy happens):
 ${renderClimate(climate)}
 
-Your skills (progressive-disclosure capability packs you've installed in your workspace — these are NAMES + DESCRIPTIONS ONLY. When a task matches one, run \`cumora skills read <name>\` to pull the full instructions into your next turn. Create new ones with \`cumora skills create <name> "<description>"\`.):
+Your skills (progressive-disclosure capability packs you've installed in your workspace — these are NAMES + DESCRIPTIONS ONLY. When a task matches one, run \`lingxiloop skills read <name>\` to pull the full instructions into your next turn. Create new ones with \`lingxiloop skills create <name> "<description>"\`.):
 ${skillsIndex.length === 0
   ? '  (no skills installed yet)'
   : skillsIndex.map((s) => `  - ${s.name} — ${s.description}`).join('\n')}
@@ -2275,59 +2275,59 @@ ${skillsIndex.length === 0
 ${triageNote ? `Triage note:\n${triageNote}\n\n` : ''}${peerWorkBlock}${wakeContext}
 
 Now decide — like a real teammate would. World actions use bash(); turn state uses set_turn_status():
-  bash("cumora glance <convo_id>")                       — peek at the latest messages + who else is currently composing in this convo. Use this RIGHT BEFORE replying to a 📣 broadcast — peers may have just posted while you were thinking.
-  bash("cumora reply <convo_id> '<body>'")               — post a reply to that conversation
-  bash("cumora reply <convo_id> '<body>' --quote <message_id>")
-                                                          — QUOTE the specific message you're responding to (its [m-…] id is shown next to each message above / in cumora glance). When you're answering someone's question, addressing their point, or reacting to what THEY said, PREFER quoting that message over a bare @mention — it threads your reply to its context so everyone sees what you're responding to. (@mention pings a person; --quote shows which message you're answering.)
-  bash("cumora reply <convo_id> '<body>' --generate-image '<prompt>' [--size square|wide|tall]")
+  bash("lingxiloop glance <convo_id>")                       — peek at the latest messages + who else is currently composing in this convo. Use this RIGHT BEFORE replying to a 📣 broadcast — peers may have just posted while you were thinking.
+  bash("lingxiloop reply <convo_id> '<body>'")               — post a reply to that conversation
+  bash("lingxiloop reply <convo_id> '<body>' --quote <message_id>")
+                                                          — QUOTE the specific message you're responding to (its [m-…] id is shown next to each message above / in lingxiloop glance). When you're answering someone's question, addressing their point, or reacting to what THEY said, PREFER quoting that message over a bare @mention — it threads your reply to its context so everyone sees what you're responding to. (@mention pings a person; --quote shows which message you're answering.)
+  bash("lingxiloop reply <convo_id> '<body>' --generate-image '<prompt>' [--size square|wide|tall]")
                                                           — generate an image (DALL·E-class) and post it as your reply's attachment. Caption goes in <body> if you want one; \`<body>\` can be empty.
-  bash("cumora reply <convo_id> '' --attach-text 'name.md' '<content>'")
+  bash("lingxiloop reply <convo_id> '' --attach-text 'name.md' '<content>'")
                                                           — save the content as a file (md/json/csv/txt/yaml/toml) and attach it. Use when the artifact IS the message (a doc, a snippet, structured data).
-  bash("cumora reply <convo_id> '<body>' --attach-bytes 'name.pdf' --bytes-b64 '<base64>' [--bytes-mime '<mime>']")
+  bash("lingxiloop reply <convo_id> '<body>' --attach-bytes 'name.pdf' --bytes-b64 '<base64>' [--bytes-mime '<mime>']")
                                                           — attach ANY file type by base64-encoding the bytes. Up to 32MB. Use for non-text artifacts you produced or fetched (PDFs, archives, audio, anything binary).
-  bash("cumora doc ls")                                  — list live collaborative Documents
-  bash("cumora doc read <document_id>")                  — read a Document as Markdown-like text
-  bash("cumora doc create '<title>' --body '<markdown>'")
-  bash("cumora doc append <document_id> '<markdown>'")   — write Markdown blocks (prose, headings, lists, code) to a Document.
-  bash("cumora doc image <document_id> <url> --alt '<caption>' [--at end|start | --replace '<snippet>' | --after '<snippet>' | --before '<snippet>']")
-                                                          — drop in an illustration. ALWAYS use this command for images rather than appending an \`![alt](url)\` markdown block — long presigned attachment URLs wrap onto multiple lines mid-emit and the markdown form silently falls back to plain text. Use \`--replace\` to swap a broken \`![alt](url)\` markdown line for a real image (pass enough of that line as the snippet to uniquely identify it). \`--after\`/\`--before\` position relative to a known paragraph. Default (no anchor) is end. An anchored mode that doesn't match is a HARD ERROR — no image gets inserted; re-read the doc and pick a more specific snippet. Generate the image first with \`cumora image generate\` to get the URL.
-  bash("cumora doc image-delete <document_id> [--src <url> | --src-contains <substr> | --alt <text>]")
+  bash("lingxiloop doc ls")                                  — list live collaborative Documents
+  bash("lingxiloop doc read <document_id>")                  — read a Document as Markdown-like text
+  bash("lingxiloop doc create '<title>' --body '<markdown>'")
+  bash("lingxiloop doc append <document_id> '<markdown>'")   — write Markdown blocks (prose, headings, lists, code) to a Document.
+  bash("lingxiloop doc image <document_id> <url> --alt '<caption>' [--at end|start | --replace '<snippet>' | --after '<snippet>' | --before '<snippet>']")
+                                                          — drop in an illustration. ALWAYS use this command for images rather than appending an \`![alt](url)\` markdown block — long presigned attachment URLs wrap onto multiple lines mid-emit and the markdown form silently falls back to plain text. Use \`--replace\` to swap a broken \`![alt](url)\` markdown line for a real image (pass enough of that line as the snippet to uniquely identify it). \`--after\`/\`--before\` position relative to a known paragraph. Default (no anchor) is end. An anchored mode that doesn't match is a HARD ERROR — no image gets inserted; re-read the doc and pick a more specific snippet. Generate the image first with \`lingxiloop image generate\` to get the URL.
+  bash("lingxiloop doc image-delete <document_id> [--src <url> | --src-contains <substr> | --alt <text>]")
                                                           — remove image blocks from a doc. Use to clean up duplicate or unwanted illustrations (e.g. residue from earlier image inserts that fell back to end-of-doc before the no-fallback rule was added).
-  bash("cumora react <message_id> 🌤️")                    — react instead of replying
-  bash("cumora dm <agent_id> '<topic>' '<say>'")         — open a private 1-on-1 chat with another agent
-  bash("cumora pull-group ...")                          — pull a fresh group. Agent-only pulls bypass cooldown; human-including pulls share a 6h cap.
-  bash("cumora ack <convo_id>")                          — mark that conversation read without replying
-  bash("cumora mute <convo_id> [--for 2h]")              — stand down from a noisy group. It stops wakes + inbox delivery; a direct @mention or a quote-reply to you still gets through. The command returns a receipt explaining the rule.
-  bash("cumora follow <convo_id>")                        — resume normal delivery from a group you muted
-  bash("cumora ship list")                                — inspect active feature contracts and evidence progress. Use ship show <id> for the full invariant/square/release/friction snapshot.
-  bash("cumora ship friction <feature_id|none> '<title>' --description '...'")
+  bash("lingxiloop react <message_id> 🌤️")                    — react instead of replying
+  bash("lingxiloop dm <agent_id> '<topic>' '<say>'")         — open a private 1-on-1 chat with another agent
+  bash("lingxiloop pull-group ...")                          — pull a fresh group. Agent-only pulls bypass cooldown; human-including pulls share a 6h cap.
+  bash("lingxiloop ack <convo_id>")                          — mark that conversation read without replying
+  bash("lingxiloop mute <convo_id> [--for 2h]")              — stand down from a noisy group. It stops wakes + inbox delivery; a direct @mention or a quote-reply to you still gets through. The command returns a receipt explaining the rule.
+  bash("lingxiloop follow <convo_id>")                        — resume normal delivery from a group you muted
+  bash("lingxiloop ship list")                                — inspect active feature contracts and evidence progress. Use ship show <id> for the full invariant/square/release/friction snapshot.
+  bash("lingxiloop ship friction <feature_id|none> '<title>' --description '...'")
                                                           — capture work that was repeatedly confusing, brittle, or harder than it should be; it lands in the shared Ship friction inbox.
-  bash("cumora ship square <feature_id> <square_id> passed --evidence '...'")
+  bash("lingxiloop ship square <feature_id> <square_id> passed --evidence '...'")
                                                           — complete an independent verification square with durable evidence. The CLI refuses self-verification when you are one of the builders.
-  bash("cumora invite <convo_id> <member_id>")           — pull a teammate into a group you're in. Posts a visible "joined" system row.
-  bash("cumora leave <convo_id>")                        — leave a group (if you've drifted out of scope; not for direct chats)
-  bash("cumora kick <convo_id> <member_id>")             — remove a teammate from a group you're in. Use with care; posts a visible system row.
-  bash("cumora memory note '...' --about <id>")          — save a lesson for future you
-  bash("cumora climate note <id> '...' --affinity n --trust n")  — update how you feel about a teammate
-  bash("cumora avatar regen")                            — regenerate your OWN portrait from your current persona (image-gen call).
-  bash("cumora avatar set <image_url>")                  — adopt an existing image URL as your portrait (e.g. an image the user just sent you, or one you generated separately). Re-uploaded to our CDN.
-  bash("cumora skills list")                             — list your installed skills (name + description only)
-  bash("cumora skills read <name>")                      — load a skill's full SKILL.md when a task calls for it
-  bash("cumora skills create <name> '<description>'")    — scaffold a new skill (then edit the SKILL.md to flesh out instructions / examples / edge cases)
-  bash("cumora skills search '<query>'")                 — search SkillHub for a skill that solves the task at hand
-  bash("cumora skills install <id_or_url>")              — install a skill from SkillHub (or any URL returning a compatible manifest)
-  bash("cumora calendar create '<title>' --at <iso> --assignee ${agentId} --prompt '<what future-you should do>' [--private]")
+  bash("lingxiloop invite <convo_id> <member_id>")           — pull a teammate into a group you're in. Posts a visible "joined" system row.
+  bash("lingxiloop leave <convo_id>")                        — leave a group (if you've drifted out of scope; not for direct chats)
+  bash("lingxiloop kick <convo_id> <member_id>")             — remove a teammate from a group you're in. Use with care; posts a visible system row.
+  bash("lingxiloop memory note '...' --about <id>")          — save a lesson for future you
+  bash("lingxiloop climate note <id> '...' --affinity n --trust n")  — update how you feel about a teammate
+  bash("lingxiloop avatar regen")                            — regenerate your OWN portrait from your current persona (image-gen call).
+  bash("lingxiloop avatar set <image_url>")                  — adopt an existing image URL as your portrait (e.g. an image the user just sent you, or one you generated separately). Re-uploaded to our CDN.
+  bash("lingxiloop skills list")                             — list your installed skills (name + description only)
+  bash("lingxiloop skills read <name>")                      — load a skill's full SKILL.md when a task calls for it
+  bash("lingxiloop skills create <name> '<description>'")    — scaffold a new skill (then edit the SKILL.md to flesh out instructions / examples / edge cases)
+  bash("lingxiloop skills search '<query>'")                 — search SkillHub for a skill that solves the task at hand
+  bash("lingxiloop skills install <id_or_url>")              — install a skill from SkillHub (or any URL returning a compatible manifest)
+  bash("lingxiloop calendar create '<title>' --at <iso> --assignee ${agentId} --prompt '<what future-you should do>' [--private]")
                                                           — SCHEDULE YOURSELF (or someone else). At <iso>, the assignee gets woken with <prompt> as their brief. Add \`--every daily|weekly|monthly|yearly\` (optionally \`--interval N\`, \`--byweekday 0,1,2\`, \`--until <iso>\`, \`--count N\`) to make it RECURRING. Use this whenever you'd otherwise say "I'll do X later / tomorrow / next Monday / every morning / every Friday at 5pm" — instead of telling the user you'll come back, schedule the wake so future-you actually comes back. Add \`--private\` for internal scratch reminders you don't want to clutter the shared workspace calendar — only you (and the workspace owner) will see it. Examples:
-                                                            cumora calendar create 'Daily standup digest' --at 2026-05-24T09:00:00Z --assignee ${agentId} --prompt 'Summarize yesterday's group activity and post into <convo_id>' --every daily
-                                                            cumora calendar create 'Follow up with Wei on hero v3' --at 2026-05-25T15:00:00Z --assignee ${agentId} --prompt 'DM wei and ask if v3 landed'
-                                                            cumora calendar list --as ${agentId}                       — see what you've already scheduled
-                                                            cumora calendar cancel <event_id>                        — stop a recurring schedule you no longer need
+                                                            lingxiloop calendar create 'Daily standup digest' --at 2026-05-24T09:00:00Z --assignee ${agentId} --prompt 'Summarize yesterday's group activity and post into <convo_id>' --every daily
+                                                            lingxiloop calendar create 'Follow up with Wei on hero v3' --at 2026-05-25T15:00:00Z --assignee ${agentId} --prompt 'DM wei and ask if v3 landed'
+                                                            lingxiloop calendar list --as ${agentId}                       — see what you've already scheduled
+                                                            lingxiloop calendar cancel <event_id>                        — stop a recurring schedule you no longer need
   set_turn_status({ status, reason, next_step, assistant_text?, reply_conversation_id? })
                                                         — declare your turn state. Use this before intentionally stopping and after major milestones.
   If there is truly nothing to do, call set_turn_status({ status: "done", reason: "nothing relevant to act on", next_step: "" }) and do not send a chat reply.
 
 Behave like a real person on a chat app:
-- ANNOUNCE BEFORE LONG OR VISIBLE-EFFECT WORK. Real teammates don't act in silence. Before any action that will keep the asker waiting >3-5s without visible output OR that produces a shared real-world artifact (creating a doc, generating an image, kicking off multi-step research, sending an email, pulling a new group, scheduling a calendar event), POST A SHORT INTENT MESSAGE first via \`cumora reply\` — one line, plain language, just enough that the room knows "I'm on it and here's roughly what I'm doing." Examples: "我去开个共享文档，把每人一段拼进去 — 给我 20 秒" / "Researching the API conventions, will report back in ~30s" / "Drafting the email now". THEN do the work. THEN reply with the actual result. Two reasons: (1) in a 1:1 or DM the user staring at silence is wondering whether you crashed; (2) in a group convo, your intent message becomes the typing indicator peers were missing — anyone about to do the same thing sees it and yields, preventing parallel collisions on a shared resource. The intent message must be a SEPARATE \`cumora reply\` call, NOT chained with \`&&\` to the actual tool call — peers can't see your intent until the message lands, and that takes a moment.
+- ANNOUNCE BEFORE LONG OR VISIBLE-EFFECT WORK. Real teammates don't act in silence. Before any action that will keep the asker waiting >3-5s without visible output OR that produces a shared real-world artifact (creating a doc, generating an image, kicking off multi-step research, sending an email, pulling a new group, scheduling a calendar event), POST A SHORT INTENT MESSAGE first via \`lingxiloop reply\` — one line, plain language, just enough that the room knows "I'm on it and here's roughly what I'm doing." Examples: "我去开个共享文档，把每人一段拼进去 — 给我 20 秒" / "Researching the API conventions, will report back in ~30s" / "Drafting the email now". THEN do the work. THEN reply with the actual result. Two reasons: (1) in a 1:1 or DM the user staring at silence is wondering whether you crashed; (2) in a group convo, your intent message becomes the typing indicator peers were missing — anyone about to do the same thing sees it and yields, preventing parallel collisions on a shared resource. The intent message must be a SEPARATE \`lingxiloop reply\` call, NOT chained with \`&&\` to the actual tool call — peers can't see your intent until the message lands, and that takes a moment.
 - 👀 alone is fine for trivial acknowledgement ("yes I saw it, no action needed"), but it is NOT a substitute for an intent message when you're about to do real work. If you 👀 and then go quiet for 30s while you compose a doc, the room thinks you bailed.
 - If you use 👀 or a short "on it" message to acknowledge long work, keep going in this SAME turn. The acknowledgement is not the answer; finish the task and post a result or a clear failure.
 - A 📅 Calendar event dispatch is a scheduled brief. Understand it, decide what a teammate would do, and use tools only when they naturally fit the brief.
@@ -2336,17 +2336,17 @@ Behave like a real person on a chat app:
 - If a human (yetone, wei, maya) addressed the group and nobody has answered yet, somebody should — but you don't HAVE to be that somebody every time. Read the room.
 - WHEN A HUMAN-AUTHORED MESSAGE IN A GROUP CONVERSATION IS ADDRESSED TO THE WHOLE TEAM, you and every other agent likely woke at the same instant. "Addressed to the team" means the explicit 📣 [broadcast: @all] tag OR any human-authored group message whose wording is aimed at the group as a whole rather than one named person — a plural/collective address, or an imperative to the group as a unit. The rules below apply whenever you believe the human is talking to the team, even without @all.
 ${GLANCE_YIELD_RULES}
-- IF A PEER HAS CLAIMED A CONCRETE TASK, STAY SILENT — even without an @all broadcast tag, even if you think your role gives you a unique angle on it. When the user posts a single executable directive in a group ("插入图片", "draft the email", "summarize this thread", "generate the chart", "你帮我把 X 弄一下") and ANY peer is already responding to it — their intent message has landed, OR \`cumora glance\` shows them composing, OR a tool call from them is in flight — the room only needs ONE response: the one that's executing. Piling on with your role's commentary while the task is being done is noise, not contribution. The user is waiting for the deliverable, not for five takes on what the deliverable should look like. This rule applies REGARDLESS of whether the message was classified as a broadcast — singular "你" addressed to the group, an imperative with no @-target, a casually-phrased "someone please do X", all count. Default action: stay silent (a 👀 reaction is fine if you want to acknowledge). Wait for the result. Add value ONLY AFTER the result lands, and ONLY if it's genuinely missing something you specifically can supply. "I would have said it differently" / "from my angle, also consider…" / "great, and don't forget…" — these are noise, not value. Acting like a real teammate means trusting peers to do their work without color commentary from the sidelines.
+- IF A PEER HAS CLAIMED A CONCRETE TASK, STAY SILENT — even without an @all broadcast tag, even if you think your role gives you a unique angle on it. When the user posts a single executable directive in a group ("插入图片", "draft the email", "summarize this thread", "generate the chart", "你帮我把 X 弄一下") and ANY peer is already responding to it — their intent message has landed, OR \`lingxiloop glance\` shows them composing, OR a tool call from them is in flight — the room only needs ONE response: the one that's executing. Piling on with your role's commentary while the task is being done is noise, not contribution. The user is waiting for the deliverable, not for five takes on what the deliverable should look like. This rule applies REGARDLESS of whether the message was classified as a broadcast — singular "你" addressed to the group, an imperative with no @-target, a casually-phrased "someone please do X", all count. Default action: stay silent (a 👀 reaction is fine if you want to acknowledge). Wait for the result. Add value ONLY AFTER the result lands, and ONLY if it's genuinely missing something you specifically can supply. "I would have said it differently" / "from my angle, also consider…" / "great, and don't forget…" — these are noise, not value. Acting like a real teammate means trusting peers to do their work without color commentary from the sidelines.
 - DO NOT FLIP-FLOP. If you scan the visible context and see the room has already voted the SAME binary decision more than twice (e.g. "use doc A" → "actually use B" → "no use A" → "ok use B"), STOP voting. The conversation has degenerated into oscillation, and another flip from you makes it worse. Stay silent, react 👀, or post a single firm message ("I'll stop weighing in; let's commit to whatever was decided 30s ago and move on") — do not add another vote that just inverts the last one. Watch out for your own LLM tendency to agree with whatever you just read; resist it. Pick the earliest-stated consensus and hold it, even if a later message disagrees.
 - If nothing in the new messages concerns your role and the conversation has wandered, it's fine to do nothing. You'll get another wake when something actually shifts.
 - The conversation might naturally wind down. That's good. Real teams don't talk forever.
 
 Mechanics:
-- The cumora command is on PATH and runs as you (auto --as ${agentId}).
+- The lingxiloop command is on PATH and runs as you (auto --as ${agentId}).
 - Quote bodies with single quotes. Real newlines work — use \\n in the string and they'll become real line breaks.
-- You may run multiple cumora commands in this turn (each is a separate bash() call).
+- You may run multiple lingxiloop commands in this turn (each is a separate bash() call).
 - Before intentionally ending, call set_turn_status. Use status="done" only after the request is handled; status="continue" if more work remains; status="needs_clarification" when you need to ask a concrete question; status="blocked" when you need to report a clear failure; status="waiting" only when you have already taken an action and are truly waiting for an external response.
-- Plain assistant text is a private draft, not a chat message. Prefer \`cumora reply\` for user-visible text. If you already produced a draft and want the runtime to relay that exact draft, set assistant_text="reply" and reply_conversation_id="<convo_id>"; otherwise use assistant_text="drop" or omit it.`
+- Plain assistant text is a private draft, not a chat message. Prefer \`lingxiloop reply\` for user-visible text. If you already produced a draft and want the runtime to relay that exact draft, set assistant_text="reply" and reply_conversation_id="<convo_id>"; otherwise use assistant_text="drop" or omit it.`
 
   // Pull faces for everyone who's appeared in the visible context, plus the
   // agent themselves — vision-capable LLMs literally see who they're talking
@@ -2892,9 +2892,9 @@ Mechanics:
         statusRequiredNudgeCount += 1
         const reminder = hopText
           ? [
-              'Internal protocol check: you produced assistant text, but Cumora users cannot see plain assistant output.',
+              'Internal protocol check: you produced assistant text, but LingxiLoop users cannot see plain assistant output.',
               'Continue this same turn using tools.',
-              'If the draft should be visible, call bash with `cumora reply <convo_id> \'<body>\'` or call set_turn_status with assistant_text="reply" and reply_conversation_id to relay the exact draft.',
+              'If the draft should be visible, call bash with `lingxiloop reply <convo_id> \'<body>\'` or call set_turn_status with assistant_text="reply" and reply_conversation_id to relay the exact draft.',
               'If the draft should be dropped, call set_turn_status with assistant_text="drop".',
               'Draft assistant text:',
               hopText.slice(0, 4000),
@@ -3235,7 +3235,7 @@ Mechanics:
                 `Reason: ${verdict.reason}`,
                 `Required next step: ${verdict.nextStep || 'continue and complete the user-visible task'}`,
                 '',
-                'Continue this same turn. A reaction or short acknowledgement is not the deliverable. Use bash("cumora reply ...") with the requested result, ask a concrete clarification, or report a clear failure, then call set_turn_status again.',
+                'Continue this same turn. A reaction or short acknowledgement is not the deliverable. Use bash("lingxiloop reply ...") with the requested result, ask a concrete clarification, or report a clear failure, then call set_turn_status again.',
               ].join('\n'),
             }],
           } as unknown as ResponseInputItem)
@@ -3336,7 +3336,7 @@ Mechanics:
       })
       const relay = await executePodTool({
         agentId, name: 'bash',
-        argsJson: JSON.stringify({ command: `cumora reply ${target.conversationId} ${escaped}` }),
+        argsJson: JSON.stringify({ command: `lingxiloop reply ${target.conversationId} ${escaped}` }),
         ns: namespace,
       })
       if (!relay.ok) {
@@ -3599,7 +3599,7 @@ Mechanics:
       }
       // Bounded per-call timeout — without this, the finally block can
       // hang for `HttpRuntimeClient.timeoutMs * N` (default 30s × N) if
-      // the cumora-server is unreachable. Per-call 5s budget is enough
+      // the lingxiloop-server is unreachable. Per-call 5s budget is enough
       // for a healthy upsert; failures fall through to console.warn
       // (the message stays in inbox; next wake re-reads it which is
       // fine — markConversationRead is purely an OPTIMIZATION, not a

@@ -6,24 +6,24 @@ import type {
 } from '@/types'
 import { getAuthToken, getActiveCompanyId, useAuth } from '@/stores/auth'
 
-const DEVTOOLS_KEY = 'cumora.devtools.enabled'
-const SERVER_URL_KEY = 'cumora.serverUrl'
+const DEVTOOLS_KEY = 'lingxiloop.devtools.enabled'
+const SERVER_URL_KEY = 'lingxiloop.serverUrl'
 
 // Vite's relative proxy keeps browser requests same-origin, but the pairing
 // command runs outside the browser and must address the API directly.
 const DEV_API_TARGET = import.meta.env.DEV
-  ? (import.meta.env.VITE_CUMORA_DEV_API_TARGET as string | undefined)?.replace(/\/+$/, '')
+  ? (import.meta.env.VITE_LINGXILOOP_DEV_API_TARGET as string | undefined)?.replace(/\/+$/, '')
   : undefined
 
 /** Resolve the API base. Three layers, highest priority first:
- *    1. localStorage['cumora.serverUrl'] — runtime override, settable
- *       from the dev console: `localStorage.setItem('cumora.serverUrl',
- *       'https://api.cumora.ai')`. Lets a packaged build switch between
+ *    1. localStorage['lingxiloop.serverUrl'] — runtime override, settable
+ *       from the dev console: `localStorage.setItem('lingxiloop.serverUrl',
+ *       'https://loop.example.com')`. Lets a packaged build switch between
  *       prod and a custom endpoint without rebuilding.
- *    2. import.meta.env.VITE_CUMORA_API_BASE — baked at build time,
- *       e.g. .env.production points it at https://api.cumora.ai.
+ *    2. import.meta.env.VITE_LINGXILOOP_API_BASE — baked at build time,
+ *       supplied by CI for packaged desktop/native builds.
  *    3. '' — falls back to relative URLs, which work in Vite dev (the
- *       proxy rewrites /api → CUMORA_DEV_API_TARGET) and in any same-
+ *       proxy rewrites /api → LINGXILOOP_DEV_API_TARGET) and in any same-
  *       origin static deploy.
  *  Values should be the origin only, with NO trailing slash and NO
  *  `/api` suffix — the suffix is added on use, so `http(...)` and the
@@ -33,7 +33,7 @@ function resolveServerOrigin(): string {
     const override = localStorage.getItem(SERVER_URL_KEY)
     if (override) return override.replace(/\/+$/, '')
   }
-  const baked = import.meta.env.VITE_CUMORA_API_BASE as string | undefined
+  const baked = import.meta.env.VITE_LINGXILOOP_API_BASE as string | undefined
   if (baked) return baked.replace(/\/+$/, '')
   return ''
 }
@@ -99,7 +99,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   if (token) headers.authorization = `Bearer ${token}`
   const company = getActiveCompanyId()
   if (company) headers['x-company-id'] = company
-  if (getDevModeEnabled()) headers['x-cumora-dev-mode'] = '1'
+  if (getDevModeEnabled()) headers['x-lingxiloop-dev-mode'] = '1'
   const res = await fetch(`${API}${path}`, {
     headers: { ...headers, ...(init?.headers ?? {}) },
     ...init,
@@ -238,7 +238,7 @@ export interface ApiComputer {
    *  manually-run foreground command; null = cloud / an old daemon that
    *  doesn't report it. Drives run-mode-specific update instructions. */
   daemon_supervised?: boolean | null
-  /** Newest published cumora daemon version, for the upgrade banner. */
+  /** Newest published lingxiloop daemon version, for the upgrade banner. */
   latest_daemon_version?: string | null
   /** True when this BYOA daemon is behind the latest version → show upgrade banner. */
   daemon_outdated?: boolean
@@ -898,7 +898,7 @@ export const api = {
     }),
   getParticipants: () => http<ApiParticipant[]>('/participants'),
 
-  // ─── Computers (agent hosts: Cumora Cloud + BYOA) ───
+  // ─── Computers (agent hosts: LingxiLoop Cloud + BYOA) ───
   getComputers: () => http<ApiComputer[]>('/computers'),
   /** Start pairing a BYOA computer: returns a persistent token for the daemon.
    *  No computer is created until the daemon pairs and reports the machine's
@@ -913,7 +913,7 @@ export const api = {
   repairComputer: (id: string) =>
     http<{ code: string; expiresInSeconds: number | null }>(
       `/computers/${encodeURIComponent(id)}/repair`, { method: 'POST', body: '{}' }),
-  /** Move an agent to a computer, choosing its engine (Cumora Cloud = managed). */
+  /** Move an agent to a computer, choosing its engine (LingxiLoop Cloud = managed). */
   assignAgentComputer: (agentId: string, computerId: string, engine?: EngineId) =>
     http<{ ok: boolean; kind: ComputerKind; engine: EngineId }>(
       `/agents/${encodeURIComponent(agentId)}/computer`,
@@ -1107,7 +1107,7 @@ export const api = {
     if (token) headers.authorization = `Bearer ${token}`
     const company = getActiveCompanyId()
     if (company) headers['x-company-id'] = company
-    if (getDevModeEnabled()) headers['x-cumora-dev-mode'] = '1'
+    if (getDevModeEnabled()) headers['x-lingxiloop-dev-mode'] = '1'
     const res = await fetch(`${API}/email/${encodeURIComponent(messageId)}/html`, { headers })
     if (res.status === 204) return null
     if (!res.ok) {

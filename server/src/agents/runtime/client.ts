@@ -166,7 +166,7 @@ export type WorkTaskType =
   // a reply is warranted; this claim decides WHO, without the big model.
   | 'reply'
   // Generic, agent-driven exclusive claim, exposed
-  // to the engine as `cumora claim "<unit of work>"`: before doing any non-trivial
+  // to the engine as `lingxiloop claim "<unit of work>"`: before doing any non-trivial
   // unit a peer could also pick up (running an activity/game, a deliverable, a
   // phase), claim it; if the claim fails a peer owns it → move on. Prevents two
   // agents doing the same thing.
@@ -265,7 +265,7 @@ export interface AgentRuntimeClient {
    *  agents (not just the renderer). The claim timestamp is preserved
    *  across heartbeats so peers can tell who started first. Auto-
    *  expires; the turn loop refreshes the lease periodically. Used
-   *  by `cumora glance` so agents can read the room before they
+   *  by `lingxiloop glance` so agents can read the room before they
    *  commit a reply. */
   markThinking(agentId: string, conversationIds: string[], ttlSec?: number): Promise<void>
   /** Drop the thinking claim. Best-effort — TTL will clean up if this
@@ -378,7 +378,7 @@ export interface AgentRuntimeClient {
   }): Promise<{ posted: boolean }>
 
   // === Steering busy heartbeat ===
-  /** Renew the per-agent "busy" lease in Redis. The cumora-server
+  /** Renew the per-agent "busy" lease in Redis. The lingxiloop-server
    *  reads `busy:<agentId>` when a new user message lands to decide
    *  whether to deliver a steer event (mid-turn injection) or a
    *  plain wake (post-turn pick-up). The pod calls this at turn

@@ -1,5 +1,5 @@
 /**
- * Integration coverage for the `cumora memory` CLI subcommands. Both
+ * Integration coverage for the `lingxiloop memory` CLI subcommands. Both
  * paths write to `agent_workspace` + `agent_log`; the embedding side
  * goes through the OpenAI text-embedding API which we stub out via
  * the test-only override hook on embeddings.ts.
@@ -14,7 +14,7 @@
  *   - `memory delete <id>` removes the row
  *
  * Run via:
- *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test \
+ *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \
  *     npm run test:integration
  */
 import { test, before, beforeEach, after } from 'node:test'

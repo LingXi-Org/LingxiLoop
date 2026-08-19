@@ -1,4 +1,4 @@
-package io.cumora.app;
+package cn.lingxilearn.loop;
 
 import com.getcapacitor.BridgeActivity;
 

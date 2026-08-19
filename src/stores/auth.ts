@@ -44,8 +44,8 @@ interface AuthState {
   markReady: () => void
 }
 
-const TOKEN_KEY = 'cumora.auth.token'
-const COMPANY_KEY = 'cumora.auth.company'
+const TOKEN_KEY = 'lingxiloop.auth.token'
+const COMPANY_KEY = 'lingxiloop.auth.company'
 
 export const useAuth = create<AuthState>((set) => ({
   token: localStorage.getItem(TOKEN_KEY),

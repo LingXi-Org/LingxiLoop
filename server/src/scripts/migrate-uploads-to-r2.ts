@@ -4,7 +4,7 @@
  *
  * Scope:
  *   - participants.avatar_url   → `/uploads/avatar-…png` becomes
- *                                 `https://cdn.cumora.ai/avatars/…png`
+ *                                 `https://cdn.example.com/avatars/…png`
  *   - messages.attachment       → adds `key` to the JSONB and rewrites
  *                                 `url` to the storage layer's fresh URL
  *                                 (HMAC-signed for `attachments/` prefix).

@@ -1,6 +1,6 @@
 # Push notifications (iOS APNs + Android FCM)
 
-Cumora's mobile clients deliver chat-message notifications when the app
+LingxiLoop's mobile clients deliver chat-message notifications when the app
 is backgrounded or killed — iOS via APNs, Android via FCM. When
 the app is foregrounded the in-app `NotificationToasts` stack handles
 presentation instead — see `src/components/NotificationToasts.tsx`.
@@ -37,10 +37,10 @@ at boot.
 
 1. **Enable Push Notifications on the bundle id.**
    - developer.apple.com → Certificates, IDs & Profiles → Identifiers
-   - Select `io.cumora.app` → check **Push Notifications** under
+   - Select `cn.lingxilearn.loop` → check **Push Notifications** under
      Capabilities → **Save**.
 2. **Mint an APNs Auth Key (`.p8`).**
-   - developer.apple.com → Keys → **+** → name it "Cumora APNs" →
+   - developer.apple.com → Keys → **+** → name it "LingxiLoop APNs" →
      check **Apple Push Notifications service (APNs)** → Continue → Register.
    - **Download the `.p8` once**. Apple will not let you download it again.
    - Record the **Key ID** shown on the keys list (10-char string).
@@ -55,47 +55,29 @@ repo) and point the env vars at it.
 ### Local dev (`.env`)
 
 ```sh
-APNS_KEY_PATH=/Users/<you>/.cumora-secrets/AuthKey_<KEY_ID>.p8
+APNS_KEY_PATH=/Users/<you>/.lingxiloop-secrets/AuthKey_<KEY_ID>.p8
 APNS_KEY_ID=<KEY_ID>                # the 10-char Key ID
 APNS_TEAM_ID=<TEAM_ID>              # the 10-char Team ID
-APNS_TOPIC=io.cumora.app            # matches the bundle id
+APNS_TOPIC=cn.lingxilearn.loop            # matches the bundle id
 APNS_ENV=development                # sandbox endpoint for Debug builds
 ```
 
-### Production (GKE — see `server/k8s/cumora-server.gke.yaml` for a deployment template)
+### Production Compose
 
-Two Secrets:
+Mobile publishing is not part of the current CI. If push is tested manually,
+store the APNs `.p8` on the production host outside the repository and add
+these values to `/opt/lingxiloop/.env.secrets`:
 
-1. **`cumora`** — already exists. Append the four APNs scalars to it:
-   ```sh
-   kubectl get secret cumora -o json \
-     | jq '.data["APNS_KEY_ID"]   |= "'$(echo -n "<KEY_ID>"   | base64)'"
-         | .data["APNS_TEAM_ID"]  |= "'$(echo -n "<TEAM_ID>" | base64)'"
-         | .data["APNS_TOPIC"]    |= "'$(echo -n "io.cumora.app" | base64)'"
-         | .data["APNS_ENV"]      |= "'$(echo -n "production"  | base64)'"' \
-     | kubectl apply -f -
-   ```
-   Or interactively: `kubectl edit secret cumora` and add the four base64-encoded keys.
+```sh
+APNS_KEY_PATH=/opt/lingxiloop/secrets/AuthKey_<KEY_ID>.p8
+APNS_KEY_ID=<KEY_ID>
+APNS_TEAM_ID=<TEAM_ID>
+APNS_TOPIC=cn.lingxilearn.loop
+APNS_ENV=production
+```
 
-2. **`cumora-apns-key`** — new, holds only the `.p8` file. Create with:
-   ```sh
-   kubectl create secret generic cumora-apns-key \
-     --from-file=AuthKey_<KEY_ID>.p8=/path/to/AuthKey_<KEY_ID>.p8
-   ```
-   The deployment mounts this at `/var/run/secrets/cumora-apns/` and
-   sets `APNS_KEY_PATH` accordingly (add the volume + mount to your
-   production deployment manifest).
-   The mount is declared `optional: true` so pods boot cleanly even
-   when this secret is absent — the push path soft-disables itself.
-
-3. **Apply the deployment** to pick up the new volume mount:
-   ```sh
-   kubectl apply -f <your-deployment>.yaml
-   kubectl rollout restart deployment/cumora-server
-   ```
-
-If you change the Key ID later, update `APNS_KEY_PATH` in your
-deployment manifest to match the new filename inside the secret.
+The path must be mounted into the LingxiLoop container before enabling push.
+CI does not upload mobile credentials or create mobile artifacts.
 
 ### Dev ↔ prod entitlement matching
 

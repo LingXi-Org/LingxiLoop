@@ -23,7 +23,7 @@ import { pool } from './db/pool.js'
 import { env } from './env.js'
 import { fcmConfigured, fcmSendOne } from './fcm.js'
 
-/** Push payload — narrowed to the fields Cumora actually populates today.
+/** Push payload — narrowed to the fields LingxiLoop actually populates today.
  *  Keep it shaped like APNs `aps` so the future Android port maps cleanly. */
 export interface PushPayload {
   title: string

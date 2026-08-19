@@ -1,6 +1,6 @@
 /**
  * Per-(agent, conversation) "seen seq" boundary tracking, stored in Redis with
- * short TTL. Used by `cumora reply`'s freshness preflight to detect when a
+ * short TTL. Used by `lingxiloop reply`'s freshness preflight to detect when a
  * peer posted in this conversation DURING the agent's triage+compose window,
  * so the second sender's INSERT gets HELD instead of colliding (e.g. Iris and
  * Marcus both posting "3" in a counting game).
@@ -24,7 +24,7 @@
 import { redis } from '../redis.js'
 
 const TTL_SECONDS = 600 // 10 minutes — well over any plausible compose window
-const KEY_PREFIX = 'cumora:seen'
+const KEY_PREFIX = 'lingxiloop:seen'
 
 function key(agentId: string, conversationId: string): string {
   return `${KEY_PREFIX}:${agentId}:${conversationId}`
@@ -82,7 +82,7 @@ export async function getSeen(agentId: string, conversationId: string): Promise<
 // ─── Compose anchor (turn-start timestamp) ────────────────────────────────
 //
 // The freshness preflight above uses `recordSeen` / `getSeen`, which advance
-// every time the agent runs `cumora messages` or `cumora glance`. That broke
+// every time the agent runs `lingxiloop messages` or `lingxiloop glance`. That broke
 // in one observed collision: two agents woke on the same boundary, agent B
 // glanced AFTER agent A posted → glance advanced B's seen-baseline PAST A's
 // new post → preflight saw "nothing newer" → B's stale draft slipped
@@ -98,7 +98,7 @@ export async function getSeen(agentId: string, conversationId: string): Promise<
 // Lifecycle: daemon writes at turn START; cli.cmdReply reads on preflight;
 // cleared on successful post (or TTL — same 10min as seen).
 
-const ANCHOR_PREFIX = 'cumora:compose-anchor'
+const ANCHOR_PREFIX = 'lingxiloop:compose-anchor'
 
 function anchorKey(agentId: string, conversationId: string): string {
   return `${ANCHOR_PREFIX}:${agentId}:${conversationId}`
@@ -152,7 +152,7 @@ export async function clearComposeAnchor(agentId: string, conversationId: string
 
 // ─── Hold token (HELD-acknowledgement gate for override flags) ────────────
 //
-// `--send-anyway` (cumora reply) and `--force` (doc/calendar create) exist so
+// `--send-anyway` (lingxiloop reply) and `--force` (doc/calendar create) exist so
 // an agent that WAS held can re-commit after reviewing the held context.
 // Agents learned to pass the flag PREEMPTIVELY to save a round-trip, which
 // turns the server-side gate into a no-op — the 2026-06-11/12 double-
@@ -185,7 +185,7 @@ const HOLD_TTL_SECONDS = 120 // a HELD acknowledgement is only meaningful in
 // the same breath as the HELD itself: HELD → re-read → re-run is seconds,
 // not minutes. Long TTLs turn yielded holds into future bypass ammunition.
 
-const HOLD_PREFIX = 'cumora:held'
+const HOLD_PREFIX = 'lingxiloop:held'
 
 function holdKey(agentId: string, scope: string): string {
   return `${HOLD_PREFIX}:${agentId}:${scope}`

@@ -64,10 +64,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>io.cumora.app.oauth</string>
+			<string>cn.lingxilearn.loop.oauth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>cumora</string>
+				<string>lingxiloop</string>
 			</array>
 		</dict>
 	</array>

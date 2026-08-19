@@ -1,0 +1,30 @@
+name: LingxiLoop production smoke
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: lingxiloop-production-smoke
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      LINGXILOOP_SMOKE_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+      LINGXILOOP_SMOKE_TOKEN: ${{ secrets.LINGXILOOP_SMOKE_TOKEN }}
+      LINGXILOOP_SMOKE_COMPANY_ID: ${{ secrets.LINGXILOOP_SMOKE_COMPANY_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: HTTPS, auth, WebSocket, database, Redis and LingxiGraph
+        run: node scripts/release-smoke.mjs

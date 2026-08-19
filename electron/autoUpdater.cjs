@@ -1,9 +1,9 @@
 /* eslint-env node */
 /**
- * Cumora auto-update — ported from alma's auto-updater.ts.
+ * LingxiLoop auto-update — ported from alma's auto-updater.ts.
  *
  * Pulls the latest-mac.yml / latest.yml / latest-linux.yml from the
- * `generic` publish provider configured in package.json (updates.cumora.ai,
+ * `generic` publish provider configured in package.json (github.com/LingXi-Org/LingxiLoop/releases,
  * R2-backed), with the GitHub Release as a fallback feed if the generic
  * one ever 404s. The flow:
  *

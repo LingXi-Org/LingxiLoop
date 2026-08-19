@@ -1,5 +1,5 @@
-# cumora-server image build context — server runtime + the web SPA bundle.
-# The same pod serves api.cumora.ai (JSON) AND app.cumora.ai (HTML+JS), so
+# lingxiloop-server image build context — server runtime + the web SPA bundle.
+# The same container serves the API and Web renderer, so
 # the build pulls in both the server source and the frontend source. The
 # frontend gets compiled in a dedicated multi-stage build inside the
 # Dockerfile (full devDeps install, `npm run build`); the result lands as

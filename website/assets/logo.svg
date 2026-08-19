@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="70" y1="60" x2="980" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1e3f5f"/>
+      <stop offset="1" stop-color="#1e3f5f"/>
+    </linearGradient>
+
+    <linearGradient id="furHead" x1="280" y1="170" x2="870" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fbf1d9"/>
+      <stop offset="1" stop-color="#fbf1d9"/>
+    </linearGradient>
+
+    <linearGradient id="furBody" x1="120" y1="260" x2="860" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fbefd5"/>
+      <stop offset="1" stop-color="#fbefd5"/>
+    </linearGradient>
+
+    <linearGradient id="darkPart" x1="250" y1="130" x2="1020" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2F3F52"/>
+      <stop offset="1" stop-color="#1F2C3E"/>
+    </linearGradient>
+
+    <radialGradient
+      id="neckShadow"
+      cx="0"
+      cy="0"
+      r="1"
+      gradientUnits="userSpaceOnUse"
+      gradientTransform="translate(390 675) rotate(26) scale(250 120)"
+    >
+      <stop offset="0" stop-color="#CDBB97" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#CDBB97" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+  </defs>
+
+
+  <g id="artwork">
+
+    <!-- Background -->
+    <g transform="translate(-5.7 51.95) translate(512 512) rotate(0) scale(1.22 1.22) translate(-512 -512)">
+      <rect width="1024" height="1024" fill="url(#bg)"/>
+    </g>
+
+
+    <!--
+      BODY
+      Rebuilt using continuous cubic Bézier curves.
+
+      The long left-hand boundary and the long body sweep toward
+      the lower-right now form continuous geometric curves.
+
+      No long polygonal L segments are used on the visible contour.
+    -->
+    <g transform="translate(-36.35 16.29) translate(509.11 612.8) rotate(0) scale(0.92 0.92) translate(-509.11 -612.8)">
+      <path
+        d="
+          M 134.75 988.30
+
+          C 132.00 905.00,
+            132.50 790.00,
+            135.50 690.00
+
+          C 137.00 650.00,
+            138.50 625.00,
+            140.68 607.80
+
+          C 153.00 548.00,
+            170.00 487.00,
+            194.00 430.00
+
+          C 218.00 373.00,
+            244.00 313.00,
+            289.33 258.12
+
+          C 337.00 217.00,
+            404.00 187.00,
+            472.00 186.00
+
+          C 427.00 246.00,
+            391.00 320.00,
+            382.00 382.00
+
+          C 376.00 424.00,
+            382.00 458.00,
+            404.20 471.53
+
+          C 367.00 507.00,
+            350.00 546.00,
+            359.00 583.00
+
+          C 370.00 628.00,
+            415.00 661.00,
+            474.00 698.00
+
+          C 548.00 744.00,
+            646.00 799.00,
+            730.38 866.59
+
+          C 782.00 908.00,
+            840.00 966.00,
+            871.00 1011.00
+
+          C 878.00 1021.00,
+            882.00 1030.00,
+            883.47 1039.63
+
+          C 775.00 1040.00,
+            665.00 1040.00,
+            557.00 1039.90
+
+          C 449.00 1039.80,
+            342.00 1039.40,
+            239.34 1039.18
+
+          C 196.00 1040.50,
+            166.00 1038.00,
+            150.00 1024.00
+
+          C 140.00 1015.00,
+            136.00 1001.00,
+            134.75 988.30
+
+          Z
+        "
+        fill="url(#furBody)"
+      />
+    </g>
+
+
+    <!-- Neck shadow -->
+    <g transform="translate(14.06 13.33) translate(457.22 738.68) rotate(-5.64) scale(1.09 1.09) translate(-457.22 -738.68)">
+      <ellipse
+        cx="478.33"
+        cy="702.77"
+        rx="250"
+        ry="120"
+        transform="rotate(26 390 675)"
+        fill="url(#neckShadow)"
+        filter="url(#softBlur)"
+      />
+    </g>
+
+
+    <!-- Left ear -->
+    <g transform="translate(8.98 27.46) translate(290 183) rotate(8.77) scale(1 1) translate(-290 -183)">
+      <ellipse
+        cx="290"
+        cy="183"
+        rx="88.23"
+        ry="127"
+        transform="rotate(-38 290 183)"
+        fill="url(#furHead)"
+      />
+    </g>
+
+    <g transform="translate(-4.9 12.32) translate(294 191) rotate(0) scale(1 1) translate(-294 -191)">
+      <ellipse
+        cx="294"
+        cy="191"
+        rx="52.77"
+        ry="84"
+        transform="rotate(-35 294 191)"
+        fill="url(#darkPart)"
+      />
+    </g>
+
+
+    <!-- Right ear -->
+    <g transform="translate(-21.46 42.47) translate(748 194) rotate(0) scale(1 1) translate(-748 -194)">
+      <ellipse
+        cx="748"
+        cy="194"
+        rx="78.83"
+        ry="116"
+        transform="rotate(34 748 194)"
+        fill="url(#furHead)"
+      />
+    </g>
+
+    <g transform="translate(-22.77 40.64) translate(750 201) rotate(0) scale(1 1) translate(-750 -201)">
+      <ellipse
+        cx="750"
+        cy="201"
+        rx="47.48"
+        ry="80"
+        transform="rotate(33 750 201)"
+        fill="url(#darkPart)"
+      />
+    </g>
+
+
+    <!--
+      HEAD
+      Irregular ellipse fitted entirely with smooth cubic Bézier curves.
+
+      Characteristics:
+      - broad upper section
+      - slightly narrower lower section
+      - softly asymmetric
+      - no angular transition points
+      - continuously varying curvature
+    -->
+    <g transform="translate(11.46 36.58) translate(542.78 445.92) rotate(188.95) scale(1 1) translate(-542.78 -445.92)">
+      <path
+        d="
+          M 585.00 190.00
+
+          C 500.00 183.00,
+            411.00 186.00,
+            345.00 213.00
+
+          C 273.00 242.00,
+            228.00 293.00,
+            220.00 365.00
+
+          C 213.00 431.00,
+            237.00 500.00,
+            282.00 561.00
+
+          C 326.00 621.00,
+            378.00 674.00,
+            437.00 702.00
+
+          C 495.00 730.00,
+            566.00 738.00,
+            628.00 727.00
+
+          C 700.00 714.00,
+            761.00 676.00,
+            810.00 619.00
+
+          C 856.00 565.00,
+            878.00 506.00,
+            870.00 443.00
+
+          C 862.00 378.00,
+            838.00 316.00,
+            794.00 269.00
+
+          C 756.00 229.00,
+            708.00 207.00,
+            650.00 197.00
+
+          C 628.00 193.00,
+            606.00 191.00,
+            585.00 190.00
+
+          Z
+        "
+        transform="rotate(15 592 445)"
+        fill="url(#furHead)"
+      />
+    </g>
+
+
+    <!-- Dark face-side area -->
+    <g transform="translate(-72.05 -64.07) translate(849.24 556.44) rotate(-0.85) scale(0.67 0.67) translate(-849.24 -556.44)">
+      <path
+        d="
+          M760 458
+          C823 440 870 398 913 360
+          C954 325 1009 337 1023 389
+          C1033 427 1026 487 1007 553
+          C987 626 957 687 926 733
+          C892 782 844 783 785 751
+          C707 708 669 647 671 580
+          C672 536 699 494 760 458
+          Z
+        "
+        fill="url(#darkPart)"
+      />
+    </g>
+
+
+    <!-- Nose -->
+    <g transform="translate(13.39 1.08) translate(503 493) rotate(0) scale(1 1) translate(-503 -493)">
+      <ellipse
+        cx="503"
+        cy="493"
+        rx="35"
+        ry="49"
+        fill="url(#darkPart)"
+      />
+    </g>
+
+
+    <!-- Mouth -->
+    <g transform="translate(-32.6 6.67) translate(624.46 647.44) rotate(0) scale(0.85 0.85) translate(-624.46 -647.44)">
+      <path
+        d="
+          M584 641
+          C602 664 627 678 653 681
+          C669 683 679 677 679 670
+          C679 660 669 658 652 654
+          C632 649 616 639 601 622
+          C592 611 578 611 572 620
+          C567 628 571 635 584 641
+          Z
+        "
+        fill="url(#darkPart)"
+      />
+    </g>
+
+  </g>
+</svg>

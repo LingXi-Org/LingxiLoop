@@ -17,7 +17,7 @@
  *     PNG so the test stays hermetic.
  *
  * Run via:
- *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test \
+ *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \
  *     npm run test:integration
  */
 import { test, before, beforeEach, after } from 'node:test'
@@ -394,7 +394,7 @@ test('[integration] image_url fetch fail on attempt 0 → retry with images stri
 // ────────────────────────────────────────────────────────────────────────────
 
 test('[integration] generateAndUploadImage: r.data[0].url fallback — fetches remote bytes and persists attachment', async () => {
-  // When the image API returns a URL instead of inline b64, cumora's
+  // When the image API returns a URL instead of inline b64, lingxiloop's
   // `generateAndUploadImage` fetches the URL and uploads the resulting
   // buffer. We mock globalThis.fetch to return a known PNG byte sequence
   // so the test stays hermetic.
@@ -421,7 +421,7 @@ test('[integration] generateAndUploadImage: r.data[0].url fallback — fetches r
   ])
   assert.equal(res.ok, true, `runCli failed: ${res.text}`)
   assert.equal(fetchedUrl, 'https://stub.image-api.example/generated/abc.png',
-    'cumora must have fetched the URL returned by the image API')
+    'lingxiloop must have fetched the URL returned by the image API')
 
   const { rows } = await pool.query<{ attachment: Record<string, unknown> | null }>(
     `SELECT attachment FROM messages WHERE conversation_id = $1 AND author_id = $2`,
@@ -443,7 +443,7 @@ test('[integration] MAX_HOPS cap-out: emit turn.cap_reached event when model is 
   // The Iris-doesn't-finish bug: model promises "我来下载…" in hop 1
   // (the tool call IS posted), then spends hops 2–4 doing the work,
   // and the loop runs out of headroom before the final hop where the
-  // model would have called cumora reply with the result. Pre-fix,
+  // model would have called lingxiloop reply with the result. Pre-fix,
   // the run row said "Completed with N tool calls" with no observable
   // signal that we cut the model off mid-task.
   //
@@ -503,7 +503,7 @@ test('[integration] MAX_HOPS cap-out: emit turn.cap_reached event when model is 
   assert.equal(capEv.length, 1, 'exactly one turn.cap_reached event')
   assert.equal(capEv[0].data.toolCallCount, 200, 'tool_call_count reflects the full MAX_HOPS budget')
   assert.equal(capEv[0].data.maxHops, 200, 'cap_reached carries the MAX_HOPS constant')
-  assert.equal(capEv[0].data.postedReplyViaTool, false, 'no cumora reply in this scenario')
+  assert.equal(capEv[0].data.postedReplyViaTool, false, 'no lingxiloop reply in this scenario')
 
   // Run row reflects the cap-out in its summary.
   const { rows: runs } = await pool.query<{ status: string; summary: string; tool_call_count: number }>(

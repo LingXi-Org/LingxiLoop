@@ -23,15 +23,15 @@ import {
 
 /* ============================ recipientAccepted ============================ */
 
-const envSingleDomain = { EMAIL_ROOT_DOMAINS: 'cumora.ai' } as never as Parameters<typeof recipientAccepted>[1]
-const envMultiDomain = { EMAIL_ROOT_DOMAINS: 'cumora.ai, cumora.dev , example.com' } as never as Parameters<typeof recipientAccepted>[1]
+const envSingleDomain = { EMAIL_ROOT_DOMAINS: 'mail.loop.example.com' } as never as Parameters<typeof recipientAccepted>[1]
+const envMultiDomain = { EMAIL_ROOT_DOMAINS: 'mail.loop.example.com, lingxiloop.dev , example.com' } as never as Parameters<typeof recipientAccepted>[1]
 
 test('recipientAccepted matches exact apex', () => {
-  assert.equal(recipientAccepted('alice@cumora.ai', envSingleDomain), true)
+  assert.equal(recipientAccepted('alice@mail.loop.example.com', envSingleDomain), true)
 })
 
 test('recipientAccepted matches subdomain', () => {
-  assert.equal(recipientAccepted('alice@acme.cumora.ai', envSingleDomain), true)
+  assert.equal(recipientAccepted('alice@acme.mail.loop.example.com', envSingleDomain), true)
 })
 
 test('recipientAccepted rejects unknown domain', () => {
@@ -39,13 +39,13 @@ test('recipientAccepted rejects unknown domain', () => {
 })
 
 test('recipientAccepted handles multi-domain allowlist', () => {
-  assert.equal(recipientAccepted('alice@cumora.dev', envMultiDomain), true)
+  assert.equal(recipientAccepted('alice@lingxiloop.dev', envMultiDomain), true)
   assert.equal(recipientAccepted('alice@example.com', envMultiDomain), true)
   assert.equal(recipientAccepted('alice@other.org', envMultiDomain), false)
 })
 
 test('recipientAccepted is case-insensitive', () => {
-  assert.equal(recipientAccepted('ALICE@CUMORA.AI', envSingleDomain), true)
+  assert.equal(recipientAccepted('ALICE@MAIL.LOOP.EXAMPLE.COM', envSingleDomain), true)
 })
 
 test('recipientAccepted rejects malformed', () => {

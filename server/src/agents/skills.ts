@@ -8,10 +8,10 @@
  *
  * Progressive disclosure is the whole point: the wake prompt lists ONLY
  * each skill's `name` + `description` (~100 tokens per skill). The
- * agent runs `cumora skills read <name>` to pull the full SKILL.md
+ * agent runs `lingxiloop skills read <name>` to pull the full SKILL.md
  * body into its next turn's context only when a task calls for it.
  * Bundled scripts / references / assets load on demand the same way
- * (`cumora skills read <name> <sub-path>`).
+ * (`lingxiloop skills read <name> <sub-path>`).
  *
  * Skills are PER-AGENT — Iris installing a skill doesn't give it to
  * Atlas, mirroring `agent_workspace` semantics. An agent who wants
@@ -208,7 +208,7 @@ export async function installSkillFromManifest(args: {
     [agentId, `skills/${manifest.name}/SKILL.md`],
   )
   if (existing[0]) {
-    throw new Error(`skill "${manifest.name}" already installed — \`cumora skills delete ${manifest.name}\` first if you want to reinstall`)
+    throw new Error(`skill "${manifest.name}" already installed — \`lingxiloop skills delete ${manifest.name}\` first if you want to reinstall`)
   }
 
   // Same tenant lookup the CLI's workspace writes do — without it

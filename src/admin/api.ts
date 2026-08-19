@@ -12,10 +12,10 @@ import { getAuthToken, useAuth } from '@/stores/auth'
 
 function origin(): string {
   if (typeof localStorage !== 'undefined') {
-    const override = localStorage.getItem('cumora.serverUrl')
+    const override = localStorage.getItem('lingxiloop.serverUrl')
     if (override) return override.replace(/\/+$/, '')
   }
-  const baked = import.meta.env.VITE_CUMORA_API_BASE as string | undefined
+  const baked = import.meta.env.VITE_LINGXILOOP_API_BASE as string | undefined
   if (baked) return baked.replace(/\/+$/, '')
   return ''
 }

@@ -116,7 +116,7 @@ interface StateData {
  *  provider-callback chain that delivers the user's token to any origin
  *  via the fragment. The check is a strict-prefix match so subpaths are
  *  fine (`http://localhost:5180/anything`) but origin spoofs aren't
- *  (`http://evil.com?https://app.cumora.ai/`). */
+ *  (`http://evil.com?https://loop.example.com/`). */
 export function returnUrlAllowed(url: string): boolean {
   if (!url) return false
   return env.AUTH_RETURN_ALLOWLIST.some((prefix) => url.startsWith(prefix))
@@ -233,8 +233,8 @@ async function fetchProfile(p: Provider, accessToken: string): Promise<Normalize
   // and pick `primary && verified`. Otherwise refuse — we need a real address
   // for the user record + cross-provider auto-binding.
   const [userR, emailsR] = await Promise.all([
-    fetch(cfg.userInfoUrl, { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json', 'user-agent': 'cumora' } }),
-    fetch('https://api.github.com/user/emails', { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json', 'user-agent': 'cumora' } }),
+    fetch(cfg.userInfoUrl, { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json', 'user-agent': 'lingxiloop' } }),
+    fetch('https://api.github.com/user/emails', { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json', 'user-agent': 'lingxiloop' } }),
   ])
   if (!userR.ok) throw new Error(`github user ${userR.status}`)
   if (!emailsR.ok) throw new Error(`github emails ${emailsR.status}`)
@@ -263,7 +263,7 @@ const AVATAR_MIME_TO_EXT: Record<string, string> = {
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024  // 2MB — way more than any real avatar
 const AVATAR_FETCH_TIMEOUT_MS = 5000
 
-/** Pull the provider's avatar URL down and re-host on Cumora storage so
+/** Pull the provider's avatar URL down and re-host on LingxiLoop storage so
  *  the renderer fetches from our CDN, not lh3.googleusercontent.com /
  *  avatars.githubusercontent.com. Three wins:
  *    - Provider URL rotation (Google changes the ACg8oc... path when the
@@ -281,7 +281,7 @@ export async function mirrorAvatar(userId: string, providerUrl: string | null): 
   try {
     const r = await fetch(providerUrl, {
       signal: ctl.signal,
-      headers: { 'user-agent': 'cumora' },
+      headers: { 'user-agent': 'lingxiloop' },
     })
     if (!r.ok) return providerUrl
     const mime = (r.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase()
@@ -447,7 +447,7 @@ export async function findOrCreateUserByProfile(
     )
 
     // Mirror the provider's avatar to our storage so the renderer fetches
-    // from cumora's CDN, not third-party hosts. Falls back to provider
+    // from lingxiloop's CDN, not third-party hosts. Falls back to provider
     // URL on failure, then to Gravatar — never empty on first login.
     // Stamp onto users.avatar_url so every workspace this user later joins
     // (via invite or self-created) re-uses ONE face, not per-tenant
@@ -506,7 +506,7 @@ export async function findOrCreateUserByProfile(
     if (sub2apiConfigured()) {
       try {
         const r = await provisionSub2apiUser({
-          cumoraUserId: userId,
+          lingxiloopUserId: userId,
           email: profile.email,
           displayName: profile.displayName,
           tier: trialTier,

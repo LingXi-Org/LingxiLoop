@@ -38,7 +38,7 @@
  *  Map. Pure makes it directly unit-testable; module-level Map is
  *  fine because the agent pod is single-process and per-agent
  *  serialization is enforced by pod-agent.ts's drain mutex. The
- *  cumora-server uses the inproc runtime for tests where multiple
+ *  lingxiloop-server uses the inproc runtime for tests where multiple
  *  agents share one process, but per-agent state still doesn't
  *  collide because each agentId gets its own bucket.
  */

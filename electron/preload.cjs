@@ -2,7 +2,7 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 /** Renderer-side surface exposed to the React app. */
-contextBridge.exposeInMainWorld('cumora', {
+contextBridge.exposeInMainWorld('lingxiloop', {
   isElectron: true,
   platform: process.platform,
   versions: {

@@ -1,18 +1,18 @@
-# cumora-agent-computer — the per-agent pod image.
+# lingxiloop-agent-computer — the per-agent pod image.
 #
 # Inside the pod two processes run:
-#   1. /usr/local/bin/cumora-fuse — mounts the agent's slice of
+#   1. /usr/local/bin/lingxiloop-fuse — mounts the agent's slice of
 #      `agent_workspace` from Postgres at /workspace, via FUSE. The
 #      agent's persona dir, memory, skills, scratch — all on the FS,
 #      backed by DB rows.
 #   2. node /app/agent-computer.cjs — the agent loop. Connects to the
-#      cumora server's /runtime/wake-stream over SSE, processes wakes,
+#      lingxiloop server's /runtime/wake-stream over SSE, processes wakes,
 #      idle-times-out and exits cleanly when there's no work.
 #
 # Build (from repo root, AFTER running build-agent-bundle.mjs):
 #   docker build \
 #     -f server/docker/agent-computer.Dockerfile \
-#     -t quay.io/yetoneful/cumora-agent-computer:dev \
+#     -t ghcr.io/lingxi-org/lingxiloop-agent-computer:dev \
 #     .
 #
 # OrbStack auto-loads images into its bundled K8s; no `docker push`
@@ -26,7 +26,7 @@
 ARG UV_VERSION=0.5.13
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv-stage
 
-# ─── stage 1: build cumora-fuse (Go) ────────────────────────────────
+# ─── stage 1: build lingxiloop-fuse (Go) ────────────────────────────────
 FROM golang:1.24-bookworm AS fuse-build
 
 WORKDIR /src
@@ -35,20 +35,20 @@ RUN GOPROXY=https://proxy.golang.org,direct go mod download
 COPY agent-fuse/ ./
 RUN GOPROXY=https://proxy.golang.org,direct CGO_ENABLED=0 GOOS=linux go build \
       -ldflags="-s -w" \
-      -o /out/cumora-fuse \
+      -o /out/lingxiloop-fuse \
       .
 
 # ─── stage 2: the runtime image ─────────────────────────────────────
 FROM node:20-bookworm-slim
 
 # tini    — PID-1 reaper / signal forwarder
-# curl / wget — used by the in-pod `cumora` shim + OpenCLI extension fetch
+# curl / wget — used by the in-pod `lingxiloop` shim + OpenCLI extension fetch
 # fuse3   — userspace FUSE: /sbin/mount.fuse3 + /bin/fusermount3
 # bash — required by the runtime bash tool (`spawn('bash', ['-c', ...])`)
 # git / ripgrep / jq — native-tool surface for the agent
 # python3 / python3-pip — for skill bundles that ship python scripts
 # ffmpeg  — media transcoding (agents do A/V work via bash)
-# ca-certificates — TLS to OpenAI and the cumora server
+# ca-certificates — TLS to OpenAI and the lingxiloop server
 # chromium + chromium-driver — agent-driven browser (under Xvfb)
 # xvfb + xauth — virtual X display so Chromium can run "headed" without
 #   a real GPU. OpenCLI requires a real Chrome extension context — pure
@@ -132,32 +132,32 @@ WORKDIR /app
 COPY dist/agent/agent-computer.cjs /app/agent-computer.cjs
 
 # The FUSE driver built in stage 1.
-COPY --from=fuse-build /out/cumora-fuse /usr/local/bin/cumora-fuse
+COPY --from=fuse-build /out/lingxiloop-fuse /usr/local/bin/lingxiloop-fuse
 
 # The shell shim agents invoke via bash → forwards argv to /runtime/cli.
-COPY server/docker/agent-computer-cumora.sh /usr/local/bin/cumora
-# Browser ergonomics wrapper. Agents call `cumora-web search/read` for
+COPY server/docker/agent-computer-lingxiloop.sh /usr/local/bin/lingxiloop
+# Browser ergonomics wrapper. Agents call `lingxiloop-web search/read` for
 # the two common cases; anything richer goes through `opencli browser`
 # directly. Stays in /usr/local/bin so bash finds it via PATH.
-COPY server/docker/agent-computer-cumora-web.sh /usr/local/bin/cumora-web
-RUN chmod +x /usr/local/bin/cumora /usr/local/bin/cumora-web /usr/local/bin/cumora-fuse
+COPY server/docker/agent-computer-lingxiloop-web.sh /usr/local/bin/lingxiloop-web
+RUN chmod +x /usr/local/bin/lingxiloop /usr/local/bin/lingxiloop-web /usr/local/bin/lingxiloop-fuse
 
 # Entrypoint: mount FUSE first, then exec the agent loop.
 COPY server/docker/agent-computer-entrypoint.sh /usr/local/bin/agent-entrypoint
 RUN chmod +x /usr/local/bin/agent-entrypoint
 
 # Env contract — orchestrator injects all of these at pod-spawn time:
-#   CUMORA_AGENT_ID            which agent to wake
-#   CUMORA_AGENT_RUNTIME_URL   server origin (e.g. http://host.docker.internal:5181/runtime)
-#   CUMORA_AGENT_RUNTIME_TOKEN signed JWT pinning agentId + companyId
-#   CUMORA_PG_URL              postgres://agent_<id>:<pw>@…/cumora  (FUSE backend)
-#   CUMORA_AGENT_IDLE_MS       ms before the Pod idle-times-out and exits
+#   LINGXILOOP_AGENT_ID            which agent to wake
+#   LINGXILOOP_AGENT_RUNTIME_URL   server origin (e.g. http://host.docker.internal:5181/runtime)
+#   LINGXILOOP_AGENT_RUNTIME_TOKEN signed JWT pinning agentId + companyId
+#   LINGXILOOP_PG_URL              postgres://agent_<id>:<pw>@…/lingxiloop  (FUSE backend)
+#   LINGXILOOP_AGENT_IDLE_MS       ms before the Pod idle-times-out and exits
 #   OPENAI_API_KEY             agent's LLM key
 #   LINGXIGRAPH_URL            LingxiGraph Runtime container origin, e.g.
 #                              http://lingxigraph-runtime:8124 (only used
 #                              when LINGXILOOP_REASONING_RUNTIME=lingxigraph)
 #   LINGXIGRAPH_TOKEN          bearer token for the runtime, if it requires one
-ENV CUMORA_RUNTIME_CLIENT=http \
+ENV LINGXILOOP_RUNTIME_CLIENT=http \
     NODE_ENV=production \
     DISPLAY=:99 \
     OPENCLI_EXTENSION_DIR=/opt/opencli-extension \

@@ -1,6 +1,6 @@
 /**
- * Cumora R2 gate — Cloudflare Worker that fronts `cdn.cumora.ai` and
- * gates access to the `cumora-attachments` bucket.
+ * LingxiLoop R2 gate — Cloudflare Worker that fronts `cdn.example.com` and
+ * gates access to the `lingxiloop-attachments` bucket.
  *
  * Access model:
  *   - GET /avatars/<key>           → unsigned, public. Portraits aren't
@@ -15,7 +15,7 @@
  *                                    probes from clients.
  *   - everything else              → 405.
  *
- * Secret rotation: rotate `R2_URL_SIGNING_SECRET` on both the Cumora
+ * Secret rotation: rotate `R2_URL_SIGNING_SECRET` on both the LingxiLoop
  * server and `wrangler secret put` here in lockstep. URLs already signed
  * with the old secret stop working at rotation time — fine, every read
  * path re-signs from the stored `attachment.key`.

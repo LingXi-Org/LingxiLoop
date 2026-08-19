@@ -1,6 +1,6 @@
 /**
  * Pins the agent turn loop's lifecycle-event invariants — the
- * observability signals the cumora UI relies on so users don't see a
+ * observability signals the lingxiloop UI relies on so users don't see a
  * stuck "Iris is typing…" indicator or a permanent "thinking" status
  * pill after the agent has actually wrapped up.
  *
@@ -14,7 +14,7 @@
  *      "running" pill in the admin UI reads from this column.
  *
  * Run via:
- *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test \
+ *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \
  *     npm run test:integration
  */
 import { test, before, beforeEach, after } from 'node:test'

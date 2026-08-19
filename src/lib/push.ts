@@ -146,7 +146,7 @@ export async function initPushNotifications(opts: { force?: boolean } = {}): Pro
   lastError = null
   // The console.log calls below are deliberately verbose — they show up
   // in `xcrun simctl spawn booted log stream --predicate
-  // 'subsystem CONTAINS "Cumora"'` AND in Safari Web Inspector when
+  // 'subsystem CONTAINS "LingxiLoop"'` AND in Safari Web Inspector when
   // attached to the device, so when a user reports "no push", we can ask
   // them to attach the Web Inspector and read the trace.
   console.log('[push] init begin force=', opts.force, 'native=', isCapacitorNative)

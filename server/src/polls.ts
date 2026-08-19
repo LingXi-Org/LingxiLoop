@@ -9,7 +9,7 @@
  *
  * This module is consumed by:
  *   - the HTTP /api/polls routes (humans via the UI)
- *   - the agent CLI (`cumora poll create / vote / close`)
+ *   - the agent CLI (`lingxiloop poll create / vote / close`)
  *   - the expiration sweeper (auto-close on expiresAt)
  *
  * All three paths go through here so the WS broadcast, validation, and

@@ -1,5 +1,5 @@
 #!/bin/sh
-# cumora-agent-computer entrypoint.
+# lingxiloop-agent-computer entrypoint.
 #
 # Brings up the agent's runtime in dependency order, then execs the
 # long-running agent loop:
@@ -10,7 +10,7 @@
 #                               cookies / login state survive pod restarts
 #   3. opencli daemon         — local bridge (port 19825) the agent uses
 #                               via `opencli browser ...` to drive Chromium
-#   4. cumora-fuse on /workspace — agent's per-agent slice of the DB-FS
+#   4. lingxiloop-fuse on /workspace — agent's per-agent slice of the DB-FS
 #   5. node /app/agent-computer.cjs — the agent loop
 #
 # All side processes are backgrounded; the agent loop holds the wait
@@ -19,8 +19,8 @@
 # before SIGKILL takes over.
 set -eu
 
-: "${CUMORA_AGENT_RUNTIME_URL:?CUMORA_AGENT_RUNTIME_URL not set — orchestrator should inject it}"
-: "${CUMORA_AGENT_RUNTIME_TOKEN:?CUMORA_AGENT_RUNTIME_TOKEN not set — orchestrator should inject it}"
+: "${LINGXILOOP_AGENT_RUNTIME_URL:?LINGXILOOP_AGENT_RUNTIME_URL not set — orchestrator should inject it}"
+: "${LINGXILOOP_AGENT_RUNTIME_TOKEN:?LINGXILOOP_AGENT_RUNTIME_TOKEN not set — orchestrator should inject it}"
 
 CHROME_PROFILE_DIR="${CHROME_PROFILE_DIR:-/opt/chrome-profile}"
 OPENCLI_EXTENSION_DIR="${OPENCLI_EXTENSION_DIR:-/opt/opencli-extension}"
@@ -105,10 +105,10 @@ CHROME_PID=$!
 # on demand.
 (opencli doctor >/tmp/opencli-doctor.log 2>&1 || true) &
 
-# ─── 4. cumora-fuse ───────────────────────────────────────────────────
-/usr/local/bin/cumora-fuse \
-  "$CUMORA_AGENT_RUNTIME_URL" \
-  "$CUMORA_AGENT_RUNTIME_TOKEN" \
+# ─── 4. lingxiloop-fuse ───────────────────────────────────────────────────
+/usr/local/bin/lingxiloop-fuse \
+  "$LINGXILOOP_AGENT_RUNTIME_URL" \
+  "$LINGXILOOP_AGENT_RUNTIME_TOKEN" \
   /workspace &
 FUSE_PID=$!
 
@@ -150,7 +150,7 @@ done
 if ! mountpoint -q /workspace 2>/dev/null; then
   echo "[entrypoint] warning: /workspace did not become a FUSE mountpoint within 10s"
 else
-  echo "[entrypoint] /workspace mounted via cumora-fuse"
+  echo "[entrypoint] /workspace mounted via lingxiloop-fuse"
 fi
 
 # ─── 5. agent loop ────────────────────────────────────────────────────

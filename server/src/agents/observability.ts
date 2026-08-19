@@ -340,7 +340,7 @@ export async function getTriageEconomics(args: {
   // IMPORTANT: cost is computed HERE, at query time, from the stored TOKEN COUNTS
   // × the CURRENT prices — NOT from the stored cost_usd (which froze whatever price
   // was in effect at record time). This way a price change (code OR
-  // CUMORA_MODEL_PRICES_JSON) instantly re-prices ALL history, matching the
+  // LINGXILOOP_MODEL_PRICES_JSON) instantly re-prices ALL history, matching the
   // "token counts are real, prices are live" promise. We aggregate tokens grouped
   // by (agent, model) because the per-token rate is model-specific.
   const toUsage = (r: { input_tokens: string; cached_tokens: string; cache_creation_tokens: string; output_tokens: string }): TokenUsage => ({

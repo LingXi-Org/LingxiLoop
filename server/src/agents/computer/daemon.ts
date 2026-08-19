@@ -1,18 +1,18 @@
 /**
- * `cumora agent computer` — the BYOA daemon.
+ * `lingxiloop agent computer` — the BYOA daemon.
  *
  * A long-running process on the user's machine (laptop or VPS) that hosts one
- * or more of their Cumora agents, using a local engine (Claude Code / Codex)
+ * or more of their LingxiLoop agents, using a local engine (Claude Code / Codex)
  * as each agent's brain. See docs/BYOA.md.
  *
- * It talks to the Cumora server only over HTTP — no DB/Redis — so it can run
+ * It talks to the LingxiLoop server only over HTTP — no DB/Redis — so it can run
  * anywhere:
- *   - pair once:   cumora agent computer --pair <code> [--server <url>]
- *   - then run:    cumora agent computer [--server <url>]
+ *   - pair once:   lingxiloop agent computer --pair <code> [--server <url>]
+ *   - then run:    lingxiloop agent computer [--server <url>]
  *
  * Per managed agent it: mints a short-lived runtime JWT, holds a wake-stream
  * SSE connection, and on each wake spawns the engine in the agent's isolated
- * home (~/.cumora/agents/<id>/). The engine acts on Cumora via a `cumora`
+ * home (~/.lingxiloop/agents/<id>/). The engine acts on LingxiLoop via a `lingxiloop`
  * shim the daemon writes onto its PATH (which POSTs to /runtime/cli).
  *
  * Standalone: only Node builtins + the DB-free SSE parser + engine.ts.
@@ -33,7 +33,7 @@ import { parseTriage, finalizeTriage, isRateLimited } from '../triage-core.js'
 import { GLANCE_YIELD_RULES } from '../glance-protocol.js'
 import { SKYPE_EMOTICONS_GUIDE } from '../skype-emoticons.js'
 
-const CONFIG_DIR = join(homedir(), '.cumora')
+const CONFIG_DIR = join(homedir(), '.lingxiloop')
 const CONFIG_PATH = join(CONFIG_DIR, 'computer.json')
 const AGENTS_ROOT = join(CONFIG_DIR, 'agents')
 // Per-agent engine session id, persisted OUTSIDE the agent home (so the engine's
@@ -45,9 +45,9 @@ const SESSIONS_DIR = join(CONFIG_DIR, 'sessions')
 // to finish before we kill the engine child. The OS supervisor SIGKILLs not long
 // after SIGTERM, so this is best-effort for SHORT turns; long tasks rely on the
 // session-resume above. Self-update (voluntary) doesn't use this — it waits for
-// idle instead (never interrupts work). Override via CUMORA_SHUTDOWN_GRACE_MS.
-const SHUTDOWN_GRACE_MS = Number(process.env.CUMORA_SHUTDOWN_GRACE_MS) || 15_000
-const DEFAULT_SERVER = process.env.CUMORA_SERVER_URL || 'https://api.cumora.ai'
+// idle instead (never interrupts work). Override via LINGXILOOP_SHUTDOWN_GRACE_MS.
+const SHUTDOWN_GRACE_MS = Number(process.env.LINGXILOOP_SHUTDOWN_GRACE_MS) || 15_000
+const DEFAULT_SERVER = process.env.LINGXILOOP_SERVER_URL?.trim().replace(/\/+$/, '') || ''
 const TOKEN_REFRESH_SKEW_MS = 5 * 60 * 1000 // refresh 5min before expiry
 const AGENT_POLL_MS = 60_000
 const HEARTBEAT_MS = 30_000
@@ -68,7 +68,7 @@ const INBOX_POLL_MS = 20_000
 // engine turn instead of N. Content-blind, no classification. Trades a small reply
 // latency (a beat before the agent starts) for far fewer spawns in a busy room.
 const WAKE_DEBOUNCE_MS = 2_500
-// Same-turn group notice (default ON — set CUMORA_BYOA_STEER_GROUP=0
+// Same-turn group notice (default ON — set LINGXILOOP_BYOA_STEER_GROUP=0
 // to disable). A DIRECT ping (DM / @me / human) is ALWAYS steered into the live
 // turn (see maybeSteer). With this on, plain GROUP activity arriving while busy
 // ALSO gets a single CONTENT-FREE nudge ("N new message(s) in <convo> — glance
@@ -83,10 +83,10 @@ const WAKE_DEBOUNCE_MS = 2_500
 // exactly like a post-wake one — so the coordination-safety objection no longer
 // exists and the busy-room latency win (skip a whole wake→triage→turn cycle per
 // coalesced burst) is taken by default.
-const STEER_GROUP_IN_TURN = process.env.CUMORA_BYOA_STEER_GROUP !== '0'
+const STEER_GROUP_IN_TURN = process.env.LINGXILOOP_BYOA_STEER_GROUP !== '0'
 // Throttle for the content-free group notice so a fast room can't spam the live
 // session — at most one group nudge per this window (direct pings are unthrottled).
-const GROUP_STEER_MIN_INTERVAL_MS = Math.max(0, Number(process.env.CUMORA_BYOA_STEER_GROUP_INTERVAL_MS ?? 8_000))
+const GROUP_STEER_MIN_INTERVAL_MS = Math.max(0, Number(process.env.LINGXILOOP_BYOA_STEER_GROUP_INTERVAL_MS ?? 8_000))
 // Board-awareness: when chat is idle, check the agent's AGENDA (assigned Kanban
 // cards + due calendar events) so it PROACTIVELY picks up assigned board work
 // instead of only reacting to a chat push. Gated like the cloud idle scheduler:
@@ -100,7 +100,7 @@ const GROUP_STEER_MIN_INTERVAL_MS = Math.max(0, Number(process.env.CUMORA_BYOA_S
 // votes were in by 13:53:05 and the tally sat until a player prodded the judge
 // at 13:56:53 — a 4-minute dead-air gap bounded exactly by quiet+check. 90/60
 // caps "it's someone's move and nobody speaks" recovery at ~2.5min while the
-// server-side agenda classifier (support-model, Cumora-subsidized — not the
+// server-side agenda classifier (support-model, LingxiLoop-subsidized — not the
 // operator's quota) stays throttled by these same gates. A real fix is
 // first-class agent reminders; this narrows the gap now.
 const AGENDA_QUIET_MS = 90_000
@@ -127,8 +127,8 @@ const MAX_VISIBLE_ERROR_CHARS = 900
 // regardless of how many agents woke at once. Anthropic/OpenAI short-window
 // burst limits are well above 2/sec so this eliminates the "Server is
 // temporarily limiting requests" storms entirely without slowing the steady
-// state. Override via CUMORA_BYOA_MIN_SPAWN_INTERVAL_MS.
-const MIN_SPAWN_INTERVAL_MS = Math.max(0, Number(process.env.CUMORA_BYOA_MIN_SPAWN_INTERVAL_MS ?? 500))
+// state. Override via LINGXILOOP_BYOA_MIN_SPAWN_INTERVAL_MS.
+const MIN_SPAWN_INTERVAL_MS = Math.max(0, Number(process.env.LINGXILOOP_BYOA_MIN_SPAWN_INTERVAL_MS ?? 500))
 // Per-computer cap on concurrent big-brain spawns. Without this, N agents
 // woken on the same SSE fanout each go to triage + spawn in parallel and
 // all hit the underlying provider (Anthropic/OpenAI) at the same wall-clock
@@ -149,8 +149,8 @@ const MIN_SPAWN_INTERVAL_MS = Math.max(0, Number(process.env.CUMORA_BYOA_MIN_SPA
 // provably cause: in a broadcast room (werewolf, 7 players woken by every group
 // message) the queue ran 6 deep and tail turns waited 215-359s — minutes of
 // user-visible silence purely from queueing. 6 keeps a hard backstop while
-// letting a whole team think in parallel. Override via CUMORA_BYOA_MAX_CONCURRENT_BIG_BRAIN.
-const BIG_BRAIN_CONCURRENCY = Math.max(1, Number(process.env.CUMORA_BYOA_MAX_CONCURRENT_BIG_BRAIN ?? 6))
+// letting a whole team think in parallel. Override via LINGXILOOP_BYOA_MAX_CONCURRENT_BIG_BRAIN.
+const BIG_BRAIN_CONCURRENCY = Math.max(1, Number(process.env.LINGXILOOP_BYOA_MAX_CONCURRENT_BIG_BRAIN ?? 6))
 // Per-computer cap on concurrent SMALL-brain (triage) spawns. The same
 // thundering-herd problem the big-brain sem fixes: when N agents wake on
 // the same SSE fanout, each spawns its own `claude --model haiku` (or
@@ -167,8 +167,8 @@ const BIG_BRAIN_CONCURRENCY = Math.max(1, Number(process.env.CUMORA_BYOA_MAX_CON
 // where most of that was queue wait, delaying every turn behind it. 8 lets a
 // full team's gate checks run in one wave; the shared spawnPacer still caps the
 // provider burst rate, and the 143/timeout storm the cap exists for stays
-// prevented. Override via CUMORA_BYOA_MAX_CONCURRENT_TRIAGE.
-const TRIAGE_CONCURRENCY = Math.max(1, Number(process.env.CUMORA_BYOA_MAX_CONCURRENT_TRIAGE ?? 8))
+// prevented. Override via LINGXILOOP_BYOA_MAX_CONCURRENT_TRIAGE.
+const TRIAGE_CONCURRENCY = Math.max(1, Number(process.env.LINGXILOOP_BYOA_MAX_CONCURRENT_TRIAGE ?? 8))
 // After a rate-limit hit on this agent, skip ITS turns for this long before
 // retrying. Without this, a rate-limited agent re-attempts on EVERY poll +
 // SSE wake, each attempt burning a wasted call on the throttled provider
@@ -265,19 +265,19 @@ const spawnPacer = new AdaptivePacer(MIN_SPAWN_INTERVAL_MS)
 // ─── self-update ──────────────────────────────────────────────────────────
 // Injected by esbuild at build time (agent-cli/build.mjs). Undefined when run
 // un-bundled (tsx dev); guarded with typeof so that path is a safe no-op.
-declare const __CUMORA_VERSION__: string | undefined
-const CURRENT_VERSION = typeof __CUMORA_VERSION__ === 'string' ? __CUMORA_VERSION__ : '0.0.0'
+declare const __LINGXILOOP_VERSION__: string | undefined
+const CURRENT_VERSION = typeof __LINGXILOOP_VERSION__ === 'string' ? __LINGXILOOP_VERSION__ : '0.0.0'
 const UPDATE_CHECK_MS = 6 * 60 * 60 * 1000 // re-check npm every 6h
 // Log rotation: the service supervisor (launchd StandardOutPath / systemd) writes
-// the daemon's stdout to ~/.cumora/daemon.log and NEVER rotates it — left alone it
+// the daemon's stdout to ~/.lingxiloop/daemon.log and NEVER rotates it — left alone it
 // fills the user's disk. We cap it ourselves.
 const MAX_LOG_BYTES = 20 * 1024 * 1024 // rotate when the live log passes 20MB
 const LOG_ROTATE_MS = 5 * 60 * 1000 // check every 5 minutes
-const SERVICE_LABEL = 'io.cumora.daemon'
+const SERVICE_LABEL = 'io.lingxiloop.daemon'
 /** The supervisor (`--install-service`) sets this so the daemon knows a clean
- *  exit will be auto-restarted on `cumora@latest` — only then do we self-exit
+ *  exit will be auto-restarted on `lingxiloop@latest` — only then do we self-exit
  *  to apply an update. A manually-run daemon just logs the available version. */
-const SUPERVISED = process.env.CUMORA_SUPERVISED === '1'
+const SUPERVISED = process.env.LINGXILOOP_SUPERVISED === '1'
 
 /** semver-ish a > b for plain MAJOR.MINOR.PATCH (ignores pre-release tags). */
 function versionGt(a: string, b: string): boolean {
@@ -457,25 +457,25 @@ function missingEngineMessage(): string {
     '  - Codex: install the `codex` CLI, then run `codex` once to sign in',
     '',
     'After that, rerun:',
-    '  npx cumora@latest agent computer --pair <code>',
+    '  npx lingxiloop@latest agent computer --pair <code>',
   ].join('\n')
 }
 
 function helpText(): string {
   return [
-    'cumora agent computer — run your Cumora agents on THIS machine (BYOA)',
+    'lingxiloop agent computer — run your LingxiLoop agents on THIS machine (BYOA)',
     '',
-    'The daemon talks to a Cumora server over HTTP and drives a local agent',
+    'The daemon talks to a LingxiLoop server over HTTP and drives a local agent',
     'engine (Claude Code or Codex). Pair once, then it runs in the background.',
     '',
     'Usage:',
-    '  npx cumora@latest agent computer --pair <code> [--server <url>] [--engine <id>]',
-    '  npx cumora@latest agent computer [--server <url>]',
+    '  npx lingxiloop@latest agent computer --pair <code> [--server <url>] [--engine <id>]',
+    '  npx lingxiloop@latest agent computer [--server <url>]',
     '',
     'Setup:',
     '  --pair <code>        pair this machine to your account (code from',
-    '                       Cumora -> You -> Computers -> Add a computer)',
-    '  --server <url>       Cumora server URL (default: ' + DEFAULT_SERVER + ')',
+    '                       LingxiLoop -> You -> Computers -> Add a computer)',
+    '  --server <url>       LingxiLoop server URL' + (DEFAULT_SERVER ? ` (default: ${DEFAULT_SERVER})` : ''),
     '  --engine <id>        force an engine: ' + ENGINE_IDS.join(' | ') + '',
     '',
     'Background service:',
@@ -514,24 +514,24 @@ async function saveConfig(cfg: DaemonConfig): Promise<void> {
   await chmod(CONFIG_PATH, 0o600)
 }
 
-// ─── the `cumora` shim ──────────────────────────────────────────────────
+// ─── the `lingxiloop` shim ──────────────────────────────────────────────────
 //
-// A tiny Node executable named `cumora` that the engine calls via bash. It
+// A tiny Node executable named `lingxiloop` that the engine calls via bash. It
 // POSTs argv to the server's /runtime/cli, which runs the full CLI server-
 // side with the agent's identity pinned by the JWT. No curl/jq dependency.
-const CUMORA_SHIM = `#!/usr/bin/env node
+const LINGXILOOP_SHIM = `#!/usr/bin/env node
 'use strict'
 ;(async () => {
-  const url = process.env.CUMORA_AGENT_RUNTIME_URL
+  const url = process.env.LINGXILOOP_AGENT_RUNTIME_URL
   // Prefer a token FILE (refreshed by the daemon) over the env token: a PERSISTENT
   // engine process is spawned once, so its env token goes stale on refresh — the
   // file is always current. Falls back to the env token (one-shot / codex path).
-  var token = process.env.CUMORA_AGENT_RUNTIME_TOKEN
-  var tokenFile = process.env.CUMORA_AGENT_RUNTIME_TOKEN_FILE
+  var token = process.env.LINGXILOOP_AGENT_RUNTIME_TOKEN
+  var tokenFile = process.env.LINGXILOOP_AGENT_RUNTIME_TOKEN_FILE
   if (tokenFile) { try { var ft = require('fs').readFileSync(tokenFile, 'utf8').trim(); if (ft) token = ft } catch (e) {} }
-  if (!url || !token) { console.error('cumora: runtime env not set'); process.exit(70) }
+  if (!url || !token) { console.error('lingxiloop: runtime env not set'); process.exit(70) }
   var argv = process.argv.slice(2)
-  // Shell-safe body input. A reply written inline (cumora reply id "..text..")
+  // Shell-safe body input. A reply written inline (lingxiloop reply id "..text..")
   // is mangled by bash BEFORE this shim runs: backticks and $(...) get run as
   // commands and collapse to empty, quotes get eaten. So --file <path> /
   // --stdin let the body come from a file (written by the editor, no shell) or
@@ -541,7 +541,7 @@ const CUMORA_SHIM = `#!/usr/bin/env node
   var fi = argv.indexOf('--file')
   if (fi >= 0 && argv[fi + 1] !== undefined) {
     try { argv.splice(fi, 2, fs.readFileSync(argv[fi + 1], 'utf8')) }
-    catch (e) { console.error('cumora: cannot read --file ' + argv[fi + 1]); process.exit(70) }
+    catch (e) { console.error('lingxiloop: cannot read --file ' + argv[fi + 1]); process.exit(70) }
   }
   var si = argv.indexOf('--stdin')
   if (si >= 0) {
@@ -556,19 +556,19 @@ const CUMORA_SHIM = `#!/usr/bin/env node
   })
   if (!res.ok) {
     const t = await res.text().catch(() => '')
-    console.error('cumora: HTTP ' + res.status + ' ' + t)
+    console.error('lingxiloop: HTTP ' + res.status + ' ' + t)
     process.exit(70)
   }
   const data = await res.json()
   if (typeof data.text === 'string' && data.text) process.stdout.write(data.text + '\\n')
   process.exit(typeof data.exitCode === 'number' ? data.exitCode : 0)
-})().catch((e) => { console.error('cumora:', (e && e.message) || e); process.exit(70) })
+})().catch((e) => { console.error('lingxiloop:', (e && e.message) || e); process.exit(70) })
 `
 
 async function writeShim(binDir: string): Promise<void> {
   await mkdir(binDir, { recursive: true })
-  const shim = join(binDir, 'cumora')
-  await writeFile(shim, CUMORA_SHIM, 'utf8')
+  const shim = join(binDir, 'lingxiloop')
+  await writeFile(shim, LINGXILOOP_SHIM, 'utf8')
   await chmod(shim, 0o755)
 }
 
@@ -930,7 +930,7 @@ class AgentRunner {
   /** Does this runner's live config still match the latest server state? The
    *  engine + model + persona are captured at construction (the adapter is
    *  fixed, and seedHome runs once in start()), so when any of them changes in
-   *  Cumora, sync() must tear this runner down and build a fresh one — otherwise
+   *  LingxiLoop, sync() must tear this runner down and build a fresh one — otherwise
    *  e.g. a Claude→Codex switch wouldn't take effect until a daemon restart. */
   configMatches(agent: AgentInfo, engine: EngineId): boolean {
     return this.adapter.id === engine
@@ -948,24 +948,24 @@ class AgentRunner {
     )
     this.token = minted.token
     this.tokenExpiresAt = Date.now() + minted.expiresInSeconds * 1000
-    // Persist to the file the cumora shim reads, so a long-lived (persistent) engine
+    // Persist to the file the lingxiloop shim reads, so a long-lived (persistent) engine
     // process always picks up the REFRESHED token rather than its stale spawn-time env.
     try { await writeFile(join(this.binDir, '.runtime-token'), this.token, { mode: 0o600 }) } catch { /* shim falls back to the env token */ }
     return this.token
   }
 
-  /** Env handed to the engine subprocess: the `cumora` shim on PATH, wired to
+  /** Env handed to the engine subprocess: the `lingxiloop` shim on PATH, wired to
    *  this agent's runtime URL + token. */
   private engineEnv(): NodeJS.ProcessEnv {
     return {
       ...process.env,
       PATH: `${this.binDir}:${process.env.PATH ?? ''}`,
-      CUMORA_AGENT_RUNTIME_URL: `${this.cfg.serverUrl}/runtime`,
-      CUMORA_AGENT_RUNTIME_TOKEN: this.token,
+      LINGXILOOP_AGENT_RUNTIME_URL: `${this.cfg.serverUrl}/runtime`,
+      LINGXILOOP_AGENT_RUNTIME_TOKEN: this.token,
       // A long-lived engine reads the FRESH token from this file (the env token
       // above goes stale on refresh); the shim prefers the file, falls back to env.
-      CUMORA_AGENT_RUNTIME_TOKEN_FILE: join(this.binDir, '.runtime-token'),
-      CUMORA_AGENT_ID: this.agent.id,
+      LINGXILOOP_AGENT_RUNTIME_TOKEN_FILE: join(this.binDir, '.runtime-token'),
+      LINGXILOOP_AGENT_ID: this.agent.id,
     }
   }
 
@@ -1100,8 +1100,8 @@ class AgentRunner {
         prompt: `${payload.instructions}\n\n${payload.input}`,
         env: this.engineEnv(),
         // Engine picks its own cheap default (claude→haiku, codex→gpt-5.4-mini);
-        // CUMORA_TRIAGE_MODEL overrides for either.
-        model: process.env.CUMORA_TRIAGE_MODEL,
+        // LINGXILOOP_TRIAGE_MODEL overrides for either.
+        model: process.env.LINGXILOOP_TRIAGE_MODEL,
         signal: controller.signal,
       })
     } catch (err) {
@@ -1184,9 +1184,9 @@ class AgentRunner {
   }
 
   /** Triage model id for pricing (the local cerebellum: claude→haiku,
-   *  codex→gpt-5.4-mini), honoring a CUMORA_TRIAGE_MODEL override. */
+   *  codex→gpt-5.4-mini), honoring a LINGXILOOP_TRIAGE_MODEL override. */
   private triageModel(): string {
-    return process.env.CUMORA_TRIAGE_MODEL || (this.adapter.id === 'claude' ? 'haiku' : 'gpt-5.4-mini')
+    return process.env.LINGXILOOP_TRIAGE_MODEL || (this.adapter.id === 'claude' ? 'haiku' : 'gpt-5.4-mini')
   }
 
   /** Post one local-triage record to the cost ledger. Best-effort. `usage` is the
@@ -1208,8 +1208,8 @@ class AgentRunner {
    *  cursor map (for `ackSeen`), AND a human-readable digest of the unread
    *  messages to PRE-LOAD into the wake prompt. Pre-loading is what the cloud
    *  agent already does (it builds the turn input from the inbox), so the BYOA
-   *  engine can read the room and reply WITHOUT first spending `cumora inbox` +
-   *  `cumora messages` round-trips — each of those is an extra opus hop, and
+   *  engine can read the room and reply WITHOUT first spending `lingxiloop inbox` +
+   *  `lingxiloop messages` round-trips — each of those is an extra opus hop, and
    *  cutting them is most of the per-turn latency.
    *  Captured BEFORE the engine runs so `ackSeen` advances exactly what THIS
    *  turn saw; messages that land mid-turn keep a higher id, stay unread, and
@@ -1268,7 +1268,7 @@ class AgentRunner {
         ? (alarm ? `[calendar:due] ${[alarm.title, alarm.agentPrompt].filter(Boolean).join(' — ') || 'scheduled alarm fired'}` : '[system]')
         : (row.body ?? '')).replace(/\s+/g, ' ').slice(0, 600)
       // Keep the message id + convo id on each line (like the cloud agent's
-      // context) so the engine can QUOTE the exact message: `cumora reply
+      // context) so the engine can QUOTE the exact message: `lingxiloop reply
       // <convo> '<body>' --quote <message_id>`.
       lines.push(`  [${row.id}] ${row.conversation_id}  ${who}: ${body}`)
     }
@@ -1280,7 +1280,7 @@ class AgentRunner {
    *  wake that ends WITHOUT a reply (small-brain said "skip", or the engine
    *  read the room and chose silence) does not re-trigger on the same messages
    *  every INBOX_POLL_MS. markConversationRead is monotonic, so this never
-   *  regresses a cursor the engine already advanced further via `cumora reply`. */
+   *  regresses a cursor the engine already advanced further via `lingxiloop reply`. */
   private async ackSeen(token: string, seen: Map<string, string>): Promise<void> {
     if (seen.size === 0) return
     await Promise.all([...seen].map(([conversationId, upToMessageId]) =>
@@ -1322,13 +1322,13 @@ class AgentRunner {
     // RESTORED to the 5/28T22:17Z baseline SHAPE: one minimal prompt of essential
     // mechanics, with GLANCE_YIELD_RULES and a few core sections — NOT a wall of
     // ── XXX ── sections (that's the bloat the user called out: AGENT_VOICE_RULES
-    // priming, MORE CUMORA COMMANDS, HELD REPLY explainer, CONTEXT COMPACTION,
+    // priming, MORE LINGXILOOP COMMANDS, HELD REPLY explainer, CONTEXT COMPACTION,
     // WORKING A BOARD CARD — none of those existed at 5/28 when coord was perfect,
     // ergo none of them are required for coord). The agent discovers other CLI
-    // surface via `cumora <cmd> --help` when it needs it.
+    // surface via `lingxiloop <cmd> --help` when it needs it.
     return (
-      `You are a Cumora teammate — a first-class member of this team with your own voice. ` +
-      `You act on Cumora through the \`cumora\` CLI on your PATH.\n\n` +
+      `You are a LingxiLoop teammate — a first-class member of this team with your own voice. ` +
+      `You act on LingxiLoop through the \`lingxiloop\` CLI on your PATH.\n\n` +
       `Read the relevant thread and respond appropriately, in your own voice — like a real teammate. ` +
       `If a human addressed the whole team, you and every peer likely woke at the same instant, so ` +
       `coordinate via the protocol below — in short: post the real next item from what's ACTUALLY been posted, ` +
@@ -1337,11 +1337,11 @@ class AgentRunner {
       // coordinates identically to the cloud pod-agent.
       GLANCE_YIELD_RULES + `\n\n` +
       `Posting a message: For ANY message with backticks, code, $, quotes, or multiple lines, ` +
-      `write it to a file (e.g. \`notes/reply.md\`) and post with \`cumora reply <conversationId> --file notes/reply.md\` — ` +
+      `write it to a file (e.g. \`notes/reply.md\`) and post with \`lingxiloop reply <conversationId> --file notes/reply.md\` — ` +
       `the shell mangles inline \`backtick\` / \`$(...)\` content. For short plain text, ` +
-      `\`cumora reply <conversationId> 'text'\` (SINGLE quotes) is fine. When you're answering a ` +
+      `\`lingxiloop reply <conversationId> 'text'\` (SINGLE quotes) is fine. When you're answering a ` +
       `SPECIFIC message, add \`--quote <message_id>\` so your reply threads to its context. ` +
-      `To address a teammate, @<their-id> (the short id in \`cumora messages\` / \`cumora participants\`), ` +
+      `To address a teammate, @<their-id> (the short id in \`lingxiloop messages\` / \`lingxiloop participants\`), ` +
       `NOT their display name.\n\n` +
       // Skype emoticons — shared with the cloud agent so a BYOA agent is as
       // expressive, not stuck on native emoji only.
@@ -1355,7 +1355,7 @@ class AgentRunner {
       `fragment. If someone DMs you mid-task, answer briefly then keep going. The only thing to avoid ` +
       `is a pointless loop. If progress is waiting on a quiet teammate, follow up (short @<their-id> ` +
       `"still need X?") and schedule your own check-back: ` +
-      `\`cumora calendar create '<chase>' --at <iso> --assignee ${this.agent.id} --prompt '<what future-you does>'\`. ` +
+      `\`lingxiloop calendar create '<chase>' --at <iso> --assignee ${this.agent.id} --prompt '<what future-you does>'\`. ` +
       `Stop only when the work is truly done or it's someone else's move.\n\n` +
       `Privacy: stay inside your home directory. Never read or expose files outside it — this machine ` +
       `holds the operator's private files.`
@@ -1367,12 +1367,12 @@ class AgentRunner {
    *  slowly and native compaction can keep up. */
   private chatDelta(memoryDigest: string, triageNote: string, inboxDigest: string, roster?: string): string {
     return (
-      `You've been woken because there's new activity in your Cumora conversations, and the cerebellum triage already ` +
+      `You've been woken because there's new activity in your LingxiLoop conversations, and the cerebellum triage already ` +
       `decided you should respond — your job is to DO it (write the reply / take the action), not to re-judge whether to. ` +
       `Follow your standing instructions for HOW.\n\n` +
       // A CLOCK. Without it the model has no idea what time it is (session
       // context only carries stale timestamps), so any time arithmetic —
-      // most visibly `cumora calendar create --at` deadlines — silently
+      // most visibly `lingxiloop calendar create --at` deadlines — silently
       // lands in the past: a werewolf judge scheduled every phase alarm ~20
       // minutes before "now" and they all fired instantly. One line, per
       // turn, always current.
@@ -1381,11 +1381,11 @@ class AgentRunner {
       (inboxDigest
         // Pre-loaded unread (fetched for you) — mirrors how the cloud agent gets
         // its inbox in the turn input, cutting the inbox/messages hops.
-        ? `Your unread messages (ALREADY FETCHED — no need to re-run \`cumora inbox\` / \`cumora messages\` to re-read ` +
-          `these; but DO \`cumora glance\` before posting in a group, to catch anything posted while you compose):\n${inboxDigest}\n\n`
-        : `Run \`cumora inbox\`, then \`cumora messages <conversationId> --tail 30\`, to catch up.\n\n`) +
+        ? `Your unread messages (ALREADY FETCHED — no need to re-run \`lingxiloop inbox\` / \`lingxiloop messages\` to re-read ` +
+          `these; but DO \`lingxiloop glance\` before posting in a group, to catch anything posted while you compose):\n${inboxDigest}\n\n`
+        : `Run \`lingxiloop inbox\`, then \`lingxiloop messages <conversationId> --tail 30\`, to catch up.\n\n`) +
       (memoryDigest ? `Your memory index (\`memory/MEMORY.md\`):\n${memoryDigest}\n\n` : ``) +
-      (roster ? `Your team right now (trust over memory — current roster; use these ids for @mentions and \`cumora dm\`):\n${roster}\n` : ``)
+      (roster ? `Your team right now (trust over memory — current roster; use these ids for @mentions and \`lingxiloop dm\`):\n${roster}\n` : ``)
     ).trimEnd()
   }
 
@@ -1616,7 +1616,7 @@ class AgentRunner {
         this.lastGroupSteeredMsgId = latestGroup.id
         this.lastGroupSteerAt = nowMs
         session.steer(
-          `⚡ ${rows.length} new message(s) arrived in ${convo} while you work — bodies withheld to keep you focused. At a natural pause, \`cumora glance ${convo}\` and handle it if it's yours (yield/claim as usual); otherwise keep going. Do NOT drop your current task.`,
+          `⚡ ${rows.length} new message(s) arrived in ${convo} while you work — bodies withheld to keep you focused. At a natural pause, \`lingxiloop glance ${convo}\` and handle it if it's yours (yield/claim as usual); otherwise keep going. Do NOT drop your current task.`,
         )
         console.log(`[computer] ${this.agent.id} GROUP-NOTICE → live turn (${rows.length} msg(s) in ${convo}, content-free)`)
         return
@@ -1627,7 +1627,7 @@ class AgentRunner {
       const who = latest.author_name ?? 'someone'
       const body = (latest.body ?? '').replace(/\s+/g, ' ').slice(0, 300)
       session.steer(
-        `⚡ A direct message arrived while you work — answer it BRIEFLY, then resume your current task (do NOT drop it). ${who} in ${convo}: "${body}". Reply one line now: \`cumora reply ${convo} 'text'\` — a quick answer, or "on it, mid-task, will follow up". Then continue what you were doing.`,
+        `⚡ A direct message arrived while you work — answer it BRIEFLY, then resume your current task (do NOT drop it). ${who} in ${convo}: "${body}". Reply one line now: \`lingxiloop reply ${convo} 'text'\` — a quick answer, or "on it, mid-task, will follow up". Then continue what you were doing.`,
       )
       console.log(`[computer] ${this.agent.id} STEER → live turn (direct msg in ${convo} from ${who})`)
     } catch { /* best-effort; the coalesced rerun still handles it at turn end */ } finally {
@@ -2013,10 +2013,10 @@ class AgentRunner {
 // ─── run loop ───────────────────────────────────────────────────────────
 
 /** Prefix every daemon log line with an ISO-8601 timestamp so the service log
- *  (~/.cumora/daemon.log) is diagnosable: when a wake arrived, how long a turn
+ *  (~/.lingxiloop/daemon.log) is diagnosable: when a wake arrived, how long a turn
  *  took, etc. Only for the long-running daemon (doRun) — the one-shot
  *  --status/--version/--logs commands stay clean. */
-/** Cap ~/.cumora/daemon.log so it can't fill the disk. The supervisor (launchd /
+/** Cap ~/.lingxiloop/daemon.log so it can't fill the disk. The supervisor (launchd /
  *  systemd) holds the file open in APPEND mode, so we can't rename it (that would
  *  orphan its fd and silently stop logging). Instead we copy-truncate (logrotate's
  *  copytruncate): keep the last full chunk as daemon.log.1, then truncate the live
@@ -2057,7 +2057,7 @@ async function doRun(serverOverride?: string): Promise<void> {
 
   const cfg = await loadConfig()
   if (!cfg) {
-    console.error('[computer] not paired. Run: cumora agent computer --pair <code> [--server <url>]')
+    console.error('[computer] not paired. Run: lingxiloop agent computer --pair <code> [--server <url>]')
     process.exitCode = 1
     return
   }
@@ -2070,13 +2070,13 @@ async function doRun(serverOverride?: string): Promise<void> {
     process.exitCode = 70
     return
   }
-  console.log(`[computer] cumora ${CURRENT_VERSION} · starting ${cfg.computerId} @ ${cfg.serverUrl} (engines: ${available.join(', ')})`)
+  console.log(`[computer] lingxiloop ${CURRENT_VERSION} · starting ${cfg.computerId} @ ${cfg.serverUrl} (engines: ${available.join(', ')})`)
   // Record what THIS process is running, keyed by pid, so `--status` can report
   // the version of the live service instance reliably (cross-checked against the
   // running pid — survives log rotation, no log-scraping).
   await writeRunningState()
   if (!SUPERVISED) {
-    console.log(`[computer] 💡 tip: run \`npx cumora@latest agent computer --install-service\` to keep this running in the background — auto-start on boot, auto-restart on crash, and auto-update. (This terminal must stay open otherwise.)`)
+    console.log(`[computer] 💡 tip: run \`npx lingxiloop@latest agent computer --install-service\` to keep this running in the background — auto-start on boot, auto-restart on crash, and auto-update. (This terminal must stay open otherwise.)`)
   }
 
   const runners = new Map<string, AgentRunner>()
@@ -2098,7 +2098,7 @@ async function doRun(serverOverride?: string): Promise<void> {
       const existing = runners.get(agent.id)
       if (existing) {
         if (existing.configMatches(agent, engine)) continue
-        // Engine/model/persona was edited in Cumora — restart the runner so the
+        // Engine/model/persona was edited in LingxiLoop — restart the runner so the
         // change takes effect on the next wake without a daemon restart.
         console.log(`[computer] agent ${agent.name} (${agent.id}) config changed → restarting on ${engine}`)
         existing.stop()
@@ -2132,7 +2132,7 @@ async function doRun(serverOverride?: string): Promise<void> {
   await heartbeat()
   await sync()
   if (runners.size === 0) {
-    console.log('[computer] no agents assigned to this computer yet. Assign one in Cumora; polling…')
+    console.log('[computer] no agents assigned to this computer yet. Assign one in LingxiLoop; polling…')
   }
   const poll = setInterval(() => { void sync() }, AGENT_POLL_MS)
   const beat = setInterval(() => { void heartbeat() }, HEARTBEAT_MS)
@@ -2168,7 +2168,7 @@ async function doRun(serverOverride?: string): Promise<void> {
   process.on('SIGTERM', () => { void shutdown('SIGTERM') })
 
   // Self-update: compare to npm's latest periodically. When supervised
-  // (--install-service), a clean exit relaunches the service on cumora@latest =
+  // (--install-service), a clean exit relaunches the service on lingxiloop@latest =
   // the update. Crucially we do NOT interrupt a live turn for a (non-urgent)
   // update: once an update is detected we wait for ALL agents to go idle, then
   // exit. First check a minute after boot, then every UPDATE_CHECK_MS.
@@ -2195,19 +2195,19 @@ async function doRun(serverOverride?: string): Promise<void> {
 // ─── self-update + service ────────────────────────────────────────────────
 
 /** Compare the running version to npm's `latest`. If behind: when supervised,
- *  exit cleanly so the service relaunches on `cumora@latest` (= the update);
+ *  exit cleanly so the service relaunches on `lingxiloop@latest` (= the update);
  *  otherwise just log that an update is available. Never throws. */
 async function checkForUpdate(onSupervisedUpdate: () => void): Promise<void> {
   try {
-    const res = await fetch('https://registry.npmjs.org/cumora/latest', { headers: { Accept: 'application/json' } })
+    const res = await fetch('https://registry.npmjs.org/lingxiloop/latest', { headers: { Accept: 'application/json' } })
     if (!res.ok) return
     const latest = (await res.json() as { version?: string })?.version
     if (typeof latest !== 'string' || !versionGt(latest, CURRENT_VERSION)) return
     if (SUPERVISED) {
-      console.log(`[computer] 🆕 cumora ${latest} available (running ${CURRENT_VERSION}) — will restart to apply once idle (in-flight turns are never interrupted for an update)`)
+      console.log(`[computer] 🆕 lingxiloop ${latest} available (running ${CURRENT_VERSION}) — will restart to apply once idle (in-flight turns are never interrupted for an update)`)
       onSupervisedUpdate()
     } else {
-      console.log(`[computer] 🆕 cumora ${latest} available (running ${CURRENT_VERSION}). Restart to update, or run \`cumora agent computer --install-service\` for auto-updates.`)
+      console.log(`[computer] 🆕 lingxiloop ${latest} available (running ${CURRENT_VERSION}). Restart to update, or run \`lingxiloop agent computer --install-service\` for auto-updates.`)
     }
   } catch { /* offline / npm hiccup — try the next tick */ }
 }
@@ -2220,12 +2220,12 @@ function resolveNpx(): string {
 }
 
 /** Install a per-user supervisor (LaunchAgent on macOS, systemd --user on
- *  Linux) that runs `npx -y cumora@latest agent computer --server <url>` with
+ *  Linux) that runs `npx -y lingxiloop@latest agent computer --server <url>` with
  *  auto-restart + run-at-boot. `@latest` + restart-on-update is what makes the
  *  daemon self-update (see checkForUpdate). Must be paired first. */
 async function installService(serverUrl: string): Promise<void> {
   if (!(await loadConfig())) {
-    throw new Error('pair this computer first: cumora agent computer --pair <code>')
+    throw new Error('pair this computer first: lingxiloop agent computer --pair <code>')
   }
   const npx = resolveNpx()
   const logPath = join(CONFIG_DIR, 'daemon.log')
@@ -2235,7 +2235,7 @@ async function installService(serverUrl: string): Promise<void> {
     const dir = join(homedir(), 'Library', 'LaunchAgents')
     await mkdir(dir, { recursive: true })
     const plistPath = join(dir, `${SERVICE_LABEL}.plist`)
-    const args = [npx, '-y', 'cumora@latest', 'agent', 'computer', '--server', serverUrl]
+    const args = [npx, '-y', 'lingxiloop@latest', 'agent', 'computer', '--server', serverUrl]
     const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -2247,7 +2247,7 @@ async function installService(serverUrl: string): Promise<void> {
   <key>StandardErrorPath</key><string>${logPath}</string>
   <key>EnvironmentVariables</key><dict>
     <key>PATH</key><string>${process.env.PATH ?? ''}</string>
-    <key>CUMORA_SUPERVISED</key><string>1</string>
+    <key>LINGXILOOP_SUPERVISED</key><string>1</string>
   </dict>
 </dict></plist>
 `
@@ -2262,25 +2262,25 @@ async function installService(serverUrl: string): Promise<void> {
   if (process.platform === 'linux') {
     const dir = join(homedir(), '.config', 'systemd', 'user')
     await mkdir(dir, { recursive: true })
-    const unitPath = join(dir, 'cumora.service')
+    const unitPath = join(dir, 'lingxiloop.service')
     const unit = `[Unit]
-Description=Cumora BYOA daemon
+Description=LingxiLoop BYOA daemon
 After=network-online.target
 
 [Service]
-ExecStart=${npx} -y cumora@latest agent computer --server ${serverUrl}
+ExecStart=${npx} -y lingxiloop@latest agent computer --server ${serverUrl}
 Restart=always
 RestartSec=5
 Environment=PATH=${process.env.PATH ?? ''}
-Environment=CUMORA_SUPERVISED=1
+Environment=LINGXILOOP_SUPERVISED=1
 
 [Install]
 WantedBy=default.target
 `
     await writeFile(unitPath, unit, 'utf8')
     await execFileP('systemctl', ['--user', 'daemon-reload'])
-    await execFileP('systemctl', ['--user', 'enable', '--now', 'cumora'])
-    console.log(`[computer] installed systemd --user service 'cumora' — auto-start, auto-restart, auto-update. Logs: journalctl --user -u cumora -f`)
+    await execFileP('systemctl', ['--user', 'enable', '--now', 'lingxiloop'])
+    console.log(`[computer] installed systemd --user service 'lingxiloop' — auto-start, auto-restart, auto-update. Logs: journalctl --user -u lingxiloop -f`)
     return
   }
 
@@ -2296,10 +2296,10 @@ async function uninstallService(): Promise<void> {
     return
   }
   if (process.platform === 'linux') {
-    await execFileP('systemctl', ['--user', 'disable', '--now', 'cumora']).catch(() => { /* already gone */ })
-    await rm(join(homedir(), '.config', 'systemd', 'user', 'cumora.service')).catch(() => { /* already gone */ })
+    await execFileP('systemctl', ['--user', 'disable', '--now', 'lingxiloop']).catch(() => { /* already gone */ })
+    await rm(join(homedir(), '.config', 'systemd', 'user', 'lingxiloop.service')).catch(() => { /* already gone */ })
     await execFileP('systemctl', ['--user', 'daemon-reload']).catch(() => {})
-    console.log(`[computer] removed systemd --user service 'cumora'`)
+    console.log(`[computer] removed systemd --user service 'lingxiloop'`)
     return
   }
   throw new Error(`--uninstall-service supports macOS and Linux (not ${process.platform})`)
@@ -2309,7 +2309,7 @@ function darwinPlistPath(): string {
   return join(homedir(), 'Library', 'LaunchAgents', `${SERVICE_LABEL}.plist`)
 }
 function linuxUnitPath(): string {
-  return join(homedir(), '.config', 'systemd', 'user', 'cumora.service')
+  return join(homedir(), '.config', 'systemd', 'user', 'lingxiloop.service')
 }
 
 /** Is the background supervisor already installed on this machine? */
@@ -2330,16 +2330,16 @@ async function reloadService(): Promise<void> {
     return
   }
   if (process.platform === 'linux') {
-    await execFileP('systemctl', ['--user', 'restart', 'cumora'])
+    await execFileP('systemctl', ['--user', 'restart', 'lingxiloop'])
   }
 }
 
 /** `--restart`: a friendly wrapper so users don't have to remember
  *  `launchctl kickstart …`. Restarts the installed service (which relaunches on
- *  cumora@latest, so it's also the "apply the update now" button). */
+ *  lingxiloop@latest, so it's also the "apply the update now" button). */
 async function restartService(): Promise<void> {
   if (!isServiceInstalled()) {
-    console.log('[computer] service not installed — run: npx cumora@latest agent computer --install-service')
+    console.log('[computer] service not installed — run: npx lingxiloop@latest agent computer --install-service')
     return
   }
   if (process.platform === 'darwin') {
@@ -2350,11 +2350,11 @@ async function restartService(): Promise<void> {
       await reloadService() // not currently loaded → load it
     }
   } else if (process.platform === 'linux') {
-    await execFileP('systemctl', ['--user', 'restart', 'cumora'])
+    await execFileP('systemctl', ['--user', 'restart', 'lingxiloop'])
   } else {
     throw new Error(`--restart supports macOS and Linux (not ${process.platform})`)
   }
-  console.log('[computer] service restarted — it relaunches on cumora@latest (also applies any pending update). Check: npx cumora@latest agent computer --status')
+  console.log('[computer] service restarted — it relaunches on lingxiloop@latest (also applies any pending update). Check: npx lingxiloop@latest agent computer --status')
 }
 
 /** `--stop`: stop the background service NOW, without uninstalling it. The job is
@@ -2412,7 +2412,7 @@ async function stopService(): Promise<void> {
     console.log('[computer] no background service installed — killing any running daemon process directly.')
   }
   await killRunningDaemons()
-  console.log('[computer] stopped — service removed and daemon process(es) killed. Re-pair to start again: npx cumora@latest agent computer --pair <code>')
+  console.log('[computer] stopped — service removed and daemon process(es) killed. Re-pair to start again: npx lingxiloop@latest agent computer --pair <code>')
 }
 
 /** `--status`: a one-glance summary — version, pairing, whether the background
@@ -2422,10 +2422,10 @@ async function printStatus(): Promise<void> {
   // The version of the binary running THIS command. May differ from what the
   // background service is actually running (it auto-updates on its own cycle),
   // so we report the service's running version separately, read from its log.
-  console.log(`cli:     cumora ${CURRENT_VERSION} (this command)`)
-  console.log(cfg ? `paired:  computer ${cfg.computerId} @ ${cfg.serverUrl}` : 'paired:  NO — run: npx cumora@latest agent computer --pair <code>')
+  console.log(`cli:     lingxiloop ${CURRENT_VERSION} (this command)`)
+  console.log(cfg ? `paired:  computer ${cfg.computerId} @ ${cfg.serverUrl}` : 'paired:  NO — run: npx lingxiloop@latest agent computer --pair <code>')
   if (!isServiceInstalled()) {
-    console.log('service: not installed — run: npx cumora@latest agent computer --install-service')
+    console.log('service: not installed — run: npx lingxiloop@latest agent computer --install-service')
     return
   }
   let livePid: number | null = null
@@ -2440,18 +2440,18 @@ async function printStatus(): Promise<void> {
       console.log('service: installed · not loaded (try: launchctl load ~/Library/LaunchAgents/' + SERVICE_LABEL + '.plist)')
     }
   } else if (process.platform === 'linux') {
-    const active = await execFileP('systemctl', ['--user', 'is-active', 'cumora']).then((r) => r.stdout.trim()).catch(() => 'inactive')
-    const pid = await execFileP('systemctl', ['--user', 'show', 'cumora', '-p', 'MainPID', '--value']).then((r) => r.stdout.trim()).catch(() => '')
+    const active = await execFileP('systemctl', ['--user', 'is-active', 'lingxiloop']).then((r) => r.stdout.trim()).catch(() => 'inactive')
+    const pid = await execFileP('systemctl', ['--user', 'show', 'lingxiloop', '-p', 'MainPID', '--value']).then((r) => r.stdout.trim()).catch(() => '')
     livePid = pid && pid !== '0' ? Number(pid) : null
     console.log(`service: installed · ${active}${livePid ? ` (pid ${livePid})` : ''}`)
   }
   const running = await resolveRunningVersion(livePid)
   if (running) {
-    console.log(`running: cumora ${running}${running === CURRENT_VERSION ? ' (latest)' : ' (differs from this cli — `npx cumora@latest agent computer --restart` to pick up the latest)'}`)
+    console.log(`running: lingxiloop ${running}${running === CURRENT_VERSION ? ' (latest)' : ' (differs from this cli — `npx lingxiloop@latest agent computer --restart` to pick up the latest)'}`)
   } else {
-    console.log('running: unknown — `npx cumora@latest agent computer --restart` to (re)start it and record the version')
+    console.log('running: unknown — `npx lingxiloop@latest agent computer --restart` to (re)start it and record the version')
   }
-  console.log(`logs:    ${process.platform === 'linux' ? 'journalctl --user -u cumora -f' : join(CONFIG_DIR, 'daemon.log')}  (or: npx cumora@latest agent computer --logs)`)
+  console.log(`logs:    ${process.platform === 'linux' ? 'journalctl --user -u lingxiloop -f' : join(CONFIG_DIR, 'daemon.log')}  (or: npx lingxiloop@latest agent computer --logs)`)
 }
 
 const RUNNING_STATE_PATH = join(CONFIG_DIR, 'running.json')
@@ -2478,9 +2478,9 @@ async function resolveRunningVersion(livePid: number | null): Promise<string> {
   } catch { /* no/again-bad state file — fall back to log scan */ }
   try {
     const text = process.platform === 'linux'
-      ? (await execFileP('journalctl', ['--user', '-u', 'cumora', '-n', '400', '--no-pager'])).stdout
+      ? (await execFileP('journalctl', ['--user', '-u', 'lingxiloop', '-n', '400', '--no-pager'])).stdout
       : await readFile(join(CONFIG_DIR, 'daemon.log'), 'utf8')
-    const m = [...text.matchAll(/cumora (\d+\.\d+\.\d+) · starting/g)]
+    const m = [...text.matchAll(/lingxiloop (\d+\.\d+\.\d+) · starting/g)]
     return m.length ? m[m.length - 1][1] : ''
   } catch { return '' }
 }
@@ -2490,14 +2490,14 @@ async function resolveRunningVersion(livePid: number | null): Promise<string> {
 async function tailLogs(): Promise<void> {
   if (process.platform === 'linux') {
     await new Promise<void>((resolve) => {
-      const c = spawn('journalctl', ['--user', '-u', 'cumora', '-n', '100', '-f'], { stdio: 'inherit' })
+      const c = spawn('journalctl', ['--user', '-u', 'lingxiloop', '-n', '100', '-f'], { stdio: 'inherit' })
       c.on('close', () => resolve()); c.on('error', () => resolve())
     })
     return
   }
   const logPath = join(CONFIG_DIR, 'daemon.log')
   if (!existsSync(logPath)) {
-    console.log(`no log at ${logPath} yet — is the service installed and running? (npx cumora@latest agent computer --status)`)
+    console.log(`no log at ${logPath} yet — is the service installed and running? (npx lingxiloop@latest agent computer --status)`)
     return
   }
   await new Promise<void>((resolve) => {
@@ -2508,13 +2508,13 @@ async function tailLogs(): Promise<void> {
 
 // ─── doctor ─────────────────────────────────────────────────────────────
 
-/** `cumora agent computer --doctor`: diagnose every local engine on this
+/** `lingxiloop agent computer --doctor`: diagnose every local engine on this
  *  machine — is it installed, and are its BIG brain (main reasoning) and SMALL
  *  brain (the triage cerebellum) reachable + authed? Each tier gets a trivial
  *  one-shot probe over the SAME spawn path real wakes use, so green here means
  *  real wakes will work. Pure local: no cloud, no DB, no pairing required. */
 async function runDoctor(): Promise<void> {
-  console.log(`cumora ${CURRENT_VERSION} · engine doctor`)
+  console.log(`lingxiloop ${CURRENT_VERSION} · engine doctor`)
   console.log('probing local engines (big brain = main reasoning, small brain = triage cerebellum)…\n')
 
   const results = await runEngineDoctor({ onLog: (l) => console.error(`  · ${l}`) })
@@ -2557,7 +2557,7 @@ async function runDoctor(): Promise<void> {
   if (!anyUsable) {
     console.log('✖ no engine has BOTH brains healthy — this machine cannot currently run a BYOA agent.')
     console.log('  fix the failures above (usually: open the engine\'s app and sign in / refresh quota), then re-run:')
-    console.log('    cumora agent computer --doctor')
+    console.log('    lingxiloop agent computer --doctor')
     process.exitCode = 1
   } else {
     console.log('✓ at least one engine is fully healthy — BYOA agents on this machine can wake their brains.')
@@ -2580,6 +2580,7 @@ export async function runComputerDaemon(argv: string[]): Promise<void> {
   // Pair first (saves config) so a combined `--pair … --install-service` can
   // pair AND hand off to the supervisor in one paste.
   if (args.pair) {
+    if (!serverUrl) throw new Error('--server <url> or LINGXILOOP_SERVER_URL is required when pairing')
     await doPair(args.pair, serverUrl, args.engine)
   }
   // Installing the service is terminal: it writes the supervisor (which runs

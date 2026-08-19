@@ -1,0 +1,110 @@
+name: lingxiloop
+
+# Production is intentionally a single LingxiLoop API instance. Managed agent
+# execution is coordinated in-process and must not be scaled horizontally yet.
+# CI supplies .release.env with digest-pinned image references and public,
+# release-specific metadata. Operators pre-provision .env.secrets; CI never
+# creates or overwrites that file.
+
+x-lingxiloop-runtime: &lingxiloop-runtime
+  image: ${LINGXILOOP_SERVER_IMAGE:?LINGXILOOP_SERVER_IMAGE must be digest-pinned}
+  env_file:
+    - ./.env.secrets
+  environment: &lingxiloop-environment
+    NODE_ENV: production
+    PORT: "5181"
+    REDIS_URL: redis://redis:6379
+    LINGXILOOP_VERSION: ${LINGXILOOP_VERSION:?LINGXILOOP_VERSION is required}
+    LINGXILOOP_COMMIT_SHA: ${LINGXILOOP_COMMIT_SHA:?LINGXILOOP_COMMIT_SHA is required}
+    LINGXILOOP_PUBLIC_ORIGIN: ${LINGXILOOP_PUBLIC_ORIGIN:?LINGXILOOP_PUBLIC_ORIGIN is required}
+    LINGXILOOP_REASONING_RUNTIME: lingxigraph
+    LINGXILOOP_MANAGED_AGENT_EXECUTION: server
+    LINGXIGRAPH_URL: http://lingxigraph-runtime:8124
+    LINGXILOOP_CORS_ORIGINS: app://lingxiloop
+    LINGXILOOP_AUTH_RETURN_ALLOWLIST: ${LINGXILOOP_PUBLIC_ORIGIN}/,http://127.0.0.1:47823/auth/done,lingxiloop://auth
+  networks: [lingxiloop]
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    env_file:
+      - ./.env.secrets
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-lingxiloop} -d $${POSTGRES_DB:-lingxiloop}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks: [lingxiloop]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    networks: [lingxiloop]
+
+  lingxigraph-runtime:
+    image: ${LINGXIGRAPH_RUNTIME_IMAGE:?LINGXIGRAPH_RUNTIME_IMAGE must be digest-pinned}
+    restart: unless-stopped
+    env_file:
+      - ./.env.secrets
+    environment:
+      PORT: "8124"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8124/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks: [lingxiloop]
+
+  migrate:
+    <<: *lingxiloop-runtime
+    profiles: [tools]
+    restart: "no"
+    command: ["npm", "run", "migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  lingxiloop:
+    <<: *lingxiloop-runtime
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      lingxigraph-runtime:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:5181:5181"
+    volumes:
+      - uploads:/app/server/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+networks:
+  lingxiloop: {}
+
+volumes:
+  postgres-data: {}
+  redis-data: {}
+  uploads: {}

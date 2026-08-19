@@ -6,7 +6,7 @@
 import { afterEach, test } from 'node:test'
 import assert from 'node:assert/strict'
 
-process.env.CUMORA_RUNTIME_CLIENT = 'http'
+process.env.LINGXILOOP_RUNTIME_CLIENT = 'http'
 
 const registry = await import('../agents/computer/registry.js')
 const { pool } = await import('../db/pool.js')

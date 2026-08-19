@@ -1,6 +1,6 @@
 /**
  * Bundle the agent-loop subtree into a single CommonJS file that runs
- * inside the cumora-agent-computer image.
+ * inside the lingxiloop-agent-computer image.
  *
  * Entry: server/src/agents/runtime/pod-agent.ts — long-running event
  * loop subscribing to /runtime/wake-stream over SSE. One Pod per

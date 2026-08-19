@@ -77,14 +77,14 @@ liveTest('[integration:live] Resend accepts a fresh send to delivered@resend.dev
     agentEmail: `live-test-${Date.now()}@${process.env.EMAIL_DOMAIN}`,
   })
   const conv = await findOrCreateEmailConversation({
-    companyId, inReplyTo: null, references: [], subject: '[CUMORA-LIVE-TEST] hello',
+    companyId, inReplyTo: null, references: [], subject: '[LINGXILOOP-LIVE-TEST] hello',
     memberIds: [agentId],
   })
   const messageId = mintMessageId()
   const sendRes = await sendViaProvider({
     from: formatAddress(agentEmail, `Test ${agentId}`),
     to: ['delivered@resend.dev'],
-    subject: '[CUMORA-LIVE-TEST] hello',
+    subject: '[LINGXILOOP-LIVE-TEST] hello',
     text: 'Live integration test send. Magic address, no real recipient.',
     messageId,
     autoSubmitted: 'auto-generated',
@@ -99,7 +99,7 @@ liveTest('[integration:live] Resend accepts a fresh send to delivered@resend.dev
     transportStatus: sendRes.ok ? 'sent' : 'failed',
     transportError: sendRes.error, smtpMessageId: sendRes.smtpMessageId,
     inReplyTo: null, references: [],
-    subject: '[CUMORA-LIVE-TEST] hello',
+    subject: '[LINGXILOOP-LIVE-TEST] hello',
     fromAddr: agentEmail, toAddrs: ['delivered@resend.dev'],
     body: 'Live integration test send.',
     autoSubmitted: true,
@@ -119,7 +119,7 @@ liveTest('[integration:live] Resend accepts a reply with In-Reply-To + Reference
   const sendRes = await sendViaProvider({
     from: formatAddress(agentEmail, `Test ${agentId}`),
     to: ['delivered@resend.dev'],
-    subject: 'Re: [CUMORA-LIVE-TEST] threading',
+    subject: 'Re: [LINGXILOOP-LIVE-TEST] threading',
     text: 'Reply with threading headers attached.',
     inReplyTo: originalId,
     references: [originalId],
@@ -134,11 +134,11 @@ liveTest('[integration:live] Resend accepts a base64 attachment', async () => {
     agentEmail: `live-test-${Date.now()}-attach@${process.env.EMAIL_DOMAIN}`,
   })
   // Tiny payload — keep the wire small so live tests don't take forever.
-  const helloBase64 = Buffer.from('hello from cumora live test').toString('base64')
+  const helloBase64 = Buffer.from('hello from lingxiloop live test').toString('base64')
   const sendRes = await sendViaProvider({
     from: formatAddress(agentEmail, `Test ${agentId}`),
     to: ['delivered@resend.dev'],
-    subject: '[CUMORA-LIVE-TEST] with attachment',
+    subject: '[LINGXILOOP-LIVE-TEST] with attachment',
     text: 'See attached.',
     messageId: mintMessageId(),
     attachments: [{ filename: 'note.txt', mimeType: 'text/plain', base64: helloBase64 }],
@@ -159,7 +159,7 @@ liveTest('[integration:live] Resend honors a custom Message-ID header on the wir
   const sendRes = await sendViaProvider({
     from: formatAddress(agentEmail, `Test ${agentId}`),
     to: ['delivered@resend.dev'],
-    subject: '[CUMORA-LIVE-TEST] message-id roundtrip',
+    subject: '[LINGXILOOP-LIVE-TEST] message-id roundtrip',
     text: 'verify the wire Message-ID matches what we minted',
     messageId: ourMessageId,
   })
@@ -195,7 +195,7 @@ liveTest('[integration:live] Resend accepts a send to bounced@resend.dev (bounce
   const sendRes = await sendViaProvider({
     from: formatAddress(agentEmail, `Test ${agentId}`),
     to: ['bounced@resend.dev'],
-    subject: '[CUMORA-LIVE-TEST] bounce path',
+    subject: '[LINGXILOOP-LIVE-TEST] bounce path',
     text: 'Should be accepted at the API; bounce is async.',
     messageId: mintMessageId(),
   })

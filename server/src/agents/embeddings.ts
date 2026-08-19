@@ -2,7 +2,7 @@
  * Memory embeddings via OpenAI's `text-embedding-3-small` (1536-dim).
  *
  * Used by:
- *   - `cumora memory note` — embeds the body at write time and stores
+ *   - `lingxiloop memory note` — embeds the body at write time and stores
  *     the vector in `agent_workspace.embedding`.
  *   - `loadMemory(agentId, queryText)` — embeds the recent inbox
  *     context at wake time so the retriever can pull semantically

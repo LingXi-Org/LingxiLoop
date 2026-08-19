@@ -5,7 +5,7 @@
  * Each agent gets one Pod, spawned on demand when a wake arrives and
  * the previous Pod has timed-out-and-exited (status `resting`). The
  * Pod's `/workspace` is a FUSE mount of the agent's slice of
- * `agent_workspace` (`cumora-fuse` Go binary, baked into the image);
+ * `agent_workspace` (`lingxiloop-fuse` Go binary, baked into the image);
  * Postgres row-level security on a per-agent role pins what the Pod
  * can see/write.
  *
@@ -30,36 +30,36 @@ import { signAgentToken } from './jwt.js'
 import { notifyAlert } from '../../alerting.js'
 import { Semaphore } from '../../concurrency.js'
 
-const KUBECTL = process.env.CUMORA_KUBECTL ?? 'kubectl'
+const KUBECTL = process.env.LINGXILOOP_KUBECTL ?? 'kubectl'
 /** kubectl context to target. In dev we pin to OrbStack so a stray
  *  `kubectl config use-context gke-...` on the dev laptop can't cause
  *  the dev server to spawn agent Pods in a real cluster. In production
  *  we leave it unset and let kubectl resolve the current context
  *  (typically the in-cluster SA when the server runs in K8s). Override
- *  the dev default with CUMORA_KUBECTL_CONTEXT (e.g. if your local
+ *  the dev default with LINGXILOOP_KUBECTL_CONTEXT (e.g. if your local
  *  context is named differently). */
-const KUBECTL_CONTEXT = process.env.CUMORA_KUBECTL_CONTEXT
+const KUBECTL_CONTEXT = process.env.LINGXILOOP_KUBECTL_CONTEXT
   ?? (env.NODE_ENV === 'production' ? '' : 'orbstack')
-const IMAGE = process.env.CUMORA_AGENT_COMPUTER_IMAGE
-  ?? 'quay.io/yetoneful/cumora-agent-computer:dev'
+const IMAGE = process.env.LINGXILOOP_AGENT_COMPUTER_IMAGE
+  ?? 'ghcr.io/lingxi-org/lingxiloop-agent-computer:dev'
 /** TTL of the JWT minted at Pod-spawn time. Pods live up to
- *  CUMORA_AGENT_IDLE_MS without restart, so the JWT lives longer than
+ *  LINGXILOOP_AGENT_IDLE_MS without restart, so the JWT lives longer than
  *  the idle ceiling to avoid mid-life expiry. */
-const TOKEN_TTL_SECONDS = Number(process.env.CUMORA_AGENT_TOKEN_TTL_SECONDS ?? 24 * 60 * 60)
+const TOKEN_TTL_SECONDS = Number(process.env.LINGXILOOP_AGENT_TOKEN_TTL_SECONDS ?? 24 * 60 * 60)
 /** K8s namespace pods land in. Default = current context's namespace. */
-const NS = process.env.CUMORA_AGENT_NAMESPACE ?? 'default'
+const NS = process.env.LINGXILOOP_AGENT_NAMESPACE ?? 'default'
 /** Comma-separated list of imagePullSecrets to attach to the agent
  *  Pod. Needed when the image lives in a private registry (e.g.
  *  quay.io with auth, gcr.io / Artifact Registry without Workload
  *  Identity). Empty = no pull secrets, fine for public registries or
  *  OrbStack-local builds. */
-const PULL_SECRETS = (process.env.CUMORA_AGENT_PULL_SECRETS ?? '')
+const PULL_SECRETS = (process.env.LINGXILOOP_AGENT_PULL_SECRETS ?? '')
   .split(',').map((s) => s.trim()).filter(Boolean)
 /** Optional ServiceAccount the agent Pod runs as. Useful for GKE
  *  Workload Identity (binding to a GCP service account) when the
  *  agent's bash tool ends up calling GCP APIs. Empty = use the
  *  namespace's `default` SA. */
-const POD_SERVICE_ACCOUNT = process.env.CUMORA_AGENT_SERVICE_ACCOUNT ?? ''
+const POD_SERVICE_ACCOUNT = process.env.LINGXILOOP_AGENT_SERVICE_ACCOUNT ?? ''
 
 export interface KubectlResult { code: number; out: string; err: string; timedOut: boolean }
 
@@ -220,20 +220,20 @@ function chromeProfilePvcName(agentId: string): string {
 
 /** Storage size for the chrome-profile PVC. Default is 500Mi which
  *  fits typical Chromium profile state (cookies + IndexedDB + cache)
- *  with comfortable headroom. Set CUMORA_CHROME_PVC_SIZE to override
+ *  with comfortable headroom. Set LINGXILOOP_CHROME_PVC_SIZE to override
  *  (use Kubernetes resource-quantity syntax: 1Gi, 200Mi, etc.). */
-const CHROME_PVC_SIZE = process.env.CUMORA_CHROME_PVC_SIZE ?? '500Mi'
+const CHROME_PVC_SIZE = process.env.LINGXILOOP_CHROME_PVC_SIZE ?? '500Mi'
 /** StorageClass for the chrome-profile PVC. Empty = cluster default,
  *  which is usually what you want. Override with
- *  CUMORA_CHROME_PVC_STORAGECLASS only when you need a specific class
+ *  LINGXILOOP_CHROME_PVC_STORAGECLASS only when you need a specific class
  *  (e.g. a fast SSD pool or a zone-pinned class). */
-const CHROME_PVC_STORAGECLASS = process.env.CUMORA_CHROME_PVC_STORAGECLASS ?? ''
+const CHROME_PVC_STORAGECLASS = process.env.LINGXILOOP_CHROME_PVC_STORAGECLASS ?? ''
 /** When set to "false", the chrome-profile volume is an emptyDir
  *  (ephemeral, dies with the pod) instead of a PVC. Escape hatch for
  *  clusters that don't have a default StorageClass yet — agents start
  *  cleanly, they just lose Chromium's login state across restarts.
  *  Default ON so login persistence is the production behavior. */
-const CHROME_PROFILE_ON_PVC = process.env.CUMORA_CHROME_PROFILE_PVC !== 'false'
+const CHROME_PROFILE_ON_PVC = process.env.LINGXILOOP_CHROME_PROFILE_PVC !== 'false'
 
 /** Render the Pod manifest. restartPolicy=OnFailure so a crashed
  *  container restarts in-place, but a clean exit (idle timeout —
@@ -253,7 +253,7 @@ function yamlQuote(value: string): string {
 /** Validate that a value contains only DNS-1123 label characters
  *  (lowercase alphanumeric + dashes). k8s rejects labels with
  *  uppercase, dots, etc. — we sanitize the agentId via safeName() for
- *  metadata.name but the cumora.agent LABEL value (used by selectors)
+ *  metadata.name but the lingxiloop.agent LABEL value (used by selectors)
  *  has the same constraint. Throws on invalid input so the caller can
  *  surface a precise error rather than letting kubectl reject the
  *  apply with a less obvious message. */
@@ -285,8 +285,8 @@ ${PULL_SECRETS.map((s) => `  - name: ${yamlQuote(s)}`).join('\n')}`
   const saBlock = POD_SERVICE_ACCOUNT === '' ? '' : `
   serviceAccountName: ${yamlQuote(POD_SERVICE_ACCOUNT)}`
   // metadata.name already went through safeName() (DNS-1123). The
-  // LABEL value cumora.agent also needs DNS-1123 — selectors that
-  // grep the cluster (`kubectl get pods -l cumora.agent=...`) rely
+  // LABEL value lingxiloop.agent also needs DNS-1123 — selectors that
+  // grep the cluster (`kubectl get pods -l lingxiloop.agent=...`) rely
   // on this matching the name slug. Run agentId through the same
   // sanitization so the two stay in sync.
   const podSlug = safeName(args.agentId).replace(/^agent-/, '')
@@ -296,8 +296,8 @@ kind: Pod
 metadata:
   name: ${podName(args.agentId)}
   labels:
-    app: cumora-agent
-    cumora.agent: ${yamlQuote(labelValue)}
+    app: lingxiloop-agent
+    lingxiloop.agent: ${yamlQuote(labelValue)}
 spec:
   restartPolicy: OnFailure${saBlock}${pullSecretsBlock}
   containers:
@@ -310,7 +310,7 @@ spec:
       #   2. /dev/fuse in the cgroup device whitelist — granted by the
       #      generic-device-plugin DaemonSet (squat/generic-device-
       #      plugin) which we depend on being installed in the cluster
-      #      (see server/k8s/generic-device-plugin.note).
+      #      (requires an operator-managed generic device plugin).
       #   3. AppArmor unconfined — the default cri-containerd profile
       #      denies the mount syscall even with CAP_SYS_ADMIN, so the
       #      pod must opt out. Without this the agent boots but
@@ -355,17 +355,17 @@ spec:
     - name: chrome-profile
       mountPath: /opt/chrome-profile
     env:
-    - name: CUMORA_AGENT_ID
+    - name: LINGXILOOP_AGENT_ID
       value: ${yamlQuote(args.agentId)}
-    - name: CUMORA_AGENT_RUNTIME_URL
+    - name: LINGXILOOP_AGENT_RUNTIME_URL
       value: ${yamlQuote(args.serverUrl)}
-    - name: CUMORA_AGENT_IDLE_MS
+    - name: LINGXILOOP_AGENT_IDLE_MS
       value: ${yamlQuote(String(args.idleMs))}
-    - name: CUMORA_AGENT_NO_WORK_MS
+    - name: LINGXILOOP_AGENT_NO_WORK_MS
       value: ${yamlQuote(String(args.noWorkMs))}
-    - name: CUMORA_PERSONA_DIR
+    - name: LINGXILOOP_PERSONA_DIR
       value: "/workspace"
-    - name: CUMORA_AGENT_RUNTIME_TOKEN
+    - name: LINGXILOOP_AGENT_RUNTIME_TOKEN
       value: |-
 ${indent(args.token)}
     - name: LINGXILOOP_REASONING_RUNTIME
@@ -421,10 +421,10 @@ kind: PersistentVolumeClaim
 metadata:
   name: ${chromeProfilePvcName(args.agentId)}
   labels:
-    app: cumora-agent
-    cumora.agent: ${yamlQuote(dnsLabelValue(safeName(args.agentId).replace(/^agent-/, '')) || 'unknown')}
+    app: lingxiloop-agent
+    lingxiloop.agent: ${yamlQuote(dnsLabelValue(safeName(args.agentId).replace(/^agent-/, '')) || 'unknown')}
   annotations:
-    cumora.dev/agent-id: ${yamlQuote(args.agentId)}
+    lingxiloop.dev/agent-id: ${yamlQuote(args.agentId)}
 spec:
   accessModes:
   - ReadWriteOnce
@@ -453,7 +453,7 @@ export const _testing = { podManifest, yamlQuote, dnsLabelValue, chromeProfilePv
 // FailedScheduling for tens of minutes with no recovery.
 
 export interface ClusterFuseUtilization {
-  /** Number of cumora-agent pods currently using a fuse slot
+  /** Number of lingxiloop-agent pods currently using a fuse slot
    *  (Pending + Running, excluding Succeeded/Failed). */
   used: number
   /** Effective admission cap: min(cluster `devic.es/fuse` capacity,
@@ -505,7 +505,7 @@ const FUSE_CACHE_TTL_MS = 10_000
  *  raciness. Below 0.90 we let everything through. */
 const FUSE_ADMISSION_THRESHOLD = 0.90
 
-/** Sample (or read from cache) the cluster's cumora-agent fuse usage.
+/** Sample (or read from cache) the cluster's lingxiloop-agent fuse usage.
  *  Fails open: on kubectl error returns `cap=Infinity` so callers
  *  never block on transient cluster-state read failures. */
 export async function getClusterFuseUtilization(): Promise<ClusterFuseUtilization> {
@@ -517,7 +517,7 @@ export async function getClusterFuseUtilization(): Promise<ClusterFuseUtilizatio
   const [nodes, pods] = await Promise.all([
     kubectlWithRetry(['get', 'nodes', '-o', 'json'], { timeoutMs: 10_000 }),
     kubectlWithRetry(
-      ['get', 'pods', '-l', 'app=cumora-agent', '-o', 'json'],
+      ['get', 'pods', '-l', 'app=lingxiloop-agent', '-o', 'json'],
       { timeoutMs: 10_000 },
     ),
   ])
@@ -828,7 +828,7 @@ async function ensurePodImpl(agentId: string): Promise<EnsurePodResult> {
   // (Chromium would just have an empty profile) so we log and
   // continue rather than block the agent from spawning.
   //
-  // Skipped entirely when CUMORA_CHROME_PROFILE_PVC=false — used by
+  // Skipped entirely when LINGXILOOP_CHROME_PROFILE_PVC=false — used by
   // clusters that don't have a default StorageClass set up yet. The
   // pod manifest swaps the volume source to emptyDir to match.
   if (CHROME_PROFILE_ON_PVC) {
@@ -965,8 +965,8 @@ let chromePvcGcTimer: NodeJS.Timeout | null = null
 
 async function listChromeProfilePvcs(): Promise<Array<{ name: string; agentId: string }>> {
   const out = await kubectlWithRetry(
-    ['get', 'pvc', '-l', 'app=cumora-agent', '-o',
-      'jsonpath={range .items[*]}{.metadata.name}|{.metadata.annotations.cumora\\.dev/agent-id}{"\\n"}{end}'],
+    ['get', 'pvc', '-l', 'app=lingxiloop-agent', '-o',
+      'jsonpath={range .items[*]}{.metadata.name}|{.metadata.annotations.lingxiloop\\.dev/agent-id}{"\\n"}{end}'],
     { timeoutMs: 20_000 },
   )
   if (out.code !== 0) {
@@ -1080,7 +1080,7 @@ export function stopChromeProfilePvcGc(): void {
 // `kubectl get pods` output, and leave dangling PVC bindings.
 
 /** Pure helper — pick agent pods that should be GC'd given the JSON
- *  output of `kubectl get pods -l app=cumora-agent -o json`. Tests
+ *  output of `kubectl get pods -l app=lingxiloop-agent -o json`. Tests
  *  pin this directly without spawning kubectl. */
 export function pickAgentPodsForGc(
   podsJson: string,
@@ -1110,12 +1110,12 @@ export function pickAgentPodsForGc(
 }
 
 /** Periodic sweep of finished agent pods. Safe to run from any number
- *  of cumora-server replicas — `kubectl delete --ignore-not-found`
+ *  of lingxiloop-server replicas — `kubectl delete --ignore-not-found`
  *  collapses concurrent calls. */
 export async function gcCompletedAgentPods(opts: { minAgeMs?: number } = {}): Promise<{ scanned: number; deleted: number }> {
   const minAgeMs = opts.minAgeMs ?? 5 * 60_000
   const r = await kubectlWithRetry(
-    ['get', 'pods', '-l', 'app=cumora-agent', '-o', 'json'],
+    ['get', 'pods', '-l', 'app=lingxiloop-agent', '-o', 'json'],
     { timeoutMs: 10_000 },
   )
   if (r.code !== 0) return { scanned: 0, deleted: 0 }
@@ -1201,7 +1201,7 @@ export async function pollClusterFusePressureOnce(): Promise<void> {
   const fuse = await getClusterFuseUtilization()
   const pendingProbe = await kubectlWithRetry(
     [
-      'get', 'pods', '-l', 'app=cumora-agent',
+      'get', 'pods', '-l', 'app=lingxiloop-agent',
       '--field-selector=status.phase=Pending',
       '--no-headers',
     ],

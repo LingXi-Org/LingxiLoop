@@ -9,7 +9,7 @@ import AuthenticationServices
  * Why not just open SFSafariViewController (@capacitor/browser)? Because
  * `SFSafariViewController` silently blocks 302 redirects to custom URL
  * schemes — when the OAuth server responds with
- * `Location: cumora://auth#token=...`, Safari drops it and the app
+ * `Location: lingxiloop://auth#token=...`, Safari drops it and the app
  * never sees the callback. `ASWebAuthenticationSession` is explicitly
  * designed for OAuth: you hand it a start URL and a callback URL
  * scheme, and the system delivers the final callback URL straight back
@@ -18,10 +18,10 @@ import AuthenticationServices
  * Exposed JS API (registered as plugin `WebAuth`):
  *
  *   await WebAuth.start({
- *     url: "https://api.cumora.ai/api/auth/start/google?return=cumora%3A%2F%2Fauth",
- *     callbackScheme: "cumora"
+ *     url: "https://loop.example.com/api/auth/start/google?return=lingxiloop%3A%2F%2Fauth",
+ *     callbackScheme: "lingxiloop"
  *   })
- *   // resolves with `{ callbackUrl: "cumora://auth#token=...&companyId=..." }`
+ *   // resolves with `{ callbackUrl: "lingxiloop://auth#token=...&companyId=..." }`
  *   // or rejects on user cancel.
  */
 @objc(WebAuthPlugin)
@@ -44,7 +44,7 @@ public class WebAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticationPres
             call.reject("Missing 'callbackScheme'")
             return
         }
-        NSLog("[Cumora] WebAuth.start url=%@ scheme=%@", url.absoluteString, scheme)
+        NSLog("[LingxiLoop] WebAuth.start url=%@ scheme=%@", url.absoluteString, scheme)
 
         DispatchQueue.main.async {
             let session = ASWebAuthenticationSession(
@@ -64,7 +64,7 @@ public class WebAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticationPres
                     call.reject("auth session returned no callback URL", "NO_CALLBACK")
                     return
                 }
-                NSLog("[Cumora] WebAuth.start callbackUrl=%@", callbackUrl.absoluteString)
+                NSLog("[LingxiLoop] WebAuth.start callbackUrl=%@", callbackUrl.absoluteString)
                 call.resolve(["callbackUrl": callbackUrl.absoluteString])
             }
             // iOS 13+ requires a presentation context provider for the

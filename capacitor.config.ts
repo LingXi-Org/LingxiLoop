@@ -1,20 +1,20 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 /**
- * Capacitor configuration for the Cumora mobile app.
+ * Capacitor configuration for the LingxiLoop mobile app.
  *
- * Bundle id `io.cumora.app` matches the Electron build's appId so the
+ * Bundle id `cn.lingxilearn.loop` matches the Electron build's appId so the
  * Apple/Google portals stay aligned. `webDir` points at Vite's standard
  * build output (`dist/`) — run `npm run build` before `npx cap sync ios`.
  *
  * `server.url` is intentionally NOT set in this checked-in config —
  * shipping with a hardcoded staging URL would lock TestFlight builds to
  * dev infra. The runtime resolveServerOrigin() in src/api/client.ts
- * picks the API origin from VITE_CUMORA_API_BASE at build time, which
+ * picks the API origin from VITE_LINGXILOOP_API_BASE at build time, which
  * is the right knob for an App Store submission build.
  */
 const config: CapacitorConfig = {
-  appId: 'io.cumora.app',
+  appId: 'cn.lingxilearn.loop',
   appName: 'LingxiLoop',
   webDir: 'dist',
   ios: {
@@ -42,9 +42,8 @@ const config: CapacitorConfig = {
   plugins: {
     // Patch window.fetch + XMLHttpRequest to route through Swift's
     // URLSession. The WKWebView's origin is `capacitor://localhost`,
-    // which CORS-blocks any cross-origin call (including ours to
-    // https://api.cumora.ai/api/auth/me) unless the server explicitly
-    // allows that origin. Routing through the native layer sidesteps
+    // which CORS-blocks calls to the build-time configured HTTPS API unless
+    // the server explicitly allows that origin. Routing through the native layer sidesteps
     // CORS entirely — the request reaches the API the same way curl
     // would, no browser preflight involved.
     CapacitorHttp: {

@@ -21,7 +21,7 @@ export interface CliSideEffectsParseResult {
   malformedLineCount: number
 }
 
-export const CLI_SIDE_EFFECT_WRITE_FAILED_PREFIX = '__CUMORA_CLI_SIDE_EFFECTS_WRITE_FAILED__='
+export const CLI_SIDE_EFFECT_WRITE_FAILED_PREFIX = '__LINGXILOOP_CLI_SIDE_EFFECTS_WRITE_FAILED__='
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -99,7 +99,7 @@ export function parseCliSideEffectsWriteFailureMarker(raw: string): CliSideEffec
 }
 
 export async function writeCliSideEffectsToResultPath(result: CliResult): Promise<void> {
-  const path = process.env.CUMORA_CLI_RESULT_PATH
+  const path = process.env.LINGXILOOP_CLI_RESULT_PATH
   const sideEffects = normalizeCliSideEffects(result.sideEffects)
   if (!path || sideEffects.length === 0) return
   const { appendFile } = await import('node:fs/promises')

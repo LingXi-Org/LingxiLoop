@@ -38,7 +38,7 @@ import { startShippingMaintenance } from './shipping-maintenance.js'
 async function main() {
   await ensureSchemaWithBootRetry()
   await seedIfEmpty()
-  // Promote CUMORA_ADMIN_EMAILS members to is_admin on every boot —
+  // Promote LINGXILOOP_ADMIN_EMAILS members to is_admin on every boot —
   // idempotent, only flips FALSE→TRUE. Demotion goes through the panel.
   await seedAdmins()
   // Catch any company that was created before the auto-onboarding wiring
@@ -55,7 +55,7 @@ async function main() {
     console.warn('[embed:backfill] crashed', e instanceof Error ? e.message : String(e)),
   )
 
-  // Per-turn FS namespaces live under /tmp/cumora-fs/. A clean shutdown
+  // Per-turn FS namespaces live under /tmp/lingxiloop-fs/. A clean shutdown
   // tears them down individually; a crashed prior process may have
   // leaked some. Wipe and recreate the root once at boot.
   await sweepStaleNamespaces()
@@ -79,7 +79,7 @@ async function main() {
       return compression.filter(req, res)
     },
   }))
-  // CORS — only kicks in when CUMORA_CORS_ORIGINS is set. Browsers send
+  // CORS — only kicks in when LINGXILOOP_CORS_ORIGINS is set. Browsers send
   // `Origin` only on cross-origin requests, so same-origin (Vite proxy,
   // colocated static deploy) is unaffected. `*` allows any origin but
   // disables credentials per the CORS spec. We do NOT enable credentials
@@ -92,7 +92,7 @@ async function main() {
       res.setHeader('Access-Control-Allow-Origin', corsAny ? '*' : origin)
       res.setHeader('Vary', 'Origin')
       res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
-      res.setHeader('Access-Control-Allow-Headers', 'content-type,authorization,x-company-id,x-cumora-dev-mode')
+      res.setHeader('Access-Control-Allow-Headers', 'content-type,authorization,x-company-id,x-lingxiloop-dev-mode')
       res.setHeader('Access-Control-Max-Age', '600')
       if (req.method === 'OPTIONS') { res.status(204).end(); return }
     }
@@ -142,11 +142,9 @@ async function main() {
   app.use('/runtime', runtimeRouter)
 
   // ============== Host gating ==============
-  // api.cumora.ai is JSON-only. The /api, /runtime, /uploads mounts above
-  // already handle the legit traffic; anything reaching this middleware on
-  // the api.* host is a stray GET that would otherwise fall through to the
-  // SPA shell, which we don't want — return 404 instead. admin.* and app.*
-  // hosts continue through to the SPA, which self-routes client-side.
+  // If an operator adds an API-only subdomain, prevent its unknown routes
+  // from falling through to the SPA. The supported production origin serves
+  // Web and API together on one host.
   app.use((req, res, next) => {
     const host = (req.hostname || '').toLowerCase()
     if (host.startsWith('api.')) {
@@ -158,10 +156,8 @@ async function main() {
 
   // ============== Web SPA bundle ==============
   // The same Docker image bakes in the frontend `dist/` next to the server
-  // source, so this single pod serves both api.cumora.ai (JSON) and
-  // app.cumora.ai (HTML+JS). The two hostnames hit the SAME GKE Service —
-  // same-origin from the browser's POV when on app.cumora.ai means zero
-  // CORS for the renderer. Local-dev keeps using Vite (port 5173) and the
+  // source, so this single container serves both JSON and the SPA. Same-origin
+  // Web needs no CORS configuration. Local dev keeps using Vite and the
   // existing /api proxy, so the static handler is skipped when dist/ isn't
   // present.
   //
@@ -201,7 +197,7 @@ async function main() {
     // No bundle present (typical for local-dev where Vite serves the
     // renderer on :5173). Keep `/` informational so dev probes still work.
     app.get('/', (_req, res) => res.json({
-      name: 'cumora', instance: env.INSTANCE_ID, spa: 'dev (served by vite)',
+      name: 'lingxiloop', instance: env.INSTANCE_ID, spa: 'dev (served by vite)',
     }))
   }
 
@@ -228,7 +224,7 @@ async function main() {
   bootDocumentBus()
 
   server.listen(env.PORT, () => {
-    console.log(`[boot] cumora server :${env.PORT} · instance ${env.INSTANCE_ID} · model ${env.OPENAI_MODEL}`)
+    console.log(`[boot] lingxiloop server :${env.PORT} · instance ${env.INSTANCE_ID} · model ${env.OPENAI_MODEL}`)
   })
 
   // Demote any 'avail' humans left over from the previous run; real
@@ -380,7 +376,7 @@ async function main() {
 }
 
 // Process-level safety nets. On modern Node (≥ 15) an unhandled
-// promise rejection terminates the process by default — for cumora
+// promise rejection terminates the process by default — for lingxiloop
 // that would knock out the wake bus + scheduler + HTTP API and every
 // agent goes silent until the pod restarts. Most of our async paths
 // either await with try/catch or `.catch()`-suffixed fire-and-forget;

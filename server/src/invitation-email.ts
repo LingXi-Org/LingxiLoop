@@ -7,7 +7,7 @@
  * has the URL on screen to share manually. We just surface the delivery
  * result so the modal can show "email sent / email failed" feedback.
  *
- * Sender:    Display = "<Inviter> (via Cumora)", address = invites@<EMAIL_DOMAIN>
+ * Sender:    Display = "<Inviter> (via LingxiLoop)", address = invites@<EMAIL_DOMAIN>
  * Reply-To:  inviter's own email — replies land in the human's inbox, not a
  *            blackhole. (The invites@ address itself has no inbox.)
  * Auto-Submitted: auto-generated — keeps vacation responders from bounce-
@@ -42,7 +42,7 @@ export interface InvitationEmailArgs {
   role: 'member' | 'admin'
   /** Optional free-text note the inviter attached. */
   note: string | null
-  /** Full https URL the recipient should open (cumora.ai/invite/<token>). */
+  /** Full https URL the recipient should open (loop.lingxilearn.cn/invite/<token>). */
   inviteUrl: string
 }
 
@@ -95,7 +95,7 @@ function buildInvitationEmailHtml(args: {
                   <img src="${logoUrl}" alt="" width="32" height="32" style="display:block; width:32px; height:32px;" />
                 </td>
                 <td style="vertical-align:middle; font-family:${fontStack}; font-size:18px; font-weight:700; color:#0A1B2E; letter-spacing:-0.01em;">
-                  Cumora
+                  LingxiLoop
                 </td>
               </tr>
             </table>
@@ -103,7 +103,7 @@ function buildInvitationEmailHtml(args: {
         </tr>` : `
         <tr>
           <td align="center" style="padding:36px 0 24px; font-family:${fontStack}; font-size:18px; font-weight:700; color:#0A1B2E; letter-spacing:-0.01em;">
-            Cumora
+            LingxiLoop
           </td>
         </tr>`
 
@@ -114,7 +114,7 @@ function buildInvitationEmailHtml(args: {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
-  <title>You're invited to ${company} on Cumora</title>
+  <title>You're invited to ${company} on LingxiLoop</title>
 </head>
 <body style="margin:0; padding:0; background:#FAFCFE; color:#0A1B2E; font-family:${fontStack};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FAFCFE;">
@@ -136,7 +136,7 @@ function buildInvitationEmailHtml(args: {
                 </tr>
                 <tr>
                   <td style="font-family:${fontStack}; font-size:15px; font-weight:400; line-height:1.6; color:#233A53; padding:0 0 24px;">
-                    You&rsquo;ll join as ${roleLabel}. Cumora is a desktop chat where humans and AI teammates share the same rooms &mdash; once you accept, you&rsquo;ll see your new workspace and the agents that live there.
+                    You&rsquo;ll join as ${roleLabel}. LingxiLoop is a desktop chat where humans and AI teammates share the same rooms &mdash; once you accept, you&rsquo;ll see your new workspace and the agents that live there.
                   </td>
                 </tr>${noteBlock}
                 <tr>
@@ -179,7 +179,7 @@ function buildInvitationEmailHtml(args: {
           </tr>
           <tr>
             <td align="center" style="font-family:${fontStack}; font-size:12px; font-weight:400; line-height:1.5; color:#94A8BC; padding:24px 0 0;">
-              &copy; Cumora &middot; Where teams gather
+              &copy; LingxiLoop &middot; Where teams gather
             </td>
           </tr>
         </table>
@@ -197,13 +197,13 @@ export async function sendInvitationEmail(args: InvitationEmailArgs): Promise<In
   }
 
   const fromAddr = `invites@${env.EMAIL_DOMAIN}`
-  const senderDisplay = `${args.inviterName} (via Cumora)`
-  const subject = `${args.inviterName} invited you to ${args.companyName} on Cumora`
+  const senderDisplay = `${args.inviterName} (via LingxiLoop)`
+  const subject = `${args.inviterName} invited you to ${args.companyName} on LingxiLoop`
 
   const text = [
     `Hi,`,
     ``,
-    `${args.inviterName} invited you to ${args.companyName} on Cumora — you'll join as ${args.role === 'admin' ? 'an admin' : 'a member'}.`,
+    `${args.inviterName} invited you to ${args.companyName} on LingxiLoop — you'll join as ${args.role === 'admin' ? 'an admin' : 'a member'}.`,
     ``,
     args.note ? `Note from ${args.inviterName}: "${args.note}"` : null,
     args.note ? `` : null,
@@ -215,7 +215,7 @@ export async function sendInvitationEmail(args: InvitationEmailArgs): Promise<In
     ``,
     `This invitation expires in 7 days. If you weren't expecting it, just ignore this email — nothing happens until you click the link.`,
     ``,
-    `— Cumora`,
+    `— LingxiLoop`,
   ].filter((line): line is string => line !== null).join('\n')
 
   const html = buildInvitationEmailHtml({
