@@ -17,7 +17,7 @@ from typing import Any, Mapping
 
 from lingxigraph import HumanMessage, create_agent
 from lingxigraph.integrations.openai_compat import OpenAICompatChatModel
-from lingxigraph.messages import AIMessage
+from lingxigraph.messages import AIMessage, SystemMessage
 
 
 ACTION_SCHEMA: dict[str, Any] = {
@@ -67,9 +67,35 @@ class UsageTrackingModel:
         self.calls: list[dict[str, Any]] = []
 
     async def agenerate(self, messages: Any, *, tools: Any = None, **kwargs: Any) -> AIMessage:
+        response_format = kwargs.get("response_format")
+        # LingxiGraph 2.0.1 passes its validation schema directly as
+        # `response_format`.  OpenAI-compatible APIs do not accept a raw JSON
+        # Schema there, and DeepSeek specifically only accepts
+        # {"type":"text"} or {"type":"json_object"}.  Keep the full schema
+        # for LingxiGraph's local validation/retry loop, but translate the
+        # provider request to JSON mode and put the schema in the prompt.
+        if _is_raw_json_schema(response_format):
+            messages = [
+                *messages,
+                SystemMessage(
+                    "Return only a JSON object matching this JSON Schema exactly. "
+                    "Do not use Markdown fences. JSON Schema:\n"
+                    + json.dumps(response_format, ensure_ascii=False, separators=(",", ":"))
+                ),
+            ]
+            kwargs["response_format"] = {"type": "json_object"}
         response = await self._inner.agenerate(messages, tools=tools, **kwargs)
         self.calls.append({"model": self.model, "usage": _normalize_usage(response.usage)})
         return response
+
+
+def _is_raw_json_schema(value: Any) -> bool:
+    """Return true for a schema mistakenly used as an API response_format."""
+    return (
+        isinstance(value, Mapping)
+        and value.get("type") == "object"
+        and ("properties" in value or "required" in value)
+    )
 
 
 def _normalize_usage(usage: Mapping[str, Any]) -> dict[str, int] | None:
