@@ -28,10 +28,21 @@
  *
  * Exit code 0 on success, 1 on any assertion / timeout failure.
  */
+import { randomUUID } from 'node:crypto'
+import { runCli } from '../src/agents/cli.js'
 import { pool } from '../src/db/pool.js'
+import { CH_MESSAGE_NEW, publish } from '../src/redis.js'
 import {
-  log as baseLog, sleep, waitForHealth, seedCompany, findOwnerDm,
-  getUnreadCursor, waitForCursorAdvance, postMessage, waitForAgentReply,
+  log as baseLog,
+  findOwnerDm,
+  getUnreadCursor,
+  postMessage,
+  seedCompany,
+  sleep,
+  triggerAndWaitForMessageBroadcast,
+  waitForAgentReply,
+  waitForCursorAdvance,
+  waitForHealth,
 } from './mvp-lib.js'
 
 const TAG = 'mvp-smoke'
@@ -63,11 +74,11 @@ async function dumpAgentRunDiagnostics(agentId: string): Promise<void> {
 
 /**
  * Fault scenario (issue #9 section 6: "LingxiGraph 返回 invalid response").
- * Only exercised when the runtime under test is the deterministic fake
- * (server/scripts/fake-lingxigraph-runtime.mjs), which special-cases this
- * exact marker string to return a schema-invalid `/v1/turn` body. Asserts
- * the Node adapter's strict validation rejects it and the agent's unread
- * cursor does NOT advance.
+ * In CI the deterministic provider special-cases this marker with invalid
+ * structured output. The real Python Runtime rejects it (after bounded
+ * structured retries), and the Node turn must leave the unread cursor
+ * untouched. Adapter-level malformed `/v1/turn` validation remains pinned
+ * by agents-lingxigraph-adapter.test.ts.
  *
  * Runs in the SAME DM the happy path just used, after the happy path's own
  * message has already been read — that's fine, this message is the last
@@ -91,28 +102,97 @@ async function runInvalidResponseFaultCheck(
   if (cursorAfter !== cursorBefore) {
     throw new Error(
       `agent unread cursor advanced ("${cursorBefore}" -> "${cursorAfter}") despite an invalid `
-      + `LingxiGraph response — strict validation / unread-cursor regression`,
+      + `LingxiGraph/provider failure — unread-cursor regression`,
     )
   }
   log(`PASS: invalid LingxiGraph response left the unread cursor untouched ("${cursorBefore}")`)
+}
+
+async function runAgentToAgentCheck(companyId: string): Promise<void> {
+  const { rows: agents } = await pool.query<{ id: string }>(
+    `SELECT id FROM participants WHERE company_id = $1 AND kind = 'agent' ORDER BY id LIMIT 2`,
+    [companyId],
+  )
+  if (agents.length < 2) throw new Error('starter team did not contain two agents for Agent -> Agent E2E')
+  const [agentA, agentB] = agents.map((row) => row.id)
+  const conversationId = `mvp-agent-dm-${randomUUID()}`
+  await pool.query(
+    `INSERT INTO conversations (id, kind, title, members, tag, company_id)
+     VALUES ($1, 'direct', 'MVP Agent E2E', $2::jsonb, 'agent', $3)`,
+    [conversationId, JSON.stringify([agentA, agentB]), companyId],
+  )
+
+  const sent = await runCli(['--as', agentA, 'reply', conversationId, 'Agent A asks Agent B for one deterministic reply.'])
+  if (!sent.ok) throw new Error(`Agent A message.send failed: ${sent.text}`)
+  const { rows: sourceRows } = await pool.query<{
+    id: string; body: string; sequence: number; created_at: Date
+  }>(
+    `SELECT id, body, sequence, created_at FROM messages
+       WHERE conversation_id = $1 AND author_id = $2 ORDER BY sequence DESC LIMIT 1`,
+    [conversationId, agentA],
+  )
+  const source = sourceRows[0]
+  if (!source) throw new Error('Agent A source message was not persisted')
+
+  const deadline = Date.now() + REPLY_TIMEOUT_MS
+  let replyCount = 0
+  for (;;) {
+    const { rows } = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM messages WHERE conversation_id = $1 AND author_id = $2`,
+      [conversationId, agentB],
+    )
+    replyCount = Number(rows[0]?.count ?? 0)
+    if (replyCount > 0) break
+    if (Date.now() > deadline) throw new Error('timed out waiting for Agent B managed-executor reply')
+    await sleep(500)
+  }
+
+  // Replay the exact durable wake event. The cursor/fingerprint plus #7 sink
+  // idempotency must prevent a second side effect.
+  await publish(CH_MESSAGE_NEW, {
+    type: 'message.new', companyId, conversationId,
+    message: {
+      id: source.id, conversationId, authorId: agentA, kind: 'text', body: source.body,
+      sequence: source.sequence, at: source.created_at.toISOString(),
+    },
+  })
+  await sleep(3_000)
+  const { rows: finalCounts } = await pool.query<{ author_id: string; count: string }>(
+    `SELECT author_id, COUNT(*)::text AS count FROM messages
+       WHERE conversation_id = $1 GROUP BY author_id`,
+    [conversationId],
+  )
+  const counts = new Map(finalCounts.map((row) => [row.author_id, Number(row.count)]))
+  if (counts.get(agentB) !== 1) throw new Error(`duplicate Agent B replies after wake replay: ${counts.get(agentB) ?? 0}`)
+  if (counts.get(agentA) !== 1) throw new Error(`Agent reply cascade detected: Agent A posted ${counts.get(agentA) ?? 0} messages`)
+  log(`PASS: Agent -> Agent managed E2E completed once (${agentA} -> ${agentB}); replay/cascade produced no duplicate`)
 }
 
 async function main(): Promise<void> {
   await waitForHealth()
   log('API health check passed')
 
-  const { conversationId, agentId, token } = await (async () => {
+  const { companyId, conversationId, agentId, token } = await (async () => {
     const { companyId, userId, token } = await seedCompany('mvp-smoke')
     log(`seeded company ${companyId} / owner ${userId}`)
     const dm = await findOwnerDm(companyId, userId)
     log(`using DM ${dm.conversationId} with agent ${dm.agentId}`)
-    return { ...dm, token }
+    return { companyId, ...dm, token }
   })()
 
   const cursorBefore = await getUnreadCursor(agentId, conversationId)
 
-  const humanMessageId = await postMessage(token, conversationId, 'Hello, agent! (mvp docker-compose smoke)')
-  log(`human message posted: ${humanMessageId}`)
+  let humanMessageId = ''
+  const wsReply = await triggerAndWaitForMessageBroadcast(
+    token,
+    { conversationId, authorId: agentId },
+    async () => {
+      humanMessageId = await postMessage(token, conversationId, 'Hello, agent! (mvp docker-compose smoke)')
+      log(`human message posted: ${humanMessageId}`)
+    },
+    REPLY_TIMEOUT_MS,
+  )
+  log(`WebSocket observed agent reply broadcast: ${wsReply.message.id}`)
 
   const reply = await waitForAgentReply(token, conversationId, agentId, REPLY_TIMEOUT_MS)
   log(`agent reply received: ${reply.id} — "${reply.body}"`)
@@ -127,6 +207,8 @@ async function main(): Promise<void> {
   }
   log(`agent unread cursor advanced: "${cursorBefore}" -> "${cursorAfter}"`)
   log('PASS: Human -> Agent -> LingxiGraph -> message.send -> observable reply, full loop verified')
+
+  await runAgentToAgentCheck(companyId)
 
   if (process.env.MVP_SMOKE_SKIP_FAULT_CHECK !== '1') {
     await runInvalidResponseFaultCheck(token, conversationId, agentId)

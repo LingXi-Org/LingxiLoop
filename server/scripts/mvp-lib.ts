@@ -5,10 +5,11 @@
  * `onboardStarterAgents` with the API server it's calling over real HTTP.
  */
 import { randomUUID } from 'node:crypto'
-import { pool } from '../src/db/pool.js'
-import { createSession } from '../src/auth.js'
-import { onboardStarterAgents } from '../src/onboardCompany.js'
+import WebSocket from 'ws'
 import { cloudComputerId, ensureCloudComputer } from '../src/agents/computer/registry.js'
+import { createSession } from '../src/auth.js'
+import { pool } from '../src/db/pool.js'
+import { onboardStarterAgents } from '../src/onboardCompany.js'
 
 export const BASE_URL = process.env.MVP_SMOKE_BASE_URL || 'http://localhost:5181'
 
@@ -152,6 +153,58 @@ export async function postMessage(token: string, conversationId: string, body: s
   return json.id
 }
 
+export interface MessageBroadcast {
+  type: 'message.new'
+  conversationId: string
+  message: MessageRow & { conversationId: string }
+}
+
+/** Open a real authenticated client WebSocket before performing `trigger`,
+ * then resolve only when that client observes the expected message.new. */
+export async function triggerAndWaitForMessageBroadcast(
+  token: string,
+  expected: { conversationId: string; authorId: string },
+  trigger: () => Promise<void>,
+  timeoutMs = 60_000,
+): Promise<MessageBroadcast> {
+  const ticketRes = await fetch(`${BASE_URL}/api/auth/ws-ticket`, {
+    method: 'POST', headers: { authorization: `Bearer ${token}` },
+  })
+  if (!ticketRes.ok) throw new Error(`WS ticket failed: ${ticketRes.status} ${await ticketRes.text()}`)
+  const { ticket } = await ticketRes.json() as { ticket: string }
+  const wsUrl = new URL(BASE_URL)
+  wsUrl.protocol = wsUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+  wsUrl.pathname = '/ws'
+  wsUrl.search = `?t=${encodeURIComponent(ticket)}`
+
+  const ws = new WebSocket(wsUrl)
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('timed out opening MVP smoke WebSocket')), 10_000)
+      ws.once('open', () => { clearTimeout(timer); resolve() })
+      ws.once('error', (error) => { clearTimeout(timer); reject(error) })
+    })
+    const observed = new Promise<MessageBroadcast>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(
+        `timed out waiting for WS message.new from ${expected.authorId} in ${expected.conversationId}`,
+      )), timeoutMs)
+      ws.on('message', (raw) => {
+        try {
+          const event = JSON.parse(raw.toString()) as MessageBroadcast
+          if (event.type !== 'message.new') return
+          if (event.conversationId !== expected.conversationId || event.message?.authorId !== expected.authorId) return
+          clearTimeout(timer)
+          resolve(event)
+        } catch { /* hello / unrelated payload */ }
+      })
+    })
+    await trigger()
+    return await observed
+  } finally {
+    ws.close()
+  }
+}
+
 export interface MessageRow { id: string; authorId: string; body: string }
 
 export async function listMessages(token: string, conversationId: string): Promise<MessageRow[]> {
@@ -168,7 +221,12 @@ export async function waitForAgentReply(
   const deadline = Date.now() + timeoutMs
   for (;;) {
     const messages = await listMessages(token, conversationId)
-    const reply = messages.find((m) => m.authorId === agentId && m.id !== excludeMessageId)
+    const reply = messages.find((m) => {
+      if (m.authorId !== agentId || m.id === excludeMessageId) return false
+      // A failed turn emits an agent-authored lifecycle notice into the DM.
+      // It is observable state, not a successful model reply.
+      return !m.body.includes('"noticeKind":"agent_turn_failed"')
+    })
     if (reply) return reply
     if (Date.now() > deadline) {
       throw new Error(`timed out after ${timeoutMs}ms waiting for ${agentId} to reply in ${conversationId}`)
