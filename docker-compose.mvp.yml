@@ -1,0 +1,111 @@
+# MVP single-server Docker Compose deployment (issue #9).
+#
+# Brings up the full Human → Agent → LingxiGraph → action loop on ONE
+# machine, without Kubernetes and without a per-Agent Pod:
+#
+#   browser → lingxiloop (API + WS) → postgres / redis
+#                        └─ HTTP /v1/turn → lingxigraph-runtime
+#
+# This is the MVP topology only:
+#   - one `lingxiloop` API replica (server-side managed agent dispatch is
+#     in-process only — see LINGXILOOP_MANAGED_AGENT_EXECUTION in .env.example)
+#   - one `lingxigraph-runtime` replica
+#   - no Kubernetes, no per-Agent Pod, no distributed lock/queue
+#
+# Quickstart:
+#   cp .env.example .env            # fill in OPENAI_API_KEY at minimum
+#   docker compose -f docker-compose.mvp.yml build
+#   docker compose -f docker-compose.mvp.yml up -d
+#   docker compose -f docker-compose.mvp.yml ps
+#   npm run mvp:smoke               # Human → Agent → LingxiGraph smoke (see README)
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lingxiloop
+      POSTGRES_PASSWORD: lingxiloop
+      POSTGRES_DB: lingxiloop
+    volumes:
+      - lingxiloop-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lingxiloop -d lingxiloop"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks: [lingxiloop-mvp]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+    networks: [lingxiloop-mvp]
+
+  lingxigraph-runtime:
+    build:
+      context: .
+      dockerfile: server/docker/lingxigraph-runtime.Dockerfile
+    restart: unless-stopped
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      LINGXIGRAPH_TOKEN: ${LINGXIGRAPH_TOKEN:-}
+      LINGXIGRAPH_MODEL_TIMEOUT_SECONDS: ${LINGXIGRAPH_MODEL_TIMEOUT_SECONDS:-90}
+      PORT: 8124
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8124/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks: [lingxiloop-mvp]
+
+  lingxiloop:
+    build:
+      context: .
+      dockerfile: server/docker/cumora-server.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      lingxigraph-runtime:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5181
+      DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
+      REDIS_URL: redis://redis:6379
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      OPENAI_MODEL_SUPPORT: ${OPENAI_MODEL_SUPPORT:-}
+      # MVP-fixed reasoning + dispatch mode — see .env.example for the full
+      # explanation of why these two go together and why replicas must stay
+      # at 1 in `server` execution mode.
+      LINGXILOOP_REASONING_RUNTIME: lingxigraph
+      LINGXILOOP_MANAGED_AGENT_EXECUTION: server
+      LINGXIGRAPH_URL: http://lingxigraph-runtime:8124
+      LINGXIGRAPH_TOKEN: ${LINGXIGRAPH_TOKEN:-}
+    ports:
+      - "${LINGXILOOP_PORT:-5181}:5181"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks: [lingxiloop-mvp]
+
+networks:
+  lingxiloop-mvp: {}
+
+volumes:
+  lingxiloop-postgres-data: {}

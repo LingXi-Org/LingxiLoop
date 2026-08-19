@@ -1,0 +1,105 @@
+# MVP single-server Docker Compose smoke (issue #9).
+#
+# Builds the real LingxiLoop server image, brings up the full
+# Human -> Agent -> LingxiGraph -> action -> WebSocket-broadcastable-reply
+# loop via Docker Compose, and drives it with server/scripts/mvp-smoke.ts +
+# server/scripts/mvp-fault-outage.ts.
+#
+# Deliberately model-cost-free: docker-compose.mvp.ci.yml swaps the real
+# Python `lingxigraph-runtime` (which calls a real OpenAI-compatible
+# provider) for server/scripts/fake-lingxigraph-runtime.mjs, a zero-dep
+# Node stand-in that speaks the identical `/v1/turn` HTTP contract
+# deterministically. No PR run consumes model quota. The real
+# lingxigraph-runtime + a real provider stays available as a manual,
+# env-gated smoke via `npm run mvp:up` / `npm run mvp:smoke` (see README).
+#
+# Separate workflow from pr.yml on purpose — pr.yml is intentionally
+# Docker-free for fork safety and speed; this one builds two images and
+# needs `docker compose`, which GitHub-hosted `ubuntu-latest` runners ship
+# with out of the box.
+
+name: MVP Compose Smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docker-compose.mvp*.yml'
+      - 'server/docker/**'
+      - 'server/lingxigraph/**'
+      - 'server/scripts/mvp-*.ts'
+      - 'server/scripts/fake-lingxigraph-runtime.mjs'
+      - 'server/src/**'
+      - 'package.json'
+      - '.github/workflows/mvp-compose-smoke.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: mvp-compose-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose-smoke:
+    name: Compose up + Human->Agent smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images
+        run: docker compose -f docker-compose.mvp.ci.yml build
+
+      - name: Start stack
+        run: docker compose -f docker-compose.mvp.ci.yml up -d
+
+      - name: Wait for all services to report healthy
+        run: |
+          services="postgres redis lingxigraph-runtime lingxiloop"
+          for i in $(seq 1 60); do
+            all_healthy=true
+            for s in $services; do
+              cid=$(docker compose -f docker-compose.mvp.ci.yml ps -q "$s")
+              status=$(docker inspect --format '{{.State.Health.Status}}' "$cid" 2>/dev/null || echo missing)
+              [ "$status" = "healthy" ] || all_healthy=false
+              echo "$s: $status"
+            done
+            [ "$all_healthy" = true ] && { echo "all services healthy"; exit 0; }
+            sleep 3
+          done
+          echo "::error::services never became healthy"
+          docker compose -f docker-compose.mvp.ci.yml ps
+          docker compose -f docker-compose.mvp.ci.yml logs
+          exit 1
+
+      - name: Human -> Agent -> LingxiGraph smoke (+ invalid-response fault check)
+        run: npm run mvp:ci:smoke
+
+      - name: Fault scenario - stop LingxiGraph Runtime
+        run: docker compose -f docker-compose.mvp.ci.yml stop lingxigraph-runtime
+
+      - name: Fault scenario - outage must not falsely complete the turn
+        run: npm run mvp:ci:fault-outage -- pre
+
+      - name: Fault scenario - restart LingxiGraph Runtime
+        run: |
+          docker compose -f docker-compose.mvp.ci.yml start lingxigraph-runtime
+          cid=$(docker compose -f docker-compose.mvp.ci.yml ps -q lingxigraph-runtime)
+          for i in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' "$cid" 2>/dev/null || echo missing)
+            echo "lingxigraph-runtime: $status"
+            [ "$status" = "healthy" ] && exit 0
+            sleep 2
+          done
+          echo "::error::lingxigraph-runtime never became healthy again"
+          exit 1
+
+      - name: Fault scenario - recovery gets a real reply
+        run: npm run mvp:ci:fault-outage -- post
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.mvp.ci.yml logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.mvp.ci.yml down -v

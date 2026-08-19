@@ -75,6 +75,37 @@ npm run typecheck && npm run server:typecheck
 npm run guard:big-brain   # CI guard: only agent turns may use the big model
 ```
 
+### MVP: single-server Docker Compose
+
+For a from-zero, Kubernetes-free way to run the full loop — `lingxiloop` (API + scheduler) + `postgres` + `redis` + a standalone `lingxigraph-runtime` — on one machine:
+
+```bash
+cp .env.example .env
+# fill in OPENAI_API_KEY (and optionally OPENAI_BASE_URL / OPENAI_MODEL) in .env
+
+docker compose -f docker-compose.mvp.yml build
+docker compose -f docker-compose.mvp.yml up -d
+docker compose -f docker-compose.mvp.yml ps    # everything should report "healthy"
+```
+
+This locks in the MVP topology `docker-compose.mvp.yml` builds:
+
+- `LINGXILOOP_REASONING_RUNTIME=lingxigraph` — reasoning goes through the standalone LingxiGraph Runtime HTTP service, not the legacy in-process tool loop.
+- `LINGXILOOP_MANAGED_AGENT_EXECUTION=server` — the `lingxiloop` API process calls `runAgentTurn()` directly; no Kubernetes, no per-Agent Pod, no `kubectl`.
+- **One `lingxiloop` replica only.** Server-side managed-agent dispatch coordination (busy/pendingRerun coalescing) is in-process state — running more than one replica in this mode races. Multi-replica support needs a follow-up distributed lock/queue (tracked as post-MVP, see issue #9's non-goals).
+
+Once it's up, run the Human → Agent → LingxiGraph smoke — seeds a throwaway company + starter agent team, sends a message into the owner's starter DM, and waits for a real agent reply plus the agent's unread cursor advancing:
+
+```bash
+npm run mvp:smoke
+```
+
+`npm run mvp:down` tears the stack down (`-v` isn't passed by default, so the Postgres volume `lingxiloop-postgres-data` survives a restart).
+
+CI runs the same shape on every relevant PR (`.github/workflows/mvp-compose-smoke.yml`), but swaps `lingxigraph-runtime` for `server/scripts/fake-lingxigraph-runtime.mjs` — a tiny deterministic stand-in that speaks the exact same `/v1/turn` contract without spending on a real model (`docker-compose.mvp.ci.yml`). That workflow also drives two of the fault scenarios from issue #9 §6: an invalid LingxiGraph response, and the runtime being stopped mid-flight — in both cases the agent's unread cursor must NOT advance (no false "turn completed"), and after the runtime comes back a fresh message gets a real reply again.
+
+What this MVP setup does **not** cover yet (see issue #9 for the full checklist): a real-provider smoke is manual/env-gated on purpose (just point `docker-compose.mvp.yml` at a real `OPENAI_API_KEY`, no compose override needed); a deterministic Agent→Agent CI scenario is out of scope for now because triage/addressing for a group conversation calls the small "cerebellum" model directly via `OPENAI_BASE_URL`, which the fake runtime doesn't stand in for.
+
 ## Repo layout
 
 | path | what it is |
