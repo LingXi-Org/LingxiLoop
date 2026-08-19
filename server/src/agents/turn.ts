@@ -20,7 +20,7 @@
 import type { ResponseInputItem, ResponseStreamEvent } from 'openai/resources/responses/responses'
 import { env } from '../env.js'
 import { getLlmClient } from '../llm.js'
-import { redis } from '../redis.js'
+import { CH_MESSAGE_DELTA, publish, redis } from '../redis.js'
 import { BUSY_STATUS_HEARTBEAT_MS } from '../status.js'
 import { pgActionLedger } from './action-ledger.js'
 import { resolveDeclaredAutoRelayTarget } from './auto-relay.js'
@@ -31,6 +31,7 @@ import { classifyInboxTriage, gateSyntheticWake } from './inbox-triage.js'
 import { computeInputScopeKey, executeCommunicationActions, runLingxiGraph } from './lingxigraph-adapter.js'
 import { classifyLlmCallError, readStreamReasoningTokens, readStreamUsage, recordLlmCall } from './llm-ledger.js'
 import { enforceModelPolicy, realTaskModel, supportModel } from './model-policy.js'
+import { extractLiveReplyPrefix } from './live-reply-preview.js'
 import { type AgentRunStatus, errorText } from './observability.js'
 import type { AgentRuntimeClient } from './runtime/client.js'
 import { commit as commitFs, type FsNamespace, hydrate as hydrateFs, teardown as teardownFs } from './runtime/fs-namespace.js'
@@ -2626,6 +2627,13 @@ Mechanics:
       }
     }
     let streamState: ResponseStreamState = newResponseStreamState()
+    const liveReplyPreviews = new Map<string, {
+      messageId: string
+      conversationId: string
+      companyId: string
+      body: string
+      sequence: number
+    }>()
     // Raw assistant function_call items from this hop, captured for replay
     // on the next hop's input. Mirror of pendingTools but keeps the full
     // response item shape so the wire format matches what /v1/responses
@@ -2767,7 +2775,44 @@ Mechanics:
       try {
         await consumeResponseStream(
           stream as AsyncIterable<ResponseStreamEvent>,
-          (event) => applyResponseStreamEvent(streamState, event, { traceItem: traceResponseOutputItem }),
+          (event) => {
+            applyResponseStreamEvent(streamState, event, { traceItem: traceResponseOutputItem })
+            if (event.type !== 'response.function_call_arguments.delta' && event.type !== 'response.function_call_arguments.done') return
+            const itemId = event.item_id
+            const pending = streamState.pendingTools[itemId]
+            if (!pending || pending.name !== 'bash') return
+            const visible = extractLiveReplyPrefix(pending.arguments)
+            if (!visible) return
+            const inboxTarget = inbox.find((message) => message.conversation_id === visible.conversationId)
+            // A preview is user-visible, so only stream into a conversation
+            // that was part of this turn's authorized inbox. The completed CLI
+            // command still performs its own membership checks.
+            if (!inboxTarget) return
+            const previous = liveReplyPreviews.get(pending.call_id)
+            const preview = previous ?? {
+              messageId: `live:${runId}:${pending.call_id}`,
+              conversationId: visible.conversationId,
+              companyId: inboxTarget.company_id ?? runCompanyId,
+              body: '',
+              sequence: Number.MAX_SAFE_INTEGER - 10_000 + hop,
+            }
+            if (visible.conversationId !== preview.conversationId || !visible.body.startsWith(preview.body)) return
+            const delta = visible.body.slice(preview.body.length)
+            if (!previous || delta) {
+              preview.body = visible.body
+              liveReplyPreviews.set(pending.call_id, preview)
+              void publish(CH_MESSAGE_DELTA, {
+                type: 'message.delta',
+                conversationId: preview.conversationId,
+                messageId: preview.messageId,
+                authorId: agentId,
+                delta,
+                sequence: preview.sequence,
+                done: false,
+                companyId: preview.companyId,
+              }).catch((error) => console.warn('[turn] live reply delta failed', error))
+            }
+          },
         )
       } catch (err) {
         // Stream itself blew up mid-flight. Record with whatever partial usage
@@ -3034,6 +3079,15 @@ Mechanics:
           agentId, name: tc.name, argsJson: tc.arguments, ns: namespace,
           signal: batchAbortController.signal,
         })
+        const preview = liveReplyPreviews.get(tc.call_id)
+        if (preview) {
+          liveReplyPreviews.delete(tc.call_id)
+          await publish(CH_MESSAGE_DELTA, {
+            type: 'message.delta', conversationId: preview.conversationId,
+            messageId: preview.messageId, authorId: agentId, delta: '',
+            sequence: preview.sequence, done: true, companyId: preview.companyId,
+          }).catch((error) => console.warn('[turn] live reply completion failed', error))
+        }
         return { tc, result }
       } catch (err) {
         return {

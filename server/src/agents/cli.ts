@@ -2117,9 +2117,6 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
 
   // Broadcast — frontend, scheduler, etc. all listen on CH_MESSAGE_NEW
   const { CH_MESSAGE_NEW, publish } = await import('../redis.js')
-  const streamBase = { conversationId: convoId, messageId, authorId: me, sequence, companyId }
-  const { replayReplyStream, finishReplyStream } = await import('../messages/stream-reply.js')
-  await replayReplyStream(streamBase, finalBody)
   await publish(CH_MESSAGE_NEW, {
     type: 'message.new',
     conversationId: convoId,
@@ -2141,7 +2138,6 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       mentionAll,
     },
   })
-  await finishReplyStream(streamBase)
 
   // Humans mentioned by an agent receive a high-priority notification even
   // when the room itself is muted. Online clients get the same bypass from

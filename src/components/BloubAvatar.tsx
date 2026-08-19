@@ -163,7 +163,9 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
   const motionStyle = motionEnabled ? {
     '--bloub-float-delay': `${-motionOffset}s`,
     '--bloub-float-duration': `${3.1 + (participantHash % 9) * 0.13}s`,
-    '--bloub-float-lift': `${size < 32 ? 0.8 : size < 48 ? 1.2 : 1.7}px`,
+    '--bloub-float-lift': `${status === 'thinking' || status === 'working'
+      ? (size < 32 ? 1.8 : size < 48 ? 3.2 : 4.4)
+      : (size < 32 ? 0.8 : size < 48 ? 1.2 : 1.7)}px`,
     overflow: 'visible',
   } as CSSProperties : { overflow: 'visible' } as CSSProperties
 

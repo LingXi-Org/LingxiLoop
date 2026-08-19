@@ -123,12 +123,18 @@ function splitUnicodeEmoji(seg: string, out: RichToken[]): void {
  *  balanced ()[]{}<> inside the URL — only trims a closing bracket when
  *  there's no matching opener inside the URL (typical case: the URL was
  *  inside parens in prose, e.g. "(see https://x.com)"). */
-function trimUrlTrailing(raw: string): { url: string; trail: string } {
-  const closers: Record<string, string> = { ')': '(', ']': '[', '}': '{', '>': '<' }
+export function trimUrlTrailing(raw: string): { url: string; trail: string } {
+  const closers: Record<string, string> = {
+    ')': '(', ']': '[', '}': '{', '>': '<',
+    '）': '（', '】': '【', '》': '《', '」': '「', '』': '『',
+  }
   let i = raw.length
   while (i > 'https://'.length) {
     const c = raw[i - 1]
-    if (c === '.' || c === ',' || c === ';' || c === ':' || c === '!' || c === '?' || c === '"' || c === "'") {
+    // Full-width CJK sentence punctuation must not reach URL(). A suffix such
+    // as the Chinese comma in `google.com，` is otherwise interpreted as part
+    // of the hostname and serialized as a misleading `xn--...` IDN label.
+    if (/[.,;:!?"'。，、；：！？]/.test(c)) {
       i--
     } else if (closers[c]) {
       const inside = raw.slice(0, i - 1)

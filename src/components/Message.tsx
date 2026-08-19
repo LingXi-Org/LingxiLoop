@@ -1351,7 +1351,9 @@ interface MessageRowProps {
   openMaus?: boolean
 }
 
-const QUICK_REACTIONS = ['👀', '👍', '✅', '❤️', '😂', '🎉']
+/** Context-rich reactions for human and agent conversations. Keep the eyes
+ * first: it is the clearest lightweight "seen / investigating" signal. */
+const QUICK_REACTIONS = ['👀', '👍', '✅', '❤️', '😂', '🎉', '👏', '🔥', '💡', '🤔', '🎯', '🙌']
 
 function ReactionPill({ msgId, r }: { msgId: string; r: import('@/types').ReactionEntry }) {
   const byId = useParticipants((s) => s.byId)
@@ -1710,6 +1712,11 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const _isEmail = msg.kind === 'email'
   const isPoll = msg.kind === 'poll'
   const isStreaming = Boolean(msg.streaming)
+  const avatarActivity = msg.streaming === 'placeholder'
+    ? 'thinking'
+    : msg.streaming === 'markdown'
+      ? 'working'
+      : undefined
   const artifactRefs = useMemo(
     () => artifactRefsForMessage(msg),
     [msg.body, msg.tool?.arg, msg.tool?.detail],
@@ -1730,7 +1737,13 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
     >
       {openMaus ? (
         <div className={cn('shrink-0', isMine && 'hidden')}>
-          <Avatar p={author} size={38} ringColor="var(--cloud)" />
+          <Avatar
+            p={author}
+            size={38}
+            ringColor="var(--cloud)"
+            statusOverride={avatarActivity}
+            className={avatarActivity ? `agent-avatar-${avatarActivity}` : undefined}
+          />
         </div>
       ) : (
         <button
@@ -1739,7 +1752,13 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           className={cn('rounded-full transition', !isMine && 'hover:opacity-80 active:scale-95 cursor-pointer')}
           title={isMine ? undefined : `Show ${author.name}'s info`}
         >
-          <Avatar p={author} size={38} ringColor="var(--cloud)" />
+          <Avatar
+            p={author}
+            size={38}
+            ringColor="var(--cloud)"
+            statusOverride={avatarActivity}
+            className={avatarActivity ? `agent-avatar-${avatarActivity}` : undefined}
+          />
         </button>
       )}
       <div className={cn('min-w-0', openMaus && 'max-w-[70%]', openMaus && isMine && 'flex flex-col items-end')}>
@@ -1763,26 +1782,27 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           >
             {msg.streaming === 'placeholder' ? (
               <span
-                className="inline-flex min-w-[132px] items-center gap-2.5 rounded-2xl border border-sky2-200/70 bg-gradient-to-r from-sky2-50 via-cloud to-sky2-50 px-3 py-2 shadow-[0_8px_24px_-16px_rgba(32,120,180,0.7)]"
+                className="thinking-card"
                 aria-label={`${author.name} 正在思考`}
                 role="status"
               >
-                <span className="relative grid size-5 shrink-0 place-items-center">
-                  <span className="absolute inset-0 rounded-full bg-sky2-200/70 animate-ping" />
-                  <span className="relative size-2.5 rounded-full bg-gradient-to-br from-skype to-skype-deep shadow-[0_0_10px_rgba(41,137,216,0.45)]" />
+                <span className="thinking-card-orbit" aria-hidden>
+                  <span className="thinking-card-core" />
                 </span>
-                <span className="text-[12px] font-medium tracking-wide text-ink-600">正在思考</span>
-                <span className="ml-auto inline-flex items-end gap-0.5" aria-hidden>
-                  {[0, 1, 2].map((dot) => (
-                    <span
-                      key={dot}
-                      className="size-1 rounded-full bg-skype-deep animate-bounce"
-                      style={{ animationDelay: `${dot * 140}ms`, animationDuration: '1.1s' }}
-                    />
-                  ))}
+                <span className="thinking-card-copy">
+                  <span className="thinking-card-title">正在思考</span>
+                  <span className="thinking-card-subtitle">组织思路并准备回复</span>
+                </span>
+                <span className="thinking-card-dots" aria-hidden>
+                  <i /><i /><i />
                 </span>
               </span>
-            ) : <RichBody body={msg.body} conversationId={msg.conversationId} />}
+            ) : (
+              <span className={msg.streaming === 'markdown' ? 'streaming-markdown' : undefined}>
+                <RichBody body={msg.body} conversationId={msg.conversationId} />
+                {msg.streaming === 'markdown' && <span className="streaming-caret" aria-hidden />}
+              </span>
+            )}
           </div>
         )}
 
@@ -1862,7 +1882,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           ).map((r) => <ReactionPill key={r.emoji} msgId={msg.id} r={r} />)}
           {/* Quick-reaction popup + reply button, visible on hover. */}
           <div className="reaction-quick-tray opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex gap-0.5">
-            {QUICK_REACTIONS.filter((e) => !(msg.reactions ?? []).some((r) => r.emoji === e && r.mine)).slice(0, 5).map((e) => (
+            {QUICK_REACTIONS.filter((e) => !(msg.reactions ?? []).some((r) => r.emoji === e && r.mine)).slice(0, 8).map((e) => (
               <QuickReactionButton key={e} msgId={msg.id} emoji={e} />
             ))}
             <ReplyIconButton msg={msg} zh={openMaus} />

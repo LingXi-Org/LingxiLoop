@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { http } from '@/api/client'
+import { trimUrlTrailing } from '@/lib/utils'
 
 /**
  * Inline OG card rendered under a chat bubble when its body contains a URL.
@@ -226,10 +227,8 @@ export function LinkPreview({ url }: { url: string }) {
 export function firstUrlInBody(body: string): string | null {
   const m = body.match(/\bhttps?:\/\/[^\s<>"'`]+/)
   if (!m) return null
-  // Trim sentence punctuation the same way parseBody does.
-  let url = m[0]
-  while (/[.,;:!?")\]}>'"]$/.test(url) && url.length > 'https://'.length) {
-    url = url.slice(0, -1)
-  }
-  return url
+  // Use the exact same ASCII + full-width punctuation handling as inline
+  // links. This prevents `google.com，` becoming `google.xn--com,-...` when
+  // the card request passes through the browser URL parser.
+  return trimUrlTrailing(m[0]).url
 }
