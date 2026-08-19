@@ -45,8 +45,11 @@ export const env = {
   /** Managed-agent reasoning path. Compatibility default stays legacy. */
   LINGXILOOP_REASONING_RUNTIME: (process.env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph'
     ? 'lingxigraph' : 'legacy') as 'legacy' | 'lingxigraph',
+  /** LingxiGraph Runtime container origin, e.g. http://lingxigraph-runtime:8124. */
+  LINGXIGRAPH_URL: process.env.LINGXIGRAPH_URL,
+  /** Bearer token sent to the LingxiGraph Runtime, if it requires one. */
+  LINGXIGRAPH_TOKEN: process.env.LINGXIGRAPH_TOKEN,
   LINGXIGRAPH_RUN_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 120_000),
-  LINGXIGRAPH_MAX_OUTPUT_BYTES: Number(process.env.LINGXIGRAPH_MAX_OUTPUT_BYTES ?? 1_048_576),
   LINGXIGRAPH_ACTION_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_ACTION_TIMEOUT_MS ?? 30_000),
   /**
    * "Cerebellum" model — JSON classifiers, palette, gender inference,
@@ -457,4 +460,12 @@ if (env.NODE_ENV === 'production') {
     )
     process.exit(1)
   }
+}
+
+if (env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph' && !env.LINGXIGRAPH_URL) {
+  console.error(
+    '[env] LINGXILOOP_REASONING_RUNTIME=lingxigraph requires LINGXIGRAPH_URL ' +
+    '(the LingxiGraph Runtime container origin, e.g. http://lingxigraph-runtime:8124).',
+  )
+  process.exit(1)
 }

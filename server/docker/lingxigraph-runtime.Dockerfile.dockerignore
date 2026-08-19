@@ -1,0 +1,4 @@
+# lingxigraph-runtime image build context — only the LingxiGraph package
+# sources are needed; nothing from the Node server or the frontend.
+*
+!server/lingxigraph/**

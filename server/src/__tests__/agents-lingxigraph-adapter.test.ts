@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { fileURLToPath } from 'node:url'
 
 import {
   communicationActionToArgv,
@@ -67,28 +66,82 @@ test('accepts a valid silent result', () => {
   assert.deepEqual(parseLingxiGraphRunResult(result([])).actions, [])
 })
 
-const fakeRunner = fileURLToPath(new URL('./fixtures/fake-lingxigraph-runner.cjs', import.meta.url))
 const request = {
   version: 1 as const, runId: 'r1',
   agent: { id: 'a1', name: 'Agent', role: 'tester', model: 'fake' },
   trigger: 'message.new' as const, systemPrompt: 'system', contextPrompt: 'context',
 }
 
-test('runner adapter accepts one JSON response', async () => {
-  const output = await runLingxiGraph(request, { pythonBin: process.execPath, runnerPath: fakeRunner })
+function fakeFetch(handler: (input: string, init: RequestInit) => Response | Promise<Response>): typeof fetch {
+  return (async (input: any, init?: RequestInit) => handler(String(input), init ?? {})) as typeof fetch
+}
+
+test('runtime adapter posts to /v1/turn and parses a valid response', async () => {
+  let seenUrl = ''
+  let seenAuth: string | null = null
+  const output = await runLingxiGraph(request, {
+    url: 'http://runtime.local:8124',
+    token: 'secret',
+    fetchImpl: fakeFetch((url, init) => {
+      seenUrl = url
+      seenAuth = (init.headers as Record<string, string>).authorization
+      return new Response(JSON.stringify({ version: 1, status: 'done', reason: 'fake', actions: [], modelCalls: [] }), { status: 200 })
+    }),
+  })
+  assert.equal(seenUrl, 'http://runtime.local:8124/v1/turn')
+  assert.equal(seenAuth, 'Bearer secret')
   assert.equal(output.reason, 'fake')
 })
 
-for (const [mode, pattern, options] of [
-  ['nonzero', /exited 7: model failed/, {}],
-  ['invalid', /invalid LingxiGraph runner output/, {}],
-  ['oversized', /output exceeded/, { maxOutputBytes: 100 }],
-  ['delay', /timed out/, { timeoutMs: 20 }],
-] as const) {
-  test(`runner adapter rejects ${mode}`, async () => {
-    await assert.rejects(runLingxiGraph(request, {
-      pythonBin: process.execPath, runnerPath: fakeRunner,
-      env: { FAKE_LINGXIGRAPH_MODE: mode }, ...options,
-    }), pattern)
-  })
-}
+test('runtime adapter converts a non-2xx response into an explicit error', async () => {
+  await assert.rejects(runLingxiGraph(request, {
+    url: 'http://runtime.local:8124',
+    fetchImpl: fakeFetch(() => new Response('model failed', { status: 502 })),
+  }), /responded 502/)
+})
+
+test('runtime adapter rejects malformed JSON bodies', async () => {
+  await assert.rejects(runLingxiGraph(request, {
+    url: 'http://runtime.local:8124',
+    fetchImpl: fakeFetch(() => new Response('{bad json', { status: 200 })),
+  }), /invalid LingxiGraph runtime response/)
+})
+
+test('runtime adapter rejects a response that fails schema validation', async () => {
+  await assert.rejects(runLingxiGraph(request, {
+    url: 'http://runtime.local:8124',
+    fetchImpl: fakeFetch(() => new Response(JSON.stringify({ version: 1, status: 'nonsense', reason: 'x', actions: [], modelCalls: [] }), { status: 200 })),
+  }), /invalid LingxiGraph runtime response/)
+})
+
+test('runtime adapter aborts via AbortController on timeout', async () => {
+  await assert.rejects(runLingxiGraph(request, {
+    url: 'http://runtime.local:8124',
+    timeoutMs: 20,
+    fetchImpl: fakeFetch((_url, init) => new Promise((_resolve, reject) => {
+      const signal = init.signal as AbortSignal
+      signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+    })),
+  }), /timed out after 20ms/)
+})
+
+test('runtime adapter times out a response whose body never completes, even after headers arrive', async () => {
+  // Regression: fetch() resolves as soon as headers land, so a hung or
+  // slow-streaming body must still be bounded by the same timeout —
+  // clearTimeout must not fire until response.text() has settled.
+  await assert.rejects(runLingxiGraph(request, {
+    url: 'http://runtime.local:8124',
+    timeoutMs: 20,
+    fetchImpl: fakeFetch((_url, init) => {
+      const signal = init.signal as AbortSignal
+      const response = {
+        ok: true,
+        status: 200,
+        text: () => new Promise<string>((_resolve, reject) => {
+          signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+        }),
+      }
+      return Promise.resolve(response as unknown as Response)
+    }),
+  }), /timed out after 20ms/)
+})

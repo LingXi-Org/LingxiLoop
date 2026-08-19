@@ -2138,8 +2138,9 @@ ${peerWorkBlock}`.trim()
       agent: { id: persona.id, name: persona.name, role: persona.role, model },
       trigger: options.trigger ?? 'message.new', systemPrompt: instructions, contextPrompt,
     }, {
+      url: env.LINGXIGRAPH_URL,
+      token: env.LINGXIGRAPH_TOKEN,
       timeoutMs: env.LINGXIGRAPH_RUN_TIMEOUT_MS,
-      maxOutputBytes: env.LINGXIGRAPH_MAX_OUTPUT_BYTES,
     })
     const elapsedMs = Date.now() - startedAt
     const perCallLatency = result.modelCalls.length > 0 ? Math.round(elapsedMs / result.modelCalls.length) : elapsedMs
