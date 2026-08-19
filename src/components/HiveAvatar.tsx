@@ -170,7 +170,7 @@ function Tile({ p, container, cx, cy, d, ringColor }: {
       style={tileStyle(container, cx, cy, d, ringColor)}
       className="grid place-items-center"
     >
-      <Avatar p={p} size={px} ringColor={ringColor} showStatus={false} animated={false} />
+      <Avatar p={p} size={px} ringColor={ringColor} showStatus={false} />
     </div>
   )
 }

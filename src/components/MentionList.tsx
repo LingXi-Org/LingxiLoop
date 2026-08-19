@@ -86,7 +86,7 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
               : 'text-stone-700 hover:bg-stone-50',
           )}
         >
-          <Avatar p={p} size={24} />
+          <Avatar p={p} size={24} showStatus={false} animated={false} />
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium leading-tight">{p.name}</div>
             <div className="truncate text-[11px] text-stone-400 leading-tight">

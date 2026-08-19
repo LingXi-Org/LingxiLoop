@@ -1,4 +1,12 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import type { Participant } from '@/types'
 import { getBloubIdentity, getBloubState, stableParticipantHash } from '@/lib/agentVisualState'
 import { NOTIF_BLUE, type DotRender } from '@/lib/bloub/decor'
@@ -39,7 +47,7 @@ const STATIC_PHASE: Record<StateId, number> = {
 // Bloub's original 316-unit canvas leaves generous exhibition padding. Chat
 // avatars are much smaller, so scale the artwork—not its containing box—to
 // make the face readable without reintroducing a circular frame.
-const CHAT_AVATAR_SCALE = 1.08
+const CHAT_AVATAR_SCALE = 1.24
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(() => (
@@ -93,7 +101,12 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
   const shape = SHAPE_BY_ID.get(identity.shape)?.radii ?? null
   const expression = EXPRESSION_BY_ID.get(identity.expression) ?? null
   const ink = COLOR_BY_ID.get(identity.color)?.hex ?? '#3b93f0'
-  const phase = STATIC_PHASE[state] + (stableParticipantHash(participant.id) % 31) / 100
+  const participantHash = useMemo(() => stableParticipantHash(participant.id), [participant.id])
+  const phase = STATIC_PHASE[state] + (participantHash % 31) / 100
+  // A shared rAF clock keeps the renderer cheap, but sampling every avatar at
+  // the exact same scene time made all eyes blink and drift in lockstep. Each
+  // identity gets a stable local offset so a room feels alive, not cloned.
+  const motionOffset = ((participantHash >>> 8) % 1200) / 100
   const engine = useMemo(
     () => new BotEngine(RAYON, state, shape, expression),
     [participant.id, identity.shape, identity.expression],
@@ -109,28 +122,50 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
 
   useEffect(() => {
     const now = getBloubClockTime()
+    const localNow = now + motionOffset
     if (motionEnabled) {
-      engine.setState(state, now)
-      setFrame(engine.sample(now))
+      engine.setState(state, localNow)
+      setFrame(engine.sample(localNow))
     } else {
-      engine.reset(state, now - phase)
-      setFrame(engine.sample(now))
+      engine.reset(state, localNow - phase)
+      setFrame(engine.sample(localNow))
     }
-  }, [engine, motionEnabled, phase, state])
+  }, [engine, motionEnabled, motionOffset, phase, state])
 
   useEffect(() => {
     if (!motionEnabled) return
     return subscribeBloubClock((now) => {
-      // Medium avatars retain the body/eyes animation at 30fps. Large avatars
-      // use every shared tick; mini/static avatars never subscribe at all.
-      if (size < 40 && lastMediumFrame.current >= 0 && now - lastMediumFrame.current < 1 / 30) return
+      // Tiny stacks use 20fps, ordinary chat avatars 30fps, and large profile
+      // avatars the display refresh rate. Visibility gating above ensures an
+      // off-screen virtual list never consumes animation work.
+      const minInterval = size < 32 ? 1 / 20 : size < 48 ? 1 / 30 : 0
+      if (minInterval && lastMediumFrame.current >= 0 && now - lastMediumFrame.current < minInterval) return
       lastMediumFrame.current = now
-      setFrame(engine.sample(now))
+      setFrame(engine.sample(now + motionOffset))
     })
-  }, [engine, motionEnabled, size])
+  }, [engine, motionEnabled, motionOffset, size])
+
+  const pointEyesAtPointer = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!motionEnabled || size < 36) return
+    const rect = event.currentTarget.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+    const x = Math.max(-1, Math.min(1, (event.clientX - rect.left - rect.width / 2) / (rect.width / 2)))
+    const y = Math.max(-1, Math.min(1, (event.clientY - rect.top - rect.height / 2) / (rect.height / 2)))
+    engine.setLook({ yaw: x * 46, pitch: -y * 34, mix: 0.86, spin: 0, wander: 0.16 }, getBloubClockTime() + motionOffset, 0.12)
+  }
+  const releasePointerLook = () => {
+    if (!motionEnabled || size < 36) return
+    engine.setLook(null, getBloubClockTime() + motionOffset, 0.38)
+  }
 
   const dots = size < 40 && frame.dots.length > 8 ? frame.dots.slice(0, 8) : frame.dots
   const renderDots = (prefix: string) => dots.map((dot, index) => <Dot key={`${prefix}-${index}`} dot={dot} ink={ink} />)
+  const motionStyle = motionEnabled ? {
+    '--bloub-float-delay': `${-motionOffset}s`,
+    '--bloub-float-duration': `${3.1 + (participantHash % 9) * 0.13}s`,
+    '--bloub-float-lift': `${size < 32 ? 0.8 : size < 48 ? 1.2 : 1.7}px`,
+    overflow: 'visible',
+  } as CSSProperties : { overflow: 'visible' } as CSSProperties
 
   return (
     <svg
@@ -140,8 +175,11 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
       viewBox={`${-DEMI_VIEWBOX} ${-DEMI_VIEWBOX} ${DEMI_VIEWBOX * 2} ${DEMI_VIEWBOX * 2}`}
       role="img"
       aria-label={`${participant.name} · ${status}`}
-      className={className}
+      className={[className, motionEnabled ? 'bloub-avatar-alive' : ''].filter(Boolean).join(' ')}
+      style={motionStyle}
       focusable="false"
+      onPointerMove={pointEyesAtPointer}
+      onPointerLeave={releasePointerLook}
     >
       <defs>
         <mask id={maskId} maskUnits="userSpaceOnUse" x={-DEMI_VIEWBOX} y={-DEMI_VIEWBOX} width={DEMI_VIEWBOX * 2} height={DEMI_VIEWBOX * 2}>

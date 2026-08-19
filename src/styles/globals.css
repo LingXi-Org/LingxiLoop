@@ -939,7 +939,29 @@ input:focus, textarea:focus, button:focus { outline: none; }
   100% { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(0.85); }
 }
 
+/* Bloub's SVG engine animates the expression and silhouette; this small
+   compositor-only float keeps that motion legible at chat-avatar sizes where
+   a one-unit SVG change would otherwise resolve to a fraction of a pixel. */
+.bloub-avatar-alive {
+  animation: bloub-avatar-float var(--bloub-float-duration, 3.6s) ease-in-out
+    var(--bloub-float-delay, 0s) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@keyframes bloub-avatar-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.7deg) scale(1); }
+  48% { transform: translate3d(0, calc(0px - var(--bloub-float-lift, 1px)), 0) rotate(0.7deg) scale(1.025); }
+  72% { transform: translate3d(0, -0.4px, 0) rotate(0.15deg) scale(1.01); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .bloub-avatar-alive {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
   .cumora-cloud-float,
   .cumora-cloud-poke,
   .cumora-cloud-poke img {

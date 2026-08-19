@@ -90,7 +90,17 @@ export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringCo
   )
 }
 
-export function AvatarMini({ p, size = 28, ringColor = 'var(--cloud)' }: { p: Participant; size?: number; ringColor?: string }) {
+export function AvatarMini({
+  p,
+  size = 28,
+  ringColor = 'var(--cloud)',
+  animated = true,
+}: {
+  p: Participant
+  size?: number
+  ringColor?: string
+  animated?: boolean
+}) {
   const status = useResolvedAvatarStatus(p)
   const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : p.avatarUrl)
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
@@ -105,7 +115,7 @@ export function AvatarMini({ p, size = 28, ringColor = 'var(--cloud)' }: { p: Pa
       }}
     >
       {p.kind === 'agent'
-        ? <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={false} />
+        ? <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} />
         : showImg
         ? <img
             key={imgKey}

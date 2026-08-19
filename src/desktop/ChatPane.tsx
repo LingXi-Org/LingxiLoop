@@ -3,6 +3,7 @@ import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
+import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow, TypingRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
@@ -1018,7 +1019,9 @@ export function Composer({
                 initial: p.initial || p.name.charAt(0).toUpperCase(),
                 avatarBg: typeof p.avatarBg === 'string' ? p.avatarBg : 'var(--ink-300)',
                 kind: p.kind,
-                avatarUrl: typeof p.avatarUrl === 'string' ? p.avatarUrl : undefined,
+                avatarUrl: p.kind === 'agent'
+                  ? staticBloubAvatarUrl(p)
+                  : typeof p.avatarUrl === 'string' ? p.avatarUrl : undefined,
               }
             }}
           />
@@ -1113,7 +1116,7 @@ export function Composer({
                       active ? 'bg-sky2-50' : 'hover:bg-sky2-50',
                     )}
                   >
-                    <Avatar p={p} size={26} ringColor="var(--cloud)" showStatus={false} />
+                    <Avatar p={p} size={26} ringColor="var(--cloud)" showStatus={false} animated={false} />
                     <div className="flex-1 min-w-0">
                       <div className="text-[12.5px] font-semibold text-ink-900 truncate">{p.name}</div>
                       <div className="text-[10.5px] text-ink-500 truncate">@{p.id}{p.role ? ` · ${p.role}` : ''}</div>

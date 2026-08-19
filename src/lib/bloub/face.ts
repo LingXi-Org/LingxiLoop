@@ -154,17 +154,18 @@ export function liveliness(t: number, opt: LivelinessOptions = {}): Liveliness {
 
   // Periodes premieres entre elles : la derive ne se repete jamais a l'oeil.
   return {
-    dYaw: (loopNoise(t, 11.3, 0.4) * 5.5 + loopNoise(t, 3.7, 2.1) * 1.6) * wander,
-    dPitch: (loopNoise(t, 9.1, 1.3) * 4.2 + loopNoise(t, 4.3, 0.7) * 1.3) * wander,
-    dRoll: loopNoise(t, 13.7, 3.2) * 2.2 * wander,
+    dYaw: (loopNoise(t, 11.3, 0.4) * 7.8 + loopNoise(t, 3.7, 2.1) * 2.3) * wander,
+    dPitch: (loopNoise(t, 9.1, 1.3) * 6 + loopNoise(t, 4.3, 0.7) * 1.9) * wander,
+    dRoll: loopNoise(t, 13.7, 3.2) * 3.1 * wander,
     lid: blink ? blinkLid(t) : 1,
-    // Au repos la video est quasiment immobile (centre stable a +-0.003, rayon
-    // constant) : toute la vie passe par le regard et les clignements. On garde
-    // juste de quoi ne pas figer completement l'image.
-    driftX: float ? loopNoise(t, 7.9, 1.9) * 0.006 : 0,
-    driftY: float ? loopNoise(t, 5.3, 0.3) * 0.007 : 0,
-    // La largeur est constante, seule la hauteur respire tres legerement.
-    breath: float ? 1 + Math.sin((t / 3.4) * Math.PI * 2) * 0.005 : 1
+    // The source mascot is almost still, but that motion disappears once the
+    // artwork is reduced to a 24–40px chat avatar. Preserve its calm character
+    // while lifting the drift and breath above a physical screen pixel.
+    driftX: float ? loopNoise(t, 7.9, 1.9) * 0.042 : 0,
+    driftY: float ? loopNoise(t, 5.3, 0.3) * 0.052 : 0,
+    // Keep width stable; a slightly stronger vertical breath reads as life
+    // rather than a generic scale pulse.
+    breath: float ? 1 + Math.sin((t / 3.4) * Math.PI * 2) * 0.032 : 1
   }
 }
 
