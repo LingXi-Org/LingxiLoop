@@ -27,8 +27,21 @@
  * is out of scope for this issue — see env.ts for the boot-time guard.
  */
 import type { AgentTurnOptions } from './turn.js'
+import { Semaphore } from '../concurrency.js'
+import { env } from '../env.js'
 
 type TurnRunner = (agentId: string, options: AgentTurnOptions) => Promise<void>
+
+/** Bounds how many runAgentTurn() calls run at once across this whole
+ *  process (all agents, all wake sources — fan-out, poll/kanban wakes,
+ *  retries), independent of the fan-out triage gate in scheduler.ts.
+ *  See env.MANAGED_TURN_CONCURRENCY. A turn can run for minutes and
+ *  holds several pg connections at once, so this is what actually
+ *  protects the pool; it must not be conflated with the fan-out
+ *  semaphore, which only needs to bound the fast triage/dispatch step
+ *  and would otherwise serialize unrelated conversations behind one
+ *  another for the full duration of every turn. */
+const turnExecutionSem = new Semaphore(env.MANAGED_TURN_CONCURRENCY)
 
 /** Indirection so tests can swap in a fake turn runner without loading
  *  turn.ts (it transitively pulls in DB/Redis/OpenAI clients that
@@ -118,7 +131,7 @@ export async function scheduleManagedAgentTurn(
       state.pendingOptions = null
       try {
         const run = await getTurnRunner()
-        await run(agentId, turnOptions)
+        await turnExecutionSem.run(() => run(agentId, turnOptions))
       } catch (err) {
         console.error(`[managed-executor] turn failed for ${agentId}:`,
           err instanceof Error ? err.message : String(err))

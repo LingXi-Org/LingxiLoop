@@ -57,7 +57,14 @@ function timeFromIso(iso?: string): string {
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/
 const TYPING_STALE_MS = 45_000
 const typingExpiryTimers = new Map<string, number>()
-const STREAMING_STALE_MS = 10_000
+// A real turn can go quiet between deltas for longer than a token gap —
+// a tool call (web fetch, shell, etc.) commonly takes several seconds,
+// and under concurrent-broadcast load (@all to several agents) a turn
+// can also sit queued behind MANAGED_TURN_CONCURRENCY for a stretch
+// before its first delta. 10s was tripping on legitimate gaps, dropping
+// the in-progress bubble and force-reloading mid-reply — which reads as
+// "the reply failed and got resent." Give it real headroom.
+const STREAMING_STALE_MS = 45_000
 const streamingExpiryTimers = new Map<string, number>()
 
 function clearStreamingExpiry(messageId: string): void {

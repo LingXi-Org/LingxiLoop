@@ -308,16 +308,18 @@ async function wakeOne(
     // managed-executor.ts, keyed by agentId.
     if (env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server' && env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph') {
       const turnOptions: AgentTurnOptions = { trigger: reason, ...options }
-      // Awaited (not fire-and-forget): fanOutWake holds wakeFanoutSem across
-      // this call specifically to bound how many runAgentTurn()s run at
-      // once during a broadcast (@all) — see the comment there. Firing this
-      // off and returning immediately let the semaphore slot free before
-      // the actual turn (and its several concurrent pg pool connections)
-      // even started, so an @all to N agents launched N unbounded
-      // concurrent turns and starved the pg pool (max 20 connections),
-      // producing "Agent run failed ... (runtime error)" for whichever
-      // agents lost the race for a connection.
-      await scheduleManagedAgentTurn(agentId, turnOptions).catch((err) =>
+      // Deliberately fire-and-forget here, NOT awaited: wakeFanoutSem
+      // (fanOutWake, below) only needs to bound the cheap triage/dispatch
+      // step, not the full turn — a turn can run for minutes, and
+      // awaiting it here would hold that slot the whole time, serializing
+      // OTHER conversations' unrelated wakes behind it on this replica
+      // (regressed a multi-@-mention broadcast into a near-sequential
+      // trickle). Concurrent-turn backpressure against the pg pool is now
+      // handled independently by turnExecutionSem inside
+      // scheduleManagedAgentTurn (env.MANAGED_TURN_CONCURRENCY), which
+      // also covers turns started outside this fan-out path (poll/kanban
+      // wakes, retries) that this semaphore never bounded anyway.
+      void scheduleManagedAgentTurn(agentId, turnOptions).catch((err) =>
         console.error(`[scheduler] scheduleManagedAgentTurn(${agentId}) failed:`,
           err instanceof Error ? err.message : String(err)),
       )

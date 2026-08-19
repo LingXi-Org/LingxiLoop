@@ -261,6 +261,20 @@ export const env = {
    */
   WAKE_FANOUT_CONCURRENCY: Number(process.env.WAKE_FANOUT_CONCURRENCY ?? 6),
   /**
+   * Max concurrent `runAgentTurn()` executions in this process for the
+   * managed+lingxigraph path, PER server replica — independent of
+   * WAKE_FANOUT_CONCURRENCY. A turn (unlike the cheap triage/dispatch
+   * step WAKE_FANOUT_CONCURRENCY bounds) can run for minutes, and it is
+   * NOT scoped to one conversation's fan-out: wakeAgent() (poll/kanban/
+   * calendar wakes) and the wake-retry worker start turns directly,
+   * bypassing the fan-out gate entirely. Without a turn-scoped cap here,
+   * a single @all to a handful of agents (each turn holding several pg
+   * connections at once, see db/pool.ts max:20) can still exhaust the
+   * pool. Keep comfortably below the pool size so request handlers and
+   * other paths still get connections. Set <=0 to fall back to 1.
+   */
+  MANAGED_TURN_CONCURRENCY: Number(process.env.MANAGED_TURN_CONCURRENCY ?? 12),
+  /**
    * Max concurrent `kubectl` child processes the orchestrator spawns,
    * PER server replica. Each kubectl is a ~50–100MB Go binary that
    * counts against the pod's memory/CPU cgroup; an unbounded burst of
