@@ -1,28 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
-import { Pressable } from './Pressable'
-import { useLongPress } from './useLongPress'
-import { MobileMessageTapback, type TapbackAction } from './MobileMessageTapback'
-import { useApp } from '@/stores/app'
-import { useMe } from '@/stores/auth'
-import { useConversations, isMuted } from '@/stores/conversations'
-import { useParticipants } from '@/stores/participants'
-import { useMessages, sendUserMessage, messagesFor, toggleReaction, VIRTUOSO_FIRST_INDEX_BASE } from '@/stores/messages'
-import type { MessagesState } from '@/stores/messages'
+import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
+import { IAt, IBack, IClip, IConvene, IMore, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow, TypingRow } from '@/components/Message'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
-import { IBack, IConvene, IMore, IClip, IAt, ISmile, ISend, ISearch } from '@/components/icons'
-import { api, type ApiAttachment } from '@/api/client'
-import type { Message, Participant } from '@/types'
-import { cn } from '@/lib/utils'
+import { SkypeEmoji } from '@/components/SkypeEmoji'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { TwEmoji } from '@/components/TwEmoji'
+import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { tapHaptic } from '@/lib/native'
-import { COMPOSER_EMOJIS } from '@/lib/emoji'
-import { SKYPE_EMOJIS, findSkypeByShortcode } from '@/lib/skypeEmojis'
-import { TwEmoji } from '@/components/TwEmoji'
-import { SkypeEmoji } from '@/components/SkypeEmoji'
+import { findSkypeByShortcode, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
+import { cn } from '@/lib/utils'
+import { useApp } from '@/stores/app'
+import { useMe } from '@/stores/auth'
+import { isMuted, useConversations } from '@/stores/conversations'
+import type { MessagesState } from '@/stores/messages'
+import { messagesFor, sendUserMessage, toggleReaction, useMessages, VIRTUOSO_FIRST_INDEX_BASE } from '@/stores/messages'
+import { useParticipants } from '@/stores/participants'
+import type { Message, Participant } from '@/types'
+import { MobileMessageTapback, type TapbackAction } from './MobileMessageTapback'
+import { Pressable } from './Pressable'
+import { useLongPress } from './useLongPress'
 
 export function MobileChat() {
   const convoId = useApp((s) => s.selectedConversationId)
@@ -485,7 +486,7 @@ export function MobileChat() {
   const agents = memberPs.filter((p) => p.kind === 'agent')
 
   return (
-    <section className="flex flex-col h-full bg-cloud overflow-x-hidden">
+    <section className="chat-surface flex flex-col h-full overflow-x-hidden">
       {/* Header */}
       <header
         className="bg-cloud/95 backdrop-blur-md sticky top-0 z-10 border-b border-ink-100"
@@ -556,6 +557,11 @@ export function MobileChat() {
                   >
                     {muted ? 'Unmute' : 'Mute notifications'}
                   </button>
+                  <ThemeToggle
+                    showLabel
+                    onToggle={() => setMenuOpen(false)}
+                    className="w-full justify-start rounded-none py-2.5 px-3.5 text-[13px]"
+                  />
                   <div className="h-px bg-ink-100 mx-1.5 my-1" />
                   <button
                     onClick={leaveConvo}
@@ -576,10 +582,7 @@ export function MobileChat() {
           user scrolls past the top. */}
       <div
         ref={streamRef}
-        className="flex-1 relative"
-        style={{
-          background: 'radial-gradient(ellipse 80% 40% at 0% 0%, rgba(194, 230, 251, 0.3), transparent 60%), radial-gradient(ellipse 60% 40% at 100% 100%, rgba(255, 217, 210, 0.25), transparent 60%), var(--cloud)',
-        }}
+        className="chat-surface flex-1 relative"
       >
         <Virtuoso
           ref={virtuosoRef}
@@ -644,7 +647,7 @@ export function MobileChat() {
       </div>
       {/* Composer */}
       <div
-        className="border-t border-ink-100 bg-cloud px-3 pt-1.5 kb-aware"
+        className="chat-composer-shell border-t px-3 pt-1.5 kb-aware"
       >
         <div className="px-1 pb-1">
           <TypingRow names={typingNames} />
@@ -769,8 +772,7 @@ export function MobileChat() {
             the full width, action buttons (attach / mention) below. */}
         <div className="flex items-end gap-2">
           <div
-            className="flex-1 bg-paper rounded-[20px] py-2 px-3.5 min-h-[40px] flex items-center"
-            style={{ border: '1px solid var(--ink-100)' }}
+            className="chat-composer flex-1 py-2 px-3.5 min-h-[40px] flex items-center"
           >
             <RichInput
               key={convoId}

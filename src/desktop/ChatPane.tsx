@@ -1,27 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
+import { type ApiAttachment, api } from '@/api/client'
+import { Avatar, AvatarStack } from '@/components/Avatar'
+import { IAt, IClip, IConvene, IPin, ISearch, ISend, ISmile } from '@/components/icons'
+import { MembersPopover } from '@/components/MembersPopover'
+import { MessageRow, TypingRow } from '@/components/Message'
+import { PollComposer } from '@/components/PollComposer'
+import { PreviewText } from '@/components/PreviewText'
+import { RichInput, type RichInputHandle } from '@/components/RichInput'
+import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
+import { SkypeEmoji } from '@/components/SkypeEmoji'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { TwEmoji } from '@/components/TwEmoji'
+import { COMPOSER_EMOJIS } from '@/lib/emoji'
+import { isImeComposing } from '@/lib/keyboard'
+import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
+import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
-import { useParticipants } from '@/stores/participants'
-import { useMessages, sendUserMessage, messagesFor, VIRTUOSO_FIRST_INDEX_BASE } from '@/stores/messages'
 import type { MessagesState } from '@/stores/messages'
-import { api, type ApiAttachment } from '@/api/client'
-import { Avatar, AvatarStack } from '@/components/Avatar'
-import { MembersPopover } from '@/components/MembersPopover'
-import { PreviewText } from '@/components/PreviewText'
-import { RichInput, type RichInputHandle } from '@/components/RichInput'
-import { SkypeEmoji } from '@/components/SkypeEmoji'
-import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
+import { messagesFor, sendUserMessage, useMessages, VIRTUOSO_FIRST_INDEX_BASE } from '@/stores/messages'
+import { useParticipants } from '@/stores/participants'
 import { useSoundStore } from '@/stores/sound'
-import { TwEmoji } from '@/components/TwEmoji'
-import { cn } from '@/lib/utils'
-import { COMPOSER_EMOJIS } from '@/lib/emoji'
-import { isImeComposing } from '@/lib/keyboard'
-import { MessageRow, TypingRow } from '@/components/Message'
-import { PollComposer } from '@/components/PollComposer'
-import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
-import { ISearch, IPin, IClip, IAt, ISmile, ISend, IConvene } from '@/components/icons'
 import type { Participant } from '@/types'
 
 /** Soft "Coming soon" popover anchored beneath the trigger. Auto-dismisses
@@ -299,6 +300,7 @@ function ChatHeader({
           + Pin drop off but Convene stays full-text — it's the primary
           action in this header. */}
       <div className="flex gap-1 text-ink-500 shrink-0">
+        <ThemeToggle className="h-9 w-9" />
         <button
           onClick={onToggleSearch}
           title="Search in this conversation"
@@ -1011,12 +1013,12 @@ export function Composer({
         />
       )}
       <div className={cn(
-        'rounded-[14px] py-3 px-3.5 pb-2 transition focus-within:shadow-[0_0_0_4px_var(--sky-50)] focus-within:border-sky2-300',
+        'chat-composer rounded-[18px] py-3 px-3.5 pb-2 transition',
         // In thread mode the parent drawer footer is already bg-cloud, so use
         // bg-paper inside for visual separation from the surrounding panel.
-        isThread ? 'bg-paper' : 'bg-cloud',
+        isThread ? 'bg-paper' : '',
       )}
-        style={{ border: '1.5px solid var(--ink-100)' }}>
+      >
         {attachment && (
           <div className="mb-2 inline-flex items-center gap-2.5 py-1.5 px-2 bg-sky2-50 border border-sky2-100 rounded-lg max-w-full">
             {attachment.kind === 'img' ? (
@@ -1914,18 +1916,11 @@ export function ChatPane() {
   return (
     <main
       className={cn(
-        'grid overflow-hidden',
+        'chat-surface grid overflow-hidden',
         searchOpen
           ? 'grid-rows-[auto_auto_minmax(0,1fr)_auto]'
           : 'grid-rows-[auto_minmax(0,1fr)_auto]',
       )}
-      style={{
-        // Background lives on <main> so the radial washes span the ENTIRE
-        // chat surface (header + thread + composer share one continuous
-        // background). Putting the gradient on the inner thread div used
-        // to clip the coral haze right where the composer started.
-        background: 'radial-gradient(ellipse 80% 40% at 0% 0%, rgba(194, 230, 251, 0.3), transparent 60%), radial-gradient(ellipse 60% 40% at 100% 100%, rgba(255, 217, 210, 0.25), transparent 60%), var(--cloud)',
-      }}
     >
       <ChatHeader
         convoId={convoId}

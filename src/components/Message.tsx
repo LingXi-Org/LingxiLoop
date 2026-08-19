@@ -1,33 +1,33 @@
-import { createContext, memo, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
 import hljs from 'highlight.js/lib/common'
+import { createContext, memo, type ReactNode, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Markdown, { type Components } from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import remarkBreaks from 'remark-breaks'
+import remarkGfm from 'remark-gfm'
+import { api } from '@/api/client'
 import { remarkCumora } from '@/lib/remarkCumora'
-import type { Message, Participant } from '@/types'
-import { Avatar } from './Avatar'
-import { HumanBadge } from './HumanBadge'
-import { SkypeEmoji } from './SkypeEmoji'
-import { TwEmoji } from './TwEmoji'
-import { cn, parseBody, parseBlocks } from '@/lib/utils'
-import { IBoard, ICalendar, IFile, IFigma, IMail } from './icons'
-import { ImageViewer } from './ImageViewer'
-import { useParticipants } from '@/stores/participants'
+import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
+import { cn, parseBlocks, parseBody } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
-import { toggleReaction, retryFailedMessage, discardFailedMessage, useMessages } from '@/stores/messages'
-import { api } from '@/api/client'
-import { DocumentLink } from './DocumentLink'
-import { BoardLink } from './BoardLink'
-import { CardLink } from './CardLink'
-import { CalendarLink } from './CalendarLink'
-import { useResolvedDocumentId, useResolvedBoardId, useResolvedCardId, useResolvedCalendarId } from '@/lib/useArtifactId'
-import { useDocuments } from '@/stores/documents'
 import { useBoards } from '@/stores/boards'
 import { useCalendar } from '@/stores/calendar'
+import { useDocuments } from '@/stores/documents'
+import { discardFailedMessage, retryFailedMessage, toggleReaction, useMessages } from '@/stores/messages'
+import { useParticipants } from '@/stores/participants'
+import type { Message, Participant } from '@/types'
+import { Avatar } from './Avatar'
+import { BoardLink } from './BoardLink'
+import { CalendarLink } from './CalendarLink'
+import { CardLink } from './CardLink'
+import { DocumentLink } from './DocumentLink'
+import { HumanBadge } from './HumanBadge'
+import { ImageViewer } from './ImageViewer'
+import { IBoard, ICalendar, IFigma, IFile, IMail } from './icons'
+import { firstUrlInBody, LinkPreview } from './LinkPreview'
 import { PollBubble } from './PollBubble'
-import { LinkPreview, firstUrlInBody } from './LinkPreview'
+import { SkypeEmoji } from './SkypeEmoji'
+import { TwEmoji } from './TwEmoji'
 
 function MentionChip({ id }: { id: string }) {
   const byId = useParticipants((s) => s.byId)
@@ -1742,16 +1742,11 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true }: MessageRowPr
         {!isToolOnly && !isAttachOnly && !isPoll && (
           <div
             className={cn(
-              'inline-block py-2.5 px-3.5 rounded-tl-[4px] rounded-tr-[14px] rounded-br-[14px] rounded-bl-[14px] text-[14px] leading-[1.55] max-w-[min(100%,580px)] break-words',
+              'message-bubble inline-block py-2.5 px-3.5 text-[14px] max-w-[min(100%,620px)] break-words',
               isMine
-                ? 'border'
-                : 'bg-sky2-50 border border-sky2-100 text-ink-700'
+                ? 'message-bubble-user'
+                : 'message-bubble-agent'
             )}
-            style={isMine ? {
-              background: 'linear-gradient(135deg, #FFE8E1, #FFD9D2)',
-              borderColor: 'rgba(255, 122, 107, 0.25)',
-              color: '#5A2B22',
-            } : undefined}
           >
             <RichBody body={msg.body} conversationId={msg.conversationId} />
           </div>
