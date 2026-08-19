@@ -51,7 +51,7 @@ Open `http://localhost:5180`.
 
 ### 1. Prepare the server
 
-Install Docker Engine + Docker Compose v2, then clone the repository and check out the release you want to deploy.
+Install Git, Docker Engine and Docker Compose v2. Node/npm are not required on the production host.
 
 ```bash
 git clone https://github.com/LingXi-Org/LingxiLoop.git
@@ -69,7 +69,7 @@ AGENT_RUNTIME_SECRET=<openssl rand -hex 32>
 For an OpenAI-compatible provider, set its base URL and model names. For example, direct DeepSeek mode can use:
 
 ```env
-OPENAI_BASE_URL=https://api.deepseek.com/v1
+OPENAI_BASE_URL=https://api.deepseek.com
 OPENAI_MODEL=deepseek-v4-pro
 OPENAI_MODEL_SUPPORT=deepseek-v4-flash
 ```
@@ -113,17 +113,18 @@ docker compose -f docker-compose.mvp.yml ps
 
 All four services should become healthy: `postgres`, `redis`, `lingxigraph-runtime`, and `lingxiloop`.
 
-Run the deployment smoke:
+Run the deployment smoke entirely inside the application container:
 
 ```bash
-npm run mvp:smoke
+docker compose -f docker-compose.mvp.yml exec -T lingxiloop \
+  npx tsx server/scripts/mvp-smoke.ts
 ```
 
 It verifies the Human → Agent → LingxiGraph path, authenticated WebSocket delivery, unread cursor behavior and Agent → Agent execution.
 
 ### 4. Put HTTPS in front
 
-Only expose the LingxiLoop port publicly through a reverse proxy. Postgres, Redis and LingxiGraph Runtime remain on the internal Compose network.
+The Compose stack binds LingxiLoop to `127.0.0.1:5181` by default. Normally only ports **80/443** should be Internet-facing; Postgres, Redis and LingxiGraph Runtime stay on the internal Compose network.
 
 A minimal Caddy configuration is:
 
@@ -134,6 +135,8 @@ loop.example.com {
 ```
 
 Caddy handles TLS and WebSocket proxying automatically. With Nginx, make sure WebSocket `Upgrade` / `Connection` headers are forwarded.
+
+If your reverse proxy/load balancer runs on another host and must reach port 5181 over the network, explicitly set `LINGXILOOP_BIND_ADDRESS` instead of relying on a public default.
 
 ### 5. Upload persistence
 
@@ -151,7 +154,8 @@ To update to a tagged release:
 git fetch --tags
 git checkout <tag>
 docker compose -f docker-compose.mvp.yml up -d --build
-npm run mvp:smoke
+docker compose -f docker-compose.mvp.yml exec -T lingxiloop \
+  npx tsx server/scripts/mvp-smoke.ts
 ```
 
 Do not run more than one LingxiLoop API replica in the current server-managed MVP mode.
