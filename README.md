@@ -104,6 +104,14 @@ Register this callback in Logto:
 https://loop.example.com/api/auth/callback/lingxi
 ```
 
+The value must exactly match `CUMORA_PUBLIC_ORIGIN` plus `/api/auth/callback/lingxi` (same scheme, host and path; no trailing slash). If a login returns "OAuth callback missing code or state", verify that your reverse proxy forwards query strings and that these production values are set before starting Compose:
+
+```env
+CUMORA_PUBLIC_ORIGIN=https://loop.example.com
+CUMORA_AUTH_DONE_URL=https://loop.example.com/
+CUMORA_AUTH_RETURN_ALLOWLIST=https://loop.example.com/
+```
+
 Authorization, token and userinfo endpoints are resolved through OIDC discovery. The code exchange and client secret remain server-side, and only a verified email can be linked. Direct Google/GitHub OAuth is optional compatibility behavior; configure it only if needed:
 
 ```env

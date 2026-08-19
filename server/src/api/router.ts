@@ -682,15 +682,31 @@ api.get('/auth/callback/:provider', safe(async (req, res) => {
   }
   const code = typeof req.query.code === 'string' ? req.query.code : ''
   const state = typeof req.query.state === 'string' ? req.query.state : ''
+  const providerError = typeof req.query.error === 'string' ? req.query.error : ''
+  const providerErrorDescription = typeof req.query.error_description === 'string'
+    ? req.query.error_description
+    : ''
+  const ip = req.socket.remoteAddress ?? null
+  const ua = (req.headers['user-agent'] as string | undefined) ?? null
+  // OIDC providers return their denial/configuration errors to the callback
+  // with `error` instead of `code`. Consume state first so the error still
+  // lands on the browser that initiated the sign-in, never a caller-chosen
+  // redirect target.
+  if (providerError) {
+    const claimed = state ? await consumeState(state) : null
+    const detail = `${provider} oauth error: ${providerError}${providerErrorDescription ? ` (${providerErrorDescription})` : ''}`
+    console.warn(`[auth] ${detail}`)
+    await audit({ kind: 'login_failed', ip, userAgent: ua, detail: { provider, error: providerError, description: providerErrorDescription || null } })
+    res.redirect(errorUrl(claimed?.returnUrl ?? null, detail.slice(0, 120))); return
+  }
   if (!code || !state) {
-    res.redirect(errorUrl(null, 'missing_code_or_state')); return
+    console.warn(`[auth] ${provider} callback missing code/state; expected callback ${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`)
+    res.redirect(errorUrl(null, 'OAuth callback missing code or state; verify CUMORA_PUBLIC_ORIGIN and the registered callback URL')); return
   }
   const claimed = await consumeState(state)
   if (!claimed || claimed.provider !== provider) {
     res.redirect(errorUrl(null, 'bad_state')); return
   }
-  const ip = req.socket.remoteAddress ?? null
-  const ua = (req.headers['user-agent'] as string | undefined) ?? null
   try {
     const url = await handleCallback({
       provider, code, returnUrl: claimed.returnUrl, ip, userAgent: ua,
