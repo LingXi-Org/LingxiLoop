@@ -53,6 +53,12 @@ if (SUSPICIOUS.test(INTEGRATION_URL)) {
 // test target when it's imported by the test harness.
 process.env.DATABASE_URL = INTEGRATION_URL
 
+// Most integration specs exercise the server-owned turn loop with injected
+// LLM/tool doubles. Keep that deterministic instead of contacting the default
+// LingxiGraph runtime; adapter/runtime E2E coverage has its own dedicated
+// specs and Compose job. An explicit caller value still wins.
+if (!process.env.LINGXILOOP_REASONING_RUNTIME) process.env.LINGXILOOP_REASONING_RUNTIME = 'legacy'
+
 // By default we force-empty RESEND_API_KEY so the suite never hits live
 // Resend — a developer's real key in .env would otherwise reject because
 // the test EMAIL_DOMAIN isn't verified. RESEND_LIVE_TEST=1 OPTS IN to
