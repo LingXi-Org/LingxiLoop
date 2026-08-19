@@ -32,6 +32,7 @@ import { deliver as deliverWake, deliverSteer, type PollWakeBrief } from './runt
 import { inprocClient, isAgentBusy } from './runtime/inproc-client.js'
 import { classifyInboxTriage, type InboxTriageVerdict } from './inbox-triage.js'
 import type { AgentTurnOptions } from './turn.js'
+import { scheduleManagedAgentTurn } from './managed-executor.js'
 import { Semaphore } from '../concurrency.js'
 
 /** Bounds how many recipients the wake fan-out triages + wakes at once
@@ -378,6 +379,21 @@ async function wakeOne(
   // up separately. The wake stays durable in the inbox for whenever they pair.
   if (host.companyId && (await companyTier(host.companyId)) === 'free') {
     console.log(`[scheduler] ${agentId} is free-tier (BYOA-only); no managed pod — wake deferred until paired`)
+    return
+  }
+
+  // MVP server-side execution (issue #4): managed agents dispatch straight
+  // to runAgentTurn() inside this process instead of spinning up a
+  // per-Agent Kubernetes Pod. No ensurePod(), no kubectl, no Pod/PVC/FUSE
+  // dependency. Serialization + busy-wake coalescing live in
+  // managed-executor.ts, keyed by agentId. BYOA and free-tier are already
+  // filtered out above; this only ever runs for paid managed agents.
+  if (env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server' && env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph') {
+    const turnOptions: AgentTurnOptions = { trigger: reason, ...options }
+    void scheduleManagedAgentTurn(agentId, turnOptions).catch((err) =>
+      console.error(`[scheduler] scheduleManagedAgentTurn(${agentId}) failed:`,
+        err instanceof Error ? err.message : String(err)),
+    )
     return
   }
 

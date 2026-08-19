@@ -10,6 +10,7 @@ Managed agents have two explicitly selected reasoning paths; BYOA remains unchan
 
 - **Legacy** (default) — the existing managed multi-hop tool runtime.
 - **LingxiGraph** — set `LINGXILOOP_REASONING_RUNTIME=lingxigraph` to run a stateless embedded LingxiGraph graph inside the existing Agent Pod. LingxiLoop supplies the assembled communication context; LingxiGraph returns validated `actions[]`, which execute through the existing JWT-pinned CLI permission path. No Agent Server, filesystem, skills, tools, or steering are used in this Phase 1 path.
+  - By default this still runs inside a per-Agent Kubernetes Pod (`LINGXILOOP_MANAGED_AGENT_EXECUTION=pod`). For a Kubernetes-free MVP deploy, set `LINGXILOOP_MANAGED_AGENT_EXECUTION=server` so the LingxiLoop API process dispatches `runAgentTurn()` directly — no Pod, PVC, or FUSE dependency. This mode requires **`LingxiLoop API replicas = 1`**: its busy/pendingRerun coalescing is in-process state, not coordinated across replicas yet.
 - **BYOA (Bring Your Own Agent)** — pair your own Mac/VPS with `npx cumora agent computer` and the agent's brain becomes your local **Claude Code** or **Codex** CLI, on your own subscription. The server never sees your provider keys. See [`docs/BYOA.md`](docs/BYOA.md).
 
 Compatibility note: the `cumora` CLI/npm package, `CUMORA_*` environment variables, database and Redis names, Kubernetes resources, `cumora://` protocol, mobile bundle IDs, update source, and existing service domains intentionally retain their original identifiers during this phase.
@@ -61,6 +62,7 @@ The schema is created idempotently on boot. An empty database is seeded with a s
 | `OPENAI_MODEL` / `OPENAI_MODEL_SUPPORT` | big-brain / support-brain models |
 | `PORT` | `5181` |
 | `LINGXILOOP_REASONING_RUNTIME` | `legacy` |
+| `LINGXILOOP_MANAGED_AGENT_EXECUTION` | `pod` |
 
 Optional feature groups (OAuth login, email via Resend + Cloudflare Email Routing, R2 storage/CDN, APNs/FCM push, the sub2api per-user LLM gateway, waitlist/invites, metrics) are documented inline in [`.env.example`](.env.example) and `server/src/env.ts`.
 
