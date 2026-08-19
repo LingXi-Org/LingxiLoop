@@ -124,3 +124,24 @@ test('runtime adapter aborts via AbortController on timeout', async () => {
     })),
   }), /timed out after 20ms/)
 })
+
+test('runtime adapter times out a response whose body never completes, even after headers arrive', async () => {
+  // Regression: fetch() resolves as soon as headers land, so a hung or
+  // slow-streaming body must still be bounded by the same timeout —
+  // clearTimeout must not fire until response.text() has settled.
+  await assert.rejects(runLingxiGraph(request, {
+    url: 'http://runtime.local:8124',
+    timeoutMs: 20,
+    fetchImpl: fakeFetch((_url, init) => {
+      const signal = init.signal as AbortSignal
+      const response = {
+        ok: true,
+        status: 200,
+        text: () => new Promise<string>((_resolve, reject) => {
+          signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+        }),
+      }
+      return Promise.resolve(response as unknown as Response)
+    }),
+  }), /timed out after 20ms/)
+})

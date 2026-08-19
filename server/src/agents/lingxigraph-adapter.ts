@@ -209,41 +209,56 @@ export async function runLingxiGraph(
   const timeoutMs = options.timeoutMs ?? Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 120_000)
   const doFetch = options.fetchImpl ?? fetch
 
+  // The timer must stay armed for the full request lifecycle — fetch()
+  // resolves as soon as headers arrive, so a controller aborted only
+  // around the initial await would leave a slow/stuck response body
+  // free to hang the agent turn forever. clearTimeout only runs once
+  // headers, body, and parsing have all completed (success or error).
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
-  let response: Response
+  const asTimeoutOrRequestError = (error: unknown): Error =>
+    error instanceof Error && error.name === 'AbortError'
+      ? new Error(`LingxiGraph runtime timed out after ${timeoutMs}ms`)
+      : new Error(`LingxiGraph runtime request failed: ${error instanceof Error ? error.message : String(error)}`)
+
   try {
-    response = await doFetch(new URL('/v1/turn', baseUrl), {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        ...(token ? { authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(request),
-      signal: controller.signal,
-    })
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`LingxiGraph runtime timed out after ${timeoutMs}ms`)
+    let response: Response
+    try {
+      response = await doFetch(new URL('/v1/turn', baseUrl), {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      })
+    } catch (error) {
+      throw asTimeoutOrRequestError(error)
     }
-    throw new Error(`LingxiGraph runtime request failed: ${error instanceof Error ? error.message : String(error)}`)
+
+    let bodyText: string
+    try {
+      bodyText = await response.text()
+    } catch (error) {
+      throw asTimeoutOrRequestError(error)
+    }
+
+    if (!response.ok) {
+      throw new Error(`LingxiGraph runtime responded ${response.status}${bodyText ? `: ${bodyText}` : ''}`)
+    }
+    let parsedBody: unknown
+    try {
+      parsedBody = JSON.parse(bodyText)
+    } catch (error) {
+      throw new Error(`invalid LingxiGraph runtime response: ${error instanceof Error ? error.message : String(error)}`)
+    }
+    try {
+      return parseLingxiGraphRunResult(parsedBody)
+    } catch (error) {
+      throw new Error(`invalid LingxiGraph runtime response: ${error instanceof Error ? error.message : String(error)}`)
+    }
   } finally {
     clearTimeout(timer)
-  }
-
-  const bodyText = await response.text()
-  if (!response.ok) {
-    throw new Error(`LingxiGraph runtime responded ${response.status}${bodyText ? `: ${bodyText}` : ''}`)
-  }
-  let parsedBody: unknown
-  try {
-    parsedBody = JSON.parse(bodyText)
-  } catch (error) {
-    throw new Error(`invalid LingxiGraph runtime response: ${error instanceof Error ? error.message : String(error)}`)
-  }
-  try {
-    return parseLingxiGraphRunResult(parsedBody)
-  } catch (error) {
-    throw new Error(`invalid LingxiGraph runtime response: ${error instanceof Error ? error.message : String(error)}`)
   }
 }

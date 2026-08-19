@@ -17,6 +17,7 @@ from typing import Any, Mapping
 
 from lingxigraph import HumanMessage, create_agent
 from lingxigraph.integrations.openai_compat import OpenAICompatChatModel
+from lingxigraph.messages import AIMessage
 
 
 ACTION_SCHEMA: dict[str, Any] = {
@@ -49,19 +50,26 @@ ACTION_SCHEMA: dict[str, Any] = {
 }
 
 
-class CapturingLedger:
-    def __init__(self, model: str) -> None:
-        self.model = model
+class UsageTrackingModel:
+    """Wraps a `ChatModel` and records the usage of every `agenerate()` call.
+
+    `create_agent()`'s structured-response node calls `model.agenerate()`
+    directly and only returns the parsed value — its usage never reaches the
+    graph's output state. Wrapping the model (rather than relying on a
+    model-level hook) captures usage from every call made during the run,
+    including that one, without depending on optional constructor kwargs
+    the pinned `lingxigraph[openai]` release may not support.
+    """
+
+    def __init__(self, inner: OpenAICompatChatModel) -> None:
+        self._inner = inner
+        self.model = inner.model
         self.calls: list[dict[str, Any]] = []
 
-    def record(self, _scope: str, usage: Mapping[str, Any]) -> None:
-        self.calls.append({"model": self.model, "usage": _normalize_usage(usage)})
-
-    def snapshot(self, _scope: str) -> Mapping[str, Any]:
-        return {}
-
-    def restore(self, _scope: str, _snapshot: Mapping[str, Any]) -> None:
-        return None
+    async def agenerate(self, messages: Any, *, tools: Any = None, **kwargs: Any) -> AIMessage:
+        response = await self._inner.agenerate(messages, tools=tools, **kwargs)
+        self.calls.append({"model": self.model, "usage": _normalize_usage(response.usage)})
+        return response
 
 
 def _normalize_usage(usage: Mapping[str, Any]) -> dict[str, int] | None:
@@ -93,22 +101,18 @@ async def _run(request: Mapping[str, Any]) -> dict[str, Any]:
     if not system_prompt or not context_prompt:
         raise ValueError("systemPrompt and contextPrompt are required")
 
-    ledger = CapturingLedger(model_name)
-    model = OpenAICompatChatModel(
+    model = UsageTrackingModel(OpenAICompatChatModel(
         model_name,
         base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
         api_key=os.getenv("OPENAI_API_KEY"),
         timeout=float(os.getenv("LINGXIGRAPH_MODEL_TIMEOUT_SECONDS", "90")),
-        cache_first=False,
-        usage_ledger=ledger,
-    )
+    ))
     graph = create_agent(
         model,
         tools=(),
         system_prompt=system_prompt,
         response_format=ACTION_SCHEMA,
         structured_retries=2,
-        cache_first=False,
         name="lingxiloop-communication",
     )
     output = await graph.ainvoke(
@@ -123,7 +127,7 @@ async def _run(request: Mapping[str, Any]) -> dict[str, Any]:
         "status": structured["status"],
         "reason": structured["reason"],
         "actions": structured["actions"],
-        "modelCalls": ledger.calls,
+        "modelCalls": model.calls,
     }
 
 
