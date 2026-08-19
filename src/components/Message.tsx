@@ -1647,10 +1647,11 @@ function QuoteCard({ msg }: { msg: Message }) {
     return (
       <button
         onClick={jump}
-        className="openmaus-quote-card mb-2 flex max-w-[min(100%,580px)] items-stretch gap-2 rounded-xl px-3 py-2 text-left transition-colors"
+        className="openmaus-quote-card mb-1.5 flex h-8 max-w-full items-center gap-2 rounded-lg px-2.5 text-left transition-colors"
+        style={{ width: 'min(580px, 62vw)' }}
       >
-        <span className="w-[3px] rounded bg-ink-200" />
-        <span className="min-w-0 text-[11.5px] text-ink-400 italic">[message deleted]</span>
+        <span className="h-4 w-0.5 shrink-0 rounded bg-ink-200" />
+        <span className="min-w-0 truncate text-[11.5px] italic text-ink-400">[message deleted]</span>
       </button>
     )
   }
@@ -1661,14 +1662,14 @@ function QuoteCard({ msg }: { msg: Message }) {
   return (
     <button
       onClick={jump}
-      className="openmaus-quote-card mb-2 flex max-w-[min(100%,580px)] items-stretch gap-2 rounded-xl px-3 py-2 text-left transition-colors"
+      className="openmaus-quote-card mb-1.5 flex h-8 max-w-full items-center gap-2 rounded-lg px-2.5 text-left transition-colors"
+      style={{ width: 'min(580px, 62vw)' }}
       title="Jump to original"
     >
-      <span className="w-[3px] rounded bg-skype" />
-      <span className="min-w-0 flex flex-col gap-0.5">
-        <span className="text-[11.5px] font-semibold text-skype-deep truncate">{authorName}</span>
-        <span className="text-[12px] text-ink-500 truncate">{bodyPreview}</span>
-      </span>
+      <span className="h-4 w-0.5 shrink-0 rounded bg-skype" />
+      <span className="shrink-0 truncate text-[11.5px] font-semibold text-skype-deep">{authorName}</span>
+      <span className="shrink-0 text-[10px] text-ink-300" aria-hidden>·</span>
+      <span className="min-w-0 flex-1 truncate text-[11.5px] text-ink-500">{bodyPreview}</span>
     </button>
   )
 }
@@ -1750,7 +1751,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             <span className="text-[10.5px] text-ink-300 font-semibold tracking-wider uppercase">{author.role}</span>
           )}
           {isHuman && !isMine && <HumanBadge />}
-          <span className="ml-auto text-[10.5px] text-ink-300 tabular-nums">{msg.at}</span>
+          <span className={cn('text-[10.5px] text-ink-300 tabular-nums', isHuman && 'ml-auto')}>{msg.at}</span>
         </div>
 
         <QuoteCard msg={msg} />

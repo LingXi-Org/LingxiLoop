@@ -970,21 +970,15 @@ export function Composer({
           </div>
         )}
         {showReplyingPill && (
-          <div className="openmaus-reply-preview mb-2 flex min-w-0 items-stretch gap-2 rounded-xl py-2 pl-3 pr-1.5">
-            <div className="w-[3px] rounded bg-skype shrink-0" />
-            <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-              <div className="text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
+          <div className="openmaus-reply-preview mb-2 flex min-w-0 items-center gap-2 rounded-lg py-1.5 pl-2.5 pr-1.5">
+            <div className="h-4 w-0.5 shrink-0 rounded bg-skype" />
+            <div className="min-w-0 flex flex-1 items-center gap-2">
+              <div className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
                 回复 {byId[replyingToMsg?.authorId ?? '']?.name ?? replyingToMsg?.authorId ?? '…'}
               </div>
-              {/* CJK text has no whitespace, so `truncate` (white-space: nowrap)
-                  blocks any soft break and the flex item's min-content equals
-                  the whole string — it pushes the composer past its column.
-                  line-clamp-1 + overflow-wrap: anywhere lets the row break
-                  between any two chars before ellipsizing, so wide replies
-                  no longer drag the chat pane past the window edge. */}
+              <span className="shrink-0 text-[10px] text-ink-300" aria-hidden>·</span>
               <div
-                className="text-[12px] text-ink-500 line-clamp-1"
-                style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+                className="min-w-0 flex-1 truncate text-[12px] text-ink-500"
               >
                 {replyingToMsg
                   ? <PreviewText body={replyingToMsg.body.slice(0, 140).replace(/\n/g, ' ')} />

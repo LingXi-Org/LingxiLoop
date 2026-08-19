@@ -684,13 +684,14 @@ export function MobileChat() {
           </div>
         )}
         {replyingToId && convoId && (
-          <div className="openmaus-reply-preview mb-2 flex items-stretch gap-2 rounded-xl py-2 pl-3 pr-1.5">
-            <div className="w-[3px] rounded bg-skype shrink-0" />
-            <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-              <div className="text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
+          <div className="openmaus-reply-preview mb-2 flex items-center gap-2 rounded-lg py-1.5 pl-2.5 pr-1.5">
+            <div className="h-4 w-0.5 shrink-0 rounded bg-skype" />
+            <div className="min-w-0 flex flex-1 items-center gap-2">
+              <div className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
                 Replying to {byId[replyingToMsg?.authorId ?? '']?.name ?? replyingToMsg?.authorId ?? '…'}
               </div>
-              <div className="text-[12px] text-ink-500 truncate">
+              <span className="shrink-0 text-[10px] text-ink-300" aria-hidden>·</span>
+              <div className="min-w-0 flex-1 truncate text-[12px] text-ink-500">
                 {replyingToMsg ? replyingToMsg.body.slice(0, 140).replace(/\n/g, ' ') : '(loading…)'}
               </div>
             </div>
