@@ -143,7 +143,6 @@ function MentionCard({ p, x, y }: { p: Participant; x: number; y: number }) {
     if (top + r.height > window.innerHeight - margin) top = y - r.height - 18  // flip above the anchor
     setAdjusted({ left, top })
   }, [x, y])
-  const role = p.role || (p.kind === 'human' ? 'human teammate' : 'agent')
   return (
     <div
       ref={ref}
@@ -165,7 +164,6 @@ function MentionCard({ p, x, y }: { p: Participant; x: number; y: number }) {
         <Avatar p={p} size={44} ringColor="var(--cloud)" showStatus={false} />
         <div className="min-w-0 flex-1">
           <div className="font-semibold text-[14px] text-ink-900 truncate">{p.name}</div>
-          <div className="text-[11.5px] font-display italic text-ink-500 truncate mb-1">{role}</div>
           {p.bio && (
             <div className="text-[11.5px] text-ink-500 leading-[1.45] line-clamp-3">{p.bio}</div>
           )}
@@ -375,7 +373,6 @@ function MessagePeekCard(
           {author ? <Avatar p={author} size={20} ringColor="var(--cloud)" showStatus={false} /> : null}
           <div className="min-w-0 flex-1 flex items-baseline gap-2">
             <span className="font-display font-semibold text-[12.5px] text-ink-900 truncate">{author?.name ?? msg.authorId}</span>
-            {author?.role ? <span className="text-[10px] text-ink-400 truncate uppercase tracking-[0.08em]">{author.role}</span> : null}
           </div>
         </div>
         <div className="text-[12.5px] text-ink-700 leading-[1.55] line-clamp-5 break-words">
@@ -1748,9 +1745,6 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
       <div className={cn('min-w-0', openMaus && 'max-w-[70%]', openMaus && isMine && 'flex flex-col items-end')}>
         <div className={cn('mb-1 flex gap-2', openMaus ? 'items-baseline' : 'items-center', openMaus && isMine && 'justify-end')}>
           <span className="font-bold text-[13.5px] text-ink-900">{author.name}</span>
-          {author.role && !isHuman && (
-            <span className="text-[10.5px] text-ink-300 font-semibold tracking-wider uppercase">{author.role}</span>
-          )}
           {isHuman && !isMine && <HumanBadge />}
           {!isStreaming && <span className={cn('text-[10.5px] text-ink-300 tabular-nums', isHuman && 'ml-auto')}>{msg.at}</span>}
         </div>

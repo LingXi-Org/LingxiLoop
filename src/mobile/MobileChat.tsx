@@ -4,7 +4,7 @@ import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
-import { IAt, IBack, IClip, IConvene, IMore, ISearch, ISend, ISmile } from '@/components/icons'
+import { IAt, IBack, IClip, IMore, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
@@ -32,12 +32,10 @@ export function MobileChat() {
   const convoId = useApp((s) => s.selectedConversationId)
   const select = useApp((s) => s.selectConversation)
   const pushStack = useApp((s) => s.pushMobileStack)
-  const setView = useApp((s) => s.setView)
   const byConvo = useMessages((s) => (convoId ? s.byConvo[convoId] : undefined))
   const streaming = useMessages((s) => s.streaming)
   const typingIds = useMessages((s) => (convoId ? s.typing[convoId] ?? null : null))
   const [menuOpen, setMenuOpen] = useState(false)
-  const [conveneStarting, setConveneStarting] = useState(false)
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [pollComposerOpen, setPollComposerOpen] = useState(false)
   const [emojiTab, setEmojiTab] = useState<'std' | 'skype'>('std')
@@ -290,19 +288,6 @@ export function MobileChat() {
   // Resolve typing ids → display names. Three hardenings over the naive
   const muted = isMuted(c)
 
-  const onConvene = async () => {
-    if (!convoId || conveneStarting) return
-    setConveneStarting(true)
-    try {
-      await api.startConvene(convoId, c.title || 'live work session')
-      setView('convene')
-    } catch (err) {
-      console.warn('start convene failed', err)
-    } finally {
-      setConveneStarting(false)
-    }
-  }
-
   const toggleMute = async () => {
     if (!convoId) return
     try {
@@ -506,14 +491,6 @@ export function MobileChat() {
                 {agents.length} agents
               </div>
             </div>
-          </Pressable>
-          <Pressable
-            onClick={onConvene}
-            disabled={conveneStarting}
-            className="w-10 h-10 grid place-items-center text-ink-700 active:bg-sky2-50 rounded-full disabled:opacity-50"
-            aria-label="Start Convene"
-          >
-            <IConvene className="w-[20px] h-[20px]" />
           </Pressable>
           <div className="relative">
             <Pressable
@@ -761,7 +738,7 @@ export function MobileChat() {
                   <Avatar p={p} size={28} ringColor="var(--paper)" showStatus={false} animated={false} />
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-semibold text-ink-900 truncate">{p.name}</div>
-                    <div className="text-[11px] text-ink-500 truncate">@{p.id}{p.role ? ` · ${p.role}` : ''}</div>
+                    <div className="text-[11px] text-ink-500 truncate">@{p.id}</div>
                   </div>
                 </button>
               )
@@ -1097,13 +1074,11 @@ const statusLabel: Record<string, string> = {
 
 export function MobileChatInfo() {
   const pushStack = useApp((s) => s.pushMobileStack)
-  const setView = useApp((s) => s.setView)
   const convoId = useApp((s) => s.selectedConversationId)
   const c = useConversations((s) => s.list.find((x) => x.id === convoId))
   const byId = useParticipants((s) => s.byId)
   const meId = useMe()
   const openAgentInfo = useApp((s) => s.openAgentInfo)
-  const [busy, setBusy] = useState(false)
   // Inline editors for the group's name + topic (groups only — a DM title is
   // derived from the other person and isn't user-editable). Plus a member
   // search filter. All declared before the early returns so the hook order
@@ -1133,16 +1108,6 @@ export function MobileChatInfo() {
   const groupAgents = memberPs.filter((p) => p.kind === 'agent')
   const activeGroupAgents = groupAgents.filter((p) => !p.departedAt)
   const statusTone = focus?.status ?? 'avail'
-
-  const startConvene = async () => {
-    if (!convoId || busy) return
-    setBusy(true)
-    try {
-      await api.startConvene(convoId, c.title || 'live work session')
-      setView('convene')
-    } catch (err) { console.warn('start convene failed', err) }
-    setBusy(false)
-  }
 
   const onToggleMute = async () => {
     if (!convoId) return
@@ -1303,9 +1268,6 @@ export function MobileChatInfo() {
             <Avatar p={focus} size={96} ringColor="var(--paper)" />
           </div>
           <h3 className="font-display font-medium text-[26px] tracking-tight mb-1">{focus.name}</h3>
-          {focus.role && (
-            <div className="font-display italic text-[14px] text-ink-500 mb-3.5">{focus.role}</div>
-          )}
           <div className="inline-flex items-center gap-2 py-2 px-4 rounded-full bg-cloud border border-ink-100 text-[13px] text-ink-700 shadow-soft">
             <span className="w-2 h-2 rounded-full animate-pulse-soft" style={{ background: `var(--${statusTone})` }} />
             {statusLabel[statusTone] ?? statusTone}
@@ -1313,18 +1275,10 @@ export function MobileChatInfo() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2 px-4 py-4 border-b border-ink-100">
-        <button
-          onClick={startConvene}
-          disabled={busy}
-          className="py-3 px-4 rounded-xl text-white font-semibold text-[13px] active:opacity-80 transition disabled:opacity-50"
-          style={{ background: 'var(--skype-ink)' }}
-        >
-          {busy ? 'Starting…' : 'Convene'}
-        </button>
+      <div className="px-4 py-4 border-b border-ink-100">
         <button
           onClick={onToggleMute}
-          className="py-3 px-4 rounded-xl bg-cloud border border-ink-100 text-ink-700 font-semibold text-[13px] active:bg-sky2-50 transition"
+          className="w-full py-3 px-4 rounded-xl bg-cloud border border-ink-100 text-ink-700 font-semibold text-[13px] active:bg-sky2-50 transition"
         >
           {muted ? '取消静音' : '静音'}
         </button>
@@ -1392,9 +1346,6 @@ export function MobileChatInfo() {
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-semibold text-ink-900 truncate">
                       {p.name}{isSelf && <span className="text-ink-300 font-normal"> · you</span>}
-                    </div>
-                    <div className="text-[11px] text-ink-500 truncate font-display italic">
-                      {p.kind === 'agent' ? (p.role ?? 'agent') : 'human teammate'}
                     </div>
                   </div>
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: `var(--${p.status ?? 'avail'})` }} />

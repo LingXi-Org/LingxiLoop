@@ -12,24 +12,15 @@
  * per-server.
  */
 import { useState, useEffect } from 'react'
-import { api, getServerOrigin, setServerOrigin } from '@/api/client'
+import { api, getServerOrigin } from '@/api/client'
 import { isElectron } from '@/lib/runtime'
 import { isNativePlatform, runOAuth } from '@/lib/native'
-import { useIsMobile } from '@/lib/utils'
 import { CloudLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
-
-interface ServerPreset { label: string; origin: string }
-const PRESETS: ServerPreset[] = [
-  { label: '生产环境', origin: 'https://loop.lingxilearn.cn' },
-  { label: '本地开发', origin: 'http://localhost:5181' },
-]
 
 export function AuthScreen() {
   const [busy, setBusy] = useState<'lingxi' | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const [picker, setPicker] = useState(false)
-  const isMobile = useIsMobile()
 
   // AuthGate strips a successful fragment after consuming it. A failure
   // fragment looks like `#token=&companyId=&error=...` — surface that
@@ -179,88 +170,7 @@ export function AuthScreen() {
             {err}
           </div>
         )}
-        <div className="text-[11px] text-ink-300 text-center font-display italic">
-          我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
-        </div>
-        {!isMobile && <ServerSwitch open={picker} onToggle={() => setPicker((v) => !v)} />}
       </div>
-    </div>
-  )
-}
-/** Currently-active server origin in human-readable form. Mirrors what
- *  api.client computed at module init. */
-function currentOriginLabel(): string {
-  const origin = getServerOrigin()
-  if (!origin) return '同源（Vite 代理 / 静态部署）'
-  const match = PRESETS.find((p) => p.origin === origin)
-  return match ? `${match.label} · ${origin}` : origin
-}
-
-function ServerSwitch({ open, onToggle }: { open: boolean; onToggle: () => void }) {
-  const [custom, setCustom] = useState('')
-  const current = getServerOrigin()
-
-  function apply(origin: string | null) {
-    setServerOrigin(origin)
-    // Hard reload — module-init-time SERVER_ORIGIN is now stale, and any
-    // pending fetch against the old origin would race confusingly.
-    location.reload()
-  }
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={onToggle}
-        className="text-[11px] text-ink-300 hover:text-ink-500 transition-colors font-display"
-      >
-        API 服务器：<span className="underline decoration-dotted">{currentOriginLabel()}</span>
-      </button>
-    )
-  }
-  return (
-    <div className="w-full border border-ink-200 rounded-[10px] p-3 bg-cloud flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="text-[12px] font-display text-ink-700">API 服务器</div>
-        <button type="button" onClick={onToggle} className="text-[11px] text-ink-300 hover:text-ink-500">关闭</button>
-      </div>
-      {PRESETS.map((p) => (
-        <button
-          key={p.origin}
-          type="button"
-          onClick={() => apply(p.origin)}
-          className={`text-left h-9 px-2 rounded-[6px] text-[12px] flex items-center justify-between hover:bg-cloud transition-colors ${current === p.origin ? 'bg-cloud' : ''}`}
-        >
-          <span className="font-display text-ink-800">{p.label}</span>
-          <span className="text-[10px] text-ink-400">{p.origin}</span>
-        </button>
-      ))}
-      <div className="flex items-stretch gap-2 pt-1">
-        <input
-          type="url"
-          value={custom}
-          onChange={(e) => setCustom(e.target.value)}
-          placeholder="https://你的服务器"
-          className="flex-1 h-9 px-2 rounded-[6px] border border-ink-200 bg-paper text-ink-900 text-[12px] placeholder:text-ink-300 focus:outline-none focus:border-ink-400"
-        />
-        <button
-          type="button"
-          disabled={!custom.trim()}
-          onClick={() => apply(custom.trim())}
-          className="h-9 px-3 rounded-[6px] bg-ink-800 text-white text-[12px] disabled:opacity-40"
-        >
-          使用
-        </button>
-      </div>
-      {current && (
-        <button
-          type="button"
-          onClick={() => apply(null)}
-          className="text-[11px] text-ink-400 hover:text-ink-600 self-start"
-        >
-          清除自定义配置（使用构建默认值）
-        </button>
-      )}
     </div>
   )
 }

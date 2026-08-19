@@ -88,17 +88,12 @@ function _ComingSoonPop({ onClose }: { onClose: () => void }) {
 }
 
 function ChatHeader({
-  convoId, onConvene, onToggleSearch, searchOpen,
+  convoId, onToggleSearch, searchOpen,
 }: {
   convoId: string
-  // Kept wired so the underlying Convene flow can be re-enabled by
-  // flipping the button's onClick back; for now the button shows a
-  // ComingSoonPop instead.
-  onConvene: () => void
   onToggleSearch: () => void
   searchOpen: boolean
 }) {
-  void onConvene
   const c = useConversations((s) => s.list.find((x) => x.id === convoId))
   const byId = useParticipants((s) => s.byId)
   const [editingTopic, setEditingTopic] = useState(false)
@@ -962,7 +957,7 @@ export function Composer({
         />
       )}
       <div className={cn(
-        'chat-composer mx-auto max-w-[900px] rounded-3xl px-3 pb-2 pt-2.5 transition',
+        'chat-composer mx-auto min-h-[88px] max-w-[900px] rounded-3xl px-3 pb-3 pt-3 transition',
         // In thread mode the parent drawer footer is already bg-cloud, so use
         // bg-paper inside for visual separation from the surrounding panel.
         isThread ? 'bg-paper' : '',
@@ -1147,7 +1142,7 @@ export function Composer({
                     <Avatar p={p} size={26} ringColor="var(--cloud)" showStatus={false} animated={false} />
                     <div className="flex-1 min-w-0">
                       <div className="text-[12.5px] font-semibold text-ink-900 truncate">{p.name}</div>
-                      <div className="text-[10.5px] text-ink-500 truncate">@{p.id}{p.role ? ` · ${p.role}` : ''}</div>
+                      <div className="text-[10.5px] text-ink-500 truncate">@{p.id}</div>
                     </div>
                   </button>
                 )
@@ -1636,7 +1631,6 @@ function OpenMausEmptyConversationState() {
 
 export function ChatPane() {
   const convoId = useApp((s) => s.selectedConversationId)
-  const setView = useApp((s) => s.setView)
   // Atomic selectors — primitive / stable refs
   const byConvo = useMessages((s) => (convoId ? s.byConvo[convoId] : undefined))
   const streaming = useMessages((s) => s.streaming)
@@ -1706,7 +1700,6 @@ export function ChatPane() {
   const conversations = useConversations((s) => s.list)
   const c = useMemo(() => conversations.find((x) => x.id === convoId), [conversations, convoId])
   const byId = useParticipants((s) => s.byId)
-  const meId = useMe()
   const streamRef = useRef<HTMLDivElement>(null)
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
   // Whether the scroll is currently anchored to the latest message — drives
@@ -1855,14 +1848,6 @@ export function ChatPane() {
     return <OpenMausEmptyConversationState />
   }
 
-  const onConvene = async () => {
-    if (!convoId) return
-    try {
-      await api.startConvene(convoId, c?.title ?? 'live work session')
-      setView('convene')
-    } catch (err) { console.warn('start convene failed', err) }
-  }
-
   return (
     <main
       className={cn(
@@ -1874,7 +1859,6 @@ export function ChatPane() {
     >
       <ChatHeader
         convoId={convoId}
-        onConvene={onConvene}
         onToggleSearch={() => setSearchOpen((v) => !v)}
         searchOpen={searchOpen}
       />

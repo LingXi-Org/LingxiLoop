@@ -50,7 +50,13 @@ function walk(directory) {
 walk(root)
 
 const normalized = files.map((file) => relative(root, file).replaceAll('\\', '/'))
-const appAsar = normalized.filter((file) => file.endsWith('/resources/app.asar') || file === 'resources/app.asar')
+// macOS app bundles use `Contents/Resources`, while Windows/Linux use
+// lowercase `resources`. Compare case-insensitively so the same verifier
+// covers every electron-builder target.
+const appAsar = normalized.filter((file) => {
+  const lower = file.toLowerCase()
+  return lower.endsWith('/resources/app.asar') || lower === 'resources/app.asar'
+})
 if (appAsar.length === 0) throw new Error(`No Electron resources/app.asar found under ${root}`)
 
 const asarEntries = appAsar.flatMap((file) => listPackage(join(root, file)).map((entry) => `app.asar${entry}`))

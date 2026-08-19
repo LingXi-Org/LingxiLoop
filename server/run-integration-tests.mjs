@@ -21,6 +21,7 @@
  * forcing every developer to maintain a test DB.
  */
 import { spawn } from 'node:child_process'
+import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 // Load the developer's .env so RESEND_API_KEY / EMAIL_DOMAIN /
@@ -80,7 +81,15 @@ if (!process.env.EMAIL_INBOUND_HMAC_SECRET) process.env.EMAIL_INBOUND_HMAC_SECRE
 // Forward to node --import tsx --test against the integration suite.
 // tsx handles TypeScript; node:test handles the test runner.
 const here = dirname(fileURLToPath(import.meta.url))
-const pattern = join(here, 'src/__integration__/*.test.ts')
+const integrationDir = join(here, 'src/__integration__')
+const testFiles = readdirSync(integrationDir)
+  .filter((name) => name.endsWith('.test.ts'))
+  .sort()
+  .map((name) => join(integrationDir, name))
+if (testFiles.length === 0) {
+  console.error(`[integration] no test files found under ${integrationDir}`)
+  process.exit(2)
+}
 // --test-concurrency=1 serializes test FILES. Default is N-cpu which
 // causes deadlocks here: every file's beforeEach TRUNCATEs the same
 // tables on the shared test DB; two TRUNCATE CASCADE statements running
@@ -89,7 +98,7 @@ const pattern = join(here, 'src/__integration__/*.test.ts')
 // serializing is the right trade.
 const child = spawn(
   'node',
-  ['--import', 'tsx', '--test', '--test-concurrency=1', pattern],
+  ['--import', 'tsx', '--test', '--test-concurrency=1', ...testFiles],
   { stdio: 'inherit', env: process.env },
 )
 child.on('exit', (code) => process.exit(code ?? 1))

@@ -13,6 +13,7 @@ import { ISearch } from '@/components/icons'
 import { GroupCreator } from '@/components/GroupCreator'
 import { api } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { participantRoleZh } from '@/lib/participantRole'
 import { Pressable } from './Pressable'
 import { useLongPress } from './useLongPress'
 import { MobileContextMenu, type ContextMenuItem } from './MobileContextMenu'
@@ -123,6 +124,13 @@ function MobileRow({ c, onTap, onLongPress }: {
   const byId = useParticipants((s) => s.byId)
   const meId = useMe()
   const press = useLongPress(onLongPress, onTap)
+  const roleLabels = c.kind === 'direct' || c.kind === 'whisper'
+    ? c.members
+      .map((id) => byId[id])
+      .filter((p): p is Participant => Boolean(p && p.id !== meId && p.kind === 'agent'))
+      .map((p) => participantRoleZh(p))
+      .filter((role): role is string => Boolean(role))
+    : []
   // Same hardening as the chat composer: drop self, and turn a
   // resolved-but-blank name into a graceful label instead of letting it
   // render as a nameless "is typing…". Unknown ids are dropped.
@@ -164,6 +172,7 @@ function MobileRow({ c, onTap, onLongPress }: {
             // assertive signal; this dim is the supporting cue.
             muted ? 'text-ink-700 opacity-80' : 'text-ink-900',
           )}>{c.title}</span>
+          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[10px] font-normal text-ink-400">{role}</span>)}
           {muted && <MutedGlyph />}
           {isFresh && (
             <span className="text-[8.5px] font-bold tracking-wider uppercase py-0.5 px-1.5 rounded text-gold-deep bg-[rgba(244,183,64,0.18)] shrink-0">NEW</span>
@@ -494,7 +503,7 @@ export function MobileChatList({ mode = 'chat' }: { mode?: 'chat' | 'mail' }) {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="px-4 pt-2 pb-3 flex items-center gap-2.5">
-          <CloudLogo size={26} />
+          <CloudLogo size={26} rounded />
           <h1 className="font-display font-medium text-[26px] tracking-tight text-ink-900 leading-none">
             {mode === 'mail' ? '邮件' : 'LingxiLoop'}
           </h1>

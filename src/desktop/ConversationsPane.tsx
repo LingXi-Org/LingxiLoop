@@ -9,6 +9,7 @@ import { GroupCreator } from '@/components/GroupCreator'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { isElectron, isMac } from '@/lib/runtime'
 import { cn } from '@/lib/utils'
+import { participantRoleZh } from '@/lib/participantRole'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { isMuted, useConversations } from '@/stores/conversations'
@@ -68,6 +69,15 @@ function ConversationRow({ conversation, selected, onMenu }: {
   const select = useApp((s) => s.selectConversation)
   const typing = useMessages((s) => (s.typing[conversation.id] ?? []).length > 0)
   const muted = isMuted(conversation)
+  const byId = useParticipants((s) => s.byId)
+  const meId = useAuth((s) => s.user?.id)
+  const roleLabels = conversation.kind === 'direct' || conversation.kind === 'whisper'
+    ? conversation.members
+      .map((id) => byId[id])
+      .filter((p): p is Participant => Boolean(p && p.id !== meId && p.kind === 'agent'))
+      .map((p) => participantRoleZh(p))
+      .filter((role): role is string => Boolean(role))
+    : []
   return (
     <button
       type="button"
@@ -84,6 +94,7 @@ function ConversationRow({ conversation, selected, onMenu }: {
           <span className="flex min-w-0 items-center gap-1.5 truncate text-[15px] font-semibold text-ink">
             {conversation.pinned && <span className="text-[11px] text-ink-secondary" aria-label="已置顶">◆</span>}
             <span className="truncate">{conversation.title}</span>
+            {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[10px] font-normal text-ink-secondary">{role}</span>)}
           </span>
           <span className="shrink-0 text-xs tabular-nums text-ink-secondary">{conversation.lastAt}</span>
         </span>
