@@ -115,7 +115,9 @@ services:
       - LINGXIGRAPH_URL=http://lingxigraph-runtime:8124
       - LINGXIGRAPH_TOKEN
     ports:
-      - "${LINGXILOOP_PORT:-5181}:5181"
+      # Safe default for same-host Caddy/Nginx. Override only when an external
+      # load balancer/network explicitly needs to reach the container port.
+      - "${LINGXILOOP_BIND_ADDRESS:-127.0.0.1}:${LINGXILOOP_PORT:-5181}:5181"
     volumes:
       - lingxiloop-uploads:/app/server/uploads
     healthcheck:
