@@ -5,7 +5,7 @@ import { Avatar, AvatarStack } from '@/components/Avatar'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
-import { MessageRow, TypingRow } from '@/components/Message'
+import { MessageRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
@@ -113,6 +113,20 @@ function ChatHeader({
   const agentMembers = memberPs.filter((p) => p.kind === 'agent')
   const agentNames = agentMembers.map((p) => p.name).join(', ')
   const humanCount = memberPs.filter((p) => p.kind === 'human').length
+  const activeAgentMembers = agentMembers.filter((p) => !p.departedAt)
+  const changeLeader = async (leaderId: string) => {
+    const previous = c.leaderId
+    useConversations.setState((s) => ({
+      list: s.list.map((x) => x.id === c.id ? { ...x, leaderId } : x),
+    }))
+    try { await api.setLeader(c.id, leaderId) }
+    catch (error) {
+      console.warn('[leader] update failed', error)
+      useConversations.setState((s) => ({
+        list: s.list.map((x) => x.id === c.id ? { ...x, leaderId: previous } : x),
+      }))
+    }
+  }
 
   // Group rename — only group chats; a DM/whisper title is derived from the
   // other person. Mirrors the topic editor (optimistic update + rollback).
@@ -214,6 +228,23 @@ function ChatHeader({
             <>
               <span className="w-1 h-1 rounded-full bg-ink-300 shrink-0" />
               <span className="shrink-0">+ {humanCount === 1 ? '你' : `${humanCount} 位成员`}</span>
+            </>
+          )}
+          {c.kind === 'group' && activeAgentMembers.length > 0 && (
+            <>
+              <span className="w-1 h-1 rounded-full bg-ink-300 shrink-0" />
+              <label className="flex shrink-0 items-center gap-1" title="普通消息由 Leader 主导回复">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-300">Leader</span>
+                <select
+                  value={c.leaderId ?? ''}
+                  onChange={(event) => void changeLeader(event.target.value)}
+                  className="max-w-[120px] bg-transparent text-[11.5px] font-semibold text-skype-deep outline-none"
+                  aria-label="更换群聊 Leader"
+                >
+                  {!c.leaderId && <option value="" disabled>请选择</option>}
+                  {activeAgentMembers.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
+                </select>
+              </label>
             </>
           )}
           {!c.topic && !editingTopic && (
@@ -465,12 +496,10 @@ function useTypingEmitter(convoId: string, text: string) {
 
 export function Composer({
   convoId,
-  typingNames,
   threadRootId = null,
   placeholder,
 }: {
   convoId: string
-  typingNames: string[]
   // When set, this composer sends thread replies rooted at `threadRootId`
   // instead of top-level messages. Drafts are scoped under a separate key so
   // the main chat composer keeps its own in-flight text, the global "replyingTo"
@@ -923,7 +952,6 @@ export function Composer({
       onDrop={onDrop}>
       {!isThread && (
         <div className="mx-auto max-w-[900px] px-1 pb-1">
-          <TypingRow names={typingNames} zh />
         </div>
       )}
       {pollComposerOpen && !isThread && (
@@ -1672,8 +1700,8 @@ export function ChatPane() {
   const retryLoad = useMessages((s) => s.retryLoad)
   // Compose with memo so the rendered array ref stays stable when inputs do
   const list = useMemo(
-    () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming } as MessagesState, convoId),
-    [byConvo, streaming, convoId],
+    () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId ? { [convoId]: typingIds } : {} } as MessagesState, convoId),
+    [byConvo, streaming, typingIds, convoId],
   )
   const conversations = useConversations((s) => s.list)
   const c = useMemo(() => conversations.find((x) => x.id === convoId), [conversations, convoId])
@@ -1819,18 +1847,6 @@ export function ChatPane() {
   // useMemo sat after an early return, so leaving a group / clearing
   // the selection dropped the hook count between renders and crashed
   // the tree with "Rendered fewer hooks than expected".)
-  // Drop the local user from the typing list — seeing "you are typing…"
-  // while your own composer is right there reads as a UI hiccup. Humans
-  // and agents both broadcast on the same channel; the filter keeps the
-  // indicator focused on OTHER participants.
-  const typingAgents = useMemo(
-    () => (typingIds ?? [])
-      .filter((id) => id !== meId)
-      .map((id) => byId[id])
-      .filter((p): p is NonNullable<typeof p> => Boolean(p)),
-    [typingIds, byId, meId],
-  )
-
   // Render the empty state until the selected conversation belongs to the
   // current list. During a company switch the old convoId can survive for
   // a render while the new tenant's conversations are loading; requiring
@@ -2008,7 +2024,7 @@ export function ChatPane() {
             the composer's top edge so it doesn't fight the typing area. */}
         <ScrollToLatestButton visible={!atBottom} onClick={scrollToLatest} zh />
       </div>
-      <Composer convoId={convoId} typingNames={typingAgents.map((a) => a.name)} />
+      <Composer convoId={convoId} />
     </main>
   )
 }

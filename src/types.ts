@@ -73,6 +73,8 @@ export interface Conversation {
   topic?: string | null
   /** participant ids */
   members: string[]
+  /** Explicit agent responsible for ordinary group messages. */
+  leaderId: string | null
   /** for whispers: the two agents in private chat */
   whisperPair?: [string, string]
   pinned?: boolean
@@ -196,6 +198,9 @@ export interface Message {
   authorId: string
   kind: MessageKind
   body: string
+  /** Structured mention metadata resolved against the conversation roster. */
+  mentionedIds?: string[]
+  mentionAll?: boolean
   at: string
   reactions?: ReactionEntry[]
   /** for tool messages */
@@ -252,6 +257,8 @@ export interface Message {
    *  keeps the same DOM node (avoids re-firing the entry animation). Set on
    *  optimistic insert; carried onto the server echo in `applyEvent`. */
   clientId?: string
+  /** Renderer-only lifecycle marker for the single in-flight bubble. */
+  streaming?: 'placeholder' | 'markdown'
 }
 
 export interface ViewKey {

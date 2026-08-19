@@ -11,7 +11,7 @@ export type CommunicationAction =
   | Exact<{ type: 'message.send'; conversationId: string; body: string; quoteMessageId?: string }>
   | Exact<{ type: 'reaction.toggle'; messageId: string; emoji: string }>
   | Exact<{ type: 'conversation.dm.create'; participantId: string; topic: string; openingMessage: string }>
-  | Exact<{ type: 'conversation.group.create'; title: string; memberIds: string[]; reason: string; openingMessage: string }>
+  | Exact<{ type: 'conversation.group.create'; title: string; memberIds: string[]; leaderId: string; reason: string; openingMessage: string }>
   | Exact<{ type: 'conversation.member.invite'; conversationId: string; participantId: string }>
   | Exact<{ type: 'conversation.member.remove'; conversationId: string; participantId: string }>
   | Exact<{ type: 'conversation.leave'; conversationId: string }>
@@ -61,7 +61,7 @@ export const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]>
   'message.send': ['type', 'conversationId', 'body', 'quoteMessageId'],
   'reaction.toggle': ['type', 'messageId', 'emoji'],
   'conversation.dm.create': ['type', 'participantId', 'topic', 'openingMessage'],
-  'conversation.group.create': ['type', 'title', 'memberIds', 'reason', 'openingMessage'],
+  'conversation.group.create': ['type', 'title', 'memberIds', 'leaderId', 'reason', 'openingMessage'],
   'conversation.member.invite': ['type', 'conversationId', 'participantId'],
   'conversation.member.remove': ['type', 'conversationId', 'participantId'],
   'conversation.leave': ['type', 'conversationId'],
@@ -163,7 +163,7 @@ export function parseCommunicationAction(raw: unknown): CommunicationAction {
     case 'message.send': return { type, conversationId: stringField(raw, 'conversationId')!, body: stringField(raw, 'body')!, ...(raw.quoteMessageId === undefined ? {} : { quoteMessageId: stringField(raw, 'quoteMessageId')! }) }
     case 'reaction.toggle': return { type, messageId: stringField(raw, 'messageId')!, emoji: stringField(raw, 'emoji')! }
     case 'conversation.dm.create': return { type, participantId: stringField(raw, 'participantId')!, topic: stringField(raw, 'topic')!, openingMessage: stringField(raw, 'openingMessage')! }
-    case 'conversation.group.create': return { type, title: stringField(raw, 'title')!, memberIds: stringArrayField(raw, 'memberIds')!, reason: stringField(raw, 'reason')!, openingMessage: stringField(raw, 'openingMessage')! }
+    case 'conversation.group.create': return { type, title: stringField(raw, 'title')!, memberIds: stringArrayField(raw, 'memberIds')!, leaderId: stringField(raw, 'leaderId')!, reason: stringField(raw, 'reason')!, openingMessage: stringField(raw, 'openingMessage')! }
     case 'conversation.member.invite': return { type, conversationId: stringField(raw, 'conversationId')!, participantId: stringField(raw, 'participantId')! }
     case 'conversation.member.remove': return { type, conversationId: stringField(raw, 'conversationId')!, participantId: stringField(raw, 'participantId')! }
     case 'conversation.leave': return { type, conversationId: stringField(raw, 'conversationId')! }
@@ -219,7 +219,7 @@ export function communicationActionToArgv(action: CommunicationAction): string[]
     case 'message.send': return ['reply', action.conversationId, action.body, ...(action.quoteMessageId ? ['--quote', action.quoteMessageId] : [])]
     case 'reaction.toggle': return ['react', action.messageId, action.emoji]
     case 'conversation.dm.create': return ['dm', action.participantId, action.topic, action.openingMessage]
-    case 'conversation.group.create': return ['pull-group', action.title, '--members', action.memberIds.join(','), '--reason', action.reason, '--say', action.openingMessage]
+    case 'conversation.group.create': return ['pull-group', action.title, '--members', action.memberIds.join(','), '--leader', action.leaderId, '--reason', action.reason, '--say', action.openingMessage]
     case 'conversation.member.invite': return ['invite', action.conversationId, action.participantId]
     case 'conversation.member.remove': return ['kick', action.conversationId, action.participantId]
     case 'conversation.leave': return ['leave', action.conversationId]

@@ -154,13 +154,15 @@ async function tPullGroup(args: Record<string, unknown>, instigatorId: string): 
   const reason = String(args.reason ?? '').trim()
   const opening = String(args.opening_message ?? '').trim()
   const members = Array.isArray(args.members) ? (args.members as unknown[]).map((m) => String(m)).filter(Boolean) : []
+  const leaderId = String(args.leader_id ?? '').trim()
+  if (!leaderId) throw new Error('pull_group requires leader_id')
   // Always include the instigator. Do NOT auto-add a human — agents are
   // first-class and can pull true agent-only groups (which surface in
   // the Whispers peek tab). The agent picks who belongs based on the
   // members[] list it supplied.
   if (!members.includes(instigatorId)) members.push(instigatorId)
   const { startPulledGroup } = await import('./scanner_helper.js')
-  const result = await startPulledGroup({ instigatorId, title, members, reason, opening })
+  const result = await startPulledGroup({ instigatorId, title, members, leaderId, reason, opening })
   return {
     ok: true, output: { conversationId: result.conversationId, members },
     durationMs: Date.now() - t0,

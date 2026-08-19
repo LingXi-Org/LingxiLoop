@@ -14,6 +14,7 @@ import { env } from '../env.js'
 import { freshenAttachmentUrl, type StoredAttachment, storage } from '../storage.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { stripLoneSurrogates } from './text-safety.js'
+import { parseMentions } from '../mentions.js'
 
 // Every CLI result flows through ok()/err(), so scrubbing lone UTF-16 surrogates
 // here means CLI output (read by agents as tool results) can never carry a split
@@ -240,7 +241,7 @@ CALENDAR  (shared schedule + your own self-scheduling tool):
 
 ACTIONS  (each writes to the world, not just your private state):
   dm <partner_id> <topic> <opening>                open a private 1-on-1 chat with another agent
-  pull-group <title> --members a,b,c --reason "..." --say "..."   create a new group + post first msg
+  pull-group <title> --members a,b,c --leader a --reason "..." --say "..."   create a new group + post first msg
   invite <convo_id> <member_id>                    pull a teammate into a group you're in
   leave <convo_id>                                 leave a group (no-op for direct chats)
   kick <convo_id> <member_id>                      remove a member from a group you're in
@@ -384,7 +385,7 @@ EXAMPLES:
   cumora workspace write drafts/v3.md "# Hero v3..." --as iris
   cumora workspace edit drafts/v3.md "warmth" "Sunday-morning warmth"
   cumora dm bram "hero copy" "Want to align before iris paints v4"
-  cumora pull-group "Aurora launch" --members iris,bram,nova --reason "Shipping next week" --say "Kickoff?"
+  cumora pull-group "Aurora launch" --members iris,bram,nova --leader iris --reason "Shipping next week" --say "Kickoff?"
   cumora react msg-abc123 🌤️
   bash: cumora-web search "warm palette inspiration" --limit 3
   bash: opencli browser "$CUMORA_AGENT_ID" open https://example.com
@@ -1337,9 +1338,9 @@ async function cmdLeave(parsed: ParsedArgs): Promise<CliResult> {
   if (!convoId) return err('usage: leave <conversation_id>')
 
   const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null
+    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
   }>(
-    `SELECT kind, title, members, company_id FROM conversations WHERE id = $1`,
+    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
     [convoId],
   )
   const c = rows[0]
@@ -1348,6 +1349,7 @@ async function cmdLeave(parsed: ParsedArgs): Promise<CliResult> {
     return err('cannot leave a direct conversation — use `cumora ack` to mute it from your inbox instead')
   }
   if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId}`)
+  if (c.leader_id === me) return err(`cannot leave while ${me} is Leader; ask a human member to change the Leader first`)
 
   // Post the system message BEFORE updating members so the leaving
   // agent's inbox (filtered by c.members @> [me]) still surfaces this
@@ -1389,9 +1391,9 @@ async function cmdInvite(parsed: ParsedArgs): Promise<CliResult> {
   if (target === me) return err(`${me} is already the one inviting`)
 
   const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null
+    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
   }>(
-    `SELECT kind, title, members, company_id FROM conversations WHERE id = $1`,
+    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
     [convoId],
   )
   const c = rows[0]
@@ -1448,9 +1450,9 @@ async function cmdKick(parsed: ParsedArgs): Promise<CliResult> {
   if (target === me) return err('use `cumora leave <convo_id>` to leave a group yourself')
 
   const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null
+    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
   }>(
-    `SELECT kind, title, members, company_id FROM conversations WHERE id = $1`,
+    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
     [convoId],
   )
   const c = rows[0]
@@ -1458,6 +1460,7 @@ async function cmdKick(parsed: ParsedArgs): Promise<CliResult> {
   if (c.kind === 'direct') return err('cannot kick from a direct conversation')
   if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId} — can't kick from a group you're not in`)
   if (!c.members.includes(target)) return err(`${target} is not a member of ${convoId}`)
+  if (c.leader_id === target) return err(`cannot remove ${target} while they are Leader; ask a human member to change the Leader first`)
 
   const next = c.members.filter((m) => m !== target)
   // Refuse to leave a group with just one member as a side-effect of kick —
@@ -1959,6 +1962,11 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   const consumedAsTextContent =
     parsed.flags['attach-text'] && !parsed.flags['attach-text-content']
   const finalBody = consumedAsTextContent ? '' : body
+  const { rows: mentionTargets } = await pool.query<{ id: string; name: string }>(
+    `SELECT id, name FROM participants WHERE company_id = $1 AND id = ANY($2::text[])`,
+    [companyId, cv[0].members],
+  )
+  const { mentionedIds, mentionAll } = parseMentions(finalBody, mentionTargets)
 
   // Atomically claim next sequence + check verbatim-dup + INSERT, all in
   // ONE transaction. The conversation_counters UPSERT takes a row-level
@@ -2029,11 +2037,11 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       }
     }
     const { rows: inserted } = await txClient.query<{ id: string }>(
-      `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, attachment, quoted_message_id, company_id, idempotency_key)
-       VALUES ($1,$2,$3,'text',$4,$5,$6::jsonb,$7,$8,$9)
+      `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, attachment, quoted_message_id, company_id, idempotency_key, mentioned_ids, mention_all)
+       VALUES ($1,$2,$3,'text',$4,$5,$6::jsonb,$7,$8,$9,$10::jsonb,$11)
        ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
        RETURNING id`,
-      [messageId, convoId, me, finalBody, sequence, attachment ? JSON.stringify(attachment) : null, resolvedQuotedId, companyId, idempotencyKey],
+      [messageId, convoId, me, finalBody, sequence, attachment ? JSON.stringify(attachment) : null, resolvedQuotedId, companyId, idempotencyKey, JSON.stringify(mentionedIds), mentionAll],
     )
     if (idempotencyKey && inserted.length === 0) {
       // Lost a genuine concurrent race against another execution of the SAME
@@ -2109,6 +2117,9 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
 
   // Broadcast — frontend, scheduler, etc. all listen on CH_MESSAGE_NEW
   const { CH_MESSAGE_NEW, publish } = await import('../redis.js')
+  const streamBase = { conversationId: convoId, messageId, authorId: me, sequence, companyId }
+  const { replayReplyStream, finishReplyStream } = await import('../messages/stream-reply.js')
+  await replayReplyStream(streamBase, finalBody)
   await publish(CH_MESSAGE_NEW, {
     type: 'message.new',
     conversationId: convoId,
@@ -2126,8 +2137,40 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
         body: quotedSummary.body,
         sequence: quotedSummary.sequence,
       } : undefined,
+      mentionedIds,
+      mentionAll,
     },
   })
+  await finishReplyStream(streamBase)
+
+  // Humans mentioned by an agent receive a high-priority notification even
+  // when the room itself is muted. Online clients get the same bypass from
+  // the structured message.new metadata.
+  void (async () => {
+    try {
+      const { computeMessageRecipients, notifyMessage } = await import('../push.js')
+      const recipients = await computeMessageRecipients({
+        conversationId: convoId, authorId: me, mentionedUserIds: mentionedIds,
+      })
+      if (recipients.length === 0) return
+      const [{ rows: convoNames }, { rows: authorNames }] = await Promise.all([
+        pool.query<{ title: string }>(`SELECT title FROM conversations WHERE id = $1`, [convoId]),
+        pool.query<{ name: string }>(`SELECT name FROM participants WHERE id = $1 AND company_id = $2`, [me, companyId]),
+      ])
+      await notifyMessage({
+        conversationId: convoId,
+        conversationTitle: convoNames[0]?.title ?? null,
+        authorId: me,
+        authorName: authorNames[0]?.name ?? me,
+        messageId,
+        body: finalBody,
+        companyId,
+        recipientUserIds: recipients,
+      })
+    } catch (error) {
+      console.warn('[push] agent reply notification failed', error)
+    }
+  })()
   const attachmentNote = attachment
     ? ` · attached ${attachment.kind} "${attachment.name}"`
     : ''
@@ -5488,14 +5531,16 @@ function buildToolArgs(toolName: string, parsed: ParsedArgs): { argsJson: string
     }
     case 'pull_group': {
       const title = pos[0]
-      if (!title) return { error: 'usage: pull-group <title> --members a,b,c --reason "..." --say "..."' }
+      if (!title) return { error: 'usage: pull-group <title> --members a,b,c --leader a --reason "..." --say "..."' }
       const membersFlag = f.members ? String(f.members) : ''
       const members = membersFlag.split(',').map((s) => s.trim()).filter(Boolean)
       if (members.length === 0) return { error: 'pull-group requires --members a,b,c' }
+      const leaderId = f.leader ? String(f.leader).trim() : ''
+      if (!leaderId) return { error: 'pull-group requires --leader <agent_id>' }
       const reason = f.reason ? String(f.reason) : ''
       const opening = f.say ? String(f.say) : (f.message ? String(f.message) : '')
       if (!reason || !opening) return { error: 'pull-group requires --reason "..." and --say "..."' }
-      return { argsJson: JSON.stringify({ title, members, reason, opening_message: opening }) }
+      return { argsJson: JSON.stringify({ title, members, leader_id: leaderId, reason, opening_message: opening }) }
     }
     case 'palette': {
       const brief = pos.join(' ').trim() || (f.brief ? String(f.brief) : '')

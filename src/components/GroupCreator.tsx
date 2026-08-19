@@ -36,6 +36,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
 
   const [title, setTitle] = useState('')
   const [picked, setPicked] = useState<Set<string>>(() => new Set(initialPicked ?? []))
+  const [leaderId, setLeaderId] = useState<string | null>(null)
   const [projects, setProjects] = useState<ApiProject[]>([])
   const [projectId, setProjectId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -56,7 +57,10 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
   const toggle = (id: string) => {
     setPicked((s) => {
       const next = new Set(s)
-      if (next.has(id)) next.delete(id)
+      if (next.has(id)) {
+        next.delete(id)
+        if (leaderId === id) setLeaderId(null)
+      }
       else next.add(id)
       return next
     })
@@ -77,11 +81,12 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
   const submit = async () => {
     setErr(null)
     if (picked.size === 0) { setErr('pick at least one teammate'); return }
+    if (!leaderId) { setErr('choose an agent as Leader'); return }
     const finalTitle = title.trim() || autoTitle
     if (!finalTitle) { setErr('add a title or pick a teammate'); return }
     setBusy(true)
     try {
-      const r = await api.createGroup({ title: finalTitle, members: [...picked], projectId })
+      const r = await api.createGroup({ title: finalTitle, members: [...picked], leaderId, projectId })
       await useConversations.getState().reload()
       setView('conversations')
       select(r.id)
@@ -93,7 +98,8 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
     }
   }
 
-  const canSubmit = picked.size > 0 && !busy
+  const leaderCandidates = candidates.filter((p) => p.kind === 'agent' && picked.has(p.id))
+  const canSubmit = picked.size > 0 && Boolean(leaderId) && !busy
 
   return (
     <div
@@ -111,6 +117,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
           <div className="text-[12.5px] text-ink-500 italic font-display mt-0.5">
             Pull a few teammates into a shared conversation. You'll always be in it.
           </div>
+
         </div>
 
         <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0">
@@ -212,6 +219,37 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
             {candidates.length === 0 && (
               <div className="text-[12.5px] text-ink-500 italic font-display py-4 text-center">
                 No teammates available — add an agent or human first.
+              </div>
+            )}
+          </div>
+
+          <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mt-5 mb-1">Leader</label>
+          <div className="text-[11.5px] text-ink-300 mb-2 font-display italic">
+            Explicitly choose the agent that handles ordinary group messages and delegates with @mentions.
+          </div>
+          <div className="grid grid-cols-1 gap-1.5">
+            {leaderCandidates.map((p) => {
+              const on = leaderId === p.id
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setLeaderId(p.id)}
+                  className="text-left flex items-center gap-3 py-2 px-2.5 rounded-[10px] transition"
+                  style={{
+                    background: on ? 'var(--sky-50)' : 'var(--paper)',
+                    border: `1.5px solid ${on ? 'var(--skype)' : 'var(--ink-100)'}`,
+                  }}
+                >
+                  <Avatar p={p} size={30} ringColor="var(--paper)" showStatus={false} />
+                  <span className="flex-1 text-[13px] font-semibold text-ink-900">{p.name}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-skype-deep">{on ? 'Leader' : 'Set leader'}</span>
+                </button>
+              )
+            })}
+            {leaderCandidates.length === 0 && (
+              <div className="rounded-[10px] border border-dashed border-ink-200 px-3 py-3 text-[12px] text-ink-400">
+                Select at least one active agent above, then choose the Leader here.
               </div>
             )}
           </div>

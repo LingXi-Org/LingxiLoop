@@ -140,6 +140,7 @@ export interface ApiConversation {
   subtitle: string | null
   topic: string | null
   members: string[]
+  leaderId: string | null
   pinned: boolean
   muted: boolean
   /** ISO timestamp when the mute auto-expires; null if muted forever or not muted. */
@@ -929,8 +930,8 @@ export const api = {
   generateAgentAvatar: (id: string) =>
     http<{ url: string }>(`/agents/${encodeURIComponent(id)}/avatar/generate`, { method: 'POST' }),
   getConversations: () => http<ApiConversation[]>('/conversations'),
-  createGroup: (input: { title: string; members: string[]; subtitle?: string; projectId?: string | null }) =>
-    http<{ id: string; members: string[]; projectId: string | null }>('/conversations', {
+  createGroup: (input: { title: string; members: string[]; leaderId: string; subtitle?: string; projectId?: string | null }) =>
+    http<{ id: string; members: string[]; leaderId: string; projectId: string | null }>('/conversations', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
@@ -952,6 +953,11 @@ export const api = {
     http<{ ok: boolean; title: string }>(`/conversations/${encodeURIComponent(conversationId)}/title`, {
       method: 'POST',
       body: JSON.stringify({ title }),
+    }),
+  setLeader: (conversationId: string, leaderId: string) =>
+    http<{ ok: boolean; leaderId: string }>(`/conversations/${encodeURIComponent(conversationId)}/leader`, {
+      method: 'POST',
+      body: JSON.stringify({ leaderId }),
     }),
   togglePin: (conversationId: string, pinned?: boolean) =>
     http<{ ok: boolean; pinned: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/pin`, {
@@ -1424,7 +1430,7 @@ export type WsEvent =
     } }
   | { type: 'message.reactions'; conversationId: string; messageId: string; reactions: Array<{ emoji: string; count: number; mine?: boolean; users?: string[] }> }
   | { type: 'group.pulled'; conversationId: string; pulledById: string }
-  | { type: 'conversation.updated'; conversationId: string; patch: { topic?: string | null; title?: string } }
+  | { type: 'conversation.updated'; conversationId: string; patch: { topic?: string | null; title?: string; leaderId?: string | null } }
   | { type: 'convene'; sessionId: string; conversationId: string; kind: 'started' | 'transcript' | 'ended' | 'tile'; data?: unknown }
   | { type: 'board.changed'; kind:
         | 'board.created' | 'board.updated' | 'board.deleted'

@@ -39,12 +39,15 @@ CREATE INDEX IF NOT EXISTS idx_messages_convo_created ON messages(conversation_i
 -- rather than wiping the reply thread. Idx supports the thread-fetch
 -- endpoint (all messages quoting a given root).
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS quoted_message_id TEXT;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS mentioned_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS mention_all BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_messages_quoted ON messages(quoted_message_id);
 
 -- Internal marker for product-owned rooms. User-created conversations keep
 -- this NULL; the marker lets preset migrations remain idempotent without
 -- guessing from editable titles.
 ALTER TABLE conversations ADD COLUMN IF NOT EXISTS preset_key TEXT;
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS leader_id TEXT;
 
 CREATE TABLE IF NOT EXISTS participants (
   id             TEXT NOT NULL,
@@ -1787,6 +1790,24 @@ UPDATE participants p
    AND p.computer_id IS NULL
    AND p.company_id IS NOT NULL
    AND COALESCE(o.tier, 'free') <> 'free';
+
+-- Existing groups gain a deterministic leader without changing human-only
+-- historical rooms. Member ordinality is preserved so the migration is
+-- stable across restarts and replicas.
+UPDATE conversations c
+   SET leader_id = (
+     SELECT member.id
+       FROM jsonb_array_elements_text(c.members) WITH ORDINALITY AS member(id, ord)
+       JOIN participants p
+         ON p.id = member.id
+        AND p.company_id = c.company_id
+      WHERE p.kind = 'agent'
+        AND p.departed_at IS NULL
+      ORDER BY member.ord
+      LIMIT 1
+   )
+ WHERE c.kind = 'group'
+   AND c.leader_id IS NULL;
 `
 
 /** Postgres advisory-lock key for serializing concurrent

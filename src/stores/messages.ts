@@ -57,6 +57,35 @@ function timeFromIso(iso?: string): string {
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/
 const TYPING_STALE_MS = 45_000
 const typingExpiryTimers = new Map<string, number>()
+const STREAMING_STALE_MS = 10_000
+const streamingExpiryTimers = new Map<string, number>()
+
+function clearStreamingExpiry(messageId: string): void {
+  const timer = streamingExpiryTimers.get(messageId)
+  if (timer !== undefined) window.clearTimeout(timer)
+  streamingExpiryTimers.delete(messageId)
+}
+
+function scheduleStreamingExpiry(messageId: string, conversationId: string): void {
+  clearStreamingExpiry(messageId)
+  const timer = window.setTimeout(() => {
+    streamingExpiryTimers.delete(messageId)
+    useMessages.setState((state) => {
+      const { [messageId]: _drop, ...streaming } = state.streaming
+      return { streaming }
+    })
+    // The database already contains the authoritative full row before any
+    // delta is sent. Refetching converts a missed terminal event into the
+    // complete message instead of leaving a permanent half-bubble.
+    void useMessages.getState().reloadConversation(conversationId)
+  }, STREAMING_STALE_MS)
+  streamingExpiryTimers.set(messageId, timer)
+}
+
+function clearAllStreamingExpiries(): void {
+  for (const timer of streamingExpiryTimers.values()) window.clearTimeout(timer)
+  streamingExpiryTimers.clear()
+}
 
 function typingKey(conversationId: string, agentId: string): string {
   return `${conversationId}:${agentId}`
@@ -259,6 +288,8 @@ function fromApi(m: ApiMessage): Message {
     poll?: Message['poll'] | null
     pollTallies?: Message['pollTallies'] | null
     clientId?: string | null
+    mentionedIds?: string[] | null
+    mentionAll?: boolean | null
   }
   const out: Message = {
     id: m.id,
@@ -278,6 +309,8 @@ function fromApi(m: ApiMessage): Message {
     poll: raw.poll ?? undefined,
     pollTallies: raw.pollTallies ?? undefined,
     clientId: raw.clientId ?? undefined,
+    mentionedIds: raw.mentionedIds ?? undefined,
+    mentionAll: raw.mentionAll ?? undefined,
   }
   ;(out as Message & { sequence?: number }).sequence = m.sequence
   return out
@@ -474,6 +507,7 @@ export const useMessages = create<MessagesState>((set, get) => ({
   applyEvent(e) {
     if (e.type === 'message.new') {
       const m = fromApi(e.message)
+      clearStreamingExpiry(m.id)
       clearTypingExpiry(e.conversationId, m.authorId)
       set((s) => {
         const existing = s.byConvo[e.conversationId] ?? []
@@ -521,6 +555,7 @@ export const useMessages = create<MessagesState>((set, get) => ({
     } else if (e.type === 'message.delta') {
       clearTypingExpiry(e.conversationId, e.authorId)
       if (e.done) {
+        clearStreamingExpiry(e.messageId)
         set((s) => {
           const { [e.messageId]: _drop, ...rest } = s.streaming
           return {
@@ -546,6 +581,7 @@ export const useMessages = create<MessagesState>((set, get) => ({
           },
         }
       })
+      scheduleStreamingExpiry(e.messageId, e.conversationId)
     } else if (e.type === 'typing') {
       if (e.done) clearTypingExpiry(e.conversationId, e.agentId)
       else scheduleTypingExpiry(e.conversationId, e.agentId)
@@ -599,9 +635,26 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
       kind: 'text' as const,
       body: x.body,
       at: timeFromIso(),
+      sequence: x.sequence,
+      streaming: x.body ? 'markdown' as const : 'placeholder' as const,
     }))
-  if (streaming.length === 0) return base
-  return [...base, ...streaming]
+  const streamingAuthors = new Set(streaming.map((message) => message.authorId))
+  const typing = (s.typing?.[convoId] ?? [])
+    .filter((authorId) => !streamingAuthors.has(authorId))
+    .map((authorId, index) => ({
+      id: `typing:${convoId}:${authorId}`,
+      conversationId: convoId,
+      authorId,
+      kind: 'text' as const,
+      body: '',
+      at: '',
+      sequence: Number.MAX_SAFE_INTEGER - 1_000 + index,
+      streaming: 'placeholder' as const,
+    }))
+  if (streaming.length === 0 && typing.length === 0) return base
+  return [...base, ...streaming, ...typing].sort((a, b) =>
+    ((a as Message & { sequence?: number }).sequence ?? 0) - ((b as Message & { sequence?: number }).sequence ?? 0),
+  )
 }
 
 function newTempId(): string {
@@ -771,6 +824,7 @@ export function bootMessagesStream() {
   // companyId change) — drops any messages the previous tenant left
   // behind in the byConvo cache.
   clearAllTypingExpiries()
+  clearAllStreamingExpiries()
   useMessages.setState({
     byConvo: {},
     streaming: {},
@@ -794,6 +848,7 @@ export function bootMessagesStream() {
       // missed their terminal events and they're stuck.
       const active = useApp.getState().selectedConversationId
       clearAllTypingExpiries()
+      clearAllStreamingExpiries()
       useMessages.setState({ streaming: {}, typing: {} })
       useMessages.setState((s) => ({
         loaded: new Set(active && s.loaded.has(active) ? [active] : []),

@@ -33,6 +33,8 @@ import { classifyInboxTriage, type InboxTriageVerdict } from './inbox-triage.js'
 import type { AgentTurnOptions } from './turn.js'
 import { scheduleManagedAgentTurn } from './managed-executor.js'
 import { Semaphore } from '../concurrency.js'
+import { parseMentions } from '../mentions.js'
+import { resolveAgentRecipients } from './message-routing.js'
 
 /** Bounds how many recipients the wake fan-out triages + wakes at once
  *  (per replica). See env.WAKE_FANOUT_CONCURRENCY — this is the
@@ -563,8 +565,8 @@ async function wake(payload: MessageNewEvent): Promise<void> {
     steerPayload = { messageId, conversationId, authorName, body: messageBody, companyId: payload.companyId ?? '' }
   }
 
-  const { rows: convoRows } = await pool.query<{ members: string[]; kind: string; muted_agent_ids: string[] }>(
-    `SELECT c.members, c.kind,
+  const { rows: convoRows } = await pool.query<{ members: string[]; kind: string; leader_id: string | null; muted_agent_ids: string[] }>(
+    `SELECT c.members, c.kind, c.leader_id,
             COALESCE(array_agg(mu.user_id) FILTER (WHERE mu.user_id IS NOT NULL), ARRAY[]::text[]) AS muted_agent_ids
        FROM conversations c
        LEFT JOIN conversation_mutes mu ON mu.conversation_id = c.id
@@ -577,25 +579,37 @@ async function wake(payload: MessageNewEvent): Promise<void> {
   const members = conversation?.members ?? []
   const mutedAgentIds = new Set(conversation?.muted_agent_ids ?? [])
   let quotedAuthorId = payload.message.quoted?.authorId ?? null
-  if (!quotedAuthorId && payload.message.quotedMessageId && mutedAgentIds.size > 0) {
+  if (!quotedAuthorId && payload.message.quotedMessageId) {
     const { rows } = await pool.query<{ author_id: string }>(
       `SELECT author_id FROM messages WHERE id = $1 AND conversation_id = $2`,
       [payload.message.quotedMessageId, conversationId],
     )
     quotedAuthorId = rows[0]?.author_id ?? null
   }
-  const agentRecipients: string[] = []
-  for (const m of members) {
-    if (m === authorId) continue
-    if (!(await isAgent(m))) continue
-    if (mutedAgentIds.has(m) && !shouldDeliverToMutedAgent({
-      agentId: m,
-      conversationKind: conversation?.kind ?? 'group',
-      body: messageBody,
-      quotedAuthorId,
-    })) continue
-    agentRecipients.push(m)
-  }
+  const { rows: roster } = members.length > 0
+    ? await pool.query<{ id: string; name: string; kind: 'human' | 'agent'; departed_at: string | null }>(
+      `SELECT id, name, kind, departed_at FROM participants WHERE id = ANY($1::text[]) AND company_id = $2`,
+      [members, payload.companyId],
+    )
+    : { rows: [] }
+  const authorKind = roster.find((member) => member.id === authorId)?.kind ?? 'unknown'
+  // New messages carry authoritative structured mentions. Old publishers and
+  // historical rows fall back to the same boundary-safe parser.
+  const parsed = payload.message.mentionedIds || payload.message.mentionAll !== undefined
+    ? { mentionedIds: payload.message.mentionedIds ?? [], mentionAll: payload.message.mentionAll ?? false }
+    : parseMentions(messageBody, roster.map(({ id, name }) => ({ id, name })))
+  const agentRecipients = resolveAgentRecipients({
+    conversationKind: conversation?.kind ?? 'group',
+    authorId,
+    authorKind,
+    leaderId: conversation?.leader_id ?? null,
+    agents: roster
+      .filter((member) => member.kind === 'agent' && !member.departed_at)
+      .map((member) => ({ id: member.id, muted: mutedAgentIds.has(member.id) })),
+    mentionedIds: parsed.mentionedIds,
+    mentionAll: parsed.mentionAll,
+    quotedAuthorId,
+  })
 
   // Whether to reply into an agent-only thread is the small model's decision
   // (it sees the per-conversation "thread heat" signal and goes quiet). The
@@ -603,7 +617,7 @@ async function wake(payload: MessageNewEvent): Promise<void> {
   // floor: when an AGENT's message would wake peers, drop the wake for any
   // recipient that is over its activation budget, so a runaway can't burn
   // unbounded cost. Human-driven wakes are NEVER throttled.
-  const authorIsAgent = await isAgent(authorId)
+  const authorIsAgent = authorKind === 'agent' || await isAgent(authorId)
   let recipients = agentRecipients
   if (authorIsAgent) {
     const allowed = await Promise.all(

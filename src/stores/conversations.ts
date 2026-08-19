@@ -131,6 +131,7 @@ function fromApi(c: ApiConversation): Conversation {
     subtitle: c.subtitle ?? undefined,
     topic: c.topic ?? null,
     members: c.members,
+    leaderId: c.leaderId ?? null,
     pinned: c.pinned,
     muted: c.muted,
     mutedUntil: c.mutedUntil,
@@ -243,6 +244,7 @@ export function bootConversations() {
           const next: Conversation = { ...c }
           if (e.patch.topic !== undefined) next.topic = e.patch.topic
           if (e.patch.title !== undefined) next.title = e.patch.title
+          if (e.patch.leaderId !== undefined) next.leaderId = e.patch.leaderId
           return next
         }),
       }))
