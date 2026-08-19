@@ -162,9 +162,9 @@ Do not run more than one LingxiLoop API replica in the current server-managed MV
 
 ## Release model
 
-`v*` tags are **Web/source releases only**. `.github/workflows/release.yml` validates the Web and server build and creates a GitHub Release in this repository. Tags containing a suffix such as `v0.1.0-alpha` are published as GitHub prereleases.
+The root [`VERSION`](VERSION) file is the Web/server release source of truth. When a change to `VERSION` lands on `main`, `.github/workflows/release.yml` validates the Web/server build, creates the matching `v<version>` tag on that exact commit, and publishes a GitHub Release in this repository. Versions with a suffix such as `0.1.0-alpha` are published as prereleases.
 
-Desktop/mobile artifacts are not built or published by the current release workflow.
+Desktop/mobile artifacts are not built or published by the current release workflow, and creating a Web release does not deploy a running server.
 
 See [`docs/RELEASE.md`](docs/RELEASE.md) for the exact release procedure.
 
@@ -176,6 +176,7 @@ See [`docs/RELEASE.md`](docs/RELEASE.md) for the exact release procedure.
 | `server/` | Express API, WebSocket server, scheduler and agent runtime integration |
 | `server/lingxigraph/` | stateless LingxiGraph communication runtime adapter |
 | `docker-compose.mvp.yml` | supported single-server Web deployment |
+| `VERSION` | Web/server release version source of truth |
 | `agent-cli/` | inherited BYOA compatibility surface |
 | `electron/`, `ios/`, `android/` | inherited client code; not in current release scope |
 | `workers/` | optional email/R2 workers |
