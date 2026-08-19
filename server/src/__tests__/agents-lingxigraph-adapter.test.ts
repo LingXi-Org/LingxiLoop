@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-
+import type { ActionLedgerClaim, ActionLedgerPort } from '../agents/action-ledger.js'
 import {
+  type CommunicationAction,
   communicationActionToArgv,
+  computeActionKey,
+  computeInputScopeKey,
   executeCommunicationActions,
   parseLingxiGraphRunResult,
   runLingxiGraph,
-  type CommunicationAction,
 } from '../agents/lingxigraph-adapter.js'
 
 const result = (actions: unknown[]) => ({
@@ -52,10 +54,15 @@ test('stops at the first failed or HELD CLI result', async () => {
     { type: 'message.send', conversationId: 'c1', body: 'first' },
     { type: 'message.send', conversationId: 'c1', body: 'must not run' },
   ]
-  const execution = await executeCommunicationActions(actions, async (argv) => {
-    seen.push(argv)
-    if (seen.length === 2) return { ok: false, exitCode: 2, text: 'HELD' }
-    return { ok: true, exitCode: 0, text: 'ok' }
+  const execution = await executeCommunicationActions({
+    agentId: 'a1',
+    inputScopeKey: 'scope1',
+    actions,
+    executeCli: async (argv) => {
+      seen.push(argv)
+      if (seen.length === 2) return { ok: false, exitCode: 2, text: 'HELD' }
+      return { ok: true, exitCode: 0, text: 'ok' }
+    },
   })
   assert.equal(execution.completed, false)
   assert.equal(execution.failedActionIndex, 1)
@@ -144,4 +151,175 @@ test('runtime adapter times out a response whose body never completes, even afte
       return Promise.resolve(response as unknown as Response)
     }),
   }), /timed out after 20ms/)
+})
+
+/* ─── issue #7: action idempotency key generation ────────────────────── */
+
+test('computeInputScopeKey is stable regardless of input order, and changes with new messages', () => {
+  const scopeA = computeInputScopeKey(['m-2', 'm-1', 'm-3'])
+  const scopeB = computeInputScopeKey(['m-1', 'm-3', 'm-2'])
+  assert.equal(scopeA, scopeB, 'same message id set (any order) must yield the same scope key')
+
+  const scopeWithNewMessage = computeInputScopeKey(['m-1', 'm-2', 'm-3', 'm-4'])
+  assert.notEqual(scopeA, scopeWithNewMessage, 'a new message in the inbox must change the scope key')
+})
+
+test('computeActionKey is stable for the same (agent, scope, index, action) and changes when any of them change', () => {
+  const scope = computeInputScopeKey(['m-1', 'm-2'])
+  const action: CommunicationAction = { type: 'message.send', conversationId: 'c1', body: 'hello' }
+
+  const keyA = computeActionKey({ agentId: 'agent-1', inputScopeKey: scope, actionIndex: 0, action })
+  const keyB = computeActionKey({ agentId: 'agent-1', inputScopeKey: scope, actionIndex: 0, action })
+  assert.equal(keyA, keyB, 'identical inputs must produce identical keys — this is the retry-safety property')
+
+  const differentAgent = computeActionKey({ agentId: 'agent-2', inputScopeKey: scope, actionIndex: 0, action })
+  assert.notEqual(keyA, differentAgent)
+
+  const newScope = computeInputScopeKey(['m-1', 'm-2', 'm-3'])
+  const differentScope = computeActionKey({ agentId: 'agent-1', inputScopeKey: newScope, actionIndex: 0, action })
+  assert.notEqual(keyA, differentScope, 'a new inbox scope must be free to repeat the same action content')
+
+  const differentIndex = computeActionKey({ agentId: 'agent-1', inputScopeKey: scope, actionIndex: 1, action })
+  assert.notEqual(keyA, differentIndex, 'two identical actions in one batch must get different keys via actionIndex')
+
+  const differentBody: CommunicationAction = { type: 'message.send', conversationId: 'c1', body: 'goodbye' }
+  const differentAction = computeActionKey({ agentId: 'agent-1', inputScopeKey: scope, actionIndex: 0, action: differentBody })
+  assert.notEqual(keyA, differentAction)
+})
+
+test('computeActionKey ignores JSON key order (canonical serialization)', () => {
+  const scope = 'scope-1'
+  const a: CommunicationAction = { type: 'message.send', conversationId: 'c1', body: 'hi', quoteMessageId: 'm9' }
+  // Same field values, constructed with a different insertion order — the
+  // canonical serializer must hash these identically.
+  const b: CommunicationAction = { quoteMessageId: 'm9', body: 'hi', conversationId: 'c1', type: 'message.send' } as CommunicationAction
+  const keyA = computeActionKey({ agentId: 'a1', inputScopeKey: scope, actionIndex: 0, action: a })
+  const keyB = computeActionKey({ agentId: 'a1', inputScopeKey: scope, actionIndex: 0, action: b })
+  assert.equal(keyA, keyB)
+})
+
+/* ─── issue #7: ledger-backed replay skips the real executor ─────────── *
+ * Only for action types WITHOUT their own sink-level idempotency — see
+ * the "single-owner" tests further down for message.send / reaction.toggle,
+ * which must bypass this generic ledger entirely (PR review P0-1). */
+
+function fakeLedger(): { port: ActionLedgerPort; claims: string[] } {
+  const store = new Map<string, ActionLedgerClaim & { key: string }>()
+  const claims: string[] = []
+  const port: ActionLedgerPort = {
+    async claim(args) {
+      claims.push(args.key)
+      const existing = store.get(args.key)
+      if (existing && existing.claimed === false) return existing
+      return { claimed: true }
+    },
+    async markSucceeded(key, result) {
+      store.set(key, { claimed: false, status: 'succeeded', result, key })
+    },
+    async markFailed() { /* not needed for this test */ },
+  }
+  return { port, claims }
+}
+
+test('a succeeded ledger entry replays its stored result without calling the real executor again', async () => {
+  const { port: ledger } = fakeLedger()
+  // conversation.leave has no sink-level idempotency of its own, so it's
+  // the generic ledger's job (not the sink's) to prevent a replay.
+  const actions: CommunicationAction[] = [{ type: 'conversation.leave', conversationId: 'c1' }]
+  let executeCliCalls = 0
+
+  const first = await executeCommunicationActions({
+    agentId: 'agent-1',
+    inputScopeKey: 'scope-1',
+    actions,
+    ledger,
+    executeCli: async () => {
+      executeCliCalls++
+      return { ok: true, exitCode: 0, text: 'left c1' }
+    },
+  })
+  assert.equal(first.completed, true)
+  assert.equal(executeCliCalls, 1)
+
+  // Simulate a retry / duplicate wake against the SAME input scope: same
+  // agent, same scope, same action ⇒ same idempotency key ⇒ the ledger
+  // already has it as succeeded ⇒ the real executor must NOT run again.
+  const retry = await executeCommunicationActions({
+    agentId: 'agent-1',
+    inputScopeKey: 'scope-1',
+    actions,
+    ledger,
+    executeCli: async () => {
+      executeCliCalls++
+      return { ok: true, exitCode: 0, text: 'left c1 (again)' }
+    },
+  })
+  assert.equal(retry.completed, true)
+  assert.equal(executeCliCalls, 1, 'succeeded ledger replay must skip the real executor')
+  assert.deepEqual(retry.results[0], { ok: true, exitCode: 0, text: 'left c1' })
+})
+
+test('a new input scope is free to repeat the same action content as a fresh execution', async () => {
+  const { port: ledger } = fakeLedger()
+  const actions: CommunicationAction[] = [{ type: 'conversation.leave', conversationId: 'c1' }]
+  let executeCliCalls = 0
+  const run = (inputScopeKey: string) => executeCommunicationActions({
+    agentId: 'agent-1',
+    inputScopeKey,
+    actions,
+    ledger,
+    executeCli: async () => {
+      executeCliCalls++
+      return { ok: true, exitCode: 0, text: `left c1 (${executeCliCalls})` }
+    },
+  })
+
+  await run('scope-1')
+  await run('scope-2')
+  assert.equal(executeCliCalls, 2, 'a genuinely new inbox scope must not be deduped against an old one')
+})
+
+/* ─── issue #7 review (P0-1 / P0-2): single-owner sink idempotency ────── */
+
+test('communicationActionToArgv never carries the idempotency key — it must travel out-of-band, not via argv', () => {
+  // Regression for PR review P0-2: an argv flag is settable by any
+  // legacy/bash-tool caller, human CLI, or BYOA pod, not just the trusted
+  // executor. There must be no code path that puts the key in argv.
+  const send = communicationActionToArgv({ type: 'message.send', conversationId: 'c1', body: 'hi' })
+  assert.deepEqual(send, ['reply', 'c1', 'hi'])
+  assert.equal(send.some((a) => a.includes('idempotency')), false)
+
+  const react = communicationActionToArgv({ type: 'reaction.toggle', messageId: 'm1', emoji: '✅' })
+  assert.deepEqual(react, ['react', 'm1', '✅'])
+})
+
+test('message.send and reaction.toggle receive the idempotency key via the internal (out-of-band) executeCli param, and skip the generic ledger entirely', async () => {
+  const { port: ledger, claims } = fakeLedger()
+  const actions: CommunicationAction[] = [
+    { type: 'message.send', conversationId: 'c1', body: 'hi' },
+    { type: 'reaction.toggle', messageId: 'm1', emoji: '✅' },
+  ]
+  const calls: Array<{ argv: string[]; internal?: { idempotencyKey?: string } }> = []
+
+  await executeCommunicationActions({
+    agentId: 'agent-1',
+    inputScopeKey: 'scope-1',
+    actions,
+    ledger,
+    executeCli: async (argv, internal) => {
+      calls.push({ argv, internal })
+      return { ok: true, exitCode: 0, text: 'ok' }
+    },
+  })
+
+  assert.equal(calls.length, 2)
+  for (const call of calls) {
+    assert.equal(call.argv.some((a) => a.includes('idempotency')), false, 'argv must never carry the key')
+    assert.ok(call.internal?.idempotencyKey, 'the internal param must carry the key for a P0 sink-owned action')
+  }
+  // PR review P0-1: the generic ledger must never be consulted for these
+  // two action types — claiming here BEFORE the sink's own transaction
+  // would pre-insert a 'pending' row that the sink's atomic claim then
+  // finds already taken, self-conflicting on the very first execution.
+  assert.deepEqual(claims, [], 'the generic ledger must not be claimed for sink-owned action types')
 })

@@ -10,8 +10,8 @@
  */
 
 import { pool } from '../db/pool.js'
-import { storage, freshenAttachmentUrl, type StoredAttachment } from '../storage.js'
 import { env } from '../env.js'
+import { freshenAttachmentUrl, type StoredAttachment, storage } from '../storage.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { stripLoneSurrogates } from './text-safety.js'
 
@@ -46,15 +46,15 @@ async function agentCompany(agentId: string): Promise<string | null> {
 
 /* ============== argv parsing ============== */
 
-import { parseArgs, unescapeChat, tokenize, type ParsedArgs } from './cli-parse.js'
+import { type ParsedArgs, parseArgs, tokenize, unescapeChat } from './cli-parse.js'
+
 export { tokenize }
 
 // resolveAs lives in ./cli-identity for test-isolation (zero-side-effect
 // import). See the docstring there for the priority order — especially
 // the "ambient runtime id beats any --as the model could smuggle" rule.
 import { resolveAs } from './cli-identity.js'
-
-
+import type { WorklogEntry, WorkTaskType } from './runtime/client.js'
 /* ============== Worklog plumbing ==============
  *
  * Heavy agent-runtime actions (browser research, document creation, image
@@ -68,8 +68,7 @@ import { resolveAs } from './cli-identity.js'
  * once, which is what we have today.
  */
 import { inprocClient as worklogClient } from './runtime/inproc-client.js'
-import type { WorkTaskType, WorklogEntry } from './runtime/client.js'
-import { recordSeen, getSeen, recordHold, consumeHold, clearHold } from './seen-boundary.js'
+import { clearHold, consumeHold, getSeen, recordHold, recordSeen } from './seen-boundary.js'
 
 function tenantScopeKey(companyId: string): string {
   return `tenant:${companyId}`
@@ -1502,7 +1501,7 @@ async function cmdKick(parsed: ParsedArgs): Promise<CliResult> {
   }])
 }
 
-async function cmdReply(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const me = resolveAs(parsed)
   const convoId = parsed.positional[0]
   // Strip any hallucinated <tool_call> XML on the way in too — defense in depth.
@@ -1521,6 +1520,13 @@ async function cmdReply(parsed: ParsedArgs): Promise<CliResult> {
   // quotes would leak content, so the server-side path enforces that too.
   const quoteFlag = parsed.flags.quote ?? parsed.flags.q
   const quotedMessageId = quoteFlag ? String(quoteFlag).trim() : null
+  // Internal, LingxiLoop-generated idempotency key (issue #7) — arrives ONLY
+  // via the out-of-band `internal` context (see RunCliInternalContext),
+  // never as an argv flag. No CLI caller (human, legacy bash-tool agent,
+  // BYOA pod) can set or spoof this. Enforced via a unique index on
+  // messages.idempotency_key: a retried/duplicate-waked send with the SAME
+  // key lands on the SAME row instead of inserting a second message.
+  const idempotencyKey = internal.idempotencyKey?.trim() || null
   if (!convoId || (!body && !hasAttachFlag)) {
     return err('usage: reply <convo_id> "<body>" [--quote <msg_id>] [--attach <url> | --generate-image "<prompt>" [--size square|wide|tall] | --attach-text "<filename>" "<content>" | --attach-bytes "<filename>" --bytes-b64 "<base64>" [--bytes-mime "<mime>"]]')
   }
@@ -1532,6 +1538,35 @@ async function cmdReply(parsed: ParsedArgs): Promise<CliResult> {
   if (!cv[0]) return err(`unknown conversation ${convoId}`)
   if (!cv[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
   const companyId = cv[0].company_id
+
+  // ─── Idempotent replay short-circuit ───────────────────────────────
+  // Skips every gate below (anti-monologue, freshness, verbatim-dup) —
+  // those are draft-time decision gates and don't apply to a message we
+  // already sent. Scoped to plain chat sends; the email auto-promote
+  // path below has its own (out-of-scope-for-#7) transport semantics.
+  if (idempotencyKey && cv[0].kind !== 'email') {
+    const { rows: replayed } = await pool.query<{
+      id: string; sequence: number; attachment: unknown; quoted_message_id: string | null
+    }>(`SELECT id, sequence, attachment, quoted_message_id FROM messages WHERE idempotency_key = $1`, [idempotencyKey])
+    if (replayed[0]) {
+      const attachmentNote = replayed[0].attachment ? ` · attached` : ''
+      const quoteNote = replayed[0].quoted_message_id ? ` · quoted ${replayed[0].quoted_message_id}` : ''
+      return ok(`sent (${replayed[0].id}, seq ${replayed[0].sequence})${attachmentNote}${quoteNote} [replayed]`, [{
+        event: 'message.posted',
+        command: 'reply',
+        medium: 'chat',
+        conversationId: convoId,
+        messageId: replayed[0].id,
+        sequence: replayed[0].sequence,
+        authorId: me,
+        companyId,
+        visibleToUser: true,
+        attachment: Boolean(replayed[0].attachment),
+        quotedMessageId: replayed[0].quoted_message_id,
+        replayed: true,
+      }])
+    }
+  }
 
   // ─── Anti-monologue gate ──────────────────────────────────────────
   // In multi-party conversations (3+ members), an agent can't post a
@@ -1993,11 +2028,34 @@ async function cmdReply(parsed: ParsedArgs): Promise<CliResult> {
         }
       }
     }
-    await txClient.query(
-      `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, attachment, quoted_message_id, company_id)
-       VALUES ($1,$2,$3,'text',$4,$5,$6::jsonb,$7,$8)`,
-      [messageId, convoId, me, finalBody, sequence, attachment ? JSON.stringify(attachment) : null, resolvedQuotedId, companyId],
+    const { rows: inserted } = await txClient.query<{ id: string }>(
+      `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, attachment, quoted_message_id, company_id, idempotency_key)
+       VALUES ($1,$2,$3,'text',$4,$5,$6::jsonb,$7,$8,$9)
+       ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
+       RETURNING id`,
+      [messageId, convoId, me, finalBody, sequence, attachment ? JSON.stringify(attachment) : null, resolvedQuotedId, companyId, idempotencyKey],
     )
+    if (idempotencyKey && inserted.length === 0) {
+      // Lost a genuine concurrent race against another execution of the SAME
+      // idempotency key (both passed the pre-check above before either
+      // committed). Don't consume the sequence number we claimed — roll
+      // back and hand back the winner's row as a replay, same as the
+      // pre-check short-circuit above.
+      await txClient.query('ROLLBACK')
+      const { rows: winner } = await pool.query<{
+        id: string; sequence: number; attachment: unknown; quoted_message_id: string | null
+      }>(`SELECT id, sequence, attachment, quoted_message_id FROM messages WHERE idempotency_key = $1`, [idempotencyKey])
+      const w = winner[0]
+      if (!w) throw new Error(`idempotency conflict on ${idempotencyKey} but no row found after rollback`)
+      const attachmentNote = w.attachment ? ` · attached` : ''
+      const quoteNote = w.quoted_message_id ? ` · quoted ${w.quoted_message_id}` : ''
+      return ok(`sent (${w.id}, seq ${w.sequence})${attachmentNote}${quoteNote} [replayed]`, [{
+        event: 'message.posted', command: 'reply', medium: 'chat',
+        conversationId: convoId, messageId: w.id, sequence: w.sequence,
+        authorId: me, companyId, visibleToUser: true,
+        attachment: Boolean(w.attachment), quotedMessageId: w.quoted_message_id, replayed: true,
+      }])
+    }
     await txClient.query('COMMIT')
   } catch (e) {
     await txClient.query('ROLLBACK').catch(() => { /* already failed */ })
@@ -5841,13 +5899,17 @@ async function cmdDoc(parsed: ParsedArgs): Promise<CliResult> {
   return err(`unknown doc op: ${op}\nusage: doc {ls|create|read|append|prepend|image|image-delete|replace|rename|delete} ...`)
 }
 
-async function runTool(toolName: string, parsed: ParsedArgs): Promise<CliResult> {
+async function runTool(toolName: string, parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const built = buildToolArgs(toolName, parsed)
   if ('error' in built) return err(built.error)
   const me = resolveAs(parsed)
 
   const { executeTool } = await import('./tools.js')
-  const r = await executeTool({ agentId: me, name: toolName, argsJson: built.argsJson })
+  // Internal idempotency key (issue #7) — out-of-band only, see
+  // RunCliInternalContext. Passed as a first-class executeTool param
+  // rather than folded into argsJson so it can never be confused with
+  // (or overridden by) a model/CLI-supplied tool argument.
+  const r = await executeTool({ agentId: me, name: toolName, argsJson: built.argsJson, idempotencyKey: internal.idempotencyKey })
   const sideEffects = cliToolSideEffects(toolName, r.output, me)
   if (parsed.flags.json) {
     return r.ok
@@ -5900,7 +5962,18 @@ function cliToolSideEffects(toolName: string, output: unknown, agentId: string):
 
 /* ============== entry point ============== */
 
-export async function runCli(argv: string[]): Promise<CliResult> {
+/** Trusted, out-of-band execution context that never travels through argv
+ *  (issue #7 review: a plain `--idempotency-key` argv flag is settable by
+ *  any legacy/bash-tool caller, human CLI, or BYOA pod — none of which
+ *  should be able to spoof a LingxiLoop-generated idempotency key). Only
+ *  `executeCommunicationActions()` (via `AgentRuntimeClient.executeCli`'s
+ *  `internal` param) ever supplies this — there is no argv flag, CLI help
+ *  text, or parseArgs path that can set it. */
+export interface RunCliInternalContext {
+  idempotencyKey?: string
+}
+
+export async function runCli(argv: string[], internal: RunCliInternalContext = {}): Promise<CliResult> {
   // Pull a leading global `--as <id>` (or `--as=<id>`) off. Runtime `/cli`
   // prepends identity this way, and direct dev/test callers often do too.
   // Re-attach it to the subcommand args so per-command parsers still see
@@ -5954,7 +6027,7 @@ export async function runCli(argv: string[]): Promise<CliResult> {
       case 'mute':                return await cmdMute(parsed)
       case 'follow':              return await cmdFollow(parsed)
       case 'ship':                return await cmdShip(parsed)
-      case 'reply':               return await cmdReply(parsed)
+      case 'reply':               return await cmdReply(parsed, internal)
       case 'leave':               return await cmdLeave(parsed)
       case 'kick':                return await cmdKick(parsed)
       case 'invite':              return await cmdInvite(parsed)
@@ -5990,7 +6063,7 @@ export async function runCli(argv: string[]): Promise<CliResult> {
       case 'kanban':              return await cmdBoard(parsed)
       case 'card':                return await cmdCard(parsed)
       case 'doc':                 return await cmdDoc(parsed)
-      case 'react':               return await runTool('react', parsed)
+      case 'react':               return await runTool('react', parsed, internal)
       case 'dm':                  return await runTool('dm_with', parsed)
       case 'pull-group':          return await runTool('pull_group', parsed)
       case 'palette':             return await runTool('palette', parsed)

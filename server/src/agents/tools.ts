@@ -18,14 +18,14 @@
  */
 
 import { randomUUID } from 'node:crypto'
+import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { getTrackedLlmClient } from './llm-ledger.js'
-import { pool } from '../db/pool.js'
-import { tReadFile, tWriteFile, tEditFile } from './runtime/native-tools.js'
 import type { FsNamespace } from './runtime/fs-namespace.js'
+import { tEditFile, tReadFile, tWriteFile } from './runtime/native-tools.js'
 import {
-  tBash, tSetTurnStatus,
   type ToolResult,
+  tBash, tSetTurnStatus,
 } from './tools-shared.js'
 
 export type { ToolResult } from './tools-shared.js'
@@ -53,6 +53,10 @@ export async function executeTool(args: {
    *  Optional so other call sites (rehire, manual replay) can keep
    *  running without a namespace. */
   ns?: FsNamespace | null
+  /** Internal, LingxiLoop-generated idempotency key (issue #7) — passed
+   *  out-of-band from `runCli`'s trusted `internal` context, never from
+   *  model/CLI-controllable args. Only consumed by `react` today. */
+  idempotencyKey?: string
 }): Promise<ToolResult> {
   const t0 = Date.now()
   const id = `t-${randomUUID()}`
@@ -78,7 +82,7 @@ export async function executeTool(args: {
       case 'set_turn_status':    result = tSetTurnStatus(parsed); break
       case 'shell':
       case 'bash':               result = await tBash(parsed, args.agentId, args.ns ?? null); break
-      case 'react':              result = await tReact(parsed, args.agentId); break
+      case 'react':              result = await tReact(parsed, args.agentId, args.idempotencyKey); break
       // Native FS tools — require an active per-turn namespace. Reject
       // gracefully if called outside a turn (shouldn't happen via the
       // normal LLM path; defensive).
@@ -177,7 +181,7 @@ function noNamespace(toolName: string, displayName: string): ToolResult {
   }
 }
 
-async function tReact(args: Record<string, unknown>, agentId: string): Promise<ToolResult> {
+async function tReact(args: Record<string, unknown>, agentId: string, idempotencyKeyArg?: string): Promise<ToolResult> {
   const t0 = Date.now()
   const messageId = String(args.message_id ?? '').trim()
   const emoji = String(args.emoji ?? '').trim()
@@ -185,33 +189,142 @@ async function tReact(args: Record<string, unknown>, agentId: string): Promise<T
     return { ok: false, output: null, error: 'message_id and emoji required', durationMs: Date.now() - t0,
       display: { name: 'react', arg: '', status: 'error', detail: 'missing args' } }
   }
+  // Internal, LingxiLoop-generated idempotency key (issue #7) — arrives ONLY
+  // via the out-of-band `idempotencyKeyArg` param (threaded from runCli's
+  // trusted `internal` context through executeTool), never from `args`
+  // (the tool's model/CLI-controllable JSON args) — so no caller can spoof
+  // or collide a key across conversations.
+  const idempotencyKey = idempotencyKeyArg?.trim() || null
 
+  // reaction.toggle is NOT naturally idempotent — replaying it flips state
+  // back. When an idempotency key is present, claim-and-mutate atomically
+  // in ONE transaction against agent_action_executions: if the key already
+  // committed as 'succeeded', return that stored result WITHOUT touching
+  // message_reactions again. A crash between claim and commit rolls the
+  // whole transaction back, so a retry is a clean first attempt — no
+  // partial state to reconcile (issue #7 §4).
+  if (idempotencyKey) {
+    const replayed = await tryReplayReaction(idempotencyKey)
+    if (replayed) return { ...replayed, durationMs: Date.now() - t0 }
+  }
+
+  const txClient = idempotencyKey ? await pool.connect() : null
+  const q = txClient ?? pool
+  try {
+    if (txClient) {
+      await txClient.query('BEGIN')
+      // Claim the key inside this same transaction. ON CONFLICT DO NOTHING
+      // means a concurrent duplicate loses the race here and falls through
+      // to the replay branch below with nothing mutated.
+      const { rows: claimed } = await txClient.query<{ idempotency_key: string }>(
+        `INSERT INTO agent_action_executions
+           (idempotency_key, agent_id, input_scope_key, action_index, action_type, action_hash, status)
+         VALUES ($1, $2, '', 0, 'reaction.toggle', $3, 'pending')
+         ON CONFLICT (idempotency_key) DO NOTHING
+         RETURNING idempotency_key`,
+        [idempotencyKey, agentId, `${messageId}:${emoji}`],
+      )
+      if (claimed.length === 0) {
+        // Lost a genuine concurrent race for the same key — someone else's
+        // transaction is committing (or already committed) this exact
+        // mutation. Roll back our no-op transaction and replay theirs.
+        await txClient.query('ROLLBACK')
+        const replayed = await tryReplayReaction(idempotencyKey!)
+        if (replayed) return { ...replayed, durationMs: Date.now() - t0 }
+        return { ok: false, output: null, error: 'idempotency claim lost with no replay result', durationMs: Date.now() - t0,
+          display: { name: 'react', arg: `${emoji} ${messageId.slice(0, 12)}`, status: 'error', detail: 'concurrent reaction claim did not resolve' } }
+      }
+    }
+
+    const { result, broadcast } = await mutateReaction(q, messageId, emoji, agentId)
+
+    if (txClient) {
+      await txClient.query(
+        `UPDATE agent_action_executions SET status = 'succeeded', result_json = $2::jsonb, updated_at = NOW() WHERE idempotency_key = $1`,
+        [idempotencyKey, JSON.stringify(result)],
+      )
+      await txClient.query('COMMIT')
+    }
+    // Broadcast only after the mutation (and, for the idempotent path, the
+    // ledger row) has actually committed — otherwise a crash between
+    // publish and COMMIT would tell WS clients about a reaction that then
+    // rolled back.
+    await broadcast()
+    return { ...result, durationMs: Date.now() - t0 }
+  } catch (e) {
+    if (txClient) await txClient.query('ROLLBACK').catch(() => { /* already failed */ })
+    throw e
+  } finally {
+    if (txClient) txClient.release()
+  }
+}
+
+/** Look up a previously-succeeded reaction.toggle by idempotency key and
+ *  render it back as a ToolResult, WITHOUT touching message_reactions —
+ *  the mutation already happened exactly once. Returns null if no
+ *  succeeded row exists yet (first attempt, or a still-pending/failed
+ *  claim that the caller should attempt to (re)claim itself). */
+async function tryReplayReaction(idempotencyKey: string): Promise<Omit<ToolResult, 'durationMs'> | null> {
+  const { rows } = await pool.query<{ status: string; result_json: Record<string, unknown> | null }>(
+    `SELECT status, result_json FROM agent_action_executions WHERE idempotency_key = $1`,
+    [idempotencyKey],
+  )
+  const row = rows[0]
+  if (!row || row.status !== 'succeeded' || !row.result_json) return null
+  const output = row.result_json.output as { messageId?: string; emoji?: string; action?: string; reactions?: unknown } | undefined
+  return {
+    ok: true,
+    output: output ?? null,
+    display: {
+      name: 'react',
+      arg: `${output?.emoji ?? ''} ${String(output?.messageId ?? '').slice(0, 12)}`,
+      status: `${output?.action ?? 'replayed'} [replayed]`,
+      detail: `(replayed — this reaction was already applied on an earlier attempt)`,
+      icon: 'web',
+    },
+  }
+}
+
+type QueryExecutor = { query: typeof pool.query }
+
+/** The actual toggle mutation + aggregate, shared by both the idempotent
+ *  (transactional) and non-idempotent (plain pool) call paths. `q` is
+ *  either the pool itself or a held transaction client — every read/write
+ *  here (including the aggregate used for the broadcast payload) goes
+ *  through `q` so an in-flight transaction sees its own uncommitted
+ *  mutation. Returns the ToolResult PLUS a `broadcast()` callback the
+ *  caller must invoke only after the mutation is durably committed —
+ *  publishing before commit would tell WS clients about a reaction that
+ *  could still roll back. */
+async function mutateReaction(
+  q: QueryExecutor, messageId: string, emoji: string, agentId: string,
+): Promise<{ result: Omit<ToolResult, 'durationMs'>; broadcast: () => Promise<void> }> {
   // Toggle: if already reacted with this emoji, remove; else add
-  const existing = await pool.query<{ count: string }>(
+  const existing = await q.query<{ count: string }>(
     `SELECT COUNT(*)::text AS count FROM message_reactions
       WHERE message_id = $1 AND user_id = $2 AND emoji = $3`,
     [messageId, agentId, emoji],
   )
   const action = Number(existing.rows[0]?.count ?? '0') > 0 ? 'removed' : 'added'
   if (action === 'removed') {
-    await pool.query(
+    await q.query(
       `DELETE FROM message_reactions WHERE message_id = $1 AND user_id = $2 AND emoji = $3`,
       [messageId, agentId, emoji],
     )
   } else {
-    await pool.query(
+    await q.query(
       `INSERT INTO message_reactions (message_id, user_id, emoji) VALUES ($1, $2, $3)
        ON CONFLICT DO NOTHING`,
       [messageId, agentId, emoji],
     )
   }
 
-  // Aggregate + broadcast. We DON'T compute a `mine` flag server-side:
-  // this row is broadcast to every WS client in the tenant, and "is this
-  // mine" is recipient-specific. The renderer derives it from `users` +
-  // the local user id. (Pre-fix, this query hardcoded user_id = 'yetone'
-  // — dev-seed leakage that made the badge wrong for every real user.)
-  const { rows: agg } = await pool.query<{ emoji: string; count: number; users: string[] }>(
+  // Aggregate. We DON'T compute a `mine` flag server-side: this row is
+  // broadcast to every WS client in the tenant, and "is this mine" is
+  // recipient-specific. The renderer derives it from `users` + the local
+  // user id. (Pre-fix, this query hardcoded user_id = 'yetone' — dev-seed
+  // leakage that made the badge wrong for every real user.)
+  const { rows: agg } = await q.query<{ emoji: string; count: number; users: string[] }>(
     `SELECT emoji,
             COUNT(*)::int AS count,
             array_agg(user_id ORDER BY user_id) AS users
@@ -219,7 +332,7 @@ async function tReact(args: Record<string, unknown>, agentId: string): Promise<T
        GROUP BY emoji ORDER BY count DESC, emoji ASC`,
     [messageId],
   )
-  const { rows: cv } = await pool.query<{ conversation_id: string; company_id: string }>(
+  const { rows: cv } = await q.query<{ conversation_id: string; company_id: string }>(
     `SELECT m.conversation_id, c.company_id
        FROM messages m
        JOIN conversations c ON c.id = m.conversation_id
@@ -232,28 +345,32 @@ async function tReact(args: Record<string, unknown>, agentId: string): Promise<T
   // acknowledgement for long work, and marking the request read before the
   // turn completes can erase unfinished tasks from the agent's inbox. The turn
   // runtime advances reads only after semantic completion is accepted.
-  const { CH_REACTIONS, publish } = await import('../redis.js')
-  await publish(CH_REACTIONS, {
-    type: 'message.reactions',
-    conversationId,
-    companyId,
-    messageId,
-    reactions: agg,
-  })
+  const broadcast = async (): Promise<void> => {
+    const { CH_REACTIONS, publish } = await import('../redis.js')
+    await publish(CH_REACTIONS, {
+      type: 'message.reactions',
+      conversationId,
+      companyId,
+      messageId,
+      reactions: agg,
+    })
+  }
 
   return {
-    ok: true,
-    output: { messageId, emoji, action, reactions: agg },
-    durationMs: Date.now() - t0,
-    display: {
-      name: 'react',
-      arg: `${emoji} ${messageId.slice(0, 12)}`,
-      status: action,
-      detail: emoji === '👀' && action === 'added'
-        ? `${agentId} ${action} ${emoji}\n\n👀 is only an acknowledgement for long work. Continue in this same turn and choose the appropriate next step: complete the task, ask a concrete clarifying question, or report a clear failure. Only generate an image when the user clearly asked for one.`
-        : `${agentId} ${action} ${emoji}`,
-      icon: 'web',
+    result: {
+      ok: true,
+      output: { messageId, emoji, action, reactions: agg },
+      display: {
+        name: 'react',
+        arg: `${emoji} ${messageId.slice(0, 12)}`,
+        status: action,
+        detail: emoji === '👀' && action === 'added'
+          ? `${agentId} ${action} ${emoji}\n\n👀 is only an acknowledgement for long work. Continue in this same turn and choose the appropriate next step: complete the task, ask a concrete clarifying question, or report a clear failure. Only generate an image when the user clearly asked for one.`
+          : `${agentId} ${action} ${emoji}`,
+        icon: 'web',
+      },
     },
+    broadcast,
   }
 }
 

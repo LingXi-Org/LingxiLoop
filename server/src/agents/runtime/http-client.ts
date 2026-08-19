@@ -14,6 +14,9 @@
  * the body's agentId and use the token. We still take it as a param so
  * the interface signatures match (and tests can pass it through).
  */
+
+import { notifyAlert } from '../../alerting.js'
+import type { CliResult } from '../cli-result.js'
 import type {
   AgentRuntimeClient,
   ClimateRow,
@@ -24,12 +27,10 @@ import type {
   PersonaRow,
   RuntimeTokenUsage,
   SkillIndexEntry,
+  SystemPromptMode,
   WorklogEntry,
   WorkTaskType,
-  SystemPromptMode,
 } from './client.js'
-import type { CliResult } from '../cli-result.js'
-import { notifyAlert } from '../../alerting.js'
 
 /** Per-process failure counter for the busy heartbeat. The heartbeat
  *  must not crash a turn on a transient Redis hiccup, but a SUSTAINED
@@ -171,7 +172,18 @@ export class HttpRuntimeClient implements AgentRuntimeClient {
     return out.prompt
   }
 
-  async executeCli(_agentId: string, argv: string[]): Promise<CliResult> {
+  async executeCli(_agentId: string, argv: string[], internal?: { idempotencyKey?: string }): Promise<CliResult> {
+    // The `/cli` server route only accepts `{ argv }` — it has no channel
+    // for out-of-band context, and deliberately so (issue #7: the whole
+    // point of `internal` is that it must NOT be settable by anything a
+    // pod/BYOA agent can reach). The managed LingxiGraph executor that
+    // needs idempotency keys always runs server-side against
+    // InProcRuntimeClient, never through this HTTP client — so getting
+    // here with a key set would mean a caller bug, not a real crash-retry
+    // path. Fail loudly rather than silently executing without dedup.
+    if (internal?.idempotencyKey) {
+      throw new Error('HttpRuntimeClient.executeCli does not support idempotency keys — communication-action execution must run against InProcRuntimeClient')
+    }
     return this.call<CliResult>('POST', '/cli', { argv })
   }
 

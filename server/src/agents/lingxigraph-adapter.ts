@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+import type { ActionLedgerPort } from './action-ledger.js'
 import type { CliResult } from './cli-result.js'
 import type { RuntimeTokenUsage } from './runtime/client.js'
 
@@ -55,7 +57,7 @@ export interface CommunicationExecutionResult {
   error?: string
 }
 
-const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]> = {
+export const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]> = {
   'message.send': ['type', 'conversationId', 'body', 'quoteMessageId'],
   'reaction.toggle': ['type', 'messageId', 'emoji'],
   'conversation.dm.create': ['type', 'participantId', 'topic', 'openingMessage'],
@@ -73,6 +75,59 @@ const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]> = {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
+
+/**
+ * Stable, key-order-independent JSON serialization of a CommunicationAction —
+ * uses the fixed field order from ACTION_KEYS rather than object insertion
+ * order, so `{type,conversationId,body}` and `{body,type,conversationId}`
+ * hash identically (issue #7, "canonical JSON key order 不影响 hash").
+ */
+export function canonicalActionJson(action: CommunicationAction): string {
+  const record = action as unknown as Record<string, unknown>
+  const keys = ACTION_KEYS[action.type]
+  const parts = keys
+    .filter((key) => record[key] !== undefined)
+    .map((key) => `${JSON.stringify(key)}:${JSON.stringify(record[key])}`)
+  return `{${parts.join(',')}}`
+}
+
+/**
+ * Stable scope key for "the input this turn actually processed" — sorted
+ * message ids, not a timestamp, so a retried wake against the SAME inbox
+ * produces the SAME scope (and a genuinely new message produces a
+ * different one). See issue #7 §1.
+ */
+export function computeInputScopeKey(inputMessageIds: string[]): string {
+  const sorted = [...inputMessageIds].sort()
+  return createHash('sha256').update(sorted.join('\n')).digest('hex')
+}
+
+/**
+ * Deterministic, LingxiLoop-generated (never model-controlled) idempotency
+ * key for one action within one turn. Stable across retries of the same
+ * (agent, input scope, index, action); changes when any of those change —
+ * including a new inbox scope, so a new turn is free to repeat the same
+ * content as a fresh, independent action. See issue #7 §1.
+ */
+export function computeActionKey(args: {
+  agentId: string
+  inputScopeKey: string
+  actionIndex: number
+  action: CommunicationAction
+}): string {
+  return createHash('sha256')
+    .update('lingxiloop-action-v1')
+    .update(args.agentId)
+    .update(args.inputScopeKey)
+    .update(String(args.actionIndex))
+    .update(canonicalActionJson(args.action))
+    .digest('hex')
+}
+
+/** P0 scope (issue #7): only these two action types carry a durable,
+ *  crash-safe idempotency key all the way to the sink. Other action types
+ *  still get ledger-level replay skipping, but no sink-level guarantee yet. */
+const SINK_IDEMPOTENT_ACTION_TYPES = new Set<CommunicationAction['type']>(['message.send', 'reaction.toggle'])
 
 function stringField(value: Record<string, unknown>, key: string, required = true): string | undefined {
   const raw = value[key]
@@ -176,24 +231,86 @@ export function communicationActionToArgv(action: CommunicationAction): string[]
   }
 }
 
+export interface CommunicationExecutionContext {
+  /** The executing agent — first component of the idempotency key. */
+  agentId: string
+  /** Stable scope for "the input this turn is processing" — see
+   *  computeInputScopeKey(). Same inbox retried ⇒ same scope ⇒ same
+   *  action keys ⇒ replay-safe. New inbox ⇒ new scope ⇒ actions are
+   *  free to repeat prior content as a legitimately new action. */
+  inputScopeKey: string
+  actions: CommunicationAction[]
+  /** `internal` is the out-of-band idempotency channel (issue #7 review:
+   *  argv is caller-controllable — a legacy bash-tool agent, human CLI, or
+   *  BYOA pod could set an argv flag directly, letting them spoof or reuse
+   *  a key across conversations). Only this executor ever populates it. */
+  executeCli: (argv: string[], internal?: { idempotencyKey?: string }) => Promise<CliResult>
+  timeoutMs?: number
+  /** Durable replay-detection ledger (Postgres-backed in production —
+   *  see action-ledger.ts). Optional so callers/tests that don't care
+   *  about idempotency can omit it; omitting it just means every retry
+   *  re-executes for real. NOT consulted for the P0 sink-owned action
+   *  types (message.send, reaction.toggle) — see the single-owner note
+   *  below — only for other action types where no sink-level dedup
+   *  exists yet. */
+  ledger?: ActionLedgerPort
+}
+
 export async function executeCommunicationActions(
-  actions: CommunicationAction[],
-  executeCli: (argv: string[]) => Promise<CliResult>,
-  timeoutMs = Number(process.env.LINGXIGRAPH_ACTION_TIMEOUT_MS ?? 30_000),
+  ctx: CommunicationExecutionContext,
 ): Promise<CommunicationExecutionResult> {
+  const timeoutMs = ctx.timeoutMs ?? Number(process.env.LINGXIGRAPH_ACTION_TIMEOUT_MS ?? 30_000)
   const results: CliResult[] = []
-  for (let index = 0; index < actions.length; index++) {
+  for (let index = 0; index < ctx.actions.length; index++) {
+    const action = ctx.actions[index]
+    const key = computeActionKey({ agentId: ctx.agentId, inputScopeKey: ctx.inputScopeKey, actionIndex: index, action })
+    // Single-owner rule (issue #7 review, P0-1): message.send and
+    // reaction.toggle each own their idempotency key end-to-end inside
+    // their OWN sink transaction (messages.idempotency_key's unique index;
+    // tReact's claim+mutate+commit). This layer must NOT also claim the
+    // same key via the generic ledger — doing so pre-inserts a 'pending'
+    // row that the sink's own atomic claim then finds already taken,
+    // self-conflicting on the very first (non-retry) execution. For these
+    // two types we always call through and let the sink decide; for every
+    // other action type (no sink-level dedup exists yet) the generic
+    // ledger below is still the only protection, so it stays authoritative.
+    const sinkOwned = SINK_IDEMPOTENT_ACTION_TYPES.has(action.type)
     try {
+      if (ctx.ledger && !sinkOwned) {
+        const claim = await ctx.ledger.claim({
+          key,
+          agentId: ctx.agentId,
+          inputScopeKey: ctx.inputScopeKey,
+          actionIndex: index,
+          actionType: action.type,
+          actionHash: canonicalActionJson(action),
+        })
+        if (!claim.claimed) {
+          // Already succeeded — replay the stored result WITHOUT invoking
+          // the real executor again (issue #7: "succeeded ledger replay
+          // 不调用真实 executor").
+          results.push(claim.result)
+          continue
+        }
+      }
       let timer: ReturnType<typeof setTimeout> | undefined
       const timeout = new Promise<never>((_resolve, reject) => {
         timer = setTimeout(() => reject(new Error(`communication action timed out after ${timeoutMs}ms`)), timeoutMs)
       })
-      const result = await Promise.race([executeCli(communicationActionToArgv(actions[index])), timeout])
-        .finally(() => { if (timer) clearTimeout(timer) })
+      const result = await Promise.race([
+        ctx.executeCli(communicationActionToArgv(action), sinkOwned ? { idempotencyKey: key } : undefined),
+        timeout,
+      ]).finally(() => { if (timer) clearTimeout(timer) })
       results.push(result)
-      if (!result.ok || result.exitCode !== 0) return { completed: false, results, failedActionIndex: index, error: result.text }
+      if (!result.ok || result.exitCode !== 0) {
+        if (ctx.ledger && !sinkOwned) await ctx.ledger.markFailed(key, result.text).catch(() => { /* observability-only */ })
+        return { completed: false, results, failedActionIndex: index, error: result.text }
+      }
+      if (ctx.ledger && !sinkOwned) await ctx.ledger.markSucceeded(key, result).catch(() => { /* observability-only */ })
     } catch (error) {
-      return { completed: false, results, failedActionIndex: index, error: error instanceof Error ? error.message : String(error) }
+      const message = error instanceof Error ? error.message : String(error)
+      if (ctx.ledger && !sinkOwned) await ctx.ledger.markFailed(key, message).catch(() => { /* observability-only */ })
+      return { completed: false, results, failedActionIndex: index, error: message }
     }
   }
   return { completed: true, results }
