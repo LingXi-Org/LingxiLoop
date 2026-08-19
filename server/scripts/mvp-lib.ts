@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto'
 import { pool } from '../src/db/pool.js'
 import { createSession } from '../src/auth.js'
 import { onboardStarterAgents } from '../src/onboardCompany.js'
+import { cloudComputerId, ensureCloudComputer } from '../src/agents/computer/registry.js'
 
 export const BASE_URL = process.env.MVP_SMOKE_BASE_URL || 'http://localhost:5181'
 
@@ -52,9 +53,17 @@ export async function seedCompany(slugPrefix: string): Promise<{ companyId: stri
   const companyId = `co-${slugPrefix}-${suffix}`
   const email = `${slugPrefix}-${suffix}@example.invalid`
 
+  // tier='pro': companyTier() (server/src/tier.ts) resolves a company's
+  // tier from its owner's users.tier, defaulting to 'free'. The scheduler
+  // treats free-tier agents as BYOA-only and defers their wake until a
+  // computer is paired (server/src/agents/scheduler.ts: "free-tier
+  // (BYOA-only); no managed pod — wake deferred"), which would make this
+  // smoke hang forever waiting for a reply that never comes. Mirror what a
+  // real paid signup gets (see oauth.ts's post-commit onboarding) so the
+  // seeded agents actually run through the server-side managed executor.
   await pool.query(
-    `INSERT INTO users (id, email, display_name, password_hash, email_verified_at, is_admin)
-       VALUES ($1, $2, $3, NULL, NOW(), FALSE)`,
+    `INSERT INTO users (id, email, display_name, password_hash, email_verified_at, is_admin, tier)
+       VALUES ($1, $2, $3, NULL, NOW(), FALSE, 'pro')`,
     [userId, email, 'MVP Smoke User'],
   )
   await pool.query(
@@ -71,7 +80,8 @@ export async function seedCompany(slugPrefix: string): Promise<{ companyId: stri
     [userId, companyId],
   )
 
-  await onboardStarterAgents(companyId)
+  await ensureCloudComputer(companyId)
+  await onboardStarterAgents(companyId, { computerId: cloudComputerId(companyId), engine: 'managed' })
 
   const { token } = await createSession(userId, {})
   return { companyId, userId, token }
