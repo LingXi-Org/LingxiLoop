@@ -1,0 +1,140 @@
+# MVP single-server Docker Compose smoke (issue #9).
+#
+# Builds the real LingxiLoop server image, brings up the full
+# Human -> Agent -> LingxiGraph -> action -> WebSocket-broadcastable-reply
+# loop via Docker Compose, and drives it with server/scripts/mvp-smoke.ts +
+# server/scripts/mvp-fault-outage.ts.
+#
+# Deliberately model-cost-free: CI runs the REAL Python LingxiGraph Runtime
+# against a deterministic OpenAI-compatible provider stub. Both HTTP
+# boundaries, Python graph execution, Node adapter/actions, Redis and WS run
+# for real; no PR run consumes model quota.
+#
+# Separate workflow from pr.yml on purpose — pr.yml is intentionally
+# Docker-free for fork safety and speed; this one builds two images and
+# needs `docker compose`, which GitHub-hosted `ubuntu-latest` runners ship
+# with out of the box.
+
+name: MVP Compose Smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docker-compose.mvp*.yml'
+      - 'server/docker/**'
+      - 'server/lingxigraph/**'
+      - 'server/scripts/mvp-*.ts'
+      - 'server/scripts/fake-lingxigraph-runtime.mjs'
+      - 'server/scripts/fake-openai-provider.mjs'
+      - 'server/src/**'
+      - 'package.json'
+      - '.github/workflows/mvp-compose-smoke.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: mvp-compose-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose-smoke:
+    name: Compose up + Human->Agent smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images
+        run: docker compose -f docker-compose.mvp.ci.yml build
+
+      - name: Start stack
+        run: docker compose -f docker-compose.mvp.ci.yml up -d
+
+      - name: Wait for all services to report healthy
+        run: |
+          services="postgres redis fake-openai-provider lingxigraph-runtime lingxiloop"
+          for i in $(seq 1 60); do
+            all_healthy=true
+            for s in $services; do
+              cid=$(docker compose -f docker-compose.mvp.ci.yml ps -q "$s")
+              status=$(docker inspect --format '{{.State.Health.Status}}' "$cid" 2>/dev/null || echo missing)
+              [ "$status" = "healthy" ] || all_healthy=false
+              echo "$s: $status"
+            done
+            [ "$all_healthy" = true ] && { echo "all services healthy"; exit 0; }
+            sleep 3
+          done
+          echo "::error::services never became healthy"
+          docker compose -f docker-compose.mvp.ci.yml ps
+          docker compose -f docker-compose.mvp.ci.yml logs
+          exit 1
+
+      - name: Human + WebSocket + Agent-to-Agent -> real Python LingxiGraph smoke
+        run: npm run mvp:ci:smoke
+
+      - name: LingxiGraph Runtime rejects an invalid token
+        run: |
+          docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop node -e '
+            fetch("http://lingxigraph-runtime:8124/v1/turn", {
+              method: "POST",
+              headers: { "content-type": "application/json", authorization: "Bearer wrong-token" },
+              body: JSON.stringify({ version: 1 })
+            }).then(async r => {
+              if (r.status !== 401) throw new Error(`expected 401, got ${r.status}: ${await r.text()}`)
+              console.log("invalid token correctly rejected with 401")
+            })'
+
+      - name: Fault scenario - stop LingxiGraph Runtime
+        run: docker compose -f docker-compose.mvp.ci.yml stop lingxigraph-runtime
+
+      - name: Fault scenario - outage must not falsely complete the turn
+        run: npm run mvp:ci:fault-outage -- pre
+
+      - name: Fault scenario - restart LingxiGraph Runtime
+        run: |
+          docker compose -f docker-compose.mvp.ci.yml start lingxigraph-runtime
+          cid=$(docker compose -f docker-compose.mvp.ci.yml ps -q lingxigraph-runtime)
+          for i in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' "$cid" 2>/dev/null || echo missing)
+            echo "lingxigraph-runtime: $status"
+            [ "$status" = "healthy" ] && exit 0
+            sleep 2
+          done
+          echo "::error::lingxigraph-runtime never became healthy again"
+          exit 1
+
+      - name: Fault scenario - recovery gets a real reply
+        run: npm run mvp:ci:fault-outage -- post
+
+      - name: Redis fault scenario - seed while healthy
+        run: npm run mvp:ci:fault-redis -- setup
+
+      - name: Redis fault scenario - stop Redis
+        run: docker compose -f docker-compose.mvp.ci.yml stop redis
+
+      - name: Redis fault scenario - message remains durable while publish is unavailable
+        run: npm run mvp:ci:fault-redis -- pre
+
+      - name: Redis fault scenario - restart and wait for health
+        run: |
+          docker compose -f docker-compose.mvp.ci.yml start redis
+          cid=$(docker compose -f docker-compose.mvp.ci.yml ps -q redis)
+          for i in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' "$cid" 2>/dev/null || echo missing)
+            echo "redis: $status"
+            [ "$status" = "healthy" ] && exit 0
+            sleep 2
+          done
+          echo "::error::redis never became healthy again"
+          exit 1
+
+      - name: Redis fault scenario - original durable input recovers exactly once
+        run: npm run mvp:ci:fault-redis -- post
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.mvp.ci.yml logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.mvp.ci.yml down -v

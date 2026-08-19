@@ -196,8 +196,14 @@ test('[integration] reaction.toggle: a transaction rollback (FK violation) does 
 /* ─── full production path: executeCommunicationActions + real DB ─────── */
 
 test('[integration] executeCommunicationActions: action[0] succeeds, action[1] fails, retry on the same input scope does not duplicate action[0]', async () => {
-  const { agentA, convoId } = await seedGroup()
-  const inputScopeKey = computeInputScopeKey(['seed-m-1', 'seed-m-2'])
+  const { agentA, agentB, companyId, convoId } = await seedGroup()
+  const inputMessageId = await seedMessage(convoId, agentB, companyId)
+  const inputScopeKey = computeInputScopeKey([inputMessageId])
+  await pool.query(
+    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at, last_read_message_id)
+     VALUES ($1, $2, '1970-01-01T00:00:00Z'::timestamptz, '')`,
+    [agentA, convoId],
+  )
   const actions: CommunicationAction[] = [
     { type: 'message.send', conversationId: convoId, body: 'first action succeeds' },
     // A quote target that doesn't exist makes cmdReply fail deterministically.
@@ -220,25 +226,40 @@ test('[integration] executeCommunicationActions: action[0] succeeds, action[1] f
     [convoId],
   )
   assert.equal(afterFirst[0].count, '1')
+  const { rows: cursorAfterFailure } = await pool.query<{ last_read_message_id: string }>(
+    `SELECT last_read_message_id FROM conversation_reads WHERE user_id = $1 AND conversation_id = $2`,
+    [agentA, convoId],
+  )
+  assert.equal(cursorAfterFailure[0].last_read_message_id, '', 'partial batch must not acknowledge its input')
 
   // Retry the SAME batch against the SAME input scope (as a real duplicate
-  // wake would) — action[0] must be deduped at the sink, not re-sent.
+  // wake would). Make the later action valid: action[0] must be deduped at
+  // the sink, and only the coordinator may acknowledge after full success.
+  const retryActions: CommunicationAction[] = [
+    actions[0],
+    { type: 'message.send', conversationId: convoId, body: 'second action succeeds', quoteMessageId: inputMessageId },
+  ]
   const retry = await executeCommunicationActions({
     agentId: agentA,
     inputScopeKey,
-    actions,
+    actions: retryActions,
     executeCli: (argv, internal) => inprocClient.executeCli(agentA, argv, internal),
     ledger: pgActionLedger,
     timeoutMs: 5_000,
   })
-  assert.equal(retry.completed, false)
-  assert.equal(retry.failedActionIndex, 1, 'action[1] keeps failing the same deterministic way')
+  assert.equal(retry.completed, true)
 
   const { rows: afterRetry } = await pool.query<{ count: string }>(
     `SELECT COUNT(*)::text AS count FROM messages WHERE conversation_id = $1 AND body = 'first action succeeds'`,
     [convoId],
   )
   assert.equal(afterRetry[0].count, '1', 'duplicate wake must not re-send action[0]')
+  await inprocClient.markConversationRead({ agentId: agentA, conversationId: convoId, upToMessageId: inputMessageId })
+  const { rows: cursorAfterSuccess } = await pool.query<{ last_read_message_id: string }>(
+    `SELECT last_read_message_id FROM conversation_reads WHERE user_id = $1 AND conversation_id = $2`,
+    [agentA, convoId],
+  )
+  assert.equal(cursorAfterSuccess[0].last_read_message_id, inputMessageId, 'full batch success acknowledges its input')
 })
 
 test('[integration] executeCommunicationActions: a new input scope may legitimately repeat prior action content', async () => {

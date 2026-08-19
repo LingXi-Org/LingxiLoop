@@ -446,7 +446,7 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
     return buildSystemPromptImpl(agentId, mode)
   }
 
-  async executeCli(agentId: string, argv: string[], internal?: { idempotencyKey?: string }): Promise<CliResult> {
+  async executeCli(agentId: string, argv: string[], internal?: { idempotencyKey?: string; deferReadCursor?: boolean }): Promise<CliResult> {
     return runCli(['--as', agentId, ...argv], internal)
   }
 

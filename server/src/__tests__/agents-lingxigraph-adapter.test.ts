@@ -299,7 +299,7 @@ test('message.send and reaction.toggle receive the idempotency key via the inter
     { type: 'message.send', conversationId: 'c1', body: 'hi' },
     { type: 'reaction.toggle', messageId: 'm1', emoji: '✅' },
   ]
-  const calls: Array<{ argv: string[]; internal?: { idempotencyKey?: string } }> = []
+  const calls: Array<{ argv: string[]; internal?: { idempotencyKey?: string; deferReadCursor?: boolean } }> = []
 
   await executeCommunicationActions({
     agentId: 'agent-1',
@@ -317,6 +317,8 @@ test('message.send and reaction.toggle receive the idempotency key via the inter
     assert.equal(call.argv.some((a) => a.includes('idempotency')), false, 'argv must never carry the key')
     assert.ok(call.internal?.idempotencyKey, 'the internal param must carry the key for a P0 sink-owned action')
   }
+  assert.equal(calls[0].internal?.deferReadCursor, true, 'structured message.send must defer cursor ownership to the turn')
+  assert.equal(calls[1].internal?.deferReadCursor, undefined, 'reaction.toggle does not mutate the read cursor')
   // PR review P0-1: the generic ledger must never be consulted for these
   // two action types — claiming here BEFORE the sink's own transaction
   // would pre-insert a 'pending' row that the sink's atomic claim then

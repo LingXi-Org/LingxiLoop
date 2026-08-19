@@ -1,0 +1,121 @@
+# Standalone CI compose for the MVP smoke (issue #9, section 8: "at least one
+# Compose smoke that doesn't depend on a paid model").
+#
+# Deliberately NOT an overlay of docker-compose.mvp.yml — Compose's merge
+# semantics make it awkward to *remove* a `build:` key from an inherited
+# service, and duplicating four short service blocks here is easier to read
+# than debugging a merge. Keep this file's `lingxiloop` / `postgres` / `redis`
+# services in sync with docker-compose.mvp.yml if you change those.
+#
+# CI builds and runs the real Python LingxiGraph Runtime. Only its upstream
+# OpenAI-compatible provider is deterministic and free
+# (server/scripts/fake-openai-provider.mjs). This exercises both real HTTP
+# boundaries and also serves LingxiLoop's Responses-API inbox triage.
+#
+# Usage:
+#   docker compose -f docker-compose.mvp.ci.yml up -d --build
+#   npm run mvp:smoke -- --base-url http://localhost:5181
+#   docker compose -f docker-compose.mvp.ci.yml down -v
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: lingxiloop
+      POSTGRES_PASSWORD: lingxiloop
+      POSTGRES_DB: lingxiloop
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lingxiloop -d lingxiloop"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks: [lingxiloop-mvp-ci]
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+    networks: [lingxiloop-mvp-ci]
+
+  fake-openai-provider:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./server/scripts/fake-openai-provider.mjs:/app/fake-openai-provider.mjs:ro
+    command: ["node", "/app/fake-openai-provider.mjs"]
+    environment:
+      PORT: 8125
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8125/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+    networks: [lingxiloop-mvp-ci]
+
+  lingxigraph-runtime:
+    build:
+      context: .
+      dockerfile: server/docker/lingxigraph-runtime.Dockerfile
+    depends_on:
+      fake-openai-provider:
+        condition: service_healthy
+    environment:
+      OPENAI_API_KEY: sk-smoke-test-not-a-real-key
+      OPENAI_BASE_URL: http://fake-openai-provider:8125/v1
+      LINGXIGRAPH_TOKEN: ci-lingxigraph-runtime-token-not-for-production
+      LINGXIGRAPH_MODEL_TIMEOUT_SECONDS: 15
+      PORT: 8124
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8124/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    networks: [lingxiloop-mvp-ci]
+
+  lingxiloop:
+    build:
+      context: .
+      dockerfile: server/docker/cumora-server.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      lingxigraph-runtime:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5181
+      DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
+      REDIS_URL: redis://redis:6379
+      # Deterministic smoke never calls a real model, but env.ts requires the
+      # var to be non-empty for the process to boot in `lingxigraph` mode.
+      OPENAI_API_KEY: sk-smoke-test-not-a-real-key
+      OPENAI_BASE_URL: http://fake-openai-provider:8125/v1
+      # NOT the public dev default — env.ts refuses to boot in production
+      # (NODE_ENV=production) if it sees that. Fixed, CI-only value; never
+      # reused for anything real.
+      AGENT_RUNTIME_SECRET: ci-mvp-smoke-agent-runtime-secret-not-for-prod-use
+      LINGXILOOP_REASONING_RUNTIME: lingxigraph
+      LINGXILOOP_MANAGED_AGENT_EXECUTION: server
+      LINGXIGRAPH_URL: http://lingxigraph-runtime:8124
+      LINGXIGRAPH_TOKEN: ci-lingxigraph-runtime-token-not-for-production
+    ports:
+      - "${LINGXILOOP_PORT:-5181}:5181"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks: [lingxiloop-mvp-ci]
+
+networks:
+  lingxiloop-mvp-ci: {}

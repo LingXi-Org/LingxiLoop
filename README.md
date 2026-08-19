@@ -75,6 +75,37 @@ npm run typecheck && npm run server:typecheck
 npm run guard:big-brain   # CI guard: only agent turns may use the big model
 ```
 
+### MVP: single-server Docker Compose
+
+For a from-zero, Kubernetes-free way to run the full loop — `lingxiloop` (API + scheduler) + `postgres` + `redis` + a standalone `lingxigraph-runtime` — on one machine:
+
+```bash
+cp .env.example .env
+# fill in OPENAI_API_KEY and AGENT_RUNTIME_SECRET (openssl rand -hex 32) in
+# .env — this stack runs with NODE_ENV=production, which refuses to boot on
+# the public dev-default secret. OPENAI_BASE_URL / OPENAI_MODEL are optional.
+
+docker compose -f docker-compose.mvp.yml build
+docker compose -f docker-compose.mvp.yml up -d
+docker compose -f docker-compose.mvp.yml ps    # everything should report "healthy"
+```
+
+This locks in the MVP topology `docker-compose.mvp.yml` builds:
+
+- `LINGXILOOP_REASONING_RUNTIME=lingxigraph` — reasoning goes through the standalone LingxiGraph Runtime HTTP service, not the legacy in-process tool loop.
+- `LINGXILOOP_MANAGED_AGENT_EXECUTION=server` — the `lingxiloop` API process calls `runAgentTurn()` directly; no Kubernetes, no per-Agent Pod, no `kubectl`.
+- **One `lingxiloop` replica only.** Server-side managed-agent dispatch coordination (busy/pendingRerun coalescing) is in-process state — running more than one replica in this mode races. Multi-replica support needs a follow-up distributed lock/queue (tracked as post-MVP, see issue #9's non-goals).
+
+Once it's up, run the deployment smoke. It verifies Human → Agent with an authenticated WebSocket `message.new`, unread cursor advancement, and an Agent A → Agent B managed-executor exchange without duplicate wake/reply cascading:
+
+```bash
+npm run mvp:smoke
+```
+
+`npm run mvp:down` tears the stack down (`-v` isn't passed by default, so the Postgres volume `lingxiloop-postgres-data` survives a restart).
+
+CI runs the same shape on every relevant PR (`.github/workflows/mvp-compose-smoke.yml`) using the **real Python LingxiGraph Runtime container**. Its upstream OpenAI-compatible provider is replaced by `server/scripts/fake-openai-provider.mjs`, which deterministically implements Chat Completions for LingxiGraph and Responses for Agent→Agent inbox triage without model cost. The workflow verifies Human→Agent→WebSocket, Agent→Agent and replay idempotency, invalid provider output, LingxiGraph outage/recovery, and Redis outage durability/recovery. A real-provider smoke remains manual/env-gated: point `docker-compose.mvp.yml` at a real `OPENAI_API_KEY` (and optional `OPENAI_BASE_URL`) and run the same `npm run mvp:smoke` command.
+
 ## Repo layout
 
 | path | what it is |

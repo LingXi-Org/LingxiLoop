@@ -226,7 +226,7 @@ export interface AgentRuntimeClient {
    *  It never travels through `argv`, so no CLI/model-controllable input
    *  can set or spoof it. Only `executeCommunicationActions()` populates
    *  it; ordinary bash-tool calls never pass it. */
-  executeCli(agentId: string, argv: string[], internal?: { idempotencyKey?: string }): Promise<CliResult>
+  executeCli(agentId: string, argv: string[], internal?: { idempotencyKey?: string; deferReadCursor?: boolean }): Promise<CliResult>
 
   /** Persist model usage produced outside the Node OpenAI client (LingxiGraph). */
   recordExternalLlmCall(args: {
