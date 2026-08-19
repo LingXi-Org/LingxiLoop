@@ -44,6 +44,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate production Web Compose config
+        env:
+          AGENT_RUNTIME_SECRET: ci-compose-config-secret-not-for-production
+          OPENAI_API_KEY: ci-compose-config-key
+        run: docker compose -f docker-compose.mvp.yml config --quiet
+
       - name: Build images
         run: docker compose -f docker-compose.mvp.ci.yml build
 
