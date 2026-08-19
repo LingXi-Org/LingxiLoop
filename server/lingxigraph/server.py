@@ -55,8 +55,8 @@ async def turn(request: Request) -> JSONResponse:
     return JSONResponse(result)
 
 
-@app.post('/v1/turn/stream')
-async def turn_stream(request: Request) -> StreamingResponse | JSONResponse:
+@app.post('/v1/turn/stream', response_model=None)
+async def turn_stream(request: Request):
     if RUNTIME_TOKEN and request.headers.get('authorization') != f'Bearer {RUNTIME_TOKEN}':
         return JSONResponse({'error': 'unauthorized'}, status_code=401)
     try:
