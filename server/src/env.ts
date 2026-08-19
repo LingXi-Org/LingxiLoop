@@ -52,6 +52,25 @@ export const env = {
   LINGXIGRAPH_RUN_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 120_000),
   LINGXIGRAPH_ACTION_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_ACTION_TIMEOUT_MS ?? 30_000),
   /**
+   * How a `managed` agent's turn actually gets dispatched:
+   *   'pod'    — current behavior: scheduler calls ensurePod() and a
+   *              per-Agent Kubernetes Pod runs runAgentTurn().
+   *   'server' — MVP fast-path (issue #4): the LingxiLoop API process
+   *              calls runAgentTurn() directly (see agents/managed-executor.ts),
+   *              never spinning up a Pod. Only takes effect for managed
+   *              agents AND LINGXILOOP_REASONING_RUNTIME=lingxigraph — the
+   *              legacy multi-hop tool loop still needs Pod-level bash/FS
+   *              isolation, so it keeps going through ensurePod() even
+   *              when this is 'server'. BYOA is unaffected either way.
+   *
+   * Default 'pod' — changing production semantics requires an explicit
+   * opt-in. 'server' is an MVP single-replica mode: its busy/pendingRerun
+   * coalescing is in-process memory, not coordinated across replicas —
+   * see the boot-time warning below.
+   */
+  LINGXILOOP_MANAGED_AGENT_EXECUTION: (process.env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server'
+    ? 'server' : 'pod') as 'pod' | 'server',
+  /**
    * "Cerebellum" model — JSON classifiers, palette, gender inference,
    * heartbeat agenda pre-check. Cheap/fast; quality matters less than
    * latency + cost. Default is a small model (not DEFAULT_MODEL) so
@@ -468,4 +487,29 @@ if (env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph' && !env.LINGXIGRAPH_URL) 
     '(the LingxiGraph Runtime container origin, e.g. http://lingxigraph-runtime:8124).',
   )
   process.exit(1)
+}
+
+// MVP guard: LINGXILOOP_MANAGED_AGENT_EXECUTION=server dispatches turns via
+// in-process busy/pendingRerun state (agents/managed-executor.ts), which is
+// NOT coordinated across replicas. Running >1 LingxiLoop API replica in this
+// mode means two replicas can each believe they're the sole runner for the
+// same agent and dispatch runAgentTurn() concurrently. We can't detect
+// replica count from inside a single process, so this is a loud warning
+// rather than a hard fail — operators are expected to keep replicas=1 until
+// a follow-up issue adds distributed coordination.
+if (env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server') {
+  if (env.LINGXILOOP_REASONING_RUNTIME !== 'lingxigraph') {
+    console.warn(
+      '[env] LINGXILOOP_MANAGED_AGENT_EXECUTION=server has no effect while ' +
+      'LINGXILOOP_REASONING_RUNTIME=legacy — server-side dispatch only applies to the ' +
+      'managed + lingxigraph path; managed agents will keep going through ensurePod().',
+    )
+  } else {
+    console.warn(
+      '[env] LINGXILOOP_MANAGED_AGENT_EXECUTION=server is an MVP mode: managed-agent ' +
+      'turn dispatch is coordinated only within THIS process. Running more than one ' +
+      'LingxiLoop API replica will let replicas race to run the same agent concurrently. ' +
+      'Keep replicas=1 until distributed coordination ships in a follow-up issue.',
+    )
+  }
 }
