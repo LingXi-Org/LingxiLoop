@@ -38,6 +38,29 @@ const TAG = 'mvp-smoke'
 const log = (msg: string) => baseLog(TAG, msg)
 const REPLY_TIMEOUT_MS = Number(process.env.MVP_SMOKE_REPLY_TIMEOUT_MS || 60_000)
 
+/** Diagnostic-only: dumps the agent's recent agent_runs/agent_events rows
+ *  to CI logs when an assertion fails, so a failure is debuggable from the
+ *  workflow log alone instead of needing a live repro. */
+async function dumpAgentRunDiagnostics(agentId: string): Promise<void> {
+  try {
+    const { rows: runs } = await pool.query(
+      `SELECT id, status, stage, error, input_message_ids, inbox_count, started_at, finished_at
+         FROM agent_runs WHERE agent_id = $1 ORDER BY started_at DESC LIMIT 3`,
+      [agentId],
+    )
+    log(`diagnostics: recent agent_runs for ${agentId}: ${JSON.stringify(runs)}`)
+    for (const run of runs as Array<{ id: string }>) {
+      const { rows: events } = await pool.query(
+        `SELECT kind, level, title, data, created_at FROM agent_events WHERE run_id = $1 ORDER BY created_at ASC`,
+        [run.id],
+      )
+      log(`diagnostics: agent_events for run ${run.id}: ${JSON.stringify(events)}`)
+    }
+  } catch (err) {
+    log(`diagnostics: failed to dump agent_runs/agent_events: ${err instanceof Error ? err.message : String(err)}`)
+  }
+}
+
 /**
  * Fault scenario (issue #9 section 6: "LingxiGraph 返回 invalid response").
  * Only exercised when the runtime under test is the deterministic fake
@@ -99,6 +122,7 @@ async function main(): Promise<void> {
   // a single point-in-time read.
   const cursorAfter = await waitForCursorAdvance(agentId, conversationId, cursorBefore)
   if (cursorAfter === cursorBefore) {
+    await dumpAgentRunDiagnostics(agentId)
     throw new Error(`agent unread cursor did not advance (still "${cursorBefore}") despite a completed turn`)
   }
   log(`agent unread cursor advanced: "${cursorBefore}" -> "${cursorAfter}"`)
