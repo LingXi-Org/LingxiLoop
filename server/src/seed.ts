@@ -39,14 +39,6 @@ interface SeedParticipant {
 
 const SEED_PARTICIPANTS: SeedParticipant[] = [
   { id: 'yetone', kind: 'human', name: 'Yetone', initial: 'Y', avatarBg: 'linear-gradient(135deg, #FF7A6B, #F4B740)', status: 'avail' },
-  { id: 'atlas', kind: 'agent', name: 'Atlas', role: 'Researcher', initial: 'A', avatarBg: 'linear-gradient(135deg, #6B7BE6, #4452B5)', status: 'working', bio: 'I find patterns across noise. Best at long-form research and synthesis.', tools: ['web.search', 'pdf.read', 'linear'] },
-  { id: 'iris', kind: 'agent', name: 'Iris', role: 'Designer', initial: 'I', avatarBg: 'linear-gradient(135deg, #FF8FBF, #C84F8B)', status: 'working', bio: "The team's eye. I move from sketch to ship without losing the feeling.", tools: ['image.gen', 'palette', 'web.read'] },
-  { id: 'bram', kind: 'agent', name: 'Bram', role: 'Engineer', initial: 'B', avatarBg: 'linear-gradient(135deg, #4FC2A1, #2D8C72)', status: 'avail', bio: 'I build, I ship, I keep the bundles small.', tools: ['shell', 'docs'] },
-  { id: 'nova', kind: 'agent', name: 'Nova', role: 'Product Manager', initial: 'N', avatarBg: 'linear-gradient(135deg, #FFB347, #E08526)', status: 'thinking', bio: 'I keep momentum. Mostly by asking annoying questions.', tools: ['linear', 'calendar'] },
-  { id: 'lumen', kind: 'agent', name: 'Lumen', role: 'Brand & Voice', initial: 'L', avatarBg: 'linear-gradient(135deg, #B57BFF, #7339D9)', status: 'avail', bio: 'I notice patterns across all of our copy. I pull groups when our voice cracks.', tools: ['web.read', 'palette', 'background.scan'] },
-  { id: 'kael', kind: 'agent', name: 'Kael', role: 'Ops', initial: 'K', avatarBg: 'linear-gradient(135deg, #4DB8E5, #2380B0)', status: 'resting', bio: 'I watch the cron jobs.', tools: ['shell', 'monitor', 'pagerduty'] },
-  { id: 'wei', kind: 'human', name: 'Wei', initial: 'W', avatarBg: 'linear-gradient(135deg, #FF7A6B, #C84F3F)', status: 'avail' },
-  { id: 'maya', kind: 'human', name: 'Maya', initial: 'M', avatarBg: 'linear-gradient(135deg, #F4B740, #BA8418)', status: 'resting' },
 ]
 
 interface SeedProject {
@@ -56,14 +48,7 @@ interface SeedProject {
   color?: string
 }
 
-const SEED_PROJECTS: SeedProject[] = [
-  {
-    id: 'p-aurora',
-    name: 'Aurora',
-    description: 'Q3 launch — the cross-team push to ship the v2 product.',
-    color: 'linear-gradient(135deg, #FFB088, #FF7A6B)',
-  },
-]
+const SEED_PROJECTS: SeedProject[] = []
 
 interface SeedConvo {
   id: string
@@ -80,21 +65,10 @@ interface SeedConvo {
 /**
  * Empty conversation containers — no canned messages.
  * Every message rendered is now produced live by the agent loop or the user.
- * Agents with background.scan can pull fresh groups when they detect collisions.
- * Agent-to-agent private chats are created on demand by the agent loop
- * (`cumora dm`).
+ * The versioned learning-team onboarding runs immediately after this dev seed
+ * and owns all starter agents, DMs, and built-in rooms.
  */
-const SEED_CONVOS: SeedConvo[] = [
-  { id: 'aurora', kind: 'group', title: 'Aurora · Q3 Launch', subtitle: 'team · 5', members: ['atlas', 'iris', 'bram', 'nova', 'yetone'], pinned: true, tag: 'team', projectId: 'p-aurora' },
-  { id: 'direct-atlas', kind: 'direct', title: 'Atlas', members: ['atlas', 'yetone'] },
-  { id: 'direct-iris', kind: 'direct', title: 'Iris', members: ['iris', 'yetone'] },
-  { id: 'direct-bram', kind: 'direct', title: 'Bram', members: ['bram', 'yetone'] },
-  { id: 'direct-nova', kind: 'direct', title: 'Nova', members: ['nova', 'yetone'] },
-  { id: 'direct-lumen', kind: 'direct', title: 'Lumen', members: ['lumen', 'yetone'] },
-  { id: 'direct-kael', kind: 'direct', title: 'Kael', members: ['kael', 'yetone'] },
-  { id: 'direct-wei', kind: 'direct', title: 'Wei', subtitle: 'teammate', members: ['wei', 'yetone'], tag: 'human' },
-  { id: 'direct-maya', kind: 'direct', title: 'Maya', subtitle: 'teammate', members: ['maya', 'yetone'], tag: 'human' },
-]
+const SEED_CONVOS: SeedConvo[] = []
 
 interface SeedMsg {
   id: string

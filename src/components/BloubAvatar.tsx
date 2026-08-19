@@ -88,8 +88,8 @@ function Dot({ dot, ink }: { dot: DotRender; ink: string }) {
 
 /** Native React renderer for Bloub's clock-free SVG morph engine. */
 export function BloubAvatar({ participant, status, size, paper = 'var(--paper)', animated = true, className }: Props) {
-  const identity = useMemo(() => getBloubIdentity(participant), [participant.id])
-  const state = getBloubState(status)
+  const identity = useMemo(() => getBloubIdentity(participant), [participant.id, participant.role])
+  const state = getBloubState(participant, status)
   const shape = SHAPE_BY_ID.get(identity.shape)?.radii ?? null
   const expression = EXPRESSION_BY_ID.get(identity.expression) ?? null
   const ink = COLOR_BY_ID.get(identity.color)?.hex ?? '#3b93f0'

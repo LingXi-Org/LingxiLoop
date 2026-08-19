@@ -13,7 +13,7 @@ import {
   deleteSession, authMiddleware, type AuthedRequest,
   audit, createWsTicket, gravatarUrlForEmail,
 } from '../auth.js'
-import { joinAllHands, onboardStarterAgents, seedMemberDms } from '../onboardCompany.js'
+import { onboardStarterAgents, seedMemberDms } from '../onboardCompany.js'
 import {
   type Provider, providerEnabled, createState, consumeState,
   authorizeUrl, handleCallback, errorUrl, returnUrlAllowed,
@@ -1009,9 +1009,6 @@ api.post('/companies', async (req, res) => {
         await onboardStarterAgents(id)
       } catch (e) { console.warn('[companies] cloud/starter setup failed', e) }
 
-      try { await joinAllHands({ companyId: id, participantId: me }) }
-      catch (e) { console.warn('[companies] join all-hands failed', e) }
-
       const ip = req.socket.remoteAddress ?? null
       const ua = (req.headers['user-agent'] as string | undefined) ?? null
       await audit({ kind: 'company_create', userId: me, companyId: id, ip, userAgent: ua, detail: { name, slug } })
@@ -1474,8 +1471,8 @@ api.get('/invitations/:token', safe(async (req, res) => {
  *    2. Inserts a company_members row (idempotent on conflict).
  *    3. Mirrors the human as a participant in the target company.
  *    4. Bumps use_count + last_accepted_at/by.
- *  Then (post-commit, best-effort) joins #all-hands so the new member
- *  gets the visible "X joined" event. Returns the company summary the
+ *  Then (post-commit, best-effort) seeds direct chats without changing the
+ *  fixed membership of Study Room or Lab. Returns the company summary the
  *  client adds to the switcher list. */
 api.post('/invitations/:token/accept', safe(async (req, res) => {
   const me = requireAuth(req)
@@ -1596,20 +1593,17 @@ api.post('/invitations/:token/accept', safe(async (req, res) => {
     client.release()
   }
 
-  // Post-commit fan-out. joinAllHands creates the "X joined" system
-  // message + WS broadcast so existing members see the newcomer arrive
-  // in real time.
+  // Post-commit fan-out. Built-in learning rooms keep fixed membership;
+  // invited people get direct conversations without joining a hidden room.
   const { rows: invRow } = await pool.query<{ company_id: string; role: string; invited_by: string }>(
     `SELECT company_id, role, invited_by FROM company_invitations WHERE token_hash = $1`,
     [tokenHash],
   )
   const inv = invRow[0]
   if (inv) {
-    try { await joinAllHands({ companyId: inv.company_id, participantId: me }) }
-    catch (e) { console.warn('[invite] join all-hands failed', e) }
     // Seed 1:1 DMs with every existing teammate (agents + humans) so the
     // invitee's sidebar matches the owner's experience — they can click any
-    // colleague directly instead of having to dig through #all-hands.
+    // colleague directly without changing the two built-in learning rooms.
     try { await seedMemberDms({ companyId: inv.company_id, memberId: me }) }
     catch (e) { console.warn('[invite] seed member DMs failed', e) }
   }
@@ -2327,17 +2321,11 @@ api.post('/agents', async (req, res) => {
     }
     return
   }
-  // Re-bind data.id for the rest of the handler so subsequent code
-  // (workspace seeding, all-hands join, response payload) sees it.
+  // Re-bind data.id for the rest of the handler so subsequent workspace
+  // seeding and the response payload see it.
   data.id = agentId
   const { invalidatePersonaCache } = await import('../agents/personas.js')
   invalidatePersonaCache()
-
-  // Auto-join the new agent into the company's #all-hands group + post a
-  // join system message. Best-effort — agent create still succeeds even
-  // if the group hasn't been seeded yet.
-  try { await joinAllHands({ companyId: tenant, participantId: data.id }) }
-  catch (e) { console.warn('[agents] join all-hands failed', e) }
 
   // Seed IDENTITY.md + SOUL.md at the workspace root. These are the
   // agent's self-definition — the system prompt loads them every turn

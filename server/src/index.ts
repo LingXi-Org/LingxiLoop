@@ -16,7 +16,7 @@ import { redis } from './redis.js'
 import { startScanner } from './agents/scanner.js'
 import { startScheduler } from './agents/scheduler.js'
 import { startIdleScheduler } from './agents/idle.js'
-import { backfillStarterAgents, backfillHumanGravatars, backfillStarterAvatars } from './onboardCompany.js'
+import { backfillStarterAgents, backfillHumanGravatars } from './onboardCompany.js'
 import { backfillMemoryEmbeddings } from './agents/embeddings.js'
 import { startStaleAgentRunSweeper } from './agents/observability.js'
 import { sweepOfflineComputers } from './agents/computer/registry.js'
@@ -46,10 +46,6 @@ async function main() {
   await backfillStarterAgents()
   // Catch human participants who were created before Gravatar wiring.
   await backfillHumanGravatars()
-  // Stamp default portraits on starter agents seeded before the
-  // pre-baked-avatar wiring shipped. Skips agents that already have
-  // an avatar_url (i.e. ones that have already regenerated their own).
-  await backfillStarterAvatars()
   // Compute embeddings for any memory rows that don't have one yet
   // (existing data from before pgvector was wired in, or rows whose
   // OpenAI call failed at write time). Fire-and-forget — the server
