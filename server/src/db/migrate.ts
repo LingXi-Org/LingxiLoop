@@ -41,6 +41,11 @@ CREATE INDEX IF NOT EXISTS idx_messages_convo_created ON messages(conversation_i
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS quoted_message_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_messages_quoted ON messages(quoted_message_id);
 
+-- Internal marker for product-owned rooms. User-created conversations keep
+-- this NULL; the marker lets preset migrations remain idempotent without
+-- guessing from editable titles.
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS preset_key TEXT;
+
 CREATE TABLE IF NOT EXISTS participants (
   id             TEXT NOT NULL,
   -- Composite PK with company_id below — the same id (e.g. a user's id, or
@@ -525,13 +530,18 @@ ALTER TABLE companies ADD COLUMN IF NOT EXISTS starter_seeded_at TIMESTAMP WITH 
 -- seeding shipped — workspaces that got agents-but-no-DMs need this
 -- one-shot to create their DMs without re-seeding agents.
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS starter_dms_seeded_at TIMESTAMP WITH TIME ZONE;
--- Every company has ONE persistent #all-hands group that every member
--- (humans + agents) is auto-joined to on creation. The conversation id is
--- stored here; we never recreate it once set. ON DELETE SET NULL guards
--- against orphaning the column if the conversation is somehow purged.
+-- Legacy all-hands compatibility columns. Learning preset v1 clears the
+-- pointer and never seeds from it; keeping the nullable columns avoids a
+-- destructive schema removal for older deployments.
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS all_hands_conversation_id TEXT
   REFERENCES conversations(id) ON DELETE SET NULL;
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS all_hands_seeded_at TIMESTAMP WITH TIME ZONE;
+-- Versioned learning-team preset. Unlike the original timestamp flags this is
+-- intentionally advanced when a new product-owned roster migration ships.
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS starter_preset_version INTEGER NOT NULL DEFAULT 0;
+
+-- Product-owned participant identity. Custom agents keep this NULL.
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS preset_key TEXT;
 
 INSERT INTO companies (id, name, slug)
 VALUES ('personal', 'Personal', 'personal')
@@ -568,6 +578,11 @@ ALTER TABLE agent_log           ADD COLUMN IF NOT EXISTS company_id TEXT;
 ALTER TABLE agent_tasks         ADD COLUMN IF NOT EXISTS company_id TEXT;
 ALTER TABLE agent_runs          ADD COLUMN IF NOT EXISTS company_id TEXT;
 ALTER TABLE agent_events        ADD COLUMN IF NOT EXISTS company_id TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_company_preset_key
+  ON conversations(company_id, preset_key) WHERE preset_key IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_participants_company_preset_key
+  ON participants(company_id, preset_key) WHERE preset_key IS NOT NULL;
 
 -- Backfill: any pre-existing data lives in the 'personal' company.
 UPDATE participants        SET company_id = 'personal' WHERE company_id IS NULL;

@@ -34,7 +34,7 @@ import { pool } from './db/pool.js'
 import { redis } from './redis.js'
 import { env } from './env.js'
 import { audit, createSession, gravatarUrlForEmail } from './auth.js'
-import { onboardStarterAgents, joinAllHands } from './onboardCompany.js'
+import { onboardStarterAgents } from './onboardCompany.js'
 import { storage } from './storage.js'
 import { provisionUser as provisionSub2apiUser, sub2apiConfigured } from './sub2api.js'
 import { isWaitlistEnabled, enqueueWaitlist, isAllowlistedAdmin } from './admin.js'
@@ -487,16 +487,15 @@ export async function findOrCreateUserByProfile(
     }
     await client.query('COMMIT')
 
-    // Starter agents + all-hands are best-effort — never block first login.
+    // Learning-team onboarding is best-effort — never block first login.
     // Skipped on the invite path: the user is about to land in the inviter's
-    // workspace, which already has its own agents + #all-hands.
+    // workspace, which already has its own learning team and rooms.
     if (companyId) {
       // Starter agents are server-managed by default and need no Computer or
       // local engine assignment.
       try {
         await onboardStarterAgents(companyId)
       } catch (e) { console.warn('[oauth] starter onboarding failed', e) }
-      try { await joinAllHands({ companyId, participantId: userId }) } catch (e) { console.warn('[oauth] join all-hands failed', e) }
     }
 
     // Mirror the user into sub2api so their LLM calls land on a

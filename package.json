@@ -30,7 +30,7 @@
     "guard:llm-tracked": "node scripts/guard-llm-tracked.mjs",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "test": "node --import tsx --experimental-test-module-mocks --test \"server/src/__tests__/**/*.test.ts\" \"workers/**/*.test.ts\"",
+    "test": "node --import tsx --experimental-test-module-mocks --test \"server/src/__tests__/**/*.test.ts\" \"src/**/*.test.ts\" \"workers/**/*.test.ts\"",
     "test:integration": "node server/run-integration-tests.mjs",
     "migrate": "tsx server/src/migrate-bin.ts",
   "mvp:up": "docker compose -f docker-compose.mvp.yml up -d --build",

@@ -11,8 +11,8 @@ const VIEWBOX = 142
 /** A DOM-free Bloub snapshot for places such as contenteditable mention chips,
  * where mounting a React avatar is impossible. Transparent eye cut-outs let
  * the chip's own background show through in both themes. */
-export function staticBloubAvatarUrl(participant: Pick<Participant, 'id' | 'status'>): string {
-  const key = `${participant.id}:${participant.status}`
+export function staticBloubAvatarUrl(participant: Pick<Participant, 'id' | 'role' | 'status'>): string {
+  const key = `${participant.id}:${participant.role ?? ''}:${participant.status}`
   const cached = cache.get(key)
   if (cached) return cached
 
@@ -20,7 +20,7 @@ export function staticBloubAvatarUrl(participant: Pick<Participant, 'id' | 'stat
   const shape = SHAPE_BY_ID.get(identity.shape)?.radii ?? null
   const expression = EXPRESSION_BY_ID.get(identity.expression) ?? null
   const ink = COLOR_BY_ID.get(identity.color)?.hex ?? '#3b93f0'
-  const engine = new BotEngine(RAYON, getBloubState(participant.status), shape, expression)
+  const engine = new BotEngine(RAYON, getBloubState(participant, participant.status), shape, expression)
   const frame = engine.sample(0.9)
   const eyes = frame.eyes
     .map((eye) => `<path d="${eye.d}" transform="${eye.matrix}" opacity="${eye.alpha}" fill="#000"/>`)

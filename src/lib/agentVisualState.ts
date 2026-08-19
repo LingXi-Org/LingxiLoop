@@ -33,6 +33,45 @@ export interface BloubIdentity {
   expression: ExpressionId
 }
 
+export type StarterPersonaKey = 'nova' | 'sage' | 'milo' | 'trace' | 'scout' | 'forge'
+
+export interface StarterBloubProfile extends BloubIdentity {
+  working: StateId
+  thinking: StateId
+}
+
+export const STARTER_PERSONA_ROLES: Record<StarterPersonaKey, string> = {
+  nova: '学习教练 · Study Coach',
+  sage: '概念导师 · Concept Tutor',
+  milo: '解题陪练 · Problem Coach',
+  trace: '错因诊断 · Learning Diagnostician',
+  scout: '阅读研究 · Research Guide',
+  forge: '实践导师 · Practice Mentor',
+}
+
+/**
+ * The learning team uses authored identities instead of hash accidents. Keeping
+ * the state pairs here also makes the twelve active poses an explicit visual
+ * vocabulary: no two starter personas work or think in the same way.
+ */
+export const STARTER_BLOUB_PROFILES: Record<StarterPersonaKey, StarterBloubProfile> = {
+  nova:  { shape: 'goutte',   color: 'ambre',     expression: 'fier',     working: 'orbit', thinking: 'thinking' },
+  sage:  { shape: 'hexagone', color: 'orange',    expression: 'attentif', working: 'wide',  thinking: 'egg' },
+  milo:  { shape: 'nuage',    color: 'turquoise', expression: 'curieux',  working: 'play',  thinking: 'wink' },
+  trace: { shape: 'squircle', color: 'rouge',     expression: 'mefiant',  working: 'alert', thinking: 'hexagon' },
+  scout: { shape: 'capsule',  color: 'bleu',      expression: 'timide',   working: 'comet', thinking: 'swirl' },
+  forge: { shape: 'triangle', color: 'vert',      expression: 'heureux',  working: 'burst', thinking: 'exclaim' },
+}
+
+const STARTER_PERSONA_KEYS = Object.keys(STARTER_BLOUB_PROFILES) as StarterPersonaKey[]
+
+export function getStarterPersonaKey(participant: Pick<Participant, 'id' | 'role'>): StarterPersonaKey | null {
+  const id = participant.id.toLowerCase()
+  return STARTER_PERSONA_KEYS.find((key) =>
+    (id === key || id.startsWith(`${key}-`)) && participant.role === STARTER_PERSONA_ROLES[key],
+  ) ?? null
+}
+
 /** FNV-1a keeps an agent's appearance stable without persistence or randomness. */
 export function stableParticipantHash(value: string): number {
   let hash = 0x811c9dc5
@@ -43,7 +82,12 @@ export function stableParticipantHash(value: string): number {
   return hash >>> 0
 }
 
-export function getBloubIdentity(participant: Pick<Participant, 'id'>): BloubIdentity {
+export function getBloubIdentity(participant: Pick<Participant, 'id' | 'role'>): BloubIdentity {
+  const personaKey = getStarterPersonaKey(participant)
+  if (personaKey) {
+    const { shape, color, expression } = STARTER_BLOUB_PROFILES[personaKey]
+    return { shape, color, expression }
+  }
   const hash = stableParticipantHash(participant.id)
   return {
     shape: SHAPES[hash % SHAPES.length]!,
@@ -52,6 +96,13 @@ export function getBloubIdentity(participant: Pick<Participant, 'id'>): BloubIde
   }
 }
 
-export function getBloubState(status: string | null | undefined): StateId {
+export function getBloubState(
+  participant: Pick<Participant, 'id' | 'role'>,
+  status: string | null | undefined,
+): StateId {
+  const personaKey = getStarterPersonaKey(participant)
+  if (personaKey && (status === 'working' || status === 'thinking')) {
+    return STARTER_BLOUB_PROFILES[personaKey][status]
+  }
   return STATUS_TO_BLOUB_STATE[status as Status] ?? 'idle'
 }

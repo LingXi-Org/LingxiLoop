@@ -23,7 +23,7 @@ import { pool } from './db/pool.js'
 import { env } from './env.js'
 import type { AuthedRequest } from './auth.js'
 import { audit, gravatarUrlForEmail } from './auth.js'
-import { onboardStarterAgents, joinAllHands } from './onboardCompany.js'
+import { onboardStarterAgents } from './onboardCompany.js'
 import { mirrorAvatar } from './oauth.js'
 import { provisionUser as provisionSub2apiUser, sub2apiConfigured, setUserTier } from './sub2api.js'
 import { formatAddress, mintMessageId, sendViaProvider } from './email.js'
@@ -383,7 +383,7 @@ function buildWelcomeEmailHtml(args: {
                 </tr>
                 <tr>
                   <td style="font-family:${fontStack}; font-size:15px; font-weight:400; line-height:1.65; color:#233A53; padding:0 0 28px;">
-                    Your workspace is set up and your starter team &mdash; Atlas, Iris, Bram, and Nova &mdash; is already gathered there, ready to meet you. Sign in with the same Google or GitHub account you used to join the waitlist, and you&rsquo;ll land right in.
+                    Your workspace is set up and your learning team &mdash; Nova, Sage, Milo, Trace, Scout, and Forge &mdash; is already gathered there, ready to study with you. Sign in with the same Google or GitHub account you used to join the waitlist, and you&rsquo;ll land right in.
                   </td>
                 </tr>${ctaBlock}
                 <tr>
@@ -449,7 +449,7 @@ async function sendWaitlistApprovedEmail(args: {
     ``,
     `You're in — welcome to Cumora.`,
     ``,
-    `Your workspace is set up and your starter team (Atlas, Iris, Bram, Nova) is already gathered there, ready to meet you.`,
+    `Your workspace is set up and your learning team (Nova, Sage, Milo, Trace, Scout, Forge) is already gathered there, ready to study with you.`,
     ``,
     ctaLine,
     `Use the same Google or GitHub account you used to join the waitlist.`,
@@ -595,7 +595,6 @@ export async function approveWaitlist(waitlistId: string, decidedBy: string): Pr
       try {
         await onboardStarterAgents(companyId)
       } catch (e) { console.warn('[admin] starter onboarding failed', e) }
-      try { await joinAllHands({ companyId, participantId: userId }) } catch (e) { console.warn('[admin] join all-hands failed', e) }
     }
     try { await sendWaitlistApprovedEmail({ email: row.email, displayName: row.display_name }) } catch (e) { console.warn('[admin] waitlist-approved email failed', e) }
     if (sub2apiConfigured()) {

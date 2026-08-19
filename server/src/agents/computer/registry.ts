@@ -39,7 +39,7 @@ async function broadcastComputerStatus(
 /** Announce a just-paired computer as online. Split out from {@link pairComputer}
  *  so the /pair route can defer it until AFTER the starter team is seeded — the
  *  desktop flips its onboarding gate on this event and immediately reloads its
- *  roster, so the agents + "Everyone" group must already exist when it fires. */
+ *  roster, so the learning agents and built-in rooms must exist when it fires. */
 export async function announceComputerOnline(computerId: string, companyId: string): Promise<void> {
   await broadcastComputerStatus(computerId, companyId, 'online')
 }
