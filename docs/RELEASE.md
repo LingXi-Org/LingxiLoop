@@ -1,34 +1,80 @@
-# LingxiLoop release guide
+# LingxiLoop Web release guide
 
-Desktop releases are owned and published by `LingXi-Org/LingxiLoop`. No tag or
-workflow is allowed to dispatch into the upstream Cumora repositories.
+LingxiLoop currently publishes **Web/server releases only**. Electron, macOS, Windows, Linux desktop and mobile artifacts are not part of the current release line.
 
-## Desktop release
+## What a release does
 
-1. Bump the root `package.json` version and commit it to `main`.
-2. Push a matching annotated tag, for example `v0.1.0-alpha`.
-3. `.github/workflows/release.yml` builds macOS, Windows, and Linux artifacts
-   and attaches them to the GitHub Release in this repository.
+A tag matching `v*` triggers `.github/workflows/release.yml`.
 
-The Electron updater also reads releases from `LingXi-Org/LingxiLoop`, as
-configured by `build.publish` in the root `package.json`.
+The workflow:
 
-Signed macOS production builds require the standard electron-builder Apple
-signing/notarization secrets. Unsigned builds remain suitable for internal
-compatibility testing.
+1. checks out the tagged source;
+2. installs dependencies with `npm ci`;
+3. runs client and server type checks;
+4. builds the Vite Web bundle;
+5. creates a GitHub Release in `LingXi-Org/LingxiLoop`.
 
-## CLI publishing
+Tags containing a suffix (for example `v0.1.0-alpha`) are marked as GitHub prereleases. A release tag does **not** deploy or mutate a running server.
 
-`.github/workflows/publish.yml` is independent of desktop tags. It only runs
-when `agent-cli/**` changes on `main`, and publishes the package name/version
-declared by `agent-cli/package.json` when `NPM_TOKEN` is configured.
+## Cut a release
 
-## Server deployment
+First make sure the intended release commit is on `main` and its PR/Compose checks are green. Then create an annotated tag on that exact commit:
 
-Every push to `main` runs `.github/workflows/build.yml` and produces immutable
-server images after type checks and tests pass. Deployment is a separate,
-manually approved workflow; pushing a desktop tag never deploys the server.
+```bash
+git switch main
+git pull --ff-only
 
-The MVP server Docker image is standalone and contains no `kubectl`. Optional
-Kubernetes deployments install and invoke cluster tooling in the deployment
-workflow/runner, not while building or running the ordinary server image.
+git tag -a v0.1.0-alpha -m "LingxiLoop v0.1.0-alpha"
+git push origin v0.1.0-alpha
+```
+
+Watch **Actions → Web Release**. After it succeeds, the GitHub Release is available from this repository's Releases page.
+
+## Deploy the Web/server release
+
+The supported alpha topology is `docker-compose.mvp.yml`:
+
+```text
+Browser → HTTPS reverse proxy → LingxiLoop SPA/API/WS
+                               ├→ Postgres
+                               ├→ Redis
+                               └→ LingxiGraph Runtime → model provider
+```
+
+Use one LingxiLoop API replica only in `LINGXILOOP_MANAGED_AGENT_EXECUTION=server` mode.
+
+On the server:
+
+```bash
+git fetch --tags
+git checkout v0.1.0-alpha
+cp .env.example .env
+# configure secrets/provider/public Web origin
+
+docker compose -f docker-compose.mvp.yml up -d --build
+docker compose -f docker-compose.mvp.yml ps
+npm run mvp:smoke
+```
+
+Put TLS/WebSocket termination in front of port `5181`. Do not expose Postgres, Redis or the LingxiGraph Runtime publicly.
+
+## Persistent data
+
+The Compose stack persists:
+
+- PostgreSQL: `lingxiloop-postgres-data`
+- local uploads: `lingxiloop-uploads`
+
+For object storage, configure the R2/S3 variables in `.env.example`; this is recommended for larger production deployments.
+
+## Rollback
+
+Checkout the previous known-good tag/commit and rebuild the application containers. Keep the Postgres and upload volumes intact:
+
+```bash
+git checkout <previous-tag>
+docker compose -f docker-compose.mvp.yml up -d --build
+npm run mvp:smoke
+```
+
+Do **not** run `docker compose down -v` during normal upgrades or rollbacks unless you intentionally want to delete persistent data.
