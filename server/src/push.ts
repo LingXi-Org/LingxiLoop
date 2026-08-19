@@ -312,6 +312,8 @@ export async function notifyMessage(args: NotifyMessageArgs): Promise<void> {
 export async function computeMessageRecipients(args: {
   conversationId: string
   authorId: string
+  /** Exact human mentions bypass the conversation mute. */
+  mentionedUserIds?: string[]
 }): Promise<string[]> {
   const { rows } = await pool.query<{ user_id: string }>(
     `WITH convo AS (
@@ -321,11 +323,14 @@ export async function computeMessageRecipients(args: {
        FROM users u
        JOIN convo c ON u.id = ANY(SELECT jsonb_array_elements_text(c.members))
       WHERE u.id <> $2
-        AND NOT EXISTS (
-          SELECT 1 FROM conversation_mutes m
-           WHERE m.conversation_id = $1
-             AND m.user_id = u.id
-             AND (m.muted_until IS NULL OR m.muted_until > NOW())
+        AND (
+          u.id = ANY($3::text[])
+          OR NOT EXISTS (
+            SELECT 1 FROM conversation_mutes m
+             WHERE m.conversation_id = $1
+               AND m.user_id = u.id
+               AND (m.muted_until IS NULL OR m.muted_until > NOW())
+          )
         )
         -- Skip humans currently looking at the app. The 'avail' status is
         -- our cross-replica online marker (WS connect flips it; the last
@@ -335,7 +340,7 @@ export async function computeMessageRecipients(args: {
            WHERE p.id = u.id
              AND p.status = 'avail'
         )`,
-    [args.conversationId, args.authorId],
+    [args.conversationId, args.authorId, args.mentionedUserIds ?? []],
   )
   return rows.map((r) => r.user_id)
 }

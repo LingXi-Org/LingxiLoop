@@ -359,14 +359,14 @@ async function seedLearningPreset(
     const roomId = `preset-${room.presetKey}-${randomUUID().slice(0, 8)}`
     const members = [ownerId, ...memberIds]
     await db.query(
-      `INSERT INTO conversations (id, preset_key, kind, title, subtitle, topic, members, pinned, tag, company_id)
-       VALUES ($1, $2, 'group', $3, $4, $5, $6::jsonb, TRUE, 'team', $7)`,
+      `INSERT INTO conversations (id, preset_key, kind, title, subtitle, topic, members, leader_id, pinned, tag, company_id)
+       VALUES ($1, $2, 'group', $3, $4, $5, $6::jsonb, $7, TRUE, 'team', $8)`,
       [
         roomId, `room:${room.presetKey}`, room.title, `team · ${members.length}`,
         room.presetKey === 'study-room'
           ? '日常学习、概念理解、解题练习与错因诊断'
           : '实验、编程、科研、数据分析、论文复现与项目实践',
-        JSON.stringify(members), companyId,
+        JSON.stringify(members), authorId, companyId,
       ],
     )
     await db.query(

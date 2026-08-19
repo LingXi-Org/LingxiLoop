@@ -59,6 +59,8 @@ export interface InboxRow {
   /** The group's topic ("what this group is for"), so every agent — the cloud
    *  turn context AND the BYOA inbox digest — stays on-task. Null if unset. */
   conversation_topic: string | null
+  conversation_leader_id?: string | null
+  conversation_member_ids?: string[]
   author_id: string
   /** Joined from participants.kind. Lets prompt-building code (turn.ts)
    *  identify human vs agent messages without a hardcoded id allow-list. */

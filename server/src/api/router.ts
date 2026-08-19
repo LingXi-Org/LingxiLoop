@@ -30,6 +30,7 @@ import {
   issueRepairCode,
 } from '../agents/computer/registry.js'
 import { createShippingRouter } from './shipping-router.js'
+import { parseMentions as parseChatMentions } from '../mentions.js'
 
 /** Re-export so older imports (server/index.ts, agents/cli.ts) keep working
  *  after the storage abstraction moved this constant. */
@@ -2451,6 +2452,17 @@ api.delete('/agents/:id', async (req, res) => {
   if (!existing[0]) { res.status(404).json({ error: 'not found' }); return }
   if (existing[0].kind !== 'agent') { res.status(400).json({ error: 'cannot off-board non-agent participant' }); return }
   if (existing[0].departed_at) { res.status(409).json({ error: 'already off-boarded' }); return }
+  const { rows: ledGroups } = await pool.query<{ id: string; title: string }>(
+    `SELECT id, title FROM conversations WHERE company_id = $1 AND kind = 'group' AND leader_id = $2 LIMIT 5`,
+    [tenant, id],
+  )
+  if (ledGroups.length > 0) {
+    res.status(409).json({
+      error: `change the leader before off-boarding ${id}`,
+      conversations: ledGroups,
+    })
+    return
+  }
   await pool.query(
     `UPDATE participants
         SET departed_at = NOW(),
@@ -2652,7 +2664,7 @@ api.get('/conversations', async (req, res) => {
           WHEN c.kind = 'direct' THEN COALESCE(other_participant.name, c.title)
           ELSE c.title
         END AS title,
-        c.subtitle, c.topic, c.members, c.pinned, c.tag, c.pulled_by AS "pulledBy",
+        c.subtitle, c.topic, c.members, c.leader_id AS "leaderId", c.pinned, c.tag, c.pulled_by AS "pulledBy",
         c.project_id AS "projectId", p.name AS "projectName", p.color AS "projectColor",
         c.created_at AS "createdAt", c.updated_at AS "updatedAt",
         -- Per-user mute. Expired mutes naturally evaluate to false so an
@@ -2724,7 +2736,7 @@ api.get('/conversations', async (req, res) => {
 })
 
 /**
- * Create a new group conversation. Body: { title, members[], subtitle? }.
+ * Create a new group conversation. Body: { title, members[], leaderId, subtitle? }.
  * The caller is auto-included; at least one other member is required.
  */
 api.post('/conversations', async (req, res) => {
@@ -2732,23 +2744,29 @@ api.post('/conversations', async (req, res) => {
   const title = String(req.body?.title ?? '').trim().slice(0, 80)
   const topic = req.body?.topic ? String(req.body.topic).trim().slice(0, 200) || null : null
   const projectId = req.body?.projectId ? String(req.body.projectId).trim() : null
+  const leaderId = typeof req.body?.leaderId === 'string' ? req.body.leaderId.trim() : ''
   const rawMembers = Array.isArray(req.body?.members) ? req.body.members : []
   const memberSet = new Set<string>()
   for (const m of rawMembers) if (typeof m === 'string') memberSet.add(m.trim())
   memberSet.add(me)
   const members = [...memberSet].filter(Boolean)
   if (!title) { res.status(400).json({ error: 'title required' }); return }
+  if (!leaderId) { res.status(400).json({ error: 'leaderId required' }); return }
   if (members.length < 2) { res.status(400).json({ error: 'pick at least one teammate' }); return }
 
   // Validate every member exists in this tenant.
-  const { rows: existing } = await pool.query<{ id: string }>(
-    `SELECT id FROM participants WHERE id = ANY($1::text[]) AND company_id = $2`,
+  const { rows: existing } = await pool.query<{ id: string; kind: string; departed_at: string | null }>(
+    `SELECT id, kind, departed_at FROM participants WHERE id = ANY($1::text[]) AND company_id = $2`,
     [members, tenant],
   )
   const validIds = new Set(existing.map((r) => r.id))
   const missing = members.filter((m) => !validIds.has(m))
   if (missing.length > 0) {
     res.status(400).json({ error: `unknown participant(s): ${missing.join(', ')}` }); return
+  }
+  const leader = existing.find((member) => member.id === leaderId)
+  if (!leader || leader.kind !== 'agent' || leader.departed_at) {
+    res.status(400).json({ error: 'leaderId must be an active agent member' }); return
   }
 
   // If a project was specified, validate it exists in this tenant.
@@ -2762,12 +2780,42 @@ api.post('/conversations', async (req, res) => {
 
   const id = `g-${randomUUID().slice(0, 8)}`
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, topic, members, pinned, tag, pulled_by, company_id, project_id)
-     VALUES ($1, 'group', $2, $3, $4::jsonb, FALSE, NULL, NULL, $5, $6)`,
-    [id, title, topic, JSON.stringify(members), tenant, projectId],
+    `INSERT INTO conversations (id, kind, title, topic, members, leader_id, pinned, tag, pulled_by, company_id, project_id)
+     VALUES ($1, 'group', $2, $3, $4::jsonb, $5, FALSE, NULL, NULL, $6, $7)`,
+    [id, title, topic, JSON.stringify(members), leaderId, tenant, projectId],
   )
   await pool.query(`INSERT INTO conversation_counters (conversation_id, next_sequence) VALUES ($1, 1)`, [id])
-  res.status(201).json({ id, members, projectId })
+  res.status(201).json({ id, members, leaderId, projectId })
+})
+
+/** Change a group's leader. Any human member may choose an active agent member. */
+api.post('/conversations/:id/leader', async (req, res) => {
+  const { userId: me, companyId: tenant } = await requireCompany(req)
+  const { id } = req.params
+  const leaderId = typeof req.body?.leaderId === 'string' ? req.body.leaderId.trim() : ''
+  if (!leaderId) { res.status(400).json({ error: 'leaderId required' }); return }
+  const { rows } = await pool.query<{ members: string[]; kind: string }>(
+    `SELECT members, kind FROM conversations WHERE id = $1 AND company_id = $2`, [id, tenant],
+  )
+  const conversation = rows[0]
+  if (!conversation) { res.status(404).json({ error: 'not found' }); return }
+  if (conversation.kind !== 'group') { res.status(400).json({ error: 'only group chats have a leader' }); return }
+  if (!conversation.members.includes(me)) { res.status(403).json({ error: 'only members can change the leader' }); return }
+  if (!conversation.members.includes(leaderId)) { res.status(400).json({ error: 'leader must be a group member' }); return }
+  const { rows: candidates } = await pool.query<{ kind: string; departed_at: string | null }>(
+    `SELECT kind, departed_at FROM participants WHERE id = $1 AND company_id = $2`, [leaderId, tenant],
+  )
+  if (candidates[0]?.kind !== 'agent' || candidates[0]?.departed_at) {
+    res.status(400).json({ error: 'leader must be an active agent' }); return
+  }
+  await pool.query(
+    `UPDATE conversations SET leader_id = $2, updated_at = NOW() WHERE id = $1 AND company_id = $3`,
+    [id, leaderId, tenant],
+  )
+  await publish(CH_CONVO_UPDATED, {
+    type: 'conversation.updated', conversationId: id, companyId: tenant, patch: { leaderId },
+  })
+  res.json({ ok: true, leaderId })
 })
 
 /** Set or clear a conversation's topic. Any member can change it. */
@@ -3076,6 +3124,7 @@ api.get('/conversations/:id/messages', async (req, res) => {
       `SELECT
           m.id, m.conversation_id AS "conversationId",
           m.author_id AS "authorId", m.kind, m.body, m.sequence,
+          m.mentioned_ids AS "mentionedIds", m.mention_all AS "mentionAll",
           m.tool, m.attachment, m.poll,
           -- Per-option vote tallies for polls. Empty array for non-poll
           -- rows. voterIds is sorted so the client can diff cheaply across
@@ -3293,6 +3342,12 @@ api.post('/conversations/:id/messages', async (req, res) => {
     return
   }
 
+  const { rows: mentionTargets } = await pool.query<{ id: string; name: string }>(
+    `SELECT id, name FROM participants WHERE company_id = $1 AND id = ANY($2::text[])`,
+    [tenant, convo.members],
+  )
+  const { mentionedIds, mentionAll } = parseChatMentions(body, mentionTargets)
+
   // Email conversations: auto-promote a "chat-style" reply into a real
   // email reply. Without this, typing in the chat input of an email
   // thread (or an agent calling `cumora reply` from its CLI) would just
@@ -3374,9 +3429,9 @@ api.post('/conversations/:id/messages', async (req, res) => {
 
   const messageId = `m-${randomUUID()}`
   await pool.query(
-    `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, attachment, quoted_message_id, company_id)
-     VALUES ($1,$2,$3,'text',$4,$5,$6::jsonb,$7,$8)`,
-    [messageId, id, me, body, sequence, attachment ? JSON.stringify(attachment) : null, resolvedQuotedId, tenant],
+    `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, attachment, quoted_message_id, company_id, mentioned_ids, mention_all)
+     VALUES ($1,$2,$3,'text',$4,$5,$6::jsonb,$7,$8,$9::jsonb,$10)`,
+    [messageId, id, me, body, sequence, attachment ? JSON.stringify(attachment) : null, resolvedQuotedId, tenant, JSON.stringify(mentionedIds), mentionAll],
   )
   await pool.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [id])
 
@@ -3394,6 +3449,8 @@ api.post('/conversations/:id/messages', async (req, res) => {
       attachment: attachment ?? undefined,
       quotedMessageId: resolvedQuotedId ?? undefined,
       quoted: quotedSummary ?? undefined,
+      mentionedIds,
+      mentionAll,
       clientId: clientId ?? undefined,
     },
   })
@@ -3405,7 +3462,7 @@ api.post('/conversations/:id/messages', async (req, res) => {
   void (async () => {
     try {
       const [recipients, convoRow, authorRow] = await Promise.all([
-        computeMessageRecipients({ conversationId: id, authorId: me }),
+        computeMessageRecipients({ conversationId: id, authorId: me, mentionedUserIds: mentionedIds }),
         pool.query<{ title: string }>(`SELECT title FROM conversations WHERE id = $1`, [id]).then((r) => r.rows[0]),
         pool.query<{ display_name: string }>(`SELECT display_name FROM users WHERE id = $1`, [me]).then((r) => r.rows[0]),
       ])
@@ -3437,6 +3494,8 @@ api.post('/conversations/:id/messages', async (req, res) => {
     sequence,
     quotedMessageId: resolvedQuotedId ?? undefined,
     quoted: quotedSummary ?? undefined,
+    mentionedIds,
+    mentionAll,
   })
 })
 

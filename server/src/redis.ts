@@ -87,6 +87,8 @@ export interface MessageNewEvent extends TenantTagged {
     clientId?: string
     /** When this message is a reply, the id of the quoted-original. */
     quotedMessageId?: string
+    mentionedIds?: string[]
+    mentionAll?: boolean
     /** Inlined summary so the renderer can draw the quote card on receipt
      *  without re-fetching. Matches the QuotedSummary shape used elsewhere. */
     quoted?: {
@@ -233,7 +235,7 @@ export interface ConversationUpdatedEvent extends TenantTagged {
   type: 'conversation.updated'
   conversationId: string
   /** what changed (so clients can patch surgically instead of refetching) */
-  patch: { topic?: string | null; title?: string }
+  patch: { topic?: string | null; title?: string; leaderId?: string | null }
 }
 
 export interface GroupPulledEvent extends TenantTagged {

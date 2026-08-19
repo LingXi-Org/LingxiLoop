@@ -158,7 +158,6 @@ export function ThreadDrawer() {
         </div>
         <Composer
           convoId={openThread.convoId}
-          typingNames={[]}
           threadRootId={openThread.rootId}
           placeholder="Reply in thread…"
         />

@@ -133,9 +133,10 @@ export function NotificationToasts() {
       // toast notifications.
       const convo = useConversations.getState().list.find((c) => c.id === e.conversationId)
       if (!convo) return
-      // Mute = silence, not "don't deliver". The message still lands in the
-      // thread + bumps the per-row badge; we just skip the toast + chime.
-      if (isMuted(convo)) return
+      // Exact @mentions are directed alerts: they intentionally bypass the
+      // room mute. The server/APNs path applies the same structured rule.
+      const mentionedMe = Boolean(meRef.current && m.mentionedIds?.includes(meRef.current))
+      if (isMuted(convo) && !mentionedMe) return
       const title = convo.title
       const at = Date.now()
       // The conversation list comes from the API; `unread` is the

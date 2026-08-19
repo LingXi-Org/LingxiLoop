@@ -92,6 +92,8 @@ interface InboxRow {
   conversation_title: string
   conversation_kind: string
   conversation_topic: string | null
+  conversation_leader_id?: string | null
+  conversation_member_ids?: string[]
   author_id: string
   /** Joined from `participants.kind` so the agent prompt can tell a human
    *  message apart from an agent reply without a hardcoded id list. Null
@@ -577,6 +579,11 @@ function renderContext(
       m.is_unread && m.kind === 'system' && systemPayloadKind(m.body) === 'calendar_event',
     )
     let header = `# ${convoId}  [${head.conversation_kind}]  "${head.conversation_title}"`
+    if (head.conversation_kind === 'group') {
+      header += head.conversation_leader_id
+        ? `  Leader: @${head.conversation_leader_id}${head.conversation_leader_id === viewerAgentId ? ' (YOU)' : ''}`
+        : '  Leader: UNASSIGNED (a human member must choose one)'
+    }
     if (hasUnreadCalendarDispatch) {
       header += `  📅 Calendar event due in NEW messages`
     } else if (lastHumanIdx >= 0 && agentMsgsSinceHuman >= 3) {
@@ -590,6 +597,14 @@ function renderContext(
     }
     if (head.conversation_topic) {
       lines.push(`  Topic: ${head.conversation_topic}`)
+    }
+    if (head.conversation_member_ids?.length) {
+      lines.push(`  Members: ${head.conversation_member_ids.map((id) => `@${id}`).join(', ')}`)
+    }
+    if (head.conversation_kind === 'group') {
+      lines.push(head.conversation_leader_id === viewerAgentId
+        ? '  Routing: you lead ordinary messages. Delegate deliberately with @member-id; @all is the only broadcast.'
+        : '  Routing: participate only when explicitly @mentioned, quote-replied, or addressed by @all. Do not shadow the Leader.')
     }
     let boundaryDrawn = false
     for (const m of msgs) {

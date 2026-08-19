@@ -1712,6 +1712,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const isAttachOnly = Boolean(msg.attachment) && !msg.body
   const _isEmail = msg.kind === 'email'
   const isPoll = msg.kind === 'poll'
+  const isStreaming = Boolean(msg.streaming)
   const artifactRefs = useMemo(
     () => artifactRefsForMessage(msg),
     [msg.body, msg.tool?.arg, msg.tool?.detail],
@@ -1751,10 +1752,10 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             <span className="text-[10.5px] text-ink-300 font-semibold tracking-wider uppercase">{author.role}</span>
           )}
           {isHuman && !isMine && <HumanBadge />}
-          <span className={cn('text-[10.5px] text-ink-300 tabular-nums', isHuman && 'ml-auto')}>{msg.at}</span>
+          {!isStreaming && <span className={cn('text-[10.5px] text-ink-300 tabular-nums', isHuman && 'ml-auto')}>{msg.at}</span>}
         </div>
 
-        <QuoteCard msg={msg} />
+        {!isStreaming && <QuoteCard msg={msg} />}
 
         {!isToolOnly && !isAttachOnly && !isPoll && (
           <div
@@ -1766,7 +1767,17 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
                 : 'message-bubble-agent'
             )}
           >
-            <RichBody body={msg.body} conversationId={msg.conversationId} />
+            {msg.streaming === 'placeholder' ? (
+              <span className="inline-flex h-5 items-center gap-1 px-0.5" aria-label={`${author.name} is typing`}>
+                {[0, 1, 2].map((dot) => (
+                  <span
+                    key={dot}
+                    className="h-1.5 w-1.5 rounded-full bg-ink-400 animate-bounce"
+                    style={{ animationDelay: `${dot * 120}ms` }}
+                  />
+                ))}
+              </span>
+            ) : <RichBody body={msg.body} conversationId={msg.conversationId} />}
           </div>
         )}
 
@@ -1776,15 +1787,15 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             noise. The component itself returns null when there's nothing
             useful to render, so this gate is just to avoid spurious
             network calls for non-text messages. */}
-        {!isToolOnly && !isAttachOnly && !isPoll && msg.kind !== 'email' && (() => {
+        {!isStreaming && !isToolOnly && !isAttachOnly && !isPoll && msg.kind !== 'email' && (() => {
           const linkUrl = firstUrlInBody(msg.body)
           return linkUrl ? <LinkPreview url={linkUrl} /> : null
         })()}
 
-        {isPoll && <PollBubble msg={msg} zh={openMaus} />}
+        {!isStreaming && isPoll && <PollBubble msg={msg} zh={openMaus} />}
 
-        {msg.kind === 'tool' && <ToolCard msg={msg} />}
-        {artifactRefs.length > 0 && (
+        {!isStreaming && msg.kind === 'tool' && <ToolCard msg={msg} />}
+        {!isStreaming && artifactRefs.length > 0 && (
           <div className="flex flex-col">
             {artifactRefs.map((ref) => (
               ref.type === 'document'
@@ -1797,7 +1808,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             ))}
           </div>
         )}
-        {msg.attachment && <AttachmentCard msg={msg} />}
+        {!isStreaming && msg.attachment && <AttachmentCard msg={msg} />}
 
         {msg.failed && (
           // Failed-to-send row: text + Retry + Dismiss buttons. The
@@ -1822,7 +1833,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           </div>
         )}
 
-        {!openMaus && (msg.replyCount ?? 0) > 0 && (
+        {!isStreaming && !openMaus && (msg.replyCount ?? 0) > 0 && (
           <button
             onClick={() => openThreadView(msg.conversationId, msg.id)}
             className="mt-1 text-[11.5px] text-skype-deep hover:underline flex items-center gap-1"
@@ -1835,7 +1846,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           </button>
         )}
 
-        <div className="mt-2 flex flex-wrap gap-1 items-center">
+        {!isStreaming && <div className="mt-2 flex flex-wrap gap-1 items-center">
           {/* Dedup by emoji at the render boundary — last writer wins.
               The store's mergeReactionOrder already keeps the array
               unique, but a defensive Map here guarantees the pill row
@@ -1851,7 +1862,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             ))}
             <ReplyIconButton msg={msg} zh={openMaus} />
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )

@@ -128,6 +128,8 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
       `WITH convos AS (
          SELECT c.id, c.company_id,
                 c.title AS conversation_title, c.kind AS conversation_kind, c.topic AS conversation_topic,
+                c.leader_id AS conversation_leader_id,
+                ARRAY(SELECT jsonb_array_elements_text(c.members)) AS conversation_member_ids,
                 COALESCE(cr.last_read_at, '1970-01-01T00:00:00Z'::timestamptz) AS lr_at,
                 COALESCE(cr.last_read_message_id, '') AS lr_id,
                 EXISTS (
@@ -141,7 +143,7 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
        )
        SELECT
           m.id, m.conversation_id, co.company_id,
-          co.conversation_title, co.conversation_kind, co.conversation_topic,
+          co.conversation_title, co.conversation_kind, co.conversation_topic, co.conversation_leader_id, co.conversation_member_ids,
           m.author_id, p.kind AS author_kind, COALESCE(p.name, m.author_id) AS author_name,
           m.body, m.kind, m.sequence, m.created_at, m.attachment, m.quoted_message_id,
           (
@@ -163,17 +165,89 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
               AND mm.author_id <> $1
               AND ROW(mm.created_at, mm.id) > ROW(co.lr_at, co.lr_id)
               AND (
-                NOT co.muted
-                OR co.conversation_kind = 'direct'
-                OR EXISTS (
-                  SELECT 1 FROM regexp_matches(mm.body, '@([[:alnum:]_-]+)', 'g') mention
-                   WHERE LOWER(mention[1]) = LOWER($1)
+                co.conversation_kind = 'direct'
+                -- Exact structured mentions and quote replies are directed
+                -- delivery and intentionally bypass the room mute.
+                OR (
+                  NOT mm.mention_all
+                  AND mm.body !~* '(^|[^[:alnum:]_@])@all([^[:alnum:]_-]|$)'
+                  AND mm.mentioned_ids @> to_jsonb(ARRAY[$1::text])
                 )
-                OR EXISTS (
-                  SELECT 1 FROM messages quoted
-                   WHERE quoted.id = mm.quoted_message_id
-                     AND quoted.conversation_id = mm.conversation_id
-                     AND quoted.author_id = $1
+                OR (
+                  NOT mm.mention_all
+                  AND mm.body !~* '(^|[^[:alnum:]_@])@all([^[:alnum:]_-]|$)'
+                  AND NOT EXISTS (
+                    SELECT 1
+                      FROM jsonb_array_elements_text(mm.mentioned_ids) mentioned(id)
+                      JOIN participants mentioned_agent
+                        ON mentioned_agent.id = mentioned.id
+                       AND mentioned_agent.company_id = co.company_id
+                       AND mentioned_agent.kind = 'agent'
+                  )
+                  AND NOT EXISTS (
+                    SELECT 1
+                      FROM regexp_matches(mm.body, '@([[:alnum:]_-]+)', 'g') legacy_mention
+                      JOIN participants legacy_agent
+                        ON LOWER(legacy_agent.id) = LOWER(legacy_mention[1])
+                       AND legacy_agent.company_id = co.company_id
+                       AND legacy_agent.kind = 'agent'
+                  )
+                  AND EXISTS (
+                    SELECT 1 FROM messages quoted
+                     WHERE quoted.id = mm.quoted_message_id
+                       AND quoted.conversation_id = mm.conversation_id
+                       AND quoted.author_id = $1
+                  )
+                )
+                -- Compatibility fallback for rows written before structured
+                -- mention metadata existed.
+                OR (
+                  mm.body !~* '(^|[^[:alnum:]_@])@all([^[:alnum:]_-]|$)'
+                  AND EXISTS (
+                    SELECT 1 FROM regexp_matches(mm.body, '@([[:alnum:]_-]+)', 'g') mention
+                     WHERE LOWER(mention[1]) = LOWER($1)
+                  )
+                )
+                -- @all is the sole broadcast and still respects mute.
+                OR (
+                  NOT co.muted
+                  AND (mm.mention_all OR mm.body ~* '(^|[^[:alnum:]_@])@all([^[:alnum:]_-]|$)')
+                )
+                -- Otherwise only the explicit Leader receives an ordinary
+                -- group message. Human-only mentions still count as ordinary;
+                -- an agent addressing humans does not start another turn.
+                OR (
+                  NOT co.muted
+                  AND co.conversation_kind = 'group'
+                  AND co.conversation_leader_id = $1
+                  AND mm.author_id <> $1
+                  AND NOT mm.mention_all
+                  AND mm.body !~* '(^|[^[:alnum:]_@])@all([^[:alnum:]_-]|$)'
+                  AND NOT EXISTS (
+                    SELECT 1
+                      FROM jsonb_array_elements_text(mm.mentioned_ids) mentioned(id)
+                      JOIN participants mentioned_agent
+                        ON mentioned_agent.id = mentioned.id
+                       AND mentioned_agent.company_id = co.company_id
+                       AND mentioned_agent.kind = 'agent'
+                  )
+                  AND NOT EXISTS (
+                    SELECT 1
+                      FROM regexp_matches(mm.body, '@([[:alnum:]_-]+)', 'g') legacy_mention
+                      JOIN participants legacy_agent
+                        ON LOWER(legacy_agent.id) = LOWER(legacy_mention[1])
+                       AND legacy_agent.company_id = co.company_id
+                       AND legacy_agent.kind = 'agent'
+                  )
+                  AND NOT (
+                    jsonb_array_length(mm.mentioned_ids) > 0
+                    AND EXISTS (
+                      SELECT 1 FROM participants author
+                       WHERE author.id = mm.author_id
+                         AND author.company_id = co.company_id
+                         AND author.kind = 'agent'
+                    )
+                  )
                 )
               )
             ORDER BY mm.created_at ASC, mm.id ASC
@@ -326,6 +400,8 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
             m.created_at, m.attachment, m.quoted_message_id,
             c.company_id,
             c.title AS conversation_title, c.kind AS conversation_kind, c.topic AS conversation_topic,
+            c.leader_id AS conversation_leader_id,
+            ARRAY(SELECT jsonb_array_elements_text(c.members)) AS conversation_member_ids,
             pr.name AS project_name,
             p.kind AS author_kind,
             COALESCE(p.name, m.author_id) AS author_name,
@@ -356,7 +432,7 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
            LEFT JOIN participants p ON p.id = m.author_id AND p.company_id = c.company_id
           WHERE c.id = ANY($2::text[])
        )
-       SELECT id, conversation_id, company_id, conversation_title, conversation_kind, conversation_topic,
+       SELECT id, conversation_id, company_id, conversation_title, conversation_kind, conversation_topic, conversation_leader_id, conversation_member_ids,
               project_name,
               author_id, author_kind, author_name, body, kind, sequence, created_at, attachment,
               quoted_message_id, human_last_read_at,

@@ -5,7 +5,7 @@ import { Avatar, AvatarStack } from '@/components/Avatar'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { IAt, IBack, IClip, IConvene, IMore, ISearch, ISend, ISmile } from '@/components/icons'
-import { MessageRow, TypingRow } from '@/components/Message'
+import { MessageRow } from '@/components/Message'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
@@ -51,8 +51,8 @@ export function MobileChat() {
   const firstItemIndex = useMessages((s) => (convoId ? s.firstItemIndex[convoId] ?? VIRTUOSO_FIRST_INDEX_BASE : VIRTUOSO_FIRST_INDEX_BASE))
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
   const list = useMemo(
-    () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming } as MessagesState, convoId),
-    [byConvo, streaming, convoId],
+    () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId && typingIds ? { [convoId]: typingIds } : {} } as MessagesState, convoId),
+    [byConvo, streaming, typingIds, convoId],
   )
   // Drives the bottom-right "scroll to latest" pill — true means we're pinned
   // at the bottom and the pill stays hidden. Note: there's also an existing
@@ -285,26 +285,6 @@ export function MobileChat() {
   if (!convoId || !c) return null
 
   // Resolve typing ids → display names. Three hardenings over the naive
-  // `byId[id]?.name`:
-  //   1. Drop the local user (`id !== meId`) — "you are typing…" with your
-  //      own composer right there reads as a glitch (matches desktop + the
-  //      conversation list, which already filter self; the chat didn't).
-  //   2. `.trim()` + fall back to a label: a resolved participant whose name
-  //      is blank/whitespace would otherwise slip past a plain `Boolean(n)`
-  //      filter and render "<b></b> is typing…" — i.e. the nameless
-  //      "is typing…" bug. Now it shows the real name, or a graceful
-  //      "An agent / Someone" when the roster row has no usable name.
-  //   3. Genuinely-unknown ids (not in byId yet) are still dropped so a
-  //      stale/cross-room typing ping can't surface a phantom indicator.
-  const typingNames = (typingIds ?? [])
-    .filter((id) => id !== meId)
-    .map((id) => {
-      const p = byId[id]
-      if (!p) return null
-      const name = p.name?.trim()
-      return name || (p.kind === 'agent' ? 'An agent' : 'Someone')
-    })
-    .filter((n): n is string => Boolean(n))
   const muted = isMuted(c)
 
   const onConvene = async () => {
@@ -652,7 +632,6 @@ export function MobileChat() {
         className="chat-composer-shell border-t px-3 pt-1.5 kb-aware"
       >
         <div className="px-1 pb-1">
-          <TypingRow names={typingNames} />
         </div>
         {attachment && (
           <div className="mb-2 inline-flex items-center gap-2.5 py-1.5 px-2 bg-sky2-50 border border-sky2-100 rounded-lg max-w-full">
@@ -1114,6 +1093,7 @@ export function MobileChatInfo() {
   const agentCount = memberPs.filter((p) => p.kind === 'agent').length
   const humanCount = memberPs.filter((p) => p.kind === 'human').length
   const groupAgents = memberPs.filter((p) => p.kind === 'agent')
+  const activeGroupAgents = groupAgents.filter((p) => !p.departedAt)
   const statusTone = focus?.status ?? 'avail'
 
   const startConvene = async () => {
@@ -1142,6 +1122,17 @@ export function MobileChatInfo() {
       useApp.getState().selectConversation(null)
       await useConversations.getState().reload()
     } catch (err) { console.warn('leave failed', err) }
+  }
+
+  const changeLeader = async (leaderId: string) => {
+    if (!convoId) return
+    const previous = c.leaderId
+    useConversations.setState((s) => ({ list: s.list.map((x) => x.id === convoId ? { ...x, leaderId } : x) }))
+    try { await api.setLeader(convoId, leaderId) }
+    catch (error) {
+      console.warn('[leader] update failed', error)
+      useConversations.setState((s) => ({ list: s.list.map((x) => x.id === convoId ? { ...x, leaderId: previous } : x) }))
+    }
   }
 
   // Group rename + topic edit. Optimistic local write, rolled back on a
@@ -1303,6 +1294,21 @@ export function MobileChatInfo() {
 
       {c.kind !== 'direct' && (
         <div className="py-4 px-5 border-b border-ink-100">
+          {isGroup && (
+            <div className="mb-4">
+              <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-2">Leader</h4>
+              <select
+                value={c.leaderId ?? ''}
+                onChange={(event) => void changeLeader(event.target.value)}
+                className="w-full rounded-[10px] bg-cloud border border-ink-100 px-3 py-2.5 text-[13px] font-semibold text-ink-900 outline-none"
+                aria-label="Change group leader"
+              >
+                {!c.leaderId && <option value="" disabled>Choose an active agent</option>}
+                {activeGroupAgents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
+              </select>
+              <p className="mt-1.5 text-[11px] text-ink-400">Ordinary messages wake this agent; the Leader can delegate with @member-id.</p>
+            </div>
+          )}
           <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-3">Members</h4>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <Stat n={String(memberPs.length)} l="members" />

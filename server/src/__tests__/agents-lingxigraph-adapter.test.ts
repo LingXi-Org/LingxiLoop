@@ -36,7 +36,7 @@ test('maps communication actions to argv without a shell or identity flag', () =
     [{ type: 'message.send', conversationId: 'c1', body: 'hi', quoteMessageId: 'm1' }, ['reply', 'c1', 'hi', '--quote', 'm1']],
     [{ type: 'reaction.toggle', messageId: 'm1', emoji: '✅' }, ['react', 'm1', '✅']],
     [{ type: 'conversation.dm.create', participantId: 'p2', topic: 'sync', openingMessage: 'hello' }, ['dm', 'p2', 'sync', 'hello']],
-    [{ type: 'conversation.group.create', title: 'Launch', memberIds: ['p2', 'p3'], reason: 'ship', openingMessage: 'go' }, ['pull-group', 'Launch', '--members', 'p2,p3', '--reason', 'ship', '--say', 'go']],
+    [{ type: 'conversation.group.create', title: 'Launch', memberIds: ['p2', 'p3'], leaderId: 'p2', reason: 'ship', openingMessage: 'go' }, ['pull-group', 'Launch', '--members', 'p2,p3', '--leader', 'p2', '--reason', 'ship', '--say', 'go']],
     [{ type: 'email.send', to: ['a@example.com'], cc: ['b@example.com'], subject: 'S', body: 'B' }, ['email', 'send', '--to', 'a@example.com', '--cc', 'b@example.com', '--subject', 'S', '--body', 'B']],
     [{ type: 'poll.create', conversationId: 'c1', question: 'Q?', options: ['A', 'B'], mode: 'multi', expiresInMinutes: 10 }, ['poll', 'create', 'c1', 'Q?', 'A', 'B', '--mode', 'multi', '--expires-in', '10']],
   ]

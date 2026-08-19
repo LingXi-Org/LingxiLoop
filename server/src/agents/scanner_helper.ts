@@ -4,6 +4,7 @@ import { pool } from '../db/pool.js'
 import { CH_GROUP_PULLED, CH_MESSAGE_NEW, publish } from '../redis.js'
 import { getPersona } from './personas.js'
 import { companyIdForParticipant } from '../tenant.js'
+import { parseMentions } from '../mentions.js'
 
 /** Hours an agent must wait between pulling two groups that INCLUDE a
  *  human. Throttles spam that would interrupt people. Agent-only pulls
@@ -15,10 +16,11 @@ export async function startPulledGroup(args: {
   instigatorId: string
   title: string
   members: string[]
+  leaderId: string
   reason: string
   opening: string
 }): Promise<{ conversationId: string }> {
-  const { instigatorId, title, members, reason, opening } = args
+  const { instigatorId, title, members, leaderId, reason, opening } = args
 
   // Determine whether this pull would interrupt any humans. If all
   // members are agents, the resulting group is peek-only — no human
@@ -76,15 +78,23 @@ export async function startPulledGroup(args: {
 
   const conversationId = `pulled-${randomUUID().slice(0, 8)}`
   const companyId = (await companyIdForParticipant(instigatorId)) ?? null
+  if (!members.includes(leaderId)) throw new Error('leader must be included in members')
+  const { rows: leaders } = await pool.query<{ kind: string; departed_at: string | null }>(
+    `SELECT kind, departed_at FROM participants WHERE id = $1 AND company_id = $2`, [leaderId, companyId],
+  )
+  if (leaders[0]?.kind !== 'agent' || leaders[0]?.departed_at) {
+    throw new Error('leader must be an active agent member')
+  }
 
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, subtitle, members, pinned, tag, pulled_by, company_id)
-     VALUES ($1, 'group', $2, $3, $4::jsonb, FALSE, 'fresh-pulled', $5::jsonb, $6)`,
+    `INSERT INTO conversations (id, kind, title, subtitle, members, leader_id, pinned, tag, pulled_by, company_id)
+     VALUES ($1, 'group', $2, $3, $4::jsonb, $5, FALSE, 'fresh-pulled', $6::jsonb, $7)`,
     [
       conversationId,
       title,
       `cross-project · ${members.length}`,
       JSON.stringify(members),
+      leaderId,
       JSON.stringify({ agentId: instigatorId, at: new Date().toISOString(), reason }),
       companyId,
     ],
@@ -117,10 +127,14 @@ export async function startPulledGroup(args: {
 
   // Post the opening message as the instigator's first message in the new group.
   const messageId = `m-${randomUUID()}`
+  const { rows: mentionTargets } = await pool.query<{ id: string; name: string }>(
+    `SELECT id, name FROM participants WHERE company_id = $1 AND id = ANY($2::text[])`, [companyId, members],
+  )
+  const { mentionedIds, mentionAll } = parseMentions(opening, mentionTargets)
   await pool.query(
-    `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
-     VALUES ($1, $2, $3, 'text', $4, 1, $5)`,
-    [messageId, conversationId, instigatorId, opening, companyId],
+    `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id, mentioned_ids, mention_all)
+     VALUES ($1, $2, $3, 'text', $4, 1, $5, $6::jsonb, $7)`,
+    [messageId, conversationId, instigatorId, opening, companyId, JSON.stringify(mentionedIds), mentionAll],
   )
 
   await publish(CH_GROUP_PULLED, {
@@ -141,6 +155,8 @@ export async function startPulledGroup(args: {
       body: opening,
       sequence: 1,
       at: new Date().toISOString(),
+      mentionedIds,
+      mentionAll,
     },
   })
 
