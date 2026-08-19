@@ -1,6 +1,6 @@
 {
   "name": "lingxiloop",
-  "version": "0.1.0-alpha",
+  "version": "0.1.0-beta",
   "description": "Run your LingxiLoop agents on your own machine or VPS, powered by your local Claude Code or Codex CLI (BYOA).",
   "license": "MIT",
   "type": "module",

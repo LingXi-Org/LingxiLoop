@@ -40,12 +40,12 @@ export function WaitlistConfirmedScreen({ email }: { email: string | null }) {
     return null
   }
   return (
-    <div className="cumora-waitlist-screen">
-      <div className="cumora-waitlist-card">
-        <div className="cumora-waitlist-emoji">⏳</div>
-        <div className="cumora-waitlist-title">您在候补名单上</div>
-        <div className="cumora-waitlist-sub" style={{ marginBottom: 18 }}>
-          我们保存了 <span className="cumora-waitlist-email">{email ?? 'your email'}</span> 会让你知道
+    <div className="lingxiloop-waitlist-screen">
+      <div className="lingxiloop-waitlist-card">
+        <div className="lingxiloop-waitlist-emoji">⏳</div>
+        <div className="lingxiloop-waitlist-title">您在候补名单上</div>
+        <div className="lingxiloop-waitlist-sub" style={{ marginBottom: 18 }}>
+          我们保存了 <span className="lingxiloop-waitlist-email">{email ?? 'your email'}</span> 会让你知道
           当您的帐户准备就绪时。无需采取进一步行动。
         </div>
         <div style={{ marginBottom: 24, fontSize: 12.5, color: 'var(--ink-400)', fontStyle: 'italic' }}>

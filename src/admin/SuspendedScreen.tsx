@@ -38,21 +38,21 @@ export function SuspendedScreen({ email, reason }: { email: string | null; reaso
     return null
   }
   return (
-    <div className="cumora-waitlist-screen">
-      <div className="cumora-waitlist-card">
-        <div className="cumora-waitlist-emoji" aria-hidden>🔒</div>
-        <div className="cumora-waitlist-title">您的帐户已被暂停</div>
-        <div className="cumora-waitlist-sub" style={{ marginBottom: reason ? 16 : 24 }}>
-          访问 <span className="cumora-waitlist-email">{email ?? 'your account'}</span> 已
+    <div className="lingxiloop-waitlist-screen">
+      <div className="lingxiloop-waitlist-card">
+        <div className="lingxiloop-waitlist-emoji" aria-hidden>🔒</div>
+        <div className="lingxiloop-waitlist-title">您的帐户已被暂停</div>
+        <div className="lingxiloop-waitlist-sub" style={{ marginBottom: reason ? 16 : 24 }}>
+          访问 <span className="lingxiloop-waitlist-email">{email ?? 'your account'}</span> 已
           被 LingxiLoop 管理员暂时禁用。
         </div>
         {reason ? (
-          <div className="cumora-suspended-reason" role="note">
-            <div className="cumora-suspended-reason-label">管理员原因</div>
-            <div className="cumora-suspended-reason-body">{reason}</div>
+          <div className="lingxiloop-suspended-reason" role="note">
+            <div className="lingxiloop-suspended-reason-label">管理员原因</div>
+            <div className="lingxiloop-suspended-reason-body">{reason}</div>
           </div>
         ) : null}
-        <div className="cumora-waitlist-sub" style={{ marginTop: 16, marginBottom: 24 }}>
+        <div className="lingxiloop-waitlist-sub" style={{ marginTop: 16, marginBottom: 24 }}>
           如果您认为这是一个错误，请回复我们发送给您的最新消息，或者
           联系您的工作区所有者。
         </div>

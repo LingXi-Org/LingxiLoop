@@ -34,7 +34,7 @@ import { CloudLogo } from './Avatar'
 import { GetDesktopAppLink } from './GetDesktopAppLink'
 import { WindowDragStrip } from './WindowDragStrip'
 
-const INVITE_TOKEN_KEY = 'cumora.pending-invite'
+const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
 
 /** Look at the URL (path / hash / query) for an invite token. Returns
  *  the token + a no-op cleanup that scrubs it from the URL so a refresh
@@ -116,7 +116,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const [busy, setBusy] = useState(false)
   const [acceptErr, setAcceptErr] = useState<string | null>(null)
   // After a successful accept in the WEB build, we stop on a success
-  // screen with "Open in Cumora app" + "Download" CTAs instead of
+  // screen with "Open in LingxiLoop app" + "Download" CTAs instead of
   // dropping the user straight into the SPA. The desktop app skips
   // this — they're already in the app, so we route them in.
   const [joinedCompany, setJoinedCompany] = useState<{ id: string; name: string; slug: string } | null>(null)
@@ -325,16 +325,16 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     </div>
   )
 }
-/** Best-effort cumora:// deep link. If the OS protocol handler isn't
+/** Best-effort lingxiloop:// deep link. If the OS protocol handler isn't
  *  registered, browsers fail silently (no broken-page) and the user just
  *  stays put — at which point the visible Download button below is the
  *  next thing they reach for. */
 function tryOpenDesktopApp() {
-  try { location.href = 'cumora://open' } catch { /* swallow */ }
+  try { location.href = 'lingxiloop://open' } catch { /* swallow */ }
 }
 
 /** Success state shown after a successful accept in the WEB build. Offers
- *  "Open in Cumora app" (best-effort cumora:// deep link) and a download
+ *  "Open in LingxiLoop app" (best-effort lingxiloop:// deep link) and a download
  *  CTA, with "continue in browser" as the soft fallback. */
 function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
   companyName: string

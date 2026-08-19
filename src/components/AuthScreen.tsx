@@ -21,7 +21,7 @@ import { WindowDragStrip } from './WindowDragStrip'
 
 interface ServerPreset { label: string; origin: string }
 const PRESETS: ServerPreset[] = [
-  { label: '生产环境', origin: 'https://api.cumora.ai' },
+  { label: '生产环境', origin: 'https://loop.lingxilearn.cn' },
   { label: '本地开发', origin: 'http://localhost:5181' },
 ]
 
@@ -82,7 +82,7 @@ export function AuthScreen() {
       }
       // Arm a single-use nonce and thread it through the return URL. The server
       // round-trips it back onto /auth/done, the loopback page carries it into
-      // the cumora:// deep link, and main accepts the token only if the nonce
+      // the lingxiloop:// deep link, and main accepts the token only if the nonce
       // matches — so a drive-by deep link the app never initiated is rejected
       // (anti session-fixation). arm() is Electron-only.
       const auth = window.lingxiloop.auth
@@ -100,7 +100,7 @@ export function AuthScreen() {
     }
     if (isNativePlatform()) {
       // iOS / Android: run the OAuth flow inside ASWebAuthenticationSession
-      // (our WebAuthPlugin). It hands the final cumora://auth#... callback
+      // (our WebAuthPlugin). It hands the final lingxiloop://auth#... callback
       // straight back to us — no SFSafariViewController, no broken 302
       // redirect to a custom URL scheme.
       const origin = getServerOrigin()
@@ -142,9 +142,9 @@ export function AuthScreen() {
     }
     // Browser fallback — full-page nav, fragment-on-redirect handled by
     // AuthGate on next mount. Pass the *current* page as `?return=` so
-    // a user signing in from admin.cumora.ai lands back on
-    // admin.cumora.ai (not the server's default app.cumora.ai). The
-    // origin must be in CUMORA_AUTH_RETURN_ALLOWLIST or the server
+    // a user signing in from the admin origin lands back there rather than
+    // the server's default app origin. The origin must be in
+    // LINGXILOOP_AUTH_RETURN_ALLOWLIST or the server
     // will reject it.
     const ret = encodeURIComponent(`${location.origin}${location.pathname}`)
     location.assign(`${api.authStartUrl(provider)}?return=${ret}`)

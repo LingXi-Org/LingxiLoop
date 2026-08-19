@@ -16,9 +16,6 @@ Configure these Environment secrets:
   `PRODUCTION_SSH_PRIVATE_KEY`, `PRODUCTION_SSH_KNOWN_HOSTS`
 - `GHCR_USERNAME`, `GHCR_TOKEN`
 - `LINGXILOOP_SMOKE_TOKEN`, `LINGXILOOP_SMOKE_COMPANY_ID`
-- `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD`
-- `CSC_LINK`, `CSC_KEY_PASSWORD`
-- `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`
 
 Use Environment protection rules if production deployment or signing requires
 manual approval. The production concurrency group never cancels an active
@@ -89,9 +86,8 @@ The desktop workflow rejects a mismatched tag or a commit outside `main`. It
 waits until production `/api/meta` reports the tag commit and LingxiGraph,
 injects `VITE_LINGXILOOP_API_BASE` from the Environment, then builds:
 
-- Windows x64 NSIS with required Authenticode validation;
-- macOS x64 and arm64 DMG + ZIP with codesign, Gatekeeper, notarization and
-  stapling validation.
+- Windows x64 NSIS distributed unsigned;
+- macOS x64 and arm64 DMG + ZIP with ad-hoc codesign validation.
 
 The Electron allow-list contains only the renderer, Electron main/preload,
 icons and package metadata. A package verifier rejects server, LingxiGraph,

@@ -180,7 +180,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                       通过电子邮件将此邀请发送给他们
                     </span>
                     <span className="block text-[11.5px] text-ink-400 font-display italic mt-0.5 leading-snug">
-                      我们将发送一条短信 <b className="not-italic text-ink-600">邀请@cumora.ai</b> 上面有你的名字。
+                      我们将发送一条短信 <b className="not-italic text-ink-600">LingxiLoop 邀请</b>，其中会显示你的名字。
                       回复将发送至您的收件箱。如果您愿意自己分享链接，请取消选中。
                     </span>
                   </span>

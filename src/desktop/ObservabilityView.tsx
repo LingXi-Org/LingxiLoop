@@ -576,7 +576,7 @@ function FileTree({ nodes, depth, expanded, onToggle, selectedPath, onSelect }: 
 }
 
 /** File-content renderer that picks the right view based on extension.
- *   - `.md` → RichBody (cumora's own markdown-ish renderer)
+ *   - `.md` → RichBody (LingxiLoop's own markdown-ish renderer)
  *   - `.json` / `.ts` / `.py` / etc → CodeBlock (syntax-highlit)
  *   - anything else → wrapped plain text in paper theme */
 function FileViewer({ path, body }: { path: string; body: string }) {
@@ -584,7 +584,7 @@ function FileViewer({ path, body }: { path: string; body: string }) {
   if (!body) return <div className="text-[13px] italic text-ink-400">（空文件）</div>
   if (ext === 'md' || ext === 'markdown') {
     return (
-      <div className="cumora-prose font-display text-[14px] leading-[1.7] text-ink-900">
+      <div className="lingxiloop-prose font-display text-[14px] leading-[1.7] text-ink-900">
         <RichBody body={body} />
       </div>
     )
@@ -634,7 +634,7 @@ function PriceMenuTable({ rows }: { rows: { model: string; inPer1M: number; cach
   const isSmall = (m: string) => /haiku|mini/i.test(m)
   return (
     <div className="rounded-[10px] border border-ink-100 bg-paper px-3.5 py-3">
-      <div className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-ink-300">代币单价 · 小脑与大脑（每 1M 代币 — 所有估算，除非您设置 CUMORA_MODEL_PRICES_JSON）</div>
+      <div className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-ink-300">代币单价 · 小脑与大脑（每 1M 代币 — 所有估算，除非您设置 LINGXILOOP_MODEL_PRICES_JSON）</div>
       <table className="mt-2 w-full text-[11.5px]">
         <thead className="text-[9px] font-bold uppercase tracking-[0.1em] text-ink-400">
           <tr>
@@ -744,7 +744,7 @@ function TriageEconomicsPanel(props: {
           <div className="mx-auto max-w-[1100px] space-y-5">
             {/* ALWAYS-ON disclaimer: every $ here is an estimate. */}
             <div className="rounded-[10px] border border-coral-soft bg-coral-soft px-3.5 py-2.5 text-[11.5px] leading-[1.6] text-coral-deep">
-              <b>⚠ 此页上的每一美元都是估算值</b> 可能与您的实际成本有很大差异。原因：我们不权威地了解每个代币的单价。云模型别名 (gpt-5.*) 是 <b>猜测</b>;克劳德等级是记忆中的标价，对于您的具体型号来说可能已经过时或错误；在统一费率计划中，美元根本不是账单（见下文）。代币数量是真实的，而应用于它们的价格却不是。套装 <code className="rounded bg-paper/60 px-1">CUMORA_MODEL_PRICES_JSON</code> 与您的实际合同费率以使这些准确。
+              <b>⚠ 此页上的每一美元都是估算值</b> 可能与您的实际成本有很大差异。原因：我们不权威地了解每个代币的单价。云模型别名 (gpt-5.*) 是 <b>猜测</b>;克劳德等级是记忆中的标价，对于您的具体型号来说可能已经过时或错误；在统一费率计划中，美元根本不是账单（见下文）。代币数量是真实的，而应用于它们的价格却不是。设置 <code className="rounded bg-paper/60 px-1">LINGXILOOP_MODEL_PRICES_JSON</code> 为您的实际合同费率以使这些准确。
             </div>
 
             {data.triageCount === 0 ? (
@@ -779,7 +779,7 @@ function TriageEconomicsPanel(props: {
             {/* The actual per-token unit prices the estimates rest on (table). */}
             {(data.unitPrices?.length ?? 0) > 0 && (
               <div className="rounded-[10px] border border-ink-100 bg-paper px-3.5 py-3">
-                <div className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-ink-300">使用的单价 · 每 1M 代币（所有估计值，除非您设置 CUMORA_MODEL_PRICES_JSON）</div>
+                <div className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-ink-300">使用的单价 · 每 1M 代币（所有估计值，除非您设置 LINGXILOOP_MODEL_PRICES_JSON）</div>
                 <table className="mt-2 w-full text-[11.5px]">
                   <thead className="text-[9px] font-bold uppercase tracking-[0.1em] text-ink-400">
                     <tr>
@@ -821,7 +821,7 @@ function TriageEconomicsPanel(props: {
 
             <div className="rounded-[10px] border border-ink-100 bg-cloud px-3.5 py-2.5 text-[11px] leading-[1.6] text-ink-500">
               <b className="text-ink-700">“已保存”的含义以及为什么它是一个估计值：</b> SKIP 可以防止大脑大转弯，所以节省的是 <b>回合将产生的大脑代币成本</b> - 我们无法确切知道（它没有运行）。我们用这个窗口中每个智能体自己的平均有效轮次成本来近似它： <b>避免 = Σ(跳过 × 该智能体的平均回合 $)</b>，那么 <b>净值 = 避免的 − 分类支出</b>。注意：跳过也会让大大脑的提示缓存变冷（5 分钟 TTL），因此稍后的真正回合可能会支付全部未缓存的输入 - 储蓄转移，它们不会消失。除了避免的身材之外，一切都被测量；缓存感知（缓存读取比新鲜输入便宜约 10 倍）。
-              {data.costEstimated && <> 价格为 <b>标价估算</b> — 设置 <code className="rounded bg-paper px-1">CUMORA_MODEL_PRICES_JSON</code> 为您的实际合同费率。</>}
+              {data.costEstimated && <> 价格为 <b>标价估算</b> — 设置 <code className="rounded bg-paper px-1">LINGXILOOP_MODEL_PRICES_JSON</code> 为您的实际合同费率。</>}
             </div>
 
             {/* Per-agent breakdown. */}

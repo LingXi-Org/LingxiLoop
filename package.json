@@ -1,7 +1,7 @@
 {
   "name": "lingxiloop",
   "private": true,
-  "version": "0.1.0-alpha",
+  "version": "0.1.0-beta",
   "type": "module",
   "main": "electron/main.cjs",
   "bin": {
@@ -167,6 +167,7 @@
       "publishAutoUpdate": true
     },
     "mac": {
+      "identity": "-",
       "category": "public.app-category.productivity",
       "icon": "build/icons/icon.icns",
       "artifactName": "LingxiLoop-${version}-${arch}.${ext}",
@@ -174,7 +175,7 @@
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "notarize": true,
+      "notarize": false,
       "target": [
         {
           "target": "dmg",

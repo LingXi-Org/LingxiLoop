@@ -63,40 +63,38 @@ jobs:
           exit 1
 
   windows:
-    name: Signed Windows x64
+    name: Unsigned Windows x64
     needs: validate-release
     runs-on: windows-latest
     timeout-minutes: 40
     environment: production
     env:
       VITE_LINGXILOOP_API_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
-      WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-      WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - name: Require HTTPS origin and signing identity
+      - name: Require HTTPS origin
         shell: pwsh
         run: |
           $origin = [Uri]$env:VITE_LINGXILOOP_API_BASE
           if ($origin.Scheme -ne 'https' -or $origin.AbsolutePath -ne '/' -or $origin.Query -or $origin.Fragment) { throw 'VITE_LINGXILOOP_API_BASE must be an HTTPS origin' }
-          if ([string]::IsNullOrWhiteSpace($env:WIN_CSC_LINK) -or [string]::IsNullOrWhiteSpace($env:WIN_CSC_KEY_PASSWORD)) { throw 'Windows signing secrets are required' }
       - run: npm ci
       - run: npm run build
       - run: npm run electron:prepare
       - run: npx electron-builder --win --x64 --publish never
       - run: node scripts/verify-desktop-package.mjs release
-      - name: Verify Authenticode
+      - name: Verify installers are unsigned
         shell: pwsh
         run: |
           $installers = @(Get-ChildItem -LiteralPath release -Filter '*.exe' -File)
           if ($installers.Count -eq 0) { throw 'No Windows installer was produced' }
           foreach ($installer in $installers) {
             $signature = Get-AuthenticodeSignature -LiteralPath $installer.FullName
-            if ($signature.Status -ne 'Valid') { throw "Invalid Authenticode signature: $($installer.Name) ($($signature.Status))" }
+            if ($signature.Status -ne 'NotSigned') { throw "Expected unsigned installer: $($installer.Name) ($($signature.Status))" }
           }
       - uses: actions/upload-artifact@v4
         with:
@@ -108,58 +106,47 @@ jobs:
           if-no-files-found: error
 
   macos:
-    name: Signed and notarized macOS x64/arm64
+    name: Ad-hoc macOS x64/arm64
     needs: validate-release
     runs-on: macos-latest
     timeout-minutes: 60
     environment: production
     env:
       VITE_LINGXILOOP_API_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
-      CSC_LINK: ${{ secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY }}
-      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - name: Require HTTPS origin, signing and notarization credentials
+      - name: Require HTTPS origin
         shell: bash
         run: |
           set -euo pipefail
           node -e '
             const url = new URL(process.env.VITE_LINGXILOOP_API_BASE || "")
             if (url.protocol !== "https:" || url.pathname !== "/" || url.search || url.hash) throw new Error("invalid desktop API origin")'
-          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_CONTENT APPLE_API_KEY_ID APPLE_API_ISSUER; do
-            test -n "${!name:-}" || { echo "::error::$name is required"; exit 2; }
-          done
-          umask 077
-          printf '%s' "$APPLE_API_KEY_CONTENT" > "$RUNNER_TEMP/AuthKey.p8"
-          echo "APPLE_API_KEY=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
       - run: npm ci
       - run: npm run build
       - run: npm run electron:prepare
       - run: npx electron-builder --mac --x64 --arm64 --publish never
       - run: node scripts/verify-desktop-package.mjs release
-      - name: Verify codesign, Gatekeeper and stapling
+      - name: Verify ad-hoc codesign
         shell: bash
         run: |
           set -euo pipefail
           apps=()
           while IFS= read -r app; do apps+=("$app"); done < <(find release -type d -name '*.app')
-          ((${#apps[@]} >= 2)) || { echo '::error::expected signed x64 and arm64 apps'; exit 1; }
+          ((${#apps[@]} >= 2)) || { echo '::error::expected ad-hoc signed x64 and arm64 apps'; exit 1; }
           for app in "${apps[@]}"; do
             codesign --verify --deep --strict --verbose=2 "$app"
-            spctl --assess --type execute --verbose=2 "$app"
-            xcrun stapler validate "$app"
+            identity="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^Signature=//p')"
+            [[ "$identity" == adhoc ]] || { echo "::error::expected ad-hoc signature for $app, got $identity"; exit 1; }
           done
           dmgs=()
           while IFS= read -r dmg; do dmgs+=("$dmg"); done < <(find release -maxdepth 1 -type f -name '*.dmg')
           ((${#dmgs[@]} >= 2)) || { echo '::error::expected x64 and arm64 DMGs'; exit 1; }
-          for dmg in "${dmgs[@]}"; do xcrun stapler validate "$dmg"; done
       - uses: actions/upload-artifact@v4
         with:
           name: macos-release
