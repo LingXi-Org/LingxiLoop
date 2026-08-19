@@ -41,7 +41,7 @@ Browser → HTTPS reverse proxy → LingxiLoop SPA/API/WS
                                └→ LingxiGraph Runtime → model provider
 ```
 
-Use one LingxiLoop API replica only in `LINGXILOOP_MANAGED_AGENT_EXECUTION=server` mode.
+Use one LingxiLoop API replica only in `LINGXILOOP_MANAGED_AGENT_EXECUTION=server` mode. The production host only needs Git, Docker Engine and Docker Compose v2; Node/npm are not required.
 
 On the server:
 
@@ -53,10 +53,11 @@ cp .env.example .env
 
 docker compose -f docker-compose.mvp.yml up -d --build
 docker compose -f docker-compose.mvp.yml ps
-npm run mvp:smoke
+docker compose -f docker-compose.mvp.yml exec -T lingxiloop \
+  npx tsx server/scripts/mvp-smoke.ts
 ```
 
-Put TLS/WebSocket termination in front of port `5181`. Do not expose Postgres, Redis or the LingxiGraph Runtime publicly.
+The Compose stack binds the Web app to loopback by default. Put TLS/WebSocket termination in front of `127.0.0.1:5181`; normally only ports 80/443 should be Internet-facing. Do not expose Postgres, Redis or the LingxiGraph Runtime publicly.
 
 ## Persistent data
 
@@ -74,7 +75,8 @@ Checkout the previous known-good tag/commit and rebuild the application containe
 ```bash
 git checkout <previous-tag>
 docker compose -f docker-compose.mvp.yml up -d --build
-npm run mvp:smoke
+docker compose -f docker-compose.mvp.yml exec -T lingxiloop \
+  npx tsx server/scripts/mvp-smoke.ts
 ```
 
 Do **not** run `docker compose down -v` during normal upgrades or rollbacks unless you intentionally want to delete persistent data.
