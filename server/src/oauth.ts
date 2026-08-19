@@ -1,5 +1,5 @@
 /**
- * OAuth — Google + GitHub. Server-side authorization-code flow.
+ * OAuth/OIDC — LingxiIdentity, Google + GitHub. Server-side authorization-code flow.
  *
  * Flow per provider:
  *   1. GET /api/auth/start/<provider> — server saves a random `state` to
@@ -40,8 +40,9 @@ import { ensureCloudComputer, cloudComputerId } from './agents/computer/registry
 import { storage } from './storage.js'
 import { provisionUser as provisionSub2apiUser, sub2apiConfigured } from './sub2api.js'
 import { isWaitlistEnabled, enqueueWaitlist, isAllowlistedAdmin } from './admin.js'
+import { discoverOidc, normalizeOidcProfile, type OidcProfile } from './oidc.js'
 
-export type Provider = 'google' | 'github' | 'apple'
+export type Provider = 'lingxi' | 'google' | 'github' | 'apple'
 
 interface ProviderConfig {
   authorizeUrl: string
@@ -50,9 +51,24 @@ interface ProviderConfig {
   scope: string
   clientId: string
   clientSecret: string
+  tokenAuthMethod?: 'client_secret_basic' | 'client_secret_post'
 }
 
-function providerConfig(p: Provider): ProviderConfig {
+async function providerConfig(p: Provider): Promise<ProviderConfig> {
+  if (p === 'lingxi') {
+    const discovered = await discoverOidc(env.LINGXI_IDENTITY_ISSUER)
+    return {
+      authorizeUrl: discovered.authorization_endpoint,
+      tokenUrl: discovered.token_endpoint,
+      userInfoUrl: discovered.userinfo_endpoint,
+      scope: env.LINGXI_IDENTITY_SCOPES,
+      clientId: env.LINGXI_IDENTITY_CLIENT_ID,
+      clientSecret: env.LINGXI_IDENTITY_CLIENT_SECRET,
+      tokenAuthMethod: discovered.token_endpoint_auth_methods_supported?.includes('client_secret_basic')
+        ? 'client_secret_basic'
+        : 'client_secret_post',
+    }
+  }
   if (p === 'google') return {
     authorizeUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl:     'https://oauth2.googleapis.com/token',
@@ -72,8 +88,10 @@ function providerConfig(p: Provider): ProviderConfig {
 }
 
 export function providerEnabled(p: Provider): boolean {
-  const cfg = providerConfig(p)
-  return Boolean(cfg.clientId && cfg.clientSecret)
+  if (p === 'lingxi') return Boolean(env.LINGXI_IDENTITY_ISSUER && env.LINGXI_IDENTITY_CLIENT_ID && env.LINGXI_IDENTITY_CLIENT_SECRET)
+  if (p === 'google') return Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
+  if (p === 'github') return Boolean(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET)
+  return false
 }
 
 function redirectUri(p: Provider): string {
@@ -128,7 +146,7 @@ export async function consumeState(state: string): Promise<StateData | null> {
   if (!v) return null
   try {
     const parsed = JSON.parse(v) as StateData
-    if (parsed.provider !== 'google' && parsed.provider !== 'github') return null
+    if (parsed.provider !== 'lingxi' && parsed.provider !== 'google' && parsed.provider !== 'github') return null
     return parsed
   } catch {
     return null
@@ -136,8 +154,8 @@ export async function consumeState(state: string): Promise<StateData | null> {
 }
 
 /** Build the provider's authorize URL the browser is 302'd to in step 1. */
-export function authorizeUrl(p: Provider, state: string): string {
-  const cfg = providerConfig(p)
+export async function authorizeUrl(p: Provider, state: string): Promise<string> {
+  const cfg = await providerConfig(p)
   const params = new URLSearchParams({
     client_id: cfg.clientId,
     redirect_uri: redirectUri(p),
@@ -163,17 +181,25 @@ interface NormalizedProfile {
 
 /** Step 2: trade the auth code for an access token. */
 async function exchangeCode(p: Provider, code: string): Promise<string> {
-  const cfg = providerConfig(p)
+  const cfg = await providerConfig(p)
   const body = new URLSearchParams({
-    client_id: cfg.clientId,
-    client_secret: cfg.clientSecret,
     code,
     redirect_uri: redirectUri(p),
     grant_type: 'authorization_code',
   })
+  const headers: Record<string, string> = {
+    'content-type': 'application/x-www-form-urlencoded',
+    accept: 'application/json',
+  }
+  if (cfg.tokenAuthMethod === 'client_secret_basic') {
+    headers.authorization = `Basic ${Buffer.from(`${cfg.clientId}:${cfg.clientSecret}`).toString('base64')}`
+  } else {
+    body.set('client_id', cfg.clientId)
+    body.set('client_secret', cfg.clientSecret)
+  }
   const r = await fetch(cfg.tokenUrl, {
     method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+    headers,
     body,
   })
   if (!r.ok) throw new Error(`${p} token exchange ${r.status}: ${await r.text()}`)
@@ -187,7 +213,12 @@ interface GitHubProfile { id: number; login: string; name?: string | null; email
 interface GitHubEmail   { email: string; primary: boolean; verified: boolean }
 
 async function fetchProfile(p: Provider, accessToken: string): Promise<NormalizedProfile> {
-  const cfg = providerConfig(p)
+  const cfg = await providerConfig(p)
+  if (p === 'lingxi') {
+    const r = await fetch(cfg.userInfoUrl, { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' } })
+    if (!r.ok) throw new Error(`LingxiIdentity userinfo ${r.status}`)
+    return normalizeOidcProfile(await r.json() as OidcProfile)
+  }
   if (p === 'google') {
     const r = await fetch(cfg.userInfoUrl, { headers: { authorization: `Bearer ${accessToken}` } })
     if (!r.ok) throw new Error(`google userinfo ${r.status}`)

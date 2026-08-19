@@ -26,7 +26,7 @@ const PRESETS: ServerPreset[] = [
 ]
 
 export function AuthScreen() {
-  const [busy, setBusy] = useState<'google' | 'github' | 'apple' | null>(null)
+  const [busy, setBusy] = useState<'lingxi' | 'google' | 'github' | 'apple' | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [picker, setPicker] = useState(false)
 
@@ -86,7 +86,7 @@ export function AuthScreen() {
     }
   }
 
-  function go(provider: 'google' | 'github') {
+  function go(provider: 'lingxi' | 'google' | 'github') {
     setBusy(provider); setErr(null)
     if (isElectron && window.cumora?.auth) {
       // Open the user's real browser (Safari / Chrome) so they see the
@@ -176,6 +176,14 @@ export function AuthScreen() {
           </div>
         </div>
         <div className="w-full flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => go('lingxi')}
+            disabled={busy !== null}
+            className="h-11 rounded-[10px] bg-ink-900 hover:bg-ink-800 text-white transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
+          >
+            {busy === 'lingxi' ? 'Redirecting…' : 'Continue with LingxiIdentity'}
+          </button>
           {/* Sign in with Apple — iOS-only for now. Apple Review
               Guideline 4.8 requires SIWA be offered as an equivalent
               option whenever an iOS app exposes any third-party

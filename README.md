@@ -87,7 +87,22 @@ CUMORA_INVITE_BASE_URL=https://loop.example.com
 
 Same-origin Web does not require `CUMORA_CORS_ORIGINS`.
 
-If you enable OAuth, also configure the relevant provider credentials:
+LingxiIdentity (Logto) is the primary Web identity provider. Create a **Traditional web** third-party application and configure:
+
+```env
+LINGXI_IDENTITY_ISSUER=https://auth.lingxilearn.cn/oidc
+LINGXI_IDENTITY_CLIENT_ID=...
+LINGXI_IDENTITY_CLIENT_SECRET=...
+LINGXI_IDENTITY_SCOPES=openid profile email
+```
+
+Register this callback in Logto:
+
+```text
+https://loop.example.com/api/auth/callback/lingxi
+```
+
+Authorization, token and userinfo endpoints are resolved through OIDC discovery. The code exchange and client secret remain server-side, and only a verified email can be linked. Direct Google/GitHub OAuth is optional compatibility behavior; configure it only if needed:
 
 ```env
 GITHUB_CLIENT_ID=...

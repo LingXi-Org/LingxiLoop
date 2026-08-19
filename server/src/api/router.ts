@@ -637,7 +637,7 @@ api.get('/metrics', async (req, res) => {
   res.send(renderProm())
 })
 
-/* ============== Auth — OAuth only (Google + GitHub) ============== */
+/* ============== Auth — LingxiIdentity OIDC + compatibility OAuth ============== */
 
 /** 302 to the provider's consent screen. State is opaque to the client —
  *  we mint it server-side, save to Redis (5min TTL), and verify on the
@@ -648,7 +648,7 @@ api.get('/metrics', async (req, res) => {
  *  can't be turned into an open redirect. Omit to use AUTH_DONE_URL. */
 api.get('/auth/start/:provider', safe(async (req, res) => {
   const provider = req.params.provider as Provider
-  if (provider !== 'google' && provider !== 'github') {
+  if (provider !== 'lingxi' && provider !== 'google' && provider !== 'github') {
     res.status(404).json({ error: 'unknown provider' }); return
   }
   if (!providerEnabled(provider)) {
@@ -668,7 +668,7 @@ api.get('/auth/start/:provider', safe(async (req, res) => {
   const inviteRaw = typeof req.query.invite === 'string' ? req.query.invite : ''
   const inviteToken = inviteRaw && inviteRaw.length >= 8 && inviteRaw.length <= 200 ? inviteRaw : null
   const state = await createState(provider, returnUrl, inviteToken)
-  res.redirect(authorizeUrl(provider, state))
+  res.redirect(await authorizeUrl(provider, state))
 }))
 
 /** Provider redirects here after consent. We trade the auth code for a
@@ -677,7 +677,7 @@ api.get('/auth/start/:provider', safe(async (req, res) => {
  *  On failure we 302 to the same target with `#error=...`. */
 api.get('/auth/callback/:provider', safe(async (req, res) => {
   const provider = req.params.provider as Provider
-  if (provider !== 'google' && provider !== 'github') {
+  if (provider !== 'lingxi' && provider !== 'google' && provider !== 'github') {
     res.status(404).json({ error: 'unknown provider' }); return
   }
   const code = typeof req.query.code === 'string' ? req.query.code : ''

@@ -280,8 +280,13 @@ export const env = {
    */
   CORS_ORIGINS: (process.env.CUMORA_CORS_ORIGINS ?? '')
     .split(',').map((s) => s.trim()).filter(Boolean),
+  LINGXI_IDENTITY_ISSUER: (process.env.LINGXI_IDENTITY_ISSUER ?? '').replace(/\/+$/, ''),
+  LINGXI_IDENTITY_CLIENT_ID: process.env.LINGXI_IDENTITY_CLIENT_ID ?? '',
+  LINGXI_IDENTITY_CLIENT_SECRET: process.env.LINGXI_IDENTITY_CLIENT_SECRET ?? '',
+  LINGXI_IDENTITY_SCOPES: process.env.LINGXI_IDENTITY_SCOPES ?? 'openid profile email',
   /**
-   * OAuth providers (Google + GitHub). Set the four creds below + the two
+   * LingxiIdentity is the primary web OIDC provider. Google and GitHub are
+   * optional compatibility providers.
    * URLs to enable. The callback URL must match the redirect registered with
    * the provider; the done URL is where we 302 the browser after creating
    * the session, with `#token=<bearer>&companyId=<id>` on the fragment so the

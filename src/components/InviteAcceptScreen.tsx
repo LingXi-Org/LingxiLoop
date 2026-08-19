@@ -444,8 +444,8 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
 }
 
 function SignInToAccept({ token }: { token: string }) {
-  const [busy, setBusy] = useState<'google' | 'github' | null>(null)
-  const go = (provider: 'google' | 'github') => {
+  const [busy, setBusy] = useState<'lingxi' | 'google' | 'github' | null>(null)
+  const go = (provider: 'lingxi' | 'google' | 'github') => {
     setBusy(provider)
     // Persist BEFORE redirect so the post-OAuth landing can resume here.
     stashPendingInvite(token)
@@ -475,6 +475,14 @@ function SignInToAccept({ token }: { token: string }) {
       <div className="text-[12.5px] text-ink-500 font-display italic text-center">
         Sign in to accept this invite
       </div>
+      <button
+        type="button"
+        onClick={() => go('lingxi')}
+        disabled={busy !== null}
+        className="h-11 rounded-[10px] bg-ink-900 hover:bg-ink-800 text-white transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
+      >
+        {busy === 'lingxi' ? 'Redirecting…' : 'Continue with LingxiIdentity'}
+      </button>
       <button
         type="button"
         onClick={() => go('google')}

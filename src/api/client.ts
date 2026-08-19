@@ -755,7 +755,7 @@ export const api = {
    *  `window.location.assign(api.authStartUrl('google'))` rather than
    *  fetch — the browser needs to do the actual navigation so the
    *  callback can land back on AUTH_DONE_URL with the session token. */
-  authStartUrl: (provider: 'google' | 'github', opts?: { inviteToken?: string | null; returnUrl?: string | null }) => {
+  authStartUrl: (provider: 'lingxi' | 'google' | 'github', opts?: { inviteToken?: string | null; returnUrl?: string | null }) => {
     const params = new URLSearchParams()
     if (opts?.returnUrl) params.set('return', opts.returnUrl)
     if (opts?.inviteToken) params.set('invite', opts.inviteToken)

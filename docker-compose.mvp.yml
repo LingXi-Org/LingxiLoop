@@ -87,6 +87,11 @@ services:
       - CUMORA_AUTH_RETURN_ALLOWLIST
       - CUMORA_INVITE_BASE_URL
       - CUMORA_CORS_ORIGINS
+      # Primary Web OIDC provider (Logto Traditional Web confidential client).
+      - LINGXI_IDENTITY_ISSUER
+      - LINGXI_IDENTITY_CLIENT_ID
+      - LINGXI_IDENTITY_CLIENT_SECRET
+      - LINGXI_IDENTITY_SCOPES
       - GOOGLE_CLIENT_ID
       - GOOGLE_CLIENT_SECRET
       - GITHUB_CLIENT_ID
