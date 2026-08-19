@@ -53,7 +53,7 @@ Open `http://localhost:5180`.
 
 Install Git, Docker Engine and Docker Compose v2. Node/npm are not required on the production host.
 
-The production Compose path uses mainland-China mirrors by default for all deployment downloads: DaoCloud for Node/Python/Postgres/Redis images, Aliyun for Debian APT and Python packages, and npmmirror for npm packages. Each mirror is configurable in `.env`; see the "Mainland China deployment mirrors" section in [`.env.example`](.env.example). To use official sources, replace those values with the documented fallback examples.
+The production Compose path uses mainland-China mirrors by default for all deployment downloads: DaoCloud for Node/Python/Postgres/Redis images, Aliyun for Debian APT, npmmirror for npm, and Tsinghua PyPI with Aliyun PyPI fallback for Python packages. Each mirror is configurable in `.env`; see the "Mainland China deployment mirrors" section in [`.env.example`](.env.example). To use official sources, replace those values with the documented fallback examples.
 
 ```bash
 git clone https://github.com/LingXi-Org/LingxiLoop.git

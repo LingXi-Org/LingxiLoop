@@ -14,11 +14,13 @@
 
 ARG PYTHON_BASE_IMAGE=docker.m.daocloud.io/library/python:3.12-slim-bookworm
 ARG APT_MIRROR=http://mirrors.aliyun.com
-ARG PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple
+ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+ARG PIP_EXTRA_INDEX_URL=https://mirrors.aliyun.com/pypi/simple
 
 FROM ${PYTHON_BASE_IMAGE}
 ARG APT_MIRROR
 ARG PIP_INDEX_URL
+ARG PIP_EXTRA_INDEX_URL
 
 # curl — used by the container HEALTHCHECK below.
 # ca-certificates — TLS to the configured OpenAI-compatible provider.
@@ -32,7 +34,10 @@ RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g; s|https://deb.debian.org|${
 WORKDIR /app
 
 COPY server/lingxigraph/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir --index-url "${PIP_INDEX_URL}" -r requirements.txt
+RUN pip install --no-cache-dir --retries 5 --timeout 60 \
+      --index-url "${PIP_INDEX_URL}" \
+      --extra-index-url "${PIP_EXTRA_INDEX_URL}" \
+      -r requirements.txt
 
 COPY server/lingxigraph/lingxigraph_runner.py server/lingxigraph/server.py ./
 
