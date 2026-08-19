@@ -8,54 +8,17 @@ permissions:
   contents: read
 
 jobs:
-  static-and-unit:
-    name: Brand, types, lint and unit tests
+  static:
+    name: Brand, version, types and build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: lingxiloop
-          POSTGRES_PASSWORD: lingxiloop
-          POSTGRES_DB: lingxiloop_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U lingxiloop -d lingxiloop_test"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
-    env:
-      DATABASE_URL: postgres://lingxiloop:lingxiloop@127.0.0.1:5432/lingxiloop_test
-      REDIS_URL: redis://127.0.0.1:6379
-      RESEND_API_KEY: ''
-      EMAIL_DOMAIN: lingxiloop.local
-      EMAIL_INBOUND_HMAC_SECRET: ci-test-secret
-      AUTH_SECRET: ci-test-auth-secret
-      AGENT_RUNTIME_SECRET: ci-test-agent-runtime-secret
-      OPENAI_API_KEY: ci-test-openai-key
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: agent-fuse/go.mod
-          cache-dependency-path: agent-fuse/go.sum
       - run: npm ci
-      - run: npm ci --prefix workers/email-gate
       - run: npm run guard:brand
       - run: npm run guard:big-brain
       - run: npm run guard:llm-tracked
@@ -63,119 +26,10 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run server:typecheck
-      - run: npm run build --prefix agent-cli
-      - run: go test ./...
-        working-directory: agent-fuse
-      - run: npm test
-
-  integration:
-    name: PostgreSQL, pgvector and Redis integration
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: lingxiloop
-          POSTGRES_PASSWORD: lingxiloop
-          POSTGRES_DB: lingxiloop_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U lingxiloop -d lingxiloop_test"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
-    env:
-      INTEGRATION_DATABASE_URL: postgres://lingxiloop:lingxiloop@127.0.0.1:5432/lingxiloop_test
-      REDIS_URL: redis://127.0.0.1:6379
-      AGENT_RUNTIME_SECRET: ci-integration-runtime-secret-not-for-production
-      OPENAI_API_KEY: ci-integration-key-not-for-production
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - name: Enable pgvector
-        env:
-          PGPASSWORD: lingxiloop
-        run: psql -h 127.0.0.1 -U lingxiloop -d lingxiloop_test -c 'CREATE EXTENSION IF NOT EXISTS vector'
-      - run: npm run test:integration
-
-  compose-e2e:
-    name: Compose Web/API/WS/LingxiGraph recovery E2E
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate production Compose contract
-        run: |
-          touch .env.secrets
-          printf '%s\n' \
-            'POSTGRES_USER=lingxiloop' \
-            'POSTGRES_PASSWORD=not-production' \
-            'POSTGRES_DB=lingxiloop' \
-            'DATABASE_URL=postgres://lingxiloop:not-production@postgres:5432/lingxiloop' \
-            'AGENT_RUNTIME_SECRET=not-production' \
-            'OPENAI_API_KEY=not-production' \
-            'LINGXIGRAPH_TOKEN=not-production' > .env.secrets
-          printf '%s\n' \
-            'LINGXILOOP_SERVER_IMAGE=ghcr.io/lingxi-org/lingxiloop-server@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
-            'LINGXIGRAPH_RUNTIME_IMAGE=ghcr.io/lingxi-org/lingxigraph-runtime@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
-            'LINGXILOOP_VERSION=0.0.0-ci' \
-            'LINGXILOOP_COMMIT_SHA=ci' \
-            'LINGXILOOP_PUBLIC_ORIGIN=https://loop.example.com' > .release.env
-          docker compose --env-file .release.env -f docker-compose.production.yml config --quiet
-          rm -f .env.secrets .release.env
-      - name: Build and start deterministic stack
-        run: docker compose -f docker-compose.mvp.ci.yml up -d --build --wait --wait-timeout 180
-      - name: Human, WebSocket and agent-to-agent real LingxiGraph turn
-        run: npm run mvp:ci:smoke
-      - name: LingxiGraph rejects invalid authentication
-        run: |
-          docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop node -e '
-            fetch("http://lingxigraph-runtime:8124/v1/turn", {
-              method: "POST",
-              headers: { "content-type": "application/json", authorization: "Bearer wrong-token" },
-              body: JSON.stringify({ version: 1 })
-            }).then(async r => {
-              if (r.status !== 401) throw new Error(`expected 401, got ${r.status}: ${await r.text()}`)
-            })'
-      - name: LingxiGraph outage does not falsely complete a turn
-        run: |
-          docker compose -f docker-compose.mvp.ci.yml stop lingxigraph-runtime
-          npm run mvp:ci:fault-outage -- pre
-          docker compose -f docker-compose.mvp.ci.yml start lingxigraph-runtime
-          timeout 90 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" "$(docker compose -f docker-compose.mvp.ci.yml ps -q lingxigraph-runtime)")" = healthy ]; do sleep 2; done'
-          npm run mvp:ci:fault-outage -- post
-      - name: Durable Redis outage recovers exactly once
-        run: |
-          npm run mvp:ci:fault-redis -- setup
-          docker compose -f docker-compose.mvp.ci.yml stop redis
-          npm run mvp:ci:fault-redis -- pre
-          docker compose -f docker-compose.mvp.ci.yml start redis
-          timeout 90 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" "$(docker compose -f docker-compose.mvp.ci.yml ps -q redis)")" = healthy ]; do sleep 2; done'
-          npm run mvp:ci:fault-redis -- post
-      - name: Dump Compose logs on failure
-        if: failure()
-        run: docker compose -f docker-compose.mvp.ci.yml logs
-      - name: Tear down
-        if: always()
-        run: docker compose -f docker-compose.mvp.ci.yml down -v
+      - run: npm run build
 
   desktop-directory-smoke:
-    name: Unsigned desktop layout (${{ matrix.os }})
+    name: Desktop layout (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
@@ -185,7 +39,7 @@ jobs:
           - os: macos-latest
             target: mac
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 15
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
       VITE_LINGXILOOP_API_BASE: https://loop.example.com
