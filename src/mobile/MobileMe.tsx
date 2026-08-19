@@ -15,12 +15,11 @@ import type { Participant } from '@/types'
 interface ToggleablePref { key: string; lbl: string; sub: string; default?: boolean }
 
 const TOGGLE_PREFS: ToggleablePref[] = [
-  { key: 'notify.push',          lbl: 'Push notifications',          sub: 'banner + badge when the app is closed', default: true },
-  { key: 'notify.group_pull',    lbl: 'Notify on group pulls',       sub: 'when an agent loops you in',         default: true },
-  { key: 'notify.mention',       lbl: 'Notify on mentions',          sub: 'when agents @ you',                  default: true },
-  { key: 'ui.typing_indicators', lbl: 'Show typing indicators',      sub: 'see when agents are drafting',       default: true },
-  { key: 'ui.reduce_motion',     lbl: 'Reduce motion',               sub: 'fewer animations',                   default: false },
-  { key: 'agents.new_tools_ok',  lbl: 'Agents can call new tools',   sub: 'with granted permissions',           default: true },
+  { key: 'notify.push',          lbl: '推送通知',          sub: '应用在后台时显示横幅和角标', default: true },
+  { key: 'notify.group_pull',    lbl: '群聊邀请通知',       sub: '智能体邀请你加入群聊时通知', default: true },
+  { key: 'notify.mention',       lbl: '提及通知',           sub: '智能体提及你时通知', default: true },
+  { key: 'ui.typing_indicators', lbl: '显示输入状态',       sub: '查看成员是否正在输入', default: true },
+  { key: 'ui.reduce_motion',     lbl: '减少动态效果',       sub: '减少界面动画', default: false },
 ]
 
 export function MobileMe() {
@@ -87,7 +86,7 @@ export function MobileMe() {
           {me.name}
         </h2>
         <div className="font-display italic text-[13px] text-ink-500 mt-0.5 mb-2.5">
-          {authUser?.email ?? 'human · team owner'}
+          {authUser?.email ?? '团队成员'}
         </div>
         <div className="font-display italic text-[12.5px] text-ink-700 max-w-[280px] mx-auto leading-snug">
           {stewardLine}
@@ -102,14 +101,14 @@ export function MobileMe() {
 
       <div className="flex-1 overflow-y-auto pb-20">
         {companies.length > 1 && (
-          <Section title="Workspace">
+          <Section title="工作空间">
             <div className="bg-cloud rounded-[12px] p-2" style={{ border: '1px solid var(--ink-100)' }}>
               <CompanySwitcher />
             </div>
           </Section>
         )}
 
-        <Section title="Your team">
+        {false && <Section title="你的团队">
           {agents.length === 0 ? (
             <div
               className="text-center bg-cloud rounded-[12px] py-5 px-4"
@@ -160,13 +159,13 @@ export function MobileMe() {
               })}
             </div>
           )}
-        </Section>
+        </Section>}
 
-        <Section title="Push notifications">
+        {false && <Section title="推送通知">
           <PushStatusTile />
-        </Section>
+        </Section>}
 
-        <Section title="Preferences">
+        <Section title="偏好设置">
           <div className="bg-cloud rounded-[12px] divide-y divide-ink-100"
             style={{ border: '1px solid var(--ink-100)' }}>
             {TOGGLE_PREFS.map((it) => {
@@ -209,8 +208,8 @@ export function MobileMe() {
             className="w-full py-3 px-4 rounded-[12px] text-[13px] font-semibold text-coral-deep transition text-left active:opacity-70"
             style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
           >
-            Sign out
-            <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">end this session on this device</span>
+            退出登录
+            <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">结束此设备上的登录状态</span>
           </button>
           <DeleteAccountButton />
         </div>
@@ -385,8 +384,8 @@ function DeleteAccountButton() {
         className="w-full py-3 px-4 rounded-[12px] text-[13px] font-semibold text-coral-deep transition text-left active:opacity-70"
         style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
       >
-        Delete account
-        <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">permanently remove this LingxiLoop account</span>
+        删除账号
+        <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">永久删除此 LingxiLoop 账号</span>
       </button>
     )
   }
@@ -397,12 +396,11 @@ function DeleteAccountButton() {
       style={{ border: '1px solid var(--coral)', background: 'rgba(255, 122, 107, 0.06)' }}
     >
       <div className="font-display text-[13px] text-ink-900 font-semibold mb-1">
-        Permanently delete this account?
+        确定永久删除账号？
       </div>
       <div className="font-display italic text-[12px] text-ink-700 leading-snug mb-3">
-        Your sign-in, OAuth links, and personal profile will be erased. Messages
-        you posted in shared rooms stay (with your name shown as "Deleted
-        user") so other members keep their history. This cannot be undone.
+        登录信息、第三方授权和个人资料将被删除。为保留其他成员的会话历史，
+        你在共享对话中发布的消息仍会保留，但姓名将显示为“已注销用户”。此操作无法撤销。
       </div>
       {err && (
         <div className="text-[11.5px] text-coral-deep font-display italic mb-2 leading-snug">
@@ -416,7 +414,7 @@ function DeleteAccountButton() {
           onClick={() => { setStage('idle'); setErr(null) }}
           className="flex-1 h-9 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-paper transition active:opacity-70 disabled:opacity-50"
           style={{ border: '1px solid var(--ink-100)' }}
-        >Cancel</button>
+        >取消</button>
         <button
           type="button"
           disabled={stage === 'busy'}
@@ -438,7 +436,7 @@ function DeleteAccountButton() {
           }}
           className="flex-1 h-9 rounded-[9px] text-[12.5px] font-semibold text-white transition active:opacity-70 disabled:opacity-50"
           style={{ background: 'var(--coral)' }}
-        >{stage === 'busy' ? 'Deleting…' : 'Delete'}</button>
+        >{stage === 'busy' ? '正在删除…' : '删除'}</button>
       </div>
     </div>
   )

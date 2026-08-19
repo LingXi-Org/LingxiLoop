@@ -369,7 +369,7 @@ function EmojiPopover({ onPick, onClose }: { onPick: (e: string) => void; onClos
               'flex-1 text-[11px] font-semibold uppercase tracking-wider py-1 rounded-[6px] transition',
               tab === k ? 'bg-sky2-100 text-skype-deep' : 'text-ink-500 hover:bg-sky2-50',
             )}
-          >{k === 'std' ? 'Standard' : 'Skype'}</button>
+          >{k === 'std' ? '常用表情' : 'LingxiLoop 表情'}</button>
         ))}
       </div>
       {tab === 'std' ? (

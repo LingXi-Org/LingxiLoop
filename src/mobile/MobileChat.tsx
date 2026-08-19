@@ -6,6 +6,7 @@ import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { IAt, IBack, IClip, IConvene, IMore, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow } from '@/components/Message'
+import { PollComposer } from '@/components/PollComposer'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
@@ -38,6 +39,7 @@ export function MobileChat() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [conveneStarting, setConveneStarting] = useState(false)
   const [emojiOpen, setEmojiOpen] = useState(false)
+  const [pollComposerOpen, setPollComposerOpen] = useState(false)
   const [emojiTab, setEmojiTab] = useState<'std' | 'skype'>('std')
   // Older-history pager — virtualization handles the runtime cost of mounting
   // long threads; we still fetch in pages of 80 so a 5k-message room doesn't
@@ -131,7 +133,7 @@ export function MobileChat() {
   // legacy manual `el.scrollTop = el.scrollHeight` effect is gone with the
   // <div> stream container it depended on.
 
-  // Reset attachment / mention / emoji-picker side state on convo
+  // Reset attachment / mention / picker side state on convo
   // switch. The composer text itself is reset by REMOUNTING RichInput
   // via `key={convoId}` on the JSX below — that path reads the right
   // draft from the store via defaultValue without going through
@@ -143,6 +145,7 @@ export function MobileChat() {
     setUploadError(null)
     setMention(null)
     setEmojiOpen(false)
+    setPollComposerOpen(false)
   }, [convoId])
 
   const onStartReached = useCallback(() => {
@@ -311,7 +314,7 @@ export function MobileChat() {
 
   const leaveConvo = async () => {
     if (!convoId) return
-    if (!confirm('Leave this conversation? Agents will continue without you.')) {
+    if (!confirm('确定退出此对话吗？其他成员仍可继续对话。')) {
       setMenuOpen(false)
       return
     }
@@ -416,6 +419,13 @@ export function MobileChat() {
 
   const send = () => {
     const v = draft.trim()
+    if (v === '/poll') {
+      setPollComposerOpen(true)
+      setDraft('')
+      editorRef.current?.setValue('')
+      setEmojiOpen(false)
+      return
+    }
     if (!v && !attachment) return
     if (!convoId) return
     sendUserMessage(convoId, v, attachment, replyingToId ?? null)
@@ -531,13 +541,13 @@ export function MobileChat() {
                     onClick={() => { pushStack('info'); setMenuOpen(false) }}
                     className="w-full text-left py-2.5 px-3.5 text-[13px] text-ink-700 active:bg-sky2-50"
                   >
-                    View details
+                    查看详情
                   </button>
                   <button
                     onClick={toggleMute}
                     className="w-full text-left py-2.5 px-3.5 text-[13px] text-ink-700 active:bg-sky2-50"
                   >
-                    {muted ? 'Unmute' : 'Mute notifications'}
+                    {muted ? '取消静音' : '消息免打扰'}
                   </button>
                   <ThemeToggle
                     showLabel
@@ -549,7 +559,7 @@ export function MobileChat() {
                     onClick={leaveConvo}
                     className="w-full text-left py-2.5 px-3.5 text-[13px] text-coral-deep active:bg-coral-soft/60"
                   >
-                    Leave conversation
+                    退出对话
                   </button>
                 </div>
               </>
@@ -633,6 +643,16 @@ export function MobileChat() {
       >
         <div className="px-1 pb-1">
         </div>
+        {pollComposerOpen && convoId && (
+          <PollComposer
+            conversationId={convoId}
+            onSubmitted={() => setPollComposerOpen(false)}
+            onCancel={() => {
+              setPollComposerOpen(false)
+              requestAnimationFrame(() => editorRef.current?.focus())
+            }}
+          />
+        )}
         {attachment && (
           <div className="mb-2 inline-flex items-center gap-2.5 py-1.5 px-2 bg-sky2-50 border border-sky2-100 rounded-lg max-w-full">
             {attachment.kind === 'img' ? (
@@ -668,7 +688,7 @@ export function MobileChat() {
             <div className="h-4 w-0.5 shrink-0 rounded bg-skype" />
             <div className="min-w-0 flex flex-1 items-center gap-2">
               <div className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
-                Replying to {byId[replyingToMsg?.authorId ?? '']?.name ?? replyingToMsg?.authorId ?? '…'}
+                回复 {byId[replyingToMsg?.authorId ?? '']?.name ?? replyingToMsg?.authorId ?? '…'}
               </div>
               <span className="shrink-0 text-[10px] text-ink-300" aria-hidden>·</span>
               <div className="min-w-0 flex-1 truncate text-[12px] text-ink-500">
@@ -766,8 +786,8 @@ export function MobileChat() {
               key={convoId}
               ref={editorRef}
               defaultValue={draft}
-              placeholder="Type @ to summon"
-              ariaLabel="Message composer"
+              placeholder="输入 @ 可提及成员"
+              ariaLabel="消息输入框"
               className="rich-input flex-1 whitespace-pre-wrap bg-transparent outline-none text-[14px] text-ink-900 leading-[1.4]"
               style={{ minHeight: '1.4em' }}
               maxHeight={120}
@@ -817,7 +837,7 @@ export function MobileChat() {
                 : 'var(--ink-200)',
               boxShadow: canSend ? '0 4px 12px -3px rgba(0, 168, 240, 0.5)' : 'none',
             }}
-            aria-label="Send"
+            aria-label="发送"
           >
             <ISend className="w-[18px] h-[18px]" strokeWidth={2} />
           </Pressable>
@@ -826,7 +846,7 @@ export function MobileChat() {
           <Pressable
             onClick={() => fileRef.current?.click()}
             className="w-9 h-9 grid place-items-center text-ink-500 rounded-full active:bg-sky2-50"
-            aria-label="Attach file"
+            aria-label="添加附件"
           >
             <IClip className="w-[20px] h-[20px]" />
           </Pressable>
@@ -837,7 +857,7 @@ export function MobileChat() {
               'w-9 h-9 grid place-items-center rounded-full active:bg-sky2-50',
               mention ? 'text-skype-deep bg-sky2-50' : 'text-ink-500',
             )}
-            aria-label="Mention"
+            aria-label="提及成员"
           >
             <IAt className="w-[20px] h-[20px]" />
           </Pressable>
@@ -848,9 +868,27 @@ export function MobileChat() {
               'w-9 h-9 grid place-items-center rounded-full active:bg-sky2-50',
               emojiOpen ? 'text-skype-deep bg-sky2-50' : 'text-ink-500',
             )}
-            aria-label="Emoji"
+            aria-label="表情"
           >
             <ISmile className="w-[20px] h-[20px]" />
+          </Pressable>
+          <Pressable
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setPollComposerOpen((v) => !v)
+              setEmojiOpen(false)
+            }}
+            className={cn(
+              'w-9 h-9 grid place-items-center rounded-full active:bg-sky2-50',
+              pollComposerOpen ? 'text-skype-deep bg-sky2-50' : 'text-ink-500',
+            )}
+            aria-label="发起投票"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <rect x="4" y="13" width="3" height="7" rx="1" />
+              <rect x="10.5" y="8" width="3" height="12" rx="1" />
+              <rect x="17" y="4" width="3" height="16" rx="1" />
+            </svg>
           </Pressable>
         </div>
         {/* Emoji picker — inline above the composer's tool row so the
@@ -874,7 +912,7 @@ export function MobileChat() {
                     'flex-1 text-[11px] font-semibold uppercase tracking-wider py-1.5 rounded-[6px] transition',
                     emojiTab === k ? 'bg-sky2-100 text-skype-deep' : 'text-ink-500 active:bg-sky2-50',
                   )}
-                >{k === 'std' ? 'Standard' : 'Skype'}</button>
+                >{k === 'std' ? '常用表情' : 'LingxiLoop 表情'}</button>
               ))}
             </div>
             <div className="px-2 py-2 max-h-[220px] overflow-y-auto">
@@ -946,7 +984,7 @@ function StreamHeader({ context }: { context?: StreamCtx }) {
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-3 px-4 pt-4">
       {hasMoreOlder ? (
         <div className="self-center py-1 px-2.5 rounded-full text-[10.5px] font-medium text-ink-400">
-          {loadingOlder ? 'Loading earlier…' : ' '}
+          {loadingOlder ? '正在加载更早的消息…' : ' '}
         </div>
       ) : (
         <div className="flex items-center gap-3 text-ink-300 text-[10.5px] font-bold tracking-[0.08em] uppercase">
@@ -1018,12 +1056,12 @@ function buildMessageTapbackActions(
 ): TapbackAction[] {
   const out: TapbackAction[] = []
   out.push({
-    label: 'Reply',
+    label: '回复',
     onClick: () => { if (convoId) setReplyingTo(convoId, msg.id) },
   })
   if (msg.body && msg.body.trim()) {
     out.push({
-      label: 'Copy text',
+      label: '复制文字',
       onClick: () => {
         // Best-effort — `navigator.clipboard.writeText` returns a
         // promise we don't await; failures fall through silently
@@ -1036,7 +1074,7 @@ function buildMessageTapbackActions(
   // desktop ChatPane permission model: agents own their own rows.
   if (meId && msg.authorId === meId) {
     out.push({
-      label: 'Delete',
+      label: '删除',
       destructive: true,
       onClick: () => {
         // Wire deletion later — for now just close, no destructive
@@ -1116,7 +1154,7 @@ export function MobileChatInfo() {
 
   const onLeave = async () => {
     if (!convoId) return
-    if (!confirm('Leave this conversation? Agents will continue without you.')) return
+    if (!confirm('确定退出此对话吗？其他成员仍可继续对话。')) return
     try {
       await api.leaveConversation(convoId)
       useApp.getState().selectConversation(null)
@@ -1288,7 +1326,7 @@ export function MobileChatInfo() {
           onClick={onToggleMute}
           className="py-3 px-4 rounded-xl bg-cloud border border-ink-100 text-ink-700 font-semibold text-[13px] active:bg-sky2-50 transition"
         >
-          {muted ? 'Unmute' : 'Mute'}
+          {muted ? '取消静音' : '静音'}
         </button>
       </div>
 
@@ -1323,7 +1361,7 @@ export function MobileChatInfo() {
               <input
                 value={memberQuery}
                 onChange={(e) => setMemberQuery(e.target.value)}
-                placeholder="Search members…"
+                placeholder="搜索成员…"
                 className="flex-1 min-w-0 text-[13px] text-ink-700 bg-transparent outline-none placeholder:text-ink-300"
               />
               {memberQuery && (
@@ -1408,7 +1446,7 @@ export function MobileChatInfo() {
           className="w-full py-3 px-4 rounded-[12px] text-[13px] font-semibold text-coral-deep transition text-left active:opacity-70"
           style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
         >
-          Leave conversation
+          退出对话
           <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">agents continue without you</span>
         </button>
       </div>

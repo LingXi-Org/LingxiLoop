@@ -120,7 +120,6 @@ export const SKYPE_EMOJIS: readonly SkypeEmoji[] = [
   { key: 'shake', label: 'Shaking', frames: 50, shortcodes: ['(shake)'] },
   { key: 'sheep', label: 'Sheep', frames: 110, shortcodes: ['(sheep)'] },
   { key: 'shielddeflect', label: 'Shield Deflect', frames: 91, shortcodes: ['(shielddeflect)'] },
-  { key: 'skype', label: 'Skype', frames: 1, shortcodes: ['(skype)', '(ss)'] },
   { key: 'sleepy', label: 'Sleepy', frames: 71, shortcodes: ['(snooze)'] },
   { key: 'smile', label: 'Smile', frames: 52, shortcodes: ['(smile)'] },
   { key: 'smirk', label: 'Smirking', frames: 53, shortcodes: ['(smirk)'] },

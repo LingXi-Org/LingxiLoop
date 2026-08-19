@@ -1354,7 +1354,7 @@ interface MessageRowProps {
   openMaus?: boolean
 }
 
-const QUICK_REACTIONS = ['👍', '❤️', '👀', '🌤️', '🔥', '👏', '✅', '🎯', '📌']
+const QUICK_REACTIONS = ['👀', '👍', '✅', '❤️', '😂', '🎉']
 
 function ReactionPill({ msgId, r }: { msgId: string; r: import('@/types').ReactionEntry }) {
   const byId = useParticipants((s) => s.byId)

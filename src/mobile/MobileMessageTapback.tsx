@@ -29,7 +29,7 @@ import { TwEmoji } from '@/components/TwEmoji'
 import { tapHaptic } from '@/lib/native'
 import { cn } from '@/lib/utils'
 
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
+const QUICK_REACTIONS = ['👀', '👍', '✅', '❤️', '😂', '🎉']
 
 export interface TapbackAction {
   label: string

@@ -93,6 +93,7 @@ function MobileDocumentPeek({ documentId, onClose }: { documentId: string; onClo
 
 export function MobileApp() {
   const view = useApp((s) => s.view)
+  const setView = useApp((s) => s.setView)
   const convoId = useApp((s) => s.selectedConversationId)
   const stack = useApp((s) => s.mobileStack)
   const pushStack = useApp((s) => s.pushMobileStack)
@@ -139,6 +140,19 @@ export function MobileApp() {
   useEffect(() => {
     if (!convoId && stack !== 'list') pushStack('list')
   }, [convoId, stack, pushStack])
+
+  // Mobile intentionally exposes only chats, mail, and the reduced account
+  // page. Redirect stale persisted routes (or legacy deep links) instead of
+  // leaving users on a hidden product area.
+  useEffect(() => {
+    if (view === 'mail' && convoId) {
+      setView('conversations')
+      return
+    }
+    if (view !== 'conversations' && view !== 'mail' && view !== 'me') {
+      setView('conversations')
+    }
+  }, [view, convoId, setView])
 
   // Wire push registration (APNs on iOS, FCM on Android) once the authed
   // mobile shell mounts. Soft no-op on web / Electron. The initializer is
@@ -231,6 +245,14 @@ export function MobileApp() {
                 )}
               </AnimatePresence>
               </ViewBoundary>
+            </motion.div>
+          )}
+
+          {view === 'mail' && (
+            <motion.div key="mail-root" className="absolute inset-0"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={fadeTransition}>
+              <ViewBoundary name="邮件"><MobileChatList mode="mail" /></ViewBoundary>
             </motion.div>
           )}
 

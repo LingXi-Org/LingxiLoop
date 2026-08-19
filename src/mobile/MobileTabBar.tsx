@@ -1,17 +1,13 @@
 import { useApp } from '@/stores/app'
-import { useAuth } from '@/stores/auth'
 import { useConversations, isMuted } from '@/stores/conversations'
-import { IChat, IWhisper, IDoc, IAgent, IAgents, IShip } from '@/components/icons'
+import { IChat, IMail, IAgents } from '@/components/icons'
 import { Pressable } from './Pressable'
 import type { ViewKey } from '@/types'
 
 const tabs: Array<{ key: ViewKey['view']; Icon: typeof IChat; label: string }> = [
-  { key: 'conversations', Icon: IChat, label: 'Chats' },
-  { key: 'whispers', Icon: IWhisper, label: 'Whispers' },
-  { key: 'shipping', Icon: IShip, label: 'Ship' },
-  { key: 'library', Icon: IDoc, label: 'Library' },
-  { key: 'agents', Icon: IAgent, label: 'Agents' },
-  { key: 'me', Icon: IAgents, label: 'Me' },
+  { key: 'conversations', Icon: IChat, label: '对话' },
+  { key: 'mail', Icon: IMail, label: '邮件' },
+  { key: 'me', Icon: IAgents, label: '我的' },
 ]
 
 /**
@@ -31,17 +27,12 @@ export function MobileTabBar() {
   const totalUnread = useConversations((s) =>
     s.list.reduce((acc, c) => acc + (isMuted(c) ? 0 : (c.unread ?? 0)), 0),
   )
-  // Whispers is owner-only (server gates /peek/agent-chats to the owner); hide
-  // the tab for non-owners. Columns are dynamic so the bar stays balanced.
-  const isOwner = useAuth((s) => s.companies.find((c) => c.id === s.activeCompanyId)?.role === 'owner')
-  const visibleTabs = isOwner ? tabs : tabs.filter((t) => t.key !== 'whispers')
-
   return (
     <nav
       className="mobile-chrome border-t border-ink-100 bg-cloud/95 backdrop-blur-md grid"
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)', gridTemplateColumns: `repeat(${visibleTabs.length}, minmax(0, 1fr))` }}
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)', gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
     >
-      {visibleTabs.map(({ key, Icon, label }) => {
+      {tabs.map(({ key, Icon, label }) => {
         const active = view === key
         const badge = key === 'conversations' && totalUnread > 0 ? totalUnread : undefined
         return (
@@ -49,7 +40,7 @@ export function MobileTabBar() {
             key={key}
             onClick={() => {
               setView(key)
-              if (key === 'conversations') select(null)
+              if (key === 'conversations' || key === 'mail') select(null)
             }}
             noScale
             className="relative flex flex-col items-center gap-1 py-2.5"
