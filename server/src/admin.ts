@@ -24,8 +24,6 @@ import { env } from './env.js'
 import type { AuthedRequest } from './auth.js'
 import { audit, gravatarUrlForEmail } from './auth.js'
 import { onboardStarterAgents, joinAllHands } from './onboardCompany.js'
-import { companyTier } from './tier.js'
-import { ensureCloudComputer, cloudComputerId } from './agents/computer/registry.js'
 import { mirrorAvatar } from './oauth.js'
 import { provisionUser as provisionSub2apiUser, sub2apiConfigured, setUserTier } from './sub2api.js'
 import { formatAddress, mintMessageId, sendViaProvider } from './email.js'
@@ -390,8 +388,7 @@ function buildWelcomeEmailHtml(args: {
                 </tr>${ctaBlock}
                 <tr>
                   <td style="font-family:${fontStack}; font-size:12.5px; font-weight:400; line-height:1.55; color:#94A8BC; padding:14px 0 0;">
-                    Don&rsquo;t have the desktop app yet?
-                    <a href="https://cumora.ai/?download=1#download" style="color:#3E6FA8; text-decoration:none; font-weight:600;">Get it for macOS, Windows, or Linux</a>.
+                    LingxiLoop works directly in your browser; no desktop installation is required.
                   </td>
                 </tr>
                 <tr>
@@ -457,7 +454,7 @@ async function sendWaitlistApprovedEmail(args: {
     ctaLine,
     `Use the same Google or GitHub account you used to join the waitlist.`,
     ``,
-    `Don't have the desktop app yet? Get it at https://cumora.ai/?download=1#download`,
+    `LingxiLoop works directly in your browser; no desktop installation is required.`,
     ``,
     `Reply to this email if anything trips you up — a real person reads it.`,
     ``,
@@ -594,14 +591,9 @@ export async function approveWaitlist(waitlistId: string, decidedBy: string): Pr
 
     // Post-commit side effects — same best-effort pattern as oauth.ts.
     if (companyId) {
-      // Free tier is BYOA-only: defer its starter team until the user pairs a
-      // computer (onboarding). Paid tiers get the cloud starters now. (Same
-      // rule as oauth.ts / POST /api/companies.)
+      // Starter agents are server-managed and available on every tier.
       try {
-        if ((await companyTier(companyId)) !== 'free') {
-          await ensureCloudComputer(companyId)
-          await onboardStarterAgents(companyId, { computerId: cloudComputerId(companyId), engine: 'managed' })
-        }
+        await onboardStarterAgents(companyId)
       } catch (e) { console.warn('[admin] starter onboarding failed', e) }
       try { await joinAllHands({ companyId, participantId: userId }) } catch (e) { console.warn('[admin] join all-hands failed', e) }
     }

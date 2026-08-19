@@ -44,11 +44,11 @@ export const env = {
    * the UI — no env vars are keyed by agent id.
    */
   OPENAI_MODEL: DEFAULT_MODEL,
-  /** Managed-agent reasoning path. Compatibility default stays legacy. */
-  LINGXILOOP_REASONING_RUNTIME: (process.env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph'
-    ? 'lingxigraph' : 'legacy') as 'legacy' | 'lingxigraph',
+  /** Managed-agent reasoning path. LingxiGraph is the product default. */
+  LINGXILOOP_REASONING_RUNTIME: (process.env.LINGXILOOP_REASONING_RUNTIME === 'legacy'
+    ? 'legacy' : 'lingxigraph') as 'legacy' | 'lingxigraph',
   /** LingxiGraph Runtime container origin, e.g. http://lingxigraph-runtime:8124. */
-  LINGXIGRAPH_URL: process.env.LINGXIGRAPH_URL,
+  LINGXIGRAPH_URL: process.env.LINGXIGRAPH_URL?.trim() || 'http://localhost:8124',
   /** Bearer token sent to the LingxiGraph Runtime, if it requires one. */
   LINGXIGRAPH_TOKEN: process.env.LINGXIGRAPH_TOKEN,
   LINGXIGRAPH_RUN_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 120_000),
@@ -65,13 +65,13 @@ export const env = {
    *              isolation, so it keeps going through ensurePod() even
    *              when this is 'server'. BYOA is unaffected either way.
    *
-   * Default 'pod' — changing production semantics requires an explicit
-   * opt-in. 'server' is an MVP single-replica mode: its busy/pendingRerun
+   * Default 'server'. The legacy Pod path is available only through an
+   * explicit compatibility override. Server mode uses in-process busy/pendingRerun
    * coalescing is in-process memory, not coordinated across replicas —
    * see the boot-time warning below.
    */
-  LINGXILOOP_MANAGED_AGENT_EXECUTION: (process.env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server'
-    ? 'server' : 'pod') as 'pod' | 'server',
+  LINGXILOOP_MANAGED_AGENT_EXECUTION: (process.env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'pod'
+    ? 'pod' : 'server') as 'pod' | 'server',
   /**
    * "Cerebellum" model — JSON classifiers, palette, gender inference,
    * heartbeat agenda pre-check. Cheap/fast; quality matters less than

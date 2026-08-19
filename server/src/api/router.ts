@@ -24,12 +24,11 @@ import { ogPreview, OgError } from '../og.js'
 import { sendInvitationEmail, type InvitationEmailDelivery } from '../invitation-email.js'
 import { getUserQuota, sub2apiConfigured } from '../sub2api.js'
 import {
-  ensureCloudComputer, issuePairingCode, pairComputer, announceComputerOnline,
+  issuePairingCode, pairComputer, announceComputerOnline,
   resolveDevice, mintAgentRuntimeToken, listAgentsForComputer,
   listComputers, revokeComputer, assignAgentToComputer, heartbeatComputer,
-  cloudComputerId, issueRepairCode,
+  issueRepairCode,
 } from '../agents/computer/registry.js'
-import { companyTier } from '../tier.js'
 import { createShippingRouter } from './shipping-router.js'
 
 /** Re-export so older imports (server/index.ts, agents/cli.ts) keep working
@@ -1005,16 +1004,9 @@ api.post('/companies', async (req, res) => {
          ON CONFLICT (id, company_id) DO NOTHING`,
         [me, displayName, displayName.charAt(0).toUpperCase(), gravatarUrl, id],
       )
-      // Paid companies get a built-in managed "Cumora Cloud" computer their
-      // starters run on. Free tier is BYOA-only: NO managed cloud computer
-      // (the UI shows a locked "Cumora Cloud (Pro)" upsell instead) and its
-      // starters are deferred until the first computer is paired
-      // (POST /api/computers/pair). Best-effort.
+      // Every workspace gets unassigned, server-managed LingxiGraph starters.
       try {
-        if ((await companyTier(id)) !== 'free') {
-          await ensureCloudComputer(id)
-          await onboardStarterAgents(id, { computerId: cloudComputerId(id), engine: 'managed' })
-        }
+        await onboardStarterAgents(id)
       } catch (e) { console.warn('[companies] cloud/starter setup failed', e) }
 
       try { await joinAllHands({ companyId: id, participantId: me }) }
@@ -1074,10 +1066,6 @@ api.post('/agents/:id/computer', safe(async (req, res) => {
   const { companyId } = await requireCompanyRole(req)
   const computerId = String(req.body?.computerId ?? '').trim()
   if (!computerId) throw new HttpError(400, 'computerId required')
-  // Free tier is BYOA-only — it can't put agents on the managed Cumora Cloud.
-  if (computerId === cloudComputerId(companyId) && (await companyTier(companyId)) === 'free') {
-    throw new HttpError(403, 'Free tier agents run on your own computer. Upgrade to Pro to use Cumora Cloud.')
-  }
   const engine = typeof req.body?.engine === 'string' ? req.body.engine : undefined
   const out = await assignAgentToComputer({ agentId: String(req.params.id), companyId, computerId, engine })
   if (!out) throw new HttpError(400, 'invalid computer, agent, or engine for this company')
@@ -1096,47 +1084,11 @@ api.post('/computers/pair', safe(async (req, res) => {
   const hostName = typeof req.body?.hostName === 'string' ? req.body.hostName : undefined
   const version = typeof req.body?.version === 'string' ? req.body.version : undefined
   const supervised = typeof req.body?.supervised === 'boolean' ? req.body.supervised : undefined
-  // Defer the "online" broadcast until AFTER seeding (below): the desktop flips
-  // its onboarding gate on that event and immediately reloads its roster, so the
-  // starter team + "Everyone" group must already exist when it fires — otherwise
-  // the user lands on an empty Conversations list that fills in a beat later.
+  // Pairing is an explicit legacy compatibility action and does not mutate the
+  // workspace's managed agents.
   const paired = await pairComputer({ code, hostName, engines, version, supervised, deferBroadcast: true })
   if (!paired) throw new HttpError(400, 'invalid pairing token')
-  // Free-tier BYOA onboarding on pair. The daemon sends the engines list with
-  // the user's CHOSEN engine first (`cumora agent computer --pair … --engine X`),
-  // so engines[0] is this computer's default engine — it's what the starter team
-  // and any adopted agent are created with. Fall back to Claude if unreported.
-  try {
-    if ((await companyTier(paired.companyId)) === 'free') {
-      const engine = (engines[0] === 'claude' || engines[0] === 'codex') ? engines[0] : 'claude'
-      // Adopt only agents that are stranded on the managed Cumora Cloud (or
-      // unassigned) onto the just-paired machine — earlier builds' boot backfill
-      // wrongly seeded free starters on cloud, where free can't run them. Agents
-      // already living on a real (non-cloud) computer are left ALONE: re-running
-      // the pair command must NOT clobber a per-agent engine the user picked
-      // (e.g. a Claude→Codex switch). Preserve whatever engine the agent already
-      // has; the auto-pick only fills in the stranded ones (engine 'managed'/null).
-      await pool.query(
-        `UPDATE participants p
-            SET computer_id = $1, engine = COALESCE(NULLIF(p.engine, 'managed'), $2)
-          WHERE p.company_id = $3 AND p.kind = 'agent'
-            AND NOT EXISTS (
-              SELECT 1 FROM computers c
-               WHERE c.id = p.computer_id AND c.kind <> 'cloud' AND c.revoked_at IS NULL
-            )`,
-        [paired.computerId, engine, paired.companyId],
-      )
-      // Seed starters for free companies that have none yet (idempotent — a
-      // company that already has the team is marked seeded and this no-ops).
-      await onboardStarterAgents(paired.companyId, { computerId: paired.computerId, engine })
-      // NOTE: we deliberately do NOT delete the company's managed cloud computer
-      // row here. It's now unused (its agents moved to the paired machine) and
-      // already hidden from free users by the editor's tier filter; leaving it
-      // avoids any churn/edge cases from removing a referenced row mid-flow.
-    }
-  } catch (e) { console.warn('[computers] free-tier pair onboarding failed', e) }
-  // Now the roster is ready — announce the computer online so the desktop's
-  // post-onboarding reload sees a fully-seeded workspace.
+  // Announce only the paired computer's availability.
   await announceComputerOnline(paired.computerId, paired.companyId)
   res.json(paired)
 }))

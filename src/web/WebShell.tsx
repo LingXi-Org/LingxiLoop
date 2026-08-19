@@ -94,7 +94,7 @@ function WebHandoff() {
           >Sign out</button>
         </div>
         <div className="text-[11px] text-ink-300 font-display italic">
-          LingxiLoop only runs as a desktop app — open it or install it to continue.
+          LingxiLoop is available here in your browser.
         </div>
       </div>
     </div>
@@ -130,9 +130,9 @@ function WebLanding() {
       <div className="w-[360px] flex flex-col items-center gap-7">
         <CloudLogo size={64} />
         <div className="text-center space-y-1">
-          <div className="font-display text-[22px] text-ink-900">LingxiLoop is a desktop app</div>
+          <div className="font-display text-[22px] text-ink-900">LingxiLoop works on the Web</div>
           <div className="font-display italic text-[13px] text-ink-400">
-            Sign in to join, or open the desktop app if it's already installed
+            Sign in to enter your workspace
           </div>
         </div>
         <div className="w-full flex flex-col gap-3">

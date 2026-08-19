@@ -1747,10 +1747,9 @@ CREATE INDEX IF NOT EXISTS idx_shipping_events_feature
 -- id is deterministic ('cloud-' || company_id) so this is idempotent and
 -- so other code can resolve it without a lookup. New companies get theirs
 -- created at company-creation time (see api/router.ts).
--- Free tier is BYOA-only: it must NOT get a managed cloud computer (the UI
--- shows a locked "Cumora Cloud (Pro)" upsell instead, with no real row).
--- Gated on owner tier so this doesn't re-create cloud rows for free companies
--- on every boot — that was leaking a cloud computer into every free workspace.
+-- These rows support the inherited paid-workspace compatibility UI. The
+-- default LingxiGraph server runtime does not require a Computer row, so Free
+-- workspaces intentionally remain unassigned and are still fully managed.
 INSERT INTO computers (id, company_id, name, kind, available_engines, status)
 SELECT 'cloud-' || c.id, c.id, 'Cumora Cloud', 'cloud', '["managed"]'::jsonb, 'online'
   FROM companies c
@@ -1762,7 +1761,7 @@ SELECT 'cloud-' || c.id, c.id, 'Cumora Cloud', 'cloud', '["managed"]'::jsonb, 'o
 
 -- ...and point every existing PAID-company agent at its company's cloud
 -- computer with the managed engine. Only touches un-migrated rows, so re-runs
--- are no-ops. Free agents are left alone (they run on a paired BYOA computer).
+-- are no-ops. Unassigned agents on any tier run in the managed server runtime.
 UPDATE participants p
    SET computer_id = 'cloud-' || p.company_id,
        engine = 'managed'

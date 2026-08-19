@@ -109,10 +109,7 @@ async function uniqueId(preferredId: string): Promise<string> {
  */
 export async function onboardStarterAgents(
   companyId: string,
-  /** When set, the starter agents are created already assigned to this
-   *  computer + engine (used for free-tier BYOA onboarding, where starters
-   *  are seeded onto the user's just-paired machine). Omit for the default
-   *  Cumora Cloud behavior. */
+  /** Optional legacy host assignment. Omit for managed LingxiGraph agents. */
   opts?: { computerId?: string | null; engine?: string | null },
 ): Promise<void> {
   const { rows: stamp } = await pool.query<{
@@ -482,16 +479,12 @@ export async function backfillStarterAgents(): Promise<void> {
          WHERE kind = 'agent' AND company_id IS NOT NULL
       )`,
   )
-  // Only backfill PAID companies. Free tier is BYOA-only: its starters are
-  // deferred until the user pairs a computer (seeded onto that computer at
-  // POST /api/computers/pair). Without this gate the boot backfill seeded 4
-  // starters (NULL computer → repointed to cloud) into every free company on
-  // every boot — the source of thousands of free agents wrongly on Cumora Cloud.
+  // Every workspace gets the managed starter team. The phase timestamps keep
+  // this idempotent and prevent deleted agents from being resurrected.
   const { rows } = await pool.query<{ id: string }>(
     `SELECT c.id FROM companies c
        JOIN users o ON o.id = c.owner_user_id
-      WHERE COALESCE(o.tier, 'free') <> 'free'
-        AND (c.starter_seeded_at IS NULL
+      WHERE (c.starter_seeded_at IS NULL
           OR c.starter_dms_seeded_at IS NULL
           OR c.all_hands_seeded_at IS NULL)`,
   )

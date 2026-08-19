@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useIsMobile } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useMessages, bootMessagesStream } from '@/stores/messages'
-import { bootParticipants, useParticipants } from '@/stores/participants'
+import { bootParticipants } from '@/stores/participants'
 import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
 import { bootWhispers, useWhispers } from '@/stores/whispers'
-import { bootComputers, useComputers } from '@/stores/computers'
-import { Onboarding } from '@/desktop/Onboarding'
+import { bootComputers } from '@/stores/computers'
 import { usePrefs } from '@/stores/preferences'
 import { api } from '@/api/client'
 import { DesktopApp } from '@/desktop/DesktopApp'
@@ -16,8 +15,7 @@ import { AuthGate } from '@/components/AuthGate'
 import { NotificationToasts } from '@/components/NotificationToasts'
 import { NotificationWindow } from '@/components/NotificationWindow'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { isNotificationWindow, isWebAppHost } from '@/lib/runtime'
-import { WebShell } from '@/web/WebShell'
+import { isNotificationWindow } from '@/lib/runtime'
 import {
   InviteAcceptScreen, consumeInviteFromUrl,
   getPendingInvite, clearPendingInvite,
@@ -43,25 +41,6 @@ function AuthedApp() {
   const isMobile = useIsMobile()
   const convoId = useApp((s) => s.selectedConversationId)
   const view = useApp((s) => s.view)
-  // Free tier is BYOA-only: gate the app behind pairing a computer until one
-  // exists. The gate clears automatically when a non-cloud computer comes
-  // online (WS computers.status → store → re-render). Wait for the computers
-  // list to load before deciding, to avoid a flash of onboarding.
-  const activeTier = useAuth((s) => s.companies.find((c) => c.id === s.activeCompanyId)?.tier)
-  const computersLoaded = useComputers((s) => s.loaded)
-  const hasOwnComputer = useComputers((s) => Object.values(s.byId).some((c) => c.kind !== 'cloud'))
-  const ownComputerCount = useComputers((s) => Object.values(s.byId).filter((c) => c.kind !== 'cloud').length)
-  // Free tier is BYOA-only: gate the app into onboarding whenever a free
-  // workspace has no paired (non-cloud) computer — pairing a machine is how a
-  // free user activates their agents. We previously ALSO required
-  // agentCount === 0, to avoid disrupting "grandfathered" free users who ran on
-  // Cumora Cloud with no paired machine. That state has been eliminated (free
-  // agents no longer run on managed cloud), so the guard is removed: any unpaired
-  // free workspace — even one with existing (now-dormant) agents — is sent to
-  // pair. `hasOwnComputer` checks existence not online status, so a
-  // paired-but-asleep machine never re-triggers onboarding.
-  const needsOnboarding = activeTier === 'free'
-    && computersLoaded && !hasOwnComputer
   const hasDockUnread = useConversations((s) =>
     s.list.some((c) => !isMuted(c) && (c.unread ?? 0) > 0),
   )
@@ -69,49 +48,6 @@ function AuthedApp() {
     convoId ? s.list.some((c) => c.id === convoId) : false,
   )
   const [updaterOpen, setUpdaterOpen] = useState(false)
-  // Dev shortcut to preview the onboarding screen on demand (⌘/Ctrl+Shift+O),
-  // regardless of tier/computer state. Toggle again to exit. The preview also
-  // auto-clears once a NEW computer pairs while you're previewing, so you can
-  // test the real "pair → advance into the app" behavior. baselineRef captures
-  // the own-computer count at the moment you toggle the preview on.
-  const [forceOnboarding, setForceOnboarding] = useState(false)
-  const baselineRef = useRef(0)
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
-        e.preventDefault()
-        setForceOnboarding((v) => {
-          if (!v) baselineRef.current = Object.values(useComputers.getState().byId).filter((c) => c.kind !== 'cloud').length
-          return !v
-        })
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-  useEffect(() => {
-    if (forceOnboarding && ownComputerCount > baselineRef.current) {
-      setForceOnboarding(false)
-      useApp.getState().setView('agents')
-    }
-  }, [forceOnboarding, ownComputerCount])
-  // When real onboarding completes (a computer connected → the gate flips
-  // off), land the user on the Agents view to meet / add to their team.
-  const wasOnboarding = useRef(needsOnboarding)
-  useEffect(() => {
-    if (wasOnboarding.current && !needsOnboarding) {
-      // Onboarding just completed: the pair flow seeded the starter team +
-      // "Everyone" group server-side (and only broadcasts the computer online
-      // once that's done). Pull both lists in now so the Conversations/Agents
-      // views are populated immediately, instead of waiting for WS events to
-      // trickle in and leaving the user staring at an empty list.
-      void useParticipants.getState().load()
-      void useConversations.getState().reload()
-      useApp.getState().setView('agents')
-    }
-    wasOnboarding.current = needsOnboarding
-  }, [needsOnboarding])
-
   useEffect(() => {
     bootMessagesStream()
     bootParticipants()
@@ -155,7 +91,7 @@ function AuthedApp() {
 
   return (
     <>
-      {(needsOnboarding || forceOnboarding) ? <Onboarding /> : (isMobile ? <MobileApp /> : <DesktopApp />)}
+      {isMobile ? <MobileApp /> : <DesktopApp />}
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}
@@ -244,18 +180,6 @@ export function App() {
       <AuthGate unauthFallback={screen}>
         {screen}
       </AuthGate>
-    )
-  }
-
-  // Public web client (app.cumora.ai) — Cumora ships only as a desktop
-  // app; the web surface is intentionally limited to OAuth sign-in, the
-  // waitlist verdict (handled above), and a cumora:// hand-off. The full
-  // chat shell below is reserved for Electron.
-  if (isWebAppHost) {
-    return (
-      <ErrorBoundary>
-        <WebShell />
-      </ErrorBoundary>
     )
   }
 

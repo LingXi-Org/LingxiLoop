@@ -27,7 +27,6 @@ import { notifyAlert } from '../alerting.js'
 import { isAgent } from './personas.js'
 import { ensurePod } from './runtime/orchestrator.js'
 import { resolveAgentHost, isByoaKind } from './computer/registry.js'
-import { companyTier } from '../tier.js'
 import { deliver as deliverWake, deliverSteer, type PollWakeBrief } from './runtime/wake-bus.js'
 import { inprocClient, isAgentBusy } from './runtime/inproc-client.js'
 import { classifyInboxTriage, type InboxTriageVerdict } from './inbox-triage.js'
@@ -287,7 +286,7 @@ async function wakeOne(
     console.warn(`[scheduler] ${agentId} ${reason} wake dropped: budget ${LOW_PRIORITY_WAKE_BUDGET_PER_MIN}/min exceeded`)
     return
   }
-  // Resolve host + tier BEFORE attempting deliverWake. This matters for the
+  // Resolve the host BEFORE attempting deliverWake. This matters for the
   // managed+server routing decision below: deliverWake() publishes to
   // whoever is subscribed to this agent's wake-stream, and during a
   // pod→server rollout an old Pod can still be alive and subscribed. If we
@@ -299,19 +298,6 @@ async function wakeOne(
   const host = await resolveAgentHost(agentId).catch(() => ({ kind: null, companyId: null }))
 
   if (!isByoaKind(host.kind)) {
-    // Free tier is BYOA-only: it must NEVER spin a managed Cumora Cloud pod
-    // or run a managed server-side turn. Reaching here means the agent is
-    // unassigned/managed with no live daemon — defer. The wake stays
-    // durable in the inbox for whenever they pair. Previously this was
-    // ungated ("grandfathered free on cloud"), which silently ran thousands
-    // of free agents on managed cloud — a real cost leak; the polluted
-    // legacy data (cloud computers + managed engines) was cleaned up
-    // separately.
-    if (host.companyId && (await companyTier(host.companyId)) === 'free') {
-      console.log(`[scheduler] ${agentId} is free-tier (BYOA-only); no managed pod — wake deferred until paired`)
-      return
-    }
-
     // MVP server-side execution (issue #4): managed agents dispatch straight
     // to runAgentTurn() inside this process instead of spinning up a
     // per-Agent Kubernetes Pod. No deliverWake/steer, no ensurePod(), no

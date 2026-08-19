@@ -25,14 +25,18 @@ LingxiLoop (SPA + API + scheduler)
  OpenAI-compatible provider
 ```
 
-The supported MVP mode is fixed to:
+This is also the code-level default for local and non-Compose starts:
 
 ```env
 LINGXILOOP_REASONING_RUNTIME=lingxigraph
 LINGXILOOP_MANAGED_AGENT_EXECUTION=server
 ```
 
-That means no Kubernetes, no per-Agent Pod and no `kubectl`. Keep **exactly one `lingxiloop` replica** in this mode because managed-agent dispatch coalescing is currently in-process.
+New workspaces on every tier enter the Web UI immediately and receive managed
+Starter Agents without pairing a computer or installing Claude Code/Codex.
+That means no Kubernetes, no per-Agent Pod and no `kubectl`. BYOA remains an
+optional compatibility surface only. Keep **exactly one `lingxiloop` replica**
+in this mode because managed-agent dispatch coalescing is currently in-process.
 
 ## Run locally
 

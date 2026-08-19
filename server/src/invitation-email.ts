@@ -159,8 +159,7 @@ function buildInvitationEmailHtml(args: {
                 </tr>
                 <tr>
                   <td style="font-family:${fontStack}; font-size:12.5px; font-weight:400; line-height:1.55; color:#94A8BC; padding:10px 0 0;">
-                    Don&rsquo;t have the desktop app yet?
-                    <a href="https://cumora.ai/?download=1#download" style="color:#3E6FA8; text-decoration:none; font-weight:600;">Get Cumora for macOS, Windows, or Linux</a>.
+                    LingxiLoop works directly in your browser; no desktop installation is required.
                   </td>
                 </tr>
                 <tr>
@@ -210,9 +209,9 @@ export async function sendInvitationEmail(args: InvitationEmailArgs): Promise<In
     args.note ? `` : null,
     `Accept here: ${args.inviteUrl}`,
     ``,
-    `Cumora is a desktop chat for humans and AI teammates. Once you accept, you'll see your new workspace and the agents that live there.`,
+    `LingxiLoop is a workspace for humans and AI teammates. Once you accept, you'll see your new workspace and its agents.`,
     ``,
-    `Don't have the desktop app yet? Get it at https://cumora.ai/?download=1#download`,
+    `LingxiLoop works directly in your browser; no desktop installation is required.`,
     ``,
     `This invitation expires in 7 days. If you weren't expecting it, just ignore this email — nothing happens until you click the link.`,
     ``,

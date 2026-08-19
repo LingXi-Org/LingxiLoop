@@ -104,8 +104,8 @@ test('managed + lingxigraph + server: routes straight to scheduleManagedAgentTur
   assert.equal(scheduleManagedCalls[0].agentId, 'agent-1')
 })
 
-test('managed + pod (default execution mode): still calls deliverWake -> ensurePod, never scheduleManagedAgentTurn', async (t) => {
-  const { wakeAgent, deliverWakeCalls, ensurePodCalls, scheduleManagedCalls } = await setup(t, {
+test('managed + explicit pod compatibility mode: calls deliverWake -> ensurePod, never scheduleManagedAgentTurn', async (t) => {
+  const { wakeAgent, deliverWakeCalls, scheduleManagedCalls } = await setup(t, {
     host: { kind: 'managed', companyId: 'co-1' },
     managedAgentExecution: 'pod',
     reasoningRuntime: 'lingxigraph',
@@ -143,7 +143,7 @@ test('BYOA host: unaffected by managed+server config, always goes through delive
   assert.deepEqual(deliverWakeCalls, ['agent-4'])
 })
 
-test('free-tier unassigned agent: deferred before deliverWake, ensurePod, or scheduleManagedAgentTurn', async (t) => {
+test('free-tier unassigned agent: routes to the managed LingxiGraph server executor', async (t) => {
   const { wakeAgent, deliverWakeCalls, ensurePodCalls, scheduleManagedCalls } = await setup(t, {
     host: { kind: null, companyId: 'co-free' },
     tier: 'free',
@@ -155,5 +155,6 @@ test('free-tier unassigned agent: deferred before deliverWake, ensurePod, or sch
 
   assert.deepEqual(deliverWakeCalls, [])
   assert.deepEqual(ensurePodCalls, [])
-  assert.deepEqual(scheduleManagedCalls, [])
+  assert.equal(scheduleManagedCalls.length, 1)
+  assert.equal(scheduleManagedCalls[0].agentId, 'agent-5')
 })

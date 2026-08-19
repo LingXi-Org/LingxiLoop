@@ -35,8 +35,6 @@ import { redis } from './redis.js'
 import { env } from './env.js'
 import { audit, createSession, gravatarUrlForEmail } from './auth.js'
 import { onboardStarterAgents, joinAllHands } from './onboardCompany.js'
-import { companyTier } from './tier.js'
-import { ensureCloudComputer, cloudComputerId } from './agents/computer/registry.js'
 import { storage } from './storage.js'
 import { provisionUser as provisionSub2apiUser, sub2apiConfigured } from './sub2api.js'
 import { isWaitlistEnabled, enqueueWaitlist, isAllowlistedAdmin } from './admin.js'
@@ -357,8 +355,7 @@ export async function completeFlow(
  *  Sign in with Apple (the native iOS path — the ONLY signup that gets a
  *  trial). Exists so the App Store review experience (and every fresh
  *  SIWA user) lands in a LIVE workspace — cloud starter agents that
- *  actually respond — instead of free-tier BYOA-only onboarding that asks
- *  them to pair a computer first. The trial-sweep worker downgrades the
+ *  actually respond. The trial-sweep worker downgrades the
  *  tier back to 'free' after expiry. */
 const APPLE_SIGNUP_TRIAL_DAYS = 7
 
@@ -434,7 +431,7 @@ export async function findOrCreateUserByProfile(
     const userId = `u-${randomUUID().slice(0, 12)}`
     // Apple signups start on a Pro trial (see APPLE_SIGNUP_TRIAL_DAYS) so
     // their first session has working cloud starter agents. Committed with
-    // the user row, so the post-commit companyTier() check below sees 'pro'
+    // the user row before post-commit workspace setup runs.
     // and seeds the cloud starters immediately.
     const trialTier = appleSignupTrial ? 'pro' : 'free'
     await client.query(
@@ -494,15 +491,10 @@ export async function findOrCreateUserByProfile(
     // Skipped on the invite path: the user is about to land in the inviter's
     // workspace, which already has its own agents + #all-hands.
     if (companyId) {
-      // Starter agents are always created ONTO a Computer. Paid tier's
-      // Computer is the managed Cumora Cloud (set up now), so seed there
-      // immediately. Free tier is BYOA-only — its starters are deferred until
-      // the user pairs their own computer (POST /api/computers/pair).
+      // Starter agents are server-managed by default and need no Computer or
+      // local engine assignment.
       try {
-        if ((await companyTier(companyId)) !== 'free') {
-          await ensureCloudComputer(companyId)
-          await onboardStarterAgents(companyId, { computerId: cloudComputerId(companyId), engine: 'managed' })
-        }
+        await onboardStarterAgents(companyId)
       } catch (e) { console.warn('[oauth] starter onboarding failed', e) }
       try { await joinAllHands({ companyId, participantId: userId }) } catch (e) { console.warn('[oauth] join all-hands failed', e) }
     }

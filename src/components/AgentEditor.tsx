@@ -1,14 +1,10 @@
 import { useEffect, useState } from 'react'
-import { api, getPairingServerOrigin, type AgentInput } from '@/api/client'
-import { isNativePlatform } from '@/lib/native'
+import { api, type AgentInput } from '@/api/client'
 import { useParticipants } from '@/stores/participants'
-import { useComputers } from '@/stores/computers'
 import { useConversations } from '@/stores/conversations'
-import { useAuth } from '@/stores/auth'
 import { Input } from '@/components/Input'
 import { TextArea } from '@/components/TextArea'
-import { Select } from '@/components/Select'
-import type { Participant, EngineId } from '@/types'
+import type { Participant } from '@/types'
 
 const PALETTE = [
   '#FFB088', '#FFD9D2', '#FFB7AF', '#F4B740',
@@ -30,74 +26,12 @@ export function AgentEditor({ agent, onClose }: Props) {
   const [bio, setBio] = useState(agent?.bio ?? '')
   const [avatarBg, setAvatarBg] = useState(agent?.avatarBg ?? PALETTE[0])
   const [model, setModel] = useState(agent?.model ?? '')
-  const [fastModel, setFastModel] = useState(agent?.fastModel ?? '')
+  const [fastModel] = useState(agent?.fastModel ?? '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(agent?.avatarUrl ?? null)
   const [generatingAvatar, setGeneratingAvatar] = useState(false)
   const [avatarErr, setAvatarErr] = useState<string | null>(null)
-  const [repairCode, setRepairCode] = useState<string | null>(null)
-  const [repairErr, setRepairErr] = useState<string | null>(null)
-  const [repairCopied, setRepairCopied] = useState(false)
-
-  // "Runs on" — which Computer hosts this agent. Cloud = managed engine.
-  // Free tier is BYOA-only: it has no real Cumora Cloud computer; we show a
-  // LOCKED "Cumora Cloud (Pro)" upsell instead and never default/select it.
-  const activeTier = useAuth((s) => s.companies.find((c) => c.id === s.activeCompanyId)?.tier)
-  const isFreeTier = activeTier === 'free'
-  const computersById = useComputers((s) => s.byId)
-  const computers = Object.values(computersById)
-    .sort((a, b) => (a.kind === 'cloud' ? 0 : 1) - (b.kind === 'cloud' ? 0 : 1) || a.name.localeCompare(b.name))
-  const cloud = computers.find((c) => c.kind === 'cloud')
-  const firstByoa = computers.find((c) => c.kind !== 'cloud')
-  // Default for a NEW agent: paid → Cumora Cloud; free → first paired computer.
-  const [computerId, setComputerId] = useState(agent?.computerId ?? (isFreeTier ? firstByoa?.id : cloud?.id) ?? '')
-  const [engine, setEngine] = useState<EngineId>((agent?.engine as EngineId) ?? 'managed')
-  const selectedComputer = computerId ? computersById[computerId] : undefined
-  const isByoa = !!selectedComputer && selectedComputer.kind !== 'cloud'
-  const selectedComputerOffline = isByoa && selectedComputer.status !== 'online'
-  const origin = getPairingServerOrigin()
-  const repairCommand = repairCode
-    ? `npx cumora@latest agent computer --pair ${repairCode}${origin ? ` --server ${origin}` : ''}`
-    : ''
-
-  useEffect(() => { void useComputers.getState().refresh() }, [])
-  useEffect(() => {
-    setRepairCopied(false)
-    setRepairErr(null)
-    setRepairCode(null)
-    if (!selectedComputerOffline || !selectedComputer) return
-
-    let cancelled = false
-    void api.repairComputer(selectedComputer.id)
-      .then((out) => { if (!cancelled) setRepairCode(out.code) })
-      .catch((e) => {
-        if (!cancelled) setRepairErr(e instanceof Error ? e.message : String(e))
-      })
-    return () => { cancelled = true }
-  }, [selectedComputer?.id, selectedComputerOffline])
-  useEffect(() => {
-    if (!repairCopied) return
-    const t = window.setTimeout(() => setRepairCopied(false), 1600)
-    return () => window.clearTimeout(t)
-  }, [repairCopied])
-  // Default selection once the list loads (new agents): paid → Cumora Cloud,
-  // free → the first paired computer (never cloud).
-  useEffect(() => {
-    if (computerId) return
-    if (isFreeTier && firstByoa) { setComputerId(firstByoa.id); setEngine((firstByoa.availableEngines[0] as EngineId) ?? 'claude') }
-    else if (!isFreeTier && cloud) { setComputerId(cloud.id); setEngine('managed') }
-  }, [cloud, firstByoa, computerId, isFreeTier])
-
-  const changeComputer = (id: string): void => {
-    setComputerId(id)
-    const c = computersById[id]
-    if (!c || c.kind === 'cloud') setEngine('managed')
-    else setEngine((agent?.engine as EngineId) && c.availableEngines.includes(agent!.engine as EngineId)
-      ? (agent!.engine as EngineId)
-      : (c.availableEngines[0] ?? 'claude'))
-  }
-
   // Esc to close
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -110,7 +44,6 @@ export function AgentEditor({ agent, onClose }: Props) {
     setBusy(true)
     try {
       const payload: AgentInput = { name, role, systemPrompt, bio, avatarBg, model: model.trim() || null, fastModel: fastModel.trim() || null }
-      let agentId = agent?.id
       if (editing) {
         // Only send avatarUrl on change so we don't clobber it on no-op edits.
         if ((agent!.avatarUrl ?? null) !== avatarUrl) payload.avatarUrl = avatarUrl
@@ -118,20 +51,7 @@ export function AgentEditor({ agent, onClose }: Props) {
       } else {
         // No `id` field on create — server slugifies it from `name`
         // and guarantees global uniqueness.
-        const created = await api.createAgent(payload)
-        agentId = created.id
-      }
-      // Persist the host assignment when the computer OR the engine changed.
-      // (Engine lives in the same assign call; gating only on the computer
-      // would silently drop a Claude→Codex switch on the same machine.) Still
-      // skipped on a plain style edit to avoid the owner/admin-gated call.
-      const target = computerId || cloud?.id
-      const current = agent?.computerId ?? cloud?.id
-      const targetComputer = target ? computersById[target] : undefined
-      const isByoaTarget = !!targetComputer && targetComputer.kind !== 'cloud'
-      const engineChanged = isByoaTarget && engine !== ((agent?.engine as EngineId) ?? null)
-      if (agentId && target && (target !== current || engineChanged)) {
-        await api.assignAgentComputer(agentId, target, isByoaTarget ? engine : undefined)
+        await api.createAgent(payload)
       }
       await useParticipants.getState().load()
       await useConversations.getState().reload()
@@ -236,12 +156,7 @@ export function AgentEditor({ agent, onClose }: Props) {
             />
           </Field>
 
-          <Field
-            label={isByoa ? 'Big-brain model (大脑)' : 'Model'}
-            hint={isByoa
-              ? `Main reasoning model passed to the engine as --model. ${engine === 'codex' ? 'A model name (e.g. gpt-5.5, o3).' : "A Claude alias or full name (e.g. opus, sonnet, claude-sonnet-4-6)."} Blank = engine default.`
-              : 'Optional — leave blank to use the system default. Any OpenAI model name works (e.g. gpt-5.5, gpt-5.5-pro, gpt-5.5-mini).'}
-          >
+          <Field label="Model" hint="Optional — leave blank to use the managed LingxiGraph runtime default.">
             <Input
               type="text"
               value={model}
@@ -252,92 +167,10 @@ export function AgentEditor({ agent, onClose }: Props) {
             />
           </Field>
 
-          {isByoa && (
-            <Field
-              label="Small-brain model (小脑)"
-              hint={engine === 'codex'
-                ? 'Cheaper model for light auxiliary tasks (e.g. gpt-5.4-mini). Blank = same as big-brain.'
-                : "Cheaper/faster model for light auxiliary tasks — maps to Claude's ANTHROPIC_SMALL_FAST_MODEL. Blank = engine default."}
-            >
-              <Input
-                type="text"
-                value={fastModel}
-                onChange={(e) => setFastModel(e.target.value)}
-                placeholder="(default)"
-                className="font-mono"
-                spellCheck={false}
-              />
-            </Field>
-          )}
-
-          <Field
-            label="Runs on"
-            hint="Which computer executes this agent. LingxiLoop Cloud is managed; a computer you've paired runs it on your local Claude Code or Codex."
-          >
-            <Select
-              ariaLabel="Runs on"
-              value={computerId}
-              onValueChange={changeComputer}
-              options={[
-                // Free tier has no real Cumora Cloud computer — filter any out
-                // (defensive) and append a locked Pro upsell entry instead.
-                // NOT on native: App Store Guideline 3.1.1 forbids referencing
-                // a paid tier that isn't purchasable in-app via IAP, so the
-                // iOS/Android builds omit the upsell entirely.
-                ...computers
-                  .filter((c) => !(isFreeTier && c.kind === 'cloud'))
-                  .map((c) => ({
-                    value: c.id,
-                    label: `${c.kind === 'cloud' ? '☁' : c.kind === 'vps' ? '🖥' : '💻'} ${c.name}`
-                      + (c.kind !== 'cloud' && c.status !== 'online' ? ' (offline)' : ''),
-                  })),
-                ...(isFreeTier && !isNativePlatform()
-                  ? [{ value: '__cloud_pro__', label: '☁ LingxiLoop Cloud — upgrade to Pro', disabled: true }]
-                  : []),
-              ]}
-            />
-            {selectedComputer && selectedComputer.kind !== 'cloud' && (
-              <div className="mt-2">
-                <Select
-                  ariaLabel="Engine"
-                  value={engine}
-                  onValueChange={(v) => setEngine(v as EngineId)}
-                  options={(selectedComputer.availableEngines.length
-                    ? selectedComputer.availableEngines
-                    : (['claude'] as EngineId[])
-                  ).map((en) => ({ value: en, label: en === 'claude' ? 'Claude Code' : en === 'codex' ? 'Codex' : en }))}
-                />
-              </div>
-            )}
-            {selectedComputerOffline && (
-              <div
-                className="mt-3 rounded-[12px] p-3"
-                style={{ background: 'var(--sky-50)', border: '1px solid var(--sky-100)' }}
-              >
-                <div className="text-[12px] font-semibold text-ink-900 mb-1">
-                  {selectedComputer?.name} is offline. Run this on that computer:
-                </div>
-                {repairErr ? (
-                  <div className="text-[11.5px] text-coral-deep bg-coral-soft rounded-[8px] p-2">{repairErr}</div>
-                ) : repairCommand ? (
-                  <>
-                    <pre className="bg-ink-900 text-cloud rounded-[9px] p-2.5 text-[11.5px] overflow-x-auto whitespace-pre-wrap break-all font-mono select-all">
-                      {repairCommand}
-                    </pre>
-                    <button
-                      type="button"
-                      onClick={() => { void navigator.clipboard?.writeText(repairCommand); setRepairCopied(true) }}
-                      className="mt-2 inline-flex items-center justify-center min-w-[108px] text-[11.5px] font-semibold px-3 py-1.5 rounded-[9px] text-white transition-colors duration-200"
-                      style={{ background: repairCopied ? '#3BB273' : 'var(--skype)' }}
-                    >
-                      {repairCopied ? '✓ Copied!' : 'Copy command'}
-                    </button>
-                  </>
-                ) : (
-                  <div className="text-[11.5px] text-ink-400">Generating reconnect command…</div>
-                )}
-              </div>
-            )}
+          <Field label="Runtime" hint="Agents run as managed LingxiGraph agents on the LingxiLoop server.">
+            <div className="rounded-[10px] bg-sky2-50 px-3 py-2 text-[12.5px] text-ink-700">
+              Managed · LingxiGraph
+            </div>
           </Field>
 
           <Field label="Avatar color" hint="Used as a fallback when no AI portrait is generated.">

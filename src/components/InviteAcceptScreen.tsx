@@ -160,17 +160,9 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         }
       }
       clearPendingInvite()
-      if (isElectron) {
-        // Already in the app — drop straight into the workspace, no
-        // success interstitial needed.
-        onDone()
-      } else {
-        // Web flow: park on the success screen so the user can choose
-        // between continuing in the browser, opening the desktop app via
-        // deep link, or downloading it. Auto-routing into the SPA was
-        // the wrong default — most invitees probably want the native app.
-        setJoinedCompany({ id: r.company.id, name: r.company.name, slug: r.company.slug })
-      }
+      // Web and native clients both enter the workspace immediately. The Web
+      // app is a complete product surface, not a desktop-download handoff.
+      onDone()
     } catch (e) {
       setAcceptErr(e instanceof Error ? e.message : String(e))
     } finally {
@@ -365,7 +357,7 @@ function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
           Welcome to {companyName}
         </h1>
         <p className="text-[12.5px] text-ink-500 font-display italic">
-          You're in. LingxiLoop works best as a desktop app — pick how to keep going.
+          You're in. Continue directly to your LingxiLoop workspace.
         </p>
       </div>
       <div className="w-full flex flex-col gap-2.5">
@@ -415,12 +407,10 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
           }}
         >Open in LingxiLoop desktop</button>
         <GetDesktopAppLink variant="button-secondary" />
-        {!isWebAppHost && (
-          <button
-            onClick={onSwitchInBrowser}
-            className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-          >Continue in browser</button>
-        )}
+        <button
+          onClick={onSwitchInBrowser}
+          className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
+        >Continue in browser</button>
       </div>
     </div>
   )
