@@ -287,6 +287,47 @@ async function wakeOne(
     console.warn(`[scheduler] ${agentId} ${reason} wake dropped: budget ${LOW_PRIORITY_WAKE_BUDGET_PER_MIN}/min exceeded`)
     return
   }
+  // Resolve host + tier BEFORE attempting deliverWake. This matters for the
+  // managed+server routing decision below: deliverWake() publishes to
+  // whoever is subscribed to this agent's wake-stream, and during a
+  // pod→server rollout an old Pod can still be alive and subscribed. If we
+  // only checked LINGXILOOP_MANAGED_AGENT_EXECUTION after `delivered > 0`
+  // returned early, the stale Pod would keep silently winning every wake —
+  // server mode would never actually take over. Resolving host/tier first
+  // lets the managed+lingxigraph+server branch return before deliverWake is
+  // ever called, so nothing (Pod or otherwise) can race it for the wake.
+  const host = await resolveAgentHost(agentId).catch(() => ({ kind: null, companyId: null }))
+
+  if (!isByoaKind(host.kind)) {
+    // Free tier is BYOA-only: it must NEVER spin a managed Cumora Cloud pod
+    // or run a managed server-side turn. Reaching here means the agent is
+    // unassigned/managed with no live daemon — defer. The wake stays
+    // durable in the inbox for whenever they pair. Previously this was
+    // ungated ("grandfathered free on cloud"), which silently ran thousands
+    // of free agents on managed cloud — a real cost leak; the polluted
+    // legacy data (cloud computers + managed engines) was cleaned up
+    // separately.
+    if (host.companyId && (await companyTier(host.companyId)) === 'free') {
+      console.log(`[scheduler] ${agentId} is free-tier (BYOA-only); no managed pod — wake deferred until paired`)
+      return
+    }
+
+    // MVP server-side execution (issue #4): managed agents dispatch straight
+    // to runAgentTurn() inside this process instead of spinning up a
+    // per-Agent Kubernetes Pod. No deliverWake/steer, no ensurePod(), no
+    // kubectl, no Pod/PVC/FUSE dependency — the wake never touches the old
+    // Pod path at all. Serialization + busy-wake coalescing live in
+    // managed-executor.ts, keyed by agentId.
+    if (env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server' && env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph') {
+      const turnOptions: AgentTurnOptions = { trigger: reason, ...options }
+      void scheduleManagedAgentTurn(agentId, turnOptions).catch((err) =>
+        console.error(`[scheduler] scheduleManagedAgentTurn(${agentId}) failed:`,
+          err instanceof Error ? err.message : String(err)),
+      )
+      return
+    }
+  }
+
   const wakePayload = {
     kind: 'wake' as const,
     reason,
@@ -363,37 +404,8 @@ async function wakeOne(
   // nothing to spin up. The wake is durable via the inbox, so the daemon
   // catches up on its next reconnect drain, same as a cold pod would.
   // Skip the pod path entirely; do NOT ensurePod / wake-retry kubectl.
-  const host = await resolveAgentHost(agentId).catch(() => ({ kind: null, companyId: null }))
   if (isByoaKind(host.kind)) {
     console.log(`[scheduler] ${agentId} is BYOA (${host.kind}); daemon offline — wake deferred to reconnect`)
-    return
-  }
-
-  // Free tier is BYOA-only: it must NEVER spin a managed Cumora Cloud pod. A free
-  // agent only runs when its own paired daemon is connected (delivered>0, handled
-  // above) or reconnects (isByoaKind, handled above). Reaching here for a free
-  // company means the agent is unassigned/managed with no live daemon — defer, do
-  // NOT ensurePod. Previously this was ungated ("grandfathered free on cloud"),
-  // which silently ran thousands of free agents on managed cloud — a real cost
-  // leak; the polluted legacy data (cloud computers + managed engines) was cleaned
-  // up separately. The wake stays durable in the inbox for whenever they pair.
-  if (host.companyId && (await companyTier(host.companyId)) === 'free') {
-    console.log(`[scheduler] ${agentId} is free-tier (BYOA-only); no managed pod — wake deferred until paired`)
-    return
-  }
-
-  // MVP server-side execution (issue #4): managed agents dispatch straight
-  // to runAgentTurn() inside this process instead of spinning up a
-  // per-Agent Kubernetes Pod. No ensurePod(), no kubectl, no Pod/PVC/FUSE
-  // dependency. Serialization + busy-wake coalescing live in
-  // managed-executor.ts, keyed by agentId. BYOA and free-tier are already
-  // filtered out above; this only ever runs for paid managed agents.
-  if (env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server' && env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph') {
-    const turnOptions: AgentTurnOptions = { trigger: reason, ...options }
-    void scheduleManagedAgentTurn(agentId, turnOptions).catch((err) =>
-      console.error(`[scheduler] scheduleManagedAgentTurn(${agentId}) failed:`,
-        err instanceof Error ? err.message : String(err)),
-    )
     return
   }
 

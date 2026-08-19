@@ -31,7 +31,7 @@
     "guard:llm-tracked": "node scripts/guard-llm-tracked.mjs",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "test": "node --import tsx --test \"server/src/__tests__/**/*.test.ts\" \"workers/**/*.test.ts\"",
+    "test": "node --import tsx --experimental-test-module-mocks --test \"server/src/__tests__/**/*.test.ts\" \"workers/**/*.test.ts\"",
     "test:integration": "node server/run-integration-tests.mjs",
     "migrate": "tsx server/src/migrate-bin.ts",
     "icons": "python3 scripts-make-mac-icon.py && npx -y electron-icon-builder -i build/icon.png -o build --flatten && node scripts-sync-electron-dev-icon.mjs",
