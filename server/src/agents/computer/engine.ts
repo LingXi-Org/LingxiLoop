@@ -6,17 +6,17 @@
  * each wake to an adapter, which spawns the engine headlessly in the agent's
  * isolated home directory. The engine reads its persona + memory + skills
  * from that home natively (CLAUDE.md / AGENTS.md, .claude/skills, …) and acts
- * on Cumora through the `cumora` shim the daemon puts on its PATH.
+ * on LingxiLoop through the `lingxiloop` shim the daemon puts on its PATH.
  *
  * This module is intentionally standalone — only Node builtins — so the
- * daemon can run on a machine with no Cumora DB/Redis access.
+ * daemon can run on a machine with no LingxiLoop DB/Redis access.
  *
  * NOTE on engine flags: the exact non-interactive / permission flags differ
  * across engine versions. We pick sensible defaults for an isolated,
  * user-owned runner and let the user override via env
- * (CUMORA_CLAUDE_ARGS / CUMORA_CODEX_ARGS, space-split). Correctness of the
+ * (LINGXILOOP_CLAUDE_ARGS / LINGXILOOP_CODEX_ARGS, space-split). Correctness of the
  * loop does not depend on the structured output — the agent acts via the
- * `cumora` tool regardless of how we parse stdout.
+ * `lingxiloop` tool regardless of how we parse stdout.
  */
 import { spawn, execFileSync, type ChildProcess } from 'node:child_process'
 import { mkdir, writeFile, access, mkdtemp } from 'node:fs/promises'
@@ -32,14 +32,14 @@ const IS_WIN = process.platform === 'win32'
 // long-running one (e.g. an agent running a multi-hour Bash command blocks this
 // turn with no output the whole time), so a default timeout would KILL real work.
 // Responsiveness during a long turn is handled by same-turn STEERING, not by
-// killing the turn. Set CUMORA_TURN_TIMEOUT_MS (milliseconds) to opt into a runaway
+// killing the turn. Set LINGXILOOP_TURN_TIMEOUT_MS (milliseconds) to opt into a runaway
 // backstop; 0/unset = no timeout (long tasks run to completion).
-const TURN_TIMEOUT_MS = Number(process.env.CUMORA_TURN_TIMEOUT_MS) || 0
+const TURN_TIMEOUT_MS = Number(process.env.LINGXILOOP_TURN_TIMEOUT_MS) || 0
 
 // By default the Codex app-server's raw event stream (text deltas, per-item token
 // + rate-limit snapshots, full item JSON) is NOT echoed to the daemon log — it's a
-// fire-hose the daemon doesn't need. Set CUMORA_CODEX_VERBOSE=1 to dump it raw.
-const CODEX_LOG_RAW = process.env.CUMORA_CODEX_VERBOSE === '1'
+// fire-hose the daemon doesn't need. Set LINGXILOOP_CODEX_VERBOSE=1 to dump it raw.
+const CODEX_LOG_RAW = process.env.LINGXILOOP_CODEX_VERBOSE === '1'
 
 /** How to spawn a CLI bin cross-platform.
  *  - POSIX: spawn the bare bin with shell:false — unchanged, zero-risk.
@@ -100,7 +100,7 @@ export interface EngineRunArgs {
   home: string
   /** The per-wake trigger prompt. */
   prompt: string
-  /** Env for the engine subprocess (includes the `cumora` shim wiring). */
+  /** Env for the engine subprocess (includes the `lingxiloop` shim wiring). */
   env: NodeJS.ProcessEnv
   /** Big-brain (main reasoning) model — passed to the engine as --model. */
   model?: string | null
@@ -528,7 +528,7 @@ function extraArgs(envVar: string): string[] {
 
 const PERSONA_HEADER = (p: EnginePersona): string =>
   `# ${p.name}${p.role ? ` — ${p.role}` : ''}\n\n` +
-  `You are **${p.name}**, a member of a team that collaborates in Cumora (a team chat).\n` +
+  `You are **${p.name}**, a member of a team that collaborates in LingxiLoop (a team chat).\n` +
   `This directory is your private home and your working directory — it persists\n` +
   `across wakes and is yours alone. Its layout:\n` +
   `- \`CLAUDE.md\` (this file) — always loaded each wake; keep it short.\n` +
@@ -547,23 +547,23 @@ const PERSONA_HEADER = (p: EnginePersona): string =>
   `directory (other projects, \`~/.ssh\`, credentials, browser data, personal files)\n` +
   `is private and not yours to touch.\n` +
   `- Stay inside your home directory. Do not read, open, list, or search files\n` +
-  `  outside it unless the operator explicitly asks you to in this Cumora workspace.\n` +
+  `  outside it unless the operator explicitly asks you to in this LingxiLoop workspace.\n` +
   `- NEVER paste, quote, summarize, or send the contents — or even the paths — of\n` +
-  `  any file outside your home into Cumora (replies, DMs, docs, kanban). Other\n` +
+  `  any file outside your home into LingxiLoop (replies, DMs, docs, kanban). Other\n` +
   `  people see what you post there.\n` +
-  `- If a task seems to need something outside your home, ask in Cumora first;\n` +
+  `- If a task seems to need something outside your home, ask in LingxiLoop first;\n` +
   `  don't go fetch it on your own.\n\n` +
-  `When you act in Cumora, use the \`cumora\` command-line tool (already on your\n` +
+  `When you act in LingxiLoop, use the \`lingxiloop\` command-line tool (already on your\n` +
   `PATH). Key commands:\n` +
-  `- \`cumora inbox\` — unread messages across your conversations\n` +
-  `- \`cumora messages <conversationId> --tail 30\` — read a conversation\n` +
-  `- \`cumora reply <conversationId> '<text>'\` — post a message (SINGLE quotes;\n` +
+  `- \`lingxiloop inbox\` — unread messages across your conversations\n` +
+  `- \`lingxiloop messages <conversationId> --tail 30\` — read a conversation\n` +
+  `- \`lingxiloop reply <conversationId> '<text>'\` — post a message (SINGLE quotes;\n` +
   `  for anything with backticks, code, $, quotes, or newlines, write it to a file\n` +
-  `  and use \`cumora reply <conversationId> --file <path>\` so the shell can't mangle it)\n` +
-  `- \`cumora contacts [<query>]\` — your teammates + humans, each with their role/function\n` +
-  `  (search by name or role, e.g. \`cumora contacts designer\`). Use it when someone asks\n` +
+  `  and use \`lingxiloop reply <conversationId> --file <path>\` so the shell can't mangle it)\n` +
+  `- \`lingxiloop contacts [<query>]\` — your teammates + humans, each with their role/function\n` +
+  `  (search by name or role, e.g. \`lingxiloop contacts designer\`). Use it when someone asks\n` +
   `  about a person or role you don't already know.\n` +
-  `- \`cumora whoami\` — your identity\n\n` +
+  `- \`lingxiloop whoami\` — your identity\n\n` +
   `Be a real teammate with your own voice — not a generic assistant.\n`
 
 /** A persistent Claude Code process for ONE agent (see EngineSession). Spawned in
@@ -628,12 +628,12 @@ class ClaudeSession implements EngineSession {
     }
     return new Promise<EngineRunResult>((resolve) => {
       this.pending = { resolve, stderr: [], stdout: [] }
-      // Opt-in runaway backstop only (CUMORA_TURN_TIMEOUT_MS); OFF by default so a
+      // Opt-in runaway backstop only (LINGXILOOP_TURN_TIMEOUT_MS); OFF by default so a
       // legit long task (e.g. a multi-hour Bash) is never killed mid-work. When set,
       // abort + respawn past the cap.
       if (TURN_TIMEOUT_MS > 0) {
         this.pendingTimer = setTimeout(() => {
-          this.settle({ exitCode: 124, error: `engine turn exceeded CUMORA_TURN_TIMEOUT_MS (${Math.round(TURN_TIMEOUT_MS / 1000)}s) — aborted; session will respawn`, sessionId: this.sid })
+          this.settle({ exitCode: 124, error: `engine turn exceeded LINGXILOOP_TURN_TIMEOUT_MS (${Math.round(TURN_TIMEOUT_MS / 1000)}s) — aborted; session will respawn`, sessionId: this.sid })
           this.stop() // kill the runaway process; the daemon respawns (--resume) on the next wake
         }, TURN_TIMEOUT_MS)
         this.pendingTimer.unref?.()
@@ -795,7 +795,7 @@ class ClaudeAdapter implements EngineAdapter {
     // --output-format json wraps the reply in a result envelope that ALSO carries
     // token usage (incl. cache_read/cache_creation) → we unwrap `.result` as the
     // text and pass `.usage` up for the triage cost ledger.
-    const flags = extraArgs('CUMORA_TRIAGE_ARGS')
+    const flags = extraArgs('LINGXILOOP_TRIAGE_ARGS')
     const model = ['--model', args.model || 'haiku']
     const { command, shell, wantsStdinPrompt } = resolveSpawn(this.bin)
     const usingJson = flags.length === 0
@@ -846,10 +846,10 @@ class ClaudeAdapter implements EngineAdapter {
   }
 
   async probeWake(args: EngineWakeProbeArgs): Promise<EngineWakeProbeResult> {
-    // Skipped when a CUMORA_CLAUDE_ARGS override is set — startSession() returns
+    // Skipped when a LINGXILOOP_CLAUDE_ARGS override is set — startSession() returns
     // null then, so the wake collapses to run() / one-shot exec, which probe()
     // already covers. The honest signal here is just "redundant".
-    if (extraArgs('CUMORA_CLAUDE_ARGS').length) {
+    if (extraArgs('LINGXILOOP_CLAUDE_ARGS').length) {
       return { ok: true, detail: '', skipped: true }
     }
     // The realistic break on the persistent-session path is `--append-system-prompt-file`
@@ -859,7 +859,7 @@ class ClaudeAdapter implements EngineAdapter {
     // and asking for "OK" exercises flag acceptance against the same auth path. If
     // the flag is rejected the CLI exits non-zero with a parse error; if it's
     // accepted we get the one-token reply.
-    const promptFile = join(args.cwd, '.cumora-doctor-standing.md')
+    const promptFile = join(args.cwd, '.lingxiloop-doctor-standing.md')
     try { await writeFile(promptFile, '', 'utf8') }
     catch (err) { return { ok: false, detail: `could not write standing-prompt probe file: ${err instanceof Error ? err.message : String(err)}` } }
     const { command, shell, wantsStdinPrompt } = resolveSpawn(this.bin)
@@ -886,7 +886,7 @@ class ClaudeAdapter implements EngineAdapter {
     await mkdir(join(home, '.claude', 'skills'), { recursive: true })
     const claudeMd = join(home, 'CLAUDE.md')
     if (!(await exists(claudeMd))) await writeFile(claudeMd, PERSONA_HEADER(persona), 'utf8')
-    // settings.json lets bash (hence the cumora shim) run without prompts in
+    // settings.json lets bash (hence the lingxiloop shim) run without prompts in
     // this isolated home. Only written if absent so the user can customize.
     const settings = join(home, '.claude', 'settings.json')
     if (!(await exists(settings))) {
@@ -899,7 +899,7 @@ class ClaudeAdapter implements EngineAdapter {
     // events the daemon can log. --dangerously-skip-permissions: the home is
     // isolated and user-owned, so non-interactive tool use is intended.
     // Big-brain model → --model; small-brain → ANTHROPIC_SMALL_FAST_MODEL env.
-    const flags = extraArgs('CUMORA_CLAUDE_ARGS')
+    const flags = extraArgs('LINGXILOOP_CLAUDE_ARGS')
     const model = args.model ? ['--model', args.model] : []
     // Continuous context across wakes: resume the agent's prior session so it
     // remembers the running task (its place in a counting relay, what it already
@@ -926,9 +926,9 @@ class ClaudeAdapter implements EngineAdapter {
   }
 
   startSession(args: EngineSessionArgs): EngineSession | null {
-    // Respect a user's custom flag override (CUMORA_CLAUDE_ARGS) by NOT using the
+    // Respect a user's custom flag override (LINGXILOOP_CLAUDE_ARGS) by NOT using the
     // persistent path — those flags are tuned for the one-shot run; fall back to run().
-    if (extraArgs('CUMORA_CLAUDE_ARGS').length) return null
+    if (extraArgs('LINGXILOOP_CLAUDE_ARGS').length) return null
     const model = args.model ? ['--model', args.model] : []
     // --resume only on the FIRST spawn / after a restart, to continue a prior
     // session; inside a live process the session continues on its own.
@@ -939,7 +939,7 @@ class ClaudeAdapter implements EngineAdapter {
     let sys: string[] = []
     let carriesStanding = false
     if (args.standingPrompt) {
-      const file = join(args.home, '.cumora-standing-prompt.md')
+      const file = join(args.home, '.lingxiloop-standing-prompt.md')
       try { writeFileSync(file, args.standingPrompt, { mode: 0o600 }); sys = ['--append-system-prompt-file', file]; carriesStanding = true }
       catch { /* couldn't write → leave it; the daemon inlines the standing prompt instead */ }
     }
@@ -961,9 +961,9 @@ class ClaudeAdapter implements EngineAdapter {
  *  startSession falls back to one-shot exec. */
 function ensureGitRepoForCodex(home: string): void {
   if (existsSync(join(home, '.git'))) return
-  const g = ['-c', 'user.name=cumora', '-c', 'user.email=cumora@local', '-c', 'commit.gpgsign=false']
+  const g = ['-c', 'user.name=lingxiloop', '-c', 'user.email=lingxiloop@local', '-c', 'commit.gpgsign=false']
   execFileSync('git', ['init'], { cwd: home, stdio: 'ignore' })
-  execFileSync('git', [...g, 'commit', '--allow-empty', '-m', 'cumora init'], { cwd: home, stdio: 'ignore' })
+  execFileSync('git', [...g, 'commit', '--allow-empty', '-m', 'lingxiloop init'], { cwd: home, stdio: 'ignore' })
 }
 
 type CodexRpcMsg = {
@@ -1032,7 +1032,7 @@ class CodexSession implements EngineSession {
     this.child.on('error', (err) => this.die(1, err.message))
     this.child.on('close', (code, sig) => this.die(code ?? (sig ? 128 : 1), sig ? `terminated by ${sig}` : `exited with code ${code}`))
     // Begin the handshake once handlers are attached.
-    queueMicrotask(() => { this.initializeId = this.req('initialize', { clientInfo: { name: 'cumora-daemon', version: '1.0.0' }, capabilities: { experimentalApi: true } }) })
+    queueMicrotask(() => { this.initializeId = this.req('initialize', { clientInfo: { name: 'lingxiloop-daemon', version: '1.0.0' }, capabilities: { experimentalApi: true } }) })
   }
 
   get alive(): boolean { return !this.exited && this.child.stdin?.writable === true }
@@ -1093,9 +1093,9 @@ class CodexSession implements EngineSession {
       if (!msg) { const c = cleanLine(line); if (c) this.onLog(c); continue }
       // The app-server fire-hoses raw events (text deltas, per-item token/rate-limit
       // snapshots, full item start/complete JSON). The daemon needs none of it — the
-      // agent acts via the `cumora` shim — so by DEFAULT we don't echo raw events to
+      // agent acts via the `lingxiloop` shim — so by DEFAULT we don't echo raw events to
       // the log; handle() emits concise signal lines instead (commands run, final
-      // answer, compaction, errors). CUMORA_CODEX_VERBOSE=1 dumps the raw stream.
+      // answer, compaction, errors). LINGXILOOP_CODEX_VERBOSE=1 dumps the raw stream.
       if (CODEX_LOG_RAW) { const c = cleanLine(line); if (c) this.onLog(c) }
       this.handle(msg)
     }
@@ -1244,11 +1244,11 @@ class CodexAdapter implements EngineAdapter {
 
   classify(args: EngineClassifyArgs): Promise<EngineClassifyResult> {
     // Codex on a ChatGPT account can't pick an arbitrary small model
-    // (`gpt-5-mini` is rejected), but it DOES accept `gpt-5.4-mini` — Cumora's
+    // (`gpt-5-mini` is rejected), but it DOES accept `gpt-5.4-mini` — LingxiLoop's
     // support tier — so that's the local cerebellum here. Cheap model, no big
-    // brain, no cloud. Override with CUMORA_TRIAGE_MODEL if your codex auth has
+    // brain, no cloud. Override with LINGXILOOP_TRIAGE_MODEL if your codex auth has
     // a different small model.
-    const flags = extraArgs('CUMORA_TRIAGE_ARGS')
+    const flags = extraArgs('LINGXILOOP_TRIAGE_ARGS')
     const model = ['--model', args.model || 'gpt-5.4-mini']
     const { command, shell } = resolveSpawn(this.bin)
     const argv = flags.length
@@ -1276,8 +1276,8 @@ class CodexAdapter implements EngineAdapter {
     // any of these is true, the wake path collapses to `codex exec ...` which
     // probe() already covers — running the JSON-RPC probe would just add a false
     // signal. Mark skipped and let doctor hide the line.
-    if (extraArgs('CUMORA_CODEX_ARGS').length
-        || process.env.CUMORA_CODEX_NO_APP_SERVER === '1'
+    if (extraArgs('LINGXILOOP_CODEX_ARGS').length
+        || process.env.LINGXILOOP_CODEX_NO_APP_SERVER === '1'
         || IS_WIN) {
       return Promise.resolve({ ok: true, detail: '', skipped: true })
     }
@@ -1321,7 +1321,7 @@ class CodexAdapter implements EngineAdapter {
       // 'data' lazily — that's the point at which we know the child is alive
       // enough to take input. Send `initialize` and wait for its id back.
       writeRpc({ jsonrpc: '2.0', id: initId, method: 'initialize',
-        params: { clientInfo: { name: 'cumora-doctor', version: '1.0.0' },
+        params: { clientInfo: { name: 'lingxiloop-doctor', version: '1.0.0' },
                   capabilities: { experimentalApi: true } } })
       child.stdout?.on('data', (b: Buffer) => {
         buf += b.toString('utf8')
@@ -1375,12 +1375,12 @@ class CodexAdapter implements EngineAdapter {
 
   run(args: EngineRunArgs): Promise<EngineRunResult> {
     // `codex exec` is the non-interactive mode. The agent runs on the user's
-    // own paired machine and needs full access to run the cumora shim (network),
+    // own paired machine and needs full access to run the lingxiloop shim (network),
     // clone repos, and write files — the Codex equivalent of Claude's
     // --dangerously-skip-permissions is --dangerously-bypass-approvals-and-sandbox.
     // --skip-git-repo-check lets it run in the agent home (not a git repo).
-    // Override the whole flag set via CUMORA_CODEX_ARGS if your version differs.
-    const flags = extraArgs('CUMORA_CODEX_ARGS')
+    // Override the whole flag set via LINGXILOOP_CODEX_ARGS if your version differs.
+    const flags = extraArgs('LINGXILOOP_CODEX_ARGS')
     const base = flags.length
       ? flags
       : ['--dangerously-bypass-approvals-and-sandbox', '--skip-git-repo-check']
@@ -1393,8 +1393,8 @@ class CodexAdapter implements EngineAdapter {
     // Escape hatches → fall back to one-shot `codex exec` (run()): a custom-args
     // override, an explicit opt-out, or Windows (JSON-RPC over a .cmd shell is
     // fragile; exec is the safe path there).
-    if (extraArgs('CUMORA_CODEX_ARGS').length) return null
-    if (process.env.CUMORA_CODEX_NO_APP_SERVER === '1') return null
+    if (extraArgs('LINGXILOOP_CODEX_ARGS').length) return null
+    if (process.env.LINGXILOOP_CODEX_NO_APP_SERVER === '1') return null
     if (IS_WIN) return null
     try { ensureGitRepoForCodex(args.home) }
     catch (err) { args.onLog(`[codex] could not init git repo for app-server (${err instanceof Error ? err.message : String(err)}) — falling back to one-shot exec`); return null }
@@ -1490,7 +1490,7 @@ export async function runEngineDoctor(opts?: {
 }): Promise<EngineHealth[]> {
   const env = opts?.env ?? process.env
   const timeoutMs = opts?.timeoutMs ?? 60_000
-  const cwd = await mkdtemp(join(tmpdir(), 'cumora-doctor-'))
+  const cwd = await mkdtemp(join(tmpdir(), 'lingxiloop-doctor-'))
   const ids = Object.keys(ADAPTERS) as EngineId[]
   return Promise.all(ids.map(async (id): Promise<EngineHealth> => {
     const adapter = ADAPTERS[id]
@@ -1530,7 +1530,7 @@ export async function runEngineDoctor(opts?: {
         opts?.onLog?.(`probing ${id} wake-path…`)
         // Use a FRESH subdir per engine: codex may `git init` here and we don't
         // want claude's probe (or a re-run) tripping over a stale .git.
-        const wakeCwd = await mkdtemp(join(tmpdir(), `cumora-doctor-${id}-wake-`))
+        const wakeCwd = await mkdtemp(join(tmpdir(), `lingxiloop-doctor-${id}-wake-`))
         r = await adapter.probeWake({ cwd: wakeCwd, env, signal: controller.signal })
       } catch (err) {
         r = { ok: false, detail: err instanceof Error ? err.message : String(err) }

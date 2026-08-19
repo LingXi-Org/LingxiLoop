@@ -1,19 +1,19 @@
 /**
- * remark plugin: Cumora's custom inline tokens on top of standard Markdown.
+ * remark plugin: LingxiLoop's custom inline tokens on top of standard Markdown.
  *
  * react-markdown + remark-gfm parse the STANDARD grammar (headings, lists,
  * blockquotes, tables, emphasis, code, autolinks). This plugin layers on the
- * Cumora-specific tokens that no Markdown engine knows about, so they keep
+ * LingxiLoop-specific tokens that no Markdown engine knows about, so they keep
  * rendering as their rich components:
  *   - `@<id>`                     → mention chip (avatar + hovercard)
  *   - `doc_… / board-… / card-… / ce-…` → live artifact link cards
  *   - unicode emoji               → Twemoji
  *   - Skype `(shortcode)`         → animated Skype emoji
  *
- * It runs `parseBody` (the single source of truth for Cumora tokenization) on
+ * It runs `parseBody` (the single source of truth for LingxiLoop tokenization) on
  * every remaining text node and splits matches into custom mdast nodes carrying
  * a `data.hName` so mdast→hast emits a custom element that react-markdown maps
- * to the matching component (see `cumoraMarkdownComponents` in Message.tsx).
+ * to the matching component (see `lingxiloopMarkdownComponents` in Message.tsx).
  *
  * Text nodes only reach here AFTER remark has consumed the standard markers
  * (bold/italic/code/links), so in practice parseBody only finds the four custom
@@ -28,7 +28,7 @@ import { parseBody, type RichToken } from './utils'
  *  component by tag name. */
 function customEl(hName: string, hProperties: Record<string, string>): RootContent {
   return {
-    type: 'cumora',
+    type: 'lingxiloop',
     data: { hName, hProperties },
     children: [],
   } as unknown as RootContent
@@ -53,12 +53,12 @@ function tokenToNode(t: RichToken): RootContent {
   }
 }
 
-export function remarkCumora() {
+export function remarkLingxiLoop() {
   return (tree: Root): void => {
     visit(tree, 'text', (node: Text, index, parent) => {
       if (!parent || typeof index !== 'number') return
       const tokens = parseBody(node.value)
-      // Nothing Cumora-specific in this text node — leave it untouched.
+      // Nothing LingxiLoop-specific in this text node — leave it untouched.
       if (tokens.length === 1 && tokens[0].kind === 'text') return
       const replacement = tokens.map(tokenToNode)
       parent.children.splice(index, 1, ...replacement)

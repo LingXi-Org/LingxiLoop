@@ -1,6 +1,6 @@
 import type { MessageDeltaEvent } from '../redis.js'
 
-const MESSAGE_DELTA_CHANNEL = 'cumora:msg.delta'
+const MESSAGE_DELTA_CHANNEL = 'lingxiloop:msg.delta'
 type PublishEvent = (channel: string, event: MessageDeltaEvent) => Promise<unknown>
 
 async function defaultPublish(channel: string, event: MessageDeltaEvent): Promise<unknown> {

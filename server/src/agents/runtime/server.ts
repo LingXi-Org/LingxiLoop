@@ -79,10 +79,10 @@ runtimeRouter.get('/wake-stream', withAgent(async (c, _req, res) => {
 
 attachFsEndpoints(runtimeRouter, withAgent)
 
-// ─── canonical action surface: cumora CLI ──────────────────────────
+// ─── canonical action surface: lingxiloop CLI ──────────────────────────
 //
-// Pods don't run the cumora CLI in-process (they have no DB access).
-// Instead the in-pod `cumora` binary is a thin curl shim that POSTs
+// Pods don't run the lingxiloop CLI in-process (they have no DB access).
+// Instead the in-pod `lingxiloop` binary is a thin curl shim that POSTs
 // argv here; we run it on the server's behalf. Auth: bearer token is
 // the same agent-runtime JWT; we *strip* any `--as` the caller passed
 // and inject the token's pinned agentId so a compromised pod can't
@@ -217,7 +217,7 @@ runtimeRouter.get('/inbox-triage/payload', withAgent(async (c, _req, res) => {
 // classifier the cloud idle scheduler (idle.ts) uses, returning a focused brief
 // when there is real work. This is what makes a BYOA agent PROACTIVELY pick up
 // assigned board tasks instead of only reacting to a chat push. The classifier
-// runs on the cloud support model (Cumora-subsidized), so it does NOT spend the
+// runs on the cloud support model (LingxiLoop-subsidized), so it does NOT spend the
 // operator's quota; the operator's brain is spent only on the actual work. The
 // daemon gates calls behind a "quiet for N minutes" window (its anti-loop), so
 // this isn't hit every poll. Empty / non-actionable → { actionable: false }.
@@ -438,7 +438,7 @@ runtimeRouter.post('/triage', withAgent(async (c, req, res) => {
 runtimeRouter.post('/llm-calls', withAgent(async (c, req, res) => {
   const body = req.body as {
     source?: string
-    /** agent-cli (npm cumora) version of the daemon emitting this batch. One
+    /** agent-cli (npm lingxiloop) version of the daemon emitting this batch. One
      *  version per batch — there's no mid-batch upgrade. Missing on pre-
      *  version daemons → rows recorded with daemon_version=NULL. */
     daemonVersion?: string
@@ -529,7 +529,7 @@ runtimeRouter.post('/runs/:runId/finish', withAgent(async (_c, req, res) => {
 // ─── steering busy heartbeat ────────────────────────────────────────
 //
 // The pod's HttpRuntimeClient pings these every ~2s during a turn so
-// the cumora-server's message-routing path can tell at a glance
+// the lingxiloop-server's message-routing path can tell at a glance
 // whether an agent is currently mid-turn (→ deliver a steer event)
 // or idle (→ deliver a normal wake). agentId comes from the JWT, not
 // the body — same impersonation defence as every other endpoint here.

@@ -1,7 +1,7 @@
 /**
- * Cumora CLI binary entry point.
+ * LingxiLoop CLI binary entry point.
  *
- * Invoked via the `cumora` shell command (see ./bin/cumora) or directly:
+ * Invoked via the `lingxiloop` shell command (see ./bin/lingxiloop) or directly:
  *   npx tsx server/src/cli-bin.ts <args...>
  */
 

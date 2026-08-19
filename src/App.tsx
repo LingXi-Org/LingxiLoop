@@ -26,9 +26,8 @@ import { WaitlistConfirmedScreen, consumeWaitlistFragment } from '@/admin/Waitli
 import { SuspendedScreen, consumeSuspendedFragment } from '@/admin/SuspendedScreen'
 import '@/admin/admin.css'
 
-/** True iff this browser tab is for the admin panel. On prod the
- *  hostname is admin.cumora.ai; in localhost dev the path prefix
- *  `/admin` triggers it. We check both so a dev can hit
+/** True iff this browser tab is for the admin panel. An optional `admin.*`
+ *  hostname or the `/admin` path prefix triggers it. We check both so dev can hit
  *  http://localhost:5180/admin/ without DNS work. */
 function isAdminContext(): boolean {
   if (typeof location === 'undefined') return false
@@ -58,11 +57,11 @@ function AuthedApp() {
   }, [])
 
   useEffect(() => {
-    window.cumora?.dock?.setUnreadDot(hasDockUnread)
+    window.lingxiloop?.dock?.setUnreadDot(hasDockUnread)
   }, [hasDockUnread])
 
   useEffect(() => {
-    return () => window.cumora?.dock?.setUnreadDot(false)
+    return () => window.lingxiloop?.dock?.setUnreadDot(false)
   }, [])
 
   // Lazy-load messages + mark conversation as read when selected
@@ -85,8 +84,8 @@ function AuthedApp() {
   // dialog without prop-drilling.
   useEffect(() => {
     const onOpen = () => setUpdaterOpen(true)
-    window.addEventListener('cumora:open-updater', onOpen)
-    return () => window.removeEventListener('cumora:open-updater', onOpen)
+    window.addEventListener('lingxiloop:open-updater', onOpen)
+    return () => window.removeEventListener('lingxiloop:open-updater', onOpen)
   }, [])
 
   return (
@@ -133,7 +132,7 @@ export function App() {
   // accept page is the user's first impression when they open a link. The
   // token can ride in via URL (fresh click) or localStorage (resumed
   // after an OAuth round-trip). The state is unset on done so the user
-  // lands in the freshly-joined workspace. We do NOT support cumora://
+  // lands in the freshly-joined workspace. We do NOT support lingxiloop://
   // deep links: invite URLs are always https://<web>/invite/<token>, so
   // the OS hands them to the default browser — Electron picks up the new
   // workspace on its next /auth/me refresh.

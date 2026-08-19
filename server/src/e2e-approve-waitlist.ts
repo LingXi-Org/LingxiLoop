@@ -7,12 +7,12 @@
  * the real Resend send goes out.
  *
  * Usage:
- *   CUMORA_E2E_EMAIL=you@example.com npx tsx server/src/e2e-approve-waitlist.ts
+ *   LINGXILOOP_E2E_EMAIL=you@example.com npx tsx server/src/e2e-approve-waitlist.ts
  *
  * Pre-reqs (already in .env on this machine):
- *   - DATABASE_URL pointed at a dev cumora DB
+ *   - DATABASE_URL pointed at a dev lingxiloop DB
  *   - RESEND_API_KEY + EMAIL_DOMAIN set
- *   - CUMORA_E2E_EMAIL — a real inbox you control (a `+tag` is appended)
+ *   - LINGXILOOP_E2E_EMAIL — a real inbox you control (a `+tag` is appended)
  *   - An admin users row exists (the script auto-discovers one)
  */
 import 'dotenv/config'
@@ -22,13 +22,13 @@ import { approveWaitlist } from './admin.js'
 
 async function main(): Promise<void> {
   const stamp = Date.now()
-  const baseEmail = process.env.CUMORA_E2E_EMAIL
+  const baseEmail = process.env.LINGXILOOP_E2E_EMAIL
   if (!baseEmail || !baseEmail.includes('@')) {
-    console.error('[e2e] set CUMORA_E2E_EMAIL to an inbox you control (the welcome email is really sent)')
+    console.error('[e2e] set LINGXILOOP_E2E_EMAIL to an inbox you control (the welcome email is really sent)')
     process.exit(1)
   }
   const [local, domain] = baseEmail.split('@')
-  const testEmail = `${local}+cumora-e2e-${stamp}@${domain}`
+  const testEmail = `${local}+lingxiloop-e2e-${stamp}@${domain}`
   const displayName = `E2E ${stamp}`
 
   console.log(`[e2e] target email: ${testEmail}`)

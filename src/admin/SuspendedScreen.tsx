@@ -38,21 +38,21 @@ export function SuspendedScreen({ email, reason }: { email: string | null; reaso
     return null
   }
   return (
-    <div className="cumora-waitlist-screen">
-      <div className="cumora-waitlist-card">
-        <div className="cumora-waitlist-emoji" aria-hidden>🔒</div>
-        <div className="cumora-waitlist-title">Your account is suspended</div>
-        <div className="cumora-waitlist-sub" style={{ marginBottom: reason ? 16 : 24 }}>
-          Access for <span className="cumora-waitlist-email">{email ?? 'your account'}</span> has been
+    <div className="lingxiloop-waitlist-screen">
+      <div className="lingxiloop-waitlist-card">
+        <div className="lingxiloop-waitlist-emoji" aria-hidden>🔒</div>
+        <div className="lingxiloop-waitlist-title">Your account is suspended</div>
+        <div className="lingxiloop-waitlist-sub" style={{ marginBottom: reason ? 16 : 24 }}>
+          Access for <span className="lingxiloop-waitlist-email">{email ?? 'your account'}</span> has been
           temporarily disabled by a LingxiLoop administrator.
         </div>
         {reason ? (
-          <div className="cumora-suspended-reason" role="note">
-            <div className="cumora-suspended-reason-label">Reason from the admin</div>
-            <div className="cumora-suspended-reason-body">{reason}</div>
+          <div className="lingxiloop-suspended-reason" role="note">
+            <div className="lingxiloop-suspended-reason-label">Reason from the admin</div>
+            <div className="lingxiloop-suspended-reason-body">{reason}</div>
           </div>
         ) : null}
-        <div className="cumora-waitlist-sub" style={{ marginTop: 16, marginBottom: 24 }}>
+        <div className="lingxiloop-waitlist-sub" style={{ marginTop: 16, marginBottom: 24 }}>
           If you think this is a mistake, reply to your most recent message from us, or
           reach out to your workspace owner.
         </div>

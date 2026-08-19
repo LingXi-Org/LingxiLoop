@@ -9,7 +9,7 @@ import {
 } from '../documents/markdown.js'
 
 test('parseInlineMarkdown converts common marks', () => {
-  assert.deepEqual(parseInlineMarkdown('Use **bold**, *italic*, ~~gone~~, `code`, and [docs](https://cumora.ai).'), [
+  assert.deepEqual(parseInlineMarkdown('Use **bold**, *italic*, ~~gone~~, `code`, and [docs](https://loop.example.com).'), [
     { type: 'text', text: 'Use ' },
     { type: 'text', text: 'bold', marks: [{ type: 'bold' }] },
     { type: 'text', text: ', ' },
@@ -19,7 +19,7 @@ test('parseInlineMarkdown converts common marks', () => {
     { type: 'text', text: ', ' },
     { type: 'text', text: 'code', marks: [{ type: 'code' }] },
     { type: 'text', text: ', and ' },
-    { type: 'text', text: 'docs', marks: [{ type: 'link', attrs: { href: 'https://cumora.ai' } }] },
+    { type: 'text', text: 'docs', marks: [{ type: 'link', attrs: { href: 'https://loop.example.com' } }] },
     { type: 'text', text: '.' },
   ])
 })

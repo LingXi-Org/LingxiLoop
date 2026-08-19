@@ -40,12 +40,12 @@ export function WaitlistConfirmedScreen({ email }: { email: string | null }) {
     return null
   }
   return (
-    <div className="cumora-waitlist-screen">
-      <div className="cumora-waitlist-card">
-        <div className="cumora-waitlist-emoji">⏳</div>
-        <div className="cumora-waitlist-title">You're on the waitlist</div>
-        <div className="cumora-waitlist-sub" style={{ marginBottom: 18 }}>
-          We saved <span className="cumora-waitlist-email">{email ?? 'your email'}</span> and will let you know
+    <div className="lingxiloop-waitlist-screen">
+      <div className="lingxiloop-waitlist-card">
+        <div className="lingxiloop-waitlist-emoji">⏳</div>
+        <div className="lingxiloop-waitlist-title">You're on the waitlist</div>
+        <div className="lingxiloop-waitlist-sub" style={{ marginBottom: 18 }}>
+          We saved <span className="lingxiloop-waitlist-email">{email ?? 'your email'}</span> and will let you know
           the moment your account is ready. No further action needed.
         </div>
         <div style={{ marginBottom: 24, fontSize: 12.5, color: 'var(--ink-400)', fontStyle: 'italic' }}>

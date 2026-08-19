@@ -12,7 +12,7 @@
  *
  * Every "agent acting in the world" capability (react / dm_with /
  * pull_group / palette / send_message …) the LLM invokes via bash +
- * the `cumora` shim. Browser work goes through the in-pod `opencli`
+ * the `lingxiloop` shim. Browser work goes through the in-pod `opencli`
  * binary (Chromium + Xvfb live in the agent-computer image), so it
  * runs via bash too. So this dispatcher only needs the four pod-local
  * cases.
@@ -21,7 +21,7 @@
  * by the agent_events trail (which flows through /runtime/cli too).
  * Skipping the legacy `tool_calls` row per-invocation is intentional:
  * it had a pool.query that leaked the DB into the pod bundle, and
- * server-side actions (via cumora CLI) still log their own tool_calls
+ * server-side actions (via lingxiloop CLI) still log their own tool_calls
  * row through the existing executeTool path in tools.ts.
  */
 import { tBash, tSetTurnStatus } from '../tools-shared.js'
@@ -67,7 +67,7 @@ function noNamespace(name: string, _wanted: string): ToolResult {
 
 /** Test-only override. When set, every {@link executePodTool} call goes
  *  through this fake instead of the real dispatch (which shells out via
- *  bash → `cumora` CLI / reads the FS namespace / hits Tavily). Production
+ *  bash → `lingxiloop` CLI / reads the FS namespace / hits Tavily). Production
  *  code never sets this; integration tests use it to make tool execution
  *  deterministic without spinning up the per-agent FS / bash subprocess. */
 let testToolOverride: ((args: DispatchArgs) => ToolResult | Promise<ToolResult>) | null = null

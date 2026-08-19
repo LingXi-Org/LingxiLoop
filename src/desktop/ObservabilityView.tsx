@@ -576,7 +576,7 @@ function FileTree({ nodes, depth, expanded, onToggle, selectedPath, onSelect }: 
 }
 
 /** File-content renderer that picks the right view based on extension.
- *   - `.md` → RichBody (cumora's own markdown-ish renderer)
+ *   - `.md` → RichBody (lingxiloop's own markdown-ish renderer)
  *   - `.json` / `.ts` / `.py` / etc → CodeBlock (syntax-highlit)
  *   - anything else → wrapped plain text in paper theme */
 function FileViewer({ path, body }: { path: string; body: string }) {
@@ -584,7 +584,7 @@ function FileViewer({ path, body }: { path: string; body: string }) {
   if (!body) return <div className="text-[13px] italic text-ink-400">(empty file)</div>
   if (ext === 'md' || ext === 'markdown') {
     return (
-      <div className="cumora-prose font-display text-[14px] leading-[1.7] text-ink-900">
+      <div className="lingxiloop-prose font-display text-[14px] leading-[1.7] text-ink-900">
         <RichBody body={body} />
       </div>
     )
@@ -634,7 +634,7 @@ function PriceMenuTable({ rows }: { rows: { model: string; inPer1M: number; cach
   const isSmall = (m: string) => /haiku|mini/i.test(m)
   return (
     <div className="rounded-[10px] border border-ink-100 bg-paper px-3.5 py-3">
-      <div className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-ink-300">Token unit prices · small brain vs big brain (per 1M tokens — all ESTIMATES unless you set CUMORA_MODEL_PRICES_JSON)</div>
+      <div className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-ink-300">Token unit prices · small brain vs big brain (per 1M tokens — all ESTIMATES unless you set LINGXILOOP_MODEL_PRICES_JSON)</div>
       <table className="mt-2 w-full text-[11.5px]">
         <thead className="text-[9px] font-bold uppercase tracking-[0.1em] text-ink-400">
           <tr>
@@ -744,7 +744,7 @@ function TriageEconomicsPanel(props: {
           <div className="mx-auto max-w-[1100px] space-y-5">
             {/* ALWAYS-ON disclaimer: every $ here is an estimate. */}
             <div className="rounded-[10px] border border-coral-soft bg-coral-soft px-3.5 py-2.5 text-[11.5px] leading-[1.6] text-coral-deep">
-              <b>⚠ Every dollar on this page is an ESTIMATE</b> and may differ substantially from your real cost. Reason: we do not authoritatively know the per-token unit prices. The cloud model aliases (gpt-5.*) are <b>guesses</b>; the Claude tiers are list prices from memory that may be stale or wrong for your exact model variant; and on a flat-rate plan the $ is not a bill at all (see below). The token counts are real — the prices applied to them are not. Set <code className="rounded bg-paper/60 px-1">CUMORA_MODEL_PRICES_JSON</code> with your real contracted rates to make these exact.
+              <b>⚠ Every dollar on this page is an ESTIMATE</b> and may differ substantially from your real cost. Reason: we do not authoritatively know the per-token unit prices. The cloud model aliases (gpt-5.*) are <b>guesses</b>; the Claude tiers are list prices from memory that may be stale or wrong for your exact model variant; and on a flat-rate plan the $ is not a bill at all (see below). The token counts are real — the prices applied to them are not. Set <code className="rounded bg-paper/60 px-1">LINGXILOOP_MODEL_PRICES_JSON</code> with your real contracted rates to make these exact.
             </div>
 
             {data.triageCount === 0 ? (
@@ -779,7 +779,7 @@ function TriageEconomicsPanel(props: {
             {/* The actual per-token unit prices the estimates rest on (table). */}
             {(data.unitPrices?.length ?? 0) > 0 && (
               <div className="rounded-[10px] border border-ink-100 bg-paper px-3.5 py-3">
-                <div className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-ink-300">Unit prices used · per 1M tokens (all ESTIMATES unless you set CUMORA_MODEL_PRICES_JSON)</div>
+                <div className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-ink-300">Unit prices used · per 1M tokens (all ESTIMATES unless you set LINGXILOOP_MODEL_PRICES_JSON)</div>
                 <table className="mt-2 w-full text-[11.5px]">
                   <thead className="text-[9px] font-bold uppercase tracking-[0.1em] text-ink-400">
                     <tr>
@@ -820,7 +820,7 @@ function TriageEconomicsPanel(props: {
 
             <div className="rounded-[10px] border border-ink-100 bg-cloud px-3.5 py-2.5 text-[11px] leading-[1.6] text-ink-500">
               <b className="text-ink-700">What "saved" means &amp; why it's an estimate:</b> a SKIP prevents a big-brain turn, so the saving is the <b>big-brain token cost that turn would have incurred</b> — which we can't know exactly (it didn't run). We approximate it with each agent's OWN mean effective turn cost in this window: <b>avoided = Σ(skips × that agent's avg turn $)</b>, then <b>net = avoided − triage spend</b>. Caveat: skipping can also let the big brain's prompt cache go cold (5-min TTL), so a later real turn may pay full uncached input — savings shift, they don't vanish. Everything except the avoided figure is measured; cache-aware (cache-reads ~10× cheaper than fresh input).
-              {data.costEstimated && <> Prices are <b>list-price estimates</b> — set <code className="rounded bg-paper px-1">CUMORA_MODEL_PRICES_JSON</code> for your real contracted rates.</>}
+              {data.costEstimated && <> Prices are <b>list-price estimates</b> — set <code className="rounded bg-paper px-1">LINGXILOOP_MODEL_PRICES_JSON</code> for your real contracted rates.</>}
             </div>
 
             {/* Per-agent breakdown. */}

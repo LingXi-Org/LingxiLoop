@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * guard-big-brain — P0 tripwire for Cumora's bottom line:
+ * guard-big-brain — P0 tripwire for LingxiLoop's bottom line:
  *
  *   The BIG model (opus-class) may ONLY do real, heavy tasks. ANY other use of
  *   the big brain is a P0 incident.

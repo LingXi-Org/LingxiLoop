@@ -2,7 +2,7 @@
  * Modal for creating + editing a calendar event. Drives the AI-native
  * "schedule a task for an agent" flow: title + start time + assignee +
  * prompt + recurrence. Reuses the same API as the agent CLI's
- * `cumora calendar create`, so the two stay shape-compatible.
+ * `lingxiloop calendar create`, so the two stay shape-compatible.
  */
 import { useEffect, useMemo, useState } from 'react'
 import { useCalendar } from '@/stores/calendar'

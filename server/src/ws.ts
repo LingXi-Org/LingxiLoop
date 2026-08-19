@@ -312,7 +312,7 @@ async function processDocMention(args: {
        documentId, companyId, mentionerId, row.id],
     )
     // Agents: drop an agent_log breadcrumb so the mention surfaces in
-    // `cumora log`. Humans don't have this surface; the toast is
+    // `lingxiloop log`. Humans don't have this surface; the toast is
     // their notification.
     if (row.kind === 'agent') {
       await pool.query(
@@ -330,7 +330,7 @@ async function processDocMention(args: {
       // the agent actually WAKES + has context to act on. The mailbox
       // scheduler watches CH_MESSAGE_NEW and runs an agent turn for
       // every recipient. Without this step the agent only sees the
-      // doc-mention via `cumora log` on its NEXT natural wake — which
+      // doc-mention via `lingxiloop log` on its NEXT natural wake — which
       // might never come if no one else messages it.
       try {
         await postDocMentionWake({
@@ -377,7 +377,7 @@ async function processDocMention(args: {
  *
  *  Body is plain prose — looks like a regular nudge to the agent's
  *  inbox parser, but carries the doc id verbatim so the agent's tool
- *  loop can call `cumora doc read <id>` without guessing. */
+ *  loop can call `lingxiloop doc read <id>` without guessing. */
 async function postDocMentionWake(args: {
   companyId: string
   mentionerId: string
@@ -446,7 +446,7 @@ async function postDocMentionWake(args: {
   )
   const sequence = seqRes.rows[0]?.seq ?? 1
   const messageId = `m-${randomUUID()}`
-  const body = `@${agentId} heads-up — I @-mentioned you in the doc "${documentTitle}". Take a look with \`cumora doc read ${documentId}\`, then either reply here or edit the doc directly (\`cumora doc append/replace ${documentId} …\`).`
+  const body = `@${agentId} heads-up — I @-mentioned you in the doc "${documentTitle}". Take a look with \`lingxiloop doc read ${documentId}\`, then either reply here or edit the doc directly (\`lingxiloop doc append/replace ${documentId} …\`).`
   await pool.query(
     `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
      VALUES ($1, $2, $3, 'text', $4, $5, $6)`,
@@ -593,7 +593,7 @@ export function attachWebSocket(httpServer: Server) {
 
   sub.on('message', (channel, payload) => {
     // Doc channels are room-scoped, not company-scoped — skip them here.
-    if (channel === 'cumora:doc.update' || channel === 'cumora:doc.awareness') return
+    if (channel === 'lingxiloop:doc.update' || channel === 'lingxiloop:doc.awareness') return
     // Tenant-aware fan-out: only deliver an event to a socket if the event's
     // companyId is in the socket's set of memberships. Untagged events are
     // dropped (no leakage), since every publisher is expected to tag.

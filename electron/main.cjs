@@ -17,15 +17,15 @@ const DEV_URL = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5180'
 // asar — and 404s. Vite's `base: './'` trick only fixes the bundled
 // imports; hard-coded JSX `src="/logo.png"` stays absolute.
 //
-// Registering `app://cumora/` as a privileged scheme + serving every
+// Registering `app://lingxiloop/` as a privileged scheme + serving every
 // request out of the packaged `dist/` directory normalises both classes
 // of paths: absolute `/foo` and relative `./foo` both end up as
-// `app://cumora/<path>` and resolve to `<resources>/dist/<path>`. The
+// `app://lingxiloop/<path>` and resolve to `<resources>/dist/<path>`. The
 // renderer otherwise can't tell it isn't running over plain http(s).
 //
-// Why `cumora` as the hostname (not `localhost`): the renderer's Origin
+// Why `lingxiloop` as the hostname (not `localhost`): the renderer's Origin
 // header gets stamped from this URL on any cross-origin fetch, and the
-// API server's CUMORA_CORS_ORIGINS gates the response on that origin.
+// API server's LINGXILOOP_CORS_ORIGINS gates the response on that origin.
 // Picking a project-specific host keeps the allowlist tight (no
 // arbitrary local app gets a CORS pass) and reads more semantically.
 //
@@ -39,14 +39,13 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ])
 
-/** Resolve the on-disk path for an `app://<host>/<request-path>` URL.
+/** Resolve the on-disk path for an `app://lingxiloop/<request-path>` URL.
  *  Strips leading slashes from the URL path and joins under the packaged
  *  dist directory. Rejects anything that resolves OUTSIDE dist (path
- *  traversal guard). Host is ignored — we accept any so legacy
- *  `app://localhost` URLs that might be sitting in localStorage redirect
- *  history still resolve. */
+ *  traversal guard), including requests for any other renderer host. */
 function appProtocolFile(reqUrl) {
   const u = new URL(reqUrl)
+  if (u.hostname !== 'lingxiloop') return null
   const distRoot = path.join(__dirname, '..', 'dist')
   let rel = decodeURIComponent(u.pathname).replace(/^\/+/, '')
   if (!rel || rel === 'index.html') rel = 'index.html'
@@ -103,29 +102,29 @@ if (isDev) {
 // Sign-in opens the system browser; after the provider redirects to
 // our prod server's /auth/callback, the server 302s to this tiny
 // local-only HTTP server. The /auth/done HTML page renders a polished
-// "You're signed in" card with an explicit "Open Cumora" button — the
-// button uses the cumora:// deep link to hand the session to the app
+// "You're signed in" card with an explicit "Open LingxiLoop" button — the
+// button uses the lingxiloop:// deep link to hand the session to the app
 // (works whether the app is currently running or not).
 //
 // Why button + deep link over silent auto-handoff:
 //   - User sees a deliberate "open the app" moment instead of an
-//     invisible POST that doesn't always bring Cumora to front
+//     invisible POST that doesn't always bring LingxiLoop to front
 //   - Deep link launches the app even if it isn't running yet —
 //     fresh-install + first sign-in works without a manual launch
-//   - The browser tab stays put on the success page, so if Cumora
+//   - The browser tab stays put on the success page, so if LingxiLoop
 //     fails to come forward the user can click again
 //
 // Tokens ride in the URL fragment (#token=…) so they stay out of
 // server access logs and HTTP Referer headers. macOS LaunchServices
 // does log the full deep-link URL — same threat surface as any other
-// cumora:// link, accepted as the cost of an explicit, user-driven
+// lingxiloop:// link, accepted as the cost of an explicit, user-driven
 // handoff. Session TTL stays tight (30d hard / 14d idle).
 //
-// Single-instance lock keeps a stray second `cumora` from binding the
+// Single-instance lock keeps a stray second `lingxiloop` from binding the
 // same loopback port AND lets deep links routed to a NEW process bounce
 // over to the already-running instance via second-instance event below.
 const LOOPBACK_PORT = 47823
-const DEEP_LINK_SCHEME = 'cumora'
+const DEEP_LINK_SCHEME = 'lingxiloop'
 
 const gotSingleInstance = app.requestSingleInstanceLock()
 if (!gotSingleInstance) {
@@ -205,14 +204,14 @@ if (process.platform === 'darwin') {
   // create-path handles repair locally (see createNotificationWindow).
 }
 
-// Register the app as the OS handler for cumora:// links. In dev this
+// Register the app as the OS handler for lingxiloop:// links. In dev this
 // only persists until the dev process ends (Electron writes to LSDb
 // each launch); packaged builds get a durable registration via the
 // `build.protocols` entry in package.json.
 if (process.defaultApp) {
   // `process.defaultApp` is true when Electron is run from CLI (dev).
   // The argv[1] is the script path — register so macOS knows which
-  // executable to invoke for cumora:// URLs.
+  // executable to invoke for lingxiloop:// URLs.
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME, process.execPath, [path.resolve(process.argv[1])])
   }
@@ -222,9 +221,9 @@ if (process.defaultApp) {
 
 /** HTML served at /auth/done. Self-contained: no external assets, so
  *  it renders identically online/offline. Shows a "You're signed in"
- *  card with an explicit Open Cumora button — clicking it navigates
- *  to `cumora://auth#token=…` so the OS hands the URL to the running
- *  Cumora app (open-url on macOS, second-instance argv on Win/Linux),
+ *  card with an explicit Open LingxiLoop button — clicking it navigates
+ *  to `lingxiloop://auth#token=…` so the OS hands the URL to the running
+ *  LingxiLoop app (open-url on macOS, second-instance argv on Win/Linux),
  *  launching it if it isn't already running. */
 const AUTH_DONE_HTML = `<!doctype html>
 <html lang="en">
@@ -367,12 +366,12 @@ const AUTH_DONE_HTML = `<!doctype html>
   // Build the deep link. Token + companyId ride in the URL fragment
   // so they're not URL-encoded as a query string (cleaner) and don't
   // appear in any web-server access logs along the path (we never
-  // navigate to a remote URL here — the OS routes the cumora:// scheme
+  // navigate to a remote URL here — the OS routes the lingxiloop:// scheme
   // directly to the local app).
   const frag = new URLSearchParams({ token });
   if (companyId) frag.set('companyId', companyId);
   if (nonce) frag.set('n', nonce);
-  const deepLink = 'cumora://auth#' + frag.toString();
+  const deepLink = 'lingxiloop://auth#' + frag.toString();
 
   let opened = false;
   btn.addEventListener('click', () => {
@@ -396,7 +395,7 @@ const AUTH_DONE_HTML = `<!doctype html>
 </html>`
 
 // ============== Auth-handoff nonce (anti session-fixation) ==============
-// An inbound `cumora://auth#token=…` deep link is otherwise unauthenticated:
+// An inbound `lingxiloop://auth#token=…` deep link is otherwise unauthenticated:
 // any web page the user visits can navigate to that scheme and silently log
 // the app into the ATTACKER's account (session fixation). We defend with a
 // single-use nonce that only the app can originate: the renderer asks main to
@@ -440,7 +439,7 @@ function consumeAuthNonce(nonce) {
   }
 }
 
-/** Pull token + companyId + nonce out of a `cumora://auth#token=…` URL. The OS
+/** Pull token + companyId + nonce out of a `lingxiloop://auth#token=…` URL. The OS
  *  hands us the full URL on open-url / second-instance; we only care
  *  about the fragment. Returns null if the URL isn't auth-shaped. */
 function parseAuthDeepLink(rawUrl) {
@@ -460,7 +459,7 @@ function parseAuthDeepLink(rawUrl) {
 
 /** Push token+companyId into the renderer — but ONLY for a handoff this app
  *  itself initiated (matching armed nonce). Bringing the main window forward
- *  is the polish touch — the user came from the browser, they want Cumora on
+ *  is the polish touch — the user came from the browser, they want LingxiLoop on
  *  top. An inbound token with a missing/stale/wrong nonce is dropped. */
 function dispatchAuthToken(token, companyId, nonce) {
   if (!consumeAuthNonce(nonce)) {
@@ -536,7 +535,7 @@ function startAuthLoopback() {
 
 // Resolve once — used for `BrowserWindow.icon` (Win/Linux taskbar) and for
 // `app.dock.setIcon` on macOS so the dock / cmd-tab in dev mode show the
-// cumora cloud instead of Electron's default.
+// lingxiloop cloud instead of Electron's default.
 const ICON_PATH = path.join(app.getAppPath(), 'build', 'icon.png')
 const DOCK_ICON_SIZE = 1024
 const DOCK_UNREAD_DOT = {
@@ -900,7 +899,7 @@ function createNotificationWindow() {
     alwaysOnTop: true,
     // macOS NSPanel-style window. Critical because it:
     //  - never activates the app on click (background clicks no longer
-    //    pull the main Cumora window forward)
+    //    pull the main LingxiLoop window forward)
     //  - doesn't appear in Mission Control / window-tab cycles
     //  - combined with `focusable: true` above, doesn't trigger the
     //    accessory-policy demotion that hides the Dock icon
@@ -933,7 +932,7 @@ function createNotificationWindow() {
   // DEFAULTS to transforming NSApp's process type between
   // `ForegroundApplication` and `UIElementApplication` (the latter is
   // the accessory/agent type — no Dock icon). So the moment the first
-  // toast painted and we called this, Cumora flipped to UIElement and
+  // toast painted and we called this, LingxiLoop flipped to UIElement and
   // the Dock icon disappeared. `skipTransformProcessType: true` tells
   // Electron to set the cross-Space collection behavior WITHOUT touching
   // the process type, so the panel still shows on every Space / over
@@ -947,7 +946,7 @@ function createNotificationWindow() {
   // Default to click-through; renderer flips it off while a toast is on
   // screen via `notification:set-interactive`. With `type: 'panel'`
   // alone, clicks on the empty area would still hit-test on this
-  // window — even though they no longer activate Cumora, they'd still
+  // window — even though they no longer activate LingxiLoop, they'd still
   // block clicks reaching whatever's underneath.
   notificationWindow.setIgnoreMouseEvents(true, { forward: true })
 
@@ -1153,11 +1152,11 @@ function createWindow() {
     // <resources>/dist. No more file:// 404s.
     //
     // Host name matters: it becomes the renderer's `Origin` header on
-    // any cross-origin fetch. The cumora API server's
-    // CUMORA_CORS_ORIGINS allows `app://cumora` — keep that in sync, or
+    // any cross-origin fetch. The lingxiloop API server's
+    // LINGXILOOP_CORS_ORIGINS allows `app://lingxiloop` — keep that in sync, or
     // /auth/me + every other /api call gets CORS-blocked and the user
     // sits forever on the sign-in screen with a valid token in store.
-    void mainWindow.loadURL('app://cumora/index.html')
+    void mainWindow.loadURL('app://lingxiloop/index.html')
   }
 
   mainWindow.on('closed', () => {
@@ -1343,13 +1342,13 @@ ipcMain.on('notification:focus-convo', (_event, conversationId) => {
   }
 })
 
-// ============== Deep-link routing (cumora://auth#token=…) ==============
+// ============== Deep-link routing (lingxiloop://auth#token=…) ==============
 // Three entry points cover all three OSes:
 //   • macOS (running) → `open-url` event
 //   • macOS (cold start by Finder/Safari clicking the link) → `open-url` fires
 //     after whenReady; we also stash the URL via `process.argv` as belt-and-braces
 //   • Windows/Linux (running) → `second-instance` event (because we hold the
-//     single-instance lock, a fresh `cumora cumora://…` invocation bounces here)
+//     single-instance lock, a fresh `lingxiloop lingxiloop://…` invocation bounces here)
 //   • Windows/Linux (cold start) → URL is in `process.argv` at boot
 //
 // Each handler funnels into dispatchAuthToken() which IPCs the renderer
@@ -1374,14 +1373,14 @@ app.on('open-url', (event, url) => {
   consumeDeepLink(url)
 })
 
-// Windows / Linux — a second `cumora cumora://auth#…` invocation bounces
+// Windows / Linux — a second `lingxiloop lingxiloop://auth#…` invocation bounces
 // here via the single-instance lock we acquired up top. The URL is the
 // last element of argv per Electron convention.
 app.on('second-instance', (_event, argv) => {
   const url = argv.find((a) => typeof a === 'string' && a.startsWith(DEEP_LINK_SCHEME + '://'))
   if (url) consumeDeepLink(url)
   // Always surface the existing window — the user just clicked something
-  // expecting Cumora to come forward.
+  // expecting LingxiLoop to come forward.
   if (mainWindow && !mainWindow.isDestroyed()) {
     if (mainWindow.isMinimized()) mainWindow.restore()
     mainWindow.show()

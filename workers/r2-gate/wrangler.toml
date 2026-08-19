@@ -1,6 +1,6 @@
-# Cloudflare Worker fronting cdn.cumora.ai — HMAC-gated R2 reads.
+# Cloudflare Worker fronting cdn.example.com — HMAC-gated R2 reads.
 #
-# Routes: every request to `cdn.cumora.ai/*` flows through this worker
+# Routes: every request to `cdn.example.com/*` flows through this worker
 # instead of going straight to R2's custom-domain handler. The worker
 # validates a server-signed query string before reading the bucket via
 # its R2 binding, then proxies the bytes back to the client (with CDN
@@ -14,22 +14,22 @@
 #
 # Anything under `avatars/` is served unsigned (portraits are not private).
 # Anything under `attachments/` requires a valid `?exp&sig` pair signed by
-# the Cumora server with the same `R2_URL_SIGNING_SECRET`.
+# the LingxiLoop server with the same `R2_URL_SIGNING_SECRET`.
 
-name = "cumora-r2-gate"
+name = "lingxiloop-r2-gate"
 main = "src/index.ts"
 compatibility_date = "2024-09-01"
-account_id = "787d1726b5b2844b0d2decd4767a4b62"
+account_id = "00000000000000000000000000000000"
 
 # Bind the bucket directly — reads use the Workers Runtime API
 # (`env.BUCKET.get(key)`), no S3 hop.
 [[r2_buckets]]
 binding = "BUCKET"
-bucket_name = "cumora-attachments"
+bucket_name = "lingxiloop-attachments-example"
 
-# Take over the cdn.cumora.ai hostname. The bucket's "Custom Domain"
+# Take over the cdn.example.com hostname. The bucket's "Custom Domain"
 # setup created the DNS + TLS; this route layers our auth logic on top
 # of it.
 [[routes]]
-pattern = "cdn.cumora.ai/*"
-zone_name = "cumora.ai"
+pattern = "cdn.example.com/*"
+zone_name = "example.com"

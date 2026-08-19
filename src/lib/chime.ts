@@ -1,5 +1,5 @@
 /**
- * Cumora notification chime — a soft, sky-themed two-note bell.
+ * LingxiLoop notification chime — a soft, sky-themed two-note bell.
  *
  * Synthesized via Web Audio API instead of shipping a binary asset:
  *  - no MP3/OGG to bundle (saves ~20 KB)

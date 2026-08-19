@@ -4,21 +4,9 @@
  *   npx tsx server/src/migrate-bin.ts
  *   # or, in package.json scripts: npm run migrate
  *
- * Designed to be the entry point of a Kubernetes init container or
- * a pre-deploy Job. Runs `ensureSchema()` and exits — no HTTP
- * listener, no scheduler, no Redis subscription. In K8s init-
- * container shape:
- *
- *   spec:
- *     initContainers:
- *     - name: migrate
- *       image: ghcr.io/yetoneful/cumora-server:<version>
- *       command: ["node", "/app/migrate-bin.cjs"]
- *       env:
- *       - { name: DATABASE_URL, valueFrom: { secretKeyRef: ... } }
- *     containers:
- *     - name: server
- *       ...
+ * Designed for the production Compose `migrate` one-shot service. Runs
+ * `ensureSchema()` and exits — no HTTP listener, scheduler, or Redis
+ * subscription. It uses the same digest-pinned server image as the app.
  *
  * The migration is wrapped in a pg_advisory_lock (see db/migrate.ts)
  * so multiple concurrent runners (rolling deploy, parallel init
@@ -41,8 +29,8 @@ import { ensureSchema } from './db/migrate.js'
 //   40P01 = deadlock_detected  — a no-op ALTER's brief AccessExclusiveLock
 //                                raced a live agent/server query into a cycle
 //                                and PG aborted one. Under constant traffic this
-//                                recurs, so a bare K8s init-container restart just
-//                                crash-loops the rollout to failure (the outage
+//                                recurs, so a bare container restart can
+//                                loop the rollout to failure (the outage
 //                                this fixes) unless we retry IN-PROCESS in a
 //                                quieter moment.
 //   55P03 = lock_not_available — lock_timeout (set inside ensureSchema) tripped

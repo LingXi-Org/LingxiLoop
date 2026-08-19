@@ -1,86 +1,102 @@
-# LingxiLoop Web release guide
+# LingxiLoop Web and Desktop release guide
 
-LingxiLoop currently publishes **Web/server releases only**. Electron, macOS, Windows, Linux desktop and mobile artifacts are not part of the current release line.
+## GitHub `production` Environment
 
-## What a release does
+Configure these Environment variables:
 
-The root `VERSION` file is the Web/server release source of truth. When a change to `VERSION` lands on `main`, `.github/workflows/release.yml`:
+| Variable | Example |
+|---|---|
+| `LINGXILOOP_PUBLIC_ORIGIN` | `https://loop.lingxilearn.cn` |
+| `PRODUCTION_SSH_PORT` | `22` |
+| `PRODUCTION_DEPLOY_PATH` | `/opt/lingxiloop` |
 
-1. checks out that exact `main` commit;
-2. reads `VERSION` and resolves `v<version>`;
-3. installs dependencies with `npm ci`;
-4. runs client/server type checks and builds the Vite Web bundle;
-5. creates an annotated Git tag on that exact commit;
-6. creates the matching GitHub Release in `LingXi-Org/LingxiLoop`.
+Configure these Environment secrets:
 
-Versions containing a suffix (for example `0.1.0-alpha`) are published as GitHub prereleases. A release does **not** deploy or mutate a running server.
+- `PRODUCTION_SSH_HOST`, `PRODUCTION_SSH_USER`,
+  `PRODUCTION_SSH_PRIVATE_KEY`, `PRODUCTION_SSH_KNOWN_HOSTS`
+- `GHCR_USERNAME`, `GHCR_TOKEN`
+- `LINGXILOOP_SMOKE_TOKEN`, `LINGXILOOP_SMOKE_COMPANY_ID`
+- `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD`
+- `CSC_LINK`, `CSC_KEY_PASSWORD`
+- `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`
 
-The workflow is retry-safe: if the tag already exists it verifies that the tag resolves to the same release commit before continuing.
+Use Environment protection rules if production deployment or signing requires
+manual approval. The production concurrency group never cancels an active
+deployment.
 
-## Cut a release
+## Production host
 
-Release preparation should go through a PR so the normal PR and Docker Compose E2E checks run before publication.
+Create `/opt/lingxiloop/.env.secrets` before the first deployment. CI never
+writes this file. It must at least define the database credentials/URL, runtime
+secrets, LingxiGraph token, and model-provider credentials:
 
-For the next release, update `VERSION` only after the desired product/deployment changes are ready:
-
-```bash
-printf '0.1.0-alpha\n' > VERSION
-git add VERSION
-git commit -m 'release: v0.1.0-alpha'
-git push
+```env
+POSTGRES_USER=lingxiloop
+POSTGRES_PASSWORD=<secret>
+POSTGRES_DB=lingxiloop
+DATABASE_URL=postgres://lingxiloop:<url-encoded-secret>@postgres:5432/lingxiloop
+AGENT_RUNTIME_SECRET=<secret>
+OPENAI_API_KEY=<secret>
+OPENAI_BASE_URL=<optional-provider-origin>
+LINGXIGRAPH_TOKEN=<secret>
 ```
 
-Merge that release PR after all required checks are green. The merge itself triggers **Actions → Web Release**, which creates `v0.1.0-alpha` and the GitHub prerelease automatically.
+OAuth, object storage and email credentials also belong in this host-owned
+file. Public/release-specific values are supplied separately by CI. The
+resulting production contract is:
 
-Do not create the same tag manually at a different commit: the release workflow will intentionally fail rather than move an existing release tag.
-
-## Deploy the Web/server release
-
-The supported alpha topology is `docker-compose.mvp.yml`:
-
-```text
-Browser → HTTPS reverse proxy → LingxiLoop SPA/API/WS
-                               ├→ Postgres
-                               ├→ Redis
-                               └→ LingxiGraph Runtime → model provider
+```env
+LINGXILOOP_REASONING_RUNTIME=lingxigraph
+LINGXILOOP_MANAGED_AGENT_EXECUTION=server
+LINGXIGRAPH_URL=http://lingxigraph-runtime:8124
+LINGXILOOP_PUBLIC_ORIGIN=https://loop.lingxilearn.cn
+LINGXILOOP_CORS_ORIGINS=app://lingxiloop
+LINGXILOOP_AUTH_RETURN_ALLOWLIST=https://loop.lingxilearn.cn/,http://127.0.0.1:47823/auth/done,lingxiloop://auth
 ```
 
-Use one LingxiLoop API replica only in `LINGXILOOP_MANAGED_AGENT_EXECUTION=server` mode. The production host only needs Git, Docker Engine and Docker Compose v2; Node/npm are not required.
+Point the existing reverse proxy at `127.0.0.1:5181` and forward WebSocket
+upgrade headers. Do not expose the other Compose services.
 
-On the server:
+## Web deployment
 
-```bash
-git fetch --tags
-git checkout v0.1.0-alpha
-cp .env.example .env
-# configure secrets/provider/public Web origin
+Every `main` push runs the full reusable quality gate. A successful run builds
+and pushes both GHCR images, records their immutable digests in
+`.release.next.env`, uploads the production Compose contract, and runs
+`scripts/deploy-production.sh` remotely.
 
-docker compose -f docker-compose.mvp.yml up -d --build
-docker compose -f docker-compose.mvp.yml ps
-docker compose -f docker-compose.mvp.yml exec -T lingxiloop \
-  npx tsx server/scripts/mvp-smoke.ts
-```
+The deploy script:
 
-The Compose stack binds the Web app to loopback by default. Put TLS/WebSocket termination in front of `127.0.0.1:5181`; normally only ports 80/443 should be Internet-facing. Do not expose Postgres, Redis or the LingxiGraph Runtime publicly.
+1. rejects mutable image tags;
+2. saves the active digest set;
+3. pulls the new images and runs forward-compatible migrations;
+4. starts one API instance without deleting volumes;
+5. verifies health and `/api/meta`;
+6. runs a real Human → Agent → LingxiGraph turn and cleans its fixture;
+7. lets CI run authenticated public API/WebSocket checks.
 
-## Persistent data
+Any failure restores the previous image digests and re-verifies them. Database,
+Redis and upload volumes are preserved; normal deployment never runs
+`docker compose down -v`.
 
-The Compose stack persists:
+## Desktop release
 
-- PostgreSQL: `lingxiloop-postgres-data`
-- local uploads: `lingxiloop-uploads`
+1. Update `VERSION`, then run `npm run version:sync` and commit all synchronized
+   package and lockfile changes to `main`.
+2. Wait for that commit's Web deployment to pass.
+3. Create and push the exact tag `v${VERSION}` on that commit.
 
-For object storage, configure the R2/S3 variables in `.env.example`; this is recommended for larger production deployments.
+The desktop workflow rejects a mismatched tag or a commit outside `main`. It
+waits until production `/api/meta` reports the tag commit and LingxiGraph,
+injects `VITE_LINGXILOOP_API_BASE` from the Environment, then builds:
 
-## Rollback
+- Windows x64 NSIS with required Authenticode validation;
+- macOS x64 and arm64 DMG + ZIP with codesign, Gatekeeper, notarization and
+  stapling validation.
 
-Checkout the previous known-good tag/commit and rebuild the application containers. Keep the Postgres and upload volumes intact:
+The Electron allow-list contains only the renderer, Electron main/preload,
+icons and package metadata. A package verifier rejects server, LingxiGraph,
+environment, private-key and secret-like files. A GitHub Release is created
+only after both platforms pass. Versions containing `-` are prereleases.
 
-```bash
-git checkout <previous-tag>
-docker compose -f docker-compose.mvp.yml up -d --build
-docker compose -f docker-compose.mvp.yml exec -T lingxiloop \
-  npx tsx server/scripts/mvp-smoke.ts
-```
-
-Do **not** run `docker compose down -v` during normal upgrades or rollbacks unless you intentionally want to delete persistent data.
+Published updater assets include installers, blockmaps, `latest.yml` and
+`latest-mac.yml`.

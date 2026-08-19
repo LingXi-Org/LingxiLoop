@@ -2,7 +2,7 @@
  * Workspace handle for an agent's turn.
  *
  * In the long-running Pod model the workspace IS a FUSE mount of the
- * agent's `agent_workspace` rows (see `cumora-fuse` Go binary). The
+ * agent's `agent_workspace` rows (see `lingxiloop-fuse` Go binary). The
  * Pod mounts it at `/workspace` once on boot; reads/writes flow
  * straight to Postgres. There's no per-turn hydrate from DB and no
  * per-turn commit back — the FUSE layer makes the FS and the DB the
@@ -25,7 +25,7 @@ export interface FsNamespace {
   runId: string
   /** Mount point of the FUSE-backed workspace. Always `/workspace`
    *  inside the pod; on a dev host running runAgentTurn out-of-pod we
-   *  honour CUMORA_PERSONA_DIR for testing. */
+   *  honour LINGXILOOP_PERSONA_DIR for testing. */
   rootDir: string
   /** Always an empty map in FUSE mode — no diff is computed at the
    *  end-of-turn. */
@@ -42,7 +42,7 @@ export interface CommitDiff {
  *  ~10µs no-op — the FS is already mounted and ready. We just hand
  *  back a struct pointing at /workspace. */
 export async function hydrate(agentId: string, runId: string): Promise<FsNamespace> {
-  const rootDir = process.env.CUMORA_PERSONA_DIR || '/workspace'
+  const rootDir = process.env.LINGXILOOP_PERSONA_DIR || '/workspace'
   return { agentId, runId, rootDir, baseline: new Map() }
 }
 

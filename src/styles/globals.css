@@ -193,7 +193,7 @@ body.native .mobile-chrome {
    "feels native" tweak for an iOS WKWebView app: the moment a user
    sees SF Pro instead of a custom web font, the cognitive frame
    flips from "this is a website" to "this is an iOS app".
-   Desktop / browser surfaces keep Manrope for Cumora's brand
+   Desktop / browser surfaces keep Manrope for LingxiLoop's brand
    identity — the override is `body.native`-scoped. */
 body.native,
 body.native .font-display,
@@ -377,7 +377,7 @@ body {
 /* Toast auto-dismiss progress bar — drains right-to-left over the toast's
  * lifetime. Used by NotificationToasts; the toast pauses the animation on
  * hover so the user gets time to read longer messages. */
-@keyframes cumora-toast-drain {
+@keyframes lingxiloop-toast-drain {
   from { transform: scaleX(1); }
   to   { transform: scaleX(0); }
 }
@@ -385,21 +385,21 @@ body {
 /* ChatPane empty-state loader — three breathing dots that lift and fade
  * in sequence. The stagger lives in inline animation-delay so each dot
  * shares the same keyframes but offsets its phase. */
-@keyframes cumora-pulse-dot {
+@keyframes lingxiloop-pulse-dot {
   0%, 80%, 100% { transform: translateY(0) scale(0.85); opacity: 0.35; }
   40%           { transform: translateY(-6px) scale(1); opacity: 1; }
 }
 
 /* Soft halo around the loader — slow, ambient pulse so the empty state
  * doesn't feel inert while the dots animate above it. */
-@keyframes cumora-halo {
+@keyframes lingxiloop-halo {
   0%, 100% { transform: scale(0.9); opacity: 0.35; }
   50%      { transform: scale(1.05); opacity: 0.7; }
 }
 
 /* Empty-state container — gentle fade + lift on mount so loading/error
  * panels don't pop in jarringly when a conversation is first opened. */
-@keyframes cumora-empty-in {
+@keyframes lingxiloop-empty-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
@@ -409,7 +409,7 @@ body {
  * animation-delay so the cluster reads as a "drifting cloud" rather than
  * a synchronized pulse. Translation is small (4-5px) on purpose — at
  * larger amplitudes it starts feeling like a loader. */
-@keyframes cumora-float {
+@keyframes lingxiloop-float {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-5px); }
 }
@@ -419,14 +419,14 @@ body {
  * WEIGHTLESS (lazily floating in a breeze), not as a metronome. The
  * rotation is tiny on purpose — anything past ~1.5° starts looking like
  * a logo animation. */
-@keyframes cumora-cloud-bob {
+@keyframes lingxiloop-cloud-bob {
   0%, 100% { transform: translate(0, 0)     rotate(0deg); }
   25%      { transform: translate(2px, -4px) rotate(0.6deg); }
   50%      { transform: translate(0, -6px)   rotate(0deg); }
   75%      { transform: translate(-2px, -3px) rotate(-0.6deg); }
 }
-.cumora-cloud-float {
-  animation: cumora-cloud-bob 9.5s ease-in-out infinite;
+.lingxiloop-cloud-float {
+  animation: lingxiloop-cloud-bob 9.5s ease-in-out infinite;
   transform-origin: center 68%;
   will-change: transform;
 }
@@ -438,8 +438,8 @@ body {
  * uniform scale is the cleaner / more elegant signal. Amplitude kept
  * tiny (1.03 ≈ +7px at 240 px wide) so the motion is FELT but never
  * looks like a big jump. */
-.cumora-cloud-poke:hover  { transform: scale(1.03); }
-.cumora-cloud-poke:active { transform: scale(0.985); }
+.lingxiloop-cloud-poke:hover  { transform: scale(1.03); }
+.lingxiloop-cloud-poke:active { transform: scale(0.985); }
 
 /* Eye-blink keyframe — asymmetric timing modeled on real eyelid
  * biology: fast snap shut, brief hold closed, slower open. A symmetric
@@ -448,7 +448,7 @@ body {
  * Real blinks have the eyelid accelerating shut and decelerating open,
  * with the closed phase being the briefest part. 220 ms total = 62 ms
  * close, 53 ms held closed, 105 ms open. */
-@keyframes cumora-eye-blink {
+@keyframes lingxiloop-eye-blink {
   0%   { opacity: 0; }     /* eyes open (rest) */
   28%  { opacity: 1; }     /* fully closed (fast snap shut) */
   52%  { opacity: 1; }     /* briefly held closed */
@@ -466,7 +466,7 @@ body {
  *       jelly-wobble that reads as "Q 弹". `both` fill-mode in the
  *       inline animation prop holds the final state through the React
  *       state-clear window so it doesn't snap mid-frame. */
-@keyframes cumora-cloud-pop {
+@keyframes lingxiloop-cloud-pop {
   0%   { transform: translateY(0)     scale(1)     rotate(0deg); }
   18%  { transform: translateY(-7px)  scale(1.04)  rotate(-2deg); }   /* apex */
   40%  { transform: translateY(-2px)  scale(1.02)  rotate(1deg); }
@@ -478,7 +478,7 @@ body {
 /* Sparkle twinkle for the gold ★ accents on the empty-state hero —
  * shrinks + dims at the trough so the stars feel like they're "breathing"
  * rather than flashing. Paired with a soft text-shadow on the element. */
-@keyframes cumora-twinkle {
+@keyframes lingxiloop-twinkle {
   0%, 100% { transform: scale(1);   opacity: 0.95; }
   50%      { transform: scale(1.25); opacity: 0.45; }
 }
@@ -486,60 +486,60 @@ body {
 /* Click-on-quote → scroll + brief flash on the jumped-to bubble. The
  * MessageRow wrapper carries `id="m-<id>"`; QuoteCard adds this class for
  * ~1.4s after a jump so the user can spot which message was quoted. */
-@keyframes cumora-quote-flash {
+@keyframes lingxiloop-quote-flash {
   0%   { background-color: transparent; }
   20%  { background-color: rgba(96, 165, 250, 0.18); }
   100% { background-color: transparent; }
 }
 .quote-jump-flash {
-  animation: cumora-quote-flash 1.4s ease-out;
+  animation: lingxiloop-quote-flash 1.4s ease-out;
   border-radius: 12px;
 }
 
-/* ─── Cumora code-block syntax theme ─────────────────────────────────────
+/* ─── LingxiLoop code-block syntax theme ─────────────────────────────────────
  * Token colors mapped onto the brand palette (sky / coral / gold / wisteria
  * / ink) so highlighted code never visually fights the surrounding chat.
  * Used by `<CodeBlock>` in Message.tsx. Designed for a light paper-toned
  * panel; if we ever ship a dark variant we'll need a separate selector.
  */
-.cumora-code, .cumora-code code { color: var(--ink-700); }
-.cumora-code .hljs-keyword,
-.cumora-code .hljs-built_in,
-.cumora-code .hljs-literal,
-.cumora-code .hljs-selector-tag,
-.cumora-code .hljs-tag,
-.cumora-code .hljs-name { color: var(--skype-deep); font-weight: 600; }
-.cumora-code .hljs-string,
-.cumora-code .hljs-regexp,
-.cumora-code .hljs-symbol,
-.cumora-code .hljs-template-tag,
-.cumora-code .hljs-template-variable { color: var(--coral-deep); }
-.cumora-code .hljs-number,
-.cumora-code .hljs-attr,
-.cumora-code .hljs-attribute { color: var(--gold-deep); }
-.cumora-code .hljs-title,
-.cumora-code .hljs-title.class_,
-.cumora-code .hljs-title.function_,
-.cumora-code .hljs-class .hljs-title,
-.cumora-code .hljs-function .hljs-title,
-.cumora-code .hljs-type,
-.cumora-code .hljs-section { color: var(--whisper-deep); font-weight: 600; }
-.cumora-code .hljs-comment,
-.cumora-code .hljs-quote { color: var(--ink-300); font-style: italic; }
-.cumora-code .hljs-meta,
-.cumora-code .hljs-meta .hljs-keyword,
-.cumora-code .hljs-doctag { color: var(--ink-500); }
-.cumora-code .hljs-variable,
-.cumora-code .hljs-property,
-.cumora-code .hljs-params { color: var(--ink-700); }
-.cumora-code .hljs-operator,
-.cumora-code .hljs-punctuation { color: var(--ink-500); }
-.cumora-code .hljs-bullet,
-.cumora-code .hljs-link { color: var(--skype-deep); }
-.cumora-code .hljs-emphasis { font-style: italic; }
-.cumora-code .hljs-strong { font-weight: 700; }
-.cumora-code .hljs-addition { background: rgba(110, 197, 106, 0.12); color: #2D6F2A; }
-.cumora-code .hljs-deletion { background: rgba(255, 122, 107, 0.12); color: var(--coral-deep); }
+.lingxiloop-code, .lingxiloop-code code { color: var(--ink-700); }
+.lingxiloop-code .hljs-keyword,
+.lingxiloop-code .hljs-built_in,
+.lingxiloop-code .hljs-literal,
+.lingxiloop-code .hljs-selector-tag,
+.lingxiloop-code .hljs-tag,
+.lingxiloop-code .hljs-name { color: var(--skype-deep); font-weight: 600; }
+.lingxiloop-code .hljs-string,
+.lingxiloop-code .hljs-regexp,
+.lingxiloop-code .hljs-symbol,
+.lingxiloop-code .hljs-template-tag,
+.lingxiloop-code .hljs-template-variable { color: var(--coral-deep); }
+.lingxiloop-code .hljs-number,
+.lingxiloop-code .hljs-attr,
+.lingxiloop-code .hljs-attribute { color: var(--gold-deep); }
+.lingxiloop-code .hljs-title,
+.lingxiloop-code .hljs-title.class_,
+.lingxiloop-code .hljs-title.function_,
+.lingxiloop-code .hljs-class .hljs-title,
+.lingxiloop-code .hljs-function .hljs-title,
+.lingxiloop-code .hljs-type,
+.lingxiloop-code .hljs-section { color: var(--whisper-deep); font-weight: 600; }
+.lingxiloop-code .hljs-comment,
+.lingxiloop-code .hljs-quote { color: var(--ink-300); font-style: italic; }
+.lingxiloop-code .hljs-meta,
+.lingxiloop-code .hljs-meta .hljs-keyword,
+.lingxiloop-code .hljs-doctag { color: var(--ink-500); }
+.lingxiloop-code .hljs-variable,
+.lingxiloop-code .hljs-property,
+.lingxiloop-code .hljs-params { color: var(--ink-700); }
+.lingxiloop-code .hljs-operator,
+.lingxiloop-code .hljs-punctuation { color: var(--ink-500); }
+.lingxiloop-code .hljs-bullet,
+.lingxiloop-code .hljs-link { color: var(--skype-deep); }
+.lingxiloop-code .hljs-emphasis { font-style: italic; }
+.lingxiloop-code .hljs-strong { font-weight: 700; }
+.lingxiloop-code .hljs-addition { background: rgba(110, 197, 106, 0.12); color: #2D6F2A; }
+.lingxiloop-code .hljs-deletion { background: rgba(255, 122, 107, 0.12); color: var(--coral-deep); }
 
 /* Scrollbars */
 *::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -639,11 +639,11 @@ input, textarea { font: inherit; }
 }
 .message-bubble-agent { background: var(--bubble-agent); color: var(--ink); }
 .message-bubble-user { background: var(--bubble-user); color: var(--bubble-user-ink); }
-.cumora-code { background: var(--code-bg); }
-:root[data-theme='dark'] .cumora-code .hljs-string,
-:root[data-theme='dark'] .cumora-code .hljs-regexp { color: #FDA197; }
-:root[data-theme='dark'] .cumora-code .hljs-comment,
-:root[data-theme='dark'] .cumora-code .hljs-quote { color: #7F8793; }
+.lingxiloop-code { background: var(--code-bg); }
+:root[data-theme='dark'] .lingxiloop-code .hljs-string,
+:root[data-theme='dark'] .lingxiloop-code .hljs-regexp { color: #FDA197; }
+:root[data-theme='dark'] .lingxiloop-code .hljs-comment,
+:root[data-theme='dark'] .lingxiloop-code .hljs-quote { color: #7F8793; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-rise { animation: none !important; }
@@ -848,19 +848,19 @@ input:focus, textarea:focus, button:focus { outline: none; }
   transform: translateY(0) scale(0.94);
 }
 .reaction-pill {
-  animation: cumora-reaction-pill-in 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: lingxiloop-reaction-pill-in 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .reaction-pill[data-mine="true"] {
   box-shadow: 0 7px 18px -14px rgba(0, 120, 200, 0.55);
 }
 .reaction-pill[data-mine="true"] .reaction-emoji {
-  animation: cumora-reaction-emoji-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: lingxiloop-reaction-emoji-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .reaction-count {
   display: inline-block;
   min-width: 0.65em;
   text-align: left;
-  animation: cumora-reaction-count-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: lingxiloop-reaction-count-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .reaction-quick-tray {
   transform: translateY(2px) scale(0.98);
@@ -896,7 +896,7 @@ input:focus, textarea:focus, button:focus { outline: none; }
   inset: 10px;
   border-radius: 999px;
   border: 1px solid rgba(244, 183, 64, 0.55);
-  animation: cumora-reaction-ring 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: lingxiloop-reaction-ring 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .reaction-burst span {
   position: absolute;
@@ -908,32 +908,32 @@ input:focus, textarea:focus, button:focus { outline: none; }
   opacity: 0;
   background: var(--gold);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75);
-  animation: cumora-reaction-spark 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: lingxiloop-reaction-spark 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .reaction-burst span:nth-child(1) { --spark-x: -14px; --spark-y: -10px; background: var(--gold); }
 .reaction-burst span:nth-child(2) { --spark-x:  13px; --spark-y: -11px; background: var(--coral); animation-delay: 22ms; }
 .reaction-burst span:nth-child(3) { --spark-x: -10px; --spark-y:  13px; background: var(--sky-glow); animation-delay: 38ms; }
 .reaction-burst span:nth-child(4) { --spark-x:  12px; --spark-y:  10px; background: var(--whisper); animation-delay: 54ms; }
 
-@keyframes cumora-reaction-pill-in {
+@keyframes lingxiloop-reaction-pill-in {
   from { opacity: 0; transform: translateY(4px) scale(0.86); }
   62%  { opacity: 1; transform: translateY(-1px) scale(1.045); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-@keyframes cumora-reaction-emoji-pop {
+@keyframes lingxiloop-reaction-emoji-pop {
   from { transform: rotate(-7deg) scale(0.72); filter: saturate(0.9); }
   65%  { transform: rotate(4deg) scale(1.12); filter: saturate(1.08); }
   to   { transform: rotate(0deg) scale(1); filter: saturate(1); }
 }
-@keyframes cumora-reaction-count-in {
+@keyframes lingxiloop-reaction-count-in {
   from { opacity: 0; transform: translateY(3px) scale(0.9); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-@keyframes cumora-reaction-ring {
+@keyframes lingxiloop-reaction-ring {
   from { opacity: 0.6; transform: scale(0.55); }
   to   { opacity: 0; transform: scale(1.8); }
 }
-@keyframes cumora-reaction-spark {
+@keyframes lingxiloop-reaction-spark {
   0%   { opacity: 0; transform: translate(0, 0) scale(0.35); }
   20%  { opacity: 1; }
   100% { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(0.85); }
@@ -962,9 +962,9 @@ input:focus, textarea:focus, button:focus { outline: none; }
     transform: none !important;
     will-change: auto !important;
   }
-  .cumora-cloud-float,
-  .cumora-cloud-poke,
-  .cumora-cloud-poke img {
+  .lingxiloop-cloud-float,
+  .lingxiloop-cloud-poke,
+  .lingxiloop-cloud-poke img {
     animation: none !important;
     transition: none !important;
     transform: none !important;

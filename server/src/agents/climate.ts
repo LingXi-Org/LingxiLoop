@@ -2,7 +2,7 @@
  * Climate auto-update — server-side hooks that nudge an agent's
  * `agent_climate` row in response to ambient events (reactions, mentions,
  * etc.). Without these, climate is only ever written by an agent's own
- * `cumora climate note` call, which means it goes stale fast.
+ * `lingxiloop climate note` call, which means it goes stale fast.
  *
  * Design notes:
  * - Climate is FROM the agent's perspective: row keyed `(agent_id, about_id)`

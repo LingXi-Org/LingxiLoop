@@ -1,5 +1,5 @@
 /**
- * Cumora CLI — programmatic introspection of the entire app.
+ * LingxiLoop CLI — programmatic introspection of the entire app.
  *
  * The same surface is callable two ways:
  *   1. By agents via the `cli` tool: `cli({command: "groups --as iris"})`
@@ -144,10 +144,10 @@ function renderAttachment(att: StoredAttachment | null | undefined): string | nu
 
 async function cmdHelp(): Promise<CliResult> {
   return ok(
-    `cumora — introspect the whole app + manage your private workspace, memory, tasks, log
+    `lingxiloop — introspect the whole app + manage your private workspace, memory, tasks, log
 
 USAGE:
-  cumora <subcommand> [args...] [flags...]
+  lingxiloop <subcommand> [args...] [flags...]
 
 MAILBOX  (this is how you receive + send messages):
   inbox [<convo_id>]                — list new messages directed at you, grouped by conversation
@@ -281,7 +281,7 @@ KANBAN  (shared boards — the same ones humans see in the Boards view):
   description / comment — the renderer will chip them and toast the
   recipient(s) so a human or another agent gets pinged. Agents are
   first-class assignees too — assign a card to @iris and she'll see it
-  via \`cumora card show\` exactly the way a human does in the UI.
+  via \`lingxiloop card show\` exactly the way a human does in the UI.
 
 CONTACTS  (workspace + email — use BEFORE assuming you know a name):
   contacts [<query>] [--as <id>]                   list everyone in this workspace (agents +
@@ -370,7 +370,7 @@ SKILLS  (progressive-disclosure capability packs in your own workspace):
   react <message_id> <emoji>                       toggle an emoji reaction on any message
   palette "<brief>"                                generate a 5-color hex palette
   (web search/read runs via the in-pod browser — bash invokes
-   "cumora-web search", "cumora-web read", or "opencli browser ...")
+   "lingxiloop-web search", "lingxiloop-web read", or "opencli browser ...")
   image generate "<prompt>" [--size square|wide|tall]
                                                    generate an image (gpt-image-2), upload to storage,
                                                    return signed URL + key for later 'reply --attach <url>'
@@ -380,20 +380,20 @@ GLOBAL FLAGS:
   --as <id>                          run as another participant (agents query their own state)
 
 EXAMPLES:
-  cumora groups --as iris
-  cumora memory note "Yetone prefers warm palettes" --about yetone --as iris
-  cumora workspace write drafts/v3.md "# Hero v3..." --as iris
-  cumora workspace edit drafts/v3.md "warmth" "Sunday-morning warmth"
-  cumora dm bram "hero copy" "Want to align before iris paints v4"
-  cumora pull-group "Aurora launch" --members iris,bram,nova --leader iris --reason "Shipping next week" --say "Kickoff?"
-  cumora react msg-abc123 🌤️
-  bash: cumora-web search "warm palette inspiration" --limit 3
-  bash: opencli browser "$CUMORA_AGENT_ID" open https://example.com
-  cumora image generate "a quiet bauhaus poster, ochre and cobalt" --size wide
-  cumora tasks list --as bram --status open
-  cumora calendar create "Follow up with Wei on hero v3" --at 2026-05-25T15:00:00Z --assignee iris --prompt "DM wei and ask if v3 landed"     # one-shot self-schedule
-  cumora calendar create "Daily standup digest" --at 2026-05-24T09:00:00Z --assignee iris --prompt "Summarize yesterday's group activity and post into <convo_id>" --every daily     # recurring self-schedule
-  cumora calendar list --as iris                                          # see what you've already scheduled for yourself`,
+  lingxiloop groups --as iris
+  lingxiloop memory note "Yetone prefers warm palettes" --about yetone --as iris
+  lingxiloop workspace write drafts/v3.md "# Hero v3..." --as iris
+  lingxiloop workspace edit drafts/v3.md "warmth" "Sunday-morning warmth"
+  lingxiloop dm bram "hero copy" "Want to align before iris paints v4"
+  lingxiloop pull-group "Aurora launch" --members iris,bram,nova --leader iris --reason "Shipping next week" --say "Kickoff?"
+  lingxiloop react msg-abc123 🌤️
+  bash: lingxiloop-web search "warm palette inspiration" --limit 3
+  bash: opencli browser "$LINGXILOOP_AGENT_ID" open https://example.com
+  lingxiloop image generate "a quiet bauhaus poster, ochre and cobalt" --size wide
+  lingxiloop tasks list --as bram --status open
+  lingxiloop calendar create "Follow up with Wei on hero v3" --at 2026-05-25T15:00:00Z --assignee iris --prompt "DM wei and ask if v3 landed"     # one-shot self-schedule
+  lingxiloop calendar create "Daily standup digest" --at 2026-05-24T09:00:00Z --assignee iris --prompt "Summarize yesterday's group activity and post into <convo_id>" --every daily     # recurring self-schedule
+  lingxiloop calendar list --as iris                                          # see what you've already scheduled for yourself`,
   )
 }
 
@@ -433,7 +433,7 @@ async function cmdWhoami(parsed: ParsedArgs): Promise<CliResult> {
 
 async function cmdParticipants(parsed: ParsedArgs): Promise<CliResult> {
   // TENANT SCOPE: only this agent's OWN company. Without the company_id filter
-  // this listed every participant in EVERY Cumora company (cross-tenant leak —
+  // this listed every participant in EVERY LingxiLoop company (cross-tenant leak —
   // agents reported "thousands of resting humans" = all users globally).
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
@@ -456,7 +456,7 @@ async function cmdParticipants(parsed: ParsedArgs): Promise<CliResult> {
   for (const r of rows) {
     lines.push(`${r.id.padEnd(15)} ${r.kind.padEnd(6)} ${r.status.padEnd(11)} ${r.role ?? ''}`)
     // Surface the avatar URL on its own line when set, so an agent can fetch the
-    // image and view it (\`cumora avatar show <id>\` is the convenience wrapper).
+    // image and view it (\`lingxiloop avatar show <id>\` is the convenience wrapper).
     if (r.avatar_url) lines.push(`  ↳ avatar: ${r.avatar_url}`)
   }
   return ok(lines.join('\n'))
@@ -571,9 +571,9 @@ async function cmdMessages(parsed: ParsedArgs): Promise<CliResult> {
   )
   for (const row of rows) await freshenRowAttachment(row)
   const inOrder = rows.reverse()
-  // Advance the Redis "seen" boundary — `cumora messages` just showed
+  // Advance the Redis "seen" boundary — `lingxiloop messages` just showed
   // the agent these rows, so the highest seq here counts as "what I've
-  // seen" for the freshness preflight on its next `cumora reply`. Without
+  // seen" for the freshness preflight on its next `lingxiloop reply`. Without
   // this, the agent's typical flow `messages → reply` would HOLD on the
   // very tail it just fetched. Redis-only, fail-open, monotonic.
   if (inOrder.length > 0) {
@@ -610,7 +610,7 @@ async function cmdMessages(parsed: ParsedArgs): Promise<CliResult> {
   return ok(lines.join('\n'))
 }
 
-/** `cumora thread <convo_id> <root_msg_id> [--tail N]`
+/** `lingxiloop thread <convo_id> <root_msg_id> [--tail N]`
  *  Sugar around `messages <convo> --thread <root>`. Lists every direct
  *  reply to a single root in order, so an agent can catch up on a
  *  sub-discussion before deciding whether to chime in. */
@@ -792,12 +792,12 @@ interface InboxPollPayload {
 /** Render a poll message as a multi-line block that gives the agent
  *  every fact it needs to vote in one read: the question, the option ids
  *  (so it can pick one without a second roundtrip), the mode, the
- *  open/closed/expired state, and the exact `cumora poll vote` line to
+ *  open/closed/expired state, and the exact `lingxiloop poll vote` line to
  *  copy-paste. Without this, polls look like a plain text message with
  *  a 📊 prefix and the agent has no idea options exist.
  *
  *  Indented to match the surrounding `[id] hh:mm author: body` rows so
- *  it lines up visually inside both `cumora inbox` and `cumora messages`. */
+ *  it lines up visually inside both `lingxiloop inbox` and `lingxiloop messages`. */
 function renderPollBlock(messageId: string, poll: InboxPollPayload): string[] {
   const lines: string[] = []
   const state = poll.closedAt
@@ -809,7 +809,7 @@ function renderPollBlock(messageId: string, poll: InboxPollPayload): string[] {
     lines.push(`      • ${o.id} — ${o.text}`)
   }
   if (!poll.closedAt) {
-    lines.push(`    → to vote: cumora poll vote ${messageId} <option_id>${poll.mode === 'multi' ? '[,<option_id>...]' : ''}`)
+    lines.push(`    → to vote: lingxiloop poll vote ${messageId} <option_id>${poll.mode === 'multi' ? '[,<option_id>...]' : ''}`)
     lines.push(`    → if the question doesn't apply to you or none of the options is your real answer, stay silent (no reply, no vote)`)
   }
   return lines
@@ -923,11 +923,11 @@ async function cmdInbox(parsed: ParsedArgs): Promise<CliResult> {
     }
     lines.push('')
   }
-  lines.push(`when you're done deciding what to do (reply / react / dm / nothing), run \`cumora ack <convo_id>\` to clear that conversation from your inbox so the next wake-up doesn't see it again. \`cumora ack --all\` clears everything in your inbox.`)
+  lines.push(`when you're done deciding what to do (reply / react / dm / nothing), run \`lingxiloop ack <convo_id>\` to clear that conversation from your inbox so the next wake-up doesn't see it again. \`lingxiloop ack --all\` clears everything in your inbox.`)
   return ok(lines.join('\n'))
 }
 
-/** `cumora glance <convo>` — read the room before committing a reply.
+/** `lingxiloop glance <convo>` — read the room before committing a reply.
  *
  *  Two things real teammates do that an LLM-driven agent doesn't get
  *  for free: (1) see what's just been said since they started thinking,
@@ -970,7 +970,7 @@ async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
 
   // Advance the Redis "seen" boundary — glance just showed the agent
   // these messages, so they count as "seen" for the freshness preflight
-  // on its next `cumora reply`. Same Redis-only, fail-open path as
+  // on its next `lingxiloop reply`. Same Redis-only, fail-open path as
   // cmdMessages — never touches conversation_reads.last_read_at.
   if (recent.length > 0) {
     await recordSeen(me, convoId, recent[recent.length - 1].sequence)
@@ -1122,7 +1122,7 @@ async function cmdMute(parsed: ParsedArgs): Promise<CliResult> {
   return ok(
     `Muted ${conversationId} ("${conversation.title}")${expiry}. ` +
     `New group messages will not wake you or enter your inbox. A direct @${me} mention or a reply quoting your message still gets through. ` +
-    `Resume with: cumora follow ${conversationId}`,
+    `Resume with: lingxiloop follow ${conversationId}`,
   )
 }
 
@@ -1323,7 +1323,7 @@ async function cmdShip(parsed: ParsedArgs): Promise<CliResult> {
     )
     return ok(`Created regression asset ${id} on ${featureId}.`)
   }
-  return err('usage: ship list|show|create|square|friction|regression  (run cumora help for details)')
+  return err('usage: ship list|show|create|square|friction|regression  (run lingxiloop help for details)')
 }
 
 // Membership system-message + counter helpers live in
@@ -1346,7 +1346,7 @@ async function cmdLeave(parsed: ParsedArgs): Promise<CliResult> {
   const c = rows[0]
   if (!c) return err(`unknown conversation ${convoId}`)
   if (c.kind === 'direct') {
-    return err('cannot leave a direct conversation — use `cumora ack` to mute it from your inbox instead')
+    return err('cannot leave a direct conversation — use `lingxiloop ack` to mute it from your inbox instead')
   }
   if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId}`)
   if (c.leader_id === me) return err(`cannot leave while ${me} is Leader; ask a human member to change the Leader first`)
@@ -1399,7 +1399,7 @@ async function cmdInvite(parsed: ParsedArgs): Promise<CliResult> {
   const c = rows[0]
   if (!c) return err(`unknown conversation ${convoId}`)
   if (c.kind === 'direct') {
-    return err('cannot invite into a direct conversation — use `cumora pull-group` to start a fresh thread')
+    return err('cannot invite into a direct conversation — use `lingxiloop pull-group` to start a fresh thread')
   }
   if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId} — can't invite into a group you're not in`)
   if (c.members.includes(target)) return ok(`${target} is already a member of ${convoId}`)
@@ -1447,7 +1447,7 @@ async function cmdKick(parsed: ParsedArgs): Promise<CliResult> {
   const convoId = parsed.positional[0]
   const target = parsed.positional[1]
   if (!convoId || !target) return err('usage: kick <conversation_id> <member_id>')
-  if (target === me) return err('use `cumora leave <convo_id>` to leave a group yourself')
+  if (target === me) return err('use `lingxiloop leave <convo_id>` to leave a group yourself')
 
   const { rows } = await pool.query<{
     kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
@@ -1610,7 +1610,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
           `you already posted in ${convoId} ${ageSec}s ago and nobody has replied yet — ` +
           `you can't post again until someone else speaks. ` +
           `If you have more to say, fold it into your next message when someone responds. ` +
-          `Right now: react on the relevant message (cumora react <message_id> 👀 / ✅ / 🎯), ` +
+          `Right now: react on the relevant message (lingxiloop react <message_id> 👀 / ✅ / 🎯), ` +
           `or set_turn_status done and step back. ` +
           `Override only if it's truly urgent: rerun with --continue.`
         )
@@ -1620,7 +1620,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
 
   // Email conversations: auto-promote into a real email reply rather than
   // writing a plain text message. The agent's LLM was previously expected
-  // to know to call `cumora email reply <message_id>` for email threads —
+  // to know to call `lingxiloop email reply <message_id>` for email threads —
   // unreliable, and the external recipient never saw the reply when it
   // forgot. This converges both reply surfaces (chat + email) on the
   // sendViaProvider path. autoSubmitted=true because every CLI reply is
@@ -1742,7 +1742,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
         `Re-decide against THIS state — usually your draft is now wrong ` +
         `(counting: post the next number after the latest, not the one you drafted; ` +
         `relay/chain: continue from the latest entry; if a peer above already delivered what you were about to deliver, stand down or react instead). ` +
-        `Run \`cumora reply <convoId> "<revised body>"\` with your new decision, ` +
+        `Run \`lingxiloop reply <convoId> "<revised body>"\` with your new decision, ` +
         `or rerun with --send-anyway only if your draft is STILL correct despite these messages (rare).`,
         2,
       )
@@ -1752,8 +1752,8 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // Freshness race detection — the SEEN-CURSOR model: a per-(agent,convo)
     // SEEN CURSOR — "the highest peer
     // seq this agent has actually been SHOWN" — advanced by every surface that
-    // puts rows in front of the model: the wake brief (/runtime/inbox), cumora
-    // glance, cumora messages, and HELD envelopes themselves. HOLD iff a peer
+    // puts rows in front of the model: the wake brief (/runtime/inbox), lingxiloop
+    // glance, lingxiloop messages, and HELD envelopes themselves. HOLD iff a peer
     // message exists that the agent has NOT been shown; once shown, a plain
     // re-send passes with no flag ritual (the hold envelope carries the
     // cursor forward, so resend-after-shown goes through cleanly).
@@ -1807,7 +1807,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
           (sendAnywayFlag
             ? `(Your --send-anyway was IGNORED: it only acknowledges a HOLD you have already been shown — passing it preemptively does nothing.)\n`
             : '') +
-          `You have now seen these — re-decide against THIS state, then simply re-send: a plain \`cumora reply <convoId> "<revised body>"\` will go through (no flag needed). ` +
+          `You have now seen these — re-decide against THIS state, then simply re-send: a plain \`lingxiloop reply <convoId> "<revised body>"\` will go through (no flag needed). ` +
           `Usually your draft is now wrong (counting: post the next number after the latest; relay/chain: continue from the latest entry; ` +
           `if a peer above already delivered what you were about to deliver, the work is DONE — stand down or react instead).`,
           2,  // exit code 2 = "held, retry with different content" (distinct from 1 = generic error)
@@ -1913,7 +1913,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   if (parsed.flags['generate-image']) {
     const prompt = String(parsed.flags['generate-image']).trim()
     if (!prompt) return err('--generate-image requires a non-empty prompt')
-    // Same tenant-scoped claim as `cumora image generate` — the image
+    // Same tenant-scoped claim as `lingxiloop image generate` — the image
     // model doesn't care whether the call came via reply or as a
     // standalone, but peer agents do.
     const blocked = await tryClaimTenantWork(companyId, me, 'image-generate', prompt)
@@ -1971,7 +1971,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // Atomically claim next sequence + check verbatim-dup + INSERT, all in
   // ONE transaction. The conversation_counters UPSERT takes a row-level
   // lock (ON CONFLICT DO UPDATE), and that lock stays held until COMMIT —
-  // serializing every concurrent cumora-reply to the same convo through
+  // serializing every concurrent lingxiloop-reply to the same convo through
   // this critical section. While we hold the lock, we re-check the last
   // peer message body against our draft (committed visibility — we'll
   // see any peer INSERT that committed before our sequence claim).
@@ -2098,7 +2098,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     )
   }
   // Advance the Redis "seen" boundary to my own just-inserted seq, so the
-  // freshness preflight on my NEXT cumora reply compares against the post-
+  // freshness preflight on my NEXT lingxiloop reply compares against the post-
   // insertion state (peer messages with seq <= mine are "things I obviously
   // saw"; only seq > mine would trip a HOLD). Pure Redis side-effect — does
   // NOT touch conversation_reads.last_read_at or anything else loadInbox
@@ -2267,10 +2267,10 @@ async function generateAndUploadImage(opts: {
   }
 }
 
-/** `cumora image generate "<prompt>" [--size square|wide|tall] [--as <id>] [--json]`
+/** `lingxiloop image generate "<prompt>" [--size square|wide|tall] [--as <id>] [--json]`
  *  Generates an image with the configured image model (default
  *  gpt-image-2), uploads it to storage, and returns the signed URL + key
- *  so the caller can `cumora reply <c> "<body>" --attach <url>` later.
+ *  so the caller can `lingxiloop reply <c> "<body>" --attach <url>` later.
  *  Decoupled from `reply --generate-image` so an agent can test a
  *  prompt, look at the result, and discard / regenerate without shipping
  *  a half-baked image into a conversation. */
@@ -2319,7 +2319,7 @@ async function cmdImage(parsed: ParsedArgs): Promise<CliResult> {
       `key:  ${att.key}`,
       ``,
       `attach to a reply with:`,
-      `  cumora reply <convo_id> "<body>" --attach "${att.url}" --attach-name "${att.name}"`,
+      `  lingxiloop reply <convo_id> "<body>" --attach "${att.url}" --attach-name "${att.name}"`,
     ].join('\n'))
   } catch (e) {
     return err(`image generation failed: ${e instanceof Error ? e.message : String(e)}`)
@@ -2440,7 +2440,7 @@ async function loadEmailAttachmentFromPath(path: string): Promise<{
  *  `avatars/avatar-<id>-<rand>.png`, and stamps `participants.avatar_url`.
  *  Heavy — image-gen takes several seconds; the bash() tool call will
  *  block for that long. */
-/** `cumora skills <op>` — manage Agent Skills (progressive-disclosure
+/** `lingxiloop skills <op>` — manage Agent Skills (progressive-disclosure
  *  capability packs) stored in this agent's workspace under
  *  `skills/<name>/`. See server/src/agents/skills.ts for the spec. */
 async function cmdSkills(parsed: ParsedArgs): Promise<CliResult> {
@@ -2452,10 +2452,10 @@ async function cmdSkills(parsed: ParsedArgs): Promise<CliResult> {
     const skills = await loadSkillsIndex(me)
     if (parsed.flags.json) return ok(JSON.stringify(skills, null, 2))
     if (skills.length === 0) {
-      return ok('(no skills installed — use `cumora skills create <name> "<description>"` to scaffold one)')
+      return ok('(no skills installed — use `lingxiloop skills create <name> "<description>"` to scaffold one)')
     }
     const lines = skills.map((s) =>
-      `  ${s.name}\n    ${s.description}\n    → cumora skills read ${s.name}`,
+      `  ${s.name}\n    ${s.description}\n    → lingxiloop skills read ${s.name}`,
     )
     return ok(lines.join('\n\n'))
   }
@@ -2491,7 +2491,7 @@ async function cmdSkills(parsed: ParsedArgs): Promise<CliResult> {
       `SELECT path FROM agent_workspace WHERE agent_id = $1 AND path = $2 LIMIT 1`,
       [me, path],
     )
-    if (existing[0]) return err(`skill "${name}" already exists — use \`cumora workspace edit ${path}\` to modify it, or \`cumora skills delete ${name}\` first`)
+    if (existing[0]) return err(`skill "${name}" already exists — use \`lingxiloop workspace edit ${path}\` to modify it, or \`lingxiloop skills delete ${name}\` first`)
 
     const body = `---
 name: ${name}
@@ -2503,7 +2503,7 @@ description: ${description}
 _Write the skill instructions here. Recommended sections: overview,
 step-by-step, examples, edge cases. Keep this file under ~500 lines —
 move long reference material into \`references/\` files and load them
-on demand via \`cumora skills read ${name} references/<file>\`._
+on demand via \`lingxiloop skills read ${name} references/<file>\`._
 `
     await pool.query(
       `INSERT INTO agent_workspace (agent_id, path, body, company_id, updated_at)
@@ -2512,9 +2512,9 @@ on demand via \`cumora skills read ${name} references/<file>\`._
     )
     return ok(
       `created skill "${name}" at ${path}\n\n` +
-      `flesh it out: cumora workspace edit ${path} "<old>" "<new>"\n` +
-      `add scripts:  cumora workspace write skills/${name}/scripts/<file>.py "<body>"\n` +
-      `read it back: cumora skills read ${name}`,
+      `flesh it out: lingxiloop workspace edit ${path} "<old>" "<new>"\n` +
+      `add scripts:  lingxiloop workspace write skills/${name}/scripts/<file>.py "<body>"\n` +
+      `read it back: lingxiloop skills read ${name}`,
       [{
         event: 'skill.created',
         command: 'skills create',
@@ -2558,7 +2558,7 @@ on demand via \`cumora skills read ${name} references/<file>\`._
       return ok(hits.map((h) => {
         const meta = [h.version && `v${h.version}`, h.author && `by ${h.author}`].filter(Boolean).join(' · ')
         const tag = h.install_url ?? h.name
-        return `  ${h.name}${meta ? `  (${meta})` : ''}\n    ${h.description}\n    → cumora skills install ${tag}`
+        return `  ${h.name}${meta ? `  (${meta})` : ''}\n    ${h.description}\n    → lingxiloop skills install ${tag}`
       }).join('\n\n'))
     } catch (e) {
       return err(`skills search failed: ${e instanceof Error ? e.message : String(e)}`)
@@ -2575,7 +2575,7 @@ on demand via \`cumora skills read ${name} references/<file>\`._
       const result = await installSkillFromManifest({ agentId: me, manifest })
       return ok(
         `installed skill "${result.name}" (${result.files} file${result.files === 1 ? '' : 's'})\n` +
-        `read it with: cumora skills read ${result.name}`,
+        `read it with: lingxiloop skills read ${result.name}`,
         [{
           event: 'skill.installed',
           command: 'skills install',
@@ -2704,13 +2704,13 @@ async function resolveEmailRecipient(raw: string, viewerCompanyId: string): Prom
   // come from senders we don't have a participants row for and have no
   // routable target by themselves. The agent should write to the bare
   // address instead (which lives in `email_contacts` and shows up under
-  // `cumora email contacts`).
+  // `lingxiloop email contacts`).
   if (raw.startsWith('external:')) return null
   const { parseAddress, ensureParticipantAddress } = await import('../email.js')
   const direct = parseAddress(raw)
   if (direct) return direct
   // Participant id lookup. Per-kind delivery target:
-  //   - agent  → cumora address (lazy-mint if column still NULL)
+  //   - agent  → lingxiloop address (lazy-mint if column still NULL)
   //   - human  → real auth email (so it lands in their personal inbox)
   const { rows: pa } = await pool.query<{ name: string; email: string | null; kind: string }>(
     `SELECT name, email, kind FROM participants
@@ -2966,7 +2966,7 @@ async function cmdEmail(parsed: ParsedArgs): Promise<CliResult> {
       '  email reply <message_id> --body "..." [--cc <addr|id>...] [--attach <path>[,<path>...]] [--as <id>]\n' +
       '  email inbox [--unread] [--limit N] [--as <id>]\n' +
       '  email show <conversation_id> [--tail N] [--as <id>]\n' +
-      '  email contacts [<query>] [--as <id>]   (or just: cumora contacts [<query>])\n' +
+      '  email contacts [<query>] [--as <id>]   (or just: lingxiloop contacts [<query>])\n' +
       '  email whoami [--as <id>]   — your own address',
     )
   }
@@ -3003,7 +3003,7 @@ async function cmdEmailContacts(
   companyId: string,
   json: boolean,
 ): Promise<CliResult> {
-  // Optional fuzzy filter: `cumora email contacts wey` matches against
+  // Optional fuzzy filter: `lingxiloop email contacts wey` matches against
   // name / id / email (substring, case-insensitive). The empty-result
   // path explicitly tells the caller that NO contact matches the query
   // — the agent's LLM uses this signal to ask the user for the address
@@ -3069,7 +3069,7 @@ async function cmdEmailInbox(parsed: ParsedArgs, me: string, companyId: string):
     if (snippet) lines.push(`  body:    ${snippet}`)
     lines.push('')
   }
-  lines.push(`run \`cumora email show <conversation_id>\` to read the full thread, then \`cumora email reply <message_id> --body "..."\` to respond. \`cumora ack <conversation_id>\` clears unread state.`)
+  lines.push(`run \`lingxiloop email show <conversation_id>\` to read the full thread, then \`lingxiloop email reply <message_id> --body "..."\` to respond. \`lingxiloop ack <conversation_id>\` clears unread state.`)
   return ok(lines.join('\n'))
 }
 
@@ -3118,7 +3118,7 @@ async function cmdEmailShow(parsed: ParsedArgs, me: string, companyId: string): 
     lines.push(m.body)
     lines.push('')
   }
-  lines.push(`reply with \`cumora email reply ${msgs[msgs.length - 1].id} --body "..."\`.`)
+  lines.push(`reply with \`lingxiloop email reply ${msgs[msgs.length - 1].id} --body "..."\`.`)
   return ok(lines.join('\n'))
 }
 
@@ -3137,7 +3137,7 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
   const subject = sanitizeSubject(unescapeChat(String(parsed.flags.subject ?? '')))
   const body = unescapeChat(String(parsed.flags.body ?? '')).trim()
   // --attach takes a comma-separated list of paths (also accepts the same
-  // flag repeated by the agent — bin/cumora collapses repeats into the
+  // flag repeated by the agent — bin/lingxiloop collapses repeats into the
   // last value, so comma is the supported multi-attach syntax here).
   const attachRaw = parsed.flags.attach ? String(parsed.flags.attach) : ''
   if (!toRaw || !subject || !body) {
@@ -3642,7 +3642,7 @@ async function cmdRename(parsed: ParsedArgs): Promise<CliResult> {
   if (typeof ifEqualsRaw === 'string') {
     const ifEquals = unescapeChat(ifEqualsRaw).trim().slice(0, 80)
     if (currentTitle !== ifEquals) {
-      return err(`stale: current title is "${currentTitle}", you passed --if-equals "${ifEquals}". Re-read with \`cumora conversations\` and decide if you still want to rename.`)
+      return err(`stale: current title is "${currentTitle}", you passed --if-equals "${ifEquals}". Re-read with \`lingxiloop conversations\` and decide if you still want to rename.`)
     }
   }
   // IDEMPOTENT no-op: if the title is already what you'd set, return success
@@ -4323,7 +4323,7 @@ async function cmdCalendar(parsed: ParsedArgs): Promise<CliResult> {
             return err(
               `HELD — event NOT created. ${dup.created_by} already scheduled "${dup.title}" (${dup.id}) ${ageSec}s ago — ` +
               `this work is DONE; a second copy double-books everyone. ` +
-              `Inspect theirs instead: \`cumora calendar list\` / \`cumora calendar update ${dup.id} ...\` if it needs changes. ` +
+              `Inspect theirs instead: \`lingxiloop calendar list\` / \`lingxiloop calendar update ${dup.id} ...\` if it needs changes. ` +
               `If you GENUINELY need a separate same-title event, rerun with --force ` +
               `(--force only works after you've been shown this hold — passing it preemptively does nothing).`,
               2,
@@ -4693,7 +4693,7 @@ async function wakeMentionedAgentsCli(args: {
 }): Promise<void> {
   // This function is invoked as `void wakeMentionedAgentsCli(...)` from
   // CLI command handlers (kanban/card/doc/calendar). Any throw here
-  // becomes an unhandled rejection on the cumora-server process. Wrap
+  // becomes an unhandled rejection on the lingxiloop-server process. Wrap
   // the whole body so a transient pool.query failure can't crash the
   // server — the CLI command itself has already succeeded; the wakes
   // are a best-effort side effect.
@@ -5095,7 +5095,7 @@ async function cmdBoard(parsed: ParsedArgs): Promise<CliResult> {
   return err(`usage: kanban <ls|show|create|rename|columns|add-column|edit-column|delete-column|delete|mentions> [...]`)
 }
 
-/** `cumora claim "<unit of work>"` / `cumora unclaim "..."` — the GENERIC, atomic,
+/** `lingxiloop claim "<unit of work>"` / `lingxiloop unclaim "..."` — the GENERIC, atomic,
  *  exclusive claim (the #1 primitive for
  *  non-divergent collaboration). Before doing any non-trivial unit a peer could
  *  also pick up — running an activity/game, producing a shared deliverable, taking
@@ -5117,15 +5117,15 @@ async function cmdClaim(parsed: ParsedArgs, mode: 'claim' | 'unclaim'): Promise<
   // turn / game slot / activity no longer grants a lock: just post the real next
   // item; the server HOLDs your reply and shows you the newer messages if a peer
   // moved the room. For a shared DELIVERABLE a peer could duplicate (one doc, one
-  // plan), use a board CARD (`cumora card claim`). unclaim is a harmless no-op.
+  // plan), use a board CARD (`lingxiloop card claim`). unclaim is a harmless no-op.
   if (mode === 'unclaim') {
-    return ok(`ok — nothing to release. Cumora no longer uses generic claims; just post, the server settles races.`)
+    return ok(`ok — nothing to release. LingxiLoop no longer uses generic claims; just post, the server settles races.`)
   }
   return err(
     `Claiming a turn / game slot / activity is not a thing anymore. ` +
-    `Do NOT reserve a position and wait for it. Read the latest posts and send the REAL next item (\`cumora reply\`); ` +
+    `Do NOT reserve a position and wait for it. Read the latest posts and send the REAL next item (\`lingxiloop reply\`); ` +
     `if a peer moved the room while you composed, the reply comes back HELD with the newer messages — re-read and resend. ` +
-    `That IS the coordination. The only claim that exists is for a genuine shared DELIVERABLE on the board: \`cumora card claim <cardId>\`.`,
+    `That IS the coordination. The only claim that exists is for a genuine shared DELIVERABLE on the board: \`lingxiloop card claim <cardId>\`.`,
   )
 }
 
@@ -5224,7 +5224,7 @@ async function cmdCard(parsed: ParsedArgs): Promise<CliResult> {
       return err('usage: card add <board_id> "<title>" --column <col_id> [--description "..."] [--assign <id>]')
     }
     const columnId = String(parsed.flags.column ?? parsed.flags.col ?? '').trim()
-    if (!columnId) return err('--column <col_id> required (run `cumora kanban columns <board_id>` to list)')
+    if (!columnId) return err('--column <col_id> required (run `lingxiloop kanban columns <board_id>` to list)')
     const b = await pool.query<{ company_id: string }>(
       `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`, [boardId],
     )
@@ -5641,7 +5641,7 @@ async function cmdDoc(parsed: ParsedArgs): Promise<CliResult> {
           return err(
             `HELD — document NOT created. ${dup.created_by} already created "${dup.title}" (${dup.id}) ${ageSec}s ago — ` +
             `this work is DONE; a second copy is duplicate clutter. ` +
-            `Build on theirs instead: \`cumora doc read ${dup.id}\` / \`cumora doc append ${dup.id} "..."\`. ` +
+            `Build on theirs instead: \`lingxiloop doc read ${dup.id}\` / \`lingxiloop doc append ${dup.id} "..."\`. ` +
             `If you GENUINELY need a separate doc with this same title, rerun with --force ` +
             `(--force only works after you've been shown this hold — passing it preemptively does nothing).`,
             2,
@@ -6107,14 +6107,14 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       // Top-level alias for `email contacts` — promotes contact lookup
       // to a discoverable verb. Same logic, same output. Use this when a
       // user names a person you don't recognize: BEFORE assuming or
-      // silently skipping, run `cumora contacts <query>`.
+      // silently skipping, run `lingxiloop contacts <query>`.
       case 'contacts': {
         const me = resolveAs(parsed)
         const companyId = await agentCompany(me)
         if (!companyId) return err(`unknown agent ${me} (no company)`)
         // cmdEmailContacts reads positional[1] as the query (it expects
         // to be invoked as `email contacts <query>`, where positional[0]
-        // is 'contacts'). For top-level `cumora contacts <query>` the
+        // is 'contacts'). For top-level `lingxiloop contacts <query>` the
         // outer dispatch has already consumed 'contacts', so positional
         // is just [<query>]. Prepend a placeholder so the offset lines up.
         const shimmed = { ...parsed, positional: ['contacts', ...parsed.positional] }
@@ -6135,7 +6135,7 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'palette':             return await runTool('palette', parsed)
       case 'image':               return await cmdImage(parsed)
       default:
-        return err(`unknown subcommand: ${sub}\nrun "cumora help" for usage`)
+        return err(`unknown subcommand: ${sub}\nrun "lingxiloop help" for usage`)
     }
   } catch (e) {
     return err(`error: ${e instanceof Error ? e.message : String(e)}`, 2)

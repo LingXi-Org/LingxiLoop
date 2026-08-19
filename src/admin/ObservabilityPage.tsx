@@ -108,7 +108,7 @@ const fmtPct = (n: number, places = 1): string => `${(n * 100).toFixed(places)}%
 // ─── Unit: $ vs tokens ───────────────────────────────────────────────────
 //
 // The $ figures are ESTIMATES — cost.ts seeds one assumed per-token rate per
-// model (verified:false unless an operator supplies CUMORA_MODEL_PRICES_JSON).
+// model (verified:false unless an operator supplies LINGXILOOP_MODEL_PRICES_JSON).
 // For BYOA every user is on their own provider/plan, so the $ is meaningless to
 // them; token counts are the objective truth. This toggle swaps every primary
 // metric between $ and tokens. Default = tokens. Cached input tokens are ALWAYS
@@ -1328,7 +1328,7 @@ function DrillCallCard({ call, unit, onJumpToRun, onJumpToAgent }: {
             {unit === 'usd' && call.costEstimated && <span className="obs-est-flag">·est</span>}
             {unit === 'usd' && isByoaSource(call.source) && <span className="obs-meter-flag">·meter</span>}
             {call.daemonVersion && (
-              <span className="obs-version-flag" title={`Recorded by daemon (npm cumora) version ${call.daemonVersion}`}>
+              <span className="obs-version-flag" title={`Recorded by daemon (npm lingxiloop) version ${call.daemonVersion}`}>
                 · v{call.daemonVersion}
               </span>
             )}

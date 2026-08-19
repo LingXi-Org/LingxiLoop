@@ -2,7 +2,7 @@
  * Admin panel — backend helpers.
  *
  * Three concerns live here:
- *   1. Allow-list reconciliation (CUMORA_ADMIN_EMAILS → users.is_admin)
+ *   1. Allow-list reconciliation (LINGXILOOP_ADMIN_EMAILS → users.is_admin)
  *      on boot, so a fresh deploy doesn't need a SQL session to mint
  *      the first admin. Idempotent — we only set TRUE; demotion goes
  *      through the panel.
@@ -30,7 +30,7 @@ import { formatAddress, mintMessageId, sendViaProvider } from './email.js'
 
 /* ============== Bootstrap admin allow-list ============== */
 
-/** On boot, force `is_admin = TRUE` for every email in CUMORA_ADMIN_EMAILS
+/** On boot, force `is_admin = TRUE` for every email in LINGXILOOP_ADMIN_EMAILS
  *  that already has a users row. Emails not yet signed up are skipped
  *  silently — they get the bit on their next /auth/me probe via the
  *  pre-set check below. Best-effort: a DB blip here must not block boot. */
@@ -318,7 +318,7 @@ function buildWelcomeEmailHtml(args: {
                   <img src="${logoUrl}" alt="" width="32" height="32" style="display:block; width:32px; height:32px;" />
                 </td>
                 <td style="vertical-align:middle; font-family:${fontStack}; font-size:18px; font-weight:700; color:#0A1B2E; letter-spacing:-0.01em;">
-                  Cumora
+                  LingxiLoop
                 </td>
               </tr>
             </table>
@@ -326,7 +326,7 @@ function buildWelcomeEmailHtml(args: {
         </tr>` : `
         <tr>
           <td align="center" style="padding:36px 0 24px; font-family:${fontStack}; font-size:18px; font-weight:700; color:#0A1B2E; letter-spacing:-0.01em;">
-            Cumora
+            LingxiLoop
           </td>
         </tr>`
 
@@ -341,7 +341,7 @@ function buildWelcomeEmailHtml(args: {
                         <tr>
                           <td bgcolor="#00A8F0" style="border-radius:8px; background:#00A8F0; mso-padding-alt:14px 28px;">
                             <a href="${args.signInUrl}" target="_blank" style="display:inline-block; padding:14px 28px; font-family:${fontStack}; font-size:14px; font-weight:600; line-height:1; color:#FFFFFF; text-decoration:none; letter-spacing:0.01em;">
-                              Open Cumora &nbsp;→
+                              Open LingxiLoop &nbsp;→
                             </a>
                           </td>
                         </tr>
@@ -350,7 +350,7 @@ function buildWelcomeEmailHtml(args: {
                   </tr>` : `
                   <tr>
                     <td style="padding:4px 0 0; font-family:${fontStack}; font-size:15px; font-weight:600; color:#4E3F8C;">
-                      Open the Cumora app and sign in with the account you used to join the waitlist.
+                      Open the LingxiLoop app and sign in with the account you used to join the waitlist.
                     </td>
                   </tr>`
 
@@ -361,7 +361,7 @@ function buildWelcomeEmailHtml(args: {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
-  <title>Welcome to Cumora</title>
+  <title>Welcome to LingxiLoop</title>
 </head>
 <body style="margin:0; padding:0; background:#FAFCFE; color:#0A1B2E; font-family:${fontStack};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FAFCFE;">
@@ -378,7 +378,7 @@ function buildWelcomeEmailHtml(args: {
                 </tr>
                 <tr>
                   <td style="font-family:${fontStack}; font-size:18px; font-weight:500; line-height:1.45; color:#233A53; padding:0 0 24px;">
-                    Welcome to Cumora, ${name}.
+                    Welcome to LingxiLoop, ${name}.
                   </td>
                 </tr>
                 <tr>
@@ -400,7 +400,7 @@ function buildWelcomeEmailHtml(args: {
                 </tr>
                 <tr>
                   <td style="font-family:${fontStack}; font-size:13px; font-weight:400; line-height:1.55; color:#5B7186; padding:20px 0 0;">
-                    Cumora is where small teams gather with AI agents as first-class teammates. We&rsquo;re early; expect rough edges and steady polish. Reply to this email if anything trips you up &mdash; a real person reads it.
+                    LingxiLoop is where small teams gather with AI agents as first-class teammates. We&rsquo;re early; expect rough edges and steady polish. Reply to this email if anything trips you up &mdash; a real person reads it.
                   </td>
                 </tr>
               </table>
@@ -408,7 +408,7 @@ function buildWelcomeEmailHtml(args: {
           </tr>
           <tr>
             <td align="center" style="font-family:${fontStack}; font-size:12px; font-weight:400; line-height:1.5; color:#94A8BC; padding:24px 0 0;">
-              &copy; Cumora &middot; Where teams gather
+              &copy; LingxiLoop &middot; Where teams gather
             </td>
           </tr>
         </table>
@@ -443,11 +443,11 @@ async function sendWaitlistApprovedEmail(args: {
   const firstName = (args.displayName.split(/\s+/)[0] || args.displayName).trim() || 'there'
   const ctaLine = httpUrl
     ? `Sign in here: ${httpUrl}`
-    : `Open the Cumora app and sign in with the same account you used to join the waitlist.`
+    : `Open the LingxiLoop app and sign in with the same account you used to join the waitlist.`
   const text = [
     `Hi ${firstName},`,
     ``,
-    `You're in — welcome to Cumora.`,
+    `You're in — welcome to LingxiLoop.`,
     ``,
     `Your workspace is set up and your learning team (Nova, Sage, Milo, Trace, Scout, Forge) is already gathered there, ready to study with you.`,
     ``,
@@ -458,13 +458,13 @@ async function sendWaitlistApprovedEmail(args: {
     ``,
     `Reply to this email if anything trips you up — a real person reads it.`,
     ``,
-    `— Cumora`,
+    `— LingxiLoop`,
   ].join('\n')
   const html = buildWelcomeEmailHtml({ firstName, signInUrl: httpUrl })
   const res = await sendViaProvider({
-    from: formatAddress(fromAddr, 'Cumora'),
+    from: formatAddress(fromAddr, 'LingxiLoop'),
     to: [args.email],
-    subject: `You're in — welcome to Cumora`,
+    subject: `You're in — welcome to LingxiLoop`,
     text,
     html,
     messageId: mintMessageId(),
@@ -600,7 +600,7 @@ export async function approveWaitlist(waitlistId: string, decidedBy: string): Pr
     if (sub2apiConfigured()) {
       try {
         const r = await provisionSub2apiUser({
-          cumoraUserId: userId,
+          lingxiloopUserId: userId,
           email: row.email,
           displayName: row.display_name,
           tier: 'free',
@@ -744,7 +744,7 @@ export async function unsuspendUser(args: {
 
 /* ============== Tier change (admin-driven) ============== */
 
-/** Set a user's tier in cumora DB AND mirror to sub2api. Used by the
+/** Set a user's tier in lingxiloop DB AND mirror to sub2api. Used by the
  *  user-detail UI. If the sub2api mirror exists, it is the quota
  *  enforcement layer, so a failed mirror must fail the admin action
  *  instead of reporting success while the gateway keeps the old tier. */

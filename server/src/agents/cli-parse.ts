@@ -1,5 +1,5 @@
 /**
- * argv parsing for the `cumora` agent CLI. Extracted into its own
+ * argv parsing for the `lingxiloop` agent CLI. Extracted into its own
  * import-side-effect-free module so unit tests can pin the behaviour
  * without booting cli.ts's DB / storage / OpenAI dependency graph.
  *
@@ -7,7 +7,7 @@
  *   - inside an agent pod, called through the JWT-pinned /runtime/cli path
  *   - inside local agent bash, normally called through a PATH wrapper
  *     that supplies ambient identity for developer ergonomics
- *   - from a dev shell with CUMORA_DEFAULT_AS in .env
+ *   - from a dev shell with LINGXILOOP_DEFAULT_AS in .env
  *   - from tests, calling runCli(argv) directly with `--as` baked in
  *
  * All modes share these two pure functions.
@@ -73,7 +73,7 @@ export function parseArgs(args: string[]): ParsedArgs {
  *     escape; we match that)
  *
  * Symmetric with how the agent bash tool would forward a body to
- * `cumora reply <convo> '<body>'` — the outer single quotes wrap any
+ * `lingxiloop reply <convo> '<body>'` — the outer single quotes wrap any
  * body content (including spaces) into one token.
  */
 export function tokenize(line: string): string[] {

@@ -16,14 +16,9 @@ import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const ROOT = path.resolve(__dirname)
-// iOS auto-masks app icons with its own rounded-corner shape, so the
-// source must be a square, fully-opaque image. Using `build/icon.png`
-// (the Electron icon that already has rounded corners baked in) would
-// result in visible double-rounded corners on iOS. We composite the
-// raw cloud mascot from `public/logo.png` onto a soft solid square
-// background so iOS owns the rounding.
-const SRC_LOGO = path.join(ROOT, 'public', 'logo.png')
-const ICON_BG = '#EAF4FB' // soft sky — matches the welcome-screen wash
+// Canonical product artwork supplied by Lingxi. All iOS derivatives are
+// rendered from this SVG so asset regeneration cannot restore old artwork.
+const SRC_LOGO = path.join(ROOT, 'assets', 'lingxiloop-logo.svg')
 const IOS_ASSETS = path.join(ROOT, 'ios', 'App', 'App', 'Assets.xcassets')
 const APPICON = path.join(IOS_ASSETS, 'AppIcon.appiconset')
 const SPLASH = path.join(IOS_ASSETS, 'Splash.imageset')
@@ -64,7 +59,7 @@ function buildContentsJson() {
     filename: iconFile(s),
     scale: `${s.scale}x`,
   }))
-  return JSON.stringify({ images, info: { version: 1, author: 'cumora' } }, null, 2)
+  return JSON.stringify({ images, info: { version: 1, author: 'lingxiloop' } }, null, 2)
 }
 
 function buildSplashContentsJson() {
@@ -74,21 +69,12 @@ function buildSplashContentsJson() {
       { idiom: 'universal', filename: 'splash-2732x2732-1.png', scale: '2x' },
       { idiom: 'universal', filename: 'splash-2732x2732-2.png', scale: '3x' },
     ],
-    info: { version: 1, author: 'cumora' },
+    info: { version: 1, author: 'lingxiloop' },
   }, null, 2)
 }
 
 async function renderIconBuffer(sharp, sizePx) {
-  // Square solid background + centered cloud mascot at 80% of canvas.
-  // iOS will mask the corners — we just need an opaque square.
-  const innerPx = Math.round(sizePx * 0.8)
-  const mascot = await sharp(SRC_LOGO).resize(innerPx, innerPx, { fit: 'contain' }).png().toBuffer()
-  return sharp({
-    create: { width: sizePx, height: sizePx, channels: 4, background: ICON_BG },
-  })
-    .composite([{ input: mascot, gravity: 'center' }])
-    .png()
-    .toBuffer()
+  return sharp(SRC_LOGO).resize(sizePx, sizePx, { fit: 'contain' }).png().toBuffer()
 }
 
 async function main() {
@@ -163,7 +149,7 @@ async function main() {
       filename: s.name,
       scale: `${i + 1}x`,
     })),
-    info: { version: 1, author: 'cumora' },
+    info: { version: 1, author: 'lingxiloop' },
     properties: { 'preserves-vector-representation': false, 'template-rendering-intent': 'original' },
   }, null, 2))
 

@@ -61,7 +61,7 @@ const DM_AGENT_TRIAGE_EVERY = 8
 
 /** Active worklog claims (the authoritative "real work is happening here"
  *  signal), keyed by conversation_id. Gathered server-side (Redis peekWorklog,
- *  scopeKey = conversation_id — the same scope `cumora claim --in <convo>` uses)
+ *  scopeKey = conversation_id — the same scope `lingxiloop claim --in <convo>` uses)
  *  and fed into triage so the gate judges "is there OWNED work here?" from FACT,
  *  not by guessing intent from message wording. Empty/absent = no active claim. */
 export type ClaimsByConvo = Record<string, WorklogEntry[]>
@@ -180,7 +180,7 @@ function buildTriageInstructions(personaName: string): string {
   // of that in-turn, identically to the cloud pod-agent. Keeping the small brain a
   // pure gate saves tokens AND keeps it free of brittle, scenario-specific
   // classification — a SINGLE principle, no enumerated cases/games.
-  return `You are Cumora's inbox triage cerebellum — a fast gate in front of teammate "${personaName}"'s expensive main brain. Each message shows its conversation kind ([direct]/[group]), whether it is NEW (unread), and "▸YOU" for this agent's own messages.
+  return `You are LingxiLoop's inbox triage cerebellum — a fast gate in front of teammate "${personaName}"'s expensive main brain. Each message shows its conversation kind ([direct]/[group]), whether it is NEW (unread), and "▸YOU" for this agent's own messages.
 
 Your ONE job is to keep NOISE off the big brain — that is ALL you suppress. Decide with a single PRINCIPLE, never a checklist of cases:
 

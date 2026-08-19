@@ -113,7 +113,7 @@ public class AppleSignInPlugin: CAPPlugin, CAPBridgedPlugin, ASAuthorizationCont
            nsErr.code == ASAuthorizationError.canceled.rawValue {
             call.reject("canceled", "USER_CANCELLED")
         } else {
-            NSLog("[Cumora] AppleSignIn failed: %@", error.localizedDescription)
+            NSLog("[LingxiLoop] AppleSignIn failed: %@", error.localizedDescription)
             call.reject("apple sign-in failed: \(error.localizedDescription)", "AUTH_FAILED")
         }
     }

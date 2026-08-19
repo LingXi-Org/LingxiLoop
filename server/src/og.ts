@@ -8,7 +8,7 @@
  *
  *   request flow:
  *     1. validate the URL (scheme, hostname, DNS-resolved IP) — no SSRF
- *     2. consult Redis (cumora:og:<url>) — 7d positive TTL, 1h negative
+ *     2. consult Redis (lingxiloop:og:<url>) — 7d positive TTL, 1h negative
  *     3. fetch the HTML body, size- and time-bounded
  *     4. extract og:* / twitter:* / <title> / meta description
  *     5. cache + return
@@ -21,7 +21,7 @@ import { lookup as dnsLookup } from 'node:dns/promises'
 import { isIP } from 'node:net'
 import { redis } from './redis.js'
 
-const CACHE_PREFIX = 'cumora:og:'
+const CACHE_PREFIX = 'lingxiloop:og:'
 /** Positive cache: how long a successful fetch stays valid. 7 days is long
  *  enough that hot URLs stay cached across a typical workweek, short enough
  *  that a site re-launch or article edit gets picked up within reasonable
@@ -170,7 +170,7 @@ async function fetchAndParse(url: string): Promise<OgResult> {
       headers: {
         // A descriptive UA + Accept header improves the OG hit rate (some
         // sites serve a stripped page to bots that look like cURL).
-        'user-agent': 'Mozilla/5.0 (compatible; CumoraBot/1.0; +https://cumora.ai)',
+        'user-agent': 'Mozilla/5.0 (compatible; LingxiLoopBot/1.0; +https://github.com/LingXi-Org/LingxiLoop)',
         'accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5',
         'accept-language': 'en-US,en;q=0.9',
       },

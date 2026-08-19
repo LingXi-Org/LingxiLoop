@@ -7,7 +7,7 @@ test('sub2apiOpenAIBaseURL prefers the internal service URL for backend model tr
   assert.equal(
     sub2apiOpenAIBaseURL({
       internalUrl: 'http://sub2api:8080/',
-      publicUrl: 'https://sub2api.cumora.ai/',
+      publicUrl: 'https://sub2api.example.com/',
     }),
     'http://sub2api:8080/v1',
   )
@@ -16,9 +16,9 @@ test('sub2apiOpenAIBaseURL falls back to the public URL when no internal URL exi
   assert.equal(
     sub2apiOpenAIBaseURL({
       internalUrl: '',
-      publicUrl: 'https://sub2api.cumora.ai/',
+      publicUrl: 'https://sub2api.example.com/',
     }),
-    'https://sub2api.cumora.ai/v1',
+    'https://sub2api.example.com/v1',
   )
 })
 
@@ -104,7 +104,7 @@ test('setUserTier uses subscription-group sync instead of replace-group', async 
     user_id: 76,
     group_id: 3,
     validity_days: 3650,
-    notes: 'cumora auto-provision',
+    notes: 'lingxiloop auto-provision',
   })
   assert.deepEqual(calls[4]?.body, { group_id: 3 })
 })

@@ -1,7 +1,7 @@
-# Cumora Mobile — iOS build & App Store submission
+# LingxiLoop Mobile — iOS build & App Store submission
 
 This document walks the end-to-end flow for building, testing and
-submitting the Cumora iOS app via Capacitor. It assumes a clean macOS
+submitting the LingxiLoop iOS app via Capacitor. It assumes a clean macOS
 machine with Xcode 15+ and Ruby/CocoaPods installed.
 
 ## Architecture summary
@@ -14,10 +14,11 @@ machine with Xcode 15+ and Ruby/CocoaPods installed.
 - **Native shell**: Capacitor 8.x. Config lives in
   `capacitor.config.ts`. Plugins wired through `src/lib/native.ts`:
   status bar, splash screen, keyboard, app (back button), haptics.
-- **Backend**: same API as the desktop app — the committed
-  `.env.production` sets `VITE_CUMORA_API_BASE=https://api.cumora.ai`,
-  so the bundled WKWebView talks to prod. Point it at your own
-  deployment when self-hosting.
+- **Backend**: the same cloud API used by Web and desktop. No production API
+  is committed; an operator must supply `VITE_LINGXILOOP_API_BASE` at build
+  time.
+- **Release status**: native source is retained and branded, but no iOS or
+  Android CI/publishing workflow is supported.
 
 ## One-time setup
 
@@ -28,7 +29,7 @@ npm install
 # The native iOS project (./ios/App) is already committed — do NOT run
 # `npx cap add ios` on a fresh checkout.
 
-# Generate App Icon + Splash assets from build/icon.png.
+# Generate App Icon + Splash assets from assets/lingxiloop-logo.svg.
 # `sharp` is required just for this script — install transient.
 npm install --no-save sharp
 node scripts-gen-ios-assets.mjs
@@ -47,14 +48,13 @@ npm run mobile:ios:run
 ```
 
 To run against a remote dev API, temporarily uncomment a `server.url`
-in capacitor.config.ts (don't commit) or set `cumora.serverUrl` via
+in capacitor.config.ts (don't commit) or set `lingxiloop.serverUrl` via
 localStorage in the in-WebView devtools.
 
 ## Release build for App Store / TestFlight
 
-1. **Check the production API endpoint** — the committed
-   `.env.production` must point `VITE_CUMORA_API_BASE` at the API this
-   build should talk to.
+1. **Provide the API endpoint for this local build** — export a clean HTTPS
+   origin as `VITE_LINGXILOOP_API_BASE`. Do not commit the value.
 
 2. **Bump the version.** `Info.plist` reads `$(MARKETING_VERSION)` /
    `$(CURRENT_PROJECT_VERSION)`, so bump those two settings in
@@ -78,7 +78,7 @@ localStorage in the in-WebView devtools.
 5. In Xcode:
    - Select the **App** target → **Signing & Capabilities**: pick
      your Apple Developer team. Bundle identifier should be
-     `io.cumora.app` (matches `capacitor.config.ts`). Note the
+     `cn.lingxilearn.loop` (matches `capacitor.config.ts`). Note the
      committed Release config uses **manual signing** with a
      pre-created distribution cert + profile; on a fork, switch the
      Release config to your own team (automatic signing is fine
@@ -99,13 +99,13 @@ defaults are too minimal for App Review):
 
 ```xml
 <key>NSCameraUsageDescription</key>
-<string>Cumora uses the camera to share photos in conversations.</string>
+<string>LingxiLoop uses the camera to share photos in conversations.</string>
 <key>NSPhotoLibraryUsageDescription</key>
-<string>Cumora needs access to your photo library to attach images to messages.</string>
+<string>LingxiLoop needs access to your photo library to attach images to messages.</string>
 <key>NSMicrophoneUsageDescription</key>
-<string>Cumora can record short voice notes for your conversations.</string>
+<string>LingxiLoop can record short voice notes for your conversations.</string>
 <key>NSUserTrackingUsageDescription</key>
-<string>Cumora does not track you across other apps and websites.</string>
+<string>LingxiLoop does not track you across other apps and websites.</string>
 <key>ITSAppUsesNonExemptEncryption</key>
 <false/>
 ```
@@ -130,7 +130,7 @@ App Store Connect.
 
 ## Privacy — App Privacy questionnaire
 
-Cumora collects the following per-user data (be explicit when answering
+LingxiLoop collects the following per-user data (be explicit when answering
 the questionnaire):
 
 | Category              | Items                  | Linked to user | Tracking | Reason             |

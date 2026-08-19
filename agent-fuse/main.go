@@ -1,10 +1,10 @@
-// cumora-fuse — a FUSE driver that maps the agent's slice of the
+// lingxiloop-fuse — a FUSE driver that maps the agent's slice of the
 // `agent_workspace` table to a real filesystem at the mount point.
 //
-//   cumora-fuse "$CUMORA_AGENT_RUNTIME_URL" "$CUMORA_AGENT_RUNTIME_TOKEN" /workspace
+//   lingxiloop-fuse "$LINGXILOOP_AGENT_RUNTIME_URL" "$LINGXILOOP_AGENT_RUNTIME_TOKEN" /workspace
 //
 // Instead of connecting to Postgres directly, the FUSE driver issues
-// HTTP requests to the cumora server's `/runtime/fs/*` endpoints.
+// HTTP requests to the lingxiloop server's `/runtime/fs/*` endpoints.
 // The server has the DB pool and uses the JWT-pinned agentId on every
 // query, so the Pod stays credential-free (only a bearer token, just
 // like /runtime/cli).
@@ -99,11 +99,11 @@ type statResp struct {
 func (w *ws) stat(p string) (statResp, syscall.Errno) {
 	body, code, err := w.do("GET", "/fs/stat", url.Values{"path": []string{p}}, nil)
 	if err != nil {
-		log.Printf("[cumora-fuse] stat(%q) network error: %v", p, err)
+		log.Printf("[lingxiloop-fuse] stat(%q) network error: %v", p, err)
 		return statResp{}, syscall.EIO
 	}
 	if code != 200 {
-		log.Printf("[cumora-fuse] stat(%q) http %d: %s", p, code, truncate(body))
+		log.Printf("[lingxiloop-fuse] stat(%q) http %d: %s", p, code, truncate(body))
 		return statResp{}, syscall.EIO
 	}
 	var out statResp
@@ -116,14 +116,14 @@ func (w *ws) stat(p string) (statResp, syscall.Errno) {
 func (w *ws) readFile(p string) ([]byte, syscall.Errno) {
 	body, code, err := w.do("GET", "/fs/read", url.Values{"path": []string{p}}, nil)
 	if err != nil {
-		log.Printf("[cumora-fuse] read(%q) network error: %v", p, err)
+		log.Printf("[lingxiloop-fuse] read(%q) network error: %v", p, err)
 		return nil, syscall.EIO
 	}
 	if code == 404 {
 		return nil, syscall.ENOENT
 	}
 	if code != 200 {
-		log.Printf("[cumora-fuse] read(%q) http %d: %s", p, code, truncate(body))
+		log.Printf("[lingxiloop-fuse] read(%q) http %d: %s", p, code, truncate(body))
 		return nil, syscall.EIO
 	}
 	var out struct{ Body string `json:"body"` }
@@ -139,7 +139,7 @@ func (w *ws) writeFile(p string, content []byte) syscall.Errno {
 		"body": string(content),
 	})
 	if err != nil {
-		log.Printf("[cumora-fuse] write(%q) network error: %v", p, err)
+		log.Printf("[lingxiloop-fuse] write(%q) network error: %v", p, err)
 		return syscall.EIO
 	}
 	if code != 200 {
@@ -429,7 +429,7 @@ func joinRel(parent, name string) string {
 
 func main() {
 	if len(os.Args) != 4 {
-		fmt.Fprintln(os.Stderr, "usage: cumora-fuse <runtime-base-url> <bearer-token> <mount-point>")
+		fmt.Fprintln(os.Stderr, "usage: lingxiloop-fuse <runtime-base-url> <bearer-token> <mount-point>")
 		os.Exit(2)
 	}
 	baseURL := os.Args[1]
@@ -439,18 +439,18 @@ func main() {
 	w := newWs(baseURL, token)
 	// Probe once so we fail fast if the URL is wrong.
 	if _, errno := w.stat(""); errno != 0 {
-		log.Fatalf("[cumora-fuse] sanity-stat failed: errno=%d (is %s reachable?)", errno, baseURL)
+		log.Fatalf("[lingxiloop-fuse] sanity-stat failed: errno=%d (is %s reachable?)", errno, baseURL)
 	}
 
 	root := &dirNode{w: w, relPath: ""}
 
 	opts := &fs.Options{
 		MountOptions: fuse.MountOptions{
-			Name:          "cumora-workspace",
-			FsName:        "cumora-workspace",
+			Name:          "lingxiloop-workspace",
+			FsName:        "lingxiloop-workspace",
 			AllowOther:    false,
 			DisableXAttrs: true,
-			Debug:         os.Getenv("CUMORA_FUSE_DEBUG") == "1",
+			Debug:         os.Getenv("LINGXILOOP_FUSE_DEBUG") == "1",
 			DirectMount:   false,
 		},
 		EntryTimeout:    durptr(0),
@@ -460,15 +460,15 @@ func main() {
 
 	srv, err := fs.Mount(mountPoint, root, opts)
 	if err != nil {
-		log.Fatalf("[cumora-fuse] mount %q: %v", mountPoint, err)
+		log.Fatalf("[lingxiloop-fuse] mount %q: %v", mountPoint, err)
 	}
-	log.Printf("[cumora-fuse] mounted at %s (backend %s)", mountPoint, baseURL)
+	log.Printf("[lingxiloop-fuse] mounted at %s (backend %s)", mountPoint, baseURL)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
 		sig := <-sigs
-		log.Printf("[cumora-fuse] %v received, unmounting", sig)
+		log.Printf("[lingxiloop-fuse] %v received, unmounting", sig)
 		// Schedule the hard-exit timer FIRST so we still exit even if
 		// Unmount() ends up blocking on a stuck in-flight request.
 		// go-fuse's Wait() is documented to return after Unmount, but
@@ -476,11 +476,11 @@ func main() {
 		// kernel mount goes away the moment Unmount returns; once it
 		// does there's nothing useful left to do, so just leave.
 		time.AfterFunc(3*time.Second, func() {
-			log.Printf("[cumora-fuse] grace period elapsed, exit 0")
+			log.Printf("[lingxiloop-fuse] grace period elapsed, exit 0")
 			os.Exit(0)
 		})
 		if err := srv.Unmount(); err != nil {
-			log.Printf("[cumora-fuse] unmount error: %v", err)
+			log.Printf("[lingxiloop-fuse] unmount error: %v", err)
 		}
 	}()
 

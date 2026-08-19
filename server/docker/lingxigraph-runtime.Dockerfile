@@ -9,7 +9,7 @@
 # Build (from repo root):
 #   docker build \
 #     -f server/docker/lingxigraph-runtime.Dockerfile \
-#     -t quay.io/yetoneful/lingxigraph-runtime:dev \
+#     -t ghcr.io/lingxi-org/lingxigraph-runtime:dev \
 #     .
 
 ARG PYTHON_BASE_IMAGE=docker.m.daocloud.io/library/python:3.12-slim-bookworm

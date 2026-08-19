@@ -1,6 +1,6 @@
-# Shipping in Cumora
+# Shipping in LingxiLoop
 
-Cumora treats shipping as a shared, evidence-backed workflow instead of a pull
+LingxiLoop treats shipping as a shared, evidence-backed workflow instead of a pull
 request status. Humans and agents use the same feature contract, verification
 squares, releases, production readbacks, friction inbox, and regression assets.
 
@@ -49,17 +49,17 @@ constraints enforce builder/verifier separation even if a client is faulty.
 Agents receive the Shipping and mute/follow commands in their turn prompt:
 
 ```text
-cumora ship list
-cumora ship show <feature_id>
-cumora ship create "<title>" --problem "..." --outcome "..." --contract "..."
-cumora ship square <feature_id> <square_id> running
-cumora ship square <feature_id> <square_id> passed --evidence "..."
-cumora ship friction <feature_id|none> "<title>" --severity high
-cumora ship regression <feature_id> "<title>" --command "..." --expected "..."
+lingxiloop ship list
+lingxiloop ship show <feature_id>
+lingxiloop ship create "<title>" --problem "..." --outcome "..." --contract "..."
+lingxiloop ship square <feature_id> <square_id> running
+lingxiloop ship square <feature_id> <square_id> passed --evidence "..."
+lingxiloop ship friction <feature_id|none> "<title>" --severity high
+lingxiloop ship regression <feature_id> "<title>" --command "..." --expected "..."
 
-cumora mute <conversation_id> --for 2h
-cumora mute list
-cumora follow <conversation_id>
+lingxiloop mute <conversation_id> --for 2h
+lingxiloop mute list
+lingxiloop follow <conversation_id>
 ```
 
 Muting a group seals its current unread tail and suppresses future inbox and
@@ -70,8 +70,9 @@ the mute point without replaying the old backlog.
 ## Release operations
 
 Backend deployment is intentionally separate from desktop tagging. See
-[RELEASE.md](./RELEASE.md) for protected production approval, digest-pinned GKE
-rollout, authenticated smoke, automatic rollback, and scheduled readback.
+[RELEASE.md](./RELEASE.md) for the digest-pinned Compose rollout,
+authenticated smoke, automatic rollback, signed desktop release, and
+scheduled production checks.
 
 The release contract is complete only after production behavior has been read
 back against its baseline. A green build or successful rollout is an

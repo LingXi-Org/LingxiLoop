@@ -1,7 +1,7 @@
 /**
  * Unit tests for the low-priority wake budget — the post-incident
  * (FUSE-cap, 2026-05-20) backpressure that caps idle/scanner-driven
- * agent spawns at 20/min per cumora-server process.
+ * agent spawns at 20/min per lingxiloop-server process.
  *
  * Run: node --import tsx --test server/src/__tests__/scheduler-low-pri-budget.test.ts
  */

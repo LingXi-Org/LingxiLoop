@@ -275,7 +275,7 @@ export function ConversationsPane() {
           <><button type="button" aria-label="关闭账号菜单" className="fixed inset-0 z-30 cursor-default" onClick={() => setAccountOpen(false)} /><div className="absolute bottom-full left-3 right-3 z-40 mb-2 rounded-xl border border-hairline bg-card p-2 shadow-2xl">
             <div className="mb-1 rounded-lg bg-inset p-2"><CompanySwitcher zh /></div>
             <ThemeToggle showLabel className="h-9 w-full justify-start px-3 text-[13px] text-ink" onToggle={() => setAccountOpen(false)} />
-            <button type="button" onClick={() => { window.dispatchEvent(new Event('cumora:open-updater')); setAccountOpen(false) }} className="flex h-9 w-full items-center rounded-lg px-3 text-left text-[13px] text-ink hover:bg-raised">检查更新</button>
+            <button type="button" onClick={() => { window.dispatchEvent(new Event('lingxiloop:open-updater')); setAccountOpen(false) }} className="flex h-9 w-full items-center rounded-lg px-3 text-left text-[13px] text-ink hover:bg-raised">检查更新</button>
             <button type="button" onClick={async () => { try { await api.authLogout() } catch { /* best effort */ } useAuth.getState().clear(); location.reload() }} className="flex h-9 w-full items-center rounded-lg px-3 text-left text-[13px] text-red-400 hover:bg-raised">退出登录</button>
           </div></>
         )}

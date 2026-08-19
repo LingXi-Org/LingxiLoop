@@ -10,10 +10,10 @@
  * To run:
  *   1. Create a DEDICATED test DB (the suite TRUNCATEs everything, so
  *      pointing at your dev DB will eat its data):
- *        createdb cumora_test
+ *        createdb lingxiloop_test
  *   2. Have Redis listening on REDIS_URL (default localhost:6379).
  *   3. Export INTEGRATION_DATABASE_URL pointing at the test DB:
- *        export INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test
+ *        export INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test
  *   4. npm run test:integration
  *
  * If INTEGRATION_DATABASE_URL is unset we print a one-line "skipped" and
@@ -33,7 +33,7 @@ import 'dotenv/config'
 const INTEGRATION_URL = process.env.INTEGRATION_DATABASE_URL
 if (!INTEGRATION_URL) {
   console.log('[integration] skipped — set INTEGRATION_DATABASE_URL to enable.')
-  console.log('             example: INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test \\\\')
+  console.log('             example: INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \\\\')
   console.log('                      npm run test:integration')
   process.exit(0)
 }
@@ -44,7 +44,7 @@ if (!INTEGRATION_URL) {
 const SUSPICIOUS = /\b(prod|production|main|live)\b/i
 if (SUSPICIOUS.test(INTEGRATION_URL)) {
   console.error(`[integration] refusing to run — INTEGRATION_DATABASE_URL looks production-flavored: ${INTEGRATION_URL}`)
-  console.error('              The suite TRUNCATEs every table. Point at a dedicated test DB (e.g. cumora_test).')
+  console.error('              The suite TRUNCATEs every table. Point at a dedicated test DB (e.g. lingxiloop_test).')
   process.exit(2)
 }
 
@@ -61,7 +61,7 @@ process.env.DATABASE_URL = INTEGRATION_URL
 const LIVE_RESEND = process.env.RESEND_LIVE_TEST === '1'
 if (!LIVE_RESEND) {
   process.env.RESEND_API_KEY = ''
-  if (!process.env.EMAIL_DOMAIN) process.env.EMAIL_DOMAIN = 'cumora.local'
+  if (!process.env.EMAIL_DOMAIN) process.env.EMAIL_DOMAIN = 'lingxiloop.local'
 } else {
   // Live mode: refuse to run if the key OR a verified domain isn't set.
   if (!process.env.RESEND_API_KEY) {

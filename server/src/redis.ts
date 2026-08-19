@@ -7,7 +7,7 @@ import { env } from './env.js'
 // doesn't spam ECONNREFUSED logs in pods that don't have a Redis
 // nearby. In server mode the first publish/subscribe wakes it up
 // instantly.
-const lazyConnect = process.env.CUMORA_RUNTIME_CLIENT === 'http'
+const lazyConnect = process.env.LINGXILOOP_RUNTIME_CLIENT === 'http'
 
 /** Single shared client for normal commands. */
 export const redis = new IORedis(env.REDIS_URL, {
@@ -27,35 +27,35 @@ redis.on('error', (e) => console.error('[redis]', e))
 sub.on('error', (e) => console.error('[redis sub]', e))
 
 /* === Channel keys === */
-export const CH_MESSAGE_NEW = 'cumora:msg.new'
-export const CH_MESSAGE_DELTA = 'cumora:msg.delta'
-export const CH_TYPING = 'cumora:typing'
-export const CH_STATUS = 'cumora:status'
-export const CH_REACTIONS = 'cumora:reactions'
-export const CH_POLLS = 'cumora:polls'
-export const CH_GROUP_PULLED = 'cumora:group.pulled'
-export const CH_CONVO_UPDATED = 'cumora:convo.updated'
-export const CH_CONVENE = 'cumora:convene'
-export const CH_BOARDS = 'cumora:boards'
-export const CH_DOCS = 'cumora:docs'
+export const CH_MESSAGE_NEW = 'lingxiloop:msg.new'
+export const CH_MESSAGE_DELTA = 'lingxiloop:msg.delta'
+export const CH_TYPING = 'lingxiloop:typing'
+export const CH_STATUS = 'lingxiloop:status'
+export const CH_REACTIONS = 'lingxiloop:reactions'
+export const CH_POLLS = 'lingxiloop:polls'
+export const CH_GROUP_PULLED = 'lingxiloop:group.pulled'
+export const CH_CONVO_UPDATED = 'lingxiloop:convo.updated'
+export const CH_CONVENE = 'lingxiloop:convene'
+export const CH_BOARDS = 'lingxiloop:boards'
+export const CH_DOCS = 'lingxiloop:docs'
 /* === Collaborative documents (CRDT) ===
  *
  * Yjs binary updates are base64-encoded into the JSON envelope so they
  * fan out through the same Redis bus + WS path as every other event.
  * `originId` is the WS client (or agent) that produced the update so the
  * fan-out can echo-suppress on the sender's own socket. */
-export const CH_DOC_UPDATE = 'cumora:doc.update'
-export const CH_DOC_AWARENESS = 'cumora:doc.awareness'
+export const CH_DOC_UPDATE = 'lingxiloop:doc.update'
+export const CH_DOC_AWARENESS = 'lingxiloop:doc.awareness'
 /** A user / agent was @-mentioned inside a doc. Fanned out via the
  *  generic tenant-scoped WS bridge (NOT the per-doc subscription
  *  bridge) — recipients listen by their participant id, regardless of
  *  whether they currently have the doc open. */
-export const CH_DOC_MENTION = 'cumora:doc.mention'
-export const CH_CALENDAR_REMINDER = 'cumora:calendar.reminder'
+export const CH_DOC_MENTION = 'lingxiloop:doc.mention'
+export const CH_CALENDAR_REMINDER = 'lingxiloop:calendar.reminder'
 /** Calendar row CRUD + dispatch-driven status changes. Sent on create /
  *  update / delete / cancel / run-now / dispatcher auto-done so every
  *  client in the company can patch their Calendar view in real time. */
-export const CH_CALENDAR_EVENTS = 'cumora:calendar.events'
+export const CH_CALENDAR_EVENTS = 'lingxiloop:calendar.events'
 
 /* === Event types ===
  *

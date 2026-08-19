@@ -6,7 +6,7 @@
  * oauth.ts findOrCreateUserByProfile). This worker walks expired stamps
  * and downgrades them back to 'free' through admin.changeUserTier — the
  * SAME path the admin UI uses — so the sub2api quota group is mirrored
- * and can never drift from the cumora tier.
+ * and can never drift from the lingxiloop tier.
  *
  * Safety properties:
  *  - Only rows with tier='pro' AND a non-NULL, past stamp are touched.

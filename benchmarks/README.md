@@ -1,4 +1,4 @@
-# Cumora Multi-Agent Coordination Benchmarks
+# LingxiLoop Multi-Agent Coordination Benchmarks
 
 Real-LLM capability evaluation for the BYOA + cloud agent coordination
 stack. Run periodically (weekly by default) against the production
@@ -59,7 +59,7 @@ of bar that flags real regressions without flapping on stochastic noise.
 ```bash
 cd benchmarks
 npm install
-# Point at the cumora DB/Redis (same ones the daemon uses)
+# Point at the lingxiloop DB/Redis (same ones the daemon uses)
 export DATABASE_URL=postgres://...
 export REDIS_URL=redis://...
 export BENCH_USER=u-<your-user-id>          # the participant ID you want to act as
@@ -75,7 +75,7 @@ The runner writes one JSON result file per scenario into
 ## Cost
 
 Per-trial cost depends entirely on your daemon's model pin
-(`CUMORA_DEFAULT_CLAUDE_MODEL`) and roster size. Indicative figures for
+(`LINGXILOOP_DEFAULT_CLAUDE_MODEL`) and roster size. Indicative figures for
 Opus 4.7 on a 7-agent roster (the standard test rig as of 2026-06):
 
 | Scenario | ~Wall time / trial | ~Cost / trial | Default trials | Per-cycle cost |
@@ -102,17 +102,17 @@ that environment.
 
 ## CI integration
 
-See [`.github/workflows/benchmark.yml`](../.github/workflows/benchmark.yml).
-The workflow runs on a `self-hosted` runner tagged `cumora-bench` because
+Benchmarks are developer-run only and are not part of the release CI.
+The workflow runs on a `self-hosted` runner tagged `lingxiloop-bench` because
 GitHub-hosted runners can't host the claude/codex CLI auth state.
 
 Self-hosted runner setup (one-time):
 1. Provision a machine with `claude` and `codex` CLIs installed and
    logged in to working accounts.
-2. Run `npx cumora agent computer` daemon in a long-lived tmux window
+2. Run `npx lingxiloop agent computer` daemon in a long-lived tmux window
    so the daemon is up when the workflow fires.
 3. Install the GH Actions self-hosted runner with labels `self-hosted`
-   + `cumora-bench`.
+   + `lingxiloop-bench`.
 4. Set the workflow secrets (`BENCH_DATABASE_URL`, `BENCH_REDIS_URL`,
    `BENCH_USER`, `BENCH_COMPANY`) under repo Settings.
 

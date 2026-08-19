@@ -1,7 +1,7 @@
 /**
  * `/runtime/cli` argv normalization.
  *
- * The pod's `cumora` shim posts a raw argv array to this endpoint. We
+ * The pod's `lingxiloop` shim posts a raw argv array to this endpoint. We
  * MUST strip any `--as <id>` / `--as=<id>` the client supplied before
  * delegating to `runCli` — the JWT pins the agent identity and re-
  * injects `--as <jwt.sub>` at the front. Without the strip, a
@@ -15,7 +15,7 @@
 /** Remove every occurrence of `--as <id>` and `--as=<id>` from argv.
  *  Returns a new array; the input is not mutated. The supplied tokens
  *  are kept in their original order otherwise — argv-positional order
- *  matters for `cumora` subcommand parsing. */
+ *  matters for `lingxiloop` subcommand parsing. */
 export function stripAsArgs(argv: readonly string[]): string[] {
   const out: string[] = []
   for (let i = 0; i < argv.length; i++) {

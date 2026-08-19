@@ -43,12 +43,13 @@ ios/App/.symlinks
 .cap-tmp/
 
 # TestFlight archive / IPA outputs from `xcodebuild archive`
-/build/Cumora.xcarchive
+/build/LingxiLoop.xcarchive
 /build/ipa
 /build/sim
 
 # Electron builder output
 release/
+electron-package/
 
 # Runtime-generated user content (AI portraits + image uploads)
 server/uploads/
@@ -60,12 +61,15 @@ server/uploads/
 .env
 .env.local
 .env.*.local
+.env.secrets
+.release.env
+.release.next.env
+.release.previous.env
 *.tsbuildinfo
 
 # tsc emissions of vite.config.ts (build artifacts)
 vite.config.js
 vite.config.d.ts
 *.tsbuildinfo
-server/k8s/*.prod.yaml
 docs/HANDOFF.md
 android/app/google-services.json

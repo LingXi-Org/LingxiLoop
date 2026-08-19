@@ -49,7 +49,7 @@ const DEFAULT_TITLE = 'bench:kanban TASK'
 const DEFAULT_BODY = `Quick collaborative deliverable: produce a short markdown doc
 (~150 words, 3 paragraphs) explaining what makes a multi-agent team
 coordinate well. The doc should be ONE shared file; please claim the
-work via \`cumora card claim\`, write the draft, post-link the doc in
+work via \`lingxiloop card claim\`, write the draft, post-link the doc in
 this conversation, and move the card to a done column when finished.`
 
 const DONE_COLUMN_RE = /\b(done|complete|completed|shipped|archive|closed|完成|已完成)\b/i

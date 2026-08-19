@@ -67,7 +67,7 @@ export function NotificationWindow() {
   // users would see a brief flash of the empty 360-wide rectangle in
   // the screen corner before the toast painted.
   useEffect(() => {
-    const bridge = window.cumora?.notify
+    const bridge = window.lingxiloop?.notify
     if (!bridge) return
     const offPush = bridge.onPush((p) => {
       // No chime here — moved to the 0→1 transition effect below so
@@ -119,7 +119,7 @@ export function NotificationWindow() {
     const prev = prevToastCount.current
     prevToastCount.current = next
     if (prev === 0 && next > 0) {
-      window.cumora?.notify?.setInteractive(true)
+      window.lingxiloop?.notify?.setInteractive(true)
       // Two RAFs: first frame React commits the new toast to the DOM
       // and layout runs; on the second frame `stackRef` has its real
       // height. We send setHeight FIRST so main resizes the still-
@@ -130,27 +130,27 @@ export function NotificationWindow() {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const h = stackRef.current?.getBoundingClientRect().height ?? 0
-          if (h > 0) window.cumora?.notify?.setHeight(Math.ceil(h) + 12)
-          window.cumora?.notify?.painted()
+          if (h > 0) window.lingxiloop?.notify?.setHeight(Math.ceil(h) + 12)
+          window.lingxiloop?.notify?.painted()
         })
       })
     } else if (prev > 0 && next === 0) {
       // Hold the destroy until AnimatePresence finishes its exit
       // animation. Without this delay, main destroys the window
       // mid-animation and the toast appears to vanish abruptly.
-      const t = setTimeout(() => { window.cumora?.notify?.setInteractive(false) }, EXIT_HOLD_MS)
+      const t = setTimeout(() => { window.lingxiloop?.notify?.setInteractive(false) }, EXIT_HOLD_MS)
       return () => clearTimeout(t)
     } else if (next > prev) {
       // New (non-coalesced) toast added while panel is already visible.
       // Fire painted again so main relays a chime IPC for this toast
       // too. No setInteractive — panel is already accepting clicks.
-      requestAnimationFrame(() => window.cumora?.notify?.painted())
+      requestAnimationFrame(() => window.lingxiloop?.notify?.painted())
     }
   }, [toasts.length])
 
   const dismiss = (id: string) => setToasts((prev) => prev.filter((t) => t.id !== id))
   const onClick = (t: Toast) => {
-    window.cumora?.notify?.focusConvo(t.conversationId)
+    window.lingxiloop?.notify?.focusConvo(t.conversationId)
     dismiss(t.id)
   }
 
@@ -163,7 +163,7 @@ export function NotificationWindow() {
     if (!el) return
     const send = () => {
       const h = el.getBoundingClientRect().height
-      if (h > 0) window.cumora?.notify?.setHeight(Math.ceil(h) + 12 /* breathing room */)
+      if (h > 0) window.lingxiloop?.notify?.setHeight(Math.ceil(h) + 12 /* breathing room */)
     }
     const ro = new ResizeObserver(send)
     ro.observe(el)
@@ -363,7 +363,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
           height: 2,
           background: 'linear-gradient(90deg, var(--skype), var(--sky-glow))',
           transformOrigin: 'left center',
-          animation: hovered ? 'none' : `cumora-toast-drain ${AUTO_DISMISS_MS}ms linear forwards`,
+          animation: hovered ? 'none' : `lingxiloop-toast-drain ${AUTO_DISMISS_MS}ms linear forwards`,
         }}
       />
     </div>

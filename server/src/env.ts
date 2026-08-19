@@ -32,7 +32,9 @@ const DEV_AGENT_RUNTIME_SECRET = 'dev-agent-runtime-secret-do-not-use-in-prod'
 export const env = {
   PORT: Number(process.env.PORT ?? 5181),
   NODE_ENV: process.env.NODE_ENV ?? 'development',
-  DATABASE_URL: required('DATABASE_URL', `postgres://${process.env.USER ?? 'postgres'}@localhost:5432/cumora`),
+  APP_VERSION: process.env.LINGXILOOP_VERSION?.trim() || '0.0.0-dev',
+  COMMIT_SHA: process.env.LINGXILOOP_COMMIT_SHA?.trim() || 'dev',
+  DATABASE_URL: required('DATABASE_URL', `postgres://${process.env.USER ?? 'postgres'}@localhost:5432/lingxiloop`),
   REDIS_URL: required('REDIS_URL', 'redis://localhost:6379'),
   OPENAI_API_KEY: required('OPENAI_API_KEY'),
   /** Optional OpenAI-compatible endpoint, e.g. DeepSeek's /v1 API. */
@@ -145,7 +147,7 @@ export const env = {
    * `R2_BUCKET`   — bucket name
    * `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` — API token credentials
    * `R2_PUBLIC_BASE` — public CDN/custom-domain base for read URLs, e.g.
-   *   https://cdn.cumora.app (no trailing slash). When unset we'll generate
+   *   https://cdn.lingxiloop.app (no trailing slash). When unset we'll generate
    *   short-lived presigned GET URLs instead — works but not cacheable.
    */
   R2_ENDPOINT: process.env.R2_ENDPOINT ?? '',
@@ -155,7 +157,7 @@ export const env = {
   R2_PUBLIC_BASE: (process.env.R2_PUBLIC_BASE ?? '').replace(/\/+$/, ''),
   /**
    * HMAC secret shared between this server (URL signer) and the Cloudflare
-   * Worker fronting `cdn.cumora.ai`. When set, R2 public URLs are emitted
+   * Worker fronting `cdn.example.com`. When set, R2 public URLs are emitted
    * with `?exp=<unix>&sig=<hex>` and the Worker validates both before
    * proxying R2 reads. Leave blank to skip signing (URLs served unsigned —
    * fine in local dev, NOT for prod).
@@ -167,9 +169,9 @@ export const env = {
   R2_URL_TTL_SECONDS: Number(process.env.R2_URL_TTL_SECONDS ?? 3600),
   /**
    * Base URL of an Agent Skills hub — any HTTP service that implements
-   * the contract below. Agents use it via `cumora skills search/install`.
+   * the contract below. Agents use it via `lingxiloop skills search/install`.
    * Leave blank to disable the hub commands; agents can still create
-   * their own skills via `cumora skills create`.
+   * their own skills via `lingxiloop skills create`.
    *
    *   GET  <hub>/search?q=<query>
    *     → [{ name, description, version?, author?, install_url }]
@@ -197,11 +199,11 @@ export const env = {
    */
   AGENT_RUNTIME_SECRET: process.env.AGENT_RUNTIME_SECRET ?? DEV_AGENT_RUNTIME_SECRET,
   /**
-   * Full URL the agent-runner pod uses to reach the cumora server's
+   * Full URL the agent-runner pod uses to reach the lingxiloop server's
    * `/runtime` API (note the trailing path). From OrbStack K8s a pod
    * talks to the host via `host.docker.internal`. Override in prod
    * with the in-cluster service URL — typically something like
-   * `http://cumora-server.default.svc.cluster.local:5181/runtime`.
+   * `http://lingxiloop-server.default.svc.cluster.local:5181/runtime`.
    */
   AGENT_RUNTIME_SERVER_URL: process.env.AGENT_RUNTIME_SERVER_URL ?? `http://host.docker.internal:${process.env.PORT ?? 5181}/runtime`,
   /**
@@ -275,10 +277,10 @@ export const env = {
    * blank preserves same-origin / Vite-proxy behavior in dev. Set to
    * the renderer's origin when you ship a build that talks directly
    * to this server from a different host (e.g. a packaged Electron
-   * app pointing at https://api.cumora.ai). Use `*` to allow any
+   * app pointing at an operator-provided HTTPS origin). Use `*` to allow any
    * origin (no credentials).
    */
-  CORS_ORIGINS: (process.env.CUMORA_CORS_ORIGINS ?? '')
+  CORS_ORIGINS: (process.env.LINGXILOOP_CORS_ORIGINS ?? '')
     .split(',').map((s) => s.trim()).filter(Boolean),
   LINGXI_IDENTITY_ISSUER: (process.env.LINGXI_IDENTITY_ISSUER ?? '').replace(/\/+$/, ''),
   LINGXI_IDENTITY_CLIENT_ID: process.env.LINGXI_IDENTITY_CLIENT_ID ?? '',
@@ -299,34 +301,34 @@ export const env = {
   /** Public origin this server is reachable at. Used to construct the
    *  per-provider redirect_uri that we hand to Google / GitHub at flow
    *  start. Defaults to http://localhost:5181 for local dev. In prod
-   *  set CUMORA_PUBLIC_ORIGIN=https://api.cumora.ai. */
-  PUBLIC_ORIGIN: (process.env.CUMORA_PUBLIC_ORIGIN ?? 'http://localhost:5181').replace(/\/+$/, ''),
+   *  set LINGXILOOP_PUBLIC_ORIGIN=https://loop.example.com. */
+  PUBLIC_ORIGIN: (process.env.LINGXILOOP_PUBLIC_ORIGIN ?? 'http://localhost:5181').replace(/\/+$/, ''),
   /** Default URL the server 302s to after a successful OAuth callback,
    *  with `#token=...&companyId=...` appended. Used when the client
    *  didn't pass `?return=` at flow start. For dev (Vite) point at
    *  http://localhost:5173/; for packaged Electron the client passes
-   *  cumora://auth at start time and the server picks that. */
-  AUTH_DONE_URL: process.env.CUMORA_AUTH_DONE_URL ?? 'http://localhost:5173/',
+   *  lingxiloop://auth at start time and the server picks that. */
+  AUTH_DONE_URL: process.env.LINGXILOOP_AUTH_DONE_URL ?? 'http://localhost:5173/',
   /** Allow-list of return URLs the client may pass via /auth/start
    *  `?return=...`. Without this we'd have an open-redirect: any
    *  attacker could craft a malicious provider-callback chain that
    *  delivers the user's token to a foreign origin. A return URL is
    *  accepted iff it startsWith one of these prefixes. Comma-separated.
    *  Common values:
-   *    cumora://auth                       (packaged Electron deep link)
+   *    lingxiloop://auth                       (packaged Electron deep link)
    *    http://localhost:5173/              (Vite dev renderer)
    *    http://localhost:5180/              (Electron dev renderer)
-   *    https://app.cumora.ai/              (future web client)
+   *    https://loop.example.com/                 (web client)
    */
-  AUTH_RETURN_ALLOWLIST: (process.env.CUMORA_AUTH_RETURN_ALLOWLIST ?? '')
+  AUTH_RETURN_ALLOWLIST: (process.env.LINGXILOOP_AUTH_RETURN_ALLOWLIST ?? '')
     .split(',').map((s) => s.trim()).filter(Boolean),
   /** Base URL used to build the public face of company invitation links
    *  (`<base>/invite/<token>`). When unset we fall back to AUTH_DONE_URL —
-   *  already prod-correct for the OAuth flow (https://app.cumora.ai on the
-   *  web, cumora://auth in packaged Electron which gets rewritten to
-   *  cumora://invite/<token>). Set this only if the invite-acceptance flow
+   *  already production-correct for the OAuth flow (the configured public origin on the
+   *  web, lingxiloop://auth in packaged Electron which gets rewritten to
+   *  lingxiloop://invite/<token>). Set this only if the invite-acceptance flow
    *  lives on a different origin than the OAuth redirect. */
-  INVITE_BASE_URL: process.env.CUMORA_INVITE_BASE_URL ?? '',
+  INVITE_BASE_URL: process.env.LINGXILOOP_INVITE_BASE_URL ?? '',
   /**
    * sub2api LLM quota gateway. When SUB2API_ADMIN_KEY is set, OAuth
    * signup provisions a per-user sub2api account + API key, and every
@@ -340,12 +342,12 @@ export const env = {
    *                          mint key, replace-group). In-cluster:
    *                          http://sub2api:8080.
    *   SUB2API_PUBLIC_URL   — public domain for browser/operator access
-   *                          (https://sub2api.cumora.ai). Backend LLM
+   *                          (https://sub2api.example.com). Backend LLM
    *                          traffic should prefer SUB2API_INTERNAL_URL
    *                          to avoid ingress request timeouts.
    *   SUB2API_ADMIN_KEY    — `x-api-key` header value for admin
    *                          endpoints. Generated once in the sub2api
-   *                          dashboard at https://sub2api.cumora.ai/.
+   *                          dashboard at https://sub2api.example.com/.
    *
    * Tier → sub2api group_id mapping. Numeric ids come from the
    * dashboard after you create the three quota groups. 0 means "tier
@@ -366,7 +368,7 @@ export const env = {
    * (we never write FALSE from this path); demotion goes through the
    * admin panel.
    */
-  ADMIN_EMAILS: (process.env.CUMORA_ADMIN_EMAILS ?? '')
+  ADMIN_EMAILS: (process.env.LINGXILOOP_ADMIN_EMAILS ?? '')
     .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
   /**
    * Real-email feature. When all three core vars are set, agents can send
@@ -378,7 +380,7 @@ export const env = {
    *
    *   RESEND_API_KEY            — Resend API key (re_… token)
    *   EMAIL_DOMAIN              — root domain that hosts agent addresses,
-   *                               e.g. "cumora.ai". Per-agent address is
+   *                               e.g. "loop.lingxilearn.cn". Per-agent address is
    *                               <participantId>.<companySlug>@<EMAIL_DOMAIN>.
    *   EMAIL_INBOUND_HMAC_SECRET — shared secret with the CF Email Worker.
    *                               Worker signs the JSON body; server verifies
@@ -424,7 +426,7 @@ export const env = {
    *  their declared expiration — manual close still works). */
   POLL_SWEEP_INTERVAL_MS: Number(process.env.POLL_SWEEP_INTERVAL_MS ?? 60_000),
   /** Interval between chrome-profile PVC garbage-collection passes.
-   *  Each pass lists all `app=cumora-agent` PVCs, joins against
+   *  Each pass lists all `app=lingxiloop-agent` PVCs, joins against
    *  participants + agent_runs, and drops PVCs whose agent has been
    *  off-boarded OR hasn't run in CHROME_PVC_GC_IDLE_DAYS. Default
    *  hourly cadence — the work is sized for off-the-clock cleanup,
@@ -453,8 +455,8 @@ export const env = {
   APNS_KEY_PATH: process.env.APNS_KEY_PATH ?? '',
   APNS_KEY_ID: process.env.APNS_KEY_ID ?? '',
   APNS_TEAM_ID: process.env.APNS_TEAM_ID ?? '',
-  /** APNs topic — must match the iOS bundle id (io.cumora.app). */
-  APNS_TOPIC: process.env.APNS_TOPIC ?? 'io.cumora.app',
+  /** APNs topic — must match the iOS bundle id (cn.lingxilearn.loop). */
+  APNS_TOPIC: process.env.APNS_TOPIC ?? 'cn.lingxilearn.loop',
   /** 'development' uses api.sandbox.push.apple.com (TestFlight + dev builds),
    *  'production' uses api.push.apple.com (App Store). Mismatching env vs.
    *  build will silently 400 every push — get it right. */

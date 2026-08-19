@@ -1,6 +1,6 @@
 /**
  * InProcRuntimeClient — `AgentRuntimeClient` impl that runs in the same
- * Node process as the cumora server. Talks directly to Postgres + Redis
+ * Node process as the lingxiloop server. Talks directly to Postgres + Redis
  * via the existing helpers; no HTTP hop.
  *
  * This is the transitional implementation. The pod-based runtime
@@ -274,7 +274,7 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
     // baseline got polluted past what the brain had actually been shown,
     // and the preflight let duplicate-collisions through (observed:
     // bram-a520 saw Iris's "1" via maybeSteer's loadInbox call, baseline
-    // advanced to seq=2, Bram's cumora reply "1" preflight then saw
+    // advanced to seq=2, Bram's lingxiloop reply "1" preflight then saw
     // nothing > 2 and let the duplicate post). Advance is now done by
     // the SERVER endpoint handler that actually shows to brain, see
     // runtime/server.ts /inbox (handler chooses advance vs probe).
@@ -578,7 +578,7 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
     // event ALWAYS goes through so the indicator clears promptly.
     if (!args.done) {
       try {
-        const fresh = await redis.set(`cumora:typ:${args.agentId}:${args.conversationId}`, '1', 'EX', 30, 'NX')
+        const fresh = await redis.set(`lingxiloop:typ:${args.agentId}:${args.conversationId}`, '1', 'EX', 30, 'NX')
         if (fresh === null) return // throttled — indicator still alive from the last ping
       } catch { /* redis hiccup — fall through and publish */ }
     }
@@ -755,7 +755,7 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
   // Lightweight "I'm thinking about responding in this convo" signal,
   // visible to peer agents via peekThinking(). The point is NOT to
   // serialize anything — it's to give the agent a way to read the
-  // room (cf. `cumora glance`) before committing a reply, the way a
+  // room (cf. `lingxiloop glance`) before committing a reply, the way a
   // person glances at a typing indicator before sending.
   //
   // Redis ZSET per convo, score = ms timestamp of the first claim,
@@ -769,7 +769,7 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
     // Collapse to ≤1 per 30s per agent (still refreshes before the 60s TTL) to
     // cut the repeated Redis writes ~5x.
     try {
-      const fresh = await redis.set(`cumora:thk:${agentId}`, '1', 'EX', 30, 'NX')
+      const fresh = await redis.set(`lingxiloop:thk:${agentId}`, '1', 'EX', 30, 'NX')
       if (fresh === null) return // throttled — existing claims still valid (60s TTL)
     } catch { /* fail-open — fall through and mark */ }
     try {
@@ -841,7 +841,7 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
   // burning tokens on a duplicate.
   //
   // Redis HASH per conversation:
-  //   key:   cumora:worklog:<convoId>
+  //   key:   lingxiloop:worklog:<convoId>
   //   field: <taskType>::<normalized subject hash>
   //   value: JSON { agentId, taskType, subject, startedAt }
   // Whole-key TTL = ttlSec on every successful claim. Per-field TTL
@@ -1047,16 +1047,16 @@ export class InProcRuntimeClient implements AgentRuntimeClient {
 /** Redis key for the per-agent busy lease — exported so the server-
  *  side delivery routing (which doesn't go through the runtime client)
  *  can read it directly. Keep the prefix short — busy:* sorts cleanly
- *  with the other cumora:* keys when scanning. */
+ *  with the other lingxiloop:* keys when scanning. */
 export function busyKey(agentId: string): string {
-  return `cumora:busy:${agentId}`
+  return `lingxiloop:busy:${agentId}`
 }
 
 /** Redis key for the per-conversation thinking set. Members are
  *  agentIds; peers read this via peekThinking() to know who else is
  *  currently composing a response. */
 export function thinkingKey(conversationId: string): string {
-  return `cumora:thinking:${conversationId}`
+  return `lingxiloop:thinking:${conversationId}`
 }
 
 /** Redis key for the per-scope worklog HASH. `scopeKey` is whatever
@@ -1065,7 +1065,7 @@ export function thinkingKey(conversationId: string): string {
  *  Fields are `<taskType>::<normalized subject>`; values are
  *  JSON-encoded WorklogEntry. Anti-duplicate-work claims live here. */
 export function worklogKey(scopeKey: string): string {
-  return `cumora:worklog:${scopeKey}`
+  return `lingxiloop:worklog:${scopeKey}`
 }
 
 /** Normalize a work subject (doc title, search query, …) so trivially-

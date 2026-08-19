@@ -103,7 +103,7 @@ test('[integration] background scanner wakes a capability-bearing agent through 
   assert.match(brief.body, /background\.scan capability/)
   assert.match(brief.body, /Campaign planning/)
   assert.match(brief.body, /campaign note 8/)
-  assert.match(brief.body, /cumora pull-group/)
+  assert.match(brief.body, /lingxiloop pull-group/)
 
   const { rowCount: runs } = await pool.query(
     `SELECT 1 FROM agent_runs WHERE agent_id = $1`,

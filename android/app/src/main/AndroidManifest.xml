@@ -23,14 +23,14 @@
             </intent-filter>
 
             <!-- OAuth callback deep link: the server redirects Google/GitHub
-                 sign-in to cumora://auth#token=... ; this routes it back to
+                 sign-in to lingxiloop://auth#token=... ; this routes it back to
                  the app, where @capacitor/app's appUrlOpen (see native.ts
                  handleDeepLink) extracts the token and closes the Custom Tab. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="cumora" />
+                <data android:scheme="lingxiloop" />
             </intent-filter>
 
         </activity>

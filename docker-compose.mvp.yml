@@ -61,7 +61,7 @@ services:
   lingxiloop:
     build:
       context: .
-      dockerfile: server/docker/cumora-server.Dockerfile
+      dockerfile: server/docker/lingxiloop-server.Dockerfile
       args:
         NODE_BASE_IMAGE: ${NODE_BASE_IMAGE:-docker.m.daocloud.io/library/node:20-bookworm-slim}
         APT_MIRROR: ${APT_MIRROR:-http://mirrors.aliyun.com}
@@ -91,11 +91,11 @@ services:
 
       # Web production origin / OAuth. Bare-name passthrough means values stay
       # unset unless configured in .env; server defaults remain intact for dev.
-      - CUMORA_PUBLIC_ORIGIN
-      - CUMORA_AUTH_DONE_URL
-      - CUMORA_AUTH_RETURN_ALLOWLIST
-      - CUMORA_INVITE_BASE_URL
-      - CUMORA_CORS_ORIGINS
+      - LINGXILOOP_PUBLIC_ORIGIN
+      - LINGXILOOP_AUTH_DONE_URL
+      - LINGXILOOP_AUTH_RETURN_ALLOWLIST
+      - LINGXILOOP_INVITE_BASE_URL
+      - LINGXILOOP_CORS_ORIGINS
       # Primary Web OIDC provider (Logto Traditional Web confidential client).
       - LINGXI_IDENTITY_ISSUER
       - LINGXI_IDENTITY_CLIENT_ID

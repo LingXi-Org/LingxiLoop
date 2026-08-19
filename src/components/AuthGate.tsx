@@ -91,8 +91,8 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
   // parsed fragment to /auth/token → main IPC'd here. Plant the
   // session and trip the /auth/me probe by setting token.
   useEffect(() => {
-    if (!isElectron || !window.cumora?.auth) return
-    const off = window.cumora.auth.onToken(({ token: t, companyId }) => {
+    if (!isElectron || !window.lingxiloop?.auth) return
+    const off = window.lingxiloop.auth.onToken(({ token: t, companyId }) => {
       if (!t) return
       setSession(t, { id: '', email: '', name: '' }, companyId)
     })
@@ -101,7 +101,7 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
 
   // Native (iOS / Android): when the SFSafariViewController flow
   // completes, lib/native.ts plants the token fragment on our location
-  // and fires `cumora:oauth-token`. Consume it the same way as the
+  // and fires `lingxiloop:oauth-token`. Consume it the same way as the
   // top-of-mount `consumeOAuthFragment` so AuthGate's existing probe
   // logic picks up the new token.
   useEffect(() => {
@@ -110,8 +110,8 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
       if (!carried) return
       setSession(carried.token, { id: '', email: '', name: '' }, carried.companyId)
     }
-    window.addEventListener('cumora:oauth-token', handler)
-    return () => window.removeEventListener('cumora:oauth-token', handler)
+    window.addEventListener('lingxiloop:oauth-token', handler)
+    return () => window.removeEventListener('lingxiloop:oauth-token', handler)
   }, [setSession])
 
   if (!ready) {

@@ -20,9 +20,10 @@ import { CloudLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
 
 interface ServerPreset { label: string; origin: string }
+const configuredOrigin = getServerOrigin()
 const PRESETS: ServerPreset[] = [
-  { label: 'Production',  origin: 'https://api.cumora.ai' },
-  { label: 'Local Dev',   origin: 'http://localhost:5181' },
+  ...(configuredOrigin ? [{ label: 'Configured', origin: configuredOrigin }] : []),
+  { label: 'Local Dev', origin: 'http://localhost:5181' },
 ]
 
 export function AuthScreen() {
@@ -88,20 +89,25 @@ export function AuthScreen() {
 
   function go(provider: 'lingxi' | 'google' | 'github') {
     setBusy(provider); setErr(null)
-    if (isElectron && window.cumora?.auth) {
+    if (isElectron && window.lingxiloop?.auth) {
       // Open the user's real browser (Safari / Chrome) so they see the
       // provider's authentic URL bar and so Google's embedded-webview
       // bans don't bite us. We pass `?return=http://127.0.0.1:47823/auth/done`
       // — the loopback HTTP server in main.cjs serves a styled
       // "Signed in" page that POSTs the fragment back to the main
       // process, which IPCs the renderer (see AuthGate's onToken).
-      const origin = getServerOrigin() || 'https://api.cumora.ai'
+      const origin = getServerOrigin()
+      if (!origin) {
+        setErr('No LingxiLoop server is configured for this desktop build.')
+        setBusy(null)
+        return
+      }
       // Arm a single-use nonce and thread it through the return URL. The server
       // round-trips it back onto /auth/done, the loopback page carries it into
-      // the cumora:// deep link, and main accepts the token only if the nonce
+      // the lingxiloop:// deep link, and main accepts the token only if the nonce
       // matches — so a drive-by deep link the app never initiated is rejected
       // (anti session-fixation). arm() is Electron-only.
-      const auth = window.cumora.auth
+      const auth = window.lingxiloop.auth
       void (async () => {
         let ret = 'http://127.0.0.1:47823/auth/done'
         try {
@@ -116,16 +122,21 @@ export function AuthScreen() {
     }
     if (isNativePlatform()) {
       // iOS / Android: run the OAuth flow inside ASWebAuthenticationSession
-      // (our WebAuthPlugin). It hands the final cumora://auth#... callback
+      // (our WebAuthPlugin). It hands the final lingxiloop://auth#... callback
       // straight back to us — no SFSafariViewController, no broken 302
       // redirect to a custom URL scheme.
-      const origin = getServerOrigin() || 'https://api.cumora.ai'
-      const ret = encodeURIComponent('cumora://auth')
+      const origin = getServerOrigin()
+      if (!origin) {
+        setErr('No LingxiLoop server is configured for this mobile build.')
+        setBusy(null)
+        return
+      }
+      const ret = encodeURIComponent('lingxiloop://auth')
       void (async () => {
         try {
           const callbackUrl = await runOAuth({
             url: `${origin}/api/auth/start/${provider}?return=${ret}`,
-            callbackScheme: 'cumora',
+            callbackScheme: 'lingxiloop',
           })
           if (!callbackUrl) {
             // User cancelled — re-enable the button.
@@ -143,7 +154,7 @@ export function AuthScreen() {
             return
           }
           history.replaceState(null, '', location.pathname + location.search + hash)
-          window.dispatchEvent(new CustomEvent('cumora:oauth-token', { detail: hash }))
+          window.dispatchEvent(new CustomEvent('lingxiloop:oauth-token', { detail: hash }))
         } catch (err) {
           setErr(err instanceof Error ? err.message : 'sign-in failed')
           setBusy(null)
@@ -153,10 +164,8 @@ export function AuthScreen() {
     }
     // Browser fallback — full-page nav, fragment-on-redirect handled by
     // AuthGate on next mount. Pass the *current* page as `?return=` so
-    // a user signing in from admin.cumora.ai lands back on
-    // admin.cumora.ai (not the server's default app.cumora.ai). The
-    // origin must be in CUMORA_AUTH_RETURN_ALLOWLIST or the server
-    // will reject it.
+    // users land back on the origin that initiated sign-in. The origin must
+    // be in LINGXILOOP_AUTH_RETURN_ALLOWLIST or the server will reject it.
     const ret = encodeURIComponent(`${location.origin}${location.pathname}`)
     location.assign(`${api.authStartUrl(provider)}?return=${ret}`)
   }
@@ -170,7 +179,7 @@ export function AuthScreen() {
       <div className="w-[320px] flex flex-col items-center gap-8">
         <CloudLogo size={64} />
         <div className="text-center">
-          <div className="font-display text-[22px] text-ink-900">Welcome to cumora</div>
+          <div className="font-display text-[22px] text-ink-900">Welcome to LingxiLoop</div>
           <div className="font-display italic text-[13px] text-ink-400 mt-1">
             Sign in to continue
           </div>

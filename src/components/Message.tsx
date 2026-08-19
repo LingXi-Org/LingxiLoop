@@ -5,7 +5,7 @@ import Markdown, { type Components } from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { api } from '@/api/client'
-import { remarkCumora } from '@/lib/remarkCumora'
+import { remarkLingxiLoop } from '@/lib/remarkLingxiLoop'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
 import { cn, parseBlocks, parseBody } from '@/lib/utils'
@@ -175,7 +175,7 @@ function MentionCard({ p, x, y }: { p: Participant; x: number; y: number }) {
   )
 }
 
-/** Restrained, paper-toned code block matching Cumora's overall light
+/** Restrained, paper-toned code block matching LingxiLoop's overall light
  *  palette. Token colors map onto the brand: keywords use --skype-deep,
  *  strings use --coral-deep, numbers --gold-deep, types --whisper-deep,
  *  comments italic --ink-300. Deliberately NOT a heavy dark card — sits
@@ -235,7 +235,7 @@ export function CodeBlock({ lang, code }: { lang: string; code: string }) {
         </button>
       </div>
       <pre
-        className="cumora-code overflow-x-auto py-2.5 px-3.5 text-[12.5px] leading-[1.6]"
+        className="lingxiloop-code overflow-x-auto py-2.5 px-3.5 text-[12.5px] leading-[1.6]"
         style={{ color: 'var(--ink-700)', margin: 0, whiteSpace: 'pre' }}
       >
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: `html` is
@@ -248,7 +248,7 @@ export function CodeBlock({ lang, code }: { lang: string; code: string }) {
   )
 }
 
-// Read a string property off a custom mdast→hast node (set via remarkCumora's
+// Read a string property off a custom mdast→hast node (set via remarkLingxiLoop's
 // hProperties). Reading from node.properties is the reliable path across
 // react-markdown's prop transforms.
 function nodeProp(node: unknown, key: string): string {
@@ -285,9 +285,9 @@ function artifactLinkForCode(value: string): ReactNode | null {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/** The Cumora look for every Markdown element — standard grammar styled to
+/** The LingxiLoop look for every Markdown element — standard grammar styled to
  *  match the app's paper-toned palette + chat-tight spacing, plus the custom
- *  elements remarkCumora emits (mentions, artifact cards, Twemoji, Skype). */
+ *  elements remarkLingxiLoop emits (mentions, artifact cards, Twemoji, Skype). */
 // The current conversation, provided by RichBody so an inline `#N` chip knows
 // which conversation's `sequence` numbers to resolve against.
 const ConversationIdContext = createContext<string | null>(null)
@@ -386,8 +386,8 @@ function MessagePeekCard(
   )
 }
 
-const cumoraMarkdownComponents = {
-  // ── Cumora custom inline tokens (emitted by remarkCumora) ──
+const lingxiloopMarkdownComponents = {
+  // ── LingxiLoop custom inline tokens (emitted by remarkLingxiLoop) ──
   cmention: ({ node }: any) => <MentionChip id={nodeProp(node, 'cid')} />,
   cmsgref: ({ node }: any) => <MessageRefChip n={Number(nodeProp(node, 'cn')) || 0} />,
   cartifact: ({ node }: any) => {
@@ -405,7 +405,7 @@ const cumoraMarkdownComponents = {
 
   // ── Standard block grammar ──
   p: ({ children }: any) => <p className="m-0 mt-2 first:mt-0 leading-[1.55]">{children}</p>,
-  // Headings use Cumora's display font + tracking-tight, matching how titles
+  // Headings use LingxiLoop's display font + tracking-tight, matching how titles
   // read everywhere else in the app (e.g. `font-display ... tracking-tight`).
   h1: ({ children }: any) => <h1 className="font-display mt-3 first:mt-0 mb-1 text-[18px] font-semibold tracking-tight leading-snug text-ink-900">{children}</h1>,
   h2: ({ children }: any) => <h2 className="font-display mt-3 first:mt-0 mb-1 text-[16px] font-semibold tracking-tight leading-snug text-ink-900">{children}</h2>,
@@ -416,7 +416,7 @@ const cumoraMarkdownComponents = {
   ul: ({ children }: any) => <ul className="my-1 first:mt-0 last:mb-0 pl-5 list-disc marker:text-ink-300 space-y-0.5">{children}</ul>,
   ol: ({ children }: any) => <ol className="my-1 first:mt-0 last:mb-0 pl-5 list-decimal marker:text-ink-400 space-y-0.5">{children}</ol>,
   li: ({ children }: any) => <li className="leading-[1.5] pl-0.5">{children}</li>,
-  // No italic — Cumora messages are CJK-heavy and synthetic-slanted CJK looks
+  // No italic — LingxiLoop messages are CJK-heavy and synthetic-slanted CJK looks
   // bad. A calm neutral rule + muted text reads as a quote without the slant.
   blockquote: ({ children }: any) => (
     <blockquote className="my-1.5 first:mt-0 last:mb-0 border-l-[3px] border-ink-200 pl-3 text-ink-500">{children}</blockquote>
@@ -502,16 +502,16 @@ const cumoraMarkdownComponents = {
 } as Components
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-const REMARK_PLUGINS = [remarkGfm, remarkBreaks, remarkCumora]
+const REMARK_PLUGINS = [remarkGfm, remarkBreaks, remarkLingxiLoop]
 
 /** Renders a message body as Markdown — full CommonMark + GFM via react-markdown,
- *  plus Cumora's own tokens (mentions / artifacts / emoji) — all styled to the
- *  app's look (see cumoraMarkdownComponents). `skipHtml` drops any raw HTML in
+ *  plus LingxiLoop's own tokens (mentions / artifacts / emoji) — all styled to the
+ *  app's look (see lingxiloopMarkdownComponents). `skipHtml` drops any raw HTML in
  *  agent/user content so messages can't inject markup. */
 export function RichBody({ body, conversationId }: { body: string; conversationId?: string | null }) {
   return (
     <ConversationIdContext.Provider value={conversationId ?? null}>
-      <Markdown remarkPlugins={REMARK_PLUGINS} components={cumoraMarkdownComponents} skipHtml>
+      <Markdown remarkPlugins={REMARK_PLUGINS} components={lingxiloopMarkdownComponents} skipHtml>
         {body}
       </Markdown>
     </ConversationIdContext.Provider>

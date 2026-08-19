@@ -1,0 +1,142 @@
+name: LingxiLoop Web deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: lingxiloop-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  quality:
+    uses: ./.github/workflows/_quality.yml
+
+  build-images:
+    name: Build digest-pinned production images
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    outputs:
+      server_digest: ${{ steps.server.outputs.digest }}
+      runtime_digest: ${{ steps.runtime.outputs.digest }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        name: Read VERSION
+        run: echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: server
+        name: Build and push LingxiLoop server
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/docker/lingxiloop-server.Dockerfile
+          push: true
+          tags: ghcr.io/lingxi-org/lingxiloop-server:${{ github.sha }}
+          build-args: |
+            LINGXILOOP_VERSION=${{ steps.version.outputs.version }}
+            LINGXILOOP_COMMIT_SHA=${{ github.sha }}
+          cache-from: type=gha,scope=lingxiloop-server
+          cache-to: type=gha,mode=max,scope=lingxiloop-server
+      - id: runtime
+        name: Build and push LingxiGraph Runtime
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/docker/lingxigraph-runtime.Dockerfile
+          push: true
+          tags: ghcr.io/lingxi-org/lingxigraph-runtime:${{ github.sha }}
+          cache-from: type=gha,scope=lingxigraph-runtime
+          cache-to: type=gha,mode=max,scope=lingxigraph-runtime
+
+  deploy:
+    name: Deploy and verify production
+    needs: build-images
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: production
+    env:
+      PUBLIC_ORIGIN: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+      SSH_HOST: ${{ secrets.PRODUCTION_SSH_HOST }}
+      SSH_USER: ${{ secrets.PRODUCTION_SSH_USER }}
+      SSH_PORT: ${{ vars.PRODUCTION_SSH_PORT || '22' }}
+      DEPLOY_PATH: ${{ vars.PRODUCTION_DEPLOY_PATH || '/opt/lingxiloop' }}
+      GHCR_USER: ${{ secrets.GHCR_USERNAME }}
+      GHCR_PASSWORD: ${{ secrets.GHCR_TOKEN }}
+      SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+      LINGXILOOP_SMOKE_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+      LINGXILOOP_SMOKE_TOKEN: ${{ secrets.LINGXILOOP_SMOKE_TOKEN }}
+      LINGXILOOP_SMOKE_COMPANY_ID: ${{ secrets.LINGXILOOP_SMOKE_COMPANY_ID }}
+      LINGXILOOP_SMOKE_EXPECTED_SHA: ${{ github.sha }}
+      LINGXILOOP_SMOKE_EXPECTED_VERSION: ${{ needs.build-images.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e '
+            const value = process.env.PUBLIC_ORIGIN || ""
+            const url = new URL(value)
+            if (url.protocol !== "https:" || url.pathname !== "/" || url.search || url.hash) {
+              throw new Error("LINGXILOOP_PUBLIC_ORIGIN must be an HTTPS origin without path, query or fragment")
+            }'
+          for name in SSH_HOST SSH_USER GHCR_USER GHCR_PASSWORD SSH_PRIVATE_KEY SSH_KNOWN_HOSTS LINGXILOOP_SMOKE_TOKEN LINGXILOOP_SMOKE_COMPANY_ID; do
+            test -n "${!name:-}" || { echo "::error::$name is required in the production Environment"; exit 2; }
+          done
+      - name: Prepare immutable release manifest and SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s\n' \
+            'LINGXILOOP_SERVER_IMAGE=ghcr.io/lingxi-org/lingxiloop-server@${{ needs.build-images.outputs.server_digest }}' \
+            'LINGXIGRAPH_RUNTIME_IMAGE=ghcr.io/lingxi-org/lingxigraph-runtime@${{ needs.build-images.outputs.runtime_digest }}' \
+            'LINGXILOOP_VERSION=${{ needs.build-images.outputs.version }}' \
+            'LINGXILOOP_COMMIT_SHA=${{ github.sha }}' \
+            "LINGXILOOP_PUBLIC_ORIGIN=$PUBLIC_ORIGIN" > .release.next.env
+          printf '%s' "$SSH_PRIVATE_KEY" > "$RUNNER_TEMP/lingxiloop_deploy_key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          chmod 600 "$RUNNER_TEMP/lingxiloop_deploy_key" "$RUNNER_TEMP/known_hosts"
+      - name: Upload production contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          SSH_ARGS=(-i "$RUNNER_TEMP/lingxiloop_deploy_key" -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -o StrictHostKeyChecking=yes -p "$SSH_PORT")
+          SCP_ARGS=(-i "$RUNNER_TEMP/lingxiloop_deploy_key" -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -o StrictHostKeyChecking=yes -P "$SSH_PORT")
+          ssh "${SSH_ARGS[@]}" "$SSH_USER@$SSH_HOST" "mkdir -p '$DEPLOY_PATH'"
+          scp "${SCP_ARGS[@]}" docker-compose.production.yml scripts/deploy-production.sh scripts/rollback-production.sh .release.next.env "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+      - name: Pull, migrate, deploy and run real LingxiGraph turn
+        shell: bash
+        run: |
+          set -euo pipefail
+          SSH_ARGS=(-i "$RUNNER_TEMP/lingxiloop_deploy_key" -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -o StrictHostKeyChecking=yes -p "$SSH_PORT")
+          printf '%s' "$GHCR_PASSWORD" | ssh "${SSH_ARGS[@]}" "$SSH_USER@$SSH_HOST" "docker login ghcr.io --username '$GHCR_USER' --password-stdin"
+          ssh "${SSH_ARGS[@]}" "$SSH_USER@$SSH_HOST" "cd '$DEPLOY_PATH' && sh deploy-production.sh"
+      - name: Authenticated public smoke
+        id: public-smoke
+        continue-on-error: true
+        run: node scripts/release-smoke.mjs
+      - name: Roll back if public verification failed
+        if: steps.public-smoke.outcome == 'failure'
+        shell: bash
+        run: |
+          SSH_ARGS=(-i "$RUNNER_TEMP/lingxiloop_deploy_key" -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -o StrictHostKeyChecking=yes -p "$SSH_PORT")
+          ssh "${SSH_ARGS[@]}" "$SSH_USER@$SSH_HOST" "cd '$DEPLOY_PATH' && sh rollback-production.sh"
+          exit 1

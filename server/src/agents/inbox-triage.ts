@@ -13,7 +13,7 @@ export { buildTriageRequest } from './triage-core.js'
 /** Gather the active worklog claims for every conversation with an unread,
  *  non-system message — the authoritative "real work is happening here" signal fed into
  *  triage (`buildTriageRequest`). scopeKey = conversation_id, the exact scope
- *  `cumora claim --in <convo>` writes under. Best-effort per convo so a Redis
+ *  `lingxiloop claim --in <convo>` writes under. Best-effort per convo so a Redis
  *  hiccup on one conversation can't starve the whole gate. Shared by BOTH the
  *  cloud path (below) and the BYOA `/inbox-triage/payload` route so Cloud ≡ BYOA. */
 export async function gatherClaimsByConvo(inbox: InboxRow[]): Promise<ClaimsByConvo> {
@@ -143,7 +143,7 @@ export async function gateSyntheticWake(args: {
     : args.kind === 'background_scan' ? 'an internal background scan'
     : 'a poll update it is watching'
   const instructions =
-    `You are Cumora's cerebellum — the cheap reflex gate that shields the EXPENSIVE big brain from being woken for nothing. ` +
+    `You are LingxiLoop's cerebellum — the cheap reflex gate that shields the EXPENSIVE big brain from being woken for nothing. ` +
     `Teammate "${args.personaName}" was woken by ${kindLabel}, NOT by a human message — NO ONE is waiting on a reply. ` +
     `Decide ONLY whether it is worth waking the big brain to ACT right now. DEFAULT IS NO. Set act=true ONLY if the signals show a ` +
     `CONCRETE, TIMELY, valuable reason to act now — a commitment that is actually due, a follow-up a human is genuinely waiting on, ` +

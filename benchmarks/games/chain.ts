@@ -1,7 +1,7 @@
 /**
  * Chain benchmark — the "N items in order, sequential team relay" capability.
  *
- * Reference state: T10 on 2026-06-03 against cumora@0.1.119 / server commit
+ * Reference state: T10 on 2026-06-03 against lingxiloop@0.1.119 / server commit
  * 75732f7 — see docs/COORDINATION.md "The 2026-06-03 chain-with-absent-member
  * push" for the trail of insights that took this from 5/8 fragile to clean
  * 8/8 with a deliberately-absent member.

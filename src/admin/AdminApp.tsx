@@ -1,16 +1,14 @@
 /**
- * Admin panel root. Mounted by App.tsx when the request hostname is
- * admin.cumora.ai (or the path starts with /admin in localhost dev).
+ * Admin panel root. Mounted by App.tsx for an `admin.*` hostname or `/admin`.
  *
  * Auth is delegated to the same AuthGate the main app uses — once
  * signed in via OAuth, AdminApp checks /api/admin/me and either
  * renders the panel or shows a "not authorized" screen. There is no
- * client-side admin login; you sign in normally first, then visit
- * admin.cumora.ai.
+ * client-side admin login; sign in normally first, then visit the admin route.
  *
- * Routing is a tiny pathname-based switcher because the rest of cumora
+ * Routing is a tiny pathname-based switcher because the rest of lingxiloop
  * doesn't use react-router and we'd rather not pull it in just for
- * three top-level pages. On admin.cumora.ai the basePath is `/`; on
+ * three top-level pages. On an admin hostname the basePath is `/`; on
  * localhost dev (or any host where the panel mounts under `/admin`)
  * the basePath is `/admin`.
  */
@@ -25,7 +23,7 @@ import { ObservabilityPage } from './ObservabilityPage'
 
 type Route = 'users' | 'waitlist' | 'settings' | 'observability'
 
-/** Empty string on admin.cumora.ai, `/admin` on localhost dev. Kept as
+/** Empty string on an admin hostname, `/admin` on a path-mounted panel. Kept as
  *  a function (not a constant) so tests / SSR don't crash on a missing
  *  `location`. */
 function getBasePath(): string {
@@ -110,7 +108,7 @@ export function AdminApp() {
         </button>
         <div className="admin-topbar-brand">
           <CloudLogo size={24} />
-          <span>cumora admin</span>
+          <span>lingxiloop admin</span>
         </div>
         <div className="admin-topbar-spacer" />
       </header>
@@ -119,7 +117,7 @@ export function AdminApp() {
         <div className="admin-brand">
           <CloudLogo size={32} />
           <div>
-            <div className="admin-brand-title">cumora admin</div>
+            <div className="admin-brand-title">lingxiloop admin</div>
             <div className="admin-brand-sub">{user?.email}</div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 /**
- * Server-side tool executor — used by cli.ts (`cumora react / dm /
+ * Server-side tool executor — used by cli.ts (`lingxiloop react / dm /
  * pull-group / palette`) and by the legacy in-process agent loop
  * (inproc / subprocess scheduler modes). Browser-driven actions now
  * run via the in-pod `opencli` binary (Chromium under Xvfb), not
@@ -9,7 +9,7 @@
  * `runtime/pod-tools.ts` instead, which dispatches only the four
  * pod-local tool kinds (bash + native FS) and skips DB logging. All
  * "actions in the world" the LLM wants to take go through bash +
- * the `cumora` CLI shim, which HTTPs back to /runtime/cli and lands
+ * the `lingxiloop` CLI shim, which HTTPs back to /runtime/cli and lands
  * here on the server.
  *
  * Pod-safe types + the LLM tool schema + bash / web tools live in
@@ -36,7 +36,7 @@ export { TOOL_DEFS_RESPONSES } from './tools-shared.js'
  *
  * Single tool: `bash`. All other capabilities (web search, dm with another agent, pull-group,
  * react, palette, image generation, plus private state mgmt) are subcommands
- * of the `cumora` CLI on PATH. Adding a new
+ * of the `lingxiloop` CLI on PATH. Adding a new
  * capability = adding a CLI subcommand; no LLM tool definition update needed.
  */
 

@@ -1,0 +1,209 @@
+name: LingxiLoop Desktop release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  quality:
+    uses: ./.github/workflows/_quality.yml
+
+  validate-release:
+    name: Validate tag and deployed Web version
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    env:
+      PUBLIC_ORIGIN: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          EXPECTED="v${VERSION}"
+          [[ "$GITHUB_REF_NAME" == "$EXPECTED" ]] || { echo "::error::tag must be exactly $EXPECTED"; exit 1; }
+          git fetch origin main --no-tags
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo '::error::release tag commit is not part of main'; exit 1; }
+          node scripts/sync-version.mjs --check
+          node -e '
+            const url = new URL(process.env.PUBLIC_ORIGIN || "")
+            if (url.protocol !== "https:" || url.pathname !== "/" || url.search || url.hash) {
+              throw new Error("LINGXILOOP_PUBLIC_ORIGIN must be an HTTPS origin without path, query or fragment")
+            }'
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          [[ "$VERSION" == *-* ]] && echo 'prerelease=true' >> "$GITHUB_OUTPUT" || echo 'prerelease=false' >> "$GITHUB_OUTPUT"
+      - name: Wait for matching Web commit and LingxiGraph runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${PUBLIC_ORIGIN%/}"
+          for attempt in $(seq 1 60); do
+            if META="$(curl -fsS --max-time 15 "$BASE/api/meta")" &&
+               SHA="$(jq -r '.commitSha' <<<"$META")" &&
+               VERSION="$(jq -r '.version' <<<"$META")" &&
+               RUNTIME="$(jq -r '.reasoningRuntime' <<<"$META")" &&
+               [[ "$SHA" == "$GITHUB_SHA" && "$VERSION" == '${{ steps.version.outputs.version }}' && "$RUNTIME" == lingxigraph ]]; then
+              echo "Production Web matches desktop release commit"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo '::error::production /api/meta did not converge to this tag commit and LingxiGraph runtime'
+          exit 1
+
+  windows:
+    name: Signed Windows x64
+    needs: validate-release
+    runs-on: windows-latest
+    timeout-minutes: 40
+    environment: production
+    env:
+      VITE_LINGXILOOP_API_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+      WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+      WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Require HTTPS origin and signing identity
+        shell: pwsh
+        run: |
+          $origin = [Uri]$env:VITE_LINGXILOOP_API_BASE
+          if ($origin.Scheme -ne 'https' -or $origin.AbsolutePath -ne '/' -or $origin.Query -or $origin.Fragment) { throw 'VITE_LINGXILOOP_API_BASE must be an HTTPS origin' }
+          if ([string]::IsNullOrWhiteSpace($env:WIN_CSC_LINK) -or [string]::IsNullOrWhiteSpace($env:WIN_CSC_KEY_PASSWORD)) { throw 'Windows signing secrets are required' }
+      - run: npm ci
+      - run: npm run build
+      - run: npm run electron:prepare
+      - run: npx electron-builder --win --x64 --publish never
+      - run: node scripts/verify-desktop-package.mjs release
+      - name: Verify Authenticode
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem -LiteralPath release -Filter '*.exe' -File)
+          if ($installers.Count -eq 0) { throw 'No Windows installer was produced' }
+          foreach ($installer in $installers) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $installer.FullName
+            if ($signature.Status -ne 'Valid') { throw "Invalid Authenticode signature: $($installer.Name) ($($signature.Status))" }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+          if-no-files-found: error
+
+  macos:
+    name: Signed and notarized macOS x64/arm64
+    needs: validate-release
+    runs-on: macos-latest
+    timeout-minutes: 60
+    environment: production
+    env:
+      VITE_LINGXILOOP_API_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Require HTTPS origin, signing and notarization credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e '
+            const url = new URL(process.env.VITE_LINGXILOOP_API_BASE || "")
+            if (url.protocol !== "https:" || url.pathname !== "/" || url.search || url.hash) throw new Error("invalid desktop API origin")'
+          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_CONTENT APPLE_API_KEY_ID APPLE_API_ISSUER; do
+            test -n "${!name:-}" || { echo "::error::$name is required"; exit 2; }
+          done
+          umask 077
+          printf '%s' "$APPLE_API_KEY_CONTENT" > "$RUNNER_TEMP/AuthKey.p8"
+          echo "APPLE_API_KEY=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
+      - run: npm ci
+      - run: npm run build
+      - run: npm run electron:prepare
+      - run: npx electron-builder --mac --x64 --arm64 --publish never
+      - run: node scripts/verify-desktop-package.mjs release
+      - name: Verify codesign, Gatekeeper and stapling
+        shell: bash
+        run: |
+          set -euo pipefail
+          apps=()
+          while IFS= read -r app; do apps+=("$app"); done < <(find release -type d -name '*.app')
+          ((${#apps[@]} >= 2)) || { echo '::error::expected signed x64 and arm64 apps'; exit 1; }
+          for app in "${apps[@]}"; do
+            codesign --verify --deep --strict --verbose=2 "$app"
+            spctl --assess --type execute --verbose=2 "$app"
+            xcrun stapler validate "$app"
+          done
+          dmgs=()
+          while IFS= read -r dmg; do dmgs+=("$dmg"); done < <(find release -maxdepth 1 -type f -name '*.dmg')
+          ((${#dmgs[@]} >= 2)) || { echo '::error::expected x64 and arm64 DMGs'; exit 1; }
+          for dmg in "${dmgs[@]}"; do xcrun stapler validate "$dmg"; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.blockmap
+            release/latest-mac.yml
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: [validate-release, windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*-release'
+          path: artifacts
+          merge-multiple: true
+      - name: Verify complete release set
+        shell: bash
+        run: |
+          set -euo pipefail
+          find artifacts -maxdepth 1 -type f -print
+          compgen -G 'artifacts/*.exe' >/dev/null
+          compgen -G 'artifacts/*.dmg' >/dev/null
+          compgen -G 'artifacts/*.zip' >/dev/null
+          compgen -G 'artifacts/*.blockmap' >/dev/null
+          test -f artifacts/latest.yml
+          test -f artifacts/latest-mac.yml
+      - name: Create release only after both platforms verify
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          PRERELEASE: ${{ needs.validate-release.outputs.prerelease }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--verify-tag --title "LingxiLoop $TAG" --generate-notes)
+          [[ "$PRERELEASE" == true ]] && args+=(--prerelease)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/* --clobber
+          else
+            gh release create "$TAG" artifacts/* "${args[@]}"
+          fi

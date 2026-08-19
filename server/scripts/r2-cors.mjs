@@ -7,7 +7,7 @@
  * bytes *directly from the browser* to R2 (see src/api/client.ts →
  * `uploadFile`). That cross-origin PUT triggers a CORS preflight, so the
  * R2 bucket itself must allow our renderer origins — the API server's
- * CUMORA_CORS_ORIGINS does NOT cover it. Without a bucket CORS policy the
+ * LINGXILOOP_CORS_ORIGINS does NOT cover it. Without a bucket CORS policy the
  * preflight gets no Access-Control-Allow-Origin and the browser rejects
  * the request as a bare "TypeError: Failed to fetch" (no status, because
  * no response ever came back).
@@ -24,7 +24,7 @@
  * Add extra origins (e.g. a prod web domain) as CLI args — they're merged
  * with the built-in dev/Electron defaults:
  *
- *   node server/scripts/r2-cors.mjs https://cumora.ai https://app.cumora.ai
+ *   node server/scripts/r2-cors.mjs https://loop.example.com https://admin.loop.example.com
  *
  * Inspect the current policy without changing anything:
  *
@@ -37,12 +37,12 @@ import { S3Client, PutBucketCorsCommand, GetBucketCorsCommand } from '@aws-sdk/c
 // with how each surface loads its renderer:
 //   - http://localhost:5173 → browser Vite dev (vite.config.ts `port`)
 //   - http://localhost:5180 → Electron dev renderer (electron/main.cjs DEV_URL)
-//   - app://cumora          → packaged Electron (main.cjs loadURL app://cumora/...)
+//   - app://lingxiloop          → packaged Electron (main.cjs loadURL app://lingxiloop/...)
 // Extra origins (prod web, alternate ports, …) come from CLI args.
 const DEFAULT_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5180',
-  'app://cumora',
+  'app://lingxiloop',
 ]
 
 const cliArgs = process.argv.slice(2)

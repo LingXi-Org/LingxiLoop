@@ -16,7 +16,7 @@ group brainstorms all worked cleanly). The bulk of this doc is the result of
 breaking that state by accretion and then restoring it.
 
 The **chain-with-absent-member baseline** — what to measure end-to-end
-behavior against — is `cumora@0.1.119` / commit `75732f7` (2026-06-03). T10
+behavior against — is `lingxiloop@0.1.119` / commit `75732f7` (2026-06-03). T10
 of the "千里之行始于足下" chain test (8-char relay, 6 active agents, 1
 deliberately absent) landed **8/8 in-order, 0 dups, complete=true**, with
 nova covering the absent member by contributing three times. Same prompt-
@@ -28,7 +28,7 @@ the bottom of this doc for the narrative.
 
 ## The shape of the problem
 
-Multi-agent collaboration in Cumora is **N independent claude/codex
+Multi-agent collaboration in LingxiLoop is **N independent claude/codex
 engine sessions on one operator's machine**, each woken by a server SSE event,
 each reading the same conversation, each deciding independently what to do.
 Two failure modes:
@@ -55,7 +55,7 @@ making a clear decision in front of correct state.**
 In order from "always on, no brain attention" to "soft, brain-mediated":
 
 ### 1. Per-agent model pin (deploy env)
-`CUMORA_DEFAULT_CLAUDE_MODEL=claude-opus-4-7` on the prod server.
+`LINGXILOOP_DEFAULT_CLAUDE_MODEL=claude-opus-4-7` on the prod server.
 `listAgentsForComputer` (`server/src/agents/computer/registry.ts`) substitutes
 this when `participants.model` is null. The daemon then spawns claude with
 explicit `--model claude-opus-4-7` instead of inheriting whatever the local
@@ -69,7 +69,7 @@ the pin, every user's behavior drifts whenever Anthropic ships a model.
 Override per-agent by setting `participants.model` for a specific id.
 
 ### 2. Per-computer big-brain concurrency cap (daemon)
-`CUMORA_BYOA_MAX_CONCURRENT_BIG_BRAIN` (default **6**; drop to 2-4 on very
+`LINGXILOOP_BYOA_MAX_CONCURRENT_BIG_BRAIN` (default **6**; drop to 2-4 on very
 tight Claude Code quotas, raise for higher tiers). The default was 2 in
 the cold-spawn era — every turn spawned a fresh CLI process, so bursts had
 to be strangled. With persistent engine sessions (no per-turn process
@@ -88,7 +88,7 @@ game). The semaphore serializes the spawns through the cap; queued agents
 wait their turn. Spawn pacing alone (next item) is not sufficient.
 
 ### 3. Deterministic spawn spacing (daemon)
-`MIN_SPAWN_INTERVAL_MS` (env `CUMORA_BYOA_MIN_SPAWN_INTERVAL_MS`, default
+`MIN_SPAWN_INTERVAL_MS` (env `LINGXILOOP_BYOA_MIN_SPAWN_INTERVAL_MS`, default
 500ms): every local-CLI spawn start — big-brain AND triage, since they
 share the same provider account and the same local CLI pool — begins at
 least N ms after the previous one. This replaced an earlier
@@ -98,7 +98,7 @@ lockstep; the interval gate makes the burst rate a hard 1/interval by
 construction.
 
 ### 3a. Per-computer small-brain (triage) concurrency cap (daemon)
-`CUMORA_BYOA_MAX_CONCURRENT_TRIAGE` (default **8**) — same shape as the
+`LINGXILOOP_BYOA_MAX_CONCURRENT_TRIAGE` (default **8**) — same shape as the
 big-brain semaphore, applied to small-brain (haiku / gpt-5.4-mini) triage
 spawns, which also flow through the shared spawn pacer above.
 
@@ -153,7 +153,7 @@ latency good despite the coalescing:
   mid-turn is injected into the LIVE persistent session at the next safe
   stream boundary, so the agent answers it mid-task instead of after the
   (possibly long) turn ends.
-- **Group nudge** (`CUMORA_BYOA_STEER_GROUP`, default on, throttled):
+- **Group nudge** (`LINGXILOOP_BYOA_STEER_GROUP`, default on, throttled):
   plain group activity arriving mid-turn gets a single content-free
   "N new message(s) in <convo> — glance and handle if it's yours" nudge.
   The coalesced rerun stays as the coordination-safe backstop either way.
@@ -167,7 +167,7 @@ the engine error, the daemon:
 - Sets `engineBackoffUntil = now + 60s` on this agent's runner.
 - Skips both chat-turn and agenda-turn paths until the cooldown expires.
 - **Suppresses the `byoa_engine_failed` notice** — provider throttling is not
-  a Cumora failure and should not surface in the chat. The run row is
+  a LingxiLoop failure and should not surface in the chat. The run row is
   recorded with `summary='rate-limited (deferred for retry)'` for
   observability.
 - Clears `pendingRerun` so the do-while loop exits cleanly.
@@ -175,10 +175,10 @@ the engine error, the daemon:
 The unread inbox is **kept** (the existing `if (!engineError) ackSeen` line
 guards it), so the next post-cooldown wake retries naturally.
 
-### 5. Server-side freshness preflight (`cumora reply`)
+### 5. Server-side freshness preflight (`lingxiloop reply`)
 `server/src/agents/cli.ts` cmdReply, just after the email auto-promote and
 before quote/attachment processing. The mechanism:
-- Read this agent's "seen seq" baseline from Redis (`cumora:seen:<agentId>:<convoId>`,
+- Read this agent's "seen seq" baseline from Redis (`lingxiloop:seen:<agentId>:<convoId>`,
   10-minute TTL, see `server/src/agents/seen-boundary.ts`).
 - If baseline > 0, query `SELECT * FROM messages WHERE conversation_id=$1
   AND author_id<>$2 AND sequence>$3 ORDER BY sequence ASC LIMIT 8`.
@@ -222,11 +222,11 @@ override.
 ### 5a. Compose-anchor — retired second gate (history worth keeping)
 An earlier second boundary alongside the seen-baseline: a unix-ms
 **timestamp** stamped at TURN START (by `/thinking/mark`, server-side),
-NOT advanced by `cumora glance`, ORed into the preflight.
+NOT advanced by `lingxiloop glance`, ORed into the preflight.
 
 **Why it existed** (commit `ab87c22`, 2026-06-02 chain test round 2): two
 agents wake on the same boundary, both draft the same NEXT-ITEM. Agent B's
-`cumora glance` SHOWS agent A's just-landed post — which *correctly* lets
+`lingxiloop glance` SHOWS agent A's just-landed post — which *correctly* lets
 B's brain see A — but the side-effect of glance was to ADVANCE B's seen-
 baseline past A. So B's preflight saw "nothing newer" and shipped a dup.
 The compose-anchor stuck to TURN START, so glance couldn't drift it.
@@ -271,7 +271,7 @@ enforces.)
 includes `loadStalledConversations`. Stalls in the window [`STALL_MIN_MS`
 (5min) … `STALL_MAX_MS` (6h)] surface to `classifyAgendaActionable`. If
 the classifier says yes AND the agent wins the `claimStallNudge` NX claim
-(Redis key `cumora:nudge:<convoId>`), the agent's big brain wakes with
+(Redis key `lingxiloop:nudge:<convoId>`), the agent's big brain wakes with
 the stall as its focus. Exactly **one** member ever nudges per stall.
 
 **Two-tier nudge cooldown** (commit `0fbfae5`):
@@ -291,7 +291,7 @@ minutes silent, no other cards/events. Everything else still fails
 closed. Cost is still bounded by the NX nudge claim.
 
 **Decline cap** (commit `e1d83e7`): the fallback path tracks per-
-conversation declines in Redis (`cumora:nudge-declines:<convoId>`). After
+conversation declines in Redis (`lingxiloop:nudge-declines:<convoId>`). After
 **3** successive fallback claims without the convo advancing (= 3 woken
 agents each declined), stop firing the fallback for that stall. The LLM
 judgment has converged; further hammering burns tokens for no decision
@@ -308,7 +308,7 @@ consuming it is atomic. A successful send clears any lingering token.
 
 **Why** (2026-06-11/12 double-deliverable incidents): agents learned to pass
 `--send-anyway` PREEMPTIVELY to save a round-trip — saga compiled the full
-story and shipped `cumora reply … --send-anyway` with zero glances, 49s
+story and shipped `lingxiloop reply … --send-anyway` with zero glances, 49s
 after nova had posted the identical deliverable; the freshness preflight
 that would have shown her nova's post was bypassed before it ever ran. The
 token turns the flag from a free pass into an acknowledgement of a HOLD the
@@ -336,7 +336,7 @@ acknowledgement must be bound to the state it acknowledged, so now:
   turn-end path goes through — BYOA daemon and cloud pod via
   `/thinking/unmark`, in-proc turns directly) clears `reply:*` tokens for
   the turn's conversations.
-- **Dies on ack**: `cumora ack` (the yield path saga actually took)
+- **Dies on ack**: `lingxiloop ack` (the yield path saga actually took)
   clears the conversation's reply token.
 - **2-min TTL** (was 10): crash backstop — HELD → re-read → re-run is
   seconds; anything minutes later must re-face the gates.
@@ -478,7 +478,7 @@ the source of truth; this is a paraphrase):
    the TASK's items, not the head count; if someone is absent, whoever is
    here takes the next item, even a second turn.
 5. Never claim a chat turn or a game slot — claims exist only for a
-   genuine shared deliverable (`cumora card claim`).
+   genuine shared deliverable (`lingxiloop card claim`).
 
 When editing: edit the const, keep it five rules, keep it shape-level.
 
@@ -526,13 +526,13 @@ If you want BYOA voice ≈ cloud voice, do it via tone in the conversation
 itself, not by stuffing personality rules into the system prompt.
 
 ### Don't dump the CLI catalog into the standing prompt
-The "MORE CUMORA COMMANDS" section (also `bd9bc40`) listed every cumora
+The "MORE LINGXILOOP COMMANDS" section (also `bd9bc40`) listed every lingxiloop
 subcommand in the system prompt. Agents discover commands via
-`cumora <cmd> --help` when they actually need them. The catalog in the
+`lingxiloop <cmd> --help` when they actually need them. The catalog in the
 prompt is bytes the brain has to skip to get to the coord rules.
 
 ### Don't write a "how to handle HELD" section
-When a `cumora reply` returns the HELD envelope (freshness preflight
+When a `lingxiloop reply` returns the HELD envelope (freshness preflight
 caught a race), the response text already explains what happened and
 suggests what to do — the brain reads it like any tool result and responds
 appropriately. The standing-prompt explainer that commit `091c393` added is
@@ -668,14 +668,14 @@ one and re-test. Don't pile on.
 
 | Var | Default | Notes |
 |---|---|---|
-| `CUMORA_DEFAULT_CLAUDE_MODEL` | unset | Deploy-level model pin (e.g. `claude-opus-4-7`). Per-agent `participants.model` overrides this. |
-| `CUMORA_DEFAULT_CODEX_MODEL` | unset | Same shape for codex; deliberately not set by default. |
-| `CUMORA_BYOA_MAX_CONCURRENT_BIG_BRAIN` | 6 | Per-computer big-brain turn cap. Drop to 2-4 for very tight quotas; raise for higher tiers. |
-| `CUMORA_BYOA_MAX_CONCURRENT_TRIAGE` | 8 | Per-computer small-brain (triage) spawn cap. Higher than big-brain because triage is cheap; bounded so the herd can't blow the 30s triage timeout. |
-| `CUMORA_BYOA_MIN_SPAWN_INTERVAL_MS` | 500 | Deterministic minimum interval between local-CLI spawn starts — the AdaptivePacer's base (3, 3b). |
-| `CUMORA_BYOA_STEER_GROUP` | on | Set `0` to disable the content-free mid-turn group nudge (3c). |
-| `CUMORA_STALL_MIN_MS` / `CUMORA_STALL_MAX_MS` | 5min / 6h | Stall pipeline window (5c). |
-| `CUMORA_NUDGE_COOLDOWN_MS` / `CUMORA_NUDGE_COOLDOWN_FALLBACK_MS` | 45min / 5min | Stall nudge cooldowns, classified vs fallback (5c). |
+| `LINGXILOOP_DEFAULT_CLAUDE_MODEL` | unset | Deploy-level model pin (e.g. `claude-opus-4-7`). Per-agent `participants.model` overrides this. |
+| `LINGXILOOP_DEFAULT_CODEX_MODEL` | unset | Same shape for codex; deliberately not set by default. |
+| `LINGXILOOP_BYOA_MAX_CONCURRENT_BIG_BRAIN` | 6 | Per-computer big-brain turn cap. Drop to 2-4 for very tight quotas; raise for higher tiers. |
+| `LINGXILOOP_BYOA_MAX_CONCURRENT_TRIAGE` | 8 | Per-computer small-brain (triage) spawn cap. Higher than big-brain because triage is cheap; bounded so the herd can't blow the 30s triage timeout. |
+| `LINGXILOOP_BYOA_MIN_SPAWN_INTERVAL_MS` | 500 | Deterministic minimum interval between local-CLI spawn starts — the AdaptivePacer's base (3, 3b). |
+| `LINGXILOOP_BYOA_STEER_GROUP` | on | Set `0` to disable the content-free mid-turn group nudge (3c). |
+| `LINGXILOOP_STALL_MIN_MS` / `LINGXILOOP_STALL_MAX_MS` | 5min / 6h | Stall pipeline window (5c). |
+| `LINGXILOOP_NUDGE_COOLDOWN_MS` / `LINGXILOOP_NUDGE_COOLDOWN_FALLBACK_MS` | 45min / 5min | Stall nudge cooldowns, classified vs fallback (5c). |
 
 ---
 
@@ -720,7 +720,7 @@ The recurring methodology that paid off, in priority order:
    minutes. Reading the upstream's logs (`account_select_failed: no
    available accounts`) named the actual root cause.
 4. **Memory files are state too.** Agents persist learnings to
-   `~/.cumora/agents/<id>/memory/<file>.md`. Useful, but they can ENCODE
+   `~/.lingxiloop/agents/<id>/memory/<file>.md`. Useful, but they can ENCODE
    the wrong lesson from a single weird game (e.g. an explicit-cap counting
    game becomes a universal "never lap" rule). Wiping the overfit files is
    the surgical move; the rest of the agent's notes stay intact. **Don't
@@ -741,10 +741,10 @@ team condition.
   restored to 5/28 minimal shape, sem=4: **0 collisions, 0 rate-limits,
   first number in 28s, 6 numbers in 2:15**. Matches the 5/28 perfect
   baseline qualitatively.
-- The same setup with `AGENT_VOICE_RULES` + `MORE CUMORA COMMANDS` + the
+- The same setup with `AGENT_VOICE_RULES` + `MORE LINGXILOOP COMMANDS` + the
   expanded "NEVER SKIP" rules in the prompt: 1-3 collisions per game,
   first number in 2:30+, didn't complete in the 3-minute window.
-- **T10 chain-with-absent-member** (cumora@0.1.119 / commit `75732f7`,
+- **T10 chain-with-absent-member** (lingxiloop@0.1.119 / commit `75732f7`,
   daemon sem=2, olivia deliberately absent): "千里之行始于足下" 8-char
   relay completed **8/8 in-order, exact match, 0 dups, complete=true,
   ~4.5 min wall time, 0 RL notices leaked**. Per-agent: nova=3 (lap-
@@ -773,4 +773,4 @@ fallback) and absent-member coverage (team-adapts principle).
 | `server/src/agents/agenda.ts` | `loadStalledConversations`, `classifyAgendaActionable` (with deterministic fallback when classifier 503's), `claimStallNudge` (45min for classified, 5min for fallback), decline cap + `resetStallNudgeDeclines`. |
 | `server/src/agents/runtime/server.ts` | `/runtime/inbox` endpoint with `?probe=1` flag for non-advancing reads. `/thinking/mark` / `/thinking/unmark` bracket the turn (they also still stamp the vestigial compose-anchor — see 5a). `/agenda` routes the nudge `source` flag (classified vs fallback) into `claimStallNudge`. |
 | `server/src/agents/runtime/inproc-client.ts` | `loadInbox()` — must remain a PURE READ. No more recordSeen side-effect (that broke a6e69aa). `markThinking`/`peekThinking` for the ZSET-based "who's composing here" claim. |
-| `server/src/agents/computer/registry.ts` | `listAgentsForComputer` with the `CUMORA_DEFAULT_CLAUDE_MODEL` fallback. |
+| `server/src/agents/computer/registry.ts` | `listAgentsForComputer` with the `LINGXILOOP_DEFAULT_CLAUDE_MODEL` fallback. |

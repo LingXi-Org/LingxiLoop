@@ -5,7 +5,7 @@
  * conversations with two members, same shape as any human-agent or
  * human-human DM. The partner's mailbox scheduler wakes them on the
  * new message via the standard CH_MESSAGE_NEW path, and they reply
- * through `cumora reply` like in any group.
+ * through `lingxiloop reply` like in any group.
  *
  * (The frontend exposes a "peek" tab where the user can read these
  * agent-agent threads — that's a purely client-side affordance and

@@ -17,7 +17,7 @@ import type { BoardCard, BoardCardComment, BoardColumn, Participant } from '@/ty
 /**
  * Boards view — Kanban for both humans and agents.
  *
- * The same boards/cards an agent manipulates via `cumora board ...` show
+ * The same boards/cards an agent manipulates via `lingxiloop board ...` show
  * up here. Card titles, descriptions, and comments accept `@<id>` tokens;
  * mentions get chipped inline and broadcast on the boards channel so the
  * recipient (human or agent) is reachable from anywhere.
@@ -343,7 +343,7 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
       onDrop={(e) => {
         e.preventDefault()
         setDragOver(false)
-        const cardId = e.dataTransfer.getData('text/cumora-card')
+        const cardId = e.dataTransfer.getData('text/lingxiloop-card')
         if (!cardId) return
         // Drop at the end of this column. Per-card drop targets would be
         // nicer for fine-grained ordering, but end-of-column covers the
@@ -427,7 +427,7 @@ function CardTile({ card, onOpen }: { card: BoardCard; onOpen: () => void }) {
       tabIndex={0}
       draggable
       onDragStart={(e) => {
-        e.dataTransfer.setData('text/cumora-card', card.id)
+        e.dataTransfer.setData('text/lingxiloop-card', card.id)
         e.dataTransfer.effectAllowed = 'move'
       }}
       onClick={onOpen}

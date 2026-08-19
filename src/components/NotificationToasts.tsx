@@ -2,7 +2,7 @@
  * In-app notification toasts. Shown when a new message arrives while the
  * window is NOT focused (or the user is viewing a different conversation).
  * Deliberately NOT using the OS native notification API — we want a stack
- * that matches Cumora's palette (sky / coral / cloud / paper) and animates
+ * that matches LingxiLoop's palette (sky / coral / cloud / paper) and animates
  * with the rest of the app.
  *
  * Behaviour:
@@ -62,10 +62,10 @@ interface Toast {
 }
 
 /** Renderer-side cache of the main window's native OS focus state,
- *  updated by `cumora.app.onFocusChange`. We trust this over
+ *  updated by `lingxiloop.app.onFocusChange`. We trust this over
  *  `document.hasFocus()` because the latter can return stale `true`
  *  values in Electron on macOS, suppressing notifications incorrectly.
- *  Seeded from `cumora.app.isFocused()` at mount; pessimistic default
+ *  Seeded from `lingxiloop.app.isFocused()` at mount; pessimistic default
  *  of `true` avoids a half-second window of spurious toasts. */
 let nativeAppFocused = true
 
@@ -98,7 +98,7 @@ export function NotificationToasts() {
   // when running in Electron — `document.hasFocus()` can lie there.
   useEffect(() => {
     if (!isElectron) return
-    const bridge = window.cumora?.app
+    const bridge = window.lingxiloop?.app
     if (!bridge) return
     // Seed from the current main-window focus state at mount, then keep
     // in sync with the main process's 500ms focus heartbeat.
@@ -150,7 +150,7 @@ export function NotificationToasts() {
       // electron/main.cjs). The chime fires from THAT renderer (synced
       // with the toast paint) — not here, so the bell + visual land
       // together instead of the bell preceding the toast by ~300ms.
-      const bridge = window.cumora?.notify
+      const bridge = window.lingxiloop?.notify
       if (isElectron && bridge) {
         const author = useParticipants.getState().byId[m.authorId]
         bridge.push({
@@ -286,14 +286,14 @@ export function NotificationToasts() {
     // is on screen. Firing from inside the notification window's React
     // mount lagged the visible toast by ~300ms in dev because the
     // panel renderer has to boot Vite + React on each push.
-    const offVisible = window.cumora?.notify?.onVisible(() => {
+    const offVisible = window.lingxiloop?.notify?.onVisible(() => {
       playNotificationChime()
     })
 
     // Electron: subscribe to focus-convo requests from the notification
     // window. When the user clicks a toast over there, this fires here
     // and selects the conversation.
-    const offFocus = window.cumora?.notify?.onFocusConvo((conversationId) => {
+    const offFocus = window.lingxiloop?.notify?.onFocusConvo((conversationId) => {
       setView('conversations')
       select(conversationId)
     })
@@ -378,7 +378,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
         borderRadius: 14,
         padding: '10px 12px 12px',
         // Soft sky-tinted shadow + 1px hairline — matches the rest of
-        // Cumora's "lifted-card" treatment elsewhere in the app.
+        // LingxiLoop's "lifted-card" treatment elsewhere in the app.
         boxShadow: '0 18px 40px -14px rgba(10, 30, 60, 0.24), 0 6px 14px -8px rgba(10, 30, 60, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.55) inset',
         border: '1px solid rgba(10, 30, 60, 0.08)',
         cursor: 'pointer',
@@ -446,7 +446,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
           height: 2,
           background: 'linear-gradient(90deg, var(--skype), var(--sky-glow))',
           transformOrigin: 'left center',
-          animation: hovered ? 'none' : `cumora-toast-drain ${AUTO_DISMISS_MS}ms linear forwards`,
+          animation: hovered ? 'none' : `lingxiloop-toast-drain ${AUTO_DISMISS_MS}ms linear forwards`,
         }}
       />
     </button>

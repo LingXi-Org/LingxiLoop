@@ -27,14 +27,14 @@
  *   • not_found — bad link.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { api, type ApiInvitationPreview } from '@/api/client'
+import { api, getServerOrigin, type ApiInvitationPreview } from '@/api/client'
 import { useAuth } from '@/stores/auth'
 import { isElectron, isWebAppHost } from '@/lib/runtime'
 import { CloudLogo } from './Avatar'
 import { GetDesktopAppLink } from './GetDesktopAppLink'
 import { WindowDragStrip } from './WindowDragStrip'
 
-const INVITE_TOKEN_KEY = 'cumora.pending-invite'
+const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
 
 /** Look at the URL (path / hash / query) for an invite token. Returns
  *  the token + a no-op cleanup that scrubs it from the URL so a refresh
@@ -116,7 +116,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const [busy, setBusy] = useState(false)
   const [acceptErr, setAcceptErr] = useState<string | null>(null)
   // After a successful accept in the WEB build, we stop on a success
-  // screen with "Open in Cumora app" + "Download" CTAs instead of
+  // screen with "Open in LingxiLoop app" + "Download" CTAs instead of
   // dropping the user straight into the SPA. The desktop app skips
   // this — they're already in the app, so we route them in.
   const [joinedCompany, setJoinedCompany] = useState<{ id: string; name: string; slug: string } | null>(null)
@@ -326,16 +326,16 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   )
 }
 
-/** Best-effort cumora:// deep link. If the OS protocol handler isn't
+/** Best-effort lingxiloop:// deep link. If the OS protocol handler isn't
  *  registered, browsers fail silently (no broken-page) and the user just
  *  stays put — at which point the visible Download button below is the
  *  next thing they reach for. */
 function tryOpenDesktopApp() {
-  try { location.href = 'cumora://open' } catch { /* swallow */ }
+  try { location.href = 'lingxiloop://open' } catch { /* swallow */ }
 }
 
 /** Success state shown after a successful accept in the WEB build. Offers
- *  "Open in Cumora app" (best-effort cumora:// deep link) and a download
+ *  "Open in LingxiLoop app" (best-effort lingxiloop:// deep link) and a download
  *  CTA, with "continue in browser" as the soft fallback. */
 function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
   companyName: string
@@ -435,18 +435,23 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
 
 function SignInToAccept({ token }: { token: string }) {
   const [busy, setBusy] = useState<'lingxi' | 'google' | 'github' | null>(null)
+  const [signInError, setSignInError] = useState<string | null>(null)
   const go = (provider: 'lingxi' | 'google' | 'github') => {
     setBusy(provider)
+    setSignInError(null)
     // Persist BEFORE redirect so the post-OAuth landing can resume here.
     stashPendingInvite(token)
-    if (isElectron && window.cumora?.auth) {
-      const origin = (typeof localStorage !== 'undefined' && localStorage.getItem('cumora.serverUrl'))
-        || (import.meta.env.VITE_CUMORA_API_BASE as string | undefined)
-        || 'https://api.cumora.ai'
+    if (isElectron && window.lingxiloop?.auth) {
+      const origin = getServerOrigin()
+      if (!origin) {
+        setSignInError('No LingxiLoop server is configured for this desktop build.')
+        setBusy(null)
+        return
+      }
       const inv = encodeURIComponent(token)
       // Arm a single-use nonce (anti session-fixation — see AuthScreen). The
       // nonce rides the return URL's query and must match on the inbound token.
-      const auth = window.cumora.auth
+      const auth = window.lingxiloop.auth
       void (async () => {
         let done = 'http://127.0.0.1:47823/auth/done'
         try {
@@ -465,6 +470,7 @@ function SignInToAccept({ token }: { token: string }) {
       <div className="text-[12.5px] text-ink-500 font-display italic text-center">
         Sign in to accept this invite
       </div>
+      {signInError && <div className="text-[12px] text-coral text-center">{signInError}</div>}
       <button
         type="button"
         onClick={() => go('lingxi')}

@@ -12,7 +12,7 @@ interface SoundState {
   setMuted(next: boolean): void
 }
 
-const STORAGE_KEY = 'cumora.skype.muted'
+const STORAGE_KEY = 'lingxiloop.skype.muted'
 
 function readInitialMuted(): boolean {
   if (typeof window === 'undefined') return true

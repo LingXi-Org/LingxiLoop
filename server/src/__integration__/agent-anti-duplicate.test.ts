@@ -32,7 +32,7 @@ beforeEach(async () => {
   // Wipe any worklog state from the previous test so claims don't
   // leak across test boundaries. SCAN+DEL because we use HASH keys
   // that FLUSHDB at the schema level doesn't touch.
-  for await (const keys of redis.scanStream({ match: 'cumora:worklog:*', count: 100 })) {
+  for await (const keys of redis.scanStream({ match: 'lingxiloop:worklog:*', count: 100 })) {
     if (keys.length > 0) await redis.del(...keys)
   }
 })

@@ -254,7 +254,7 @@ test('[integration] steer (verbatim path): mid-turn message lands in next hop in
       fcId: 'fc_reply',
       callId: 'call_reply',
       name: 'bash',
-      argsJson: JSON.stringify({ command: `cumora reply ${conversationId} 'here are the files, including hidden ones'` }),
+      argsJson: JSON.stringify({ command: `lingxiloop reply ${conversationId} 'here are the files, including hidden ones'` }),
     }),
     // Hop 3: no further work → explicit protocol termination.
     streamSetTurnStatus(),
@@ -281,8 +281,8 @@ test('[integration] steer (verbatim path): mid-turn message lands in next hop in
         return { ok: true, output: { stdout: 'file1\nfile2\n', stderr: '', exitCode: 0 }, durationMs: DEBOUNCE_MS + 200,
                  display: { name: 'bash', arg: cmd, status: 'ok', detail: '' } }
       }
-      // cumora reply path — write the actual reply row so we can assert it.
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      // lingxiloop reply path — write the actual reply row so we can assert it.
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`
@@ -523,7 +523,7 @@ test('[integration] steer (summary path): >3 batched messages → cheap-model su
   // LLM stub scripted for the 3-call sequence:
   //   #0 = hop 1 main response (bash call)
   //   #1 = summarizer call (because batch.length=5 > threshold=3)
-  //   #2 = hop 2 main response (cumora reply)
+  //   #2 = hop 2 main response (lingxiloop reply)
   const SUMMARY_TEXT = 'User reversed direction five times; latest instruction wins: do X.'
   let callIdx = 0
   const capturedInputs: ResponseInputItem[][] = []
@@ -556,12 +556,12 @@ test('[integration] steer (summary path): >3 batched messages → cheap-model su
           })()
         }
         if (idx === 2) {
-          // hop 2: cumora reply
+          // hop 2: lingxiloop reply
           return (async function *() {
             yield { type: 'response.created', response: { id: 'r2', status: 'in_progress' } } as unknown as ResponseStreamEvent
             yield { type: 'response.output_item.added', item: { id: 'fc_r', type: 'function_call', call_id: 'cr', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent
-            yield { type: 'response.function_call_arguments.done', item_id: 'fc_r', arguments: JSON.stringify({ command: `cumora reply ${conversationId} 'done X'` }) } as unknown as ResponseStreamEvent
-            yield { type: 'response.completed', response: { status: 'completed', output: [{ id: 'fc_r', type: 'function_call', call_id: 'cr', name: 'bash', arguments: JSON.stringify({ command: `cumora reply ${conversationId} 'done X'` }) }], usage: { input_tokens: 250, output_tokens: 20 } } } as unknown as ResponseStreamEvent
+            yield { type: 'response.function_call_arguments.done', item_id: 'fc_r', arguments: JSON.stringify({ command: `lingxiloop reply ${conversationId} 'done X'` }) } as unknown as ResponseStreamEvent
+            yield { type: 'response.completed', response: { status: 'completed', output: [{ id: 'fc_r', type: 'function_call', call_id: 'cr', name: 'bash', arguments: JSON.stringify({ command: `lingxiloop reply ${conversationId} 'done X'` }) }], usage: { input_tokens: 250, output_tokens: 20 } } } as unknown as ResponseStreamEvent
           })()
         }
         if (idx === 3) {
@@ -611,7 +611,7 @@ test('[integration] steer (summary path): >3 batched messages → cheap-model su
       return { ok: true, output: { stdout: 'ok', stderr: '', exitCode: 0 }, durationMs: DEBOUNCE_MS + 200,
                display: { name: 'bash', arg: cmd, status: 'ok', detail: '' } }
     }
-    const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+    const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
     if (matched) {
       const messageId = `m-${randomUUID()}`
       await pool.query(`INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
@@ -628,7 +628,7 @@ test('[integration] steer (summary path): >3 batched messages → cheap-model su
 
   // ── assertion 1: the summarizer was invoked.
   // Call sequence: idx=0 hop1 (bash) → idx=1 summarizer →
-  // idx=2 hop2 (cumora reply) → idx=3 terminator (no-tools text exit).
+  // idx=2 hop2 (lingxiloop reply) → idx=3 terminator (no-tools text exit).
   assert.equal(callIdx, 4, 'should have made 4 LLM calls: hop1, summarizer, hop2, terminator')
 
   // ── assertion 2: the summarizer instructions match our prompt
@@ -714,12 +714,12 @@ test('[integration] steer force-continuation: text-only hop + pending steer → 
         if (idx === 1) {
           // Hop 2: continuation triggered by steer drain. Model
           // sees the original prompt + draft answer + the new
-          // user input. Respond with cumora reply to "3+3".
+          // user input. Respond with lingxiloop reply to "3+3".
           return (async function *() {
             yield { type: 'response.created', response: { id: 'r2', status: 'in_progress' } } as unknown as ResponseStreamEvent
             yield { type: 'response.output_item.added', item: { id: 'fc_r', type: 'function_call', call_id: 'cr', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent
-            yield { type: 'response.function_call_arguments.done', item_id: 'fc_r', arguments: JSON.stringify({ command: `cumora reply ${conversationId} 'The answer to 3+3 is 6.'` }) } as unknown as ResponseStreamEvent
-            yield { type: 'response.completed', response: { status: 'completed', output: [{ id: 'fc_r', type: 'function_call', call_id: 'cr', name: 'bash', arguments: JSON.stringify({ command: `cumora reply ${conversationId} 'The answer to 3+3 is 6.'` }) }], usage: { input_tokens: 200, output_tokens: 15 } } } as unknown as ResponseStreamEvent
+            yield { type: 'response.function_call_arguments.done', item_id: 'fc_r', arguments: JSON.stringify({ command: `lingxiloop reply ${conversationId} 'The answer to 3+3 is 6.'` }) } as unknown as ResponseStreamEvent
+            yield { type: 'response.completed', response: { status: 'completed', output: [{ id: 'fc_r', type: 'function_call', call_id: 'cr', name: 'bash', arguments: JSON.stringify({ command: `lingxiloop reply ${conversationId} 'The answer to 3+3 is 6.'` }) }], usage: { input_tokens: 200, output_tokens: 15 } } } as unknown as ResponseStreamEvent
           })()
         }
         // Hop 3+: terminator
@@ -735,7 +735,7 @@ test('[integration] steer force-continuation: text-only hop + pending steer → 
   __setPodToolOverrideForTesting(async (args): Promise<ToolResult> => {
     const parsed = JSON.parse(args.argsJson || '{}') as { command?: string }
     const cmd = String(parsed.command ?? '')
-    const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+    const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
     if (matched) {
       const id = `m-${randomUUID()}`
       await pool.query(`INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
@@ -963,11 +963,11 @@ test('[integration] steer queue resets at turn boundaries (no leak across turns)
   ])
   llm.install()
 
-  // Single bash stub: handle the auto-relay's `cumora reply` call.
+  // Single bash stub: handle the auto-relay's `lingxiloop reply` call.
   makeToolStub({
     bash: async (parsed) => {
       const cmd = String(parsed.command ?? '')
-      const matched = cmd.match(/^cumora\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
+      const matched = cmd.match(/^lingxiloop\s+reply\s+(\S+)\s+'([\s\S]*)'$/)
       if (matched) {
         const [, convoId, body] = matched
         const messageId = `m-${randomUUID()}`

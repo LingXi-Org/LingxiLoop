@@ -68,7 +68,7 @@ test('truncate-only: a single oversized function_call_output is shortened, struc
   const huge = 'X'.repeat(COMPACTED_OUTPUT_BYTES * 10)
   const history: ResponseInputItem[] = [
     userMsg('list boards'),
-    fnCall('call_1', 'bash', '{"command":"cumora kanban ls"}'),
+    fnCall('call_1', 'bash', '{"command":"lingxiloop kanban ls"}'),
     fnOutput('call_1', huge),
   ]
   const result = compactHistory(history, NEVER_OVER)
@@ -630,7 +630,7 @@ test('summary: marker text is hidden inside a message item — model sees the su
   // The summary lands as `{ type: 'message', role: 'user', content }`
   // so the agent reads it as "context I'm being given," not as a
   // function call. Pin that the role is 'user' (not 'system' or
-  // 'assistant') — keeping it user-role aligns with how cumora's
+  // 'assistant') — keeping it user-role aligns with how lingxiloop's
   // wake prompt feeds inbox items into the model.
   const history: ResponseInputItem[] = [
     userMsg('q'),

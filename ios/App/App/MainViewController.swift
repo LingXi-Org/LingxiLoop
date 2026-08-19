@@ -18,7 +18,7 @@ import Capacitor
  */
 class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
-        NSLog("[Cumora] MainViewController.capacitorDidLoad — registering WebAuth, AppleSignIn")
+        NSLog("[LingxiLoop] MainViewController.capacitorDidLoad — registering WebAuth, AppleSignIn")
         bridge?.registerPluginInstance(WebAuthPlugin())
         bridge?.registerPluginInstance(AppleSignInPlugin())
     }

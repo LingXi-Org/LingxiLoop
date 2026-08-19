@@ -69,7 +69,7 @@ function isAssistantTextAction(value: unknown): value is AssistantTextAction {
  * Tool definitions for the OpenAI Responses API.
  *
  * World-changing capabilities (reply, react, image generation, docs,
- * kanban, email, private memory, etc.) remain subcommands of the `cumora`
+ * kanban, email, private memory, etc.) remain subcommands of the `lingxiloop`
  * CLI on PATH via bash. `set_turn_status` is the one protocol tool: it
  * declares the model's own completion state so the runtime does not have
  * to infer task state from silence.
@@ -78,55 +78,55 @@ export const TOOL_DEFS_RESPONSES: FunctionTool[] = [
   {
     type: 'function',
     name: 'bash',
-    description: `Run a real bash command (\`bash -c\`). Use this for world actions and private workspace operations; every capability is a subcommand of the \`cumora\` CLI which is on PATH and runs as you (auto --as).
+    description: `Run a real bash command (\`bash -c\`). Use this for world actions and private workspace operations; every capability is a subcommand of the \`lingxiloop\` CLI which is on PATH and runs as you (auto --as).
 
   # introspect the world
-  cumora whoami
-  cumora groups | cumora conversations | cumora directs
-  cumora members <convo_id>
-  cumora messages <convo_id> --tail 20
-  cumora search "<query>"
-  cumora participants
+  lingxiloop whoami
+  lingxiloop groups | lingxiloop conversations | lingxiloop directs
+  lingxiloop members <convo_id>
+  lingxiloop messages <convo_id> --tail 20
+  lingxiloop search "<query>"
+  lingxiloop participants
 
   # your private state (persists across all conversations)
-  cumora memory list
-  cumora memory note "Yetone prefers warm palettes" --about yetone --kind preference
-  cumora workspace ls
-  cumora workspace read drafts/v3.md
-  cumora workspace write drafts/v3.md "# Hero v3 ..."
-  cumora workspace edit drafts/v3.md "old text" "new text"
-  cumora workspace grep "warm" -i
-  cumora tasks list --status open
-  cumora tasks add "Send hero v4 tokens"
-  cumora log
+  lingxiloop memory list
+  lingxiloop memory note "Yetone prefers warm palettes" --about yetone --kind preference
+  lingxiloop workspace ls
+  lingxiloop workspace read drafts/v3.md
+  lingxiloop workspace write drafts/v3.md "# Hero v3 ..."
+  lingxiloop workspace edit drafts/v3.md "old text" "new text"
+  lingxiloop workspace grep "warm" -i
+  lingxiloop tasks list --status open
+  lingxiloop tasks add "Send hero v4 tokens"
+  lingxiloop log
 
   # ACTIONS — these write to the world, not just your private state
-  cumora dm <partner_id> <topic> <opening>
-  cumora pull-group "<title>" --members a,b,c --reason "..." --say "..."
-  cumora react <message_id> <emoji>             # toggle
+  lingxiloop dm <partner_id> <topic> <opening>
+  lingxiloop pull-group "<title>" --members a,b,c --reason "..." --say "..."
+  lingxiloop react <message_id> <emoji>             # toggle
 
   # KANBAN — the same boards humans see in the Boards view. Cards can
   # be assigned to humans OR to other agents (you're a first-class
   # assignee). @-mention any id in title/description/comments and that
   # participant gets pinged.
-  cumora kanban ls
-  cumora kanban show <board_id>
-  cumora kanban create "<title>" [--description "..."]
-  cumora kanban rename <board_id> --title "..." [--description "..."]
-  cumora kanban columns <board_id>
-  cumora kanban add-column <board_id> "<title>"
-  cumora kanban edit-column <board_id> <column_id> [--title "..."] [--position N]
-  cumora kanban delete-column <board_id> <column_id>
-  cumora kanban mentions                       # NEW kanban @-mentions of YOU since last check
-  cumora card ls <board_id>
-  cumora card show <card_id>
-  cumora card add <board_id> "<title>" --column <col_id> [--description "..."] [--assign <id>]
-  cumora card move <card_id> --to <column_id>
-  cumora card assign <card_id> <participant_id|null>
-  cumora card rename <card_id> --title "..." [--description "..."]
-  cumora card comment <card_id> "<body>"
-  cumora card delete-comment <card_id> <comment_id>
-  cumora card delete <card_id>
+  lingxiloop kanban ls
+  lingxiloop kanban show <board_id>
+  lingxiloop kanban create "<title>" [--description "..."]
+  lingxiloop kanban rename <board_id> --title "..." [--description "..."]
+  lingxiloop kanban columns <board_id>
+  lingxiloop kanban add-column <board_id> "<title>"
+  lingxiloop kanban edit-column <board_id> <column_id> [--title "..."] [--position N]
+  lingxiloop kanban delete-column <board_id> <column_id>
+  lingxiloop kanban mentions                       # NEW kanban @-mentions of YOU since last check
+  lingxiloop card ls <board_id>
+  lingxiloop card show <card_id>
+  lingxiloop card add <board_id> "<title>" --column <col_id> [--description "..."] [--assign <id>]
+  lingxiloop card move <card_id> --to <column_id>
+  lingxiloop card assign <card_id> <participant_id|null>
+  lingxiloop card rename <card_id> --title "..." [--description "..."]
+  lingxiloop card comment <card_id> "<body>"
+  lingxiloop card delete-comment <card_id> <comment_id>
+  lingxiloop card delete <card_id>
 
   # COLLABORATIVE DOCS — humans + agents share the same live canvas. Edits
   # propagate via CRDT, so a human watching the doc sees your insertions
@@ -134,12 +134,12 @@ export const TOOL_DEFS_RESPONSES: FunctionTool[] = [
   # Use these when you want to draft long-form prose, a spec, a plan, or
   # any artifact a teammate is going to read or co-edit. Cheaper than
   # spamming chat with a 40-line message.
-  cumora doc ls                                       # every doc in the workspace
-  cumora doc create "<title>" [--body "..."]          # new doc, optionally pre-filled
-  cumora doc read <doc_id>                            # current text body (plain)
-  cumora doc append <doc_id> "<text>"                 # append paragraph(s) at end
-  cumora doc prepend <doc_id> "<text>"                # paragraph(s) at the top
-  cumora doc image <doc_id> <url> [--alt "..."]
+  lingxiloop doc ls                                       # every doc in the workspace
+  lingxiloop doc create "<title>" [--body "..."]          # new doc, optionally pre-filled
+  lingxiloop doc read <doc_id>                            # current text body (plain)
+  lingxiloop doc append <doc_id> "<text>"                 # append paragraph(s) at end
+  lingxiloop doc prepend <doc_id> "<text>"                # paragraph(s) at the top
+  lingxiloop doc image <doc_id> <url> [--alt "..."]
     [--at end|start | --replace "<snippet>" | --after "<snippet>" | --before "<snippet>"]
                                                        # insert an illustration. USE THIS instead of
                                                        # appending an ![alt](url) markdown block —
@@ -151,36 +151,36 @@ export const TOOL_DEFS_RESPONSES: FunctionTool[] = [
                                                        # position the image relative to that block.
                                                        # An anchored mode that misses is a HARD
                                                        # error — no fallback insertion.
-  cumora doc image-delete <doc_id> [--src "<url>" | --src-contains "<substr>" | --alt "<text>"]
+  lingxiloop doc image-delete <doc_id> [--src "<url>" | --src-contains "<substr>" | --alt "<text>"]
                                                        # delete image blocks from a doc by src or
                                                        # alt match. Use to clean up duplicate or
                                                        # unwanted illustrations.
-  cumora doc replace <doc_id> --find "..." --replace "..."   # first match
-  cumora doc rename <doc_id> "<title>"
+  lingxiloop doc replace <doc_id> --find "..." --replace "..."   # first match
+  lingxiloop doc rename <doc_id> "<title>"
 
-  cumora palette "<brief>"
+  lingxiloop palette "<brief>"
 
   # WEB — drive a real Chromium running INSIDE your pod, with login
   # state that persists across your pod restarts (cookies / IndexedDB
   # live on a per-agent PVC). Two layers:
   #
   # Layer 1 — quick ergonomics for the common cases:
-  #   cumora-web search "<query>" [--limit N]   # DuckDuckGo, no captcha
-  #   cumora-web read <url>                      # render + extract main text
+  #   lingxiloop-web search "<query>" [--limit N]   # DuckDuckGo, no captcha
+  #   lingxiloop-web read <url>                      # render + extract main text
   #
   # Layer 2 — full OpenCLI surface for anything else (click, fill, multi-
   # step flows, scraping specific elements, sites that need your login).
   # The session id is always your agent id; the browser stays around
   # across calls in the same pod lifetime.
   #
-  #   opencli browser "$CUMORA_AGENT_ID" open <url>
-  #   opencli browser "$CUMORA_AGENT_ID" state                    # current URL + title
-  #   opencli browser "$CUMORA_AGENT_ID" get text --selector 'main'
-  #   opencli browser "$CUMORA_AGENT_ID" click --selector '#submit'
-  #   opencli browser "$CUMORA_AGENT_ID" type --selector 'input[name=q]' --text "..."
-  #   opencli browser "$CUMORA_AGENT_ID" fill --selector 'form' --data '{"q":"..."}'
-  #   opencli browser "$CUMORA_AGENT_ID" wait --selector '.result'
-  #   opencli browser "$CUMORA_AGENT_ID" screenshot --output /tmp/page.png
+  #   opencli browser "$LINGXILOOP_AGENT_ID" open <url>
+  #   opencli browser "$LINGXILOOP_AGENT_ID" state                    # current URL + title
+  #   opencli browser "$LINGXILOOP_AGENT_ID" get text --selector 'main'
+  #   opencli browser "$LINGXILOOP_AGENT_ID" click --selector '#submit'
+  #   opencli browser "$LINGXILOOP_AGENT_ID" type --selector 'input[name=q]' --text "..."
+  #   opencli browser "$LINGXILOOP_AGENT_ID" fill --selector 'form' --data '{"q":"..."}'
+  #   opencli browser "$LINGXILOOP_AGENT_ID" wait --selector '.result'
+  #   opencli browser "$LINGXILOOP_AGENT_ID" screenshot --output /tmp/page.png
   #
   # 100+ built-in adapters also work without writing selectors:
   #   opencli hackernews top --limit 5
@@ -211,15 +211,15 @@ export const TOOL_DEFS_RESPONSES: FunctionTool[] = [
   #   Conditions: one of the LISTED options is plausibly your answer in
   #   character. Light polls count — your persona can have favorite
   #   pets even if it doesn't have a body to keep them in.
-  #   Action: run "cumora poll vote <message_id> <option_id>" and DONE.
-  #   The vote IS your response. Do NOT also send a "cumora reply".
+  #   Action: run "lingxiloop poll vote <message_id> <option_id>" and DONE.
+  #   The vote IS your response. Do NOT also send a "lingxiloop reply".
   #
   # Acceptable outcome B — SILENT.
   #   Conditions: none of the listed options fits your persona at all
   #   (e.g. a poll about a meeting time when you have no calendar), or
   #   the question is genuinely outside your scope.
   #   Action: do NOTHING for this message. No reply, no vote, no react.
-  #   Just "cumora ack" and move on.
+  #   Just "lingxiloop ack" and move on.
   #
   # Hard prohibitions — these are judged as failures, no exceptions:
   #   - Replying with prose without voting. If you're engaged enough to
@@ -242,33 +242,33 @@ export const TOOL_DEFS_RESPONSES: FunctionTool[] = [
   #     option, ask what your character would pick, vote that.
   #
   # Commands:
-  cumora poll create <convo_id> "<question>" "<opt1>" "<opt2>" [...] [--mode single|multi] [--expires-in <minutes>]
-  cumora poll vote <message_id> <option_id>[,<option_id>...]   # multi-choice: comma-separated. --clear retracts.
-  cumora poll show <message_id>                                # current tallies + your vote
-  cumora poll close <message_id>                               # only the original author
+  lingxiloop poll create <convo_id> "<question>" "<opt1>" "<opt2>" [...] [--mode single|multi] [--expires-in <minutes>]
+  lingxiloop poll vote <message_id> <option_id>[,<option_id>...]   # multi-choice: comma-separated. --clear retracts.
+  lingxiloop poll show <message_id>                                # current tallies + your vote
+  lingxiloop poll close <message_id>                               # only the original author
 
   # CONTACTS — workspace + email roster (use BEFORE assuming you know a name)
-  cumora contacts [<query>]                        # every agent / human / external mail correspondent
+  lingxiloop contacts [<query>]                        # every agent / human / external mail correspondent
                                                    # in this workspace. With a query, substring-
                                                    # matches name/id/email. If no match: REPLY to
                                                    # the user asking for the address — do NOT
                                                    # silently skip their request.
 
   # EMAIL — real external mail (you have your own address)
-  cumora email whoami                              # your address
-  cumora email contacts [<query>]                  # alias for the above (email-namespaced)
-  cumora email inbox [--unread] [--limit N]        # your email threads
-  cumora email show <conversation_id>              # full thread
-  cumora email send --to <addr|id>[,...] [--cc ...] --subject "..." --body "..."
-  cumora email reply <message_id> --body "..." [--cc ...]
+  lingxiloop email whoami                              # your address
+  lingxiloop email contacts [<query>]                  # alias for the above (email-namespaced)
+  lingxiloop email inbox [--unread] [--limit N]        # your email threads
+  lingxiloop email show <conversation_id>              # full thread
+  lingxiloop email send --to <addr|id>[,...] [--cc ...] --subject "..." --body "..."
+  lingxiloop email reply <message_id> --body "..." [--cc ...]
 
-  cumora help                                    # full reference
+  lingxiloop help                                    # full reference
 
 You can pipe, grep, redirect — it's a real shell. Output is captured (stdout+stderr, exit code).`,
     parameters: {
       type: 'object',
       properties: {
-        command: { type: 'string', description: 'shell command line, e.g. "cumora groups" or "cumora messages aurora-launch --tail 5 | grep bundle". cwd is your /workspace/ — use relative paths (e.g. `cat memory/preference/abc.md`).' },
+        command: { type: 'string', description: 'shell command line, e.g. "lingxiloop groups" or "lingxiloop messages aurora-launch --tail 5 | grep bundle". cwd is your /workspace/ — use relative paths (e.g. `cat memory/preference/abc.md`).' },
       },
       required: ['command'],
       additionalProperties: false,
@@ -283,11 +283,11 @@ You can pipe, grep, redirect — it's a real shell. Output is captured (stdout+s
 Use:
 - status="continue" when you have only acknowledged, started work, or still need another tool/action.
 - status="done" only after the user's request has been meaningfully handled, or after you correctly chose silence because there is nothing to do.
-- status="needs_clarification" when the next step is to ask the user a concrete question; then continue and actually ask it with cumora reply.
-- status="blocked" when you cannot complete the task; then continue and report the clear failure with cumora reply unless the user-visible failure was already sent.
+- status="needs_clarification" when the next step is to ask the user a concrete question; then continue and actually ask it with lingxiloop reply.
+- status="blocked" when you cannot complete the task; then continue and report the clear failure with lingxiloop reply unless the user-visible failure was already sent.
 - status="waiting" only when you have taken an action and are genuinely waiting for an external response/event.
 
-If you previously emitted plain assistant text in this turn, users did not see it. Prefer sending it yourself with cumora reply. Only use assistant_text="reply" when you intentionally want the runtime to relay that exact draft to reply_conversation_id; use assistant_text="drop" when the draft should not be user-visible.`,
+If you previously emitted plain assistant text in this turn, users did not see it. Prefer sending it yourself with lingxiloop reply. Only use assistant_text="reply" when you intentionally want the runtime to relay that exact draft to reply_conversation_id; use assistant_text="drop" when the draft should not be user-visible.`,
     parameters: {
       type: 'object',
       properties: {
@@ -423,18 +423,18 @@ export async function tBash(
   const { chmod, mkdtemp, readFile, rm, writeFile } = await import('node:fs/promises')
   const { tmpdir } = await import('node:os')
   const repoRoot = process.cwd()
-  const resultDir = await mkdtemp(join(tmpdir(), 'cumora-cli-'))
+  const resultDir = await mkdtemp(join(tmpdir(), 'lingxiloop-cli-'))
   const resultPath = join(resultDir, 'side-effects.jsonl')
-  const podRuntime = process.env.CUMORA_RUNTIME_CLIENT === 'http'
-  const localCumoraBin = join(repoRoot, 'bin', 'cumora')
-  const localWrapperPath = join(resultDir, 'cumora')
+  const podRuntime = process.env.LINGXILOOP_RUNTIME_CLIENT === 'http'
+  const localLingxiLoopBin = join(repoRoot, 'bin', 'lingxiloop')
+  const localWrapperPath = join(resultDir, 'lingxiloop')
   if (!podRuntime) {
     await writeFile(localWrapperPath, [
       '#!/bin/sh',
-      'export CUMORA_CLI_IDENTITY_SOURCE=agent-bash',
-      `export CUMORA_AGENT_ID=${shellSingleQuote(agentId)}`,
-      'unset CUMORA_DEFAULT_AS',
-      `exec ${shellSingleQuote(localCumoraBin)} "$@"`,
+      'export LINGXILOOP_CLI_IDENTITY_SOURCE=agent-bash',
+      `export LINGXILOOP_AGENT_ID=${shellSingleQuote(agentId)}`,
+      'unset LINGXILOOP_DEFAULT_AS',
+      `exec ${shellSingleQuote(localLingxiLoopBin)} "$@"`,
       '',
     ].join('\n'), 'utf8')
     await chmod(localWrapperPath, 0o755)
@@ -442,7 +442,7 @@ export async function tBash(
   // Bash runs in the per-turn FS namespace (the agent's "persona
   // directory") when one's active — so the agent can `cat IDENTITY.md`,
   // `grep -r foo memory/`, etc. on real files instead of paying the
-  // cost of `cumora workspace read`. When there's no namespace (CLI /
+  // cost of `lingxiloop workspace read`. When there's no namespace (CLI /
   // replay / boot path) we fall back to the repo root.
   const cwd = ns?.rootDir ?? repoRoot
   const repoBin = join(repoRoot, 'bin')
@@ -452,21 +452,21 @@ export async function tBash(
     .join(delimiter)
   const childEnv = {
     ...process.env,
-    // Local agent bash gets a runtime-installed `cumora` wrapper first
+    // Local agent bash gets a runtime-installed `lingxiloop` wrapper first
     // on PATH so ordinary CLI calls run as the current agent. This is
-    // a dev guard for the supported `cumora ...` path; the production
+    // a dev guard for the supported `lingxiloop ...` path; the production
     // security boundary is the pod shim plus JWT-pinned /runtime/cli.
     PATH: `${podRuntime ? repoBin : resultDir}${delimiter}${basePath}`,
-    CUMORA_AGENT: agentId,
+    LINGXILOOP_AGENT: agentId,
     ...(!podRuntime
       ? {
-          CUMORA_AGENT_ID: agentId,
-          CUMORA_CLI_IDENTITY_SOURCE: 'agent-bash',
-          CUMORA_DEFAULT_AS: '',
+          LINGXILOOP_AGENT_ID: agentId,
+          LINGXILOOP_CLI_IDENTITY_SOURCE: 'agent-bash',
+          LINGXILOOP_DEFAULT_AS: '',
         }
       : {}),
-    CUMORA_PERSONA_DIR: ns?.rootDir ?? '',
-    CUMORA_CLI_RESULT_PATH: resultPath,
+    LINGXILOOP_PERSONA_DIR: ns?.rootDir ?? '',
+    LINGXILOOP_CLI_RESULT_PATH: resultPath,
   }
 
   const heavyOp = /--generate-image|web-(search|read)|skills\s+(install|search)/i.test(command)

@@ -138,7 +138,7 @@ function CommunitySection() {
   )
 }
 
-/** Cumora version + auto-update entry point. Renders only when the
+/** LingxiLoop version + auto-update entry point. Renders only when the
  *  Electron bridge is available (PWA / web builds have no updater).
  *  Click "Check for updates" → opens the UpdaterDialog mounted at the
  *  AuthedApp level via a custom window event (avoids prop-drilling
@@ -148,7 +148,7 @@ function AboutSection() {
   const [supported, setSupported] = useState<boolean>(false)
 
   useEffect(() => {
-    const bridge = typeof window !== 'undefined' ? window.cumora?.update : undefined
+    const bridge = typeof window !== 'undefined' ? window.lingxiloop?.update : undefined
     if (!bridge) return
     void bridge.getAppInfo().then((info) => {
       setVersion(info.version)
@@ -172,7 +172,7 @@ function AboutSection() {
         </div>
         <button
           type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent('cumora:open-updater'))}
+          onClick={() => window.dispatchEvent(new CustomEvent('lingxiloop:open-updater'))}
           className="shrink-0 h-9 px-4 rounded-[8px] text-[13px] font-display transition-colors text-white"
           style={{ background: 'var(--skype)' }}
         >
@@ -185,7 +185,7 @@ function AboutSection() {
 
 /* ============================ Usage / Quota ============================
  * Three rounded "weather cards" — daily / weekly / monthly — mirroring
- * the cumora cloud-and-paper feel. The bars use --skype on a faint
+ * the lingxiloop cloud-and-paper feel. The bars use --skype on a faint
  * sky2-100 track until usage crosses 75% (turns coral) and 95% (deep
  * coral with a quiet pulse). Numbers come from sub2api's subscription
  * summary; everything is best-effort — missing data renders a soft
@@ -364,7 +364,7 @@ function UsageTab() {
             </div>
             <div className="font-display italic text-[12px] text-ink-500 mt-1 max-w-xl">
               {error
-                ? 'The cumora server couldn\'t reach the quota gateway. Try again in a moment.'
+                ? 'The lingxiloop server couldn\'t reach the quota gateway. Try again in a moment.'
                 : 'Your account hasn\'t been provisioned on the quota gateway yet. This usually clears up on its own — try again in a minute.'}
             </div>
             <button onClick={load}
@@ -736,7 +736,7 @@ function ComputersTab() {
 
   const origin = getPairingServerOrigin()
   const serverFlag = origin ? ` --server ${origin}` : ''
-  const pairCommand = code ? `npx cumora@latest agent computer --pair ${code}${serverFlag}${engine === 'codex' ? ' --engine codex' : ''}${asService ? ' --install-service' : ''}` : ''
+  const pairCommand = code ? `npx lingxiloop@latest agent computer --pair ${code}${serverFlag}${engine === 'codex' ? ' --engine codex' : ''}${asService ? ' --install-service' : ''}` : ''
   const list = Object.values(byId).sort((a, b) =>
     (a.kind === 'cloud' ? 0 : 1) - (b.kind === 'cloud' ? 0 : 1) || a.name.localeCompare(b.name))
 
@@ -786,7 +786,7 @@ function ComputersTab() {
             const n = agentCount(c.id, c.kind === 'cloud')
             const repairable = c.kind !== 'cloud'
             const expanded = repairFor === c.id
-            const repairCmd = repairCode ? `npx cumora@latest agent computer --pair ${repairCode}${serverFlag}` : ''
+            const repairCmd = repairCode ? `npx lingxiloop@latest agent computer --pair ${repairCode}${serverFlag}` : ''
             return (
               <div key={c.id} className="bg-cloud rounded-[14px]" style={{ border: '1px solid var(--ink-100)' }}>
                 <div
@@ -934,7 +934,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /** Elegant, self-clearing "your daemon is behind" banner. Shows the moment any
- *  paired computer reports an outdated `cumora` daemon, and disappears on its own
+ *  paired computer reports an outdated `lingxiloop` daemon, and disappears on its own
  *  once the daemon restarts onto the latest (the next heartbeat clears the flag).
  *  Warm gold (an invitation to update), not alarm red. One-click copy. */
 function DaemonUpgradeBanner({ onJump }: { onJump: () => void }) {
@@ -952,7 +952,7 @@ function DaemonUpgradeBanner({ onJump }: { onJump: () => void }) {
   // which itself prints install-service guidance when no service exists.
   const manual = outdated.filter((c) => c.daemonSupervised === false)
   const allManual = manual.length === outdated.length
-  const cmd = allManual ? 'npx cumora@latest agent computer' : 'npx cumora@latest agent computer --restart'
+  const cmd = allManual ? 'npx lingxiloop@latest agent computer' : 'npx lingxiloop@latest agent computer --restart'
   const copy = () => { void navigator.clipboard?.writeText(cmd); setCopied(true); window.setTimeout(() => setCopied(false), 1600) }
 
   return (

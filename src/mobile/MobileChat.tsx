@@ -929,7 +929,7 @@ type StreamCtx = { hasMoreOlder: boolean; loadingOlder: boolean }
  *  scope — never recreated per render — which is the whole point: an inline
  *  `components={{ Header: () => … }}` literal makes a brand-new component
  *  *type* on every render, and React unmounts+remounts a node whose type
- *  identity changed. Cumora streams agent messages many times per second, so
+ *  identity changed. LingxiLoop streams agent messages many times per second, so
  *  that inline Header was being torn down and rebuilt on every streaming tick,
  *  re-measuring the very top of the list and nudging every row below it — a
  *  primary driver of the scroll-up jitter. The flags now arrive via `context`,

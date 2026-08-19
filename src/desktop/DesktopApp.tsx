@@ -10,7 +10,7 @@ export function DesktopApp() {
   const theme = useTheme((s) => s.theme)
 
   useEffect(() => {
-    window.cumora?.windowChrome?.setTheme(theme)
+    window.lingxiloop?.windowChrome?.setTheme(theme)
   }, [theme])
 
   return (

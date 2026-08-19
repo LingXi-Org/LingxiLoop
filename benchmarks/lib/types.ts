@@ -1,5 +1,5 @@
 /**
- * Shared types for the cumora multi-agent coordination benchmark suite.
+ * Shared types for the lingxiloop multi-agent coordination benchmark suite.
  *
  * A `Scenario` is one game definition. The harness runs N `Trial`s of each
  * scenario, then aggregates into a `BenchmarkResult`. Pass criteria are
@@ -136,8 +136,8 @@ export interface PassResult {
 export interface BenchmarkResult {
   scenarioId: string
   ranAt: string  // ISO
-  cumoraVersion: string  // npm package version of the daemon under test
-  serverSha: string  // git sha of the cumora server under test
+  lingxiloopVersion: string  // npm package version of the daemon under test
+  serverSha: string  // git sha of the lingxiloop server under test
   trials: TrialMetrics[]
   verdict: PassResult
 }

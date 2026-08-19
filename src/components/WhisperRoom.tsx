@@ -106,7 +106,7 @@ function Bubble({ msg }: { msg: ApiWhisperMessage }) {
   if (!author) return null
   // Tool-call rows have kind='tool' and an empty body. Without this guard
   // they render as ghostly empty bubbles. Drop them entirely for now —
-  // when we want to surface "X used `cumora ...`" we'll render a small
+  // when we want to surface "X used `lingxiloop ...`" we'll render a small
   // tool-card here instead.
   if (msg.kind === 'tool') return null
   // Defensive: any non-tool row that somehow ended up with an empty body

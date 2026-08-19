@@ -10,12 +10,12 @@
  *   5. After N trials, apply `passCriterion` over all trial metrics.
  *
  * The harness DOES NOT spawn agents — they're expected to already be
- * running (on the operator's machine via `npx cumora agent computer`,
+ * running (on the operator's machine via `npx lingxiloop agent computer`,
  * or on the cloud pod-agent infra). It just creates the test convo and
  * watches what happens, exactly like a real human would.
  *
  * Environment:
- *   - DATABASE_URL — postgres connection string (same one cumora server uses)
+ *   - DATABASE_URL — postgres connection string (same one lingxiloop server uses)
  *   - REDIS_URL    — redis connection string (for the CH_MESSAGE_NEW publish)
  *   - BENCH_USER   — participant id of the "human" who drives scenarios
  *                    (this is a real participant row; if not set, the
@@ -31,7 +31,7 @@ import { Pool } from 'pg'
 import Redis from 'ioredis'
 import type { Scenario, TrialMetrics, BenchmarkResult, TrialContext, TrialMessage } from './types.ts'
 
-const CH_MESSAGE_NEW = 'cumora:message.new'
+const CH_MESSAGE_NEW = 'lingxiloop:message.new'
 
 function env(name: string): string {
   const v = process.env[name]
@@ -131,8 +131,8 @@ export async function runScenario(scenario: Scenario): Promise<BenchmarkResult> 
   const benchUser = env('BENCH_USER')
   const benchCompany = env('BENCH_COMPANY')
 
-  const cumoraVersion = envOptional('CUMORA_DAEMON_VERSION') ?? 'unknown'
-  const serverSha = envOptional('CUMORA_SERVER_SHA') ?? 'unknown'
+  const lingxiloopVersion = envOptional('LINGXILOOP_DAEMON_VERSION') ?? 'unknown'
+  const serverSha = envOptional('LINGXILOOP_SERVER_SHA') ?? 'unknown'
 
   const trialMetrics: TrialMetrics[] = []
   try {
@@ -185,7 +185,7 @@ export async function runScenario(scenario: Scenario): Promise<BenchmarkResult> 
   return {
     scenarioId: scenario.id,
     ranAt: new Date().toISOString(),
-    cumoraVersion,
+    lingxiloopVersion,
     serverSha,
     trials: trialMetrics,
     verdict,

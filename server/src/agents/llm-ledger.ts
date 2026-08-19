@@ -30,7 +30,7 @@
  *
  * What this is NOT for:
  *   - BYOA-local LLM calls (the operator's paired claude / codex CLI). Those
- *     are billed against the operator's own subscription, not Cumora's sub2api,
+ *     are billed against the operator's own subscription, not LingxiLoop's sub2api,
  *     and are already accounted for in `agent_triages` (BYOA triage rows) +
  *     `agent_runs` (BYOA turn rows) with `source='byoa-*'`. Putting them into
  *     `llm_calls` would muddy the "sub2api spend" rollup that's the whole
@@ -100,7 +100,7 @@ export interface LlmCallRecord extends LlmCallContext {
   latencyMs: number
   status: LlmCallStatus
   error?: string | null
-  /** The agent-cli (npm `cumora`) version that produced this row, captured by
+  /** The agent-cli (npm `lingxiloop`) version that produced this row, captured by
    *  the daemon and sent in its `/runtime/llm-calls` / `/runtime/triage`
    *  payload. Cloud rows (no daemon) leave it null. Used by the operator to
    *  correlate spend / cache behaviour with a daemon release — when a new
@@ -737,7 +737,7 @@ export interface LlmCallRow {
   status: LlmCallStatus
   error: string | null
   extras: Record<string, unknown> | null
-  /** agent-cli (npm cumora) version that produced this row. Cloud rows: null. */
+  /** agent-cli (npm lingxiloop) version that produced this row. Cloud rows: null. */
   daemonVersion: string | null
 }
 

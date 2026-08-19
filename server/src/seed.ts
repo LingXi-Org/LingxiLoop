@@ -88,7 +88,7 @@ const SEED_MESSAGES: SeedMsg[] = []
 
 export async function seedIfEmpty(): Promise<void> {
   // Always make sure the dev account exists so login works on a fresh DB.
-  // Email: yetone@dev.local  Password: cumora-dev (DEV ONLY).
+  // Email: yetone@dev.local  Password: lingxiloop-dev (DEV ONLY).
   await ensureDevUser()
 
   const { rows } = await pool.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM conversations')

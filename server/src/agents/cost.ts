@@ -12,7 +12,7 @@
  * pays a flat-rate subscription, so the dollar figure here is "meter-equivalent"
  * — what the same computation WOULD cost on the metered API — which is the
  * honest basis for "is this triage worth it". Override real contracted rates via
- * the CUMORA_MODEL_PRICES_JSON env (a JSON map of modelId → price); only those
+ * the LINGXILOOP_MODEL_PRICES_JSON env (a JSON map of modelId → price); only those
  * count as `verified` — every seeded default is reported as an estimate.
  */
 
@@ -45,10 +45,10 @@ export const EMPTY_USAGE: TokenUsage = {
 // are Anthropic's published list prices to the best of our knowledge (cache-read
 // ≈ 0.1× input, cache-write ≈ 1.25× input), but we can't verify at runtime that
 // they're current for the EXACT model variant in use (e.g. a specific 4.x), and
-// the gpt-5.* ids are Cumora's internal cloud aliases whose true upstream rate we
+// the gpt-5.* ids are LingxiLoop's internal cloud aliases whose true upstream rate we
 // don't know at all. So nothing here is presented as authoritative: a figure is
 // only `verified` (non-estimated) when the OPERATOR supplies the real contracted
-// rate via CUMORA_MODEL_PRICES_JSON. Everything else surfaces as an estimate.
+// rate via LINGXILOOP_MODEL_PRICES_JSON. Everything else surfaces as an estimate.
 const SEED_PRICES: Record<string, ModelPrice> = {
   'gpt-5.5':      { inPer1M: 2.5, cachedInPer1M: 0.25, cacheWritePer1M: 2.5, outPer1M: 10, verified: false },
   'gpt-5.4-mini': { inPer1M: 0.25, cachedInPer1M: 0.025, cacheWritePer1M: 0.25, outPer1M: 2, verified: false },
@@ -70,7 +70,7 @@ let envOverrides: Record<string, ModelPrice> | null = null
 function overrides(): Record<string, ModelPrice> {
   if (envOverrides) return envOverrides
   envOverrides = {}
-  const raw = process.env.CUMORA_MODEL_PRICES_JSON
+  const raw = process.env.LINGXILOOP_MODEL_PRICES_JSON
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as Record<string, Partial<ModelPrice>>
@@ -84,7 +84,7 @@ function overrides(): Record<string, ModelPrice> {
         }
       }
     } catch (err) {
-      console.warn('[cost] CUMORA_MODEL_PRICES_JSON is not valid JSON — ignoring:', err instanceof Error ? err.message : err)
+      console.warn('[cost] LINGXILOOP_MODEL_PRICES_JSON is not valid JSON — ignoring:', err instanceof Error ? err.message : err)
     }
   }
   return envOverrides
@@ -110,7 +110,7 @@ export function priceFor(model: string | null | undefined): ModelPrice {
 
 /** The full known price menu (seeded tiers + any operator env overrides), for a
  *  UI reference table so users can see exactly what each model costs. `estimated`
- *  is true for everything except operator-supplied (CUMORA_MODEL_PRICES_JSON) rates. */
+ *  is true for everything except operator-supplied (LINGXILOOP_MODEL_PRICES_JSON) rates. */
 export function modelPriceTable(): Array<{
   model: string; inPer1M: number; cachedInPer1M: number; cacheWritePer1M: number; outPer1M: number; estimated: boolean
 }> {

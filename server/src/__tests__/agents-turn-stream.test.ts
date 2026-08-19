@@ -162,14 +162,14 @@ test('response.completed with output:[] still back-fills pendingTools from earli
   // build relies on `pendingTools` as the single source of truth.
   const s = play([
     { type: 'response.output_item.added', item: { id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent,
-    { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: '{"command":"cumora kanban ls"}' } as unknown as ResponseStreamEvent,
+    { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: '{"command":"lingxiloop kanban ls"}' } as unknown as ResponseStreamEvent,
     { type: 'response.completed', response: { status: 'completed', output: [], usage: usage(8400, 80) } } as unknown as ResponseStreamEvent,
   ])
   assert.equal(s.responseStatus, 'completed')
   assert.equal(s.totalTokens, 8480)
   assert.deepEqual(Object.keys(s.pendingTools), ['fc_1'])
   assert.equal(s.pendingTools.fc_1.call_id, 'call_1')
-  assert.equal(s.pendingTools.fc_1.arguments, '{"command":"cumora kanban ls"}')
+  assert.equal(s.pendingTools.fc_1.arguments, '{"command":"lingxiloop kanban ls"}')
 })
 
 test('response.completed back-fills pendingTools when output_item.added events were missing entirely', () => {
@@ -332,7 +332,7 @@ test('text + tool call in the same hop both land — agent can both speak and ac
     { type: 'response.output_text.delta', item_id: 'msg_1', content_index: 0, delta: 'On it — ' } as unknown as ResponseStreamEvent,
     { type: 'response.output_text.delta', item_id: 'msg_1', content_index: 0, delta: 'checking the boards.' } as unknown as ResponseStreamEvent,
     { type: 'response.output_item.added', item: { id: 'fc_1', type: 'function_call', call_id: 'call_1', name: 'bash', arguments: '' } } as unknown as ResponseStreamEvent,
-    { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: '{"command":"cumora kanban ls"}' } as unknown as ResponseStreamEvent,
+    { type: 'response.function_call_arguments.done', item_id: 'fc_1', arguments: '{"command":"lingxiloop kanban ls"}' } as unknown as ResponseStreamEvent,
     { type: 'response.completed', response: { status: 'completed', output: [], usage: usage(200, 40) } } as unknown as ResponseStreamEvent,
   ])
   assert.equal(Array.from(s.responseTextByPart.values()).join(''), 'On it — checking the boards.')

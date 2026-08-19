@@ -8,7 +8,7 @@
  *      during cold-start / before the SSE attached)
  *   3. Loop: read SSE events; on `event: wake` → drain()
  *   4. After each drain finishes, kick / reset the idle timer
- *   5. If the idle timer fires (no wakes for CUMORA_AGENT_IDLE_MS):
+ *   5. If the idle timer fires (no wakes for LINGXILOOP_AGENT_IDLE_MS):
  *      set status='resting', close the stream, exit 0. K8s deletes
  *      the Pod. PVC stays.
  *   6. SIGTERM (k8s draining the node): finish current turn, exit 0.
@@ -17,10 +17,10 @@
  * turn before the next.
  *
  * Required env (injected by the orchestrator at pod-spawn time):
- *   CUMORA_AGENT_ID            which agent this Pod IS
- *   CUMORA_AGENT_RUNTIME_URL   server origin + /runtime suffix
- *   CUMORA_AGENT_RUNTIME_TOKEN signed JWT pinning agentId + companyId
- *   CUMORA_AGENT_IDLE_MS       idle timeout (ms); default 10 min
+ *   LINGXILOOP_AGENT_ID            which agent this Pod IS
+ *   LINGXILOOP_AGENT_RUNTIME_URL   server origin + /runtime suffix
+ *   LINGXILOOP_AGENT_RUNTIME_TOKEN signed JWT pinning agentId + companyId
+ *   LINGXILOOP_AGENT_IDLE_MS       idle timeout (ms); default 10 min
  *   OPENAI_API_KEY             agent's LLM key
  *
  * Exit codes:
@@ -46,7 +46,7 @@ interface RunnerState {
   /** True once an SSE 'wake' or 'steer' event has arrived from the
    *  server. The bootstrap drain at SSE-attach does NOT flip this —
    *  it's specifically "did the server tell us there's work AFTER we
-   *  subscribed?" If still false after CUMORA_AGENT_NO_WORK_MS, the
+   *  subscribed?" If still false after LINGXILOOP_AGENT_NO_WORK_MS, the
    *  no-work-exit path fires to free this pod's /dev/fuse slot for
    *  another agent. See FUSE-cap incident postmortem 2026-05-20. */
   firstWakeReceived: boolean
@@ -329,7 +329,7 @@ async function gracefulExit(reason: string, finalStatus: 'resting' | null): Prom
   }
   if (finalStatus) {
     try {
-      const agentId = process.env.CUMORA_AGENT_ID
+      const agentId = process.env.LINGXILOOP_AGENT_ID
       if (agentId) await runtime.setStatus(agentId, finalStatus)
     } catch (err) {
       console.warn(`[pod-agent] failed to set status=${finalStatus}:`, err instanceof Error ? err.message : String(err))
@@ -348,13 +348,13 @@ async function gracefulExit(reason: string, finalStatus: 'resting' | null): Prom
 }
 
 async function main(): Promise<void> {
-  const agentId = process.env.CUMORA_AGENT_ID
-  const url = process.env.CUMORA_AGENT_RUNTIME_URL
-  const token = process.env.CUMORA_AGENT_RUNTIME_TOKEN
-  const idleMs = Number(process.env.CUMORA_AGENT_IDLE_MS ?? 3 * 60_000)
-  const noWorkMs = Number(process.env.CUMORA_AGENT_NO_WORK_MS ?? 90_000)
+  const agentId = process.env.LINGXILOOP_AGENT_ID
+  const url = process.env.LINGXILOOP_AGENT_RUNTIME_URL
+  const token = process.env.LINGXILOOP_AGENT_RUNTIME_TOKEN
+  const idleMs = Number(process.env.LINGXILOOP_AGENT_IDLE_MS ?? 3 * 60_000)
+  const noWorkMs = Number(process.env.LINGXILOOP_AGENT_NO_WORK_MS ?? 90_000)
   if (!agentId || !url || !token) {
-    console.error('[pod-agent] missing env: CUMORA_AGENT_ID / CUMORA_AGENT_RUNTIME_URL / CUMORA_AGENT_RUNTIME_TOKEN')
+    console.error('[pod-agent] missing env: LINGXILOOP_AGENT_ID / LINGXILOOP_AGENT_RUNTIME_URL / LINGXILOOP_AGENT_RUNTIME_TOKEN')
     process.exit(2)
   }
   console.log(`[pod-agent] starting · agent=${agentId} idleMs=${idleMs} noWorkMs=${noWorkMs} pid=${process.pid}`)
@@ -401,14 +401,14 @@ process.on('unhandledRejection', (reason, _p) => {
   void notifyAlert({
     label: 'pod.unhandledRejection',
     error: reason,
-    extras: { agentId: process.env.CUMORA_AGENT_ID },
+    extras: { agentId: process.env.LINGXILOOP_AGENT_ID },
   })
 })
 process.on('uncaughtException', (err) => {
   void notifyAlert({
     label: 'pod.uncaughtException',
     error: err,
-    extras: { agentId: process.env.CUMORA_AGENT_ID },
+    extras: { agentId: process.env.LINGXILOOP_AGENT_ID },
   })
 })
 

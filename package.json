@@ -1,11 +1,11 @@
 {
   "name": "lingxiloop",
   "private": true,
-  "version": "0.1.64",
+  "version": "0.1.0-alpha",
   "type": "module",
   "main": "electron/main.cjs",
   "bin": {
-    "lingxiloop": "./bin/cumora"
+    "lingxiloop": "./bin/lingxiloop"
   },
   "description": "Real-time communication and collaboration for humans and AI agents.",
   "license": "MIT",
@@ -28,26 +28,30 @@
     "server:typecheck": "tsc -p server/tsconfig.json --noEmit",
     "guard:big-brain": "node scripts/guard-big-brain.mjs",
     "guard:llm-tracked": "node scripts/guard-llm-tracked.mjs",
+    "guard:brand": "node scripts/guard-brand.mjs",
+    "version:sync": "node scripts/sync-version.mjs --write",
+    "version:check": "node scripts/sync-version.mjs --check",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "test": "node --import tsx --experimental-test-module-mocks --test \"server/src/__tests__/**/*.test.ts\" \"src/**/*.test.ts\" \"workers/**/*.test.ts\"",
     "test:integration": "node server/run-integration-tests.mjs",
     "migrate": "tsx server/src/migrate-bin.ts",
-  "mvp:up": "docker compose -f docker-compose.mvp.yml up -d --build",
-  "mvp:down": "docker compose -f docker-compose.mvp.yml down",
-  "mvp:smoke": "docker compose -f docker-compose.mvp.yml exec -T lingxiloop npx tsx server/scripts/mvp-smoke.ts",
-  "mvp:ci:up": "docker compose -f docker-compose.mvp.ci.yml up -d --build",
-  "mvp:ci:down": "docker compose -f docker-compose.mvp.ci.yml down -v",
-  "mvp:ci:smoke": "docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop npx tsx server/scripts/mvp-smoke.ts",
-  "mvp:ci:fault-outage": "docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop npx tsx server/scripts/mvp-fault-outage.ts",
-  "mvp:ci:fault-redis": "docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop npx tsx server/scripts/mvp-fault-redis.ts",
-    "icons": "python3 scripts-make-mac-icon.py && npx -y electron-icon-builder -i build/icon.png -o build --flatten && node scripts-sync-electron-dev-icon.mjs",
+    "mvp:up": "docker compose -f docker-compose.mvp.yml up -d --build",
+    "mvp:down": "docker compose -f docker-compose.mvp.yml down",
+    "mvp:smoke": "docker compose -f docker-compose.mvp.yml exec -T lingxiloop npx tsx server/scripts/mvp-smoke.ts",
+    "mvp:ci:up": "docker compose -f docker-compose.mvp.ci.yml up -d --build",
+    "mvp:ci:down": "docker compose -f docker-compose.mvp.ci.yml down -v",
+    "mvp:ci:smoke": "docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop npx tsx server/scripts/mvp-smoke.ts",
+    "mvp:ci:fault-outage": "docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop npx tsx server/scripts/mvp-fault-outage.ts",
+    "mvp:ci:fault-redis": "docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop npx tsx server/scripts/mvp-fault-redis.ts",
+    "icons": "npx -y electron-icon-builder -i build/icon.png -o build --flatten && node scripts-sync-electron-dev-icon.mjs",
     "electron:dev": "concurrently -k -n web,api,electron -c blue,magenta,cyan \"npm:dev\" \"npm:server:dev\" \"wait-on tcp:5180 tcp:5181 && cross-env-shell ELECTRON_RENDERER_URL=http://localhost:5180 electron .\"",
     "electron:start": "electron .",
-    "electron:build": "npm run build && electron-builder",
-    "electron:build:mac": "npm run build && electron-builder --mac",
-    "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:linux": "npm run build && electron-builder --linux",
+    "electron:prepare": "node scripts/prepare-electron-package.mjs",
+    "electron:build": "npm run build && npm run electron:prepare && electron-builder",
+    "electron:build:mac": "npm run build && npm run electron:prepare && electron-builder --mac",
+    "electron:build:win": "npm run build && npm run electron:prepare && electron-builder --win",
+    "electron:build:linux": "npm run build && npm run electron:prepare && electron-builder --linux",
     "mobile:sync": "npm run build && npx cap sync",
     "mobile:ios": "npm run mobile:sync && npx cap open ios",
     "mobile:ios:run": "npm run mobile:sync && npx cap run ios",
@@ -131,7 +135,7 @@
     "wait-on": "^8.0.5"
   },
   "build": {
-    "appId": "org.lingxi.loop",
+    "appId": "cn.lingxilearn.loop",
     "productName": "LingxiLoop",
     "asar": true,
     "protocols": [
@@ -145,11 +149,13 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "build/icon.png",
+      "build/**/*",
       "build/tray-template*.png",
-      "package.json"
+      "package.json",
+      "node_modules/**/*"
     ],
     "directories": {
+      "app": "electron-package",
       "output": "release",
       "buildResources": "build"
     },
@@ -163,6 +169,7 @@
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "build/icons/icon.icns",
+      "artifactName": "LingxiLoop-${version}-${arch}.${ext}",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",

@@ -106,14 +106,14 @@ const CALENDAR_LOOKBEHIND_MS = 15 * 60_000
 /** Stall window: a conversation counts as "stalled" only if its last message is
  *  at least STALL_MIN_MS old (give people time to reply naturally — don't nag)
  *  and at most STALL_MAX_MS old (don't resurrect ancient threads). Env-overridable. */
-const STALL_MIN_MS = Number(process.env.CUMORA_STALL_MIN_MS) || 5 * 60_000
-const STALL_MAX_MS = Number(process.env.CUMORA_STALL_MAX_MS) || 6 * 60 * 60_000
+const STALL_MIN_MS = Number(process.env.LINGXILOOP_STALL_MIN_MS) || 5 * 60_000
+const STALL_MAX_MS = Number(process.env.LINGXILOOP_STALL_MAX_MS) || 6 * 60 * 60_000
 /** Cooldown between nudges to the SAME conversation, across ALL agents. Keyed on
  *  conversation only (NOT last-message-id) — a nudge changes the last message, so
  *  a per-message key would re-arm 5min later and nag. This guarantees a stalled
  *  conversation is nudged at most ONCE per cooldown by exactly ONE agent. Env-
  *  overridable; set very large for "one nudge per stall episode, basically once". */
-const NUDGE_COOLDOWN_MS = Number(process.env.CUMORA_NUDGE_COOLDOWN_MS) || 45 * 60_000
+const NUDGE_COOLDOWN_MS = Number(process.env.LINGXILOOP_NUDGE_COOLDOWN_MS) || 45 * 60_000
 /** SHORTER cooldown for nudges driven by the DETERMINISTIC fallback
  *  (cerebellum unavailable). Rationale: the deterministic rule is conservative
  *  on input but doesn't know whether the WOKEN agent's big brain will actually
@@ -122,7 +122,7 @@ const NUDGE_COOLDOWN_MS = Number(process.env.CUMORA_NUDGE_COOLDOWN_MS) || 45 * 6
  *  lets other members get a turn at the same stall with a different big-brain
  *  judgment. The 45min lock is right when the cerebellum SAID "yes nudge";
  *  it's wrong as the only knob for an outage-time fallback. */
-const NUDGE_COOLDOWN_FALLBACK_MS = Number(process.env.CUMORA_NUDGE_COOLDOWN_FALLBACK_MS) || 5 * 60_000
+const NUDGE_COOLDOWN_FALLBACK_MS = Number(process.env.LINGXILOOP_NUDGE_COOLDOWN_FALLBACK_MS) || 5 * 60_000
 
 /** Claim the right to nudge a stalled conversation. Returns true for the FIRST
  *  caller (across all member agents); everyone else — and the same agent on a
@@ -149,11 +149,11 @@ export async function claimStallNudge(
   // posting resets the conversation state). Classified-path nudges
   // already use the 45min cooldown so they don't need a separate cap.
   if (opts?.source === 'fallback') {
-    const declineKey = `cumora:nudge-declines:${conversationId}`
+    const declineKey = `lingxiloop:nudge-declines:${conversationId}`
     const declines = await redis.get(declineKey).then((v) => Number(v) || 0).catch(() => 0)
     if (declines >= 3) return false
   }
-  const key = `cumora:nudge:${conversationId}`
+  const key = `lingxiloop:nudge:${conversationId}`
   const cooldownMs = opts?.source === 'fallback' ? NUDGE_COOLDOWN_FALLBACK_MS : NUDGE_COOLDOWN_MS
   const ttlSec = Math.ceil(cooldownMs / 1000)
   const res = await redis.set(key, '1', 'EX', ttlSec, 'NX').catch(() => null)
@@ -164,7 +164,7 @@ export async function claimStallNudge(
     // tracks "fallback claims granted without a follow-on post" — we can't
     // know whether the agent posted until later; the cleaner-on-post path
     // (resetStallNudgeDeclines) handles the truthing.
-    const declineKey = `cumora:nudge-declines:${conversationId}`
+    const declineKey = `lingxiloop:nudge-declines:${conversationId}`
     await redis.multi()
       .incr(declineKey)
       .expire(declineKey, Math.ceil(NUDGE_COOLDOWN_MS / 1000))
@@ -181,7 +181,7 @@ export async function claimStallNudge(
  *  state = new budget. Fire-and-forget. */
 export async function resetStallNudgeDeclines(conversationId: string): Promise<void> {
   if (!conversationId) return
-  await redis.del(`cumora:nudge-declines:${conversationId}`).catch(() => null)
+  await redis.del(`lingxiloop:nudge-declines:${conversationId}`).catch(() => null)
 }
 
 /** Pull cards assigned to (or @-mentioning) the agent in non-done
@@ -400,7 +400,7 @@ export async function classifyAgendaActionable(args: {
   }
   const rendered = renderAgendaForClassifier(agenda)
   const styleHint = (persona.style ?? '').slice(0, 400)
-  const instructions = `You are Cumora's heartbeat agenda triage. Given an agent's currently-assigned Kanban cards and their currently-due calendar events, decide whether the agent should wake up RIGHT NOW to act on something, or stay quiet.
+  const instructions = `You are LingxiLoop's heartbeat agenda triage. Given an agent's currently-assigned Kanban cards and their currently-due calendar events, decide whether the agent should wake up RIGHT NOW to act on something, or stay quiet.
 
 Decide "actionable: true" only when at least one item is concrete, fresh, AND clearly belongs to this agent's role. Reject:
 - vague brainstorming cards with no owner action
@@ -526,7 +526,7 @@ export function renderAgendaBrief(agenda: AgentAgenda, focus: string): string {
       if (c.description) lines.push(`    ${c.description.replace(/\n/g, ' ').slice(0, 200)}`)
     }
     lines.push('')
-    lines.push(`Inspect with: bash("cumora kanban show <board_id>") or bash("cumora card show <card_id>").`)
+    lines.push(`Inspect with: bash("lingxiloop kanban show <board_id>") or bash("lingxiloop card show <card_id>").`)
   }
   if (agenda.events.length > 0) {
     if (lines.length > 0) lines.push('')
@@ -543,7 +543,7 @@ export function renderAgendaBrief(agenda: AgentAgenda, focus: string): string {
       lines.push(`- ${s.conversationId} [${s.kind}] "${s.title ?? ''}" — ${s.lastAuthorIsSelf ? 'YOU spoke last' : `${s.lastAuthorName} spoke last`}, ${s.minutesSilent}m ago. Recent:`)
       for (const ln of (s.recentTail || s.lastBody).split('\n')) lines.push(`    ${ln}`)
     }
-    lines.push(`If (and ONLY if) one is genuinely unfinished and someone is waiting: read the room (\`cumora messages <id>\`), then send AT MOST ONE message — answer it if it needs your answer, or a single brief nudge. Never nag, never pile on, never revive a finished thread.`)
+    lines.push(`If (and ONLY if) one is genuinely unfinished and someone is waiting: read the room (\`lingxiloop messages <id>\`), then send AT MOST ONE message — answer it if it needs your answer, or a single brief nudge. Never nag, never pile on, never revive a finished thread.`)
   }
   return lines.join('\n')
 }

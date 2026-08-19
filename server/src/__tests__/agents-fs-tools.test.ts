@@ -24,7 +24,7 @@ let tmpRoot = ''
 let ns: FsNamespace
 
 beforeEach(async () => {
-  tmpRoot = await mkdtemp(join(tmpdir(), 'cumora-fs-test-'))
+  tmpRoot = await mkdtemp(join(tmpdir(), 'lingxiloop-fs-test-'))
   ns = {
     agentId: 'test-agent',
     runId: 'test-run',
@@ -98,7 +98,7 @@ test('write_file: overwrites an existing file', async () => {
 })
 
 test('write_file: empty content writes an empty file (legitimate use)', async () => {
-  // E.g. `cumora memory note ""` from a misbehaving CLI invocation —
+  // E.g. `lingxiloop memory note ""` from a misbehaving CLI invocation —
   // we still write the row but with empty content.
   const r = await tWriteFile({ path: 'empty.txt', content: '' }, ns)
   assert.equal(r.ok, true)

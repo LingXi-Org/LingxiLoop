@@ -180,7 +180,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                       Email this invite to them
                     </span>
                     <span className="block text-[11.5px] text-ink-400 font-display italic mt-0.5 leading-snug">
-                      We'll send a short note from <b className="not-italic text-ink-600">invites@cumora.ai</b> with your name on it.
+                      We'll send a short invitation email with your name on it.
                       Replies go to your inbox. Uncheck if you'd rather share the link yourself.
                     </span>
                   </span>

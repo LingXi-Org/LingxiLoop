@@ -5,7 +5,7 @@
  *   - Surface area is tiny (counters only — no histograms / summaries
  *     yet) so the dep saves <100 lines.
  *   - Prom-client's reset semantics + global registry don't compose
- *     cleanly with the rest of cumora's module-level singletons.
+ *     cleanly with the rest of lingxiloop's module-level singletons.
  *   - We can keep all metric names + labels strictly typed in one file,
  *     which makes "which counters exist" greppable.
  *

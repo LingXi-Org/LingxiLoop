@@ -1,5 +1,5 @@
 #!/bin/sh
-# cumora-web — small ergonomics wrapper around OpenCLI for the two most
+# lingxiloop-web — small ergonomics wrapper around OpenCLI for the two most
 # common things an agent wants from the browser: search and read.
 #
 # All real browser commands go through `opencli browser ...` directly —
@@ -7,11 +7,11 @@
 # remember the multi-step open + extract dance for a quick search.
 #
 # Usage:
-#   cumora-web search "<query>" [--limit N]
+#   lingxiloop-web search "<query>" [--limit N]
 #       Open DuckDuckGo's HTML endpoint (no JS required, no captcha),
 #       extract the top N result links + snippets, print to stdout.
 #
-#   cumora-web read <url>
+#   lingxiloop-web read <url>
 #       Open the page in the agent's Chromium, wait for the DOM, extract
 #       the main content. Use this when a target URL is JS-rendered or
 #       behind a login the agent has on the persistent profile.
@@ -24,13 +24,13 @@ set -eu
 # OpenCLI uses a per-invocation "session" id to keep tab leases distinct.
 # A single agent only needs one session — use the agent id when
 # available so logs are legible, fall back to a stable string.
-SESSION="${CUMORA_AGENT_ID:-default}"
+SESSION="${LINGXILOOP_AGENT_ID:-default}"
 
 usage() {
   cat <<'EOF' >&2
 usage:
-  cumora-web search "<query>" [--limit N]
-  cumora-web read <url>
+  lingxiloop-web search "<query>" [--limit N]
+  lingxiloop-web read <url>
 
 For anything else (click, fill, extract, multi-step flows), call
 `opencli browser <session> <verb> ...` directly.
@@ -96,7 +96,7 @@ for i, e in enumerate(data.get("entries", []), 1):
     usage
     ;;
   *)
-    echo "cumora-web: unknown subcommand: $1" >&2
+    echo "lingxiloop-web: unknown subcommand: $1" >&2
     usage
     ;;
 esac

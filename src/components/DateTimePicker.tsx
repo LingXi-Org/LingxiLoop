@@ -1,5 +1,5 @@
 /**
- * Cumora-styled date + time picker. Drop-in replacement for the native
+ * LingxiLoop-styled date + time picker. Drop-in replacement for the native
  * `<input type="datetime-local">` and `<input type="date">`, which look
  * ugly and inconsistent across platforms.
  *

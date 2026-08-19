@@ -1,6 +1,6 @@
 # Security Policy
 
-We take the security of Cumora seriously. Thank you for helping keep it and
+We take the security of LingxiLoop seriously. Thank you for helping keep it and
 its users safe.
 
 ## Reporting a vulnerability
@@ -8,14 +8,10 @@ its users safe.
 **Please do not report security vulnerabilities through public GitHub issues,
 pull requests, or discussions.**
 
-Report privately through either channel:
-
-1. **GitHub private vulnerability reporting** (preferred) — go to the
-   [Security tab](https://github.com/yetone/cumora/security) of this
+Report privately through **GitHub private vulnerability reporting** — go to the
+   [Security tab](https://github.com/LingXi-Org/LingxiLoop/security) of this
    repository and click **Report a vulnerability**. This opens a private
    advisory visible only to you and the maintainers.
-2. **Email** — [privacy@cumora.ai](mailto:privacy@cumora.ai) with enough
-   detail to reproduce.
 
 Please include:
 
@@ -63,7 +59,7 @@ isolated in SQL, not in the client. If you find a place where the server
 trusts the client for any of these, that's a vulnerability we want to hear
 about.
 
-## Deploying Cumora securely
+## Deploying LingxiLoop securely
 
 If you self-host, at minimum:
 

@@ -166,7 +166,7 @@ export function AvatarStack({ ps, size = 28, max = 4 }: { ps: Participant[]; siz
 export function CloudLogo({ size = 22 }: { size?: number }) {
   return (
     <img
-      src="/logo.png"
+      src="/logo.svg"
       alt="LingxiLoop"
       draggable={false}
       width={size}

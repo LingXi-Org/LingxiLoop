@@ -2,14 +2,14 @@ import UIKit
 import Capacitor
 
 /**
- * SceneDelegate — required so `cumora://` deep links reach Capacitor
+ * SceneDelegate — required so `lingxiloop://` deep links reach Capacitor
  * when the app is already running. iOS 13+ delivers URL opens to a
  * running app via `scene(_:openURLContexts:)` (NOT
  * `AppDelegate.application(_:open:)`). Capacitor's `appUrlOpen` event
  * is wired to NSNotificationCenter; we just bridge the scene callback
  * into `ApplicationDelegateProxy` and the JS layer picks it up.
  *
- * Without this class, cumora:// URLs fired while the WebView is in
+ * Without this class, lingxiloop:// URLs fired while the WebView is in
  * the foreground (e.g. the OAuth redirect from SFSafariViewController)
  * are silently dropped by iOS and our `@capacitor/app` listener never
  * fires. The Swift NSLog below makes the bridge easy to verify in
@@ -24,19 +24,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to do anything here besides accept the scene — Capacitor's
         // bridge controller is already wired into the storyboard.
         if let urlContext = connectionOptions.urlContexts.first {
-            NSLog("[Cumora] SceneDelegate willConnect url=%@", urlContext.url.absoluteString)
+            NSLog("[LingxiLoop] SceneDelegate willConnect url=%@", urlContext.url.absoluteString)
             ApplicationDelegateProxy.shared.application(UIApplication.shared, open: urlContext.url, options: [:])
         }
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        // The hot path — fired when iOS routes a `cumora://...` URL to
+        // The hot path — fired when iOS routes a `lingxiloop://...` URL to
         // an already-running app instance. Capacitor's
         // ApplicationDelegateProxy posts the
         // `capacitorOpenURLNotification` that @capacitor/app subscribes
         // to, which becomes the `appUrlOpen` event in JS.
         guard let urlContext = URLContexts.first else { return }
-        NSLog("[Cumora] SceneDelegate openURLContexts url=%@", urlContext.url.absoluteString)
+        NSLog("[LingxiLoop] SceneDelegate openURLContexts url=%@", urlContext.url.absoluteString)
         ApplicationDelegateProxy.shared.application(UIApplication.shared, open: urlContext.url, options: [:])
     }
 

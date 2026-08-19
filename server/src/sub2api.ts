@@ -2,10 +2,10 @@
  * sub2api gateway — thin admin SDK + provisioning helpers.
  *
  * sub2api (https://github.com/Wei-Shaw/sub2api) is the LLM quota
- * gateway sitting between cumora-server and OpenAI. Each cumora user
+ * gateway sitting between lingxiloop-server and OpenAI. Each lingxiloop user
  * gets a mirrored sub2api account + API key + group assignment. All
  * LLM calls flow through sub2api so quotas are enforced at the
- * gateway layer rather than scattered through cumora-server.
+ * gateway layer rather than scattered through lingxiloop-server.
  *
  * Provisioning flow (`provisionUser`) — every step uses the admin
  * x-api-key; no auth endpoint is ever touched:
@@ -40,7 +40,7 @@ export interface ProvisionResult {
   groupId: number
 }
 
-/** Translate cumora's soft tier label to sub2api's numeric group id. */
+/** Translate lingxiloop's soft tier label to sub2api's numeric group id. */
 function tierToGroupId(tier: Tier): number {
   switch (tier) {
     case 'free': return env.SUB2API_TIER_FREE_GROUP_ID
@@ -106,17 +106,17 @@ interface AdminAPIKeyList   { items: AdminAPIKeyRow[]; total: number; page: numb
 
 /** End-to-end: create sub2api user + log in + mint key. Returns the
  *  numeric user id and the raw API key, both to be persisted on the
- *  cumora users row. On any step failure, throws — caller decides
+ *  lingxiloop users row. On any step failure, throws — caller decides
  *  whether to swallow (we do during OAuth signup to never block login).
  *
- *  We mirror the cumora user with their REAL email. sub2api's user
+ *  We mirror the lingxiloop user with their REAL email. sub2api's user
  *  list is the operator's source of truth for "who is on this
  *  platform" — showing synthetic addresses defeats that. The sub2api
  *  admin account is provisioned out of the way (set ADMIN_EMAIL on
- *  the sub2api deployment to something like `admin@cumora.local`) so
+ *  the sub2api deployment to something like `admin@lingxiloop.local`) so
  *  there's no collision with real user emails. */
 export async function provisionUser(args: {
-  cumoraUserId: string
+  lingxiloopUserId: string
   email: string
   displayName: string
   tier?: Tier
@@ -145,9 +145,9 @@ export async function provisionUser(args: {
         // group access. They'll get gated until SUB2API_TIER_*_GROUP_ID
         // is configured. Better than refusing signup.
         allowed_groups: groupId > 0 ? [groupId] : [],
-        // Tag the sub2api row with the cumora user id so the operator
+        // Tag the sub2api row with the lingxiloop user id so the operator
         // can grep / trace either direction.
-        notes: `cumora user ${args.cumoraUserId}`,
+        notes: `lingxiloop user ${args.lingxiloopUserId}`,
       }),
     })
   } catch (e) {
@@ -185,7 +185,7 @@ export async function provisionUser(args: {
           user_id: created.id,
           group_id: groupId,
           validity_days: 3650,
-          notes: 'cumora auto-provision',
+          notes: 'lingxiloop auto-provision',
         }),
       })
     } catch (e) {
@@ -207,7 +207,7 @@ export async function provisionUser(args: {
   const apiKey = await adminFetch<ApiKeyResponse>(`/api/v1/admin/users/${created.id}/api-keys`, {
     method: 'POST',
     body: JSON.stringify({
-      name: `cumora · ${args.displayName}`,
+      name: `lingxiloop · ${args.displayName}`,
       // Bind the key to the user's allowed group at creation time so
       // upstream calls are gated immediately. If groupId is 0 the
       // sub2api side will refuse upstream calls anyway.
@@ -260,7 +260,7 @@ interface AdminSubscriptionRow {
 }
 
 const TIER_SUBSCRIPTION_VALIDITY_DAYS = 3650
-const TIER_SUBSCRIPTION_NOTES = 'cumora auto-provision'
+const TIER_SUBSCRIPTION_NOTES = 'lingxiloop auto-provision'
 
 function configuredTierGroupIds(): Set<number> {
   return new Set([
@@ -293,7 +293,7 @@ export async function getUserQuota(sub2apiUserId: number): Promise<QuotaSnapshot
   const active = rows.filter((r) => r.status === 'active')
   if (active.length === 0) return null
   // Pick the "most generous" subscription as the visible quota. sub2api
-  // technically allows multiple active groups but a cumora user almost
+  // technically allows multiple active groups but a lingxiloop user almost
   // always has exactly one (their tier).
   active.sort((a, b) => (b.group?.monthly_limit_usd ?? 0) - (a.group?.monthly_limit_usd ?? 0))
   const r = active[0]
@@ -324,11 +324,11 @@ export async function getUserQuota(sub2apiUserId: number): Promise<QuotaSnapshot
 /** Tier change. Idempotent: re-calling with the same tier is fine.
  *
  * sub2api's `replace-group` endpoint is only for non-subscription
- * exclusive groups. Cumora's tiers are subscription groups, so tier
+ * exclusive groups. LingxiLoop's tiers are subscription groups, so tier
  * changes must keep three records in sync:
  *   1. target user subscription is active,
  *   2. the user's API keys point at the target group,
- *   3. stale Cumora tier subscriptions are revoked so quota reads don't
+ *   3. stale LingxiLoop tier subscriptions are revoked so quota reads don't
  *      keep seeing the old tier.
  */
 export async function setUserTier(sub2apiUserId: number, tier: Tier): Promise<void> {

@@ -52,13 +52,13 @@ const model = process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-2'
 /* ============== Hero prompt ==============
  *
  * Goal: an atmospheric brand banner for a software product called
- * Cumora. The name nods to cumulus → clouds; the brand palette is sky
+ * LingxiLoop. The name nods to cumulus → clouds; the brand palette is sky
  * blue + dusty wisteria purple + warm coral + cream paper. Tone is
  * "an elegant, contemplative place where small teams quietly gather".
  *
  * Anti-goals: no characters, no UI mockups, no literal text on the
  * canvas, no harsh corporate stock-art gradients, no logos. */
-const HERO_PROMPT = `A serene wide-cinematic hero illustration for a software product named Cumora — a calm place where small teams of thinkers gather.
+const HERO_PROMPT = `A serene wide-cinematic hero illustration for a software product named LingxiLoop — a calm place where small teams of thinkers gather.
 
 Subject: a painterly cloudscape at the soft hour between dawn and morning. Layered cumulus clouds drift across an expansive sky in slow, sculptural formations. The horizon is barely visible, dissolving into mist. The composition has depth — distant clouds smaller and cooler, foreground clouds larger and warmer-lit — drawing the eye into the scene.
 

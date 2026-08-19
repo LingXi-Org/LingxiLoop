@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react'
 import path from 'node:path'
 
 // Vite proxy target. Default points at the local dev server; set
-// CUMORA_DEV_API_TARGET=https://api.cumora.ai (no trailing slash) to
+// LINGXILOOP_DEV_API_TARGET=https://loop.example.com (no trailing slash) to
 // run the dev renderer against production without rebuilding.
-const HTTP_TARGET = process.env.CUMORA_DEV_API_TARGET || 'http://localhost:5181'
+const HTTP_TARGET = process.env.LINGXILOOP_DEV_API_TARGET || 'http://localhost:5181'
 const WS_TARGET = HTTP_TARGET.replace(/^http/, 'ws')
 
 export default defineConfig({
@@ -13,7 +13,7 @@ export default defineConfig({
   // The renderer uses relative URLs through the Vite proxy, but commands
   // copied from the UI run outside that proxy and need the API origin.
   define: {
-    'import.meta.env.VITE_CUMORA_DEV_API_TARGET': JSON.stringify(HTTP_TARGET),
+    'import.meta.env.VITE_LINGXILOOP_DEV_API_TARGET': JSON.stringify(HTTP_TARGET),
   },
   resolve: {
     alias: {

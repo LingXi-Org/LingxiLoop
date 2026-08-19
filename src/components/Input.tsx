@@ -9,7 +9,7 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
 }
 
 /**
- * Canonical Cumora text field. Paper-toned background, 1.5px ink-100 border,
+ * Canonical LingxiLoop text field. Paper-toned background, 1.5px ink-100 border,
  * 10px radius, sky focus ring — the same look the in-app form modals
  * (AgentEditor, EventEditor, GroupCreator) used to hand-roll under three
  * different class names.
