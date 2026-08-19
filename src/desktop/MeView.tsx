@@ -17,28 +17,28 @@ type Tab = (typeof tabs)[number]
 
 const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: string; sub: string; default: boolean }> }> = [
   {
-    title: 'Notifications',
+    title: '通知',
     items: [
-      { key: 'notify.group_pulled', lbl: 'When an agent pulls a group with you in it', sub: 'always · never · only urgent', default: true },
-      { key: 'notify.whisper_mention', lbl: 'When a whisper mentions you', sub: 'always · digest · never', default: true },
-      { key: 'notify.convene_called', lbl: 'When a Convene session is called', sub: 'always · never', default: true },
-      { key: 'notify.daily_summary', lbl: 'Daily summary of overnight agent activity', sub: '8:00am local time', default: false },
+      { key: 'notify.group_pulled', lbl: 'Agent 邀请你加入群聊时', sub: '始终 · 从不 · 仅紧急情况', default: true },
+      { key: 'notify.whisper_mention', lbl: '私聊中提及你时', sub: '始终 · 摘要 · 从不', default: true },
+      { key: 'notify.convene_called', lbl: '有人发起协作会话时', sub: '始终 · 从不', default: true },
+      { key: 'notify.daily_summary', lbl: 'Agent 夜间活动每日摘要', sub: '当地时间上午 8:00', default: false },
     ],
   },
   {
-    title: 'Look & feel',
+    title: '外观与体验',
     items: [
-      { key: 'ui.reduce_motion', lbl: 'Reduce motion', sub: 'fewer animations', default: false },
-      { key: 'ui.typing_indicators', lbl: 'Show typing indicators', sub: 'see when agents are drafting', default: true },
-      { key: 'ui.thoughts_in_main', lbl: 'Show "thinking aloud" snippets in main chat', sub: 'usually private to whispers', default: false },
+      { key: 'ui.reduce_motion', lbl: '减少动态效果', sub: '减少界面动画', default: false },
+      { key: 'ui.typing_indicators', lbl: '显示输入状态', sub: '查看 Agent 是否正在组织回复', default: true },
+      { key: 'ui.thoughts_in_main', lbl: '在主聊天中显示思考片段', sub: '通常仅在私聊中显示', default: false },
     ],
   },
   {
-    title: 'Privacy',
+    title: '隐私',
     items: [
-      { key: 'priv.allow_silent_whispers', lbl: 'Let agents whisper without your peek', sub: 'they still log to your transcript', default: true },
-      { key: 'priv.allow_new_tools', lbl: 'Let agents call new tools autonomously', sub: 'with the permissions you\'ve granted', default: true },
-      { key: 'priv.allow_human_invites', lbl: 'Let agents add humans to groups', sub: 'with your consent each time', default: false },
+      { key: 'priv.allow_silent_whispers', lbl: '允许 Agent 自主私聊', sub: '对话仍会记录在你的会话中', default: true },
+      { key: 'priv.allow_new_tools', lbl: '允许 Agent 自主调用新工具', sub: '仅限你已授予的权限', default: true },
+      { key: 'priv.allow_human_invites', lbl: '允许 Agent 邀请成员加入群聊', sub: '每次都需要你的同意', default: false },
     ],
   },
 ]
@@ -63,7 +63,7 @@ function ProfileTab() {
   const providers = authUser.providers ?? []
   return (
     <div className="space-y-6">
-      <Section title="↳ Identity">
+      <Section title="↳ 身份信息">
         <div className="bg-cloud rounded-[14px] p-5 flex items-start gap-5"
           style={{ border: '1px solid var(--ink-100)' }}>
           {meParticipant
@@ -83,13 +83,13 @@ function ProfileTab() {
         </div>
       </Section>
 
-      <Section title="↳ Session">
+      <Section title="↳ 登录会话">
         <div className="bg-cloud rounded-[14px] p-5 flex items-center justify-between gap-4"
           style={{ border: '1px solid var(--ink-100)' }}>
           <div className="min-w-0">
-            <div className="font-display text-[14px] text-ink-800">Signed in to <span className="font-mono text-[12px]">{serverOrigin}</span></div>
+            <div className="font-display text-[14px] text-ink-800">当前登录到 <span className="font-mono text-[12px]">{serverOrigin}</span></div>
             <div className="font-display italic text-[12px] text-ink-400 mt-0.5">
-              Signing out clears the local token and revokes this session on the server.
+              退出登录会清除本地凭据，并在服务器端撤销当前会话。
             </div>
           </div>
           <button
@@ -97,7 +97,7 @@ function ProfileTab() {
             onClick={signOut}
             className="shrink-0 h-9 px-4 rounded-[8px] bg-ink-800 hover:bg-ink-900 text-white text-[13px] font-display transition-colors"
           >
-            Sign out
+            退出登录
           </button>
         </div>
       </Section>
@@ -128,15 +128,15 @@ function AboutSection() {
   if (!version) return null
 
   return (
-    <Section title="↳ About">
+    <Section title="↳ 关于">
       <div className="bg-cloud rounded-[14px] p-5 flex items-center justify-between gap-4"
         style={{ border: '1px solid var(--ink-100)' }}>
         <div className="min-w-0">
           <div className="font-display text-[14px] text-ink-800">LingxiLoop <span className="font-mono text-[12px]">v{version}</span></div>
           <div className="font-display italic text-[12px] text-ink-400 mt-0.5">
             {supported
-              ? 'Auto-update checks daily. You\'ll see a banner when a new version is ready.'
-              : 'Auto-update is not available in this build (open the dialog to see why).'}
+              ? '每天自动检查更新，新版本可用时会显示提示。'
+              : '此版本不支持自动更新，可打开更新窗口查看详情。'}
           </div>
         </div>
         <button
@@ -145,7 +145,7 @@ function AboutSection() {
           className="shrink-0 h-9 px-4 rounded-[8px] text-[13px] font-display transition-colors text-white"
           style={{ background: 'var(--skype)' }}
         >
-          Check for updates
+          检查更新
         </button>
       </div>
     </Section>
@@ -163,9 +163,9 @@ function AboutSection() {
 type PeriodKey = 'daily' | 'weekly' | 'monthly'
 
 const PERIOD_META: Array<{ key: PeriodKey; label: string; sub: string }> = [
-  { key: 'daily',   label: 'Daily',   sub: 'rolls over at local midnight' },
-  { key: 'weekly',  label: 'Weekly',  sub: 'rolls over weekly' },
-  { key: 'monthly', label: 'Monthly', sub: 'rolls over monthly' },
+  { key: 'daily',   label: '每日',   sub: '当地时间零点重置' },
+  { key: 'weekly',  label: '每周',   sub: '每周重置' },
+  { key: 'monthly', label: '每月', sub: '每月重置' },
 ]
 
 function fmtUsd(n: number): string {
@@ -270,13 +270,13 @@ function UsageTab() {
   if (state.kind === 'loading') {
     return (
       <div className="space-y-6">
-        <Section title="↳ Quota">
+        <Section title="↳ 用量额度">
           <div className="grid grid-cols-3 gap-3">
             {PERIOD_META.map((p) => (
               <div key={p.key} className="bg-cloud rounded-[14px] p-5 h-[140px]"
                 style={{ border: '1px solid var(--ink-100)' }}>
                 <div className="font-display font-semibold text-[14px] text-ink-300">{p.label}</div>
-                <div className="font-display italic text-[12px] text-ink-300 mt-2">loading…</div>
+                <div className="font-display italic text-[12px] text-ink-300 mt-2">加载中…</div>
               </div>
             ))}
           </div>
@@ -291,12 +291,12 @@ function UsageTab() {
         <Section title="↳ Quota">
           <div className="bg-cloud rounded-[14px] p-6 text-center"
             style={{ border: '1px solid var(--ink-100)' }}>
-            <div className="font-display text-[14px] text-ink-700 mb-1">Couldn't fetch your quota</div>
+            <div className="font-display text-[14px] text-ink-700 mb-1">无法获取用量额度</div>
             <div className="font-display italic text-[12px] text-coral-deep mb-3">{state.message}</div>
             <button onClick={load}
               className="px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-white"
               style={{ background: 'var(--skype)' }}>
-              Try again
+              重试
             </button>
           </div>
         </Section>
@@ -386,9 +386,9 @@ function TrustTab() {
 
   return (
     <div className="space-y-6">
-      <Section title="↳ Per-agent autonomy">
+      <Section title="↳ Agent 自主权">
         <div className="text-[13px] text-ink-500 leading-[1.55] mb-4 max-w-2xl font-display italic">
-          Each agent has a threshold for acting on their own — pulling groups, kicking off tools, whispering peers. Adjust per agent if their judgment doesn't match yours.
+          每个 Agent 都有独立的自主行动阈值，包括发起群聊、调用工具和联系其他 Agent。你可以根据其表现分别调整。
         </div>
         <div className="space-y-2">
           {agents.map((a) => {
@@ -405,7 +405,7 @@ function TrustTab() {
                 </div>
                 <div className="min-w-0">
                   <div className="text-[11px] text-ink-500 mb-1.5 flex justify-between">
-                    <span>autonomy threshold</span>
+                    <span>自主行动阈值</span>
                     <span className="font-mono text-[11px] font-semibold text-ink-700">{trust.toFixed(2)}</span>
                   </div>
                   <input type="range" min={0} max={1} step={0.01} value={trust}
@@ -418,7 +418,7 @@ function TrustTab() {
         </div>
       </Section>
 
-      <Section title="↳ Pulled-group track records">
+      <Section title="↳ 群聊协作记录">
         <div className="grid grid-cols-3 gap-3">
           {agents.slice(0, 3).map((a) => {
             const ar = autonomy[a.id]
@@ -430,9 +430,9 @@ function TrustTab() {
                   <div className="font-bold text-[13px] text-ink-900">{a.name}</div>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 text-center">
-                  <Stat n={ar?.pulled ?? 0} l="pulled" tone="good" />
-                  <Stat n={ar?.led ?? 0} l="led" tone="good" />
-                  <Stat n={ar?.dissolved ?? 0} l="noise" tone="warn" />
+                  <Stat n={ar?.pulled ?? 0} l="发起" tone="good" />
+                  <Stat n={ar?.led ?? 0} l="主持" tone="good" />
+                  <Stat n={ar?.dissolved ?? 0} l="无效" tone="warn" />
                 </div>
               </div>
             )
@@ -490,16 +490,16 @@ function ProjectsTab() {
 
   return (
     <div className="space-y-6">
-      <Section title="↳ Projects">
+      <Section title="↳ 项目">
         <div className="text-[13px] text-ink-500 leading-[1.55] mb-4 max-w-2xl font-display italic">
-          Projects bundle related groups under a name + a tint. Attach a group to a project so the team and the agents both see what scope the conversation belongs to.
+          项目可将相关群聊归入统一名称与颜色标识，帮助成员和 Agent 清楚理解每段对话的工作范围。
         </div>
 
         <div className="space-y-2">
           {visible.length === 0 && !creating && (
             <div className="bg-cloud rounded-[12px] p-6 text-center text-[13px] text-ink-500 italic font-display"
               style={{ border: '1px dashed var(--ink-100)' }}>
-              No projects yet. Click <b className="not-italic text-skype-deep">+ New project</b> to start one.
+              暂无项目。点击 <b className="not-italic text-skype-deep">+ 新建项目</b> 开始创建。
             </div>
           )}
           {visible.map((p) => (
@@ -509,17 +509,17 @@ function ProjectsTab() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <div className="font-semibold text-[14px] text-ink-900 truncate">{p.name}</div>
-                  {p.status === 'archived' && <span className="text-[10px] text-ink-300 uppercase tracking-wider">archived</span>}
+                  {p.status === 'archived' && <span className="text-[10px] text-ink-300 uppercase tracking-wider">已归档</span>}
                 </div>
                 <div className="font-display italic text-[12px] text-ink-500 truncate">
-                  {p.description || '(no description)'}  ·  {p.conversationCount} conversation{p.conversationCount === 1 ? '' : 's'}
+                  {p.description || '暂无描述'}  ·  {p.conversationCount} 个对话
                 </div>
               </div>
               <button
                 onClick={() => archive(p.id, p.status !== 'archived')}
                 className="px-3 py-1.5 rounded-[8px] text-[11.5px] font-semibold text-ink-700 bg-paper hover:bg-sky2-50 transition"
                 style={{ border: '1px solid var(--ink-100)' }}
-              >{p.status === 'archived' ? 'Restore' : 'Archive'}</button>
+              >{p.status === 'archived' ? '恢复' : '归档'}</button>
             </div>
           ))}
         </div>
@@ -532,7 +532,7 @@ function ProjectsTab() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Project name"
+              placeholder="项目名称"
               className="w-full px-3 py-2 text-[13px] rounded outline-none"
               style={{ border: '1px solid var(--ink-100)', background: 'var(--paper)' }}
             />
@@ -540,7 +540,7 @@ function ProjectsTab() {
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Short description (optional)"
+              placeholder="简短描述（可选）"
               className="w-full px-3 py-2 text-[12.5px] rounded outline-none"
               style={{ border: '1px solid var(--ink-100)', background: 'var(--paper)' }}
             />
@@ -551,11 +551,11 @@ function ProjectsTab() {
                 disabled={!name.trim() || busy}
                 className="px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-white disabled:opacity-50"
                 style={{ background: 'var(--skype)' }}
-              >{busy ? '…' : 'Create project'}</button>
+              >{busy ? '…' : '创建项目'}</button>
               <button
                 onClick={() => { setCreating(false); setName(''); setDescription(''); setErr(null) }}
                 className="px-3 py-1.5 rounded-[8px] text-[12px] text-ink-500 hover:bg-cloud"
-              >Cancel</button>
+              >取消</button>
             </div>
           </div>
         ) : (
@@ -564,13 +564,13 @@ function ProjectsTab() {
               onClick={() => setCreating(true)}
               className="px-4 py-2 rounded-[10px] text-[12.5px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-50 transition"
               style={{ border: '1px dashed var(--sky2-300)' }}
-            >+ New project</button>
+            >+ 新建项目</button>
             {archivedCount > 0 && (
               <button
                 onClick={() => setShowArchived((v) => !v)}
                 className="text-[11.5px] text-ink-500 hover:text-skype-deep transition italic font-display"
               >
-                {showArchived ? 'Hide archived' : `Show archived (${archivedCount})`}
+                {showArchived ? '隐藏已归档项目' : `显示已归档项目（${archivedCount}）`}
               </button>
             )}
           </div>
@@ -620,15 +620,15 @@ function PreferencesTab() {
       ))}
       <SkypeSoundSection />
       {devtoolsCanEnable && (
-        <Section title="↳ Developer">
+        <Section title="↳ 开发者">
           <Checkbox
             checked={devtoolsEnabled}
             disabled={devtoolsLocal}
             onCheckedChange={(next) => { void setDevMode(next) }}
-            label="Developer mode"
+            label="开发者模式"
             description={devtoolsLocal
-              ? 'Always on while running the local development build'
-              : 'Show Observe and unlock backend-gated developer tools on this device'}
+              ? '本地开发版本中始终启用'
+              : '显示观测页面并解锁此设备上的开发工具'}
           />
         </Section>
       )}
@@ -1010,7 +1010,7 @@ export function MeView() {
               )}>
               {({ Profile: '个人资料', Usage: '用量', Computers: '设备', Projects: '项目', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
               {t === 'Computers' && hasOutdated && (
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--gold-deep)' }} title="A daemon needs updating" />
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--gold-deep)' }} title="有设备服务需要更新" />
               )}
             </button>
           ))}

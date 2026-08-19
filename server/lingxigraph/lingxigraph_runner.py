@@ -13,7 +13,9 @@ import asyncio
 import json
 import os
 import sys
-from typing import Any, Mapping
+from typing import Any, AsyncIterator, Mapping
+
+import httpx
 
 from lingxigraph import HumanMessage, create_agent
 from lingxigraph.integrations.openai_compat import OpenAICompatChatModel
@@ -154,6 +156,133 @@ async def _run(request: Mapping[str, Any]) -> dict[str, Any]:
         "reason": structured["reason"],
         "actions": structured["actions"],
         "modelCalls": model.calls,
+    }
+
+
+def _partial_json_string(raw: str, start: int) -> str:
+    """Decode the complete prefix of a possibly unfinished JSON string."""
+    out: list[str] = []
+    i = start
+    escapes = {'n': '\n', 'r': '\r', 't': '\t', 'b': '\b', 'f': '\f', '"': '"', '\\': '\\', '/': '/'}
+    while i < len(raw):
+        char = raw[i]
+        if char == '"':
+            break
+        if char != '\\':
+            out.append(char)
+            i += 1
+            continue
+        if i + 1 >= len(raw):
+            break
+        escaped = raw[i + 1]
+        if escaped == 'u':
+            value = raw[i + 2:i + 6]
+            if len(value) < 4 or any(c not in '0123456789abcdefABCDEF' for c in value):
+                break
+            out.append(chr(int(value, 16)))
+            i += 6
+            continue
+        out.append(escapes.get(escaped, escaped))
+        i += 2
+    return ''.join(out)
+
+
+def _message_send_prefixes(raw: str) -> list[tuple[int, str, str]]:
+    """Return every message.send action whose body has begun streaming."""
+    import re
+    found: list[tuple[int, str, str]] = []
+    marker = re.compile(r'"type"\s*:\s*"message\.send"')
+    for index, match in enumerate(marker.finditer(raw)):
+        tail = raw[match.end():]
+        conversation = re.search(r'"conversationId"\s*:\s*"', tail)
+        body = re.search(r'"body"\s*:\s*"', tail)
+        if not conversation or not body or body.start() < conversation.start():
+            continue
+        conversation_id = _partial_json_string(tail, conversation.end())
+        body_prefix = _partial_json_string(tail, body.end())
+        if conversation_id:
+            found.append((index, conversation_id, body_prefix))
+    return found
+
+
+async def _run_stream(request: Mapping[str, Any]) -> AsyncIterator[dict[str, Any]]:
+    """Run the production communication model as a real provider token stream.
+
+    The final structured object remains authoritative; intermediate events only
+    expose prefixes of message.send bodies for the chat presentation layer.
+    """
+    if request.get('version') != 1:
+        raise ValueError('request version must be 1')
+    agent = request.get('agent')
+    if not isinstance(agent, Mapping):
+        raise ValueError('agent is required')
+    model_name = str(agent.get('model') or '').strip()
+    system_prompt = str(request.get('systemPrompt') or '').strip()
+    context_prompt = str(request.get('contextPrompt') or '').strip()
+    if not model_name or not system_prompt or not context_prompt:
+        raise ValueError('agent.model, systemPrompt and contextPrompt are required')
+
+    schema_prompt = (
+        'Return only one JSON object matching this JSON Schema exactly. '
+        'Keep each message.send field order as type, conversationId, body so its body can be streamed. '
+        'Do not use Markdown fences. JSON Schema:\n'
+        + json.dumps(ACTION_SCHEMA, ensure_ascii=False, separators=(',', ':'))
+    )
+    base_url = os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1').rstrip('/')
+    headers = {'authorization': f"Bearer {os.getenv('OPENAI_API_KEY', '')}", 'content-type': 'application/json'}
+    payload = {
+        'model': model_name,
+        'messages': [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'system', 'content': schema_prompt},
+            {'role': 'user', 'content': context_prompt},
+        ],
+        'response_format': {'type': 'json_object'},
+        'stream': True,
+        'stream_options': {'include_usage': True},
+    }
+    raw = ''
+    emitted: dict[int, str] = {}
+    usage: Mapping[str, Any] = {}
+    timeout = float(os.getenv('LINGXIGRAPH_MODEL_TIMEOUT_SECONDS', '90'))
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        async with client.stream('POST', f'{base_url}/chat/completions', headers=headers, json=payload) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                if not line.startswith('data:'):
+                    continue
+                data = line[5:].strip()
+                if not data or data == '[DONE]':
+                    continue
+                event = json.loads(data)
+                if event.get('usage'):
+                    usage = event['usage']
+                choices = event.get('choices') or []
+                delta = choices[0].get('delta', {}).get('content') if choices else None
+                if not isinstance(delta, str) or not delta:
+                    continue
+                raw += delta
+                for action_index, conversation_id, body in _message_send_prefixes(raw):
+                    previous = emitted.get(action_index, '')
+                    if not body.startswith(previous):
+                        continue
+                    addition = body[len(previous):]
+                    if addition or action_index not in emitted:
+                        emitted[action_index] = body
+                        yield {'type': 'message.delta', 'actionIndex': action_index, 'conversationId': conversation_id, 'delta': addition}
+
+    structured = json.loads(raw)
+    if not isinstance(structured, Mapping):
+        raise ValueError('model did not return a structured object')
+    yield {
+        'type': 'result',
+        'result': {
+            'version': 1,
+            'status': structured['status'],
+            'reason': structured['reason'],
+            'actions': structured['actions'],
+            'modelCalls': [{'model': model_name, 'usage': _normalize_usage(usage)}],
+        },
     }
 
 

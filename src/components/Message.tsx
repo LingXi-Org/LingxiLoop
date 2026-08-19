@@ -1773,11 +1773,14 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
         {!isToolOnly && !isAttachOnly && !isPoll && (
           <div
             className={cn(
-              'message-bubble inline-block break-words py-2.5',
-              openMaus ? 'max-w-full px-4 text-[15px]' : 'max-w-[min(100%,620px)] px-3.5 text-[14px]',
-              isMine
-                ? 'message-bubble-user'
-                : 'message-bubble-agent'
+              'inline-block break-words',
+              msg.streaming === 'placeholder'
+                ? 'py-0.5'
+                : cn(
+                    'message-bubble py-2.5',
+                    openMaus ? 'max-w-full px-4 text-[15px]' : 'max-w-[min(100%,620px)] px-3.5 text-[14px]',
+                    isMine ? 'message-bubble-user' : 'message-bubble-agent',
+                  ),
             )}
           >
             {msg.streaming === 'placeholder' ? (
@@ -1786,16 +1789,10 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
                 aria-label={`${author.name} 正在思考`}
                 role="status"
               >
-                <span className="thinking-card-orbit" aria-hidden>
-                  <span className="thinking-card-core" />
-                </span>
-                <span className="thinking-card-copy">
-                  <span className="thinking-card-title">正在思考</span>
-                  <span className="thinking-card-subtitle">组织思路并准备回复</span>
-                </span>
                 <span className="thinking-card-dots" aria-hidden>
                   <i /><i /><i />
                 </span>
+                <span>思考中</span>
               </span>
             ) : (
               <span className={msg.streaming === 'markdown' ? 'streaming-markdown' : undefined}>

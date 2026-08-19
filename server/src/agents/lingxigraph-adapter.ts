@@ -48,6 +48,8 @@ export interface LingxiGraphAdapterOptions {
   token?: string
   timeoutMs?: number
   fetchImpl?: typeof fetch
+  /** Native provider deltas for message.send bodies from the runtime's NDJSON endpoint. */
+  onMessageDelta?: (event: { actionIndex: number; conversationId: string; delta: string }) => void | Promise<void>
 }
 
 export interface CommunicationExecutionResult {
@@ -346,7 +348,7 @@ export async function runLingxiGraph(
   try {
     let response: Response
     try {
-      response = await doFetch(new URL('/v1/turn', baseUrl), {
+      response = await doFetch(new URL(options.onMessageDelta ? '/v1/turn/stream' : '/v1/turn', baseUrl), {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -357,6 +359,39 @@ export async function runLingxiGraph(
       })
     } catch (error) {
       throw asTimeoutOrRequestError(error)
+    }
+
+    if (options.onMessageDelta) {
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '')
+        throw new Error(`LingxiGraph runtime responded ${response.status}${errorText ? `: ${errorText}` : ''}`)
+      }
+      if (!response.body) throw new Error('LingxiGraph streaming response had no body')
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffered = ''
+      let finalResult: unknown = null
+      while (true) {
+        const { done, value } = await reader.read()
+        buffered += decoder.decode(value, { stream: !done })
+        const lines = buffered.split('\n')
+        buffered = done ? '' : (lines.pop() ?? '')
+        for (const line of lines) {
+          if (!line.trim()) continue
+          const event = JSON.parse(line) as {
+            type?: string; actionIndex?: number; conversationId?: string; delta?: string; result?: unknown; error?: string
+          }
+          if (event.type === 'error') throw new Error(`LingxiGraph runtime stream failed: ${event.error ?? 'unknown error'}`)
+          if (event.type === 'message.delta' && typeof event.actionIndex === 'number' && typeof event.conversationId === 'string') {
+            await options.onMessageDelta({ actionIndex: event.actionIndex, conversationId: event.conversationId, delta: event.delta ?? '' })
+          } else if (event.type === 'result') {
+            finalResult = event.result
+          }
+        }
+        if (done) break
+      }
+      if (finalResult === null) throw new Error('LingxiGraph runtime stream ended without a result')
+      return parseLingxiGraphRunResult(finalResult)
     }
 
     let bodyText: string

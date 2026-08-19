@@ -17,9 +17,11 @@ import os
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+import json
 
-from lingxigraph_runner import _run
+from fastapi.responses import JSONResponse, StreamingResponse
+
+from lingxigraph_runner import _run, _run_stream
 
 app = FastAPI(title="lingxigraph-runtime")
 
@@ -51,3 +53,22 @@ async def turn(request: Request) -> JSONResponse:
         return JSONResponse({"error": f"{type(exc).__name__}: {exc}"}, status_code=502)
 
     return JSONResponse(result)
+
+
+@app.post('/v1/turn/stream')
+async def turn_stream(request: Request) -> StreamingResponse | JSONResponse:
+    if RUNTIME_TOKEN and request.headers.get('authorization') != f'Bearer {RUNTIME_TOKEN}':
+        return JSONResponse({'error': 'unauthorized'}, status_code=401)
+    try:
+        body: Any = await request.json()
+    except Exception as exc:
+        return JSONResponse({'error': f'invalid JSON body: {exc}'}, status_code=400)
+
+    async def events():
+        try:
+            async for event in _run_stream(body):
+                yield json.dumps(event, ensure_ascii=False, separators=(',', ':')) + '\n'
+        except Exception as exc:
+            yield json.dumps({'type': 'error', 'error': f'{type(exc).__name__}: {exc}'}, ensure_ascii=False) + '\n'
+
+    return StreamingResponse(events(), media_type='application/x-ndjson')

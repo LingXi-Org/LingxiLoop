@@ -2150,6 +2150,9 @@ ${peerWorkBlock}`.trim()
       data: { model, contextChars: contextPrompt.length }, stage: 'thinking',
     })
     const startedAt = Date.now()
+    const graphPreviews = new Map<number, {
+      messageId: string; conversationId: string; companyId: string; sequence: number
+    }>()
     const result = await runLingxiGraph({
       version: 1, runId,
       agent: { id: persona.id, name: persona.name, role: persona.role, model },
@@ -2158,6 +2161,23 @@ ${peerWorkBlock}`.trim()
       url: env.LINGXIGRAPH_URL,
       token: env.LINGXIGRAPH_TOKEN,
       timeoutMs: env.LINGXIGRAPH_RUN_TIMEOUT_MS,
+      onMessageDelta: async (event) => {
+        const target = inbox.find((message) => message.conversation_id === event.conversationId)
+        if (!target) return
+        const preview = graphPreviews.get(event.actionIndex) ?? {
+          messageId: `live:${runId}:graph:${event.actionIndex}`,
+          conversationId: event.conversationId,
+          companyId: target.company_id ?? runCompanyId,
+          sequence: Number.MAX_SAFE_INTEGER - 20_000 + event.actionIndex,
+        }
+        if (preview.conversationId !== event.conversationId) return
+        graphPreviews.set(event.actionIndex, preview)
+        await publish(CH_MESSAGE_DELTA, {
+          type: 'message.delta', conversationId: preview.conversationId,
+          messageId: preview.messageId, authorId: agentId, delta: event.delta,
+          sequence: preview.sequence, done: false, companyId: preview.companyId,
+        })
+      },
     })
     const elapsedMs = Date.now() - startedAt
     const perCallLatency = result.modelCalls.length > 0 ? Math.round(elapsedMs / result.modelCalls.length) : elapsedMs
@@ -2192,6 +2212,11 @@ ${peerWorkBlock}`.trim()
       timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
       ledger: pgActionLedger,
     })
+    await Promise.all([...graphPreviews.values()].map((preview) => publish(CH_MESSAGE_DELTA, {
+      type: 'message.delta', conversationId: preview.conversationId,
+      messageId: preview.messageId, authorId: agentId, delta: '',
+      sequence: preview.sequence, done: true, companyId: preview.companyId,
+    }).catch((error) => console.warn('[turn] graph live reply completion failed', error))))
     toolCallCount += execution.results.length
     for (const cliResult of execution.results) {
       cliSideEffectsThisTurn.push(...(cliResult.sideEffects ?? []))

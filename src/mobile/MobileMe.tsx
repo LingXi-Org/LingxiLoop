@@ -42,7 +42,7 @@ export function MobileMe() {
     return {
       id: authUser?.id ?? 'me',
       kind: 'human',
-      name: authUser?.name ?? 'You',
+      name: authUser?.name ?? '我',
       initial: (authUser?.name ?? 'Y').charAt(0).toUpperCase(),
       avatarBg: 'linear-gradient(135deg, #FF7A6B, #F4B740)',
       status: 'avail',
@@ -61,11 +61,11 @@ export function MobileMe() {
   // there but they read as personal context, not KPIs.
   const stewardLine = useMemo(() => {
     const parts: string[] = []
-    if (agents.length) parts.push(`${agents.length} agent${agents.length === 1 ? '' : 's'}`)
-    if (convoList.length) parts.push(`${convoList.length} room${convoList.length === 1 ? '' : 's'}`)
-    if (whisperList.length) parts.push(`${whisperList.length} peek${whisperList.length === 1 ? '' : 's'}`)
-    if (parts.length === 0) return 'A quiet workspace — invite some agents to get started.'
-    return `Steward of ${parts.join(' · ')}.`
+    if (agents.length) parts.push(`${agents.length} 个 Agent`)
+    if (convoList.length) parts.push(`${convoList.length} 个对话`)
+    if (whisperList.length) parts.push(`${whisperList.length} 个私聊`)
+    if (parts.length === 0) return '工作空间还很安静，邀请一些 Agent 开始协作吧。'
+    return `正在管理 ${parts.join(' · ')}`
   }, [agents.length, convoList.length, whisperList.length])
 
   return (

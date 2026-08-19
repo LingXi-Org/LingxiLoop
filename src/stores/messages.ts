@@ -639,8 +639,12 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
       streaming: x.body ? 'markdown' as const : 'placeholder' as const,
     }))
   const streamingAuthors = new Set(streaming.map((message) => message.authorId))
+  const meId = getMeId()
   const typing = (s.typing?.[convoId] ?? [])
-    .filter((authorId) => !streamingAuthors.has(authorId))
+    // The server echoes typing events to every member, including their
+    // author. Rendering our own echo created a bogus "thinking" row directly
+    // above the composer on every keystroke.
+    .filter((authorId) => authorId !== meId && !streamingAuthors.has(authorId))
     .map((authorId, index) => ({
       id: `typing:${convoId}:${authorId}`,
       conversationId: convoId,
