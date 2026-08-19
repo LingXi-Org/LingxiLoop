@@ -31,7 +31,7 @@
 import { pool } from '../src/db/pool.js'
 import {
   log as baseLog, sleep, waitForHealth, seedCompany, findOwnerDm,
-  getUnreadCursor, postMessage, waitForAgentReply,
+  getUnreadCursor, waitForCursorAdvance, postMessage, waitForAgentReply,
 } from './mvp-lib.js'
 
 const TAG = 'mvp-smoke'
@@ -94,7 +94,10 @@ async function main(): Promise<void> {
   const reply = await waitForAgentReply(token, conversationId, agentId, REPLY_TIMEOUT_MS)
   log(`agent reply received: ${reply.id} — "${reply.body}"`)
 
-  const cursorAfter = await getUnreadCursor(agentId, conversationId)
+  // markConversationRead() runs AFTER message.send commits, so the cursor
+  // write can trail the reply becoming visible by a beat — poll instead of
+  // a single point-in-time read.
+  const cursorAfter = await waitForCursorAdvance(agentId, conversationId, cursorBefore)
   if (cursorAfter === cursorBefore) {
     throw new Error(`agent unread cursor did not advance (still "${cursorBefore}") despite a completed turn`)
   }

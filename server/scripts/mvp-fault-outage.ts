@@ -30,7 +30,7 @@
 import { pool } from '../src/db/pool.js'
 import {
   log as baseLog, sleep, seedCompany, latestCompanyForPrefix, findOwnerDm,
-  getUnreadCursor, postMessage, waitForAgentReply,
+  getUnreadCursor, waitForCursorAdvance, postMessage, waitForAgentReply,
 } from './mvp-lib.js'
 
 const SLUG_PREFIX = 'mvp-fault-outage'
@@ -81,7 +81,9 @@ async function main(): Promise<void> {
   const reply = await waitForAgentReply(token, conversationId, agentId, 60_000, msgId)
   log(`agent reply received: ${reply.id} — "${reply.body}"`)
 
-  const cursorAfter = await getUnreadCursor(agentId, conversationId)
+  // See mvp-smoke.ts for why this polls instead of reading once: the
+  // cursor write trails message.send committing by a beat.
+  const cursorAfter = await waitForCursorAdvance(agentId, conversationId, cursorBefore)
   if (cursorAfter === cursorBefore) {
     throw new Error('agent unread cursor did not advance after a successful post-recovery turn')
   }

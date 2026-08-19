@@ -122,6 +122,25 @@ export async function getUnreadCursor(agentId: string, conversationId: string): 
   return rows[0]?.last_read_message_id ?? ''
 }
 
+/**
+ * markConversationRead() (server/src/agents/runtime/inproc-client.ts) runs
+ * AFTER the turn's message.send action has already committed — so the
+ * instant a caller observes the agent's reply over HTTP (e.g. via
+ * waitForAgentReply), the cursor write can still be a beat behind. Poll
+ * instead of reading once to avoid flaking on that race.
+ */
+export async function waitForCursorAdvance(
+  agentId: string, conversationId: string, notEqualTo: string, timeoutMs = 10_000,
+): Promise<string> {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    const cursor = await getUnreadCursor(agentId, conversationId)
+    if (cursor !== notEqualTo) return cursor
+    if (Date.now() > deadline) return cursor
+    await sleep(250)
+  }
+}
+
 export async function postMessage(token: string, conversationId: string, body: string): Promise<string> {
   const res = await fetch(`${BASE_URL}/api/conversations/${conversationId}/messages`, {
     method: 'POST',
