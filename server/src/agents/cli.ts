@@ -2065,12 +2065,24 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   }
   await pool.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [convoId])
 
-  // Posting auto-acks me on this conversation (I clearly saw the messages I'm replying to)
+  // Posting auto-acks me on this conversation (I clearly saw the messages I'm replying to).
+  // Anchor the cursor to the message we actually inserted instead of NOW():
+  // using wall-clock time can skip a peer message committed between our
+  // INSERT and this ack, and leaves last_read_message_id stale so a later
+  // monotonic markConversationRead() cannot repair the cursor.
   await pool.query(
-    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-     VALUES ($1, $2, NOW())
-     ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = NOW()`,
-    [me, convoId],
+    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at, last_read_message_id)
+     SELECT $1, $2, created_at, id FROM messages WHERE id = $3
+     ON CONFLICT (user_id, conversation_id) DO UPDATE SET
+       last_read_at = CASE
+         WHEN ROW(EXCLUDED.last_read_at, EXCLUDED.last_read_message_id)
+            > ROW(conversation_reads.last_read_at, conversation_reads.last_read_message_id)
+         THEN EXCLUDED.last_read_at ELSE conversation_reads.last_read_at END,
+       last_read_message_id = CASE
+         WHEN ROW(EXCLUDED.last_read_at, EXCLUDED.last_read_message_id)
+            > ROW(conversation_reads.last_read_at, conversation_reads.last_read_message_id)
+         THEN EXCLUDED.last_read_message_id ELSE conversation_reads.last_read_message_id END`,
+    [me, convoId, messageId],
   )
   // Advance the Redis "seen" boundary to my own just-inserted seq, so the
   // freshness preflight on my NEXT cumora reply compares against the post-

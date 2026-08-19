@@ -17,19 +17,20 @@
  *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/cumora_test \
  *     npm run test:integration
  */
-import { test, before, beforeEach, after } from 'node:test'
+
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
+import { after, before, beforeEach, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import type { ResponseStreamEvent } from 'openai/resources/responses/responses'
-import { pool } from '../db/pool.js'
-import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
-import { __setLlmClientOverrideForTesting } from '../llm.js'
+import { runCli } from '../agents/cli.js'
 import { __setPodToolOverrideForTesting } from '../agents/runtime/pod-tools.js'
 import type { ToolResult } from '../agents/tools-shared.js'
-import { runAgentTurn } from '../agents/turn.js'
-import { runCli } from '../agents/cli.js'
 import { tBash } from '../agents/tools-shared.js'
+import { runAgentTurn } from '../agents/turn.js'
+import { pool } from '../db/pool.js'
+import { __setLlmClientOverrideForTesting } from '../llm.js'
+import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 before(async () => {
   await ensureSchemaOnce()
@@ -928,9 +929,11 @@ test('[integration] conversation cursor advances after an explicit reply — inb
   const userMessageId = await postHuman({ conversationId, companyId, humanId, body: 'hello there' })
   // Sanity: cursor starts before the message, so the agent sees 1 unread.
   await pool.query(
-    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-     VALUES ($1, $2, '1970-01-01T00:00:00Z'::timestamptz)
-     ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = EXCLUDED.last_read_at`,
+    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at, last_read_message_id)
+     VALUES ($1, $2, '1970-01-01T00:00:00Z'::timestamptz, '')
+     ON CONFLICT (user_id, conversation_id) DO UPDATE SET
+       last_read_at = EXCLUDED.last_read_at,
+       last_read_message_id = EXCLUDED.last_read_message_id`,
     [agentId, conversationId],
   )
 
@@ -943,11 +946,11 @@ test('[integration] conversation cursor advances after an explicit reply — inb
   ])
   assert.equal(res.ok, true, `runCli reply failed: ${res.text}`)
 
-  // Confirm the agent's last_read_at moved to AT or AFTER the human's
-  // message timestamp. (cmdReply writes NOW(); the message was inserted
-  // a few ms before, so >= is the safe assertion.)
-  const { rows } = await pool.query<{ last_read_at: Date }>(
-    `SELECT last_read_at FROM conversation_reads
+  // Confirm the cursor is anchored to the reply itself. Using NOW() here
+  // would leave last_read_message_id stale and could skip a peer message
+  // committed between the reply INSERT and the cursor update.
+  const { rows } = await pool.query<{ last_read_at: Date; last_read_message_id: string }>(
+    `SELECT last_read_at, last_read_message_id FROM conversation_reads
        WHERE user_id = $1 AND conversation_id = $2`,
     [agentId, conversationId],
   )
@@ -958,4 +961,13 @@ test('[integration] conversation cursor advances after an explicit reply — inb
   const cursor = new Date(rows[0].last_read_at).getTime()
   const userMsgAt = new Date(msgRow[0].created_at).getTime()
   assert.ok(cursor >= userMsgAt, `cursor ${cursor} must be >= user message ts ${userMsgAt}`)
+  const { rows: replyRows } = await pool.query<{ id: string; created_at: Date }>(
+    `SELECT id, created_at FROM messages
+       WHERE conversation_id = $1 AND author_id = $2
+       ORDER BY sequence DESC LIMIT 1`,
+    [conversationId, agentId],
+  )
+  assert.equal(replyRows.length, 1, 'agent reply exists')
+  assert.equal(rows[0].last_read_message_id, replyRows[0].id, 'cursor id is the committed reply')
+  assert.equal(cursor, new Date(replyRows[0].created_at).getTime(), 'cursor time is the committed reply timestamp')
 })
