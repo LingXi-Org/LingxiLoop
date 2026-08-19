@@ -85,7 +85,7 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
   }, [token, setMe, setServerCapabilities, clear, markReady])
 
   // Electron-only: listen for OAuth tokens forwarded by the main
-  // process. The user clicked "Continue with Google" → we opened the
+  // process. The user clicked "使用 LingxiIdentity 继续" → we opened the
   // system browser → provider redirected through our server to
   // http://127.0.0.1:47823/auth/done → loopback page POSTed the
   // parsed fragment to /auth/token → main IPC'd here. Plant the

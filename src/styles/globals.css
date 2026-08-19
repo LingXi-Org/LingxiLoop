@@ -266,22 +266,6 @@ body {
   color: #fff;
 }
 .auth-provider-lingxi:hover { background: #0068ad; }
-.auth-provider-google {
-  background: #fff;
-  border-color: #d6dce3;
-  color: #202124;
-}
-.auth-provider-google:hover { background: #f4f7fa; }
-.auth-provider-github {
-  background: #1f2328;
-  color: #fff;
-}
-.auth-provider-github:hover { background: #2a3037; }
-.auth-provider-apple {
-  background: #000;
-  color: #fff;
-}
-.auth-provider-apple:hover { background: #171717; }
 
 /* Desktop conversation shell — intentionally scoped so the existing mobile,
    auth, admin and notification surfaces retain their current visual system. */

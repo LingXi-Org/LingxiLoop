@@ -325,7 +325,6 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     </div>
   )
 }
-
 /** Best-effort cumora:// deep link. If the OS protocol handler isn't
  *  registered, browsers fail silently (no broken-page) and the user just
  *  stays put — at which point the visible Download button below is the
@@ -434,8 +433,8 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
 }
 
 function SignInToAccept({ token }: { token: string }) {
-  const [busy, setBusy] = useState<'lingxi' | 'google' | 'github' | null>(null)
-  const go = (provider: 'lingxi' | 'google' | 'github') => {
+  const [busy, setBusy] = useState<'lingxi' | null>(null)
+  const go = (provider: 'lingxi') => {
     setBusy(provider)
     // Persist BEFORE redirect so the post-OAuth landing can resume here.
     stashPendingInvite(token)
@@ -473,24 +472,6 @@ function SignInToAccept({ token }: { token: string }) {
       >
         {busy === 'lingxi' ? '正在跳转…' : '使用 LingxiIdentity 继续'}
       </button>
-      <button
-        type="button"
-        onClick={() => go('google')}
-        disabled={busy !== null}
-        className="auth-provider-button auth-provider-google h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
-      >
-        <GoogleMark />
-        {busy === 'google' ? '正在跳转…' : '使用 Google 继续'}
-      </button>
-      <button
-        type="button"
-        onClick={() => go('github')}
-        disabled={busy !== null}
-        className="auth-provider-button auth-provider-github h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
-      >
-        <GitHubMark />
-        {busy === 'github' ? '正在跳转…' : '使用 GitHub 继续'}
-      </button>
       <div className="text-[10.5px] text-ink-300 text-center font-display italic">
         我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
       </div>
@@ -499,24 +480,5 @@ function SignInToAccept({ token }: { token: string }) {
         <GetDesktopAppLink variant="text" label="获取 LingxiLoop" />
       </div>
     </div>
-  )
-}
-
-function GoogleMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
-  )
-}
-
-function GitHubMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1-.02-1.95-3.2.69-3.88-1.54-3.88-1.54-.52-1.32-1.28-1.67-1.28-1.67-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18.92-.26 1.91-.39 2.9-.39.99 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.12 3.06.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.4-5.25 5.68.41.36.78 1.07.78 2.16 0 1.56-.01 2.81-.01 3.19 0 .31.21.67.8.55C20.22 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/>
-    </svg>
   )
 }
