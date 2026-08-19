@@ -54,11 +54,17 @@ services:
       dockerfile: server/docker/lingxigraph-runtime.Dockerfile
     restart: unless-stopped
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
-      LINGXIGRAPH_TOKEN: ${LINGXIGRAPH_TOKEN:-}
-      LINGXIGRAPH_MODEL_TIMEOUT_SECONDS: ${LINGXIGRAPH_MODEL_TIMEOUT_SECONDS:-90}
-      PORT: 8124
+      # Bare-name entries pass the value through from the shell/.env ONLY
+      # when it's actually set there — unlike `${VAR:-}`, an unset var is
+      # left unset in the container instead of being forced to "". That
+      # matters here: lingxigraph_runner.py does
+      # `os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")`, so an
+      # explicit empty string would defeat that default.
+      - OPENAI_API_KEY
+      - OPENAI_BASE_URL
+      - LINGXIGRAPH_TOKEN
+      - LINGXIGRAPH_MODEL_TIMEOUT_SECONDS=${LINGXIGRAPH_MODEL_TIMEOUT_SECONDS:-90}
+      - PORT=8124
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8124/health"]
       interval: 5s
@@ -80,20 +86,28 @@ services:
       lingxigraph-runtime:
         condition: service_healthy
     environment:
-      NODE_ENV: production
-      PORT: 5181
-      DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
-      REDIS_URL: redis://redis:6379
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-}
-      OPENAI_MODEL_SUPPORT: ${OPENAI_MODEL_SUPPORT:-}
+      - NODE_ENV=production
+      - PORT=5181
+      - DATABASE_URL=postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
+      - REDIS_URL=redis://redis:6379
+      # Required — env.ts refuses to boot in production on the public dev
+      # default. Generate one with `openssl rand -hex 32` and put it in
+      # .env; see .env.example.
+      - AGENT_RUNTIME_SECRET=${AGENT_RUNTIME_SECRET:?AGENT_RUNTIME_SECRET is required in .env — see .env.example (openssl rand -hex 32)}
+      - OPENAI_API_KEY
+      # Bare-name passthrough (see lingxigraph-runtime above for why): an
+      # unset OPENAI_MODEL / OPENAI_MODEL_SUPPORT must stay UNSET so
+      # env.ts's own `?? 'gpt-5.5'` / `?? 'gpt-5.4-mini'` defaults apply,
+      # not get short-circuited by an explicit "".
+      - OPENAI_MODEL
+      - OPENAI_MODEL_SUPPORT
       # MVP-fixed reasoning + dispatch mode — see .env.example for the full
       # explanation of why these two go together and why replicas must stay
       # at 1 in `server` execution mode.
-      LINGXILOOP_REASONING_RUNTIME: lingxigraph
-      LINGXILOOP_MANAGED_AGENT_EXECUTION: server
-      LINGXIGRAPH_URL: http://lingxigraph-runtime:8124
-      LINGXIGRAPH_TOKEN: ${LINGXIGRAPH_TOKEN:-}
+      - LINGXILOOP_REASONING_RUNTIME=lingxigraph
+      - LINGXILOOP_MANAGED_AGENT_EXECUTION=server
+      - LINGXIGRAPH_URL=http://lingxigraph-runtime:8124
+      - LINGXIGRAPH_TOKEN
     ports:
       - "${LINGXILOOP_PORT:-5181}:5181"
     healthcheck:

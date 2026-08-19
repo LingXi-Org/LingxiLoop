@@ -80,6 +80,10 @@ services:
       # Deterministic smoke never calls a real model, but env.ts requires the
       # var to be non-empty for the process to boot in `lingxigraph` mode.
       OPENAI_API_KEY: sk-smoke-test-not-a-real-key
+      # NOT the public dev default — env.ts refuses to boot in production
+      # (NODE_ENV=production) if it sees that. Fixed, CI-only value; never
+      # reused for anything real.
+      AGENT_RUNTIME_SECRET: ci-mvp-smoke-agent-runtime-secret-not-for-prod-use
       LINGXILOOP_REASONING_RUNTIME: lingxigraph
       LINGXILOOP_MANAGED_AGENT_EXECUTION: server
       LINGXIGRAPH_URL: http://lingxigraph-runtime:8124

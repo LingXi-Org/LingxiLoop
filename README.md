@@ -81,7 +81,9 @@ For a from-zero, Kubernetes-free way to run the full loop — `lingxiloop` (API 
 
 ```bash
 cp .env.example .env
-# fill in OPENAI_API_KEY (and optionally OPENAI_BASE_URL / OPENAI_MODEL) in .env
+# fill in OPENAI_API_KEY and AGENT_RUNTIME_SECRET (openssl rand -hex 32) in
+# .env — this stack runs with NODE_ENV=production, which refuses to boot on
+# the public dev-default secret. OPENAI_BASE_URL / OPENAI_MODEL are optional.
 
 docker compose -f docker-compose.mvp.yml build
 docker compose -f docker-compose.mvp.yml up -d
