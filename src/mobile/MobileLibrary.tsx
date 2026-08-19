@@ -20,9 +20,9 @@ import { cn } from '@/lib/utils'
 type LibTab = 'documents' | 'boards' | 'calendar'
 
 const TABS: Array<{ key: LibTab; label: string; Icon: typeof IDoc }> = [
-  { key: 'documents', label: 'Documents', Icon: IDoc },
-  { key: 'boards', label: 'Boards', Icon: IBoard },
-  { key: 'calendar', label: 'Calendar', Icon: ICalendar },
+  { key: 'documents', label: "文档", Icon: IDoc },
+  { key: 'boards', label: "看板", Icon: IBoard },
+  { key: 'calendar', label: "日历", Icon: ICalendar },
 ]
 
 export function MobileLibrary() {
@@ -43,7 +43,7 @@ export function MobileLibrary() {
     setCreating(true)
     try {
       if (tab === 'documents') {
-        const d = await create({ title: 'Untitled' })
+        const d = await create({ title: "无标题" })
         openDocumentPeek(d.id)
       } else if (tab === 'boards') {
         const id = await createBoard('Untitled board')
@@ -62,10 +62,10 @@ export function MobileLibrary() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}>
         <div className="px-4 pt-2 pb-2">
           <h1 className="font-display font-medium text-[26px] tracking-tight text-ink-900 leading-none">
-            Library
+            资料库
           </h1>
           <div className="text-[12.5px] text-ink-500 mt-0.5 font-display italic">
-            documents, boards & schedule
+            文件、看板和时间表
           </div>
         </div>
         <div className="px-3 pb-3 flex gap-1.5">
@@ -103,7 +103,7 @@ export function MobileLibrary() {
       <button
         onClick={onPlus}
         disabled={creating}
-        aria-label={tab === 'documents' ? 'New document' : tab === 'boards' ? 'New board' : 'New event'}
+        aria-label={tab === 'documents' ? "新文件" : tab === 'boards' ? "新板" : "新活动"}
         className="absolute right-4 bottom-4 z-20 w-14 h-14 rounded-full grid place-items-center text-white active:scale-95 transition disabled:opacity-50"
         style={{
           background: tab === 'documents'
@@ -149,11 +149,11 @@ function DocumentsList() {
   return (
     <div className="pb-24">
       {!loaded && (
-        <div className="px-6 py-10 text-center text-[13px] text-ink-300 font-display italic">Loading…</div>
+        <div className="px-6 py-10 text-center text-[13px] text-ink-300 font-display italic">加载中…</div>
       )}
       {loaded && list.length === 0 && (
         <div className="px-6 py-12 text-center text-[13px] text-ink-500 font-display italic leading-relaxed">
-          No documents yet. Tap the + to create one — humans and agents both edit live.
+          尚无文件。点击 + 创建一个 - 人和智能体都可以实时编辑。
         </div>
       )}
       <div className="divide-y divide-ink-100">
@@ -197,11 +197,11 @@ function BoardsList() {
   return (
     <div className="pb-24">
       {loadingList && list.length === 0 && (
-        <div className="px-6 py-10 text-center text-[13px] text-ink-300 font-display italic">Loading…</div>
+        <div className="px-6 py-10 text-center text-[13px] text-ink-300 font-display italic">加载中…</div>
       )}
       {!loadingList && list.length === 0 && (
         <div className="px-6 py-12 text-center text-[13px] text-ink-500 font-display italic leading-relaxed">
-          No boards yet. Tap the + to start one — agents can move cards through it on their own.
+          还没有板。点击“+”即可启动一张卡片——客服人员可以自行移动卡片。
         </div>
       )}
       <div className="divide-y divide-ink-100">

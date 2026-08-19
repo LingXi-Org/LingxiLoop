@@ -66,10 +66,10 @@ export function ConveneView() {
         style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(143, 211, 247, 0.18), transparent 60%), var(--paper)' }}>
         <div className="text-center">
           <div className="font-display font-medium text-[24px] text-ink-900 mb-2" style={{ letterSpacing: '-0.02em' }}>
-            Pick a conversation
+            选择一个对话
           </div>
           <div className="font-display italic text-[14px] text-ink-500">
-            Convene runs from a chat. Select one and click Convene to bring agents into a live session.
+            召集从聊天中运行。选择一个并单击“召集”将座席引入实时会话。
           </div>
         </div>
       </main>
@@ -82,16 +82,16 @@ export function ConveneView() {
         style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(143, 211, 247, 0.18), transparent 60%), var(--paper)' }}>
         <div className="text-center max-w-sm">
           <div className="font-display font-medium text-[24px] text-ink-900 mb-2" style={{ letterSpacing: '-0.02em' }}>
-            {state.session ? 'Last convene wrapped' : 'No live convene'}
+            {state.session ? "最后一次召集包裹" : "没有现场召集"}
           </div>
           <div className="font-display italic text-[14px] text-ink-500 mb-5">
-            Pull every agent in <b className="text-ink-700 font-semibold">{c.title}</b> into a live work session — each takes a turn, decisions are summarized at the end.
+            将所有特工拉进来 <b className="text-ink-700 font-semibold">{c.title}</b> 进入现场工作会议 - 每个人轮流，最后总结决定。
           </div>
           <button
             onClick={startConvene}
             className="py-3 px-5 rounded-full text-white text-[13.5px] font-semibold inline-flex items-center gap-2"
             style={{ background: 'linear-gradient(135deg, var(--skype), var(--skype-deep))', boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)' }}>
-            ▶ Start a Convene
+            ▶ 召开会议
           </button>
         </div>
       </main>
@@ -104,7 +104,7 @@ export function ConveneView() {
         style={{ background: 'linear-gradient(90deg, rgba(255, 122, 107, 0.08) 0%, rgba(0, 168, 240, 0.06) 100%)' }}>
         <div className="inline-flex items-center gap-2 py-1.5 px-3 bg-coral-deep text-white rounded-full text-[10.5px] font-extrabold tracking-[0.12em] uppercase">
           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse-soft" />
-          LIVE
+          直播
         </div>
         <div className="font-display font-medium text-[17px] text-ink-900" style={{ letterSpacing: '-0.01em' }}>
           {state.session.title}
@@ -113,7 +113,7 @@ export function ConveneView() {
           <em className="italic text-coral-deep" style={{ fontStyle: 'italic', fontWeight: 400 }}>{state.session.flair}</em>
         )}
         <div className="text-[12px] text-ink-500 ml-auto">
-          started {new Date(state.session.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          开始 {new Date(state.session.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
 
@@ -138,7 +138,7 @@ export function ConveneView() {
                 <div className="text-[11.5px] font-semibold flex items-center gap-1.5"
                   style={{ color: isSpeaking ? 'var(--skype-deep)' : `var(--${p.status})` }}>
                   <span className="w-1.5 h-1.5 rounded-full animate-pulse-soft" style={{ background: isSpeaking ? 'var(--skype)' : `var(--${p.status})` }} />
-                  {isSpeaking ? 'speaking' : (p.status === 'thinking' ? 'thinking' : p.status === 'working' ? 'working' : 'listening')}
+                  {isSpeaking ? "说话" : (p.status === 'thinking' ? "思考" : p.status === 'working' ? "工作" : "聆听")}
                 </div>
               </div>
             )
@@ -152,7 +152,7 @@ export function ConveneView() {
                 <div key={t.id} className="my-4 py-3.5 px-4 rounded-[12px] relative"
                   style={{ background: 'linear-gradient(135deg, var(--whisper-50), rgba(255,255,255,0.5))', border: '1.5px solid var(--whisper)' }}>
                   <div className="absolute -top-2.5 left-4 bg-whisper text-white text-[9.5px] font-extrabold tracking-[0.15em] py-1 px-2.5 rounded">
-                    DECISION
+                    决定
                   </div>
                   <div className="font-display font-medium text-[16px] text-ink-900 mt-1.5 mb-1">
                     {t.decision.headline}
@@ -180,9 +180,9 @@ export function ConveneView() {
         style={{ background: 'linear-gradient(180deg, #FBFDFE, #F4F8FC)' }}>
         <div className="py-3.5 px-[18px] pb-2.5 border-b border-ink-100">
           <h4 className="font-display font-medium text-[16px] tracking-tight mb-1">
-            Live <em className="italic text-skype-deep" style={{ fontWeight: 400 }}>transcript</em>
+            直播 <em className="italic text-skype-deep" style={{ fontWeight: 400 }}>文字记录</em>
           </h4>
-          <div className="text-[11px] text-ink-500">{state.transcript.length} entries</div>
+          <div className="text-[11px] text-ink-500">{state.transcript.length} 条目</div>
         </div>
         <div className="py-3 px-[18px] pb-2 space-y-2">
           {state.transcript.map((t) => {

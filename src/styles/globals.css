@@ -254,6 +254,35 @@ body {
   overflow: hidden;
 }
 
+/* OAuth buttons use fixed, audited foreground/background pairs. Theme ink
+   tokens intentionally invert in dark mode, which made the old combinations
+   (text-white + bg-ink-900, or bg-white + text-ink-800) turn white-on-white. */
+.auth-provider-button {
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(10, 27, 46, 0.08);
+}
+.auth-provider-lingxi {
+  background: #0078c8;
+  color: #fff;
+}
+.auth-provider-lingxi:hover { background: #0068ad; }
+.auth-provider-google {
+  background: #fff;
+  border-color: #d6dce3;
+  color: #202124;
+}
+.auth-provider-google:hover { background: #f4f7fa; }
+.auth-provider-github {
+  background: #1f2328;
+  color: #fff;
+}
+.auth-provider-github:hover { background: #2a3037; }
+.auth-provider-apple {
+  background: #000;
+  color: #fff;
+}
+.auth-provider-apple:hover { background: #171717; }
+
 /* Desktop conversation shell — intentionally scoped so the existing mobile,
    auth, admin and notification surfaces retain their current visual system. */
 .desktop-openmaus {
@@ -331,6 +360,29 @@ body {
 .omb-no-drag, .omb-no-drag * { -webkit-app-region: no-drag; }
 .desktop-openmaus[data-electron='true'] .omb-titlebar-safe {
   padding-right: max(20px, calc(100vw - env(titlebar-area-x, 100vw) - env(titlebar-area-width, 0px)));
+}
+
+/* Windows uses the native caption buttons supplied by titleBarOverlay. Keep
+   the app chrome compact while retaining a generous drag area. */
+.desktop-openmaus[data-electron='true'][data-platform^='win'] .desktop-window-toolbar {
+  height: 36px;
+  min-height: 36px;
+  padding-top: 0;
+  padding-bottom: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, transparent), var(--panel));
+  border-bottom: 1px solid var(--hairline);
+}
+.desktop-openmaus[data-electron='true'][data-platform^='win'] .desktop-chat-toolbar {
+  min-height: 42px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  gap: 12px;
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--app) 94%, transparent);
+}
+.desktop-openmaus[data-electron='true'][data-platform^='win'] .desktop-window-toolbar .size-5 {
+  width: 18px;
+  height: 18px;
 }
 
 @media (prefers-reduced-motion: reduce) {

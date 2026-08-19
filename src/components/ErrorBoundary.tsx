@@ -23,11 +23,11 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="max-w-[460px] text-center">
             <div className="font-display font-medium text-[32px] tracking-tight text-ink-900 mb-2"
               style={{ letterSpacing: '-0.025em' }}>
-              Something cracked.
+              有什么东西破裂了。
             </div>
             <div className="font-display italic text-[14px] text-ink-500 leading-relaxed mb-5">
-              The view hit an unexpected state. Your data is safe — this is
-              just the screen reacting badly.
+              视图出现意外状态。您的数据是安全的——这是
+              只是屏幕反应不好。
             </div>
             <pre
               className="text-left text-[11.5px] font-mono text-ink-700 bg-cloud rounded-[10px] py-2.5 px-3 mb-5 overflow-x-auto whitespace-pre-wrap break-words"
@@ -43,12 +43,12 @@ export class ErrorBoundary extends Component<Props, State> {
                   background: 'linear-gradient(135deg, var(--skype), var(--skype-deep))',
                   boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.45)',
                 }}
-              >Reset view</button>
+              >重置视图</button>
               <button
                 onClick={() => window.location.reload()}
                 className="py-2 px-4 rounded-[10px] text-[13px] font-semibold text-ink-700 bg-cloud"
                 style={{ border: '1px solid var(--ink-100)' }}
-              >Reload</button>
+              >重新加载</button>
             </div>
           </div>
         </div>

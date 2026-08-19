@@ -102,21 +102,21 @@ export function MobileMe() {
 
       <div className="flex-1 overflow-y-auto pb-20">
         {companies.length > 1 && (
-          <Section title="Workspace">
+          <Section title="工作区">
             <div className="bg-cloud rounded-[12px] p-2" style={{ border: '1px solid var(--ink-100)' }}>
               <CompanySwitcher />
             </div>
           </Section>
         )}
 
-        <Section title="Your team">
+        <Section title="你的团队">
           {agents.length === 0 ? (
             <div
               className="text-center bg-cloud rounded-[12px] py-5 px-4"
               style={{ border: '1px dashed var(--ink-100)' }}
             >
               <div className="font-display italic text-[13px] text-ink-500 leading-snug">
-                A quiet workspace — no agents have joined yet.
+                安静的工作空间 — 尚未加入客服人员。
               </div>
             </div>
           ) : (
@@ -162,11 +162,11 @@ export function MobileMe() {
           )}
         </Section>
 
-        <Section title="Push notifications">
+        <Section title="推送通知">
           <PushStatusTile />
         </Section>
 
-        <Section title="Preferences">
+        <Section title="偏好设置">
           <div className="bg-cloud rounded-[12px] divide-y divide-ink-100"
             style={{ border: '1px solid var(--ink-100)' }}>
             {TOGGLE_PREFS.map((it) => {
@@ -209,8 +209,8 @@ export function MobileMe() {
             className="w-full py-3 px-4 rounded-[12px] text-[13px] font-semibold text-coral-deep transition text-left active:opacity-70"
             style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
           >
-            Sign out
-            <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">end this session on this device</span>
+            退出登录
+            <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">在此设备上结束此会话</span>
           </button>
           <DeleteAccountButton />
         </div>
@@ -246,8 +246,8 @@ function PushStatusTile() {
     return (
       <div className="bg-cloud rounded-[12px] p-3.5 text-[12px] text-ink-500 font-display italic"
         style={{ border: '1px solid var(--ink-100)' }}>
-        Push notifications run on the iOS / Android native shell — this
-        web preview just uses live socket messages.
+        推送通知在 iOS / Android 本机 shell 上运行 - 这
+        Web 预览仅使用实时套接字消息。
       </div>
     )
   }
@@ -288,30 +288,30 @@ function PushStatusTile() {
       <div className="p-3.5 flex items-center gap-3">
         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: status.prefEnabled ? 'var(--avail)' : 'var(--coral)' }} />
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-[13px] text-ink-900 leading-tight">App preference</div>
+          <div className="font-semibold text-[13px] text-ink-900 leading-tight">应用程序首选项</div>
           <div className="font-display italic text-[11px] text-ink-500 mt-0.5">
             {status.prefEnabled
-              ? 'notify.push is ON — init will run on next app launch.'
-              : "notify.push is OFF — toggle it on above (or tap 'Reset & retry' below)."}
+              ? "notification.push 已开启 — init 将在下次应用程序启动时运行。"
+              : "notification.push 已关闭 — 在上方将其打开（或点击下方的“重置并重试”）。"}
           </div>
         </div>
         <span className="text-[10.5px] font-bold tracking-wider uppercase px-2 py-1 rounded-full"
           style={{ background: 'var(--ink-100)', color: 'var(--ink-700)' }}>
-          {status.prefEnabled ? 'On' : 'Off'}
+          {status.prefEnabled ? "开" : "关"}
         </span>
       </div>
       <div className="p-3.5 flex items-center gap-3">
         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: permColor }} />
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-[13px] text-ink-900 leading-tight">iOS permission</div>
+          <div className="font-semibold text-[13px] text-ink-900 leading-tight">iOS 权限</div>
           <div className="font-display italic text-[11px] text-ink-500 mt-0.5">
             {perm === 'denied'
-              ? 'Open iOS Settings → LingxiLoop → Notifications to re-enable.'
+              ? "打开 iOS 设置 → LingxiLoop → 通知以重新启用。"
               : perm === 'granted'
-                ? 'iOS will deliver alerts when the app is in background.'
+                ? "iOS 将在应用程序处于后台时发出警报。"
                 : perm === 'unknown'
-                  ? 'iOS hasn\'t been asked yet — see the last-step row below.'
-                  : 'iOS will show its dialog the next time init runs.'}
+                  ? "iOS 尚未被询问 - 请参阅下面的最后一步。"
+                  : "iOS 将在下次 init 运行时显示其对话框。"}
           </div>
         </div>
         <span className="text-[10.5px] font-bold tracking-wider uppercase px-2 py-1 rounded-full"
@@ -322,25 +322,25 @@ function PushStatusTile() {
       <div className="p-3.5 flex items-center gap-3">
         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: status.tokenSuffix ? 'var(--avail)' : 'var(--ink-300)' }} />
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-[13px] text-ink-900 leading-tight">Device token</div>
+          <div className="font-semibold text-[13px] text-ink-900 leading-tight">设备令牌</div>
           <div className="font-display italic text-[11px] text-ink-500 mt-0.5">
             {status.tokenSuffix
               ? `Registered with server (…${status.tokenSuffix}).`
-              : 'No APNs token yet — see the last-step row below.'}
+              : "尚无 APNs 令牌 — 请参阅下面的最后一步。"}
           </div>
         </div>
       </div>
       {/* The smoking gun for "why is push silently dead?". Shows the
           deepest step the most recent init() reached. */}
       <div className="p-3.5">
-        <div className="text-[10.5px] font-bold uppercase tracking-wider text-ink-500 mb-1">Last init step</div>
+        <div className="text-[10.5px] font-bold uppercase tracking-wider text-ink-500 mb-1">最后一个初始化步骤</div>
         <div className="font-display italic text-[12px] text-ink-700 leading-snug">
           {stepLabel[status.lastStep]}
         </div>
       </div>
       {status.lastError && (
         <div className="p-3.5 text-[11.5px] font-display italic text-coral-deep leading-snug">
-          Last error: {status.lastError}
+          最后一个错误： {status.lastError}
         </div>
       )}
       <button
@@ -349,9 +349,9 @@ function PushStatusTile() {
         disabled={busy}
         className="w-full text-left p-3.5 active:bg-paper transition text-[12.5px] font-semibold text-skype-deep disabled:opacity-50"
       >
-        {busy ? 'Working…' : 'Re-register this device'}
+        {busy ? "工作..." : "重新注册该设备"}
         <span className="block font-display italic text-[11px] text-ink-500 mt-0.5 font-normal not-italic">
-          Runs init again — respects the app preference toggle.
+          再次运行 init — 尊重应用程序首选项切换。
         </span>
       </button>
       <button
@@ -360,9 +360,9 @@ function PushStatusTile() {
         disabled={busy}
         className="w-full text-left p-3.5 active:bg-paper transition text-[12.5px] font-semibold text-coral-deep disabled:opacity-50"
       >
-        Reset &amp; retry (force)
+        重置并重试（强制）
         <span className="block font-display italic text-[11px] text-ink-500 mt-0.5 font-normal not-italic">
-          Bypasses the in-app preference — useful if the toggle got stuck off.
+          绕过应用内首选项 - 如果切换被卡住，则很有用。
         </span>
       </button>
     </div>
@@ -385,8 +385,8 @@ function DeleteAccountButton() {
         className="w-full py-3 px-4 rounded-[12px] text-[13px] font-semibold text-coral-deep transition text-left active:opacity-70"
         style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
       >
-        Delete account
-        <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">permanently remove this LingxiLoop account</span>
+        删除帐户
+        <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">永久删除此LingxiLoop帐户</span>
       </button>
     )
   }
@@ -397,12 +397,12 @@ function DeleteAccountButton() {
       style={{ border: '1px solid var(--coral)', background: 'rgba(255, 122, 107, 0.06)' }}
     >
       <div className="font-display text-[13px] text-ink-900 font-semibold mb-1">
-        Permanently delete this account?
+        永久删除此帐户？
       </div>
       <div className="font-display italic text-[12px] text-ink-700 leading-snug mb-3">
-        Your sign-in, OAuth links, and personal profile will be erased. Messages
-        you posted in shared rooms stay (with your name shown as "Deleted
-        user") so other members keep their history. This cannot be undone.
+        您的登录、OAuth 链接和个人资料将被删除。留言
+        您在共享房间住宿中发布的信息（您的姓名显示为“已删除
+        用户”），以便其他成员保留他们的历史记录。此操作无法撤消。
       </div>
       {err && (
         <div className="text-[11.5px] text-coral-deep font-display italic mb-2 leading-snug">
@@ -416,7 +416,7 @@ function DeleteAccountButton() {
           onClick={() => { setStage('idle'); setErr(null) }}
           className="flex-1 h-9 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-paper transition active:opacity-70 disabled:opacity-50"
           style={{ border: '1px solid var(--ink-100)' }}
-        >Cancel</button>
+        >取消</button>
         <button
           type="button"
           disabled={stage === 'busy'}
@@ -438,7 +438,7 @@ function DeleteAccountButton() {
           }}
           className="flex-1 h-9 rounded-[9px] text-[12.5px] font-semibold text-white transition active:opacity-70 disabled:opacity-50"
           style={{ background: 'var(--coral)' }}
-        >{stage === 'busy' ? 'Deleting…' : 'Delete'}</button>
+        >{stage === 'busy' ? "正在删除..." : "删除"}</button>
       </div>
     </div>
   )

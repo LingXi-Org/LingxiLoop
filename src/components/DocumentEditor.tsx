@@ -149,12 +149,12 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
 
   if (!doc) return (
     <div className="h-full flex items-center justify-center text-stone-400 text-sm">
-      Document not found.
+      未找到文档。
     </div>
   )
   if (!user || !session) return (
     <div className="h-full flex items-center justify-center text-stone-400 text-sm">
-      Loading…
+      加载中…
     </div>
   )
 
@@ -186,8 +186,8 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
             'flex-1 min-w-0 bg-transparent font-medium text-stone-900 focus:outline-none',
             isPeek ? 'text-[16px] leading-[1.35]' : 'text-xl',
           )}
-          placeholder="Untitled"
-          aria-label="Document title"
+          placeholder="无标题"
+          aria-label="文档标题"
         />
         <div className="shrink-0">
           <PresenceStrip session={session} synced={synced} />
@@ -197,8 +197,8 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
             type="button"
             onClick={onOpenFull}
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:text-skype-deep hover:bg-sky2-100 transition"
-            title="Open in Documents"
-            aria-label="Open in Documents"
+            title="在文档中打开"
+            aria-label="在文档中打开"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <path d="M14 4h6v6" />
@@ -212,8 +212,8 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
             type="button"
             onClick={onClose}
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-400 hover:text-ink-900 hover:bg-ink-100/70 transition"
-            title="Close document"
-            aria-label="Close document"
+            title="关闭文档"
+            aria-label="关闭文档"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
               <path d="M6 6l12 12M18 6L6 18" />
@@ -228,7 +228,7 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
             }}
             className="text-xs leading-none text-stone-500 hover:text-red-600 transition-colors"
           >
-            Delete
+            删除
           </button>
         )}
       </header>
@@ -272,7 +272,7 @@ function CollaborativeEditor({ session, synced, userName, userColor, documentId,
       allowBase64: false,
     }),
     Placeholder.configure({
-      placeholder: 'Start writing — humans and agents can both edit live.',
+      placeholder: "开始写作——人类和特工都可以实时编辑。",
     }),
     Collaboration.configure({ document: session.doc }),
     CollaborationCaret.configure({
@@ -421,60 +421,60 @@ function Toolbar({ editor, disabled }: ToolbarProps) {
       <button
         type="button" className={btn(editor.isActive('bold'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleBold().run()}
-        title="Bold (⌘B)"
+        title="粗体 (⌘B)"
       ><IBold className="w-4 h-4" /></button>
       <button
         type="button" className={btn(editor.isActive('italic'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        title="Italic (⌘I)"
+        title="斜体 (⌘I)"
       ><IItalic className="w-4 h-4" /></button>
       <button
         type="button" className={btn(editor.isActive('strike'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        title="Strikethrough"
+        title="删除线"
       ><IStrike className="w-4 h-4" /></button>
       <ToolbarSep />
       <button
         type="button" className={btn(editor.isActive('heading', { level: 1 }))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        title="Heading 1"
+        title="标题 1"
       ><IH1 className="w-4 h-4" /></button>
       <button
         type="button" className={btn(editor.isActive('heading', { level: 2 }))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        title="Heading 2"
+        title="标题 2"
       ><IH2 className="w-4 h-4" /></button>
       <button
         type="button" className={btn(editor.isActive('heading', { level: 3 }))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        title="Heading 3"
+        title="标题 3"
       ><IH3 className="w-4 h-4" /></button>
       <ToolbarSep />
       <button
         type="button" className={btn(editor.isActive('bulletList'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        title="Bullet list"
+        title="项目符号列表"
       ><IList className="w-4 h-4" /></button>
       <button
         type="button" className={btn(editor.isActive('orderedList'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        title="Ordered list"
+        title="有序列表"
       ><IListOrdered className="w-4 h-4" /></button>
       <button
         type="button" className={btn(editor.isActive('blockquote'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        title="Quote"
+        title="引用"
       ><IQuote className="w-4 h-4" /></button>
       <ToolbarSep />
       <button
         type="button" className={btn(editor.isActive('code'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleCode().run()}
-        title="Inline code"
+        title="内联代码"
       ><ICode className="w-4 h-4" /></button>
       <button
         type="button" className={btn(editor.isActive('codeBlock'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        title="Code block"
+        title="代码块"
       ><ICodeBlock className="w-4 h-4" /></button>
       <LinkButton editor={editor} disabled={disabled} />
       <ImageButton editor={editor} disabled={disabled} />
@@ -482,12 +482,12 @@ function Toolbar({ editor, disabled }: ToolbarProps) {
       <button
         type="button" className={btn(false)} disabled={disabled || !editor.can().undo()}
         onClick={() => editor.chain().focus().undo().run()}
-        title="Undo (⌘Z)"
+        title="撤消 (⌘Z)"
       ><IUndo className="w-4 h-4" /></button>
       <button
         type="button" className={btn(false)} disabled={disabled || !editor.can().redo()}
         onClick={() => editor.chain().focus().redo().run()}
-        title="Redo (⌘⇧Z)"
+        title="重做 (⌘⇧Z)"
       ><IRedo className="w-4 h-4" /></button>
     </div>
   )
@@ -568,7 +568,7 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
               : 'text-stone-600 hover:bg-stone-100'
           ),
         )}
-        title={uploading ? 'Uploading image' : 'Insert image'}
+        title={uploading ? "上传图片" : "插入图像"}
       >
         <IImage className="w-4 h-4" />
       </button>
@@ -601,7 +601,7 @@ function LinkButton({ editor, disabled }: { editor: Editor; disabled: boolean })
             : 'text-stone-600 hover:bg-stone-100'
         ),
       )}
-      title="Link"
+      title="链接"
     >
       <ILink className="w-4 h-4" />
     </button>
@@ -634,8 +634,8 @@ function PresenceStrip({ session, synced }: { session: YDocSession; synced: bool
   // ascent/descent (16.5px for 12px Manrope), not line-height, so it
   // centers on a different baseline than the 12px-tall Delete button.
   // As a block, height = leading-none line-height = 12px = same box.
-  if (!synced) return <span className="block text-xs leading-none text-stone-400">syncing…</span>
-  if (peers.length === 0) return <span className="block text-xs leading-none text-stone-400">only you</span>
+  if (!synced) return <span className="block text-xs leading-none text-stone-400">正在同步...</span>
+  if (peers.length === 0) return <span className="block text-xs leading-none text-stone-400">只有你</span>
   return (
     <div className="flex items-center -space-x-1.5">
       {peers.slice(0, 6).map((p) => (

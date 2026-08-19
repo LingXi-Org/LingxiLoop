@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { isElectron } from '@/lib/runtime'
+import { isElectron, isWindows } from '@/lib/runtime'
 
 /**
  * A top-edge drag region for frameless Electron windows on screens that have no
@@ -18,7 +18,7 @@ export function WindowDragStrip() {
     <div
       aria-hidden
       className="absolute top-0 inset-x-0 z-10"
-      style={{ height: 44, WebkitAppRegion: 'drag' } as CSSProperties}
+      style={{ height: isWindows ? 36 : 44, WebkitAppRegion: 'drag' } as CSSProperties}
     />
   )
 }

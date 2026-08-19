@@ -35,8 +35,8 @@ export function ScrollToLatestButton({ visible, onClick, bottomOffset = 16, zh =
     <button
       type="button"
       onClick={onClick}
-      aria-label={zh ? '回到最新消息' : 'Scroll to latest message'}
-      title={zh ? '回到最新消息' : 'Latest message'}
+      aria-label={zh ? '回到最新消息' : "滚动到最新消息"}
+      title={zh ? '回到最新消息' : "最新消息"}
       className={cn(
         // Positioning: absolute within the chat stream's relative container.
         'absolute right-4 z-20 grid place-items-center',

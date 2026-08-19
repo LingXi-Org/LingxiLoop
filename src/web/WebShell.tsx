@@ -71,11 +71,11 @@ function WebHandoff() {
       style={{ background: 'var(--paper)' }}
     >
       <div className="w-[360px] flex flex-col items-center gap-7 text-center">
-        <CloudLogo size={64} />
+        <CloudLogo size={64} rounded />
         <div className="space-y-1">
-          <div className="font-display text-[22px] text-ink-900">You're signed in</div>
+          <div className="font-display text-[22px] text-ink-900">您已登录</div>
           <div className="font-display italic text-[13px] text-ink-400">
-            Opening LingxiLoop on your desktop…
+            在桌面上打开 LingxiLoop...
           </div>
         </div>
         <div className="w-full flex flex-col gap-2.5">
@@ -86,15 +86,15 @@ function WebHandoff() {
               background: 'var(--skype)',
               boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
             }}
-          >Open in LingxiLoop desktop</button>
+          >在 LingxiLoop 桌面端打开</button>
           <GetDesktopAppLink variant="button-secondary" />
           <button
             onClick={() => void signOut()}
             className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-          >Sign out</button>
+          >退出登录</button>
         </div>
         <div className="text-[11px] text-ink-300 font-display italic">
-          LingxiLoop is available here in your browser.
+          LingxiLoop 可在您的浏览器中找到。
         </div>
       </div>
     </div>
@@ -128,11 +128,11 @@ function WebLanding() {
       style={{ background: 'var(--paper)' }}
     >
       <div className="w-[360px] flex flex-col items-center gap-7">
-        <CloudLogo size={64} />
+        <CloudLogo size={64} rounded />
         <div className="text-center space-y-1">
-          <div className="font-display text-[22px] text-ink-900">LingxiLoop works on the Web</div>
+          <div className="font-display text-[22px] text-ink-900">在网页中使用 LingxiLoop</div>
           <div className="font-display italic text-[13px] text-ink-400">
-            Sign in to enter your workspace
+            登录以进入您的工作区
           </div>
         </div>
         <div className="w-full flex flex-col gap-3">
@@ -140,19 +140,19 @@ function WebLanding() {
             type="button"
             onClick={() => go('google')}
             disabled={busy !== null}
-            className="h-11 rounded-[10px] border border-ink-200 bg-white hover:bg-cloud transition-colors flex items-center justify-center gap-3 text-[14px] text-ink-800 disabled:opacity-60"
+            className="auth-provider-button auth-provider-google h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
           >
             <GoogleMark />
-            {busy === 'google' ? 'Redirecting…' : 'Continue with Google'}
+            {busy === 'google' ? '正在跳转…' : '使用 Google 继续'}
           </button>
           <button
             type="button"
             onClick={() => go('github')}
             disabled={busy !== null}
-            className="h-11 rounded-[10px] bg-[#1f2328] hover:bg-[#2a3037] text-white transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
+            className="auth-provider-button auth-provider-github h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
           >
             <GitHubMark />
-            {busy === 'github' ? 'Redirecting…' : 'Continue with GitHub'}
+            {busy === 'github' ? '正在跳转…' : '使用 GitHub 继续'}
           </button>
         </div>
         {err && (
@@ -162,7 +162,7 @@ function WebLanding() {
         )}
         <div className="w-full flex items-center gap-3 text-[11px] text-ink-300 font-display italic">
           <div className="flex-1 h-px bg-ink-100" />
-          or
+          或
           <div className="flex-1 h-px bg-ink-100" />
         </div>
         <div className="w-full flex flex-col gap-2.5">
@@ -171,7 +171,7 @@ function WebLanding() {
             onClick={() => tryDeepLink('cumora://open')}
             className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-ink-700 transition"
             style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
-          >Open in LingxiLoop desktop</button>
+          >在 LingxiLoop 桌面端打开</button>
           <GetDesktopAppLink
             variant="button-secondary"
             gateBypass={approvedEntry}
@@ -180,7 +180,7 @@ function WebLanding() {
           />
         </div>
         <div className="text-[11px] text-ink-300 text-center font-display italic">
-          We use your provider only to verify it's you — no posting, no scope creep.
+          我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
         </div>
       </div>
     </div>

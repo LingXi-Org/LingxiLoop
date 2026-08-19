@@ -100,7 +100,7 @@ function ConvoAvatar({ c, size = 48 }: { c: Conversation; size?: number }) {
  *  the desktop pane's indicator — Slack / iOS Messages convention. */
 function MutedGlyph() {
   return (
-    <span className="inline-flex items-center justify-center w-3.5 h-3.5 shrink-0 text-ink-300" aria-label="Muted">
+    <span className="inline-flex items-center justify-center w-3.5 h-3.5 shrink-0 text-ink-300" aria-label="静音">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         <path d="M18.63 13A17.9 17.9 0 0 1 18 8" />
@@ -166,7 +166,7 @@ function MobileRow({ c, onTap, onLongPress }: {
           )}>{c.title}</span>
           {muted && <MutedGlyph />}
           {isFresh && (
-            <span className="text-[8.5px] font-bold tracking-wider uppercase py-0.5 px-1.5 rounded text-gold-deep bg-[rgba(244,183,64,0.18)] shrink-0">NEW</span>
+            <span className="text-[8.5px] font-bold tracking-wider uppercase py-0.5 px-1.5 rounded text-gold-deep bg-[rgba(244,183,64,0.18)] shrink-0">新</span>
           )}
           {c.tag === 'human' && <HumanBadge />}
         </div>
@@ -271,7 +271,7 @@ function convoSwipeActions(c: Conversation): SwipeAction[] {
   const actions: SwipeAction[] = []
   if (c.unread !== undefined && c.unread > 0) {
     actions.push({
-      label: 'Read',
+      label: "阅读",
       background: 'var(--skype)',
       onClick: async () => {
         try { await api.markRead(c.id); await reload() }
@@ -298,7 +298,7 @@ function convoSwipeActions(c: Conversation): SwipeAction[] {
   })
   if (c.kind !== 'whisper') {
     actions.push({
-      label: 'Leave',
+      label: "离开",
       background: 'var(--coral)',
       onClick: async () => {
         if (!confirm(`Leave “${c.title}”? Agents will continue without you.`)) return
@@ -342,7 +342,7 @@ function convoMenuItems(
 
   items.push(
     {
-      label: 'Open',
+      label: "打开",
       onClick: () => useApp.getState().selectConversation(c.id),
     },
     {
@@ -366,7 +366,7 @@ function convoMenuItems(
   )
   if (c.unread !== undefined && c.unread > 0) {
     items.push({
-      label: 'Mark as read',
+      label: "标记为已读",
       onClick: async () => {
         try {
           await api.markRead(c.id)
@@ -377,7 +377,7 @@ function convoMenuItems(
   }
   if (c.kind !== 'whisper') {
     items.push({
-      label: 'Leave conversation',
+      label: "离开对话",
       destructive: true,
       onClick: async () => {
         if (!confirm(`Leave “${c.title}”? Agents will continue without you.`)) return
@@ -502,7 +502,7 @@ export function MobileChatList() {
               'ml-auto w-9 h-9 rounded-full grid place-items-center text-ink-700 border',
               searchOpen ? 'bg-sky2-50 border-sky2-200 text-skype-deep' : 'bg-cloud border-ink-100',
             )}
-            aria-label={searchOpen ? 'Close search' : 'Open search'}
+            aria-label={searchOpen ? "关闭搜索" : "打开搜索"}
           >
             <ISearch className="w-[18px] h-[18px]" />
           </Pressable>
@@ -518,7 +518,7 @@ export function MobileChatList() {
                 type="search"
                 value={searchQ}
                 onChange={(e) => setSearchQ(e.target.value)}
-                placeholder="Search conversations, agents…"
+                placeholder="搜索对话、智能体……"
                 className="flex-1 bg-transparent outline-none text-[14px] text-ink-900 placeholder:text-ink-300"
                 autoCapitalize="none"
                 autoCorrect="off"
@@ -528,7 +528,7 @@ export function MobileChatList() {
                 <Pressable
                   onClick={() => setSearchQ('')}
                   className="text-ink-500 px-1.5 text-[18px] leading-none"
-                  aria-label="Clear"
+                  aria-label="清除"
                 >×</Pressable>
               )}
             </div>
@@ -578,7 +578,7 @@ export function MobileChatList() {
                 and the gesture-bound `y` transform keep working. */}
             <div className="px-0 pt-1.5 pb-1">
               {byRecency.length === 0 ? (
-                <div className="px-3 py-6 text-center text-[13px] text-ink-300 font-display italic">no conversations yet</div>
+                <div className="px-3 py-6 text-center text-[13px] text-ink-300 font-display italic">还没有对话</div>
               ) : scroller ? (
                 <Virtuoso
                   customScrollParent={scroller}

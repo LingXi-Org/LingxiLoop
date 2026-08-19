@@ -59,37 +59,37 @@ export function Onboarding() {
           <div className="flex items-center gap-3 mb-2">
             <span className="text-[34px] leading-none">💻</span>
             <h1 className="font-display font-medium text-[32px] tracking-tight text-ink-900" style={{ letterSpacing: '-0.02em' }}>
-              Set up your computer
+              设置您的计算机
             </h1>
           </div>
           <p className="text-[14.5px] text-ink-600 leading-relaxed mb-6 max-w-[560px]">
-            Your agents run on <strong>your own machine</strong> (or a VPS), powered by your local
-            <span className="font-mono text-[13px]"> Claude Code</span> or
-            <span className="font-mono text-[13px]"> Codex</span>. Pair a computer to get started —
-            your starter team will set up there, each with its own isolated workspace, memory, and skills.
+            您的智能体运行在 <strong>你自己的机器</strong> （或 VPS），由您本地提供
+            <span className="font-mono text-[13px]"> 克劳德代码</span> 或
+            <span className="font-mono text-[13px]"> 法典</span>。配对计算机即可开始 —
+            您的入门团队将在那里组建，每个团队都有自己独立的工作空间、内存和技能。
           </p>
 
           <div className="bg-cloud rounded-[16px] p-5" style={{ border: '1px solid var(--ink-100)' }}>
             {!code ? (
               <>
                 <div className="text-[13px] text-ink-600 mb-4">
-                  On the machine you want to host your agents, you'll run one command. It needs
-                  <span className="font-mono"> claude</span> or <span className="font-mono">codex</span> installed.
+                  在您想要托管智能体的计算机上，您将运行一个命令。它需要
+                  <span className="font-mono"> 克劳德</span> 或 <span className="font-mono">法典</span> 已安装。
                 </div>
                 {err && <div className="text-[12px] text-coral-deep bg-coral-soft rounded-[8px] p-2 mb-3">{err}</div>}
                 <button onClick={getCode} disabled={busy}
                   className="px-5 py-2.5 rounded-[11px] bg-skype text-white text-[14px] font-semibold disabled:opacity-50">
-                  {busy ? 'Generating…' : 'Add a computer'}
+                  {busy ? "正在生成..." : "添加计算机"}
                 </button>
               </>
             ) : (
               <>
-                <div className="text-[13px] font-semibold text-ink-900 mb-1">Run this on that machine:</div>
+                <div className="text-[13px] font-semibold text-ink-900 mb-1">在该机器上运行：</div>
                 <div className="text-[11.5px] text-ink-500 mb-2.5 italic font-display">
-                  This pairing token stays valid. The computer appears here and you'll continue automatically once it connects.
+                  此配对令牌保持有效。计算机出现在此处，连接后您将自动继续。
                 </div>
                 <div className="flex items-center gap-2.5 mb-2.5">
-                  <span className="text-[12px] text-ink-500">Engine</span>
+                  <span className="text-[12px] text-ink-500">发动机</span>
                   <div className="inline-flex rounded-[9px] p-0.5" style={{ background: 'var(--ink-100)' }}>
                     {([['claude', 'Claude Code'], ['codex', 'Codex']] as const).map(([id, label]) => (
                       <button key={id} type="button" onClick={() => setEngine(id)}
@@ -101,18 +101,18 @@ export function Onboarding() {
                       </button>
                     ))}
                   </div>
-                  <span className="text-[11px] text-ink-400">just the default — this computer can still run agents on either engine</span>
+                  <span className="text-[11px] text-ink-400">只是默认值 - 该计算机仍然可以在任一引擎上运行智能体</span>
                 </div>
                 {isWindows ? (
                   <div className="mb-2.5 text-[12px] text-ink-600">
-                    Keep this terminal open while the agents run.
-                    <span className="text-ink-400"> — background service install isn’t supported on Windows yet.</span>
+                    在智能体运行时保持此终端打开。
+                    <span className="text-ink-400"> — Windows 尚不支持后台服务安装。</span>
                   </div>
                 ) : (
                   <label className="flex items-start gap-2 mb-2.5 cursor-pointer select-none">
                     <input type="checkbox" checked={asService} onChange={(e) => setAsService(e.target.checked)} className="mt-[3px]" />
                     <span className="text-[12px] text-ink-600">
-                      Keep it running in the background <span className="text-ink-400">— auto-start on boot, auto-restart on crash, auto-update. Otherwise this terminal has to stay open.</span>
+                      让它在后台运行 <span className="text-ink-400">— 启动时自动启动、崩溃时自动重启、自动更新。否则该终端必须保持打开状态。</span>
                     </span>
                   </label>
                 )}
@@ -121,11 +121,11 @@ export function Onboarding() {
                   <button onClick={() => { void navigator.clipboard?.writeText(cmd); setCopied(true) }}
                     className="inline-flex items-center justify-center min-w-[120px] text-[12px] font-semibold px-3 py-1.5 rounded-[9px] text-white transition-colors duration-200"
                     style={{ background: copied ? '#3BB273' : 'var(--skype)' }}>
-                    {copied ? '✓ Copied!' : 'Copy command'}
+                    {copied ? "✓ 已复制！" : "复制命令"}
                   </button>
                   <span className="inline-flex items-center gap-2 text-[12px] text-ink-500">
                     <span className="w-2 h-2 rounded-full bg-ink-300 animate-pulse" />
-                    Waiting for your computer to connect…
+                    正在等待您的计算机连接...
                   </span>
                 </div>
               </>
@@ -133,7 +133,7 @@ export function Onboarding() {
           </div>
 
           <p className="text-[12px] text-ink-400 mt-4">
-            Want managed cloud agents instead? <span className="text-skype-deep">Upgrade to Pro</span> to run agents on LingxiLoop Cloud.
+            想要托管云智能体吗？ <span className="text-skype-deep">升级到专业版</span> 在 LingxiLoop 云上运行智能体。
           </p>
         </div>
       </main>

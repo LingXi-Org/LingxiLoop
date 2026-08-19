@@ -15,20 +15,22 @@ import { useState, useEffect } from 'react'
 import { api, getServerOrigin, setServerOrigin } from '@/api/client'
 import { isCapacitorIOS, isElectron } from '@/lib/runtime'
 import { isNativePlatform, nativePlatform, runAppleSignIn, runOAuth } from '@/lib/native'
+import { useIsMobile } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { CloudLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
 
 interface ServerPreset { label: string; origin: string }
 const PRESETS: ServerPreset[] = [
-  { label: 'Production',  origin: 'https://api.cumora.ai' },
-  { label: 'Local Dev',   origin: 'http://localhost:5181' },
+  { label: '生产环境', origin: 'https://api.cumora.ai' },
+  { label: '本地开发', origin: 'http://localhost:5181' },
 ]
 
 export function AuthScreen() {
   const [busy, setBusy] = useState<'lingxi' | 'google' | 'github' | 'apple' | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [picker, setPicker] = useState(false)
+  const isMobile = useIsMobile()
 
   // AuthGate strips a successful fragment after consuming it. A failure
   // fragment looks like `#token=&companyId=&error=...` — surface that
@@ -138,14 +140,14 @@ export function AuthScreen() {
           const u = new URL(callbackUrl)
           const hash = u.hash || (u.search ? `#${u.search.replace(/^\?/, '')}` : '')
           if (!hash) {
-            setErr('Sign-in completed but no token was returned.')
+            setErr('登录已完成，但未返回登录凭证。')
             setBusy(null)
             return
           }
           history.replaceState(null, '', location.pathname + location.search + hash)
           window.dispatchEvent(new CustomEvent('cumora:oauth-token', { detail: hash }))
         } catch (err) {
-          setErr(err instanceof Error ? err.message : 'sign-in failed')
+          setErr(err instanceof Error ? err.message : '登录失败')
           setBusy(null)
         }
       })()
@@ -168,11 +170,11 @@ export function AuthScreen() {
     >
       <WindowDragStrip />
       <div className="w-[320px] flex flex-col items-center gap-8">
-        <CloudLogo size={64} />
+        <CloudLogo size={64} rounded />
         <div className="text-center">
-          <div className="font-display text-[22px] text-ink-900">Welcome to cumora</div>
+          <div className="font-display text-[22px] text-ink-900">欢迎使用LingxiLoop</div>
           <div className="font-display italic text-[13px] text-ink-400 mt-1">
-            Sign in to continue
+            登录后继续
           </div>
         </div>
         <div className="w-full flex flex-col gap-3">
@@ -180,9 +182,9 @@ export function AuthScreen() {
             type="button"
             onClick={() => go('lingxi')}
             disabled={busy !== null}
-            className="h-11 rounded-[10px] bg-ink-900 hover:bg-ink-800 text-white transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
+            className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
           >
-            {busy === 'lingxi' ? 'Redirecting…' : 'Continue with LingxiIdentity'}
+            {busy === 'lingxi' ? '正在跳转…' : '使用 LingxiIdentity 继续'}
           </button>
           {/* Sign in with Apple — iOS-only for now. Apple Review
               Guideline 4.8 requires SIWA be offered as an equivalent
@@ -195,29 +197,29 @@ export function AuthScreen() {
               type="button"
               onClick={goApple}
               disabled={busy !== null}
-              className="h-11 rounded-[10px] bg-black hover:bg-[#111] text-white transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
+              className="auth-provider-button auth-provider-apple h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
             >
               <AppleMark />
-              {busy === 'apple' ? 'Signing in…' : 'Continue with Apple'}
+              {busy === 'apple' ? '正在登录…' : '使用 Apple 继续'}
             </button>
           )}
           <button
             type="button"
             onClick={() => go('google')}
             disabled={busy !== null}
-            className="h-11 rounded-[10px] border border-ink-200 bg-white hover:bg-cloud transition-colors flex items-center justify-center gap-3 text-[14px] text-ink-800 disabled:opacity-60"
+            className="auth-provider-button auth-provider-google h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
           >
             <GoogleMark />
-            {busy === 'google' ? 'Redirecting…' : 'Continue with Google'}
+            {busy === 'google' ? '正在跳转…' : '使用 Google 继续'}
           </button>
           <button
             type="button"
             onClick={() => go('github')}
             disabled={busy !== null}
-            className="h-11 rounded-[10px] bg-[#1f2328] hover:bg-[#2a3037] text-white transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
+            className="auth-provider-button auth-provider-github h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] disabled:opacity-60"
           >
             <GitHubMark />
-            {busy === 'github' ? 'Redirecting…' : 'Continue with GitHub'}
+            {busy === 'github' ? '正在跳转…' : '使用 GitHub 继续'}
           </button>
         </div>
         {err && (
@@ -226,9 +228,9 @@ export function AuthScreen() {
           </div>
         )}
         <div className="text-[11px] text-ink-300 text-center font-display italic">
-          We use your provider only to verify it's you — no posting, no scope creep.
+          我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
         </div>
-        <ServerSwitch open={picker} onToggle={() => setPicker((v) => !v)} />
+        {!isMobile && <ServerSwitch open={picker} onToggle={() => setPicker((v) => !v)} />}
       </div>
     </div>
   )
@@ -238,7 +240,7 @@ export function AuthScreen() {
  *  api.client computed at module init. */
 function currentOriginLabel(): string {
   const origin = getServerOrigin()
-  if (!origin) return 'same-origin (Vite proxy / static)'
+  if (!origin) return '同源（Vite 代理 / 静态部署）'
   const match = PRESETS.find((p) => p.origin === origin)
   return match ? `${match.label} · ${origin}` : origin
 }
@@ -261,15 +263,15 @@ function ServerSwitch({ open, onToggle }: { open: boolean; onToggle: () => void 
         onClick={onToggle}
         className="text-[11px] text-ink-300 hover:text-ink-500 transition-colors font-display"
       >
-        API server: <span className="underline decoration-dotted">{currentOriginLabel()}</span>
+        API 服务器：<span className="underline decoration-dotted">{currentOriginLabel()}</span>
       </button>
     )
   }
   return (
-    <div className="w-full border border-ink-200 rounded-[10px] p-3 bg-white/60 flex flex-col gap-2">
+    <div className="w-full border border-ink-200 rounded-[10px] p-3 bg-cloud flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <div className="text-[12px] font-display text-ink-700">API server</div>
-        <button type="button" onClick={onToggle} className="text-[11px] text-ink-300 hover:text-ink-500">close</button>
+        <div className="text-[12px] font-display text-ink-700">API 服务器</div>
+        <button type="button" onClick={onToggle} className="text-[11px] text-ink-300 hover:text-ink-500">关闭</button>
       </div>
       {PRESETS.map((p) => (
         <button
@@ -287,8 +289,8 @@ function ServerSwitch({ open, onToggle }: { open: boolean; onToggle: () => void 
           type="url"
           value={custom}
           onChange={(e) => setCustom(e.target.value)}
-          placeholder="https://your-server"
-          className="flex-1 h-9 px-2 rounded-[6px] border border-ink-200 text-[12px] focus:outline-none focus:border-ink-400"
+          placeholder="https://你的服务器"
+          className="flex-1 h-9 px-2 rounded-[6px] border border-ink-200 bg-paper text-ink-900 text-[12px] placeholder:text-ink-300 focus:outline-none focus:border-ink-400"
         />
         <button
           type="button"
@@ -296,7 +298,7 @@ function ServerSwitch({ open, onToggle }: { open: boolean; onToggle: () => void 
           onClick={() => apply(custom.trim())}
           className="h-9 px-3 rounded-[6px] bg-ink-800 text-white text-[12px] disabled:opacity-40"
         >
-          Use
+          使用
         </button>
       </div>
       {current && (
@@ -305,7 +307,7 @@ function ServerSwitch({ open, onToggle }: { open: boolean; onToggle: () => void 
           onClick={() => apply(null)}
           className="text-[11px] text-ink-400 hover:text-ink-600 self-start"
         >
-          Clear override (use build default)
+          清除自定义配置（使用构建默认值）
         </button>
       )}
     </div>

@@ -6,12 +6,12 @@ import { Pressable } from './Pressable'
 import type { ViewKey } from '@/types'
 
 const tabs: Array<{ key: ViewKey['view']; Icon: typeof IChat; label: string }> = [
-  { key: 'conversations', Icon: IChat, label: 'Chats' },
-  { key: 'whispers', Icon: IWhisper, label: 'Whispers' },
-  { key: 'shipping', Icon: IShip, label: 'Ship' },
-  { key: 'library', Icon: IDoc, label: 'Library' },
-  { key: 'agents', Icon: IAgent, label: 'Agents' },
-  { key: 'me', Icon: IAgents, label: 'Me' },
+  { key: 'conversations', Icon: IChat, label: "聊天" },
+  { key: 'whispers', Icon: IWhisper, label: "私聊" },
+  { key: 'shipping', Icon: IShip, label: "交付" },
+  { key: 'library', Icon: IDoc, label: "资料库" },
+  { key: 'agents', Icon: IAgent, label: "智能体" },
+  { key: 'me', Icon: IAgents, label: "我的" },
 ]
 
 /**

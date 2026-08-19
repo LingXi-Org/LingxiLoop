@@ -216,7 +216,7 @@ export function MobileCalendar() {
         <button
           onClick={() => goMonth(-1)}
           className="w-9 h-9 grid place-items-center rounded-full text-ink-700 active:bg-sky2-50 transition text-[20px] leading-none"
-          aria-label="Previous month"
+          aria-label="上个月"
         >‹</button>
         <div className="flex-1 text-center font-display font-medium text-[17px] text-ink-900 tracking-tight" style={{ letterSpacing: '-0.01em' }}>
           {monthLabel}
@@ -224,13 +224,13 @@ export function MobileCalendar() {
         <button
           onClick={() => goMonth(1)}
           className="w-9 h-9 grid place-items-center rounded-full text-ink-700 active:bg-sky2-50 transition text-[20px] leading-none"
-          aria-label="Next month"
+          aria-label="下个月"
         >›</button>
         <button
           onClick={goToday}
           className="py-1.5 px-3 text-[11.5px] font-semibold rounded-full bg-sky2-50 border border-sky2-100 active:bg-sky2-100 transition"
           style={{ color: 'var(--skype)' }}
-        >Today</button>
+        >今天</button>
       </div>
 
       {/* Weekday row */}
@@ -308,10 +308,10 @@ export function MobileCalendar() {
           />
         )}
         {!selectedDay && (
-          <div className="px-2 py-6 text-center text-[12.5px] text-ink-400 italic">Pick a day to see events.</div>
+          <div className="px-2 py-6 text-center text-[12.5px] text-ink-400 italic">选择一天查看事件。</div>
         )}
         {!loaded && events.length === 0 && (
-          <div className="px-2 py-6 text-center text-[12.5px] text-ink-300 italic">Loading…</div>
+          <div className="px-2 py-6 text-center text-[12.5px] text-ink-300 italic">加载中…</div>
         )}
       </div>
 
@@ -341,11 +341,11 @@ function DayDetail({ day, items, onEdit, onNew, byId }: {
         <div className="font-display font-medium text-[15px] text-ink-900 tracking-tight" style={{ letterSpacing: '-0.01em' }}>
           {heading}
         </div>
-        <span className="text-[11px] text-ink-400">· {items.length} event{items.length === 1 ? '' : 's'}</span>
+        <span className="text-[11px] text-ink-400">· {items.length} 事件{items.length === 1 ? '' : 's'}</span>
         <button
           onClick={onNew}
           className="ml-auto py-1 px-2 text-[11px] font-semibold rounded-full text-skype-deep bg-sky2-50 border border-sky2-100 active:bg-sky2-100 transition"
-        >+ New</button>
+        >+ 新</button>
       </div>
 
       {items.length === 0 ? (
@@ -355,11 +355,11 @@ function DayDetail({ day, items, onEdit, onNew, byId }: {
           <div className="mx-auto mb-2 w-9 h-9 rounded-full grid place-items-center bg-sky2-50 text-skype-deep">
             <ICalendar className="w-[18px] h-[18px]" />
           </div>
-          <div className="text-[12.5px] text-ink-500 font-display italic leading-relaxed">Nothing scheduled for this day.</div>
+          <div className="text-[12.5px] text-ink-500 font-display italic leading-relaxed">今天没有安排。</div>
           <button
             onClick={onNew}
             className="mt-3 py-1.5 px-3 text-[12px] font-semibold rounded-full bg-cloud border border-ink-100 text-ink-700 active:bg-sky2-50 transition"
-          >Add an event</button>
+          >添加事件</button>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -382,10 +382,10 @@ function DayDetail({ day, items, onEdit, onNew, byId }: {
                 <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.12em]"
                   style={{ color: tone.fg }}
                 >
-                  {ev.kind === 'agent_task' ? 'Agent task' : 'Personal'}
+                  {ev.kind === 'agent_task' ? "智能体任务" : "个人"}
                   {it.isRecurring && (
                     <span className="inline-flex items-center gap-0.5 text-ink-400 font-normal normal-case tracking-normal text-[10.5px]">
-                      <IRepeat className="w-3 h-3" /> recurring
+                      <IRepeat className="w-3 h-3" /> 重复出现
                     </span>
                   )}
                 </div>

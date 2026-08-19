@@ -1027,7 +1027,7 @@ function createWindow() {
           titleBarOverlay: {
             color: '#070707',
             symbolColor: '#FCFCFC',
-            height: 44,
+            height: 36,
           },
         }
       : {}),
@@ -1224,7 +1224,7 @@ ipcMain.on('window-chrome:set-theme', (_event, theme) => {
   mainWindow.setTitleBarOverlay({
     color: dark ? '#070707' : '#F4F5F7',
     symbolColor: dark ? '#FCFCFC' : '#111318',
-    height: 44,
+    height: 36,
   })
 })
 

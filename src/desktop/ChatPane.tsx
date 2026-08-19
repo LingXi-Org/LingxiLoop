@@ -70,19 +70,14 @@ function _ComingSoonPop({ onClose }: { onClose: () => void }) {
             style={{ animation: 'cumora-sparkle-drift 2.4s ease-in-out infinite' }}
           >✨</span>
           <div className="min-w-0">
-            <div className="text-[12.5px] font-semibold text-ink-900 leading-tight">Coming soon</div>
+            <div className="text-[12.5px] font-semibold text-ink-900 leading-tight">即将推出</div>
             <div className="text-[11.5px] text-ink-500 font-display italic leading-snug mt-0.5">
-              Live working sessions are still on the way.
+              现场工作会议仍在进行中。
             </div>
           </div>
         </div>
       </div>
-      <style>{`
-        @keyframes cumora-sparkle-drift {
-          0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.95; }
-          50%      { transform: translateY(-2px) rotate(8deg); opacity: 1; }
-        }
-      `}</style>
+      <style>{"@keyframes cumora-sparkle-drift {\n          0%, 100% { 变换：translateY(0) 旋转(0deg);不透明度：0.95； }\n          50% { 变换：translateY(-2px) 旋转(8deg);不透明度：1； }\n        }"}</style>
     </div>
   )
 }
@@ -163,7 +158,7 @@ function ChatHeader({
   }
 
   return (
-    <div className="omb-titlebar-safe omb-drag flex min-h-[56px] items-center gap-4 px-5 py-2.5">
+    <div className="desktop-chat-toolbar omb-titlebar-safe omb-drag flex min-h-[56px] items-center gap-4 px-5 py-2.5">
       <div className="omb-no-drag flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-1 py-0.5">
         <div className="hidden shrink-0 sm:block"><AvatarStack ps={agentMembers} size={28} max={3} /></div>
         <div className="min-w-0 flex-1">
@@ -338,7 +333,7 @@ function EmojiPopover({ onPick, onClose }: { onPick: (e: string) => void; onClos
               'flex-1 text-[11px] font-semibold uppercase tracking-wider py-1 rounded-[6px] transition',
               tab === k ? 'bg-sky2-100 text-skype-deep' : 'text-ink-500 hover:bg-sky2-50',
             )}
-          >{k === 'std' ? 'Standard' : 'Skype'}</button>
+          >{k === 'std' ? "标准" : 'Skype'}</button>
         ))}
       </div>
       {tab === 'std' ? (
@@ -769,8 +764,8 @@ export function Composer({
   const slashCommands = useMemo<SlashCommand[]>(() => [
     {
       id: 'poll',
-      label: 'Poll',
-      hint: '发起一次投票，agents 和人都能参与',
+      label: "民意调查",
+      hint: "发起一次投票，智能体和人共同参与",
       keywords: ['poll', 'vote', '投票', 'p'],
       run: () => openPollComposer(),
     },
@@ -1427,7 +1422,7 @@ function _EmptyConversationState() {
                 <button
                   type="button"
                   onClick={onCloudPoke}
-                  aria-label="Hello cloud"
+                  aria-label="云你好"
                   className="cumora-cloud-poke group block w-full h-full cursor-pointer p-0 border-0 bg-transparent focus:outline-none"
                   style={{
                     // Silky-spring transition. The hover-state CSS rule
@@ -1564,22 +1559,22 @@ function _EmptyConversationState() {
               className="font-display font-medium text-[28px] text-ink-900 leading-[1.12]"
               style={{ letterSpacing: '-0.025em' }}
             >
-              Pick up where you left off
+              从上次停下的地方继续
             </h2>
             <p className="mt-2.5 font-display italic text-[14px] text-ink-500 leading-relaxed max-w-[360px]">
-              Choose a thread on the left to slip back in.
+              选择左侧的线程重新滑入。
             </p>
 
             {total > 0 && (
               <div className="mt-6 text-[12px] text-ink-400 font-display italic flex items-center gap-1.5">
                 <span className="text-gold leading-none not-italic" style={{ fontSize: 10 }}>★</span>
                 <b className="not-italic text-ink-700 font-semibold tabular-nums">{total}</b>
-                <span>{total === 1 ? 'thread waiting' : 'threads waiting'}</span>
+                <span>{total === 1 ? "线程正在等待" : "线程正在等待"}</span>
                 {unread > 0 && (
                   <>
                     <span className="text-ink-200" aria-hidden>·</span>
                     <b className="not-italic text-coral-deep font-semibold tabular-nums">{unread}</b>
-                    <span>unread</span>
+                    <span>未读</span>
                   </>
                 )}
               </div>
@@ -1599,7 +1594,7 @@ function OpenMausEmptyConversationState() {
         <img src="/logo.png" alt="" className="size-14 rounded-2xl opacity-90" draggable={false} />
         <h1 className="text-[17px] font-semibold text-ink">选择一个会话开始交流</h1>
         <p className="text-[13px] leading-6 text-ink-secondary">
-          {total > 0 ? `左侧共有 ${total} 个会话。你也可以搜索消息，或新建群聊。` : '新消息和 Agent 的实时进度会显示在这里。'}
+          {total > 0 ? `左侧共有 ${total} 个会话。你也可以搜索消息，或新建群聊。` : "新消息和智能体的实时详情将显示在这里。"}
         </p>
       </div>
     </main>
@@ -1902,7 +1897,7 @@ export function ChatPane() {
             type="button"
             onClick={() => setMatchIdx((i) => (i + 1) % Math.max(1, matchedIds.length))}
             disabled={matchedIds.length === 0}
-            title="下一个匹配项（Enter / ↓）"
+            title="下一个匹配项（输入 / ↓）"
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:bg-sky2-50 hover:text-skype-deep transition disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-500"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">

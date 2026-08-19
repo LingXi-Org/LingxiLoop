@@ -104,76 +104,76 @@ export function AgentEditor({ agent, onClose }: Props) {
           </div>
           <div className="flex-1">
             <h2 className="font-display font-medium text-[20px] tracking-tight">
-              {editing ? `Edit ${agent!.name}` : 'New agent'}
+              {editing ? `Edit ${agent!.name}` : "新智能体"}
             </h2>
             <div className="text-[12.5px] text-ink-500 italic font-display">
-              {editing ? 'Tweak how this teammate behaves.' : 'Define a new teammate from scratch.'}
+              {editing ? "调整该队友的行为方式。" : "从头开始​​定义一个新队友。"}
             </div>
           </div>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full grid place-items-center text-ink-500 hover:bg-sky2-50 hover:text-ink-900 transition"
-            aria-label="Close"
+            aria-label="关闭"
           >×</button>
         </div>
 
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
-          <Field label="Name" hint="What teammates call them. The handle (@-mention id) is derived from this automatically.">
+          <Field label="姓名" hint="队友怎么称呼他们。句柄（@-mention id）是自动从中派生的。">
             <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Saga"
+              placeholder="例如佐贺"
             />
           </Field>
 
-          <Field label="Role" hint="One- or two-word title shown next to the name.">
+          <Field label="角色" hint="名称旁边显示一个或两个单词的标题。">
             <Input
               type="text"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              placeholder="e.g. Storyteller"
+              placeholder="例如讲故事的人"
             />
           </Field>
 
-          <Field label="Style (system prompt)" hint="The agent's voice, instincts, and quirks. Written in second person — the LLM reads this as 'you'.">
+          <Field label="风格（系统提示符）" hint="特工的声音、本能和怪癖。以第二人称书写 — LLM 将其读作“你”。">
             <TextArea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={5}
-              placeholder="You write narratives. You sense what the team forgets to say out loud. Direct, warm, never preachy."
+              placeholder="你写叙述。你感觉到团队忘记大声说出来的话。直接、热情、从不说教。"
               className="font-display italic"
               style={{ minHeight: 110 }}
             />
           </Field>
 
-          <Field label="Bio" hint="Optional, shown on the agent card.">
+          <Field label="简历" hint="可选，显示在智能体卡上。">
             <TextArea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={2}
-              placeholder="A one-line description of what they're best at."
+              placeholder="对他们最擅长的事情的一行描述。"
             />
           </Field>
 
-          <Field label="Model" hint="Optional — leave blank to use the managed LingxiGraph runtime default.">
+          <Field label="型号" hint="可选 — 留空以使用托管 LingxiGraph 运行时默认值。">
             <Input
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              placeholder="(default)"
+              placeholder="（默认）"
               className="font-mono"
               spellCheck={false}
             />
           </Field>
 
-          <Field label="Runtime" hint="Agents run as managed LingxiGraph agents on the LingxiLoop server.">
+          <Field label="运行时" hint="智能体在 LingxiLoop 服务器上作为托管 LingxiGraph 智能体运行。">
             <div className="rounded-[10px] bg-sky2-50 px-3 py-2 text-[12.5px] text-ink-700">
-              Managed · LingxiGraph
+              托管·LingxiGraph
             </div>
           </Field>
 
-          <Field label="Avatar color" hint="Used as a fallback when no AI portrait is generated.">
+          <Field label="头像颜色" hint="用作未生成 AI 肖像时的后备。">
             <div className="flex flex-wrap gap-2">
               {PALETTE.map((c) => (
                 <button
@@ -194,10 +194,10 @@ export function AgentEditor({ agent, onClose }: Props) {
           </Field>
 
           <Field
-            label="AI-generated portrait"
+            label="AI生成的肖像"
             hint={editing
-              ? 'Generates an editorial portrait fitting this agent\'s name, role, and style. Save your edits first if you tweaked the style.'
-              : 'Available after the agent is created. Save first, then re-open to generate.'}
+              ? "生成适合该特工的姓名、角色和风格的社论肖像。如果您调整了样式，请先保存您的编辑。"
+              : "创建智能体后可用。先保存，然后重新打开生成。"}
           >
             <div className="flex items-center gap-4">
               {/* Avatar preview with breathing/sparkle animation while generating */}
@@ -280,13 +280,13 @@ export function AgentEditor({ agent, onClose }: Props) {
                     <path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M19 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/>
                   </svg>
                   {generatingAvatar
-                    ? <span>Painting<span className="ae-dots" /></span>
-                    : (avatarUrl ? 'Regenerate' : 'Generate with AI')}
+                    ? <span>绘画<span className="ae-dots" /></span>
+                    : (avatarUrl ? "再生" : "用 AI 生成")}
                 </button>
 
                 {generatingAvatar && (
                   <div className="text-[11.5px] text-whisper-deep font-display italic leading-[1.5]">
-                    Composing {name || 'your agent'}'s portrait — usually 15–30s. You can keep editing other fields.
+                    作曲 {name || 'your agent'}的肖像 — 通常为 15-30 秒。您可以继续编辑其他字段。
                   </div>
                 )}
 
@@ -295,7 +295,7 @@ export function AgentEditor({ agent, onClose }: Props) {
                     type="button"
                     onClick={() => setAvatarUrl(null)}
                     className="self-start text-[11.5px] text-ink-500 hover:text-coral-deep transition"
-                  >clear portrait (use color block instead)</button>
+                  >清晰肖像（使用色块代替）</button>
                 )}
 
                 {avatarErr && (
@@ -319,7 +319,7 @@ export function AgentEditor({ agent, onClose }: Props) {
             onClick={onClose}
             className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >Cancel</button>
+          >取消</button>
           <div className="flex-1" />
           <button
             onClick={submit}
@@ -330,7 +330,7 @@ export function AgentEditor({ agent, onClose }: Props) {
               boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
             }}
           >
-            {busy ? 'Saving…' : (editing ? 'Save changes' : 'Create agent')}
+            {busy ? "正在保存..." : (editing ? "保存更改" : "创建智能体")}
           </button>
         </div>
       </div>

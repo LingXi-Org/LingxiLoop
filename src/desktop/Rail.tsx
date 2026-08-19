@@ -12,14 +12,14 @@ import { cn } from '@/lib/utils'
 import type { Participant, ViewKey } from '@/types'
 
 const baseItems: Array<{ key: ViewKey['view']; Icon: typeof IChat; label: string }> = [
-  { key: 'conversations', Icon: IChat, label: 'Conversations' },
-  { key: 'whispers', Icon: IWhisper, label: 'Whispers' },
-  { key: 'shipping', Icon: IShip, label: 'Ship' },
-  { key: 'boards', Icon: IBoard, label: 'Boards' },
-  { key: 'calendar', Icon: ICalendar, label: 'Calendar' },
-  { key: 'documents', Icon: IDoc, label: 'Docs' },
-  { key: 'agents', Icon: IAgent, label: 'Agents' },
-  { key: 'me', Icon: IAgents, label: 'Me' },
+  { key: 'conversations', Icon: IChat, label: "会话" },
+  { key: 'whispers', Icon: IWhisper, label: "私聊" },
+  { key: 'shipping', Icon: IShip, label: "交付" },
+  { key: 'boards', Icon: IBoard, label: "看板" },
+  { key: 'calendar', Icon: ICalendar, label: "日历" },
+  { key: 'documents', Icon: IDoc, label: "文档" },
+  { key: 'agents', Icon: IAgent, label: "智能体" },
+  { key: 'me', Icon: IAgents, label: "我的" },
 ]
 
 export function Rail() {
@@ -45,7 +45,7 @@ export function Rail() {
   const assembled = devtoolsEnabled
     ? [
         ...baseItems.slice(0, 3),
-        { key: 'observability' as const, Icon: IObserve, label: 'Observe' },
+        { key: 'observability' as const, Icon: IObserve, label: "观测" },
         ...baseItems.slice(3),
       ]
     : baseItems
@@ -77,7 +77,7 @@ export function Rail() {
       <button
         className="mb-3.5 relative"
         onClick={() => setView('me')}
-        title={daemonOutdated ? 'A computer daemon needs updating — open You' : (authUser?.name ?? 'You')}
+        title={daemonOutdated ? "计算机守护程序需要更新 — 打开 You" : (authUser?.name ?? 'You')}
       >
         <Avatar p={meAvatar} size={44} ringColor="var(--cloud)" />
         {daemonOutdated && (
@@ -127,8 +127,8 @@ export function Rail() {
           location.reload()
         }}
         className="w-11 h-11 rounded-xl grid place-items-center text-ink-400 hover:bg-cloud hover:text-coral-deep transition-colors"
-        title="Sign out"
-        aria-label="Sign out"
+        title="退出登录"
+        aria-label="退出登录"
       >
         <IExit className="w-[22px] h-[22px]" />
       </button>

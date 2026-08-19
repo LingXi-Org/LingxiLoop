@@ -27,7 +27,7 @@ export function DocumentsView() {
 
   const handleCreate = async () => {
     try {
-      const d = await create({ title: 'Untitled' })
+      const d = await create({ title: "无标题" })
       select(d.id)
     } catch (e) {
       console.warn('[docs] create failed', e)
@@ -38,24 +38,24 @@ export function DocumentsView() {
     <div className="grid h-full overflow-hidden" style={{ gridTemplateColumns: '280px 1fr' }}>
       <aside className="border-r border-ink-100 bg-white flex flex-col min-h-0">
         <header className="px-4 py-3 flex items-center justify-between border-b border-ink-100">
-          <h2 className="font-display text-sm font-medium text-stone-800">Documents</h2>
+          <h2 className="font-display text-sm font-medium text-stone-800">文档</h2>
           <button
             type="button"
             onClick={handleCreate}
             className="w-7 h-7 rounded-lg grid place-items-center text-skype-deep hover:bg-skype/10 transition-colors"
-            title="New document"
-            aria-label="New document"
+            title="新文件"
+            aria-label="新文件"
           >
             <IPlus className="w-4 h-4" />
           </button>
         </header>
         <div className="flex-1 overflow-y-auto py-2">
           {!loaded && (
-            <div className="px-4 py-6 text-xs text-stone-400">Loading…</div>
+            <div className="px-4 py-6 text-xs text-stone-400">加载中…</div>
           )}
           {loaded && list.length === 0 && (
             <div className="px-4 py-6 text-xs text-stone-400">
-              No documents yet. Create one — humans and agents both edit live.
+              尚无文档。创建一个——人类和智能体都可以实时编辑。
             </div>
           )}
           {list.map((d) => {
@@ -89,8 +89,8 @@ export function DocumentsView() {
         ) : (
           <div className="h-full grid place-items-center text-stone-400 text-sm">
             {list.length === 0
-              ? 'Create a document to start collaborating.'
-              : 'Select a document from the list.'}
+              ? "创建文档以开始协作。"
+              : "从列表中选择一个文档。"}
           </div>
         )}
       </main>

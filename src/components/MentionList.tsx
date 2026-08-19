@@ -60,7 +60,7 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
   if (items.length === 0) {
     return (
       <div className="rounded-lg bg-white border border-stone-200 shadow-lg px-3 py-2 text-xs text-stone-400">
-        no match
+        没有匹配
       </div>
     )
   }
@@ -90,7 +90,7 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium leading-tight">{p.name}</div>
             <div className="truncate text-[11px] text-stone-400 leading-tight">
-              {p.kind === 'agent' ? 'agent' : 'human'}{p.role ? ` · ${p.role}` : ''}
+              {p.kind === 'agent' ? "智能体" : "成员"}{p.role ? ` · ${p.role}` : ''}
             </div>
           </div>
         </button>

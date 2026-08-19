@@ -32,8 +32,8 @@ export function SettingsPage() {
     <div className="admin-page">
       <header className="admin-page-head">
         <div>
-          <h1 className="admin-h1">Settings</h1>
-          <div className="admin-sub">Global toggles. Changes apply instantly.</div>
+          <h1 className="admin-h1">设置</h1>
+          <div className="admin-sub">全局切换。更改立即生效。</div>
         </div>
       </header>
 
@@ -41,7 +41,7 @@ export function SettingsPage() {
 
       <div className="admin-settings">
         <SettingRow
-          title="Waitlist"
+          title="候补名单"
           desc="When ON, new OAuth signups land on the waitlist instead of creating an account. Existing users sign in normally. Bootstrap admins (env allow-list) bypass the gate."
           on={!!s?.waitlist_enabled}
           busy={busyKey === 'waitlist_enabled'}
@@ -49,7 +49,7 @@ export function SettingsPage() {
           onToggle={() => void flip('waitlist_enabled')}
         />
         <SettingRow
-          title="Signups paused"
+          title="注册已暂停"
           desc="When ON, the waitlist itself also stops accepting new entries — useful for emergencies (LLM bill spike, prod incident). Existing waitlist entries can still be approved."
           on={!!s?.signups_paused}
           busy={busyKey === 'signups_paused'}

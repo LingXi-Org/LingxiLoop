@@ -54,7 +54,7 @@ function MentionChip({ id }: { id: string }) {
           animated={false}
           ringColor="transparent"
         />
-        <span style={{ lineHeight: '16px' }}>@all</span>
+        <span style={{ lineHeight: '16px' }}>@全部</span>
       </span>
     )
   }
@@ -231,7 +231,7 @@ export function CodeBlock({ lang, code }: { lang: string; code: string }) {
             background: copied ? 'rgba(110, 197, 106, 0.10)' : 'transparent',
           }}
         >
-          {copied ? 'COPIED' : 'COPY'}
+          {copied ? "已复制" : "复制"}
         </button>
       </div>
       <pre
@@ -379,7 +379,7 @@ function MessagePeekCard(
           </div>
         </div>
         <div className="text-[12.5px] text-ink-700 leading-[1.55] line-clamp-5 break-words">
-          {bodyPreview || <span className="italic text-ink-400">(no text)</span>}
+          {bodyPreview || <span className="italic text-ink-400">（无文字）</span>}
         </div>
       </div>
     </div>
@@ -623,7 +623,7 @@ function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conve
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">Document</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">文件</span>
             <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
             <span className="text-[10.5px] text-ink-400 truncate">{id}</span>
           </div>
@@ -631,18 +631,18 @@ function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conve
           <div className="mt-1 flex items-center gap-1.5 min-w-0 text-[11.5px] text-ink-500">
             {author && <span className="truncate">{author}</span>}
             {author && updated && <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />}
-            {updated && <span className="shrink-0">Updated {updated}</span>}
+            {updated && <span className="shrink-0">已更新 {updated}</span>}
             {isPinnedHere && (
               <>
                 <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-                <span className="shrink-0 text-gold-deep">in this conversation</span>
+                <span className="shrink-0 text-gold-deep">在此对话中</span>
               </>
             )}
           </div>
         </div>
 
         <div className="ml-1 h-8 px-3 rounded-full bg-sky2-50 text-skype-deep text-[11.5px] font-semibold inline-flex items-center gap-1.5 transition group-hover:bg-skype group-hover:text-white">
-          Open
+          打开
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
             <path d="M9 18l6-6-6-6" />
           </svg>
@@ -713,26 +713,26 @@ function BoardArtifactCard({ id: rawId }: { id: string }) {
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">Kanban</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">看板</span>
             <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
             <span className="text-[10.5px] text-ink-400 truncate">{id}</span>
           </div>
           <div className="mt-1 text-[14px] font-semibold text-ink-900 truncate">{title}</div>
           <div className="mt-1 flex items-center gap-1.5 min-w-0 text-[11.5px] text-ink-500">
-            {columns !== null && <span>{columns} columns</span>}
+            {columns !== null && <span>{columns} 列</span>}
             {columns !== null && cards !== null && <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />}
-            {cards !== null && <span>{cards} cards</span>}
+            {cards !== null && <span>{cards} 卡</span>}
             {updated && (
               <>
                 <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-                <span className="shrink-0">Updated {timeAgo(updated)}</span>
+                <span className="shrink-0">已更新 {timeAgo(updated)}</span>
               </>
             )}
           </div>
         </div>
 
         <div className="ml-1 h-8 px-3 rounded-full bg-sky2-50 text-skype-deep text-[11.5px] font-semibold inline-flex items-center gap-1.5 transition group-hover:bg-skype-deep group-hover:text-white">
-          Open
+          打开
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
             <path d="M9 18l6-6-6-6" />
           </svg>
@@ -801,7 +801,7 @@ function CardArtifactCard({ id: rawId }: { id: string }) {
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">Kanban card</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">看板卡</span>
             <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
             <span className="text-[10.5px] text-ink-400 truncate">{id}</span>
           </div>
@@ -817,14 +817,14 @@ function CardArtifactCard({ id: rawId }: { id: string }) {
             {updated && (
               <>
                 <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-                <span className="shrink-0">Updated {updated}</span>
+                <span className="shrink-0">已更新 {updated}</span>
               </>
             )}
           </div>
         </div>
 
         <div className="ml-1 h-8 px-3 rounded-full bg-sky2-50 text-skype-deep text-[11.5px] font-semibold inline-flex items-center gap-1.5 transition group-hover:bg-skype-deep group-hover:text-white">
-          Peek
+          看
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
             <path d="M9 18l6-6-6-6" />
           </svg>
@@ -880,7 +880,7 @@ function CalendarArtifactCard({ id: rawId }: { id: string }) {
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">Calendar</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">日历</span>
             <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
             <span className="text-[10.5px] text-ink-400 truncate">{id}</span>
           </div>
@@ -890,7 +890,7 @@ function CalendarArtifactCard({ id: rawId }: { id: string }) {
             {event?.kind === 'agent_task' && assignee && (
               <>
                 <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-                <span className="truncate">for {assignee}</span>
+                <span className="truncate">为 {assignee}</span>
               </>
             )}
             {event?.status && (
@@ -903,7 +903,7 @@ function CalendarArtifactCard({ id: rawId }: { id: string }) {
         </div>
 
         <div className="ml-1 h-8 px-3 rounded-full bg-sky2-50 text-skype-deep text-[11.5px] font-semibold inline-flex items-center gap-1.5 transition group-hover:bg-skype group-hover:text-white">
-          Open
+          打开
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
             <path d="M9 18l6-6-6-6" />
           </svg>
@@ -1103,8 +1103,8 @@ function _EmailCard({ msg }: { msg: Message }) {
       ? 'var(--skype-deep)'
       : '#7A6A3F'
   const recipients = [
-    ...e.to.map((t) => ({ label: 'To', value: t })),
-    ...e.cc.map((c) => ({ label: 'Cc', value: c })),
+    ...e.to.map((t) => ({ label: "至", value: t })),
+    ...e.cc.map((c) => ({ label: "抄送", value: c })),
   ]
   return (
     <div
@@ -1123,7 +1123,7 @@ function _EmailCard({ msg }: { msg: Message }) {
             style={{ background: dirChipBg, color: dirChipColor }}
           >
             <IMail className="w-3 h-3" strokeWidth={2} />
-            {isFailed ? 'failed' : isQueued ? 'queued' : isOut ? 'sent' : 'received'}
+            {isFailed ? "失败" : isQueued ? "已排队" : isOut ? "已发送" : "已收到"}
           </span>
           {e.hasHtml && (
             <button
@@ -1136,9 +1136,9 @@ function _EmailCard({ msg }: { msg: Message }) {
                   : 'text-ink-400 hover:text-ink-700 hover:bg-[rgba(120,110,95,0.10)]',
               )}
               aria-pressed={showHtml}
-              title={showHtml ? 'Hide HTML version' : 'Show HTML version'}
+              title={showHtml ? "隐藏 HTML 版本" : "显示HTML版本"}
             >
-              {showHtml ? 'plain' : 'html'}
+              {showHtml ? "简单" : 'html'}
             </button>
           )}
           {e.smtpMessageId && (
@@ -1151,12 +1151,12 @@ function _EmailCard({ msg }: { msg: Message }) {
           )}
         </div>
         <div className="font-display font-medium text-[16px] leading-snug text-ink-900 break-words">
-          {e.subject || <span className="text-ink-400 italic">(no subject)</span>}
+          {e.subject || <span className="text-ink-400 italic">（无主题）</span>}
         </div>
       </div>
       <div className="px-4 py-2.5 text-[11.5px] text-ink-500 space-y-0.5 border-b border-[rgba(120,110,95,0.18)]">
         <div className="flex gap-2">
-          <span className="font-semibold w-7 shrink-0 text-ink-300 uppercase tracking-wider text-[10px] pt-0.5">From</span>
+          <span className="font-semibold w-7 shrink-0 text-ink-300 uppercase tracking-wider text-[10px] pt-0.5">来自</span>
           <span className="text-ink-700 break-all">{e.from}</span>
         </div>
         {recipients.length > 0 && recipients.map((r, i) => (
@@ -1169,11 +1169,11 @@ function _EmailCard({ msg }: { msg: Message }) {
       {showHtml ? (
         <div className="px-2 py-2 bg-white">
           {htmlLoading && (
-            <div className="px-3 py-6 text-[12px] text-ink-400 italic">loading html…</div>
+            <div className="px-3 py-6 text-[12px] text-ink-400 italic">正在加载 html...</div>
           )}
           {htmlError && (
             <div className="px-3 py-3 text-[12px] text-coral-deep">
-              couldn't load html: {htmlError}
+              无法加载 html: {htmlError}
             </div>
           )}
           {htmlBody !== null && !htmlError && (
@@ -1197,7 +1197,7 @@ function _EmailCard({ msg }: { msg: Message }) {
           className="px-4 py-2 text-[11.5px] text-coral-deep border-t border-[rgba(196,60,50,0.25)]"
           style={{ background: 'rgba(196, 60, 50, 0.06)' }}
         >
-          delivery failed: {e.transportError}
+          发送失败： {e.transportError}
         </div>
       )}
       <div className="flex items-center gap-2 px-4 py-2 border-t border-[rgba(120,110,95,0.18)]">
@@ -1207,7 +1207,7 @@ function _EmailCard({ msg }: { msg: Message }) {
           className="inline-flex items-center gap-1.5 py-1.5 px-3 text-[11.5px] font-semibold text-ink-700 bg-cloud border border-ink-100 rounded-[7px] hover:border-sky2-200 hover:text-skype-deep transition"
         >
           <IMail className="w-3.5 h-3.5" strokeWidth={2} />
-          Reply
+          回复
         </button>
       </div>
     </div>
@@ -1243,10 +1243,10 @@ function EmailAttachmentRow({ att }: { att: NonNullable<NonNullable<Message['ema
           download={att.filename}
           className="shrink-0 text-[11.5px] font-semibold text-skype-deep hover:underline"
         >
-          download
+          下载
         </a>
       ) : (
-        <span className="shrink-0 text-[11.5px] text-ink-300 italic">unavailable</span>
+        <span className="shrink-0 text-[11.5px] text-ink-300 italic">不可用</span>
       )}
     </div>
   )
@@ -1304,7 +1304,7 @@ function EmailHtmlFrame({ html }: { html: string }) {
       sandbox="allow-popups allow-popups-to-escape-sandbox"
       referrerPolicy="no-referrer"
       style={{ width: '100%', height: h, border: 0, background: 'white', borderRadius: 6 }}
-      title="HTML email body"
+      title="HTML 电子邮件正文"
     />
   )
 }
@@ -1328,9 +1328,9 @@ function WhisperLink({ msg }: { msg: Message }) {
         <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path d="M3 12c0-4 4-8 9-8s9 4 9 8-4 8-9 8a10 10 0 01-3-.5L3 21l1.5-5A8 8 0 013 12z"/></svg>
       </div>
       <div className="min-w-0 flex-1">
-        <span className="text-whisper-deep font-bold">{a?.name}</span> and <span className="text-whisper-deep font-bold">{b?.name}</span> are whispering — <em className="font-display italic font-normal text-whisper-deep">{w.snippet}</em> · {w.count} messages
+        <span className="text-whisper-deep font-bold">{a?.name}</span> 和 <span className="text-whisper-deep font-bold">{b?.name}</span> 正在私聊—— <em className="font-display italic font-normal text-whisper-deep">{w.snippet}</em> · {w.count} 消息
       </div>
-      <div className="ml-auto text-[11px] font-semibold py-1 px-2.5 rounded-full bg-[rgba(124,92,255,0.15)] text-whisper-deep shrink-0">Peek →</div>
+      <div className="ml-auto text-[11px] font-semibold py-1 px-2.5 rounded-full bg-[rgba(124,92,255,0.15)] text-whisper-deep shrink-0">看→</div>
     </div>
   )
 }
@@ -1570,7 +1570,7 @@ export function SystemRow({ msg, delay = 0, animate = true, openMaus = false }: 
       <div className={cn('flex justify-center my-3', riseCls)} style={riseStyle}>
         <div className="max-w-[min(100%,540px)] flex items-center gap-2 px-3 py-1.5 rounded-md bg-skype/10 border border-skype/20 text-skype text-[11.5px] font-display">
           <span className="leading-[1.4] shrink-0">📅</span>
-          <span className="leading-[1.4]">{openMaus ? '日历提醒：' : 'Calendar fired: '}{title}</span>
+          <span className="leading-[1.4]">{openMaus ? '日历提醒：' : "日历已触发："}{title}</span>
           {!openMaus && typeof payload.eventId === 'string' && <CalendarLink id={payload.eventId} />}
         </div>
       </div>
@@ -1597,15 +1597,15 @@ export function SystemRow({ msg, delay = 0, animate = true, openMaus = false }: 
         {payload.kind === 'kicked' && actor ? (
           <>
             <SystemActor p={actor} onClick={() => { if (!openMaus) openAgentInfo(actor.id) }} disabled={openMaus} />
-            <span>— {openMaus ? '将' : 'removed'}</span>
+            <span>— {openMaus ? '将' : "已删除"}</span>
             <SystemActor p={subject} onClick={onClick} disabled={openMaus} />
-            <span>{openMaus ? '移出群聊' : 'from the group'}</span>
+            <span>{openMaus ? '移出群聊' : "来自小组"}</span>
           </>
         ) : (
           <>
             <SystemActor p={subject} onClick={onClick} disabled={openMaus} />
-            <span>— {payload.kind === 'joined' ? (openMaus ? '加入了群聊' : 'joined the group')
-              : payload.kind === 'left' ? (openMaus ? '退出了群聊' : 'left the group')
+            <span>— {payload.kind === 'joined' ? (openMaus ? '加入了群聊' : "已加入群组")
+              : payload.kind === 'left' ? (openMaus ? '退出了群聊' : "退群")
               : openMaus ? '更新了群聊' : payload.kind ?? 'updated the group'}</span>
           </>
         )}
@@ -1651,7 +1651,7 @@ function QuoteCard({ msg }: { msg: Message }) {
         style={{ width: 'min(580px, 62vw)' }}
       >
         <span className="h-4 w-0.5 shrink-0 rounded bg-ink-200" />
-        <span className="min-w-0 truncate text-[11.5px] italic text-ink-400">[message deleted]</span>
+        <span className="min-w-0 truncate text-[11.5px] italic text-ink-400">[消息已删除]</span>
       </button>
     )
   }
@@ -1664,7 +1664,7 @@ function QuoteCard({ msg }: { msg: Message }) {
       onClick={jump}
       className="openmaus-quote-card mb-1.5 flex h-8 max-w-full items-center gap-2 rounded-lg px-2.5 text-left transition-colors"
       style={{ width: 'min(580px, 62vw)' }}
-      title="Jump to original"
+      title="跳转至原文"
     >
       <span className="h-4 w-0.5 shrink-0 rounded bg-skype" />
       <span className="shrink-0 truncate text-[11.5px] font-semibold text-skype-deep">{authorName}</span>
@@ -1683,8 +1683,8 @@ function ReplyIconButton({ msg, zh = false }: { msg: Message; zh?: boolean }) {
     <button
       onClick={() => setReplyingTo(msg.conversationId, msg.id)}
       className="w-6 h-6 rounded-full hover:bg-sky2-50 grid place-items-center text-ink-400 hover:text-skype-deep"
-      title={zh ? '回复' : 'Reply'}
-      aria-label={zh ? '回复这条消息' : 'Reply to this message'}
+      title={zh ? '回复' : "回复"}
+      aria-label={zh ? '回复这条消息' : "回复此消息"}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="9 17 4 12 9 7" />
@@ -1807,18 +1807,18 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           // attachment / quote; Dismiss just drops the bubble locally
           // so it stops clogging the bottom of the conversation.
           <div className="mt-1 flex items-center gap-2 text-[11px] text-coral-deep">
-            <span>{openMaus ? '发送失败' : 'Failed to send'}</span>
+            <span>{openMaus ? '发送失败' : "发送失败"}</span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); void retryFailedMessage(msg.conversationId, msg.id) }}
               className="font-semibold underline underline-offset-2 hover:text-coral-700"
-            >{openMaus ? '重试' : 'Retry'}</button>
+            >{openMaus ? '重试' : "重试"}</button>
             <span className="text-ink-300">·</span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); discardFailedMessage(msg.conversationId, msg.id) }}
               className="font-semibold underline underline-offset-2 hover:text-coral-700"
-            >{openMaus ? '移除' : 'Dismiss'}</button>
+            >{openMaus ? '移除' : "驳回"}</button>
           </div>
         )}
 
@@ -1831,7 +1831,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
               <polyline points="9 17 4 12 9 7" />
               <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
             </svg>
-            {msg.replyCount} {msg.replyCount === 1 ? 'reply' : 'replies'}
+            {msg.replyCount} {msg.replyCount === 1 ? "回复" : "回复"}
           </button>
         )}
 
@@ -1876,16 +1876,16 @@ export function TypingRow({ names, zh = false }: { names: string[]; zh?: boolean
   const visible = names.length > 0
   let body: React.ReactNode = null
   if (!zh && names.length === 1) {
-    body = <><b className="text-ink-700 font-semibold">{names[0]}</b> is typing…</>
+    body = <><b className="text-ink-700 font-semibold">{names[0]}</b> 正在输入...</>
   } else if (!zh && names.length === 2) {
-    body = <><b className="text-ink-700 font-semibold">{names[0]}</b> and <b className="text-ink-700 font-semibold">{names[1]}</b> are typing…</>
+    body = <><b className="text-ink-700 font-semibold">{names[0]}</b> 和 <b className="text-ink-700 font-semibold">{names[1]}</b> 正在输入...</>
   } else if (!zh && names.length >= 3) {
     body = (
       <>
         <b className="text-ink-700 font-semibold">{names[0]}</b>, <b className="text-ink-700 font-semibold">{names[1]}</b>
         {names.length === 3
-          ? <> and <b className="text-ink-700 font-semibold">{names[2]}</b> are typing…</>
-          : <> and <b className="text-ink-700 font-semibold">{names.length - 2} more</b> are typing…</>}
+          ? <> 和 <b className="text-ink-700 font-semibold">{names[2]}</b> 正在输入...</>
+          : <> 和 <b className="text-ink-700 font-semibold">{names.length - 2} 更多</b> 正在输入...</>}
       </>
     )
   } else if (names.length === 1) {

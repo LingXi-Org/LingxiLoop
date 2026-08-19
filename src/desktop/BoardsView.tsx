@@ -82,12 +82,12 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
     <aside className="h-full overflow-y-auto border-r border-ink-100 bg-cloud/40 relative">
       <ResizeHandle onMouseDown={onResizeStart} />
       <div className="px-4 py-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-ink-900">Boards</h2>
+        <h2 className="text-lg font-semibold text-ink-900">看板</h2>
         <button
           onClick={() => setCreating(true)}
           className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-50 hover:text-skype-deep"
-          title="New board"
-          aria-label="New board"
+          title="新板"
+          aria-label="新板"
         >
           <IPlus className="w-4 h-4" />
         </button>
@@ -103,7 +103,7 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
               if (e.key === 'Escape') { setCreating(false); setDraft('') }
             }}
             onBlur={() => void submit()}
-            placeholder="Board title..."
+            placeholder="董事会标题..."
             className="w-full px-2.5 py-1.5 text-sm rounded-md border border-ink-200 bg-white focus:outline-none focus:border-skype"
           />
         </div>
@@ -128,7 +128,7 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
         })}
         {list.length === 0 && !creating && (
           <li className="px-4 py-3 text-xs text-ink-400">
-            No boards yet. Click + to start one.
+            还没有板。单击 + 开始一个。
           </li>
         )}
       </ul>
@@ -142,7 +142,7 @@ function EmptyBoardsState({ empty }: { empty: boolean }) {
       <div className="text-center">
         <IBoard className="w-12 h-12 mx-auto mb-3 opacity-50" />
         <p className="text-sm">
-          {empty ? 'Create your first board to get started.' : 'Pick a board to open it.'}
+          {empty ? "创建您的第一个看板以开始使用。" : "选择一个板将其打开。"}
         </p>
       </div>
     </div>
@@ -185,7 +185,7 @@ function BoardCanvas({ boardId }: { boardId: string }) {
   if (!snap) {
     return (
       <div className="h-full grid place-items-center text-ink-400 text-sm">
-        {loadingBoardId === boardId ? 'Loading…' : 'No data.'}
+        {loadingBoardId === boardId ? "加载中…" : "无数据。"}
       </div>
     )
   }
@@ -243,8 +243,8 @@ function BoardCanvas({ boardId }: { boardId: string }) {
             try { await deleteBoard(boardId) } catch (e) { console.warn('[boards] delete failed', e) }
           }}
           className="w-8 h-8 rounded-md grid place-items-center text-ink-400 hover:bg-coral-50 hover:text-coral-deep"
-          title="Delete board"
-          aria-label="Delete board"
+          title="删除板"
+          aria-label="删除板"
         >
           <ITrash className="w-4 h-4" />
         </button>
@@ -272,7 +272,7 @@ function BoardCanvas({ boardId }: { boardId: string }) {
                   if (e.key === 'Escape') { setAddingCol(false); setColDraft('') }
                 }}
                 onBlur={() => void submitNewColumn()}
-                placeholder="Column title..."
+                placeholder="列标题..."
                 className="w-full px-2.5 py-1.5 text-sm rounded-md border border-ink-200 bg-white focus:outline-none focus:border-skype"
               />
             </div>
@@ -281,7 +281,7 @@ function BoardCanvas({ boardId }: { boardId: string }) {
               onClick={() => setAddingCol(true)}
               className="w-72 flex-shrink-0 px-3 py-2.5 rounded-lg text-sm text-ink-500 border border-dashed border-ink-200 hover:bg-cloud/40 hover:text-ink-700 transition-colors text-left"
             >
-              + Add column
+              + 添加列
             </button>
           )}
         </div>
@@ -379,8 +379,8 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
             try { await deleteColumn(boardId, column.id) } catch (e) { console.warn('[boards] delete col failed', e) }
           }}
           className="w-5 h-5 rounded grid place-items-center text-ink-300 hover:text-coral-deep"
-          title="Delete column"
-          aria-label="Delete column"
+          title="删除列"
+          aria-label="删除列"
         >
           <IMore className="w-3.5 h-3.5" />
         </button>
@@ -397,7 +397,7 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
             onSubmit={() => void submit()}
             onEscape={() => { setAdding(false); setDraft('') }}
             onBlur={() => void submit()}
-            placeholder="Card title... (@mention anyone)"
+            placeholder="卡片标题...（@提及任何人）"
             multiline
             submitOnEnter
             rows={2}
@@ -408,7 +408,7 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
             onClick={() => setAdding(true)}
             className="w-full text-left text-xs text-ink-400 px-2.5 py-1.5 rounded-md hover:bg-white hover:text-ink-600 transition-colors"
           >
-            + Add card
+            + 添加卡
           </button>
         )}
       </div>
@@ -859,7 +859,7 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
               value={title}
               onChange={setTitle}
               onSubmit={() => void saveTitle()}
-              placeholder="Card title — @mention anyone"
+              placeholder="卡片标题 — @提及任何人"
               className="-ml-2 w-full border-transparent bg-transparent px-2 py-1.5 text-[19px] font-semibold leading-7 text-ink-900 placeholder:text-ink-300 focus:border-skype/30 focus:bg-white focus:ring-2 focus:ring-skype/15"
             />
           </div>
@@ -867,13 +867,13 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
             type="button"
             onClick={() => { void saveTitle().then(onClose) }}
             className="shrink-0 rounded-md px-2.5 py-1.5 text-sm text-ink-500 hover:bg-sky2-50 hover:text-skype-deep"
-          >Close</button>
+          >关闭</button>
         </header>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           <section className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">Column</div>
+              <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">栏目</div>
               <Select
                 value={card.columnId}
                 onValueChange={(columnId) => void moveToColumn(columnId)}
@@ -882,7 +882,7 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
               />
             </div>
             <div>
-              <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">Assignee</div>
+              <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">受让人</div>
               <AssigneePicker
                 value={card.assigneeId}
                 onChange={(id) => void setAssignee(id)}
@@ -892,12 +892,12 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
           </section>
 
           <section>
-            <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">Description</div>
+            <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">说明</div>
             <MentionInput
               value={description}
               onChange={setDescription}
               onSubmit={() => void saveDescription()}
-              placeholder="What's this card about? (@mention agents or humans — they'll see it)"
+              placeholder="这张卡是关于什么的？ （@提及特工或人类——他们会看到的）"
               multiline
               rows={4}
             />
@@ -910,13 +910,13 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
               <button
                 onClick={() => void saveDescription()}
                 className="text-xs text-ink-500 hover:text-skype-deep px-2 py-1"
-              >Save description</button>
+              >保存描述</button>
             </div>
           </section>
 
           <section>
             <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">
-              Comments {comments.length > 0 && <span className="text-ink-500">· {comments.length}</span>}
+              评论 {comments.length > 0 && <span className="text-ink-500">· {comments.length}</span>}
             </div>
             <ul className="space-y-2">
               {comments.map((c) => {
@@ -937,7 +937,7 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
                 )
               })}
               {comments.length === 0 && (
-                <li className="text-xs text-ink-400">No comments yet.</li>
+                <li className="text-xs text-ink-400">还没有评论。</li>
               )}
             </ul>
             <div className="mt-3">
@@ -945,7 +945,7 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
                 value={draftComment}
                 onChange={setDraftComment}
                 onSubmit={() => void postComment()}
-                placeholder="Comment… (⌘↵ to post · @mention to ping)"
+                placeholder="评论…（⌘↵发帖·@提及ping）"
                 multiline
                 rows={2}
               />
@@ -954,7 +954,7 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
                   onClick={() => void postComment()}
                   disabled={!draftComment.trim() || posting}
                   className="px-3 py-1.5 text-sm rounded-md bg-skype text-white hover:bg-skype-deep disabled:opacity-40 disabled:hover:bg-skype"
-                >Post comment</button>
+                >发表评论</button>
               </div>
             </div>
           </section>
@@ -962,7 +962,7 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
 
         <footer className="px-5 py-3 border-t border-ink-100 flex items-center justify-between">
           <div className="text-[11px] text-ink-400">
-            Created {formatTime(card.createdAt)} · by {byId[card.createdBy]?.name ?? card.createdBy}
+            已创建 {formatTime(card.createdAt)} ·由 {byId[card.createdBy]?.name ?? card.createdBy}
           </div>
           <button
             onClick={async () => {
@@ -970,7 +970,7 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
               try { await deleteCard(boardId, card.id); onClose() } catch (e) { console.warn(e) }
             }}
             className="text-xs text-coral-deep hover:underline"
-          >Delete card</button>
+          >删除卡</button>
         </footer>
       </div>
     </div>
@@ -1000,7 +1000,7 @@ function AssigneePicker({ value, onChange, meId }: {
   )
   const selected = value ? everyone.find((p) => p.id === value) ?? null : null
   const options = useMemo(() => [
-    { id: null, label: 'Unassigned', meta: '', participant: null as Participant | null },
+    { id: null, label: "未分配", meta: '', participant: null as Participant | null },
     ...everyone.map((p) => ({
       id: p.id,
       label: p.name,
@@ -1081,7 +1081,7 @@ function AssigneePicker({ value, onChange, meId }: {
           aria-controls={`${id}-listbox`}
           aria-activedescendant={open && filtered[activeIndex] ? `${id}-option-${activeIndex}` : undefined}
           value={displayValue}
-          placeholder="Search assignees..."
+          placeholder="搜索受让人..."
           onFocus={openMenu}
           onMouseDown={() => {
             if (!open) openMenu()
@@ -1123,8 +1123,8 @@ function AssigneePicker({ value, onChange, meId }: {
         {value && (
           <button
             type="button"
-            aria-label="Clear assignee"
-            title="Clear assignee"
+            aria-label="清除受让人"
+            title="清除受让人"
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => onChange(null)}
             className="absolute right-[45px] grid h-7 w-7 place-items-center rounded-[9px] text-ink-300 transition hover:bg-sky2-50 hover:text-ink-600"
@@ -1134,7 +1134,7 @@ function AssigneePicker({ value, onChange, meId }: {
         )}
         <button
           type="button"
-          aria-label="Open assignee menu"
+          aria-label="打开受让人菜单"
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => openMenu()}
           className={cn(
@@ -1190,7 +1190,7 @@ function AssigneePicker({ value, onChange, meId }: {
             )
           })}
           {filtered.length === 0 && (
-            <div className="px-3 py-3 text-[12.5px] font-semibold text-ink-400">No matching teammate.</div>
+            <div className="px-3 py-3 text-[12.5px] font-semibold text-ink-400">没有匹配的队友。</div>
           )}
         </div>
       )}

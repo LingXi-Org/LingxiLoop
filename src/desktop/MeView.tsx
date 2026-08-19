@@ -16,7 +16,7 @@ type Tab = (typeof tabs)[number]
 
 const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: string; sub: string; default: boolean }> }> = [
   {
-    title: 'Notifications',
+    title: "通知",
     items: [
       { key: 'notify.group_pulled', lbl: 'When an agent pulls a group with you in it', sub: 'always · never · only urgent', default: true },
       { key: 'notify.whisper_mention', lbl: 'When a whisper mentions you', sub: 'always · digest · never', default: true },
@@ -25,7 +25,7 @@ const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: strin
     ],
   },
   {
-    title: 'Look & feel',
+    title: "外观和感觉",
     items: [
       { key: 'ui.reduce_motion', lbl: 'Reduce motion', sub: 'fewer animations', default: false },
       { key: 'ui.typing_indicators', lbl: 'Show typing indicators', sub: 'see when agents are drafting', default: true },
@@ -33,7 +33,7 @@ const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: strin
     ],
   },
   {
-    title: 'Privacy',
+    title: "隐私",
     items: [
       { key: 'priv.allow_silent_whispers', lbl: 'Let agents whisper without your peek', sub: 'they still log to your transcript', default: true },
       { key: 'priv.allow_new_tools', lbl: 'Let agents call new tools autonomously', sub: 'with the permissions you\'ve granted', default: true },
@@ -62,7 +62,7 @@ function ProfileTab() {
   const providers = authUser.providers ?? []
   return (
     <div className="space-y-6">
-      <Section title="↳ Identity">
+      <Section title="↳ 身份">
         <div className="bg-cloud rounded-[14px] p-5 flex items-start gap-5"
           style={{ border: '1px solid var(--ink-100)' }}>
           {meParticipant
@@ -82,13 +82,13 @@ function ProfileTab() {
         </div>
       </Section>
 
-      <Section title="↳ Session">
+      <Section title="↳ 会议">
         <div className="bg-cloud rounded-[14px] p-5 flex items-center justify-between gap-4"
           style={{ border: '1px solid var(--ink-100)' }}>
           <div className="min-w-0">
-            <div className="font-display text-[14px] text-ink-800">Signed in to <span className="font-mono text-[12px]">{serverOrigin}</span></div>
+            <div className="font-display text-[14px] text-ink-800">已登录 <span className="font-mono text-[12px]">{serverOrigin}</span></div>
             <div className="font-display italic text-[12px] text-ink-400 mt-0.5">
-              Signing out clears the local token and revokes this session on the server.
+              注销会清除本地令牌并撤销服务器上的此会话。
             </div>
           </div>
           <button
@@ -96,7 +96,7 @@ function ProfileTab() {
             onClick={signOut}
             className="shrink-0 h-9 px-4 rounded-[8px] bg-ink-800 hover:bg-ink-900 text-white text-[13px] font-display transition-colors"
           >
-            Sign out
+            退出登录
           </button>
         </div>
       </Section>
@@ -112,13 +112,13 @@ function ProfileTab() {
  *  has a single, advertised entry point that doesn't go through email. */
 function CommunitySection() {
   return (
-    <Section title="↳ Community & feedback">
+    <Section title="↳ 社区和反馈">
       <div className="bg-cloud rounded-[14px] p-5 flex items-center justify-between gap-4"
         style={{ border: '1px solid var(--ink-100)' }}>
         <div className="min-w-0">
-          <div className="font-display text-[14px] text-ink-800">Join the LingxiLoop Discord</div>
+          <div className="font-display text-[14px] text-ink-800">加入LingxiLoop Discord</div>
           <div className="font-display italic text-[12px] text-ink-400 mt-0.5">
-            Share feedback, report bugs, and meet other people running agent teams.
+            分享反馈、报告错误并与智能体团队的其他人员会面。
           </div>
         </div>
         <a
@@ -131,7 +131,7 @@ function CommunitySection() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 0 0-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
           </svg>
-          Join Discord
+          加入 Discord
         </a>
       </div>
     </Section>
@@ -159,15 +159,15 @@ function AboutSection() {
   if (!version) return null
 
   return (
-    <Section title="↳ About">
+    <Section title="↳ 关于">
       <div className="bg-cloud rounded-[14px] p-5 flex items-center justify-between gap-4"
         style={{ border: '1px solid var(--ink-100)' }}>
         <div className="min-w-0">
           <div className="font-display text-[14px] text-ink-800">LingxiLoop <span className="font-mono text-[12px]">v{version}</span></div>
           <div className="font-display italic text-[12px] text-ink-400 mt-0.5">
             {supported
-              ? 'Auto-update checks daily. You\'ll see a banner when a new version is ready.'
-              : 'Auto-update is not available in this build (open the dialog to see why).'}
+              ? "每天自动更新检查。当新版本准备就绪时，您会看到一个横幅。"
+              : "自动更新在此版本中不可用（打开对话框查看原因）。"}
           </div>
         </div>
         <button
@@ -176,7 +176,7 @@ function AboutSection() {
           className="shrink-0 h-9 px-4 rounded-[8px] text-[13px] font-display transition-colors text-white"
           style={{ background: 'var(--skype)' }}
         >
-          Check for updates
+          检查更新
         </button>
       </div>
     </Section>
@@ -194,9 +194,9 @@ function AboutSection() {
 type PeriodKey = 'daily' | 'weekly' | 'monthly'
 
 const PERIOD_META: Array<{ key: PeriodKey; label: string; sub: string }> = [
-  { key: 'daily',   label: 'Daily',   sub: 'rolls over at local midnight' },
-  { key: 'weekly',  label: 'Weekly',  sub: 'rolls over weekly' },
-  { key: 'monthly', label: 'Monthly', sub: 'rolls over monthly' },
+  { key: 'daily',   label: "每日",   sub: 'rolls over at local midnight' },
+  { key: 'weekly',  label: "每周",  sub: 'rolls over weekly' },
+  { key: 'monthly', label: "每月", sub: 'rolls over monthly' },
 ]
 
 function fmtUsd(n: number): string {
@@ -259,7 +259,7 @@ function QuotaCard({ period, label, sub, window }: {
         <div className="font-display font-semibold text-[14px] text-ink-900">{label}</div>
         {limit != null
           ? <div className="font-mono text-[11px] font-semibold text-ink-500">{pct.toFixed(0)}%</div>
-          : <div className="font-mono text-[10px] tracking-wider uppercase text-ink-300">unlimited</div>}
+          : <div className="font-mono text-[10px] tracking-wider uppercase text-ink-300">无限</div>}
       </div>
       <div className="font-display tabular-nums text-[22px] tracking-tight text-ink-900" style={{ letterSpacing: '-0.02em' }}>
         {fmtUsd(used)}
@@ -301,13 +301,13 @@ function UsageTab() {
   if (state.kind === 'loading') {
     return (
       <div className="space-y-6">
-        <Section title="↳ Quota">
+        <Section title="↳ 配额">
           <div className="grid grid-cols-3 gap-3">
             {PERIOD_META.map((p) => (
               <div key={p.key} className="bg-cloud rounded-[14px] p-5 h-[140px]"
                 style={{ border: '1px solid var(--ink-100)' }}>
                 <div className="font-display font-semibold text-[14px] text-ink-300">{p.label}</div>
-                <div className="font-display italic text-[12px] text-ink-300 mt-2">loading…</div>
+                <div className="font-display italic text-[12px] text-ink-300 mt-2">加载中...</div>
               </div>
             ))}
           </div>
@@ -319,15 +319,15 @@ function UsageTab() {
   if (state.kind === 'error') {
     return (
       <div className="space-y-6">
-        <Section title="↳ Quota">
+        <Section title="↳ 配额">
           <div className="bg-cloud rounded-[14px] p-6 text-center"
             style={{ border: '1px solid var(--ink-100)' }}>
-            <div className="font-display text-[14px] text-ink-700 mb-1">Couldn't fetch your quota</div>
+            <div className="font-display text-[14px] text-ink-700 mb-1">无法获取您的配额</div>
             <div className="font-display italic text-[12px] text-coral-deep mb-3">{state.message}</div>
             <button onClick={load}
               className="px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-white"
               style={{ background: 'var(--skype)' }}>
-              Try again
+              再试一次
             </button>
           </div>
         </Section>
@@ -340,12 +340,12 @@ function UsageTab() {
   if (!configured) {
     return (
       <div className="space-y-6">
-        <Section title="↳ Quota">
+        <Section title="↳ 配额">
           <div className="bg-cloud rounded-[14px] p-6"
             style={{ border: '1px dashed var(--ink-100)' }}>
-            <div className="font-display text-[14px] text-ink-700">No quota gateway on this deployment</div>
+            <div className="font-display text-[14px] text-ink-700">此部署中没有配额网关</div>
             <div className="font-display italic text-[12px] text-ink-500 mt-1 max-w-xl">
-              This server isn't running a sub2api gateway, so per-period quotas aren't tracked. Usage is governed by the host's own API key allowance.
+              此服务器未运行 sub2api 网关，因此不会跟踪每个周期的配额。使用情况由主机自己的 API 密钥限额控制。
             </div>
           </div>
         </Section>
@@ -356,21 +356,21 @@ function UsageTab() {
   if (!snapshot) {
     return (
       <div className="space-y-6">
-        <Section title="↳ Quota">
+        <Section title="↳ 配额">
           <div className="bg-cloud rounded-[14px] p-6"
             style={{ border: '1px dashed var(--ink-100)' }}>
             <div className="font-display text-[14px] text-ink-700">
-              {error ? 'Quota gateway is unreachable' : 'No active subscription'}
+              {error ? "配额网关无法访问" : "没有有效订阅"}
             </div>
             <div className="font-display italic text-[12px] text-ink-500 mt-1 max-w-xl">
               {error
-                ? 'The cumora server couldn\'t reach the quota gateway. Try again in a moment.'
-                : 'Your account hasn\'t been provisioned on the quota gateway yet. This usually clears up on its own — try again in a minute.'}
+                ? "cumora 服务器无法到达配额网关。稍后再试一次。"
+                : "您的帐户尚未在配额网关上配置。这通常会自行消失 - 请稍后再试。"}
             </div>
             <button onClick={load}
               className="mt-3 px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-50 transition"
               style={{ border: '1px dashed var(--sky2-300)' }}>
-              Refresh
+              刷新
             </button>
           </div>
         </Section>
@@ -380,10 +380,10 @@ function UsageTab() {
 
   return (
     <div className="space-y-6">
-      <Section title="↳ Quota">
+      <Section title="↳ 配额">
         <div className="text-[13px] text-ink-500 leading-[1.55] mb-4 max-w-2xl font-display italic">
-          What your agents have spent on this account, across the rolling windows the gateway enforces. Numbers are in USD.
-          {snapshot.groupName ? <> Plan: <span className="not-italic font-semibold text-skype-deep">{snapshot.groupName}</span>.</> : null}
+          在网关强制执行的滚动窗口中，您的智能体在此帐户上花费的费用。数字为 USD。
+          {snapshot.groupName ? <> 计划： <span className="not-italic font-semibold text-skype-deep">{snapshot.groupName}</span>.</> : null}
         </div>
         <div className="grid grid-cols-3 gap-3">
           {PERIOD_META.map((p) => (
@@ -400,9 +400,9 @@ function UsageTab() {
           <button onClick={load}
             className="px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}>
-            Refresh
+            刷新
           </button>
-          {error && <span className="text-[11.5px] text-coral-deep font-display italic">last refresh had a hiccup: {error}</span>}
+          {error && <span className="text-[11.5px] text-coral-deep font-display italic">上次刷新出现了问题： {error}</span>}
         </div>
       </Section>
     </div>
@@ -417,9 +417,9 @@ function TrustTab() {
 
   return (
     <div className="space-y-6">
-      <Section title="↳ Per-agent autonomy">
+      <Section title="↳ 每个智能体自治">
         <div className="text-[13px] text-ink-500 leading-[1.55] mb-4 max-w-2xl font-display italic">
-          Each agent has a threshold for acting on their own — pulling groups, kicking off tools, whispering peers. Adjust per agent if their judgment doesn't match yours.
+          每个智能体都有一个独立行动的门槛——拉动群体、启动工具、与同伴私聊。如果他们的判断与您的不一致，请根据每个智能体进行调整。
         </div>
         <div className="space-y-2">
           {agents.map((a) => {
@@ -436,7 +436,7 @@ function TrustTab() {
                 </div>
                 <div className="min-w-0">
                   <div className="text-[11px] text-ink-500 mb-1.5 flex justify-between">
-                    <span>autonomy threshold</span>
+                    <span>自治阈值</span>
                     <span className="font-mono text-[11px] font-semibold text-ink-700">{trust.toFixed(2)}</span>
                   </div>
                   <input type="range" min={0} max={1} step={0.01} value={trust}
@@ -449,7 +449,7 @@ function TrustTab() {
         </div>
       </Section>
 
-      <Section title="↳ Pulled-group track records">
+      <Section title="↳ 拉组曲目记录">
         <div className="grid grid-cols-3 gap-3">
           {agents.slice(0, 3).map((a) => {
             const ar = autonomy[a.id]
@@ -521,16 +521,16 @@ function ProjectsTab() {
 
   return (
     <div className="space-y-6">
-      <Section title="↳ Projects">
+      <Section title="↳ 项目">
         <div className="text-[13px] text-ink-500 leading-[1.55] mb-4 max-w-2xl font-display italic">
-          Projects bundle related groups under a name + a tint. Attach a group to a project so the team and the agents both see what scope the conversation belongs to.
+          将相关组项目捆绑在名称+色调下。将一个组附加到一个项目，以便团队和智能体都可以看到对话属于哪个范围。
         </div>
 
         <div className="space-y-2">
           {visible.length === 0 && !creating && (
             <div className="bg-cloud rounded-[12px] p-6 text-center text-[13px] text-ink-500 italic font-display"
               style={{ border: '1px dashed var(--ink-100)' }}>
-              No projects yet. Click <b className="not-italic text-skype-deep">+ New project</b> to start one.
+              还没有项目。点击 <b className="not-italic text-skype-deep">+ 新项目</b> 开始一个。
             </div>
           )}
           {visible.map((p) => (
@@ -540,17 +540,17 @@ function ProjectsTab() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <div className="font-semibold text-[14px] text-ink-900 truncate">{p.name}</div>
-                  {p.status === 'archived' && <span className="text-[10px] text-ink-300 uppercase tracking-wider">archived</span>}
+                  {p.status === 'archived' && <span className="text-[10px] text-ink-300 uppercase tracking-wider">已存档</span>}
                 </div>
                 <div className="font-display italic text-[12px] text-ink-500 truncate">
-                  {p.description || '(no description)'}  ·  {p.conversationCount} conversation{p.conversationCount === 1 ? '' : 's'}
+                  {p.description || '(no description)'}  ·  {p.conversationCount} 对话{p.conversationCount === 1 ? '' : 's'}
                 </div>
               </div>
               <button
                 onClick={() => archive(p.id, p.status !== 'archived')}
                 className="px-3 py-1.5 rounded-[8px] text-[11.5px] font-semibold text-ink-700 bg-paper hover:bg-sky2-50 transition"
                 style={{ border: '1px solid var(--ink-100)' }}
-              >{p.status === 'archived' ? 'Restore' : 'Archive'}</button>
+              >{p.status === 'archived' ? "恢复" : "存档"}</button>
             </div>
           ))}
         </div>
@@ -563,7 +563,7 @@ function ProjectsTab() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Project name"
+              placeholder="项目名称"
               className="w-full px-3 py-2 text-[13px] rounded outline-none"
               style={{ border: '1px solid var(--ink-100)', background: 'var(--paper)' }}
             />
@@ -571,7 +571,7 @@ function ProjectsTab() {
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Short description (optional)"
+              placeholder="简短描述（可选）"
               className="w-full px-3 py-2 text-[12.5px] rounded outline-none"
               style={{ border: '1px solid var(--ink-100)', background: 'var(--paper)' }}
             />
@@ -582,11 +582,11 @@ function ProjectsTab() {
                 disabled={!name.trim() || busy}
                 className="px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-white disabled:opacity-50"
                 style={{ background: 'var(--skype)' }}
-              >{busy ? '…' : 'Create project'}</button>
+              >{busy ? '…' : "创建项目"}</button>
               <button
                 onClick={() => { setCreating(false); setName(''); setDescription(''); setErr(null) }}
                 className="px-3 py-1.5 rounded-[8px] text-[12px] text-ink-500 hover:bg-cloud"
-              >Cancel</button>
+              >取消</button>
             </div>
           </div>
         ) : (
@@ -595,13 +595,13 @@ function ProjectsTab() {
               onClick={() => setCreating(true)}
               className="px-4 py-2 rounded-[10px] text-[12.5px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-50 transition"
               style={{ border: '1px dashed var(--sky2-300)' }}
-            >+ New project</button>
+            >+ 新项目</button>
             {archivedCount > 0 && (
               <button
                 onClick={() => setShowArchived((v) => !v)}
                 className="text-[11.5px] text-ink-500 hover:text-skype-deep transition italic font-display"
               >
-                {showArchived ? 'Hide archived' : `Show archived (${archivedCount})`}
+                {showArchived ? "隐藏已存档" : `Show archived (${archivedCount})`}
               </button>
             )}
           </div>
@@ -651,15 +651,15 @@ function PreferencesTab() {
       ))}
       <SkypeSoundSection />
       {devtoolsCanEnable && (
-        <Section title="↳ Developer">
+        <Section title="↳ 开发者">
           <Checkbox
             checked={devtoolsEnabled}
             disabled={devtoolsLocal}
             onCheckedChange={(next) => { void setDevMode(next) }}
-            label="Developer mode"
+            label="开发者模式"
             description={devtoolsLocal
-              ? 'Always on while running the local development build'
-              : 'Show Observe and unlock backend-gated developer tools on this device'}
+              ? "运行本地开发构建时始终开启"
+              : "显示观察并解锁此设备上的后端控制开发人员工具"}
           />
         </Section>
       )}
@@ -675,14 +675,14 @@ function SkypeSoundSection() {
   const setMuted = useSoundStore((s) => s.setMuted)
   const on = !muted
   return (
-    <Section title="↳ Skype emoticons">
+    <Section title="↳ Skype 表情符号">
       <div className="bg-cloud rounded-[14px]"
         style={{ border: '1px solid var(--ink-100)' }}>
         <div className="flex items-center gap-4 p-4 cursor-pointer" onClick={() => setMuted(on)}>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-[13px] text-ink-900">Play classic Skype sounds</div>
+            <div className="font-semibold text-[13px] text-ink-900">播放经典 Skype 声音</div>
             <div className="font-display italic font-normal text-[11.5px] text-ink-500 mt-0.5">
-              this device only · plays once when a Skype emoticon enters view; click an emoticon to replay
+              此设备仅在 Skype 表情符号进入视图时播放一次；点击表情即可重播
             </div>
           </div>
           <span className={cn('w-9 h-5 rounded-full relative shrink-0 transition-colors', on ? 'bg-skype' : 'bg-ink-200')}>
@@ -770,16 +770,16 @@ function ComputersTab() {
 
   return (
     <div className="space-y-6">
-      <Section title="↳ Where your agents run">
+      <Section title="↳ 你的智能体运行的地方">
         <p className="text-[13px] text-ink-500 mb-4 max-w-[640px]">
-          Every agent runs on a <strong>Computer</strong>. <em>LingxiLoop Cloud</em> is built in and
-          always on. Pair your own machine or a VPS to run agents on your local
-          <span className="font-mono text-[12px]"> Claude Code</span> or
-          <span className="font-mono text-[12px]"> Codex</span> — each agent gets its own isolated
-          workspace, memory and skills there.
+          每个智能体都运行在 <strong>计算机</strong>. <em>LingxiLoop 云</em> 是内置的并且
+          始终开启。配对您自己的计算机或 VPS 以在本地运行智能体
+          <span className="font-mono text-[12px]"> 克劳德代码</span> 或
+          <span className="font-mono text-[12px]"> 法典</span> — 每个智能体都有自己的隔离
+          那里有工作空间、记忆力和技能。
         </p>
 
-        {!loaded && <div className="text-[13px] text-ink-400">Loading…</div>}
+        {!loaded && <div className="text-[13px] text-ink-400">加载中…</div>}
 
         <div className="grid gap-3">
           {list.map((c) => {
@@ -803,14 +803,14 @@ function ComputersTab() {
                       {c.daemonOutdated && (
                         <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-0.5 rounded-full"
                           style={{ background: 'rgba(244,183,64,0.18)', color: 'var(--gold-deep)' }}
-                          title={c.latestDaemonVersion ? `Update to v${c.latestDaemonVersion}` : 'Update available'}>
-                          ↑ update{c.daemonVersion ? ` · v${c.daemonVersion}` : ''}
+                          title={c.latestDaemonVersion ? `Update to v${c.latestDaemonVersion}` : "有更新"}>
+                          ↑ 更新{c.daemonVersion ? ` · v${c.daemonVersion}` : ''}
                         </span>
                       )}
                     </div>
                     <div className="text-[12px] text-ink-500 mt-0.5">
                       {c.availableEngines.map((e) => ENGINE_LABEL[e] ?? e).join(', ') || '—'}
-                      {' · '}{n} agent{n === 1 ? '' : 's'}
+                      {' · '}{n} 智能体{n === 1 ? '' : 's'}
                       {repairable && c.daemonVersion && (
                         <>{' · '}<span className="font-mono text-[11px] text-ink-400">v{c.daemonVersion}</span></>
                       )}
@@ -818,10 +818,10 @@ function ComputersTab() {
                   </div>
                   {repairable && (
                     <>
-                      <span className="text-[12px] font-semibold text-skype-deep">{expanded ? 'Hide' : 'Reconnect'}</span>
+                      <span className="text-[12px] font-semibold text-skype-deep">{expanded ? "隐藏" : "重新连接"}</span>
                       <button onClick={(e) => { e.stopPropagation(); void remove(c.id, c.name) }}
                         className="text-[12px] font-semibold text-coral-deep hover:underline px-2 py-1">
-                        Remove
+                        删除
                       </button>
                     </>
                   )}
@@ -829,17 +829,17 @@ function ComputersTab() {
                 {expanded && (
                   <div className="px-4 pb-4 pt-3 border-t border-ink-100">
                     <div className="text-[12px] text-ink-500 mb-2 italic font-display">
-                      Run this on “{c.name}” to reconnect it — its agents stay attached. This token stays valid.
+                      在“上运行”{c.name}”来重新连接它——它的智能体保持连接状态。该令牌仍然有效。
                     </div>
                     {!repairCode ? (
-                      <div className="text-[12px] text-ink-400">Generating…</div>
+                      <div className="text-[12px] text-ink-400">正在生成...</div>
                     ) : (
                       <>
                         <pre className="bg-ink-900 text-cloud rounded-[10px] p-3 text-[12px] overflow-x-auto whitespace-pre-wrap break-all font-mono select-all">{repairCmd}</pre>
                         <button onClick={(e) => { e.stopPropagation(); void navigator.clipboard?.writeText(repairCmd); setRepairCopied(true) }}
                           className="mt-2 inline-flex items-center justify-center min-w-[120px] text-[12px] font-semibold px-3 py-1.5 rounded-[9px] text-white transition-colors duration-200"
                           style={{ background: repairCopied ? '#3BB273' : 'var(--skype)' }}>
-                          {repairCopied ? '✓ Copied!' : 'Copy command'}
+                          {repairCopied ? "✓ 已复制！" : "复制命令"}
                         </button>
                       </>
                     )}
@@ -853,13 +853,13 @@ function ComputersTab() {
         {code ? (
           <div className="mt-4 bg-sky-50 rounded-[14px] p-4" style={{ border: '1px solid var(--sky-100)' }}>
             <div className="text-[13px] font-semibold text-ink-900 mb-1">
-              Run this on the machine you want to host agents:
+              在要托管智能体的计算机上运行此命令：
             </div>
             <div className="text-[11.5px] text-ink-500 mb-2.5 italic font-display">
-              Needs <span className="font-mono not-italic">claude</span> or <span className="font-mono not-italic">codex</span> installed. The computer names itself after that machine and appears here once paired. This token stays valid.
+              需要 <span className="font-mono not-italic">克劳德</span> 或 <span className="font-mono not-italic">法典</span> 已安装。计算机以该机器的名字命名，并在配对后出现在此处。该令牌仍然有效。
             </div>
             <div className="flex items-center gap-2.5 mb-2.5">
-              <span className="text-[12px] text-ink-500">Engine</span>
+              <span className="text-[12px] text-ink-500">发动机</span>
               <div className="inline-flex rounded-[9px] p-0.5" style={{ background: 'var(--ink-100)' }}>
                 {([['claude', 'Claude Code'], ['codex', 'Codex']] as const).map(([id, label]) => (
                   <button key={id} type="button" onClick={() => setEngine(id)}
@@ -871,18 +871,18 @@ function ComputersTab() {
                   </button>
                 ))}
               </div>
-              <span className="text-[11px] text-ink-400">just the default — this computer can still run agents on either engine</span>
+              <span className="text-[11px] text-ink-400">只是默认值 - 该计算机仍然可以在任一引擎上运行智能体</span>
             </div>
             {isWindows ? (
               <div className="mb-2.5 text-[12px] text-ink-600">
-                Keep this terminal open while the agents run.
-                <span className="text-ink-400"> — background service install isn’t supported on Windows yet.</span>
+                在智能体运行时保持此终端打开。
+                <span className="text-ink-400"> — Windows 尚不支持后台服务安装。</span>
               </div>
             ) : (
               <label className="flex items-start gap-2 mb-2.5 cursor-pointer select-none">
                 <input type="checkbox" checked={asService} onChange={(e) => setAsService(e.target.checked)} className="mt-[3px]" />
                 <span className="text-[12px] text-ink-600">
-                  Keep it running in the background <span className="text-ink-400">— auto-start on boot, auto-restart on crash, auto-update. Otherwise this terminal has to stay open.</span>
+                  让它在后台运行 <span className="text-ink-400">— 启动时自动启动、崩溃时自动重启、自动更新。否则该终端必须保持打开状态。</span>
                 </span>
               </label>
             )}
@@ -898,24 +898,21 @@ function ComputersTab() {
                       style={{ animation: 'cp-pop 0.32s cubic-bezier(.36,1.6,.4,1)' }}>
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    <span style={{ animation: 'cp-fade 0.2s ease' }}>Copied!</span>
+                    <span style={{ animation: 'cp-fade 0.2s ease' }}>已复制！</span>
                   </>
-                ) : 'Copy command'}
+                ) : "复制命令"}
               </button>
               <button onClick={() => setCode(null)}
-                className="text-[12px] font-semibold px-3 py-1.5 rounded-[9px] border border-ink-100 text-ink-600">Done</button>
+                className="text-[12px] font-semibold px-3 py-1.5 rounded-[9px] border border-ink-100 text-ink-600">完成</button>
             </div>
-            <style>{`
-              @keyframes cp-pop { 0% { transform: scale(0.2); opacity: 0 } 55% { transform: scale(1.3) } 100% { transform: scale(1); opacity: 1 } }
-              @keyframes cp-fade { from { opacity: 0; transform: translateX(-2px) } to { opacity: 1; transform: none } }
-            `}</style>
+            <style>{"@keyframes cp-pop { 0% { 变换：比例（0.2）;不透明度：0 } 55% { 变换：scale(1.3) } 100% { 变换：scale(1);不透明度：1 } }\n              @keyframes cp-fade { from { 不透明度：0;变换：translateX(-2px) } 为 { 不透明度：1;变换：无 } }"}</style>
           </div>
         ) : (
           <>
             {err && <div className="mt-4 text-[12px] text-coral-deep bg-coral-soft rounded-[8px] p-2">{err}</div>}
             <button onClick={addComputer} disabled={busy}
               className="mt-4 px-4 py-2 rounded-[10px] bg-skype text-white text-[13px] font-semibold disabled:opacity-50">
-              {busy ? 'Generating…' : '+ Add a computer'}
+              {busy ? "正在生成..." : "+ 添加计算机"}
             </button>
           </>
         )}
@@ -963,7 +960,7 @@ function DaemonUpgradeBanner({ onJump }: { onJump: () => void }) {
           style={{ background: 'rgba(244,183,64,0.22)', color: 'var(--gold-deep)' }}>↑</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="font-display font-semibold text-[15px] text-ink-900">Update available</span>
+            <span className="font-display font-semibold text-[15px] text-ink-900">有更新</span>
             {latest && (
               <span className="inline-flex items-center gap-1.5 text-[11px] font-mono">
                 {one?.daemonVersion && (
@@ -976,17 +973,17 @@ function DaemonUpgradeBanner({ onJump }: { onJump: () => void }) {
           </div>
           <div className="text-[12.5px] text-ink-600 mt-1 leading-relaxed">
             {one ? (
-              <><strong className="text-ink-900 font-medium">{one.name}</strong> is running an outdated agent daemon.</>
+              <><strong className="text-ink-900 font-medium">{one.name}</strong> 正在运行过时的智能体守护程序。</>
             ) : (
-              <><strong className="text-ink-900 font-medium">{outdated.length} computers</strong> are running an outdated agent daemon: {outdated.map((c) => c.name).join(', ')}.</>
+              <><strong className="text-ink-900 font-medium">{outdated.length} 计算机</strong> 正在运行过时的智能体守护进程： {outdated.map((c) => c.name).join(', ')}.</>
             )}
             {allManual ? (
-              <>{' '}{one ? 'It runs' : 'They run'} as a foreground command — press <kbd className="font-mono text-[11px]">Ctrl-C</kbd> in {one ? 'its' : 'each'} terminal, then re-run to update. Tip: <code className="font-mono text-[11px]">--install-service</code> makes updates automatic.</>
+              <>{' '}{one ? "它运行" : "他们跑"} 作为前台命令 — 按 <kbd className="font-mono text-[11px]">Ctrl-C</kbd> 在 {one ? "其" : "每个"} 终端，然后重新运行以更新。提示： <code className="font-mono text-[11px]">--安装服务</code> 使更新自动进行。</>
             ) : (
               <>
-                {' '}Restart {one ? 'it' : 'them'} to pick up the latest fixes — agents stay attached.
+                {' '}重新启动 {one ? "它" : "他们"} 获取最新修复——智能体保持连接。
                 {manual.length > 0 && (
-                  <>{' '}({manual.map((c) => c.name).join(', ')} {manual.length === 1 ? 'runs' : 'run'} as a foreground command — Ctrl-C and re-run there instead.)</>
+                  <>{' '}({manual.map((c) => c.name).join(', ')} {manual.length === 1 ? "运行" : "运行"} 作为前台命令 - Ctrl-C 并在那里重新运行。）</>
                 )}
               </>
             )}
@@ -996,11 +993,11 @@ function DaemonUpgradeBanner({ onJump }: { onJump: () => void }) {
             <button onClick={copy}
               className="shrink-0 inline-flex items-center justify-center min-w-[82px] text-[12px] font-semibold px-3 rounded-[10px] text-white transition-colors duration-200"
               style={{ background: copied ? 'var(--avail)' : 'var(--gold-deep)' }}>
-              {copied ? '✓ Copied' : 'Copy'}
+              {copied ? "✓ 已复制" : "复制"}
             </button>
           </div>
           <button onClick={onJump} className="mt-2 text-[11.5px] font-semibold text-gold-deep hover:underline" style={{ color: 'var(--gold-deep)' }}>
-            Manage computers →
+            管理计算机 →
           </button>
         </div>
       </div>
@@ -1019,10 +1016,10 @@ export function MeView() {
       <div className="max-w-[1100px] mx-auto">
         <div className="mb-6">
           <h1 className="font-display font-medium text-[36px] tracking-tight text-ink-900 mb-1" style={{ letterSpacing: '-0.025em' }}>
-            You <em className="italic text-coral-deep" style={{ fontStyle: 'italic', fontWeight: 400 }}>at the center</em>
+            你 <em className="italic text-coral-deep" style={{ fontStyle: 'italic', fontWeight: 400 }}>位于中心</em>
           </h1>
           <div className="font-display italic font-normal text-[15px] text-ink-500">
-            How your agents see you, what they remember, and how much rope they get.
+            你的特工如何看待你，他们记得什么，以及他们得到了多少绳子。
           </div>
         </div>
 
@@ -1040,7 +1037,7 @@ export function MeView() {
               )}>
               {t}
               {t === 'Computers' && hasOutdated && (
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--gold-deep)' }} title="A daemon needs updating" />
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--gold-deep)' }} title="守护进程需要更新" />
               )}
             </button>
           ))}
