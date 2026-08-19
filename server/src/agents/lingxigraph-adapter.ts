@@ -1,5 +1,3 @@
-import { spawn } from 'node:child_process'
-
 import type { CliResult } from './cli-result.js'
 import type { RuntimeTokenUsage } from './runtime/client.js'
 
@@ -44,11 +42,10 @@ export interface LingxiGraphRunResult {
 }
 
 export interface LingxiGraphAdapterOptions {
-  pythonBin?: string
-  runnerPath?: string
+  url?: string
+  token?: string
   timeoutMs?: number
-  maxOutputBytes?: number
-  env?: NodeJS.ProcessEnv
+  fetchImpl?: typeof fetch
 }
 
 export interface CommunicationExecutionResult {
@@ -206,51 +203,47 @@ export async function runLingxiGraph(
   request: LingxiGraphRunRequest,
   options: LingxiGraphAdapterOptions = {},
 ): Promise<LingxiGraphRunResult> {
-  const pythonBin = options.pythonBin ?? process.env.LINGXIGRAPH_PYTHON_BIN ?? (process.platform === 'win32' ? 'python' : 'python3')
-  const runnerPath = options.runnerPath ?? process.env.LINGXIGRAPH_RUNNER_PATH ?? '/opt/lingxiloop/lingxigraph_runner.py'
+  const baseUrl = options.url ?? process.env.LINGXIGRAPH_URL
+  if (!baseUrl) throw new Error('LINGXIGRAPH_URL is required to reach the LingxiGraph runtime')
+  const token = options.token ?? process.env.LINGXIGRAPH_TOKEN
   const timeoutMs = options.timeoutMs ?? Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 120_000)
-  const maxOutputBytes = options.maxOutputBytes ?? Number(process.env.LINGXIGRAPH_MAX_OUTPUT_BYTES ?? 1_048_576)
+  const doFetch = options.fetchImpl ?? fetch
 
-  return await new Promise<LingxiGraphRunResult>((resolve, reject) => {
-    const child = spawn(pythonBin, [runnerPath], { stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, ...options.env } })
-    const stdout: Buffer[] = []
-    const stderr: Buffer[] = []
-    let stdoutBytes = 0
-    let settled = false
-    const finish = (error?: Error, result?: LingxiGraphRunResult) => {
-      if (settled) return
-      settled = true
-      clearTimeout(timer)
-      if (error) reject(error)
-      else resolve(result!)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  let response: Response
+  try {
+    response = await doFetch(new URL('/v1/turn', baseUrl), {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(request),
+      signal: controller.signal,
+    })
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`LingxiGraph runtime timed out after ${timeoutMs}ms`)
     }
-    const timer = setTimeout(() => {
-      child.kill('SIGKILL')
-      finish(new Error(`LingxiGraph runner timed out after ${timeoutMs}ms`))
-    }, timeoutMs)
-    child.on('error', (error) => finish(error))
-    child.stdout.on('data', (chunk: Buffer) => {
-      stdoutBytes += chunk.length
-      if (stdoutBytes > maxOutputBytes) {
-        child.kill('SIGKILL')
-        finish(new Error(`LingxiGraph runner output exceeded ${maxOutputBytes} bytes`))
-        return
-      }
-      stdout.push(chunk)
-    })
-    child.stderr.on('data', (chunk: Buffer) => {
-      if (stderr.reduce((sum, item) => sum + item.length, 0) < 64 * 1024) stderr.push(chunk)
-    })
-    child.on('close', (code) => {
-      if (settled) return
-      const errText = Buffer.concat(stderr).toString('utf8').trim()
-      if (code !== 0) return finish(new Error(`LingxiGraph runner exited ${code}${errText ? `: ${errText}` : ''}`))
-      try {
-        finish(undefined, parseLingxiGraphRunResult(JSON.parse(Buffer.concat(stdout).toString('utf8')) as unknown))
-      } catch (error) {
-        finish(new Error(`invalid LingxiGraph runner output: ${error instanceof Error ? error.message : String(error)}`))
-      }
-    })
-    child.stdin.end(JSON.stringify(request))
-  })
+    throw new Error(`LingxiGraph runtime request failed: ${error instanceof Error ? error.message : String(error)}`)
+  } finally {
+    clearTimeout(timer)
+  }
+
+  const bodyText = await response.text()
+  if (!response.ok) {
+    throw new Error(`LingxiGraph runtime responded ${response.status}${bodyText ? `: ${bodyText}` : ''}`)
+  }
+  let parsedBody: unknown
+  try {
+    parsedBody = JSON.parse(bodyText)
+  } catch (error) {
+    throw new Error(`invalid LingxiGraph runtime response: ${error instanceof Error ? error.message : String(error)}`)
+  }
+  try {
+    return parseLingxiGraphRunResult(parsedBody)
+  } catch (error) {
+    throw new Error(`invalid LingxiGraph runtime response: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }

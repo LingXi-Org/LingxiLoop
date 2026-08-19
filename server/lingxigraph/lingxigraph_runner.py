@@ -1,7 +1,10 @@
 """LingxiLoop's communication-only, stateless LingxiGraph runner.
 
-One JSON request is read from stdin and one JSON result is written to stdout.
-Operational logs belong on stderr so the Node adapter can parse stdout safely.
+`_run()` is the reasoning core shared by both entry points:
+
+- `server.py` — the HTTP runtime (`POST /v1/turn`), the supported path.
+- `main()` below — a stdin/stdout CLI kept for local, dependency-free
+  smoke-testing of `_run()` without standing up the HTTP server.
 """
 
 from __future__ import annotations

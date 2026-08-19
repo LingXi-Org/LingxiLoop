@@ -6,5 +6,4 @@
 !server/docker/agent-computer-cumora.sh
 !server/docker/agent-computer-cumora-web.sh
 !server/docker/agent-computer-entrypoint.sh
-!server/lingxigraph/**
 !agent-fuse/**
