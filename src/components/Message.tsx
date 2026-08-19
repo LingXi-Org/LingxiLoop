@@ -1762,14 +1762,25 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             )}
           >
             {msg.streaming === 'placeholder' ? (
-              <span className="inline-flex h-5 items-center gap-1 px-0.5" aria-label={`${author.name} is typing`}>
-                {[0, 1, 2].map((dot) => (
-                  <span
-                    key={dot}
-                    className="h-1.5 w-1.5 rounded-full bg-ink-400 animate-bounce"
-                    style={{ animationDelay: `${dot * 120}ms` }}
-                  />
-                ))}
+              <span
+                className="inline-flex min-w-[132px] items-center gap-2.5 rounded-2xl border border-sky2-200/70 bg-gradient-to-r from-sky2-50 via-cloud to-sky2-50 px-3 py-2 shadow-[0_8px_24px_-16px_rgba(32,120,180,0.7)]"
+                aria-label={`${author.name} 正在思考`}
+                role="status"
+              >
+                <span className="relative grid size-5 shrink-0 place-items-center">
+                  <span className="absolute inset-0 rounded-full bg-sky2-200/70 animate-ping" />
+                  <span className="relative size-2.5 rounded-full bg-gradient-to-br from-skype to-skype-deep shadow-[0_0_10px_rgba(41,137,216,0.45)]" />
+                </span>
+                <span className="text-[12px] font-medium tracking-wide text-ink-600">正在思考</span>
+                <span className="ml-auto inline-flex items-end gap-0.5" aria-hidden>
+                  {[0, 1, 2].map((dot) => (
+                    <span
+                      key={dot}
+                      className="size-1 rounded-full bg-skype-deep animate-bounce"
+                      style={{ animationDelay: `${dot * 140}ms`, animationDuration: '1.1s' }}
+                    />
+                  ))}
+                </span>
               </span>
             ) : <RichBody body={msg.body} conversationId={msg.conversationId} />}
           </div>
