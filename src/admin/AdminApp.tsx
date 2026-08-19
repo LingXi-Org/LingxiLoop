@@ -86,17 +86,17 @@ export function AdminApp() {
   }, [verified, route])
 
   if (verified === 'checking') {
-    return <FullScreenNote tone="muted">Checking admin access…</FullScreenNote>
+    return <FullScreenNote tone="muted">正在检查管理员访问权限...</FullScreenNote>
   }
   if (verified === 'denied') {
     return (
       <FullScreenNote tone="warn">
-        <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Not authorized</div>
+        <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>未授权</div>
         <div style={{ fontSize: 14, opacity: 0.7, marginBottom: 16 }}>
-          Signed in as <code>{user?.email ?? '(unknown)'}</code>.
+          登录身份 <code>{user?.email ?? '(unknown)'}</code>.
         </div>
         <button className="btn" onClick={() => { clear() }}>
-          Sign out and switch account
+          退出并切换帐户
         </button>
       </FullScreenNote>
     )
@@ -105,12 +105,12 @@ export function AdminApp() {
   return (
     <div className={`admin-shell${navOpen ? ' nav-open' : ''}`}>
       <header className="admin-topbar">
-        <button className="admin-topbar-burger" onClick={() => setNavOpen((v) => !v)} aria-label="Toggle navigation">
+        <button className="admin-topbar-burger" onClick={() => setNavOpen((v) => !v)} aria-label="切换导航">
           <span /><span /><span />
         </button>
         <div className="admin-topbar-brand">
           <CloudLogo size={24} />
-          <span>cumora admin</span>
+          <span>库莫拉管理员</span>
         </div>
         <div className="admin-topbar-spacer" />
       </header>
@@ -119,18 +119,18 @@ export function AdminApp() {
         <div className="admin-brand">
           <CloudLogo size={32} />
           <div>
-            <div className="admin-brand-title">cumora admin</div>
+            <div className="admin-brand-title">库莫拉管理员</div>
             <div className="admin-brand-sub">{user?.email}</div>
           </div>
         </div>
         <nav className="admin-nav">
-          <NavLink current={route} target="users"         label="Users"         badge={stats?.users.total} />
-          <NavLink current={route} target="waitlist"      label="Waitlist"      badge={stats?.waitlist.pending || undefined} highlight={!!stats?.waitlist.pending} />
-          <NavLink current={route} target="observability" label="Observability" />
-          <NavLink current={route} target="settings"      label="Settings" />
+          <NavLink current={route} target="users"         label="用户"         badge={stats?.users.total} />
+          <NavLink current={route} target="waitlist"      label="候补名单"      badge={stats?.waitlist.pending || undefined} highlight={!!stats?.waitlist.pending} />
+          <NavLink current={route} target="observability" label="可观察性" />
+          <NavLink current={route} target="settings"      label="设置" />
         </nav>
         <div className="admin-sidebar-foot">
-          <button className="btn-ghost" onClick={() => { clear() }}>Sign out</button>
+          <button className="btn-ghost" onClick={() => { clear() }}>退出登录</button>
         </div>
       </aside>
       <main className="admin-main">

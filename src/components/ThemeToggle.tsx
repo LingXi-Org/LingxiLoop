@@ -15,8 +15,8 @@ export function ThemeToggle({ className, showLabel = false, onToggle }: Props) {
   return (
     <button
       type="button"
-      aria-label={`Switch to ${next} theme`}
-      title={`Switch to ${next} theme`}
+      aria-label={`切换到${next === 'light' ? '浅色' : '深色'}主题`}
+      title={`切换到${next === 'light' ? '浅色' : '深色'}主题`}
       onClick={() => { toggleTheme(); onToggle?.() }}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-[9px] text-ink-500 transition hover:bg-sky2-50 hover:text-skype-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky2-300',
@@ -24,7 +24,7 @@ export function ThemeToggle({ className, showLabel = false, onToggle }: Props) {
       )}
     >
       {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-      {showLabel && <span>{theme === 'dark' ? 'Light theme' : 'Dark theme'}</span>}
+      {showLabel && <span>{theme === 'dark' ? '浅色主题' : '深色主题'}</span>}
     </button>
   )
 }

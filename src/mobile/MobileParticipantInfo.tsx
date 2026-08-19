@@ -60,10 +60,10 @@ export function MobileParticipantInfo() {
   if (p.id === meId) {
     return (
       <section className="flex flex-col h-full overflow-hidden bg-paper">
-        <DeepHeader title="Profile" onBack={close} />
+        <DeepHeader title="简介" onBack={close} />
         <div className="flex-1 grid place-items-center px-8 text-center">
           <div className="font-display italic text-[13px] text-ink-500">
-            That's you — head over to <span className="text-skype-deep font-semibold not-italic">Me</span> for your own profile.
+            这就是你——前往 <span className="text-skype-deep font-semibold not-italic">我的</span> 为您自己的个人资料。
           </div>
         </div>
       </section>
@@ -141,7 +141,7 @@ export function MobileParticipantInfo() {
           </div>
         </div>
 
-        <Section title="Actions">
+        <Section title="行动">
           <div className={cn('grid gap-2', isAgent ? 'grid-cols-3' : 'grid-cols-1')}>
             <button
               type="button"
@@ -156,7 +156,7 @@ export function MobileParticipantInfo() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              {opening ? 'Opening…' : 'DM'}
+              {opening ? "开幕..." : 'DM'}
             </button>
             {/* Whisper / Convene mirror the desktop pane — agent-team
                 rituals only. Placeholder buttons today; kept on screen
@@ -169,7 +169,7 @@ export function MobileParticipantInfo() {
                   style={{ background: 'var(--skype-ink)' }}
                 >
                   <IWhisper className="w-[14px] h-[14px]" />
-                  Whisper
+                  私聊
                 </button>
                 <button
                   type="button"
@@ -177,7 +177,7 @@ export function MobileParticipantInfo() {
                   style={{ border: '1px solid var(--ink-100)' }}
                 >
                   <IConvene className="w-[14px] h-[14px]" />
-                  Convene
+                  召开
                 </button>
               </>
             )}
@@ -185,13 +185,13 @@ export function MobileParticipantInfo() {
         </Section>
 
         {p.email && (
-          <Section title="Email">
+          <Section title="电子邮件">
             <button
               type="button"
               onClick={copyEmail}
               className="w-full py-2.5 px-3 bg-cloud rounded-[12px] flex items-center gap-2 text-[12px] text-ink-700 font-mono active:opacity-80 transition text-left"
               style={{ border: '1px solid var(--ink-100)' }}
-              title={copied ? 'Copied!' : 'Tap to copy'}
+              title={copied ? "已复制！" : "点击复制"}
             >
               <IMail className="w-3.5 h-3.5 shrink-0 text-skype-deep" strokeWidth={2} />
               <span className="truncate flex-1">{p.email}</span>
@@ -201,14 +201,14 @@ export function MobileParticipantInfo() {
                   copied ? 'text-avail' : 'text-ink-300',
                 )}
               >
-                {copied ? 'copied' : 'copy'}
+                {copied ? "已复制" : "复制"}
               </span>
             </button>
           </Section>
         )}
 
         {isAgent && (p.tools?.length ?? 0) > 0 && (
-          <Section title="Tools enabled">
+          <Section title="工具已启用">
             <div className="grid grid-cols-2 gap-1.5">
               {(p.tools ?? []).map((t) => (
                 <div
@@ -255,7 +255,7 @@ function DeepHeader({ title, onBack }: { title: string; onBack: () => void }) {
           type="button"
           onClick={onBack}
           className="w-9 h-9 grid place-items-center rounded-full active:bg-sky2-50 transition text-ink-700"
-          aria-label="Back"
+          aria-label="返回"
         >
           <IBack className="w-[18px] h-[18px]" />
         </button>

@@ -129,7 +129,7 @@ export function Combobox<T extends string = string>({
         )}
         <button
           type="button"
-          aria-label="Toggle menu"
+          aria-label="切换菜单"
           tabIndex={-1}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => { if (open) { setOpen(false); setQuery('') } else openMenu() }}

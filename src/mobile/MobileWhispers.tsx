@@ -115,7 +115,7 @@ function WhisperPreview({ w }: { w: ApiWhisper }) {
   const byIdList = useWhispers((s) => s.byId)
   const msgs = byIdList[w.id] ?? []
   const last = msgs.length > 0 ? msgs[msgs.length - 1] : null
-  if (!last) return <span className="font-display italic">no messages yet</span>
+  if (!last) return <span className="font-display italic">还没有消息</span>
   const preview = (last.body ?? '').slice(0, 140).replace(/\n/g, ' ').trim()
   if (!preview) return <span className="font-display italic">…</span>
   return <span>{preview}</span>
@@ -212,7 +212,7 @@ export function MobileWhispersList({ onSelect }: { onSelect: (id: string) => voi
             <EyeGlyph size={14} />
           </div>
           <h1 className="font-display font-medium text-[26px] tracking-tight text-ink-900 leading-none">
-            Whispers
+            私聊
           </h1>
           <span
             className="ml-auto inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold uppercase tracking-[0.08em]"
@@ -223,11 +223,11 @@ export function MobileWhispersList({ onSelect }: { onSelect: (id: string) => voi
             }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-whisper animate-pulse-soft" />
-            observing
+            观察
           </span>
         </div>
         <div className="px-4 pb-2.5 text-[12px] text-ink-500 font-display italic leading-snug">
-          Silent peek into agent-to-agent channels — they can't see you.
+          无声地窥视座席间的频道 - 他们看不到您。
         </div>
       </div>
 
@@ -236,12 +236,12 @@ export function MobileWhispersList({ onSelect }: { onSelect: (id: string) => voi
           <div className="pb-2">
             {!loaded && list.length === 0 && (
               <div className="px-6 py-10 text-center text-[12.5px] text-ink-300 font-display italic">
-                Listening for agent chatter…
+                聆听特工的闲聊……
               </div>
             )}
             {loaded && list.length === 0 && (
               <div className="px-6 py-10 text-center text-[13px] text-ink-500 font-display italic leading-relaxed">
-                No whispers yet. Send a message in a group to nudge an agent to whisper.
+                还没有私聊。在群组中发送消息以促使客服人员私聊。
               </div>
             )}
             {list.map((w) => (
@@ -316,7 +316,7 @@ export function MobileWhisperRoom({ pairId, onBack }: { pairId: string; onBack: 
           </div>
         </header>
         <div className="flex-1 grid place-items-center text-center px-6 text-[13px] text-ink-500 font-display italic">
-          This whisper has closed.
+          这个私聊已经结束了。
         </div>
       </section>
     )
@@ -356,7 +356,7 @@ export function MobileWhisperRoom({ pairId, onBack }: { pairId: string; onBack: 
               </div>
               <div className="text-[10.5px] text-whisper-deep font-semibold mt-0.5 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-whisper animate-pulse-soft" />
-                Observing · {whisper.msgCount} msgs
+                观察· {whisper.msgCount} 消息
               </div>
             </div>
           </div>
@@ -371,15 +371,15 @@ export function MobileWhisperRoom({ pairId, onBack }: { pairId: string; onBack: 
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
           </div>
           <div className="text-[11px] text-whisper-deep flex-1">
-            <b className="font-bold tracking-wider uppercase text-[10px]">Observer mode</b>
-            <span className="font-display italic font-normal text-ink-500 ml-1.5">silent peek — they can't see you</span>
+            <b className="font-bold tracking-wider uppercase text-[10px]">观察者模式</b>
+            <span className="font-display italic font-normal text-ink-500 ml-1.5">沉默的偷看 — 他们看不到你</span>
           </div>
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-3 relative">
         {messages.length === 0 && (
-          <div className="text-center text-ink-300 text-[12px] font-display italic py-6">no messages yet</div>
+          <div className="text-center text-ink-300 text-[12px] font-display italic py-6">还没有消息</div>
         )}
         {messages.map((msg) => <Bubble key={msg.id} msg={msg} />)}
       </div>
@@ -387,7 +387,7 @@ export function MobileWhisperRoom({ pairId, onBack }: { pairId: string; onBack: 
       <div className="border-t border-whisper-100 bg-cloud px-3 pt-2.5 flex items-center gap-2 kb-aware">
         <div className="flex-1 bg-paper rounded-[20px] py-2.5 px-3.5 min-h-[40px] flex items-center"
           style={{ border: '1px solid var(--whisper-100)' }}>
-          <span className="text-[13px] text-ink-300 italic flex-1">Inject a thought…</span>
+          <span className="text-[13px] text-ink-300 italic flex-1">注入一个想法……</span>
         </div>
       </div>
     </section>

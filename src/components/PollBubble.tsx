@@ -146,16 +146,16 @@ export function PollBubble({ msg, zh = false }: Props) {
             <rect x="17" y="14" width="4" height="6" rx="1" />
           </svg>
         </span>
-        <span className="font-semibold text-ink-700">{zh ? '投票' : 'Poll'}</span>
+        <span className="font-semibold text-ink-700">{zh ? '投票' : "民意调查"}</span>
         <span className="text-ink-300">·</span>
         <span>{author?.name ?? msg.authorId}</span>
         {poll.mode === 'multi' && (
-          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">{zh ? '多选' : 'multi'}</span>
+          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">{zh ? '多选' : "多"}</span>
         )}
         <span className="ml-auto text-ink-400 tabular-nums">
           {isClosed
-            ? (poll.closedReason === 'expired' ? (zh ? '已过期' : 'expired') : (zh ? '已结束' : 'closed'))
-            : (remaining ? (zh ? `剩余 ${remaining}` : `${remaining} left`) : (zh ? '进行中' : 'open'))}
+            ? (poll.closedReason === 'expired' ? (zh ? '已过期' : "已过期\n使用") : (zh ? '已结束' : "已关闭"))
+            : (remaining ? (zh ? `剩余 ${remaining}` : `${remaining} left`) : (zh ? '进行中' : "打开"))}
         </span>
       </div>
 
@@ -230,7 +230,7 @@ export function PollBubble({ msg, zh = false }: Props) {
               <span className="relative z-[1] flex-1 min-w-0 text-[13.5px] text-ink-800 truncate">
                 {opt.text}
                 {isWinner && (
-                  <span className="ml-1.5 text-[11px] text-skype-deep" title={zh ? '当前领先' : 'winning option'}>★</span>
+                  <span className="ml-1.5 text-[11px] text-skype-deep" title={zh ? '当前领先' : "获胜选项"}>★</span>
                 )}
               </span>
               <span className="relative z-[1] flex items-center gap-1.5 text-[11.5px] tabular-nums text-ink-500">
@@ -247,13 +247,13 @@ export function PollBubble({ msg, zh = false }: Props) {
       <div className="px-3.5 pb-3 pt-1 flex items-center gap-2 text-[11.5px] text-ink-500 min-h-[28px]">
         <span className="tabular-nums">
           {totalVotes === 0
-            ? (zh ? '暂无投票' : 'no votes yet')
+            ? (zh ? '暂无投票' : "还没有投票")
             : (zh ? `${totalVotes} 票` : `${totalVotes} ${totalVotes === 1 ? 'vote' : 'votes'}`)}
         </span>
         {!isClosed && myCurrentVotes.size > 0 && (
           <>
             <span className="text-ink-300">·</span>
-            <span>{zh ? '你已投票' : 'you voted'}</span>
+            <span>{zh ? '你已投票' : "你投票了"}</span>
           </>
         )}
         {errorMsg && (
@@ -267,7 +267,7 @@ export function PollBubble({ msg, zh = false }: Props) {
               disabled={submitting}
               className="px-2 py-0.5 rounded-full text-ink-500 hover:bg-ink-50 transition"
             >
-              {zh ? '重置' : 'reset'}
+              {zh ? '重置' : "重置"}
             </button>
             <button
               type="button"
@@ -275,7 +275,7 @@ export function PollBubble({ msg, zh = false }: Props) {
               disabled={submitting}
               className="px-2.5 py-0.5 rounded-full bg-skype-deep text-white font-semibold tracking-wide hover:brightness-105 transition disabled:opacity-50"
             >
-              {submitting ? (zh ? '保存中…' : 'saving…') : (zh ? '提交' : 'submit')}
+              {submitting ? (zh ? '保存中…' : "正在保存...") : (zh ? '提交' : "提交")}
             </button>
           </span>
         )}

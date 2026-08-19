@@ -61,8 +61,8 @@ function PeekHeader({
             type="button"
             onClick={onOpenFull}
             className="h-8 w-8 rounded-[8px] grid place-items-center text-ink-500 hover:text-skype-deep hover:bg-sky2-100 transition"
-            title="Open full workspace"
-            aria-label="Open full workspace"
+            title="打开完整工作区"
+            aria-label="打开完整工作区"
           >
             <OpenFullIcon />
           </button>
@@ -71,8 +71,8 @@ function PeekHeader({
           type="button"
           onClick={onClose}
           className="h-8 w-8 rounded-[8px] grid place-items-center text-ink-400 hover:text-ink-900 hover:bg-ink-100/70 transition"
-          title="Close artifact"
-          aria-label="Close artifact"
+          title="关闭神器"
+          aria-label="关闭神器"
         >
           <CloseIcon />
         </button>
@@ -118,7 +118,7 @@ function PeekUnavailable({
           onClick={onClose}
           className="mt-4 h-8 px-3 rounded-[8px] text-[12px] font-semibold text-ink-600 border border-ink-100 hover:bg-sky2-50 transition"
         >
-          Close
+          关闭
         </button>
       </div>
     </div>
@@ -210,14 +210,14 @@ export function BoardPeekContent({
   const isBoardPending = !snap && (loadingBoardId === boardId || loadingList || requestedBoardId.current !== boardId)
 
   if (isBoardPending) {
-    return <PeekLoading icon={<IBoard className="w-5 h-5" />} label="Opening board..." />
+    return <PeekLoading icon={<IBoard className="w-5 h-5" />} label="开板..." />
   }
 
   if (!snap) {
     return (
       <PeekUnavailable
         icon={<IBoard className="w-5 h-5" />}
-        title="Board unavailable"
+        title="董事会不可用"
         detail="This board may have been deleted or moved out of this workspace."
         onClose={onClose}
       />
@@ -228,7 +228,7 @@ export function BoardPeekContent({
     <div className="h-full min-h-0 flex flex-col bg-cloud">
       <PeekHeader
         icon={<IBoard className="w-5 h-5" />}
-        label="Kanban board"
+        label="看板"
         title={snap.title}
         meta={`${snap.columns.length} columns - ${snap.cards.length} cards - updated ${formatShortDate(snap.updatedAt)}`}
         onClose={onClose}
@@ -252,7 +252,7 @@ export function BoardPeekContent({
                 <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
                   {cards.length === 0 && (
                     <div className="rounded-[8px] border border-dashed border-ink-100 px-3 py-4 text-center text-[11.5px] text-ink-400">
-                      Empty
+                      空
                     </div>
                   )}
                   {cards.map((card) => (
@@ -293,7 +293,7 @@ function BoardPeekCard({ card, focused }: { card: BoardCard; focused: boolean })
     >
       {focused && (
         <div className="mb-1.5 inline-flex rounded-full bg-sky2-100 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.12em] text-skype-deep">
-          Opened from chat
+          从聊天中打开
         </div>
       )}
       <div className="text-[12.5px] font-medium leading-snug text-ink-800 line-clamp-3">{card.title}</div>
@@ -305,7 +305,7 @@ function BoardPeekCard({ card, focused }: { card: BoardCard; focused: boolean })
               <span className="truncate">{assignee.name}</span>
             </span>
           )}
-          {card.commentCount > 0 && <span className="ml-auto shrink-0">{card.commentCount} comments</span>}
+          {card.commentCount > 0 && <span className="ml-auto shrink-0">{card.commentCount} 评论</span>}
           {!assignee && card.mentions.length > 0 && <span className="truncate">@{card.mentions.slice(0, 2).join(' @')}</span>}
         </div>
       )}
@@ -348,14 +348,14 @@ export function CalendarEventPeekContent({
   }, [event, eventId, loadEvent, loadingEventId])
 
   if (!event && !failed) {
-    return <PeekLoading icon={<ICalendar className="w-5 h-5" />} label="Opening event..." />
+    return <PeekLoading icon={<ICalendar className="w-5 h-5" />} label="开幕活动..." />
   }
 
   if (!event) {
     return (
       <PeekUnavailable
         icon={<ICalendar className="w-5 h-5" />}
-        title="Event unavailable"
+        title="活动不可用"
         detail={failed || 'This calendar event may have been deleted or moved out of this workspace.'}
         onClose={onClose}
       />
@@ -366,7 +366,7 @@ export function CalendarEventPeekContent({
     <div className="h-full min-h-0 flex flex-col bg-cloud">
       <PeekHeader
         icon={<ICalendar className="w-5 h-5" />}
-        label="Calendar event"
+        label="日历事件"
         title={event.title || 'Untitled event'}
         meta={`${event.kind === 'agent_task' ? 'Agent task' : 'Personal'} - ${event.status}`}
         onClose={onClose}
@@ -390,7 +390,7 @@ export function CalendarEventPeekContent({
         <div className="mt-3 grid gap-3">
           {assignee && (
             <section className="rounded-[12px] border border-ink-100 bg-white/65 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-400">Assignee</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-400">受让人</div>
               <div className="mt-2 flex items-center gap-2">
                 <AvatarMini p={assignee} size={24} />
                 <div className="min-w-0">
@@ -403,7 +403,7 @@ export function CalendarEventPeekContent({
 
           {targetConversation && (
             <section className="rounded-[12px] border border-ink-100 bg-white/65 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-400">Conversation</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-400">对话</div>
               <div className="mt-1 truncate text-[13px] font-semibold text-ink-900">{targetConversation.title}</div>
               {targetConversation.subtitle && (
                 <div className="mt-0.5 truncate text-[11.5px] text-ink-500">{targetConversation.subtitle}</div>
@@ -413,7 +413,7 @@ export function CalendarEventPeekContent({
 
           {event.agentPrompt && (
             <section className="rounded-[12px] border border-sky2-100 bg-sky2-50/45 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">Agent prompt</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">智能体提示</div>
               <p className="mt-2 text-[12.5px] leading-relaxed text-ink-700 whitespace-pre-wrap">{event.agentPrompt}</p>
             </section>
           )}
@@ -423,7 +423,7 @@ export function CalendarEventPeekContent({
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
         <div className="flex-1 min-w-0 text-[11px] text-ink-400 truncate">
-          Created {formatShortDate(event.createdAt)} - Updated {formatShortDate(event.updatedAt)}
+          已创建 {formatShortDate(event.createdAt)} - 已更新 {formatShortDate(event.updatedAt)}
         </div>
         {event.kind === 'agent_task' && (
           <button
@@ -436,13 +436,13 @@ export function CalendarEventPeekContent({
             }}
             disabled={busy !== null}
             className="py-1.5 px-3 text-[12px] font-semibold rounded-full bg-sky2-50 text-skype-deep border border-sky2-100 active:bg-sky2-100 transition disabled:opacity-60"
-          >{busy === 'run' ? 'Running…' : 'Run now'}</button>
+          >{busy === 'run' ? "正在运行..." : "立即运行"}</button>
         )}
         <button
           type="button"
           onClick={() => setEditing(true)}
           className="py-1.5 px-3 text-[12px] font-semibold rounded-full bg-cloud text-ink-700 border border-ink-100 active:bg-sky2-50 transition"
-        >Edit</button>
+        >编辑</button>
         <button
           type="button"
           onClick={async () => {
@@ -459,7 +459,7 @@ export function CalendarEventPeekContent({
           }}
           disabled={busy !== null}
           className="py-1.5 px-3 text-[12px] font-semibold rounded-full text-coral-deep border border-coral-soft active:bg-coral-soft/40 transition disabled:opacity-60"
-        >Delete</button>
+        >删除</button>
       </div>
       {editing && (
         <EventEditor event={event} onClose={() => setEditing(false)} />

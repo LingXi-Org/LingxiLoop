@@ -120,14 +120,14 @@ export function ThreadDrawer() {
     >
       <header className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-ink-100">
         <div>
-          <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-400">Thread</div>
+          <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-400">主题</div>
           <div className="text-[13px] text-ink-700 font-semibold mt-0.5">
-            {visibleReplies.length} {visibleReplies.length === 1 ? 'reply' : 'replies'}
+            {visibleReplies.length} {visibleReplies.length === 1 ? "回复" : "回复"}
           </div>
         </div>
         <button
           onClick={close}
-          aria-label="Close thread"
+          aria-label="关闭线程"
           className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-cloud hover:text-ink-900 transition"
         >×</button>
       </header>
@@ -138,13 +138,13 @@ export function ThreadDrawer() {
           <MessageRow msg={root} author={rootAuthor ?? fallbackAuthor} />
         </div>
         <div className="text-[10.5px] font-bold uppercase tracking-wider text-ink-400 pt-1 border-t border-ink-100 -mb-2">
-          Replies
+          回复
         </div>
 
-        {loading && <div className="text-[12px] text-ink-400 italic">loading replies…</div>}
+        {loading && <div className="text-[12px] text-ink-400 italic">正在加载回复...</div>}
         {err && <div className="text-[12px] text-coral-deep">{err}</div>}
         {!loading && !err && visibleReplies.length === 0 && (
-          <div className="text-[12px] text-ink-400 italic">No replies yet — be the first.</div>
+          <div className="text-[12px] text-ink-400 italic">尚未回复 - 成为第一个。</div>
         )}
         {visibleReplies.map((m) => {
           const a = byId[m.authorId] ?? { ...fallbackAuthor, id: m.authorId, name: m.authorId, initial: (m.authorId[0] ?? '?').toUpperCase() }
@@ -154,12 +154,12 @@ export function ThreadDrawer() {
 
       <div className="border-t border-ink-100 bg-cloud px-3 py-3">
         <div className="text-[10.5px] text-ink-400 mb-1.5">
-          Replying to <span className="text-skype-deep font-semibold">{rootAuthor?.name ?? root.authorId}</span>
+          回复 <span className="text-skype-deep font-semibold">{rootAuthor?.name ?? root.authorId}</span>
         </div>
         <Composer
           convoId={openThread.convoId}
           threadRootId={openThread.rootId}
-          placeholder="Reply in thread…"
+          placeholder="在帖子中回复..."
         />
       </div>
     </aside>

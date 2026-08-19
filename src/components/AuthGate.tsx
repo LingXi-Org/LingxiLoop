@@ -121,7 +121,7 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
       <div
         className="fixed inset-0 grid place-items-center text-ink-300 font-display italic text-[13px]"
         style={{ background: 'var(--paper)' }}
-      ><WindowDragStrip />loading…</div>
+      ><WindowDragStrip />加载中...</div>
     )
   }
 

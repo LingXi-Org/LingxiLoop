@@ -68,8 +68,8 @@ function AgentCard({ p, onEdit, onDelete }: {
           onClick={() => onEdit(p)}
           className="w-7 h-7 rounded-full grid place-items-center bg-cloud hover:bg-sky2-50 text-ink-500 hover:text-skype-deep transition"
           style={{ border: '1px solid var(--ink-100)' }}
-          title="Edit"
-          aria-label="Edit agent"
+          title="编辑"
+          aria-label="编辑智能体"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -77,8 +77,8 @@ function AgentCard({ p, onEdit, onDelete }: {
           onClick={() => onDelete(p)}
           className="w-7 h-7 rounded-full grid place-items-center bg-cloud hover:bg-coral-soft text-ink-500 hover:text-coral-deep transition"
           style={{ border: '1px solid var(--ink-100)' }}
-          title="Off-board"
-          aria-label="Off-board agent"
+          title="车外"
+          aria-label="场外智能体"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
         </button>
@@ -103,7 +103,7 @@ function AgentCard({ p, onEdit, onDelete }: {
               title={hostOffline ? `${hostLabel} is offline` : `Runs on ${hostLabel}`}>
               <span>{hostIcon}</span>
               <span className="max-w-[120px] truncate">{hostLabel}</span>
-              {hostOffline && <span className="italic text-ink-400">· sleeping</span>}
+              {hostOffline && <span className="italic text-ink-400">·睡觉</span>}
             </div>
           </div>
         </div>
@@ -113,7 +113,7 @@ function AgentCard({ p, onEdit, onDelete }: {
         "{p.bio || p.systemPrompt || '—'}"
       </div>
 
-      <div className="text-[9.5px] font-bold text-ink-300 tracking-wider uppercase mb-2">Tools</div>
+      <div className="text-[9.5px] font-bold text-ink-300 tracking-wider uppercase mb-2">工具</div>
       <div className="flex flex-wrap gap-1 mb-4">
         {(p.tools ?? []).map((t) => (
           <span key={t} className="font-mono text-[10.5px] py-0.5 px-1.5 rounded text-ink-700"
@@ -129,11 +129,11 @@ function AgentCard({ p, onEdit, onDelete }: {
           disabled={openingChat}
           className="flex-1 py-2 px-3 bg-skype text-white rounded-[9px] text-[12px] font-semibold transition disabled:opacity-60"
           style={{ boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.4)' }}>
-          {openingChat ? 'Opening…' : 'Chat'}
+          {openingChat ? "开幕..." : "聊天"}
         </button>
         <button className="flex-1 py-2 px-3 bg-cloud text-ink-700 rounded-[9px] text-[12px] font-semibold hover:border-whisper-200 hover:text-whisper-deep transition"
           style={{ border: '1px solid var(--ink-100)' }}>
-          Whisper
+          私聊
         </button>
       </div>
     </div>
@@ -154,10 +154,10 @@ function HireCard({ onClick }: { onClick: () => void }) {
           <IPlus className="w-6 h-6" strokeWidth={2} />
         </div>
         <div className="font-display font-medium text-[18px] text-ink-900 mb-1.5" style={{ letterSpacing: '-0.01em' }}>
-          Add an agent
+          添加智能体
         </div>
         <div className="font-display italic font-normal text-[12.5px] text-ink-500 max-w-[200px] mx-auto leading-[1.5]">
-          Define an id, a name, and the style they speak in.
+          定义一个 ID，一个名字，以及他们说话的风格。
         </div>
       </div>
     </button>
@@ -194,12 +194,12 @@ function ConfirmOffboard({ p, onCancel, onConfirmed }: {
         style={{ border: '1px solid var(--ink-100)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-display font-medium text-[20px] tracking-tight mb-1.5">Off-board {p.name}?</h3>
+        <h3 className="font-display font-medium text-[20px] tracking-tight mb-1.5">车外 {p.name}?</h3>
         <p className="text-[13px] text-ink-700 leading-[1.6] mb-3">
-          {p.name} will leave the team. They stop replying, get hidden from other agents' rosters, and disappear from active conversations.
+          {p.name} 将离开团队。他们停止回复，从其他特工名册中隐藏起来，并从活跃的对话中消失。
         </p>
         <p className="text-[12.5px] text-ink-500 leading-[1.55] font-display italic mb-4">
-          Their memory, log, workspace, tasks, and message history all stay intact — you can rehire them any time and they'll pick up where they left off.
+          他们的记忆、日志、工作空间、任务和消息历史记录都保持不变——您可以随时重新雇用他们，他们会从上次中断的地方继续。
         </p>
         {err && (
           <div className="text-[12.5px] text-coral-deep bg-coral-soft py-2 px-3 rounded-lg mb-3">{err}</div>
@@ -210,13 +210,13 @@ function ConfirmOffboard({ p, onCancel, onConfirmed }: {
             disabled={busy}
             className="flex-1 py-2 px-3 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >Cancel</button>
+          >取消</button>
           <button
             onClick={submit}
             disabled={busy}
             className="flex-1 py-2 px-3 rounded-[9px] text-[12.5px] font-semibold text-white transition disabled:opacity-50"
             style={{ background: 'var(--coral-deep)' }}
-          >{busy ? 'Off-boarding…' : `Off-board ${p.name}`}</button>
+          >{busy ? "下机……" : `Off-board ${p.name}`}</button>
         </div>
       </div>
     </div>
@@ -244,7 +244,7 @@ function FormerAgentCard({ p, onRehire }: { p: Participant; onRehire: (p: Partic
         title={`Rehire ${p.name}`}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg>
-        Rehire
+        重新雇用
       </button>
     </div>
   )
@@ -281,10 +281,10 @@ export function AgentsView() {
         <div className="mb-6 flex items-end gap-4">
           <div className="flex-1">
             <h1 className="font-display font-medium text-[36px] tracking-tight text-ink-900 mb-1" style={{ letterSpacing: '-0.025em' }}>
-              Your team <em className="italic text-skype-deep" style={{ fontWeight: 400 }}>of {list.length}</em>
+              你的团队 <em className="italic text-skype-deep" style={{ fontWeight: 400 }}>的 {list.length}</em>
             </h1>
             <div className="font-display italic font-normal text-[15px] text-ink-500">
-              Agents work on their own and with each other. They'll loop you in when they need a call.
+              智能体可以独立工作并相互协作。当他们需要打电话时，他们会给你打电话。
             </div>
           </div>
           <button
@@ -296,22 +296,22 @@ export function AgentsView() {
             }}
           >
             <IPlus className="w-4 h-4" strokeWidth={2.5} />
-            New agent
+            新智能体
           </button>
         </div>
 
         <div className="flex gap-3 mb-6 text-[11px]">
           <div className="py-1.5 px-3 bg-cloud rounded-full text-ink-700 border border-ink-100">
-            <b className="text-skype-deep font-semibold">{list.filter((a) => a.status === 'working').length}</b> working
+            <b className="text-skype-deep font-semibold">{list.filter((a) => a.status === 'working').length}</b> 工作
           </div>
           <div className="py-1.5 px-3 bg-cloud rounded-full text-ink-700 border border-ink-100">
-            <b className="text-thinking font-semibold">{list.filter((a) => a.status === 'thinking').length}</b> thinking
+            <b className="text-thinking font-semibold">{list.filter((a) => a.status === 'thinking').length}</b> 思考
           </div>
           <div className="py-1.5 px-3 bg-cloud rounded-full text-ink-700 border border-ink-100">
-            <b className="text-avail font-semibold">{list.filter((a) => a.status === 'avail').length}</b> available
+            <b className="text-avail font-semibold">{list.filter((a) => a.status === 'avail').length}</b> 可用
           </div>
           <div className="py-1.5 px-3 bg-cloud rounded-full text-ink-700 border border-ink-100">
-            <b className="text-resting font-semibold">{list.filter((a) => a.status === 'resting').length}</b> resting
+            <b className="text-resting font-semibold">{list.filter((a) => a.status === 'resting').length}</b> 休息
           </div>
         </div>
 
@@ -325,10 +325,10 @@ export function AgentsView() {
         {departed.length > 0 && (
           <div className="mt-10 mb-2">
             <h2 className="font-display font-medium text-[20px] tracking-tight text-ink-700 mb-1.5" style={{ letterSpacing: '-0.02em' }}>
-              Former teammates <em className="italic text-ink-500" style={{ fontWeight: 400, fontSize: '0.85em' }}>· {departed.length}</em>
+              前队友 <em className="italic text-ink-500" style={{ fontWeight: 400, fontSize: '0.85em' }}>· {departed.length}</em>
             </h2>
             <div className="font-display italic font-normal text-[13px] text-ink-500 mb-4">
-              Off-boarded — their memory and history are preserved. Rehire any time and they'll pick up where they left off.
+              离开——他们的记忆和历史被保留。随时重新雇用，他们就会从上次停下的地方继续工作。
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {departed.map((p) => <FormerAgentCard key={p.id} p={p} onRehire={rehire} />)}
@@ -339,10 +339,10 @@ export function AgentsView() {
         {humans.length > 0 && (
           <div className="mt-10 mb-2">
             <h2 className="font-display font-medium text-[24px] tracking-tight text-ink-900 mb-1.5" style={{ letterSpacing: '-0.02em' }}>
-              Human teammates
+              人类队友
             </h2>
             <div className="font-display italic font-normal text-[13.5px] text-ink-500 mb-5">
-              People you work with.
+              与你一起工作的人。
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               {humans.map((p) => (
@@ -353,7 +353,7 @@ export function AgentsView() {
                     <div className="font-bold text-[14px] text-ink-900">{p.name}</div>
                     <div className="text-[11px] text-ink-500">{STATUS_LABEL[p.status] ?? 'idle'}</div>
                   </div>
-                  <span className="text-[9px] font-bold py-0.5 px-1.5 rounded uppercase tracking-wider bg-coral-soft text-coral-deep">human</span>
+                  <span className="text-[9px] font-bold py-0.5 px-1.5 rounded uppercase tracking-wider bg-coral-soft text-coral-deep">成员</span>
                 </div>
               ))}
             </div>

@@ -92,23 +92,23 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
     <div className="admin-page">
       <header className="admin-page-head">
         <div>
-          <h1 className="admin-h1">Users</h1>
+          <h1 className="admin-h1">用户</h1>
           <div className="admin-sub">
             {stats
-              ? <>{stats.users.total} total · {stats.users.admins} admin · {stats.users.tiers.free} free · {stats.users.tiers.pro} pro · {stats.users.tiers.max} max</>
+              ? <>{stats.users.total} 总计· {stats.users.admins} 管理· {stats.users.tiers.free} 免费· {stats.users.tiers.pro} 亲· {stats.users.tiers.max} 最大</>
               : <>&nbsp;</>}
           </div>
         </div>
         <div className="admin-filters">
           <input
-            type="search" placeholder="email or name" className="admin-input"
+            type="search" placeholder="电子邮件或姓名" className="admin-input"
             value={q} onChange={(e) => setQ(e.target.value)}
           />
           <select className="admin-select" value={tier} onChange={(e) => setTier(e.target.value as Tier | '')}>
-            <option value="">All tiers</option>
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-            <option value="max">Max</option>
+            <option value="">所有级别</option>
+            <option value="free">免费</option>
+            <option value="pro">专业版</option>
+            <option value="max">最大</option>
           </select>
         </div>
       </header>
@@ -117,15 +117,15 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
 
       <div className="admin-table">
         <div className="admin-thead">
-          <div>User</div>
-          <div>Tier</div>
-          <div>Admin</div>
-          <div>Companies</div>
-          <div>Joined</div>
-          <div>Last login</div>
+          <div>用户</div>
+          <div>等级</div>
+          <div>管理员</div>
+          <div>公司</div>
+          <div>已加入</div>
+          <div>上次登录</div>
         </div>
-        {loading && items.length === 0 && <div className="admin-row admin-empty">Loading…</div>}
-        {!loading && items.length === 0 && <div className="admin-row admin-empty">No users match.</div>}
+        {loading && items.length === 0 && <div className="admin-row admin-empty">加载中…</div>}
+        {!loading && items.length === 0 && <div className="admin-row admin-empty">没有用户匹配。</div>}
         {items.map((u) => (
           <UserRow
             key={u.id} u={u} expanded={expandedId === u.id}
@@ -182,8 +182,8 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
           <div className="admin-cell-user-text">
             <div className="admin-cell-user-name">
               {u.name}
-              {isMe && <span className="admin-pill admin-pill-soft" style={{ marginLeft: 8 }}>you</span>}
-              {u.suspended && <span className="admin-pill admin-pill-warn" style={{ marginLeft: 8 }}>suspended</span>}
+              {isMe && <span className="admin-pill admin-pill-soft" style={{ marginLeft: 8 }}>你</span>}
+              {u.suspended && <span className="admin-pill admin-pill-warn" style={{ marginLeft: 8 }}>暂停</span>}
             </div>
             <div className="admin-cell-user-email">{u.email}</div>
           </div>
@@ -191,9 +191,9 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
         <div onClick={(e) => e.stopPropagation()} data-label="Tier">
           <select className="admin-select admin-select-sm"
             value={u.tier} onChange={(e) => onTierChange(e.target.value as Tier)}>
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-            <option value="max">Max</option>
+            <option value="free">免费</option>
+            <option value="pro">专业版</option>
+            <option value="max">最大</option>
           </select>
         </div>
         <div onClick={(e) => e.stopPropagation()} data-label="Admin">
@@ -201,9 +201,9 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
             className={`admin-toggle ${u.isAdmin ? 'is-on' : ''}`}
             onClick={onAdminToggle}
             disabled={isMe && u.isAdmin}
-            title={isMe && u.isAdmin ? "Can't remove your own admin" : ''}
+            title={isMe && u.isAdmin ? "无法删除您自己的管理员" : ''}
           >
-            {u.isAdmin ? 'admin' : '—'}
+            {u.isAdmin ? "管理员" : '—'}
           </button>
         </div>
         <div data-label="Companies">{u.companyCount}</div>
@@ -212,22 +212,22 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
       </div>
       {expanded && (
         <div className="admin-row-detail">
-          {loadingDetail && <div className="admin-empty">Loading details…</div>}
+          {loadingDetail && <div className="admin-empty">正在加载详细信息...</div>}
           {detail && (
             <div className="admin-detail-grid">
-              <DetailField label="User ID" value={detail.id} mono />
+              <DetailField label="用户 ID" value={detail.id} mono />
               <DetailField label="sub2api ID" value={detail.sub2apiUserId ? String(detail.sub2apiUserId) : '—'} mono />
-              <DetailField label="Created"   value={fmtDateTime(detail.createdAt)} mono />
-              <DetailField label="Last login" value={detail.lastLoginAt ? fmtDateTime(detail.lastLoginAt) : '—'} mono />
+              <DetailField label="已创建"   value={fmtDateTime(detail.createdAt)} mono />
+              <DetailField label="上次登录" value={detail.lastLoginAt ? fmtDateTime(detail.lastLoginAt) : '—'} mono />
               {/* Suspension card — only shown when the row IS suspended. We
                   surface the reason, who suspended them, and when, so the
                   operator has all the context before deciding to unsuspend. */}
               {detail.suspended && (
                 <div className="admin-detail-suspended">
-                  <div className="admin-detail-label">Suspended</div>
+                  <div className="admin-detail-label">暂停</div>
                   <div className="admin-detail-suspended-meta">
                     {detail.suspendedAt ? fmtDateTime(detail.suspendedAt) : '—'}
-                    {detail.suspendedBy ? <> · by <span className="admin-cell-mono">{detail.suspendedBy}</span></> : null}
+                    {detail.suspendedBy ? <> ·由 <span className="admin-cell-mono">{detail.suspendedBy}</span></> : null}
                   </div>
                   {detail.suspensionReason && (
                     <div className="admin-detail-suspended-reason">{detail.suspensionReason}</div>
@@ -239,21 +239,21 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
                   className={`btn-ghost ${detail.suspended ? '' : 'admin-btn-danger'}`}
                   onClick={handleSuspendClick}
                   disabled={isMe && !detail.suspended}
-                  title={isMe && !detail.suspended ? "You can't suspend yourself" : ''}
+                  title={isMe && !detail.suspended ? "你不能暂停自己" : ''}
                 >
-                  {detail.suspended ? 'Unsuspend' : 'Suspend account'}
+                  {detail.suspended ? "取消暂停" : "暂停帐户"}
                 </button>
               </div>
               <div className="admin-detail-companies">
-                <div className="admin-detail-label">Companies ({detail.companies.length})</div>
-                {detail.companies.length === 0 && <div className="admin-empty">No companies.</div>}
+                <div className="admin-detail-label">公司（{detail.companies.length})</div>
+                {detail.companies.length === 0 && <div className="admin-empty">没有公司。</div>}
                 {detail.companies.map((c) => (
                   <div key={c.id} className="admin-detail-company">
                     <div>
                       <div style={{ fontWeight: 600 }}>{c.name}</div>
                       <div className="admin-cell-user-email">{c.slug} · {c.role}</div>
                     </div>
-                    <div className="admin-cell-mono">{c.agentCount} agents</div>
+                    <div className="admin-cell-mono">{c.agentCount} 智能体</div>
                   </div>
                 ))}
               </div>

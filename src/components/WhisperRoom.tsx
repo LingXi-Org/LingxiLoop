@@ -218,8 +218,8 @@ export function WhisperRoom({ pairId }: { pairId: string }) {
           <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
           </svg>
-          <b className="font-semibold tracking-wide uppercase text-[9.5px]">Observer mode</b>
-          <span className="font-display italic text-ink-500 text-[11px]">silent peek — inject to step in</span>
+          <b className="font-semibold tracking-wide uppercase text-[9.5px]">观察者模式</b>
+          <span className="font-display italic text-ink-500 text-[11px]">静默窥视 — 注入以介入</span>
         </div>
       </div>
 
@@ -255,7 +255,7 @@ export function WhisperRoom({ pairId }: { pairId: string }) {
             {isGroup ? `${ms.length} agents` : (whisper.about ?? 'private thread')}
             <span className="not-italic text-ink-300"> · </span>
             <span className="not-italic text-ink-300">
-              started {new Date(whisper.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              开始 {new Date(whisper.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
         </div>
@@ -265,7 +265,7 @@ export function WhisperRoom({ pairId }: { pairId: string }) {
       <div className="overflow-y-auto py-3 px-6 pb-3 flex flex-col gap-3 relative">
         <Divider label={`opened ${new Date(whisper.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`} />
         {messages.length === 0 && (
-          <div className="text-center text-ink-300 text-[12px] font-display italic py-6">no messages yet</div>
+          <div className="text-center text-ink-300 text-[12px] font-display italic py-6">还没有消息</div>
         )}
         {messages.map((msg) => <Bubble key={msg.id} msg={msg} />)}
       </div>
@@ -277,7 +277,7 @@ export function WhisperRoom({ pairId }: { pairId: string }) {
           style={{ border: '1.5px solid var(--whisper-100)' }}>
           <Avatar p={meAvatar} size={26} ringColor="var(--cloud)" showStatus={false} />
           <div className="flex-1 text-[13px] text-ink-300">
-            Inject a thought — <em className="font-display italic font-normal">they'll see it as if you'd been listening…</em>
+            注入一个想法—— <em className="font-display italic font-normal">他们会看到它，就好像您一直在听一样……</em>
           </div>
         </div>
       </div>
@@ -316,18 +316,18 @@ export function WhisperInspector({ pairId }: { pairId: string }) {
           background: 'radial-gradient(circle at 50% 0%, var(--whisper-100), transparent 70%)',
           borderColor: 'var(--whisper-100)',
         }}>
-        <div className="text-[9.5px] font-extrabold text-whisper tracking-[0.18em] uppercase mb-2">Whisper · {messages.length} messages</div>
+        <div className="text-[9.5px] font-extrabold text-whisper tracking-[0.18em] uppercase mb-2">私聊· {messages.length} 消息</div>
         <h3 className="font-display font-medium text-[20px] tracking-tight mb-1.5">
           {whisper.about ?? whisper.title ?? 'private thread'}
         </h3>
         <div className="font-display italic text-[12px] leading-[1.6] text-ink-500 px-1.5">
-          opened {new Date(whisper.createdAt).toLocaleString()}
+          已打开 {new Date(whisper.createdAt).toLocaleString()}
         </div>
       </div>
 
       <div className="py-4 px-5 border-b border-whisper-100">
         <h4 className="text-[10.5px] font-extrabold text-whisper tracking-[0.12em] uppercase mb-2.5">
-          {ms.length === 2 ? 'The two voices' : `${ms.length} voices`}
+          {ms.length === 2 ? "两个声音" : `${ms.length} voices`}
         </h4>
         <div className={cn(
           'grid gap-3',
@@ -339,7 +339,7 @@ export function WhisperInspector({ pairId }: { pairId: string }) {
               <div className="text-[12px] font-bold text-ink-900 mt-1.5">{p.name}</div>
               {p.role && <div className="font-display italic text-[10px] text-ink-500 mb-2">{p.role}</div>}
               <div className="font-display text-[22px] font-medium text-whisper-deep leading-none" style={{ letterSpacing: '-0.02em' }}>{turnsByAuthor[p.id] ?? 0}</div>
-              <div className="text-[9px] font-bold text-ink-300 uppercase tracking-wider mt-0.5">turns</div>
+              <div className="text-[9px] font-bold text-ink-300 uppercase tracking-wider mt-0.5">转</div>
             </div>
           ))}
         </div>

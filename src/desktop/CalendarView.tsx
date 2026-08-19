@@ -356,7 +356,7 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
               },
             },
             {
-              label: 'New all-day event',
+              label: "新的全天活动",
               onClick: () => {
                 const start = new Date(menu.date); start.setHours(0, 0, 0, 0)
                 const end = new Date(menu.date); end.setHours(23, 59, 0, 0)
@@ -599,7 +599,7 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
               },
             },
             {
-              label: 'New all-day event',
+              label: "新的全天活动",
               onClick: () => {
                 const s = new Date(menu.date); s.setHours(0, 0, 0, 0)
                 const e = new Date(menu.date); e.setHours(23, 59, 0, 0)
@@ -684,13 +684,13 @@ export function CalendarView() {
       <div className="flex flex-col min-h-0">
         <div className="px-6 py-3 border-b border-ink-100 flex items-center gap-3 shrink-0">
           <ICalendar className="w-5 h-5 text-skype" />
-          <h1 className="text-lg font-semibold text-ink-900">Calendar</h1>
+          <h1 className="text-lg font-semibold text-ink-900">日历</h1>
 
           <div className="flex items-center gap-1 ml-3">
             <button onClick={goPrev}
               className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100">‹</button>
             <button onClick={goToday}
-              className="px-2 h-7 rounded-md text-xs font-medium text-ink-700 hover:bg-ink-100">Today</button>
+              className="px-2 h-7 rounded-md text-xs font-medium text-ink-700 hover:bg-ink-100">今天</button>
             <button onClick={goNext}
               className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100">›</button>
             <span className="ml-2 text-sm text-ink-700 font-medium">{headerLabel}</span>
@@ -725,7 +725,7 @@ export function CalendarView() {
             }}
           >
             <IPlus className="w-4 h-4" strokeWidth={2.5} />
-            New
+            新
           </button>
         </div>
 
@@ -738,21 +738,21 @@ export function CalendarView() {
       <aside className="border-l border-ink-100 flex flex-col min-h-0">
         <div className="px-4 py-4 border-b border-ink-100 flex items-center gap-2 shrink-0">
           <IClock className="w-4 h-4 text-ink-500" />
-          <h2 className="text-sm font-semibold text-ink-700">Upcoming</h2>
+          <h2 className="text-sm font-semibold text-ink-700">即将推出</h2>
           <div className="flex-1" />
-          <span className="text-xs text-ink-400">{agenda.length} item{agenda.length === 1 ? '' : 's'}</span>
+          <span className="text-xs text-ink-400">{agenda.length} 项目{agenda.length === 1 ? '' : 's'}</span>
         </div>
         <div className="flex-1 min-h-0 overflow-auto px-3 py-2 space-y-2">
           {!loaded && (
-            <div className="text-sm text-ink-400 px-1 py-2">Loading…</div>
+            <div className="text-sm text-ink-400 px-1 py-2">加载中…</div>
           )}
           {loaded && agenda.length === 0 && (
             <div className="px-1 py-6 text-center">
-              <div className="text-sm text-ink-500 mb-2">Nothing scheduled for the next 30 days.</div>
+              <div className="text-sm text-ink-500 mb-2">未来 30 天内没有任何安排。</div>
               <button
                 onClick={() => openNew()}
                 className="text-xs text-skype font-medium hover:underline"
-              >Schedule something →</button>
+              >安排一些事情 →</button>
             </div>
           )}
           {agenda.map((it, idx) => {
@@ -783,7 +783,7 @@ export function CalendarView() {
                       {it.event.isPrivate && (
                         <>
                           <span className="opacity-50">·</span>
-                          <span title="Private event — only the creator and assignee can see this. The workspace owner can also see private events that involve an agent.">🔒</span>
+                          <span title="私人事件——只有创建者和受让人才能看到。工作区所有者还可以查看涉及智能体的私人事件。">🔒</span>
                         </>
                       )}
                     </div>
@@ -797,7 +797,7 @@ export function CalendarView() {
                         <span className="text-xs text-ink-600">→ {assignee.name}</span>
                         {it.event.targetConversationId && convosById[it.event.targetConversationId] && (
                           <span className="text-xs text-ink-400 truncate">
-                            in #{convosById[it.event.targetConversationId]}
+                            在 #{convosById[it.event.targetConversationId]}
                           </span>
                         )}
                       </div>
@@ -806,16 +806,16 @@ export function CalendarView() {
                   <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                     {it.event.kind === 'agent_task' && (
                       <button
-                        title="Run now"
+                        title="立即运行"
                         onClick={async () => {
                           try { await runNow(it.event.id) } catch (err) { console.warn('[calendar] run-now failed', err) }
                         }}
                         className="text-[10px] text-skype-deep px-1.5 py-0.5 rounded hover:bg-sky2-100"
-                      >Run now</button>
+                      >立即运行</button>
                     )}
                     {(it.event.createdBy === meId) && (
                       <button
-                        title="Delete event"
+                        title="删除事件"
                         onClick={async () => {
                           if (!confirm(`Delete "${it.event.title}"?`)) return
                           try { await remove(it.event.id) } catch (err) { console.warn('[calendar] delete failed', err) }
