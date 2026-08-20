@@ -1,0 +1,205 @@
+name: Verified republish LingxiLoop Desktop v0.1.0-beta
+
+on:
+  push:
+    branches:
+      - automation/republish-v0.1.0-beta
+
+permissions:
+  contents: write
+
+env:
+  TARGET_SHA: 9c03f3ec405234afaf8d8654eb09981f314a69a2
+  VERSION: 0.1.0-beta
+  TAG: v0.1.0-beta
+  RELEASE_BRANCH: automation/republish-v0.1.0-beta
+  VITE_LINGXILOOP_API_BASE: https://loop.lingxilearn.cn
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+jobs:
+  prepare:
+    if: github.event.head_commit.message == 'ci: run verified republish v0.1.0-beta'
+    runs-on: ubuntu-latest
+    outputs:
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          fetch-depth: 0
+      - id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(tr -d '[:space:]' < VERSION)" = "$VERSION"
+          git fetch origin main --no-tags
+          git merge-base --is-ancestor "$TARGET_SHA" origin/main
+          REMOTE_SHA="$(git ls-remote origin "refs/tags/$TAG" | awk '{print $1}')"
+          test "$REMOTE_SHA" = "$TARGET_SHA"
+          echo 'prerelease=true' >> "$GITHUB_OUTPUT"
+      - name: Remove any stale release object, keep corrected tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes 2>/dev/null || true
+      - name: Record prepare success
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          body="stage=prepare\nstatus=success\ntag=$TAG\nsha=$TARGET_SHA\nrun=$GITHUB_RUN_ID\n"
+          encoded="$(printf '%b' "$body" | base64 -w0)"
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/.release-status-v0.1.0-beta-prepare.txt" \
+            -f message='ci: record v0.1.0-beta prepare success' \
+            -f content="$encoded" \
+            -f branch="$RELEASE_BRANCH" >/dev/null
+
+  windows:
+    name: Unsigned Windows x64
+    needs: prepare
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run electron:prepare
+      - run: npx electron-builder --win --x64 --publish never
+      - run: node scripts/verify-desktop-package.mjs release
+      - name: Verify installers are unsigned
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem -LiteralPath release -Filter '*.exe' -File)
+          if ($installers.Count -eq 0) { throw 'No Windows installer was produced' }
+          foreach ($installer in $installers) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $installer.FullName
+            if ($signature.Status -ne 'NotSigned') { throw "Expected unsigned installer: $($installer.Name) ($($signature.Status))" }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-verified
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+          if-no-files-found: error
+      - name: Record Windows success
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $body = "stage=windows`nstatus=success`ntag=$env:TAG`nsha=$env:TARGET_SHA`nrun=$env:GITHUB_RUN_ID`n"
+          $encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($body))
+          gh api --method PUT "repos/$env:GITHUB_REPOSITORY/contents/.release-status-v0.1.0-beta-windows.txt" -f message='ci: record v0.1.0-beta windows success' -f content="$encoded" -f branch="$env:RELEASE_BRANCH" | Out-Null
+
+  macos:
+    name: Ad-hoc macOS x64/arm64
+    needs: prepare
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run electron:prepare
+      - run: npx electron-builder --mac --x64 --arm64 --publish never
+      - run: node scripts/verify-desktop-package.mjs release
+      - name: Verify ad-hoc codesign
+        shell: bash
+        run: |
+          set -euo pipefail
+          apps=()
+          while IFS= read -r app; do apps+=("$app"); done < <(find release -type d -name '*.app')
+          ((${#apps[@]} >= 2)) || { echo '::error::expected ad-hoc signed x64 and arm64 apps'; exit 1; }
+          for app in "${apps[@]}"; do
+            codesign --verify --deep --strict --verbose=2 "$app"
+            identity="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^Signature=//p')"
+            [[ "$identity" == adhoc ]] || { echo "::error::expected ad-hoc signature for $app, got $identity"; exit 1; }
+          done
+          dmgs=()
+          while IFS= read -r dmg; do dmgs+=("$dmg"); done < <(find release -maxdepth 1 -type f -name '*.dmg')
+          ((${#dmgs[@]} >= 2)) || { echo '::error::expected x64 and arm64 DMGs'; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-release-verified
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.blockmap
+            release/latest-mac.yml
+          if-no-files-found: error
+      - name: Record macOS success
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          body="stage=macos\nstatus=success\ntag=$TAG\nsha=$TARGET_SHA\nrun=$GITHUB_RUN_ID\n"
+          encoded="$(printf '%b' "$body" | base64 -w0)"
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/.release-status-v0.1.0-beta-macos.txt" \
+            -f message='ci: record v0.1.0-beta macos success' \
+            -f content="$encoded" \
+            -f branch="$RELEASE_BRANCH" >/dev/null
+
+  publish:
+    name: Publish corrected GitHub Release
+    needs: [prepare, windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*-release-verified'
+          path: artifacts
+          merge-multiple: true
+      - name: Verify complete release set
+        shell: bash
+        run: |
+          set -euo pipefail
+          find artifacts -maxdepth 1 -type f -print
+          compgen -G 'artifacts/*.exe' >/dev/null
+          test "$(find artifacts -maxdepth 1 -type f -name '*.dmg' | wc -l)" -ge 2
+          test "$(find artifacts -maxdepth 1 -type f -name '*.zip' | wc -l)" -ge 2
+          compgen -G 'artifacts/*.blockmap' >/dev/null
+          test -f artifacts/latest.yml
+          test -f artifacts/latest-mac.yml
+      - name: Create or repair corrected prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "LingxiLoop $TAG" --generate-notes --prerelease
+          fi
+          JSON="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,assets,url)"
+          jq -e --arg tag "$TAG" '
+            .tagName == $tag and
+            .isPrerelease == true and
+            ([.assets[].name | select(endswith(".exe"))] | length) >= 1 and
+            ([.assets[].name | select(endswith(".dmg"))] | length) >= 2 and
+            ([.assets[].name | select(endswith(".zip"))] | length) >= 2 and
+            ([.assets[].name | select(. == "latest.yml")] | length) == 1 and
+            ([.assets[].name | select(. == "latest-mac.yml")] | length) == 1
+          ' <<<"$JSON" >/dev/null
+          URL="$(jq -r '.url' <<<"$JSON")"
+          ASSETS="$(jq -r '.assets[].name' <<<"$JSON" | paste -sd ',' -)"
+          body="status=verified\ntag=$TAG\nsha=$TARGET_SHA\nrelease=$URL\nassets=$ASSETS\nrun=$GITHUB_RUN_ID\nverified_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)\n"
+          encoded="$(printf '%b' "$body" | base64 -w0)"
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/.release-verification-v0.1.0-beta-v2.txt" \
+            -f message='ci: mark v0.1.0-beta release fully verified' \
+            -f content="$encoded" \
+            -f branch="$RELEASE_BRANCH" >/dev/null
