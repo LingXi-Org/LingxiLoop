@@ -1,0 +1,50 @@
+name: Inspect LingxiLoop Desktop v0.1.0-beta
+
+on:
+  push:
+    branches:
+      - automation/republish-v0.1.0-beta
+
+permissions:
+  contents: write
+
+env:
+  TARGET_SHA: 9c03f3ec405234afaf8d8654eb09981f314a69a2
+  TAG: v0.1.0-beta
+
+jobs:
+  inspect:
+    if: github.event.head_commit.message == 'ci: inspect v0.1.0-beta release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: automation/republish-v0.1.0-beta
+          fetch-depth: 0
+      - name: Inspect release state
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REMOTE_SHA="$(git ls-remote origin "refs/tags/$TAG" | awk '{print $1}')"
+          {
+            echo "tag=$TAG"
+            echo "expected_sha=$TARGET_SHA"
+            echo "tag_sha=${REMOTE_SHA:-missing}"
+            if JSON="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,assets,url 2>/dev/null)"; then
+              echo "release_exists=yes"
+              echo "release_url=$(jq -r '.url' <<<"$JSON")"
+              echo "prerelease=$(jq -r '.isPrerelease' <<<"$JSON")"
+              echo "asset_count=$(jq '.assets | length' <<<"$JSON")"
+              jq -r '.assets[].name' <<<"$JSON" | sed 's/^/asset=/'
+            else
+              echo "release_exists=no"
+            fi
+            echo "inspected_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > .release-inspection-v0.1.0-beta.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .release-inspection-v0.1.0-beta.txt
+          git commit -m 'ci: record v0.1.0-beta release inspection'
+          git push origin HEAD:automation/republish-v0.1.0-beta
