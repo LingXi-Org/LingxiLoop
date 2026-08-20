@@ -65,6 +65,31 @@ export const STARTER_BLOUB_PROFILES: Record<StarterPersonaKey, StarterBloubProfi
 
 const STARTER_PERSONA_KEYS = Object.keys(STARTER_BLOUB_PROFILES) as StarterPersonaKey[]
 
+/** The six poses already curated as "this agent is working" animations
+ *  across STARTER_BLOUB_PROFILES (orbit/wide/play/alert/comet/burst) —
+ *  reused here as the general "working" expression library so a working
+ *  agent's avatar cycles through visual variety instead of holding one
+ *  pose the whole time it's busy. */
+export const WORKING_STATE_POOL: StateId[] = ['orbit', 'wide', 'play', 'alert', 'comet', 'burst']
+
+/** Deterministic per-seed shuffle (splitmix32-style LCG) — same seed always
+ *  produces the same sequence within a session, so a re-render doesn't
+ *  reshuffle mid-cycle, but different agents (and a reseed between working
+ *  spells) see a different order/subset. */
+export function pickWorkingStateSequence(seed: number, count: number = 3): StateId[] {
+  const pool = [...WORKING_STATE_POOL]
+  let s = seed >>> 0
+  const next = (): number => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
+    return s / 0x100000000
+  }
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1))
+    ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
+  }
+  return pool.slice(0, Math.min(Math.max(1, count), pool.length))
+}
+
 export function getStarterPersonaKey(participant: Pick<Participant, 'id' | 'role'>): StarterPersonaKey | null {
   const id = participant.id.toLowerCase()
   return STARTER_PERSONA_KEYS.find((key) =>

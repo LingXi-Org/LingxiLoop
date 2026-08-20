@@ -8,14 +8,39 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import type { Participant } from '@/types'
-import { getBloubIdentity, getBloubState, stableParticipantHash } from '@/lib/agentVisualState'
+import { getBloubIdentity, getBloubState, pickWorkingStateSequence, stableParticipantHash } from '@/lib/agentVisualState'
 import { NOTIF_BLUE, type DotRender } from '@/lib/bloub/decor'
 import { BotEngine, type BotFrame } from '@/lib/bloub/engine'
 import { EXPRESSION_BY_ID } from '@/lib/bloub/expressions'
 import { DEMI_VIEWBOX, RAYON } from '@/lib/bloub/repere'
 import { COLOR_BY_ID, SHAPE_BY_ID } from '@/lib/bloub/skins'
-import type { StateId } from '@/lib/bloub/states'
+import { STATE_BY_ID, type StateId } from '@/lib/bloub/states'
 import { getBloubClockTime, subscribeBloubClock } from '@/lib/bloub/clock'
+
+const WORKING_CYCLE_LENGTH = 3
+
+/** While `status === 'working'`, cycles the avatar through a few randomly
+ *  (but deterministically-per-agent) chosen poses from WORKING_STATE_POOL
+ *  instead of holding a single one for the whole busy stretch — each pose
+ *  advances to the next after its own catalog duration. Any other status
+ *  just passes `baseState` straight through, unchanged. */
+function useDisplayState(participantHash: number, status: string, baseState: StateId, motionEnabled: boolean): StateId {
+  const sequence = useMemo(
+    () => (status === 'working' ? pickWorkingStateSequence(participantHash, WORKING_CYCLE_LENGTH) : null),
+    [status, participantHash],
+  )
+  const [index, setIndex] = useState(0)
+  useEffect(() => { setIndex(0) }, [sequence])
+  useEffect(() => {
+    if (!sequence || !motionEnabled) return
+    const current = sequence[index % sequence.length]!
+    const durationMs = (STATE_BY_ID.get(current)?.duration ?? 2) * 1000
+    const timer = window.setTimeout(() => setIndex((i) => i + 1), durationMs)
+    return () => window.clearTimeout(timer)
+  }, [sequence, index, motionEnabled])
+  if (!sequence) return baseState
+  return sequence[index % sequence.length]!
+}
 
 interface Props {
   participant: Participant
@@ -97,11 +122,15 @@ function Dot({ dot, ink }: { dot: DotRender; ink: string }) {
 /** Native React renderer for Bloub's clock-free SVG morph engine. */
 export function BloubAvatar({ participant, status, size, paper = 'var(--paper)', animated = true, className }: Props) {
   const identity = useMemo(() => getBloubIdentity(participant), [participant.id, participant.role])
-  const state = getBloubState(participant, status)
+  const baseState = getBloubState(participant, status)
   const shape = SHAPE_BY_ID.get(identity.shape)?.radii ?? null
   const expression = EXPRESSION_BY_ID.get(identity.expression) ?? null
   const ink = COLOR_BY_ID.get(identity.color)?.hex ?? '#3b93f0'
   const participantHash = useMemo(() => stableParticipantHash(participant.id), [participant.id])
+  const { ref, visible } = useViewportVisibility()
+  const reducedMotion = useReducedMotion()
+  const motionEnabled = animated && size >= 24 && visible && !reducedMotion
+  const state = useDisplayState(participantHash, status, baseState, motionEnabled)
   const phase = STATIC_PHASE[state] + (participantHash % 31) / 100
   // A shared rAF clock keeps the renderer cheap, but sampling every avatar at
   // the exact same scene time made all eyes blink and drift in lockstep. Each
@@ -112,9 +141,6 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
     [participant.id, identity.shape, identity.expression],
   )
   const [frame, setFrame] = useState<BotFrame>(() => engine.sample(phase))
-  const { ref, visible } = useViewportVisibility()
-  const reducedMotion = useReducedMotion()
-  const motionEnabled = animated && size >= 24 && visible && !reducedMotion
   const lastMediumFrame = useRef(-1)
   const reactId = useId()
   const uid = useMemo(() => `bloub-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`, [reactId])
