@@ -12,16 +12,13 @@ jobs:
     uses: ./.github/workflows/_quality.yml
 
   validate-release:
-    name: Validate tag and deployed Web version
+    name: Validate desktop release tag
     needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment: production
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
-    env:
-      PUBLIC_ORIGIN: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,40 +33,19 @@ jobs:
           git fetch origin main --no-tags
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo '::error::release tag commit is not part of main'; exit 1; }
           node scripts/sync-version.mjs --check
-          node -e '
-            const url = new URL(process.env.PUBLIC_ORIGIN || "")
-            if (url.protocol !== "https:" || url.pathname !== "/" || url.search || url.hash) {
-              throw new Error("LINGXILOOP_PUBLIC_ORIGIN must be an HTTPS origin without path, query or fragment")
-            }'
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           [[ "$VERSION" == *-* ]] && echo 'prerelease=true' >> "$GITHUB_OUTPUT" || echo 'prerelease=false' >> "$GITHUB_OUTPUT"
-      - name: Wait for matching Web commit and LingxiGraph runtime
-        shell: bash
-        run: |
-          set -euo pipefail
-          BASE="${PUBLIC_ORIGIN%/}"
-          for attempt in $(seq 1 60); do
-            if META="$(curl -fsS --max-time 15 "$BASE/api/meta")" &&
-               SHA="$(jq -r '.commitSha' <<<"$META")" &&
-               VERSION="$(jq -r '.version' <<<"$META")" &&
-               RUNTIME="$(jq -r '.reasoningRuntime' <<<"$META")" &&
-               [[ "$SHA" == "$GITHUB_SHA" && "$VERSION" == '${{ steps.version.outputs.version }}' && "$RUNTIME" == lingxigraph ]]; then
-              echo "Production Web matches desktop release commit"
-              exit 0
-            fi
-            sleep 15
-          done
-          echo '::error::production /api/meta did not converge to this tag commit and LingxiGraph runtime'
-          exit 1
 
   windows:
     name: Unsigned Windows x64
     needs: validate-release
     runs-on: windows-latest
     timeout-minutes: 40
-    environment: production
     env:
-      VITE_LINGXILOOP_API_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+      # Desktop releases are independent from the Web deployment pipeline.
+      # Keep the API origin in source control so publishing requires no
+      # GitHub Environment variables or production deployment credentials.
+      VITE_LINGXILOOP_API_BASE: https://loop.lingxilearn.cn
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
@@ -77,11 +53,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Require HTTPS origin
-        shell: pwsh
-        run: |
-          $origin = [Uri]$env:VITE_LINGXILOOP_API_BASE
-          if ($origin.Scheme -ne 'https' -or $origin.AbsolutePath -ne '/' -or $origin.Query -or $origin.Fragment) { throw 'VITE_LINGXILOOP_API_BASE must be an HTTPS origin' }
       - run: npm ci
       - run: npm run build
       - run: npm run electron:prepare
@@ -110,9 +81,9 @@ jobs:
     needs: validate-release
     runs-on: macos-latest
     timeout-minutes: 60
-    environment: production
     env:
-      VITE_LINGXILOOP_API_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+      # Same fixed cloud API as Windows; no production Environment required.
+      VITE_LINGXILOOP_API_BASE: https://loop.lingxilearn.cn
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
@@ -120,13 +91,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Require HTTPS origin
-        shell: bash
-        run: |
-          set -euo pipefail
-          node -e '
-            const url = new URL(process.env.VITE_LINGXILOOP_API_BASE || "")
-            if (url.protocol !== "https:" || url.pathname !== "/" || url.search || url.hash) throw new Error("invalid desktop API origin")'
       - run: npm ci
       - run: npm run build
       - run: npm run electron:prepare
