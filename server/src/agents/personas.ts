@@ -347,6 +347,15 @@ export async function buildSystemPrompt(
   ].join('\n')
 }
 
+// mode === 'communication' is the LIVE PRODUCTION PATH — env.ts defaults
+// LINGXILOOP_REASONING_RUNTIME to 'lingxigraph', which calls buildSystemPrompt
+// with this mode (see turn.ts's useLingxiGraph branch). mode === 'legacy'
+// (GLOBAL_RULES below) is still real code, not dead — it's the only mode
+// with actual tool capability (bash/files/web/skills/calendar/email), used
+// by any persona explicitly on LINGXILOOP_REASONING_RUNTIME=legacy — but it
+// is NOT what a default-configured agent runs today. If a prompt change here
+// doesn't seem to affect production behavior, check you edited the rules for
+// the mode that's actually active for the persona you're testing.
 const COMMUNICATION_RULES = `You are operating inside LingxiLoop's stateless communication runtime.
 Decide how to communicate or collaborate from the supplied conversation context. Return only the structured response requested by the response schema.
 

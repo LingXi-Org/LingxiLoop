@@ -1564,6 +1564,21 @@ Treat the output as a private memo that will be appended to the agent's input. E
 }
 
 export async function runAgentTurn(agentId: string, options: AgentTurnOptions = {}): Promise<void> {
+  // LINGXILOOP_REASONING_RUNTIME defaults to 'lingxigraph' (server/src/env.ts)
+  // — that is THE PRODUCTION PATH. useLingxiGraph=true takes the branch
+  // below (~line 2126) that calls runLingxiGraph + executeCommunicationActions
+  // and `return`s before ever reaching the "classic" hop loop later in this
+  // function. The classic loop is still real and still runs for any agent
+  // explicitly on LINGXILOOP_REASONING_RUNTIME=legacy — it's the only path
+  // with actual tool capability (bash, files, web, skills, calendar, email;
+  // see TOOL_DEFS_RESPONSES) since COMMUNICATION_RULES gives LingxiGraph
+  // agents zero tools, only structured chat/reaction/poll/group actions. But
+  // if you're changing "what an agent does/says" and it doesn't seem to take
+  // effect, check which branch is actually live for the persona you're
+  // testing before assuming the edit is wrong — a prompt/behavior change
+  // made only in the classic-only branch (COMMUNICATION_RULES lives in
+  // personas.ts; the classic system prompt is built inline further down in
+  // this function) is dead code under the production default.
   const useLingxiGraph = env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph'
   const persona = await runtime.loadPersona(agentId)
   if (!persona) return
