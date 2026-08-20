@@ -24,6 +24,10 @@ node_modules
 dist
 dist-ssr
 
+# Python bytecode cache (server/lingxigraph/)
+__pycache__/
+*.pyc
+
 # Wrangler local cache (workers/*/.wrangler/) — build artifacts + auth state
 .wrangler/
 
