@@ -349,6 +349,19 @@ function agentTurnFailureNoticeReason(summary: string, err?: string | null): str
   if (text.includes('missing turn-status') || text.includes('protocol')) return 'turn-status protocol violation'
   if (text.includes('auto-relay')) return 'reply delivery error'
   if (text.includes('max_hops') || text.includes('max hops') || text.includes('cap_reached')) return 'turn limit reached'
+  // Checked BEFORE isModelProviderConnectionText: pg-pool's own
+  // "Connection terminated due to connection timeout" contains "terminated"
+  // and would otherwise be mis-bucketed as a model-provider connection
+  // error. Both this and "timeout exceeded when trying to connect" (the
+  // other pg-pool exhaustion error, from node_modules/pg-pool) surface
+  // under a same-conversation multi-agent burst competing for the 20-
+  // connection pool — worth its own label so it's distinguishable in
+  // observability from an actual upstream LLM connection failure.
+  if (text.includes('timeout exceeded when trying to connect')
+    || (text.includes('connection terminated') && text.includes('timeout'))) {
+    return 'database pool exhausted'
+  }
+  if (text.includes('lingxigraph runtime timed out')) return 'lingxigraph runtime timed out'
   if (isModelProviderConnectionText(text)) return 'model provider connection error'
   return 'runtime error'
 }
@@ -2170,7 +2183,7 @@ ${peerWorkBlock}`.trim()
       runId, agentId, companyId: runCompanyId,
       kind: 'lingxigraph.started', title: 'LingxiGraph stateless run started',
       data: { model, contextChars: contextPrompt.length }, stage: 'thinking',
-    })
+    }).catch(() => { /* observability best-effort */ })
     const startedAt = Date.now()
     // Deliberately NOT passing onMessageDelta: that option makes
     // runLingxiGraph hit /v1/turn/stream, whose live preview is scraped by
@@ -2204,11 +2217,15 @@ ${peerWorkBlock}`.trim()
       } else {
         missingUsageHopCount++
       }
+      // Best-effort: a usage-ledger hiccup here must not abort the turn
+      // before executeCommunicationActions runs below — that would turn a
+      // successful model response into a dropped reply.
       await runtime.recordExternalLlmCall({
         runId, agentId, companyId: runCompanyId, model: call.model,
         usage: call.usage, latencyMs: perCallLatency, status: 'ok',
         extras: { runtime: 'lingxigraph', aggregateRunnerLatencyMs: elapsedMs },
-      })
+      }).catch((err) => console.warn(`[turn] ${agentId} recordExternalLlmCall failed`,
+        err instanceof Error ? err.message : err))
     }
 
     // For an ordinary message-driven wake, the scope is the stable set of
@@ -2259,14 +2276,31 @@ ${peerWorkBlock}`.trim()
         kind: 'lingxigraph.action_failed', level: 'error', title: finalSummary,
         data: { failedActionIndex: execution.failedActionIndex, executedActions: execution.results.length },
         stage: 'failed',
-      })
+      }).catch(() => { /* observability best-effort */ })
       return
     }
 
+    // Bounded per-call timeout + catch: markConversationRead is purely an
+    // optimization (a stuck/rejected call would otherwise propagate to the
+    // outer catch and turn an ALREADY-SUCCESSFUL turn — the replies/
+    // reactions already executed above — into a spurious "runtime error"
+    // notice, exactly the failure mode a same-conversation multi-agent
+    // burst produces under pg-pool pressure). Mirrors the identical
+    // pattern used for the steering-drain markConversationRead call later
+    // in this function.
     const readTargets = new Map<string, string>()
     for (const msg of inbox) readTargets.set(msg.conversation_id, msg.id)
+    const MARK_READ_TIMEOUT_MS = 5_000
     await Promise.all([...readTargets.entries()].map(([conversationId, upToMessageId]) =>
-      runtime.markConversationRead({ agentId, conversationId, upToMessageId }),
+      Promise.race<void>([
+        runtime.markConversationRead({ agentId, conversationId, upToMessageId }),
+        new Promise<void>((_, rej) =>
+          setTimeout(() => rej(new Error(`markConversationRead(${conversationId}) timed out after ${MARK_READ_TIMEOUT_MS}ms`)), MARK_READ_TIMEOUT_MS),
+        ),
+      ]).catch((err) =>
+        console.warn(`[turn] ${agentId} markConversationRead(${conversationId}) failed`,
+          err instanceof Error ? err.message : err),
+      ),
     ))
     lastCompletedInbox.set(agentId, fingerprint)
     finalStatus = 'completed'
@@ -2278,7 +2312,7 @@ ${peerWorkBlock}`.trim()
       kind: 'lingxigraph.completed', title: finalSummary,
       data: { status: result.status, actionCount: result.actions.length, modelCalls: result.modelCalls.length },
       stage: 'completed',
-    })
+    }).catch(() => { /* observability best-effort */ })
     return
   }
 

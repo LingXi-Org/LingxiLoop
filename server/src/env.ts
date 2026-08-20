@@ -53,7 +53,20 @@ export const env = {
   LINGXIGRAPH_URL: process.env.LINGXIGRAPH_URL?.trim() || 'http://localhost:8124',
   /** Bearer token sent to the LingxiGraph Runtime, if it requires one. */
   LINGXIGRAPH_TOKEN: process.env.LINGXIGRAPH_TOKEN,
-  LINGXIGRAPH_RUN_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 120_000),
+  /**
+   * Must stay comfortably above the LingxiGraph Runtime's own worst-case
+   * retry budget, or this timeout fires first and turns a slow-but-would-
+   * have-succeeded call into a generic "runtime error" notice — this
+   * timer is armed for the FULL request (server/src/agents/
+   * lingxigraph-adapter.ts), while the Python side's `_run` retries up to
+   * `max_model_calls: 4` times (server/lingxigraph/lingxigraph_runner.py),
+   * each call bounded by LINGXIGRAPH_MODEL_TIMEOUT_SECONDS (default 90s,
+   * server/docker/lingxigraph-runtime.Dockerfile) — worst case 4×90s=360s.
+   * Keep this above that product, especially since a same-conversation
+   * multi-agent burst (@all) makes individual model calls to the shared
+   * upstream provider slower, not faster.
+   */
+  LINGXIGRAPH_RUN_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 400_000),
   LINGXIGRAPH_ACTION_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_ACTION_TIMEOUT_MS ?? 30_000),
   /**
    * How a `managed` agent's turn actually gets dispatched:
