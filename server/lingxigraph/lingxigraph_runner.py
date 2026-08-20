@@ -240,6 +240,17 @@ async def _run_stream(request: Mapping[str, Any]) -> AsyncIterator[dict[str, Any
         'response_format': {'type': 'json_object'},
         'stream': True,
         'stream_options': {'include_usage': True},
+        # Without any repetition control, this model call was observed
+        # falling into genuine autoregressive repetition loops mid-generation
+        # ("我在我在我在...待待待命...专门专门专门专门专门...") — a real degenerate
+        # sampling failure, not a bug in the delta diffing below (which only
+        # ever forwards exactly what body_prefix decodes to). Moderate
+        # frequency/presence penalties are the standard mitigation and are
+        # safe for JSON output: they discourage repeating the same token
+        # within a single response but don't prevent the required JSON
+        # structural keys, which each appear at most once per action.
+        'frequency_penalty': float(os.getenv('LINGXIGRAPH_FREQUENCY_PENALTY', '0.4')),
+        'presence_penalty': float(os.getenv('LINGXIGRAPH_PRESENCE_PENALTY', '0.2')),
     }
     raw = ''
     emitted: dict[int, str] = {}
