@@ -1,0 +1,74 @@
+name: Verify LingxiLoop Desktop v0.1.0-beta
+
+on:
+  push:
+    branches:
+      - automation/republish-v0.1.0-beta
+
+permissions:
+  contents: write
+
+env:
+  TARGET_SHA: 9c03f3ec405234afaf8d8654eb09981f314a69a2
+  TAG: v0.1.0-beta
+
+jobs:
+  verify:
+    if: github.event.head_commit.message == 'ci: verify desktop v0.1.0-beta release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: automation/republish-v0.1.0-beta
+          fetch-depth: 0
+      - name: Wait for corrected release and validate assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 100); do
+            REMOTE_SHA="$(git ls-remote origin "refs/tags/$TAG" | awk '{print $1}')"
+            if [[ "$REMOTE_SHA" != "$TARGET_SHA" ]]; then
+              echo "tag currently points to ${REMOTE_SHA:-<missing>}, expected $TARGET_SHA"
+              sleep 10
+              continue
+            fi
+
+            if JSON="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,assets,url 2>/dev/null)"; then
+              if jq -e --arg tag "$TAG" '
+                .tagName == $tag and
+                .isPrerelease == true and
+                ([.assets[].name | select(endswith(".exe"))] | length) >= 1 and
+                ([.assets[].name | select(endswith(".dmg"))] | length) >= 2 and
+                ([.assets[].name | select(endswith(".zip"))] | length) >= 2 and
+                ([.assets[].name | select(endswith(".blockmap"))] | length) >= 1 and
+                ([.assets[].name | select(. == "latest.yml")] | length) == 1 and
+                ([.assets[].name | select(. == "latest-mac.yml")] | length) == 1
+              ' <<<"$JSON" >/dev/null; then
+                echo "$JSON" > /tmp/release.json
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo '::error::corrected desktop release did not become complete'
+          exit 1
+      - name: Write verification marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="$(jq -r '.url' /tmp/release.json)"
+          {
+            echo "tag=$TAG"
+            echo "sha=$TARGET_SHA"
+            echo "release=$URL"
+            echo "verified_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "status=verified"
+          } > .release-verification-v0.1.0-beta.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .release-verification-v0.1.0-beta.txt
+          git commit -m 'ci: mark v0.1.0-beta release verified'
+          git push origin HEAD:automation/republish-v0.1.0-beta
