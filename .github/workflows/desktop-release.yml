@@ -3,6 +3,19 @@ name: LingxiLoop Desktop release
 on:
   push:
     tags: ['v*']
+    # A workflow-only change on main can repair/rebuild the tag matching
+    # VERSION without deleting and recreating the tag. Path filters are not
+    # evaluated for tag pushes, so normal v* releases still run as before.
+    branches: [main]
+    paths:
+      - '.github/workflows/desktop-release.yml'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing v* tag to build or rebuild
+        required: true
+        default: v0.1.0-beta
+        type: string
 
 permissions:
   contents: write
@@ -11,44 +24,82 @@ jobs:
   quality:
     uses: ./.github/workflows/_quality.yml
 
-  validate-release:
-    name: Validate desktop release tag
+  resolve-release:
+    name: Resolve desktop release target
     needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      prerelease: ${{ steps.version.outputs.prerelease }}
+      release_tag: ${{ steps.release.outputs.release_tag }}
+      target_sha: ${{ steps.release.outputs.target_sha }}
+      version: ${{ steps.release.outputs.version }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - id: version
+      - id: release
+        name: Resolve and validate tag
+        env:
+          REQUESTED_TAG: ${{ inputs.tag || '' }}
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(tr -d '[:space:]' < VERSION)"
+
+          git fetch origin main --tags --force
+
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            TAG="$GITHUB_REF_NAME"
+          elif [[ -n "$REQUESTED_TAG" ]]; then
+            TAG="$REQUESTED_TAG"
+          else
+            # This path is used by a workflow-file-only push to main. It lets
+            # us repair the existing release for the version declared by main.
+            MAIN_VERSION="$(tr -d '[:space:]' < VERSION)"
+            TAG="v${MAIN_VERSION}"
+          fi
+
+          [[ "$TAG" == v* ]] || { echo "::error::desktop release tag must start with v"; exit 1; }
+          git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null || {
+            echo "::error::tag $TAG does not exist"
+            exit 1
+          }
+
+          TARGET_SHA="$(git rev-list -n1 "$TAG")"
+          VERSION="$(git show "$TARGET_SHA:VERSION" | tr -d '[:space:]')"
           EXPECTED="v${VERSION}"
-          [[ "$GITHUB_REF_NAME" == "$EXPECTED" ]] || { echo "::error::tag must be exactly $EXPECTED"; exit 1; }
-          git fetch origin main --no-tags
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo '::error::release tag commit is not part of main'; exit 1; }
+          [[ "$TAG" == "$EXPECTED" ]] || {
+            echo "::error::tag $TAG does not match VERSION $VERSION (expected $EXPECTED)"
+            exit 1
+          }
+
+          git merge-base --is-ancestor "$TARGET_SHA" origin/main || {
+            echo "::error::release tag commit $TARGET_SHA is not part of main"
+            exit 1
+          }
+
+          git checkout --detach "$TARGET_SHA"
           node scripts/sync-version.mjs --check
+
+          echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "target_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           [[ "$VERSION" == *-* ]] && echo 'prerelease=true' >> "$GITHUB_OUTPUT" || echo 'prerelease=false' >> "$GITHUB_OUTPUT"
 
+          echo "Desktop release target: $TAG -> $TARGET_SHA ($VERSION)"
+
   windows:
     name: Unsigned Windows x64
-    needs: validate-release
+    needs: resolve-release
     runs-on: windows-latest
     timeout-minutes: 40
     env:
-      # Desktop releases are independent from the Web deployment pipeline.
-      # Keep the API origin in source control so publishing requires no
-      # GitHub Environment variables or production deployment credentials.
       VITE_LINGXILOOP_API_BASE: https://loop.lingxilearn.cn
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-release.outputs.target_sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -78,15 +129,16 @@ jobs:
 
   macos:
     name: Ad-hoc macOS x64/arm64
-    needs: validate-release
+    needs: resolve-release
     runs-on: macos-latest
     timeout-minutes: 60
     env:
-      # Same fixed cloud API as Windows; no production Environment required.
       VITE_LINGXILOOP_API_BASE: https://loop.lingxilearn.cn
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-release.outputs.target_sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -123,10 +175,9 @@ jobs:
 
   publish:
     name: Publish GitHub Release
-    needs: [validate-release, windows, macos]
+    needs: [resolve-release, windows, macos]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           pattern: '*-release'
@@ -143,18 +194,29 @@ jobs:
           compgen -G 'artifacts/*.blockmap' >/dev/null
           test -f artifacts/latest.yml
           test -f artifacts/latest-mac.yml
-      - name: Create release only after both platforms verify
+      - name: Create or repair GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
-          PRERELEASE: ${{ needs.validate-release.outputs.prerelease }}
+          TAG: ${{ needs.resolve-release.outputs.release_tag }}
+          TARGET_SHA: ${{ needs.resolve-release.outputs.target_sha }}
+          PRERELEASE: ${{ needs.resolve-release.outputs.prerelease }}
         shell: bash
         run: |
           set -euo pipefail
-          args=(--verify-tag --title "LingxiLoop $TAG" --generate-notes)
-          [[ "$PRERELEASE" == true ]] && args+=(--prerelease)
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" artifacts/* --clobber
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/* --clobber --repo "$GITHUB_REPOSITORY"
           else
+            args=(--repo "$GITHUB_REPOSITORY" --verify-tag --target "$TARGET_SHA" --title "LingxiLoop $TAG" --generate-notes)
+            [[ "$PRERELEASE" == true ]] && args+=(--prerelease)
             gh release create "$TAG" artifacts/* "${args[@]}"
           fi
+
+          # Ensure a repaired existing release is also marked correctly.
+          if [[ "$PRERELEASE" == true ]]; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "LingxiLoop $TAG" --prerelease
+          else
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "LingxiLoop $TAG" --prerelease=false
+          fi
+
+          echo "Published desktop assets for $TAG from $TARGET_SHA"
