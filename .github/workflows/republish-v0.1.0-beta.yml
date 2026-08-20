@@ -1,0 +1,167 @@
+name: Republish LingxiLoop Desktop v0.1.0-beta
+
+on:
+  push:
+    branches:
+      - automation/republish-v0.1.0-beta
+
+permissions:
+  contents: write
+
+env:
+  TARGET_SHA: 9c03f3ec405234afaf8d8654eb09981f314a69a2
+  VERSION: 0.1.0-beta
+  TAG: v0.1.0-beta
+  VITE_LINGXILOOP_API_BASE: https://loop.lingxilearn.cn
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+jobs:
+  prepare:
+    name: Remove old release and retag latest main
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          fetch-depth: 0
+      - name: Validate locked release commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(tr -d '[:space:]' < VERSION)" = "$VERSION"
+          git fetch origin main --no-tags
+          test "$(git rev-parse origin/main)" = "$TARGET_SHA" || {
+            echo "::error::main moved after release was locked; refusing to publish a different commit"
+            exit 1
+          }
+      - name: Delete previous release and tag, then retag locked commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            git push origin ":refs/tags/$TAG"
+          fi
+          git tag -f "$TAG" "$TARGET_SHA"
+          git push origin "refs/tags/$TAG"
+          REMOTE_SHA="$(git ls-remote origin "refs/tags/$TAG" | awk '{print $1}')"
+          test "$REMOTE_SHA" = "$TARGET_SHA" || {
+            echo "::error::tag points to $REMOTE_SHA instead of $TARGET_SHA"
+            exit 1
+          }
+
+  windows:
+    name: Unsigned Windows x64
+    needs: prepare
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run electron:prepare
+      - run: npx electron-builder --win --x64 --publish never
+      - run: node scripts/verify-desktop-package.mjs release
+      - name: Verify installers are unsigned
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem -LiteralPath release -Filter '*.exe' -File)
+          if ($installers.Count -eq 0) { throw 'No Windows installer was produced' }
+          foreach ($installer in $installers) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $installer.FullName
+            if ($signature.Status -ne 'NotSigned') { throw "Expected unsigned installer: $($installer.Name) ($($signature.Status))" }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+          if-no-files-found: error
+
+  macos:
+    name: Ad-hoc macOS x64/arm64
+    needs: prepare
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run electron:prepare
+      - run: npx electron-builder --mac --x64 --arm64 --publish never
+      - run: node scripts/verify-desktop-package.mjs release
+      - name: Verify ad-hoc codesign
+        shell: bash
+        run: |
+          set -euo pipefail
+          apps=()
+          while IFS= read -r app; do apps+=("$app"); done < <(find release -type d -name '*.app')
+          ((${#apps[@]} >= 2)) || { echo '::error::expected ad-hoc signed x64 and arm64 apps'; exit 1; }
+          for app in "${apps[@]}"; do
+            codesign --verify --deep --strict --verbose=2 "$app"
+            identity="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^Signature=//p')"
+            [[ "$identity" == adhoc ]] || { echo "::error::expected ad-hoc signature for $app, got $identity"; exit 1; }
+          done
+          dmgs=()
+          while IFS= read -r dmg; do dmgs+=("$dmg"); done < <(find release -maxdepth 1 -type f -name '*.dmg')
+          ((${#dmgs[@]} >= 2)) || { echo '::error::expected x64 and arm64 DMGs'; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.blockmap
+            release/latest-mac.yml
+          if-no-files-found: error
+
+  publish:
+    name: Publish corrected GitHub Release
+    needs: [prepare, windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*-release'
+          path: artifacts
+          merge-multiple: true
+      - name: Verify complete release set
+        shell: bash
+        run: |
+          set -euo pipefail
+          find artifacts -maxdepth 1 -type f -print
+          compgen -G 'artifacts/*.exe' >/dev/null
+          compgen -G 'artifacts/*.dmg' >/dev/null
+          compgen -G 'artifacts/*.zip' >/dev/null
+          compgen -G 'artifacts/*.blockmap' >/dev/null
+          test -f artifacts/latest.yml
+          test -f artifacts/latest-mac.yml
+      - name: Create corrected prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" artifacts/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "LingxiLoop $TAG" \
+            --generate-notes \
+            --prerelease
