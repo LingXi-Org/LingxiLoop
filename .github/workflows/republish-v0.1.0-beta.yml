@@ -17,6 +17,7 @@ env:
 
 jobs:
   prepare:
+    if: github.event.head_commit.message == 'ci: republish v0.1.0-beta from latest main'
     name: Remove old release and retag latest main
     runs-on: ubuntu-latest
     timeout-minutes: 10
