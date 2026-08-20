@@ -2172,9 +2172,20 @@ ${peerWorkBlock}`.trim()
       data: { model, contextChars: contextPrompt.length }, stage: 'thinking',
     })
     const startedAt = Date.now()
-    const graphPreviews = new Map<number, {
-      messageId: string; conversationId: string; companyId: string; sequence: number
-    }>()
+    // Deliberately NOT passing onMessageDelta: that option makes
+    // runLingxiGraph hit /v1/turn/stream, whose live preview is scraped by
+    // regex off the model's still-generating raw JSON text
+    // (_message_send_prefixes in lingxigraph_runner.py) — the runner's own
+    // docstring calls this "best-effort", and in practice it could show
+    // garbled/repeated text (e.g. a reasoning/draft phase in the raw stream
+    // getting misread as the real reply body) that later resolved once the
+    // turn finished and the authoritative final message replaced it.
+    // Omitting it routes to the non-streaming /v1/turn endpoint instead,
+    // which only ever returns the final, schema-validated structured
+    // result — no speculative mid-generation text is ever shown. The
+    // "thinking"/typing indicator already published above (publishTyping,
+    // ~line 2075) covers the perceived-responsiveness need while a turn is
+    // in flight.
     const result = await runLingxiGraph({
       version: 1, runId,
       agent: { id: persona.id, name: persona.name, role: persona.role, model },
@@ -2183,23 +2194,6 @@ ${peerWorkBlock}`.trim()
       url: env.LINGXIGRAPH_URL,
       token: env.LINGXIGRAPH_TOKEN,
       timeoutMs: env.LINGXIGRAPH_RUN_TIMEOUT_MS,
-      onMessageDelta: async (event) => {
-        const target = inbox.find((message) => message.conversation_id === event.conversationId)
-        if (!target) return
-        const preview = graphPreviews.get(event.actionIndex) ?? {
-          messageId: `live:${runId}:graph:${event.actionIndex}`,
-          conversationId: event.conversationId,
-          companyId: target.company_id ?? runCompanyId,
-          sequence: Number.MAX_SAFE_INTEGER - 20_000 + event.actionIndex,
-        }
-        if (preview.conversationId !== event.conversationId) return
-        graphPreviews.set(event.actionIndex, preview)
-        await publish(CH_MESSAGE_DELTA, {
-          type: 'message.delta', conversationId: preview.conversationId,
-          messageId: preview.messageId, authorId: agentId, delta: event.delta,
-          sequence: preview.sequence, done: false, companyId: preview.companyId,
-        })
-      },
     })
     const elapsedMs = Date.now() - startedAt
     const perCallLatency = result.modelCalls.length > 0 ? Math.round(elapsedMs / result.modelCalls.length) : elapsedMs
@@ -2234,11 +2228,6 @@ ${peerWorkBlock}`.trim()
       timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
       ledger: pgActionLedger,
     })
-    await Promise.all([...graphPreviews.values()].map((preview) => publish(CH_MESSAGE_DELTA, {
-      type: 'message.delta', conversationId: preview.conversationId,
-      messageId: preview.messageId, authorId: agentId, delta: '',
-      sequence: preview.sequence, done: true, companyId: preview.companyId,
-    }).catch((error) => console.warn('[turn] graph live reply completion failed', error))))
     toolCallCount += execution.results.length
     for (const cliResult of execution.results) {
       cliSideEffectsThisTurn.push(...(cliResult.sideEffects ?? []))
