@@ -37,7 +37,7 @@ import type { AgentRuntimeClient } from './runtime/client.js'
 import { commit as commitFs, type FsNamespace, hydrate as hydrateFs, teardown as teardownFs } from './runtime/fs-namespace.js'
 import { executePodTool, TOOL_DEFS_RESPONSES } from './runtime/pod-tools.js'
 import { runtime } from './runtime/select.js'
-import { ensureAckReaction } from './tools.js'
+import { DEFAULT_ACK_REACTIONS as DEFAULT_ACK_EMOJIS, ensureAckReaction } from './tools.js'
 import type { PollWakeBrief } from './runtime/wake-bus.js'
 import {
   canDrainSteer,
@@ -2132,8 +2132,16 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
         : isPollUpdateWake && options.pollBrief
           ? `Poll update: ${options.pollBrief.question} (${options.pollBrief.phase}, ${options.pollBrief.totalVotes} votes)`
           : 'New conversation activity'
+    // Reinforced right next to the actual inbox (not just in the general
+    // system prompt) because this is the one case where "an empty actions
+    // array is fine" is actively wrong: a DM has no peer who might already
+    // be handling it, so silence there always reads as the agent going
+    // unresponsive.
+    const dmMandatoryReplyNote = inbox.some((m) => m.conversation_kind === 'dm')
+      ? '\nThis wake includes a 1:1 direct message. You MUST include a message.send action (paired with a reaction.toggle) before ending the turn — an empty actions array is not acceptable here.\n'
+      : ''
     const contextPrompt = `Now: ${nowStr}
-
+${dmMandatoryReplyNote}
 Trigger:
 ${triggerBrief}
 
@@ -2227,6 +2235,24 @@ ${peerWorkBlock}`.trim()
     toolCallCount += execution.results.length
     for (const cliResult of execution.results) {
       cliSideEffectsThisTurn.push(...(cliResult.sideEffects ?? []))
+    }
+    // Same guarantee as the classic (non-LingxiGraph) path: reacting is
+    // prompt-suggested here (COMMUNICATION_RULES), not enforced by the
+    // action schema, so pair every reply with an ack reaction regardless
+    // of whether the model actually emitted a reaction.toggle action.
+    const ackedMessageIds = new Set(
+      cliSideEffectsThisTurn
+        .filter((e) => e.event === 'reaction.updated' && e.action === 'added'
+          && DEFAULT_ACK_EMOJIS.has(String(e.emoji ?? '')))
+        .map((e) => e.messageId as string),
+    )
+    for (const effect of cliSideEffectsThisTurn) {
+      if (effect.event !== 'message.posted' || effect.command !== 'reply') continue
+      const targetMessageId = (effect.quotedMessageId as string | undefined)
+        ?? inbox.filter((m) => m.conversation_id === effect.conversationId && m.author_id !== agentId).at(-1)?.id
+      if (targetMessageId && !ackedMessageIds.has(targetMessageId)) {
+        void ensureAckReaction(targetMessageId, agentId)
+      }
     }
     if (!execution.completed) {
       finalStatus = 'failed'

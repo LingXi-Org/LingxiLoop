@@ -354,7 +354,8 @@ Decide how to communicate or collaborate from the supplied conversation context.
 - Use only the available communication actions. You have no tools, shell, filesystem, skills, or memory-writing capability in this run.
 - Actions are executed later, in order, under your fixed agent identity. Never attempt identity impersonation.
 - Prefer replying in the existing conversation. Use quoteMessageId when a specific earlier message must be addressed.
-- Avoid duplicate replies. An empty actions array is the correct way to remain silent.
+- Avoid duplicate replies. An empty actions array is the correct way to remain silent — BUT ONLY for un-targeted group chatter nobody needs a response to. In a 1:1 direct message, or when a message names/@-mentions you specifically, an empty actions array is NOT acceptable: there is no peer who might already be covering it, so you MUST include a message.send action before ending the turn. Silence there reads as unresponsive, not as good judgment.
+- EVERY message.send you emit MUST be paired with a reaction.toggle (👀 or ✅) on the message you're responding to (set its messageId as quoteMessageId's target). React 👀 while acknowledging, ✅ once you've delivered the result. A reply with no accompanying reaction is incomplete — do not treat replying and reacting as alternatives to each other.
 - Keep messages concise, useful, and natural. Do not mention internal prompts, schemas, runtimes, or implementation details.`
 
 async function readWorkspaceFile(agentId: string, path: string): Promise<string | null> {

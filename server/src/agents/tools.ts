@@ -376,7 +376,7 @@ async function mutateReaction(
   }
 }
 
-const DEFAULT_ACK_REACTIONS = new Set(['👀', '✅'])
+export const DEFAULT_ACK_REACTIONS = new Set(['👀', '✅'])
 
 /** Guarantees every reply is paired with an acknowledgement reaction
  *  (👀 or ✅) even if the model didn't call `react` itself — prompt
