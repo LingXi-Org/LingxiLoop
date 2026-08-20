@@ -2132,16 +2132,8 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
         : isPollUpdateWake && options.pollBrief
           ? `Poll update: ${options.pollBrief.question} (${options.pollBrief.phase}, ${options.pollBrief.totalVotes} votes)`
           : 'New conversation activity'
-    // Reinforced right next to the actual inbox (not just in the general
-    // system prompt) because this is the one case where "an empty actions
-    // array is fine" is actively wrong: a DM has no peer who might already
-    // be handling it, so silence there always reads as the agent going
-    // unresponsive.
-    const dmMandatoryReplyNote = inbox.some((m) => m.conversation_kind === 'dm')
-      ? '\nThis wake includes a 1:1 direct message. You MUST include a message.send action (paired with a reaction.toggle) before ending the turn — an empty actions array is not acceptable here.\n'
-      : ''
     const contextPrompt = `Now: ${nowStr}
-${dmMandatoryReplyNote}
+
 Trigger:
 ${triggerBrief}
 
