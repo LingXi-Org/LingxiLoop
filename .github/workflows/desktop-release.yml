@@ -53,8 +53,6 @@ jobs:
           elif [[ -n "$REQUESTED_TAG" ]]; then
             TAG="$REQUESTED_TAG"
           else
-            # This path is used by a workflow-file-only push to main. It lets
-            # us repair the existing release for the version declared by main.
             MAIN_VERSION="$(tr -d '[:space:]' < VERSION)"
             TAG="v${MAIN_VERSION}"
           fi
@@ -128,7 +126,7 @@ jobs:
           if-no-files-found: error
 
   macos:
-    name: Ad-hoc macOS x64/arm64
+    name: Unsigned macOS x64/arm64
     needs: resolve-release
     runs-on: macos-latest
     timeout-minutes: 60
@@ -148,21 +146,18 @@ jobs:
       - run: npm run electron:prepare
       - run: npx electron-builder --mac --x64 --arm64 --publish never
       - run: node scripts/verify-desktop-package.mjs release
-      - name: Verify ad-hoc codesign
+      - name: Verify macOS release artifacts
         shell: bash
         run: |
           set -euo pipefail
-          apps=()
-          while IFS= read -r app; do apps+=("$app"); done < <(find release -type d -name '*.app')
-          ((${#apps[@]} >= 2)) || { echo '::error::expected ad-hoc signed x64 and arm64 apps'; exit 1; }
-          for app in "${apps[@]}"; do
-            codesign --verify --deep --strict --verbose=2 "$app"
-            identity="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^Signature=//p')"
-            [[ "$identity" == adhoc ]] || { echo "::error::expected ad-hoc signature for $app, got $identity"; exit 1; }
-          done
-          dmgs=()
-          while IFS= read -r dmg; do dmgs+=("$dmg"); done < <(find release -maxdepth 1 -type f -name '*.dmg')
+          shopt -s nullglob
+          dmgs=(release/*.dmg)
+          zips=(release/*.zip)
           ((${#dmgs[@]} >= 2)) || { echo '::error::expected x64 and arm64 DMGs'; exit 1; }
+          ((${#zips[@]} >= 2)) || { echo '::error::expected x64 and arm64 ZIPs'; exit 1; }
+          test -f release/latest-mac.yml || { echo '::error::missing latest-mac.yml'; exit 1; }
+          printf 'macOS artifacts:\n'
+          printf '  %s\n' "${dmgs[@]}" "${zips[@]}" release/latest-mac.yml
       - uses: actions/upload-artifact@v4
         with:
           name: macos-release
@@ -212,11 +207,10 @@ jobs:
             gh release create "$TAG" artifacts/* "${args[@]}"
           fi
 
-          # Ensure a repaired existing release is also marked correctly.
           if [[ "$PRERELEASE" == true ]]; then
             gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "LingxiLoop $TAG" --prerelease
           else
-            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "LingxiLoop $TAG" --prerelease=false
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "LingxiLoop $TAG" --latest
           fi
 
           echo "Published desktop assets for $TAG from $TARGET_SHA"
