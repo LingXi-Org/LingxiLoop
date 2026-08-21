@@ -488,7 +488,14 @@ export function communicationActionToArgv(action: CommunicationAction): string[]
     case 'document.read': return ['doc', 'read', action.documentId, '--json']
     case 'document.update': return ['doc', 'replace', action.documentId, '--find', action.find, '--replace', action.replace]
     case 'document.append': return ['doc', 'append', action.documentId, action.content]
-    case 'document.share': return ['reply', action.conversationId, [action.comment, `文档：${action.documentId}`].filter(Boolean).join('\n\n')]
+    case 'document.share': return [
+      'doc',
+      'share',
+      action.documentId,
+      '--conversation',
+      action.conversationId,
+      ...(action.comment ? ['--comment', action.comment] : []),
+    ]
   }
 }
 

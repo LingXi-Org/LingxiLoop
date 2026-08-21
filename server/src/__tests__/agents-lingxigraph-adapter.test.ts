@@ -46,7 +46,7 @@ test('maps communication actions to argv without a shell or identity flag', () =
     [{ type: 'document.read', documentId: 'doc_1' }, ['doc', 'read', 'doc_1', '--json']],
     [{ type: 'document.update', documentId: 'doc_1', find: '旧', replace: '新' }, ['doc', 'replace', 'doc_1', '--find', '旧', '--replace', '新']],
     [{ type: 'document.append', documentId: 'doc_1', content: '补充' }, ['doc', 'append', 'doc_1', '补充']],
-    [{ type: 'document.share', documentId: 'doc_1', conversationId: 'c1', comment: '学习笔记' }, ['reply', 'c1', '学习笔记\n\n文档：doc_1']],
+    [{ type: 'document.share', documentId: 'doc_1', conversationId: 'c1', comment: '学习笔记' }, ['doc', 'share', 'doc_1', '--conversation', 'c1', '--comment', '学习笔记']],
   ]
   for (const [action, argv] of cases) {
     const mapped = communicationActionToArgv(action)

@@ -5565,7 +5565,7 @@ async function publishDocChanged(
   })
 }
 
-async function cmdDoc(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const op = parsed.positional[0] ?? 'ls'
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
@@ -5682,6 +5682,38 @@ async function cmdDoc(parsed: ParsedArgs): Promise<CliResult> {
       '',
       body || '(empty)',
     ].join('\n'))
+  }
+
+  if (op === 'share') {
+    const docId = parsed.positional[1]
+    const conversationId = typeof parsed.flags.conversation === 'string'
+      ? parsed.flags.conversation.trim()
+      : ''
+    const comment = typeof parsed.flags.comment === 'string'
+      ? unescapeChat(parsed.flags.comment).trim()
+      : ''
+    if (!docId || !conversationId) {
+      return err('usage: doc share <document_id> --conversation <conversation_id> [--comment "<text>"]')
+    }
+
+    const { rows: documents } = await pool.query<{ title: string }>(
+      `SELECT title FROM documents WHERE id = $1 AND company_id = $2 LIMIT 1`,
+      [docId, companyId],
+    )
+    if (!documents[0]) return err(`document ${docId} not found`)
+
+    const { rows: conversations } = await pool.query<{ members: string[] }>(
+      `SELECT members FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
+      [conversationId, companyId],
+    )
+    if (!conversations[0]) return err(`unknown conversation ${conversationId}`)
+    if (!conversations[0].members.includes(me)) {
+      return err(`${me} is not a member of ${conversationId}`)
+    }
+
+    const body = [comment, `文档：${docId}`].filter(Boolean).join('\n\n')
+    const reply = { ...parsed, positional: [conversationId, body] }
+    return await cmdReply(reply, internal)
   }
 
   if (op === 'append') {
@@ -6117,7 +6149,7 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'unclaim':             return await cmdClaim(parsed, 'unclaim')
       case 'kanban':              return await cmdBoard(parsed)
       case 'card':                return await cmdCard(parsed)
-      case 'doc':                 return await cmdDoc(parsed)
+      case 'doc':                 return await cmdDoc(parsed, internal)
       case 'react':               return await runTool('react', parsed, internal)
       case 'dm':                  return await runTool('dm_with', parsed)
       case 'pull-group':          return await runTool('pull_group', parsed)
