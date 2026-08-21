@@ -10,19 +10,134 @@
  *
  * Run: node --import tsx --test server/src/__tests__/agents-managed-executor.test.ts
  */
-import { test, beforeEach } from 'node:test'
+
 import assert from 'node:assert/strict'
+import { beforeEach, test } from 'node:test'
 import {
-  scheduleManagedAgentTurn,
-  isManagedAgentBusy,
   _resetManagedExecutorForTests,
+  _setConsumedMarkerForTests,
+  _setReceiptStoreForTests,
+  _setRuntimeControlForTests,
+  _setSteerRunnerForTests,
   _setTurnRunnerForTests,
+  activateManagedLingxiGraphRun,
+  deactivateManagedLingxiGraphRun,
+  isManagedAgentBusy,
+  recordManagedLingxiGraphEvent,
+  scheduleManagedAgentTurn,
 } from '../agents/managed-executor.js'
 import type { AgentTurnOptions } from '../agents/turn.js'
 
 beforeEach(() => {
   _resetManagedExecutorForTests()
   _setTurnRunnerForTests()
+  _setSteerRunnerForTests()
+  _setConsumedMarkerForTests(async () => {})
+  _setReceiptStoreForTests({
+    async activate() {},
+    async accepted() {},
+    async resolve() { return null },
+    async active() { return null },
+  })
+  _setRuntimeControlForTests()
+})
+
+test('busy LingxiGraph run steers a follow-up and never starts a second turn after consumption', async () => {
+  let resolveFirst: (() => void) | undefined
+  let starts = 0
+  const steerCalls: Array<{ runId: string; key: string }> = []
+  _setTurnRunnerForTests(async (agentId) => {
+    starts++
+    activateManagedLingxiGraphRun(agentId, 'runtime-run-1', 'co-1')
+    await new Promise<void>((resolve) => { resolveFirst = resolve })
+    deactivateManagedLingxiGraphRun(agentId, 'runtime-run-1')
+  })
+  _setSteerRunnerForTests((async (request) => {
+    steerCalls.push({ runId: request.runId, key: request.idempotencyKey })
+    return { outcome: 'accepted', eventId: 'steer-1', runId: request.runId, sequence: 1, status: 'pending', kind: request.kind }
+  }) as typeof import('../agents/lingxigraph-adapter.js').steerLingxiGraphRun)
+
+  const first = scheduleManagedAgentTurn('agent-steer', { trigger: 'message.new' })
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  await scheduleManagedAgentTurn('agent-steer', { trigger: 'message.new' }, {
+    messageId: 'message-1', conversationId: 'conv-1', authorId: 'human-1',
+    authorName: 'Human', body: 'please adjust', companyId: 'co-1',
+  })
+  recordManagedLingxiGraphEvent('agent-steer', {
+    runId: 'runtime-run-1', sequence: 2, kind: 'run.steer.consumed', data: { steering_event_id: 'steer-1' },
+  })
+  resolveFirst?.()
+  await first
+
+  assert.deepEqual(steerCalls, [{ runId: 'runtime-run-1', key: 'message-1' }])
+  assert.equal(starts, 1, 'one input must not be both steered and rerun as a second turn')
+})
+
+test('terminal steering rejection falls back to exactly one new turn', async () => {
+  let resolveFirst: (() => void) | undefined
+  let starts = 0
+  _setTurnRunnerForTests(async (agentId) => {
+    starts++
+    if (starts === 1) {
+      activateManagedLingxiGraphRun(agentId, 'runtime-run-2', 'co-1')
+      await new Promise<void>((resolve) => { resolveFirst = resolve })
+      deactivateManagedLingxiGraphRun(agentId, 'runtime-run-2')
+    }
+  })
+  _setSteerRunnerForTests((async () => {
+    const { LingxiGraphRequestError } = await import('../agents/lingxigraph-adapter.js')
+    throw new LingxiGraphRequestError('finalizing', 409, 'run_finalizing', false)
+  }) as typeof import('../agents/lingxigraph-adapter.js').steerLingxiGraphRun)
+
+  const first = scheduleManagedAgentTurn('agent-fallback', { trigger: 'message.new' })
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  await scheduleManagedAgentTurn('agent-fallback', { trigger: 'message.new' }, {
+    messageId: 'message-2', conversationId: 'conv-1', authorId: 'human-1',
+    authorName: 'Human', body: 'late follow-up', companyId: 'co-1',
+  })
+  resolveFirst?.()
+  await first
+  assert.equal(starts, 2)
+})
+
+test('restart recovery resolves the trusted persisted run and steers it without creating a replacement turn', async () => {
+  let starts = 0
+  let activeCalls = 0
+  let streamed = false
+  _setTurnRunnerForTests(async () => { starts++ })
+  _setReceiptStoreForTests({
+    async activate() {},
+    async accepted() {},
+    async resolve() { return null },
+    async active() {
+      activeCalls++
+      return { loopRunId: 'loop-run-old', runtimeRunId: 'runtime-run-old', companyId: 'co-1' }
+    },
+  })
+  _setRuntimeControlForTests({
+    lookup: async () => ({ id: 'runtime-run-old', status: 'running', supersededByRunId: null }),
+    stream: (async (runId, onEvent) => {
+      streamed = true
+      await onEvent({
+        runId, sequence: 2, kind: 'run.steer.consumed', data: { steering_event_id: 'steer-recovered' },
+      })
+      return 2
+    }) as typeof import('../agents/lingxigraph-adapter.js').streamLingxiGraphRunEvents,
+  })
+  _setSteerRunnerForTests((async (request) => ({
+    outcome: 'accepted', eventId: 'steer-recovered', runId: request.runId,
+    sequence: 1, status: 'pending', kind: request.kind,
+  })) as typeof import('../agents/lingxigraph-adapter.js').steerLingxiGraphRun)
+
+  await scheduleManagedAgentTurn('agent-recovered', { trigger: 'message.new' }, {
+    messageId: 'message-after-restart', conversationId: 'conv-1', authorId: 'human-1',
+    authorName: 'Human', body: 'continue with this', companyId: 'co-1',
+  })
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  assert.equal(activeCalls, 1)
+  assert.equal(streamed, true)
+  assert.equal(starts, 0, 'a persisted active Runtime run must win over a replacement Loop turn')
 })
 
 test('idle agent: a single wake starts exactly one turn', async () => {
