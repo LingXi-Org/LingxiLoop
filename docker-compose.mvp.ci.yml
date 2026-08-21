@@ -65,10 +65,16 @@ services:
     depends_on:
       fake-openai-provider:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       OPENAI_API_KEY: sk-smoke-test-not-a-real-key
       OPENAI_BASE_URL: http://fake-openai-provider:8125/v1
-      LINGXIGRAPH_TOKEN: ci-lingxigraph-runtime-token-not-for-production
+      LINGXIGRAPH_POSTGRES_URL: postgresql://lingxiloop:lingxiloop@postgres:5432/lingxiloop
+      LINGXIGRAPH_REDIS_URL: redis://redis:6379/1
+      LINGXIGRAPH_INSECURE_DEV_AUTH: "true"
       LINGXIGRAPH_MODEL_TIMEOUT_SECONDS: 15
       PORT: 8124
     healthcheck:
@@ -106,7 +112,6 @@ services:
       LINGXILOOP_REASONING_RUNTIME: lingxigraph
       LINGXILOOP_MANAGED_AGENT_EXECUTION: server
       LINGXIGRAPH_URL: http://lingxigraph-runtime:8124
-      LINGXIGRAPH_TOKEN: ci-lingxigraph-runtime-token-not-for-production
     ports:
       - "${LINGXILOOP_PORT:-5181}:5181"
     healthcheck:

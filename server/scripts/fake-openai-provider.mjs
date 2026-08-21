@@ -103,14 +103,43 @@ const server = createServer(async (req, res) => {
         : conversationId ? `deterministic reply into ${conversationId}` : 'no unread conversation',
       actions: conversationId && !alreadyAnswered ? [{ type: 'message.send', conversationId, body: REPLY_BODY }] : [],
     }
-    json(res, 200, {
+    const completion = {
       id: `chatcmpl-${randomUUID()}`,
       object: 'chat.completion',
       created: Math.floor(Date.now() / 1000),
       model: body.model || 'fake-chat',
       choices: [{ index: 0, message: { role: 'assistant', content: JSON.stringify(structured) }, finish_reason: 'stop' }],
       usage: { prompt_tokens: 20, completion_tokens: 12, total_tokens: 32 },
-    })
+    }
+    if (body.stream) {
+      res.writeHead(200, {
+        'content-type': 'text/event-stream; charset=utf-8',
+        'cache-control': 'no-cache',
+        connection: 'keep-alive',
+      })
+      const content = completion.choices[0].message.content
+      for (let offset = 0; offset < content.length; offset += 12) {
+        const delta = content.slice(offset, offset + 12)
+        res.write(`data: ${JSON.stringify({
+          id: completion.id,
+          object: 'chat.completion.chunk',
+          created: completion.created,
+          model: completion.model,
+          choices: [{ index: 0, delta: { content: delta }, finish_reason: null }],
+        })}\n\n`)
+      }
+      res.write(`data: ${JSON.stringify({
+        id: completion.id,
+        object: 'chat.completion.chunk',
+        created: completion.created,
+        model: completion.model,
+        choices: [],
+        usage: completion.usage,
+      })}\n\n`)
+      res.end('data: [DONE]\n\n')
+      return
+    }
+    json(res, 200, completion)
     return
   }
 

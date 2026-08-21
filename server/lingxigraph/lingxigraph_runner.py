@@ -1,8 +1,10 @@
-"""LingxiLoop's communication-only, stateless LingxiGraph runner.
+"""LingxiLoop's communication-only model runner.
 
-`_run()` is the reasoning core shared by both entry points:
+The production entry point is ``lingxigraph_graph.py`` on LingxiGraph's
+durable Agent Server. The CLI below remains useful for focused model-contract
+tests without PostgreSQL/Redis.
 
-- `server.py` — the HTTP runtime (`POST /v1/turn`), the supported path.
+- `_run_stream()` — provider deltas projected into Runtime-native events.
 - `main()` below — a stdin/stdout CLI kept for local, dependency-free
   smoke-testing of `_run()` without standing up the HTTP server.
 """

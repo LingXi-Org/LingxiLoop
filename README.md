@@ -109,7 +109,7 @@ Every server exposes `GET /api/meta`:
 | `src/` | shared React/Vite Web and Electron renderer |
 | `electron/` | desktop main process, bridge and updater |
 | `server/` | API, WebSocket, scheduler and LingxiGraph integration |
-| `server/lingxigraph/` | stateless LingxiGraph reasoning service |
+| `server/lingxigraph/` | LingxiGraph production graph and durable Runtime manifest |
 | `docker-compose.production.yml` | digest-pinned production topology |
 | `agent-cli/`, `agent-fuse/` | retained BYOA tooling |
 | `ios/`, `android/` | retained mobile source; not released |

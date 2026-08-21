@@ -44,10 +44,17 @@ services:
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
         PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple}
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - OPENAI_API_KEY
       - OPENAI_BASE_URL
-      - LINGXIGRAPH_TOKEN
+      - LINGXIGRAPH_POSTGRES_URL=postgresql://lingxiloop:lingxiloop@postgres:5432/lingxiloop
+      - LINGXIGRAPH_REDIS_URL=redis://redis:6379/1
+      - LINGXIGRAPH_INSECURE_DEV_AUTH=true
       - LINGXIGRAPH_MODEL_TIMEOUT_SECONDS=${LINGXIGRAPH_MODEL_TIMEOUT_SECONDS:-90}
       - PORT=8124
     healthcheck:
@@ -127,7 +134,7 @@ services:
       - LINGXILOOP_REASONING_RUNTIME=lingxigraph
       - LINGXILOOP_MANAGED_AGENT_EXECUTION=server
       - LINGXIGRAPH_URL=http://lingxigraph-runtime:8124
-      - LINGXIGRAPH_TOKEN
+        # Local compose uses LingxiGraph's controlled X-Tenant-ID dev auth.
     ports:
       # Safe default for same-host Caddy/Nginx. Override only when an external
       # load balancer/network explicitly needs to reach the container port.
