@@ -1705,7 +1705,7 @@ function HandoffCard({ msg }: { msg: Message }) {
   const done = handoff.status === 'completed'
   const blocked = handoff.status === 'blocked'
   return (
-    <div className="w-[min(560px,70vw)] rounded-xl border border-ink-100 bg-cloud px-4 py-3 shadow-sm">
+    <div className="w-[min(560px,70vw)] rounded-xl border border-hairline bg-panel px-4 py-3 shadow-sm">
       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-400">
         <span className={`size-2 rounded-full ${done ? 'bg-avail' : blocked ? 'bg-coral' : 'bg-gold'}`} />
         Handoff
@@ -1713,11 +1713,11 @@ function HandoffCard({ msg }: { msg: Message }) {
       </div>
       <div className="mt-2 text-[14px] font-semibold text-ink-900">{handoff.title}</div>
       <div className="mt-1 text-[11.5px] text-ink-500">{from} → {to}</div>
-      {handoff.note && <div className="mt-2 rounded-lg bg-raised/70 px-3 py-2 text-[12px] text-ink-600">{handoff.note}</div>}
+      {handoff.note && <div className="mt-2 rounded-lg bg-raised px-3 py-2 text-[12px] text-ink-secondary">{handoff.note}</div>}
       {(handoff.sharedPaths.length > 0 || handoff.browserTargets.length > 0) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {handoff.sharedPaths.map((path) => <code key={path} className="rounded bg-sky-50 px-2 py-1 text-[10.5px] text-skype-deep">{path}</code>)}
-          {handoff.browserTargets.map((target) => <code key={target} className="rounded bg-gold/10 px-2 py-1 text-[10.5px] text-gold-deep">浏览器：{target}</code>)}
+          {handoff.sharedPaths.map((path) => <code key={path} className="rounded border border-hairline bg-raised px-2 py-1 text-[10.5px] text-ink-secondary">{path}</code>)}
+          {handoff.browserTargets.map((target) => <code key={target} className="rounded border border-hairline bg-raised px-2 py-1 text-[10.5px] text-ink-secondary">浏览器：{target}</code>)}
         </div>
       )}
     </div>
@@ -1741,9 +1741,9 @@ function ApprovalCard({ msg }: { msg: Message }) {
       ? '敏感或破坏性操作'
       : '财务或不可逆操作'
   return (
-    <div className="w-[min(560px,70vw)] rounded-xl border border-gold/40 bg-cloud px-4 py-3 shadow-sm">
-      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-gold-deep">
-        <span className="size-2 rounded-full bg-gold" />需要你的批准
+    <div className="w-[min(560px,70vw)] rounded-xl border border-hairline bg-panel px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-secondary">
+        <span className="size-2 rounded-full bg-accent" />需要你的批准
         {!pending && <span className={`ml-auto normal-case tracking-normal ${approval.status === 'approved' ? 'text-avail' : 'text-coral-deep'}`}>{approval.status === 'approved' ? '已批准' : approval.status === 'rejected' ? '已拒绝' : '已过期'}</span>}
       </div>
       <div className="mt-2 text-[14px] font-semibold text-ink-900">{approval.summary}</div>
@@ -1751,11 +1751,11 @@ function ApprovalCard({ msg }: { msg: Message }) {
       {pending && (
         <div className="mt-3 flex justify-end gap-2">
           <button type="button" disabled={busy !== null} onClick={() => void resolve('rejected')}
-            className="rounded-lg border border-ink-100 px-3 py-1.5 text-[12px] font-semibold text-ink-600 hover:bg-raised disabled:opacity-50">
+            className="rounded-lg border border-hairline px-3 py-1.5 text-[12px] font-semibold text-ink-secondary hover:bg-raised-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50">
             {busy === 'rejected' ? '处理中…' : '拒绝'}
           </button>
           <button type="button" disabled={busy !== null} onClick={() => void resolve('approved')}
-            className="rounded-lg bg-skype px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-skype-deep disabled:opacity-50">
+            className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-semibold text-white hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50">
             {busy === 'approved' ? '处理中…' : '批准'}
           </button>
         </div>

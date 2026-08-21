@@ -77,7 +77,7 @@ async function conversationGate(conversationId: string, companyId: string, requi
 
 async function publishMessage(message: {
   id: string; conversationId: string; companyId: string; authorId: string; kind: string; body: string; sequence: number;
-  mentionedIds?: string[]; handoff?: HandoffSnapshot; approval?: ApprovalSnapshot
+  mentionedIds?: string[]; handoff?: HandoffSnapshot; approval?: ApprovalSnapshot; activation?: 'deliver' | 'trigger'
 }): Promise<void> {
   await publish(CH_MESSAGE_NEW, {
     type: 'message.new',
@@ -95,6 +95,7 @@ async function publishMessage(message: {
       mentionAll: false,
       handoff: message.handoff,
       approval: message.approval,
+      activation: message.activation,
     },
   })
 }
@@ -108,6 +109,7 @@ async function postStructuredMessage(args: {
   mentionedIds?: string[]
   handoff?: HandoffSnapshot
   approval?: ApprovalSnapshot
+  activation?: 'deliver' | 'trigger'
 }): Promise<{ id: string; sequence: number }> {
   const client = await pool.connect()
   const id = `m-${randomUUID()}`
@@ -186,6 +188,7 @@ export async function createHandoff(args: {
       body: `Handoff to @${args.toAgentId}: ${snapshot.title}`,
       mentionedIds: [args.toAgentId],
       handoff: snapshot,
+      activation: 'trigger',
     })
     await pool.query(`UPDATE agent_handoffs SET source_message_id = $2 WHERE id = $1`, [id, message.id])
     return { ...snapshot, sourceMessageId: message.id }

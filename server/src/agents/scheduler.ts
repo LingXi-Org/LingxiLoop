@@ -622,6 +622,7 @@ async function wake(payload: MessageNewEvent): Promise<void> {
     mentionedIds: parsed.mentionedIds,
     mentionAll: parsed.mentionAll,
     quotedAuthorId,
+    activation: payload.message.activation,
   })
 
   // Whether to reply into an agent-only thread is the small model's decision
@@ -631,6 +632,9 @@ async function wake(payload: MessageNewEvent): Promise<void> {
   // recipient that is over its activation budget, so a runaway can't burn
   // unbounded cost. Human-driven wakes are NEVER throttled.
   const authorIsAgent = authorKind === 'agent' || await isAgent(authorId)
+  // Agent communication is always delivered to the mailbox. Only a formal
+  // handoff/follow-up carrying activation=trigger can start or steer a turn;
+  // ordinary peer messages therefore cannot create duplicate turns.
   let recipients = agentRecipients
   if (authorIsAgent) {
     const allowed = await Promise.all(

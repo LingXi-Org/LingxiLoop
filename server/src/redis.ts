@@ -91,6 +91,9 @@ export interface MessageNewEvent extends TenantTagged {
     quotedMessageId?: string
     mentionedIds?: string[]
     mentionAll?: boolean
+    /** Internal agent-coordination intent. `deliver` is mailbox-only;
+     * `trigger` is reserved for formal handoff/follow-up activation. */
+    activation?: 'deliver' | 'trigger'
     /** Inlined summary so the renderer can draw the quote card on receipt
      *  without re-fetching. Matches the QuotedSummary shape used elsewhere. */
     quoted?: {

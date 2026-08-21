@@ -34,7 +34,8 @@ test('agent-to-human mention and ordinary leader reply terminate the chain', () 
 })
 
 test('non-leader agent may explicitly delegate to another agent', () => {
-  assert.deepEqual(resolveAgentRecipients({ ...base, authorId: 'peer', authorKind: 'agent', mentionedIds: ['leader'] }), ['leader'])
+  assert.deepEqual(resolveAgentRecipients({ ...base, authorId: 'peer', authorKind: 'agent', mentionedIds: ['leader'] }), [])
+  assert.deepEqual(resolveAgentRecipients({ ...base, authorId: 'peer', authorKind: 'agent', mentionedIds: ['leader'], activation: 'trigger' }), ['leader'])
 })
 
 test('direct conversations still wake the other agent', () => {

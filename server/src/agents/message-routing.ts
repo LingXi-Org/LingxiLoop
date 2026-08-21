@@ -12,10 +12,14 @@ export interface GroupRouteInput {
   mentionedIds: string[]
   mentionAll: boolean
   quotedAuthorId?: string | null
+  /** Agent-authored communication is mailbox-only unless an internal formal
+   * handoff/follow-up explicitly asks the scheduler to activate a turn. */
+  activation?: 'deliver' | 'trigger'
 }
 
 /** Pure routing policy shared by the scheduler and its matrix tests. */
 export function resolveAgentRecipients(input: GroupRouteInput): string[] {
+  if (input.authorKind === 'agent' && input.activation !== 'trigger') return []
   const agents = input.agents.filter((agent) => agent.id !== input.authorId)
   if (input.conversationKind !== 'group') return agents.map((agent) => agent.id)
 
