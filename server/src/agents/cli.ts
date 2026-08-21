@@ -11,10 +11,10 @@
 
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import { parseMentions } from '../mentions.js'
 import { freshenAttachmentUrl, type StoredAttachment, storage } from '../storage.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { stripLoneSurrogates } from './text-safety.js'
-import { parseMentions } from '../mentions.js'
 
 // Every CLI result flows through ok()/err(), so scrubbing lone UTF-16 surrogates
 // here means CLI output (read by agents as tool results) can never carry a split
@@ -157,12 +157,6 @@ MAILBOX  (this is how you receive + send messages):
   mute <convo_id> --until <iso>     — stop delivery until a wall-clock time; omit duration to mute forever
   mute list                         — show your active muted groups and expiry times
   follow <convo_id>                 — resume normal delivery from a muted group
-  ship list                         — list feature contracts and evidence-square progress
-  ship show <feature_id>            — inspect invariants, squares, releases, friction, regressions
-  ship create "<title>" --problem "..." --outcome "..." --contract "..." [--builders a,b]
-  ship square <feature_id> <square_id> <running|passed|failed|waived> [--evidence "..."] [--notes "..."]
-  ship friction <feature_id|none> "<title>" [--description "..."] [--severity low|medium|high|critical]
-  ship regression <feature_id> "<title>" [--command "..."] [--expected "..."]
   reply <convo_id> "<body>"         — post a message to that conversation as you
   reply <convo_id> "<body>" --quote <msg_id>
                                     — post as a quote-reply to <msg_id> (same convo); inbox + messages
@@ -1143,7 +1137,7 @@ async function cmdFollow(parsed: ParsedArgs): Promise<CliResult> {
     : `${conversationId} was not muted; normal delivery is already active.`)
 }
 
-async function cmdShip(parsed: ParsedArgs): Promise<CliResult> {
+async function _cmdShip(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
@@ -6088,7 +6082,6 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'ack':                 return await cmdAck(parsed)
       case 'mute':                return await cmdMute(parsed)
       case 'follow':              return await cmdFollow(parsed)
-      case 'ship':                return await cmdShip(parsed)
       case 'reply':               return await cmdReply(parsed, internal)
       case 'leave':               return await cmdLeave(parsed)
       case 'kick':                return await cmdKick(parsed)

@@ -1,34 +1,51 @@
-import { Router, type Request, type Response, type NextFunction } from 'express'
-import { storage, UPLOAD_DIR, freshenAttachmentUrl, normalizeStorageKey, storageKeyFromPublicUrl } from '../storage.js'
-import { pool } from '../db/pool.js'
-import { CH_MESSAGE_NEW, CH_REACTIONS, CH_CONVO_UPDATED, CH_DOCS, CH_TYPING, CH_CALENDAR_EVENTS, publish, redis } from '../redis.js'
-import { createPoll, castVote, closePoll, PollError } from '../polls.js'
-import { env } from '../env.js'
-import { getTriageEconomics } from '../agents/observability.js'
-import { BUSY_STATUS_LEASE_MS } from '../status.js'
-import { notifyMessage, computeMessageRecipients } from '../push.js'
-import { randomUUID, randomBytes, createHash, timingSafeEqual } from 'node:crypto'
-import {
-  deleteSession, authMiddleware, type AuthedRequest,
-  audit, createWsTicket, gravatarUrlForEmail,
-} from '../auth.js'
-import { onboardStarterAgents, seedMemberDms } from '../onboardCompany.js'
-import {
-  type Provider, providerEnabled, createState, consumeState,
-  authorizeUrl, handleCallback, errorUrl, returnUrlAllowed,
-} from '../oauth.js'
-import { adminRouter } from './admin-router.js'
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
+import { type NextFunction, type Request, type Response, Router } from 'express'
 import { isWaitlistEnabled } from '../admin.js'
-import { ogPreview, OgError } from '../og.js'
-import { sendInvitationEmail, type InvitationEmailDelivery } from '../invitation-email.js'
-import { getUserQuota, sub2apiConfigured } from '../sub2api.js'
 import {
-  issuePairingCode, pairComputer, announceComputerOnline,
-  resolveDevice, mintAgentRuntimeToken, listAgentsForComputer,
-  listComputers, revokeComputer, assignAgentToComputer, heartbeatComputer,
+  announceComputerOnline,
+  assignAgentToComputer,
+  heartbeatComputer,
+  issuePairingCode,
   issueRepairCode,
+  listAgentsForComputer,
+  listComputers,
+  mintAgentRuntimeToken,
+  pairComputer,
+  resolveDevice,
+  revokeComputer,
 } from '../agents/computer/registry.js'
+import { getTriageEconomics } from '../agents/observability.js'
+import {
+  type AuthedRequest,
+  audit,
+  authMiddleware,
+  createWsTicket,
+  deleteSession,
+  gravatarUrlForEmail,
+} from '../auth.js'
+import { pool } from '../db/pool.js'
+import { env } from '../env.js'
+import { type InvitationEmailDelivery, sendInvitationEmail } from '../invitation-email.js'
 import { parseMentions as parseChatMentions } from '../mentions.js'
+import {
+  authorizeUrl,
+  consumeState,
+  createState,
+  errorUrl,
+  handleCallback,
+  type Provider,
+  providerEnabled,
+  returnUrlAllowed,
+} from '../oauth.js'
+import { OgError, ogPreview } from '../og.js'
+import { onboardStarterAgents, seedMemberDms } from '../onboardCompany.js'
+import { castVote, closePoll, createPoll, PollError } from '../polls.js'
+import { computeMessageRecipients, notifyMessage } from '../push.js'
+import { CH_CALENDAR_EVENTS, CH_CONVO_UPDATED, CH_DOCS, CH_MESSAGE_NEW, CH_REACTIONS, CH_TYPING, publish, redis } from '../redis.js'
+import { BUSY_STATUS_LEASE_MS } from '../status.js'
+import { freshenAttachmentUrl, normalizeStorageKey, storage, storageKeyFromPublicUrl, UPLOAD_DIR } from '../storage.js'
+import { getUserQuota, sub2apiConfigured } from '../sub2api.js'
+import { adminRouter } from './admin-router.js'
 
 /** Re-export so older imports (server/index.ts, agents/cli.ts) keep working
  *  after the storage abstraction moved this constant. */
@@ -670,7 +687,7 @@ api.get('/metrics', async (req, res) => {
   res.send(renderProm())
 })
 
-/* ============== Auth — LingxiIdentity OIDC + compatibility OAuth ============== */
+/* ============== Auth — LingxiIdentity OIDC ============== */
 
 /** 302 to the provider's consent screen. State is opaque to the client —
  *  we mint it server-side, save to Redis (5min TTL), and verify on the
@@ -681,7 +698,7 @@ api.get('/metrics', async (req, res) => {
  *  can't be turned into an open redirect. Omit to use AUTH_DONE_URL. */
 api.get('/auth/start/:provider', safe(async (req, res) => {
   const provider = req.params.provider as Provider
-  if (provider !== 'lingxi' && provider !== 'google' && provider !== 'github') {
+  if (provider !== 'lingxi') {
     res.status(404).json({ error: 'unknown provider' }); return
   }
   if (!providerEnabled(provider)) {
@@ -710,7 +727,7 @@ api.get('/auth/start/:provider', safe(async (req, res) => {
  *  On failure we 302 to the same target with `#error=...`. */
 api.get('/auth/callback/:provider', safe(async (req, res) => {
   const provider = req.params.provider as Provider
-  if (provider !== 'lingxi' && provider !== 'google' && provider !== 'github') {
+  if (provider !== 'lingxi') {
     res.status(404).json({ error: 'unknown provider' }); return
   }
   const code = typeof req.query.code === 'string' ? req.query.code : ''
@@ -751,47 +768,6 @@ api.get('/auth/callback/:provider', safe(async (req, res) => {
     console.warn(`[auth] ${provider} callback failed:`, msg)
     await audit({ kind: 'login_failed', ip, userAgent: ua, detail: { provider, error: msg } })
     res.redirect(errorUrl(claimed.returnUrl, msg.slice(0, 120)))
-  }
-}))
-
-/** Native Sign in with Apple — the iOS app finished the
- *  ASAuthorization flow on-device and POSTs the resulting
- *  `identity_token` here. We verify the JWT, find-or-create, and
- *  return the session token as JSON (no browser redirect). */
-api.post('/auth/apple/native', safe(async (req, res) => {
-  const { handleAppleNativeSignIn, WaitlistedError, SuspendedError } = await import('../oauth.js')
-  const body = (req.body ?? {}) as {
-    identityToken?: unknown; email?: unknown; name?: unknown; inviteToken?: unknown
-  }
-  const identityToken = typeof body.identityToken === 'string' ? body.identityToken : ''
-  if (!identityToken) { res.status(400).json({ error: 'identityToken required' }); return }
-  const fallbackEmail = typeof body.email === 'string' ? body.email : null
-  const fallbackName = typeof body.name === 'string' ? body.name : null
-  const inviteToken = typeof body.inviteToken === 'string' ? body.inviteToken : null
-  const ip = req.socket.remoteAddress ?? null
-  const ua = (req.headers['user-agent'] as string | undefined) ?? null
-  try {
-    const r = await handleAppleNativeSignIn({
-      identityToken,
-      fallbackEmail,
-      fallbackName,
-      // Only our bundle id is accepted. If we later ship an Android
-      // app or web SIWA fallback they'll get distinct audiences.
-      audiences: ['cn.lingxilearn.loop'],
-      inviteToken,
-      ip, userAgent: ua,
-    })
-    res.json({
-      token: r.token,
-      user: { id: r.userId, email: r.email, displayName: r.displayName },
-      companyId: r.companyId,
-    })
-  } catch (e) {
-    if (e instanceof WaitlistedError) { res.status(403).json({ error: 'waitlisted', email: e.email }); return }
-    if (e instanceof SuspendedError) { res.status(403).json({ error: 'suspended', email: e.email, reason: e.reason }); return }
-    const msg = e instanceof Error ? e.message : String(e)
-    console.warn('[auth] apple native sign-in failed:', msg)
-    res.status(400).json({ error: msg })
   }
 }))
 

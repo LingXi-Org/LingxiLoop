@@ -1,10 +1,21 @@
+import { getActiveCompanyId, getAuthToken, useAuth } from '@/stores/auth'
 import type {
-  Message, Status,
-  BoardSummary, BoardSnapshot, BoardCardComment, BoardCardLookup,
-  CalendarEvent, CalendarEventKind, CalendarEventStatus, CalendarDispatch, RecurrenceRule,
-  CalendarReminderChannel,ComputerStatus, ComputerKind, EngineId,
+  BoardCardComment,
+  BoardCardLookup,
+  BoardSnapshot,
+  BoardSummary,
+  CalendarDispatch,
+  CalendarEvent,
+  CalendarEventKind,
+  CalendarEventStatus,
+  CalendarReminderChannel,
+  ComputerKind,
+  ComputerStatus,
+  EngineId,
+  Message,
+  RecurrenceRule,
+  Status,
 } from '@/types'
-import { getAuthToken, getActiveCompanyId, useAuth } from '@/stores/auth'
 
 const DEVTOOLS_KEY = 'lingxiloop.devtools.enabled'
 const SERVER_URL_KEY = 'lingxiloop.serverUrl'
@@ -753,10 +764,10 @@ export const api = {
   health: () => http<{ ok: boolean; ts: number }>('/health'),
   me: () => http<{ id: string; name: string; kind: string }>('/me'),
   /** Full-page redirect into the provider's consent screen. Use
-   *  `window.location.assign(api.authStartUrl('google'))` rather than
+   *  `window.location.assign(api.authStartUrl('lingxi'))` rather than
    *  fetch — the browser needs to do the actual navigation so the
    *  callback can land back on AUTH_DONE_URL with the session token. */
-  authStartUrl: (provider: 'lingxi' | 'google' | 'github', opts?: { inviteToken?: string | null; returnUrl?: string | null }) => {
+  authStartUrl: (provider: 'lingxi', opts?: { inviteToken?: string | null; returnUrl?: string | null }) => {
     const params = new URLSearchParams()
     if (opts?.returnUrl) params.set('return', opts.returnUrl)
     if (opts?.inviteToken) params.set('invite', opts.inviteToken)
@@ -771,20 +782,6 @@ export const api = {
    *  token is invalid — caller should `useAuth.clear()` immediately. */
   deleteAccount: () =>
     http<{ ok: boolean }>('/me/account', { method: 'DELETE' }),
-  /** Native Sign in with Apple — POST the identity_token JWT obtained
-   *  from the iOS-native ASAuthorization flow. Server verifies the JWT
-   *  against Apple's JWKS, find-or-creates the user, and returns a
-   *  fresh session token. */
-  authAppleNative: (input: { identityToken: string; email?: string | null; name?: string | null; inviteToken?: string | null }) =>
-    http<{ token: string; user: { id: string; email: string; displayName: string }; companyId: string | null }>('/auth/apple/native', {
-      method: 'POST',
-      body: JSON.stringify({
-        identityToken: input.identityToken,
-        email: input.email ?? null,
-        name: input.name ?? null,
-        inviteToken: input.inviteToken ?? null,
-      }),
-    }),
   authMe: () =>
     http<MeResponse>('/auth/me'),
   /** sub2api-backed quota snapshot for the signed-in user. `configured`

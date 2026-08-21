@@ -20,8 +20,7 @@ export interface AuthUser {
   email: string
   name: string
   emailVerified?: boolean
-  /** OAuth providers linked to this account, e.g. ['google'] or
-   *  ['google', 'github']. Populated by /auth/me. */
+  /** Verified identity providers linked to this account. */
   providers?: string[]
 }
 

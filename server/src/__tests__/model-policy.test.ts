@@ -1,18 +1,17 @@
-import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { env } from '../env.js'
+import { test } from 'node:test'
 import { enforceModelPolicy, realTaskModel, supportModel } from '../agents/model-policy.js'
+import { env } from '../env.js'
 
 const BIG = env.OPENAI_MODEL
 const SMALL = env.OPENAI_MODEL_SUPPORT
 
 test('real tasks may use the big model', () => {
   assert.equal(enforceModelPolicy(BIG, 'agent-turn'), BIG)
-  assert.equal(enforceModelPolicy(BIG, 'convene-speech'), BIG)
 })
 
 test('a non-real-task that tries the big model is caught and forced to support', () => {
-  for (const purpose of ['compaction', 'steer-summary', 'completion-verify', 'inbox-triage', 'agenda', 'palette', 'gender', 'convene-decision'] as const) {
+  for (const purpose of ['compaction', 'steer-summary', 'completion-verify', 'inbox-triage', 'agenda', 'palette', 'gender'] as const) {
     assert.equal(enforceModelPolicy(BIG, purpose), SMALL, `${purpose} must be forced off the big model`)
   }
 })
