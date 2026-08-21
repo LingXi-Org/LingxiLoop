@@ -24,8 +24,11 @@ runuser -u lingxi -- env DISPLAY=:10 openbox-session &
 
 # Exactly one Chromium process owns the persistent profile. Agents receive
 # different CDP targets through BrowserTargetRegistry; they never start another
-# process against this user-data-dir.
+# process against this user-data-dir. Some managed Docker hosts forbid nested
+# user namespaces, so Chromium's own sandbox cannot start there; Docker remains
+# the isolation boundary for this dedicated Computer container.
 runuser -u lingxi -- env DISPLAY=:10 chromium \
+  --no-sandbox \
   --no-first-run \
   --no-default-browser-check \
   --disable-dev-shm-usage \

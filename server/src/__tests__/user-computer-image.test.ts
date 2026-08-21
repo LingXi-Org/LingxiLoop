@@ -14,6 +14,7 @@ test('user computer image keeps one persistent browser service and lightweight s
   assert.match(dockerfile, /\bxdotool\b/)
   assert.doesNotMatch(dockerfile, /\b(?:gnome|kde)\b/i)
   assert.match(entrypoint, /--user-data-dir=\/home\/lingxi\/\.config\/chromium/)
+  assert.match(entrypoint, /--no-sandbox/)
   assert.match(entrypoint, /\/tmp\/\.X11-unix/)
   assert.match(entrypoint, /127\.0\.0\.1:9222\/json\/version/)
   assert.equal((entrypoint.match(/^runuser .* chromium \\/gm) ?? []).length, 1)
