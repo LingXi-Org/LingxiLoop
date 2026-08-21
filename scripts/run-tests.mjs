@@ -29,6 +29,14 @@ if (testFiles.length === 0) {
 const child = spawn(
   process.execPath,
   ['--import', 'tsx', '--experimental-test-module-mocks', '--test', ...testFiles],
-  { stdio: 'inherit', env: process.env },
+  {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      // Unit tests mock provider calls; importing env.ts should not require
+      // developers or CI to expose a real production credential.
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'unit-test-key',
+    },
+  },
 )
 child.on('exit', (code) => process.exit(code ?? 1))

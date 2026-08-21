@@ -1,11 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useTransform, type MotionValue } from 'framer-motion'
 import { useApp } from '@/stores/app'
 import { MobileChatList } from './MobileChatList'
 import { MobileChat, MobileChatInfo } from './MobileChat'
 import { MobileTabBar } from './MobileTabBar'
 import { MobileWhispersList, MobileWhisperRoom } from './MobileWhispers'
-import { MobileConvene } from './MobileConvene'
 import { MobileLibrary } from './MobileLibrary'
 import { MobileAgents } from './MobileAgents'
 import { MobileMe } from './MobileMe'
@@ -17,8 +16,6 @@ import { initPushNotifications } from '@/lib/push'
 import { MobileParticipantInfo } from './MobileParticipantInfo'
 import { useSwipeBackProps } from './useSwipeBack'
 import { ViewBoundary } from './ViewBoundary'
-
-const ShippingWorkspace = lazy(() => import('@/components/ShippingWorkspace').then((module) => ({ default: module.ShippingWorkspace })))
 
 /** iOS UINavigationController push/pop spring. CRITICALLY DAMPED:
  *  damping ratio ζ = damping / (2·√(k·m)) = 38 / (2·√320) ≈ 1.06,
@@ -141,15 +138,11 @@ export function MobileApp() {
     if (!convoId && stack !== 'list') pushStack('list')
   }, [convoId, stack, pushStack])
 
-  // Mobile intentionally exposes only chats, mail, and the reduced account
-  // page. Redirect stale persisted routes (or legacy deep links) instead of
+  // The public product surface is Chats / Agents / Library / Me. Redirect
+  // stale persisted routes (or legacy deep links) instead of
   // leaving users on a hidden product area.
   useEffect(() => {
-    if (view === 'mail' && convoId) {
-      setView('conversations')
-      return
-    }
-    if (view !== 'conversations' && view !== 'mail' && view !== 'me') {
+    if (!['conversations', 'agents', 'library', 'me'].includes(view)) {
       setView('conversations')
     }
   }, [view, convoId, setView])
@@ -289,30 +282,12 @@ export function MobileApp() {
             </motion.div>
           )}
 
-          {/* CONVENE view — reachable from chat header, shows empty state on its own */}
-          {view === 'convene' && (
-            <motion.div key="convene" className="absolute inset-0"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={fadeTransition}>
-              <ViewBoundary name="Convene"><MobileConvene /></ViewBoundary>
-            </motion.div>
-          )}
-
           {/* LIBRARY view — documents, boards, calendar */}
           {view === 'library' && (
             <motion.div key="library" className="absolute inset-0"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={fadeTransition}>
               <ViewBoundary name="Library"><MobileLibrary /></ViewBoundary>
-            </motion.div>
-          )}
-
-          {/* SHIP view — end-to-end contract, verification, release, and learning loop */}
-          {view === 'shipping' && (
-            <motion.div key="shipping" className="absolute inset-0"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={fadeTransition}>
-              <ViewBoundary name="Ship"><Suspense fallback={<div className="h-full grid place-items-center text-sm text-ink-400">开船……</div>}><ShippingWorkspace compact /></Suspense></ViewBoundary>
             </motion.div>
           )}
 

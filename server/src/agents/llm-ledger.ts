@@ -42,7 +42,7 @@ import { randomUUID } from 'node:crypto'
 import type OpenAI from 'openai'
 import { pool } from '../db/pool.js'
 import { getLlmClient } from '../llm.js'
-import { effectiveCostUsd, priceFor, usageFromOpenAI, EMPTY_USAGE, type TokenUsage } from './cost.js'
+import { EMPTY_USAGE, effectiveCostUsd, priceFor, type TokenUsage, usageFromOpenAI } from './cost.js'
 
 /** The exhaustive set of business purposes that spend sub2api. Adding a new
  *  callsite REQUIRES adding its purpose here — that's the discipline knob that
@@ -51,7 +51,6 @@ export type LlmCallPurpose =
   // Big-model real tasks (sanctioned by model-policy.ts).
   | 'agent-turn'
   | 'lingxigraph-agent-turn'
-  | 'convene-speech'
   // Small-model cerebellum classifiers — the gpt-5.4-mini hot path.
   | 'inbox-triage'
   | 'synthetic-wake-gate'
@@ -59,7 +58,6 @@ export type LlmCallPurpose =
   | 'compaction'
   | 'completion-verify'
   | 'steer-summary'
-  | 'convene-decision'
   // One-shot utilities (rare per call, but unaccounted before this ledger).
   | 'palette'
   | 'gender'

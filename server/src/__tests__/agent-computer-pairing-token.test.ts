@@ -3,8 +3,9 @@
  *
  * Run: node --import tsx --test server/src/__tests__/agent-computer-pairing-token.test.ts
  */
-import { afterEach, test } from 'node:test'
+
 import assert from 'node:assert/strict'
+import { afterEach, test } from 'node:test'
 
 process.env.LINGXILOOP_RUNTIME_CLIENT = 'http'
 

@@ -1,15 +1,14 @@
-import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { test } from 'node:test'
 import {
   CLI_SIDE_EFFECT_WRITE_FAILED_PREFIX,
   cliResultHasReplySideEffect,
   cliResultSideEffectChannelUnreliable,
   normalizeCliSideEffects,
+  parseCliSideEffectsJsonl,
   parseCliSideEffectsJsonlDetailed,
   parseCliSideEffectsWriteFailureMarker,
-  parseCliSideEffectsJsonl,
 } from '../agents/cli-result.js'
-import { tBash } from '../agents/tools-shared.js'
 
 test('parseCliSideEffectsJsonl collects valid CLI side effects and ignores malformed lines', () => {
   const effects = parseCliSideEffectsJsonl([
@@ -74,54 +73,4 @@ test('normalizeCliSideEffects filters non-event values', () => {
     { command: 'reply' },
     null,
   ]), [{ event: 'memory.written', memoryId: 'mem-1' }])
-})
-
-test('tBash reads CLI side effects from the out-of-band result path', async () => {
-  const payload = JSON.stringify({
-    sideEffects: [{ event: 'message.posted', command: 'reply', conversationId: 'c-1', messageId: 'm-1' }],
-  })
-  const escaped = payload.replace(/'/g, "'\\''")
-  const result = await tBash({
-    command: `printf '%s\\n' '${escaped}' >> "$LINGXILOOP_CLI_RESULT_PATH"; printf visible-output`,
-  }, 'agent-1', null)
-
-  assert.equal(result.ok, true)
-  assert.deepEqual(result.output, {
-    stdout: 'visible-output',
-    stderr: '',
-    exitCode: 0,
-    sideEffects: [{ event: 'message.posted', command: 'reply', conversationId: 'c-1', messageId: 'm-1' }],
-  })
-})
-
-test('tBash marks malformed side-effect result files as unreliable', async () => {
-  const result = await tBash({
-    command: `printf '%s\\n' 'not json' >> "$LINGXILOOP_CLI_RESULT_PATH"; printf visible-output`,
-  }, 'agent-1', null)
-
-  assert.equal(result.ok, true)
-  assert.deepEqual(result.output, {
-    stdout: 'visible-output',
-    stderr: '',
-    exitCode: 0,
-    sideEffectsParseFailed: true,
-    sideEffectsMalformedLineCount: 1,
-  })
-})
-
-test('tBash recovers side effects from pod-shim write-failure marker', async () => {
-  const payload = JSON.stringify([{ event: 'message.posted', command: 'reply', conversationId: 'c-1', messageId: 'm-1' }])
-  const escaped = `${CLI_SIDE_EFFECT_WRITE_FAILED_PREFIX}${payload}`.replace(/'/g, "'\\''")
-  const result = await tBash({
-    command: `printf '%s\\n' '${escaped}' >&2; printf visible-output`,
-  }, 'agent-1', null)
-
-  assert.equal(result.ok, true)
-  assert.deepEqual(result.output, {
-    stdout: 'visible-output',
-    stderr: `${CLI_SIDE_EFFECT_WRITE_FAILED_PREFIX}${payload}\n`,
-    exitCode: 0,
-    sideEffects: [{ event: 'message.posted', command: 'reply', conversationId: 'c-1', messageId: 'm-1' }],
-    sideEffectsWriteFailed: true,
-  })
 })

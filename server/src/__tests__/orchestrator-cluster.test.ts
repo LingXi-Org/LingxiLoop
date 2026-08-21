@@ -9,15 +9,16 @@
  *
  * Run: node --import tsx --test server/src/__tests__/orchestrator-cluster.test.ts
  */
-import { test, after, beforeEach } from 'node:test'
+
 import assert from 'node:assert/strict'
-import { pool } from '../db/pool.js'
+import { after, beforeEach, test } from 'node:test'
 import {
+  _resetFusePressureStateForTests,
+  evaluateFusePressureSample,
   parseClusterFuse,
   pickAgentPodsForGc,
-  evaluateFusePressureSample,
-  _resetFusePressureStateForTests,
 } from '../agents/runtime/orchestrator.js'
+import { pool } from '../db/pool.js'
 
 after(async () => {
   try { await pool.end() } catch { /* ignore */ }

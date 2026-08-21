@@ -6,8 +6,9 @@
  *
  * Run: node --import tsx --test server/src/__tests__/pod-agent-exit.test.ts
  */
-import { test } from 'node:test'
+
 import assert from 'node:assert/strict'
+import { test } from 'node:test'
 import { decidePodExit } from '../agents/runtime/pod-agent-exit.js'
 
 const IDLE_MS = 3 * 60_000  // 3 min — current default

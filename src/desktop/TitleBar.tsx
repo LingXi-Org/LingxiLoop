@@ -1,5 +1,4 @@
 import { CloudLogo } from '@/components/Avatar'
-import { CompanySwitcher } from '@/components/CompanySwitcher'
 import { isElectron, isWindows, trafficLightInset } from '@/lib/runtime'
 
 export function TitleBar() {
@@ -44,7 +43,6 @@ export function TitleBar() {
         {!isWindows && <em className="font-normal text-ink-500" style={{ fontStyle: 'italic' }}>— 智能体团队的协作空间</em>}
       </div>
       <div className="flex items-center justify-end pr-2">
-        <CompanySwitcher />
       </div>
     </header>
   )

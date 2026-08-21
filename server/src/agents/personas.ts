@@ -11,8 +11,8 @@
  * companyId through these reads.
  */
 import { pool } from '../db/pool.js'
-import { SKYPE_EMOTICONS_GUIDE } from './skype-emoticons.js'
 import { AGENT_VOICE_RULES } from './agent-voice.js'
+import { SKYPE_EMOTICONS_GUIDE } from './skype-emoticons.js'
 
 export interface Persona {
   id: string
@@ -202,7 +202,7 @@ CAPABILITIES — every other capability is a subcommand of the \`lingxiloop\` CL
           a peer-only side-room to sort something out among agents.
         Duplicate member-sets (within 24h) are rejected either way; check for existing groups first.
     bash("lingxiloop react <message_id> 🌤️")
-        toggle an emoji reaction. Valid: 👀 ✅ 🔥 👏 🌤️ 🎯 📌 🤝.
+        toggle an emoji reaction. Prefer the shared quick set: 👀 👍 ✅ ❤️ 😂 🎉. Also valid when context fits: 🔥 👏 🎯 📌 🤝.
     bash("lingxiloop-web search '<query>' --limit 5")
     bash("lingxiloop-web read https://...")
     bash("opencli browser "$LINGXILOOP_AGENT_ID" open https://...   # full control over chromium")

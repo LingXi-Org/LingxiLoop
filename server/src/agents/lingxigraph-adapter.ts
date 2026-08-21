@@ -21,6 +21,11 @@ export type CommunicationAction =
   | Exact<{ type: 'poll.create'; conversationId: string; question: string; options: string[]; mode?: 'single' | 'multi'; expiresInMinutes?: number }>
   | Exact<{ type: 'poll.vote'; messageId: string; optionIds: string[] }>
   | Exact<{ type: 'poll.close'; messageId: string }>
+  | Exact<{ type: 'document.create'; title: string; content?: string }>
+  | Exact<{ type: 'document.read'; documentId: string }>
+  | Exact<{ type: 'document.update'; documentId: string; find: string; replace: string }>
+  | Exact<{ type: 'document.append'; documentId: string; content: string }>
+  | Exact<{ type: 'document.share'; documentId: string; conversationId: string; comment?: string }>
 
 export interface LingxiGraphRunRequest {
   version: 1
@@ -311,6 +316,11 @@ export const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]>
   'poll.create': ['type', 'conversationId', 'question', 'options', 'mode', 'expiresInMinutes'],
   'poll.vote': ['type', 'messageId', 'optionIds'],
   'poll.close': ['type', 'messageId'],
+  'document.create': ['type', 'title', 'content'],
+  'document.read': ['type', 'documentId'],
+  'document.update': ['type', 'documentId', 'find', 'replace'],
+  'document.append': ['type', 'documentId', 'content'],
+  'document.share': ['type', 'documentId', 'conversationId', 'comment'],
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -419,6 +429,11 @@ export function parseCommunicationAction(raw: unknown): CommunicationAction {
     }
     case 'poll.vote': return { type, messageId: stringField(raw, 'messageId')!, optionIds: stringArrayField(raw, 'optionIds')! }
     case 'poll.close': return { type, messageId: stringField(raw, 'messageId')! }
+    case 'document.create': return { type, title: stringField(raw, 'title')!, ...(raw.content === undefined ? {} : { content: stringField(raw, 'content', false)! }) }
+    case 'document.read': return { type, documentId: stringField(raw, 'documentId')! }
+    case 'document.update': return { type, documentId: stringField(raw, 'documentId')!, find: stringField(raw, 'find')!, replace: stringField(raw, 'replace', false) ?? '' }
+    case 'document.append': return { type, documentId: stringField(raw, 'documentId')!, content: stringField(raw, 'content')! }
+    case 'document.share': return { type, documentId: stringField(raw, 'documentId')!, conversationId: stringField(raw, 'conversationId')!, ...(raw.comment === undefined ? {} : { comment: stringField(raw, 'comment', false)! }) }
   }
 }
 
@@ -469,6 +484,18 @@ export function communicationActionToArgv(action: CommunicationAction): string[]
     case 'poll.create': return ['poll', 'create', action.conversationId, action.question, ...action.options, '--mode', action.mode ?? 'single', ...(action.expiresInMinutes ? ['--expires-in', String(action.expiresInMinutes)] : [])]
     case 'poll.vote': return ['poll', 'vote', action.messageId, action.optionIds.join(',')]
     case 'poll.close': return ['poll', 'close', action.messageId]
+    case 'document.create': return ['doc', 'create', action.title, ...(action.content ? ['--body', action.content] : [])]
+    case 'document.read': return ['doc', 'read', action.documentId, '--json']
+    case 'document.update': return ['doc', 'replace', action.documentId, '--find', action.find, '--replace', action.replace]
+    case 'document.append': return ['doc', 'append', action.documentId, action.content]
+    case 'document.share': return [
+      'doc',
+      'share',
+      action.documentId,
+      '--conversation',
+      action.conversationId,
+      ...(action.comment ? ['--comment', action.comment] : []),
+    ]
   }
 }
 

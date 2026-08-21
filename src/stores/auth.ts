@@ -20,8 +20,7 @@ export interface AuthUser {
   email: string
   name: string
   emailVerified?: boolean
-  /** OAuth providers linked to this account, e.g. ['google'] or
-   *  ['google', 'github']. Populated by /auth/me. */
+  /** Verified identity providers linked to this account. */
   providers?: string[]
 }
 
@@ -95,7 +94,6 @@ export const useAuth = create<AuthState>((set) => ({
       import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
       import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
       import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
-      import('./shipping').then(({ useShipping }) => useShipping.getState().reset()),
     ])
   },
   /** Append a freshly-created company to the user's set and switch to it. */
@@ -111,7 +109,6 @@ export const useAuth = create<AuthState>((set) => ({
         import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
         import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
         import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
-        import('./shipping').then(({ useShipping }) => useShipping.getState().reset()),
       ])
     }
   },
@@ -129,7 +126,6 @@ export const useAuth = create<AuthState>((set) => ({
       import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
       import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
       import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
-      import('./shipping').then(({ useShipping }) => useShipping.getState().reset()),
     ])
   },
   markReady() {

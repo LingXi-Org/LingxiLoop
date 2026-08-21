@@ -18,18 +18,19 @@
  *
  * Run: node --import tsx --test server/src/__tests__/agents-orchestrator.test.ts
  */
-import { test, after } from 'node:test'
+
 import assert from 'node:assert/strict'
-import { pool } from '../db/pool.js'
+import { after, test } from 'node:test'
 import {
-  parsePodHealth,
-  stuckPendingReason,
-  safeName,
-  isRetryableKubectlError,
-  planIdlePvcGc,
   _testing,
+  isRetryableKubectlError,
   type KubectlResult,
+  parsePodHealth,
+  planIdlePvcGc,
+  safeName,
+  stuckPendingReason,
 } from '../agents/runtime/orchestrator.js'
+import { pool } from '../db/pool.js'
 
 const { yamlQuote, dnsLabelValue, podManifest } = _testing
 

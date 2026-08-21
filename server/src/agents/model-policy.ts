@@ -10,26 +10,24 @@
  * caught immediately ("及时发现") and contained rather than silently burning
  * brain-model tokens.
  */
-import { env } from '../env.js'
+
 import { notifyAlert } from '../alerting.js'
+import { env } from '../env.js'
 
 export type ModelPurpose =
   // Real tasks — the ONLY purposes allowed to use the big/brain model.
   | 'agent-turn' // main turn: the agent responding to a real conversation
-  | 'convene-speech' // convene: the agent's spoken contribution in a live session
   // Auxiliary cerebellum work — MUST use the small support model.
   | 'inbox-triage'
   | 'completion-verify'
   | 'compaction'
   | 'steer-summary'
-  | 'convene-decision'
   | 'agenda'
   | 'palette'
   | 'gender'
 
 const REAL_TASK_PURPOSES: ReadonlySet<ModelPurpose> = new Set<ModelPurpose>([
   'agent-turn',
-  'convene-speech',
 ])
 
 /** The small/cerebellum model for all auxiliary work. */
