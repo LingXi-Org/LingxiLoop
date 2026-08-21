@@ -23,7 +23,7 @@ RUN apt-get -o Acquire::Retries=3 update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        ca-certificates curl git jq ripgrep bash tini \
        python3 python3-pip \
-       chromium chromium-driver \
+       chromium chromium-driver chromium-sandbox \
        xvfb xauth openbox x11vnc novnc websockify xterm pcmanfm scrot xdotool \
        fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji \
        procps \

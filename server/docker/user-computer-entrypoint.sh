@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Xvfb is deliberately launched as the unprivileged desktop user. Prepare its
+# root-owned UNIX socket directory first, and clear only this container's
+# browser-service display lock left behind by a stopped/restarted container.
+install -d -o root -g root -m 1777 /tmp/.X11-unix
+rm -f /tmp/.X10-lock /tmp/.X11-unix/X10
+
 mkdir -p \
   /home/lingxi/.config/chromium \
   /home/lingxi/shared \
@@ -28,4 +34,15 @@ runuser -u lingxi -- env DISPLAY=:10 chromium \
   --user-data-dir=/home/lingxi/.config/chromium \
   about:blank &
 
-exec sleep infinity
+# Do not report a usable Computer until its singleton browser service is
+# reachable. A failed Xvfb/Chromium launch must fail the container rather than
+# leaving `sleep infinity` running with no automation capability.
+for attempt in $(seq 1 30); do
+  if curl --fail --silent http://127.0.0.1:9222/json/version >/dev/null; then
+    exec sleep infinity
+  fi
+  sleep 1
+done
+
+echo 'Chromium CDP did not become ready on 127.0.0.1:9222' >&2
+exit 1
