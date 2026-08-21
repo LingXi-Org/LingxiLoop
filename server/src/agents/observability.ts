@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
-import { effectiveCostUsd, priceFor, modelPriceTable, EMPTY_USAGE, type TokenUsage } from './cost.js'
+import { EMPTY_USAGE, effectiveCostUsd, modelPriceTable, priceFor, type TokenUsage } from './cost.js'
 
-export type AgentRunStatus = 'running' | 'completed' | 'failed' | 'skipped'
+export type AgentRunStatus = 'running' | 'waiting_for_human' | 'completed' | 'failed' | 'skipped'
 export type TriageSource = 'cloud' | 'byoa-claude' | 'byoa-codex'
 export type AgentEventLevel = 'debug' | 'info' | 'warn' | 'error'
 

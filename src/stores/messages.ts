@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import type { Message, ReactionEntry } from '@/types'
-import { api, ws, type WsEvent, type ApiMessage } from '@/api/client'
+import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
 import { useApp } from '@/stores/app'
 import { getMeId } from '@/stores/auth'
+import type { Message, ReactionEntry } from '@/types'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -297,6 +297,8 @@ function fromApi(m: ApiMessage): Message {
     clientId?: string | null
     mentionedIds?: string[] | null
     mentionAll?: boolean | null
+    handoff?: Message['handoff'] | null
+    approval?: Message['approval'] | null
   }
   const out: Message = {
     id: m.id,
@@ -318,6 +320,8 @@ function fromApi(m: ApiMessage): Message {
     clientId: raw.clientId ?? undefined,
     mentionedIds: raw.mentionedIds ?? undefined,
     mentionAll: raw.mentionAll ?? undefined,
+    handoff: raw.handoff ?? undefined,
+    approval: raw.approval ?? undefined,
   }
   ;(out as Message & { sequence?: number }).sequence = m.sequence
   return out

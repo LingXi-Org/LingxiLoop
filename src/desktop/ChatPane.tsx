@@ -2,8 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
-import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
-import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
@@ -12,6 +10,8 @@ import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { TwEmoji } from '@/components/TwEmoji'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
+import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
@@ -1629,6 +1629,39 @@ function OpenMausEmptyConversationState() {
   )
 }
 
+function ConversationActivity({ conversationId }: { conversationId: string }) {
+  const [events, setEvents] = useState<Awaited<ReturnType<typeof api.getCoworkerActivity>>>([])
+  useEffect(() => {
+    let cancelled = false
+    const refresh = () => void api.getCoworkerActivity(conversationId)
+      .then((rows) => { if (!cancelled) setEvents(rows) })
+      .catch(() => { /* activity is best-effort; chat remains primary */ })
+    refresh()
+    const timer = window.setInterval(refresh, 8_000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [conversationId])
+  const visible = events.slice(-3)
+  if (visible.length === 0) return null
+  const active = [...events].reverse().find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')
+  return (
+    <div className="border-b border-hairline bg-panel/70 px-5 py-2" role="status" aria-label="Agent 最近活动">
+      <div className="mx-auto flex max-w-[900px] items-center gap-3 overflow-hidden">
+        <span className={`size-2 shrink-0 rounded-full ${active ? 'animate-pulse bg-gold' : 'bg-avail'}`} />
+        <span className="shrink-0 text-[11px] font-semibold text-ink-600">
+          {active ? `${active.agentName}${active.runStatus === 'waiting_for_human' ? ' 正在等待你' : ' 正在工作'}` : '最近活动'}
+        </span>
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+          {visible.map((event) => (
+            <span key={event.id} className="max-w-[240px] truncate rounded-full bg-raised px-2.5 py-1 text-[10.5px] text-ink-500" title={event.title}>
+              {/completed/.test(event.kind) ? '✓' : /failed/.test(event.kind) ? '!' : '●'} {event.title}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ChatPane() {
   const convoId = useApp((s) => s.selectedConversationId)
   // Atomic selectors — primitive / stable refs
@@ -1853,8 +1886,8 @@ export function ChatPane() {
       className={cn(
         'chat-surface grid overflow-hidden',
         searchOpen
-          ? 'grid-rows-[auto_auto_minmax(0,1fr)_auto]'
-          : 'grid-rows-[auto_minmax(0,1fr)_auto]',
+          ? 'grid-rows-[auto_auto_auto_minmax(0,1fr)_auto]'
+          : 'grid-rows-[auto_auto_minmax(0,1fr)_auto]',
       )}
     >
       <ChatHeader
@@ -1862,6 +1895,7 @@ export function ChatPane() {
         onToggleSearch={() => setSearchOpen((v) => !v)}
         searchOpen={searchOpen}
       />
+      <ConversationActivity conversationId={convoId} />
       {searchOpen && (
         <div className="flex items-center gap-2 border-b border-hairline bg-panel px-5 py-2">
           <div className="flex flex-1 items-center gap-2 rounded-lg bg-raised/70 px-3 py-1.5 text-[13px] text-ink-secondary focus-within:ring-1 focus-within:ring-accent">

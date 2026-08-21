@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react'
+import { ComputerView } from '@/components/ComputerView'
 import { EmailComposer } from '@/components/EmailComposer'
-import { IAgent, IAgents, IBoard, ICalendar, IChat, IDoc } from '@/components/icons'
+import { IAgent, IAgents, IBoard, ICalendar, IChat, IComputer, IDoc } from '@/components/icons'
 import { isElectron, platform } from '@/lib/runtime'
+import { useApp } from '@/stores/app'
 import { useTheme } from '@/stores/theme'
-import { ConversationsPane } from './ConversationsPane'
-import { ChatPane } from './ChatPane'
-import { MeView } from './MeView'
+import type { ViewKey } from '@/types'
 import { AgentsView } from './AgentsView'
 import { BoardsView } from './BoardsView'
 import { CalendarView } from './CalendarView'
+import { ChatPane } from './ChatPane'
+import { ConversationsPane } from './ConversationsPane'
 import { DocumentsView } from './DocumentsView'
-import { useApp } from '@/stores/app'
-import type { ViewKey } from '@/types'
+import { MeView } from './MeView'
 
 const productViews: Array<{ key: ViewKey['view']; label: string; Icon: typeof IChat }> = [
   { key: 'conversations', label: '对话', Icon: IChat },
   { key: 'agents', label: '智能体', Icon: IAgent },
+  { key: 'computer', label: 'Computer', Icon: IComputer },
   { key: 'library', label: '资料库', Icon: IDoc },
   { key: 'me', label: '我的', Icon: IAgents },
 ]
@@ -82,6 +84,7 @@ export function DesktopApp() {
           <ChatPane />
         </div>
       ) : view === 'agents' ? <div className="min-h-0 flex-1 overflow-hidden"><AgentsView /></div>
+        : view === 'computer' ? <div className="min-h-0 flex-1 overflow-hidden"><ComputerView /></div>
         : view === 'library' ? <LibraryView />
           : <div className="min-h-0 flex-1 overflow-hidden"><MeView /></div>}
       <EmailComposer />

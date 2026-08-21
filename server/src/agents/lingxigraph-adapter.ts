@@ -26,6 +26,11 @@ export type CommunicationAction =
   | Exact<{ type: 'document.update'; documentId: string; find: string; replace: string }>
   | Exact<{ type: 'document.append'; documentId: string; content: string }>
   | Exact<{ type: 'document.share'; documentId: string; conversationId: string; comment?: string }>
+  | Exact<{ type: 'handoff.create'; conversationId: string; toAgentId: string; title: string; note?: string; sharedPaths?: string[]; browserTargets?: string[] }>
+  | Exact<{ type: 'handoff.complete'; handoffId: string; note?: string }>
+  | Exact<{ type: 'approval.request'; conversationId: string; kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action'; summary: string; payload: Record<string, unknown> }>
+  | Exact<{ type: 'memory.note'; body: string; kind: 'fact' | 'preference' | 'instruction' | 'relationship'; about?: string }>
+  | Exact<{ type: 'autonomy.remember'; conversationId: string; scope: string; operation: string; mode: 'allow' | 'ask' | 'deny' }>
 
 export interface LingxiGraphRunRequest {
   version: 1
@@ -301,6 +306,8 @@ export interface CommunicationExecutionResult {
   results: CliResult[]
   failedActionIndex?: number
   error?: string
+  waitingForHuman?: boolean
+  approvalId?: string
 }
 
 export const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]> = {
@@ -321,6 +328,11 @@ export const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]>
   'document.update': ['type', 'documentId', 'find', 'replace'],
   'document.append': ['type', 'documentId', 'content'],
   'document.share': ['type', 'documentId', 'conversationId', 'comment'],
+  'handoff.create': ['type', 'conversationId', 'toAgentId', 'title', 'note', 'sharedPaths', 'browserTargets'],
+  'handoff.complete': ['type', 'handoffId', 'note'],
+  'approval.request': ['type', 'conversationId', 'kind', 'summary', 'payload'],
+  'memory.note': ['type', 'body', 'kind', 'about'],
+  'autonomy.remember': ['type', 'conversationId', 'scope', 'operation', 'mode'],
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -434,6 +446,36 @@ export function parseCommunicationAction(raw: unknown): CommunicationAction {
     case 'document.update': return { type, documentId: stringField(raw, 'documentId')!, find: stringField(raw, 'find')!, replace: stringField(raw, 'replace', false) ?? '' }
     case 'document.append': return { type, documentId: stringField(raw, 'documentId')!, content: stringField(raw, 'content')! }
     case 'document.share': return { type, documentId: stringField(raw, 'documentId')!, conversationId: stringField(raw, 'conversationId')!, ...(raw.comment === undefined ? {} : { comment: stringField(raw, 'comment', false)! }) }
+    case 'handoff.create': return {
+      type, conversationId: stringField(raw, 'conversationId')!, toAgentId: stringField(raw, 'toAgentId')!,
+      title: stringField(raw, 'title')!,
+      ...(raw.note === undefined ? {} : { note: stringField(raw, 'note', false)! }),
+      ...(raw.sharedPaths === undefined ? {} : { sharedPaths: stringArrayField(raw, 'sharedPaths', 0)! }),
+      ...(raw.browserTargets === undefined ? {} : { browserTargets: stringArrayField(raw, 'browserTargets', 0)! }),
+    }
+    case 'handoff.complete': return { type, handoffId: stringField(raw, 'handoffId')!, ...(raw.note === undefined ? {} : { note: stringField(raw, 'note', false)! }) }
+    case 'approval.request': {
+      const kind = String(raw.kind)
+      if (!['external_communication', 'sensitive_or_destructive_action', 'financial_or_irreversible_action'].includes(kind)) throw new Error('invalid approval kind')
+      if (!isRecord(raw.payload)) throw new Error('approval payload must be an object')
+      return { type, conversationId: stringField(raw, 'conversationId')!, kind: kind as 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action', summary: stringField(raw, 'summary')!, payload: raw.payload }
+    }
+    case 'memory.note': {
+      const kind = String(raw.kind)
+      if (!['fact', 'preference', 'instruction', 'relationship'].includes(kind)) throw new Error('invalid memory kind')
+      return { type, body: stringField(raw, 'body')!, kind: kind as 'fact' | 'preference' | 'instruction' | 'relationship', ...(raw.about === undefined ? {} : { about: stringField(raw, 'about', false)! }) }
+    }
+    case 'autonomy.remember': {
+      const mode = String(raw.mode)
+      if (!['allow', 'ask', 'deny'].includes(mode)) throw new Error('invalid autonomy mode')
+      return {
+        type,
+        conversationId: stringField(raw, 'conversationId')!,
+        scope: stringField(raw, 'scope')!,
+        operation: stringField(raw, 'operation')!,
+        mode: mode as 'allow' | 'ask' | 'deny',
+      }
+    }
   }
 }
 
@@ -496,6 +538,16 @@ export function communicationActionToArgv(action: CommunicationAction): string[]
       action.conversationId,
       ...(action.comment ? ['--comment', action.comment] : []),
     ]
+    case 'handoff.create': return [
+      'handoff', 'create', action.conversationId, action.toAgentId, action.title,
+      ...(action.note ? ['--note', action.note] : []),
+      ...(action.sharedPaths?.length ? ['--paths', action.sharedPaths.join(',')] : []),
+      ...(action.browserTargets?.length ? ['--browser-targets', action.browserTargets.join(',')] : []),
+    ]
+    case 'handoff.complete': return ['handoff', 'complete', action.handoffId, ...(action.note ? ['--note', action.note] : [])]
+    case 'approval.request': return ['approval', 'request', action.conversationId, action.kind, action.summary, '--payload-json', JSON.stringify(action.payload)]
+    case 'memory.note': return ['memory', 'note', action.body, '--kind', action.kind, ...(action.about ? ['--about', action.about] : [])]
+    case 'autonomy.remember': return ['autonomy', 'remember', action.conversationId, action.scope, action.operation, action.mode]
   }
 }
 
@@ -522,6 +574,14 @@ export interface CommunicationExecutionContext {
    *  below — only for other action types where no sink-level dedup
    *  exists yet. */
   ledger?: ActionLedgerPort
+  /** Product-level hard gate evaluated before the generic action ledger. A
+   * denied result is persisted as a visible Approval card and stops the batch
+   * without running the risky action. */
+  gateAction?: (
+    action: CommunicationAction,
+    actionIndex: number,
+    idempotencyKey: string,
+  ) => Promise<{ allow: boolean; result?: CliResult; waitingForHuman?: boolean; approvalId?: string; error?: string }>
 }
 
 export async function executeCommunicationActions(
@@ -544,6 +604,20 @@ export async function executeCommunicationActions(
     // ledger below is still the only protection, so it stays authoritative.
     const sinkOwned = SINK_IDEMPOTENT_ACTION_TYPES.has(action.type)
     try {
+      if (ctx.gateAction) {
+        const gate = await ctx.gateAction(action, index, key)
+        if (!gate.allow) {
+          if (gate.result) results.push(gate.result)
+          return {
+            completed: !gate.error,
+            results,
+            failedActionIndex: gate.error ? index : undefined,
+            error: gate.error,
+            waitingForHuman: gate.waitingForHuman,
+            approvalId: gate.approvalId,
+          }
+        }
+      }
       if (ctx.ledger && !sinkOwned) {
         const claim = await ctx.ledger.claim({
           key,

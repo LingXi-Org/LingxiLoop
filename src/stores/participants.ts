@@ -1,7 +1,7 @@
 import { create } from 'zustand'
-import { api, ws, type ApiParticipant } from '@/api/client'
+import { type ApiParticipant, api, ws } from '@/api/client'
+import { clearAvatarCache, invalidateAvatar } from '@/lib/avatarCache'
 import type { Participant, Status } from '@/types'
-import { invalidateAvatar, clearAvatarCache } from '@/lib/avatarCache'
 
 interface ParticipantsState {
   byId: Record<string, Participant>
@@ -62,6 +62,7 @@ function fromApi(p: ApiParticipant): Participant {
     statusUpdatedAt: coerceStatusUpdatedAt(p.statusUpdatedAt),
     bio: p.bio ?? undefined,
     tools: p.tools ?? undefined,
+    capabilities: p.capabilities ?? undefined,
     systemPrompt: p.systemPrompt ?? undefined,
     model: p.model ?? null,
     fastModel: p.fastModel ?? null,

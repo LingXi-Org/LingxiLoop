@@ -1,5 +1,6 @@
 import { getActiveCompanyId, getAuthToken, useAuth } from '@/stores/auth'
 import type {
+  AgentCapability,
   BoardCardComment,
   BoardCardLookup,
   BoardSnapshot,
@@ -223,6 +224,7 @@ export interface ApiParticipant {
   statusUpdatedAt?: string
   bio: string | null
   tools: string[] | null
+  capabilities: AgentCapability[] | null
   systemPrompt?: string | null
   model?: string | null
   email?: string | null
@@ -253,6 +255,81 @@ export interface ApiComputer {
   latest_daemon_version?: string | null
   /** True when this BYOA daemon is behind the latest version → show upgrade banner. */
   daemon_outdated?: boolean
+}
+
+async function httpBlob(path: string): Promise<Blob> {
+  const headers: Record<string, string> = {}
+  const token = getAuthToken()
+  if (token) headers.authorization = `Bearer ${token}`
+  const company = getActiveCompanyId()
+  if (company) headers['x-company-id'] = company
+  const res = await fetch(`${API}${path}`, { headers })
+  if (res.status === 401) useAuth.getState().clear()
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  return res.blob()
+}
+
+export interface ApiAgentScreen {
+  id: string
+  computerId: string
+  agentId: string
+  agentName: string
+  status: 'idle' | 'working' | 'waiting' | 'human_control'
+  controller: { type: 'agent' | 'human'; id: string } | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ApiUserComputer {
+  id: string
+  userId: string
+  companyId: string
+  runtimeType: string
+  status: 'stopped' | 'starting' | 'running' | 'stopping' | 'error'
+  imageVersion: string
+  createdAt: string
+  lastActiveAt: string
+  screens: ApiAgentScreen[]
+  capabilities: {
+    persistentVolumes: boolean
+    pauseResume: boolean
+    snapshots: boolean
+    networkPolicy: boolean
+    credentialBroker: boolean
+    secureRuntime: boolean
+  }
+}
+
+export interface ApiCoworkerActivity {
+  id: string
+  runId: string
+  agentId: string
+  agentName: string
+  runStatus: ApiAgentRunStatus
+  kind: string
+  level: ApiAgentEventLevel
+  title: string
+  createdAt: string
+}
+
+export interface ApiLearnedMemory {
+  agentId: string
+  agentName: string
+  path: string
+  body: string
+  meta: { kind?: 'fact' | 'preference' | 'instruction' | 'relationship'; about?: string; [key: string]: unknown }
+  updatedAt: string
+}
+
+export interface ApiAutonomyRule {
+  id: string
+  agentId: string
+  scope: string
+  operation: string
+  mode: 'allow' | 'ask' | 'deny'
+  source: 'explicit_user' | 'learned'
+  createdAt: string
+  updatedAt: string
 }
 
 /** Universal-search response. The backend ranks results inside each bucket;
@@ -311,6 +388,7 @@ export interface AgentInput {
   /** per-agent small-brain (fast) model override; null clears it */
   fastModel?: string | null
   tools?: string[]
+  capabilities?: AgentCapability[]
 }
 
 export interface ApiAttachment {
@@ -379,7 +457,7 @@ export interface ApiAutonomy {
   dissolved: number
 }
 
-export type ApiAgentRunStatus = 'running' | 'completed' | 'failed' | 'skipped' | 'stalled'
+export type ApiAgentRunStatus = 'running' | 'waiting_for_human' | 'completed' | 'failed' | 'skipped' | 'stalled'
 export type ApiAgentEventLevel = 'debug' | 'info' | 'warn' | 'error'
 
 export interface ApiAgentRun {
@@ -897,6 +975,23 @@ export const api = {
 
   // ─── Computers (agent hosts: LingxiLoop Cloud + BYOA) ───
   getComputers: () => http<ApiComputer[]>('/computers'),
+  getUserComputer: () => http<ApiUserComputer>('/computer'),
+  startUserComputer: () => http<ApiUserComputer>('/computer/start', { method: 'POST', body: '{}' }),
+  stopUserComputer: () => http<ApiUserComputer>('/computer/stop', { method: 'POST', body: '{}' }),
+  createComputerScreen: (agentId: string) =>
+    http<ApiAgentScreen>('/computer/screens', { method: 'POST', body: JSON.stringify({ agentId }) }),
+  takeOverScreen: (screenId: string) =>
+    http<ApiAgentScreen>(`/computer/screens/${encodeURIComponent(screenId)}/takeover`, { method: 'POST', body: '{}' }),
+  returnScreenToAgent: (screenId: string) =>
+    http<ApiAgentScreen>(`/computer/screens/${encodeURIComponent(screenId)}/return`, { method: 'POST', body: '{}' }),
+  getComputerScreenScreenshot: (screenId: string) =>
+    httpBlob(`/computer/screens/${encodeURIComponent(screenId)}/screenshot`),
+  sendComputerScreenInput: (
+    screenId: string,
+    input: { type: 'click'; x: number; y: number; button?: number } | { type: 'text'; text: string } | { type: 'key'; key: string },
+  ) => http<{ ok: boolean }>(`/computer/screens/${encodeURIComponent(screenId)}/input`, {
+    method: 'POST', body: JSON.stringify(input),
+  }),
   /** Start pairing a BYOA computer: returns a persistent token for the daemon.
    *  No computer is created until the daemon pairs and reports the machine's
    *  real hostname, so the UI just shows the command. */
@@ -1240,6 +1335,22 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ threshold }),
     }),
+  getCoworkerActivity: (conversationId: string) =>
+    http<ApiCoworkerActivity[]>(`/coworker/activity?conversationId=${encodeURIComponent(conversationId)}`),
+  resolveApproval: (approvalId: string, decision: 'approved' | 'rejected') =>
+    http<{ status: 'approved' | 'rejected' }>(`/coworker/approvals/${encodeURIComponent(approvalId)}/resolve`, {
+      method: 'POST', body: JSON.stringify({ decision }),
+    }),
+  getLearnedMemories: () => http<ApiLearnedMemory[]>('/coworker/memories'),
+  updateLearnedMemory: (input: { agentId: string; path: string; body: string }) =>
+    http<ApiLearnedMemory>('/coworker/memories', { method: 'PATCH', body: JSON.stringify(input) }),
+  forgetLearnedMemory: (agentId: string, path: string) =>
+    http<{ ok: boolean }>(`/coworker/memories?agentId=${encodeURIComponent(agentId)}&path=${encodeURIComponent(path)}`, { method: 'DELETE' }),
+  getAutonomyRules: () => http<ApiAutonomyRule[]>('/coworker/autonomy-rules'),
+  putAutonomyRule: (input: { agentId: string; scope: string; operation: string; mode: 'allow' | 'ask' | 'deny' }) =>
+    http<ApiAutonomyRule>('/coworker/autonomy-rules', { method: 'PUT', body: JSON.stringify(input) }),
+  deleteAutonomyRule: (id: string) =>
+    http<{ ok: boolean }>(`/coworker/autonomy-rules/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   getAgentRuns: (filters?: { agentId?: string | null; status?: ApiAgentRunStatus | 'all'; limit?: number }) => {
     const q = new URLSearchParams()
     if (filters?.agentId) q.set('agentId', filters.agentId)

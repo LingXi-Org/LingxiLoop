@@ -1,6 +1,7 @@
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
+export type AgentCapability = 'computer' | 'web' | 'files' | 'email' | 'documents' | 'calendar'
 
 /** Where an agent runs. 'cloud' = the built-in LingxiLoop Cloud (managed engine);
  *  'local'/'vps' = a computer the user paired, running the BYOA daemon. */
@@ -42,6 +43,8 @@ export interface Participant {
   statusUpdatedAt?: string
   bio?: string
   tools?: string[]
+  /** Product-level permissions selected by the workspace owner. */
+  capabilities?: AgentCapability[]
   /** the agent's distinctive style — only set for agents */
   systemPrompt?: string
   /** big-brain (main) model override; null/undefined = use system default */
@@ -105,7 +108,30 @@ export interface Conversation {
   projectColor?: string | null
 }
 
-export type MessageKind = 'text' | 'tool' | 'attachment' | 'whisper-link' | 'thought' | 'system' | 'email' | 'poll'
+export type MessageKind = 'text' | 'tool' | 'attachment' | 'whisper-link' | 'thought' | 'system' | 'email' | 'poll' | 'handoff' | 'approval'
+
+export interface HandoffPayload {
+  id: string
+  fromAgentId: string
+  toAgentId: string
+  title: string
+  status: 'pending' | 'accepted' | 'working' | 'completed' | 'blocked'
+  note?: string | null
+  sharedPaths: string[]
+  browserTargets: string[]
+}
+
+export interface ApprovalPayload {
+  id: string
+  agentId: string
+  kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action'
+  summary: string
+  status: 'pending' | 'approved' | 'rejected' | 'expired'
+  payload: Record<string, unknown>
+  requestedAt: string
+  resolvedAt?: string | null
+  resolvedBy?: string | null
+}
 
 /* ============== Polls (lightweight votes inline in any conversation) ====== */
 
@@ -238,6 +264,8 @@ export interface Message {
   /** Per-option aggregated tallies for kind === 'poll'. Empty array for
    *  any other message kind. Updated in place by `poll.updated` WS events. */
   pollTallies?: PollTally[]
+  handoff?: HandoffPayload
+  approval?: ApprovalPayload
   /** Reply-to / quote pointer: the id of another message in this same
    *  conversation that this one is quoting. Null for non-reply messages. */
   quotedMessageId?: string
@@ -262,7 +290,7 @@ export interface Message {
 }
 
 export interface ViewKey {
-  view: 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
+  view: 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'computer' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
 }
 
 /* ============== Calendar (AI-native shared schedule) ============== */

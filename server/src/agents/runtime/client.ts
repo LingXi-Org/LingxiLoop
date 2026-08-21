@@ -140,6 +140,8 @@ export interface PersonaRow {
   style: string
   /** Per-agent model override; null = use system default. */
   model: string | null
+  /** Product-level permissions selected by a workspace owner. */
+  capabilities?: string[]
   companyId: string
 }
 
@@ -346,7 +348,7 @@ export interface AgentRuntimeClient {
    *  let the server store a cache-aware effective cost for the turn. */
   finishRun(args: {
     runId: string
-    status: 'running' | 'completed' | 'failed' | 'skipped'
+    status: 'running' | 'waiting_for_human' | 'completed' | 'failed' | 'skipped'
     summary?: string
     error?: string | null
     toolCallCount?: number

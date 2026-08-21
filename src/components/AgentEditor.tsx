@@ -1,16 +1,26 @@
 import { useEffect, useState } from 'react'
-import { api, type AgentInput } from '@/api/client'
-import { useParticipants } from '@/stores/participants'
-import { useConversations } from '@/stores/conversations'
+import { type AgentInput, api } from '@/api/client'
 import { Input } from '@/components/Input'
 import { TextArea } from '@/components/TextArea'
-import type { Participant } from '@/types'
+import { useConversations } from '@/stores/conversations'
+import { useParticipants } from '@/stores/participants'
+import type { AgentCapability, Participant } from '@/types'
 
 const PALETTE = [
   '#FFB088', '#FFD9D2', '#FFB7AF', '#F4B740',
   '#7C5CFF', '#A593FF', '#4FC2F4', '#41B5DC',
   '#4FC2A1', '#6EC56A', '#E9A0E9', '#FF7AB6',
 ]
+
+const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; description: string }> = [
+  { id: 'computer', label: 'Computer', description: '查看并操作用户的共享电脑屏幕' },
+  { id: 'web', label: 'Web Research', description: '搜索和读取公开网页' },
+  { id: 'files', label: 'Files', description: '读写工作区与交付文件' },
+  { id: 'email', label: 'Email', description: '起草邮件；发送仍需审批策略' },
+  { id: 'documents', label: 'Documents', description: '创建、读取和编辑协作文档' },
+  { id: 'calendar', label: 'Calendar', description: '访问日历和日程相关能力' },
+]
+const DEFAULT_CAPABILITIES: AgentCapability[] = ['computer', 'web', 'files', 'email', 'documents']
 
 interface Props {
   /** if provided, edit mode; otherwise create mode */
@@ -27,6 +37,7 @@ export function AgentEditor({ agent, onClose }: Props) {
   const [avatarBg, setAvatarBg] = useState(agent?.avatarBg ?? PALETTE[0])
   const [model, setModel] = useState(agent?.model ?? '')
   const [fastModel] = useState(agent?.fastModel ?? '')
+  const [capabilities, setCapabilities] = useState<AgentCapability[]>(agent?.capabilities ?? DEFAULT_CAPABILITIES)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(agent?.avatarUrl ?? null)
@@ -43,7 +54,10 @@ export function AgentEditor({ agent, onClose }: Props) {
     setErr(null)
     setBusy(true)
     try {
-      const payload: AgentInput = { name, role, systemPrompt, bio, avatarBg, model: model.trim() || null, fastModel: fastModel.trim() || null }
+      const payload: AgentInput = {
+        name, role, systemPrompt, bio, avatarBg, capabilities,
+        model: model.trim() || null, fastModel: fastModel.trim() || null,
+      }
       if (editing) {
         // Only send avatarUrl on change so we don't clobber it on no-op edits.
         if ((agent!.avatarUrl ?? null) !== avatarUrl) payload.avatarUrl = avatarUrl
@@ -170,6 +184,40 @@ export function AgentEditor({ agent, onClose }: Props) {
           <Field label="运行时" hint="智能体在 LingxiLoop 服务器上作为托管 LingxiGraph 智能体运行。">
             <div className="rounded-[10px] bg-sky2-50 px-3 py-2 text-[12.5px] text-ink-700">
               托管·LingxiGraph
+            </div>
+          </Field>
+
+          <Field label="能力与权限" hint="只允许该智能体使用已勾选的能力；可随时撤销。高风险动作仍会单独请求批准。">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {CAPABILITY_OPTIONS.map((option) => {
+                const checked = capabilities.includes(option.id)
+                return (
+                  <label
+                    key={option.id}
+                    className="flex items-start gap-2.5 rounded-[10px] px-3 py-2.5 cursor-pointer transition"
+                    style={{
+                      border: checked ? '1px solid var(--skype)' : '1px solid var(--ink-100)',
+                      background: checked ? 'var(--sky2-50)' : 'var(--cloud)',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => setCapabilities((current) => checked
+                        ? current.filter((capability) => capability !== option.id)
+                        : [...current, option.id])}
+                      className="mt-0.5 accent-[var(--skype)]"
+                    />
+                    <span>
+                      <span className="block text-[12.5px] font-semibold text-ink-900">{option.label}</span>
+                      <span className="block text-[11px] leading-[1.4] text-ink-500">{option.description}</span>
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+            <div className="mt-2 rounded-[9px] border border-dashed border-ink-100 px-3 py-2 text-[11.5px] text-ink-500">
+              + 更多能力可通过后续集成扩展
             </div>
           </Field>
 

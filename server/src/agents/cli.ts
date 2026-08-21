@@ -14,6 +14,7 @@ import { env } from '../env.js'
 import { parseMentions } from '../mentions.js'
 import { freshenAttachmentUrl, type StoredAttachment, storage } from '../storage.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
+import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
 import { stripLoneSurrogates } from './text-safety.js'
 
 // Every CLI result flows through ok()/err(), so scrubbing lone UTF-16 surrogates
@@ -184,6 +185,7 @@ PRIVATE TO EACH AGENT  (these write/read state owned by --as):
   memory note <body> [--as <id>] [--about <subject>] [--kind <kind>]
   memory pin <id>
   memory delete <id>
+  autonomy remember <convo_id> <scope> <operation> <allow|ask|deny>
 
   log [--as <id>] [--limit N]
   log note <body> [--as <id>]
@@ -3667,11 +3669,134 @@ async function cmdRename(parsed: ParsedArgs): Promise<CliResult> {
   }])
 }
 
+/* ============== explicit coworker ownership / approval ================== */
+
+async function cmdHandoff(parsed: ParsedArgs): Promise<CliResult> {
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
+  const sub = parsed.positional[0]
+  if (sub === 'create') {
+    const conversationId = parsed.positional[1]
+    const toAgentId = parsed.positional[2]
+    const title = parsed.positional.slice(3).join(' ').trim()
+    if (!conversationId || !toAgentId || !title) return err('usage: handoff create <conversation_id> <to_agent_id> <title> [--note text] [--paths a,b] [--browser-targets a,b]')
+    const split = (value: unknown): string[] => typeof value === 'string'
+      ? value.split(',').map((item) => item.trim()).filter(Boolean)
+      : []
+    const handoff = await createHandoff({
+      companyId, conversationId, fromAgentId: me, toAgentId, title,
+      note: typeof parsed.flags.note === 'string' ? parsed.flags.note : null,
+      sharedPaths: split(parsed.flags.paths),
+      browserTargets: split(parsed.flags['browser-targets']),
+    })
+    return ok(`handoff ${handoff.id} → ${toAgentId}: ${title}`, [{
+      event: 'handoff.created', command: 'handoff', handoffId: handoff.id,
+      conversationId, authorId: me, toAgentId, messageId: handoff.sourceMessageId,
+      companyId, visibleToUser: true,
+    }])
+  }
+  if (sub === 'complete' || sub === 'block' || sub === 'accept') {
+    const handoffId = parsed.positional[1]
+    if (!handoffId) return err(`usage: handoff ${sub} <handoff_id> [--note text]`)
+    const status = sub === 'complete' ? 'completed' : sub === 'block' ? 'blocked' : 'accepted'
+    const handoff = await updateHandoff({
+      companyId, handoffId, actorAgentId: me, status,
+      note: typeof parsed.flags.note === 'string' ? parsed.flags.note : null,
+    })
+    return ok(`handoff ${handoffId} ${status}`, [{
+      event: `handoff.${status}`, command: 'handoff', handoffId,
+      conversationId: handoff.conversationId, authorId: me,
+      messageId: handoff.resultMessageId ?? undefined, companyId, visibleToUser: true,
+    }])
+  }
+  return err('usage: handoff <create|accept|complete|block> ...')
+}
+
+async function cmdApproval(parsed: ParsedArgs): Promise<CliResult> {
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
+  if (parsed.positional[0] !== 'request') return err('usage: approval request <conversation_id> <kind> <summary> --payload-json <json>')
+  const conversationId = parsed.positional[1]
+  const kind = parsed.positional[2]
+  const summary = parsed.positional.slice(3).join(' ').trim()
+  if (!conversationId || !summary || !['external_communication', 'sensitive_or_destructive_action', 'financial_or_irreversible_action'].includes(kind)) {
+    return err('usage: approval request <conversation_id> <external_communication|sensitive_or_destructive_action|financial_or_irreversible_action> <summary> --payload-json <json>')
+  }
+  let payload: Record<string, unknown> = {}
+  if (typeof parsed.flags['payload-json'] === 'string') {
+    try {
+      const value = JSON.parse(parsed.flags['payload-json']) as unknown
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return err('--payload-json must be an object')
+      payload = value as Record<string, unknown>
+    } catch { return err('--payload-json must be valid JSON') }
+  }
+  const approval = await requestApproval({
+    companyId, agentId: me, conversationId,
+    kind: kind as 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action',
+    summary, payload,
+  })
+  return ok(`waiting for human approval ${approval.id}`, [{
+    event: 'approval.requested', command: 'approval', approvalId: approval.id,
+    conversationId, messageId: approval.messageId, authorId: me, companyId,
+    visibleToUser: true, waitingForHuman: true,
+  }])
+}
+
+async function cmdAutonomy(parsed: ParsedArgs): Promise<CliResult> {
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
+  if (parsed.positional[0] !== 'remember') {
+    return err('usage: autonomy remember <conversation_id> <scope> <operation> <allow|ask|deny>')
+  }
+  const conversationId = parsed.positional[1]
+  const scope = parsed.positional[2]?.trim()
+  const operation = parsed.positional[3]?.trim()
+  const mode = parsed.positional[4]
+  if (!conversationId || !scope || !operation || !['allow', 'ask', 'deny'].includes(mode)) {
+    return err('usage: autonomy remember <conversation_id> <scope> <operation> <allow|ask|deny>')
+  }
+  const human = await pool.query<{ user_id: string }>(
+    `SELECT m.author_id AS user_id
+       FROM messages m
+       JOIN conversations c ON c.id = m.conversation_id AND c.company_id = $2
+       JOIN participants p ON p.id = m.author_id AND p.company_id = $2 AND p.kind = 'human'
+      WHERE m.conversation_id = $1
+      ORDER BY m.sequence DESC LIMIT 1`,
+    [conversationId, companyId],
+  )
+  const userId = human.rows[0]?.user_id
+  if (!userId) return err('autonomy rules require an explicit human instruction in this conversation')
+  const rule = await upsertAutonomyRule({
+    companyId,
+    userId,
+    agentId: me,
+    scope,
+    operation,
+    mode: mode as 'allow' | 'ask' | 'deny',
+    source: 'explicit_user',
+  })
+  return ok(`remembered autonomy rule ${scope}.${operation}=${mode}`, [{
+    event: 'autonomy.learned',
+    command: 'autonomy remember',
+    ruleId: rule.id,
+    agentId: me,
+    conversationId,
+    scope,
+    operation,
+    mode,
+    companyId,
+    visibleToUser: true,
+  }])
+}
+
 /* ============== private agent state: memory / log / workspace / tasks ============== */
 
 /** Whitelisted memory kinds. Becomes a path segment, so we keep it
  *  small + slug-safe — agents can't write `memory/Whatever-They-Want/`. */
-const MEMORY_KINDS = ['observation', 'preference', 'fact', 'decision', 'note'] as const
+const MEMORY_KINDS = ['observation', 'preference', 'fact', 'instruction', 'relationship', 'decision', 'note'] as const
 type MemoryKind = typeof MEMORY_KINDS[number]
 function normalizeMemoryKind(raw: unknown): MemoryKind {
   const s = String(raw ?? '').trim().toLowerCase()
@@ -6102,6 +6227,9 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'tools-log':           return await cmdToolsLog(parsed)
       case 'participants-status': return await cmdStatus(parsed)
       case 'memory':              return await cmdMemory(parsed)
+      case 'handoff':             return await cmdHandoff(parsed)
+      case 'approval':            return await cmdApproval(parsed)
+      case 'autonomy':            return await cmdAutonomy(parsed)
       case 'climate':             return await cmdClimate(parsed)
       case 'log':                 return await cmdLog(parsed)
       case 'workspace':

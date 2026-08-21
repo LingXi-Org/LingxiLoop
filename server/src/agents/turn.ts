@@ -25,6 +25,7 @@ import { BUSY_STATUS_HEARTBEAT_MS } from '../status.js'
 import { pgActionLedger } from './action-ledger.js'
 import { resolveDeclaredAutoRelayTarget } from './auto-relay.js'
 import { addUsage, EMPTY_USAGE, type TokenUsage, usageFromOpenAI } from './cost.js'
+import { consumeApprovedAction, listAutonomyRules, requestApproval } from './coworker.js'
 import { GLANCE_YIELD_RULES } from './glance-protocol.js'
 import { materializeImage } from './image-fetcher.js'
 import { classifyInboxTriage, gateSyntheticWake } from './inbox-triage.js'
@@ -2167,6 +2168,14 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
         : isPollUpdateWake && options.pollBrief
           ? `Poll update: ${options.pollBrief.question} (${options.pollBrief.phase}, ${options.pollBrief.totalVotes} votes)`
           : 'New conversation activity'
+    const autonomyUserId = [...inbox].reverse().find((message) => message.author_kind === 'human')?.author_id
+    const autonomyRules = runCompanyId && autonomyUserId
+      ? await listAutonomyRules(runCompanyId, autonomyUserId).catch(() => [])
+      : []
+    const autonomyBlock = autonomyRules
+      .filter((rule) => rule.agentId === agentId)
+      .map((rule) => `- ${rule.scope}.${rule.operation}: ${rule.mode} (${rule.source})`)
+      .join('\n') || '(none)'
     const contextPrompt = `Now: ${nowStr}
 
 Trigger:
@@ -2183,6 +2192,10 @@ ${renderMemory(memory)}
 
 Relationship climate:
 ${renderClimate(climate)}
+
+Explicit autonomy rules for the human who triggered this turn:
+${autonomyBlock}
+These rules guide low-risk ask/act choices only. They never bypass hard approval gates for external communication, destructive/sensitive actions, or financial/irreversible actions.
 
 ${peerWorkBlock}`.trim()
 
@@ -2290,10 +2303,88 @@ ${peerWorkBlock}`.trim()
       executeCli: (argv, internal) => runtime.executeCli(agentId, argv, internal),
       timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
       ledger: pgActionLedger,
+      gateAction: async (action) => {
+        const requiredCapability = action.type.startsWith('email.')
+          ? 'email'
+          : action.type.startsWith('document.')
+            ? 'documents'
+            : null
+        const enabledCapabilities = persona.capabilities
+          ?? ['computer', 'web', 'files', 'email', 'documents']
+        if (requiredCapability && !enabledCapabilities.includes(requiredCapability)) {
+          return {
+            allow: false,
+            error: `agent capability '${requiredCapability}' is disabled by the workspace owner`,
+          }
+        }
+        if (action.type !== 'email.send' && action.type !== 'email.reply') return { allow: true }
+        const payload = action as unknown as Record<string, unknown>
+        const consumed = await consumeApprovedAction({ companyId: runCompanyId ?? '', agentId, payload })
+        if (consumed.approved) {
+          await runtime.recordEvent({
+            runId, agentId, companyId: runCompanyId,
+            kind: 'approval.consumed', title: 'Human approval consumed; executing external communication',
+            data: { approvalId: consumed.approvalId, actionType: action.type }, stage: 'working',
+          }).catch(() => undefined)
+          return { allow: true }
+        }
+        const conversationId = action.type === 'email.reply'
+          ? inbox.find((message) => message.id === action.messageId)?.conversation_id
+            ?? [...inbox].reverse().find((message) => message.author_kind === 'human')?.conversation_id
+          : [...inbox].reverse().find((message) => message.author_kind === 'human')?.conversation_id
+        if (!conversationId || !runCompanyId) {
+          return { allow: false, error: 'external communication requires a conversation-scoped human approval' }
+        }
+        const summary = action.type === 'email.send'
+          ? `Send external email to ${action.to.join(', ')} — ${action.subject}`
+          : `Reply to external email ${action.messageId}`
+        const approval = await requestApproval({
+          companyId: runCompanyId, agentId, conversationId, runId,
+          kind: 'external_communication', summary, payload,
+        })
+        const rejected = approval.status === 'rejected'
+        return {
+          allow: false,
+          waitingForHuman: !rejected,
+          approvalId: approval.id,
+          result: {
+            ok: true,
+            exitCode: 0,
+            text: rejected ? `external communication was rejected (${approval.id})` : `waiting for human approval ${approval.id}`,
+            sideEffects: [{
+              event: rejected ? 'approval.rejected' : 'approval.requested',
+              command: 'approval', approvalId: approval.id, conversationId,
+              messageId: approval.messageId, authorId: agentId, companyId: runCompanyId,
+              visibleToUser: true, waitingForHuman: !rejected,
+            }],
+          },
+        }
+      },
     })
     toolCallCount += execution.results.length
     for (const cliResult of execution.results) {
       cliSideEffectsThisTurn.push(...(cliResult.sideEffects ?? []))
+    }
+    for (const effect of cliSideEffectsThisTurn) {
+      const visibleKinds: Record<string, string> = {
+        'handoff.created': 'Created a handoff',
+        'handoff.completed': 'Completed a handoff',
+        'handoff.blocked': 'Blocked on a handoff',
+        'approval.requested': 'Requested human approval',
+        'approval.rejected': 'Human rejected an approval',
+        'memory.written': 'Learned a durable memory',
+        'autonomy.learned': 'Learned an explicit autonomy rule',
+        'message.posted': 'Sent a message',
+      }
+      const title = visibleKinds[effect.event]
+      if (!title) continue
+      await runtime.recordEvent({
+        runId, agentId, companyId: runCompanyId,
+        kind: effect.event === 'memory.written' ? 'memory.learned' : effect.event,
+        title,
+        data: Object.fromEntries(Object.entries(effect).filter(([key]) => !['body', 'payload', 'reasoning'].includes(key))),
+        stage: effect.event === 'approval.requested' ? 'waiting_for_human' : 'working',
+      }).catch(() => undefined)
     }
     // Same guarantee as the classic (non-LingxiGraph) path: reacting is
     // prompt-suggested here (COMMUNICATION_RULES), not enforced by the
@@ -2323,6 +2414,17 @@ ${peerWorkBlock}`.trim()
         data: { failedActionIndex: execution.failedActionIndex, executedActions: execution.results.length },
         stage: 'failed',
       }).catch(() => { /* observability best-effort */ })
+      return
+    }
+    if (execution.waitingForHuman) {
+      finalStatus = 'waiting_for_human'
+      finalSummary = `Waiting for human approval ${execution.approvalId ?? ''}`.trim()
+      await setAgentStatus('waiting')
+      await runtime.recordEvent({
+        runId, agentId, companyId: runCompanyId,
+        kind: 'approval.requested', title: finalSummary,
+        data: { approvalId: execution.approvalId }, stage: 'waiting_for_human',
+      }).catch(() => undefined)
       return
     }
 
@@ -3858,12 +3960,12 @@ Mechanics:
     // the loop exited but before this finally ran). They're still in
     // the messages table so the next wake picks them up.
     resetSteerForAgent(agentId)
-    await setAgentStatus('avail')
+    await setAgentStatus(finalStatus === 'waiting_for_human' ? 'waiting' : 'avail')
       .then(() => runtime.recordEvent({
         runId, agentId, companyId: runCompanyId,
         kind: 'status.changed',
-        title: 'Agent status reset to available',
-        data: { status: 'avail' },
+        title: finalStatus === 'waiting_for_human' ? 'Agent is waiting for human approval' : 'Agent status reset to available',
+        data: { status: finalStatus === 'waiting_for_human' ? 'waiting' : 'avail' },
       }))
       .catch((err) => console.error(`[turn] ${agentId} failed to reset status`, err))
     await runtime.finishRun({

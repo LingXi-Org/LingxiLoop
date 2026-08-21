@@ -80,6 +80,8 @@ export interface MessageNewEvent extends TenantTagged {
     reactions?: unknown
     tool?: unknown
     attachment?: unknown
+    handoff?: unknown
+    approval?: unknown
     /** Echoed verbatim from the POST body when the sender provided one.
      *  The renderer uses it to dedup the WS echo against its still-temp
      *  optimistic bubble when the WS event races the POST response — id

@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  api,
   type ApiAgentEvent,
   type ApiAgentRun,
   type ApiAgentRunStatus,
   type ApiAgentWorkspaceFile,
   type ApiAgentWorkspaceFileContent,
   type ApiTriageEconomics,
+  api,
 } from '@/api/client'
 import { Checkbox } from '@/components/Checkbox'
-import { Select } from '@/components/Select'
+import { CodeBlock, RichBody } from '@/components/Message'
 import { ResizeHandle } from '@/components/ResizeHandle'
-import { RichBody, CodeBlock } from '@/components/Message'
-import { useParticipants } from '@/stores/participants'
+import { Select } from '@/components/Select'
 import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
+import { useParticipants } from '@/stores/participants'
 
 type StatusFilter = ApiAgentRunStatus | 'all'
 type DevPanel = 'traces' | 'workspace' | 'triage'
@@ -24,13 +24,18 @@ const TRIAGE_WINDOWS: { hours: number; label: string }[] = [
   { hours: 6, label: '6h' }, { hours: 24, label: '24h' }, { hours: 72, label: '3d' }, { hours: 168, label: '7d' },
 ]
 
-const STATUS_OPTIONS: StatusFilter[] = ['all', 'running', 'stalled', 'failed', 'completed', 'skipped']
+const STATUS_OPTIONS: StatusFilter[] = ['all', 'running', 'waiting_for_human', 'stalled', 'failed', 'completed', 'skipped']
 
 const STATUS_STYLE: Record<ApiAgentRunStatus, { label: string; cls: string; dot: string }> = {
   running: {
     label: "运行",
     cls: 'bg-sky2-50 text-skype-deep border-sky2-100',
     dot: 'var(--skype)',
+  },
+  waiting_for_human: {
+    label: '等待用户',
+    cls: 'bg-cloud text-gold-deep border-gold',
+    dot: 'var(--gold-deep)',
   },
   stalled: {
     label: "停滞",

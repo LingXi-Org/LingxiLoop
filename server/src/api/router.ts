@@ -14,6 +14,14 @@ import {
   resolveDevice,
   revokeComputer,
 } from '../agents/computer/registry.js'
+import { userComputerService } from '../agents/computer/user-computer.js'
+import {
+  deleteAutonomyRule,
+  listAutonomyRules,
+  listHandoffs,
+  resolveApproval,
+  upsertAutonomyRule,
+} from '../agents/coworker.js'
 import { getTriageEconomics } from '../agents/observability.js'
 import {
   type AuthedRequest,
@@ -1042,6 +1050,81 @@ api.get('/computers', safe(async (req, res) => {
   res.json(await listComputers(companyId))
 }))
 
+/* ============== My Computer (one persistent environment per user) ====== */
+
+api.get('/computer', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await userComputerService.get(userId, companyId))
+}))
+
+api.post('/computer/start', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await userComputerService.start(userId, companyId))
+}))
+
+api.post('/computer/stop', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await userComputerService.stop(userId, companyId))
+}))
+
+api.post('/computer/screens', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  const agentId = String(req.body?.agentId ?? '').trim()
+  if (!agentId) throw new HttpError(400, 'agentId required')
+  res.status(201).json(await userComputerService.ensureScreen(userId, companyId, agentId))
+}))
+
+api.post('/computer/screens/:id/takeover', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await userComputerService.takeover(userId, companyId, String(req.params.id)))
+}))
+
+api.post('/computer/screens/:id/return', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await userComputerService.returnToAgent(userId, companyId, String(req.params.id)))
+}))
+
+api.get('/computer/screens/:id/screenshot', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  const bytes = await userComputerService.screenshot(userId, companyId, String(req.params.id))
+  res.type('image/png').send(Buffer.from(bytes))
+}))
+
+api.post('/computer/screens/:id/input', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  const type = String(req.body?.type ?? '')
+  const screenId = String(req.params.id)
+  if (type === 'click') {
+    const x = Number(req.body?.x)
+    const y = Number(req.body?.y)
+    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new HttpError(400, 'finite x and y required')
+    await userComputerService.sendHumanInput(userId, companyId, screenId, { type, x, y, button: Number(req.body?.button ?? 1) })
+  } else if (type === 'text') {
+    await userComputerService.sendHumanInput(userId, companyId, screenId, { type, text: String(req.body?.text ?? '') })
+  } else if (type === 'key') {
+    await userComputerService.sendHumanInput(userId, companyId, screenId, { type, key: String(req.body?.key ?? '') })
+  } else {
+    throw new HttpError(400, 'input type must be click, text or key')
+  }
+  res.json({ ok: true })
+}))
+
+api.get('/computer/browser-targets', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await userComputerService.listBrowserTargets(userId, companyId))
+}))
+
+api.post('/computer/browser-targets', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  const screenId = String(req.body?.screenId ?? '').trim()
+  const agentId = String(req.body?.agentId ?? '').trim()
+  const targetRef = String(req.body?.targetRef ?? '').trim()
+  if (!screenId || !agentId || !targetRef) throw new HttpError(400, 'screenId, agentId and targetRef required')
+  res.status(201).json(await userComputerService.registerBrowserTarget({
+    userId, companyId, screenId, agentId, targetRef, private: req.body?.private === true,
+  }))
+}))
+
 // Start pairing a new BYOA computer: returns a persistent token (owner/admin).
 // No computer row is created here — pairComputer creates it once the daemon
 // pairs and reports the machine's real hostname.
@@ -1762,7 +1845,7 @@ api.get('/participants', async (req, res) => {
     id: string; kind: 'agent' | 'human'; name: string; role: string | null
     initial: string; avatarBg: string; avatarUrl: string | null
     status: string; statusUpdatedAt: string | null
-    bio: string | null; tools: string[] | null
+    bio: string | null; tools: string[] | null; capabilities: string[] | null
     systemPrompt: string | null; model: string | null
     email: string | null; companySlug: string | null
     departedAt: string | null
@@ -1771,7 +1854,7 @@ api.get('/participants', async (req, res) => {
     `SELECT p.id, p.kind, p.name, p.role, p.initial,
             p.avatar_bg AS "avatarBg", p.avatar_url AS "avatarUrl",
             p.status, p.status_updated_at AS "statusUpdatedAt",
-            p.bio, p.tools, p.system_prompt AS "systemPrompt", p.model,
+            p.bio, p.tools, p.capabilities, p.system_prompt AS "systemPrompt", p.model,
             p.computer_id AS "computerId", p.engine, p.fast_model AS "fastModel",
             -- Email resolution differs by kind:
             --  - agents carry their own minted address on participants.email
@@ -2219,8 +2302,10 @@ interface AgentBody {
   systemPrompt?: unknown; bio?: unknown
   initial?: unknown; avatarBg?: unknown; avatarUrl?: unknown
   model?: unknown; fastModel?: unknown
-  tools?: unknown
+  tools?: unknown; capabilities?: unknown
 }
+const AGENT_CAPABILITIES = new Set(['computer', 'web', 'files', 'email', 'documents', 'calendar'])
+const DEFAULT_AGENT_CAPABILITIES = ['computer', 'web', 'files', 'email', 'documents']
 function readAgentBody(b: AgentBody): {
   id?: string; name?: string; role?: string
   systemPrompt?: string; bio?: string
@@ -2232,6 +2317,7 @@ function readAgentBody(b: AgentBody): {
   /** small-brain model override; same semantics as `model` */
   fastModel?: string | null
   tools?: string[] | null
+  capabilities?: string[]
 } {
   const out: Record<string, unknown> = {}
   if (typeof b.id === 'string')           out.id = b.id.trim()
@@ -2248,6 +2334,9 @@ function readAgentBody(b: AgentBody): {
   if (b.fastModel === null)               out.fastModel = null
   else if (typeof b.fastModel === 'string') out.fastModel = b.fastModel.trim() || null
   if (Array.isArray(b.tools))             out.tools = b.tools.map((x) => String(x))
+  if (Array.isArray(b.capabilities)) {
+    out.capabilities = [...new Set(b.capabilities.map(String).filter((x) => AGENT_CAPABILITIES.has(x)))]
+  }
   return out as ReturnType<typeof readAgentBody>
 }
 
@@ -2315,10 +2404,11 @@ api.post('/agents', async (req, res) => {
   const avatarBg = data.avatarBg || defaultAvatarBg(agentId)
   try {
     await pool.query(
-      `INSERT INTO participants (id, kind, name, role, initial, avatar_bg, status, bio, tools, system_prompt, model, fast_model, company_id)
-       VALUES ($1, 'agent', $2, $3, $4, $5, 'avail', $6, $7::jsonb, $8, $9, $10, $11)`,
+      `INSERT INTO participants (id, kind, name, role, initial, avatar_bg, status, bio, tools, capabilities, system_prompt, model, fast_model, company_id)
+       VALUES ($1, 'agent', $2, $3, $4, $5, 'avail', $6, $7::jsonb, $8::jsonb, $9, $10, $11, $12)`,
       [agentId, data.name, data.role ?? '', initial, avatarBg, data.bio ?? '',
-       JSON.stringify(data.tools ?? ['bash']), data.systemPrompt, data.model ?? null, data.fastModel ?? null, tenant],
+       JSON.stringify(data.tools ?? ['bash']), JSON.stringify(data.capabilities ?? DEFAULT_AGENT_CAPABILITIES),
+       data.systemPrompt, data.model ?? null, data.fastModel ?? null, tenant],
     )
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
@@ -2433,6 +2523,7 @@ api.put('/agents/:id', async (req, res) => {
   if (data.model !== undefined)        push('model', data.model)             // null clears it (use default)
   if (data.fastModel !== undefined)    push('fast_model', data.fastModel)    // small-brain model; null clears
   if (data.tools !== undefined)        push('tools', JSON.stringify(data.tools))
+  if (data.capabilities !== undefined) push('capabilities', JSON.stringify(data.capabilities))
   if (sets.length === 0) { res.status(400).json({ error: 'nothing to update' }); return }
   params.push(id, tenant)
   await pool.query(
@@ -3134,7 +3225,7 @@ api.get('/conversations/:id/messages', async (req, res) => {
           m.id, m.conversation_id AS "conversationId",
           m.author_id AS "authorId", m.kind, m.body, m.sequence,
           m.mentioned_ids AS "mentionedIds", m.mention_all AS "mentionAll",
-          m.tool, m.attachment, m.poll,
+          m.tool, m.attachment, m.poll, m.handoff, m.approval,
           -- Per-option vote tallies for polls. Empty array for non-poll
           -- rows. voterIds is sorted so the client can diff cheaply across
           -- successive WS poll.updated events.
@@ -3990,7 +4081,7 @@ api.get('/conversations/:id/messages/:rootId/replies', async (req, res) => {
       `SELECT
           m.id, m.conversation_id AS "conversationId",
           m.author_id AS "authorId", m.kind, m.body, m.sequence,
-          m.tool, m.attachment, m.poll,
+          m.tool, m.attachment, m.poll, m.handoff, m.approval,
           -- Per-option vote tallies for polls. Empty array for non-poll
           -- rows. voterIds is sorted so the client can diff cheaply across
           -- successive WS poll.updated events.
@@ -4489,7 +4580,111 @@ api.get('/devtools/agent-workspace/file', safe(async (req, res) => {
 
 /* ============== Agent observability ============== */
 
-const AGENT_RUN_STATUSES = new Set(['running', 'completed', 'failed', 'skipped', 'stalled'])
+/* ============== Coworker activity / handoff / approval / learning ====== */
+
+api.get('/coworker/activity', safe(async (req, res) => {
+  const conversationId = String(req.query.conversationId ?? '').trim()
+  if (!conversationId) throw new HttpError(400, 'conversationId required')
+  const { companyId } = await requireConversationMember(req, conversationId)
+  const { rows } = await pool.query(
+    `SELECT e.id, e.run_id AS "runId", e.agent_id AS "agentId",
+       COALESCE(p.name, e.agent_id) AS "agentName", r.status AS "runStatus", e.kind, e.level, e.title,
+       e.created_at AS "createdAt"
+     FROM agent_events e
+     JOIN agent_runs r ON r.id = e.run_id
+     LEFT JOIN participants p ON p.id = e.agent_id AND p.company_id = e.company_id
+     WHERE e.company_id = $1 AND e.level <> 'debug'
+       AND (
+         r.trigger->>'conversationId' = $2
+         OR EXISTS (
+           SELECT 1 FROM jsonb_array_elements_text(r.input_message_ids) input(message_id)
+           JOIN messages m ON m.id = input.message_id
+           WHERE m.conversation_id = $2
+         )
+       )
+       AND e.kind !~ '(prompt|reasoning|chain.of.thought)'
+     ORDER BY e.created_at DESC LIMIT 12`, [companyId, conversationId],
+  )
+  res.json(rows.reverse())
+}))
+
+api.get('/coworker/handoffs', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  const conversationId = typeof req.query.conversationId === 'string' ? req.query.conversationId.trim() : undefined
+  if (conversationId) await requireConversationMember(req, conversationId)
+  res.json(await listHandoffs(companyId, conversationId || undefined))
+}))
+
+api.post('/coworker/approvals/:id/resolve', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  const decision = String(req.body?.decision ?? '')
+  if (decision !== 'approved' && decision !== 'rejected') throw new HttpError(400, 'decision must be approved or rejected')
+  res.json(await resolveApproval({ companyId, userId, approvalId: String(req.params.id), decision }))
+}))
+
+api.get('/coworker/memories', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  const { rows } = await pool.query(
+    `SELECT w.agent_id AS "agentId", COALESCE(p.name, w.agent_id) AS "agentName",
+       w.path, w.body, w.meta, w.updated_at AS "updatedAt"
+     FROM agent_workspace w
+     LEFT JOIN participants p ON p.id = w.agent_id AND p.company_id = w.company_id
+     WHERE w.company_id = $1 AND w.path LIKE 'memory/%'
+     ORDER BY w.updated_at DESC LIMIT 200`, [companyId],
+  )
+  res.json(rows)
+}))
+
+api.patch('/coworker/memories', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  const agentId = String(req.body?.agentId ?? '').trim()
+  const path = String(req.body?.path ?? '').trim()
+  const body = String(req.body?.body ?? '').trim()
+  if (!agentId || !/^memory\/(fact|preference|instruction|relationship|observation|decision|note)\/[A-Za-z0-9._-]+\.md$/.test(path) || !body) {
+    throw new HttpError(400, 'valid agentId, memory path and body required')
+  }
+  const updated = await pool.query(
+    `UPDATE agent_workspace SET body = $4, updated_at = NOW(), embedding = NULL
+     WHERE agent_id = $1 AND path = $2 AND company_id = $3
+     RETURNING agent_id AS "agentId", path, body, meta, updated_at AS "updatedAt"`,
+    [agentId, path, companyId, body],
+  )
+  if (!updated.rows[0]) throw new HttpError(404, 'memory not found')
+  res.json(updated.rows[0])
+}))
+
+api.delete('/coworker/memories', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  const agentId = String(req.query.agentId ?? '').trim()
+  const path = String(req.query.path ?? '').trim()
+  if (!agentId || !path.startsWith('memory/')) throw new HttpError(400, 'agentId and memory path required')
+  const result = await pool.query(`DELETE FROM agent_workspace WHERE agent_id = $1 AND path = $2 AND company_id = $3`, [agentId, path, companyId])
+  if ((result.rowCount ?? 0) === 0) throw new HttpError(404, 'memory not found')
+  res.json({ ok: true })
+}))
+
+api.get('/coworker/autonomy-rules', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await listAutonomyRules(companyId, userId))
+}))
+
+api.put('/coworker/autonomy-rules', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  const agentId = String(req.body?.agentId ?? '').trim()
+  const scope = String(req.body?.scope ?? '').trim()
+  const operation = String(req.body?.operation ?? '').trim()
+  const mode = String(req.body?.mode ?? '')
+  if (!agentId || !scope || !operation || !['allow', 'ask', 'deny'].includes(mode)) throw new HttpError(400, 'agentId, scope, operation and valid mode required')
+  res.json(await upsertAutonomyRule({ companyId, userId, agentId, scope, operation, mode: mode as 'allow' | 'ask' | 'deny' }))
+}))
+
+api.delete('/coworker/autonomy-rules/:id', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  if (!await deleteAutonomyRule(companyId, userId, String(req.params.id))) throw new HttpError(404, 'rule not found')
+  res.json({ ok: true })
+}))
+
+const AGENT_RUN_STATUSES = new Set(['running', 'waiting_for_human', 'completed', 'failed', 'skipped', 'stalled'])
 
 /** Window after which a `running` row is rendered as `stalled` in the UI.
  *  Postgres INTERVAL literal so we can inject it straight into the SQL.
