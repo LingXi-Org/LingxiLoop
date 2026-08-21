@@ -4619,7 +4619,13 @@ api.post('/coworker/approvals/:id/resolve', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
   const decision = String(req.body?.decision ?? '')
   if (decision !== 'approved' && decision !== 'rejected') throw new HttpError(400, 'decision must be approved or rejected')
-  res.json(await resolveApproval({ companyId, userId, approvalId: String(req.params.id), decision }))
+  const approval = await resolveApproval({ companyId, userId, approvalId: String(req.params.id), decision })
+  // Resume the persisted action from the original run — never create a fresh
+  // mailbox wake-up that could replay earlier reasoning/actions.
+  const continuation = decision === 'approved'
+    ? await import('../agents/turn.js').then(({ resumeApprovedContinuation }) => resumeApprovedContinuation(approval.id))
+    : { resumed: false }
+  res.json({ ...approval, continuation })
 }))
 
 api.get('/coworker/memories', safe(async (req, res) => {

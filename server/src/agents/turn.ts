@@ -19,17 +19,18 @@
  */
 import type { ResponseInputItem, ResponseStreamEvent } from 'openai/resources/responses/responses'
 import { env } from '../env.js'
+import { pool } from '../db/pool.js'
 import { getLlmClient } from '../llm.js'
 import { CH_MESSAGE_DELTA, publish, redis } from '../redis.js'
 import { BUSY_STATUS_HEARTBEAT_MS } from '../status.js'
 import { pgActionLedger } from './action-ledger.js'
 import { resolveDeclaredAutoRelayTarget } from './auto-relay.js'
 import { addUsage, EMPTY_USAGE, type TokenUsage, usageFromOpenAI } from './cost.js'
-import { consumeApprovedAction, listAutonomyRules, requestApproval } from './coworker.js'
+import { claimApprovedContinuation, consumeApprovedAction, finishApprovedContinuation, listAutonomyRules, requestApproval } from './coworker.js'
 import { GLANCE_YIELD_RULES } from './glance-protocol.js'
 import { materializeImage } from './image-fetcher.js'
 import { classifyInboxTriage, gateSyntheticWake } from './inbox-triage.js'
-import { computeInputScopeKey, executeCommunicationActions, runLingxiGraph } from './lingxigraph-adapter.js'
+import { communicationActionToArgv, computeInputScopeKey, executeCommunicationActions, runLingxiGraph, type CommunicationAction } from './lingxigraph-adapter.js'
 import { extractLiveReplyPrefix } from './live-reply-preview.js'
 import { classifyLlmCallError, readStreamReasoningTokens, readStreamUsage, recordLlmCall } from './llm-ledger.js'
 import {
@@ -1582,6 +1583,64 @@ Treat the output as a private memo that will be appended to the agent's input. E
   }
 }
 
+/**
+ * Resume the single blocked action attached to an approved card. This does not
+ * call the model again or create a new turn: the original run remains the
+ * lifecycle owner and only its persisted continuation is eligible to execute.
+ */
+export async function resumeApprovedContinuation(approvalId: string): Promise<{ resumed: boolean; error?: string }> {
+  const continuation = await claimApprovedContinuation(approvalId)
+  if (!continuation) return { resumed: false, error: 'approval has no resumable continuation' }
+  const action = continuation.blockedAction as CommunicationAction
+  if (!action || typeof action.type !== 'string') {
+    await finishApprovedContinuation(approvalId, 'failed')
+    await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approval continuation was invalid', error: 'invalid blocked action' })
+    return { resumed: false, error: 'invalid blocked action' }
+  }
+  await pool.query(
+    `UPDATE agent_runs SET status = 'running', stage = 'resuming', updated_at = NOW(), finished_at = NULL
+     WHERE id = $1 AND status = 'waiting_for_human'`, [continuation.runId],
+  )
+  await runtime.recordEvent({
+    runId: continuation.runId, agentId: continuation.agentId, companyId: continuation.companyId,
+    kind: 'approval.resumed', title: 'Human approval received; resuming the blocked action',
+    data: { approvalId, actionKey: continuation.actionKey, conversationId: continuation.conversationId }, stage: 'working',
+  }).catch(() => undefined)
+  // Claim consumption before the side effect. The continuation claim above is
+  // already an atomic run-level lock; consuming here makes a crash/retry fail
+  // closed rather than accidentally issuing a second external action.
+  const consumed = await consumeApprovedAction({
+    approvalId, companyId: continuation.companyId, agentId: continuation.agentId,
+    conversationId: continuation.conversationId, runId: continuation.runId,
+    actionKey: continuation.actionKey, payload: continuation.payload,
+  })
+  if (!consumed.approved) {
+    await finishApprovedContinuation(approvalId, 'failed')
+    return { resumed: false, error: 'approval continuation was already consumed or no longer matches' }
+  }
+  try {
+    const result = await runtime.executeCli(continuation.agentId, communicationActionToArgv(action))
+    if (!result.ok || result.exitCode !== 0) {
+      await finishApprovedContinuation(approvalId, 'failed')
+      await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approved action failed', error: result.text, toolCallCount: 1 })
+      return { resumed: false, error: result.text }
+    }
+    await finishApprovedContinuation(approvalId, 'completed')
+    await runtime.recordEvent({
+      runId: continuation.runId, agentId: continuation.agentId, companyId: continuation.companyId,
+      kind: 'approval.continuation_completed', title: 'Approved action completed',
+      data: { approvalId, actionKey: continuation.actionKey }, stage: 'completed',
+    }).catch(() => undefined)
+    await runtime.finishRun({ runId: continuation.runId, status: 'completed', summary: 'Approved continuation completed', toolCallCount: 1 })
+    return { resumed: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    await finishApprovedContinuation(approvalId, 'failed')
+    await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approved action failed', error: message, toolCallCount: 1 })
+    return { resumed: false, error: message }
+  }
+}
+
 export async function runAgentTurn(agentId: string, options: AgentTurnOptions = {}): Promise<void> {
   // LINGXILOOP_REASONING_RUNTIME defaults to 'lingxigraph' (server/src/env.ts)
   // — that is THE PRODUCTION PATH. useLingxiGraph=true takes the branch
@@ -2303,7 +2362,7 @@ ${peerWorkBlock}`.trim()
       executeCli: (argv, internal) => runtime.executeCli(agentId, argv, internal),
       timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
       ledger: pgActionLedger,
-      gateAction: async (action) => {
+      gateAction: async (action, actionIndex, actionKey) => {
         const requiredCapability = action.type.startsWith('email.')
           ? 'email'
           : action.type.startsWith('document.')
@@ -2317,30 +2376,38 @@ ${peerWorkBlock}`.trim()
             error: `agent capability '${requiredCapability}' is disabled by the workspace owner`,
           }
         }
-        if (action.type !== 'email.send' && action.type !== 'email.reply') return { allow: true }
-        const payload = action as unknown as Record<string, unknown>
-        const consumed = await consumeApprovedAction({ companyId: runCompanyId ?? '', agentId, payload })
-        if (consumed.approved) {
-          await runtime.recordEvent({
-            runId, agentId, companyId: runCompanyId,
-            kind: 'approval.consumed', title: 'Human approval consumed; executing external communication',
-            data: { approvalId: consumed.approvalId, actionType: action.type }, stage: 'working',
-          }).catch(() => undefined)
-          return { allow: true }
-        }
-        const conversationId = action.type === 'email.reply'
-          ? inbox.find((message) => message.id === action.messageId)?.conversation_id
+        const requestedApproval = action.type === 'approval.request' ? action : null
+        const destructiveComputerAction = action.type === 'computer.exec'
+          && ['rm', 'dd', 'mkfs', 'shutdown', 'reboot'].includes(action.command[0] ?? '')
+        if (!requestedApproval && action.type !== 'email.send' && action.type !== 'email.reply' && !destructiveComputerAction) return { allow: true }
+        const emailReply = action.type === 'email.reply' ? action : null
+        const emailSend = action.type === 'email.send' ? action : null
+        const payload = requestedApproval ? requestedApproval.payload : action as unknown as Record<string, unknown>
+        const conversationId = requestedApproval
+          ? requestedApproval.conversationId
+          : emailReply
+          ? inbox.find((message) => message.id === emailReply.messageId)?.conversation_id
             ?? [...inbox].reverse().find((message) => message.author_kind === 'human')?.conversation_id
           : [...inbox].reverse().find((message) => message.author_kind === 'human')?.conversation_id
         if (!conversationId || !runCompanyId) {
           return { allow: false, error: 'external communication requires a conversation-scoped human approval' }
         }
-        const summary = action.type === 'email.send'
-          ? `Send external email to ${action.to.join(', ')} — ${action.subject}`
-          : `Reply to external email ${action.messageId}`
+        const summary = requestedApproval
+          ? requestedApproval.summary
+          : emailSend
+          ? `Send external email to ${emailSend.to.join(', ')} — ${emailSend.subject}`
+          : `Reply to external email ${emailReply?.messageId ?? ''}`
+        const kind = requestedApproval?.kind ?? (destructiveComputerAction ? 'sensitive_or_destructive_action' : 'external_communication')
+        // Generic approval requests must carry the exact persisted action they
+        // intend to resume. We deliberately do not execute arbitrary payloads.
+        const blockedAction = requestedApproval
+          ? (payload.action && typeof payload.action === 'object' && !Array.isArray(payload.action)
+            ? payload.action as Record<string, unknown>
+            : null)
+          : action as unknown as Record<string, unknown>
         const approval = await requestApproval({
           companyId: runCompanyId, agentId, conversationId, runId,
-          kind: 'external_communication', summary, payload,
+          kind, summary, payload, actionKey, actionIndex, blockedAction,
         })
         const rejected = approval.status === 'rejected'
         return {
@@ -2350,7 +2417,7 @@ ${peerWorkBlock}`.trim()
           result: {
             ok: true,
             exitCode: 0,
-            text: rejected ? `external communication was rejected (${approval.id})` : `waiting for human approval ${approval.id}`,
+            text: rejected ? `approval was rejected (${approval.id})` : `waiting for human approval ${approval.id}`,
             sideEffects: [{
               event: rejected ? 'approval.rejected' : 'approval.requested',
               command: 'approval', approvalId: approval.id, conversationId,

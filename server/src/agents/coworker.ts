@@ -27,6 +27,9 @@ export interface ApprovalSnapshot {
   requestedAt: string
   resolvedAt?: string | null
   resolvedBy?: string | null
+  runId?: string | null
+  conversationId?: string
+  actionKey?: string | null
 }
 
 export interface AutonomyRuleSnapshot {
@@ -38,6 +41,17 @@ export interface AutonomyRuleSnapshot {
   source: 'explicit_user' | 'learned'
   createdAt: string
   updatedAt: string
+}
+
+export interface ApprovedContinuation {
+  approvalId: string
+  companyId: string
+  agentId: string
+  conversationId: string
+  runId: string
+  actionKey: string
+  payload: Record<string, unknown>
+  blockedAction: Record<string, unknown>
 }
 
 function payloadHash(payload: Record<string, unknown>): string {
@@ -197,7 +211,10 @@ export async function updateHandoff(args: {
   )
   const row = rows[0]
   if (!row) throw new Error('handoff not found')
-  if (args.actorAgentId !== row.to_agent_id && args.actorAgentId !== row.from_agent_id) throw new Error('agent does not own this handoff')
+  // The source agent may only create the handoff. From acceptance onward the
+  // target agent owns progress and terminal state; this keeps the UI's
+  // ownership claim truthful and prevents a source from declaring work done.
+  if (args.actorAgentId !== row.to_agent_id) throw new Error('only the target agent owns this handoff after creation')
   const snapshot: HandoffSnapshot = {
     id: args.handoffId,
     fromAgentId: row.from_agent_id,
@@ -254,18 +271,15 @@ export async function listHandoffs(companyId: string, conversationId?: string): 
 }
 
 export async function consumeApprovedAction(args: {
-  companyId: string; agentId: string; payload: Record<string, unknown>
+  approvalId: string; companyId: string; agentId: string; conversationId: string; runId: string; actionKey: string; payload: Record<string, unknown>
 }): Promise<{ approved: boolean; approvalId?: string }> {
   const hash = payloadHash(args.payload)
   const { rows } = await pool.query<{ id: string }>(
     `UPDATE agent_approvals SET consumed_at = NOW()
-     WHERE id = (
-       SELECT id FROM agent_approvals
-        WHERE company_id = $1 AND agent_id = $2 AND payload_hash = $3
-          AND status = 'approved' AND consumed_at IS NULL
-        ORDER BY resolved_at DESC LIMIT 1
-        FOR UPDATE SKIP LOCKED
-     ) RETURNING id`, [args.companyId, args.agentId, hash],
+     WHERE id = $1 AND company_id = $2 AND agent_id = $3
+       AND conversation_id = $4 AND run_id = $5 AND action_key = $6
+       AND payload_hash = $7 AND status = 'approved' AND consumed_at IS NULL
+     RETURNING id`, [args.approvalId, args.companyId, args.agentId, args.conversationId, args.runId, args.actionKey, hash],
   )
   return rows[0] ? { approved: true, approvalId: rows[0].id } : { approved: false }
 }
@@ -275,6 +289,9 @@ export async function requestApproval(args: {
   agentId: string
   conversationId: string
   runId?: string | null
+  actionKey?: string | null
+  actionIndex?: number | null
+  blockedAction?: Record<string, unknown> | null
   kind: ApprovalKind
   summary: string
   payload: Record<string, unknown>
@@ -286,7 +303,8 @@ export async function requestApproval(args: {
   }>(
     `SELECT a.id, a.message_id, a.requested_at, a.status FROM agent_approvals a
      WHERE a.company_id = $1 AND a.agent_id = $2 AND a.conversation_id = $3
-       AND a.payload_hash = $4 AND (
+       AND a.run_id IS NOT DISTINCT FROM $4 AND a.action_key IS NOT DISTINCT FROM $5
+       AND a.payload_hash = $6 AND (
          a.status = 'pending'
          OR (a.status = 'rejected' AND NOT EXISTS (
            SELECT 1 FROM messages m
@@ -294,7 +312,7 @@ export async function requestApproval(args: {
            WHERE m.conversation_id = a.conversation_id AND m.created_at > a.resolved_at
          ))
        )
-     ORDER BY requested_at DESC LIMIT 1`, [args.companyId, args.agentId, args.conversationId, hash],
+     ORDER BY requested_at DESC LIMIT 1`, [args.companyId, args.agentId, args.conversationId, args.runId ?? null, args.actionKey ?? null, hash],
   )
   if (existing.rows[0]) {
     return {
@@ -311,10 +329,12 @@ export async function requestApproval(args: {
   }
   await pool.query(
     `INSERT INTO agent_approvals (
-       id, company_id, agent_id, conversation_id, run_id, kind, summary, payload, payload_hash
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)`,
+       id, company_id, agent_id, conversation_id, run_id, kind, summary, payload, payload_hash,
+       action_key, action_index, blocked_action
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12::jsonb)`,
     [id, args.companyId, args.agentId, args.conversationId, args.runId ?? null,
-      args.kind, args.summary.trim(), JSON.stringify(args.payload), hash],
+      args.kind, args.summary.trim(), JSON.stringify(args.payload), hash,
+      args.actionKey ?? null, args.actionIndex ?? null, args.blockedAction ? JSON.stringify(args.blockedAction) : null],
   )
   try {
     const message = await postStructuredMessage({
@@ -331,6 +351,32 @@ export async function requestApproval(args: {
     await pool.query(`DELETE FROM agent_approvals WHERE id = $1`, [id]).catch(() => undefined)
     throw error
   }
+}
+
+/** Atomically claim the one continuation paired with an approved card. */
+export async function claimApprovedContinuation(approvalId: string): Promise<ApprovedContinuation | null> {
+  const { rows } = await pool.query<{
+    id: string; company_id: string; agent_id: string; conversation_id: string; run_id: string | null;
+    action_key: string | null; payload: Record<string, unknown>; blocked_action: Record<string, unknown> | null
+  }>(
+    `UPDATE agent_approvals
+        SET continuation_status = 'running', resumed_at = NOW()
+      WHERE id = $1 AND status = 'approved' AND consumed_at IS NULL
+        AND continuation_status = 'pending'
+      RETURNING id, company_id, agent_id, conversation_id, run_id, action_key, payload, blocked_action`,
+    [approvalId],
+  )
+  const row = rows[0]
+  if (!row?.run_id || !row.action_key || !row.blocked_action) return null
+  return {
+    approvalId: row.id, companyId: row.company_id, agentId: row.agent_id,
+    conversationId: row.conversation_id, runId: row.run_id, actionKey: row.action_key,
+    payload: row.payload, blockedAction: row.blocked_action,
+  }
+}
+
+export async function finishApprovedContinuation(approvalId: string, status: 'completed' | 'failed'): Promise<void> {
+  await pool.query(`UPDATE agent_approvals SET continuation_status = $2 WHERE id = $1`, [approvalId, status])
 }
 
 export async function resolveApproval(args: {
@@ -358,7 +404,7 @@ export async function resolveApproval(args: {
   const snapshot: ApprovalSnapshot = {
     id: row.id, agentId: row.agent_id, kind: row.kind, summary: row.summary,
     status: args.decision, payload: row.payload, requestedAt: String(row.requested_at),
-    resolvedAt, resolvedBy: args.userId,
+    resolvedAt, resolvedBy: args.userId, runId: row.run_id, conversationId: row.conversation_id,
   }
   await pool.query(`UPDATE messages SET approval = $2::jsonb WHERE id = $1`, [row.message_id, JSON.stringify(snapshot)])
   const original = await pool.query<{ sequence: number }>(`SELECT sequence FROM messages WHERE id = $1`, [row.message_id])
@@ -372,25 +418,18 @@ export async function resolveApproval(args: {
     sequence: original.rows[0]?.sequence ?? 1,
     approval: snapshot,
   })
-  // A real new conversation message wakes the same agent again. The next
-  // structured action consumes the one-time approved payload; rejection is
-  // visible in context and therefore cannot execute the rejected action.
-  await postStructuredMessage({
-    conversationId: row.conversation_id,
-    companyId: args.companyId,
-    authorId: args.userId,
-    kind: 'system',
-    body: `${args.decision === 'approved' ? 'Approved' : 'Rejected'}: ${row.summary} [${row.id}]`,
-    mentionedIds: [row.agent_id],
-  })
-  if (row.run_id) {
+  // Do not create a fresh wake-up. An approved continuation resumes the
+  // suspended run using this exact approval/action identity; rejection
+  // terminally completes that same run without executing the blocked action.
+  if (row.run_id && args.decision === 'rejected') {
     await pool.query(
       `UPDATE agent_runs
        SET status = 'completed', finished_at = COALESCE(finished_at, NOW()), updated_at = NOW(),
-           summary = COALESCE(summary, $2)
+           summary = $2
        WHERE id = $1 AND status = 'waiting_for_human'`,
-      [row.run_id, `Human ${args.decision} approval; continuation was queued`],
+      [row.run_id, 'Human rejected approval; blocked action was not executed'],
     )
+    await pool.query(`UPDATE agent_approvals SET continuation_status = 'rejected' WHERE id = $1`, [row.id])
   }
   return { ...snapshot, conversationId: row.conversation_id, messageId: row.message_id }
 }

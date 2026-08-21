@@ -31,6 +31,18 @@ export type CommunicationAction =
   | Exact<{ type: 'approval.request'; conversationId: string; kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action'; summary: string; payload: Record<string, unknown> }>
   | Exact<{ type: 'memory.note'; body: string; kind: 'fact' | 'preference' | 'instruction' | 'relationship'; about?: string }>
   | Exact<{ type: 'autonomy.remember'; conversationId: string; scope: string; operation: string; mode: 'allow' | 'ask' | 'deny' }>
+  | Exact<{ type: 'computer.exec'; screenId: string; command: string[]; cwd?: string }>
+  | Exact<{ type: 'computer.read_file'; screenId: string; path: string }>
+  | Exact<{ type: 'computer.write_file'; screenId: string; path: string; content: string }>
+  | Exact<{ type: 'computer.list_files'; screenId: string; path: string }>
+  | Exact<{ type: 'computer.screenshot'; screenId: string }>
+  | Exact<{ type: 'computer.screen.status'; screenId: string }>
+  | Exact<{ type: 'computer.screen.wait_for_human'; screenId: string }>
+  | Exact<{ type: 'computer.browser.open'; screenId: string; url: string; private?: boolean }>
+  | Exact<{ type: 'computer.browser.targets'; screenId: string }>
+  | Exact<{ type: 'computer.browser.navigate'; targetId: string; url: string }>
+  | Exact<{ type: 'computer.browser.click'; targetId: string; x: number; y: number }>
+  | Exact<{ type: 'computer.browser.type'; targetId: string; text: string }>
 
 export interface LingxiGraphRunRequest {
   version: 1
@@ -333,6 +345,18 @@ export const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]>
   'approval.request': ['type', 'conversationId', 'kind', 'summary', 'payload'],
   'memory.note': ['type', 'body', 'kind', 'about'],
   'autonomy.remember': ['type', 'conversationId', 'scope', 'operation', 'mode'],
+  'computer.exec': ['type', 'screenId', 'command', 'cwd'],
+  'computer.read_file': ['type', 'screenId', 'path'],
+  'computer.write_file': ['type', 'screenId', 'path', 'content'],
+  'computer.list_files': ['type', 'screenId', 'path'],
+  'computer.screenshot': ['type', 'screenId'],
+  'computer.screen.status': ['type', 'screenId'],
+  'computer.screen.wait_for_human': ['type', 'screenId'],
+  'computer.browser.open': ['type', 'screenId', 'url', 'private'],
+  'computer.browser.targets': ['type', 'screenId'],
+  'computer.browser.navigate': ['type', 'targetId', 'url'],
+  'computer.browser.click': ['type', 'targetId', 'x', 'y'],
+  'computer.browser.type': ['type', 'targetId', 'text'],
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -458,6 +482,9 @@ export function parseCommunicationAction(raw: unknown): CommunicationAction {
       const kind = String(raw.kind)
       if (!['external_communication', 'sensitive_or_destructive_action', 'financial_or_irreversible_action'].includes(kind)) throw new Error('invalid approval kind')
       if (!isRecord(raw.payload)) throw new Error('approval payload must be an object')
+      if (!isRecord(raw.payload.action)) throw new Error('approval payload must include an exact action object')
+      const blocked = parseCommunicationAction(raw.payload.action)
+      if (blocked.type === 'approval.request') throw new Error('approval continuation cannot request another approval')
       return { type, conversationId: stringField(raw, 'conversationId')!, kind: kind as 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action', summary: stringField(raw, 'summary')!, payload: raw.payload }
     }
     case 'memory.note': {
@@ -476,6 +503,24 @@ export function parseCommunicationAction(raw: unknown): CommunicationAction {
         mode: mode as 'allow' | 'ask' | 'deny',
       }
     }
+    case 'computer.exec': return { type, screenId: stringField(raw, 'screenId')!, command: stringArrayField(raw, 'command')!, ...(raw.cwd === undefined ? {} : { cwd: stringField(raw, 'cwd', false)! }) }
+    case 'computer.read_file': return { type, screenId: stringField(raw, 'screenId')!, path: stringField(raw, 'path')! }
+    case 'computer.write_file': return { type, screenId: stringField(raw, 'screenId')!, path: stringField(raw, 'path')!, content: stringField(raw, 'content', false) ?? '' }
+    case 'computer.list_files': return { type, screenId: stringField(raw, 'screenId')!, path: stringField(raw, 'path')! }
+    case 'computer.screenshot': return { type, screenId: stringField(raw, 'screenId')! }
+    case 'computer.screen.status': return { type, screenId: stringField(raw, 'screenId')! }
+    case 'computer.screen.wait_for_human': return { type, screenId: stringField(raw, 'screenId')! }
+    case 'computer.browser.open': {
+      if (raw.private !== undefined && typeof raw.private !== 'boolean') throw new Error('private must be boolean')
+      return { type, screenId: stringField(raw, 'screenId')!, url: stringField(raw, 'url')!, ...(raw.private === undefined ? {} : { private: raw.private }) }
+    }
+    case 'computer.browser.targets': return { type, screenId: stringField(raw, 'screenId')! }
+    case 'computer.browser.navigate': return { type, targetId: stringField(raw, 'targetId')!, url: stringField(raw, 'url')! }
+    case 'computer.browser.click': {
+      if (typeof raw.x !== 'number' || !Number.isFinite(raw.x) || typeof raw.y !== 'number' || !Number.isFinite(raw.y)) throw new Error('browser click coordinates must be finite numbers')
+      return { type, targetId: stringField(raw, 'targetId')!, x: raw.x, y: raw.y }
+    }
+    case 'computer.browser.type': return { type, targetId: stringField(raw, 'targetId')!, text: stringField(raw, 'text')! }
   }
 }
 
@@ -548,6 +593,18 @@ export function communicationActionToArgv(action: CommunicationAction): string[]
     case 'approval.request': return ['approval', 'request', action.conversationId, action.kind, action.summary, '--payload-json', JSON.stringify(action.payload)]
     case 'memory.note': return ['memory', 'note', action.body, '--kind', action.kind, ...(action.about ? ['--about', action.about] : [])]
     case 'autonomy.remember': return ['autonomy', 'remember', action.conversationId, action.scope, action.operation, action.mode]
+    case 'computer.exec': return ['computer', 'exec', action.screenId, ...action.command, ...(action.cwd ? ['--cwd', action.cwd] : [])]
+    case 'computer.read_file': return ['computer', 'read-file', action.screenId, action.path]
+    case 'computer.write_file': return ['computer', 'write-file', action.screenId, action.path, action.content]
+    case 'computer.list_files': return ['computer', 'list-files', action.screenId, action.path]
+    case 'computer.screenshot': return ['computer', 'screenshot', action.screenId]
+    case 'computer.screen.status': return ['computer', 'screen-status', action.screenId]
+    case 'computer.screen.wait_for_human': return ['computer', 'wait-for-human', action.screenId]
+    case 'computer.browser.open': return ['computer', 'browser-open', action.screenId, action.url, ...(action.private ? ['--private'] : [])]
+    case 'computer.browser.targets': return ['computer', 'browser-targets', action.screenId]
+    case 'computer.browser.navigate': return ['computer', 'browser-navigate', action.targetId, action.url]
+    case 'computer.browser.click': return ['computer', 'browser-click', action.targetId, String(action.x), String(action.y)]
+    case 'computer.browser.type': return ['computer', 'browser-type', action.targetId, action.text]
   }
 }
 

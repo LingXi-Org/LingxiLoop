@@ -3,12 +3,26 @@
 # lightweight desktop sessions only. Build from the repository root:
 #   docker build -f server/docker/user-computer.Dockerfile \
 #     -t ghcr.io/lingxi-org/lingxiloop-user-computer:dev .
-FROM debian:bookworm-slim
+ARG BASE_IMAGE=docker.m.daocloud.io/library/debian:bookworm-slim
+FROM ${BASE_IMAGE}
 
-RUN apt-get update \
+ARG DEBIAN_MIRROR=http://mirrors.aliyun.com/debian
+ARG DEBIAN_SECURITY_MIRROR=http://mirrors.aliyun.com/debian-security
+ARG PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple
+
+# Mainland-China deployment defaults. All mirrors stay build-time overridable
+# for private registries or air-gapped environments.
+RUN sed -i \
+      -e "s|http://deb.debian.org/debian|${DEBIAN_MIRROR}|g" \
+      -e "s|http://deb.debian.org/debian-security|${DEBIAN_SECURITY_MIRROR}|g" \
+      /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
+  && mkdir -p /etc/pip \
+  && printf '[global]\nindex-url = %s\ntrusted-host = mirrors.aliyun.com\n' "${PIP_INDEX_URL}" > /etc/pip.conf
+
+RUN apt-get -o Acquire::Retries=3 update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        ca-certificates curl git jq ripgrep bash tini \
-       python3 python3-pip nodejs npm \
+       python3 python3-pip \
        chromium chromium-driver \
        xvfb xauth openbox x11vnc novnc websockify xterm pcmanfm scrot xdotool \
        fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji \
@@ -24,7 +38,9 @@ RUN chmod +x /usr/local/bin/user-computer-entrypoint
 
 ENV HOME=/home/lingxi \
     CHROME_PROFILE_DIR=/home/lingxi/.config/chromium \
-    DISPLAY=:10
+    DISPLAY=:10 \
+    PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple \
+    PIP_TRUSTED_HOST=mirrors.aliyun.com
 
 WORKDIR /workspace
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/user-computer-entrypoint"]

@@ -15,6 +15,7 @@ import { parseMentions } from '../mentions.js'
 import { freshenAttachmentUrl, type StoredAttachment, storage } from '../storage.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
+import { userComputerService } from './computer/user-computer.js'
 import { stripLoneSurrogates } from './text-safety.js'
 
 // Every CLI result flows through ok()/err(), so scrubbing lone UTF-16 surrogates
@@ -3671,6 +3672,74 @@ async function cmdRename(parsed: ParsedArgs): Promise<CliResult> {
 
 /* ============== explicit coworker ownership / approval ================== */
 
+async function cmdComputer(parsed: ParsedArgs): Promise<CliResult> {
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
+  const sub = parsed.positional[0]
+  const screenId = parsed.positional[1]
+  if (!sub || !screenId) return err('usage: computer <exec|read-file|write-file|list-files|screenshot|screen-status|wait-for-human|browser-open|browser-targets|browser-navigate|browser-click|browser-type> ...')
+  if (sub === 'exec') {
+    const command = parsed.positional.slice(2)
+    const cwd = typeof parsed.flags.cwd === 'string' ? parsed.flags.cwd : undefined
+    const result = await userComputerService.execForAgent({ companyId, agentId: me, screenId, command, cwd })
+    return result.exitCode === 0 ? ok(result.stdout || '(command completed)') : err(result.stderr || result.stdout || 'computer command failed', result.exitCode)
+  }
+  if (sub === 'read-file') {
+    const path = parsed.positional[2]
+    if (!path) return err('usage: computer read-file <screen_id> <path>')
+    return ok(await userComputerService.readFileForAgent({ companyId, agentId: me, screenId, path }))
+  }
+  if (sub === 'write-file') {
+    const [path, content] = parsed.positional.slice(2)
+    if (!path || content === undefined) return err('usage: computer write-file <screen_id> <path> <content>')
+    await userComputerService.writeFileForAgent({ companyId, agentId: me, screenId, path, content })
+    return ok(`wrote ${path}`)
+  }
+  if (sub === 'list-files') {
+    const path = parsed.positional[2]
+    if (!path) return err('usage: computer list-files <screen_id> <path>')
+    return ok(JSON.stringify(await userComputerService.listFilesForAgent({ companyId, agentId: me, screenId, path })))
+  }
+  if (sub === 'screenshot') {
+    const bytes = await userComputerService.screenshotForAgent({ companyId, agentId: me, screenId })
+    return ok(JSON.stringify({ mime: 'image/png', base64: Buffer.from(bytes).toString('base64') }))
+  }
+  if (sub === 'screen-status') {
+    return ok(JSON.stringify(await userComputerService.screenStatusForAgent({ companyId, agentId: me, screenId })))
+  }
+  if (sub === 'wait-for-human') {
+    await userComputerService.waitForHumanForAgent({ companyId, agentId: me, screenId })
+    return ok(`screen ${screenId} is waiting for human control`)
+  }
+  if (sub === 'browser-open') {
+    const url = parsed.positional[2]
+    if (!url) return err('usage: computer browser-open <screen_id> <url> [--private]')
+    return ok(JSON.stringify(await userComputerService.openBrowserForAgent({ companyId, agentId: me, screenId, url, private: Boolean(parsed.flags.private) })))
+  }
+  if (sub === 'browser-targets') {
+    return ok(JSON.stringify(await userComputerService.listBrowserTargetsForAgent({ companyId, agentId: me, screenId })))
+  }
+  if (sub === 'browser-navigate') {
+    const url = parsed.positional[2]
+    if (!url) return err('usage: computer browser-navigate <target_id> <url>')
+    return ok(JSON.stringify(await userComputerService.navigateBrowserForAgent({ companyId, agentId: me, targetId: screenId, url })))
+  }
+  if (sub === 'browser-click') {
+    const x = Number(parsed.positional[2]); const y = Number(parsed.positional[3])
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return err('usage: computer browser-click <target_id> <x> <y>')
+    await userComputerService.browserInputForAgent({ companyId, agentId: me, targetId: screenId, input: { type: 'click', x, y } })
+    return ok('browser click sent')
+  }
+  if (sub === 'browser-type') {
+    const text = parsed.positional[2]
+    if (!text) return err('usage: computer browser-type <target_id> <text>')
+    await userComputerService.browserInputForAgent({ companyId, agentId: me, targetId: screenId, input: { type: 'text', text } })
+    return ok('browser text sent')
+  }
+  return err(`unknown computer command: ${sub}`)
+}
+
 async function cmdHandoff(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
@@ -6227,6 +6296,7 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'tools-log':           return await cmdToolsLog(parsed)
       case 'participants-status': return await cmdStatus(parsed)
       case 'memory':              return await cmdMemory(parsed)
+      case 'computer':            return await cmdComputer(parsed)
       case 'handoff':             return await cmdHandoff(parsed)
       case 'approval':            return await cmdApproval(parsed)
       case 'autonomy':            return await cmdAutonomy(parsed)

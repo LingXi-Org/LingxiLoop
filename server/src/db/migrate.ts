@@ -1684,12 +1684,22 @@ CREATE TABLE IF NOT EXISTS agent_approvals (
   summary         TEXT NOT NULL,
   payload         JSONB NOT NULL DEFAULT '{}'::jsonb,
   payload_hash    TEXT NOT NULL,
+  action_key      TEXT,
+  action_index    INTEGER,
+  blocked_action  JSONB,
+  continuation_status TEXT NOT NULL DEFAULT 'pending', -- pending | running | completed | rejected | failed
+  resumed_at      TIMESTAMP WITH TIME ZONE,
   status          TEXT NOT NULL DEFAULT 'pending', -- pending | approved | rejected | expired
   requested_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   resolved_at     TIMESTAMP WITH TIME ZONE,
   resolved_by     TEXT,
   consumed_at     TIMESTAMP WITH TIME ZONE
 );
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS action_key TEXT;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS action_index INTEGER;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS blocked_action JSONB;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS continuation_status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS resumed_at TIMESTAMP WITH TIME ZONE;
 CREATE INDEX IF NOT EXISTS idx_agent_approvals_pending ON agent_approvals(company_id, status, requested_at DESC);
 CREATE INDEX IF NOT EXISTS idx_agent_approvals_gate ON agent_approvals(agent_id, payload_hash, status, consumed_at);
 
