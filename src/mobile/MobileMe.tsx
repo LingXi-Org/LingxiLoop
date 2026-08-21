@@ -7,7 +7,6 @@ import { useParticipants } from '@/stores/participants'
 import { useConversations } from '@/stores/conversations'
 import { useWhispers } from '@/stores/whispers'
 import { usePrefs } from '@/stores/preferences'
-import { CompanySwitcher } from '@/components/CompanySwitcher'
 import { getPushStatus, initPushNotifications, teardownPushNotifications, type PushStatus } from '@/lib/push'
 import { api } from '@/api/client'
 import type { Participant } from '@/types'
@@ -100,14 +99,6 @@ export function MobileMe() {
       </div>
 
       <div className="flex-1 overflow-y-auto pb-20">
-        {companies.length > 1 && (
-          <Section title="工作空间">
-            <div className="bg-cloud rounded-[12px] p-2" style={{ border: '1px solid var(--ink-100)' }}>
-              <CompanySwitcher />
-            </div>
-          </Section>
-        )}
-
         {false && <Section title="你的团队">
           {agents.length === 0 ? (
             <div

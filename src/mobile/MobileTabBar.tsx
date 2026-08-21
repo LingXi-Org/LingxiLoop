@@ -1,12 +1,13 @@
 import { useApp } from '@/stores/app'
 import { useConversations, isMuted } from '@/stores/conversations'
-import { IChat, IMail, IAgents } from '@/components/icons'
+import { IChat, IAgent, IAgents, IDoc } from '@/components/icons'
 import { Pressable } from './Pressable'
 import type { ViewKey } from '@/types'
 
 const tabs: Array<{ key: ViewKey['view']; Icon: typeof IChat; label: string }> = [
   { key: 'conversations', Icon: IChat, label: '对话' },
-  { key: 'mail', Icon: IMail, label: '邮件' },
+  { key: 'agents', Icon: IAgent, label: '智能体' },
+  { key: 'library', Icon: IDoc, label: '资料库' },
   { key: 'me', Icon: IAgents, label: '我的' },
 ]
 
@@ -40,7 +41,7 @@ export function MobileTabBar() {
             key={key}
             onClick={() => {
               setView(key)
-              if (key === 'conversations' || key === 'mail') select(null)
+              if (key === 'conversations') select(null)
             }}
             noScale
             className="relative flex flex-col items-center gap-1 py-2.5"

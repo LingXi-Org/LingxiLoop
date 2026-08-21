@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { api, type ApiSearchResults } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
-import { CompanySwitcher } from '@/components/CompanySwitcher'
 import { ContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { GroupCreator } from '@/components/GroupCreator'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -284,7 +283,6 @@ export function ConversationsPane() {
         </button>
         {accountOpen && (
           <><button type="button" aria-label="关闭账号菜单" className="fixed inset-0 z-30 cursor-default" onClick={() => setAccountOpen(false)} /><div className="absolute bottom-full left-3 right-3 z-40 mb-2 rounded-xl border border-hairline bg-card p-2 shadow-2xl">
-            <div className="mb-1 rounded-lg bg-inset p-2"><CompanySwitcher zh /></div>
             <button type="button" onClick={() => { useApp.getState().setView('me'); setAccountOpen(false) }} className="flex h-9 w-full items-center rounded-lg px-3 text-left text-[13px] text-ink hover:bg-raised">个人设置</button>
             <ThemeToggle showLabel className="h-9 w-full justify-start px-3 text-[13px] text-ink" onToggle={() => setAccountOpen(false)} />
             <button type="button" onClick={() => { window.dispatchEvent(new Event('lingxiloop:open-updater')); setAccountOpen(false) }} className="flex h-9 w-full items-center rounded-lg px-3 text-left text-[13px] text-ink hover:bg-raised">检查更新</button>

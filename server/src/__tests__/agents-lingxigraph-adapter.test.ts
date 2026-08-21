@@ -39,6 +39,11 @@ test('maps communication actions to argv without a shell or identity flag', () =
     [{ type: 'conversation.group.create', title: 'Launch', memberIds: ['p2', 'p3'], leaderId: 'p2', reason: 'ship', openingMessage: 'go' }, ['pull-group', 'Launch', '--members', 'p2,p3', '--leader', 'p2', '--reason', 'ship', '--say', 'go']],
     [{ type: 'email.send', to: ['a@example.com'], cc: ['b@example.com'], subject: 'S', body: 'B' }, ['email', 'send', '--to', 'a@example.com', '--cc', 'b@example.com', '--subject', 'S', '--body', 'B']],
     [{ type: 'poll.create', conversationId: 'c1', question: 'Q?', options: ['A', 'B'], mode: 'multi', expiresInMinutes: 10 }, ['poll', 'create', 'c1', 'Q?', 'A', 'B', '--mode', 'multi', '--expires-in', '10']],
+    [{ type: 'document.create', title: 'SVM 学习笔记', content: '初稿' }, ['doc', 'create', 'SVM 学习笔记', '--body', '初稿']],
+    [{ type: 'document.read', documentId: 'doc_1' }, ['doc', 'read', 'doc_1', '--json']],
+    [{ type: 'document.update', documentId: 'doc_1', find: '旧', replace: '新' }, ['doc', 'replace', 'doc_1', '--find', '旧', '--replace', '新']],
+    [{ type: 'document.append', documentId: 'doc_1', content: '补充' }, ['doc', 'append', 'doc_1', '补充']],
+    [{ type: 'document.share', documentId: 'doc_1', conversationId: 'c1', comment: '学习笔记' }, ['reply', 'c1', '学习笔记\n\n文档：doc_1']],
   ]
   for (const [action, argv] of cases) {
     const mapped = communicationActionToArgv(action)

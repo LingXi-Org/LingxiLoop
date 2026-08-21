@@ -33,7 +33,6 @@ import { startLlmRollupRefresher } from './agents/llm-rollup.js'
 import { startTrialSweepWorker } from './trial-sweep.js'
 import { seedAdmins } from './admin.js'
 import { notifyAlert } from './alerting.js'
-import { startShippingMaintenance } from './shipping-maintenance.js'
 
 async function main() {
   await ensureSchemaWithBootRetry()
@@ -303,11 +302,6 @@ async function main() {
   // tick backfills; steady-state upserts the recent few hours. Advisory-locked
   // so one replica refreshes. LLM_ROLLUP_INTERVAL_MS=0 disables.
   startLlmRollupRefresher()
-
-  // Product shipping loop maintenance — promotes missed production
-  // readbacks to visible overdue friction and mines repeated agent completion
-  // failures into deduplicated improvement signals.
-  startShippingMaintenance()
 
   // Agent-pod garbage collection — sweep Succeeded/Failed/Unknown
   // agent pods older than 5min. Plain Pods don't have TTL-after-

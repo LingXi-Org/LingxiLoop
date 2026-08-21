@@ -4,7 +4,6 @@ import { pool } from '../db/pool.js'
 import { CH_MESSAGE_NEW, CH_REACTIONS, CH_CONVO_UPDATED, CH_DOCS, CH_TYPING, CH_CALENDAR_EVENTS, publish, redis } from '../redis.js'
 import { createPoll, castVote, closePoll, PollError } from '../polls.js'
 import { env } from '../env.js'
-import { startConvene, getActiveConvene } from '../agents/convene.js'
 import { getTriageEconomics } from '../agents/observability.js'
 import { BUSY_STATUS_LEASE_MS } from '../status.js'
 import { notifyMessage, computeMessageRecipients } from '../push.js'
@@ -29,7 +28,6 @@ import {
   listComputers, revokeComputer, assignAgentToComputer, heartbeatComputer,
   issueRepairCode,
 } from '../agents/computer/registry.js'
-import { createShippingRouter } from './shipping-router.js'
 import { parseMentions as parseChatMentions } from '../mentions.js'
 
 /** Re-export so older imports (server/index.ts, agents/cli.ts) keep working
@@ -4456,56 +4454,6 @@ api.get('/peek/agent-chats/:id/messages', async (req, res) => {
   res.json(rows)
 })
 
-/* ============== Convene ============== */
-
-api.post('/conversations/:id/convene', async (req, res) => {
-  const { id } = req.params
-  // Convene starts a live session ON a conversation — only members get to
-  // initiate. Without membership-gating, a peer could spin up convene
-  // sessions on private DMs, both leaking the topic and triggering agent
-  // activity in rooms they don't belong to.
-  const { userId: me } = await requireConversationMember(req, id)
-  const topic = String(req.body?.topic ?? 'live work session')
-  const session = await startConvene({ conversationId: id, startedBy: me, topic })
-  res.json(session)
-})
-
-api.get('/conversations/:id/convene', async (req, res) => {
-  // Reading the active session leaks its existence + topic — same membership
-  // bar as starting it.
-  await requireConversationMember(req, req.params.id)
-  const session = await getActiveConvene(req.params.id)
-  res.json(session)
-})
-
-api.get('/convene/:sessionId/transcript', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
-  // Resolve the parent conversation + its members in a single round-trip so
-  // we can enforce membership without an extra SELECT. Tenant gate stays in
-  // the JOIN; the members check is the new bar.
-  const { rows: gate } = await pool.query<{ members: string[] }>(
-    `SELECT c.members
-       FROM convene_sessions s
-       JOIN conversations c ON c.id = s.conversation_id
-      WHERE s.id = $1 AND c.company_id = $2 LIMIT 1`,
-    [req.params.sessionId, tenant],
-  )
-  if (!gate[0]) { res.status(404).json({ error: 'not found' }); return }
-  if (!gate[0].members.includes(me)) {
-    // Opaque 404 — don't disclose that the session exists in a room the
-    // caller can't read.
-    res.status(404).json({ error: 'not found' }); return
-  }
-  const { rows } = await pool.query(
-    `SELECT id, session_id AS "sessionId", author_id AS "authorId", kind, body, sequence,
-            decision, created_at AS "createdAt"
-       FROM convene_transcript WHERE session_id = $1
-       ORDER BY sequence ASC`,
-    [req.params.sessionId],
-  )
-  res.json(rows)
-})
-
 /* ============== Developer tools ============== */
 
 api.get('/devtools/capabilities', safe(async (req, res) => {
@@ -6138,7 +6086,5 @@ api.post('/push/unregister', async (req, res) => {
 // namespace cannot shadow any legacy API route. The router receives the same
 // tenant/role gates as the rest of this file; it never trusts company ids from
 // request bodies or URLs.
-api.use('/shipping', createShippingRouter({ pool, requireCompany, requireCompanyRole }))
-
 // Global error handler — must come after all routes. HttpError → status code.
 api.use(errorHandler)
