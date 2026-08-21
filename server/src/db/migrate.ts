@@ -227,6 +227,31 @@ ALTER TABLE agent_runs ADD COLUMN IF NOT EXISTS output_tokens         INTEGER NO
 ALTER TABLE agent_runs ADD COLUMN IF NOT EXISTS cost_usd              DOUBLE PRECISION NOT NULL DEFAULT 0;
 ALTER TABLE agent_runs ADD COLUMN IF NOT EXISTS cost_estimated        BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE agent_runs ADD COLUMN IF NOT EXISTS model                 TEXT;  -- big-brain model id, for showing the rate the cost used
+ALTER TABLE agent_runs ADD COLUMN IF NOT EXISTS reasoning_runtime     TEXT;
+ALTER TABLE agent_runs ADD COLUMN IF NOT EXISTS external_runtime_run_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_agent_runs_external_runtime
+  ON agent_runs(agent_id, external_runtime_run_id)
+  WHERE external_runtime_run_id IS NOT NULL;
+
+-- Communication-to-Runtime receipt. The chat message remains authoritative;
+-- this row only lets a restarted Loop process correlate durable Runtime
+-- lifecycle events back to the message read cursor.
+CREATE TABLE IF NOT EXISTS lingxigraph_steering_receipts (
+  message_id         TEXT PRIMARY KEY,
+  company_id         TEXT,
+  agent_id           TEXT NOT NULL,
+  conversation_id    TEXT NOT NULL,
+  runtime_run_id     TEXT NOT NULL,
+  steering_event_id  TEXT NOT NULL,
+  status             TEXT NOT NULL DEFAULT 'accepted',
+  accepted_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  consumed_at        TIMESTAMP WITH TIME ZONE,
+  updated_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_lingxigraph_steering_event
+  ON lingxigraph_steering_receipts(runtime_run_id, steering_event_id);
+CREATE INDEX IF NOT EXISTS idx_lingxigraph_steering_pending
+  ON lingxigraph_steering_receipts(agent_id, status, updated_at DESC);
 
 CREATE TABLE IF NOT EXISTS agent_events (
   id          TEXT PRIMARY KEY,
@@ -1898,6 +1923,7 @@ const AGENT_ID_CASCADE_TABLES: CascadeSpec[] = [
   { table: 'agent_log',            column: 'agent_id',    scopeSql: 'company_id = $3' },
   { table: 'agent_tasks',          column: 'agent_id',    scopeSql: 'company_id = $3' },
   { table: 'agent_runs',           column: 'agent_id',    scopeSql: 'company_id = $3' },
+  { table: 'lingxigraph_steering_receipts', column: 'agent_id', scopeSql: 'company_id = $3' },
   { table: 'agent_events',         column: 'agent_id',    scopeSql: 'company_id = $3' },
   { table: 'agent_autonomy',       column: 'agent_id',    scopeSql: 'company_id = $3' },
   { table: 'agent_climate',        column: 'agent_id',    scopeSql: 'company_id = $3' },

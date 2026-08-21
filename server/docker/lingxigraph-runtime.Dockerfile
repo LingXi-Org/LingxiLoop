@@ -1,5 +1,4 @@
-# lingxigraph-runtime — standalone, stateless HTTP runtime for LingxiGraph
-# reasoning.
+# LingxiGraph Agent Server — durable Runs, steering and resumable SSE.
 #
 # This container owns nothing but `/v1/turn`: one JSON request in, one
 # structured `actions[]` result out. It never touches LingxiLoop's Postgres,
@@ -39,16 +38,17 @@ RUN pip install --no-cache-dir --retries 5 --timeout 60 \
       --extra-index-url "${PIP_EXTRA_INDEX_URL}" \
       -r requirements.txt
 
-COPY server/lingxigraph/lingxigraph_runner.py server/lingxigraph/server.py ./
+COPY server/lingxigraph/lingxigraph_runner.py server/lingxigraph/lingxigraph_graph.py server/lingxigraph/lingxigraph.json ./
 
 # Env contract:
 #   OPENAI_API_KEY                       required — the reasoning provider's key
 #   OPENAI_BASE_URL                      optional — defaults to api.openai.com
 #   LINGXIGRAPH_MODEL_TIMEOUT_SECONDS    optional — per-model-call timeout
-#   LINGXIGRAPH_TOKEN                    optional — if set, /v1/turn requires
-#                                         `Authorization: Bearer <token>`
+#   LINGXIGRAPH_POSTGRES_URL             durable Run/steering/event store
+#   LINGXIGRAPH_REDIS_URL                optional low-latency event wakeup
 #   PORT                                 optional — HTTP listen port
-ENV LINGXIGRAPH_MODEL_TIMEOUT_SECONDS=90 \
+ENV PYTHONPATH=/app \
+    LINGXIGRAPH_MODEL_TIMEOUT_SECONDS=90 \
     PORT=8124
 
 EXPOSE 8124
@@ -56,4 +56,4 @@ EXPOSE 8124
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -fsS "http://localhost:${PORT}/health" || exit 1
 
-CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "lingxigraph migrate && lingxigraph server --host 0.0.0.0 --port ${PORT} --embedded-worker"]

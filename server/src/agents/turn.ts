@@ -29,15 +29,19 @@ import { GLANCE_YIELD_RULES } from './glance-protocol.js'
 import { materializeImage } from './image-fetcher.js'
 import { classifyInboxTriage, gateSyntheticWake } from './inbox-triage.js'
 import { computeInputScopeKey, executeCommunicationActions, runLingxiGraph } from './lingxigraph-adapter.js'
-import { classifyLlmCallError, readStreamReasoningTokens, readStreamUsage, recordLlmCall } from './llm-ledger.js'
-import { enforceModelPolicy, realTaskModel, supportModel } from './model-policy.js'
 import { extractLiveReplyPrefix } from './live-reply-preview.js'
+import { classifyLlmCallError, readStreamReasoningTokens, readStreamUsage, recordLlmCall } from './llm-ledger.js'
+import {
+  activateManagedLingxiGraphRun,
+  deactivateManagedLingxiGraphRun,
+  recordManagedLingxiGraphEvent,
+} from './managed-executor.js'
+import { enforceModelPolicy, realTaskModel, supportModel } from './model-policy.js'
 import { type AgentRunStatus, errorText } from './observability.js'
 import type { AgentRuntimeClient } from './runtime/client.js'
 import { commit as commitFs, type FsNamespace, hydrate as hydrateFs, teardown as teardownFs } from './runtime/fs-namespace.js'
 import { executePodTool, TOOL_DEFS_RESPONSES } from './runtime/pod-tools.js'
 import { runtime } from './runtime/select.js'
-import { DEFAULT_ACK_REACTIONS as DEFAULT_ACK_EMOJIS, ensureAckReaction } from './tools.js'
 import type { PollWakeBrief } from './runtime/wake-bus.js'
 import {
   canDrainSteer,
@@ -51,6 +55,7 @@ import {
   SUMMARIZE_THRESHOLD as STEER_SUMMARIZE_THRESHOLD,
   type SteerItem,
 } from './steer.js'
+import { DEFAULT_ACK_REACTIONS as DEFAULT_ACK_EMOJIS, ensureAckReaction } from './tools.js'
 import {
   bashOutputHasReplySideEffect,
   bashOutputSideEffectChannelUnreliable,
@@ -1658,6 +1663,8 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
     inboxCount: inbox.length,
     fingerprint,
   })
+  let managedLingxiGraphRunActive = false
+  let managedLingxiGraphRuntimeRunId: string | null = null
   let finalStatus: AgentRunStatus = 'completed'
   let finalSummary = ''
   let finalError: string | null = null
@@ -2185,6 +2192,18 @@ ${peerWorkBlock}`.trim()
       data: { model, contextChars: contextPrompt.length }, stage: 'thinking',
     }).catch(() => { /* observability best-effort */ })
     const startedAt = Date.now()
+    const nativePreviews = new Map<number, {
+      messageId: string; conversationId: string; sequence: number; companyId: string | null
+    }>()
+    const clearNativePreviews = async (): Promise<void> => {
+      const previews = [...nativePreviews.values()]
+      nativePreviews.clear()
+      await Promise.all(previews.map((preview) => publish(CH_MESSAGE_DELTA, {
+        type: 'message.delta', conversationId: preview.conversationId,
+        messageId: preview.messageId, authorId: agentId, delta: '',
+        sequence: preview.sequence, done: true, companyId: preview.companyId ?? undefined,
+      }).catch(() => undefined)))
+    }
     // Deliberately NOT passing onMessageDelta: that option makes
     // runLingxiGraph hit /v1/turn/stream, whose live preview is scraped by
     // regex off the model's still-generating raw JSON text
@@ -2203,10 +2222,37 @@ ${peerWorkBlock}`.trim()
       version: 1, runId,
       agent: { id: persona.id, name: persona.name, role: persona.role, model },
       trigger: options.trigger ?? 'message.new', systemPrompt: instructions, contextPrompt,
+      tenantId: runCompanyId ?? undefined,
     }, {
       url: env.LINGXIGRAPH_URL,
       token: env.LINGXIGRAPH_TOKEN,
       timeoutMs: env.LINGXIGRAPH_RUN_TIMEOUT_MS,
+      nativeRuns: true,
+      onRunAssigned: async (runtimeRunId) => {
+        // Only the trusted create-run response may establish this mapping.
+        await activateManagedLingxiGraphRun(agentId, runtimeRunId, runCompanyId, runId)
+        managedLingxiGraphRunActive = true
+        managedLingxiGraphRuntimeRunId = runtimeRunId
+      },
+      onRunEvent: (event) => recordManagedLingxiGraphEvent(agentId, event),
+      onMessageDelta: async ({ actionIndex, conversationId, delta }) => {
+        const target = inbox.find((message) => message.conversation_id === conversationId)
+        if (!target) return // Runtime output cannot escape the authorized inbox scope.
+        const preview = nativePreviews.get(actionIndex) ?? {
+          messageId: `live:${runId}:lingxigraph:${actionIndex}`,
+          conversationId,
+          sequence: Number.MAX_SAFE_INTEGER - 20_000 + actionIndex,
+          companyId: target.company_id ?? runCompanyId,
+        }
+        if (preview.conversationId !== conversationId) return
+        nativePreviews.set(actionIndex, preview)
+        await publish(CH_MESSAGE_DELTA, {
+          type: 'message.delta', conversationId, messageId: preview.messageId,
+          authorId: agentId, delta, sequence: preview.sequence, done: false,
+          companyId: preview.companyId ?? undefined,
+        })
+      },
+      onMessageReset: clearNativePreviews,
     })
     const elapsedMs = Date.now() - startedAt
     const perCallLatency = result.modelCalls.length > 0 ? Math.round(elapsedMs / result.modelCalls.length) : elapsedMs
@@ -3705,6 +3751,12 @@ Mechanics:
     await postTurnFailureNotices(finalSummary, finalError)
     throw err
   } finally {
+    if (managedLingxiGraphRunActive) {
+      // Runtime event callbacks have already run before the native stream
+      // closes. The manager clears the exact active id it registered.
+      // (The Loop observability run id is intentionally a different id.)
+      if (managedLingxiGraphRuntimeRunId) deactivateManagedLingxiGraphRun(agentId, managedLingxiGraphRuntimeRunId)
+    }
     // Commit the FS namespace back to agent_workspace BEFORE we tear
     // it down — every other cleanup below is best-effort, but losing
     // a workspace diff would be data loss.

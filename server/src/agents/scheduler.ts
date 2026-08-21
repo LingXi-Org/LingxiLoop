@@ -20,21 +20,22 @@
  * server doesn't track Pod lifetimes — the next wake re-creates the
  * Pod via the orchestrator.
  */
+
+import { notifyAlert } from '../alerting.js'
+import { Semaphore } from '../concurrency.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import { CH_MESSAGE_NEW, CH_POLLS, CH_TYPING, publish, redis, sub, type MessageNewEvent, type PollUpdatedEvent } from '../redis.js'
-import { notifyAlert } from '../alerting.js'
-import { isAgent } from './personas.js'
-import { ensurePod } from './runtime/orchestrator.js'
-import { resolveAgentHost, isByoaKind } from './computer/registry.js'
-import { deliver as deliverWake, deliverSteer, type PollWakeBrief } from './runtime/wake-bus.js'
-import { inprocClient, isAgentBusy } from './runtime/inproc-client.js'
-import { classifyInboxTriage, type InboxTriageVerdict } from './inbox-triage.js'
-import type { AgentTurnOptions } from './turn.js'
-import { scheduleManagedAgentTurn } from './managed-executor.js'
-import { Semaphore } from '../concurrency.js'
 import { parseMentions } from '../mentions.js'
+import { CH_MESSAGE_NEW, CH_POLLS, CH_TYPING, type MessageNewEvent, type PollUpdatedEvent, publish, redis, sub } from '../redis.js'
+import { isByoaKind, resolveAgentHost } from './computer/registry.js'
+import { classifyInboxTriage, type InboxTriageVerdict } from './inbox-triage.js'
+import { scheduleManagedAgentTurn } from './managed-executor.js'
 import { resolveAgentRecipients } from './message-routing.js'
+import { isAgent } from './personas.js'
+import { inprocClient, isAgentBusy } from './runtime/inproc-client.js'
+import { ensurePod } from './runtime/orchestrator.js'
+import { deliverSteer, deliver as deliverWake, type PollWakeBrief } from './runtime/wake-bus.js'
+import type { AgentTurnOptions } from './turn.js'
 
 /** Bounds how many recipients the wake fan-out triages + wakes at once
  *  (per replica). See env.WAKE_FANOUT_CONCURRENCY — this is the
@@ -49,6 +50,7 @@ const wakeFanoutSem = new Semaphore(env.WAKE_FANOUT_CONCURRENCY)
 export interface SteerWakePayload {
   messageId: string
   conversationId: string
+  authorId?: string
   authorName: string
   body: string
   /** Tenant tag so the steer-ack typing broadcast routes to clients instead of
@@ -319,7 +321,7 @@ async function wakeOne(
       // scheduleManagedAgentTurn (env.MANAGED_TURN_CONCURRENCY), which
       // also covers turns started outside this fan-out path (poll/kanban
       // wakes, retries) that this semaphore never bounded anyway.
-      void scheduleManagedAgentTurn(agentId, turnOptions).catch((err) =>
+      void scheduleManagedAgentTurn(agentId, turnOptions, steerPayload).catch((err) =>
         console.error(`[scheduler] scheduleManagedAgentTurn(${agentId}) failed:`,
           err instanceof Error ? err.message : String(err)),
       )
@@ -573,7 +575,7 @@ async function wake(payload: MessageNewEvent): Promise<void> {
   let steerPayload: SteerWakePayload | null = null
   if (messageKind !== 'system' && messageBody && messageBody.length > 0) {
     const authorName = await resolveAuthorName(authorId)
-    steerPayload = { messageId, conversationId, authorName, body: messageBody, companyId: payload.companyId ?? '' }
+    steerPayload = { messageId, conversationId, authorId, authorName, body: messageBody, companyId: payload.companyId ?? '' }
   }
 
   const { rows: convoRows } = await pool.query<{ members: string[]; kind: string; leader_id: string | null; muted_agent_ids: string[] }>(

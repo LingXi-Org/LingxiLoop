@@ -4,12 +4,14 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from types import MappingProxyType, SimpleNamespace
 
 from lingxigraph.messages import AIMessage
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from lingxigraph_runner import UsageTrackingModel
+from lingxigraph_graph import _apply_steering
 
 
 class _RecordingModel:
@@ -51,6 +53,21 @@ class UsageTrackingModelTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(inner.kwargs["response_format"], {"type": "json_object"})
         self.assertEqual(inner.messages, [])
+
+
+class RuntimeStateTests(unittest.TestCase):
+    def test_steering_returns_a_mutable_update_for_runtime_mappingproxy(self) -> None:
+        state = MappingProxyType({"contextPrompt": "Existing context", "generation": 0})
+
+        updated = _apply_steering(
+            state,
+            (SimpleNamespace(kind="message.new", payload={"messageId": "message-1"}),),
+        )
+
+        updated["generation"] = 1
+        self.assertEqual(updated["generation"], 1)
+        self.assertIn('"messageId":"message-1"', updated["contextPrompt"])
+        self.assertEqual(state["generation"], 0)
 
 
 if __name__ == "__main__":

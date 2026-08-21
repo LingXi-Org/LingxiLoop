@@ -1,4 +1,4 @@
-lingxigraph[openai]==2.0.1
-fastapi==0.115.6
+lingxigraph[openai,server]==2.3.0
 httpx==0.28.1
-uvicorn[standard]==0.34.0
+psycopg[binary]>=3.2,<4
+redis>=5,<7
