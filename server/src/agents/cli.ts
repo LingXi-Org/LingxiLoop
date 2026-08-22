@@ -3740,7 +3740,7 @@ async function cmdComputer(parsed: ParsedArgs): Promise<CliResult> {
   return err(`unknown computer command: ${sub}`)
 }
 
-async function cmdHandoff(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdHandoff(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
@@ -3758,6 +3758,7 @@ async function cmdHandoff(parsed: ParsedArgs): Promise<CliResult> {
       note: typeof parsed.flags.note === 'string' ? parsed.flags.note : null,
       sharedPaths: split(parsed.flags.paths),
       browserTargets: split(parsed.flags['browser-targets']),
+      idempotencyKey: internal.idempotencyKey,
     })
     return ok(`handoff ${handoff.id} → ${toAgentId}: ${title}`, [{
       event: 'handoff.created', command: 'handoff', handoffId: handoff.id,
@@ -6297,7 +6298,7 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'participants-status': return await cmdStatus(parsed)
       case 'memory':              return await cmdMemory(parsed)
       case 'computer':            return await cmdComputer(parsed)
-      case 'handoff':             return await cmdHandoff(parsed)
+      case 'handoff':             return await cmdHandoff(parsed, internal)
       case 'approval':            return await cmdApproval(parsed)
       case 'autonomy':            return await cmdAutonomy(parsed)
       case 'climate':             return await cmdClimate(parsed)

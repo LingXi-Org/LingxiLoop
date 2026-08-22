@@ -6,6 +6,7 @@ import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { api } from '@/api/client'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
+import { messageShellCapabilities } from '@/lib/messageShell'
 import { remarkLingxiLoop } from '@/lib/remarkLingxiLoop'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
 import { cn, parseBlocks, parseBody } from '@/lib/utils'
@@ -1705,9 +1706,9 @@ function HandoffCard({ msg }: { msg: Message }) {
   const done = handoff.status === 'completed'
   const blocked = handoff.status === 'blocked'
   return (
-    <div className="w-[min(560px,70vw)] rounded-xl border border-hairline bg-panel px-4 py-3 shadow-sm">
-      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-400">
-        <span className={`size-2 rounded-full ${done ? 'bg-avail' : blocked ? 'bg-coral' : 'bg-gold'}`} />
+    <div className="w-full max-w-[560px] select-text rounded-xl border border-hairline bg-panel px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-secondary">
+        <span className={`size-2 rounded-full ${done ? 'bg-[var(--avail)]' : blocked ? 'bg-[var(--waiting)]' : 'bg-[var(--working)]'}`} />
         Handoff
         <span className="ml-auto normal-case tracking-normal text-[11px] text-ink-500">{statusLabel}</span>
       </div>
@@ -1741,21 +1742,21 @@ function ApprovalCard({ msg }: { msg: Message }) {
       ? '敏感或破坏性操作'
       : '财务或不可逆操作'
   return (
-    <div className="w-[min(560px,70vw)] rounded-xl border border-hairline bg-panel px-4 py-3 shadow-sm">
+    <div className="w-full max-w-[560px] select-text rounded-xl border border-hairline bg-panel px-4 py-3 shadow-sm">
       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-secondary">
         <span className="size-2 rounded-full bg-accent" />需要你的批准
-        {!pending && <span className={`ml-auto normal-case tracking-normal ${approval.status === 'approved' ? 'text-avail' : 'text-coral-deep'}`}>{approval.status === 'approved' ? '已批准' : approval.status === 'rejected' ? '已拒绝' : '已过期'}</span>}
+        {!pending && <span className={`ml-auto normal-case tracking-normal ${approval.status === 'approved' ? 'text-[var(--avail)]' : approval.status === 'rejected' ? 'text-[var(--coral-deep)]' : 'text-ink-secondary'}`}>{approval.status === 'approved' ? '已批准' : approval.status === 'rejected' ? '已拒绝' : '已过期'}</span>}
       </div>
       <div className="mt-2 text-[14px] font-semibold text-ink-900">{approval.summary}</div>
-      <div className="mt-1 text-[11px] text-ink-400">{detail}</div>
+      <div className="mt-1 text-[11px] text-ink-secondary">{detail}</div>
       {pending && (
         <div className="mt-3 flex justify-end gap-2">
           <button type="button" disabled={busy !== null} onClick={() => void resolve('rejected')}
-            className="rounded-lg border border-hairline px-3 py-1.5 text-[12px] font-semibold text-ink-secondary hover:bg-raised-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50">
+            className="rounded-lg border border-hairline px-3 py-1.5 text-[12px] font-semibold text-ink-secondary enabled:hover:bg-raised-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50">
             {busy === 'rejected' ? '处理中…' : '拒绝'}
           </button>
           <button type="button" disabled={busy !== null} onClick={() => void resolve('approved')}
-            className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-semibold text-white hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50">
+            className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-semibold text-accent-ink enabled:hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50">
             {busy === 'approved' ? '处理中…' : '批准'}
           </button>
         </div>
@@ -1785,6 +1786,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const isPoll = msg.kind === 'poll'
   const isHandoff = msg.kind === 'handoff'
   const isApproval = msg.kind === 'approval'
+  const shell = messageShellCapabilities(msg.kind)
   const isStreaming = Boolean(msg.streaming)
   const avatarActivity = msg.streaming === 'placeholder'
     ? 'thinking'
@@ -1801,6 +1803,8 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   return (
     <div
       id={`m-${msg.id}`}
+      data-message-shell={shell.sharedShell ? 'shared' : 'specialized'}
+      data-message-kind={msg.kind}
       className={cn(
         'group gap-3 items-start scroll-mt-20',
         openMaus ? 'flex' : 'grid grid-cols-[38px_1fr]',
@@ -1835,14 +1839,14 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           />
         </button>
       )}
-      <div className={cn('min-w-0', openMaus && 'max-w-[70%]', openMaus && isMine && 'flex flex-col items-end')}>
+      <div className={cn('min-w-0', shell.selection && 'select-text', openMaus && 'max-w-[70%]', openMaus && isMine && 'flex flex-col items-end')}>
         <div className={cn('mb-1 flex gap-2', openMaus ? 'items-baseline' : 'items-center', openMaus && isMine && 'justify-end')}>
           <span className="font-bold text-[13.5px] text-ink-900">{author.name}</span>
           {isHuman && !isMine && <HumanBadge />}
           {!isStreaming && <span className={cn('text-[10.5px] text-ink-300 tabular-nums', isHuman && 'ml-auto')}>{msg.at}</span>}
         </div>
 
-        {!isStreaming && <QuoteCard msg={msg} />}
+        {!isStreaming && shell.quote && <QuoteCard msg={msg} />}
 
         {!isToolOnly && !isAttachOnly && !isPoll && !isHandoff && !isApproval && (
           <div
@@ -1883,7 +1887,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             noise. The component itself returns null when there's nothing
             useful to render, so this gate is just to avoid spurious
             network calls for non-text messages. */}
-        {!isStreaming && !isToolOnly && !isAttachOnly && !isPoll && !isHandoff && !isApproval && msg.kind !== 'email' && (() => {
+        {!isStreaming && shell.linkPreview && !isToolOnly && !isAttachOnly && (() => {
           const linkUrl = firstUrlInBody(msg.body)
           return linkUrl ? <LinkPreview url={linkUrl} /> : null
         })()}
@@ -1944,7 +1948,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           </button>
         )}
 
-        {!isStreaming && <div className="mt-2 flex flex-wrap gap-1 items-center">
+        {!isStreaming && shell.reactions && <div className="mt-2 flex flex-wrap gap-1 items-center">
           {/* Dedup by emoji at the render boundary — last writer wins.
               The store's mergeReactionOrder already keeps the array
               unique, but a defensive Map here guarantees the pill row
@@ -1958,7 +1962,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             {QUICK_REACTIONS.filter((e) => !(msg.reactions ?? []).some((r) => r.emoji === e && r.mine)).slice(0, 8).map((e) => (
               <QuickReactionButton key={e} msgId={msg.id} emoji={e} />
             ))}
-            <ReplyIconButton msg={msg} zh={openMaus} />
+            {shell.reply && <ReplyIconButton msg={msg} zh={openMaus} />}
           </div>
         </div>}
       </div>

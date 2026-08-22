@@ -30,6 +30,7 @@ import { CH_MESSAGE_NEW, CH_POLLS, CH_TYPING, type MessageNewEvent, type PollUpd
 import { isByoaKind, resolveAgentHost } from './computer/registry.js'
 import { classifyInboxTriage, type InboxTriageVerdict } from './inbox-triage.js'
 import { scheduleManagedAgentTurn } from './managed-executor.js'
+import { resolveMailboxDelivery, type AgentActivation, type MailboxDeliveryPhase } from './mailbox-delivery.js'
 import { resolveAgentRecipients } from './message-routing.js'
 import { isAgent } from './personas.js'
 import { inprocClient, isAgentBusy } from './runtime/inproc-client.js'
@@ -57,6 +58,14 @@ export interface SteerWakePayload {
    *  being dropped as "untagged". Sourced from the message-new event. Optional
    *  only so test fixtures can omit it; the production wake() path always sets it. */
   companyId?: string
+  /** Who authored the durable mailbox row. Peer messages default to
+   * queue-only; human messages may steer same-turn work. */
+  authorKind?: 'human' | 'agent' | 'unknown'
+  /** Explicit coordination intent. Only formal handoff/follow-up publishers
+   * may set trigger for an Agent-authored message. */
+  activation?: AgentActivation
+  /** Filled at the delivery boundary, never trusted from a chat message. */
+  mailboxPhase?: MailboxDeliveryPhase
 }
 
 type WakeReason = 'message.new' | 'idle' | 'manual' | 'background_scan' | 'poll.updated'
@@ -354,7 +363,12 @@ async function wakeOne(
   // disable steering during an incident without a redeploy.
   if (env.STEER_ENABLED && steerPayload && delivered > 0) {
     const busy = await isAgentBusy(agentId).catch(() => false)
-    if (busy) {
+    const mailbox = resolveMailboxDelivery({
+      authorKind: steerPayload.authorKind ?? 'unknown',
+      activation: steerPayload.activation,
+      targetBusy: busy,
+    })
+    if (mailbox.steerCurrentTurn) {
       // Per-agent rate limit: at most STEER_RATE_PER_MINUTE steers
       // delivered in any rolling 60s window. Above that, fall through
       // to wake-only (message is still in DB → next wake picks it up).
@@ -364,7 +378,7 @@ async function wakeOne(
       if (!allowed) {
         console.warn(`[scheduler] steer rate-limited for ${agentId}; falling back to wake-only`)
       } else {
-        await deliverSteer(agentId, steerPayload).catch((err) =>
+        await deliverSteer(agentId, { ...steerPayload, mailboxPhase: mailbox.phase }).catch((err) =>
           console.warn(`[scheduler] deliverSteer(${agentId}) failed:`,
             err instanceof Error ? err.message : err),
         )
@@ -606,6 +620,13 @@ async function wake(payload: MessageNewEvent): Promise<void> {
     )
     : { rows: [] }
   const authorKind = roster.find((member) => member.id === authorId)?.kind ?? 'unknown'
+  if (steerPayload) {
+    steerPayload = {
+      ...steerPayload,
+      authorKind,
+      activation: payload.message.activation,
+    }
+  }
   // New messages carry authoritative structured mentions. Old publishers and
   // historical rows fall back to the same boundary-safe parser.
   const parsed = payload.message.mentionedIds || payload.message.mentionAll !== undefined

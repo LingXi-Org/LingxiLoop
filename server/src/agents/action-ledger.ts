@@ -6,11 +6,10 @@
  * observability, but is NOT by itself the exactly-once guarantee — a
  * process crash between "claimed" and "marked succeeded" leaves a
  * `pending` row that a retry is allowed to reclaim and re-execute. The
- * actual at-most-once guarantee for `message.send` / `reaction.toggle`
- * lives at the sink (the `messages.idempotency_key` unique index and the
- * atomic claim+mutate transaction in `tReact()`, respectively) — this
- * ledger just avoids re-invoking the executor when we already know the
- * action succeeded.
+ * actual at-most-once guarantee for `message.send` / `reaction.toggle` /
+ * `handoff.create` lives at the sink (message/handoff unique indexes and the
+ * atomic claim+mutate transaction in `tReact()`) — this ledger just avoids
+ * re-invoking the executor when we already know another action succeeded.
  */
 
 import { pool } from '../db/pool.js'

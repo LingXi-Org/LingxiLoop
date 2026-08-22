@@ -1670,6 +1670,9 @@ CREATE TABLE IF NOT EXISTS agent_handoffs (
   created_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+ALTER TABLE agent_handoffs ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_handoffs_idempotency_key
+  ON agent_handoffs(idempotency_key) WHERE idempotency_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_agent_handoffs_owner ON agent_handoffs(company_id, to_agent_id, status);
 CREATE INDEX IF NOT EXISTS idx_agent_handoffs_conversation ON agent_handoffs(conversation_id, created_at DESC);
 

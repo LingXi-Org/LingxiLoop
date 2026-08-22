@@ -156,6 +156,9 @@ export async function createHandoff(args: {
   sharedPaths?: string[]
   browserTargets?: string[]
   note?: string | null
+  /** Trusted structured-action key. A retry returns and republishes the same
+   * message id; scheduler/message-cursor dedup prevents a second execution. */
+  idempotencyKey?: string | null
 }): Promise<HandoffSnapshot & { sourceMessageId: string }> {
   await conversationGate(args.conversationId, args.companyId, [args.fromAgentId, args.toAgentId])
   const id = `handoff-${randomUUID()}`
@@ -170,32 +173,96 @@ export async function createHandoff(args: {
     browserTargets: args.browserTargets ?? [],
   }
   if (!snapshot.title) throw new Error('handoff title is required')
-  await pool.query(
-    `INSERT INTO agent_handoffs (
-       id, company_id, conversation_id, from_agent_id, to_agent_id, title,
-       context_message_ids, shared_paths, browser_targets, note, status
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9::jsonb,$10,'working')`,
-    [id, args.companyId, args.conversationId, args.fromAgentId, args.toAgentId, snapshot.title,
-      JSON.stringify(args.contextMessageIds ?? []), JSON.stringify(snapshot.sharedPaths),
-      JSON.stringify(snapshot.browserTargets), snapshot.note],
-  )
+  const client = await pool.connect()
+  let message: { id: string; sequence: number } | null = null
+  let resolvedSnapshot = snapshot
+  let resolvedConversationId = args.conversationId
   try {
-    const message = await postStructuredMessage({
-      conversationId: args.conversationId,
-      companyId: args.companyId,
-      authorId: args.fromAgentId,
-      kind: 'handoff',
-      body: `Handoff to @${args.toAgentId}: ${snapshot.title}`,
-      mentionedIds: [args.toAgentId],
-      handoff: snapshot,
-      activation: 'trigger',
-    })
-    await pool.query(`UPDATE agent_handoffs SET source_message_id = $2 WHERE id = $1`, [id, message.id])
-    return { ...snapshot, sourceMessageId: message.id }
+    await client.query('BEGIN')
+    const inserted = await client.query<{ id: string }>(
+      `INSERT INTO agent_handoffs (
+         id, company_id, conversation_id, from_agent_id, to_agent_id, title,
+         context_message_ids, shared_paths, browser_targets, note, status, idempotency_key
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9::jsonb,$10,'working',$11)
+       ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
+       RETURNING id`,
+      [id, args.companyId, args.conversationId, args.fromAgentId, args.toAgentId, snapshot.title,
+        JSON.stringify(args.contextMessageIds ?? []), JSON.stringify(snapshot.sharedPaths),
+        JSON.stringify(snapshot.browserTargets), snapshot.note, args.idempotencyKey?.trim() || null],
+    )
+
+    if (inserted.rows.length === 0) {
+      const { rows } = await client.query<{
+        id: string; conversation_id: string; from_agent_id: string; to_agent_id: string; title: string; status: HandoffStatus;
+        note: string | null; shared_paths: string[]; browser_targets: string[]; source_message_id: string | null;
+        sequence: number | null
+      }>(
+        `SELECT h.id, h.conversation_id, h.from_agent_id, h.to_agent_id, h.title, h.status, h.note,
+                shared_paths, browser_targets, source_message_id, m.sequence
+           FROM agent_handoffs h
+           LEFT JOIN messages m ON m.id = h.source_message_id
+          WHERE h.idempotency_key = $1 AND h.company_id = $2 AND h.from_agent_id = $3
+          LIMIT 1`,
+        [args.idempotencyKey?.trim() || null, args.companyId, args.fromAgentId],
+      )
+      const existing = rows[0]
+      if (!existing?.source_message_id || existing.sequence === null) throw new Error('handoff idempotency conflict did not resolve to a committed message')
+      resolvedSnapshot = {
+        id: existing.id,
+        fromAgentId: existing.from_agent_id,
+        toAgentId: existing.to_agent_id,
+        title: existing.title,
+        status: existing.status,
+        note: existing.note,
+        sharedPaths: existing.shared_paths ?? [],
+        browserTargets: existing.browser_targets ?? [],
+      }
+      resolvedConversationId = existing.conversation_id
+      message = { id: existing.source_message_id, sequence: existing.sequence }
+      await client.query('COMMIT')
+    } else {
+      const seq = await client.query<{ seq: number }>(
+        `INSERT INTO conversation_counters (conversation_id, next_sequence)
+         VALUES ($1, 2)
+         ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
+         RETURNING next_sequence - 1 AS seq`, [args.conversationId],
+      )
+      const sequence = seq.rows[0]?.seq ?? 1
+      const messageId = `m-${randomUUID()}`
+      const body = `Handoff to @${args.toAgentId}: ${snapshot.title}`
+      await client.query(
+        `INSERT INTO messages (
+           id, conversation_id, author_id, kind, body, sequence, company_id,
+           mentioned_ids, mention_all, handoff
+         ) VALUES ($1,$2,$3,'handoff',$4,$5,$6,$7::jsonb,FALSE,$8::jsonb)`,
+        [messageId, args.conversationId, args.fromAgentId, body, sequence, args.companyId,
+          JSON.stringify([args.toAgentId]), JSON.stringify(snapshot)],
+      )
+      await client.query(`UPDATE agent_handoffs SET source_message_id = $2 WHERE id = $1`, [id, messageId])
+      await client.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [args.conversationId])
+      await client.query('COMMIT')
+      message = { id: messageId, sequence }
+    }
   } catch (error) {
-    await pool.query(`DELETE FROM agent_handoffs WHERE id = $1`, [id]).catch(() => undefined)
+    await client.query('ROLLBACK').catch(() => undefined)
     throw error
+  } finally {
+    client.release()
   }
+
+  await publishMessage({
+    id: message.id,
+    sequence: message.sequence,
+    conversationId: resolvedConversationId,
+    companyId: args.companyId,
+    authorId: args.fromAgentId,
+    kind: 'handoff',
+    body: `Handoff to @${resolvedSnapshot.toAgentId}: ${resolvedSnapshot.title}`,
+    mentionedIds: [resolvedSnapshot.toAgentId],
+    handoff: resolvedSnapshot,
+    activation: 'trigger',
+  })
+  return { ...resolvedSnapshot, sourceMessageId: message.id }
 }
 
 export async function updateHandoff(args: {

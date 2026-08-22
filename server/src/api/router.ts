@@ -22,6 +22,7 @@ import {
   resolveApproval,
   upsertAutonomyRule,
 } from '../agents/coworker.js'
+import { PUBLIC_ACTIVITY_KINDS, publicActivityTitle } from '../agents/activity-visibility.js'
 import { getTriageEconomics } from '../agents/observability.js'
 import {
   type AuthedRequest,
@@ -976,7 +977,10 @@ api.get('/me', safe(async (req, res) => {
 
 api.get('/companies', async (req, res) => {
   const me = userId(req)
-  const { rows } = await pool.query(
+  const { rows } = await pool.query<{
+    id: string; runId: string; agentId: string; agentName: string; runStatus: string;
+    kind: string; level: 'debug' | 'info' | 'warn' | 'error'; title: string; createdAt: Date
+  }>(
     `SELECT c.id, c.name, c.slug, c.created_at AS "createdAt", cm.role
        FROM companies c
        JOIN company_members cm ON cm.company_id = c.id AND cm.user_id = $1
@@ -4596,16 +4600,21 @@ api.get('/coworker/activity', safe(async (req, res) => {
      WHERE e.company_id = $1 AND e.level <> 'debug'
        AND (
          r.trigger->>'conversationId' = $2
+         OR COALESCE(r.trigger->'conversationIds', '[]'::jsonb) ? $2
          OR EXISTS (
            SELECT 1 FROM jsonb_array_elements_text(r.input_message_ids) input(message_id)
            JOIN messages m ON m.id = input.message_id
            WHERE m.conversation_id = $2
          )
        )
-       AND e.kind !~ '(prompt|reasoning|chain.of.thought)'
-     ORDER BY e.created_at DESC LIMIT 12`, [companyId, conversationId],
+       AND e.kind = ANY($3::text[])
+       AND e.kind !~* '(prompt|reasoning|chain[._-]?of[._-]?thought|secret|credential)'
+     ORDER BY e.created_at DESC LIMIT 12`, [companyId, conversationId, PUBLIC_ACTIVITY_KINDS],
   )
-  res.json(rows.reverse())
+  res.json(rows.reverse().map((row) => ({
+    ...row,
+    title: publicActivityTitle(row.kind, row.level) ?? 'Agent activity updated',
+  })))
 }))
 
 api.get('/coworker/handoffs', safe(async (req, res) => {

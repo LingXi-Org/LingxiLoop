@@ -1528,6 +1528,7 @@ export type WsEvent =
   | { type: 'message.new'; conversationId: string; message: ApiMessage }
   | { type: 'message.delta'; conversationId: string; messageId: string; authorId: string; delta: string; sequence: number; done: boolean }
   | { type: 'typing'; conversationId: string; agentId: string; done: boolean }
+  | { type: 'agent.activity'; conversationIds: string[]; activity: ApiCoworkerActivity }
   | { type: 'participants.status'; participantId: string; status: Status; statusUpdatedAt?: string }
   | { type: 'participants.avatar'; participantId: string; avatarUrl: string }
   | { type: 'computers.status'; computerId: string; status: ComputerStatus }

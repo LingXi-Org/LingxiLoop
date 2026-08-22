@@ -411,10 +411,14 @@ export function computeActionKey(args: {
     .digest('hex')
 }
 
-/** P0 scope (issue #7): only these two action types carry a durable,
+/** P0 scope (issue #7/#37): these action types carry a durable,
  *  crash-safe idempotency key all the way to the sink. Other action types
  *  still get ledger-level replay skipping, but no sink-level guarantee yet. */
-const SINK_IDEMPOTENT_ACTION_TYPES = new Set<CommunicationAction['type']>(['message.send', 'reaction.toggle'])
+const SINK_IDEMPOTENT_ACTION_TYPES = new Set<CommunicationAction['type']>([
+  'message.send',
+  'reaction.toggle',
+  'handoff.create',
+])
 
 function stringField(value: Record<string, unknown>, key: string, required = true): string | undefined {
   const raw = value[key]
@@ -649,14 +653,14 @@ export async function executeCommunicationActions(
   for (let index = 0; index < ctx.actions.length; index++) {
     const action = ctx.actions[index]
     const key = computeActionKey({ agentId: ctx.agentId, inputScopeKey: ctx.inputScopeKey, actionIndex: index, action })
-    // Single-owner rule (issue #7 review, P0-1): message.send and
-    // reaction.toggle each own their idempotency key end-to-end inside
-    // their OWN sink transaction (messages.idempotency_key's unique index;
-    // tReact's claim+mutate+commit). This layer must NOT also claim the
+    // Single-owner rule (issue #7/#37 review): message.send,
+    // reaction.toggle, and handoff.create each own their idempotency key
+    // end-to-end inside their OWN sink transaction (message/handoff unique
+    // indexes; tReact's claim+mutate+commit). This layer must NOT also claim the
     // same key via the generic ledger — doing so pre-inserts a 'pending'
     // row that the sink's own atomic claim then finds already taken,
     // self-conflicting on the very first (non-retry) execution. For these
-    // two types we always call through and let the sink decide; for every
+    // three types we always call through and let the sink decide; for every
     // other action type (no sink-level dedup exists yet) the generic
     // ledger below is still the only protection, so it stays authoritative.
     const sinkOwned = SINK_IDEMPOTENT_ACTION_TYPES.has(action.type)

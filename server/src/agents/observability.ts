@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
+import { CH_AGENT_ACTIVITY, publish } from '../redis.js'
+import { publicActivityTitle } from './activity-visibility.js'
 import { EMPTY_USAGE, effectiveCostUsd, modelPriceTable, priceFor, type TokenUsage } from './cost.js'
 
 export type AgentRunStatus = 'running' | 'waiting_for_human' | 'completed' | 'failed' | 'skipped'
@@ -34,6 +36,67 @@ function jsonForDb(value: unknown): string {
   }
 }
 
+async function publishAgentActivity(args: {
+  id: string
+  runId: string
+  kind: string
+  level?: AgentEventLevel
+  createdAt?: string
+  statusOverride?: AgentRunStatus
+}): Promise<void> {
+  const level = args.level ?? 'info'
+  const title = publicActivityTitle(args.kind, level)
+  if (!title) return
+  try {
+    const { rows } = await pool.query<{
+      agent_id: string
+      company_id: string | null
+      status: AgentRunStatus
+      agent_name: string
+      conversation_ids: string[]
+    }>(
+      `SELECT r.agent_id, r.company_id, r.status,
+              COALESCE(p.name, r.agent_id) AS agent_name,
+              ARRAY(
+                SELECT DISTINCT conversation_id
+                  FROM (
+                    SELECT jsonb_array_elements_text(COALESCE(r.trigger->'conversationIds', '[]'::jsonb)) AS conversation_id
+                    UNION ALL
+                    SELECT m.conversation_id
+                      FROM jsonb_array_elements_text(COALESCE(r.input_message_ids, '[]'::jsonb)) input(message_id)
+                      JOIN messages m ON m.id = input.message_id
+                  ) activity_conversations
+                 WHERE conversation_id IS NOT NULL AND conversation_id <> ''
+              ) AS conversation_ids
+         FROM agent_runs r
+         LEFT JOIN participants p ON p.id = r.agent_id AND p.company_id = r.company_id
+        WHERE r.id = $1
+        LIMIT 1`,
+      [args.runId],
+    )
+    const row = rows[0]
+    if (!row?.company_id || row.conversation_ids.length === 0) return
+    await publish(CH_AGENT_ACTIVITY, {
+      type: 'agent.activity',
+      companyId: row.company_id,
+      conversationIds: row.conversation_ids,
+      activity: {
+        id: args.id,
+        runId: args.runId,
+        agentId: row.agent_id,
+        agentName: row.agent_name,
+        runStatus: args.statusOverride ?? row.status,
+        kind: args.kind,
+        level,
+        title,
+        createdAt: args.createdAt ?? new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    console.warn('[observability] activity publish failed — REST fallback remains available', error instanceof Error ? error.message : error)
+  }
+}
+
 export function errorText(err: unknown): string {
   if (err instanceof Error) return err.stack || err.message
   return String(err)
@@ -64,6 +127,12 @@ export async function createAgentRun(args: {
       args.fingerprint ?? null,
     ],
   )
+  await publishAgentActivity({
+    id: `${id}:started`,
+    runId: id,
+    kind: 'run.started',
+    statusOverride: 'running',
+  })
   return id
 }
 
@@ -77,11 +146,13 @@ export async function recordAgentEvent(args: {
   data?: Record<string, unknown>
   stage?: string
 }): Promise<void> {
-  await pool.query(
+  const id = `evt-${randomUUID()}`
+  const inserted = await pool.query<{ created_at: Date }>(
     `INSERT INTO agent_events (id, run_id, agent_id, company_id, kind, level, title, data)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb)`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb)
+     RETURNING created_at`,
     [
-      `evt-${randomUUID()}`,
+      id,
       args.runId,
       args.agentId,
       args.companyId ?? null,
@@ -98,6 +169,13 @@ export async function recordAgentEvent(args: {
       WHERE id = $1`,
     [args.runId, args.stage ?? null],
   )
+  await publishAgentActivity({
+    id,
+    runId: args.runId,
+    kind: args.kind,
+    level: args.level,
+    createdAt: inserted.rows[0]?.created_at?.toISOString(),
+  })
 }
 
 export async function finishAgentRun(args: {
@@ -154,6 +232,13 @@ export async function finishAgentRun(args: {
       args.model ?? null,
     ],
   )
+  await publishAgentActivity({
+    id: `${args.runId}:${args.status}`,
+    runId: args.runId,
+    kind: `run.${args.status}`,
+    level: args.status === 'failed' ? 'error' : 'info',
+    statusOverride: args.status,
+  })
 }
 
 /** Record one inbox-triage call (the small-brain gate) with its cache-aware cost.

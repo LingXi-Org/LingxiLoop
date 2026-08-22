@@ -1,3 +1,5 @@
+import { resolveMailboxDelivery, type AgentActivation } from './mailbox-delivery.js'
+
 export interface RoutingAgent {
   id: string
   muted: boolean
@@ -14,12 +16,17 @@ export interface GroupRouteInput {
   quotedAuthorId?: string | null
   /** Agent-authored communication is mailbox-only unless an internal formal
    * handoff/follow-up explicitly asks the scheduler to activate a turn. */
-  activation?: 'deliver' | 'trigger'
+  activation?: AgentActivation
 }
 
 /** Pure routing policy shared by the scheduler and its matrix tests. */
 export function resolveAgentRecipients(input: GroupRouteInput): string[] {
-  if (input.authorKind === 'agent' && input.activation !== 'trigger') return []
+  const mailbox = resolveMailboxDelivery({
+    authorKind: input.authorKind,
+    activation: input.activation,
+    targetBusy: false,
+  })
+  if (!mailbox.activate) return []
   const agents = input.agents.filter((agent) => agent.id !== input.authorId)
   if (input.conversationKind !== 'group') return agents.map((agent) => agent.id)
 

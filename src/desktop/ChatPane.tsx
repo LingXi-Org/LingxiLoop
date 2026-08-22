@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
-import { type ApiAttachment, api } from '@/api/client'
+import { type ApiAttachment, type ApiCoworkerActivity, api, ws } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow } from '@/components/Message'
@@ -1630,24 +1630,52 @@ function OpenMausEmptyConversationState() {
 }
 
 function ConversationActivity({ conversationId }: { conversationId: string }) {
-  const [events, setEvents] = useState<Awaited<ReturnType<typeof api.getCoworkerActivity>>>([])
+  const [events, setEvents] = useState<ApiCoworkerActivity[]>([])
   useEffect(() => {
     let cancelled = false
+    setEvents([])
+    const merge = (rows: ApiCoworkerActivity[]) => {
+      if (cancelled) return
+      setEvents((current) => {
+        const byId = new Map(current.map((event) => [event.id, event]))
+        for (const event of rows) byId.set(event.id, event)
+        return [...byId.values()]
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          .slice(-12)
+      })
+    }
     const refresh = () => void api.getCoworkerActivity(conversationId)
-      .then((rows) => { if (!cancelled) setEvents(rows) })
+      .then(merge)
       .catch(() => { /* activity is best-effort; chat remains primary */ })
     refresh()
-    const timer = window.setInterval(refresh, 8_000)
-    return () => { cancelled = true; window.clearInterval(timer) }
+    void ws.connect()
+    const off = ws.on((event) => {
+      if (event.type === 'agent.activity' && event.conversationIds.includes(conversationId)) {
+        merge([event.activity])
+      } else if (event.type === 'hello') {
+        // Reconcile anything missed while the socket was disconnected.
+        refresh()
+      }
+    })
+    // Slow REST reconciliation is only a fallback for dropped/backpressured WS
+    // frames; live activity arrives through the same realtime path as messages.
+    const timer = window.setInterval(refresh, 60_000)
+    return () => { cancelled = true; off(); window.clearInterval(timer) }
   }, [conversationId])
   const visible = events.slice(-3)
   if (visible.length === 0) return null
-  const active = [...events].reverse().find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')
+  // A run emits multiple activity rows. Only its newest row represents the
+  // current state; otherwise an older run.started row can outlive a later
+  // run.completed row and leave the strip pulsing forever.
+  const latestByRun = new Map<string, ApiCoworkerActivity>()
+  for (const event of events) latestByRun.set(event.runId, event)
+  const active = [...latestByRun.values()].reverse()
+    .find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')
   return (
-    <div className="border-b border-hairline bg-panel/70 px-5 py-2" role="status" aria-label="Agent 最近活动">
+    <div className="border-b border-hairline bg-panel px-5 py-2" role="status" aria-label="Agent 最近活动">
       <div className="mx-auto flex max-w-[900px] items-center gap-3 overflow-hidden">
-        <span className={`size-2 shrink-0 rounded-full ${active ? 'animate-pulse bg-gold' : 'bg-avail'}`} />
-        <span className="shrink-0 text-[11px] font-semibold text-ink-600">
+        <span className={`size-2 shrink-0 rounded-full ${active ? 'animate-pulse bg-[var(--working)]' : 'bg-[var(--avail)]'}`} />
+        <span className="shrink-0 text-[11px] font-semibold text-ink-secondary">
           {active ? `${active.agentName}${active.runStatus === 'waiting_for_human' ? ' 正在等待你' : ' 正在工作'}` : '最近活动'}
         </span>
         <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
