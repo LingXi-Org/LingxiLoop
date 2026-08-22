@@ -29,7 +29,10 @@ if (testFiles.length === 0) {
 
 const child = spawn(
   process.execPath,
-  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', ...testFiles],
+  // Several unit files intentionally override process-wide environment and
+  // module seams. Serialize files so those test doubles cannot race each
+  // other on faster CI runners; individual assertions remain deterministic.
+  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-concurrency=1', ...testFiles],
   {
     stdio: 'inherit',
     env: {
