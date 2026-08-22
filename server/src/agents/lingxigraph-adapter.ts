@@ -142,7 +142,7 @@ export async function getLingxiGraphRun(
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
     const response = await (options.fetchImpl ?? fetch)(new URL(`/v1/runs/${encodeURIComponent(runId)}`, baseUrl), {
-      headers: graphHeaders(token, !token && tenantId ? { 'x-tenant-id': tenantId } : {}),
+      headers: runtimeHeaders(token, tenantId),
       signal: controller.signal,
     })
     const raw = await response.text()
@@ -168,11 +168,23 @@ function graphHeaders(token: string | undefined, extra: Record<string, string> =
   }
 }
 
-function tenantHeaders(request: LingxiGraphRunRequest, token: string | undefined): Record<string, string> {
+/**
+ * Build Runtime headers for a single tenant. Production identity comes from a
+ * verified bearer token; the explicit tenant header is deliberately limited
+ * to the Runtime's insecure development auth mode.
+ */
+function runtimeHeaders(
+  token: string | undefined,
+  tenantId: string | null | undefined,
+  extra: Record<string, string> = {},
+): Record<string, string> {
   // Production tenant identity comes exclusively from the verified JWT. The
   // explicit header is only valid when no bearer token is configured (the
   // official Runtime's controlled insecure-dev mode).
-  return !token && request.tenantId ? { 'x-tenant-id': request.tenantId } : {}
+  return graphHeaders(token, {
+    ...(!token && tenantId ? { 'x-tenant-id': tenantId } : {}),
+    ...extra,
+  })
 }
 
 function problemDetails(raw: string, fallbackCode: string): { code: string; detail: string; retryable?: boolean } {
@@ -224,7 +236,7 @@ export async function steerLingxiGraphRun(
     try {
       const response = await doFetch(new URL(`/v1/runs/${encodeURIComponent(request.runId)}/steer`, baseUrl), {
         method: 'POST',
-        headers: graphHeaders(token, {
+        headers: runtimeHeaders(token, options.tenantId, {
           'content-type': 'application/json',
           'idempotency-key': request.idempotencyKey,
         }),
@@ -289,8 +301,7 @@ export async function streamLingxiGraphRunEvents(
   if (!baseUrl) throw new Error('LINGXIGRAPH_URL is required to reach the LingxiGraph runtime')
   const token = options.token ?? process.env.LINGXIGRAPH_TOKEN
   const response = await (options.fetchImpl ?? fetch)(new URL(`/v1/runs/${encodeURIComponent(runId)}/stream`, baseUrl), {
-    headers: graphHeaders(token, {
-      ...(!token && options.tenantId ? { 'x-tenant-id': options.tenantId } : {}),
+    headers: runtimeHeaders(token, options.tenantId, {
       accept: 'text/event-stream',
       ...(options.lastEventId ? { 'last-event-id': String(options.lastEventId) } : {}),
     }),
@@ -740,10 +751,7 @@ async function runLingxiGraphNative(
   const originalFetch = options.fetchImpl ?? fetch
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
-  const headers = (extra: Record<string, string> = {}) => graphHeaders(token, {
-    ...tenantHeaders(request, token),
-    ...extra,
-  })
+  const headers = (extra: Record<string, string> = {}) => runtimeHeaders(token, request.tenantId, extra)
   const doFetch: typeof fetch = ((input: Parameters<typeof fetch>[0], init?: RequestInit) => originalFetch(input, {
     ...init,
     signal: controller.signal,
@@ -818,7 +826,7 @@ async function runLingxiGraphNative(
       } else if (channel === 'message.reset') {
         await options.onMessageReset?.()
       }
-    }, { url: baseUrl, token, fetchImpl: doFetch })
+    }, { url: baseUrl, token, fetchImpl: doFetch, tenantId: request.tenantId ?? null })
 
     const finalRun = await readJson(await doFetch(new URL(`/v1/runs/${encodeURIComponent(runtimeRunId)}`, baseUrl), {
       headers: headers(),

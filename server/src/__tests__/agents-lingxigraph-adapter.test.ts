@@ -223,6 +223,7 @@ test('runtime adapter times out a response whose body never completes, even afte
 test('steering adapter sends a stable Idempotency-Key and parses durable acceptance', async () => {
   let seenUrl = ''
   let seenKey = ''
+  let seenTenant = ''
   let seenBody: unknown
   const accepted = await steerLingxiGraphRun({
     runId: 'run/trusted',
@@ -231,9 +232,11 @@ test('steering adapter sends a stable Idempotency-Key and parses durable accepta
     idempotencyKey: 'm-1',
   }, {
     url: 'http://runtime.local:8124',
+    tenantId: 'co-1',
     fetchImpl: fakeFetch((url, init) => {
       seenUrl = url
       seenKey = (init.headers as Record<string, string>)['idempotency-key']
+      seenTenant = (init.headers as Record<string, string>)['x-tenant-id']
       seenBody = JSON.parse(String(init.body))
       return new Response(JSON.stringify({
         id: 'steer-1', run_id: 'run/trusted', sequence: 3,
@@ -243,11 +246,31 @@ test('steering adapter sends a stable Idempotency-Key and parses durable accepta
   })
   assert.equal(seenUrl, 'http://runtime.local:8124/v1/runs/run%2Ftrusted/steer')
   assert.equal(seenKey, 'm-1')
+  assert.equal(seenTenant, 'co-1')
   assert.deepEqual(seenBody, { kind: 'message.new', payload: { messageId: 'm-1', body: 'follow up' }, metadata: {} })
   assert.deepEqual(accepted, {
     outcome: 'accepted', eventId: 'steer-1', runId: 'run/trusted', sequence: 3,
     status: 'pending', kind: 'message.new',
   })
+})
+
+test('native Runtime requests keep bearer authentication free of dev tenant headers', async () => {
+  let headers: Record<string, string> | undefined
+  await steerLingxiGraphRun({
+    runId: 'r1', kind: 'message.new', payload: {}, idempotencyKey: 'm-1',
+  }, {
+    url: 'http://runtime.local:8124',
+    token: 'production-token',
+    tenantId: 'co-1',
+    fetchImpl: fakeFetch((_url, init) => {
+      headers = init.headers as Record<string, string>
+      return new Response(JSON.stringify({
+        id: 's1', run_id: 'r1', sequence: 1, status: 'pending', kind: 'message.new',
+      }), { status: 202 })
+    }),
+  })
+  assert.equal(headers?.authorization, 'Bearer production-token')
+  assert.equal(headers?.['x-tenant-id'], undefined)
 })
 
 test('steering adapter classifies terminal/finalizing rejection as permanent', async () => {
@@ -294,22 +317,42 @@ test('native SSE adapter resumes from Last-Event-ID and deduplicates sequences',
     },
   })
   let lastEventId = ''
+  let tenant = ''
   const events: string[] = []
   const cursor = await streamLingxiGraphRunEvents('r1', (event) => { events.push(event.kind) }, {
     url: 'http://runtime.local:8124',
+    tenantId: 'co-1',
     lastEventId: 8,
     fetchImpl: fakeFetch((_url, init) => {
       lastEventId = (init.headers as Record<string, string>)['last-event-id']
+      tenant = (init.headers as Record<string, string>)['x-tenant-id']
       return new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream' } })
     }),
   })
   assert.equal(lastEventId, '8')
+  assert.equal(tenant, 'co-1')
   assert.deepEqual(events, ['run.steer.consumed'])
   assert.equal(cursor, 9)
 })
 
+test('omitting an insecure-dev tenant resolves the stream under default and reproduces run-not-found', async () => {
+  let resolvedTenant = ''
+  await assert.rejects(streamLingxiGraphRunEvents('run-owned-by-co-1', () => undefined, {
+    url: 'http://runtime.local:8124',
+    fetchImpl: fakeFetch((_url, init) => {
+      resolvedTenant = (init.headers as Record<string, string>)['x-tenant-id'] ?? 'default'
+      return new Response('run not found', { status: 404 })
+    }),
+  }), (error: unknown) => error instanceof LingxiGraphRequestError
+    && error.status === 404
+    && /run not found/.test(error.message))
+  assert.equal(resolvedTenant, 'default')
+  assert.notEqual(resolvedTenant, 'co-1')
+})
+
 test('native run adapter creates a Runtime run, consumes SSE, and reads authoritative output', async () => {
   const urls: string[] = []
+  const tenants: Array<{ url: string; tenant: string | undefined }> = []
   const events: string[] = []
   let runKey = ''
   let tenant = ''
@@ -320,7 +363,9 @@ test('native run adapter creates a Runtime run, consumes SSE, and reads authorit
     onRunEvent: (event) => { events.push(event.kind) },
     fetchImpl: fakeFetch((url, init) => {
       urls.push(url)
-      tenant = (init.headers as Record<string, string> | undefined)?.['x-tenant-id'] ?? tenant
+      const requestTenant = (init.headers as Record<string, string> | undefined)?.['x-tenant-id']
+      tenant = requestTenant ?? tenant
+      tenants.push({ url, tenant: requestTenant })
       if (url.endsWith('/v1/assistants') && !init.method) return new Response('[]', { status: 200 })
       if (url.endsWith('/v1/assistants')) return new Response(JSON.stringify({ id: 'assistant-1' }), { status: 201 })
       if (url.endsWith('/v1/runs')) {
@@ -347,6 +392,16 @@ test('native run adapter creates a Runtime run, consumes SSE, and reads authorit
   assert.equal(runKey, 'lingxiloop-run:r1')
   assert.deepEqual(events, ['run_completed'])
   assert.equal(urls.some((url) => url.endsWith('/v1/runs/runtime-run-1/stream')), true)
+  assert.deepEqual(tenants.map(({ url, tenant }) => ({
+    path: new URL(url).pathname,
+    tenant,
+  })), [
+    { path: '/v1/assistants', tenant: 'co-1' },
+    { path: '/v1/assistants', tenant: 'co-1' },
+    { path: '/v1/runs', tenant: 'co-1' },
+    { path: '/v1/runs/runtime-run-1/stream', tenant: 'co-1' },
+    { path: '/v1/runs/runtime-run-1', tenant: 'co-1' },
+  ])
 })
 
 /* ─── issue #7: action idempotency key generation ────────────────────── */
