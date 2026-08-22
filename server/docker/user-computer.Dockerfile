@@ -34,7 +34,9 @@ RUN useradd --create-home --home-dir /home/lingxi --shell /bin/bash lingxi \
   && chown -R lingxi:lingxi /home/lingxi /workspace /documents /downloads
 
 COPY server/docker/user-computer-entrypoint.sh /usr/local/bin/user-computer-entrypoint
-RUN chmod +x /usr/local/bin/user-computer-entrypoint
+COPY server/docker/browser-broker.py /usr/local/bin/browser-broker
+RUN sed -i 's/\r$//' /usr/local/bin/user-computer-entrypoint /usr/local/bin/browser-broker \
+  && chmod +x /usr/local/bin/user-computer-entrypoint /usr/local/bin/browser-broker
 
 ENV HOME=/home/lingxi \
     CHROME_PROFILE_DIR=/home/lingxi/.config/chromium \

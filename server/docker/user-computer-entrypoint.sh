@@ -14,7 +14,11 @@ mkdir -p \
   /workspace \
   /documents \
   /downloads
-chown -R lingxi:lingxi /home/lingxi /workspace /documents /downloads
+getent group lingxi-shared >/dev/null || groupadd lingxi-shared
+usermod -a -G lingxi-shared lingxi
+chown -R lingxi:lingxi-shared /home/lingxi /workspace /documents /downloads
+chmod 2775 /workspace /documents /downloads /home/lingxi/shared
+chmod 711 /home/lingxi /home/lingxi/agent-private
 
 # Screen :10 is the browser-service display. Further agent screens are created
 # lazily by AgentScreenManager (:11, :12, ...), each with its own input/VNC
@@ -22,30 +26,22 @@ chown -R lingxi:lingxi /home/lingxi /workspace /documents /downloads
 runuser -u lingxi -- Xvfb :10 -screen 0 1440x900x24 -nolisten tcp &
 runuser -u lingxi -- env DISPLAY=:10 openbox-session &
 
-# Exactly one Chromium process owns the persistent profile. Agents receive
-# different CDP targets through BrowserTargetRegistry; they never start another
-# process against this user-data-dir. Some managed Docker hosts forbid nested
-# user namespaces, so Chromium's own sandbox cannot start there; Docker remains
-# the isolation boundary for this dedicated Computer container.
-runuser -u lingxi -- env DISPLAY=:10 chromium \
-  --no-sandbox \
-  --no-first-run \
-  --no-default-browser-check \
-  --disable-dev-shm-usage \
-  --remote-debugging-address=127.0.0.1 \
-  --remote-debugging-port=9222 \
-  --user-data-dir=/home/lingxi/.config/chromium \
-  about:blank &
+# The root broker owns Chromium's remote-debugging pipe and exposes only a
+# mode-0600 Unix socket. Agent shell users have no TCP or filesystem path to
+# CDP, while the service can still address an exact target/session.
+/usr/local/bin/browser-broker &
 
 # Do not report a usable Computer until its singleton browser service is
 # reachable. A failed Xvfb/Chromium launch must fail the container rather than
 # leaving `sleep infinity` running with no automation capability.
 for attempt in $(seq 1 30); do
-  if curl --fail --silent http://127.0.0.1:9222/json/version >/dev/null; then
+  if curl --fail --silent --unix-socket /run/lingxi/browser.sock \
+      -X POST -H 'content-type: application/json' -d '{}' http://localhost/health >/dev/null; then
     exec sleep infinity
   fi
   sleep 1
 done
 
-echo 'Chromium CDP did not become ready on 127.0.0.1:9222' >&2
+echo 'Chromium broker did not become ready' >&2
+test ! -f /tmp/chromium-broker.log || cat /tmp/chromium-broker.log >&2
 exit 1

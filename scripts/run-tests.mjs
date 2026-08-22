@@ -13,6 +13,7 @@ const roots = [
 function collect(directory) {
   const files = []
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && ['node_modules', 'dist', 'coverage', '.wrangler'].includes(entry.name)) continue
     const full = join(directory, entry.name)
     if (entry.isDirectory()) files.push(...collect(full))
     else if (entry.isFile() && entry.name.endsWith('.test.ts')) files.push(full)

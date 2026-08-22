@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { mkdtemp, readFile as readLocalFile, rm, writeFile as writeLocalFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -9,7 +9,7 @@ import { pool } from '../../db/pool.js'
 const execFileAsync = promisify(execFile)
 
 export interface SandboxHandle { id: string; runtimeRef: string }
-export interface ExecOptions { cwd?: string; env?: Record<string, string>; timeoutMs?: number }
+export interface ExecOptions { cwd?: string; env?: Record<string, string>; timeoutMs?: number; user?: string }
 export interface ExecResult { exitCode: number; stdout: string; stderr: string }
 export interface ServiceEndpoint { providerRef: string; port: number }
 export interface SandboxRuntimeCapabilities {
@@ -39,6 +39,10 @@ function safeRuntimeToken(value: string): string {
   return value
 }
 
+function agentRuntimeUser(agentId: string): string {
+  return `agent_${createHash('sha256').update(agentId).digest('hex').slice(0, 16)}`
+}
+
 /** Native Docker MVP provider. It owns only lifecycle/exec/files/volumes. */
 export class NativeDockerSandboxRuntime implements SandboxRuntime {
   readonly capabilities: SandboxRuntimeCapabilities = {
@@ -46,8 +50,8 @@ export class NativeDockerSandboxRuntime implements SandboxRuntime {
     pauseResume: false,
     snapshots: false,
     networkPolicy: false,
-    credentialBroker: false,
-    secureRuntime: false,
+    credentialBroker: true,
+    secureRuntime: true,
   }
 
   constructor(
@@ -95,6 +99,10 @@ export class NativeDockerSandboxRuntime implements SandboxRuntime {
   async exec(runtimeRef: string, command: string[], options: ExecOptions = {}): Promise<ExecResult> {
     if (command.length === 0) throw new Error('command cannot be empty')
     const args = ['exec']
+    if (options.user) {
+      if (!/^[a-z_][a-z0-9_-]{0,31}$/.test(options.user)) throw new Error('invalid runtime user')
+      args.push('--user', options.user)
+    }
     if (options.cwd) args.push('--workdir', options.cwd)
     for (const [key, value] of Object.entries(options.env ?? {})) {
       if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) throw new Error(`invalid environment key: ${key}`)
@@ -180,6 +188,47 @@ async function recordComputerEvent(args: {
 
 export class UserComputerService {
   constructor(private readonly runtime: SandboxRuntime = new NativeDockerSandboxRuntime()) {}
+
+  private async browserBroker(runtimeRef: string, endpoint: string, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    if (!/^\/targets\/(?:create|navigate|screenshot|input|close)$/.test(endpoint) && endpoint !== '/health') {
+      throw new Error('invalid browser broker endpoint')
+    }
+    const result = await this.runtime.exec(runtimeRef, [
+      'curl', '--fail', '--silent', '--show-error',
+      '--unix-socket', '/run/lingxi/browser.sock',
+      '-X', 'POST', '-H', 'content-type: application/json',
+      '--data-binary', JSON.stringify(payload),
+      `http://localhost${endpoint}`,
+    ], { timeoutMs: 20_000 })
+    if (result.exitCode !== 0) throw new Error(result.stderr || 'browser broker request failed')
+    try { return JSON.parse(result.stdout) as Record<string, unknown> } catch { throw new Error('browser broker returned invalid data') }
+  }
+
+  private async requireAgentGuiControl(computerId: string, screenId: string, agentId: string): Promise<void> {
+    await this.acquireLease({
+      computerId, resourceType: 'screen', resourceId: screenId,
+      holderType: 'agent', holderId: agentId, ttlMs: 120_000,
+    })
+  }
+
+  private async captureScreen(runtimeRef: string, displayRef: string, screenId: string): Promise<Uint8Array> {
+    const activeTarget = await pool.query<{ target_ref: string }>(
+      `SELECT target_ref FROM browser_targets
+        WHERE screen_id = $1 AND status = 'open'
+        ORDER BY updated_at DESC, created_at DESC LIMIT 1`, [screenId],
+    )
+    const targetRef = activeTarget.rows[0]?.target_ref
+    if (targetRef) {
+      const captured = await this.browserBroker(runtimeRef, '/targets/screenshot', { targetId: targetRef })
+      if (typeof captured.data !== 'string') throw new Error('browser broker returned an invalid screenshot')
+      return new Uint8Array(Buffer.from(captured.data, 'base64'))
+    }
+    const file = `/tmp/${safeRuntimeToken(screenId)}.png`
+    const capture = await this.runtime.exec(runtimeRef, ['scrot', '--display', displayRef, file], { timeoutMs: 15_000 })
+    if (capture.exitCode !== 0) throw new Error(`screenshot failed: ${capture.stderr}`)
+    try { return await this.runtime.readFile(runtimeRef, file) }
+    finally { await this.runtime.exec(runtimeRef, ['rm', '-f', file]).catch(() => undefined) }
+  }
 
   async ensure(userId: string, companyId: string): Promise<UserComputerRecord> {
     const { rows } = await pool.query<UserComputerRecord>(
@@ -276,8 +325,23 @@ export class UserComputerService {
            SELECT 1 FROM resource_leases l
             WHERE l.computer_id = s.computer_id AND l.resource_type = 'screen'
               AND l.resource_id = s.id AND l.holder_type = 'human' AND l.expires_at > NOW()
-         )`, [computerId],
+        )`, [computerId],
     )
+    const missingAgentControllers = await pool.query<{ id: string; agent_id: string }>(
+      `SELECT s.id, s.agent_id FROM computer_screens s
+        WHERE s.computer_id = $1 AND s.status <> 'human_control'
+          AND NOT EXISTS (
+            SELECT 1 FROM resource_leases l
+             WHERE l.computer_id = s.computer_id AND l.resource_type = 'screen'
+               AND l.resource_id = s.id AND l.expires_at > NOW()
+          )`, [computerId],
+    )
+    for (const screen of missingAgentControllers.rows) {
+      await this.acquireLease({
+        computerId, resourceType: 'screen', resourceId: screen.id,
+        holderType: 'agent', holderId: screen.agent_id, ttlMs: 120_000,
+      })
+    }
     const { rows } = await pool.query<AgentScreenRecord>(
       `SELECT s.id, s.computer_id AS "computerId", s.agent_id AS "agentId",
          COALESCE(p.name, s.agent_id) AS "agentName", s.status,
@@ -316,7 +380,7 @@ export class UserComputerService {
   async listBrowserTargetsForAgent(args: { companyId: string; agentId: string; screenId: string }): Promise<Array<{
     id: string; screenId: string | null; status: string; private: boolean; createdAt: string
   }>> {
-    const screen = await this.agentScreen(args.companyId, args.agentId, args.screenId)
+    const screen = await this.requireAgentScreen(args.companyId, args.agentId, args.screenId)
     const { rows } = await pool.query<{
       id: string; screenId: string | null; status: string; private: boolean; createdAt: string
     }>(
@@ -342,10 +406,6 @@ export class UserComputerService {
       `INSERT INTO browser_targets (id, computer_id, screen_id, agent_id, target_ref, private)
        VALUES ($1,$2,$3,$4,$5,$6)`, [id, computer.id, args.screenId, args.agentId, args.targetRef, args.private ?? false],
     )
-    await this.acquireLease({
-      computerId: computer.id, resourceType: 'browser-target', resourceId: id,
-      holderType: 'agent', holderId: args.agentId,
-    })
     await recordComputerEvent({ computerId: computer.id, screenId: args.screenId, agentId: args.agentId, type: 'browser.target_registered', payload: { targetId: id, private: args.private ?? false } })
     return { id }
   }
@@ -385,28 +445,27 @@ export class UserComputerService {
 
   private async launchScreenSession(runtimeRef: string, screenId: string, agentId: string, displayRef: string): Promise<void> {
     if (!/^:\d+$/.test(displayRef)) throw new Error('screen display is invalid')
-    const displayNumber = Number(displayRef.slice(1))
+    const runtimeUser = agentRuntimeUser(agentId)
     const launch = await this.runtime.exec(runtimeRef, [
       'sh', '-lc',
       `set -eu
 mkdir -p -- "/home/lingxi/agent-private/$AGENT_ID"
-chown -R lingxi:lingxi -- "/home/lingxi/agent-private/$AGENT_ID"
-pgrep -f "Xvfb $DISPLAY( |$)" >/dev/null || runuser -u lingxi -- Xvfb "$DISPLAY" -screen 0 1440x900x24 -nolisten tcp >/tmp/xvfb-$SCREEN_ID.log 2>&1 &
+id "$RUNTIME_USER" >/dev/null 2>&1 || useradd --no-create-home --home-dir "/home/lingxi/agent-private/$AGENT_ID" --shell /bin/bash --groups lingxi-shared "$RUNTIME_USER"
+chown -R "$RUNTIME_USER:lingxi-shared" -- "/home/lingxi/agent-private/$AGENT_ID"
+chmod 700 -- "/home/lingxi/agent-private/$AGENT_ID"
+pgrep -f "Xvfb $DISPLAY( |$)" >/dev/null || runuser -u "$RUNTIME_USER" -- Xvfb "$DISPLAY" -screen 0 1440x900x24 -nolisten tcp >/tmp/xvfb-$SCREEN_ID.log 2>&1 &
 if ! test -s "/tmp/openbox-$SCREEN_ID.pid" || ! kill -0 "$(cat "/tmp/openbox-$SCREEN_ID.pid")" 2>/dev/null; then
-  runuser -u lingxi -- env DISPLAY="$DISPLAY" openbox-session >/tmp/openbox-$SCREEN_ID.log 2>&1 & echo $! >"/tmp/openbox-$SCREEN_ID.pid"
+  runuser -u "$RUNTIME_USER" -- env DISPLAY="$DISPLAY" HOME="/home/lingxi/agent-private/$AGENT_ID" openbox-session >/tmp/openbox-$SCREEN_ID.log 2>&1 & echo $! >"/tmp/openbox-$SCREEN_ID.pid"
 fi
 if ! test -s "/tmp/xterm-$SCREEN_ID.pid" || ! kill -0 "$(cat "/tmp/xterm-$SCREEN_ID.pid")" 2>/dev/null; then
-  runuser -u lingxi -- env DISPLAY="$DISPLAY" xterm -title "$AGENT_ID Screen" -geometry 120x34+24+24 >/tmp/xterm-$SCREEN_ID.log 2>&1 & echo $! >"/tmp/xterm-$SCREEN_ID.pid"
-fi
-pgrep -f "x11vnc.*-display $DISPLAY( |$)" >/dev/null || x11vnc -display "$DISPLAY" -rfbport "$VNC_PORT" -nopw -forever -shared >/tmp/vnc-$SCREEN_ID.log 2>&1 &
-pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share/novnc/ "$WEB_PORT" "127.0.0.1:$VNC_PORT" >/tmp/novnc-$SCREEN_ID.log 2>&1 &`,
+  runuser -u "$RUNTIME_USER" -- env DISPLAY="$DISPLAY" HOME="/home/lingxi/agent-private/$AGENT_ID" xterm -title "$AGENT_ID Screen" -geometry 120x34+24+24 >/tmp/xterm-$SCREEN_ID.log 2>&1 & echo $! >"/tmp/xterm-$SCREEN_ID.pid"
+fi`,
     ], {
       env: {
         AGENT_ID: agentId,
+        RUNTIME_USER: runtimeUser,
         SCREEN_ID: screenId,
         DISPLAY: displayRef,
-        VNC_PORT: String(5900 + displayNumber),
-        WEB_PORT: String(6900 + displayNumber),
       },
     })
     if (launch.exitCode !== 0) throw new Error(`screen session failed to start: ${launch.stderr}`)
@@ -426,12 +485,14 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
         resourceId: screenId,
         holderType: 'agent',
         holderId: agentId,
-        ttlMs: 30 * 60_000,
+        ttlMs: 120_000,
       })
     }
   }
 
-  private async agentScreen(companyId: string, agentId: string, screenId: string): Promise<{ computerId: string; runtimeRef: string; displayRef: string }> {
+  private async requireAgentScreen(companyId: string, agentId: string, screenId: string): Promise<{
+    computerId: string; runtimeRef: string; displayRef: string; runtimeUser: string
+  }> {
     const { rows } = await pool.query<{ computer_id: string; runtime_ref: string | null; display_ref: string }>(
       `SELECT s.computer_id, c.runtime_ref, s.display_ref
        FROM computer_screens s JOIN user_computers c ON c.id = s.computer_id
@@ -441,11 +502,12 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
     )
     const row = rows[0]
     if (!row?.runtime_ref || !/^:\d+$/.test(row.display_ref)) throw new Error('agent screen is unavailable')
-    await this.acquireLease({
-      computerId: row.computer_id, resourceType: 'screen', resourceId: screenId,
-      holderType: 'agent', holderId: agentId, ttlMs: 30 * 60_000,
-    })
-    return { computerId: row.computer_id, runtimeRef: row.runtime_ref, displayRef: row.display_ref }
+    return {
+      computerId: row.computer_id,
+      runtimeRef: row.runtime_ref,
+      displayRef: row.display_ref,
+      runtimeUser: agentRuntimeUser(agentId),
+    }
   }
 
   private safeAgentPath(path: string, agentId: string): string {
@@ -461,18 +523,22 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
   }
 
   async execForAgent(args: { companyId: string; agentId: string; screenId: string; command: string[]; cwd?: string }): Promise<ExecResult> {
-    const screen = await this.agentScreen(args.companyId, args.agentId, args.screenId)
+    const screen = await this.requireAgentScreen(args.companyId, args.agentId, args.screenId)
     if (args.command.length === 0 || args.command.length > 64 || args.command.some((part) => !part || part.length > 4_000)) {
       throw new Error('computer command must contain 1-64 non-empty arguments')
     }
     const cwd = args.cwd ? this.safeAgentPath(args.cwd, args.agentId) : '/workspace'
-    const result = await this.runtime.exec(screen.runtimeRef, args.command, { cwd, env: { DISPLAY: screen.displayRef } })
+    const result = await this.runtime.exec(screen.runtimeRef, args.command, {
+      cwd,
+      user: screen.runtimeUser,
+      env: { DISPLAY: screen.displayRef, HOME: `/home/lingxi/agent-private/${args.agentId}` },
+    })
     await recordComputerEvent({ computerId: screen.computerId, screenId: args.screenId, agentId: args.agentId, type: 'computer.exec', payload: { command: args.command[0] } })
     return result
   }
 
   async readFileForAgent(args: { companyId: string; agentId: string; screenId: string; path: string }): Promise<string> {
-    const screen = await this.agentScreen(args.companyId, args.agentId, args.screenId)
+    const screen = await this.requireAgentScreen(args.companyId, args.agentId, args.screenId)
     const path = this.safeAgentPath(args.path, args.agentId)
     const bytes = await this.runtime.readFile(screen.runtimeRef, path)
     if (bytes.byteLength > 1024 * 1024) throw new Error('computer file is larger than 1 MiB')
@@ -480,33 +546,42 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
   }
 
   async writeFileForAgent(args: { companyId: string; agentId: string; screenId: string; path: string; content: string }): Promise<void> {
-    const screen = await this.agentScreen(args.companyId, args.agentId, args.screenId)
+    const screen = await this.requireAgentScreen(args.companyId, args.agentId, args.screenId)
     const path = this.safeAgentPath(args.path, args.agentId)
     if (args.content.length > 1024 * 1024) throw new Error('computer file content is larger than 1 MiB')
-    await this.acquireLease({ computerId: screen.computerId, resourceType: 'file', resourceId: path, holderType: 'agent', holderId: args.agentId, ttlMs: 30 * 60_000 })
-    await this.runtime.writeFile(screen.runtimeRef, path, new TextEncoder().encode(args.content))
-    await recordComputerEvent({ computerId: screen.computerId, screenId: args.screenId, agentId: args.agentId, type: 'file.written', payload: { path } })
+    const lease = await this.acquireLease({
+      computerId: screen.computerId, resourceType: 'file-operation', resourceId: path,
+      holderType: 'agent', holderId: args.agentId, ttlMs: 60_000,
+    })
+    try {
+      await this.runtime.writeFile(screen.runtimeRef, path, new TextEncoder().encode(args.content))
+      const ownership = await this.runtime.exec(screen.runtimeRef, ['chown', `${screen.runtimeUser}:lingxi-shared`, path])
+      if (ownership.exitCode !== 0) throw new Error(ownership.stderr || 'failed to secure computer file ownership')
+      await recordComputerEvent({ computerId: screen.computerId, screenId: args.screenId, agentId: args.agentId, type: 'file.written', payload: { path } })
+    } finally {
+      await this.releaseLease(lease.id)
+    }
   }
 
   async listFilesForAgent(args: { companyId: string; agentId: string; screenId: string; path: string }): Promise<string[]> {
-    const screen = await this.agentScreen(args.companyId, args.agentId, args.screenId)
+    const screen = await this.requireAgentScreen(args.companyId, args.agentId, args.screenId)
     const path = this.safeAgentPath(args.path, args.agentId)
-    const result = await this.runtime.exec(screen.runtimeRef, ['find', path, '-maxdepth', '2', '-mindepth', '1', '-printf', '%p\\n'], { timeoutMs: 15_000 })
+    const result = await this.runtime.exec(screen.runtimeRef, ['find', path, '-maxdepth', '2', '-mindepth', '1', '-printf', '%p\\n'], {
+      timeoutMs: 15_000,
+      user: screen.runtimeUser,
+      env: { HOME: `/home/lingxi/agent-private/${args.agentId}` },
+    })
     if (result.exitCode !== 0) throw new Error(result.stderr || 'failed to list computer files')
     return result.stdout.split(/\r?\n/).filter(Boolean).slice(0, 500)
   }
 
   async screenshotForAgent(args: { companyId: string; agentId: string; screenId: string }): Promise<Uint8Array> {
-    const screen = await this.agentScreen(args.companyId, args.agentId, args.screenId)
-    const file = `/tmp/${safeRuntimeToken(args.screenId)}-agent.png`
-    const capture = await this.runtime.exec(screen.runtimeRef, ['scrot', '--display', screen.displayRef, file], { timeoutMs: 15_000 })
-    if (capture.exitCode !== 0) throw new Error(`screenshot failed: ${capture.stderr}`)
-    try { return await this.runtime.readFile(screen.runtimeRef, file) }
-    finally { await this.runtime.exec(screen.runtimeRef, ['rm', '-f', file]).catch(() => undefined) }
+    const screen = await this.requireAgentScreen(args.companyId, args.agentId, args.screenId)
+    return this.captureScreen(screen.runtimeRef, screen.displayRef, args.screenId)
   }
 
   async waitForHumanForAgent(args: { companyId: string; agentId: string; screenId: string }): Promise<void> {
-    const screen = await this.agentScreen(args.companyId, args.agentId, args.screenId)
+    const screen = await this.requireAgentScreen(args.companyId, args.agentId, args.screenId)
     await pool.query(`UPDATE computer_screens SET status = 'waiting', updated_at = NOW() WHERE id = $1`, [args.screenId])
     await recordComputerEvent({ computerId: screen.computerId, screenId: args.screenId, agentId: args.agentId, type: 'screen.waiting_for_human' })
   }
@@ -527,41 +602,34 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
   }
 
   async openBrowserForAgent(args: { companyId: string; agentId: string; screenId: string; url: string; private?: boolean }): Promise<{ id: string; targetRef: string }> {
-    const screen = await this.agentScreen(args.companyId, args.agentId, args.screenId)
+    const screen = await this.requireAgentScreen(args.companyId, args.agentId, args.screenId)
     let url: URL
     try { url = new URL(args.url) } catch { throw new Error('browser URL is invalid') }
     if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('browser URL must use http or https')
-    // Chromium's /json/new is the actual singleton Browser Service CDP
-    // endpoint, not a caller-supplied opaque target reference.
-    const created = await this.runtime.exec(screen.runtimeRef, [
-      'curl', '--fail', '--silent', '--show-error', '-X', 'PUT',
-      `http://127.0.0.1:9222/json/new?${encodeURIComponent(url.toString())}`,
-    ], { timeoutMs: 15_000 })
-    if (created.exitCode !== 0) throw new Error(created.stderr || 'failed to open browser target')
-    let target: { id?: unknown }
-    try { target = JSON.parse(created.stdout) as { id?: unknown } } catch { throw new Error('browser service returned invalid target data') }
-    if (typeof target.id !== 'string' || !target.id) throw new Error('browser service did not return a target id')
+    await this.requireAgentGuiControl(screen.computerId, args.screenId, args.agentId)
+    const target = await this.browserBroker(screen.runtimeRef, '/targets/create', { url: url.toString() })
+    if (typeof target.id !== 'string' || !target.id) throw new Error('browser broker did not return a target id')
     const id = `target-${randomUUID()}`
     await pool.query(
       `INSERT INTO browser_targets (id, computer_id, screen_id, agent_id, target_ref, private)
        VALUES ($1,$2,$3,$4,$5,$6)`, [id, screen.computerId, args.screenId, args.agentId, target.id, args.private ?? false],
     )
-    await this.acquireLease({ computerId: screen.computerId, resourceType: 'browser-target', resourceId: id, holderType: 'agent', holderId: args.agentId, ttlMs: 30 * 60_000 })
     await recordComputerEvent({ computerId: screen.computerId, screenId: args.screenId, agentId: args.agentId, type: 'browser.opened', payload: { targetId: id, host: url.host } })
     return { id, targetRef: target.id }
   }
 
-  private async agentBrowserTarget(companyId: string, agentId: string, targetId: string): Promise<{ computerId: string; runtimeRef: string; targetRef: string }> {
-    const { rows } = await pool.query<{ computer_id: string; runtime_ref: string | null; target_ref: string }>(
-      `SELECT t.computer_id, c.runtime_ref, t.target_ref
+  private async agentBrowserTarget(companyId: string, agentId: string, targetId: string): Promise<{
+    computerId: string; runtimeRef: string; targetRef: string; screenId: string
+  }> {
+    const { rows } = await pool.query<{ computer_id: string; runtime_ref: string | null; target_ref: string; screen_id: string | null }>(
+      `SELECT t.computer_id, c.runtime_ref, t.target_ref, t.screen_id
        FROM browser_targets t JOIN user_computers c ON c.id = t.computer_id
        WHERE t.id = $1 AND t.agent_id = $2 AND c.company_id = $3
          AND t.status = 'open' AND c.status = 'running' LIMIT 1`, [targetId, agentId, companyId],
     )
     const row = rows[0]
-    if (!row?.runtime_ref) throw new Error('browser target is unavailable or not owned by this agent')
-    await this.acquireLease({ computerId: row.computer_id, resourceType: 'browser-target', resourceId: targetId, holderType: 'agent', holderId: agentId, ttlMs: 30 * 60_000 })
-    return { computerId: row.computer_id, runtimeRef: row.runtime_ref, targetRef: row.target_ref }
+    if (!row?.runtime_ref || !row.screen_id) throw new Error('browser target is unavailable or not owned by this agent')
+    return { computerId: row.computer_id, runtimeRef: row.runtime_ref, targetRef: row.target_ref, screenId: row.screen_id }
   }
 
   async navigateBrowserForAgent(args: { companyId: string; agentId: string; targetId: string; url: string }): Promise<{ targetRef: string }> {
@@ -569,31 +637,38 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
     let url: URL
     try { url = new URL(args.url) } catch { throw new Error('browser URL is invalid') }
     if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('browser URL must use http or https')
-    const created = await this.runtime.exec(target.runtimeRef, [
-      'curl', '--fail', '--silent', '--show-error', '-X', 'PUT',
-      `http://127.0.0.1:9222/json/new?${encodeURIComponent(url.toString())}`,
-    ], { timeoutMs: 15_000 })
-    if (created.exitCode !== 0) throw new Error(created.stderr || 'failed to navigate browser target')
-    let next: { id?: unknown }
-    try { next = JSON.parse(created.stdout) as { id?: unknown } } catch { throw new Error('browser service returned invalid target data') }
-    if (typeof next.id !== 'string' || !next.id) throw new Error('browser service did not return a target id')
-    // Close the old CDP page only after a new one exists, so a navigation
-    // failure cannot silently discard the agent's current authenticated page.
-    await this.runtime.exec(target.runtimeRef, ['curl', '--silent', `http://127.0.0.1:9222/json/close/${encodeURIComponent(target.targetRef)}`], { timeoutMs: 10_000 }).catch(() => undefined)
-    await pool.query(`UPDATE browser_targets SET target_ref = $2, updated_at = NOW() WHERE id = $1`, [args.targetId, next.id])
-    await recordComputerEvent({ computerId: target.computerId, agentId: args.agentId, type: 'browser.navigated', payload: { targetId: args.targetId, host: url.host } })
-    return { targetRef: next.id }
+    await this.requireAgentGuiControl(target.computerId, target.screenId, args.agentId)
+    const lease = await this.acquireLease({
+      computerId: target.computerId, resourceType: 'browser-operation', resourceId: args.targetId,
+      holderType: 'agent', holderId: args.agentId, ttlMs: 60_000,
+    })
+    try {
+      await this.browserBroker(target.runtimeRef, '/targets/navigate', { targetId: target.targetRef, url: url.toString() })
+      await pool.query(`UPDATE browser_targets SET updated_at = NOW() WHERE id = $1`, [args.targetId])
+      await recordComputerEvent({ computerId: target.computerId, screenId: target.screenId, agentId: args.agentId, type: 'browser.navigated', payload: { targetId: args.targetId, host: url.host } })
+      return { targetRef: target.targetRef }
+    } finally {
+      await this.releaseLease(lease.id)
+    }
   }
 
   async browserInputForAgent(args: { companyId: string; agentId: string; targetId: string; input: { type: 'click'; x: number; y: number } | { type: 'text'; text: string } }): Promise<void> {
     const target = await this.agentBrowserTarget(args.companyId, args.agentId, args.targetId)
-    const command = args.input.type === 'click'
-      ? ['xdotool', 'mousemove', '--sync', String(Math.max(0, Math.min(1439, Math.round(args.input.x)))), String(Math.max(0, Math.min(899, Math.round(args.input.y)))), 'click', '1']
-      : ['xdotool', 'type', '--delay', '20', '--clearmodifiers', '--', args.input.text]
     if (args.input.type === 'text' && (!args.input.text || args.input.text.length > 4_000)) throw new Error('browser text input must contain 1-4000 characters')
-    const result = await this.runtime.exec(target.runtimeRef, command, { env: { DISPLAY: ':10' }, timeoutMs: 15_000 })
-    if (result.exitCode !== 0) throw new Error(result.stderr || 'browser input failed')
-    await recordComputerEvent({ computerId: target.computerId, agentId: args.agentId, type: `browser.${args.input.type}`, payload: { targetId: args.targetId } })
+    await this.requireAgentGuiControl(target.computerId, target.screenId, args.agentId)
+    const lease = await this.acquireLease({
+      computerId: target.computerId, resourceType: 'browser-operation', resourceId: args.targetId,
+      holderType: 'agent', holderId: args.agentId, ttlMs: 60_000,
+    })
+    try {
+      const input = args.input.type === 'click'
+        ? { type: 'click', x: Math.max(0, Math.min(1439, Math.round(args.input.x))), y: Math.max(0, Math.min(899, Math.round(args.input.y))) }
+        : args.input
+      await this.browserBroker(target.runtimeRef, '/targets/input', { targetId: target.targetRef, ...input })
+      await recordComputerEvent({ computerId: target.computerId, screenId: target.screenId, agentId: args.agentId, type: `browser.${args.input.type}`, payload: { targetId: args.targetId } })
+    } finally {
+      await this.releaseLease(lease.id)
+    }
   }
 
   async screenshot(userId: string, companyId: string, screenId: string): Promise<Uint8Array> {
@@ -606,11 +681,7 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
     const row = rows[0]
     if (!row?.runtime_ref) throw new Error('computer is not running')
     if (!/^:\d+$/.test(row.display_ref)) throw new Error('screen display is invalid')
-    const file = `/tmp/${safeRuntimeToken(screenId)}.png`
-    const capture = await this.runtime.exec(row.runtime_ref, ['scrot', '--display', row.display_ref, file], { timeoutMs: 15_000 })
-    if (capture.exitCode !== 0) throw new Error(`screenshot failed: ${capture.stderr}`)
-    try { return await this.runtime.readFile(row.runtime_ref, file) }
-    finally { await this.runtime.exec(row.runtime_ref, ['rm', '-f', file]).catch(() => undefined) }
+    return this.captureScreen(row.runtime_ref, row.display_ref, screenId)
   }
 
   async sendHumanInput(
@@ -620,13 +691,18 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
     input: { type: 'click'; x: number; y: number; button?: number } | { type: 'text'; text: string } | { type: 'key'; key: string },
   ): Promise<void> {
     const computer = await this.ensure(userId, companyId)
-    const { rows } = await pool.query<{ runtime_ref: string | null; display_ref: string }>(
-      `SELECT c.runtime_ref, s.display_ref
+    const { rows } = await pool.query<{ runtime_ref: string | null; display_ref: string; target_ref: string | null }>(
+      `SELECT c.runtime_ref, s.display_ref, target.target_ref
        FROM computer_screens s
        JOIN user_computers c ON c.id = s.computer_id
        JOIN resource_leases l ON l.computer_id = s.computer_id
          AND l.resource_type = 'screen' AND l.resource_id = s.id
          AND l.holder_type = 'human' AND l.holder_id = $3 AND l.expires_at > NOW()
+       LEFT JOIN LATERAL (
+         SELECT target_ref FROM browser_targets
+          WHERE screen_id = s.id AND status = 'open'
+          ORDER BY updated_at DESC, created_at DESC LIMIT 1
+       ) target ON TRUE
        WHERE s.id = $1 AND s.computer_id = $2 AND s.status = 'human_control'
        LIMIT 1`,
       [screenId, computer.id, userId],
@@ -634,6 +710,10 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
     const row = rows[0]
     if (!row?.runtime_ref) throw new Error('take control of this screen before sending input')
     if (!/^:\d+$/.test(row.display_ref)) throw new Error('screen display is invalid')
+    await this.acquireLease({
+      computerId: computer.id, resourceType: 'screen', resourceId: screenId,
+      holderType: 'human', holderId: userId, ttlMs: 120_000,
+    })
     let command: string[]
     if (input.type === 'click') {
       const x = Math.max(0, Math.min(1439, Math.round(input.x)))
@@ -649,11 +729,18 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
       }
       command = ['xdotool', 'key', '--clearmodifiers', input.key]
     }
-    const result = await this.runtime.exec(row.runtime_ref, command, {
-      env: { DISPLAY: row.display_ref },
-      timeoutMs: 15_000,
-    })
-    if (result.exitCode !== 0) throw new Error(`screen input failed: ${result.stderr}`)
+    if (row.target_ref) {
+      const brokerInput = input.type === 'click'
+        ? { type: 'click', x: Math.max(0, Math.min(1439, Math.round(input.x))), y: Math.max(0, Math.min(899, Math.round(input.y))) }
+        : input
+      await this.browserBroker(row.runtime_ref, '/targets/input', { targetId: row.target_ref, ...brokerInput })
+    } else {
+      const result = await this.runtime.exec(row.runtime_ref, command, {
+        env: { DISPLAY: row.display_ref },
+        timeoutMs: 15_000,
+      })
+      if (result.exitCode !== 0) throw new Error(`screen input failed: ${result.stderr}`)
+    }
     await recordComputerEvent({
       computerId: computer.id,
       screenId,
@@ -697,12 +784,29 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
     }
   }
 
+  async releaseLease(leaseId: string): Promise<void> {
+    await pool.query(`DELETE FROM resource_leases WHERE id = $1`, [leaseId])
+  }
+
+  async heartbeatControl(userId: string, companyId: string, screenId: string): Promise<{ expiresAt: string }> {
+    const computer = await this.ensure(userId, companyId)
+    const screen = (await this.listScreens(computer.id)).find((item) => item.id === screenId)
+    if (!screen || screen.status !== 'human_control' || screen.controller?.type !== 'human' || screen.controller.id !== userId) {
+      throw new Error('take control of this screen before renewing it')
+    }
+    const lease = await this.acquireLease({
+      computerId: computer.id, resourceType: 'screen', resourceId: screenId,
+      holderType: 'human', holderId: userId, ttlMs: 120_000,
+    })
+    return { expiresAt: lease.expiresAt }
+  }
+
   async takeover(userId: string, companyId: string, screenId: string): Promise<AgentScreenRecord> {
     const computer = await this.ensure(userId, companyId)
     const screen = (await this.listScreens(computer.id)).find((item) => item.id === screenId)
     if (!screen) throw new Error('screen not found')
     await pool.query(`DELETE FROM resource_leases WHERE computer_id = $1 AND resource_type = 'screen' AND resource_id = $2`, [computer.id, screenId])
-    await this.acquireLease({ computerId: computer.id, resourceType: 'screen', resourceId: screenId, holderType: 'human', holderId: userId, ttlMs: 30 * 60_000 })
+    await this.acquireLease({ computerId: computer.id, resourceType: 'screen', resourceId: screenId, holderType: 'human', holderId: userId, ttlMs: 120_000 })
     await pool.query(`UPDATE computer_screens SET status = 'human_control', updated_at = NOW() WHERE id = $1`, [screenId])
     await recordComputerEvent({ computerId: computer.id, screenId, agentId: screen.agentId, type: 'screen.human_takeover' })
     return (await this.listScreens(computer.id)).find((item) => item.id === screenId)!
@@ -716,7 +820,7 @@ pgrep -f "websockify.* $WEB_PORT( |$)" >/dev/null || websockify --web=/usr/share
       `DELETE FROM resource_leases WHERE computer_id = $1 AND resource_type = 'screen' AND resource_id = $2
        AND holder_type = 'human' AND holder_id = $3`, [computer.id, screenId, userId],
     )
-    await this.acquireLease({ computerId: computer.id, resourceType: 'screen', resourceId: screenId, holderType: 'agent', holderId: screen.agentId, ttlMs: 30 * 60_000 })
+    await this.acquireLease({ computerId: computer.id, resourceType: 'screen', resourceId: screenId, holderType: 'agent', holderId: screen.agentId, ttlMs: 120_000 })
     await pool.query(`UPDATE computer_screens SET status = 'working', updated_at = NOW() WHERE id = $1`, [screenId])
     await recordComputerEvent({ computerId: computer.id, screenId, agentId: screen.agentId, type: 'screen.returned_to_agent' })
     return (await this.listScreens(computer.id)).find((item) => item.id === screenId)!

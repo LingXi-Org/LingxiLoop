@@ -193,7 +193,7 @@ test('[integration] learning preset force-upgrades legacy workspaces and is idem
   assert.deepEqual(presets.map((agent) => agent.role), [
     '实践导师 · Practice Mentor',
     '解题陪练 · Problem Coach',
-    '学习教练 · Study Coach',
+    '团队负责人 · Chief of Staff',
     '概念导师 · Concept Tutor',
     '阅读研究 · Research Guide',
     '错因诊断 · Learning Diagnostician',

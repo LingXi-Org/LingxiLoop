@@ -52,6 +52,9 @@ export interface ApprovedContinuation {
   actionKey: string
   payload: Record<string, unknown>
   blockedAction: Record<string, unknown>
+  remainingActions: Record<string, unknown>[]
+  inputScopeKey: string
+  actionIndex: number
 }
 
 function payloadHash(payload: Record<string, unknown>): string {
@@ -272,53 +275,103 @@ export async function updateHandoff(args: {
   status: Extract<HandoffStatus, 'accepted' | 'working' | 'completed' | 'blocked'>
   note?: string | null
 }): Promise<HandoffSnapshot & { resultMessageId: string | null; conversationId: string }> {
-  const { rows } = await pool.query<{
-    conversation_id: string; from_agent_id: string; to_agent_id: string; title: string;
-    shared_paths: string[]; browser_targets: string[]; note: string | null
-  }>(
-    `SELECT conversation_id, from_agent_id, to_agent_id, title, shared_paths, browser_targets, note
-     FROM agent_handoffs WHERE id = $1 AND company_id = $2 LIMIT 1`, [args.handoffId, args.companyId],
-  )
-  const row = rows[0]
-  if (!row) throw new Error('handoff not found')
-  // The source agent may only create the handoff. From acceptance onward the
-  // target agent owns progress and terminal state; this keeps the UI's
-  // ownership claim truthful and prevents a source from declaring work done.
-  if (args.actorAgentId !== row.to_agent_id) throw new Error('only the target agent owns this handoff after creation')
-  const snapshot: HandoffSnapshot = {
-    id: args.handoffId,
-    fromAgentId: row.from_agent_id,
-    toAgentId: row.to_agent_id,
-    title: row.title,
-    status: args.status,
-    note: args.note?.trim() || row.note,
-    sharedPaths: row.shared_paths ?? [],
-    browserTargets: row.browser_targets ?? [],
-  }
-  await pool.query(
-    `UPDATE agent_handoffs SET status = $3, note = $4, updated_at = NOW()
-     WHERE id = $1 AND company_id = $2`, [args.handoffId, args.companyId, args.status, snapshot.note],
-  )
-  await pool.query(
-    `UPDATE messages SET handoff = $2::jsonb WHERE id = (
-       SELECT source_message_id FROM agent_handoffs WHERE id = $1
-     )`, [args.handoffId, JSON.stringify(snapshot)],
-  )
+  const client = await pool.connect()
+  let snapshot!: HandoffSnapshot
   let resultMessageId: string | null = null
-  if (args.status === 'completed' || args.status === 'blocked') {
-    const result = await postStructuredMessage({
-      conversationId: row.conversation_id,
+  let resultSequence: number | null = null
+  let conversationId = ''
+  try {
+    await client.query('BEGIN')
+    const { rows } = await client.query<{
+      conversation_id: string; from_agent_id: string; to_agent_id: string; title: string;
+      shared_paths: string[]; browser_targets: string[]; note: string | null; status: HandoffStatus;
+      source_message_id: string | null; result_message_id: string | null; result_sequence: number | null
+    }>(
+      `SELECT h.conversation_id, h.from_agent_id, h.to_agent_id, h.title,
+              h.shared_paths, h.browser_targets, h.note, h.status,
+              h.source_message_id, h.result_message_id, result.sequence AS result_sequence
+         FROM agent_handoffs h
+         LEFT JOIN messages result ON result.id = h.result_message_id
+        WHERE h.id = $1 AND h.company_id = $2
+        FOR UPDATE OF h`, [args.handoffId, args.companyId],
+    )
+    const row = rows[0]
+    if (!row) throw new Error('handoff not found')
+    if (args.actorAgentId !== row.to_agent_id) throw new Error('only the target agent owns this handoff after creation')
+    conversationId = row.conversation_id
+    const terminal = args.status === 'completed' || args.status === 'blocked'
+    if (row.result_message_id) {
+      if (row.status !== args.status) throw new Error(`handoff is already terminal (${row.status})`)
+      snapshot = {
+        id: args.handoffId, fromAgentId: row.from_agent_id, toAgentId: row.to_agent_id,
+        title: row.title, status: row.status, note: row.note,
+        sharedPaths: row.shared_paths ?? [], browserTargets: row.browser_targets ?? [],
+      }
+      resultMessageId = row.result_message_id
+      resultSequence = row.result_sequence
+      await client.query('COMMIT')
+    } else {
+      snapshot = {
+        id: args.handoffId, fromAgentId: row.from_agent_id, toAgentId: row.to_agent_id,
+        title: row.title, status: args.status, note: args.note?.trim() || row.note,
+        sharedPaths: row.shared_paths ?? [], browserTargets: row.browser_targets ?? [],
+      }
+      await client.query(
+        `UPDATE agent_handoffs SET status = $3, note = $4, updated_at = NOW()
+          WHERE id = $1 AND company_id = $2`,
+        [args.handoffId, args.companyId, args.status, snapshot.note],
+      )
+      await client.query(
+        `UPDATE messages SET handoff = $2::jsonb WHERE id = $1`,
+        [row.source_message_id, JSON.stringify(snapshot)],
+      )
+      if (terminal) {
+        resultMessageId = `m-${randomUUID()}`
+        const seq = await client.query<{ seq: number }>(
+          `INSERT INTO conversation_counters (conversation_id, next_sequence)
+           VALUES ($1, 2)
+           ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
+           RETURNING next_sequence - 1 AS seq`, [row.conversation_id],
+        )
+        resultSequence = seq.rows[0]?.seq ?? 1
+        const body = `${args.status === 'completed' ? 'Completed' : 'Blocked'} handoff: ${row.title}${snapshot.note ? ` — ${snapshot.note}` : ''}`
+        await client.query(
+          `INSERT INTO messages (
+             id, conversation_id, author_id, kind, body, sequence, company_id,
+             mentioned_ids, mention_all, handoff
+           ) VALUES ($1,$2,$3,'handoff',$4,$5,$6,$7::jsonb,FALSE,$8::jsonb)`,
+          [resultMessageId, row.conversation_id, args.actorAgentId, body, resultSequence,
+            args.companyId, JSON.stringify([row.from_agent_id]), JSON.stringify(snapshot)],
+        )
+        await client.query(
+          `UPDATE agent_handoffs SET result_message_id = $2 WHERE id = $1`,
+          [args.handoffId, resultMessageId],
+        )
+        await client.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [row.conversation_id])
+      }
+      await client.query('COMMIT')
+    }
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally {
+    client.release()
+  }
+  if (resultMessageId && resultSequence != null) {
+    await publishMessage({
+      id: resultMessageId,
+      sequence: resultSequence,
+      conversationId,
       companyId: args.companyId,
       authorId: args.actorAgentId,
       kind: 'handoff',
-      body: `${args.status === 'completed' ? 'Completed' : 'Blocked'} handoff: ${row.title}${snapshot.note ? ` — ${snapshot.note}` : ''}`,
-      mentionedIds: [row.from_agent_id],
+      body: `${snapshot.status === 'completed' ? 'Completed' : 'Blocked'} handoff: ${snapshot.title}${snapshot.note ? ` — ${snapshot.note}` : ''}`,
+      mentionedIds: [snapshot.fromAgentId],
       handoff: snapshot,
+      activation: 'trigger',
     })
-    resultMessageId = result.id
-    await pool.query(`UPDATE agent_handoffs SET result_message_id = $2 WHERE id = $1`, [args.handoffId, result.id])
   }
-  return { ...snapshot, resultMessageId, conversationId: row.conversation_id }
+  return { ...snapshot, resultMessageId, conversationId }
 }
 
 export async function listHandoffs(companyId: string, conversationId?: string): Promise<unknown[]> {
@@ -362,6 +415,8 @@ export async function requestApproval(args: {
   actionKey?: string | null
   actionIndex?: number | null
   blockedAction?: Record<string, unknown> | null
+  remainingActions?: Record<string, unknown>[]
+  inputScopeKey?: string | null
   kind: ApprovalKind
   summary: string
   payload: Record<string, unknown>
@@ -400,11 +455,12 @@ export async function requestApproval(args: {
   await pool.query(
     `INSERT INTO agent_approvals (
        id, company_id, agent_id, conversation_id, run_id, kind, summary, payload, payload_hash,
-       action_key, action_index, blocked_action
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12::jsonb)`,
+       action_key, action_index, blocked_action, remaining_actions, input_scope_key
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12::jsonb,$13::jsonb,$14)`,
     [id, args.companyId, args.agentId, args.conversationId, args.runId ?? null,
       args.kind, args.summary.trim(), JSON.stringify(args.payload), hash,
-      args.actionKey ?? null, args.actionIndex ?? null, args.blockedAction ? JSON.stringify(args.blockedAction) : null],
+      args.actionKey ?? null, args.actionIndex ?? null, args.blockedAction ? JSON.stringify(args.blockedAction) : null,
+      JSON.stringify(args.remainingActions ?? []), args.inputScopeKey ?? null],
   )
   try {
     const message = await postStructuredMessage({
@@ -427,21 +483,25 @@ export async function requestApproval(args: {
 export async function claimApprovedContinuation(approvalId: string): Promise<ApprovedContinuation | null> {
   const { rows } = await pool.query<{
     id: string; company_id: string; agent_id: string; conversation_id: string; run_id: string | null;
-    action_key: string | null; payload: Record<string, unknown>; blocked_action: Record<string, unknown> | null
+    action_key: string | null; action_index: number | null; payload: Record<string, unknown>; blocked_action: Record<string, unknown> | null;
+    remaining_actions: Record<string, unknown>[] | null; input_scope_key: string | null
   }>(
     `UPDATE agent_approvals
         SET continuation_status = 'running', resumed_at = NOW()
       WHERE id = $1 AND status = 'approved' AND consumed_at IS NULL
         AND continuation_status = 'pending'
-      RETURNING id, company_id, agent_id, conversation_id, run_id, action_key, payload, blocked_action`,
+      RETURNING id, company_id, agent_id, conversation_id, run_id, action_key, action_index,
+        payload, blocked_action, remaining_actions, input_scope_key`,
     [approvalId],
   )
   const row = rows[0]
-  if (!row?.run_id || !row.action_key || !row.blocked_action) return null
+  if (!row?.run_id || !row.action_key || !row.blocked_action || !row.input_scope_key || row.action_index == null) return null
   return {
     approvalId: row.id, companyId: row.company_id, agentId: row.agent_id,
     conversationId: row.conversation_id, runId: row.run_id, actionKey: row.action_key,
     payload: row.payload, blockedAction: row.blocked_action,
+    remainingActions: row.remaining_actions ?? [], inputScopeKey: row.input_scope_key,
+    actionIndex: row.action_index,
   }
 }
 

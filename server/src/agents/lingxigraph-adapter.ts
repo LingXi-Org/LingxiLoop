@@ -620,6 +620,8 @@ export interface CommunicationExecutionContext {
    *  action keys ⇒ replay-safe. New inbox ⇒ new scope ⇒ actions are
    *  free to repeat prior content as a legitimately new action. */
   inputScopeKey: string
+  /** Original batch index for actions in a persisted continuation. */
+  actionIndexOffset?: number
   actions: CommunicationAction[]
   /** `internal` is the out-of-band idempotency channel (issue #7 review:
    *  argv is caller-controllable — a legacy bash-tool agent, human CLI, or
@@ -652,7 +654,8 @@ export async function executeCommunicationActions(
   const results: CliResult[] = []
   for (let index = 0; index < ctx.actions.length; index++) {
     const action = ctx.actions[index]
-    const key = computeActionKey({ agentId: ctx.agentId, inputScopeKey: ctx.inputScopeKey, actionIndex: index, action })
+    const absoluteIndex = (ctx.actionIndexOffset ?? 0) + index
+    const key = computeActionKey({ agentId: ctx.agentId, inputScopeKey: ctx.inputScopeKey, actionIndex: absoluteIndex, action })
     // Single-owner rule (issue #7/#37 review): message.send,
     // reaction.toggle, and handoff.create each own their idempotency key
     // end-to-end inside their OWN sink transaction (message/handoff unique
@@ -666,13 +669,13 @@ export async function executeCommunicationActions(
     const sinkOwned = SINK_IDEMPOTENT_ACTION_TYPES.has(action.type)
     try {
       if (ctx.gateAction) {
-        const gate = await ctx.gateAction(action, index, key)
+        const gate = await ctx.gateAction(action, absoluteIndex, key)
         if (!gate.allow) {
           if (gate.result) results.push(gate.result)
           return {
             completed: !gate.error,
             results,
-            failedActionIndex: gate.error ? index : undefined,
+            failedActionIndex: gate.error ? absoluteIndex : undefined,
             error: gate.error,
             waitingForHuman: gate.waitingForHuman,
             approvalId: gate.approvalId,
@@ -684,7 +687,7 @@ export async function executeCommunicationActions(
           key,
           agentId: ctx.agentId,
           inputScopeKey: ctx.inputScopeKey,
-          actionIndex: index,
+          actionIndex: absoluteIndex,
           actionType: action.type,
           actionHash: canonicalActionJson(action),
         })
@@ -712,13 +715,13 @@ export async function executeCommunicationActions(
       results.push(result)
       if (!result.ok || result.exitCode !== 0) {
         if (ctx.ledger && !sinkOwned) await ctx.ledger.markFailed(key, result.text).catch(() => { /* observability-only */ })
-        return { completed: false, results, failedActionIndex: index, error: result.text }
+        return { completed: false, results, failedActionIndex: absoluteIndex, error: result.text }
       }
       if (ctx.ledger && !sinkOwned) await ctx.ledger.markSucceeded(key, result).catch(() => { /* observability-only */ })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       if (ctx.ledger && !sinkOwned) await ctx.ledger.markFailed(key, message).catch(() => { /* observability-only */ })
-      return { completed: false, results, failedActionIndex: index, error: message }
+      return { completed: false, results, failedActionIndex: absoluteIndex, error: message }
     }
   }
   return { completed: true, results }

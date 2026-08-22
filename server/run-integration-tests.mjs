@@ -58,6 +58,10 @@ process.env.DATABASE_URL = INTEGRATION_URL
 // LingxiGraph runtime; adapter/runtime E2E coverage has its own dedicated
 // specs and Compose job. An explicit caller value still wins.
 if (!process.env.LINGXILOOP_REASONING_RUNTIME) process.env.LINGXILOOP_REASONING_RUNTIME = 'legacy'
+// Integration specs provide explicit embedding overrides where vector values
+// are under test. Every other spec must remain hermetic and never contact the
+// real embeddings API with the runner's placeholder key.
+if (!process.env.LINGXILOOP_DISABLE_EMBEDDINGS) process.env.LINGXILOOP_DISABLE_EMBEDDINGS = '1'
 
 // By default we force-empty RESEND_API_KEY so the suite never hits live
 // Resend — a developer's real key in .env would otherwise reject because

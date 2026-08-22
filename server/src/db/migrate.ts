@@ -1690,6 +1690,8 @@ CREATE TABLE IF NOT EXISTS agent_approvals (
   action_key      TEXT,
   action_index    INTEGER,
   blocked_action  JSONB,
+  remaining_actions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  input_scope_key TEXT,
   continuation_status TEXT NOT NULL DEFAULT 'pending', -- pending | running | completed | rejected | failed
   resumed_at      TIMESTAMP WITH TIME ZONE,
   status          TEXT NOT NULL DEFAULT 'pending', -- pending | approved | rejected | expired
@@ -1701,6 +1703,8 @@ CREATE TABLE IF NOT EXISTS agent_approvals (
 ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS action_key TEXT;
 ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS action_index INTEGER;
 ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS blocked_action JSONB;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS remaining_actions JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS input_scope_key TEXT;
 ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS continuation_status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS resumed_at TIMESTAMP WITH TIME ZONE;
 CREATE INDEX IF NOT EXISTS idx_agent_approvals_pending ON agent_approvals(company_id, status, requested_at DESC);

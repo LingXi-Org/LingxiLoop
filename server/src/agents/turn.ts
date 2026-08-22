@@ -24,6 +24,7 @@ import { getLlmClient } from '../llm.js'
 import { CH_MESSAGE_DELTA, publish, redis } from '../redis.js'
 import { BUSY_STATUS_HEARTBEAT_MS } from '../status.js'
 import { pgActionLedger } from './action-ledger.js'
+import { hardApprovalForAction, requiredCapabilityForAction } from './action-policy.js'
 import { resolveDeclaredAutoRelayTarget } from './auto-relay.js'
 import { addUsage, EMPTY_USAGE, type TokenUsage, usageFromOpenAI } from './cost.js'
 import { claimApprovedContinuation, consumeApprovedAction, finishApprovedContinuation, listAutonomyRules, requestApproval } from './coworker.js'
@@ -83,6 +84,85 @@ interface InboxAttachment {
   mime?: string
   /** Storage key (`attachments/<uuid>.<ext>`) preserved for re-signing. */
   key?: string
+}
+
+interface ExecutorGateOptions {
+  companyId: string
+  agentId: string
+  runId: string
+  inputScopeKey: string
+  actions: CommunicationAction[]
+  actionIndexOffset?: number
+  enabledCapabilities: string[]
+  fallbackConversationId?: string | null
+  conversationForAction?: (action: CommunicationAction) => string | null | undefined
+}
+
+/** Central executor-boundary gate. Prompt instructions and autonomy rules are
+ * advisory; capability denial and mandatory approvals always flow through
+ * this function immediately before the sink executes. */
+function createExecutorGate(options: ExecutorGateOptions) {
+  const offset = options.actionIndexOffset ?? 0
+  return async (action: CommunicationAction, actionIndex: number, actionKey: string) => {
+    const requiredCapability = requiredCapabilityForAction(action)
+    if (requiredCapability && !options.enabledCapabilities.includes(requiredCapability)) {
+      return {
+        allow: false,
+        error: `agent capability '${requiredCapability}' is disabled by the workspace owner`,
+      }
+    }
+    const requirement = hardApprovalForAction(action)
+    if (!requirement) return { allow: true }
+    if (!requirement.blockedAction.type || typeof requirement.blockedAction.type !== 'string') {
+      return { allow: false, error: 'approval request must contain the exact typed action in payload.action' }
+    }
+    const blockedCapability = requiredCapabilityForAction(requirement.blockedAction as unknown as CommunicationAction)
+    if (blockedCapability && !options.enabledCapabilities.includes(blockedCapability)) {
+      return {
+        allow: false,
+        error: `agent capability '${blockedCapability}' is disabled by the workspace owner`,
+      }
+    }
+    const conversationId = options.conversationForAction?.(action) ?? options.fallbackConversationId
+    if (!conversationId) {
+      return { allow: false, error: 'sensitive action requires a conversation-scoped human approval' }
+    }
+    const localIndex = actionIndex - offset
+    const remainingActions = options.actions.slice(localIndex + 1)
+      .map((item) => item as unknown as Record<string, unknown>)
+    const approval = await requestApproval({
+      companyId: options.companyId,
+      agentId: options.agentId,
+      conversationId,
+      runId: options.runId,
+      kind: requirement.kind,
+      summary: requirement.summary,
+      payload: requirement.payload,
+      actionKey,
+      actionIndex,
+      blockedAction: requirement.blockedAction,
+      remainingActions,
+      inputScopeKey: options.inputScopeKey,
+    })
+    const rejected = approval.status === 'rejected'
+    return {
+      allow: false,
+      waitingForHuman: !rejected,
+      approvalId: approval.id,
+      error: rejected ? `approval was rejected (${approval.id})` : undefined,
+      result: {
+        ok: true,
+        exitCode: 0,
+        text: rejected ? `approval was rejected (${approval.id})` : `waiting for human approval ${approval.id}`,
+        sideEffects: [{
+          event: rejected ? 'approval.rejected' : 'approval.requested',
+          command: 'approval', approvalId: approval.id, conversationId,
+          messageId: approval.messageId, authorId: options.agentId, companyId: options.companyId,
+          visibleToUser: true, waitingForHuman: !rejected,
+        }],
+      },
+    }
+  }
 }
 
 interface QuotedSummary {
@@ -1583,20 +1663,25 @@ Treat the output as a private memo that will be appended to the agent's input. E
   }
 }
 
-/**
- * Resume the single blocked action attached to an approved card. This does not
- * call the model again or create a new turn: the original run remains the
- * lifecycle owner and only its persisted continuation is eligible to execute.
- */
-export async function resumeApprovedContinuation(approvalId: string): Promise<{ resumed: boolean; error?: string }> {
+/** Resume the exact persisted action cursor on the original run. The model is
+ * not called again: blocked + remaining actions are the durable continuation. */
+export async function resumeApprovedContinuation(approvalId: string): Promise<{
+  resumed: boolean
+  waitingForHuman?: boolean
+  error?: string
+}> {
   const continuation = await claimApprovedContinuation(approvalId)
   if (!continuation) return { resumed: false, error: 'approval has no resumable continuation' }
   const action = continuation.blockedAction as CommunicationAction
-  if (!action || typeof action.type !== 'string') {
+  const remainingActions = continuation.remainingActions as CommunicationAction[]
+  if (!action || typeof action.type !== 'string'
+    || remainingActions.some((item) => !item || typeof item.type !== 'string')) {
     await finishApprovedContinuation(approvalId, 'failed')
     await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approval continuation was invalid', error: 'invalid blocked action' })
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
     return { resumed: false, error: 'invalid blocked action' }
   }
+  await runtime.setStatus(continuation.agentId, 'working').catch(() => undefined)
   await pool.query(
     `UPDATE agent_runs SET status = 'running', stage = 'resuming', updated_at = NOW(), finished_at = NULL
      WHERE id = $1 AND status = 'waiting_for_human'`, [continuation.runId],
@@ -1606,6 +1691,21 @@ export async function resumeApprovedContinuation(approvalId: string): Promise<{ 
     kind: 'approval.resumed', title: 'Human approval received; resuming the blocked action',
     data: { approvalId, actionKey: continuation.actionKey, conversationId: continuation.conversationId }, stage: 'working',
   }).catch(() => undefined)
+  const persona = await runtime.loadPersona(continuation.agentId)
+  const enabledCapabilities = persona?.capabilities
+    ?? ['computer', 'web', 'files', 'email', 'documents']
+  const blockedCapability = requiredCapabilityForAction(action)
+  if (blockedCapability && !enabledCapabilities.includes(blockedCapability)) {
+    await finishApprovedContinuation(approvalId, 'failed')
+    await runtime.finishRun({
+      runId: continuation.runId,
+      status: 'failed',
+      summary: 'Approved continuation was blocked by current workspace capability policy',
+      error: `agent capability '${blockedCapability}' is disabled by the workspace owner`,
+    })
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+    return { resumed: false, error: `agent capability '${blockedCapability}' is disabled by the workspace owner` }
+  }
   // Claim consumption before the side effect. The continuation claim above is
   // already an atomic run-level lock; consuming here makes a crash/retry fail
   // closed rather than accidentally issuing a second external action.
@@ -1616,29 +1716,96 @@ export async function resumeApprovedContinuation(approvalId: string): Promise<{ 
   })
   if (!consumed.approved) {
     await finishApprovedContinuation(approvalId, 'failed')
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
     return { resumed: false, error: 'approval continuation was already consumed or no longer matches' }
   }
   try {
-    const result = await runtime.executeCli(continuation.agentId, communicationActionToArgv(action))
+    const result = await runtime.executeCli(
+      continuation.agentId,
+      communicationActionToArgv(action),
+      { idempotencyKey: continuation.actionKey },
+    )
     if (!result.ok || result.exitCode !== 0) {
       await finishApprovedContinuation(approvalId, 'failed')
       await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approved action failed', error: result.text, toolCallCount: 1 })
+      await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
       return { resumed: false, error: result.text }
     }
     await finishApprovedContinuation(approvalId, 'completed')
+    const execution = await executeCommunicationActions({
+      agentId: continuation.agentId,
+      inputScopeKey: continuation.inputScopeKey,
+      actionIndexOffset: continuation.actionIndex + 1,
+      actions: remainingActions,
+      executeCli: (argv, internal) => runtime.executeCli(continuation.agentId, argv, internal),
+      timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
+      ledger: pgActionLedger,
+      gateAction: createExecutorGate({
+        companyId: continuation.companyId,
+        agentId: continuation.agentId,
+        runId: continuation.runId,
+        inputScopeKey: continuation.inputScopeKey,
+        actions: remainingActions,
+        actionIndexOffset: continuation.actionIndex + 1,
+        enabledCapabilities,
+        fallbackConversationId: continuation.conversationId,
+        conversationForAction: (nextAction) => nextAction.type === 'approval.request'
+          ? nextAction.conversationId
+          : null,
+      }),
+    })
+    if (execution.waitingForHuman) {
+      await runtime.setStatus(continuation.agentId, 'waiting').catch(() => undefined)
+      await runtime.finishRun({
+        runId: continuation.runId,
+        status: 'waiting_for_human',
+        summary: `Waiting for human approval ${execution.approvalId ?? ''}`.trim(),
+        toolCallCount: 1 + execution.results.length,
+      })
+      return { resumed: true, waitingForHuman: true }
+    }
+    if (!execution.completed) {
+      await runtime.finishRun({
+        runId: continuation.runId,
+        status: 'failed',
+        summary: 'Approved continuation failed',
+        error: execution.error,
+        toolCallCount: 1 + execution.results.length,
+      })
+      await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+      return { resumed: false, error: execution.error }
+    }
     await runtime.recordEvent({
       runId: continuation.runId, agentId: continuation.agentId, companyId: continuation.companyId,
       kind: 'approval.continuation_completed', title: 'Approved action completed',
       data: { approvalId, actionKey: continuation.actionKey }, stage: 'completed',
     }).catch(() => undefined)
-    await runtime.finishRun({ runId: continuation.runId, status: 'completed', summary: 'Approved continuation completed', toolCallCount: 1 })
+    await runtime.finishRun({
+      runId: continuation.runId,
+      status: 'completed',
+      summary: 'Approved continuation completed',
+      toolCallCount: 1 + execution.results.length,
+    })
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
     return { resumed: true }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     await finishApprovedContinuation(approvalId, 'failed')
     await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approved action failed', error: message, toolCallCount: 1 })
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
     return { resumed: false, error: message }
   }
+}
+
+export async function finalizeRejectedContinuation(args: { runId?: string | null; agentId: string }): Promise<void> {
+  if (args.runId) {
+    await runtime.finishRun({
+      runId: args.runId,
+      status: 'completed',
+      summary: 'Human rejected approval; blocked action and remaining batch were not executed',
+    })
+  }
+  await runtime.setStatus(args.agentId, 'avail')
 }
 
 export async function runAgentTurn(agentId: string, options: AgentTurnOptions = {}): Promise<void> {
@@ -2362,71 +2529,22 @@ ${peerWorkBlock}`.trim()
       executeCli: (argv, internal) => runtime.executeCli(agentId, argv, internal),
       timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
       ledger: pgActionLedger,
-      gateAction: async (action, actionIndex, actionKey) => {
-        const requiredCapability = action.type.startsWith('email.')
-          ? 'email'
-          : action.type.startsWith('document.')
-            ? 'documents'
-            : null
-        const enabledCapabilities = persona.capabilities
-          ?? ['computer', 'web', 'files', 'email', 'documents']
-        if (requiredCapability && !enabledCapabilities.includes(requiredCapability)) {
-          return {
-            allow: false,
-            error: `agent capability '${requiredCapability}' is disabled by the workspace owner`,
-          }
-        }
-        const requestedApproval = action.type === 'approval.request' ? action : null
-        const destructiveComputerAction = action.type === 'computer.exec'
-          && ['rm', 'dd', 'mkfs', 'shutdown', 'reboot'].includes(action.command[0] ?? '')
-        if (!requestedApproval && action.type !== 'email.send' && action.type !== 'email.reply' && !destructiveComputerAction) return { allow: true }
-        const emailReply = action.type === 'email.reply' ? action : null
-        const emailSend = action.type === 'email.send' ? action : null
-        const payload = requestedApproval ? requestedApproval.payload : action as unknown as Record<string, unknown>
-        const conversationId = requestedApproval
-          ? requestedApproval.conversationId
-          : emailReply
-          ? inbox.find((message) => message.id === emailReply.messageId)?.conversation_id
-            ?? [...inbox].reverse().find((message) => message.author_kind === 'human')?.conversation_id
-          : [...inbox].reverse().find((message) => message.author_kind === 'human')?.conversation_id
-        if (!conversationId || !runCompanyId) {
-          return { allow: false, error: 'external communication requires a conversation-scoped human approval' }
-        }
-        const summary = requestedApproval
-          ? requestedApproval.summary
-          : emailSend
-          ? `Send external email to ${emailSend.to.join(', ')} — ${emailSend.subject}`
-          : `Reply to external email ${emailReply?.messageId ?? ''}`
-        const kind = requestedApproval?.kind ?? (destructiveComputerAction ? 'sensitive_or_destructive_action' : 'external_communication')
-        // Generic approval requests must carry the exact persisted action they
-        // intend to resume. We deliberately do not execute arbitrary payloads.
-        const blockedAction = requestedApproval
-          ? (payload.action && typeof payload.action === 'object' && !Array.isArray(payload.action)
-            ? payload.action as Record<string, unknown>
-            : null)
-          : action as unknown as Record<string, unknown>
-        const approval = await requestApproval({
-          companyId: runCompanyId, agentId, conversationId, runId,
-          kind, summary, payload, actionKey, actionIndex, blockedAction,
-        })
-        const rejected = approval.status === 'rejected'
-        return {
-          allow: false,
-          waitingForHuman: !rejected,
-          approvalId: approval.id,
-          result: {
-            ok: true,
-            exitCode: 0,
-            text: rejected ? `approval was rejected (${approval.id})` : `waiting for human approval ${approval.id}`,
-            sideEffects: [{
-              event: rejected ? 'approval.rejected' : 'approval.requested',
-              command: 'approval', approvalId: approval.id, conversationId,
-              messageId: approval.messageId, authorId: agentId, companyId: runCompanyId,
-              visibleToUser: true, waitingForHuman: !rejected,
-            }],
-          },
-        }
-      },
+      gateAction: createExecutorGate({
+        companyId: runCompanyId,
+        agentId,
+        runId,
+        inputScopeKey,
+        actions: result.actions,
+        enabledCapabilities: persona.capabilities
+          ?? ['computer', 'web', 'files', 'email', 'documents'],
+        fallbackConversationId: [...inbox].reverse().find((message) => message.author_kind === 'human')?.conversation_id
+          ?? inbox.at(-1)?.conversation_id,
+        conversationForAction: (action) => action.type === 'approval.request'
+          ? action.conversationId
+          : action.type === 'email.reply'
+            ? inbox.find((message) => message.id === action.messageId)?.conversation_id
+            : null,
+      }),
     })
     toolCallCount += execution.results.length
     for (const cliResult of execution.results) {

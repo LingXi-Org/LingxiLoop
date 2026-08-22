@@ -1169,7 +1169,9 @@ test('[integration] structured turn status continue keeps the loop alive until a
 })
 
 test('[integration] reaction-only terminal done is semantically rejected and the agent continues', async () => {
-  const { companyId, agentId, humanId, conversationId } = await seedConvo({ kind: 'group' })
+  // Use a direct mailbox delivery: unmentioned group messages are
+  // intentionally suppressed by the mailbox policy before the turn starts.
+  const { companyId, agentId, humanId, conversationId } = await seedConvo({ kind: 'direct' })
   const askingMessageId = await postHumanMessage({
     conversationId,
     companyId,
@@ -1278,7 +1280,7 @@ test('[integration] reaction-only terminal done is semantically rejected and the
 })
 
 test('[integration] action-only terminal done is semantically verified before the inbox cursor advances', async () => {
-  const { companyId, agentId, humanId, conversationId } = await seedConvo({ kind: 'group' })
+  const { companyId, agentId, humanId, conversationId } = await seedConvo({ kind: 'direct' })
   const askingMessageId = await postHumanMessage({
     conversationId,
     companyId,

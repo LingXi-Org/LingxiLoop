@@ -214,7 +214,7 @@ export async function finishAgentRun(args: {
             cost_estimated        = COALESCE($12, cost_estimated),
             model                 = COALESCE($13, model),
             updated_at = NOW(),
-            finished_at = NOW()
+            finished_at = CASE WHEN $2 IN ('running', 'waiting_for_human') THEN NULL ELSE NOW() END
       WHERE id = $1`,
     [
       args.runId,

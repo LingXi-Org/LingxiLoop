@@ -269,6 +269,46 @@ async function httpBlob(path: string): Promise<Blob> {
   return res.blob()
 }
 
+async function streamComputerScreen(
+  screenId: string,
+  onFrame: (frame: Blob, status: ApiAgentScreen['status']) => void,
+  signal: AbortSignal,
+): Promise<void> {
+  const headers: Record<string, string> = { accept: 'text/event-stream' }
+  const token = getAuthToken()
+  if (token) headers.authorization = `Bearer ${token}`
+  const company = getActiveCompanyId()
+  if (company) headers['x-company-id'] = company
+  const response = await fetch(`${API}/computer/screens/${encodeURIComponent(screenId)}/stream`, { headers, signal })
+  if (response.status === 401) useAuth.getState().clear()
+  if (!response.ok || !response.body) throw new Error(`${response.status} ${response.statusText}`)
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffered = ''
+  while (!signal.aborted) {
+    const { value, done } = await reader.read()
+    buffered += decoder.decode(value, { stream: !done })
+    let boundary = buffered.indexOf('\n\n')
+    while (boundary >= 0) {
+      const event = buffered.slice(0, boundary)
+      buffered = buffered.slice(boundary + 2)
+      const data = event.split('\n').find((line) => line.startsWith('data: '))?.slice(6)
+      if (data) {
+        const parsed = JSON.parse(data) as { image?: string; status?: ApiAgentScreen['status']; error?: string }
+        if (parsed.error) throw new Error(parsed.error)
+        if (parsed.image && parsed.status) {
+          const binary = atob(parsed.image)
+          const bytes = new Uint8Array(binary.length)
+          for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index)
+          onFrame(new Blob([bytes], { type: 'image/png' }), parsed.status)
+        }
+      }
+      boundary = buffered.indexOf('\n\n')
+    }
+    if (done) break
+  }
+}
+
 export interface ApiAgentScreen {
   id: string
   computerId: string
@@ -984,6 +1024,9 @@ export const api = {
     http<ApiAgentScreen>(`/computer/screens/${encodeURIComponent(screenId)}/takeover`, { method: 'POST', body: '{}' }),
   returnScreenToAgent: (screenId: string) =>
     http<ApiAgentScreen>(`/computer/screens/${encodeURIComponent(screenId)}/return`, { method: 'POST', body: '{}' }),
+  heartbeatScreenControl: (screenId: string) =>
+    http<{ expiresAt: string }>(`/computer/screens/${encodeURIComponent(screenId)}/heartbeat`, { method: 'POST', body: '{}' }),
+  streamComputerScreen,
   getComputerScreenScreenshot: (screenId: string) =>
     httpBlob(`/computer/screens/${encodeURIComponent(screenId)}/screenshot`),
   sendComputerScreenInput: (

@@ -1088,10 +1088,44 @@ api.post('/computer/screens/:id/return', safe(async (req, res) => {
   res.json(await userComputerService.returnToAgent(userId, companyId, String(req.params.id)))
 }))
 
+api.post('/computer/screens/:id/heartbeat', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await userComputerService.heartbeatControl(userId, companyId, String(req.params.id)))
+}))
+
 api.get('/computer/screens/:id/screenshot', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
   const bytes = await userComputerService.screenshot(userId, companyId, String(req.params.id))
   res.type('image/png').send(Buffer.from(bytes))
+}))
+
+api.get('/computer/screens/:id/stream', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  const screenId = String(req.params.id)
+  let closed = false
+  req.on('close', () => { closed = true })
+  res.status(200)
+  res.setHeader('content-type', 'text/event-stream')
+  res.setHeader('cache-control', 'no-cache, no-transform')
+  res.setHeader('connection', 'keep-alive')
+  res.flushHeaders()
+  while (!closed && !res.writableEnded) {
+    try {
+      const [bytes, computer] = await Promise.all([
+        userComputerService.screenshot(userId, companyId, screenId),
+        userComputerService.get(userId, companyId),
+      ])
+      const screen = computer.screens.find((item) => item.id === screenId)
+      if (!screen) throw new Error('screen not found')
+      res.write(`data: ${JSON.stringify({ image: Buffer.from(bytes).toString('base64'), status: screen.status })}\n\n`)
+      const delayMs = screen.status === 'working' || screen.status === 'human_control' ? 750 : 8_000
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    } catch (error) {
+      if (!closed) res.write(`event: error\ndata: ${JSON.stringify({ error: error instanceof Error ? error.message : String(error) })}\n\n`)
+      break
+    }
+  }
+  if (!res.writableEnded) res.end()
 }))
 
 api.post('/computer/screens/:id/input', safe(async (req, res) => {
@@ -4633,7 +4667,10 @@ api.post('/coworker/approvals/:id/resolve', safe(async (req, res) => {
   // mailbox wake-up that could replay earlier reasoning/actions.
   const continuation = decision === 'approved'
     ? await import('../agents/turn.js').then(({ resumeApprovedContinuation }) => resumeApprovedContinuation(approval.id))
-    : { resumed: false }
+    : await import('../agents/turn.js').then(async ({ finalizeRejectedContinuation }) => {
+      await finalizeRejectedContinuation({ runId: approval.runId, agentId: approval.agentId })
+      return { resumed: false }
+    })
   res.json({ ...approval, continuation })
 }))
 

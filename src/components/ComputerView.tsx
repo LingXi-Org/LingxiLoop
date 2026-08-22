@@ -47,6 +47,7 @@ export function ComputerView() {
 
   useEffect(() => {
     let cancelled = false
+    const controller = new AbortController()
     const replaceUrl = (next: string | null) => {
       if (screenUrlRef.current) URL.revokeObjectURL(screenUrlRef.current)
       screenUrlRef.current = next
@@ -67,14 +68,45 @@ export function ComputerView() {
         if (!cancelled) setStreamError(err instanceof Error ? err.message : String(err))
       }
     }
-    void refresh()
-    const timer = window.setInterval(() => void refresh(), 2_000)
+    const runStream = async () => {
+      try {
+        await api.streamComputerScreen(selectedId, (blob, status) => {
+          if (cancelled) return
+          replaceUrl(URL.createObjectURL(blob))
+          setStreamError(null)
+          setComputer((current) => current ? {
+            ...current,
+            screens: current.screens.map((screen) => screen.id === selectedId ? { ...screen, status } : screen),
+          } : current)
+        }, controller.signal)
+      } catch (err) {
+        if (cancelled || controller.signal.aborted) return
+        setStreamError(err instanceof Error ? `${err.message}；已切换为低频刷新` : String(err))
+        while (!cancelled) {
+          await refresh()
+          await new Promise((resolve) => window.setTimeout(resolve,
+            selected?.status === 'working' || selected?.status === 'human_control' ? 1_000 : 8_000))
+        }
+      }
+    }
+    void runStream()
     return () => {
       cancelled = true
-      window.clearInterval(timer)
+      controller.abort()
       replaceUrl(null)
     }
-  }, [selectedId, computer?.status])
+  }, [selectedId, computer?.status, selected?.status])
+
+  useEffect(() => {
+    if (!selected || selected.status !== 'human_control') return
+    const heartbeat = () => void api.heartbeatScreenControl(selected.id).catch((err) => {
+      setStreamError(err instanceof Error ? err.message : String(err))
+      void load()
+    })
+    heartbeat()
+    const timer = window.setInterval(heartbeat, 45_000)
+    return () => window.clearInterval(timer)
+  }, [selected?.id, selected?.status])
 
   const sendInput = async (input: Parameters<typeof api.sendComputerScreenInput>[1]) => {
     if (!selected) return false
@@ -92,7 +124,7 @@ export function ComputerView() {
     <main className="h-full overflow-y-auto bg-app px-5 py-5 md:px-8 md:py-7">
       <div className="mx-auto max-w-6xl">
         <header className="flex flex-wrap items-center gap-3">
-          <div className="grid size-11 place-items-center rounded-xl bg-sky-50 text-skype-deep"><IComputer className="size-5" /></div>
+          <div className="grid size-11 place-items-center rounded-xl bg-raised text-accent"><IComputer className="size-5" /></div>
           <div>
             <h1 className="text-[20px] font-semibold text-ink">我的 Computer</h1>
             <p className="text-[12px] text-ink-secondary">所有 Agent 共享文件、应用与登录状态，并在各自 Screen 并行工作。</p>
@@ -100,11 +132,11 @@ export function ComputerView() {
           {computer && (
             <div className="ml-auto flex items-center gap-2">
               <span className={`size-2 rounded-full ${computer.status === 'running' ? 'bg-avail' : computer.status === 'error' ? 'bg-coral' : 'bg-ink-200'}`} />
-              <span className="text-[12px] font-semibold text-ink-600">{STATUS_LABEL[computer.status]}</span>
+              <span className="text-[12px] font-semibold text-ink-secondary">{STATUS_LABEL[computer.status]}</span>
               {computer.status === 'running' ? (
-                <button type="button" disabled={busy !== null} onClick={() => void run('stop', api.stopUserComputer)} className="ml-2 rounded-lg border border-ink-100 px-3 py-1.5 text-[12px] font-semibold text-ink-600 hover:bg-raised disabled:opacity-50">停止</button>
+                <button type="button" disabled={busy !== null} onClick={() => void run('stop', api.stopUserComputer)} className="ml-2 rounded-lg border border-hairline px-3 py-1.5 text-[12px] font-semibold text-ink-secondary hover:bg-raised disabled:opacity-50">停止</button>
               ) : (
-                <button type="button" disabled={busy !== null} onClick={() => void run('start', api.startUserComputer)} className="ml-2 rounded-lg bg-skype px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-skype-deep disabled:opacity-50">{busy === 'start' ? '启动中…' : '启动'}</button>
+                <button type="button" disabled={busy !== null} onClick={() => void run('start', api.startUserComputer)} className="ml-2 rounded-lg bg-accent px-3 py-1.5 text-[12px] font-semibold text-accent-ink hover:opacity-90 disabled:opacity-50">{busy === 'start' ? '启动中…' : '启动'}</button>
               )}
             </div>
           )}
@@ -120,7 +152,7 @@ export function ComputerView() {
               <div className="px-2 pb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-300">Screens</div>
               <div className="space-y-1">
                 {computer.screens.map((screen) => (
-                  <button key={screen.id} type="button" onClick={() => setSelectedId(screen.id)} className={`w-full rounded-xl px-3 py-2.5 text-left transition ${selectedId === screen.id ? 'bg-sky-50 text-skype-deep' : 'text-ink-600 hover:bg-raised'}`}>
+                  <button key={screen.id} type="button" onClick={() => setSelectedId(screen.id)} className={`w-full rounded-xl px-3 py-2.5 text-left transition ${selectedId === screen.id ? 'bg-raised text-accent' : 'text-ink-secondary hover:bg-raised'}`}>
                     <div className="text-[13px] font-semibold">{screen.agentName}</div>
                     <div className="mt-0.5 text-[10.5px] opacity-70">{SCREEN_STATUS[screen.status]}</div>
                   </button>
@@ -129,11 +161,11 @@ export function ComputerView() {
               </div>
               {unassigned.length > 0 && (
                 <div className="mt-3 border-t border-hairline pt-3">
-                  <select value={addAgentId} onChange={(event) => setAddAgentId(event.target.value)} className="h-9 w-full rounded-lg border border-ink-100 bg-cloud px-2 text-[12px] text-ink-600">
+                  <select value={addAgentId} onChange={(event) => setAddAgentId(event.target.value)} className="h-9 w-full rounded-lg border border-hairline bg-inset px-2 text-[12px] text-ink-secondary">
                     <option value="">选择 Agent…</option>
                     {unassigned.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
                   </select>
-                  <button type="button" disabled={!addAgentId || busy !== null} onClick={() => void run('screen', () => api.createComputerScreen(addAgentId))} className="mt-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-ink-100 text-[12px] font-semibold text-ink-600 hover:bg-raised disabled:opacity-40"><IPlus className="size-3.5" />添加 Screen</button>
+                  <button type="button" disabled={!addAgentId || busy !== null} onClick={() => void run('screen', () => api.createComputerScreen(addAgentId))} className="mt-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-hairline text-[12px] font-semibold text-ink-secondary hover:bg-raised disabled:opacity-40"><IPlus className="size-3.5" />添加 Screen</button>
                 </div>
               )}
             </aside>
@@ -148,9 +180,9 @@ export function ComputerView() {
                     </div>
                     <div className="ml-auto">
                       {selected.status === 'human_control' ? (
-                        <button type="button" disabled={busy !== null} onClick={() => void run('return', () => api.returnScreenToAgent(selected.id))} className="rounded-lg bg-skype px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50">交还给 {selected.agentName}</button>
+                        <button type="button" disabled={busy !== null} onClick={() => void run('return', () => api.returnScreenToAgent(selected.id))} className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-semibold text-accent-ink disabled:opacity-50">交还给 {selected.agentName}</button>
                       ) : (
-                        <button type="button" disabled={busy !== null} onClick={() => void run('takeover', () => api.takeOverScreen(selected.id))} className="rounded-lg border border-ink-100 px-3 py-1.5 text-[12px] font-semibold text-ink-600 hover:bg-raised disabled:opacity-50">接管控制</button>
+                        <button type="button" disabled={busy !== null} onClick={() => void run('takeover', () => api.takeOverScreen(selected.id))} className="rounded-lg border border-hairline px-3 py-1.5 text-[12px] font-semibold text-ink-secondary hover:bg-raised disabled:opacity-50">接管控制</button>
                       )}
                     </div>
                   </div>
@@ -167,10 +199,10 @@ export function ComputerView() {
                             const y = ((event.clientY - rect.top) / rect.height) * event.currentTarget.naturalHeight
                             void sendInput({ type: 'click', x, y })
                           }}
-                          className={`max-h-[680px] w-full rounded-lg border border-ink-100 bg-black object-contain shadow-sm ${selected.status === 'human_control' ? 'cursor-crosshair' : ''}`}
+                          className={`max-h-[680px] w-full rounded-lg border border-hairline bg-inset object-contain shadow-sm ${selected.status === 'human_control' ? 'cursor-crosshair' : ''}`}
                         />
                         {selected.status === 'human_control' && (
-                          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-ink-100 bg-cloud p-2">
+                          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-hairline bg-inset p-2">
                             <input
                               value={inputText}
                               onChange={(event) => setInputText(event.target.value)}
@@ -181,11 +213,11 @@ export function ComputerView() {
                                 }
                               }}
                               placeholder="输入到当前 Screen…"
-                              className="h-9 min-w-[220px] flex-1 rounded-lg border border-ink-100 bg-panel px-3 text-[12px] text-ink-700 outline-none focus:border-skype"
+                              className="h-9 min-w-[220px] flex-1 rounded-lg border border-hairline bg-panel px-3 text-[12px] text-ink outline-none focus:border-accent"
                             />
-                            <button type="button" disabled={!inputText} onClick={() => void sendInput({ type: 'text', text: inputText }).then((sent) => { if (sent) setInputText('') })} className="h-9 rounded-lg bg-skype px-3 text-[11.5px] font-semibold text-white disabled:opacity-40">输入文字</button>
+                            <button type="button" disabled={!inputText} onClick={() => void sendInput({ type: 'text', text: inputText }).then((sent) => { if (sent) setInputText('') })} className="h-9 rounded-lg bg-accent px-3 text-[11.5px] font-semibold text-accent-ink disabled:opacity-40">输入文字</button>
                             {(['Return', 'Tab', 'Escape'] as const).map((key) => (
-                              <button key={key} type="button" onClick={() => void sendInput({ type: 'key', key })} className="h-9 rounded-lg border border-ink-100 px-3 text-[11.5px] font-semibold text-ink-600 hover:bg-raised">
+                              <button key={key} type="button" onClick={() => void sendInput({ type: 'key', key })} className="h-9 rounded-lg border border-hairline px-3 text-[11.5px] font-semibold text-ink-secondary hover:bg-raised">
                                 {key === 'Return' ? 'Enter' : key === 'Escape' ? 'Esc' : key}
                               </button>
                             ))}
@@ -196,7 +228,7 @@ export function ComputerView() {
                     ) : (
                       <div className="max-w-md text-center">
                         <IComputer className="mx-auto size-12 text-ink-200" />
-                        <div className="mt-4 text-[14px] font-semibold text-ink-600">{computer.status === 'running' ? '正在连接 Screen…' : '启动 Computer 以查看 Screen'}</div>
+                        <div className="mt-4 text-[14px] font-semibold text-ink-secondary">{computer.status === 'running' ? '正在连接 Screen…' : '启动 Computer 以查看 Screen'}</div>
                         <p className="mt-2 text-[12px] leading-5 text-ink-400">桌面画面通过认证 Computer Gateway 刷新；内部端口、显示号和运行时凭据不会暴露给客户端。</p>
                         {streamError && <p className="mt-2 text-[11px] text-coral-deep">{streamError}</p>}
                       </div>
@@ -215,7 +247,7 @@ export function ComputerView() {
             ['共享工作区', '/workspace 与 /home/lingxi 在重启后保留'],
             ['独立控制', '接管一个 Screen 不会暂停其他 Agent'],
             ['共享登录', '浏览器服务复用用户级持久化 profile'],
-          ].map(([title, detail]) => <div key={title} className="rounded-xl border border-hairline bg-panel px-4 py-3"><div className="text-[12px] font-semibold text-ink-700">{title}</div><div className="mt-1 text-[10.5px] text-ink-400">{detail}</div></div>)}
+          ].map(([title, detail]) => <div key={title} className="rounded-xl border border-hairline bg-panel px-4 py-3"><div className="text-[12px] font-semibold text-ink">{title}</div><div className="mt-1 text-[10.5px] text-ink-secondary">{detail}</div></div>)}
         </div>
       </div>
     </main>

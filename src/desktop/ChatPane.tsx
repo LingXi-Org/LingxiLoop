@@ -1685,8 +1685,48 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
             </span>
           ))}
         </div>
+        {active && <ActivityScreenPreview agentId={active.agentId} agentName={active.agentName} />}
       </div>
     </div>
+  )
+}
+
+function ActivityScreenPreview({ agentId, agentName }: { agentId: string; agentName: string }) {
+  const [screenId, setScreenId] = useState<string | null>(null)
+  const [frameUrl, setFrameUrl] = useState<string | null>(null)
+  const frameRef = useRef<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    void api.getUserComputer().then((computer) => {
+      if (!cancelled && computer.status === 'running') {
+        setScreenId(computer.screens.find((screen) => screen.agentId === agentId)?.id ?? null)
+      }
+    }).catch(() => undefined)
+    return () => { cancelled = true }
+  }, [agentId])
+  useEffect(() => {
+    if (!screenId) return
+    const controller = new AbortController()
+    void api.streamComputerScreen(screenId, (blob) => {
+      const next = URL.createObjectURL(blob)
+      if (frameRef.current) URL.revokeObjectURL(frameRef.current)
+      frameRef.current = next
+      setFrameUrl(next)
+    }, controller.signal).catch(() => undefined)
+    return () => {
+      controller.abort()
+      if (frameRef.current) URL.revokeObjectURL(frameRef.current)
+      frameRef.current = null
+      setFrameUrl(null)
+    }
+  }, [screenId])
+  if (!frameUrl) return null
+  return (
+    <img
+      src={frameUrl}
+      alt={`${agentName} Screen 实时预览`}
+      className="hidden h-12 w-[78px] shrink-0 rounded-md border border-hairline bg-inset object-cover sm:block"
+    />
   )
 }
 
