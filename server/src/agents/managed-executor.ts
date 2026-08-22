@@ -271,6 +271,7 @@ export async function scheduleManagedAgentTurn(
         const run = await runLookup(recovered.runtimeRunId, recovered.companyId, {
           url: env.LINGXIGRAPH_URL,
           token: env.LINGXIGRAPH_TOKEN,
+          tenantId: recovered.companyId,
         })
         state.lastSteeredMessageId = null
         state.activeRun = { runId: run.id, loopRunId: recovered.loopRunId, companyId: recovered.companyId }
@@ -340,6 +341,7 @@ export async function scheduleManagedAgentTurn(
           }, {
             url: env.LINGXIGRAPH_URL,
             token: env.LINGXIGRAPH_TOKEN,
+            tenantId: active.companyId,
           })
           if (accepted.status !== 'consumed' && accepted.status !== 'superseded') {
             state.pendingSteers.set(accepted.eventId, steerPayload)
