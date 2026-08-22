@@ -37,6 +37,7 @@ import { inprocClient, isAgentBusy } from './runtime/inproc-client.js'
 import { ensurePod } from './runtime/orchestrator.js'
 import { deliverSteer, deliver as deliverWake, type PollWakeBrief } from './runtime/wake-bus.js'
 import type { AgentTurnOptions } from './turn.js'
+import { resolveWakeDispatch } from './wake-routing.js'
 
 /** Bounds how many recipients the wake fan-out triages + wakes at once
  *  (per replica). See env.WAKE_FANOUT_CONCURRENCY — this is the
@@ -70,6 +71,10 @@ export interface SteerWakePayload {
 
 type WakeReason = 'message.new' | 'idle' | 'manual' | 'background_scan' | 'poll.updated'
 type WakeOptions = Pick<AgentTurnOptions, 'idleReason' | 'backgroundBrief' | 'pollBrief' | 'triageNote'>
+interface WakeMessageContext {
+  authorKind: 'human' | 'agent' | 'unknown'
+  activation?: AgentActivation
+}
 
 interface WakeRetryJob {
   id: string
@@ -197,7 +202,12 @@ function startWakeRetryWorker(intervalMs: number = 5_000): NodeJS.Timeout {
 }
 
 /** Wake one agent. Exposed so non-message-new triggers (kanban card
- *  mentions, calendar dispatches, …) can use the same SSE-or-spawn path. */
+ *  mentions, calendar dispatches, …) can use the same SSE-or-spawn path.
+ *
+ * A direct `message.new` call is deliberately not trusted on its own: callers
+ * must carry author/activation context in `steerPayload`. Human messages wake
+ * normally, while Agent messages need `activation: 'trigger'`; without that
+ * context the durable mailbox row remains queue-only. */
 export async function wakeAgent(
   agentId: string,
   reason: WakeReason,
@@ -292,6 +302,7 @@ async function wakeOne(
   steerPayload: SteerWakePayload | null = null,
   options: WakeOptions = {},
   retryAttempt: number = 0,
+  messageContext?: WakeMessageContext,
 ): Promise<void> {
   // Synthetic wakes can be dropped under load — the next idle tick
   // or next scanner pass will re-evaluate. Real wakes never are.
@@ -310,32 +321,42 @@ async function wakeOne(
   // ever called, so nothing (Pod or otherwise) can race it for the wake.
   const host = await resolveAgentHost(agentId).catch(() => ({ kind: null, companyId: null }))
 
-  if (!isByoaKind(host.kind)) {
+  const dispatch = resolveWakeDispatch({
+    reason,
+    message: messageContext ?? (steerPayload?.authorKind ? {
+      authorKind: steerPayload.authorKind,
+      activation: steerPayload.activation,
+    } : undefined),
+    hostKind: host.kind,
+    managedAgentExecution: env.LINGXILOOP_MANAGED_AGENT_EXECUTION,
+    reasoningRuntime: env.LINGXILOOP_REASONING_RUNTIME,
+  })
+  if (dispatch === 'queue-only') return
+
+  if (dispatch === 'managed-server') {
     // MVP server-side execution (issue #4): managed agents dispatch straight
     // to runAgentTurn() inside this process instead of spinning up a
     // per-Agent Kubernetes Pod. No deliverWake/steer, no ensurePod(), no
     // kubectl, no Pod/PVC/FUSE dependency — the wake never touches the old
     // Pod path at all. Serialization + busy-wake coalescing live in
     // managed-executor.ts, keyed by agentId.
-    if (env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server' && env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph') {
-      const turnOptions: AgentTurnOptions = { trigger: reason, ...options }
-      // Deliberately fire-and-forget here, NOT awaited: wakeFanoutSem
-      // (fanOutWake, below) only needs to bound the cheap triage/dispatch
-      // step, not the full turn — a turn can run for minutes, and
-      // awaiting it here would hold that slot the whole time, serializing
-      // OTHER conversations' unrelated wakes behind it on this replica
-      // (regressed a multi-@-mention broadcast into a near-sequential
-      // trickle). Concurrent-turn backpressure against the pg pool is now
-      // handled independently by turnExecutionSem inside
-      // scheduleManagedAgentTurn (env.MANAGED_TURN_CONCURRENCY), which
-      // also covers turns started outside this fan-out path (poll/kanban
-      // wakes, retries) that this semaphore never bounded anyway.
-      void scheduleManagedAgentTurn(agentId, turnOptions, steerPayload).catch((err) =>
-        console.error(`[scheduler] scheduleManagedAgentTurn(${agentId}) failed:`,
-          err instanceof Error ? err.message : String(err)),
-      )
-      return
-    }
+    const turnOptions: AgentTurnOptions = { trigger: reason, ...options }
+    // Deliberately fire-and-forget here, NOT awaited: wakeFanoutSem
+    // (fanOutWake, below) only needs to bound the cheap triage/dispatch
+    // step, not the full turn — a turn can run for minutes, and
+    // awaiting it here would hold that slot the whole time, serializing
+    // OTHER conversations' unrelated wakes behind it on this replica
+    // (regressed a multi-@-mention broadcast into a near-sequential
+    // trickle). Concurrent-turn backpressure against the pg pool is now
+    // handled independently by turnExecutionSem inside
+    // scheduleManagedAgentTurn (env.MANAGED_TURN_CONCURRENCY), which
+    // also covers turns started outside this fan-out path (poll/kanban
+    // wakes, retries) that this semaphore never bounded anyway.
+    void scheduleManagedAgentTurn(agentId, turnOptions, steerPayload).catch((err) =>
+      console.error(`[scheduler] scheduleManagedAgentTurn(${agentId}) failed:`,
+        err instanceof Error ? err.message : String(err)),
+    )
+    return
   }
 
   const wakePayload = {
@@ -678,7 +699,10 @@ async function wake(payload: MessageNewEvent): Promise<void> {
   // scheduler wakes every subscribed, non-muted agent at the same time,
   // like a Slack room. A muted agent only passes through for an exact
   // mention or quoted reply.
-  await fanOutWake(recipients, conversationId, steerPayload)
+  await fanOutWake(recipients, conversationId, steerPayload, {
+    authorKind,
+    activation: payload.message.activation,
+  })
 }
 
 function escapeRegex(value: string): string {
@@ -744,6 +768,7 @@ export async function fanOutWake(
   recipients: string[],
   conversationId: string,
   steerPayload: SteerWakePayload | null,
+  messageContext?: WakeMessageContext,
 ): Promise<void> {
   // Bounded fan-out (env.WAKE_FANOUT_CONCURRENCY). Each recipient's work
   // — host resolve, the support-model triage (3 DB reads + a model call)
@@ -775,7 +800,7 @@ export async function fanOutWake(
       // Await INSIDE the slot so it's held across ensurePod (kubectl)
       // too — that's what bounds the child-process + pod-admission
       // pressure, not just the triage DB reads.
-      await wakeOne(m, 'message.new', conversationId, steerPayload, triageOptions)
+      await wakeOne(m, 'message.new', conversationId, steerPayload, triageOptions, 0, messageContext)
     } catch (err) {
       console.error(`[scheduler] wakeOne(${m}) failed:`, err instanceof Error ? err.message : err)
     }

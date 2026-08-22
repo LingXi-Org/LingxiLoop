@@ -437,6 +437,7 @@ test('[integration] wire: scheduler.wakeAgent routes BOTH wake AND steer when ag
     conversationId: 'c-456',
     authorName: 'bob',
     body: 'wait, change the plan',
+    authorKind: 'human',
   })
   await new Promise((r) => setTimeout(r, 200))
 
@@ -466,6 +467,7 @@ test('[integration] wire: scheduler.wakeAgent does NOT deliver steer when agent 
     conversationId: 'c-789',
     authorName: 'carol',
     body: 'normal message — should not steer',
+    authorKind: 'human',
   })
   await new Promise((r) => setTimeout(r, 200))
 
@@ -870,6 +872,7 @@ test('[integration] rate limit: scheduler drops steers past 30/min — wake stil
       conversationId: 'c-spam',
       authorName: 'spammer',
       body: `msg ${i}`,
+      authorKind: 'human',
     })
   }
   await new Promise((r) => setTimeout(r, 250))

@@ -80,12 +80,44 @@ jobs:
       - run: npm run test:integration
 
   user-computer-docker-smoke:
-    name: User Computer Docker and browser smoke
+    name: User Computer full-stack takeover smoke
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lingxiloop_computer_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lingxiloop_computer_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_computer_test
+      REDIS_URL: redis://127.0.0.1:6379
+      OPENAI_API_KEY: computer-smoke-key
     steps:
       - uses: actions/checkout@v4
-      - run: node scripts/user-computer-smoke.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx scripts/user-computer-smoke.mjs
 
   desktop-directory-smoke:
     name: Desktop layout (${{ matrix.os }})
