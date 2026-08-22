@@ -45,7 +45,7 @@ beforeEach(() => {
 test('busy LingxiGraph run steers a follow-up and never starts a second turn after consumption', async () => {
   let resolveFirst: (() => void) | undefined
   let starts = 0
-  const steerCalls: Array<{ runId: string; key: string }> = []
+  const steerCalls: Array<{ runId: string; key: string; phase: unknown }> = []
   _setTurnRunnerForTests(async (agentId) => {
     starts++
     activateManagedLingxiGraphRun(agentId, 'runtime-run-1', 'co-1')
@@ -53,7 +53,7 @@ test('busy LingxiGraph run steers a follow-up and never starts a second turn aft
     deactivateManagedLingxiGraphRun(agentId, 'runtime-run-1')
   })
   _setSteerRunnerForTests((async (request) => {
-    steerCalls.push({ runId: request.runId, key: request.idempotencyKey })
+    steerCalls.push({ runId: request.runId, key: request.idempotencyKey, phase: request.metadata?.mailboxPhase })
     return { outcome: 'accepted', eventId: 'steer-1', runId: request.runId, sequence: 1, status: 'pending', kind: request.kind }
   }) as typeof import('../agents/lingxigraph-adapter.js').steerLingxiGraphRun)
 
@@ -61,7 +61,8 @@ test('busy LingxiGraph run steers a follow-up and never starts a second turn aft
   await new Promise((resolve) => setTimeout(resolve, 0))
   await scheduleManagedAgentTurn('agent-steer', { trigger: 'message.new' }, {
     messageId: 'message-1', conversationId: 'conv-1', authorId: 'human-1',
-    authorName: 'Human', body: 'please adjust', companyId: 'co-1',
+    authorName: 'Agent A', body: 'please adjust', companyId: 'co-1',
+    authorKind: 'agent', activation: 'trigger',
   })
   recordManagedLingxiGraphEvent('agent-steer', {
     runId: 'runtime-run-1', sequence: 2, kind: 'run.steer.consumed', data: { steering_event_id: 'steer-1' },
@@ -69,7 +70,7 @@ test('busy LingxiGraph run steers a follow-up and never starts a second turn aft
   resolveFirst?.()
   await first
 
-  assert.deepEqual(steerCalls, [{ runId: 'runtime-run-1', key: 'message-1' }])
+  assert.deepEqual(steerCalls, [{ runId: 'runtime-run-1', key: 'message-1', phase: 'CURRENT_TURN' }])
   assert.equal(starts, 1, 'one input must not be both steered and rerun as a second turn')
 })
 
@@ -146,6 +147,20 @@ test('idle agent: a single wake starts exactly one turn', async () => {
 
   await scheduleManagedAgentTurn('agent-1', { trigger: 'message.new' })
   assert.deepEqual(calls, ['agent-1'])
+})
+
+test('ordinary peer delivery never starts or queues a managed turn', async () => {
+  let starts = 0
+  _setTurnRunnerForTests(async () => { starts++ })
+
+  await scheduleManagedAgentTurn('agent-mailbox-only', { trigger: 'message.new' }, {
+    messageId: 'peer-message-1', conversationId: 'conv-1', authorId: 'agent-a',
+    authorName: 'Agent A', body: 'context for later', companyId: 'co-1',
+    authorKind: 'agent', activation: 'deliver',
+  })
+
+  assert.equal(starts, 0)
+  assert.equal(isManagedAgentBusy('agent-mailbox-only'), false)
 })
 
 test('busy agent: a second wake does not start a concurrent turn, only coalesces', async () => {

@@ -38,6 +38,7 @@ import {
   steerLingxiGraphRun,
   streamLingxiGraphRunEvents,
 } from './lingxigraph-adapter.js'
+import { resolveMailboxDelivery, type AgentActivation, type MailboxDeliveryPhase } from './mailbox-delivery.js'
 import type { AgentTurnOptions } from './turn.js'
 
 type TurnRunner = (agentId: string, options: AgentTurnOptions) => Promise<void>
@@ -92,6 +93,9 @@ export interface ManagedSteerPayload {
   authorName: string
   body: string
   companyId?: string
+  authorKind?: 'human' | 'agent' | 'unknown'
+  activation?: AgentActivation
+  mailboxPhase?: MailboxDeliveryPhase
 }
 
 type SteerRunner = typeof steerLingxiGraphRun
@@ -244,6 +248,17 @@ export async function scheduleManagedAgentTurn(
   steerPayload: ManagedSteerPayload | null = null,
 ): Promise<void> {
   const state = getRunner(agentId)
+  const initialMailbox = steerPayload
+    ? resolveMailboxDelivery({
+        authorKind: steerPayload.authorKind ?? 'unknown',
+        activation: steerPayload.activation,
+        targetBusy: state.busy,
+      })
+    : null
+  // Defense in depth: the scheduler normally omits queue-only peers from its
+  // recipient list, but the executor also enforces the contract so a direct
+  // caller cannot accidentally turn mailbox delivery into work activation.
+  if (steerPayload && !initialMailbox?.activate) return
 
   // Process-restart recovery: the in-memory executor can be idle while a
   // LingxiGraph worker is still running the durable Run. Resolve that mapping
@@ -289,7 +304,14 @@ export async function scheduleManagedAgentTurn(
 
   if (state.busy) {
     const active = state.activeRun
-    if (steerPayload && active) {
+    const mailbox = steerPayload
+      ? resolveMailboxDelivery({
+          authorKind: steerPayload.authorKind ?? 'unknown',
+          activation: steerPayload.activation,
+          targetBusy: true,
+        })
+      : null
+    if (steerPayload && active && mailbox?.steerCurrentTurn) {
       // The run id is sourced only from the executor's active runtime state;
       // no message/user field can select an arbitrary run. The tenant tag
       // must agree as well before anything crosses the Runtime boundary.
@@ -306,8 +328,14 @@ export async function scheduleManagedAgentTurn(
               authorId: steerPayload.authorId ?? '',
               authorName: steerPayload.authorName,
               body: steerPayload.body,
+              mailboxPhase: mailbox.phase,
+              activation: steerPayload.activation ?? 'trigger',
             },
-            metadata: { agentId, companyId: steerPayload.companyId ?? active.companyId },
+            metadata: {
+              agentId,
+              companyId: steerPayload.companyId ?? active.companyId,
+              mailboxPhase: mailbox.phase,
+            },
             idempotencyKey: steerPayload.messageId,
           }, {
             url: env.LINGXIGRAPH_URL,

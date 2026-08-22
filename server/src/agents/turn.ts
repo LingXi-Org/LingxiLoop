@@ -19,16 +19,19 @@
  */
 import type { ResponseInputItem, ResponseStreamEvent } from 'openai/resources/responses/responses'
 import { env } from '../env.js'
+import { pool } from '../db/pool.js'
 import { getLlmClient } from '../llm.js'
 import { CH_MESSAGE_DELTA, publish, redis } from '../redis.js'
 import { BUSY_STATUS_HEARTBEAT_MS } from '../status.js'
 import { pgActionLedger } from './action-ledger.js'
+import { hardApprovalForAction, requiredCapabilityForAction } from './action-policy.js'
 import { resolveDeclaredAutoRelayTarget } from './auto-relay.js'
 import { addUsage, EMPTY_USAGE, type TokenUsage, usageFromOpenAI } from './cost.js'
+import { claimApprovedContinuation, consumeApprovedAction, finishApprovedContinuation, listAutonomyRules, requestApproval } from './coworker.js'
 import { GLANCE_YIELD_RULES } from './glance-protocol.js'
 import { materializeImage } from './image-fetcher.js'
 import { classifyInboxTriage, gateSyntheticWake } from './inbox-triage.js'
-import { computeInputScopeKey, executeCommunicationActions, runLingxiGraph } from './lingxigraph-adapter.js'
+import { communicationActionToArgv, computeInputScopeKey, executeCommunicationActions, runLingxiGraph, type CommunicationAction } from './lingxigraph-adapter.js'
 import { extractLiveReplyPrefix } from './live-reply-preview.js'
 import { classifyLlmCallError, readStreamReasoningTokens, readStreamUsage, recordLlmCall } from './llm-ledger.js'
 import {
@@ -81,6 +84,85 @@ interface InboxAttachment {
   mime?: string
   /** Storage key (`attachments/<uuid>.<ext>`) preserved for re-signing. */
   key?: string
+}
+
+interface ExecutorGateOptions {
+  companyId: string
+  agentId: string
+  runId: string
+  inputScopeKey: string
+  actions: CommunicationAction[]
+  actionIndexOffset?: number
+  enabledCapabilities: string[]
+  fallbackConversationId?: string | null
+  conversationForAction?: (action: CommunicationAction) => string | null | undefined
+}
+
+/** Central executor-boundary gate. Prompt instructions and autonomy rules are
+ * advisory; capability denial and mandatory approvals always flow through
+ * this function immediately before the sink executes. */
+function createExecutorGate(options: ExecutorGateOptions) {
+  const offset = options.actionIndexOffset ?? 0
+  return async (action: CommunicationAction, actionIndex: number, actionKey: string) => {
+    const requiredCapability = requiredCapabilityForAction(action)
+    if (requiredCapability && !options.enabledCapabilities.includes(requiredCapability)) {
+      return {
+        allow: false,
+        error: `agent capability '${requiredCapability}' is disabled by the workspace owner`,
+      }
+    }
+    const requirement = hardApprovalForAction(action)
+    if (!requirement) return { allow: true }
+    if (!requirement.blockedAction.type || typeof requirement.blockedAction.type !== 'string') {
+      return { allow: false, error: 'approval request must contain the exact typed action in payload.action' }
+    }
+    const blockedCapability = requiredCapabilityForAction(requirement.blockedAction as unknown as CommunicationAction)
+    if (blockedCapability && !options.enabledCapabilities.includes(blockedCapability)) {
+      return {
+        allow: false,
+        error: `agent capability '${blockedCapability}' is disabled by the workspace owner`,
+      }
+    }
+    const conversationId = options.conversationForAction?.(action) ?? options.fallbackConversationId
+    if (!conversationId) {
+      return { allow: false, error: 'sensitive action requires a conversation-scoped human approval' }
+    }
+    const localIndex = actionIndex - offset
+    const remainingActions = options.actions.slice(localIndex + 1)
+      .map((item) => item as unknown as Record<string, unknown>)
+    const approval = await requestApproval({
+      companyId: options.companyId,
+      agentId: options.agentId,
+      conversationId,
+      runId: options.runId,
+      kind: requirement.kind,
+      summary: requirement.summary,
+      payload: requirement.payload,
+      actionKey,
+      actionIndex,
+      blockedAction: requirement.blockedAction,
+      remainingActions,
+      inputScopeKey: options.inputScopeKey,
+    })
+    const rejected = approval.status === 'rejected'
+    return {
+      allow: false,
+      waitingForHuman: !rejected,
+      approvalId: approval.id,
+      error: rejected ? `approval was rejected (${approval.id})` : undefined,
+      result: {
+        ok: true,
+        exitCode: 0,
+        text: rejected ? `approval was rejected (${approval.id})` : `waiting for human approval ${approval.id}`,
+        sideEffects: [{
+          event: rejected ? 'approval.rejected' : 'approval.requested',
+          command: 'approval', approvalId: approval.id, conversationId,
+          messageId: approval.messageId, authorId: options.agentId, companyId: options.companyId,
+          visibleToUser: true, waitingForHuman: !rejected,
+        }],
+      },
+    }
+  }
 }
 
 interface QuotedSummary {
@@ -1581,6 +1663,151 @@ Treat the output as a private memo that will be appended to the agent's input. E
   }
 }
 
+/** Resume the exact persisted action cursor on the original run. The model is
+ * not called again: blocked + remaining actions are the durable continuation. */
+export async function resumeApprovedContinuation(approvalId: string): Promise<{
+  resumed: boolean
+  waitingForHuman?: boolean
+  error?: string
+}> {
+  const continuation = await claimApprovedContinuation(approvalId)
+  if (!continuation) return { resumed: false, error: 'approval has no resumable continuation' }
+  const action = continuation.blockedAction as CommunicationAction
+  const remainingActions = continuation.remainingActions as CommunicationAction[]
+  if (!action || typeof action.type !== 'string'
+    || remainingActions.some((item) => !item || typeof item.type !== 'string')) {
+    await finishApprovedContinuation(approvalId, 'failed')
+    await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approval continuation was invalid', error: 'invalid blocked action' })
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+    return { resumed: false, error: 'invalid blocked action' }
+  }
+  await runtime.setStatus(continuation.agentId, 'working').catch(() => undefined)
+  await pool.query(
+    `UPDATE agent_runs SET status = 'running', stage = 'resuming', updated_at = NOW(), finished_at = NULL
+     WHERE id = $1 AND status = 'waiting_for_human'`, [continuation.runId],
+  )
+  await runtime.recordEvent({
+    runId: continuation.runId, agentId: continuation.agentId, companyId: continuation.companyId,
+    kind: 'approval.resumed', title: 'Human approval received; resuming the blocked action',
+    data: { approvalId, actionKey: continuation.actionKey, conversationId: continuation.conversationId }, stage: 'working',
+  }).catch(() => undefined)
+  const persona = await runtime.loadPersona(continuation.agentId)
+  const enabledCapabilities = persona?.capabilities
+    ?? ['computer', 'web', 'files', 'email', 'documents']
+  const blockedCapability = requiredCapabilityForAction(action)
+  if (blockedCapability && !enabledCapabilities.includes(blockedCapability)) {
+    await finishApprovedContinuation(approvalId, 'failed')
+    await runtime.finishRun({
+      runId: continuation.runId,
+      status: 'failed',
+      summary: 'Approved continuation was blocked by current workspace capability policy',
+      error: `agent capability '${blockedCapability}' is disabled by the workspace owner`,
+    })
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+    return { resumed: false, error: `agent capability '${blockedCapability}' is disabled by the workspace owner` }
+  }
+  // Claim consumption before the side effect. The continuation claim above is
+  // already an atomic run-level lock; consuming here makes a crash/retry fail
+  // closed rather than accidentally issuing a second external action.
+  const consumed = await consumeApprovedAction({
+    approvalId, companyId: continuation.companyId, agentId: continuation.agentId,
+    conversationId: continuation.conversationId, runId: continuation.runId,
+    actionKey: continuation.actionKey, payload: continuation.payload,
+  })
+  if (!consumed.approved) {
+    await finishApprovedContinuation(approvalId, 'failed')
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+    return { resumed: false, error: 'approval continuation was already consumed or no longer matches' }
+  }
+  try {
+    const result = await runtime.executeCli(
+      continuation.agentId,
+      communicationActionToArgv(action),
+      { idempotencyKey: continuation.actionKey },
+    )
+    if (!result.ok || result.exitCode !== 0) {
+      await finishApprovedContinuation(approvalId, 'failed')
+      await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approved action failed', error: result.text, toolCallCount: 1 })
+      await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+      return { resumed: false, error: result.text }
+    }
+    await finishApprovedContinuation(approvalId, 'completed')
+    const execution = await executeCommunicationActions({
+      agentId: continuation.agentId,
+      inputScopeKey: continuation.inputScopeKey,
+      actionIndexOffset: continuation.actionIndex + 1,
+      actions: remainingActions,
+      executeCli: (argv, internal) => runtime.executeCli(continuation.agentId, argv, internal),
+      timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
+      ledger: pgActionLedger,
+      gateAction: createExecutorGate({
+        companyId: continuation.companyId,
+        agentId: continuation.agentId,
+        runId: continuation.runId,
+        inputScopeKey: continuation.inputScopeKey,
+        actions: remainingActions,
+        actionIndexOffset: continuation.actionIndex + 1,
+        enabledCapabilities,
+        fallbackConversationId: continuation.conversationId,
+        conversationForAction: (nextAction) => nextAction.type === 'approval.request'
+          ? nextAction.conversationId
+          : null,
+      }),
+    })
+    if (execution.waitingForHuman) {
+      await runtime.setStatus(continuation.agentId, 'waiting').catch(() => undefined)
+      await runtime.finishRun({
+        runId: continuation.runId,
+        status: 'waiting_for_human',
+        summary: `Waiting for human approval ${execution.approvalId ?? ''}`.trim(),
+        toolCallCount: 1 + execution.results.length,
+      })
+      return { resumed: true, waitingForHuman: true }
+    }
+    if (!execution.completed) {
+      await runtime.finishRun({
+        runId: continuation.runId,
+        status: 'failed',
+        summary: 'Approved continuation failed',
+        error: execution.error,
+        toolCallCount: 1 + execution.results.length,
+      })
+      await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+      return { resumed: false, error: execution.error }
+    }
+    await runtime.recordEvent({
+      runId: continuation.runId, agentId: continuation.agentId, companyId: continuation.companyId,
+      kind: 'approval.continuation_completed', title: 'Approved action completed',
+      data: { approvalId, actionKey: continuation.actionKey }, stage: 'completed',
+    }).catch(() => undefined)
+    await runtime.finishRun({
+      runId: continuation.runId,
+      status: 'completed',
+      summary: 'Approved continuation completed',
+      toolCallCount: 1 + execution.results.length,
+    })
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+    return { resumed: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    await finishApprovedContinuation(approvalId, 'failed')
+    await runtime.finishRun({ runId: continuation.runId, status: 'failed', summary: 'Approved action failed', error: message, toolCallCount: 1 })
+    await runtime.setStatus(continuation.agentId, 'avail').catch(() => undefined)
+    return { resumed: false, error: message }
+  }
+}
+
+export async function finalizeRejectedContinuation(args: { runId?: string | null; agentId: string }): Promise<void> {
+  if (args.runId) {
+    await runtime.finishRun({
+      runId: args.runId,
+      status: 'completed',
+      summary: 'Human rejected approval; blocked action and remaining batch were not executed',
+    })
+  }
+  await runtime.setStatus(args.agentId, 'avail')
+}
+
 export async function runAgentTurn(agentId: string, options: AgentTurnOptions = {}): Promise<void> {
   // LINGXILOOP_REASONING_RUNTIME defaults to 'lingxigraph' (server/src/env.ts)
   // — that is THE PRODUCTION PATH. useLingxiGraph=true takes the branch
@@ -2167,6 +2394,14 @@ export async function runAgentTurn(agentId: string, options: AgentTurnOptions = 
         : isPollUpdateWake && options.pollBrief
           ? `Poll update: ${options.pollBrief.question} (${options.pollBrief.phase}, ${options.pollBrief.totalVotes} votes)`
           : 'New conversation activity'
+    const autonomyUserId = [...inbox].reverse().find((message) => message.author_kind === 'human')?.author_id
+    const autonomyRules = runCompanyId && autonomyUserId
+      ? await listAutonomyRules(runCompanyId, autonomyUserId).catch(() => [])
+      : []
+    const autonomyBlock = autonomyRules
+      .filter((rule) => rule.agentId === agentId)
+      .map((rule) => `- ${rule.scope}.${rule.operation}: ${rule.mode} (${rule.source})`)
+      .join('\n') || '(none)'
     const contextPrompt = `Now: ${nowStr}
 
 Trigger:
@@ -2183,6 +2418,10 @@ ${renderMemory(memory)}
 
 Relationship climate:
 ${renderClimate(climate)}
+
+Explicit autonomy rules for the human who triggered this turn:
+${autonomyBlock}
+These rules guide low-risk ask/act choices only. They never bypass hard approval gates for external communication, destructive/sensitive actions, or financial/irreversible actions.
 
 ${peerWorkBlock}`.trim()
 
@@ -2290,10 +2529,47 @@ ${peerWorkBlock}`.trim()
       executeCli: (argv, internal) => runtime.executeCli(agentId, argv, internal),
       timeoutMs: env.LINGXIGRAPH_ACTION_TIMEOUT_MS,
       ledger: pgActionLedger,
+      gateAction: createExecutorGate({
+        companyId: runCompanyId,
+        agentId,
+        runId,
+        inputScopeKey,
+        actions: result.actions,
+        enabledCapabilities: persona.capabilities
+          ?? ['computer', 'web', 'files', 'email', 'documents'],
+        fallbackConversationId: [...inbox].reverse().find((message) => message.author_kind === 'human')?.conversation_id
+          ?? inbox.at(-1)?.conversation_id,
+        conversationForAction: (action) => action.type === 'approval.request'
+          ? action.conversationId
+          : action.type === 'email.reply'
+            ? inbox.find((message) => message.id === action.messageId)?.conversation_id
+            : null,
+      }),
     })
     toolCallCount += execution.results.length
     for (const cliResult of execution.results) {
       cliSideEffectsThisTurn.push(...(cliResult.sideEffects ?? []))
+    }
+    for (const effect of cliSideEffectsThisTurn) {
+      const visibleKinds: Record<string, string> = {
+        'handoff.created': 'Created a handoff',
+        'handoff.completed': 'Completed a handoff',
+        'handoff.blocked': 'Blocked on a handoff',
+        'approval.requested': 'Requested human approval',
+        'approval.rejected': 'Human rejected an approval',
+        'memory.written': 'Learned a durable memory',
+        'autonomy.learned': 'Learned an explicit autonomy rule',
+        'message.posted': 'Sent a message',
+      }
+      const title = visibleKinds[effect.event]
+      if (!title) continue
+      await runtime.recordEvent({
+        runId, agentId, companyId: runCompanyId,
+        kind: effect.event === 'memory.written' ? 'memory.learned' : effect.event,
+        title,
+        data: Object.fromEntries(Object.entries(effect).filter(([key]) => !['body', 'payload', 'reasoning'].includes(key))),
+        stage: effect.event === 'approval.requested' ? 'waiting_for_human' : 'working',
+      }).catch(() => undefined)
     }
     // Same guarantee as the classic (non-LingxiGraph) path: reacting is
     // prompt-suggested here (COMMUNICATION_RULES), not enforced by the
@@ -2323,6 +2599,17 @@ ${peerWorkBlock}`.trim()
         data: { failedActionIndex: execution.failedActionIndex, executedActions: execution.results.length },
         stage: 'failed',
       }).catch(() => { /* observability best-effort */ })
+      return
+    }
+    if (execution.waitingForHuman) {
+      finalStatus = 'waiting_for_human'
+      finalSummary = `Waiting for human approval ${execution.approvalId ?? ''}`.trim()
+      await setAgentStatus('waiting')
+      await runtime.recordEvent({
+        runId, agentId, companyId: runCompanyId,
+        kind: 'approval.requested', title: finalSummary,
+        data: { approvalId: execution.approvalId }, stage: 'waiting_for_human',
+      }).catch(() => undefined)
       return
     }
 
@@ -3858,12 +4145,12 @@ Mechanics:
     // the loop exited but before this finally ran). They're still in
     // the messages table so the next wake picks them up.
     resetSteerForAgent(agentId)
-    await setAgentStatus('avail')
+    await setAgentStatus(finalStatus === 'waiting_for_human' ? 'waiting' : 'avail')
       .then(() => runtime.recordEvent({
         runId, agentId, companyId: runCompanyId,
         kind: 'status.changed',
-        title: 'Agent status reset to available',
-        data: { status: 'avail' },
+        title: finalStatus === 'waiting_for_human' ? 'Agent is waiting for human approval' : 'Agent status reset to available',
+        data: { status: finalStatus === 'waiting_for_human' ? 'waiting' : 'avail' },
       }))
       .catch((err) => console.error(`[turn] ${agentId} failed to reset status`, err))
     await runtime.finishRun({

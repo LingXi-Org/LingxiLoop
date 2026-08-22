@@ -124,6 +124,11 @@ interface WakeKindSteer {
   authorName: string
   /** The raw message body the model needs to see. */
   body: string
+  /** Auditable communication intent and phase, assigned by the server-side
+   * mailbox policy rather than inferred by the Runtime. */
+  authorKind?: 'human' | 'agent' | 'unknown'
+  activation?: 'deliver' | 'trigger'
+  mailboxPhase?: 'CURRENT_TURN' | 'NEXT_TURN'
 }
 
 /** Per-agent Redis channel. Keep the prefix short — every PUBLISH

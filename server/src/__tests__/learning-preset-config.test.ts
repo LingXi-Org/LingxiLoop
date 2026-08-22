@@ -5,7 +5,7 @@ process.env.OPENAI_API_KEY ||= 'test-key'
 const { LEARNING_PRESET_VERSION, STARTER_ROOMS, STARTER_TEAM } = await import('../onboardCompany.js')
 
 test('learning preset defines exactly the six required personas', () => {
-  assert.equal(LEARNING_PRESET_VERSION, 1)
+  assert.equal(LEARNING_PRESET_VERSION, 2)
   assert.deepEqual(
     STARTER_TEAM.map((agent) => agent.presetKey),
     ['nova', 'sage', 'milo', 'trace', 'scout', 'forge'],
@@ -13,7 +13,7 @@ test('learning preset defines exactly the six required personas', () => {
   assert.deepEqual(
     STARTER_TEAM.map((agent) => agent.role),
     [
-      '学习教练 · Study Coach',
+      '团队负责人 · Chief of Staff',
       '概念导师 · Concept Tutor',
       '解题陪练 · Problem Coach',
       '错因诊断 · Learning Diagnostician',

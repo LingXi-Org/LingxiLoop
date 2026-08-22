@@ -26,6 +26,23 @@ export type CommunicationAction =
   | Exact<{ type: 'document.update'; documentId: string; find: string; replace: string }>
   | Exact<{ type: 'document.append'; documentId: string; content: string }>
   | Exact<{ type: 'document.share'; documentId: string; conversationId: string; comment?: string }>
+  | Exact<{ type: 'handoff.create'; conversationId: string; toAgentId: string; title: string; note?: string; sharedPaths?: string[]; browserTargets?: string[] }>
+  | Exact<{ type: 'handoff.complete'; handoffId: string; note?: string }>
+  | Exact<{ type: 'approval.request'; conversationId: string; kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action'; summary: string; payload: Record<string, unknown> }>
+  | Exact<{ type: 'memory.note'; body: string; kind: 'fact' | 'preference' | 'instruction' | 'relationship'; about?: string }>
+  | Exact<{ type: 'autonomy.remember'; conversationId: string; scope: string; operation: string; mode: 'allow' | 'ask' | 'deny' }>
+  | Exact<{ type: 'computer.exec'; screenId: string; command: string[]; cwd?: string }>
+  | Exact<{ type: 'computer.read_file'; screenId: string; path: string }>
+  | Exact<{ type: 'computer.write_file'; screenId: string; path: string; content: string }>
+  | Exact<{ type: 'computer.list_files'; screenId: string; path: string }>
+  | Exact<{ type: 'computer.screenshot'; screenId: string }>
+  | Exact<{ type: 'computer.screen.status'; screenId: string }>
+  | Exact<{ type: 'computer.screen.wait_for_human'; screenId: string }>
+  | Exact<{ type: 'computer.browser.open'; screenId: string; url: string; private?: boolean }>
+  | Exact<{ type: 'computer.browser.targets'; screenId: string }>
+  | Exact<{ type: 'computer.browser.navigate'; targetId: string; url: string }>
+  | Exact<{ type: 'computer.browser.click'; targetId: string; x: number; y: number }>
+  | Exact<{ type: 'computer.browser.type'; targetId: string; text: string }>
 
 export interface LingxiGraphRunRequest {
   version: 1
@@ -301,6 +318,8 @@ export interface CommunicationExecutionResult {
   results: CliResult[]
   failedActionIndex?: number
   error?: string
+  waitingForHuman?: boolean
+  approvalId?: string
 }
 
 export const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]> = {
@@ -321,6 +340,23 @@ export const ACTION_KEYS: Record<CommunicationAction['type'], readonly string[]>
   'document.update': ['type', 'documentId', 'find', 'replace'],
   'document.append': ['type', 'documentId', 'content'],
   'document.share': ['type', 'documentId', 'conversationId', 'comment'],
+  'handoff.create': ['type', 'conversationId', 'toAgentId', 'title', 'note', 'sharedPaths', 'browserTargets'],
+  'handoff.complete': ['type', 'handoffId', 'note'],
+  'approval.request': ['type', 'conversationId', 'kind', 'summary', 'payload'],
+  'memory.note': ['type', 'body', 'kind', 'about'],
+  'autonomy.remember': ['type', 'conversationId', 'scope', 'operation', 'mode'],
+  'computer.exec': ['type', 'screenId', 'command', 'cwd'],
+  'computer.read_file': ['type', 'screenId', 'path'],
+  'computer.write_file': ['type', 'screenId', 'path', 'content'],
+  'computer.list_files': ['type', 'screenId', 'path'],
+  'computer.screenshot': ['type', 'screenId'],
+  'computer.screen.status': ['type', 'screenId'],
+  'computer.screen.wait_for_human': ['type', 'screenId'],
+  'computer.browser.open': ['type', 'screenId', 'url', 'private'],
+  'computer.browser.targets': ['type', 'screenId'],
+  'computer.browser.navigate': ['type', 'targetId', 'url'],
+  'computer.browser.click': ['type', 'targetId', 'x', 'y'],
+  'computer.browser.type': ['type', 'targetId', 'text'],
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -375,10 +411,14 @@ export function computeActionKey(args: {
     .digest('hex')
 }
 
-/** P0 scope (issue #7): only these two action types carry a durable,
+/** P0 scope (issue #7/#37): these action types carry a durable,
  *  crash-safe idempotency key all the way to the sink. Other action types
  *  still get ledger-level replay skipping, but no sink-level guarantee yet. */
-const SINK_IDEMPOTENT_ACTION_TYPES = new Set<CommunicationAction['type']>(['message.send', 'reaction.toggle'])
+const SINK_IDEMPOTENT_ACTION_TYPES = new Set<CommunicationAction['type']>([
+  'message.send',
+  'reaction.toggle',
+  'handoff.create',
+])
 
 function stringField(value: Record<string, unknown>, key: string, required = true): string | undefined {
   const raw = value[key]
@@ -434,6 +474,57 @@ export function parseCommunicationAction(raw: unknown): CommunicationAction {
     case 'document.update': return { type, documentId: stringField(raw, 'documentId')!, find: stringField(raw, 'find')!, replace: stringField(raw, 'replace', false) ?? '' }
     case 'document.append': return { type, documentId: stringField(raw, 'documentId')!, content: stringField(raw, 'content')! }
     case 'document.share': return { type, documentId: stringField(raw, 'documentId')!, conversationId: stringField(raw, 'conversationId')!, ...(raw.comment === undefined ? {} : { comment: stringField(raw, 'comment', false)! }) }
+    case 'handoff.create': return {
+      type, conversationId: stringField(raw, 'conversationId')!, toAgentId: stringField(raw, 'toAgentId')!,
+      title: stringField(raw, 'title')!,
+      ...(raw.note === undefined ? {} : { note: stringField(raw, 'note', false)! }),
+      ...(raw.sharedPaths === undefined ? {} : { sharedPaths: stringArrayField(raw, 'sharedPaths', 0)! }),
+      ...(raw.browserTargets === undefined ? {} : { browserTargets: stringArrayField(raw, 'browserTargets', 0)! }),
+    }
+    case 'handoff.complete': return { type, handoffId: stringField(raw, 'handoffId')!, ...(raw.note === undefined ? {} : { note: stringField(raw, 'note', false)! }) }
+    case 'approval.request': {
+      const kind = String(raw.kind)
+      if (!['external_communication', 'sensitive_or_destructive_action', 'financial_or_irreversible_action'].includes(kind)) throw new Error('invalid approval kind')
+      if (!isRecord(raw.payload)) throw new Error('approval payload must be an object')
+      if (!isRecord(raw.payload.action)) throw new Error('approval payload must include an exact action object')
+      const blocked = parseCommunicationAction(raw.payload.action)
+      if (blocked.type === 'approval.request') throw new Error('approval continuation cannot request another approval')
+      return { type, conversationId: stringField(raw, 'conversationId')!, kind: kind as 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action', summary: stringField(raw, 'summary')!, payload: raw.payload }
+    }
+    case 'memory.note': {
+      const kind = String(raw.kind)
+      if (!['fact', 'preference', 'instruction', 'relationship'].includes(kind)) throw new Error('invalid memory kind')
+      return { type, body: stringField(raw, 'body')!, kind: kind as 'fact' | 'preference' | 'instruction' | 'relationship', ...(raw.about === undefined ? {} : { about: stringField(raw, 'about', false)! }) }
+    }
+    case 'autonomy.remember': {
+      const mode = String(raw.mode)
+      if (!['allow', 'ask', 'deny'].includes(mode)) throw new Error('invalid autonomy mode')
+      return {
+        type,
+        conversationId: stringField(raw, 'conversationId')!,
+        scope: stringField(raw, 'scope')!,
+        operation: stringField(raw, 'operation')!,
+        mode: mode as 'allow' | 'ask' | 'deny',
+      }
+    }
+    case 'computer.exec': return { type, screenId: stringField(raw, 'screenId')!, command: stringArrayField(raw, 'command')!, ...(raw.cwd === undefined ? {} : { cwd: stringField(raw, 'cwd', false)! }) }
+    case 'computer.read_file': return { type, screenId: stringField(raw, 'screenId')!, path: stringField(raw, 'path')! }
+    case 'computer.write_file': return { type, screenId: stringField(raw, 'screenId')!, path: stringField(raw, 'path')!, content: stringField(raw, 'content', false) ?? '' }
+    case 'computer.list_files': return { type, screenId: stringField(raw, 'screenId')!, path: stringField(raw, 'path')! }
+    case 'computer.screenshot': return { type, screenId: stringField(raw, 'screenId')! }
+    case 'computer.screen.status': return { type, screenId: stringField(raw, 'screenId')! }
+    case 'computer.screen.wait_for_human': return { type, screenId: stringField(raw, 'screenId')! }
+    case 'computer.browser.open': {
+      if (raw.private !== undefined && typeof raw.private !== 'boolean') throw new Error('private must be boolean')
+      return { type, screenId: stringField(raw, 'screenId')!, url: stringField(raw, 'url')!, ...(raw.private === undefined ? {} : { private: raw.private }) }
+    }
+    case 'computer.browser.targets': return { type, screenId: stringField(raw, 'screenId')! }
+    case 'computer.browser.navigate': return { type, targetId: stringField(raw, 'targetId')!, url: stringField(raw, 'url')! }
+    case 'computer.browser.click': {
+      if (typeof raw.x !== 'number' || !Number.isFinite(raw.x) || typeof raw.y !== 'number' || !Number.isFinite(raw.y)) throw new Error('browser click coordinates must be finite numbers')
+      return { type, targetId: stringField(raw, 'targetId')!, x: raw.x, y: raw.y }
+    }
+    case 'computer.browser.type': return { type, targetId: stringField(raw, 'targetId')!, text: stringField(raw, 'text')! }
   }
 }
 
@@ -496,6 +587,28 @@ export function communicationActionToArgv(action: CommunicationAction): string[]
       action.conversationId,
       ...(action.comment ? ['--comment', action.comment] : []),
     ]
+    case 'handoff.create': return [
+      'handoff', 'create', action.conversationId, action.toAgentId, action.title,
+      ...(action.note ? ['--note', action.note] : []),
+      ...(action.sharedPaths?.length ? ['--paths', action.sharedPaths.join(',')] : []),
+      ...(action.browserTargets?.length ? ['--browser-targets', action.browserTargets.join(',')] : []),
+    ]
+    case 'handoff.complete': return ['handoff', 'complete', action.handoffId, ...(action.note ? ['--note', action.note] : [])]
+    case 'approval.request': return ['approval', 'request', action.conversationId, action.kind, action.summary, '--payload-json', JSON.stringify(action.payload)]
+    case 'memory.note': return ['memory', 'note', action.body, '--kind', action.kind, ...(action.about ? ['--about', action.about] : [])]
+    case 'autonomy.remember': return ['autonomy', 'remember', action.conversationId, action.scope, action.operation, action.mode]
+    case 'computer.exec': return ['computer', 'exec', action.screenId, ...action.command, ...(action.cwd ? ['--cwd', action.cwd] : [])]
+    case 'computer.read_file': return ['computer', 'read-file', action.screenId, action.path]
+    case 'computer.write_file': return ['computer', 'write-file', action.screenId, action.path, action.content]
+    case 'computer.list_files': return ['computer', 'list-files', action.screenId, action.path]
+    case 'computer.screenshot': return ['computer', 'screenshot', action.screenId]
+    case 'computer.screen.status': return ['computer', 'screen-status', action.screenId]
+    case 'computer.screen.wait_for_human': return ['computer', 'wait-for-human', action.screenId]
+    case 'computer.browser.open': return ['computer', 'browser-open', action.screenId, action.url, ...(action.private ? ['--private'] : [])]
+    case 'computer.browser.targets': return ['computer', 'browser-targets', action.screenId]
+    case 'computer.browser.navigate': return ['computer', 'browser-navigate', action.targetId, action.url]
+    case 'computer.browser.click': return ['computer', 'browser-click', action.targetId, String(action.x), String(action.y)]
+    case 'computer.browser.type': return ['computer', 'browser-type', action.targetId, action.text]
   }
 }
 
@@ -507,6 +620,8 @@ export interface CommunicationExecutionContext {
    *  action keys ⇒ replay-safe. New inbox ⇒ new scope ⇒ actions are
    *  free to repeat prior content as a legitimately new action. */
   inputScopeKey: string
+  /** Original batch index for actions in a persisted continuation. */
+  actionIndexOffset?: number
   actions: CommunicationAction[]
   /** `internal` is the out-of-band idempotency channel (issue #7 review:
    *  argv is caller-controllable — a legacy bash-tool agent, human CLI, or
@@ -522,6 +637,14 @@ export interface CommunicationExecutionContext {
    *  below — only for other action types where no sink-level dedup
    *  exists yet. */
   ledger?: ActionLedgerPort
+  /** Product-level hard gate evaluated before the generic action ledger. A
+   * denied result is persisted as a visible Approval card and stops the batch
+   * without running the risky action. */
+  gateAction?: (
+    action: CommunicationAction,
+    actionIndex: number,
+    idempotencyKey: string,
+  ) => Promise<{ allow: boolean; result?: CliResult; waitingForHuman?: boolean; approvalId?: string; error?: string }>
 }
 
 export async function executeCommunicationActions(
@@ -531,25 +654,40 @@ export async function executeCommunicationActions(
   const results: CliResult[] = []
   for (let index = 0; index < ctx.actions.length; index++) {
     const action = ctx.actions[index]
-    const key = computeActionKey({ agentId: ctx.agentId, inputScopeKey: ctx.inputScopeKey, actionIndex: index, action })
-    // Single-owner rule (issue #7 review, P0-1): message.send and
-    // reaction.toggle each own their idempotency key end-to-end inside
-    // their OWN sink transaction (messages.idempotency_key's unique index;
-    // tReact's claim+mutate+commit). This layer must NOT also claim the
+    const absoluteIndex = (ctx.actionIndexOffset ?? 0) + index
+    const key = computeActionKey({ agentId: ctx.agentId, inputScopeKey: ctx.inputScopeKey, actionIndex: absoluteIndex, action })
+    // Single-owner rule (issue #7/#37 review): message.send,
+    // reaction.toggle, and handoff.create each own their idempotency key
+    // end-to-end inside their OWN sink transaction (message/handoff unique
+    // indexes; tReact's claim+mutate+commit). This layer must NOT also claim the
     // same key via the generic ledger — doing so pre-inserts a 'pending'
     // row that the sink's own atomic claim then finds already taken,
     // self-conflicting on the very first (non-retry) execution. For these
-    // two types we always call through and let the sink decide; for every
+    // three types we always call through and let the sink decide; for every
     // other action type (no sink-level dedup exists yet) the generic
     // ledger below is still the only protection, so it stays authoritative.
     const sinkOwned = SINK_IDEMPOTENT_ACTION_TYPES.has(action.type)
     try {
+      if (ctx.gateAction) {
+        const gate = await ctx.gateAction(action, absoluteIndex, key)
+        if (!gate.allow) {
+          if (gate.result) results.push(gate.result)
+          return {
+            completed: !gate.error,
+            results,
+            failedActionIndex: gate.error ? absoluteIndex : undefined,
+            error: gate.error,
+            waitingForHuman: gate.waitingForHuman,
+            approvalId: gate.approvalId,
+          }
+        }
+      }
       if (ctx.ledger && !sinkOwned) {
         const claim = await ctx.ledger.claim({
           key,
           agentId: ctx.agentId,
           inputScopeKey: ctx.inputScopeKey,
-          actionIndex: index,
+          actionIndex: absoluteIndex,
           actionType: action.type,
           actionHash: canonicalActionJson(action),
         })
@@ -577,13 +715,13 @@ export async function executeCommunicationActions(
       results.push(result)
       if (!result.ok || result.exitCode !== 0) {
         if (ctx.ledger && !sinkOwned) await ctx.ledger.markFailed(key, result.text).catch(() => { /* observability-only */ })
-        return { completed: false, results, failedActionIndex: index, error: result.text }
+        return { completed: false, results, failedActionIndex: absoluteIndex, error: result.text }
       }
       if (ctx.ledger && !sinkOwned) await ctx.ledger.markSucceeded(key, result).catch(() => { /* observability-only */ })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       if (ctx.ledger && !sinkOwned) await ctx.ledger.markFailed(key, message).catch(() => { /* observability-only */ })
-      return { completed: false, results, failedActionIndex: index, error: message }
+      return { completed: false, results, failedActionIndex: absoluteIndex, error: message }
     }
   }
   return { completed: true, results }

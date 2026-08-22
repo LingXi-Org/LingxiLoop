@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useParticipants } from '@/stores/participants'
-import { useComputers } from '@/stores/computers'
-import { usePrefs } from '@/stores/preferences'
-import { useSoundStore } from '@/stores/sound'
-import { useDevtools } from '@/stores/devtools'
-import { useAuth } from '@/stores/auth'
-import { useApp } from '@/stores/app'
+import { type ApiProject, type ApiQuotaSnapshot, type ApiQuotaWindow, api, getPairingServerOrigin, getServerOrigin } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { Checkbox } from '@/components/Checkbox'
-import { cn } from '@/lib/utils'
 import { isWindows } from '@/lib/runtime'
-import { api, getPairingServerOrigin, getServerOrigin, type ApiProject, type ApiQuotaSnapshot, type ApiQuotaWindow } from '@/api/client'
+import { cn } from '@/lib/utils'
+import { useApp } from '@/stores/app'
+import { useAuth } from '@/stores/auth'
+import { useComputers } from '@/stores/computers'
+import { useDevtools } from '@/stores/devtools'
+import { useParticipants } from '@/stores/participants'
+import { usePrefs } from '@/stores/preferences'
+import { useSoundStore } from '@/stores/sound'
 
-const tabs = ['Profile', 'Usage', 'Computers', 'Projects', 'Trust & autonomy', 'Preferences'] as const
+const tabs = ['Profile', 'Usage', 'Computers', 'Projects', 'Memory', 'Trust & autonomy', 'Preferences'] as const
 type Tab = (typeof tabs)[number]
 
 const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: string; sub: string; default: boolean }> }> = [
@@ -383,6 +383,12 @@ function TrustTab() {
   const autonomy = usePrefs((s) => s.autonomy)
   const setAutonomy = usePrefs((s) => s.setAutonomy)
   const agents = Object.values(byId).filter((p) => p.kind === 'agent')
+  const [rules, setRules] = useState<Awaited<ReturnType<typeof api.getAutonomyRules>>>([])
+  const [rulesError, setRulesError] = useState<string | null>(null)
+  const loadRules = () => void api.getAutonomyRules().then(setRules).catch((error) => {
+    setRulesError(error instanceof Error ? error.message : String(error))
+  })
+  useEffect(loadRules, [])
 
   return (
     <div className="space-y-6">
@@ -415,6 +421,31 @@ function TrustTab() {
               </div>
             )
           })}
+        </div>
+      </Section>
+
+      <Section title="↳ 明确的允许 / 询问 / 拒绝规则">
+        <div className="mb-3 text-[12px] text-ink-500">
+          当你明确告诉 Agent“以后不用问”或“每次都要问”时，规则会出现在这里。外发、删除和付款等硬风险动作仍然需要审批。
+        </div>
+        {rulesError && <div className="mb-3 text-[11px] text-coral-deep">{rulesError}</div>}
+        <div className="space-y-2">
+          {rules.map((rule) => (
+            <div key={rule.id} className="flex items-center justify-between gap-3 rounded-[12px] border border-ink-100 bg-cloud px-4 py-3">
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-semibold text-ink-800">
+                  {byId[rule.agentId]?.name ?? rule.agentId} · {rule.scope}.{rule.operation}
+                </div>
+                <div className="mt-0.5 text-[10.5px] uppercase tracking-wide text-ink-400">
+                  {rule.mode === 'allow' ? '允许' : rule.mode === 'ask' ? '每次询问' : '拒绝'} · {rule.source === 'explicit_user' ? '用户明确设置' : '已学习'}
+                </div>
+              </div>
+              <button type="button" onClick={() => void api.deleteAutonomyRule(rule.id).then(loadRules)} className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">
+                撤销
+              </button>
+            </div>
+          ))}
+          {rules.length === 0 && <div className="rounded-xl border border-dashed border-ink-100 px-6 py-7 text-center text-[12px] text-ink-400">还没有明确的自治规则。</div>}
         </div>
       </Section>
 
@@ -977,6 +1008,55 @@ function DaemonUpgradeBanner({ onJump }: { onJump: () => void }) {
   )
 }
 
+function MemoryTab() {
+  const [items, setItems] = useState<Awaited<ReturnType<typeof api.getLearnedMemories>>>([])
+  const [editing, setEditing] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const load = () => void api.getLearnedMemories().then(setItems).catch((err) => setError(err instanceof Error ? err.message : String(err)))
+  useEffect(load, [])
+  const kindLabel = (path: string) => ({ fact: '事实', preference: '偏好', instruction: '指令', relationship: '关系' } as Record<string, string>)[path.split('/')[1] ?? ''] ?? '记忆'
+  return (
+    <section>
+      <div className="mb-5">
+        <h2 className="text-[18px] font-semibold text-ink-900">Agent 学到了什么</h2>
+        <p className="mt-1 text-[12px] text-ink-500">这些记忆会跨会话生效。你可以随时编辑或忘记，普通的一次性聊天不会自动进入这里。</p>
+      </div>
+      {error && <div className="mb-3 rounded-lg bg-coral-soft/30 px-3 py-2 text-[11px] text-coral-deep">{error}</div>}
+      <div className="space-y-3">
+        {items.map((item) => {
+          const key = `${item.agentId}:${item.path}`
+          const isEditing = editing === key
+          return (
+            <article key={key} className="rounded-xl border border-ink-100 bg-cloud px-4 py-3">
+              <div className="flex items-center gap-2 text-[10.5px] font-semibold text-ink-400">
+                <span className="text-skype-deep">✦ 已学习{kindLabel(item.path)}</span><span>·</span><span>{item.agentName}</span>
+              </div>
+              {isEditing ? (
+                <textarea value={draft} onChange={(event) => setDraft(event.target.value)} className="mt-2 min-h-20 w-full rounded-lg border border-ink-100 bg-paper px-3 py-2 text-[13px] text-ink-700 outline-none focus:border-skype" />
+              ) : <div className="mt-2 whitespace-pre-wrap text-[13px] leading-5 text-ink-700">{item.body}</div>}
+              <div className="mt-3 flex gap-2">
+                {isEditing ? (
+                  <>
+                    <button type="button" onClick={() => void api.updateLearnedMemory({ agentId: item.agentId, path: item.path, body: draft }).then(() => { setEditing(null); load() })} className="rounded-lg bg-skype px-3 py-1.5 text-[11px] font-semibold text-white">保存</button>
+                    <button type="button" onClick={() => setEditing(null)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-ink-500 hover:bg-raised">取消</button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" onClick={() => { setEditing(key); setDraft(item.body) }} className="rounded-lg border border-ink-100 px-3 py-1.5 text-[11px] font-semibold text-ink-600 hover:bg-raised">编辑</button>
+                    <button type="button" onClick={() => void api.forgetLearnedMemory(item.agentId, item.path).then(load)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">忘记</button>
+                  </>
+                )}
+              </div>
+            </article>
+          )
+        })}
+        {items.length === 0 && <div className="rounded-xl border border-dashed border-ink-100 px-6 py-10 text-center text-[12px] text-ink-400">还没有可见的长期记忆。明确告诉 Agent“以后……”后，学习结果会出现在这里。</div>}
+      </div>
+    </section>
+  )
+}
+
 export function MeView() {
   const [tab, setTab] = useState<Tab>('Profile')
   const hasOutdated = useComputers((s) => Object.values(s.byId).some((c) => c.daemonOutdated))
@@ -1008,7 +1088,7 @@ export function MeView() {
                 i === 0 ? 'pl-0 pr-5' : 'px-5',
                 tab === t ? 'border-skype text-skype-deep' : 'border-transparent text-ink-500 hover:text-ink-700',
               )}>
-              {({ Profile: '个人资料', Usage: '用量', Computers: '设备', Projects: '项目', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
+              {({ Profile: '个人资料', Usage: '用量', Computers: '设备', Projects: '项目', Memory: '记忆', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
               {t === 'Computers' && hasOutdated && (
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--gold-deep)' }} title="有设备服务需要更新" />
               )}
@@ -1020,6 +1100,7 @@ export function MeView() {
         {tab === 'Usage' && <UsageTab />}
         {tab === 'Computers' && <ComputersTab />}
         {tab === 'Projects' && <ProjectsTab />}
+        {tab === 'Memory' && <MemoryTab />}
         {tab === 'Trust & autonomy' && <TrustTab />}
         {tab === 'Preferences' && <PreferencesTab />}
       </div>

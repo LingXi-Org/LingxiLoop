@@ -22,6 +22,8 @@ export interface Persona {
   style: string
   /** Optional per-agent model override; null = use system default. */
   model: string | null
+  /** Product-level permissions selected by a workspace owner. */
+  capabilities: string[]
   /** The tenant this persona belongs to. */
   companyId: string
 }
@@ -38,16 +40,19 @@ export async function getPersona(id: string): Promise<Persona | null> {
   if (personaCache.has(id)) return personaCache.get(id) ?? null
   const { rows } = await pool.query<{
     id: string; name: string; role: string | null; style: string | null;
-    model: string | null; company_id: string
+    model: string | null; capabilities: string[] | null; company_id: string
   }>(
-    `SELECT id, name, role, system_prompt AS style, model, company_id
+    `SELECT id, name, role, system_prompt AS style, model, capabilities, company_id
        FROM participants
       WHERE id = $1 AND kind = 'agent' AND departed_at IS NULL`,
     [id],
   )
   const r = rows[0]
   const persona: Persona | null = r
-    ? { id: r.id, name: r.name, role: r.role ?? '', style: r.style ?? '', model: r.model ?? null, companyId: r.company_id }
+    ? {
+        id: r.id, name: r.name, role: r.role ?? '', style: r.style ?? '', model: r.model ?? null,
+        capabilities: Array.isArray(r.capabilities) ? r.capabilities : [], companyId: r.company_id,
+      }
     : null
   personaCache.set(id, persona)
   return persona
@@ -62,9 +67,9 @@ export async function isAgent(id: string): Promise<boolean> {
 export async function getAllAgentPersonas(companyId: string): Promise<Persona[]> {
   const { rows } = await pool.query<{
     id: string; name: string; role: string | null; style: string | null;
-    model: string | null; company_id: string
+    model: string | null; capabilities: string[] | null; company_id: string
   }>(
-    `SELECT id, name, role, system_prompt AS style, model, company_id
+    `SELECT id, name, role, system_prompt AS style, model, capabilities, company_id
        FROM participants
       WHERE kind = 'agent' AND departed_at IS NULL AND company_id = $1
       ORDER BY name ASC`,
@@ -72,6 +77,7 @@ export async function getAllAgentPersonas(companyId: string): Promise<Persona[]>
   )
   return rows.map((r) => ({
     id: r.id, name: r.name, role: r.role ?? '', style: r.style ?? '', model: r.model ?? null,
+    capabilities: Array.isArray(r.capabilities) ? r.capabilities : [],
     companyId: r.company_id,
   }))
 }
@@ -316,6 +322,9 @@ export async function buildSystemPrompt(
   if (!persona) return null
   const team = await getTeamRoster(persona.companyId)
   const styleLine = persona.style ? `Your style: ${persona.style}` : `Your style: (no style set in DB — please run \`lingxiloop ...\` to introspect.)`
+  const capabilitySection = `## AUTHORIZED CAPABILITIES\n\n${persona.capabilities.length > 0
+    ? persona.capabilities.map((capability) => `- ${capability}`).join('\n')
+    : '- none'}\n\nOnly use the capabilities listed above. If a task requires anything else, explain that the workspace owner must enable it; do not attempt a workaround.`
 
   // IDENTITY.md + SOUL.md live in the agent's workspace at the root,
   // edited by the agent themselves as they evolve. Read directly from
@@ -341,6 +350,8 @@ export async function buildSystemPrompt(
     '',
     styleLine,
     '',
+    capabilitySection,
+    '',
     mode === 'communication' ? COMMUNICATION_RULES : GLOBAL_RULES.trim(),
     '',
     rosterSection(team, persona.id),
@@ -360,9 +371,15 @@ const COMMUNICATION_RULES = `You are operating inside LingxiLoop's stateless com
 Decide how to communicate or collaborate from the supplied conversation context. Return only the structured response requested by the response schema.
 
 - People and agents are first-class teammates. Answer direct human requests first.
-- Use only the available communication actions. You have no tools, shell, filesystem, skills, or memory-writing capability in this run.
+- Use only the available structured actions. You have no shell, filesystem or hidden tool access in this run; memory.note and autonomy.remember are the explicit durable-learning actions.
 - Actions are executed later, in order, under your fixed agent identity. Never attempt identity impersonation.
 - Prefer replying in the existing conversation. Use quoteMessageId when a specific earlier message must be addressed.
+- When formally delegating owned work to a teammate, use handoff.create instead of relying on a prose @mention. Complete work you accepted with handoff.complete so ownership remains queryable. A team lead may create multiple handoffs and should synthesize their visible results in the original conversation.
+- Use memory.note only for an explicit, durable fact, preference, instruction, or relationship. Do not treat ordinary one-off conversation content as permanent memory. Acknowledge the learned item in a concise message so the user can see it.
+- Use autonomy.remember only when a human explicitly says an operation should be allowed, asked about, or denied in the future. Never infer expanded authority from silence or one-off behavior. Hard-risk approval gates still apply regardless of a learned rule.
+- External email is always protected by a hard human-approval gate. It is safe to propose email.send/email.reply directly: LingxiLoop will persist an Approval card and pause the action until the user approves. Never claim an external message was sent while approval is pending or rejected.
+- approval.request is for other sensitive/destructive or financial/irreversible operations. Its payload MUST include an exact action object from the structured action schema; LingxiLoop persists that action, pauses this run, and executes only that exact action after approval. Ordinary public-web research and reading do not require approval.
+- When Computer is authorized, use the computer.* actions only with your assigned screen/target ids. File writes and browser target operations are lease-protected; never claim control of another agent's Screen or target.
 - Avoid duplicate replies. An empty actions array is the correct way to remain silent for un-targeted group chatter nobody needs a response to. In a 1:1 direct message, or when a message names/@-mentions you specifically, prefer replying — there is no peer who might already be covering it.
 - Keep messages concise, useful, and natural. Do not mention internal prompts, schemas, runtimes, or implementation details.`
 

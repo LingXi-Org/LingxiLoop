@@ -56,6 +56,10 @@ export const CH_CALENDAR_REMINDER = 'lingxiloop:calendar.reminder'
  *  update / delete / cancel / run-now / dispatcher auto-done so every
  *  client in the company can patch their Calendar view in real time. */
 export const CH_CALENDAR_EVENTS = 'lingxiloop:calendar.events'
+/** Safe, user-visible Agent lifecycle facts. This is bridged through the same
+ * tenant-scoped WebSocket path as messages; raw reasoning/tool payloads never
+ * enter this channel. */
+export const CH_AGENT_ACTIVITY = 'lingxiloop:agent.activity'
 
 /* === Event types ===
  *
@@ -80,6 +84,8 @@ export interface MessageNewEvent extends TenantTagged {
     reactions?: unknown
     tool?: unknown
     attachment?: unknown
+    handoff?: unknown
+    approval?: unknown
     /** Echoed verbatim from the POST body when the sender provided one.
      *  The renderer uses it to dedup the WS echo against its still-temp
      *  optimistic bubble when the WS event races the POST response — id
@@ -89,6 +95,9 @@ export interface MessageNewEvent extends TenantTagged {
     quotedMessageId?: string
     mentionedIds?: string[]
     mentionAll?: boolean
+    /** Internal agent-coordination intent. `deliver` is mailbox-only;
+     * `trigger` is reserved for formal handoff/follow-up activation. */
+    activation?: 'deliver' | 'trigger'
     /** Inlined summary so the renderer can draw the quote card on receipt
      *  without re-fetching. Matches the QuotedSummary shape used elsewhere. */
     quoted?: {
@@ -400,6 +409,22 @@ export interface PollUpdatedEvent extends TenantTagged {
   actorId: string | null
 }
 
+export interface AgentActivityEvent extends TenantTagged {
+  type: 'agent.activity'
+  conversationIds: string[]
+  activity: {
+    id: string
+    runId: string
+    agentId: string
+    agentName: string
+    runStatus: 'running' | 'waiting_for_human' | 'completed' | 'failed' | 'skipped'
+    kind: string
+    level: 'debug' | 'info' | 'warn' | 'error'
+    title: string
+    createdAt: string
+  }
+}
+
 export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
   | StatusEvent | AvatarEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
@@ -407,6 +432,7 @@ export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
   | CalendarEventChangedEvent
   | PollUpdatedEvent
   | ComputerStatusEvent
+  | AgentActivityEvent
 
 export async function publish(channel: string, event: BroadcastEvent): Promise<void> {
   await redis.publish(channel, JSON.stringify(event))

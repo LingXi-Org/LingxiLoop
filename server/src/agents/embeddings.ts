@@ -43,6 +43,7 @@ export async function embedText(text: string): Promise<string | null> {
   const trimmed = (text ?? '').trim()
   if (!trimmed) return null
   if (testEmbedOverride) return testEmbedOverride(trimmed)
+  if (process.env.LINGXILOOP_DISABLE_EMBEDDINGS === '1') return null
   try {
     const resp = await client.embeddings.create({
       model: EMBED_MODEL,

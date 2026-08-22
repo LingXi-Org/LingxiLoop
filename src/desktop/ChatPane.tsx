@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
-import { type ApiAttachment, api } from '@/api/client'
+import { type ApiAttachment, type ApiCoworkerActivity, api, ws } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
-import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
-import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
@@ -12,6 +10,8 @@ import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { TwEmoji } from '@/components/TwEmoji'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
+import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
@@ -1629,6 +1629,107 @@ function OpenMausEmptyConversationState() {
   )
 }
 
+function ConversationActivity({ conversationId }: { conversationId: string }) {
+  const [events, setEvents] = useState<ApiCoworkerActivity[]>([])
+  useEffect(() => {
+    let cancelled = false
+    setEvents([])
+    const merge = (rows: ApiCoworkerActivity[]) => {
+      if (cancelled) return
+      setEvents((current) => {
+        const byId = new Map(current.map((event) => [event.id, event]))
+        for (const event of rows) byId.set(event.id, event)
+        return [...byId.values()]
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          .slice(-12)
+      })
+    }
+    const refresh = () => void api.getCoworkerActivity(conversationId)
+      .then(merge)
+      .catch(() => { /* activity is best-effort; chat remains primary */ })
+    refresh()
+    void ws.connect()
+    const off = ws.on((event) => {
+      if (event.type === 'agent.activity' && event.conversationIds.includes(conversationId)) {
+        merge([event.activity])
+      } else if (event.type === 'hello') {
+        // Reconcile anything missed while the socket was disconnected.
+        refresh()
+      }
+    })
+    // Slow REST reconciliation is only a fallback for dropped/backpressured WS
+    // frames; live activity arrives through the same realtime path as messages.
+    const timer = window.setInterval(refresh, 60_000)
+    return () => { cancelled = true; off(); window.clearInterval(timer) }
+  }, [conversationId])
+  const visible = events.slice(-3)
+  if (visible.length === 0) return null
+  // A run emits multiple activity rows. Only its newest row represents the
+  // current state; otherwise an older run.started row can outlive a later
+  // run.completed row and leave the strip pulsing forever.
+  const latestByRun = new Map<string, ApiCoworkerActivity>()
+  for (const event of events) latestByRun.set(event.runId, event)
+  const active = [...latestByRun.values()].reverse()
+    .find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')
+  return (
+    <div className="border-b border-hairline bg-panel px-5 py-2" role="status" aria-label="Agent 最近活动">
+      <div className="mx-auto flex max-w-[900px] items-center gap-3 overflow-hidden">
+        <span className={`size-2 shrink-0 rounded-full ${active ? 'animate-pulse bg-[var(--working)]' : 'bg-[var(--avail)]'}`} />
+        <span className="shrink-0 text-[11px] font-semibold text-ink-secondary">
+          {active ? `${active.agentName}${active.runStatus === 'waiting_for_human' ? ' 正在等待你' : ' 正在工作'}` : '最近活动'}
+        </span>
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+          {visible.map((event) => (
+            <span key={event.id} className="max-w-[240px] truncate rounded-full bg-raised px-2.5 py-1 text-[10.5px] text-ink-500" title={event.title}>
+              {/completed/.test(event.kind) ? '✓' : /failed/.test(event.kind) ? '!' : '●'} {event.title}
+            </span>
+          ))}
+        </div>
+        {active && <ActivityScreenPreview agentId={active.agentId} agentName={active.agentName} />}
+      </div>
+    </div>
+  )
+}
+
+function ActivityScreenPreview({ agentId, agentName }: { agentId: string; agentName: string }) {
+  const [screenId, setScreenId] = useState<string | null>(null)
+  const [frameUrl, setFrameUrl] = useState<string | null>(null)
+  const frameRef = useRef<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    void api.getUserComputer().then((computer) => {
+      if (!cancelled && computer.status === 'running') {
+        setScreenId(computer.screens.find((screen) => screen.agentId === agentId)?.id ?? null)
+      }
+    }).catch(() => undefined)
+    return () => { cancelled = true }
+  }, [agentId])
+  useEffect(() => {
+    if (!screenId) return
+    const controller = new AbortController()
+    void api.streamComputerScreen(screenId, (blob) => {
+      const next = URL.createObjectURL(blob)
+      if (frameRef.current) URL.revokeObjectURL(frameRef.current)
+      frameRef.current = next
+      setFrameUrl(next)
+    }, controller.signal).catch(() => undefined)
+    return () => {
+      controller.abort()
+      if (frameRef.current) URL.revokeObjectURL(frameRef.current)
+      frameRef.current = null
+      setFrameUrl(null)
+    }
+  }, [screenId])
+  if (!frameUrl) return null
+  return (
+    <img
+      src={frameUrl}
+      alt={`${agentName} Screen 实时预览`}
+      className="hidden h-12 w-[78px] shrink-0 rounded-md border border-hairline bg-inset object-cover sm:block"
+    />
+  )
+}
+
 export function ChatPane() {
   const convoId = useApp((s) => s.selectedConversationId)
   // Atomic selectors — primitive / stable refs
@@ -1853,8 +1954,8 @@ export function ChatPane() {
       className={cn(
         'chat-surface grid overflow-hidden',
         searchOpen
-          ? 'grid-rows-[auto_auto_minmax(0,1fr)_auto]'
-          : 'grid-rows-[auto_minmax(0,1fr)_auto]',
+          ? 'grid-rows-[auto_auto_auto_minmax(0,1fr)_auto]'
+          : 'grid-rows-[auto_auto_minmax(0,1fr)_auto]',
       )}
     >
       <ChatHeader
@@ -1862,6 +1963,7 @@ export function ChatPane() {
         onToggleSearch={() => setSearchOpen((v) => !v)}
         searchOpen={searchOpen}
       />
+      <ConversationActivity conversationId={convoId} />
       {searchOpen && (
         <div className="flex items-center gap-2 border-b border-hairline bg-panel px-5 py-2">
           <div className="flex flex-1 items-center gap-2 rounded-lg bg-raised/70 px-3 py-1.5 text-[13px] text-ink-secondary focus-within:ring-1 focus-within:ring-accent">

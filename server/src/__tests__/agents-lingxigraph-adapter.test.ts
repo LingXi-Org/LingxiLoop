@@ -32,6 +32,12 @@ test('strictly validates actions before execution', () => {
   assert.throws(() => parseLingxiGraphRunResult(result(Array.from({ length: 17 }, () => ({
     type: 'reaction.toggle', messageId: 'm1', emoji: '✅',
   })))), /at most 16/)
+  assert.throws(() => parseLingxiGraphRunResult(result([
+    { type: 'approval.request', conversationId: 'c1', kind: 'sensitive_or_destructive_action', summary: 'delete', payload: {} },
+  ])), /must include an exact action/)
+  assert.throws(() => parseLingxiGraphRunResult(result([
+    { type: 'approval.request', conversationId: 'c1', kind: 'sensitive_or_destructive_action', summary: 'nested', payload: { action: { type: 'approval.request', conversationId: 'c1', kind: 'sensitive_or_destructive_action', summary: 'again', payload: { action: { type: 'computer.exec', screenId: 's1', command: ['pwd'] } } } } },
+  ])), /cannot request another approval/)
 })
 
 test('maps communication actions to argv without a shell or identity flag', () => {
@@ -47,6 +53,15 @@ test('maps communication actions to argv without a shell or identity flag', () =
     [{ type: 'document.update', documentId: 'doc_1', find: '旧', replace: '新' }, ['doc', 'replace', 'doc_1', '--find', '旧', '--replace', '新']],
     [{ type: 'document.append', documentId: 'doc_1', content: '补充' }, ['doc', 'append', 'doc_1', '补充']],
     [{ type: 'document.share', documentId: 'doc_1', conversationId: 'c1', comment: '学习笔记' }, ['doc', 'share', 'doc_1', '--conversation', 'c1', '--comment', '学习笔记']],
+    [{ type: 'handoff.create', conversationId: 'c1', toAgentId: 'iris', title: '研究竞品', note: '先看架构', sharedPaths: ['/workspace/research.md'] }, ['handoff', 'create', 'c1', 'iris', '研究竞品', '--note', '先看架构', '--paths', '/workspace/research.md']],
+    [{ type: 'handoff.complete', handoffId: 'handoff-1', note: '完成' }, ['handoff', 'complete', 'handoff-1', '--note', '完成']],
+    [{ type: 'approval.request', conversationId: 'c1', kind: 'sensitive_or_destructive_action', summary: '删除文件', payload: { path: '/workspace/a', action: { type: 'computer.exec', screenId: 'screen-1', command: ['rm', '/workspace/a'] } } }, ['approval', 'request', 'c1', 'sensitive_or_destructive_action', '删除文件', '--payload-json', '{"path":"/workspace/a","action":{"type":"computer.exec","screenId":"screen-1","command":["rm","/workspace/a"]}}']],
+    [{ type: 'computer.exec', screenId: 'screen-1', command: ['pwd'], cwd: '/workspace' }, ['computer', 'exec', 'screen-1', 'pwd', '--cwd', '/workspace']],
+    [{ type: 'computer.write_file', screenId: 'screen-1', path: '/workspace/a.txt', content: 'hello' }, ['computer', 'write-file', 'screen-1', '/workspace/a.txt', 'hello']],
+    [{ type: 'computer.browser.open', screenId: 'screen-1', url: 'https://example.com', private: true }, ['computer', 'browser-open', 'screen-1', 'https://example.com', '--private']],
+    [{ type: 'computer.browser.targets', screenId: 'screen-1' }, ['computer', 'browser-targets', 'screen-1']],
+    [{ type: 'memory.note', body: '竞品分析先给三条结论', kind: 'preference', about: 'user-1' }, ['memory', 'note', '竞品分析先给三条结论', '--kind', 'preference', '--about', 'user-1']],
+    [{ type: 'autonomy.remember', conversationId: 'c1', scope: 'web', operation: 'research', mode: 'allow' }, ['autonomy', 'remember', 'c1', 'web', 'research', 'allow']],
   ]
   for (const [action, argv] of cases) {
     const mapped = communicationActionToArgv(action)
@@ -75,6 +90,50 @@ test('stops at the first failed or HELD CLI result', async () => {
   assert.equal(execution.completed, false)
   assert.equal(execution.failedActionIndex, 1)
   assert.equal(seen.length, 2)
+})
+
+test('a product approval gate stops a risky action before the ledger and executor', async () => {
+  let executed = false
+  let claimed = false
+  const execution = await executeCommunicationActions({
+    agentId: 'a1',
+    inputScopeKey: 'scope1',
+    actions: [{ type: 'email.send', to: ['outside@example.com'], subject: 'Summary', body: 'Body' }],
+    executeCli: async () => { executed = true; return { ok: true, exitCode: 0, text: 'sent' } },
+    ledger: {
+      claim: async () => { claimed = true; throw new Error('must not claim') },
+      markSucceeded: async () => undefined,
+      markFailed: async () => undefined,
+    },
+    gateAction: async () => ({
+      allow: false,
+      waitingForHuman: true,
+      approvalId: 'approval-1',
+      result: { ok: true, exitCode: 0, text: 'waiting' },
+    }),
+  })
+  assert.equal(execution.completed, true)
+  assert.equal(execution.waitingForHuman, true)
+  assert.equal(execution.approvalId, 'approval-1')
+  assert.equal(executed, false)
+  assert.equal(claimed, false)
+})
+
+test('a generic approval action prevents all later actions from running', async () => {
+  const seen: string[][] = []
+  const execution = await executeCommunicationActions({
+    agentId: 'a1', inputScopeKey: 'scope1',
+    actions: [
+      { type: 'approval.request', conversationId: 'c1', kind: 'financial_or_irreversible_action', summary: 'pay', payload: { action: { type: 'computer.exec', screenId: 's1', command: ['pay'] } } },
+      { type: 'message.send', conversationId: 'c1', body: 'must not run' },
+    ],
+    executeCli: async (argv) => { seen.push(argv); return { ok: true, exitCode: 0, text: 'ok' } },
+    gateAction: async (action) => action.type === 'approval.request'
+      ? { allow: false, waitingForHuman: true, approvalId: 'approval-1', result: { ok: true, exitCode: 0, text: 'waiting' } }
+      : { allow: true },
+  })
+  assert.equal(execution.waitingForHuman, true)
+  assert.deepEqual(seen, [])
 })
 
 test('accepts a valid silent result', () => {

@@ -66,6 +66,12 @@ CREATE TABLE IF NOT EXISTS participants (
   system_prompt  TEXT
 );
 
+-- User-visible, revocable permissions are kept separate from the low-level
+-- runtime tool list. Existing agents retain their current behaviour after the
+-- migration; owners can narrow the list from the agent editor.
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS capabilities JSONB NOT NULL
+  DEFAULT '["computer","web","files","email","documents"]'::jsonb;
+
 CREATE TABLE IF NOT EXISTS conversation_counters (
   conversation_id TEXT PRIMARY KEY REFERENCES conversations(id) ON DELETE CASCADE,
   next_sequence   INTEGER NOT NULL DEFAULT 1
@@ -1497,6 +1503,12 @@ CREATE INDEX IF NOT EXISTS idx_document_mentions_doc
 -- transaction. Composite PK keeps the same voter from double-stuffing the
 -- same option.
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS poll JSONB;
+-- Coworker cards remain ordinary conversation messages. The structured
+-- snapshot is denormalized onto the message so WebSocket delivery and history
+-- reads share one rendering contract; the authoritative/queryable rows live
+-- in agent_handoffs / agent_approvals below.
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS handoff JSONB;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS approval JSONB;
 
 CREATE TABLE IF NOT EXISTS poll_votes (
   message_id            TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
@@ -1566,6 +1578,152 @@ ALTER TABLE computers ADD COLUMN IF NOT EXISTS daemon_version TEXT;
 -- command, NULL = an old daemon that doesn't report it. Reported on pair +
 -- heartbeat; lets the app show run-mode-specific update instructions.
 ALTER TABLE computers ADD COLUMN IF NOT EXISTS daemon_supervised BOOLEAN;
+
+-- ====================== User-level Computer product ======================
+-- The legacy computers table above is an agent-host/BYOA compatibility
+-- registry.  A User Computer is a different business object: one persistent
+-- environment per user, shared by N agents, with agent-owned screens. Keeping
+-- this table separate prevents a runtime/container id or old BYOA host from
+-- accidentally becoming the product identity.
+CREATE TABLE IF NOT EXISTS user_computers (
+  id             TEXT PRIMARY KEY,
+  user_id        TEXT NOT NULL,
+  company_id     TEXT NOT NULL,
+  runtime_type   TEXT NOT NULL DEFAULT 'native-docker',
+  runtime_ref    TEXT,
+  status         TEXT NOT NULL DEFAULT 'stopped', -- stopped | starting | running | stopping | error
+  image_version  TEXT NOT NULL DEFAULT 'v1',
+  created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  last_active_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  deleted_at     TIMESTAMP WITH TIME ZONE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_computers_one_active
+  ON user_computers(user_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_user_computers_company ON user_computers(company_id);
+
+CREATE TABLE IF NOT EXISTS computer_screens (
+  id          TEXT PRIMARY KEY,
+  computer_id TEXT NOT NULL REFERENCES user_computers(id) ON DELETE CASCADE,
+  agent_id    TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'idle', -- idle | working | waiting | human_control
+  session_ref TEXT,
+  display_ref TEXT,
+  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(computer_id, agent_id)
+);
+CREATE INDEX IF NOT EXISTS idx_computer_screens_computer ON computer_screens(computer_id);
+
+CREATE TABLE IF NOT EXISTS browser_targets (
+  id          TEXT PRIMARY KEY,
+  computer_id TEXT NOT NULL REFERENCES user_computers(id) ON DELETE CASCADE,
+  screen_id   TEXT REFERENCES computer_screens(id) ON DELETE SET NULL,
+  agent_id    TEXT NOT NULL,
+  target_ref  TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'open',
+  private     BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_browser_targets_owner ON browser_targets(computer_id, agent_id);
+
+CREATE TABLE IF NOT EXISTS resource_leases (
+  id            TEXT PRIMARY KEY,
+  computer_id   TEXT NOT NULL REFERENCES user_computers(id) ON DELETE CASCADE,
+  resource_type TEXT NOT NULL,
+  resource_id   TEXT NOT NULL,
+  holder_type   TEXT NOT NULL, -- agent | human
+  holder_id     TEXT NOT NULL,
+  expires_at    TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_resource_leases_resource
+  ON resource_leases(computer_id, resource_type, resource_id, expires_at DESC);
+
+CREATE TABLE IF NOT EXISTS computer_events (
+  id          TEXT PRIMARY KEY,
+  computer_id TEXT NOT NULL REFERENCES user_computers(id) ON DELETE CASCADE,
+  screen_id   TEXT REFERENCES computer_screens(id) ON DELETE SET NULL,
+  agent_id    TEXT,
+  type        TEXT NOT NULL,
+  payload     JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_computer_events_recent ON computer_events(computer_id, created_at DESC);
+
+-- ========================= Coworker continuity ===========================
+CREATE TABLE IF NOT EXISTS agent_handoffs (
+  id                  TEXT PRIMARY KEY,
+  company_id          TEXT NOT NULL,
+  conversation_id     TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  source_message_id   TEXT REFERENCES messages(id) ON DELETE SET NULL,
+  from_agent_id       TEXT NOT NULL,
+  to_agent_id         TEXT NOT NULL,
+  title               TEXT NOT NULL,
+  context_message_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  shared_paths        JSONB NOT NULL DEFAULT '[]'::jsonb,
+  browser_targets     JSONB NOT NULL DEFAULT '[]'::jsonb,
+  note                TEXT,
+  status              TEXT NOT NULL DEFAULT 'working', -- pending | accepted | working | completed | blocked
+  result_message_id   TEXT REFERENCES messages(id) ON DELETE SET NULL,
+  created_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+ALTER TABLE agent_handoffs ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_handoffs_idempotency_key
+  ON agent_handoffs(idempotency_key) WHERE idempotency_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_agent_handoffs_owner ON agent_handoffs(company_id, to_agent_id, status);
+CREATE INDEX IF NOT EXISTS idx_agent_handoffs_conversation ON agent_handoffs(conversation_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS agent_approvals (
+  id              TEXT PRIMARY KEY,
+  company_id      TEXT NOT NULL,
+  agent_id        TEXT NOT NULL,
+  conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  run_id          TEXT,
+  message_id      TEXT REFERENCES messages(id) ON DELETE SET NULL,
+  kind            TEXT NOT NULL,
+  summary         TEXT NOT NULL,
+  payload         JSONB NOT NULL DEFAULT '{}'::jsonb,
+  payload_hash    TEXT NOT NULL,
+  action_key      TEXT,
+  action_index    INTEGER,
+  blocked_action  JSONB,
+  remaining_actions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  input_scope_key TEXT,
+  continuation_status TEXT NOT NULL DEFAULT 'pending', -- pending | running | completed | rejected | failed
+  resumed_at      TIMESTAMP WITH TIME ZONE,
+  status          TEXT NOT NULL DEFAULT 'pending', -- pending | approved | rejected | expired
+  requested_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  resolved_at     TIMESTAMP WITH TIME ZONE,
+  resolved_by     TEXT,
+  consumed_at     TIMESTAMP WITH TIME ZONE
+);
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS action_key TEXT;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS action_index INTEGER;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS blocked_action JSONB;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS remaining_actions JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS input_scope_key TEXT;
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS continuation_status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE agent_approvals ADD COLUMN IF NOT EXISTS resumed_at TIMESTAMP WITH TIME ZONE;
+CREATE INDEX IF NOT EXISTS idx_agent_approvals_pending ON agent_approvals(company_id, status, requested_at DESC);
+CREATE INDEX IF NOT EXISTS idx_agent_approvals_gate ON agent_approvals(agent_id, payload_hash, status, consumed_at);
+
+CREATE TABLE IF NOT EXISTS agent_autonomy_rules (
+  id         TEXT PRIMARY KEY,
+  company_id TEXT NOT NULL,
+  user_id    TEXT NOT NULL,
+  agent_id   TEXT NOT NULL,
+  scope      TEXT NOT NULL,
+  operation  TEXT NOT NULL,
+  mode       TEXT NOT NULL, -- allow | ask | deny
+  source     TEXT NOT NULL DEFAULT 'explicit_user',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, agent_id, scope, operation)
+);
+CREATE INDEX IF NOT EXISTS idx_agent_autonomy_rules_user ON agent_autonomy_rules(company_id, user_id, agent_id);
 
 -- An agent's host + engine choice. A NULL computer_id, or one pointing at
 -- a 'cloud' computer, means managed (current pod behavior). A 'local' /

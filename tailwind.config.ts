@@ -25,6 +25,7 @@ const config: Config = {
           100: 'var(--ink-100)',
         },
         accent: 'var(--accent)',
+        'accent-ink': 'var(--accent-ink)',
         skype: {
           DEFAULT: 'var(--skype)',
           deep: 'var(--skype-deep)',

@@ -61,12 +61,13 @@ class RuntimeStateTests(unittest.TestCase):
 
         updated = _apply_steering(
             state,
-            (SimpleNamespace(kind="message.new", payload={"messageId": "message-1"}),),
+            (SimpleNamespace(kind="message.new", payload={"messageId": "message-1", "mailboxPhase": "CURRENT_TURN"}),),
         )
 
         updated["generation"] = 1
         self.assertEqual(updated["generation"], 1)
         self.assertIn('"messageId":"message-1"', updated["contextPrompt"])
+        self.assertIn('"mailboxPhase":"CURRENT_TURN"', updated["contextPrompt"])
         self.assertEqual(state["generation"], 0)
 
 

@@ -1,19 +1,20 @@
+import { AnimatePresence, type MotionValue, motion, useTransform } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion, useTransform, type MotionValue } from 'framer-motion'
-import { useApp } from '@/stores/app'
-import { MobileChatList } from './MobileChatList'
-import { MobileChat, MobileChatInfo } from './MobileChat'
-import { MobileTabBar } from './MobileTabBar'
-import { MobileWhispersList, MobileWhisperRoom } from './MobileWhispers'
-import { MobileLibrary } from './MobileLibrary'
-import { MobileAgents } from './MobileAgents'
-import { MobileMe } from './MobileMe'
-import { DocumentEditor } from '@/components/DocumentEditor'
 import { BoardPeekContent, CalendarEventPeekContent } from '@/components/ArtifactPeekContent'
-import { useDocuments } from '@/stores/documents'
+import { ComputerView } from '@/components/ComputerView'
+import { DocumentEditor } from '@/components/DocumentEditor'
 import { IDoc } from '@/components/icons'
 import { initPushNotifications } from '@/lib/push'
+import { useApp } from '@/stores/app'
+import { useDocuments } from '@/stores/documents'
+import { MobileAgents } from './MobileAgents'
+import { MobileChat, MobileChatInfo } from './MobileChat'
+import { MobileChatList } from './MobileChatList'
+import { MobileLibrary } from './MobileLibrary'
+import { MobileMe } from './MobileMe'
 import { MobileParticipantInfo } from './MobileParticipantInfo'
+import { MobileTabBar } from './MobileTabBar'
+import { MobileWhisperRoom, MobileWhispersList } from './MobileWhispers'
 import { useSwipeBackProps } from './useSwipeBack'
 import { ViewBoundary } from './ViewBoundary'
 
@@ -142,7 +143,7 @@ export function MobileApp() {
   // stale persisted routes (or legacy deep links) instead of
   // leaving users on a hidden product area.
   useEffect(() => {
-    if (!['conversations', 'agents', 'library', 'me'].includes(view)) {
+    if (!['conversations', 'agents', 'computer', 'library', 'me'].includes(view)) {
       setView('conversations')
     }
   }, [view, convoId, setView])
@@ -297,6 +298,14 @@ export function MobileApp() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={fadeTransition}>
               <ViewBoundary name="Agents"><MobileAgents /></ViewBoundary>
+            </motion.div>
+          )}
+
+          {view === 'computer' && (
+            <motion.div key="computer" className="absolute inset-0"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={fadeTransition}>
+              <ViewBoundary name="Computer"><ComputerView /></ViewBoundary>
             </motion.div>
           )}
 

@@ -42,7 +42,13 @@ export function extractLiveReplyPrefix(rawArguments: string): LiveReplyPrefix | 
   let body = reply[2]
   // CLI commands shell-escape an apostrophe as '\''; decode every COMPLETE
   // escape group and leave a trailing partial group buffered for the next delta.
-  body = body.replace(/'\\''/g, "'")
-  if (body.endsWith("'")) body = body.slice(0, -1)
+  // partialJsonString has already consumed the JSON backslash, so the shell
+  // escape arrives here as three adjacent quote characters.
+  const endsWithEscapedApostrophe = body.endsWith("'''")
+  body = body.replace(/'''/g, "'")
+  // A final quote is the shell delimiter only when it is not the tail of a
+  // complete apostrophe escape (`'\\''`). The replace above turns that escape
+  // into a literal apostrophe, so use the raw capture to distinguish them.
+  if (body.endsWith("'") && !endsWithEscapedApostrophe) body = body.slice(0, -1)
   return { conversationId: reply[1], body }
 }
