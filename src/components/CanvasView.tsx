@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { ws } from '@/api/client'
 import { AvatarMini } from '@/components/Avatar'
 import { IPlus, ITrash } from '@/components/icons'
-import { shouldSyncCanvasDraft } from '@/lib/canvasDraft'
+import { createCanvasDraftSaveQueue, shouldSyncCanvasDraft, type CanvasDraftPatch } from '@/lib/canvasDraft'
 import { useMe } from '@/stores/auth'
 import { useCanvas } from '@/stores/canvas'
 import { useParticipants } from '@/stores/participants'
@@ -360,12 +360,26 @@ function CanvasRail() {
   const [draftTitle, setDraftTitle] = useState('')
   const [draftContent, setDraftContent] = useState('')
   const [editorFocused, setEditorFocused] = useState(false)
-  const [draftDirty, setDraftDirty] = useState(false)
+  const [titleDirty, setTitleDirty] = useState(false)
+  const [contentDirty, setContentDirty] = useState(false)
   const [comment, setComment] = useState('')
   const [tab, setTab] = useState<'inspect' | 'activity'>('inspect')
   const draftFrameIdRef = useRef<string | null>(null)
   const draftTitleRef = useRef('')
   const draftContentRef = useRef('')
+  const updateFrameRef = useRef(updateFrame)
+  updateFrameRef.current = updateFrame
+  const saveQueueRef = useRef<ReturnType<typeof createCanvasDraftSaveQueue> | null>(null)
+  if (!saveQueueRef.current) {
+    saveQueueRef.current = createCanvasDraftSaveQueue({
+      save: async (frameId, patch) => {
+        await updateFrameRef.current(frameId, patch)
+        if (draftFrameIdRef.current !== frameId) return
+        if (patch.title !== undefined && draftTitleRef.current === patch.title) setTitleDirty(false)
+        if (patch.content !== undefined && draftContentRef.current === patch.content) setContentDirty(false)
+      },
+    })
+  }
 
   useEffect(() => {
     const nextFrameId = frame?.id ?? null
@@ -373,7 +387,7 @@ function CanvasRail() {
       currentFrameId: draftFrameIdRef.current,
       nextFrameId,
       focused: editorFocused,
-      dirty: draftDirty,
+      dirty: titleDirty || contentDirty,
     })) return
 
     const nextTitle = frame?.title ?? ''
@@ -383,38 +397,27 @@ function CanvasRail() {
     draftContentRef.current = nextContent
     setDraftTitle(nextTitle)
     setDraftContent(nextContent)
-    setDraftDirty(false)
-  }, [draftDirty, editorFocused, frame?.id, frame?.revision])
+    setTitleDirty(false)
+    setContentDirty(false)
+  }, [contentDirty, editorFocused, frame?.id, frame?.revision, titleDirty])
 
-  useEffect(() => {
-    const frameId = frame?.id
-    if (!frameId || !draftDirty) return
-    const submittedTitle = draftTitle
-    const submittedContent = draftContent
-    const timer = window.setTimeout(() => {
-      void updateFrame(frameId, { title: submittedTitle, content: submittedContent })
-        .then(() => {
-          if (
-            draftFrameIdRef.current === frameId
-            && draftTitleRef.current === submittedTitle
-            && draftContentRef.current === submittedContent
-          ) setDraftDirty(false)
-        })
-        .catch(() => undefined)
-    }, 550)
-    return () => window.clearTimeout(timer)
-  }, [draftContent, draftDirty, draftTitle, frame?.id, updateFrame])
+  function scheduleDraftSave(patch: CanvasDraftPatch) {
+    const frameId = draftFrameIdRef.current
+    if (frameId) saveQueueRef.current?.schedule(frameId, patch)
+  }
 
   function changeDraftTitle(value: string) {
     draftTitleRef.current = value
     setDraftTitle(value)
-    setDraftDirty(true)
+    setTitleDirty(true)
+    scheduleDraftSave({ title: value })
   }
 
   function changeDraftContent(value: string) {
     draftContentRef.current = value
     setDraftContent(value)
-    setDraftDirty(true)
+    setContentDirty(true)
+    scheduleDraftSave({ content: value })
   }
 
   function leaveEditor(event: React.FocusEvent<HTMLDivElement>) {
