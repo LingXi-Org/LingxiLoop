@@ -26,8 +26,8 @@ export const IAgents = (p: IconProps) => (
 export const IAgent = (p: IconProps) => (
   <svg {...base} {...p}><circle cx="10" cy="9" r="3.5"/><path d="M4.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6"/><path d="M18 4l.7 1.8 1.8.7-1.8.7L18 9l-.7-1.8-1.8-.7 1.8-.7L18 4z"/></svg>
 )
-export const IComputer = (p: IconProps) => (
-  <svg {...base} {...p}><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+export const ICanvas = (p: IconProps) => (
+  <svg {...base} {...p}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h5v4H8zM13 13h5v4h-5zM6 15h3"/></svg>
 )
 export const ITasks = (p: IconProps) => (
   <svg {...base} {...p}><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>

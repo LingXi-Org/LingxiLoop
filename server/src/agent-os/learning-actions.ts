@@ -2,12 +2,19 @@ import { createHash, randomUUID } from 'node:crypto'
 import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
+import {
+  appendCanvasFrameContent,
+  createCanvasFrame,
+  deleteCanvasFrame,
+  getCanvasSnapshot,
+  setCanvasStatus,
+  updateCanvasFrame,
+} from '../canvas/service.js'
 import { readResearch, searchResearch } from './research.js'
 import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
-  'computer.input', 'computer.takeover',
   'routines.create', 'routines.activate',
   'documents.delete', 'boards.delete', 'calendar.delete',
 ])
@@ -146,6 +153,63 @@ async function executeResearch(_work: AgentWorkItem, method: string, args: Recor
   throw new Error(`unsupported research action: ${method}`)
 }
 
+async function executeCanvas(
+  work: AgentWorkItem,
+  method: string,
+  args: Record<string, unknown>,
+  action: HostAction,
+): Promise<HostActionResult> {
+  if (method === 'get') {
+    return { ok: true, value: await getCanvasSnapshot(work.companyId, work.agentId) }
+  }
+  if (method === 'create_frame') {
+    return {
+      ok: true,
+      value: await createCanvasFrame({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent',
+        idempotencyKey: action.idempotencyKey, frame: args,
+      }),
+    }
+  }
+  if (method === 'set_status') {
+    return {
+      ok: true,
+      value: await setCanvasStatus({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent',
+        status: textArg(args, 'status'), frameId: typeof args.frameId === 'string' ? args.frameId : null,
+      }),
+    }
+  }
+  const frameId = textArg(args, 'frameId')
+  if (method === 'update_frame') {
+    const { frameId: _frameId, ...patch } = args
+    return {
+      ok: true,
+      value: await updateCanvasFrame({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent', frameId, patch,
+      }),
+    }
+  }
+  if (method === 'append_content') {
+    return {
+      ok: true,
+      value: await appendCanvasFrameContent({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent', frameId,
+        content: textArg(args, 'content'),
+      }),
+    }
+  }
+  if (method === 'delete_frame') {
+    return {
+      ok: true,
+      value: await deleteCanvasFrame({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent', frameId,
+      }),
+    }
+  }
+  throw new Error(`unsupported canvas action: ${method}`)
+}
+
 export function actionRequiresApproval(action: string): boolean { return APPROVAL_REQUIRED.has(action) }
 
 export async function executeLearningAction(work: AgentWorkItem, action: HostAction): Promise<HostActionResult> {
@@ -157,6 +221,7 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (namespace === 'polls') return executePoll(work, method, args, action)
   if (namespace === 'turn') return { ok: true, value: { status: method, ...args } }
   if (namespace === 'research') return executeResearch(work, method, args)
+  if (namespace === 'canvas') return executeCanvas(work, method, args, action)
   const result = await runStructuredLearningAction(action.action, args, work.agentId, { idempotencyKey: action.idempotencyKey })
   return result.ok ? { ok: true, value: { text: result.text, sideEffects: result.sideEffects ?? [] } } : { ok: false, error: result.text }
 }

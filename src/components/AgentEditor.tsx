@@ -13,14 +13,14 @@ const PALETTE = [
 ]
 
 const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; description: string }> = [
-  { id: 'computer', label: 'Computer', description: '查看并操作用户的共享电脑屏幕' },
+  { id: 'canvas', label: 'Canvas', description: '查看并修改工作区共享画布与 Frame' },
   { id: 'web', label: 'Web Research', description: '搜索和读取公开网页' },
   { id: 'files', label: 'Files', description: '读写工作区与交付文件' },
   { id: 'email', label: 'Email', description: '起草邮件；发送仍需审批策略' },
   { id: 'documents', label: 'Documents', description: '创建、读取和编辑协作文档' },
   { id: 'calendar', label: 'Calendar', description: '访问日历和日程相关能力' },
 ]
-const DEFAULT_CAPABILITIES: AgentCapability[] = ['computer', 'web', 'files', 'email', 'documents']
+const DEFAULT_CAPABILITIES: AgentCapability[] = ['canvas', 'web', 'files', 'email', 'documents']
 
 interface Props {
   /** if provided, edit mode; otherwise create mode */

@@ -25,10 +25,8 @@ if grep -Eq 'IMAGE=[^@[:space:]]+:[^@[:space:]]+$' "$next_env"; then
 fi
 if ! grep -Eq '^LINGXILOOP_SERVER_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
    ! grep -Eq '^AGENT_OS_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
-   ! grep -Eq '^WUKONGIM_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
-   ! grep -Eq '^COMPUTER_RUNTIME_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
-   ! grep -Eq '^USER_COMPUTER_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env"; then
-  echo "All five LingxiLoop production images must be digest-pinned" >&2
+   ! grep -Eq '^WUKONGIM_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env"; then
+  echo "All three LingxiLoop production images must be digest-pinned" >&2
   exit 2
 fi
 

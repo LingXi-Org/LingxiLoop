@@ -38,12 +38,6 @@ jobs:
           - package: lingxiloop-wukongim
             dockerfile: server/docker/wukongim.Dockerfile
             wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
-          - package: lingxiloop-computer-runtime
-            dockerfile: server/docker/computer-runtime.Dockerfile
-            wukong_commit: ""
-          - package: lingxiloop-user-computer
-            dockerfile: server/docker/user-computer.Dockerfile
-            wukong_commit: ""
     steps:
       - uses: actions/checkout@v4
       - id: version

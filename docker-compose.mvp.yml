@@ -63,29 +63,6 @@ services:
     networks: [lingxiloop-mvp]
     logging: *quiet-logging
 
-  computer-runtime:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-computer-runtime:${LINGXILOOP_IMAGE_TAG:-mvp}
-    pull_policy: always
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
-      COMPUTER_RUNTIME_PORT: 5195
-      COMPUTER_RUNTIME_SERVICE_TOKEN: ${COMPUTER_RUNTIME_SERVICE_TOKEN:?COMPUTER_RUNTIME_SERVICE_TOKEN is required in .env}
-      LINGXILOOP_USER_COMPUTER_IMAGE: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-user-computer:${LINGXILOOP_IMAGE_TAG:-mvp}
-    volumes:
-      # Explicit trusted single-host provider boundary. The main API never
-      # receives Docker access; only this narrow internal manager does.
-      - /var/run/docker.sock:/var/run/docker.sock
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5195/readyz"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 5s
-    networks: [lingxiloop-mvp]
-    logging: *quiet-logging
-
   lingxiloop:
     image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
@@ -97,8 +74,6 @@ services:
         condition: service_healthy
       wukongim:
         condition: service_healthy
-      computer-runtime:
-        condition: service_healthy
     environment:
       NODE_ENV: production
       LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
@@ -106,8 +81,6 @@ services:
       DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
       REDIS_URL: redis://redis:6379
       AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required in .env}
-      COMPUTER_RUNTIME_SERVICE_TOKEN: ${COMPUTER_RUNTIME_SERVICE_TOKEN:?COMPUTER_RUNTIME_SERVICE_TOKEN is required in .env}
-      LINGXILOOP_COMPUTER_RUNTIME_URL: http://computer-runtime:5195
       WUKONG_API_URL: http://wukongim:5001
       WUKONG_WS_URL: ${WUKONG_WS_URL:-ws://localhost:5200}
       WUKONG_API_TOKEN: ${WUKONG_API_TOKEN:-dev-wukong-api-token}
