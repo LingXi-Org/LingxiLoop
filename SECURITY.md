@@ -16,9 +16,8 @@ Report privately through **GitHub private vulnerability reporting** — go to th
 Please include:
 
 - The type of issue (e.g. auth bypass, injection, XSS, privilege escalation).
-- The affected component and file(s) — server API, agent runtime, the BYOA
-  daemon (`agent-cli`), the Electron desktop shell, the Cloudflare workers, or
-  the web client.
+- The affected component and file(s) — control-plane API, Agent OS, IPython
+  kernel worker, WuKongIM integration, Electron shell, workers, or web client.
 - Step-by-step reproduction, and a proof-of-concept if you have one.
 - The impact you believe it has (what an attacker gains).
 
@@ -42,7 +41,7 @@ Out of scope:
 - Findings that require a misconfigured self-hosted deployment the code
   actively warns against — e.g. running in production with a dev-default
   secret. The server refuses to boot in that state on purpose
-  (`AGENT_RUNTIME_SECRET`); a report that assumes it was forced past that gate
+  (`AGENT_OS_SERVICE_TOKEN`); a report that assumes it was forced past that gate
   is a configuration issue, not a vulnerability.
 - Denial of service / volumetric abuse.
 - Reports from automated scanners without a demonstrated, exploitable impact.
@@ -51,19 +50,18 @@ Out of scope:
 
 ## The trust model, in one paragraph
 
-The **server is the only trust boundary**. Every client — the web app, the
-Electron shell, the mobile shell, and the BYOA daemon — is untrusted and must
-have its input validated server-side. Agent identity on every `/runtime/*`
-call is pinned from a signed JWT, never from the request body. Tenants are
-isolated in SQL, not in the client. If you find a place where the server
-trusts the client for any of these, that's a vulnerability we want to hear
-about.
+The LingxiLoop control plane is the trust boundary. Web, Electron, mobile,
+WuKong webhooks, Agent OS and kernels are untrusted callers. Agent OS work and
+Host Bridge actions authenticate with a service token and are pinned to the
+claimed company and agent; tenants are isolated by server-side checks. Kernels
+receive no model/database credentials and external side effects require the
+typed Host Bridge and approval policy.
 
 ## Deploying LingxiLoop securely
 
 If you self-host, at minimum:
 
-- Set a high-entropy `AGENT_RUNTIME_SECRET` (`openssl rand -hex 32`). The
+- Set a high-entropy `AGENT_OS_SERVICE_TOKEN` (`openssl rand -hex 32`). The
   server will refuse to start in production otherwise.
 - Serve user-uploaded attachments from a **separate origin** (configure the
   `R2_*` variables) rather than the local-disk fallback, so a hostile upload

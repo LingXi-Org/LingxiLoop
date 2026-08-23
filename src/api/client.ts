@@ -10,9 +10,6 @@ import type {
   CalendarEventKind,
   CalendarEventStatus,
   CalendarReminderChannel,
-  ComputerKind,
-  ComputerStatus,
-  EngineId,
   Message,
   RecurrenceRule,
   Status,
@@ -21,11 +18,6 @@ import type {
 const DEVTOOLS_KEY = 'lingxiloop.devtools.enabled'
 const SERVER_URL_KEY = 'lingxiloop.serverUrl'
 
-// Vite's relative proxy keeps browser requests same-origin, but the pairing
-// command runs outside the browser and must address the API directly.
-const DEV_API_TARGET = import.meta.env.DEV
-  ? (import.meta.env.VITE_LINGXILOOP_DEV_API_TARGET as string | undefined)?.replace(/\/+$/, '')
-  : undefined
 
 /** Resolve the API base. Three layers, highest priority first:
  *    1. localStorage['lingxiloop.serverUrl'] — runtime override, settable
@@ -64,10 +56,6 @@ export function getServerOrigin(): string {
 /** Origin to embed in a local computer pairing command.
  * In Vite dev the browser uses a relative proxy, so SERVER_ORIGIN is empty;
  * the daemon still needs the API target rather than the renderer origin. */
-export function getPairingServerOrigin(): string {
-  return SERVER_ORIGIN || DEV_API_TARGET || ''
-}
-
 /** Persist a new server origin override and clear the existing session.
  *  We don't try to hot-swap the in-memory API/WS — anything pending against
  *  the old origin would race or fail in confusing ways. Callers should
@@ -229,32 +217,6 @@ export interface ApiParticipant {
   model?: string | null
   email?: string | null
   departedAt?: string | null
-  computerId?: string | null
-  engine?: string | null
-  fastModel?: string | null
-}
-
-/** A Computer (agent host) as returned by GET /api/computers. */
-export interface ApiComputer {
-  id: string
-  company_id: string
-  owner_user_id: string | null
-  name: string
-  kind: ComputerKind
-  available_engines: EngineId[]
-  status: ComputerStatus
-  last_seen_at: string | null
-  paired_at: string | null
-  /** Daemon version this computer is running (null for cloud / a pre-version daemon). */
-  daemon_version?: string | null
-  /** True = daemon runs under the --install-service supervisor; false = a
-   *  manually-run foreground command; null = cloud / an old daemon that
-   *  doesn't report it. Drives run-mode-specific update instructions. */
-  daemon_supervised?: boolean | null
-  /** Newest published lingxiloop daemon version, for the upgrade banner. */
-  latest_daemon_version?: string | null
-  /** True when this BYOA daemon is behind the latest version → show upgrade banner. */
-  daemon_outdated?: boolean
 }
 
 async function httpBlob(path: string): Promise<Blob> {
@@ -423,10 +385,6 @@ export interface AgentInput {
   avatarBg?: string
   /** pass null to clear the AI portrait and fall back to the color block */
   avatarUrl?: string | null
-  /** per-agent big-brain model override; null clears it (use system default) */
-  model?: string | null
-  /** per-agent small-brain (fast) model override; null clears it */
-  fastModel?: string | null
   tools?: string[]
   capabilities?: AgentCapability[]
 }
@@ -524,7 +482,7 @@ export interface ApiAgentRun {
 }
 
 // ── Triage cost-effectiveness ledger ──
-export type ApiTriageSource = 'cloud' | 'byoa-claude' | 'byoa-codex'
+export type ApiTriageSource = 'cloud' | 'agent-os' | 'product'
 
 export interface ApiTriageAgentRow {
   agentId: string
@@ -594,7 +552,6 @@ export interface ApiTriageEconomics {
   estimatedAvoidedUsd: number
   estimatedNetSavingsUsd: number
   costEstimated: boolean
-  byoaShare: number
   unitPrices: ApiTriageUnitPrice[]
   priceTable: ApiTriagePriceRow[]
   perAgent: ApiTriageAgentRow[]
@@ -1012,9 +969,16 @@ export const api = {
       method: 'POST', body: JSON.stringify({}),
     }),
   getParticipants: () => http<ApiParticipant[]>('/participants'),
+  stopAgentRun: (agentId: string, channelId: string) =>
+    http<{ ok: boolean; workId: string }>('/im/runs/stop', {
+      method: 'POST', body: JSON.stringify({ agentId, channelId }),
+    }),
+  steerAgentRun: (agentId: string, channelId: string, text: string) =>
+    http<{ ok: boolean; workId: string; steerId: string }>('/im/runs/steer', {
+      method: 'POST', body: JSON.stringify({ agentId, channelId, text }),
+    }),
 
-  // ─── Computers (agent hosts: LingxiLoop Cloud + BYOA) ───
-  getComputers: () => http<ApiComputer[]>('/computers'),
+  // ─── User Computer (shared learning workspace) ───
   getUserComputer: () => http<ApiUserComputer>('/computer'),
   startUserComputer: () => http<ApiUserComputer>('/computer/start', { method: 'POST', body: '{}' }),
   stopUserComputer: () => http<ApiUserComputer>('/computer/stop', { method: 'POST', body: '{}' }),
@@ -1035,24 +999,6 @@ export const api = {
   ) => http<{ ok: boolean }>(`/computer/screens/${encodeURIComponent(screenId)}/input`, {
     method: 'POST', body: JSON.stringify(input),
   }),
-  /** Start pairing a BYOA computer: returns a persistent token for the daemon.
-   *  No computer is created until the daemon pairs and reports the machine's
-   *  real hostname, so the UI just shows the command. */
-  requestPairingCode: () =>
-    http<{ code: string; expiresInSeconds: number | null }>(
-      '/computers', { method: 'POST', body: '{}' }),
-  /** Revoke a paired computer (its device token + agent JWTs stop working). */
-  deleteComputer: (id: string) =>
-    http<{ ok: boolean }>(`/computers/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-  /** Get a re-pair code to reconnect an existing computer (keeps its agents). */
-  repairComputer: (id: string) =>
-    http<{ code: string; expiresInSeconds: number | null }>(
-      `/computers/${encodeURIComponent(id)}/repair`, { method: 'POST', body: '{}' }),
-  /** Move an agent to a computer, choosing its engine (LingxiLoop Cloud = managed). */
-  assignAgentComputer: (agentId: string, computerId: string, engine?: EngineId) =>
-    http<{ ok: boolean; kind: ComputerKind; engine: EngineId }>(
-      `/agents/${encodeURIComponent(agentId)}/computer`,
-      { method: 'POST', body: JSON.stringify({ computerId, engine }) }),
   createAgent: (input: AgentInput) =>
     http<{ id: string }>('/agents', { method: 'POST', body: JSON.stringify(input) }),
   updateAgent: (id: string, input: AgentInput) =>
@@ -1064,7 +1010,7 @@ export const api = {
     http<{ ok: boolean }>(`/agents/${encodeURIComponent(id)}/rehire`, { method: 'POST' }),
   generateAgentAvatar: (id: string) =>
     http<{ url: string }>(`/agents/${encodeURIComponent(id)}/avatar/generate`, { method: 'POST' }),
-  getConversations: () => http<ApiConversation[]>('/conversations'),
+  getConversations: () => http<ApiConversation[]>('/im/channels'),
   createGroup: (input: { title: string; members: string[]; leaderId: string; subtitle?: string; projectId?: string | null }) =>
     http<{ id: string; members: string[]; leaderId: string; projectId: string | null }>('/conversations', {
       method: 'POST',
@@ -1337,7 +1283,7 @@ export const api = {
       body: JSON.stringify(typeof input === 'string' ? { url: input } : input),
     }),
   markRead: (conversationId: string) =>
-    http<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/read`, {
+    http<{ ok: boolean }>(`/im/channels/${encodeURIComponent(conversationId)}/read`, {
       method: 'POST',
       body: JSON.stringify({}),
     }),
@@ -1574,7 +1520,6 @@ export type WsEvent =
   | { type: 'agent.activity'; conversationIds: string[]; activity: ApiCoworkerActivity }
   | { type: 'participants.status'; participantId: string; status: Status; statusUpdatedAt?: string }
   | { type: 'participants.avatar'; participantId: string; avatarUrl: string }
-  | { type: 'computers.status'; computerId: string; status: ComputerStatus }
   | { type: 'participants.added'; conversationId?: string; participant: {
       id: string; kind: 'human' | 'agent'; name: string; role: string | null;
       initial: string; avatarBg: string; avatarUrl: string | null;

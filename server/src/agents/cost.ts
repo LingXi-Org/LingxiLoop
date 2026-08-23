@@ -8,10 +8,7 @@
  * brain session reads most of its input from the prompt cache at ~0.1× the
  * price. So a "saving" can secretly be a loss. We price each tier separately.
  *
- * Prices are per 1M tokens, in USD, list prices. For BYOA agents the operator
- * pays a flat-rate subscription, so the dollar figure here is "meter-equivalent"
- * — what the same computation WOULD cost on the metered API — which is the
- * honest basis for "is this triage worth it". Override real contracted rates via
+ * Prices are per 1M tokens, in USD, list prices. Override contracted rates via
  * the LINGXILOOP_MODEL_PRICES_JSON env (a JSON map of modelId → price); only those
  * count as `verified` — every seeded default is reported as an estimate.
  */
@@ -41,26 +38,12 @@ export const EMPTY_USAGE: TokenUsage = {
   inputTokens: 0, cachedInputTokens: 0, cacheCreationTokens: 0, outputTokens: 0,
 }
 
-// Seeded prices — ALL treated as ESTIMATES (verified: false). The claude tiers
-// are Anthropic's published list prices to the best of our knowledge (cache-read
-// ≈ 0.1× input, cache-write ≈ 1.25× input), but we can't verify at runtime that
-// they're current for the EXACT model variant in use (e.g. a specific 4.x), and
-// the gpt-5.* ids are LingxiLoop's internal cloud aliases whose true upstream rate we
-// don't know at all. So nothing here is presented as authoritative: a figure is
+// Seeded prices are estimates. Nothing here is presented as authoritative: a figure is
 // only `verified` (non-estimated) when the OPERATOR supplies the real contracted
 // rate via LINGXILOOP_MODEL_PRICES_JSON. Everything else surfaces as an estimate.
 const SEED_PRICES: Record<string, ModelPrice> = {
-  'gpt-5.5':      { inPer1M: 2.5, cachedInPer1M: 0.25, cacheWritePer1M: 2.5, outPer1M: 10, verified: false },
-  'gpt-5.4-mini': { inPer1M: 0.25, cachedInPer1M: 0.025, cacheWritePer1M: 0.25, outPer1M: 2, verified: false },
-  // Claude — Anthropic published list prices (input / cache-read = "cache hits &
-  // refreshes" / 5m cache-write / output, per 1M). Matched by substring so version
-  // suffixes resolve. Legacy Opus 4.0/4.1 ($15/$75) are listed BEFORE the general
-  // `claude-opus` so the specific version wins; current Opus (4.5–4.8) is cheaper
-  // ($5/$25). Haiku here = Haiku 4.5 ($1/$5); Sonnet 4.x = $3/$15.
-  'claude-opus-4-1': { inPer1M: 15, cachedInPer1M: 1.5, cacheWritePer1M: 18.75, outPer1M: 75, verified: false },
-  'claude-opus':   { inPer1M: 5, cachedInPer1M: 0.5, cacheWritePer1M: 6.25, outPer1M: 25, verified: false },
-  'claude-sonnet': { inPer1M: 3, cachedInPer1M: 0.3, cacheWritePer1M: 3.75, outPer1M: 15, verified: false },
-  'claude-haiku':  { inPer1M: 1, cachedInPer1M: 0.1, cacheWritePer1M: 1.25, outPer1M: 5, verified: false },
+  'deepseek-chat':     { inPer1M: 0.28, cachedInPer1M: 0.028, cacheWritePer1M: 0.28, outPer1M: 0.42, verified: false },
+  'deepseek-reasoner': { inPer1M: 0.55, cachedInPer1M: 0.14, cacheWritePer1M: 0.55, outPer1M: 2.19, verified: false },
 }
 
 // Last-resort rate for an unrecognized model: mid-tier, ALWAYS flagged estimated.
@@ -95,10 +78,7 @@ function overrides(): Record<string, ModelPrice> {
 export function priceFor(model: string | null | undefined): ModelPrice {
   const id = (model ?? '').toLowerCase().trim()
   if (!id) return FALLBACK_PRICE
-  // Match in BOTH directions: a full id like "claude-sonnet-4-6" contains the seed
-  // key "claude-sonnet", while a bare tier id like "haiku" is contained BY the seed
-  // key "claude-haiku". Checking only one direction mispriced bare ids (e.g. the
-  // triage model "haiku" fell through to the fallback = sonnet rate).
+  // Match exact ids and versioned variants of the configured global model family.
   const matches = (key: string): boolean => { const k = key.toLowerCase(); return id === k || id.includes(k) || k.includes(id) }
   const ov = overrides()
   if (ov[id]) return ov[id]
@@ -153,42 +133,29 @@ export function cacheHitRate(usage: TokenUsage): number {
   return totalInput > 0 ? usage.cachedInputTokens / totalInput : 0
 }
 
-/** The subset of provider usage fields we read (OpenAI Responses + Anthropic). */
+/** DeepSeek usage plus compatible-gateway aliases. */
 interface RawUsage {
   input_tokens?: number
   output_tokens?: number
+  prompt_tokens?: number
+  completion_tokens?: number
+  prompt_cache_hit_tokens?: number
+  prompt_cache_miss_tokens?: number
   input_tokens_details?: { cached_tokens?: number }
   prompt_tokens_details?: { cached_tokens?: number }
-  cache_read_input_tokens?: number
-  cache_creation_input_tokens?: number
 }
 
-/** Map an OpenAI Responses `usage` to cache-aware TokenUsage. OpenAI's
- *  `input_tokens` is the TOTAL input INCLUDING the cached portion, so we subtract
- *  `input_tokens_details.cached_tokens` to get the uncached part. OpenAI auto-
- *  caches with no separate write charge → cacheCreationTokens = 0. */
-export function usageFromOpenAI(raw: unknown): TokenUsage {
+/** Map DeepSeek Chat Completions usage to cache-aware TokenUsage. */
+export function usageFromDeepSeek(raw: unknown): TokenUsage {
   const u = (raw ?? {}) as RawUsage
-  const total = Number(u.input_tokens ?? 0)
-  const cached = Number(u.input_tokens_details?.cached_tokens ?? u.prompt_tokens_details?.cached_tokens ?? 0)
+  const total = Number(u.prompt_tokens ?? u.input_tokens ?? 0)
+  const cached = Number(u.prompt_cache_hit_tokens ?? u.input_tokens_details?.cached_tokens ?? u.prompt_tokens_details?.cached_tokens ?? 0)
+  const miss = Number(u.prompt_cache_miss_tokens ?? Math.max(0, total - cached))
   return {
-    inputTokens: Math.max(0, total - cached),
+    inputTokens: Math.max(0, miss),
     cachedInputTokens: cached,
     cacheCreationTokens: 0,
-    outputTokens: Number(u.output_tokens ?? 0),
-  }
-}
-
-/** Map an Anthropic / Claude Code stream-json `usage` to TokenUsage. Anthropic's
- *  `input_tokens` already EXCLUDES the cached read/write portions, which are
- *  reported separately as cache_read_input_tokens / cache_creation_input_tokens. */
-export function usageFromClaude(raw: unknown): TokenUsage {
-  const u = (raw ?? {}) as RawUsage
-  return {
-    inputTokens: Number(u.input_tokens ?? 0),
-    cachedInputTokens: Number(u.cache_read_input_tokens ?? 0),
-    cacheCreationTokens: Number(u.cache_creation_input_tokens ?? 0),
-    outputTokens: Number(u.output_tokens ?? 0),
+    outputTokens: Number(u.completion_tokens ?? u.output_tokens ?? 0),
   }
 }
 
@@ -202,8 +169,7 @@ export function addUsage(a: TokenUsage, b: TokenUsage): TokenUsage {
   }
 }
 
-/** True when there's any token signal at all (distinguishes "measured but zero"
- *  from "no usage reported", e.g. codex). */
+/** True when there's any token signal at all. */
 export function hasUsage(u: TokenUsage): boolean {
   return u.inputTokens + u.cachedInputTokens + u.cacheCreationTokens + u.outputTokens > 0
 }

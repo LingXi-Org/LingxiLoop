@@ -355,15 +355,8 @@ CREATE INDEX IF NOT EXISTS idx_llm_calls_created ON llm_calls(created_at);  -- d
 CREATE INDEX IF NOT EXISTS idx_llm_calls_run_created ON llm_calls(run_id, created_at ASC) WHERE run_id IS NOT NULL;
 -- Per-agent spend over time.
 CREATE INDEX IF NOT EXISTS idx_llm_calls_agent_created ON llm_calls(agent_id, created_at DESC) WHERE agent_id IS NOT NULL;
--- Model-level rollup ("of all my gpt-5.4-mini spend, which purposes?").
+-- Model-level rollup ("of all my deepseek-chat spend, which purposes?").
 CREATE INDEX IF NOT EXISTS idx_llm_calls_model_purpose_created ON llm_calls(model, purpose, created_at DESC);
--- Daemon version on BYOA rows so the operator can correlate spend / cache
--- behaviour with the agent-cli release that produced them. Idempotent ALTER
--- so existing rows stay (their version is unknown → NULL). NULL on cloud
--- agent-turn rows is fine; only BYOA paths populate it.
-ALTER TABLE llm_calls ADD COLUMN IF NOT EXISTS daemon_version TEXT;
-CREATE INDEX IF NOT EXISTS idx_llm_calls_daemon_version_created ON llm_calls(daemon_version, created_at DESC) WHERE daemon_version IS NOT NULL;
-
 -- ── Pre-aggregated rollup of llm_calls for the Observability dashboard ──────
 -- Measured root cause of the slow Observability API: the whole llm_calls table
 -- (~470k rows, growing ~70k/day) lives inside the 30d window, so every one of
@@ -372,13 +365,13 @@ CREATE INDEX IF NOT EXISTS idx_llm_calls_daemon_version_created ON llm_calls(dae
 -- the whole table.
 --
 -- Fix: maintain an hourly-bucketed rollup at the FINEST grain every dashboard
--- query needs — (bucket_hour × company × agent × purpose × model × source ×
--- daemon_version). Measured ~30k rows for 30d (15× smaller than raw); the full
+-- query needs — (bucket_hour × company × agent × purpose × model × source).
+-- Measured ~30k rows for 30d (15× smaller than raw); the full
 -- 6-query fan-out off this table is ~230ms vs 5-25s. The page reads THIS; only
 -- the drill-down (raw call rows) still touches llm_calls (already indexed by
 -- run/agent). Refreshed incrementally by the llm-rollup worker (server boot).
 --
--- nullable company/agent/daemon are part of the identity, so the upsert key is
+-- nullable company/agent are part of the identity, so the upsert key is
 -- a NULLS NOT DISTINCT unique index (PG15+) — two NULL-company rows for the
 -- same (hour,purpose,model,…) collapse to one bucket instead of duplicating.
 CREATE TABLE IF NOT EXISTS llm_calls_rollup (
@@ -388,7 +381,6 @@ CREATE TABLE IF NOT EXISTS llm_calls_rollup (
   purpose               TEXT NOT NULL,
   model                 TEXT NOT NULL,
   source                TEXT NOT NULL,
-  daemon_version        TEXT,
   calls                 BIGINT NOT NULL DEFAULT 0,
   ok_calls              BIGINT NOT NULL DEFAULT 0,
   failed_calls          BIGINT NOT NULL DEFAULT 0,
@@ -401,8 +393,11 @@ CREATE TABLE IF NOT EXISTS llm_calls_rollup (
   cost_usd              DOUBLE PRECISION NOT NULL DEFAULT 0,
   cost_estimated        BOOLEAN NOT NULL DEFAULT TRUE
 );
+ALTER TABLE llm_calls DROP COLUMN IF EXISTS daemon_version;
+ALTER TABLE llm_calls_rollup DROP COLUMN IF EXISTS daemon_version;
+DROP INDEX IF EXISTS idx_llm_rollup_key;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_llm_rollup_key
-  ON llm_calls_rollup (bucket_hour, company_id, agent_id, purpose, model, source, daemon_version)
+  ON llm_calls_rollup (bucket_hour, company_id, agent_id, purpose, model, source)
   NULLS NOT DISTINCT;
 -- Read path: every dashboard query filters bucket_hour > now() - N days.
 CREATE INDEX IF NOT EXISTS idx_llm_rollup_bucket ON llm_calls_rollup (bucket_hour DESC);
@@ -918,7 +913,7 @@ DROP TABLE IF EXISTS email_verification_tokens;
 --                       to the renderer — it'd grant LLM access to anyone
 --                       who steals it for the lifetime of the key.
 -- All three are nullable for backwards-compat: pre-sub2api users have NULLs
--- and the LLM client falls back to the legacy single OPENAI_API_KEY path.
+-- and the LLM client falls back to the shared DeepSeek credential path.
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS tier            TEXT    NOT NULL DEFAULT 'free',
   ADD COLUMN IF NOT EXISTS sub2api_user_id BIGINT,
@@ -1944,35 +1939,179 @@ CREATE TABLE IF NOT EXISTS shipping_events (
 CREATE INDEX IF NOT EXISTS idx_shipping_events_feature
   ON shipping_events(feature_id, created_at ASC);
 
--- Back-fill: one managed LingxiLoop Cloud computer per existing PAID company. The
--- id is deterministic ('cloud-' || company_id) so this is idempotent and
--- so other code can resolve it without a lookup. New companies get theirs
--- created at company-creation time (see api/router.ts).
--- These rows support the inherited paid-workspace compatibility UI. The
--- default LingxiGraph server runtime does not require a Computer row, so Free
--- workspaces intentionally remain unassigned and are still fully managed.
-INSERT INTO computers (id, company_id, name, kind, available_engines, status)
-SELECT 'cloud-' || c.id, c.id, 'LingxiLoop Cloud', 'cloud', '["managed"]'::jsonb, 'online'
-  FROM companies c
-  JOIN users o ON o.id = c.owner_user_id
- WHERE COALESCE(o.tier, 'free') <> 'free'
-   AND NOT EXISTS (
-   SELECT 1 FROM computers x WHERE x.company_id = c.id AND x.kind = 'cloud'
- );
+-- ========================= Learning Agent OS =========================
+-- The control plane owns durable work and business state. WuKongIM owns chat
+-- history; these tables intentionally contain only references and projections.
+CREATE TABLE IF NOT EXISTS im_channel_bindings (
+  channel_id       TEXT PRIMARY KEY,
+  company_id       TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  profile          JSONB NOT NULL DEFAULT '{}'::jsonb,
+  leader_agent_id  TEXT,
+  preset_key       TEXT,
+  created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+ALTER TABLE agent_events ADD COLUMN IF NOT EXISTS sequence INTEGER;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_events_run_sequence
+  ON agent_events(run_id, sequence) WHERE sequence IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_im_channel_bindings_company
+  ON im_channel_bindings(company_id, updated_at DESC);
 
--- ...and point every existing PAID-company agent at its company's cloud
--- computer with the managed engine. Only touches un-migrated rows, so re-runs
--- are no-ops. Unassigned agents on any tier run in the managed server runtime.
-UPDATE participants p
-   SET computer_id = 'cloud-' || p.company_id,
-       engine = 'managed'
-  FROM companies c
-  JOIN users o ON o.id = c.owner_user_id
- WHERE p.company_id = c.id
-   AND p.kind = 'agent'
-   AND p.computer_id IS NULL
-   AND p.company_id IS NOT NULL
-   AND COALESCE(o.tier, 'free') <> 'free';
+-- Poll state is a rebuildable product projection keyed by the stable WuKong
+-- client_msg_no. The poll message itself and every update remain owned by
+-- WuKongIM; no chat row is mirrored into the legacy messages table.
+CREATE TABLE IF NOT EXISTS im_polls (
+  poll_client_msg_no TEXT PRIMARY KEY,
+  channel_id        TEXT NOT NULL,
+  channel_type      INTEGER NOT NULL DEFAULT 2,
+  company_id        TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  author_id         TEXT NOT NULL,
+  poll              JSONB NOT NULL,
+  revision          BIGINT NOT NULL DEFAULT 1,
+  wukong_message_id TEXT,
+  wukong_message_seq BIGINT,
+  created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_im_polls_channel
+  ON im_polls(company_id, channel_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_im_polls_expiry
+  ON im_polls(updated_at)
+  WHERE (poll->>'closedAt') IS NULL AND (poll->>'expiresAt') IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS im_poll_votes (
+  poll_client_msg_no TEXT NOT NULL REFERENCES im_polls(poll_client_msg_no) ON DELETE CASCADE,
+  voter_participant_id TEXT NOT NULL,
+  voter_kind       TEXT NOT NULL,
+  option_id        TEXT NOT NULL,
+  company_id       TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (poll_client_msg_no, voter_participant_id, option_id)
+);
+CREATE INDEX IF NOT EXISTS idx_im_poll_votes_voter
+  ON im_poll_votes(company_id, voter_participant_id);
+
+CREATE TABLE IF NOT EXISTS wukong_webhook_receipts (
+  event_id     TEXT PRIMARY KEY,
+  event_type   TEXT NOT NULL,
+  payload_hash TEXT NOT NULL,
+  received_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  processed_at TIMESTAMP WITH TIME ZONE,
+  error        TEXT
+);
+
+CREATE TABLE IF NOT EXISTS agent_work_items (
+  id                         TEXT PRIMARY KEY,
+  company_id                 TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  agent_id                   TEXT NOT NULL,
+  channel_id                 TEXT NOT NULL,
+  thread_root_client_msg_no  TEXT,
+  trigger_client_msg_no      TEXT NOT NULL,
+  reason                     TEXT NOT NULL,
+  status                     TEXT NOT NULL DEFAULT 'queued',
+  priority                   INTEGER NOT NULL DEFAULT 100,
+  fence                      BIGINT NOT NULL DEFAULT 0,
+  lease_token_hash           TEXT,
+  leased_by                  TEXT,
+  lease_expires_at           TIMESTAMP WITH TIME ZONE,
+  attempts                   INTEGER NOT NULL DEFAULT 0,
+  available_at               TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  error                      TEXT,
+  created_at                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  finished_at                TIMESTAMP WITH TIME ZONE,
+  UNIQUE(agent_id, trigger_client_msg_no, reason)
+);
+CREATE INDEX IF NOT EXISTS idx_agent_work_claim
+  ON agent_work_items(status, available_at, priority DESC, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_agent_work_agent
+  ON agent_work_items(company_id, agent_id, created_at DESC);
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS cancel_requested_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS steer_inputs JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+CREATE TABLE IF NOT EXISTS agent_os_sessions (
+  session_key      TEXT PRIMARY KEY,
+  company_id      TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  agent_id        TEXT NOT NULL,
+  channel_id      TEXT NOT NULL,
+  thread_root_client_msg_no TEXT,
+  summary          TEXT,
+  history          JSONB NOT NULL DEFAULT '[]'::jsonb,
+  revision         BIGINT NOT NULL DEFAULT 1,
+  updated_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_agent_os_sessions_agent
+  ON agent_os_sessions(company_id, agent_id, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS agent_host_actions (
+  idempotency_key TEXT PRIMARY KEY,
+  work_id         TEXT NOT NULL REFERENCES agent_work_items(id) ON DELETE CASCADE,
+  run_id          TEXT NOT NULL,
+  cell_id         TEXT NOT NULL,
+  call_index      INTEGER NOT NULL,
+  action          TEXT NOT NULL,
+  args            JSONB NOT NULL DEFAULT '{}'::jsonb,
+  status          TEXT NOT NULL DEFAULT 'pending',
+  result           JSONB,
+  error            TEXT,
+  approval_id      TEXT,
+  created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_agent_host_actions_work
+  ON agent_host_actions(work_id, created_at ASC);
+
+CREATE TABLE IF NOT EXISTS agent_os_approvals (
+  id              TEXT PRIMARY KEY,
+  company_id      TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  agent_id        TEXT NOT NULL,
+  channel_id      TEXT NOT NULL,
+  work_id         TEXT NOT NULL REFERENCES agent_work_items(id) ON DELETE CASCADE,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  action          TEXT NOT NULL,
+  args            JSONB NOT NULL DEFAULT '{}'::jsonb,
+  summary         TEXT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'pending',
+  requested_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  resolved_at     TIMESTAMP WITH TIME ZONE,
+  resolved_by     TEXT,
+  result          JSONB,
+  error           TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_agent_os_approvals_pending
+  ON agent_os_approvals(company_id, status, requested_at DESC);
+
+CREATE TABLE IF NOT EXISTS agent_routines (
+  id             TEXT PRIMARY KEY,
+  company_id     TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  agent_id       TEXT NOT NULL,
+  channel_id     TEXT NOT NULL,
+  kind           TEXT NOT NULL,
+  title          TEXT NOT NULL,
+  instructions   TEXT NOT NULL,
+  schedule       JSONB NOT NULL,
+  timezone       TEXT NOT NULL DEFAULT 'Asia/Shanghai',
+  status         TEXT NOT NULL DEFAULT 'paused',
+  next_run_at    TIMESTAMP WITH TIME ZONE,
+  created_by     TEXT NOT NULL,
+  approved_by    TEXT,
+  created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_agent_routines_due
+  ON agent_routines(status, next_run_at) WHERE status = 'active';
+
+CREATE TABLE IF NOT EXISTS agent_routine_runs (
+  id          TEXT PRIMARY KEY,
+  routine_id  TEXT NOT NULL REFERENCES agent_routines(id) ON DELETE CASCADE,
+  work_id     TEXT REFERENCES agent_work_items(id) ON DELETE SET NULL,
+  status      TEXT NOT NULL DEFAULT 'queued',
+  scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  started_at  TIMESTAMP WITH TIME ZONE,
+  finished_at TIMESTAMP WITH TIME ZONE,
+  error       TEXT,
+  UNIQUE(routine_id, scheduled_at)
+);
 
 -- Existing groups gain a deterministic leader without changing human-only
 -- historical rooms. Member ordinality is preserved so the migration is
@@ -1999,6 +2138,89 @@ UPDATE conversations c
  *  unlikely to collide with any other code that might
  *  pg_advisory_lock the same database. */
 const SCHEMA_LOCK_KEY = 7_643_178_926_104n
+
+/** One-way maintenance-window cutover. The marker makes destructive data
+ * cleanup exactly-once; the final DROP statements remain idempotent so an
+ * interrupted deployment cannot leave the retired host fields behind. */
+async function runAgentOSCutover(client: import('pg').PoolClient): Promise<void> {
+  await client.query('BEGIN')
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS agent_os_cutovers (
+        id TEXT PRIMARY KEY,
+        completed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        detail JSONB NOT NULL DEFAULT '{}'::jsonb
+      )
+    `)
+    const { rows } = await client.query<{ done: boolean }>(
+      `SELECT EXISTS (SELECT 1 FROM agent_os_cutovers WHERE id = 'agent-os-v1') AS done`,
+    )
+    if (!rows[0]?.done) {
+      await client.query(`
+        CREATE TEMP TABLE cutover_removed_agents ON COMMIT DROP AS
+        SELECT p.id, p.company_id
+          FROM participants p
+          LEFT JOIN computers c ON c.id = p.computer_id
+         WHERE p.kind = 'agent'
+           AND (p.engine IN ('claude', 'codex') OR c.kind IN ('local', 'vps'))
+      `)
+
+      // Preserve human-owned assets while removing assignments to retired agents.
+      await client.query(`UPDATE board_cards bc SET assignee_id = NULL FROM boards b, cutover_removed_agents r WHERE bc.board_id=b.id AND bc.assignee_id=r.id AND b.company_id=r.company_id`)
+      await client.query(`UPDATE calendar_events e SET assignee_id = NULL FROM cutover_removed_agents r WHERE e.assignee_id=r.id AND e.company_id=r.company_id AND NOT EXISTS (SELECT 1 FROM cutover_removed_agents owner WHERE owner.id=e.created_by AND owner.company_id=e.company_id)`)
+      await client.query(`UPDATE conversations c SET leader_id = NULL FROM cutover_removed_agents r WHERE c.leader_id=r.id AND c.company_id=r.company_id`)
+
+      // Delete data owned by retired identities. Cascades remove document
+      // updates, board cards/comments and run events where declared.
+      await client.query(`DELETE FROM documents d USING cutover_removed_agents r WHERE d.created_by=r.id AND d.company_id=r.company_id`)
+      await client.query(`DELETE FROM boards b USING cutover_removed_agents r WHERE b.created_by=r.id AND b.company_id=r.company_id`)
+      await client.query(`DELETE FROM calendar_events e USING cutover_removed_agents r WHERE e.created_by=r.id AND e.company_id=r.company_id`)
+      await client.query(`DELETE FROM agent_tasks t USING cutover_removed_agents r WHERE t.agent_id=r.id AND t.company_id=r.company_id`)
+      await client.query(`DELETE FROM agent_workspace w USING cutover_removed_agents r WHERE w.agent_id=r.id AND w.company_id=r.company_id`)
+      await client.query(`DELETE FROM agent_memory m USING cutover_removed_agents r WHERE m.agent_id=r.id AND m.company_id=r.company_id`)
+      await client.query(`DELETE FROM agent_log l USING cutover_removed_agents r WHERE l.agent_id=r.id AND l.company_id=r.company_id`)
+      await client.query(`DELETE FROM agent_routines a USING cutover_removed_agents r WHERE a.agent_id=r.id AND a.company_id=r.company_id`)
+
+      // No legacy transcript or Runtime state crosses the maintenance window.
+      await client.query('DELETE FROM agent_host_actions')
+      await client.query('DELETE FROM agent_os_approvals')
+      await client.query('DELETE FROM agent_work_items')
+      await client.query('DELETE FROM agent_os_sessions')
+      await client.query('DELETE FROM agent_approvals')
+      await client.query('DELETE FROM agent_handoffs')
+      await client.query('DELETE FROM agent_action_executions')
+      await client.query('DELETE FROM tool_calls')
+      await client.query('DELETE FROM agent_runs')
+      await client.query('DELETE FROM message_reactions')
+      await client.query('DELETE FROM conversation_reads')
+      await client.query('DELETE FROM messages')
+      await client.query('UPDATE conversation_counters SET next_sequence = 1')
+      await client.query(`DELETE FROM participants p USING cutover_removed_agents r WHERE p.id = r.id AND p.company_id = r.company_id`)
+      await client.query(`
+        INSERT INTO agent_os_cutovers (id, detail)
+        VALUES ('agent-os-v1', jsonb_build_object(
+          'removedAgents', (SELECT COUNT(*) FROM cutover_removed_agents),
+          'legacyMessagesReset', TRUE,
+          'legacyRuntimeReset', TRUE
+        ))
+      `)
+    }
+
+    await client.query(`
+      DROP TABLE IF EXISTS lingxigraph_steering_receipts;
+      DROP TABLE IF EXISTS computers;
+      ALTER TABLE participants DROP COLUMN IF EXISTS computer_id;
+      ALTER TABLE participants DROP COLUMN IF EXISTS engine;
+      ALTER TABLE participants DROP COLUMN IF EXISTS model;
+      ALTER TABLE participants DROP COLUMN IF EXISTS fast_model;
+      ALTER TABLE companies DROP COLUMN IF EXISTS pair_token;
+    `)
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  }
+}
 
 /**
  * Boot-time wrapper around `ensureSchema` that retries with exponential
@@ -2081,7 +2303,6 @@ const AGENT_ID_CASCADE_TABLES: CascadeSpec[] = [
   { table: 'agent_log',            column: 'agent_id',    scopeSql: 'company_id = $3' },
   { table: 'agent_tasks',          column: 'agent_id',    scopeSql: 'company_id = $3' },
   { table: 'agent_runs',           column: 'agent_id',    scopeSql: 'company_id = $3' },
-  { table: 'lingxigraph_steering_receipts', column: 'agent_id', scopeSql: 'company_id = $3' },
   { table: 'agent_events',         column: 'agent_id',    scopeSql: 'company_id = $3' },
   { table: 'agent_autonomy',       column: 'agent_id',    scopeSql: 'company_id = $3' },
   { table: 'agent_climate',        column: 'agent_id',    scopeSql: 'company_id = $3' },
@@ -2295,6 +2516,7 @@ export async function ensureSchema(): Promise<void> {
       // and no sentinels, so it still runs + retries to completion.
       try {
         await client.query(DDL)
+        await runAgentOSCutover(client)
       // Conditionally add the embedding column + HNSW index — only
       // if pgvector was actually installed. Wrapped in DO $$ so the
       // whole statement is a no-op when the extension isn't there.
@@ -2393,10 +2615,6 @@ async function schemaAlreadyCurrent(client: import('pg').PoolClient): Promise<bo
         -- the day this shipped; sentinel added so the next new table can't
         -- repeat it.
         AND (SELECT count(*) FROM pg_class WHERE relname = 'llm_calls') > 0
-        -- llm_calls.daemon_version added so 40P01-fallback doesn't skip the
-        -- ALTER. Keep updating this list whenever a new column lands.
-        AND (SELECT count(*) FROM information_schema.columns
-               WHERE table_name = 'llm_calls' AND column_name = 'daemon_version') > 0
         -- llm_calls_rollup: the Observability pre-aggregation table. Without
         -- this sentinel a 40P01 fallback would skip CREATE TABLE and every
         -- dashboard query would 500 on "relation llm_calls_rollup does not exist".
@@ -2458,9 +2676,9 @@ async function buildConcurrentIndexes(client: import('pg').PoolClient): Promise<
       table: 'llm_calls',
       // Every Observability aggregation filters `created_at > NOW() - Ndays`,
       // and the DEFAULT admin view passes no companyId — so NONE of the other
-      // llm_calls indexes (all led by company_id / run_id / agent_id / model /
-      // daemon_version) can serve it. Without a created_at-led index the global
-      // summary/rollup/trend/topAgents/daemonVersion queries each SEQ-SCAN the
+      // llm_calls indexes (all led by company_id / run_id / agent_id / model)
+      // can serve it. Without a created_at-led index the global
+      // summary/rollup/trend/topAgents queries each SEQ-SCAN the
       // whole ledger on every page load → the slow Observability API.
       //
       // BRIN, not btree: llm_calls is append-only and physically time-ordered,

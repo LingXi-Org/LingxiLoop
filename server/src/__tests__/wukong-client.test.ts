@@ -1,0 +1,85 @@
+import assert from 'node:assert/strict'
+import { createHmac } from 'node:crypto'
+import { afterEach, test } from 'node:test'
+import { WukongClient } from '../im/wukong.js'
+
+const originalFetch = globalThis.fetch
+afterEach(() => { globalThis.fetch = originalFetch })
+
+test('WuKong channel reconciliation uses the v3 integer-switch contract', async () => {
+  let body: Record<string, unknown> = {}
+  globalThis.fetch = async (_input, init) => {
+    body = JSON.parse(String(init?.body)) as Record<string, unknown>
+    return new Response('{"status":200}', { status: 200 })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  await client.upsertChannel({ channelId: 'study', channelType: 2, title: 'Study Room', members: ['student', 'nova'] })
+  assert.deepEqual(body, {
+    channel_id: 'study', channel_type: 2, large: 0, reset: 1, subscribers: ['student', 'nova'],
+  })
+})
+
+test('WuKong adapter uses v3 message endpoints and preserves client_msg_no', async () => {
+  const calls: Array<{ url: string; init?: RequestInit }> = []
+  globalThis.fetch = async (input, init) => {
+    calls.push({ url: String(input), init })
+    return new Response(JSON.stringify({ message_id: 'wk-1', message_seq: 9 }), { status: 200 })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk:5001', wsUrl: 'ws://wk:5200', apiToken: 'token', webhookSecret: 'secret' })
+  const sent = await client.sendMessage('study', 2, 'nova', { version: 1, kind: 'text', clientMsgNo: 'client-1', body: 'hello' })
+  assert.deepEqual(sent, { messageId: 'wk-1', messageSeq: 9 })
+  assert.equal(calls[0]?.url, 'http://wk:5001/message/send')
+  const body = JSON.parse(String(calls[0]?.init?.body)) as Record<string, unknown>
+  assert.equal(body.client_msg_no, 'client-1')
+  assert.deepEqual(JSON.parse(Buffer.from(String(body.payload), 'base64').toString('utf8')), {
+    type: 1000, version: 1, kind: 'text', clientMsgNo: 'client-1', body: 'hello',
+  })
+  const headers = calls[0]?.init?.headers as Record<string, string> | undefined
+  assert.equal(headers?.token, 'token')
+})
+
+test('WuKong adapter syncs channel history and decodes Lingxi payloads', async () => {
+  const calls: Array<{ url: string; body: Record<string, unknown> }> = []
+  const encoded = Buffer.from(JSON.stringify({
+    type: 1000, version: 1, kind: 'text', clientMsgNo: 'client-9', body: 'learn',
+  })).toString('base64')
+  globalThis.fetch = async (input, init) => {
+    calls.push({ url: String(input), body: JSON.parse(String(init?.body)) as Record<string, unknown> })
+    return new Response(JSON.stringify({ messages: [{
+      message_idstr: 'wk-9', message_seq: 9, client_msg_no: 'client-9', channel_id: 'study',
+      channel_type: 2, from_uid: 'sage', timestamp: 123, payload: encoded,
+    }] }), { status: 200 })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk:5001', wsUrl: 'ws://wk:5200', apiToken: 'token', webhookSecret: 'secret' })
+  const messages = await client.syncMessages('study', 2, 80, 'student')
+  assert.equal(calls[0]?.url, 'http://wk:5001/channel/messagesync')
+  assert.equal(calls[0]?.body.login_uid, 'student')
+  assert.equal(messages[0]?.payload.body, 'learn')
+  assert.equal(messages[0]?.clientMsgNo, 'client-9')
+})
+
+test('WuKong stream events include enough routing metadata for the browser', async () => {
+  let body: Record<string, unknown> = {}
+  globalThis.fetch = async (_input, init) => {
+    body = JSON.parse(String(init?.body)) as Record<string, unknown>
+    return new Response('{}', { status: 200 })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  await client.emitEvent({
+    channelId: 'study', channelType: 2, fromUid: 'nova', clientMsgNo: 'preview-1',
+    eventId: 'evt-1', eventType: 'stream.delta', data: { kind: 'text', delta: 'hi' },
+  })
+  assert.deepEqual(body.payload, {
+    kind: 'text', delta: 'hi', channelId: 'study', channelType: 2, fromUid: 'nova', clientMsgNo: 'preview-1',
+  })
+})
+
+test('WuKong webhook signatures are constant-time HMAC contracts', () => {
+  const raw = Buffer.from('{"event":"message.committed"}')
+  const secret = 'test-webhook-secret'
+  const signature = createHmac('sha256', secret).update(raw).digest('hex')
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: secret })
+  assert.equal(client.verifyWebhook(raw, `sha256=${signature}`), true)
+  assert.equal(client.verifyWebhook(raw, 'sha256=deadbeef'), false)
+  assert.equal(client.verifyWebhook(Buffer.from('tampered'), `sha256=${signature}`), false)
+})

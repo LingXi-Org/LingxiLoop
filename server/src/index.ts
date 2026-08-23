@@ -1,3 +1,4 @@
+import './logging.js'
 import express from 'express'
 import compression from 'compression'
 import http from 'node:http'
@@ -13,16 +14,9 @@ import { attachWebSocket, resetHumanPresenceOnBoot } from './ws.js'
 import { bootDocumentBus } from './documents/rooms.js'
 import { pool } from './db/pool.js'
 import { redis } from './redis.js'
-import { startScanner } from './agents/scanner.js'
-import { startScheduler } from './agents/scheduler.js'
-import { startIdleScheduler } from './agents/idle.js'
 import { backfillStarterAgents, backfillHumanGravatars } from './onboardCompany.js'
 import { backfillMemoryEmbeddings } from './agents/embeddings.js'
 import { startStaleAgentRunSweeper } from './agents/observability.js'
-import { sweepOfflineComputers } from './agents/computer/registry.js'
-import { sweepStaleNamespaces } from './agents/runtime/fs-namespace.js'
-import { runtimeRouter } from './agents/runtime/server.js'
-import { startCompletedPodGc, startClusterFuseMonitor, startChromeProfilePvcGc } from './agents/runtime/orchestrator.js'
 import { inboundEmailRouter } from './api/inbound-email.js'
 import { startEmailRetryWorker } from './email-retry.js'
 import { startEmailGcWorker } from './email-gc.js'
@@ -33,6 +27,10 @@ import { startLlmRollupRefresher } from './agents/llm-rollup.js'
 import { startTrialSweepWorker } from './trial-sweep.js'
 import { seedAdmins } from './admin.js'
 import { notifyAlert } from './alerting.js'
+import { agentOSControlRouter } from './agent-os/control-plane.js'
+import { wukongWebhookRouter } from './im/webhook.js'
+import { reconcileLearningChannels } from './im/reconcile.js'
+import { startLearningRoutineScheduler } from './agent-os/routine-scheduler.js'
 
 async function main() {
   await ensureSchemaWithBootRetry()
@@ -43,6 +41,9 @@ async function main() {
   // Catch any company that was created before the auto-onboarding wiring
   // existed (e.g. dev workspaces predating this commit).
   await backfillStarterAgents()
+  void reconcileLearningChannels().then(({ channels, failures }) =>
+    console.log(`[im] reconciled ${channels - failures}/${channels} learning channels`),
+  )
   // Catch human participants who were created before Gravatar wiring.
   await backfillHumanGravatars()
   // Compute embeddings for any memory rows that don't have one yet
@@ -54,11 +55,6 @@ async function main() {
     console.warn('[embed:backfill] crashed', e instanceof Error ? e.message : String(e)),
   )
 
-  // Per-turn FS namespaces live under /tmp/lingxiloop-fs/. A clean shutdown
-  // tears them down individually; a crashed prior process may have
-  // leaked some. Wipe and recreate the root once at boot.
-  await sweepStaleNamespaces()
-
   // In local-storage mode the uploads dir backs the /uploads/ static handler
   // below. In R2 mode neither is needed — files live in object storage and
   // public URLs are served directly by R2 / CDN.
@@ -67,8 +63,7 @@ async function main() {
   }
 
   const app = express()
-  // gzip responses ≥1kb. Uncompressed JSON to the BYOA fleet was the #1 GCP
-  // egress cost (~160GiB/wk, /runtime/inbox alone ~90% of API bytes). SSE
+  // gzip responses ≥1kb to keep control-plane and asset traffic compact. SSE
   // must stay uncompressed: compression buffers event-stream chunks, which
   // would stall wake-streams until the buffer flushes.
   app.use(compression({
@@ -103,6 +98,7 @@ async function main() {
   // parses, body-parser flips req._body=true so the generic parser below
   // becomes a no-op for these requests.
   app.use('/webhooks/email', inboundEmailRouter)
+  app.use('/webhooks/wukong', wukongWebhookRouter)
 
   // Bumped from 256kb to 32mb because the upload endpoint takes base64-encoded
   // file bodies up to MAX_UPLOAD_BYTES (25MB raw → ~34MB base64). R2-mode
@@ -136,9 +132,9 @@ async function main() {
     next()
   })
   app.use('/api', api)
-  // Per-pod agent runtime API — JWT-authed, completely separate from the
-  // cookie-auth /api/* surface used by humans. See agents/runtime/server.ts.
-  app.use('/runtime', runtimeRouter)
+  // The independent Agent OS uses a service identity and scoped work leases;
+  // it never receives a human session or direct database credentials.
+  app.use('/internal/agent-os', agentOSControlRouter)
 
   // ============== Host gating ==============
   // If an operator adds an API-only subdomain, prevent its unknown routes
@@ -223,7 +219,7 @@ async function main() {
   bootDocumentBus()
 
   server.listen(env.PORT, () => {
-    console.log(`[boot] lingxiloop server :${env.PORT} · instance ${env.INSTANCE_ID} · model ${env.OPENAI_MODEL}`)
+    console.log(`[boot] lingxiloop server :${env.PORT} · instance ${env.INSTANCE_ID} · DeepSeek model ${env.DEEPSEEK_MODEL}`)
   })
 
   // Demote any 'avail' humans left over from the previous run; real
@@ -241,32 +237,8 @@ async function main() {
       err instanceof Error ? err.message : String(err)),
   )
 
-  // Mailbox scheduler: subscribes to CH_MESSAGE_NEW and runs an agent turn for
-  // every conversation member who isn't the author. Replaces the old
-  // server-side classifier/cascade — every agent decides for itself via its
-  // own LLM call whether to reply / react / dm / ack.
-  startScheduler()
-
-  // Start generic background scans for agents that explicitly have
-  // the background.scan capability.
-  // In a multi-instance deploy you'd elect a leader (or use a job queue) so
-  // only one instance runs the scan; for single-instance dev this is fine.
-  if (process.env.ENABLE_SCANNER !== 'false') {
-    const handle = startScanner(env.SCANNER_INTERVAL_MS)
-    console.log(`[boot] background scanner running every ${env.SCANNER_INTERVAL_MS}ms`)
-    handle.unref()
-  }
-
-  // Idle scheduler — gives agents a chance to spontaneously initiate when
-  // nothing is incoming. Defaults to 15min cadence; set IDLE_INTERVAL_MS=0
-  // to disable. See agents/idle.ts for what an idle tick actually does.
-  if (process.env.ENABLE_IDLE !== 'false' && env.IDLE_INTERVAL_MS > 0) {
-    const handle = startIdleScheduler(env.IDLE_INTERVAL_MS)
-    if (handle) {
-      console.log(`[boot] idle scheduler running every ${env.IDLE_INTERVAL_MS}ms (min quiet ${env.IDLE_MIN_QUIET_MIN}min)`)
-      handle.unref()
-    }
-  }
+  startLearningRoutineScheduler()
+  console.log('[boot] learning routine scheduler running every 60s')
 
   // Outbound email retry loop — reclaims transport_status='failed' rows.
   // SKIP LOCKED keeps multi-replica deploys safe; setting
@@ -303,38 +275,6 @@ async function main() {
   // so one replica refreshes. LLM_ROLLUP_INTERVAL_MS=0 disables.
   startLlmRollupRefresher()
 
-  // Agent-pod garbage collection — sweep Succeeded/Failed/Unknown
-  // agent pods older than 5min. Plain Pods don't have TTL-after-
-  // finished, so without this leftover idle-exit pods accumulate
-  // indefinitely. ENABLE_AGENT_POD_GC=false disables (e.g. local dev
-  // without kubectl).
-  if (process.env.ENABLE_AGENT_POD_GC !== 'false') {
-    startCompletedPodGc()
-    console.log('[boot] agent-pod GC running every 60s')
-  }
-
-  // Chrome-profile PVC garbage collection — reclaims volumes for
-  // off-boarded agents and for agents idle > CHROME_PVC_GC_IDLE_DAYS.
-  // At $0.10/GB·month per PVC this becomes the main cost driver as
-  // the agent population grows; without it, abandoned profiles
-  // accumulate forever. ENABLE_CHROME_PVC_GC=false disables (e.g.
-  // emptyDir-mode clusters that never create PVCs in the first place).
-  if (process.env.ENABLE_CHROME_PVC_GC !== 'false') {
-    startChromeProfilePvcGc({
-      intervalMs: env.CHROME_PVC_GC_INTERVAL_MS,
-      idleThresholdMs: env.CHROME_PVC_GC_IDLE_DAYS * 24 * 60 * 60_000,
-    })
-  }
-
-  // Cluster fuse-pressure monitor — periodic check that fires
-  // notifyAlert when pending agent pods stay above 20 (or fuse
-  // utilization ≥ 95%) for 5min sustained. ENABLE_CLUSTER_MONITOR=false
-  // disables. Pairs with the FUSE admission control in ensurePod.
-  if (process.env.ENABLE_CLUSTER_MONITOR !== 'false') {
-    startClusterFuseMonitor()
-    console.log('[boot] cluster fuse-pressure monitor running every 60s')
-  }
-
   // Agent run orphan sweeper — if a pod finishes during server
   // rolling restart / NEG cutover, its final /runtime/runs/:id/finish
   // call can be lost after all semantic work is done. Active turns
@@ -343,18 +283,6 @@ async function main() {
   if (process.env.ENABLE_AGENT_RUN_SWEEPER !== 'false') {
     startStaleAgentRunSweeper()
     console.log('[boot] stale agent-run sweeper running every 60s')
-  }
-
-  // BYOA computer offline sweeper — flip paired computers to 'offline' once
-  // their daemon heartbeat goes stale, broadcasting the transition so the
-  // Computers panel + agent chips update live.
-  {
-    const handle = setInterval(() => {
-      void sweepOfflineComputers().catch((e) =>
-        console.warn('[computer] offline sweep failed', e instanceof Error ? e.message : e))
-    }, 30_000)
-    handle.unref()
-    console.log('[boot] computer offline sweeper running every 30s')
   }
 
   // Graceful shutdown

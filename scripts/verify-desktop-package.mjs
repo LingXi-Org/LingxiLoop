@@ -34,7 +34,7 @@ if (!existsSync(root)) {
 
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 const allowed = packageJson.build?.files ?? []
-const forbiddenManifestEntry = allowed.find((entry) => /(^|[/\\])(server|server\/lingxigraph)([/\\]|$)|(^|[/\\])\.env/i.test(entry))
+const forbiddenManifestEntry = allowed.find((entry) => /(^|[/\\])server([/\\]|$)|(^|[/\\])\.env/i.test(entry))
 if (forbiddenManifestEntry) {
   throw new Error(`electron-builder files allow-list includes a forbidden backend/secret path: ${forbiddenManifestEntry}`)
 }
@@ -83,14 +83,14 @@ const forbidden = normalized.filter((file) => {
   const path = `/${file.toLowerCase()}`
   const name = basename(path)
   return path.includes('/resources/app/server/') ||
-    path.includes('/lingxigraph/') ||
+    path.includes('/agent-os/') ||
     /\/(\.env($|\.)|[^/]*(secret|private[-_]?key)[^/]*)/.test(path) ||
     /\.(pem|p8|p12|key)$/.test(name)
 })
 const forbiddenAsar = asarEntries.filter((entry) => {
   const path = entry.toLowerCase()
   return path.startsWith('app.asar/server/') ||
-    path.includes('/lingxigraph/') ||
+    path.includes('/agent-os/') ||
     /\/(\.env($|\.)|[^/]*(secret|private[-_]?key)[^/]*)/.test(path) ||
     /\.(pem|p8|p12|key)$/.test(path)
 })

@@ -1,4 +1,0 @@
-lingxigraph[openai,server]==2.3.0
-httpx==0.28.1
-psycopg[binary]>=3.2,<4
-redis>=5,<7

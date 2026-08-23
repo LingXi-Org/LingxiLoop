@@ -1,5 +1,5 @@
-# One persistent user-level Computer shared by multiple LingxiGraph agents.
-# Reasoning stays in LingxiGraph; this image supplies tools, files, browser and
+# One persistent user-level Computer shared by multiple learning agents.
+# Reasoning stays in Agent OS; this image supplies tools, files, browser and
 # lightweight desktop sessions only. Build from the repository root:
 #   docker build -f server/docker/user-computer.Dockerfile \
 #     -t ghcr.io/lingxi-org/lingxiloop-user-computer:dev .

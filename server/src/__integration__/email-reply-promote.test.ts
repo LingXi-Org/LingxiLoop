@@ -10,15 +10,15 @@
  * headers from the latest email_messages row in the convo and routes
  * the body through Resend (or mock).
  */
-import { test, before, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
+import { after, before, beforeEach, test } from 'node:test'
+import { pool } from '../db/pool.js'
+import { findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent,
   seedUserMembership, teardownAll,
 } from './_helpers.js'
-import { pool } from '../db/pool.js'
-import { findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
 
 const ME_USER_ID = 'u-test-promote'
 let server: Server
@@ -246,10 +246,9 @@ test('[integration] lingxiloop reply CLI on a non-email convo writes a plain tex
   assert.equal(msgRows[0].body, 'plain chat reply')
 })
 
-test('[integration] non-email conversation POST still writes a kind=text row (regression)', async () => {
-  // Auto-promote must NOT fire on group/direct/whisper conversations —
-  // those are chat surfaces. Stand up a plain group convo and verify the
-  // POST still lands as a kind='text' message.
+test('[integration] non-email conversation POST is retired in favor of WuKongIM', async () => {
+  // Chat messages are written through the WuKongIM SDK. The legacy REST
+  // endpoint remains available only for email conversations.
   const { companyId } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
   // Insert a minimal group conversation with the user as a member.
@@ -264,11 +263,12 @@ test('[integration] non-email conversation POST still writes a kind=text row (re
     headers: { 'content-type': 'application/json', 'x-company-id': companyId },
     body: JSON.stringify({ body: 'just a chat message' }),
   })
-  assert.equal(res.status, 202)
-  const payload = await res.json() as { id: string }
-  const { rows } = await pool.query<{ kind: string }>(
-    `SELECT kind FROM messages WHERE id = $1`,
-    [payload.id],
+  assert.equal(res.status, 410)
+  const payload = await res.json() as { error: string; transport: string }
+  assert.equal(payload.transport, 'wukongim')
+  const { rows } = await pool.query<{ n: number }>(
+    `SELECT COUNT(*)::int AS n FROM messages WHERE conversation_id = $1`,
+    [convId],
   )
-  assert.equal(rows[0].kind, 'text', 'group convo POSTs must remain kind=text — only email convos auto-promote')
+  assert.equal(rows[0]?.n, 0)
 })

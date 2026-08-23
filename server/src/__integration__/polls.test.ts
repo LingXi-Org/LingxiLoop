@@ -1,9 +1,8 @@
 /**
  * Integration tests for the poll feature.
  *
- * Polls are kind='poll' rows in messages with a structured payload + a
- * separate poll_votes table for tallies. Both humans (via /api/polls)
- * and agents (via the shared core in server/src/polls.ts) reach the
+ * WuKongIM owns poll messages while im_polls/im_poll_votes hold the mutable
+ * voting projection. Both humans (via /api/polls) and agents reach the
  * same code path — these tests exercise the HTTP surface and the
  * vote-change / multi-choice / expiration semantics.
  */
@@ -15,6 +14,7 @@ import {
 } from './_helpers.js'
 import { pool } from '../db/pool.js'
 import { castVote, closePoll, sweepExpiredPolls } from '../polls.js'
+import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 
 const ME = 'u-me'
 const PEER = 'u-peer'
@@ -23,8 +23,15 @@ const COMPANY = 'c-polls'
 const CONVO = 'co-polls'
 let server: Server
 let baseUrl = ''
+let messageSeq = 0
 
 before(async () => {
+  _setWukongClientForTests(new class extends WukongClient {
+    override async sendMessage(): Promise<{ messageId: string; messageSeq: number }> {
+      messageSeq += 1
+      return { messageId: `wk-${messageSeq}`, messageSeq }
+    }
+  }({ apiUrl: 'http://unused', wsUrl: 'ws://unused', apiToken: 'test', webhookSecret: 'test' }))
   await ensureSchemaOnce()
   const app = await buildApiTestApp(ME)
   await new Promise<void>((resolve) => {
@@ -42,6 +49,7 @@ beforeEach(async () => {
 })
 
 after(async () => {
+  _setWukongClientForTests(null)
   await teardownAll(server)
 })
 
@@ -49,6 +57,11 @@ async function seedWorld(): Promise<void> {
   await pool.query(
     `INSERT INTO companies (id, name, slug, owner_user_id) VALUES ($1, 'Polls Co', 'polls-co', $2)`,
     [COMPANY, ME],
+  )
+  await pool.query(
+    `INSERT INTO im_channel_bindings (channel_id, company_id, profile)
+     VALUES ($1,$2,$3::jsonb)`,
+    [CONVO, COMPANY, JSON.stringify({ channelId: CONVO, channelType: 2, title: 'Polls Group', members: [ME, PEER, AGENT] })],
   )
   await seedUserMembership(ME, COMPANY)
   await seedUserMembership(PEER, COMPANY, { displayName: 'Peer', email: 'peer@test.local' })
@@ -95,12 +108,13 @@ test('[integration] POST /polls creates a poll message with structured payload',
   assert.equal(body.poll.options.length, 3)
   assert.equal(body.poll.closedAt, null)
 
-  // The poll is also a real messages row that other queries see.
-  const { rows } = await pool.query<{ kind: string; poll: { question: string } | null }>(
-    `SELECT kind, poll FROM messages WHERE id = $1`, [body.messageId],
+  // Postgres contains a projection only; the message is committed by WuKong.
+  const { rows } = await pool.query<{ poll: { question: string } }>(
+    `SELECT poll FROM im_polls WHERE poll_client_msg_no = $1`, [body.messageId],
   )
-  assert.equal(rows[0].kind, 'poll')
-  assert.equal(rows[0].poll?.question, 'Lunch?')
+  assert.equal(rows[0].poll.question, 'Lunch?')
+  const legacy = await pool.query(`SELECT 1 FROM messages WHERE id=$1`, [body.messageId])
+  assert.equal(legacy.rowCount, 0)
 })
 
 test('[integration] POST /polls rejects fewer than 2 distinct options', async () => {
@@ -177,7 +191,7 @@ test('[integration] retracting via empty optionIds drops all of voter\'s rows', 
   const retract = await voteViaHttp(created.messageId, [])
   assert.equal(retract.status, 200)
   const { rows } = await pool.query<{ n: number }>(
-    `SELECT COUNT(*)::int AS n FROM poll_votes WHERE message_id = $1 AND voter_participant_id = $2`,
+    `SELECT COUNT(*)::int AS n FROM im_poll_votes WHERE poll_client_msg_no = $1 AND voter_participant_id = $2`,
     [created.messageId, ME],
   )
   assert.equal(rows[0].n, 0)
@@ -213,15 +227,15 @@ test('[integration] sweepExpiredPolls auto-closes polls past expiresAt', async (
 
   // Backdate the expiration to a second ago so the sweeper picks it up.
   await pool.query(
-    `UPDATE messages
+    `UPDATE im_polls
         SET poll = jsonb_set(poll, '{expiresAt}', to_jsonb((NOW() - INTERVAL '1 second')::text), true)
-      WHERE id = $1`,
+      WHERE poll_client_msg_no = $1`,
     [created.messageId],
   )
   const closed = await sweepExpiredPolls()
   assert.ok(closed >= 1)
   const { rows } = await pool.query<{ poll: { closedAt: string | null; closedReason: string | null } }>(
-    `SELECT poll FROM messages WHERE id = $1`, [created.messageId],
+    `SELECT poll FROM im_polls WHERE poll_client_msg_no = $1`, [created.messageId],
   )
   assert.ok(rows[0].poll.closedAt)
   assert.equal(rows[0].poll.closedReason, 'expired')

@@ -20,7 +20,6 @@ const targets = [
       json.packages[''].version = version
     },
   },
-  { path: 'agent-cli/package.json', mutate: (json) => { json.version = version } },
 ]
 
 const mismatches = []

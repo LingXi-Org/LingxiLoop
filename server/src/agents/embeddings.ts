@@ -1,5 +1,5 @@
 /**
- * Memory embeddings via OpenAI's `text-embedding-3-small` (1536-dim).
+ * Optional memory embeddings exposed by the configured DeepSeek gateway.
  *
  * Used by:
  *   - `lingxiloop memory note` — embeds the body at write time and stores
@@ -10,28 +10,27 @@
  *
  * All calls are best-effort: if the API hiccups or the input is
  * empty/oversized, we return `null` and the caller falls back to
- * recency-only retrieval. That way a transient OpenAI outage doesn't
+ * recency-only retrieval. That way a transient gateway outage doesn't
  * break the entire wake cycle.
  */
 import OpenAI from 'openai'
 import { env } from '../env.js'
 import { pool } from '../db/pool.js'
 
-const EMBED_MODEL = 'text-embedding-3-small'
 const EMBED_DIM = 1536
-/** OpenAI accepts up to ~8K tokens per input; we cap at 8K characters
+/** We cap at 8K characters
  *  (~2K tokens) which is plenty for a single memory entry or a few
  *  recent inbox messages. */
 const MAX_INPUT_CHARS = 8000
 
-const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+const client = new OpenAI({ apiKey: env.DEEPSEEK_API_KEY, baseURL: env.DEEPSEEK_BASE_URL })
 
 /** Test-only override. When set, every {@link embedText} call returns
- *  whatever this function produces — bypassing the real OpenAI
+ *  whatever this function produces — bypassing the configured gateway's
  *  embeddings API. Production code never sets this; integration tests
  *  use it to make memory writes deterministic without spending
  *  embedding credits OR depending on the test runner having a real
- *  OPENAI_API_KEY in env. */
+ *  DeepSeek credential in env. */
 let testEmbedOverride: ((text: string) => string | null | Promise<string | null>) | null = null
 export function __setEmbedTextOverrideForTesting(fn: typeof testEmbedOverride): void {
   testEmbedOverride = fn
@@ -44,9 +43,10 @@ export async function embedText(text: string): Promise<string | null> {
   if (!trimmed) return null
   if (testEmbedOverride) return testEmbedOverride(trimmed)
   if (process.env.LINGXILOOP_DISABLE_EMBEDDINGS === '1') return null
+  if (!env.DEEPSEEK_EMBEDDING_MODEL) return null
   try {
     const resp = await client.embeddings.create({
-      model: EMBED_MODEL,
+      model: env.DEEPSEEK_EMBEDDING_MODEL,
       input: trimmed.length > MAX_INPUT_CHARS ? trimmed.slice(0, MAX_INPUT_CHARS) : trimmed,
     })
     const vec = resp.data[0]?.embedding
@@ -76,7 +76,7 @@ export async function hasPgVector(): Promise<boolean> {
 }
 
 /** Walk all memory rows missing an embedding and fill them in. Throttled
- *  so a large agent (thousands of memories) doesn't burst OpenAI's
+ *  so a large agent (thousands of memories) doesn't burst the gateway's
  *  rate limit. Fire-and-forget at server boot. */
 export async function backfillMemoryEmbeddings(opts: { batchSize?: number; delayMs?: number } = {}): Promise<void> {
   const batchSize = opts.batchSize ?? 50

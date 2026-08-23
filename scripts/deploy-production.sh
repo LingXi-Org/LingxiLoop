@@ -24,8 +24,9 @@ if grep -Eq 'IMAGE=[^@[:space:]]+:[^@[:space:]]+$' "$next_env"; then
   exit 2
 fi
 if ! grep -Eq '^LINGXILOOP_SERVER_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
-   ! grep -Eq '^LINGXIGRAPH_RUNTIME_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env"; then
-  echo "Both production images must be digest-pinned" >&2
+   ! grep -Eq '^AGENT_OS_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
+   ! grep -Eq '^WUKONGIM_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env"; then
+  echo "Server, Agent OS and WuKongIM production images must be digest-pinned" >&2
   exit 2
 fi
 
@@ -46,7 +47,7 @@ verify() {
     if meta="$(curl -fsS --max-time 10 http://127.0.0.1:5181/api/meta 2>/dev/null)" &&
        printf '%s' "$meta" | grep -Fq "\"commitSha\":\"$expected_sha\"" &&
        printf '%s' "$meta" | grep -Fq "\"version\":\"$expected_version\"" &&
-       printf '%s' "$meta" | grep -Fq '"reasoningRuntime":"lingxigraph"'; then
+       printf '%s' "$meta" | grep -Fq '"reasoningRuntime":"agent-os"'; then
       curl -fsS --max-time 10 http://127.0.0.1:5181/api/health >/dev/null
       return 0
     fi

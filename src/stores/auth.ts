@@ -11,7 +11,7 @@ export interface AuthCompany {
   name: string
   slug: string
   role: string
-  /** plan tier of the company (owner's tier). 'free' agents are BYOA-only. */
+  /** Plan tier of the active company (owner's tier). */
   tier?: 'free' | 'pro' | 'max' | string
 }
 

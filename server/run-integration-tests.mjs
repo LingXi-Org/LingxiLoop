@@ -53,11 +53,8 @@ if (SUSPICIOUS.test(INTEGRATION_URL)) {
 // test target when it's imported by the test harness.
 process.env.DATABASE_URL = INTEGRATION_URL
 
-// Most integration specs exercise the server-owned turn loop with injected
-// LLM/tool doubles. Keep that deterministic instead of contacting the default
-// LingxiGraph runtime; adapter/runtime E2E coverage has its own dedicated
-// specs and Compose job. An explicit caller value still wins.
-if (!process.env.LINGXILOOP_REASONING_RUNTIME) process.env.LINGXILOOP_REASONING_RUNTIME = 'legacy'
+// Agent OS protocol tests inject their own Responses and Kernel doubles;
+// integration tests must never contact a real model endpoint by accident.
 // Integration specs provide explicit embedding overrides where vector values
 // are under test. Every other spec must remain hermetic and never contact the
 // real embeddings API with the runner's placeholder key.

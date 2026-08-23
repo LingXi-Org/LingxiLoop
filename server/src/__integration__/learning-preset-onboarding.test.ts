@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
-import { after, before, beforeEach, test } from 'node:test'
 import { randomUUID } from 'node:crypto'
-import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
+import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { LEARNING_PRESET_VERSION, onboardStarterAgents } from '../onboardCompany.js'
+import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 before(async () => {
   await ensureSchemaOnce()
@@ -159,7 +159,7 @@ test('[integration] learning preset seeds a fresh workspace without an all-hands
        (SELECT COUNT(*)::int FROM conversations WHERE company_id = $1 AND title = 'Everyone') AS all_hands`,
     [companyId],
   )
-  assert.deepEqual(counts.rows[0], { agents: 6, dms: 6, rooms: 2, welcomes: 2, all_hands: 0 })
+  assert.deepEqual(counts.rows[0], { agents: 6, dms: 6, rooms: 2, welcomes: 0, all_hands: 0 })
 })
 
 test('[integration] learning preset force-upgrades legacy workspaces and is idempotent', async () => {
@@ -201,7 +201,7 @@ test('[integration] learning preset force-upgrades legacy workspaces and is idem
   assert.ok(presets.every((agent) => agent.status === 'avail'))
   assert.ok(presets.every((agent) => agent.avatar_url === null))
   assert.ok(presets.every((agent) => agent.bio.length > 0 && agent.system_prompt.includes('next step')))
-  assert.ok(presets.every((agent) => JSON.stringify(agent.tools) === JSON.stringify(['bash'])))
+  assert.ok(presets.every((agent) => JSON.stringify(agent.tools) === JSON.stringify(['ipython'])))
   const agentIds = new Map(presets.map((agent) => [agent.preset_key, agent.id]))
 
   const rooms = await pool.query<{ id: string; preset_key: string; title: string; members: string[] }>(
@@ -218,19 +218,23 @@ test('[integration] learning preset force-upgrades legacy workspaces and is idem
     [companyId],
   )
   assert.equal(dms.rows[0]?.n, 6)
-  const welcomes = await pool.query<{ preset_key: string; author_id: string; body: string }>(
-    `SELECT c.preset_key, m.author_id, m.body FROM messages m
-      JOIN conversations c ON c.id = m.conversation_id
-     WHERE c.company_id = $1 AND c.preset_key LIKE 'room:%' AND m.sequence = 1
-     ORDER BY c.preset_key`,
+  const welcomeProfiles = await pool.query<{
+    preset_key: string
+    leader_agent_id: string
+    welcome: string
+  }>(
+    `SELECT preset_key, leader_agent_id, profile ->> 'welcome' AS welcome
+       FROM im_channel_bindings
+      WHERE company_id = $1 AND preset_key LIKE 'room:%'
+      ORDER BY preset_key`,
     [companyId],
   )
-  assert.deepEqual(welcomes.rows.map((message) => [message.preset_key, message.author_id]), [
+  assert.deepEqual(welcomeProfiles.rows.map((profile) => [profile.preset_key, profile.leader_agent_id]), [
     ['room:lab', agentIds.get('forge')],
     ['room:study-room', agentIds.get('nova')],
   ])
-  assert.match(welcomes.rows[0]?.body ?? '', /论文|代码|实验/)
-  assert.match(welcomes.rows[1]?.body ?? '', /复习计划|概念/)
+  assert.match(welcomeProfiles.rows[0]?.welcome ?? '', /论文|代码|实验/)
+  assert.match(welcomeProfiles.rows[1]?.welcome ?? '', /复习计划|概念/)
 
   const custom = await pool.query<{ members: string[] }>(`SELECT members FROM conversations WHERE id = $1`, [customRoomId])
   assert.deepEqual(custom.rows[0]?.members, [ownerId, customId])

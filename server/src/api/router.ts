@@ -1,28 +1,10 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import { type NextFunction, type Request, type Response, Router } from 'express'
 import { isWaitlistEnabled } from '../admin.js'
-import {
-  announceComputerOnline,
-  assignAgentToComputer,
-  heartbeatComputer,
-  issuePairingCode,
-  issueRepairCode,
-  listAgentsForComputer,
-  listComputers,
-  mintAgentRuntimeToken,
-  pairComputer,
-  resolveDevice,
-  revokeComputer,
-} from '../agents/computer/registry.js'
-import { userComputerService } from '../agents/computer/user-computer.js'
-import {
-  deleteAutonomyRule,
-  listAutonomyRules,
-  listHandoffs,
-  resolveApproval,
-  upsertAutonomyRule,
-} from '../agents/coworker.js'
+import { enqueueAgentWork } from '../agent-os/enqueue.js'
 import { PUBLIC_ACTIVITY_KINDS, publicActivityTitle } from '../agents/activity-visibility.js'
+import { userComputerService } from '../agents/computer/user-computer.js'
+import { deleteAutonomyRule, listAutonomyRules, listHandoffs, upsertAutonomyRule } from '../agents/coworker.js'
 import { getTriageEconomics } from '../agents/observability.js'
 import {
   type AuthedRequest,
@@ -34,6 +16,7 @@ import {
 } from '../auth.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import { imRouter } from '../im/router.js'
 import { type InvitationEmailDelivery, sendInvitationEmail } from '../invitation-email.js'
 import { parseMentions as parseChatMentions } from '../mentions.js'
 import {
@@ -141,17 +124,6 @@ function requireAuth(req: Request & AuthedRequest): string {
  *  Auth is now enforced everywhere — no more dev-mode header spoofing. */
 function userId(req: Request & AuthedRequest): string {
   return requireAuth(req)
-}
-
-/** Resolve the calling Computer daemon from its device-token Bearer header,
- *  or throw 401. Used by daemon-facing endpoints that carry no user session —
- *  the device token (issued at pairing) is the credential. */
-async function requireDevice(req: Request & AuthedRequest): Promise<{ computerId: string; companyId: string }> {
-  const auth = req.headers.authorization
-  const token = typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
-  const dev = await resolveDevice(token)
-  if (!dev) throw new HttpError(401, 'invalid or revoked device token')
-  return dev
 }
 
 const TIER_LIMITS = {
@@ -557,7 +529,7 @@ api.get('/meta', (_req, res) => {
     product: 'LingxiLoop',
     version: env.APP_VERSION,
     commitSha: env.COMMIT_SHA,
-    reasoningRuntime: env.LINGXILOOP_REASONING_RUNTIME,
+    reasoningRuntime: 'agent-os',
   })
 })
 
@@ -580,9 +552,9 @@ api.get('/health', async (_req, res) => {
 
 // Production dependency readiness used by the scheduled public smoke. It
 // exercises the real database connection, Redis command path, and the
-// configured LingxiGraph Runtime without exposing credentials or internals.
+// configured Agent OS worker without exposing credentials or internals.
 api.get('/health/dependencies', async (_req, res) => {
-  const checks = { database: false, redis: false, lingxigraph: false }
+  const checks = { database: false, redis: false, agentOs: false }
   await Promise.allSettled([
     Promise.race([
       pool.query('SELECT 1').then(() => { checks.database = true }),
@@ -592,12 +564,11 @@ api.get('/health/dependencies', async (_req, res) => {
       redis.ping().then(() => { checks.redis = true }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('redis timeout')), 2_000)),
     ]),
-    fetch(`${env.LINGXIGRAPH_URL.replace(/\/+$/, '')}/health`, {
-      headers: env.LINGXIGRAPH_TOKEN ? { authorization: `Bearer ${env.LINGXIGRAPH_TOKEN}` } : undefined,
+    fetch(`${(process.env.AGENT_OS_URL ?? 'http://localhost:5190').replace(/\/+$/, '')}/health`, {
       signal: AbortSignal.timeout(3_000),
     }).then((response) => {
-      checks.lingxigraph = response.ok
-      if (!response.ok) throw new Error(`LingxiGraph health returned ${response.status}`)
+      checks.agentOs = response.ok
+      if (!response.ok) throw new Error(`Agent OS health returned ${response.status}`)
     }),
   ])
   const ok = Object.values(checks).every(Boolean)
@@ -935,6 +906,7 @@ api.get('/auth/me', safe(async (req, res) => {
 // Admin panel. The sub-router enforces requireAdmin on every route; we
 // mount it here so the shared authMiddleware runs first.
 api.use('/admin', adminRouter)
+api.use('/im', imRouter)
 
 
 /* ============== /me/quota — sub2api subscription snapshot ===========
@@ -1026,7 +998,7 @@ api.post('/companies', async (req, res) => {
          ON CONFLICT (id, company_id) DO NOTHING`,
         [me, displayName, displayName.charAt(0).toUpperCase(), gravatarUrl, id],
       )
-      // Every workspace gets unassigned, server-managed LingxiGraph starters.
+      // Every workspace gets the six server-managed learning agents.
       try {
         await onboardStarterAgents(id)
       } catch (e) { console.warn('[companies] cloud/starter setup failed', e) }
@@ -1045,14 +1017,6 @@ api.post('/companies', async (req, res) => {
   }
   res.status(500).json({ error: 'failed to create company after retries' })
 })
-
-/* ============== Computers (agent hosts: LingxiLoop Cloud + BYOA) ============== */
-
-// List computers visible in the active company (LingxiLoop Cloud + paired ones).
-api.get('/computers', safe(async (req, res) => {
-  const { companyId } = await requireCompany(req)
-  res.json(await listComputers(companyId))
-}))
 
 /* ============== My Computer (one persistent environment per user) ====== */
 
@@ -1161,88 +1125,6 @@ api.post('/computer/browser-targets', safe(async (req, res) => {
   res.status(201).json(await userComputerService.registerBrowserTarget({
     userId, companyId, screenId, agentId, targetRef, private: req.body?.private === true,
   }))
-}))
-
-// Start pairing a new BYOA computer: returns a persistent token (owner/admin).
-// No computer row is created here — pairComputer creates it once the daemon
-// pairs and reports the machine's real hostname.
-api.post('/computers', safe(async (req, res) => {
-  const { userId: uid, companyId } = await requireCompanyRole(req)
-  res.status(201).json(await issuePairingCode({ companyId, ownerUserId: uid }))
-}))
-
-// Issue a persistent re-pair token for an existing computer — reconnect it (and its
-// agents) by running the daemon again with this code (owner/admin).
-api.post('/computers/:id/repair', safe(async (req, res) => {
-  const { userId: uid, companyId } = await requireCompanyRole(req)
-  const out = await issueRepairCode({ companyId, ownerUserId: uid, computerId: String(req.params.id) })
-  if (!out) throw new HttpError(404, 'computer not found or not re-pairable')
-  res.json(out)
-}))
-
-// Revoke a paired computer (owner/admin) — kills its device token + agent JWTs.
-api.delete('/computers/:id', safe(async (req, res) => {
-  const { companyId } = await requireCompanyRole(req)
-  const ok = await revokeComputer({ computerId: String(req.params.id), companyId })
-  if (!ok) throw new HttpError(404, 'computer not found or not revocable')
-  res.json({ ok: true })
-}))
-
-// Assign an agent to a computer (move between LingxiLoop Cloud and a paired
-// machine), choosing its engine (owner/admin).
-api.post('/agents/:id/computer', safe(async (req, res) => {
-  const { companyId } = await requireCompanyRole(req)
-  const computerId = String(req.body?.computerId ?? '').trim()
-  if (!computerId) throw new HttpError(400, 'computerId required')
-  const engine = typeof req.body?.engine === 'string' ? req.body.engine : undefined
-  const out = await assignAgentToComputer({ agentId: String(req.params.id), companyId, computerId, engine })
-  if (!out) throw new HttpError(400, 'invalid computer, agent, or engine for this company')
-  res.json({ ok: true, ...out })
-}))
-
-// --- daemon-facing endpoints (device-token authed, no user session) ---
-
-// Redeem a pairing token → device token. The token itself is the credential.
-api.post('/computers/pair', safe(async (req, res) => {
-  const code = String(req.body?.code ?? '').trim()
-  if (!code) throw new HttpError(400, 'code required')
-  const engines = Array.isArray(req.body?.engines)
-    ? (req.body.engines as unknown[]).filter((e): e is string => typeof e === 'string')
-    : []
-  const hostName = typeof req.body?.hostName === 'string' ? req.body.hostName : undefined
-  const version = typeof req.body?.version === 'string' ? req.body.version : undefined
-  const supervised = typeof req.body?.supervised === 'boolean' ? req.body.supervised : undefined
-  // Pairing is an explicit legacy compatibility action and does not mutate the
-  // workspace's managed agents.
-  const paired = await pairComputer({ code, hostName, engines, version, supervised, deferBroadcast: true })
-  if (!paired) throw new HttpError(400, 'invalid pairing token')
-  // Announce only the paired computer's availability.
-  await announceComputerOnline(paired.computerId, paired.companyId)
-  res.json(paired)
-}))
-
-// Agents assigned to the calling computer (daemon discovery on boot).
-api.get('/computers/me/agents', safe(async (req, res) => {
-  const { computerId } = await requireDevice(req)
-  res.json(await listAgentsForComputer(computerId))
-}))
-
-// Daemon liveness heartbeat — keeps the computer 'online' (an offline sweep
-// flips it once heartbeats go stale).
-api.post('/computers/heartbeat', safe(async (req, res) => {
-  const { computerId } = await requireDevice(req)
-  const version = typeof req.body?.version === 'string' ? req.body.version : undefined
-  const supervised = typeof req.body?.supervised === 'boolean' ? req.body.supervised : undefined
-  await heartbeatComputer(computerId, version, supervised)
-  res.json({ ok: true })
-}))
-
-// Mint a per-agent runtime JWT for the calling computer (daemon refresh loop).
-api.post('/agents/:id/runtime-token', safe(async (req, res) => {
-  const { computerId } = await requireDevice(req)
-  const minted = await mintAgentRuntimeToken({ computerId, agentId: String(req.params.id) })
-  if (!minted) throw new HttpError(403, 'agent not assigned to this computer')
-  res.json(minted)
 }))
 
 /* ============== Company invitations ============== */
@@ -1884,16 +1766,14 @@ api.get('/participants', async (req, res) => {
     initial: string; avatarBg: string; avatarUrl: string | null
     status: string; statusUpdatedAt: string | null
     bio: string | null; tools: string[] | null; capabilities: string[] | null
-    systemPrompt: string | null; model: string | null
+    systemPrompt: string | null
     email: string | null; companySlug: string | null
     departedAt: string | null
-    computerId: string | null; engine: string | null; fastModel: string | null
   }>(
     `SELECT p.id, p.kind, p.name, p.role, p.initial,
             p.avatar_bg AS "avatarBg", p.avatar_url AS "avatarUrl",
             p.status, p.status_updated_at AS "statusUpdatedAt",
-            p.bio, p.tools, p.capabilities, p.system_prompt AS "systemPrompt", p.model,
-            p.computer_id AS "computerId", p.engine, p.fast_model AS "fastModel",
+            p.bio, p.tools, p.capabilities, p.system_prompt AS "systemPrompt",
             -- Email resolution differs by kind:
             --  - agents carry their own minted address on participants.email
             --  - humans don't have one there; surface their real auth email
@@ -2263,32 +2143,30 @@ async function inferAgentGender(args: {
       purpose: 'gender', companyId: args.tenant,
       extras: { agentName: name, role: role.slice(0, 60) },
     })
-    const r = await client.responses.create({
-      model: env.OPENAI_MODEL_SUPPORT,
+    const r = await client.chat.completions.create({
+      model: env.DEEPSEEK_MODEL,
       // Lean STRONGLY COMMITTAL toward feminine/masculine. The androgynous
       // branch's pools (short hair + menswear) drift the output toward a
       // butch register the project doesn't want, so reserve androgynous for
       // the rare case where the name is an abstract brand codename with no
       // human gender lean at all (e.g. "Nimbus", "Helix"). For any name with
       // even a faint feminine OR masculine cultural lean, pick that.
-      instructions: `Reply with strict JSON only: {"gender": "feminine" | "masculine"}, or "androgynous" only in the rare case below.
+      messages: [{ role: 'system', content: `Reply with strict JSON only: {"gender": "feminine" | "masculine"}, or "androgynous" only in the rare case below.
 
 Strongly prefer feminine or masculine. Decide primarily by the NAME's cultural convention (e.g. "Atlas" / "Bram" → masculine; "Iris" / "Maya" → feminine). If the name is unisex (e.g. "Quinn", "Sky", "Riley"), use the persona / role text to break the tie. If it still leans either way at all, pick that side.
 
 Only return "androgynous" when the name is an abstract / brand-style codename with no human gender association (e.g. "Nimbus", "Helix", "Vector") AND the persona text gives no human gender cue. This should be rare.
 
-No prose, no explanation.`,
-      input: `Classify the agent below and reply as JSON.
+No prose, no explanation.` }, { role: 'user', content: `Classify the agent below and reply as JSON.
 
 Name: ${name}
 Role: ${role || '(none)'}
 Persona / style:
-${systemPrompt.slice(0, 500) || '(none)'}`,
-      text: { format: { type: 'json_object' } },
-      max_output_tokens: 200,
-      reasoning: { effort: 'low' },
+${systemPrompt.slice(0, 500) || '(none)'}` }],
+      response_format: { type: 'json_object' },
+      max_tokens: 200,
     })
-    const parsed = JSON.parse(r.output_text ?? '{}') as { gender?: string }
+    const parsed = JSON.parse(r.choices[0]?.message?.content ?? '{}') as { gender?: string }
     if (parsed.gender === 'feminine' || parsed.gender === 'masculine' || parsed.gender === 'androgynous') {
       return parsed.gender
     }
@@ -2339,7 +2217,6 @@ interface AgentBody {
   id?: unknown; name?: unknown; role?: unknown
   systemPrompt?: unknown; bio?: unknown
   initial?: unknown; avatarBg?: unknown; avatarUrl?: unknown
-  model?: unknown; fastModel?: unknown
   tools?: unknown; capabilities?: unknown
 }
 const AGENT_CAPABILITIES = new Set(['computer', 'web', 'files', 'email', 'documents', 'calendar'])
@@ -2350,10 +2227,6 @@ function readAgentBody(b: AgentBody): {
   initial?: string; avatarBg?: string
   /** undefined = leave alone, null = explicit clear, string = set */
   avatarUrl?: string | null
-  /** undefined = leave alone, null = explicit clear → use system default, string = override */
-  model?: string | null
-  /** small-brain model override; same semantics as `model` */
-  fastModel?: string | null
   tools?: string[] | null
   capabilities?: string[]
 } {
@@ -2367,10 +2240,6 @@ function readAgentBody(b: AgentBody): {
   if (typeof b.avatarBg === 'string')     out.avatarBg = b.avatarBg.trim()
   if (b.avatarUrl === null)               out.avatarUrl = null
   else if (typeof b.avatarUrl === 'string') out.avatarUrl = b.avatarUrl.trim()
-  if (b.model === null)                   out.model = null
-  else if (typeof b.model === 'string')   out.model = b.model.trim() || null
-  if (b.fastModel === null)               out.fastModel = null
-  else if (typeof b.fastModel === 'string') out.fastModel = b.fastModel.trim() || null
   if (Array.isArray(b.tools))             out.tools = b.tools.map((x) => String(x))
   if (Array.isArray(b.capabilities)) {
     out.capabilities = [...new Set(b.capabilities.map(String).filter((x) => AGENT_CAPABILITIES.has(x)))]
@@ -2442,11 +2311,11 @@ api.post('/agents', async (req, res) => {
   const avatarBg = data.avatarBg || defaultAvatarBg(agentId)
   try {
     await pool.query(
-      `INSERT INTO participants (id, kind, name, role, initial, avatar_bg, status, bio, tools, capabilities, system_prompt, model, fast_model, company_id)
-       VALUES ($1, 'agent', $2, $3, $4, $5, 'avail', $6, $7::jsonb, $8::jsonb, $9, $10, $11, $12)`,
+      `INSERT INTO participants (id, kind, name, role, initial, avatar_bg, status, bio, tools, capabilities, system_prompt, company_id)
+       VALUES ($1, 'agent', $2, $3, $4, $5, 'avail', $6, $7::jsonb, $8::jsonb, $9, $10)`,
       [agentId, data.name, data.role ?? '', initial, avatarBg, data.bio ?? '',
-       JSON.stringify(data.tools ?? ['bash']), JSON.stringify(data.capabilities ?? DEFAULT_AGENT_CAPABILITIES),
-       data.systemPrompt, data.model ?? null, data.fastModel ?? null, tenant],
+       JSON.stringify(['ipython']), JSON.stringify(data.capabilities ?? DEFAULT_AGENT_CAPABILITIES),
+       data.systemPrompt, tenant],
     )
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
@@ -2535,7 +2404,7 @@ api.post('/agents', async (req, res) => {
 })
 
 api.put('/agents/:id', async (req, res) => {
-  // Editing agent system_prompt / model / tools changes a shared resource
+  // Editing an Agent identity or capabilities changes a shared resource
   // every member talks to. Gate to owner/admin — same bar as creation.
   const { companyId: tenant } = await requireCompanyRole(req)
   const id = req.params.id
@@ -2558,9 +2427,7 @@ api.put('/agents/:id', async (req, res) => {
   if (data.initial !== undefined)      push('initial', data.initial)
   if (data.avatarBg !== undefined)     push('avatar_bg', data.avatarBg)
   if (data.avatarUrl !== undefined)    push('avatar_url', data.avatarUrl)   // null clears it
-  if (data.model !== undefined)        push('model', data.model)             // null clears it (use default)
-  if (data.fastModel !== undefined)    push('fast_model', data.fastModel)    // small-brain model; null clears
-  if (data.tools !== undefined)        push('tools', JSON.stringify(data.tools))
+  if (data.tools !== undefined)        push('tools', JSON.stringify(['ipython']))
   if (data.capabilities !== undefined) push('capabilities', JSON.stringify(data.capabilities))
   if (sets.length === 0) { res.status(400).json({ error: 'nothing to update' }); return }
   params.push(id, tenant)
@@ -2611,21 +2478,13 @@ api.delete('/agents/:id', async (req, res) => {
   )
   const { invalidatePersonaCache } = await import('../agents/personas.js')
   invalidatePersonaCache(id)
-  // Reclaim the agent's chrome-profile PVC. Off-board is the agent's
-  // terminal state — its pod is silenced for good and any future
-  // re-spawn (via /rehire) gets a fresh profile anyway, since 30+
-  // days of cookies / login state are usually stale by then. Fire-
-  // and-forget so a slow kubectl call doesn't stall the response;
-  // the helper is idempotent so a re-off-board (race) is harmless.
-  void import('../agents/runtime/orchestrator.js').then(({ deleteChromeProfilePvc }) =>
-    deleteChromeProfilePvc(id),
-  ).catch((e) => console.warn(`[off-board] chrome-PVC delete failed for ${id}:`, e instanceof Error ? e.message : String(e)))
   res.json({ ok: true, departedAt: new Date().toISOString() })
 })
 
 /**
  * Generate an AI portrait for an agent and save it as their avatar.
- * Uses the configured OPENAI_IMAGE_MODEL (default: gpt-image-2). The prompt
+ * Uses an optional image capability exposed by the configured DeepSeek
+ * gateway. Official text-only DeepSeek deployments require uploaded avatars.
  * combines the agent's name + role + style with a deterministic visual
  * signature derived from their id, so every agent gets a *distinct* look
  * (different age, skin tone, hair, wardrobe, etc.) but the same person
@@ -2651,6 +2510,9 @@ export async function generateAndPersistAvatar(args: {
   const a = rows[0]
   if (!a) throw new HttpError(404, 'not found')
   if (a.kind !== 'agent') throw new HttpError(400, 'avatar generation is only for agents')
+  if (!env.DEEPSEEK_IMAGE_MODEL) {
+    throw new HttpError(501, 'image generation is disabled; upload an avatar or configure a DeepSeek gateway image model')
+  }
 
   const styleHint = (a.system_prompt ?? '').slice(0, 500)
   // Gender inference is async — call before the visual signature so we pick
@@ -2715,7 +2577,7 @@ export async function generateAndPersistAvatar(args: {
     extras: { gender, kind: a.kind },
   })
   const r = await client.images.generate({
-    model: env.OPENAI_IMAGE_MODEL,
+    model: env.DEEPSEEK_IMAGE_MODEL,
     prompt,
     size: '1024x1024',
     n: 1,
@@ -3232,6 +3094,22 @@ api.post('/conversations/:id/read', async (req, res) => {
   res.json({ ok: true })
 })
 
+// The maintenance-window cutover is intentionally one-way for chat. Email
+// threads remain product assets backed by the email transport tables, so they
+// may continue into the handlers below; every IM conversation is rejected
+// before any legacy message read or write can run.
+api.all('/conversations/:id/messages', async (req, res, next) => {
+  try {
+    const { companyId } = await requireCompany(req)
+    const { rows } = await pool.query<{ kind: string }>(
+      `SELECT kind FROM conversations WHERE id=$1 AND company_id=$2 LIMIT 1`,
+      [req.params.id, companyId],
+    )
+    if (rows[0]?.kind === 'email') { next(); return }
+    res.status(410).json({ error: 'legacy chat API retired; use WuKongIM', transport: 'wukongim' })
+  } catch (error) { next(error) }
+})
+
 api.get('/conversations/:id/messages', async (req, res) => {
   const { id } = req.params
   try {
@@ -3638,10 +3516,8 @@ api.post('/conversations/:id/messages', async (req, res) => {
 })
 
 /* ============== Polls ====================================================
- * A poll is a kind='poll' messages row with a structured payload + a
- * separate poll_votes table for tallies. Both humans (via this HTTP API)
- * and agents (via `lingxiloop poll …` in agents/cli.ts) share the same core
- * in ../polls.ts so the WS broadcast + validation stay in lockstep. */
+ * WuKongIM owns poll messages and revision snapshots. Postgres contains only
+ * the vote projection; both humans and the loop SDK share ../polls.ts. */
 
 function pollHttpError(res: Response, e: unknown): void {
   if (e instanceof PollError) {
@@ -3662,11 +3538,6 @@ api.post('/polls', async (req, res) => {
     const body = req.body ?? {}
     const conversationId = String(body.conversationId ?? '')
     if (!conversationId) { res.status(400).json({ error: 'conversationId required' }); return }
-    // Conversation membership is re-checked inside createPoll, but going
-    // through requireConversationMember here gives a uniform 404 for
-    // cross-tenant / missing rows like the rest of the API.
-    await requireConversationMember(req, conversationId)
-
     const optionsRaw = Array.isArray(body.options) ? body.options : []
     const created = await createPoll({
       conversationId,
@@ -4658,22 +4529,6 @@ api.get('/coworker/handoffs', safe(async (req, res) => {
   res.json(await listHandoffs(companyId, conversationId || undefined))
 }))
 
-api.post('/coworker/approvals/:id/resolve', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  const decision = String(req.body?.decision ?? '')
-  if (decision !== 'approved' && decision !== 'rejected') throw new HttpError(400, 'decision must be approved or rejected')
-  const approval = await resolveApproval({ companyId, userId, approvalId: String(req.params.id), decision })
-  // Resume the persisted action from the original run — never create a fresh
-  // mailbox wake-up that could replay earlier reasoning/actions.
-  const continuation = decision === 'approved'
-    ? await import('../agents/turn.js').then(({ resumeApprovedContinuation }) => resumeApprovedContinuation(approval.id))
-    : await import('../agents/turn.js').then(async ({ finalizeRejectedContinuation }) => {
-      await finalizeRejectedContinuation({ runId: approval.runId, agentId: approval.agentId })
-      return { resumed: false }
-    })
-  res.json({ ...approval, continuation })
-}))
-
 api.get('/coworker/memories', safe(async (req, res) => {
   const { companyId } = await requireCompany(req)
   const { rows } = await pool.query(
@@ -5070,9 +4925,8 @@ async function wakeMentionedAgents(args: {
     [args.companyId, targets],
   )
   if (rows.length === 0) return
-  const { wakeAgent } = await import('../agents/scheduler.js')
   for (const r of rows) {
-    void wakeAgent(r.id, 'manual', null).catch((e) => {
+    void enqueueAgentWork({ companyId: args.companyId, agentId: r.id, reason: 'mention' }).catch((e) => {
       console.warn(`[boards] wake ${r.id} failed`, e)
     })
   }

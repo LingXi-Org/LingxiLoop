@@ -64,12 +64,8 @@ function fromApi(p: ApiParticipant): Participant {
     tools: p.tools ?? undefined,
     capabilities: p.capabilities ?? undefined,
     systemPrompt: p.systemPrompt ?? undefined,
-    model: p.model ?? null,
-    fastModel: p.fastModel ?? null,
     email: p.email ?? null,
     departedAt: p.departedAt ?? null,
-    computerId: p.computerId ?? null,
-    engine: (p.engine as Participant['engine']) ?? null,
   }
 }
 

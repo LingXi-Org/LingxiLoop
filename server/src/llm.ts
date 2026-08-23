@@ -1,22 +1,22 @@
 /**
- * OpenAI client factory — every server-side LLM call goes through here.
+ * DeepSeek protocol client factory — every server-side LLM call goes through here.
  *
  * Routing rules (tenant-aware):
  *
  *   1. If sub2api is configured AND we can resolve the tenant's owner
- *      → that owner's sub2api_api_key → OpenAI client pointed at the
- *      sub2api OpenAI-compatible base. Per-user quotas enforced.
+ *      → that owner's sub2api_api_key → SDK client pointed at the
+ *      sub2api DeepSeek-compatible base. Per-user quotas enforced.
  *
  *   2. Else (sub2api unconfigured, or new tenant without a provisioned
- *      key yet) → legacy single `env.OPENAI_API_KEY` client pointed at
- *      `OPENAI_BASE_URL` when configured, otherwise OpenAI directly.
+ *      key yet) → the single DeepSeek credential and configurable DeepSeek
+ *      compatible endpoint. No alternate provider fallback exists.
  *      No quotas — same behavior as pre-sub2api for the default case.
  *
  * Callers pass `tenant` (= company_id). When `tenant` is null (e.g.
  * platform-wide tasks like the avatar regen of a seeded agent before
  * any workspace exists) we always use the legacy path.
  *
- * Per-tenant client cache: OpenAI client construction is cheap but we
+ * Per-tenant client cache: SDK client construction is cheap but we
  * call this on every LLM hop. Cache by tenant; invalidate explicitly
  * (e.g. tier change handler) via `invalidateLlmClient(tenant)`.
  *
@@ -45,7 +45,7 @@ const cache = new Map<string, CachedClient>()
 /** Tolerance settings for both the sub2api-routed client AND the legacy
  *  fallback. Production has surfaced "all four agents 502'd at once →
  *  every run failed → fingerprint locks them out" sequences caused by
- *  brief upstream flakiness on sub2api / the model provider. The OpenAI
+ *  brief upstream flakiness on sub2api / DeepSeek. The protocol SDK
  *  SDK retries on 5xx + 408 + 429 + network errors out of the box, but
  *  its default ceiling (2) is too thin for the bursty 502 windows we
  *  see; 5 absorbs short outages without making the wall-clock pathological.
@@ -57,15 +57,14 @@ const SDK_TIMEOUT_MS = 5 * 60_000
 
 /** Test-only override. When set, every {@link getLlmClient} call returns
  *  whatever this function produces. Production code never sets this; it
- *  exists so integration tests can inject a fake OpenAI client whose
- *  `responses.create` returns crafted Responses-API event streams instead
- *  of round-tripping through sub2api / OpenAI. */
+ *  exists so integration tests can inject a fake protocol client instead of
+ *  round-tripping through sub2api / DeepSeek. */
 let testLlmOverride: ((tenant: string | null) => OpenAI | Promise<OpenAI>) | null = null
 export function __setLlmClientOverrideForTesting(fn: typeof testLlmOverride): void {
   testLlmOverride = fn
 }
 
-/** Build (and cache) the OpenAI client for this tenant. Async because
+/** Build (and cache) the DeepSeek-compatible client for this tenant. Async because
  *  resolving the tenant's owner_user_id + sub2api_api_key is a DB hop.
  *  Always returns a working client — never throws on lookup failure. */
 export async function getLlmClient(tenant: string | null): Promise<OpenAI> {
@@ -118,8 +117,8 @@ export function invalidateLlmClient(tenant: string): void {
 let _legacy: OpenAI | null = null
 function legacyClient(): OpenAI {
   if (!_legacy) _legacy = new OpenAI({
-    apiKey: env.OPENAI_API_KEY,
-    baseURL: env.OPENAI_BASE_URL,
+    apiKey: env.DEEPSEEK_API_KEY,
+    baseURL: env.DEEPSEEK_BASE_URL,
     maxRetries: SDK_MAX_RETRIES,
     timeout: SDK_TIMEOUT_MS,
   })

@@ -1,10 +1,7 @@
 /**
  * Shared Skype-emoticon guidance — the ONE place that teaches an agent how to use
- * LingxiLoop's classic Skype emoticons (`(name)` shortcodes). Imported VERBATIM by BOTH
- * the cloud system prompt (personas.ts GLOBAL_RULES) and the BYOA daemon standing
- * prompt (computer/daemon.ts), so a BYOA agent is as expressive as a cloud one
- * instead of falling back to only native unicode emoji. Pure (no imports / no side
- * effects) so it can be bundled into the standalone daemon. Edit in ONE place.
+ * LingxiLoop's classic Skype emoticons (`(name)` shortcodes). Imported by the
+ * Agent OS prompt builder. Pure (no imports or side effects).
  *
  * The shortcode catalog is the source of truth in src/lib/skypeEmojis.ts (client
  * renderer); this is the curated, mood-grouped subset surfaced to agents.

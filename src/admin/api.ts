@@ -120,7 +120,7 @@ export type LlmCallPurpose =
   | 'palette' | 'gender' | 'avatar-image' | 'agent-image'
 
 export type LlmCallStatus = 'ok' | 'rate_limited' | 'timeout' | 'failed'
-export type LlmCallSource = 'cloud' | 'byoa-claude' | 'byoa-codex'
+export type LlmCallSource = 'cloud' | 'agent-os' | 'product'
 
 export interface LlmSummary {
   sinceDays: number
@@ -199,26 +199,12 @@ export interface LlmTenantRow {
   outputTokens: number
 }
 
-export interface LlmDaemonVersionRow {
-  daemonVersion: string
-  source: LlmCallSource
-  calls: number
-  costUsd: number
-  inputTokens: number
-  cachedInputTokens: number
-  outputTokens: number
-  failureRate: number
-  firstSeen: string
-  lastSeen: string
-}
-
 export interface LlmObservabilityPayload {
   summary: LlmSummary
   rollup: LlmRollupRow[]
   trend: LlmTrendBucket[]
   topAgents: LlmTopAgentRow[]
   tenants: LlmTenantRow[]
-  daemonVersions: LlmDaemonVersionRow[]
 }
 
 /** One raw call row returned by the drill-down endpoint. Same shape as the
@@ -246,7 +232,6 @@ export interface LlmCallRow {
   status: LlmCallStatus
   error: string | null
   extras: Record<string, unknown> | null
-  daemonVersion: string | null
 }
 
 export const adminApi = {

@@ -1,16 +1,16 @@
-# lingxiloop-server — the API + scheduler + orchestrator process.
+# lingxiloop-server — the product control plane and web application.
 #
-# Serves THREE surfaces from the same Node process:
+# Serves three surfaces from the same Node process:
 #   /api/*        — JSON API (Express router)
-#   /runtime/*    — per-pod agent runtime API (JWT-authed)
+#   /internal/agent-os/* — private Host Adapter API
 #   everything else — the React SPA bundle (built into /app/dist below)
 #
 # Entry points:
 #   npm run server:start  →  tsx server/src/index.ts  (main runtime)
 #   npm run migrate       →  tsx server/src/migrate-bin.ts  (init container)
 #
-# The server image intentionally ships no cluster tooling. Managed turns run
-# in the API process and call the separate LingxiGraph Runtime over HTTP.
+# Model turns run only in the separate Agent OS service. The control plane
+# owns product authorization, approvals, WuKong integration and projections.
 #
 # Build (from repo root):
 #   docker build \
@@ -93,9 +93,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY server ./server
-# Keep `bin/lingxiloop` available for any in-process CLI calls the server
-# itself might make (e.g. from the test endpoints).
-COPY bin ./bin
 # Web SPA bundle — read by server/src/index.ts at boot via existsSync().
 # When this is absent (e.g. an older runtime image) the server falls
 # back to a JSON `/` response.

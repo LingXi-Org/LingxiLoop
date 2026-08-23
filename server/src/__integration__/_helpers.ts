@@ -31,6 +31,14 @@ export function ensureSchemaOnce(): Promise<void> {
  *  constraints; CASCADE on the parents handles it but listing explicitly
  *  keeps the intent visible + lets us spot-check leakage. */
 const TABLES_TO_WIPE: readonly string[] = [
+  'agent_host_actions',
+  'agent_os_approvals',
+  'agent_work_items',
+  'agent_os_sessions',
+  'im_poll_votes',
+  'im_polls',
+  'wukong_webhook_receipts',
+  'im_channel_bindings',
   'resource_leases',
   'browser_targets',
   'computer_screens',

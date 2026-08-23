@@ -749,14 +749,14 @@ function TriageEconomicsPanel(props: {
           <div className="mx-auto max-w-[1100px] space-y-5">
             {/* ALWAYS-ON disclaimer: every $ here is an estimate. */}
             <div className="rounded-[10px] border border-coral-soft bg-coral-soft px-3.5 py-2.5 text-[11.5px] leading-[1.6] text-coral-deep">
-              <b>⚠ 此页上的每一美元都是估算值</b> 可能与您的实际成本有很大差异。原因：我们不权威地了解每个代币的单价。云模型别名 (gpt-5.*) 是 <b>猜测</b>;克劳德等级是记忆中的标价，对于您的具体型号来说可能已经过时或错误；在统一费率计划中，美元根本不是账单（见下文）。代币数量是真实的，而应用于它们的价格却不是。设置 <code className="rounded bg-paper/60 px-1">LINGXILOOP_MODEL_PRICES_JSON</code> 为您的实际合同费率以使这些准确。
+              <b>⚠ 此页上的每一美元都是估算值</b>，可能与实际成本不同。DeepSeek 的默认价格仅用于估算；代币数量是真实的。设置 <code className="rounded bg-paper/60 px-1">LINGXILOOP_MODEL_PRICES_JSON</code> 为你的实际合同费率可获得准确结果。
             </div>
 
             {data.triageCount === 0 ? (
               <>
                 <PriceMenuTable rows={data.priceTable ?? []} />
                 <div className="rounded-[10px] border border-ink-100 bg-cloud px-3.5 py-3 text-[12px] leading-[1.6] text-ink-500">
-                  此窗口中尚未记录分类。分类成本在下一次智能体唤醒时捕获（立即云；守护程序报告使用情况后 BYOA）。上表是这些估计将使用的参考。
+                  此窗口中尚未记录分类。Agent OS 的下一次学习任务会开始记录；上表展示届时采用的参考价格。
                 </div>
               </>
             ) : (
@@ -815,12 +815,6 @@ function TriageEconomicsPanel(props: {
                     ))}
                   </tbody>
                 </table>
-              </div>
-            )}
-
-            {data.byoaShare > 0 && (
-              <div className="rounded-[10px] border border-gold bg-cloud px-3.5 py-2.5 text-[11px] leading-[1.6] text-gold-deep">
-                <b>{fmtPct(data.byoaShare)} 在 BYOA 上运行</b> （你自己的克劳德/法典）。如果这是一个固定费率计划（例如 Claude Max），这些美元是 <b>米当量</b> — 相同的代币在即用即付 API 上的花费是多少， <b>不是您真正的账单</b> （在您达到计划的费率限制之前，边际值约为 0 美元）。对于固定费率计划，与计划无关的实际成本是 <b>代币/配额</b>，而不是 $。美元仍然是分类与转向的忠实相对衡量标准。
               </div>
             )}
 

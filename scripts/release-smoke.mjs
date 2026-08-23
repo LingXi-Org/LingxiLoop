@@ -56,12 +56,12 @@ try {
 
   const dependencyHealth = await request('/api/health/dependencies', { authenticated: false })
   if (!dependencyHealth?.ok || !Object.values(dependencyHealth.dependencies ?? {}).every(Boolean)) {
-    throw new Error('/api/health/dependencies did not report database, Redis and LingxiGraph healthy')
+    throw new Error('/api/health/dependencies did not report database, Redis and Agent OS healthy')
   }
 
   const meta = await request('/api/meta', { authenticated: false })
-  if (meta?.product !== 'LingxiLoop' || meta?.reasoningRuntime !== 'lingxigraph') {
-    throw new Error('/api/meta did not report the LingxiLoop + LingxiGraph production contract')
+  if (meta?.product !== 'LingxiLoop' || meta?.reasoningRuntime !== 'agent-os') {
+    throw new Error('/api/meta did not report the LingxiLoop + Agent OS production contract')
   }
   if (expectedSha && meta.commitSha !== expectedSha) {
     throw new Error(`/api/meta commit mismatch: expected ${expectedSha}, got ${meta.commitSha}`)
@@ -75,7 +75,7 @@ try {
     throw new Error(`smoke identity is not a member of company ${companyId}`)
   }
 
-  const conversations = await request('/api/conversations')
+  const conversations = await request('/api/im/channels')
   if (!Array.isArray(conversations)) throw new Error('/api/conversations did not return an array')
 
   const wsTicket = await request('/api/auth/ws-ticket', { method: 'POST' })

@@ -1,9 +1,0 @@
-{
-  "$schema": "https://lingxigraph.dev/schemas/manifest-v1.json",
-  "graphs": {
-    "lingxiloop-agent": {
-      "path": "lingxigraph_graph:graph",
-      "version": "1.0.0"
-    }
-  }
-}

@@ -8,7 +8,7 @@
  * user for the address instead of silently skipping.
  *
  * We exercise via runCli rather than HTTP because the contacts surface
- * is agent-CLI-only; the helpers under the hood are the same.
+ * is exposed to Agent OS through the structured Host Bridge.
  */
 import { test, before, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'

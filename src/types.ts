@@ -3,32 +3,6 @@ export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
 export type AgentCapability = 'computer' | 'web' | 'files' | 'email' | 'documents' | 'calendar'
 
-/** Where an agent runs. 'cloud' = the built-in LingxiLoop Cloud (managed engine);
- *  'local'/'vps' = a computer the user paired, running the BYOA daemon. */
-export type ComputerKind = 'cloud' | 'local' | 'vps'
-export type ComputerStatus = 'online' | 'offline' | 'busy'
-/** Engine an agent's host runs it on. 'managed' = LingxiLoop's server-side loop. */
-export type EngineId = 'managed' | 'claude' | 'codex'
-
-export interface Computer {
-  id: string
-  name: string
-  kind: ComputerKind
-  status: ComputerStatus
-  availableEngines: EngineId[]
-  lastSeenAt?: string | null
-  pairedAt?: string | null
-  /** The lingxiloop daemon version this computer is running (null = cloud / unknown). */
-  daemonVersion?: string | null
-  /** How the daemon runs: true = installed service (launchd/systemd),
-   *  false = manually-run foreground command, null = cloud / unknown. */
-  daemonSupervised?: boolean | null
-  /** Newest published daemon version (for the upgrade banner). */
-  latestDaemonVersion?: string | null
-  /** True when the daemon is behind the latest version → show the upgrade banner. */
-  daemonOutdated?: boolean
-}
-
 export interface Participant {
   id: string
   kind: ParticipantKind
@@ -47,14 +21,6 @@ export interface Participant {
   capabilities?: AgentCapability[]
   /** the agent's distinctive style — only set for agents */
   systemPrompt?: string
-  /** big-brain (main) model override; null/undefined = use system default */
-  model?: string | null
-  /** small-brain (fast/auxiliary) model override */
-  fastModel?: string | null
-  /** id of the Computer this agent runs on (null/undefined = LingxiLoop Cloud) */
-  computerId?: string | null
-  /** engine the agent's host runs it on ('managed' for cloud agents) */
-  engine?: EngineId | null
   /** Real external email address. Agents get one of the form
    *  `<id>@<companySlug>.<EMAIL_DOMAIN>` (auto-minted on first use);
    *  humans carry their auth email here for the renderer's contact

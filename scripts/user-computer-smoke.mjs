@@ -15,7 +15,7 @@ if (!/test/i.test(databaseUrl)) {
   throw new Error('DATABASE_URL must point to a disposable test database for the full-stack computer smoke')
 }
 process.env.LINGXILOOP_USER_COMPUTER_IMAGE = image
-process.env.OPENAI_API_KEY ||= 'computer-smoke-key'
+process.env.DEEPSEEK_API_KEY ||= 'computer-smoke-key'
 process.env.REDIS_URL ||= 'redis://127.0.0.1:6379'
 
 let apiServer

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
-import { useComputers } from '@/stores/computers'
 import { useConversations } from '@/stores/conversations'
 import { Avatar } from '@/components/Avatar'
 import { IPlus } from '@/components/icons'
@@ -25,12 +24,8 @@ function AgentCard({ p, onEdit, onDelete }: {
   const setView = useApp((s) => s.setView)
   const select = useApp((s) => s.selectConversation)
   const conversations = useConversations((s) => s.list)
-  const host = useComputers((s) => (p.computerId ? s.byId[p.computerId] : undefined))
-  const hostIcon = !host ? '✦' : host.kind === 'cloud' ? '☁' : host.kind === 'vps' ? '🖥' : '💻'
-  const hostLabel = host ? host.name : 'Managed · LingxiGraph'
-  const hostOffline = !!host && host.kind !== 'cloud' && host.status !== 'online'
-  const displayStatus = hostOffline ? 'resting' : p.status
-  const displayStatusLabel = hostOffline ? 'Computer offline' : STATUS_LABEL[p.status]
+  const displayStatus = p.status
+  const displayStatusLabel = STATUS_LABEL[p.status]
   const direct = useMemo(
     () => conversations.find((c) => c.kind === 'direct' && c.members.includes(p.id)),
     [conversations, p.id],
@@ -100,10 +95,9 @@ function AgentCard({ p, onEdit, onDelete }: {
             </div>
             <div className="inline-flex items-center gap-1 text-[11px] py-0.5 px-2 rounded-full text-ink-500"
               style={{ background: 'var(--ink-100)' }}
-              title={hostOffline ? `${hostLabel} is offline` : `Runs on ${hostLabel}`}>
-              <span>{hostIcon}</span>
-              <span className="max-w-[120px] truncate">{hostLabel}</span>
-              {hostOffline && <span className="italic text-ink-400">·睡觉</span>}
+              title="LingxiLoop Agent OS">
+              <span>✦</span>
+              <span>Agent OS</span>
             </div>
           </div>
         </div>

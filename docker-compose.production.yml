@@ -1,7 +1,12 @@
 name: lingxiloop
 
-# Production is intentionally a single LingxiLoop API instance. Managed agent
-# execution is coordinated in-process and must not be scaled horizontally yet.
+x-quiet-logging: &quiet-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Agent execution is owned by the independently scalable Agent OS work queue.
 # CI supplies .release.env with digest-pinned image references and public,
 # release-specific metadata. Operators pre-provision .env.secrets; CI never
 # creates or overwrites that file.
@@ -12,14 +17,15 @@ x-lingxiloop-runtime: &lingxiloop-runtime
     - ./.env.secrets
   environment: &lingxiloop-environment
     NODE_ENV: production
+    LINGXILOOP_LOG_LEVEL: warn
     PORT: "5181"
     REDIS_URL: redis://redis:6379
     LINGXILOOP_VERSION: ${LINGXILOOP_VERSION:?LINGXILOOP_VERSION is required}
     LINGXILOOP_COMMIT_SHA: ${LINGXILOOP_COMMIT_SHA:?LINGXILOOP_COMMIT_SHA is required}
     LINGXILOOP_PUBLIC_ORIGIN: ${LINGXILOOP_PUBLIC_ORIGIN:?LINGXILOOP_PUBLIC_ORIGIN is required}
-    LINGXILOOP_REASONING_RUNTIME: lingxigraph
-    LINGXILOOP_MANAGED_AGENT_EXECUTION: server
-    LINGXIGRAPH_URL: http://lingxigraph-runtime:8124
+    WUKONG_API_URL: http://wukongim:5001
+    WUKONG_WS_URL: ${WUKONG_WS_PUBLIC_URL:?WUKONG_WS_PUBLIC_URL is required}
+    WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
     LINGXILOOP_CORS_ORIGINS: app://lingxiloop
     LINGXILOOP_AUTH_RETURN_ALLOWLIST: ${LINGXILOOP_PUBLIC_ORIGIN}/,http://127.0.0.1:47823/auth/done,lingxiloop://auth
   networks: [lingxiloop]
@@ -28,6 +34,7 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     restart: unless-stopped
+    command: ["postgres", "-c", "log_min_messages=warning", "-c", "log_min_error_statement=error"]
     env_file:
       - ./.env.secrets
     volumes:
@@ -43,7 +50,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--appendonly", "yes", "--loglevel", "warning"]
     volumes:
       - redis-data:/data
     healthcheck:
@@ -54,20 +61,25 @@ services:
       start_period: 5s
     networks: [lingxiloop]
 
-  lingxigraph-runtime:
-    image: ${LINGXIGRAPH_RUNTIME_IMAGE:?LINGXIGRAPH_RUNTIME_IMAGE must be digest-pinned}
+  wukongim:
+    image: ${WUKONGIM_IMAGE:?WUKONGIM_IMAGE must pin v3 commit c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47 by digest}
     restart: unless-stopped
     env_file:
       - ./.env.secrets
     environment:
-      PORT: "8124"
+      WK_NODE_DATA_DIR: /var/lib/wukongim
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8124/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:5001/readyz"]
       interval: 10s
       timeout: 3s
       retries: 20
       start_period: 10s
+    volumes:
+      - wukong-data:/var/lib/wukongim
+    ports:
+      - "127.0.0.1:5200:5200"
     networks: [lingxiloop]
+    logging: *quiet-logging
 
   migrate:
     <<: *lingxiloop-runtime
@@ -88,7 +100,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      lingxigraph-runtime:
+      wukongim:
         condition: service_healthy
     ports:
       - "127.0.0.1:5181:5181"
@@ -100,6 +112,34 @@ services:
       timeout: 5s
       retries: 30
       start_period: 20s
+    logging: *quiet-logging
+
+  agent-os:
+    image: ${AGENT_OS_IMAGE:?AGENT_OS_IMAGE must be digest-pinned}
+    restart: unless-stopped
+    env_file:
+      - ./.env.secrets
+    environment:
+      NODE_ENV: production
+      LINGXILOOP_LOG_LEVEL: warn
+      AGENT_OS_PORT: "5190"
+      LINGXILOOP_CONTROL_PLANE_URL: http://lingxiloop:5181
+      AGENT_OS_HOMES_ROOT: /var/lib/lingxiloop-agent-os/homes
+    depends_on:
+      lingxiloop:
+        condition: service_healthy
+      wukongim:
+        condition: service_healthy
+    volumes:
+      - agent-os-data:/var/lib/lingxiloop-agent-os
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5190/readyz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks: [lingxiloop]
+    logging: *quiet-logging
 
 networks:
   lingxiloop: {}
@@ -108,3 +148,5 @@ volumes:
   postgres-data: {}
   redis-data: {}
   uploads: {}
+  wukong-data: {}
+  agent-os-data: {}

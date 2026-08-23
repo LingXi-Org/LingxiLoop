@@ -1,9 +1,0 @@
-# Build context shipped to docker is the whole repo root. We only
-# need the agent bundle, the in-pod shell shims, and the Go FUSE
-# source for stage 1's `go build`.
-*
-!dist/agent/agent-computer.cjs
-!server/docker/agent-computer-lingxiloop.sh
-!server/docker/agent-computer-lingxiloop-web.sh
-!server/docker/agent-computer-entrypoint.sh
-!agent-fuse/**

@@ -2,7 +2,9 @@ import { create } from 'zustand'
 import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
 import { useApp } from '@/stores/app'
 import { getMeId } from '@/stores/auth'
+import { useParticipants } from '@/stores/participants'
 import type { Message, ReactionEntry } from '@/types'
+import { lingxiIm, type ImEnvelope } from '@/lib/im/wukong'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -327,6 +329,73 @@ function fromApi(m: ApiMessage): Message {
   return out
 }
 
+function fromIm(message: ImEnvelope): Message {
+  const payload = message.payload
+  const data = payload.data ?? {}
+  const kind = payload.kind === 'tool_activity' || payload.kind === 'artifact' ? 'tool' : payload.kind
+  const pollClientMsgNo = payload.kind === 'poll'
+    ? String(payload.refs?.pollClientMsgNo ?? payload.clientMsgNo)
+    : null
+  const approvalId = payload.kind === 'approval' && payload.refs?.approvalId
+    ? `approval-${payload.refs.approvalId}`
+    : null
+  const pollData = payload.kind === 'poll' && data.poll && typeof data.poll === 'object'
+    ? data.poll as Message['poll']
+    : payload.kind === 'poll' ? data as unknown as Message['poll'] : undefined
+  return fromApi({
+    // Poll update messages deliberately share the original poll's stable
+    // client id so a WuKong event snapshot replaces the bubble in place.
+    id: pollClientMsgNo ?? approvalId ?? (message.messageId || payload.clientMsgNo),
+    clientId: payload.clientMsgNo,
+    conversationId: message.channelId,
+    authorId: message.fromUid,
+    kind: kind as Message['kind'],
+    body: payload.body ?? '',
+    at: new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString(),
+    createdAt: new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString(),
+    sequence: message.messageSeq,
+    quotedMessageId: payload.replyToClientMsgNo,
+    attachment: payload.kind === 'attachment' ? data as Message['attachment'] : undefined,
+    tool: payload.kind === 'tool_activity' || payload.kind === 'artifact' ? {
+      name: String(data.name ?? payload.body ?? payload.kind),
+      arg: String(data.arg ?? ''),
+      status: String(data.status ?? data.stage ?? 'completed'),
+      detail: String(data.detail ?? ''),
+    } : undefined,
+    handoff: payload.kind === 'handoff' ? data as unknown as Message['handoff'] : undefined,
+    approval: payload.kind === 'approval' ? data as unknown as Message['approval'] : undefined,
+    poll: pollData,
+    pollTallies: payload.kind === 'poll' && Array.isArray(data.pollTallies)
+      ? data.pollTallies as Message['pollTallies']
+      : undefined,
+    mentionedIds: Array.isArray(data.mentionedIds) ? data.mentionedIds.map(String) : undefined,
+    mentionAll: data.mentionAll === true,
+  })
+}
+
+function fromImBatch(messages: ImEnvelope[]): Message[] {
+  const byId = new Map<string, Message>()
+  for (const envelope of messages) {
+    const next = fromIm(envelope)
+    const previous = byId.get(next.id)
+    if (!previous) {
+      byId.set(next.id, next)
+      continue
+    }
+    // WuKong keeps each poll revision as a durable message. Collapse those
+    // snapshots to one bubble while retaining the original timeline slot.
+    const previousSeq = sequenceOf(previous)
+    const nextSeq = sequenceOf(next)
+    const latest = (nextSeq ?? 0) >= (previousSeq ?? 0) ? next : previous
+    ;(latest as Message & { sequence?: number }).sequence = Math.min(
+      previousSeq ?? Number.MAX_SAFE_INTEGER,
+      nextSeq ?? Number.MAX_SAFE_INTEGER,
+    )
+    byId.set(next.id, latest)
+  }
+  return sortMessagesStable([...byId.values()])
+}
+
 function sequenceOf(m: Message): number | null {
   const raw = (m as Message & { sequence?: unknown }).sequence
   return typeof raw === 'number' && Number.isFinite(raw) ? raw : null
@@ -391,8 +460,8 @@ export const useMessages = create<MessagesState>((set, get) => ({
       return { loading: new Set(s.loading).add(id), errors: restErrors }
     })
     try {
-      const msgs = await api.getMessages(id, { limit: MESSAGES_PAGE_SIZE })
-      const normalized = msgs.map(fromApi)
+      const msgs = await lingxiIm.history(id, MESSAGES_PAGE_SIZE)
+      const normalized = fromImBatch(msgs)
       // Fewer rows than the page cap → we've already got everything older.
       // Equal-to-cap is ambiguous (could be exactly N or N+more) so default
       // to optimistic "more available" and let the next loadOlder confirm.
@@ -431,8 +500,8 @@ export const useMessages = create<MessagesState>((set, get) => ({
     try {
       // Reload pulls the same window the initial load did — last N. Older
       // history that was already paged in stays in byConvo via the merge.
-      const msgs = await api.getMessages(id, { limit: MESSAGES_PAGE_SIZE })
-      const normalized = msgs.map(fromApi)
+      const msgs = await lingxiIm.history(id, MESSAGES_PAGE_SIZE)
+      const normalized = fromImBatch(msgs)
       const hasMore = normalized.length >= MESSAGES_PAGE_SIZE
       set((s) => ({
         byConvo: { ...s.byConvo, [id]: mergeFetchedMessages(s.byConvo[id], normalized) },
@@ -472,33 +541,10 @@ export const useMessages = create<MessagesState>((set, get) => ({
       set((s) => ({ hasMoreOlder: { ...s.hasMoreOlder, [id]: false } }))
       return
     }
-    set((s) => ({ loadingOlder: new Set(s.loadingOlder).add(id) }))
-    try {
-      const msgs = await api.getMessages(id, { before: oldest, limit: MESSAGES_PAGE_SIZE })
-      const normalized = msgs.map(fromApi)
-      const hasMore = normalized.length >= MESSAGES_PAGE_SIZE
-      set((s) => {
-        const prev = s.byConvo[id] ?? []
-        const merged = mergeFetchedMessages(prev, normalized)
-        // Every fetched row is strictly older than the cursor, so the net-new
-        // rows (after dedup) all land at the FRONT. Shift firstItemIndex down
-        // by that count in the same update as the data, so react-virtuoso
-        // keeps the scroll anchored instead of jumping/stalling.
-        const prepended = Math.max(0, merged.length - prev.length)
-        const base = s.firstItemIndex[id] ?? VIRTUOSO_FIRST_INDEX_BASE
-        return {
-          byConvo: { ...s.byConvo, [id]: merged },
-          hasMoreOlder: { ...s.hasMoreOlder, [id]: hasMore },
-          loadingOlder: new Set([...s.loadingOlder].filter((x) => x !== id)),
-          firstItemIndex: { ...s.firstItemIndex, [id]: base - prepended },
-        }
-      })
-    } catch (err) {
-      console.warn('[messages] loadOlder failed', err)
-      set((s) => ({
-        loadingOlder: new Set([...s.loadingOlder].filter((x) => x !== id)),
-      }))
-    }
+    // WuKongIM owns pagination. The initial v3 adapter returns the committed
+    // tail window; do not fall back to the retired Postgres message table.
+    // A subsequent SDK contract upgrade can expose its sequence cursor here.
+    set((state) => ({ hasMoreOlder: { ...state.hasMoreOlder, [id]: false } }))
   },
 
   async retryLoad(id) {
@@ -710,11 +756,10 @@ export async function sendUserMessage(
   const v = body.trim()
   if (!v && !attachment) return
   const meId = getMeId()
-  // Without a signed-in user we can't paint an optimistic bubble (no authorId
-  // to attribute it to). Fall back to the old fire-and-forget path.
+  // WuKong identity is derived from the signed-in user; never fall back to a
+  // second message store when that identity is missing.
   if (!meId) {
-    try { await api.sendMessage(convoId, v, attachment ?? null, quotedMessageId ?? null) }
-    catch (err) { console.warn('[messages] send failed', err) }
+    console.warn('[messages] send skipped: no authenticated WuKong identity')
     return
   }
 
@@ -773,7 +818,28 @@ export async function sendUserMessage(
   }))
 
   try {
-    const { id: realId } = await api.sendMessage(convoId, v, attachment ?? null, quotedMessageId ?? null, tempId)
+    const mentionAll = /(^|\s)@everyone\b/i.test(v)
+    const mentionedIds = Object.values(useParticipants.getState().byId)
+      .filter((participant) => participant.kind === 'agent')
+      .filter((participant) => [participant.id, participant.name].some((label) => {
+        const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        return new RegExp(`(^|\\s)@${escaped}(?=\\s|$|[.,!?，。！？])`, 'i').test(v)
+      }))
+      .map((participant) => participant.id)
+    const sent = await lingxiIm.send(convoId, {
+      version: 1,
+      kind: attachment ? 'attachment' : 'text',
+      clientMsgNo: tempId,
+      body: v,
+      ...(quotedMessageId ? { replyToClientMsgNo: quotedMessageId } : {}),
+      data: {
+        ...(attachment ?? {}),
+        mentionedIds,
+        mentionAll,
+        ...(quotedSummary ? { replyAuthorId: quotedSummary.authorId } : {}),
+      },
+    })
+    const realId = sent.messageId || sent.clientMsgNo
     // Reconcile the temp bubble with the server. Either the WS `message.new`
     // already raced ahead of us (real id already in the list → drop the temp)
     // or it hasn't (rename temp → real id so the eventual WS event dedupes
@@ -855,6 +921,7 @@ export async function toggleReaction(messageId: string, emoji: string): Promise<
 // Bound once; workspace switches reset the per-conversation message
 // caches so old-tenant message arrays don't linger past a remount.
 let wsBound = false
+let imBound = false
 export function bootMessagesStream() {
   // Reset every time bootMessagesStream is called (App.tsx remounts on
   // companyId change) — drops any messages the previous tenant left
@@ -869,6 +936,47 @@ export function bootMessagesStream() {
     loading: new Set(),
     errors: {},
   })
+  if (!imBound) {
+    imBound = true
+    lingxiIm.subscribe((message) => {
+      const normalized = fromIm(message)
+      useMessages.setState((state) => ({
+        byConvo: {
+          ...state.byConvo,
+          [normalized.conversationId]: mergeFetchedMessages(state.byConvo[normalized.conversationId], [normalized]),
+        },
+      }))
+    })
+    lingxiIm.subscribeEvent((event) => {
+      const id = event.clientMsgNo
+      if (event.type === 'stream.open') {
+        useMessages.setState((state) => ({
+          streaming: {
+            ...state.streaming,
+            [id]: { body: event.text ?? '', conversationId: event.channelId, authorId: event.fromUid, sequence: Number.MAX_SAFE_INTEGER - 10 },
+          },
+        }))
+        scheduleStreamingExpiry(id, event.channelId)
+        return
+      }
+      if (event.type === 'stream.delta') {
+        useMessages.setState((state) => {
+          const current = state.streaming[id] ?? {
+            body: '', conversationId: event.channelId, authorId: event.fromUid, sequence: Number.MAX_SAFE_INTEGER - 10,
+          }
+          return { streaming: { ...state.streaming, [id]: { ...current, body: current.body + (event.delta ?? '') } } }
+        })
+        scheduleStreamingExpiry(id, event.channelId)
+        return
+      }
+      clearStreamingExpiry(id)
+      useMessages.setState((state) => {
+        const { [id]: _drop, ...streaming } = state.streaming
+        return { streaming }
+      })
+    })
+    void lingxiIm.connect().catch((error) => console.warn('[im] connect failed', error))
+  }
   if (wsBound) return
   wsBound = true
   ws.connect()
@@ -892,6 +1000,9 @@ export function bootMessagesStream() {
       if (active) void useMessages.getState().reloadConversation(active)
       return
     }
+    // Chat transport is WuKongIM-authoritative. Keep the legacy socket for
+    // documents, boards, calendar and presence only.
+    if (e.type === 'message.new' || e.type === 'message.delta' || e.type === 'message.reactions' || e.type === 'typing') return
     useMessages.getState().applyEvent(e)
   })
 }

@@ -18,8 +18,8 @@ start a thread.
                                                                                  │
                                                                                  ▼ wakes the recipient agent
                                                                          ┌──────────────────┐
-                                                                         │  agent (pod or   │
-                                                                         │  BYOA) runs a    │
+                                                                         │  Agent OS runs   │
+                                                                         │  a learning      │
                                                                          │  turn, replies   │
                                                                          └──────────────────┘
                                                                                  │

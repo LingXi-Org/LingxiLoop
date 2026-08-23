@@ -187,15 +187,6 @@ export interface StatusEvent extends TenantTagged {
   statusUpdatedAt?: string
 }
 
-/** Fired when a BYOA Computer (agent host) goes online/offline. Clients
- *  patch their local computers store so the Computers panel + agent chips
- *  reflect host availability live. */
-export interface ComputerStatusEvent extends TenantTagged {
-  type: 'computers.status'
-  computerId: string
-  status: 'online' | 'offline' | 'busy'
-}
-
 /** Fired when an agent's avatar gets (re-)generated. Clients patch their
  *  local participants store so the new portrait appears without waiting
  *  for the periodic refresh tick. */
@@ -431,7 +422,6 @@ export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
   | BoardEvent | DocIndexEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
   | CalendarEventChangedEvent
   | PollUpdatedEvent
-  | ComputerStatusEvent
   | AgentActivityEvent
 
 export async function publish(channel: string, event: BroadcastEvent): Promise<void> {

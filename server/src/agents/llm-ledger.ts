@@ -9,7 +9,7 @@
  *   into "part of the turn total" or wasn't recorded at all. That made it
  *   impossible to answer the question the operator actually needs:
  *
- *     "Which business purpose burned the most gpt-5.4-mini last month?"
+ *     "Which business purpose burned the most deepseek-chat last month?"
  *
  * Design contract:
  *   1. One row in `llm_calls` per OUTBOUND model call. Every cloud LLM spend
@@ -18,31 +18,19 @@
  *      itself. Every error path here is caught and logged, never re-thrown.
  *   3. The PRIMARY entry point is `getTrackedLlmClient(ctx)` — it returns the
  *      same shape as `getLlmClient()` but auto-records every
- *      `responses.create`, `chat.completions.create`, and `images.generate`
+ *      `chat.completions.create` and optional `images.generate`
  *      against the bound context. Forgetting it for a NEW callsite is caught
  *      at CI by `scripts/guard-llm-tracked.mjs`.
- *   4. Streaming calls (only the main agent turn today) can't surface final
- *      usage on the create() return — usage arrives on the stream as
- *      `response.completed.usage`. Those callsites stay on `getLlmClient()`
- *      directly AND manually call `recordLlmCall()` per hop from inside their
- *      stream consumer, where final usage is known. Same ledger row shape,
- *      different timing. The CI guard's allowlist documents these exceptions.
  *
- * What this is NOT for:
- *   - BYOA-local LLM calls (the operator's paired claude / codex CLI). Those
- *     are billed against the operator's own subscription, not LingxiLoop's sub2api,
- *     and are already accounted for in `agent_triages` (BYOA triage rows) +
- *     `agent_runs` (BYOA turn rows) with `source='byoa-*'`. Putting them into
- *     `llm_calls` would muddy the "sub2api spend" rollup that's the whole
- *     point. If we later want a unified ledger across cloud + BYOA, that's a
- *     separate, additive widening.
+ * This ledger covers DeepSeek-compatible product calls. Agent OS and
+ * auxiliary learning services use explicit sources and business purposes.
  */
 
 import { randomUUID } from 'node:crypto'
 import type OpenAI from 'openai'
 import { pool } from '../db/pool.js'
 import { getLlmClient } from '../llm.js'
-import { EMPTY_USAGE, effectiveCostUsd, priceFor, type TokenUsage, usageFromOpenAI } from './cost.js'
+import { EMPTY_USAGE, effectiveCostUsd, priceFor, type TokenUsage, usageFromDeepSeek } from './cost.js'
 
 /** The exhaustive set of business purposes that spend sub2api. Adding a new
  *  callsite REQUIRES adding its purpose here — that's the discipline knob that
@@ -50,8 +38,8 @@ import { EMPTY_USAGE, effectiveCostUsd, priceFor, type TokenUsage, usageFromOpen
 export type LlmCallPurpose =
   // Big-model real tasks (sanctioned by model-policy.ts).
   | 'agent-turn'
-  | 'lingxigraph-agent-turn'
-  // Small-model cerebellum classifiers — the gpt-5.4-mini hot path.
+  | 'agent-os-turn'
+  // Small structured learning utilities using the same global DeepSeek model.
   | 'inbox-triage'
   | 'synthetic-wake-gate'
   | 'agenda'
@@ -70,7 +58,7 @@ export type LlmCallPurpose =
   | 'agent-image'
 
 export type LlmCallStatus = 'ok' | 'rate_limited' | 'timeout' | 'failed'
-export type LlmCallSource = 'cloud' | 'byoa-claude' | 'byoa-codex'
+export type LlmCallSource = 'cloud' | 'agent-os' | 'product'
 
 /** Context bound to a tracked client. Every LLM call it makes carries this
  *  shape into the ledger. `purpose` is mandatory; everything else scopes the
@@ -98,12 +86,6 @@ export interface LlmCallRecord extends LlmCallContext {
   latencyMs: number
   status: LlmCallStatus
   error?: string | null
-  /** The agent-cli (npm `lingxiloop`) version that produced this row, captured by
-   *  the daemon and sent in its `/runtime/llm-calls` / `/runtime/triage`
-   *  payload. Cloud rows (no daemon) leave it null. Used by the operator to
-   *  correlate spend / cache behaviour with a daemon release — when a new
-   *  version regresses token usage, the per-version rollup makes it visible. */
-  daemonVersion?: string | null
 }
 
 /** Single INSERT into `llm_calls`. Never throws — the ledger is observability,
@@ -123,8 +105,8 @@ export async function recordLlmCall(rec: LlmCallRecord): Promise<void> {
          input_tokens, cached_input_tokens, cache_creation_tokens,
          output_tokens, reasoning_tokens,
          cost_usd, cost_estimated, measured,
-         latency_ms, status, error, extras, daemon_version
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20::jsonb,$21)`,
+         latency_ms, status, error, extras
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20::jsonb)`,
       [
         `llm-${randomUUID()}`,
         rec.companyId, rec.agentId ?? null, rec.runId ?? null, rec.conversationId ?? null,
@@ -135,7 +117,6 @@ export async function recordLlmCall(rec: LlmCallRecord): Promise<void> {
         rec.latencyMs, rec.status,
         rec.error ? rec.error.slice(0, 500) : null,
         rec.extras ? JSON.stringify(rec.extras) : null,
-        rec.daemonVersion ?? null,
       ],
     )
   } catch (err) {
@@ -156,31 +137,7 @@ export function classifyLlmCallError(err: unknown): LlmCallStatus {
   return 'failed'
 }
 
-/** Pull final usage out of an OpenAI Responses streaming event. Streaming
- *  callsites (turn.ts: completion-verify, compaction, steer-summary, the main
- *  agent turn) consume the stream themselves and read this on every event;
- *  the LAST non-null result is the call's final usage. Returns null for events
- *  that don't carry usage (the vast majority — only `response.completed`
- *  carries the totals). */
-export function readStreamUsage(ev: { type?: string } & Record<string, unknown>): TokenUsage | null {
-  if (ev.type !== 'response.completed') return null
-  // The event's `response` field is the full Response object, whose `usage`
-  // field is the same shape that non-streaming responses.create() returns —
-  // so we re-use the same mapper.
-  const r = (ev as { response?: { usage?: unknown } }).response
-  if (!r?.usage) return null
-  return usageFromOpenAI(r.usage)
-}
-
-/** Like readStreamUsage but for `output_tokens_details.reasoning_tokens` on
- *  the completed event — surfaces non-zero reasoning spend separately. */
-export function readStreamReasoningTokens(ev: { type?: string } & Record<string, unknown>): number {
-  if (ev.type !== 'response.completed') return 0
-  const r = (ev as { response?: { usage?: unknown } }).response
-  return r?.usage ? readReasoningTokens(r.usage) : 0
-}
-
-/** OpenAI Responses surfaces reasoning tokens (when on) under
+/** DeepSeek-compatible gateways may surface reasoning tokens under
  *  `output_tokens_details.reasoning_tokens`. NaN-safe → 0. */
 function readReasoningTokens(usage: unknown): number {
   const u = (usage ?? {}) as { output_tokens_details?: { reasoning_tokens?: number } }
@@ -194,11 +151,11 @@ function readReasoningTokens(usage: unknown): number {
 type AnyArgs = { model?: string; stream?: boolean; n?: number; size?: string } & Record<string, unknown>
 type AnyResponse = { usage?: unknown } & Record<string, unknown>
 
-/** Returns a tracked OpenAI client. Wraps `responses.create`,
- *  `chat.completions.create`, and `images.generate` so every call is recorded
+/** Returns a tracked DeepSeek protocol client. Wraps
+ *  `chat.completions.create` and optional `images.generate` so every call is recorded
  *  to `llm_calls` under `ctx.purpose`. Everything else passes through.
  *
- *  Streaming (`{ stream: true }` on responses.create): we DO NOT record from
+ *  Streaming (`{ stream: true }`): we DO NOT record from
  *  here — usage isn't on the synchronous return, it arrives on the stream.
  *  Streaming callsites (today: only the main agent turn) must call
  *  `recordLlmCall()` themselves from inside their stream consumer. This is
@@ -207,7 +164,7 @@ type AnyResponse = { usage?: unknown } & Record<string, unknown>
 export async function getTrackedLlmClient(ctx: LlmCallContext): Promise<OpenAI> {
   const raw = await getLlmClient(ctx.companyId)
 
-  // Wrap an awaited create() with timing + ledger. Used by responses & chat.
+  // Wrap an awaited Chat Completions call with timing + ledger.
   const wrapAwaited = (
     boundCreate: (args: AnyArgs, opts?: unknown) => Promise<AnyResponse>,
   ) =>
@@ -224,7 +181,7 @@ export async function getTrackedLlmClient(ctx: LlmCallContext): Promise<OpenAI> 
         const r = await boundCreate(args, opts)
         void recordLlmCall({
           ...ctx, model,
-          usage: usageFromOpenAI(r.usage),
+          usage: usageFromDeepSeek(r.usage),
           reasoningTokens: readReasoningTokens(r.usage),
           latencyMs: Date.now() - t0, status: 'ok',
         })
@@ -275,21 +232,7 @@ export async function getTrackedLlmClient(ctx: LlmCallContext): Promise<OpenAI> 
   // until you teach the wrapper — and the CI guard will surface that gap).
   return new Proxy(raw, {
     get(target, prop, receiver): unknown {
-      if (prop === 'responses') {
-        return new Proxy(target.responses as object, {
-          get(rt: object, p: string | symbol, rr: unknown): unknown {
-            if (p === 'create') {
-              const create = (target.responses as { create: (...a: unknown[]) => Promise<unknown> }).create
-              return wrapAwaited(create.bind(target.responses) as (a: AnyArgs, o?: unknown) => Promise<AnyResponse>)
-            }
-            return Reflect.get(rt, p, rr)
-          },
-        })
-      }
       if (prop === 'chat') {
-        // Test/embedded clients may implement only the Responses surface.
-        // Let compatibility callers detect that instead of proxying undefined.
-        if (!target.chat) return undefined
         return new Proxy(target.chat as object, {
           get(ct: object, p: string | symbol, cr: unknown): unknown {
             if (p === 'completions') {
@@ -413,7 +356,7 @@ export async function getLlmSpendRollup(args: {
   companyId?: string | null
   /** Inclusive lower bound. Default: 30 days ago. */
   sinceDays?: number
-  /** Optional model substring filter (e.g. 'gpt-5.4-mini'). Useful for
+  /** Optional model substring filter (e.g. 'deepseek-chat'). Useful for
    *  "what burned my mini?" — exactly the question this ledger was built for. */
   model?: string | null
 }): Promise<LlmSpendRollupRow[]> {
@@ -735,8 +678,6 @@ export interface LlmCallRow {
   status: LlmCallStatus
   error: string | null
   extras: Record<string, unknown> | null
-  /** agent-cli (npm lingxiloop) version that produced this row. Cloud rows: null. */
-  daemonVersion: string | null
 }
 
 /** Raw call rows for one bucket — driven by the drill-down panel.
@@ -802,7 +743,6 @@ export async function getLlmCalls(args: {
     cost_usd: string; cost_estimated: boolean; measured: boolean
     latency_ms: number | null; status: string; error: string | null
     extras: Record<string, unknown> | null
-    daemon_version: string | null
   }>(
     `SELECT
        l.id, l.created_at::text, l.company_id,
@@ -813,7 +753,7 @@ export async function getLlmCalls(args: {
        l.output_tokens::text, l.reasoning_tokens::text,
        l.cost_usd::text, l.cost_estimated, l.measured,
        l.latency_ms, l.status, l.error,
-       l.extras, l.daemon_version
+       l.extras
      FROM llm_calls l
      LEFT JOIN participants p
             ON p.id = l.agent_id
@@ -846,76 +786,5 @@ export async function getLlmCalls(args: {
     status: r.status as LlmCallStatus,
     error: r.error,
     extras: r.extras,
-    daemonVersion: r.daemon_version,
   }))
-}
-
-/** One row of the per-daemon-version rollup. Answers 'after I shipped v0.1.X,
- *  did average cost-per-hop go up?' — exactly the regression-spotter the
- *  operator needs when a release lands. Cache hit rate per version is the
- *  flip side: a release that warmed caches better will show a jump here. */
-export interface LlmDaemonVersionRow {
-  daemonVersion: string
-  source: LlmCallSource
-  calls: number
-  costUsd: number
-  inputTokens: number
-  cachedInputTokens: number
-  outputTokens: number
-  failureRate: number
-  /** First and last row times we saw this version in the window — useful to
-   *  see when the upgrade actually rolled out. */
-  firstSeen: string
-  lastSeen: string
-}
-
-export async function getLlmDaemonVersionRollup(args: { sinceDays?: number; companyId?: string | null } = {}): Promise<LlmDaemonVersionRow[]> {
-  const sinceDays = args.sinceDays ?? 30
-  const params: unknown[] = [sinceDays]
-  let scope = ''
-  if (args.companyId !== undefined) {
-    if (args.companyId === null) scope = `AND company_id IS NULL`
-    else { params.push(args.companyId); scope = `AND company_id = $${params.length}` }
-  }
-  const { rows } = await pool.query<{
-    daemon_version: string; source: string
-    calls: string; cost_usd: string
-    input_tokens: string; cached_input_tokens: string; output_tokens: string
-    ok_calls: string
-    first_seen: string; last_seen: string
-  }>(
-    // first/last seen are bucket_hour MIN/MAX → hour-precision (fine for the
-    // relative "2h ago" display). ok_calls is pre-summed in the rollup.
-    `SELECT daemon_version, source,
-            SUM(calls)::text                                               AS calls,
-            COALESCE(SUM(cost_usd), 0)::text                               AS cost_usd,
-            SUM(input_tokens)::text                                        AS input_tokens,
-            SUM(cached_input_tokens)::text                                 AS cached_input_tokens,
-            SUM(output_tokens)::text                                       AS output_tokens,
-            SUM(ok_calls)::text                                            AS ok_calls,
-            MIN(bucket_hour)::text                                         AS first_seen,
-            MAX(bucket_hour)::text                                         AS last_seen
-       FROM llm_calls_rollup
-      WHERE bucket_hour > NOW() - ($1::int * INTERVAL '1 day') ${scope}
-        AND daemon_version IS NOT NULL
-      GROUP BY daemon_version, source
-      ORDER BY MAX(bucket_hour) DESC, SUM(cost_usd) DESC`,
-    params,
-  )
-  return rows.map((r) => {
-    const calls = Number(r.calls)
-    const failed = calls - Number(r.ok_calls)
-    return {
-      daemonVersion: r.daemon_version,
-      source: r.source as LlmCallSource,
-      calls,
-      costUsd: Number(r.cost_usd),
-      inputTokens: Number(r.input_tokens),
-      cachedInputTokens: Number(r.cached_input_tokens),
-      outputTokens: Number(r.output_tokens),
-      failureRate: calls > 0 ? failed / calls : 0,
-      firstSeen: r.first_seen,
-      lastSeen: r.last_seen,
-    }
-  })
 }

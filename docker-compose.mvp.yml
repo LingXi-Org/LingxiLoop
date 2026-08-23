@@ -1,14 +1,18 @@
-# MVP single-server Docker Compose deployment.
-#
-# Browser -> lingxiloop (SPA + API + WebSocket) -> Postgres / Redis
-#                                             -> LingxiGraph Runtime
-#
-# Web/server mode only: one LingxiLoop replica, no Kubernetes/per-Agent Pod.
+# MVP single-server deployment. Every LingxiLoop component is pulled from
+# GitHub Container Registry; this file never builds application images.
+
+x-quiet-logging: &quiet-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   postgres:
     image: ${PGVECTOR_IMAGE:-docker.m.daocloud.io/pgvector/pgvector:pg16}
+    pull_policy: always
     restart: unless-stopped
+    command: ["postgres", "-c", "log_min_messages=warning", "-c", "log_min_error_statement=error"]
     environment:
       POSTGRES_USER: lingxiloop
       POSTGRES_PASSWORD: lingxiloop
@@ -22,10 +26,15 @@ services:
       retries: 10
       start_period: 5s
     networks: [lingxiloop-mvp]
+    logging: *quiet-logging
 
   redis:
     image: ${REDIS_IMAGE:-docker.m.daocloud.io/library/redis:7-alpine}
+    pull_policy: always
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--loglevel", "warning"]
+    volumes:
+      - lingxiloop-redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -33,112 +42,83 @@ services:
       retries: 10
       start_period: 3s
     networks: [lingxiloop-mvp]
+    logging: *quiet-logging
 
-  lingxigraph-runtime:
-    build:
-      context: .
-      dockerfile: server/docker/lingxigraph-runtime.Dockerfile
-      args:
-        PYTHON_BASE_IMAGE: ${PYTHON_BASE_IMAGE:-docker.m.daocloud.io/library/python:3.12-slim-bookworm}
-        APT_MIRROR: ${APT_MIRROR:-http://mirrors.aliyun.com}
-        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
-        PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple}
+  wukongim:
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-wukongim:${LINGXILOOP_IMAGE_TAG:-mvp}
+    pull_policy: always
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
-      - OPENAI_API_KEY
-      - OPENAI_BASE_URL
-      - LINGXIGRAPH_POSTGRES_URL=postgresql://lingxiloop:lingxiloop@postgres:5432/lingxiloop
-      - LINGXIGRAPH_REDIS_URL=redis://redis:6379/1
-      - LINGXIGRAPH_INSECURE_DEV_AUTH=true
-      - LINGXIGRAPH_MODEL_TIMEOUT_SECONDS=${LINGXIGRAPH_MODEL_TIMEOUT_SECONDS:-90}
-      - PORT=8124
+      WK_NODE_DATA_DIR: /var/lib/wukongim
+    volumes:
+      - lingxiloop-wukong-data:/var/lib/wukongim
+    ports:
+      - "${WUKONG_WS_BIND_ADDRESS:-0.0.0.0}:${WUKONG_WS_PORT:-5200}:5200"
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8124/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:5001/readyz"]
       interval: 5s
       timeout: 3s
       retries: 10
       start_period: 5s
     networks: [lingxiloop-mvp]
+    logging: *quiet-logging
 
   lingxiloop:
-    build:
-      context: .
-      dockerfile: server/docker/lingxiloop-server.Dockerfile
-      args:
-        NODE_BASE_IMAGE: ${NODE_BASE_IMAGE:-docker.m.daocloud.io/library/node:20-bookworm-slim}
-        APT_MIRROR: ${APT_MIRROR:-http://mirrors.aliyun.com}
-        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      lingxigraph-runtime:
+      wukongim:
         condition: service_healthy
     environment:
-      - NODE_ENV=production
-      - PORT=5181
-      - DATABASE_URL=postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
-      - REDIS_URL=redis://redis:6379
-      - AGENT_RUNTIME_SECRET=${AGENT_RUNTIME_SECRET:?AGENT_RUNTIME_SECRET is required in .env — generate with openssl rand -hex 32}
-
-      # Model/provider configuration.
-      - OPENAI_API_KEY
-      - OPENAI_BASE_URL
-      - OPENAI_MODEL
-      - OPENAI_MODEL_SUPPORT
-      - OPENAI_COMPACTION_MODEL
-      - OPENAI_IMAGE_MODEL
-
-      # Web production origin / OAuth. Bare-name passthrough means values stay
-      # unset unless configured in .env; server defaults remain intact for dev.
-      - LINGXILOOP_PUBLIC_ORIGIN
-      - LINGXILOOP_AUTH_DONE_URL
-      - LINGXILOOP_AUTH_RETURN_ALLOWLIST
-      - LINGXILOOP_INVITE_BASE_URL
-      - LINGXILOOP_CORS_ORIGINS
-      # Primary Web OIDC provider (Logto Traditional Web confidential client).
-      - LINGXI_IDENTITY_ISSUER
-      - LINGXI_IDENTITY_CLIENT_ID
-      - LINGXI_IDENTITY_CLIENT_SECRET
-      - LINGXI_IDENTITY_SCOPES
-      - GOOGLE_CLIENT_ID
-      - GOOGLE_CLIENT_SECRET
-      - GITHUB_CLIENT_ID
-      - GITHUB_CLIENT_SECRET
-
-      # Public upload/object-storage configuration. Local mode is persisted by
-      # the named volume below; R2/S3 can be enabled by setting all core R2 vars.
-      - PUBLIC_HOST
-      - R2_ENDPOINT
-      - R2_BUCKET
-      - R2_ACCESS_KEY_ID
-      - R2_SECRET_ACCESS_KEY
-      - R2_PUBLIC_BASE
-      - R2_URL_SIGNING_SECRET
-      - R2_URL_TTL_SECONDS
-
-      # Optional integrations useful to the Web/server deployment.
-      - SKILLHUB_URL
-      - RESEND_API_KEY
-      - EMAIL_DOMAIN
-      - EMAIL_INBOUND_HMAC_SECRET
-
-      # MVP-fixed reasoning + dispatch mode.
-      - LINGXILOOP_REASONING_RUNTIME=lingxigraph
-      - LINGXILOOP_MANAGED_AGENT_EXECUTION=server
-      - LINGXIGRAPH_URL=http://lingxigraph-runtime:8124
-        # Local compose uses LingxiGraph's controlled X-Tenant-ID dev auth.
+      NODE_ENV: production
+      LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
+      PORT: 5181
+      DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
+      REDIS_URL: redis://redis:6379
+      AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required in .env}
+      WUKONG_API_URL: http://wukongim:5001
+      WUKONG_WS_URL: ${WUKONG_WS_URL:-ws://localhost:5200}
+      WUKONG_API_TOKEN: ${WUKONG_API_TOKEN:-dev-wukong-api-token}
+      WUKONG_WEBHOOK_SECRET: ${WUKONG_WEBHOOK_SECRET:-dev-wukong-webhook-secret}
+      WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      DEEPSEEK_EMBEDDING_MODEL: ${DEEPSEEK_EMBEDDING_MODEL:-}
+      DEEPSEEK_IMAGE_MODEL: ${DEEPSEEK_IMAGE_MODEL:-}
+      LINGXILOOP_PUBLIC_ORIGIN: ${LINGXILOOP_PUBLIC_ORIGIN:-http://localhost:5181}
+      LINGXILOOP_AUTH_DONE_URL: ${LINGXILOOP_AUTH_DONE_URL:-http://localhost:5181/}
+      LINGXILOOP_AUTH_RETURN_ALLOWLIST: ${LINGXILOOP_AUTH_RETURN_ALLOWLIST:-}
+      LINGXILOOP_INVITE_BASE_URL: ${LINGXILOOP_INVITE_BASE_URL:-}
+      LINGXILOOP_CORS_ORIGINS: ${LINGXILOOP_CORS_ORIGINS:-}
+      LINGXI_IDENTITY_ISSUER: ${LINGXI_IDENTITY_ISSUER:-}
+      LINGXI_IDENTITY_CLIENT_ID: ${LINGXI_IDENTITY_CLIENT_ID:-}
+      LINGXI_IDENTITY_CLIENT_SECRET: ${LINGXI_IDENTITY_CLIENT_SECRET:-}
+      LINGXI_IDENTITY_SCOPES: ${LINGXI_IDENTITY_SCOPES:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      PUBLIC_HOST: ${PUBLIC_HOST:-}
+      R2_ENDPOINT: ${R2_ENDPOINT:-}
+      R2_BUCKET: ${R2_BUCKET:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_PUBLIC_BASE: ${R2_PUBLIC_BASE:-}
+      R2_URL_SIGNING_SECRET: ${R2_URL_SIGNING_SECRET:-}
+      R2_URL_TTL_SECONDS: ${R2_URL_TTL_SECONDS:-}
+      SKILLHUB_URL: ${SKILLHUB_URL:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_DOMAIN: ${EMAIL_DOMAIN:-}
+      EMAIL_INBOUND_HMAC_SECRET: ${EMAIL_INBOUND_HMAC_SECRET:-}
     ports:
-      # Safe default for same-host Caddy/Nginx. Override only when an external
-      # load balancer/network explicitly needs to reach the container port.
-      - "${LINGXILOOP_BIND_ADDRESS:-127.0.0.1}:${LINGXILOOP_PORT:-5181}:5181"
+      # Public by default so the mobile client can reach the API backend.
+      - "${LINGXILOOP_BIND_ADDRESS:-0.0.0.0}:${LINGXILOOP_PORT:-5181}:5181"
     volumes:
       - lingxiloop-uploads:/app/server/uploads
     healthcheck:
@@ -148,10 +128,44 @@ services:
       retries: 20
       start_period: 10s
     networks: [lingxiloop-mvp]
+    logging: *quiet-logging
+
+  agent-os:
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-agent-os:${LINGXILOOP_IMAGE_TAG:-mvp}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      lingxiloop:
+        condition: service_healthy
+      wukongim:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
+      AGENT_OS_PORT: 5190
+      AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required in .env}
+      LINGXILOOP_CONTROL_PLANE_URL: http://lingxiloop:5181
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      AGENT_OS_HOMES_ROOT: /var/lib/lingxiloop-agent-os/homes
+    volumes:
+      - lingxiloop-agent-os-data:/var/lib/lingxiloop-agent-os
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5190/readyz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks: [lingxiloop-mvp]
+    logging: *quiet-logging
 
 networks:
   lingxiloop-mvp: {}
 
 volumes:
   lingxiloop-postgres-data: {}
+  lingxiloop-redis-data: {}
   lingxiloop-uploads: {}
+  lingxiloop-wukong-data: {}
+  lingxiloop-agent-os-data: {}
