@@ -23,9 +23,11 @@ interface CanvasDraftSaveQueueOptions {
   clearTimer?: (timer: unknown) => void
 }
 
-interface PendingCanvasDraftSave {
-  patch: CanvasDraftPatch
-  timer: unknown
+interface CanvasDraftSaveState {
+  inFlight: boolean
+  patch?: CanvasDraftPatch
+  ready: boolean
+  timer?: unknown
 }
 
 /**
@@ -34,20 +36,43 @@ interface PendingCanvasDraftSave {
  * the patch contains only fields the human actually changed.
  */
 export function createCanvasDraftSaveQueue(options: CanvasDraftSaveQueueOptions) {
-  const pending = new Map<string, PendingCanvasDraftSave>()
+  const states = new Map<string, CanvasDraftSaveState>()
   const setTimer = options.setTimer ?? ((callback, delayMs) => globalThis.setTimeout(callback, delayMs))
   const clearTimer = options.clearTimer ?? ((timer) => globalThis.clearTimeout(timer as ReturnType<typeof setTimeout>))
 
+  async function flush(frameId: string, state: CanvasDraftSaveState) {
+    if (state.inFlight || !state.ready || !state.patch) return
+    const patch = state.patch
+    state.patch = undefined
+    state.ready = false
+    state.inFlight = true
+    try {
+      await options.save(frameId, patch)
+    } catch {
+      // The Inspector keeps its dirty state on failure. A later edit creates
+      // another save attempt; surfacing autosave errors is a separate concern.
+    } finally {
+      state.inFlight = false
+      if (state.ready && state.patch) {
+        void flush(frameId, state)
+      } else if (!state.patch && state.timer === undefined) {
+        states.delete(frameId)
+      }
+    }
+  }
+
   return {
     schedule(frameId: string, patch: CanvasDraftPatch) {
-      const previous = pending.get(frameId)
-      if (previous) clearTimer(previous.timer)
-      const mergedPatch = { ...previous?.patch, ...patch }
-      const timer = setTimer(() => {
-        pending.delete(frameId)
-        void Promise.resolve(options.save(frameId, mergedPatch)).catch(() => undefined)
+      const state = states.get(frameId) ?? { inFlight: false, ready: false }
+      states.set(frameId, state)
+      if (state.timer !== undefined) clearTimer(state.timer)
+      state.patch = { ...state.patch, ...patch }
+      state.ready = false
+      state.timer = setTimer(() => {
+        state.timer = undefined
+        state.ready = true
+        void flush(frameId, state)
       }, options.delayMs ?? 550)
-      pending.set(frameId, { patch: mergedPatch, timer })
     },
   }
 }

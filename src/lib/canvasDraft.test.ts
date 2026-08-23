@@ -119,3 +119,54 @@ test('edits to both fields on one frame merge into one pending patch', () => {
     patch: { title: 'Title', content: 'Content' },
   }])
 })
+
+test('same-frame saves are serialized and flush only the latest pending patch', async () => {
+  const timers = fakeTimers()
+  let resolveFirst!: () => void
+  const firstSave = new Promise<void>((resolve) => { resolveFirst = resolve })
+  const saves: Array<{ frameId: string; patch: CanvasDraftPatch }> = []
+  const queue = createCanvasDraftSaveQueue({
+    save: (frameId, patch) => {
+      saves.push({ frameId, patch })
+      return saves.length === 1 ? firstSave : Promise.resolve()
+    },
+    setTimer: timers.setTimer,
+    clearTimer: timers.clearTimer,
+  })
+
+  queue.schedule('frame-1', { title: 'A' })
+  timers.runAll()
+  assert.deepEqual(saves, [{ frameId: 'frame-1', patch: { title: 'A' } }])
+
+  queue.schedule('frame-1', { title: 'B' })
+  queue.schedule('frame-1', { content: 'latest content' })
+  timers.runAll()
+  assert.equal(saves.length, 1, 'the second save must wait for the first request')
+
+  resolveFirst()
+  await new Promise<void>((resolve) => setImmediate(resolve))
+  assert.deepEqual(saves, [
+    { frameId: 'frame-1', patch: { title: 'A' } },
+    { frameId: 'frame-1', patch: { title: 'B', content: 'latest content' } },
+  ])
+})
+
+test('different frames may save independently', () => {
+  const timers = fakeTimers()
+  const saves: string[] = []
+  const never = new Promise<void>(() => undefined)
+  const queue = createCanvasDraftSaveQueue({
+    save: (frameId) => {
+      saves.push(frameId)
+      return never
+    },
+    setTimer: timers.setTimer,
+    clearTimer: timers.clearTimer,
+  })
+
+  queue.schedule('frame-A', { title: 'A' })
+  queue.schedule('frame-B', { title: 'B' })
+  timers.runAll()
+
+  assert.deepEqual(saves, ['frame-A', 'frame-B'])
+})
