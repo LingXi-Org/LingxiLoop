@@ -1,6 +1,6 @@
-import WKSDK, { MessageContent, type Message as WKMessage, type WKEvent } from 'wukongimjssdk'
-import { getAuthToken, getActiveCompanyId } from '@/stores/auth'
+import WKSDK, { MessageContent, type WKEvent, type Message as WKMessage } from 'wukongimjssdk'
 import { getServerOrigin } from '@/api/client'
+import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
 
 export const LINGXI_MESSAGE_CONTENT_TYPE = 1000
 
@@ -119,7 +119,6 @@ export class LingxiImClient {
     this.sdk.config.uid = bootstrap.uid
     this.sdk.config.token = bootstrap.token
     this.sdk.config.addr = bootstrap.wsUrl
-    this.sdk.config.protoVersion = 3
     this.sdk.connect()
     this.started = true
   }

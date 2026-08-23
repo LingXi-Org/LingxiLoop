@@ -13,6 +13,10 @@ function jsonRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
+function isNotFound(error: unknown): boolean {
+  return error instanceof Error && /returned 404(?:\D|$)/.test(error.message)
+}
+
 export class WukongClient {
   constructor(readonly config: WukongConfig) {}
 
@@ -134,15 +138,27 @@ export class WukongClient {
   }
 
   async clearUnread(uid: string, channelId: string, channelType: number): Promise<void> {
-    await this.request('/conversations/clearUnread', {
-      method: 'POST', body: JSON.stringify({ uid, channel_id: channelId, channel_type: channelType }),
-    })
+    try {
+      await this.request('/conversations/clearUnread', {
+        method: 'POST', body: JSON.stringify({ uid, channel_id: channelId, channel_type: channelType }),
+      })
+    } catch (error) {
+      // WuKongIM has no conversation to clear until a channel receives a message.
+      if (!isNotFound(error)) throw error
+    }
   }
 
   async syncMessages(channelId: string, channelType: number, limit = 80, loginUid = ''): Promise<ImMessage[]> {
-    const value = await this.request<unknown>('/channel/messagesync', {
-      method: 'POST', body: JSON.stringify({ login_uid: loginUid, channel_id: channelId, channel_type: channelType, start_message_seq: 0, end_message_seq: 0, limit, pull_mode: 1 }),
-    })
+    let value: unknown
+    try {
+      value = await this.request<unknown>('/channel/messagesync', {
+        method: 'POST', body: JSON.stringify({ login_uid: loginUid, channel_id: channelId, channel_type: channelType, start_message_seq: 0, end_message_seq: 0, limit, pull_mode: 1 }),
+      })
+    } catch (error) {
+      // An empty channel has no sync state yet; expose it as an empty history.
+      if (isNotFound(error)) return []
+      throw error
+    }
     const root = jsonRecord(value)
     const list = Array.isArray(value) ? value : Array.isArray(root.messages) ? root.messages : []
     return list.map((raw) => {

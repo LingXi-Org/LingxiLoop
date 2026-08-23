@@ -112,6 +112,7 @@ services:
       WUKONG_WS_URL: ${WUKONG_WS_URL:-ws://localhost:5200}
       WUKONG_API_TOKEN: ${WUKONG_API_TOKEN:-dev-wukong-api-token}
       WUKONG_WEBHOOK_SECRET: ${WUKONG_WEBHOOK_SECRET:-dev-wukong-webhook-secret}
+      WUKONG_USER_TOKEN_SECRET: ${WUKONG_USER_TOKEN_SECRET:?WUKONG_USER_TOKEN_SECRET is required in .env}
       WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
