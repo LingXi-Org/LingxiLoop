@@ -255,7 +255,7 @@ async function actionFromLedger(client: PoolClient, key: string, action: HostAct
 
 const ACTION_CAPABILITIES: Record<string, string> = {
   files: 'files', documents: 'documents', boards: 'documents', calendar: 'calendar',
-  research: 'web', computer: 'computer', email: 'email',
+  research: 'web', canvas: 'canvas', email: 'email',
 }
 
 async function assertActionAllowed(work: AgentWorkItem, action: HostAction): Promise<void> {

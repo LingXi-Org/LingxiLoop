@@ -79,66 +79,16 @@ jobs:
       - run: npm ci
       - run: npm run test:integration
 
-  user-computer-docker-smoke:
-    name: User Computer full-stack takeover smoke
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: lingxiloop_computer_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d lingxiloop_computer_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_computer_test
-      REDIS_URL: redis://127.0.0.1:6379
-      DEEPSEEK_API_KEY: computer-smoke-key
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: node --import tsx scripts/user-computer-smoke.mjs
-
   agent-os-compose-smoke:
     name: Agent OS + WuKongIM Compose smoke
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Build the User Computer image used by the runtime manager
-        run: docker compose -f docker-compose.mvp.ci.yml --profile build-only build user-computer-image
       - name: Build and start isolated MVP test stack
         run: docker compose -f docker-compose.mvp.ci.yml up -d --build --wait
       - name: Verify WuKong webhook, durable work, IPython and final reply
         run: npm run mvp:ci:smoke
-      - name: Verify public Computer API through the isolated runtime manager
-        run: npm run mvp:ci:computer-smoke
-      - name: Restart the public API without restarting the Computer provider
-        run: |
-          docker compose -f docker-compose.mvp.ci.yml restart lingxiloop
-          docker compose -f docker-compose.mvp.ci.yml up -d --wait lingxiloop
-      - name: Verify Computer state, screenshot and takeover survive API restart
-        run: docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop npx tsx server/scripts/computer-compose-smoke.ts --verify-restart
       - name: Collect service logs after failure
         if: failure()
         run: docker compose -f docker-compose.mvp.ci.yml logs --no-color --tail 300

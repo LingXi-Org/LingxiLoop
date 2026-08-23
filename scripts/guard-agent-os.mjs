@@ -8,6 +8,11 @@ const bannedPaths = [
   'agent-cli', 'agent-fuse', 'server/lingxigraph', 'server/src/agents/runtime',
   'server/src/agents/computer/daemon.ts', 'server/src/agents/computer/engine.ts',
   'server/src/agents/computer/registry.ts', 'server/src/agents/turn.ts',
+  'server/src/agents/computer/user-computer.ts', 'server/src/computer-runtime',
+  'server/docker/computer-runtime.Dockerfile', 'server/docker/user-computer.Dockerfile',
+  'server/docker/user-computer-entrypoint.sh', 'server/docker/agent-computer-entrypoint.sh',
+  'server/docker/browser-broker.py', 'server/docker/agent-computer-lingxiloop.sh',
+  'server/src/scripts/build-agent-bundle.mjs', 'src/components/ComputerView.tsx',
 ]
 for (const path of bannedPaths) {
   const absolute = join(root, path)
@@ -38,6 +43,7 @@ for (const path of runtimeFiles) {
   if (/LINGXIGRAPH_|LINGXILOOP_REASONING_RUNTIME|byoa-(?:claude|codex)|agent computer --pair|requestPairingCode/i.test(source)) failures.push(`${rel}: retired runtime/BYOA configuration`)
   if (/\/computers(?:\/|['"`])/.test(source)) failures.push(`${rel}: retired agent-host pairing API`)
   if (/fast_model|fastModel|participants\.model|p\.computer_id|p\.engine/.test(source)) failures.push(`${rel}: retired per-Agent runtime/model field`)
+  if (/LINGXILOOP_COMPUTER_RUNTIME|COMPUTER_RUNTIME_SERVICE_TOKEN|LINGXILOOP_USER_COMPUTER_IMAGE|\/api\/computer|\/computer\/screens|\bcomputer\.(?:input|takeover|screenshot)/i.test(source)) failures.push(`${rel}: retired Shared Computer runtime`)
   if (/OPENAI_(?:API_KEY|BASE_URL|MODEL|IMAGE_MODEL)/.test(source)) failures.push(`${rel}: provider configuration must use DeepSeek only`)
 }
 
@@ -66,7 +72,7 @@ if (!productionCompose.includes('WUKONGIM_IMAGE must pin v3 commit') || !product
   failures.push('docker-compose.production.yml must require a digest-pinned WuKongIM package')
 }
 const ciWorkflow = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8')
-for (const image of ['lingxiloop-server', 'lingxiloop-agent-os', 'lingxiloop-wukongim', 'lingxiloop-computer-runtime', 'lingxiloop-user-computer']) {
+for (const image of ['lingxiloop-server', 'lingxiloop-agent-os', 'lingxiloop-wukongim']) {
   if (!ciWorkflow.includes(`package: ${image}`)) failures.push(`CI does not publish ${image} package`)
 }
 if (/\blingxiloop:\s*[\s\S]{0,1200}\/var\/run\/docker\.sock/.test(mvpCompose)) {

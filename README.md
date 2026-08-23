@@ -60,10 +60,9 @@ Compose pulls the `mvp` GHCR packages through
 the LingxiLoop API, Agent OS and WuKongIM stack to become healthy. API port
 5181 and WuKong WebSocket port 5200 bind to `0.0.0.0` by default for mobile
 clients; use TLS and override the bind addresses for public deployments.
-Packaged services default to warning-level, size-rotated logs.
-The User Computer runs behind an authenticated internal Computer Runtime
-Manager; only that manager mounts the Docker socket. The mobile-facing API has
-no Docker privileges and retains Computer state across API restarts.
+Packaged services default to warning-level, size-rotated logs. Canvas state is
+stored in Postgres and broadcast through the existing Redis/WebSocket path; no
+service mounts the Docker socket or shares an Agent execution environment.
 
 ## Verification
 
@@ -80,9 +79,8 @@ model tool surface other than `ipython`.
 
 ## Package publishing and production
 
-CI publishes `lingxiloop-server`, `lingxiloop-agent-os`,
-`lingxiloop-wukongim`, `lingxiloop-computer-runtime` and
-`lingxiloop-user-computer` as GHCR packages after every successful `main` build.
+CI publishes `lingxiloop-server`, `lingxiloop-agent-os` and
+`lingxiloop-wukongim` as GHCR packages after every successful `main` build.
 Each receives immutable commit/version tags plus the rolling `mvp` tag used by
 the one-command deployment.
 
@@ -94,7 +92,7 @@ TLS client endpoint is published by the deployment proxy.
 
 Cutover is intentionally one-way. The migration removes BYOA agents and their
 owned data, resets legacy chat/runtime data, preserves human-owned learning
-assets and user computers, and provisions fresh Study Room and Lab bindings.
+assets, removes Shared Computer state, and provisions fresh Study Room and Lab bindings.
 Rollback restores the pre-cutover PostgreSQL and WuKongIM volume backups; it
 does not reactivate the retired runtime.
 

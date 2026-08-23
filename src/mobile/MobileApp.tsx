@@ -1,7 +1,7 @@
 import { AnimatePresence, type MotionValue, motion, useTransform } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { BoardPeekContent, CalendarEventPeekContent } from '@/components/ArtifactPeekContent'
-import { ComputerView } from '@/components/ComputerView'
+import { CanvasView } from '@/components/CanvasView'
 import { DocumentEditor } from '@/components/DocumentEditor'
 import { IDoc } from '@/components/icons'
 import { initPushNotifications } from '@/lib/push'
@@ -143,7 +143,7 @@ export function MobileApp() {
   // stale persisted routes (or legacy deep links) instead of
   // leaving users on a hidden product area.
   useEffect(() => {
-    if (!['conversations', 'agents', 'computer', 'library', 'me'].includes(view)) {
+    if (!['conversations', 'agents', 'canvas', 'library', 'me'].includes(view)) {
       setView('conversations')
     }
   }, [view, convoId, setView])
@@ -301,11 +301,11 @@ export function MobileApp() {
             </motion.div>
           )}
 
-          {view === 'computer' && (
-            <motion.div key="computer" className="absolute inset-0"
+          {view === 'canvas' && (
+            <motion.div key="canvas" className="absolute inset-0"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={fadeTransition}>
-              <ViewBoundary name="Computer"><ComputerView /></ViewBoundary>
+              <ViewBoundary name="Canvas"><CanvasView /></ViewBoundary>
             </motion.div>
           )}
 

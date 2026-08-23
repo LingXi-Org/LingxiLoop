@@ -1,16 +1,14 @@
 # Release and rollback
 
-Production deploys five immutable application images:
+Production deploys three immutable application images:
 
 - `LINGXILOOP_SERVER_IMAGE`
 - `AGENT_OS_IMAGE`
 - `WUKONGIM_IMAGE`
-- `COMPUTER_RUNTIME_IMAGE`
-- `USER_COMPUTER_IMAGE`
 
-All must use `image@sha256:…`. The public API talks to the internal Computer
-Runtime Manager over authenticated HTTP; only that manager mounts the Docker
-socket and starts the digest-pinned User Computer image. WuKongIM v3 is built from verified commit
+All must use `image@sha256:…`. No application service mounts the Docker socket;
+Canvas collaboration is ordinary Postgres state fanned out through the existing
+Redis/WebSocket path. WuKongIM v3 is built from verified commit
 `c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47` and then pinned by image digest.
 Operators provide `.env.secrets`; CI uploads only `.release.next.env`, Compose
 and deployment scripts.

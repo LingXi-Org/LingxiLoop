@@ -70,7 +70,16 @@ CREATE TABLE IF NOT EXISTS participants (
 -- runtime tool list. Existing agents retain their current behaviour after the
 -- migration; owners can narrow the list from the agent editor.
 ALTER TABLE participants ADD COLUMN IF NOT EXISTS capabilities JSONB NOT NULL
-  DEFAULT '["computer","web","files","email","documents"]'::jsonb;
+  DEFAULT '["canvas","web","files","email","documents"]'::jsonb;
+ALTER TABLE participants ALTER COLUMN capabilities SET DEFAULT
+  '["canvas","web","files","email","documents"]'::jsonb;
+-- Shared Computer was retired in favour of shared Canvas state. Preserve
+-- every agent's other permissions while replacing the obsolete capability.
+-- Agents that had already revoked Computer must not be granted Canvas here;
+-- newly created agents receive Canvas through the column default above.
+UPDATE participants
+   SET capabilities = (capabilities - 'computer') || '["canvas"]'::jsonb
+ WHERE capabilities ? 'computer';
 
 CREATE TABLE IF NOT EXISTS conversation_counters (
   conversation_id TEXT PRIMARY KEY REFERENCES conversations(id) ON DELETE CASCADE,
@@ -1422,6 +1431,74 @@ CREATE TABLE IF NOT EXISTS board_mention_reads (
   last_read_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT '1970-01-01 00:00:00+00'
 );
 
+-- ============== Shared Canvas ==========================================
+-- One native shared state surface per workspace. Agent execution remains in
+-- isolated Agent OS kernels; only these rows and their small WS deltas cross
+-- execution boundaries.
+CREATE TABLE IF NOT EXISTS canvases (
+  id          TEXT PRIMARY KEY,
+  company_id  TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL DEFAULT 'Shared Canvas',
+  created_by  TEXT NOT NULL,
+  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(company_id)
+);
+
+CREATE TABLE IF NOT EXISTS canvas_frames (
+  id          TEXT PRIMARY KEY,
+  canvas_id   TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+  type        TEXT NOT NULL CHECK (type IN ('html','markdown','document','image','artifact')),
+  title       TEXT NOT NULL,
+  x           DOUBLE PRECISION NOT NULL DEFAULT 0,
+  y           DOUBLE PRECISION NOT NULL DEFAULT 0,
+  width       DOUBLE PRECISION NOT NULL DEFAULT 420,
+  height      DOUBLE PRECISION NOT NULL DEFAULT 300,
+  content     TEXT NOT NULL DEFAULT '',
+  data        JSONB NOT NULL DEFAULT '{}'::jsonb,
+  revision    BIGINT NOT NULL DEFAULT 1,
+  created_by  TEXT NOT NULL,
+  updated_by  TEXT NOT NULL,
+  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_canvas_frames_canvas ON canvas_frames(canvas_id, created_at ASC);
+
+CREATE TABLE IF NOT EXISTS canvas_presence (
+  canvas_id        TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+  participant_id   TEXT NOT NULL,
+  participant_kind TEXT NOT NULL CHECK (participant_kind IN ('user','agent')),
+  status           TEXT NOT NULL,
+  frame_id         TEXT REFERENCES canvas_frames(id) ON DELETE SET NULL,
+  last_seen_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (canvas_id, participant_id)
+);
+CREATE INDEX IF NOT EXISTS idx_canvas_presence_seen ON canvas_presence(canvas_id, last_seen_at DESC);
+
+CREATE TABLE IF NOT EXISTS canvas_comments (
+  id          TEXT PRIMARY KEY,
+  canvas_id   TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+  frame_id    TEXT REFERENCES canvas_frames(id) ON DELETE SET NULL,
+  author_id   TEXT NOT NULL,
+  author_kind TEXT NOT NULL CHECK (author_kind IN ('user','agent')),
+  body        TEXT NOT NULL,
+  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_canvas_comments_canvas ON canvas_comments(canvas_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_canvas_comments_frame ON canvas_comments(frame_id, created_at DESC) WHERE frame_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS canvas_activity (
+  id          TEXT PRIMARY KEY,
+  canvas_id   TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+  frame_id    TEXT REFERENCES canvas_frames(id) ON DELETE SET NULL,
+  actor_id    TEXT NOT NULL,
+  actor_kind  TEXT NOT NULL CHECK (actor_kind IN ('user','agent')),
+  action      TEXT NOT NULL,
+  detail      JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_canvas_activity_canvas ON canvas_activity(canvas_id, created_at DESC);
+
 -- ============== Collaborative documents (CRDT-backed) ===================
 -- AI-Native shared canvases. Humans and agents both subscribe to a Y.Doc
 -- room over the existing /ws channel; every edit travels as a Yjs binary
@@ -1573,79 +1650,6 @@ ALTER TABLE computers ADD COLUMN IF NOT EXISTS daemon_version TEXT;
 -- command, NULL = an old daemon that doesn't report it. Reported on pair +
 -- heartbeat; lets the app show run-mode-specific update instructions.
 ALTER TABLE computers ADD COLUMN IF NOT EXISTS daemon_supervised BOOLEAN;
-
--- ====================== User-level Computer product ======================
--- The legacy computers table above is an agent-host/BYOA compatibility
--- registry.  A User Computer is a different business object: one persistent
--- environment per user, shared by N agents, with agent-owned screens. Keeping
--- this table separate prevents a runtime/container id or old BYOA host from
--- accidentally becoming the product identity.
-CREATE TABLE IF NOT EXISTS user_computers (
-  id             TEXT PRIMARY KEY,
-  user_id        TEXT NOT NULL,
-  company_id     TEXT NOT NULL,
-  runtime_type   TEXT NOT NULL DEFAULT 'native-docker',
-  runtime_ref    TEXT,
-  status         TEXT NOT NULL DEFAULT 'stopped', -- stopped | starting | running | stopping | error
-  image_version  TEXT NOT NULL DEFAULT 'v1',
-  created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  last_active_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  deleted_at     TIMESTAMP WITH TIME ZONE
-);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_user_computers_one_active
-  ON user_computers(user_id) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_user_computers_company ON user_computers(company_id);
-
-CREATE TABLE IF NOT EXISTS computer_screens (
-  id          TEXT PRIMARY KEY,
-  computer_id TEXT NOT NULL REFERENCES user_computers(id) ON DELETE CASCADE,
-  agent_id    TEXT NOT NULL,
-  status      TEXT NOT NULL DEFAULT 'idle', -- idle | working | waiting | human_control
-  session_ref TEXT,
-  display_ref TEXT,
-  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  UNIQUE(computer_id, agent_id)
-);
-CREATE INDEX IF NOT EXISTS idx_computer_screens_computer ON computer_screens(computer_id);
-
-CREATE TABLE IF NOT EXISTS browser_targets (
-  id          TEXT PRIMARY KEY,
-  computer_id TEXT NOT NULL REFERENCES user_computers(id) ON DELETE CASCADE,
-  screen_id   TEXT REFERENCES computer_screens(id) ON DELETE SET NULL,
-  agent_id    TEXT NOT NULL,
-  target_ref  TEXT NOT NULL,
-  status      TEXT NOT NULL DEFAULT 'open',
-  private     BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_browser_targets_owner ON browser_targets(computer_id, agent_id);
-
-CREATE TABLE IF NOT EXISTS resource_leases (
-  id            TEXT PRIMARY KEY,
-  computer_id   TEXT NOT NULL REFERENCES user_computers(id) ON DELETE CASCADE,
-  resource_type TEXT NOT NULL,
-  resource_id   TEXT NOT NULL,
-  holder_type   TEXT NOT NULL, -- agent | human
-  holder_id     TEXT NOT NULL,
-  expires_at    TIMESTAMP WITH TIME ZONE NOT NULL,
-  created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_resource_leases_resource
-  ON resource_leases(computer_id, resource_type, resource_id, expires_at DESC);
-
-CREATE TABLE IF NOT EXISTS computer_events (
-  id          TEXT PRIMARY KEY,
-  computer_id TEXT NOT NULL REFERENCES user_computers(id) ON DELETE CASCADE,
-  screen_id   TEXT REFERENCES computer_screens(id) ON DELETE SET NULL,
-  agent_id    TEXT,
-  type        TEXT NOT NULL,
-  payload     JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_computer_events_recent ON computer_events(computer_id, created_at DESC);
 
 -- ========================= Coworker continuity ===========================
 CREATE TABLE IF NOT EXISTS agent_handoffs (
@@ -2220,6 +2224,14 @@ async function runAgentOSCutover(client: import('pg').PoolClient): Promise<void>
     }
 
     await client.query(`
+      -- Shared Computer state has no execution-environment-safe mapping to
+      -- Canvas. Drop it during the same one-way runtime cutover; the complete
+      -- implementation remains recoverable from legacy/shared-computer.
+      DROP TABLE IF EXISTS computer_events;
+      DROP TABLE IF EXISTS resource_leases;
+      DROP TABLE IF EXISTS browser_targets;
+      DROP TABLE IF EXISTS computer_screens;
+      DROP TABLE IF EXISTS user_computers;
       DROP TABLE IF EXISTS lingxigraph_steering_receipts;
       DROP TABLE IF EXISTS computers;
       ALTER TABLE participants DROP COLUMN IF EXISTS computer_id;

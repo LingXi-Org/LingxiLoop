@@ -50,7 +50,7 @@ def read_message() -> dict[str, Any]:
 
 
 def deny_network(*_args: Any, **_kwargs: Any) -> Any:
-    raise PermissionError("direct network access is disabled; use loop.research, loop.email, or loop.computer")
+    raise PermissionError("direct network access is disabled; use an authorized loop Host Bridge namespace")
 
 
 if os.environ.get("LINGXILOOP_KERNEL_ALLOW_NETWORK") != "1":
@@ -109,7 +109,7 @@ class Namespace:
 class LoopBridge:
     NAMESPACES = (
         "chat", "memory", "skills", "files", "documents", "boards",
-        "calendar", "routines", "research", "computer", "email", "polls", "turn",
+        "canvas", "calendar", "routines", "research", "email", "polls", "turn",
     )
 
     def __init__(self) -> None:

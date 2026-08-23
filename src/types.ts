@@ -1,7 +1,7 @@
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
-export type AgentCapability = 'computer' | 'web' | 'files' | 'email' | 'documents' | 'calendar'
+export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar'
 
 export interface Participant {
   id: string
@@ -256,7 +256,71 @@ export interface Message {
 }
 
 export interface ViewKey {
-  view: 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'computer' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
+  view: 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
+}
+
+/* ============== Shared Canvas ======================================== */
+
+export type CanvasFrameType = 'html' | 'markdown' | 'document' | 'image' | 'artifact'
+
+export interface CanvasFrame {
+  id: string
+  canvasId: string
+  type: CanvasFrameType
+  title: string
+  x: number
+  y: number
+  width: number
+  height: number
+  content: string
+  data: Record<string, unknown>
+  revision: number
+  createdBy: string
+  updatedBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CanvasPresence {
+  participantId: string
+  participantKind: 'user' | 'agent'
+  status: string
+  frameId: string | null
+  lastSeenAt: string
+}
+
+export interface CanvasComment {
+  id: string
+  canvasId: string
+  frameId: string | null
+  authorId: string
+  authorKind: 'user' | 'agent'
+  body: string
+  createdAt: string
+}
+
+export interface CanvasActivity {
+  id: string
+  canvasId: string
+  frameId: string | null
+  actorId: string
+  actorKind: 'user' | 'agent'
+  action: string
+  detail: Record<string, unknown>
+  createdAt: string
+}
+
+export interface CanvasSnapshot {
+  id: string
+  title: string
+  companyId: string
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+  frames: CanvasFrame[]
+  presence: CanvasPresence[]
+  comments: CanvasComment[]
+  activity: CanvasActivity[]
 }
 
 /* ============== Calendar (AI-native shared schedule) ============== */

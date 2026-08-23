@@ -1,4 +1,4 @@
-import { IAgent, IAgents, IChat, IComputer, IDoc } from '@/components/icons'
+import { IAgent, IAgents, ICanvas, IChat, IDoc } from '@/components/icons'
 import { useApp } from '@/stores/app'
 import { isMuted, useConversations } from '@/stores/conversations'
 import type { ViewKey } from '@/types'
@@ -7,7 +7,7 @@ import { Pressable } from './Pressable'
 const tabs: Array<{ key: ViewKey['view']; Icon: typeof IChat; label: string }> = [
   { key: 'conversations', Icon: IChat, label: '对话' },
   { key: 'agents', Icon: IAgent, label: '智能体' },
-  { key: 'computer', Icon: IComputer, label: '电脑' },
+  { key: 'canvas', Icon: ICanvas, label: '画布' },
   { key: 'library', Icon: IDoc, label: '资料库' },
   { key: 'me', Icon: IAgents, label: '我的' },
 ]
