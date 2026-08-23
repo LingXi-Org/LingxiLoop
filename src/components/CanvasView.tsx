@@ -362,6 +362,7 @@ function CanvasRail() {
   const [editorFocused, setEditorFocused] = useState(false)
   const [titleDirty, setTitleDirty] = useState(false)
   const [contentDirty, setContentDirty] = useState(false)
+  const [saveErrors, setSaveErrors] = useState<Record<string, string>>({})
   const [comment, setComment] = useState('')
   const [tab, setTab] = useState<'inspect' | 'activity'>('inspect')
   const draftFrameIdRef = useRef<string | null>(null)
@@ -374,9 +375,18 @@ function CanvasRail() {
     saveQueueRef.current = createCanvasDraftSaveQueue({
       save: async (frameId, patch) => {
         await updateFrameRef.current(frameId, patch)
+        setSaveErrors((current) => {
+          if (!(frameId in current)) return current
+          const next = { ...current }
+          delete next[frameId]
+          return next
+        })
         if (draftFrameIdRef.current !== frameId) return
         if (patch.title !== undefined && draftTitleRef.current === patch.title) setTitleDirty(false)
         if (patch.content !== undefined && draftContentRef.current === patch.content) setContentDirty(false)
+      },
+      onError: (frameId) => {
+        setSaveErrors((current) => ({ ...current, [frameId]: 'Autosave failed. Your draft is kept for retry.' }))
       },
     })
   }
@@ -430,6 +440,7 @@ function CanvasRail() {
     () => (snapshot?.comments ?? []).filter((item) => !item.frameId || item.frameId === selectedId),
     [snapshot?.comments, selectedId],
   )
+  const saveError = frame ? saveErrors[frame.id] : undefined
 
   async function submitComment() {
     const body = comment.trim()
@@ -454,6 +465,12 @@ function CanvasRail() {
                 <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wider text-ink-400">Content · {frame.type}</label>
                 <textarea value={draftContent} onChange={(event) => changeDraftContent(event.target.value)} rows={12} className="mt-1.5 w-full resize-y rounded-lg border border-hairline bg-inset px-3 py-2 font-mono text-xs leading-5 text-ink outline-none focus:border-accent" placeholder={frame.type === 'image' ? 'https://…' : 'Frame content'} />
                 <div className="mt-3 flex items-center justify-between text-[10px] text-ink-400"><span>{Math.round(frame.width)} × {Math.round(frame.height)}</span><span>revision {frame.revision}</span></div>
+                {saveError && (
+                  <div role="alert" className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700">
+                    <span>{saveError}</span>
+                    <button type="button" onClick={() => saveQueueRef.current?.retry(frame.id)} className="shrink-0 font-semibold underline underline-offset-2">Retry</button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="rounded-xl bg-raised p-4 text-sm text-ink-secondary">Select a frame to edit its title and content.</div>

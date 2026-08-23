@@ -170,3 +170,60 @@ test('different frames may save independently', () => {
 
   assert.deepEqual(saves, ['frame-A', 'frame-B'])
 })
+
+test('a failed save keeps its patch and can be retried explicitly', async () => {
+  const timers = fakeTimers()
+  const saves: CanvasDraftPatch[] = []
+  const errors: string[] = []
+  let attempt = 0
+  const queue = createCanvasDraftSaveQueue({
+    save: (_frameId, patch) => {
+      saves.push(patch)
+      attempt += 1
+      return attempt === 1 ? Promise.reject(new Error('offline')) : Promise.resolve()
+    },
+    onError: (frameId) => errors.push(frameId),
+    setTimer: timers.setTimer,
+    clearTimer: timers.clearTimer,
+  })
+
+  queue.schedule('frame-1', { title: 'Retained title' })
+  timers.runAll()
+  await new Promise<void>((resolve) => setImmediate(resolve))
+
+  assert.deepEqual(errors, ['frame-1'])
+  assert.equal(queue.retry('frame-1'), true)
+  await new Promise<void>((resolve) => setImmediate(resolve))
+  assert.deepEqual(saves, [
+    { title: 'Retained title' },
+    { title: 'Retained title' },
+  ])
+  assert.equal(queue.retry('frame-1'), false)
+})
+
+test('newer edits merge over a failed in-flight patch before retry', async () => {
+  const timers = fakeTimers()
+  let rejectFirst!: (error: Error) => void
+  const firstSave = new Promise<void>((_resolve, reject) => { rejectFirst = reject })
+  const saves: CanvasDraftPatch[] = []
+  const queue = createCanvasDraftSaveQueue({
+    save: (_frameId, patch) => {
+      saves.push(patch)
+      return saves.length === 1 ? firstSave : Promise.resolve()
+    },
+    setTimer: timers.setTimer,
+    clearTimer: timers.clearTimer,
+  })
+
+  queue.schedule('frame-1', { title: 'Old title' })
+  timers.runAll()
+  queue.schedule('frame-1', { title: 'Latest title', content: 'Latest content' })
+  timers.runAll()
+  rejectFirst(new Error('offline'))
+  await new Promise<void>((resolve) => setImmediate(resolve))
+
+  assert.deepEqual(saves, [
+    { title: 'Old title' },
+    { title: 'Latest title', content: 'Latest content' },
+  ])
+})

@@ -19,6 +19,7 @@ export type CanvasDraftPatch = Partial<Record<'title' | 'content', string>>
 interface CanvasDraftSaveQueueOptions {
   delayMs?: number
   save: (frameId: string, patch: CanvasDraftPatch) => void | Promise<void>
+  onError?: (frameId: string, error: unknown) => void
   setTimer?: (callback: () => void, delayMs: number) => unknown
   clearTimer?: (timer: unknown) => void
 }
@@ -48,9 +49,11 @@ export function createCanvasDraftSaveQueue(options: CanvasDraftSaveQueueOptions)
     state.inFlight = true
     try {
       await options.save(frameId, patch)
-    } catch {
-      // The Inspector keeps its dirty state on failure. A later edit creates
-      // another save attempt; surfacing autosave errors is a separate concern.
+    } catch (error) {
+      // Retain failed fields for an explicit retry. Edits made while this
+      // request was in flight win when they touch the same field.
+      state.patch = { ...patch, ...(state.patch ?? {}) }
+      options.onError?.(frameId, error)
     } finally {
       state.inFlight = false
       if (state.ready && state.patch) {
@@ -73,6 +76,15 @@ export function createCanvasDraftSaveQueue(options: CanvasDraftSaveQueueOptions)
         state.ready = true
         void flush(frameId, state)
       }, options.delayMs ?? 550)
+    },
+    retry(frameId: string) {
+      const state = states.get(frameId)
+      if (!state?.patch) return false
+      if (state.timer !== undefined) clearTimer(state.timer)
+      state.timer = undefined
+      state.ready = true
+      void flush(frameId, state)
+      return true
     },
   }
 }
