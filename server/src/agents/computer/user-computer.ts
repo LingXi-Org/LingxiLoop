@@ -24,6 +24,7 @@ export interface SandboxRuntimeCapabilities {
 /** Infrastructure-only contract. Product ids never cross this boundary. */
 export interface SandboxRuntime {
   readonly capabilities: SandboxRuntimeCapabilities
+  health(): Promise<void>
   create(input: { businessId: string; imageVersion: string }): Promise<SandboxHandle>
   start(runtimeRef: string): Promise<void>
   stop(runtimeRef: string): Promise<void>
@@ -60,8 +61,16 @@ export class NativeDockerSandboxRuntime implements SandboxRuntime {
   ) {}
 
   private async docker(args: string[], timeoutMs = 60_000): Promise<{ stdout: string; stderr: string }> {
-    return execFileAsync(this.dockerBin, args, { timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024 })
+    try {
+      return await execFileAsync(this.dockerBin, args, { timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024 })
+    } catch (error) {
+      const cause = error as { code?: string; message?: string }
+      if (cause.code === 'ENOENT') throw new Error('trusted-host Docker provider is unavailable: Docker CLI was not found')
+      throw error
+    }
   }
+
+  async health(): Promise<void> { await this.docker(['version', '--format', '{{.Server.Version}}'], 10_000) }
 
   async create(input: { businessId: string; imageVersion: string }): Promise<SandboxHandle> {
     const suffix = input.businessId.replace(/[^a-zA-Z0-9_.-]/g, '-').slice(-48)
@@ -93,7 +102,15 @@ export class NativeDockerSandboxRuntime implements SandboxRuntime {
   }
 
   async destroy(runtimeRef: string): Promise<void> {
-    await this.docker(['rm', '--force', safeRuntimeToken(runtimeRef)])
+    const safeRef = safeRuntimeToken(runtimeRef)
+    await this.docker(['rm', '--force', safeRef]).catch((error) => {
+      if (!String(error).includes('No such container')) throw error
+    })
+    for (const suffix of ['home', 'workspace', 'documents', 'downloads']) {
+      await this.docker(['volume', 'rm', `${safeRef}-${suffix}`]).catch((error) => {
+        if (!String(error).includes('no such volume')) throw error
+      })
+    }
   }
 
   async exec(runtimeRef: string, command: string[], options: ExecOptions = {}): Promise<ExecResult> {
@@ -144,6 +161,86 @@ export class NativeDockerSandboxRuntime implements SandboxRuntime {
     if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('invalid service port')
     return { providerRef: `${safeRuntimeToken(runtimeRef)}:${port}`, port }
   }
+}
+
+/** Narrow internal HTTP client. The API never needs Docker CLI/socket access. */
+export class HttpSandboxRuntime implements SandboxRuntime {
+  readonly capabilities: SandboxRuntimeCapabilities = {
+    persistentVolumes: true,
+    pauseResume: false,
+    snapshots: false,
+    networkPolicy: false,
+    credentialBroker: true,
+    secureRuntime: true,
+  }
+
+  constructor(
+    private readonly baseUrl: string,
+    private readonly serviceToken: string,
+  ) {
+    if (!baseUrl.trim()) throw new Error('Computer Runtime Manager URL is required')
+    if (!serviceToken.trim()) throw new Error('Computer Runtime Manager service token is required')
+  }
+
+  private async request<T>(operation: string, body: Record<string, unknown> = {}): Promise<T> {
+    let response: Response
+    try {
+      response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/v1/${operation}`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${this.serviceToken}`, 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(120_000),
+      })
+    } catch (error) {
+      throw new Error(`Computer Runtime Manager is unavailable: ${error instanceof Error ? error.message : String(error)}`)
+    }
+    const text = await response.text()
+    if (!response.ok) throw new Error(`Computer Runtime Manager ${operation} failed (${response.status}): ${text.slice(0, 500)}`)
+    try { return JSON.parse(text) as T } catch { throw new Error(`Computer Runtime Manager ${operation} returned invalid JSON`) }
+  }
+
+  async health(): Promise<void> { await this.request('health') }
+  create(input: { businessId: string; imageVersion: string }): Promise<SandboxHandle> { return this.request('create', input) }
+  start(runtimeRef: string): Promise<void> { return this.request('start', { runtimeRef }).then(() => undefined) }
+  stop(runtimeRef: string): Promise<void> { return this.request('stop', { runtimeRef }).then(() => undefined) }
+  destroy(runtimeRef: string): Promise<void> { return this.request('destroy', { runtimeRef }).then(() => undefined) }
+  exec(runtimeRef: string, command: string[], options?: ExecOptions): Promise<ExecResult> {
+    return this.request('exec', { runtimeRef, command, options: options ?? {} })
+  }
+  async readFile(runtimeRef: string, path: string): Promise<Uint8Array> {
+    const value = await this.request<{ data: string }>('read-file', { runtimeRef, path })
+    return new Uint8Array(Buffer.from(value.data, 'base64'))
+  }
+  writeFile(runtimeRef: string, path: string, data: Uint8Array): Promise<void> {
+    return this.request('write-file', { runtimeRef, path, data: Buffer.from(data).toString('base64') }).then(() => undefined)
+  }
+  exposeService(runtimeRef: string, port: number): Promise<ServiceEndpoint> { return this.request('expose-service', { runtimeRef, port }) }
+}
+
+class UnavailableSandboxRuntime implements SandboxRuntime {
+  readonly capabilities: SandboxRuntimeCapabilities = {
+    persistentVolumes: false, pauseResume: false, snapshots: false,
+    networkPolicy: false, credentialBroker: false, secureRuntime: false,
+  }
+  private unavailable(): never { throw new Error('Computer Runtime Manager is not configured') }
+  async health(): Promise<void> { this.unavailable() }
+  async create(): Promise<SandboxHandle> { return this.unavailable() }
+  async start(): Promise<void> { this.unavailable() }
+  async stop(): Promise<void> { this.unavailable() }
+  async destroy(): Promise<void> { this.unavailable() }
+  async exec(): Promise<ExecResult> { return this.unavailable() }
+  async readFile(): Promise<Uint8Array> { return this.unavailable() }
+  async writeFile(): Promise<void> { this.unavailable() }
+  async exposeService(): Promise<ServiceEndpoint> { return this.unavailable() }
+}
+
+export function createSandboxRuntime(): SandboxRuntime {
+  const managerUrl = process.env.LINGXILOOP_COMPUTER_RUNTIME_URL?.trim()
+  if (managerUrl) return new HttpSandboxRuntime(managerUrl, process.env.COMPUTER_RUNTIME_SERVICE_TOKEN ?? '')
+  if (process.env.LINGXILOOP_COMPUTER_RUNTIME === 'trusted-host-docker' || process.env.NODE_ENV !== 'production') {
+    return new NativeDockerSandboxRuntime()
+  }
+  return new UnavailableSandboxRuntime()
 }
 
 export type UserComputerStatus = 'stopped' | 'starting' | 'running' | 'stopping' | 'error'
@@ -268,6 +365,7 @@ export class UserComputerService {
 
   async start(userId: string, companyId: string): Promise<UserComputerRecord> {
     const computer = await this.ensure(userId, companyId)
+    await this.runtime.health()
     await pool.query(`UPDATE user_computers SET status = 'starting', last_active_at = NOW() WHERE id = $1`, [computer.id])
     try {
       const current = await pool.query<{ runtime_ref: string | null }>(`SELECT runtime_ref FROM user_computers WHERE id = $1`, [computer.id])
@@ -827,4 +925,4 @@ fi`,
   }
 }
 
-export const userComputerService = new UserComputerService()
+export const userComputerService = new UserComputerService(createSandboxRuntime())

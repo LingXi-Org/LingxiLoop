@@ -360,7 +360,7 @@ adminRouter.get('/stats', safe(async (req, res) => {
  *
  *  Query params:
  *    sinceDays — 1..365 (default 30)
- *    model     — substring filter (e.g. "gpt-5.4-mini") — applies to rollup
+ *    model     — substring filter (e.g. "deepseek-chat") — applies to rollup
  *                + trend; summary KPIs stay global so the operator can see
  *                "what fraction of MY total was mini" by comparing.
  *    companyId — optional tenant filter; admin defaults to ALL tenants. */
@@ -375,20 +375,19 @@ adminRouter.get('/observability/llm', safe(async (req, res) => {
   const companyFilter = typeof req.query.companyId === 'string' && req.query.companyId.trim() ? req.query.companyId.trim() : undefined
   // `fresh=1` (manual refresh / auto-refresh) bypasses the response cache.
   const fresh = req.query.fresh === '1' || req.query.fresh === 'true'
-  const { getLlmSummary, getLlmSpendRollup, getLlmDailyTrend, getLlmTopAgents, getLlmTenants, getLlmDaemonVersionRollup } = await import('../agents/llm-ledger.js')
+  const { getLlmSummary, getLlmSpendRollup, getLlmDailyTrend, getLlmTopAgents, getLlmTenants } = await import('../agents/llm-ledger.js')
   // 30s TTL keyed by the exact inputs that change the result. Absorbs the
   // page's refetch-on-every-filter-toggle without a stale-data hazard for a
   // spend dashboard. Tenant list is global (NOT scoped by companyFilter) so the
   // picker can always offer every active account regardless of the filter.
   const cacheKey = `obs-llm|${sinceDays}|${modelFilter ?? ''}|${companyFilter ?? '*'}`
   const payload = await cachedAgg(cacheKey, 30_000, async () => {
-    const [summaryCore, rollup, trend, topAgents, tenants, daemonVersions] = await Promise.all([
+    const [summaryCore, rollup, trend, topAgents, tenants] = await Promise.all([
       getLlmSummary({ sinceDays, companyId: companyFilter }),
       getLlmSpendRollup({ sinceDays, model: modelFilter, companyId: companyFilter as string | null | undefined }),
       getLlmDailyTrend({ sinceDays, companyId: companyFilter }),
       getLlmTopAgents({ sinceDays, limit: 20, companyId: companyFilter }),
       getLlmTenants({ sinceDays, limit: 200 }),
-      getLlmDaemonVersionRollup({ sinceDays, companyId: companyFilter }),
     ])
     // Derive the two summary fields getLlmSummary deliberately skipped from the
     // rollup we already have in hand — no extra table scan. Both then reflect
@@ -405,7 +404,7 @@ adminRouter.get('/observability/llm', safe(async (req, res) => {
       if (!topPurpose || costUsd > topPurpose.costUsd) topPurpose = { purpose, costUsd }
     }
     const summary = { ...summaryCore, topPurpose, savableUsd }
-    return { summary, rollup, trend, topAgents, tenants, daemonVersions }
+    return { summary, rollup, trend, topAgents, tenants }
   }, fresh)
   res.json(payload)
 }))

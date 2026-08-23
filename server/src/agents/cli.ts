@@ -17,6 +17,7 @@ import type { CliResult, CliSideEffect } from './cli-result.js'
 import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
 import { userComputerService } from './computer/user-computer.js'
 import { stripLoneSurrogates } from './text-safety.js'
+import { enqueueAgentWork } from '../agent-os/enqueue.js'
 
 // Every CLI result flows through ok()/err(), so scrubbing lone UTF-16 surrogates
 // here means CLI output (read by agents as tool results) can never carry a split
@@ -57,7 +58,7 @@ export { tokenize }
 // import). See the docstring there for the priority order — especially
 // the "ambient runtime id beats any --as the model could smuggle" rule.
 import { resolveAs } from './cli-identity.js'
-import type { WorklogEntry, WorkTaskType } from './runtime/client.js'
+import { normalizeWorkSubject, type WorklogEntry, type WorkTaskType } from './work-claims.js'
 /* ============== Worklog plumbing ==============
  *
  * Heavy agent-runtime actions (browser research, document creation, image
@@ -70,7 +71,7 @@ import type { WorklogEntry, WorkTaskType } from './runtime/client.js'
  * block real work. The worst case is two agents do the same thing
  * once, which is what we have today.
  */
-import { inprocClient as worklogClient } from './runtime/inproc-client.js'
+import { workClaims as worklogClient } from './work-claims.js'
 import { clearHold, consumeHold, getSeen, recordHold, recordSeen } from './seen-boundary.js'
 
 function tenantScopeKey(companyId: string): string {
@@ -748,7 +749,7 @@ async function cmdStatus(parsed: ParsedArgs): Promise<CliResult> {
 
 /* ============== mailbox: inbox / ack / reply ============== */
 
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
 interface InboxQuotedSummary {
   id: string
@@ -1221,7 +1222,7 @@ async function _cmdShip(parsed: ParsedArgs): Promise<CliResult> {
       await client.query(
         `INSERT INTO shipping_events (id,company_id,feature_id,actor_id,kind,data)
          VALUES ($1,$2,$3,$4,'feature.created',$5::jsonb)`,
-        [`se-${randomUUID()}`, companyId, id, me, JSON.stringify({ title, source: 'agent-cli' })],
+        [`se-${randomUUID()}`, companyId, id, me, JSON.stringify({ title, source: 'agent-os-host-bridge' })],
       )
       await client.query('COMMIT')
     } catch (error) {
@@ -1245,7 +1246,7 @@ async function _cmdShip(parsed: ParsedArgs): Promise<CliResult> {
     const notes = typeof parsed.flags.notes === 'string' ? parsed.flags.notes.trim() : ''
     if ((status === 'passed' || status === 'failed') && !evidence) return err(`${status} requires --evidence`)
     if (status === 'waived' && !notes) return err('waived requires --notes with the written reason')
-    const proof = JSON.stringify([{ note: evidence, capturedAt: new Date().toISOString(), via: 'agent-cli' }])
+    const proof = JSON.stringify([{ note: evidence, capturedAt: new Date().toISOString(), via: 'agent-os-host-bridge' }])
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
@@ -1278,7 +1279,7 @@ async function _cmdShip(parsed: ParsedArgs): Promise<CliResult> {
             'An agent-reported proof failed and was promoted into friction plus a replayable regression.', proof],
         )
       }
-      await client.query(`INSERT INTO shipping_events (id,company_id,feature_id,actor_id,kind,data) VALUES ($1,$2,$3,$4,'verification.updated',$5::jsonb)`, [`se-${randomUUID()}`, companyId, featureId, me, JSON.stringify({ id: squareId, status, via: 'agent-cli' })])
+      await client.query(`INSERT INTO shipping_events (id,company_id,feature_id,actor_id,kind,data) VALUES ($1,$2,$3,$4,'verification.updated',$5::jsonb)`, [`se-${randomUUID()}`, companyId, featureId, me, JSON.stringify({ id: squareId, status, via: 'agent-os-host-bridge' })])
       await client.query('COMMIT')
     } catch (error) {
       await client.query('ROLLBACK').catch(() => {})
@@ -1299,7 +1300,7 @@ async function _cmdShip(parsed: ParsedArgs): Promise<CliResult> {
     const id = `fr-${randomUUID()}`
     await pool.query(
       `INSERT INTO shipping_friction_reports (id,company_id,feature_id,reporter_id,source,title,description,severity)
-       VALUES ($1,$2,$3,$4,'agent-cli',$5,$6,$7)`,
+       VALUES ($1,$2,$3,$4,'agent-os-host-bridge',$5,$6,$7)`,
       [id, companyId, featureId, me, title, typeof parsed.flags.description === 'string' ? parsed.flags.description : title, severity],
     )
     return ok(`Captured friction ${id}${featureId ? ` on ${featureId}` : ''}. It is now visible in the Ship workspace.`)
@@ -1523,7 +1524,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // Internal, LingxiLoop-generated idempotency key (issue #7) — arrives ONLY
   // via the out-of-band `internal` context (see RunCliInternalContext),
   // never as an argv flag. No CLI caller (human, legacy bash-tool agent,
-  // BYOA pod) can set or spoof this. Enforced via a unique index on
+  // untrusted caller can set or spoof this. Enforced via a unique index on
   // messages.idempotency_key: a retried/duplicate-waked send with the SAME
   // key lands on the SAME row instead of inserting a second message.
   const idempotencyKey = internal.idempotencyKey?.trim() || null
@@ -2071,7 +2072,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   await pool.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [convoId])
 
   // Posting auto-acks me on this conversation (I clearly saw the messages I'm replying to).
-  // Structured LingxiGraph batches defer this side effect until every
+  // Structured Host Bridge batches defer this side effect until every
   // action succeeds; runAgentTurn then advances only to the inbox messages
   // that Graph actually consumed.
   if (!internal.deferReadCursor) {
@@ -2105,13 +2106,6 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // override, so a hold acknowledged-but-unused must not arm a later
   // preemptive --send-anyway in this conversation.
   void clearHold(me, replyHoldScope)
-  // A new message advances the conversation — the stall-state has changed,
-  // so any prior "give up on this stalled state" fallback-decline counter
-  // is now stale; clear it so a future stall (if it stalls again later) gets
-  // a fresh budget of fallback attempts. Fire-and-forget; if it fails the
-  // worst case is the counter TTLs naturally in 45min.
-  void (await import('./agenda.js')).resetStallNudgeDeclines(convoId)
-
   // Broadcast — frontend, scheduler, etc. all listen on CH_MESSAGE_NEW
   const { CH_MESSAGE_NEW, publish } = await import('../redis.js')
   await publish(CH_MESSAGE_NEW, {
@@ -2201,13 +2195,16 @@ const IMAGE_SIZE_MAP: Record<string, '1024x1024' | '1536x1024' | '1024x1536'> = 
 async function generateAndUploadImage(opts: {
   prompt: string
   size: string
-  /** Tenant for sub2api routing. When null, falls back to the legacy
-   *  shared OPENAI_API_KEY. */
+  /** Tenant for sub2api routing. When null, uses the shared DeepSeek
+   * credential. */
   tenant: string | null
   /** Agent invoking the tool (for ledger attribution). The peer-agent claim
    *  on this work uses the same id, so we already have it at every callsite. */
   agentId: string
 }): Promise<{ url: string; name: string; kind: 'img'; mime: string; size: number; key: string }> {
+  if (!env.DEEPSEEK_IMAGE_MODEL) {
+    throw new Error('image generation is disabled; configure a DeepSeek gateway image model')
+  }
   const size = IMAGE_SIZE_MAP[opts.size] ?? '1024x1024'
   // The agent-tool image generation lives on its own purpose so it doesn't
   // get pooled with avatar regeneration. Both ultimately hit the same image
@@ -2220,7 +2217,7 @@ async function generateAndUploadImage(opts: {
     extras: { size: opts.size, promptPreview: opts.prompt.slice(0, 120) },
   })
   const r = await client.images.generate({
-    model: env.OPENAI_IMAGE_MODEL,
+    model: env.DEEPSEEK_IMAGE_MODEL,
     prompt: opts.prompt,
     size,
     n: 1,
@@ -2261,8 +2258,8 @@ async function generateAndUploadImage(opts: {
 }
 
 /** `lingxiloop image generate "<prompt>" [--size square|wide|tall] [--as <id>] [--json]`
- *  Generates an image with the configured image model (default
- *  gpt-image-2), uploads it to storage, and returns the signed URL + key
+ *  Generates an image through an optional DeepSeek gateway image model,
+ *  uploads it to storage, and returns the signed URL + key
  *  so the caller can `lingxiloop reply <c> "<body>" --attach <url>` later.
  *  Decoupled from `reply --generate-image` so an agent can test a
  *  prompt, look at the result, and discard / regenerate without shipping
@@ -2306,7 +2303,7 @@ async function cmdImage(parsed: ParsedArgs): Promise<CliResult> {
       : size === 'tall' ? '1024×1536'
       : '1024×1024'
     return ok([
-      `generated ${dim} · ${Math.round(att.size / 1024)}KB · ${env.OPENAI_IMAGE_MODEL}`,
+      `generated ${dim} · ${Math.round(att.size / 1024)}KB · ${env.DEEPSEEK_IMAGE_MODEL}`,
       `name: ${att.name}`,
       `url:  ${att.url}`,
       `key:  ${att.key}`,
@@ -2802,7 +2799,7 @@ async function listAgentEmailThreads(args: {
 
 /* ============== Polls ====================================================
  * Agents can create polls, cast their own vote, and close polls they
- * authored. All three call the shared core in ../polls.ts — the HTTP API
+ * authored. All three call the WuKong-backed shared core in ../polls.ts — the HTTP API
  * for human users wraps the same functions, so renderer + agent paths
  * stay in lockstep on validation + broadcast. */
 async function cmdPoll(parsed: ParsedArgs): Promise<CliResult> {
@@ -2924,8 +2921,8 @@ async function cmdPollShow(parsed: ParsedArgs, me: string, companyId: string): P
   const messageId = parsed.positional[1]
   if (!messageId) return err('usage: poll show <message_id>')
   const { rows } = await pool.query<{ poll: { question: string; mode: string; options: Array<{ id: string; text: string }>; expiresAt: string | null; closedAt: string | null } | null; author_id: string }>(
-    `SELECT poll, author_id FROM messages
-      WHERE id = $1 AND company_id = $2 AND kind = 'poll' LIMIT 1`,
+    `SELECT poll, author_id FROM im_polls
+      WHERE poll_client_msg_no = $1 AND company_id = $2 LIMIT 1`,
     [messageId, companyId],
   )
   const row = rows[0]
@@ -2933,7 +2930,7 @@ async function cmdPollShow(parsed: ParsedArgs, me: string, companyId: string): P
   const { rows: tallyRows } = await pool.query<{ option_id: string; cnt: number; voter_ids: string[] }>(
     `SELECT option_id, COUNT(*)::int AS cnt,
             array_agg(voter_participant_id ORDER BY voter_participant_id) AS voter_ids
-       FROM poll_votes WHERE message_id = $1 GROUP BY option_id`,
+       FROM im_poll_votes WHERE poll_client_msg_no = $1 GROUP BY option_id`,
     [messageId],
   )
   const tallyMap = new Map(tallyRows.map((t) => [t.option_id, { cnt: t.cnt, voters: t.voter_ids }]))
@@ -2950,7 +2947,7 @@ async function cmdPollShow(parsed: ParsedArgs, me: string, companyId: string): P
   return ok(`${head}\n${lines}`)
 }
 
-async function cmdEmail(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdEmail(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const sub = parsed.positional[0]
   if (!sub) {
     return err(
@@ -2972,8 +2969,8 @@ async function cmdEmail(parsed: ParsedArgs): Promise<CliResult> {
     case 'contacts': return cmdEmailContacts(parsed, me, companyId, Boolean(parsed.flags.json))
     case 'inbox':    return cmdEmailInbox(parsed, me, companyId)
     case 'show':     return cmdEmailShow(parsed, me, companyId)
-    case 'send':     return cmdEmailSend(parsed, me, companyId)
-    case 'reply':    return cmdEmailReply(parsed, me, companyId)
+    case 'send':     return cmdEmailSend(parsed, me, companyId, internal.idempotencyKey)
+    case 'reply':    return cmdEmailReply(parsed, me, companyId, internal.idempotencyKey)
     default:
       return err(`unknown email subcommand: ${sub}`)
   }
@@ -3115,7 +3112,7 @@ async function cmdEmailShow(parsed: ParsedArgs, me: string, companyId: string): 
   return ok(lines.join('\n'))
 }
 
-async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
+async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string, idempotencyKey?: string): Promise<CliResult> {
   const toRaw = parsed.flags.to ? String(parsed.flags.to) : ''
   const ccRaw = parsed.flags.cc ? String(parsed.flags.cc) : ''
   const {
@@ -3175,13 +3172,22 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
     if (inHouse.rows[0]) memberIds.add(inHouse.rows[0].id)
   }
 
-  const messageId = mintMessageId()
+  const actionHash = idempotencyKey ? createHash('sha256').update(idempotencyKey).digest('hex') : ''
+  const messageId = idempotencyKey ? `agent-${actionHash}@lingxiloop.local` : mintMessageId()
+  if (idempotencyKey) {
+    const { rows } = await pool.query<{ message_id: string; conversation_id: string }>(
+      `SELECT message_id, conversation_id FROM email_messages WHERE company_id=$1 AND LOWER(smtp_message_id)=LOWER($2) LIMIT 1`,
+      [companyId, messageId],
+    )
+    if (rows[0]) return ok(`sent (replayed) · ${rows[0].message_id} · thread ${rows[0].conversation_id}`)
+  }
   const conv = await findOrCreateEmailConversation({
     companyId,
     inReplyTo: null,
     references: [],
     subject,
     memberIds: [...memberIds],
+    idempotencyKey,
   })
 
   // Call the provider FIRST so we record sent/failed accurately. If
@@ -3194,6 +3200,7 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
     subject,
     text: body,
     messageId,
+    idempotencyKey: idempotencyKey ? `agent-os/${actionHash}` : undefined,
     autoSubmitted: 'auto-generated',
     attachments: loadedAttachments.map((a) => ({
       filename: a.filename, mimeType: a.mimeType, base64: a.base64,
@@ -3216,6 +3223,7 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
     ccAddrs: ccResolved.map((r) => formatAddress(r.addr, r.name)),
     body,
     autoSubmitted: true,
+    idempotencyKey,
     attachments: loadedAttachments.map((a) => ({
       filename: a.filename, mimeType: a.mimeType, sizeBytes: a.sizeBytes,
       storageKey: a.storageKey,
@@ -3243,7 +3251,7 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
   }])
 }
 
-async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
+async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string, idempotencyKey?: string): Promise<CliResult> {
   const replyTo = parsed.positional[1]
   const body = unescapeChat(String(parsed.flags.body ?? '')).trim()
   const attachRaw = parsed.flags.attach ? String(parsed.flags.attach) : ''
@@ -3333,7 +3341,15 @@ async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string):
     ...(o.smtp_message_id ? [o.smtp_message_id] : []),
   ].filter((x): x is string => Boolean(x))
   const inReplyTo = o.smtp_message_id ? normalizeMessageId(o.smtp_message_id) : null
-  const messageId = mintMessageId()
+  const actionHash = idempotencyKey ? createHash('sha256').update(idempotencyKey).digest('hex') : ''
+  const messageId = idempotencyKey ? `agent-${actionHash}@lingxiloop.local` : mintMessageId()
+  if (idempotencyKey) {
+    const { rows } = await pool.query<{ message_id: string; conversation_id: string }>(
+      `SELECT message_id, conversation_id FROM email_messages WHERE company_id=$1 AND LOWER(smtp_message_id)=LOWER($2) LIMIT 1`,
+      [companyId, messageId],
+    )
+    if (rows[0]) return ok(`replied (replayed) · ${rows[0].message_id} · thread ${rows[0].conversation_id}`)
+  }
 
   const sendRes = await sendViaProvider({
     from: formatAddress(sender.email, sender.displayName),
@@ -3344,6 +3360,7 @@ async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string):
     inReplyTo: inReplyTo ?? undefined,
     references: newReferences,
     messageId,
+    idempotencyKey: idempotencyKey ? `agent-os/${actionHash}` : undefined,
     autoSubmitted: 'auto-replied',
     attachments: loadedAttachments.map((a) => ({
       filename: a.filename, mimeType: a.mimeType, base64: a.base64,
@@ -3366,6 +3383,7 @@ async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string):
     ccAddrs: ccCombined,
     body,
     autoSubmitted: true,
+    idempotencyKey,
     attachments: loadedAttachments.map((a) => ({
       filename: a.filename, mimeType: a.mimeType, sizeBytes: a.sizeBytes,
       storageKey: a.storageKey,
@@ -3437,17 +3455,14 @@ async function cmdAvatar(parsed: ParsedArgs): Promise<CliResult> {
     const r = t[0]
     const who = `${r.name} (${r.id}) — ${r.kind}${r.role ? `, ${r.role}` : ''}`
     if (!r.avatar_url) return ok(`${who}\n(no avatar set)`)
-    // We give the URL + a recipe. The CLI's tool-result text channel doesn't
-    // auto-feed vision (that's reserved for message attachments), so to ACTUALLY
-    // see the face the agent downloads the file and opens it with whatever image-
-    // reading tool the engine provides (Claude Code: \`Read <path>\` shows images
-    // inline; Codex: open the saved file).
+    // Return the URL and an artifact recipe. The Host Bridge result channel
+    // does not automatically feed image bytes back into the model.
     return ok(
       `${who}\n` +
       `avatar URL: ${r.avatar_url}\n\n` +
       `To actually SEE the image, save it locally then open it with your image-reading tool:\n` +
       `  curl -sL '${r.avatar_url}' -o /tmp/${r.id}-avatar\n` +
-      `then open \`/tmp/${r.id}-avatar\` with your Read / view-image tool.`,
+      `then inspect \`/tmp/${r.id}-avatar\` as an artifact.`,
     )
   }
 
@@ -4372,7 +4387,7 @@ async function publishCalendarCli(args: {
   })
 }
 
-async function cmdCalendar(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const op = parsed.positional[0] ?? 'list'
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
@@ -4429,6 +4444,13 @@ async function cmdCalendar(parsed: ParsedArgs): Promise<CliResult> {
     //                                  [--kind personal|agent_task]
     const title = parsed.positional.slice(1).join(' ').trim()
     if (!title) return err('usage: calendar create "<title>" --at <iso> [flags]')
+    const stableCalendarId = internal.idempotencyKey
+      ? `ce-agent-${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
+      : null
+    if (stableCalendarId) {
+      const { rows } = await pool.query(`SELECT 1 FROM calendar_events WHERE id=$1 AND company_id=$2`, [stableCalendarId, companyId])
+      if (rows[0]) return ok(`scheduled ${stableCalendarId} [replayed]`)
+    }
     const startStr = parsed.flags.at ? String(parsed.flags.at) : ''
     if (!startStr) return err('--at <iso-timestamp> is required')
     const start = new Date(startStr)
@@ -4486,7 +4508,6 @@ async function cmdCalendar(parsed: ParsedArgs): Promise<CliResult> {
       // shared work, and we must not leak another agent's private event
       // title through a HELD envelope.
       if (!isPrivate) {
-        const { normalizeWorkSubject } = await import('./runtime/inproc-client.js')
         const normTitle = normalizeWorkSubject(title)
         const calHoldScope = `calendar-create:${normTitle}`
         const forceArmed = Boolean(parsed.flags.force) && (await consumeHold(me, calHoldScope)).armed
@@ -4516,7 +4537,7 @@ async function cmdCalendar(parsed: ParsedArgs): Promise<CliResult> {
           }
         }
       }
-      const id = `ce-${randomUUID()}`
+      const id = stableCalendarId ?? `ce-${randomUUID()}`
       await pool.query(
         `INSERT INTO calendar_events
            (id, company_id, created_by, kind, title, assignee_id,
@@ -4895,9 +4916,8 @@ async function wakeMentionedAgentsCli(args: {
       [args.companyId, targets],
     )
     if (rows.length === 0) return
-    const { wakeAgent } = await import('./scheduler.js')
     for (const r of rows) {
-      wakeAgent(r.id, 'manual', null).catch((e) => {
+      enqueueAgentWork({ companyId: args.companyId, agentId: r.id, reason: 'mention' }).catch((e) => {
         console.warn(`[kanban-cli] wake ${r.id} failed`, e instanceof Error ? e.message : e)
       })
     }
@@ -4906,7 +4926,7 @@ async function wakeMentionedAgentsCli(args: {
   }
 }
 
-async function cmdBoard(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdBoard(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const op = parsed.positional[0] ?? 'ls'
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
@@ -4977,9 +4997,16 @@ async function cmdBoard(parsed: ParsedArgs): Promise<CliResult> {
     const title = parsed.positional.slice(1).join(' ').trim()
       || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
     if (!title) return err('usage: kanban create "<title>" [--description "..."]')
+    const stableBoardId = internal.idempotencyKey
+      ? `board-agent-${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
+      : null
+    if (stableBoardId) {
+      const { rows } = await pool.query(`SELECT 1 FROM boards WHERE id=$1 AND company_id=$2`, [stableBoardId, companyId])
+      if (rows[0]) return ok(`created board ${stableBoardId}: ${title} [replayed]`)
+    }
     const description = typeof parsed.flags.description === 'string'
       ? unescapeChat(parsed.flags.description).slice(0, 4000) : null
-    const id = `board-${randomUUID().slice(0, 12)}`
+    const id = stableBoardId ?? `board-${randomUUID().slice(0, 12)}`
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
@@ -4991,7 +5018,7 @@ async function cmdBoard(parsed: ParsedArgs): Promise<CliResult> {
       for (let i = 0; i < seeds.length; i++) {
         await client.query(
           `INSERT INTO board_columns (id, board_id, title, position) VALUES ($1, $2, $3, $4)`,
-          [`col-${randomUUID().slice(0, 12)}`, id, seeds[i], (i + 1) * 1000],
+          [stableBoardId ? `col-agent-${createHash('sha256').update(`${internal.idempotencyKey}:${i}`).digest('hex').slice(0, 24)}` : `col-${randomUUID().slice(0, 12)}`, id, seeds[i], (i + 1) * 1000],
         )
       }
       await client.query('COMMIT')
@@ -5787,6 +5814,13 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
     const title = parsed.positional.slice(1).join(' ').trim()
       || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
       || 'Untitled'
+    const stableDocumentId = internal.idempotencyKey
+      ? `doc_agent_${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
+      : null
+    if (stableDocumentId) {
+      const { rows } = await pool.query(`SELECT 1 FROM documents WHERE id=$1 AND company_id=$2`, [stableDocumentId, companyId])
+      if (rows[0]) return ok(`created document ${stableDocumentId}: ${title} [replayed]`)
+    }
 
     // Tenant-scoped claim by title so two agents don't independently
     // create overlapping docs ("Q3 plan v1", "Q3 plan v2", "Q3 plan
@@ -5805,7 +5839,6 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
       // duplicating. This runs inside the claim window, so against a
       // CONCURRENT creator we either lose the claim (handled above) or
       // see their committed row here.
-      const { normalizeWorkSubject } = await import('./runtime/inproc-client.js')
       const normTitle = normalizeWorkSubject(title)
       const docHoldScope = `doc-create:${normTitle}`
       const forceArmed = Boolean(parsed.flags.force) && (await consumeHold(me, docHoldScope)).armed
@@ -5833,7 +5866,7 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
           )
         }
       }
-      const id = `doc_${randomUUID().replace(/-/g, '').slice(0, 16)}`
+      const id = stableDocumentId ?? `doc_${randomUUID().replace(/-/g, '').slice(0, 16)}`
       await pool.query(
         `INSERT INTO documents (id, company_id, title, created_by) VALUES ($1, $2, $3, $4)`,
         [id, companyId, title.slice(0, 200), me],
@@ -6243,7 +6276,7 @@ function cliToolSideEffects(toolName: string, output: unknown, agentId: string):
 
 /** Trusted, out-of-band execution context that never travels through argv
  *  (issue #7 review: a plain `--idempotency-key` argv flag is settable by
- *  any legacy/bash-tool caller, human CLI, or BYOA pod — none of which
+ *  any legacy/internal caller outside the typed Host Bridge — none of which
  *  should be able to spoof a LingxiLoop-generated idempotency key). Only
  *  `executeCommunicationActions()` (via `AgentRuntimeClient.executeCli`'s
  *  `internal` param) ever supplies this — there is no argv flag, CLI help
@@ -6254,6 +6287,109 @@ export interface RunCliInternalContext {
    *  advancing conversation_reads. The turn coordinator owns the cursor
    *  after the complete action batch succeeds. */
   deferReadCursor?: boolean
+}
+
+/**
+ * Structured in-process domain entrypoint used by Agent OS. It deliberately
+ * bypasses argv/token parsing: the Host Bridge has already schema-checked a
+ * namespace.method action and supplies typed JSON values.
+ *
+ * The command handlers are shared during the cutover so the mature learning
+ * capability implementations retain their validation and side-effect ledger.
+ * No executable, shell, CLI string, or provider Agent product is involved.
+ */
+export async function runStructuredLearningAction(
+  action: string,
+  values: Record<string, unknown>,
+  identity: string,
+  internal: RunCliInternalContext = {},
+): Promise<CliResult> {
+  const [namespace, rawMethod] = action.split('.')
+  if (!namespace || !rawMethod) return err('action must use namespace.method')
+  const method = rawMethod.replaceAll('_', '-')
+  const flags: Record<string, string | boolean> = { as: identity }
+  const excluded = new Set<string>()
+  const positional: string[] = []
+  const stringValue = (key: string, required = true): string => {
+    const value = typeof values[key] === 'string' ? values[key].trim() : ''
+    if (required && !value) throw new Error(`${key} is required`)
+    excluded.add(key)
+    return value
+  }
+
+  let command = ''
+  if (namespace === 'memory') {
+    command = 'memory'; positional.push(method)
+    if (method === 'note') positional.push(stringValue('body'))
+    if (method === 'search') positional.push(stringValue('query'))
+  } else if (namespace === 'skills') {
+    command = 'skills'; positional.push(method)
+    if (method !== 'list') {
+      const name = stringValue('name', false)
+      if (name) positional.push(name)
+    }
+  } else if (namespace === 'files') {
+    command = 'workspace'; positional.push(method === 'list' ? 'ls' : method)
+    if (method === 'list') {
+      const path = stringValue('path', false); if (path) positional.push(path)
+    } else if (method === 'write') positional.push(stringValue('path'), stringValue('body'))
+    else if (method === 'edit') positional.push(stringValue('path'), stringValue('find'), stringValue('replace'))
+    else positional.push(stringValue(method === 'grep' ? 'query' : 'path'))
+  } else if (namespace === 'documents') {
+    command = 'doc'; positional.push(method === 'list' ? 'ls' : method)
+    if (method === 'create') positional.push(stringValue('title'))
+    else if (method === 'replace') positional.push(stringValue('documentId'))
+    else if (method !== 'list') {
+      positional.push(stringValue('documentId'))
+      const value = stringValue(method === 'rename' ? 'title' : 'body', method !== 'read' && method !== 'delete')
+      if (value) positional.push(value)
+    }
+  } else if (namespace === 'boards') {
+    const isCard = method.startsWith('card-')
+    command = isCard ? 'card' : 'kanban'
+    const operation = method.replace(/^card-/, '')
+    positional.push(operation === 'list' ? 'ls' : operation)
+    const id = stringValue(isCard ? 'cardId' : 'boardId', false)
+    const title = stringValue('title', false)
+    if (id) positional.push(id)
+    if (title) positional.push(title)
+  } else if (namespace === 'calendar') {
+    command = 'calendar'; positional.push(method)
+  } else if (namespace === 'polls') {
+    command = 'poll'; positional.push(method)
+    const id = stringValue('messageId', false); if (id) positional.push(id)
+  } else if (namespace === 'email') {
+    command = 'email'; positional.push(method)
+    const id = stringValue('messageId', false); if (id) positional.push(id)
+  } else if (namespace === 'computer') {
+    command = 'computer'; positional.push(method)
+  } else {
+    return err(`unsupported structured namespace: ${namespace}`)
+  }
+
+  for (const [key, value] of Object.entries(values)) {
+    if (excluded.has(key) || value === undefined || value === null || value === false) continue
+    const flag = key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`)
+    flags[flag] = value === true ? true : Array.isArray(value) ? value.map(String).join(',') : String(value)
+  }
+  const parsed: ParsedArgs = { positional, flags }
+  try {
+    switch (command) {
+      case 'memory': return await cmdMemory(parsed)
+      case 'skills': return await cmdSkills(parsed)
+      case 'workspace': return await cmdWorkspace(parsed)
+      case 'doc': return await cmdDoc(parsed, internal)
+      case 'kanban': return await cmdBoard(parsed, internal)
+      case 'card': return await cmdCard(parsed)
+      case 'calendar': return await cmdCalendar(parsed, internal)
+      case 'poll': return await cmdPoll(parsed)
+      case 'email': return await cmdEmail(parsed, internal)
+      case 'computer': return await cmdComputer(parsed)
+      default: return err(`unsupported structured action: ${action}`)
+    }
+  } catch (error) {
+    return err(`error: ${error instanceof Error ? error.message : String(error)}`, 2)
+  }
 }
 
 export async function runCli(argv: string[], internal: RunCliInternalContext = {}): Promise<CliResult> {

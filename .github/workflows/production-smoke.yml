@@ -26,5 +26,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: HTTPS, auth, WebSocket, database, Redis and LingxiGraph
+      - name: HTTPS, auth, WuKongIM, database, Redis and Agent OS
         run: node scripts/release-smoke.mjs

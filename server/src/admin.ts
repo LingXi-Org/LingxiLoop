@@ -283,8 +283,7 @@ function approvedEntryUrl(raw: string): string | null {
  *  font stack with system fallback, sky-blue → wisteria gradient CTA,
  *  paper background) and email-client-safe (table-based layout, inline
  *  styles, no external CSS). The hero + logo images live on R2 at
- *  deterministic keys under `email/` — see scripts-gen-welcome-email-
- *  assets.ts. If R2_PUBLIC_BASE isn't set we just omit the image rows;
+ *  deterministic keys under `email/`. If R2_PUBLIC_BASE isn't set we omit the image rows;
  *  the rest of the layout still renders nicely. */
 function buildWelcomeEmailHtml(args: {
   firstName: string

@@ -1,9 +1,8 @@
 /**
  * Shared coordination protocol — minimal by design.
  *
- * Imported VERBATIM by BOTH the cloud pod-agent prompt (turn.ts) and the BYOA
- * daemon engine prompt (computer/daemon.ts) so the two collaborate identically.
- * Edit in ONE place.
+ * Imported by the Agent OS prompt builder so all learning roles coordinate
+ * consistently. Edit in one place.
  *
  * MODEL: an agent sees only the
  * POSTED message stream plus a private per-(agent,convo) seen-cursor — there is

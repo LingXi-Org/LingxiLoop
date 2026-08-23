@@ -3,7 +3,6 @@ import type { Participant } from '@/types'
 import { cn, statusColor } from '@/lib/utils'
 import { AVATAR_IMG_LOADING, useAvatarImg, useCachedAvatarSrc } from '@/lib/avatarCache'
 import { useAuth } from '@/stores/auth'
-import { useComputers } from '@/stores/computers'
 import { BloubAvatar } from './BloubAvatar'
 
 interface Props {
@@ -26,15 +25,7 @@ function useResolvedAvatarStatus(p: Participant, statusOverride?: string) {
   // Override the dot for the auth user's own avatar instead of trying to
   // win that race — other people still see the real server-driven state.
   const selfId = useAuth((s) => s.user?.id)
-  // A BYOA agent is only as "online" as the computer it runs on. If its paired
-  // (non-cloud) computer is offline, show the agent offline EVERYWHERE it renders
-  // (conversation list, chat header, group members, …) — not just in AgentsView.
-  // Cloud/managed agents and humans have no paired computer, so they're
-  // unaffected. Subscribing to the specific computer re-renders the dot the
-  // moment its status flips via the computers.status WS event.
-  const host = useComputers((s) => (p.computerId ? s.byId[p.computerId] : undefined))
-  const hostOffline = !!host && host.kind !== 'cloud' && host.status !== 'online'
-  const ownStatus = p.id === selfId && p.kind === 'human' ? 'avail' : (hostOffline ? 'resting' : p.status)
+  const ownStatus = p.id === selfId && p.kind === 'human' ? 'avail' : p.status
   return statusOverride ?? ownStatus
 }
 

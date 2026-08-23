@@ -39,7 +39,7 @@ const child = spawn(
       ...process.env,
       // Unit tests mock provider calls; importing env.ts should not require
       // developers or CI to expose a real production credential.
-      OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'unit-test-key',
+      DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || 'unit-test-key',
     },
   },
 )

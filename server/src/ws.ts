@@ -2,14 +2,13 @@ import { WebSocketServer, type WebSocket } from 'ws'
 import type { Server } from 'node:http'
 import {
   sub,
-  CH_MESSAGE_NEW, CH_MESSAGE_DELTA, CH_TYPING,
-  CH_STATUS, CH_REACTIONS, CH_POLLS,
+  CH_STATUS,
   CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
   CH_BOARDS, CH_DOCS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
   publish,
   type DocMentionEvent,
 } from './redis.js'
-import type { MessageNewEvent } from './redis.js'
+import { wukongClient } from './im/wukong.js'
 import { env } from './env.js'
 import { consumeWsTicket } from './auth.js'
 import { pool } from './db/pool.js'
@@ -326,12 +325,8 @@ async function processDocMention(args: {
         ],
       ).catch((e) => console.warn('[doc.mention] agent_log insert failed', e))
 
-      // Also post a real `text` message authored by the mentioner so
-      // the agent actually WAKES + has context to act on. The mailbox
-      // scheduler watches CH_MESSAGE_NEW and runs an agent turn for
-      // every recipient. Without this step the agent only sees the
-      // doc-mention via `lingxiloop log` on its NEXT natural wake — which
-      // might never come if no one else messages it.
+      // Also post a WuKong text message authored by the mentioner so the
+      // post-commit webhook deterministically wakes the mentioned agent.
       try {
         await postDocMentionWake({
           companyId,
@@ -362,12 +357,8 @@ async function processDocMention(args: {
   await publish(CH_DOC_MENTION, event)
 }
 
-/** Post a synthetic chat message that wakes the mentioned agent with
- *  enough context to act. The agent's mailbox scheduler subscribes to
- *  CH_MESSAGE_NEW and runs a turn for every recipient — so dropping a
- *  real `text` message into a conversation the agent is in is the
- *  cheapest, most-reliable wake-with-context primitive available
- *  today (same pattern boards / scanner use indirectly).
+/** Post a WuKong message that wakes the mentioned agent with enough context
+ *  to act. The post-commit webhook is the sole work-enqueue boundary.
  *
  *  Conversation selection — first match wins:
  *    1. The doc's pinned `conversation_id`, IF the agent is a member.
@@ -393,14 +384,14 @@ async function postDocMentionWake(args: {
     documentId, documentTitle, pinnedConversationId,
   } = args
 
-  // 1) Try the pinned convo if both mentioner + agent are members.
+  // 1) Try the pinned WuKong channel if both mentioner + agent are members.
   let conversationId: string | null = null
   if (pinnedConversationId) {
-    const { rows } = await pool.query<{ members: string[] }>(
-      `SELECT members FROM conversations WHERE id = $1 AND company_id = $2`,
+    const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
+      `SELECT profile FROM im_channel_bindings WHERE channel_id = $1 AND company_id = $2`,
       [pinnedConversationId, companyId],
     )
-    const members = rows[0]?.members ?? []
+    const members = Array.isArray(rows[0]?.profile.members) ? rows[0].profile.members.map(String) : []
     if (members.includes(mentionerId) && members.includes(agentId)) {
       conversationId = pinnedConversationId
     }
@@ -409,69 +400,36 @@ async function postDocMentionWake(args: {
   // 2) Existing DM (same 2-member query the /conversations/direct
   //    handler uses — single source of truth for the dedup shape).
   if (!conversationId) {
-    const { rows } = await pool.query<{ id: string }>(
-      `SELECT id FROM conversations
-        WHERE kind = 'direct' AND company_id = $3
-          AND members @> to_jsonb(ARRAY[$1::text]) AND members @> to_jsonb(ARRAY[$2::text])
-          AND jsonb_array_length(members) = 2
+    const { rows } = await pool.query<{ channel_id: string }>(
+      `SELECT channel_id FROM im_channel_bindings
+        WHERE company_id = $3 AND profile->>'kind' = 'direct'
+          AND profile->'members' @> to_jsonb(ARRAY[$1::text])
+          AND profile->'members' @> to_jsonb(ARRAY[$2::text])
+          AND jsonb_array_length(profile->'members') = 2
         ORDER BY updated_at DESC LIMIT 1`,
       [mentionerId, agentId, companyId],
     )
-    if (rows[0]) conversationId = rows[0].id
+    if (rows[0]) conversationId = rows[0].channel_id
   }
 
   // 3) Create one.
   if (!conversationId) {
     const fresh = `direct-${agentId}-${randomUUID().slice(0, 6)}`
+    const profile = { channelId: fresh, channelType: 2 as const, kind: 'direct' as const, title: agentName, members: [mentionerId, agentId] }
+    await wukongClient().upsertChannel(profile)
     await pool.query(
-      `INSERT INTO conversations (id, kind, title, subtitle, members, pinned, tag, company_id)
-       VALUES ($1, 'direct', $2, NULL, $3::jsonb, FALSE, NULL, $4)`,
-      [fresh, agentName, JSON.stringify([mentionerId, agentId]), companyId],
-    )
-    await pool.query(
-      `INSERT INTO conversation_counters (conversation_id, next_sequence) VALUES ($1, 1)
-       ON CONFLICT (conversation_id) DO NOTHING`,
-      [fresh],
+      `INSERT INTO im_channel_bindings (channel_id, company_id, profile)
+       VALUES ($1,$2,$3::jsonb) ON CONFLICT (channel_id) DO NOTHING`,
+      [fresh, companyId, JSON.stringify(profile)],
     )
     conversationId = fresh
   }
 
-  // Allocate a sequence + insert the message. Same shape sendMessage uses.
-  const seqRes = await pool.query<{ seq: number }>(
-    `INSERT INTO conversation_counters (conversation_id, next_sequence)
-     VALUES ($1, 2)
-     ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
-     RETURNING next_sequence - 1 AS seq`,
-    [conversationId],
-  )
-  const sequence = seqRes.rows[0]?.seq ?? 1
-  const messageId = `m-${randomUUID()}`
-  const body = `@${agentId} heads-up — I @-mentioned you in the doc "${documentTitle}". Take a look with \`lingxiloop doc read ${documentId}\`, then either reply here or edit the doc directly (\`lingxiloop doc append/replace ${documentId} …\`).`
-  await pool.query(
-    `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
-     VALUES ($1, $2, $3, 'text', $4, $5, $6)`,
-    [messageId, conversationId, mentionerId, body, sequence, companyId],
-  )
-  await pool.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [conversationId])
-
-  // Publish on the same bus chat messages use → scheduler wakes the
-  // agent's pod, the turn loop drains the inbox, the agent sees this
-  // message with the doc id verbatim.
-  const event: MessageNewEvent = {
-    type: 'message.new',
-    companyId,
-    conversationId,
-    message: {
-      id: messageId,
-      conversationId,
-      authorId: mentionerId,
-      kind: 'text',
-      body,
-      sequence,
-      at: new Date().toISOString(),
-    },
-  }
-  await publish(CH_MESSAGE_NEW, event)
+  const body = `@${agentId} heads-up — I mentioned you in the document "${documentTitle}". Please read document ${documentId}.`
+  await wukongClient().sendMessage(conversationId, 2, mentionerId, {
+    version: 1, kind: 'text', clientMsgNo: `doc-mention-${randomUUID()}`, body,
+    refs: { documentId }, data: { mentionedIds: [agentId], mentionAll: false },
+  })
 }
 
 /** Display-name lookup for the mention payload. Tries users first
@@ -583,8 +541,7 @@ export function attachWebSocket(httpServer: Server) {
   // this list — the room manager handles them, since recipients need to
   // be filtered by doc-subscription, not just company.
   sub.subscribe(
-    CH_MESSAGE_NEW, CH_MESSAGE_DELTA, CH_TYPING,
-    CH_STATUS, CH_REACTIONS, CH_POLLS,
+    CH_STATUS,
     CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
     CH_BOARDS, CH_DOCS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
   ).then((count) => {

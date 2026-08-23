@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-process.env.OPENAI_API_KEY ||= 'test-key'
+process.env.DEEPSEEK_API_KEY ||= 'test-key'
 const { LEARNING_PRESET_VERSION, STARTER_ROOMS, STARTER_TEAM } = await import('../onboardCompany.js')
 
 test('learning preset defines exactly the six required personas', () => {
-  assert.equal(LEARNING_PRESET_VERSION, 2)
+  assert.equal(LEARNING_PRESET_VERSION, 3)
   assert.deepEqual(
     STARTER_TEAM.map((agent) => agent.presetKey),
     ['nova', 'sage', 'milo', 'trace', 'scout', 'forge'],
@@ -22,7 +22,7 @@ test('learning preset defines exactly the six required personas', () => {
     ],
   )
   for (const agent of STARTER_TEAM) {
-    assert.deepEqual(agent.tools, ['bash'])
+    assert.deepEqual(agent.tools, ['ipython'])
     assert.match(agent.systemPrompt, /next step/i)
     assert.equal('avatarUrl' in agent, false)
   }

@@ -9,12 +9,12 @@ project's [MIT License](LICENSE).
 
 ## Getting set up
 
-You need **Node ≥ 18** (CI runs on Node 24), plus **Postgres** and **Redis**
-running locally.
+You need **Node ≥ 20**, Python 3 with IPython, **Postgres**, **Redis**, and a
+WuKongIM v3 instance running locally.
 
 ```bash
 createdb -h localhost lingxiloop
-export OPENAI_API_KEY=sk-...        # the only hard-required env var
+export DEEPSEEK_API_KEY=sk-...        # the only hard-required model credential
 
 npm install
 npm run dev:all                     # Vite renderer on :5180 + API server on :5181
@@ -26,8 +26,8 @@ with a starter team. Everything else (OAuth login, email, storage, push, the
 sub2api LLM gateway) soft-disables when its env vars are unset — see
 [`.env.example`](.env.example).
 
-Component-specific setup lives in [`docs/`](docs/): `BYOA.md` (the local-engine
-daemon), `MOBILE_IOS.md`, `PUSH_NOTIFICATIONS.md`, `email.md`.
+Component-specific setup lives in [`docs/`](docs/), including mobile, push and
+email integration notes.
 
 ## Before you open a PR
 
@@ -39,7 +39,7 @@ npm run typecheck          # frontend types
 npm run server:typecheck   # server types
 npm test                   # unit tests (node:test) for server + workers
 npm run test:integration   # integration suite (needs local Postgres + Redis)
-npm run guard:big-brain    # architecture guard, see below
+npm run guard:agent-os     # independent runtime/tool-boundary guard
 npm run guard:llm-tracked  # architecture guard, see below
 ```
 
@@ -53,24 +53,21 @@ Both TypeScript projects are `strict`. There are no frontend unit tests yet;
 server and worker logic is covered by `server/src/__tests__` and
 `server/src/__integration__`.
 
-## Two architecture invariants (enforced in CI)
+## Architecture invariants (enforced in CI)
 
-These aren't style preferences — they're the product's core cost model, and a
-guard script will fail your build if you break them:
+These are product boundaries, and a guard script fails the build if they are
+broken:
 
-1. **Only agent turns may use the big model.** The cheap "cerebellum" model
-   handles triage, classification, summaries, and every other utility call;
-   the expensive model is reserved for the actual agent reasoning turn. If you
-   add an LLM call, route it through the right tier. `npm run guard:big-brain`
-   checks this.
+1. **Agent OS is independent.** Runtime code must not call or install an agent
+   CLI, and the model-facing tool list must contain only strict `ipython`.
+   `npm run guard:agent-os` checks this boundary.
 2. **Every LLM call must be tracked** in the cost ledger. Untracked spend is a
    correctness bug here, not just an oversight. `npm run guard:llm-tracked`
    checks this.
 
-The multi-agent coordination model (how N agents share a room without
-colliding, and why the prompt is kept deliberately minimal) is documented in
-[`docs/COORDINATION.md`](docs/COORDINATION.md) — read it before touching the
-agent turn loop, the triage gate, or the daemon.
+The learning-agent coordination model is documented in
+[`docs/COORDINATION.md`](docs/COORDINATION.md). Read it before changing routing,
+handoffs, the Agent OS loop or WuKong events.
 
 ## Coding conventions
 
@@ -78,8 +75,7 @@ agent turn loop, the triage gate, or the daemon.
   that explain *why* — constraints, trade-offs, and the history behind a
   non-obvious choice — not what the next line does. If your change reverses a
   decision a comment documents, update the comment.
-- Keep the coordination prompts (`glance-protocol.ts`, the daemon standing
-  prompt) shape-level and minimal. Adding per-scenario examples to fix one
+- Keep coordination prompts shape-level and minimal. Adding per-scenario examples to fix one
   observed bug is the most expensive class of change here — see the
   anti-patterns in `docs/COORDINATION.md`.
 - Prefer `any`-free, well-typed code; both tsconfigs are strict for a reason.

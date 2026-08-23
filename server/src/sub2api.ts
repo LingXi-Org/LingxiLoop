@@ -51,7 +51,7 @@ function tierToGroupId(tier: Tier): number {
 
 /** True when env is wired enough that we should actually try to talk
  *  to sub2api. When false, callers should silently fall back to the
- *  legacy global OPENAI_API_KEY path. */
+ *  shared DeepSeek credential path. */
 export function sub2apiConfigured(): boolean {
   return Boolean(env.SUB2API_INTERNAL_URL && env.SUB2API_ADMIN_KEY)
 }

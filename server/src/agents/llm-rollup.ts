@@ -49,11 +49,11 @@ const RETENTION_HOURS = 95 * 24
 export async function refreshLlmRollup(sinceHours: number): Promise<number> {
   const res = await pool.query(
     `INSERT INTO llm_calls_rollup (
-       bucket_hour, company_id, agent_id, purpose, model, source, daemon_version,
+       bucket_hour, company_id, agent_id, purpose, model, source,
        calls, ok_calls, failed_calls, rate_limited_calls,
        input_tokens, cached_input_tokens, cache_creation_tokens, output_tokens, reasoning_tokens,
        cost_usd, cost_estimated)
-     SELECT date_trunc('hour', created_at), company_id, agent_id, purpose, model, source, daemon_version,
+     SELECT date_trunc('hour', created_at), company_id, agent_id, purpose, model, source,
             COUNT(*),
             COUNT(*) FILTER (WHERE status = 'ok'),
             COUNT(*) FILTER (WHERE status != 'ok'),
@@ -67,8 +67,8 @@ export async function refreshLlmRollup(sinceHours: number): Promise<number> {
             BOOL_OR(cost_estimated)
        FROM llm_calls
       WHERE created_at >= date_trunc('hour', NOW()) - ($1::int * INTERVAL '1 hour')
-      GROUP BY 1, 2, 3, 4, 5, 6, 7
-     ON CONFLICT (bucket_hour, company_id, agent_id, purpose, model, source, daemon_version)
+      GROUP BY 1, 2, 3, 4, 5, 6
+     ON CONFLICT (bucket_hour, company_id, agent_id, purpose, model, source)
      DO UPDATE SET
        calls = EXCLUDED.calls,
        ok_calls = EXCLUDED.ok_calls,

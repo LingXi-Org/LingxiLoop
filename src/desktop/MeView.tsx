@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react'
-import { type ApiProject, type ApiQuotaSnapshot, type ApiQuotaWindow, api, getPairingServerOrigin, getServerOrigin } from '@/api/client'
+import { type ApiProject, type ApiQuotaSnapshot, type ApiQuotaWindow, api, getServerOrigin } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { Checkbox } from '@/components/Checkbox'
-import { isWindows } from '@/lib/runtime'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { useComputers } from '@/stores/computers'
 import { useDevtools } from '@/stores/devtools'
 import { useParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
 import { useSoundStore } from '@/stores/sound'
 
-const tabs = ['Profile', 'Usage', 'Computers', 'Projects', 'Memory', 'Trust & autonomy', 'Preferences'] as const
+const tabs = ['Profile', 'Usage', 'Projects', 'Memory', 'Trust & autonomy', 'Preferences'] as const
 type Tab = (typeof tabs)[number]
 
 const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: string; sub: string; default: boolean }> }> = [
@@ -695,315 +693,11 @@ function SkypeSoundSection() {
   )
 }
 
-const ENGINE_LABEL: Record<string, string> = { managed: 'LingxiLoop', claude: 'Claude Code', codex: 'Codex' }
-const KIND_ICON: Record<string, string> = { cloud: '☁', local: '💻', vps: '🖥' }
-const STATUS_COLOR: Record<string, string> = { online: '#3BB273', busy: '#E6A23C', offline: 'var(--ink-300)' }
-
-function ComputersTab() {
-  const byId = useComputers((s) => s.byId)
-  const loaded = useComputers((s) => s.loaded)
-  const participants = useParticipants((s) => s.byId)
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-  const [code, setCode] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-  // Engine for a NEWLY added computer's starter/assigned agents. Claude is the
-  // default (no flag → daemon auto-detects); Codex appends `--engine codex`.
-  const [engine, setEngine] = useState<'claude' | 'codex'>('claude')
-  // Default on: install the always-on service (auto-start/restart/update).
-  // --install-service is macOS/Linux only (daemon throws on Windows) → off + hidden there.
-  const [asService, setAsService] = useState(!isWindows)
-  // Per-computer re-pair (reconnect) command, keyed by computer id.
-  const [repairFor, setRepairFor] = useState<string | null>(null)
-  const [repairCode, setRepairCode] = useState<string | null>(null)
-  const [repairCopied, setRepairCopied] = useState(false)
-
-  useEffect(() => { void useComputers.getState().refresh() }, [])
-  useEffect(() => { if (!repairCopied) return; const t = window.setTimeout(() => setRepairCopied(false), 1600); return () => window.clearTimeout(t) }, [repairCopied])
-
-  async function toggleRepair(id: string) {
-    if (repairFor === id) { setRepairFor(null); setRepairCode(null); return }
-    setRepairFor(id); setRepairCode(null)
-    try { setRepairCode((await api.repairComputer(id)).code) }
-    catch (e) { alert(e instanceof Error ? e.message : String(e)); setRepairFor(null) }
-  }
-  useEffect(() => { if (!copied) return; const t = window.setTimeout(() => setCopied(false), 1600); return () => window.clearTimeout(t) }, [copied])
-
-  function copyCommand() {
-    void navigator.clipboard?.writeText(pairCommand)
-    setCopied(true)
-  }
-
-  const origin = getPairingServerOrigin()
-  const serverFlag = origin ? ` --server ${origin}` : ''
-  const pairCommand = code ? `npx lingxiloop@latest agent computer --pair ${code}${serverFlag}${engine === 'codex' ? ' --engine codex' : ''}${asService ? ' --install-service' : ''}` : ''
-  const list = Object.values(byId).sort((a, b) =>
-    (a.kind === 'cloud' ? 0 : 1) - (b.kind === 'cloud' ? 0 : 1) || a.name.localeCompare(b.name))
-
-  function agentCount(computerId: string, isCloud: boolean): number {
-    return Object.values(participants).filter((p) =>
-      p.kind === 'agent' && !p.departedAt &&
-      (p.computerId === computerId || (isCloud && !p.computerId))).length
-  }
-
-  // Clicking "Add a computer" just mints a pairing token and shows the command.
-  // The computer itself is created server-side only when the daemon pairs and
-  // reports the machine's real hostname — so no placeholder row, and it shows
-  // up here (named after the machine) once paired, via the WS status event.
-  async function addComputer() {
-    setErr(null); setBusy(true)
-    try {
-      const res = await api.requestPairingCode()
-      setCode(res.code)
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
-    } finally { setBusy(false) }
-  }
-
-  async function remove(id: string, label: string) {
-    if (!confirm(`Remove "${label}"? Its agents will go offline until you re-pair.`)) return
-    try {
-      await api.deleteComputer(id)
-      await useComputers.getState().refresh()
-    } catch (e) { alert(e instanceof Error ? e.message : String(e)) }
-  }
-
-  return (
-    <div className="space-y-6">
-      <Section title="↳ Where your agents run">
-        <p className="text-[13px] text-ink-500 mb-4 max-w-[640px]">
-          Every agent runs on a <strong>Computer</strong>. <em>LingxiLoop Cloud</em> is built in and
-          always on. Pair your own machine or a VPS to run agents on your local
-          <span className="font-mono text-[12px]"> Claude Code</span> or
-          <span className="font-mono text-[12px]"> Codex</span> — each agent gets its own isolated
-          workspace, memory and skills there.
-        </p>
-
-        {!loaded && <div className="text-[13px] text-ink-400">Loading…</div>}
-
-        <div className="grid gap-3">
-          {list.map((c) => {
-            const n = agentCount(c.id, c.kind === 'cloud')
-            const repairable = c.kind !== 'cloud'
-            const expanded = repairFor === c.id
-            const repairCmd = repairCode ? `npx lingxiloop@latest agent computer --pair ${repairCode}${serverFlag}` : ''
-            return (
-              <div key={c.id} className="bg-cloud rounded-[14px]" style={{ border: '1px solid var(--ink-100)' }}>
-                <div
-                  className={cn('p-4 flex items-center gap-4 rounded-[14px]', repairable && 'cursor-pointer hover:bg-sky-50/50')}
-                  onClick={repairable ? () => void toggleRepair(c.id) : undefined}>
-                  <div className="text-[22px] w-8 text-center">{KIND_ICON[c.kind] ?? '🖥'}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-display font-medium text-[16px] text-ink-900">{c.name}</span>
-                      <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-500">
-                        <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLOR[c.status] ?? 'var(--ink-300)' }} />
-                        {c.status}
-                      </span>
-                      {c.daemonOutdated && (
-                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-0.5 rounded-full"
-                          style={{ background: 'rgba(244,183,64,0.18)', color: 'var(--gold-deep)' }}
-                          title={c.latestDaemonVersion ? `Update to v${c.latestDaemonVersion}` : 'Update available'}>
-                          ↑ update{c.daemonVersion ? ` · v${c.daemonVersion}` : ''}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[12px] text-ink-500 mt-0.5">
-                      {c.availableEngines.map((e) => ENGINE_LABEL[e] ?? e).join(', ') || '—'}
-                      {' · '}{n} agent{n === 1 ? '' : 's'}
-                      {repairable && c.daemonVersion && (
-                        <>{' · '}<span className="font-mono text-[11px] text-ink-400">v{c.daemonVersion}</span></>
-                      )}
-                    </div>
-                  </div>
-                  {repairable && (
-                    <>
-                      <span className="text-[12px] font-semibold text-skype-deep">{expanded ? 'Hide' : 'Reconnect'}</span>
-                      <button onClick={(e) => { e.stopPropagation(); void remove(c.id, c.name) }}
-                        className="text-[12px] font-semibold text-coral-deep hover:underline px-2 py-1">
-                        Remove
-                      </button>
-                    </>
-                  )}
-                </div>
-                {expanded && (
-                  <div className="px-4 pb-4 pt-3 border-t border-ink-100">
-                    <div className="text-[12px] text-ink-500 mb-2 italic font-display">
-                      Run this on “{c.name}” to reconnect it — its agents stay attached. This token stays valid.
-                    </div>
-                    {!repairCode ? (
-                      <div className="text-[12px] text-ink-400">Generating…</div>
-                    ) : (
-                      <>
-                        <pre className="bg-ink-900 text-cloud rounded-[10px] p-3 text-[12px] overflow-x-auto whitespace-pre-wrap break-all font-mono select-all">{repairCmd}</pre>
-                        <button onClick={(e) => { e.stopPropagation(); void navigator.clipboard?.writeText(repairCmd); setRepairCopied(true) }}
-                          className="mt-2 inline-flex items-center justify-center min-w-[120px] text-[12px] font-semibold px-3 py-1.5 rounded-[9px] text-white transition-colors duration-200"
-                          style={{ background: repairCopied ? '#3BB273' : 'var(--skype)' }}>
-                          {repairCopied ? '✓ Copied!' : 'Copy command'}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        {code ? (
-          <div className="mt-4 bg-sky-50 rounded-[14px] p-4" style={{ border: '1px solid var(--sky-100)' }}>
-            <div className="text-[13px] font-semibold text-ink-900 mb-1">
-              Run this on the machine you want to host agents:
-            </div>
-            <div className="text-[11.5px] text-ink-500 mb-2.5 italic font-display">
-              Needs <span className="font-mono not-italic">claude</span> or <span className="font-mono not-italic">codex</span> installed. The computer names itself after that machine and appears here once paired. This token stays valid.
-            </div>
-            <div className="flex items-center gap-2.5 mb-2.5">
-              <span className="text-[12px] text-ink-500">Engine</span>
-              <div className="inline-flex rounded-[9px] p-0.5" style={{ background: 'var(--ink-100)' }}>
-                {([['claude', 'Claude Code'], ['codex', 'Codex']] as const).map(([id, label]) => (
-                  <button key={id} type="button" onClick={() => setEngine(id)}
-                    className="px-3 py-1 rounded-[7px] text-[12px] font-semibold transition-colors duration-150"
-                    style={engine === id
-                      ? { background: 'var(--paper)', color: 'var(--ink-900)', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }
-                      : { color: 'var(--ink-500)' }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <span className="text-[11px] text-ink-400">just the default — this computer can still run agents on either engine</span>
-            </div>
-            {isWindows ? (
-              <div className="mb-2.5 text-[12px] text-ink-600">
-                Keep this terminal open while the agents run.
-                <span className="text-ink-400"> — background service install isn’t supported on Windows yet.</span>
-              </div>
-            ) : (
-              <label className="flex items-start gap-2 mb-2.5 cursor-pointer select-none">
-                <input type="checkbox" checked={asService} onChange={(e) => setAsService(e.target.checked)} className="mt-[3px]" />
-                <span className="text-[12px] text-ink-600">
-                  Keep it running in the background <span className="text-ink-400">— auto-start on boot, auto-restart on crash, auto-update. Otherwise this terminal has to stay open.</span>
-                </span>
-              </label>
-            )}
-            <pre className="bg-ink-900 text-cloud rounded-[10px] p-3 text-[12px] overflow-x-auto whitespace-pre-wrap break-all font-mono select-all">{pairCommand}</pre>
-            <div className="flex gap-2 mt-3">
-              <button onClick={copyCommand} aria-live="polite"
-                className="inline-flex items-center justify-center gap-1.5 min-w-[128px] text-[12px] font-semibold px-3 py-1.5 rounded-[9px] text-white transition-colors duration-200"
-                style={{ background: copied ? '#3BB273' : 'var(--skype)' }}>
-                {copied ? (
-                  <>
-                    <svg key="ck" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
-                      style={{ animation: 'cp-pop 0.32s cubic-bezier(.36,1.6,.4,1)' }}>
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span style={{ animation: 'cp-fade 0.2s ease' }}>Copied!</span>
-                  </>
-                ) : 'Copy command'}
-              </button>
-              <button onClick={() => setCode(null)}
-                className="text-[12px] font-semibold px-3 py-1.5 rounded-[9px] border border-ink-100 text-ink-600">Done</button>
-            </div>
-            <style>{`
-              @keyframes cp-pop { 0% { transform: scale(0.2); opacity: 0 } 55% { transform: scale(1.3) } 100% { transform: scale(1); opacity: 1 } }
-              @keyframes cp-fade { from { opacity: 0; transform: translateX(-2px) } to { opacity: 1; transform: none } }
-            `}</style>
-          </div>
-        ) : (
-          <>
-            {err && <div className="mt-4 text-[12px] text-coral-deep bg-coral-soft rounded-[8px] p-2">{err}</div>}
-            <button onClick={addComputer} disabled={busy}
-              className="mt-4 px-4 py-2 rounded-[10px] bg-skype text-white text-[13px] font-semibold disabled:opacity-50">
-              {busy ? 'Generating…' : '+ Add a computer'}
-            </button>
-          </>
-        )}
-      </Section>
-    </div>
-  )
-}
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
       <h4 className="text-[10.5px] font-extrabold text-skype tracking-[0.14em] uppercase mb-3">{title}</h4>
       {children}
-    </div>
-  )
-}
-
-/** Elegant, self-clearing "your daemon is behind" banner. Shows the moment any
- *  paired computer reports an outdated `lingxiloop` daemon, and disappears on its own
- *  once the daemon restarts onto the latest (the next heartbeat clears the flag).
- *  Warm gold (an invitation to update), not alarm red. One-click copy. */
-function DaemonUpgradeBanner({ onJump }: { onJump: () => void }) {
-  const byId = useComputers((s) => s.byId)
-  const [copied, setCopied] = useState(false)
-  const outdated = Object.values(byId).filter((c) => c.daemonOutdated)
-  if (outdated.length === 0) return null
-
-  const latest = outdated.map((c) => c.latestDaemonVersion).find(Boolean) ?? null
-  const one = outdated.length === 1 ? outdated[0] : null
-  // Run-mode-aware instructions. A supervised daemon (--install-service) is
-  // restarted through its launchd/systemd wrapper; a manually-run foreground
-  // daemon has no wrapper — the user must Ctrl-C it and re-run the command.
-  // Unknown (old daemon not reporting the mode yet) gets the service command,
-  // which itself prints install-service guidance when no service exists.
-  const manual = outdated.filter((c) => c.daemonSupervised === false)
-  const allManual = manual.length === outdated.length
-  const cmd = allManual ? 'npx lingxiloop@latest agent computer' : 'npx lingxiloop@latest agent computer --restart'
-  const copy = () => { void navigator.clipboard?.writeText(cmd); setCopied(true); window.setTimeout(() => setCopied(false), 1600) }
-
-  return (
-    <div className="relative overflow-hidden rounded-[16px] mb-6"
-      style={{ border: '1px solid rgba(244,183,64,0.45)', background: 'linear-gradient(135deg, rgba(244,183,64,0.15), rgba(244,183,64,0.035) 70%)' }}>
-      <div className="p-4 flex items-start gap-4">
-        <div className="shrink-0 mt-0.5 w-9 h-9 rounded-full flex items-center justify-center text-[17px] font-bold"
-          style={{ background: 'rgba(244,183,64,0.22)', color: 'var(--gold-deep)' }}>↑</div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="font-display font-semibold text-[15px] text-ink-900">Update available</span>
-            {latest && (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono">
-                {one?.daemonVersion && (
-                  <span className="px-1.5 py-0.5 rounded-full" style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>v{one.daemonVersion}</span>
-                )}
-                <span className="text-ink-300">→</span>
-                <span className="px-1.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(244,183,64,0.30)', color: 'var(--gold-deep)' }}>v{latest}</span>
-              </span>
-            )}
-          </div>
-          <div className="text-[12.5px] text-ink-600 mt-1 leading-relaxed">
-            {one ? (
-              <><strong className="text-ink-900 font-medium">{one.name}</strong> is running an outdated agent daemon.</>
-            ) : (
-              <><strong className="text-ink-900 font-medium">{outdated.length} computers</strong> are running an outdated agent daemon: {outdated.map((c) => c.name).join(', ')}.</>
-            )}
-            {allManual ? (
-              <>{' '}{one ? 'It runs' : 'They run'} as a foreground command — press <kbd className="font-mono text-[11px]">Ctrl-C</kbd> in {one ? 'its' : 'each'} terminal, then re-run to update. Tip: <code className="font-mono text-[11px]">--install-service</code> makes updates automatic.</>
-            ) : (
-              <>
-                {' '}Restart {one ? 'it' : 'them'} to pick up the latest fixes — agents stay attached.
-                {manual.length > 0 && (
-                  <>{' '}({manual.map((c) => c.name).join(', ')} {manual.length === 1 ? 'runs' : 'run'} as a foreground command — Ctrl-C and re-run there instead.)</>
-                )}
-              </>
-            )}
-          </div>
-          <div className="mt-2.5 flex items-stretch gap-2 max-w-[580px]">
-            <code className="flex-1 bg-ink-900 text-cloud rounded-[10px] px-3 py-2 text-[12px] font-mono overflow-x-auto whitespace-nowrap select-all flex items-center">{cmd}</code>
-            <button onClick={copy}
-              className="shrink-0 inline-flex items-center justify-center min-w-[82px] text-[12px] font-semibold px-3 rounded-[10px] text-white transition-colors duration-200"
-              style={{ background: copied ? 'var(--avail)' : 'var(--gold-deep)' }}>
-              {copied ? '✓ Copied' : 'Copy'}
-            </button>
-          </div>
-          <button onClick={onJump} className="mt-2 text-[11.5px] font-semibold text-gold-deep hover:underline" style={{ color: 'var(--gold-deep)' }}>
-            Manage computers →
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
@@ -1059,8 +753,6 @@ function MemoryTab() {
 
 export function MeView() {
   const [tab, setTab] = useState<Tab>('Profile')
-  const hasOutdated = useComputers((s) => Object.values(s.byId).some((c) => c.daemonOutdated))
-  useEffect(() => { void useComputers.getState().refresh() }, [])
 
   return (
     <main className="overflow-y-auto p-8 pt-6"
@@ -1076,8 +768,6 @@ export function MeView() {
           </div>
         </div>
 
-        <DaemonUpgradeBanner onJump={() => setTab('Computers')} />
-
         <div className="flex gap-1 mb-7 border-b border-ink-100">
           {tabs.map((t, i) => (
             <button
@@ -1088,17 +778,13 @@ export function MeView() {
                 i === 0 ? 'pl-0 pr-5' : 'px-5',
                 tab === t ? 'border-skype text-skype-deep' : 'border-transparent text-ink-500 hover:text-ink-700',
               )}>
-              {({ Profile: '个人资料', Usage: '用量', Computers: '设备', Projects: '项目', Memory: '记忆', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
-              {t === 'Computers' && hasOutdated && (
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--gold-deep)' }} title="有设备服务需要更新" />
-              )}
+              {({ Profile: '个人资料', Usage: '用量', Projects: '项目', Memory: '记忆', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
             </button>
           ))}
         </div>
 
         {tab === 'Profile' && <ProfileTab />}
         {tab === 'Usage' && <UsageTab />}
-        {tab === 'Computers' && <ComputersTab />}
         {tab === 'Projects' && <ProjectsTab />}
         {tab === 'Memory' && <MemoryTab />}
         {tab === 'Trust & autonomy' && <TrustTab />}

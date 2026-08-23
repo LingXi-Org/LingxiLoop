@@ -5,7 +5,7 @@ import { publicActivityTitle } from './activity-visibility.js'
 import { EMPTY_USAGE, effectiveCostUsd, modelPriceTable, priceFor, type TokenUsage } from './cost.js'
 
 export type AgentRunStatus = 'running' | 'waiting_for_human' | 'completed' | 'failed' | 'skipped'
-export type TriageSource = 'cloud' | 'byoa-claude' | 'byoa-codex'
+export type TriageSource = 'cloud' | 'agent-os' | 'product'
 export type AgentEventLevel = 'debug' | 'info' | 'warn' | 'error'
 
 const MAX_STRING_CHARS = 24_000
@@ -243,7 +243,7 @@ export async function finishAgentRun(args: {
 
 /** Record one inbox-triage call (the small-brain gate) with its cache-aware cost.
  *  Best-effort: a DB hiccup must never break a turn. `usage` null/undefined means
- *  the engine gave us no token counts (e.g. codex) → stored as unmeasured. */
+ *  the provider gave us no token counts → stored as unmeasured. */
 export async function recordTriage(args: {
   agentId: string
   companyId?: string | null
@@ -277,12 +277,9 @@ export async function recordTriage(args: {
   }
 }
 
-/** Heartbeat a still-running run: bump updated_at so the stale-run sweeper does
- *  NOT reap a legitimately long turn. Cloud turns stay alive implicitly (every
- *  recordAgentEvent bumps updated_at); BYOA turns emit no mid-run events, so the
- *  daemon must call this periodically while its engine turn is in flight, or any
- *  turn >maxAgeMs gets falsely closed as "orphaned". Only touches a 'running' row
- *  so it can never resurrect a finished/failed one. */
+/** Heartbeat a still-running run so the stale-run sweeper does not reap a
+ * legitimately long Agent OS turn. Only touches a running row and therefore
+ * cannot resurrect a terminal run. */
 export async function touchAgentRun(runId: string): Promise<void> {
   await pool.query(
     `UPDATE agent_runs SET updated_at = NOW() WHERE id = $1 AND status = 'running'`,
@@ -398,7 +395,6 @@ export interface TriageEconomics {
   estimatedAvoidedUsd: number      // Σ per-agent skipCount*avgTurnCost — the avoided BIG-BRAIN spend
   estimatedNetSavingsUsd: number   // estimatedAvoided − triageCost (LABELED estimate in the UI)
   costEstimated: boolean           // any price was a seeded/fallback estimate, not an operator rate
-  byoaShare: number                // fraction of triages on BYOA (flat-rate $ → meter-equivalent, not a bill)
   unitPrices: TriageUnitPrice[]    // the actual per-token rates used (small brain vs big brain)
   priceTable: TriagePriceRow[]     // the full price menu (reference), always populated
   perAgent: TriageAgentRow[]
@@ -437,13 +433,12 @@ export async function getTriageEconomics(args: {
 
   const triAgg = await pool.query<{
     agent_id: string; agent_name: string; model: string | null; actionable: boolean;
-    n: number; measured_n: number; byoa_n: number;
+    n: number; measured_n: number;
     input_tokens: string; cached_tokens: string; cache_creation_tokens: string; output_tokens: string;
   }>(
     `SELECT t.agent_id, COALESCE(p.name, t.agent_id) AS agent_name, t.model, t.actionable,
             count(*)::int AS n,
             count(*) FILTER (WHERE t.measured)::int AS measured_n,
-            count(*) FILTER (WHERE t.source LIKE 'byoa%')::int AS byoa_n,
             COALESCE(sum(t.input_tokens), 0)::bigint AS input_tokens,
             COALESCE(sum(t.cached_input_tokens), 0)::bigint AS cached_tokens,
             COALESCE(sum(t.cache_creation_tokens), 0)::bigint AS cache_creation_tokens,
@@ -476,7 +471,7 @@ export async function getTriageEconomics(args: {
 
   interface Acc {
     agentName: string
-    triageCount: number; skipCount: number; wakeCount: number; measuredCount: number; byoaCount: number
+    triageCount: number; skipCount: number; wakeCount: number; measuredCount: number
     triageCostUsd: number; triageOverheadUsd: number
     turnCount: number; turnCostUsd: number; cacheRead: number; totalInput: number
   }
@@ -484,7 +479,7 @@ export async function getTriageEconomics(args: {
   const accOf = (id: string, name: string): Acc => {
     let a = acc.get(id)
     if (!a) {
-      a = { agentName: name, triageCount: 0, skipCount: 0, wakeCount: 0, measuredCount: 0, byoaCount: 0, triageCostUsd: 0, triageOverheadUsd: 0, turnCount: 0, turnCostUsd: 0, cacheRead: 0, totalInput: 0 }
+      a = { agentName: name, triageCount: 0, skipCount: 0, wakeCount: 0, measuredCount: 0, triageCostUsd: 0, triageOverheadUsd: 0, turnCount: 0, turnCostUsd: 0, cacheRead: 0, totalInput: 0 }
       acc.set(id, a)
     } else if (name !== id && a.agentName === id) {
       a.agentName = name
@@ -499,7 +494,6 @@ export async function getTriageEconomics(args: {
     const cost = effectiveCostUsd(t.model, toUsage(t)).usd
     a.triageCount += t.n
     a.measuredCount += t.measured_n
-    a.byoaCount += t.byoa_n
     a.triageCostUsd += cost
     if (t.actionable) { a.wakeCount += t.n; a.triageOverheadUsd += cost } else { a.skipCount += t.n }
   }
@@ -582,13 +576,13 @@ export async function getTriageEconomics(args: {
   // Global rollups (turn metrics over ALL agents with runs; triage metrics + the
   // net over the agents that triaged, using each agent's OWN avg turn cost).
   let triageCostUsd = 0, estimatedAvoidedUsd = 0, triageCount = 0, triageSkip = 0, triageWake = 0
-  let triageMeasured = 0, triageOverhead = 0, byoaTri = 0
+  let triageMeasured = 0, triageOverhead = 0
   let turnCostUsd = 0, turnCount = 0, cacheRead = 0, totalInput = 0
   for (const a of acc.values()) {
     turnCostUsd += a.turnCostUsd; turnCount += a.turnCount; cacheRead += a.cacheRead; totalInput += a.totalInput
     if (a.triageCount > 0) {
       triageCostUsd += a.triageCostUsd; triageCount += a.triageCount; triageSkip += a.skipCount
-      triageWake += a.wakeCount; triageMeasured += a.measuredCount; triageOverhead += a.triageOverheadUsd; byoaTri += a.byoaCount
+      triageWake += a.wakeCount; triageMeasured += a.measuredCount; triageOverhead += a.triageOverheadUsd
       estimatedAvoidedUsd += a.skipCount * (a.turnCount > 0 ? a.turnCostUsd / a.turnCount : 0)
     }
   }
@@ -616,7 +610,6 @@ export async function getTriageEconomics(args: {
     estimatedAvoidedUsd,
     estimatedNetSavingsUsd: estimatedAvoidedUsd - triageCostUsd,
     costEstimated,
-    byoaShare: triageCount > 0 ? byoaTri / triageCount : 0,
     unitPrices,
     priceTable: modelPriceTable(),
     perAgent: perAgent.sort((a, b) => b.triageCount - a.triageCount),

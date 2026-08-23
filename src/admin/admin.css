@@ -847,7 +847,7 @@
 .obs-cell-model { display: flex; flex-direction: column; min-width: 0; }
 .obs-cell-source { font-size: 11px; color: var(--ink-500); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
 .obs-est-flag { margin-left: 4px; color: var(--gold-deep); font-size: 10px; }
-/* BYOA rows carry meter-equivalent cost, not a real bill — same scale as
+/* Estimated rows carry meter-equivalent cost, not a settled bill — same scale as
  * cloud rows so they can be compared, but flagged distinctly (skype-tier
  * blue instead of gold) so the operator's eye separates the two semantics
  * at a glance. */

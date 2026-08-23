@@ -6,7 +6,6 @@ import { useMessages, bootMessagesStream } from '@/stores/messages'
 import { bootParticipants } from '@/stores/participants'
 import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
 import { bootWhispers, useWhispers } from '@/stores/whispers'
-import { bootComputers } from '@/stores/computers'
 import { usePrefs } from '@/stores/preferences'
 import { api } from '@/api/client'
 import { DesktopApp } from '@/desktop/DesktopApp'
@@ -52,7 +51,6 @@ function AuthedApp() {
     bootParticipants()
     bootConversations()
     bootWhispers()
-    bootComputers()
     void usePrefs.getState().load()
   }, [])
 

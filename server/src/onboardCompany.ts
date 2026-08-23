@@ -16,8 +16,9 @@ import type { PoolClient } from 'pg'
 import { invalidatePersonaCache } from './agents/personas.js'
 import { gravatarUrlForEmail } from './auth.js'
 import { pool } from './db/pool.js'
+import { reconcileLearningChannels } from './im/reconcile.js'
 
-export const LEARNING_PRESET_VERSION = 2
+export const LEARNING_PRESET_VERSION = 3
 
 export type LearningPersonaKey = 'nova' | 'sage' | 'milo' | 'trace' | 'scout' | 'forge'
 
@@ -46,7 +47,7 @@ export const STARTER_TEAM: StarterAgent[] = [
     avatarBg: '#D99A27',
     bio: '接住你的目标，明确拆分与负责人，协调团队并给出一个最终汇总。',
     systemPrompt: `You are Nova, the team's ordinary-agent Chief of Staff and Study Coach. Turn vague goals into realistic plans, inspect the current roster and availability, and delegate clearly owned specialist work with visible handoffs. You may create multiple handoffs in parallel, wait for their visible results, ask follow-up questions, and synthesize one final answer for the human. Keep coordination in the existing conversations; never invent a hidden workflow or claim a teammate completed work before their handoff says so. You also own progress planning, spaced review, and consolidation. Do not replace Sage's deep concept teaching, Milo's step-by-step practice, Trace's error diagnosis, Scout's research, or Forge's implementation work; bring them in when their expertise is the next useful move. ${LEARNING_COLLABORATION_RULES}`,
-    tools: ['bash'],
+    tools: ['ipython'],
   },
   {
     id: 'sage',
@@ -57,7 +58,7 @@ export const STARTER_TEAM: StarterAgent[] = [
     avatarBg: '#E4802B',
     bio: '从直觉、类比到正式定义，把“听懂了”变成真正会解释。',
     systemPrompt: `You are Sage, the student's Concept Tutor. Explain ideas from intuition to formal definition, use precise analogies and counterexamples, ask short Socratic questions, and check understanding before moving on. Correct misconceptions without shaming the student. Do not take over exercise drilling or implementation when Milo or Forge is better suited. ${LEARNING_COLLABORATION_RULES}`,
-    tools: ['bash'],
+    tools: ['ipython'],
   },
   {
     id: 'milo',
@@ -68,7 +69,7 @@ export const STARTER_TEAM: StarterAgent[] = [
     avatarBg: '#27AFA8',
     bio: '用分层提示陪你推到答案，再用变式练习确认方法真的掌握。',
     systemPrompt: `You are Milo, the student's Problem Coach. Ask the student to attempt the problem, provide the smallest useful hint, reveal derivations step by step, and generate targeted practice and variations. Prefer coaching over immediately giving a final answer, while still giving a complete worked solution when the student asks or is truly stuck. Leave root-cause diagnosis of repeated errors to Trace. ${LEARNING_COLLABORATION_RULES}`,
-    tools: ['bash'],
+    tools: ['ipython'],
   },
   {
     id: 'trace',
@@ -79,7 +80,7 @@ export const STARTER_TEAM: StarterAgent[] = [
     avatarBg: '#D94D4D',
     bio: '从错题里定位知识漏洞、误区和反复出现的错误模式。',
     systemPrompt: `You are Trace, the student's Learning Diagnostician. Inspect the student's work rather than guessing, separate conceptual gaps from procedural mistakes and slips, identify recurring error patterns, and prescribe a small verification or remediation exercise. Be factual and non-judgmental. Do not reteach an entire topic when a focused diagnosis and handoff to Sage or Milo is enough. ${LEARNING_COLLABORATION_RULES}`,
-    tools: ['bash'],
+    tools: ['ipython'],
   },
   {
     id: 'scout',
@@ -90,7 +91,7 @@ export const STARTER_TEAM: StarterAgent[] = [
     avatarBg: '#377FD1',
     bio: '带你读教材、PDF 与论文，检索可靠资料并整理成可用的笔记。',
     systemPrompt: `You are Scout, the student's Research Guide. Help read textbooks, PDFs, and papers; search for reliable sources; distinguish evidence from inference; synthesize notes; and support clear academic writing without fabricating citations. Preserve the student's voice and make source provenance explicit. Hand implementation and experiment execution to Forge. ${LEARNING_COLLABORATION_RULES}`,
-    tools: ['bash'],
+    tools: ['ipython'],
   },
   {
     id: 'forge',
@@ -101,7 +102,7 @@ export const STARTER_TEAM: StarterAgent[] = [
     avatarBg: '#38A06B',
     bio: '把原理落到实验、代码和项目里，用可复现的步骤一起做出来。',
     systemPrompt: `You are Forge, the student's Practice Mentor. Guide experiments, programming, debugging, project implementation, data analysis, and reproducible engineering work. Start from the actual environment and observed output, make assumptions explicit, verify each important step, and explain safety constraints when relevant. Ask Scout for source work and Sage for conceptual clarification instead of duplicating them. ${LEARNING_COLLABORATION_RULES}`,
-    tools: ['bash'],
+    tools: ['ipython'],
   },
 ]
 
@@ -170,6 +171,11 @@ async function purgeLegacyLearningPreset(
   const ids = legacyAgentIds
 
   // Product-owned rooms and legacy default rooms are replaced wholesale.
+  await db.query(
+    `DELETE FROM im_channel_bindings
+      WHERE company_id=$1 AND (preset_key IS NOT NULL OR leader_agent_id=ANY($2::text[]))`,
+    [companyId, ids],
+  )
   await db.query(
     `DELETE FROM conversations
       WHERE company_id = $1
@@ -324,7 +330,6 @@ async function seedLearningPreset(
   db: QueryClient,
   companyId: string,
   ownerId: string,
-  opts?: { computerId?: string | null; engine?: string | null },
 ): Promise<void> {
   const agentIds = new Map<LearningPersonaKey, string>()
   for (const agent of STARTER_TEAM) {
@@ -333,12 +338,11 @@ async function seedLearningPreset(
     await db.query(
       `INSERT INTO participants (
          id, preset_key, kind, name, role, initial, avatar_bg, avatar_url, status,
-         bio, tools, system_prompt, company_id, computer_id, engine
-       ) VALUES ($1, $2, 'agent', $3, $4, $5, $6, NULL, 'avail', $7, $8::jsonb, $9, $10, $11, $12)`,
+         bio, tools, system_prompt, company_id
+       ) VALUES ($1, $2, 'agent', $3, $4, $5, $6, NULL, 'avail', $7, $8::jsonb, $9, $10)`,
       [
         id, agent.presetKey, agent.name, agent.role, agent.initial, agent.avatarBg,
-        agent.bio, JSON.stringify(agent.tools ?? ['bash']), agent.systemPrompt, companyId,
-        opts?.computerId ?? null, opts?.engine ?? null,
+        agent.bio, JSON.stringify(agent.tools ?? ['ipython']), agent.systemPrompt, companyId,
       ],
     )
 
@@ -349,8 +353,11 @@ async function seedLearningPreset(
       [dmId, `dm:${agent.presetKey}`, agent.name, JSON.stringify([ownerId, id]), companyId],
     )
     await db.query(
-      `INSERT INTO conversation_counters (conversation_id, next_sequence) VALUES ($1, 1)`,
-      [dmId],
+      `INSERT INTO im_channel_bindings (channel_id, company_id, profile, leader_agent_id, preset_key)
+       VALUES ($1,$2,$3::jsonb,$4,$5)`,
+      [dmId, companyId, JSON.stringify({
+        channelId: dmId, channelType: 2, kind: 'direct', title: agent.name, members: [ownerId, id], createdAt: new Date().toISOString(),
+      }), id, `dm:${agent.presetKey}`],
     )
   }
 
@@ -371,13 +378,15 @@ async function seedLearningPreset(
       ],
     )
     await db.query(
-      `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
-       VALUES ($1, $2, $3, 'text', $4, 1, $5)`,
-      [`m-${randomUUID()}`, roomId, authorId, room.welcome, companyId],
-    )
-    await db.query(
-      `INSERT INTO conversation_counters (conversation_id, next_sequence) VALUES ($1, 2)`,
-      [roomId],
+      `INSERT INTO im_channel_bindings (channel_id, company_id, profile, leader_agent_id, preset_key)
+       VALUES ($1,$2,$3::jsonb,$4,$5)`,
+      [roomId, companyId, JSON.stringify({
+        channelId: roomId, channelType: 2, title: room.title, members,
+        topic: room.presetKey === 'study-room'
+          ? '日常学习、概念理解、解题练习与错因诊断'
+          : '实验、编程、科研、数据分析、论文复现与项目实践',
+        welcome: room.welcome, welcomeAuthorId: authorId, pinned: true, createdAt: new Date().toISOString(),
+      }), authorId, `room:${room.presetKey}`],
     )
   }
 }
@@ -385,8 +394,8 @@ async function seedLearningPreset(
 /** Install or force-upgrade one workspace to the current learning preset. */
 export async function onboardStarterAgents(
   companyId: string,
-  opts?: { computerId?: string | null; engine?: string | null },
 ): Promise<void> {
+  let seeded = false
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
@@ -420,23 +429,19 @@ export async function onboardStarterAgents(
       return
     }
 
-    const existing = await client.query<{ id: string; preset_key: string | null; computer_id: string | null; engine: string | null }>(
-      `SELECT id, preset_key, computer_id, engine FROM participants
+    const existing = await client.query<{ id: string; preset_key: string | null }>(
+      `SELECT id, preset_key FROM participants
         WHERE company_id = $1 AND kind = 'agent'`,
       [companyId],
     )
     const legacy = existing.rows.filter((agent) => agent.preset_key !== null || isLegacyPresetId(agent.id))
-    const inheritedHost = legacy.find((agent) => agent.computer_id || agent.engine)
     await purgeLegacyLearningPreset(
       client,
       companyId,
       legacy.map((agent) => agent.id),
       company.all_hands_conversation_id,
     )
-    await seedLearningPreset(client, companyId, ownerId, {
-      computerId: opts?.computerId ?? inheritedHost?.computer_id ?? null,
-      engine: opts?.engine ?? inheritedHost?.engine ?? null,
-    })
+    await seedLearningPreset(client, companyId, ownerId)
     await client.query(
       `UPDATE companies
           SET starter_preset_version = $2,
@@ -448,12 +453,18 @@ export async function onboardStarterAgents(
       [companyId, LEARNING_PRESET_VERSION],
     )
     await client.query('COMMIT')
+    seeded = true
     invalidatePersonaCache()
   } catch (error) {
     await client.query('ROLLBACK')
     throw error
   } finally {
     client.release()
+  }
+  if (seeded) {
+    await reconcileLearningChannels().catch((error) => {
+      console.warn('[onboard] WuKongIM reconciliation deferred:', error instanceof Error ? error.message : String(error))
+    })
   }
 }
 

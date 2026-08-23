@@ -36,7 +36,6 @@ import {
   type LlmCallPurpose,
   type LlmCallRow,
   type LlmCallSource,
-  type LlmDaemonVersionRow,
   type LlmObservabilityPayload,
   type LlmRollupRow,
   type LlmTenantRow,
@@ -109,8 +108,7 @@ const fmtPct = (n: number, places = 1): string => `${(n * 100).toFixed(places)}%
 //
 // The $ figures are ESTIMATES — cost.ts seeds one assumed per-token rate per
 // model (verified:false unless an operator supplies LINGXILOOP_MODEL_PRICES_JSON).
-// For BYOA every user is on their own provider/plan, so the $ is meaningless to
-// them; token counts are the objective truth. This toggle swaps every primary
+// Token counts remain the provider-independent truth. This toggle swaps every primary
 // metric between $ and tokens. Default = tokens. Cached input tokens are ALWAYS
 // shown distinctly from uncached (they bill ~10× less and behave differently),
 // regardless of unit.
@@ -150,24 +148,14 @@ const REFRESH_INTERVALS: Array<{ label: string; ms: number }> = [
 
 // ─── Source filter ───────────────────────────────────────────────────────
 //
-// The ledger now records BOTH cloud sub2api AND BYOA local spend (the daemon
-// emits per-hop trajectory via /runtime/llm-calls). Cloud rows are real $;
-// BYOA rows are meter-equivalent — same per-token rate, but the operator's
-// actual bill is a flat subscription. Default is "All", but the explicit
-// filter is here so the operator can isolate either side when investigating
-// a spike: "did cloud cost spike, or just BYOA token usage?"
-
-// One BYOA pill covering BOTH engines (byoa-claude + byoa-codex). The rollup
-// table still shows them as separate rows (different engine/model); this is
-// just the filter — the operator rarely wants to isolate a single BYOA engine,
-// and "Cloud vs BYOA" is the split that matters.
-type SourceFilter = 'all' | 'cloud' | 'byoa'
+// Separate Agent OS reasoning from retained control-plane utilities.
+type SourceFilter = 'all' | 'cloud' | 'agent-os' | 'product'
 const SOURCE_FILTERS: Array<{ key: SourceFilter; label: string }> = [
   { key: 'all',   label: "全部" },
   { key: 'cloud', label: "云" },
-  { key: 'byoa',  label: 'BYOA' },
+  { key: 'agent-os', label: 'Agent OS' },
+  { key: 'product', label: '产品能力' },
 ]
-const isByoaSource = (s: string): boolean => s === 'byoa-claude' || s === 'byoa-codex'
 
 // ─── Component ───────────────────────────────────────────────────────────
 
@@ -249,7 +237,7 @@ export function ObservabilityPage() {
     if (sourceFilter === 'all') return data
     return {
       ...data,
-      rollup: data.rollup.filter((r) => sourceFilter === 'byoa' ? isByoaSource(r.source) : r.source === sourceFilter),
+      rollup: data.rollup.filter((r) => r.source === sourceFilter),
       // Trend buckets don't carry source; leaving them as-is is the honest
       // choice — the source-filtered chart would mean re-fetching with a
       // server-side filter, deferred until needed.
@@ -283,7 +271,7 @@ export function ObservabilityPage() {
         <div>
           <h1 className="admin-h1">可观察性</h1>
           <div className="admin-sub">
-            每个 LLM 调用（云和 BYOA）都归因于使用它的业务逻辑。
+            每个 LLM 调用都归因于使用它的学习业务逻辑。
             {data?.summary && (
               <> 窗口：最后一个 {data.summary.sinceDays}d · {fmtInt(data.summary.activeTenants)} 活跃租户。</>
             )}
@@ -312,8 +300,8 @@ export function ObservabilityPage() {
               >{s.label}</button>
             ))}
           </div>
-          {/* Unit toggle — $ are seeded estimates; tokens are the platform-
-              neutral truth (the whole reason BYOA can't trust the $). */}
+          {/* Unit toggle — $ are seeded estimates; tokens are the
+              provider-independent measurement. */}
           <div className="obs-pills" role="tablist" aria-label="单位">
             {UNITS.map((u) => (
               <button
@@ -328,7 +316,7 @@ export function ObservabilityPage() {
           </div>
           <input
             className="admin-input obs-model-input"
-            placeholder="过滤器型号（例如 gpt-5.4-mini）"
+            placeholder="过滤模型（例如 deepseek-chat）"
             value={modelFilter}
             onChange={(e) => setModelFilter(e.target.value)}
           />
@@ -457,25 +445,6 @@ export function ObservabilityPage() {
           unit={unit}
           loading={loading}
           onDrill={(r) => r.agentId && setDrill({ kind: 'agent', agentId: r.agentId, agentName: r.agentName })}
-        />
-      </section>
-
-      {/* By daemon version — correlate spend / cache behaviour with agent-cli
-          releases. When a new version regresses token usage, the per-version
-          rollup makes the bad bucket light up. NULL daemon_version rows
-          (cloud agent-turn etc.) are excluded server-side; this card is for
-          BYOA-version analysis specifically. */}
-      <section className="obs-card">
-        <div className="obs-card-head">
-          <div>
-            <div className="obs-card-title">按守护进程版本</div>
-            <div className="obs-card-sub">每个 agent-cli 版本花费 × 缓存行为 · 钻取一行以查看其调用</div>
-          </div>
-        </div>
-        <DaemonVersionTable
-          rows={data?.daemonVersions ?? []}
-          unit={unit}
-          loading={loading}
         />
       </section>
 
@@ -999,11 +968,6 @@ function RollupTable({ rows, unit, loading, onDrill }: { rows: LlmRollupRow[]; u
               <div className="obs-mono">{r.model}</div>
               <div className="obs-cell-source">
                 {r.source}
-                {/* BYOA cost is meter-equivalent — what the same tokens WOULD
-                    cost on the metered API. The operator's actual bill is a
-                    flat subscription. Flagging this on the row keeps the $
-                    column honest without hiding the comparable signal. */}
-                {unit === 'usd' && isByoaSource(r.source) && <span className="obs-meter-flag" title="BYOA 支出与计量等价（这些代币在计量 API 上的花费） - 运营商的实际账单是固定订阅">·米</span>}
                 {unit === 'usd' && r.costEstimated && <span className="obs-est-flag" title="根据种子估算计算的成本，而不是运营商提供的费率">·est</span>}
               </div>
             </div>
@@ -1088,78 +1052,6 @@ function TopAgentsTable({ rows, unit, loading, onDrill }: { rows: LlmObservabili
       ))}
     </div>
   )
-}
-
-// ─── Daemon-version rollup ────────────────────────────────────────────────
-//
-// "After v0.1.X shipped, did average cost-per-hop go up?" The single most
-// useful release-regression-spotter the page has. Each row is one
-// (daemonVersion × source) combo, sorted by lastSeen DESC so the freshest
-// version sits at the top. Cache hit % is the headline column — a release
-// that broke session caching shows up here as a giant drop.
-//
-// Same visual shape as TopAgents/Rollup so the page reads as a family. The
-// "last seen" column shows a relative timestamp so the operator immediately
-// knows whether a version is still live.
-
-function DaemonVersionTable({ rows, unit, loading }: {
-  rows: LlmDaemonVersionRow[]
-  unit: Unit
-  loading: boolean
-}) {
-  if (loading && rows.length === 0) return <div className="obs-empty">加载中…</div>
-  if (!loading && rows.length === 0) return (
-    <div className="obs-empty">
-      尚无守护程序版本数据。一旦操作员的守护进程升级到报告它的版本，它们就会开始填充它。
-    </div>
-  )
-  return (
-    <div className="obs-table obs-table-daemon">
-      <div className="obs-thead obs-thead-daemon">
-        <div className="obs-th-left">版本</div>
-        <div className="obs-th-left">来源</div>
-        <div className="obs-th-right">通话</div>
-        <div className="obs-th-right">{unit === 'usd' ? "成本" : "代币"}</div>
-        <div className="obs-th-right">缓存命中</div>
-        <div className="obs-th-right">平均/调用</div>
-        <div className="obs-th-right">失败</div>
-        <div className="obs-th-right">最后出现</div>
-      </div>
-      {rows.map((r, i) => {
-        const totalIn = r.inputTokens + r.cachedInputTokens
-        const hitRate = totalIn > 0 ? r.cachedInputTokens / totalIn : null
-        const totalTok = r.inputTokens + r.cachedInputTokens + r.outputTokens
-        const avgCost = r.calls > 0 ? r.costUsd / r.calls : 0
-        const avgTok = r.calls > 0 ? totalTok / r.calls : 0
-        return (
-          <div className="obs-row obs-row-daemon" key={`${r.daemonVersion}-${r.source}-${i}`}>
-            <div className="obs-cell-version">
-              <span className="obs-cell-purpose-label">v{r.daemonVersion}</span>
-            </div>
-            <div className="obs-cell-source">{r.source}{isByoaSource(r.source) && <span className="obs-meter-flag">·米</span>}</div>
-            <div className="obs-cell-num">{fmtInt(r.calls)}</div>
-            <div className="obs-cell-num obs-cell-cost">{unit === 'usd' ? fmtUsd(r.costUsd, r.costUsd < 1 ? 4 : 2) : fmtTokens(totalTok)}</div>
-            <div className="obs-cell-num">{hitRate != null ? <span className={cacheToneClass(hitRate)}>{fmtPct(hitRate, 1)}</span> : '—'}</div>
-            <div className="obs-cell-num">{unit === 'usd' ? fmtUsd(avgCost, 6) : fmtTokens(avgTok)}</div>
-            <div className="obs-cell-num">{r.failureRate > 0 ? <span style={{ color: r.failureRate > 0.1 ? 'var(--coral-deep)' : 'var(--ink-700)' }}>{fmtPct(r.failureRate, 1)}</span> : '—'}</div>
-            <div className="obs-cell-num obs-cell-sub-only" title={new Date(r.lastSeen).toLocaleString()}>{relativeTime(r.lastSeen)}</div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-/** Tiny "now-3h" / "2d ago" formatter for the "Last seen" column. The full
- *  timestamp lives in the title attribute. */
-function relativeTime(iso: string): string {
-  const t = new Date(iso).getTime()
-  if (!Number.isFinite(t)) return '—'
-  const ms = Date.now() - t
-  if (ms < 60_000) return `${Math.max(0, Math.floor(ms / 1000))}s ago`
-  if (ms < 3_600_000) return `${Math.floor(ms / 60_000)}m ago`
-  if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)}h ago`
-  return `${Math.floor(ms / 86_400_000)}d ago`
 }
 
 // ─── Drill-down panel ────────────────────────────────────────────────────
@@ -1326,12 +1218,6 @@ function DrillCallCard({ call, unit, onJumpToRun, onJumpToAgent }: {
             <span className="obs-mono">{call.model}</span>
             <span> · {call.source}</span>
             {unit === 'usd' && call.costEstimated && <span className="obs-est-flag">·est</span>}
-            {unit === 'usd' && isByoaSource(call.source) && <span className="obs-meter-flag">·米</span>}
-            {call.daemonVersion && (
-              <span className="obs-version-flag" title={`Recorded by daemon (npm lingxiloop) version ${call.daemonVersion}`}>
-                · v{call.daemonVersion}
-              </span>
-            )}
             <span className={call.status === 'ok' ? '' : 'obs-drill-status-bad'}> · {call.status}</span>
           </div>
         </div>

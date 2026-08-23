@@ -1,131 +1,112 @@
 # LingxiLoop
 
-> Human–Agent and Agent–Agent real-time collaboration, powered by LingxiGraph.
+LingxiLoop is a learning collaboration product with its own Agent OS. Six
+specialized agents—Nova, Sage, Milo, Trace, Scout and Forge—work with learners
+in direct messages, Study Rooms and Labs.
 
-LingxiLoop ships as one cloud backend plus two supported clients: the same
-React/Vite Web renderer served by the backend, and signed Windows/macOS
-Electron packages. Both clients use the same cloud API and the backend-owned
-LingxiGraph Runtime. The desktop package never contains or calls LingxiGraph
-directly.
+The runtime is implemented in this repository. It does not invoke, install or
+pair with Codex, Claude, or another agent CLI. Codex Harness, Ankole and Prime
+Agent are architecture references only.
 
-## Production architecture
+## Architecture
 
 ```text
-Web browser ─────────────┐
-                        ├─ HTTPS / WebSocket ─ Reverse proxy ─ 127.0.0.1:5181
-Electron desktop ───────┘                                  │
-                                                           ▼
-                                         LingxiLoop SPA + API (one instance)
-                                           ├─ PostgreSQL + pgvector
-                                           ├─ Redis
-                                           └─ LingxiGraph Runtime ─ model provider
+Web / Electron
+  ├─ WuKongIM v3 — messages, channels, ordering, membership, threads, read state
+  └─ LingxiLoop control plane — identity, learning assets, approvals, work queue
+       └─ Agent OS — stateless model loop, sessions, compaction, stop/steer
+            └─ isolated persistent IPython kernel per Agent OS session
+                 └─ typed loop SDK → approved Host Bridge actions
 ```
 
-Production uses [`docker-compose.production.yml`](docker-compose.production.yml).
-Only `127.0.0.1:5181` is published; PostgreSQL, Redis and LingxiGraph remain on
-the private Compose network. Managed turns are in-process, so the API remains a
-single instance.
+The model receives exactly one tool:
 
-The current Web origin is `https://loop.lingxilearn.cn`. It is supplied through
-the GitHub `production` Environment, not committed as a desktop API fallback.
-Desktop builds fail if `VITE_LINGXILOOP_API_BASE` is missing or is not a clean
-HTTPS origin.
+```ts
+{ name: "ipython", arguments: { code: string } }
+```
+
+Agent OS uses DeepSeek's OpenAI-compatible Chat Completions protocol and owns
+conversation history itself. `DEEPSEEK_BASE_URL` may point to an approved
+DeepSeek gateway, but there is no alternate provider registry. IPython variables survive across turns while
+the kernel lives; durable state must be written to Agent Home or a typed
+`loop.*` learning service. WuKongIM is the only authoritative message store.
 
 ## Local development
 
-Install Node.js 20+, PostgreSQL and Redis, then:
+Requirements: Node.js 20+, Python 3 with IPython, PostgreSQL and Redis.
 
-```bash
-createdb -h localhost lingxiloop
-export OPENAI_API_KEY=sk-...
-npm install
+```powershell
+npm ci
+$env:DATABASE_URL = 'postgres://lingxiloop:lingxiloop@localhost:5432/lingxiloop'
+$env:REDIS_URL = 'redis://localhost:6379'
+$env:DEEPSEEK_API_KEY = '...'
+$env:DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'
+$env:DEEPSEEK_MODEL = 'deepseek-chat'
+$env:AGENT_OS_SERVICE_TOKEN = 'replace-with-a-long-random-secret'
+npm run migrate
 npm run dev:all
+npm run agent-os:start
 ```
 
-Open `http://localhost:5180`. The default reasoning/dispatch contract is:
+For the packaged MVP topology, copy `.env.example` to `.env`, provide the
+required secrets, then run exactly one deployment command:
 
-```env
-LINGXILOOP_REASONING_RUNTIME=lingxigraph
-LINGXILOOP_MANAGED_AGENT_EXECUTION=server
-LINGXIGRAPH_URL=http://localhost:8124
+```powershell
+npm run mvp:up
 ```
 
-[`docker-compose.mvp.yml`](docker-compose.mvp.yml) remains the build-from-source
-local Compose stack. [`docker-compose.mvp.ci.yml`](docker-compose.mvp.ci.yml)
-uses a deterministic model-provider stub while exercising the real Python
-LingxiGraph HTTP boundary.
+Compose pulls the `mvp` GHCR packages through
+`accel.way2api.fun/ghcr.io` by default—nothing is built locally—and waits for
+the LingxiLoop API, Agent OS and WuKongIM stack to become healthy. API port
+5181 and WuKong WebSocket port 5200 bind to `0.0.0.0` by default for mobile
+clients; use TLS and override the bind addresses for public deployments.
+Packaged services default to warning-level, size-rotated logs.
+The User Computer runs behind an authenticated internal Computer Runtime
+Manager; only that manager mounts the Docker socket. The mobile-facing API has
+no Docker privileges and retains Computer state across API restarts.
 
-## CI/CD
+## Verification
 
-- `LingxiLoop CI` runs the reusable quality gate on pull requests: brand and
-  version guards, Biome, client/server types, unit and PostgreSQL/Redis
-  integration tests, full Compose recovery E2E, and unsigned Windows/macOS
-  directory-package smoke checks.
-- `LingxiLoop Web deploy` runs the same gate on `main`, publishes
-  `ghcr.io/lingxi-org/lingxiloop-server` and
-  `ghcr.io/lingxi-org/lingxigraph-runtime`, then SSH-deploys immutable digests.
-  It migrates, verifies `/api/meta`, runs a real LingxiGraph turn, performs an
-  authenticated public smoke, and restores the previous digests on failure.
-- `LingxiLoop Desktop release` handles an existing `v${VERSION}` tag whose
-  commit belongs to `main`. It waits for the same commit to be live on Web,
-  then signs Windows x64 and macOS x64/arm64, notarizes macOS, validates every
-  signature and publishes the updater metadata with the installers.
-- `LingxiLoop production smoke` runs daily against HTTPS, authenticated API,
-  WebSocket, PostgreSQL, Redis, version metadata and LingxiGraph health.
-
-There are no mobile publishing workflows. iOS/Android source remains branded
-and buildable for future work, but it is outside the supported release line.
-The BYOA daemon and Worker source remain in the repository; npm CLI, Worker and
-marketing-site publication are not automated.
-
-See [`docs/RELEASE.md`](docs/RELEASE.md) for Environment configuration and the
-release procedure.
-
-## Version and product metadata
-
-[`VERSION`](VERSION) is the only release version source. Synchronize and check
-package metadata with:
-
-```bash
-npm run version:sync
-npm run version:check
-```
-
-Every server exposes `GET /api/meta`:
-
-```json
-{
-  "product": "LingxiLoop",
-  "version": "<VERSION>",
-  "commitSha": "<git sha>",
-  "reasoningRuntime": "lingxigraph"
-}
-```
-
-## Repository layout
-
-| Path | Role |
-|---|---|
-| `src/` | shared React/Vite Web and Electron renderer |
-| `electron/` | desktop main process, bridge and updater |
-| `server/` | API, WebSocket, scheduler and LingxiGraph integration |
-| `server/lingxigraph/` | LingxiGraph production graph and durable Runtime manifest |
-| `docker-compose.production.yml` | digest-pinned production topology |
-| `agent-cli/`, `agent-fuse/` | retained BYOA tooling |
-| `ios/`, `android/` | retained mobile source; not released |
-| `workers/`, `website/` | retained optional source; not deployed by CI |
-
-## Development checks
-
-```bash
-npm run guard:brand
-npm run version:check
-npm run lint
-npm run typecheck
+```powershell
+npm run guard:agent-os
 npm run server:typecheck
+npm run typecheck
 npm test
-npm run test:integration
 ```
 
-Additional documentation: [`CONTRIBUTING.md`](CONTRIBUTING.md),
-[`SECURITY.md`](SECURITY.md), and [`docs/COORDINATION.md`](docs/COORDINATION.md).
+The architecture guard rejects retired runtime files, executable Codex/Claude
+adapters, BYOA pairing configuration, LingxiGraph runtime dependencies and any
+model tool surface other than `ipython`.
+
+## Package publishing and production
+
+CI publishes `lingxiloop-server`, `lingxiloop-agent-os`,
+`lingxiloop-wukongim`, `lingxiloop-computer-runtime` and
+`lingxiloop-user-computer` as GHCR packages after every successful `main` build.
+Each receives immutable commit/version tags plus the rolling `mvp` tag used by
+the one-command deployment.
+
+[`docker-compose.production.yml`](docker-compose.production.yml) requires
+digest-pinned server, Agent OS and WuKongIM images. WuKongIM v3 source builds
+are pinned to commit `c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47`; production must deploy its
+verified immutable image digest. Its management API remains private, while the
+TLS client endpoint is published by the deployment proxy.
+
+Cutover is intentionally one-way. The migration removes BYOA agents and their
+owned data, resets legacy chat/runtime data, preserves human-owned learning
+assets and user computers, and provisions fresh Study Room and Lab bindings.
+Rollback restores the pre-cutover PostgreSQL and WuKongIM volume backups; it
+does not reactivate the retired runtime.
+
+## Repository map
+
+| Path | Purpose |
+| --- | --- |
+| `server/src/agent-os/` | Agent OS host, model loop, queue and Host Bridge contracts |
+| `server/agent-os/` | Persistent IPython kernel runner |
+| `server/src/im/` | WuKongIM bootstrap, webhook, routing and payload contracts |
+| `server/src/agents/` | Typed learning-domain services used by the Host Bridge |
+| `src/lib/im/` | Browser-side WuKongIM SDK wrapper |
+| `scripts/guard-agent-os.mjs` | CI guard for the independent runtime boundary |
+
+Licensed under [MIT](LICENSE).

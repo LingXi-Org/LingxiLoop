@@ -35,8 +35,6 @@ export function AgentEditor({ agent, onClose }: Props) {
   const [systemPrompt, setSystemPrompt] = useState(agent?.systemPrompt ?? '')
   const [bio, setBio] = useState(agent?.bio ?? '')
   const [avatarBg, setAvatarBg] = useState(agent?.avatarBg ?? PALETTE[0])
-  const [model, setModel] = useState(agent?.model ?? '')
-  const [fastModel] = useState(agent?.fastModel ?? '')
   const [capabilities, setCapabilities] = useState<AgentCapability[]>(agent?.capabilities ?? DEFAULT_CAPABILITIES)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -56,7 +54,6 @@ export function AgentEditor({ agent, onClose }: Props) {
     try {
       const payload: AgentInput = {
         name, role, systemPrompt, bio, avatarBg, capabilities,
-        model: model.trim() || null, fastModel: fastModel.trim() || null,
       }
       if (editing) {
         // Only send avatarUrl on change so we don't clobber it on no-op edits.
@@ -170,20 +167,9 @@ export function AgentEditor({ agent, onClose }: Props) {
             />
           </Field>
 
-          <Field label="型号" hint="可选 — 留空以使用托管 LingxiGraph 运行时默认值。">
-            <Input
-              type="text"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder="（默认）"
-              className="font-mono"
-              spellCheck={false}
-            />
-          </Field>
-
-          <Field label="运行时" hint="智能体在 LingxiLoop 服务器上作为托管 LingxiGraph 智能体运行。">
+          <Field label="运行时" hint="所有学习 Agent 使用同一套 LingxiLoop Agent OS 与全局模型配置。">
             <div className="rounded-[10px] bg-sky2-50 px-3 py-2 text-[12.5px] text-ink-700">
-              托管·LingxiGraph
+              LingxiLoop Agent OS · Persistent IPython
             </div>
           </Field>
 

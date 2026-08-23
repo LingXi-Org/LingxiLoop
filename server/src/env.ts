@@ -15,94 +15,31 @@ function required(name: string, fallback?: string): string {
   }
   return v
 }
-
-const DEFAULT_MODEL = process.env.OPENAI_MODEL ?? 'gpt-5.5'
-// Cerebellum default — small/fast model used by JSON classifiers and one-shot
-// utilities that don't drive the agent's perceived intelligence (gender infer,
-// palette, completion verifier, agenda pre-check, decision summarizer, etc.).
-// Kept as a *named* default so all cerebellum knobs land on the same model
-// when an operator doesn't override individually.
-const DEFAULT_SUPPORT_MODEL = process.env.OPENAI_MODEL_SUPPORT ?? 'gpt-5.4-mini'
-
-// Public-source dev default for the runtime-JWT secret. Safe for a single
-// dev machine; a production deploy left on it lets anyone who read the
-// (open-source) code forge runtime tokens, so boot refuses it below.
-const DEV_AGENT_RUNTIME_SECRET = 'dev-agent-runtime-secret-do-not-use-in-prod'
-
+const DEFAULT_MODEL = process.env.DEEPSEEK_MODEL?.trim() || 'deepseek-chat'
 export const env = {
   PORT: Number(process.env.PORT ?? 5181),
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   APP_VERSION: process.env.LINGXILOOP_VERSION?.trim() || '0.0.0-dev',
   COMMIT_SHA: process.env.LINGXILOOP_COMMIT_SHA?.trim() || 'dev',
-  DATABASE_URL: required('DATABASE_URL', `postgres://${process.env.USER ?? 'postgres'}@localhost:5432/lingxiloop`),
+  DATABASE_URL: required(
+    'DATABASE_URL',
+    `postgres://${process.env.USER ?? 'postgres'}@localhost:5432/lingxiloop`,
+  ),
   REDIS_URL: required('REDIS_URL', 'redis://localhost:6379'),
-  OPENAI_API_KEY: required('OPENAI_API_KEY'),
-  /** Optional OpenAI-compatible endpoint, e.g. DeepSeek's /v1 API. */
-  OPENAI_BASE_URL: process.env.OPENAI_BASE_URL?.trim() || undefined,
+  DEEPSEEK_API_KEY: required('DEEPSEEK_API_KEY'),
+  /** DeepSeek's OpenAI-compatible endpoint; operators may point this at an
+   * approved DeepSeek gateway without enabling another model provider. */
+  DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL?.trim() || 'https://api.deepseek.com/v1',
   /**
-   * "Brain" model — the agent's main reasoning loop and convene speech.
-   * Default model used when an agent's `participants.model` is NULL.
-   * Per-agent overrides live on the agent row in DB and are edited from
-   * the UI — no env vars are keyed by agent id.
+   * The single global DeepSeek Chat Completions model used by the Agent OS main
+   * loop, context compaction, and retained learning utilities.
    */
-  OPENAI_MODEL: DEFAULT_MODEL,
-  /** Managed-agent reasoning path. LingxiGraph is the product default. */
-  LINGXILOOP_REASONING_RUNTIME: (process.env.LINGXILOOP_REASONING_RUNTIME === 'legacy'
-    ? 'legacy' : 'lingxigraph') as 'legacy' | 'lingxigraph',
-  /** LingxiGraph Runtime container origin, e.g. http://lingxigraph-runtime:8124. */
-  LINGXIGRAPH_URL: process.env.LINGXIGRAPH_URL?.trim() || 'http://localhost:8124',
-  /** Bearer token sent to the LingxiGraph Runtime, if it requires one. */
-  LINGXIGRAPH_TOKEN: process.env.LINGXIGRAPH_TOKEN,
-  /**
-   * Must stay comfortably above the LingxiGraph Runtime's own worst-case
-   * retry budget, or this timeout fires first and turns a slow-but-would-
-   * have-succeeded call into a generic "runtime error" notice — this
-   * timer is armed for the FULL request (server/src/agents/
-   * lingxigraph-adapter.ts), while the Python side's `_run` retries up to
-   * `max_model_calls: 4` times (server/lingxigraph/lingxigraph_runner.py),
-   * each call bounded by LINGXIGRAPH_MODEL_TIMEOUT_SECONDS (default 90s,
-   * server/docker/lingxigraph-runtime.Dockerfile) — worst case 4×90s=360s.
-   * Keep this above that product, especially since a same-conversation
-   * multi-agent burst (@all) makes individual model calls to the shared
-   * upstream provider slower, not faster.
-   */
-  LINGXIGRAPH_RUN_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_RUN_TIMEOUT_MS ?? 400_000),
-  LINGXIGRAPH_ACTION_TIMEOUT_MS: Number(process.env.LINGXIGRAPH_ACTION_TIMEOUT_MS ?? 30_000),
-  /**
-   * How a `managed` agent's turn actually gets dispatched:
-   *   'pod'    — current behavior: scheduler calls ensurePod() and a
-   *              per-Agent Kubernetes Pod runs runAgentTurn().
-   *   'server' — MVP fast-path (issue #4): the LingxiLoop API process
-   *              calls runAgentTurn() directly (see agents/managed-executor.ts),
-   *              never spinning up a Pod. Only takes effect for managed
-   *              agents AND LINGXILOOP_REASONING_RUNTIME=lingxigraph — the
-   *              legacy multi-hop tool loop still needs Pod-level bash/FS
-   *              isolation, so it keeps going through ensurePod() even
-   *              when this is 'server'. BYOA is unaffected either way.
-   *
-   * Default 'server'. The legacy Pod path is available only through an
-   * explicit compatibility override. Server mode uses in-process busy/pendingRerun
-   * coalescing is in-process memory, not coordinated across replicas —
-   * see the boot-time warning below.
-   */
-  LINGXILOOP_MANAGED_AGENT_EXECUTION: (process.env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'pod'
-    ? 'pod' : 'server') as 'pod' | 'server',
-  /**
-   * "Cerebellum" model — JSON classifiers, palette, gender inference,
-   * heartbeat agenda pre-check. Cheap/fast; quality matters less than
-   * latency + cost. Default is a small model (not DEFAULT_MODEL) so
-   * unconfigured deployments still split brain/cerebellum.
-   */
-  OPENAI_MODEL_SUPPORT: DEFAULT_SUPPORT_MODEL,
-  /**
-   * "Cerebellum" summarizer — used by auto-compaction summarizer,
-   * verifyTerminalCompletion, and the mid-turn steer-batch summarizer.
-   * One-shot text reductions, never the main reasoning. Defaults to the
-   * support model so it ships on the small tier by default; can be
-   * pointed at a separate model if operators want a different size
-   * (e.g. nano) for these calls specifically.
-   */
-  OPENAI_COMPACTION_MODEL: process.env.OPENAI_COMPACTION_MODEL ?? DEFAULT_SUPPORT_MODEL,
+  DEEPSEEK_MODEL: DEFAULT_MODEL,
+  /** Optional capabilities exposed by the same DeepSeek-compatible gateway.
+   * Official DeepSeek deployments normally leave these empty; LingxiLoop then
+   * uses recency memory and uploaded avatars instead of another provider. */
+  DEEPSEEK_EMBEDDING_MODEL: process.env.DEEPSEEK_EMBEDDING_MODEL?.trim() || '',
+  DEEPSEEK_IMAGE_MODEL: process.env.DEEPSEEK_IMAGE_MODEL?.trim() || '',
   /**
    * Webhook URL for process-level alerts (unhandledRejection /
    * uncaughtException). Currently expects a Discord-compatible
@@ -111,42 +48,16 @@ export const env = {
    */
   ALERT_WEBHOOK_URL: process.env.ALERT_WEBHOOK_URL ?? '',
   /**
-   * Mid-turn steering kill-switch. When set to 'false' / '0' / 'no':
-   *   - scheduler.wake() skips deliverSteer entirely (only wake fires)
-   *   - pushSteer is a no-op on the pod side
-   *   - existing in-flight queues are left alone (they'll drain or
-   *     reset normally)
-   * Default 'on' — set this if steering causes an incident in prod
-   * and you need to disable it without a redeploy.
-   */
-  STEER_ENABLED: !/^(false|0|no|off)$/i.test(process.env.STEER_ENABLED ?? ''),
-  /**
    * Minimum interval (ms) between alerts that share the same
    * (label, error-fingerprint). Defaults to 60s — protects the webhook
    * from a tight loop of identical crashes hammering it.
    */
   ALERT_DEDUPE_MS: Number(process.env.ALERT_DEDUPE_MS ?? 60_000),
-  /** Image model for avatar generation. Override with OPENAI_IMAGE_MODEL. */
-  OPENAI_IMAGE_MODEL: process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-2',
-  /** Background scanner cadence */
-  SCANNER_INTERVAL_MS: Number(process.env.SCANNER_INTERVAL_MS ?? 90_000),
-  /**
-   * Idle scheduler cadence — how often we wake one available agent and let
-   * them decide whether to spontaneously DM a teammate or post a
-   * standalone thought (instead of only reacting to incoming messages).
-   * Set to 0 to disable.
-   */
-  IDLE_INTERVAL_MS: Number(process.env.IDLE_INTERVAL_MS ?? 15 * 60_000),
-  /** Min minutes since an agent last spoke before they're eligible for an idle tick. */
-  IDLE_MIN_QUIET_MIN: Number(process.env.IDLE_MIN_QUIET_MIN ?? 25),
   /** for distributed deploys, identify this instance in logs / pubsub */
   INSTANCE_ID: process.env.INSTANCE_ID ?? `app-${Math.random().toString(36).slice(2, 7)}`,
   /**
-   * Publicly reachable origin for /uploads URLs. OpenAI's input_image needs
-   * a URL it can actually fetch — \`http://localhost:5181\` won't work in prod
-   * but does work for local dev IF the server is on the same host as the
-   * browser (it isn't, OpenAI fetches from its side). For real vision in dev,
-   * point this at an ngrok / cloudflared tunnel to your :5181.
+   * Publicly reachable origin for /uploads URLs. Configure this when a
+   * DeepSeek-compatible gateway needs to fetch uploaded learning assets.
    */
   PUBLIC_HOST: process.env.PUBLIC_HOST ?? '',
   /**
@@ -198,107 +109,6 @@ export const env = {
    */
   SKILLHUB_URL: (process.env.SKILLHUB_URL ?? '').replace(/\/+$/, ''),
   /**
-   * HMAC secret used to sign per-agent JWTs handed to runtime pods.
-   * The server signs at pod-spawn time; the pod presents the token on
-   * every `/runtime/*` request. Token shape:
-   *   { sub: agentId, companyId, scope: 'agent-runner', iat, exp }
-   *
-   * Dev default = deterministic-but-random-looking string so single-
-   * machine dev "just works". In prod set a real high-entropy secret —
-   * boot refuses to start on this default when NODE_ENV=production
-   * (see the production-secret gate below). The default is public
-   * source, so a prod deploy left on it would let anyone forge runtime
-   * JWTs and impersonate any agent/tenant.
-   */
-  AGENT_RUNTIME_SECRET: process.env.AGENT_RUNTIME_SECRET ?? DEV_AGENT_RUNTIME_SECRET,
-  /**
-   * Full URL the agent-runner pod uses to reach the lingxiloop server's
-   * `/runtime` API (note the trailing path). From OrbStack K8s a pod
-   * talks to the host via `host.docker.internal`. Override in prod
-   * with the in-cluster service URL — typically something like
-   * `http://lingxiloop-server.default.svc.cluster.local:5181/runtime`.
-   */
-  AGENT_RUNTIME_SERVER_URL: process.env.AGENT_RUNTIME_SERVER_URL ?? `http://host.docker.internal:${process.env.PORT ?? 5181}/runtime`,
-  /**
-   * Per-agent pod idle timeout. After this many ms with no wake
-   * events, the Pod sets the agent's status to `resting`, gracefully
-   * shuts down, and the K8s Pod is gone. The PVC stays so the next
-   * wake re-uses the same workspace.
-   *
-   * Default 3 minutes — was 10 min before the FUSE-cap incident on
-   * 2026-05-20, when post-crashloop-recovery thundering-herd spawned
-   * hundreds of idle pods that each held a /dev/fuse slot for 10 min
-   * each, blowing past the cluster's 50-slot cap. 3 min still
-   * absorbs bouncy conversation cold-starts (each pod cold-start is
-   * ~5s with PVC bound) and lets fuse slots recycle 3× faster.
-   */
-  AGENT_IDLE_MS: Number(process.env.AGENT_IDLE_MS ?? 3 * 60_000),
-  /**
-   * Pod no-work-detected fast-exit timeout (ms). If a pod boots,
-   * runs its bootstrap inbox-drain, and then receives NO further
-   * SSE wake/steer event within this window, it self-exits to free
-   * the /dev/fuse slot. Distinct from AGENT_IDLE_MS, which is the
-   * "I've done work, now I've been quiet for a while" timer.
-   *
-   * Default 90s — covers crashloop-recovery scenarios where a wake
-   * fired against a resting agent, ensurePod spawned a pod, the
-   * pod's bootstrap drain handled the queued message, and then no
-   * follow-up wake arrives. Without this, the pod would sit on the
-   * FUSE slot until AGENT_IDLE_MS elapsed even though it had no
-   * pending work.
-   */
-  AGENT_NO_WORK_MS: Number(process.env.AGENT_NO_WORK_MS ?? 90_000),
-  /**
-   * App-level ceiling for concurrently active agent pods. This is
-   * intentionally separate from the generic-device-plugin's advertised
-   * /dev/fuse count: GKE can expose hundreds of logical FUSE slots per
-   * node, but CPU, memory, API-server churn, and provider concurrency
-   * are the real production ceiling. The orchestrator admits new pods
-   * against min(cluster fuse capacity, this value). Set <=0 to rely on
-   * the cluster resource only.
-   */
-  AGENT_POD_ADMISSION_MAX: Number(process.env.AGENT_POD_ADMISSION_MAX ?? 40),
-  /**
-   * Max concurrent recipients the scheduler triages + wakes at once,
-   * PER server replica. The wake fan-out for a group message used to be
-   * an unbounded `Promise.all` over every recipient — each running a
-   * 3-query triage (loadPersona/loadInbox/loadContext) + a support-model
-   * call + ensurePod. Under a swarm reply-storm that stampeded the pg
-   * pool (max 20): triage timed out acquiring a connection, fell open,
-   * woke the agent anyway, which generated more messages → more wakes →
-   * a self-amplifying loop that survived restarts (the 2026-05-27
-   * connection-exhaustion outage). Bounding the fan-out turns the
-   * stampede into backpressure; excess wakes queue and drain. Keep
-   * comfortably below the pool size so request handlers and other paths
-   * still get connections. Set <=0 to fall back to 1 (never unbounded).
-   */
-  WAKE_FANOUT_CONCURRENCY: Number(process.env.WAKE_FANOUT_CONCURRENCY ?? 6),
-  /**
-   * Max concurrent `runAgentTurn()` executions in this process for the
-   * managed+lingxigraph path, PER server replica — independent of
-   * WAKE_FANOUT_CONCURRENCY. A turn (unlike the cheap triage/dispatch
-   * step WAKE_FANOUT_CONCURRENCY bounds) can run for minutes, and it is
-   * NOT scoped to one conversation's fan-out: wakeAgent() (poll/kanban/
-   * calendar wakes) and the wake-retry worker start turns directly,
-   * bypassing the fan-out gate entirely. Without a turn-scoped cap here,
-   * a single @all to a handful of agents (each turn holding several pg
-   * connections at once, see db/pool.ts max:20) can still exhaust the
-   * pool. Keep comfortably below the pool size so request handlers and
-   * other paths still get connections. Set <=0 to fall back to 1.
-   */
-  MANAGED_TURN_CONCURRENCY: Number(process.env.MANAGED_TURN_CONCURRENCY ?? 12),
-  /**
-   * Max concurrent `kubectl` child processes the orchestrator spawns,
-   * PER server replica. Each kubectl is a ~50–100MB Go binary that
-   * counts against the pod's memory/CPU cgroup; an unbounded burst of
-   * them (one+ per wake during a storm) can OOM-kill or CPU-throttle the
-   * server pod itself. This cap also closes the pod-admission race —
-   * with bounded concurrency the admit check (used < cap) no longer
-   * fires hundreds of times before any pod actually starts. Set <=0 to
-   * fall back to 1.
-   */
-  KUBECTL_MAX_CONCURRENCY: Number(process.env.KUBECTL_MAX_CONCURRENCY ?? 8),
-  /**
    * Comma-separated allow-list of origins for CORS. The browser only
    * sends an Origin header for cross-origin requests, so leaving this
    * blank preserves same-origin / Vite-proxy behavior in dev. Set to
@@ -308,7 +118,9 @@ export const env = {
    * origin (no credentials).
    */
   CORS_ORIGINS: (process.env.LINGXILOOP_CORS_ORIGINS ?? '')
-    .split(',').map((s) => s.trim()).filter(Boolean),
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
   LINGXI_IDENTITY_ISSUER: (process.env.LINGXI_IDENTITY_ISSUER ?? '').replace(/\/+$/, ''),
   LINGXI_IDENTITY_CLIENT_ID: process.env.LINGXI_IDENTITY_CLIENT_ID ?? '',
   LINGXI_IDENTITY_CLIENT_SECRET: process.env.LINGXI_IDENTITY_CLIENT_SECRET ?? '',
@@ -321,15 +133,18 @@ export const env = {
    * the session, with `#token=<bearer>&companyId=<id>` on the fragment so the
    * renderer can pick it up without it landing in server access logs.
    */
-  GOOGLE_CLIENT_ID:     process.env.GOOGLE_CLIENT_ID     ?? '',
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? '',
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? '',
-  GITHUB_CLIENT_ID:     process.env.GITHUB_CLIENT_ID     ?? '',
+  GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID ?? '',
   GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET ?? '',
   /** Public origin this server is reachable at. Used to construct the
    *  per-provider redirect_uri that we hand to Google / GitHub at flow
    *  start. Defaults to http://localhost:5181 for local dev. In prod
    *  set LINGXILOOP_PUBLIC_ORIGIN=https://loop.example.com. */
-  PUBLIC_ORIGIN: (process.env.LINGXILOOP_PUBLIC_ORIGIN ?? 'http://localhost:5181').replace(/\/+$/, ''),
+  PUBLIC_ORIGIN: (process.env.LINGXILOOP_PUBLIC_ORIGIN ?? 'http://localhost:5181').replace(
+    /\/+$/,
+    '',
+  ),
   /** Default URL the server 302s to after a successful OAuth callback,
    *  with `#token=...&companyId=...` appended. Used when the client
    *  didn't pass `?return=` at flow start. For dev (Vite) point at
@@ -348,7 +163,9 @@ export const env = {
    *    https://loop.example.com/                 (web client)
    */
   AUTH_RETURN_ALLOWLIST: (process.env.LINGXILOOP_AUTH_RETURN_ALLOWLIST ?? '')
-    .split(',').map((s) => s.trim()).filter(Boolean),
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
   /** Base URL used to build the public face of company invitation links
    *  (`<base>/invite/<token>`). When unset we fall back to AUTH_DONE_URL —
    *  already production-correct for the OAuth flow (the configured public origin on the
@@ -360,8 +177,8 @@ export const env = {
    * sub2api LLM quota gateway. When SUB2API_ADMIN_KEY is set, OAuth
    * signup provisions a per-user sub2api account + API key, and every
    * LLM client uses that user's key + the sub2api OpenAI-compatible
-   * endpoint. Without the admin key we fall back to the legacy single
-   * OPENAI_API_KEY path (no per-user quotas).
+   * endpoint. Without the admin key we fall back to the shared
+   * DeepSeek credential path (no per-user quotas).
    *
    * Three knobs:
    *   SUB2API_INTERNAL_URL — where THIS server reaches sub2api for
@@ -382,11 +199,11 @@ export const env = {
    * (the user has a sub2api account but can't call upstream yet).
    */
   SUB2API_INTERNAL_URL: (process.env.SUB2API_INTERNAL_URL ?? '').replace(/\/+$/, ''),
-  SUB2API_PUBLIC_URL:   (process.env.SUB2API_PUBLIC_URL ?? '').replace(/\/+$/, ''),
-  SUB2API_ADMIN_KEY:    process.env.SUB2API_ADMIN_KEY ?? '',
+  SUB2API_PUBLIC_URL: (process.env.SUB2API_PUBLIC_URL ?? '').replace(/\/+$/, ''),
+  SUB2API_ADMIN_KEY: process.env.SUB2API_ADMIN_KEY ?? '',
   SUB2API_TIER_FREE_GROUP_ID: Number(process.env.SUB2API_TIER_FREE_GROUP_ID ?? 0),
-  SUB2API_TIER_PRO_GROUP_ID:  Number(process.env.SUB2API_TIER_PRO_GROUP_ID  ?? 0),
-  SUB2API_TIER_MAX_GROUP_ID:  Number(process.env.SUB2API_TIER_MAX_GROUP_ID  ?? 0),
+  SUB2API_TIER_PRO_GROUP_ID: Number(process.env.SUB2API_TIER_PRO_GROUP_ID ?? 0),
+  SUB2API_TIER_MAX_GROUP_ID: Number(process.env.SUB2API_TIER_MAX_GROUP_ID ?? 0),
   /**
    * Comma-separated allow-list of emails that are forced to `is_admin =
    * true` on every server boot. The bootstrap path so that adding a new
@@ -396,7 +213,9 @@ export const env = {
    * admin panel.
    */
   ADMIN_EMAILS: (process.env.LINGXILOOP_ADMIN_EMAILS ?? '')
-    .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
   /**
    * Real-email feature. When all three core vars are set, agents can send
    * mail (Resend) and receive mail (Cloudflare Email Worker → /webhooks/
@@ -420,7 +239,10 @@ export const env = {
    *  RESEND_API_KEY is empty (i.e. already in mock mode). Lets local dev
    *  exercise the transport_status='failed' branch without misconfiguring
    *  real credentials. 0 / unset = always succeed. */
-  EMAIL_MOCK_FAIL_RATE: Math.max(0, Math.min(1, Number(process.env.EMAIL_MOCK_FAIL_RATE ?? 0) || 0)),
+  EMAIL_MOCK_FAIL_RATE: Math.max(
+    0,
+    Math.min(1, Number(process.env.EMAIL_MOCK_FAIL_RATE ?? 0) || 0),
+  ),
   /** Interval between outbound retry-loop ticks. Defaults to 60s; set to
    *  0 to disable retry entirely (failed sends stay failed forever). The
    *  loop uses SKIP LOCKED so multiple replicas can run it concurrently. */
@@ -452,19 +274,6 @@ export const env = {
    *  event. Set to 0 to disable (polls then stay open forever even after
    *  their declared expiration — manual close still works). */
   POLL_SWEEP_INTERVAL_MS: Number(process.env.POLL_SWEEP_INTERVAL_MS ?? 60_000),
-  /** Interval between chrome-profile PVC garbage-collection passes.
-   *  Each pass lists all `app=lingxiloop-agent` PVCs, joins against
-   *  participants + agent_runs, and drops PVCs whose agent has been
-   *  off-boarded OR hasn't run in CHROME_PVC_GC_IDLE_DAYS. Default
-   *  hourly cadence — the work is sized for off-the-clock cleanup,
-   *  not real-time. Set to 0 to disable. */
-  CHROME_PVC_GC_INTERVAL_MS: Number(process.env.CHROME_PVC_GC_INTERVAL_MS ?? 60 * 60_000),
-  /** How many days an agent must be inactive before its
-   *  chrome-profile PVC is reclaimed. 30d is the sweet spot: long
-   *  enough that idle but in-use agents (weekend / vacation) don't
-   *  lose login state, short enough that abandoned agents don't
-   *  accumulate $0.10/month forever. */
-  CHROME_PVC_GC_IDLE_DAYS: Number(process.env.CHROME_PVC_GC_IDLE_DAYS ?? 30),
   /** Bearer token gating GET /api/metrics. Unset → endpoint returns 404
    *  (don't leak internal counts to unauthenticated callers in deploys
    *  that haven't set up Prometheus yet). When set, scrapers pass it as
@@ -487,7 +296,9 @@ export const env = {
   /** 'development' uses api.sandbox.push.apple.com (TestFlight + dev builds),
    *  'production' uses api.push.apple.com (App Store). Mismatching env vs.
    *  build will silently 400 every push — get it right. */
-  APNS_ENV: (process.env.APNS_ENV === 'production' ? 'production' : 'development') as 'development' | 'production',
+  APNS_ENV: (process.env.APNS_ENV === 'production' ? 'production' : 'development') as
+    | 'development'
+    | 'production',
   /** FCM (Firebase Cloud Messaging, HTTP v1) credentials for Android push.
    *  Supply the Firebase service-account JSON either inline (raw or base64)
    *  via FCM_SERVICE_ACCOUNT_JSON, or as a file path via
@@ -500,52 +311,4 @@ export const env = {
   FCM_SERVICE_ACCOUNT_JSON: process.env.FCM_SERVICE_ACCOUNT_JSON ?? '',
   FCM_SERVICE_ACCOUNT_PATH: process.env.FCM_SERVICE_ACCOUNT_PATH ?? '',
 }
-
-// Production-secret gate: refuse to boot in production while any security
-// secret is still on its public-source dev default. Without this, a deploy
-// that forgot to set AGENT_RUNTIME_SECRET would sign/verify every runtime
-// JWT with a value anyone can read in the repo — a full agent/tenant
-// impersonation bypass. Fail closed, loudly, at startup rather than serve
-// forgeable tokens.
-if (env.NODE_ENV === 'production') {
-  if (env.AGENT_RUNTIME_SECRET === DEV_AGENT_RUNTIME_SECRET) {
-    console.error(
-      '[env] AGENT_RUNTIME_SECRET is still the dev default in production. ' +
-      'Set it to a high-entropy secret (e.g. `openssl rand -hex 32`) — refusing to start.',
-    )
-    process.exit(1)
-  }
-}
-
-if (env.LINGXILOOP_REASONING_RUNTIME === 'lingxigraph' && !env.LINGXIGRAPH_URL) {
-  console.error(
-    '[env] LINGXILOOP_REASONING_RUNTIME=lingxigraph requires LINGXIGRAPH_URL ' +
-    '(the LingxiGraph Runtime container origin, e.g. http://lingxigraph-runtime:8124).',
-  )
-  process.exit(1)
-}
-
-// MVP guard: LINGXILOOP_MANAGED_AGENT_EXECUTION=server dispatches turns via
-// in-process busy/pendingRerun state (agents/managed-executor.ts), which is
-// NOT coordinated across replicas. Running >1 LingxiLoop API replica in this
-// mode means two replicas can each believe they're the sole runner for the
-// same agent and dispatch runAgentTurn() concurrently. We can't detect
-// replica count from inside a single process, so this is a loud warning
-// rather than a hard fail — operators are expected to keep replicas=1 until
-// a follow-up issue adds distributed coordination.
-if (env.LINGXILOOP_MANAGED_AGENT_EXECUTION === 'server') {
-  if (env.LINGXILOOP_REASONING_RUNTIME !== 'lingxigraph') {
-    console.warn(
-      '[env] LINGXILOOP_MANAGED_AGENT_EXECUTION=server has no effect while ' +
-      'LINGXILOOP_REASONING_RUNTIME=legacy — server-side dispatch only applies to the ' +
-      'managed + lingxigraph path; managed agents will keep going through ensurePod().',
-    )
-  } else {
-    console.warn(
-      '[env] LINGXILOOP_MANAGED_AGENT_EXECUTION=server is an MVP mode: managed-agent ' +
-      'turn dispatch is coordinated only within THIS process. Running more than one ' +
-      'LingxiLoop API replica will let replicas race to run the same agent concurrently. ' +
-      'Keep replicas=1 until distributed coordination ships in a follow-up issue.',
-    )
-  }
-}
+// Keep environment validation side-effect free after module initialization.
