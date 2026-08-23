@@ -75,9 +75,11 @@ ALTER TABLE participants ALTER COLUMN capabilities SET DEFAULT
   '["canvas","web","files","email","documents"]'::jsonb;
 -- Shared Computer was retired in favour of shared Canvas state. Preserve
 -- every agent's other permissions while replacing the obsolete capability.
+-- Agents that had already revoked Computer must not be granted Canvas here;
+-- newly created agents receive Canvas through the column default above.
 UPDATE participants
    SET capabilities = (capabilities - 'computer') || '["canvas"]'::jsonb
- WHERE capabilities ? 'computer' OR NOT (capabilities ? 'canvas');
+ WHERE capabilities ? 'computer';
 
 CREATE TABLE IF NOT EXISTS conversation_counters (
   conversation_id TEXT PRIMARY KEY REFERENCES conversations(id) ON DELETE CASCADE,

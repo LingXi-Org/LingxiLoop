@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { ws } from '@/api/client'
 import { AvatarMini } from '@/components/Avatar'
 import { IPlus, ITrash } from '@/components/icons'
+import { shouldSyncCanvasDraft } from '@/lib/canvasDraft'
 import { useMe } from '@/stores/auth'
 import { useCanvas } from '@/stores/canvas'
 import { useParticipants } from '@/stores/participants'
@@ -358,21 +359,69 @@ function CanvasRail() {
   const frame = snapshot?.frames.find((item) => item.id === selectedId) ?? null
   const [draftTitle, setDraftTitle] = useState('')
   const [draftContent, setDraftContent] = useState('')
+  const [editorFocused, setEditorFocused] = useState(false)
+  const [draftDirty, setDraftDirty] = useState(false)
   const [comment, setComment] = useState('')
   const [tab, setTab] = useState<'inspect' | 'activity'>('inspect')
+  const draftFrameIdRef = useRef<string | null>(null)
+  const draftTitleRef = useRef('')
+  const draftContentRef = useRef('')
 
   useEffect(() => {
-    setDraftTitle(frame?.title ?? '')
-    setDraftContent(frame?.content ?? '')
-  }, [frame?.id, frame?.revision])
+    const nextFrameId = frame?.id ?? null
+    if (!shouldSyncCanvasDraft({
+      currentFrameId: draftFrameIdRef.current,
+      nextFrameId,
+      focused: editorFocused,
+      dirty: draftDirty,
+    })) return
+
+    const nextTitle = frame?.title ?? ''
+    const nextContent = frame?.content ?? ''
+    draftFrameIdRef.current = nextFrameId
+    draftTitleRef.current = nextTitle
+    draftContentRef.current = nextContent
+    setDraftTitle(nextTitle)
+    setDraftContent(nextContent)
+    setDraftDirty(false)
+  }, [draftDirty, editorFocused, frame?.id, frame?.revision])
 
   useEffect(() => {
-    if (!frame || (draftTitle === frame.title && draftContent === frame.content)) return
+    const frameId = frame?.id
+    if (!frameId || !draftDirty) return
+    const submittedTitle = draftTitle
+    const submittedContent = draftContent
     const timer = window.setTimeout(() => {
-      void updateFrame(frame.id, { title: draftTitle, content: draftContent }).catch(() => undefined)
+      void updateFrame(frameId, { title: submittedTitle, content: submittedContent })
+        .then(() => {
+          if (
+            draftFrameIdRef.current === frameId
+            && draftTitleRef.current === submittedTitle
+            && draftContentRef.current === submittedContent
+          ) setDraftDirty(false)
+        })
+        .catch(() => undefined)
     }, 550)
     return () => window.clearTimeout(timer)
-  }, [draftContent, draftTitle, frame, updateFrame])
+  }, [draftContent, draftDirty, draftTitle, frame?.id, updateFrame])
+
+  function changeDraftTitle(value: string) {
+    draftTitleRef.current = value
+    setDraftTitle(value)
+    setDraftDirty(true)
+  }
+
+  function changeDraftContent(value: string) {
+    draftContentRef.current = value
+    setDraftContent(value)
+    setDraftDirty(true)
+  }
+
+  function leaveEditor(event: React.FocusEvent<HTMLDivElement>) {
+    const nextTarget = event.relatedTarget
+    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return
+    setEditorFocused(false)
+  }
 
   const comments = useMemo(
     () => (snapshot?.comments ?? []).filter((item) => !item.frameId || item.frameId === selectedId),
@@ -396,13 +445,13 @@ function CanvasRail() {
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto p-4">
             {frame ? (
-              <>
+              <div onFocusCapture={() => setEditorFocused(true)} onBlurCapture={leaveEditor}>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-ink-400">Title</label>
-                <input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} className="mt-1.5 w-full rounded-lg border border-hairline bg-inset px-3 py-2 text-sm text-ink outline-none focus:border-accent" />
+                <input value={draftTitle} onChange={(event) => changeDraftTitle(event.target.value)} className="mt-1.5 w-full rounded-lg border border-hairline bg-inset px-3 py-2 text-sm text-ink outline-none focus:border-accent" />
                 <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wider text-ink-400">Content · {frame.type}</label>
-                <textarea value={draftContent} onChange={(event) => setDraftContent(event.target.value)} rows={12} className="mt-1.5 w-full resize-y rounded-lg border border-hairline bg-inset px-3 py-2 font-mono text-xs leading-5 text-ink outline-none focus:border-accent" placeholder={frame.type === 'image' ? 'https://…' : 'Frame content'} />
+                <textarea value={draftContent} onChange={(event) => changeDraftContent(event.target.value)} rows={12} className="mt-1.5 w-full resize-y rounded-lg border border-hairline bg-inset px-3 py-2 font-mono text-xs leading-5 text-ink outline-none focus:border-accent" placeholder={frame.type === 'image' ? 'https://…' : 'Frame content'} />
                 <div className="mt-3 flex items-center justify-between text-[10px] text-ink-400"><span>{Math.round(frame.width)} × {Math.round(frame.height)}</span><span>revision {frame.revision}</span></div>
-              </>
+              </div>
             ) : (
               <div className="rounded-xl bg-raised p-4 text-sm text-ink-secondary">Select a frame to edit its title and content.</div>
             )}
