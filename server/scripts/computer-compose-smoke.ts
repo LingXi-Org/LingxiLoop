@@ -1,13 +1,10 @@
 /** Compose smoke for the public Computer API and the isolated runtime manager. */
 import { randomUUID } from 'node:crypto'
-import { readFile, writeFile } from 'node:fs/promises'
 import { createSession } from '../src/auth.js'
 import { HttpSandboxRuntime } from '../src/agents/computer/user-computer.js'
 import { pool } from '../src/db/pool.js'
 
 const BASE_URL = process.env.MVP_SMOKE_BASE_URL ?? 'http://localhost:5181'
-const STATE_FILE = '/tmp/lingxiloop-computer-compose-smoke.json'
-
 interface State { companyId: string; userId: string; agentId: string; screenId: string; token: string }
 
 async function api(path: string, state: Pick<State, 'companyId' | 'token'>, init: RequestInit = {}): Promise<Response> {
@@ -84,12 +81,36 @@ async function firstRun(): Promise<void> {
   await screenshot(state)
   const taken = await json<{ status: string; controller: { type: string; id: string } | null }>(`/computer/screens/${state.screenId}/takeover`, state, { method: 'POST' })
   if (taken.status !== 'human_control' || taken.controller?.id !== state.userId) throw new Error('human takeover was not persisted')
-  await writeFile(STATE_FILE, JSON.stringify(state), 'utf8')
   console.log(`PASS Computer API start/screenshot/takeover: ${state.screenId}`)
 }
 
+async function loadPersistedState(): Promise<State> {
+  const { rows } = await pool.query<{
+    company_id: string; user_id: string; agent_id: string; screen_id: string
+  }>(
+    `SELECT c.id AS company_id, c.owner_user_id AS user_id, s.agent_id, s.id AS screen_id
+       FROM companies c
+       JOIN user_computers uc ON uc.company_id=c.id AND uc.user_id=c.owner_user_id AND uc.deleted_at IS NULL
+       JOIN computer_screens s ON s.computer_id=uc.id
+      WHERE c.slug LIKE 'computer-compose-%'
+      ORDER BY c.created_at DESC, s.created_at DESC LIMIT 1`,
+  )
+  const row = rows[0]
+  if (!row?.user_id) throw new Error('persisted Computer smoke state was not found after API restart')
+  return {
+    companyId: row.company_id,
+    userId: row.user_id,
+    agentId: row.agent_id,
+    screenId: row.screen_id,
+    token: (await createSession(row.user_id, { ua: 'computer-compose-smoke-restart' })).token,
+  }
+}
+
 async function verifyRestart(): Promise<void> {
-  const state = JSON.parse(await readFile(STATE_FILE, 'utf8')) as State
+  // The API container may be recreated rather than merely restarted by a
+  // newer Compose implementation. Recover only from authoritative Postgres,
+  // which is the behavior this smoke is intended to prove.
+  const state = await loadPersistedState()
   const computer = await json<{ status: string; screens: Array<{ id: string }> }>('/computer', state)
   if (computer.status !== 'running' || !computer.screens.some((screen) => screen.id === state.screenId)) {
     throw new Error('Computer state did not survive API restart')
