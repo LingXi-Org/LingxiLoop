@@ -1,26 +1,24 @@
-import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { Virtuoso } from 'react-virtuoso'
+import { api } from '@/api/client'
+import { Avatar, CloudLogo } from '@/components/Avatar'
+import { GroupCreator } from '@/components/GroupCreator'
+import { HiveAvatar } from '@/components/HiveAvatar'
+import { ISearch } from '@/components/icons'
+import { ConversationListItemContent } from '@/im/ConversationList'
+import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
-import { useConversations, isMuted } from '@/stores/conversations'
+import { isMuted, useConversations } from '@/stores/conversations'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
-import { Avatar, CloudLogo } from '@/components/Avatar'
-import { PreviewText } from '@/components/PreviewText'
-import { HiveAvatar } from '@/components/HiveAvatar'
-import { HumanBadge } from '@/components/HumanBadge'
-import { ISearch } from '@/components/icons'
-import { GroupCreator } from '@/components/GroupCreator'
-import { api } from '@/api/client'
-import { cn } from '@/lib/utils'
-import { participantRoleZh } from '@/lib/participantRole'
-import { Pressable } from './Pressable'
-import { useLongPress } from './useLongPress'
-import { MobileContextMenu, type ContextMenuItem } from './MobileContextMenu'
-import { SwipeableRow, type SwipeAction } from './SwipeableRow'
-import { PullToRefresh } from './PullToRefresh'
-import { Virtuoso } from 'react-virtuoso'
 import type { Conversation, Participant } from '@/types'
+import { type ContextMenuItem, MobileContextMenu } from './MobileContextMenu'
+import { Pressable } from './Pressable'
+import { PullToRefresh } from './PullToRefresh'
+import { type SwipeAction, SwipeableRow } from './SwipeableRow'
+import { useLongPress } from './useLongPress'
 
 const filters = ['全部', '智能体', '私聊', '成员'] as const
 type Filter = (typeof filters)[number]
@@ -97,52 +95,13 @@ function ConvoAvatar({ c, size = 48 }: { c: Conversation; size?: number }) {
 // useLongPress lives in ./useLongPress.ts — shared with MobileChat's
 // message tapback menu.
 
-/** Small bell-off glyph for muted conversation rows. Same shape as
- *  the desktop pane's indicator — Slack / iOS Messages convention. */
-function MutedGlyph() {
-  return (
-    <span className="inline-flex items-center justify-center w-3.5 h-3.5 shrink-0 text-ink-300" aria-label="已静音">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        <path d="M18.63 13A17.9 17.9 0 0 1 18 8" />
-        <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
-        <path d="M18 8a6 6 0 0 0-9.33-5" />
-        <line x1="1" y1="1" x2="23" y2="23" />
-      </svg>
-    </span>
-  )
-}
-
 function MobileRow({ c, onTap, onLongPress }: {
   c: Conversation
   onTap: () => void
   onLongPress: (coords: { x: number; y: number }) => void
 }) {
   const isFresh = c.tag === 'fresh-pulled'
-  const muted = isMuted(c)
-  const typingIds = useMessages((s) => s.typing[c.id])
-  const byId = useParticipants((s) => s.byId)
-  const meId = useMe()
   const press = useLongPress(onLongPress, onTap)
-  const roleLabels = c.kind === 'direct' || c.kind === 'whisper'
-    ? c.members
-      .map((id) => byId[id])
-      .filter((p): p is Participant => Boolean(p && p.id !== meId && p.kind === 'agent'))
-      .map((p) => participantRoleZh(p))
-      .filter((role): role is string => Boolean(role))
-    : []
-  // Same hardening as the chat composer: drop self, and turn a
-  // resolved-but-blank name into a graceful label instead of letting it
-  // render as a nameless "is typing…". Unknown ids are dropped.
-  const typingNames = (typingIds ?? [])
-    .filter((id) => id !== meId)
-    .map((id) => {
-      const p = byId[id]
-      if (!p) return null
-      const name = p.name?.trim()
-      return name || (p.kind === 'agent' ? 'An agent' : 'Someone')
-    })
-    .filter((n): n is string => Boolean(n))
   return (
     <motion.button
       {...press}
@@ -162,57 +121,7 @@ function MobileRow({ c, onTap, onLongPress }: {
         isFresh && 'bg-gradient-to-r from-[rgba(244,183,64,0.08)] to-transparent',
       )}
     >
-      <ConvoAvatar c={c} />
-      <div className="min-w-0 self-center">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span className={cn(
-            'text-[15px] font-semibold truncate',
-            // Muted rows get a softer title tone — same affordance the
-            // desktop pane uses. The bell-off glyph carries the
-            // assertive signal; this dim is the supporting cue.
-            muted ? 'text-ink-700 opacity-80' : 'text-ink-900',
-          )}>{c.title}</span>
-          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[10px] font-normal text-ink-400">{role}</span>)}
-          {muted && <MutedGlyph />}
-          {isFresh && (
-            <span className="text-[8.5px] font-bold tracking-wider uppercase py-0.5 px-1.5 rounded text-gold-deep bg-[rgba(244,183,64,0.18)] shrink-0">NEW</span>
-          )}
-          {c.tag === 'human' && <HumanBadge />}
-        </div>
-        {typingNames.length > 0 ? (
-          <div className="text-[12.5px] text-skype-deep leading-snug truncate flex items-center gap-1.5">
-            <span className="inline-flex gap-[2px] shrink-0">
-              <span className="w-[3px] h-[3px] rounded-full bg-skype animate-bounce-dot" />
-              <span className="w-[3px] h-[3px] rounded-full bg-skype animate-bounce-dot" style={{ animationDelay: '0.15s' }} />
-              <span className="w-[3px] h-[3px] rounded-full bg-skype animate-bounce-dot" style={{ animationDelay: '0.3s' }} />
-            </span>
-            <span className="truncate">
-              {typingNames.length === 1
-                ? `${typingNames[0]} is typing…`
-                : typingNames.length === 2
-                  ? `${typingNames[0]} and ${typingNames[1]} are typing…`
-                  : `${typingNames[0]} and ${typingNames.length - 1} more are typing…`}
-            </span>
-          </div>
-        ) : (
-          <div className="text-[12.5px] text-ink-500 leading-snug truncate">
-            <PreviewText body={c.preview} />
-          </div>
-        )}
-      </div>
-      <div className="flex flex-col items-end gap-1 self-center">
-        <span className="text-[10.5px] text-ink-300 tabular-nums">{c.lastAt}</span>
-        {c.unread !== undefined && c.unread > 0 && (
-          <span className="inline-grid place-items-center min-w-[20px] h-5 px-1.5 rounded-full text-[10.5px] font-bold"
-            style={{
-              // Muted rows: keep the count visible (people still want
-              // to know there's unread) but switch to a grey chip —
-              // matches the "silent" affordance from the desktop pane.
-              background: muted ? 'var(--ink-200)' : (isFresh ? 'var(--gold)' : 'var(--coral)'),
-              color: muted ? 'var(--ink-700)' : (isFresh ? 'var(--ink-900)' : 'white'),
-            }}>{c.unread}</span>
-        )}
-      </div>
+      <ConversationListItemContent conversation={c} variant="mobile" />
     </motion.button>
   )
 }

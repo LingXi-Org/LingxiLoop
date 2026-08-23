@@ -631,6 +631,52 @@ input, textarea { font: inherit; }
  * untouched while semantic surfaces switch cleanly between light and dark. */
 .chat-surface { background: var(--panel); color: var(--ink); }
 .chat-composer-shell { background: var(--panel); border-color: var(--hairline); }
+
+/* ============== Shared IM shell ============== */
+.desktop-im-grid {
+  grid-template-columns: 320px minmax(0, 1fr);
+  background: var(--app);
+}
+.desktop-im-grid[data-context-open='true'] {
+  grid-template-columns: 320px minmax(360px, 1fr) clamp(360px, 36vw, 680px);
+}
+.im-context-pane {
+  position: relative;
+  z-index: 15;
+}
+.im-conversation-header,
+.im-composer-surface {
+  -webkit-font-smoothing: antialiased;
+}
+.im-profile [data-avatar] {
+  transform: translateZ(0);
+}
+
+/* A third rail stays a real column on roomy desktop windows. On compact web
+   and split-screen desktop windows it becomes a contained overlay above the
+   conversation, keeping the list usable and preventing three crushed panes. */
+@media (max-width: 1180px) and (min-width: 768px) {
+  .desktop-im-grid,
+  .desktop-im-grid[data-context-open='true'] {
+    grid-template-columns: 292px minmax(0, 1fr);
+  }
+  .desktop-im-grid[data-context-open='true'] .im-context-pane {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    width: min(520px, calc(100vw - 292px));
+  }
+}
+
+@media (max-width: 900px) and (min-width: 768px) {
+  .desktop-im-grid,
+  .desktop-im-grid[data-context-open='true'] {
+    grid-template-columns: 276px minmax(0, 1fr);
+  }
+  .desktop-im-grid[data-context-open='true'] .im-context-pane {
+    width: calc(100vw - 276px);
+  }
+}
 .chat-composer {
   /* OpenMaus Composer: one quiet raised surface with a very light keyline. */
   background: color-mix(in srgb, var(--raised) 60%, transparent);

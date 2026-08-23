@@ -1,92 +1,112 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { ComputerView } from '@/components/ComputerView'
 import { EmailComposer } from '@/components/EmailComposer'
-import { IAgent, IAgents, IBoard, ICalendar, IChat, IComputer, IDoc } from '@/components/icons'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
 import { useTheme } from '@/stores/theme'
 import type { ViewKey } from '@/types'
 import { AgentsView } from './AgentsView'
+import { BoardPeekPane } from './BoardPeekPane'
 import { BoardsView } from './BoardsView'
+import { CalendarPeekPane } from './CalendarPeekPane'
 import { CalendarView } from './CalendarView'
 import { ChatPane } from './ChatPane'
 import { ConversationsPane } from './ConversationsPane'
+import { DocumentPeekPane } from './DocumentPeekPane'
 import { DocumentsView } from './DocumentsView'
+import { InfoPane } from './InfoPane'
 import { MeView } from './MeView'
+import { ThreadDrawer } from './ThreadDrawer'
 
-const productViews: Array<{ key: ViewKey['view']; label: string; Icon: typeof IChat }> = [
-  { key: 'conversations', label: '对话', Icon: IChat },
-  { key: 'agents', label: '智能体', Icon: IAgent },
-  { key: 'computer', label: 'Computer', Icon: IComputer },
-  { key: 'library', label: '资料库', Icon: IDoc },
-  { key: 'me', label: '我的', Icon: IAgents },
-]
+const CONTEXT_TITLES: Partial<Record<ViewKey['view'], string>> = {
+  agents: '智能体',
+  computer: 'Computer',
+  library: '资料库',
+  documents: '文档',
+  boards: '看板',
+  calendar: '日历',
+  me: '我的',
+}
 
-function DesktopNavigation() {
-  const view = useApp((state) => state.view)
-  const setView = useApp((state) => state.setView)
+function WorkspaceContext({ view }: { view: ViewKey['view'] }) {
+  const close = () => useApp.getState().setView('conversations')
+  const libraryOpen = view === 'library' || view === 'documents' || view === 'boards' || view === 'calendar'
+  const body = view === 'agents' ? <AgentsView />
+    : view === 'computer' ? <ComputerView />
+      : view === 'boards' ? <BoardsView />
+        : view === 'calendar' ? <CalendarView />
+          : view === 'me' ? <MeView />
+            : <DocumentsView />
+
   return (
-    <nav className="flex h-14 shrink-0 items-center gap-1 border-b border-hairline bg-panel px-4" aria-label="主导航">
-      <span className="mr-5 text-[16px] font-semibold text-ink">LingxiLoop</span>
-      {productViews.map(({ key, label, Icon }) => (
-        <button key={key} type="button" onClick={() => setView(key)}
-          className={`flex h-9 items-center gap-2 rounded-lg px-3 text-[13px] font-medium transition ${view === key ? 'bg-raised text-accent' : 'text-ink-secondary hover:bg-raised/60 hover:text-ink'}`}>
-          <Icon className="h-4 w-4" />{label}
-        </button>
-      ))}
-    </nav>
+    <section className="flex h-full min-h-0 flex-col bg-app">
+      <header className="flex h-[60px] shrink-0 items-center gap-3 border-b border-hairline bg-panel/92 px-4 backdrop-blur-xl">
+        <button type="button" onClick={close} className="grid size-9 place-items-center rounded-full text-ink-secondary hover:bg-raised" aria-label="关闭上下文面板">×</button>
+        <div className="min-w-0">
+          <h2 className="truncate text-[14px] font-semibold text-ink">{CONTEXT_TITLES[view] ?? '工作区'}</h2>
+          <p className="text-[10px] text-ink-secondary">会话上下文</p>
+        </div>
+      </header>
+      {libraryOpen && (
+        <nav className="flex h-11 shrink-0 items-center gap-1 border-b border-hairline bg-panel px-3" aria-label="资料库分区">
+          {([
+            ['documents', '文档'],
+            ['boards', '看板'],
+            ['calendar', '日历'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => useApp.getState().setView(key)}
+              className={view === key || (view === 'library' && key === 'documents')
+                ? 'rounded-lg bg-raised px-3 py-1.5 text-[11px] font-semibold text-accent'
+                : 'rounded-lg px-3 py-1.5 text-[11px] font-medium text-ink-secondary hover:bg-raised'}
+            >{label}</button>
+          ))}
+        </nav>
+      )}
+      <div className="min-h-0 flex-1 overflow-hidden">{body}</div>
+    </section>
   )
 }
 
-function LibraryView() {
-  const [section, setSection] = useState<'documents' | 'boards' | 'calendar'>('documents')
-  const sections = [
-    { key: 'documents' as const, label: '文档', Icon: IDoc },
-    { key: 'boards' as const, label: '看板', Icon: IBoard },
-    { key: 'calendar' as const, label: '日历', Icon: ICalendar },
-  ]
-  return (
-    <div className="flex min-h-0 flex-1 overflow-hidden">
-      <aside className="w-52 shrink-0 border-r border-hairline bg-panel p-3">
-        <h1 className="px-3 pb-3 pt-2 text-[15px] font-semibold text-ink">资料库</h1>
-        {sections.map(({ key, label, Icon }) => (
-          <button key={key} type="button" onClick={() => setSection(key)} className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] ${section === key ? 'bg-raised text-accent' : 'text-ink-secondary hover:bg-raised/60'}`}>
-            <Icon className="h-4 w-4" />{label}
-          </button>
-        ))}
-      </aside>
-      <main className="min-w-0 flex-1 overflow-hidden">
-        {section === 'documents' ? <DocumentsView /> : section === 'boards' ? <BoardsView /> : <CalendarView />}
-      </main>
-    </div>
-  )
-}
-
-/** The desktop product has one shape: workspace left, conversation right. */
+/** IM-first desktop/web shell. Messaging remains mounted in the first two
+ * columns; profiles, threads, artifacts, agents and workspace tools use a
+ * contextual third rail instead of replacing chat with product tabs. */
 export function DesktopApp() {
-  const theme = useTheme((s) => s.theme)
-  const view = useApp((s) => s.view)
+  const theme = useTheme((state) => state.theme)
+  const view = useApp((state) => state.view)
+  const infoParticipantId = useApp((state) => state.infoAgentId)
+  const openThread = useApp((state) => state.openThread)
+  const documentId = useApp((state) => state.openDocumentId)
+  const boardId = useApp((state) => state.openBoardId)
+  const calendarEventId = useApp((state) => state.openCalendarEventId)
+  const workspaceContextOpen = view !== 'conversations'
+  const contextOpen = Boolean(infoParticipantId || openThread || documentId || boardId || calendarEventId || workspaceContextOpen)
 
   useEffect(() => {
     window.lingxiloop?.windowChrome?.setTheme(theme)
   }, [theme])
 
+  let context: React.ReactNode = null
+  if (infoParticipantId) context = <InfoPane />
+  else if (openThread) context = <ThreadDrawer />
+  else if (documentId) context = <DocumentPeekPane />
+  else if (boardId) context = <BoardPeekPane />
+  else if (calendarEventId) context = <CalendarPeekPane />
+  else if (workspaceContextOpen) context = <WorkspaceContext view={view} />
+
   return (
     <div
-      className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-col overflow-hidden bg-app"
+      className="desktop-openmaus relative h-screen w-screen min-h-0 overflow-hidden bg-app"
       data-electron={isElectron ? 'true' : 'false'}
       data-platform={platform}
     >
-      <DesktopNavigation />
-      {view === 'conversations' ? (
-        <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: '320px minmax(0, 1fr)' }}>
-          <ConversationsPane />
-          <ChatPane />
-        </div>
-      ) : view === 'agents' ? <div className="min-h-0 flex-1 overflow-hidden"><AgentsView /></div>
-        : view === 'computer' ? <div className="min-h-0 flex-1 overflow-hidden"><ComputerView /></div>
-        : view === 'library' ? <LibraryView />
-          : <div className="min-h-0 flex-1 overflow-hidden"><MeView /></div>}
+      <div className="desktop-im-grid grid h-full min-h-0" data-context-open={contextOpen ? 'true' : 'false'}>
+        <ConversationsPane />
+        <ChatPane />
+        {contextOpen && <aside className="im-context-pane min-h-0 min-w-0 overflow-hidden border-l border-hairline bg-panel shadow-[-18px_0_40px_-34px_rgba(10,30,60,0.5)]">{context}</aside>}
+      </div>
       <EmailComposer />
     </div>
   )

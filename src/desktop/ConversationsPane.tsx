@@ -1,18 +1,18 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
-import { api, type ApiSearchResults } from '@/api/client'
-import { Avatar, AvatarStack } from '@/components/Avatar'
+import { type ApiSearchResults, api } from '@/api/client'
+import { Avatar } from '@/components/Avatar'
 import { ContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { GroupCreator } from '@/components/GroupCreator'
+import { IAgent, IComputer, IDoc } from '@/components/icons'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { ConversationListItemContent } from '@/im/ConversationList'
 import { isElectron, isMac } from '@/lib/runtime'
 import { cn } from '@/lib/utils'
-import { participantRoleZh } from '@/lib/participantRole'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { isMuted, useConversations } from '@/stores/conversations'
-import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import type { Conversation, Participant } from '@/types'
 
@@ -34,49 +34,12 @@ const MoreIcon = () => (
   </svg>
 )
 
-function ConversationAvatar({ conversation }: { conversation: Conversation }) {
-  const byId = useParticipants((s) => s.byId)
-  const meId = useAuth((s) => s.user?.id)
-  const members = conversation.members
-    .filter((id) => id !== meId)
-    .map((id) => byId[id])
-    .filter((p): p is Participant => Boolean(p))
-
-  if (conversation.kind === 'group' || members.length > 1) {
-    return (
-      <div className="flex size-14 shrink-0 items-center justify-center">
-        {members.length > 0
-          ? <AvatarStack ps={members} size={34} max={3} />
-          : <span className="grid size-12 place-items-center rounded-full bg-raised text-lg text-ink-secondary">群</span>}
-      </div>
-    )
-  }
-  const person = members[0]
-  if (person) return <Avatar p={person} size={52} ringColor="var(--panel)" />
-  return (
-    <span className="grid size-[52px] shrink-0 place-items-center rounded-full bg-raised text-[17px] font-semibold text-ink">
-      {conversation.kind === 'email' ? '邮' : conversation.title.charAt(0).toUpperCase()}
-    </span>
-  )
-}
-
 function ConversationRow({ conversation, selected, onMenu }: {
   conversation: Conversation
   selected: boolean
   onMenu: (event: React.MouseEvent) => void
 }) {
   const select = useApp((s) => s.selectConversation)
-  const typing = useMessages((s) => (s.typing[conversation.id] ?? []).length > 0)
-  const muted = isMuted(conversation)
-  const byId = useParticipants((s) => s.byId)
-  const meId = useAuth((s) => s.user?.id)
-  const roleLabels = conversation.kind === 'direct' || conversation.kind === 'whisper'
-    ? conversation.members
-      .map((id) => byId[id])
-      .filter((p): p is Participant => Boolean(p && p.id !== meId && p.kind === 'agent'))
-      .map((p) => participantRoleZh(p))
-      .filter((role): role is string => Boolean(role))
-    : []
   return (
     <button
       type="button"
@@ -87,30 +50,7 @@ function ConversationRow({ conversation, selected, onMenu }: {
         selected ? 'bg-raised text-ink' : 'text-ink hover:bg-raised/55',
       )}
     >
-      <ConversationAvatar conversation={conversation} />
-      <span className="min-w-0 flex-1">
-        <span className="flex items-baseline justify-between gap-2">
-          <span className="flex min-w-0 items-center gap-1.5 truncate text-[15px] font-semibold text-ink">
-            {conversation.pinned && <span className="text-[11px] text-ink-secondary" aria-label="已置顶">◆</span>}
-            <span className="truncate">{conversation.title}</span>
-            {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[10px] font-normal text-ink-secondary">{role}</span>)}
-          </span>
-          <span className="shrink-0 text-xs tabular-nums text-ink-secondary">{conversation.lastAt}</span>
-        </span>
-        <span className="mt-0.5 flex items-center justify-between gap-2">
-          <span className={cn('truncate text-[13px]', typing ? 'text-accent' : 'text-ink-secondary')}>
-            {typing ? '正在输入…' : (conversation.preview || '还没有消息')}
-          </span>
-          <span className="flex shrink-0 items-center gap-1.5">
-            {muted && <span className="text-[11px] text-ink-secondary" title="已静音">⌁</span>}
-            {(conversation.unread ?? 0) > 0 && (
-              <span className="grid min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-4 text-white">
-                {conversation.unread! > 99 ? '99+' : conversation.unread}
-              </span>
-            )}
-          </span>
-        </span>
-      </span>
+      <ConversationListItemContent conversation={conversation} variant="desktop" />
     </button>
   )
 }
@@ -166,6 +106,7 @@ export function ConversationsPane() {
   const [results, setResults] = useState<ApiSearchResults | null>(null)
   const [searching, setSearching] = useState(false)
   const [plusOpen, setPlusOpen] = useState(false)
+  const [launcherOpen, setLauncherOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [creating, setCreating] = useState<string[] | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null)
@@ -233,9 +174,35 @@ export function ConversationsPane() {
   return (
     <aside className="relative flex h-full min-h-0 flex-col border-r border-hairline bg-panel text-ink">
       <div className="desktop-window-toolbar omb-drag flex h-12 shrink-0 items-center justify-between px-4 pt-1">
-        {!isElectron ? (
-          <div className="flex items-center gap-2"><span className="size-3 rounded-full bg-[#ff5f57]" /><span className="size-3 rounded-full bg-[#febc2e]" /><span className="size-3 rounded-full bg-[#28c840]" /></div>
-        ) : isMac ? <div className="w-[72px]" /> : <div />}
+        <div className="flex items-center gap-2">
+          {!isElectron ? (
+            <div className="mr-1 flex items-center gap-2"><span className="size-3 rounded-full bg-[#ff5f57]" /><span className="size-3 rounded-full bg-[#febc2e]" /><span className="size-3 rounded-full bg-[#28c840]" /></div>
+          ) : isMac ? <div className="w-[72px]" /> : null}
+          <div className="relative omb-no-drag">
+            <button type="button" onClick={() => setLauncherOpen((open) => !open)} className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised hover:text-ink" aria-label="打开工作区菜单">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-[18px]"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            </button>
+            {launcherOpen && (
+              <>
+                <button type="button" aria-label="关闭工作区菜单" className="fixed inset-0 z-30 cursor-default" onClick={() => setLauncherOpen(false)} />
+                <div className="absolute left-0 top-full z-40 mt-1 w-56 overflow-hidden rounded-2xl border border-hairline bg-card p-2 shadow-2xl">
+                  <div className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-secondary">LingxiLoop</div>
+                  {([
+                    ['agents', '智能体', IAgent],
+                    ['computer', 'Computer', IComputer],
+                    ['library', '资料库', IDoc],
+                  ] as const).map(([key, label, Icon]) => (
+                    <button key={key} type="button" onClick={() => { useApp.getState().setView(key); setLauncherOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-[13px] font-medium text-ink hover:bg-raised">
+                      <Icon className="size-4 text-accent" />{label}
+                    </button>
+                  ))}
+                  <div className="my-1 h-px bg-hairline" />
+                  <button type="button" onClick={() => { useApp.getState().setView('me'); setLauncherOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-[13px] text-ink hover:bg-raised">设置</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
         <div className="relative omb-no-drag">
           <button type="button" onClick={() => setPlusOpen((open) => !open)} className="rounded-md p-1.5 text-ink-secondary hover:bg-raised hover:text-ink" aria-label="新建"><PlusIcon className="size-5" /></button>
           {plusOpen && (

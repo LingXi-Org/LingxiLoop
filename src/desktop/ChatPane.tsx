@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
+import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, type ApiCoworkerActivity, api, ws } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
@@ -10,6 +10,10 @@ import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { TwEmoji } from '@/components/TwEmoji'
+import { ComposerSurface } from '@/im/Composer'
+import { ConversationHeader } from '@/im/ConversationHeader'
+import { ConversationView } from '@/im/ConversationView'
+import { MessageList } from '@/im/MessageList'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
@@ -87,7 +91,7 @@ function _ComingSoonPop({ onClose }: { onClose: () => void }) {
   )
 }
 
-function ChatHeader({
+function _ChatHeader({
   convoId, onToggleSearch, searchOpen,
 }: {
   convoId: string
@@ -938,7 +942,7 @@ export function Composer({
   const canSend = (draft.trim().length > 0 || attachment !== null) && !uploading
 
   return (
-    <div className={isThread ? '' : 'px-5 pb-5 pt-2'}
+    <ComposerSurface className={isThread ? 'border-0 bg-transparent !p-0' : undefined}
       // Composer wrapper is FULLY transparent — the parent <main>'s radial
       // washes (sky from top-left, coral from bottom-right) bleed through
       // uninterrupted, so there's no longer a hard boundary where the
@@ -1201,7 +1205,7 @@ export function Composer({
           </button>
         </div>
       </div>
-    </div>
+    </ComposerSurface>
   )
 }
 
@@ -1392,7 +1396,7 @@ function _EmptyConversationState() {
 
 
   return (
-    <main
+    <ConversationView
       className="relative overflow-hidden"
       style={{
         // Sky pocket centered on the cloud — the previous linear
@@ -1610,7 +1614,7 @@ function _EmptyConversationState() {
           </div>
         </div>
       </div>
-    </main>
+    </ConversationView>
   )
 }
 
@@ -1958,10 +1962,23 @@ export function ChatPane() {
           : 'grid-rows-[auto_auto_minmax(0,1fr)_auto]',
       )}
     >
-      <ChatHeader
-        convoId={convoId}
-        onToggleSearch={() => setSearchOpen((v) => !v)}
-        searchOpen={searchOpen}
+      <ConversationHeader
+        conversationId={convoId}
+        onOpenDetails={() => {
+          const participantId = c.members.find((id) => byId[id]?.kind === 'agent')
+          if (participantId) useApp.getState().openAgentInfo(participantId)
+        }}
+        actions={(
+          <button
+            type="button"
+            onClick={() => setSearchOpen((value) => !value)}
+            title="搜索当前会话"
+            aria-label="搜索当前会话"
+            className={cn('grid size-9 place-items-center rounded-full transition', searchOpen ? 'bg-raised text-accent' : 'text-ink-secondary hover:bg-raised hover:text-ink')}
+          >
+            <ISearch className="size-[18px]" />
+          </button>
+        )}
       />
       <ConversationActivity conversationId={convoId} />
       {searchOpen && (
@@ -2040,13 +2057,10 @@ export function ChatPane() {
             <ThreadLoader />
           </div>
         ) : (
-          <Virtuoso
-            ref={virtuosoRef}
-            className="h-full"
-            data={list}
+          <MessageList
+            virtuosoRef={virtuosoRef}
+            messages={list}
             firstItemIndex={firstItemIndex}
-            followOutput="auto"
-            initialTopMostItemIndex={Math.max(0, list.length - 1)}
             startReached={onStartReached}
             atBottomStateChange={setAtBottom}
             // Initial-height hint so Virtuoso's first-pass sizing is
@@ -2075,7 +2089,6 @@ export function ChatPane() {
               ),
               Footer: () => <div className="h-3" />,
             }}
-            computeItemKey={(_index, m) => m.clientId ?? m.id}
             itemContent={(i, m) => {
               const author = byId[m.authorId]
               // System / whisper rows render without a resolved author (e.g. the

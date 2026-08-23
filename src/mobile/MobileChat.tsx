@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
+import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
-import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
-import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { IAt, IBack, IClip, IMore, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
@@ -12,6 +10,12 @@ import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { TwEmoji } from '@/components/TwEmoji'
+import { ComposerSurface } from '@/im/Composer'
+import { ConversationHeader } from '@/im/ConversationHeader'
+import { ConversationView } from '@/im/ConversationView'
+import { MessageList } from '@/im/MessageList'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
+import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { tapHaptic } from '@/lib/native'
@@ -457,41 +461,14 @@ export function MobileChat() {
     }
   }
   const canSend = (draft.trim().length > 0 || attachment !== null) && !uploading
-  const memberPs = c.members
-    .map((m) => byId[m])
-    .filter((p): p is Participant => Boolean(p))
-  const agents = memberPs.filter((p) => p.kind === 'agent')
-
   return (
-    <section className="chat-surface flex flex-col h-full overflow-x-hidden">
-      {/* Header */}
-      <header
-        className="bg-cloud/95 backdrop-blur-md sticky top-0 z-10 border-b border-ink-100"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
-      >
-        <div className="px-2 py-2.5 flex items-center gap-2">
-          <Pressable
-            onClick={() => select(null)}
-            className="w-10 h-10 grid place-items-center text-ink-700 active:bg-sky2-50 rounded-full"
-          >
-            <IBack className="w-[22px] h-[22px]" strokeWidth={2} />
-          </Pressable>
-          <Pressable
-            onClick={() => pushStack('info')}
-            scale={0.985}
-            className="flex-1 flex items-center gap-2.5 py-1 active:opacity-70"
-          >
-            <AvatarStack ps={agents} size={26} max={3} />
-            <div className="text-left flex-1 min-w-0">
-              <div className="font-display font-medium text-[16px] text-ink-900 leading-tight truncate" style={{ letterSpacing: '-0.01em' }}>
-                {c.title}
-              </div>
-              <div className="text-[11px] font-semibold flex items-center gap-1 leading-none mt-0.5 text-working">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse-soft bg-working" />
-                {agents.length} agents
-              </div>
-            </div>
-          </Pressable>
+    <ConversationView variant="mobile" className="flex flex-col overflow-x-hidden">
+      <ConversationHeader
+        conversationId={convoId}
+        variant="mobile"
+        onBack={() => select(null)}
+        onOpenDetails={() => pushStack('info')}
+        actions={(
           <div className="relative">
             <Pressable
               onClick={() => setMenuOpen((v) => !v)}
@@ -542,8 +519,8 @@ export function MobileChat() {
               </>
             )}
           </div>
-        </div>
-      </header>
+        )}
+      />
 
       {/* Stream — virtualized via react-virtuoso. Long conversations no
           longer mount every bubble at once; rows outside the viewport
@@ -553,16 +530,13 @@ export function MobileChat() {
         ref={streamRef}
         className="chat-surface flex-1 relative"
       >
-        <Virtuoso
-          ref={virtuosoRef}
-          className="h-full"
-          data={list}
+        <MessageList
+          virtuosoRef={virtuosoRef}
+          messages={list}
           firstItemIndex={firstItemIndex}
           // Pin to the bottom on first mount + every append. 'smooth' would
           // animate every WS streaming chunk and feel laggy; 'auto' jumps
           // for new messages while leaving the user free to scroll up.
-          followOutput="auto"
-          initialTopMostItemIndex={Math.max(0, list.length - 1)}
           startReached={onStartReached}
           // Padding lives inside Header / Footer so virtuoso can measure the
           // first/last items without a wrapping flex container fighting it.
@@ -592,7 +566,6 @@ export function MobileChat() {
               />
             )
           }}
-          computeItemKey={(_index, m) => m.clientId ?? m.id}
           // First-pass height estimate for rows Virtuoso hasn't measured yet.
           // A real mobile row (avatar + author line + a few lines of body, and
           // often a card) lands well above the old 88px guess, so every
@@ -615,9 +588,7 @@ export function MobileChat() {
         <ScrollToLatestButton visible={!atBottom} onClick={smoothScrollToLatest} bottomOffset={20} />
       </div>
       {/* Composer */}
-      <div
-        className="chat-composer-shell border-t px-3 pt-1.5 kb-aware"
-      >
+      <ComposerSurface variant="mobile">
         <div className="px-1 pb-1">
         </div>
         {pollComposerOpen && convoId && (
@@ -919,7 +890,7 @@ export function MobileChat() {
             </div>
           </div>
         )}
-      </div>
+      </ComposerSurface>
       <MobileMessageTapback
         open={tapback !== null}
         anchor={tapback?.coords ?? null}
@@ -930,7 +901,7 @@ export function MobileChat() {
         actions={tapback ? buildMessageTapbackActions(tapback.msg, convoId, setReplyingTo, meId) : []}
         onClose={() => setTapback(null)}
       />
-    </section>
+    </ConversationView>
   )
 }
 

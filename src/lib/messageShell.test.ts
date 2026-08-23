@@ -23,6 +23,29 @@ test('desktop and mobile both render the shared MessageRow component', async () 
   assert.match(mobile, /<MessageRow\b/)
 })
 
+test('web, desktop, and mobile compose the shared IM core without Telegram runtime code', async () => {
+  const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
+  const mobile = await readFile(new URL('../mobile/MobileChat.tsx', import.meta.url), 'utf8')
+  const desktopProfile = await readFile(new URL('../desktop/InfoPane.tsx', import.meta.url), 'utf8')
+  const mobileProfile = await readFile(new URL('../mobile/MobileParticipantInfo.tsx', import.meta.url), 'utf8')
+  const desktopList = await readFile(new URL('../desktop/ConversationsPane.tsx', import.meta.url), 'utf8')
+  const mobileList = await readFile(new URL('../mobile/MobileChatList.tsx', import.meta.url), 'utf8')
+  const desktopShell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
+  const packageJson = await readFile(new URL('../../package.json', import.meta.url), 'utf8')
+
+  for (const component of ['ConversationView', 'MessageList', 'ConversationHeader', 'ComposerSurface']) {
+    assert.match(desktop, new RegExp(`<${component}\\b`))
+    assert.match(mobile, new RegExp(`<${component}\\b`))
+  }
+  assert.match(desktopProfile, /<ParticipantProfile\b/)
+  assert.match(mobileProfile, /<ParticipantProfile\b/)
+  assert.match(desktopList, /<ConversationListItemContent\b/)
+  assert.match(mobileList, /<ConversationListItemContent\b/)
+  assert.match(desktopShell, /data-context-open=/)
+  assert.doesNotMatch(desktopShell, /DesktopNavigation/)
+  assert.doesNotMatch(packageJson, /"(?:teact|telegram-tt)"/i)
+})
+
 test('desktop chat reserves a scrollable middle row so the composer stays at the bottom', async () => {
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
   assert.match(desktop, /chat-surface grid h-full min-h-0 min-w-0 overflow-hidden/)

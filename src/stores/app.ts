@@ -90,13 +90,27 @@ interface AppState {
 
 export const useApp = create<AppState>((set) => ({
   view: 'conversations',
-  setView: (v) => set({ view: v }),
+  setView: (v) => set(v === 'conversations'
+    ? { view: v }
+    : {
+      view: v,
+      infoAgentId: null,
+      openThread: null,
+      openDocumentId: null,
+      openBoardId: null,
+      openBoardCardId: null,
+      openCalendarEventId: null,
+    }),
 
   // Starts unselected — the real conversations list arrives async from the
   // server. Seeding with a mock id here used to fire a 404 messages fetch
   // before the user picked anything.
   selectedConversationId: null,
-  selectConversation: (id) => set({ selectedConversationId: id, mobileStack: id ? 'chat' : 'list' }),
+  selectConversation: (id) => set({
+    view: 'conversations',
+    selectedConversationId: id,
+    mobileStack: id ? 'chat' : 'list',
+  }),
   setSelectedIfNone: (id) => set((s) => s.selectedConversationId ? {} : { selectedConversationId: id }),
 
   mobileStack: 'list',
@@ -107,7 +121,7 @@ export const useApp = create<AppState>((set) => ({
   // slot in DesktopApp. Keeping both states in sync here means the UI never
   // sees both flags on at once.
   openAgentInfo: (agentId) =>
-    set({ infoAgentId: agentId, openThread: null, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null }),
+    set({ view: 'conversations', infoAgentId: agentId, openThread: null, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null }),
   closeAgentInfo: () => set({ infoAgentId: null }),
 
   replyingTo: {},
@@ -134,7 +148,7 @@ export const useApp = create<AppState>((set) => ({
 
   openThread: null,
   openThreadView: (convoId, rootId) =>
-    set({ openThread: { convoId, rootId }, infoAgentId: null, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null }),
+    set({ view: 'conversations', openThread: { convoId, rootId }, infoAgentId: null, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null }),
   closeThreadView: () => set({ openThread: null }),
 
   openDocumentId: null,
