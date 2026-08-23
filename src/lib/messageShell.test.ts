@@ -23,6 +23,13 @@ test('desktop and mobile both render the shared MessageRow component', async () 
   assert.match(mobile, /<MessageRow\b/)
 })
 
+test('desktop chat reserves a scrollable middle row so the composer stays at the bottom', async () => {
+  const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
+  assert.match(desktop, /chat-surface grid h-full min-h-0 min-w-0 overflow-hidden/)
+  assert.match(desktop, /grid-rows-\[auto_auto_minmax\(0,1fr\)_auto\]/)
+  assert.match(desktop, /<Composer convoId=\{convoId\} \/>/)
+})
+
 test('Coworker cards use semantic light/dark tokens and expose the shared shell marker', async () => {
   const message = await readFile(new URL('../components/Message.tsx', import.meta.url), 'utf8')
   const activity = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')

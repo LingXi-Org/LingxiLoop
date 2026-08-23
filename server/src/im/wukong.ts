@@ -13,8 +13,14 @@ function jsonRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
-function isNotFound(error: unknown): boolean {
-  return error instanceof Error && /returned 404(?:\D|$)/.test(error.message)
+function isEmptyChannelResult(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  // WuKongIM reports a newly-created channel with no sync/conversation state
+  // as either a conventional 404 or a 500 whose response says "not found".
+  // Both mean the same thing to the chat UI: there is simply no history (or
+  // unread state) to return yet. Do not hide unrelated 500 failures.
+  return /returned 404(?:\D|$)/.test(error.message)
+    || (/returned 500(?:\D|$)/.test(error.message) && /not found/i.test(error.message))
 }
 
 export class WukongClient {
@@ -144,7 +150,7 @@ export class WukongClient {
       })
     } catch (error) {
       // WuKongIM has no conversation to clear until a channel receives a message.
-      if (!isNotFound(error)) throw error
+      if (!isEmptyChannelResult(error)) throw error
     }
   }
 
@@ -156,7 +162,7 @@ export class WukongClient {
       })
     } catch (error) {
       // An empty channel has no sync state yet; expose it as an empty history.
-      if (isNotFound(error)) return []
+      if (isEmptyChannelResult(error)) return []
       throw error
     }
     const root = jsonRecord(value)

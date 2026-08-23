@@ -1952,7 +1952,7 @@ export function ChatPane() {
   return (
     <main
       className={cn(
-        'chat-surface grid overflow-hidden',
+        'chat-surface grid h-full min-h-0 min-w-0 overflow-hidden',
         searchOpen
           ? 'grid-rows-[auto_auto_auto_minmax(0,1fr)_auto]'
           : 'grid-rows-[auto_auto_minmax(0,1fr)_auto]',
