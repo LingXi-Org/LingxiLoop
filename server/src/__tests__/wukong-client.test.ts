@@ -65,6 +65,13 @@ test('WuKong adapter treats missing empty-channel sync state as empty results', 
   await assert.doesNotReject(client.clearUnread('student', 'empty', 2))
 })
 
+test('WuKong adapter treats the empty-channel 500 response as empty results', async () => {
+  globalThis.fetch = async () => new Response('messagesync not found', { status: 500 })
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  assert.deepEqual(await client.syncMessages('empty', 2), [])
+  await assert.doesNotReject(client.clearUnread('student', 'empty', 2))
+})
+
 test('WuKong stream events include enough routing metadata for the browser', async () => {
   let body: Record<string, unknown> = {}
   globalThis.fetch = async (_input, init) => {
