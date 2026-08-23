@@ -2029,6 +2029,18 @@ CREATE INDEX IF NOT EXISTS idx_agent_work_agent
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS cancel_requested_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS steer_inputs JSONB NOT NULL DEFAULT '[]'::jsonb;
 
+-- Cross-worker serialization for one Agent OS session. A crashed worker's
+-- lease expires with its work lease, allowing another worker to resume.
+CREATE TABLE IF NOT EXISTS agent_os_session_leases (
+  session_key TEXT PRIMARY KEY,
+  work_id     TEXT NOT NULL REFERENCES agent_work_items(id) ON DELETE CASCADE,
+  fence       BIGINT NOT NULL,
+  expires_at  TIMESTAMP WITH TIME ZONE NOT NULL,
+  updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_os_session_leases_work
+  ON agent_os_session_leases(work_id);
+
 CREATE TABLE IF NOT EXISTS agent_os_sessions (
   session_key      TEXT PRIMARY KEY,
   company_id      TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -2184,6 +2196,7 @@ async function runAgentOSCutover(client: import('pg').PoolClient): Promise<void>
       // No legacy transcript or Runtime state crosses the maintenance window.
       await client.query('DELETE FROM agent_host_actions')
       await client.query('DELETE FROM agent_os_approvals')
+      await client.query('DELETE FROM agent_os_session_leases')
       await client.query('DELETE FROM agent_work_items')
       await client.query('DELETE FROM agent_os_sessions')
       await client.query('DELETE FROM agent_approvals')

@@ -33,6 +33,7 @@ export function ensureSchemaOnce(): Promise<void> {
 const TABLES_TO_WIPE: readonly string[] = [
   'agent_host_actions',
   'agent_os_approvals',
+  'agent_os_session_leases',
   'agent_work_items',
   'agent_os_sessions',
   'im_poll_votes',

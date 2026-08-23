@@ -66,8 +66,11 @@ if (!productionCompose.includes('WUKONGIM_IMAGE must pin v3 commit') || !product
   failures.push('docker-compose.production.yml must require a digest-pinned WuKongIM package')
 }
 const ciWorkflow = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8')
-for (const image of ['lingxiloop-server', 'lingxiloop-agent-os', 'lingxiloop-wukongim']) {
+for (const image of ['lingxiloop-server', 'lingxiloop-agent-os', 'lingxiloop-wukongim', 'lingxiloop-computer-runtime', 'lingxiloop-user-computer']) {
   if (!ciWorkflow.includes(`package: ${image}`)) failures.push(`CI does not publish ${image} package`)
+}
+if (/\blingxiloop:\s*[\s\S]{0,1200}\/var\/run\/docker\.sock/.test(mvpCompose)) {
+  failures.push('public LingxiLoop API service must not mount the Docker socket')
 }
 const wukongDockerfile = readFileSync(join(root, 'server/docker/wukongim.Dockerfile'), 'utf8')
 if (!/git fetch --depth 1 origin "\$WUKONG_COMMIT"/.test(wukongDockerfile) || !/git rev-parse HEAD/.test(wukongDockerfile)) {

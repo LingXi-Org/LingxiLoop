@@ -20,7 +20,7 @@ export interface KernelManagerOptions {
 }
 
 export interface KernelExecutor {
-  execute(work: AgentWorkItem, runId: string, code: string, signal?: AbortSignal): Promise<KernelExecution>
+  execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal): Promise<KernelExecution>
 }
 
 interface KernelMessage {
@@ -179,12 +179,11 @@ class PersistentKernel {
     this.pending.clear()
   }
 
-  execute(work: AgentWorkItem, runId: string, code: string, signal?: AbortSignal): Promise<KernelExecution> {
+  execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal): Promise<KernelExecution> {
     const operation = this.tail.then(async () => {
       await this.start()
       this.lastUsedAt = Date.now()
       const executionId = randomUUID()
-      const cellId = randomUUID()
       return await new Promise<KernelExecution>((resolveExecution, rejectExecution) => {
         const timer = setTimeout(() => {
           this.pending.delete(executionId)
@@ -249,24 +248,27 @@ export class KernelManager implements KernelExecutor {
     this.sweepTimer.unref?.()
   }
 
-  private key(work: AgentWorkItem): string { return `${work.companyId}:${work.agentId}` }
+  private key(work: AgentWorkItem): string {
+    return [work.companyId, work.agentId, work.channelId, work.threadRootClientMsgNo ?? '-'].join(':')
+  }
 
   private homeSegment(value: string): string {
     // Tenant/agent identifiers are data, never filesystem path components.
     return createHash('sha256').update(value).digest('hex')
   }
 
-  async execute(work: AgentWorkItem, runId: string, code: string, signal?: AbortSignal): Promise<KernelExecution> {
+  async execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal): Promise<KernelExecution> {
     const key = this.key(work)
     let kernel = this.kernels.get(key)
     if (!kernel) {
       const safeCompany = this.homeSegment(work.companyId)
       const safeAgent = this.homeSegment(work.agentId)
-      kernel = new PersistentKernel(key, resolve(this.options.homesRoot, safeCompany, safeAgent), this.bridge, this.options)
+      const safeSession = this.homeSegment(`${work.channelId}:${work.threadRootClientMsgNo ?? '-'}`)
+      kernel = new PersistentKernel(key, resolve(this.options.homesRoot, safeCompany, safeAgent, 'sessions', safeSession), this.bridge, this.options)
       this.kernels.set(key, kernel)
     }
     try {
-      return await kernel.execute(work, runId, code, signal)
+      return await kernel.execute(work, runId, cellId, code, signal)
     } catch (error) {
       if (error instanceof KernelTimeoutError || error instanceof KernelCancelledError) this.kernels.delete(key)
       throw error

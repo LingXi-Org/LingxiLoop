@@ -21,7 +21,7 @@ function context(item: AgentWorkItem, body: string): AgentContext {
 class StatefulKernel implements KernelExecutor {
   readonly cells: string[] = []
   private value = 0
-  async execute(_work: AgentWorkItem, _runId: string, code: string): Promise<KernelExecution> {
+  async execute(_work: AgentWorkItem, _runId: string, _cellId: string, code: string): Promise<KernelExecution> {
     this.cells.push(code)
     const match = /score\s*=\s*(\d+)/.exec(code)
     if (match) this.value = Number(match[1])
@@ -48,6 +48,7 @@ test('Agent OS runs multi-hop IPython and keeps the channel session across work 
 
   assert.deepEqual(kernel.cells, ['score = 7'])
   assert.equal(host.messages[0]?.body, 'Baseline saved.')
+  assert.equal(host.messages[0]?.clientMsgNo, 'agent-w1')
   assert.equal(host.messages[1]?.body, 'Your baseline is 7.')
   assert.equal(host.sessions.size, 1)
   const history = [...host.sessions.values()][0]?.history ?? []

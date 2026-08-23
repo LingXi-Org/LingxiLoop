@@ -68,7 +68,8 @@ export class HttpHostAdapter implements AgentOSHostAdapter {
   }
 
   saveSession(session: AgentSessionRecord): Promise<void> {
-    return this.request('/internal/agent-os/sessions', { method: 'PUT', body: JSON.stringify(session) }).then(() => undefined)
+    return this.request<{ revision: number }>('/internal/agent-os/sessions', { method: 'PUT', body: JSON.stringify(session) })
+      .then((value) => { session.revision = value.revision })
   }
 
   executeAction(work: AgentWorkItem, action: HostAction): Promise<HostActionResult> {
@@ -118,7 +119,13 @@ export class MemoryHostAdapter implements AgentOSHostAdapter {
     const value = this.sessions.get(key)
     return value ? structuredClone(value) : null
   }
-  async saveSession(session: AgentSessionRecord): Promise<void> { this.sessions.set(session.key, structuredClone(session)) }
+  async saveSession(session: AgentSessionRecord): Promise<void> {
+    const existing = this.sessions.get(session.key)
+    if (existing && existing.revision !== session.revision) throw new Error('Agent OS session revision conflict')
+    if (!existing && session.revision !== 0) throw new Error('Agent OS session revision conflict')
+    session.revision += 1
+    this.sessions.set(session.key, structuredClone(session))
+  }
   async executeAction(_work: AgentWorkItem, action: HostAction): Promise<HostActionResult> {
     this.actions.push(structuredClone(action))
     return this.actionHandler(action)

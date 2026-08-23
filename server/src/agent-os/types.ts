@@ -97,6 +97,7 @@ export interface AgentSessionRecord {
   threadRootClientMsgNo?: string
   summary?: string
   history: ModelItem[]
+  revision: number
 }
 
 export type ModelItem =

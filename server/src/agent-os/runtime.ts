@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import type { AgentOSHostAdapter } from './host-adapter.js'
 import {
   ApprovalPendingError,
@@ -45,7 +44,7 @@ function messagePayload(work: AgentWorkItem, text: string, runId: string): Lingx
   return {
     version: 1,
     kind: 'text',
-    clientMsgNo: `agent-${runId}`,
+    clientMsgNo: `agent-${work.id}`,
     body: text,
     ...(work.threadRootClientMsgNo ? { replyToClientMsgNo: work.threadRootClientMsgNo } : {}),
     refs: { runId, agentId: work.agentId },
@@ -78,7 +77,8 @@ export class AgentOSRuntime {
   }
 
   async runWork(work: AgentWorkItem, signal?: AbortSignal): Promise<void> {
-    const runId = randomUUID()
+    // A retried durable work item must reuse every externally visible identity.
+    const runId = work.id
     this.eventSeqByRun.set(runId, 0)
     const lifecycle = new AbortController()
     let leaseLost: Error | null = null
@@ -116,6 +116,7 @@ export class AgentOSRuntime {
         channelId: work.channelId,
         ...(work.threadRootClientMsgNo ? { threadRootClientMsgNo: work.threadRootClientMsgNo } : {}),
         history: [],
+        revision: 0,
       }
       session.history.push(...contextItems(context, Boolean(stored?.history.length)))
       await this.compactIfNeeded(session, context.persona.instructions, lifecycle.signal)
@@ -147,14 +148,15 @@ export class AgentOSRuntime {
           finalText = turn.text.trim()
           break
         }
-        for (const call of calls) {
+        for (const [callIndex, call] of calls.entries()) {
           const { code } = parseIPythonArguments(call.arguments)
           await this.event(work, runId, {
             kind: 'ipython.started', stage: 'started', visibility: 'user',
             data: { callId: call.callId, codePreview: code.slice(0, 240) },
           })
           try {
-            const execution = await this.kernels.execute(work, runId, code, lifecycle.signal)
+            const cellId = `hop-${hop + 1}-call-${callIndex + 1}`
+            const execution = await this.kernels.execute(work, runId, cellId, code, lifecycle.signal)
             const output = JSON.stringify({
               stdout: execution.stdout, stderr: execution.stderr, result: execution.result,
               truncated: execution.truncated, artifacts: execution.artifacts,

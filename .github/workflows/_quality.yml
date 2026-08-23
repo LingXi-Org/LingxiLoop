@@ -125,10 +125,20 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Build the User Computer image used by the runtime manager
+        run: docker compose -f docker-compose.mvp.ci.yml --profile build-only build user-computer-image
       - name: Build and start isolated MVP test stack
         run: docker compose -f docker-compose.mvp.ci.yml up -d --build --wait
       - name: Verify WuKong webhook, durable work, IPython and final reply
         run: npm run mvp:ci:smoke
+      - name: Verify public Computer API through the isolated runtime manager
+        run: npm run mvp:ci:computer-smoke
+      - name: Restart the public API without restarting the Computer provider
+        run: |
+          docker compose -f docker-compose.mvp.ci.yml restart lingxiloop
+          docker compose -f docker-compose.mvp.ci.yml up -d --wait lingxiloop
+      - name: Verify Computer state, screenshot and takeover survive API restart
+        run: docker compose -f docker-compose.mvp.ci.yml exec -T lingxiloop npx tsx server/scripts/computer-compose-smoke.ts --verify-restart
       - name: Collect service logs after failure
         if: failure()
         run: docker compose -f docker-compose.mvp.ci.yml logs --no-color --tail 300

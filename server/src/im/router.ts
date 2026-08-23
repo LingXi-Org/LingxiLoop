@@ -140,11 +140,16 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
     )
     if (!rows[0]) { await client.query('ROLLBACK'); res.status(404).json({ error: 'approval not found' }); return }
     approval = rows[0]
-    if (approval.status !== 'pending') { await client.query('ROLLBACK'); res.status(409).json({ error: `approval already ${approval.status}` }); return }
-    await client.query(
-      `UPDATE agent_os_approvals SET status=$2, resolved_at=NOW(), resolved_by=$3 WHERE id=$1`,
-      [approval.id, approved ? 'approved' : 'rejected', userId],
-    )
+    const requestedStatus = approved ? 'approved' : 'rejected'
+    if (approval.status !== 'pending' && approval.status !== requestedStatus) {
+      await client.query('ROLLBACK'); res.status(409).json({ error: `approval already ${approval.status}` }); return
+    }
+    if (approval.status === 'pending') {
+      await client.query(
+        `UPDATE agent_os_approvals SET status=$2, resolved_at=NOW(), resolved_by=$3 WHERE id=$1`,
+        [approval.id, requestedStatus, userId],
+      )
+    }
     await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)
@@ -196,7 +201,11 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
       },
     },
   ).catch(() => undefined)
-  const resumeId = randomUUID()
+  // Resolution is itself replayable: a crash after the decision commit (or
+  // after the approved side effect) can safely repeat this request. The Host
+  // Action ledger and its sink key recover the action, while this stable work
+  // id recovers the continuation without creating a second run.
+  const resumeId = `resume-${approval.id}`
   await pool.query(
     `INSERT INTO agent_work_items (id, company_id, agent_id, channel_id, trigger_client_msg_no, reason, priority)
      VALUES ($1,$2,$3,$4,$5,'resume',200)

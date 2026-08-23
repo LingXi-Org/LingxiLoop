@@ -17,6 +17,7 @@ class FakeRuntime implements SandboxRuntime {
   }
   execCalls: Array<{ command: string[]; options?: ExecOptions }> = []
   failWrite = false
+  async health() {}
   async create() { return { id: 'runtime-1', runtimeRef: 'runtime-1' } }
   async start() {}
   async stop() {}

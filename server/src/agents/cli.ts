@@ -749,7 +749,7 @@ async function cmdStatus(parsed: ParsedArgs): Promise<CliResult> {
 
 /* ============== mailbox: inbox / ack / reply ============== */
 
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
 interface InboxQuotedSummary {
   id: string
@@ -2947,7 +2947,7 @@ async function cmdPollShow(parsed: ParsedArgs, me: string, companyId: string): P
   return ok(`${head}\n${lines}`)
 }
 
-async function cmdEmail(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdEmail(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const sub = parsed.positional[0]
   if (!sub) {
     return err(
@@ -2969,8 +2969,8 @@ async function cmdEmail(parsed: ParsedArgs): Promise<CliResult> {
     case 'contacts': return cmdEmailContacts(parsed, me, companyId, Boolean(parsed.flags.json))
     case 'inbox':    return cmdEmailInbox(parsed, me, companyId)
     case 'show':     return cmdEmailShow(parsed, me, companyId)
-    case 'send':     return cmdEmailSend(parsed, me, companyId)
-    case 'reply':    return cmdEmailReply(parsed, me, companyId)
+    case 'send':     return cmdEmailSend(parsed, me, companyId, internal.idempotencyKey)
+    case 'reply':    return cmdEmailReply(parsed, me, companyId, internal.idempotencyKey)
     default:
       return err(`unknown email subcommand: ${sub}`)
   }
@@ -3112,7 +3112,7 @@ async function cmdEmailShow(parsed: ParsedArgs, me: string, companyId: string): 
   return ok(lines.join('\n'))
 }
 
-async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
+async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string, idempotencyKey?: string): Promise<CliResult> {
   const toRaw = parsed.flags.to ? String(parsed.flags.to) : ''
   const ccRaw = parsed.flags.cc ? String(parsed.flags.cc) : ''
   const {
@@ -3172,13 +3172,22 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
     if (inHouse.rows[0]) memberIds.add(inHouse.rows[0].id)
   }
 
-  const messageId = mintMessageId()
+  const actionHash = idempotencyKey ? createHash('sha256').update(idempotencyKey).digest('hex') : ''
+  const messageId = idempotencyKey ? `agent-${actionHash}@lingxiloop.local` : mintMessageId()
+  if (idempotencyKey) {
+    const { rows } = await pool.query<{ message_id: string; conversation_id: string }>(
+      `SELECT message_id, conversation_id FROM email_messages WHERE company_id=$1 AND LOWER(smtp_message_id)=LOWER($2) LIMIT 1`,
+      [companyId, messageId],
+    )
+    if (rows[0]) return ok(`sent (replayed) · ${rows[0].message_id} · thread ${rows[0].conversation_id}`)
+  }
   const conv = await findOrCreateEmailConversation({
     companyId,
     inReplyTo: null,
     references: [],
     subject,
     memberIds: [...memberIds],
+    idempotencyKey,
   })
 
   // Call the provider FIRST so we record sent/failed accurately. If
@@ -3191,6 +3200,7 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
     subject,
     text: body,
     messageId,
+    idempotencyKey: idempotencyKey ? `agent-os/${actionHash}` : undefined,
     autoSubmitted: 'auto-generated',
     attachments: loadedAttachments.map((a) => ({
       filename: a.filename, mimeType: a.mimeType, base64: a.base64,
@@ -3213,6 +3223,7 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
     ccAddrs: ccResolved.map((r) => formatAddress(r.addr, r.name)),
     body,
     autoSubmitted: true,
+    idempotencyKey,
     attachments: loadedAttachments.map((a) => ({
       filename: a.filename, mimeType: a.mimeType, sizeBytes: a.sizeBytes,
       storageKey: a.storageKey,
@@ -3240,7 +3251,7 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string): 
   }])
 }
 
-async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
+async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string, idempotencyKey?: string): Promise<CliResult> {
   const replyTo = parsed.positional[1]
   const body = unescapeChat(String(parsed.flags.body ?? '')).trim()
   const attachRaw = parsed.flags.attach ? String(parsed.flags.attach) : ''
@@ -3330,7 +3341,15 @@ async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string):
     ...(o.smtp_message_id ? [o.smtp_message_id] : []),
   ].filter((x): x is string => Boolean(x))
   const inReplyTo = o.smtp_message_id ? normalizeMessageId(o.smtp_message_id) : null
-  const messageId = mintMessageId()
+  const actionHash = idempotencyKey ? createHash('sha256').update(idempotencyKey).digest('hex') : ''
+  const messageId = idempotencyKey ? `agent-${actionHash}@lingxiloop.local` : mintMessageId()
+  if (idempotencyKey) {
+    const { rows } = await pool.query<{ message_id: string; conversation_id: string }>(
+      `SELECT message_id, conversation_id FROM email_messages WHERE company_id=$1 AND LOWER(smtp_message_id)=LOWER($2) LIMIT 1`,
+      [companyId, messageId],
+    )
+    if (rows[0]) return ok(`replied (replayed) · ${rows[0].message_id} · thread ${rows[0].conversation_id}`)
+  }
 
   const sendRes = await sendViaProvider({
     from: formatAddress(sender.email, sender.displayName),
@@ -3341,6 +3360,7 @@ async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string):
     inReplyTo: inReplyTo ?? undefined,
     references: newReferences,
     messageId,
+    idempotencyKey: idempotencyKey ? `agent-os/${actionHash}` : undefined,
     autoSubmitted: 'auto-replied',
     attachments: loadedAttachments.map((a) => ({
       filename: a.filename, mimeType: a.mimeType, base64: a.base64,
@@ -3363,6 +3383,7 @@ async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string):
     ccAddrs: ccCombined,
     body,
     autoSubmitted: true,
+    idempotencyKey,
     attachments: loadedAttachments.map((a) => ({
       filename: a.filename, mimeType: a.mimeType, sizeBytes: a.sizeBytes,
       storageKey: a.storageKey,
@@ -4366,7 +4387,7 @@ async function publishCalendarCli(args: {
   })
 }
 
-async function cmdCalendar(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const op = parsed.positional[0] ?? 'list'
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
@@ -4423,6 +4444,13 @@ async function cmdCalendar(parsed: ParsedArgs): Promise<CliResult> {
     //                                  [--kind personal|agent_task]
     const title = parsed.positional.slice(1).join(' ').trim()
     if (!title) return err('usage: calendar create "<title>" --at <iso> [flags]')
+    const stableCalendarId = internal.idempotencyKey
+      ? `ce-agent-${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
+      : null
+    if (stableCalendarId) {
+      const { rows } = await pool.query(`SELECT 1 FROM calendar_events WHERE id=$1 AND company_id=$2`, [stableCalendarId, companyId])
+      if (rows[0]) return ok(`scheduled ${stableCalendarId} [replayed]`)
+    }
     const startStr = parsed.flags.at ? String(parsed.flags.at) : ''
     if (!startStr) return err('--at <iso-timestamp> is required')
     const start = new Date(startStr)
@@ -4509,7 +4537,7 @@ async function cmdCalendar(parsed: ParsedArgs): Promise<CliResult> {
           }
         }
       }
-      const id = `ce-${randomUUID()}`
+      const id = stableCalendarId ?? `ce-${randomUUID()}`
       await pool.query(
         `INSERT INTO calendar_events
            (id, company_id, created_by, kind, title, assignee_id,
@@ -4898,7 +4926,7 @@ async function wakeMentionedAgentsCli(args: {
   }
 }
 
-async function cmdBoard(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdBoard(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const op = parsed.positional[0] ?? 'ls'
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
@@ -4969,9 +4997,16 @@ async function cmdBoard(parsed: ParsedArgs): Promise<CliResult> {
     const title = parsed.positional.slice(1).join(' ').trim()
       || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
     if (!title) return err('usage: kanban create "<title>" [--description "..."]')
+    const stableBoardId = internal.idempotencyKey
+      ? `board-agent-${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
+      : null
+    if (stableBoardId) {
+      const { rows } = await pool.query(`SELECT 1 FROM boards WHERE id=$1 AND company_id=$2`, [stableBoardId, companyId])
+      if (rows[0]) return ok(`created board ${stableBoardId}: ${title} [replayed]`)
+    }
     const description = typeof parsed.flags.description === 'string'
       ? unescapeChat(parsed.flags.description).slice(0, 4000) : null
-    const id = `board-${randomUUID().slice(0, 12)}`
+    const id = stableBoardId ?? `board-${randomUUID().slice(0, 12)}`
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
@@ -4983,7 +5018,7 @@ async function cmdBoard(parsed: ParsedArgs): Promise<CliResult> {
       for (let i = 0; i < seeds.length; i++) {
         await client.query(
           `INSERT INTO board_columns (id, board_id, title, position) VALUES ($1, $2, $3, $4)`,
-          [`col-${randomUUID().slice(0, 12)}`, id, seeds[i], (i + 1) * 1000],
+          [stableBoardId ? `col-agent-${createHash('sha256').update(`${internal.idempotencyKey}:${i}`).digest('hex').slice(0, 24)}` : `col-${randomUUID().slice(0, 12)}`, id, seeds[i], (i + 1) * 1000],
         )
       }
       await client.query('COMMIT')
@@ -5779,6 +5814,13 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
     const title = parsed.positional.slice(1).join(' ').trim()
       || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
       || 'Untitled'
+    const stableDocumentId = internal.idempotencyKey
+      ? `doc_agent_${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
+      : null
+    if (stableDocumentId) {
+      const { rows } = await pool.query(`SELECT 1 FROM documents WHERE id=$1 AND company_id=$2`, [stableDocumentId, companyId])
+      if (rows[0]) return ok(`created document ${stableDocumentId}: ${title} [replayed]`)
+    }
 
     // Tenant-scoped claim by title so two agents don't independently
     // create overlapping docs ("Q3 plan v1", "Q3 plan v2", "Q3 plan
@@ -5824,7 +5866,7 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
           )
         }
       }
-      const id = `doc_${randomUUID().replace(/-/g, '').slice(0, 16)}`
+      const id = stableDocumentId ?? `doc_${randomUUID().replace(/-/g, '').slice(0, 16)}`
       await pool.query(
         `INSERT INTO documents (id, company_id, title, created_by) VALUES ($1, $2, $3, $4)`,
         [id, companyId, title.slice(0, 200), me],
@@ -6337,11 +6379,11 @@ export async function runStructuredLearningAction(
       case 'skills': return await cmdSkills(parsed)
       case 'workspace': return await cmdWorkspace(parsed)
       case 'doc': return await cmdDoc(parsed, internal)
-      case 'kanban': return await cmdBoard(parsed)
+      case 'kanban': return await cmdBoard(parsed, internal)
       case 'card': return await cmdCard(parsed)
-      case 'calendar': return await cmdCalendar(parsed)
+      case 'calendar': return await cmdCalendar(parsed, internal)
       case 'poll': return await cmdPoll(parsed)
-      case 'email': return await cmdEmail(parsed)
+      case 'email': return await cmdEmail(parsed, internal)
       case 'computer': return await cmdComputer(parsed)
       default: return err(`unsupported structured action: ${action}`)
     }

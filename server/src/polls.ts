@@ -5,7 +5,7 @@
  * mutable voting projection required to validate choices and calculate
  * tallies; the projection is keyed by the original WuKong client_msg_no.
  */
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { pool } from './db/pool.js'
 import type { PollPayload, PollOption } from './db/schema.js'
 import type { PollUpdatedEvent } from './redis.js'
@@ -32,6 +32,7 @@ export interface CreatePollInput {
   mode: 'single' | 'multi'
   options: string[]
   expiresInMinutes?: number | null
+  idempotencyKey?: string
 }
 
 export interface CreatedPoll {
@@ -51,6 +52,8 @@ type PollRow = {
   revision: string
 }
 
+function stableSuffix(value: string): string { return createHash('sha256').update(value).digest('hex') }
+
 function validatePoll(input: CreatePollInput): PollPayload {
   const question = input.question.trim()
   if (!question) throw new PollError('question is required')
@@ -65,7 +68,8 @@ function validatePoll(input: CreatePollInput): PollPayload {
     const key = text.toLocaleLowerCase()
     if (seen.has(key)) continue
     seen.add(key)
-    options.push({ id: `opt-${randomUUID().slice(0, 8)}`, text })
+    const optionKey = input.idempotencyKey ? `${input.idempotencyKey}:${options.length}` : randomUUID()
+    options.push({ id: `opt-${stableSuffix(optionKey).slice(0, 12)}`, text })
     if (options.length >= MAX_OPTIONS) break
   }
   if (options.length < MIN_OPTIONS) throw new PollError(`need at least ${MIN_OPTIONS} distinct options`)
@@ -124,7 +128,9 @@ export async function createPoll(input: CreatePollInput): Promise<CreatedPoll> {
   const poll = validatePoll(input)
   const binding = await channelBinding(input.companyId, input.conversationId)
   if (!binding.members.includes(input.authorId)) throw new PollError('not a member of this channel', 403)
-  const messageId = `poll-${randomUUID()}`
+  const messageId = input.idempotencyKey
+    ? `poll-${stableSuffix(input.idempotencyKey).slice(0, 32)}`
+    : `poll-${randomUUID()}`
   const row: PollRow = {
     poll_client_msg_no: messageId,
     channel_id: input.conversationId,
@@ -134,21 +140,34 @@ export async function createPoll(input: CreatePollInput): Promise<CreatedPoll> {
     poll,
     revision: '1',
   }
-  await pool.query(
+  const inserted = await pool.query(
     `INSERT INTO im_polls
        (poll_client_msg_no, channel_id, channel_type, company_id, author_id, poll, revision)
-     VALUES ($1,$2,$3,$4,$5,$6::jsonb,1)`,
+     VALUES ($1,$2,$3,$4,$5,$6::jsonb,1)
+     ON CONFLICT (poll_client_msg_no) DO NOTHING RETURNING poll_client_msg_no`,
     [messageId, input.conversationId, binding.channelType, input.companyId, input.authorId, JSON.stringify(poll)],
   )
+  if (!inserted.rows[0]) {
+    const { rows } = await pool.query<PollRow>(
+      `SELECT poll_client_msg_no, channel_id, channel_type, company_id, author_id, poll, revision
+         FROM im_polls WHERE poll_client_msg_no=$1`, [messageId],
+    )
+    const existing = rows[0]
+    if (!existing || existing.company_id !== input.companyId || existing.channel_id !== input.conversationId || existing.author_id !== input.authorId) {
+      throw new PollError('poll idempotency conflict', 409)
+    }
+    row.poll = existing.poll
+    row.revision = existing.revision
+  }
   try {
     const sent = await publishSnapshot(row, input.authorId, true)
     await pool.query(
       `UPDATE im_polls SET wukong_message_seq=$2, updated_at=NOW() WHERE poll_client_msg_no=$1`,
       [messageId, sent.messageSeq],
     )
-    return { messageId, sequence: sent.messageSeq, poll }
+    return { messageId, sequence: sent.messageSeq, poll: row.poll }
   } catch (error) {
-    await pool.query(`DELETE FROM im_polls WHERE poll_client_msg_no=$1`, [messageId]).catch(() => undefined)
+    if (inserted.rows[0]) await pool.query(`DELETE FROM im_polls WHERE poll_client_msg_no=$1`, [messageId]).catch(() => undefined)
     throw error
   }
 }

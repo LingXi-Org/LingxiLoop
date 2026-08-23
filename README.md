@@ -15,7 +15,7 @@ Web / Electron
   ├─ WuKongIM v3 — messages, channels, ordering, membership, threads, read state
   └─ LingxiLoop control plane — identity, learning assets, approvals, work queue
        └─ Agent OS — stateless model loop, sessions, compaction, stop/steer
-            └─ isolated persistent IPython kernel per company + agent
+            └─ isolated persistent IPython kernel per Agent OS session
                  └─ typed loop SDK → approved Host Bridge actions
 ```
 
@@ -61,6 +61,9 @@ the LingxiLoop API, Agent OS and WuKongIM stack to become healthy. API port
 5181 and WuKong WebSocket port 5200 bind to `0.0.0.0` by default for mobile
 clients; use TLS and override the bind addresses for public deployments.
 Packaged services default to warning-level, size-rotated logs.
+The User Computer runs behind an authenticated internal Computer Runtime
+Manager; only that manager mounts the Docker socket. The mobile-facing API has
+no Docker privileges and retains Computer state across API restarts.
 
 ## Verification
 
@@ -77,8 +80,9 @@ model tool surface other than `ipython`.
 
 ## Package publishing and production
 
-CI publishes `lingxiloop-server`, `lingxiloop-agent-os` and
-`lingxiloop-wukongim` as GHCR packages after every successful `main` build.
+CI publishes `lingxiloop-server`, `lingxiloop-agent-os`,
+`lingxiloop-wukongim`, `lingxiloop-computer-runtime` and
+`lingxiloop-user-computer` as GHCR packages after every successful `main` build.
 Each receives immutable commit/version tags plus the rolling `mvp` tag used by
 the one-command deployment.
 

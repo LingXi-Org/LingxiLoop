@@ -1,9 +1,8 @@
-import { randomUUID } from 'node:crypto'
-import OpenAI from 'openai'
+import { createHash, randomUUID } from 'node:crypto'
 import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
-import { env } from '../env.js'
 import { wukongClient } from '../im/wukong.js'
+import { readResearch, searchResearch } from './research.js'
 import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 
 const APPROVAL_REQUIRED = new Set([
@@ -60,7 +59,11 @@ async function executeChat(work: AgentWorkItem, method: string, args: Record<str
   throw new Error(`unsupported chat action: ${method}`)
 }
 
-async function executeRoutine(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
+function stableId(prefix: string, key: string): string {
+  return `${prefix}-${createHash('sha256').update(key).digest('hex').slice(0, 32)}`
+}
+
+async function executeRoutine(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
   if (method === 'list') {
     const { rows } = await pool.query(`SELECT * FROM agent_routines WHERE company_id=$1 AND agent_id=$2 ORDER BY created_at DESC`, [work.companyId, work.agentId])
     return { ok: true, value: rows }
@@ -74,11 +77,12 @@ async function executeRoutine(work: AgentWorkItem, method: string, args: Record<
     return { ok: true, value: rows[0] }
   }
   if (method === 'create') {
-    const id = randomUUID()
+    const id = stableId('routine', action.idempotencyKey)
     const { rows } = await pool.query(
       `INSERT INTO agent_routines
          (id, company_id, agent_id, channel_id, kind, title, instructions, schedule, timezone, status, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,'paused',$3) RETURNING *`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,'paused',$3)
+       ON CONFLICT (id) DO UPDATE SET updated_at=agent_routines.updated_at RETURNING *`,
       [id, work.companyId, work.agentId, work.channelId, textArg(args, 'kind'), textArg(args, 'title'),
         textArg(args, 'instructions'), JSON.stringify(record(args.schedule)), textArg(args, 'timezone', false) || 'Asia/Shanghai'],
     )
@@ -87,7 +91,7 @@ async function executeRoutine(work: AgentWorkItem, method: string, args: Record<
   throw new Error(`unsupported routine action: ${method}`)
 }
 
-async function executePoll(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
+async function executePoll(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
   const { castVote, closePoll, createPoll } = await import('../polls.js')
   if (method === 'create') {
     const rawOptions = Array.isArray(args.options) ? args.options.map(String) : []
@@ -101,6 +105,7 @@ async function executePoll(work: AgentWorkItem, method: string, args: Record<str
         mode: args.mode === 'multi' ? 'multi' : 'single',
         options: rawOptions,
         expiresInMinutes: typeof args.expiresInMinutes === 'number' ? args.expiresInMinutes : null,
+        idempotencyKey: action.idempotencyKey,
       }),
     }
   }
@@ -135,21 +140,10 @@ async function executePoll(work: AgentWorkItem, method: string, args: Record<str
   throw new Error(`unsupported poll action: ${method}`)
 }
 
-async function executeResearch(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
-  if (method !== 'search' && method !== 'read') throw new Error(`unsupported research action: ${method}`)
-  const query = method === 'search'
-    ? textArg(args, 'query')
-    : `Read and summarize this source for a learner, retaining dates and source attribution: ${textArg(args, 'url')}`
-  const client = new OpenAI({ apiKey: env.DEEPSEEK_API_KEY, baseURL: env.DEEPSEEK_BASE_URL })
-  const response = await client.chat.completions.create({
-    model: env.DEEPSEEK_MODEL,
-    messages: [
-      { role: 'system', content: 'You are a learning research assistant. State clearly when a claim is an inference and never invent citations or pretend you browsed a source.' },
-      { role: 'user', content: query },
-    ],
-    max_tokens: 2_000,
-  })
-  return { ok: true, value: { text: response.choices[0]?.message?.content ?? '', query, agentId: work.agentId } }
+async function executeResearch(_work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
+  if (method === 'search') return { ok: true, value: await searchResearch(textArg(args, 'query'), Number(args.limit ?? 8)) }
+  if (method === 'read') return { ok: true, value: await readResearch(textArg(args, 'url')) }
+  throw new Error(`unsupported research action: ${method}`)
 }
 
 export function actionRequiresApproval(action: string): boolean { return APPROVAL_REQUIRED.has(action) }
@@ -159,8 +153,8 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   const [namespace, method] = action.action.split('.')
   if (!namespace || !method) throw new Error('action must use namespace.method')
   if (namespace === 'chat') return executeChat(work, method, args, action)
-  if (namespace === 'routines') return executeRoutine(work, method, args)
-  if (namespace === 'polls') return executePoll(work, method, args)
+  if (namespace === 'routines') return executeRoutine(work, method, args, action)
+  if (namespace === 'polls') return executePoll(work, method, args, action)
   if (namespace === 'turn') return { ok: true, value: { status: method, ...args } }
   if (namespace === 'research') return executeResearch(work, method, args)
   const result = await runStructuredLearningAction(action.action, args, work.agentId, { idempotencyKey: action.idempotencyKey })

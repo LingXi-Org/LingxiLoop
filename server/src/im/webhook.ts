@@ -63,28 +63,50 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
     res.status(400).json({ error: 'invalid LingxiMessageV1 payload' }); return
   }
 
-  const { rowCount } = await pool.query(
-    `INSERT INTO wukong_webhook_receipts (event_id, event_type, payload_hash)
-     VALUES ($1,$2,$3) ON CONFLICT (event_id) DO NOTHING`,
-    [eventId, eventType, createHash('sha256').update(raw).digest('hex')],
-  )
-  if (rowCount === 0) { res.json({ ok: true, duplicate: true }); return }
-  if (eventType !== 'msg.notify' && !eventType.includes('message')) {
-    await pool.query(`UPDATE wukong_webhook_receipts SET processed_at=NOW() WHERE event_id=$1`, [eventId])
-    res.json({ ok: true, ignored: true }); return
-  }
-  if (payload.data?.suppressAgentWake === true) {
-    await pool.query(`UPDATE wukong_webhook_receipts SET processed_at=NOW() WHERE event_id=$1`, [eventId])
-    res.json({ ok: true, ignored: true, reason: 'product-state update' }); return
-  }
-
+  const payloadHash = createHash('sha256').update(raw).digest('hex')
+  const client = await pool.connect()
   try {
-    const { rows: bindings } = await pool.query<{
+    await client.query('BEGIN')
+    await client.query(
+      `INSERT INTO wukong_webhook_receipts (event_id, event_type, payload_hash)
+       VALUES ($1,$2,$3) ON CONFLICT (event_id) DO NOTHING`,
+      [eventId, eventType, payloadHash],
+    )
+    const { rows: receipts } = await client.query<{ payload_hash: string; processed_at: string | null }>(
+      `SELECT payload_hash, processed_at FROM wukong_webhook_receipts WHERE event_id=$1 FOR UPDATE`,
+      [eventId],
+    )
+    const receipt = receipts[0]
+    if (!receipt) throw new Error('failed to lock WuKong webhook receipt')
+    if (receipt.payload_hash !== payloadHash) {
+      throw Object.assign(new Error('event_id was reused with a different payload'), { status: 409 })
+    }
+    if (receipt.processed_at) {
+      await client.query('COMMIT')
+      res.json({ ok: true, duplicate: true })
+      return
+    }
+    if (eventType !== 'msg.notify' && !eventType.includes('message')) {
+      await client.query(`UPDATE wukong_webhook_receipts SET processed_at=NOW(), error=NULL WHERE event_id=$1`, [eventId])
+      await client.query('COMMIT')
+      res.json({ ok: true, ignored: true })
+      return
+    }
+    if (payload.data?.suppressAgentWake === true) {
+      await client.query(`UPDATE wukong_webhook_receipts SET processed_at=NOW(), error=NULL WHERE event_id=$1`, [eventId])
+      await client.query('COMMIT')
+      res.json({ ok: true, ignored: true, reason: 'product-state update' })
+      return
+    }
+
+    const { rows: bindings } = await client.query<{
       company_id: string; profile: Record<string, unknown>; leader_agent_id: string | null
     }>(`SELECT company_id, profile, leader_agent_id FROM im_channel_bindings WHERE channel_id=$1`, [channelId])
-    if (!bindings[0]) { res.status(202).json({ ok: true, ignored: true, reason: 'unbound channel' }); return }
+    if (!bindings[0]) {
+      throw Object.assign(new Error('WuKong channel is not bound yet; retry webhook'), { status: 503 })
+    }
     const profileMembers = Array.isArray(bindings[0].profile.members) ? bindings[0].profile.members.map(String) : []
-    const { rows: members } = await pool.query<{ id: string; kind: 'human' | 'agent'; preset_key: string | null }>(
+    const { rows: members } = await client.query<{ id: string; kind: 'human' | 'agent'; preset_key: string | null }>(
       `SELECT id, kind, preset_key FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
       [bindings[0].company_id, profileMembers],
     )
@@ -105,7 +127,7 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
         })
     for (const agentId of recipients) {
       const reason = payload.kind === 'handoff' ? 'handoff' : mentionedIds.includes(agentId) || payload.data?.mentionAll === true ? 'mention' : 'message'
-      await pool.query(
+      await client.query(
         `INSERT INTO agent_work_items
            (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason)
          VALUES ($1,$2,$3,$4,$5,$6,$7)
@@ -113,10 +135,13 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
         [randomUUID(), bindings[0].company_id, agentId, channelId, payload.replyToClientMsgNo ?? null, clientMsgNo, reason],
       )
     }
-    await pool.query(`UPDATE wukong_webhook_receipts SET processed_at=NOW() WHERE event_id=$1`, [eventId])
+    await client.query(`UPDATE wukong_webhook_receipts SET processed_at=NOW(), error=NULL WHERE event_id=$1`, [eventId])
+    await client.query('COMMIT')
     res.json({ ok: true, recipients })
   } catch (error) {
-    await pool.query(`UPDATE wukong_webhook_receipts SET error=$2 WHERE event_id=$1`, [eventId, error instanceof Error ? error.message : String(error)]).catch(() => undefined)
+    await client.query('ROLLBACK').catch(() => undefined)
     throw error
+  } finally {
+    client.release()
   }
 }))

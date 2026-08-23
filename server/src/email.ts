@@ -14,7 +14,7 @@
  * agent wakes) runs identically — useful for local dev where you don't
  * want to burn Resend quota.
  */
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { pool } from './db/pool.js'
 import { env } from './env.js'
 
@@ -334,6 +334,8 @@ interface SendArgs {
    *  always mints — so we track our minted id alongside whatever the
    *  provider returns and use whichever is non-null. */
   messageId?: string | null
+  /** Stable provider-side key for crash-safe retries (Resend retains it for 24h). */
+  idempotencyKey?: string
   /** True when this send is automation (heartbeat decision or agent CLI
    *  shelling out). Adds an RFC 3834 Auto-Submitted header so receiving
    *  MTAs / vacation responders don't bounce-loop with us, and the inbound
@@ -452,6 +454,7 @@ export async function sendViaProvider(args: SendArgs): Promise<ProviderSendResul
       headers: {
         'authorization': `Bearer ${apiKey}`,
         'content-type': 'application/json',
+        ...(args.idempotencyKey ? { 'idempotency-key': args.idempotencyKey.slice(0, 256) } : {}),
       },
       body: JSON.stringify(body),
     })
@@ -611,6 +614,8 @@ export async function persistEmailMessage(args: {
    *  from real humans don't. Used by loadEmailSnapshot to keep the LLM
    *  from auto-replying to other automation (loop protection). */
   autoSubmitted?: boolean
+  /** Stable Host Action key; also makes the local message row deterministic. */
+  idempotencyKey?: string
   /** Optional attachment metadata, already-uploaded form. Each entry
    *  becomes one email_attachments row so the renderer's JOIN sees the
    *  same shape it does for inbound mail. `storageKey` is the object-
@@ -627,19 +632,31 @@ export async function persistEmailMessage(args: {
 }): Promise<{ messageId: string; sequence: number }> {
   // Need this lazily to avoid a circular import (redis pulls in env, etc).
   const { CH_MESSAGE_NEW, publish } = await import('./redis.js')
-  const messageId = `m-${randomUUID()}`
-  // Atomic sequence claim — same pattern as cmdReply / api/router.ts.
-  const seqResult = await pool.query<{ seq: number }>(
+  const messageId = args.idempotencyKey
+    ? `m-agent-${createHash('sha256').update(args.idempotencyKey).digest('hex').slice(0, 32)}`
+    : `m-${randomUUID()}`
+  interface PersistedAttachment {
+    id: string; filename: string; mimeType: string; sizeBytes: number;
+    storageKey: string | null; truncated: boolean;
+  }
+  let sequence = 0
+  const persistedAttachments: PersistedAttachment[] = []
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    // Sequence + message/email rows + attachments commit atomically. A crash
+    // cannot leave a partial local projection that poisons a provider retry.
+    const seqResult = await client.query<{ seq: number }>(
     `INSERT INTO conversation_counters (conversation_id, next_sequence)
      VALUES ($1, 2)
      ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
      RETURNING next_sequence - 1 AS seq`,
     [args.conversationId],
   )
-  const sequence = seqResult.rows[0]?.seq ?? 1
+    sequence = seqResult.rows[0]?.seq ?? 1
   // No need to stash headers on the messages row — the API joins on
   // email_messages and emits a typed `email` field per row when kind='email'.
-  await pool.query(
+    await client.query(
     `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
      VALUES ($1, $2, $3, 'email', $4, $5, $6)`,
     [messageId, args.conversationId, args.authorId, args.body, sequence, args.companyId],
@@ -652,7 +669,7 @@ export async function persistEmailMessage(args: {
   const initialRetryAt = (args.direction === 'out' && args.transportStatus === 'failed')
     ? new Date(Date.now() + 60_000)
     : null
-  await pool.query(
+    await client.query(
     `INSERT INTO email_messages (
         message_id, conversation_id, company_id, direction, transport_status,
         transport_error, smtp_message_id, in_reply_to, references_chain,
@@ -686,18 +703,13 @@ export async function persistEmailMessage(args: {
   // produced the row. We also capture the inserted ids so the wake event
   // can echo them — the renderer's freshly-arrived bubble shouldn't have
   // to wait for a /messages refetch to see attachments.
-  interface PersistedAttachment {
-    id: string; filename: string; mimeType: string; sizeBytes: number;
-    storageKey: string | null; truncated: boolean;
-  }
-  const persistedAttachments: PersistedAttachment[] = []
   if (args.attachments?.length) {
     for (const a of args.attachments) {
       const attId = `eatt-${randomUUID().slice(0, 12)}`
       const filename = a.filename.slice(0, 200)
       const mimeType = (a.mimeType || 'application/octet-stream').slice(0, 120)
       const truncated = Boolean(a.truncated)
-      await pool.query(
+      await client.query(
         `INSERT INTO email_attachments
            (id, message_id, conversation_id, company_id, filename, mime_type, size_bytes, storage_key, truncated)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
@@ -714,10 +726,16 @@ export async function persistEmailMessage(args: {
       })
     }
   }
-  // Resolve a fresh public URL per attachment for the wake event, mirroring
-  // what /conversations/:id/messages does on read. Truncated rows stay
-  // url=null. Storage failures degrade to null too — the renderer
-  // distinguishes that from a real URL.
+    await client.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [args.conversationId])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally {
+    client.release()
+  }
+  // Resolve fresh public URLs only after the database commit; object storage
+  // latency must not hold locks in the email projection transaction.
   const { storage } = await import('./storage.js')
   const wakeAttachments = await Promise.all(persistedAttachments.map(async (a) => {
     let url: string | null = null
@@ -729,7 +747,6 @@ export async function persistEmailMessage(args: {
       url, truncated: a.truncated,
     }
   }))
-  await pool.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [args.conversationId])
   // Wake every member-agent of the conversation. The scheduler dedups
   // across replicas via the wake-claim Redis key.
   await publish(CH_MESSAGE_NEW, {
@@ -785,6 +802,8 @@ export async function findOrCreateEmailConversation(args: {
   /** Participant ids that should be on the conversation. Includes the
    *  sender. Order is preserved for the title fallback ("A ↔ B"). */
   memberIds: string[]
+  /** Stable key for an outbound Host Action creating a new thread. */
+  idempotencyKey?: string
 }): Promise<{ conversationId: string; created: boolean }> {
   const candidates = [args.inReplyTo, ...args.references]
     .map((x) => normalizeMessageId(x))
@@ -812,14 +831,17 @@ export async function findOrCreateEmailConversation(args: {
   // Strip leading Re:/Fwd: for the title — easier to scan in the
   // conversation list. The full subject is preserved on each message.
   const cleanSubject = args.subject.replace(/^\s*((re|fwd|fw)\s*:\s*)+/i, '').trim() || '(no subject)'
-  const id = `email-${randomUUID().slice(0, 12)}`
+  const id = args.idempotencyKey
+    ? `email-agent-${createHash('sha256').update(args.idempotencyKey).digest('hex').slice(0, 24)}`
+    : `email-${randomUUID().slice(0, 12)}`
   const uniqueMembers = Array.from(new Set(args.memberIds))
-  await pool.query(
+  const inserted = await pool.query(
     `INSERT INTO conversations (id, kind, title, members, company_id, topic)
-     VALUES ($1, 'email', $2, $3::jsonb, $4, $5)`,
+     VALUES ($1, 'email', $2, $3::jsonb, $4, $5)
+     ON CONFLICT (id) DO NOTHING RETURNING id`,
     [id, cleanSubject.slice(0, 200), JSON.stringify(uniqueMembers), args.companyId, cleanSubject.slice(0, 200)],
   )
-  return { conversationId: id, created: true }
+  return { conversationId: id, created: Boolean(inserted.rows[0]) }
 }
 
 /** Bump (or create) the email_contacts row for an external sender. We

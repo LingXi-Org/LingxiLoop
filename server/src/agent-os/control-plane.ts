@@ -52,6 +52,14 @@ function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
   }
 }
 
+function workSessionKey(row: WorkRow | AgentWorkItem): string {
+  const companyId = 'company_id' in row ? row.company_id : row.companyId
+  const agentId = 'agent_id' in row ? row.agent_id : row.agentId
+  const channelId = 'channel_id' in row ? row.channel_id : row.channelId
+  const thread = 'thread_root_client_msg_no' in row ? row.thread_root_client_msg_no : row.threadRootClientMsgNo
+  return [companyId, agentId, channelId, thread ?? '-'].join(':')
+}
+
 async function requireLease(req: Request): Promise<{ work: AgentWorkItem; row: WorkRow }> {
   const id = req.params.id
   const fence = Number(req.body?.fence ?? req.query.fence)
@@ -72,16 +80,31 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+    await client.query(`DELETE FROM agent_os_session_leases WHERE expires_at <= NOW()`)
     const { rows } = await client.query<WorkRow>(
       `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason
          FROM agent_work_items
         WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
           AND available_at <= NOW()
+          AND NOT EXISTS (
+            SELECT 1 FROM agent_os_session_leases sl
+             WHERE sl.session_key = agent_work_items.company_id || ':' || agent_work_items.agent_id || ':' ||
+               agent_work_items.channel_id || ':' || COALESCE(agent_work_items.thread_root_client_msg_no, '-')
+               AND sl.expires_at > NOW()
+          )
         ORDER BY priority DESC, created_at ASC
         FOR UPDATE SKIP LOCKED LIMIT 1`,
     )
     if (!rows[0]) { await client.query('COMMIT'); res.json(null); return }
     const token = randomBytes(32).toString('base64url')
+    const proposedFence = Number(rows[0].fence) + 1
+    const sessionLease = await client.query(
+      `INSERT INTO agent_os_session_leases (session_key, work_id, fence, expires_at)
+       VALUES ($1,$2,$3,NOW()+INTERVAL '45 seconds')
+       ON CONFLICT (session_key) DO NOTHING RETURNING session_key`,
+      [workSessionKey(rows[0]), rows[0].id, proposedFence],
+    )
+    if (!sessionLease.rows[0]) { await client.query('COMMIT'); res.json(null); return }
     const { rows: claimed } = await client.query<WorkRow>(
       `UPDATE agent_work_items
           SET status='leased', fence=fence+1, lease_token_hash=$2, leased_by=$3,
@@ -101,9 +124,14 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
 agentOSControlRouter.post('/work/:id/heartbeat', safe(async (req, res) => {
   const { work } = await requireLease(req)
   const { rows } = await pool.query<{ cancel_requested_at: string | null; steer_inputs: Array<{ id: string; text: string; createdAt: string }> }>(
-    `UPDATE agent_work_items SET lease_expires_at=NOW()+INTERVAL '45 seconds', updated_at=NOW()
-      WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased'
-      RETURNING cancel_requested_at, steer_inputs`,
+    `WITH renewed AS (
+       UPDATE agent_work_items SET lease_expires_at=NOW()+INTERVAL '45 seconds', updated_at=NOW()
+        WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased'
+        RETURNING cancel_requested_at, steer_inputs
+     ), session_renewed AS (
+       UPDATE agent_os_session_leases SET expires_at=NOW()+INTERVAL '45 seconds', updated_at=NOW()
+        WHERE work_id=$1 AND fence=$2 AND EXISTS (SELECT 1 FROM renewed)
+     ) SELECT cancel_requested_at, steer_inputs FROM renewed`,
     [work.id, work.fence, hash(work.leaseToken)],
   )
   const row = rows[0]
@@ -160,20 +188,20 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
 agentOSControlRouter.get('/sessions/:key', safe(async (req, res) => {
   const { rows } = await pool.query<{
     session_key: string; company_id: string; agent_id: string; channel_id: string
-    thread_root_client_msg_no: string | null; summary: string | null; history: AgentSessionRecord['history']
+    thread_root_client_msg_no: string | null; summary: string | null; history: AgentSessionRecord['history']; revision: string | number
   }>(`SELECT * FROM agent_os_sessions WHERE session_key=$1`, [req.params.key])
   const row = rows[0]
   res.json({ session: row ? {
     key: row.session_key, companyId: row.company_id, agentId: row.agent_id, channelId: row.channel_id,
     ...(row.thread_root_client_msg_no ? { threadRootClientMsgNo: row.thread_root_client_msg_no } : {}),
-    ...(row.summary ? { summary: row.summary } : {}), history: row.history,
+    ...(row.summary ? { summary: row.summary } : {}), history: row.history, revision: Number(row.revision),
   } : null })
 }))
 
 agentOSControlRouter.put('/sessions', safe(async (req, res) => {
   const session = req.body as AgentSessionRecord
   const expectedKey = [session.companyId, session.agentId, session.channelId, session.threadRootClientMsgNo ?? '-'].join(':')
-  if (!session.key || session.key !== expectedKey || !Array.isArray(session.history)) {
+  if (!session.key || session.key !== expectedKey || !Array.isArray(session.history) || !Number.isInteger(session.revision) || session.revision < 0) {
     res.status(400).json({ error: 'invalid Agent OS session identity' }); return
   }
   const { rows: scope } = await pool.query(
@@ -184,24 +212,41 @@ agentOSControlRouter.put('/sessions', safe(async (req, res) => {
     [session.agentId, session.companyId, session.channelId],
   )
   if (!scope[0]) { res.status(403).json({ error: 'session scope is not available to this agent' }); return }
-  await pool.query(
+  const { rows: saved } = await pool.query<{ revision: string | number }>(
     `INSERT INTO agent_os_sessions
-       (session_key, company_id, agent_id, channel_id, thread_root_client_msg_no, summary, history)
-     VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)
+       (session_key, company_id, agent_id, channel_id, thread_root_client_msg_no, summary, history, revision)
+     SELECT $1,$2,$3,$4,$5,$6,$7::jsonb,1 WHERE $8=0
      ON CONFLICT (session_key) DO UPDATE SET summary=EXCLUDED.summary, history=EXCLUDED.history,
-       revision=agent_os_sessions.revision+1, updated_at=NOW()`,
+       revision=agent_os_sessions.revision+1, updated_at=NOW()
+     WHERE agent_os_sessions.revision=$8
+     RETURNING revision`,
     [session.key, session.companyId, session.agentId, session.channelId, session.threadRootClientMsgNo ?? null,
-      session.summary ?? null, JSON.stringify(session.history)],
+      session.summary ?? null, JSON.stringify(session.history), session.revision],
   )
-  res.json({ ok: true })
+  if (!saved[0]) { res.status(409).json({ error: 'Agent OS session revision conflict' }); return }
+  res.json({ ok: true, revision: Number(saved[0].revision) })
 }))
 
-async function actionFromLedger(client: PoolClient, key: string): Promise<HostActionResult | null> {
-  const { rows } = await client.query<{ status: string; result: unknown; error: string | null; approval_id: string | null }>(
-    `SELECT status, result, error, approval_id FROM agent_host_actions WHERE idempotency_key=$1`, [key],
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(',')}}`
+  }
+  return JSON.stringify(value) ?? 'null'
+}
+
+async function actionFromLedger(client: PoolClient, key: string, action: HostAction): Promise<HostActionResult | null> {
+  const { rows } = await client.query<{
+    status: string; result: unknown; error: string | null; approval_id: string | null; action: string; args: unknown
+  }>(
+    `SELECT status, result, error, approval_id, action, args FROM agent_host_actions WHERE idempotency_key=$1`, [key],
   )
   const row = rows[0]
   if (!row) return null
+  if (row.action !== action.action || canonicalJson(row.args) !== canonicalJson(action.args)) {
+    throw new Error('Host Action idempotency key was reused for a different action')
+  }
   if (row.status === 'succeeded') return { ok: true, value: row.result }
   if (row.status === 'failed') return { ok: false, error: row.error ?? 'action failed' }
   if (row.status === 'awaiting_approval' && row.approval_id) return { ok: false, approval: { id: row.approval_id, status: 'pending' } }
@@ -217,6 +262,7 @@ async function assertActionAllowed(work: AgentWorkItem, action: HostAction): Pro
   if (!/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(action.action)) throw new Error('invalid Host Action name')
   if (!Number.isInteger(action.callIndex) || action.callIndex < 0) throw new Error('invalid Host Action callIndex')
   if (action.idempotencyKey !== `${action.runId}:${action.cellId}:${action.callIndex}`) throw new Error('invalid Host Action idempotency key')
+  if (action.runId !== work.id) throw new Error('Host Action run identity must equal its durable work id')
   if (JSON.stringify(action.args).length > 64 * 1024) throw new Error('Host Action arguments exceed 64 KiB')
   const { rows } = await pool.query<{ capabilities: string[] | null }>(
     `SELECT capabilities FROM participants
@@ -232,9 +278,15 @@ async function assertActionAllowed(work: AgentWorkItem, action: HostAction): Pro
 export async function executeActionWithLedger(work: AgentWorkItem, action: HostAction, approved = false): Promise<HostActionResult> {
   await assertActionAllowed(work, action)
   const client = await pool.connect()
+  let transactionOpen = false
   try {
+    // Serialize one stable action key across API replicas. If this process
+    // crashes, Postgres releases the lock and the retry reuses the same sink
+    // idempotency key derived from work/hop/call.
+    await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [action.idempotencyKey])
     await client.query('BEGIN')
-    const replay = await actionFromLedger(client, action.idempotencyKey)
+    transactionOpen = true
+    const replay = await actionFromLedger(client, action.idempotencyKey, action)
     if (replay && !(approved && replay.approval)) { await client.query('COMMIT'); return replay }
     await client.query(
       `INSERT INTO agent_host_actions
@@ -256,22 +308,31 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
       const { rows } = await client.query<{ id: string }>(`SELECT id FROM agent_os_approvals WHERE idempotency_key=$1`, [action.idempotencyKey])
       await client.query(`UPDATE agent_host_actions SET status='awaiting_approval', approval_id=$2, updated_at=NOW() WHERE idempotency_key=$1`, [action.idempotencyKey, rows[0].id])
       await client.query('COMMIT')
+      transactionOpen = false
       return { ok: false, approval: { id: rows[0].id, status: 'pending' } }
     }
+    await client.query(
+      `UPDATE agent_host_actions SET status='pending', error=NULL, updated_at=NOW() WHERE idempotency_key=$1`,
+      [action.idempotencyKey],
+    )
     await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => undefined)
-    throw error
-  } finally { client.release() }
+    transactionOpen = false
 
-  let result: HostActionResult
-  try { result = await executeLearningAction(work, action) }
-  catch (error) { result = { ok: false, error: error instanceof Error ? error.message : String(error) } }
-  await pool.query(
-    `UPDATE agent_host_actions SET status=$2, result=$3::jsonb, error=$4, updated_at=NOW() WHERE idempotency_key=$1`,
-    [action.idempotencyKey, result.ok ? 'succeeded' : 'failed', result.value === undefined ? null : JSON.stringify(result.value), result.error ?? null],
-  )
-  return result
+    let result: HostActionResult
+    try { result = await executeLearningAction(work, action) }
+    catch (error) { result = { ok: false, error: error instanceof Error ? error.message : String(error) } }
+    await client.query(
+      `UPDATE agent_host_actions SET status=$2, result=$3::jsonb, error=$4, updated_at=NOW() WHERE idempotency_key=$1`,
+      [action.idempotencyKey, result.ok ? 'succeeded' : 'failed', result.value === undefined ? null : JSON.stringify(result.value), result.error ?? null],
+    )
+    return result
+  } catch (error) {
+    if (transactionOpen) await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally {
+    await client.query(`SELECT pg_advisory_unlock(hashtextextended($1, 0))`, [action.idempotencyKey]).catch(() => undefined)
+    client.release()
+  }
 }
 
 agentOSControlRouter.post('/work/:id/actions', safe(async (req, res) => {
@@ -362,10 +423,19 @@ agentOSControlRouter.post('/work/:id/complete', safe(async (req, res) => {
   const { work } = await requireLease(req)
   const status = String(req.body.status)
   if (!['completed', 'failed', 'cancelled'].includes(status)) { res.status(400).json({ error: 'invalid status' }); return }
-  await pool.query(
-    `UPDATE agent_work_items SET status=$2, error=$3, lease_token_hash=NULL, lease_expires_at=NULL,
-       updated_at=NOW(), finished_at=NOW() WHERE id=$1 AND fence=$4`,
-    [work.id, status, req.body.error ?? null, work.fence],
-  )
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query(
+      `UPDATE agent_work_items SET status=$2, error=$3, lease_token_hash=NULL, lease_expires_at=NULL,
+         updated_at=NOW(), finished_at=NOW() WHERE id=$1 AND fence=$4`,
+      [work.id, status, req.body.error ?? null, work.fence],
+    )
+    await client.query(`DELETE FROM agent_os_session_leases WHERE work_id=$1 AND fence=$2`, [work.id, work.fence])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
   res.json({ ok: true })
 }))
