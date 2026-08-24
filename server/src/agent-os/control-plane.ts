@@ -189,6 +189,7 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
       initiatorAgentId: canvas.initiatorAgentId,
       assignment: canvas.assignments.find((item) => item.agentId === work.agentId),
       assignments: canvas.assignments, frames: canvas.frames,
+      activity: canvas.activity.slice(0, 50),
     } } : {}),
     ...(approvals[0] ? { pendingApproval: {
       approvalId: approvals[0].id,

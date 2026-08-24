@@ -41,19 +41,19 @@ export function canvasActivityLabel(activity: CanvasActivity): string {
   const title = typeof activity.detail.title === 'string' ? `“${activity.detail.title}”` : '画板'
   const status = typeof activity.detail.status === 'string' ? activity.detail.status : ''
   switch (activity.action) {
-    case 'frame.created': return `创建了 ${title}`
-    case 'frame.updated': return `更新了 ${title}`
-    case 'frame.content_appended': return `向 ${title} 追加了内容`
-    case 'frame.deleted': return `删除了 ${title}`
-    case 'comment.created': return '留下了反馈'
-    case 'agent.status': return status ? `状态更新：${status}` : '更新了工作状态'
-    case 'agent.steered': return '调整了 Agent 的工作方向'
-    case 'assignment.completed': return '完成了任务并提交自检'
-    case 'assignment.failed': return '任务执行失败'
-    case 'assignment.created': return '在画布中新增了工作'
-    case 'assignment.restarted': return '重新启动了一项工作'
-    case 'assignment.steered': return '补充了新的工作要求'
-    default: return activity.action.replaceAll('.', ' · ')
+    case 'frame_created': return `创建了 ${title}`
+    case 'frame_updated': return `更新了 ${title}`
+    case 'frame_deleted': return `删除了 ${title}`
+    case 'comment_created': return '留下了反馈'
+    case 'agent_status': return status ? `状态更新：${status}` : '更新了工作状态'
+    case 'assignment_created': return '在画布中新增了工作'
+    case 'assignment_updated': return '补充了新的工作要求'
+    case 'handoff': return '把任务和画布上下文移交给了另一位 Agent'
+    case 'task_completed': return '完成了任务并提交自检'
+    case 'task_failed': return '任务执行失败'
+    case 'task_cancelled': return '任务已停止'
+    case 'workspace_started': return '启动了协作画布'
+    case 'workspace_updated': return '更新了画布状态'
   }
 }
 

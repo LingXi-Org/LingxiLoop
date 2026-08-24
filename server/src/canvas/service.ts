@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { findCanvasPlacement } from '../../../src/lib/canvasLayout.js'
+import { normalizeCanvasActivityKind, type CanvasActivityKind } from '../../../src/lib/canvasEventKinds.js'
 import { pool } from '../db/pool.js'
 import { type CanvasEvent, CH_CANVAS, publish } from '../redis.js'
 import { assertCanvasDependencyDAG, canvasAgentColor, canvasWorkArea } from './orchestration.js'
@@ -75,7 +76,7 @@ export interface CanvasActivity {
   frameId: string | null
   actorId: string
   actorKind: CanvasActorKind
-  action: string
+  action: CanvasActivityKind
   detail: Record<string, unknown>
   createdAt: string
 }
@@ -266,22 +267,25 @@ async function requireFrame(companyId: string, frameId: string): Promise<CanvasF
 
 async function logActivity(input: {
   companyId: string; canvasId: string; actorId: string; actorKind: CanvasActorKind
-  action: string; frameId?: string | null; detail?: Record<string, unknown>
+  action: CanvasActivityKind; frameId?: string | null; detail?: Record<string, unknown>; idempotencyKey?: string
 }): Promise<CanvasActivity> {
-  const id = `activity-${randomUUID()}`
+  const id = input.idempotencyKey
+    ? `activity-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 32)}`
+    : `activity-${randomUUID()}`
   const { rows } = await pool.query<{
     id: string; canvas_id: string; frame_id: string | null; actor_id: string
     actor_kind: CanvasActorKind; action: string; detail: Record<string, unknown>; created_at: string
   }>(
     `INSERT INTO canvas_activity (id, canvas_id, frame_id, actor_id, actor_kind, action, detail)
      VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)
+     ON CONFLICT (id) DO UPDATE SET id=canvas_activity.id
      RETURNING *`,
     [id, input.canvasId, input.frameId ?? null, input.actorId, input.actorKind, input.action, JSON.stringify(input.detail ?? {})],
   )
   const row = rows[0]
   const activity: CanvasActivity = {
     id: row.id, canvasId: row.canvas_id, frameId: row.frame_id,
-    actorId: row.actor_id, actorKind: row.actor_kind, action: row.action,
+    actorId: row.actor_id, actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action),
     detail: row.detail ?? {}, createdAt: row.created_at,
   }
   await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
@@ -371,7 +375,7 @@ export async function getCanvasSnapshot(companyId: string, actorId: string, canv
     })),
     activity: activity.rows.map((row) => ({
       id: row.id, canvasId: row.canvas_id, frameId: row.frame_id,
-      actorId: row.actor_id, actorKind: row.actor_kind, action: row.action,
+      actorId: row.actor_id, actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action),
       detail: row.detail ?? {}, createdAt: row.created_at,
     })),
   }
@@ -444,7 +448,7 @@ export async function createCanvasFrame(input: {
   await publishCanvas(input.companyId, { kind: 'frame.created', canvasId: canvas.id, revision: frame.revision, frame })
   await logActivity({
     companyId: input.companyId, canvasId: canvas.id, actorId: input.actorId,
-    actorKind: input.actorKind, frameId: frame.id, action: 'frame.created',
+    actorKind: input.actorKind, frameId: frame.id, action: 'frame_created',
     detail: { title: frame.title, type: frame.type },
   })
   return frame
@@ -496,7 +500,7 @@ export async function updateCanvasFrame(input: {
   await publishCanvas(input.companyId, { kind: 'frame.updated', canvasId: frame.canvasId, revision: frame.revision, frame })
   await logActivity({
     companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
-    actorKind: input.actorKind, frameId: frame.id, action: 'frame.updated',
+    actorKind: input.actorKind, frameId: frame.id, action: 'frame_updated',
     detail: { fields: Object.keys(input.patch) },
   })
   return frame
@@ -525,8 +529,8 @@ export async function appendCanvasFrameContent(input: {
   await publishCanvas(input.companyId, { kind: 'frame.updated', canvasId: frame.canvasId, revision: frame.revision, frame })
   await logActivity({
     companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
-    actorKind: input.actorKind, frameId: frame.id, action: 'frame.content_appended',
-    detail: { characters: input.content.length },
+    actorKind: input.actorKind, frameId: frame.id, action: 'frame_updated',
+    detail: { operation: 'append', characters: input.content.length, title: frame.title },
   })
   return frame
 }
@@ -540,7 +544,7 @@ export async function deleteCanvasFrame(input: {
   await publishCanvas(input.companyId, { kind: 'frame.deleted', canvasId: frame.canvasId, frameId: frame.id })
   await logActivity({
     companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
-    actorKind: input.actorKind, action: 'frame.deleted', detail: { title: frame.title, type: frame.type },
+    actorKind: input.actorKind, action: 'frame_deleted', detail: { title: frame.title, type: frame.type },
   })
   return { id: frame.id, canvasId: frame.canvasId }
 }
@@ -603,7 +607,7 @@ export async function setCanvasStatus(input: {
         actorId: input.actorId,
         actorKind: input.actorKind,
         frameId: input.frameId,
-        action: 'agent.status',
+        action: 'agent_status',
         detail: { status },
       })
     }
@@ -635,7 +639,7 @@ export async function addCanvasComment(input: {
   await publishCanvas(input.companyId, { kind: 'comment.created', canvasId: canvas.id, comment })
   await logActivity({
     companyId: input.companyId, canvasId: canvas.id, actorId: input.actorId,
-    actorKind: input.actorKind, frameId: input.frameId, action: 'comment.created',
+    actorKind: input.actorKind, frameId: input.frameId, action: 'comment_created',
   })
   return comment
 }
@@ -740,7 +744,16 @@ export async function startCanvasWorkspace(input: {
     workspace: { id, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
       assignmentCount: snapshot.assignments.length, frameCount: snapshot.frames.length },
   })
-  return snapshot
+  const activity = await logActivity({
+    companyId: input.companyId,
+    canvasId: id,
+    actorId: input.initiatorAgentId,
+    actorKind: 'agent',
+    action: 'workspace_started',
+    idempotencyKey: `${input.idempotencyKey}:workspace_started`,
+    detail: { title: snapshot.title, goal: snapshot.goal },
+  })
+  return { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }
 }
 
 export async function addCanvasWorkspaceAgents(input: {
@@ -768,11 +781,12 @@ export async function addCanvasWorkspaceAgents(input: {
 
 export async function assignCanvasWorkspaceWork(input: {
   companyId: string; canvasId: string; actorId: string; agentId: string; assignment: string
+  actorKind?: CanvasActorKind
 }): Promise<CanvasSnapshot> {
   const assignment = input.assignment.trim().slice(0, 4_000)
   if (!assignment) throw new Error('assignment is required')
   const client = await pool.connect()
-  let action = 'assignment.created'
+  let action: CanvasActivityKind = 'assignment_created'
   try {
     await client.query('BEGIN')
     const { rows: canvases } = await client.query<CanvasRow>(
@@ -801,10 +815,10 @@ export async function assignCanvasWorkspaceWork(input: {
         [existing.id, canvas.id, input.agentId, steerId, assignment],
       )
       if (steered[0]) {
-        action = 'assignment.steered'
+        action = 'assignment_updated'
         await client.query(`UPDATE canvas_agent_assignments SET assignment=$2,updated_at=NOW() WHERE id=$1`, [existing.id, assignment])
       } else {
-        action = 'assignment.restarted'
+        action = 'assignment_updated'
         const workId = `canvas-work-${randomUUID()}`
         await client.query(`UPDATE agent_work_items SET canvas_assignment_id=NULL,updated_at=NOW() WHERE canvas_assignment_id=$1`, [existing.id])
         await client.query(`DELETE FROM canvas_assignment_dependencies WHERE assignment_id=$1`, [existing.id])
@@ -836,11 +850,109 @@ export async function assignCanvasWorkspaceWork(input: {
     companyId: input.companyId,
     canvasId: input.canvasId,
     actorId: input.actorId,
-    actorKind: 'user',
+    actorKind: input.actorKind ?? 'user',
     action,
     detail: { agentId: input.agentId, assignment },
   })
   return snapshot
+}
+
+export interface CanvasHandoffResult {
+  snapshot: CanvasSnapshot
+  activity: CanvasActivity
+}
+
+/** Transfer owned Canvas work through the existing durable assignment queue.
+ * The handoff itself is an immutable Canvas activity carrying only the context
+ * needed by the receiving worker; no parallel memory/runtime is introduced. */
+export async function handoffCanvasWork(input: {
+  companyId: string
+  canvasId: string
+  fromAgentId: string
+  toAgentId: string
+  task: string
+  context?: string
+  frameIds?: string[]
+  idempotencyKey: string
+}): Promise<CanvasHandoffResult> {
+  if (input.fromAgentId === input.toAgentId) throw new Error('handoff target must be another agent')
+  const task = input.task.trim().slice(0, 4_000)
+  if (!task) throw new Error('handoff task is required')
+  const context = input.context?.trim().slice(0, 8_000) ?? ''
+  const activityId = `activity-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 32)}`
+  const existingActivity = await pool.query<{
+    id: string; canvas_id: string; frame_id: string | null; actor_id: string
+    actor_kind: CanvasActorKind; action: string; detail: Record<string, unknown>; created_at: string
+  }>(
+    `SELECT activity.* FROM canvas_activity activity
+       JOIN canvases canvas ON canvas.id=activity.canvas_id
+      WHERE activity.id=$1 AND activity.canvas_id=$2 AND canvas.company_id=$3`,
+    [activityId, input.canvasId, input.companyId],
+  )
+  if (existingActivity.rows[0]) {
+    const row = existingActivity.rows[0]
+    return {
+      snapshot: await getCanvasSnapshot(input.companyId, input.fromAgentId, input.canvasId),
+      activity: {
+        id: row.id, canvasId: row.canvas_id, frameId: row.frame_id,
+        actorId: row.actor_id, actorKind: row.actor_kind,
+        action: normalizeCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at,
+      },
+    }
+  }
+
+  const canvas = await requireCanvas(input.companyId, input.canvasId)
+  if (canvas.status !== 'active') throw new Error('only an active canvas accepts handoffs')
+  const { rows: sourceRows } = await pool.query<AssignmentRow>(
+    `SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2 LIMIT 1`,
+    [input.canvasId, input.fromAgentId],
+  )
+  const source = sourceRows[0]
+  if (!source) throw new Error('only a current Canvas worker can hand off work')
+  const requestedFrameIds = [...new Set((input.frameIds ?? []).map(String).filter(Boolean))]
+  if (requestedFrameIds.length > 0) {
+    const { rows } = await pool.query<{ id: string }>(
+      `SELECT id FROM canvas_frames WHERE canvas_id=$1 AND id=ANY($2::text[])`,
+      [input.canvasId, requestedFrameIds],
+    )
+    if (rows.length !== requestedFrameIds.length) throw new Error('handoff frameIds must belong to this Canvas')
+  }
+  const frameIds = [...new Set([source.active_frame_id, ...requestedFrameIds].filter((id): id is string => Boolean(id)))]
+  const snapshot = await assignCanvasWorkspaceWork({
+    companyId: input.companyId,
+    canvasId: input.canvasId,
+    actorId: input.fromAgentId,
+    actorKind: 'agent',
+    agentId: input.toAgentId,
+    assignment: task,
+  })
+  const target = snapshot.assignments.find((assignment) => assignment.agentId === input.toAgentId)
+  const names = await pool.query<{ id: string; name: string }>(
+    `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
+    [input.companyId, [input.fromAgentId, input.toAgentId]],
+  )
+  const nameById = new Map(names.rows.map((row) => [row.id, row.name]))
+  const activity = await logActivity({
+    companyId: input.companyId,
+    canvasId: input.canvasId,
+    actorId: input.fromAgentId,
+    actorKind: 'agent',
+    frameId: source.active_frame_id,
+    action: 'handoff',
+    idempotencyKey: input.idempotencyKey,
+    detail: {
+      fromAgentId: input.fromAgentId,
+      fromAgentName: nameById.get(input.fromAgentId) ?? input.fromAgentId,
+      toAgentId: input.toAgentId,
+      toAgentName: nameById.get(input.toAgentId) ?? input.toAgentId,
+      sourceAssignmentId: source.id,
+      targetAssignmentId: target?.id ?? null,
+      task,
+      context,
+      frameIds,
+    },
+  })
+  return { snapshot: { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }, activity }
 }
 
 async function publishAssignments(companyId: string, canvasId: string): Promise<void> {
@@ -951,7 +1063,9 @@ export async function completeCanvasWork(input: {
       actorId: completion.agentId,
       actorKind: 'agent',
       frameId: completion.frameId,
-      action: `assignment.${completion.status}`,
+      action: completion.status === 'completed'
+        ? 'task_completed'
+        : completion.status === 'failed' ? 'task_failed' : 'task_cancelled',
       detail: { status: completion.status, result: input.resultText, error: input.error },
     })
     const { rows } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE id=$1`, [canvasId])

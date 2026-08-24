@@ -393,10 +393,10 @@ function latestAssignmentProgress(snapshot: CanvasSnapshot, assignment: CanvasAg
     const status = typeof activity.detail.status === 'string' ? activity.detail.status : null
     if (status) return localizeStatus(status)
     const frame = activity.frameId ? snapshot.frames.find((item) => item.id === activity.frameId) : null
-    if (activity.action === 'frame.content_appended') return `正在补充 ${String(activity.detail.title ?? frame?.title ?? '卡片')}`
-    if (activity.action === 'frame.updated') return `已更新 ${frame?.title ?? '卡片'}`
-    if (activity.action === 'frame.created') return `已新建 ${frame?.title ?? '卡片'}`
-    if (activity.action === 'comment.created') return '已收到新的画布反馈'
+    if (activity.action === 'frame_updated') return `已更新 ${String(activity.detail.title ?? frame?.title ?? '卡片')}`
+    if (activity.action === 'frame_created') return `已新建 ${frame?.title ?? '卡片'}`
+    if (activity.action === 'comment_created') return '已收到新的画布反馈'
+    if (activity.action === 'handoff') return `已移交给 ${String(activity.detail.toAgentName ?? '另一位 Agent')}`
   }
   return `${localizeStatus(canvasStatusLabel(assignment.status))} · ${assignment.assignment}`
 }

@@ -22,12 +22,13 @@ function action(work: AgentWorkItem, name: string, args: Record<string, unknown>
 
 test('[integration] canvas.* shares durable frames without sharing Agent execution state', async () => {
   const { companyId, agentId } = await seedCompanyWithAgent({ agentId: 'canvas-agent' })
+  const { agentId: targetAgentId } = await seedCompanyWithAgent({ companyId, agentId: 'canvas-target' })
   const work: AgentWorkItem = {
     id: 'canvas-work', fence: 1, companyId, agentId, channelId: 'canvas-channel',
     triggerClientMsgNo: 'canvas-trigger', reason: 'message', leaseToken: 'test-lease',
   }
 
-  await pool.query(`UPDATE participants SET capabilities='["canvas"]'::jsonb WHERE id=$1 AND company_id=$2`, [agentId, companyId])
+  await pool.query(`UPDATE participants SET capabilities='["canvas"]'::jsonb WHERE id=ANY($1::text[]) AND company_id=$2`, [[agentId, targetAgentId], companyId])
   await pool.query(
     `INSERT INTO conversations (id,kind,title,members,company_id) VALUES ($1,'direct','Canvas test',$2::jsonb,$3)`,
     [work.channelId, JSON.stringify([agentId]), companyId],
@@ -78,8 +79,35 @@ test('[integration] canvas.* shares durable frames without sharing Agent executi
   assert.equal(shared.presence[0]?.participantId, agentId)
   assert.ok(shared.activity.length >= 3)
 
-  const deleted = await executeLearningAction(work, action(work, 'canvas.delete_frame', { frameId: frame.id }, 7))
+  const handedOff = await executeLearningAction(work, action(work, 'canvas.handoff', {
+    canvasId,
+    toAgentId: targetAgentId,
+    task: 'Review the shared plan and add verification steps',
+    context: 'The initial structure is complete; verify the assumptions.',
+    frameIds: [frame.id],
+  }, 7))
+  assert.equal(handedOff.ok, true)
+  const handoffValue = handedOff.value as {
+    snapshot: { assignments: Array<{ agentId: string }>; activity: Array<{ action: string }> }
+    activity: { action: string; detail: { fromAgentId: string; toAgentId: string; frameIds: string[] } }
+  }
+  assert.ok(handoffValue.snapshot.assignments.some((item) => item.agentId === targetAgentId))
+  assert.equal(handoffValue.activity.action, 'handoff')
+  assert.equal(handoffValue.activity.detail.fromAgentId, agentId)
+  assert.equal(handoffValue.activity.detail.toAgentId, targetAgentId)
+  assert.deepEqual(handoffValue.activity.detail.frameIds, [frame.id])
+
+  const handedOffAgain = await executeLearningAction(work, action(work, 'canvas.handoff', {
+    canvasId,
+    toAgentId: targetAgentId,
+    task: 'Review the shared plan and add verification steps',
+    context: 'The initial structure is complete; verify the assumptions.',
+    frameIds: [frame.id],
+  }, 7))
+  assert.equal((handedOffAgain.value as { activity: { id: string } }).activity.id, (handedOff.value as { activity: { id: string } }).activity.id)
+
+  const deleted = await executeLearningAction(work, action(work, 'canvas.delete_frame', { frameId: frame.id }, 8))
   assert.equal(deleted.ok, true)
-  const afterDelete = await executeLearningAction(work, action(work, 'canvas.get', { canvasId }, 8))
+  const afterDelete = await executeLearningAction(work, action(work, 'canvas.get', { canvasId }, 9))
   assert.deepEqual((afterDelete.value as { frames: unknown[] }).frames, [])
 })

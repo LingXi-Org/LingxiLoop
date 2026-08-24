@@ -1,3 +1,7 @@
+import type { CanvasActivityKind } from '@/lib/canvasEventKinds'
+
+export type { CanvasActivityKind } from '@/lib/canvasEventKinds'
+
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
@@ -352,7 +356,7 @@ export interface CanvasActivity {
   frameId: string | null
   actorId: string
   actorKind: 'user' | 'agent'
-  action: string
+  action: CanvasActivityKind
   detail: Record<string, unknown>
   createdAt: string
 }

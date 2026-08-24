@@ -272,9 +272,9 @@ const mockCanvas: CanvasSnapshot = {
     { id: 'mock-comment-1', canvasId: MOCK_CANVAS_ID, frameId: 'mock-frame-preview', authorId: ME_ID, authorKind: 'user', body: '继续贴近 Telegram Web A 的密度。', createdAt: isoMinutesAgo(5) },
   ],
   activity: [
-    { id: 'mock-activity-2', canvasId: MOCK_CANVAS_ID, frameId: 'mock-frame-preview', actorId: 'mock-iris', actorKind: 'agent', action: 'agent.status', detail: { status: '正在观察预览并修正窄屏布局' }, createdAt: isoMinutesAgo(2) },
-    { id: 'mock-activity-3', canvasId: MOCK_CANVAS_ID, frameId: 'mock-frame-brief', actorId: 'mock-nova', actorKind: 'agent', action: 'frame.content_appended', detail: { title: '体验目标', revision: 3 }, createdAt: isoMinutesAgo(6) },
-    { id: 'mock-activity-4', canvasId: MOCK_CANVAS_ID, frameId: 'mock-frame-preview', actorId: ME_ID, actorKind: 'user', action: 'comment.created', detail: {}, createdAt: isoMinutesAgo(5) },
+    { id: 'mock-activity-2', canvasId: MOCK_CANVAS_ID, frameId: 'mock-frame-preview', actorId: 'mock-iris', actorKind: 'agent', action: 'agent_status', detail: { status: '正在观察预览并修正窄屏布局' }, createdAt: isoMinutesAgo(2) },
+    { id: 'mock-activity-3', canvasId: MOCK_CANVAS_ID, frameId: 'mock-frame-brief', actorId: 'mock-nova', actorKind: 'agent', action: 'frame_updated', detail: { title: '体验目标', revision: 3 }, createdAt: isoMinutesAgo(6) },
+    { id: 'mock-activity-4', canvasId: MOCK_CANVAS_ID, frameId: 'mock-frame-preview', actorId: ME_ID, actorKind: 'user', action: 'comment_created', detail: {}, createdAt: isoMinutesAgo(5) },
   ],
 }
 
@@ -347,7 +347,7 @@ function seedMockCanvas(): void {
             updated = { ...frame, ...patch, revision: frame.revision + 1, updatedBy: ME_ID, updatedAt: changedAt }
             return updated
           }),
-          activity: [{ id: `mock-activity-${Date.now()}`, canvasId: MOCK_CANVAS_ID, frameId: id, actorId: ME_ID, actorKind: 'user', action: 'frame.updated', detail: { title: state.snapshot.frames.find((frame) => frame.id === id)?.title }, createdAt: changedAt }, ...state.snapshot.activity],
+          activity: [{ id: `mock-activity-${Date.now()}`, canvasId: MOCK_CANVAS_ID, frameId: id, actorId: ME_ID, actorKind: 'user', action: 'frame_updated', detail: { title: state.snapshot.frames.find((frame) => frame.id === id)?.title }, createdAt: changedAt }, ...state.snapshot.activity],
           updatedAt: changedAt,
         } : state.snapshot,
         previews: updated && state.previews[MOCK_CANVAS_ID]
@@ -376,13 +376,13 @@ function seedMockCanvas(): void {
     addComment: async (body, frameId = null) => {
       const createdAt = new Date().toISOString()
       const comment: CanvasComment = { id: `mock-comment-${Date.now()}`, canvasId: MOCK_CANVAS_ID, frameId, authorId: ME_ID, authorKind: 'user', body, createdAt }
-      const activity: CanvasActivity = { id: `mock-activity-${Date.now()}`, canvasId: MOCK_CANVAS_ID, frameId, actorId: ME_ID, actorKind: 'user', action: 'comment.created', detail: {}, createdAt }
+      const activity: CanvasActivity = { id: `mock-activity-${Date.now()}`, canvasId: MOCK_CANVAS_ID, frameId, actorId: ME_ID, actorKind: 'user', action: 'comment_created', detail: {}, createdAt }
       useCanvas.setState((state) => state.snapshot ? { snapshot: { ...state.snapshot, comments: [comment, ...state.snapshot.comments], activity: [activity, ...state.snapshot.activity], updatedAt: createdAt } } : {})
     },
     steerAgent: async (agentId, text) => {
       const createdAt = new Date().toISOString()
       const target = useCanvas.getState().snapshot?.assignments.find((item) => item.agentId === agentId)
-      const activity: CanvasActivity = { id: `mock-activity-${Date.now()}`, canvasId: MOCK_CANVAS_ID, frameId: target?.activeFrameId ?? null, actorId: ME_ID, actorKind: 'user', action: 'agent.steered', detail: { text, agentId }, createdAt }
+      const activity: CanvasActivity = { id: `mock-activity-${Date.now()}`, canvasId: MOCK_CANVAS_ID, frameId: target?.activeFrameId ?? null, actorId: ME_ID, actorKind: 'user', action: 'assignment_updated', detail: { text, agentId }, createdAt }
       useCanvas.setState((state) => state.snapshot ? { snapshot: {
         ...state.snapshot,
         presence: state.snapshot.presence.map((item) => item.participantId === agentId ? { ...item, status: `收到反馈：${text}`, lastSeenAt: createdAt } : item),
@@ -406,7 +406,7 @@ function seedMockCanvas(): void {
           }
         const activity: CanvasActivity = {
           id: `mock-activity-${Date.now()}`, canvasId: MOCK_CANVAS_ID, frameId: current?.activeFrameId ?? null,
-          actorId: ME_ID, actorKind: 'user', action: current ? 'assignment.steered' : 'assignment.created',
+          actorId: ME_ID, actorKind: 'user', action: current ? 'assignment_updated' : 'assignment_created',
           detail: { agentId, assignment }, createdAt,
         }
         return { snapshot: {

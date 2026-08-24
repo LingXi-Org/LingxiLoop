@@ -8,6 +8,7 @@ import {
   createCanvasFrame,
   deleteCanvasFrame,
   getCanvasSnapshot,
+  handoffCanvasWork,
   listCanvasAvailableAgents,
   setCanvasStatus,
   startCanvasWorkspace,
@@ -200,6 +201,23 @@ async function executeCanvas(
   }
   if (method === 'get') {
     return { ok: true, value: await getCanvasSnapshot(work.companyId, work.agentId, canvasId) }
+  }
+  if (method === 'handoff') {
+    if (!canvasId) throw new Error('canvasId is required for a Canvas handoff')
+    const frameIds = Array.isArray(args.frameIds) ? args.frameIds.map(String) : []
+    return {
+      ok: true,
+      value: await handoffCanvasWork({
+        companyId: work.companyId,
+        canvasId,
+        fromAgentId: work.agentId,
+        toAgentId: textArg(args, 'toAgentId'),
+        task: textArg(args, 'task'),
+        context: textArg(args, 'context', false),
+        frameIds,
+        idempotencyKey: action.idempotencyKey,
+      }),
+    }
   }
   if (method === 'create_frame') {
     if (!canvasId) throw new Error('canvasId is required for task Canvas frames')

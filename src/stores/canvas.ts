@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { api, type WsEvent, ws } from '@/api/client'
 import { findCanvasPlacement } from '@/lib/canvasLayout'
+import { mergeCanvasActivities } from '@/lib/canvasEvents'
 import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from '@/lib/canvasRealtime'
 import { useApp } from '@/stores/app'
 import type {
@@ -16,6 +17,7 @@ interface CanvasState {
   workspaces: CanvasWorkspaceSummary[]
   activeCanvasId: string | null
   eventClocks: Record<string, string>
+  activityByCanvas: Record<string, CanvasSnapshot['activity']>
   liveCards: Record<string, { status?: CanvasSnapshot['status']; frameIds: string[]; assignments: CanvasSnapshot['assignments'] }>
   loading: boolean
   error: string | null
@@ -54,6 +56,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   workspaces: [],
   activeCanvasId: null,
   eventClocks: {},
+  activityByCanvas: {},
   liveCards: {},
   loading: false,
   error: null,
@@ -63,21 +66,28 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       const snapshot = await api.getCanvas(canvasId ?? get().activeCanvasId ?? undefined)
-      set((state) => ({
-        snapshot,
-        previews: { ...state.previews, [snapshot.id]: snapshot },
-        activeCanvasId: snapshot.id,
-        eventClocks: {
-          ...state.eventClocks,
-          [`${snapshot.id}:workspace`]: snapshot.updatedAt,
-          ...Object.fromEntries(snapshot.frames.map((frame) => [`${snapshot.id}:frame:${frame.id}`, frame.updatedAt])),
-          ...Object.fromEntries(snapshot.assignments.map((assignment) => [`${snapshot.id}:assignment:${assignment.agentId}`, assignment.updatedAt])),
-          ...Object.fromEntries(snapshot.presence.map((presence) => [`${snapshot.id}:presence:${presence.participantId}`, presence.lastSeenAt])),
-        },
-        selectedFrameId: state.selectedFrameId && snapshot.frames.some((f) => f.id === state.selectedFrameId)
-          ? state.selectedFrameId
-          : null,
-      }))
+      set((state) => {
+        const current = state.activityByCanvas[snapshot.id]
+          ?? (state.snapshot?.id === snapshot.id ? state.snapshot.activity : [])
+        const activity = mergeCanvasActivities(current, snapshot.activity)
+        const merged = { ...snapshot, activity }
+        return {
+          snapshot: merged,
+          previews: { ...state.previews, [snapshot.id]: merged },
+          activityByCanvas: { ...state.activityByCanvas, [snapshot.id]: activity },
+          activeCanvasId: snapshot.id,
+          eventClocks: {
+            ...state.eventClocks,
+            [`${snapshot.id}:workspace`]: snapshot.updatedAt,
+            ...Object.fromEntries(snapshot.frames.map((frame) => [`${snapshot.id}:frame:${frame.id}`, frame.updatedAt])),
+            ...Object.fromEntries(snapshot.assignments.map((assignment) => [`${snapshot.id}:assignment:${assignment.agentId}`, assignment.updatedAt])),
+            ...Object.fromEntries(snapshot.presence.map((presence) => [`${snapshot.id}:presence:${presence.participantId}`, presence.lastSeenAt])),
+          },
+          selectedFrameId: state.selectedFrameId && snapshot.frames.some((f) => f.id === state.selectedFrameId)
+            ? state.selectedFrameId
+            : null,
+        }
+      })
     } catch (error) {
       set({ error: error instanceof Error ? error.message : String(error) })
     } finally {
@@ -90,7 +100,13 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     if (state.snapshot?.id === canvasId || state.previews[canvasId]) return
     try {
       const snapshot = await api.getCanvas(canvasId)
-      set((current) => ({ previews: { ...current.previews, [canvasId]: snapshot } }))
+      set((current) => {
+        const activity = mergeCanvasActivities(current.activityByCanvas[canvasId] ?? [], snapshot.activity)
+        return {
+          activityByCanvas: { ...current.activityByCanvas, [canvasId]: activity },
+          previews: { ...current.previews, [canvasId]: { ...snapshot, activity } },
+        }
+      })
     } catch {
       // A message preview is supplementary UI. Opening the workspace still
       // uses load(), which surfaces actionable errors in the Canvas view.
@@ -102,7 +118,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     catch (error) { set({ error: error instanceof Error ? error.message : String(error) }) }
   },
 
-  reset: () => set({ snapshot: null, previews: {}, workspaces: [], activeCanvasId: null, eventClocks: {}, liveCards: {}, loading: false, error: null, selectedFrameId: null }),
+  reset: () => set({ snapshot: null, previews: {}, workspaces: [], activeCanvasId: null, eventClocks: {}, activityByCanvas: {}, liveCards: {}, loading: false, error: null, selectedFrameId: null }),
   selectFrame: (id) => set({ selectedFrameId: id }),
   patchLocalFrame: (id, patch) => set((state) => {
     if (!state.snapshot) return {}
@@ -215,6 +231,12 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
 
   applyEvent: (event) => {
+    if (event.kind === 'activity.created' && event.activity) {
+      set((state) => ({ activityByCanvas: {
+        ...state.activityByCanvas,
+        [event.canvasId]: mergeCanvasActivities(state.activityByCanvas[event.canvasId] ?? [], [event.activity!]),
+      } }))
+    }
     const entityId = event.frame?.id ?? event.frameId ?? event.assignment?.agentId
       ?? event.presence?.participantId ?? event.participantId
     const clockScope = event.kind.startsWith('workspace.')
@@ -265,6 +287,12 @@ export const useCanvas = create<CanvasState>((set, get) => ({
       if (event.kind === 'workspace.updated' && event.workspace) {
         return { previews: { ...state.previews, [event.canvasId]: { ...preview, ...event.workspace } as CanvasSnapshot } }
       }
+      if (event.kind === 'activity.created' && event.activity) {
+        return { previews: { ...state.previews, [event.canvasId]: {
+          ...preview,
+          activity: mergeCanvasActivities(preview.activity, [event.activity]),
+        } } }
+      }
       return {}
     })
     set((state) => {
@@ -299,7 +327,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
         return { snapshot: { ...snapshot, comments: [event.comment, ...snapshot.comments.filter((item) => item.id !== event.comment!.id)].slice(0, 100) } }
       }
       if (event.kind === 'activity.created' && event.activity) {
-        return { snapshot: { ...snapshot, activity: [event.activity, ...snapshot.activity.filter((item) => item.id !== event.activity!.id)].slice(0, 100) } }
+        return { snapshot: { ...snapshot, activity: mergeCanvasActivities(snapshot.activity, [event.activity]) } }
       }
       if (event.kind === 'assignment.updated' && event.assignment) {
         const prior = snapshot.assignments.find((item) => item.agentId === event.assignment!.agentId)

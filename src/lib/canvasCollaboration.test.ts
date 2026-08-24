@@ -22,6 +22,6 @@ test('formats live and completed durations', () => {
 })
 
 test('turns persisted activity into human narration', () => {
-  const activity: CanvasActivity = { id: 'a', canvasId: 'c', frameId: null, actorId: 'agent', actorKind: 'agent', action: 'agent.status', detail: { status: '正在检查窄屏布局' }, createdAt: '2026-01-01T00:00:00.000Z' }
+  const activity: CanvasActivity = { id: 'a', canvasId: 'c', frameId: null, actorId: 'agent', actorKind: 'agent', action: 'agent_status', detail: { status: '正在检查窄屏布局' }, createdAt: '2026-01-01T00:00:00.000Z' }
   assert.equal(canvasActivityLabel(activity), '状态更新：正在检查窄屏布局')
 })
