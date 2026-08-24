@@ -111,6 +111,19 @@ test('[integration] canvas.* shares durable frames without sharing Agent executi
        SELECT id FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2
      )`, [canvasId, targetAgentId],
   )).rowCount, 1)
+  const activeTargetHandoff = await handoffCanvasWork({
+    companyId, canvasId, fromAgentId: agentId, toAgentId: targetAgentId,
+    task: 'Validate the plan against the supplied sources',
+    context: 'Use the acceptance criteria and surface any missing evidence.',
+    frameIds: [frame.id], idempotencyKey: `${work.id}:canvas-active-target`,
+  })
+  assert.equal(activeTargetHandoff.activity.action, 'handoff')
+  const { rows: steeredWork } = await pool.query<{ steer_inputs: Array<{ text: string }> }>(
+    `SELECT steer_inputs FROM agent_work_items WHERE canvas_id=$1 AND agent_id=$2`, [canvasId, targetAgentId],
+  )
+  const deliveredSteer = steeredWork[0]?.steer_inputs.at(-1)?.text ?? ''
+  assert.match(deliveredSteer, /acceptance criteria/)
+  assert.match(deliveredSteer, new RegExp(frame.id))
 
   // A successful handoff may be retried after the workspace advances while
   // the caller has not received its original response.

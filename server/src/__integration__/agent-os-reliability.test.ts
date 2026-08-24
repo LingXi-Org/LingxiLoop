@@ -160,3 +160,24 @@ test('[integration] work claims serialize one session while allowing the next af
   assert.equal(completed.status, 200)
   assert.equal((await claim())?.id, ids[1])
 })
+
+test('[integration] a stopped leased worker stays unclaimable after its lease expires', async () => {
+  const stoppedWorkId = `stopped-lease-${randomUUID()}`
+  await pool.query(
+    `INSERT INTO agent_work_items
+       (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,lease_expires_at,cancel_requested_at)
+     VALUES ($1,$2,$3,$4,$5,'canvas_worker','leased',NOW()-INTERVAL '1 minute',NOW())`,
+    [stoppedWorkId, COMPANY, AGENT, CHANNEL, `stopped-${stoppedWorkId}`],
+  )
+  const response = await fetch(`${baseUrl}/internal/agent-os/work/claim`, {
+    method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ workerId: 'lease-expiry-recovery' }),
+  })
+  assert.equal(response.status, 200)
+  assert.equal(await response.json(), null)
+  const { rows } = await pool.query<{ status: string; attempts: number }>(
+    `SELECT status,attempts FROM agent_work_items WHERE id=$1`, [stoppedWorkId],
+  )
+  assert.equal(rows[0]?.status, 'leased')
+  assert.equal(rows[0]?.attempts, 0)
+})

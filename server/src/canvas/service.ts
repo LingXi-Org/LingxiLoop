@@ -907,7 +907,7 @@ export async function handoffCanvasWork(input: {
       // Publishing is intentionally replay-safe. The durable activity is the
       // source of truth; a lost post-commit Redis delivery is recovered when
       // the caller retries the same idempotency key.
-      await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
+      await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity }).catch(() => undefined)
       return { snapshot: { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }, activity }
     }
     if (canvas.status !== 'active') throw new Error('only an active canvas accepts handoffs')
@@ -925,6 +925,12 @@ export async function handoffCanvasWork(input: {
       if (rows.length !== requestedFrameIds.length) throw new Error('handoff frameIds must belong to this Canvas')
     }
     const frameIds = [...new Set([source.active_frame_id, ...requestedFrameIds].filter((id): id is string => Boolean(id)))]
+    const handoffSteerText = [
+      '[Canvas handoff]',
+      `Task: ${task}`,
+      ...(context ? [`Context: ${context}`] : []),
+      ...(frameIds.length > 0 ? [`Canvas frame IDs: ${frameIds.join(', ')}`] : []),
+    ].join('\n')
     await assertMembersAvailable(client, input.companyId, [{ agentId: input.toAgentId, assignment: task }])
     const { rows: targets } = await client.query<AssignmentRow>(
       `SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2 FOR UPDATE`, [canvas.id, input.toAgentId],
@@ -943,7 +949,7 @@ export async function handoffCanvasWork(input: {
            updated_at=NOW()
            FROM canvas_agent_assignments a WHERE a.id=$1 AND w.canvas_assignment_id=a.id
             AND a.canvas_id=$2 AND a.agent_id=$3 AND w.status IN ('queued','blocked','leased') RETURNING w.id`,
-        [target.id, canvas.id, input.toAgentId, steerId, task],
+        [target.id, canvas.id, input.toAgentId, steerId, handoffSteerText],
       )
       if (!steered[0]) {
         const workId = `canvas-handoff-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 28)}`
@@ -989,8 +995,10 @@ export async function handoffCanvasWork(input: {
     throw error
   } finally { client.release() }
   const snapshot = await getCanvasSnapshot(input.companyId, input.fromAgentId, input.canvasId)
-  await publishAssignments(input.companyId, input.canvasId)
-  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
+  // The database transaction above is the handoff acknowledgement. Realtime
+  // delivery is opportunistic and a retry of this key will republish it.
+  await publishAssignments(input.companyId, input.canvasId).catch(() => undefined)
+  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity }).catch(() => undefined)
   return { snapshot: { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }, activity }
 }
 

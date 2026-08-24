@@ -1,9 +1,9 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
-import { Router, type Request, type Response, type NextFunction } from 'express'
+import { type NextFunction, type Request, type Response, Router } from 'express'
 import type { PoolClient } from 'pg'
+import { completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
-import { completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
 import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
 import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 
@@ -89,7 +89,8 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
     const { rows } = await client.query<WorkRow>(
       `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id
          FROM agent_work_items
-        WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
+         WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
+           AND cancel_requested_at IS NULL
           AND available_at <= NOW()
           AND NOT EXISTS (
             SELECT 1 FROM agent_os_session_leases sl
@@ -377,8 +378,11 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
   await pool.query(`UPDATE agent_runs SET stage=$2, updated_at=NOW() WHERE id=$1`, [event.runId, event.kind])
   if (work.reason === 'canvas_worker' && work.canvasId) {
     if (event.kind === 'run.started') {
-      await pool.query(`UPDATE canvas_agent_assignments SET status='working',started_at=COALESCE(started_at,NOW()),updated_at=NOW() WHERE id=$1`, [work.canvasAssignmentId])
-      await setCanvasStatus({ companyId: work.companyId, canvasId: work.canvasId, actorId: work.agentId, actorKind: 'agent', status: 'working' }).catch(() => undefined)
+      const { rows: started } = await pool.query<{ id: string }>(
+        `UPDATE canvas_agent_assignments SET status='working',started_at=COALESCE(started_at,NOW()),updated_at=NOW()
+          WHERE id=$1 AND status NOT IN ('completed','failed','cancelled') RETURNING id`, [work.canvasAssignmentId],
+      )
+      if (started[0]) await setCanvasStatus({ companyId: work.companyId, canvasId: work.canvasId, actorId: work.agentId, actorKind: 'agent', status: 'working' }).catch(() => undefined)
     }
     res.json({ ok: true }); return
   }
