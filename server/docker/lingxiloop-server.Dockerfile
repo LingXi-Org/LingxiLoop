@@ -93,6 +93,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY server ./server
+# Canvas service deliberately shares these dependency-free domain helpers with
+# the React client. They are loaded by tsx at runtime, so include them in the
+# control-plane image as well (the SPA build stage's source is not copied into
+# this final stage).
+COPY src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts ./src/lib/
 # Web SPA bundle — read by server/src/index.ts at boot via existsSync().
 # When this is absent (e.g. an older runtime image) the server falls
 # back to a JSON `/` response.

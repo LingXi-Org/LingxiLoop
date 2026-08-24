@@ -150,7 +150,7 @@ export function Combobox<T extends string = string>({
           id={`${id}-listbox`}
           role="listbox"
           aria-label={ariaLabel}
-          className="absolute left-0 right-0 top-full z-[70] mt-2 max-h-72 overflow-auto rounded-[16px] border border-sky2-100 bg-cloud p-2.5 shadow-[0_22px_55px_-24px_rgba(10,30,60,0.38),0_8px_18px_-12px_rgba(10,30,60,0.2),0_0_0_1px_rgba(255,255,255,0.72)_inset] animate-rise"
+          className="app-menu-surface absolute left-0 right-0 top-full z-[70] mt-2 max-h-72 overflow-auto p-1.5 animate-rise"
         >
           {filtered.map((option, idx) => {
             const active = idx === activeIndex
@@ -167,7 +167,7 @@ export function Combobox<T extends string = string>({
                 onMouseEnter={() => setActiveIndex(idx)}
                 onClick={() => commit(option)}
                 className={cn(
-                  'flex h-9 w-full items-center gap-2.5 rounded-[10px] px-3 text-left text-[12.5px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-45',
+                  'app-menu-item',
                   selectedOption
                     ? 'bg-skype text-white shadow-[0_10px_22px_-16px_rgba(0,120,200,0.82)]'
                     : active

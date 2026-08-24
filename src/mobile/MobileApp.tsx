@@ -160,6 +160,7 @@ export function MobileApp() {
   const showTabBar =
     !(view === 'conversations' && (stack === 'chat' || stack === 'info')) &&
     !(view === 'whispers' && whisperId !== null) &&
+    view !== 'canvas' &&
     !infoParticipantId
 
   return (
@@ -305,8 +306,7 @@ export function MobileApp() {
             <motion.div key="canvas" className="absolute inset-0"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={fadeTransition}>
-              <button type="button" onClick={() => setView('conversations')} className="absolute left-3 top-3 z-[80] rounded-lg border border-hairline bg-white/95 px-3 py-1.5 text-xs font-semibold text-ink shadow">返回</button>
-              <ViewBoundary name="Canvas"><CanvasView /></ViewBoundary>
+              <ViewBoundary name="Canvas"><CanvasView onBack={() => setView('conversations')} /></ViewBoundary>
             </motion.div>
           )}
 

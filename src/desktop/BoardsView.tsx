@@ -1,17 +1,17 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { useBoards } from '@/stores/boards'
-import { useParticipants } from '@/stores/participants'
-import { useMe } from '@/stores/auth'
 import { AvatarMini } from '@/components/Avatar'
 import { BoardLink } from '@/components/BoardLink'
-import { CardLink } from '@/components/CardLink'
 import { CalendarLink } from '@/components/CalendarLink'
+import { CardLink } from '@/components/CardLink'
 import { DocumentLink } from '@/components/DocumentLink'
+import { IAt, IBoard, IMore, IPlus, ITrash } from '@/components/icons'
 import { ResizeHandle } from '@/components/ResizeHandle'
 import { Select } from '@/components/Select'
 import { useResizableWidth } from '@/lib/useResizableWidth'
-import { IBoard, IPlus, IAt, ITrash, IMore } from '@/components/icons'
 import { cn } from '@/lib/utils'
+import { useMe } from '@/stores/auth'
+import { useBoards } from '@/stores/boards'
+import { useParticipants } from '@/stores/participants'
 import type { BoardCard, BoardCardComment, BoardColumn, Participant } from '@/types'
 
 /**
@@ -758,7 +758,7 @@ function MentionInput(props: {
         />
       )}
       {open && matches.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto rounded-md border border-ink-200 bg-white shadow-lg z-20">
+        <div className="app-menu-surface absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto p-1">
           {matches.map((p, i) => (
             <button
               key={p.id}
@@ -766,8 +766,8 @@ function MentionInput(props: {
               onMouseDown={(e) => { e.preventDefault(); insertMention(p) }}
               onMouseEnter={() => setHighlight(i)}
               className={cn(
-                'w-full px-2 py-1.5 flex items-center gap-2 text-left text-sm',
-                i === highlight ? 'bg-skype/10' : 'hover:bg-ink-50',
+                'app-menu-item',
+                i === highlight && 'is-active',
               )}
             >
               <AvatarMini p={p} size={20} />
@@ -1152,7 +1152,7 @@ function AssigneePicker({ value, onChange, meId }: {
         <div
           id={`${id}-listbox`}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-[70] mt-2 max-h-72 overflow-auto rounded-[16px] border border-sky2-100 bg-cloud p-2.5 shadow-[0_22px_55px_-24px_rgba(10,30,60,0.38),0_8px_18px_-12px_rgba(10,30,60,0.2),0_0_0_1px_rgba(255,255,255,0.72)_inset] animate-rise"
+          className="app-menu-surface absolute left-0 right-0 top-full z-[70] mt-2 max-h-72 overflow-auto p-1.5 animate-rise"
         >
           {filtered.map((option, idx) => {
             const active = idx === activeIndex
@@ -1168,7 +1168,7 @@ function AssigneePicker({ value, onChange, meId }: {
                 onMouseEnter={() => setActiveIndex(idx)}
                 onClick={() => commit(option)}
                 className={cn(
-                  'flex h-9 w-full items-center gap-2.5 rounded-[10px] px-3 text-left text-[12.5px] font-semibold transition',
+                  'app-menu-item',
                   selectedOption
                     ? 'bg-skype text-white shadow-[0_10px_22px_-16px_rgba(0,120,200,0.82)]'
                     : active

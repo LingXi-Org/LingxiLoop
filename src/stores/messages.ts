@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
+import { isMockImDevelopment } from '@/lib/devMode'
+import { type ImEnvelope, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
 import { getMeId } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import type { Message, ReactionEntry } from '@/types'
-import { lingxiIm, type ImEnvelope } from '@/lib/im/wukong'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -820,6 +821,21 @@ export async function sendUserMessage(
     },
   }))
 
+  if (isMockImDevelopment()) {
+    const realId = `mock-${Date.now()}`
+    useMessages.setState((s) => ({
+      byConvo: {
+        ...s.byConvo,
+        [convoId]: (s.byConvo[convoId] ?? []).map((item) =>
+          item.id === tempId
+            ? { ...item, id: realId, pending: false, sequence: Date.now() }
+            : item,
+        ),
+      },
+    }))
+    return
+  }
+
   try {
     const mentionAll = /(^|\s)@everyone\b/i.test(v)
     const mentionedIds = Object.values(useParticipants.getState().byId)
@@ -911,6 +927,7 @@ export async function toggleReaction(messageId: string, emoji: string): Promise<
   const previous = patchMessageReactions(messageId, (reactions) =>
     optimisticToggleReactions(reactions, emoji),
   )
+  if (isMockImDevelopment()) return
   try {
     const res = await api.toggleReaction(messageId, emoji)
     const incoming = deriveMineForReactions(res.reactions)

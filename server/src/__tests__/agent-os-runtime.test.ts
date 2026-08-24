@@ -36,6 +36,13 @@ test('Canvas contract tells agents to autonomously decide and start via IPython'
   assert.match(contract, /loop\.canvas\.start_workspace/)
   assert.match(contract, /Never ask the human to open Canvas, select agents, or allocate work/)
   assert.match(contract, /Do not create a workspace for a quick single-agent answer/)
+  assert.match(contract, /loop\.canvas\.get\(canvasId=canvas_id\)/)
+  assert.match(contract, /loop\.canvas\.create_frame\(canvasId=canvas_id, type="markdown"/)
+  assert.match(contract, /loop\.canvas\.set_status\(canvasId=canvas_id/)
+  assert.match(contract, /baseRevision=current\["revision"\]/)
+  assert.match(contract, /loop\.canvas\.append_content\(frameId=frame\["id"\]/)
+  assert.match(contract, /loop\.canvas\.handoff\(canvasId=canvas_id/)
+  assert.match(contract, /Human right-click @ assignments and card feedback/)
   assert.match(contract, /"id":"sage"/)
 })
 
@@ -96,7 +103,7 @@ test('Canvas start directive persists the session and defers without a fake chat
 test('Canvas worker stores its final result without replying in the source conversation', async () => {
   const item: AgentWorkItem = { ...work('canvas-worker', 'canvas:c:a'), reason: 'canvas_worker', canvasId: 'c', canvasAssignmentId: 'a' }
   const host = new MemoryHostAdapter()
-  host.contexts.set(item.id, { ...context(item, 'Research the assigned topic.'), canvas: { id: 'c', title: 'Study', goal: 'Learn', status: 'active', initiatorAgentId: 'nova', assignments: [], frames: [] } })
+  host.contexts.set(item.id, { ...context(item, 'Research the assigned topic.'), canvas: { id: 'c', title: 'Study', goal: 'Learn', status: 'active', initiatorAgentId: 'nova', assignments: [], frames: [], activity: [] } })
   const model = new ScriptedModelDriver([{ output: [{ role: 'assistant', content: 'Worker result' }], text: 'Worker result', usage: { inputTokens: 10, outputTokens: 3 } }])
   await new AgentOSRuntime(host, model, new StatefulKernel(), { heartbeatMs: 60_000 }).runWork(item)
   assert.equal(host.messages.length, 0)

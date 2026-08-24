@@ -181,7 +181,7 @@ export function Select<T extends string = string>({
         aria-hidden={!open}
         onAnimationEnd={() => setAnimateMenu(false)}
         className={cn(
-          'absolute left-0 right-0 top-full z-[70] mt-2 max-h-72 overflow-auto rounded-[16px] border border-sky2-100 bg-cloud p-2.5 shadow-[0_22px_55px_-24px_rgba(10,30,60,0.38),0_8px_18px_-12px_rgba(10,30,60,0.2),0_0_0_1px_rgba(255,255,255,0.72)_inset]',
+          'app-menu-surface absolute left-0 right-0 top-full z-[70] mt-2 max-h-72 overflow-auto p-1.5',
           'origin-top transition-[opacity,transform,visibility] duration-150 ease-out',
           open ? 'visible translate-y-0 scale-100 opacity-100' : 'invisible pointer-events-none -translate-y-1 scale-[0.985] opacity-0',
           animateMenu && 'animate-rise',
@@ -203,7 +203,7 @@ export function Select<T extends string = string>({
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => commit(idx)}
               className={cn(
-                'flex h-8 w-full items-center gap-2.5 rounded-[10px] px-3 text-left text-[12.5px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-45',
+                'app-menu-item',
                 selectedOption
                   ? 'bg-skype text-white shadow-[0_10px_22px_-16px_rgba(0,120,200,0.82)]'
                   : active

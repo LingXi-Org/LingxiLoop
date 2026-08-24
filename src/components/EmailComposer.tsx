@@ -19,16 +19,16 @@
  * keeps drawer open + surfaces error inline so the user can edit + retry.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useApp } from '@/stores/app'
-import { useParticipants } from '@/stores/participants'
-import { useConversations } from '@/stores/conversations'
-import { useMessages } from '@/stores/messages'
-import { useAuth } from '@/stores/auth'
-import { Avatar } from './Avatar'
-import { IMail } from './icons'
 import { api } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { useApp } from '@/stores/app'
+import { useAuth } from '@/stores/auth'
+import { useConversations } from '@/stores/conversations'
+import { useMessages } from '@/stores/messages'
+import { useParticipants } from '@/stores/participants'
 import type { Message, Participant } from '@/types'
+import { Avatar } from './Avatar'
+import { IMail } from './icons'
 
 /** Pending or completed file attachment in the composer. We track the
  *  upload lifecycle locally so the user gets immediate feedback (filename
@@ -158,7 +158,7 @@ function PillField({
       </div>
       {openSuggest && suggestions.length > 0 && (
         <div
-          className="absolute left-[72px] right-3 top-full z-10 mt-1 max-h-[220px] overflow-y-auto rounded-xl border border-hairline bg-card py-1 shadow-2xl"
+          className="app-menu-surface absolute left-[72px] right-3 top-full z-10 mt-1 max-h-[220px] overflow-y-auto p-1"
         >
           {suggestions.map((p) => (
             <button

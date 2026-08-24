@@ -86,7 +86,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build and start isolated MVP test stack
-        run: docker compose -f docker-compose.mvp.ci.yml up -d --build --wait
+        shell: bash
+        run: |
+          set -o pipefail
+          compose=(docker compose -f docker-compose.mvp.ci.yml)
+          if ! "${compose[@]}" up -d --build --wait; then
+            echo "First Compose startup failed; collecting state before one clean retry."
+            "${compose[@]}" ps --all || true
+            "${compose[@]}" logs --no-color --tail 200 || true
+            "${compose[@]}" down -v --remove-orphans || true
+            "${compose[@]}" up -d --build --wait
+          fi
       - name: Verify WuKong webhook, durable work, IPython and final reply
         run: npm run mvp:ci:smoke
       - name: Collect service logs after failure

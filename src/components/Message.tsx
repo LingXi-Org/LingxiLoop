@@ -14,14 +14,15 @@ import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useBoards } from '@/stores/boards'
 import { useCalendar } from '@/stores/calendar'
-import { useDocuments } from '@/stores/documents'
 import { useCanvas } from '@/stores/canvas'
+import { useDocuments } from '@/stores/documents'
 import { discardFailedMessage, retryFailedMessage, toggleReaction, useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import type { Message, Participant } from '@/types'
 import { Avatar } from './Avatar'
 import { BoardLink } from './BoardLink'
 import { CalendarLink } from './CalendarLink'
+import { CanvasPreview } from './CanvasPreview'
 import { CardLink } from './CardLink'
 import { DocumentLink } from './DocumentLink'
 import { HumanBadge } from './HumanBadge'
@@ -1648,11 +1649,10 @@ function QuoteCard({ msg }: { msg: Message }) {
     return (
       <button
         onClick={jump}
-        className="openmaus-quote-card mb-1.5 flex h-8 max-w-full items-center gap-2 rounded-lg px-2.5 text-left transition-colors"
+        className="mb-1.5 block max-w-full truncate text-left"
         style={{ width: 'min(580px, 62vw)' }}
       >
-        <span className="h-4 w-0.5 shrink-0 rounded bg-ink-200" />
-        <span className="min-w-0 truncate text-[11.5px] italic text-ink-400">[消息已删除]</span>
+        <span className="text-[11.5px] italic text-ink-400">[消息已删除]</span>
       </button>
     )
   }
@@ -1663,11 +1663,10 @@ function QuoteCard({ msg }: { msg: Message }) {
   return (
     <button
       onClick={jump}
-      className="openmaus-quote-card mb-1.5 flex h-8 max-w-full items-center gap-2 rounded-lg px-2.5 text-left transition-colors"
+      className="mb-1.5 flex max-w-full items-baseline gap-1.5 text-left"
       style={{ width: 'min(580px, 62vw)' }}
       title="跳转至原文"
     >
-      <span className="h-4 w-0.5 shrink-0 rounded bg-skype" />
       <span className="shrink-0 truncate text-[11.5px] font-semibold text-skype-deep">{authorName}</span>
       <span className="shrink-0 text-[10px] text-ink-300" aria-hidden>·</span>
       <span className="min-w-0 flex-1 truncate text-[11.5px] text-ink-500">{bodyPreview}</span>
@@ -1771,22 +1770,33 @@ function CanvasWorkspaceCard({ msg }: { msg: Message }) {
   const openCanvasPeek = useApp((state) => state.openCanvasPeek)
   const setView = useApp((state) => state.setView)
   const load = useCanvas((state) => state.load)
-  const live = useCanvas((state) => state.snapshot?.id === msg.canvas?.canvasId ? state.snapshot : null)
+  const loadPreview = useCanvas((state) => state.loadPreview)
+  const canvasId = msg.canvas?.canvasId
+  const live = useCanvas((state) => state.snapshot?.id === canvasId
+    ? state.snapshot
+    : (canvasId ? state.previews[canvasId] ?? null : null))
   const liveCard = useCanvas((state) => msg.canvas ? state.liveCards[msg.canvas.canvasId] : undefined)
   const canvas = msg.canvas
+  useEffect(() => {
+    if (canvasId) void loadPreview(canvasId)
+  }, [canvasId, loadPreview])
   if (!canvas) return null
   const members = live?.assignments ?? (liveCard?.assignments.length ? liveCard.assignments : canvas.members)
-  const frameCount = live?.frames.length ?? liveCard?.frameIds.length ?? canvas.frameCount
+  const frameCount = live?.frames.filter((frame) => frame.type !== 'artifact').length ?? liveCard?.frameIds.length ?? canvas.frameCount
   const status = live?.status ?? liveCard?.status ?? canvas.status
+  const statusLabel = ({ active: '进行中', completed: '已完成', archived: '已归档', failed: '失败' } as Record<string, string>)[status] ?? status
   const open = () => {
     void load(canvas.canvasId)
     if (window.innerWidth < 768) setView('canvas')
     else openCanvasPeek(canvas.canvasId)
   }
-  return <button type="button" onClick={open} className="mt-1 block w-full max-w-[620px] rounded-2xl border border-accent/25 bg-panel p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:bg-raised-hover hover:shadow-md">
-    <div className="flex items-center justify-between gap-3"><span className="text-sm font-semibold text-ink-900">{canvas.title}</span><span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold uppercase text-accent">{status}</span></div>
-    <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-ink-500">{canvas.goal}</p>
-    <div className="mt-3 flex items-center gap-1.5">{members.slice(0, 8).map((member) => <span key={member.agentId} title={`${member.agentId}: ${member.assignment}`} className="size-3 rounded-full ring-2 ring-panel" style={{ backgroundColor: member.color }} />)}<span className="ml-2 text-[10px] text-ink-400">{members.length} Agents · {frameCount} Frames</span></div>
+  return <button type="button" onClick={open} className="canvas-message-card mt-1 block w-full max-w-[620px] overflow-hidden rounded-2xl border text-left transition hover:-translate-y-0.5">
+    <CanvasPreview snapshot={live} title={canvas.title} frameCount={frameCount} />
+    <div className="p-3.5">
+      <div className="flex items-center justify-between gap-3"><span className="text-sm font-semibold text-ink-900">{canvas.title}</span><span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-accent">{statusLabel}</span></div>
+      <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-500">{canvas.goal}</p>
+      <div className="mt-2.5 flex items-center gap-1.5">{members.slice(0, 8).map((member) => <span key={member.agentId} title={`${member.agentId}: ${member.assignment}`} className="size-3 rounded-full ring-2 ring-panel" style={{ backgroundColor: member.color }} />)}<span className="ml-2 text-[10px] text-ink-400">{members.length} 位智能体 · {frameCount} 张卡片</span></div>
+    </div>
   </button>
 }
 

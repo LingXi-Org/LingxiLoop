@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
+import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
-import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
-import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { IAt, IBack, IClip, IMore, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
+import { SelectMenu } from '@/components/SelectMenu'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { TwEmoji } from '@/components/TwEmoji'
+import { ComposerSurface } from '@/im/Composer'
+import { ConversationHeader } from '@/im/ConversationHeader'
+import { ConversationView } from '@/im/ConversationView'
+import { MessageList } from '@/im/MessageList'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
+import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { tapHaptic } from '@/lib/native'
@@ -457,41 +462,14 @@ export function MobileChat() {
     }
   }
   const canSend = (draft.trim().length > 0 || attachment !== null) && !uploading
-  const memberPs = c.members
-    .map((m) => byId[m])
-    .filter((p): p is Participant => Boolean(p))
-  const agents = memberPs.filter((p) => p.kind === 'agent')
-
   return (
-    <section className="chat-surface flex flex-col h-full overflow-x-hidden">
-      {/* Header */}
-      <header
-        className="bg-cloud/95 backdrop-blur-md sticky top-0 z-10 border-b border-ink-100"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
-      >
-        <div className="px-2 py-2.5 flex items-center gap-2">
-          <Pressable
-            onClick={() => select(null)}
-            className="w-10 h-10 grid place-items-center text-ink-700 active:bg-sky2-50 rounded-full"
-          >
-            <IBack className="w-[22px] h-[22px]" strokeWidth={2} />
-          </Pressable>
-          <Pressable
-            onClick={() => pushStack('info')}
-            scale={0.985}
-            className="flex-1 flex items-center gap-2.5 py-1 active:opacity-70"
-          >
-            <AvatarStack ps={agents} size={26} max={3} />
-            <div className="text-left flex-1 min-w-0">
-              <div className="font-display font-medium text-[16px] text-ink-900 leading-tight truncate" style={{ letterSpacing: '-0.01em' }}>
-                {c.title}
-              </div>
-              <div className="text-[11px] font-semibold flex items-center gap-1 leading-none mt-0.5 text-working">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse-soft bg-working" />
-                {agents.length} agents
-              </div>
-            </div>
-          </Pressable>
+    <ConversationView variant="mobile" className="flex flex-col overflow-x-hidden">
+      <ConversationHeader
+        conversationId={convoId}
+        variant="mobile"
+        onBack={() => select(null)}
+        onOpenDetails={() => pushStack('info')}
+        actions={(
           <div className="relative">
             <Pressable
               onClick={() => setMenuOpen((v) => !v)}
@@ -507,29 +485,23 @@ export function MobileChat() {
                   className="fixed inset-0 z-20"
                   onClick={() => setMenuOpen(false)}
                 />
-                <div
-                  className="absolute right-2 top-11 z-30 min-w-[180px] py-1 rounded-[12px] bg-paper animate-rise"
-                  style={{
-                    border: '1px solid var(--ink-100)',
-                    boxShadow: '0 12px 28px -8px rgba(10, 30, 60, 0.20), 0 4px 10px -4px rgba(10, 30, 60, 0.12)',
-                  }}
-                >
+                <div className="app-menu-surface absolute right-2 top-11 z-30 min-w-[180px] p-1 animate-rise">
                   <button
                     onClick={() => { pushStack('info'); setMenuOpen(false) }}
-                    className="w-full text-left py-2.5 px-3.5 text-[13px] text-ink-700 active:bg-sky2-50"
+                    className="app-menu-item"
                   >
                     查看详情
                   </button>
                   <button
                     onClick={toggleMute}
-                    className="w-full text-left py-2.5 px-3.5 text-[13px] text-ink-700 active:bg-sky2-50"
+                    className="app-menu-item"
                   >
                     {muted ? '取消静音' : '消息免打扰'}
                   </button>
                   <ThemeToggle
                     showLabel
                     onToggle={() => setMenuOpen(false)}
-                    className="w-full justify-start rounded-none py-2.5 px-3.5 text-[13px]"
+                    className="app-menu-item justify-start"
                   />
                   <div className="h-px bg-ink-100 mx-1.5 my-1" />
                   <button
@@ -542,8 +514,8 @@ export function MobileChat() {
               </>
             )}
           </div>
-        </div>
-      </header>
+        )}
+      />
 
       {/* Stream — virtualized via react-virtuoso. Long conversations no
           longer mount every bubble at once; rows outside the viewport
@@ -553,16 +525,13 @@ export function MobileChat() {
         ref={streamRef}
         className="chat-surface flex-1 relative"
       >
-        <Virtuoso
-          ref={virtuosoRef}
-          className="h-full"
-          data={list}
+        <MessageList
+          virtuosoRef={virtuosoRef}
+          messages={list}
           firstItemIndex={firstItemIndex}
           // Pin to the bottom on first mount + every append. 'smooth' would
           // animate every WS streaming chunk and feel laggy; 'auto' jumps
           // for new messages while leaving the user free to scroll up.
-          followOutput="auto"
-          initialTopMostItemIndex={Math.max(0, list.length - 1)}
           startReached={onStartReached}
           // Padding lives inside Header / Footer so virtuoso can measure the
           // first/last items without a wrapping flex container fighting it.
@@ -592,7 +561,6 @@ export function MobileChat() {
               />
             )
           }}
-          computeItemKey={(_index, m) => m.clientId ?? m.id}
           // First-pass height estimate for rows Virtuoso hasn't measured yet.
           // A real mobile row (avatar + author line + a few lines of body, and
           // often a card) lands well above the old 88px guess, so every
@@ -615,9 +583,7 @@ export function MobileChat() {
         <ScrollToLatestButton visible={!atBottom} onClick={smoothScrollToLatest} bottomOffset={20} />
       </div>
       {/* Composer */}
-      <div
-        className="chat-composer-shell border-t px-3 pt-1.5 kb-aware"
-      >
+      <ComposerSurface variant="mobile">
         <div className="px-1 pb-1">
         </div>
         {pollComposerOpen && convoId && (
@@ -685,13 +651,7 @@ export function MobileChat() {
             when a row is tapped (which would close the picker first). */}
         {mention && filteredMentions.length > 0 && (
           <div
-            className="mb-2 rounded-[12px] bg-paper animate-rise overflow-hidden"
-            style={{
-              border: '1px solid var(--ink-100)',
-              boxShadow: '0 12px 28px -8px rgba(10, 30, 60, 0.20), 0 4px 10px -4px rgba(10, 30, 60, 0.12)',
-              maxHeight: 240,
-              overflowY: 'auto',
-            }}
+            className="app-menu-surface mb-2 max-h-60 overflow-y-auto p-1 animate-rise"
             onMouseDown={(e) => e.preventDefault()}
           >
             <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-300">
@@ -706,8 +666,8 @@ export function MobileChat() {
                     type="button"
                     onClick={() => insertMention(entry)}
                     className={cn(
-                      'w-full text-left flex items-center gap-2.5 py-2 px-3 transition',
-                      active ? 'bg-sky2-50' : 'active:bg-sky2-50',
+                      'app-menu-item',
+                      active && 'is-active',
                     )}
                   >
                     <Avatar
@@ -731,8 +691,8 @@ export function MobileChat() {
                   type="button"
                   onClick={() => insertMention(entry)}
                   className={cn(
-                    'w-full text-left flex items-center gap-2.5 py-2 px-3 transition',
-                    active ? 'bg-sky2-50' : 'active:bg-sky2-50',
+                    'app-menu-item',
+                    active && 'is-active',
                   )}
                 >
                   <Avatar p={p} size={28} ringColor="var(--paper)" showStatus={false} animated={false} />
@@ -919,7 +879,7 @@ export function MobileChat() {
             </div>
           </div>
         )}
-      </div>
+      </ComposerSurface>
       <MobileMessageTapback
         open={tapback !== null}
         anchor={tapback?.coords ?? null}
@@ -930,7 +890,7 @@ export function MobileChat() {
         actions={tapback ? buildMessageTapbackActions(tapback.msg, convoId, setReplyingTo, meId) : []}
         onClose={() => setTapback(null)}
       />
-    </section>
+    </ConversationView>
   )
 }
 
@@ -1289,15 +1249,16 @@ export function MobileChatInfo() {
           {isGroup && (
             <div className="mb-4">
               <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-2">Leader</h4>
-              <select
+              <SelectMenu
                 value={c.leaderId ?? ''}
-                onChange={(event) => void changeLeader(event.target.value)}
-                className="w-full rounded-[10px] bg-cloud border border-ink-100 px-3 py-2.5 text-[13px] font-semibold text-ink-900 outline-none"
-                aria-label="Change group leader"
-              >
-                {!c.leaderId && <option value="" disabled>Choose an active agent</option>}
-                {activeGroupAgents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
-              </select>
+                onChange={(value) => void changeLeader(value)}
+                options={[
+                  ...(!c.leaderId ? [{ value: '', label: 'Choose an active agent', disabled: true }] : []),
+                  ...activeGroupAgents.map((agent) => ({ value: agent.id, label: agent.name })),
+                ]}
+                className="w-full"
+                ariaLabel="Change group leader"
+              />
               <p className="mt-1.5 text-[11px] text-ink-400">Ordinary messages wake this agent; the Leader can delegate with @member-id.</p>
             </div>
           )}

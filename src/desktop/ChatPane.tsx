@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
+import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, type ApiCoworkerActivity, api, ws } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
@@ -8,10 +8,16 @@ import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
+import { SelectMenu } from '@/components/SelectMenu'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { TwEmoji } from '@/components/TwEmoji'
+import { ComposerSurface } from '@/im/Composer'
+import { ConversationHeader } from '@/im/ConversationHeader'
+import { ConversationView } from '@/im/ConversationView'
+import { MessageList } from '@/im/MessageList'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
+import { isMockImDevelopment } from '@/lib/devMode'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
@@ -87,7 +93,7 @@ function _ComingSoonPop({ onClose }: { onClose: () => void }) {
   )
 }
 
-function ChatHeader({
+function _ChatHeader({
   convoId, onToggleSearch, searchOpen,
 }: {
   convoId: string
@@ -228,18 +234,21 @@ function ChatHeader({
           {c.kind === 'group' && activeAgentMembers.length > 0 && (
             <>
               <span className="w-1 h-1 rounded-full bg-ink-300 shrink-0" />
-              <label className="flex shrink-0 items-center gap-1" title="普通消息由 Leader 主导回复">
+              <div className="flex shrink-0 items-center gap-1" title="普通消息由 Leader 主导回复">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-ink-300">Leader</span>
-                <select
+                <SelectMenu
                   value={c.leaderId ?? ''}
-                  onChange={(event) => void changeLeader(event.target.value)}
-                  className="max-w-[120px] bg-transparent text-[11.5px] font-semibold text-skype-deep outline-none"
-                  aria-label="更换群聊 Leader"
-                >
-                  {!c.leaderId && <option value="" disabled>请选择</option>}
-                  {activeAgentMembers.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
-                </select>
-              </label>
+                  onChange={(value) => void changeLeader(value)}
+                  options={[
+                    ...(!c.leaderId ? [{ value: '', label: '请选择', disabled: true }] : []),
+                    ...activeAgentMembers.map((agent) => ({ value: agent.id, label: agent.name })),
+                  ]}
+                  className="max-w-[120px]"
+                  buttonClassName="border-0 bg-transparent px-1 text-[11.5px] font-semibold text-skype-deep shadow-none"
+                  size="compact"
+                  ariaLabel="更换群聊 Leader"
+                />
+              </div>
             </>
           )}
           {!c.topic && !editingTopic && (
@@ -344,10 +353,8 @@ function EmojiPopover({ onPick, onClose }: { onPick: (e: string) => void; onClos
   return (
     <div
       ref={ref}
-      className="absolute bottom-full mb-2 left-0 z-30 py-2 px-2 rounded-[10px] bg-cloud animate-rise"
+      className="app-menu-surface absolute bottom-full left-0 z-30 mb-2 px-2 py-2 animate-rise"
       style={{
-        border: '1px solid var(--ink-100)',
-        boxShadow: '0 12px 28px -8px rgba(10, 30, 60, 0.20), 0 4px 10px -4px rgba(10, 30, 60, 0.12)',
         // Wider + taller in the Skype tab: 107 emoticons in 7 cols means
         // the user sees ~10 rows at once (still has to scroll for the
         // tail, but the panel doesn't read as "a handful").
@@ -439,6 +446,7 @@ function useTypingEmitter(convoId: string, text: string) {
   }, [])
 
   const sendTyping = useCallback((targetConvoId: string, done: boolean) => {
+    if (isMockImDevelopment()) return
     void api.emitTyping(targetConvoId, done).catch((e) => {
       console.warn('[typing] emit failed', e)
     })
@@ -938,7 +946,7 @@ export function Composer({
   const canSend = (draft.trim().length > 0 || attachment !== null) && !uploading
 
   return (
-    <div className={isThread ? '' : 'px-5 pb-5 pt-2'}
+    <ComposerSurface className={isThread ? 'border-0 bg-transparent !p-0' : undefined}
       // Composer wrapper is FULLY transparent — the parent <main>'s radial
       // washes (sky from top-left, coral from bottom-right) bleed through
       // uninterrupted, so there's no longer a hard boundary where the
@@ -1050,10 +1058,7 @@ export function Composer({
           />
           {slashOpen && filteredSlashCommands.length > 0 && (
             <div
-              className="absolute bottom-full mb-2 left-0 z-20 min-w-[280px] py-1 rounded-[10px] bg-cloud animate-rise"
-              style={{
-                boxShadow: '0 12px 28px -8px rgba(10, 30, 60, 0.20), 0 4px 10px -4px rgba(10, 30, 60, 0.12), 0 0 0 1px rgba(0, 80, 140, 0.08)',
-              }}
+              className="app-menu-surface absolute bottom-full left-0 z-20 mb-2 min-w-[280px] p-1 animate-rise"
               onMouseDown={(e) => e.preventDefault()}
             >
               <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-300">
@@ -1068,8 +1073,8 @@ export function Composer({
                     onMouseEnter={() => setSlashIndex(i)}
                     onClick={() => runSlashCommand(cmd)}
                     className={cn(
-                      'w-full text-left flex items-center gap-2.5 py-1.5 px-3 transition',
-                      active ? 'bg-sky2-50' : 'hover:bg-sky2-50',
+                      'app-menu-item',
+                      active && 'is-active',
                     )}
                   >
                     <span
@@ -1090,10 +1095,7 @@ export function Composer({
           )}
           {mention && filteredMentions.length > 0 && (
             <div
-              className="absolute bottom-full mb-2 left-0 z-20 min-w-[240px] py-1 rounded-[10px] bg-cloud animate-rise"
-              style={{
-                boxShadow: '0 12px 28px -8px rgba(10, 30, 60, 0.20), 0 4px 10px -4px rgba(10, 30, 60, 0.12), 0 0 0 1px rgba(0, 80, 140, 0.08)',
-              }}
+              className="app-menu-surface absolute bottom-full left-0 z-20 mb-2 min-w-[240px] p-1 animate-rise"
               onMouseDown={(e) => e.preventDefault()}
             >
               <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-300">
@@ -1109,8 +1111,8 @@ export function Composer({
                       onMouseEnter={() => setMentionIndex(i)}
                       onClick={() => insertMention(entry)}
                       className={cn(
-                        'w-full text-left flex items-center gap-2.5 py-1.5 px-3 transition',
-                        active ? 'bg-sky2-50' : 'hover:bg-sky2-50',
+                        'app-menu-item',
+                        active && 'is-active',
                       )}
                     >
                       <Avatar
@@ -1135,8 +1137,8 @@ export function Composer({
                     onMouseEnter={() => setMentionIndex(i)}
                     onClick={() => insertMention(entry)}
                     className={cn(
-                      'w-full text-left flex items-center gap-2.5 py-1.5 px-3 transition',
-                      active ? 'bg-sky2-50' : 'hover:bg-sky2-50',
+                      'app-menu-item',
+                      active && 'is-active',
                     )}
                   >
                     <Avatar p={p} size={26} ringColor="var(--cloud)" showStatus={false} animated={false} />
@@ -1201,7 +1203,7 @@ export function Composer({
           </button>
         </div>
       </div>
-    </div>
+    </ComposerSurface>
   )
 }
 
@@ -1392,7 +1394,7 @@ function _EmptyConversationState() {
 
 
   return (
-    <main
+    <ConversationView
       className="relative overflow-hidden"
       style={{
         // Sky pocket centered on the cloud — the previous linear
@@ -1610,7 +1612,7 @@ function _EmptyConversationState() {
           </div>
         </div>
       </div>
-    </main>
+    </ConversationView>
   )
 }
 
@@ -1632,6 +1634,10 @@ function OpenMausEmptyConversationState() {
 function ConversationActivity({ conversationId }: { conversationId: string }) {
   const [events, setEvents] = useState<ApiCoworkerActivity[]>([])
   useEffect(() => {
+    if (isMockImDevelopment()) {
+      setEvents([])
+      return
+    }
     let cancelled = false
     setEvents([])
     const merge = (rows: ApiCoworkerActivity[]) => {
@@ -1911,21 +1917,34 @@ export function ChatPane() {
 
   return (
     <main
-      className={cn(
-        'chat-surface grid h-full min-h-0 min-w-0 overflow-hidden',
-        searchOpen
-          ? 'grid-rows-[auto_auto_auto_minmax(0,1fr)_auto]'
-          : 'grid-rows-[auto_auto_minmax(0,1fr)_auto]',
-      )}
+      className="chat-surface grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden"
     >
-      <ChatHeader
-        convoId={convoId}
-        onToggleSearch={() => setSearchOpen((v) => !v)}
-        searchOpen={searchOpen}
+      <ConversationHeader
+        conversationId={convoId}
+        onOpenDetails={() => {
+          const participantId = c.members.find((id) => byId[id]?.kind === 'agent')
+          if (participantId) useApp.getState().openAgentInfo(participantId)
+        }}
+        actions={(
+          <button
+            type="button"
+            onClick={() => setSearchOpen((value) => !value)}
+            title="搜索当前会话"
+            aria-label="搜索当前会话"
+            className={cn('grid size-9 place-items-center rounded-full transition', searchOpen ? 'bg-raised text-accent' : 'text-ink-secondary hover:bg-raised hover:text-ink')}
+          >
+            <ISearch className="size-[18px]" />
+          </button>
+        )}
       />
-      <ConversationActivity conversationId={convoId} />
-      {searchOpen && (
-        <div className="flex items-center gap-2 border-b border-hairline bg-panel px-5 py-2">
+      {/* Keep optional chrome in one stable grid cell. ConversationActivity
+          returns null when there are no events; rendering it as a top-level
+          grid child used to shift the message list into an auto row and the
+          composer into the flexible row, collapsing the chat. */}
+      <div data-chat-auxiliary="true">
+        <ConversationActivity conversationId={convoId} />
+        {searchOpen && (
+          <div className="flex items-center gap-2 border-b border-hairline bg-panel px-5 py-2">
           <div className="flex flex-1 items-center gap-2 rounded-lg bg-raised/70 px-3 py-1.5 text-[13px] text-ink-secondary focus-within:ring-1 focus-within:ring-accent">
             <ISearch className="w-3.5 h-3.5" strokeWidth={2} />
             <input
@@ -1982,8 +2001,9 @@ export function ChatPane() {
               <line x1="18" y1="6" x2="6" y2="18" />
             </svg>
           </button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
       <div ref={streamRef} className="min-h-0 relative">
         {/* Empty-state branches: an error from the initial fetch wins over the
             loader (a stale spinner under an error message would be confusing).
@@ -2000,13 +2020,10 @@ export function ChatPane() {
             <ThreadLoader />
           </div>
         ) : (
-          <Virtuoso
-            ref={virtuosoRef}
-            className="h-full"
-            data={list}
+          <MessageList
+            virtuosoRef={virtuosoRef}
+            messages={list}
             firstItemIndex={firstItemIndex}
-            followOutput="auto"
-            initialTopMostItemIndex={Math.max(0, list.length - 1)}
             startReached={onStartReached}
             atBottomStateChange={setAtBottom}
             // Initial-height hint so Virtuoso's first-pass sizing is
@@ -2035,7 +2052,6 @@ export function ChatPane() {
               ),
               Footer: () => <div className="h-3" />,
             }}
-            computeItemKey={(_index, m) => m.clientId ?? m.id}
             itemContent={(i, m) => {
               const author = byId[m.authorId]
               // System / whisper rows render without a resolved author (e.g. the

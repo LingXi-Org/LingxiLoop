@@ -1,6 +1,7 @@
 import WKSDK, { MessageContent, type WKEvent, type Message as WKMessage } from 'wukongimjssdk'
 import { getServerOrigin } from '@/api/client'
 import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
+import { isEmptyHistoryDetail } from './historyErrors'
 
 export const LINGXI_MESSAGE_CONTENT_TYPE = 1000
 
@@ -137,7 +138,15 @@ export class LingxiImClient {
 
   async history(channelId: string, limit = 80): Promise<ImEnvelope[]> {
     const response = await fetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?limit=${limit}`, { headers: authHeaders() })
-    if (!response.ok) throw new Error(`IM history failed: ${response.status}`)
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '')
+      // Older API deployments can forward WuKongIM's empty-channel result as
+      // a 500. It is not a failed transcript: the channel simply has no sync
+      // state yet. Keep genuine server failures visible by requiring an
+      // explicit empty/not-found marker in the response body.
+      if (response.status === 500 && isEmptyHistoryDetail(detail)) return []
+      throw new Error(`IM history failed: ${response.status}`)
+    }
     return await response.json() as ImEnvelope[]
   }
 

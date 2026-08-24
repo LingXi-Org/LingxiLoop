@@ -1,32 +1,39 @@
-import { useEffect, useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkBreaks from 'remark-breaks'
-import remarkGfm from 'remark-gfm'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ws } from '@/api/client'
 import { AvatarMini } from '@/components/Avatar'
-import { IPlus, ITrash } from '@/components/icons'
+import { CanvasFrameContent } from '@/components/CanvasFrameContent'
+import { IAt, IBack, IPlus, ISend, ITrash } from '@/components/icons'
+import { canvasStatusLabel, isCanvasAssignmentActive } from '@/lib/canvasCollaboration'
+import { isMockImDevelopment } from '@/lib/devMode'
 import { useCanvas } from '@/stores/canvas'
 import { useParticipants } from '@/stores/participants'
-import type { CanvasFrame, CanvasFrameType } from '@/types'
+import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType, CanvasSnapshot } from '@/types'
 
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 2.5
-const FRAME_TYPES: Array<{ type: CanvasFrameType; label: string }> = [
-  { type: 'markdown', label: 'Markdown' },
-  { type: 'html', label: 'HTML' },
-  { type: 'document', label: 'Document' },
-  { type: 'image', label: 'Image' },
-  { type: 'artifact', label: 'Artifact' },
+const FRAME_TYPES: Array<{ type: CanvasFrameType; label: string; detail: string }> = [
+  { type: 'markdown', label: '文本卡片', detail: '标题与列表' },
+  { type: 'html', label: '网页卡片', detail: '可视网页内容' },
+  { type: 'document', label: '文档卡片', detail: '引用文档' },
+  { type: 'image', label: '图片卡片', detail: '图片链接' },
 ]
 
-type Viewport = { x: number; y: number; zoom: number }
+const TYPE_LABELS: Record<CanvasFrameType, string> = {
+  markdown: '文本', html: '网页', document: '文档', image: '图片', artifact: '成果',
+}
+const EDITABLE_FRAME_TYPES = new Set<CanvasFrameType>(['markdown', 'document'])
 
-export function CanvasView({ canvasId }: { canvasId?: string; embedded?: boolean } = {}) {
+type Viewport = { x: number; y: number; zoom: number }
+type CanvasMenu = { x: number; y: number; worldX: number; worldY: number; addOpen: boolean }
+type FrameMenu = { x: number; y: number; frameId: string }
+type GesturePoint = { x: number; y: number; pointerType: string }
+type PinchGesture = { distance: number; zoom: number; worldX: number; worldY: number }
+
+export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: () => void } = {}) {
   const snapshot = useCanvas((state) => state.snapshot)
   const error = useCanvas((state) => state.error)
   const selectedId = useCanvas((state) => state.selectedFrameId)
   const activeCanvasId = useCanvas((state) => state.activeCanvasId)
-  const workspaces = useCanvas((state) => state.workspaces)
   const load = useCanvas((state) => state.load)
   const loadWorkspaces = useCanvas((state) => state.loadWorkspaces)
   const selectFrame = useCanvas((state) => state.selectFrame)
@@ -34,13 +41,21 @@ export function CanvasView({ canvasId }: { canvasId?: string; embedded?: boolean
   const setStatus = useCanvas((state) => state.setStatus)
   const stageRef = useRef<HTMLDivElement>(null)
   const [viewport, setViewport] = useState<Viewport>({ x: 80, y: 80, zoom: 1 })
-  const [addOpen, setAddOpen] = useState(false)
   const [panning, setPanning] = useState(false)
+  const [menu, setMenu] = useState<CanvasMenu | null>(null)
+  const [frameMenu, setFrameMenu] = useState<FrameMenu | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [feedbackFrameId, setFeedbackFrameId] = useState<string | null>(null)
   const cursorSentAt = useRef(0)
   const fittedCanvasId = useRef<string | null>(null)
+  const gesturePoints = useRef(new Map<number, GesturePoint>())
+  const pinchGesture = useRef<PinchGesture | null>(null)
+  const gestureTravel = useRef(0)
+  const gestureMoved = useRef(false)
+  const visibleFrames = useMemo(() => snapshot?.frames.filter((frame) => frame.type !== 'artifact') ?? [], [snapshot?.frames])
 
   useEffect(() => {
-    void ws.connect()
+    if (!isMockImDevelopment()) void ws.connect()
     void (async () => {
       await loadWorkspaces()
       const target = canvasId ?? useCanvas.getState().activeCanvasId ?? useCanvas.getState().workspaces[0]?.id
@@ -50,7 +65,7 @@ export function CanvasView({ canvasId }: { canvasId?: string; embedded?: boolean
 
   useEffect(() => {
     if (!activeCanvasId) return
-    const announce = () => void setStatus('viewing', useCanvas.getState().selectedFrameId).catch(() => undefined)
+    const announce = () => void setStatus('查看画布', useCanvas.getState().selectedFrameId).catch(() => undefined)
     announce()
     const timer = window.setInterval(announce, 30_000)
     return () => {
@@ -60,40 +75,45 @@ export function CanvasView({ canvasId }: { canvasId?: string; embedded?: boolean
   }, [activeCanvasId, setStatus])
 
   useEffect(() => {
-    if (selectedId && activeCanvasId) void setStatus('viewing', selectedId).catch(() => undefined)
+    if (selectedId && activeCanvasId) void setStatus('查看卡片', selectedId).catch(() => undefined)
   }, [activeCanvasId, selectedId, setStatus])
 
   useEffect(() => {
     if (!snapshot || fittedCanvasId.current === snapshot.id) return
     fittedCanvasId.current = snapshot.id
-    const frame = window.requestAnimationFrame(() => fit())
+    const frame = window.requestAnimationFrame(() => fitInitial())
     return () => window.cancelAnimationFrame(frame)
+  }, [snapshot?.id])
+
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage || !snapshot || typeof ResizeObserver === 'undefined') return
+    let frame = 0
+    const observer = new ResizeObserver(() => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => fitInitial())
+    })
+    observer.observe(stage)
+    return () => {
+      observer.disconnect()
+      window.cancelAnimationFrame(frame)
+    }
   }, [snapshot?.id])
 
   function worldPoint(clientX: number, clientY: number): { x: number; y: number } {
     const rect = stageRef.current?.getBoundingClientRect()
     if (!rect) return { x: 80, y: 80 }
-    return {
-      x: (clientX - rect.left - viewport.x) / viewport.zoom,
-      y: (clientY - rect.top - viewport.y) / viewport.zoom,
-    }
+    return { x: (clientX - rect.left - viewport.x) / viewport.zoom, y: (clientY - rect.top - viewport.y) / viewport.zoom }
   }
 
-  function createAtCenter(type: CanvasFrameType) {
-    const rect = stageRef.current?.getBoundingClientRect()
-    const at = rect
-      ? worldPoint(rect.left + rect.width / 2 - 210, rect.top + rect.height / 2 - 150)
-      : { x: 80, y: 80 }
-    setAddOpen(false)
+  function createAt(type: CanvasFrameType, at: { x: number; y: number }) {
+    setMenu(null)
     void createFrame(type, at)
   }
 
   function fit() {
     const stage = stageRef.current
-    const surfaces = [
-      ...(snapshot?.frames ?? []).map((frame) => ({ x: frame.x, y: frame.y, width: frame.width, height: frame.height })),
-      ...(snapshot?.assignments ?? []).map((assignment) => assignment.workArea),
-    ]
+    const surfaces = visibleFrames
     if (!stage || surfaces.length === 0) {
       setViewport({ x: 80, y: 80, zoom: 1 })
       return
@@ -104,12 +124,21 @@ export function CanvasView({ canvasId }: { canvasId?: string; embedded?: boolean
     const maxY = Math.max(...surfaces.map((surface) => surface.y + surface.height))
     const width = Math.max(1, maxX - minX)
     const height = Math.max(1, maxY - minY)
-    const zoom = Math.min(1.25, Math.max(MIN_ZOOM, Math.min((stage.clientWidth - 140) / width, (stage.clientHeight - 140) / height)))
-    setViewport({
-      x: (stage.clientWidth - width * zoom) / 2 - minX * zoom,
-      y: (stage.clientHeight - height * zoom) / 2 - minY * zoom,
-      zoom,
-    })
+    const zoom = Math.min(1.25, Math.max(MIN_ZOOM, Math.min((stage.clientWidth - 120) / width, (stage.clientHeight - 120) / height)))
+    setViewport({ x: (stage.clientWidth - width * zoom) / 2 - minX * zoom, y: (stage.clientHeight - height * zoom) / 2 - minY * zoom, zoom })
+  }
+
+  function fitInitial() {
+    const stage = stageRef.current
+    if (stage && stage.clientWidth < 640) {
+      const activeFrameId = snapshot?.assignments.find((assignment) => visibleFrames.some((frame) => frame.id === assignment.activeFrameId))?.activeFrameId
+      const frameId = activeFrameId ?? visibleFrames[0]?.id
+      if (frameId) {
+        focusFrame(frameId)
+        return
+      }
+    }
+    fit()
   }
 
   function zoomBy(factor: number, clientX?: number, clientY?: number) {
@@ -121,270 +150,660 @@ export function CanvasView({ canvasId }: { canvasId?: string; embedded?: boolean
     setViewport((current) => {
       const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, current.zoom * factor))
       const scale = zoom / current.zoom
-      return {
-        x: pivotX - (pivotX - current.x) * scale,
-        y: pivotY - (pivotY - current.y) * scale,
-        zoom,
-      }
+      return { x: pivotX - (pivotX - current.x) * scale, y: pivotY - (pivotY - current.y) * scale, zoom }
     })
   }
 
+  function focusFrame(frameId: string) {
+    const frame = visibleFrames.find((item) => item.id === frameId)
+    const stage = stageRef.current
+    if (!frame || !stage) return
+    const zoom = Math.min(1.2, Math.max(MIN_ZOOM, Math.min((stage.clientWidth - 100) / frame.width, (stage.clientHeight - 100) / frame.height)))
+    setViewport({ x: (stage.clientWidth - frame.width * zoom) / 2 - frame.x * zoom, y: (stage.clientHeight - frame.height * zoom) / 2 - frame.y * zoom, zoom })
+    selectFrame(frameId)
+  }
+
   function onWheel(event: React.WheelEvent) {
-    if (!event.ctrlKey && !event.metaKey && (event.target as HTMLElement).closest('[data-canvas-frame]')) return
     event.preventDefault()
-    if (event.ctrlKey || event.metaKey) {
-      zoomBy(Math.exp(-Math.max(-40, Math.min(40, event.deltaY)) * 0.01), event.clientX, event.clientY)
-    } else {
-      setViewport((current) => ({ ...current, x: current.x - event.deltaX, y: current.y - event.deltaY }))
-    }
+    setMenu(null)
+    const delta = event.deltaY || event.deltaX
+    zoomBy(Math.exp(-Math.max(-120, Math.min(120, delta)) * 0.002), event.clientX, event.clientY)
   }
 
   function onStagePointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (event.target !== event.currentTarget && !(event.target as HTMLElement).dataset.canvasWorld) return
-    if (event.button !== 0 && event.button !== 1) return
-    selectFrame(null)
+    const target = event.target as HTMLElement
+    if (target.closest('[role="menu"], .canvas-mini-dialog, .canvas-inline-editor')) return
+    setMenu(null)
+    setFrameMenu(null)
+    const blankSurface = event.target === event.currentTarget || Boolean(target.dataset.canvasWorld)
+    const touchSurface = event.pointerType === 'touch' && !target.closest('button, input, textarea, [role="menu"], .canvas-context-menu')
+    if (!blankSurface && !touchSurface) return
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+    if (blankSurface && document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    const points = gesturePoints.current
+    if (points.size === 0) {
+      gestureTravel.current = 0
+      gestureMoved.current = false
+    }
+    points.set(event.pointerId, { x: event.clientX, y: event.clientY, pointerType: event.pointerType })
+    if (points.size === 1) selectFrame(null)
     setPanning(true)
-    let lastX = event.clientX
-    let lastY = event.clientY
-    const move = (next: PointerEvent) => {
-      const dx = next.clientX - lastX
-      const dy = next.clientY - lastY
-      lastX = next.clientX
-      lastY = next.clientY
-      setViewport((current) => ({ ...current, x: current.x + dx, y: current.y + dy }))
+    if (points.size >= 2) {
+      const [first, second] = [...points.values()]
+      const stage = stageRef.current
+      if (!first || !second || !stage) return
+      const rect = stage.getBoundingClientRect()
+      const centerX = (first.x + second.x) / 2 - rect.left
+      const centerY = (first.y + second.y) / 2 - rect.top
+      pinchGesture.current = {
+        distance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y)),
+        zoom: viewport.zoom,
+        worldX: (centerX - viewport.x) / viewport.zoom,
+        worldY: (centerY - viewport.y) / viewport.zoom,
+      }
     }
-    const up = () => {
+  }
+
+  function onStagePointerEnd(event: React.PointerEvent<HTMLDivElement>) {
+    gesturePoints.current.delete(event.pointerId)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    pinchGesture.current = null
+    if (gesturePoints.current.size === 0) {
       setPanning(false)
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', up)
+      window.setTimeout(() => { gestureMoved.current = false }, 0)
     }
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up)
+  }
+
+  function onStageContextMenu(event: React.MouseEvent<HTMLDivElement>) {
+    event.preventDefault()
+    const stage = stageRef.current
+    if (!stage) return
+    const rect = stage.getBoundingClientRect()
+    const frameElement = (event.target as HTMLElement).closest<HTMLElement>('[data-canvas-frame]')
+    if (frameElement?.dataset.canvasFrame) {
+      setMenu(null)
+      setFrameMenu({
+        frameId: frameElement.dataset.canvasFrame,
+        x: Math.max(8, Math.min(stage.clientWidth - 220, event.clientX - rect.left)),
+        y: Math.max(8, Math.min(stage.clientHeight - 280, event.clientY - rect.top)),
+      })
+      return
+    }
+    setFrameMenu(null)
+    const world = worldPoint(event.clientX, event.clientY)
+    setMenu({
+      x: Math.max(8, Math.min(stage.clientWidth - 190, event.clientX - rect.left)),
+      y: Math.max(8, Math.min(stage.clientHeight - 250, event.clientY - rect.top)),
+      worldX: world.x,
+      worldY: world.y,
+      addOpen: false,
+    })
   }
 
   function onStagePointerMove(event: React.PointerEvent<HTMLDivElement>) {
-    if (!activeCanvasId) return
-    if (Date.now() - cursorSentAt.current < 120) return
+    const points = gesturePoints.current
+    const previous = points.get(event.pointerId)
+    if (previous) {
+      event.preventDefault()
+      const next = { x: event.clientX, y: event.clientY, pointerType: event.pointerType }
+      gestureTravel.current += Math.abs(next.x - previous.x) + Math.abs(next.y - previous.y)
+      if (gestureTravel.current > 5) gestureMoved.current = true
+      points.set(event.pointerId, next)
+      if (points.size >= 2) {
+        const [first, second] = [...points.values()]
+        const pinch = pinchGesture.current
+        const stage = stageRef.current
+        if (first && second && pinch && stage) {
+          const rect = stage.getBoundingClientRect()
+          const distance = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y))
+          const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, pinch.zoom * (distance / pinch.distance)))
+          const centerX = (first.x + second.x) / 2 - rect.left
+          const centerY = (first.y + second.y) / 2 - rect.top
+          setViewport({ x: centerX - pinch.worldX * zoom, y: centerY - pinch.worldY * zoom, zoom })
+        }
+      } else {
+        setViewport((current) => ({ ...current, x: current.x + next.x - previous.x, y: current.y + next.y - previous.y }))
+      }
+    }
+    if (!activeCanvasId || Date.now() - cursorSentAt.current < 120) return
     cursorSentAt.current = Date.now()
-    void setStatus('viewing', selectedId, worldPoint(event.clientX, event.clientY)).catch(() => undefined)
+    void setStatus('查看画布', selectedId, worldPoint(event.clientX, event.clientY)).catch(() => undefined)
   }
 
-  return (
-    <div className="relative flex h-full min-h-0 overflow-hidden bg-[#f4f5f7]">
-      <section className="relative min-w-0 flex-1 overflow-hidden">
-        <CanvasHeader />
-        <div
-          ref={stageRef}
-          className={`absolute inset-x-0 bottom-0 overflow-hidden ${snapshot || workspaces.length > 0 ? 'top-14' : 'top-0'} ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
-          onPointerDown={onStagePointerDown}
-          onPointerMove={onStagePointerMove}
-          onWheel={onWheel}
-          style={{
-            backgroundColor: '#f6f7f9',
-            backgroundImage: 'radial-gradient(circle, rgba(87, 96, 118, .2) 1px, transparent 1px)',
-            backgroundPosition: `${viewport.x}px ${viewport.y}px`,
-            backgroundSize: `${24 * viewport.zoom}px ${24 * viewport.zoom}px`,
-          }}
-        >
-          <div
-            data-canvas-world="true"
-            className="absolute left-0 top-0 h-full w-full origin-top-left"
-            style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}
-          >
-            {snapshot?.assignments.map((assignment) => {
-              const hasFrame = snapshot.frames.some((frame) => frame.createdBy === assignment.agentId)
-              const liveStatus = snapshot.presence.find((presence) => presence.participantId === assignment.agentId)?.status ?? assignment.status
-              return <div key={assignment.id} className="pointer-events-none absolute rounded-2xl border-2 border-dashed"
-                style={{ left: assignment.workArea.x, top: assignment.workArea.y, width: assignment.workArea.width, height: assignment.workArea.height, borderColor: assignment.color, backgroundColor: `color-mix(in srgb, ${assignment.color} 5%, transparent)` }}>
-                <div className="absolute left-3 top-3 origin-top-left rounded-full px-2.5 py-1 text-[11px] font-semibold text-white shadow" style={{ backgroundColor: assignment.color, transform: `scale(${1 / viewport.zoom})` }}>
-                  {byAgentName(assignment.agentId)} · {liveStatus}
-                </div>
-                {!hasFrame && <div className="absolute inset-10 top-20 grid place-items-center rounded-xl border border-dashed bg-white/45 text-center">
-                  <div><div className="text-xs font-semibold" style={{ color: assignment.color }}>{assignment.assignment}</div><div className="mt-1 text-[10px] text-ink-400">{assignment.status === 'blocked' ? `等待 ${assignment.dependsOnAgentIds.map(byAgentName).join('、')}` : liveStatus}</div></div>
-                </div>}
-              </div>
-            })}
-            {snapshot?.frames.map((frame) => (
-              <FrameCard key={frame.id} frame={frame} selected={selectedId === frame.id} zoom={viewport.zoom}
-                editorColor={snapshot.assignments.find((assignment) => assignment.agentId === frame.updatedBy)?.color}
-                editorName={snapshot.assignments.some((assignment) => assignment.agentId === frame.updatedBy) ? byAgentName(frame.updatedBy) : undefined} />
-            ))}
-            {snapshot?.assignments.filter((assignment) => assignment.cursor).map((assignment) => <div key={`${assignment.id}-cursor`} className="pointer-events-none absolute z-50 origin-top-left transition-[left,top] duration-300 ease-out" style={{ left: assignment.cursor!.x, top: assignment.cursor!.y, transform: `scale(${1 / viewport.zoom})` }}>
-              <svg width="20" height="24" viewBox="0 0 20 24" fill="none"><path d="M2 2l15 10-7 1-3 7L2 2z" fill={assignment.color} stroke="white" strokeWidth="1.5" /></svg>
-              <span className="absolute left-4 top-4 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-semibold text-white" style={{ backgroundColor: assignment.color }}>{byAgentName(assignment.agentId)}</span>
-            </div>)}
-          </div>
+  const feedbackFrame = visibleFrames.find((frame) => frame.id === feedbackFrameId) ?? null
 
-          {error && <div className="absolute left-4 top-16 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 shadow">{error}</div>}
-
-          {snapshot && <div className="absolute bottom-4 left-4 flex items-center gap-1 rounded-xl border border-hairline bg-white/95 p-1 shadow-lg backdrop-blur">
-            <div className="relative">
-              <button type="button" onClick={() => setAddOpen((open) => !open)} className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-ink hover:bg-raised">
-                <IPlus className="size-4" /> Frame
-              </button>
-              {addOpen && (
-                <div className="absolute bottom-11 left-0 w-44 rounded-xl border border-hairline bg-white p-1.5 shadow-xl">
-                  {FRAME_TYPES.map(({ type, label }) => (
-                    <button key={type} type="button" onClick={() => createAtCenter(type)} className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-ink hover:bg-raised">
-                      {label}<span className="text-[10px] uppercase text-ink-400">{type}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <span className="mx-1 h-5 w-px bg-hairline" />
-            <button type="button" onClick={() => zoomBy(1 / 1.2)} className="size-9 rounded-lg text-lg text-ink-secondary hover:bg-raised">−</button>
-            <span className="w-12 text-center text-xs tabular-nums text-ink-secondary">{Math.round(viewport.zoom * 100)}%</span>
-            <button type="button" onClick={() => zoomBy(1.2)} className="size-9 rounded-lg text-lg text-ink-secondary hover:bg-raised">+</button>
-            <button type="button" onClick={fit} className="h-9 rounded-lg px-3 text-xs font-medium text-ink-secondary hover:bg-raised">Fit</button>
-          </div>}
-        </div>
-      </section>
-    </div>
-  )
-}
-
-function byAgentName(agentId: string): string {
-  return useParticipants.getState().byId[agentId]?.name ?? agentId
-}
-
-function CanvasHeader() {
-  const snapshot = useCanvas((state) => state.snapshot)
-  const workspaces = useCanvas((state) => state.workspaces)
-  const load = useCanvas((state) => state.load)
-  const byId = useParticipants((state) => state.byId)
-  if (!snapshot && workspaces.length === 0) return null
-  return (
-    <header className="absolute inset-x-0 top-0 z-20 flex h-14 items-center justify-between border-b border-hairline bg-white/90 px-4 backdrop-blur">
-      <select aria-label="Canvas workspace history" value={snapshot?.id ?? ''} onChange={(event) => void load(event.target.value)} className="max-w-[260px] bg-transparent text-sm font-semibold text-ink outline-none">
-        {snapshot && !workspaces.some((item) => item.id === snapshot.id) && <option value={snapshot.id}>{snapshot.title}</option>}
-        {workspaces.map((workspace) => <option key={workspace.id} value={workspace.id}>{workspace.status === 'active' ? '● ' : ''}{workspace.title}</option>)}
-      </select>
-      <div className="flex items-center -space-x-1.5">
-        {snapshot?.presence.slice(0, 8).map((presence) => {
-          const participant = byId[presence.participantId]
-          return participant ? (
-            <div key={presence.participantId} title={`${participant.name} · ${presence.status}`} className="relative rounded-full ring-2 ring-white">
-              <AvatarMini p={participant} size={28} />
-              <span className="absolute bottom-0 right-0 size-2 rounded-full border border-white bg-emerald-500" />
-            </div>
-          ) : (
-            <div key={presence.participantId} title={`${presence.participantId} · ${presence.status}`} className="grid size-7 place-items-center rounded-full bg-accent text-[10px] font-bold text-white ring-2 ring-white">
-              {presence.participantId.slice(0, 1).toUpperCase()}
-            </div>
-          )
+  return <div className="canvas-shell relative h-full min-h-0 overflow-hidden">
+    <CanvasHeader onBack={onBack} onFocusFrame={focusFrame} />
+    <div
+      ref={stageRef}
+      className={`canvas-stage canvas-main-stage absolute inset-x-0 bottom-0 overflow-hidden ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
+      onPointerDownCapture={onStagePointerDown}
+      onPointerMove={onStagePointerMove}
+      onPointerUp={onStagePointerEnd}
+      onPointerCancel={onStagePointerEnd}
+      onContextMenu={onStageContextMenu}
+      onWheel={onWheel}
+      onDragStart={(event) => event.preventDefault()}
+      style={{ backgroundPosition: `${viewport.x}px ${viewport.y}px`, backgroundSize: `${24 * viewport.zoom}px ${24 * viewport.zoom}px` }}
+    >
+      <div data-canvas-world="true" className="absolute left-0 top-0 h-full w-full origin-top-left" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}>
+        {snapshot && visibleFrames.map((frame) => {
+          const assignment = assignmentForFrame(frame, snapshot.assignments)
+          const livePresence = assignment ? snapshot.presence.find((presence) => presence.participantId === assignment.agentId && presence.frameId === frame.id && presence.status !== 'offline') : undefined
+          return <FrameCard key={frame.id} frame={frame} assignment={assignment} status={livePresence?.status} selected={selectedId === frame.id} zoom={viewport.zoom} commentCount={snapshot.comments.filter((comment) => comment.frameId === frame.id).length} allowActivation={() => !gestureMoved.current} />
         })}
       </div>
-    </header>
-  )
+      {snapshot && visibleFrames.length === 0 && <div className="pointer-events-none absolute inset-0 grid place-items-center"><div className="rounded-2xl border border-hairline bg-panel/80 px-5 py-4 text-center shadow-sm backdrop-blur"><div className="text-sm font-semibold text-ink">画布还没有卡片</div><div className="mt-1 text-xs text-ink-secondary">在空白处单击右键，选择“新增”或“对话”。</div></div></div>}
+      {error && <div className="absolute left-4 top-4 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 shadow">{error}</div>}
+      {menu && <CanvasContextMenu menu={menu} onMenuChange={setMenu} onTalk={() => { setMenu(null); setDialogOpen(true) }} onCreate={createAt} />}
+      {frameMenu && snapshot && <CanvasFrameMenu menu={frameMenu} frame={snapshot.frames.find((frame) => frame.id === frameMenu.frameId)} onClose={() => setFrameMenu(null)} onFeedback={(frameId) => { setFrameMenu(null); setFeedbackFrameId(frameId) }} />}
+    </div>
+    {feedbackFrame && <FrameFeedbackDialog frame={feedbackFrame} viewport={viewport} onClose={() => setFeedbackFrameId(null)} />}
+    {dialogOpen && snapshot && <CanvasAgentDialog onClose={() => setDialogOpen(false)} />}
+  </div>
 }
 
-function FrameCard({ frame, selected, zoom, editorColor, editorName }: { frame: CanvasFrame; selected: boolean; zoom: number; editorColor?: string; editorName?: string }) {
+function CanvasHeader({ onBack, onFocusFrame }: {
+  onBack?: () => void
+  onFocusFrame: (frameId: string) => void
+}) {
+  const snapshot = useCanvas((state) => state.snapshot)
+  return <header className="canvas-header canvas-main-header absolute inset-x-0 top-0 z-30 flex items-center gap-4 border-b border-hairline px-3 backdrop-blur-xl">
+    <div className="flex min-w-0 shrink-0 items-center gap-2">
+      {onBack && <button type="button" onClick={onBack} aria-label="返回对话" className="grid size-9 place-items-center rounded-full text-ink-secondary hover:bg-raised"><IBack className="size-5" /></button>}
+      <div className="min-w-0 max-w-56"><div className="truncate text-[14px] font-semibold text-ink">{snapshot?.title ?? '画布'}</div><div className="truncate text-[9px] text-ink-secondary">{snapshot?.goal ?? '共同工作的可视空间'}</div></div>
+    </div>
+    <CanvasTimeline onFocusFrame={onFocusFrame} />
+  </header>
+}
+
+function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => void }) {
+  const snapshot = useCanvas((state) => state.snapshot)
+  const byId = useParticipants((state) => state.byId)
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [scrollState, setScrollState] = useState({ overflowing: false, left: false, right: false })
+
+  useLayoutEffect(() => {
+    const timeline = timelineRef.current
+    const track = trackRef.current
+    if (!timeline || !track) return
+    let animationFrame = 0
+    const update = () => {
+      window.cancelAnimationFrame(animationFrame)
+      animationFrame = window.requestAnimationFrame(() => {
+        const overflowing = timeline.scrollWidth > timeline.clientWidth + 2
+        const left = overflowing && timeline.scrollLeft > 2
+        const right = overflowing && timeline.scrollLeft + timeline.clientWidth < timeline.scrollWidth - 2
+        setScrollState((current) => current.overflowing === overflowing && current.left === left && current.right === right ? current : { overflowing, left, right })
+      })
+    }
+    update()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update)
+    observer?.observe(timeline)
+    observer?.observe(track)
+    timeline.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.cancelAnimationFrame(animationFrame)
+      observer?.disconnect()
+      timeline.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [snapshot?.assignments.length])
+
+  if (!snapshot) return <div className="min-w-0 flex-1" />
+  const scrollTimeline = (direction: -1 | 1) => {
+    const timeline = timelineRef.current
+    if (!timeline) return
+    timeline.scrollBy({ left: direction * Math.max(180, timeline.clientWidth * 0.72), behavior: 'smooth' })
+  }
+  return <div className="canvas-timeline-shell relative min-w-0 flex-1">
+    {scrollState.left && <button type="button" aria-label="向左移动工作时间轴" onClick={() => scrollTimeline(-1)} className="canvas-timeline-scroll-button is-left"><svg viewBox="0 0 20 20" aria-hidden><path d="m12.5 5-5 5 5 5" /></svg></button>}
+    <div ref={timelineRef} className={`canvas-work-timeline min-w-0 overflow-x-auto py-2 ${scrollState.overflowing ? 'px-8' : 'px-2'}`} onWheel={(event) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
+      event.currentTarget.scrollLeft += event.deltaY
+    }}><div ref={trackRef} className="canvas-work-timeline-track flex min-w-max items-center gap-3">
+      {snapshot.assignments.map((assignment) => {
+        const participant = byId[assignment.agentId]
+        const activeFrameId = snapshot.frames.some((frame) => frame.id === assignment.activeFrameId && frame.type !== 'artifact') ? assignment.activeFrameId : null
+        const progress = latestAssignmentProgress(snapshot, assignment)
+        return <button key={assignment.id} type="button" disabled={!activeFrameId} onClick={() => activeFrameId && onFocusFrame(activeFrameId)} className="canvas-timeline-item group relative flex max-w-52 items-center gap-2 px-3 text-left disabled:cursor-default">
+          <span className="canvas-timeline-node relative z-10 grid size-7 shrink-0 place-items-center">{participant ? <AvatarMini p={participant} size={26} statusOverride={assignment.status === 'blocked' || assignment.status === 'waiting' ? 'thinking' : isCanvasAssignmentActive(assignment.status) ? 'working' : 'avail'} /> : <span className="text-[9px] font-bold" style={{ color: assignment.color }}>{assignment.agentId.slice(0, 1).toUpperCase()}</span>}</span>
+          <span className="min-w-0"><span className="block truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? assignment.agentId}</span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}</span></span>
+        </button>
+      })}
+    </div></div>
+    {scrollState.right && <button type="button" aria-label="向右移动工作时间轴" onClick={() => scrollTimeline(1)} className="canvas-timeline-scroll-button is-right"><svg viewBox="0 0 20 20" aria-hidden><path d="m7.5 5 5 5-5 5" /></svg></button>}
+  </div>
+}
+
+function latestAssignmentProgress(snapshot: CanvasSnapshot, assignment: CanvasAgentAssignment): string {
+  const presence = snapshot.presence
+    .filter((item) => item.participantId === assignment.agentId && item.status !== 'offline')
+    .sort((left, right) => Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt))[0]
+  if (presence?.status && !['viewing', '查看画布'].includes(presence.status)) return localizeStatus(presence.status)
+
+  const activity = snapshot.activity
+    .filter((item) => item.actorId === assignment.agentId)
+    .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))[0]
+  if (activity) {
+    const status = typeof activity.detail.status === 'string' ? activity.detail.status : null
+    if (status) return localizeStatus(status)
+    const frame = activity.frameId ? snapshot.frames.find((item) => item.id === activity.frameId) : null
+    if (activity.action === 'frame_updated') return `已更新 ${String(activity.detail.title ?? frame?.title ?? '卡片')}`
+    if (activity.action === 'frame_created') return `已新建 ${frame?.title ?? '卡片'}`
+    if (activity.action === 'comment_created') return '已收到新的画布反馈'
+    if (activity.action === 'handoff') return `已移交给 ${String(activity.detail.toAgentName ?? '另一位 Agent')}`
+  }
+  return `${localizeStatus(canvasStatusLabel(assignment.status))} · ${assignment.assignment}`
+}
+
+function CanvasContextMenu({ menu, onMenuChange, onTalk, onCreate }: {
+  menu: CanvasMenu
+  onMenuChange: (menu: CanvasMenu | null) => void
+  onTalk: () => void
+  onCreate: (type: CanvasFrameType, at: { x: number; y: number }) => void
+}) {
+  return <div role="menu" aria-label="画布操作" onPointerDown={(event) => event.stopPropagation()} className="canvas-context-menu app-menu-surface absolute z-50 w-44 p-1.5" style={{ left: menu.x, top: menu.y }}>
+    <button type="button" role="menuitem" onClick={onTalk} className="app-menu-item"><span className="app-menu-icon"><IAt /></span><span>对话</span></button>
+    <button type="button" role="menuitem" aria-expanded={menu.addOpen} onClick={() => onMenuChange({ ...menu, addOpen: !menu.addOpen })} className="app-menu-item"><span className="app-menu-icon"><IPlus /></span><span className="flex-1">新增</span><span className="text-ink-secondary">›</span></button>
+    {menu.addOpen && <div className="mt-1 border-t border-hairline pt-1">{FRAME_TYPES.map((item) => <button key={item.type} type="button" role="menuitem" onClick={() => onCreate(item.type, { x: menu.worldX, y: menu.worldY })} className="app-menu-item justify-between"><span>{item.label}</span><span className="text-[9px] font-normal text-ink-secondary">{item.detail}</span></button>)}</div>}
+  </div>
+}
+
+function CanvasFrameMenu({ menu, frame: targetFrame, onClose, onFeedback }: {
+  menu: FrameMenu
+  frame?: CanvasFrame
+  onClose: () => void
+  onFeedback: (frameId: string) => void
+}) {
+  const deleteFrame = useCanvas((state) => state.deleteFrame)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  if (!targetFrame) return null
+  const frame = targetFrame
+
+  async function copyContent() {
+    try {
+      await navigator.clipboard.writeText(frameTextContent(frame))
+      setNotice('已复制内容')
+    } catch {
+      setNotice('复制失败，请在编辑器中手动复制')
+    }
+  }
+
+  async function download() {
+    try {
+      await downloadFrame(frame)
+      setNotice('已开始下载')
+    } catch {
+      setNotice('下载失败')
+    }
+  }
+
+  async function remove() {
+    if (busy) return
+    setBusy(true)
+    try {
+      await deleteFrame(frame.id)
+      onClose()
+    } catch (cause) {
+      setNotice(cause instanceof Error ? cause.message : '删除失败')
+      setBusy(false)
+    }
+  }
+
+  return <div role="menu" aria-label={`${frame.title}卡片操作`} onPointerDown={(event) => event.stopPropagation()} onContextMenu={(event) => event.preventDefault()} className="canvas-context-menu app-menu-surface absolute z-[60] w-52 p-1.5" style={{ left: menu.x, top: menu.y }}>
+    <div className="border-b border-hairline px-2.5 pb-2 pt-1.5"><div className="truncate text-[11px] font-semibold text-ink">{frame.title}</div><div className="mt-0.5 text-[9px] text-ink-secondary">{TYPE_LABELS[frame.type]} · 第 {frame.revision} 版</div></div>
+    <button type="button" role="menuitem" onClick={() => onFeedback(frame.id)} className="app-menu-item"><span className="app-menu-icon"><IAt /></span><span>反馈给智能体</span></button>
+    <button type="button" role="menuitem" onClick={() => void copyContent()} className="app-menu-item"><span className="app-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg></span><span>复制内容</span></button>
+    <button type="button" role="menuitem" onClick={() => void download()} className="app-menu-item"><span className="app-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14" /></svg></span><span>下载文件</span></button>
+    <div className="my-1 border-t border-hairline" />
+    {confirmDelete
+      ? <div className="px-2 py-1.5"><div className="text-[10px] text-ink-secondary">删除后无法恢复，确定继续？</div><div className="mt-2 flex gap-1.5"><button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 rounded-lg bg-raised px-2 py-1.5 text-[10px] font-semibold text-ink">取消</button><button type="button" disabled={busy} onClick={() => void remove()} className="flex-1 rounded-lg bg-red-500 px-2 py-1.5 text-[10px] font-semibold text-white disabled:opacity-40">删除</button></div></div>
+      : <button type="button" role="menuitem" onClick={() => setConfirmDelete(true)} className="app-menu-item is-destructive"><span className="app-menu-icon"><ITrash /></span><span>删除卡片</span></button>}
+    {notice && <div role="status" className="mx-2 mb-1 mt-1 rounded-md bg-inset px-2 py-1.5 text-[9px] leading-4 text-ink-secondary">{notice}</div>}
+  </div>
+}
+
+function frameTextContent(frame: CanvasFrame): string {
+  if (frame.content) return frame.content
+  const data = JSON.stringify(frame.data, null, 2)
+  return data === '{}' ? '' : data
+}
+
+function safeDownloadName(title: string): string {
+  return title.trim().replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').replace(/[. ]+$/g, '').slice(0, 80) || '画布卡片'
+}
+
+function saveBlob(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = name
+  anchor.click()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+}
+
+async function downloadFrame(frame: CanvasFrame) {
+  const base = safeDownloadName(frame.title)
+  if (frame.type === 'image' && frame.content) {
+    try {
+      const response = await fetch(frame.content)
+      if (!response.ok) throw new Error(String(response.status))
+      const blob = await response.blob()
+      const extension = blob.type.split('/')[1]?.replace('jpeg', 'jpg').replace(/[^a-z0-9]/gi, '') || 'png'
+      saveBlob(blob, `${base}.${extension}`)
+      return
+    } catch {
+      const anchor = document.createElement('a')
+      anchor.href = frame.content
+      anchor.download = base
+      anchor.target = '_blank'
+      anchor.rel = 'noopener noreferrer'
+      anchor.click()
+      return
+    }
+  }
+  const format = frame.type === 'markdown'
+    ? { extension: 'md', mime: 'text/markdown;charset=utf-8' }
+    : frame.type === 'html'
+      ? { extension: 'html', mime: 'text/html;charset=utf-8' }
+      : frame.type === 'artifact'
+        ? { extension: 'json', mime: 'application/json;charset=utf-8' }
+        : { extension: 'txt', mime: 'text/plain;charset=utf-8' }
+  saveBlob(new Blob([frameTextContent(frame)], { type: format.mime }), `${base}.${format.extension}`)
+}
+
+function FrameCard({ frame, assignment, status, selected, zoom, commentCount, allowActivation }: {
+  frame: CanvasFrame
+  assignment?: CanvasAgentAssignment
+  status?: string
+  selected: boolean
+  zoom: number
+  commentCount: number
+  allowActivation: () => boolean
+}) {
   const selectFrame = useCanvas((state) => state.selectFrame)
   const patchLocalFrame = useCanvas((state) => state.patchLocalFrame)
   const updateFrame = useCanvas((state) => state.updateFrame)
-  const deleteFrame = useCanvas((state) => state.deleteFrame)
+  const participant = useParticipants((state) => assignment ? state.byId[assignment.agentId] : undefined)
+  const moved = useRef(false)
+  const editorRef = useRef<HTMLTextAreaElement>(null)
+  const draftRef = useRef(frame.content)
+  const savingRef = useRef(false)
+  const queuedSaveRef = useRef(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(frame.content)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const color = assignment?.color ?? 'var(--accent)'
+
+  useEffect(() => {
+    if (!editing) {
+      draftRef.current = frame.content
+      setDraft(frame.content)
+    }
+  }, [editing, frame.content])
+
+  useEffect(() => {
+    if (!editing) return
+    editorRef.current?.focus()
+    editorRef.current?.setSelectionRange(editorRef.current.value.length, editorRef.current.value.length)
+  }, [editing])
+
+  useEffect(() => {
+    if (!editing || draft === frame.content) return
+    const timer = window.setTimeout(() => void persistContent(draft), 650)
+    return () => window.clearTimeout(timer)
+  }, [draft, editing, frame.content, frame.revision])
+
+  async function persistContent(content = draftRef.current) {
+    if (savingRef.current) {
+      queuedSaveRef.current = true
+      return
+    }
+    const currentFrame = useCanvas.getState().snapshot?.frames.find((item) => item.id === frame.id)
+    if (!currentFrame || currentFrame.content === content) return
+    savingRef.current = true
+    setSaving(true); setSaveError(null)
+    try {
+      await updateFrame(frame.id, { content }, true, currentFrame.revision)
+    } catch (cause) {
+      setSaveError(cause instanceof Error ? cause.message : '保存失败')
+      setEditing(true)
+    } finally {
+      savingRef.current = false
+      setSaving(false)
+      if (queuedSaveRef.current || draftRef.current !== content) {
+        queuedSaveRef.current = false
+        void persistContent(draftRef.current)
+      }
+    }
+  }
 
   function beginMove(event: React.PointerEvent) {
-    event.preventDefault()
-    event.stopPropagation()
-    selectFrame(frame.id)
+    if (event.pointerType === 'touch') {
+      event.stopPropagation()
+      return
+    }
+    event.preventDefault(); event.stopPropagation(); moved.current = false; selectFrame(frame.id)
     const start = { clientX: event.clientX, clientY: event.clientY, x: frame.x, y: frame.y }
     let latest = { x: frame.x, y: frame.y }
     const move = (next: PointerEvent) => {
-      latest = {
-        x: Math.round(start.x + (next.clientX - start.clientX) / zoom),
-        y: Math.round(start.y + (next.clientY - start.clientY) / zoom),
-      }
+      if (Math.abs(next.clientX - start.clientX) + Math.abs(next.clientY - start.clientY) > 4) moved.current = true
+      latest = { x: Math.round(start.x + (next.clientX - start.clientX) / zoom), y: Math.round(start.y + (next.clientY - start.clientY) / zoom) }
       patchLocalFrame(frame.id, latest)
     }
-    const up = () => {
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', up)
-      void updateFrame(frame.id, latest).catch(() => undefined)
-    }
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up)
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); if (moved.current) void updateFrame(frame.id, latest).catch(() => undefined) }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
   }
 
   function beginResize(event: React.PointerEvent) {
-    event.preventDefault()
-    event.stopPropagation()
-    selectFrame(frame.id)
+    event.preventDefault(); event.stopPropagation(); moved.current = true; selectFrame(frame.id)
     const start = { clientX: event.clientX, clientY: event.clientY, width: frame.width, height: frame.height }
     let latest = { width: frame.width, height: frame.height }
     const move = (next: PointerEvent) => {
-      latest = {
-        width: Math.max(180, Math.round(start.width + (next.clientX - start.clientX) / zoom)),
-        height: Math.max(140, Math.round(start.height + (next.clientY - start.clientY) / zoom)),
-      }
+      latest = { width: Math.max(180, Math.round(start.width + (next.clientX - start.clientX) / zoom)), height: Math.max(140, Math.round(start.height + (next.clientY - start.clientY) / zoom)) }
       patchLocalFrame(frame.id, latest)
     }
-    const up = () => {
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', up)
-      void updateFrame(frame.id, latest).catch(() => undefined)
-    }
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up)
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); void updateFrame(frame.id, latest).catch(() => undefined) }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
   }
 
-  return (
-    <article
-      data-canvas-frame="true"
-      className={`absolute overflow-hidden rounded-xl border bg-white shadow-md transition-[box-shadow,border-color] ${selected ? 'border-accent shadow-[0_0_0_2px_rgba(80,110,255,.18),0_12px_35px_rgba(25,35,60,.16)]' : 'border-black/10 hover:shadow-lg'}`}
-      style={{ left: frame.x, top: frame.y, width: frame.width, height: frame.height, ...(editorColor ? { borderColor: editorColor, boxShadow: `0 0 0 2px color-mix(in srgb, ${editorColor} 16%, transparent), 0 12px 35px rgba(25,35,60,.16)` } : {}) }}
-      onPointerDown={(event) => { event.stopPropagation(); selectFrame(frame.id) }}
-    >
-      <header onPointerDown={beginMove} className="flex h-10 cursor-grab items-center gap-2 border-b border-hairline bg-[#fafbfc] px-3 active:cursor-grabbing">
-        <span className="rounded bg-ink-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-ink-500">{frame.type}</span>
-        <span className="min-w-0 flex-1 truncate text-xs font-semibold text-ink">{frame.title}</span>
-        {editorName && <span className="max-w-24 truncate rounded-full px-2 py-0.5 text-[9px] font-semibold text-white" style={{ backgroundColor: editorColor }}>{editorName}</span>}
-        <span className="text-[9px] tabular-nums text-ink-400">v{frame.revision}</span>
-        <button type="button" aria-label="Delete frame" onPointerDown={(event) => event.stopPropagation()} onClick={() => void deleteFrame(frame.id)} className="grid size-7 place-items-center rounded text-ink-400 hover:bg-red-50 hover:text-red-600">
-          <ITrash className="size-3.5" />
-        </button>
-      </header>
-      <div className="h-[calc(100%-40px)] overflow-auto bg-white">
-        <FrameContent frame={frame} />
-      </div>
-      <button type="button" aria-label="Resize frame" onPointerDown={beginResize} className="absolute bottom-0 right-0 size-5 cursor-nwse-resize rounded-tl bg-accent/10 before:absolute before:bottom-1 before:right-1 before:size-2 before:border-b before:border-r before:border-accent" />
-    </article>
-  )
-}
-
-function FrameContent({ frame }: { frame: CanvasFrame }) {
-  if (frame.type === 'html') {
-    return <iframe title={frame.title} sandbox="" srcDoc={frame.content} className="h-full min-h-40 w-full border-0 bg-white" />
-  }
-  if (frame.type === 'markdown') {
-    return (
-      <div className="prose prose-sm max-w-none p-4 text-ink">
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{frame.content}</ReactMarkdown>
-      </div>
-    )
-  }
-  if (frame.type === 'image') {
-    return frame.content
-      ? <img src={frame.content} alt={String(frame.data.alt ?? frame.title)} className="h-full w-full object-contain" />
-      : <EmptyFrame label="Waiting for image content" />
-  }
-  if (frame.type === 'document') {
-    return (
-      <div className="flex h-full flex-col justify-between p-5">
-        <div><div className="text-xs font-semibold uppercase tracking-wider text-ink-400">Document reference</div><p className="mt-3 whitespace-pre-wrap text-sm text-ink-secondary">{frame.content || 'Waiting for document content.'}</p></div>
-        {typeof frame.data.documentId === 'string' && <span className="text-xs text-accent">Document · {frame.data.documentId}</span>}
-      </div>
-    )
-  }
-  return (
-    <div className="p-5">
-      <div className="text-xs font-semibold uppercase tracking-wider text-ink-400">Artifact</div>
-      <pre className="mt-3 whitespace-pre-wrap break-words font-mono text-xs text-ink-secondary">{frame.content || JSON.stringify(frame.data, null, 2) || 'No artifact payload yet.'}</pre>
+  return <article data-canvas-frame={frame.id} className={`canvas-frame-card absolute overflow-hidden rounded-xl border shadow-md transition-[box-shadow,border-color] ${selected ? 'is-selected' : 'hover:shadow-lg'} ${status ? 'is-live-editing' : ''}`} style={{ left: frame.x, top: frame.y, width: frame.width, height: frame.height, borderColor: color, boxShadow: selected ? `0 0 0 2px color-mix(in srgb, ${color} 42%, transparent), inset 4px 0 0 ${color}, var(--canvas-shadow)` : `inset 4px 0 0 ${color}, var(--canvas-shadow)` }} onPointerDown={(event) => { event.stopPropagation(); selectFrame(frame.id) }}>
+    <header onPointerDown={beginMove} className="canvas-frame-header flex h-10 cursor-grab items-center gap-2 border-b border-hairline px-3 active:cursor-grabbing">
+      <span className="rounded px-1.5 py-0.5 text-[9px] font-semibold" style={{ backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>{TYPE_LABELS[frame.type]}</span>
+      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-ink">{frame.title}</span>
+      {assignment && <span className="max-w-32 truncate rounded-full px-2 py-0.5 text-[9px] font-semibold text-white" style={{ backgroundColor: color }}>{participant?.name ?? assignment.agentId}{status ? ` · ${localizeStatus(status)}` : ''}</span>}
+      {commentCount > 0 && <span className="text-[9px] text-ink-secondary">{commentCount} 条反馈</span>}
+      <span className="text-[9px] tabular-nums text-ink-secondary">第 {frame.revision} 版</span>
+    </header>
+    <div className={`canvas-frame-body relative h-[calc(100%-40px)] overflow-auto ${EDITABLE_FRAME_TYPES.has(frame.type) ? 'cursor-text' : ''}`} onClick={(event) => {
+      event.stopPropagation()
+      if (EDITABLE_FRAME_TYPES.has(frame.type) && allowActivation() && !editing) setEditing(true)
+    }}>
+      {editing
+        ? <div className="canvas-inline-editor flex h-full min-h-0 flex-col p-2" onPointerDown={(event) => event.stopPropagation()}>
+          <textarea ref={editorRef} value={draft} onChange={(event) => { draftRef.current = event.target.value; setDraft(event.target.value) }} onBlur={() => { void persistContent(draftRef.current); setEditing(false) }} onKeyDown={(event) => { if (event.key === 'Escape') event.currentTarget.blur() }} spellCheck className="canvas-panel-input min-h-0 flex-1 resize-none rounded-lg border px-3 py-2 font-mono text-xs leading-5" aria-label={`编辑${frame.title}`} />
+          {(saving || saveError) && <div aria-live="polite" className={`pointer-events-none absolute bottom-3 right-4 rounded-full px-2 py-1 text-[9px] shadow-sm ${saveError ? 'bg-red-500/10 text-red-500' : 'bg-panel/90 text-ink-secondary'}`}>{saveError ?? '自动保存中…'}</div>}
+        </div>
+        : <CanvasFrameContent frame={frame} />}
     </div>
-  )
+    <button type="button" aria-label="调整卡片大小" onPointerDown={beginResize} onClick={(event) => event.stopPropagation()} className="absolute bottom-0 right-0 size-5 cursor-nwse-resize rounded-tl bg-accent/10 before:absolute before:bottom-1 before:right-1 before:size-2 before:border-b before:border-r before:border-accent" />
+  </article>
 }
 
-function EmptyFrame({ label }: { label: string }) {
-  return <div className="grid h-full place-items-center p-6 text-center text-xs text-ink-400">{label}</div>
+function feedbackDraftKey(canvasId: string, frameId: string) {
+  return `lingxiloop:canvas-feedback:${canvasId}:${frameId}`
+}
+
+function readFeedbackDraft(canvasId: string, frameId: string): string {
+  try { return window.sessionStorage.getItem(feedbackDraftKey(canvasId, frameId)) ?? '' }
+  catch { return '' }
+}
+
+function writeFeedbackDraft(canvasId: string, frameId: string, body: string) {
+  try {
+    const key = feedbackDraftKey(canvasId, frameId)
+    if (body.trim()) window.sessionStorage.setItem(key, body)
+    else window.sessionStorage.removeItem(key)
+  } catch { /* Session storage can be unavailable in privacy-restricted webviews. */ }
+}
+
+function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame; viewport: Viewport; onClose: () => void }) {
+  const snapshot = useCanvas((state) => state.snapshot)!
+  const steerAgent = useCanvas((state) => state.steerAgent)
+  const assignAgent = useCanvas((state) => state.assignAgent)
+  const addComment = useCanvas((state) => state.addComment)
+  const byId = useParticipants((state) => state.byId)
+  const [body, setBody] = useState(() => readFeedbackDraft(frame.canvasId, frame.id))
+  const bodyRef = useRef(body)
+  const [agentId, setAgentId] = useState(assignmentForFrame(frame, snapshot.assignments)?.agentId ?? snapshot.assignments[0]?.agentId ?? '')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const panelRef = useRef<HTMLFormElement>(null)
+  const [position, setPosition] = useState({ left: 12, top: 88, maxHeight: 520 })
+  const assignment = assignmentForFrame(frame, snapshot.assignments)
+  const targetAssignment = snapshot.assignments.find((item) => item.agentId === agentId)
+  const participant = agentId ? byId[agentId] : undefined
+  const comments = snapshot.comments.filter((comment) => comment.frameId === frame.id).slice(0, 3)
+
+  useEffect(() => {
+    const closeOnOutside = (event: PointerEvent) => {
+      const target = event.target as Node | null
+      if (target && panelRef.current?.contains(target)) return
+      writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current)
+      onClose()
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current)
+      onClose()
+    }
+    document.addEventListener('pointerdown', closeOnOutside, true)
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutside, true)
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [frame.canvasId, frame.id, onClose])
+
+  useLayoutEffect(() => {
+    const panel = panelRef.current
+    const card = document.querySelector<HTMLElement>(`[data-canvas-frame="${CSS.escape(frame.id)}"]`)
+    const shell = card?.closest<HTMLElement>('.canvas-shell')
+    if (!panel || !card || !shell) return
+    let animationFrame = 0
+    const place = () => {
+      window.cancelAnimationFrame(animationFrame)
+      animationFrame = window.requestAnimationFrame(() => {
+        const shellRect = shell.getBoundingClientRect()
+        const cardRect = card.getBoundingClientRect()
+        const panelRect = panel.getBoundingClientRect()
+        const gap = 12
+        const edge = 12
+        const minTop = shellRect.width <= 640 ? 128 : 88
+        const panelWidth = Math.min(panelRect.width || 384, shellRect.width - edge * 2)
+        const maxHeight = Math.max(180, shellRect.height - minTop - edge)
+        const panelHeight = Math.min(panelRect.height || 420, maxHeight)
+        const right = cardRect.right - shellRect.left + gap
+        const left = cardRect.left - shellRect.left - panelWidth - gap
+        const preferredLeft = right + panelWidth <= shellRect.width - edge ? right : left
+        const x = Math.max(edge, Math.min(preferredLeft, shellRect.width - panelWidth - edge))
+        const centeredTop = cardRect.top - shellRect.top + (cardRect.height - panelHeight) / 2
+        const y = Math.max(minTop, Math.min(centeredTop, shellRect.height - panelHeight - edge))
+        setPosition({ left: Math.round(x), top: Math.round(y), maxHeight: Math.round(maxHeight) })
+      })
+    }
+    place()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place)
+    observer?.observe(shell)
+    observer?.observe(card)
+    observer?.observe(panel)
+    window.addEventListener('resize', place)
+    return () => {
+      window.cancelAnimationFrame(animationFrame)
+      observer?.disconnect()
+      window.removeEventListener('resize', place)
+    }
+  }, [frame.height, frame.id, frame.width, frame.x, frame.y, viewport.x, viewport.y, viewport.zoom])
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    const text = body.trim()
+    if (!text || busy) return
+    setBusy(true); setError(null)
+    try {
+      if (agentId) {
+        if (targetAssignment && isCanvasAssignmentActive(targetAssignment.status)) await steerAgent(agentId, text)
+        else await assignAgent(agentId, text)
+      }
+      await addComment(text, frame.id)
+      writeFeedbackDraft(frame.canvasId, frame.id, '')
+      onClose()
+    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) }
+    finally { setBusy(false) }
+  }
+
+  return <form ref={panelRef} onSubmit={submit} onPointerDown={(event) => event.stopPropagation()} className="canvas-mini-dialog app-menu-surface absolute z-[70] w-[min(384px,calc(100%-24px))] overflow-auto rounded-2xl p-4" style={position}>
+    <div className="flex items-center gap-3">
+      {participant ? <AvatarMini p={participant} size={34} /> : <span className="grid size-9 place-items-center rounded-full bg-accent/10 text-sm font-bold text-accent">评</span>}
+      <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">反馈给 {participant?.name ?? '智能体'}</div><div className="truncate text-[10px] text-ink-secondary">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</div></div>
+      <button type="button" onClick={() => { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() }} aria-label="关闭反馈" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</button>
+    </div>
+    {!assignment && <div className="mt-3 flex flex-wrap gap-2">{snapshot.assignments.map((item) => {
+      const agent = byId[item.agentId]
+      return <button key={item.agentId} type="button" onClick={() => setAgentId(item.agentId)} className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold ${agentId === item.agentId ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? item.agentId}</button>
+    })}</div>}
+    {comments.length > 0 && <div className="mt-3 space-y-1.5">{comments.map((comment) => <div key={comment.id} className="rounded-lg bg-inset px-2.5 py-2 text-[10px] leading-4 text-ink-secondary">{comment.body}</div>)}</div>}
+    <textarea autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="canvas-panel-input mt-3 w-full resize-none rounded-xl border px-3 py-2.5 text-xs" />
+    {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
+    <div className="mt-3 flex justify-end"><button type="submit" disabled={!agentId || !body.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />发送反馈</button></div>
+  </form>
+}
+
+function CanvasAgentDialog({ onClose }: { onClose: () => void }) {
+  const snapshot = useCanvas((state) => state.snapshot)!
+  const assignAgent = useCanvas((state) => state.assignAgent)
+  const byId = useParticipants((state) => state.byId)
+  const agents = useMemo(() => Object.values(byId).filter((participant) => participant.kind === 'agent' && (participant.capabilities?.includes('canvas') || snapshot.assignments.some((item) => item.agentId === participant.id))), [byId, snapshot.assignments])
+  const [agentId, setAgentId] = useState(agents[0]?.id ?? '')
+  const [assignment, setAssignment] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    const text = assignment.trim()
+    if (!agentId || !text || busy) return
+    setBusy(true); setError(null)
+    try {
+      await assignAgent(agentId, text)
+      onClose()
+    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) }
+    finally { setBusy(false) }
+  }
+
+  return <div className="canvas-dialog-layer absolute inset-0 z-[70] grid place-items-center p-4" onPointerDown={onClose}><form onSubmit={submit} onPointerDown={(event) => event.stopPropagation()} className="canvas-mini-dialog w-full max-w-md rounded-2xl border border-hairline p-4 shadow-2xl backdrop-blur-xl">
+    <div className="flex items-center justify-between"><div><div className="text-sm font-semibold text-ink">在画布中新增工作</div><div className="mt-0.5 text-[10px] text-ink-secondary">选择智能体，并通过 @ 对话把任务加入当前画布。</div></div><button type="button" onClick={onClose} aria-label="关闭对话" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</button></div>
+    <div className="mt-4 flex flex-wrap gap-2">{agents.map((agent) => <button key={agent.id} type="button" onClick={() => setAgentId(agent.id)} className={`flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold ${agentId === agent.id ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}><AvatarMini p={agent} size={24} />@{agent.name}</button>)}</div>
+    <textarea autoFocus value={assignment} onChange={(event) => setAssignment(event.target.value)} rows={4} placeholder="描述希望智能体在这块画布中新增的工作…" className="canvas-panel-input mt-4 w-full resize-none rounded-xl border px-3 py-2.5 text-xs" />
+    {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
+    <div className="mt-3 flex justify-end"><button type="submit" disabled={!agentId || !assignment.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />@ 智能体并新增工作</button></div>
+  </form></div>
+}
+
+function assignmentForFrame(frame: CanvasFrame, assignments: CanvasAgentAssignment[]): CanvasAgentAssignment | undefined {
+  return assignments.find((assignment) => assignment.agentId === frame.updatedBy)
+    ?? assignments.find((assignment) => assignment.agentId === frame.createdBy)
+    ?? assignments.find((assignment) => assignment.activeFrameId === frame.id)
+}
+
+function localizeStatus(status: string): string {
+  return ({ working: '正在工作', editing: '正在编辑', viewing: '正在查看', queued: '排队中', blocked: '等待依赖', waiting: '正在复核', completed: '已完成', failed: '失败', cancelled: '已停止', offline: '离线' } as Record<string, string>)[status] ?? status
 }

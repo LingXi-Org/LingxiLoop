@@ -45,6 +45,7 @@ export interface AgentContext {
     assignment?: unknown
     assignments: unknown[]
     frames: unknown[]
+    activity: unknown[]
   }
   canvasRoster?: Array<{ id: string; name: string; role: string; status: string }>
 }

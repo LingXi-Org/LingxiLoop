@@ -22,7 +22,20 @@ function sessionKey(work: AgentWorkItem): string {
 }
 
 export function canvasContextContract(roster: unknown[]): string {
-  return `Agent OS Canvas decision policy: loop.canvas is preloaded in IPython, your only model-visible tool. Proactively start a Canvas workspace when the request needs multiple learning specialties, parallel investigation, dependent stages, or a shared visual result. First call loop.canvas.available_agents(); choose the smallest useful capable team yourself; then call loop.canvas.start_workspace(title=..., goal=..., members=[...]) with concrete assignments and dependsOnAgentIds where ordering matters. Never ask the human to open Canvas, select agents, or allocate work. Do not create a workspace for a quick single-agent answer. start_workspace safely defers the initiating turn after the live card appears. Canvas workers must read the current workspace, announce meaningful focus changes with loop.canvas.set_status(...), publish results in their frames, and never reply directly to the source conversation. Read a frame before replacing content and pass its revision as baseRevision; append_content is atomic. Keep execution inside your own IPython/Agent Home. Available Canvas agents: ${JSON.stringify(roster)}.`
+  return `Agent OS Canvas decision policy: loop.canvas is preloaded in IPython, your only model-visible tool. Proactively start a Canvas workspace when the request needs multiple learning specialties, parallel investigation, dependent stages, or a shared visual result. First call loop.canvas.available_agents(); choose the smallest useful capable team yourself; then call loop.canvas.start_workspace(title=..., goal=..., members=[...]) with concrete assignments and dependsOnAgentIds where ordering matters. Never ask the human to open Canvas, select agents, or allocate work. Do not create a workspace for a quick single-agent answer. start_workspace safely defers the initiating turn after the live card appears.
+
+Canvas IPython recipe (these are real calls, not pseudocode):
+workspace = loop.canvas.get(canvasId=canvas_id)
+loop.canvas.set_status(canvasId=canvas_id, status="正在整理资料")
+frame = loop.canvas.create_frame(canvasId=canvas_id, type="markdown", title="阶段结论", content="# 结论\\n\\n- 要点", data={})
+loop.canvas.set_status(canvasId=canvas_id, status="正在编辑阶段结论", frameId=frame["id"])
+fresh = loop.canvas.get(canvasId=canvas_id)
+current = next(item for item in fresh["frames"] if item["id"] == frame["id"])
+loop.canvas.update_frame(frameId=frame["id"], content="# 更新后的结论", baseRevision=current["revision"])
+loop.canvas.append_content(frameId=frame["id"], content="\\n\\n补充内容")
+loop.canvas.handoff(canvasId=canvas_id, toAgentId="目标 Agent ID", task="明确的后续任务", context="已完成内容、关键判断和验收条件", frameIds=[frame["id"]])
+
+Canvas workers must read the current workspace before editing; the snapshot includes the latest persisted activity events. Announce meaningful focus changes with set_status, and publish usable results as html, markdown, document, image, or artifact frames. Human right-click @ assignments and card feedback arrive as the current Canvas assignment or steering input: act on them in the same workspace, update the relevant frame when one is identified, and do not reply directly to the source conversation. Read a frame before replacing content and pass its revision as baseRevision; append_content is atomic. Use loop.canvas.handoff(...) when another Agent should own the next task: provide a focused task, concise context, and relevant frameIds. Use loop.canvas.add_agents(canvasId=..., members=[...]) only when a missing specialty is truly required. Keep execution inside your own IPython/Agent Home. Available Canvas agents: ${JSON.stringify(roster)}.`
 }
 
 function contextItems(context: Awaited<ReturnType<AgentOSHostAdapter['loadContext']>>, continuing: boolean): ModelItem[] {

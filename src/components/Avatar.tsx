@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react'
-import type { Participant } from '@/types'
-import { cn, statusColor } from '@/lib/utils'
 import { AVATAR_IMG_LOADING, useAvatarImg, useCachedAvatarSrc } from '@/lib/avatarCache'
+import { cn, statusColor } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
+import type { Participant } from '@/types'
 import { BloubAvatar } from './BloubAvatar'
 
 interface Props {
@@ -85,14 +85,16 @@ export function AvatarMini({
   p,
   size = 28,
   ringColor = 'var(--cloud)',
+  statusOverride,
   animated = true,
 }: {
   p: Participant
   size?: number
   ringColor?: string
+  statusOverride?: string
   animated?: boolean
 }) {
-  const status = useResolvedAvatarStatus(p)
+  const status = useResolvedAvatarStatus(p, statusOverride)
   const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : p.avatarUrl)
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
   return (

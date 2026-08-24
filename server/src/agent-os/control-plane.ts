@@ -1,9 +1,9 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
-import { Router, type Request, type Response, type NextFunction } from 'express'
+import { type NextFunction, type Request, type Response, Router } from 'express'
 import type { PoolClient } from 'pg'
+import { completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
-import { completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
 import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
 import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 
@@ -65,14 +65,15 @@ function workSessionKey(row: WorkRow | AgentWorkItem): string {
   return [companyId, agentId, channelId, thread ?? '-'].join(':')
 }
 
-async function requireLease(req: Request): Promise<{ work: AgentWorkItem; row: WorkRow }> {
+async function requireLease(req: Request, actionable = false): Promise<{ work: AgentWorkItem; row: WorkRow }> {
   const id = req.params.id
   const fence = Number(req.body?.fence ?? req.query.fence)
   const leaseToken = String(req.body?.leaseToken ?? req.query.leaseToken ?? '')
   const { rows } = await pool.query<WorkRow>(
     `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id
        FROM agent_work_items
-      WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND lease_expires_at > NOW()`,
+       WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND lease_expires_at > NOW()
+         ${actionable ? 'AND cancel_requested_at IS NULL' : ''}`,
     [id, fence, hash(leaseToken)],
   )
   if (!rows[0]) throw Object.assign(new Error('work lease lost or expired'), { status: 409 })
@@ -89,7 +90,8 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
     const { rows } = await client.query<WorkRow>(
       `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id
          FROM agent_work_items
-        WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
+         WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
+           AND cancel_requested_at IS NULL
           AND available_at <= NOW()
           AND NOT EXISTS (
             SELECT 1 FROM agent_os_session_leases sl
@@ -189,6 +191,7 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
       initiatorAgentId: canvas.initiatorAgentId,
       assignment: canvas.assignments.find((item) => item.agentId === work.agentId),
       assignments: canvas.assignments, frames: canvas.frames,
+      activity: canvas.activity.slice(0, 50),
     } } : {}),
     ...(approvals[0] ? { pendingApproval: {
       approvalId: approvals[0].id,
@@ -297,12 +300,30 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
   const client = await pool.connect()
   let transactionOpen = false
   try {
+    // Keep the work fence for the whole side-effect execution. Stop takes the
+    // same lock before committing cancellation, so once Stop returns an old
+    // lease cannot begin another Host Action.
+    if (work.canvasId) {
+      // Canvas actions share this workspace fence; workspace Stop takes its
+      // exclusive counterpart before changing durable state.
+      await client.query(`SELECT pg_advisory_lock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${work.canvasId}`])
+    }
+    await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [`agent-work:${work.id}`])
     // Serialize one stable action key across API replicas. If this process
     // crashes, Postgres releases the lock and the retry reuses the same sink
     // idempotency key derived from work/hop/call.
     await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [action.idempotencyKey])
     await client.query('BEGIN')
     transactionOpen = true
+    // Revalidate every work item after the advisory locks have been acquired.
+    // The HTTP entry check may have succeeded before a lease expiry/reclaim;
+    // this fence prevents that stale request from executing a side effect.
+    const { rows: actionable } = await client.query<{ id: string }>(
+      `SELECT id FROM agent_work_items WHERE id=$1 AND fence=$2 AND lease_token_hash=$3
+        AND status='leased' AND lease_expires_at > NOW() AND cancel_requested_at IS NULL`,
+      [work.id, work.fence, hash(work.leaseToken)],
+    )
+    if (!actionable[0]) throw Object.assign(new Error('work was stopped or lease was replaced'), { status: 409 })
     const replay = await actionFromLedger(client, action.idempotencyKey, action)
     if (replay && !(approved && replay.approval)) { await client.query('COMMIT'); return replay }
     await client.query(
@@ -350,12 +371,14 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
     throw error
   } finally {
     await client.query(`SELECT pg_advisory_unlock(hashtextextended($1, 0))`, [action.idempotencyKey]).catch(() => undefined)
+    if (work.canvasId) await client.query(`SELECT pg_advisory_unlock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${work.canvasId}`]).catch(() => undefined)
+    await client.query(`SELECT pg_advisory_unlock(hashtextextended($1, 0))`, [`agent-work:${work.id}`]).catch(() => undefined)
     client.release()
   }
 }
 
 agentOSControlRouter.post('/work/:id/actions', safe(async (req, res) => {
-  const { work } = await requireLease(req)
+  const { work } = await requireLease(req, true)
   res.json(await executeActionWithLedger(work, req.body.action as HostAction))
 }))
 
@@ -376,8 +399,11 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
   await pool.query(`UPDATE agent_runs SET stage=$2, updated_at=NOW() WHERE id=$1`, [event.runId, event.kind])
   if (work.reason === 'canvas_worker' && work.canvasId) {
     if (event.kind === 'run.started') {
-      await pool.query(`UPDATE canvas_agent_assignments SET status='working',started_at=COALESCE(started_at,NOW()),updated_at=NOW() WHERE id=$1`, [work.canvasAssignmentId])
-      await setCanvasStatus({ companyId: work.companyId, canvasId: work.canvasId, actorId: work.agentId, actorKind: 'agent', status: 'working' }).catch(() => undefined)
+      const { rows: started } = await pool.query<{ id: string }>(
+        `UPDATE canvas_agent_assignments SET status='working',started_at=COALESCE(started_at,NOW()),updated_at=NOW()
+          WHERE id=$1 AND status NOT IN ('completed','failed','cancelled') RETURNING id`, [work.canvasAssignmentId],
+      )
+      if (started[0]) await setCanvasStatus({ companyId: work.companyId, canvasId: work.canvasId, actorId: work.agentId, actorKind: 'agent', status: 'working' }).catch(() => undefined)
     }
     res.json({ ok: true }); return
   }
