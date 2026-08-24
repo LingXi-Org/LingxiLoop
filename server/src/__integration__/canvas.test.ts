@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { after, before, beforeEach, test } from 'node:test'
 import { executeLearningAction } from '../agent-os/learning-actions.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
-import { stopCanvasAssignment } from '../canvas/service.js'
+import { handoffCanvasWork, stopCanvasAssignment } from '../canvas/service.js'
 import { pool } from '../db/pool.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, teardownAll } from './_helpers.js'
 
@@ -111,6 +111,32 @@ test('[integration] canvas.* shares durable frames without sharing Agent executi
        SELECT id FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2
      )`, [canvasId, targetAgentId],
   )).rowCount, 1)
+
+  // A successful handoff may be retried after the workspace advances while
+  // the caller has not received its original response.
+  await pool.query(`UPDATE canvases SET status='completed' WHERE id=$1`, [canvasId])
+  const replayed = await handoffCanvasWork({
+    companyId, canvasId, fromAgentId: agentId, toAgentId: targetAgentId,
+    task: 'Review the shared plan and add verification steps',
+    context: 'The initial structure is complete; verify the assumptions.',
+    frameIds: [frame.id], idempotencyKey: `${work.id}:canvas-cell:7`,
+  })
+  assert.equal(replayed.activity.id, (handedOff.value as { activity: { id: string } }).activity.id)
+  await pool.query(`UPDATE canvases SET status='active' WHERE id=$1`, [canvasId])
+
+  // Fail exactly at the durable activity write. A process crash at this
+  // boundary has the same PostgreSQL outcome: the prior work/assignment
+  // mutations must roll back with the transaction.
+  await pool.query(`CREATE OR REPLACE FUNCTION test_canvas_stop_activity_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test cancellation activity failure'; END $$`)
+  await pool.query(`CREATE TRIGGER test_canvas_stop_activity_failure BEFORE INSERT ON canvas_activity FOR EACH ROW WHEN (NEW.action = 'task_cancelled') EXECUTE FUNCTION test_canvas_stop_activity_failure()`)
+  try {
+    await assert.rejects(stopCanvasAssignment({ companyId, canvasId, agentId: targetAgentId }), /test cancellation activity failure/)
+    assert.equal((await pool.query(`SELECT status FROM agent_work_items WHERE canvas_id=$1 AND agent_id=$2`, [canvasId, targetAgentId])).rows[0]?.status, 'queued')
+    assert.equal((await pool.query(`SELECT status FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2`, [canvasId, targetAgentId])).rows[0]?.status, 'queued')
+  } finally {
+    await pool.query(`DROP TRIGGER test_canvas_stop_activity_failure ON canvas_activity`)
+    await pool.query(`DROP FUNCTION test_canvas_stop_activity_failure()`)
+  }
 
   await stopCanvasAssignment({ companyId, canvasId, agentId: targetAgentId })
   assert.equal((await pool.query(

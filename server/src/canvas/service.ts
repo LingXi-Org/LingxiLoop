@@ -896,15 +896,21 @@ export async function handoffCanvasWork(input: {
       `SELECT * FROM canvases WHERE id=$1 AND company_id=$2 FOR UPDATE`, [input.canvasId, input.companyId],
     )
     const canvas = canvases[0]
-    if (!canvas || canvas.status !== 'active') throw new Error('only an active canvas accepts handoffs')
+    if (!canvas) throw Object.assign(new Error('canvas not found'), { status: 404 })
     const { rows: existingActivities } = await client.query<ActivityRow>(
       `SELECT * FROM canvas_activity WHERE id=$1 AND canvas_id=$2`, [activityId, canvas.id],
     )
     if (existingActivities[0]) {
       activity = toActivity(existingActivities[0])
       await client.query('COMMIT')
-      return { snapshot: await getCanvasSnapshot(input.companyId, input.fromAgentId, input.canvasId), activity }
+      const snapshot = await getCanvasSnapshot(input.companyId, input.fromAgentId, input.canvasId)
+      // Publishing is intentionally replay-safe. The durable activity is the
+      // source of truth; a lost post-commit Redis delivery is recovered when
+      // the caller retries the same idempotency key.
+      await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
+      return { snapshot: { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }, activity }
     }
+    if (canvas.status !== 'active') throw new Error('only an active canvas accepts handoffs')
 
     const { rows: sourceRows } = await client.query<AssignmentRow>(
       `SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2 FOR UPDATE`, [canvas.id, input.fromAgentId],
@@ -1120,16 +1126,76 @@ export async function steerCanvasAssignment(input: { companyId: string; canvasId
 }
 
 export async function stopCanvasAssignment(input: { companyId: string; canvasId: string; agentId: string }): Promise<void> {
-  const { rows } = await pool.query<{ id: string }>(
-    `UPDATE agent_work_items w SET cancel_requested_at=NOW(),status=CASE WHEN w.status IN ('queued','blocked') THEN 'cancelled' ELSE w.status END,updated_at=NOW()
-      FROM canvas_agent_assignments a,canvases c WHERE a.canvas_id=$2 AND a.agent_id=$3 AND a.canvas_id=c.id AND c.company_id=$1
-       AND w.canvas_assignment_id=a.id AND w.status IN ('queued','blocked','leased') RETURNING w.id`, [input.companyId, input.canvasId, input.agentId],
-  )
-  if (!rows[0]) throw new Error('active canvas assignment not found')
-  // completeCanvasWork owns the assignment terminal transition and activity.
-  // Updating it here first made that routine's terminal-state guard a no-op,
-  // so a learner stop silently lost its task_cancelled timeline event.
-  await completeCanvasWork({ workId: rows[0].id, companyId: input.companyId, status: 'cancelled', error: 'Stopped by learner' })
+  const client = await pool.connect()
+  let activity: CanvasActivity | null = null
+  try {
+    await client.query('BEGIN')
+    const { rows: works } = await client.query<{ id: string; canvas_assignment_id: string }>(
+      `UPDATE agent_work_items w SET cancel_requested_at=NOW(),status=CASE WHEN w.status IN ('queued','blocked') THEN 'cancelled' ELSE w.status END,updated_at=NOW()
+        FROM canvas_agent_assignments a,canvases c WHERE a.canvas_id=$2 AND a.agent_id=$3 AND a.canvas_id=c.id AND c.company_id=$1
+         AND w.canvas_assignment_id=a.id AND w.status IN ('queued','blocked','leased')
+       RETURNING w.id,w.canvas_assignment_id`, [input.companyId, input.canvasId, input.agentId],
+    )
+    const work = works[0]
+    if (!work) throw new Error('active canvas assignment not found')
+    const { rows: assignments } = await client.query<{ active_frame_id: string | null }>(
+      `UPDATE canvas_agent_assignments SET status='cancelled',error='Stopped by learner',completed_at=NOW(),updated_at=NOW()
+        WHERE id=$1 AND status NOT IN ('completed','failed','cancelled') RETURNING active_frame_id`, [work.canvas_assignment_id],
+    )
+    if (!assignments[0]) throw new Error('active canvas assignment not found')
+    const activityId = `activity-${createHash('sha256').update(`canvas-stop:${work.id}`).digest('hex').slice(0, 32)}`
+    const { rows: activities } = await client.query<{
+      id: string; canvas_id: string; frame_id: string | null; actor_id: string; actor_kind: CanvasActorKind; action: string; detail: Record<string, unknown>; created_at: string
+    }>(
+      `INSERT INTO canvas_activity (id,canvas_id,frame_id,actor_id,actor_kind,action,detail)
+       VALUES ($1,$2,$3,$4,'agent','task_cancelled',$5::jsonb)
+       ON CONFLICT (id) DO UPDATE SET id=canvas_activity.id RETURNING *`,
+      [activityId, input.canvasId, assignments[0].active_frame_id, input.agentId, JSON.stringify({ status: 'cancelled', error: 'Stopped by learner' })],
+    )
+    const row = activities[0]
+    activity = { id: row.id, canvasId: row.canvas_id, frameId: row.frame_id, actorId: row.actor_id,
+      actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at }
+    await client.query(
+      `WITH RECURSIVE blocked_descendants(id) AS (
+         SELECT d.assignment_id FROM canvas_assignment_dependencies d JOIN canvas_agent_assignments parent ON parent.id=d.depends_on_assignment_id
+          WHERE parent.canvas_id=$1 AND parent.status IN ('failed','cancelled')
+         UNION SELECT d.assignment_id FROM canvas_assignment_dependencies d JOIN blocked_descendants b ON b.id=d.depends_on_assignment_id
+       ) UPDATE canvas_agent_assignments child SET status='blocked',error='Blocked by a failed or stopped dependency',completed_at=NOW(),updated_at=NOW()
+          WHERE child.id IN (SELECT id FROM blocked_descendants) AND child.status='blocked' AND child.error IS NULL`, [input.canvasId],
+    )
+    await client.query(
+      `UPDATE agent_work_items work SET status='cancelled',cancel_requested_at=COALESCE(cancel_requested_at,NOW()),updated_at=NOW()
+         FROM canvas_agent_assignments assignment WHERE work.canvas_assignment_id=assignment.id AND assignment.canvas_id=$1
+          AND assignment.status='blocked' AND assignment.error IS NOT NULL AND work.status='blocked'`, [input.canvasId],
+    )
+    const { rows: unfinished } = await client.query(
+      `SELECT 1 FROM canvas_agent_assignments WHERE canvas_id=$1 AND
+        (status IN ('queued','working','waiting') OR (status='blocked' AND error IS NULL)) LIMIT 1`, [input.canvasId],
+    )
+    if (!unfinished[0]) {
+      const { rows: canvases } = await client.query<CanvasRow>(
+        `UPDATE canvases SET status='summarizing',updated_at=NOW() WHERE id=$1 AND status='active' RETURNING *`, [input.canvasId],
+      )
+      const canvas = canvases[0]
+      if (canvas?.initiator_agent_id && canvas.conversation_id) {
+        const summaryWorkId = `canvas-summary-${createHash('sha256').update(canvas.id).digest('hex').slice(0, 24)}`
+        await client.query(
+          `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id)
+           VALUES ($1,$2,$3,$4,$5,$6,'canvas_summary','queued',200,$7) ON CONFLICT (id) DO NOTHING`,
+          [summaryWorkId, canvas.company_id, canvas.initiator_agent_id, canvas.conversation_id, canvas.trigger_client_msg_no, `canvas-summary:${canvas.id}`, canvas.id],
+        )
+      }
+    }
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
+  await publishAssignments(input.companyId, input.canvasId)
+  if (activity) await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
+  const { rows: canvases } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE id=$1`, [input.canvasId])
+  if (canvases[0]) await publishCanvas(input.companyId, { kind: 'workspace.updated', canvasId: input.canvasId,
+    conversationId: canvases[0].conversation_id ?? undefined, workspace: { id: input.canvasId, status: canvases[0].status, title: canvases[0].title, goal: canvases[0].goal } })
 }
 
 export async function stopCanvasWorkspace(input: { companyId: string; canvasId: string }): Promise<void> {
