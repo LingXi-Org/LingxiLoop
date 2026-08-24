@@ -72,6 +72,24 @@ test('WuKong adapter treats the empty-channel 500 response as empty results', as
   await assert.doesNotReject(client.clearUnread('student', 'empty', 2))
 })
 
+test('WuKong adapter recognizes structured and localized empty-channel 500 responses', async () => {
+  for (const detail of [
+    '{"error":"channel does not exist"}',
+    '{"message":"no_messages"}',
+    '{"message":"频道不存在"}',
+  ]) {
+    globalThis.fetch = async () => new Response(detail, { status: 500 })
+    const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+    assert.deepEqual(await client.syncMessages('empty', 2), [])
+  }
+})
+
+test('WuKong adapter does not hide unrelated history failures', async () => {
+  globalThis.fetch = async () => new Response('storage unavailable', { status: 500 })
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  await assert.rejects(() => client.syncMessages('study', 2), /storage unavailable/)
+})
+
 test('WuKong stream events include enough routing metadata for the browser', async () => {
   let body: Record<string, unknown> = {}
   globalThis.fetch = async (_input, init) => {

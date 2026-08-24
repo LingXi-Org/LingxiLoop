@@ -20,7 +20,11 @@ function isEmptyChannelResult(error: unknown): boolean {
   // Both mean the same thing to the chat UI: there is simply no history (or
   // unread state) to return yet. Do not hide unrelated 500 failures.
   return /returned 404(?:\D|$)/.test(error.message)
-    || (/returned 500(?:\D|$)/.test(error.message) && /not found/i.test(error.message))
+    || (/returned 500(?:\D|$)/.test(error.message) && isEmptyChannelDetail(error.message))
+}
+
+function isEmptyChannelDetail(detail: string): boolean {
+  return /not[\s_-]*found|no[\s_-]*messages?|channel[^\r\n]{0,40}(?:missing|does not exist)|不存在|未找到|没有消息|无消息/i.test(detail)
 }
 
 export class WukongClient {

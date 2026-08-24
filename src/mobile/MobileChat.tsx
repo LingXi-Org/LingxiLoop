@@ -7,6 +7,7 @@ import { MessageRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
+import { SelectMenu } from '@/components/SelectMenu'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { TwEmoji } from '@/components/TwEmoji'
@@ -484,29 +485,23 @@ export function MobileChat() {
                   className="fixed inset-0 z-20"
                   onClick={() => setMenuOpen(false)}
                 />
-                <div
-                  className="absolute right-2 top-11 z-30 min-w-[180px] py-1 rounded-[12px] bg-paper animate-rise"
-                  style={{
-                    border: '1px solid var(--ink-100)',
-                    boxShadow: '0 12px 28px -8px rgba(10, 30, 60, 0.20), 0 4px 10px -4px rgba(10, 30, 60, 0.12)',
-                  }}
-                >
+                <div className="app-menu-surface absolute right-2 top-11 z-30 min-w-[180px] p-1 animate-rise">
                   <button
                     onClick={() => { pushStack('info'); setMenuOpen(false) }}
-                    className="w-full text-left py-2.5 px-3.5 text-[13px] text-ink-700 active:bg-sky2-50"
+                    className="app-menu-item"
                   >
                     查看详情
                   </button>
                   <button
                     onClick={toggleMute}
-                    className="w-full text-left py-2.5 px-3.5 text-[13px] text-ink-700 active:bg-sky2-50"
+                    className="app-menu-item"
                   >
                     {muted ? '取消静音' : '消息免打扰'}
                   </button>
                   <ThemeToggle
                     showLabel
                     onToggle={() => setMenuOpen(false)}
-                    className="w-full justify-start rounded-none py-2.5 px-3.5 text-[13px]"
+                    className="app-menu-item justify-start"
                   />
                   <div className="h-px bg-ink-100 mx-1.5 my-1" />
                   <button
@@ -656,13 +651,7 @@ export function MobileChat() {
             when a row is tapped (which would close the picker first). */}
         {mention && filteredMentions.length > 0 && (
           <div
-            className="mb-2 rounded-[12px] bg-paper animate-rise overflow-hidden"
-            style={{
-              border: '1px solid var(--ink-100)',
-              boxShadow: '0 12px 28px -8px rgba(10, 30, 60, 0.20), 0 4px 10px -4px rgba(10, 30, 60, 0.12)',
-              maxHeight: 240,
-              overflowY: 'auto',
-            }}
+            className="app-menu-surface mb-2 max-h-60 overflow-y-auto p-1 animate-rise"
             onMouseDown={(e) => e.preventDefault()}
           >
             <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-300">
@@ -677,8 +666,8 @@ export function MobileChat() {
                     type="button"
                     onClick={() => insertMention(entry)}
                     className={cn(
-                      'w-full text-left flex items-center gap-2.5 py-2 px-3 transition',
-                      active ? 'bg-sky2-50' : 'active:bg-sky2-50',
+                      'app-menu-item',
+                      active && 'is-active',
                     )}
                   >
                     <Avatar
@@ -702,8 +691,8 @@ export function MobileChat() {
                   type="button"
                   onClick={() => insertMention(entry)}
                   className={cn(
-                    'w-full text-left flex items-center gap-2.5 py-2 px-3 transition',
-                    active ? 'bg-sky2-50' : 'active:bg-sky2-50',
+                    'app-menu-item',
+                    active && 'is-active',
                   )}
                 >
                   <Avatar p={p} size={28} ringColor="var(--paper)" showStatus={false} animated={false} />
@@ -1260,15 +1249,16 @@ export function MobileChatInfo() {
           {isGroup && (
             <div className="mb-4">
               <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-2">Leader</h4>
-              <select
+              <SelectMenu
                 value={c.leaderId ?? ''}
-                onChange={(event) => void changeLeader(event.target.value)}
-                className="w-full rounded-[10px] bg-cloud border border-ink-100 px-3 py-2.5 text-[13px] font-semibold text-ink-900 outline-none"
-                aria-label="Change group leader"
-              >
-                {!c.leaderId && <option value="" disabled>Choose an active agent</option>}
-                {activeGroupAgents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
-              </select>
+                onChange={(value) => void changeLeader(value)}
+                options={[
+                  ...(!c.leaderId ? [{ value: '', label: 'Choose an active agent', disabled: true }] : []),
+                  ...activeGroupAgents.map((agent) => ({ value: agent.id, label: agent.name })),
+                ]}
+                className="w-full"
+                ariaLabel="Change group leader"
+              />
               <p className="mt-1.5 text-[11px] text-ink-400">Ordinary messages wake this agent; the Leader can delegate with @member-id.</p>
             </div>
           )}

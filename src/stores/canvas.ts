@@ -1,16 +1,18 @@
 import { create } from 'zustand'
-import { api, ws, type WsEvent } from '@/api/client'
+import { api, type WsEvent, ws } from '@/api/client'
+import { findCanvasPlacement } from '@/lib/canvasLayout'
+import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from '@/lib/canvasRealtime'
+import { useApp } from '@/stores/app'
 import type {
   CanvasFrame,
   CanvasFrameType,
   CanvasSnapshot,
   CanvasWorkspaceSummary,
 } from '@/types'
-import { useApp } from '@/stores/app'
-import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from '@/lib/canvasRealtime'
 
 interface CanvasState {
   snapshot: CanvasSnapshot | null
+  previews: Record<string, CanvasSnapshot>
   workspaces: CanvasWorkspaceSummary[]
   activeCanvasId: string | null
   eventClocks: Record<string, string>
@@ -19,6 +21,7 @@ interface CanvasState {
   error: string | null
   selectedFrameId: string | null
   load: (canvasId?: string) => Promise<void>
+  loadPreview: (canvasId: string) => Promise<void>
   loadWorkspaces: (conversationId?: string) => Promise<void>
   reset: () => void
   selectFrame: (id: string | null) => void
@@ -26,11 +29,12 @@ interface CanvasState {
   createFrame: (type: CanvasFrameType, at?: { x: number; y: number }) => Promise<CanvasFrame>
   updateFrame: (id: string, patch: Partial<Pick<CanvasFrame,
     'type' | 'title' | 'x' | 'y' | 'width' | 'height' | 'content' | 'data'
-  >>, optimistic?: boolean) => Promise<CanvasFrame>
+  >>, optimistic?: boolean, baseRevision?: number) => Promise<CanvasFrame>
   deleteFrame: (id: string) => Promise<void>
   addComment: (body: string, frameId?: string | null) => Promise<void>
   setStatus: (status: string, frameId?: string | null, cursor?: { x: number; y: number }) => Promise<void>
   steerAgent: (agentId: string, text: string) => Promise<void>
+  assignAgent: (agentId: string, assignment: string) => Promise<void>
   stopAgent: (agentId: string) => Promise<void>
   stopWorkspace: () => Promise<void>
   applyEvent: (event: Extract<WsEvent, { type: 'canvas.changed' }>) => void
@@ -46,6 +50,7 @@ const defaults: Record<CanvasFrameType, { title: string; content: string; width:
 
 export const useCanvas = create<CanvasState>((set, get) => ({
   snapshot: null,
+  previews: {},
   workspaces: [],
   activeCanvasId: null,
   eventClocks: {},
@@ -60,6 +65,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
       const snapshot = await api.getCanvas(canvasId ?? get().activeCanvasId ?? undefined)
       set((state) => ({
         snapshot,
+        previews: { ...state.previews, [snapshot.id]: snapshot },
         activeCanvasId: snapshot.id,
         eventClocks: {
           ...state.eventClocks,
@@ -79,33 +85,56 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     }
   },
 
+  loadPreview: async (canvasId) => {
+    const state = get()
+    if (state.snapshot?.id === canvasId || state.previews[canvasId]) return
+    try {
+      const snapshot = await api.getCanvas(canvasId)
+      set((current) => ({ previews: { ...current.previews, [canvasId]: snapshot } }))
+    } catch {
+      // A message preview is supplementary UI. Opening the workspace still
+      // uses load(), which surfaces actionable errors in the Canvas view.
+    }
+  },
+
   loadWorkspaces: async (conversationId) => {
     try { set({ workspaces: await api.getCanvases(conversationId) }) }
     catch (error) { set({ error: error instanceof Error ? error.message : String(error) }) }
   },
 
-  reset: () => set({ snapshot: null, workspaces: [], activeCanvasId: null, eventClocks: {}, liveCards: {}, loading: false, error: null, selectedFrameId: null }),
+  reset: () => set({ snapshot: null, previews: {}, workspaces: [], activeCanvasId: null, eventClocks: {}, liveCards: {}, loading: false, error: null, selectedFrameId: null }),
   selectFrame: (id) => set({ selectedFrameId: id }),
-  patchLocalFrame: (id, patch) => set((state) => state.snapshot ? {
-    snapshot: {
+  patchLocalFrame: (id, patch) => set((state) => {
+    if (!state.snapshot) return {}
+    const nextSnapshot = {
       ...state.snapshot,
       frames: state.snapshot.frames.map((frame) => frame.id === id ? { ...frame, ...patch } : frame),
-    },
-  } : {}),
+    }
+    return {
+      snapshot: nextSnapshot,
+      previews: state.previews[nextSnapshot.id]
+        ? { ...state.previews, [nextSnapshot.id]: nextSnapshot }
+        : state.previews,
+    }
+  }),
 
   createFrame: async (type, at = { x: 80, y: 80 }) => {
     const preset = defaults[type]
-    const frame = await api.createCanvasFrame({ canvasId: get().activeCanvasId ?? undefined, type, x: at.x, y: at.y, ...preset })
+    const placement = findCanvasPlacement(get().snapshot?.frames ?? [], preset, at)
+    const frame = await api.createCanvasFrame({ canvasId: get().activeCanvasId ?? undefined, type, x: placement.x, y: placement.y, ...preset })
     set((state) => ({
       selectedFrameId: frame.id,
       snapshot: state.snapshot
         ? { ...state.snapshot, frames: upsertCanvasFrame(state.snapshot.frames, frame) }
         : state.snapshot,
+      previews: state.previews[frame.canvasId]
+        ? { ...state.previews, [frame.canvasId]: { ...state.previews[frame.canvasId], frames: upsertCanvasFrame(state.previews[frame.canvasId].frames, frame) } }
+        : state.previews,
     }))
     return frame
   },
 
-  updateFrame: async (id, patch, optimistic = false) => {
+  updateFrame: async (id, patch, optimistic = false, baseRevision) => {
     const before = get().snapshot?.frames.find((frame) => frame.id === id)
     if (optimistic && before) {
       set((state) => state.snapshot ? {
@@ -117,10 +146,13 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     }
     try {
       const contentChange = patch.type !== undefined || patch.title !== undefined || patch.content !== undefined || patch.data !== undefined
-      const frame = await api.updateCanvasFrame(id, { ...patch, ...(contentChange && before ? { baseRevision: before.revision } : {}) })
-      set((state) => state.snapshot ? {
-        snapshot: { ...state.snapshot, frames: upsertCanvasFrame(state.snapshot.frames, frame) },
-      } : {})
+      const frame = await api.updateCanvasFrame(id, { ...patch, ...(contentChange && before ? { baseRevision: baseRevision ?? before.revision } : {}) })
+      set((state) => ({
+        ...(state.snapshot ? { snapshot: { ...state.snapshot, frames: upsertCanvasFrame(state.snapshot.frames, frame) } } : {}),
+        ...(state.previews[frame.canvasId] ? {
+          previews: { ...state.previews, [frame.canvasId]: { ...state.previews[frame.canvasId], frames: upsertCanvasFrame(state.previews[frame.canvasId].frames, frame) } },
+        } : {}),
+      }))
       return frame
     } catch (error) {
       if (optimistic && before) {
@@ -133,11 +165,15 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
 
   deleteFrame: async (id) => {
+    const canvasId = get().snapshot?.frames.find((frame) => frame.id === id)?.canvasId
     await api.deleteCanvasFrame(id)
-    set((state) => state.snapshot ? {
+    set((state) => ({
       selectedFrameId: state.selectedFrameId === id ? null : state.selectedFrameId,
-      snapshot: { ...state.snapshot, frames: state.snapshot.frames.filter((frame) => frame.id !== id) },
-    } : {})
+      ...(state.snapshot ? { snapshot: { ...state.snapshot, frames: state.snapshot.frames.filter((frame) => frame.id !== id) } } : {}),
+      ...(canvasId && state.previews[canvasId] ? {
+        previews: { ...state.previews, [canvasId]: { ...state.previews[canvasId], frames: state.previews[canvasId].frames.filter((frame) => frame.id !== id) } },
+      } : {}),
+    }))
   },
 
   addComment: async (body, frameId = null) => {
@@ -159,6 +195,15 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   steerAgent: async (agentId, text) => {
     const canvasId = get().activeCanvasId; if (!canvasId) return
     await api.steerCanvasAssignment(canvasId, agentId, text)
+  },
+  assignAgent: async (agentId, assignment) => {
+    const canvasId = get().activeCanvasId; if (!canvasId) return
+    const snapshot = await api.assignCanvasWork(canvasId, agentId, assignment)
+    set((state) => ({
+      snapshot,
+      previews: { ...state.previews, [snapshot.id]: snapshot },
+      activeCanvasId: snapshot.id,
+    }))
   },
   stopAgent: async (agentId) => {
     const canvasId = get().activeCanvasId; if (!canvasId) return
@@ -202,6 +247,25 @@ export const useCanvas = create<CanvasState>((set, get) => ({
         next = { ...current, status: event.workspace.status }
       }
       return next === current ? {} : { liveCards: { ...state.liveCards, [event.canvasId]: next } }
+    })
+    set((state) => {
+      const preview = state.previews[event.canvasId]
+      if (!preview) return {}
+      if ((event.kind === 'frame.created' || event.kind === 'frame.updated') && event.frame) {
+        return { previews: { ...state.previews, [event.canvasId]: { ...preview, frames: upsertCanvasFrame(preview.frames, event.frame) } } }
+      }
+      if (event.kind === 'frame.deleted' && event.frameId) {
+        return { previews: { ...state.previews, [event.canvasId]: { ...preview, frames: preview.frames.filter((frame) => frame.id !== event.frameId) } } }
+      }
+      if (event.kind === 'assignment.updated' && event.assignment) {
+        return { previews: { ...state.previews, [event.canvasId]: { ...preview, assignments: [
+          ...preview.assignments.filter((item) => item.agentId !== event.assignment!.agentId), event.assignment,
+        ] } } }
+      }
+      if (event.kind === 'workspace.updated' && event.workspace) {
+        return { previews: { ...state.previews, [event.canvasId]: { ...preview, ...event.workspace } as CanvasSnapshot } }
+      }
+      return {}
     })
     set((state) => {
       const snapshot = state.snapshot

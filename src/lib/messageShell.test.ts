@@ -48,9 +48,30 @@ test('web, desktop, and mobile compose the shared IM core without Telegram runti
 
 test('desktop chat reserves a scrollable middle row so the composer stays at the bottom', async () => {
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  assert.match(desktop, /chat-surface grid h-full min-h-0 min-w-0 overflow-hidden/)
+  assert.match(desktop, /chat-surface grid h-full min-h-0 min-w-0 grid-rows-/)
   assert.match(desktop, /grid-rows-\[auto_auto_minmax\(0,1fr\)_auto\]/)
+  assert.match(desktop, /data-chat-auxiliary="true"[\s\S]*?<ConversationActivity/)
+  assert.doesNotMatch(desktop, /searchOpen[\s\S]{0,160}grid-rows-/)
   assert.match(desktop, /<Composer convoId=\{convoId\} \/>/)
+})
+
+test('desktop IM columns resize without changing the message/composer grid contract', async () => {
+  const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
+  const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
+  assert.match(shell, /role="separator"/)
+  assert.match(shell, /setPointerCapture/)
+  assert.match(shell, /LEFT_COLUMN_STORAGE_KEY/)
+  assert.match(shell, /--im-left-column-width/)
+  assert.match(css, /grid-template-columns: var\(--im-left-column-width\) minmax\(0, 1fr\)/)
+  assert.match(css, /calc\(100vw - var\(--im-left-column-width\)\)/)
+})
+
+test('reply text and composer surface do not restore the removed outer rules', async () => {
+  const message = await readFile(new URL('../components/Message.tsx', import.meta.url), 'utf8')
+  const composer = await readFile(new URL('../im/Composer.tsx', import.meta.url), 'utf8')
+  const quoteCard = message.slice(message.indexOf('function QuoteCard'), message.indexOf('function ReplyIconButton'))
+  assert.doesNotMatch(quoteCard, /openmaus-quote-card|border-|rounded-/)
+  assert.doesNotMatch(composer, /border-t|border-hairline/)
 })
 
 test('Coworker cards use semantic light/dark tokens and expose the shared shell marker', async () => {

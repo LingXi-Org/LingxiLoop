@@ -1,28 +1,32 @@
 import { useEffect, useState } from 'react'
-import { useIsMobile } from '@/lib/utils'
-import { useApp } from '@/stores/app'
-import { useAuth } from '@/stores/auth'
-import { useMessages, bootMessagesStream } from '@/stores/messages'
-import { bootParticipants } from '@/stores/participants'
-import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
-import { bootWhispers, useWhispers } from '@/stores/whispers'
-import { usePrefs } from '@/stores/preferences'
+import { AdminApp } from '@/admin/AdminApp'
+import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
+import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
 import { api } from '@/api/client'
-import { DesktopApp } from '@/desktop/DesktopApp'
-import { MobileApp } from '@/mobile/MobileApp'
 import { AuthGate } from '@/components/AuthGate'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import {
+  clearPendingInvite,
+  consumeInviteFromUrl,
+  getPendingInvite,
+  InviteAcceptScreen,
+} from '@/components/InviteAcceptScreen'
 import { NotificationToasts } from '@/components/NotificationToasts'
 import { NotificationWindow } from '@/components/NotificationWindow'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { isNotificationWindow } from '@/lib/runtime'
-import {
-  InviteAcceptScreen, consumeInviteFromUrl,
-  getPendingInvite, clearPendingInvite,
-} from '@/components/InviteAcceptScreen'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
-import { AdminApp } from '@/admin/AdminApp'
-import { WaitlistConfirmedScreen, consumeWaitlistFragment } from '@/admin/WaitlistConfirmedScreen'
-import { SuspendedScreen, consumeSuspendedFragment } from '@/admin/SuspendedScreen'
+import { DesktopApp } from '@/desktop/DesktopApp'
+import { seedMockIm } from '@/dev/mockIm'
+import { isMockImDevelopment } from '@/lib/devMode'
+import { isNotificationWindow } from '@/lib/runtime'
+import { useIsMobile } from '@/lib/utils'
+import { MobileApp } from '@/mobile/MobileApp'
+import { useApp } from '@/stores/app'
+import { useAuth } from '@/stores/auth'
+import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
+import { bootMessagesStream, useMessages } from '@/stores/messages'
+import { bootParticipants } from '@/stores/participants'
+import { usePrefs } from '@/stores/preferences'
+import { bootWhispers, useWhispers } from '@/stores/whispers'
 import '@/admin/admin.css'
 
 /** True iff this browser tab is for the admin panel. An optional `admin.*`
@@ -35,7 +39,7 @@ function isAdminContext(): boolean {
   return false
 }
 
-function AuthedApp() {
+function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
   const isMobile = useIsMobile()
   const convoId = useApp((s) => s.selectedConversationId)
   const view = useApp((s) => s.view)
@@ -47,12 +51,13 @@ function AuthedApp() {
   )
   const [updaterOpen, setUpdaterOpen] = useState(false)
   useEffect(() => {
+    if (mockMode) return
     bootMessagesStream()
     bootParticipants()
     bootConversations()
     bootWhispers()
     void usePrefs.getState().load()
-  }, [])
+  }, [mockMode])
 
   useEffect(() => {
     window.lingxiloop?.dock?.setUnreadDot(hasDockUnread)
@@ -64,18 +69,20 @@ function AuthedApp() {
 
   // Lazy-load messages + mark conversation as read when selected
   useEffect(() => {
+    if (mockMode) return
     if (!convoId || !selectedConvoExists) return
     void useMessages.getState().loadConversation(convoId)
     void api.markRead(convoId).then(() => {
       // refresh list so the badge clears
       void useConversations.getState().reload()
     }).catch(() => { /* swallow */ })
-  }, [convoId, selectedConvoExists])
+  }, [convoId, selectedConvoExists, mockMode])
 
   // Lazy-refresh whisper list when entering whispers view
   useEffect(() => {
+    if (mockMode) return
     if (view === 'whispers') useWhispers.getState().loadList()
-  }, [view])
+  }, [view, mockMode])
 
   // Cross-component "open updater" channel — MeView's "Check for
   // updates" button posts this event to ask AuthedApp to open the
@@ -92,9 +99,9 @@ function AuthedApp() {
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}
-      <NotificationToasts />
-      <UpdateBanner onOpen={() => setUpdaterOpen(true)} />
-      <UpdaterDialog open={updaterOpen} onClose={() => setUpdaterOpen(false)} />
+      {!mockMode && <NotificationToasts />}
+      {!mockMode && <UpdateBanner onOpen={() => setUpdaterOpen(true)} />}
+      {!mockMode && <UpdaterDialog open={updaterOpen} onClose={() => setUpdaterOpen(false)} />}
     </>
   )
 }
@@ -105,6 +112,17 @@ export function App() {
   // routing) and just render the toast stack — it receives payloads over
   // IPC from the main window.
   if (isNotificationWindow) return <NotificationWindow />
+
+  // Local Vite development opens straight into a deterministic IM workspace.
+  // `?api=1` remains available for explicitly testing the real auth/API stack.
+  if (isMockImDevelopment() && !isAdminContext()) {
+    seedMockIm()
+    return (
+      <ErrorBoundary>
+        <AuthedApp mockMode />
+      </ErrorBoundary>
+    )
+  }
 
   // Waitlist landing — handleCallback redirects here with `#waitlist=1`
   // when a brand-new OAuth visitor hit the gate. Consume the fragment

@@ -85,12 +85,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
       {open && (
         <div
           ref={popRef}
-          className="absolute top-full mt-1 right-0 min-w-[240px] rounded-[10px] py-1.5 z-50"
-          style={{
-            background: 'var(--paper)',
-            border: '1px solid var(--ink-100)',
-            boxShadow: '0 12px 32px -8px rgba(10, 30, 60, 0.18), 0 4px 8px -2px rgba(10, 30, 60, 0.08)',
-          }}
+          className="app-menu-surface absolute right-0 top-full z-50 mt-1 min-w-[240px] p-1.5"
         >
           <div className="px-3 py-1 text-[10.5px] uppercase tracking-wide text-ink-300 font-display">
             {zh ? '切换工作区' : "切换工作空间"}
@@ -99,7 +94,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
             <button
               key={c.id}
               onClick={() => switchCompany(c.id)}
-              className="w-full px-3 py-1.5 flex items-center gap-2 text-left hover:bg-cloud transition"
+              className="app-menu-item"
             >
               <span
                 className="w-5 h-5 rounded grid place-items-center text-[10px] font-bold text-white shrink-0"
@@ -120,7 +115,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
           {active && (active.role === 'owner' || active.role === 'admin') && (
             <button
               onClick={() => { setInviteOpen(true); setOpen(false) }}
-              className="w-full px-3 py-1.5 flex items-center gap-2 text-left hover:bg-cloud transition text-[12px] text-ink-700"
+              className="app-menu-item"
             >
               <span
                 className="w-5 h-5 rounded grid place-items-center shrink-0 text-[11px]"
@@ -158,7 +153,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
           ) : (
             <button
               onClick={() => setCreating(true)}
-              className="w-full px-3 py-1.5 flex items-center gap-2 text-left hover:bg-cloud transition text-[12px] text-ink-700"
+              className="app-menu-item"
             >
               <span className="w-5 h-5 rounded grid place-items-center text-ink-500 shrink-0" style={{ border: '1px dashed var(--ink-100)' }}>+</span>
               {zh ? '创建新工作区' : "创建新工作区"}

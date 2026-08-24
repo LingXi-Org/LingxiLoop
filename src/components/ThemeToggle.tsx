@@ -23,7 +23,7 @@ export function ThemeToggle({ className, showLabel = false, onToggle }: Props) {
         className,
       )}
     >
-      {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+      <span className={showLabel ? 'app-menu-icon' : undefined}>{theme === 'dark' ? <SunIcon /> : <MoonIcon />}</span>
       {showLabel && <span>{theme === 'dark' ? '浅色主题' : '深色主题'}</span>}
     </button>
   )

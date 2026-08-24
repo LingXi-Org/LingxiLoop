@@ -10,13 +10,13 @@ import type {
   CalendarEventKind,
   CalendarEventStatus,
   CalendarReminderChannel,
-  Message,
   CanvasActivity,
   CanvasComment,
   CanvasFrame,
   CanvasFrameType,
   CanvasPresence,
   CanvasSnapshot,
+  Message,
   RecurrenceRule,
   Status,
 } from '@/types'
@@ -923,6 +923,10 @@ export const api = {
     http<CanvasPresence | null>('/canvas/status', { method: 'POST', body: JSON.stringify({ status, frameId, canvasId, cursorX: cursor?.x, cursorY: cursor?.y }) }),
   addCanvasComment: (body: string, frameId?: string | null, canvasId?: string) =>
     http<CanvasComment>('/canvas/comments', { method: 'POST', body: JSON.stringify({ body, frameId, canvasId }) }),
+  assignCanvasWork: (canvasId: string, agentId: string, assignment: string) =>
+    http<CanvasSnapshot>(`/canvases/${encodeURIComponent(canvasId)}/assignments`, {
+      method: 'POST', body: JSON.stringify({ agentId, assignment }),
+    }),
   steerCanvasAssignment: (canvasId: string, agentId: string, text: string) =>
     http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/assignments/${encodeURIComponent(agentId)}/steer`, { method: 'POST', body: JSON.stringify({ text }) }),
   stopCanvasAssignment: (canvasId: string, agentId: string) =>

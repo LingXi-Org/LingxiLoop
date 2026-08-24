@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { type CSSProperties, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { CanvasView } from '@/components/CanvasView'
 import { EmailComposer } from '@/components/EmailComposer'
 import { isElectron, platform } from '@/lib/runtime'
@@ -20,7 +20,7 @@ import { ThreadDrawer } from './ThreadDrawer'
 
 const CONTEXT_TITLES: Partial<Record<ViewKey['view'], string>> = {
   agents: '智能体',
-  canvas: 'Canvas',
+  canvas: '画布',
   library: '资料库',
   documents: '文档',
   boards: '看板',
@@ -28,11 +28,49 @@ const CONTEXT_TITLES: Partial<Record<ViewKey['view'], string>> = {
   me: '我的',
 }
 
+const LEFT_COLUMN_STORAGE_KEY = 'lingxiloop:im-left-column-width'
+const LEFT_COLUMN_MIN = 256
+const LEFT_COLUMN_MAX = 424
+const MIDDLE_COLUMN_MIN = 360
+
+function defaultLeftColumnWidth(viewportWidth: number): number {
+  return Math.round(Math.min(LEFT_COLUMN_MAX, Math.max(LEFT_COLUMN_MIN, viewportWidth * 0.25)))
+}
+
+function rightColumnWidth(viewportWidth: number): number {
+  return Math.min(424, Math.max(320, viewportWidth * 0.27))
+}
+
+function clampLeftColumnWidth(width: number, viewportWidth: number, contextOpen: boolean): number {
+  const reservedContext = contextOpen && viewportWidth > 1180 ? rightColumnWidth(viewportWidth) : 0
+  const responsiveMax = Math.max(LEFT_COLUMN_MIN, viewportWidth - MIDDLE_COLUMN_MIN - reservedContext)
+  return Math.round(Math.min(LEFT_COLUMN_MAX, responsiveMax, Math.max(LEFT_COLUMN_MIN, width)))
+}
+
+function loadLeftColumnWidth(): number {
+  if (typeof window === 'undefined') return 320
+  try {
+    const stored = Number(window.localStorage.getItem(LEFT_COLUMN_STORAGE_KEY))
+    if (Number.isFinite(stored) && stored > 0) return stored
+  } catch { /* private browsing can deny storage access */ }
+  return defaultLeftColumnWidth(window.innerWidth)
+}
+
+function hasStoredLeftColumnWidth(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const stored = Number(window.localStorage.getItem(LEFT_COLUMN_STORAGE_KEY))
+    return Number.isFinite(stored) && stored > 0
+  } catch {
+    return false
+  }
+}
+
 function WorkspaceContext({ view }: { view: ViewKey['view'] }) {
   const close = () => useApp.getState().setView('conversations')
   const libraryOpen = view === 'library' || view === 'documents' || view === 'boards' || view === 'calendar'
   const body = view === 'agents' ? <AgentsView />
-    : view === 'canvas' ? <CanvasView />
+    : view === 'canvas' ? <CanvasView onBack={close} />
       : view === 'boards' ? <BoardsView />
         : view === 'calendar' ? <CalendarView />
           : view === 'me' ? <MeView />
@@ -72,22 +110,12 @@ function WorkspaceContext({ view }: { view: ViewKey['view'] }) {
 
 function CanvasContext({ canvasId, onClose }: { canvasId: string; onClose: () => void }) {
   return (
-    <div className="relative h-full min-h-0 overflow-hidden">
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute right-3 top-3 z-50 rounded-full border border-hairline bg-panel/95 px-3 py-1.5 text-xs font-medium text-ink-secondary shadow-sm backdrop-blur hover:bg-raised"
-      >
-        关闭
-      </button>
-      <CanvasView canvasId={canvasId} embedded />
-    </div>
+    <div className="relative h-full min-h-0 overflow-hidden"><CanvasView canvasId={canvasId} onBack={onClose} /></div>
   )
 }
 
-/** IM-first desktop/web shell. Messaging remains mounted in the first two
- * columns; profiles, threads, artifacts, agents and workspace tools use a
- * contextual third rail instead of replacing chat with product tabs. */
+/** IM-first desktop/web shell. Profiles and lightweight artifacts may use a
+ * contextual rail; an opened Canvas always replaces the conversation column. */
 export function DesktopApp() {
   const theme = useTheme((state) => state.theme)
   const view = useApp((state) => state.view)
@@ -98,33 +126,92 @@ export function DesktopApp() {
   const calendarEventId = useApp((state) => state.openCalendarEventId)
   const canvasId = useApp((state) => state.openCanvasId)
   const closeCanvasPeek = useApp((state) => state.closeCanvasPeek)
-  const [canvasWidth, setCanvasWidth] = useState(560)
-  const resizingCanvas = useRef(false)
   const workspaceContextOpen = view !== 'conversations'
-  const contextOpen = Boolean(infoParticipantId || openThread || documentId || boardId || calendarEventId || canvasId || workspaceContextOpen)
+  const contextOpen = !canvasId && Boolean(infoParticipantId || openThread || documentId || boardId || calendarEventId || workspaceContextOpen)
+  const [leftColumnWidth, setLeftColumnWidth] = useState(loadLeftColumnWidth)
+  const hasCustomLeftWidthRef = useRef(hasStoredLeftColumnWidth())
+  const resizeRef = useRef<{ pointerId: number; startX: number; startWidth: number } | null>(null)
+
+  const persistLeftColumnWidth = useCallback((width: number) => {
+    try { window.localStorage.setItem(LEFT_COLUMN_STORAGE_KEY, String(width)) } catch { /* best effort */ }
+  }, [])
+
+  const stopResize = useCallback((target?: HTMLElement, pointerId?: number) => {
+    if (target && pointerId !== undefined && target.hasPointerCapture(pointerId)) {
+      target.releasePointerCapture(pointerId)
+    }
+    resizeRef.current = null
+    document.body.classList.remove('im-column-resizing')
+  }, [])
+
+  const handleResizeStart = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    hasCustomLeftWidthRef.current = true
+    resizeRef.current = { pointerId: event.pointerId, startX: event.clientX, startWidth: leftColumnWidth }
+    document.body.classList.add('im-column-resizing')
+  }, [leftColumnWidth])
+
+  const handleResizeMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const resize = resizeRef.current
+    if (!resize || resize.pointerId !== event.pointerId) return
+    const next = clampLeftColumnWidth(
+      resize.startWidth + event.clientX - resize.startX,
+      window.innerWidth,
+      contextOpen,
+    )
+    setLeftColumnWidth(next)
+  }, [contextOpen])
+
+  const handleResizeEnd = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (resizeRef.current?.pointerId !== event.pointerId) return
+    persistLeftColumnWidth(leftColumnWidth)
+    stopResize(event.currentTarget, event.pointerId)
+  }, [leftColumnWidth, persistLeftColumnWidth, stopResize])
+
+  const resetLeftColumnWidth = useCallback(() => {
+    const next = clampLeftColumnWidth(defaultLeftColumnWidth(window.innerWidth), window.innerWidth, contextOpen)
+    hasCustomLeftWidthRef.current = false
+    setLeftColumnWidth(next)
+    try { window.localStorage.removeItem(LEFT_COLUMN_STORAGE_KEY) } catch { /* best effort */ }
+  }, [contextOpen])
+
+  const handleResizeKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    let next: number | null = null
+    if (event.key === 'ArrowLeft') next = leftColumnWidth - (event.shiftKey ? 32 : 8)
+    if (event.key === 'ArrowRight') next = leftColumnWidth + (event.shiftKey ? 32 : 8)
+    if (event.key === 'Home') next = LEFT_COLUMN_MIN
+    if (event.key === 'End') next = LEFT_COLUMN_MAX
+    if (next === null) return
+    event.preventDefault()
+    const clamped = clampLeftColumnWidth(next, window.innerWidth, contextOpen)
+    hasCustomLeftWidthRef.current = true
+    setLeftColumnWidth(clamped)
+    persistLeftColumnWidth(clamped)
+  }, [contextOpen, leftColumnWidth, persistLeftColumnWidth])
 
   useEffect(() => {
     window.lingxiloop?.windowChrome?.setTheme(theme)
   }, [theme])
 
   useEffect(() => {
-    if (!canvasId) return
-    const move = (event: PointerEvent) => {
-      if (!resizingCanvas.current) return
-      setCanvasWidth(Math.max(380, Math.min(900, window.innerWidth - event.clientX)))
+    const handleWindowResize = () => {
+      setLeftColumnWidth((current) => clampLeftColumnWidth(
+        hasCustomLeftWidthRef.current ? current : defaultLeftColumnWidth(window.innerWidth),
+        window.innerWidth,
+        contextOpen,
+      ))
     }
-    const up = () => {
-      resizingCanvas.current = false
-      document.body.classList.remove('im-column-resizing')
-    }
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up)
-    return () => {
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', up)
-      document.body.classList.remove('im-column-resizing')
-    }
-  }, [canvasId])
+    handleWindowResize()
+    window.addEventListener('resize', handleWindowResize)
+    return () => window.removeEventListener('resize', handleWindowResize)
+  }, [contextOpen])
+
+  useEffect(() => () => {
+    resizeRef.current = null
+    document.body.classList.remove('im-column-resizing')
+  }, [])
 
   let context: React.ReactNode = null
   if (infoParticipantId) context = <InfoPane />
@@ -132,7 +219,6 @@ export function DesktopApp() {
   else if (documentId) context = <DocumentPeekPane />
   else if (boardId) context = <BoardPeekPane />
   else if (calendarEventId) context = <CalendarPeekPane />
-  else if (canvasId) context = <CanvasContext canvasId={canvasId} onClose={closeCanvasPeek} />
   else if (workspaceContextOpen) context = <WorkspaceContext view={view} />
 
   return (
@@ -144,29 +230,34 @@ export function DesktopApp() {
       <div
         className="desktop-im-grid grid h-full min-h-0"
         data-context-open={contextOpen ? 'true' : 'false'}
-        data-canvas-open={canvasId ? 'true' : 'false'}
-        style={{ '--im-context-width': `${canvasWidth}px` } as React.CSSProperties}
+        style={{
+          '--im-left-column-width': `${leftColumnWidth}px`,
+        } as CSSProperties}
       >
         <ConversationsPane />
-        <ChatPane />
+        {canvasId ? <CanvasContext canvasId={canvasId} onClose={closeCanvasPeek} /> : <ChatPane />}
         {contextOpen && (
           <aside className="im-context-pane min-h-0 min-w-0 overflow-hidden border-l border-hairline bg-panel shadow-[-18px_0_40px_-34px_rgba(10,30,60,0.5)]">
-            {canvasId && (
-              <div
-                role="separator"
-                aria-label="调整 Canvas 宽度"
-                aria-orientation="vertical"
-                className="im-context-resize-handle"
-                onPointerDown={(event) => {
-                  resizingCanvas.current = true
-                  document.body.classList.add('im-column-resizing')
-                  event.currentTarget.setPointerCapture(event.pointerId)
-                }}
-              />
-            )}
             {context}
           </aside>
         )}
+        <div
+          role="separator"
+          aria-label="调整会话列表宽度"
+          aria-orientation="vertical"
+          aria-valuemin={LEFT_COLUMN_MIN}
+          aria-valuemax={LEFT_COLUMN_MAX}
+          aria-valuenow={leftColumnWidth}
+          tabIndex={0}
+          className="im-left-resize-handle"
+          title="拖动调整会话列表宽度，双击恢复默认"
+          onPointerDown={handleResizeStart}
+          onPointerMove={handleResizeMove}
+          onPointerUp={handleResizeEnd}
+          onPointerCancel={handleResizeEnd}
+          onDoubleClick={resetLeftColumnWidth}
+          onKeyDown={handleResizeKeyDown}
+        />
       </div>
       <EmailComposer />
     </div>

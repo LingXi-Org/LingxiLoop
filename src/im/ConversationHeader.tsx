@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from 'react'
 import { api } from '@/api/client'
 import { AvatarStack } from '@/components/Avatar'
+import { SelectMenu } from '@/components/SelectMenu'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
@@ -85,7 +86,7 @@ export function ConversationHeader({
     <header
       className={cn(
         'im-conversation-header omb-drag z-20 flex shrink-0 items-center border-b border-hairline bg-panel/92 backdrop-blur-xl',
-        mobile ? 'min-h-14 gap-1 px-2 py-2' : 'omb-titlebar-safe min-h-[60px] gap-3 px-4 py-2.5',
+        mobile ? 'min-h-14 gap-1 px-2 py-2' : 'omb-titlebar-safe min-h-16 gap-3 px-4 py-2.5',
       )}
       style={mobile ? { paddingTop: 'max(env(safe-area-inset-top), 8px)' } : undefined}
     >
@@ -149,13 +150,21 @@ export function ConversationHeader({
               >{subtitle}</button>
             )}
             {!mobile && conversation.kind === 'group' && agents.length > 0 && (
-              <label className="flex shrink-0 items-center gap-1 border-l border-hairline pl-2">
+              <div className="flex shrink-0 items-center gap-1 border-l border-hairline pl-2">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-ink-secondary">Leader</span>
-                <select value={conversation.leaderId ?? ''} onChange={(event) => void changeLeader(event.target.value)} className="max-w-24 bg-transparent text-[10px] font-semibold text-accent">
-                  {!conversation.leaderId && <option value="" disabled>选择</option>}
-                  {agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
-                </select>
-              </label>
+                <SelectMenu
+                  ariaLabel="更换群聊 Leader"
+                  value={conversation.leaderId ?? ''}
+                  onChange={(value) => void changeLeader(value)}
+                  options={[
+                    ...(!conversation.leaderId ? [{ value: '', label: '选择', disabled: true }] : []),
+                    ...agents.map((agent) => ({ value: agent.id, label: agent.name })),
+                  ]}
+                  className="max-w-24"
+                  buttonClassName="border-0 bg-transparent px-1 text-[10px] font-semibold text-accent shadow-none"
+                  size="compact"
+                />
+              </div>
             )}
           </span>
         </span>

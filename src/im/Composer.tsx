@@ -12,7 +12,7 @@ export function ComposerSurface({ children, variant = 'desktop', className, ...p
   return (
     <div
       className={cn(
-        'im-composer-surface chat-composer-shell shrink-0 border-t border-hairline bg-panel/95 backdrop-blur-xl',
+        'im-composer-surface chat-composer-shell shrink-0 bg-panel/95 backdrop-blur-xl',
         variant === 'mobile' ? 'kb-aware px-3 pt-1.5' : 'px-5 pb-4 pt-2',
         className,
       )}

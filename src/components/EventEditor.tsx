@@ -5,15 +5,16 @@
  * `lingxiloop calendar create`, so the two stay shape-compatible.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { useCalendar } from '@/stores/calendar'
-import { useParticipants } from '@/stores/participants'
-import { useConversations } from '@/stores/conversations'
-import { useMe } from '@/stores/auth'
 import { Avatar } from '@/components/Avatar'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import { Input } from '@/components/Input'
+import { SelectMenu } from '@/components/SelectMenu'
 import { TextArea } from '@/components/TextArea'
-import type { CalendarEvent, CalendarEventKind, RecurrenceRule, Participant } from '@/types'
+import { useMe } from '@/stores/auth'
+import { useCalendar } from '@/stores/calendar'
+import { useConversations } from '@/stores/conversations'
+import { useParticipants } from '@/stores/participants'
+import type { CalendarEvent, CalendarEventKind, Participant, RecurrenceRule } from '@/types'
 
 /** Prefilled defaults passed in when creating a NEW event from a calendar
  *  drag-select or right-click. Ignored when `event` is supplied (edit
@@ -311,17 +312,18 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     onChange={(e) => setRecur({ ...recur, interval: Math.max(1, Number(e.target.value) || 1) })}
                     style={{ width: 70 }}
                   />
-                  <select
+                  <SelectMenu
+                    ariaLabel="重复频率"
                     value={recur.freq}
-                    onChange={(e) => setRecur({ ...recur, freq: e.target.value as RecurrenceRule['freq'] })}
-                    className="ev-input"
-                    style={{ width: 'auto' }}
-                  >
-                    <option value="daily">日{recur.interval > 1 ? 's' : ''}</option>
-                    <option value="weekly">周{recur.interval > 1 ? 's' : ''}</option>
-                    <option value="monthly">月{recur.interval > 1 ? 's' : ''}</option>
-                    <option value="yearly">年{recur.interval > 1 ? 's' : ''}</option>
-                  </select>
+                    onChange={(value) => setRecur({ ...recur, freq: value as RecurrenceRule['freq'] })}
+                    options={[
+                      { value: 'daily', label: `日${recur.interval > 1 ? 's' : ''}` },
+                      { value: 'weekly', label: `周${recur.interval > 1 ? 's' : ''}` },
+                      { value: 'monthly', label: `月${recur.interval > 1 ? 's' : ''}` },
+                      { value: 'yearly', label: `年${recur.interval > 1 ? 's' : ''}` },
+                    ]}
+                    className="w-28"
+                  />
                 </div>
                 {recur.freq === 'weekly' && (
                   <div className="flex flex-wrap gap-1">
@@ -483,16 +485,16 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               </Field>
 
               <Field label="发表于" hint="调度消息触发时到达的位置。留空可与受让人一起使用您的 DM。">
-                <select
+                <SelectMenu
+                  ariaLabel="发布到会话"
                   value={targetConversationId ?? ''}
-                  onChange={(e) => setTargetConversationId(e.target.value || null)}
-                  className="ev-input"
-                >
-                  <option value="">— 与受让人的直接消息 —</option>
-                  {targetConvos.map((c) => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
-                </select>
+                  onChange={(value) => setTargetConversationId(value || null)}
+                  options={[
+                    { value: '', label: '— 与受让人的直接消息 —' },
+                    ...targetConvos.map((conversation) => ({ value: conversation.id, label: conversation.title })),
+                  ]}
+                  className="w-full"
+                />
               </Field>
 
               <Field label="提示" hint="智能体每次应该做什么。纯文本——智能体将其视为系统消息。">

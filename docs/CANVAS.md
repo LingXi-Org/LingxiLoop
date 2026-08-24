@@ -10,9 +10,12 @@ The shared boundary contains only task-workspace-scoped Canvas records:
 - `canvas_presence` stores short-lived human/Agent working status and cursors.
 - `canvas_comments` and `canvas_activity` provide discussion and audit history.
 
-Human frame mutations use authenticated `/api/canvas` routes. There is no human
-agent picker, assignment composer, or workspace-creation control in Canvas; the
-learning Agent decides when a workspace helps and allocates its capable peers.
+Human frame mutations use authenticated `/api/canvas` routes. The learning Agent
+still decides when a workspace helps and allocates the initial capable peers.
+Inside an active workspace, humans can right-click the blank stage to @ an Agent
+with additional work, create a typed frame, or click a frame to send focused
+feedback. Those actions steer the same durable Agent work items instead of
+creating a separate collaboration surface.
 Agent mutations use the
 Agent OS Host Bridge (`canvas.available_agents`, `canvas.start_workspace`,
 `canvas.add_agents`, `canvas.get`, `canvas.create_frame`,
@@ -35,7 +38,7 @@ older revisions. Content replacement uses `baseRevision` optimistic concurrency,
 while append remains an atomic database operation.
 
 Frame types are deliberately open beyond HTML: `html`, `markdown`, `document`,
-`image`, and `artifact` are first-class values. HTML renders in a scriptless
+`image`, and `artifact` are first-class values. HTML renders in an isolated
 sandboxed iframe; it never executes in the LingxiLoop application origin.
 
 Canvas introduces no collaboration container, MCP service, Docker runtime,

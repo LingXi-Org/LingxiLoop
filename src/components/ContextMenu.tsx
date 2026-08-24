@@ -89,12 +89,8 @@ export function ContextMenu({ x, y, items, onClose, _isChild }: Props) {
       <div
         ref={ref}
         role="menu"
-        className="fixed z-[60] min-w-[200px] py-1 rounded-[10px] bg-cloud animate-rise"
-        style={{
-          left: x,
-          top: y,
-          boxShadow: '0 10px 30px -8px rgba(10, 30, 60, 0.20), 0 4px 10px -4px rgba(10, 30, 60, 0.12), 0 0 0 1px rgba(0, 80, 140, 0.08)',
-        }}
+        className="app-menu-surface fixed z-[60] min-w-[200px] p-1 animate-rise"
+        style={{ left: x, top: y }}
         onContextMenu={(e) => e.preventDefault()}
       >
         {items.map((it, i) => {
@@ -122,14 +118,12 @@ export function ContextMenu({ x, y, items, onClose, _isChild }: Props) {
                 onClose()
               }}
               className={cn(
-                'w-full text-left px-3 py-1.5 text-[12.5px] flex items-center gap-2 transition disabled:opacity-40 disabled:cursor-not-allowed',
-                it.destructive
-                  ? 'text-coral-deep hover:bg-coral-soft'
-                  : 'text-ink-700 hover:bg-sky2-50 hover:text-skype-deep',
-                openSubmenuIdx === i && 'bg-sky2-50 text-skype-deep',
+                'app-menu-item',
+                it.destructive && 'is-destructive',
+                openSubmenuIdx === i && 'is-active',
               )}
             >
-              {it.icon && <span className="w-4 h-4 inline-flex items-center justify-center">{it.icon}</span>}
+              {it.icon && <span className="app-menu-icon">{it.icon}</span>}
               <span className="flex-1 font-medium">{it.label}</span>
               {it.hint && !hasSubmenu && <span className="text-[10.5px] text-ink-300">{it.hint}</span>}
               {hasSubmenu && (

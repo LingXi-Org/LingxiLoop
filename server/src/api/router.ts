@@ -13,10 +13,10 @@ import {
   deleteSession,
   gravatarUrlForEmail,
 } from '../auth.js'
-import { pool } from '../db/pool.js'
 import {
   addCanvasComment,
   appendCanvasFrameContent,
+  assignCanvasWorkspaceWork,
   createCanvasFrame,
   deleteCanvasFrame,
   getCanvasSnapshot,
@@ -27,6 +27,7 @@ import {
   stopCanvasWorkspace,
   updateCanvasFrame,
 } from '../canvas/service.js'
+import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { imRouter } from '../im/router.js'
 import { type InvitationEmailDelivery, sendInvitationEmail } from '../invitation-email.js'
@@ -1045,6 +1046,17 @@ api.get('/canvases', safe(async (req, res) => {
 api.get('/canvases/:id', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
   res.json(await getCanvasSnapshot(companyId, userId, String(req.params.id)))
+}))
+
+api.post('/canvases/:id/assignments', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.status(201).json(await assignCanvasWorkspaceWork({
+    companyId,
+    canvasId: String(req.params.id),
+    actorId: userId,
+    agentId: String(req.body?.agentId ?? ''),
+    assignment: String(req.body?.assignment ?? ''),
+  }))
 }))
 
 api.post('/canvases/:id/assignments/:agentId/steer', safe(async (req, res) => {

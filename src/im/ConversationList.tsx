@@ -11,6 +11,7 @@ import { useParticipants } from '@/stores/participants'
 import type { Conversation, Participant } from '@/types'
 
 let lastRosterBackfillAt = 0
+const EMPTY_TYPING_IDS: string[] = []
 
 function backfillRosterOnce() {
   const now = Date.now()
@@ -74,11 +75,15 @@ export function ConversationAvatar({
 export function ConversationListItemContent({
   conversation,
   variant = 'desktop',
+  selected = false,
 }: {
   conversation: Conversation
   variant?: 'desktop' | 'mobile'
+  selected?: boolean
 }) {
-  const typingIds = useMessages((state) => state.typing[conversation.id] ?? [])
+  // Zustand's external-store selector must return a stable snapshot when no
+  // one is typing. A fresh `[]` here causes an infinite render loop in React.
+  const typingIds = useMessages((state) => state.typing[conversation.id] ?? EMPTY_TYPING_IDS)
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const muted = isMuted(conversation)
@@ -97,25 +102,25 @@ export function ConversationListItemContent({
 
   return (
     <>
-      <ConversationAvatar conversation={conversation} size={isMobile ? 48 : 52} variant={variant} />
+      <ConversationAvatar conversation={conversation} size={isMobile ? 48 : 54} variant={variant} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
-          {conversation.pinned && !isMobile && <span className="text-[9px] text-ink-secondary" aria-label="已置顶">◆</span>}
-          <span className={cn('truncate text-[15px] font-semibold', muted ? 'text-ink-secondary' : 'text-ink')}>
+          {conversation.pinned && !isMobile && <span className={cn('text-[9px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已置顶">◆</span>}
+          <span className={cn('truncate text-[16px] font-semibold', selected ? 'text-white' : muted ? 'text-ink-secondary' : 'text-ink')}>
             {conversation.title}
           </span>
-          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[10px] font-normal text-ink-secondary">{role}</span>)}
-          {muted && <span className="shrink-0 text-[11px] text-ink-secondary" aria-label="已静音">⌁</span>}
+          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className={cn('shrink-0 text-[10px] font-normal', selected ? 'text-white/70' : 'text-ink-secondary')}>{role}</span>)}
+          {muted && <span className={cn('shrink-0 text-[11px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已静音">⌁</span>}
           {conversation.tag === 'fresh-pulled' && <span className="rounded bg-gold/20 px-1.5 py-0.5 text-[8px] font-bold text-gold-deep">NEW</span>}
         </span>
-        <span className={cn('mt-0.5 block truncate text-[12.5px]', typingNames.length > 0 ? 'text-accent' : 'text-ink-secondary')}>
+        <span className={cn('mt-0.5 block truncate text-[14px]', selected ? 'text-white/75' : typingNames.length > 0 ? 'text-accent' : 'text-ink-secondary')}>
           {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1 self-center">
-        <span className="text-[10.5px] tabular-nums text-ink-secondary">{conversation.lastAt}</span>
+        <span className={cn('text-[12px] tabular-nums', selected ? 'text-white/75' : 'text-ink-secondary')}>{conversation.lastAt}</span>
         {(conversation.unread ?? 0) > 0 && (
-          <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold leading-5', muted ? 'bg-raised text-ink-secondary' : 'bg-accent text-white')}>
+          <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold leading-5', selected ? 'bg-white text-accent' : muted ? 'bg-raised text-ink-secondary' : 'bg-accent text-white')}>
             {conversation.unread! > 99 ? '99+' : conversation.unread}
           </span>
         )}

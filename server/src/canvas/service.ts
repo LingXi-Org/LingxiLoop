@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
+import { findCanvasPlacement } from '../../../src/lib/canvasLayout.js'
 import { pool } from '../db/pool.js'
-import { CH_CANVAS, publish, type CanvasEvent } from '../redis.js'
+import { type CanvasEvent, CH_CANVAS, publish } from '../redis.js'
 import { assertCanvasDependencyDAG, canvasAgentColor, canvasWorkArea } from './orchestration.js'
 
 export const CANVAS_FRAME_TYPES = ['html', 'markdown', 'document', 'image', 'artifact'] as const
@@ -389,33 +390,57 @@ export async function createCanvasFrame(input: {
   const id = input.idempotencyKey
     ? `frame-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 24)}`
     : `frame-${randomUUID()}`
-  let defaultX = 80; let defaultY = 80
-  if (input.actorKind === 'agent') {
-    const { rows: areas } = await pool.query<{ work_x: number | string; work_y: number | string }>(
-      `SELECT work_x,work_y FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2`, [canvas.id, input.actorId],
+  const width = frameSize(input.frame.width, 'width', 420)
+  const height = frameSize(input.frame.height, 'height', 300)
+  const client = await pool.connect()
+  let frame: CanvasFrame
+  try {
+    await client.query('BEGIN')
+    // Serialise automatic placement per workspace. Locking the canvas id,
+    // rather than existing frame rows, also covers an initially empty board.
+    await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`canvas-layout:${canvas.id}`])
+    let defaultX = 80; let defaultY = 80
+    if (input.actorKind === 'agent') {
+      const { rows: areas } = await client.query<{ work_x: number | string; work_y: number | string }>(
+        `SELECT work_x,work_y FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2`, [canvas.id, input.actorId],
+      )
+      if (areas[0]) { defaultX = Number(areas[0].work_x) + 40; defaultY = Number(areas[0].work_y) + 100 }
+    }
+    let x = finiteNumber(input.frame.x ?? defaultX, 'x')
+    let y = finiteNumber(input.frame.y ?? defaultY, 'y')
+    const { rows: occupied } = await client.query<Pick<FrameRow, 'x' | 'y' | 'width' | 'height'>>(
+      `SELECT x,y,width,height FROM canvas_frames WHERE canvas_id=$1 ORDER BY created_at ASC`, [canvas.id],
     )
-    if (areas[0]) { defaultX = Number(areas[0].work_x) + 40; defaultY = Number(areas[0].work_y) + 100 }
-  }
-  const { rows } = await pool.query<FrameRow>(
-    `INSERT INTO canvas_frames
-       (id, canvas_id, type, title, x, y, width, height, content, data, created_by, updated_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$11)
-     ON CONFLICT (id) DO UPDATE SET id=canvas_frames.id
-     RETURNING *`,
-    [id, canvas.id, type, title,
-      finiteNumber(input.frame.x ?? defaultX, 'x'), finiteNumber(input.frame.y ?? defaultY, 'y'),
-      frameSize(input.frame.width, 'width', 420), frameSize(input.frame.height, 'height', 300),
-      content, JSON.stringify(data), input.actorId],
-  )
-  const frame = toFrame(rows[0])
-  if (input.actorKind === 'agent') {
-    await pool.query(
-      `UPDATE canvas_agent_assignments SET active_frame_id=$3,cursor_x=$4,cursor_y=$5,status='working',
-         started_at=COALESCE(started_at,NOW()),updated_at=NOW() WHERE canvas_id=$1 AND agent_id=$2`,
-      [canvas.id, input.actorId, frame.id, frame.x + frame.width / 2, frame.y + 28],
+    const placement = findCanvasPlacement(
+      occupied.map((item) => ({ x: Number(item.x), y: Number(item.y), width: Number(item.width), height: Number(item.height) })),
+      { width, height },
+      { x, y },
     )
+    x = placement.x; y = placement.y
+    const { rows } = await client.query<FrameRow>(
+      `INSERT INTO canvas_frames
+         (id, canvas_id, type, title, x, y, width, height, content, data, created_by, updated_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$11)
+       ON CONFLICT (id) DO UPDATE SET id=canvas_frames.id
+       RETURNING *`,
+      [id, canvas.id, type, title, x, y, width, height, content, JSON.stringify(data), input.actorId],
+    )
+    frame = toFrame(rows[0])
+    if (input.actorKind === 'agent') {
+      await client.query(
+        `UPDATE canvas_agent_assignments SET active_frame_id=$3,cursor_x=$4,cursor_y=$5,status='working',
+           started_at=COALESCE(started_at,NOW()),updated_at=NOW() WHERE canvas_id=$1 AND agent_id=$2`,
+        [canvas.id, input.actorId, frame.id, frame.x + frame.width / 2, frame.y + 28],
+      )
+    }
+    await client.query(`UPDATE canvases SET updated_at=NOW() WHERE id=$1`, [canvas.id])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally {
+    client.release()
   }
-  await pool.query(`UPDATE canvases SET updated_at=NOW() WHERE id=$1`, [canvas.id])
   await publishCanvas(input.companyId, { kind: 'frame.created', canvasId: canvas.id, revision: frame.revision, frame })
   await logActivity({
     companyId: input.companyId, canvasId: canvas.id, actorId: input.actorId,
@@ -526,6 +551,12 @@ export async function setCanvasStatus(input: {
 }): Promise<CanvasPresence | null> {
   const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId)
   const status = input.status.trim().slice(0, 120)
+  const previous = input.actorKind === 'agent'
+    ? (await pool.query<{ status: string; frame_id: string | null }>(
+      `SELECT status,frame_id FROM canvas_presence WHERE canvas_id=$1 AND participant_id=$2 LIMIT 1`,
+      [canvas.id, input.actorId],
+    )).rows[0]
+    : undefined
   if (!status || status === 'offline') {
     await pool.query(`DELETE FROM canvas_presence WHERE canvas_id=$1 AND participant_id=$2`, [canvas.id, input.actorId])
     await publishCanvas(input.companyId, {
@@ -563,6 +594,20 @@ export async function setCanvasStatus(input: {
     )
   }
   await publishCanvas(input.companyId, { kind: 'presence.updated', canvasId: canvas.id, presence })
+  if (input.actorKind === 'agent') {
+    await publishAssignments(input.companyId, canvas.id)
+    if (previous?.status !== status || previous?.frame_id !== (input.frameId ?? null)) {
+      await logActivity({
+        companyId: input.companyId,
+        canvasId: canvas.id,
+        actorId: input.actorId,
+        actorKind: input.actorKind,
+        frameId: input.frameId,
+        action: 'agent.status',
+        detail: { status },
+      })
+    }
+  }
   return presence
 }
 
@@ -721,6 +766,83 @@ export async function addCanvasWorkspaceAgents(input: {
   return snapshot
 }
 
+export async function assignCanvasWorkspaceWork(input: {
+  companyId: string; canvasId: string; actorId: string; agentId: string; assignment: string
+}): Promise<CanvasSnapshot> {
+  const assignment = input.assignment.trim().slice(0, 4_000)
+  if (!assignment) throw new Error('assignment is required')
+  const client = await pool.connect()
+  let action = 'assignment.created'
+  try {
+    await client.query('BEGIN')
+    const { rows: canvases } = await client.query<CanvasRow>(
+      `SELECT * FROM canvases WHERE id=$1 AND company_id=$2 FOR UPDATE`,
+      [input.canvasId, input.companyId],
+    )
+    const canvas = canvases[0]
+    if (!canvas || canvas.status !== 'active') throw new Error('only an active canvas accepts new work')
+    await assertMembersAvailable(client, input.companyId, [{ agentId: input.agentId, assignment }])
+    const { rows: assignments } = await client.query<AssignmentRow>(
+      `SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2 FOR UPDATE`,
+      [canvas.id, input.agentId],
+    )
+    const existing = assignments[0]
+    if (!existing) {
+      const { rows: all } = await client.query<AssignmentRow>(`SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 ORDER BY created_at`, [canvas.id])
+      await insertMembers(client, { canvas, members: [{ agentId: input.agentId, assignment }], existing: all })
+    } else {
+      const terminal = ['completed', 'failed', 'cancelled'].includes(existing.status)
+      const steerId = randomUUID()
+      const { rows: steered } = terminal ? { rows: [] } : await client.query<{ id: string }>(
+        `UPDATE agent_work_items w SET steer_inputs=w.steer_inputs || jsonb_build_array(jsonb_build_object(
+           'id',$4,'text',$5,'createdAt',NOW())),updated_at=NOW()
+          FROM canvas_agent_assignments a WHERE a.id=$1 AND w.canvas_assignment_id=a.id
+           AND a.canvas_id=$2 AND a.agent_id=$3 AND w.status IN ('queued','blocked','leased') RETURNING w.id`,
+        [existing.id, canvas.id, input.agentId, steerId, assignment],
+      )
+      if (steered[0]) {
+        action = 'assignment.steered'
+        await client.query(`UPDATE canvas_agent_assignments SET assignment=$2,updated_at=NOW() WHERE id=$1`, [existing.id, assignment])
+      } else {
+        action = 'assignment.restarted'
+        const workId = `canvas-work-${randomUUID()}`
+        await client.query(`UPDATE agent_work_items SET canvas_assignment_id=NULL,updated_at=NOW() WHERE canvas_assignment_id=$1`, [existing.id])
+        await client.query(`DELETE FROM canvas_assignment_dependencies WHERE assignment_id=$1`, [existing.id])
+        await client.query(
+          `UPDATE canvas_agent_assignments SET assignment=$2,status='queued',active_frame_id=NULL,work_id=$3,
+             result=NULL,error=NULL,started_at=NULL,completed_at=NULL,updated_at=NOW() WHERE id=$1`,
+          [existing.id, assignment, workId],
+        )
+        await client.query(
+          `INSERT INTO agent_work_items
+             (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id)
+           VALUES ($1,$2,$3,$4,$5,$6,'canvas_worker','queued',180,$7,$8)`,
+          [workId, canvas.company_id, input.agentId, canvas.conversation_id,
+            canvas.trigger_client_msg_no, `canvas-dialog:${canvas.id}:${steerId}`, canvas.id, existing.id],
+        )
+      }
+    }
+    await client.query(`UPDATE canvases SET updated_at=NOW() WHERE id=$1`, [canvas.id])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally {
+    client.release()
+  }
+  const snapshot = await getCanvasSnapshot(input.companyId, input.actorId, input.canvasId)
+  await publishAssignments(input.companyId, input.canvasId)
+  await logActivity({
+    companyId: input.companyId,
+    canvasId: input.canvasId,
+    actorId: input.actorId,
+    actorKind: 'user',
+    action,
+    detail: { agentId: input.agentId, assignment },
+  })
+  return snapshot
+}
+
 async function publishAssignments(companyId: string, canvasId: string): Promise<void> {
   const { rows } = await pool.query<AssignmentRow>(`SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1`, [canvasId])
   const { rows: dependencies } = await pool.query<{ agent_id: string; depends_on_agent_id: string }>(
@@ -736,6 +858,7 @@ export async function completeCanvasWork(input: {
   workId: string; companyId: string; status: 'completed' | 'failed' | 'cancelled'; resultText?: string; error?: string
 }): Promise<void> {
   const client = await pool.connect(); let canvasId: string | null = null
+  let completion: { agentId: string; frameId: string | null; status: CanvasAssignmentStatus } | null = null
   try {
     await client.query('BEGIN')
     const { rows: works } = await client.query<{ canvas_id: string | null; canvas_assignment_id: string | null; reason: string; agent_id: string }>(
@@ -757,11 +880,12 @@ export async function completeCanvasWork(input: {
     }
     if (!work.canvas_assignment_id) { await client.query('COMMIT'); return }
     const assignmentStatus: CanvasAssignmentStatus = input.status === 'completed' ? 'completed' : input.status === 'failed' ? 'failed' : 'cancelled'
-    await client.query(
+    const { rows: completedAssignments } = await client.query<{ active_frame_id: string | null }>(
       `UPDATE canvas_agent_assignments SET status=$2,result=$3,error=$4,completed_at=NOW(),updated_at=NOW()
-        WHERE id=$1 AND status NOT IN ('completed','failed','cancelled')`,
+        WHERE id=$1 AND status NOT IN ('completed','failed','cancelled') RETURNING active_frame_id`,
       [work.canvas_assignment_id, assignmentStatus, input.resultText ?? null, input.error ?? null],
     )
+    if (completedAssignments[0]) completion = { agentId: work.agent_id, frameId: completedAssignments[0].active_frame_id, status: assignmentStatus }
     await client.query(
       `WITH RECURSIVE blocked_descendants(id) AS (
          SELECT d.assignment_id FROM canvas_assignment_dependencies d
@@ -821,6 +945,15 @@ export async function completeCanvasWork(input: {
   finally { client.release() }
   if (canvasId) {
     await publishAssignments(input.companyId, canvasId)
+    if (completion) await logActivity({
+      companyId: input.companyId,
+      canvasId,
+      actorId: completion.agentId,
+      actorKind: 'agent',
+      frameId: completion.frameId,
+      action: `assignment.${completion.status}`,
+      detail: { status: completion.status, result: input.resultText, error: input.error },
+    })
     const { rows } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE id=$1`, [canvasId])
     if (rows[0]) await publishCanvas(input.companyId, { kind: 'workspace.updated', canvasId,
       conversationId: rows[0].conversation_id ?? undefined, workspace: { id: canvasId, status: rows[0].status, title: rows[0].title, goal: rows[0].goal } })
