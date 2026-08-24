@@ -1,6 +1,64 @@
 export const AGENT_OS_PROTOCOL_VERSION = 1 as const
 
-export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary'
+export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary' | 'memory_synthesis'
+export type WorkLane = 'learner' | 'approval' | 'collaboration' | 'background'
+
+export type MemoryScopeType = 'learner' | 'course' | 'agent_role'
+export interface PromptMemoryV1 {
+  id: string
+  scopeType: MemoryScopeType
+  scopeId: string
+  body: string
+  kind: string
+  origin: 'explicit' | 'synthesized'
+  pinned: boolean
+  sourceEventIds: string[]
+  version: number
+  confidence: number
+  validUntil?: string
+  updatedAt: string
+}
+
+export interface PromptContextV1 {
+  version: 1
+  epoch: number
+  assembledAt: string
+  systemInstructions: string
+  persona: { name: string; role: string; instructions: string }
+  capabilities: string[]
+  memories: {
+    learner: PromptMemoryV1[]
+    course: PromptMemoryV1[]
+    agentRole: PromptMemoryV1[]
+  }
+  sourceVersions: Record<string, string>
+}
+
+export interface MemorySynthesisChange {
+  action: 'create' | 'update' | 'expire'
+  scopeType: MemoryScopeType
+  scopeId: string
+  id?: string
+  expectedVersion?: number
+  content?: string
+  kind?: string
+  sourceEventIds: string[]
+  validUntil?: string
+}
+
+export interface MemorySynthesisBatch {
+  evidence: Array<{
+    id: string
+    learnerId: string
+    conversationId: string
+    userEventId: string
+    assistantEventId: string
+    user: string
+    assistant: string
+    occurredAt: string
+  }>
+  currentMemories: PromptMemoryV1[]
+}
 
 export interface AgentWorkItem {
   id: string
@@ -11,6 +69,11 @@ export interface AgentWorkItem {
   threadRootClientMsgNo?: string
   triggerClientMsgNo: string
   reason: AgentWorkReason
+  lane: WorkLane
+  createdAt?: string
+  availableAt?: string
+  attempts?: number
+  preemptions?: number
   leaseToken: string
   canvasId?: string
   canvasAssignmentId?: string
@@ -35,6 +98,8 @@ export interface AgentContext {
   }
   messages: AgentContextMessage[]
   summary?: string
+  learnerId?: string
+  promptContextCandidate?: PromptContextV1
   pendingApproval?: ApprovalResolution
   canvas?: {
     id: string
@@ -54,6 +119,7 @@ export interface HostHeartbeat {
   ok: boolean
   cancelRequested?: boolean
   steer?: Array<{ id: string; text: string; createdAt: string }>
+  preemptRequested?: boolean
 }
 
 export interface HostAction {
@@ -113,7 +179,11 @@ export interface AgentSessionRecord {
   threadRootClientMsgNo?: string
   summary?: string
   history: ModelItem[]
+  /** Durable work ids whose dynamic turn input is already present in history. */
+  appliedWorkIds?: string[]
   revision: number
+  compactionEpoch: number
+  promptContext?: PromptContextV1
 }
 
 export type ModelItem =

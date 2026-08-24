@@ -5,7 +5,7 @@ import { test } from 'node:test'
 
 const run = promisify(execFile)
 
-test('repository contains no retired Agent product runtime', async () => {
+test('active AgentOS cannot regress to legacy, Codex CLI, or Computer runtimes', async () => {
   const result = await run(process.execPath, ['scripts/guard-agent-os.mjs'], { cwd: process.cwd() })
-  assert.match(result.stdout, /Agent OS guard passed/)
+  assert.match(result.stdout, /Agent OS architecture guard passed/)
 })

@@ -7,14 +7,20 @@ import type {
   HostActionResult,
   HostHeartbeat,
   LingxiMessageV1,
+  MemorySynthesisBatch,
+  MemorySynthesisChange,
 } from './types.js'
 
 export interface AgentOSHostAdapter {
   claimWork(signal?: AbortSignal): Promise<AgentWorkItem | null>
   heartbeat(work: AgentWorkItem): Promise<HostHeartbeat>
+  yieldWork(work: AgentWorkItem): Promise<void>
+  loadMemorySynthesis(work: AgentWorkItem): Promise<MemorySynthesisBatch | null>
+  applyMemorySynthesis(work: AgentWorkItem, input: { evidenceIds: string[]; changes: MemorySynthesisChange[]; approved: boolean; confidence: number }): Promise<{ outcome: string; changeCount: number }>
+  recordMemoryEvidence(work: AgentWorkItem, input: { learnerId: string; userText: string; assistantText: string }): Promise<void>
   loadContext(work: AgentWorkItem): Promise<AgentContext>
   loadSession(key: string): Promise<AgentSessionRecord | null>
-  saveSession(session: AgentSessionRecord): Promise<void>
+  saveSession(work: AgentWorkItem, session: AgentSessionRecord): Promise<void>
   executeAction(work: AgentWorkItem, action: HostAction): Promise<HostActionResult>
   emitEvent(work: AgentWorkItem, event: AgentRunEvent): Promise<void>
   commitMessage(work: AgentWorkItem, message: LingxiMessageV1): Promise<void>
@@ -58,6 +64,28 @@ export class HttpHostAdapter implements AgentOSHostAdapter {
     })
   }
 
+  yieldWork(work: AgentWorkItem): Promise<void> {
+    return this.request(`/internal/agent-os/work/${encodeURIComponent(work.id)}/yield`, {
+      method: 'POST', body: JSON.stringify({ fence: work.fence, leaseToken: work.leaseToken }),
+    }).then(() => undefined)
+  }
+
+  loadMemorySynthesis(work: AgentWorkItem): Promise<MemorySynthesisBatch | null> {
+    return this.request<{ batch: MemorySynthesisBatch | null }>(`/internal/agent-os/work/${encodeURIComponent(work.id)}/memory-synthesis?fence=${work.fence}&leaseToken=${encodeURIComponent(work.leaseToken)}`).then((value) => value.batch)
+  }
+
+  applyMemorySynthesis(work: AgentWorkItem, input: { evidenceIds: string[]; changes: MemorySynthesisChange[]; approved: boolean; confidence: number }): Promise<{ outcome: string; changeCount: number }> {
+    return this.request(`/internal/agent-os/work/${encodeURIComponent(work.id)}/memory-synthesis`, {
+      method: 'POST', body: JSON.stringify({ fence: work.fence, leaseToken: work.leaseToken, ...input }),
+    })
+  }
+
+  recordMemoryEvidence(work: AgentWorkItem, input: { learnerId: string; userText: string; assistantText: string }): Promise<void> {
+    return this.request(`/internal/agent-os/work/${encodeURIComponent(work.id)}/memory-evidence`, {
+      method: 'POST', body: JSON.stringify({ fence: work.fence, leaseToken: work.leaseToken, ...input }),
+    }).then(() => undefined)
+  }
+
   loadContext(work: AgentWorkItem): Promise<AgentContext> {
     return this.request(`/internal/agent-os/work/${encodeURIComponent(work.id)}/context?fence=${work.fence}&leaseToken=${encodeURIComponent(work.leaseToken)}`)
   }
@@ -67,8 +95,10 @@ export class HttpHostAdapter implements AgentOSHostAdapter {
       .then((value) => value.session)
   }
 
-  saveSession(session: AgentSessionRecord): Promise<void> {
-    return this.request<{ revision: number }>('/internal/agent-os/sessions', { method: 'PUT', body: JSON.stringify(session) })
+  saveSession(work: AgentWorkItem, session: AgentSessionRecord): Promise<void> {
+    return this.request<{ revision: number }>('/internal/agent-os/sessions', {
+      method: 'PUT', body: JSON.stringify({ workId: work.id, fence: work.fence, leaseToken: work.leaseToken, session }),
+    })
       .then((value) => { session.revision = value.revision })
   }
 
@@ -110,6 +140,10 @@ export class MemoryHostAdapter implements AgentOSHostAdapter {
 
   async claimWork(): Promise<AgentWorkItem | null> { return this.queue.shift() ?? null }
   async heartbeat(): Promise<HostHeartbeat> { return { ok: true } }
+  async yieldWork(): Promise<void> {}
+  async loadMemorySynthesis(): Promise<MemorySynthesisBatch | null> { return null }
+  async applyMemorySynthesis(): Promise<{ outcome: string; changeCount: number }> { return { outcome: 'committed', changeCount: 0 } }
+  async recordMemoryEvidence(): Promise<void> {}
   async loadContext(work: AgentWorkItem): Promise<AgentContext> {
     const value = this.contexts.get(work.id)
     if (!value) throw new Error(`missing context for work ${work.id}`)
@@ -119,7 +153,7 @@ export class MemoryHostAdapter implements AgentOSHostAdapter {
     const value = this.sessions.get(key)
     return value ? structuredClone(value) : null
   }
-  async saveSession(session: AgentSessionRecord): Promise<void> {
+  async saveSession(_work: AgentWorkItem, session: AgentSessionRecord): Promise<void> {
     const existing = this.sessions.get(session.key)
     if (existing && existing.revision !== session.revision) throw new Error('Agent OS session revision conflict')
     if (!existing && session.revision !== 0) throw new Error('Agent OS session revision conflict')

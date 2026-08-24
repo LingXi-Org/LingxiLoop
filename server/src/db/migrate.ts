@@ -73,6 +73,20 @@ ALTER TABLE participants ADD COLUMN IF NOT EXISTS capabilities JSONB NOT NULL
   DEFAULT '["canvas","web","files","email","documents"]'::jsonb;
 ALTER TABLE participants ALTER COLUMN capabilities SET DEFAULT
   '["canvas","web","files","email","documents"]'::jsonb;
+-- PromptContext snapshots need a stable source version for persona and
+-- capability changes. Keep this independent from status_updated_at, which is
+-- presence-specific and changes much more frequently.
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+CREATE OR REPLACE FUNCTION touch_participant_updated_at() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS participants_touch_updated_at ON participants;
+CREATE TRIGGER participants_touch_updated_at
+  BEFORE UPDATE ON participants
+  FOR EACH ROW EXECUTE FUNCTION touch_participant_updated_at();
 -- Shared Computer was retired in favour of shared Canvas state. Preserve
 -- every agent's other permissions while replacing the obsolete capability.
 -- Agents that had already revoked Computer must not be granted Canvas here;
@@ -694,6 +708,9 @@ ON CONFLICT (agent_id, path) DO NOTHING;
 -- when the agent has thousands of files in their workspace.
 CREATE INDEX IF NOT EXISTS idx_workspace_memory_about
   ON agent_workspace ((meta->>'about'))
+  WHERE path LIKE 'memory/%';
+CREATE INDEX IF NOT EXISTS idx_workspace_memory_scope
+  ON agent_workspace (company_id, (meta->>'scopeType'), (meta->>'scopeId'), updated_at DESC)
   WHERE path LIKE 'memory/%';
 
 -- Promote participants PK from (id) to (id, company_id) so the same id can
@@ -2099,6 +2116,21 @@ ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS steer_inputs JSONB NOT NUL
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS canvas_id TEXT REFERENCES canvases(id) ON DELETE SET NULL;
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS canvas_assignment_id TEXT REFERENCES canvas_agent_assignments(id) ON DELETE SET NULL;
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS result_text TEXT;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS preempt_requested_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS preempt_grace_expires_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS preemptions INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS lease_started_at TIMESTAMP WITH TIME ZONE;
+UPDATE agent_work_items SET lease_started_at=NOW() WHERE status='leased' AND lease_started_at IS NULL;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS lane TEXT GENERATED ALWAYS AS (
+  CASE
+    WHEN reason IN ('message','mention') THEN 'learner'
+    WHEN reason = 'resume' THEN 'approval'
+    WHEN reason IN ('handoff','canvas_worker','canvas_summary') THEN 'collaboration'
+    ELSE 'background'
+  END
+) STORED;
+CREATE INDEX IF NOT EXISTS idx_agent_work_lane_claim
+  ON agent_work_items(status, available_at, lane, priority DESC, created_at ASC);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_work_canvas_assignment
   ON agent_work_items(canvas_assignment_id) WHERE canvas_assignment_id IS NOT NULL;
 
@@ -2127,6 +2159,48 @@ CREATE TABLE IF NOT EXISTS agent_os_sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_agent_os_sessions_agent
   ON agent_os_sessions(company_id, agent_id, updated_at DESC);
+ALTER TABLE agent_os_sessions ADD COLUMN IF NOT EXISTS compaction_epoch INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE agent_os_sessions ADD COLUMN IF NOT EXISTS prompt_context JSONB;
+ALTER TABLE agent_os_sessions ADD COLUMN IF NOT EXISTS applied_work_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+CREATE TABLE IF NOT EXISTS agent_memory_evidence (
+  id              TEXT PRIMARY KEY,
+  company_id      TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  agent_id        TEXT NOT NULL,
+  learner_id      TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  user_event_id   TEXT NOT NULL,
+  assistant_event_id TEXT NOT NULL,
+  user_text       TEXT NOT NULL,
+  assistant_text  TEXT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'pending',
+  attempts        INTEGER NOT NULL DEFAULT 0,
+  available_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW() + INTERVAL '15 seconds',
+  created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  processed_at    TIMESTAMP WITH TIME ZONE,
+  error           TEXT,
+  UNIQUE(company_id, agent_id, user_event_id, assistant_event_id)
+);
+CREATE INDEX IF NOT EXISTS idx_agent_memory_evidence_pending
+  ON agent_memory_evidence(company_id, agent_id, status, available_at, created_at);
+
+CREATE TABLE IF NOT EXISTS im_send_acceptances (
+  company_id    TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  user_id       TEXT NOT NULL,
+  client_nonce  TEXT NOT NULL,
+  input_digest  TEXT NOT NULL,
+  channel_id    TEXT NOT NULL,
+  channel_type  INTEGER NOT NULL,
+  payload       JSONB NOT NULL,
+  status        TEXT NOT NULL DEFAULT 'pending',
+  echo          JSONB,
+  error         TEXT,
+  created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(company_id, user_id, client_nonce)
+);
+CREATE INDEX IF NOT EXISTS idx_im_send_acceptances_pending
+  ON im_send_acceptances(status, updated_at);
 
 CREATE TABLE IF NOT EXISTS agent_host_actions (
   idempotency_key TEXT PRIMARY KEY,

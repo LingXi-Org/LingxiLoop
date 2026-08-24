@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
 import { isMockImDevelopment } from '@/lib/devMode'
-import { type ImEnvelope, lingxiIm } from '@/lib/im/wukong'
+import { type ImEnvelope, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
-import { getMeId } from '@/stores/auth'
+import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import type { Message, ReactionEntry } from '@/types'
 
@@ -751,11 +751,35 @@ function newTempId(): string {
   return `temp-${rnd}`
 }
 
+interface MessageOutboxEntry { convoId: string; nonce: string; payload: LingxiMessageV1; createdAt: string }
+function outboxKey(): string | null {
+  const companyId = getActiveCompanyId(), userId = getMeId()
+  return companyId && userId ? `lingxiloop.im.outbox:${companyId}:${userId}` : null
+}
+function readOutbox(): MessageOutboxEntry[] {
+  const key = outboxKey(); if (!key) return []
+  try {
+    const value = JSON.parse(localStorage.getItem(key) ?? '[]') as unknown
+    return Array.isArray(value) ? value.filter((item): item is MessageOutboxEntry => Boolean(item && typeof item === 'object' && typeof (item as MessageOutboxEntry).nonce === 'string')) : []
+  } catch { return [] }
+}
+function writeOutbox(entries: MessageOutboxEntry[]): void {
+  const key = outboxKey(); if (!key) return
+  try { localStorage.setItem(key, JSON.stringify(entries.slice(-100))) } catch { /* best effort */ }
+}
+function rememberOutbox(entry: MessageOutboxEntry): void {
+  const entries = readOutbox().filter((item) => item.nonce !== entry.nonce)
+  writeOutbox([...entries, entry])
+}
+function forgetOutbox(nonce: string): void { writeOutbox(readOutbox().filter((item) => item.nonce !== nonce)) }
+
 export async function sendUserMessage(
   convoId: string,
   body: string,
   attachment?: import('@/api/client').ApiAttachment | null,
   quotedMessageId?: string | null,
+  clientNonce?: string,
+  replayPayload?: LingxiMessageV1,
 ): Promise<void> {
   const v = body.trim()
   if (!v && !attachment) return
@@ -787,7 +811,7 @@ export async function sendUserMessage(
     }
   }
 
-  const tempId = newTempId()
+  const tempId = clientNonce ?? newTempId()
   const optimistic: Message = {
     id: tempId,
     clientId: tempId,
@@ -814,12 +838,13 @@ export async function sendUserMessage(
   // shouldn't shove our bubble up the timeline.
   ;(optimistic as Message & { sequence?: number }).sequence = Number.MAX_SAFE_INTEGER
 
-  useMessages.setState((s) => ({
-    byConvo: {
-      ...s.byConvo,
-      [convoId]: [...(s.byConvo[convoId] ?? []), optimistic],
-    },
-  }))
+  useMessages.setState((s) => {
+    const list = s.byConvo[convoId] ?? []
+    const exists = list.some((item) => item.id === tempId)
+    return { byConvo: { ...s.byConvo, [convoId]: exists
+      ? list.map((item) => item.id === tempId ? { ...item, pending: true, failed: false } : item)
+      : [...list, optimistic] } }
+  })
 
   if (isMockImDevelopment()) {
     const realId = `mock-${Date.now()}`
@@ -845,7 +870,7 @@ export async function sendUserMessage(
         return new RegExp(`(^|\\s)@${escaped}(?=\\s|$|[.,!?，。！？])`, 'i').test(v)
       }))
       .map((participant) => participant.id)
-    const sent = await lingxiIm.send(convoId, {
+    const payload: LingxiMessageV1 = replayPayload ?? {
       version: 1,
       kind: attachment ? 'attachment' : 'text',
       clientMsgNo: tempId,
@@ -857,7 +882,10 @@ export async function sendUserMessage(
         mentionAll,
         ...(quotedSummary ? { replyAuthorId: quotedSummary.authorId } : {}),
       },
-    })
+    }
+    rememberOutbox({ convoId, nonce: tempId, payload, createdAt: new Date().toISOString() })
+    const sent = await lingxiIm.send(convoId, payload)
+    forgetOutbox(tempId)
     const realId = sent.messageId || sent.clientMsgNo
     // Reconcile the temp bubble with the server. Either the WS `message.new`
     // already raced ahead of us (real id already in the list → drop the temp)
@@ -885,11 +913,10 @@ export async function sendUserMessage(
   }
 }
 
-/** Drop a failed-to-send optimistic bubble from the local list. The
- *  message never reached the server so no rollback is needed there;
- *  this is purely a UI clean-up so the bubble doesn't linger forever
- *  at the bottom of the conversation. */
+/** Drop a failed optimistic bubble and its local recovery intent. A server-
+ * accepted echo, if one exists, remains authoritative and may still arrive. */
 export function discardFailedMessage(convoId: string, tempId: string): void {
+  forgetOutbox(tempId)
   useMessages.setState((s) => {
     const list = s.byConvo[convoId]
     if (!list) return s
@@ -919,8 +946,28 @@ export async function retryFailedMessage(convoId: string, tempId: string): Promi
     ? { url: att.url ?? '', name: att.name, kind: att.kind, mime: att.mime, size: att.size }
     : null
   const quotedId = msg.quotedMessageId ?? null
-  discardFailedMessage(convoId, tempId)
-  await sendUserMessage(convoId, body, retryAttachment, quotedId)
+  const replayPayload = readOutbox().find((entry) => entry.nonce === tempId)?.payload
+  await sendUserMessage(convoId, body, retryAttachment, quotedId, tempId, replayPayload)
+}
+
+async function recoverMessageOutbox(): Promise<void> {
+  for (const entry of readOutbox()) {
+    try {
+      const status = await lingxiIm.sendStatus(entry.nonce)
+      if (status.status === 'accepted' && status.echo) {
+        forgetOutbox(entry.nonce)
+        const normalized = fromIm(status.echo)
+        useMessages.setState((state) => ({ byConvo: {
+          ...state.byConvo,
+          [entry.convoId]: mergeFetchedMessages((state.byConvo[entry.convoId] ?? []).filter((item) => item.id !== entry.nonce), [normalized]),
+        } }))
+        continue
+      }
+      const data = entry.payload.data ?? {}
+      const attachment = entry.payload.kind === 'attachment' ? data as unknown as import('@/api/client').ApiAttachment : null
+      await sendUserMessage(entry.convoId, entry.payload.body ?? '', attachment, entry.payload.replyToClientMsgNo, entry.nonce, entry.payload)
+    } catch (error) { console.warn('[messages] outbox recovery deferred', error) }
+  }
 }
 
 export async function toggleReaction(messageId: string, emoji: string): Promise<void> {
@@ -960,11 +1007,15 @@ export function bootMessagesStream() {
     imBound = true
     lingxiIm.subscribe((message) => {
       const normalized = fromIm(message)
+      forgetOutbox(message.clientMsgNo)
       useMessages.setState((state) => ({
         byConvo: {
           ...state.byConvo,
           [normalized.conversationId]: mergeFetchedMessages(state.byConvo[normalized.conversationId], [normalized]),
         },
+        ...(message.payload.kind === 'text' && message.payload.refs?.runId
+          ? { streaming: Object.fromEntries(Object.entries(state.streaming).filter(([id]) => id !== `preview-${message.payload.refs?.runId}`)) }
+          : {}),
       }))
     })
     lingxiIm.subscribeEvent((event) => {
@@ -997,6 +1048,7 @@ export function bootMessagesStream() {
     })
     void lingxiIm.connect().catch((error) => console.warn('[im] connect failed', error))
   }
+  void recoverMessageOutbox()
   if (wsBound) return
   wsBound = true
   ws.connect()

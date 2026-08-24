@@ -2,12 +2,12 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { MemoryHostAdapter } from '../agent-os/host-adapter.js'
 import type { KernelExecutor } from '../agent-os/kernel-manager.js'
-import { ScriptedModelDriver } from '../agent-os/model-driver.js'
+import { ScriptedModelDriver, type AgentModelDriver, type ModelTurnResult } from '../agent-os/model-driver.js'
 import { AgentOSRuntime, canvasContextContract } from '../agent-os/runtime.js'
-import type { AgentContext, AgentWorkItem, KernelExecution } from '../agent-os/types.js'
+import type { AgentContext, AgentWorkItem, KernelExecution, ModelItem } from '../agent-os/types.js'
 
 function work(id: string, trigger: string): AgentWorkItem {
-  return { id, fence: 1, companyId: 'co-1', agentId: 'nova', channelId: 'study', triggerClientMsgNo: trigger, reason: 'message', leaseToken: `lease-${id}` }
+  return { id, fence: 1, companyId: 'co-1', agentId: 'nova', channelId: 'study', triggerClientMsgNo: trigger, reason: 'message', lane: 'learner', leaseToken: `lease-${id}` }
 }
 
 function context(item: AgentWorkItem, body: string): AgentContext {
@@ -27,6 +27,18 @@ class StatefulKernel implements KernelExecutor {
     if (match) this.value = Number(match[1])
     return { executionId: `cell-${this.cells.length}`, stdout: '', stderr: '', result: this.value, durationMs: 1, truncated: false, artifacts: [] }
   }
+}
+
+class RecordingModel implements AgentModelDriver {
+  readonly instructions: string[] = []
+  readonly items: ModelItem[][] = []
+  async run(args: { instructions: string; items: ModelItem[] }): Promise<ModelTurnResult> {
+    this.instructions.push(args.instructions)
+    this.items.push(structuredClone(args.items))
+    return { output: [{ role: 'assistant', content: 'ok' }], text: 'ok', usage: { inputTokens: 1, outputTokens: 1 } }
+  }
+  async compact(): Promise<string> { return 'summary' }
+  async structured(): Promise<unknown> { return {} }
 }
 
 test('Canvas contract tells agents to autonomously decide and start via IPython', () => {
@@ -74,6 +86,45 @@ test('Agent OS runs multi-hop IPython and keeps the channel session across work 
   assert.equal(host.outcomes.get(second.id)?.status, 'completed')
 })
 
+test('PromptContext stays frozen within one compaction epoch', async () => {
+  const first = work('prompt-1', 'prompt-message-1'), second = work('prompt-2', 'prompt-message-2')
+  const host = new MemoryHostAdapter()
+  const base = (item: AgentWorkItem, marker: string): AgentContext => ({
+    ...context(item, marker), learnerId: 'student', promptContextCandidate: {
+      version: 1, epoch: 0, assembledAt: '2026-08-24T00:00:00.000Z', systemInstructions: marker,
+      persona: { name: 'Nova', role: 'Coach', instructions: marker }, capabilities: ['canvas'],
+      memories: { learner: [], course: [], agentRole: [] }, sourceVersions: { persona: marker },
+    },
+  })
+  host.contexts.set(first.id, base(first, 'frozen-v1'))
+  host.contexts.set(second.id, base(second, 'changed-v2'))
+  const model = new RecordingModel()
+  const runtime = new AgentOSRuntime(host, model, new StatefulKernel(), { heartbeatMs: 60_000 })
+  await runtime.runWork(first)
+  await runtime.runWork(second)
+  assert.equal(model.instructions.length, 2)
+  assert.match(model.instructions[0], /frozen-v1/)
+  assert.match(model.instructions[1], /frozen-v1/)
+  assert.doesNotMatch(model.instructions[1], /changed-v2/)
+  assert.equal([...host.sessions.values()][0]?.compactionEpoch, 0)
+})
+
+test('retrying the same durable work does not inject its trigger twice', async () => {
+  const item = { ...work('retry-work', 'retry-message'), fence: 3 }
+  const host = new MemoryHostAdapter()
+  host.contexts.set(item.id, context(item, 'Do not duplicate me.'))
+  host.sessions.set('co-1:nova:study:-', {
+    key: 'co-1:nova:study:-', companyId: 'co-1', agentId: 'nova', channelId: 'study',
+    history: [{ role: 'user', content: 'Do not duplicate me.' }, { role: 'assistant', content: 'Partial work.' }],
+    appliedWorkIds: [item.id], revision: 1, compactionEpoch: 0,
+  })
+  const model = new RecordingModel()
+  await new AgentOSRuntime(host, model, new StatefulKernel(), { heartbeatMs: 60_000 }).runWork(item)
+  const serialized = JSON.stringify(model.items[0])
+  assert.equal(serialized.match(/Do not duplicate me\./g)?.length, 1)
+  assert.ok(host.events[0]?.seq >= 200_001)
+})
+
 test('soft context limit summarizes with the same model driver', async () => {
   const item = work('compact', 'm-compact')
   const host = new MemoryHostAdapter()
@@ -101,7 +152,7 @@ test('Canvas start directive persists the session and defers without a fake chat
 })
 
 test('Canvas worker stores its final result without replying in the source conversation', async () => {
-  const item: AgentWorkItem = { ...work('canvas-worker', 'canvas:c:a'), reason: 'canvas_worker', canvasId: 'c', canvasAssignmentId: 'a' }
+  const item: AgentWorkItem = { ...work('canvas-worker', 'canvas:c:a'), reason: 'canvas_worker', lane: 'collaboration', canvasId: 'c', canvasAssignmentId: 'a' }
   const host = new MemoryHostAdapter()
   host.contexts.set(item.id, { ...context(item, 'Research the assigned topic.'), canvas: { id: 'c', title: 'Study', goal: 'Learn', status: 'active', initiatorAgentId: 'nova', assignments: [], frames: [], activity: [] } })
   const model = new ScriptedModelDriver([{ output: [{ role: 'assistant', content: 'Worker result' }], text: 'Worker result', usage: { inputTokens: 10, outputTokens: 3 } }])

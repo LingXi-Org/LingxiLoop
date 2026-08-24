@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from 'node:crypto'
+import { createHash, createHmac, randomUUID } from 'node:crypto'
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
@@ -6,6 +6,7 @@ import { executeActionWithLedger } from '../agent-os/control-plane.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import { wukongClient } from './wukong.js'
 import type { ImChannelProfile } from './types.js'
+import type { LingxiMessageV1 } from '../agent-os/types.js'
 
 export const imRouter = Router()
 
@@ -26,6 +27,15 @@ async function identity(req: Request & AuthedRequest): Promise<{ userId: string;
 function userImToken(uid: string): string {
   const secret = process.env.WUKONG_USER_TOKEN_SECRET ?? process.env.AGENT_OS_SERVICE_TOKEN ?? 'dev-wukong-user-token-secret'
   return createHmac('sha256', secret).update(`wukong-user:${uid}`).digest('base64url')
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(',')}}`
+  }
+  return JSON.stringify(value)
 }
 
 imRouter.get('/bootstrap', safe(async (req, res) => {
@@ -105,6 +115,85 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
   res.json(await wukongClient().syncMessages(channelId, Number(rows[0].profile.channelType ?? 2), limit, userId))
 }))
 
+imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
+  const { userId, companyId } = await identity(req)
+  const channelId = String(req.params.id)
+  const clientNonce = String(req.body?.clientNonce ?? '').trim()
+  const rawPayload = req.body?.payload as LingxiMessageV1
+  if (!clientNonce || clientNonce.length > 80 || !rawPayload || rawPayload.version !== 1 || rawPayload.clientMsgNo !== clientNonce) {
+    res.status(400).json({ error: 'valid clientNonce and matching LingxiMessageV1 payload required' }); return
+  }
+  const rawData = rawPayload.data && typeof rawPayload.data === 'object' ? rawPayload.data : {}
+  const { suppressAgentWake: _suppressAgentWake, ...safeData } = rawData
+  const payload: LingxiMessageV1 = {
+    version: 1, kind: rawPayload.kind, clientMsgNo: clientNonce,
+    ...(rawPayload.body ? { body: rawPayload.body } : {}),
+    ...(rawPayload.replyToClientMsgNo ? { replyToClientMsgNo: rawPayload.replyToClientMsgNo } : {}),
+    data: safeData,
+  }
+  if (!['text', 'attachment'].includes(payload.kind) || (!payload.body?.trim() && payload.kind !== 'attachment')) {
+    res.status(400).json({ error: 'invalid user message payload' }); return
+  }
+  const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
+    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [channelId, companyId],
+  )
+  const members = Array.isArray(bindings[0]?.profile.members) ? bindings[0].profile.members.map(String) : []
+  if (!bindings[0]) { res.status(404).json({ error: 'channel not found' }); return }
+  if (!members.includes(userId)) { res.status(403).json({ error: 'not a channel member' }); return }
+  const channelType = Number(bindings[0].profile.channelType ?? 2)
+  const inputDigest = createHash('sha256').update(canonicalJson({ channelId, channelType, payload })).digest('hex')
+  const client = await pool.connect()
+  try {
+    await client.query(`SELECT pg_advisory_lock(hashtextextended($1,0))`, [`im-send:${companyId}:${userId}:${clientNonce}`])
+    await client.query(
+      `INSERT INTO im_send_acceptances(company_id,user_id,client_nonce,input_digest,channel_id,channel_type,payload)
+       VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) ON CONFLICT(company_id,user_id,client_nonce) DO NOTHING`,
+      [companyId, userId, clientNonce, inputDigest, channelId, channelType, JSON.stringify(payload)],
+    )
+    const { rows } = await client.query<{ input_digest: string; status: string; echo: Record<string, unknown> | null }>(
+      `SELECT input_digest,status,echo FROM im_send_acceptances WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
+      [companyId, userId, clientNonce],
+    )
+    const acceptance = rows[0]
+    if (!acceptance || acceptance.input_digest !== inputDigest) { res.status(409).json({ error: 'clientNonce was reused with different input' }); return }
+    if (acceptance.status === 'accepted' && acceptance.echo) { res.json({ status: 'accepted', echo: acceptance.echo, duplicate: true }); return }
+    try {
+      const sent = await wukongClient().sendMessage(channelId, channelType, userId, payload)
+      const echo = {
+        messageId: sent.messageId, messageSeq: sent.messageSeq, clientMsgNo: clientNonce,
+        channelId, channelType, fromUid: userId, timestamp: Math.floor(Date.now() / 1000), payload,
+      }
+      await client.query(
+        `UPDATE im_send_acceptances SET status='accepted',echo=$4::jsonb,error=NULL,updated_at=NOW()
+          WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
+        [companyId, userId, clientNonce, JSON.stringify(echo)],
+      )
+      res.status(202).json({ status: 'accepted', echo })
+    } catch (error) {
+      await client.query(
+        `UPDATE im_send_acceptances SET status='pending',error=$4,updated_at=NOW()
+          WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
+        [companyId, userId, clientNonce, error instanceof Error ? error.message : String(error)],
+      )
+      throw error
+    }
+  } finally {
+    await client.query(`SELECT pg_advisory_unlock(hashtextextended($1,0))`, [`im-send:${companyId}:${userId}:${clientNonce}`]).catch(() => undefined)
+    client.release()
+  }
+}))
+
+imRouter.get('/sends/:clientNonce', safe(async (req, res) => {
+  const { userId, companyId } = await identity(req)
+  const { rows } = await pool.query(
+    `SELECT status,echo,error,channel_id AS "channelId",updated_at AS "updatedAt"
+      FROM im_send_acceptances WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
+    [companyId, userId, String(req.params.clientNonce)],
+  )
+  if (!rows[0]) { res.status(404).json({ error: 'send acceptance not found' }); return }
+  res.json(rows[0])
+}))
+
 imRouter.post('/channels/:id/read', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
@@ -167,7 +256,7 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
     const work: AgentWorkItem = {
       id: approval.work_id, companyId: source[0].company_id, agentId: source[0].agent_id,
       channelId: source[0].channel_id, triggerClientMsgNo: source[0].trigger_client_msg_no,
-      reason: source[0].reason, fence: Number(source[0].fence), leaseToken: 'approval-resolution',
+      reason: source[0].reason, lane: 'approval', fence: Number(source[0].fence), leaseToken: 'approval-resolution',
       ...(source[0].thread_root_client_msg_no ? { threadRootClientMsgNo: source[0].thread_root_client_msg_no } : {}),
     }
     const action: HostAction = {
