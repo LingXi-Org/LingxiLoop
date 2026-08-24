@@ -1142,13 +1142,16 @@ export async function stopCanvasAssignment(input: { companyId: string; canvasId:
   const client = await pool.connect()
   let activity: CanvasActivity | null = null
   try {
+    // Canvas-scoped operations always take the workspace fence before an
+    // agent-work fence; this matches Host Actions and workspace Stop.
+    await client.query(`SELECT pg_advisory_lock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${input.canvasId}`])
     await client.query('BEGIN')
     const { rows: candidates } = await client.query<{ id: string }>(
       `SELECT w.id FROM agent_work_items w
         JOIN canvas_agent_assignments a ON w.canvas_assignment_id=a.id
         JOIN canvases c ON a.canvas_id=c.id
        WHERE a.canvas_id=$2 AND a.agent_id=$3 AND c.company_id=$1
-         AND w.status IN ('queued','blocked','leased') FOR UPDATE OF w`, [input.companyId, input.canvasId, input.agentId],
+         AND w.status IN ('queued','blocked','leased')`, [input.companyId, input.canvasId, input.agentId],
     )
     if (!candidates[0]) throw new Error('active canvas assignment not found')
     await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`agent-work:${candidates[0].id}`])
@@ -1212,7 +1215,10 @@ export async function stopCanvasAssignment(input: { companyId: string; canvasId:
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
-  } finally { client.release() }
+  } finally {
+    await client.query(`SELECT pg_advisory_unlock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${input.canvasId}`]).catch(() => undefined)
+    client.release()
+  }
   await publishAssignments(input.companyId, input.canvasId)
   if (activity) await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
   const { rows: canvases } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE id=$1`, [input.canvasId])

@@ -303,12 +303,12 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
     // Keep the work fence for the whole side-effect execution. Stop takes the
     // same lock before committing cancellation, so once Stop returns an old
     // lease cannot begin another Host Action.
-    await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [`agent-work:${work.id}`])
     if (work.canvasId) {
       // Canvas actions share this workspace fence; workspace Stop takes its
       // exclusive counterpart before changing durable state.
       await client.query(`SELECT pg_advisory_lock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${work.canvasId}`])
     }
+    await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [`agent-work:${work.id}`])
     // Serialize one stable action key across API replicas. If this process
     // crashes, Postgres releases the lock and the retry reuses the same sink
     // idempotency key derived from work/hop/call.
