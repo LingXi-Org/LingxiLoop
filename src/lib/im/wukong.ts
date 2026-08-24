@@ -1,7 +1,9 @@
 import WKSDK, { MessageContent, type WKEvent, type Message as WKMessage } from 'wukongimjssdk'
 import { getServerOrigin } from '@/api/client'
 import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
-import { isEmptyHistoryDetail } from './historyErrors'
+import { isEmptyHistoryDetail, isInternalAgentStatus } from './historyErrors'
+
+export { isInternalAgentStatus } from './historyErrors'
 
 export const LINGXI_MESSAGE_CONTENT_TYPE = 1000
 
@@ -147,7 +149,10 @@ export class LingxiImClient {
       if (response.status === 500 && isEmptyHistoryDetail(detail)) return []
       throw new Error(`IM history failed: ${response.status}`)
     }
-    return await response.json() as ImEnvelope[]
+    const messages = await response.json() as ImEnvelope[]
+    // Older servers persisted the ephemeral run-start preview. Hide those
+    // legacy transport records without suppressing genuine tool activity.
+    return messages.filter((message) => !isInternalAgentStatus(message))
   }
 
   async send(channelId: string, payload: LingxiMessageV1, channelType = 2): Promise<ImEnvelope> {

@@ -497,11 +497,8 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
   const channelType = Number(rows[0]?.profile?.channelType ?? 2)
   const previewClientMsgNo = `preview-${event.runId}`
   if (event.kind === 'run.started') {
-    const preview: LingxiMessageV1 = {
-      version: 1, kind: 'tool_activity', clientMsgNo: previewClientMsgNo,
-      body: 'Agent started working', refs: { runId: event.runId, agentId: work.agentId }, data: { stage: 'started' },
-    }
-    await wukongClient().sendMessage(work.channelId, channelType, work.agentId, preview).catch(() => undefined)
+    // A run-start notification is transport state, not conversation content.
+    // Keep it ephemeral so it cannot leak into history as a tool bubble.
     await wukongClient().emitEvent({
       channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
       eventId: `${event.runId}:${event.seq}`, eventType: 'stream.open', data: { kind: 'text', text: '' },

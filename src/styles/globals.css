@@ -201,6 +201,13 @@
 }
 .select-menu-trigger:disabled { cursor: not-allowed; opacity: 0.5; }
 .select-menu-trigger-compact { min-height: 30px; border-radius: 8px; padding: 5px 8px 5px 9px; font-size: 11px; }
+.im-conversation-header .select-menu-trigger-compact {
+  /* The Leader picker lives in the subtitle line. Its generic 30px compact
+   * height made group headers taller than direct-message headers. */
+  min-height: 20px;
+  height: 20px;
+  padding: 0 4px;
+}
 .select-menu-chevron { width: 16px; height: 16px; flex: none; color: var(--ink-secondary); transition: transform 160ms ease; }
 .select-menu-chevron.is-open { transform: rotate(180deg); }
 .select-menu-popup {

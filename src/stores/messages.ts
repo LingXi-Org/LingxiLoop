@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
 import { isMockImDevelopment } from '@/lib/devMode'
-import { type ImEnvelope, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
+import { type ImEnvelope, isInternalAgentStatus, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
@@ -1006,6 +1006,7 @@ export function bootMessagesStream() {
   if (!imBound) {
     imBound = true
     lingxiIm.subscribe((message) => {
+      if (isInternalAgentStatus(message)) return
       const normalized = fromIm(message)
       forgetOutbox(message.clientMsgNo)
       useMessages.setState((state) => ({
