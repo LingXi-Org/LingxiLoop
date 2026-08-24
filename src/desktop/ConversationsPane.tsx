@@ -5,7 +5,7 @@ import { type ApiSearchResults, api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { ContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { GroupCreator } from '@/components/GroupCreator'
-import { IAgent, IComputer, IDoc } from '@/components/icons'
+import { IAgent, ICanvas, IDoc } from '@/components/icons'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConversationListItemContent } from '@/im/ConversationList'
 import { isElectron, isMac } from '@/lib/runtime'
@@ -189,7 +189,7 @@ export function ConversationsPane() {
                   <div className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-secondary">LingxiLoop</div>
                   {([
                     ['agents', '智能体', IAgent],
-                    ['computer', 'Computer', IComputer],
+                    ['canvas', 'Canvas', ICanvas],
                     ['library', '资料库', IDoc],
                   ] as const).map(([key, label, Icon]) => (
                     <button key={key} type="button" onClick={() => { useApp.getState().setView(key); setLauncherOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-[13px] font-medium text-ink hover:bg-raised">

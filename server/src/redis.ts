@@ -38,6 +38,9 @@ export const CH_CONVO_UPDATED = 'lingxiloop:convo.updated'
 export const CH_CONVENE = 'lingxiloop:convene'
 export const CH_BOARDS = 'lingxiloop:boards'
 export const CH_DOCS = 'lingxiloop:docs'
+/** Shared Canvas mutations and presence. Frame state stays in Postgres; this
+ * channel only carries the small realtime delta to connected workspace peers. */
+export const CH_CANVAS = 'lingxiloop:canvas'
 /* === Collaborative documents (CRDT) ===
  *
  * Yjs binary updates are base64-encoded into the JSON envelope so they
@@ -290,6 +293,28 @@ export interface DocIndexEvent extends TenantTagged {
   actorId?: string
 }
 
+export interface CanvasEvent extends TenantTagged {
+  type: 'canvas.changed'
+  kind:
+    | 'frame.created' | 'frame.updated' | 'frame.deleted'
+    | 'presence.updated' | 'presence.removed'
+    | 'comment.created' | 'activity.created'
+    | 'workspace.started' | 'workspace.updated'
+    | 'assignment.updated' | 'cursor.moved'
+  canvasId: string
+  timestamp: string
+  conversationId?: string
+  revision?: number
+  frameId?: string
+  participantId?: string
+  frame?: unknown
+  presence?: unknown
+  assignment?: unknown
+  workspace?: unknown
+  comment?: unknown
+  activity?: unknown
+}
+
 /** A Yjs binary update has been applied to a doc room. Carried base64
  *  because the WS path is JSON-only. originId is the WS client / agent id
  *  that produced the update — listeners on that same client echo-suppress. */
@@ -419,7 +444,7 @@ export interface AgentActivityEvent extends TenantTagged {
 export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
   | StatusEvent | AvatarEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
-  | BoardEvent | DocIndexEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
+  | BoardEvent | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
   | CalendarEventChangedEvent
   | PollUpdatedEvent
   | AgentActivityEvent

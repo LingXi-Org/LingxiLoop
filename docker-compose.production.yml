@@ -26,7 +26,6 @@ x-lingxiloop-runtime: &lingxiloop-runtime
     WUKONG_API_URL: http://wukongim:5001
     WUKONG_WS_URL: ${WUKONG_WS_PUBLIC_URL:?WUKONG_WS_PUBLIC_URL is required}
     WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
-    LINGXILOOP_COMPUTER_RUNTIME_URL: http://computer-runtime:5195
     LINGXILOOP_CORS_ORIGINS: app://lingxiloop
     LINGXILOOP_AUTH_RETURN_ALLOWLIST: ${LINGXILOOP_PUBLIC_ORIGIN}/,http://127.0.0.1:47823/auth/done,lingxiloop://auth
   networks: [lingxiloop]
@@ -82,29 +81,6 @@ services:
     networks: [lingxiloop]
     logging: *quiet-logging
 
-  computer-runtime:
-    image: ${COMPUTER_RUNTIME_IMAGE:?COMPUTER_RUNTIME_IMAGE must be digest-pinned}
-    restart: unless-stopped
-    env_file:
-      - ./.env.secrets
-    environment:
-      NODE_ENV: production
-      LINGXILOOP_LOG_LEVEL: warn
-      COMPUTER_RUNTIME_PORT: "5195"
-      LINGXILOOP_USER_COMPUTER_IMAGE: ${USER_COMPUTER_IMAGE:?USER_COMPUTER_IMAGE must be digest-pinned}
-    volumes:
-      # The Docker trust boundary is isolated to this internal provider. The
-      # public API container never receives the socket or Docker CLI.
-      - /var/run/docker.sock:/var/run/docker.sock
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5195/readyz"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 10s
-    networks: [lingxiloop]
-    logging: *quiet-logging
-
   migrate:
     <<: *lingxiloop-runtime
     profiles: [tools]
@@ -125,8 +101,6 @@ services:
       redis:
         condition: service_healthy
       wukongim:
-        condition: service_healthy
-      computer-runtime:
         condition: service_healthy
     ports:
       - "127.0.0.1:5181:5181"

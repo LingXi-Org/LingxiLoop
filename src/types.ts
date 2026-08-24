@@ -1,7 +1,7 @@
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
-export type AgentCapability = 'computer' | 'web' | 'files' | 'email' | 'documents' | 'calendar'
+export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar'
 
 export interface Participant {
   id: string
@@ -74,7 +74,7 @@ export interface Conversation {
   projectColor?: string | null
 }
 
-export type MessageKind = 'text' | 'tool' | 'attachment' | 'whisper-link' | 'thought' | 'system' | 'email' | 'poll' | 'handoff' | 'approval'
+export type MessageKind = 'text' | 'tool' | 'attachment' | 'whisper-link' | 'thought' | 'system' | 'email' | 'poll' | 'handoff' | 'approval' | 'canvas'
 
 export interface HandoffPayload {
   id: string
@@ -232,6 +232,14 @@ export interface Message {
   pollTallies?: PollTally[]
   handoff?: HandoffPayload
   approval?: ApprovalPayload
+  canvas?: {
+    canvasId: string
+    title: string
+    goal: string
+    status: CanvasWorkspaceStatus
+    members: Array<{ agentId: string; assignment: string; color: string; status: CanvasAssignmentStatus }>
+    frameCount: number
+  }
   /** Reply-to / quote pointer: the id of another message in this same
    *  conversation that this one is quoting. Null for non-reply messages. */
   quotedMessageId?: string
@@ -256,7 +264,118 @@ export interface Message {
 }
 
 export interface ViewKey {
-  view: 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'computer' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
+  view: 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
+}
+
+/* ============== Shared Canvas ======================================== */
+
+export type CanvasFrameType = 'html' | 'markdown' | 'document' | 'image' | 'artifact'
+
+export interface CanvasFrame {
+  id: string
+  canvasId: string
+  type: CanvasFrameType
+  title: string
+  x: number
+  y: number
+  width: number
+  height: number
+  content: string
+  data: Record<string, unknown>
+  revision: number
+  createdBy: string
+  updatedBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CanvasPresence {
+  participantId: string
+  participantKind: 'user' | 'agent'
+  status: string
+  frameId: string | null
+  color?: string | null
+  cursorX?: number | null
+  cursorY?: number | null
+  lastSeenAt: string
+}
+
+export type CanvasWorkspaceStatus = 'active' | 'summarizing' | 'completed' | 'stopped' | 'failed'
+export type CanvasAssignmentStatus = 'queued' | 'blocked' | 'working' | 'waiting' | 'completed' | 'failed' | 'cancelled'
+
+export interface CanvasAgentAssignment {
+  id: string
+  canvasId: string
+  agentId: string
+  assignment: string
+  color: string
+  status: CanvasAssignmentStatus
+  workArea: { x: number; y: number; width: number; height: number }
+  activeFrameId: string | null
+  cursor: { x: number; y: number } | null
+  workId: string | null
+  dependsOnAgentIds: string[]
+  result: string | null
+  error: string | null
+  startedAt: string | null
+  completedAt: string | null
+  updatedAt: string
+}
+
+export interface CanvasWorkspaceSummary {
+  id: string
+  title: string
+  goal: string
+  conversationId: string | null
+  initiatorAgentId: string | null
+  status: CanvasWorkspaceStatus
+  origin: string
+  frameCount: number
+  assignmentCount: number
+  updatedAt: string
+  createdAt: string
+}
+
+export interface CanvasComment {
+  id: string
+  canvasId: string
+  frameId: string | null
+  authorId: string
+  authorKind: 'user' | 'agent'
+  body: string
+  createdAt: string
+}
+
+export interface CanvasActivity {
+  id: string
+  canvasId: string
+  frameId: string | null
+  actorId: string
+  actorKind: 'user' | 'agent'
+  action: string
+  detail: Record<string, unknown>
+  createdAt: string
+}
+
+export interface CanvasSnapshot {
+  id: string
+  title: string
+  companyId: string
+  conversationId: string | null
+  triggerClientMsgNo: string | null
+  goal: string
+  initiatorAgentId: string | null
+  status: CanvasWorkspaceStatus
+  origin: string
+  summary: string | null
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+  frames: CanvasFrame[]
+  assignments: CanvasAgentAssignment[]
+  presence: CanvasPresence[]
+  comments: CanvasComment[]
+  activity: CanvasActivity[]
 }
 
 /* ============== Calendar (AI-native shared schedule) ============== */

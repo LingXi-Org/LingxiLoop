@@ -3,6 +3,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import type { PoolClient } from 'pg'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
+import { completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
 import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
 import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 
@@ -36,6 +37,8 @@ interface WorkRow {
   thread_root_client_msg_no: string | null
   trigger_client_msg_no: string
   reason: AgentWorkItem['reason']
+  canvas_id: string | null
+  canvas_assignment_id: string | null
 }
 
 function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
@@ -48,6 +51,8 @@ function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
     ...(row.thread_root_client_msg_no ? { threadRootClientMsgNo: row.thread_root_client_msg_no } : {}),
     triggerClientMsgNo: row.trigger_client_msg_no,
     reason: row.reason,
+    ...(row.canvas_id ? { canvasId: row.canvas_id } : {}),
+    ...(row.canvas_assignment_id ? { canvasAssignmentId: row.canvas_assignment_id } : {}),
     leaseToken,
   }
 }
@@ -65,7 +70,7 @@ async function requireLease(req: Request): Promise<{ work: AgentWorkItem; row: W
   const fence = Number(req.body?.fence ?? req.query.fence)
   const leaseToken = String(req.body?.leaseToken ?? req.query.leaseToken ?? '')
   const { rows } = await pool.query<WorkRow>(
-    `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason
+    `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id
        FROM agent_work_items
       WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND lease_expires_at > NOW()`,
     [id, fence, hash(leaseToken)],
@@ -82,7 +87,7 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
     await client.query('BEGIN')
     await client.query(`DELETE FROM agent_os_session_leases WHERE expires_at <= NOW()`)
     const { rows } = await client.query<WorkRow>(
-      `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason
+      `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id
          FROM agent_work_items
         WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
           AND available_at <= NOW()
@@ -110,7 +115,7 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
           SET status='leased', fence=fence+1, lease_token_hash=$2, leased_by=$3,
               lease_expires_at=NOW()+INTERVAL '45 seconds', attempts=attempts+1, updated_at=NOW()
         WHERE id=$1
-      RETURNING id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason`,
+      RETURNING id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id`,
       [rows[0].id, hash(token), workerId],
     )
     await client.query('COMMIT')
@@ -172,10 +177,19 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
         LIMIT 1`, [approvalId, work.agentId, work.channelId],
     )
     : { rows: [] }
+  const canvas = work.canvasId ? await getCanvasSnapshot(work.companyId, work.agentId, work.canvasId) : null
+  const canvasRoster = await listCanvasAvailableAgents(work.companyId)
   res.json({
     work,
     persona: { name: personas[0].name, role: personas[0].role ?? 'Learning Agent', instructions: personas[0].system_prompt ?? '' },
     messages,
+    canvasRoster,
+    ...(canvas ? { canvas: {
+      id: canvas.id, title: canvas.title, goal: canvas.goal, status: canvas.status,
+      initiatorAgentId: canvas.initiatorAgentId,
+      assignment: canvas.assignments.find((item) => item.agentId === work.agentId),
+      assignments: canvas.assignments, frames: canvas.frames,
+    } } : {}),
     ...(approvals[0] ? { pendingApproval: {
       approvalId: approvals[0].id,
       approved: approvals[0].status === 'approved',
@@ -247,7 +261,10 @@ async function actionFromLedger(client: PoolClient, key: string, action: HostAct
   if (row.action !== action.action || canonicalJson(row.args) !== canonicalJson(action.args)) {
     throw new Error('Host Action idempotency key was reused for a different action')
   }
-  if (row.status === 'succeeded') return { ok: true, value: row.result }
+  if (row.status === 'succeeded') {
+    const stored = row.result as { __hostActionResult?: boolean; value?: unknown; directive?: HostActionResult['directive'] } | null
+    return stored?.__hostActionResult ? { ok: true, value: stored.value, ...(stored.directive ? { directive: stored.directive } : {}) } : { ok: true, value: row.result }
+  }
   if (row.status === 'failed') return { ok: false, error: row.error ?? 'action failed' }
   if (row.status === 'awaiting_approval' && row.approval_id) return { ok: false, approval: { id: row.approval_id, status: 'pending' } }
   return null
@@ -255,7 +272,7 @@ async function actionFromLedger(client: PoolClient, key: string, action: HostAct
 
 const ACTION_CAPABILITIES: Record<string, string> = {
   files: 'files', documents: 'documents', boards: 'documents', calendar: 'calendar',
-  research: 'web', computer: 'computer', email: 'email',
+  research: 'web', canvas: 'canvas', email: 'email',
 }
 
 async function assertActionAllowed(work: AgentWorkItem, action: HostAction): Promise<void> {
@@ -323,7 +340,9 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
     catch (error) { result = { ok: false, error: error instanceof Error ? error.message : String(error) } }
     await client.query(
       `UPDATE agent_host_actions SET status=$2, result=$3::jsonb, error=$4, updated_at=NOW() WHERE idempotency_key=$1`,
-      [action.idempotencyKey, result.ok ? 'succeeded' : 'failed', result.value === undefined ? null : JSON.stringify(result.value), result.error ?? null],
+      [action.idempotencyKey, result.ok ? 'succeeded' : 'failed', result.ok
+        ? JSON.stringify({ __hostActionResult: true, value: result.value ?? null, ...(result.directive ? { directive: result.directive } : {}) })
+        : null, result.error ?? null],
     )
     return result
   } catch (error) {
@@ -355,6 +374,13 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
       event.stage === 'failed' ? 'error' : 'info', event.kind, JSON.stringify(event.data), event.seq],
   )
   await pool.query(`UPDATE agent_runs SET stage=$2, updated_at=NOW() WHERE id=$1`, [event.runId, event.kind])
+  if (work.reason === 'canvas_worker' && work.canvasId) {
+    if (event.kind === 'run.started') {
+      await pool.query(`UPDATE canvas_agent_assignments SET status='working',started_at=COALESCE(started_at,NOW()),updated_at=NOW() WHERE id=$1`, [work.canvasAssignmentId])
+      await setCanvasStatus({ companyId: work.companyId, canvasId: work.canvasId, actorId: work.agentId, actorKind: 'agent', status: 'working' }).catch(() => undefined)
+    }
+    res.json({ ok: true }); return
+  }
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(`SELECT profile FROM im_channel_bindings WHERE channel_id=$1`, [work.channelId])
   const channelType = Number(rows[0]?.profile?.channelType ?? 2)
   const previewClientMsgNo = `preview-${event.runId}`
@@ -414,6 +440,10 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
 
 agentOSControlRouter.post('/work/:id/messages', safe(async (req, res) => {
   const { work } = await requireLease(req)
+  if (work.reason === 'canvas_summary' && work.canvasId) {
+    const { rows: canvases } = await pool.query<{ status: string }>(`SELECT status FROM canvases WHERE id=$1 AND company_id=$2`, [work.canvasId, work.companyId])
+    if (canvases[0]?.status !== 'summarizing') { res.json({ ok: true, suppressed: true }); return }
+  }
   const message = req.body.message as LingxiMessageV1
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(`SELECT profile FROM im_channel_bindings WHERE channel_id=$1`, [work.channelId])
   res.json(await wukongClient().sendMessage(work.channelId, Number(rows[0]?.profile?.channelType ?? 2), work.agentId, message))
@@ -427,9 +457,9 @@ agentOSControlRouter.post('/work/:id/complete', safe(async (req, res) => {
   try {
     await client.query('BEGIN')
     await client.query(
-      `UPDATE agent_work_items SET status=$2, error=$3, lease_token_hash=NULL, lease_expires_at=NULL,
+      `UPDATE agent_work_items SET status=$2, error=$3,result_text=$5, lease_token_hash=NULL, lease_expires_at=NULL,
          updated_at=NOW(), finished_at=NOW() WHERE id=$1 AND fence=$4`,
-      [work.id, status, req.body.error ?? null, work.fence],
+      [work.id, status, req.body.error ?? null, work.fence, req.body.resultText ?? null],
     )
     await client.query(`DELETE FROM agent_os_session_leases WHERE work_id=$1 AND fence=$2`, [work.id, work.fence])
     await client.query('COMMIT')
@@ -437,5 +467,9 @@ agentOSControlRouter.post('/work/:id/complete', safe(async (req, res) => {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
   } finally { client.release() }
+  if (work.canvasId) {
+    await completeCanvasWork({ workId: work.id, companyId: work.companyId,
+      status: status as 'completed' | 'failed' | 'cancelled', resultText: req.body.resultText, error: req.body.error })
+  }
   res.json({ ok: true })
 }))

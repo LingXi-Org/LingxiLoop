@@ -634,15 +634,38 @@ input, textarea { font: inherit; }
 
 /* ============== Shared IM shell ============== */
 .desktop-im-grid {
+  --im-context-width: clamp(360px, 36vw, 680px);
   grid-template-columns: 320px minmax(0, 1fr);
   background: var(--app);
 }
 .desktop-im-grid[data-context-open='true'] {
-  grid-template-columns: 320px minmax(360px, 1fr) clamp(360px, 36vw, 680px);
+  grid-template-columns: 320px minmax(360px, 1fr) var(--im-context-width);
 }
 .im-context-pane {
   position: relative;
   z-index: 15;
+}
+.im-context-resize-handle {
+  position: absolute;
+  inset-block: 0;
+  left: -4px;
+  z-index: 30;
+  width: 8px;
+  cursor: ew-resize;
+  touch-action: none;
+}
+.im-context-resize-handle::after {
+  position: absolute;
+  inset-block: 0;
+  left: 3px;
+  width: 2px;
+  content: '';
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+.im-context-resize-handle:hover::after,
+body.im-column-resizing .im-context-resize-handle::after {
+  background: var(--accent);
 }
 .im-conversation-header,
 .im-composer-surface {

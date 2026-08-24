@@ -74,6 +74,9 @@ interface AppState {
   openCalendarEventId: string | null
   openCalendarEventPeek: (eventId: string) => void
   closeCalendarEventPeek: () => void
+  openCanvasId: string | null
+  openCanvasPeek: (canvasId: string) => void
+  closeCanvasPeek: () => void
 
   /**
    * Email composer state — when set, an overlay drawer is rendered on top
@@ -100,6 +103,7 @@ export const useApp = create<AppState>((set) => ({
       openBoardId: null,
       openBoardCardId: null,
       openCalendarEventId: null,
+      openCanvasId: null,
     }),
 
   // Starts unselected — the real conversations list arrives async from the
@@ -110,6 +114,7 @@ export const useApp = create<AppState>((set) => ({
     view: 'conversations',
     selectedConversationId: id,
     mobileStack: id ? 'chat' : 'list',
+    openCanvasId: null,
   }),
   setSelectedIfNone: (id) => set((s) => s.selectedConversationId ? {} : { selectedConversationId: id }),
 
@@ -121,7 +126,7 @@ export const useApp = create<AppState>((set) => ({
   // slot in DesktopApp. Keeping both states in sync here means the UI never
   // sees both flags on at once.
   openAgentInfo: (agentId) =>
-    set({ view: 'conversations', infoAgentId: agentId, openThread: null, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null }),
+    set({ view: 'conversations', infoAgentId: agentId, openThread: null, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null, openCanvasId: null }),
   closeAgentInfo: () => set({ infoAgentId: null }),
 
   replyingTo: {},
@@ -148,22 +153,25 @@ export const useApp = create<AppState>((set) => ({
 
   openThread: null,
   openThreadView: (convoId, rootId) =>
-    set({ view: 'conversations', openThread: { convoId, rootId }, infoAgentId: null, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null }),
+    set({ view: 'conversations', openThread: { convoId, rootId }, infoAgentId: null, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null, openCanvasId: null }),
   closeThreadView: () => set({ openThread: null }),
 
   openDocumentId: null,
   openDocumentPeek: (documentId) =>
-    set({ openDocumentId: documentId, openBoardId: null, openBoardCardId: null, openCalendarEventId: null, openThread: null, infoAgentId: null }),
+    set({ view: 'conversations', openDocumentId: documentId, openBoardId: null, openBoardCardId: null, openCalendarEventId: null, openCanvasId: null, openThread: null, infoAgentId: null }),
   closeDocumentPeek: () => set({ openDocumentId: null }),
   openBoardId: null,
   openBoardCardId: null,
   openBoardPeek: (boardId, cardId = null) =>
-    set({ openBoardId: boardId, openBoardCardId: cardId, openDocumentId: null, openCalendarEventId: null, openThread: null, infoAgentId: null }),
+    set({ view: 'conversations', openBoardId: boardId, openBoardCardId: cardId, openDocumentId: null, openCalendarEventId: null, openCanvasId: null, openThread: null, infoAgentId: null }),
   closeBoardPeek: () => set({ openBoardId: null, openBoardCardId: null }),
   openCalendarEventId: null,
   openCalendarEventPeek: (eventId) =>
-    set({ openCalendarEventId: eventId, openDocumentId: null, openBoardId: null, openBoardCardId: null, openThread: null, infoAgentId: null }),
+    set({ view: 'conversations', openCalendarEventId: eventId, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCanvasId: null, openThread: null, infoAgentId: null }),
   closeCalendarEventPeek: () => set({ openCalendarEventId: null }),
+  openCanvasId: null,
+  openCanvasPeek: (canvasId) => set({ view: 'conversations', openCanvasId: canvasId, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null, openThread: null, infoAgentId: null }),
+  closeCanvasPeek: () => set({ openCanvasId: null }),
 
   composeEmail: null,
   openComposeNew: () => set({ composeEmail: { mode: 'new' } }),

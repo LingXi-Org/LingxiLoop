@@ -15,6 +15,7 @@ import { useMe } from '@/stores/auth'
 import { useBoards } from '@/stores/boards'
 import { useCalendar } from '@/stores/calendar'
 import { useDocuments } from '@/stores/documents'
+import { useCanvas } from '@/stores/canvas'
 import { discardFailedMessage, retryFailedMessage, toggleReaction, useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import type { Message, Participant } from '@/types'
@@ -1766,6 +1767,29 @@ function ApprovalCard({ msg }: { msg: Message }) {
   )
 }
 
+function CanvasWorkspaceCard({ msg }: { msg: Message }) {
+  const openCanvasPeek = useApp((state) => state.openCanvasPeek)
+  const setView = useApp((state) => state.setView)
+  const load = useCanvas((state) => state.load)
+  const live = useCanvas((state) => state.snapshot?.id === msg.canvas?.canvasId ? state.snapshot : null)
+  const liveCard = useCanvas((state) => msg.canvas ? state.liveCards[msg.canvas.canvasId] : undefined)
+  const canvas = msg.canvas
+  if (!canvas) return null
+  const members = live?.assignments ?? (liveCard?.assignments.length ? liveCard.assignments : canvas.members)
+  const frameCount = live?.frames.length ?? liveCard?.frameIds.length ?? canvas.frameCount
+  const status = live?.status ?? liveCard?.status ?? canvas.status
+  const open = () => {
+    void load(canvas.canvasId)
+    if (window.innerWidth < 768) setView('canvas')
+    else openCanvasPeek(canvas.canvasId)
+  }
+  return <button type="button" onClick={open} className="mt-1 block w-full max-w-[620px] rounded-2xl border border-accent/25 bg-panel p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:bg-raised-hover hover:shadow-md">
+    <div className="flex items-center justify-between gap-3"><span className="text-sm font-semibold text-ink-900">{canvas.title}</span><span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold uppercase text-accent">{status}</span></div>
+    <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-ink-500">{canvas.goal}</p>
+    <div className="mt-3 flex items-center gap-1.5">{members.slice(0, 8).map((member) => <span key={member.agentId} title={`${member.agentId}: ${member.assignment}`} className="size-3 rounded-full ring-2 ring-panel" style={{ backgroundColor: member.color }} />)}<span className="ml-2 text-[10px] text-ink-400">{members.length} Agents · {frameCount} Frames</span></div>
+  </button>
+}
+
 function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = false }: MessageRowProps) {
   const openAgentInfo = useApp((s) => s.openAgentInfo)
   const openThreadView = useApp((s) => s.openThreadView)
@@ -1786,6 +1810,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const isPoll = msg.kind === 'poll'
   const isHandoff = msg.kind === 'handoff'
   const isApproval = msg.kind === 'approval'
+  const isCanvas = msg.kind === 'canvas'
   const shell = messageShellCapabilities(msg.kind)
   const isStreaming = Boolean(msg.streaming)
   const avatarActivity = msg.streaming === 'placeholder'
@@ -1848,7 +1873,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
 
         {!isStreaming && shell.quote && <QuoteCard msg={msg} />}
 
-        {!isToolOnly && !isAttachOnly && !isPoll && !isHandoff && !isApproval && (
+        {!isToolOnly && !isAttachOnly && !isPoll && !isHandoff && !isApproval && !isCanvas && (
           <div
             className={cn(
               'inline-block break-words',
@@ -1895,6 +1920,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
         {!isStreaming && isPoll && <PollBubble msg={msg} zh={openMaus} />}
         {!isStreaming && isHandoff && <HandoffCard msg={msg} />}
         {!isStreaming && isApproval && <ApprovalCard msg={msg} />}
+        {!isStreaming && isCanvas && <CanvasWorkspaceCard msg={msg} />}
 
         {!isStreaming && msg.kind === 'tool' && <ToolCard msg={msg} />}
         {!isStreaming && artifactRefs.length > 0 && (

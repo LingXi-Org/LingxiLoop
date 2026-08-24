@@ -2,12 +2,23 @@ import { createHash, randomUUID } from 'node:crypto'
 import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
+import {
+  addCanvasWorkspaceAgents,
+  appendCanvasFrameContent,
+  createCanvasFrame,
+  deleteCanvasFrame,
+  getCanvasSnapshot,
+  listCanvasAvailableAgents,
+  setCanvasStatus,
+  startCanvasWorkspace,
+  updateCanvasFrame,
+  type CanvasMemberInput,
+} from '../canvas/service.js'
 import { readResearch, searchResearch } from './research.js'
 import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
-  'computer.input', 'computer.takeover',
   'routines.create', 'routines.activate',
   'documents.delete', 'boards.delete', 'calendar.delete',
 ])
@@ -146,6 +157,99 @@ async function executeResearch(_work: AgentWorkItem, method: string, args: Recor
   throw new Error(`unsupported research action: ${method}`)
 }
 
+async function executeCanvas(
+  work: AgentWorkItem,
+  method: string,
+  args: Record<string, unknown>,
+  action: HostAction,
+): Promise<HostActionResult> {
+  const canvasId = textArg(args, 'canvasId', false) || work.canvasId
+  const members = (): CanvasMemberInput[] => {
+    if (!Array.isArray(args.members)) throw new Error('members must be an array')
+    return args.members.map((raw) => {
+      const member = record(raw)
+      return {
+        agentId: textArg(member, 'agentId'), assignment: textArg(member, 'assignment'),
+        ...(Array.isArray(member.dependsOnAgentIds) ? { dependsOnAgentIds: member.dependsOnAgentIds.map(String) } : {}),
+      }
+    })
+  }
+  if (method === 'available_agents') return { ok: true, value: await listCanvasAvailableAgents(work.companyId) }
+  if (method === 'start_workspace') {
+    const snapshot = await startCanvasWorkspace({
+      companyId: work.companyId, initiatorAgentId: work.agentId, conversationId: work.channelId,
+      triggerClientMsgNo: work.triggerClientMsgNo, title: textArg(args, 'title'), goal: textArg(args, 'goal'),
+      members: members(), idempotencyKey: action.idempotencyKey,
+    })
+    const card: LingxiMessageV1 = {
+      version: 1, kind: 'canvas', clientMsgNo: `canvas-card-${snapshot.id}`,
+      body: snapshot.title, refs: { canvasId: snapshot.id, runId: action.runId, agentId: work.agentId },
+      data: { canvasId: snapshot.id, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
+        members: snapshot.assignments.map((item) => ({ agentId: item.agentId, assignment: item.assignment, color: item.color, status: item.status })),
+        frameCount: 0, suppressAgentWake: true },
+    }
+    const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
+      `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [work.channelId, work.companyId],
+    )
+    await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card).catch(() => undefined)
+    return { ok: true, value: snapshot, directive: { type: 'defer_to_canvas', canvasId: snapshot.id } }
+  }
+  if (method === 'add_agents') {
+    if (!canvasId) throw new Error('canvasId is required')
+    return { ok: true, value: await addCanvasWorkspaceAgents({ companyId: work.companyId, canvasId, actorId: work.agentId, members: members() }) }
+  }
+  if (method === 'get') {
+    return { ok: true, value: await getCanvasSnapshot(work.companyId, work.agentId, canvasId) }
+  }
+  if (method === 'create_frame') {
+    if (!canvasId) throw new Error('canvasId is required for task Canvas frames')
+    return {
+      ok: true,
+      value: await createCanvasFrame({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent',
+        idempotencyKey: action.idempotencyKey, canvasId, frame: args,
+      }),
+    }
+  }
+  if (method === 'set_status') {
+    return {
+      ok: true,
+      value: await setCanvasStatus({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent',
+        canvasId, status: textArg(args, 'status'), frameId: typeof args.frameId === 'string' ? args.frameId : null,
+      }),
+    }
+  }
+  const frameId = textArg(args, 'frameId')
+  if (method === 'update_frame') {
+    const { frameId: _frameId, ...patch } = args
+    return {
+      ok: true,
+      value: await updateCanvasFrame({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent', frameId, patch,
+      }),
+    }
+  }
+  if (method === 'append_content') {
+    return {
+      ok: true,
+      value: await appendCanvasFrameContent({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent', frameId,
+        content: textArg(args, 'content'),
+      }),
+    }
+  }
+  if (method === 'delete_frame') {
+    return {
+      ok: true,
+      value: await deleteCanvasFrame({
+        companyId: work.companyId, actorId: work.agentId, actorKind: 'agent', frameId,
+      }),
+    }
+  }
+  throw new Error(`unsupported canvas action: ${method}`)
+}
+
 export function actionRequiresApproval(action: string): boolean { return APPROVAL_REQUIRED.has(action) }
 
 export async function executeLearningAction(work: AgentWorkItem, action: HostAction): Promise<HostActionResult> {
@@ -157,6 +261,7 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (namespace === 'polls') return executePoll(work, method, args, action)
   if (namespace === 'turn') return { ok: true, value: { status: method, ...args } }
   if (namespace === 'research') return executeResearch(work, method, args)
+  if (namespace === 'canvas') return executeCanvas(work, method, args, action)
   const result = await runStructuredLearningAction(action.action, args, work.agentId, { idempotencyKey: action.idempotencyKey })
   return result.ok ? { ok: true, value: { text: result.text, sideEffects: result.sideEffects ?? [] } } : { ok: false, error: result.text }
 }

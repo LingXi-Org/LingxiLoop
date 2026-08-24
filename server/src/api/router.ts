@@ -3,7 +3,6 @@ import { type NextFunction, type Request, type Response, Router } from 'express'
 import { isWaitlistEnabled } from '../admin.js'
 import { enqueueAgentWork } from '../agent-os/enqueue.js'
 import { PUBLIC_ACTIVITY_KINDS, publicActivityTitle } from '../agents/activity-visibility.js'
-import { userComputerService } from '../agents/computer/user-computer.js'
 import { deleteAutonomyRule, listAutonomyRules, listHandoffs, upsertAutonomyRule } from '../agents/coworker.js'
 import { getTriageEconomics } from '../agents/observability.js'
 import {
@@ -15,6 +14,19 @@ import {
   gravatarUrlForEmail,
 } from '../auth.js'
 import { pool } from '../db/pool.js'
+import {
+  addCanvasComment,
+  appendCanvasFrameContent,
+  createCanvasFrame,
+  deleteCanvasFrame,
+  getCanvasSnapshot,
+  listCanvasWorkspaces,
+  setCanvasStatus,
+  steerCanvasAssignment,
+  stopCanvasAssignment,
+  stopCanvasWorkspace,
+  updateCanvasFrame,
+} from '../canvas/service.js'
 import { env } from '../env.js'
 import { imRouter } from '../im/router.js'
 import { type InvitationEmailDelivery, sendInvitationEmail } from '../invitation-email.js'
@@ -1018,112 +1030,95 @@ api.post('/companies', async (req, res) => {
   res.status(500).json({ error: 'failed to create company after retries' })
 })
 
-/* ============== My Computer (one persistent environment per user) ====== */
+/* ============== Shared Canvas (shared state, isolated execution) ======= */
 
-api.get('/computer', safe(async (req, res) => {
+api.get('/canvas', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
-  res.json(await userComputerService.get(userId, companyId))
+  res.json(await getCanvasSnapshot(companyId, userId))
 }))
 
-api.post('/computer/start', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  res.json(await userComputerService.start(userId, companyId))
+api.get('/canvases', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  res.json(await listCanvasWorkspaces(companyId, typeof req.query.conversationId === 'string' ? req.query.conversationId : undefined))
 }))
 
-api.post('/computer/stop', safe(async (req, res) => {
+api.get('/canvases/:id', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
-  res.json(await userComputerService.stop(userId, companyId))
+  res.json(await getCanvasSnapshot(companyId, userId, String(req.params.id)))
 }))
 
-api.post('/computer/screens', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  const agentId = String(req.body?.agentId ?? '').trim()
-  if (!agentId) throw new HttpError(400, 'agentId required')
-  res.status(201).json(await userComputerService.ensureScreen(userId, companyId, agentId))
-}))
-
-api.post('/computer/screens/:id/takeover', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  res.json(await userComputerService.takeover(userId, companyId, String(req.params.id)))
-}))
-
-api.post('/computer/screens/:id/return', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  res.json(await userComputerService.returnToAgent(userId, companyId, String(req.params.id)))
-}))
-
-api.post('/computer/screens/:id/heartbeat', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  res.json(await userComputerService.heartbeatControl(userId, companyId, String(req.params.id)))
-}))
-
-api.get('/computer/screens/:id/screenshot', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  const bytes = await userComputerService.screenshot(userId, companyId, String(req.params.id))
-  res.type('image/png').send(Buffer.from(bytes))
-}))
-
-api.get('/computer/screens/:id/stream', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  const screenId = String(req.params.id)
-  let closed = false
-  req.on('close', () => { closed = true })
-  res.status(200)
-  res.setHeader('content-type', 'text/event-stream')
-  res.setHeader('cache-control', 'no-cache, no-transform')
-  res.setHeader('connection', 'keep-alive')
-  res.flushHeaders()
-  while (!closed && !res.writableEnded) {
-    try {
-      const [bytes, computer] = await Promise.all([
-        userComputerService.screenshot(userId, companyId, screenId),
-        userComputerService.get(userId, companyId),
-      ])
-      const screen = computer.screens.find((item) => item.id === screenId)
-      if (!screen) throw new Error('screen not found')
-      res.write(`data: ${JSON.stringify({ image: Buffer.from(bytes).toString('base64'), status: screen.status })}\n\n`)
-      const delayMs = screen.status === 'working' || screen.status === 'human_control' ? 750 : 8_000
-      await new Promise((resolve) => setTimeout(resolve, delayMs))
-    } catch (error) {
-      if (!closed) res.write(`event: error\ndata: ${JSON.stringify({ error: error instanceof Error ? error.message : String(error) })}\n\n`)
-      break
-    }
-  }
-  if (!res.writableEnded) res.end()
-}))
-
-api.post('/computer/screens/:id/input', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  const type = String(req.body?.type ?? '')
-  const screenId = String(req.params.id)
-  if (type === 'click') {
-    const x = Number(req.body?.x)
-    const y = Number(req.body?.y)
-    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new HttpError(400, 'finite x and y required')
-    await userComputerService.sendHumanInput(userId, companyId, screenId, { type, x, y, button: Number(req.body?.button ?? 1) })
-  } else if (type === 'text') {
-    await userComputerService.sendHumanInput(userId, companyId, screenId, { type, text: String(req.body?.text ?? '') })
-  } else if (type === 'key') {
-    await userComputerService.sendHumanInput(userId, companyId, screenId, { type, key: String(req.body?.key ?? '') })
-  } else {
-    throw new HttpError(400, 'input type must be click, text or key')
-  }
+api.post('/canvases/:id/assignments/:agentId/steer', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  await steerCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId), text: String(req.body?.text ?? '') })
   res.json({ ok: true })
 }))
 
-api.get('/computer/browser-targets', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  res.json(await userComputerService.listBrowserTargets(userId, companyId))
+api.post('/canvases/:id/assignments/:agentId/stop', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  await stopCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId) })
+  res.json({ ok: true })
 }))
 
-api.post('/computer/browser-targets', safe(async (req, res) => {
+api.post('/canvases/:id/stop', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  await stopCanvasWorkspace({ companyId, canvasId: String(req.params.id) })
+  res.json({ ok: true })
+}))
+
+api.post('/canvas/frames', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
-  const screenId = String(req.body?.screenId ?? '').trim()
-  const agentId = String(req.body?.agentId ?? '').trim()
-  const targetRef = String(req.body?.targetRef ?? '').trim()
-  if (!screenId || !agentId || !targetRef) throw new HttpError(400, 'screenId, agentId and targetRef required')
-  res.status(201).json(await userComputerService.registerBrowserTarget({
-    userId, companyId, screenId, agentId, targetRef, private: req.body?.private === true,
+  res.status(201).json(await createCanvasFrame({
+    companyId, actorId: userId, actorKind: 'user', canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined, frame: req.body ?? {},
+  }))
+}))
+
+api.patch('/canvas/frames/:id', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  try {
+    res.json(await updateCanvasFrame({
+      companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id), patch: req.body ?? {},
+    }))
+  } catch (error) {
+    const conflict = error as Error & { status?: number; latestFrame?: unknown }
+    if (conflict.status === 409) { res.status(409).json({ error: conflict.message, latestFrame: conflict.latestFrame }); return }
+    throw error
+  }
+}))
+
+api.post('/canvas/frames/:id/append', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await appendCanvasFrameContent({
+    companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id),
+    content: String(req.body?.content ?? ''),
+  }))
+}))
+
+api.delete('/canvas/frames/:id', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await deleteCanvasFrame({
+    companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id),
+  }))
+}))
+
+api.post('/canvas/status', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await setCanvasStatus({
+    companyId, actorId: userId, actorKind: 'user',
+    canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined,
+    status: String(req.body?.status ?? ''),
+    frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
+    cursorX: typeof req.body?.cursorX === 'number' ? req.body.cursorX : null,
+    cursorY: typeof req.body?.cursorY === 'number' ? req.body.cursorY : null,
+  }))
+}))
+
+api.post('/canvas/comments', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.status(201).json(await addCanvasComment({
+    companyId, actorId: userId, actorKind: 'user',
+    canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined,
+    frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
+    body: String(req.body?.body ?? ''),
   }))
 }))
 
@@ -2219,8 +2214,8 @@ interface AgentBody {
   initial?: unknown; avatarBg?: unknown; avatarUrl?: unknown
   tools?: unknown; capabilities?: unknown
 }
-const AGENT_CAPABILITIES = new Set(['computer', 'web', 'files', 'email', 'documents', 'calendar'])
-const DEFAULT_AGENT_CAPABILITIES = ['computer', 'web', 'files', 'email', 'documents']
+const AGENT_CAPABILITIES = new Set(['canvas', 'web', 'files', 'email', 'documents', 'calendar'])
+const DEFAULT_AGENT_CAPABILITIES = ['canvas', 'web', 'files', 'email', 'documents']
 function readAgentBody(b: AgentBody): {
   id?: string; name?: string; role?: string
   systemPrompt?: string; bio?: string

@@ -18,7 +18,7 @@ import { gravatarUrlForEmail } from './auth.js'
 import { pool } from './db/pool.js'
 import { reconcileLearningChannels } from './im/reconcile.js'
 
-export const LEARNING_PRESET_VERSION = 3
+export const LEARNING_PRESET_VERSION = 4
 
 export type LearningPersonaKey = 'nova' | 'sage' | 'milo' | 'trace' | 'scout' | 'forge'
 
@@ -35,7 +35,9 @@ export interface StarterAgent {
   tools?: string[]
 }
 
-const LEARNING_COLLABORATION_RULES = `Match the student's language. In group conversations, do not repeat another agent's answer: speak when directly asked, when the question clearly belongs to your role, or when a correction is necessary. Keep agent-to-agent coordination brief. End substantive guidance with one concrete next step the student can take.`
+const LEARNING_COLLABORATION_RULES = `Match the student's language. In group conversations, do not repeat another agent's answer: speak when directly asked, when the question clearly belongs to your role, or when a correction is necessary. Keep agent-to-agent coordination brief. End substantive guidance with one concrete next step the student can take.
+
+Canvas autonomy: IPython is your only model-visible tool, and loop.canvas is preloaded inside it. Proactively use loop.canvas.available_agents() and loop.canvas.start_workspace(...) when the request benefits from two or more learning specialties, parallel investigation, a staged dependency, or a shared visual result that the student should watch evolve. Do not ask the student to open Canvas, choose agents, or assign work. Select only the useful capable agents yourself, give each a concrete deliverable, and declare dependsOnAgentIds when order matters. For a quick single-agent answer, reply normally instead of creating ceremony. If you are a Canvas worker, read the workspace first, publish progress with loop.canvas.set_status(...), create or update frames in your assigned work area, and leave your result in Canvas rather than replying to the source conversation. You may recruit another capable learning agent with loop.canvas.add_agents(...) only when a real missing specialty emerges.`
 
 export const STARTER_TEAM: StarterAgent[] = [
   {
@@ -46,7 +48,7 @@ export const STARTER_TEAM: StarterAgent[] = [
     initial: 'N',
     avatarBg: '#D99A27',
     bio: '接住你的目标，明确拆分与负责人，协调团队并给出一个最终汇总。',
-    systemPrompt: `You are Nova, the team's ordinary-agent Chief of Staff and Study Coach. Turn vague goals into realistic plans, inspect the current roster and availability, and delegate clearly owned specialist work with visible handoffs. You may create multiple handoffs in parallel, wait for their visible results, ask follow-up questions, and synthesize one final answer for the human. Keep coordination in the existing conversations; never invent a hidden workflow or claim a teammate completed work before their handoff says so. You also own progress planning, spaced review, and consolidation. Do not replace Sage's deep concept teaching, Milo's step-by-step practice, Trace's error diagnosis, Scout's research, or Forge's implementation work; bring them in when their expertise is the next useful move. ${LEARNING_COLLABORATION_RULES}`,
+    systemPrompt: `You are Nova, the team's Chief of Staff and Study Coach. Turn vague goals into realistic plans, inspect the current roster and availability, and delegate clearly owned specialist work with visible progress. Prefer an autonomous Canvas workspace over chat handoffs whenever several specialists or a shared evolving result will materially help. You may start parallel and dependent assignments, wait for their Canvas results, and synthesize the single final answer for the human. Never claim a teammate completed work before the workspace shows it. You also own progress planning, spaced review, and consolidation. Do not replace Sage's deep concept teaching, Milo's step-by-step practice, Trace's error diagnosis, Scout's research, or Forge's implementation work; bring them in when their expertise is the next useful move. ${LEARNING_COLLABORATION_RULES}`,
     tools: ['ipython'],
   },
   {
@@ -152,14 +154,13 @@ async function uniqueId(db: QueryClient, preferredId: string): Promise<string> {
   return `${preferredId}-${randomUUID().slice(0, 12)}`
 }
 
-const LEGACY_PRESET_KEYS = [
-  'atlas', 'iris', 'bram', 'nova', 'lumen', 'kael',
-  'kiki', 'memo', 'wren', 'sage', 'milo', 'trace', 'scout', 'forge',
+const RETIRED_BUILTIN_KEYS = [
+  'atlas', 'iris', 'bram', 'lumen', 'kael', 'kiki', 'memo', 'wren',
 ] as const
 
-function isLegacyPresetId(id: string): boolean {
+function isRetiredBuiltinId(id: string): boolean {
   const lower = id.toLowerCase()
-  return LEGACY_PRESET_KEYS.some((key) => lower === key || lower.startsWith(`${key}-`))
+  return RETIRED_BUILTIN_KEYS.some((key) => lower === key || lower.startsWith(`${key}-`))
 }
 
 async function purgeLegacyLearningPreset(
@@ -167,25 +168,45 @@ async function purgeLegacyLearningPreset(
   companyId: string,
   legacyAgentIds: string[],
   allHandsConversationId: string | null,
+  replaceProductPreset = true,
 ): Promise<void> {
   const ids = legacyAgentIds
 
-  // Product-owned rooms and legacy default rooms are replaced wholesale.
-  await db.query(
-    `DELETE FROM im_channel_bindings
-      WHERE company_id=$1 AND (preset_key IS NOT NULL OR leader_agent_id=ANY($2::text[]))`,
-    [companyId, ids],
-  )
-  await db.query(
-    `DELETE FROM conversations
-      WHERE company_id = $1
-        AND (preset_key IS NOT NULL
-          OR id = $2
-          OR id LIKE 'allhands-%'
-          OR ($1 = 'personal' AND id = 'aurora')
-          OR (kind = 'direct' AND members ?| $3::text[]))`,
-    [companyId, allHandsConversationId, ids],
-  )
+  if (replaceProductPreset) {
+    // Legacy workspaces replace all product-owned rooms wholesale.
+    await db.query(
+      `DELETE FROM im_channel_bindings
+        WHERE company_id=$1 AND (preset_key IS NOT NULL OR leader_agent_id=ANY($2::text[]))`,
+      [companyId, ids],
+    )
+    await db.query(
+      `DELETE FROM conversations
+        WHERE company_id = $1
+          AND (preset_key IS NOT NULL
+            OR id = $2
+            OR id LIKE 'allhands-%'
+            OR ($1 = 'personal' AND id = 'aurora')
+            OR (kind = 'direct' AND members ?| $3::text[]))`,
+      [companyId, allHandsConversationId, ids],
+    )
+  } else {
+    // v3 already has the six learning agents. Preserve their identities,
+    // conversations, memory and Canvas history; remove only retired built-ins.
+    await db.query(
+      `DELETE FROM im_channel_bindings
+        WHERE company_id=$1 AND leader_agent_id=ANY($2::text[])`,
+      [companyId, ids],
+    )
+    await db.query(
+      `DELETE FROM conversations
+        WHERE company_id = $1
+          AND (id = $2
+            OR id LIKE 'allhands-%'
+            OR ($1 = 'personal' AND id = 'aurora')
+            OR (kind = 'direct' AND members ?| $3::text[]))`,
+      [companyId, allHandsConversationId, ids],
+    )
+  }
 
   if (ids.length > 0) {
     // Remove every authored trace from surviving shared conversations, then
@@ -210,6 +231,16 @@ async function purgeLegacyLearningPreset(
     )
     await db.query(
       `DELETE FROM conversations WHERE company_id = $1 AND jsonb_array_length(members) < 2`,
+      [companyId],
+    )
+    await db.query(
+      `UPDATE im_channel_bindings binding
+          SET profile = jsonb_set(binding.profile, '{members}', conversation.members, true)
+         FROM conversations conversation
+        WHERE binding.company_id = $1
+          AND binding.channel_id = conversation.id
+          AND conversation.company_id = $1
+          AND binding.profile -> 'members' IS DISTINCT FROM conversation.members`,
       [companyId],
     )
 
@@ -391,6 +422,22 @@ async function seedLearningPreset(
   }
 }
 
+async function refreshLearningPreset(db: QueryClient, companyId: string): Promise<void> {
+  for (const agent of STARTER_TEAM) {
+    await db.query(
+      `UPDATE participants
+          SET name=$3, role=$4, initial=$5, avatar_bg=$6, avatar_url=NULL,
+              status=CASE WHEN status='offboarded' THEN status ELSE 'avail' END,
+              bio=$7, tools=$8::jsonb, system_prompt=$9
+        WHERE company_id=$1 AND kind='agent' AND preset_key=$2`,
+      [
+        companyId, agent.presetKey, agent.name, agent.role, agent.initial,
+        agent.avatarBg, agent.bio, JSON.stringify(agent.tools ?? ['ipython']), agent.systemPrompt,
+      ],
+    )
+  }
+}
+
 /** Install or force-upgrade one workspace to the current learning preset. */
 export async function onboardStarterAgents(
   companyId: string,
@@ -434,14 +481,30 @@ export async function onboardStarterAgents(
         WHERE company_id = $1 AND kind = 'agent'`,
       [companyId],
     )
-    const legacy = existing.rows.filter((agent) => agent.preset_key !== null || isLegacyPresetId(agent.id))
-    await purgeLegacyLearningPreset(
-      client,
-      companyId,
-      legacy.map((agent) => agent.id),
-      company.all_hands_conversation_id,
-    )
-    await seedLearningPreset(client, companyId, ownerId)
+    if (company.starter_preset_version >= 3) {
+      const currentKeys = new Set<string>(STARTER_TEAM.map((agent) => agent.presetKey))
+      const retired = existing.rows.filter((agent) =>
+        (agent.preset_key !== null && !currentKeys.has(agent.preset_key))
+        || (agent.preset_key === null && isRetiredBuiltinId(agent.id)),
+      )
+      await purgeLegacyLearningPreset(
+        client,
+        companyId,
+        retired.map((agent) => agent.id),
+        company.all_hands_conversation_id,
+        false,
+      )
+      await refreshLearningPreset(client, companyId)
+    } else {
+      const legacy = existing.rows.filter((agent) => agent.preset_key !== null || isRetiredBuiltinId(agent.id))
+      await purgeLegacyLearningPreset(
+        client,
+        companyId,
+        legacy.map((agent) => agent.id),
+        company.all_hands_conversation_id,
+      )
+      await seedLearningPreset(client, companyId, ownerId)
+    }
     await client.query(
       `UPDATE companies
           SET starter_preset_version = $2,

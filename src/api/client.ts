@@ -11,6 +11,12 @@ import type {
   CalendarEventStatus,
   CalendarReminderChannel,
   Message,
+  CanvasActivity,
+  CanvasComment,
+  CanvasFrame,
+  CanvasFrameType,
+  CanvasPresence,
+  CanvasSnapshot,
   RecurrenceRule,
   Status,
 } from '@/types'
@@ -217,89 +223,6 @@ export interface ApiParticipant {
   model?: string | null
   email?: string | null
   departedAt?: string | null
-}
-
-async function httpBlob(path: string): Promise<Blob> {
-  const headers: Record<string, string> = {}
-  const token = getAuthToken()
-  if (token) headers.authorization = `Bearer ${token}`
-  const company = getActiveCompanyId()
-  if (company) headers['x-company-id'] = company
-  const res = await fetch(`${API}${path}`, { headers })
-  if (res.status === 401) useAuth.getState().clear()
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-  return res.blob()
-}
-
-async function streamComputerScreen(
-  screenId: string,
-  onFrame: (frame: Blob, status: ApiAgentScreen['status']) => void,
-  signal: AbortSignal,
-): Promise<void> {
-  const headers: Record<string, string> = { accept: 'text/event-stream' }
-  const token = getAuthToken()
-  if (token) headers.authorization = `Bearer ${token}`
-  const company = getActiveCompanyId()
-  if (company) headers['x-company-id'] = company
-  const response = await fetch(`${API}/computer/screens/${encodeURIComponent(screenId)}/stream`, { headers, signal })
-  if (response.status === 401) useAuth.getState().clear()
-  if (!response.ok || !response.body) throw new Error(`${response.status} ${response.statusText}`)
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffered = ''
-  while (!signal.aborted) {
-    const { value, done } = await reader.read()
-    buffered += decoder.decode(value, { stream: !done })
-    let boundary = buffered.indexOf('\n\n')
-    while (boundary >= 0) {
-      const event = buffered.slice(0, boundary)
-      buffered = buffered.slice(boundary + 2)
-      const data = event.split('\n').find((line) => line.startsWith('data: '))?.slice(6)
-      if (data) {
-        const parsed = JSON.parse(data) as { image?: string; status?: ApiAgentScreen['status']; error?: string }
-        if (parsed.error) throw new Error(parsed.error)
-        if (parsed.image && parsed.status) {
-          const binary = atob(parsed.image)
-          const bytes = new Uint8Array(binary.length)
-          for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index)
-          onFrame(new Blob([bytes], { type: 'image/png' }), parsed.status)
-        }
-      }
-      boundary = buffered.indexOf('\n\n')
-    }
-    if (done) break
-  }
-}
-
-export interface ApiAgentScreen {
-  id: string
-  computerId: string
-  agentId: string
-  agentName: string
-  status: 'idle' | 'working' | 'waiting' | 'human_control'
-  controller: { type: 'agent' | 'human'; id: string } | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ApiUserComputer {
-  id: string
-  userId: string
-  companyId: string
-  runtimeType: string
-  status: 'stopped' | 'starting' | 'running' | 'stopping' | 'error'
-  imageVersion: string
-  createdAt: string
-  lastActiveAt: string
-  screens: ApiAgentScreen[]
-  capabilities: {
-    persistentVolumes: boolean
-    pauseResume: boolean
-    snapshots: boolean
-    networkPolicy: boolean
-    credentialBroker: boolean
-    secureRuntime: boolean
-  }
 }
 
 export interface ApiCoworkerActivity {
@@ -978,27 +901,33 @@ export const api = {
       method: 'POST', body: JSON.stringify({ agentId, channelId, text }),
     }),
 
-  // ─── User Computer (shared learning workspace) ───
-  getUserComputer: () => http<ApiUserComputer>('/computer'),
-  startUserComputer: () => http<ApiUserComputer>('/computer/start', { method: 'POST', body: '{}' }),
-  stopUserComputer: () => http<ApiUserComputer>('/computer/stop', { method: 'POST', body: '{}' }),
-  createComputerScreen: (agentId: string) =>
-    http<ApiAgentScreen>('/computer/screens', { method: 'POST', body: JSON.stringify({ agentId }) }),
-  takeOverScreen: (screenId: string) =>
-    http<ApiAgentScreen>(`/computer/screens/${encodeURIComponent(screenId)}/takeover`, { method: 'POST', body: '{}' }),
-  returnScreenToAgent: (screenId: string) =>
-    http<ApiAgentScreen>(`/computer/screens/${encodeURIComponent(screenId)}/return`, { method: 'POST', body: '{}' }),
-  heartbeatScreenControl: (screenId: string) =>
-    http<{ expiresAt: string }>(`/computer/screens/${encodeURIComponent(screenId)}/heartbeat`, { method: 'POST', body: '{}' }),
-  streamComputerScreen,
-  getComputerScreenScreenshot: (screenId: string) =>
-    httpBlob(`/computer/screens/${encodeURIComponent(screenId)}/screenshot`),
-  sendComputerScreenInput: (
-    screenId: string,
-    input: { type: 'click'; x: number; y: number; button?: number } | { type: 'text'; text: string } | { type: 'key'; key: string },
-  ) => http<{ ok: boolean }>(`/computer/screens/${encodeURIComponent(screenId)}/input`, {
-    method: 'POST', body: JSON.stringify(input),
+  // ─── Shared Canvas (state only; agent execution remains isolated) ───
+  getCanvas: (canvasId?: string) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas'),
+  getCanvases: (conversationId?: string) => http<import('@/types').CanvasWorkspaceSummary[]>(`/canvases${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`),
+  createCanvasFrame: (input: {
+    type: CanvasFrameType; title?: string; x?: number; y?: number; width?: number
+    canvasId?: string; height?: number; content?: string; data?: Record<string, unknown>
+  }) => http<CanvasFrame>('/canvas/frames', { method: 'POST', body: JSON.stringify(input) }),
+  updateCanvasFrame: (frameId: string, patch: Partial<Pick<CanvasFrame,
+    'type' | 'title' | 'x' | 'y' | 'width' | 'height' | 'content' | 'data'
+  >> & { baseRevision?: number }) => http<CanvasFrame>(`/canvas/frames/${encodeURIComponent(frameId)}`, {
+    method: 'PATCH', body: JSON.stringify(patch),
   }),
+  appendCanvasContent: (frameId: string, content: string) =>
+    http<CanvasFrame>(`/canvas/frames/${encodeURIComponent(frameId)}/append`, {
+      method: 'POST', body: JSON.stringify({ content }),
+    }),
+  deleteCanvasFrame: (frameId: string) =>
+    http<{ id: string; canvasId: string }>(`/canvas/frames/${encodeURIComponent(frameId)}`, { method: 'DELETE' }),
+  setCanvasStatus: (status: string, frameId?: string | null, canvasId?: string, cursor?: { x: number; y: number }) =>
+    http<CanvasPresence | null>('/canvas/status', { method: 'POST', body: JSON.stringify({ status, frameId, canvasId, cursorX: cursor?.x, cursorY: cursor?.y }) }),
+  addCanvasComment: (body: string, frameId?: string | null, canvasId?: string) =>
+    http<CanvasComment>('/canvas/comments', { method: 'POST', body: JSON.stringify({ body, frameId, canvasId }) }),
+  steerCanvasAssignment: (canvasId: string, agentId: string, text: string) =>
+    http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/assignments/${encodeURIComponent(agentId)}/steer`, { method: 'POST', body: JSON.stringify({ text }) }),
+  stopCanvasAssignment: (canvasId: string, agentId: string) =>
+    http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/assignments/${encodeURIComponent(agentId)}/stop`, { method: 'POST' }),
+  stopCanvas: (canvasId: string) => http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/stop`, { method: 'POST' }),
   createAgent: (input: AgentInput) =>
     http<{ id: string }>('/agents', { method: 'POST', body: JSON.stringify(input) }),
   updateAgent: (id: string, input: AgentInput) =>
@@ -1542,6 +1471,26 @@ export type WsEvent =
   | { type: 'doc.error'; documentId?: string; error: string }
   | { type: 'doc.changed'; kind: 'document.created' | 'document.updated' | 'document.deleted'; documentId: string; actorId?: string }
   | { type: 'doc.mention'; documentId: string; documentTitle: string; mentionerId: string; mentionerName: string; mentionedIds: string[] }
+  | {
+      type: 'canvas.changed'
+      kind:
+        | 'frame.created' | 'frame.updated' | 'frame.deleted'
+        | 'presence.updated' | 'presence.removed'
+        | 'comment.created' | 'activity.created'
+        | 'workspace.started' | 'workspace.updated' | 'assignment.updated' | 'cursor.moved'
+      canvasId: string
+      timestamp: string
+      conversationId?: string
+      revision?: number
+      frameId?: string
+      participantId?: string
+      frame?: CanvasFrame
+      presence?: CanvasPresence
+      assignment?: import('@/types').CanvasAgentAssignment
+      workspace?: Partial<CanvasSnapshot> & { id: string }
+      comment?: CanvasComment
+      activity?: CanvasActivity
+    }
   | {
       type: 'calendar.reminder'
       eventId: string

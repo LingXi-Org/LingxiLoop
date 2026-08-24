@@ -6,7 +6,7 @@ export const LINGXI_MESSAGE_CONTENT_TYPE = 1000
 
 export type LingxiMessageV1 = {
   version: 1
-  kind: 'text' | 'attachment' | 'system' | 'tool_activity' | 'approval' | 'handoff' | 'poll' | 'artifact'
+  kind: 'text' | 'attachment' | 'system' | 'tool_activity' | 'approval' | 'handoff' | 'poll' | 'artifact' | 'canvas'
   clientMsgNo: string
   body?: string
   replyToClientMsgNo?: string

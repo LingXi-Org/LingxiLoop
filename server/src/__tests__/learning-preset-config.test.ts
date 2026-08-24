@@ -5,7 +5,7 @@ process.env.DEEPSEEK_API_KEY ||= 'test-key'
 const { LEARNING_PRESET_VERSION, STARTER_ROOMS, STARTER_TEAM } = await import('../onboardCompany.js')
 
 test('learning preset defines exactly the six required personas', () => {
-  assert.equal(LEARNING_PRESET_VERSION, 3)
+  assert.equal(LEARNING_PRESET_VERSION, 4)
   assert.deepEqual(
     STARTER_TEAM.map((agent) => agent.presetKey),
     ['nova', 'sage', 'milo', 'trace', 'scout', 'forge'],
@@ -24,6 +24,9 @@ test('learning preset defines exactly the six required personas', () => {
   for (const agent of STARTER_TEAM) {
     assert.deepEqual(agent.tools, ['ipython'])
     assert.match(agent.systemPrompt, /next step/i)
+    assert.match(agent.systemPrompt, /loop\.canvas\.available_agents\(\)/)
+    assert.match(agent.systemPrompt, /loop\.canvas\.start_workspace/)
+    assert.match(agent.systemPrompt, /Do not ask the student to open Canvas, choose agents, or assign work/)
     assert.equal('avatarUrl' in agent, false)
   }
 })

@@ -301,6 +301,7 @@ function fromApi(m: ApiMessage): Message {
     mentionAll?: boolean | null
     handoff?: Message['handoff'] | null
     approval?: Message['approval'] | null
+    canvas?: Message['canvas'] | null
   }
   const out: Message = {
     id: m.id,
@@ -324,6 +325,7 @@ function fromApi(m: ApiMessage): Message {
     mentionAll: raw.mentionAll ?? undefined,
     handoff: raw.handoff ?? undefined,
     approval: raw.approval ?? undefined,
+    canvas: raw.canvas ?? undefined,
   }
   ;(out as Message & { sequence?: number }).sequence = m.sequence
   return out
@@ -364,6 +366,7 @@ function fromIm(message: ImEnvelope): Message {
     } : undefined,
     handoff: payload.kind === 'handoff' ? data as unknown as Message['handoff'] : undefined,
     approval: payload.kind === 'approval' ? data as unknown as Message['approval'] : undefined,
+    canvas: payload.kind === 'canvas' ? data as unknown as Message['canvas'] : undefined,
     poll: pollData,
     pollTallies: payload.kind === 'poll' && Array.isArray(data.pollTallies)
       ? data.pollTallies as Message['pollTallies']

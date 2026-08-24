@@ -32,6 +32,6 @@ export function messageShellCapabilities(kind: MessageKind): MessageShellCapabil
     reactions: true,
     reply: true,
     selection: true,
-    linkPreview: !['tool', 'attachment', 'email', 'poll', 'handoff', 'approval'].includes(kind),
+    linkPreview: !['tool', 'attachment', 'email', 'poll', 'handoff', 'approval', 'canvas'].includes(kind),
   }
 }

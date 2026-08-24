@@ -50,7 +50,7 @@ def read_message() -> dict[str, Any]:
 
 
 def deny_network(*_args: Any, **_kwargs: Any) -> Any:
-    raise PermissionError("direct network access is disabled; use loop.research, loop.email, or loop.computer")
+    raise PermissionError("direct network access is disabled; use an authorized loop Host Bridge namespace")
 
 
 if os.environ.get("LINGXILOOP_KERNEL_ALLOW_NETWORK") != "1":
@@ -109,7 +109,7 @@ class Namespace:
 class LoopBridge:
     NAMESPACES = (
         "chat", "memory", "skills", "files", "documents", "boards",
-        "calendar", "routines", "research", "computer", "email", "polls", "turn",
+        "canvas", "calendar", "routines", "research", "email", "polls", "turn",
     )
 
     def __init__(self) -> None:
@@ -117,6 +117,7 @@ class LoopBridge:
         self.run_id = ""
         self.cell_id = ""
         self.call_index = 0
+        self.directives: list[dict[str, Any]] = []
         for name in self.NAMESPACES:
             setattr(self, name, Namespace(self, name))
 
@@ -125,6 +126,7 @@ class LoopBridge:
         self.run_id = str(context.get("runId", ""))
         self.cell_id = str(context.get("cellId", execution_id))
         self.call_index = 0
+        self.directives = []
 
     def call(self, action: str, args: dict[str, Any]) -> Any:
         index = self.call_index
@@ -148,6 +150,8 @@ class LoopBridge:
                 raise ApprovalPending(str(response["approval"]["id"]))
             if not response.get("ok"):
                 raise RuntimeError(str(response.get("error") or "host action failed"))
+            if isinstance(response.get("directive"), dict):
+                self.directives.append(response["directive"])
             return response.get("value")
 
 
@@ -262,6 +266,7 @@ def execute(message: dict[str, Any]) -> None:
         "truncated": truncated,
         "durationMs": round((time.monotonic() - started) * 1000),
         "artifacts": changed_artifacts(files_before),
+        "directives": loop.directives,
     })
 
 

@@ -1,6 +1,6 @@
 export const AGENT_OS_PROTOCOL_VERSION = 1 as const
 
-export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume'
+export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary'
 
 export interface AgentWorkItem {
   id: string
@@ -12,6 +12,8 @@ export interface AgentWorkItem {
   triggerClientMsgNo: string
   reason: AgentWorkReason
   leaseToken: string
+  canvasId?: string
+  canvasAssignmentId?: string
 }
 
 export interface AgentContextMessage {
@@ -34,6 +36,17 @@ export interface AgentContext {
   messages: AgentContextMessage[]
   summary?: string
   pendingApproval?: ApprovalResolution
+  canvas?: {
+    id: string
+    title: string
+    goal: string
+    status: string
+    initiatorAgentId: string | null
+    assignment?: unknown
+    assignments: unknown[]
+    frames: unknown[]
+  }
+  canvasRoster?: Array<{ id: string; name: string; role: string; status: string }>
 }
 
 export interface HostHeartbeat {
@@ -70,6 +83,7 @@ export interface HostActionResult {
     id: string
     status: 'pending'
   }
+  directive?: { type: 'defer_to_canvas'; canvasId: string }
 }
 
 export interface ApprovalResolution {
@@ -87,6 +101,7 @@ export interface KernelExecution {
   durationMs: number
   truncated: boolean
   artifacts: Array<{ path: string; size: number; mime: string; sha256: string }>
+  directives?: Array<{ type: 'defer_to_canvas'; canvasId: string }>
 }
 
 export interface AgentSessionRecord {
@@ -114,6 +129,7 @@ export type LingxiMessageKind =
   | 'handoff'
   | 'poll'
   | 'artifact'
+  | 'canvas'
 
 export interface LingxiMessageV1 {
   version: 1
