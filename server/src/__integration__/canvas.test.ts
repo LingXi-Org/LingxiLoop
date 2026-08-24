@@ -1,9 +1,10 @@
-import { after, before, beforeEach, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, teardownAll } from './_helpers.js'
+import { after, before, beforeEach, test } from 'node:test'
 import { executeLearningAction } from '../agent-os/learning-actions.js'
-import { pool } from '../db/pool.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
+import { stopCanvasAssignment } from '../canvas/service.js'
+import { pool } from '../db/pool.js'
+import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => { await resetAllTables() })
@@ -105,6 +106,17 @@ test('[integration] canvas.* shares durable frames without sharing Agent executi
     frameIds: [frame.id],
   }, 7))
   assert.equal((handedOffAgain.value as { activity: { id: string } }).activity.id, (handedOff.value as { activity: { id: string } }).activity.id)
+  assert.equal((await pool.query(
+    `SELECT 1 FROM agent_work_items WHERE canvas_id=$1 AND canvas_assignment_id=(
+       SELECT id FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2
+     )`, [canvasId, targetAgentId],
+  )).rowCount, 1)
+
+  await stopCanvasAssignment({ companyId, canvasId, agentId: targetAgentId })
+  assert.equal((await pool.query(
+    `SELECT 1 FROM canvas_activity WHERE canvas_id=$1 AND actor_id=$2 AND action='task_cancelled'`,
+    [canvasId, targetAgentId],
+  )).rowCount, 1)
 
   const deleted = await executeLearningAction(work, action(work, 'canvas.delete_frame', { frameId: frame.id }, 8))
   assert.equal(deleted.ok, true)
