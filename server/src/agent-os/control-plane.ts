@@ -304,18 +304,25 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
     // same lock before committing cancellation, so once Stop returns an old
     // lease cannot begin another Host Action.
     await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [`agent-work:${work.id}`])
+    if (work.reason === 'canvas_worker' && work.canvasId) {
+      // Canvas actions share this workspace fence; workspace Stop takes its
+      // exclusive counterpart before changing durable state.
+      await client.query(`SELECT pg_advisory_lock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${work.canvasId}`])
+    }
     // Serialize one stable action key across API replicas. If this process
     // crashes, Postgres releases the lock and the retry reuses the same sink
     // idempotency key derived from work/hop/call.
     await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [action.idempotencyKey])
     await client.query('BEGIN')
     transactionOpen = true
-    const { rows: actionable } = await client.query<{ id: string }>(
-      `SELECT id FROM agent_work_items WHERE id=$1 AND fence=$2 AND lease_token_hash=$3
-        AND status='leased' AND lease_expires_at > NOW() AND cancel_requested_at IS NULL`,
-      [work.id, work.fence, hash(work.leaseToken)],
-    )
-    if (!actionable[0]) throw Object.assign(new Error('work was stopped'), { status: 409 })
+    if (work.reason === 'canvas_worker' && work.canvasId) {
+      const { rows: actionable } = await client.query<{ id: string }>(
+        `SELECT id FROM agent_work_items WHERE id=$1 AND fence=$2 AND lease_token_hash=$3
+          AND status='leased' AND lease_expires_at > NOW() AND cancel_requested_at IS NULL`,
+        [work.id, work.fence, hash(work.leaseToken)],
+      )
+      if (!actionable[0]) throw Object.assign(new Error('work was stopped'), { status: 409 })
+    }
     const replay = await actionFromLedger(client, action.idempotencyKey, action)
     if (replay && !(approved && replay.approval)) { await client.query('COMMIT'); return replay }
     await client.query(
@@ -363,6 +370,7 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
     throw error
   } finally {
     await client.query(`SELECT pg_advisory_unlock(hashtextextended($1, 0))`, [action.idempotencyKey]).catch(() => undefined)
+    if (work.reason === 'canvas_worker' && work.canvasId) await client.query(`SELECT pg_advisory_unlock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${work.canvasId}`]).catch(() => undefined)
     await client.query(`SELECT pg_advisory_unlock(hashtextextended($1, 0))`, [`agent-work:${work.id}`]).catch(() => undefined)
     client.release()
   }

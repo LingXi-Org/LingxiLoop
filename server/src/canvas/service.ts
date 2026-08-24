@@ -1224,10 +1224,10 @@ export async function stopCanvasWorkspace(input: { companyId: string; canvasId: 
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
-    const { rows: works } = await client.query<{ id: string }>(
-      `SELECT id FROM agent_work_items WHERE canvas_id=$1 AND status IN ('queued','blocked','leased') ORDER BY id FOR UPDATE`, [input.canvasId],
-    )
-    for (const work of works) await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`agent-work:${work.id}`])
+    // Linearise the entire workspace without locking individual work rows
+    // first. Canvas Host Actions hold the shared form across their side
+    // effects, so no new Canvas action can cross this stop boundary.
+    await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`canvas-workspace:${input.canvasId}`])
     const { rows: canvases } = await client.query<CanvasRow>(
       `SELECT * FROM canvases WHERE id=$1 AND company_id=$2 FOR UPDATE`, [input.canvasId, input.companyId],
     )
