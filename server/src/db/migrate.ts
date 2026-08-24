@@ -73,6 +73,20 @@ ALTER TABLE participants ADD COLUMN IF NOT EXISTS capabilities JSONB NOT NULL
   DEFAULT '["canvas","web","files","email","documents"]'::jsonb;
 ALTER TABLE participants ALTER COLUMN capabilities SET DEFAULT
   '["canvas","web","files","email","documents"]'::jsonb;
+-- PromptContext snapshots need a stable source version for persona and
+-- capability changes. Keep this independent from status_updated_at, which is
+-- presence-specific and changes much more frequently.
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+CREATE OR REPLACE FUNCTION touch_participant_updated_at() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS participants_touch_updated_at ON participants;
+CREATE TRIGGER participants_touch_updated_at
+  BEFORE UPDATE ON participants
+  FOR EACH ROW EXECUTE FUNCTION touch_participant_updated_at();
 -- Shared Computer was retired in favour of shared Canvas state. Preserve
 -- every agent's other permissions while replacing the obsolete capability.
 -- Agents that had already revoked Computer must not be granted Canvas here;

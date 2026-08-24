@@ -72,25 +72,29 @@ async function recallScope(args: {
     }
     await enqueuePendingMemorySynthesis(args.companyId, args.agentId, args.conversationId)
   }
-  const params: unknown[] = [args.companyId, args.scopeType, args.scopeId, args.agentId, limit]
+  const params: unknown[] = [args.companyId, args.scopeType, args.scopeId]
   let distance = 'NULL::real AS distance'
   let order = `COALESCE((meta->>'pinned')::boolean,false) DESC, updated_at DESC`
+  let legacyRole = ''
+  if (args.scopeType === 'agent_role') {
+    params.push(args.agentId)
+    legacyRole = `OR (agent_id=$${params.length} AND meta->>'scopeType' IS NULL)`
+  }
+  params.push(limit)
+  const limitParameter = `$${params.length}`
   const vector = args.query && await hasPgVector() ? await embedText(args.query) : null
   if (vector) {
     params.push(vector)
-    distance = `CASE WHEN embedding IS NULL THEN NULL ELSE embedding <=> $6::vector END AS distance`
+    distance = `CASE WHEN embedding IS NULL THEN NULL ELSE embedding <=> $${params.length}::vector END AS distance`
     order = `COALESCE((meta->>'pinned')::boolean,false) DESC, distance ASC NULLS LAST, updated_at DESC`
   }
-  const legacyRole = args.scopeType === 'agent_role'
-    ? `OR (agent_id=$4 AND meta->>'scopeType' IS NULL)`
-    : ''
   const { rows } = await pool.query<MemoryRow & { distance: number | null }>(
     `SELECT agent_id,path,body,meta,updated_at,${distance}
        FROM agent_workspace
       WHERE company_id=$1 AND path LIKE 'memory/%'
         AND COALESCE(meta->>'status','active')='active'
         AND (meta->>'scopeType'=$2 AND meta->>'scopeId'=$3 ${legacyRole})
-      ORDER BY ${order} LIMIT $5`, params,
+      ORDER BY ${order} LIMIT ${limitParameter}`, params,
   )
   return rows.map((row) => toPromptMemory(row, args.scopeType, args.scopeId))
 }

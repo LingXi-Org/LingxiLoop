@@ -113,9 +113,9 @@ test('[integration] failed webhook dispatch rolls back its receipt and the same 
 test('[integration] durable lanes and watchdog preempt lower-lane work without losing it', async () => {
   const activeId = `routine-${randomUUID()}`, waitingId = `learner-${randomUUID()}`
   await pool.query(
-    `INSERT INTO agent_work_items(id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at,lease_started_at,created_at)
-     VALUES($1,$3,$4,$5,$1,'routine','leased',1,'hash',NOW()+INTERVAL '1 minute',NOW()-INTERVAL '5 minutes',NOW()-INTERVAL '5 minutes'),
-           ($2,$3,$4,$5,$2,'message','queued',0,NULL,NULL,NULL,NOW()-INTERVAL '5 minutes')`,
+    `INSERT INTO agent_work_items(id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at,lease_started_at,created_at,available_at)
+     VALUES($1,$3,$4,$5,$1,'routine','leased',1,'hash',NOW()+INTERVAL '1 minute',NOW()-INTERVAL '5 minutes',NOW()-INTERVAL '5 minutes',NOW()-INTERVAL '5 minutes'),
+           ($2,$3,$4,$5,$2,'message','queued',0,NULL,NULL,NULL,NOW()-INTERVAL '5 minutes',NOW()-INTERVAL '5 minutes')`,
     [activeId, waitingId, COMPANY, AGENT, CHANNEL],
   )
   await pool.query(`INSERT INTO agent_os_session_leases(session_key,work_id,fence,expires_at) VALUES($1,$2,1,NOW()+INTERVAL '1 minute')`, [`${COMPANY}:${AGENT}:${CHANNEL}:-`, activeId])
