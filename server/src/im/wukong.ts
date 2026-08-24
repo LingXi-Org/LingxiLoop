@@ -15,12 +15,14 @@ function jsonRecord(value: unknown): Record<string, unknown> {
 
 function isEmptyChannelResult(error: unknown): boolean {
   if (!(error instanceof Error)) return false
-  // WuKongIM reports a newly-created channel with no sync/conversation state
-  // as either a conventional 404 or a 500 whose response says "not found".
-  // Both mean the same thing to the chat UI: there is simply no history (or
-  // unread state) to return yet. Do not hide unrelated 500 failures.
+  // The pinned WuKongIM v3 compatibility API sends application/store errors
+  // through writeJSONError, which uses HTTP 400 even for a missing message
+  // channel or conversation membership. Older builds used 404/500. All three
+  // mean the same thing here: there is no history/unread state yet. Only
+  // suppress responses whose detail explicitly identifies an empty target so
+  // malformed requests and unrelated storage failures still surface.
   return /returned 404(?:\D|$)/.test(error.message)
-    || (/returned 500(?:\D|$)/.test(error.message) && isEmptyChannelDetail(error.message))
+    || (/returned (?:400|500)(?:\D|$)/.test(error.message) && isEmptyChannelDetail(error.message))
 }
 
 function isEmptyChannelDetail(detail: string): boolean {

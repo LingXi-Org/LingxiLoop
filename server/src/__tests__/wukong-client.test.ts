@@ -65,6 +65,17 @@ test('WuKong adapter treats missing empty-channel sync state as empty results', 
   await assert.doesNotReject(client.clearUnread('student', 'empty', 2))
 })
 
+test('WuKong adapter accepts v3 empty-state errors returned as HTTP 400', async () => {
+  const responses = [
+    '{"msg":"internal/message: channel not found: channel: channel not found: {direct-nova-6fd4-efca5d 2}","status":400}',
+    '{"msg":"db: not found","status":400}',
+  ]
+  globalThis.fetch = async () => new Response(responses.shift(), { status: 400 })
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  assert.deepEqual(await client.syncMessages('direct-nova-6fd4-efca5d', 2), [])
+  await assert.doesNotReject(client.clearUnread('student', 'direct-nova-6fd4-efca5d', 2))
+})
+
 test('WuKong adapter treats the empty-channel 500 response as empty results', async () => {
   globalThis.fetch = async () => new Response('messagesync not found', { status: 500 })
   const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
@@ -88,6 +99,13 @@ test('WuKong adapter does not hide unrelated history failures', async () => {
   globalThis.fetch = async () => new Response('storage unavailable', { status: 500 })
   const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
   await assert.rejects(() => client.syncMessages('study', 2), /storage unavailable/)
+})
+
+test('WuKong adapter does not hide unrelated HTTP 400 failures', async () => {
+  globalThis.fetch = async () => new Response('{"msg":"channel_id cannot be empty","status":400}', { status: 400 })
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  await assert.rejects(() => client.syncMessages('study', 2), /channel_id cannot be empty/)
+  await assert.rejects(() => client.clearUnread('student', 'study', 2), /channel_id cannot be empty/)
 })
 
 test('WuKong stream events include enough routing metadata for the browser', async () => {
