@@ -20,7 +20,11 @@ import {
   createCanvasFrame,
   deleteCanvasFrame,
   getCanvasSnapshot,
+  listCanvasWorkspaces,
   setCanvasStatus,
+  steerCanvasAssignment,
+  stopCanvasAssignment,
+  stopCanvasWorkspace,
   updateCanvasFrame,
 } from '../canvas/service.js'
 import { env } from '../env.js'
@@ -1033,18 +1037,52 @@ api.get('/canvas', safe(async (req, res) => {
   res.json(await getCanvasSnapshot(companyId, userId))
 }))
 
+api.get('/canvases', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  res.json(await listCanvasWorkspaces(companyId, typeof req.query.conversationId === 'string' ? req.query.conversationId : undefined))
+}))
+
+api.get('/canvases/:id', safe(async (req, res) => {
+  const { userId, companyId } = await requireCompany(req)
+  res.json(await getCanvasSnapshot(companyId, userId, String(req.params.id)))
+}))
+
+api.post('/canvases/:id/assignments/:agentId/steer', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  await steerCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId), text: String(req.body?.text ?? '') })
+  res.json({ ok: true })
+}))
+
+api.post('/canvases/:id/assignments/:agentId/stop', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  await stopCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId) })
+  res.json({ ok: true })
+}))
+
+api.post('/canvases/:id/stop', safe(async (req, res) => {
+  const { companyId } = await requireCompany(req)
+  await stopCanvasWorkspace({ companyId, canvasId: String(req.params.id) })
+  res.json({ ok: true })
+}))
+
 api.post('/canvas/frames', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
   res.status(201).json(await createCanvasFrame({
-    companyId, actorId: userId, actorKind: 'user', frame: req.body ?? {},
+    companyId, actorId: userId, actorKind: 'user', canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined, frame: req.body ?? {},
   }))
 }))
 
 api.patch('/canvas/frames/:id', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
-  res.json(await updateCanvasFrame({
-    companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id), patch: req.body ?? {},
-  }))
+  try {
+    res.json(await updateCanvasFrame({
+      companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id), patch: req.body ?? {},
+    }))
+  } catch (error) {
+    const conflict = error as Error & { status?: number; latestFrame?: unknown }
+    if (conflict.status === 409) { res.status(409).json({ error: conflict.message, latestFrame: conflict.latestFrame }); return }
+    throw error
+  }
 }))
 
 api.post('/canvas/frames/:id/append', safe(async (req, res) => {
@@ -1066,8 +1104,11 @@ api.post('/canvas/status', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
   res.json(await setCanvasStatus({
     companyId, actorId: userId, actorKind: 'user',
+    canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined,
     status: String(req.body?.status ?? ''),
     frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
+    cursorX: typeof req.body?.cursorX === 'number' ? req.body.cursorX : null,
+    cursorY: typeof req.body?.cursorY === 'number' ? req.body.cursorY : null,
   }))
 }))
 
@@ -1075,6 +1116,7 @@ api.post('/canvas/comments', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
   res.status(201).json(await addCanvasComment({
     companyId, actorId: userId, actorKind: 'user',
+    canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined,
     frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
     body: String(req.body?.body ?? ''),
   }))

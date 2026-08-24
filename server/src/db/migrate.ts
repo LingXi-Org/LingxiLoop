@@ -1445,6 +1445,28 @@ CREATE TABLE IF NOT EXISTS canvases (
   UNIQUE(company_id)
 );
 
+-- Canvas is now a task-scoped workspace. Drop the original one-canvas-per-
+-- tenant constraint without deleting the historical row, then add the
+-- conversation/run metadata used by Agent OS orchestration.
+ALTER TABLE canvases DROP CONSTRAINT IF EXISTS canvases_company_id_key;
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL;
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS trigger_client_msg_no TEXT;
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS goal TEXT NOT NULL DEFAULT '';
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS initiator_agent_id TEXT;
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS origin TEXT NOT NULL DEFAULT 'legacy';
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS summary TEXT;
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='canvases_status_check') THEN
+    ALTER TABLE canvases ADD CONSTRAINT canvases_status_check
+      CHECK (status IN ('active','summarizing','completed','stopped','failed'));
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS idx_canvases_company_updated ON canvases(company_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_canvases_conversation ON canvases(company_id, conversation_id, updated_at DESC)
+  WHERE conversation_id IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS canvas_frames (
   id          TEXT PRIMARY KEY,
   canvas_id   TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
@@ -1474,6 +1496,48 @@ CREATE TABLE IF NOT EXISTS canvas_presence (
   PRIMARY KEY (canvas_id, participant_id)
 );
 CREATE INDEX IF NOT EXISTS idx_canvas_presence_seen ON canvas_presence(canvas_id, last_seen_at DESC);
+ALTER TABLE canvas_presence ADD COLUMN IF NOT EXISTS color TEXT;
+ALTER TABLE canvas_presence ADD COLUMN IF NOT EXISTS cursor_x DOUBLE PRECISION;
+ALTER TABLE canvas_presence ADD COLUMN IF NOT EXISTS cursor_y DOUBLE PRECISION;
+
+CREATE TABLE IF NOT EXISTS canvas_agent_assignments (
+  id                 TEXT PRIMARY KEY,
+  canvas_id          TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+  agent_id           TEXT NOT NULL,
+  assignment         TEXT NOT NULL,
+  color              TEXT NOT NULL,
+  status             TEXT NOT NULL DEFAULT 'queued',
+  work_x              DOUBLE PRECISION NOT NULL DEFAULT 0,
+  work_y              DOUBLE PRECISION NOT NULL DEFAULT 0,
+  work_width          DOUBLE PRECISION NOT NULL DEFAULT 680,
+  work_height         DOUBLE PRECISION NOT NULL DEFAULT 520,
+  active_frame_id     TEXT REFERENCES canvas_frames(id) ON DELETE SET NULL,
+  cursor_x            DOUBLE PRECISION,
+  cursor_y            DOUBLE PRECISION,
+  work_id             TEXT,
+  result              TEXT,
+  error               TEXT,
+  started_at          TIMESTAMP WITH TIME ZONE,
+  completed_at        TIMESTAMP WITH TIME ZONE,
+  created_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(canvas_id, agent_id)
+);
+CREATE INDEX IF NOT EXISTS idx_canvas_assignments_status
+  ON canvas_agent_assignments(canvas_id, status, created_at ASC);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='canvas_agent_assignments_status_check') THEN
+    ALTER TABLE canvas_agent_assignments ADD CONSTRAINT canvas_agent_assignments_status_check
+      CHECK (status IN ('queued','blocked','working','waiting','completed','failed','cancelled'));
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS canvas_assignment_dependencies (
+  assignment_id            TEXT NOT NULL REFERENCES canvas_agent_assignments(id) ON DELETE CASCADE,
+  depends_on_assignment_id TEXT NOT NULL REFERENCES canvas_agent_assignments(id) ON DELETE CASCADE,
+  PRIMARY KEY (assignment_id, depends_on_assignment_id),
+  CHECK (assignment_id <> depends_on_assignment_id)
+);
 
 CREATE TABLE IF NOT EXISTS canvas_comments (
   id          TEXT PRIMARY KEY,
@@ -2032,6 +2096,11 @@ CREATE INDEX IF NOT EXISTS idx_agent_work_agent
   ON agent_work_items(company_id, agent_id, created_at DESC);
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS cancel_requested_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS steer_inputs JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS canvas_id TEXT REFERENCES canvases(id) ON DELETE SET NULL;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS canvas_assignment_id TEXT REFERENCES canvas_agent_assignments(id) ON DELETE SET NULL;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS result_text TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_work_canvas_assignment
+  ON agent_work_items(canvas_assignment_id) WHERE canvas_assignment_id IS NOT NULL;
 
 -- Cross-worker serialization for one Agent OS session. A crashed worker's
 -- lease expires with its work lease, allowing another worker to resume.

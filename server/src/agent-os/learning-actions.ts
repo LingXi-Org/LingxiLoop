@@ -3,12 +3,16 @@ import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
 import {
+  addCanvasWorkspaceAgents,
   appendCanvasFrameContent,
   createCanvasFrame,
   deleteCanvasFrame,
   getCanvasSnapshot,
+  listCanvasAvailableAgents,
   setCanvasStatus,
+  startCanvasWorkspace,
   updateCanvasFrame,
+  type CanvasMemberInput,
 } from '../canvas/service.js'
 import { readResearch, searchResearch } from './research.js'
 import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
@@ -159,15 +163,51 @@ async function executeCanvas(
   args: Record<string, unknown>,
   action: HostAction,
 ): Promise<HostActionResult> {
+  const canvasId = textArg(args, 'canvasId', false) || work.canvasId
+  const members = (): CanvasMemberInput[] => {
+    if (!Array.isArray(args.members)) throw new Error('members must be an array')
+    return args.members.map((raw) => {
+      const member = record(raw)
+      return {
+        agentId: textArg(member, 'agentId'), assignment: textArg(member, 'assignment'),
+        ...(Array.isArray(member.dependsOnAgentIds) ? { dependsOnAgentIds: member.dependsOnAgentIds.map(String) } : {}),
+      }
+    })
+  }
+  if (method === 'available_agents') return { ok: true, value: await listCanvasAvailableAgents(work.companyId) }
+  if (method === 'start_workspace') {
+    const snapshot = await startCanvasWorkspace({
+      companyId: work.companyId, initiatorAgentId: work.agentId, conversationId: work.channelId,
+      triggerClientMsgNo: work.triggerClientMsgNo, title: textArg(args, 'title'), goal: textArg(args, 'goal'),
+      members: members(), idempotencyKey: action.idempotencyKey,
+    })
+    const card: LingxiMessageV1 = {
+      version: 1, kind: 'canvas', clientMsgNo: `canvas-card-${snapshot.id}`,
+      body: snapshot.title, refs: { canvasId: snapshot.id, runId: action.runId, agentId: work.agentId },
+      data: { canvasId: snapshot.id, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
+        members: snapshot.assignments.map((item) => ({ agentId: item.agentId, assignment: item.assignment, color: item.color, status: item.status })),
+        frameCount: 0, suppressAgentWake: true },
+    }
+    const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
+      `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [work.channelId, work.companyId],
+    )
+    await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card).catch(() => undefined)
+    return { ok: true, value: snapshot, directive: { type: 'defer_to_canvas', canvasId: snapshot.id } }
+  }
+  if (method === 'add_agents') {
+    if (!canvasId) throw new Error('canvasId is required')
+    return { ok: true, value: await addCanvasWorkspaceAgents({ companyId: work.companyId, canvasId, actorId: work.agentId, members: members() }) }
+  }
   if (method === 'get') {
-    return { ok: true, value: await getCanvasSnapshot(work.companyId, work.agentId) }
+    return { ok: true, value: await getCanvasSnapshot(work.companyId, work.agentId, canvasId) }
   }
   if (method === 'create_frame') {
+    if (!canvasId) throw new Error('canvasId is required for task Canvas frames')
     return {
       ok: true,
       value: await createCanvasFrame({
         companyId: work.companyId, actorId: work.agentId, actorKind: 'agent',
-        idempotencyKey: action.idempotencyKey, frame: args,
+        idempotencyKey: action.idempotencyKey, canvasId, frame: args,
       }),
     }
   }
@@ -176,7 +216,7 @@ async function executeCanvas(
       ok: true,
       value: await setCanvasStatus({
         companyId: work.companyId, actorId: work.agentId, actorKind: 'agent',
-        status: textArg(args, 'status'), frameId: typeof args.frameId === 'string' ? args.frameId : null,
+        canvasId, status: textArg(args, 'status'), frameId: typeof args.frameId === 'string' ? args.frameId : null,
       }),
     }
   }

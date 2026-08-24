@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CanvasView } from '@/components/CanvasView'
 import { EmailComposer } from '@/components/EmailComposer'
 import { IAgent, IAgents, IBoard, ICalendar, ICanvas, IChat, IDoc } from '@/components/icons'
@@ -66,10 +66,22 @@ function LibraryView() {
 export function DesktopApp() {
   const theme = useTheme((s) => s.theme)
   const view = useApp((s) => s.view)
+  const openCanvasId = useApp((s) => s.openCanvasId)
+  const closeCanvasPeek = useApp((s) => s.closeCanvasPeek)
+  const [canvasWidth, setCanvasWidth] = useState(560)
+  const resizing = useRef(false)
 
   useEffect(() => {
     window.lingxiloop?.windowChrome?.setTheme(theme)
   }, [theme])
+
+  useEffect(() => {
+    if (!openCanvasId) return
+    const move = (event: PointerEvent) => { if (resizing.current) setCanvasWidth(Math.max(380, Math.min(900, window.innerWidth - event.clientX))) }
+    const up = () => { resizing.current = false }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
+    return () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
+  }, [openCanvasId])
 
   return (
     <div
@@ -79,9 +91,16 @@ export function DesktopApp() {
     >
       <DesktopNavigation />
       {view === 'conversations' ? (
-        <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: '320px minmax(0, 1fr)' }}>
+        <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: openCanvasId ? `320px minmax(360px, 1fr) 6px ${canvasWidth}px` : '320px minmax(0, 1fr)' }}>
           <ConversationsPane />
           <ChatPane />
+          {openCanvasId ? <>
+            <div role="separator" aria-label="调整 Canvas 宽度" onPointerDown={(event) => { resizing.current = true; event.currentTarget.setPointerCapture(event.pointerId) }} className="cursor-col-resize border-l border-hairline bg-panel hover:bg-accent/20" />
+            <div className="relative min-w-0 overflow-hidden border-l border-hairline">
+              <button type="button" onClick={closeCanvasPeek} className="absolute right-3 top-3 z-50 rounded-md border border-hairline bg-panel px-2 py-1 text-xs text-ink-secondary">关闭</button>
+              <CanvasView canvasId={openCanvasId} embedded />
+            </div>
+          </> : null}
         </div>
       ) : view === 'agents' ? <div className="min-h-0 flex-1 overflow-hidden"><AgentsView /></div>
         : view === 'canvas' ? <div className="min-h-0 flex-1 overflow-hidden"><CanvasView /></div>

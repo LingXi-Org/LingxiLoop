@@ -41,6 +41,7 @@ interface KernelMessage {
   truncated?: boolean
   durationMs?: number
   artifacts?: KernelExecution['artifacts']
+  directives?: KernelExecution['directives']
 }
 
 interface PendingExecution {
@@ -143,6 +144,7 @@ class PersistentKernel {
         durationMs: message.durationMs ?? 0,
         truncated: message.truncated === true,
         artifacts: message.artifacts ?? [],
+        directives: message.directives ?? [],
       })
     }
   }

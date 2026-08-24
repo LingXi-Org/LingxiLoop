@@ -299,11 +299,18 @@ export interface CanvasEvent extends TenantTagged {
     | 'frame.created' | 'frame.updated' | 'frame.deleted'
     | 'presence.updated' | 'presence.removed'
     | 'comment.created' | 'activity.created'
+    | 'workspace.started' | 'workspace.updated'
+    | 'assignment.updated' | 'cursor.moved'
   canvasId: string
+  timestamp: string
+  conversationId?: string
+  revision?: number
   frameId?: string
   participantId?: string
   frame?: unknown
   presence?: unknown
+  assignment?: unknown
+  workspace?: unknown
   comment?: unknown
   activity?: unknown
 }
