@@ -902,14 +902,15 @@ export const api = {
     }),
 
   // ─── Shared Canvas (state only; agent execution remains isolated) ───
-  getCanvas: () => http<CanvasSnapshot>('/canvas'),
+  getCanvas: (canvasId?: string) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas'),
+  getCanvases: (conversationId?: string) => http<import('@/types').CanvasWorkspaceSummary[]>(`/canvases${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`),
   createCanvasFrame: (input: {
     type: CanvasFrameType; title?: string; x?: number; y?: number; width?: number
-    height?: number; content?: string; data?: Record<string, unknown>
+    canvasId?: string; height?: number; content?: string; data?: Record<string, unknown>
   }) => http<CanvasFrame>('/canvas/frames', { method: 'POST', body: JSON.stringify(input) }),
   updateCanvasFrame: (frameId: string, patch: Partial<Pick<CanvasFrame,
     'type' | 'title' | 'x' | 'y' | 'width' | 'height' | 'content' | 'data'
-  >>) => http<CanvasFrame>(`/canvas/frames/${encodeURIComponent(frameId)}`, {
+  >> & { baseRevision?: number }) => http<CanvasFrame>(`/canvas/frames/${encodeURIComponent(frameId)}`, {
     method: 'PATCH', body: JSON.stringify(patch),
   }),
   appendCanvasContent: (frameId: string, content: string) =>
@@ -918,10 +919,15 @@ export const api = {
     }),
   deleteCanvasFrame: (frameId: string) =>
     http<{ id: string; canvasId: string }>(`/canvas/frames/${encodeURIComponent(frameId)}`, { method: 'DELETE' }),
-  setCanvasStatus: (status: string, frameId?: string | null) =>
-    http<CanvasPresence | null>('/canvas/status', { method: 'POST', body: JSON.stringify({ status, frameId }) }),
-  addCanvasComment: (body: string, frameId?: string | null) =>
-    http<CanvasComment>('/canvas/comments', { method: 'POST', body: JSON.stringify({ body, frameId }) }),
+  setCanvasStatus: (status: string, frameId?: string | null, canvasId?: string, cursor?: { x: number; y: number }) =>
+    http<CanvasPresence | null>('/canvas/status', { method: 'POST', body: JSON.stringify({ status, frameId, canvasId, cursorX: cursor?.x, cursorY: cursor?.y }) }),
+  addCanvasComment: (body: string, frameId?: string | null, canvasId?: string) =>
+    http<CanvasComment>('/canvas/comments', { method: 'POST', body: JSON.stringify({ body, frameId, canvasId }) }),
+  steerCanvasAssignment: (canvasId: string, agentId: string, text: string) =>
+    http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/assignments/${encodeURIComponent(agentId)}/steer`, { method: 'POST', body: JSON.stringify({ text }) }),
+  stopCanvasAssignment: (canvasId: string, agentId: string) =>
+    http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/assignments/${encodeURIComponent(agentId)}/stop`, { method: 'POST' }),
+  stopCanvas: (canvasId: string) => http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/stop`, { method: 'POST' }),
   createAgent: (input: AgentInput) =>
     http<{ id: string }>('/agents', { method: 'POST', body: JSON.stringify(input) }),
   updateAgent: (id: string, input: AgentInput) =>
@@ -1471,11 +1477,17 @@ export type WsEvent =
         | 'frame.created' | 'frame.updated' | 'frame.deleted'
         | 'presence.updated' | 'presence.removed'
         | 'comment.created' | 'activity.created'
+        | 'workspace.started' | 'workspace.updated' | 'assignment.updated' | 'cursor.moved'
       canvasId: string
+      timestamp: string
+      conversationId?: string
+      revision?: number
       frameId?: string
       participantId?: string
       frame?: CanvasFrame
       presence?: CanvasPresence
+      assignment?: import('@/types').CanvasAgentAssignment
+      workspace?: Partial<CanvasSnapshot> & { id: string }
       comment?: CanvasComment
       activity?: CanvasActivity
     }

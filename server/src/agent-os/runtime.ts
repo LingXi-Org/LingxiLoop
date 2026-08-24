@@ -21,6 +21,10 @@ function sessionKey(work: AgentWorkItem): string {
   return [work.companyId, work.agentId, work.channelId, work.threadRootClientMsgNo ?? '-'].join(':')
 }
 
+export function canvasContextContract(roster: unknown[]): string {
+  return `Agent OS Canvas decision policy: loop.canvas is preloaded in IPython, your only model-visible tool. Proactively start a Canvas workspace when the request needs multiple learning specialties, parallel investigation, dependent stages, or a shared visual result. First call loop.canvas.available_agents(); choose the smallest useful capable team yourself; then call loop.canvas.start_workspace(title=..., goal=..., members=[...]) with concrete assignments and dependsOnAgentIds where ordering matters. Never ask the human to open Canvas, select agents, or allocate work. Do not create a workspace for a quick single-agent answer. start_workspace safely defers the initiating turn after the live card appears. Canvas workers must read the current workspace, announce meaningful focus changes with loop.canvas.set_status(...), publish results in their frames, and never reply directly to the source conversation. Read a frame before replacing content and pass its revision as baseRevision; append_content is atomic. Keep execution inside your own IPython/Agent Home. Available Canvas agents: ${JSON.stringify(roster)}.`
+}
+
 function contextItems(context: Awaited<ReturnType<AgentOSHostAdapter['loadContext']>>, continuing: boolean): ModelItem[] {
   const relevant = continuing && context.work.reason !== 'resume'
     ? context.messages.filter((message) => message.clientMsgNo === context.work.triggerClientMsgNo)
@@ -30,6 +34,8 @@ function contextItems(context: Awaited<ReturnType<AgentOSHostAdapter['loadContex
     return `[${message.createdAt}] ${message.authorName} (${message.authorKind}, id=${message.authorId}${reply}): ${message.body}`
   })
   const content = [
+    canvasContextContract(context.canvasRoster ?? []),
+    context.canvas ? `Current Canvas work context:\n${JSON.stringify(context.canvas)}` : '',
     context.summary ? `Prior durable summary:\n${context.summary}` : '',
     context.pendingApproval
       ? `Resolved approval: ${JSON.stringify(context.pendingApproval)}`
@@ -166,6 +172,13 @@ export class AgentOSRuntime {
               kind: 'ipython.completed', stage: 'completed', visibility: 'user',
               data: { callId: call.callId, durationMs: execution.durationMs, truncated: execution.truncated },
             })
+            const defer = execution.directives?.find((directive) => directive.type === 'defer_to_canvas')
+            if (defer) {
+              await this.host.saveSession(session)
+              await this.event(work, runId, { kind: 'run.completed', stage: 'completed', visibility: 'user', data: { deferredToCanvasId: defer.canvasId } })
+              await this.host.completeWork(work, { status: 'completed' })
+              return
+            }
           } catch (error) {
             if (error instanceof ApprovalPendingError) {
               await this.event(work, runId, {
@@ -188,10 +201,10 @@ export class AgentOSRuntime {
         await this.compactIfNeeded(session, context.persona.instructions, lifecycle.signal)
       }
       if (!finalText) throw new Error(`agent did not finish within ${this.options.maxHops} model hops`)
-      await this.host.commitMessage(work, messagePayload(work, finalText, runId))
+      if (work.reason !== 'canvas_worker') await this.host.commitMessage(work, messagePayload(work, finalText, runId))
       await this.host.saveSession(session)
       await this.event(work, runId, { kind: 'run.completed', stage: 'completed', visibility: 'user', data: {} })
-      await this.host.completeWork(work, { status: 'completed' })
+      await this.host.completeWork(work, { status: 'completed', resultText: finalText })
     } catch (error) {
       const cancelled = !leaseLost && (lifecycle.signal.aborted || error instanceof KernelCancelledError)
       const status = cancelled ? 'cancelled' : 'failed'

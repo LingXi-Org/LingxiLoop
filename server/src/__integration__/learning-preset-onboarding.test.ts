@@ -294,3 +294,64 @@ test('[integration] learning preset force-upgrades legacy workspaces and is idem
   )
   assert.deepEqual(after.rows[0], before.rows[0])
 })
+
+test('[integration] v4 refresh preserves learning-agent identity and removes only retired built-ins', async () => {
+  const { companyId, ownerId } = await seedEmptyWorkspace()
+  await onboardStarterAgents(companyId)
+
+  const before = await pool.query<{ id: string; preset_key: string }>(
+    `SELECT id, preset_key FROM participants
+      WHERE company_id=$1 AND kind='agent' AND preset_key IS NOT NULL
+      ORDER BY preset_key`,
+    [companyId],
+  )
+  const novaId = before.rows.find((agent) => agent.preset_key === 'nova')?.id
+  assert.ok(novaId)
+  await pool.query(`UPDATE companies SET starter_preset_version=3 WHERE id=$1`, [companyId])
+  await pool.query(`UPDATE participants SET system_prompt='v3 prompt' WHERE id=$1`, [novaId])
+  await pool.query(
+    `INSERT INTO agent_workspace (agent_id, path, body, company_id)
+     VALUES ($1, 'memory/keep.md', 'keep this learning history', $2)`,
+    [novaId, companyId],
+  )
+
+  const retiredId = `atlas-${randomUUID().slice(0, 8)}`
+  const customId = `custom-${randomUUID().slice(0, 8)}`
+  await pool.query(
+    `INSERT INTO participants (id, preset_key, company_id, kind, name, role, initial, avatar_bg, status, system_prompt)
+     VALUES ($1, 'atlas-retired', $3, 'agent', 'Atlas', 'retired', 'A', '#bbb', 'avail', 'retired'),
+            ($2, NULL, $3, 'agent', 'Custom', 'custom', 'C', '#ccc', 'avail', 'custom')`,
+    [retiredId, customId, companyId],
+  )
+  await pool.query(
+    `INSERT INTO conversations (id, kind, title, members, company_id)
+     VALUES ($1, 'direct', 'Atlas', $2::jsonb, $3)`,
+    [`direct-${retiredId}`, JSON.stringify([ownerId, retiredId]), companyId],
+  )
+
+  await onboardStarterAgents(companyId)
+
+  const after = await pool.query<{ id: string; preset_key: string }>(
+    `SELECT id, preset_key FROM participants
+      WHERE company_id=$1 AND kind='agent' AND preset_key IS NOT NULL
+      ORDER BY preset_key`,
+    [companyId],
+  )
+  assert.deepEqual(after.rows, before.rows)
+  const refreshed = await pool.query<{ system_prompt: string; tools: string[] }>(
+    `SELECT system_prompt, tools FROM participants WHERE id=$1`,
+    [novaId],
+  )
+  assert.match(refreshed.rows[0]?.system_prompt ?? '', /loop\.canvas\.start_workspace/)
+  assert.deepEqual(refreshed.rows[0]?.tools, ['ipython'])
+  const survivors = await pool.query<{ id: string }>(
+    `SELECT id FROM participants WHERE company_id=$1 AND id=ANY($2::text[]) ORDER BY id`,
+    [companyId, [retiredId, customId]],
+  )
+  assert.deepEqual(survivors.rows.map((row) => row.id), [customId])
+  const memory = await pool.query<{ body: string }>(
+    `SELECT body FROM agent_workspace WHERE company_id=$1 AND agent_id=$2 AND path='memory/keep.md'`,
+    [companyId, novaId],
+  )
+  assert.equal(memory.rows[0]?.body, 'keep this learning history')
+})

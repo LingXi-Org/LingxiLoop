@@ -18,7 +18,7 @@ export interface AgentOSHostAdapter {
   executeAction(work: AgentWorkItem, action: HostAction): Promise<HostActionResult>
   emitEvent(work: AgentWorkItem, event: AgentRunEvent): Promise<void>
   commitMessage(work: AgentWorkItem, message: LingxiMessageV1): Promise<void>
-  completeWork(work: AgentWorkItem, outcome: { status: 'completed' | 'failed' | 'cancelled'; error?: string }): Promise<void>
+  completeWork(work: AgentWorkItem, outcome: { status: 'completed' | 'failed' | 'cancelled'; error?: string; resultText?: string }): Promise<void>
 }
 
 interface HttpHostOptions {
@@ -90,7 +90,7 @@ export class HttpHostAdapter implements AgentOSHostAdapter {
     }).then(() => undefined)
   }
 
-  completeWork(work: AgentWorkItem, outcome: { status: 'completed' | 'failed' | 'cancelled'; error?: string }): Promise<void> {
+  completeWork(work: AgentWorkItem, outcome: { status: 'completed' | 'failed' | 'cancelled'; error?: string; resultText?: string }): Promise<void> {
     return this.request(`/internal/agent-os/work/${encodeURIComponent(work.id)}/complete`, {
       method: 'POST', body: JSON.stringify({ fence: work.fence, leaseToken: work.leaseToken, ...outcome }),
     }).then(() => undefined)
@@ -105,7 +105,7 @@ export class MemoryHostAdapter implements AgentOSHostAdapter {
   readonly actions: HostAction[] = []
   readonly events: AgentRunEvent[] = []
   readonly messages: LingxiMessageV1[] = []
-  readonly outcomes = new Map<string, { status: 'completed' | 'failed' | 'cancelled'; error?: string }>()
+  readonly outcomes = new Map<string, { status: 'completed' | 'failed' | 'cancelled'; error?: string; resultText?: string }>()
   actionHandler: (action: HostAction) => Promise<HostActionResult> = async () => ({ ok: true, value: null })
 
   async claimWork(): Promise<AgentWorkItem | null> { return this.queue.shift() ?? null }
@@ -132,7 +132,7 @@ export class MemoryHostAdapter implements AgentOSHostAdapter {
   }
   async emitEvent(_work: AgentWorkItem, event: AgentRunEvent): Promise<void> { this.events.push(structuredClone(event)) }
   async commitMessage(_work: AgentWorkItem, message: LingxiMessageV1): Promise<void> { this.messages.push(structuredClone(message)) }
-  async completeWork(work: AgentWorkItem, outcome: { status: 'completed' | 'failed' | 'cancelled'; error?: string }): Promise<void> {
+  async completeWork(work: AgentWorkItem, outcome: { status: 'completed' | 'failed' | 'cancelled'; error?: string; resultText?: string }): Promise<void> {
     this.outcomes.set(work.id, { ...outcome })
   }
 }

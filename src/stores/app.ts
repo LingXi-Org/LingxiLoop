@@ -74,6 +74,9 @@ interface AppState {
   openCalendarEventId: string | null
   openCalendarEventPeek: (eventId: string) => void
   closeCalendarEventPeek: () => void
+  openCanvasId: string | null
+  openCanvasPeek: (canvasId: string) => void
+  closeCanvasPeek: () => void
 
   /**
    * Email composer state — when set, an overlay drawer is rendered on top
@@ -96,7 +99,7 @@ export const useApp = create<AppState>((set) => ({
   // server. Seeding with a mock id here used to fire a 404 messages fetch
   // before the user picked anything.
   selectedConversationId: null,
-  selectConversation: (id) => set({ selectedConversationId: id, mobileStack: id ? 'chat' : 'list' }),
+  selectConversation: (id) => set({ selectedConversationId: id, mobileStack: id ? 'chat' : 'list', openCanvasId: null }),
   setSelectedIfNone: (id) => set((s) => s.selectedConversationId ? {} : { selectedConversationId: id }),
 
   mobileStack: 'list',
@@ -150,6 +153,9 @@ export const useApp = create<AppState>((set) => ({
   openCalendarEventPeek: (eventId) =>
     set({ openCalendarEventId: eventId, openDocumentId: null, openBoardId: null, openBoardCardId: null, openThread: null, infoAgentId: null }),
   closeCalendarEventPeek: () => set({ openCalendarEventId: null }),
+  openCanvasId: null,
+  openCanvasPeek: (canvasId) => set({ openCanvasId: canvasId, openDocumentId: null, openBoardId: null, openBoardCardId: null, openCalendarEventId: null, openThread: null, infoAgentId: null }),
+  closeCanvasPeek: () => set({ openCanvasId: null }),
 
   composeEmail: null,
   openComposeNew: () => set({ composeEmail: { mode: 'new' } }),
