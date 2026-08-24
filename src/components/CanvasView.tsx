@@ -7,7 +7,7 @@ import { canvasStatusLabel, isCanvasAssignmentActive } from '@/lib/canvasCollabo
 import { isMockImDevelopment } from '@/lib/devMode'
 import { useCanvas } from '@/stores/canvas'
 import { useParticipants } from '@/stores/participants'
-import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType } from '@/types'
+import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType, CanvasSnapshot } from '@/types'
 
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 2.5
@@ -369,14 +369,36 @@ function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => v
       {snapshot.assignments.map((assignment) => {
         const participant = byId[assignment.agentId]
         const activeFrameId = snapshot.frames.some((frame) => frame.id === assignment.activeFrameId && frame.type !== 'artifact') ? assignment.activeFrameId : null
+        const progress = latestAssignmentProgress(snapshot, assignment)
         return <button key={assignment.id} type="button" disabled={!activeFrameId} onClick={() => activeFrameId && onFocusFrame(activeFrameId)} className="canvas-timeline-item group relative flex max-w-52 items-center gap-2 px-3 text-left disabled:cursor-default">
           <span className="canvas-timeline-node relative z-10 grid size-7 shrink-0 place-items-center">{participant ? <AvatarMini p={participant} size={26} statusOverride={assignment.status === 'blocked' || assignment.status === 'waiting' ? 'thinking' : isCanvasAssignmentActive(assignment.status) ? 'working' : 'avail'} /> : <span className="text-[9px] font-bold" style={{ color: assignment.color }}>{assignment.agentId.slice(0, 1).toUpperCase()}</span>}</span>
-          <span className="min-w-0"><span className="block truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? assignment.agentId}</span><span className="block truncate text-[8px] text-ink-secondary">{assignment.assignment}</span></span>
+          <span className="min-w-0"><span className="block truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? assignment.agentId}</span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}</span></span>
         </button>
       })}
     </div></div>
     {scrollState.right && <button type="button" aria-label="向右移动工作时间轴" onClick={() => scrollTimeline(1)} className="canvas-timeline-scroll-button is-right"><svg viewBox="0 0 20 20" aria-hidden><path d="m7.5 5 5 5-5 5" /></svg></button>}
   </div>
+}
+
+function latestAssignmentProgress(snapshot: CanvasSnapshot, assignment: CanvasAgentAssignment): string {
+  const presence = snapshot.presence
+    .filter((item) => item.participantId === assignment.agentId && item.status !== 'offline')
+    .sort((left, right) => Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt))[0]
+  if (presence?.status && !['viewing', '查看画布'].includes(presence.status)) return localizeStatus(presence.status)
+
+  const activity = snapshot.activity
+    .filter((item) => item.actorId === assignment.agentId)
+    .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))[0]
+  if (activity) {
+    const status = typeof activity.detail.status === 'string' ? activity.detail.status : null
+    if (status) return localizeStatus(status)
+    const frame = activity.frameId ? snapshot.frames.find((item) => item.id === activity.frameId) : null
+    if (activity.action === 'frame.content_appended') return `正在补充 ${String(activity.detail.title ?? frame?.title ?? '卡片')}`
+    if (activity.action === 'frame.updated') return `已更新 ${frame?.title ?? '卡片'}`
+    if (activity.action === 'frame.created') return `已新建 ${frame?.title ?? '卡片'}`
+    if (activity.action === 'comment.created') return '已收到新的画布反馈'
+  }
+  return `${localizeStatus(canvasStatusLabel(assignment.status))} · ${assignment.assignment}`
 }
 
 function CanvasContextMenu({ menu, onMenuChange, onTalk, onCreate }: {
@@ -616,13 +638,31 @@ function FrameCard({ frame, assignment, status, selected, zoom, commentCount, al
   </article>
 }
 
+function feedbackDraftKey(canvasId: string, frameId: string) {
+  return `lingxiloop:canvas-feedback:${canvasId}:${frameId}`
+}
+
+function readFeedbackDraft(canvasId: string, frameId: string): string {
+  try { return window.sessionStorage.getItem(feedbackDraftKey(canvasId, frameId)) ?? '' }
+  catch { return '' }
+}
+
+function writeFeedbackDraft(canvasId: string, frameId: string, body: string) {
+  try {
+    const key = feedbackDraftKey(canvasId, frameId)
+    if (body.trim()) window.sessionStorage.setItem(key, body)
+    else window.sessionStorage.removeItem(key)
+  } catch { /* Session storage can be unavailable in privacy-restricted webviews. */ }
+}
+
 function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame; viewport: Viewport; onClose: () => void }) {
   const snapshot = useCanvas((state) => state.snapshot)!
   const steerAgent = useCanvas((state) => state.steerAgent)
   const assignAgent = useCanvas((state) => state.assignAgent)
   const addComment = useCanvas((state) => state.addComment)
   const byId = useParticipants((state) => state.byId)
-  const [body, setBody] = useState('')
+  const [body, setBody] = useState(() => readFeedbackDraft(frame.canvasId, frame.id))
+  const bodyRef = useRef(body)
   const [agentId, setAgentId] = useState(assignmentForFrame(frame, snapshot.assignments)?.agentId ?? snapshot.assignments[0]?.agentId ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -632,6 +672,26 @@ function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame;
   const targetAssignment = snapshot.assignments.find((item) => item.agentId === agentId)
   const participant = agentId ? byId[agentId] : undefined
   const comments = snapshot.comments.filter((comment) => comment.frameId === frame.id).slice(0, 3)
+
+  useEffect(() => {
+    const closeOnOutside = (event: PointerEvent) => {
+      const target = event.target as Node | null
+      if (target && panelRef.current?.contains(target)) return
+      writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current)
+      onClose()
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current)
+      onClose()
+    }
+    document.addEventListener('pointerdown', closeOnOutside, true)
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutside, true)
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [frame.canvasId, frame.id, onClose])
 
   useLayoutEffect(() => {
     const panel = panelRef.current
@@ -684,6 +744,7 @@ function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame;
         else await assignAgent(agentId, text)
       }
       await addComment(text, frame.id)
+      writeFeedbackDraft(frame.canvasId, frame.id, '')
       onClose()
     } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) }
     finally { setBusy(false) }
@@ -693,14 +754,14 @@ function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame;
     <div className="flex items-center gap-3">
       {participant ? <AvatarMini p={participant} size={34} /> : <span className="grid size-9 place-items-center rounded-full bg-accent/10 text-sm font-bold text-accent">评</span>}
       <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">反馈给 {participant?.name ?? '智能体'}</div><div className="truncate text-[10px] text-ink-secondary">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</div></div>
-      <button type="button" onClick={onClose} aria-label="关闭反馈" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</button>
+      <button type="button" onClick={() => { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() }} aria-label="关闭反馈" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</button>
     </div>
     {!assignment && <div className="mt-3 flex flex-wrap gap-2">{snapshot.assignments.map((item) => {
       const agent = byId[item.agentId]
       return <button key={item.agentId} type="button" onClick={() => setAgentId(item.agentId)} className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold ${agentId === item.agentId ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? item.agentId}</button>
     })}</div>}
     {comments.length > 0 && <div className="mt-3 space-y-1.5">{comments.map((comment) => <div key={comment.id} className="rounded-lg bg-inset px-2.5 py-2 text-[10px] leading-4 text-ink-secondary">{comment.body}</div>)}</div>}
-    <textarea autoFocus value={body} onChange={(event) => setBody(event.target.value)} rows={3} placeholder="说明需要修改或继续完成的内容…" className="canvas-panel-input mt-3 w-full resize-none rounded-xl border px-3 py-2.5 text-xs" />
+    <textarea autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="canvas-panel-input mt-3 w-full resize-none rounded-xl border px-3 py-2.5 text-xs" />
     {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
     <div className="mt-3 flex justify-end"><button type="submit" disabled={!agentId || !body.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />发送反馈</button></div>
   </form>
@@ -738,9 +799,9 @@ function CanvasAgentDialog({ onClose }: { onClose: () => void }) {
 }
 
 function assignmentForFrame(frame: CanvasFrame, assignments: CanvasAgentAssignment[]): CanvasAgentAssignment | undefined {
-  return assignments.find((assignment) => assignment.activeFrameId === frame.id)
-    ?? assignments.find((assignment) => assignment.agentId === frame.updatedBy)
+  return assignments.find((assignment) => assignment.agentId === frame.updatedBy)
     ?? assignments.find((assignment) => assignment.agentId === frame.createdBy)
+    ?? assignments.find((assignment) => assignment.activeFrameId === frame.id)
 }
 
 function localizeStatus(status: string): string {

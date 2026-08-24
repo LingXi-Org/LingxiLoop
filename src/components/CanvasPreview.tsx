@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import type { CanvasSnapshot } from '@/types'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type { CanvasFrame, CanvasSnapshot } from '@/types'
 import { CanvasFrameContent } from './CanvasFrameContent'
 
 const FRAME_TYPE_LABELS = {
@@ -17,6 +17,8 @@ interface CanvasPreviewProps {
 }
 
 export function CanvasPreview({ snapshot, title, frameCount }: CanvasPreviewProps) {
+  const previewRef = useRef<HTMLDivElement>(null)
+  const [previewSize, setPreviewSize] = useState({ width: 620, height: 196 })
   const frames = useMemo(() => snapshot?.frames.filter((frame) => frame.type !== 'artifact') ?? [], [snapshot?.frames])
   const bounds = useMemo(() => {
     const surfaces = frames.map(({ x, y, width, height }) => ({ x, y, width, height }))
@@ -29,6 +31,19 @@ export function CanvasPreview({ snapshot, title, frameCount }: CanvasPreviewProp
     return { minX, minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) }
   }, [frames])
 
+  useLayoutEffect(() => {
+    const preview = previewRef.current
+    if (!preview || typeof ResizeObserver === 'undefined') return
+    const update = () => setPreviewSize((current) => {
+      const next = { width: preview.clientWidth, height: preview.clientHeight }
+      return current.width === next.width && current.height === next.height ? current : next
+    })
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(preview)
+    return () => observer.disconnect()
+  }, [])
+
   const rectStyle = (rect: { x: number; y: number; width: number; height: number }) => ({
     left: `${((rect.x - bounds.minX) / bounds.width) * 100}%`,
     top: `${((rect.y - bounds.minY) / bounds.height) * 100}%`,
@@ -36,18 +51,32 @@ export function CanvasPreview({ snapshot, title, frameCount }: CanvasPreviewProp
     height: `${(rect.height / bounds.height) * 100}%`,
   })
 
+  const htmlPreviewStyle = (frame: CanvasFrame) => {
+    const displayedWidth = (frame.width / bounds.width) * previewSize.width
+    const displayedHeight = (frame.height / bounds.height) * previewSize.height * 0.82
+    const sourceHeight = Math.max(1, frame.height - 40)
+    const scale = Math.max(0.01, Math.min(displayedWidth / frame.width, displayedHeight / sourceHeight))
+    return { width: frame.width, height: sourceHeight, transform: `scale(${scale})` }
+  }
+
+  const agentColor = (frame: CanvasFrame) => snapshot?.assignments.find((assignment) => assignment.agentId === frame.updatedBy)?.color
+    ?? snapshot?.assignments.find((assignment) => assignment.agentId === frame.createdBy)?.color
+    ?? snapshot?.assignments.find((assignment) => assignment.activeFrameId === frame.id)?.color
+
   return (
-    <div className="canvas-preview" aria-label={`${title}画布预览`}>
+    <div ref={previewRef} className="canvas-preview" aria-label={`${title}画布预览`}>
       {snapshot ? (
         <div className="absolute inset-0">
           {frames.map((frame) => (
-            <div key={frame.id} className="canvas-preview-frame" style={rectStyle(frame)}>
+            <div key={frame.id} className="canvas-preview-frame" style={{ ...rectStyle(frame), borderColor: agentColor(frame) }}>
               <div className="canvas-preview-frame-header">
                 <span className="truncate">{frame.title}</span>
                 <span className="opacity-55">{FRAME_TYPE_LABELS[frame.type]}</span>
               </div>
               <div className="canvas-preview-frame-content">
-                <CanvasFrameContent frame={frame} preview />
+                {frame.type === 'html'
+                  ? <div className="canvas-preview-html-scale" style={htmlPreviewStyle(frame)}><CanvasFrameContent frame={frame} preview /></div>
+                  : <CanvasFrameContent frame={frame} preview />}
               </div>
             </div>
           ))}
