@@ -1143,11 +1143,20 @@ export async function stopCanvasAssignment(input: { companyId: string; canvasId:
   let activity: CanvasActivity | null = null
   try {
     await client.query('BEGIN')
+    const { rows: candidates } = await client.query<{ id: string }>(
+      `SELECT w.id FROM agent_work_items w
+        JOIN canvas_agent_assignments a ON w.canvas_assignment_id=a.id
+        JOIN canvases c ON a.canvas_id=c.id
+       WHERE a.canvas_id=$2 AND a.agent_id=$3 AND c.company_id=$1
+         AND w.status IN ('queued','blocked','leased') FOR UPDATE OF w`, [input.companyId, input.canvasId, input.agentId],
+    )
+    if (!candidates[0]) throw new Error('active canvas assignment not found')
+    await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`agent-work:${candidates[0].id}`])
     const { rows: works } = await client.query<{ id: string; canvas_assignment_id: string }>(
       `UPDATE agent_work_items w SET cancel_requested_at=NOW(),status=CASE WHEN w.status IN ('queued','blocked') THEN 'cancelled' ELSE w.status END,updated_at=NOW()
         FROM canvas_agent_assignments a,canvases c WHERE a.canvas_id=$2 AND a.agent_id=$3 AND a.canvas_id=c.id AND c.company_id=$1
          AND w.canvas_assignment_id=a.id AND w.status IN ('queued','blocked','leased')
-       RETURNING w.id,w.canvas_assignment_id`, [input.companyId, input.canvasId, input.agentId],
+        RETURNING w.id,w.canvas_assignment_id`, [input.companyId, input.canvasId, input.agentId],
     )
     const work = works[0]
     if (!work) throw new Error('active canvas assignment not found')
@@ -1212,12 +1221,23 @@ export async function stopCanvasAssignment(input: { companyId: string; canvasId:
 }
 
 export async function stopCanvasWorkspace(input: { companyId: string; canvasId: string }): Promise<void> {
-  const { rows } = await pool.query<{ id: string }>(
-    `UPDATE canvases SET status='stopped',completed_at=NOW(),updated_at=NOW() WHERE id=$1 AND company_id=$2 AND status IN ('active','summarizing') RETURNING id`,
-    [input.canvasId, input.companyId],
-  )
-  if (!rows[0]) throw new Error('active canvas not found')
-  await pool.query(`UPDATE agent_work_items SET cancel_requested_at=NOW(),status=CASE WHEN status IN ('queued','blocked') THEN 'cancelled' ELSE status END,updated_at=NOW() WHERE canvas_id=$1 AND status IN ('queued','blocked','leased')`, [input.canvasId])
-  await pool.query(`UPDATE canvas_agent_assignments SET status='cancelled',error='Workspace stopped by learner',completed_at=NOW(),updated_at=NOW() WHERE canvas_id=$1 AND status NOT IN ('completed','failed','cancelled')`, [input.canvasId])
-  await publishCanvas(input.companyId, { kind: 'workspace.updated', canvasId: input.canvasId, workspace: { id: input.canvasId, status: 'stopped' } })
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const { rows: works } = await client.query<{ id: string }>(
+      `SELECT id FROM agent_work_items WHERE canvas_id=$1 AND status IN ('queued','blocked','leased') ORDER BY id FOR UPDATE`, [input.canvasId],
+    )
+    for (const work of works) await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`agent-work:${work.id}`])
+    const { rows: canvases } = await client.query<CanvasRow>(
+      `SELECT * FROM canvases WHERE id=$1 AND company_id=$2 FOR UPDATE`, [input.canvasId, input.companyId],
+    )
+    const canvas = canvases[0]
+    if (!canvas || !['active', 'summarizing', 'stopped'].includes(canvas.status)) throw new Error('active canvas not found')
+    await client.query(`UPDATE canvases SET status='stopped',completed_at=COALESCE(completed_at,NOW()),updated_at=NOW() WHERE id=$1`, [input.canvasId])
+    await client.query(`UPDATE agent_work_items SET cancel_requested_at=COALESCE(cancel_requested_at,NOW()),status=CASE WHEN status IN ('queued','blocked') THEN 'cancelled' ELSE status END,updated_at=NOW() WHERE canvas_id=$1 AND status IN ('queued','blocked','leased')`, [input.canvasId])
+    await client.query(`UPDATE canvas_agent_assignments SET status='cancelled',error='Workspace stopped by learner',completed_at=NOW(),updated_at=NOW() WHERE canvas_id=$1 AND status NOT IN ('completed','failed','cancelled')`, [input.canvasId])
+    await client.query('COMMIT')
+  } catch (error) { await client.query('ROLLBACK').catch(() => undefined); throw error }
+  finally { client.release() }
+  await publishCanvas(input.companyId, { kind: 'workspace.updated', canvasId: input.canvasId, workspace: { id: input.canvasId, status: 'stopped' } }).catch(() => undefined)
 }
