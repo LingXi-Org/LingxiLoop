@@ -112,8 +112,9 @@ test('[integration] pending Host Action reuses its sink id after a post-side-eff
     triggerClientMsgNo: 'trigger-host-action', reason: 'message', leaseToken: 'unused-direct-call',
   }
   await pool.query(
-    `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason) VALUES ($1,$2,$3,$4,$5,$6)`,
-    [work.id, COMPANY, AGENT, CHANNEL, work.triggerClientMsgNo, work.reason],
+    `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at)
+     VALUES ($1,$2,$3,$4,$5,$6,'leased',$7,$8,NOW()+INTERVAL '1 minute')`,
+    [work.id, COMPANY, AGENT, CHANNEL, work.triggerClientMsgNo, work.reason, work.fence, createHash('sha256').update(work.leaseToken).digest('hex')],
   )
   const action: HostAction = {
     runId: work.id, cellId: 'hop-1-call-1', callIndex: 0, action: 'chat.send', args: { body: 'Exactly once' },
