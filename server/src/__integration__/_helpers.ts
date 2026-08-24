@@ -36,6 +36,8 @@ const TABLES_TO_WIPE: readonly string[] = [
   'agent_os_session_leases',
   'agent_work_items',
   'agent_os_sessions',
+  'agent_memory_evidence',
+  'im_send_acceptances',
   'im_poll_votes',
   'im_polls',
   'wukong_webhook_receipts',

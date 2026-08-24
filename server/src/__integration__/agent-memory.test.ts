@@ -26,6 +26,7 @@ import {
 } from './_helpers.js'
 import { __setEmbedTextOverrideForTesting } from '../agents/embeddings.js'
 import { runCli } from '../agents/cli.js'
+import { recallMemories, writeExplicitMemory } from '../agent-os/memory-service.js'
 
 before(async () => {
   await ensureSchemaOnce()
@@ -46,6 +47,18 @@ after(async () => {
 function fakeEmbedding(scalar = 0.001): string {
   return `[${Array.from({ length: 1536 }, () => scalar).join(',')}]`
 }
+
+test('[integration] scoped learner memory is shared while course and role memory stay isolated', async () => {
+  const { companyId, agentId } = await seedCompanyWithAgent({ agentId: 'memory-agent-a' })
+  const { agentId: agentB } = await seedCompanyWithAgent({ companyId, agentId: 'memory-agent-b' })
+  __setEmbedTextOverrideForTesting(() => null)
+  await writeExplicitMemory({ companyId, agentId, scopeType: 'learner', scopeId: 'learner-1', body: 'Prefers visual examples', sourceEventId: 'msg-1' })
+  await writeExplicitMemory({ companyId, agentId, scopeType: 'course', scopeId: 'course-a', body: 'Working on derivatives', sourceEventId: 'msg-2' })
+  await writeExplicitMemory({ companyId, agentId, scopeType: 'agent_role', scopeId: agentId, body: 'Use Socratic questions', sourceEventId: 'msg-3' })
+  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'learner', scopeId: 'learner-1' })).length, 1)
+  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'course', scopeId: 'course-b' })).length, 0)
+  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'agent_role', scopeId: agentB })).length, 0)
+})
 
 test('[integration] memory note: writes agent_workspace + agent_log, includes embedding when embedText returns one', async () => {
   const { companyId, agentId } = await seedCompanyWithAgent()

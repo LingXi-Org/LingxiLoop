@@ -16,7 +16,8 @@ import {
   type CanvasMemberInput,
 } from '../canvas/service.js'
 import { readResearch, searchResearch } from './research.js'
-import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
+import { recallMemories, verifyExplicitMemory, writeExplicitMemory } from './memory-service.js'
+import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1, MemoryScopeType } from './types.js'
 
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
@@ -280,6 +281,32 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (namespace === 'turn') return { ok: true, value: { status: method, ...args } }
   if (namespace === 'research') return executeResearch(work, method, args)
   if (namespace === 'canvas') return executeCanvas(work, method, args, action)
+  if (namespace === 'memory') {
+    const rawScope = String(args.scope ?? 'course')
+    const scopeType: MemoryScopeType = rawScope === 'learner' || rawScope === 'agent_role' ? rawScope : 'course'
+    const scopeId = scopeType === 'course' ? work.channelId : scopeType === 'agent_role' ? work.agentId : textArg(args, 'learnerId')
+    if (scopeType === 'learner') {
+      const { rows } = await pool.query(
+        `SELECT 1 FROM participants p JOIN im_channel_bindings b ON b.company_id=p.company_id
+          WHERE p.id=$1 AND p.company_id=$2 AND p.kind='human' AND b.channel_id=$3 AND b.profile->'members' ? p.id`,
+        [scopeId, work.companyId, work.channelId],
+      )
+      if (!rows[0]) throw new Error('learnerId is not a human member of this learning conversation')
+    }
+    if (method === 'recall' || method === 'list') return { ok: true, value: await recallMemories({
+      companyId: work.companyId, agentId: work.agentId, scopeType, scopeId,
+      query: typeof args.query === 'string' ? args.query : '', limit: Number(args.limit ?? 12), conversationId: work.channelId,
+    }) }
+    if (method === 'note') return { ok: true, value: await writeExplicitMemory({
+      companyId: work.companyId, agentId: work.agentId, scopeType, scopeId,
+      body: textArg(args, 'body'), kind: typeof args.kind === 'string' ? args.kind : undefined,
+      sourceEventId: work.triggerClientMsgNo,
+    }) }
+    if (method === 'verify') return { ok: true, value: {
+      verified: await verifyExplicitMemory({ companyId: work.companyId, id: textArg(args, 'id') }),
+    } }
+    throw new Error(`unsupported memory action: ${method}`)
+  }
   const result = await runStructuredLearningAction(action.action, args, work.agentId, { idempotencyKey: action.idempotencyKey })
   return result.ok ? { ok: true, value: { text: result.text, sideEffects: result.sideEffects ?? [] } } : { ok: false, error: result.text }
 }

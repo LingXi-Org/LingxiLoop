@@ -31,6 +31,8 @@ import { agentOSControlRouter } from './agent-os/control-plane.js'
 import { wukongWebhookRouter } from './im/webhook.js'
 import { reconcileLearningChannels } from './im/reconcile.js'
 import { startLearningRoutineScheduler } from './agent-os/routine-scheduler.js'
+import { startAgentWorkWatchdog } from './agent-os/work-watchdog.js'
+import { startMemorySynthesisScheduler } from './agent-os/memory-service.js'
 
 async function main() {
   await ensureSchemaWithBootRetry()
@@ -238,6 +240,8 @@ async function main() {
   )
 
   startLearningRoutineScheduler()
+  startAgentWorkWatchdog()
+  startMemorySynthesisScheduler()
   console.log('[boot] learning routine scheduler running every 60s')
 
   // Outbound email retry loop — reclaims transport_status='failed' rows.

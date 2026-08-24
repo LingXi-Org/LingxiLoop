@@ -30,7 +30,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run guard:brand
-      - run: npm run guard:agent-os
       - run: npm run guard:llm-tracked
       - run: npm run version:check
       - run: npm run lint

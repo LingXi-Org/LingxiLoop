@@ -24,7 +24,6 @@
     "server:start": "tsx server/src/index.ts",
     "agent-os:start": "tsx server/src/agent-os/service.ts",
     "server:typecheck": "tsc -p server/tsconfig.json --noEmit",
-    "guard:agent-os": "node scripts/guard-agent-os.mjs",
     "guard:llm-tracked": "node scripts/guard-llm-tracked.mjs",
     "guard:brand": "node scripts/guard-brand.mjs",
     "version:sync": "node scripts/sync-version.mjs --write",

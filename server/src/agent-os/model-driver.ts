@@ -12,6 +12,7 @@ export type ModelTurnResult = {
 export interface AgentModelDriver {
   run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult>
   compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<string>
+  structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<unknown>
 }
 
 function toChatMessage(item: ModelItem): ChatCompletionMessageParam {
@@ -110,6 +111,20 @@ export class DeepSeekChatDriver implements AgentModelDriver {
     }, { signal: args.signal })
     return response.choices[0]?.message?.content?.trim() ?? ''
   }
+
+  async structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<unknown> {
+    const response = await this.client.chat.completions.create({
+      model: this.model,
+      messages: [
+        { role: 'system', content: args.instructions },
+        { role: 'user', content: JSON.stringify(args.input) },
+      ],
+      response_format: { type: 'json_object' },
+      max_tokens: 2_000,
+    }, { signal: args.signal })
+    const text = response.choices[0]?.message?.content?.trim() ?? '{}'
+    try { return JSON.parse(text) as unknown } catch { throw new Error('model returned invalid structured JSON') }
+  }
 }
 
 export class ScriptedModelDriver implements AgentModelDriver {
@@ -120,4 +135,5 @@ export class ScriptedModelDriver implements AgentModelDriver {
     return structuredClone(next)
   }
   async compact(args: { items: ModelItem[] }): Promise<string> { return `Summary of ${args.items.length} items` }
+  async structured(): Promise<unknown> { return { changes: [], approved: true, confidence: 1 } }
 }

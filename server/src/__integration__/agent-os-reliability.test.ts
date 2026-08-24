@@ -8,7 +8,9 @@ import { executeLearningAction } from '../agent-os/learning-actions.js'
 import type { AgentWorkItem, HostAction, LingxiMessageV1 } from '../agent-os/types.js'
 import { pool } from '../db/pool.js'
 import { wukongWebhookRouter } from '../im/webhook.js'
+import { imRouter } from '../im/router.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
+import { sweepAgentWorkWatchdog } from '../agent-os/work-watchdog.js'
 import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 const COMPANY = 'co-agent-os-reliability'
@@ -37,6 +39,7 @@ before(async () => {
   const app = express()
   app.use('/webhooks/wukong', wukongWebhookRouter)
   app.use(express.json())
+  app.use('/api/im', (req, _res, next) => { (req as express.Request & { authUserId?: string }).authUserId = HUMAN; req.headers['x-company-id'] = COMPANY; next() }, imRouter)
   app.use('/internal/agent-os', agentOSControlRouter)
   app.use((error: Error & { status?: number }, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     res.status(error.status ?? 500).json({ error: error.message })
@@ -55,6 +58,7 @@ beforeEach(async () => {
   persistedClientMessages.clear()
   sendAttempts = 0
   await pool.query(`INSERT INTO companies (id,name,slug) VALUES ($1,'Reliability','agent-os-reliability')`, [COMPANY])
+  await pool.query(`INSERT INTO company_members(company_id,user_id,role) VALUES($1,$2,'member')`, [COMPANY, HUMAN])
   await pool.query(
     `INSERT INTO participants (id,company_id,kind,name,role,initial,avatar_bg,status,capabilities)
      VALUES ($1,$3,'agent','Nova','coach','N','#6d5dfc','avail','["web"]'::jsonb),
@@ -106,10 +110,83 @@ test('[integration] failed webhook dispatch rolls back its receipt and the same 
   assert.equal((await pool.query(`SELECT 1 FROM agent_work_items WHERE trigger_client_msg_no=$1`, [`msg-${eventId}`])).rowCount, 1)
 })
 
+test('[integration] durable lanes and watchdog preempt lower-lane work without losing it', async () => {
+  const activeId = `routine-${randomUUID()}`, waitingId = `learner-${randomUUID()}`
+  await pool.query(
+    `INSERT INTO agent_work_items(id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at,lease_started_at,created_at)
+     VALUES($1,$3,$4,$5,$1,'routine','leased',1,'hash',NOW()+INTERVAL '1 minute',NOW()-INTERVAL '5 minutes',NOW()-INTERVAL '5 minutes'),
+           ($2,$3,$4,$5,$2,'message','queued',0,NULL,NULL,NULL,NOW()-INTERVAL '5 minutes')`,
+    [activeId, waitingId, COMPANY, AGENT, CHANNEL],
+  )
+  await pool.query(`INSERT INTO agent_os_session_leases(session_key,work_id,fence,expires_at) VALUES($1,$2,1,NOW()+INTERVAL '1 minute')`, [`${COMPANY}:${AGENT}:${CHANNEL}:-`, activeId])
+  const lanes = await pool.query<{ reason: string; lane: string }>(`SELECT reason,lane FROM agent_work_items WHERE id=ANY($1::text[]) ORDER BY reason`, [[activeId, waitingId]])
+  assert.deepEqual(lanes.rows.map((row) => [row.reason, row.lane]), [['message', 'learner'], ['routine', 'background']])
+  await sweepAgentWorkWatchdog(new Date())
+  assert.equal((await pool.query(`SELECT preempt_requested_at IS NOT NULL AS requested FROM agent_work_items WHERE id=$1`, [activeId])).rows[0]?.requested, true)
+  await pool.query(`UPDATE agent_work_items SET preempt_grace_expires_at=NOW()-INTERVAL '1 second' WHERE id=$1`, [activeId])
+  await sweepAgentWorkWatchdog(new Date())
+  const fenced = (await pool.query<{ status: string; fence: string; preemptions: number }>(`SELECT status,fence,preemptions FROM agent_work_items WHERE id=$1`, [activeId])).rows[0]
+  assert.equal(fenced.status, 'queued')
+  assert.equal(Number(fenced.fence), 2)
+  assert.equal(fenced.preemptions, 1)
+  assert.equal((await pool.query(`SELECT 1 FROM agent_os_session_leases WHERE work_id=$1`, [activeId])).rowCount, 0)
+})
+
+test('[integration] session persistence rejects a worker after its fence is superseded', async () => {
+  const workId = `session-fence-${randomUUID()}`, leaseToken = 'session-fence-token'
+  const sessionKey = `${COMPANY}:${AGENT}:${CHANNEL}:-`
+  await pool.query(
+    `INSERT INTO agent_work_items
+       (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_started_at,lease_expires_at)
+     VALUES($1,$2,$3,$4,$5,'message','leased',1,$6,NOW(),NOW()+INTERVAL '1 minute')`,
+    [workId, COMPANY, AGENT, CHANNEL, `trigger-${workId}`, createHash('sha256').update(leaseToken).digest('hex')],
+  )
+  await pool.query(
+    `INSERT INTO agent_os_session_leases(session_key,work_id,fence,expires_at) VALUES($1,$2,1,NOW()+INTERVAL '1 minute')`,
+    [sessionKey, workId],
+  )
+  const session = {
+    key: sessionKey, companyId: COMPANY, agentId: AGENT, channelId: CHANNEL,
+    history: [{ role: 'user', content: 'once' }], appliedWorkIds: [workId], revision: 0, compactionEpoch: 0,
+  }
+  const save = () => fetch(`${baseUrl}/internal/agent-os/sessions`, {
+    method: 'PUT', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ workId, fence: 1, leaseToken, session }),
+  })
+  assert.equal((await save()).status, 200)
+  await pool.query(`UPDATE agent_work_items SET fence=2,status='queued',lease_token_hash=NULL WHERE id=$1`, [workId])
+  await pool.query(`DELETE FROM agent_os_session_leases WHERE work_id=$1`, [workId])
+  session.history.push({ role: 'assistant', content: 'late zombie write' })
+  assert.equal((await save()).status, 409)
+  const { rows } = await pool.query<{ history: Array<{ content: string }> }>(`SELECT history FROM agent_os_sessions WHERE session_key=$1`, [sessionKey])
+  assert.equal(rows[0]?.history.some((item) => item.content === 'late zombie write'), false)
+})
+
+test('[integration] user send acceptance replays one nonce and rejects digest reuse', async () => {
+  const nonce = `temp-${randomUUID()}`
+  const payload = { version: 1, kind: 'text', clientMsgNo: nonce, body: 'Study calculus' }
+  const send = () => fetch(`${baseUrl}/api/im/channels/${CHANNEL}/messages/accept`, {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': COMPANY }, body: JSON.stringify({ clientNonce: nonce, payload }),
+  })
+  assert.equal((await send()).status, 202)
+  const duplicate = await send()
+  assert.equal(duplicate.status, 200)
+  assert.equal((await duplicate.json() as { duplicate?: boolean }).duplicate, true)
+  assert.equal(sendAttempts, 1)
+  const conflict = await fetch(`${baseUrl}/api/im/channels/${CHANNEL}/messages/accept`, {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': COMPANY },
+    body: JSON.stringify({ clientNonce: nonce, payload: { ...payload, body: 'Different' } }),
+  })
+  assert.equal(conflict.status, 409)
+  await pool.query(`UPDATE im_send_acceptances SET status='pending',echo=NULL WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`, [COMPANY, HUMAN, nonce])
+  assert.equal((await send()).status, 202)
+  assert.equal(persistedClientMessages.size, 1)
+})
+
 test('[integration] pending Host Action reuses its sink id after a post-side-effect crash', async () => {
   const work: AgentWorkItem = {
     id: `work-${randomUUID()}`, fence: 1, companyId: COMPANY, agentId: AGENT, channelId: CHANNEL,
-    triggerClientMsgNo: 'trigger-host-action', reason: 'message', leaseToken: 'unused-direct-call',
+    triggerClientMsgNo: 'trigger-host-action', reason: 'message', lane: 'learner', leaseToken: 'unused-direct-call',
   }
   await pool.query(
     `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at)

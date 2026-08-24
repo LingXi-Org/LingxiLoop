@@ -5,6 +5,7 @@ import { completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCa
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
 import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
+import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
 import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 
 export const agentOSControlRouter = Router()
@@ -37,6 +38,11 @@ interface WorkRow {
   thread_root_client_msg_no: string | null
   trigger_client_msg_no: string
   reason: AgentWorkItem['reason']
+  lane: AgentWorkItem['lane']
+  created_at?: string
+  available_at?: string
+  attempts?: number
+  preemptions?: number
   canvas_id: string | null
   canvas_assignment_id: string | null
 }
@@ -51,6 +57,11 @@ function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
     ...(row.thread_root_client_msg_no ? { threadRootClientMsgNo: row.thread_root_client_msg_no } : {}),
     triggerClientMsgNo: row.trigger_client_msg_no,
     reason: row.reason,
+    lane: row.lane,
+    ...(row.created_at ? { createdAt: row.created_at } : {}),
+    ...(row.available_at ? { availableAt: row.available_at } : {}),
+    ...(row.attempts === undefined ? {} : { attempts: Number(row.attempts) }),
+    ...(row.preemptions === undefined ? {} : { preemptions: Number(row.preemptions) }),
     ...(row.canvas_id ? { canvasId: row.canvas_id } : {}),
     ...(row.canvas_assignment_id ? { canvasAssignmentId: row.canvas_assignment_id } : {}),
     leaseToken,
@@ -70,7 +81,7 @@ async function requireLease(req: Request, actionable = false): Promise<{ work: A
   const fence = Number(req.body?.fence ?? req.query.fence)
   const leaseToken = String(req.body?.leaseToken ?? req.query.leaseToken ?? '')
   const { rows } = await pool.query<WorkRow>(
-    `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id
+    `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,canvas_id,canvas_assignment_id
        FROM agent_work_items
        WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND lease_expires_at > NOW()
          ${actionable ? 'AND cancel_requested_at IS NULL' : ''}`,
@@ -88,7 +99,8 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
     await client.query('BEGIN')
     await client.query(`DELETE FROM agent_os_session_leases WHERE expires_at <= NOW()`)
     const { rows } = await client.query<WorkRow>(
-      `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id
+      `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,
+              canvas_id,canvas_assignment_id,created_at,available_at,attempts,preemptions
          FROM agent_work_items
          WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
            AND cancel_requested_at IS NULL
@@ -99,7 +111,8 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
                agent_work_items.channel_id || ':' || COALESCE(agent_work_items.thread_root_client_msg_no, '-')
                AND sl.expires_at > NOW()
           )
-        ORDER BY priority DESC, created_at ASC
+        ORDER BY CASE lane WHEN 'learner' THEN 4 WHEN 'approval' THEN 3 WHEN 'collaboration' THEN 2 ELSE 1 END DESC,
+                 priority DESC, created_at ASC
         FOR UPDATE SKIP LOCKED LIMIT 1`,
     )
     if (!rows[0]) { await client.query('COMMIT'); res.json(null); return }
@@ -114,10 +127,11 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
     if (!sessionLease.rows[0]) { await client.query('COMMIT'); res.json(null); return }
     const { rows: claimed } = await client.query<WorkRow>(
       `UPDATE agent_work_items
-          SET status='leased', fence=fence+1, lease_token_hash=$2, leased_by=$3,
+          SET status='leased', fence=fence+1, lease_token_hash=$2, leased_by=$3, lease_started_at=NOW(),
               lease_expires_at=NOW()+INTERVAL '45 seconds', attempts=attempts+1, updated_at=NOW()
         WHERE id=$1
-      RETURNING id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id`,
+      RETURNING id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,
+                canvas_id,canvas_assignment_id,created_at,available_at,attempts,preemptions`,
       [rows[0].id, hash(token), workerId],
     )
     await client.query('COMMIT')
@@ -130,26 +144,50 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
 
 agentOSControlRouter.post('/work/:id/heartbeat', safe(async (req, res) => {
   const { work } = await requireLease(req)
-  const { rows } = await pool.query<{ cancel_requested_at: string | null; steer_inputs: Array<{ id: string; text: string; createdAt: string }> }>(
+  const { rows } = await pool.query<{ cancel_requested_at: string | null; preempt_requested_at: string | null; steer_inputs: Array<{ id: string; text: string; createdAt: string }> }>(
     `WITH renewed AS (
        UPDATE agent_work_items SET lease_expires_at=NOW()+INTERVAL '45 seconds', updated_at=NOW()
         WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased'
-        RETURNING cancel_requested_at, steer_inputs
+        RETURNING cancel_requested_at, preempt_requested_at, steer_inputs
      ), session_renewed AS (
        UPDATE agent_os_session_leases SET expires_at=NOW()+INTERVAL '45 seconds', updated_at=NOW()
         WHERE work_id=$1 AND fence=$2 AND EXISTS (SELECT 1 FROM renewed)
-     ) SELECT cancel_requested_at, steer_inputs FROM renewed`,
+     ) SELECT cancel_requested_at, preempt_requested_at, steer_inputs FROM renewed`,
     [work.id, work.fence, hash(work.leaseToken)],
   )
   const row = rows[0]
-  res.json({ ok: Boolean(row), cancelRequested: Boolean(row?.cancel_requested_at), steer: row?.steer_inputs ?? [] })
+  res.json({ ok: Boolean(row), cancelRequested: Boolean(row?.cancel_requested_at), preemptRequested: Boolean(row?.preempt_requested_at), steer: row?.steer_inputs ?? [] })
+}))
+
+agentOSControlRouter.post('/work/:id/yield', safe(async (req, res) => {
+  const { work } = await requireLease(req)
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const { rows } = await client.query(
+      `UPDATE agent_work_items
+          SET status='queued', fence=fence+1, lease_token_hash=NULL, leased_by=NULL, lease_expires_at=NULL,
+              preempt_requested_at=NULL, preempt_grace_expires_at=NULL, preemptions=preemptions+1,
+              available_at=NOW()+INTERVAL '1 second', updated_at=NOW()
+        WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND preempt_requested_at IS NOT NULL
+        RETURNING id`,
+      [work.id, work.fence, hash(work.leaseToken)],
+    )
+    if (!rows[0]) { await client.query('ROLLBACK'); res.status(409).json({ error: 'work is no longer yieldable' }); return }
+    await client.query(`DELETE FROM agent_os_session_leases WHERE work_id=$1 AND fence=$2`, [work.id, work.fence])
+    await client.query('COMMIT')
+    res.json({ ok: true })
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
 }))
 
 agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   const { work } = await requireLease(req)
   const [{ rows: personas }, { rows: bindings }] = await Promise.all([
-    pool.query<{ name: string; role: string | null; system_prompt: string | null }>(
-      `SELECT name, role, system_prompt FROM participants WHERE id=$1 AND company_id=$2 AND kind='agent' LIMIT 1`,
+    pool.query<{ name: string; role: string | null; system_prompt: string | null; capabilities: string[] | null; updated_at: string }>(
+      `SELECT name, role, system_prompt, capabilities, updated_at FROM participants WHERE id=$1 AND company_id=$2 AND kind='agent' LIMIT 1`,
       [work.agentId, work.companyId],
     ),
     pool.query<{ profile: Record<string, unknown> }>(
@@ -169,6 +207,15 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
     createdAt: new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString(),
     ...(message.payload.replyToClientMsgNo ? { replyToClientMsgNo: message.payload.replyToClientMsgNo } : {}),
   }))
+  const triggerMessage = messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)
+  const learnerMessage = triggerMessage?.authorKind === 'human' ? triggerMessage : [...messages].reverse().find((message) => message.authorKind === 'human')
+  const persona = { name: personas[0].name, role: personas[0].role ?? 'Learning Agent', instructions: personas[0].system_prompt ?? '' }
+  const promptContextCandidate = learnerMessage ? await buildPromptContext({
+    epoch: 0, companyId: work.companyId, agentId: work.agentId, conversationId: work.channelId,
+    learnerId: learnerMessage.authorId, query: triggerMessage?.body ?? learnerMessage.body,
+    persona, capabilities: personas[0].capabilities ?? [],
+    sourceVersions: { persona: personas[0].updated_at, capabilities: personas[0].updated_at },
+  }) : undefined
   const approvalId = work.reason === 'resume' && work.triggerClientMsgNo.startsWith('approval:')
     ? work.triggerClientMsgNo.slice('approval:'.length)
     : null
@@ -183,8 +230,10 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   const canvasRoster = await listCanvasAvailableAgents(work.companyId)
   res.json({
     work,
-    persona: { name: personas[0].name, role: personas[0].role ?? 'Learning Agent', instructions: personas[0].system_prompt ?? '' },
+    persona,
     messages,
+    ...(learnerMessage ? { learnerId: learnerMessage.authorId } : {}),
+    ...(promptContextCandidate ? { promptContextCandidate } : {}),
     canvasRoster,
     ...(canvas ? { canvas: {
       id: canvas.id, title: canvas.title, goal: canvas.goal, status: canvas.status,
@@ -202,43 +251,80 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   })
 }))
 
+agentOSControlRouter.get('/work/:id/memory-synthesis', safe(async (req, res) => {
+  const { work } = await requireLease(req)
+  if (work.reason !== 'memory_synthesis') { res.status(409).json({ error: 'not a memory synthesis work item' }); return }
+  res.json({ batch: await loadMemorySynthesisBatch(work) })
+}))
+
+agentOSControlRouter.post('/work/:id/memory-evidence', safe(async (req, res) => {
+  const { work } = await requireLease(req)
+  await recordMemoryEvidence({ work, learnerId: String(req.body?.learnerId ?? ''), userText: String(req.body?.userText ?? ''), assistantText: String(req.body?.assistantText ?? '') })
+  res.json({ ok: true })
+}))
+
+agentOSControlRouter.post('/work/:id/memory-synthesis', safe(async (req, res) => {
+  const { work } = await requireLease(req)
+  if (work.reason !== 'memory_synthesis') { res.status(409).json({ error: 'not a memory synthesis work item' }); return }
+  res.json(await applyMemorySynthesis({
+    work, evidenceIds: Array.isArray(req.body?.evidenceIds) ? req.body.evidenceIds.map(String) : [],
+    changes: req.body?.changes, approved: req.body?.approved === true, confidence: Number(req.body?.confidence ?? 0),
+  }))
+}))
+
 agentOSControlRouter.get('/sessions/:key', safe(async (req, res) => {
   const { rows } = await pool.query<{
     session_key: string; company_id: string; agent_id: string; channel_id: string
     thread_root_client_msg_no: string | null; summary: string | null; history: AgentSessionRecord['history']; revision: string | number
+    compaction_epoch: number; prompt_context: AgentSessionRecord['promptContext'] | null
+    applied_work_ids: string[] | null
   }>(`SELECT * FROM agent_os_sessions WHERE session_key=$1`, [req.params.key])
   const row = rows[0]
   res.json({ session: row ? {
     key: row.session_key, companyId: row.company_id, agentId: row.agent_id, channelId: row.channel_id,
     ...(row.thread_root_client_msg_no ? { threadRootClientMsgNo: row.thread_root_client_msg_no } : {}),
     ...(row.summary ? { summary: row.summary } : {}), history: row.history, revision: Number(row.revision),
+    compactionEpoch: Number(row.compaction_epoch ?? 0), appliedWorkIds: row.applied_work_ids ?? [],
+    ...(row.prompt_context ? { promptContext: row.prompt_context } : {}),
   } : null })
 }))
 
 agentOSControlRouter.put('/sessions', safe(async (req, res) => {
-  const session = req.body as AgentSessionRecord
+  const session = req.body?.session as AgentSessionRecord
+  const workId = String(req.body?.workId ?? '')
+  const fence = Number(req.body?.fence)
+  const leaseToken = String(req.body?.leaseToken ?? '')
+  if (!session || !workId || !Number.isInteger(fence) || !leaseToken) {
+    res.status(400).json({ error: 'work lease and session required' }); return
+  }
   const expectedKey = [session.companyId, session.agentId, session.channelId, session.threadRootClientMsgNo ?? '-'].join(':')
   if (!session.key || session.key !== expectedKey || !Array.isArray(session.history) || !Number.isInteger(session.revision) || session.revision < 0) {
     res.status(400).json({ error: 'invalid Agent OS session identity' }); return
   }
   const { rows: scope } = await pool.query(
-    `SELECT 1
-       FROM participants p
-       JOIN im_channel_bindings b ON b.company_id=p.company_id AND b.channel_id=$3
-      WHERE p.id=$1 AND p.company_id=$2 AND p.kind='agent' LIMIT 1`,
-    [session.agentId, session.companyId, session.channelId],
+    `SELECT 1 FROM agent_work_items w
+      JOIN agent_os_session_leases sl ON sl.work_id=w.id AND sl.fence=w.fence
+     WHERE w.id=$1 AND w.fence=$2 AND w.lease_token_hash=$3 AND w.status='leased' AND w.lease_expires_at>NOW()
+       AND w.company_id=$4 AND w.agent_id=$5 AND w.channel_id=$6
+       AND COALESCE(w.thread_root_client_msg_no,'-')=COALESCE($7,'-')
+       AND sl.session_key=$8 AND sl.expires_at>NOW() LIMIT 1`,
+    [workId, fence, hash(leaseToken), session.companyId, session.agentId, session.channelId,
+      session.threadRootClientMsgNo ?? null, session.key],
   )
-  if (!scope[0]) { res.status(403).json({ error: 'session scope is not available to this agent' }); return }
+  if (!scope[0]) { res.status(409).json({ error: 'work lease lost before session save' }); return }
   const { rows: saved } = await pool.query<{ revision: string | number }>(
     `INSERT INTO agent_os_sessions
-       (session_key, company_id, agent_id, channel_id, thread_root_client_msg_no, summary, history, revision)
-     SELECT $1,$2,$3,$4,$5,$6,$7::jsonb,1 WHERE $8=0
+       (session_key, company_id, agent_id, channel_id, thread_root_client_msg_no, summary, history, revision, compaction_epoch, prompt_context, applied_work_ids)
+     SELECT $1,$2,$3,$4,$5,$6,$7::jsonb,1,$9,$10::jsonb,$11::jsonb WHERE $8=0
      ON CONFLICT (session_key) DO UPDATE SET summary=EXCLUDED.summary, history=EXCLUDED.history,
+       compaction_epoch=EXCLUDED.compaction_epoch,prompt_context=EXCLUDED.prompt_context,
+       applied_work_ids=EXCLUDED.applied_work_ids,
        revision=agent_os_sessions.revision+1, updated_at=NOW()
      WHERE agent_os_sessions.revision=$8
      RETURNING revision`,
     [session.key, session.companyId, session.agentId, session.channelId, session.threadRootClientMsgNo ?? null,
-      session.summary ?? null, JSON.stringify(session.history), session.revision],
+      session.summary ?? null, JSON.stringify(session.history), session.revision, session.compactionEpoch,
+      session.promptContext ? JSON.stringify(session.promptContext) : null, JSON.stringify(session.appliedWorkIds ?? [])],
   )
   if (!saved[0]) { res.status(409).json({ error: 'Agent OS session revision conflict' }); return }
   res.json({ ok: true, revision: Number(saved[0].revision) })

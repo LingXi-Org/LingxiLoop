@@ -151,9 +151,22 @@ export class LingxiImClient {
   }
 
   async send(channelId: string, payload: LingxiMessageV1, channelType = 2): Promise<ImEnvelope> {
-    await this.connect()
-    const sent = await this.sdk.chatManager.send(new LingxiContent(payload), this.sdk.newChannel(channelId, channelType))
-    return fromSdk(sent)
+    const response = await fetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages/accept`, {
+      method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.clientMsgNo, payload, channelType }),
+    })
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '')
+      throw new Error(`IM send acceptance failed: ${response.status} ${detail.slice(0, 300)}`)
+    }
+    const value = await response.json() as { echo: ImEnvelope }
+    return value.echo
+  }
+
+  async sendStatus(clientNonce: string): Promise<{ status: string; echo?: ImEnvelope; error?: string }> {
+    const response = await fetch(`${getServerOrigin()}/api/im/sends/${encodeURIComponent(clientNonce)}`, { headers: authHeaders() })
+    if (response.status === 404) return { status: 'missing' }
+    if (!response.ok) throw new Error(`IM send recovery failed: ${response.status}`)
+    return await response.json() as { status: string; echo?: ImEnvelope; error?: string }
   }
 }
 
