@@ -721,6 +721,7 @@ export async function startCanvasWorkspace(input: {
 }): Promise<CanvasSnapshot> {
   const id = `canvas-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 28)}`
   const client = await pool.connect()
+  let activity: CanvasActivity
   try {
     await client.query('BEGIN')
     const { rows } = await client.query<CanvasRow>(
@@ -734,6 +735,18 @@ export async function startCanvasWorkspace(input: {
     const canvas = rows[0]
     const { rows: existing } = await client.query<AssignmentRow>(`SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 ORDER BY created_at`, [id])
     if (existing.length === 0) await insertMembers(client, { canvas, members: input.members, existing })
+    const activityId = `activity-${createHash('sha256').update(`${input.idempotencyKey}:workspace_started`).digest('hex').slice(0, 32)}`
+    const { rows: activities } = await client.query<{
+      id: string; canvas_id: string; frame_id: string | null; actor_id: string; actor_kind: CanvasActorKind; action: string; detail: Record<string, unknown>; created_at: string
+    }>(
+      `INSERT INTO canvas_activity (id,canvas_id,frame_id,actor_id,actor_kind,action,detail)
+       VALUES ($1,$2,NULL,$3,'agent','workspace_started',$4::jsonb)
+       ON CONFLICT (id) DO UPDATE SET id=canvas_activity.id RETURNING *`,
+      [activityId, id, input.initiatorAgentId, JSON.stringify({ title: canvas.title, goal: canvas.goal })],
+    )
+    const row = activities[0]
+    activity = { id: row.id, canvasId: row.canvas_id, frameId: row.frame_id, actorId: row.actor_id,
+      actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at }
     await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined); throw error
@@ -743,16 +756,8 @@ export async function startCanvasWorkspace(input: {
     kind: 'workspace.started', canvasId: id, conversationId: input.conversationId,
     workspace: { id, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
       assignmentCount: snapshot.assignments.length, frameCount: snapshot.frames.length },
-  })
-  const activity = await logActivity({
-    companyId: input.companyId,
-    canvasId: id,
-    actorId: input.initiatorAgentId,
-    actorKind: 'agent',
-    action: 'workspace_started',
-    idempotencyKey: `${input.idempotencyKey}:workspace_started`,
-    detail: { title: snapshot.title, goal: snapshot.goal },
-  })
+  }).catch(() => undefined)
+  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: id, activity }).catch(() => undefined)
   return { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }
 }
 
@@ -945,7 +950,7 @@ export async function handoffCanvasWork(input: {
       const { rows: steered } = terminal ? { rows: [] } : await client.query<{ id: string }>(
         `UPDATE agent_work_items w SET steer_inputs=CASE WHEN EXISTS (
              SELECT 1 FROM jsonb_array_elements(w.steer_inputs) item WHERE item->>'id'=$4
-           ) THEN w.steer_inputs ELSE w.steer_inputs || jsonb_build_array(jsonb_build_object('id',$4,'text',$5,'createdAt',NOW())) END,
+           ) THEN w.steer_inputs ELSE w.steer_inputs || jsonb_build_array(jsonb_build_object('id',$4,'text',$5::text,'createdAt',NOW())) END,
            updated_at=NOW()
            FROM canvas_agent_assignments a WHERE a.id=$1 AND w.canvas_assignment_id=a.id
             AND a.canvas_id=$2 AND a.agent_id=$3 AND w.status IN ('queued','blocked','leased') RETURNING w.id`,

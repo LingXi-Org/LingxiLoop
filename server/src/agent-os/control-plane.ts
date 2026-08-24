@@ -65,14 +65,15 @@ function workSessionKey(row: WorkRow | AgentWorkItem): string {
   return [companyId, agentId, channelId, thread ?? '-'].join(':')
 }
 
-async function requireLease(req: Request): Promise<{ work: AgentWorkItem; row: WorkRow }> {
+async function requireLease(req: Request, actionable = false): Promise<{ work: AgentWorkItem; row: WorkRow }> {
   const id = req.params.id
   const fence = Number(req.body?.fence ?? req.query.fence)
   const leaseToken = String(req.body?.leaseToken ?? req.query.leaseToken ?? '')
   const { rows } = await pool.query<WorkRow>(
     `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,canvas_id,canvas_assignment_id
        FROM agent_work_items
-      WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND lease_expires_at > NOW()`,
+       WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND lease_expires_at > NOW()
+         ${actionable ? 'AND cancel_requested_at IS NULL' : ''}`,
     [id, fence, hash(leaseToken)],
   )
   if (!rows[0]) throw Object.assign(new Error('work lease lost or expired'), { status: 409 })
@@ -357,7 +358,7 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
 }
 
 agentOSControlRouter.post('/work/:id/actions', safe(async (req, res) => {
-  const { work } = await requireLease(req)
+  const { work } = await requireLease(req, true)
   res.json(await executeActionWithLedger(work, req.body.action as HostAction))
 }))
 

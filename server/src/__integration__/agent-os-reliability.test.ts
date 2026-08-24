@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { createHmac, randomUUID } from 'node:crypto'
+import { createHash, createHmac, randomUUID } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import express from 'express'
@@ -180,4 +180,22 @@ test('[integration] a stopped leased worker stays unclaimable after its lease ex
   )
   assert.equal(rows[0]?.status, 'leased')
   assert.equal(rows[0]?.attempts, 0)
+})
+
+test('[integration] a stopped worker lease cannot execute a Canvas action before heartbeat', async () => {
+  const workId = `stopped-action-${randomUUID()}`
+  const leaseToken = 'stopped-worker-lease-token'
+  await pool.query(
+    `INSERT INTO agent_work_items
+       (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at,cancel_requested_at)
+     VALUES ($1,$2,$3,$4,$5,'canvas_worker','leased',4,$6,NOW()+INTERVAL '1 minute',NOW())`,
+    [workId, COMPANY, AGENT, CHANNEL, `stopped-${workId}`, createHash('sha256').update(leaseToken).digest('hex')],
+  )
+  const response = await fetch(`${baseUrl}/internal/agent-os/work/${workId}/actions`, {
+    method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ fence: 4, leaseToken, action: { runId: workId, cellId: 'stopped', callIndex: 0,
+      action: 'canvas.create_frame', args: {}, idempotencyKey: `${workId}:stopped:0` } }),
+  })
+  assert.equal(response.status, 409)
+  assert.equal((await pool.query(`SELECT 1 FROM agent_host_actions WHERE work_id=$1`, [workId])).rowCount, 0)
 })
