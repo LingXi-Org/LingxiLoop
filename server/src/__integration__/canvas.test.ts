@@ -31,8 +31,8 @@ test('[integration] canvas.* shares durable frames without sharing Agent executi
 
   await pool.query(`UPDATE participants SET capabilities='["canvas"]'::jsonb WHERE id=ANY($1::text[]) AND company_id=$2`, [[agentId, targetAgentId], companyId])
   await pool.query(
-    `INSERT INTO conversations (id,kind,title,members,company_id) VALUES ($1,'direct','Canvas test',$2::jsonb,$3)`,
-    [work.channelId, JSON.stringify([agentId]), companyId],
+    `INSERT INTO conversations (id,kind,title,members,company_id) VALUES ($1,'group','Canvas test',$2::jsonb,$3)`,
+    [work.channelId, JSON.stringify([agentId, targetAgentId]), companyId],
   )
   const started = await executeLearningAction(work, action(work, 'canvas.start_workspace', {
     title: 'Shared learning task', goal: 'Build and revise a durable shared plan',
