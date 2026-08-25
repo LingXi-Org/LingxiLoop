@@ -131,18 +131,28 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
           leaderAgentId: bindings[0].leader_agent_id ?? undefined,
           handoffTargetId: payload.kind === 'handoff' ? refs.toAgentId : undefined,
         })
+    const queuedStreams: Array<{ workId: string; agentId: string }> = []
     for (const agentId of recipients) {
       const reason = payload.kind === 'handoff' ? 'handoff' : mentionedIds.includes(agentId) || mentionAll ? 'mention' : 'message'
-      await client.query(
+      const workId = randomUUID()
+      const inserted = await client.query<{ id: string }>(
         `INSERT INTO agent_work_items
            (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason)
          VALUES ($1,$2,$3,$4,$5,$6,$7)
-         ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING`,
-        [randomUUID(), bindings[0].company_id, agentId, channelId, payload.replyToClientMsgNo ?? null, clientMsgNo, reason],
+         ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING
+         RETURNING id`,
+        [workId, bindings[0].company_id, agentId, channelId, payload.replyToClientMsgNo ?? null, clientMsgNo, reason],
       )
+      if (inserted.rows[0]) queuedStreams.push({ workId: inserted.rows[0].id, agentId })
     }
     await client.query(`UPDATE wukong_webhook_receipts SET processed_at=NOW(), error=NULL WHERE event_id=$1`, [eventId])
     await client.query('COMMIT')
+    const channelType = Number(bindings[0].profile.channelType ?? 2)
+    await Promise.allSettled(queuedStreams.map(({ workId, agentId }) => wukongClient().emitEvent({
+      channelId, channelType, fromUid: agentId, clientMsgNo: `preview-${workId}`,
+      eventId: `${workId}:queued`, eventType: 'stream.open',
+      data: { kind: 'text', text: '', phase: 'thinking', queued: true },
+    })))
     res.json({ ok: true, recipients })
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)

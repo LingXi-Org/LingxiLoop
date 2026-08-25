@@ -39,6 +39,8 @@ export interface ImStreamEvent {
   kind?: string
   text?: string
   delta?: string
+  phase?: 'thinking'
+  queued?: boolean
 }
 
 type Bootstrap = { uid: string; token: string; wsUrl: string; apiVersion: 3; sdkVersion: '1.3.5' }
@@ -108,6 +110,8 @@ export class LingxiImClient {
         kind: typeof data.kind === 'string' ? data.kind : undefined,
         text: typeof data.text === 'string' ? data.text : undefined,
         delta: typeof data.delta === 'string' ? data.delta : undefined,
+        phase: data.phase === 'thinking' ? 'thinking' : undefined,
+        queued: data.queued === true,
       }
       if (!converted.channelId || !converted.fromUid || !converted.clientMsgNo) return
       for (const listener of this.eventListeners) listener(converted)

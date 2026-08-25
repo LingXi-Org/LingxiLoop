@@ -11,3 +11,14 @@ export function withoutFinalizedActiveRuns<T extends { runId?: string }>(
   if (activeRunIds.size === 0) return messages
   return messages.filter((message) => !message.runId || !activeRunIds.has(message.runId))
 }
+
+export const ACTIVE_STREAM_EXPIRY_MS = 45_000
+export const QUEUED_STREAM_EXPIRY_MS = 5 * 60_000
+
+export function streamModeForOpen(phase?: string): 'placeholder' | 'markdown' {
+  return phase === 'thinking' ? 'placeholder' : 'markdown'
+}
+
+export function streamExpiryForOpen(queued: boolean): number {
+  return queued ? QUEUED_STREAM_EXPIRY_MS : ACTIVE_STREAM_EXPIRY_MS
+}

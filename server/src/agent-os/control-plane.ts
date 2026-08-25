@@ -501,7 +501,7 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
     // Keep it ephemeral so it cannot leak into history as a tool bubble.
     await wukongClient().emitEvent({
       channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
-      eventId: `${event.runId}:${event.seq}`, eventType: 'stream.open', data: { kind: 'text', text: '' },
+      eventId: `${event.runId}:${event.seq}`, eventType: 'stream.open', data: { kind: 'text', text: '', phase: 'thinking' },
     }).catch(() => undefined)
   } else if (event.kind === 'model.delta') {
     await wukongClient().emitEvent({
