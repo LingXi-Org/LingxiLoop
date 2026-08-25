@@ -71,7 +71,7 @@ export const CH_AGENT_ACTIVITY = 'lingxiloop:agent.activity'
  * memberships. Events without `companyId` are treated as conservatively
  * routable (skipped) — keep the field populated at every publish site.
  */
-interface TenantTagged { companyId?: string }
+interface TenantTagged { companyId?: string; workspaceId?: string }
 
 export interface MessageNewEvent extends TenantTagged {
   type: 'message.new'

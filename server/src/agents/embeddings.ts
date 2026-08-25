@@ -59,6 +59,32 @@ export async function embedText(text: string): Promise<string | null> {
   }
 }
 
+/** Batch variant used by knowledge-source indexing. The provider sees at
+ * most 50 inputs per request; callers still get one nullable vector per
+ * input so keyword-only indexing remains usable on partial failures. */
+export async function embedTexts(texts: string[]): Promise<Array<string | null>> {
+  if (texts.length === 0) return []
+  if (testEmbedOverride) return Promise.all(texts.map((value) => embedText(value)))
+  if (process.env.LINGXILOOP_DISABLE_EMBEDDINGS === '1' || !env.DEEPSEEK_EMBEDDING_MODEL) {
+    return texts.map(() => null)
+  }
+  const output: Array<string | null> = []
+  for (let offset = 0; offset < texts.length; offset += 50) {
+    const batch = texts.slice(offset, offset + 50).map((text) => text.trim().slice(0, MAX_INPUT_CHARS))
+    try {
+      const response = await client.embeddings.create({ model: env.DEEPSEEK_EMBEDDING_MODEL, input: batch })
+      output.push(...batch.map((_text, index) => {
+        const vector = response.data[index]?.embedding
+        return Array.isArray(vector) && vector.length === EMBED_DIM ? `[${vector.join(',')}]` : null
+      }))
+    } catch (error) {
+      console.warn('[embed:batch] failed', error instanceof Error ? error.message : String(error))
+      output.push(...batch.map(() => null))
+    }
+  }
+  return output
+}
+
 /** Whether pgvector is actually installed in this database. Cached so
  *  loadMemory doesn't probe on every wake. `null` = not yet probed. */
 let pgvectorAvailable: boolean | null = null

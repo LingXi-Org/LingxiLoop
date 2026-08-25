@@ -5,8 +5,11 @@ import Markdown, { type Components } from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { api } from '@/api/client'
+import { inferAttachmentPreview } from '@/lib/attachmentPreview'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { messageShellCapabilities } from '@/lib/messageShell'
+import type { TranscriptAdjacency } from '@/lib/transcriptExperience'
+import { withoutInlineKnowledgeCitations } from '@/lib/knowledgeCitations'
 import { remarkLingxiLoop } from '@/lib/remarkLingxiLoop'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
 import { cn, parseBlocks, parseBody } from '@/lib/utils'
@@ -18,11 +21,14 @@ import { useCanvas } from '@/stores/canvas'
 import { useDocuments } from '@/stores/documents'
 import { discardFailedMessage, retryFailedMessage, toggleReaction, useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
+import { useKnowledgeSources } from '@/stores/knowledgeSources'
 import type { Message, Participant } from '@/types'
 import { Avatar } from './Avatar'
+import { AttachmentViewer } from './AttachmentViewer'
 import { BoardLink } from './BoardLink'
 import { CalendarLink } from './CalendarLink'
 import { CanvasPreview } from './CanvasPreview'
+import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import { CardLink } from './CardLink'
 import { DocumentLink } from './DocumentLink'
 import { HumanBadge } from './HumanBadge'
@@ -930,14 +936,14 @@ function ToolCard({ msg }: { msg: Message }) {
           className="w-[22px] h-[22px] rounded-md grid place-items-center text-white font-mono font-bold text-[11px]"
           style={{ background: icoBg[ico] ?? icoBg.web }}
         >{ico === 'github' ? '▲' : (ico ?? 'W')[0].toUpperCase()}</div>
-        <div className="font-mono text-[11.5px] font-medium">
+        <div data-find-content className="font-mono text-[11.5px] font-medium">
           {t.name} <span className="text-ink-300">· {t.arg}</span>
         </div>
         <div className="ml-auto text-[10.5px] font-bold tracking-wider px-2 py-0.5 rounded bg-[rgba(110,197,106,0.15)] text-[#3D8B3F]">
           {t.status}
         </div>
       </div>
-      <div className="px-3.5 py-3 font-mono text-[11.5px] text-ink-500 leading-[1.55] whitespace-pre-line">
+      <div data-find-content className="px-3.5 py-3 font-mono text-[11.5px] text-ink-500 leading-[1.55] whitespace-pre-line">
         {t.detail}
       </div>
     </div>
@@ -946,8 +952,19 @@ function ToolCard({ msg }: { msg: Message }) {
 
 function AttachmentCard({ msg }: { msg: Message }) {
   const [viewerOpen, setViewerOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const knowledgeSource = useKnowledgeSources((state) => state.list.find((source) =>
+    Boolean(source.originClientMsgNo) && source.originClientMsgNo === (msg.clientId ?? msg.id),
+  ))
   if (!msg.attachment) return null
   const a = msg.attachment
+  const previewKind = inferAttachmentPreview(a)
+  const knowledgeBadge = knowledgeSource ? <span className={cn(
+    'mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold',
+    knowledgeSource.status === 'ready' && 'bg-emerald-100 text-emerald-700',
+    knowledgeSource.status === 'failed' && 'bg-red-100 text-red-700',
+    knowledgeSource.status !== 'ready' && knowledgeSource.status !== 'failed' && 'bg-amber-100 text-amber-700',
+  )}>{knowledgeSource.status === 'ready' ? '已加入资料' : knowledgeSource.status === 'failed' ? '摄取失败' : '正在建立知识索引'}</span> : null
 
   // Real image with a URL: render inline; clicking opens the lightbox.
   if (a.kind === 'img' && a.url) {
@@ -956,7 +973,7 @@ function AttachmentCard({ msg }: { msg: Message }) {
         <button
           type="button"
           onClick={() => setViewerOpen(true)}
-          className="block mt-2 max-w-[min(100%,420px)] text-left cursor-zoom-in group"
+          className="message-attachment-bubble block mt-2 text-left cursor-zoom-in group"
         >
           {/* The server doesn't store image dimensions today, so we
               don't know the natural aspect when this row first renders.
@@ -983,12 +1000,17 @@ function AttachmentCard({ msg }: { msg: Message }) {
             />
           </div>
           <div className="mt-1 text-[11px] text-ink-500 truncate">{a.name}{a.size ? ` · ${Math.round(a.size / 1024)}KB` : ''}</div>
+          {knowledgeBadge}
         </button>
         {viewerOpen && (
           <ImageViewer src={a.url} name={a.name} onClose={() => setViewerOpen(false)} />
         )}
       </>
     )
+  }
+
+  if (previewKind === 'audio' && a.url) {
+    return <div className="message-attachment-bubble audio-attachment-card mt-2"><div data-find-content className="truncate text-[12px] font-semibold text-ink-700">{a.name}</div>{knowledgeBadge}<audio className="mt-2 w-full" controls preload="metadata" src={a.url}>浏览器不支持音频播放。</audio></div>
   }
 
   // File card fallback (PDF / docs / archives / text / etc). Renders as a
@@ -1013,27 +1035,37 @@ function AttachmentCard({ msg }: { msg: Message }) {
         style={{
           background: a.kind === 'fig'
             ? 'radial-gradient(circle at 30% 30%, #FF6B9D, transparent 50%), radial-gradient(circle at 70% 70%, #4FC2F4, transparent 50%), linear-gradient(135deg, #2A2545, #1A1525)'
-            : 'linear-gradient(135deg, #2A2A35, #1A1A22)',
+            : 'linear-gradient(135deg, var(--accent), #075cae)',
         }}
       >
         {a.kind === 'fig' ? <IFigma className="w-5 h-5" stroke="white" strokeWidth={2} /> : <IFile className="w-5 h-5" stroke="white" strokeWidth={1.5} />}
         <span className="absolute bottom-1 right-1 font-mono text-[9px] font-bold text-white bg-black/55 px-1 rounded tracking-wider uppercase">{ext}</span>
       </div>
       <div className="min-w-0">
-        <div className="text-[13px] font-semibold text-ink-900 truncate">{a.name}</div>
+        <div data-find-content className="text-[13px] font-semibold text-ink-900 truncate">{a.name}</div>
         <div className="text-[11px] text-ink-500 truncate">
           {a.mime ?? a.meta ?? ''}{sizeLabel ? ` · ${sizeLabel}` : ''}
         </div>
+        {knowledgeBadge}
       </div>
     </>
   )
 
   if (!a.url) {
     return (
-      <div className="mt-2 max-w-[min(100%,380px)] grid grid-cols-[56px_1fr] gap-2.5 p-2.5 bg-cloud border border-ink-100 rounded-[11px] items-center">
+      <div className="message-attachment-bubble mt-2 grid grid-cols-[56px_1fr] gap-2.5 p-2.5 bg-cloud border border-ink-100 rounded-[11px] items-center">
         {inner}
       </div>
     )
+  }
+
+  if (previewKind === 'pdf' || previewKind === 'text' || previewKind === 'video') {
+    return <>
+      <button ref={triggerRef} type="button" onClick={() => setViewerOpen(true)} className="message-attachment-bubble mt-2 grid grid-cols-[56px_1fr] gap-2.5 p-2.5 bg-cloud border border-ink-100 rounded-[11px] items-center cursor-pointer hover:shadow-soft hover:border-sky2-200 transition text-left">
+        {inner}
+      </button>
+      {viewerOpen && <AttachmentViewer attachment={a} kind={previewKind} onClose={() => { setViewerOpen(false); window.requestAnimationFrame(() => triggerRef.current?.focus()) }} />}
+    </>
   }
 
   return (
@@ -1042,7 +1074,7 @@ function AttachmentCard({ msg }: { msg: Message }) {
       download={a.name}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2 max-w-[min(100%,380px)] grid grid-cols-[56px_1fr] gap-2.5 p-2.5 bg-cloud border border-ink-100 rounded-[11px] items-center cursor-pointer hover:shadow-soft hover:border-sky2-200 transition no-underline"
+      className="message-attachment-bubble mt-2 grid grid-cols-[56px_1fr] gap-2.5 p-2.5 bg-cloud border border-ink-100 rounded-[11px] items-center cursor-pointer hover:shadow-soft hover:border-sky2-200 transition no-underline"
     >
       {inner}
     </a>
@@ -1352,6 +1384,7 @@ interface MessageRowProps {
   /** Desktop-only OpenMaus presentation. Shared/mobile callers keep the
    *  established message layout when this flag is omitted. */
   openMaus?: boolean
+  adjacency?: TranscriptAdjacency
 }
 
 /** Context-rich reactions for human and agent conversations. Keep the eyes
@@ -1781,29 +1814,22 @@ function CanvasWorkspaceCard({ msg }: { msg: Message }) {
     if (canvasId) void loadPreview(canvasId)
   }, [canvasId, loadPreview])
   if (!canvas) return null
-  const members = live?.assignments ?? (liveCard?.assignments.length ? liveCard.assignments : canvas.members)
   const frameCount = live?.frames.filter((frame) => frame.type !== 'artifact').length ?? liveCard?.frameIds.length ?? canvas.frameCount
-  const status = live?.status ?? liveCard?.status ?? canvas.status
-  const statusLabel = ({ active: '进行中', completed: '已完成', archived: '已归档', failed: '失败' } as Record<string, string>)[status] ?? status
   const open = () => {
     void load(canvas.canvasId)
     if (window.innerWidth < 768) setView('canvas')
     else openCanvasPeek(canvas.canvasId)
   }
-  return <button type="button" onClick={open} className="canvas-message-card mt-1 block w-full max-w-[620px] overflow-hidden rounded-2xl border text-left transition hover:-translate-y-0.5">
+  return <button type="button" onClick={open} className="message-attachment-bubble canvas-message-card mt-1 block overflow-hidden rounded-2xl border text-left">
     <CanvasPreview snapshot={live} title={canvas.title} frameCount={frameCount} />
-    <div className="p-3.5">
-      <div className="flex items-center justify-between gap-3"><span className="text-sm font-semibold text-ink-900">{canvas.title}</span><span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-accent">{statusLabel}</span></div>
-      <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-500">{canvas.goal}</p>
-      <div className="mt-2.5 flex items-center gap-1.5">{members.slice(0, 8).map((member) => <span key={member.agentId} title={`${member.agentId}: ${member.assignment}`} className="size-3 rounded-full ring-2 ring-panel" style={{ backgroundColor: member.color }} />)}<span className="ml-2 text-[10px] text-ink-400">{members.length} 位智能体 · {frameCount} 张卡片</span></div>
-    </div>
   </button>
 }
 
-function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = false }: MessageRowProps) {
+function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = false, adjacency }: MessageRowProps) {
   const openAgentInfo = useApp((s) => s.openAgentInfo)
   const openThreadView = useApp((s) => s.openThreadView)
   const meId = useMe()
+  const [actionMenu, setActionMenu] = useState<{ x: number; y: number } | null>(null)
   // System / whisper rows don't need a resolved author — handle them before
   // touching `author` so a synthetic-author system message (the calendar-fired
   // notice, authored by CALENDAR_SYSTEM_AUTHOR_ID) renders instead of being
@@ -1813,6 +1839,8 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   if (!author) return null
   const isHuman = author.kind === 'human'
   const isMine = msg.authorId === meId
+  const groupStart = adjacency?.isGroupStart ?? true
+  const groupEnd = adjacency?.isGroupEnd ?? true
 
   const isToolOnly = msg.kind === 'tool' && !msg.body
   const isAttachOnly = Boolean(msg.attachment) && !msg.body
@@ -1823,6 +1851,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const isCanvas = msg.kind === 'canvas'
   const shell = messageShellCapabilities(msg.kind)
   const isStreaming = Boolean(msg.streaming)
+  const openKnowledgeCitation = useKnowledgeSources((state) => state.openCitation)
   const avatarActivity = msg.streaming === 'placeholder'
     ? 'thinking'
     : msg.streaming === 'markdown'
@@ -1835,21 +1864,41 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const onAvatarClick = () => {
     if (!isMine) openAgentInfo(author.id)
   }
+  const copyBody = () => { if (msg.body) void navigator.clipboard.writeText(msg.body) }
+  const actionItems: ContextMenuItem[] = [
+    { label: '快速反应', submenu: QUICK_REACTIONS.slice(0, 6).map((emoji) => ({ label: emoji, onSelect: () => void toggleReaction(msg.id, emoji) })) },
+    ...(shell.reply ? [{ label: '回复', onSelect: () => useApp.getState().setReplyingTo(msg.conversationId, msg.id) }] : []),
+    { label: '在线程中打开', onSelect: () => openThreadView(msg.conversationId, msg.id) },
+    ...(msg.body ? [{ label: '复制文字', onSelect: copyBody }] : []),
+  ]
   return (
     <div
       id={`m-${msg.id}`}
       data-message-shell={shell.sharedShell ? 'shared' : 'specialized'}
       data-message-kind={msg.kind}
+      data-message-owner={isMine ? 'self' : 'other'}
+      data-message-group-start={groupStart ? 'true' : 'false'}
+      data-message-group-end={groupEnd ? 'true' : 'false'}
       className={cn(
         'group gap-3 items-start scroll-mt-20',
-        openMaus ? 'flex' : 'grid grid-cols-[38px_1fr]',
+        openMaus
+          ? 'flex'
+          : isMine
+            ? 'flex justify-end'
+            : 'grid grid-cols-[38px_1fr]',
         openMaus && isMine && 'flex-row-reverse',
         animate && 'animate-rise',
       )}
       style={animate ? { animationDelay: `${delay}ms` } : undefined}
+      onContextMenu={(event) => {
+        const target = event.target as HTMLElement
+        if (target.closest('a, button, input, textarea, video, audio, [contenteditable="true"]')) return
+        if (window.getSelection()?.toString()) return
+        event.preventDefault(); setActionMenu({ x: event.clientX, y: event.clientY })
+      }}
     >
       {openMaus ? (
-        <div className={cn('shrink-0', isMine && 'hidden')}>
+        <div className={cn('shrink-0', isMine && 'hidden', !groupStart && 'invisible')}>
           <Avatar
             p={author}
             size={38}
@@ -1858,12 +1907,11 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             className={avatarActivity ? `agent-avatar-${avatarActivity}` : undefined}
           />
         </div>
-      ) : (
+      ) : !isMine ? (
         <button
           onClick={onAvatarClick}
-          disabled={isMine}
-          className={cn('rounded-full transition', !isMine && 'hover:opacity-80 active:scale-95 cursor-pointer')}
-          title={isMine ? undefined : `Show ${author.name}'s info`}
+          className={cn('cursor-pointer rounded-full transition hover:opacity-80 active:scale-95', !groupStart && 'invisible pointer-events-none')}
+          title={`Show ${author.name}'s info`}
         >
           <Avatar
             p={author}
@@ -1873,13 +1921,24 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             className={avatarActivity ? `agent-avatar-${avatarActivity}` : undefined}
           />
         </button>
-      )}
-      <div className={cn('min-w-0', shell.selection && 'select-text', openMaus && 'max-w-[70%]', openMaus && isMine && 'flex flex-col items-end')}>
-        <div className={cn('mb-1 flex gap-2', openMaus ? 'items-baseline' : 'items-center', openMaus && isMine && 'justify-end')}>
-          <span className="font-bold text-[13.5px] text-ink-900">{author.name}</span>
-          {isHuman && !isMine && <HumanBadge />}
-          {!isStreaming && <span className={cn('text-[10.5px] text-ink-300 tabular-nums', isHuman && 'ml-auto')}>{msg.at}</span>}
-        </div>
+      ) : null}
+      <div className={cn(
+        'min-w-0',
+        shell.selection && 'select-text',
+        (isAttachOnly || isCanvas) && 'message-attachment-host',
+        openMaus && 'max-w-[70%]',
+        openMaus && isMine && 'flex flex-col items-end',
+        !openMaus && isMine && 'ml-auto flex max-w-[84%] flex-col items-end',
+      )}>
+        {(groupStart || groupEnd) && <div className={cn(
+          'mb-1 flex min-h-[17px] gap-2',
+          openMaus ? 'items-baseline' : 'items-center',
+          isMine && 'justify-end',
+        )}>
+          {groupStart && <span className="font-bold text-[13.5px] text-ink-900">{author.name}</span>}
+          {groupStart && isHuman && !isMine && <HumanBadge />}
+          {!isStreaming && groupEnd && <span className={cn('text-[10.5px] text-ink-300 tabular-nums', (!groupStart || isHuman) && 'ml-auto')}>{msg.at}</span>}
+        </div>}
 
         {!isStreaming && shell.quote && <QuoteCard msg={msg} />}
 
@@ -1891,8 +1950,10 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
                 ? 'py-0.5'
                 : cn(
                     'message-bubble py-2.5',
-                    openMaus ? 'max-w-full px-4 text-[15px]' : 'max-w-[min(100%,620px)] px-3.5 text-[14px]',
+                    openMaus || isMine ? 'max-w-full px-4 text-[15px]' : 'max-w-[min(100%,620px)] px-3.5 text-[14px]',
                     isMine ? 'message-bubble-user' : 'message-bubble-agent',
+                    adjacency?.isContinuedFromPrevious && 'message-bubble-continued-from',
+                    adjacency?.isContinuedToNext && 'message-bubble-continued-to',
                   ),
             )}
           >
@@ -1908,8 +1969,8 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
                 <span>思考中</span>
               </span>
             ) : (
-              <span className={msg.streaming === 'markdown' ? 'streaming-markdown' : undefined}>
-                <RichBody body={msg.body} conversationId={msg.conversationId} />
+              <span data-find-content className={msg.streaming === 'markdown' ? 'streaming-markdown' : undefined}>
+                <RichBody body={withoutInlineKnowledgeCitations(msg.body, msg.citations)} conversationId={msg.conversationId} />
                 {msg.streaming === 'markdown' && <span className="streaming-caret" aria-hidden />}
               </span>
             )}
@@ -1947,6 +2008,22 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
           </div>
         )}
         {!isStreaming && msg.attachment && <AttachmentCard msg={msg} />}
+        {!isStreaming && (msg.citations?.length ?? 0) > 0 && (
+          <div className="mt-2 flex max-w-[620px] flex-wrap gap-1.5" aria-label="引用来源">
+            {msg.citations!.map((citation) => (
+              <button
+                key={`${citation.marker}-${citation.chunkId}`}
+                type="button"
+                onClick={() => void openKnowledgeCitation(citation)}
+                title={citation.excerpt}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-panel px-2.5 py-1.5 text-left text-[10px] text-ink-secondary transition hover:border-accent/40 hover:text-accent"
+              >
+                <span className="font-bold text-accent">[{citation.marker}]</span>
+                <span className="max-w-44 truncate">{citation.sourceTitle}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {msg.failed && (
           // Failed-to-send row: text + Retry + Dismiss buttons. The
@@ -1994,14 +2071,16 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
             new Map((msg.reactions ?? []).map((r) => [r.emoji, r])).values(),
           ).map((r) => <ReactionPill key={r.emoji} msgId={msg.id} r={r} />)}
           {/* Quick-reaction popup + reply button, visible on hover. */}
-          <div className="reaction-quick-tray opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex gap-0.5">
-            {QUICK_REACTIONS.filter((e) => !(msg.reactions ?? []).some((r) => r.emoji === e && r.mine)).slice(0, 8).map((e) => (
-              <QuickReactionButton key={e} msgId={msg.id} emoji={e} />
-            ))}
+          <div className="message-action-tray reaction-quick-tray opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex gap-0.5">
+            <QuickReactionButton msgId={msg.id} emoji="👀" />
             {shell.reply && <ReplyIconButton msg={msg} zh={openMaus} />}
+            <button type="button" onClick={() => openThreadView(msg.conversationId, msg.id)} className="message-action-button" title="在线程中打开" aria-label="在线程中打开">↪</button>
+            {msg.body && <button type="button" onClick={copyBody} className="message-action-button" title="复制文字" aria-label="复制文字">⧉</button>}
+            <button type="button" onClick={(event) => { const r = event.currentTarget.getBoundingClientRect(); setActionMenu({ x: r.right, y: r.bottom + 4 }) }} className="message-action-button" title="更多" aria-label="更多消息操作">•••</button>
           </div>
         </div>}
       </div>
+      {actionMenu && <ContextMenu x={actionMenu.x} y={actionMenu.y} items={actionItems} onClose={() => setActionMenu(null)} />}
     </div>
   )
 }

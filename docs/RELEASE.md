@@ -1,10 +1,11 @@
 # Release and rollback
 
-Production deploys three immutable application images:
+Production deploys four immutable application images:
 
 - `LINGXILOOP_SERVER_IMAGE`
 - `AGENT_OS_IMAGE`
 - `WUKONGIM_IMAGE`
+- `OPEN_NOTEBOOK_IMAGE`
 
 All must use `image@sha256:…`. No application service mounts the Docker socket;
 Canvas collaboration is ordinary Postgres state fanned out through the existing
@@ -13,7 +14,8 @@ Redis/WebSocket path. WuKongIM v3 is built from verified commit
 Operators provide `.env.secrets`; CI uploads only `.release.next.env`, Compose
 and deployment scripts.
 
-Before the maintenance cutover, back up PostgreSQL and the WuKongIM volume.
+Before the maintenance cutover, back up PostgreSQL, WuKongIM, SurrealDB, and
+the Open Notebook data volume.
 The migration is one-way: it removes retired Agent-host identities and data,
 resets legacy conversations/runtime state, drops retired schema fields and
 creates the Agent OS/WuKong projections. It does not dual-write.

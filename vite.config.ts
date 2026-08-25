@@ -42,6 +42,12 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // Third-party reference checkouts can contain tens of thousands of files
+    // (including Python virtual environments). They are never renderer input;
+    // keeping them out of the watcher prevents reload storms and stalled HMR.
+    watch: {
+      ignored: ['**/third_party/**', '**/.venv/**', '**/dist/**', '**/coverage/**'],
+    },
     proxy: {
       '/api':      { target: HTTP_TARGET, changeOrigin: true, secure: false },
       '/uploads':  { target: HTTP_TARGET, changeOrigin: true, secure: false },

@@ -1,0 +1,23 @@
+{
+  "repository": "https://github.com/CopilotKit/OpenBot.git",
+  "commit": "d293f2331bd5ff9ba4ad17af6ac94570a157d26d",
+  "license": "MIT",
+  "hashMode": "sha256-lf-normalized",
+  "files": [
+    {
+      "upstreamPath": "app/src/components/layout/detail-panel.tsx",
+      "localPath": "src/components/layout/detail-panel.tsx",
+      "sha256": "26a1271f29614558af3905c929b8e028ba88b292f6e12b86e56e868bbf6de0c7"
+    },
+    {
+      "upstreamPath": "app/src/components/ui/button.tsx",
+      "localPath": "src/components/ui/button.tsx",
+      "sha256": "3b51f11af902fb3f41823c8e8369e904320c2c899bf68afa565adb46d5178b95"
+    },
+    {
+      "upstreamPath": "app/src/lib/motion.ts",
+      "localPath": "src/lib/motion.ts",
+      "sha256": "c51be313d7779ee8f6af2fc1631a4ac35607ccf718a5c029e6541bde96a347a5"
+    }
+  ]
+}

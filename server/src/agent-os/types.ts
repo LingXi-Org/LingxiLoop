@@ -97,6 +97,19 @@ export interface AgentContext {
     instructions: string
   }
   messages: AgentContextMessage[]
+  /** Retrieved for this turn only. Never frozen into PromptContext/session. */
+  knowledgeContext?: Array<{
+    sourceId: string
+    sourceTitle: string
+    chunkId: string
+    excerpt: string
+    sourceUrl?: string
+    position: number
+    marker: string
+  }>
+  knowledgeSourceCount?: number
+  /** Degraded attachment ingestion detail for the triggering message. */
+  knowledgeIngestionFailure?: string
   summary?: string
   learnerId?: string
   promptContextCandidate?: PromptContextV1
@@ -208,6 +221,6 @@ export interface LingxiMessageV1 {
   clientMsgNo: string
   body?: string
   replyToClientMsgNo?: string
-  refs?: Record<string, string>
+  refs?: Record<string, string | string[]>
   data?: Record<string, unknown>
 }

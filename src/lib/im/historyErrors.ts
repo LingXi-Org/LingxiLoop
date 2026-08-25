@@ -8,7 +8,7 @@ type StatusEnvelope = {
     kind: string
     clientMsgNo: string
     body?: string
-    refs?: Record<string, string>
+    refs?: Record<string, string | string[]>
     data?: Record<string, unknown>
   }
 }

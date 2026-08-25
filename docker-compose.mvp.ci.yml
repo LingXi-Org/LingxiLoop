@@ -42,6 +42,43 @@ services:
       start_period: 3s
     networks: [lingxiloop-mvp-ci]
 
+  surrealdb:
+    image: surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011
+    command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "ci-open-notebook-db-password", "memory"]
+    healthcheck:
+      test: ["CMD", "/surreal", "is-ready", "--endpoint", "http://localhost:8000"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    networks: [lingxiloop-knowledge-internal-ci]
+
+  open-notebook:
+    build:
+      context: ./third_party/open-notebook
+      target: runtime
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+    environment:
+      OPEN_NOTEBOOK_ENCRYPTION_KEY: ci-open-notebook-encryption-key
+      OPEN_NOTEBOOK_PASSWORD: ci-open-notebook-password
+      OPEN_NOTEBOOK_WORKER_MAX_TASKS: "1"
+      OPEN_NOTEBOOK_R2_ENABLED: "false"
+      OPEN_NOTEBOOK_R2_PREFIX: open-notebook
+      SURREAL_URL: ws://surrealdb:8000/rpc
+      SURREAL_USER: open-notebook
+      SURREAL_PASSWORD: ci-open-notebook-db-password
+      SURREAL_NAMESPACE: open_notebook
+      SURREAL_DATABASE: open_notebook
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5055/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks: [lingxiloop-knowledge-internal-ci, lingxiloop-knowledge-egress-ci]
+
   fake-deepseek-provider:
     image: node:20-alpine
     working_dir: /app
@@ -87,6 +124,8 @@ services:
         condition: service_healthy
       wukongim:
         condition: service_healthy
+      open-notebook:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       LINGXILOOP_LOG_LEVEL: warn
@@ -102,6 +141,9 @@ services:
       WUKONG_API_TOKEN: ci-wukong-api-token
       WUKONG_WEBHOOK_SECRET: ci-wukong-webhook-secret
       WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
+      OPEN_NOTEBOOK_ENABLED: "true"
+      OPEN_NOTEBOOK_URL: http://open-notebook:5055
+      OPEN_NOTEBOOK_PASSWORD: ci-open-notebook-password
     ports:
       - "${LINGXILOOP_PORT:-5181}:5181"
     healthcheck:
@@ -110,7 +152,7 @@ services:
       timeout: 3s
       retries: 20
       start_period: 10s
-    networks: [lingxiloop-mvp-ci]
+    networks: [lingxiloop-mvp-ci, lingxiloop-knowledge-internal-ci]
 
   agent-os:
     build:
@@ -141,3 +183,6 @@ services:
 
 networks:
   lingxiloop-mvp-ci: {}
+  lingxiloop-knowledge-internal-ci:
+    internal: true
+  lingxiloop-knowledge-egress-ci: {}

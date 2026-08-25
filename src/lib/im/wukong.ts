@@ -13,7 +13,7 @@ export type LingxiMessageV1 = {
   clientMsgNo: string
   body?: string
   replyToClientMsgNo?: string
-  refs?: Record<string, string>
+  refs?: Record<string, string | string[]>
   data?: Record<string, unknown>
 }
 
@@ -87,11 +87,13 @@ export class LingxiImClient {
   private started = false
   private listeners = new Set<(message: ImEnvelope) => void>()
   private eventListeners = new Set<(event: ImStreamEvent) => void>()
+  private workspaceChannels = new Set<string>()
 
   constructor() {
     this.sdk.register(LINGXI_MESSAGE_CONTENT_TYPE, () => new LingxiContent())
     this.sdk.chatManager.addMessageListener((message) => {
       const converted = fromSdk(message)
+      if (!this.workspaceChannels.has(converted.channelId)) return
       for (const listener of this.listeners) listener(converted)
     })
     this.sdk.eventManager.addEventListener((event: WKEvent) => {
@@ -110,6 +112,7 @@ export class LingxiImClient {
         delta: typeof data.delta === 'string' ? data.delta : undefined,
       }
       if (!converted.channelId || !converted.fromUid || !converted.clientMsgNo) return
+      if (!this.workspaceChannels.has(converted.channelId)) return
       for (const listener of this.eventListeners) listener(converted)
     })
   }
@@ -127,6 +130,10 @@ export class LingxiImClient {
   }
 
   disconnect(): void { this.sdk.disconnect(); this.started = false }
+
+  setWorkspaceChannels(channelIds: Iterable<string>): void {
+    this.workspaceChannels = new Set(channelIds)
+  }
 
   subscribe(listener: (message: ImEnvelope) => void): () => void {
     this.listeners.add(listener)

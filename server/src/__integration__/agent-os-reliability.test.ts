@@ -14,6 +14,7 @@ import { sweepAgentWorkWatchdog } from '../agent-os/work-watchdog.js'
 import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 const COMPANY = 'co-agent-os-reliability'
+const PROJECT = 'project-agent-os-reliability'
 const AGENT = 'agent-agent-os-reliability'
 const HUMAN = 'human-agent-os-reliability'
 const CHANNEL = 'channel-agent-os-reliability'
@@ -39,7 +40,7 @@ before(async () => {
   const app = express()
   app.use('/webhooks/wukong', wukongWebhookRouter)
   app.use(express.json())
-  app.use('/api/im', (req, _res, next) => { (req as express.Request & { authUserId?: string }).authUserId = HUMAN; req.headers['x-company-id'] = COMPANY; next() }, imRouter)
+  app.use('/api/im', (req, _res, next) => { (req as express.Request & { authUserId?: string }).authUserId = HUMAN; req.headers['x-company-id'] = COMPANY; req.headers['x-project-id'] = PROJECT; next() }, imRouter)
   app.use('/internal/agent-os', agentOSControlRouter)
   app.use((error: Error & { status?: number }, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     res.status(error.status ?? 500).json({ error: error.message })
@@ -59,11 +60,17 @@ beforeEach(async () => {
   sendAttempts = 0
   await pool.query(`INSERT INTO companies (id,name,slug) VALUES ($1,'Reliability','agent-os-reliability')`, [COMPANY])
   await pool.query(`INSERT INTO company_members(company_id,user_id,role) VALUES($1,$2,'member')`, [COMPANY, HUMAN])
+  await pool.query(`INSERT INTO projects(id,company_id,name) VALUES($1,$2,'Reliability Workspace')`, [PROJECT, COMPANY])
   await pool.query(
     `INSERT INTO participants (id,company_id,kind,name,role,initial,avatar_bg,status,capabilities)
      VALUES ($1,$3,'agent','Nova','coach','N','#6d5dfc','avail','["web"]'::jsonb),
             ($2,$3,'human','Learner','learner','L','#0078c8','avail','[]'::jsonb)`,
     [AGENT, HUMAN, COMPANY],
+  )
+  await pool.query(
+    `INSERT INTO conversations(id,kind,title,members,company_id,project_id)
+     VALUES($1,'group','Reliability Channel',$2::jsonb,$3,$4)`,
+    [CHANNEL, JSON.stringify([AGENT, HUMAN]), COMPANY, PROJECT],
   )
   await pool.query(
     `INSERT INTO im_channel_bindings (channel_id,company_id,leader_agent_id,profile)

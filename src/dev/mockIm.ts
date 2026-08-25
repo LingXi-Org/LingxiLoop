@@ -146,6 +146,14 @@ const messagesByConversation: Record<string, Message[]> = {
     message({ id: 'mock-m1', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-nova', kind: 'text', body: '早上好，我已经把昨天的讨论整理成了三个执行步骤。', at: timeMinutesAgo(32), sequence: 1 }),
     message({ id: 'mock-m2', conversationId: DEFAULT_CONVERSATION_ID, authorId: ME_ID, kind: 'text', body: '先把核心流程跑通，再处理视觉细节。', at: timeMinutesAgo(27), reactions: [{ emoji: '👍', count: 2, mine: true, users: [ME_ID, 'mock-iris'] }], sequence: 2 }),
     message({ id: 'mock-m3', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-iris', kind: 'text', body: '收到。我会保留现有头像和 Agent 工作动效，其余部分先不改样式。', at: timeMinutesAgo(20), sequence: 3 }),
+    message({ id: 'mock-grok-run-1', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-nova', kind: 'text', body: '发布简报已经确认：公开测试目标是 10 月 15 日，决策依据来自本周客户访谈和容量评估。', at: timeMinutesAgo(16), createdAt: isoMinutesAgo(16), sequence: 3.1 }),
+    message({ id: 'mock-grok-run-2', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-nova', kind: 'text', body: '指标口径也已对齐，核心依据会随附件一并归档，方便发布团队复核。', at: timeMinutesAgo(14), createdAt: isoMinutesAgo(14), sequence: 3.2 }),
+    message({ id: 'mock-attachment-pdf', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-nova', kind: 'attachment', body: '', attachment: { name: '秋季发布简报.pdf', kind: 'pdf', mime: 'application/pdf', size: 679, url: '/mock/grok-preview.pdf' }, at: timeMinutesAgo(13), createdAt: isoMinutesAgo(13), sequence: 3.3 }),
+    message({ id: 'mock-attachment-text', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-nova', kind: 'attachment', body: '', attachment: { name: '设计笔记.md', kind: 'file', mime: 'text/markdown', size: 402, url: '/mock/grok-notes.txt' }, at: timeMinutesAgo(12), createdAt: isoMinutesAgo(12), sequence: 3.4 }),
+    message({ id: 'mock-attachment-json', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-nova', kind: 'attachment', body: '', attachment: { name: '搜索样例.json', kind: 'file', mime: 'application/json', size: 236, url: '/mock/grok-data.json' }, at: timeMinutesAgo(11), createdAt: isoMinutesAgo(11), sequence: 3.5 }),
+    message({ id: 'mock-attachment-audio', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-iris', kind: 'attachment', body: '', attachment: { name: '交互提示音.mp3', kind: 'file', mime: 'audio/mpeg', url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3' }, at: timeMinutesAgo(10), createdAt: isoMinutesAgo(10), sequence: 3.6 }),
+    message({ id: 'mock-attachment-video', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-iris', kind: 'attachment', body: '', attachment: { name: '动态预览.mp4', kind: 'file', mime: 'video/mp4', url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }, at: timeMinutesAgo(9), createdAt: isoMinutesAgo(9), sequence: 3.7 }),
+    message({ id: 'mock-attachment-unknown', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-sol', kind: 'attachment', body: '', attachment: { name: '原始数据.bin', kind: 'file', mime: 'application/octet-stream', size: 128, url: '/mock/unknown.bin' }, at: timeMinutesAgo(8), createdAt: isoMinutesAgo(8), sequence: 3.8 }),
     message({
       id: 'mock-canvas-message',
       conversationId: DEFAULT_CONVERSATION_ID,
@@ -166,7 +174,7 @@ const messagesByConversation: Record<string, Message[]> = {
       },
       sequence: 4,
     }),
-    message({ id: 'mock-m4', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-nova', kind: 'text', body: '画布已经挂在会话上下文中，点击上面的卡片即可展开并拖动查看。', at: timeMinutesAgo(2), quotedMessageId: 'mock-m2', quoted: { id: 'mock-m2', authorId: ME_ID, authorName: '林曦', kind: 'text', body: '先把核心流程跑通，再处理视觉细节。', sequence: 2 }, sequence: 5 }),
+    message({ id: 'mock-m4', conversationId: DEFAULT_CONVERSATION_ID, authorId: 'mock-nova', kind: 'text', body: '资料驱动的回答会保留可追溯引用，空白工作区仍可直接开始对话。[S1]', citations: [{ sourceId: 'mock-source-brief', sourceTitle: 'NotebookLM 产品简报.pdf', chunkId: 'mock-chunk-1', excerpt: 'NotebookLM 将用户提供的来源作为回答依据，并通过行内引用帮助用户回到原始上下文。', position: 3, marker: 'S1' }], at: timeMinutesAgo(2), quotedMessageId: 'mock-m2', quoted: { id: 'mock-m2', authorId: ME_ID, authorName: '林曦', kind: 'text', body: '先把核心流程跑通，再处理视觉细节。', sequence: 2 }, sequence: 5 }),
   ],
   'mock-nova-dm': [
     message({ id: 'mock-dm1', conversationId: 'mock-nova-dm', authorId: 'mock-nova', kind: 'text', body: '我准备了一份简短的竞品分析提纲。', at: timeMinutesAgo(26), sequence: 1 }),
@@ -175,6 +183,37 @@ const messagesByConversation: Record<string, Message[]> = {
   'mock-design': [
     message({ id: 'mock-design1', conversationId: 'mock-design', authorId: 'mock-iris', kind: 'text', body: '交互稿已经更新，重点检查消息区高度和底部输入框。', at: '昨天 16:40', sequence: 1 }),
   ],
+}
+
+const launchConversations: Conversation[] = [
+  { id: 'mock-launch-room', kind: 'group', title: '发布作战室', subtitle: 'Nova、Iris、Echo', topic: '秋季版本上市协调', members: [ME_ID, 'mock-nova', 'mock-iris', 'mock-echo'], leaderId: 'mock-nova', pinned: true, unread: 3, lastAt: timeMinutesAgo(42), lastAtIso: isoMinutesAgo(42), preview: 'Nova：发布日期和资料依据已经对齐。', tag: 'team' },
+  { id: 'mock-launch-dm', kind: 'direct', title: 'Echo', subtitle: '内容编辑', members: [ME_ID, 'mock-echo'], leaderId: 'mock-echo', unread: 0, lastAt: '昨天', lastAtIso: isoMinutesAgo(1_560), preview: '发布文案已按客户反馈更新。', tag: 'human' },
+]
+
+const generalConversations: Conversation[] = [
+  { id: 'mock-general-lobby', kind: 'group', title: '空白头脑风暴', subtitle: 'Nova', topic: '不带资料的空群', members: [ME_ID, 'mock-nova'], leaderId: 'mock-nova', pinned: false, unread: 1, lastAt: '周一', lastAtIso: isoMinutesAgo(4_320), preview: 'Nova：可以直接对话，也可以随时添加资料。' },
+]
+
+const workspaceMessages: Record<string, Record<string, Message[]>> = {
+  'mock-research': messagesByConversation,
+  'mock-launch': {
+    'mock-launch-room': [
+      message({ id: 'mock-launch-m1', conversationId: 'mock-launch-room', authorId: ME_ID, kind: 'text', body: '根据资料，秋季版本的公开测试目标和核心指标是什么？', at: timeMinutesAgo(51), sequence: 1 }),
+      message({ id: 'mock-launch-m2', conversationId: 'mock-launch-room', authorId: 'mock-nova', kind: 'text', body: '公开测试目标日期为 10 月 15 日 [S1]。首批重点观察周活跃知识工作区、引用点击率、首次有效回答耗时和通用知识回退率 [S2]。', citations: [
+        { sourceId: 'mock-launch-brief', sourceTitle: '秋季发布简报.pdf', chunkId: 'mock-launch-chunk-4', excerpt: '秋季版本聚焦知识工作区、可追溯回答和多人 Agent 协作。公开测试目标日期为 10 月 15 日。', position: 4, marker: 'S1' },
+        { sourceId: 'mock-launch-metrics', sourceTitle: '北极星指标.csv', chunkId: 'mock-launch-metrics-1', excerpt: '周活跃知识工作区、引用点击率、首次资料到首次有效回答耗时、通用知识回退率。', position: 1, marker: 'S2' },
+      ], at: timeMinutesAgo(42), sequence: 2 }),
+    ],
+    'mock-launch-dm': [message({ id: 'mock-launch-dm1', conversationId: 'mock-launch-dm', authorId: 'mock-echo', kind: 'text', body: '发布文案已经按“快速找到依据”和“保留现有聊天习惯”两条客户反馈更新。[S1]', citations: [{ sourceId: 'mock-launch-voice', sourceTitle: '客户之声摘录', chunkId: 'mock-launch-voice-2', excerpt: '客户最看重快速找到依据、在原始资料中定位，以及不需要重新学习一套聊天工具。', position: 2, marker: 'S1' }], at: '昨天 15:20', sequence: 1 })],
+  },
+  'mock-general': {
+    'mock-general-lobby': [
+      message({ id: 'mock-general-m1', conversationId: 'mock-general-lobby', authorId: 'mock-nova', kind: 'text', body: '这条入站信息无法判断具体项目，已保留在通用工作区。', at: '周一 09:30', sequence: 1 }),
+      message({ id: 'mock-general-m2', conversationId: 'mock-general-lobby', authorId: ME_ID, kind: 'text', body: '先解释一下什么是 grounding。', at: '周一 09:32', sequence: 2 }),
+      message({ id: 'mock-general-m3', conversationId: 'mock-general-lobby', authorId: 'mock-nova', kind: 'text', body: 'Grounding 是让回答建立在指定证据之上 [S1]。', citations: [{ sourceId: 'mock-general-links', sourceTitle: '常用链接与术语', chunkId: 'mock-general-links-1', excerpt: 'Grounding：让回答建立在指定证据之上。', position: 1, marker: 'S1' }], at: '周一 09:33', sequence: 3 }),
+    ],
+  },
+  'mock-empty': {},
 }
 
 const canvasUpdatedAt = isoMinutesAgo(1)
@@ -292,6 +331,24 @@ const mockCanvasSummary: CanvasWorkspaceSummary = {
   createdAt: mockCanvas.createdAt,
 }
 
+const mockCanvasCatalog: Record<string, CanvasSnapshot> = { [MOCK_CANVAS_ID]: mockCanvas }
+
+function canvasSummary(snapshot: CanvasSnapshot): CanvasWorkspaceSummary {
+  return {
+    id: snapshot.id,
+    title: snapshot.title,
+    goal: snapshot.goal,
+    conversationId: snapshot.conversationId,
+    initiatorAgentId: snapshot.initiatorAgentId,
+    status: snapshot.status,
+    origin: snapshot.origin,
+    frameCount: snapshot.frames.length,
+    assignmentCount: snapshot.assignments.length,
+    updatedAt: snapshot.updatedAt,
+    createdAt: snapshot.createdAt,
+  }
+}
+
 function seedMockCanvas(): void {
   useCanvas.setState({
     snapshot: mockCanvas,
@@ -308,14 +365,56 @@ function seedMockCanvas(): void {
         assignments: mockCanvas.assignments,
       },
     },
-    load: async () => {
-      useCanvas.setState((state) => ({ snapshot: state.snapshot ?? mockCanvas, previews: { ...state.previews, [MOCK_CANVAS_ID]: state.snapshot ?? mockCanvas }, activeCanvasId: MOCK_CANVAS_ID, loading: false, error: null }))
+    load: async (canvasId) => {
+      const id = canvasId ?? useCanvas.getState().activeCanvasId ?? MOCK_CANVAS_ID
+      const target = mockCanvasCatalog[id] ?? mockCanvas
+      useCanvas.setState((state) => ({ snapshot: target, previews: { ...state.previews, [target.id]: target }, activeCanvasId: target.id, loading: false, error: null }))
     },
-    loadPreview: async () => {
-      useCanvas.setState((state) => ({ previews: { ...state.previews, [MOCK_CANVAS_ID]: state.snapshot ?? mockCanvas } }))
+    loadPreview: async (canvasId) => {
+      const target = mockCanvasCatalog[canvasId]
+      if (target) useCanvas.setState((state) => ({ previews: { ...state.previews, [canvasId]: target } }))
     },
-    loadWorkspaces: async () => {
-      useCanvas.setState({ workspaces: [mockCanvasSummary], error: null })
+    loadWorkspaces: async (conversationId) => {
+      const summaries = Object.values(mockCanvasCatalog)
+        .filter((item) => !conversationId || item.conversationId === conversationId)
+        .map(canvasSummary)
+      useCanvas.setState({ workspaces: summaries, error: null })
+    },
+    createForConversation: async (conversationId) => {
+      const existing = Object.values(mockCanvasCatalog).find((item) => item.conversationId === conversationId)
+      if (existing) return existing
+      const createdAt = new Date().toISOString()
+      const id = `mock-canvas-${conversationId}`
+      const created: CanvasSnapshot = {
+        id,
+        title: '群聊 Canvas',
+        companyId: 'mock-workspace',
+        conversationId,
+        triggerClientMsgNo: null,
+        goal: '记录这个群聊里的想法、任务与 Agent 协作进度。',
+        initiatorAgentId: null,
+        status: 'active',
+        origin: 'conversation',
+        summary: 'Canvas 已创建，等待第一张卡片。',
+        createdBy: ME_ID,
+        createdAt,
+        updatedAt: createdAt,
+        frames: [],
+        assignments: [],
+        presence: [],
+        comments: [],
+        activity: [],
+      }
+      mockCanvasCatalog[id] = created
+      const summary = canvasSummary(created)
+      useCanvas.setState((state) => ({
+        snapshot: created,
+        previews: { ...state.previews, [id]: created },
+        workspaces: [summary],
+        activeCanvasId: id,
+        error: null,
+      }))
+      return created
     },
     createFrame: async (type, at = { x: 120, y: 120 }) => {
       const createdAt = new Date().toISOString()
@@ -443,6 +542,28 @@ function seedMockCanvas(): void {
   })
 }
 
+/** Swap all conversation/message/canvas fixtures as one atomic mock workspace
+ * transition. This keeps the empty workspace genuinely empty and prevents
+ * data from one demo workspace leaking into another. */
+export function activateMockWorkspace(_projectId?: string): void {
+  const nextConversations = [...conversations, ...launchConversations, ...generalConversations]
+  const nextMessages = Object.assign({}, ...Object.values(workspaceMessages))
+  useConversations.setState({ list: nextConversations, loaded: true })
+  useMessages.setState({
+    byConvo: nextMessages,
+    streaming: {},
+    typing: {},
+    loaded: new Set(nextConversations.map((conversation) => conversation.id)),
+    loading: new Set(),
+    hasMoreOlder: Object.fromEntries(nextConversations.map((conversation) => [conversation.id, false])),
+    loadingOlder: new Set(),
+    firstItemIndex: Object.fromEntries(nextConversations.map((conversation) => [conversation.id, VIRTUOSO_FIRST_INDEX_BASE])),
+    errors: {},
+  })
+  seedMockCanvas()
+  useApp.getState().selectConversation(null)
+}
+
 export function seedMockIm(): void {
   if (useAuth.getState().user?.id === ME_ID && useConversations.getState().loaded) return
 
@@ -458,19 +579,5 @@ export function seedMockIm(): void {
     byId: Object.fromEntries(participants.map((participant) => [participant.id, participant])),
     loaded: true,
   })
-  useConversations.setState({ list: conversations, loaded: true })
-  useMessages.setState({
-    byConvo: messagesByConversation,
-    streaming: {},
-    typing: {},
-    loaded: new Set(conversations.map((conversation) => conversation.id)),
-    loading: new Set(),
-    hasMoreOlder: Object.fromEntries(conversations.map((conversation) => [conversation.id, false])),
-    loadingOlder: new Set(),
-    firstItemIndex: Object.fromEntries(conversations.map((conversation) => [conversation.id, VIRTUOSO_FIRST_INDEX_BASE])),
-    errors: {},
-  })
-  seedMockCanvas()
-  const app = useApp.getState()
-  if (!app.selectedConversationId) app.selectConversation(DEFAULT_CONVERSATION_ID)
+  activateMockWorkspace()
 }

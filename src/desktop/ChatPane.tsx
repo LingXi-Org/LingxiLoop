@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, type ApiCoworkerActivity, api, ws } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
-import { IAt, IClip, ISearch, ISend, ISmile } from '@/components/icons'
+import { IAt, ICanvas, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { MessageRow } from '@/components/Message'
 import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
@@ -20,8 +20,10 @@ import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
+import { applyFindHighlights, clearFindHighlights } from '@/lib/findHighlights'
 import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
+import { projectFindMatches, projectTranscriptAdjacency } from '@/lib/transcriptExperience'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
@@ -210,17 +212,6 @@ function _ChatHeader({
               title={canRename ? '点击重命名群聊' : c.title}
               onClick={canRename ? startEditTitle : undefined}
             >{c.title}</span>
-          )}
-          {c.projectName && (
-            <span
-              className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded shrink-0"
-              style={{
-                background: c.projectColor ?? 'var(--cloud)',
-                color: c.projectColor ? 'white' : 'var(--ink-700)',
-                border: c.projectColor ? 'none' : '1px solid var(--ink-100)',
-              }}
-              title={`所属项目：${c.projectName}`}
-            >{c.projectName}</span>
           )}
         </h2>
         <div className="flex min-w-0 items-center gap-1.5 text-[12px] text-ink-secondary">
@@ -520,6 +511,14 @@ export function Composer({
   const [uploadErrorsByScope, setUploadErrorsByScope] = useState<Record<string, string>>({})
   const editorRef = useRef<RichInputHandle>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const focusComposer = () => {
+      const thread = useApp.getState().openThread
+      if ((isThread && thread?.rootId === threadRootId) || (!isThread && !thread)) editorRef.current?.focus()
+    }
+    window.addEventListener('lingxiloop:focus-composer', focusComposer)
+    return () => window.removeEventListener('lingxiloop:focus-composer', focusComposer)
+  }, [isThread, threadRootId])
   // Per-scope "have we hydrated the editor DOM yet?" map. Switching scope
   // pulls the saved draft text out of `draftsByScope` and pushes it into the
   // contenteditable; without this guard the editor would re-sync on every
@@ -1696,7 +1695,7 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
   )
 }
 
-export function ChatPane() {
+export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => void } = {}) {
   const convoId = useApp((s) => s.selectedConversationId)
   // Atomic selectors — primitive / stable refs
   const byConvo = useMessages((s) => (convoId ? s.byConvo[convoId] : undefined))
@@ -1764,6 +1763,7 @@ export function ChatPane() {
     () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId ? { [convoId]: typingIds } : {} } as MessagesState, convoId),
     [byConvo, streaming, typingIds, convoId],
   )
+  const adjacency = useMemo(() => projectTranscriptAdjacency(list), [list])
   const conversations = useConversations((s) => s.list)
   const c = useMemo(() => conversations.find((x) => x.id === convoId), [conversations, convoId])
   const byId = useParticipants((s) => s.byId)
@@ -1797,31 +1797,49 @@ export function ChatPane() {
   // jump between them with the up/down arrows or Enter / Shift+Enter.
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const deferredSearchQuery = useDeferredValue(searchQuery)
   const [matchIdx, setMatchIdx] = useState(0)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
-  const matchedIds = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return [] as string[]
-    return list
-      .filter((m) => typeof m.body === 'string' && m.body.toLowerCase().includes(q))
-      .map((m) => m.id)
-  }, [list, searchQuery])
+  const findMatches = useMemo(() => projectFindMatches(list, deferredSearchQuery), [list, deferredSearchQuery])
+  const currentMatch = findMatches[matchIdx] ?? null
+  const matchedIds = useMemo(() => new Set(findMatches.map((match) => match.messageId)), [findMatches])
   // Reset the search when the user navigates to a different conversation.
   useEffect(() => {
     setSearchOpen(false); setSearchQuery(''); setMatchIdx(0)
   }, [convoId])
   // Reset to the first hit whenever the result set changes.
-  useEffect(() => { setMatchIdx(0) }, [matchedIds.length])
+  useEffect(() => { setMatchIdx(0) }, [deferredSearchQuery, findMatches.length])
   // Scroll the current hit into view. We virtualize the message list so a
   // matched row may not even be mounted yet — virtuoso's scrollToIndex
   // mounts and centers it in one go.
   useEffect(() => {
-    const id = matchedIds[matchIdx]
+    const id = currentMatch?.messageId
     if (!id) return
     const index = list.findIndex((m) => m.id === id)
     if (index < 0) return
     virtuosoRef.current?.scrollToIndex({ index, align: 'center', behavior: 'smooth' })
-  }, [matchedIds, matchIdx, list])
+  }, [currentMatch?.messageId, currentMatch?.occurrence, list])
+
+  useEffect(() => {
+    if (!searchOpen) { clearFindHighlights(); return }
+    const frame = window.requestAnimationFrame(() => {
+      applyFindHighlights(streamRef.current, deferredSearchQuery, currentMatch)
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [searchOpen, deferredSearchQuery, currentMatch, list])
+
+  const refreshFindHighlights = useCallback(() => {
+    if (!searchOpen) return
+    window.requestAnimationFrame(() => applyFindHighlights(streamRef.current, deferredSearchQuery, currentMatch))
+  }, [searchOpen, deferredSearchQuery, currentMatch])
+
+  useEffect(() => () => clearFindHighlights(), [])
+
+  useEffect(() => {
+    const openFind = () => setSearchOpen(true)
+    window.addEventListener('lingxiloop:find-chat', openFind)
+    return () => window.removeEventListener('lingxiloop:find-chat', openFind)
+  }, [])
 
   // Centralized "jump to message" — quote clicks and `#N` chips both set
   // useApp.pendingJumpMessageId and we resolve it here. virtuoso.scrollToIndex
@@ -1926,15 +1944,26 @@ export function ChatPane() {
           if (participantId) useApp.getState().openAgentInfo(participantId)
         }}
         actions={(
-          <button
-            type="button"
-            onClick={() => setSearchOpen((value) => !value)}
-            title="搜索当前会话"
-            aria-label="搜索当前会话"
-            className={cn('grid size-9 place-items-center rounded-full transition', searchOpen ? 'bg-raised text-accent' : 'text-ink-secondary hover:bg-raised hover:text-ink')}
-          >
-            <ISearch className="size-[18px]" />
-          </button>
+          <>
+            {c.kind === 'group' && onOpenGroupContext && <button
+              type="button"
+              onClick={onOpenGroupContext}
+              title="打开知识库和 Canvas"
+              aria-label="打开群聊上下文"
+              className="grid size-9 place-items-center rounded-full text-ink-secondary transition hover:bg-raised hover:text-ink"
+            >
+              <ICanvas className="size-[18px]" />
+            </button>}
+            <button
+              type="button"
+              onClick={() => setSearchOpen((value) => !value)}
+              title="搜索当前会话"
+              aria-label="搜索当前会话"
+              className={cn('grid size-9 place-items-center rounded-full transition', searchOpen ? 'bg-raised text-accent' : 'text-ink-secondary hover:bg-raised hover:text-ink')}
+            >
+              <ISearch className="size-[18px]" />
+            </button>
+          </>
         )}
       />
       {/* Keep optional chrome in one stable grid cell. ConversationActivity
@@ -1953,7 +1982,7 @@ export function ChatPane() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); return }
-                const n = matchedIds.length
+                const n = findMatches.length
                 if (n === 0) return
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); setMatchIdx((i) => (i + 1) % n); return }
                 if ((e.key === 'Enter' && e.shiftKey) || e.key === 'ArrowUp') { e.preventDefault(); setMatchIdx((i) => (i - 1 + n) % n); return }
@@ -1963,15 +1992,15 @@ export function ChatPane() {
               className="flex-1 min-w-0 bg-transparent outline-none text-ink-900 placeholder:text-ink-300"
             />
             <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-300">
-              {matchedIds.length === 0
+              {findMatches.length === 0
                 ? (searchQuery.trim() ? '无匹配' : '')
-                : `${matchIdx + 1} / ${matchedIds.length}`}
+                : `${matchIdx + 1} / ${findMatches.length}`}
             </span>
           </div>
           <button
             type="button"
-            onClick={() => setMatchIdx((i) => (i - 1 + matchedIds.length) % Math.max(1, matchedIds.length))}
-            disabled={matchedIds.length === 0}
+            onClick={() => setMatchIdx((i) => (i - 1 + findMatches.length) % Math.max(1, findMatches.length))}
+            disabled={findMatches.length === 0}
             title="上一个匹配项（Shift+Enter / ↑）"
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:bg-sky2-50 hover:text-skype-deep transition disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-500"
           >
@@ -1981,8 +2010,8 @@ export function ChatPane() {
           </button>
           <button
             type="button"
-            onClick={() => setMatchIdx((i) => (i + 1) % Math.max(1, matchedIds.length))}
-            disabled={matchedIds.length === 0}
+            onClick={() => setMatchIdx((i) => (i + 1) % Math.max(1, findMatches.length))}
+            disabled={findMatches.length === 0}
             title="下一个匹配项（Enter / ↓）"
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:bg-sky2-50 hover:text-skype-deep transition disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-500"
           >
@@ -2026,6 +2055,7 @@ export function ChatPane() {
             firstItemIndex={firstItemIndex}
             startReached={onStartReached}
             atBottomStateChange={setAtBottom}
+            rangeChanged={refreshFindHighlights}
             // Initial-height hint so Virtuoso's first-pass sizing is
             // close to the real per-message height (avatar + 1-2 lines
             // of text). Without it the list starts assuming a tiny
@@ -2053,6 +2083,7 @@ export function ChatPane() {
               Footer: () => <div className="h-3" />,
             }}
             itemContent={(i, m) => {
+              const rowIndex = i >= firstItemIndex ? i - firstItemIndex : i
               const author = byId[m.authorId]
               // System / whisper rows render without a resolved author (e.g. the
               // calendar-fired notice has a synthetic system author id). Only
@@ -2064,18 +2095,22 @@ export function ChatPane() {
               // Virtuoso remount (scroll / quote-jump) doesn't replay the fade.
               const firstAnimation = !animatedIdsRef.current.has(m.id)
               if (firstAnimation) animatedIdsRef.current.add(m.id)
-              const isMatch = searchOpen && matchedIds.includes(m.id)
-              const isCurrent = isMatch && matchedIds[matchIdx] === m.id
+              const rowAdjacency = adjacency[rowIndex]
+              const isMatch = searchOpen && matchedIds.has(m.id)
+              const isCurrent = isMatch && currentMatch?.messageId === m.id
               return (
                 <div
                   data-msg-id={m.id}
+                  data-find-message-id={m.id}
                   className={cn(
-                    'mx-auto w-full max-w-[900px] rounded-[10px] px-5 py-[9px] transition-shadow',
-                    isMatch && 'ring-1 ring-gold/40',
-                    isCurrent && 'ring-2 ring-gold shadow-[0_0_24px_-4px_rgba(244,183,64,0.55)]',
+                    'mx-auto w-full max-w-[900px] rounded-[10px] px-5 transition-shadow',
+                    rowAdjacency?.isContinuedFromPrevious ? 'pt-[2px]' : 'pt-[9px]',
+                    rowAdjacency?.isContinuedToNext ? 'pb-[2px]' : 'pb-[9px]',
+                    isMatch && 'find-row-fallback',
+                    isCurrent && 'find-row-current-fallback',
                   )}
                 >
-                  <MessageRow msg={m} author={author} delay={delay} animate={firstAnimation} openMaus />
+                  <MessageRow msg={m} author={author} adjacency={rowAdjacency} delay={delay} animate={firstAnimation} openMaus />
                 </div>
               )
             }}

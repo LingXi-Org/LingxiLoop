@@ -6,7 +6,14 @@ import type { ModelItem } from './types.js'
 export type ModelTurnResult = {
   output: ModelItem[]
   text: string
-  usage: { inputTokens: number; outputTokens: number }
+  usage: { inputTokens: number; outputTokens: number; available?: boolean }
+}
+
+export class ModelCompatibilityError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ModelCompatibilityError'
+  }
 }
 
 export interface AgentModelDriver {
@@ -49,7 +56,7 @@ export class DeepSeekChatDriver implements AgentModelDriver {
   }
 
   async run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult> {
-    const stream = await this.client.chat.completions.create({
+    const request = {
       model: this.model,
       messages: [
         { role: 'system', content: args.instructions },
@@ -58,6 +65,9 @@ export class DeepSeekChatDriver implements AgentModelDriver {
       tools: CHAT_TOOLS,
       tool_choice: 'auto',
       max_tokens: 4_000,
+    } satisfies Parameters<typeof this.client.chat.completions.create>[0]
+    const stream = await this.client.chat.completions.create({
+      ...request,
       stream: true,
       stream_options: { include_usage: true },
     }, { signal: args.signal })
@@ -66,12 +76,18 @@ export class DeepSeekChatDriver implements AgentModelDriver {
     let text = ''
     let inputTokens = 0
     let outputTokens = 0
+    let usageAvailable = false
+    let finishReason: string | null = null
+    let chunkCount = 0
     const calls = new Map<number, { id: string; name: string; arguments: string }>()
     for await (const chunk of stream) {
+      chunkCount += 1
       if (chunk.usage) {
+        usageAvailable = true
         inputTokens = chunk.usage.prompt_tokens ?? 0
         outputTokens = chunk.usage.completion_tokens ?? 0
       }
+      finishReason = chunk.choices[0]?.finish_reason ?? finishReason
       const delta = chunk.choices[0]?.delta
       if (!delta) continue
       if (delta.content) {
@@ -92,10 +108,38 @@ export class DeepSeekChatDriver implements AgentModelDriver {
         output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.arguments })
       }
     }
+    if (output.length === 0) {
+      // Some compatible gateways emit SSE accepted by the SDK but without
+      // materialized deltas. Retry once using the more portable JSON envelope.
+      const fallback = await this.client.chat.completions.create({ ...request, stream: false }, { signal: args.signal })
+      const message = fallback.choices[0]?.message
+      const fallbackText = typeof message?.content === 'string' ? message.content : ''
+      if (fallbackText) {
+        text = fallbackText
+        output.push({ role: 'assistant', content: fallbackText })
+        await args.onTextDelta?.(fallbackText)
+      }
+      for (const call of message?.tool_calls ?? []) {
+        if (call.type === 'function' && call.id && call.function.name === 'ipython') {
+          output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.function.arguments })
+        }
+      }
+      if (fallback.usage) {
+        usageAvailable = true
+        inputTokens = fallback.usage.prompt_tokens
+        outputTokens = fallback.usage.completion_tokens
+      }
+      if (output.length === 0) {
+        const fallbackReason = fallback.choices[0]?.finish_reason ?? 'unavailable'
+        throw new ModelCompatibilityError(
+          `model returned no assistant content or tool calls (stream chunks=${chunkCount}, stream finish_reason=${finishReason ?? 'unavailable'}, fallback finish_reason=${fallbackReason})`,
+        )
+      }
+    }
     return {
       output,
       text,
-      usage: { inputTokens, outputTokens },
+      usage: { inputTokens, outputTokens, available: usageAvailable },
     }
   }
 

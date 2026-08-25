@@ -20,6 +20,8 @@ import {
   createCanvasFrame,
   deleteCanvasFrame,
   getCanvasSnapshot,
+  getConversationCanvas,
+  ensureConversationCanvas,
   listCanvasWorkspaces,
   setCanvasStatus,
   steerCanvasAssignment,
@@ -50,6 +52,17 @@ import { CH_CALENDAR_EVENTS, CH_CONVO_UPDATED, CH_DOCS, CH_MESSAGE_NEW, CH_REACT
 import { BUSY_STATUS_LEASE_MS } from '../status.js'
 import { freshenAttachmentUrl, normalizeStorageKey, storage, storageKeyFromPublicUrl, UPLOAD_DIR } from '../storage.js'
 import { getUserQuota, sub2apiConfigured } from '../sub2api.js'
+import {
+  deleteKnowledgeSource,
+  enqueueKnowledgeSource,
+  ensureProjectNotebook,
+  getKnowledgeSourceText,
+  MAX_SOURCE_BYTES,
+  openNotebookEnabled,
+  retryKnowledgeSource,
+  syncProjectNotebookMetadata,
+} from '../knowledge/service.js'
+import { openNotebookClient } from '../knowledge/open-notebook-client.js'
 import { adminRouter } from './admin-router.js'
 
 /** Re-export so older imports (server/index.ts, agents/cli.ts) keep working
@@ -263,6 +276,37 @@ async function requireCompany(req: Request & AuthedRequest): Promise<{ userId: s
   return { userId, companyId: rows[0].company_id }
 }
 
+/** Internal compatibility key for legacy NOT NULL artifact columns. It is
+ * never accepted from clients and is not used as an authorization boundary. */
+async function companyArtifactBucket(companyId: string): Promise<string> {
+  const { rows } = await pool.query<{ id: string }>(`SELECT id FROM projects WHERE company_id=$1 AND is_general=TRUE LIMIT 1`, [companyId])
+  if (!rows[0]) throw new HttpError(500, 'company artifact storage is unavailable')
+  return rows[0].id
+}
+
+async function requireCompanyArtifactContext(req: Request & AuthedRequest) {
+  const company = await requireCompany(req)
+  return { ...company, projectId: await companyArtifactBucket(company.companyId) }
+}
+
+async function requireWorkspace(
+  req: Request & AuthedRequest,
+  explicitProjectId?: string,
+): Promise<{ userId: string; companyId: string; projectId: string; role: string; projectCreatedBy: string; isGeneral: boolean }> {
+  const { userId, companyId } = await requireCompany(req)
+  const header = typeof req.headers['x-project-id'] === 'string' ? req.headers['x-project-id'].trim() : ''
+  const projectId = explicitProjectId?.trim() || header
+  if (!projectId) throw new HttpError(400, 'x-project-id is required inside a knowledge workspace')
+  if (explicitProjectId && header && header !== explicitProjectId) throw new HttpError(409, 'workspace header does not match route')
+  const { rows } = await pool.query<{ created_by: string; is_general: boolean; role: string }>(
+    `SELECT p.created_by, p.is_general, cm.role
+       FROM projects p JOIN company_members cm ON cm.company_id = p.company_id AND cm.user_id = $2
+      WHERE p.id = $1 AND p.company_id = $3 LIMIT 1`, [projectId, userId, companyId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'workspace not found')
+  return { userId, companyId, projectId, role: rows[0].role, projectCreatedBy: rows[0].created_by, isGeneral: rows[0].is_general }
+}
+
 const DEVTOOLS_HEADER = 'x-lingxiloop-dev-mode'
 const DEVTOOLS_ROLES = new Set(['owner', 'admin'])
 /** Privileged role set used for owner/admin gates on agent + project mutations
@@ -323,10 +367,10 @@ async function requireCompanyRole(
 async function requireConversationMember(
   req: Request & AuthedRequest,
   conversationId: string,
-): Promise<{ userId: string; companyId: string; members: string[]; kind: string }> {
+): Promise<{ userId: string; companyId: string; projectId: string | null; members: string[]; kind: string }> {
   const { userId, companyId } = await requireCompany(req)
-  const { rows } = await pool.query<{ members: string[]; kind: string }>(
-    `SELECT members, kind FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
+  const { rows } = await pool.query<{ project_id: string | null; members: string[]; kind: string }>(
+    `SELECT project_id, members, kind FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
     [conversationId, companyId],
   )
   if (!rows[0]) throw new HttpError(404, 'not found')
@@ -335,7 +379,36 @@ async function requireConversationMember(
     // so a probing client can't tell "doesn't exist" from "I'm not in it".
     throw new HttpError(404, 'not found')
   }
-  return { userId, companyId, members: rows[0].members, kind: rows[0].kind }
+  return { userId, companyId, projectId: rows[0].project_id, members: rows[0].members, kind: rows[0].kind }
+}
+
+async function requireGroupConversation(req: Request & AuthedRequest, conversationId: string) {
+  const membership = await requireConversationMember(req, conversationId)
+  if (membership.kind !== 'group') throw new HttpError(404, 'not found')
+  const { rows } = await pool.query<{ role: string }>(`SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2 LIMIT 1`, [membership.companyId, membership.userId])
+  return { ...membership, role: rows[0]?.role ?? 'member' }
+}
+
+async function requireCanvasWorkspace(req: Request & AuthedRequest, canvasId: string) {
+  const { userId, companyId } = await requireCompany(req)
+  const { rows } = await pool.query<{ conversation_id: string }>(
+    `SELECT cv.conversation_id FROM canvases cv JOIN conversations c ON c.id=cv.conversation_id
+      WHERE cv.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text]) LIMIT 1`,
+    [canvasId, companyId, userId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'canvas not found')
+  return { userId, companyId, projectId: null, conversationId: rows[0].conversation_id }
+}
+
+async function requireCanvasFrameWorkspace(req: Request & AuthedRequest, frameId: string) {
+  const { userId, companyId } = await requireCompany(req)
+  const { rows } = await pool.query(
+    `SELECT 1 FROM canvas_frames f JOIN canvases cv ON cv.id=f.canvas_id JOIN conversations c ON c.id=cv.conversation_id
+      WHERE f.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text]) LIMIT 1`,
+    [frameId, companyId, userId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'canvas frame not found')
+  return { userId, companyId, projectId: null }
 }
 
 async function getDevtoolsState(req: Request & AuthedRequest): Promise<{
@@ -408,11 +481,11 @@ function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFun
 
 /** Build a stable storage key from policy + a random UUID. Files land
  *  under `attachments/` so they don't collide with avatar keys. */
-function attachmentKey(mime: string): { key: string; ext: string } | null {
+function attachmentKey(mime: string, companyId: string): { key: string; ext: string } | null {
   const policy = MIME_POLICY[mime]
   if (!policy) return null
   const id = randomUUID().replace(/-/g, '')
-  return { key: `attachments/${id}.${policy.ext}`, ext: policy.ext }
+  return { key: `attachments/${companyId}/${id}.${policy.ext}`, ext: policy.ext }
 }
 
 /**
@@ -445,7 +518,7 @@ api.post('/uploads/presign', async (req, res) => {
   // signed R2 PUT URLs and burn through our storage quota / host arbitrary
   // content under our domain. Membership-only is enough — we don't restrict
   // uploads by role since attachments are a basic chat affordance.
-  await requireCompany(req)
+  const { companyId } = await requireCompany(req)
   if (storage.mode !== 'r2') {
     res.status(501).json({ error: 'presign not available in local mode — POST /uploads instead' })
     return
@@ -459,7 +532,7 @@ api.post('/uploads/presign', async (req, res) => {
     return
   }
   const policy = MIME_POLICY[mime]
-  const k = attachmentKey(mime)
+  const k = attachmentKey(mime, companyId)
   if (!policy || !k) { res.status(415).json({ error: `mime not allowed: ${mime}` }); return }
   const signed = await storage.presignPut(k.key, mime)
   res.json({
@@ -484,7 +557,7 @@ api.post('/uploads', async (req, res) => {
   // Auth + tenant gate. Without this, anyone on the open internet could push
   // 25MB blobs into our storage — a DoS + cost vector. Membership-only is
   // sufficient since attachments are a baseline chat feature.
-  await requireCompany(req)
+  const { companyId } = await requireCompany(req)
   const name = String(req.body?.name ?? '').trim().slice(0, 200)
   const mime = String(req.body?.mime ?? '').trim().toLowerCase()
   const dataBase64 = String(req.body?.dataBase64 ?? '')
@@ -508,7 +581,7 @@ api.post('/uploads', async (req, res) => {
     res.status(413).json({ error: `size out of range (got ${buf.length}, max ${MAX_UPLOAD_BYTES})` })
     return
   }
-  const k = attachmentKey(mime)
+  const k = attachmentKey(mime, companyId)
   if (!k) { res.status(415).json({ error: `mime not allowed: ${mime}` }); return }
   const url = await storage.put(k.key, buf, mime)
   res.json({
@@ -567,8 +640,8 @@ api.get('/health', async (_req, res) => {
 // exercises the real database connection, Redis command path, and the
 // configured Agent OS worker without exposing credentials or internals.
 api.get('/health/dependencies', async (_req, res) => {
-  const checks = { database: false, redis: false, agentOs: false }
-  await Promise.allSettled([
+  const checks = { database: false, redis: false, agentOs: false, openNotebook: !openNotebookEnabled() }
+  const dependencies: Array<Promise<unknown>> = [
     Promise.race([
       pool.query('SELECT 1').then(() => { checks.database = true }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('database timeout')), 2_000)),
@@ -583,7 +656,12 @@ api.get('/health/dependencies', async (_req, res) => {
       checks.agentOs = response.ok
       if (!response.ok) throw new Error(`Agent OS health returned ${response.status}`)
     }),
-  ])
+  ]
+  if (openNotebookEnabled()) dependencies.push(openNotebookClient.health().then((healthy) => {
+    checks.openNotebook = healthy
+    if (!healthy) throw new Error('Open Notebook health check failed')
+  }))
+  await Promise.allSettled(dependencies)
   const ok = Object.values(checks).every(Boolean)
   res.status(ok ? 200 : 503).json({ ok, dependencies: checks, ts: Date.now() })
 })
@@ -995,6 +1073,12 @@ api.post('/companies', async (req, res) => {
         `INSERT INTO company_members (company_id, user_id, role) VALUES ($1, $2, 'owner')`,
         [id, me],
       )
+      await pool.query(
+        `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
+         VALUES ($1, $2, '通用工作区', '默认工作区与未归类内容', '#64748b', $3, TRUE)
+         ON CONFLICT (id) DO NOTHING`,
+        [`general-${createHash('md5').update(id).digest('hex').slice(0, 16)}`, id, me],
+      )
       // Mirror the human-as-participant + starter-agents from signup, so a
       // brand-new workspace has the same teammates regardless of how it was
       // created. The participant insert is idempotent on (id) collision —
@@ -1033,23 +1117,39 @@ api.post('/companies', async (req, res) => {
 
 /* ============== Shared Canvas (shared state, isolated execution) ======= */
 
+api.get('/conversations/:id/canvas', safe(async (req, res) => {
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  res.json(await getConversationCanvas(membership.companyId, String(req.params.id), membership.userId))
+}))
+
+api.post('/conversations/:id/canvas', safe(async (req, res) => {
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  res.status(201).json(await ensureConversationCanvas(membership.companyId, String(req.params.id), membership.userId))
+}))
+
 api.get('/canvas', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  res.json(await getCanvasSnapshot(companyId, userId))
+  const conversationId = typeof req.query.conversationId === 'string' ? req.query.conversationId : ''
+  if (!conversationId) throw new HttpError(400, 'conversationId is required')
+  const membership = await requireGroupConversation(req, conversationId)
+  const canvas = await getConversationCanvas(membership.companyId, conversationId, membership.userId)
+  if (!canvas) throw new HttpError(404, 'canvas not found')
+  res.json(canvas)
 }))
 
 api.get('/canvases', safe(async (req, res) => {
-  const { companyId } = await requireCompany(req)
-  res.json(await listCanvasWorkspaces(companyId, typeof req.query.conversationId === 'string' ? req.query.conversationId : undefined))
+  const conversationId = typeof req.query.conversationId === 'string' ? req.query.conversationId : ''
+  if (!conversationId) throw new HttpError(400, 'conversationId is required')
+  const membership = await requireGroupConversation(req, conversationId)
+  res.json(await listCanvasWorkspaces(membership.companyId, conversationId))
 }))
 
 api.get('/canvases/:id', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const { userId, companyId } = await requireCanvasWorkspace(req, String(req.params.id))
   res.json(await getCanvasSnapshot(companyId, userId, String(req.params.id)))
 }))
 
 api.post('/canvases/:id/assignments', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const { userId, companyId } = await requireCanvasWorkspace(req, String(req.params.id))
   res.status(201).json(await assignCanvasWorkspaceWork({
     companyId,
     canvasId: String(req.params.id),
@@ -1060,32 +1160,34 @@ api.post('/canvases/:id/assignments', safe(async (req, res) => {
 }))
 
 api.post('/canvases/:id/assignments/:agentId/steer', safe(async (req, res) => {
-  const { companyId } = await requireCompany(req)
+  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id))
   await steerCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId), text: String(req.body?.text ?? '') })
   res.json({ ok: true })
 }))
 
 api.post('/canvases/:id/assignments/:agentId/stop', safe(async (req, res) => {
-  const { companyId } = await requireCompany(req)
+  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id))
   await stopCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId) })
   res.json({ ok: true })
 }))
 
 api.post('/canvases/:id/stop', safe(async (req, res) => {
-  const { companyId } = await requireCompany(req)
+  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id))
   await stopCanvasWorkspace({ companyId, canvasId: String(req.params.id) })
   res.json({ ok: true })
 }))
 
 api.post('/canvas/frames', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
+  if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId)
   res.status(201).json(await createCanvasFrame({
-    companyId, actorId: userId, actorKind: 'user', canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined, frame: req.body ?? {},
+    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId, frame: req.body ?? {},
   }))
 }))
 
 api.patch('/canvas/frames/:id', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id))
   try {
     res.json(await updateCanvasFrame({
       companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id), patch: req.body ?? {},
@@ -1098,7 +1200,7 @@ api.patch('/canvas/frames/:id', safe(async (req, res) => {
 }))
 
 api.post('/canvas/frames/:id/append', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id))
   res.json(await appendCanvasFrameContent({
     companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id),
     content: String(req.body?.content ?? ''),
@@ -1106,17 +1208,18 @@ api.post('/canvas/frames/:id/append', safe(async (req, res) => {
 }))
 
 api.delete('/canvas/frames/:id', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id))
   res.json(await deleteCanvasFrame({
     companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id),
   }))
 }))
 
 api.post('/canvas/status', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
+  if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId)
   res.json(await setCanvasStatus({
-    companyId, actorId: userId, actorKind: 'user',
-    canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined,
+    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId,
     status: String(req.body?.status ?? ''),
     frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
     cursorX: typeof req.body?.cursorX === 'number' ? req.body.cursorX : null,
@@ -1125,10 +1228,11 @@ api.post('/canvas/status', safe(async (req, res) => {
 }))
 
 api.post('/canvas/comments', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
+  if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId)
   res.status(201).json(await addCanvasComment({
-    companyId, actorId: userId, actorKind: 'user',
-    canvasId: typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined,
+    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId,
     frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
     body: String(req.body?.body ?? ''),
   }))
@@ -1659,13 +1763,22 @@ api.post('/invitations/:token/accept', safe(async (req, res) => {
 api.get('/projects', async (req, res) => {
   const { companyId: tenant } = await requireCompany(req)
   const { rows } = await pool.query(
-    `SELECT id, name, description, color, status,
-            created_at AS "createdAt", archived_at AS "archivedAt",
-            (SELECT COUNT(*)::int FROM conversations WHERE project_id = projects.id) AS "conversationCount"
-       FROM projects
-      WHERE company_id = $1
-      ORDER BY status ASC, created_at DESC`,
-    [tenant],
+    `SELECT p.id, p.name, p.description, p.color, p.status, p.created_by AS "createdBy",
+            p.is_general AS "isGeneral", p.created_at AS "createdAt", p.updated_at AS "updatedAt",
+            p.archived_at AS "archivedAt", pv.visited_at AS "lastVisitedAt",
+            (SELECT COUNT(*)::int FROM conversations c WHERE c.project_id = p.id) AS "conversationCount",
+            (SELECT COUNT(*)::int FROM knowledge_sources s WHERE s.project_id = p.id AND s.deleted_at IS NULL) AS "sourceCount",
+            (SELECT COUNT(*)::int FROM documents d WHERE d.project_id = p.id) AS "documentCount",
+            (SELECT COUNT(*)::int FROM boards b WHERE b.project_id = p.id) AS "boardCount",
+            (SELECT COUNT(*)::int FROM calendar_events e WHERE e.project_id = p.id) AS "calendarEventCount",
+            (SELECT COUNT(*)::int FROM canvases cv WHERE cv.project_id = p.id) AS "canvasCount",
+            (cm.role IN ('owner','admin') OR p.created_by = $2) AS "canManage"
+       FROM projects p
+       JOIN company_members cm ON cm.company_id = p.company_id AND cm.user_id = $2
+       LEFT JOIN project_visits pv ON pv.project_id = p.id AND pv.user_id = $2
+      WHERE p.company_id = $1
+      ORDER BY p.status ASC, pv.visited_at DESC NULLS LAST, p.updated_at DESC`,
+    [tenant, userId(req)],
   )
   res.json(rows)
 })
@@ -1678,18 +1791,25 @@ api.post('/projects', async (req, res) => {
   if (!name) { res.status(400).json({ error: 'name required' }); return }
   const id = `p-${randomUUID().slice(0, 10)}`
   await pool.query(
-    `INSERT INTO projects (id, company_id, name, description, color)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [id, tenant, name, description, color],
+    `INSERT INTO projects (id, company_id, name, description, color, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, tenant, name, description, color, userId(req)],
   )
-  res.status(201).json({ id, name, description, color, status: 'active' })
+  let knowledgeState: 'disabled' | 'ready' | 'failed' = openNotebookEnabled() ? 'ready' : 'disabled'
+  if (openNotebookEnabled()) {
+    try { await ensureProjectNotebook(id, tenant) }
+    catch (error) { knowledgeState = 'failed'; console.warn('[knowledge] project notebook provisioning failed', error) }
+  }
+  res.status(201).json({ id, name, description, color, status: 'active', knowledgeState })
 })
 
 api.put('/projects/:id', async (req, res) => {
   // Renaming or recoloring a shared project ripples through every member's
   // sidebar — gate to owner/admin so a single member can't unilaterally
   // re-brand the team's work.
-  const { companyId: tenant } = await requireCompanyRole(req)
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.projectCreatedBy !== workspace.userId) throw new HttpError(403, 'only the workspace creator or a company admin can edit it')
+  const tenant = workspace.companyId
   const { id } = req.params
   const { rows: gate } = await pool.query(
     `SELECT 1 FROM projects WHERE id = $1 AND company_id = $2 LIMIT 1`,
@@ -1705,16 +1825,20 @@ api.put('/projects/:id', async (req, res) => {
   if (sets.length === 0) { res.status(400).json({ error: 'nothing to update' }); return }
   params.push(id, tenant)
   await pool.query(
-    `UPDATE projects SET ${sets.join(', ')} WHERE id = $${params.length - 1} AND company_id = $${params.length}`,
+    `UPDATE projects SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${params.length - 1} AND company_id = $${params.length}`,
     params,
   )
+  await syncProjectNotebookMetadata(String(id)).catch((error) => console.warn('[knowledge] notebook metadata sync failed', error))
   res.json({ ok: true })
 })
 
 api.post('/projects/:id/archive', async (req, res) => {
   // Archive/unarchive is destructive (hides every linked conversation from
   // the active list); owner/admin only.
-  const { companyId: tenant } = await requireCompanyRole(req)
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  if (workspace.isGeneral) throw new HttpError(400, 'the General workspace cannot be archived')
+  if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.projectCreatedBy !== workspace.userId) throw new HttpError(403, 'only the workspace creator or a company admin can archive it')
+  const tenant = workspace.companyId
   const { id } = req.params
   const archive = req.body?.archive !== false
   await pool.query(
@@ -1723,16 +1847,352 @@ api.post('/projects/:id/archive', async (req, res) => {
       : `UPDATE projects SET status = 'active', archived_at = NULL WHERE id = $1 AND company_id = $2`,
     [id, tenant],
   )
+  await syncProjectNotebookMetadata(String(id)).catch((error) => console.warn('[knowledge] notebook archive sync failed', error))
   res.json({ ok: true, status: archive ? 'archived' : 'active' })
 })
+
+api.post('/projects/:id/open', safe(async (req, res) => {
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  await pool.query(
+    `INSERT INTO project_visits (project_id, user_id, visited_at) VALUES ($1, $2, NOW())
+     ON CONFLICT (project_id, user_id) DO UPDATE SET visited_at = NOW()`,
+    [workspace.projectId, workspace.userId],
+  )
+  res.json({ ok: true })
+}))
+
+const SOURCE_MIMES = new Set([
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain', 'text/markdown', 'text/csv', 'application/json',
+])
+
+function sourceView(row: Record<string, unknown>) {
+  return row
+}
+
+function requireOpenNotebook(): void {
+  if (!openNotebookEnabled()) throw new HttpError(503, 'Open Notebook knowledge engine is disabled')
+}
+
+api.get('/projects/:id/sources', safe(async (req, res) => {
+  requireOpenNotebook()
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  const { rows } = await pool.query(
+    `SELECT s.id, s.kind, s.title, s.mime_type AS "mimeType", s.size_bytes AS "sizeBytes",
+            s.original_url AS "originalUrl", s.status, s.stage, s.error,
+            s.is_truncated AS "isTruncated", s.created_by AS "createdBy",
+            s.created_at AS "createdAt", s.updated_at AS "updatedAt",
+            s.origin_client_msg_no AS "originClientMsgNo", s.external_chunk_count AS "chunkCount"
+       FROM knowledge_sources s
+      WHERE s.project_id = $1 AND s.company_id = $2 AND s.deleted_at IS NULL
+      ORDER BY s.created_at DESC`, [workspace.projectId, workspace.companyId],
+  )
+  res.json(rows.map(sourceView))
+}))
+
+api.get('/projects/:id/sources/:sourceId', safe(async (req, res) => {
+  requireOpenNotebook()
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  const { rows } = await pool.query(
+    `SELECT id, kind, title, mime_type AS "mimeType", size_bytes AS "sizeBytes", original_url AS "originalUrl",
+            storage_key AS "storageKey",
+            status, stage, error, is_truncated AS "isTruncated",
+            created_by AS "createdBy", created_at AS "createdAt", updated_at AS "updatedAt"
+       FROM knowledge_sources WHERE id = $1 AND project_id = $2 AND company_id = $3 AND deleted_at IS NULL`,
+    [req.params.sourceId, workspace.projectId, workspace.companyId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'source not found')
+  const row = rows[0] as Record<string, unknown>
+  const storageKey = typeof row.storageKey === 'string' ? row.storageKey : null
+  delete row.storageKey
+  const extractedText = row.status === 'ready'
+    ? await getKnowledgeSourceText(String(req.params.sourceId), workspace.companyId, workspace.projectId).catch(() => null)
+    : null
+  res.json({ ...row, extractedText, originalFileUrl: row.kind === 'file' && storageKey ? await storage.publicUrl(storageKey) : null })
+}))
+
+api.post('/projects/:id/sources', safe(async (req, res) => {
+  requireOpenNotebook()
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  const kind = String(req.body?.kind ?? '').trim()
+  if (kind !== 'text' && kind !== 'url') throw new HttpError(400, 'kind must be text or url')
+  const rawText = kind === 'text' ? String(req.body?.text ?? '').trim() : null
+  const rawUrl = kind === 'url' ? String(req.body?.url ?? '').trim() : null
+  if (kind === 'text' && !rawText) throw new HttpError(400, 'text is required')
+  if (kind === 'url' && !rawUrl) throw new HttpError(400, 'url is required')
+  if (rawText && Buffer.byteLength(rawText, 'utf8') > MAX_SOURCE_BYTES) throw new HttpError(413, 'source exceeds 25 MB')
+  const id = `ks-${randomUUID().slice(0, 16)}`
+  const title = String(req.body?.title ?? (kind === 'url' ? rawUrl : '粘贴文本')).trim().slice(0, 200)
+  const storageKey = rawText ? `knowledge-sources/${workspace.companyId}/${workspace.projectId}/${id}.txt` : null
+  if (rawText && storageKey) await storage.put(storageKey, Buffer.from(rawText, 'utf8'), 'text/plain')
+  await pool.query(
+    `INSERT INTO knowledge_sources (id, company_id, project_id, kind, title, mime_type, size_bytes, storage_key, original_url, status, stage, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'queued','queued',$10)`,
+    [id, workspace.companyId, workspace.projectId, kind, title || '未命名来源', kind === 'url' ? null : 'text/plain', rawText ? Buffer.byteLength(rawText, 'utf8') : 0, storageKey, rawUrl, workspace.userId],
+  )
+  await enqueueKnowledgeSource(id)
+  res.status(201).json({ id, kind, title, status: 'queued', stage: 'queued' })
+}))
+
+api.post('/projects/:id/sources/upload', safe(async (req, res) => {
+  requireOpenNotebook()
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  const name = String(req.body?.name ?? '').trim().slice(0, 200)
+  const mime = String(req.body?.mime ?? '').trim().toLowerCase()
+  const size = Number(req.body?.size ?? 0)
+  const dataBase64 = typeof req.body?.dataBase64 === 'string' ? req.body.dataBase64 : ''
+  if (!name || !SOURCE_MIMES.has(mime)) throw new HttpError(415, 'unsupported source file type')
+  if (!Number.isFinite(size) || size <= 0 || size > MAX_SOURCE_BYTES) throw new HttpError(413, 'file size is outside the 25 MB limit')
+  const buffer = dataBase64 ? Buffer.from(dataBase64, 'base64') : null
+  if (!buffer || buffer.length === 0 || buffer.length > MAX_SOURCE_BYTES) throw new HttpError(400, 'dataBase64 is required and must match the file size limit')
+  if (buffer.length !== size) throw new HttpError(400, 'declared file size does not match uploaded content')
+  const extension = ({ 'application/pdf': 'pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx', 'text/plain': 'txt', 'text/markdown': 'md', 'text/csv': 'csv', 'application/json': 'json' } as Record<string, string>)[mime]
+  const id = `ks-${randomUUID().slice(0, 16)}`
+  const key = `knowledge-sources/${workspace.companyId}/${workspace.projectId}/${id}.${extension}`
+  await storage.put(key, buffer, mime)
+  await pool.query(
+    `INSERT INTO knowledge_sources (id, company_id, project_id, kind, title, mime_type, size_bytes, storage_key, status, stage, created_by)
+     VALUES ($1,$2,$3,'file',$4,$5,$6,$7,'queued','queued',$8)`,
+    [id, workspace.companyId, workspace.projectId, name, mime, buffer.length, key, workspace.userId],
+  )
+  await enqueueKnowledgeSource(id)
+  res.status(201).json({ id, kind: 'file', title: name, mimeType: mime, sizeBytes: buffer.length, status: 'queued', stage: 'queued' })
+}))
+
+api.post('/projects/:id/sources/upload/presign', safe(async (req, res) => {
+  requireOpenNotebook()
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  if (storage.mode !== 'r2') throw new HttpError(501, 'presigned source upload is not available in local storage mode')
+  const name = String(req.body?.name ?? '').trim().slice(0, 200)
+  const mime = String(req.body?.mime ?? '').trim().toLowerCase()
+  const size = Number(req.body?.size ?? 0)
+  if (!name || !SOURCE_MIMES.has(mime)) throw new HttpError(415, 'unsupported source file type')
+  if (!Number.isFinite(size) || size <= 0 || size > MAX_SOURCE_BYTES) throw new HttpError(413, 'file size is outside the 25 MB limit')
+  const extension = ({ 'application/pdf': 'pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx', 'text/plain': 'txt', 'text/markdown': 'md', 'text/csv': 'csv', 'application/json': 'json' } as Record<string, string>)[mime]
+  const id = `ks-${randomUUID().slice(0, 16)}`
+  const key = `knowledge-sources/${workspace.companyId}/${workspace.projectId}/${id}.${extension}`
+  const signed = await storage.presignPut(key, mime)
+  await pool.query(
+    `INSERT INTO knowledge_sources (id, company_id, project_id, kind, title, mime_type, size_bytes, storage_key, status, stage, created_by)
+     VALUES ($1,$2,$3,'file',$4,$5,$6,$7,'upload_pending','upload_pending',$8)`,
+    [id, workspace.companyId, workspace.projectId, name, mime, size, key, workspace.userId],
+  )
+  res.status(201).json({ id, uploadUrl: signed.uploadUrl, mime, size })
+}))
+
+api.post('/projects/:id/sources/:sourceId/complete-upload', safe(async (req, res) => {
+  requireOpenNotebook()
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  const { rows } = await pool.query<{ storage_key: string; size_bytes: number; created_by: string }>(
+    `SELECT storage_key, size_bytes, created_by FROM knowledge_sources
+      WHERE id=$1 AND company_id=$2 AND project_id=$3 AND status='upload_pending' AND deleted_at IS NULL`,
+    [req.params.sourceId, workspace.companyId, workspace.projectId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'pending source upload not found')
+  if (rows[0].created_by !== workspace.userId) throw new HttpError(403, 'only the uploader can complete this upload')
+  const body = await storage.readObject(rows[0].storage_key)
+  if (body.length !== rows[0].size_bytes || body.length > MAX_SOURCE_BYTES) throw new HttpError(400, 'uploaded object size does not match the declaration')
+  await enqueueKnowledgeSource(String(req.params.sourceId))
+  res.json({ ok: true, id: req.params.sourceId, status: 'queued' })
+}))
+
+api.post('/projects/:id/sources/:sourceId/retry', safe(async (req, res) => {
+  requireOpenNotebook()
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  const { rows } = await pool.query<{ created_by: string }>(
+    `SELECT created_by FROM knowledge_sources WHERE id = $1 AND project_id = $2 AND deleted_at IS NULL`,
+    [req.params.sourceId, workspace.projectId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'source not found')
+  if (rows[0].created_by !== workspace.userId && workspace.projectCreatedBy !== workspace.userId && !PRIVILEGED_ROLES.has(workspace.role)) throw new HttpError(403, 'not allowed to retry this source')
+  await retryKnowledgeSource(String(req.params.sourceId), workspace.companyId, workspace.projectId)
+  res.json({ ok: true })
+}))
+
+api.delete('/projects/:id/sources/:sourceId', safe(async (req, res) => {
+  requireOpenNotebook()
+  const workspace = await requireWorkspace(req, String(req.params.id))
+  const { rows } = await pool.query<{ created_by: string; storage_key: string | null }>(
+    `SELECT created_by, storage_key FROM knowledge_sources
+      WHERE id = $1 AND project_id = $2 AND company_id = $3 AND deleted_at IS NULL`,
+    [req.params.sourceId, workspace.projectId, workspace.companyId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'source not found')
+  if (rows[0].created_by !== workspace.userId && workspace.projectCreatedBy !== workspace.userId && !PRIVILEGED_ROLES.has(workspace.role)) {
+    throw new HttpError(403, 'not allowed to delete this source')
+  }
+  await deleteKnowledgeSource(String(req.params.sourceId), workspace.companyId, workspace.projectId)
+  res.json({ ok: true })
+}))
+
+api.get('/conversations/:id/sources', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  const { rows } = await pool.query(
+    `SELECT s.id, s.kind, s.title, s.mime_type AS "mimeType", s.size_bytes AS "sizeBytes",
+            s.original_url AS "originalUrl", s.status, s.stage, s.error,
+            s.is_truncated AS "isTruncated", s.created_by AS "createdBy",
+            s.created_at AS "createdAt", s.updated_at AS "updatedAt",
+            s.origin_client_msg_no AS "originClientMsgNo",
+            (e.source_id IS NULL) AS enabled, s.external_chunk_count AS "chunkCount"
+       FROM knowledge_sources s LEFT JOIN conversation_source_exclusions e
+         ON e.source_id = s.id AND e.conversation_id = $1
+      WHERE s.project_id = $3 AND s.company_id = $2 AND s.deleted_at IS NULL
+      ORDER BY s.created_at DESC`,
+    [req.params.id, membership.companyId, membership.projectId],
+  )
+  res.json(rows)
+}))
+
+api.get('/conversations/:id/sources/:sourceId', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  const { rows } = await pool.query(
+    `SELECT id, kind, title, mime_type AS "mimeType", size_bytes AS "sizeBytes", original_url AS "originalUrl",
+            storage_key AS "storageKey", status, stage, error,
+            is_truncated AS "isTruncated", created_by AS "createdBy", created_at AS "createdAt", updated_at AS "updatedAt"
+       FROM knowledge_sources WHERE id=$1 AND project_id=$2 AND company_id=$3 AND deleted_at IS NULL`,
+    [req.params.sourceId, membership.projectId, membership.companyId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'source not found')
+  const row = rows[0] as Record<string, unknown>
+  const storageKey = typeof row.storageKey === 'string' ? row.storageKey : null
+  delete row.storageKey
+  const extractedText = row.status === 'ready'
+    ? await getKnowledgeSourceText(String(req.params.sourceId), membership.companyId, membership.projectId).catch(() => null)
+    : null
+  res.json({ ...row, extractedText, originalFileUrl: row.kind === 'file' && storageKey ? await storage.publicUrl(storageKey) : null })
+}))
+
+api.post('/conversations/:id/sources', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  const kind = String(req.body?.kind ?? '').trim()
+  if (kind !== 'text' && kind !== 'url') throw new HttpError(400, 'kind must be text or url')
+  const rawText = kind === 'text' ? String(req.body?.text ?? '').trim() : null
+  const rawUrl = kind === 'url' ? String(req.body?.url ?? '').trim() : null
+  if (kind === 'text' && !rawText) throw new HttpError(400, 'text is required')
+  if (kind === 'url' && !rawUrl) throw new HttpError(400, 'url is required')
+  if (rawText && Buffer.byteLength(rawText, 'utf8') > MAX_SOURCE_BYTES) throw new HttpError(413, 'source exceeds 25 MB')
+  const id = `ks-${randomUUID().slice(0, 16)}`
+  const title = String(req.body?.title ?? (kind === 'url' ? rawUrl : '粘贴文本')).trim().slice(0, 200) || '未命名来源'
+  const storageKey = rawText ? `knowledge-sources/${membership.companyId}/${membership.projectId}/${id}.txt` : null
+  if (rawText && storageKey) await storage.put(storageKey, Buffer.from(rawText, 'utf8'), 'text/plain')
+  await pool.query(
+    `INSERT INTO knowledge_sources (id, company_id, project_id, conversation_id, kind, title, mime_type, size_bytes, storage_key, original_url, status, stage, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'queued','queued',$11)`,
+    [id, membership.companyId, membership.projectId, req.params.id, kind, title, kind === 'url' ? null : 'text/plain', rawText ? Buffer.byteLength(rawText, 'utf8') : 0, storageKey, rawUrl, membership.userId],
+  )
+  await enqueueKnowledgeSource(id)
+  res.status(201).json({ id, kind, title, status: 'queued', stage: 'queued' })
+}))
+
+api.post('/conversations/:id/sources/upload', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  const name = String(req.body?.name ?? '').trim().slice(0, 200)
+  const mime = String(req.body?.mime ?? '').trim().toLowerCase()
+  const size = Number(req.body?.size ?? 0)
+  const dataBase64 = typeof req.body?.dataBase64 === 'string' ? req.body.dataBase64 : ''
+  if (!name || !SOURCE_MIMES.has(mime)) throw new HttpError(415, 'unsupported source file type')
+  if (!Number.isFinite(size) || size <= 0 || size > MAX_SOURCE_BYTES) throw new HttpError(413, 'file size is outside the 25 MB limit')
+  const buffer = dataBase64 ? Buffer.from(dataBase64, 'base64') : null
+  if (!buffer || buffer.length !== size || buffer.length > MAX_SOURCE_BYTES) throw new HttpError(400, 'uploaded content does not match declared size')
+  const extension = ({ 'application/pdf': 'pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx', 'text/plain': 'txt', 'text/markdown': 'md', 'text/csv': 'csv', 'application/json': 'json' } as Record<string, string>)[mime]
+  const id = `ks-${randomUUID().slice(0, 16)}`
+  const key = `knowledge-sources/${membership.companyId}/${membership.projectId}/${id}.${extension}`
+  await storage.put(key, buffer, mime)
+  await pool.query(
+    `INSERT INTO knowledge_sources (id, company_id, project_id, conversation_id, kind, title, mime_type, size_bytes, storage_key, status, stage, created_by)
+     VALUES ($1,$2,$3,$4,'file',$5,$6,$7,$8,'queued','queued',$9)`,
+    [id, membership.companyId, membership.projectId, req.params.id, name, mime, buffer.length, key, membership.userId],
+  )
+  await enqueueKnowledgeSource(id)
+  res.status(201).json({ id, kind: 'file', title: name, mimeType: mime, sizeBytes: buffer.length, status: 'queued', stage: 'queued' })
+}))
+
+api.post('/conversations/:id/sources/upload/presign', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  if (storage.mode !== 'r2') throw new HttpError(501, 'presigned source upload is not available in local storage mode')
+  const name = String(req.body?.name ?? '').trim().slice(0, 200)
+  const mime = String(req.body?.mime ?? '').trim().toLowerCase()
+  const size = Number(req.body?.size ?? 0)
+  if (!name || !SOURCE_MIMES.has(mime)) throw new HttpError(415, 'unsupported source file type')
+  if (!Number.isFinite(size) || size <= 0 || size > MAX_SOURCE_BYTES) throw new HttpError(413, 'file size is outside the 25 MB limit')
+  const extension = ({ 'application/pdf': 'pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx', 'text/plain': 'txt', 'text/markdown': 'md', 'text/csv': 'csv', 'application/json': 'json' } as Record<string, string>)[mime]
+  const id = `ks-${randomUUID().slice(0, 16)}`
+  const key = `knowledge-sources/${membership.companyId}/${membership.projectId}/${id}.${extension}`
+  const signed = await storage.presignPut(key, mime)
+  await pool.query(`INSERT INTO knowledge_sources (id, company_id, project_id, conversation_id, kind, title, mime_type, size_bytes, storage_key, status, stage, created_by) VALUES ($1,$2,$3,$4,'file',$5,$6,$7,$8,'upload_pending','upload_pending',$9)`, [id, membership.companyId, membership.projectId, req.params.id, name, mime, size, key, membership.userId])
+  res.status(201).json({ id, uploadUrl: signed.uploadUrl, mime, size })
+}))
+
+api.post('/conversations/:id/sources/:sourceId/complete-upload', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  const { rows } = await pool.query<{ storage_key: string; size_bytes: number; created_by: string }>(`SELECT storage_key, size_bytes, created_by FROM knowledge_sources WHERE id=$1 AND project_id=$2 AND company_id=$3 AND status='upload_pending' AND deleted_at IS NULL`, [req.params.sourceId, membership.projectId, membership.companyId])
+  if (!rows[0]) throw new HttpError(404, 'pending source upload not found')
+  if (rows[0].created_by !== membership.userId) throw new HttpError(403, 'only the uploader can complete this upload')
+  const body = await storage.readObject(rows[0].storage_key)
+  if (body.length !== rows[0].size_bytes || body.length > MAX_SOURCE_BYTES) throw new HttpError(400, 'uploaded object size does not match the declaration')
+  await enqueueKnowledgeSource(String(req.params.sourceId)); res.json({ ok: true, id: req.params.sourceId, status: 'queued' })
+}))
+
+api.post('/conversations/:id/sources/:sourceId/retry', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  const { rows } = await pool.query<{ created_by: string }>(`SELECT created_by FROM knowledge_sources WHERE id=$1 AND project_id=$2 AND company_id=$3 AND deleted_at IS NULL`, [req.params.sourceId, membership.projectId, membership.companyId])
+  if (!rows[0]) throw new HttpError(404, 'source not found')
+  if (rows[0].created_by !== membership.userId && !PRIVILEGED_ROLES.has(membership.role)) throw new HttpError(403, 'not allowed to retry this source')
+  await retryKnowledgeSource(String(req.params.sourceId), membership.companyId, membership.projectId); res.json({ ok: true })
+}))
+
+api.delete('/conversations/:id/sources/:sourceId', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  const { rows } = await pool.query<{ created_by: string; storage_key: string | null }>(`SELECT created_by, storage_key FROM knowledge_sources WHERE id=$1 AND project_id=$2 AND company_id=$3 AND deleted_at IS NULL`, [req.params.sourceId, membership.projectId, membership.companyId])
+  if (!rows[0]) throw new HttpError(404, 'source not found')
+  if (rows[0].created_by !== membership.userId && !PRIVILEGED_ROLES.has(membership.role)) throw new HttpError(403, 'not allowed to delete this source')
+  await deleteKnowledgeSource(String(req.params.sourceId), membership.companyId, membership.projectId)
+  res.json({ ok: true })
+}))
+
+api.put('/conversations/:id/sources', safe(async (req, res) => {
+  requireOpenNotebook()
+  const membership = await requireGroupConversation(req, String(req.params.id))
+  if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
+  const excluded = Array.isArray(req.body?.excludedSourceIds) ? [...new Set(req.body.excludedSourceIds.map(String))].slice(0, 500) : []
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query(`DELETE FROM conversation_source_exclusions WHERE conversation_id = $1`, [req.params.id])
+    if (excluded.length) await client.query(
+      `INSERT INTO conversation_source_exclusions (conversation_id, source_id, created_by)
+       SELECT $1, s.id, $3 FROM knowledge_sources s
+        WHERE s.project_id = $5 AND s.company_id = $2 AND s.id = ANY($4::text[])`,
+      [req.params.id, membership.companyId, membership.userId, excluded, membership.projectId],
+    )
+    await client.query('COMMIT')
+  } catch (error) { await client.query('ROLLBACK').catch(() => undefined); throw error } finally { client.release() }
+  res.json({ ok: true, excludedSourceIds: excluded })
+}))
 
 /** Attach (or detach when projectId=null) a conversation to a project. */
 api.post('/conversations/:id/project', async (req, res) => {
   const { userId: me, companyId: tenant } = await requireCompany(req)
   const { id } = req.params
-  const projectId = req.body?.projectId === null ? null
-                  : (typeof req.body?.projectId === 'string' ? req.body.projectId.trim() : undefined)
-  if (projectId === undefined) { res.status(400).json({ error: 'projectId required (string or null to detach)' }); return }
+  const projectId = typeof req.body?.projectId === 'string' ? req.body.projectId.trim() : ''
+  if (!projectId) { res.status(400).json({ error: 'projectId is required; conversations cannot be detached from a workspace' }); return }
   const { rows } = await pool.query<{ members: string[] }>(
     `SELECT members FROM conversations WHERE id = $1 AND company_id = $2`,
     [id, tenant],
@@ -1741,13 +2201,11 @@ api.post('/conversations/:id/project', async (req, res) => {
   if (!rows[0].members.includes(me)) {
     res.status(403).json({ error: 'only members can change the project' }); return
   }
-  if (projectId !== null) {
-    const { rows: pj } = await pool.query(
-      `SELECT 1 FROM projects WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [projectId, tenant],
-    )
-    if (!pj[0]) { res.status(400).json({ error: 'unknown project' }); return }
-  }
+  const { rows: pj } = await pool.query(
+    `SELECT 1 FROM projects WHERE id = $1 AND company_id = $2 AND archived_at IS NULL LIMIT 1`,
+    [projectId, tenant],
+  )
+  if (!pj[0]) { res.status(400).json({ error: 'unknown project' }); return }
   await pool.query(
     `UPDATE conversations SET project_id = $2, updated_at = NOW() WHERE id = $1 AND company_id = $3`,
     [id, projectId, tenant],
@@ -2226,7 +2684,7 @@ interface AgentBody {
   initial?: unknown; avatarBg?: unknown; avatarUrl?: unknown
   tools?: unknown; capabilities?: unknown
 }
-const AGENT_CAPABILITIES = new Set(['canvas', 'web', 'files', 'email', 'documents', 'calendar'])
+const AGENT_CAPABILITIES = new Set(['canvas', 'web', 'files', 'email', 'documents', 'calendar', 'knowledge'])
 const DEFAULT_AGENT_CAPABILITIES = ['canvas', 'web', 'files', 'email', 'documents']
 function readAgentBody(b: AgentBody): {
   id?: string; name?: string; role?: string
@@ -2672,7 +3130,6 @@ api.get('/conversations', async (req, res) => {
           ELSE c.title
         END AS title,
         c.subtitle, c.topic, c.members, c.leader_id AS "leaderId", c.pinned, c.tag, c.pulled_by AS "pulledBy",
-        c.project_id AS "projectId", p.name AS "projectName", p.color AS "projectColor",
         c.created_at AS "createdAt", c.updated_at AS "updatedAt",
         -- Per-user mute. Expired mutes naturally evaluate to false so an
         -- "until tomorrow" silence wears off without needing a sweeper job.
@@ -2717,7 +3174,6 @@ api.get('/conversations', async (req, res) => {
              )
         ), 0) AS "unreadCount"
       FROM conversations c
-      LEFT JOIN projects p ON p.id = c.project_id
       LEFT JOIN conversation_mutes mu ON mu.conversation_id = c.id AND mu.user_id = $1
       LEFT JOIN LATERAL (
         SELECT p_other.name
@@ -2750,7 +3206,6 @@ api.post('/conversations', async (req, res) => {
   const { userId: me, companyId: tenant } = await requireCompany(req)
   const title = String(req.body?.title ?? '').trim().slice(0, 80)
   const topic = req.body?.topic ? String(req.body.topic).trim().slice(0, 200) || null : null
-  const projectId = req.body?.projectId ? String(req.body.projectId).trim() : null
   const leaderId = typeof req.body?.leaderId === 'string' ? req.body.leaderId.trim() : ''
   const rawMembers = Array.isArray(req.body?.members) ? req.body.members : []
   const memberSet = new Set<string>()
@@ -2776,23 +3231,14 @@ api.post('/conversations', async (req, res) => {
     res.status(400).json({ error: 'leaderId must be an active agent member' }); return
   }
 
-  // If a project was specified, validate it exists in this tenant.
-  if (projectId) {
-    const { rows: pj } = await pool.query(
-      `SELECT 1 FROM projects WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [projectId, tenant],
-    )
-    if (!pj[0]) { res.status(400).json({ error: 'unknown project' }); return }
-  }
-
   const id = `g-${randomUUID().slice(0, 8)}`
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, topic, members, leader_id, pinned, tag, pulled_by, company_id, project_id)
-     VALUES ($1, 'group', $2, $3, $4::jsonb, $5, FALSE, NULL, NULL, $6, $7)`,
-    [id, title, topic, JSON.stringify(members), leaderId, tenant, projectId],
+    `INSERT INTO conversations (id, kind, title, topic, members, leader_id, pinned, tag, pulled_by, company_id)
+     VALUES ($1, 'group', $2, $3, $4::jsonb, $5, FALSE, NULL, NULL, $6)`,
+    [id, title, topic, JSON.stringify(members), leaderId, tenant],
   )
   await pool.query(`INSERT INTO conversation_counters (conversation_id, next_sequence) VALUES ($1, 1)`, [id])
-  res.status(201).json({ id, members, leaderId, projectId })
+  res.status(201).json({ id, members, leaderId })
 })
 
 /** Change a group's leader. Any human member may choose an active agent member. */
@@ -3310,8 +3756,8 @@ api.get('/conversations/:id/messages', async (req, res) => {
 })
 
 api.post('/conversations/:id/messages', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
   const { id } = req.params
+  const { userId: me, companyId: tenant, projectId } = await requireConversationMember(req, String(id))
   const body = String(req.body?.body ?? '').trim()
   const rawAttachment = req.body?.attachment
   let attachment: AttachmentPayload | null = null
@@ -3466,6 +3912,7 @@ api.post('/conversations/:id/messages', async (req, res) => {
     type: 'message.new',
     conversationId: id,
     companyId: tenant,
+    workspaceId: projectId ?? undefined,
     message: {
       id: messageId, conversationId: id, authorId: me,
       kind: 'text', body, sequence, at: new Date().toISOString(),
@@ -4876,14 +5323,14 @@ async function parseMentions(companyId: string, text: string): Promise<string[]>
  *  company. Throws 404 if the board doesn't exist OR lives in another
  *  tenant — kept opaque so a probing client can't enumerate cross-tenant
  *  board ids. */
-async function requireBoardAccess(req: Request & AuthedRequest, boardId: string): Promise<{ userId: string; companyId: string }> {
-  const { userId, companyId } = await requireCompany(req)
+async function requireBoardAccess(req: Request & AuthedRequest, boardId: string): Promise<{ userId: string; companyId: string; projectId: string }> {
+  const { userId, companyId, projectId } = await requireCompanyArtifactContext(req)
   const { rows } = await pool.query<{ company_id: string }>(
-    `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`,
-    [boardId],
+    `SELECT company_id FROM boards WHERE id = $1 AND company_id = $2 LIMIT 1`,
+    [boardId, companyId],
   )
   if (!rows[0] || rows[0].company_id !== companyId) throw new HttpError(404, 'not found')
-  return { userId, companyId }
+  return { userId, companyId, projectId }
 }
 
 async function publishBoardEvent(args: {
@@ -4895,11 +5342,17 @@ async function publishBoardEvent(args: {
   commentId?: string
   mentions?: string[]
   actorId?: string
+  workspaceId?: string
 }): Promise<void> {
+  const workspaceId = args.workspaceId ?? (await pool.query<{ project_id: string }>(
+    `SELECT project_id FROM boards WHERE id=$1 AND company_id=$2 LIMIT 1`,
+    [args.boardId, args.companyId],
+  )).rows[0]?.project_id
   const { CH_BOARDS, publish } = await import('../redis.js')
   await publish(CH_BOARDS, {
     type: 'board.changed',
     companyId: args.companyId,
+    workspaceId,
     kind: args.kind,
     boardId: args.boardId,
     cardId: args.cardId,
@@ -5041,7 +5494,7 @@ api.get('/cards/:id', async (req, res) => {
 /** POST /boards — create a board. Auto-seeds the conventional "Todo /
  *  Doing / Done" columns so the new board is immediately usable. */
 api.post('/boards', async (req, res) => {
-  const { userId: me, companyId } = await requireCompany(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
   const title = String(req.body?.title ?? '').trim().slice(0, 200)
   const description = String(req.body?.description ?? '').trim().slice(0, 4000) || null
   if (!title) throw new HttpError(400, 'title required')
@@ -5050,8 +5503,8 @@ api.post('/boards', async (req, res) => {
   try {
     await client.query('BEGIN')
     await client.query(
-      `INSERT INTO boards (id, company_id, title, description, created_by) VALUES ($1, $2, $3, $4, $5)`,
-      [id, companyId, title, description, me],
+      `INSERT INTO boards (id, company_id, project_id, title, description, created_by) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [id, companyId, projectId, title, description, me],
     )
     const seeds = ['Todo', 'Doing', 'Done']
     for (let i = 0; i < seeds.length; i++) {
@@ -5141,7 +5594,7 @@ api.get('/boards/:id', async (req, res) => {
 /** PATCH /boards/:id — rename / re-describe. */
 api.patch('/boards/:id', async (req, res) => {
   const boardId = req.params.id
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId, projectId } = await requireBoardAccess(req, boardId)
   const patch: Record<string, unknown> = {}
   if (typeof req.body?.title === 'string') patch.title = req.body.title.trim().slice(0, 200)
   if (typeof req.body?.description === 'string') patch.description = req.body.description.trim().slice(0, 4000) || null
@@ -5163,9 +5616,9 @@ api.patch('/boards/:id', async (req, res) => {
 /** DELETE /boards/:id — full drop, columns + cards + comments cascade. */
 api.delete('/boards/:id', async (req, res) => {
   const boardId = req.params.id
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId, projectId } = await requireBoardAccess(req, boardId)
   await pool.query(`DELETE FROM boards WHERE id = $1`, [boardId])
-  await publishBoardEvent({ companyId, kind: 'board.deleted', boardId, actorId: me })
+  await publishBoardEvent({ companyId, workspaceId: projectId, kind: 'board.deleted', boardId, actorId: me })
   res.json({ ok: true })
 })
 
@@ -5609,12 +6062,14 @@ function publishCalendarChange(args: {
   eventId: string
   companyId: string
   actorId: string | null
+  workspaceId: string
 }): void {
   void publish(CH_CALENDAR_EVENTS, {
     type: 'calendar.changed',
     kind: args.kind,
     eventId: args.eventId,
     companyId: args.companyId,
+    workspaceId: args.workspaceId,
     actorId: args.actorId,
   }).catch((e) => {
     console.warn('[calendar] publish failed', e instanceof Error ? e.message : e)
@@ -5622,7 +6077,7 @@ function publishCalendarChange(args: {
 }
 
 api.get('/calendar/events', async (req, res) => {
-  const { userId: me, companyId } = await requireCompany(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
   // Optional range window — keeps the list bounded for the agenda / month
   // view. Without a window we return everything in the company, capped at
   // 1000 rows. The list page will paginate when that becomes a real cap.
@@ -5631,9 +6086,9 @@ api.get('/calendar/events', async (req, res) => {
   // Privacy filter: `is_private` rows are only visible to their creator
   // or assignee. The clause uses $2 for the caller id; range filters
   // bind after.
-  const params: unknown[] = [companyId, me]
+  const params: unknown[] = [companyId, me, projectId]
   let sql = `SELECT ${CALENDAR_SELECT} FROM calendar_events
-             WHERE company_id = $1 AND ${calendarVisibilityClause(2, 1)}`
+             WHERE company_id = $1 AND project_id = $3 AND ${calendarVisibilityClause(2, 1)}`
   if (from && !Number.isNaN(from.getTime())) {
     params.push(from)
     // We want recurring 'active' events to show up regardless of their seed
@@ -5651,7 +6106,7 @@ api.get('/calendar/events', async (req, res) => {
 })
 
 api.post('/calendar/events', async (req, res) => {
-  const { userId: me, companyId } = await requireCompany(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
   const body = req.body as Record<string, unknown> | undefined
   if (!body || typeof body !== 'object') throw new HttpError(400, 'body required')
 
@@ -5715,8 +6170,8 @@ api.post('/calendar/events', async (req, res) => {
   }
   if (targetConversationId) {
     const { rows: c } = await pool.query(
-      `SELECT 1 FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [targetConversationId, companyId],
+      `SELECT 1 FROM conversations WHERE id = $1 AND company_id = $2 AND project_id = $3 LIMIT 1`,
+      [targetConversationId, companyId, projectId],
     )
     if (!c[0]) throw new HttpError(400, 'targetConversationId not found in this workspace')
   }
@@ -5724,41 +6179,41 @@ api.post('/calendar/events', async (req, res) => {
   const id = `ce-${randomUUID()}`
   const { rows } = await pool.query(
     `INSERT INTO calendar_events
-       (id, company_id, created_by, kind, title, description, assignee_id,
+       (id, company_id, project_id, created_by, kind, title, description, assignee_id,
         target_conversation_id, agent_prompt, start_at, end_at, all_day,
         recurrence, status, reminder_minutes_before, reminder_channel,
         is_private)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,$15,$16,$17)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15,$16,$17,$18)
      RETURNING ${CALENDAR_SELECT}`,
     [
-      id, companyId, me, kind, title, description, assigneeId,
+      id, companyId, projectId, me, kind, title, description, assigneeId,
       targetConversationId, agentPrompt, startAt, endAt, allDay,
       recurrence ? JSON.stringify(recurrence) : null, status,
       reminderMinutesBefore, reminderChannel,
       isPrivate,
     ],
   )
-  publishCalendarChange({ kind: 'event.created', eventId: id, companyId, actorId: me })
+  publishCalendarChange({ kind: 'event.created', eventId: id, companyId, workspaceId: projectId, actorId: me })
   res.status(201).json({ event: rowToCalendarEvent(rows[0]) })
 })
 
 api.get('/calendar/events/:id', async (req, res) => {
-  const { userId: me, companyId } = await requireCompany(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
   const id = String(req.params.id)
   // Tenant filter + privacy filter are both 404 (not 403) — we don't want
   // to leak "this id exists but you can't see it" vs "no such id."
   const { rows } = await pool.query(
     `SELECT ${CALENDAR_SELECT} FROM calendar_events
-      WHERE id = $1 AND company_id = $2 AND ${calendarVisibilityClause(3, 2)}
+      WHERE id = $1 AND company_id = $2 AND project_id = $4 AND ${calendarVisibilityClause(3, 2)}
       LIMIT 1`,
-    [id, companyId, me],
+    [id, companyId, me, projectId],
   )
   if (!rows[0]) throw new HttpError(404, 'event not found')
   res.json({ event: rowToCalendarEvent(rows[0]) })
 })
 
 api.patch('/calendar/events/:id', async (req, res) => {
-  const { userId: me, companyId } = await requireCompany(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
   const id = String(req.params.id)
   const body = req.body as Record<string, unknown> | undefined
   if (!body || typeof body !== 'object') throw new HttpError(400, 'body required')
@@ -5770,9 +6225,9 @@ api.patch('/calendar/events/:id', async (req, res) => {
   {
     const { rows } = await pool.query(
       `SELECT 1 FROM calendar_events
-        WHERE id = $1 AND company_id = $2 AND ${calendarVisibilityClause(3, 2)}
+        WHERE id = $1 AND company_id = $2 AND project_id = $4 AND ${calendarVisibilityClause(3, 2)}
         LIMIT 1`,
-      [id, companyId, me],
+      [id, companyId, me, projectId],
     )
     if (!rows[0]) throw new HttpError(404, 'event not found')
   }
@@ -5853,39 +6308,39 @@ api.patch('/calendar/events/:id', async (req, res) => {
   }
   if (sets.length === 0) throw new HttpError(400, 'no updatable fields')
   sets.push('updated_at = NOW()')
-  params.push(id, companyId)
+  params.push(id, companyId, projectId)
   const sql = `UPDATE calendar_events SET ${sets.join(', ')}
-                WHERE id = $${params.length - 1} AND company_id = $${params.length}
+                WHERE id = $${params.length - 2} AND company_id = $${params.length - 1} AND project_id = $${params.length}
             RETURNING ${CALENDAR_SELECT}`
   const { rows } = await pool.query(sql, params)
   if (!rows[0]) throw new HttpError(404, 'event not found')
-  publishCalendarChange({ kind: 'event.updated', eventId: id, companyId, actorId: me })
+  publishCalendarChange({ kind: 'event.updated', eventId: id, companyId, workspaceId: projectId, actorId: me })
   res.json({ event: rowToCalendarEvent(rows[0]) })
 })
 
 api.delete('/calendar/events/:id', async (req, res) => {
-  const { userId: me, companyId } = await requireCompany(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
   const id = String(req.params.id)
   // The visibility clause is folded into the DELETE so the same caller
   // who can't read the row can't delete it either. rowCount === 0 covers
   // both "no such id" and "privacy filtered" — same 404 on the wire.
   const r = await pool.query(
     `DELETE FROM calendar_events
-      WHERE id = $1 AND company_id = $2 AND ${calendarVisibilityClause(3, 2)}`,
-    [id, companyId, me],
+      WHERE id = $1 AND company_id = $2 AND project_id = $4 AND ${calendarVisibilityClause(3, 2)}`,
+    [id, companyId, me, projectId],
   )
   if (r.rowCount === 0) throw new HttpError(404, 'event not found')
-  publishCalendarChange({ kind: 'event.deleted', eventId: id, companyId, actorId: me })
+  publishCalendarChange({ kind: 'event.deleted', eventId: id, companyId, workspaceId: projectId, actorId: me })
   res.json({ ok: true })
 })
 
 api.post('/calendar/events/:id/run-now', async (req, res) => {
-  const { userId: me, companyId } = await requireCompany(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
   const id = String(req.params.id)
   const { rows } = await pool.query(
     `SELECT ${CALENDAR_SELECT} FROM calendar_events
-      WHERE id = $1 AND company_id = $2 AND ${calendarVisibilityClause(3, 2)}`,
-    [id, companyId, me],
+      WHERE id = $1 AND company_id = $2 AND project_id = $4 AND ${calendarVisibilityClause(3, 2)}`,
+    [id, companyId, me, projectId],
   )
   if (!rows[0]) throw new HttpError(404, 'event not found')
   const { dispatchEvent } = await import('../calendar.js')
@@ -5893,12 +6348,12 @@ api.post('/calendar/events/:id/run-now', async (req, res) => {
   // wide enough to absorb concurrent button-mashing within the same minute.
   const result = await dispatchEvent(rows[0] as import('../calendar.js').CalendarEventRow, new Date())
   // last_fired_at moved + dispatch happened → renderers want to refetch.
-  publishCalendarChange({ kind: 'event.dispatched', eventId: id, companyId, actorId: me })
+  publishCalendarChange({ kind: 'event.dispatched', eventId: id, companyId, workspaceId: projectId, actorId: me })
   res.json(result)
 })
 
 api.get('/calendar/events/:id/dispatches', async (req, res) => {
-  const { userId: me, companyId } = await requireCompany(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
   const id = String(req.params.id)
   // Visibility gate: if the caller can't see the underlying event, they
   // can't see its dispatch history either. Cheap pre-check keeps the
@@ -5906,9 +6361,9 @@ api.get('/calendar/events/:id/dispatches', async (req, res) => {
   {
     const { rows } = await pool.query(
       `SELECT 1 FROM calendar_events
-        WHERE id = $1 AND company_id = $2 AND ${calendarVisibilityClause(3, 2)}
+        WHERE id = $1 AND company_id = $2 AND project_id = $4 AND ${calendarVisibilityClause(3, 2)}
         LIMIT 1`,
-      [id, companyId, me],
+      [id, companyId, me, projectId],
     )
     if (!rows[0]) throw new HttpError(404, 'event not found')
   }
@@ -5917,9 +6372,9 @@ api.get('/calendar/events/:id/dispatches', async (req, res) => {
             cd.conversation_id, cd.message_id, cd.error
        FROM calendar_dispatches cd
        JOIN calendar_events ce ON ce.id = cd.event_id
-      WHERE cd.event_id = $1 AND ce.company_id = $2
+      WHERE cd.event_id = $1 AND ce.company_id = $2 AND ce.project_id = $3
       ORDER BY cd.scheduled_for DESC LIMIT 200`,
-    [id, companyId],
+    [id, companyId, projectId],
   )
   const dispatches: CalendarDispatchPayload[] = rows.map((r) => ({
     id: String(r.id),
@@ -6000,6 +6455,7 @@ api.get('/documents', safe(async (req, res) => {
 
 api.post('/documents', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
+  const projectId = await companyArtifactBucket(companyId)
   const body = (req.body ?? {}) as { title?: unknown; conversationId?: unknown }
   const title = typeof body.title === 'string' && body.title.trim()
     ? body.title.trim().slice(0, 200)
@@ -6016,9 +6472,9 @@ api.post('/documents', safe(async (req, res) => {
   }
   const id = `doc_${randomUUID().replace(/-/g, '').slice(0, 16)}`
   await pool.query(
-    `INSERT INTO documents (id, company_id, title, created_by, conversation_id)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [id, companyId, title, userId, conversationId],
+    `INSERT INTO documents (id, company_id, project_id, title, created_by, conversation_id)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, companyId, projectId, title, userId, conversationId],
   )
   const { rows } = await pool.query<DocumentRow>(
     `SELECT id, company_id, title, created_by, conversation_id, created_at, updated_at

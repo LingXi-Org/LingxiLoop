@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { ws } from '@/api/client'
 import { AvatarMini } from '@/components/Avatar'
 import { CanvasFrameContent } from '@/components/CanvasFrameContent'
@@ -292,7 +292,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
         {snapshot && visibleFrames.map((frame) => {
           const assignment = assignmentForFrame(frame, snapshot.assignments)
           const livePresence = assignment ? snapshot.presence.find((presence) => presence.participantId === assignment.agentId && presence.frameId === frame.id && presence.status !== 'offline') : undefined
-          return <FrameCard key={frame.id} frame={frame} assignment={assignment} status={livePresence?.status} selected={selectedId === frame.id} zoom={viewport.zoom} commentCount={snapshot.comments.filter((comment) => comment.frameId === frame.id).length} allowActivation={() => !gestureMoved.current} />
+          return <FrameCard key={frame.id} frame={frame} assignment={assignment} status={livePresence?.status} selected={selectedId === frame.id} zoom={viewport.zoom} allowActivation={() => !gestureMoved.current} />
         })}
       </div>
       {snapshot && visibleFrames.length === 0 && <div className="pointer-events-none absolute inset-0 grid place-items-center"><div className="rounded-2xl border border-hairline bg-panel/80 px-5 py-4 text-center shadow-sm backdrop-blur"><div className="text-sm font-semibold text-ink">画布还没有卡片</div><div className="mt-1 text-xs text-ink-secondary">在空白处单击右键，选择“新增”或“对话”。</div></div></div>}
@@ -519,19 +519,19 @@ async function downloadFrame(frame: CanvasFrame) {
   saveBlob(new Blob([frameTextContent(frame)], { type: format.mime }), `${base}.${format.extension}`)
 }
 
-function FrameCard({ frame, assignment, status, selected, zoom, commentCount, allowActivation }: {
+function FrameCard({ frame, assignment, status, selected, zoom, allowActivation }: {
   frame: CanvasFrame
   assignment?: CanvasAgentAssignment
   status?: string
   selected: boolean
   zoom: number
-  commentCount: number
   allowActivation: () => boolean
 }) {
   const selectFrame = useCanvas((state) => state.selectFrame)
   const patchLocalFrame = useCanvas((state) => state.patchLocalFrame)
   const updateFrame = useCanvas((state) => state.updateFrame)
-  const participant = useParticipants((state) => assignment ? state.byId[assignment.agentId] : undefined)
+  const ownerId = assignment?.agentId ?? frame.updatedBy ?? frame.createdBy
+  const owner = useParticipants((state) => ownerId ? state.byId[ownerId] : undefined)
   const moved = useRef(false)
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const draftRef = useRef(frame.content)
@@ -615,14 +615,9 @@ function FrameCard({ frame, assignment, status, selected, zoom, commentCount, al
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
   }
 
-  return <article data-canvas-frame={frame.id} className={`canvas-frame-card absolute overflow-hidden rounded-xl border shadow-md transition-[box-shadow,border-color] ${selected ? 'is-selected' : 'hover:shadow-lg'} ${status ? 'is-live-editing' : ''}`} style={{ left: frame.x, top: frame.y, width: frame.width, height: frame.height, borderColor: color, boxShadow: selected ? `0 0 0 2px color-mix(in srgb, ${color} 42%, transparent), inset 4px 0 0 ${color}, var(--canvas-shadow)` : `inset 4px 0 0 ${color}, var(--canvas-shadow)` }} onPointerDown={(event) => { event.stopPropagation(); selectFrame(frame.id) }}>
-    <header onPointerDown={beginMove} className="canvas-frame-header flex h-10 cursor-grab items-center gap-2 border-b border-hairline px-3 active:cursor-grabbing">
-      <span className="rounded px-1.5 py-0.5 text-[9px] font-semibold" style={{ backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>{TYPE_LABELS[frame.type]}</span>
-      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-ink">{frame.title}</span>
-      {assignment && <span className="max-w-32 truncate rounded-full px-2 py-0.5 text-[9px] font-semibold text-white" style={{ backgroundColor: color }}>{participant?.name ?? assignment.agentId}{status ? ` · ${localizeStatus(status)}` : ''}</span>}
-      {commentCount > 0 && <span className="text-[9px] text-ink-secondary">{commentCount} 条反馈</span>}
-      <span className="text-[9px] tabular-nums text-ink-secondary">第 {frame.revision} 版</span>
-    </header>
+  return <article data-canvas-frame={frame.id} className={`canvas-frame-card absolute overflow-hidden rounded-xl border shadow-md transition-[box-shadow,border-color] ${selected ? 'is-selected' : ''} ${status ? 'is-live-editing' : ''}`} style={{ left: frame.x, top: frame.y, width: frame.width, height: frame.height, '--canvas-frame-accent': color } as CSSProperties} onPointerDown={(event) => { event.stopPropagation(); selectFrame(frame.id) }}>
+    <header onPointerDown={beginMove} className="canvas-frame-header cursor-grab active:cursor-grabbing" aria-label={`移动${frame.title}`} />
+    {ownerId && <span className="canvas-frame-agent-label"><i aria-hidden />{owner?.name ?? ownerId}</span>}
     <div className={`canvas-frame-body relative h-[calc(100%-40px)] overflow-auto ${EDITABLE_FRAME_TYPES.has(frame.type) ? 'cursor-text' : ''}`} onClick={(event) => {
       event.stopPropagation()
       if (EDITABLE_FRAME_TYPES.has(frame.type) && allowActivation() && !editing) setEditing(true)

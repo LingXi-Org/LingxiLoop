@@ -19,8 +19,9 @@ const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; descriptio
   { id: 'email', label: 'Email', description: '起草邮件；发送仍需审批策略' },
   { id: 'documents', label: 'Documents', description: '创建、读取和编辑协作文档' },
   { id: 'calendar', label: 'Calendar', description: '访问日历和日程相关能力' },
+  { id: 'knowledge', label: 'Knowledge', description: '检索并操作当前工作区的 Open Notebook 知识库' },
 ]
-const DEFAULT_CAPABILITIES: AgentCapability[] = ['canvas', 'web', 'files', 'email', 'documents']
+const DEFAULT_CAPABILITIES: AgentCapability[] = ['canvas', 'web', 'files', 'email', 'documents', 'knowledge']
 
 interface Props {
   /** if provided, edit mode; otherwise create mode */

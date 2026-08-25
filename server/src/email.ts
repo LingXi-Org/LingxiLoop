@@ -796,6 +796,8 @@ export async function persistEmailMessage(args: {
  *  view (matches Gmail's behavior). */
 export async function findOrCreateEmailConversation(args: {
   companyId: string
+  /** Omitted for inbound/unscoped mail, which is routed to General. */
+  projectId?: string | null
   inReplyTo: string | null
   references: string[]
   subject: string
@@ -836,10 +838,11 @@ export async function findOrCreateEmailConversation(args: {
     : `email-${randomUUID().slice(0, 12)}`
   const uniqueMembers = Array.from(new Set(args.memberIds))
   const inserted = await pool.query(
-    `INSERT INTO conversations (id, kind, title, members, company_id, topic)
-     VALUES ($1, 'email', $2, $3::jsonb, $4, $5)
+    `INSERT INTO conversations (id, kind, title, members, company_id, project_id, topic)
+     SELECT $1, 'email', $2, $3::jsonb, $4,
+            COALESCE($6::text, (SELECT id FROM projects WHERE company_id=$4 AND is_general=TRUE LIMIT 1)), $5
      ON CONFLICT (id) DO NOTHING RETURNING id`,
-    [id, cleanSubject.slice(0, 200), JSON.stringify(uniqueMembers), args.companyId, cleanSubject.slice(0, 200)],
+    [id, cleanSubject.slice(0, 200), JSON.stringify(uniqueMembers), args.companyId, cleanSubject.slice(0, 200), args.projectId ?? null],
   )
   return { conversationId: id, created: Boolean(inserted.rows[0]) }
 }

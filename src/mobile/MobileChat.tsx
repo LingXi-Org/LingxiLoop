@@ -20,6 +20,7 @@ import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { tapHaptic } from '@/lib/native'
+import { projectTranscriptAdjacency, type TranscriptAdjacency } from '@/lib/transcriptExperience'
 import { findSkypeByShortcode, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
@@ -37,6 +38,7 @@ export function MobileChat() {
   const convoId = useApp((s) => s.selectedConversationId)
   const select = useApp((s) => s.selectConversation)
   const pushStack = useApp((s) => s.pushMobileStack)
+  const openGroupContext = useApp((s) => s.openMobileGroupContext)
   const byConvo = useMessages((s) => (convoId ? s.byConvo[convoId] : undefined))
   const streaming = useMessages((s) => s.streaming)
   const typingIds = useMessages((s) => (convoId ? s.typing[convoId] ?? null : null))
@@ -59,6 +61,7 @@ export function MobileChat() {
     () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId && typingIds ? { [convoId]: typingIds } : {} } as MessagesState, convoId),
     [byConvo, streaming, typingIds, convoId],
   )
+  const adjacency = useMemo(() => projectTranscriptAdjacency(list), [list])
   // Drives the bottom-right "scroll to latest" pill — true means we're pinned
   // at the bottom and the pill stays hidden. Note: there's also an existing
   // `scrollToLatest` (declared below) that snaps with `behavior:'auto'` for the
@@ -470,7 +473,8 @@ export function MobileChat() {
         onBack={() => select(null)}
         onOpenDetails={() => pushStack('info')}
         actions={(
-          <div className="relative">
+          <div className="relative flex items-center">
+            {c?.kind === 'group' && <Pressable onClick={() => openGroupContext('knowledge')} haptic="medium" className="h-9 rounded-full border border-ink-100 px-3 text-[11px] font-semibold text-skype-deep active:bg-sky2-50" aria-label="打开知识库和 Canvas">上下文</Pressable>}
             <Pressable
               onClick={() => setMenuOpen((v) => !v)}
               haptic="medium"
@@ -541,7 +545,8 @@ export function MobileChat() {
           // tick and was a primary cause of scroll-up jitter. See StreamHeader.
           components={STREAM_COMPONENTS}
           context={streamCtx}
-          itemContent={(_index, m) => {
+          itemContent={(index, m) => {
+            const rowIndex = index >= firstItemIndex ? index - firstItemIndex : index
             const author = byId[m.authorId]
             // System / whisper rows render without a resolved author (e.g. the
             // calendar-fired notice has a synthetic system author id).
@@ -557,6 +562,7 @@ export function MobileChat() {
                 msg={m}
                 author={author}
                 animate={animate}
+                adjacency={adjacency[rowIndex]}
                 onLongPress={(coords) => setTapback({ msg: m, coords })}
               />
             )
@@ -958,17 +964,18 @@ const STREAM_COMPONENTS = { Header: StreamHeader, Footer: StreamFooter }
  *  "Copy text" row), which puts the body on the clipboard
  *  programmatically. */
 function MessageRowMobileShell({
-  msg, author, animate, onLongPress,
+  msg, author, animate, adjacency, onLongPress,
 }: {
   msg: Message
   author?: Participant
   animate: boolean
+  adjacency?: TranscriptAdjacency
   onLongPress: (coords: { x: number; y: number }) => void
 }) {
   const press = useLongPress(onLongPress)
   return (
     <div
-      className="mx-auto w-full max-w-[760px] px-4 py-2"
+      className={cn('mx-auto w-full max-w-[760px] px-4', adjacency?.isContinuedFromPrevious ? 'pt-0.5' : 'pt-2', adjacency?.isContinuedToNext ? 'pb-0.5' : 'pb-2')}
       style={{
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -976,7 +983,7 @@ function MessageRowMobileShell({
       }}
       {...press}
     >
-      <MessageRow msg={msg} author={author} delay={0} animate={animate} />
+      <MessageRow msg={msg} author={author} adjacency={adjacency} delay={0} animate={animate} />
     </div>
   )
 }

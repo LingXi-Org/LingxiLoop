@@ -1,7 +1,7 @@
 import type { Participant, Status } from '@/types'
 import type { ExpressionId } from './bloub/expressions'
 import type { ColorId, ShapeId } from './bloub/skins'
-import type { StateId } from './bloub/states'
+import { SEQUENCE, type StateId } from './bloub/states'
 
 export const STATUS_TO_BLOUB_STATE: Record<Status, StateId> = {
   avail: 'idle',
@@ -65,29 +65,31 @@ export const STARTER_BLOUB_PROFILES: Record<StarterPersonaKey, StarterBloubProfi
 
 const STARTER_PERSONA_KEYS = Object.keys(STARTER_BLOUB_PROFILES) as StarterPersonaKey[]
 
-/** The six poses already curated as "this agent is working" animations
- *  across STARTER_BLOUB_PROFILES (orbit/wide/play/alert/comet/burst) —
- *  reused here as the general "working" expression library so a working
- *  agent's avatar cycles through visual variety instead of holding one
- *  pose the whole time it's busy. */
-export const WORKING_STATE_POOL: StateId[] = ['orbit', 'wide', 'play', 'alert', 'comet', 'burst']
+/** Bloub's complete 14-state catalogue montage. `swirl` remains excluded
+ *  because upstream defines it as an interface transition, not a catalogue
+ *  state. Keep a local copy so callers cannot mutate the vendored sequence. */
+export const WORKING_STATE_POOL: StateId[] = [...SEQUENCE]
 
-/** Deterministic per-seed shuffle (splitmix32-style LCG) — same seed always
- *  produces the same sequence within a session, so a re-render doesn't
- *  reshuffle mid-cycle, but different agents (and a reseed between working
- *  spells) see a different order/subset. */
-export function pickWorkingStateSequence(seed: number, count: number = 3): StateId[] {
-  const pool = [...WORKING_STATE_POOL]
-  let s = seed >>> 0
-  const next = (): number => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
-    return s / 0x100000000
-  }
-  for (let i = pool.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(next() * (i + 1))
-    ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
-  }
-  return pool.slice(0, Math.min(Math.max(1, count), pool.length))
+/** Preserve the exact upstream montage order while using the work epoch to
+ *  choose its starting frame. A complete pass therefore visits every one of
+ *  the 14 catalogue states exactly once before wrapping. */
+export function pickWorkingStateSequence(
+  seed: number,
+  count: number = WORKING_STATE_POOL.length,
+): StateId[] {
+  const length = WORKING_STATE_POOL.length
+  const start = (seed >>> 0) % length
+  const montage = WORKING_STATE_POOL.map((_, offset) => (
+    WORKING_STATE_POOL[(start + offset) % length]!
+  ))
+  return montage.slice(0, Math.min(Math.max(1, count), length))
+}
+
+/** Mixes the participant identity with a server timestamp or local work-round
+ *  key. It is intentionally pure so every avatar instance representing the
+ *  same work epoch starts from the same montage frame. */
+export function getWorkingEpochSeed(participantId: string, epochKey: string | number): number {
+  return stableParticipantHash(`${participantId}\u0000${epochKey}`)
 }
 
 export function getStarterPersonaKey(participant: Pick<Participant, 'id' | 'role'>): StarterPersonaKey | null {

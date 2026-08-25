@@ -19,7 +19,10 @@ async function identity(req: Request & AuthedRequest): Promise<{ userId: string;
   const companyId = String(req.headers['x-company-id'] ?? '').trim()
   if (!userId) throw Object.assign(new Error('authentication required'), { status: 401 })
   if (!companyId) throw Object.assign(new Error('x-company-id required'), { status: 400 })
-  const { rows } = await pool.query(`SELECT 1 FROM company_members WHERE user_id=$1 AND company_id=$2`, [userId, companyId])
+  const { rows } = await pool.query(
+    `SELECT 1 FROM company_members WHERE user_id=$1 AND company_id=$2`,
+    [userId, companyId],
+  )
   if (!rows[0]) throw Object.assign(new Error('not a company member'), { status: 403 })
   return { userId, companyId }
 }
@@ -52,7 +55,9 @@ imRouter.get('/channels', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const { rows } = await pool.query<{
     channel_id: string; profile: Record<string, unknown>; leader_agent_id: string | null; preset_key: string | null
-  }>(`SELECT channel_id, profile, leader_agent_id, preset_key FROM im_channel_bindings WHERE company_id=$1 ORDER BY created_at`, [companyId])
+  }>(`SELECT b.channel_id, b.profile, b.leader_agent_id, b.preset_key
+        FROM im_channel_bindings b JOIN conversations c ON c.id = b.channel_id
+       WHERE b.company_id=$1 AND c.members @> to_jsonb(ARRAY[$2::text]) ORDER BY b.created_at`, [companyId, userId])
   const conversations = await wukongClient().listConversations(userId)
   const state = new Map(conversations.map((item) => [`${item.channelId}:${item.channelType}`, item]))
   res.json(rows.map((row) => {
@@ -72,9 +77,6 @@ imRouter.get('/channels', safe(async (req, res) => {
     mutedUntil: null,
     tag: row.preset_key ? 'team' : null,
     pulledBy: null,
-    projectId: null,
-    projectName: null,
-    projectColor: null,
     createdAt: typeof row.profile.createdAt === 'string' ? row.profile.createdAt : new Date(0).toISOString(),
     updatedAt: last ? new Date(last.timestamp * 1000).toISOString() : typeof row.profile.updatedAt === 'string' ? row.profile.updatedAt : new Date(0).toISOString(),
     unreadCount: im?.unread ?? 0,
@@ -92,6 +94,11 @@ imRouter.post('/channels', safe(async (req, res) => {
   if (!profile.channelId || !profile.title || !Array.isArray(profile.members)) {
     res.status(400).json({ error: 'channelId, title and members required' }); return
   }
+  const { rows: conversations } = await pool.query(
+    `SELECT 1 FROM conversations WHERE id=$1 AND company_id=$2`,
+    [profile.channelId, companyId],
+  )
+  if (!conversations[0]) { res.status(404).json({ error: 'conversation not found in workspace' }); return }
   await wukongClient().upsertChannel(profile)
   await pool.query(
     `INSERT INTO im_channel_bindings (channel_id, company_id, profile, leader_agent_id, preset_key)
@@ -108,7 +115,8 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [channelId, companyId],
+    `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
+      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
   )
   if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
   const limit = Math.max(1, Math.min(200, Number(req.query.limit ?? 80)))
@@ -135,7 +143,8 @@ imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
     res.status(400).json({ error: 'invalid user message payload' }); return
   }
   const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [channelId, companyId],
+    `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
+      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
   )
   const members = Array.isArray(bindings[0]?.profile.members) ? bindings[0].profile.members.map(String) : []
   if (!bindings[0]) { res.status(404).json({ error: 'channel not found' }); return }
@@ -186,8 +195,9 @@ imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
 imRouter.get('/sends/:clientNonce', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const { rows } = await pool.query(
-    `SELECT status,echo,error,channel_id AS "channelId",updated_at AS "updatedAt"
-      FROM im_send_acceptances WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
+    `SELECT a.status,a.echo,a.error,a.channel_id AS "channelId",a.updated_at AS "updatedAt"
+       FROM im_send_acceptances a JOIN conversations c ON c.id=a.channel_id
+      WHERE a.company_id=$1 AND a.user_id=$2 AND a.client_nonce=$3 AND c.members @> to_jsonb(ARRAY[$2::text])`,
     [companyId, userId, String(req.params.clientNonce)],
   )
   if (!rows[0]) { res.status(404).json({ error: 'send acceptance not found' }); return }
@@ -197,7 +207,8 @@ imRouter.get('/sends/:clientNonce', safe(async (req, res) => {
 imRouter.post('/channels/:id/read', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [req.params.id, companyId],
+    `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
+      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [req.params.id, companyId, userId],
   )
   if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
   await wukongClient().clearUnread(userId, String(req.params.id), Number(rows[0].profile.channelType ?? 2))
@@ -205,8 +216,12 @@ imRouter.post('/channels/:id/read', safe(async (req, res) => {
 }))
 
 imRouter.get('/approvals', safe(async (req, res) => {
-  const { companyId } = await identity(req)
-  const { rows } = await pool.query(`SELECT * FROM agent_os_approvals WHERE company_id=$1 ORDER BY requested_at DESC LIMIT 100`, [companyId])
+  const { userId, companyId } = await identity(req)
+  const { rows } = await pool.query(
+    `SELECT a.* FROM agent_os_approvals a JOIN conversations c ON c.id=a.channel_id
+      WHERE a.company_id=$1 AND c.members @> to_jsonb(ARRAY[$2::text]) ORDER BY a.requested_at DESC LIMIT 100`,
+    [companyId, userId],
+  )
   res.json(rows)
 }))
 
@@ -225,7 +240,8 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
               h.run_id, h.cell_id, h.call_index
          FROM agent_os_approvals a
          JOIN agent_host_actions h ON h.idempotency_key = a.idempotency_key
-        WHERE a.id=$1 AND a.company_id=$2 FOR UPDATE OF a`, [req.params.id, companyId],
+         JOIN conversations c ON c.id = a.channel_id
+        WHERE a.id=$1 AND a.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text]) FOR UPDATE OF a`, [req.params.id, companyId, userId],
     )
     if (!rows[0]) { await client.query('ROLLBACK'); res.status(404).json({ error: 'approval not found' }); return }
     approval = rows[0]
@@ -317,13 +333,14 @@ imRouter.post('/routines/:id/pause', safe(async (req, res) => {
   res.json(rows[0])
 }))
 
-async function activeWorkForControl(companyId: string, agentId: string, channelId: string): Promise<string | null> {
+async function activeWorkForControl(companyId: string, userId: string, agentId: string, channelId: string): Promise<string | null> {
   const { rows } = await pool.query<{ id: string }>(
     `SELECT w.id FROM agent_work_items w
       JOIN im_channel_bindings b ON b.channel_id=w.channel_id AND b.company_id=w.company_id
-     WHERE w.company_id=$1 AND w.agent_id=$2 AND w.channel_id=$3 AND w.status='leased'
+      JOIN conversations c ON c.id=w.channel_id
+     WHERE w.company_id=$1 AND c.members @> to_jsonb(ARRAY[$2::text]) AND w.agent_id=$3 AND w.channel_id=$4 AND w.status='leased'
      ORDER BY w.updated_at DESC LIMIT 1`,
-    [companyId, agentId, channelId],
+    [companyId, userId, agentId, channelId],
   )
   return rows[0]?.id ?? null
 }
@@ -333,7 +350,7 @@ imRouter.post('/runs/stop', safe(async (req, res) => {
   const agentId = String(req.body?.agentId ?? '').trim()
   const channelId = String(req.body?.channelId ?? '').trim()
   if (!agentId || !channelId) { res.status(400).json({ error: 'agentId and channelId required' }); return }
-  const workId = await activeWorkForControl(companyId, agentId, channelId)
+  const workId = await activeWorkForControl(companyId, userId, agentId, channelId)
   if (!workId) { res.status(404).json({ error: 'no active run' }); return }
   await pool.query(`UPDATE agent_work_items SET cancel_requested_at=NOW(), updated_at=NOW() WHERE id=$1`, [workId])
   const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
@@ -353,7 +370,7 @@ imRouter.post('/runs/steer', safe(async (req, res) => {
   const channelId = String(req.body?.channelId ?? '').trim()
   const text = String(req.body?.text ?? '').trim().slice(0, 4_000)
   if (!agentId || !channelId || !text) { res.status(400).json({ error: 'agentId, channelId and text required' }); return }
-  const workId = await activeWorkForControl(companyId, agentId, channelId)
+  const workId = await activeWorkForControl(companyId, userId, agentId, channelId)
   if (!workId) { res.status(404).json({ error: 'no active run' }); return }
   const steer = { id: randomUUID(), text, createdAt: new Date().toISOString() }
   await pool.query(

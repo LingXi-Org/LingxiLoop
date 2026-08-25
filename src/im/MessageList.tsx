@@ -1,5 +1,5 @@
 import type React from 'react'
-import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
+import { Virtuoso, type ListRange, type VirtuosoHandle } from 'react-virtuoso'
 import type { Message } from '@/types'
 
 interface MessageListProps {
@@ -10,6 +10,7 @@ interface MessageListProps {
   computeItemKey?: (index: number, message: Message) => React.Key
   startReached?: () => void
   atBottomStateChange?: (atBottom: boolean) => void
+  rangeChanged?: (range: ListRange) => void
   components?: any
   context?: any
   defaultItemHeight?: number
@@ -28,6 +29,7 @@ export function MessageList({
   computeItemKey = (_index, message) => message.clientId ?? message.id,
   startReached,
   atBottomStateChange,
+  rangeChanged,
   components,
   context,
   defaultItemHeight = 104,
@@ -44,6 +46,7 @@ export function MessageList({
       initialTopMostItemIndex={Math.max(0, messages.length - 1)}
       startReached={startReached}
       atBottomStateChange={atBottomStateChange}
+      rangeChanged={rangeChanged}
       components={components}
       context={context}
       itemContent={itemContent}

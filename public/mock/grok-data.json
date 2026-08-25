@@ -1,0 +1,11 @@
+{
+  "release": "autumn-beta",
+  "targetDate": "2026-10-15",
+  "owners": ["Nova", "Iris"],
+  "metrics": {
+    "weeklyActiveTeams": 1200,
+    "citationOpenRate": 0.38,
+    "firstUsefulAnswerSeconds": 42
+  },
+  "approved": true
+}

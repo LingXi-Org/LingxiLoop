@@ -1,35 +1,28 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { CanvasFrame, CanvasSnapshot } from '@/types'
 import { CanvasFrameContent } from './CanvasFrameContent'
-
-const FRAME_TYPE_LABELS = {
-  markdown: '文本',
-  html: '网页',
-  document: '文档',
-  image: '图片',
-  artifact: '成果',
-} as const
 
 interface CanvasPreviewProps {
   snapshot: CanvasSnapshot | null
   title: string
   frameCount: number
+  fill?: boolean
 }
 
-export function CanvasPreview({ snapshot, title, frameCount }: CanvasPreviewProps) {
+export function CanvasPreview({ snapshot, title, frameCount, fill = false }: CanvasPreviewProps) {
   const previewRef = useRef<HTMLDivElement>(null)
   const [previewSize, setPreviewSize] = useState({ width: 620, height: 196 })
   const frames = useMemo(() => snapshot?.frames.filter((frame) => frame.type !== 'artifact') ?? [], [snapshot?.frames])
   const bounds = useMemo(() => {
     const surfaces = frames.map(({ x, y, width, height }) => ({ x, y, width, height }))
     if (surfaces.length === 0) return { minX: 0, minY: 0, width: 1000, height: 600 }
-    const padding = 56
+    const padding = fill ? 14 : 56
     const minX = Math.min(...surfaces.map((surface) => surface.x)) - padding
     const minY = Math.min(...surfaces.map((surface) => surface.y)) - padding
     const maxX = Math.max(...surfaces.map((surface) => surface.x + surface.width)) + padding
     const maxY = Math.max(...surfaces.map((surface) => surface.y + surface.height)) + padding
     return { minX, minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) }
-  }, [frames])
+  }, [fill, frames])
 
   useLayoutEffect(() => {
     const preview = previewRef.current
@@ -53,8 +46,8 @@ export function CanvasPreview({ snapshot, title, frameCount }: CanvasPreviewProp
 
   const htmlPreviewStyle = (frame: CanvasFrame) => {
     const displayedWidth = (frame.width / bounds.width) * previewSize.width
-    const displayedHeight = (frame.height / bounds.height) * previewSize.height * 0.82
-    const sourceHeight = Math.max(1, frame.height - 40)
+    const displayedHeight = (frame.height / bounds.height) * previewSize.height
+    const sourceHeight = Math.max(1, frame.height)
     const scale = Math.max(0.01, Math.min(displayedWidth / frame.width, displayedHeight / sourceHeight))
     return { width: frame.width, height: sourceHeight, transform: `scale(${scale})` }
   }
@@ -64,15 +57,11 @@ export function CanvasPreview({ snapshot, title, frameCount }: CanvasPreviewProp
     ?? snapshot?.assignments.find((assignment) => assignment.activeFrameId === frame.id)?.color
 
   return (
-    <div ref={previewRef} className="canvas-preview" aria-label={`${title}画布预览`}>
+    <div ref={previewRef} className="canvas-preview" style={fill ? { height: '100%', borderBottom: 0 } : undefined} aria-label={`${title}画布预览`}>
       {snapshot ? (
         <div className="absolute inset-0">
           {frames.map((frame) => (
-            <div key={frame.id} className="canvas-preview-frame" style={{ ...rectStyle(frame), borderColor: agentColor(frame) }}>
-              <div className="canvas-preview-frame-header">
-                <span className="truncate">{frame.title}</span>
-                <span className="opacity-55">{FRAME_TYPE_LABELS[frame.type]}</span>
-              </div>
+            <div key={frame.id} className="canvas-preview-frame" style={{ ...rectStyle(frame), '--canvas-frame-accent': agentColor(frame) ?? 'var(--accent)' } as CSSProperties}>
               <div className="canvas-preview-frame-content">
                 {frame.type === 'html'
                   ? <div className="canvas-preview-html-scale" style={htmlPreviewStyle(frame)}><CanvasFrameContent frame={frame} preview /></div>

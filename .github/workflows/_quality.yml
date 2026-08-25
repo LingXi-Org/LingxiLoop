@@ -28,7 +28,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - run: npm ci
+      - name: Verify vendored Open Notebook scope contract
+        working-directory: third_party/open-notebook
+        run: |
+          python -m pip install pytest
+          python -m pytest -q tests/test_lingxiloop_native_scope.py
       - run: npm run guard:brand
       - run: npm run guard:agent-os
       - run: npm run guard:llm-tracked
@@ -82,7 +90,7 @@ jobs:
   agent-os-compose-smoke:
     name: Agent OS + WuKongIM Compose smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Build and start isolated MVP test stack

@@ -7,6 +7,7 @@ import { wukongClient } from '../im/wukong.js'
 import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
 import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
 import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
+import { retrieveKnowledge } from '../knowledge/service.js'
 
 export const agentOSControlRouter = Router()
 
@@ -209,6 +210,26 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   }))
   const triggerMessage = messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)
   const learnerMessage = triggerMessage?.authorKind === 'human' ? triggerMessage : [...messages].reverse().find((message) => message.authorKind === 'human')
+  const { rows: workspaceRows } = await pool.query<{ kind: string; source_count: number; ingestion_failure: string | null }>(
+    `SELECT c.kind,
+            (SELECT COUNT(*)::int FROM knowledge_sources s WHERE s.project_id = c.project_id AND s.status = 'ready' AND s.deleted_at IS NULL) AS source_count,
+            (SELECT COALESCE(j.wake_error, s.error) FROM knowledge_sources s
+               LEFT JOIN knowledge_source_jobs j ON j.source_id=s.id
+              WHERE s.company_id=c.company_id AND s.origin_client_msg_no=$3 AND s.deleted_at IS NULL
+              ORDER BY s.created_at DESC LIMIT 1) AS ingestion_failure
+       FROM conversations c WHERE c.id = $1 AND c.company_id = $2 LIMIT 1`,
+    [work.channelId, work.companyId, work.triggerClientMsgNo],
+  )
+  const workspaceRow = workspaceRows[0]
+  const knowledgeContext = workspaceRow?.kind === 'group' && learnerMessage
+    ? await retrieveKnowledge({
+        conversationId: work.channelId,
+        query: triggerMessage?.body ?? learnerMessage.body,
+      }).catch((error) => {
+        console.warn('[knowledge] retrieval failed:', error instanceof Error ? error.message : String(error))
+        return []
+      })
+    : []
   const persona = { name: personas[0].name, role: personas[0].role ?? 'Learning Agent', instructions: personas[0].system_prompt ?? '' }
   const promptContextCandidate = learnerMessage ? await buildPromptContext({
     epoch: 0, companyId: work.companyId, agentId: work.agentId, conversationId: work.channelId,
@@ -232,6 +253,9 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
     work,
     persona,
     messages,
+    knowledgeContext,
+    knowledgeSourceCount: workspaceRow?.source_count ?? 0,
+    ...(workspaceRow?.ingestion_failure ? { knowledgeIngestionFailure: workspaceRow.ingestion_failure } : {}),
     ...(learnerMessage ? { learnerId: learnerMessage.authorId } : {}),
     ...(promptContextCandidate ? { promptContextCandidate } : {}),
     canvasRoster,
@@ -361,7 +385,7 @@ async function actionFromLedger(client: PoolClient, key: string, action: HostAct
 
 const ACTION_CAPABILITIES: Record<string, string> = {
   files: 'files', documents: 'documents', boards: 'documents', calendar: 'calendar',
-  research: 'web', canvas: 'canvas', email: 'email',
+  research: 'web', canvas: 'canvas', email: 'email', knowledge: 'knowledge',
 }
 
 async function assertActionAllowed(work: AgentWorkItem, action: HostAction): Promise<void> {

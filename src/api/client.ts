@@ -19,6 +19,9 @@ import type {
   Message,
   RecurrenceRule,
   Status,
+  ConversationSourceSelection,
+  KnowledgeSource,
+  WorkspaceSummary,
 } from '@/types'
 
 const DEVTOOLS_KEY = 'lingxiloop.devtools.enabled'
@@ -59,9 +62,6 @@ export function getServerOrigin(): string {
   return SERVER_ORIGIN
 }
 
-/** Origin to embed in a local computer pairing command.
- * In Vite dev the browser uses a relative proxy, so SERVER_ORIGIN is empty;
- * the daemon still needs the API target rather than the renderer origin. */
 /** Persist a new server origin override and clear the existing session.
  *  We don't try to hot-swap the in-memory API/WS — anything pending against
  *  the old origin would race or fail in confusing ways. Callers should
@@ -153,9 +153,6 @@ export interface ApiConversation {
   mutedUntil: string | null
   tag: string | null
   pulledBy: { agentId: string; at: string; reason: string } | null
-  projectId: string | null
-  projectName: string | null
-  projectColor: string | null
   createdAt: string
   updatedAt: string
   unreadCount: number
@@ -195,16 +192,8 @@ export interface ApiQuotaResponse {
   error?: string
 }
 
-export interface ApiProject {
-  id: string
-  name: string
-  description: string
-  color: string | null
-  status: 'active' | 'archived'
-  createdAt: string
-  archivedAt: string | null
-  conversationCount: number
-}
+/** @deprecated Project APIs remain only for compatibility with stale, unmounted settings modules. */
+export type ApiProject = WorkspaceSummary
 
 export interface ApiParticipant {
   id: string
@@ -792,6 +781,39 @@ export const api = {
   listCompanies: () =>
     http<Array<{ id: string; name: string; slug: string; createdAt: string; role: string }>>('/companies'),
   listProjects: () => http<ApiProject[]>('/projects'),
+  openProject: (id: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}/open`, { method: 'POST' }),
+  createProject: (input: { name: string; description?: string; color?: string }) => http<ApiProject>('/projects', { method: 'POST', body: JSON.stringify(input) }),
+  archiveProject: (id: string, archive = true) => http<{ ok: boolean; status: string }>(`/projects/${encodeURIComponent(id)}/archive`, { method: 'POST', body: JSON.stringify({ archive }) }),
+  listSources: (conversationId: string) => http<KnowledgeSource[]>(`/conversations/${encodeURIComponent(conversationId)}/sources`),
+  getSource: (conversationId: string, sourceId: string) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`),
+  addTextSource: (conversationId: string, input: { title?: string; text: string }) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources`, { method: 'POST', body: JSON.stringify({ kind: 'text', ...input }) }),
+  addUrlSource: (conversationId: string, input: { title?: string; url: string }) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources`, { method: 'POST', body: JSON.stringify({ kind: 'url', ...input }) }),
+  uploadSource: (conversationId: string, input: { name: string; mime: string; size: number; dataBase64: string }) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources/upload`, { method: 'POST', body: JSON.stringify(input) }),
+  uploadKnowledgeFile: async (conversationId: string, file: File): Promise<void> => {
+    const caps = await api.uploadCapabilities()
+    const mime = file.type || 'text/plain'
+    if (caps.presignSupported) {
+      const signed = await http<{ id: string; uploadUrl: string; mime: string; size: number }>(`/conversations/${encodeURIComponent(conversationId)}/sources/upload/presign`, {
+        method: 'POST', body: JSON.stringify({ name: file.name, mime, size: file.size }),
+      })
+      const response = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': mime }, body: file })
+      if (!response.ok) throw new Error(`source upload failed: ${response.status}`)
+      await http(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(signed.id)}/complete-upload`, { method: 'POST' })
+      return
+    }
+    const buffer = await file.arrayBuffer()
+    const bytes = new Uint8Array(buffer)
+    let binary = ''
+    for (let offset = 0; offset < bytes.length; offset += 32_768) binary += String.fromCharCode(...bytes.subarray(offset, offset + 32_768))
+    await api.uploadSource(conversationId, { name: file.name, mime, size: file.size, dataBase64: btoa(binary) })
+  },
+  retrySource: (conversationId: string, sourceId: string) => http<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}/retry`, { method: 'POST' }),
+  deleteSource: (conversationId: string, sourceId: string) => http<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`, { method: 'DELETE' }),
+  getConversationSources: async (conversationId: string): Promise<ConversationSourceSelection> => {
+    const sources = await http<KnowledgeSource[]>(`/conversations/${encodeURIComponent(conversationId)}/sources`)
+    return { conversationId, sources: sources.map((source) => ({ sourceId: source.id, title: source.title, status: source.status, enabled: (source as KnowledgeSource & { enabled?: boolean }).enabled !== false })) }
+  },
+  updateConversationSources: (conversationId: string, excludedSourceIds: string[]) => http<{ ok: boolean; excludedSourceIds: string[] }>(`/conversations/${encodeURIComponent(conversationId)}/sources`, { method: 'PUT', body: JSON.stringify({ excludedSourceIds }) }),
   getShippingOverview: () => http<ShippingOverview>('/shipping/overview'),
   getShippingFeature: (id: string) => http<ShippingFeatureDetail>(`/shipping/features/${encodeURIComponent(id)}`),
   createShippingFeature: (input: {
@@ -828,22 +850,6 @@ export const api = {
     http<ShippingFeatureDetail>(`/shipping/features/${encodeURIComponent(featureId)}/regressions`, { method: 'POST', body: JSON.stringify(input) }),
   updateShippingRegression: (featureId: string, regressionId: string, input: Record<string, unknown>) =>
     http<ShippingFeatureDetail>(`/shipping/features/${encodeURIComponent(featureId)}/regressions/${encodeURIComponent(regressionId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
-  createProject: (input: { name: string; description?: string; color?: string }) =>
-    http<{ id: string; name: string; description: string; color: string | null; status: string }>('/projects', {
-      method: 'POST', body: JSON.stringify(input),
-    }),
-  updateProject: (id: string, input: { name?: string; description?: string; color?: string | null }) =>
-    http<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}`, {
-      method: 'PUT', body: JSON.stringify(input),
-    }),
-  archiveProject: (id: string, archive = true) =>
-    http<{ ok: boolean; status: string }>(`/projects/${encodeURIComponent(id)}/archive`, {
-      method: 'POST', body: JSON.stringify({ archive }),
-    }),
-  attachProject: (conversationId: string, projectId: string | null) =>
-    http<{ ok: boolean; projectId: string | null }>(`/conversations/${encodeURIComponent(conversationId)}/project`, {
-      method: 'POST', body: JSON.stringify({ projectId }),
-    }),
   createCompany: (name: string) =>
     http<{ id: string; name: string; slug: string; role: string }>('/companies', {
       method: 'POST', body: JSON.stringify({ name }),
@@ -904,6 +910,8 @@ export const api = {
   // ─── Shared Canvas (state only; agent execution remains isolated) ───
   getCanvas: (canvasId?: string) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas'),
   getCanvases: (conversationId?: string) => http<import('@/types').CanvasWorkspaceSummary[]>(`/canvases${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`),
+  getConversationCanvas: (conversationId: string) => http<CanvasSnapshot | null>(`/conversations/${encodeURIComponent(conversationId)}/canvas`),
+  createConversationCanvas: (conversationId: string) => http<CanvasSnapshot>(`/conversations/${encodeURIComponent(conversationId)}/canvas`, { method: 'POST' }),
   createCanvasFrame: (input: {
     type: CanvasFrameType; title?: string; x?: number; y?: number; width?: number
     canvasId?: string; height?: number; content?: string; data?: Record<string, unknown>
@@ -944,8 +952,8 @@ export const api = {
   generateAgentAvatar: (id: string) =>
     http<{ url: string }>(`/agents/${encodeURIComponent(id)}/avatar/generate`, { method: 'POST' }),
   getConversations: () => http<ApiConversation[]>('/im/channels'),
-  createGroup: (input: { title: string; members: string[]; leaderId: string; subtitle?: string; projectId?: string | null }) =>
-    http<{ id: string; members: string[]; leaderId: string; projectId: string | null }>('/conversations', {
+  createGroup: (input: { title: string; members: string[]; leaderId: string; subtitle?: string }) =>
+    http<{ id: string; members: string[]; leaderId: string }>('/conversations', {
       method: 'POST',
       body: JSON.stringify(input),
     }),

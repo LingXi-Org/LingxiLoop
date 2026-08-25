@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import express, { Router, type Request, type Response, type NextFunction } from 'express'
 import { pool } from '../db/pool.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
+import { createAttachmentKnowledgeJob, isKnowledgeAttachmentMime } from '../knowledge/service.js'
 import { resolveLearningAgentRecipients } from './routing.js'
 import { wukongClient } from './wukong.js'
 
@@ -123,10 +124,43 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
           mentionAll: payload.data?.mentionAll === true,
           replyAuthorId: typeof payload.data?.replyAuthorId === 'string' ? payload.data.replyAuthorId : undefined,
           leaderAgentId: bindings[0].leader_agent_id ?? undefined,
-          handoffTargetId: payload.kind === 'handoff' ? refs.toAgentId : undefined,
+          handoffTargetId: payload.kind === 'handoff' && typeof refs.toAgentId === 'string' ? refs.toAgentId : undefined,
         })
-    for (const agentId of recipients) {
-      const reason = payload.kind === 'handoff' ? 'handoff' : mentionedIds.includes(agentId) || payload.data?.mentionAll === true ? 'mention' : 'message'
+    const wakeRecipients = recipients.map((agentId) => ({
+      agentId,
+      reason: payload.kind === 'handoff' ? 'handoff' : mentionedIds.includes(agentId) || payload.data?.mentionAll === true ? 'mention' : 'message',
+    }))
+    let deferAgentWake = false
+    let knowledgeSourceId: string | undefined
+    if (payload.kind === 'attachment') {
+      const attachment = record(payload.data)
+      const mime = String(attachment.mime ?? '').toLowerCase()
+      const size = Number(attachment.size ?? 0)
+      const storageKey = String(attachment.key ?? '')
+      const { rows: conversations } = await client.query<{ project_id: string | null; kind: string }>(
+        `SELECT project_id, kind FROM conversations WHERE id=$1 AND company_id=$2 LIMIT 1`,
+        [channelId, bindings[0].company_id],
+      )
+      if (conversations[0]?.kind === 'group' && conversations[0].project_id
+          && storageKey.startsWith(`attachments/${bindings[0].company_id}/`) && isKnowledgeAttachmentMime(mime, size)) {
+        const ingestion = await createAttachmentKnowledgeJob(client, {
+          companyId: bindings[0].company_id,
+          projectId: conversations[0].project_id,
+          conversationId: channelId,
+          clientMsgNo,
+          createdBy: fromUid,
+          title: String(attachment.name ?? '聊天附件'),
+          mime,
+          size,
+          storageKey,
+          threadRootClientMsgNo: payload.replyToClientMsgNo,
+          recipients: wakeRecipients,
+        })
+        deferAgentWake = ingestion.deferAgentWake
+        knowledgeSourceId = ingestion.sourceId
+      }
+    }
+    for (const { agentId, reason } of deferAgentWake ? [] : wakeRecipients) {
       await client.query(
         `INSERT INTO agent_work_items
            (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason)
@@ -137,7 +171,7 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
     }
     await client.query(`UPDATE wukong_webhook_receipts SET processed_at=NOW(), error=NULL WHERE event_id=$1`, [eventId])
     await client.query('COMMIT')
-    res.json({ ok: true, recipients })
+    res.json({ ok: true, recipients, deferAgentWake, ...(knowledgeSourceId ? { knowledgeSourceId } : {}) })
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error

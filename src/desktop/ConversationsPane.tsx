@@ -5,8 +5,7 @@ import { type ApiSearchResults, api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { ContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { GroupCreator } from '@/components/GroupCreator'
-import { IAgent, ICanvas, IDoc, IExit, IMail, IPlus, IRepeat, ISettings } from '@/components/icons'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { IAgent, ICanvas, IDoc, IMail, IPlus, ISettings } from '@/components/icons'
 import { ConversationListItemContent } from '@/im/ConversationList'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { cn } from '@/lib/utils'
@@ -15,16 +14,11 @@ import { useAuth } from '@/stores/auth'
 import { isMuted, useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
 import type { Conversation, Participant } from '@/types'
+import { SidebarFooter } from './SidebarFooter'
 
 const SearchIcon = ({ className = '' }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className} aria-hidden>
     <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-  </svg>
-)
-
-const MoreIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden>
-    <circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="19" cy="12" r="1.7" />
   </svg>
 )
 
@@ -96,25 +90,24 @@ export function ConversationsPane() {
   const selected = useApp((s) => s.selectedConversationId)
   const select = useApp((s) => s.selectConversation)
   const authUser = useAuth((s) => s.user)
-  const me = useParticipants((s) => authUser?.id ? s.byId[authUser.id] : undefined)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ApiSearchResults | null>(null)
   const [searching, setSearching] = useState(false)
   const [launcherOpen, setLauncherOpen] = useState(false)
-  const [accountOpen, setAccountOpen] = useState(false)
   const [creating, setCreating] = useState<string[] | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null)
   const [addingMembers, setAddingMembers] = useState<Conversation | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault(); searchRef.current?.focus(); searchRef.current?.select()
-      }
+    const focusSearch = () => { searchRef.current?.focus(); searchRef.current?.select() }
+    const createGroup = () => setCreating([])
+    window.addEventListener('lingxiloop:focus-conversation-search', focusSearch)
+    window.addEventListener('lingxiloop:new-group', createGroup)
+    return () => {
+      window.removeEventListener('lingxiloop:focus-conversation-search', focusSearch)
+      window.removeEventListener('lingxiloop:new-group', createGroup)
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
   }, [])
 
   useEffect(() => {
@@ -169,23 +162,18 @@ export function ConversationsPane() {
     setMenu({ x: event.clientX, y: event.clientY, items })
   }
 
-  const fallback: Participant = {
-    id: authUser?.id ?? 'me', kind: 'human', name: authUser?.name ?? '我', initial: (authUser?.name ?? '我').charAt(0),
-    avatarBg: 'linear-gradient(135deg,#1084fe,#7c5cff)', status: 'avail',
-  }
-
   return (
-    <aside className="relative flex h-full min-h-0 flex-col border-r border-hairline bg-panel text-ink">
+    <aside className="im-conversations-sidebar relative flex h-full min-h-0 flex-col border-r border-hairline bg-panel text-ink">
       <div className="desktop-window-toolbar omb-drag flex h-16 shrink-0 items-center gap-2.5 px-[13px] py-2">
         <div className="relative omb-no-drag">
-          <button type="button" onClick={() => setLauncherOpen((open) => !open)} className="grid size-10 place-items-center rounded-full text-ink-secondary transition-colors hover:bg-raised hover:text-ink" aria-label="打开主菜单">
+          <button type="button" aria-expanded={launcherOpen} aria-haspopup="menu" onClick={() => setLauncherOpen((open) => !open)} className="grok-top-menu-trigger" aria-label="打开主菜单">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
           {launcherOpen && (
             <>
               <button type="button" aria-label="关闭主菜单" className="fixed inset-0 z-30 cursor-default" onClick={() => setLauncherOpen(false)} />
-              <div className="app-menu-surface absolute left-0 top-full z-40 mt-2 min-w-[216px] overflow-hidden p-1">
-                <div className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-secondary">LingxiLoop</div>
+              <div className="app-menu-surface grok-top-menu absolute left-0 top-full z-40 mt-1 min-w-[216px] overflow-hidden p-1" role="menu" aria-label="LingxiLoop">
+                <div className="grok-top-menu-label">LingxiLoop</div>
                 <button type="button" onClick={() => { setLauncherOpen(false); setCreating([]) }} className="app-menu-item"><span className="app-menu-icon"><IPlus /></span>新建群聊</button>
                 <button type="button" onClick={() => { setLauncherOpen(false); useApp.getState().openComposeNew() }} className="app-menu-item"><span className="app-menu-icon"><IMail /></span>写邮件</button>
                 <div className="my-1 h-px bg-hairline" />
@@ -231,21 +219,7 @@ export function ConversationsPane() {
         )}
       </div>
 
-      <div className="relative shrink-0 px-3 pb-3 pt-2">
-        <button type="button" onClick={() => setAccountOpen((open) => !open)} className="flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-raised/70">
-          <Avatar p={me ?? fallback} size={30} ringColor="var(--panel)" />
-          <span className="min-w-0 flex-1 truncate text-[14px] text-ink">{authUser?.name ?? '我的账号'}</span>
-          <MoreIcon />
-        </button>
-        {accountOpen && (
-          <><button type="button" aria-label="关闭账号菜单" className="fixed inset-0 z-30 cursor-default" onClick={() => setAccountOpen(false)} /><div className="app-menu-surface absolute bottom-full left-3 right-3 z-40 mb-2 p-1.5">
-            <button type="button" onClick={() => { useApp.getState().setView('me'); setAccountOpen(false) }} className="app-menu-item"><span className="app-menu-icon"><ISettings /></span>个人设置</button>
-            <ThemeToggle showLabel className="app-menu-item justify-start" onToggle={() => setAccountOpen(false)} />
-            <button type="button" onClick={() => { window.dispatchEvent(new Event('lingxiloop:open-updater')); setAccountOpen(false) }} className="app-menu-item"><span className="app-menu-icon"><IRepeat /></span>检查更新</button>
-            <button type="button" onClick={async () => { try { await api.authLogout() } catch { /* best effort */ } useAuth.getState().clear(); location.reload() }} className="app-menu-item is-destructive"><span className="app-menu-icon"><IExit /></span>退出登录</button>
-          </div></>
-        )}
-      </div>
+      <SidebarFooter />
       {menu && <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />}
       {creating && <GroupCreator initialPicked={creating} onClose={() => setCreating(null)} />}
       {addingMembers && <AddMembersDialog conversation={addingMembers} onClose={() => setAddingMembers(null)} />}
