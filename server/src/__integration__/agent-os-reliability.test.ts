@@ -6,11 +6,11 @@ import express from 'express'
 import { agentOSControlRouter, executeActionWithLedger } from '../agent-os/control-plane.js'
 import { executeLearningAction } from '../agent-os/learning-actions.js'
 import type { AgentWorkItem, HostAction, LingxiMessageV1 } from '../agent-os/types.js'
-import { pool } from '../db/pool.js'
-import { wukongWebhookRouter } from '../im/webhook.js'
-import { imRouter } from '../im/router.js'
-import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 import { sweepAgentWorkWatchdog } from '../agent-os/work-watchdog.js'
+import { pool } from '../db/pool.js'
+import { imRouter } from '../im/router.js'
+import { wukongWebhookRouter } from '../im/webhook.js'
+import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 const COMPANY = 'co-agent-os-reliability'
@@ -23,6 +23,7 @@ const WEBHOOK_SECRET = 'agent-os-reliability-webhook-secret'
 let server: Server
 let baseUrl = ''
 const persistedClientMessages = new Set<string>()
+const emittedEvents: Array<Parameters<WukongClient['emitEvent']>[0]> = []
 let sendAttempts = 0
 
 class IdempotentWukong extends WukongClient {
@@ -30,6 +31,10 @@ class IdempotentWukong extends WukongClient {
     sendAttempts += 1
     persistedClientMessages.add(payload.clientMsgNo)
     return { messageId: `wk-${payload.clientMsgNo}`, messageSeq: [...persistedClientMessages].indexOf(payload.clientMsgNo) + 1 }
+  }
+
+  override async emitEvent(args: Parameters<WukongClient['emitEvent']>[0]): Promise<void> {
+    emittedEvents.push(structuredClone(args))
   }
 }
 
@@ -57,6 +62,7 @@ before(async () => {
 beforeEach(async () => {
   await resetAllTables()
   persistedClientMessages.clear()
+  emittedEvents.length = 0
   sendAttempts = 0
   await pool.query(`INSERT INTO companies (id,name,slug) VALUES ($1,'Reliability','agent-os-reliability')`, [COMPANY])
   await pool.query(`INSERT INTO company_members(company_id,user_id,role) VALUES($1,$2,'member')`, [COMPANY, HUMAN])
@@ -115,6 +121,58 @@ test('[integration] failed webhook dispatch rolls back its receipt and the same 
   assert.equal(retried.status, 200)
   assert.equal((await pool.query(`SELECT 1 FROM wukong_webhook_receipts WHERE event_id=$1 AND processed_at IS NOT NULL`, [eventId])).rowCount, 1)
   assert.equal((await pool.query(`SELECT 1 FROM agent_work_items WHERE trigger_client_msg_no=$1`, [`msg-${eventId}`])).rowCount, 1)
+  assert.equal(emittedEvents.length, 1)
+  assert.equal(emittedEvents[0]?.eventType, 'stream.open')
+  assert.equal(emittedEvents[0]?.fromUid, AGENT)
+  assert.match(emittedEvents[0]?.clientMsgNo ?? '', /^preview-/)
+  assert.deepEqual(emittedEvents[0]?.data, { kind: 'text', text: '', phase: 'thinking', queued: true, streamSeq: 0 })
+
+  const duplicate = await postWebhook(body)
+  assert.equal(duplicate.status, 200)
+  assert.equal(emittedEvents.length, 1)
+})
+
+test('[integration] @all queues six agents and opens one unique thinking preview for each', async () => {
+  const agentIds = [AGENT, ...Array.from({ length: 5 }, (_, index) => `agent-agent-os-reliability-${index + 2}`)]
+  for (const [index, agentId] of agentIds.slice(1).entries()) {
+    await pool.query(
+      `INSERT INTO participants (id,company_id,kind,name,role,initial,avatar_bg,status,capabilities)
+       VALUES ($1,$2,'agent',$3,'coach','A','#6d5dfc','avail','[]'::jsonb)`,
+      [agentId, COMPANY, `Agent ${index + 2}`],
+    )
+  }
+  await pool.query(
+    `UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$1::jsonb) WHERE channel_id=$2`,
+    [JSON.stringify([...agentIds, HUMAN]), CHANNEL],
+  )
+  const eventId = `all-${randomUUID()}`
+  const body = JSON.stringify({
+    event_id: eventId,
+    event_type: 'message.committed',
+    message: {
+      channel_id: CHANNEL,
+      channel_type: 2,
+      from_uid: HUMAN,
+      client_msg_no: `msg-${eventId}`,
+      payload: {
+        version: 1,
+        kind: 'text',
+        clientMsgNo: `msg-${eventId}`,
+        body: '@all Help me study.',
+        data: { mentionAll: true },
+      },
+    },
+  })
+
+  const response = await postWebhook(body)
+  assert.equal(response.status, 200)
+  assert.equal((await pool.query(`SELECT 1 FROM agent_work_items WHERE trigger_client_msg_no=$1`, [`msg-${eventId}`])).rowCount, 6)
+  assert.equal(emittedEvents.length, 6)
+  assert.equal(new Set(emittedEvents.map((event) => event.clientMsgNo)).size, 6)
+  assert.deepEqual(new Set(emittedEvents.map((event) => event.fromUid)), new Set(agentIds))
+  assert.equal(emittedEvents.every((event) => event.eventType === 'stream.open'), true)
+  assert.equal(emittedEvents.every((event) => (event.data as { phase?: string }).phase === 'thinking'), true)
+  assert.equal(emittedEvents.every((event) => (event.data as { streamSeq?: number }).streamSeq === 0), true)
 })
 
 test('[integration] durable lanes and watchdog preempt lower-lane work without losing it', async () => {

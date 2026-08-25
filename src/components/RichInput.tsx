@@ -11,19 +11,19 @@
  * pre-contenteditable composer.
  */
 import {
+  type ClipboardEvent,
+  type CSSProperties,
   forwardRef,
+  type KeyboardEvent,
   useCallback,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useRef,
-  type CSSProperties,
-  type ClipboardEvent,
-  type KeyboardEvent,
 } from 'react'
-import { findSkypeByKey, findSkypeByShortcode, SKYPE_SHORTCODE_RE, skypeEmojiUrl } from '@/lib/skypeEmojis'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
+import { findSkypeByKey, findSkypeByShortcode, SKYPE_SHORTCODE_RE, skypeEmojiUrl } from '@/lib/skypeEmojis'
 
 export interface MentionInfo {
   /** Display name shown after the `@` inside the chip. */
@@ -44,7 +44,7 @@ export interface RichInputHandle {
   getValue(): string
   /** Replace the entire content. Used when switching conversations or
    *  clearing after send. */
-  setValue(s: string): void
+  setValue(s: string, caretOffset?: number): void
   /** Insert plain text at the current caret position. Returns the new
    *  serialized value + caret offset. */
   insertText(s: string): void
@@ -371,6 +371,60 @@ function moveCaretToEnd(el: HTMLElement) {
   sel.addRange(range)
 }
 
+/** Restore a caret expressed in the editor's serialized text coordinates.
+ * Mention/emoji atoms count as their wire token length, while newlines are
+ * represented by BR nodes. This keeps picker replacements at the insertion
+ * point instead of jumping to the end (or onto a browser-created block). */
+function moveCaretToOffset(el: HTMLElement, requested: number) {
+  let remaining = Math.max(0, requested)
+  const range = document.createRange()
+  let placed = false
+  const visit = (node: Node) => {
+    if (placed) return
+    if (node.nodeType === Node.TEXT_NODE) {
+      const length = node.nodeValue?.length ?? 0
+      if (remaining <= length) {
+        range.setStart(node, remaining)
+        range.collapse(true)
+        placed = true
+      } else remaining -= length
+      return
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return
+    const element = node as HTMLElement
+    const mentionId = element.dataset.mentionId
+    const skypeKey = element.dataset.skypeEmoji
+    const atomLength = mentionId
+      ? mentionId.length + 1
+      : skypeKey ? (findSkypeByKey(skypeKey)?.shortcodes[0] ?? `(${skypeKey})`).length : 0
+    if (atomLength) {
+      if (remaining <= atomLength) {
+        range.setStartAfter(element)
+        range.collapse(true)
+        placed = true
+      } else remaining -= atomLength
+      return
+    }
+    if (element.tagName === 'BR') {
+      if (remaining <= 1) {
+        range.setStartAfter(element)
+        range.collapse(true)
+        placed = true
+      } else remaining -= 1
+      return
+    }
+    for (const child of Array.from(element.childNodes)) visit(child)
+  }
+  for (const child of Array.from(el.childNodes)) visit(child)
+  if (!placed) {
+    range.selectNodeContents(el)
+    range.collapse(false)
+  }
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+}
+
 export const RichInput = forwardRef<RichInputHandle, Props>(function RichInput(
   {
     defaultValue, placeholder, className, style, maxHeight,
@@ -452,13 +506,15 @@ export const RichInput = forwardRef<RichInputHandle, Props>(function RichInput(
       const el = elRef.current
       return el ? serializeNode(el) : ''
     },
-    setValue(s: string) {
+    setValue(s: string, caretOffset?: number) {
       const el = elRef.current
       if (!el) return
       inflate(s, el, resolveMentionRef.current)
       lastEmittedRef.current = s
-      moveCaretToEnd(el)
-      onChange?.(s, s.length)
+      const nextCaret = Math.min(Math.max(0, caretOffset ?? s.length), s.length)
+      if (caretOffset === undefined) moveCaretToEnd(el)
+      else moveCaretToOffset(el, nextCaret)
+      onChange?.(s, nextCaret)
     },
     insertText(s: string) {
       const el = elRef.current

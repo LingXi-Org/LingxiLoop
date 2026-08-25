@@ -525,19 +525,20 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
     // Keep it ephemeral so it cannot leak into history as a tool bubble.
     await wukongClient().emitEvent({
       channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
-      eventId: `${event.runId}:${event.seq}`, eventType: 'stream.open', data: { kind: 'text', text: '' },
+      eventId: `${event.runId}:${event.seq}`, eventType: 'stream.open',
+      data: { kind: 'text', text: '', phase: 'thinking', streamSeq: event.seq },
     }).catch(() => undefined)
   } else if (event.kind === 'model.delta') {
     await wukongClient().emitEvent({
       channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
       eventId: `${event.runId}:${event.seq}`, eventType: 'stream.delta',
-      data: { kind: 'text', delta: String((event.data as { delta?: unknown } | null)?.delta ?? '') },
+      data: { kind: 'text', delta: String((event.data as { delta?: unknown } | null)?.delta ?? ''), streamSeq: event.seq },
     }).catch(() => undefined)
   } else if (event.kind === 'run.completed' || event.kind === 'run.failed' || event.kind === 'run.cancelled') {
     const eventType = event.kind === 'run.completed' ? 'stream.close' : event.kind === 'run.cancelled' ? 'stream.cancel' : 'stream.error'
     await wukongClient().emitEvent({
       channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
-      eventId: `${event.runId}:${event.seq}`, eventType, data: { kind: 'text', event },
+      eventId: `${event.runId}:${event.seq}`, eventType, data: { kind: 'text', event, streamSeq: event.seq },
     }).catch(() => undefined)
   } else if (event.kind === 'approval.pending') {
     const approvalId = String((event.data as { approvalId?: unknown } | null)?.approvalId ?? '')

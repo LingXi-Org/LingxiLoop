@@ -5,7 +5,7 @@ import {
   type KernelExecutor,
   KernelTimeoutError,
 } from './kernel-manager.js'
-import type { AgentModelDriver } from './model-driver.js'
+import { type AgentModelDriver, ModelAdapterError } from './model-driver.js'
 import { parseIPythonArguments } from './tool.js'
 import type { AgentContext, AgentRunEvent, AgentSessionRecord, AgentWorkItem, LingxiMessageV1, MemorySynthesisChange, ModelItem, PromptContextV1 } from './types.js'
 
@@ -223,7 +223,11 @@ export class AgentOSRuntime {
         session.history.push(...turn.output)
         await this.event(work, runId, {
           kind: 'model.completed', stage: 'completed', visibility: 'internal',
-          data: { hop: hop + 1, usage: turn.usage },
+          data: {
+            hop: hop + 1,
+            usage: turn.usage.available === false ? { available: false } : turn.usage,
+            ...(turn.diagnostics ? { diagnostics: turn.diagnostics } : {}),
+          },
         })
         const calls = turn.output.filter((item): item is Extract<ModelItem, { type: 'function_call' }> => 'type' in item && item.type === 'function_call')
         if (calls.length === 0) {
@@ -280,7 +284,7 @@ export class AgentOSRuntime {
             : session.promptContext
         }
       }
-      if (!finalText) throw new Error(`agent did not finish within ${this.options.maxHops} model hops`)
+      if (!finalText) throw new Error(`agent exhausted ${this.options.maxHops} model hops without a final assistant response`)
       if (work.reason !== 'canvas_worker') await this.host.commitMessage(work, messagePayload(work, finalText, runId, context))
       if ((work.reason === 'message' || work.reason === 'mention') && context.learnerId) {
         const trigger = context.messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)
@@ -300,7 +304,10 @@ export class AgentOSRuntime {
       const status = cancelled ? 'cancelled' : 'failed'
       await this.event(work, runId, {
         kind: cancelled ? 'run.cancelled' : 'run.failed', stage: status, visibility: 'user',
-        data: { error: error instanceof Error ? error.message : String(error) },
+        data: {
+          error: error instanceof Error ? error.message : String(error),
+          ...(error instanceof ModelAdapterError ? { modelDiagnostics: error.diagnostics } : {}),
+        },
       }).catch(() => undefined)
       await this.host.completeWork(work, { status, error: error instanceof Error ? error.message : String(error) })
     } finally {

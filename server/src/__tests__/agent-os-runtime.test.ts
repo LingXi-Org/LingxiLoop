@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { MemoryHostAdapter } from '../agent-os/host-adapter.js'
 import type { KernelExecutor } from '../agent-os/kernel-manager.js'
-import { ScriptedModelDriver, type AgentModelDriver, type ModelTurnResult } from '../agent-os/model-driver.js'
+import { type AgentModelDriver, ModelAdapterError, type ModelTurnResult, ScriptedModelDriver } from '../agent-os/model-driver.js'
 import { AgentOSRuntime, canvasContextContract, knowledgeContextContract } from '../agent-os/runtime.js'
 import type { AgentContext, AgentWorkItem, KernelExecution, ModelItem } from '../agent-os/types.js'
 
@@ -84,6 +84,27 @@ test('Agent OS runs multi-hop IPython and keeps the channel session across work 
   assert.ok(history.some((item) => 'type' in item && item.type === 'function_call_output'))
   assert.equal(host.outcomes.get(first.id)?.status, 'completed')
   assert.equal(host.outcomes.get(second.id)?.status, 'completed')
+})
+
+test('an empty model response fails once with adapter diagnostics, not a hop-limit error', async () => {
+  const item = work('empty-model', 'm-empty')
+  const host = new MemoryHostAdapter()
+  host.contexts.set(item.id, context(item, 'Hello?'))
+  const diagnostics = { chunkCount: 1, choiceCount: 1, finishReasons: ['stop'], contentLength: 0, toolCallCount: 0, chunkShapes: ['{"deltaKeys":["role"]}'] }
+  const model: AgentModelDriver = {
+    run: async () => { throw new ModelAdapterError('model returned no assistant content or supported tool calls', diagnostics) },
+    compact: async () => '',
+    structured: async () => ({}),
+  }
+  await new AgentOSRuntime(host, model, new StatefulKernel(), { heartbeatMs: 60_000 }).runWork(item)
+  const started = host.events.filter((event) => event.kind === 'model.started')
+  const failed = host.events.find((event) => event.kind === 'run.failed')
+  assert.equal(started.length, 1)
+  assert.ok(failed?.data && typeof failed.data === 'object')
+  const failedData = failed.data as Record<string, unknown>
+  assert.match(String(failedData.error), /no assistant content/)
+  assert.deepEqual(failedData.modelDiagnostics, diagnostics)
+  assert.doesNotMatch(String(host.outcomes.get(item.id)?.error), /model hops/)
 })
 
 test('PromptContext stays frozen within one compaction epoch', async () => {

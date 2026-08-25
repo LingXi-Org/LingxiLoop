@@ -7,12 +7,22 @@ export type ModelTurnResult = {
   output: ModelItem[]
   text: string
   usage: { inputTokens: number; outputTokens: number; available?: boolean }
+  diagnostics?: ModelTurnDiagnostics
 }
 
-export class ModelCompatibilityError extends Error {
-  constructor(message: string) {
+export type ModelTurnDiagnostics = {
+  chunkCount: number
+  choiceCount: number
+  finishReasons: string[]
+  contentLength: number
+  toolCallCount: number
+  chunkShapes: string[]
+}
+
+export class ModelAdapterError extends Error {
+  constructor(message: string, readonly diagnostics: ModelTurnDiagnostics) {
     super(message)
-    this.name = 'ModelCompatibilityError'
+    this.name = 'ModelAdapterError'
   }
 }
 
@@ -77,29 +87,52 @@ export class DeepSeekChatDriver implements AgentModelDriver {
     let inputTokens = 0
     let outputTokens = 0
     let usageAvailable = false
-    let finishReason: string | null = null
     let chunkCount = 0
+    let choiceCount = 0
+    const finishReasons = new Set<string>()
+    const chunkShapes: string[] = []
     const calls = new Map<number, { id: string; name: string; arguments: string }>()
     for await (const chunk of stream) {
       chunkCount += 1
+      choiceCount += chunk.choices.length
+      if (chunkShapes.length < 8) {
+        chunkShapes.push(JSON.stringify({
+          keys: Object.keys(chunk),
+          choices: chunk.choices.map((choice) => ({
+            keys: Object.keys(choice),
+            deltaKeys: choice.delta ? Object.keys(choice.delta) : [],
+            // A few compatible gateways put a complete message in each SSE
+            // event instead of using OpenAI's delta envelope.
+            messageKeys: Object.keys((choice as unknown as { message?: object }).message ?? {}),
+            finishReason: choice.finish_reason ?? null,
+          })),
+        }))
+      }
       if (chunk.usage) {
         usageAvailable = true
         inputTokens = chunk.usage.prompt_tokens ?? 0
         outputTokens = chunk.usage.completion_tokens ?? 0
       }
-      finishReason = chunk.choices[0]?.finish_reason ?? finishReason
-      const delta = chunk.choices[0]?.delta
-      if (!delta) continue
-      if (delta.content) {
-        text += delta.content
-        await args.onTextDelta?.(delta.content)
-      }
-      for (const raw of delta.tool_calls ?? []) {
-        const existing = calls.get(raw.index) ?? { id: '', name: '', arguments: '' }
-        if (raw.id) existing.id = raw.id
-        if (raw.function?.name) existing.name += raw.function.name
-        if (raw.function?.arguments) existing.arguments += raw.function.arguments
-        calls.set(raw.index, existing)
+      for (const choice of chunk.choices) {
+        if (choice.finish_reason) finishReasons.add(choice.finish_reason)
+        const compatible = choice as unknown as {
+          delta?: { content?: string | null; tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }> }
+          message?: { content?: string | null; tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }> }
+        }
+        const content = compatible.delta?.content ?? compatible.message?.content
+        if (content) {
+          text += content
+          await args.onTextDelta?.(content)
+        }
+        const rawCalls = compatible.delta?.tool_calls ?? compatible.message?.tool_calls ?? []
+        for (const [position, raw] of rawCalls.entries()) {
+          const index = raw.index ?? position
+          const existing = calls.get(index) ?? { id: '', name: '', arguments: '' }
+          if (raw.id) existing.id = raw.id
+          if (raw.function?.name) existing.name += raw.function.name
+          if (raw.function?.arguments) existing.arguments += raw.function.arguments
+          calls.set(index, existing)
+        }
       }
     }
     if (text) output.push({ role: 'assistant', content: text })
@@ -108,10 +141,22 @@ export class DeepSeekChatDriver implements AgentModelDriver {
         output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.arguments })
       }
     }
+    let diagnostics: ModelTurnDiagnostics = {
+      chunkCount,
+      choiceCount,
+      finishReasons: [...finishReasons],
+      contentLength: text.length,
+      toolCallCount: output.filter((item) => 'type' in item && item.type === 'function_call').length,
+      chunkShapes,
+    }
     if (output.length === 0) {
-      // Some compatible gateways emit SSE accepted by the SDK but without
-      // materialized deltas. Retry once using the more portable JSON envelope.
-      const fallback = await this.client.chat.completions.create({ ...request, stream: false }, { signal: args.signal })
+      // A few gateways accept an SSE request but return an envelope the SDK
+      // cannot materialize. Retry once with the portable JSON response while
+      // retaining the stream diagnostics for operator visibility.
+      const fallback = await this.client.chat.completions.create(
+        { ...request, stream: false },
+        { signal: args.signal },
+      )
       const message = fallback.choices[0]?.message
       const fallbackText = typeof message?.content === 'string' ? message.content : ''
       if (fallbackText) {
@@ -129,10 +174,18 @@ export class DeepSeekChatDriver implements AgentModelDriver {
         inputTokens = fallback.usage.prompt_tokens
         outputTokens = fallback.usage.completion_tokens
       }
+      const fallbackReason = fallback.choices[0]?.finish_reason
+      if (fallbackReason) finishReasons.add(fallbackReason)
+      diagnostics = {
+        ...diagnostics,
+        finishReasons: [...finishReasons],
+        contentLength: text.length,
+        toolCallCount: output.filter((item) => 'type' in item && item.type === 'function_call').length,
+      }
       if (output.length === 0) {
-        const fallbackReason = fallback.choices[0]?.finish_reason ?? 'unavailable'
-        throw new ModelCompatibilityError(
-          `model returned no assistant content or tool calls (stream chunks=${chunkCount}, stream finish_reason=${finishReason ?? 'unavailable'}, fallback finish_reason=${fallbackReason})`,
+        throw new ModelAdapterError(
+          `model returned no assistant content or supported tool calls after stream and JSON fallback (chunks=${chunkCount}, choices=${choiceCount}, finishReasons=${diagnostics.finishReasons.join(',') || 'unavailable'})`,
+          diagnostics,
         )
       }
     }
@@ -140,6 +193,7 @@ export class DeepSeekChatDriver implements AgentModelDriver {
       output,
       text,
       usage: { inputTokens, outputTokens, available: usageAvailable },
+      diagnostics,
     }
   }
 

@@ -1,9 +1,10 @@
 import '../logging.js'
 import http from 'node:http'
-import { AgentOSRuntime } from './runtime.js'
+import { parseAgentOSConcurrency } from './concurrency-config.js'
 import { HttpHostAdapter } from './host-adapter.js'
 import { KernelManager } from './kernel-manager.js'
 import { DeepSeekChatDriver } from './model-driver.js'
+import { AgentOSRuntime } from './runtime.js'
 
 function required(name: string): string {
   const value = process.env[name]?.trim()
@@ -24,11 +25,7 @@ const model = new DeepSeekChatDriver(process.env.DEEPSEEK_MODEL ?? 'deepseek-cha
 })
 const kernels = new KernelManager({ execute: (work, action) => host.executeAction(work, action) })
 const runtime = new AgentOSRuntime(host, model, kernels)
-const configuredConcurrency = Number(process.env.AGENT_OS_MAX_CONCURRENT_RUNS ?? 4)
-if (!Number.isInteger(configuredConcurrency) || configuredConcurrency < 1 || configuredConcurrency > 32) {
-  throw new Error('AGENT_OS_MAX_CONCURRENT_RUNS must be an integer between 1 and 32')
-}
-const maxConcurrentRuns = configuredConcurrency
+const maxConcurrentRuns = parseAgentOSConcurrency(process.env.AGENT_OS_MAX_CONCURRENT_RUNS)
 const active = new Map<string, { controller: AbortController; done: Promise<void> }>()
 let stopping = false
 
