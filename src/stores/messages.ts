@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
-import { hasBroadcastMention, withoutFinalizedActiveRuns } from '@/lib/chatMessages'
+import {
+  ACTIVE_STREAM_EXPIRY_MS,
+  hasBroadcastMention,
+  shouldApplyStreamEvent,
+  streamExpiryForOpen,
+  streamModeForOpen,
+  withoutFinalizedActiveRuns,
+} from '@/lib/chatMessages'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { type ImEnvelope, isInternalAgentStatus, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
@@ -24,7 +31,7 @@ export const VIRTUOSO_FIRST_INDEX_BASE = 1_000_000
 export interface MessagesState {
   byConvo: Record<string, Message[]>
   /** in-flight streaming bodies, keyed by message id */
-  streaming: Record<string, { body: string; conversationId: string; authorId: string; sequence: number; mode?: 'markdown'; runId?: string }>
+  streaming: Record<string, { body: string; conversationId: string; authorId: string; sequence: number; mode?: 'placeholder' | 'markdown'; runId?: string }>
   /** which agents are currently typing in each conversation */
   typing: Record<string, string[]>
   loaded: Set<string>
@@ -68,8 +75,23 @@ const typingExpiryTimers = new Map<string, number>()
 // before its first delta. 10s was tripping on legitimate gaps, dropping
 // the in-progress bubble and force-reloading mid-reply — which reads as
 // "the reply failed and got resent." Give it real headroom.
-const STREAMING_STALE_MS = 45_000
 const streamingExpiryTimers = new Map<string, number>()
+const streamEventSequences = new Map<string, number>()
+const STREAM_EVENT_SEQUENCE_LIMIT = 2_000
+
+function acceptStreamEvent(messageId: string, sequence: number | undefined): boolean {
+  if (!shouldApplyStreamEvent(streamEventSequences.get(messageId), sequence)) return false
+  if (sequence !== undefined) {
+    // Refresh insertion order so the bounded map retains recently active runs.
+    streamEventSequences.delete(messageId)
+    streamEventSequences.set(messageId, sequence)
+    if (streamEventSequences.size > STREAM_EVENT_SEQUENCE_LIMIT) {
+      const oldest = streamEventSequences.keys().next().value
+      if (oldest !== undefined) streamEventSequences.delete(oldest)
+    }
+  }
+  return true
+}
 
 function clearStreamingExpiry(messageId: string): void {
   const timer = streamingExpiryTimers.get(messageId)
@@ -77,7 +99,7 @@ function clearStreamingExpiry(messageId: string): void {
   streamingExpiryTimers.delete(messageId)
 }
 
-function scheduleStreamingExpiry(messageId: string, conversationId: string): void {
+function scheduleStreamingExpiry(messageId: string, conversationId: string, timeoutMs = ACTIVE_STREAM_EXPIRY_MS): void {
   clearStreamingExpiry(messageId)
   const timer = window.setTimeout(() => {
     streamingExpiryTimers.delete(messageId)
@@ -89,7 +111,7 @@ function scheduleStreamingExpiry(messageId: string, conversationId: string): voi
     // delta is sent. Refetching converts a missed terminal event into the
     // complete message instead of leaving a permanent half-bubble.
     void useMessages.getState().reloadConversation(conversationId)
-  }, STREAMING_STALE_MS)
+  }, timeoutMs)
   streamingExpiryTimers.set(messageId, timer)
 }
 
@@ -1059,18 +1081,19 @@ export function bootMessagesStream() {
     })
     lingxiIm.subscribeEvent((event) => {
       const id = event.clientMsgNo
+      if (!acceptStreamEvent(id, event.streamSeq)) return
       if (event.type === 'stream.open') {
         useMessages.setState((state) => ({
           streaming: {
             ...state.streaming,
             [id]: {
               body: event.text ?? '', conversationId: event.channelId, authorId: event.fromUid,
-              sequence: Number.MAX_SAFE_INTEGER - 10, mode: 'markdown',
+              sequence: Number.MAX_SAFE_INTEGER - 10, mode: streamModeForOpen(event.phase),
               runId: id.startsWith('preview-') ? id.slice('preview-'.length) : undefined,
             },
           },
         }))
-        scheduleStreamingExpiry(id, event.channelId)
+        scheduleStreamingExpiry(id, event.channelId, streamExpiryForOpen(event.queued === true))
         return
       }
       if (event.type === 'stream.delta') {
@@ -1078,7 +1101,7 @@ export function bootMessagesStream() {
           const current = state.streaming[id] ?? {
             body: '', conversationId: event.channelId, authorId: event.fromUid, sequence: Number.MAX_SAFE_INTEGER - 10,
           }
-          return { streaming: { ...state.streaming, [id]: { ...current, body: current.body + (event.delta ?? '') } } }
+          return { streaming: { ...state.streaming, [id]: { ...current, body: current.body + (event.delta ?? ''), mode: 'markdown' } } }
         })
         scheduleStreamingExpiry(id, event.channelId)
         return

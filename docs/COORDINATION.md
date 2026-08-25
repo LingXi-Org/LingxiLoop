@@ -15,7 +15,7 @@ and converted to an `AgentWorkItem` in the same PostgreSQL transaction as its
 receipt. An unprocessed receipt is retryable. The durable queue grants a lease
 with a monotonic fencing token plus a session lease, so only one work item can
 mutate a session at a time. Each worker also enforces
-`AGENT_OS_MAX_CONCURRENT_RUNS` (default 4) to bound model and kernel pressure.
+`AGENT_OS_MAX_CONCURRENT_RUNS` (default 8) to bound model and kernel pressure.
 
 Agent OS owns the model loop and history. It streams visible deltas and
 activity, posts exactly one durable final message, and checkpoints the session
