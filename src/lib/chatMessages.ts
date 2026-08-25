@@ -22,3 +22,9 @@ export function streamModeForOpen(phase?: string): 'placeholder' | 'markdown' {
 export function streamExpiryForOpen(queued: boolean): number {
   return queued ? QUEUED_STREAM_EXPIRY_MS : ACTIVE_STREAM_EXPIRY_MS
 }
+
+export function shouldApplyStreamEvent(lastSequence: number | undefined, incomingSequence: number | undefined): boolean {
+  // Sequence-less events come from older servers and retain their original behavior.
+  if (incomingSequence === undefined) return true
+  return lastSequence === undefined || incomingSequence > lastSequence
+}

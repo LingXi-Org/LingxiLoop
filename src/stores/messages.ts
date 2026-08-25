@@ -3,6 +3,7 @@ import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
 import {
   ACTIVE_STREAM_EXPIRY_MS,
   hasBroadcastMention,
+  shouldApplyStreamEvent,
   streamExpiryForOpen,
   streamModeForOpen,
   withoutFinalizedActiveRuns,
@@ -75,6 +76,22 @@ const typingExpiryTimers = new Map<string, number>()
 // the in-progress bubble and force-reloading mid-reply — which reads as
 // "the reply failed and got resent." Give it real headroom.
 const streamingExpiryTimers = new Map<string, number>()
+const streamEventSequences = new Map<string, number>()
+const STREAM_EVENT_SEQUENCE_LIMIT = 2_000
+
+function acceptStreamEvent(messageId: string, sequence: number | undefined): boolean {
+  if (!shouldApplyStreamEvent(streamEventSequences.get(messageId), sequence)) return false
+  if (sequence !== undefined) {
+    // Refresh insertion order so the bounded map retains recently active runs.
+    streamEventSequences.delete(messageId)
+    streamEventSequences.set(messageId, sequence)
+    if (streamEventSequences.size > STREAM_EVENT_SEQUENCE_LIMIT) {
+      const oldest = streamEventSequences.keys().next().value
+      if (oldest !== undefined) streamEventSequences.delete(oldest)
+    }
+  }
+  return true
+}
 
 function clearStreamingExpiry(messageId: string): void {
   const timer = streamingExpiryTimers.get(messageId)
@@ -1064,6 +1081,7 @@ export function bootMessagesStream() {
     })
     lingxiIm.subscribeEvent((event) => {
       const id = event.clientMsgNo
+      if (!acceptStreamEvent(id, event.streamSeq)) return
       if (event.type === 'stream.open') {
         useMessages.setState((state) => ({
           streaming: {

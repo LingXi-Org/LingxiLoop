@@ -118,7 +118,7 @@ test('[integration] failed webhook dispatch rolls back its receipt and the same 
   assert.equal(emittedEvents[0]?.eventType, 'stream.open')
   assert.equal(emittedEvents[0]?.fromUid, AGENT)
   assert.match(emittedEvents[0]?.clientMsgNo ?? '', /^preview-/)
-  assert.deepEqual(emittedEvents[0]?.data, { kind: 'text', text: '', phase: 'thinking', queued: true })
+  assert.deepEqual(emittedEvents[0]?.data, { kind: 'text', text: '', phase: 'thinking', queued: true, streamSeq: 0 })
 
   const duplicate = await postWebhook(body)
   assert.equal(duplicate.status, 200)
@@ -165,6 +165,7 @@ test('[integration] @all queues six agents and opens one unique thinking preview
   assert.deepEqual(new Set(emittedEvents.map((event) => event.fromUid)), new Set(agentIds))
   assert.equal(emittedEvents.every((event) => event.eventType === 'stream.open'), true)
   assert.equal(emittedEvents.every((event) => (event.data as { phase?: string }).phase === 'thinking'), true)
+  assert.equal(emittedEvents.every((event) => (event.data as { streamSeq?: number }).streamSeq === 0), true)
 })
 
 test('[integration] durable lanes and watchdog preempt lower-lane work without losing it', async () => {

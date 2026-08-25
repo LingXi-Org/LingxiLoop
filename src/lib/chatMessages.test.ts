@@ -4,6 +4,7 @@ import {
   ACTIVE_STREAM_EXPIRY_MS,
   hasBroadcastMention,
   QUEUED_STREAM_EXPIRY_MS,
+  shouldApplyStreamEvent,
   streamExpiryForOpen,
   streamModeForOpen,
   withoutFinalizedActiveRuns,
@@ -26,6 +27,15 @@ test('queued placeholders outlive active stream silence protection', () => {
   assert.equal(streamExpiryForOpen(false), ACTIVE_STREAM_EXPIRY_MS)
   assert.equal(streamExpiryForOpen(true), QUEUED_STREAM_EXPIRY_MS)
   assert.ok(QUEUED_STREAM_EXPIRY_MS > ACTIVE_STREAM_EXPIRY_MS)
+})
+
+test('stream sequence rejects a queued preview that arrives after output or termination', () => {
+  assert.equal(shouldApplyStreamEvent(undefined, 0), true)
+  assert.equal(shouldApplyStreamEvent(2, 0), false)
+  assert.equal(shouldApplyStreamEvent(4, 0), false)
+  assert.equal(shouldApplyStreamEvent(4, 4), false)
+  assert.equal(shouldApplyStreamEvent(4, 5), true)
+  assert.equal(shouldApplyStreamEvent(4, undefined), true)
 })
 
 test('hides a persisted reply only while its matching markdown stream is active', () => {

@@ -151,7 +151,7 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
     await Promise.allSettled(queuedStreams.map(({ workId, agentId }) => wukongClient().emitEvent({
       channelId, channelType, fromUid: agentId, clientMsgNo: `preview-${workId}`,
       eventId: `${workId}:queued`, eventType: 'stream.open',
-      data: { kind: 'text', text: '', phase: 'thinking', queued: true },
+      data: { kind: 'text', text: '', phase: 'thinking', queued: true, streamSeq: 0 },
     })))
     res.json({ ok: true, recipients })
   } catch (error) {
