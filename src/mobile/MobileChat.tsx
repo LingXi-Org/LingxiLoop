@@ -346,7 +346,8 @@ export function MobileChat() {
     const at = slice.lastIndexOf('@')
     if (at < 0) { setMention(null); return }
     const before = at === 0 ? '' : text[at - 1]
-    if (before && !/\s/.test(before)) { setMention(null); return }
+    const followsMentionChip = /@[A-Za-z][\w-]*$/.test(text.slice(0, at))
+    if (before && !/\s/.test(before) && !followsMentionChip) { setMention(null); return }
     const after = slice.slice(at + 1)
     if (/\s/.test(after)) { setMention(null); return }
     if (after.length > 30) { setMention(null); return }
@@ -373,9 +374,10 @@ export function MobileChat() {
     const sep = before && !/\s$/.test(before) ? ' ' : ''
     const insert = `${sep}@${token} `
     const next = `${before}${insert}${after}`.replace(/ {2,}$/, ' ')
+    const nextCaret = before.length + insert.length
     setDraft(next)
     setMention(null)
-    editorRef.current?.setValue(next)
+    editorRef.current?.setValue(next, nextCaret)
     requestAnimationFrame(() => editorRef.current?.focus())
   }
 

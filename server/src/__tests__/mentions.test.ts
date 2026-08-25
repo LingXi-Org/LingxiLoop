@@ -23,6 +23,11 @@ test('recognizes standalone @all without prefix collisions', () => {
   })
 })
 
+test('recognizes broadcast mentions next to CJK prose and legacy @everyone', () => {
+  assert.equal(parseMentions('请@all 都回答', targets).mentionAll, true)
+  assert.equal(parseMentions('@everyone please answer', targets).mentionAll, true)
+})
+
 test('ignores emails, URLs, inline code and fenced code', () => {
   const body = 'mail a@ann.com https://x.test/@anna `@iris-01`\n```ts\n@小灵\n```\nreal @human-1'
   assert.deepEqual(parseMentions(body, targets), {
