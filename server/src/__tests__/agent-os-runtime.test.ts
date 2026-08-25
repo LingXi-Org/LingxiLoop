@@ -100,8 +100,10 @@ test('an empty model response fails once with adapter diagnostics, not a hop-lim
   const started = host.events.filter((event) => event.kind === 'model.started')
   const failed = host.events.find((event) => event.kind === 'run.failed')
   assert.equal(started.length, 1)
-  assert.match(String(failed?.data.error), /no assistant content/)
-  assert.deepEqual(failed?.data.modelDiagnostics, diagnostics)
+  assert.ok(failed?.data && typeof failed.data === 'object')
+  const failedData = failed.data as Record<string, unknown>
+  assert.match(String(failedData.error), /no assistant content/)
+  assert.deepEqual(failedData.modelDiagnostics, diagnostics)
   assert.doesNotMatch(String(host.outcomes.get(item.id)?.error), /model hops/)
 })
 

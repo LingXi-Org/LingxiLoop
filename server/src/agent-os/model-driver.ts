@@ -114,7 +114,7 @@ export class DeepSeekChatDriver implements AgentModelDriver {
         if (choice.finish_reason) finishReasons.add(choice.finish_reason)
         const compatible = choice as unknown as {
           delta?: { content?: string | null; tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }> }
-          message?: { content?: string | null; tool_calls?: Array<{ id?: string; function?: { name?: string; arguments?: string } }> }
+          message?: { content?: string | null; tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }> }
         }
         const content = compatible.delta?.content ?? compatible.message?.content
         if (content) {
