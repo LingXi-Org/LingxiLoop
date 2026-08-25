@@ -42,7 +42,10 @@ jobs:
             wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
             context: .
           - package: lingxiloop-open-notebook
-            dockerfile: Dockerfile
+            # `file` is evaluated from the checked-out workspace by Buildx.
+            # Keep the narrower context: the Dockerfile's COPY paths are
+            # relative to this directory.
+            dockerfile: third_party/open-notebook/Dockerfile
             wukong_commit: ""
             context: ./third_party/open-notebook
     steps:
