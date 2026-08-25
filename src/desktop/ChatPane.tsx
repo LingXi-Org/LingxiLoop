@@ -693,12 +693,13 @@ export function Composer({
     // Collapse any accidental double-trailing-space from sandwiching
     // the new mention next to an existing one.
     const next = `${before}${insert}${after}`.replace(/ {2,}$/, ' ')
+    const nextCaret = before.length + insert.length
     setMention(null)
     // setValue reflows the editor's DOM with the new text. Caret lands
     // at the end of the field — accepting this trade-off for the mid-
     // sentence insertion case keeps the composer rewrite small. Most
     // mentions are at the tail of a message anyway.
-    editorRef.current?.setValue(next)
+    editorRef.current?.setValue(next, nextCaret)
     requestAnimationFrame(() => editorRef.current?.focus())
   }
 
@@ -760,6 +761,20 @@ export function Composer({
     const skype = text.startsWith('(') ? findSkypeByShortcode(text) : undefined
     if (skype) editor.insertSkype(skype.key)
     else editor.insertText(text)
+  }
+
+  /** Toolbar shortcut for mentions. Preserve the editor selection (the
+   * button prevents mousedown blur) and insert an inline separator when the
+   * caret follows prose, so contenteditable never needs to create a DIV/BR
+   * wrapper to establish a mention boundary. */
+  const openMentionByButton = () => {
+    const editor = editorRef.current
+    if (!editor) return
+    const caret = editor.getCaretOffset()
+    const value = editor.getValue()
+    const previous = caret > 0 ? value[caret - 1] : ''
+    editor.insertText(previous && !/\s/.test(previous) ? ' @' : '@')
+    requestAnimationFrame(() => editor.focus())
   }
 
   const [emojiOpen, setEmojiOpen] = useState(false)
@@ -1170,7 +1185,7 @@ export function Composer({
           ><IClip className="w-[17px] h-[17px]" /></button>
           <button
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => insertAtCursor('@')}
+            onClick={openMentionByButton}
             className="w-7 h-7 rounded-[7px] grid place-items-center hover:bg-sky2-50 hover:text-skype-deep transition"
             title="提及成员"
           ><IAt className="w-[17px] h-[17px]" /></button>

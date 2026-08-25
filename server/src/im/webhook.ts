@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto'
-import express, { Router, type Request, type Response, type NextFunction } from 'express'
-import { pool } from '../db/pool.js'
+import express, { type NextFunction, type Request, type Response, Router } from 'express'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
+import { pool } from '../db/pool.js'
+import { parseMentions } from '../mentions.js'
 import { resolveLearningAgentRecipients } from './routing.js'
 import { wukongClient } from './wukong.js'
 
@@ -106,27 +107,32 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
       throw Object.assign(new Error('WuKong channel is not bound yet; retry webhook'), { status: 503 })
     }
     const profileMembers = Array.isArray(bindings[0].profile.members) ? bindings[0].profile.members.map(String) : []
-    const { rows: members } = await client.query<{ id: string; kind: 'human' | 'agent'; preset_key: string | null }>(
-      `SELECT id, kind, preset_key FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
+    const { rows: members } = await client.query<{ id: string; name: string; kind: 'human' | 'agent'; preset_key: string | null }>(
+      `SELECT id, name, kind, preset_key FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
       [bindings[0].company_id, profileMembers],
     )
     if (!members.some((member) => member.id === fromUid)) {
       throw new Error('message author is not a bound channel member')
     }
     const refs = payload.refs ?? {}
-    const mentionedIds = Array.isArray(payload.data?.mentionedIds) ? payload.data.mentionedIds.map(String) : []
+    const parsedMentions = parseMentions(payload.body ?? '', members)
+    const mentionedIds = [...new Set([
+      ...(Array.isArray(payload.data?.mentionedIds) ? payload.data.mentionedIds.map(String) : []),
+      ...parsedMentions.mentionedIds,
+    ])]
+    const mentionAll = payload.data?.mentionAll === true || parsedMentions.mentionAll
     const recipients = resolveLearningAgentRecipients({
           authorId: fromUid,
           channelType: Number(bindings[0].profile.channelType ?? 2),
           members: members.map((member) => ({ id: member.id, kind: member.kind, presetKey: member.preset_key })),
           mentionedIds,
-          mentionAll: payload.data?.mentionAll === true,
+          mentionAll,
           replyAuthorId: typeof payload.data?.replyAuthorId === 'string' ? payload.data.replyAuthorId : undefined,
           leaderAgentId: bindings[0].leader_agent_id ?? undefined,
           handoffTargetId: payload.kind === 'handoff' ? refs.toAgentId : undefined,
         })
     for (const agentId of recipients) {
-      const reason = payload.kind === 'handoff' ? 'handoff' : mentionedIds.includes(agentId) || payload.data?.mentionAll === true ? 'mention' : 'message'
+      const reason = payload.kind === 'handoff' ? 'handoff' : mentionedIds.includes(agentId) || mentionAll ? 'mention' : 'message'
       await client.query(
         `INSERT INTO agent_work_items
            (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason)

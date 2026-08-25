@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
+import { hasBroadcastMention, withoutFinalizedActiveRuns } from '@/lib/chatMessages'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { type ImEnvelope, isInternalAgentStatus, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
@@ -23,7 +24,7 @@ export const VIRTUOSO_FIRST_INDEX_BASE = 1_000_000
 export interface MessagesState {
   byConvo: Record<string, Message[]>
   /** in-flight streaming bodies, keyed by message id */
-  streaming: Record<string, { body: string; conversationId: string; authorId: string; sequence: number }>
+  streaming: Record<string, { body: string; conversationId: string; authorId: string; sequence: number; mode?: 'markdown'; runId?: string }>
   /** which agents are currently typing in each conversation */
   typing: Record<string, string[]>
   loaded: Set<string>
@@ -300,6 +301,7 @@ function fromApi(m: ApiMessage): Message {
     clientId?: string | null
     mentionedIds?: string[] | null
     mentionAll?: boolean | null
+    runId?: string | null
     handoff?: Message['handoff'] | null
     approval?: Message['approval'] | null
     canvas?: Message['canvas'] | null
@@ -324,6 +326,7 @@ function fromApi(m: ApiMessage): Message {
     clientId: raw.clientId ?? undefined,
     mentionedIds: raw.mentionedIds ?? undefined,
     mentionAll: raw.mentionAll ?? undefined,
+    runId: raw.runId ?? undefined,
     handoff: raw.handoff ?? undefined,
     approval: raw.approval ?? undefined,
     canvas: raw.canvas ?? undefined,
@@ -374,6 +377,7 @@ function fromIm(message: ImEnvelope): Message {
       : undefined,
     mentionedIds: Array.isArray(data.mentionedIds) ? data.mentionedIds.map(String) : undefined,
     mentionAll: data.mentionAll === true,
+    runId: typeof payload.refs?.runId === 'string' ? payload.refs.runId : undefined,
   })
 }
 
@@ -398,6 +402,32 @@ function fromImBatch(messages: ImEnvelope[]): Message[] {
     byId.set(next.id, latest)
   }
   return sortMessagesStable([...byId.values()])
+}
+
+const activeReadTimers = new Map<string, number>()
+
+/** WuKong-delivered Agent OS messages do not necessarily have a matching app
+ * WebSocket message.new event. Mark the open room read from this transport as
+ * well, optimistically clearing its badge and debouncing the server cursor so
+ * a burst of streamed/final messages advances to the newest one. */
+function markConversationReadWhileOpen(conversationId: string): void {
+  void import('@/stores/conversations').then(({ useConversations }) => {
+    useConversations.setState((state) => ({
+      list: state.list.map((conversation) => conversation.id === conversationId
+        ? { ...conversation, unread: undefined }
+        : conversation),
+    }))
+  })
+  const current = activeReadTimers.get(conversationId)
+  if (current !== undefined) window.clearTimeout(current)
+  activeReadTimers.set(conversationId, window.setTimeout(() => {
+    activeReadTimers.delete(conversationId)
+    if (useApp.getState().selectedConversationId !== conversationId) return
+    void api.markRead(conversationId)
+      .then(() => import('@/stores/conversations'))
+      .then(({ useConversations }) => useConversations.getState().reload())
+      .catch(() => undefined)
+  }, 50))
 }
 
 function sequenceOf(m: Message): number | null {
@@ -697,7 +727,13 @@ export const useMessages = create<MessagesState>((set, get) => ({
 
 export const messagesFor = (s: MessagesState, convoId: string | null): Message[] => {
   if (!convoId) return EMPTY_MESSAGES
-  const base = s.byConvo[convoId] ?? EMPTY_MESSAGES
+  const stored = s.byConvo[convoId] ?? EMPTY_MESSAGES
+  const activeRunIds = new Set(Object.values(s.streaming)
+    .flatMap((entry) => entry.conversationId === convoId && entry.runId ? [entry.runId] : []))
+  // The durable final WuKong message can land just before stream.close.
+  // Keep showing the live Markdown row until that terminal event, then the
+  // already-cached final row takes over in the same timeline position.
+  const base = withoutFinalizedActiveRuns(stored, activeRunIds)
   const streaming = Object.entries(s.streaming)
     .filter(([id, x]) => x.conversationId === convoId
       // A streaming row's synthetic id never equals a real DB message id, so
@@ -718,7 +754,7 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
       body: x.body,
       at: timeFromIso(),
       sequence: x.sequence,
-      streaming: x.body ? 'markdown' as const : 'placeholder' as const,
+      streaming: x.mode === 'markdown' || x.body ? 'markdown' as const : 'placeholder' as const,
     }))
   const streamingAuthors = new Set(streaming.map((message) => message.authorId))
   const meId = getMeId()
@@ -862,7 +898,7 @@ export async function sendUserMessage(
   }
 
   try {
-    const mentionAll = /(^|\s)@everyone\b/i.test(v)
+    const mentionAll = hasBroadcastMention(v)
     const mentionedIds = Object.values(useParticipants.getState().byId)
       .filter((participant) => participant.kind === 'agent')
       .filter((participant) => [participant.id, participant.name].some((label) => {
@@ -995,6 +1031,8 @@ export function bootMessagesStream() {
   // behind in the byConvo cache.
   clearAllTypingExpiries()
   clearAllStreamingExpiries()
+  for (const timer of activeReadTimers.values()) window.clearTimeout(timer)
+  activeReadTimers.clear()
   useMessages.setState({
     byConvo: {},
     streaming: {},
@@ -1014,10 +1052,10 @@ export function bootMessagesStream() {
           ...state.byConvo,
           [normalized.conversationId]: mergeFetchedMessages(state.byConvo[normalized.conversationId], [normalized]),
         },
-        ...(message.payload.kind === 'text' && message.payload.refs?.runId
-          ? { streaming: Object.fromEntries(Object.entries(state.streaming).filter(([id]) => id !== `preview-${message.payload.refs?.runId}`)) }
-          : {}),
       }))
+      if (message.channelId === useApp.getState().selectedConversationId) {
+        void markConversationReadWhileOpen(message.channelId)
+      }
     })
     lingxiIm.subscribeEvent((event) => {
       const id = event.clientMsgNo
@@ -1025,7 +1063,11 @@ export function bootMessagesStream() {
         useMessages.setState((state) => ({
           streaming: {
             ...state.streaming,
-            [id]: { body: event.text ?? '', conversationId: event.channelId, authorId: event.fromUid, sequence: Number.MAX_SAFE_INTEGER - 10 },
+            [id]: {
+              body: event.text ?? '', conversationId: event.channelId, authorId: event.fromUid,
+              sequence: Number.MAX_SAFE_INTEGER - 10, mode: 'markdown',
+              runId: id.startsWith('preview-') ? id.slice('preview-'.length) : undefined,
+            },
           },
         }))
         scheduleStreamingExpiry(id, event.channelId)

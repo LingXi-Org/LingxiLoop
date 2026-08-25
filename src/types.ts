@@ -197,6 +197,9 @@ export interface Message {
   /** Structured mention metadata resolved against the conversation roster. */
   mentionedIds?: string[]
   mentionAll?: boolean
+  /** Agent OS run identity used to hand off a live Markdown stream to its
+   * persisted final message without briefly rendering both. */
+  runId?: string
   at: string
   reactions?: ReactionEntry[]
   /** for tool messages */
