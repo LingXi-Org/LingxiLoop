@@ -67,15 +67,12 @@ CREATE TABLE IF NOT EXISTS participants (
 );
 
 -- User-visible, revocable permissions are kept separate from the low-level
--- runtime tool list. Existing agents retain their current behaviour after the
--- migration; owners can narrow the list from the agent editor.
+-- runtime tool list. Defaults apply only to newly-created agents; a migration
+-- must not silently restore a capability that an owner previously revoked.
 ALTER TABLE participants ADD COLUMN IF NOT EXISTS capabilities JSONB NOT NULL
-  DEFAULT '["canvas","web","files","email","documents","knowledge"]'::jsonb;
+  DEFAULT '["canvas","web","files","email","documents"]'::jsonb;
 ALTER TABLE participants ALTER COLUMN capabilities SET DEFAULT
-  '["canvas","web","files","email","documents","knowledge"]'::jsonb;
-UPDATE participants
-   SET capabilities = capabilities || '["knowledge"]'::jsonb
- WHERE kind = 'agent' AND NOT capabilities ? 'knowledge';
+  '["canvas","web","files","email","documents"]'::jsonb;
 -- PromptContext snapshots need a stable source version for persona and
 -- capability changes. Keep this independent from status_updated_at, which is
 -- presence-specific and changes much more frequently.
@@ -2403,14 +2400,15 @@ ALTER TABLE documents ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projec
 ALTER TABLE boards ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT;
 ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT;
 ALTER TABLE canvases ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT;
-DELETE FROM canvases WHERE conversation_id IS NULL;
-ALTER TABLE canvases ALTER COLUMN conversation_id SET NOT NULL;
+-- Legacy canvases were company-level and legitimately have no conversation.
+-- Keep them (and their cascading frames) as workspace-level canvases.
+ALTER TABLE canvases ALTER COLUMN conversation_id DROP NOT NULL;
 ALTER TABLE canvases ALTER COLUMN project_id DROP NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_canvases_one_per_conversation ON canvases(conversation_id);
 
 CREATE OR REPLACE FUNCTION enforce_group_context_owner() RETURNS trigger AS $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM conversations c WHERE c.id = NEW.conversation_id AND c.company_id = NEW.company_id AND c.kind = 'group') THEN
+  IF NEW.conversation_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM conversations c WHERE c.id = NEW.conversation_id AND c.company_id = NEW.company_id AND c.kind = 'group') THEN
     RAISE EXCEPTION 'canvases require a group conversation';
   END IF;
   RETURN NEW;

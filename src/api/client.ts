@@ -952,8 +952,8 @@ export const api = {
   generateAgentAvatar: (id: string) =>
     http<{ url: string }>(`/agents/${encodeURIComponent(id)}/avatar/generate`, { method: 'POST' }),
   getConversations: () => http<ApiConversation[]>('/im/channels'),
-  createGroup: (input: { title: string; members: string[]; leaderId: string; subtitle?: string }) =>
-    http<{ id: string; members: string[]; leaderId: string }>('/conversations', {
+  createGroup: (input: { title: string; members: string[]; leaderId: string; subtitle?: string; workspaceId?: string }) =>
+    http<{ id: string; members: string[]; leaderId: string; projectId: string }>('/conversations', {
       method: 'POST',
       body: JSON.stringify(input),
     }),

@@ -8,6 +8,7 @@ import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import { useConversations } from '@/stores/conversations'
 import { useApp } from '@/stores/app'
+import { useWorkspace } from '@/stores/workspace'
 import { Avatar } from '@/components/Avatar'
 import { Input } from '@/components/Input'
 import type { Participant } from '@/types'
@@ -23,6 +24,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
   const select = useApp((s) => s.selectConversation)
   const setView = useApp((s) => s.setView)
   const meId = useMe()
+  const workspaceId = useWorkspace((s) => s.selectedId)
 
   const candidates = useMemo<Participant[]>(() => {
     return Object.values(byId)
@@ -78,7 +80,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
     if (!finalTitle) { setErr('add a title or pick a teammate'); return }
     setBusy(true)
     try {
-      const r = await api.createGroup({ title: finalTitle, members: [...picked], leaderId })
+      const r = await api.createGroup({ title: finalTitle, members: [...picked], leaderId, workspaceId: workspaceId ?? undefined })
       await useConversations.getState().reload()
       setView('conversations')
       select(r.id)

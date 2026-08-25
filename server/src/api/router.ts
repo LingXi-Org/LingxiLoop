@@ -3216,6 +3216,19 @@ api.post('/conversations', async (req, res) => {
   if (!leaderId) { res.status(400).json({ error: 'leaderId required' }); return }
   if (members.length < 2) { res.status(400).json({ error: 'pick at least one teammate' }); return }
 
+  const requestedProjectId = typeof req.body?.workspaceId === 'string' ? req.body.workspaceId.trim() : ''
+  const { rows: workspaces } = await pool.query<{ id: string }>(
+    requestedProjectId
+      ? `SELECT id FROM projects WHERE id = $1 AND company_id = $2 AND status = 'active' LIMIT 1`
+      : `SELECT id FROM projects WHERE company_id = $1 AND is_general = TRUE AND status = 'active' LIMIT 1`,
+    requestedProjectId ? [requestedProjectId, tenant] : [tenant],
+  )
+  const projectId = workspaces[0]?.id
+  if (!projectId) {
+    res.status(requestedProjectId ? 400 : 409).json({ error: requestedProjectId ? 'workspace not found' : 'General workspace unavailable' })
+    return
+  }
+
   // Validate every member exists in this tenant.
   const { rows: existing } = await pool.query<{ id: string; kind: string; departed_at: string | null }>(
     `SELECT id, kind, departed_at FROM participants WHERE id = ANY($1::text[]) AND company_id = $2`,
@@ -3233,12 +3246,12 @@ api.post('/conversations', async (req, res) => {
 
   const id = `g-${randomUUID().slice(0, 8)}`
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, topic, members, leader_id, pinned, tag, pulled_by, company_id)
-     VALUES ($1, 'group', $2, $3, $4::jsonb, $5, FALSE, NULL, NULL, $6)`,
-    [id, title, topic, JSON.stringify(members), leaderId, tenant],
+    `INSERT INTO conversations (id, kind, title, topic, members, leader_id, pinned, tag, pulled_by, company_id, project_id)
+     VALUES ($1, 'group', $2, $3, $4::jsonb, $5, FALSE, NULL, NULL, $6, $7)`,
+    [id, title, topic, JSON.stringify(members), leaderId, tenant, projectId],
   )
   await pool.query(`INSERT INTO conversation_counters (conversation_id, next_sequence) VALUES ($1, 1)`, [id])
-  res.status(201).json({ id, members, leaderId })
+  res.status(201).json({ id, members, leaderId, projectId })
 })
 
 /** Change a group's leader. Any human member may choose an active agent member. */
