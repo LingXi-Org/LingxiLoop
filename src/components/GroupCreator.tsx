@@ -3,11 +3,12 @@
  * teammates (active agents + other humans). Yetone is auto-included.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { api, type ApiProject } from '@/api/client'
+import { api } from '@/api/client'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import { useConversations } from '@/stores/conversations'
 import { useApp } from '@/stores/app'
+import { useWorkspace } from '@/stores/workspace'
 import { Avatar } from '@/components/Avatar'
 import { Input } from '@/components/Input'
 import type { Participant } from '@/types'
@@ -23,6 +24,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
   const select = useApp((s) => s.selectConversation)
   const setView = useApp((s) => s.setView)
   const meId = useMe()
+  const workspaceId = useWorkspace((s) => s.selectedId)
 
   const candidates = useMemo<Participant[]>(() => {
     return Object.values(byId)
@@ -37,8 +39,6 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
   const [title, setTitle] = useState('')
   const [picked, setPicked] = useState<Set<string>>(() => new Set(initialPicked ?? []))
   const [leaderId, setLeaderId] = useState<string | null>(null)
-  const [projects, setProjects] = useState<ApiProject[]>([])
-  const [projectId, setProjectId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -47,12 +47,6 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
-
-  useEffect(() => {
-    void api.listProjects()
-      .then((list) => setProjects(list.filter((p) => p.status === 'active')))
-      .catch(() => { /* ignore — picker just hides */ })
-  }, [])
 
   const toggle = (id: string) => {
     setPicked((s) => {
@@ -86,7 +80,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
     if (!finalTitle) { setErr('add a title or pick a teammate'); return }
     setBusy(true)
     try {
-      const r = await api.createGroup({ title: finalTitle, members: [...picked], leaderId, projectId })
+      const r = await api.createGroup({ title: finalTitle, members: [...picked], leaderId, workspaceId: workspaceId ?? undefined })
       await useConversations.getState().reload()
       setView('conversations')
       select(r.id)
@@ -139,46 +133,6 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
             className="mb-5"
             maxLength={80}
           />
-
-          {projects.length > 0 && (
-            <>
-              <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">
-                项目
-                <span className="ml-1.5 text-ink-300 normal-case font-medium tracking-normal">— 可选</span>
-              </label>
-              <div className="text-[11.5px] text-ink-300 mb-1.5 font-display italic">
-                将此组附加到项目，以便智能体查看其所属内容。
-              </div>
-              <div className="flex flex-wrap gap-1.5 mb-5">
-                <button
-                  type="button"
-                  onClick={() => setProjectId(null)}
-                  className="px-2.5 py-1 rounded-full text-[11.5px] font-medium transition"
-                  style={{
-                    background: projectId === null ? 'var(--ink-700)' : 'var(--paper)',
-                    color: projectId === null ? 'white' : 'var(--ink-500)',
-                    border: '1px solid var(--ink-100)',
-                  }}
-                >没有项目</button>
-                {projects.map((p) => {
-                  const on = projectId === p.id
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setProjectId(p.id)}
-                      className="px-2.5 py-1 rounded-full text-[11.5px] font-medium transition"
-                      style={{
-                        background: on ? (p.color ?? 'var(--skype)') : 'var(--paper)',
-                        color: on ? 'white' : 'var(--ink-700)',
-                        border: '1px solid var(--ink-100)',
-                      }}
-                    >{p.name}</button>
-                  )
-                })}
-              </div>
-            </>
-          )}
 
           <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">成员</label>
           <div className="text-[11.5px] text-ink-300 mb-2 font-display italic">

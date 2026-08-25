@@ -366,8 +366,6 @@ SKILLS  (progressive-disclosure capability packs in your own workspace):
   skills delete <name>                             remove a skill
   react <message_id> <emoji>                       toggle an emoji reaction on any message
   palette "<brief>"                                generate a 5-color hex palette
-  (web search/read runs via the in-pod browser — bash invokes
-   "lingxiloop-web search", "lingxiloop-web read", or "opencli browser ...")
   image generate "<prompt>" [--size square|wide|tall]
                                                    generate an image (gpt-image-2), upload to storage,
                                                    return signed URL + key for later 'reply --attach <url>'
@@ -384,8 +382,6 @@ EXAMPLES:
   lingxiloop dm bram "hero copy" "Want to align before iris paints v4"
   lingxiloop pull-group "Aurora launch" --members iris,bram,nova --leader iris --reason "Shipping next week" --say "Kickoff?"
   lingxiloop react msg-abc123 🌤️
-  bash: lingxiloop-web search "warm palette inspiration" --limit 3
-  bash: opencli browser "$LINGXILOOP_AGENT_ID" open https://example.com
   lingxiloop image generate "a quiet bauhaus poster, ochre and cobalt" --size wide
   lingxiloop tasks list --as bram --status open
   lingxiloop calendar create "Follow up with Wei on hero v3" --at 2026-05-25T15:00:00Z --assignee iris --prompt "DM wei and ask if v3 landed"     # one-shot self-schedule
@@ -2968,7 +2964,7 @@ async function cmdEmail(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     case 'contacts': return cmdEmailContacts(parsed, me, companyId, Boolean(parsed.flags.json))
     case 'inbox':    return cmdEmailInbox(parsed, me, companyId)
     case 'show':     return cmdEmailShow(parsed, me, companyId)
-    case 'send':     return cmdEmailSend(parsed, me, companyId, internal.idempotencyKey)
+    case 'send':     return cmdEmailSend(parsed, me, companyId, internal.idempotencyKey, internal.projectId)
     case 'reply':    return cmdEmailReply(parsed, me, companyId, internal.idempotencyKey)
     default:
       return err(`unknown email subcommand: ${sub}`)
@@ -3111,7 +3107,7 @@ async function cmdEmailShow(parsed: ParsedArgs, me: string, companyId: string): 
   return ok(lines.join('\n'))
 }
 
-async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string, idempotencyKey?: string): Promise<CliResult> {
+async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string, idempotencyKey?: string, projectId?: string): Promise<CliResult> {
   const toRaw = parsed.flags.to ? String(parsed.flags.to) : ''
   const ccRaw = parsed.flags.cc ? String(parsed.flags.cc) : ''
   const {
@@ -3182,6 +3178,7 @@ async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string, i
   }
   const conv = await findOrCreateEmailConversation({
     companyId,
+    projectId,
     inReplyTo: null,
     references: [],
     subject,
@@ -4307,15 +4304,35 @@ async function publishCalendarCli(args: {
   kind: 'event.created' | 'event.updated' | 'event.deleted' | 'event.dispatched'
   eventId: string
   actorId: string
+  workspaceId?: string
 }): Promise<void> {
+  const workspaceId = args.workspaceId ?? (await pool.query<{ project_id: string }>(
+    `SELECT project_id FROM calendar_events WHERE id=$1 AND company_id=$2 LIMIT 1`,
+    [args.eventId, args.companyId],
+  )).rows[0]?.project_id
   const { CH_CALENDAR_EVENTS, publish } = await import('../redis.js')
   await publish(CH_CALENDAR_EVENTS, {
     type: 'calendar.changed',
     companyId: args.companyId,
+    workspaceId,
     kind: args.kind,
     eventId: args.eventId,
     actorId: args.actorId,
   })
+}
+
+/** Resolve the workspace inherited from an Agent OS turn. Direct developer
+ * CLI calls intentionally fall back to the company's General workspace. */
+async function resolveCliProjectId(companyId: string, requested?: string): Promise<string> {
+  const { rows } = await pool.query<{ id: string }>(
+    `SELECT id FROM projects
+      WHERE company_id=$1 AND status <> 'archived'
+        AND (($2::text IS NOT NULL AND id=$2) OR ($2::text IS NULL AND is_general=TRUE))
+      ORDER BY is_general DESC LIMIT 1`,
+    [companyId, requested ?? null],
+  )
+  if (!rows[0]) throw new Error('knowledge workspace is unavailable')
+  return rows[0].id
 }
 
 async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
@@ -4323,14 +4340,26 @@ async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext =
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
+  const projectId = await resolveCliProjectId(companyId, internal.projectId)
+
+  if (!['list', 'create'].includes(op)) {
+    const eventId = parsed.positional[1]
+    if (eventId) {
+      const access = await pool.query(
+        `SELECT 1 FROM calendar_events WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
+        [eventId, companyId, projectId],
+      )
+      if (!access.rows[0]) return err(`no event ${eventId}`)
+    }
+  }
 
   if (op === 'list') {
     // Default scope: events assigned to `me` OR created by `me`. The
     // `--all` flag widens to every event in the workspace (parity with
     // the UI's "Workspace" filter).
     const all = Boolean(parsed.flags.all)
-    const params: unknown[] = [companyId, me]
-    let where = `company_id = $1`
+    const params: unknown[] = [companyId, me, projectId]
+    let where = `company_id = $1 AND project_id = $3`
     if (all) {
       // --all widens to the whole workspace, BUT we still hide private
       // rows the caller isn't authorized to read. The default (narrow)
@@ -4379,7 +4408,7 @@ async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext =
       ? `ce-agent-${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
       : null
     if (stableCalendarId) {
-      const { rows } = await pool.query(`SELECT 1 FROM calendar_events WHERE id=$1 AND company_id=$2`, [stableCalendarId, companyId])
+      const { rows } = await pool.query(`SELECT 1 FROM calendar_events WHERE id=$1 AND company_id=$2 AND project_id=$3`, [stableCalendarId, companyId, projectId])
       if (rows[0]) return ok(`scheduled ${stableCalendarId} [replayed]`)
     }
     const startStr = parsed.flags.at ? String(parsed.flags.at) : ''
@@ -4389,6 +4418,13 @@ async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext =
     const assigneeId = parsed.flags.assignee ? String(parsed.flags.assignee) : null
     const agentPrompt = parsed.flags.prompt ? String(parsed.flags.prompt) : null
     const targetConvo = parsed.flags.in ? String(parsed.flags.in) : null
+    if (targetConvo) {
+      const target = await pool.query(
+        `SELECT 1 FROM conversations WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
+        [targetConvo, companyId, projectId],
+      )
+      if (!target.rows[0]) return err(`unknown conversation ${targetConvo} in this workspace`)
+    }
     const kind = parsed.flags.kind === 'personal' ? 'personal' : (assigneeId || agentPrompt ? 'agent_task' : 'personal')
     if (kind === 'agent_task' && !assigneeId) {
       return err('agent_task events need an --assignee')
@@ -4447,11 +4483,11 @@ async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext =
             id: string; title: string; created_by: string; created_at: Date
           }>(
             `SELECT id, title, created_by, created_at FROM calendar_events
-              WHERE company_id = $1 AND created_by <> $2
+              WHERE company_id = $1 AND created_by <> $2 AND project_id = $3
                 AND status = 'active' AND is_private = FALSE
                 AND created_at > NOW() - INTERVAL '15 minutes'
               ORDER BY created_at DESC LIMIT 50`,
-            [companyId, me],
+            [companyId, me, projectId],
           )
           const dup = recentDups.find((d) => normalizeWorkSubject(d.title) === normTitle)
           if (dup) {
@@ -4471,11 +4507,11 @@ async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext =
       const id = stableCalendarId ?? `ce-${randomUUID()}`
       await pool.query(
         `INSERT INTO calendar_events
-           (id, company_id, created_by, kind, title, assignee_id,
+           (id, company_id, project_id, created_by, kind, title, assignee_id,
             target_conversation_id, agent_prompt, start_at, recurrence,
             reminder_minutes_before, reminder_channel, status, is_private)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12,'active',$13)`,
-        [id, companyId, me, kind, title, assigneeId, targetConvo, agentPrompt, start,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,'active',$14)`,
+        [id, companyId, projectId, me, kind, title, assigneeId, targetConvo, agentPrompt, start,
          recurrence ? JSON.stringify(recurrence) : null,
          reminderMinutes, reminderChannel, isPrivate],
       )
@@ -4713,6 +4749,7 @@ async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext =
     // from local state) accordingly.
     await publishCalendarCli({
       companyId,
+      workspaceId: projectId,
       kind: op === 'delete' ? 'event.deleted' : 'event.updated',
       eventId: id,
       actorId: me,
@@ -4806,11 +4843,17 @@ async function publishBoardCli(args: {
   commentId?: string
   mentions?: string[]
   actorId: string
+  workspaceId?: string
 }): Promise<void> {
+  const workspaceId = args.workspaceId ?? (await pool.query<{ project_id: string }>(
+    `SELECT project_id FROM boards WHERE id=$1 AND company_id=$2 LIMIT 1`,
+    [args.boardId, args.companyId],
+  )).rows[0]?.project_id
   const { CH_BOARDS, publish } = await import('../redis.js')
   await publish(CH_BOARDS, {
     type: 'board.changed',
     companyId: args.companyId,
+    workspaceId,
     kind: args.kind,
     boardId: args.boardId,
     cardId: args.cardId,
@@ -4862,14 +4905,26 @@ async function cmdBoard(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
+  const projectId = await resolveCliProjectId(companyId, internal.projectId)
+
+  if (!['ls', 'list', 'create', 'new'].includes(op)) {
+    const boardId = parsed.positional[1]
+    if (boardId) {
+      const access = await pool.query(
+        `SELECT 1 FROM boards WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
+        [boardId, companyId, projectId],
+      )
+      if (!access.rows[0]) return err(`board ${boardId} not found`)
+    }
+  }
 
   if (op === 'ls' || op === 'list') {
     const { rows } = await pool.query<{
       id: string; title: string; description: string | null; updated_at: string
     }>(
       `SELECT id, title, description, updated_at FROM boards
-        WHERE company_id = $1 ORDER BY updated_at DESC`,
-      [companyId],
+        WHERE company_id = $1 AND project_id = $2 ORDER BY updated_at DESC`,
+      [companyId, projectId],
     )
     if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
     if (rows.length === 0) return ok(`(no boards in this workspace)`)
@@ -4932,7 +4987,7 @@ async function cmdBoard(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       ? `board-agent-${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
       : null
     if (stableBoardId) {
-      const { rows } = await pool.query(`SELECT 1 FROM boards WHERE id=$1 AND company_id=$2`, [stableBoardId, companyId])
+      const { rows } = await pool.query(`SELECT 1 FROM boards WHERE id=$1 AND company_id=$2 AND project_id=$3`, [stableBoardId, companyId, projectId])
       if (rows[0]) return ok(`created board ${stableBoardId}: ${title} [replayed]`)
     }
     const description = typeof parsed.flags.description === 'string'
@@ -4942,8 +4997,8 @@ async function cmdBoard(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     try {
       await client.query('BEGIN')
       await client.query(
-        `INSERT INTO boards (id, company_id, title, description, created_by) VALUES ($1, $2, $3, $4, $5)`,
-        [id, companyId, title.slice(0, 200), description, me],
+        `INSERT INTO boards (id, company_id, project_id, title, description, created_by) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [id, companyId, projectId, title.slice(0, 200), description, me],
       )
       const seeds = ['Todo', 'Doing', 'Done']
       for (let i = 0; i < seeds.length; i++) {
@@ -5143,7 +5198,7 @@ async function cmdBoard(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       [boardId, companyId],
     )
     if ((r.rowCount ?? 0) === 0) return err(`board ${boardId} not found`)
-    await publishBoardCli({ companyId, kind: 'board.deleted', boardId, actorId: me })
+    await publishBoardCli({ companyId, workspaceId: projectId, kind: 'board.deleted', boardId, actorId: me })
     return ok(`deleted board ${boardId}`, [{
       event: 'kanban.board_deleted',
       command: 'kanban delete',
@@ -5272,11 +5327,12 @@ async function cmdClaim(parsed: ParsedArgs, mode: 'claim' | 'unclaim'): Promise<
   )
 }
 
-async function cmdCard(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdCard(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const op = parsed.positional[0] ?? 'ls'
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
+  const projectId = await resolveCliProjectId(companyId, internal.projectId)
 
   /** Look up the boardId behind a cardId AND verify it's in our tenant.
    *  Returns null if the card doesn't exist or is cross-tenant. */
@@ -5284,8 +5340,8 @@ async function cmdCard(parsed: ParsedArgs): Promise<CliResult> {
     const r = await pool.query<{ board_id: string; column_id: string; company_id: string }>(
       `SELECT c.board_id, c.column_id, b.company_id
          FROM board_cards c JOIN boards b ON b.id = c.board_id
-        WHERE c.id = $1 LIMIT 1`,
-      [cardId],
+        WHERE c.id = $1 AND b.project_id = $2 LIMIT 1`,
+      [cardId, projectId],
     )
     if (r.rows.length === 0 || r.rows[0].company_id !== companyId) return null
     return { boardId: r.rows[0].board_id, columnId: r.rows[0].column_id }
@@ -5295,7 +5351,7 @@ async function cmdCard(parsed: ParsedArgs): Promise<CliResult> {
     const boardId = parsed.positional[1]
     if (!boardId) return err('usage: card ls <board_id>')
     const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`, [boardId],
+      `SELECT company_id FROM boards WHERE id = $1 AND project_id = $2 LIMIT 1`, [boardId, projectId],
     )
     if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
     const { rows } = await pool.query<{
@@ -5326,8 +5382,8 @@ async function cmdCard(parsed: ParsedArgs): Promise<CliResult> {
               c.assignee_id, c.mentions, c.created_by, c.created_at, c.updated_at,
               b.company_id
          FROM board_cards c JOIN boards b ON b.id = c.board_id
-        WHERE c.id = $1 LIMIT 1`,
-      [cardId],
+        WHERE c.id = $1 AND b.project_id = $2 LIMIT 1`,
+      [cardId, projectId],
     )
     if (r.rows.length === 0 || r.rows[0].company_id !== companyId) return err(`card ${cardId} not found`)
     const c = r.rows[0]
@@ -5369,7 +5425,7 @@ async function cmdCard(parsed: ParsedArgs): Promise<CliResult> {
     const columnId = String(parsed.flags.column ?? parsed.flags.col ?? '').trim()
     if (!columnId) return err('--column <col_id> required (run `lingxiloop kanban columns <board_id>` to list)')
     const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`, [boardId],
+      `SELECT company_id FROM boards WHERE id = $1 AND project_id = $2 LIMIT 1`, [boardId, projectId],
     )
     if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
     const colCheck = await pool.query(
@@ -5707,12 +5763,18 @@ async function publishDocChanged(
   documentId: string,
   kind: 'document.created' | 'document.updated' | 'document.deleted',
   actorId: string,
+  requestedWorkspaceId?: string,
 ): Promise<void> {
+  const workspaceId = requestedWorkspaceId ?? (await pool.query<{ project_id: string }>(
+    `SELECT project_id FROM documents WHERE id=$1 AND company_id=$2 LIMIT 1`,
+    [documentId, companyId],
+  )).rows[0]?.project_id
   const { CH_DOCS, publish } = await import('../redis.js')
   await publish(CH_DOCS, {
     type: 'doc.changed',
     kind,
     companyId,
+    workspaceId,
     documentId,
     actorId,
   })
@@ -5723,14 +5785,26 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
+  const projectId = await resolveCliProjectId(companyId, internal.projectId)
+
+  if (!['ls', 'list', 'create', 'new'].includes(op)) {
+    const documentId = parsed.positional[1]
+    if (documentId) {
+      const access = await pool.query(
+        `SELECT 1 FROM documents WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
+        [documentId, companyId, projectId],
+      )
+      if (!access.rows[0]) return err(`document ${documentId} not found`)
+    }
+  }
 
   if (op === 'ls' || op === 'list') {
     const { rows } = await pool.query<{
       id: string; title: string; created_by: string; updated_at: Date
     }>(
       `SELECT id, title, created_by, updated_at FROM documents
-        WHERE company_id = $1 ORDER BY updated_at DESC LIMIT 200`,
-      [companyId],
+        WHERE company_id = $1 AND project_id = $2 ORDER BY updated_at DESC LIMIT 200`,
+      [companyId, projectId],
     )
     if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
     if (rows.length === 0) return ok('(no documents in this workspace)')
@@ -5749,7 +5823,7 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
       ? `doc_agent_${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
       : null
     if (stableDocumentId) {
-      const { rows } = await pool.query(`SELECT 1 FROM documents WHERE id=$1 AND company_id=$2`, [stableDocumentId, companyId])
+      const { rows } = await pool.query(`SELECT 1 FROM documents WHERE id=$1 AND company_id=$2 AND project_id=$3`, [stableDocumentId, companyId, projectId])
       if (rows[0]) return ok(`created document ${stableDocumentId}: ${title} [replayed]`)
     }
 
@@ -5778,10 +5852,10 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
           id: string; title: string; created_by: string; created_at: Date
         }>(
           `SELECT id, title, created_by, created_at FROM documents
-            WHERE company_id = $1 AND created_by <> $2
+            WHERE company_id = $1 AND created_by <> $2 AND project_id = $3
               AND created_at > NOW() - INTERVAL '15 minutes'
             ORDER BY created_at DESC LIMIT 50`,
-          [companyId, me],
+          [companyId, me, projectId],
         )
         const dup = recentDups.find((d) => normalizeWorkSubject(d.title) === normTitle)
         if (dup) {
@@ -5799,8 +5873,8 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
       }
       const id = stableDocumentId ?? `doc_${randomUUID().replace(/-/g, '').slice(0, 16)}`
       await pool.query(
-        `INSERT INTO documents (id, company_id, title, created_by) VALUES ($1, $2, $3, $4)`,
-        [id, companyId, title.slice(0, 200), me],
+        `INSERT INTO documents (id, company_id, project_id, title, created_by) VALUES ($1, $2, $3, $4, $5)`,
+        [id, companyId, projectId, title.slice(0, 200), me],
       )
       // If --body was supplied, seed the doc as one or more paragraphs.
       // Newlines split, so a multi-line body lands as proper block
@@ -5862,8 +5936,8 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
     if (!documents[0]) return err(`document ${docId} not found`)
 
     const { rows: conversations } = await pool.query<{ members: string[] }>(
-      `SELECT members FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [conversationId, companyId],
+      `SELECT members FROM conversations WHERE id = $1 AND company_id = $2 AND project_id = $3 LIMIT 1`,
+      [conversationId, companyId, projectId],
     )
     if (!conversations[0]) return err(`unknown conversation ${conversationId}`)
     if (!conversations[0].members.includes(me)) {
@@ -6128,7 +6202,7 @@ async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}):
     if (rows.length === 0) return err(`document ${docId} not found`)
     if (rows[0].created_by !== me) return err(`only the creator can delete document ${docId}`)
     await pool.query(`DELETE FROM documents WHERE id = $1`, [docId])
-    await publishDocChanged(companyId, docId, 'document.deleted', me)
+    await publishDocChanged(companyId, docId, 'document.deleted', me, projectId)
     return ok(`deleted document ${docId}`, [{
       event: 'document.deleted',
       command: 'doc delete',
@@ -6214,6 +6288,8 @@ function cliToolSideEffects(toolName: string, output: unknown, agentId: string):
  *  text, or parseArgs path that can set it. */
 export interface RunCliInternalContext {
   idempotencyKey?: string
+  /** Workspace inherited from the Agent OS trigger conversation. */
+  projectId?: string
   /** Trusted structured-action path only: persist the reply without
    *  advancing conversation_reads. The turn coordinator owns the cursor
    *  after the complete action batch succeeds. */
@@ -6309,7 +6385,7 @@ export async function runStructuredLearningAction(
       case 'workspace': return await cmdWorkspace(parsed)
       case 'doc': return await cmdDoc(parsed, internal)
       case 'kanban': return await cmdBoard(parsed, internal)
-      case 'card': return await cmdCard(parsed)
+      case 'card': return await cmdCard(parsed, internal)
       case 'calendar': return await cmdCalendar(parsed, internal)
       case 'poll': return await cmdPoll(parsed)
       case 'email': return await cmdEmail(parsed, internal)
@@ -6410,7 +6486,7 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'claim':               return await cmdClaim(parsed, 'claim')
       case 'unclaim':             return await cmdClaim(parsed, 'unclaim')
       case 'kanban':              return await cmdBoard(parsed)
-      case 'card':                return await cmdCard(parsed)
+      case 'card':                return await cmdCard(parsed, internal)
       case 'doc':                 return await cmdDoc(parsed, internal)
       case 'react':               return await runTool('react', parsed, internal)
       case 'dm':                  return await runTool('dm_with', parsed)

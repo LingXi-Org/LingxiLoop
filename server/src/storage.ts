@@ -19,7 +19,7 @@
  *   - `attachments/` — user uploads
  *   - `avatars/`     — agent portraits
  */
-import { writeFile, mkdir, readdir, stat, unlink } from 'node:fs/promises'
+import { writeFile, mkdir, readFile, readdir, stat, unlink } from 'node:fs/promises'
 import { join, resolve, dirname } from 'node:path'
 import { createHmac } from 'node:crypto'
 import {
@@ -32,12 +32,12 @@ import { env } from './env.js'
 /** Keys under these prefixes get HMAC-signed URLs when a signing secret is
  *  configured. Other prefixes (e.g. `avatars/`) are served unsigned — they
  *  carry no private user content and benefit from full CDN caching. */
-const SIGNED_PREFIXES = ['attachments/', 'email-attachments/']
+const SIGNED_PREFIXES = ['attachments/', 'email-attachments/', 'knowledge-sources/']
 function needsSignature(key: string): boolean {
   return SIGNED_PREFIXES.some((p) => key.startsWith(p))
 }
 
-const STORAGE_KEY_PREFIXES = ['attachments/', 'email-attachments/', 'avatars/']
+const STORAGE_KEY_PREFIXES = ['attachments/', 'email-attachments/', 'avatars/', 'knowledge-sources/']
 function isStorageKey(key: string): boolean {
   return STORAGE_KEY_PREFIXES.some((p) => key.startsWith(p))
 }
@@ -113,6 +113,9 @@ export interface Storage {
   /** Resolve a long-lived public URL for a key. R2 mode emits a presigned
    *  GET when no public base is configured. */
   publicUrl(key: string): Promise<string>
+  /** Read an object into memory. Knowledge-source files are capped at 25 MB
+   *  at the API edge, so a bounded Buffer keeps parser APIs simple. */
+  readObject(key: string): Promise<Buffer>
   /** Enumerate every object whose key starts with `prefix`. Used by the
    *  GC sweep to find orphans not referenced by any DB row. Both backends
    *  walk lazily / paginated under the hood; the caller gets the flat
@@ -147,26 +150,38 @@ class LocalStorage implements Storage {
     return `/uploads/${key}`
   }
 
+  async readObject(key: string): Promise<Buffer> {
+    const normalized = normalizeStorageKey(key)
+    if (!normalized) throw new Error('invalid storage key')
+    return readFile(join(UPLOAD_DIR, normalized))
+  }
+
   async listObjectsByPrefix(prefix: string): Promise<StorageObject[]> {
-    // Local layout: UPLOAD_DIR/<prefix>/<files>. readdir + stat is fine —
-    // local dev never accumulates the millions of objects R2 would.
-    const dir = join(UPLOAD_DIR, prefix)
-    let names: string[]
-    try { names = await readdir(dir) }
-    catch { return [] }  // no such directory == no objects
+    // Knowledge objects use company/project/source subdirectories, while
+    // legacy attachment prefixes are flat. Walk recursively so reconciliation
+    // has the same semantics in local and R2 modes.
+    const root = join(UPLOAD_DIR, prefix)
     const out: StorageObject[] = []
-    for (const name of names) {
-      const full = join(dir, name)
-      try {
-        const s = await stat(full)
-        if (!s.isFile()) continue
-        out.push({
-          key: `${prefix.replace(/\/+$/, '')}/${name}`,
-          sizeBytes: s.size,
-          lastModifiedMs: s.mtimeMs,
-        })
-      } catch { /* ignore disappeared / unreadable */ }
+    const walk = async (dir: string, relative: string): Promise<void> => {
+      let names: string[]
+      try { names = await readdir(dir) }
+      catch { return }
+      for (const name of names) {
+        const full = join(dir, name)
+        const child = relative ? `${relative}/${name}` : name
+        try {
+          const s = await stat(full)
+          if (s.isDirectory()) { await walk(full, child); continue }
+          if (!s.isFile()) continue
+          out.push({
+            key: `${prefix.replace(/\/+$/, '')}/${child}`,
+            sizeBytes: s.size,
+            lastModifiedMs: s.mtimeMs,
+          })
+        } catch { /* ignore disappeared / unreadable */ }
+      }
     }
+    await walk(root, '')
     return out
   }
 
@@ -289,6 +304,14 @@ class R2Storage implements Storage {
       new GetObjectCommand({ Bucket: this.bucket, Key: key }),
       { expiresIn: 60 * 60 * 24 * 7 },  // 7 days
     )
+  }
+
+  async readObject(key: string): Promise<Buffer> {
+    const normalized = normalizeStorageKey(key)
+    if (!normalized) throw new Error('invalid storage key')
+    const response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: normalized }))
+    if (!response.Body) throw new Error('object has no body')
+    return Buffer.from(await response.Body.transformToByteArray())
   }
 }
 

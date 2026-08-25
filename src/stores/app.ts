@@ -12,6 +12,9 @@ interface AppState {
   /** mobile-only: which level of the navigation stack we're on */
   mobileStack: 'list' | 'chat' | 'info'
   pushMobileStack: (s: 'list' | 'chat' | 'info') => void
+  mobileGroupContext: 'knowledge' | 'canvas' | null
+  openMobileGroupContext: (tab?: 'knowledge' | 'canvas') => void
+  closeMobileGroupContext: () => void
 
   /**
    * Right info pane on desktop. null = pane is closed. Set to an agent id to
@@ -120,6 +123,9 @@ export const useApp = create<AppState>((set) => ({
 
   mobileStack: 'list',
   pushMobileStack: (s) => set({ mobileStack: s }),
+  mobileGroupContext: null,
+  openMobileGroupContext: (tab = 'knowledge') => set({ mobileGroupContext: tab }),
+  closeMobileGroupContext: () => set({ mobileGroupContext: null }),
 
   infoAgentId: null,
   // Opening agent info closes any open thread — they share the same right

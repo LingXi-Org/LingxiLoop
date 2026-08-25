@@ -5,7 +5,66 @@ export type { CanvasActivityKind } from '@/lib/canvasEventKinds'
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
-export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar'
+export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge'
+
+export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed'
+
+export interface WorkspaceSummary {
+  id: string
+  name: string
+  description: string
+  color: string | null
+  status: 'active' | 'archived'
+  createdBy: string
+  isGeneral: boolean
+  createdAt: string
+  updatedAt: string
+  archivedAt: string | null
+  lastVisitedAt: string | null
+  sourceCount: number
+  conversationCount: number
+  documentCount: number
+  boardCount: number
+  calendarEventCount: number
+  canvasCount: number
+  canManage: boolean
+}
+
+export interface KnowledgeSource {
+  id: string
+  kind: 'file' | 'url' | 'text'
+  title: string
+  mimeType: string | null
+  sizeBytes: number
+  originalUrl: string | null
+  originalFileUrl?: string | null
+  status: KnowledgeSourceStatus
+  stage: string
+  error: string | null
+  isTruncated: boolean
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+  chunkCount?: number
+  extractedText?: string | null
+  /** Present for sources automatically ingested from a chat attachment. */
+  originClientMsgNo?: string | null
+}
+
+export interface KnowledgeCitation {
+  sourceId: string
+  sourceTitle: string
+  chunkId: string
+  excerpt: string
+  sourceUrl?: string
+  position: number
+  marker: string
+}
+
+export interface ConversationSourceSelection {
+  conversationId: string
+  sources: Array<{ sourceId: string; title: string; status: KnowledgeSourceStatus; enabled: boolean }>
+}
 
 export interface Participant {
   id: string
@@ -72,10 +131,6 @@ export interface Conversation {
   tag?: 'team' | 'whisper' | 'human' | 'fresh-pulled'
   /** if pulled by an agent: the convener id and reason */
   pulledBy?: { agentId: string; at: string; reason: string }
-  /** when this conversation belongs to a project, the project's id + name + tint */
-  projectId?: string | null
-  projectName?: string | null
-  projectColor?: string | null
 }
 
 export type MessageKind = 'text' | 'tool' | 'attachment' | 'whisper-link' | 'thought' | 'system' | 'email' | 'poll' | 'handoff' | 'approval' | 'canvas'
@@ -194,6 +249,7 @@ export interface Message {
   authorId: string
   kind: MessageKind
   body: string
+  citations?: KnowledgeCitation[]
   /** Structured mention metadata resolved against the conversation roster. */
   mentionedIds?: string[]
   mentionAll?: boolean
@@ -201,6 +257,8 @@ export interface Message {
    * persisted final message without briefly rendering both. */
   runId?: string
   at: string
+  /** Canonical timestamp used for transcript grouping. Legacy/mock rows may omit it. */
+  createdAt?: string
   reactions?: ReactionEntry[]
   /** for tool messages */
   tool?: {
@@ -271,7 +329,7 @@ export interface Message {
 }
 
 export interface ViewKey {
-  view: 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
+  view: 'sources' | 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
 }
 
 /* ============== Shared Canvas ======================================== */

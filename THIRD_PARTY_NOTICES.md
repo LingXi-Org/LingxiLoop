@@ -1,5 +1,45 @@
 # Third-Party Notices
 
+## Open Notebook
+
+LingxiLoop's native knowledge engine vendors Open Notebook from commit
+`a7de90d38aaf18ee85fd661854d35c11e44613e2`:
+https://github.com/lfnovo/open-notebook
+
+The vendored source is maintained directly in `third_party/open-notebook` and
+includes LingxiLoop workspace scoping and idempotency. Its complete MIT license
+is retained at `third_party/open-notebook/LICENSE`.
+
+MIT License, Copyright (c) 2024 Luis Novo.
+
+## OpenBot
+
+The desktop group-context panel uses source files vendored from OpenBot at
+commit `d293f2331bd5ff9ba4ad17af6ac94570a157d26d`:
+https://github.com/CopilotKit/OpenBot
+
+MIT License
+
+Copyright (c) 2026 CopilotKit
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 ## OpenMausBot
 
 Portions of the desktop conversation UX and visual system are inspired by

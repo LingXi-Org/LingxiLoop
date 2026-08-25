@@ -7,8 +7,10 @@ import {
   getBloubIdentity,
   getBloubState,
   getStarterPersonaKey,
+  getWorkingEpochSeed,
   pickWorkingStateSequence,
 } from './agentVisualState'
+import { SEQUENCE } from './bloub/states'
 
 test('starter Bloub identities stay stable across tenant id suffixes', () => {
   for (const [key, expected] of Object.entries(STARTER_BLOUB_PROFILES)) {
@@ -54,16 +56,28 @@ test('shared and custom-agent status mappings retain their defaults', () => {
   assert.equal(getStarterPersonaKey({ id: 'nova-custom' }), null)
 })
 
-test('pickWorkingStateSequence is deterministic per seed, draws distinct poses from the pool', () => {
-  const a = pickWorkingStateSequence(42, 3)
-  const b = pickWorkingStateSequence(42, 3)
-  assert.deepEqual(a, b, 'same seed must reproduce the same sequence')
-  assert.equal(a.length, 3)
-  assert.equal(new Set(a).size, 3, 'no repeats within one sequence')
-  for (const id of a) assert.ok(WORKING_STATE_POOL.includes(id))
+test('working montage uses the complete upstream 14-state catalogue', () => {
+  assert.deepEqual(WORKING_STATE_POOL, SEQUENCE)
+  assert.equal(WORKING_STATE_POOL.length, 14)
+  assert.equal(new Set(WORKING_STATE_POOL).size, 14)
+  assert.equal(WORKING_STATE_POOL.includes('swirl'), false)
+})
 
-  const c = pickWorkingStateSequence(7, 3)
-  assert.notDeepEqual(a, c, 'a different seed should (almost always) pick a different order/subset')
+test('working montage reseeds its start without changing upstream order or repeating a state', () => {
+  const a = pickWorkingStateSequence(42)
+  const b = pickWorkingStateSequence(42)
+  assert.deepEqual(a, b, 'same work epoch must reproduce the same montage')
+  assert.equal(a.length, WORKING_STATE_POOL.length)
+  assert.equal(new Set(a).size, WORKING_STATE_POOL.length, 'one pass must not repeat a state')
+
+  for (let index = 1; index < a.length; index += 1) {
+    const previous = WORKING_STATE_POOL.indexOf(a[index - 1]!)
+    assert.equal(a[index], WORKING_STATE_POOL[(previous + 1) % WORKING_STATE_POOL.length])
+  }
+
+  const c = pickWorkingStateSequence(43)
+  assert.notDeepEqual(a, c, 'a different seed should select a different montage start')
+  assert.deepEqual([...c].sort(), [...WORKING_STATE_POOL].sort())
 })
 
 test('pickWorkingStateSequence clamps count to the pool size', () => {
@@ -73,4 +87,11 @@ test('pickWorkingStateSequence clamps count to the pool size', () => {
 
   const one = pickWorkingStateSequence(1, 0)
   assert.equal(one.length, 1)
+})
+
+test('working epoch seed is stable within a round and changes with time or round', () => {
+  const current = getWorkingEpochSeed('nova', '2026-08-25T09:00:00.000Z:1')
+  assert.equal(current, getWorkingEpochSeed('nova', '2026-08-25T09:00:00.000Z:1'))
+  assert.notEqual(current, getWorkingEpochSeed('nova', '2026-08-25T09:01:00.000Z:1'))
+  assert.notEqual(current, getWorkingEpochSeed('nova', '2026-08-25T09:00:00.000Z:2'))
 })

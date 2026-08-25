@@ -111,11 +111,11 @@ export function MobileMessageTapback({
               width: MENU_WIDTH,
               transformOrigin: `${placement.originX}% ${placement.originY}%`,
               borderRadius: 16,
-              background: 'rgba(252, 253, 254, 0.94)',
+              background: 'color-mix(in srgb, var(--panel) 94%, transparent)',
               backdropFilter: 'blur(20px) saturate(180%)',
               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-              boxShadow: '0 22px 44px -12px rgba(10, 30, 60, 0.34), 0 8px 16px -6px rgba(10, 30, 60, 0.20)',
-              border: '1px solid rgba(255, 255, 255, 0.5)',
+              boxShadow: '0 22px 44px -12px rgba(0, 0, 0, 0.46), 0 8px 16px -6px rgba(0, 0, 0, 0.24)',
+              border: '1px solid var(--hairline)',
             }}
             initial={{ scale: 0.82, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}

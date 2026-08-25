@@ -25,6 +25,7 @@ import { startCalendarScheduler } from './calendar.js'
 import { startPollExpirationSweeper } from './polls.js'
 import { startLlmRollupRefresher } from './agents/llm-rollup.js'
 import { startTrialSweepWorker } from './trial-sweep.js'
+import { startKnowledgeStorageGc, startKnowledgeWorker } from './knowledge/service.js'
 import { seedAdmins } from './admin.js'
 import { notifyAlert } from './alerting.js'
 import { agentOSControlRouter } from './agent-os/control-plane.js'
@@ -88,7 +89,7 @@ async function main() {
       res.setHeader('Access-Control-Allow-Origin', corsAny ? '*' : origin)
       res.setHeader('Vary', 'Origin')
       res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
-      res.setHeader('Access-Control-Allow-Headers', 'content-type,authorization,x-company-id,x-lingxiloop-dev-mode')
+      res.setHeader('Access-Control-Allow-Headers', 'content-type,authorization,x-company-id,x-project-id,x-lingxiloop-dev-mode')
       res.setHeader('Access-Control-Max-Age', '600')
       if (req.method === 'OPTIONS') { res.status(204).end(); return }
     }
@@ -259,6 +260,9 @@ async function main() {
   // Mobile Pro-trial expiry — hourly sweep that downgrades lapsed trials
   // back to free (mirrors sub2api via the same path the admin UI uses).
   startTrialSweepWorker()
+  const stopKnowledgeWorker = startKnowledgeWorker()
+  const stopKnowledgeGc = startKnowledgeStorageGc()
+  console.log('[boot] knowledge-source worker started')
 
   // Calendar dispatcher — once a minute, scan calendar_events for due
   // occurrences and post the scheduled prompt into the target conversation
@@ -292,6 +296,8 @@ async function main() {
   // Graceful shutdown
   const shutdown = async (sig: string) => {
     console.log(`[shutdown] ${sig}`)
+    stopKnowledgeWorker()
+    stopKnowledgeGc()
     server.close()
     try { await pool.end() } catch { /* ignore */ }
     try { redis.disconnect() } catch { /* ignore */ }

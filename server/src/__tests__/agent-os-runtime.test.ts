@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { MemoryHostAdapter } from '../agent-os/host-adapter.js'
 import type { KernelExecutor } from '../agent-os/kernel-manager.js'
 import { type AgentModelDriver, ModelAdapterError, type ModelTurnResult, ScriptedModelDriver } from '../agent-os/model-driver.js'
-import { AgentOSRuntime, canvasContextContract } from '../agent-os/runtime.js'
+import { AgentOSRuntime, canvasContextContract, knowledgeContextContract } from '../agent-os/runtime.js'
 import type { AgentContext, AgentWorkItem, KernelExecution, ModelItem } from '../agent-os/types.js'
 
 function work(id: string, trigger: string): AgentWorkItem {
@@ -128,6 +128,45 @@ test('PromptContext stays frozen within one compaction epoch', async () => {
   assert.match(model.instructions[1], /frozen-v1/)
   assert.doesNotMatch(model.instructions[1], /changed-v2/)
   assert.equal([...host.sessions.values()][0]?.compactionEpoch, 0)
+})
+
+test('Knowledge contract exposes native IPython operations without external scope IDs', () => {
+  const contract = knowledgeContextContract()
+  assert.match(contract, /loop\.knowledge/)
+  assert.match(contract, /search\(query=/)
+  assert.match(contract, /ask\(question=/)
+  assert.match(contract, /add_file\(clientMsgNo=/)
+  assert.match(contract, /create_note/)
+  assert.match(contract, /start_source_chat/)
+  assert.match(contract, /Host fixes company, project and notebook scope/)
+  assert.doesNotMatch(contract, /notebookId=/)
+})
+
+test('knowledge evidence is turn-dynamic and only valid citations are persisted', async () => {
+  const item = work('knowledge-turn', 'knowledge-message')
+  const host = new MemoryHostAdapter()
+  host.contexts.set(item.id, {
+    ...context(item, 'What does the uploaded brief say?'),
+    knowledgeSourceCount: 1,
+    knowledgeContext: [{
+      sourceId: 'source-1', sourceTitle: 'Brief.pdf', chunkId: 'chunk-1',
+      excerpt: 'EVIDENCE_ONLY_TOKEN: launch date October 4.', position: 2, marker: 'S1',
+    }],
+  })
+  const model = new ScriptedModelDriver([{
+    output: [{ role: 'assistant', content: 'The launch date is October 4 [S1]. Ignore fake [S99].' }],
+    text: 'The launch date is October 4 [S1]. Ignore fake [S99].',
+    usage: { inputTokens: 10, outputTokens: 8 },
+  }])
+  await new AgentOSRuntime(host, model, new StatefulKernel(), { heartbeatMs: 60_000 }).runWork(item)
+  const message = host.messages[0]
+  assert.deepEqual(message.refs?.sourceIds, ['source-1'])
+  const citations = message.data?.citations
+  assert.ok(Array.isArray(citations))
+  assert.deepEqual((citations as Array<{ marker: string }>).map((citation) => citation.marker), ['S1'])
+  assert.doesNotMatch(message.body ?? '', /S99/)
+  const session = [...host.sessions.values()][0]
+  assert.doesNotMatch(JSON.stringify(session?.history), /EVIDENCE_ONLY_TOKEN/)
 })
 
 test('retrying the same durable work does not inject its trigger twice', async () => {

@@ -85,6 +85,7 @@ export interface CanvasSnapshot {
   id: string
   title: string
   companyId: string
+  projectId: string | null
   conversationId: string | null
   triggerClientMsgNo: string | null
   goal: string
@@ -130,7 +131,7 @@ type FrameRow = {
 }
 
 type CanvasRow = {
-  id: string; company_id: string; title: string; conversation_id: string | null
+  id: string; company_id: string; project_id: string | null; title: string; conversation_id: string | null
   trigger_client_msg_no: string | null; goal: string; initiator_agent_id: string | null
   status: CanvasWorkspaceStatus; origin: string; summary: string | null
   created_by: string; created_at: string; updated_at: string
@@ -206,7 +207,15 @@ function toFrame(row: FrameRow): CanvasFrame {
 }
 
 async function publishCanvas(companyId: string, event: Omit<CanvasEvent, 'type' | 'companyId' | 'timestamp'>): Promise<void> {
-  await publish(CH_CANVAS, { type: 'canvas.changed', companyId, timestamp: new Date().toISOString(), ...event })
+  const { rows } = await pool.query<{ conversation_id: string | null }>(
+    `SELECT conversation_id FROM canvases WHERE id=$1 AND company_id=$2`,
+    [event.canvasId, companyId],
+  )
+  await publish(CH_CANVAS, {
+    type: 'canvas.changed', companyId,
+    ...(rows[0]?.conversation_id ? { conversationId: rows[0].conversation_id } : {}),
+    timestamp: new Date().toISOString(), ...event,
+  })
 }
 
 function toAssignment(row: AssignmentRow, dependencies: string[] = []): CanvasAgentAssignment {
@@ -221,13 +230,13 @@ function toAssignment(row: AssignmentRow, dependencies: string[] = []): CanvasAg
   }
 }
 
-async function ensureCanvas(companyId: string, actorId: string): Promise<CanvasRow> {
-  const id = stableCanvasId(companyId)
+async function ensureCanvas(companyId: string, actorId: string, projectId?: string): Promise<CanvasRow> {
+  const id = stableCanvasId(projectId ? `${companyId}:${projectId}` : companyId)
   await pool.query(
-    `INSERT INTO canvases (id, company_id, title, created_by, origin)
-     VALUES ($1, $2, 'Legacy Canvas', $3, 'legacy')
+    `INSERT INTO canvases (id, company_id, project_id, title, created_by, origin)
+     VALUES ($1, $2, $3, 'Legacy Canvas', $4, 'legacy')
      ON CONFLICT (id) DO NOTHING`,
-    [id, companyId, actorId],
+    [id, companyId, projectId ?? null, actorId],
   )
   const { rows } = await pool.query<CanvasRow>(
     `SELECT * FROM canvases WHERE id=$1 AND company_id=$2 LIMIT 1`, [id, companyId],
@@ -236,19 +245,19 @@ async function ensureCanvas(companyId: string, actorId: string): Promise<CanvasR
   return rows[0]
 }
 
-async function requireCanvas(companyId: string, canvasId: string): Promise<CanvasRow> {
-  const { rows } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE id=$1 AND company_id=$2 LIMIT 1`, [canvasId, companyId])
+async function requireCanvas(companyId: string, canvasId: string, projectId?: string): Promise<CanvasRow> {
+  const { rows } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE id=$1 AND company_id=$2 AND ($3::text IS NULL OR project_id=$3) LIMIT 1`, [canvasId, companyId, projectId ?? null])
   if (!rows[0]) throw new Error('canvas not found')
   return rows[0]
 }
 
-async function resolveCanvas(companyId: string, actorId: string, canvasId?: string): Promise<CanvasRow> {
-  return canvasId ? requireCanvas(companyId, canvasId) : ensureCanvas(companyId, actorId)
+async function resolveCanvas(companyId: string, actorId: string, canvasId?: string, projectId?: string): Promise<CanvasRow> {
+  return canvasId ? requireCanvas(companyId, canvasId, projectId) : ensureCanvas(companyId, actorId, projectId)
 }
 
-async function resolveCanvasRead(companyId: string, canvasId?: string): Promise<CanvasRow> {
-  if (canvasId) return requireCanvas(companyId, canvasId)
-  const { rows } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE company_id=$1 ORDER BY updated_at DESC LIMIT 1`, [companyId])
+async function resolveCanvasRead(companyId: string, canvasId?: string, projectId?: string): Promise<CanvasRow> {
+  if (canvasId) return requireCanvas(companyId, canvasId, projectId)
+  const { rows } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE company_id=$1 AND ($2::text IS NULL OR project_id=$2) ORDER BY updated_at DESC LIMIT 1`, [companyId, projectId ?? null])
   if (!rows[0]) throw Object.assign(new Error('canvas not found'), { status: 404 })
   return rows[0]
 }
@@ -292,9 +301,10 @@ async function logActivity(input: {
   return activity
 }
 
-export async function listCanvasWorkspaces(companyId: string, conversationId?: string): Promise<CanvasWorkspaceSummary[]> {
+export async function listCanvasWorkspaces(companyId: string, conversationId?: string, projectId?: string): Promise<CanvasWorkspaceSummary[]> {
   const values: unknown[] = [companyId]
   const conversation = conversationId ? `AND c.conversation_id=$${values.push(conversationId)}` : ''
+  const project = projectId ? `AND c.project_id=$${values.push(projectId)}` : ''
   const { rows } = await pool.query<{
     id: string; title: string; goal: string; conversation_id: string | null; initiator_agent_id: string | null
     status: CanvasWorkspaceStatus; origin: string; frame_count: string | number; assignment_count: string | number
@@ -304,7 +314,7 @@ export async function listCanvasWorkspaces(companyId: string, conversationId?: s
             COUNT(DISTINCT f.id)::int AS frame_count, COUNT(DISTINCT a.id)::int AS assignment_count
        FROM canvases c LEFT JOIN canvas_frames f ON f.canvas_id=c.id
        LEFT JOIN canvas_agent_assignments a ON a.canvas_id=c.id
-      WHERE c.company_id=$1 ${conversation}
+      WHERE c.company_id=$1 ${conversation} ${project}
       GROUP BY c.id ORDER BY c.updated_at DESC`, values,
   )
   return rows.map((row) => ({
@@ -315,9 +325,29 @@ export async function listCanvasWorkspaces(companyId: string, conversationId?: s
   }))
 }
 
-export async function getCanvasSnapshot(companyId: string, actorId: string, canvasId?: string): Promise<CanvasSnapshot> {
+/** Group-scoped Canvas is created lazily and is unique per conversation. */
+export async function ensureConversationCanvas(companyId: string, conversationId: string, actorId: string): Promise<CanvasSnapshot> {
+  const id = stableCanvasId(`${companyId}:${conversationId}`)
+  const { rows } = await pool.query<{ id: string }>(
+    `INSERT INTO canvases (id, company_id, conversation_id, title, goal, created_by, origin)
+     SELECT $1, c.company_id, c.id, c.title || ' Canvas', COALESCE(c.topic, ''), $4, 'conversation'
+       FROM conversations c WHERE c.id=$2 AND c.company_id=$3 AND c.kind='group'
+     ON CONFLICT (conversation_id) DO UPDATE SET conversation_id=EXCLUDED.conversation_id
+     RETURNING id`,
+    [id, conversationId, companyId, actorId],
+  )
+  if (!rows[0]) throw Object.assign(new Error('group conversation not found'), { status: 404 })
+  return getCanvasSnapshot(companyId, actorId, rows[0].id)
+}
+
+export async function getConversationCanvas(companyId: string, conversationId: string, actorId: string): Promise<CanvasSnapshot | null> {
+  const { rows } = await pool.query<{ id: string }>(`SELECT id FROM canvases WHERE company_id=$1 AND conversation_id=$2 LIMIT 1`, [companyId, conversationId])
+  return rows[0] ? getCanvasSnapshot(companyId, actorId, rows[0].id) : null
+}
+
+export async function getCanvasSnapshot(companyId: string, actorId: string, canvasId?: string, projectId?: string): Promise<CanvasSnapshot> {
   void actorId
-  const canvas = await resolveCanvasRead(companyId, canvasId)
+  const canvas = await resolveCanvasRead(companyId, canvasId, projectId)
   const [frames, presence, assignments, dependencies, comments, activity] = await Promise.all([
     pool.query<FrameRow>(`SELECT * FROM canvas_frames WHERE canvas_id=$1 ORDER BY created_at ASC`, [canvas.id]),
     pool.query<{
@@ -351,6 +381,7 @@ export async function getCanvasSnapshot(companyId: string, actorId: string, canv
     id: canvas.id,
     title: canvas.title,
     companyId,
+    projectId: canvas.project_id,
     conversationId: canvas.conversation_id,
     triggerClientMsgNo: canvas.trigger_client_msg_no,
     goal: canvas.goal,
@@ -383,10 +414,10 @@ export async function getCanvasSnapshot(companyId: string, actorId: string, canv
 
 export async function createCanvasFrame(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; idempotencyKey?: string
-  canvasId?: string
+  canvasId?: string; projectId?: string
   frame: Record<string, unknown>
 }): Promise<CanvasFrame> {
-  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId)
+  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
   const type = frameType(input.frame.type)
   const title = String(input.frame.title ?? `${type[0].toUpperCase()}${type.slice(1)} frame`).trim().slice(0, MAX_FRAME_TITLE) || 'Untitled frame'
   const content = contentValue(input.frame.content)
@@ -551,9 +582,9 @@ export async function deleteCanvasFrame(input: {
 
 export async function setCanvasStatus(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; status: string; canvasId?: string
-  frameId?: string | null; cursorX?: number | null; cursorY?: number | null
+  projectId?: string; frameId?: string | null; cursorX?: number | null; cursorY?: number | null
 }): Promise<CanvasPresence | null> {
-  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId)
+  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
   const status = input.status.trim().slice(0, 120)
   const previous = input.actorKind === 'agent'
     ? (await pool.query<{ status: string; frame_id: string | null }>(
@@ -616,9 +647,9 @@ export async function setCanvasStatus(input: {
 }
 
 export async function addCanvasComment(input: {
-  companyId: string; actorId: string; actorKind: CanvasActorKind; canvasId?: string; frameId?: string | null; body: string
+  companyId: string; actorId: string; actorKind: CanvasActorKind; canvasId?: string; projectId?: string; frameId?: string | null; body: string
 }): Promise<CanvasComment> {
-  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId)
+  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
   if (input.frameId) await requireFrame(input.companyId, input.frameId)
   const body = input.body.trim().slice(0, 8_000)
   if (!body) throw new Error('body is required')
@@ -720,20 +751,24 @@ export async function startCanvasWorkspace(input: {
   title: string; goal: string; members: CanvasMemberInput[]; idempotencyKey: string
 }): Promise<CanvasSnapshot> {
   const id = `canvas-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 28)}`
+  let canvasId = id
   const client = await pool.connect()
   let activity: CanvasActivity
   try {
     await client.query('BEGIN')
     const { rows } = await client.query<CanvasRow>(
       `INSERT INTO canvases
-         (id,company_id,title,conversation_id,trigger_client_msg_no,goal,initiator_agent_id,status,origin,created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'active','agent_os',$7)
-       ON CONFLICT (id) DO UPDATE SET updated_at=canvases.updated_at RETURNING *`,
+         (id,company_id,project_id,title,conversation_id,trigger_client_msg_no,goal,initiator_agent_id,status,origin,created_by)
+       SELECT $1,$2,NULL,$3,$4,$5,$6,$7,'active','agent_os',$7
+         FROM conversations c WHERE c.id=$4 AND c.company_id=$2 AND c.kind='group'
+       ON CONFLICT (conversation_id) DO UPDATE SET updated_at=NOW(), status='active' RETURNING *`,
       [id, input.companyId, input.title.trim().slice(0, 200) || 'Agent workspace', input.conversationId,
         input.triggerClientMsgNo, input.goal.trim(), input.initiatorAgentId],
     )
     const canvas = rows[0]
-    const { rows: existing } = await client.query<AssignmentRow>(`SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 ORDER BY created_at`, [id])
+    if (!canvas) throw new Error('canvas requires a group conversation')
+    canvasId = canvas.id
+    const { rows: existing } = await client.query<AssignmentRow>(`SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 ORDER BY created_at`, [canvasId])
     if (existing.length === 0) await insertMembers(client, { canvas, members: input.members, existing })
     const activityId = `activity-${createHash('sha256').update(`${input.idempotencyKey}:workspace_started`).digest('hex').slice(0, 32)}`
     const { rows: activities } = await client.query<{
@@ -742,7 +777,7 @@ export async function startCanvasWorkspace(input: {
       `INSERT INTO canvas_activity (id,canvas_id,frame_id,actor_id,actor_kind,action,detail)
        VALUES ($1,$2,NULL,$3,'agent','workspace_started',$4::jsonb)
        ON CONFLICT (id) DO UPDATE SET id=canvas_activity.id RETURNING *`,
-      [activityId, id, input.initiatorAgentId, JSON.stringify({ title: canvas.title, goal: canvas.goal })],
+      [activityId, canvasId, input.initiatorAgentId, JSON.stringify({ title: canvas.title, goal: canvas.goal })],
     )
     const row = activities[0]
     activity = { id: row.id, canvasId: row.canvas_id, frameId: row.frame_id, actorId: row.actor_id,
@@ -751,13 +786,13 @@ export async function startCanvasWorkspace(input: {
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined); throw error
   } finally { client.release() }
-  const snapshot = await getCanvasSnapshot(input.companyId, input.initiatorAgentId, id)
+  const snapshot = await getCanvasSnapshot(input.companyId, input.initiatorAgentId, canvasId)
   await publishCanvas(input.companyId, {
-    kind: 'workspace.started', canvasId: id, conversationId: input.conversationId,
-    workspace: { id, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
+    kind: 'workspace.started', canvasId, conversationId: input.conversationId,
+    workspace: { id: canvasId, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
       assignmentCount: snapshot.assignments.length, frameCount: snapshot.frames.length },
   }).catch(() => undefined)
-  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: id, activity }).catch(() => undefined)
+  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId, activity }).catch(() => undefined)
   return { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }
 }
 

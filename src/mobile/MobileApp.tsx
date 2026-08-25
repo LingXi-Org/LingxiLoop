@@ -17,6 +17,9 @@ import { MobileTabBar } from './MobileTabBar'
 import { MobileWhisperRoom, MobileWhispersList } from './MobileWhispers'
 import { useSwipeBackProps } from './useSwipeBack'
 import { ViewBoundary } from './ViewBoundary'
+import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
+import { useConversations } from '@/stores/conversations'
+import { MobileGroupContext } from './MobileGroupContext'
 
 /** iOS UINavigationController push/pop spring. CRITICALLY DAMPED:
  *  damping ratio ζ = damping / (2·√(k·m)) = 38 / (2·√320) ≈ 1.06,
@@ -93,6 +96,8 @@ export function MobileApp() {
   const view = useApp((s) => s.view)
   const setView = useApp((s) => s.setView)
   const convoId = useApp((s) => s.selectedConversationId)
+  const mobileGroupContext = useApp((s) => s.mobileGroupContext)
+  const closeMobileGroupContext = useApp((s) => s.closeMobileGroupContext)
   const stack = useApp((s) => s.mobileStack)
   const pushStack = useApp((s) => s.pushMobileStack)
   const documentId = useApp((s) => s.openDocumentId)
@@ -108,6 +113,7 @@ export function MobileApp() {
   const infoParticipantId = useApp((s) => s.infoAgentId)
   const closeAgentInfo = useApp((s) => s.closeAgentInfo)
   const [whisperId, setWhisperId] = useState<string | null>(null)
+  const activeConversation = useConversations((state) => state.list.find((item) => item.id === convoId) ?? null)
 
   // Edge-swipe-back gestures for deep screens. Hooks are called
   // unconditionally (the per-page motion.div is conditional, but the
@@ -148,6 +154,10 @@ export function MobileApp() {
     }
   }, [view, convoId, setView])
 
+  useEffect(() => {
+    if (activeConversation?.kind !== 'group' && mobileGroupContext) closeMobileGroupContext()
+  }, [activeConversation?.kind, closeMobileGroupContext, mobileGroupContext])
+
   // Wire push registration (APNs on iOS, FCM on Android) once the authed
   // mobile shell mounts. Soft no-op on web / Electron. The initializer is
   // idempotent — re-mounts (e.g. on company switch) won't re-prompt because
@@ -161,10 +171,10 @@ export function MobileApp() {
     !(view === 'conversations' && (stack === 'chat' || stack === 'info')) &&
     !(view === 'whispers' && whisperId !== null) &&
     view !== 'canvas' &&
-    !infoParticipantId
+    !infoParticipantId && !mobileGroupContext
 
   return (
-    <div className="relative z-10 h-[100dvh] w-screen flex flex-col bg-paper">
+    <div className="mobile-grok-shell relative z-10 flex h-[100dvh] w-screen flex-col bg-paper">
       <main className="flex-1 relative overflow-hidden">
         {/* Top-level view switcher — was previously
             `<AnimatePresence mode="wait">`, which serializes exits
@@ -321,6 +331,14 @@ export function MobileApp() {
         </AnimatePresence>
       </main>
 
+      <AnimatePresence>
+        {mobileGroupContext && activeConversation?.kind === 'group' && (
+          <motion.div key={`group-context-${activeConversation.id}`} className="absolute inset-0 z-50 bg-panel" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={slideTransition}>
+            <MobileGroupContext conversationId={activeConversation.id} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {showTabBar && <MobileTabBar />}
       <AnimatePresence>
         {artifactKey && (
@@ -361,6 +379,7 @@ export function MobileApp() {
           </motion.div>
         )}
       </AnimatePresence>
+      <SourceDetailOverlay />
     </div>
   )
 }

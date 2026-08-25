@@ -24,7 +24,7 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -32,12 +32,19 @@ jobs:
           - package: lingxiloop-server
             dockerfile: server/docker/lingxiloop-server.Dockerfile
             wukong_commit: ""
+            context: .
           - package: lingxiloop-agent-os
             dockerfile: server/docker/agent-os.Dockerfile
             wukong_commit: ""
+            context: .
           - package: lingxiloop-wukongim
             dockerfile: server/docker/wukongim.Dockerfile
             wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
+            context: .
+          - package: lingxiloop-open-notebook
+            dockerfile: Dockerfile
+            wukong_commit: ""
+            context: ./third_party/open-notebook
     steps:
       - uses: actions/checkout@v4
       - id: version
@@ -54,7 +61,7 @@ jobs:
       - name: Build and publish immutable and MVP tags
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
           platforms: linux/amd64,linux/arm64
           push: true

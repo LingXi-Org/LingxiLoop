@@ -327,6 +327,7 @@ function fromApi(m: ApiMessage): Message {
     handoff?: Message['handoff'] | null
     approval?: Message['approval'] | null
     canvas?: Message['canvas'] | null
+    citations?: Message['citations'] | null
   }
   const out: Message = {
     id: m.id,
@@ -335,6 +336,7 @@ function fromApi(m: ApiMessage): Message {
     kind: m.kind as Message['kind'],
     body: m.body,
     at,
+    createdAt: m.createdAt ?? (m.at && ISO_RE.test(m.at) ? m.at : undefined),
     reactions: deriveMineForReactions(m.reactions),
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,
@@ -352,6 +354,7 @@ function fromApi(m: ApiMessage): Message {
     handoff: raw.handoff ?? undefined,
     approval: raw.approval ?? undefined,
     canvas: raw.canvas ?? undefined,
+    citations: raw.citations ?? undefined,
   }
   ;(out as Message & { sequence?: number }).sequence = m.sequence
   return out
@@ -393,6 +396,7 @@ function fromIm(message: ImEnvelope): Message {
     handoff: payload.kind === 'handoff' ? data as unknown as Message['handoff'] : undefined,
     approval: payload.kind === 'approval' ? data as unknown as Message['approval'] : undefined,
     canvas: payload.kind === 'canvas' ? data as unknown as Message['canvas'] : undefined,
+    citations: Array.isArray(data.citations) ? data.citations as Message['citations'] : undefined,
     poll: pollData,
     pollTallies: payload.kind === 'poll' && Array.isArray(data.pollTallies)
       ? data.pollTallies as Message['pollTallies']
@@ -959,6 +963,17 @@ export async function sendUserMessage(
           )
       return { byConvo: { ...s.byConvo, [convoId]: next } }
     })
+    if (attachment) {
+      // The webhook creates the local Source immediately after WuKong commits
+      // the attachment. Refresh once after the acknowledgement; once the
+      // queued row is visible, the existing SourcePanel poll follows it to a
+      // terminal Open Notebook state.
+      window.setTimeout(() => {
+        void import('@/stores/knowledgeSources')
+          .then(({ useKnowledgeSources }) => useKnowledgeSources.getState().load())
+          .catch(() => undefined)
+      }, 750)
+    }
   } catch (err) {
     console.warn('[messages] send failed', err)
     useMessages.setState((s) => {

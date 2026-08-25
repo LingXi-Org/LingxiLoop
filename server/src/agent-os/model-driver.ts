@@ -66,7 +66,7 @@ export class DeepSeekChatDriver implements AgentModelDriver {
   }
 
   async run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult> {
-    const stream = await this.client.chat.completions.create({
+    const request = {
       model: this.model,
       messages: [
         { role: 'system', content: args.instructions },
@@ -75,6 +75,9 @@ export class DeepSeekChatDriver implements AgentModelDriver {
       tools: CHAT_TOOLS,
       tool_choice: 'auto',
       max_tokens: 4_000,
+    } satisfies Parameters<typeof this.client.chat.completions.create>[0]
+    const stream = await this.client.chat.completions.create({
+      ...request,
       stream: true,
       stream_options: { include_usage: true },
     }, { signal: args.signal })
@@ -138,7 +141,7 @@ export class DeepSeekChatDriver implements AgentModelDriver {
         output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.arguments })
       }
     }
-    const diagnostics: ModelTurnDiagnostics = {
+    let diagnostics: ModelTurnDiagnostics = {
       chunkCount,
       choiceCount,
       finishReasons: [...finishReasons],
@@ -147,10 +150,44 @@ export class DeepSeekChatDriver implements AgentModelDriver {
       chunkShapes,
     }
     if (output.length === 0) {
-      throw new ModelAdapterError(
-        `model returned no assistant content or supported tool calls (chunks=${chunkCount}, choices=${choiceCount}, finishReasons=${diagnostics.finishReasons.join(',') || 'unavailable'})`,
-        diagnostics,
+      // A few gateways accept an SSE request but return an envelope the SDK
+      // cannot materialize. Retry once with the portable JSON response while
+      // retaining the stream diagnostics for operator visibility.
+      const fallback = await this.client.chat.completions.create(
+        { ...request, stream: false },
+        { signal: args.signal },
       )
+      const message = fallback.choices[0]?.message
+      const fallbackText = typeof message?.content === 'string' ? message.content : ''
+      if (fallbackText) {
+        text = fallbackText
+        output.push({ role: 'assistant', content: fallbackText })
+        await args.onTextDelta?.(fallbackText)
+      }
+      for (const call of message?.tool_calls ?? []) {
+        if (call.type === 'function' && call.id && call.function.name === 'ipython') {
+          output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.function.arguments })
+        }
+      }
+      if (fallback.usage) {
+        usageAvailable = true
+        inputTokens = fallback.usage.prompt_tokens
+        outputTokens = fallback.usage.completion_tokens
+      }
+      const fallbackReason = fallback.choices[0]?.finish_reason
+      if (fallbackReason) finishReasons.add(fallbackReason)
+      diagnostics = {
+        ...diagnostics,
+        finishReasons: [...finishReasons],
+        contentLength: text.length,
+        toolCallCount: output.filter((item) => 'type' in item && item.type === 'function_call').length,
+      }
+      if (output.length === 0) {
+        throw new ModelAdapterError(
+          `model returned no assistant content or supported tool calls after stream and JSON fallback (chunks=${chunkCount}, choices=${choiceCount}, finishReasons=${diagnostics.finishReasons.join(',') || 'unavailable'})`,
+          diagnostics,
+        )
+      }
     }
     return {
       output,

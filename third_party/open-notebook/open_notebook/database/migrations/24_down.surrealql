@@ -1,0 +1,4 @@
+REMOVE FUNCTION IF EXISTS fn::scoped_text_search;
+REMOVE FUNCTION IF EXISTS fn::scoped_vector_search;
+REMOVE INDEX IF EXISTS idx_notebook_external_key ON TABLE notebook;
+REMOVE FIELD IF EXISTS external_key ON TABLE notebook;

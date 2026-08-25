@@ -5,6 +5,7 @@ import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
+import { lingxiIm } from '@/lib/im/wukong'
 
 interface ConversationsState {
   list: Conversation[]
@@ -142,9 +143,6 @@ function fromApi(c: ApiConversation): Conversation {
     preview,
     tag: (c.tag ?? undefined) as Conversation['tag'],
     pulledBy: c.pulledBy ?? undefined,
-    projectId: c.projectId,
-    projectName: c.projectName,
-    projectColor: c.projectColor,
   }
 }
 
@@ -185,9 +183,11 @@ export const useConversations = create<ConversationsState>((set) => ({
     // Clear stale data immediately so a workspace switch never shows the
     // previous tenant's conversations during the loading window.
     set({ list: [], loaded: false })
+    lingxiIm.setWorkspaceChannels([])
     try {
       const list = await api.getConversations()
       const conversations = list.map(fromApi)
+      lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations, loaded: true })
       refreshActiveMessagesIfSidebarMoved(conversations)
     } catch (err) {
@@ -198,6 +198,7 @@ export const useConversations = create<ConversationsState>((set) => ({
     try {
       const list = await api.getConversations()
       const conversations = list.map(fromApi)
+      lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations })
       refreshActiveMessagesIfSidebarMoved(conversations)
     } catch (err) {

@@ -44,6 +44,58 @@ services:
     networks: [lingxiloop-mvp]
     logging: *quiet-logging
 
+  surrealdb:
+    image: surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011
+    pull_policy: always
+    restart: unless-stopped
+    command: ["start", "--log", "warn", "--user", "${OPEN_NOTEBOOK_SURREAL_USER:-open-notebook}", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:-open-notebook-dev}", "rocksdb:/data/open-notebook.db"]
+    environment:
+      SURREAL_EXPERIMENTAL_GRAPHQL: "true"
+    volumes:
+      - open-notebook-surreal-data:/data
+    healthcheck:
+      test: ["CMD", "/surreal", "is-ready", "--endpoint", "http://localhost:8000"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    networks: [lingxiloop-knowledge-internal]
+    logging: *quiet-logging
+
+  open-notebook:
+    build:
+      context: ./third_party/open-notebook
+      target: runtime
+    restart: unless-stopped
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+    environment:
+      OPEN_NOTEBOOK_ENCRYPTION_KEY: ${OPEN_NOTEBOOK_ENCRYPTION_KEY:-lingxiloop-local-open-notebook-key}
+      OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
+      OPEN_NOTEBOOK_WORKER_MAX_TASKS: ${OPEN_NOTEBOOK_WORKER_MAX_TASKS:-5}
+      OPEN_NOTEBOOK_R2_ENABLED: ${OPEN_NOTEBOOK_R2_ENABLED:-auto}
+      OPEN_NOTEBOOK_R2_PREFIX: ${OPEN_NOTEBOOK_R2_PREFIX:-open-notebook}
+      R2_ENDPOINT: ${R2_ENDPOINT:-}
+      R2_BUCKET: ${R2_BUCKET:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      SURREAL_URL: ws://surrealdb:8000/rpc
+      SURREAL_USER: ${OPEN_NOTEBOOK_SURREAL_USER:-open-notebook}
+      SURREAL_PASSWORD: ${OPEN_NOTEBOOK_SURREAL_PASSWORD:-open-notebook-dev}
+      SURREAL_NAMESPACE: open_notebook
+      SURREAL_DATABASE: open_notebook
+    volumes:
+      - open-notebook-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5055/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks: [lingxiloop-knowledge-internal, lingxiloop-knowledge-egress]
+    logging: *quiet-logging
+
   wukongim:
     image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-wukongim:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
@@ -73,6 +125,8 @@ services:
       redis:
         condition: service_healthy
       wukongim:
+        condition: service_healthy
+      open-notebook:
         condition: service_healthy
     environment:
       NODE_ENV: production
@@ -117,6 +171,13 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_DOMAIN: ${EMAIL_DOMAIN:-}
       EMAIL_INBOUND_HMAC_SECRET: ${EMAIL_INBOUND_HMAC_SECRET:-}
+      OPEN_NOTEBOOK_ENABLED: ${OPEN_NOTEBOOK_ENABLED:-true}
+      OPEN_NOTEBOOK_URL: http://open-notebook:5055
+      OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
+      OPEN_NOTEBOOK_CHAT_MODEL: ${OPEN_NOTEBOOK_CHAT_MODEL:-}
+      OPEN_NOTEBOOK_STRATEGY_MODEL: ${OPEN_NOTEBOOK_STRATEGY_MODEL:-}
+      OPEN_NOTEBOOK_ANSWER_MODEL: ${OPEN_NOTEBOOK_ANSWER_MODEL:-}
+      OPEN_NOTEBOOK_FINAL_ANSWER_MODEL: ${OPEN_NOTEBOOK_FINAL_ANSWER_MODEL:-}
     ports:
       # Public by default so the mobile client can reach the API backend.
       - "${LINGXILOOP_BIND_ADDRESS:-0.0.0.0}:${LINGXILOOP_PORT:-5181}:5181"
@@ -128,7 +189,7 @@ services:
       timeout: 3s
       retries: 20
       start_period: 10s
-    networks: [lingxiloop-mvp]
+    networks: [lingxiloop-mvp, lingxiloop-knowledge-internal]
     logging: *quiet-logging
 
   agent-os:
@@ -164,6 +225,9 @@ services:
 
 networks:
   lingxiloop-mvp: {}
+  lingxiloop-knowledge-internal:
+    internal: true
+  lingxiloop-knowledge-egress: {}
 
 volumes:
   lingxiloop-postgres-data: {}
@@ -171,3 +235,5 @@ volumes:
   lingxiloop-uploads: {}
   lingxiloop-wukong-data: {}
   lingxiloop-agent-os-data: {}
+  open-notebook-surreal-data: {}
+  open-notebook-data: {}

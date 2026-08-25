@@ -128,6 +128,14 @@ export async function seedCompanyWithAgent(opts?: {
      ON CONFLICT DO NOTHING`,
     [companyId, `Test ${companyId}`, companyId, 'test-owner'],
   )
+  // Mirror production onboarding: companies created after the schema
+  // migration need their General workspace established explicitly.
+  await pool.query(
+    `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
+     SELECT $2, $1, '通用工作区', '测试公司的默认工作区', '#667085', 'test-owner', TRUE
+      WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
+    [companyId, `general-${companyId}`],
+  )
   // participants composite PK is (id, company_id) — see migrate.ts.
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)

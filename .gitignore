@@ -24,7 +24,7 @@ node_modules
 dist
 dist-ssr
 
-# Python bytecode cache (server/lingxigraph/)
+# Python bytecode cache
 __pycache__/
 *.pyc
 

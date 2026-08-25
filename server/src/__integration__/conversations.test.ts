@@ -87,3 +87,54 @@ test('[integration] GET /search uses the same perspective-specific direct title'
 
   assert.equal(direct?.title, 'Ada')
 })
+
+async function seedGroupCreationFixture(): Promise<{ companyId: string; agentId: string; generalId: string; currentId: string }> {
+  const companyId = 'c-group-workspace'
+  const agentId = 'agent-workspace'
+  const generalId = 'p-general'
+  const currentId = 'p-current'
+  await pool.query(
+    `INSERT INTO companies (id, name, slug, owner_user_id) VALUES ($1, 'Workspace Co', 'workspace-co', $2)`,
+    [companyId, ME_USER_ID],
+  )
+  await seedUserMembership(ME_USER_ID, companyId)
+  await pool.query(
+    `INSERT INTO participants (id, kind, name, initial, avatar_bg, status, company_id)
+     VALUES ($1, 'agent', 'Workspace Agent', 'W', '#000', 'online', $2)`,
+    [agentId, companyId],
+  )
+  await pool.query(
+    `INSERT INTO projects (id, company_id, name, color, created_by, is_general)
+     VALUES ($1,$3,'General','#000',$4,TRUE), ($2,$3,'Current','#111',$4,FALSE)`,
+    [generalId, currentId, companyId, ME_USER_ID],
+  )
+  return { companyId, agentId, generalId, currentId }
+}
+
+test('[integration] new group binds to the current workspace immediately', async () => {
+  const { companyId, agentId, currentId } = await seedGroupCreationFixture()
+  const res = await fetch(`${baseUrl}/api/conversations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({ title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
+  })
+  assert.equal(res.status, 201)
+  const body = await res.json() as { id: string; projectId: string }
+  assert.equal(body.projectId, currentId)
+  const stored = await pool.query<{ project_id: string }>(`SELECT project_id FROM conversations WHERE id=$1`, [body.id])
+  assert.equal(stored.rows[0]?.project_id, currentId)
+})
+
+test('[integration] new group falls back to General when no current workspace is supplied', async () => {
+  const { companyId, agentId, generalId } = await seedGroupCreationFixture()
+  const res = await fetch(`${baseUrl}/api/conversations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({ title: 'General group', members: [agentId], leaderId: agentId }),
+  })
+  assert.equal(res.status, 201)
+  const body = await res.json() as { id: string; projectId: string }
+  assert.equal(body.projectId, generalId)
+  const stored = await pool.query<{ project_id: string }>(`SELECT project_id FROM conversations WHERE id=$1`, [body.id])
+  assert.equal(stored.rows[0]?.project_id, generalId)
+})

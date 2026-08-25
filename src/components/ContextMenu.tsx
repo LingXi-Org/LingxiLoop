@@ -38,6 +38,7 @@ interface Props {
 
 export function ContextMenu({ x, y, items, onClose, _isChild }: Props) {
   const ref = useRef<HTMLDivElement>(null)
+  const restoreFocusRef = useRef<HTMLElement | null>(null)
   // Which row's submenu is currently rendered. Stays sticky as the user
   // moves across no-submenu siblings — only resets when they enter ANOTHER
   // submenu opener.
@@ -45,11 +46,30 @@ export function ContextMenu({ x, y, items, onClose, _isChild }: Props) {
   const [submenuAnchor, setSubmenuAnchor] = useState<{ top: number; right: number; left: number } | null>(null)
 
   useEffect(() => {
+    if (_isChild) return
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const frame = window.requestAnimationFrame(() => {
+      const first = ref.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')
+      first?.focus()
+    })
+    return () => { window.cancelAnimationFrame(frame); restoreFocusRef.current?.focus({ preventScroll: true }) }
+  }, [_isChild])
+
+  useEffect(() => {
     // Esc + outside-click dismissal lives on the ROOT panel only — children
     // skip both, so a click on a child item doesn't read as "outside the
     // parent" and slam the whole stack shut before the leaf handler runs.
     if (_isChild) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return }
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
+      const buttons = [...(ref.current?.querySelectorAll<HTMLButtonElement>(':scope > button:not(:disabled)') ?? [])]
+      if (buttons.length === 0) return
+      e.preventDefault()
+      const current = buttons.indexOf(document.activeElement as HTMLButtonElement)
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length - 1 : e.key === 'ArrowDown' ? (current + 1) % buttons.length : (current - 1 + buttons.length) % buttons.length
+      buttons[next]?.focus()
+    }
     const onDown = (e: MouseEvent) => {
       const target = e.target as Node | null
       if (!target) return
@@ -109,6 +129,13 @@ export function ContextMenu({ x, y, items, onClose, _isChild }: Props) {
                 // Sibling rows without their own submenu KEEP the current
                 // child open so the user can travel right to it.
               }}
+              onFocus={(e) => {
+                if (!hasSubmenu) return
+                const r = e.currentTarget.getBoundingClientRect()
+                setOpenSubmenuIdx(i)
+                setSubmenuAnchor({ top: r.top, right: r.right, left: r.left })
+              }}
+              aria-haspopup={hasSubmenu ? 'menu' : undefined}
               onClick={() => {
                 if (it.disabled) return
                 // Submenu-only rows don't have their own action; the user

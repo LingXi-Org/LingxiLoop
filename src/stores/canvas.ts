@@ -25,6 +25,7 @@ interface CanvasState {
   load: (canvasId?: string) => Promise<void>
   loadPreview: (canvasId: string) => Promise<void>
   loadWorkspaces: (conversationId?: string) => Promise<void>
+  createForConversation: (conversationId: string) => Promise<CanvasSnapshot>
   reset: () => void
   selectFrame: (id: string | null) => void
   patchLocalFrame: (id: string, patch: Partial<CanvasFrame>) => void
@@ -116,6 +117,31 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   loadWorkspaces: async (conversationId) => {
     try { set({ workspaces: await api.getCanvases(conversationId) }) }
     catch (error) { set({ error: error instanceof Error ? error.message : String(error) }) }
+  },
+
+  createForConversation: async (conversationId) => {
+    const snapshot = await api.createConversationCanvas(conversationId)
+    const summary: CanvasWorkspaceSummary = {
+      id: snapshot.id,
+      title: snapshot.title,
+      goal: snapshot.goal,
+      conversationId: snapshot.conversationId,
+      initiatorAgentId: snapshot.initiatorAgentId,
+      status: snapshot.status,
+      origin: snapshot.origin,
+      frameCount: snapshot.frames.length,
+      assignmentCount: snapshot.assignments.length,
+      updatedAt: snapshot.updatedAt,
+      createdAt: snapshot.createdAt,
+    }
+    set((state) => ({
+      snapshot,
+      previews: { ...state.previews, [snapshot.id]: snapshot },
+      workspaces: [...state.workspaces.filter((item) => item.conversationId !== conversationId), summary],
+      activeCanvasId: snapshot.id,
+      error: null,
+    }))
+    return snapshot
   },
 
   reset: () => set({ snapshot: null, previews: {}, workspaces: [], activeCanvasId: null, eventClocks: {}, activityByCanvas: {}, liveCards: {}, loading: false, error: null, selectedFrameId: null }),
@@ -346,9 +372,11 @@ export const useCanvas = create<CanvasState>((set, get) => ({
 
 ws.on((event) => {
   if (event.type === 'canvas.changed') {
+    const activeConversationId = useApp.getState().selectedConversationId
+    if (event.conversationId && event.conversationId !== activeConversationId) return
     useCanvas.getState().applyEvent(event)
     if (event.kind === 'workspace.started') {
-      void useCanvas.getState().loadWorkspaces()
+      void useCanvas.getState().loadWorkspaces(event.conversationId)
       const app = useApp.getState()
       if (window.innerWidth >= 768 && app.view === 'conversations' && app.selectedConversationId === event.conversationId) {
         app.openCanvasPeek(event.canvasId)

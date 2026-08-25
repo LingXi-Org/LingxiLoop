@@ -19,14 +19,29 @@ for required in "$compose_file" "$next_env" ".env.secrets"; do
   fi
 done
 
+for secret in OPEN_NOTEBOOK_PASSWORD OPEN_NOTEBOOK_ENCRYPTION_KEY OPEN_NOTEBOOK_SURREAL_PASSWORD; do
+  if ! grep -Eq "^${secret}=.+" .env.secrets; then
+    echo "Missing required Open Notebook production secret: $secret" >&2
+    exit 2
+  fi
+done
+if ! grep -Eq '^OPEN_NOTEBOOK_CHAT_MODEL=.+' .env.secrets &&
+   { ! grep -Eq '^OPEN_NOTEBOOK_STRATEGY_MODEL=.+' .env.secrets ||
+     ! grep -Eq '^OPEN_NOTEBOOK_ANSWER_MODEL=.+' .env.secrets ||
+     ! grep -Eq '^OPEN_NOTEBOOK_FINAL_ANSWER_MODEL=.+' .env.secrets; }; then
+  echo "Open Notebook Ask requires OPEN_NOTEBOOK_CHAT_MODEL or all three stage model IDs" >&2
+  exit 2
+fi
+
 if grep -Eq 'IMAGE=[^@[:space:]]+:[^@[:space:]]+$' "$next_env"; then
   echo "Production images must use immutable image@sha256 digests" >&2
   exit 2
 fi
 if ! grep -Eq '^LINGXILOOP_SERVER_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
    ! grep -Eq '^AGENT_OS_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
-   ! grep -Eq '^WUKONGIM_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env"; then
-  echo "All three LingxiLoop production images must be digest-pinned" >&2
+   ! grep -Eq '^WUKONGIM_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
+   ! grep -Eq '^OPEN_NOTEBOOK_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env"; then
+  echo "All four LingxiLoop production images must be digest-pinned" >&2
   exit 2
 fi
 
@@ -36,7 +51,7 @@ fi
 cp "$next_env" "$active_env"
 
 compose() {
-  docker compose --env-file "$active_env" -f "$compose_file" "$@"
+  docker compose --env-file "$active_env" --env-file .env.secrets -f "$compose_file" "$@"
 }
 
 verify() {

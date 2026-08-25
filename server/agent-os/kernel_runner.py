@@ -109,7 +109,7 @@ class Namespace:
 class LoopBridge:
     NAMESPACES = (
         "chat", "memory", "skills", "files", "documents", "boards",
-        "canvas", "calendar", "routines", "research", "email", "polls", "turn",
+        "canvas", "calendar", "routines", "research", "email", "knowledge", "polls", "turn",
     )
 
     def __init__(self) -> None:

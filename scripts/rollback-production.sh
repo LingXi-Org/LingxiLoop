@@ -13,8 +13,8 @@ for required in "$compose_file" "$previous_env" ".env.secrets"; do
 done
 
 cp "$previous_env" "$active_env"
-docker compose --env-file "$active_env" -f "$compose_file" pull
-docker compose --env-file "$active_env" -f "$compose_file" up -d --remove-orphans
+docker compose --env-file "$active_env" --env-file .env.secrets -f "$compose_file" pull
+docker compose --env-file "$active_env" --env-file .env.secrets -f "$compose_file" up -d --remove-orphans
 
 expected_sha="$(sed -n 's/^LINGXILOOP_COMMIT_SHA=//p' "$active_env")"
 attempts=0

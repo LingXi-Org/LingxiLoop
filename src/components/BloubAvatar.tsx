@@ -8,7 +8,13 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import type { Participant } from '@/types'
-import { getBloubIdentity, getBloubState, pickWorkingStateSequence, stableParticipantHash } from '@/lib/agentVisualState'
+import {
+  getBloubIdentity,
+  getBloubState,
+  getWorkingEpochSeed,
+  pickWorkingStateSequence,
+  stableParticipantHash,
+} from '@/lib/agentVisualState'
 import { NOTIF_BLUE, type DotRender } from '@/lib/bloub/decor'
 import { BotEngine, type BotFrame } from '@/lib/bloub/engine'
 import { EXPRESSION_BY_ID } from '@/lib/bloub/expressions'
@@ -17,17 +23,30 @@ import { COLOR_BY_ID, SHAPE_BY_ID } from '@/lib/bloub/skins'
 import { STATE_BY_ID, type StateId } from '@/lib/bloub/states'
 import { getBloubClockTime, subscribeBloubClock } from '@/lib/bloub/clock'
 
-const WORKING_CYCLE_LENGTH = 3
+/** Each entry into `working` advances a local epoch. Server-driven working
+ *  states additionally use statusUpdatedAt, so remounts during one work spell
+ *  remain stable while a new server work spell is reseeded. */
+function useWorkingEpoch(participant: Participant, status: string): number {
+  const epoch = useRef({ previousStatus: null as string | null, localRound: 0 })
+  if (epoch.current.previousStatus !== status) {
+    if (status === 'working') epoch.current.localRound += 1
+    epoch.current.previousStatus = status
+  }
+  const serverEpoch = status === 'working' && participant.status === 'working'
+    ? participant.statusUpdatedAt?.trim()
+    : undefined
+  return useMemo(
+    () => getWorkingEpochSeed(participant.id, `${serverEpoch ?? 'local'}:${epoch.current.localRound}`),
+    [participant.id, serverEpoch, epoch.current.localRound],
+  )
+}
 
-/** While `status === 'working'`, cycles the avatar through a few randomly
- *  (but deterministically-per-agent) chosen poses from WORKING_STATE_POOL
- *  instead of holding a single one for the whole busy stretch — each pose
- *  advances to the next after its own catalog duration. Any other status
- *  just passes `baseState` straight through, unchanged. */
-function useDisplayState(participantHash: number, status: string, baseState: StateId, motionEnabled: boolean): StateId {
+/** While working, play the complete upstream montage from the epoch-seeded
+ *  starting frame. Each state retains its own catalogue duration. */
+function useDisplayState(workingSeed: number, status: string, baseState: StateId, motionEnabled: boolean): StateId {
   const sequence = useMemo(
-    () => (status === 'working' ? pickWorkingStateSequence(participantHash, WORKING_CYCLE_LENGTH) : null),
-    [status, participantHash],
+    () => (status === 'working' ? pickWorkingStateSequence(workingSeed) : null),
+    [status, workingSeed],
   )
   const [index, setIndex] = useState(0)
   useEffect(() => { setIndex(0) }, [sequence])
@@ -127,10 +146,11 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
   const expression = EXPRESSION_BY_ID.get(identity.expression) ?? null
   const ink = COLOR_BY_ID.get(identity.color)?.hex ?? '#3b93f0'
   const participantHash = useMemo(() => stableParticipantHash(participant.id), [participant.id])
+  const workingSeed = useWorkingEpoch(participant, status)
   const { ref, visible } = useViewportVisibility()
   const reducedMotion = useReducedMotion()
   const motionEnabled = animated && size >= 24 && visible && !reducedMotion
-  const state = useDisplayState(participantHash, status, baseState, motionEnabled)
+  const state = useDisplayState(workingSeed, status, baseState, motionEnabled)
   const phase = STATIC_PHASE[state] + (participantHash % 31) / 100
   // A shared rAF clock keeps the renderer cheap, but sampling every avatar at
   // the exact same scene time made all eyes blink and drift in lockstep. Each

@@ -67,8 +67,8 @@ CREATE TABLE IF NOT EXISTS participants (
 );
 
 -- User-visible, revocable permissions are kept separate from the low-level
--- runtime tool list. Existing agents retain their current behaviour after the
--- migration; owners can narrow the list from the agent editor.
+-- runtime tool list. Defaults apply only to newly-created agents; a migration
+-- must not silently restore a capability that an owner previously revoked.
 ALTER TABLE participants ADD COLUMN IF NOT EXISTS capabilities JSONB NOT NULL
   DEFAULT '["canvas","web","files","email","documents"]'::jsonb;
 ALTER TABLE participants ALTER COLUMN capabilities SET DEFAULT
@@ -170,15 +170,14 @@ CREATE TABLE IF NOT EXISTS message_reactions (
 -- Sink-level dedup for message.send: a nullable, internally-set key that
 -- lets a retried/duplicate-waked action land on the SAME row instead of
 -- inserting a second message. Never exposed as a model-controllable CLI
--- arg — only the LingxiGraph action executor sets it. Partial unique index
+-- arg — only the AgentOS action executor sets it. Partial unique index
 -- (WHERE NOT NULL) so ordinary human/legacy sends (no key) are unaffected.
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_idempotency_key
   ON messages(idempotency_key) WHERE idempotency_key IS NOT NULL;
 
 -- Durable ledger of communication-action executions, keyed by a
--- LingxiLoop-generated (not model-controlled) idempotency key — see
--- lingxigraph-adapter.ts computeActionKey(). Used by
+-- LingxiLoop-generated (not model-controlled) idempotency key. Used by
 -- executeCommunicationActions() for replay detection: a succeeded row
 -- lets a retried/duplicate-waked action skip the real executor entirely.
 -- NOT the sole exactly-once guarantee — sink-level idempotency (the
@@ -261,26 +260,6 @@ ALTER TABLE agent_runs ADD COLUMN IF NOT EXISTS external_runtime_run_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_agent_runs_external_runtime
   ON agent_runs(agent_id, external_runtime_run_id)
   WHERE external_runtime_run_id IS NOT NULL;
-
--- Communication-to-Runtime receipt. The chat message remains authoritative;
--- this row only lets a restarted Loop process correlate durable Runtime
--- lifecycle events back to the message read cursor.
-CREATE TABLE IF NOT EXISTS lingxigraph_steering_receipts (
-  message_id         TEXT PRIMARY KEY,
-  company_id         TEXT,
-  agent_id           TEXT NOT NULL,
-  conversation_id    TEXT NOT NULL,
-  runtime_run_id     TEXT NOT NULL,
-  steering_event_id  TEXT NOT NULL,
-  status             TEXT NOT NULL DEFAULT 'accepted',
-  accepted_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  consumed_at        TIMESTAMP WITH TIME ZONE,
-  updated_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_lingxigraph_steering_event
-  ON lingxigraph_steering_receipts(runtime_run_id, steering_event_id);
-CREATE INDEX IF NOT EXISTS idx_lingxigraph_steering_pending
-  ON lingxigraph_steering_receipts(agent_id, status, updated_at DESC);
 
 CREATE TABLE IF NOT EXISTS agent_events (
   id          TEXT PRIMARY KEY,
@@ -1700,38 +1679,6 @@ CREATE INDEX IF NOT EXISTS idx_push_devices_user
   ON push_devices(user_id)
   WHERE disabled_at IS NULL;
 
--- ============================== Computers ==============================
--- A "Computer" is the host an agent runs on. LingxiLoop Cloud is a built-in,
--- managed computer (engine = the server-side turn.ts loop); BYOA agents
--- run on computers the user pairs (their Mac, a VPS) via the
--- "lingxiloop agent computer" daemon. Every agent references exactly one
--- computer; the scheduler branches on kind to decide pod vs. local
--- wake. company_id / owner_user_id are soft references (TEXT, no FK),
--- matching the rest of the schema.
-CREATE TABLE IF NOT EXISTS computers (
-  id                TEXT PRIMARY KEY,
-  company_id        TEXT NOT NULL,
-  owner_user_id     TEXT,                                  -- NULL for the managed LingxiLoop Cloud row
-  name              TEXT NOT NULL,                         -- "LingxiLoop Cloud", "MacBook Pro", "prod-vps-01"
-  kind              TEXT NOT NULL,                         -- 'cloud' | 'local' | 'vps'
-  available_engines JSONB NOT NULL DEFAULT '[]'::jsonb,    -- ['claude','codex']; ['managed'] for cloud
-  status            TEXT NOT NULL DEFAULT 'offline',       -- 'online' | 'offline' | 'busy'
-  last_seen_at      TIMESTAMP WITH TIME ZONE,
-  credential_hash   TEXT,                                  -- SHA256 of the device token; NULL for cloud
-  paired_at         TIMESTAMP WITH TIME ZONE,
-  revoked_at        TIMESTAMP WITH TIME ZONE,
-  created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_computers_company ON computers(company_id);
--- The lingxiloop daemon's running version (semver string), reported on pair +
--- heartbeat. NULL = a pre-version-reporting (old) daemon → treated as outdated.
-ALTER TABLE computers ADD COLUMN IF NOT EXISTS daemon_version TEXT;
--- HOW the daemon runs: TRUE = under the --install-service supervisor
--- (launchd / systemd, LINGXILOOP_SUPERVISED=1), FALSE = a manually-run foreground
--- command, NULL = an old daemon that doesn't report it. Reported on pair +
--- heartbeat; lets the app show run-mode-specific update instructions.
-ALTER TABLE computers ADD COLUMN IF NOT EXISTS daemon_supervised BOOLEAN;
-
 -- ========================= Coworker continuity ===========================
 CREATE TABLE IF NOT EXISTS agent_handoffs (
   id                  TEXT PRIMARY KEY,
@@ -1804,29 +1751,6 @@ CREATE TABLE IF NOT EXISTS agent_autonomy_rules (
   UNIQUE(user_id, agent_id, scope, operation)
 );
 CREATE INDEX IF NOT EXISTS idx_agent_autonomy_rules_user ON agent_autonomy_rules(company_id, user_id, agent_id);
-
--- An agent's host + engine choice. A NULL computer_id, or one pointing at
--- a 'cloud' computer, means managed (current pod behavior). A 'local' /
--- 'vps' computer means BYOA: wakes go to the paired daemon, no pod.
-ALTER TABLE participants ADD COLUMN IF NOT EXISTS computer_id TEXT;
-ALTER TABLE participants ADD COLUMN IF NOT EXISTS engine      TEXT;  -- 'managed' | 'claude' | 'codex'
--- Per-agent model overrides. "model" (added earlier) is the big-brain / main
--- reasoning model; "fast_model" is the small-brain model for cheap auxiliary
--- work. For BYOA agents these pass through to the engine as --model (big) and,
--- for Claude, ANTHROPIC_SMALL_FAST_MODEL (small).
-ALTER TABLE participants ADD COLUMN IF NOT EXISTS fast_model  TEXT;
-
--- Persistent per-company pairing token. Replaces the old short-lived Redis
--- pairing code so a historical "add a computer" command (--pair <token>)
--- stays valid forever. Long + high-entropy in lieu of expiry; maps to exactly
--- one company, so a computer paired with it can only ever join that company.
-ALTER TABLE companies ADD COLUMN IF NOT EXISTS pair_token TEXT;
-CREATE UNIQUE INDEX IF NOT EXISTS companies_pair_token_idx ON companies(pair_token) WHERE pair_token IS NOT NULL;
-
--- Persistent per-computer reconnect token. This keeps the Computer detail
--- "reconnect" command bound to that exact row, preserving its assigned agents.
-ALTER TABLE computers ADD COLUMN IF NOT EXISTS pair_token TEXT;
-CREATE UNIQUE INDEX IF NOT EXISTS computers_pair_token_idx ON computers(pair_token) WHERE pair_token IS NOT NULL;
 
 -- ============== Evidence-backed feature shipping =======================
 -- A shipping feature is deliberately distinct from a generic board card.
@@ -2289,6 +2213,241 @@ UPDATE conversations c
    )
  WHERE c.kind = 'group'
    AND c.leader_id IS NULL;
+
+-- ============== Source-grounded knowledge workspaces =====================
+-- Projects are the company-scoped workspace boundary. Existing projects are
+-- preserved; every company also owns one stable, non-archivable General
+-- workspace used to adopt legacy rows that predate workspace scoping.
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_general BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE projects p
+   SET created_by = COALESCE(
+     p.created_by,
+     (SELECT c.owner_user_id FROM companies c WHERE c.id = p.company_id),
+     (SELECT cm.user_id FROM company_members cm WHERE cm.company_id = p.company_id ORDER BY cm.joined_at LIMIT 1),
+     'system'
+   )
+ WHERE p.created_by IS NULL;
+
+INSERT INTO projects (id, company_id, name, description, color, status, created_by, is_general)
+SELECT 'general-' || substring(md5(c.id), 1, 16), c.id, '通用工作区',
+       '未归类的历史内容与默认收件工作区', '#64748b', 'active',
+       COALESCE(c.owner_user_id,
+         (SELECT cm.user_id FROM company_members cm WHERE cm.company_id = c.id ORDER BY cm.joined_at LIMIT 1),
+         'system'), TRUE
+  FROM companies c
+ WHERE NOT EXISTS (SELECT 1 FROM projects p WHERE p.company_id = c.id AND p.is_general = TRUE);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_one_general
+  ON projects(company_id) WHERE is_general = TRUE;
+CREATE INDEX IF NOT EXISTS idx_projects_company_updated
+  ON projects(company_id, status, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS project_visits (
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL,
+  visited_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (project_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_project_visits_user
+  ON project_visits(user_id, visited_at DESC);
+
+CREATE TABLE IF NOT EXISTS schema_cutovers (
+  name TEXT PRIMARY KEY,
+  completed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_sources (
+  id TEXT PRIMARY KEY,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL,
+  origin_client_msg_no TEXT,
+  kind TEXT NOT NULL,
+  title TEXT NOT NULL,
+  mime_type TEXT,
+  size_bytes INTEGER NOT NULL DEFAULT 0,
+  storage_key TEXT,
+  original_url TEXT,
+  external_source_id TEXT,
+  external_command_id TEXT,
+  external_chunk_count INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'queued',
+  stage TEXT NOT NULL DEFAULT 'queued',
+  error TEXT,
+  is_truncated BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  deleted_at TIMESTAMP WITH TIME ZONE
+);
+DROP TRIGGER IF EXISTS trg_knowledge_source_group_only ON knowledge_sources;
+ALTER TABLE knowledge_sources ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projects(id) ON DELETE CASCADE;
+ALTER TABLE knowledge_sources ADD COLUMN IF NOT EXISTS conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL;
+ALTER TABLE knowledge_sources ADD COLUMN IF NOT EXISTS origin_client_msg_no TEXT;
+ALTER TABLE knowledge_sources ADD COLUMN IF NOT EXISTS external_source_id TEXT;
+ALTER TABLE knowledge_sources ADD COLUMN IF NOT EXISTS external_command_id TEXT;
+ALTER TABLE knowledge_sources ADD COLUMN IF NOT EXISTS external_chunk_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE knowledge_sources ALTER COLUMN conversation_id DROP NOT NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM schema_cutovers WHERE name='open_notebook_native_v1') THEN
+    DELETE FROM knowledge_sources;
+    INSERT INTO schema_cutovers(name) VALUES ('open_notebook_native_v1');
+  END IF;
+END $$;
+DELETE FROM knowledge_sources WHERE project_id IS NULL;
+ALTER TABLE knowledge_sources ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE knowledge_sources DROP COLUMN IF EXISTS extracted_text;
+ALTER TABLE knowledge_sources DROP COLUMN IF EXISTS content_hash;
+ALTER TABLE knowledge_sources DROP COLUMN IF EXISTS chunk_count;
+DROP TABLE IF EXISTS knowledge_source_chunks CASCADE;
+DROP INDEX IF EXISTS idx_knowledge_sources_conversation;
+CREATE INDEX IF NOT EXISTS idx_knowledge_sources_project
+  ON knowledge_sources(company_id, project_id, status, created_at DESC) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_knowledge_sources_external
+  ON knowledge_sources(external_source_id) WHERE external_source_id IS NOT NULL;
+DROP INDEX IF EXISTS idx_knowledge_sources_origin_message;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_knowledge_sources_origin_message
+  ON knowledge_sources(company_id, conversation_id, origin_client_msg_no)
+  WHERE origin_client_msg_no IS NOT NULL AND conversation_id IS NOT NULL AND deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS knowledge_notebook_bindings (
+  project_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  external_key TEXT NOT NULL UNIQUE,
+  external_notebook_id TEXT UNIQUE,
+  state TEXT NOT NULL DEFAULT 'pending',
+  last_error TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_source_jobs (
+  id TEXT PRIMARY KEY,
+  source_id TEXT NOT NULL UNIQUE REFERENCES knowledge_sources(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'queued',
+  attempts INTEGER NOT NULL DEFAULT 0,
+  available_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  leased_until TIMESTAMP WITH TIME ZONE,
+  leased_by TEXT,
+  last_error TEXT,
+  wake_recipients JSONB,
+  wake_channel_id TEXT,
+  wake_trigger_client_msg_no TEXT,
+  wake_thread_root_client_msg_no TEXT,
+  wake_deadline TIMESTAMP WITH TIME ZONE,
+  wake_released_at TIMESTAMP WITH TIME ZONE,
+  wake_error TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+ALTER TABLE knowledge_source_jobs ADD COLUMN IF NOT EXISTS wake_recipients JSONB;
+ALTER TABLE knowledge_source_jobs ADD COLUMN IF NOT EXISTS wake_channel_id TEXT;
+ALTER TABLE knowledge_source_jobs ADD COLUMN IF NOT EXISTS wake_trigger_client_msg_no TEXT;
+ALTER TABLE knowledge_source_jobs ADD COLUMN IF NOT EXISTS wake_thread_root_client_msg_no TEXT;
+ALTER TABLE knowledge_source_jobs ADD COLUMN IF NOT EXISTS wake_deadline TIMESTAMP WITH TIME ZONE;
+ALTER TABLE knowledge_source_jobs ADD COLUMN IF NOT EXISTS wake_released_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE knowledge_source_jobs ADD COLUMN IF NOT EXISTS wake_error TEXT;
+CREATE INDEX IF NOT EXISTS idx_knowledge_jobs_claim
+  ON knowledge_source_jobs(status, available_at, leased_until);
+
+CREATE TABLE IF NOT EXISTS conversation_source_exclusions (
+  conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  source_id TEXT NOT NULL REFERENCES knowledge_sources(id) ON DELETE CASCADE,
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (conversation_id, source_id)
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_note_bindings (
+  id TEXT PRIMARY KEY,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  external_note_id TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_knowledge_notes_project ON knowledge_note_bindings(company_id, project_id, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS knowledge_insight_bindings (
+  id TEXT PRIMARY KEY,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  source_id TEXT NOT NULL REFERENCES knowledge_sources(id) ON DELETE CASCADE,
+  external_insight_id TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_source_chat_sessions (
+  id TEXT PRIMARY KEY,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  source_id TEXT NOT NULL REFERENCES knowledge_sources(id) ON DELETE CASCADE,
+  agent_id TEXT NOT NULL,
+  external_session_id TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Adopt legacy conversations and artifacts into their company's General
+-- workspace. Conversation-linked artifacts inherit that conversation first.
+UPDATE conversations c SET project_id = p.id
+  FROM projects p
+ WHERE c.project_id IS NULL AND p.company_id = c.company_id AND p.is_general = TRUE;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT;
+ALTER TABLE boards ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT;
+ALTER TABLE canvases ADD COLUMN IF NOT EXISTS project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT;
+-- Legacy canvases were company-level and legitimately have no conversation.
+-- Keep them (and their cascading frames) as workspace-level canvases.
+ALTER TABLE canvases ALTER COLUMN conversation_id DROP NOT NULL;
+ALTER TABLE canvases ALTER COLUMN project_id DROP NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_canvases_one_per_conversation ON canvases(conversation_id);
+
+CREATE OR REPLACE FUNCTION enforce_group_context_owner() RETURNS trigger AS $$
+BEGIN
+  IF NEW.conversation_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM conversations c WHERE c.id = NEW.conversation_id AND c.company_id = NEW.company_id AND c.kind = 'group') THEN
+    RAISE EXCEPTION 'canvases require a group conversation';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_knowledge_source_group_only ON knowledge_sources;
+DROP TRIGGER IF EXISTS trg_canvas_group_only ON canvases;
+CREATE TRIGGER trg_canvas_group_only BEFORE INSERT OR UPDATE OF conversation_id ON canvases FOR EACH ROW EXECUTE FUNCTION enforce_group_context_owner();
+UPDATE documents d SET project_id = COALESCE(
+  (SELECT c.project_id FROM conversations c WHERE c.id = d.conversation_id),
+  (SELECT p.id FROM projects p WHERE p.company_id = d.company_id AND p.is_general = TRUE)
+) WHERE d.project_id IS NULL;
+UPDATE canvases c SET project_id = COALESCE(
+  (SELECT cv.project_id FROM conversations cv WHERE cv.id = c.conversation_id),
+  (SELECT p.id FROM projects p WHERE p.company_id = c.company_id AND p.is_general = TRUE)
+) WHERE c.project_id IS NULL;
+UPDATE boards b SET project_id = p.id FROM projects p
+ WHERE b.project_id IS NULL AND p.company_id = b.company_id AND p.is_general = TRUE;
+UPDATE calendar_events e SET project_id = p.id FROM projects p
+ WHERE e.project_id IS NULL AND p.company_id = e.company_id AND p.is_general = TRUE;
+CREATE INDEX IF NOT EXISTS idx_documents_project ON documents(project_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_boards_project ON boards(project_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_calendar_project ON calendar_events(project_id, start_at);
+CREATE INDEX IF NOT EXISTS idx_canvases_project ON canvases(project_id, updated_at DESC);
+
+CREATE OR REPLACE FUNCTION touch_knowledge_workspace_updated_at() RETURNS trigger AS $$
+BEGIN
+  UPDATE projects SET updated_at = NOW() WHERE id = COALESCE(NEW.project_id, OLD.project_id);
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+DO $$
+DECLARE table_name TEXT;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY['conversations','knowledge_sources','documents','boards','calendar_events','canvases'] LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS trg_touch_workspace ON %I', table_name);
+    EXECUTE format('CREATE TRIGGER trg_touch_workspace AFTER INSERT OR UPDATE OR DELETE ON %I FOR EACH ROW EXECUTE FUNCTION touch_knowledge_workspace_updated_at()', table_name);
+  END LOOP;
+END $$;
 `
 
 /** Postgres advisory-lock key for serializing concurrent
@@ -2315,14 +2474,57 @@ async function runAgentOSCutover(client: import('pg').PoolClient): Promise<void>
       `SELECT EXISTS (SELECT 1 FROM agent_os_cutovers WHERE id = 'agent-os-v1') AS done`,
     )
     if (!rows[0]?.done) {
-      await client.query(`
-        CREATE TEMP TABLE cutover_removed_agents ON COMMIT DROP AS
-        SELECT p.id, p.company_id
-          FROM participants p
-          LEFT JOIN computers c ON c.id = p.computer_id
-         WHERE p.kind = 'agent'
-           AND (p.engine IN ('claude', 'codex') OR c.kind IN ('local', 'vps'))
+      // Fresh AgentOS v1 databases never create the retired host schema. An
+      // upgraded database may still have those columns/tables, so discover
+      // them through the catalog before issuing any compatibility-only SQL.
+      const { rows: legacyHostSchema } = await client.query<{
+        has_computers: boolean
+        has_computer_id: boolean
+        has_engine: boolean
+      }>(`
+        SELECT
+          to_regclass('public.computers') IS NOT NULL AS has_computers,
+          EXISTS (
+            SELECT 1 FROM information_schema.columns
+             WHERE table_schema = current_schema()
+               AND table_name = 'participants'
+               AND column_name = 'computer_id'
+          ) AS has_computer_id,
+          EXISTS (
+            SELECT 1 FROM information_schema.columns
+             WHERE table_schema = current_schema()
+               AND table_name = 'participants'
+               AND column_name = 'engine'
+          ) AS has_engine
       `)
+      const legacy = legacyHostSchema[0]
+      await client.query(`
+        CREATE TEMP TABLE cutover_removed_agents (
+          id TEXT NOT NULL,
+          company_id TEXT
+        ) ON COMMIT DROP
+      `)
+      if (legacy?.has_engine) {
+        await client.query(`
+          INSERT INTO cutover_removed_agents (id, company_id)
+          SELECT id, company_id FROM participants
+           WHERE kind = 'agent' AND engine IN ('claude', 'codex')
+        `)
+      }
+      if (legacy?.has_computers && legacy.has_computer_id) {
+        await client.query(`
+          INSERT INTO cutover_removed_agents (id, company_id)
+          SELECT p.id, p.company_id
+            FROM participants p
+            JOIN computers c ON c.id = p.computer_id
+           WHERE p.kind = 'agent'
+             AND c.kind IN ('local', 'vps')
+             AND NOT EXISTS (
+               SELECT 1 FROM cutover_removed_agents r
+                WHERE r.id = p.id AND r.company_id = p.company_id
+             )
+        `)
+      }
 
       // Preserve human-owned assets while removing assignments to retired agents.
       await client.query(`UPDATE board_cards bc SET assignee_id = NULL FROM boards b, cutover_removed_agents r WHERE bc.board_id=b.id AND bc.assignee_id=r.id AND b.company_id=r.company_id`)
@@ -2367,9 +2569,7 @@ async function runAgentOSCutover(client: import('pg').PoolClient): Promise<void>
     }
 
     await client.query(`
-      -- Shared Computer state has no execution-environment-safe mapping to
-      -- Canvas. Drop it during the same one-way runtime cutover; the complete
-      -- implementation remains recoverable from legacy/shared-computer.
+      -- Upgrade cleanup only: these objects are never created by AgentOS v1.
       DROP TABLE IF EXISTS computer_events;
       DROP TABLE IF EXISTS resource_leases;
       DROP TABLE IF EXISTS browser_targets;
@@ -2672,6 +2872,11 @@ export async function ensureSchema(): Promise<void> {
       } catch (e) {
         console.warn('[db] pgvector unavailable — semantic memory disabled:', e instanceof Error ? e.message : String(e))
       }
+      try {
+        await client.query('CREATE EXTENSION IF NOT EXISTS pg_trgm')
+      } catch (e) {
+        console.warn('[db] pg_trgm unavailable:', e instanceof Error ? e.message : String(e))
+      }
       // The idempotent DDL batch below runs as ONE implicit transaction (node-pg
       // simple protocol), so it briefly AccessExclusive-locks ~30 tables and HOLDS
       // them all until commit. On an already-migrated prod DB every statement is a
@@ -2790,6 +2995,13 @@ async function schemaAlreadyCurrent(client: import('pg').PoolClient): Promise<bo
         -- Shipping is the latest product-domain addition. Never take the
         -- lock-contention shortcut on a pod that has not created its core table.
         AND (SELECT count(*) FROM pg_class WHERE relname = 'shipping_features') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'knowledge_sources') > 0
+        AND (SELECT count(*) FROM information_schema.columns
+               WHERE table_name = 'knowledge_sources' AND column_name = 'external_source_id') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'knowledge_notebook_bindings') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'knowledge_source_chat_sessions') > 0
+        AND (SELECT count(*) FROM information_schema.columns
+               WHERE table_name = 'projects' AND column_name = 'is_general') > 0
         AS ok
     `)
     return rows[0]?.ok === true

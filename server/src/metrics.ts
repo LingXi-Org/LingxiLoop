@@ -37,6 +37,16 @@ export type CounterName =
   | 'email.gc.failed'
   | 'db.gc.deleted'
   | 'db.gc.failed'
+  | 'knowledge.source.processed'
+  | 'knowledge.source.processing_ms'
+  | 'knowledge.notebook.provisioned'
+  | 'knowledge.notebook.provision_failed'
+  | 'knowledge.attachment.agent_wake'
+  | 'knowledge.retrieval.queries'
+  | 'knowledge.retrieval.hits'
+  | 'knowledge.retrieval.errors'
+  | 'knowledge.retrieval.latency_ms'
+  | 'knowledge.retrieval.generic_fallback'
 
 interface CounterDef {
   help: string
@@ -63,6 +73,16 @@ const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
   'email.gc.failed':                     { help: 'GC delete attempts that failed at the storage layer.', labels: [] },
   'db.gc.deleted':                       { help: 'Rows deleted by the DB retention sweep.', labels: ['table'] },
   'db.gc.failed':                        { help: 'DB retention sweeps that failed (per table, will retry).', labels: ['table'] },
+  'knowledge.source.processed':          { help: 'Knowledge-source processing attempts by outcome.', labels: ['status'] },
+  'knowledge.source.processing_ms':      { help: 'Cumulative knowledge-source processing milliseconds.', labels: [] },
+  'knowledge.notebook.provisioned':      { help: 'Project notebooks provisioned in Open Notebook.', labels: [] },
+  'knowledge.notebook.provision_failed': { help: 'Project notebook provisioning failures.', labels: [] },
+  'knowledge.attachment.agent_wake':     { help: 'Deferred attachment Agent turns released after ingestion.', labels: ['status'] },
+  'knowledge.retrieval.queries':         { help: 'Knowledge retrieval queries.', labels: [] },
+  'knowledge.retrieval.hits':            { help: 'Knowledge chunks injected into Agent turns.', labels: [] },
+  'knowledge.retrieval.errors':          { help: 'Open Notebook retrieval requests that failed.', labels: [] },
+  'knowledge.retrieval.latency_ms':      { help: 'Cumulative Open Notebook retrieval latency in milliseconds.', labels: [] },
+  'knowledge.retrieval.generic_fallback':{ help: 'Agent turns with ready sources but no sufficient retrieval hit.', labels: [] },
 }
 
 /** Storage: nested map keyed by counter name, then by serialized labels. */

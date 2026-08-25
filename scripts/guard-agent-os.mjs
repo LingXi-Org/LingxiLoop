@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { extname, join, relative, resolve } from 'node:path'
 
 const root = resolve('.')
@@ -22,6 +22,15 @@ const activeFiles = [
   join(root, 'src/lib/im/wukong.ts'),
   join(root, 'src/stores/messages.ts'),
 ]
+
+for (const retiredPath of [
+  join(root, 'server/lingxigraph'),
+  join(root, 'server/docker/agent-computer-lingxiloop-web.sh'),
+]) {
+  if (existsSync(retiredPath)) {
+    failures.push(`${relative(root, retiredPath).replaceAll('\\', '/')}: retired source path must not exist`)
+  }
+}
 
 for (const path of activeFiles) {
   const rel = relative(root, path).replaceAll('\\', '/')

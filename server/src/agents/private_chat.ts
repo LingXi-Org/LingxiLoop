@@ -35,6 +35,7 @@ async function findOrCreateDirect(
   aId: string,
   bId: string,
   companyId: string | null,
+  projectId: string | null,
   topic: string | null,
 ): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(
@@ -43,10 +44,10 @@ async function findOrCreateDirect(
          AND members @> $1::jsonb
          AND members @> $2::jsonb
          AND jsonb_array_length(members) = 2
-         ${companyId ? 'AND company_id = $3' : ''}
+         ${companyId ? 'AND company_id = $3 AND project_id = $4' : ''}
        ORDER BY created_at DESC LIMIT 1`,
     companyId
-      ? [JSON.stringify([aId]), JSON.stringify([bId]), companyId]
+      ? [JSON.stringify([aId]), JSON.stringify([bId]), companyId, projectId]
       : [JSON.stringify([aId]), JSON.stringify([bId])],
   )
   if (rows[0]) {
@@ -65,9 +66,9 @@ async function findOrCreateDirect(
   const id = `direct-${randomUUID().slice(0, 12)}`
   await pool.query(
     `INSERT INTO conversations
-       (id, kind, title, members, company_id, topic)
-     VALUES ($1, 'direct', $2, $3::jsonb, $4, $5)`,
-    [id, `${aName} ↔ ${bName}`, JSON.stringify([aId, bId]), companyId, topic ?? null],
+       (id, kind, title, members, company_id, project_id, topic)
+     VALUES ($1, 'direct', $2, $3::jsonb, $4, $5, $6)`,
+    [id, `${aName} ↔ ${bName}`, JSON.stringify([aId, bId]), companyId, projectId, topic ?? null],
   )
   return id
 }
@@ -93,6 +94,7 @@ export async function startPrivateChat(args: {
   partnerId: string
   topic: string
   opening: string
+  projectId?: string
 }): Promise<{ conversationId: string; messageId: string }> {
   const { instigatorId, partnerId, topic, opening } = args
   // The instigator is the calling agent; the PARTNER may be an agent OR a HUMAN
@@ -107,7 +109,16 @@ export async function startPrivateChat(args: {
   if (!partner) throw new Error(`private-chat partner not found: ${partnerId}`)
 
   const companyId = (await companyIdForParticipant(instigatorId)) ?? null
-  const conversationId = await findOrCreateDirect(instigatorId, partnerId, companyId, topic || null)
+  const projectId = companyId
+    ? (await pool.query<{ id: string }>(
+      `SELECT id FROM projects WHERE company_id=$1 AND archived_at IS NULL
+        AND (id=$2 OR ($2::text IS NULL AND is_general=TRUE))
+        ORDER BY is_general DESC LIMIT 1`,
+      [companyId, args.projectId ?? null],
+    )).rows[0]?.id ?? null
+    : null
+  if (companyId && !projectId) throw new Error('private chat workspace is unavailable')
+  const conversationId = await findOrCreateDirect(instigatorId, partnerId, companyId, projectId, topic || null)
 
   const messageId = `m-${randomUUID()}`
   const sequence = await nextConversationSequence(conversationId)
@@ -133,6 +144,7 @@ export async function startPrivateChat(args: {
     type: 'message.new',
     conversationId,
     companyId: companyId ?? undefined,
+    workspaceId: projectId ?? undefined,
     message: {
       id: messageId, conversationId, authorId: instigatorId,
       kind: 'text', body: opening, sequence,

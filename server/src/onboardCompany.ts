@@ -362,6 +362,12 @@ async function seedLearningPreset(
   companyId: string,
   ownerId: string,
 ): Promise<void> {
+  const { rows: workspaces } = await db.query<{ id: string }>(
+    `SELECT id FROM projects WHERE company_id=$1 AND is_general=TRUE LIMIT 1`,
+    [companyId],
+  )
+  const projectId = workspaces[0]?.id
+  if (!projectId) throw new Error('general workspace must exist before starter onboarding')
   const agentIds = new Map<LearningPersonaKey, string>()
   for (const agent of STARTER_TEAM) {
     const id = await uniqueId(db, agent.id)
@@ -379,9 +385,9 @@ async function seedLearningPreset(
 
     const dmId = `direct-${id}-${randomUUID().slice(0, 6)}`
     await db.query(
-      `INSERT INTO conversations (id, preset_key, kind, title, subtitle, members, pinned, tag, company_id)
-       VALUES ($1, $2, 'direct', $3, NULL, $4::jsonb, FALSE, NULL, $5)`,
-      [dmId, `dm:${agent.presetKey}`, agent.name, JSON.stringify([ownerId, id]), companyId],
+      `INSERT INTO conversations (id, preset_key, kind, title, subtitle, members, pinned, tag, company_id, project_id)
+       VALUES ($1, $2, 'direct', $3, NULL, $4::jsonb, FALSE, NULL, $5, $6)`,
+      [dmId, `dm:${agent.presetKey}`, agent.name, JSON.stringify([ownerId, id]), companyId, projectId],
     )
     await db.query(
       `INSERT INTO im_channel_bindings (channel_id, company_id, profile, leader_agent_id, preset_key)
@@ -398,14 +404,14 @@ async function seedLearningPreset(
     const roomId = `preset-${room.presetKey}-${randomUUID().slice(0, 8)}`
     const members = [ownerId, ...memberIds]
     await db.query(
-      `INSERT INTO conversations (id, preset_key, kind, title, subtitle, topic, members, leader_id, pinned, tag, company_id)
-       VALUES ($1, $2, 'group', $3, $4, $5, $6::jsonb, $7, TRUE, 'team', $8)`,
+      `INSERT INTO conversations (id, preset_key, kind, title, subtitle, topic, members, leader_id, pinned, tag, company_id, project_id)
+       VALUES ($1, $2, 'group', $3, $4, $5, $6::jsonb, $7, TRUE, 'team', $8, $9)`,
       [
         roomId, `room:${room.presetKey}`, room.title, `team · ${members.length}`,
         room.presetKey === 'study-room'
           ? '日常学习、概念理解、解题练习与错因诊断'
           : '实验、编程、科研、数据分析、论文复现与项目实践',
-        JSON.stringify(members), authorId, companyId,
+        JSON.stringify(members), authorId, companyId, projectId,
       ],
     )
     await db.query(
@@ -475,6 +481,16 @@ export async function onboardStarterAgents(
       await client.query('ROLLBACK')
       return
     }
+
+    // New companies created after the schema migration do not pass through
+    // the historical backfill. Establish their immutable landing workspace
+    // before starter conversations are inserted.
+    await client.query(
+      `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
+       SELECT $2, $1, '通用工作区', '未指定工作区的会话与资料', '#667085', $3, TRUE
+        WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
+      [companyId, `general-${randomUUID().slice(0, 18)}`, ownerId],
+    )
 
     const existing = await client.query<{ id: string; preset_key: string | null }>(
       `SELECT id, preset_key FROM participants
@@ -564,6 +580,12 @@ export async function seedMemberDms(args: {
   memberId: string
 }): Promise<void> {
   const { companyId, memberId } = args
+  const { rows: workspaces } = await pool.query<{ id: string }>(
+    `SELECT id FROM projects WHERE company_id=$1 AND is_general=TRUE LIMIT 1`,
+    [companyId],
+  )
+  const projectId = workspaces[0]?.id
+  if (!projectId) throw new Error('general workspace must exist before member onboarding')
   const { rows: others } = await pool.query<{ id: string; name: string; kind: 'agent' | 'human' }>(
     `SELECT id, name, kind FROM participants
       WHERE company_id = $1
@@ -577,19 +599,19 @@ export async function seedMemberDms(args: {
     // member is somehow re-onboarded.
     const { rows: ex } = await pool.query(
       `SELECT 1 FROM conversations
-        WHERE company_id = $1 AND kind = 'direct'
+        WHERE company_id = $1 AND project_id = $4 AND kind = 'direct'
           AND members @> to_jsonb(ARRAY[$2::text, $3::text])
           AND jsonb_array_length(members) = 2 LIMIT 1`,
-      [companyId, memberId, other.id],
+      [companyId, memberId, other.id, projectId],
     )
     if (ex[0]) continue
     const dmId = `direct-${other.id}-${randomUUID().slice(0, 6)}`
     await pool.query(
-      `INSERT INTO conversations (id, kind, title, subtitle, members, pinned, tag, company_id)
-       VALUES ($1, 'direct', $2, NULL, $3::jsonb, FALSE, $4, $5)
+      `INSERT INTO conversations (id, kind, title, subtitle, members, pinned, tag, company_id, project_id)
+       VALUES ($1, 'direct', $2, NULL, $3::jsonb, FALSE, $4, $5, $6)
        ON CONFLICT (id) DO NOTHING`,
       [dmId, other.name, JSON.stringify([memberId, other.id]),
-       other.kind === 'human' ? 'human' : null, companyId],
+       other.kind === 'human' ? 'human' : null, companyId, projectId],
     )
     await pool.query(
       `INSERT INTO conversation_counters (conversation_id, next_sequence) VALUES ($1, 1)

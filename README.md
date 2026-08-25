@@ -79,13 +79,14 @@ model tool surface other than `ipython`.
 
 ## Package publishing and production
 
-CI publishes `lingxiloop-server`, `lingxiloop-agent-os` and
-`lingxiloop-wukongim` as GHCR packages after every successful `main` build.
+CI publishes `lingxiloop-server`, `lingxiloop-agent-os`,
+`lingxiloop-wukongim`, and the audited vendored `lingxiloop-open-notebook` as
+GHCR packages after every successful `main` build.
 Each receives immutable commit/version tags plus the rolling `mvp` tag used by
 the one-command deployment.
 
 [`docker-compose.production.yml`](docker-compose.production.yml) requires
-digest-pinned server, Agent OS and WuKongIM images. WuKongIM v3 source builds
+digest-pinned server, Agent OS, WuKongIM, and Open Notebook images. WuKongIM v3 source builds
 are pinned to commit `c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47`; production must deploy its
 verified immutable image digest. Its management API remains private, while the
 TLS client endpoint is published by the deployment proxy.

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { type ApiProject, type ApiQuotaSnapshot, type ApiQuotaWindow, api, getServerOrigin } from '@/api/client'
+import { type ApiQuotaSnapshot, type ApiQuotaWindow, api, getServerOrigin } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { Checkbox } from '@/components/Checkbox'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,7 @@ import { useParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
 import { useSoundStore } from '@/stores/sound'
 
-const tabs = ['Profile', 'Usage', 'Projects', 'Memory', 'Trust & autonomy', 'Preferences'] as const
+const tabs = ['Profile', 'Usage', 'Memory', 'Trust & autonomy', 'Preferences'] as const
 type Tab = (typeof tabs)[number]
 
 const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: string; sub: string; default: boolean }> }> = [
@@ -481,134 +481,6 @@ function Stat({ n, l, tone }: { n: number; l: string; tone: 'good' | 'warn' }) {
   )
 }
 
-function ProjectsTab() {
-  const [projects, setProjects] = useState<ApiProject[]>([])
-  const [showArchived, setShowArchived] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-
-  const refresh = () => {
-    void api.listProjects().then(setProjects).catch(() => { /* ignore */ })
-  }
-  useEffect(refresh, [])
-
-  const create = async () => {
-    const trimmed = name.trim()
-    if (!trimmed) return
-    setBusy(true); setErr(null)
-    try {
-      await api.createProject({ name: trimmed, description: description.trim() })
-      setName(''); setDescription(''); setCreating(false); refresh()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const archive = async (id: string, archive: boolean) => {
-    try { await api.archiveProject(id, archive); refresh() }
-    catch (e) { console.warn('[projects] archive failed', e) }
-  }
-
-  const visible = showArchived ? projects : projects.filter((p) => p.status === 'active')
-  const archivedCount = projects.filter((p) => p.status === 'archived').length
-
-  return (
-    <div className="space-y-6">
-      <Section title="↳ 项目">
-        <div className="text-[13px] text-ink-500 leading-[1.55] mb-4 max-w-2xl font-display italic">
-          项目可将相关群聊归入统一名称与颜色标识，帮助成员和 Agent 清楚理解每段对话的工作范围。
-        </div>
-
-        <div className="space-y-2">
-          {visible.length === 0 && !creating && (
-            <div className="bg-cloud rounded-[12px] p-6 text-center text-[13px] text-ink-500 italic font-display"
-              style={{ border: '1px dashed var(--ink-100)' }}>
-              暂无项目。点击 <b className="not-italic text-skype-deep">+ 新建项目</b> 开始创建。
-            </div>
-          )}
-          {visible.map((p) => (
-            <div key={p.id} className="bg-cloud rounded-[12px] p-4 flex items-center gap-4"
-              style={{ border: '1px solid var(--ink-100)', opacity: p.status === 'archived' ? 0.55 : 1 }}>
-              <div className="w-3 h-10 rounded-full shrink-0" style={{ background: p.color ?? 'var(--ink-200)' }} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="font-semibold text-[14px] text-ink-900 truncate">{p.name}</div>
-                  {p.status === 'archived' && <span className="text-[10px] text-ink-300 uppercase tracking-wider">已归档</span>}
-                </div>
-                <div className="font-display italic text-[12px] text-ink-500 truncate">
-                  {p.description || '暂无描述'}  ·  {p.conversationCount} 个对话
-                </div>
-              </div>
-              <button
-                onClick={() => archive(p.id, p.status !== 'archived')}
-                className="px-3 py-1.5 rounded-[8px] text-[11.5px] font-semibold text-ink-700 bg-paper hover:bg-sky2-50 transition"
-                style={{ border: '1px solid var(--ink-100)' }}
-              >{p.status === 'archived' ? '恢复' : '归档'}</button>
-            </div>
-          ))}
-        </div>
-
-        {creating ? (
-          <div className="mt-4 bg-cloud rounded-[12px] p-4 space-y-2"
-            style={{ border: '1.5px solid var(--sky2-300)' }}>
-            <input
-              autoFocus
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="项目名称"
-              className="w-full px-3 py-2 text-[13px] rounded outline-none"
-              style={{ border: '1px solid var(--ink-100)', background: 'var(--paper)' }}
-            />
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="简短描述（可选）"
-              className="w-full px-3 py-2 text-[12.5px] rounded outline-none"
-              style={{ border: '1px solid var(--ink-100)', background: 'var(--paper)' }}
-            />
-            {err && <div className="text-[11.5px] text-coral-deep">{err}</div>}
-            <div className="flex gap-2">
-              <button
-                onClick={create}
-                disabled={!name.trim() || busy}
-                className="px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-white disabled:opacity-50"
-                style={{ background: 'var(--skype)' }}
-              >{busy ? '…' : '创建项目'}</button>
-              <button
-                onClick={() => { setCreating(false); setName(''); setDescription(''); setErr(null) }}
-                className="px-3 py-1.5 rounded-[8px] text-[12px] text-ink-500 hover:bg-cloud"
-              >取消</button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              onClick={() => setCreating(true)}
-              className="px-4 py-2 rounded-[10px] text-[12.5px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-50 transition"
-              style={{ border: '1px dashed var(--sky2-300)' }}
-            >+ 新建项目</button>
-            {archivedCount > 0 && (
-              <button
-                onClick={() => setShowArchived((v) => !v)}
-                className="text-[11.5px] text-ink-500 hover:text-skype-deep transition italic font-display"
-              >
-                {showArchived ? '隐藏已归档项目' : `显示已归档项目（${archivedCount}）`}
-              </button>
-            )}
-          </div>
-        )}
-      </Section>
-    </div>
-  )
-}
-
 function PreferencesTab() {
   const prefs = usePrefs((s) => s.prefs)
   const setPref = usePrefs((s) => s.setPref)
@@ -778,14 +650,13 @@ export function MeView() {
                 i === 0 ? 'pl-0 pr-5' : 'px-5',
                 tab === t ? 'border-skype text-skype-deep' : 'border-transparent text-ink-500 hover:text-ink-700',
               )}>
-              {({ Profile: '个人资料', Usage: '用量', Projects: '项目', Memory: '记忆', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
+              {({ Profile: '个人资料', Usage: '用量', Memory: '记忆', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
             </button>
           ))}
         </div>
 
         {tab === 'Profile' && <ProfileTab />}
         {tab === 'Usage' && <UsageTab />}
-        {tab === 'Projects' && <ProjectsTab />}
         {tab === 'Memory' && <MemoryTab />}
         {tab === 'Trust & autonomy' && <TrustTab />}
         {tab === 'Preferences' && <PreferencesTab />}

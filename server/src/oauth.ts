@@ -491,8 +491,7 @@ export async function findOrCreateUserByProfile(
     // Skipped on the invite path: the user is about to land in the inviter's
     // workspace, which already has its own learning team and rooms.
     if (companyId) {
-      // Starter agents are server-managed by default and need no Computer or
-      // local engine assignment.
+      // Starter agents are provisioned directly into the managed AgentOS runtime.
       try {
         await onboardStarterAgents(companyId)
       } catch (e) { console.warn('[oauth] starter onboarding failed', e) }

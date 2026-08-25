@@ -3,6 +3,31 @@ import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
 import {
+  addKnowledgeFile,
+  addKnowledgeText,
+  addKnowledgeUrl,
+  askKnowledgeForAgent,
+  createKnowledgeInsight,
+  createKnowledgeNote,
+  deleteKnowledgeInsight,
+  deleteKnowledgeNote,
+  deleteKnowledgeSourceForAgent,
+  getKnowledgeNote,
+  getKnowledgeSourceForAgent,
+  listKnowledgeInsights,
+  listKnowledgeNotes,
+  listKnowledgeSourcesForAgent,
+  retryKnowledgeSourceForAgent,
+  searchKnowledgeForAgent,
+  sendKnowledgeSourceChatMessage,
+  setKnowledgeSourceEnabled,
+  startKnowledgeSourceChat,
+  updateKnowledgeNote,
+  updateKnowledgeInsight,
+  updateKnowledgeSourceForAgent,
+  unlinkKnowledgeSourceForAgent,
+} from '../knowledge/agent-knowledge.js'
+import {
   addCanvasWorkspaceAgents,
   appendCanvasFrameContent,
   createCanvasFrame,
@@ -23,6 +48,8 @@ const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
   'routines.create', 'routines.activate',
   'documents.delete', 'boards.delete', 'calendar.delete',
+  'knowledge.update_source', 'knowledge.set_source_enabled', 'knowledge.unlink_source', 'knowledge.delete_source',
+  'knowledge.update_note', 'knowledge.delete_note', 'knowledge.update_insight', 'knowledge.delete_insight',
 ])
 
 function record(value: unknown): Record<string, unknown> {
@@ -33,6 +60,57 @@ function textArg(args: Record<string, unknown>, name: string, required = true): 
   const value = typeof args[name] === 'string' ? args[name].trim() : ''
   if (required && !value) throw new Error(`${name} is required`)
   return value
+}
+
+async function executeKnowledge(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
+  if (method === 'list_sources') return { ok: true, value: await listKnowledgeSourcesForAgent(work) }
+  if (method === 'get_source') return { ok: true, value: await getKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
+  if (method === 'search') return { ok: true, value: await searchKnowledgeForAgent(work, textArg(args, 'query'), Math.max(1, Math.min(20, Number(args.limit ?? 8)))) }
+  if (method === 'ask') return { ok: true, value: await askKnowledgeForAgent(work, textArg(args, 'question')) }
+  if (method === 'add_text') return { ok: true, value: await addKnowledgeText(work, { title: textArg(args, 'title'), text: textArg(args, 'text') }) }
+  if (method === 'add_url') return { ok: true, value: await addKnowledgeUrl(work, { title: textArg(args, 'title', false) || textArg(args, 'url'), url: textArg(args, 'url') }) }
+  if (method === 'add_file') {
+    // Agents refer to a committed message, never an arbitrary storage key.
+    // The Host resolves the attachment inside the current channel so a guessed
+    // key from another tenant cannot cross the knowledge boundary.
+    const clientMsgNo = textArg(args, 'clientMsgNo')
+    const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
+      `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [work.channelId, work.companyId],
+    )
+    const messages = await wukongClient().syncMessages(work.channelId, Number(rows[0]?.profile.channelType ?? 2), 100, work.agentId)
+    const message = messages.find((item) => item.clientMsgNo === clientMsgNo && item.payload.kind === 'attachment')
+    if (!message) throw new Error('attachment message not found in the current conversation')
+    const attachment = record(message.payload.data)
+    return { ok: true, value: await addKnowledgeFile(work, {
+      title: textArg(args, 'title', false) || String(attachment.name ?? '聊天附件'),
+      storageKey: String(attachment.key ?? ''), mime: String(attachment.mime ?? ''), size: Number(attachment.size ?? 0),
+    }) }
+  }
+  if (method === 'retry_ingestion') return { ok: true, value: await retryKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
+  if (method === 'update_source') return { ok: true, value: await updateKnowledgeSourceForAgent(work, textArg(args, 'sourceId'), {
+    ...(typeof args.title === 'string' ? { title: args.title } : {}),
+    ...(Array.isArray(args.topics) ? { topics: args.topics.map(String).slice(0, 50) } : {}),
+  }) }
+  if (method === 'set_source_enabled') return { ok: true, value: await setKnowledgeSourceEnabled(work, textArg(args, 'sourceId'), args.enabled === true) }
+  if (method === 'unlink_source') return { ok: true, value: await unlinkKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
+  if (method === 'delete_source') return { ok: true, value: await deleteKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
+  if (method === 'list_notes') return { ok: true, value: await listKnowledgeNotes(work) }
+  if (method === 'get_note') return { ok: true, value: await getKnowledgeNote(work, textArg(args, 'noteId')) }
+  if (method === 'create_note') return { ok: true, value: await createKnowledgeNote(work, { title: textArg(args, 'title', false) || undefined, content: textArg(args, 'content') }) }
+  if (method === 'update_note') return { ok: true, value: await updateKnowledgeNote(work, textArg(args, 'noteId'), {
+    ...(typeof args.title === 'string' ? { title: args.title } : {}), ...(typeof args.content === 'string' ? { content: args.content } : {}),
+  }) }
+  if (method === 'delete_note') return { ok: true, value: await deleteKnowledgeNote(work, textArg(args, 'noteId')) }
+  if (method === 'list_insights') return { ok: true, value: await listKnowledgeInsights(work, textArg(args, 'sourceId')) }
+  if (method === 'create_insight') return { ok: true, value: await createKnowledgeInsight(work, textArg(args, 'sourceId'), textArg(args, 'transformation')) }
+  if (method === 'update_insight') return { ok: true, value: await updateKnowledgeInsight(work, textArg(args, 'insightId'), {
+    ...(typeof args.insightType === 'string' ? { insightType: args.insightType } : {}),
+    ...(typeof args.content === 'string' ? { content: args.content } : {}),
+  }) }
+  if (method === 'delete_insight') return { ok: true, value: await deleteKnowledgeInsight(work, textArg(args, 'insightId')) }
+  if (method === 'start_source_chat') return { ok: true, value: await startKnowledgeSourceChat(work, textArg(args, 'sourceId'), textArg(args, 'title', false) || undefined) }
+  if (method === 'send_source_chat_message') return { ok: true, value: await sendKnowledgeSourceChatMessage(work, textArg(args, 'sessionId'), textArg(args, 'message')) }
+  throw new Error(`unsupported knowledge action: ${method}`)
 }
 
 async function executeChat(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
@@ -281,6 +359,7 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (namespace === 'turn') return { ok: true, value: { status: method, ...args } }
   if (namespace === 'research') return executeResearch(work, method, args)
   if (namespace === 'canvas') return executeCanvas(work, method, args, action)
+  if (namespace === 'knowledge') return executeKnowledge(work, method, args)
   if (namespace === 'memory') {
     const rawScope = String(args.scope ?? 'course')
     const scopeType: MemoryScopeType = rawScope === 'learner' || rawScope === 'agent_role' ? rawScope : 'course'
@@ -307,6 +386,12 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
     } }
     throw new Error(`unsupported memory action: ${method}`)
   }
-  const result = await runStructuredLearningAction(action.action, args, work.agentId, { idempotencyKey: action.idempotencyKey })
+  const projectId = new Set(['email', 'documents', 'boards', 'calendar']).has(namespace)
+    ? (await pool.query<{ project_id: string }>(
+      `SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2`,
+      [work.channelId, work.companyId],
+    )).rows[0]?.project_id
+    : undefined
+  const result = await runStructuredLearningAction(action.action, args, work.agentId, { idempotencyKey: action.idempotencyKey, ...(projectId ? { projectId } : {}) })
   return result.ok ? { ok: true, value: { text: result.text, sideEffects: result.sideEffects ?? [] } } : { ok: false, error: result.text }
 }
