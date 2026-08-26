@@ -65,6 +65,20 @@ test('WuKong adapter treats missing empty-channel sync state as empty results', 
   await assert.doesNotReject(client.clearUnread('student', 'empty', 2))
 })
 
+test('WuKong client sets the exact remaining unread count for partial visibility', async () => {
+  let requestUrl = ''
+  let body: Record<string, unknown> = {}
+  globalThis.fetch = async (input, init) => {
+    requestUrl = String(input)
+    body = JSON.parse(String(init?.body)) as Record<string, unknown>
+    return new Response('{}', { status: 200 })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  await client.setUnread('student', 'study', 2, 4)
+  assert.equal(requestUrl, 'http://wk/conversations/setUnread')
+  assert.deepEqual(body, { uid: 'student', channel_id: 'study', channel_type: 2, unread: 4 })
+})
+
 test('WuKong adapter accepts v3 empty-state errors returned as HTTP 400', async () => {
   const responses = [
     '{"msg":"internal/message: channel not found: channel: channel not found: {direct-nova-6fd4-efca5d 2}","status":400}',

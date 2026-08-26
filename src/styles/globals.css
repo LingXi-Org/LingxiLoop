@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "tw-shimmer";
+@config "../../tailwind.config.ts";
 
 :root {
   --skype: #00A8F0;
@@ -162,6 +163,56 @@
   --canvas-shadow: 0 14px 38px rgba(0, 0, 0, 0.42);
   --canvas-vignette: linear-gradient(180deg, transparent 48%, rgba(0, 0, 0, 0.38));
 }
+
+/* assistant-ui Elements and Tool UI semantic theme. */
+.assistant-ui-scope {
+  color-scheme: light;
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
+
+:root[data-theme='dark'] .assistant-ui-scope {
+  color-scheme: dark;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+}
+
+:root[data-theme='dark'] .assistant-ui-scope .shimmer { --shimmer-color: white; }
 
 .app-menu-surface {
   border: 1px solid color-mix(in srgb, var(--hairline) 92%, transparent);
@@ -1585,7 +1636,7 @@ body {
 }
 
 /* Click-on-quote → scroll + brief flash on the jumped-to bubble. The
- * MessageRow wrapper carries `id="m-<id>"`; QuoteCard adds this class for
+ * LingxiImMessage carries `id="m-<id>"`; QuoteCard adds this class for
  * ~1.4s after a jump so the user can spot which message was quoted. */
 @keyframes lingxiloop-quote-flash {
   0%   { background-color: transparent; }
@@ -1600,7 +1651,7 @@ body {
 /* ─── LingxiLoop code-block syntax theme ─────────────────────────────────────
  * Token colors mapped onto the brand palette (sky / coral / gold / wisteria
  * / ink) so highlighted code never visually fights the surrounding chat.
- * Used by `<CodeBlock>` in Message.tsx. Designed for a light paper-toned
+ * Used by `<CodeBlock>` in messages/MessageBody.tsx. Designed for a light paper-toned
  * panel; if we ever ship a dark variant we'll need a separate selector.
  */
 .lingxiloop-code, .lingxiloop-code code { color: var(--ink-700); }
@@ -1719,10 +1770,10 @@ input, textarea { font: inherit; }
   background: color-mix(in srgb, var(--gold) 72%, transparent);
   text-decoration: underline 1px color-mix(in srgb, var(--ink-900) 55%, transparent);
 }
-.find-row-fallback { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 46%, transparent); }
-.find-row-current-fallback { box-shadow: inset 0 0 0 2px var(--gold), 0 10px 30px -24px var(--gold); }
-[data-find-highlights="true"] .find-row-fallback,
-[data-find-highlights="true"] .find-row-current-fallback { box-shadow: none; }
+.find-row-match { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 46%, transparent); }
+.find-row-current { box-shadow: inset 0 0 0 2px var(--gold), 0 10px 30px -24px var(--gold); }
+[data-find-highlights="true"] .find-row-match,
+[data-find-highlights="true"] .find-row-current { box-shadow: none; }
 .desktop-detail-panel-host {
   height: 100%;
   background: var(--im-chat-surface);

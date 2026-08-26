@@ -253,6 +253,9 @@ export interface Message {
   id: string
   conversationId: string
   authorId: string
+  /** Persisted WuKong/Lingxi sequence. Optimistic, typing and streaming-only
+   * rows intentionally omit it and never participate in read receipts. */
+  sequence?: number
   kind: MessageKind
   body: string
   citations?: KnowledgeCitation[]
@@ -279,12 +282,9 @@ export interface Message {
     name: string
     /** kind 'img' renders inline; others render as a file card */
     kind: 'img' | 'pdf' | 'file' | 'fig'
-    /** real assets carry a URL; mock/legacy data may not */
-    url?: string
+    url: string
     mime?: string
     size?: number
-    /** legacy descriptor — fallback when no real file is present (e.g. mock data) */
-    meta?: string
   }
   /** Populated by the server when kind === 'email'. Carries headers,
    *  direction, and transport status so the email bubble can render the
@@ -333,6 +333,14 @@ export interface Message {
   clientId?: string
   /** Renderer-only lifecycle marker for the single in-flight bubble. */
   streaming?: 'placeholder' | 'markdown'
+}
+
+export interface ImReadReceiptAdvance {
+  channelId: string
+  readerId: string
+  previousReadSeq: number
+  readThroughSeq: number
+  readAt: string
 }
 
 export interface ViewKey {

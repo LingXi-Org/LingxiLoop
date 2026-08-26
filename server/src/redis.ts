@@ -63,6 +63,9 @@ export const CH_CALENDAR_EVENTS = 'lingxiloop:calendar.events'
  * tenant-scoped WebSocket path as messages; raw reasoning/tool payloads never
  * enter this channel. */
 export const CH_AGENT_ACTIVITY = 'lingxiloop:agent.activity'
+/** Durable IM read-cursor advances. The WS bridge additionally filters these
+ * by authenticated recipient id before stripping the internal recipient list. */
+export const CH_IM_READ_RECEIPTS = 'lingxiloop:im.read-receipts'
 
 /* === Event types ===
  *
@@ -441,6 +444,18 @@ export interface AgentActivityEvent extends TenantTagged {
   }
 }
 
+export interface ImReadReceiptEvent extends TenantTagged {
+  type: 'im.read-receipt'
+  companyId: string
+  channelId: string
+  readerId: string
+  previousReadSeq: number
+  readThroughSeq: number
+  readAt: string
+  /** Internal routing envelope. Never forwarded to browsers. */
+  recipientIds: string[]
+}
+
 export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
   | StatusEvent | AvatarEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
@@ -448,6 +463,7 @@ export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
   | CalendarEventChangedEvent
   | PollUpdatedEvent
   | AgentActivityEvent
+  | ImReadReceiptEvent
 
 export async function publish(channel: string, event: BroadcastEvent): Promise<void> {
   await redis.publish(channel, JSON.stringify(event))

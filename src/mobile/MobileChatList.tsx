@@ -175,23 +175,11 @@ function PinnedTile({ c, onSelect, onLongPress }: {
   )
 }
 
-/** Build the iOS Mail-style swipe-left actions for a conversation
- *  row. Mirrors a subset of the context menu items — the ones a user
- *  reaches for most often (pin / mute / mark read / leave). */
+/** Build the iOS Mail-style swipe-left actions for a conversation row. */
 function convoSwipeActions(c: Conversation): SwipeAction[] {
   const reload = () => useConversations.getState().reload()
   const muted = isMuted(c)
   const actions: SwipeAction[] = []
-  if (c.unread !== undefined && c.unread > 0) {
-    actions.push({
-      label: 'Read',
-      background: 'var(--skype)',
-      onClick: async () => {
-        try { await api.markRead(c.id); await reload() }
-        catch (err) { console.warn('markRead failed', err) }
-      },
-    })
-  }
   actions.push({
     label: muted ? '取消静音' : '静音',
     background: 'var(--ink-500)',
@@ -275,17 +263,6 @@ function convoMenuItems(
       },
     },
   )
-  if (c.unread !== undefined && c.unread > 0) {
-    items.push({
-      label: 'Mark as read',
-      onClick: async () => {
-        try {
-          await api.markRead(c.id)
-          await reload()
-        } catch (err) { console.warn('markRead failed', err) }
-      },
-    })
-  }
   items.push({
     label: '退出对话',
     destructive: true,

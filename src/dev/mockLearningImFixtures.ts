@@ -1,4 +1,4 @@
-import type { AgentCapability, Conversation, Message, Participant } from '@/types'
+import type { AgentCapability, Conversation, ImReadReceiptAdvance, Message, Participant } from '@/types'
 
 export const MOCK_USER_ID = 'mock-me'
 export const MOCK_STUDY_ROOM_ID = 'mock-study-room'
@@ -107,6 +107,15 @@ export const learningMessages: Record<string, Message[]> = {
     message({ id: 'mock-study-sage', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-sage', kind: 'text', body: '先做一个诊断：如果一个向量经过矩阵作用后方向不变，但长度可能变化，你会怎样用等式表达？', at: timeMinutesAgo(29), createdAt: isoMinutesAgo(29), sequence: 4 }),
     message({ id: 'mock-study-answer', conversationId: MOCK_STUDY_ROOM_ID, authorId: MOCK_USER_ID, kind: 'text', body: '应该是 Av=λv，其中 v 不能是零向量。', at: timeMinutesAgo(26), createdAt: isoMinutesAgo(26), sequence: 5 }),
     message({ id: 'mock-study-trace', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-trace', kind: 'text', body: '独立复核：定义准确；但这只支持“识别特征向量关系”，还不能证明可对角化。下一步要检查是否存在足够多线性无关的特征向量。', at: timeMinutesAgo(22), createdAt: isoMinutesAgo(22), sequence: 6 }),
+    message({ id: 'mock-study-reasoning', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-sage', kind: 'thought', body: '先区分必要条件与充分条件，再用反例检查“有 n 个根”是否足够。', at: timeMinutesAgo(20), createdAt: isoMinutesAgo(20), sequence: 7 }),
+    message({ id: 'mock-study-tool', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-scout', kind: 'tool', body: '', tool: { name: 'knowledge.search', arg: '可对角化 充分必要条件', status: 'completed', detail: '检索到 3 个课程知识片段，并完成来源去重。', icon: 'db' }, at: timeMinutesAgo(18), createdAt: isoMinutesAgo(18), sequence: 8 }),
+    message({ id: 'mock-study-poll', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-nova', kind: 'poll', body: '', poll: { question: '下一步先练哪一种判断？', mode: 'single', options: [{ id: 'eigenvectors', text: '线性无关特征向量' }, { id: 'multiplicity', text: '代数/几何重数' }, { id: 'counterexample', text: '构造反例' }], expiresAt: null, closedAt: null, closedReason: null }, pollTallies: [{ optionId: 'eigenvectors', count: 2, voterIds: [MOCK_USER_ID, 'mock-sage'] }, { optionId: 'multiplicity', count: 1, voterIds: ['mock-trace'] }, { optionId: 'counterexample', count: 0, voterIds: [] }], at: timeMinutesAgo(16), createdAt: isoMinutesAgo(16), sequence: 9 }),
+    message({ id: 'mock-study-handoff', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-nova', kind: 'handoff', body: '', handoff: { id: 'handoff-diagonalization', fromAgentId: 'mock-nova', toAgentId: 'mock-milo', title: '生成两道渐进练习', status: 'working', note: '保留一道 Jordan 块反例。', sharedPaths: ['course/linear-algebra/diagonalization.md'], browserTargets: [] }, at: timeMinutesAgo(14), createdAt: isoMinutesAgo(14), sequence: 10 }),
+    message({ id: 'mock-study-image', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-milo', kind: 'attachment', body: '特征向量方向示意图', attachment: { name: 'eigenvector-map.png', kind: 'img', url: '/icon.png', mime: 'image/png', size: 18432 }, at: timeMinutesAgo(12), createdAt: isoMinutesAgo(12), sequence: 11 }),
+    message({ id: 'mock-study-pdf', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-scout', kind: 'attachment', body: '', attachment: { name: 'diagonalization-notes.pdf', kind: 'pdf', url: '/mock/grok-preview.pdf', mime: 'application/pdf', size: 55296 }, at: timeMinutesAgo(11), createdAt: isoMinutesAgo(11), sequence: 12 }),
+    message({ id: 'mock-study-mail-out', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-nova', kind: 'email', body: '本周学习摘要已经整理完毕，附件包含练习清单。', email: { subject: '线性代数本周学习摘要', from: 'nova@local.learning', to: ['dev@localhost'], cc: [], direction: 'out', transportStatus: 'sent' }, at: timeMinutesAgo(10), createdAt: isoMinutesAgo(10), sequence: 13 }),
+    message({ id: 'mock-study-mail-in', conversationId: MOCK_STUDY_ROOM_ID, authorId: MOCK_USER_ID, kind: 'email', body: '收到，我会先完成反例练习。', email: { subject: 'Re: 线性代数本周学习摘要', from: 'dev@localhost', to: ['nova@local.learning'], cc: [], direction: 'in', transportStatus: 'received' }, at: timeMinutesAgo(9), createdAt: isoMinutesAgo(9), sequence: 14 }),
+    message({ id: 'mock-study-code', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-milo', kind: 'text', body: '可以用下面的最小检查验证特征向量：\n```python\nimport numpy as np\nnp.allclose(A @ v, lam * v)\n```\n更多说明见 https://en.wikipedia.org/wiki/Diagonalizable_matrix', at: timeMinutesAgo(7), createdAt: isoMinutesAgo(7), sequence: 15 }),
   ],
   [MOCK_LAB_ROOM_ID]: [
     message({ id: 'mock-lab-request', conversationId: MOCK_LAB_ROOM_ID, authorId: MOCK_USER_ID, kind: 'text', body: '我想把对角化用到马尔可夫链长期状态分析里，做成迁移项目。', at: timeMinutesAgo(24), createdAt: isoMinutesAgo(24), sequence: 1 }),
@@ -138,5 +147,16 @@ export const learningMessages: Record<string, Message[]> = {
     message({id:'mock-pulse-draft',conversationId:MOCK_TEACHER_ROOM_ID,authorId:MOCK_PULSE_ID,kind:'text',body:'活动草稿已保存：\n“迁移项目：马尔可夫链长期状态”\n\n目标等级为 L4，评价方式为教师审核；量规包含迁移情境、谱方法和限制反思。当前仍是草稿，没有向学生发布。',at:timeMinutesAgo(30),createdAt:isoMinutesAgo(30),sequence:11}),
     message({id:'mock-pulse-publish-request',conversationId:MOCK_TEACHER_ROOM_ID,authorId:MOCK_USER_ID,kind:'text',body:'发布“迁移：用谱方法分析真实系统”这个学习目标。',at:timeMinutesAgo(8),createdAt:isoMinutesAgo(8),sequence:12}),
     message({id:'approval-mock-pulse-publish',conversationId:MOCK_TEACHER_ROOM_ID,authorId:MOCK_PULSE_ID,kind:'approval',body:'发布学习目标需要教师确认。',approval:{id:'mock-pulse-publish',agentId:MOCK_PULSE_ID,kind:'course_management',summary:'发布学习目标“迁移：用谱方法分析真实系统”',status:'pending',payload:{action:'teacher.publish_objective',args:{objectiveId:'obj-transfer'}},requestedAt:isoMinutesAgo(6),requestedBy:MOCK_USER_ID,scope:{projectId:'mock-research',courseId:'mock-course-linear-algebra',roomId:MOCK_TEACHER_ROOM_ID,risk:'course_management'},preview:{method:'publish_objective',entityId:'obj-transfer',entityLabel:'迁移：用谱方法分析真实系统',currentState:'draft',nextState:'published'}},at:timeMinutesAgo(6),createdAt:isoMinutesAgo(6),sequence:13}),
+  ],
+}
+
+export const learningReadReceipts: Record<string, ImReadReceiptAdvance[]> = {
+  [MOCK_STUDY_ROOM_ID]: [
+    { channelId: MOCK_STUDY_ROOM_ID, readerId: 'mock-nova', previousReadSeq: 0, readThroughSeq: 14, readAt: isoMinutesAgo(5) },
+    { channelId: MOCK_STUDY_ROOM_ID, readerId: 'mock-sage', previousReadSeq: 0, readThroughSeq: 13, readAt: isoMinutesAgo(4) },
+    { channelId: MOCK_STUDY_ROOM_ID, readerId: 'mock-milo', previousReadSeq: 0, readThroughSeq: 12, readAt: isoMinutesAgo(3) },
+  ],
+  [MOCK_TEACHER_ROOM_ID]: [
+    { channelId: MOCK_TEACHER_ROOM_ID, readerId: MOCK_PULSE_ID, previousReadSeq: 0, readThroughSeq: 12, readAt: isoMinutesAgo(5) },
   ],
 }

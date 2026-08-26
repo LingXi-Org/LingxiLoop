@@ -13,6 +13,7 @@ import {
   learningConversations,
   learningMessages,
   learningParticipants,
+  learningReadReceipts,
   MOCK_USER_ID,
 } from './mockLearningImFixtures'
 
@@ -28,6 +29,7 @@ export function activateMockWorkspace(_projectId?: string): void {
     loadingOlder: new Set(),
     firstItemIndex: Object.fromEntries(learningConversations.map((conversation) => [conversation.id, VIRTUOSO_FIRST_INDEX_BASE])),
     errors: {},
+    readReceipts: learningReadReceipts,
   })
   seedMockLearningCanvas()
   useApp.getState().selectConversation(null)

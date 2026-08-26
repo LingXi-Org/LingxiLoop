@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
-import type { Message, PollTally } from '@/types'
+import { useAuiState } from '@assistant-ui/react'
+import type { PollTally } from '@/types'
 import { api } from '@/api/client'
 import { useParticipants } from '@/stores/participants'
 import { useMe } from '@/stores/auth'
 import { Avatar } from './Avatar'
 import { cn } from '@/lib/utils'
+import { OptionList, type OptionListSelection } from './tool-ui/option-list'
+import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 
 /**
  * Poll bubble. Renders a kind='poll' message — question + clickable options
@@ -21,7 +24,6 @@ import { cn } from '@/lib/utils'
  */
 
 interface Props {
-  msg: Message
   zh?: boolean
 }
 
@@ -38,7 +40,8 @@ function timeRemaining(iso: string | null): string | null {
   return `${days}d`
 }
 
-export function PollBubble({ msg, zh = false }: Props) {
+export function PollBubble({ zh = false }: Props) {
+  const { message: msg } = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
   const meId = useMe()
   const byId = useParticipants((s) => s.byId)
   const poll = msg.poll
@@ -100,23 +103,6 @@ export function PollBubble({ msg, zh = false }: Props) {
     }
   }
 
-  const onOptionClick = (optionId: string) => {
-    if (isClosed || submitting) return
-    if (poll.mode === 'single') {
-      // Click again on your existing pick = retract. Otherwise = switch.
-      const willRetract = myCurrentVotes.has(optionId) && myCurrentVotes.size === 1
-      setPendingPicks(new Set(willRetract ? [] : [optionId]))
-      void commit(willRetract ? [] : [optionId])
-    } else {
-      // Toggle inside the buffered selection.
-      const base = pendingPicks ?? new Set(myCurrentVotes)
-      const next = new Set(base)
-      if (next.has(optionId)) next.delete(optionId)
-      else next.add(optionId)
-      setPendingPicks(next)
-    }
-  }
-
   const onSubmitMulti = () => {
     if (!pendingPicks) return
     void commit(Array.from(pendingPicks))
@@ -128,6 +114,31 @@ export function PollBubble({ msg, zh = false }: Props) {
     : null
 
   const remaining = !isClosed ? timeRemaining(poll.expiresAt) : null
+  const optionListOptions = poll.options.map((option) => {
+    const tally = tallyByOption.get(option.id)
+    const count = tally?.count ?? 0
+    const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0
+    const isWinner = winner?.optionId === option.id && count > 0
+    return {
+      id: option.id,
+      label: `${option.text}${isWinner ? ' ★' : ''}`,
+      description: `${count} ${zh ? '票' : count === 1 ? 'vote' : 'votes'} · ${pct}%`,
+      icon: (tally?.voterIds.length ?? 0) > 0 ? <VoterStack voterIds={tally?.voterIds ?? []} /> : undefined,
+      disabled: isClosed || submitting,
+    }
+  })
+  const optionListValue: OptionListSelection = poll.mode === 'single'
+    ? (Array.from(displayedPicks)[0] ?? null)
+    : Array.from(displayedPicks)
+  const onOptionListChange = (selection: OptionListSelection) => {
+    const ids = selection == null ? [] : typeof selection === 'string' ? [selection] : selection
+    if (poll.mode === 'single') {
+      setPendingPicks(new Set(ids))
+      void commit(ids)
+      return
+    }
+    setPendingPicks(new Set(ids))
+  }
 
   return (
     <div
@@ -164,84 +175,24 @@ export function PollBubble({ msg, zh = false }: Props) {
         {poll.question}
       </div>
 
-      {/* Options */}
-      <div className="px-2.5 pb-2 flex flex-col gap-1">
-        {poll.options.map((opt) => {
-          const tally = tallyByOption.get(opt.id)
-          const count = tally?.count ?? 0
-          const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0
-          const checked = displayedPicks.has(opt.id)
-          const isWinner = winner && winner.optionId === opt.id && count > 0
-          const voters = tally?.voterIds ?? []
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => onOptionClick(opt.id)}
-              disabled={isClosed}
-              className={cn(
-                'group relative w-full text-left px-3 py-2 rounded-[10px] border transition',
-                'flex items-center gap-2.5',
-                isClosed ? 'cursor-default' : 'cursor-pointer',
-                checked
-                  ? 'border-sky2-200 bg-sky2-50'
-                  : 'border-transparent hover:border-sky2-100 hover:bg-sky2-50/60',
-                isWinner && 'border-sky2-300',
-              )}
-            >
-              {/* Bottom progress bar — width is this option's share of ALL
-                  votes (pct, not relative-to-max), so the bars read as the
-                  actual vote split at a glance. NB the old full-height fill
-                  used bg-ink-50/70 — ink-50 doesn't exist in the palette, so
-                  it silently rendered nothing. */}
-              <span
-                aria-hidden
-                className="absolute inset-x-1 bottom-[2px] h-[3px] rounded-full bg-ink-100/60 overflow-hidden pointer-events-none"
-              >
-                <span
-                  className={cn(
-                    'absolute inset-y-0 left-0 rounded-full transition-[width] duration-300 ease-out',
-                    checked ? 'bg-skype' : 'bg-sky2-300',
-                  )}
-                  style={{ width: `${pct}%` }}
-                />
-              </span>
-              {/* checkbox / radio dot */}
-              <span
-                aria-hidden
-                className={cn(
-                  'relative z-[1] shrink-0 inline-flex items-center justify-center transition',
-                  poll.mode === 'single' ? 'w-4 h-4 rounded-full' : 'w-4 h-4 rounded-[4px]',
-                  checked
-                    ? 'bg-skype-deep border border-skype-deep text-white'
-                    : 'border border-ink-200 bg-cloud',
-                )}
-              >
-                {checked && (
-                  poll.mode === 'single'
-                    ? <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                    : (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )
-                )}
-              </span>
-              <span className="relative z-[1] flex-1 min-w-0 text-[13.5px] text-ink-800 truncate">
-                {opt.text}
-                {isWinner && (
-                  <span className="ml-1.5 text-[11px] text-skype-deep" title={zh ? '当前领先' : "获胜选项"}>★</span>
-                )}
-              </span>
-              <span className="relative z-[1] flex items-center gap-1.5 text-[11.5px] tabular-nums text-ink-500">
-                {voters.length > 0 && <VoterStack voterIds={voters} />}
-                <span className="font-semibold text-ink-700">{count}</span>
-                {totalVotes > 0 && <span className="text-ink-400">· {pct}%</span>}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      <OptionList
+        id={`poll-options-${msg.id}`}
+        role="decision"
+        className="px-3 pb-2 [&_[data-slot=option-list]]:max-w-none"
+        options={optionListOptions}
+        selectionMode={poll.mode}
+        minSelections={0}
+        value={optionListValue}
+        onChange={onOptionListChange}
+        actions={!isClosed && poll.mode === 'multi' && hasUnsavedDelta ? [
+          { id: 'reset', label: zh ? '重置' : 'Reset', variant: 'ghost', disabled: submitting },
+          { id: 'submit', label: submitting ? (zh ? '保存中…' : 'Saving…') : (zh ? '提交' : 'Submit'), disabled: submitting },
+        ] : undefined}
+        onAction={(actionId) => {
+          if (actionId === 'reset') onResetMulti()
+          if (actionId === 'submit') onSubmitMulti()
+        }}
+      />
 
       {/* Footer / multi-choice submit */}
       <div className="px-3.5 pb-3 pt-1 flex items-center gap-2 text-[11.5px] text-ink-500 min-h-[28px]">
@@ -258,26 +209,6 @@ export function PollBubble({ msg, zh = false }: Props) {
         )}
         {errorMsg && (
           <span className="text-coral-deep">· {errorMsg}</span>
-        )}
-        {!isClosed && poll.mode === 'multi' && hasUnsavedDelta && (
-          <span className="ml-auto flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={onResetMulti}
-              disabled={submitting}
-              className="px-2 py-0.5 rounded-full text-ink-500 hover:bg-ink-50 transition"
-            >
-              {zh ? '重置' : "重置"}
-            </button>
-            <button
-              type="button"
-              onClick={onSubmitMulti}
-              disabled={submitting}
-              className="px-2.5 py-0.5 rounded-full bg-skype-deep text-white font-semibold tracking-wide hover:brightness-105 transition disabled:opacity-50"
-            >
-              {submitting ? (zh ? '保存中…' : "正在保存...") : (zh ? '提交' : "提交")}
-            </button>
-          </span>
         )}
       </div>
     </div>

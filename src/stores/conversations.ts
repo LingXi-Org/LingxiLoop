@@ -227,14 +227,8 @@ export function bootConversations() {
       return
     }
     if (e.type === 'message.new' || e.type === 'group.pulled') {
-      // If a new message arrives for the conversation the user is currently
-      // viewing, treat it as already-seen — mark read on the server BEFORE we
-      // reload, so the badge never blinks up to 1 just to drop back to 0.
-      const active = useApp.getState().selectedConversationId
-      if (e.type === 'message.new' && e.conversationId === active) {
-        void api.markRead(e.conversationId).then(() => useConversations.getState().reload())
-        return
-      }
+      // Do not infer "read" from selection alone. MessageList advances the
+      // durable cursor from Virtuoso's actually visible range.
       void useConversations.getState().reload()
     } else if (e.type === 'conversation.updated') {
       // Surgical patch — apply patch fields to the matching conversation in

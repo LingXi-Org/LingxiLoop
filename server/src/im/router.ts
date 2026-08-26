@@ -8,6 +8,11 @@ import { wukongClient } from './wukong.js'
 import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import { assertTeacherApprovalFresh } from '../learning/teacher-agent.js'
+import {
+  listReadReceiptAdvances,
+  publishReadReceiptAdvance,
+  recordReadReceiptAdvance,
+} from './read-receipts.js'
 
 export const imRouter = Router()
 
@@ -231,14 +236,50 @@ imRouter.get('/sends/:clientNonce', safe(async (req, res) => {
 
 imRouter.post('/channels/:id/read', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
-  await assertTeacherRoomAccess(String(req.params.id),userId)
+  const channelId = String(req.params.id)
+  await assertTeacherRoomAccess(channelId,userId)
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
     `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
-      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [req.params.id, companyId, userId],
+      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
   )
   if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
-  await wukongClient().clearUnread(userId, String(req.params.id), Number(rows[0].profile.channelType ?? 2))
-  res.json({ ok: true })
+  const channelType = Number(rows[0].profile.channelType ?? 2)
+  const body = req.body && typeof req.body === 'object' ? req.body as Record<string, unknown> : {}
+  const readThroughSeq = Number(body.readThroughSeq)
+  if (!Number.isSafeInteger(readThroughSeq) || readThroughSeq <= 0) {
+    res.status(400).json({ error: 'readThroughSeq must be a positive safe integer' })
+    return
+  }
+  const latestRows = await wukongClient().syncMessages(channelId, channelType, 1, userId)
+  const latestSeq = latestRows.reduce((max, message) => Math.max(max, message.messageSeq), 0)
+  if (readThroughSeq > latestSeq) {
+    res.status(400).json({ error: 'readThroughSeq exceeds latest channel sequence', latestSeq })
+    return
+  }
+  await wukongClient().setUnread(userId, channelId, channelType, latestSeq - readThroughSeq)
+  const receipt = await recordReadReceiptAdvance({ companyId, channelId, readerId: userId, readThroughSeq })
+  if (receipt) await publishReadReceiptAdvance(receipt)
+  res.json({ ok: true, latestSeq, receipt })
+}))
+
+imRouter.get('/channels/:id/read-receipts', safe(async (req, res) => {
+  const { userId, companyId } = await identity(req)
+  const channelId = String(req.params.id)
+  await assertTeacherRoomAccess(channelId, userId)
+  const member = await pool.query(
+    `SELECT 1 FROM conversations
+      WHERE id=$1 AND company_id=$2 AND members @> to_jsonb(ARRAY[$3::text])`,
+    [channelId, companyId, userId],
+  )
+  if (!member.rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
+  const fromSeq = Number(req.query.fromSeq)
+  const toSeq = Number(req.query.toSeq)
+  if (!Number.isSafeInteger(fromSeq) || fromSeq <= 0 || !Number.isSafeInteger(toSeq) || toSeq < fromSeq) {
+    res.status(400).json({ error: 'invalid receipt sequence range' })
+    return
+  }
+  const receipts = await listReadReceiptAdvances({ companyId, channelId, fromSeq, toSeq })
+  res.json({ channelId, fromSeq, toSeq, receipts })
 }))
 
 imRouter.get('/approvals', safe(async (req, res) => {

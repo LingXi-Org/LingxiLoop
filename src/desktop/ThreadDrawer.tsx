@@ -11,13 +11,21 @@
  *     but keep the drawer open.
  */
 import { useEffect, useMemo, useState } from 'react'
+import { ThreadPrimitive } from '@assistant-ui/react'
 import { useApp } from '@/stores/app'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import { api, type ApiMessage } from '@/api/client'
-import { MessageRow } from '@/components/Message'
+import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { Composer } from '@/desktop/ChatPane'
-import type { Message, Participant } from '@/types'
+import { LingxiAssistantRuntimeProvider } from '@/im/assistantRuntime'
+import type { Message } from '@/types'
+
+const THREAD_MESSAGE_COMPONENTS = { Message: () => <LingxiImMessage animate={false} /> }
+
+function ThreadMessage({ messageId }: { messageId: string }) {
+  return <ThreadPrimitive.Unstable_MessageById messageId={messageId} components={THREAD_MESSAGE_COMPONENTS} />
+}
 
 function apiToMessage(m: ApiMessage): Message {
   const raw = m as unknown as {
@@ -40,6 +48,7 @@ function apiToMessage(m: ApiMessage): Message {
     quotedMessageId: raw.quotedMessageId ?? undefined,
     quoted: raw.quoted ?? undefined,
     replyCount: raw.replyCount ?? undefined,
+    sequence: m.sequence,
   }
 }
 
@@ -77,6 +86,10 @@ export function ThreadDrawer() {
 
     return out
   }, [replies, liveReplies])
+  const runtimeMessages = useMemo(
+    () => root ? [root, ...visibleReplies] : visibleReplies,
+    [root, visibleReplies],
+  )
 
   // Refetch on (convoId, rootId) change. The fetched snapshot covers replies
   // already persisted on the server; visibleReplies above folds in messages
@@ -101,21 +114,13 @@ export function ThreadDrawer() {
   if (!openThread || !root) return null
 
   const rootAuthor = byId[root.authorId]
-  const fallbackAuthor: Participant = {
-    id: root.authorId,
-    kind: 'human',
-    name: root.authorId,
-    role: '',
-    initial: (root.authorId[0] ?? '?').toUpperCase(),
-    avatarBg: 'var(--ink-200)',
-    status: 'avail',
-  }
 
   return (
-    <aside
-      className="border-l border-ink-100 overflow-hidden relative flex flex-col"
-      style={{ background: 'linear-gradient(180deg, #FBFDFE, #F4F8FC)' }}
-    >
+    <LingxiAssistantRuntimeProvider messages={runtimeMessages}>
+      <aside
+        className="border-l border-ink-100 overflow-hidden relative flex flex-col"
+        style={{ background: 'linear-gradient(180deg, #FBFDFE, #F4F8FC)' }}
+      >
       <header className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-ink-100">
         <div>
           <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-400">主题</div>
@@ -133,7 +138,7 @@ export function ThreadDrawer() {
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
         {/* Root message — small visual treatment to distinguish from replies. */}
         <div className="rounded-lg border border-ink-100 bg-paper px-3 py-2.5">
-          <MessageRow msg={root} author={rootAuthor ?? fallbackAuthor} />
+          <ThreadMessage messageId={root.id} />
         </div>
         <div className="text-[10.5px] font-bold uppercase tracking-wider text-ink-400 pt-1 border-t border-ink-100 -mb-2">
           回复
@@ -144,10 +149,9 @@ export function ThreadDrawer() {
         {!loading && !err && visibleReplies.length === 0 && (
           <div className="text-[12px] text-ink-400 italic">尚未回复 - 成为第一个。</div>
         )}
-        {visibleReplies.map((m) => {
-          const a = byId[m.authorId] ?? { ...fallbackAuthor, id: m.authorId, name: m.authorId, initial: (m.authorId[0] ?? '?').toUpperCase() }
-          return <MessageRow key={m.clientId ?? m.id} msg={m} author={a} />
-        })}
+        {visibleReplies.map((message) => (
+          <ThreadMessage key={message.clientId ?? message.id} messageId={message.id} />
+        ))}
       </div>
 
       <div className="border-t border-ink-100 bg-cloud px-3 py-3">
@@ -160,6 +164,7 @@ export function ThreadDrawer() {
           placeholder="在帖子中回复..."
         />
       </div>
-    </aside>
+      </aside>
+    </LingxiAssistantRuntimeProvider>
   )
 }

@@ -1,26 +1,39 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { messageShellCapabilities } from './messageShell'
+import { createLingxiAssistantMessage, type LingxiImMessageCustom } from '@/im/assistantMessage'
+import type { Message, MessageKind, Participant } from '@/types'
 
-test('text, poll, artifact, handoff, and approval retain the shared MessageRow behavior contract', () => {
+test('text, poll, artifact, handoff, and approval receive native IM presentation metadata', () => {
+  const participant: Participant = { id: 'agent', kind: 'agent', name: 'Agent', initial: 'A', avatarBg: '#000', status: 'avail' }
   for (const kind of ['text', 'poll', 'tool', 'handoff', 'approval'] as const) {
-    const shell = messageShellCapabilities(kind)
-    assert.equal(shell.sharedShell, true, `${kind} must stay in MessageRow`)
-    assert.equal(shell.quote, true)
-    assert.equal(shell.reactions, true)
-    assert.equal(shell.reply, true)
-    assert.equal(shell.selection, true)
+    const raw: Message = { id: kind, conversationId: 'room', authorId: participant.id, kind: kind as MessageKind, body: '', at: '10:00' }
+    const converted = createLingxiAssistantMessage(raw, 0, [raw], { [participant.id]: participant }, 'me')
+    const shell = converted.metadata?.custom as unknown as LingxiImMessageCustom
+    assert.equal(shell.presentation.variant, 'standard', `${kind} must stay in LingxiImMessage`)
+    assert.equal(shell.presentation.quote, true)
+    assert.equal(shell.presentation.reactions, true)
+    assert.equal(shell.presentation.reply, true)
+    assert.equal(shell.presentation.selection, true)
   }
-  assert.equal(messageShellCapabilities('handoff').linkPreview, false)
-  assert.equal(messageShellCapabilities('approval').linkPreview, false)
+  const presentationFor = (kind: MessageKind) => {
+    const raw: Message = { id: kind, conversationId: 'room', authorId: participant.id, kind, body: '', at: '10:00' }
+    const converted = createLingxiAssistantMessage(raw, 0, [raw], { [participant.id]: participant }, 'me')
+    assert.ok(converted.metadata?.custom)
+    return (converted.metadata.custom as unknown as LingxiImMessageCustom).presentation
+  }
+  assert.equal(presentationFor('handoff').linkPreview, false)
+  assert.equal(presentationFor('approval').linkPreview, false)
+  assert.equal(presentationFor('approval').attachmentHost, true)
 })
 
-test('desktop and mobile both render the shared MessageRow component', async () => {
+test('desktop and mobile both render the native assistant-ui IM entry', async () => {
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
   const mobile = await readFile(new URL('../mobile/MobileChat.tsx', import.meta.url), 'utf8')
-  assert.match(desktop, /<MessageRow\b/)
-  assert.match(mobile, /<MessageRow\b/)
+  assert.match(desktop, /<LingxiImMessage\b/)
+  assert.match(mobile, /<LingxiImMessage\b/)
+  assert.match(desktop, /useAuiState\(\(state\) => state\.message\.metadata\.custom\)/)
+  assert.match(mobile, /useAuiState\(\(state\) => state\.message\.metadata\.custom\)/)
 })
 
 test('web, desktop, and mobile compose the shared IM core without Telegram runtime code', async () => {
@@ -76,7 +89,7 @@ test('desktop IM columns resize without changing the message/composer grid contr
 })
 
 test('mobile self messages align right and never render an avatar slot', async () => {
-  const message = await readFile(new URL('../components/Message.tsx', import.meta.url), 'utf8')
+  const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
   assert.match(message, /data-message-owner=\{isMine \? 'self' : 'other'\}/)
   assert.match(message, /isMine\s*\? 'flex justify-end'/)
   assert.match(message, /\) : !isMine \? \(/)
@@ -139,7 +152,7 @@ test('desktop group context is a flat top-bottom surface instead of bordered das
 })
 
 test('reply text and composer surface do not restore the removed outer rules', async () => {
-  const message = await readFile(new URL('../components/Message.tsx', import.meta.url), 'utf8')
+  const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
   const composer = await readFile(new URL('../im/Composer.tsx', import.meta.url), 'utf8')
   const quoteCard = message.slice(message.indexOf('function QuoteCard'), message.indexOf('function ReplyIconButton'))
   assert.doesNotMatch(quoteCard, /openmaus-quote-card|border-|rounded-/)
@@ -147,7 +160,8 @@ test('reply text and composer surface do not restore the removed outer rules', a
 })
 
 test('Coworker cards use semantic light/dark tokens and expose the shared shell marker', async () => {
-  const message = await readFile(new URL('../components/Message.tsx', import.meta.url), 'utf8')
+  const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
+  const parts = await readFile(new URL('../components/messages/LingxiMessageParts.tsx', import.meta.url), 'utf8')
   const activity = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
   const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
 
@@ -157,7 +171,7 @@ test('Coworker cards use semantic light/dark tokens and expose the shared shell 
   assert.match(css, /:root\[data-theme='dark'\]/)
   assert.match(message, /data-message-shell=/)
 
-  const coworkerSource = `${message.slice(message.indexOf('function HandoffCard'), message.indexOf('function MessageRowImpl'))}\n${activity.slice(activity.indexOf('function ConversationActivity'), activity.indexOf('export function ChatPane'))}`
+  const coworkerSource = `${parts.slice(parts.indexOf('function HandoffPart'), parts.indexOf('function LearningMissionPart'))}\n${activity.slice(activity.indexOf('function ConversationActivity'), activity.indexOf('export function ChatPane'))}`
   assert.doesNotMatch(coworkerSource, /bg-sky-50|text-skype-deep|bg-gold\/10|text-gold-deep|bg-white|text-black/)
   assert.match(coworkerSource, /border-hairline/)
   assert.match(coworkerSource, /bg-panel/)
@@ -166,11 +180,12 @@ test('Coworker cards use semantic light/dark tokens and expose the shared shell 
 
 test('Canvas bubble and full view share the attachment preview theme surfaces', async () => {
   const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
-  const message = await readFile(new URL('../components/Message.tsx', import.meta.url), 'utf8')
+  const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
+  const business = await readFile(new URL('../components/messages/MessageBusinessParts.tsx', import.meta.url), 'utf8')
   const canvasView = await readFile(new URL('../components/CanvasView.tsx', import.meta.url), 'utf8')
   const canvasPreview = await readFile(new URL('../components/CanvasPreview.tsx', import.meta.url), 'utf8')
   const bubble = css.slice(css.indexOf('.canvas-message-card {'), css.indexOf('.canvas-preview {'))
-  const canvasCard = message.slice(message.indexOf('function CanvasWorkspaceCard'), message.indexOf('function MessageRowImpl'))
+  const canvasCard = business.slice(business.indexOf('export function CanvasWorkspaceCard'), business.indexOf('function BoardArtifactCard'))
   const full = `${css.slice(css.indexOf('.canvas-shell,'), css.indexOf('.canvas-work-timeline {'))}\n${css.slice(css.indexOf('.canvas-frame-card {'), css.indexOf('.canvas-inline-editor,'))}`
   assert.match(bubble, /border-color: var\(--brand-bubble-border\)/)
   assert.match(bubble, /background: var\(--brand-bubble-surface\)/)
@@ -182,9 +197,9 @@ test('Canvas bubble and full view share the attachment preview theme surfaces', 
   assert.match(full, /border: 0 !important/)
   assert.match(css, /\.message-attachment-host \{ width: min\(420px, 100%\); \}/)
   assert.match(css, /\.message-attachment-bubble \{[\s\S]*?width: 100%; max-width: 100%;[\s\S]*?background: var\(--brand-bubble-surface\) !important;/)
-  assert.match(message, /\(isAttachOnly \|\| isCanvas \|\| isApproval\) && 'message-attachment-host'/)
+  assert.match(message, /shell\.attachmentHost && 'message-attachment-host'/)
   assert.match(css.slice(css.indexOf('.canvas-preview {'), css.indexOf('.canvas-preview-frame {')), /background-image: none/)
-  assert.match(message, /message-attachment-bubble canvas-message-card/)
+  assert.match(business, /message-attachment-bubble canvas-message-card/)
   assert.doesNotMatch(canvasCard, /hover:-translate-y|canvas-message-card[^\n]*transition/)
   assert.doesNotMatch(css, /\.canvas-message-card:hover/)
   assert.doesNotMatch(canvasCard, /statusLabel|members\.slice|canvas\.goal|位智能体|张卡片|className="p-3\.5"/)
@@ -198,18 +213,20 @@ test('Canvas bubble and full view share the attachment preview theme surfaces', 
   assert.match(canvasView, /className="canvas-frame-agent-label"/)
   assert.match(canvasView, /owner\?\.name \?\? ownerId/)
   assert.doesNotMatch(canvasView.slice(canvasView.indexOf('return <article data-canvas-frame'), canvasView.indexOf('<div className={`canvas-frame-body')), /TYPE_LABELS|commentCount|participant\?\.name|frame\.revision/)
-  assert.ok((message.match(/message-attachment-bubble/g) ?? []).length >= 6)
+  assert.equal((business.match(/message-attachment-bubble/g) ?? []).length, 5)
   assert.doesNotMatch(`${bubble}\n${full}`, /background:\s*#(?:fff|000|080808)/i)
 })
 
-test('teacher approval cards use the same attachment bubble shell', async () => {
-  const message = await readFile(new URL('../components/Message.tsx', import.meta.url), 'utf8')
-  const approvalCard = message.slice(message.indexOf('function ApprovalCard'), message.indexOf('function CanvasWorkspaceCard'))
-  assert.match(approvalCard, /message-attachment-bubble/)
-  assert.match(approvalCard, /rounded-\[11px\]/)
-  assert.match(approvalCard, /border-ink-100/)
-  assert.match(approvalCard, /bg-cloud/)
-  assert.doesNotMatch(approvalCard, /max-w-\[560px\][^\n]*shadow-sm/)
-  assert.match(approvalCard, /教师审批/)
-  assert.match(approvalCard, /发布学习目标/)
+test('approval is a native Tool UI decision inside the shared attachment host', async () => {
+  const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
+  const parts = await readFile(new URL('../components/messages/LingxiMessageParts.tsx', import.meta.url), 'utf8')
+  const approval = await readFile(new URL('../components/tool-ui/approval-card/approval-card.tsx', import.meta.url), 'utf8')
+  const approvalPart = parts.slice(parts.indexOf('function ApprovalPart'), parts.indexOf('function ToolActivityPart'))
+  assert.match(message, /shell\.attachmentHost && 'message-attachment-host'/)
+  assert.match(approvalPart, /<ApprovalCard/)
+  assert.match(approvalPart, /role="decision"/)
+  assert.match(approvalPart, /addResult\(\{ decision \}\)/)
+  assert.match(approvalPart, /confirmLabel=/)
+  assert.match(approvalPart, /cancelLabel=/)
+  assert.match(approval, /data-slot="approval-card"/)
 })

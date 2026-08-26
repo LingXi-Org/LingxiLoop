@@ -2174,6 +2174,25 @@ CREATE TABLE IF NOT EXISTS im_send_acceptances (
 CREATE INDEX IF NOT EXISTS idx_im_send_acceptances_pending
   ON im_send_acceptances(status, updated_at);
 
+-- Durable, append-only IM read cursor advances. Each row records the exact
+-- interval that became visible in one monotonic step, preserving the real
+-- confirmation timestamp instead of rewriting a single "last read" value.
+CREATE TABLE IF NOT EXISTS im_read_receipt_advances (
+  company_id        TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  channel_id        TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  reader_id         TEXT NOT NULL,
+  previous_read_seq BIGINT NOT NULL,
+  read_through_seq  BIGINT NOT NULL,
+  read_at           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(company_id, channel_id, reader_id, read_through_seq),
+  CONSTRAINT im_read_receipt_monotonic_check CHECK
+    (previous_read_seq >= 0 AND read_through_seq > previous_read_seq)
+);
+CREATE INDEX IF NOT EXISTS idx_im_read_receipt_range
+  ON im_read_receipt_advances(company_id, channel_id, previous_read_seq, read_through_seq);
+CREATE INDEX IF NOT EXISTS idx_im_read_receipt_reader
+  ON im_read_receipt_advances(company_id, reader_id, read_at DESC);
+
 CREATE TABLE IF NOT EXISTS agent_host_actions (
   idempotency_key TEXT PRIMARY KEY,
   work_id         TEXT NOT NULL REFERENCES agent_work_items(id) ON DELETE CASCADE,

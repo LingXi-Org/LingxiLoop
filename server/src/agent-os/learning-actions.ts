@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
+import { advanceAgentReadReceipt } from '../im/read-receipts.js'
 import {
   addKnowledgeFile,
   addKnowledgeText,
@@ -201,7 +202,17 @@ async function executeKnowledge(work: AgentWorkItem, method: string, args: Recor
 
 async function executeChat(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
   if (method === 'history') {
-    const messages = await wukongClient().syncMessages(textArg(args, 'channelId', false) || work.channelId, Number(args.channelType ?? 2), Number(args.limit ?? 50), work.agentId)
+    const channelId = textArg(args, 'channelId', false) || work.channelId
+    const messages = await wukongClient().syncMessages(channelId, Number(args.channelType ?? 2), Number(args.limit ?? 50), work.agentId)
+    const readThroughSeq = messages.reduce((max, message) => Math.max(max, message.messageSeq), 0)
+    if (readThroughSeq > 0) {
+      await advanceAgentReadReceipt({
+        companyId: work.companyId,
+        channelId,
+        agentId: work.agentId,
+        readThroughSeq,
+      })
+    }
     return { ok: true, value: messages }
   }
   if (method === 'send') {

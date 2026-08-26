@@ -3,10 +3,10 @@ import test from 'node:test'
 import { formatTextPreview, inferAttachmentPreview, inferTextPreviewFormat, readTextPreview, tokenizeJsonPreview } from './attachmentPreview'
 
 test('infers preview kind from MIME and extension', () => {
-  assert.equal(inferAttachmentPreview({ name: 'brief.pdf', kind: 'file' }), 'pdf')
-  assert.equal(inferAttachmentPreview({ name: 'clip.bin', kind: 'file', mime: 'video/mp4' }), 'video')
-  assert.equal(inferAttachmentPreview({ name: 'notes.md', kind: 'file' }), 'text')
-  assert.equal(inferAttachmentPreview({ name: 'archive.zip', kind: 'file' }), 'download')
+  assert.equal(inferAttachmentPreview({ name: 'brief.pdf', kind: 'file', url: '/brief.pdf' }), 'pdf')
+  assert.equal(inferAttachmentPreview({ name: 'clip.bin', kind: 'file', url: '/clip.bin', mime: 'video/mp4' }), 'video')
+  assert.equal(inferAttachmentPreview({ name: 'notes.md', kind: 'file', url: '/notes.md' }), 'text')
+  assert.equal(inferAttachmentPreview({ name: 'archive.zip', kind: 'file', url: '/archive.zip' }), 'download')
 })
 
 test('reads and formats safe text without evaluating content', async () => {

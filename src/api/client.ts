@@ -17,6 +17,7 @@ import type {
   CanvasPresence,
   CanvasSnapshot,
   Message,
+  ImReadReceiptAdvance,
   RecurrenceRule,
   Status,
   ConversationSourceSelection,
@@ -1236,11 +1237,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(typeof input === 'string' ? { url: input } : input),
     }),
-  markRead: (conversationId: string) =>
-    http<{ ok: boolean }>(`/im/channels/${encodeURIComponent(conversationId)}/read`, {
+  markRead: (conversationId: string, readThroughSeq: number) =>
+    http<{ ok: boolean; latestSeq: number; receipt: ImReadReceiptAdvance | null }>(`/im/channels/${encodeURIComponent(conversationId)}/read`, {
       method: 'POST',
-      body: JSON.stringify({}),
+      body: JSON.stringify({ readThroughSeq }),
     }),
+  readReceipts: (conversationId: string, fromSeq: number, toSeq: number) =>
+    http<{ channelId: string; fromSeq: number; toSeq: number; receipts: ImReadReceiptAdvance[] }>(
+      `/im/channels/${encodeURIComponent(conversationId)}/read-receipts?fromSeq=${encodeURIComponent(String(fromSeq))}&toSeq=${encodeURIComponent(String(toSeq))}`,
+    ),
   /** Broadcast a typing indicator into a conversation. Callers should
    *  throttle to roughly one POST every few seconds while typing
    *  continues, then send a final `done:true` when the composer goes
@@ -1467,6 +1472,7 @@ export type WsEvent =
   | { type: 'message.delta'; conversationId: string; messageId: string; authorId: string; delta: string; sequence: number; done: boolean }
   | { type: 'typing'; conversationId: string; agentId: string; done: boolean }
   | { type: 'agent.activity'; conversationIds: string[]; activity: ApiCoworkerActivity }
+  | ({ type: 'im.read-receipt' } & ImReadReceiptAdvance)
   | { type: 'participants.status'; participantId: string; status: Status; statusUpdatedAt?: string }
   | { type: 'participants.avatar'; participantId: string; avatarUrl: string }
   | { type: 'participants.added'; conversationId?: string; participant: {

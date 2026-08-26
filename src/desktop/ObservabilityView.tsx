@@ -9,7 +9,7 @@ import {
   api,
 } from '@/api/client'
 import { Checkbox } from '@/components/Checkbox'
-import { CodeBlock, RichBody } from '@/components/Message'
+import { CodeBlock, RichBody } from '@/components/messages/MessageBody'
 import { ResizeHandle } from '@/components/ResizeHandle'
 import { Select } from '@/components/Select'
 import { useResizableWidth } from '@/lib/useResizableWidth'

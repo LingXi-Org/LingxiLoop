@@ -4,6 +4,7 @@ import type { PoolClient } from 'pg'
 import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
+import { advanceAgentReadReceipt } from '../im/read-receipts.js'
 import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
 import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
 import { roleAllowsAction } from './role-policy.js'
@@ -208,6 +209,15 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   const profile = bindings[0]?.profile ?? {}
   const channelType = Number(profile.channelType ?? 2)
   const history = await wukongClient().syncMessages(work.channelId, channelType, 80, work.agentId)
+  const readThroughSeq = history.reduce((max, message) => Math.max(max, message.messageSeq), 0)
+  if (readThroughSeq > 0) {
+    await advanceAgentReadReceipt({
+      companyId: work.companyId,
+      channelId: work.channelId,
+      agentId: work.agentId,
+      readThroughSeq,
+    })
+  }
   const messages = history.map((message) => ({
     clientMsgNo: message.clientMsgNo,
     authorId: message.fromUid,

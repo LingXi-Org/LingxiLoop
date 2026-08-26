@@ -61,7 +61,8 @@ if (!/MODEL_TOOLS[^\n]*Object\.freeze\(\[IPYTHON_TOOL\]\)/.test(tool)) {
 const kernel = readFileSync(join(root, 'server/agent-os/kernel_runner.py'), 'utf8')
 const actions = readFileSync(join(root, 'server/src/agent-os/learning-actions.ts'), 'utf8')
 const controlPlane = readFileSync(join(root, 'server/src/agent-os/control-plane.ts'), 'utf8')
-const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8')
+// Keep the architecture guard deterministic across Windows and POSIX worktrees.
+const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8').replaceAll('\r\n', '\n')
 const promptAssembly = readFileSync(join(root, 'server/src/agent-os/prompt-assembly.ts'), 'utf8')
 const canvasService = readFileSync(join(root, 'server/src/canvas/service.ts'), 'utf8')
 const migration = readFileSync(join(root, 'server/src/db/migrate.ts'), 'utf8')

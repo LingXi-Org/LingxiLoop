@@ -23,7 +23,7 @@ test('breaks groups across authors and five minute boundary', () => {
 })
 
 test('find matches count every occurrence and searchable primary metadata', () => {
-  const messages = [base('m1', { body: 'alpha alpha', attachment: { name: 'alpha.txt', kind: 'file' } }), base('m2', { body: 'none' })]
+  const messages = [base('m1', { body: 'alpha alpha', attachment: { name: 'alpha.txt', kind: 'file', url: '/alpha.txt' } }), base('m2', { body: 'none' })]
   assert.equal(searchableTextForMessage(messages[0]).includes('alpha.txt'), true)
   assert.deepEqual(projectFindMatches(messages, 'alpha'), [
     { messageId: 'm1', occurrence: 0 }, { messageId: 'm1', occurrence: 1 }, { messageId: 'm1', occurrence: 2 },

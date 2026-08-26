@@ -1,9 +1,10 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { useAuiState } from '@assistant-ui/react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, type ApiCoworkerActivity, api, ws } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, ICanvas, IClip, ISearch, ISend, ISmile } from '@/components/icons'
-import { MessageRow } from '@/components/Message'
+import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
@@ -15,6 +16,7 @@ import { ComposerSurface } from '@/im/Composer'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { ConversationView } from '@/im/ConversationView'
 import { MessageList } from '@/im/MessageList'
+import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { isMockImDevelopment } from '@/lib/devMode'
@@ -23,7 +25,7 @@ import { isImeComposing } from '@/lib/keyboard'
 import { applyFindHighlights, clearFindHighlights } from '@/lib/findHighlights'
 import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
-import { projectFindMatches, projectTranscriptAdjacency } from '@/lib/transcriptExperience'
+import { projectFindMatches } from '@/lib/transcriptExperience'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
@@ -32,6 +34,46 @@ import { messagesFor, sendUserMessage, useMessages, VIRTUOSO_FIRST_INDEX_BASE } 
 import { useParticipants } from '@/stores/participants'
 import { useSoundStore } from '@/stores/sound'
 import type { Participant } from '@/types'
+
+function DesktopRuntimeEntry({
+  index,
+  initialIdsRef,
+  animatedIdsRef,
+  searchOpen,
+  matchedIds,
+  currentMessageId,
+}: {
+  index: number
+  initialIdsRef: MutableRefObject<Set<string> | null>
+  animatedIdsRef: MutableRefObject<Set<string>>
+  searchOpen: boolean
+  matchedIds: ReadonlySet<string>
+  currentMessageId?: string
+}) {
+  const custom = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
+  const { message } = custom
+  const wasInitial = initialIdsRef.current?.has(message.id) ?? false
+  const delay = wasInitial ? Math.min(index * 30, 200) : 0
+  const firstAnimation = !animatedIdsRef.current.has(message.id)
+  if (firstAnimation) animatedIdsRef.current.add(message.id)
+  const isMatch = searchOpen && matchedIds.has(message.id)
+  const isCurrent = isMatch && currentMessageId === message.id
+  return (
+    <div
+      data-msg-id={message.id}
+      data-find-message-id={message.id}
+      className={cn(
+        'mx-auto w-full max-w-[900px] rounded-[10px] px-5 transition-shadow',
+        custom.continuedFromPrevious ? 'pt-[2px]' : 'pt-[9px]',
+        custom.continuedToNext ? 'pb-[2px]' : 'pb-[9px]',
+        isMatch && 'find-row-match',
+        isCurrent && 'find-row-current',
+      )}
+    >
+      <LingxiImMessage delay={delay} animate={firstAnimation} openMaus />
+    </div>
+  )
+}
 
 /** Soft "Coming soon" popover anchored beneath the trigger. Auto-dismisses
  *  after a beat; also closes on outside-click or Escape. The sparkle
@@ -1778,7 +1820,6 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
     () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId ? { [convoId]: typingIds } : {} } as MessagesState, convoId),
     [byConvo, streaming, typingIds, convoId],
   )
-  const adjacency = useMemo(() => projectTranscriptAdjacency(list), [list])
   const conversations = useConversations((s) => s.list)
   const c = useMemo(() => conversations.find((x) => x.id === convoId), [conversations, convoId])
   const byId = useParticipants((s) => s.byId)
@@ -2097,38 +2138,16 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
               ),
               Footer: () => <div className="h-3" />,
             }}
-            itemContent={(i, m) => {
-              const rowIndex = i >= firstItemIndex ? i - firstItemIndex : i
-              const author = byId[m.authorId]
-              // System rows render without a resolved author (e.g. the
-              // calendar-fired notice has a synthetic system author id). Only
-              // gate real authored messages on the participant being loaded.
-              if (!author && m.kind !== 'system') return <div className="h-0" />
-              const wasInitial = initialIdsRef.current?.has(m.id) ?? false
-              const delay = wasInitial ? Math.min(i * 30, 200) : 0
-              // Animate a message's rise-in at most once per convo session, so a
-              // Virtuoso remount (scroll / quote-jump) doesn't replay the fade.
-              const firstAnimation = !animatedIdsRef.current.has(m.id)
-              if (firstAnimation) animatedIdsRef.current.add(m.id)
-              const rowAdjacency = adjacency[rowIndex]
-              const isMatch = searchOpen && matchedIds.has(m.id)
-              const isCurrent = isMatch && currentMatch?.messageId === m.id
-              return (
-                <div
-                  data-msg-id={m.id}
-                  data-find-message-id={m.id}
-                  className={cn(
-                    'mx-auto w-full max-w-[900px] rounded-[10px] px-5 transition-shadow',
-                    rowAdjacency?.isContinuedFromPrevious ? 'pt-[2px]' : 'pt-[9px]',
-                    rowAdjacency?.isContinuedToNext ? 'pb-[2px]' : 'pb-[9px]',
-                    isMatch && 'find-row-fallback',
-                    isCurrent && 'find-row-current-fallback',
-                  )}
-                >
-                  <MessageRow msg={m} author={author} adjacency={rowAdjacency} delay={delay} animate={firstAnimation} openMaus />
-                </div>
-              )
-            }}
+            itemContent={(index) => (
+              <DesktopRuntimeEntry
+                index={index}
+                initialIdsRef={initialIdsRef}
+                animatedIdsRef={animatedIdsRef}
+                searchOpen={searchOpen}
+                matchedIds={matchedIds}
+                currentMessageId={currentMatch?.messageId}
+              />
+            )}
           />
         )}
         {/* Bottom-right "scroll to latest" pill — appears once the user has

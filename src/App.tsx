@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { AdminApp } from '@/admin/AdminApp'
 import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
 import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
-import { api } from '@/api/client'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
@@ -64,15 +63,12 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     return () => window.lingxiloop?.dock?.setUnreadDot(false)
   }, [])
 
-  // Lazy-load messages + mark conversation as read when selected
+  // Lazy-load messages when selected. Read state advances only from the
+  // Virtuoso visible range while the page is focused.
   useEffect(() => {
     if (mockMode) return
     if (!convoId || !selectedConvoExists) return
     void useMessages.getState().loadConversation(convoId)
-    void api.markRead(convoId).then(() => {
-      // refresh list so the badge clears
-      void useConversations.getState().reload()
-    }).catch(() => { /* swallow */ })
   }, [convoId, selectedConvoExists, mockMode])
 
   // Cross-component "open updater" channel — MeView's "Check for

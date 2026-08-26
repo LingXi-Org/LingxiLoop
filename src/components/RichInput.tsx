@@ -138,7 +138,7 @@ function makeMentionNode(id: string, info: MentionInfo): HTMLSpanElement {
   chip.style.padding = '0 7px'
   chip.style.borderRadius = '999px'
   chip.style.fontWeight = '600'
-  chip.style.verticalAlign = '-0.15em' // centers the chip on 14px CJK text; keep in sync with Message.tsx MentionChip
+  chip.style.verticalAlign = '-0.15em' // centers the chip on 14px CJK text; keep in sync with MessageBody MentionChip
   chip.style.lineHeight = '1.4'
   chip.style.userSelect = 'none'
   if (id === 'all' || info.kind === 'human') {

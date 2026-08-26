@@ -3,7 +3,7 @@ import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, IBack, IClip, IMore, ISearch, ISend, ISmile } from '@/components/icons'
-import { MessageRow } from '@/components/Message'
+import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { PollComposer } from '@/components/PollComposer'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
@@ -15,12 +15,13 @@ import { ComposerSurface } from '@/im/Composer'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { ConversationView } from '@/im/ConversationView'
 import { MessageList } from '@/im/MessageList'
+import { useAuiState } from '@assistant-ui/react'
+import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { tapHaptic } from '@/lib/native'
-import { projectTranscriptAdjacency, type TranscriptAdjacency } from '@/lib/transcriptExperience'
 import { findSkypeByShortcode, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
@@ -61,7 +62,6 @@ export function MobileChat() {
     () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId && typingIds ? { [convoId]: typingIds } : {} } as MessagesState, convoId),
     [byConvo, streaming, typingIds, convoId],
   )
-  const adjacency = useMemo(() => projectTranscriptAdjacency(list), [list])
   // Drives the bottom-right "scroll to latest" pill — true means we're pinned
   // at the bottom and the pill stays hidden. Note: there's also an existing
   // `scrollToLatest` (declared below) that snaps with `behavior:'auto'` for the
@@ -547,28 +547,12 @@ export function MobileChat() {
           // tick and was a primary cause of scroll-up jitter. See StreamHeader.
           components={STREAM_COMPONENTS}
           context={streamCtx}
-          itemContent={(index, m) => {
-            const rowIndex = index >= firstItemIndex ? index - firstItemIndex : index
-            const author = byId[m.authorId]
-            // System rows render without a resolved author (e.g. the
-            // calendar-fired notice has a synthetic system author id).
-            if (!author && m.kind !== 'system') return <div className="h-0" />
-            // Animate only freshly-arrived messages, not historical
-            // rows being remounted as Virtuoso virtualizes the
-            // scrollback. Without this gate, scrolling up replays a
-            // fade on every row that re-enters the viewport.
-            const createdAt = m.at ? new Date(m.at).getTime() : 0
-            const animate = createdAt > convoOpenedAtRef.current
-            return (
-              <MessageRowMobileShell
-                msg={m}
-                author={author}
-                animate={animate}
-                adjacency={adjacency[rowIndex]}
-                onLongPress={(coords) => setTapback({ msg: m, coords })}
-              />
-            )
-          }}
+          itemContent={() => (
+            <MobileRuntimeEntryShell
+              animateAfter={convoOpenedAtRef.current}
+              onLongPress={(message, coords) => setTapback({ msg: message, coords })}
+            />
+          )}
           // First-pass height estimate for rows Virtuoso hasn't measured yet.
           // A real mobile row (avatar + author line + a few lines of body, and
           // often a card) lands well above the old 88px guess, so every
@@ -951,7 +935,7 @@ function StreamFooter() {
 const STREAM_COMPONENTS = { Header: StreamHeader, Footer: StreamFooter }
 
 /** Per-message wrapper that attaches the long-press detector and
- *  preserves the same padding the bare MessageRow used to ship inside
+ *  preserves the transcript padding owned by the native IM entry
  *  Virtuoso's itemContent. The wrapper exists as its own component
  *  so the long-press hook gets its own state slot — re-using one
  *  detector across all visible items would cross-fire.
@@ -965,19 +949,19 @@ const STREAM_COMPONENTS = { Header: StreamHeader, Footer: StreamFooter }
  *  exactly this reason; Copy comes through the Tapback menu (our
  *  "Copy text" row), which puts the body on the clipboard
  *  programmatically. */
-function MessageRowMobileShell({
-  msg, author, animate, adjacency, onLongPress,
+function MobileRuntimeEntryShell({
+  animateAfter, onLongPress,
 }: {
-  msg: Message
-  author?: Participant
-  animate: boolean
-  adjacency?: TranscriptAdjacency
-  onLongPress: (coords: { x: number; y: number }) => void
+  animateAfter: number
+  onLongPress: (message: Message, coords: { x: number; y: number }) => void
 }) {
-  const press = useLongPress(onLongPress)
+  const custom = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
+  const createdAt = Date.parse(custom.message.createdAt ?? custom.message.at)
+  const animate = Number.isFinite(createdAt) && createdAt > animateAfter
+  const press = useLongPress((coords) => onLongPress(custom.message, coords))
   return (
     <div
-      className={cn('mx-auto w-full max-w-[760px] px-4', adjacency?.isContinuedFromPrevious ? 'pt-0.5' : 'pt-2', adjacency?.isContinuedToNext ? 'pb-0.5' : 'pb-2')}
+      className={cn('mx-auto w-full max-w-[760px] px-4', custom.continuedFromPrevious ? 'pt-0.5' : 'pt-2', custom.continuedToNext ? 'pb-0.5' : 'pb-2')}
       style={{
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -985,7 +969,7 @@ function MessageRowMobileShell({
       }}
       {...press}
     >
-      <MessageRow msg={msg} author={author} adjacency={adjacency} delay={0} animate={animate} />
+      <LingxiImMessage delay={0} animate={animate} />
     </div>
   )
 }
