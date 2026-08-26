@@ -223,6 +223,8 @@ export interface EvalCaseInput {
   caseId: string
   name?: string
   sourceAgentRunId?: string
+  /** Versioned deterministic executor scenario resolved by a local/CI runtime harness. */
+  runtimeScenario?: string
   observation?: EvalObservation
   expectations: EvalCaseExpectations
   metadata?: Record<string, unknown>
@@ -475,7 +477,10 @@ function validateExpectations(value: Record<string, unknown>, path: string): voi
   }
 }
 
-export function validateEvalRunInput(value: unknown): EvalRunInput {
+export function validateEvalRunInput(
+  value: unknown,
+  options: { allowRuntimeScenarios?: boolean } = {},
+): EvalRunInput {
   if (!isObject(value)) throw new EvalInputError('request body must be an object')
   if (value.schemaVersion !== undefined && value.schemaVersion !== EVAL_SCHEMA_VERSION) {
     throw new EvalInputError(`schemaVersion must be ${EVAL_SCHEMA_VERSION}`)
@@ -520,9 +525,15 @@ export function validateEvalRunInput(value: unknown): EvalRunInput {
     if (rawCase.sourceAgentRunId !== undefined && (typeof rawCase.sourceAgentRunId !== 'string' || !rawCase.sourceAgentRunId.trim())) {
       throw new EvalInputError(`cases[${index}].sourceAgentRunId must be a non-empty string`)
     }
+    if (rawCase.runtimeScenario !== undefined && (typeof rawCase.runtimeScenario !== 'string' || !rawCase.runtimeScenario.trim())) {
+      throw new EvalInputError(`cases[${index}].runtimeScenario must be a non-empty string`)
+    }
+    if (rawCase.runtimeScenario && !options.allowRuntimeScenarios) {
+      throw new EvalInputError(`cases[${index}].runtimeScenario is only available to a trusted local runtime harness`)
+    }
     if (rawCase.observation !== undefined) validateObservation(rawCase.observation, `cases[${index}].observation`)
-    if (!rawCase.sourceAgentRunId && !isObject(rawCase.observation)) {
-      throw new EvalInputError(`cases[${index}] must provide sourceAgentRunId or observation`)
+    if (!rawCase.sourceAgentRunId && !(options.allowRuntimeScenarios && rawCase.runtimeScenario) && !isObject(rawCase.observation)) {
+      throw new EvalInputError(`cases[${index}] must provide sourceAgentRunId, runtimeScenario, or observation`)
     }
   }
   const threshold = value.passThreshold
@@ -544,6 +555,7 @@ export function validateEvalRunInput(value: unknown): EvalRunInput {
         caseId: String(item.caseId).trim(),
         ...(typeof item.name === 'string' ? { name: item.name.trim() } : {}),
         ...(typeof item.sourceAgentRunId === 'string' ? { sourceAgentRunId: item.sourceAgentRunId.trim() } : {}),
+        ...(typeof item.runtimeScenario === 'string' ? { runtimeScenario: item.runtimeScenario.trim() } : {}),
       }
     }),
   } as unknown as EvalRunInput

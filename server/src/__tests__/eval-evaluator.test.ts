@@ -155,4 +155,14 @@ test('Eval request validation accepts a trace-backed case and rejects malformed 
       expectations: { requiredStages: ['unknown'] },
     }],
   }), EvalInputError)
+  const runtimeSuite = {
+    suiteKey: 'runtime-v1',
+    version: 'abc123',
+    cases: [{ caseId: 'runtime', runtimeScenario: 'auto-grounding', expectations: {} }],
+  }
+  assert.throws(() => validateEvalRunInput(runtimeSuite), /trusted local runtime harness/)
+  assert.equal(
+    validateEvalRunInput(runtimeSuite, { allowRuntimeScenarios: true }).cases[0].runtimeScenario,
+    'auto-grounding',
+  )
 })

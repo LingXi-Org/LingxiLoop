@@ -1,6 +1,6 @@
 # Agent Eval
 
-LingxiLoop Agent Eval is a deterministic regression system with two entry points: a versioned local/CI harness and an admin dashboard for persisted Agent OS runs. It covers eight product capabilities:
+LingxiLoop Agent Eval is a deterministic regression system with three entry points: a frozen evaluator/harness self-test, a real deterministic Agent OS runtime gate, and an admin dashboard for persisted Agent OS runs. It covers eight product capabilities:
 
 1. Agent answer quality;
 2. teaching quality, concept coverage, explanation, and understanding checks;
@@ -15,10 +15,12 @@ Each case flows through `ingest → answer → teaching → RAG → tools → sa
 
 ## Local and CI regression harness
 
-The repository contains a versioned golden smoke suite and baseline:
+The repository contains two versioned smoke suites and baselines:
 
 - `eval/suites/smoke.v1.json`
 - `eval/baselines/smoke.v1.json`
+- `eval/suites/runtime-smoke.v1.json`
+- `eval/baselines/runtime-smoke.v1.json`
 
 Run the same gate used by CI:
 
@@ -26,7 +28,9 @@ Run the same gate used by CI:
 npm run eval:check
 ```
 
-The CLI evaluates every golden Case, compares the run, each capability, and each Case against the baseline, writes `artifacts/eval-smoke-report.json`, and exits non-zero for a threshold failure or regression. In GitHub Actions, the report is added to the Job Summary and uploaded as the `agent-eval-smoke-*` artifact. This makes a deterministic Eval regression a merge-blocking quality check without requiring a live model or external account.
+`eval:check` deliberately runs two different gates. `eval:harness` replays frozen observations to verify evaluator, sanitizer, comparison, and report semantics. `eval:runtime` runs the current `AgentOSRuntime` with the repository's in-memory Host, scripted model, and deterministic Kernel/Host Bridge seam before generating observations. Its three Cases cover automatic evidence, dynamic `knowledge.search` through IPython, and a sensitive `email.send` stopped at Approval. The runtime model asserts current prompt and model-input fragments, so broken prompt/context wiring, routing, RAG, tool selection, or Approval behavior can fail the gate without a live model, network, or external account.
+
+Both CLIs compare the run, every observed capability, and every Case against their baseline, append GitHub Job Summary tables, and exit non-zero for a threshold failure or regression. They write `artifacts/eval-harness-report.json` and `artifacts/eval-runtime-smoke-report.json`; CI uploads them together as the `agent-eval-*` artifact.
 
 The generic CLI entry is:
 
@@ -34,8 +38,12 @@ The generic CLI entry is:
 npx tsx scripts/run-agent-eval.ts \
   --suite eval/suites/smoke.v1.json \
   --baseline eval/baselines/smoke.v1.json \
-  --report artifacts/eval-smoke-report.json
+  --report artifacts/eval-harness-report.json
 ```
+
+The trusted runtime CLI uses `runtimeScenario` identifiers from its versioned suite. That field is rejected by the Admin/API validator and is not a remote code-execution surface.
+
+Pull-request CI consumes the `$lingxiloop-verify-change` classifier. An Eval-focused PR runs focused Eval unit tests, both Eval gates, applicable guards/typechecks, a build only for Dashboard changes, and `test:integration:eval` only for Eval persistence changes. Open Notebook, Compose, full serial integration, and Windows/macOS packaging run only when their owning paths are classified; `main`, manual, and release callers retain the full matrix. The repository-local `$lingxiloop-eval-change` Skill documents suite/baseline, deterministic/model Eval, trace sanitization, comparison, and verification rules.
 
 ## Run an evaluation
 

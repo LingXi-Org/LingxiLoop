@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
-import { buildReport, classifyPaths, parseArgs, renderText } from './classify-change.mjs'
+import { buildCiPlan, buildReport, classifyPaths, parseArgs, renderText } from './classify-change.mjs'
 
 const script = fileURLToPath(new URL('./classify-change.mjs', import.meta.url))
 
@@ -49,6 +49,45 @@ test('classifies Agent OS changes with architecture and ledger guards', () => {
   assert.equal(check(report, 'npm run guard:agent-os')?.tier, 'required')
   assert.equal(check(report, 'npm run guard:llm-tracked')?.tier, 'required')
   assert.equal(report.escalations.some(({ id }) => id === 'cross-domain'), false)
+})
+
+test('keeps an Eval stack change on the focused deterministic matrix', () => {
+  const paths = [
+    '.github/workflows/_quality.yml',
+    'package.json',
+    'eval/suites/smoke.v1.json',
+    'scripts/run-agent-runtime-eval.ts',
+    'server/src/agent-os/runtime.ts',
+    'server/src/db/migrate.ts',
+    'server/src/__integration__/eval.test.ts',
+    'src/admin/EvalPage.tsx',
+  ]
+  const report = classifyPaths(paths)
+  assert.ok(category(report, 'eval'))
+  assert.equal(report.ci.evalFocused, true)
+  assert.equal(report.ci.integration, 'eval')
+  assert.equal(report.ci.dashboard, true)
+  assert.equal(report.ci.compose, false)
+  assert.equal(report.ci.desktop, false)
+  assert.equal(check(report, 'npm run test:eval')?.tier, 'required')
+  assert.equal(check(report, 'npm run eval:check')?.tier, 'required')
+  assert.equal(check(report, 'npm run test:integration:eval')?.tier, 'required')
+  assert.equal(check(report, 'npm run test:integration'), undefined)
+  assert.equal(check(report, 'npm test'), undefined)
+  assert.equal(report.escalations.some(({ id }) => id === 'full-ci-approximation'), false)
+})
+
+test('maps heavy CI jobs only to their owning paths', () => {
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(buildCiPlan(['third_party/open-notebook/tests/test_lingxiloop_native_scope.py']))
+      .filter(([key]) => ['openNotebook', 'compose', 'desktop'].includes(key))),
+    { openNotebook: true, compose: false, desktop: false },
+  )
+  assert.equal(buildCiPlan(['docker-compose.mvp.ci.yml']).compose, true)
+  assert.equal(buildCiPlan(['server/src/agent-os/runtime.ts']).compose, true)
+  assert.equal(buildCiPlan(['electron/main.cjs']).desktop, true)
+  assert.equal(buildCiPlan(['package.json']).desktop, false)
+  assert.equal(buildCiPlan(['.github/workflows/_quality.yml']).compose, false)
 })
 
 test('escalates runtime migrations to the full CI approximation', () => {
@@ -126,7 +165,7 @@ test('default CLI mode includes untracked files and emits valid JSON', () => {
     const result = run(process.execPath, [script, '--format', 'json'], directory)
     assert.equal(result.status, 0, result.stderr)
     const report = JSON.parse(result.stdout)
-    assert.equal(report.version, 1)
+    assert.equal(report.version, 2)
     assert.equal(report.scope.mode, 'worktree')
     assert.deepEqual(report.paths, ['untracked.md'])
   } finally {

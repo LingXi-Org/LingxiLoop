@@ -8,8 +8,74 @@ permissions:
   contents: read
 
 jobs:
+  classify:
+    name: Classify changed domains
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      full: ${{ steps.plan.outputs.full }}
+      eval: ${{ steps.plan.outputs.eval }}
+      eval_focused: ${{ steps.plan.outputs.eval_focused }}
+      dashboard: ${{ steps.plan.outputs.dashboard }}
+      frontend: ${{ steps.plan.outputs.frontend }}
+      server: ${{ steps.plan.outputs.server }}
+      agent_os: ${{ steps.plan.outputs.agent_os }}
+      build_release: ${{ steps.plan.outputs.build_release }}
+      open_notebook: ${{ steps.plan.outputs.open_notebook }}
+      compose: ${{ steps.plan.outputs.compose }}
+      desktop: ${{ steps.plan.outputs.desktop }}
+      build: ${{ steps.plan.outputs.build }}
+      full_unit: ${{ steps.plan.outputs.full_unit }}
+      integration: ${{ steps.plan.outputs.integration }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify change classifier
+        run: node --test .agents/skills/lingxiloop-verify-change/scripts/classify-change.test.mjs
+      - id: plan
+        name: Build quality plan with lingxiloop-verify-change
+        env:
+          FULL_MATRIX: ${{ github.event_name != 'pull_request' }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          if [[ "$FULL_MATRIX" == "true" ]]; then
+            printf '{"ci":{}}\n' > change-plan.json
+          else
+            node .agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs \
+              --base "$BASE_SHA" --head "$HEAD_SHA" --format json > change-plan.json
+          fi
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from 'node:fs'
+          const report = JSON.parse(readFileSync('change-plan.json', 'utf8'))
+          const ci = report.ci ?? {}
+          const output = {
+            full: process.env.FULL_MATRIX === 'true',
+            eval: ci.eval ?? false,
+            eval_focused: ci.evalFocused ?? false,
+            dashboard: ci.dashboard ?? false,
+            frontend: ci.frontend ?? false,
+            server: ci.server ?? false,
+            agent_os: ci.agentOs ?? false,
+            build_release: ci.buildRelease ?? false,
+            open_notebook: ci.openNotebook ?? false,
+            compose: ci.compose ?? false,
+            desktop: ci.desktop ?? false,
+            build: ci.build ?? false,
+            full_unit: ci.fullUnit ?? false,
+            integration: ci.integration ?? 'none',
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, Object.entries(output)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('\n') + '\n')
+          NODE
+          cat change-plan.json
+
   static:
-    name: Brand, version, types, build and Agent Eval
+    name: Focused static, unit, build and Agent Eval
+    needs: classify
     runs-on: ubuntu-latest
     timeout-minutes: 12
     services:
@@ -29,35 +95,60 @@ jobs:
           node-version: 22
           cache: npm
       - uses: actions/setup-python@v5
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.open_notebook == 'true'
         with:
           python-version: "3.12"
       - run: npm ci
       - name: Verify vendored Open Notebook scope contract
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.open_notebook == 'true'
         working-directory: third_party/open-notebook
         run: |
           python -m pip install pytest python-dotenv
           python -m pytest -q tests/test_lingxiloop_native_scope.py
-      - run: npm run guard:brand
-      - run: npm run guard:agent-os
-      - run: npm run guard:llm-tracked
-      - run: npm run version:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run server:typecheck
-      - run: npm test
-      - name: Agent Eval golden regression gate
+      - name: Verify brand contract
+        run: npm run guard:brand
+      - name: Verify Agent OS architecture
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.agent_os == 'true' || needs.classify.outputs.eval == 'true'
+        run: npm run guard:agent-os
+      - name: Verify universal LLM ledger
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.agent_os == 'true' || needs.classify.outputs.eval == 'true'
+        run: npm run guard:llm-tracked
+      - name: Verify synchronized version
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.build_release == 'true'
+        run: npm run version:check
+      - name: Lint changed code domains
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.frontend == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.eval == 'true' || needs.classify.outputs.build_release == 'true'
+        run: npm run lint
+      - name: Typecheck frontend
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.frontend == 'true' || needs.classify.outputs.dashboard == 'true'
+        run: npm run typecheck
+      - name: Typecheck server
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.eval == 'true'
+        run: npm run server:typecheck
+      - name: Full unit suite
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.full_unit == 'true'
+        run: npm test
+      - name: Focused Agent Eval unit tests
+        if: needs.classify.outputs.full != 'true' && needs.classify.outputs.eval == 'true'
+        run: npm run test:eval
+      - name: Agent Eval harness and real runtime regression gates
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.eval == 'true'
         run: npm run eval:check
-      - name: Upload Agent Eval report
-        if: always()
+      - name: Upload Agent Eval reports
+        if: always() && (needs.classify.outputs.full == 'true' || needs.classify.outputs.eval == 'true')
         uses: actions/upload-artifact@v4
         with:
-          name: agent-eval-smoke-${{ github.run_attempt }}
-          path: artifacts/eval-smoke-report.json
+          name: agent-eval-${{ github.run_attempt }}
+          path: artifacts/eval-*.json
           if-no-files-found: error
-      - run: npm run build
+      - name: Build changed frontend surface
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.build == 'true'
+        run: npm run build
 
   server-integration:
-    name: Full server integration suite
+    name: Server integration (focused when eligible)
+    needs: classify
+    if: needs.classify.outputs.full == 'true' || needs.classify.outputs.integration != 'none'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -94,10 +185,19 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run test:integration
+      - name: Run selected integration scope
+        shell: bash
+        run: |
+          if [[ "${{ needs.classify.outputs.full }}" == "true" || "${{ needs.classify.outputs.integration }}" == "full" ]]; then
+            npm run test:integration
+          else
+            npm run test:integration:eval
+          fi
 
   agent-os-compose-smoke:
     name: Agent OS + WuKongIM Compose smoke
+    needs: classify
+    if: needs.classify.outputs.full == 'true' || needs.classify.outputs.compose == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -125,6 +225,8 @@ jobs:
 
   desktop-directory-smoke:
     name: Desktop layout (${{ matrix.os }})
+    needs: classify
+    if: needs.classify.outputs.full == 'true' || needs.classify.outputs.desktop == 'true'
     strategy:
       fail-fast: false
       matrix:
