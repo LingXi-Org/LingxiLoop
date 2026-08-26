@@ -26,7 +26,7 @@ import {
 import { type AuthedRequest, gravatarUrlForEmail } from '../auth.js'
 import { pool } from '../db/pool.js'
 import { EvalInputError, validateEvalRunInput } from '../eval/contracts.js'
-import { createEvalRun, getEvalDashboard, getEvalRunDetail } from '../eval/service.js'
+import { createEvalRun, getEvalComparison, getEvalDashboard, getEvalRunDetail } from '../eval/service.js'
 
 export const adminRouter = Router()
 
@@ -394,6 +394,18 @@ adminRouter.get('/eval/runs', safe(async (req, res) => {
     limit: Number.isFinite(rawLimit) ? rawLimit : 80,
     sinceDays: Number.isFinite(rawDays) ? rawDays : 90,
   }))
+}))
+
+adminRouter.get('/eval/compare', safe(async (req, res) => {
+  await requireAdmin(req)
+  const baseRunId = typeof req.query.baseRunId === 'string' ? req.query.baseRunId.trim() : ''
+  const candidateRunId = typeof req.query.candidateRunId === 'string' ? req.query.candidateRunId.trim() : ''
+  if (!baseRunId || !candidateRunId) throw new HttpError(400, 'baseRunId and candidateRunId are required')
+  try {
+    res.json(await getEvalComparison(baseRunId, candidateRunId))
+  } catch (error) {
+    rethrowEvalError(error)
+  }
 }))
 
 adminRouter.get('/eval/runs/:id', safe(async (req, res) => {

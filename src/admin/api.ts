@@ -234,7 +234,8 @@ export interface LlmCallRow {
   extras: Record<string, unknown> | null
 }
 
-export type EvalStageName = 'ingest' | 'answer' | 'rag' | 'tools' | 'collaboration' | 'aggregate'
+export type EvalDimensionName = 'answer' | 'teaching' | 'rag' | 'tools' | 'safety' | 'task' | 'collaboration' | 'efficiency'
+export type EvalStageName = 'ingest' | EvalDimensionName | 'aggregate'
 export type EvalStageStatus = 'pass' | 'fail' | 'skipped' | 'error'
 
 export interface EvalFinding {
@@ -242,6 +243,7 @@ export interface EvalFinding {
   status: 'pass' | 'fail' | 'not_observed'
   severity: 'info' | 'warning' | 'error'
   message: string
+  category?: string
   expected?: unknown
   actual?: unknown
 }
@@ -261,7 +263,17 @@ export interface EvalRunSummary {
   passedCases: number
   failedCases: number
   errorCases: number
-  stageScores: Record<'answer' | 'rag' | 'tools' | 'collaboration', number | null>
+  stageScores: Record<EvalDimensionName, number | null>
+  stageStatuses: Record<EvalDimensionName, EvalStageStatus>
+  failureCategories: Record<string, number>
+  resources: {
+    averageLatencyMs: number | null
+    totalTokens: number
+    totalCostUsd: number
+    modelCalls: number
+    ipythonCells: number
+    toolCalls: number
+  }
 }
 
 export interface EvalDashboardRun {
@@ -269,6 +281,7 @@ export interface EvalDashboardRun {
   suiteKey: string
   suiteName: string
   version: string
+  target: { commitSha?: string; promptVersion?: string; model?: string }
   baselineRunId: string | null
   status: 'pass' | 'fail' | 'error'
   score: number
@@ -288,9 +301,36 @@ export interface EvalDashboardRun {
 }
 
 export interface EvalDashboardPayload {
-  summary: { totalRuns: number; passRate: number; averageScore: number; failedRuns: number; suites: number }
+  summary: {
+    totalRuns: number
+    passRate: number
+    averageScore: number
+    failedRuns: number
+    suites: number
+    averageLatencyMs: number | null
+    totalTokens: number
+    totalCostUsd: number
+  }
   runs: EvalDashboardRun[]
   stageAverages: EvalRunSummary['stageScores']
+  failureClusters: Array<{ category: string; count: number; runCount: number }>
+}
+
+export interface EvalTraceEvent {
+  id: string
+  kind: 'input' | 'decision' | 'model' | 'ipython' | 'host_action' | 'approval' | 'canvas' | 'answer'
+  label: string
+  status: 'started' | 'completed' | 'failed' | 'pending' | 'skipped'
+  startedAt?: string
+  finishedAt?: string
+  durationMs?: number
+  agentId?: string
+  hop?: number
+  cellId?: string
+  action?: string
+  input?: unknown
+  output?: unknown
+  metadata?: Record<string, unknown>
 }
 
 export interface EvalCaseDetail {
@@ -304,6 +344,7 @@ export interface EvalCaseDetail {
   observation: Record<string, unknown>
   expectations: Record<string, unknown>
   failureReasons: string[]
+  failureCategories: string[]
   stages: EvalStageResult[]
 }
 
@@ -316,6 +357,7 @@ export interface EvalCreateRunRequest {
   suiteKey: string
   suiteName?: string
   version: string
+  target?: { commitSha?: string; promptVersion?: string; model?: string }
   baselineRunId?: string
   passThreshold?: number
   cases: Array<{
@@ -327,6 +369,25 @@ export interface EvalCreateRunRequest {
     metadata?: Record<string, unknown>
   }>
   metadata?: Record<string, unknown>
+}
+
+export interface EvalComparison {
+  base: EvalDashboardRun
+  candidate: EvalDashboardRun
+  scoreDelta: number
+  targetChanges: Array<{ field: 'commitSha' | 'promptVersion' | 'model'; base: string | null; candidate: string | null }>
+  stageDeltas: Array<{ stage: EvalDimensionName; base: number | null; candidate: number | null; delta: number | null }>
+  caseDeltas: Array<{
+    caseId: string
+    name: string
+    base: number | null
+    candidate: number | null
+    delta: number | null
+    status: 'improved' | 'regressed' | 'unchanged' | 'added' | 'removed'
+    stageDeltas: Array<{ stage: EvalDimensionName; base: number | null; candidate: number | null; delta: number | null }>
+    addedFailureCategories: string[]
+    resolvedFailureCategories: string[]
+  }>
 }
 
 export const adminApi = {
@@ -347,6 +408,10 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  evalComparison: (baseRunId: string, candidateRunId: string) => {
+    const qs = new URLSearchParams({ baseRunId, candidateRunId })
+    return http<EvalComparison>(`/eval/compare?${qs.toString()}`)
+  },
 
   observabilityLlm: (params: { sinceDays?: number; model?: string; companyId?: string; fresh?: boolean } = {}) => {
     const qs = new URLSearchParams()

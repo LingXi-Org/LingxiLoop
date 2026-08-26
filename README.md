@@ -106,6 +106,8 @@ does not reactivate the retired runtime.
 | `server/src/im/` | WuKongIM bootstrap, webhook, routing and payload contracts |
 | `server/src/agents/` | Typed learning-domain services used by the Host Bridge |
 | `server/src/eval/` | Deterministic answer, RAG, tool, and multi-Agent evaluation pipeline |
+| `eval/suites/` + `eval/baselines/` | Versioned golden Eval datasets and merge-gating baselines |
+| `scripts/run-agent-eval.ts` | Local/CI Eval harness and JSON/Job Summary reporter |
 | `src/lib/im/` | Browser-side WuKongIM SDK wrapper |
 | `src/admin/EvalPage.tsx` | Eval run pipeline, failure drill-down, and version comparison dashboard |
 | `scripts/guard-agent-os.mjs` | CI guard for the independent runtime boundary |

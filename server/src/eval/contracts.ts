@@ -1,15 +1,47 @@
 export const EVAL_SCHEMA_VERSION = 'lingxiloop.eval.v1' as const
 
-export type EvalStage = 'ingest' | 'answer' | 'rag' | 'tools' | 'collaboration' | 'aggregate'
+export const EVAL_DIMENSIONS = [
+  'answer',
+  'teaching',
+  'rag',
+  'tools',
+  'safety',
+  'task',
+  'collaboration',
+  'efficiency',
+] as const
+export type EvalDimension = (typeof EVAL_DIMENSIONS)[number]
+export type EvalStage = 'ingest' | EvalDimension | 'aggregate'
 export type EvalStatus = 'pass' | 'fail' | 'error'
 export type EvalStageStatus = 'pass' | 'fail' | 'skipped' | 'error'
 export type EvalFindingStatus = 'pass' | 'fail' | 'not_observed'
+export type EvalFailureCategory =
+  | 'answer_quality'
+  | 'teaching_quality'
+  | 'rag_missing_source'
+  | 'rag_missing_citation'
+  | 'rag_hallucination'
+  | 'rag_bad_citation'
+  | 'tool_missing'
+  | 'tool_selection'
+  | 'tool_error'
+  | 'approval_violation'
+  | 'policy_violation'
+  | 'task_incomplete'
+  | 'routing_error'
+  | 'canvas_failure'
+  | 'timeout'
+  | 'cost_regression'
+  | 'trace_efficiency'
+  | 'runtime_error'
+  | 'coverage_gap'
 
 export interface EvalFinding {
   checkId: string
   status: EvalFindingStatus
   severity: 'info' | 'warning' | 'error'
   message: string
+  category?: EvalFailureCategory
   expected?: unknown
   actual?: unknown
 }
@@ -22,11 +54,14 @@ export interface EvalCitationObservation {
 }
 
 export interface EvalToolCallObservation {
+  id?: string
   name: string
   args?: unknown
   result?: unknown
   status?: 'ok' | 'error' | 'pending'
   durationMs?: number
+  approvalId?: string
+  cellId?: string
 }
 
 export interface EvalAgentTurnObservation {
@@ -39,15 +74,60 @@ export interface EvalAgentTurnObservation {
   error?: string
 }
 
+export interface EvalApprovalObservation {
+  id: string
+  action: string
+  status: 'pending' | 'approved' | 'rejected' | 'failed'
+  requestedAt?: string
+  resolvedAt?: string
+}
+
+export interface EvalArtifactObservation {
+  kind: string
+  id?: string
+  title?: string
+}
+
+export type EvalTraceKind = 'input' | 'decision' | 'model' | 'ipython' | 'host_action' | 'approval' | 'canvas' | 'answer'
+export interface EvalTraceEvent {
+  id: string
+  kind: EvalTraceKind
+  label: string
+  status: 'started' | 'completed' | 'failed' | 'pending' | 'skipped'
+  startedAt?: string
+  finishedAt?: string
+  durationMs?: number
+  agentId?: string
+  hop?: number
+  cellId?: string
+  action?: string
+  input?: unknown
+  output?: unknown
+  metadata?: Record<string, unknown>
+}
+
+export interface EvalTarget {
+  commitSha?: string
+  promptVersion?: string
+  model?: string
+}
+
 export interface EvalObservation {
+  input?: string
   answer?: string
   retrievedSourceIds?: string[]
   citedSourceIds?: string[]
   citations?: EvalCitationObservation[]
   toolCalls?: EvalToolCallObservation[]
   agentTurns?: EvalAgentTurnObservation[]
+  approvals?: EvalApprovalObservation[]
+  artifacts?: EvalArtifactObservation[]
+  trace?: EvalTraceEvent[]
+  taskCompletion?: { completed?: boolean; completionRate?: number; outcome?: string }
+  policyViolations?: string[]
   latencyMs?: number
   tokenCount?: number
+  costUsd?: number
   error?: string
   metadata?: Record<string, unknown>
 }
@@ -68,6 +148,14 @@ export interface RagExpectations {
   requireCitations?: boolean
   minRetrievalRecall?: number
   minCitationPrecision?: number
+}
+
+export interface TeachingExpectations {
+  requiredConcepts?: string[]
+  explanationMarkers?: string[]
+  requireExplanation?: boolean
+  requireCheckForUnderstanding?: boolean
+  minExplanationLength?: number
 }
 
 export interface ExpectedToolCall {
@@ -95,14 +183,40 @@ export interface CollaborationExpectations {
   requireParallelism?: boolean
 }
 
+export interface SafetyExpectations {
+  requiredApprovalActions?: string[]
+  forbiddenActionNames?: string[]
+  requireNoPolicyViolations?: boolean
+}
+
+export interface TaskExpectations {
+  requireCompleted?: boolean
+  minCompletionRate?: number
+  requiredArtifactKinds?: string[]
+}
+
+export interface EfficiencyExpectations {
+  maxLatencyMs?: number
+  maxTokens?: number
+  maxCostUsd?: number
+  maxModelCalls?: number
+  maxIpythonCells?: number
+  maxToolCalls?: number
+  requireSuccessfulTrace?: boolean
+}
+
 export interface EvalCaseExpectations {
   answer?: AnswerExpectations
+  teaching?: TeachingExpectations
   rag?: RagExpectations
   tools?: ToolExpectations
+  safety?: SafetyExpectations
+  task?: TaskExpectations
   collaboration?: CollaborationExpectations
-  requiredStages?: Array<Exclude<EvalStage, 'ingest' | 'aggregate'>>
+  efficiency?: EfficiencyExpectations
+  requiredStages?: EvalDimension[]
   passThreshold?: number
-  weights?: Partial<Record<'answer' | 'rag' | 'tools' | 'collaboration', number>>
+  weights?: Partial<Record<EvalDimension, number>>
 }
 
 export interface EvalCaseInput {
@@ -120,6 +234,7 @@ export interface EvalRunInput {
   suiteName?: string
   version: string
   baselineRunId?: string
+  target?: EvalTarget
   passThreshold?: number
   cases: EvalCaseInput[]
   metadata?: Record<string, unknown>
@@ -145,6 +260,7 @@ export interface EvalCaseReport {
   expectations: EvalCaseExpectations
   stages: EvalStageResult[]
   failureReasons: string[]
+  failureCategories: EvalFailureCategory[]
 }
 
 export interface EvalRunReport {
@@ -153,6 +269,7 @@ export interface EvalRunReport {
   suiteName: string
   version: string
   baselineRunId: string | null
+  target: EvalTarget
   status: EvalStatus
   score: number
   passThreshold: number
@@ -161,7 +278,17 @@ export interface EvalRunReport {
     passedCases: number
     failedCases: number
     errorCases: number
-    stageScores: Record<'answer' | 'rag' | 'tools' | 'collaboration', number | null>
+    stageScores: Record<EvalDimension, number | null>
+    stageStatuses: Record<EvalDimension, EvalStageStatus>
+    failureCategories: Partial<Record<EvalFailureCategory, number>>
+    resources: {
+      averageLatencyMs: number | null
+      totalTokens: number
+      totalCostUsd: number
+      modelCalls: number
+      ipythonCells: number
+      toolCalls: number
+    }
   }
   cases: EvalCaseReport[]
 }
@@ -207,14 +334,23 @@ function assertOptionalRecord(record: Record<string, unknown>, key: string, path
 
 function validateObservation(value: unknown, path: string): void {
   if (!isObject(value)) throw new EvalInputError(`${path} must be an object`)
-  for (const key of ['answer', 'error'] as const) {
+  for (const key of ['input', 'answer', 'error'] as const) {
     if (value[key] !== undefined && typeof value[key] !== 'string') throw new EvalInputError(`${path}.${key} must be a string`)
   }
   assertStringArray(value, 'retrievedSourceIds', path)
   assertStringArray(value, 'citedSourceIds', path)
+  assertStringArray(value, 'policyViolations', path)
   assertOptionalNumber(value, 'latencyMs', path)
   assertOptionalNumber(value, 'tokenCount', path, { integer: true })
-  for (const [key, identity] of [['citations', 'sourceId'], ['toolCalls', 'name'], ['agentTurns', 'agentId']] as const) {
+  assertOptionalNumber(value, 'costUsd', path)
+  for (const [key, identity] of [
+    ['citations', 'sourceId'],
+    ['toolCalls', 'name'],
+    ['agentTurns', 'agentId'],
+    ['approvals', 'id'],
+    ['artifacts', 'kind'],
+    ['trace', 'id'],
+  ] as const) {
     const items = value[key]
     if (items === undefined) continue
     if (!Array.isArray(items) || items.some((item) => !isObject(item) || typeof item[identity] !== 'string' || !item[identity])) {
@@ -228,11 +364,33 @@ function validateObservation(value: unknown, path: string): void {
     }
     assertOptionalNumber(item, 'durationMs', `${path}.toolCalls[]`)
   }
+  for (const item of Array.isArray(value.approvals) ? value.approvals : []) {
+    if (!isObject(item) || typeof item.action !== 'string' || !item.action ||
+        !['pending', 'approved', 'rejected', 'failed'].includes(String(item.status))) {
+      throw new EvalInputError(`${path}.approvals[] must contain action and a supported status`)
+    }
+  }
+  for (const item of Array.isArray(value.trace) ? value.trace : []) {
+    if (!isObject(item) || typeof item.kind !== 'string' || typeof item.label !== 'string' ||
+        !['input', 'decision', 'model', 'ipython', 'host_action', 'approval', 'canvas', 'answer'].includes(item.kind) ||
+        !['started', 'completed', 'failed', 'pending', 'skipped'].includes(String(item.status))) {
+      throw new EvalInputError(`${path}.trace[] contains an invalid trace event`)
+    }
+    assertOptionalNumber(item, 'durationMs', `${path}.trace[]`)
+  }
+  if (value.taskCompletion !== undefined) {
+    if (!isObject(value.taskCompletion)) throw new EvalInputError(`${path}.taskCompletion must be an object`)
+    assertOptionalBoolean(value.taskCompletion, 'completed', `${path}.taskCompletion`)
+    assertOptionalNumber(value.taskCompletion, 'completionRate', `${path}.taskCompletion`, { max: 1 })
+    if (value.taskCompletion.outcome !== undefined && typeof value.taskCompletion.outcome !== 'string') {
+      throw new EvalInputError(`${path}.taskCompletion.outcome must be a string`)
+    }
+  }
   assertOptionalRecord(value, 'metadata', path)
 }
 
 function validateExpectations(value: Record<string, unknown>, path: string): void {
-  const allowedStages = new Set(['answer', 'rag', 'tools', 'collaboration'])
+  const allowedStages = new Set<string>(EVAL_DIMENSIONS)
   if (value.requiredStages !== undefined && (!Array.isArray(value.requiredStages) ||
       value.requiredStages.some((item) => typeof item !== 'string' || !allowedStages.has(item)))) {
     throw new EvalInputError(`${path}.requiredStages contains an unsupported stage`)
@@ -256,6 +414,14 @@ function validateExpectations(value: Record<string, unknown>, path: string): voi
     for (const key of ['minLength', 'maxLength', 'maxLatencyMs', 'maxTokens'] as const) assertOptionalNumber(answer, key, `${path}.answer`, { integer: true })
     assertOptionalNumber(answer, 'minSimilarity', `${path}.answer`, { max: 1 })
     if (answer.referenceAnswer !== undefined && typeof answer.referenceAnswer !== 'string') throw new EvalInputError(`${path}.answer.referenceAnswer must be a string`)
+  }
+  const teaching = isObject(value.teaching) ? value.teaching : null
+  if (teaching) {
+    assertStringArray(teaching, 'requiredConcepts', `${path}.teaching`)
+    assertStringArray(teaching, 'explanationMarkers', `${path}.teaching`)
+    assertOptionalBoolean(teaching, 'requireExplanation', `${path}.teaching`)
+    assertOptionalBoolean(teaching, 'requireCheckForUnderstanding', `${path}.teaching`)
+    assertOptionalNumber(teaching, 'minExplanationLength', `${path}.teaching`, { integer: true })
   }
   const rag = isObject(value.rag) ? value.rag : null
   if (rag) {
@@ -287,6 +453,26 @@ function validateExpectations(value: Record<string, unknown>, path: string): voi
       assertOptionalBoolean(collaboration, key, `${path}.collaboration`)
     }
   }
+  const safety = isObject(value.safety) ? value.safety : null
+  if (safety) {
+    assertStringArray(safety, 'requiredApprovalActions', `${path}.safety`)
+    assertStringArray(safety, 'forbiddenActionNames', `${path}.safety`)
+    assertOptionalBoolean(safety, 'requireNoPolicyViolations', `${path}.safety`)
+  }
+  const task = isObject(value.task) ? value.task : null
+  if (task) {
+    assertOptionalBoolean(task, 'requireCompleted', `${path}.task`)
+    assertOptionalNumber(task, 'minCompletionRate', `${path}.task`, { max: 1 })
+    assertStringArray(task, 'requiredArtifactKinds', `${path}.task`)
+  }
+  const efficiency = isObject(value.efficiency) ? value.efficiency : null
+  if (efficiency) {
+    for (const key of ['maxLatencyMs', 'maxTokens', 'maxModelCalls', 'maxIpythonCells', 'maxToolCalls'] as const) {
+      assertOptionalNumber(efficiency, key, `${path}.efficiency`, { integer: true })
+    }
+    assertOptionalNumber(efficiency, 'maxCostUsd', `${path}.efficiency`)
+    assertOptionalBoolean(efficiency, 'requireSuccessfulTrace', `${path}.efficiency`)
+  }
 }
 
 export function validateEvalRunInput(value: unknown): EvalRunInput {
@@ -305,6 +491,14 @@ export function validateEvalRunInput(value: unknown): EvalRunInput {
   }
   if (value.baselineRunId !== undefined && (typeof value.baselineRunId !== 'string' || !value.baselineRunId.trim())) {
     throw new EvalInputError('baselineRunId must be a non-empty string')
+  }
+  if (value.target !== undefined) {
+    if (!isObject(value.target)) throw new EvalInputError('target must be an object')
+    for (const key of ['commitSha', 'promptVersion', 'model'] as const) {
+      if (value.target[key] !== undefined && (typeof value.target[key] !== 'string' || !value.target[key].trim())) {
+        throw new EvalInputError(`target.${key} must be a non-empty string`)
+      }
+    }
   }
   assertOptionalRecord(value, 'metadata', 'request')
   if (!Array.isArray(value.cases) || value.cases.length === 0 || value.cases.length > 100) {
@@ -341,6 +535,8 @@ export function validateEvalRunInput(value: unknown): EvalRunInput {
     version,
     ...(typeof value.suiteName === 'string' ? { suiteName: value.suiteName.trim() } : {}),
     ...(typeof value.baselineRunId === 'string' ? { baselineRunId: value.baselineRunId.trim() } : {}),
+    ...(isObject(value.target) ? { target: Object.fromEntries(Object.entries(value.target)
+      .flatMap(([key, item]) => typeof item === 'string' ? [[key, item.trim()]] : [])) } : {}),
     cases: value.cases.map((rawCase) => {
       const item = rawCase as Record<string, unknown>
       return {

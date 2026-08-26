@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   static:
-    name: Brand, version, types and build
+    name: Brand, version, types, build and Agent Eval
     runs-on: ubuntu-latest
     timeout-minutes: 12
     services:
@@ -45,6 +45,15 @@ jobs:
       - run: npm run typecheck
       - run: npm run server:typecheck
       - run: npm test
+      - name: Agent Eval golden regression gate
+        run: npm run eval:check
+      - name: Upload Agent Eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-eval-smoke-${{ github.run_attempt }}
+          path: artifacts/eval-smoke-report.json
+          if-no-files-found: error
       - run: npm run build
 
   server-integration:

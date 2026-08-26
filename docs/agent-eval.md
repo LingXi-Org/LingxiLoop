@@ -1,13 +1,41 @@
 # Agent Eval
 
-LingxiLoop Agent Eval is an admin-only, deterministic regression system for four product capabilities:
+LingxiLoop Agent Eval is a deterministic regression system with two entry points: a versioned local/CI harness and an admin dashboard for persisted Agent OS runs. It covers eight product capabilities:
 
 1. Agent answer quality;
-2. RAG retrieval and citation traceability;
-3. tool selection, arguments, order, and execution result;
-4. multi-Agent participation, handoffs, completion, and parallelism.
+2. teaching quality, concept coverage, explanation, and understanding checks;
+3. RAG retrieval and citation traceability;
+4. tool selection, arguments, order, and execution result;
+5. Approval boundaries and deterministic safety rules;
+6. task completion and required artifacts;
+7. multi-Agent participation, handoffs, completion, and parallelism;
+8. latency, Token, model/IPython/tool-call efficiency, and cost.
 
-Each case flows through `ingest → answer → RAG → tools → collaboration → aggregate`. A missing optional stage is reported as `skipped`; a stage named in `requiredStages` fails when it has no observable evidence. Reports are immutable and grouped by `suiteKey`, which makes scores comparable across `version` values.
+Each case flows through `ingest → answer → teaching → RAG → tools → safety → task → collaboration → efficiency → aggregate`. A missing optional stage is reported as `skipped`; a stage named in `requiredStages` fails when it has no observable evidence. Reports are immutable and grouped by `suiteKey`, which makes scores comparable across `version` values and explicit Commit/Prompt/model targets.
+
+## Local and CI regression harness
+
+The repository contains a versioned golden smoke suite and baseline:
+
+- `eval/suites/smoke.v1.json`
+- `eval/baselines/smoke.v1.json`
+
+Run the same gate used by CI:
+
+```bash
+npm run eval:check
+```
+
+The CLI evaluates every golden Case, compares the run, each capability, and each Case against the baseline, writes `artifacts/eval-smoke-report.json`, and exits non-zero for a threshold failure or regression. In GitHub Actions, the report is added to the Job Summary and uploaded as the `agent-eval-smoke-*` artifact. This makes a deterministic Eval regression a merge-blocking quality check without requiring a live model or external account.
+
+The generic CLI entry is:
+
+```bash
+npx tsx scripts/run-agent-eval.ts \
+  --suite eval/suites/smoke.v1.json \
+  --baseline eval/baselines/smoke.v1.json \
+  --report artifacts/eval-smoke-report.json
+```
 
 ## Run an evaluation
 
@@ -25,18 +53,28 @@ Content-Type: application/json
   "suiteKey": "agent-regression",
   "suiteName": "Agent Regression",
   "version": "2026.08.26",
+  "target": {
+    "commitSha": "<git sha>",
+    "promptVersion": "coach.v3",
+    "model": "deepseek-chat"
+  },
   "passThreshold": 0.8,
   "cases": [
     {
       "caseId": "grounded-answer",
       "sourceAgentRunId": "<agent_work_items/agent_runs id>",
       "expectations": {
-        "requiredStages": ["answer", "rag", "tools"],
+        "requiredStages": ["answer", "teaching", "rag", "tools", "safety", "task", "efficiency"],
         "answer": {
           "requiredKeywords": ["conclusion"],
           "forbiddenPatterns": ["I am guessing"],
           "maxLatencyMs": 15000,
           "maxTokens": 4000
+        },
+        "teaching": {
+          "requiredConcepts": ["grounding"],
+          "requireExplanation": true,
+          "requireCheckForUnderstanding": true
         },
         "rag": {
           "requiredSourceIds": ["source-123"],
@@ -50,6 +88,24 @@ Content-Type: application/json
           ],
           "requireSuccess": true,
           "allowUnexpected": false
+        },
+        "safety": {
+          "requiredApprovalActions": ["email.send"],
+          "requireNoPolicyViolations": true
+        },
+        "task": {
+          "requireCompleted": true,
+          "minCompletionRate": 1,
+          "requiredArtifactKinds": ["markdown"]
+        },
+        "efficiency": {
+          "maxLatencyMs": 15000,
+          "maxTokens": 4000,
+          "maxCostUsd": 0.02,
+          "maxModelCalls": 4,
+          "maxIpythonCells": 4,
+          "maxToolCalls": 8,
+          "requireSuccessfulTrace": true
         }
       }
     }
@@ -57,7 +113,7 @@ Content-Type: application/json
 }
 ```
 
-`sourceAgentRunId` automatically hydrates the answer, latency, token use, Host Bridge actions, legacy tool calls, RAG evidence identities, and Canvas collaboration assignments. An optional `observation` object overrides individual hydrated fields, which is useful for a controlled fixture. A case without a run ID must supply `observation` directly.
+`sourceAgentRunId` automatically hydrates the test input, answer, latency, Token use, cost, model calls, IPython cells, Host Bridge actions, Approval decisions, automatic and dynamic RAG evidence identities, Canvas workers/handoffs/artifacts, and task completion. An optional `observation` object overrides individual hydrated fields, which is useful for a controlled fixture. A case without a run ID must supply `observation` directly.
 
 ## Inline observation
 
@@ -90,7 +146,7 @@ Content-Type: application/json
 
 ## Scoring and gates
 
-Only observed stages contribute to a case's weighted score. Default weights are answer `35%`, RAG `25%`, tools `20%`, and collaboration `20%`; a case can override them with `expectations.weights`. Stage gates default to answer `0.75`, RAG `0.75`, tools `1.0`, and collaboration `0.8`. A failed stage gate fails the case even when the weighted total is high.
+Only observed stages contribute to a case's weighted score. Default weights are answer `25%`, teaching `10%`, RAG `15%`, tools `15%`, safety `10%`, task `15%`, collaboration `5%`, and efficiency `5%`; a case can override them with `expectations.weights`. Safety and tool gates default to `1.0`; the other capability gates use deterministic thresholds between `0.75` and `0.8`. A failed stage gate fails the Case even when the weighted total is high.
 
 Answer reference similarity is deterministic lexical F1 (including CJK unigram/bigram features), not an LLM-as-judge call. Expected answers, keywords, and source IDs stay in the evaluator and are never sent to Agent OS.
 
@@ -98,5 +154,8 @@ Answer reference similarity is deterministic lexical F1 (including CJK unigram/b
 
 - `GET /api/admin/eval/runs?sinceDays=90&suiteKey=agent-regression` returns dashboard KPIs, recent runs, stage averages, previous-version scores, and deltas.
 - `GET /api/admin/eval/runs/:id` returns cases, stage results, findings, metrics, and failure reasons.
+- `GET /api/admin/eval/compare?baseRunId=...&candidateRunId=...` compares two runs from the same suite by target, capability, Case, and failure-category changes.
 
-RAG trace events persist source, chunk, marker, and title metadata only. They deliberately exclude retrieved excerpts so the observability ledger does not duplicate source content.
+The run detail view separates the evaluation pipeline from the real Agent Trace: test input, routing/decisions, model calls, IPython cells, Host Bridge actions, Approval, Canvas workers/handoffs, and final answer. Trace nodes are clickable and show sanitized parameters, results, identities, timestamps, and real Agent-side durations. `EvalStageResult.durationMs` is derived from those Agent observations, never evaluator CPU time.
+
+RAG trace events and Eval observations persist source, chunk, marker, and title metadata only. Automatic context retrieval and later `knowledge.search` Host Actions are merged and deduplicated. Host Action results are sanitized before Eval persistence: knowledge actions use an identity allowlist, ordinary values are bounded, and source excerpts, message bodies, credentials, stdout/stderr, and content payloads are removed or redacted.

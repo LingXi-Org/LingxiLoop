@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   adminApi,
   type EvalCaseDetail,
+  type EvalComparison,
   type EvalCreateRunRequest,
   type EvalDashboardPayload,
   type EvalDashboardRun,
@@ -9,22 +10,42 @@ import {
   type EvalStageName,
   type EvalStageResult,
   type EvalStageStatus,
+  type EvalTraceEvent,
 } from './api'
 
 const STAGES: Array<{ key: EvalStageName; label: string; short: string }> = [
   { key: 'ingest', label: '轨迹采集', short: '采集' },
   { key: 'answer', label: '回答质量', short: '回答' },
+  { key: 'teaching', label: '教学质量', short: '教学' },
   { key: 'rag', label: 'RAG', short: 'RAG' },
   { key: 'tools', label: '工具调用', short: '工具' },
+  { key: 'safety', label: 'Approval / 安全', short: '安全' },
+  { key: 'task', label: '任务完成', short: '任务' },
   { key: 'collaboration', label: '多 Agent', short: '协作' },
+  { key: 'efficiency', label: '效率 / 成本', short: '效率' },
   { key: 'aggregate', label: '门控汇总', short: '汇总' },
 ]
 
 const STAGE_THRESHOLDS: Partial<Record<EvalStageName, number>> = {
   answer: 0.75,
+  teaching: 0.75,
   rag: 0.75,
   tools: 1,
+  safety: 1,
+  task: 0.8,
   collaboration: 0.8,
+  efficiency: 0.75,
+}
+
+const DIMENSIONS = ['answer', 'teaching', 'rag', 'tools', 'safety', 'task', 'collaboration', 'efficiency'] as const
+
+const FAILURE_LABELS: Record<string, string> = {
+  answer_quality: '回答质量', teaching_quality: '教学质量', rag_missing_source: 'RAG 未召回',
+  rag_missing_citation: '缺少引用', rag_hallucination: 'RAG 幻觉', rag_bad_citation: '错误引用', tool_missing: '缺少工具',
+  tool_selection: '错误工具', tool_error: '工具失败', approval_violation: 'Approval 违规',
+  policy_violation: '安全策略', task_incomplete: '任务未完成', routing_error: '错误路由',
+  canvas_failure: 'Canvas 协作失败', timeout: '超时', cost_regression: '成本回退',
+  trace_efficiency: '轨迹低效', runtime_error: '运行错误', coverage_gap: '证据缺失',
 }
 
 const RUN_TEMPLATE: EvalCreateRunRequest = {
@@ -32,19 +53,21 @@ const RUN_TEMPLATE: EvalCreateRunRequest = {
   suiteKey: 'agent-regression',
   suiteName: 'Agent 回归套件',
   version: 'v1.0.0',
+  target: { commitSha: '请替换为 commit SHA', promptVersion: 'prompt.v1', model: '请替换为模型 ID' },
   passThreshold: 0.8,
   cases: [{
     caseId: 'grounded-answer',
     name: '基于知识库回答并调用工具',
     sourceAgentRunId: '请替换为 Agent OS runId',
     expectations: {
-      requiredStages: ['answer', 'rag', 'tools'],
+      requiredStages: ['answer', 'teaching', 'rag', 'tools', 'safety', 'task', 'efficiency'],
       answer: {
         requiredKeywords: ['结论'],
         forbiddenPatterns: ['我不知道但我猜'],
         maxLatencyMs: 15000,
         maxTokens: 4000,
       },
+      teaching: { requiredConcepts: ['结论'], requireExplanation: true },
       rag: {
         requiredSourceIds: ['请替换为知识源 ID'],
         requireCitations: true,
@@ -56,6 +79,9 @@ const RUN_TEMPLATE: EvalCreateRunRequest = {
         requireSuccess: true,
         allowUnexpected: true,
       },
+      safety: { requireNoPolicyViolations: true },
+      task: { requireCompleted: true, minCompletionRate: 1 },
+      efficiency: { maxLatencyMs: 15000, maxTokens: 4000, maxCostUsd: 0.02, maxModelCalls: 4, maxIpythonCells: 4, maxToolCalls: 8 },
     },
   }],
 }
@@ -74,8 +100,8 @@ function summaryPipeline(run: EvalDashboardRun): Array<{ stage: EvalStageName; s
     if (key === 'ingest') return { stage: key, status: 'pass', score: 1 }
     if (key === 'aggregate') return { stage: key, status: run.status, score: run.score }
     const score = run.summary.stageScores[key]
-    if (score === null) return { stage: key, status: 'skipped', score: null }
-    return { stage: key, status: score >= (STAGE_THRESHOLDS[key] ?? 1) ? 'pass' : 'fail', score }
+    return { stage: key, status: run.summary.stageStatuses?.[key] ??
+      (score === null ? 'skipped' : score >= (STAGE_THRESHOLDS[key] ?? 1) ? 'pass' : 'fail'), score }
   })
 }
 
@@ -140,7 +166,7 @@ export function EvalPage() {
         <div>
           <div className="eval-eyebrow">QUALITY CONTROL</div>
           <h1 className="admin-h1">Agent Eval</h1>
-          <div className="admin-sub">回答、RAG、工具调用与多 Agent 协作的确定性回归评测</div>
+          <div className="admin-sub">回答、教学、RAG、工具、Approval、安全、任务与多 Agent 的确定性回归评测</div>
         </div>
         <div className="eval-head-actions">
           <button className="btn-ghost" disabled={refreshing} onClick={refresh}>{refreshing ? '刷新中…' : '刷新'}</button>
@@ -178,12 +204,23 @@ export function EvalPage() {
             ? '—' : `${data.runs[0].scoreDelta >= 0 ? '+' : ''}${(data.runs[0].scoreDelta * 100).toFixed(1)}pp`}
             note={data.runs[0] ? `${data.runs[0].suiteName} · ${data.runs[0].version}` : '暂无基线'}
             tone={(data.runs[0]?.scoreDelta ?? 0) < 0 ? 'coral' : 'green'} />
+          <Kpi label="平均延迟" value={data.summary.averageLatencyMs === null ? '—' : `${Math.round(data.summary.averageLatencyMs)}ms`}
+            note="真实 Agent 端到端耗时" tone="sky" />
+          <Kpi label="Token" value={data.summary.totalTokens.toLocaleString('zh-CN')}
+            note={`${data.runs.reduce((sum, run) => sum + (run.summary.resources?.modelCalls ?? 0), 0)} 次模型调用`} tone="ink" />
+          <Kpi label="累计成本" value={`$${data.summary.totalCostUsd.toFixed(4)}`}
+            note="所选运行范围" tone="coral" />
+          <Kpi label="工具调用" value={data.runs.reduce((sum, run) => sum + (run.summary.resources?.toolCalls ?? 0), 0).toLocaleString('zh-CN')}
+            note="Host Bridge 与兼容工具轨迹" tone="ink" />
         </section>
 
         <section className="eval-overview-grid">
           <VersionTrend runs={trendRuns} suiteName={trendRuns[0]?.suiteName ?? '暂无套件'} />
           <StageAverages values={data.stageAverages} />
+          <FailureClusters clusters={data.failureClusters} />
         </section>
+
+        <ComparisonPanel runs={data.runs} />
 
         <section className="eval-runs-section">
           <div className="eval-section-head">
@@ -250,7 +287,7 @@ function StageAverages({ values }: { values: EvalDashboardPayload['stageAverages
   return <div className="eval-panel eval-stage-panel">
     <div className="eval-panel-head"><div><h2>能力分布</h2><p>所选范围的阶段均分</p></div></div>
     <div className="eval-stage-bars">
-      {(['answer', 'rag', 'tools', 'collaboration'] as const).map((stage) => {
+      {DIMENSIONS.map((stage) => {
         const value = values[stage]
         const label = STAGES.find((item) => item.key === stage)?.label ?? stage
         return <div className="eval-stage-bar" key={stage}>
@@ -262,20 +299,109 @@ function StageAverages({ values }: { values: EvalDashboardPayload['stageAverages
   </div>
 }
 
-function MiniPipeline({ stages, compact = false }: {
+function FailureClusters({ clusters }: { clusters: EvalDashboardPayload['failureClusters'] }) {
+  const maximum = Math.max(1, ...clusters.map((item) => item.count))
+  return <div className="eval-panel eval-failure-panel">
+    <div className="eval-panel-head"><div><h2>失败聚类</h2><p>跨运行、跨 Case 的确定性分类</p></div></div>
+    {clusters.length === 0 ? <div className="eval-chart-empty">当前范围没有失败分类。</div> : <div className="eval-failure-clusters">
+      {clusters.slice(0, 8).map((cluster) => <div key={cluster.category}>
+        <span>{FAILURE_LABELS[cluster.category] ?? cluster.category}</span>
+        <div><i style={{ width: `${(cluster.count / maximum) * 100}%` }} /></div>
+        <strong>{cluster.count}</strong><small>{cluster.runCount} runs</small>
+      </div>)}
+    </div>}
+  </div>
+}
+
+function ComparisonPanel({ runs }: { runs: EvalDashboardRun[] }) {
+  const defaultSuite = runs[0]?.suiteKey
+  const comparable = runs.filter((run) => run.suiteKey === defaultSuite)
+  const [baseId, setBaseId] = useState('')
+  const [candidateId, setCandidateId] = useState('')
+  const [comparison, setComparison] = useState<EvalComparison | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    if (comparable.length < 2) { setBaseId(''); setCandidateId(''); return }
+    if (!comparable.some((run) => run.id === candidateId)) setCandidateId(comparable[0].id)
+    if (!comparable.some((run) => run.id === baseId) || baseId === candidateId) {
+      setBaseId(comparable.find((run) => run.id !== comparable[0].id)?.id ?? '')
+    }
+  }, [defaultSuite, runs.length])
+  useEffect(() => {
+    if (!baseId || !candidateId || baseId === candidateId) { setComparison(null); return }
+    let cancelled = false
+    setError(null)
+    adminApi.evalComparison(baseId, candidateId)
+      .then((payload) => { if (!cancelled) setComparison(payload) })
+      .catch((reason) => { if (!cancelled) setError(errorMessage(reason)) })
+    return () => { cancelled = true }
+  }, [baseId, candidateId])
+  return <section className="eval-compare-section">
+    <div className="eval-section-head"><div><h2>版本对比</h2><p>按 Commit、Prompt、模型、能力与 Case 定位提升或退化。</p></div></div>
+    {comparable.length < 2 ? <div className="eval-compare-empty">同一套件至少需要两次运行才能比较。</div> : <>
+      <div className="eval-compare-selectors">
+        <label><span>基线</span><select value={baseId} onChange={(event) => setBaseId(event.target.value)}>
+          {comparable.filter((run) => run.id !== candidateId).map((run) => <option value={run.id} key={run.id}>{run.version} · {fmtDate(run.createdAt)}</option>)}
+        </select></label>
+        <span>→</span>
+        <label><span>候选</span><select value={candidateId} onChange={(event) => setCandidateId(event.target.value)}>
+          {comparable.filter((run) => run.id !== baseId).map((run) => <option value={run.id} key={run.id}>{run.version} · {fmtDate(run.createdAt)}</option>)}
+        </select></label>
+      </div>
+      {error && <div className="admin-banner-err">{error}</div>}
+      {comparison && <ComparisonResult comparison={comparison} />}
+    </>}
+  </section>
+}
+
+function ComparisonResult({ comparison }: { comparison: EvalComparison }) {
+  const targetLabel: Record<string, string> = { commitSha: 'Commit', promptVersion: 'Prompt', model: '模型' }
+  return <div className="eval-compare-result">
+    <div className="eval-target-diff">
+      {comparison.targetChanges.map((item) => <div key={item.field}><span>{targetLabel[item.field]}</span><code>{item.base ?? '—'}</code><b>→</b><code>{item.candidate ?? '—'}</code></div>)}
+    </div>
+    <div className="eval-capability-deltas">
+      {comparison.stageDeltas.map((item) => <div className={(item.delta ?? 0) < 0 ? 'is-down' : (item.delta ?? 0) > 0 ? 'is-up' : ''} key={item.stage}>
+        <span>{STAGES.find((stage) => stage.key === item.stage)?.label ?? item.stage}</span>
+        <strong>{item.delta === null ? '—' : `${item.delta >= 0 ? '+' : ''}${(item.delta * 100).toFixed(1)}pp`}</strong>
+        <small>{fmtPercent(item.base)} → {fmtPercent(item.candidate)}</small>
+      </div>)}
+    </div>
+    <div className="eval-case-deltas">
+      <div className="eval-case-delta-head"><span>Case</span><span>基线</span><span>候选</span><span>变化</span><span>失败分类变化</span></div>
+      {comparison.caseDeltas.map((item) => <div className={`eval-case-delta eval-case-delta-${item.status}`} key={item.caseId}>
+        <span><strong>{item.name}</strong><small>{item.caseId}</small></span>
+        <span>{fmtPercent(item.base)}</span><span>{fmtPercent(item.candidate)}</span>
+        <span>{item.delta === null ? item.status : `${item.delta >= 0 ? '+' : ''}${(item.delta * 100).toFixed(1)}pp`}</span>
+        <span>{item.addedFailureCategories.map((category) => <i className="is-added" key={category}>+{FAILURE_LABELS[category] ?? category}</i>)}
+          {item.resolvedFailureCategories.map((category) => <i className="is-resolved" key={category}>−{FAILURE_LABELS[category] ?? category}</i>)}
+          {!item.addedFailureCategories.length && !item.resolvedFailureCategories.length && '—'}</span>
+      </div>)}
+    </div>
+  </div>
+}
+
+function MiniPipeline({ stages, compact = false, onSelect, selected }: {
   stages: Array<{ stage: EvalStageName; status: EvalStageStatus; score: number | null }>
   compact?: boolean
+  onSelect?: (stage: EvalStageName) => void
+  selected?: EvalStageName | null
 }) {
   return <div className={`eval-pipeline${compact ? ' is-compact' : ''}`}>
     {stages.map((stage, index) => {
       const meta = STAGES.find((item) => item.key === stage.stage) ?? { label: stage.stage, short: stage.stage }
       return <div className="eval-pipeline-step-wrap" key={stage.stage}>
         {index > 0 && <div className={`eval-pipeline-link eval-pipeline-link-${stage.status}`} />}
-        <div className={`eval-pipeline-step eval-pipeline-step-${stage.status}`} title={`${meta.label}: ${fmtPercent(stage.score, 1)}`}>
+        {onSelect ? <button className={`eval-pipeline-step eval-pipeline-step-${stage.status}${selected === stage.stage ? ' is-selected' : ''}`}
+          title={`${meta.label}: ${fmtPercent(stage.score, 1)}`} onClick={() => onSelect(stage.stage)}>
           <span className="eval-pipeline-icon">{stage.status === 'pass' ? '✓' : stage.status === 'skipped' ? '–' : '!'}</span>
           <span className="eval-pipeline-label">{meta.short}</span>
           {!compact && <strong>{fmtPercent(stage.score)}</strong>}
-        </div>
+        </button> : <div className={`eval-pipeline-step eval-pipeline-step-${stage.status}`} title={`${meta.label}: ${fmtPercent(stage.score, 1)}`}>
+          <span className="eval-pipeline-icon">{stage.status === 'pass' ? '✓' : stage.status === 'skipped' ? '–' : '!'}</span>
+          <span className="eval-pipeline-label">{meta.short}</span>
+          {!compact && <strong>{fmtPercent(stage.score)}</strong>}
+        </div>}
       </div>
     })}
   </div>
@@ -286,7 +412,8 @@ function RunCard({ run, onOpen }: { run: EvalDashboardRun; onOpen: () => void })
     <div className="eval-run-card-top">
       <div className={`eval-run-state eval-run-state-${run.status}`}><span />{run.status === 'pass' ? '通过' : run.status === 'error' ? '异常' : '未通过'}</div>
       <div className="eval-run-title"><strong>{run.suiteName}</strong><span>{run.version}</span></div>
-      <div className="eval-run-meta"><span>{fmtDate(run.createdAt)}</span><span>{run.source === 'agent-os' ? 'Agent OS 轨迹' : run.source === 'mixed' ? '混合轨迹' : '内联观测'}</span></div>
+      <div className="eval-run-meta"><span>{fmtDate(run.createdAt)}</span><span>{run.source === 'agent-os' ? 'Agent OS 轨迹' : run.source === 'mixed' ? '混合轨迹' : '内联观测'}</span>
+        <span>{run.target.model ?? run.target.promptVersion ?? run.target.commitSha?.slice(0, 8) ?? '未标记目标'}</span></div>
       <div className="eval-run-score"><strong>{fmtPercent(run.score, 1)}</strong><span className={run.scoreDelta === null ? '' : run.scoreDelta >= 0 ? 'is-up' : 'is-down'}>
         {run.scoreDelta === null ? '无基线' : `${run.scoreDelta >= 0 ? '↑' : '↓'} ${Math.abs(run.scoreDelta * 100).toFixed(1)}pp`}
       </span></div>
@@ -307,10 +434,15 @@ function RunDetailDrawer({ detail, error, onClose }: { detail: EvalRunDetail | n
         <button onClick={onClose} aria-label="关闭">×</button>
       </div>
       {error ? <div className="admin-banner-err">{error}</div> : !detail ? <EvalSkeleton compact /> : <>
+        <div className="eval-detail-target"><span>Commit <code>{detail.target.commitSha?.slice(0, 12) ?? '—'}</code></span>
+          <span>Prompt <code>{detail.target.promptVersion ?? '—'}</code></span><span>模型 <code>{detail.target.model ?? '—'}</code></span></div>
         <div className="eval-detail-summary">
           <div><span>综合得分</span><strong>{fmtPercent(detail.score, 1)}</strong></div>
           <div><span>通过用例</span><strong>{detail.passedCases}/{detail.caseCount}</strong></div>
           <div><span>版本变化</span><strong className={(detail.scoreDelta ?? 0) < 0 ? 'is-down' : 'is-up'}>{detail.scoreDelta === null ? '—' : `${detail.scoreDelta >= 0 ? '+' : ''}${(detail.scoreDelta * 100).toFixed(1)}pp`}</strong></div>
+          <div><span>平均延迟</span><strong>{detail.summary.resources.averageLatencyMs === null ? '—' : `${Math.round(detail.summary.resources.averageLatencyMs)}ms`}</strong></div>
+          <div><span>Token / 成本</span><strong>{detail.summary.resources.totalTokens.toLocaleString('zh-CN')} / ${detail.summary.resources.totalCostUsd.toFixed(4)}</strong></div>
+          <div><span>模型 / IPython</span><strong>{detail.summary.resources.modelCalls} / {detail.summary.resources.ipythonCells}</strong></div>
         </div>
         <div className="eval-case-tabs">
           {detail.cases.map((item) => <button key={item.id} className={item.id === selected?.id ? 'is-active' : ''} onClick={() => setCaseId(item.id)}>
@@ -328,7 +460,9 @@ function CaseDetail({ item }: { item: EvalCaseDetail }) {
   useEffect(() => { setExpandedStage(item.stages.find((stage) => stage.status === 'fail' || stage.status === 'error')?.stage ?? null) }, [item.id])
   return <div className="eval-case-detail">
     <div className="eval-case-ident"><div><span>CASE</span><strong>{item.caseId}</strong></div>{item.sourceAgentRunId && <code>{item.sourceAgentRunId}</code>}</div>
-    <MiniPipeline stages={item.stages.map((stage) => ({ stage: stage.stage, status: stage.status, score: stage.score }))} />
+    <MiniPipeline stages={item.stages.map((stage) => ({ stage: stage.stage, status: stage.status, score: stage.score }))}
+      selected={expandedStage} onSelect={setExpandedStage} />
+    <TraceTimeline trace={(item.observation.trace as EvalTraceEvent[] | undefined) ?? []} />
     {item.failureReasons.length > 0 && <div className="eval-root-causes">
       <h3>失败原因</h3>
       <ul>{item.failureReasons.map((reason, index) => <li key={`${reason}-${index}`}>{reason}</li>)}</ul>
@@ -340,12 +474,60 @@ function CaseDetail({ item }: { item: EvalCaseDetail }) {
   </div>
 }
 
+function TraceTimeline({ trace }: { trace: EvalTraceEvent[] }) {
+  const [selectedId, setSelectedId] = useState<string | null>(trace.find((event) => event.status === 'failed')?.id ?? trace[0]?.id ?? null)
+  useEffect(() => { setSelectedId(trace.find((event) => event.status === 'failed')?.id ?? trace[0]?.id ?? null) }, [trace])
+  const selected = trace.find((event) => event.id === selectedId) ?? trace[0]
+  if (!trace.length) return <div className="eval-trace-empty">此观测没有真实运行 Trace；固定 suite 可通过 observation.trace 提供。</div>
+  return <section className="eval-trace-section">
+    <div className="eval-trace-head"><div><span>AGENT TRACE</span><h3>真实执行链路</h3></div><small>{trace.length} 个事件 · 节点可下钻</small></div>
+    <div className="eval-trace-flow">
+      {trace.map((event, index) => <div className="eval-trace-node-wrap" key={event.id}>
+        {index > 0 && <i />}
+        <button className={`eval-trace-node eval-trace-node-${event.status}${selected?.id === event.id ? ' is-selected' : ''}`}
+          onClick={() => setSelectedId(event.id)} title={event.label}>
+          <span>{traceIcon(event.kind)}</span><strong>{event.label}</strong>
+          <small>{event.durationMs === undefined ? event.kind : formatDuration(event.durationMs)}</small>
+        </button>
+      </div>)}
+    </div>
+    {selected && <div className="eval-trace-inspector">
+      <div className="eval-trace-inspector-head"><div><span>{selected.kind.replace('_', ' ')}</span><h4>{selected.label}</h4></div>
+        <strong className={`eval-trace-state eval-trace-state-${selected.status}`}>{selected.status}</strong></div>
+      <div className="eval-trace-facts">
+        {selected.agentId && <span>Agent <code>{selected.agentId}</code></span>}
+        {selected.hop && <span>Hop <code>{selected.hop}</code></span>}
+        {selected.cellId && <span>Cell <code>{selected.cellId}</code></span>}
+        {selected.action && <span>Action <code>{selected.action}</code></span>}
+        {selected.durationMs !== undefined && <span>耗时 <code>{formatDuration(selected.durationMs)}</code></span>}
+      </div>
+      <div className="eval-trace-json-grid">
+        {selected.input !== undefined && <div><span>输入 / 参数</span><pre>{prettyJson(selected.input)}</pre></div>}
+        {selected.output !== undefined && <div><span>输出 / 结果</span><pre>{prettyJson(selected.output)}</pre></div>}
+        {selected.metadata && Object.keys(selected.metadata).length > 0 && <div><span>Trace metadata</span><pre>{prettyJson(selected.metadata)}</pre></div>}
+      </div>
+    </div>}
+  </section>
+}
+
+function traceIcon(kind: EvalTraceEvent['kind']): string {
+  return ({ input: '↪', decision: '◇', model: 'M', ipython: 'Py', host_action: 'H', approval: 'A', canvas: 'C', answer: '✓' })[kind]
+}
+
+function formatDuration(value: number): string {
+  return value >= 1000 ? `${(value / 1000).toFixed(value >= 10_000 ? 0 : 1)}s` : `${Math.round(value)}ms`
+}
+
+function prettyJson(value: unknown): string {
+  try { return JSON.stringify(value, null, 2) } catch { return String(value) }
+}
+
 function StageDisclosure({ stage, open, onToggle }: { stage: EvalStageResult; open: boolean; onToggle: () => void }) {
   const meta = STAGES.find((item) => item.key === stage.stage)
   return <div className={`eval-disclosure eval-disclosure-${stage.status}`}>
     <button onClick={onToggle} aria-expanded={open}>
       <span className="eval-disclosure-icon">{stage.status === 'pass' ? '✓' : stage.status === 'skipped' ? '–' : '!'}</span>
-      <span><strong>{meta?.label ?? stage.stage}</strong><small>{stage.failureReason ?? `${stage.findings.filter((item) => item.status === 'pass').length} 项检查通过`}</small></span>
+      <span><strong>{meta?.label ?? stage.stage}</strong><small>{stage.failureReason ?? `${stage.findings.filter((item) => item.status === 'pass').length} 项检查通过`} · 真实耗时 {formatDuration(stage.durationMs)}</small></span>
       <span>{fmtPercent(stage.score, 1)}</span><b>{open ? '−' : '+'}</b>
     </button>
     {open && <div className="eval-findings">
@@ -379,7 +561,7 @@ function CreateRunDialog({ onClose, onCreated }: { onClose: () => void; onCreate
   return <div className="eval-overlay eval-dialog-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget && !submitting) onClose() }}>
     <div className="eval-dialog" role="dialog" aria-modal="true" aria-label="运行 Agent Eval">
       <div className="eval-dialog-head"><div><span>NEW EVAL RUN</span><h2>运行评测套件</h2><p>粘贴观测 JSON，或填写 Agent OS runId 自动回填真实轨迹。</p></div><button onClick={onClose} disabled={submitting}>×</button></div>
-      <div className="eval-dialog-help"><span>支持的层</span><code>answer</code><code>rag</code><code>tools</code><code>collaboration</code><em>期望值只进入评测器，不会发送给 Agent。</em></div>
+      <div className="eval-dialog-help"><span>支持的层</span>{DIMENSIONS.map((dimension) => <code key={dimension}>{dimension}</code>)}<em>期望值只进入评测器，不会发送给 Agent。</em></div>
       {error && <div className="admin-banner-err">{error}</div>}
       <textarea className="eval-json-input" value={value} onChange={(event) => setValue(event.target.value)} spellCheck={false} aria-label="Eval run JSON" />
       <div className="eval-dialog-foot"><span>最多 100 个用例；报告写入后不可变。</span><div><button className="btn-ghost" onClick={onClose} disabled={submitting}>取消</button><button className="btn-primary" onClick={() => void submit()} disabled={submitting}>{submitting ? '评测中…' : '开始运行'}</button></div></div>
@@ -388,7 +570,7 @@ function CreateRunDialog({ onClose, onCreated }: { onClose: () => void; onCreate
 }
 
 function EmptyEval({ onCreate }: { onCreate: () => void }) {
-  return <div className="eval-empty"><div>◎</div><h3>还没有评测运行</h3><p>从一个 Agent OS runId 开始，系统会自动采集回答、RAG、工具与协作轨迹。</p><button className="btn-primary" onClick={onCreate}>运行第一次评测</button></div>
+  return <div className="eval-empty"><div>◎</div><h3>还没有评测运行</h3><p>从一个 Agent OS runId 开始，系统会自动采集输入、模型、IPython、Host Bridge、Approval、Canvas 与最终回答轨迹。</p><button className="btn-primary" onClick={onCreate}>运行第一次评测</button></div>
 }
 
 function EvalSkeleton({ compact = false }: { compact?: boolean }) {

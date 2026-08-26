@@ -169,7 +169,16 @@ export class AgentOSRuntime {
         await this.host.completeWork(work, { status: 'completed' })
         return
       }
+      const contextStartedAt = Date.now()
       const context = await this.host.loadContext(work)
+      const triggerInput = context.messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)?.body
+      await this.event(work, runId, {
+        kind: 'input.loaded', stage: 'completed', visibility: 'internal',
+        data: {
+          triggerClientMsgNo: work.triggerClientMsgNo,
+          ...(triggerInput ? { text: triggerInput.slice(0, 4_000) } : {}),
+        },
+      })
       // Persist only evidence identity/traceability metadata — never excerpts —
       // so an Eval run can score RAG recall and citation validity later without
       // copying potentially sensitive source text into the observability ledger.
@@ -177,6 +186,7 @@ export class AgentOSRuntime {
         kind: 'knowledge.context.loaded', stage: 'completed', visibility: 'internal',
         data: {
           sourceCount: context.knowledgeSourceCount ?? 0,
+          durationMs: Math.max(0, Date.now() - contextStartedAt),
           citations: (context.knowledgeContext ?? []).map((citation) => ({
             sourceId: citation.sourceId,
             chunkId: citation.chunkId,

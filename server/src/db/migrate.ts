@@ -2512,6 +2512,9 @@ CREATE TABLE IF NOT EXISTS eval_runs (
   suite_key       TEXT NOT NULL,
   suite_name      TEXT NOT NULL,
   version         TEXT NOT NULL,
+  commit_sha      TEXT,
+  prompt_version  TEXT,
+  model           TEXT,
   baseline_run_id TEXT REFERENCES eval_runs(id) ON DELETE SET NULL,
   status          TEXT NOT NULL CHECK (status IN ('pass','fail','error')),
   score           DOUBLE PRECISION NOT NULL CHECK (score BETWEEN 0 AND 1),
@@ -2528,6 +2531,9 @@ CREATE TABLE IF NOT EXISTS eval_runs (
   finished_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+ALTER TABLE eval_runs ADD COLUMN IF NOT EXISTS commit_sha TEXT;
+ALTER TABLE eval_runs ADD COLUMN IF NOT EXISTS prompt_version TEXT;
+ALTER TABLE eval_runs ADD COLUMN IF NOT EXISTS model TEXT;
 CREATE INDEX IF NOT EXISTS idx_eval_runs_suite_created ON eval_runs(suite_key, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_eval_runs_status_created ON eval_runs(status, created_at DESC);
 
@@ -2553,7 +2559,7 @@ CREATE TABLE IF NOT EXISTS eval_stage_results (
   id             TEXT PRIMARY KEY,
   eval_run_id    TEXT NOT NULL REFERENCES eval_runs(id) ON DELETE CASCADE,
   eval_case_id   TEXT NOT NULL REFERENCES eval_cases(id) ON DELETE CASCADE,
-  stage          TEXT NOT NULL CHECK (stage IN ('ingest','answer','rag','tools','collaboration','aggregate')),
+  stage          TEXT NOT NULL CHECK (stage IN ('ingest','answer','teaching','rag','tools','safety','task','collaboration','efficiency','aggregate')),
   position       INTEGER NOT NULL,
   status         TEXT NOT NULL CHECK (status IN ('pass','fail','skipped','error')),
   score          DOUBLE PRECISION CHECK (score BETWEEN 0 AND 1),
@@ -2564,6 +2570,9 @@ CREATE TABLE IF NOT EXISTS eval_stage_results (
   created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   UNIQUE(eval_case_id, stage)
 );
+ALTER TABLE eval_stage_results DROP CONSTRAINT IF EXISTS eval_stage_results_stage_check;
+ALTER TABLE eval_stage_results ADD CONSTRAINT eval_stage_results_stage_check
+  CHECK (stage IN ('ingest','answer','teaching','rag','tools','safety','task','collaboration','efficiency','aggregate'));
 CREATE INDEX IF NOT EXISTS idx_eval_stages_run ON eval_stage_results(eval_run_id, position);
 CREATE INDEX IF NOT EXISTS idx_eval_stages_failures ON eval_stage_results(eval_run_id, status) WHERE status IN ('fail','error');
 
@@ -3274,6 +3283,7 @@ async function schemaAlreadyCurrent(client: import('pg').PoolClient): Promise<bo
         AND (SELECT count(*) FROM pg_class WHERE relname = 'eval_runs') > 0
         AND (SELECT count(*) FROM pg_class WHERE relname = 'eval_cases') > 0
         AND (SELECT count(*) FROM pg_class WHERE relname = 'eval_stage_results') > 0
+        AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='eval_runs' AND column_name='commit_sha')
         AS ok
     `)
     return rows[0]?.ok === true
