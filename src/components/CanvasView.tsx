@@ -313,7 +313,7 @@ function CanvasHeader({ onBack, onFocusFrame }: {
   return <header className="canvas-header canvas-main-header absolute inset-x-0 top-0 z-30 flex items-center gap-4 border-b border-hairline px-3 backdrop-blur-xl">
     <div className="flex min-w-0 shrink-0 items-center gap-2">
       {onBack && <button type="button" onClick={onBack} aria-label="返回对话" className="grid size-9 place-items-center rounded-full text-ink-secondary hover:bg-raised"><IBack className="size-5" /></button>}
-      <div className="min-w-0 max-w-64"><div className="truncate text-[14px] font-semibold text-ink">{snapshot?.title ?? '画布'}</div><div className="truncate text-[9px] text-ink-secondary">{snapshot ? `${snapshot.goal} · ${snapshot.reports.length} 份结构化报告${snapshot.reports.some((report) => report.executionRole === 'reporter') ? ' · Reporter 已汇聚' : ''}` : '共同工作的可视空间'}</div></div>
+      <div className="min-w-0 max-w-64"><div className="truncate text-[14px] font-semibold text-ink">{snapshot?.title ?? '画布'}</div><div className="truncate text-[9px] text-ink-secondary">{snapshot ? `${snapshot.goal} · ${snapshot.reports.length} 份结构化报告${snapshot.reports.some((report) => report.executionRole === 'reporter') ? ' · 已完成汇总' : ''}` : '共同工作的可视空间'}</div></div>
     </div>
     <CanvasTimeline onFocusFrame={onFocusFrame} />
   </header>

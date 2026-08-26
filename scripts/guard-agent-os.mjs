@@ -65,8 +65,28 @@ const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8
 const promptAssembly = readFileSync(join(root, 'server/src/agent-os/prompt-assembly.ts'), 'utf8')
 const canvasService = readFileSync(join(root, 'server/src/canvas/service.ts'), 'utf8')
 const migration = readFileSync(join(root, 'server/src/db/migrate.ts'), 'utf8')
+const teacherAgent = readFileSync(join(root, 'server/src/learning/teacher-agent.ts'), 'utf8')
 if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
   failures.push('learning must exist only as a capability-gated loop.learning Host Bridge namespace')
+}
+if (!/"teacher"/.test(kernel) || !/allowedNamespaces/.test(kernel)
+  || !/namespace === 'teacher'/.test(actions) || !/teacher: 'teacher_admin'/.test(controlPlane)) {
+  failures.push('Pulse must be capability-gated through the loop.teacher Host Bridge namespace')
+}
+if (!runtime.includes("allowedNamespaces: ['teacher', 'turn']")
+  || !runtime.includes('teacherAgent\n        ?') || !runtime.includes('teacherContextContract')) {
+  failures.push('Pulse IPython must expose only teacher/turn and use a dedicated transient contract')
+}
+if (!teacherAgent.includes("PULSE_CAPABILITIES = ['teacher_admin']")
+  || !teacherAgent.includes("JSON.stringify(['ipython'])")
+  || /loop\.learning/.test(teacherAgent)) {
+  failures.push('Pulse identity must remain product-managed with tools=[ipython] and no learner SDK')
+}
+if (!controlPlane.includes("namespace === 'teacher'") || !controlPlane.includes('teacher_managed')) {
+  failures.push('ordinary agents must be deterministically blocked from teacher.*')
+}
+for (const table of ['learning_project_teacher_agents','learning_course_teacher_rooms']) {
+  if (!migration.includes(`CREATE TABLE IF NOT EXISTS ${table}`)) failures.push(`missing durable Pulse relation ${table}`)
 }
 if (!runtime.includes('finish_planning') || !actions.includes('planning gate blocked')) {
   failures.push('learning must retain the Frontier-style planning gate')

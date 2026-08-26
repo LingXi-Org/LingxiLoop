@@ -10,11 +10,11 @@ import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
 
 const STATUS_LABEL: Record<string, string> = {
-  avail: 'Available',
-  working: 'Working',
-  thinking: 'Thinking',
-  waiting: 'Waiting on you',
-  resting: 'Resting',
+  avail: '可用',
+  working: '工作中',
+  thinking: '思考中',
+  waiting: '等待你确认',
+  resting: '休息中',
 }
 
 const STATUS_COLOR: Record<string, string> = {

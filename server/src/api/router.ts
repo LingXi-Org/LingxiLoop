@@ -1756,7 +1756,10 @@ api.get('/projects', async (req, res) => {
     `SELECT p.id, p.name, p.description, p.color, p.status, p.created_by AS "createdBy",
             p.is_general AS "isGeneral", p.created_at AS "createdAt", p.updated_at AS "updatedAt",
             p.archived_at AS "archivedAt", pv.visited_at AS "lastVisitedAt",
-            (SELECT COUNT(*)::int FROM conversations c WHERE c.project_id = p.id) AS "conversationCount",
+            (SELECT COUNT(*)::int FROM conversations c WHERE c.project_id = p.id
+              AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=c.id)
+                OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr JOIN learning_course_memberships tcm
+                  ON tcm.course_id=tr.course_id AND tcm.user_id=$2 AND tcm.role='teacher' WHERE tr.conversation_id=c.id))) AS "conversationCount",
             (SELECT COUNT(*)::int FROM knowledge_sources s WHERE s.project_id = p.id AND s.deleted_at IS NULL) AS "sourceCount",
             (SELECT COUNT(*)::int FROM documents d WHERE d.project_id = p.id) AS "documentCount",
             (SELECT COUNT(*)::int FROM boards b WHERE b.project_id = p.id) AS "boardCount",
@@ -2295,6 +2298,23 @@ async function isProductManagedTeacherAgent(agentId:string,companyId:string):Pro
   )
   return Boolean(rows[0])
 }
+
+// Product-managed Pulse identities stay opaque on every generic /agents/:id
+// read surface. Mutating routes apply the stronger managed-agent block below.
+api.use('/agents/:id',async(req:Request&AuthedRequest,res,next)=>{
+  try{
+    const {userId,companyId}=await requireCompany(req)
+    const {rows}=await pool.query<{managed:boolean;visible:boolean}>(
+      `SELECT EXISTS(SELECT 1 FROM learning_project_teacher_agents pta WHERE pta.company_id=$2 AND pta.agent_id=$1) AS managed,
+              EXISTS(SELECT 1 FROM learning_project_teacher_agents pta JOIN learning_courses c ON c.project_id=pta.project_id AND c.company_id=pta.company_id
+                JOIN learning_course_memberships cm ON cm.course_id=c.id AND cm.user_id=$3 AND cm.role='teacher'
+                WHERE pta.company_id=$2 AND pta.agent_id=$1) AS visible`,
+      [req.params.id,companyId,userId],
+    )
+    if(rows[0]?.managed&&!rows[0].visible){res.status(404).json({error:'not found'});return}
+    next()
+  }catch(error){next(error)}
+})
 
 const AVATAR_PALETTE = [
   '#FFB088', '#FFD9D2', '#FFB7AF', '#F4B740',
@@ -4699,12 +4719,14 @@ api.get('/search', async (req, res) => {
   const M_LIMIT = 15
 
   const participantsP = pool.query(
-    `SELECT id, kind, name, role, initial, avatar_bg AS "avatarBg", avatar_url AS "avatarUrl",
-            status, bio
-       FROM participants
-      WHERE company_id = $1
-        AND departed_at IS NULL
-        AND (name ILIKE $2 ESCAPE '\\' OR role ILIKE $2 ESCAPE '\\' OR id ILIKE $2 ESCAPE '\\')
+    `SELECT p.id,p.kind,p.name,p.role,p.initial,p.avatar_bg AS "avatarBg",p.avatar_url AS "avatarUrl",
+            p.status,p.bio
+       FROM participants p LEFT JOIN learning_project_teacher_agents pta ON pta.company_id=p.company_id AND pta.agent_id=p.id
+      WHERE p.company_id = $1
+        AND p.departed_at IS NULL
+        AND (pta.agent_id IS NULL OR EXISTS(SELECT 1 FROM learning_courses lc JOIN learning_course_memberships cm ON cm.course_id=lc.id
+          WHERE lc.project_id=pta.project_id AND lc.company_id=pta.company_id AND cm.user_id=$5 AND cm.role='teacher'))
+        AND (p.name ILIKE $2 ESCAPE '\\' OR p.role ILIKE $2 ESCAPE '\\' OR p.id ILIKE $2 ESCAPE '\\')
       ORDER BY
         CASE WHEN lower(name) = lower($3) THEN 0
              WHEN name ILIKE $4 ESCAPE '\\' THEN 1
@@ -4714,7 +4736,7 @@ api.get('/search', async (req, res) => {
         CASE kind WHEN 'agent' THEN 0 ELSE 1 END,
         name
       LIMIT ${P_LIMIT}`,
-    [tenant, contains, exact, prefix],
+    [tenant, contains, exact, prefix,me],
   )
 
   // 1-on-1 direct-room titles are perspective-specific,
@@ -4771,6 +4793,9 @@ api.get('/search', async (req, res) => {
       WHERE c.company_id = $1
         AND c.kind = 'group'
         AND c.members @> to_jsonb(ARRAY[$2::text])
+        AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=c.id)
+          OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr JOIN learning_course_memberships cm
+            ON cm.course_id=tr.course_id AND cm.user_id=$2 AND cm.role='teacher' WHERE tr.conversation_id=c.id))
         AND (c.title ILIKE $3 ESCAPE '\\' OR (c.topic IS NOT NULL AND c.topic ILIKE $3 ESCAPE '\\'))
       ORDER BY
         CASE WHEN lower(c.title) = lower($4) THEN 0
@@ -4811,6 +4836,9 @@ api.get('/search', async (req, res) => {
        ) other_participant ON c.kind = 'direct'
       WHERE c.company_id = $1
         AND c.members @> to_jsonb(ARRAY[$2::text])
+        AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=c.id)
+          OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr JOIN learning_course_memberships cm
+            ON cm.course_id=tr.course_id AND cm.user_id=$2 AND cm.role='teacher' WHERE tr.conversation_id=c.id))
         AND m.kind = 'text'
         AND m.body ILIKE $3 ESCAPE '\\'
       ORDER BY m.created_at DESC

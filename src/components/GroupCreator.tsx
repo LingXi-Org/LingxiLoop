@@ -67,17 +67,17 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
     const names = candidates.filter((p) => picked.has(p.id)).map((p) => p.name)
     if (names.length === 0) return ''
     if (names.length === 1) return names[0]
-    if (names.length === 2) return `${names[0]} & ${names[1]}`
-    if (names.length === 3) return `${names[0]}, ${names[1]} & ${names[2]}`
-    return `${names[0]}, ${names[1]} & ${names.length - 2} more`
+    if (names.length === 2) return `${names[0]}、${names[1]}`
+    if (names.length === 3) return `${names[0]}、${names[1]}、${names[2]}`
+    return `${names[0]}、${names[1]}等 ${names.length} 位成员`
   }, [candidates, picked])
 
   const submit = async () => {
     setErr(null)
-    if (picked.size === 0) { setErr('pick at least one teammate'); return }
-    if (!leaderId) { setErr('choose an agent as Leader'); return }
+    if (picked.size === 0) { setErr('请至少选择一名成员'); return }
+    if (!leaderId) { setErr('请选择一名智能体作为负责人'); return }
     const finalTitle = title.trim() || autoTitle
-    if (!finalTitle) { setErr('add a title or pick a teammate'); return }
+    if (!finalTitle) { setErr('请填写标题或选择成员'); return }
     setBusy(true)
     try {
       const r = await api.createGroup({ title: finalTitle, members: [...picked], leaderId, workspaceId: workspaceId ?? undefined })
@@ -107,9 +107,9 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 border-b border-ink-100 shrink-0">
-          <h2 className="font-display font-medium text-[20px] tracking-tight">新组</h2>
+          <h2 className="font-display font-medium text-[20px] tracking-tight">新建群聊</h2>
           <div className="text-[12.5px] text-ink-500 italic font-display mt-0.5">
-            将一些队友拉入共享对话。你将永远在其中。
+            邀请成员加入共享对话；你会自动成为群成员。
           </div>
 
         </div>
@@ -128,7 +128,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={autoTitle || 'e.g. Aurora launch — week 1'}
+            placeholder={autoTitle || '例如：Aurora 发布准备 · 第 1 周'}
             autoFocus
             className="mb-5"
             maxLength={80}
@@ -136,7 +136,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
 
           <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">成员</label>
           <div className="text-[11.5px] text-ink-300 mb-2 font-display italic">
-            {picked.size === 0 ? "点击添加" : `${picked.size} selected — you are auto-included`}
+            {picked.size === 0 ? "点击添加" : `已选择 ${picked.size} 位 · 你会自动加入`}
           </div>
           <div className="grid grid-cols-1 gap-1.5">
             {candidates.map((p) => {
@@ -156,7 +156,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-semibold text-ink-900 truncate">{p.name}</div>
                     <div className="text-[11px] text-ink-500 truncate">
-                      {p.role || (p.kind === 'human' ? 'human' : 'agent')}
+                      {p.role || (p.kind === 'human' ? '成员' : '智能体')}
                     </div>
                   </div>
                   <span
@@ -172,14 +172,14 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
             })}
             {candidates.length === 0 && (
               <div className="text-[12.5px] text-ink-500 italic font-display py-4 text-center">
-                没有可用的队友 - 首先添加智能体或人员。
+                暂无可选成员，请先添加智能体或公司成员。
               </div>
             )}
           </div>
 
-          <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mt-5 mb-1">Leader</label>
+          <label className="block text-[11px] font-bold tracking-wider text-ink-500 mt-5 mb-1">负责人</label>
           <div className="text-[11.5px] text-ink-300 mb-2 font-display italic">
-            Explicitly choose the agent that handles ordinary group messages and delegates with @mentions.
+            负责人响应普通群聊消息，并可通过 @提及 分派其他成员。
           </div>
           <div className="grid grid-cols-1 gap-1.5">
             {leaderCandidates.map((p) => {
@@ -197,13 +197,13 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
                 >
                   <Avatar p={p} size={30} ringColor="var(--paper)" showStatus={false} />
                   <span className="flex-1 text-[13px] font-semibold text-ink-900">{p.name}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-skype-deep">{on ? 'Leader' : 'Set leader'}</span>
+                  <span className="text-[10px] font-bold tracking-wider text-skype-deep">{on ? '负责人' : '设为负责人'}</span>
                 </button>
               )
             })}
             {leaderCandidates.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-ink-200 px-3 py-3 text-[12px] text-ink-400">
-                Select at least one active agent above, then choose the Leader here.
+                请先在上方选择至少一名可用智能体，再在此指定负责人。
               </div>
             )}
           </div>
@@ -231,7 +231,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
               background: 'var(--skype)',
               boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
             }}
-          >{busy ? "正在创建..." : `Create group${picked.size > 0 ? ` (${picked.size + 1})` : ''}`}</button>
+          >{busy ? "正在创建…" : `创建群聊${picked.size > 0 ? `（${picked.size + 1} 人）` : ''}`}</button>
         </div>
       </div>
     </div>

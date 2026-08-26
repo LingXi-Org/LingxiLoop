@@ -481,7 +481,7 @@ export function MobileChat() {
               onClick={() => setMenuOpen((v) => !v)}
               haptic="medium"
               className="w-10 h-10 grid place-items-center text-ink-700 active:bg-sky2-50 rounded-full"
-              aria-label="More"
+              aria-label="更多"
             >
               <IMore className="w-[20px] h-[20px]" />
             </Pressable>
@@ -934,7 +934,7 @@ function StreamHeader({ context }: { context?: StreamCtx }) {
       ) : (
         <div className="flex items-center gap-3 text-ink-300 text-[10.5px] font-bold tracking-[0.08em] uppercase">
           <span className="flex-1 h-px bg-gradient-to-r from-transparent via-ink-100 to-transparent" />
-          Beginning
+          会话开始
           <span className="flex-1 h-px bg-gradient-to-r from-transparent via-ink-100 to-transparent" />
         </div>
       )}
@@ -1034,11 +1034,11 @@ function buildMessageTapbackActions(
 }
 
 const statusLabel: Record<string, string> = {
-  avail: 'Available',
-  working: 'Working',
-  thinking: 'Thinking',
-  waiting: 'Waiting on you',
-  resting: 'Resting',
+  avail: '可用',
+  working: '工作中',
+  thinking: '思考中',
+  waiting: '等待你确认',
+  resting: '休息中',
 }
 
 export function MobileChatInfo() {
@@ -1257,25 +1257,25 @@ export function MobileChatInfo() {
         <div className="py-4 px-5 border-b border-ink-100">
           {isGroup && (
             <div className="mb-4">
-              <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-2">Leader</h4>
+              <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider mb-2">负责人</h4>
               <SelectMenu
                 value={c.leaderId ?? ''}
                 onChange={(value) => void changeLeader(value)}
                 options={[
-                  ...(!c.leaderId ? [{ value: '', label: 'Choose an active agent', disabled: true }] : []),
+                  ...(!c.leaderId ? [{ value: '', label: '选择一名可用智能体', disabled: true }] : []),
                   ...activeGroupAgents.map((agent) => ({ value: agent.id, label: agent.name })),
                 ]}
                 className="w-full"
-                ariaLabel="Change group leader"
+                ariaLabel="更换群聊负责人"
               />
-              <p className="mt-1.5 text-[11px] text-ink-400">Ordinary messages wake this agent; the Leader can delegate with @member-id.</p>
+              <p className="mt-1.5 text-[11px] text-ink-400">普通消息会唤醒该智能体；负责人可通过 @成员 分派工作。</p>
             </div>
           )}
-          <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-3">Members</h4>
+          <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider mb-3">成员</h4>
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <Stat n={String(memberPs.length)} l="members" />
-            <Stat n={String(agentCount)} l="agents" />
-            <Stat n={String(humanCount)} l="humans" />
+            <Stat n={String(memberPs.length)} l="全部" />
+            <Stat n={String(agentCount)} l="智能体" />
+            <Stat n={String(humanCount)} l="成员" />
           </div>
           {/* Search — only worth showing once the list is long enough to
               warrant scanning. Filters by name or @id. */}
@@ -1293,7 +1293,7 @@ export function MobileChatInfo() {
                   type="button"
                   onClick={() => setMemberQuery('')}
                   className="w-6 h-6 -mr-1 grid place-items-center text-ink-400 active:text-ink-600 shrink-0"
-                  aria-label="Clear search"
+                  aria-label="清除搜索"
                 >×</button>
               )}
             </div>
@@ -1315,7 +1315,7 @@ export function MobileChatInfo() {
                   <Avatar p={p} size={32} />
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-semibold text-ink-900 truncate">
-                      {p.name}{isSelf && <span className="text-ink-300 font-normal"> · you</span>}
+                      {p.name}{isSelf && <span className="text-ink-300 font-normal"> · 你</span>}
                     </div>
                   </div>
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: `var(--${p.status ?? 'avail'})` }} />
@@ -1325,7 +1325,7 @@ export function MobileChatInfo() {
             })}
             {filteredMembers.length === 0 && (
               <div className="py-5 text-center text-[12px] text-ink-400 italic font-display">
-                No members match “{memberQuery}”
+                没有与“{memberQuery}”匹配的成员
               </div>
             )}
           </div>
@@ -1334,7 +1334,7 @@ export function MobileChatInfo() {
 
       {!isGroup && focus && (focus.tools ?? []).length > 0 && (
         <div className="py-4 px-5 border-b border-ink-100">
-          <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-3">Tools</h4>
+          <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider mb-3">工具</h4>
           <div className="grid grid-cols-2 gap-2">
             {(focus.tools ?? []).map((t) => (
               <div key={t} className="py-2.5 px-3 bg-cloud border border-ink-100 rounded-[10px] flex items-center gap-2 text-[12.5px] text-ink-700">
@@ -1348,7 +1348,7 @@ export function MobileChatInfo() {
 
       {!isGroup && focus?.bio && (
         <div className="py-4 px-5 border-b border-ink-100">
-          <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider uppercase mb-3">About</h4>
+          <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider mb-3">简介</h4>
           <div
             className="py-3 px-3.5 rounded-r-lg font-display italic text-[13px] leading-[1.55] text-ink-700"
             style={{
@@ -1368,7 +1368,7 @@ export function MobileChatInfo() {
           style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
         >
           退出对话
-          <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">agents continue without you</span>
+          <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">退出后，智能体仍会继续工作</span>
         </button>
       </div>
     </section>

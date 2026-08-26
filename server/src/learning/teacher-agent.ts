@@ -28,9 +28,9 @@ import type {
 
 type Queryable = Pick<PoolClient, 'query'> | typeof pool
 
-const PULSE_PRESET_VERSION = 1
+const PULSE_PRESET_VERSION = 2
 const PULSE_CAPABILITIES = ['teacher_admin'] as const
-const PULSE_ROLE = '教学运营与学情汇总 · Teacher Operations'
+const PULSE_ROLE = '教学运营与学情汇总'
 const PULSE_PROMPT = `You are Pulse, the product-managed Project teacher operations Agent. Work only in the registered teacher room. Observe current Host-scoped facts, identify the smallest requested management operation, execute reversible routine operations or submit approval-gated operations, then report the exact durable result. Aggregate before drilling into an individual learner. Never contact learners, enter Study Rooms, teach, invent evidence, infer hidden traits, or use Canvas, handoffs, email, memory, learning Missions, or general routines. Scheduled turns are read-only summaries.`
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 const APPROVAL_METHODS = new Set([
@@ -203,7 +203,7 @@ export async function ensureTeacherAgentForCourse(courseId: string, db: Queryabl
   const resolvedAgentId=existing[0]?.agent_id??agentId
   await db.query(
     `INSERT INTO participants(id,preset_key,kind,name,role,initial,avatar_bg,status,bio,tools,capabilities,system_prompt,company_id)
-     VALUES($1,$2,'agent',$3,$4,'P','#7756D8','avail','Project-scoped teacher operations Agent',$5::jsonb,$6::jsonb,$7,$8)
+     VALUES($1,$2,'agent',$3,$4,'P','#7756D8','avail','项目级教师专用智能体；负责课程管理与学情汇总',$5::jsonb,$6::jsonb,$7,$8)
      ON CONFLICT(id,company_id) DO UPDATE SET name=EXCLUDED.name,role=EXCLUDED.role,tools=EXCLUDED.tools,
        capabilities=EXCLUDED.capabilities,system_prompt=EXCLUDED.system_prompt,departed_at=NULL`,
     [resolvedAgentId,`teacher-agent:${course.project_id}`,displayName,PULSE_ROLE,JSON.stringify(['ipython']),JSON.stringify(PULSE_CAPABILITIES),PULSE_PROMPT,course.company_id],
@@ -222,7 +222,7 @@ export async function ensureTeacherAgentForCourse(courseId: string, db: Queryabl
     `INSERT INTO conversations(id,preset_key,kind,title,subtitle,topic,members,leader_id,pinned,tag,company_id,project_id)
      VALUES($1,$2,'group',$3,$4,'课程管理、学情汇总与教师审批',$5::jsonb,$6,TRUE,'teacher',$7,$8)
      ON CONFLICT(id) DO NOTHING`,
-    [roomId,`teacher-room:${courseId}`,title,`teachers · ${teachers.length}`,JSON.stringify(members),resolvedAgentId,course.company_id,course.project_id],
+    [roomId,`teacher-room:${courseId}`,title,`教师 · ${teachers.length}`,JSON.stringify(members),resolvedAgentId,course.company_id,course.project_id],
   )
   await db.query(
     `INSERT INTO conversation_counters(conversation_id,next_sequence) VALUES($1,1) ON CONFLICT(conversation_id) DO NOTHING`,[roomId],
@@ -269,7 +269,7 @@ export async function syncTeacherRoomMembers(courseId:string,db:Queryable=pool):
   if(!rows[0]||rows[0].status!=='active')return
   const {rows:teachers}=await db.query<{user_id:string}>(`SELECT user_id FROM learning_course_memberships WHERE course_id=$1 AND role='teacher' ORDER BY user_id`,[courseId])
   const members=[...teachers.map((row)=>row.user_id),rows[0].agent_id]
-  await db.query(`UPDATE conversations SET members=$2::jsonb,subtitle=$3,updated_at=NOW() WHERE id=$1`,[rows[0].conversation_id,JSON.stringify(members),`teachers · ${teachers.length}`])
+  await db.query(`UPDATE conversations SET members=$2::jsonb,subtitle=$3,updated_at=NOW() WHERE id=$1`,[rows[0].conversation_id,JSON.stringify(members),`教师 · ${teachers.length}`])
   const {rows:bindings}=await db.query<{profile:Record<string,unknown>}>(`UPDATE im_channel_bindings SET profile=profile||jsonb_build_object('members',$2::jsonb),updated_at=NOW() WHERE channel_id=$1 RETURNING profile`,[rows[0].conversation_id,JSON.stringify(members)])
   if(bindings[0]?.profile)await wukongClient().upsertChannel(bindings[0].profile as unknown as ImChannelProfile)
 }
@@ -435,7 +435,7 @@ async function configureDigest(scope:TeacherScope,args:Record<string,unknown>,db
   const schedule:{frequency:'daily'|'weekly';localTime:string;weekday?:typeof WEEKDAYS[number]}={frequency,localTime,...(weekday?{weekday}:{})}
   const nextRunAt=await nextTeacherDigestRun(schedule,timezone,new Date(),db)
   await db.query(`INSERT INTO agent_routines(id,company_id,agent_id,channel_id,kind,title,instructions,schedule,timezone,status,next_run_at,created_by,approved_by)
-    VALUES($1,$2,$3,$4,'teacher_project_digest','Project 学情摘要','Generate a bounded aggregate teacher digest with loop.teacher.overview. Do not read raw attempts or perform writes.',$5::jsonb,$6,'active',$7,$8,$8)
+    VALUES($1,$2,$3,$4,'teacher_project_digest','项目学情摘要','Generate a bounded aggregate teacher digest with loop.teacher.overview. Do not read raw attempts or perform writes.',$5::jsonb,$6,'active',$7,$8,$8)
     ON CONFLICT(id) DO UPDATE SET schedule=EXCLUDED.schedule,timezone=EXCLUDED.timezone,status='active',next_run_at=EXCLUDED.next_run_at,updated_at=NOW(),created_by=EXCLUDED.created_by`,
     [id,scope.companyId,scope.agentId,scope.roomId,JSON.stringify(schedule),timezone,nextRunAt,scope.teacherId])
   inc('learning.teacher_agent.digest_configured',{frequency})
@@ -452,15 +452,44 @@ export async function describeTeacherAction(work:AgentWorkItem,action:HostAction
   if(!APPROVAL_METHODS.has(method))return undefined
   if(!scope.teacherId)throw new Error('approval request requires a teacher')
   const args=object(action.args)
-  let entityId:string|undefined;let currentState:unknown;let currentVersion:unknown
-  if(method.includes('objective')){entityId=textArg(args,'objectiveId','objective_id');const {rows}=await db.query(`SELECT status,updated_at FROM learning_objectives WHERE id=$1 AND course_id=$2`,[entityId,scope.courseId]);if(!rows[0])throw new Error('objective is outside the current course');currentState=rows[0].status;currentVersion=versionToken(rows[0].updated_at)}
-  else if(method.includes('activity')){entityId=textArg(args,'activityId','activity_id');const {rows}=await db.query(`SELECT status,updated_at FROM learning_activities WHERE id=$1 AND course_id=$2`,[entityId,scope.courseId]);if(!rows[0])throw new Error('activity is outside the current course');currentState=rows[0].status;currentVersion=versionToken(rows[0].updated_at)}
-  else if(method==='set_course_status'){entityId=scope.courseId;const {rows}=await db.query(`SELECT status,updated_at FROM learning_courses WHERE id=$1`,[scope.courseId]);currentState=rows[0]?.status;currentVersion=versionToken(rows[0]?.updated_at)}
-  else if(method==='set_teacher_membership'){entityId=textArg(args,'userId','user_id');const {rows}=await db.query(`SELECT EXISTS(SELECT 1 FROM learning_course_memberships WHERE course_id=$1 AND user_id=$2 AND role='teacher') AS enabled`,[scope.courseId,entityId]);currentState=Boolean(rows[0]?.enabled);currentVersion=currentState}
-  else {entityId=textArg(args,'evaluationId','evaluation_id');const {rows}=await db.query(`SELECT e.status FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id WHERE e.id=$1 AND a.course_id=$2`,[entityId,scope.courseId]);if(!rows[0])throw new Error('evaluation is outside the current course');currentState=rows[0].status;currentVersion=currentState}
-  return {requestedBy:scope.teacherId,summary:`${scope.agentName} 请求教师确认：${method}`,
+  let entityId:string|undefined;let entityLabel:string|undefined;let currentState:unknown;let currentVersion:unknown
+  if(method.includes('objective')){
+    entityId=textArg(args,'objectiveId','objective_id')
+    const {rows}=await db.query<{status:string;updated_at:unknown;title:string}>(`SELECT status,updated_at,title FROM learning_objectives WHERE id=$1 AND course_id=$2`,[entityId,scope.courseId])
+    if(!rows[0])throw new Error('objective is outside the current course')
+    currentState=rows[0].status;currentVersion=versionToken(rows[0].updated_at);entityLabel=rows[0].title
+  }
+  else if(method.includes('activity')){
+    entityId=textArg(args,'activityId','activity_id')
+    const {rows}=await db.query<{status:string;updated_at:unknown;title:string}>(`SELECT status,updated_at,title FROM learning_activities WHERE id=$1 AND course_id=$2`,[entityId,scope.courseId])
+    if(!rows[0])throw new Error('activity is outside the current course')
+    currentState=rows[0].status;currentVersion=versionToken(rows[0].updated_at);entityLabel=rows[0].title
+  }
+  else if(method==='set_course_status'){
+    entityId=scope.courseId;entityLabel=scope.courseTitle
+    const {rows}=await db.query<{status:string;updated_at:unknown}>(`SELECT status,updated_at FROM learning_courses WHERE id=$1`,[scope.courseId])
+    currentState=rows[0]?.status;currentVersion=versionToken(rows[0]?.updated_at)
+  }
+  else if(method==='set_teacher_membership'){
+    entityId=textArg(args,'userId','user_id')
+    const {rows}=await db.query<{enabled:boolean;name:string|null}>(`SELECT EXISTS(SELECT 1 FROM learning_course_memberships WHERE course_id=$1 AND user_id=$2 AND role='teacher') AS enabled,(SELECT name FROM participants WHERE id=$2 AND company_id=$3 LIMIT 1) AS name`,[scope.courseId,entityId,scope.companyId])
+    currentState=Boolean(rows[0]?.enabled);currentVersion=currentState;entityLabel=rows[0]?.name??'课程成员'
+  }
+  else {
+    entityId=textArg(args,'evaluationId','evaluation_id')
+    const {rows}=await db.query<{status:string;title:string|null}>(`SELECT e.status,act.title FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id LEFT JOIN learning_activities act ON act.id=a.activity_id WHERE e.id=$1 AND a.course_id=$2`,[entityId,scope.courseId])
+    if(!rows[0])throw new Error('evaluation is outside the current course')
+    currentState=rows[0].status;currentVersion=currentState;entityLabel=rows[0].title??'学习评价'
+  }
+  const operationLabel:Record<string,string>={
+    publish_objective:'发布学习目标',archive_objective:'归档学习目标',publish_activity:'发布学习活动',close_activity:'关闭学习活动',
+    set_course_status:String(args.status)==='archived'?'归档课程':'启用课程',
+    set_teacher_membership:args.enabled===false?'移除教师身份':'授予教师身份',
+    review_evaluation:args.decision==='reject'?'退回学习评价':'采纳学习评价',override_mastery:'人工调整掌握等级',
+  }
+  return {requestedBy:scope.teacherId,summary:`${operationLabel[method]??'确认关键变更'}“${entityLabel??'当前对象'}”`,
     scope:{projectId:scope.projectId,courseId:scope.courseId,roomId:scope.roomId,risk:method.includes('evaluation')||method==='override_mastery'?'learning_evaluation':'course_management'},
-    preview:{method,entityId,currentState,currentVersion,args}}
+    preview:{method,entityId,entityLabel,currentState,currentVersion,args}}
 }
 
 export async function assertTeacherApprovalFresh(input:{channelId:string;companyId:string;action:string;preview:Record<string,unknown>},db:Queryable=pool):Promise<void>{

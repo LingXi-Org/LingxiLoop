@@ -11,11 +11,11 @@ const initialCanvas: CanvasSnapshot = {
   companyId: 'mock-workspace',
   conversationId: MOCK_LAB_ROOM_ID,
   triggerClientMsgNo: null,
-  goal: '用可复现实验解释 Markov 链长期状态，并保留来源与验证证据。',
+  goal: '用可复现实验解释马尔可夫链长期状态，并保留来源与验证证据。',
   initiatorAgentId: 'mock-forge',
   status: 'completed',
   origin: 'mock',
-  summary: 'Reporter 已消费三份结构化报告：数值结论获支持，但保留周期链反例冲突和适用范围。',
+  summary: '汇总角色已读取三份结构化报告：数值结论获得支持，同时保留周期链反例和适用范围。',
   createdBy: MOCK_USER_ID,
   createdAt: isoMinutesAgo(28),
   updatedAt,
@@ -23,7 +23,7 @@ const initialCanvas: CanvasSnapshot = {
     {
       id: 'mock-frame-plan', canvasId: MOCK_LEARNING_CANVAS_ID, type: 'markdown', title: '迁移任务与成功标准',
       x: 70, y: 80, width: 430, height: 310,
-      content: '# Markov 链迁移任务\n\n- 写出转移矩阵并核对随机性\n- 用特征分解解释长期状态\n- 与直接迭代的数值结果交叉验证\n- 记录适用条件、误差和反例\n\n成功标准：结论可复现，且经 Trace 独立复核和教师确认。',
+      content: '# 马尔可夫链迁移任务\n\n- 写出转移矩阵并核对随机性\n- 用特征分解解释长期状态\n- 与直接迭代的数值结果交叉验证\n- 记录适用条件、误差和反例\n\n成功标准：结论可复现，且经 Trace 独立复核和教师确认。',
       data: {}, revision: 2, createdBy: 'mock-nova', updatedBy: 'mock-nova', createdAt: isoMinutesAgo(27), updatedAt: isoMinutesAgo(18),
     },
     {
@@ -144,9 +144,9 @@ export function seedMockLearningCanvas(): void {
       if (existing) { replaceSnapshot(existing); return existing }
       const createdAt = new Date().toISOString()
       const created: CanvasSnapshot = {
-        ...initialCanvas, id: `mock-learning-canvas-${Date.now()}`, conversationId, title: '学习协作 Canvas',
+        ...initialCanvas, id: `mock-learning-canvas-${Date.now()}`, conversationId, title: '学习协作画布',
         goal: '汇聚课程问题、学习证据和教学智能体报告。', initiatorAgentId: null,
-        summary: 'Canvas 已创建，等待第一张学习卡片。', createdAt, updatedAt: createdAt,
+        summary: '协作画布已创建，等待第一张学习卡片。', createdAt, updatedAt: createdAt,
         frames: [], assignments: [], presence: [], comments: [], activity: [],reports:[],
       }
       replaceSnapshot(created)

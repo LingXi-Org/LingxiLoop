@@ -111,6 +111,13 @@ async function refreshLearningPreset(db: QueryClient, companyId: string): Promis
       ],
     )
   }
+  for (const room of STARTER_ROOMS) {
+    await db.query(
+      `UPDATE conversations SET title=$3, updated_at=NOW()
+        WHERE company_id=$1 AND preset_key=$2`,
+      [companyId, `room:${room.presetKey}`, room.title],
+    )
+  }
 }
 
 /** Install the preset once, or refresh the current preset without replacing identities or learning history. */

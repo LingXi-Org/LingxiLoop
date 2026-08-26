@@ -55,3 +55,13 @@ test('explicit execution role selects verifier or specialist contract independen
   const traceAsSpecialist=assembleAgentSystemPrompt({persona:{name:'Trace',role:'Diagnostician',instructions:'Diagnose.'},capabilities:['learning'],memories:{learner:[],course:[],agentRole:[]},assembledAt:'2026-08-26T08:00:00.000Z',executionRole:'specialist'})
   assert.match(traceAsSpecialist, /# Frontier-style Specialist Workflow/)
 })
+
+test('Pulse follows grok ordering with the Frontier teacher operations workflow and no learner surface',()=>{
+  const prompt=assembleAgentSystemPrompt({persona:{name:'Pulse · Algebra',role:'Teacher Operations',instructions:'Be exact.'},capabilities:['teacher_admin'],memories:{learner:[],course:[],agentRole:[]},executionRole:'coordinator',assembledAt:'2026-08-26T08:00:00.000Z'})
+  assert.ok(prompt.indexOf('<policy>')<prompt.indexOf('# Available Tool Surface'))
+  assert.ok(prompt.indexOf('# Available Tool Surface')<prompt.indexOf('# Frontier-style Teacher Operations Workflow'))
+  assert.match(prompt,/exactly `loop\.teacher` and `loop\.turn`/)
+  assert.match(prompt,/Observe current Host-scoped state/)
+  assert.match(prompt,/Anti-spin/)
+  assert.doesNotMatch(prompt,/loop\.learning|Canvas is the only fan-out/)
+})

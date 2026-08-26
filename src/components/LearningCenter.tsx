@@ -21,6 +21,73 @@ type Section =
   | "reviews"
   | "notifications";
 
+const STATUS_LABELS: Record<string, string> = {
+  draft: "草稿",
+  active: "进行中",
+  published: "已发布",
+  closed: "已关闭",
+  archived: "已归档",
+  open: "待开始",
+  in_progress: "进行中",
+  completed: "已完成",
+  cancelled: "已取消",
+  pending: "待审核",
+  accepted: "已采纳",
+  rejected: "已退回",
+  verified: "已验证",
+  learning: "学习中",
+  needs_review: "待复核",
+  sent: "已送达",
+  failed: "投递失败",
+};
+const MISSION_KIND_LABELS: Record<string, string> = {
+  study: "持续学习",
+  project: "迁移项目",
+  research: "资料研读",
+  review: "复习巩固",
+};
+const STEP_TYPE_LABELS: Record<string, string> = {
+  learn: "理解",
+  practice: "练习",
+  check: "检查",
+  reflect: "反思",
+};
+const ACTIVITY_TYPE_LABELS: Record<string, string> = {
+  lesson: "课程讲解",
+  practice: "练习",
+  assessment: "考核",
+  project: "项目",
+  review: "复习",
+};
+const EVALUATION_MODE_LABELS: Record<string, string> = {
+  agent_formative: "智能体形成性评价",
+  teacher_required: "教师审核",
+};
+const WEEKDAY_LABELS: Record<string, string> = {
+  monday: "周一",
+  tuesday: "周二",
+  wednesday: "周三",
+  thursday: "周四",
+  friday: "周五",
+  saturday: "周六",
+  sunday: "周日",
+};
+const ASSISTANCE_LABELS: Record<string, string> = {
+  none: "独立完成",
+  hint: "使用提示",
+  guided: "引导下完成",
+};
+const DELIVERY_CHANNEL_LABELS: Record<string, string> = {
+  in_app: "应用内",
+  push: "移动推送",
+  email: "邮件",
+};
+
+function statusLabel(value: unknown): string {
+  const raw = String(value ?? "—");
+  return STATUS_LABELS[raw] ?? raw;
+}
+
 function Card({
   children,
   className = "",
@@ -125,14 +192,14 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
     <div className="mx-auto flex min-h-full max-w-3xl items-center px-5 py-10">
       <Card className="w-full p-6 md:p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
-          Learning Center
+          学习中心
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-ink">
           建立你的第一个课程空间
         </h1>
         <p className="mt-2 max-w-xl text-[13px] leading-6 text-ink-secondary">
-          课程把目标、Study Room、练习证据与掌握度连成一个闭环。Agent
-          可以规划和形成性评价，发布与高阶掌握仍由教师确认。
+          课程把学习目标、学习室、练习证据与掌握度连成一个闭环。教学智能体
+          可以协助规划并开展形成性评价，发布内容与确认高阶掌握仍由教师负责。
         </p>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <label className="grid gap-2 text-[12px] font-semibold text-ink">
@@ -158,7 +225,7 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
             />
           </label>
           <label className="grid gap-2 text-[12px] font-semibold text-ink">
-            所属 Project
+            所属项目
             <select
               value={projectId}
               onChange={(event) => setProjectId(event.target.value)}
@@ -172,7 +239,7 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
             </select>
           </label>
           <label className="grid gap-2 text-[12px] font-semibold text-ink">
-            绑定 Study Room
+            绑定学习室
             <select
               value={roomId}
               onChange={(event) => setRoomId(event.target.value)}
@@ -220,7 +287,7 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
         )}
         <div className="mt-6 flex items-center justify-between gap-4">
           <p className="text-[11px] text-ink-secondary">
-            应用内提醒默认开启；Push 与邮件可稍后显式订阅。
+            应用内提醒默认开启；移动推送与邮件可稍后自行订阅。
           </p>
           <button
             disabled={busy || !projectId || !title.trim()}
@@ -522,7 +589,7 @@ export function LearningCenter() {
           ["notifications", "提醒"],
         ]
       : [
-          ["today", "Today"],
+          ["today", "今日"],
           ["objectives", "目标图"],
           ["activities", "活动"],
           ["evidence", "掌握证据"],
@@ -533,7 +600,7 @@ export function LearningCenter() {
     <div className="flex h-full min-h-0 flex-col bg-app text-ink">
       <header className="shrink-0 border-b border-hairline bg-panel px-4 py-3 md:px-6">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 basis-full md:basis-auto md:flex-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
               学习
             </p>
@@ -542,7 +609,7 @@ export function LearningCenter() {
           <select
             value={courseId}
             onChange={(event) => setCourseId(event.target.value)}
-            className="h-9 max-w-52 rounded-xl border border-hairline bg-card px-3 text-[12px]"
+            className="h-9 min-w-0 flex-1 rounded-xl border border-hairline bg-card px-3 text-[12px] md:max-w-52 md:flex-none"
           >
             {dashboard.courses.map((item) => (
               <option key={item.id} value={item.id}>
@@ -551,7 +618,7 @@ export function LearningCenter() {
             ))}
           </select>
           {course.roles.length > 1 && (
-            <div className="flex rounded-full bg-raised p-1">
+            <div className="flex shrink-0 rounded-full bg-raised p-1">
               {(["learner", "teacher"] as const).map((role) => (
                 <button
                   key={role}
@@ -617,8 +684,8 @@ export function LearningCenter() {
                   <Card key={String(mission.id)}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
-                          Mission task board
+                        <p className="text-[10px] font-bold tracking-[0.16em] text-accent">
+                          学习任务板
                         </p>
                         <h3 className="mt-1 text-[15px] font-semibold">
                           {String(mission.goal)}
@@ -627,11 +694,11 @@ export function LearningCenter() {
                           成功标准：{String(mission.successCriteria)}
                         </p>
                         <p className="mt-1 text-[10px] font-semibold text-ink-secondary">
-                          {String(mission.missionKind ?? "study")} · coordinator {String(mission.coordinatorName ?? mission.coordinatorAgentId ?? "—")}
+                          {MISSION_KIND_LABELS[String(mission.missionKind ?? "study")] ?? String(mission.missionKind ?? "study")} · 负责人 {String(mission.coordinatorName ?? mission.coordinatorAgentId ?? "—")}
                         </p>
                       </div>
                       <span className="rounded-full bg-accent/10 px-3 py-1 text-[11px] font-semibold text-accent">
-                        {String(mission.status)} · {completed}/{steps.length}
+                        {statusLabel(mission.status)} · 已完成 {completed}/{steps.length}
                       </span>
                     </div>
                     <div className="mt-4 space-y-2">
@@ -652,7 +719,7 @@ export function LearningCenter() {
                               {String(step.description)}
                             </p>
                             <p className="mt-0.5 text-[10px] text-ink-secondary">
-                              {String(step.type)} ·{" "}
+                              {STEP_TYPE_LABELS[String(step.type)] ?? String(step.type)} ·{" "}
                               {String(step.successCriteria)}
                             </p>
                           </div>
@@ -681,7 +748,7 @@ export function LearningCenter() {
                 <Card>
                   <p className="text-[14px] font-semibold">今天没有到期复习</p>
                   <p className="mt-1 text-[12px] text-ink-secondary">
-                    你可以继续一个活动，或在 Study Room 里让 Nova 建立 Mission。
+                    你可以继续一个活动，或在学习室里请 Nova 建立持续学习任务。
                   </p>
                 </Card>
               )}
@@ -690,14 +757,15 @@ export function LearningCenter() {
           {section === "today" && perspective === "teacher" && (
             <>
               {teacherAgent&&<Card className="overflow-hidden border-accent/25 bg-gradient-to-br from-accent/10 via-card to-card">
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-start gap-4 md:items-center">
                   <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-accent text-lg font-bold text-white shadow-sm">P</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2"><h3 className="text-[15px] font-semibold">{teacherAgent.displayName}</h3><span className="rounded-full bg-accent/10 px-2 py-1 text-[10px] font-bold text-accent">教师专用 · Project 共用</span></div>
-                    <p className="mt-1 text-[12px] text-ink-secondary">教学运营与学情汇总 · 仅当前课程 teacher 可见，关键变更进入人工审批</p>
-                    <p className="mt-2 text-[11px] text-ink-secondary">摘要：{teacherAgent.digest.frequency==='off'?'关闭':`${teacherAgent.digest.frequency==='daily'?'每日':`每周 ${teacherAgent.digest.weekday??''}`} ${teacherAgent.digest.localTime??''} · ${teacherAgent.digest.timezone}`}{teacherAgent.digest.nextRunAt?` · 下次 ${new Date(teacherAgent.digest.nextRunAt).toLocaleString()}`:''} · 待审批 {teacherAgent.pendingApprovals}</p>
+                  <div className="min-w-0 flex-1 basis-[220px]">
+                    <div className="flex flex-wrap items-center gap-2"><h3 className="text-[15px] font-semibold">{teacherAgent.displayName}</h3><span className="rounded-full bg-accent/10 px-2 py-1 text-[10px] font-bold text-accent">教师专用 · 项目内复用</span></div>
+                    <p className="mt-1 text-[12px] text-ink-secondary">教学运营与学情汇总 · 仅本课程教师可见，关键变更必须由教师确认</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-semibold text-ink-secondary"><span className="rounded-full bg-raised px-2 py-1">班级汇总</span><span className="rounded-full bg-raised px-2 py-1">学生钻取</span><span className="rounded-full bg-raised px-2 py-1">关键变更审批</span></div>
+                    <p className="mt-2 text-[11px] text-ink-secondary">定时摘要：{teacherAgent.digest.frequency==='off'?'未开启':`${teacherAgent.digest.frequency==='daily'?'每日':`每${WEEKDAY_LABELS[teacherAgent.digest.weekday??'']??'周'}`} ${teacherAgent.digest.localTime??''} · ${teacherAgent.digest.timezone}`}{teacherAgent.digest.nextRunAt?` · 下次发送 ${new Date(teacherAgent.digest.nextRunAt).toLocaleString('zh-CN')}`:''} · 待审批 {teacherAgent.pendingApprovals} 项</p>
                   </div>
-                  <button onClick={()=>void useConversations.getState().reload().then(()=>{setView('conversations');selectConversation(teacherAgent.roomId)})} className="rounded-full bg-accent px-4 py-2.5 text-[12px] font-semibold text-white">打开共享教师室</button>
+                  <button onClick={()=>void useConversations.getState().reload().then(()=>{setView('conversations');selectConversation(teacherAgent.roomId)})} className="w-full whitespace-nowrap rounded-full bg-accent px-4 py-2.5 text-[12px] font-semibold text-white md:w-auto">打开共享教师室</button>
                 </div>
               </Card>}
               <div className="grid gap-4 md:grid-cols-3">
@@ -715,7 +783,7 @@ export function LearningCenter() {
                 </Card>
                 <Card>
                   <p className="text-[11px] text-ink-secondary">课程状态</p>
-                  <p className="mt-2 text-xl font-semibold">{course.status}</p>
+                  <p className="mt-2 text-xl font-semibold">{statusLabel(course.status)}</p>
                 </Card>
               </div>
               {progress.length > 0 && (
@@ -746,7 +814,7 @@ export function LearningCenter() {
                   </div>
                 </Card>
               )}
-              {missions.length>0&&<Card><h3 className="text-[14px] font-semibold">Mission coordinators</h3><div className="mt-3 divide-y divide-hairline">{missions.map((mission)=><div key={String(mission.id)} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="text-[12px] font-semibold">{String(mission.goal)}</p><p className="mt-1 text-[10px] text-ink-secondary">{String(mission.missionKind??'study')} · 单一任务级 coordinator</p></div><select value={String(mission.coordinatorAgentId??'')} onChange={(event)=>void api.setLearningMissionCoordinator(course.id,String(mission.id),event.target.value).then(()=>loadCourse()).catch((reason)=>setError(String(reason)))} className="h-9 rounded-xl border border-hairline bg-panel px-3 text-[11px]">{coordinatorAgents.map((agent)=><option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></div>)}</div></Card>}
+              {missions.length>0&&<Card><h3 className="text-[14px] font-semibold">学习任务负责人</h3><p className="mt-1 text-[11px] text-ink-secondary">每项持续学习任务由一名教学智能体负责协调，专业角色仍可在协作画布中分工。</p><div className="mt-3 divide-y divide-hairline">{missions.map((mission)=><div key={String(mission.id)} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="text-[12px] font-semibold">{String(mission.goal)}</p><p className="mt-1 text-[10px] text-ink-secondary">{MISSION_KIND_LABELS[String(mission.missionKind??'study')]??String(mission.missionKind??'study')} · 当前负责人 {String(mission.coordinatorName??mission.coordinatorAgentId??'—')}</p></div><select aria-label={`调整“${String(mission.goal)}”的负责人`} value={String(mission.coordinatorAgentId??'')} onChange={(event)=>void api.setLearningMissionCoordinator(course.id,String(mission.id),event.target.value).then(()=>loadCourse()).catch((reason)=>setError(String(reason)))} className="h-9 rounded-xl border border-hairline bg-panel px-3 text-[11px]">{coordinatorAgents.map((agent)=><option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></div>)}</div></Card>}
               <TeacherComposer
                 course={course}
                 objectives={objectives}
@@ -779,7 +847,7 @@ export function LearningCenter() {
                       <p className="mt-2 text-[10px] text-ink-secondary">
                         目标等级 L{objective.targetLevel} · 先修{" "}
                         {objective.prerequisiteIds.length || "无"} ·{" "}
-                        {objective.status}
+                        {statusLabel(objective.status)}
                       </p>
                       {perspective === "teacher" &&
                         objective.status === "draft" && (
@@ -822,15 +890,15 @@ export function LearningCenter() {
                           {activity.title}
                         </h3>
                         <span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-ink-secondary">
-                          {activity.status}
+                          {statusLabel(activity.status)}
                         </span>
                       </div>
                       <p className="mt-2 text-[12px] leading-5 text-ink-secondary">
                         {activity.instructions}
                       </p>
                       <p className="mt-2 text-[10px] text-ink-secondary">
-                        {activity.type} · L{activity.targetLevel} ·{" "}
-                        {activity.evaluationMode}
+                        {ACTIVITY_TYPE_LABELS[activity.type] ?? activity.type} · L{activity.targetLevel} ·{" "}
+                        {EVALUATION_MODE_LABELS[activity.evaluationMode] ?? activity.evaluationMode}
                       </p>
                     </div>
                     {perspective === "teacher" && (
@@ -918,7 +986,7 @@ export function LearningCenter() {
                         </p>
                         <p className="mt-1 text-[11px] text-ink-secondary">
                           {new Date(String(item.created_at)).toLocaleString()} ·{" "}
-                          {String(item.assistance)}
+                          {ASSISTANCE_LABELS[String(item.assistance)] ?? String(item.assistance)}
                         </p>
                       </div>
                       {item.demonstrated_level !== null &&
@@ -948,7 +1016,7 @@ export function LearningCenter() {
                     {String(item.activity_title ?? "学习评价")}
                   </h3>
                   <p className="mt-1 text-[12px] text-ink-secondary">
-                    学习者 {String(item.learner_id)} · 建议 L
+                    学习者 {String(progress.find((learner)=>learner.user_id===item.learner_id)?.display_name??"课程成员")} · 建议 L
                     {String(item.demonstrated_level)} · 置信度{" "}
                     {Math.round(Number(item.confidence) * 100)}%
                   </p>
@@ -956,9 +1024,9 @@ export function LearningCenter() {
                     {String(item.feedback ?? "")}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold">
-                    <span className="rounded-full bg-raised px-2 py-1 text-ink-secondary">builder {String(item.builder_agent_id ?? "未绑定")}</span>
+                    <span className="rounded-full bg-raised px-2 py-1 text-ink-secondary">评价提交者：{item.builder_agent_id?participantsById[String(item.builder_agent_id)]?.name??"教学智能体":"未绑定"}</span>
                     <span className={`rounded-full px-2 py-1 ${item.verifier_verdict === "supported" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
-                      verifier {String(item.verifier_agent_id ?? "缺失")} · {String(item.verifier_verdict ?? "teacher_required")}
+                      独立复核：{item.verifier_agent_id?participantsById[String(item.verifier_agent_id)]?.name??"教学智能体":"尚未复核"} · {item.verifier_verdict==="supported"?"证据支持":item.verifier_verdict==="contradicted"?"证据冲突":"需教师审核"}
                     </span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -1025,7 +1093,7 @@ export function LearningCenter() {
                 {(
                   [
                     ["in_app_enabled", "应用内"],
-                    ["push_enabled", "Push"],
+                    ["push_enabled", "移动推送"],
                     ["email_enabled", "邮件"],
                   ] as const
                 ).map(([key, label]) => (
@@ -1153,10 +1221,10 @@ export function LearningCenter() {
                           {item.kind === "review_due"
                             ? "复习摘要"
                             : "待审核摘要"}{" "}
-                          · {String(item.channel)}
+                          · {DELIVERY_CHANNEL_LABELS[String(item.channel)] ?? String(item.channel)}
                         </span>
                         <span className="text-ink-secondary">
-                          {String(item.status)}
+                          {statusLabel(item.status)}
                         </span>
                       </div>
                     ))}

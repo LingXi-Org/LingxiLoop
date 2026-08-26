@@ -1752,21 +1752,52 @@ function ApprovalCard({ msg }: { msg: Message }) {
           : '财务或不可逆操作'
   const requestedBy=approval.requestedBy?participants[approval.requestedBy]?.name??approval.requestedBy:null
   const resolvedBy=approval.resolvedBy?participants[approval.resolvedBy]?.name??approval.resolvedBy:null
+  const previewArgs=(approval.preview?.args&&typeof approval.preview.args==='object'&&!Array.isArray(approval.preview.args)
+    ?approval.preview.args
+    :{}) as Record<string,unknown>
+  const method=String(approval.preview?.method??String(approval.payload.action??'').split('.').pop()??'operation')
+  const operationLabel:Record<string,string>={
+    publish_objective:'发布学习目标',archive_objective:'归档学习目标',publish_activity:'发布学习活动',close_activity:'关闭学习活动',
+    set_course_status:'变更课程状态',set_teacher_membership:'变更教师权限',review_evaluation:'审核学习评价',override_mastery:'人工调整掌握等级',
+  }
+  const stateLabel=(value:unknown):string=>{
+    if(value===true)return '已启用'
+    if(value===false)return '未启用'
+    const raw=String(value??'—')
+    return ({draft:'草稿',published:'已发布',closed:'已关闭',archived:'已归档',active:'进行中',paused:'已暂停',pending:'待审核',accepted:'已采纳',rejected:'已拒绝',approved:'已批准',teacher_required:'需教师审核'} as Record<string,string>)[raw]??raw
+  }
+  const requestedState=approval.preview?.nextState
+    ??previewArgs.status
+    ??(method==='set_teacher_membership'?(previewArgs.enabled===false?'移除教师身份':'授予教师身份'):undefined)
+    ??(method==='review_evaluation'?(previewArgs.decision==='reject'?'退回评价':'采纳评价'):undefined)
+    ??(method==='override_mastery'?(previewArgs.overrideLevel!==undefined?`掌握等级 L${String(previewArgs.overrideLevel)}`:'人工确认掌握等级'):undefined)
+    ??({publish_objective:'已发布',archive_objective:'已归档',publish_activity:'已发布',close_activity:'已关闭'} as Record<string,string>)[method]
+    ??'执行申请中的变更'
   return (
-    <div className="w-full max-w-[560px] select-text rounded-xl border border-hairline bg-panel px-4 py-3 shadow-sm">
-      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-secondary">
-        <span className="size-2 rounded-full bg-accent" />需要你的批准
-        {!pending && <span className={`ml-auto normal-case tracking-normal ${approval.status === 'approved' ? 'text-[var(--avail)]' : approval.status === 'rejected' ? 'text-[var(--coral-deep)]' : 'text-ink-secondary'}`}>{approval.status === 'approved' ? '已批准' : approval.status === 'rejected' ? '已拒绝' : '已过期'}</span>}
+    <div className="message-attachment-bubble mt-1 w-full select-text overflow-hidden rounded-[11px] border border-ink-100 bg-cloud">
+      <div className="flex items-start gap-2.5 p-2.5">
+        <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-accent to-[#075cae] text-white" aria-hidden>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.12em] text-ink-500">
+            教师审批
+            <span className="ml-auto normal-case tracking-normal text-[10.5px] text-ink-500">{pending?'等待确认':approval.status === 'approved' ? '已批准' : approval.status === 'rejected' ? '已拒绝' : '已过期'}</span>
+          </div>
+          <div data-find-content className="mt-1 text-[13px] font-semibold leading-5 text-ink-900">{approval.summary}</div>
+          <div className="mt-0.5 text-[11px] text-ink-500">{detail}</div>
+        </div>
       </div>
-      <div className="mt-2 text-[14px] font-semibold text-ink-900">{approval.summary}</div>
-      <div className="mt-1 text-[11px] text-ink-secondary">{detail}</div>
-      {(requestedBy||resolvedBy)&&<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10.5px] text-ink-secondary">{requestedBy&&<span>发起人：{requestedBy}</span>}{resolvedBy&&<span>确认人：{resolvedBy}</span>}</div>}
-      {approval.preview&&<div className="mt-2 rounded-lg bg-raised px-3 py-2 font-mono text-[10.5px] leading-relaxed text-ink-secondary">{String(approval.preview.method??'operation')} · {String(approval.preview.entityId??'current scope')}<br/>{String(approval.preview.currentState??'—')} → {String(approval.preview.nextState??(approval.preview.args as Record<string,unknown>|undefined)?.status??'requested')}</div>}
-      {approval.error&&<div className="mt-2 text-[11px] text-coral-deep">{approval.error}</div>}
+      {approval.preview&&<div className="border-t border-ink-100 px-3 py-2.5 text-[11px] leading-relaxed text-ink-500">
+        <div className="flex items-center justify-between gap-3"><span>{operationLabel[method]??'确认关键变更'}</span>{Boolean(approval.preview.entityId)&&<span className="max-w-[52%] truncate text-[10.5px]" title={`对象编号：${String(approval.preview.entityId)}`}>{String(approval.preview.entityLabel??'查看变更对象')}</span>}</div>
+        <div className="mt-1.5 flex items-center gap-2 font-semibold text-ink-700"><span className="rounded-md bg-raised px-2 py-1">{stateLabel(approval.preview.currentState)}</span><span aria-hidden>→</span><span className="rounded-md bg-accent/10 px-2 py-1 text-accent">{stateLabel(requestedState)}</span></div>
+      </div>}
+      {(requestedBy||resolvedBy)&&<div className="border-t border-ink-100 px-3 py-2 text-[10.5px] text-ink-500"><div className="flex flex-wrap gap-x-4 gap-y-1">{requestedBy&&<span>发起人：{requestedBy}</span>}{resolvedBy&&<span>确认人：{resolvedBy}</span>}</div></div>}
+      {approval.error&&<div className="border-t border-ink-100 px-3 py-2 text-[11px] text-coral-deep">{approval.error}</div>}
       {pending && (
-        <div className="mt-3 flex justify-end gap-2">
+        <div className="flex justify-end gap-2 border-t border-ink-100 px-3 py-2.5">
           <button type="button" disabled={busy !== null} onClick={() => void resolve('rejected')}
-            className="rounded-lg border border-hairline px-3 py-1.5 text-[12px] font-semibold text-ink-secondary enabled:hover:bg-raised-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50">
+            className="rounded-lg border border-ink-100 bg-panel px-3 py-1.5 text-[12px] font-semibold text-ink-500 enabled:hover:shadow-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50">
             {busy === 'rejected' ? '处理中…' : '拒绝'}
           </button>
           <button type="button" disabled={busy !== null} onClick={() => void resolve('approved')}
@@ -1775,7 +1806,7 @@ function ApprovalCard({ msg }: { msg: Message }) {
           </button>
         </div>
       )}
-      {error && <div className="mt-2 text-[11px] text-coral-deep">{error}</div>}
+      {error && <div className="border-t border-ink-100 px-3 py-2 text-[11px] text-coral-deep">{error}</div>}
     </div>
   )
 }
@@ -1906,7 +1937,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
       <div className={cn(
         'min-w-0',
         shell.selection && 'select-text',
-        (isAttachOnly || isCanvas) && 'message-attachment-host',
+        (isAttachOnly || isCanvas || isApproval) && 'message-attachment-host',
         openMaus && 'max-w-[70%]',
         openMaus && isMine && 'flex flex-col items-end',
         !openMaus && isMine && 'ml-auto flex max-w-[84%] flex-col items-end',
@@ -1974,9 +2005,9 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
         {!isStreaming && isApproval && <ApprovalCard msg={msg} />}
         {!isStreaming && isCanvas && <CanvasWorkspaceCard msg={msg} />}
         {!isStreaming && isLearningMission && msg.learningMission && (
-          <button type="button" onClick={() => useApp.getState().setView('learning')} className="mt-1 block w-full max-w-[620px] overflow-hidden rounded-2xl border border-accent/25 bg-card text-left shadow-sm transition hover:border-accent/50">
-            <div className="border-b border-hairline bg-accent/10 px-4 py-3"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Learning Mission</p><h3 className="mt-1 text-[15px] font-semibold text-ink">{msg.learningMission.goal}</h3></div>
-            <div className="px-4 py-3"><p className="text-[11px] font-semibold text-ink-secondary">成功标准</p><p className="mt-1 text-[13px] leading-5 text-ink">{msg.learningMission.successCriteria}</p><div className="mt-3 flex items-center justify-between"><span className="rounded-full bg-raised px-2.5 py-1 text-[10px] font-semibold text-ink-secondary">{msg.learningMission.status}</span><span className="text-[11px] font-semibold text-accent">打开学习中心 →</span></div></div>
+          <button type="button" onClick={() => useApp.getState().setView('learning')} className="message-attachment-bubble mt-1 block w-full max-w-[620px] overflow-hidden rounded-2xl border text-left transition hover:shadow-soft">
+            <div className="border-b border-ink-100 bg-accent/10 px-4 py-3"><p className="text-[10px] font-bold tracking-[0.16em] text-accent">学习任务</p><h3 className="mt-1 text-[15px] font-semibold text-ink">{msg.learningMission.goal}</h3></div>
+            <div className="px-4 py-3"><p className="text-[11px] font-semibold text-ink-secondary">成功标准</p><p className="mt-1 text-[13px] leading-5 text-ink">{msg.learningMission.successCriteria}</p><div className="mt-3 flex items-center justify-between"><span className="rounded-full bg-raised px-2.5 py-1 text-[10px] font-semibold text-ink-secondary">{msg.learningMission.status==='active'?'进行中':msg.learningMission.status==='completed'?'已完成':msg.learningMission.status==='cancelled'?'已取消':msg.learningMission.status}</span><span className="text-[11px] font-semibold text-accent">打开学习中心 →</span></div></div>
           </button>
         )}
 

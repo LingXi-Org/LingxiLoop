@@ -13,14 +13,14 @@ const PALETTE = [
 ]
 
 const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; description: string }> = [
-  { id: 'canvas', label: 'Canvas', description: '查看并修改工作区共享画布与 Frame' },
-  { id: 'web', label: 'Web Research', description: '搜索和读取公开网页' },
-  { id: 'files', label: 'Files', description: '读写工作区与交付文件' },
-  { id: 'email', label: 'Email', description: '起草邮件；发送仍需审批策略' },
-  { id: 'documents', label: 'Documents', description: '创建、读取和编辑协作文档' },
-  { id: 'calendar', label: 'Calendar', description: '访问日历和日程相关能力' },
-  { id: 'knowledge', label: 'Knowledge', description: '检索并操作当前工作区的 Open Notebook 知识库' },
-  { id: 'learning', label: 'Learning', description: '在课程范围内规划 Mission、记录证据并提出形成性评价' },
+  { id: 'canvas', label: '共享画布', description: '查看并修改工作区共享画布与内容卡片' },
+  { id: 'web', label: '网页研究', description: '搜索和读取公开网页' },
+  { id: 'files', label: '文件', description: '读写工作区与交付文件' },
+  { id: 'email', label: '邮件', description: '起草邮件；实际发送仍受审批策略约束' },
+  { id: 'documents', label: '协作文档', description: '创建、读取和编辑协作文档' },
+  { id: 'calendar', label: '日历', description: '访问日历和日程相关能力' },
+  { id: 'knowledge', label: '知识库', description: '检索并操作当前工作区的 Open Notebook 知识库' },
+  { id: 'learning', label: '教学', description: '在课程范围内规划学习任务、记录证据并提出形成性评价' },
 ]
 const DEFAULT_CAPABILITIES: AgentCapability[] = ['canvas', 'web', 'files', 'email', 'documents', 'knowledge']
 
@@ -117,7 +117,7 @@ export function AgentEditor({ agent, onClose }: Props) {
           </div>
           <div className="flex-1">
             <h2 className="font-display font-medium text-[20px] tracking-tight">
-              {editing ? `Edit ${agent!.name}` : "新智能体"}
+              {editing ? `编辑 ${agent!.name}` : "新建智能体"}
             </h2>
             <div className="text-[12.5px] text-ink-500 italic font-display">
               {editing ? "调整该队友的行为方式。" : "从头开始​​定义一个新队友。"}
@@ -131,52 +131,52 @@ export function AgentEditor({ agent, onClose }: Props) {
         </div>
 
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
-          <Field label="姓名" hint="队友怎么称呼他们。句柄（@-mention id）是自动从中派生的。">
+          <Field label="名称" hint="智能体在界面中的显示名称；@提及标识会自动生成。">
             <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例如佐贺"
+              placeholder="例如：概念导师"
             />
           </Field>
 
-          <Field label="任务级职责策略" hint="由 AgentOS Host 按每个 durable work item 分配，智能体不能通过名字或提示词提升权限。">
+          <Field label="任务职责" hint="由 AgentOS 主机按每个持久任务分配；智能体不能通过名称或提示词提升权限。">
             <div className="grid gap-2 sm:grid-cols-2">
               {[
-                ['Coordinator', '唯一维护 Mission 任务板并分派最小团队'],
-                ['Specialist', '只完成分配的专业子问题并提交结构化报告'],
-                ['Verifier', '必须独立于 builder，执行反例检查和证据裁决'],
-                ['Reporter', '只消费持久化报告，保留冲突并形成最终汇总'],
+                ['协调者', '维护学习任务板，并分派完成任务所需的最小团队'],
+                ['专业执行者', '只完成分配的专业子问题，并提交结构化报告'],
+                ['独立复核者', '必须独立于产出角色，执行反例检查和证据裁决'],
+                ['汇总者', '只读取已保存的报告，保留冲突并形成最终汇总'],
               ].map(([title, description]) => <div key={title} className="rounded-[10px] border border-ink-100 bg-white px-3 py-2.5"><div className="text-[12px] font-semibold text-ink-900">{title}</div><div className="mt-1 text-[11px] leading-4 text-ink-500">{description}</div></div>)}
             </div>
           </Field>
 
-          <Field label="角色" hint="名称旁边显示一个或两个单词的标题。">
+          <Field label="角色说明" hint="显示在名称旁，用简短文字说明该智能体的职责。">
             <Input
               type="text"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              placeholder="例如讲故事的人"
+              placeholder="例如：概念教学与理解检查"
             />
           </Field>
 
-          <Field label="风格（系统提示符）" hint="特工的声音、本能和怪癖。以第二人称书写 — LLM 将其读作“你”。">
+          <Field label="行为提示词" hint="描述智能体的语气、原则和工作边界。请用第二人称“你”来书写。">
             <TextArea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={5}
-              placeholder="你写叙述。你感觉到团队忘记大声说出来的话。直接、热情、从不说教。"
+              placeholder="你先核对事实，再给出清晰结论。表达直接、友好，不夸大不确定信息。"
               className="font-display italic"
               style={{ minHeight: 110 }}
             />
           </Field>
 
-          <Field label="简历" hint="可选，显示在智能体卡上。">
+          <Field label="简介" hint="可选，显示在智能体资料卡上。">
             <TextArea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={2}
-              placeholder="对他们最擅长的事情的一行描述。"
+              placeholder="用一句话说明这个智能体最擅长的事情。"
             />
           </Field>
 

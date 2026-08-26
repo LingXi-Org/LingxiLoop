@@ -10,11 +10,11 @@ import { HumanBadge } from '@/components/HumanBadge'
 import type { Participant } from '@/types'
 
 const statusLabels: Record<string, string> = {
-  avail: 'Available',
-  working: 'Working',
-  thinking: 'Thinking',
-  waiting: 'Waiting on you',
-  resting: 'Resting',
+  avail: '可用',
+  working: '工作中',
+  thinking: '思考中',
+  waiting: '等待你确认',
+  resting: '休息中',
 }
 
 const statusColors: Record<string, string> = {

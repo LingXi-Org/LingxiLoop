@@ -87,6 +87,13 @@ test('[integration] current-preset refresh preserves identities and learning his
   )
   assert.match(refreshed.rows[0]?.system_prompt ?? '', /learning coordinator/i)
   assert.deepEqual(refreshed.rows[0]?.tools, ['ipython'])
+  const visibleCopy = await pool.query<{ role:string;room_title:string }>(
+    `SELECT
+      (SELECT role FROM participants WHERE company_id=$1 AND preset_key='nova') AS role,
+      (SELECT title FROM conversations WHERE company_id=$1 AND preset_key='room:study-room') AS room_title`,
+    [companyId],
+  )
+  assert.deepEqual(visibleCopy.rows[0], { role:'学习规划与协调', room_title:'学习室' })
   const memory = await pool.query<{ body: string }>(
     "SELECT body FROM agent_workspace WHERE company_id=$1 AND agent_id=$2 AND path='memory/keep.md'",
     [companyId, novaId],

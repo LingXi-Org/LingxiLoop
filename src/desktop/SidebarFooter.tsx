@@ -130,7 +130,7 @@ export function SidebarFooter() {
       {openPanel === 'projects' && (
         <section className="grok-sidebar-popover grok-project-popover" aria-label="项目" role="menu">
           <header className="grok-sidebar-popover-header">
-            <span>Projects</span>
+            <span>项目</span>
           </header>
           <div className="grok-sidebar-popover-list">
             {projectsLoading && <div className="grok-sidebar-popover-empty">正在载入…</div>}
@@ -197,7 +197,7 @@ export function SidebarFooter() {
         onClick={() => togglePanel('projects')}
       >
         <IconFolder size={19} stroke={1.55} />
-        <span className="grok-sidebar-footer-label">{projects.find((project) => project.id === selectedProjectId)?.name ?? 'Projects'}</span>
+        <span className="grok-sidebar-footer-label">{projects.find((project) => project.id === selectedProjectId)?.name ?? '项目'}</span>
         <IconChevronDown className="grok-sidebar-row-chevron" size={16} stroke={1.55} />
       </button>
 

@@ -151,9 +151,9 @@ export function ConversationHeader({
             )}
             {!mobile && conversation.kind === 'group' && agents.length > 0 && (
               <div className="flex shrink-0 items-center gap-1 border-l border-hairline pl-2">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-ink-secondary">Leader</span>
+                <span className="text-[9px] font-bold tracking-wider text-ink-secondary">负责人</span>
                 <SelectMenu
-                  ariaLabel="更换群聊 Leader"
+                  ariaLabel="更换群聊负责人"
                   value={conversation.leaderId ?? ''}
                   onChange={(value) => void changeLeader(value)}
                   options={[

@@ -78,9 +78,9 @@ function _ComingSoonPop({ onClose }: { onClose: () => void }) {
             style={{ animation: 'lingxiloop-sparkle-drift 2.4s ease-in-out infinite' }}
           >✨</span>
           <div className="min-w-0">
-            <div className="text-[12.5px] font-semibold text-ink-900 leading-tight">Coming soon</div>
+            <div className="text-[12.5px] font-semibold text-ink-900 leading-tight">即将推出</div>
             <div className="text-[11.5px] text-ink-500 font-display italic leading-snug mt-0.5">
-              Live working sessions are still on the way.
+              实时工作会话仍在准备中。
             </div>
           </div>
         </div>
@@ -225,8 +225,8 @@ function _ChatHeader({
           {c.kind === 'group' && activeAgentMembers.length > 0 && (
             <>
               <span className="w-1 h-1 rounded-full bg-ink-300 shrink-0" />
-              <div className="flex shrink-0 items-center gap-1" title="普通消息由 Leader 主导回复">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-300">Leader</span>
+              <div className="flex shrink-0 items-center gap-1" title="普通消息由群聊负责人主导回复">
+                <span className="text-[10px] font-bold tracking-wider text-ink-300">负责人</span>
                 <SelectMenu
                   value={c.leaderId ?? ''}
                   onChange={(value) => void changeLeader(value)}
@@ -237,7 +237,7 @@ function _ChatHeader({
                   className="max-w-[120px]"
                   buttonClassName="border-0 bg-transparent px-1 text-[11.5px] font-semibold text-skype-deep shadow-none"
                   size="compact"
-                  ariaLabel="更换群聊 Leader"
+                  ariaLabel="更换群聊负责人"
                 />
               </div>
             </>
@@ -1603,22 +1603,22 @@ function _EmptyConversationState() {
               className="font-display font-medium text-[28px] text-ink-900 leading-[1.12]"
               style={{ letterSpacing: '-0.025em' }}
             >
-              Pick up where you left off
+              继续上次的对话
             </h2>
             <p className="mt-2.5 font-display italic text-[14px] text-ink-500 leading-relaxed max-w-[360px]">
-              Choose a thread on the left to slip back in.
+              从左侧选择一个线程继续处理。
             </p>
 
             {total > 0 && (
               <div className="mt-6 text-[12px] text-ink-400 font-display italic flex items-center gap-1.5">
                 <span className="text-gold leading-none not-italic" style={{ fontSize: 10 }}>★</span>
                 <b className="not-italic text-ink-700 font-semibold tabular-nums">{total}</b>
-                <span>{total === 1 ? 'thread waiting' : 'threads waiting'}</span>
+                <span>个线程等待处理</span>
                 {unread > 0 && (
                   <>
                     <span className="text-ink-200" aria-hidden>·</span>
                     <b className="not-italic text-coral-deep font-semibold tabular-nums">{unread}</b>
-                    <span>unread</span>
+                    <span>条未读</span>
                   </>
                 )}
               </div>

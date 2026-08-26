@@ -11,7 +11,7 @@ import { useMe } from '@/stores/auth'
 import type { Participant } from '@/types'
 
 const STATUS_LABEL: Record<string, string> = {
-  avail: 'Available', working: 'Working', thinking: 'Thinking', waiting: 'Waiting on you', resting: 'Resting',
+  avail: '可用', working: '工作中', thinking: '思考中', waiting: '等待你确认', resting: '休息中',
 }
 const STATUS_COLOR: Record<string, string> = {
   avail: 'var(--avail)', working: 'var(--working)', thinking: 'var(--thinking)', waiting: 'var(--waiting)', resting: 'var(--resting)',
