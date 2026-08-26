@@ -25,6 +25,7 @@
     "agent-os:start": "tsx server/src/agent-os/service.ts",
     "server:typecheck": "tsc -p server/tsconfig.json --noEmit",
     "guard:agent-os": "node scripts/guard-agent-os.mjs",
+    "eval:learning": "tsx server/scripts/eval-learning.ts",
     "guard:llm-tracked": "node scripts/guard-llm-tracked.mjs",
     "guard:brand": "node scripts/guard-brand.mjs",
     "guard:openbot-vendor": "node scripts/guard-openbot-vendor.mjs",

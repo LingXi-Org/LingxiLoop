@@ -64,6 +64,7 @@ import {
 } from '../knowledge/service.js'
 import { openNotebookClient } from '../knowledge/open-notebook-client.js'
 import { adminRouter } from './admin-router.js'
+import { learningRouter } from '../learning/router.js'
 
 /** Re-export so older imports (server/index.ts, agents/cli.ts) keep working
  *  after the storage abstraction moved this constant. */
@@ -313,11 +314,6 @@ const DEVTOOLS_ROLES = new Set(['owner', 'admin'])
  *  and any other "shared workspace resource" write paths. Kept as a Set so
  *  call sites read as a single predicate. */
 const PRIVILEGED_ROLES = DEVTOOLS_ROLES
-/** Strictly the company owner — used for the most sensitive surfaces (e.g. the
- *  whisper / agent-chat observer view, which exposes EVERY agent-to-agent
- *  conversation in the workspace). Not even admins; owner only. */
-const OWNER_ONLY = new Set(['owner'])
-
 function requestedDevMode(req: Request): boolean {
   const h = req.headers[DEVTOOLS_HEADER]
   return h === '1' || h === 'true'
@@ -369,9 +365,12 @@ async function requireConversationMember(
   conversationId: string,
 ): Promise<{ userId: string; companyId: string; projectId: string | null; members: string[]; kind: string }> {
   const { userId, companyId } = await requireCompany(req)
-  const { rows } = await pool.query<{ project_id: string | null; members: string[]; kind: string }>(
-    `SELECT project_id, members, kind FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
-    [conversationId, companyId],
+  const { rows } = await pool.query<{ project_id: string | null; members: string[]; kind: string; teacher_course_id:string|null;current_teacher:boolean }>(
+    `SELECT c.project_id,c.members,c.kind,tr.course_id AS teacher_course_id,
+            EXISTS(SELECT 1 FROM learning_course_memberships cm WHERE cm.course_id=tr.course_id AND cm.user_id=$3 AND cm.role='teacher') AS current_teacher
+       FROM conversations c LEFT JOIN learning_course_teacher_rooms tr ON tr.conversation_id=c.id
+      WHERE c.id=$1 AND c.company_id=$2 LIMIT 1`,
+    [conversationId, companyId,userId],
   )
   if (!rows[0]) throw new HttpError(404, 'not found')
   if (!rows[0].members.includes(userId)) {
@@ -379,6 +378,7 @@ async function requireConversationMember(
     // so a probing client can't tell "doesn't exist" from "I'm not in it".
     throw new HttpError(404, 'not found')
   }
+  if(rows[0].teacher_course_id&&!rows[0].current_teacher)throw new HttpError(404,'not found')
   return { userId, companyId, projectId: rows[0].project_id, members: rows[0].members, kind: rows[0].kind }
 }
 
@@ -1024,16 +1024,6 @@ api.get('/me/quota', safe(async (req, res) => {
     console.warn('[me/quota] sub2api fetch failed', e)
     res.json({ configured: true, snapshot: null, error: 'sub2api unreachable' })
   }
-}))
-
-/* ============== /me legacy stub — now session-derived ============== */
-api.get('/me', safe(async (req, res) => {
-  const userId = requireAuth(req)
-  const { rows } = await pool.query<{ id: string; display_name: string }>(
-    `SELECT id, display_name FROM users WHERE id = $1`, [userId],
-  )
-  if (!rows[0]) { res.status(401).json({ error: 'session points to missing user' }); return }
-  res.json({ id: rows[0].id, name: rows[0].display_name, kind: 'human' })
 }))
 
 /* ============== Companies (multi-tenant root) ============== */
@@ -1828,6 +1818,13 @@ api.put('/projects/:id', async (req, res) => {
     `UPDATE projects SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${params.length - 1} AND company_id = $${params.length}`,
     params,
   )
+  if(typeof req.body?.name==='string'){
+    await pool.query(
+      `UPDATE participants p SET name=$3,updated_at=NOW() FROM learning_project_teacher_agents pta
+        WHERE pta.project_id=$1 AND pta.company_id=$2 AND p.id=pta.agent_id AND p.company_id=pta.company_id`,
+      [id,tenant,`Pulse · ${req.body.name.trim().slice(0,80)}`.slice(0,80)],
+    )
+  }
   await syncProjectNotebookMetadata(String(id)).catch((error) => console.warn('[knowledge] notebook metadata sync failed', error))
   res.json({ ok: true })
 })
@@ -2214,7 +2211,7 @@ api.post('/conversations/:id/project', async (req, res) => {
 })
 
 api.get('/participants', async (req, res) => {
-  const { companyId: tenant } = await requireCompany(req)
+  const { userId: me, companyId: tenant } = await requireCompany(req)
   await pool.query(
     `UPDATE participants
         SET status = 'avail',
@@ -2233,7 +2230,7 @@ api.get('/participants', async (req, res) => {
     bio: string | null; tools: string[] | null; capabilities: string[] | null
     systemPrompt: string | null
     email: string | null; companySlug: string | null
-    departedAt: string | null
+    departedAt: string | null; managed:boolean; projectId:string|null; presetKey:string|null
   }>(
     `SELECT p.id, p.kind, p.name, p.role, p.initial,
             p.avatar_bg AS "avatarBg", p.avatar_url AS "avatarUrl",
@@ -2254,15 +2251,21 @@ api.get('/participants', async (req, res) => {
               CASE WHEN p.kind = 'human' AND cm.user_id IS NOT NULL THEN u.email END
             ) AS email,
             comp.slug AS "companySlug",
-            p.departed_at AS "departedAt"
+            p.departed_at AS "departedAt",p.preset_key AS "presetKey",
+            (pta.agent_id IS NOT NULL) AS managed,pta.project_id AS "projectId"
        FROM participants p
        JOIN companies comp ON comp.id = p.company_id
+       LEFT JOIN learning_project_teacher_agents pta ON pta.company_id=p.company_id AND pta.agent_id=p.id
        LEFT JOIN company_members cm
               ON cm.user_id = p.id AND cm.company_id = p.company_id
        LEFT JOIN users u ON u.id = cm.user_id
       WHERE p.company_id = $1
+        AND (pta.agent_id IS NULL OR EXISTS(
+          SELECT 1 FROM learning_courses lc JOIN learning_course_memberships lcm ON lcm.course_id=lc.id
+           WHERE lc.project_id=pta.project_id AND lc.company_id=pta.company_id AND lcm.user_id=$2 AND lcm.role='teacher'
+        ))
       ORDER BY p.kind DESC, p.name ASC`,
-    [tenant],
+    [tenant,me],
   )
   // Compute deterministic addresses for agents who haven't been
   // lazy-minted yet — without this, the renderer's recipient picker hides
@@ -2272,9 +2275,9 @@ api.get('/participants', async (req, res) => {
   // address that WILL be used.
   const { computeAgentAddress } = await import('../email.js')
   const finalRows = rows.map((r) => {
-    if (r.email || r.kind !== 'agent' || !r.companySlug) {
+    if (r.managed || r.email || r.kind !== 'agent' || !r.companySlug) {
       const { companySlug: _drop, ...rest } = r
-      return rest
+      return r.managed ? {...rest,email:null} : rest
     }
     const computed = computeAgentAddress(r.id, r.companySlug)
     const { companySlug: _drop, ...rest } = r
@@ -2284,6 +2287,14 @@ api.get('/participants', async (req, res) => {
 })
 
 /* ============== Agent CRUD ============== */
+
+async function isProductManagedTeacherAgent(agentId:string,companyId:string):Promise<boolean>{
+  const {rows}=await pool.query(
+    `SELECT 1 FROM learning_project_teacher_agents WHERE agent_id=$1 AND company_id=$2 LIMIT 1`,
+    [agentId,companyId],
+  )
+  return Boolean(rows[0])
+}
 
 const AVATAR_PALETTE = [
   '#FFB088', '#FFD9D2', '#FFB7AF', '#F4B740',
@@ -2684,7 +2695,7 @@ interface AgentBody {
   initial?: unknown; avatarBg?: unknown; avatarUrl?: unknown
   tools?: unknown; capabilities?: unknown
 }
-const AGENT_CAPABILITIES = new Set(['canvas', 'web', 'files', 'email', 'documents', 'calendar', 'knowledge'])
+const AGENT_CAPABILITIES = new Set(['canvas', 'web', 'files', 'email', 'documents', 'calendar', 'knowledge', 'learning'])
 const DEFAULT_AGENT_CAPABILITIES = ['canvas', 'web', 'files', 'email', 'documents']
 function readAgentBody(b: AgentBody): {
   id?: string; name?: string; role?: string
@@ -2873,6 +2884,7 @@ api.put('/agents/:id', async (req, res) => {
   // every member talks to. Gate to owner/admin — same bar as creation.
   const { companyId: tenant } = await requireCompanyRole(req)
   const id = req.params.id
+  if(await isProductManagedTeacherAgent(id,tenant)){res.status(404).json({error:'not found'});return}
   const { rows: existing } = await pool.query<{ kind: string }>(
     `SELECT kind FROM participants WHERE id = $1 AND company_id = $2`, [id, tenant],
   )
@@ -2916,6 +2928,7 @@ api.delete('/agents/:id', async (req, res) => {
   // it from every conversation's wake roster — destructive, owner/admin only.
   const { companyId: tenant } = await requireCompanyRole(req)
   const id = req.params.id
+  if(await isProductManagedTeacherAgent(id,tenant)){res.status(404).json({error:'not found'});return}
   const { rows: existing } = await pool.query<{ kind: string; departed_at: string | null }>(
     `SELECT kind, departed_at FROM participants WHERE id = $1 AND company_id = $2`, [id, tenant],
   )
@@ -3085,6 +3098,7 @@ api.post('/agents/:id/avatar/generate', async (req, res) => {
   // member could re-roll every agent's portrait in a loop and run up the
   // bill / consume the per-tenant image quota.
   const { companyId: tenant } = await requireCompanyRole(req)
+  if(await isProductManagedTeacherAgent(req.params.id,tenant)){res.status(404).json({error:'not found'});return}
   try {
     const { url } = await generateAndPersistAvatar({ agentId: req.params.id, tenant })
     res.json({ url })
@@ -3100,6 +3114,7 @@ api.post('/agents/:id/rehire', async (req, res) => {
   // Same gate as off-boarding (DELETE /agents/:id) — owner/admin only.
   const { companyId: tenant } = await requireCompanyRole(req)
   const id = req.params.id
+  if(await isProductManagedTeacherAgent(id,tenant)){res.status(404).json({error:'not found'});return}
   const { rows: existing } = await pool.query<{ kind: string; departed_at: string | null }>(
     `SELECT kind, departed_at FROM participants WHERE id = $1 AND company_id = $2`, [id, tenant],
   )
@@ -3187,11 +3202,13 @@ api.get('/conversations', async (req, res) => {
       ) other_participant ON c.kind = 'direct'
       WHERE c.company_id = $2
         -- Only conversations the caller is actually in. Without this,
-        -- agent-to-agent direct chats (members=[agentA, agentB]) leak
-        -- into the user's list even though they're not a participant
-        -- — those are private to the agents and surfaced only via the
-        -- "Whispers" peek tab.
+        -- conversations the caller is not a member of must never leak into
+        -- their list, regardless of who the other participants are.
         AND c.members @> to_jsonb(ARRAY[$1::text])
+        AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=c.id)
+          OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr
+            JOIN learning_course_memberships cm ON cm.course_id=tr.course_id AND cm.user_id=$1 AND cm.role='teacher'
+            WHERE tr.conversation_id=c.id))
       ORDER BY c.pinned DESC, c.updated_at DESC`,
     [me, tenant],
   )
@@ -3239,6 +3256,11 @@ api.post('/conversations', async (req, res) => {
   if (missing.length > 0) {
     res.status(400).json({ error: `unknown participant(s): ${missing.join(', ')}` }); return
   }
+  const {rows:managedMembers}=await pool.query(
+    `SELECT 1 FROM learning_project_teacher_agents WHERE company_id=$1 AND agent_id=ANY($2::text[]) LIMIT 1`,
+    [tenant,members],
+  )
+  if(managedMembers[0]){res.status(403).json({error:'Pulse can only belong to its provisioned teacher room'});return}
   const leader = existing.find((member) => member.id === leaderId)
   if (!leader || leader.kind !== 'agent' || leader.departed_at) {
     res.status(400).json({ error: 'leaderId must be an active agent member' }); return
@@ -3268,6 +3290,7 @@ api.post('/conversations/:id/leader', async (req, res) => {
   if (conversation.kind !== 'group') { res.status(400).json({ error: 'only group chats have a leader' }); return }
   if (!conversation.members.includes(me)) { res.status(403).json({ error: 'only members can change the leader' }); return }
   if (!conversation.members.includes(leaderId)) { res.status(400).json({ error: 'leader must be a group member' }); return }
+  if(await isProductManagedTeacherAgent(leaderId,tenant)){res.status(403).json({error:'Pulse cannot lead a regular group'});return}
   const { rows: candidates } = await pool.query<{ kind: string; departed_at: string | null }>(
     `SELECT kind, departed_at FROM participants WHERE id = $1 AND company_id = $2`, [leaderId, tenant],
   )
@@ -3350,6 +3373,7 @@ api.post('/conversations/direct', async (req, res) => {
     `SELECT id, kind FROM participants WHERE id = $1 AND company_id = $2`, [otherId, tenant],
   )
   if (!pp[0]) { res.status(404).json({ error: 'unknown participant' }); return }
+  if(await isProductManagedTeacherAgent(otherId,tenant)){res.status(404).json({error:'unknown participant'});return}
 
   // Look for an existing direct chat with exactly these two members.
   const { rows: existing } = await pool.query<{ id: string }>(
@@ -3467,12 +3491,15 @@ api.post('/conversations/:id/members', async (req, res) => {
   if (!c) { res.status(404).json({ error: 'not found' }); return }
   if (c.kind !== 'group') { res.status(400).json({ error: `cannot add to a ${c.kind} conversation` }); return }
   if (!c.members.includes(me)) { res.status(403).json({ error: 'only members can add others' }); return }
+  const {rows:teacherRoom}=await pool.query(`SELECT 1 FROM learning_course_teacher_rooms WHERE conversation_id=$1`,[id])
+  if(teacherRoom[0]){res.status(403).json({error:'teacher-room membership follows course teacher membership'});return}
   if (c.members.includes(newMember)) { res.json({ ok: true, members: c.members, alreadyIn: true }); return }
   // Validate participant exists in this tenant.
   const { rows: existing } = await pool.query<{ id: string }>(
     `SELECT id FROM participants WHERE id = $1 AND company_id = $2`, [newMember, tenant],
   )
   if (!existing[0]) { res.status(400).json({ error: `unknown participant: ${newMember}` }); return }
+  if(await isProductManagedTeacherAgent(newMember,tenant)){res.status(403).json({error:'Pulse can only belong to its provisioned teacher room'});return}
   const next = [...c.members, newMember]
   await pool.query(
     `UPDATE conversations SET members = $2::jsonb, updated_at = NOW() WHERE id = $1 AND company_id = $3`,
@@ -3502,6 +3529,8 @@ api.post('/conversations/:id/leave', async (req, res) => {
     res.status(400).json({ error: 'cannot leave a direct conversation' }); return
   }
   if (!c.members.includes(me)) { res.status(409).json({ error: 'not a member' }); return }
+  const {rows:teacherRoom}=await pool.query(`SELECT 1 FROM learning_course_teacher_rooms WHERE conversation_id=$1`,[id])
+  if(teacherRoom[0]){res.status(403).json({error:'teacher-room membership follows course teacher membership'});return}
   const { postMembershipSystemMessage } = await import('../agents/membership.js')
   await postMembershipSystemMessage({
     conversationId: id, companyId: tenant, actorId: me,
@@ -3572,7 +3601,7 @@ api.all('/conversations/:id/messages', async (req, res, next) => {
       [req.params.id, companyId],
     )
     if (rows[0]?.kind === 'email') { next(); return }
-    res.status(410).json({ error: 'legacy chat API retired; use WuKongIM', transport: 'wukongim' })
+    res.status(410).json({ error: 'chat REST transport is unavailable; use WuKongIM', transport: 'wukongim' })
   } catch (error) { next(error) }
 })
 
@@ -3582,8 +3611,7 @@ api.get('/conversations/:id/messages', async (req, res) => {
     // Membership-gated read. Tenant-gate alone used to let any peer in the
     // same workspace pull the full transcript of someone else's DM as long
     // as they knew (or guessed) the conversation id; requireConversationMember
-    // closes that path. The /peek/agent-chats surface intentionally bypasses
-    // membership for fully-agent rooms — see that handler.
+    // closes that path. There is no observer endpoint that bypasses this gate.
     const { companyId: tenant } = await requireConversationMember(req, id)
     // Cursor pagination. No params → most recent `limit` messages, sorted
     // ASC (the historical contract). `before=<sequence>` returns the page
@@ -4116,7 +4144,9 @@ async function resolveHttpRecipient(raw: string, ctx: EmailRecipientResolveCtx):
   //              the in-app notification)
   const { rows: pa } = await pool.query<{ name: string; email: string | null; kind: string }>(
     `SELECT name, email, kind FROM participants
-      WHERE id = $1 AND company_id = $2 AND departed_at IS NULL LIMIT 1`,
+      WHERE id = $1 AND company_id = $2 AND departed_at IS NULL
+        AND NOT EXISTS(SELECT 1 FROM learning_project_teacher_agents pta WHERE pta.company_id=participants.company_id AND pta.agent_id=participants.id)
+      LIMIT 1`,
     [raw, ctx.companyId],
   )
   if (pa[0]) {
@@ -4627,25 +4657,12 @@ api.post('/messages/:id/reactions', async (req, res) => {
   res.json({ reactions: agg })
 })
 
-/* ============== Peek (agent-only conversations) ==============
- *
- * Backs the frontend's "Whispers" tab — a read-only window into
- * conversations where every participant is an agent. Covers both 1-on-1
- * direct chats AND multi-agent groups that an agent has pulled. The
- * user is NOT a member, so these don't show up under /conversations
- * and don't count toward unread — but the frontend lets them
- * eavesdrop.
- *
- * Selection rule: any conversation in the company where every member is
- * an agent (no humans). Messages live in the unified `messages` table.
- */
-
 /**
  * Universal search across the workspace.
  *
  * Returns four ranked buckets in this order of importance:
  *  1. `participants` — agents + humans (matched on name/role/id)
- *  2. `rooms`        — direct chats + whispers (1-on-1 by title or member name)
+ *  2. `rooms`        — direct chats (1-on-1 by title or member name)
  *  3. `groups`       — group chats (by title)
  *  4. `messages`     — text-message body matches, newest first, with a snippet
  *
@@ -4700,7 +4717,7 @@ api.get('/search', async (req, res) => {
     [tenant, contains, exact, prefix],
   )
 
-  // 1-on-1 rooms (direct + whisper): direct titles are perspective-specific,
+  // 1-on-1 direct-room titles are perspective-specific,
   // so compute the display title from the member that is not the caller.
   // Match on that display title OR on the other participant's name.
   const roomsP = pool.query(
@@ -4725,7 +4742,7 @@ api.get('/search', async (req, res) => {
             LIMIT 1
          ) other_participant ON c.kind = 'direct'
         WHERE c.company_id = $1
-          AND c.kind IN ('direct', 'whisper')
+          AND c.kind = 'direct'
           AND c.members @> to_jsonb(ARRAY[$2::text])
      )
      SELECT r.id, r.kind, r.title, r.members, r."projectName"
@@ -4828,73 +4845,6 @@ api.get('/search', async (req, res) => {
       snippet: snippetOf(m.body ?? ''),
     })),
   })
-})
-
-api.get('/peek/agent-chats', async (req, res) => {
-  // Owner-only: the whisper observer view exposes every agent-to-agent
-  // conversation in the workspace, so it's gated to the company owner (not
-  // admins, not regular members). requireCompanyRole throws 403 otherwise.
-  const { companyId: tenant } = await requireCompanyRole(req, OWNER_ONLY)
-  const { rows } = await pool.query(
-    `SELECT c.id,
-            c.kind,
-            c.title,
-            c.members,
-            (c.members->>0) AS "agentA",
-            (c.members->>1) AS "agentB",
-            c.topic AS about,
-            c.created_at AS "createdAt",
-            c.updated_at AS "updatedAt",
-            (SELECT COUNT(*)::int FROM messages WHERE conversation_id = c.id) AS "msgCount"
-       FROM conversations c
-       WHERE c.company_id = $1
-         AND jsonb_array_length(c.members) >= 2
-         AND NOT EXISTS (
-           SELECT 1 FROM jsonb_array_elements_text(c.members) m
-             LEFT JOIN participants p ON p.id = m AND p.company_id = c.company_id
-            WHERE p.kind IS DISTINCT FROM 'agent'
-         )
-       ORDER BY c.updated_at DESC
-       LIMIT 50`,
-    [tenant],
-  )
-  res.json(rows)
-})
-
-api.get('/peek/agent-chats/:id/messages', async (req, res) => {
-  // Owner-only, same as the list endpoint above.
-  const { companyId: tenant } = await requireCompanyRole(req, OWNER_ONLY)
-  const { id } = req.params
-  // Peek deliberately bypasses the "must be a member" rule — the whole
-  // point is to let humans eavesdrop on agent-only rooms. BUT we must verify
-  // the conversation IS fully agent-only, otherwise this endpoint becomes a
-  // backdoor that reads any conversation in the tenant (private DMs etc.).
-  // Same predicate as /peek/agent-chats: every member must be a participant
-  // of kind='agent' in this company.
-  const { rows: w } = await pool.query<{ ok: boolean }>(
-    `SELECT (
-        jsonb_array_length(c.members) >= 1
-        AND NOT EXISTS (
-          SELECT 1 FROM jsonb_array_elements_text(c.members) m
-            LEFT JOIN participants p ON p.id = m AND p.company_id = c.company_id
-           WHERE p.kind IS DISTINCT FROM 'agent'
-        )
-     ) AS ok
-       FROM conversations c
-      WHERE c.id = $1 AND c.company_id = $2
-      LIMIT 1`,
-    [id, tenant],
-  )
-  if (!w[0] || !w[0].ok) { res.status(404).json({ error: 'not found' }); return }
-  const { rows } = await pool.query(
-    `SELECT id, conversation_id AS "conversationId", author_id AS "authorId",
-            kind, body, sequence, tool, created_at AS "createdAt"
-       FROM messages
-       WHERE conversation_id = $1
-       ORDER BY sequence ASC`,
-    [id],
-  )
-  res.json(rows)
 })
 
 /* ============== Developer tools ============== */
@@ -5215,6 +5165,7 @@ api.put('/me/preferences', async (req, res) => {
 
 api.get('/agents/:id/autonomy', async (req, res) => {
   const { userId: me, companyId: tenant } = await requireCompany(req)
+  if(await isProductManagedTeacherAgent(req.params.id,tenant)){res.status(404).json({error:'not found'});return}
   const { rows: gate } = await pool.query(
     `SELECT 1 FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
     [req.params.id, tenant],
@@ -5230,6 +5181,7 @@ api.get('/agents/:id/autonomy', async (req, res) => {
 
 api.put('/agents/:id/autonomy', async (req, res) => {
   const { userId: me, companyId: tenant } = await requireCompany(req)
+  if(await isProductManagedTeacherAgent(req.params.id,tenant)){res.status(404).json({error:'not found'});return}
   const { rows: gate } = await pool.query(
     `SELECT 1 FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
     [req.params.id, tenant],
@@ -6634,6 +6586,8 @@ api.post('/push/unregister', async (req, res) => {
     res.status(500).json({ error: e instanceof Error ? e.message : String(e) })
   }
 })
+
+api.use('/learning', learningRouter)
 
 // Evidence-backed feature delivery. Mounted late so its compact `/shipping/*`
 // namespace cannot shadow any legacy API route. The router receives the same

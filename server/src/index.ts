@@ -34,6 +34,8 @@ import { reconcileLearningChannels } from './im/reconcile.js'
 import { startLearningRoutineScheduler } from './agent-os/routine-scheduler.js'
 import { startAgentWorkWatchdog } from './agent-os/work-watchdog.js'
 import { startMemorySynthesisScheduler } from './agent-os/memory-service.js'
+import { startLearningNotificationScheduler } from './learning/notifications.js'
+import { backfillTeacherAgents } from './learning/teacher-agent.js'
 
 async function main() {
   await ensureSchemaWithBootRetry()
@@ -44,6 +46,7 @@ async function main() {
   // Catch any company that was created before the auto-onboarding wiring
   // existed (e.g. dev workspaces predating this commit).
   await backfillStarterAgents()
+  await backfillTeacherAgents()
   void reconcileLearningChannels().then(({ channels, failures }) =>
     console.log(`[im] reconciled ${channels - failures}/${channels} learning channels`),
   )
@@ -243,6 +246,7 @@ async function main() {
   startLearningRoutineScheduler()
   startAgentWorkWatchdog()
   startMemorySynthesisScheduler()
+  startLearningNotificationScheduler()
   console.log('[boot] learning routine scheduler running every 60s')
 
   // Outbound email retry loop — reclaims transport_status='failed' rows.

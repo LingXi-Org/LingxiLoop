@@ -81,11 +81,6 @@ function ConvoAvatar({ c, size = 48 }: { c: Conversation; size?: number }) {
     if (ordered.length === 0) return <TeamFallback />
     return <HiveAvatar ps={ordered} size={size} ringColor="var(--paper)" />
   }
-  if (c.kind === 'whisper') {
-    const ps = c.members.map((m) => byId[m]).filter((p): p is Participant => Boolean(p))
-    if (ps.length === 0) return <TeamFallback />
-    return <HiveAvatar ps={ps} size={size} ringColor="var(--paper)" />
-  }
   const member = c.members.find((m) => m !== meId) ?? c.members[0]
   const p = member ? byId[member] : undefined
   if (!p) return null
@@ -214,17 +209,15 @@ function convoSwipeActions(c: Conversation): SwipeAction[] {
       catch (err) { console.warn('togglePin failed', err) }
     },
   })
-  if (c.kind !== 'whisper') {
-    actions.push({
-      label: '退出',
-      background: 'var(--coral)',
-      onClick: async () => {
-        if (!confirm(`确定退出“${c.title}”吗？其他成员仍可继续对话。`)) return
-        try { await api.leaveConversation(c.id); await reload() }
-        catch (err) { console.warn('leave failed', err) }
-      },
-    })
-  }
+  actions.push({
+    label: '退出',
+    background: 'var(--coral)',
+    onClick: async () => {
+      if (!confirm(`确定退出“${c.title}”吗？其他成员仍可继续对话。`)) return
+      try { await api.leaveConversation(c.id); await reload() }
+      catch (err) { console.warn('leave failed', err) }
+    },
+  })
   return actions
 }
 
@@ -293,19 +286,17 @@ function convoMenuItems(
       },
     })
   }
-  if (c.kind !== 'whisper') {
-    items.push({
-      label: '退出对话',
-      destructive: true,
-      onClick: async () => {
-        if (!confirm(`确定退出“${c.title}”吗？其他成员仍可继续对话。`)) return
-        try {
-          await api.leaveConversation(c.id)
-          await reload()
-        } catch (err) { console.warn('leave failed', err) }
-      },
-    })
-  }
+  items.push({
+    label: '退出对话',
+    destructive: true,
+    onClick: async () => {
+      if (!confirm(`确定退出“${c.title}”吗？其他成员仍可继续对话。`)) return
+      try {
+        await api.leaveConversation(c.id)
+        await reload()
+      } catch (err) { console.warn('leave failed', err) }
+    },
+  })
   return items
 }
 
@@ -373,9 +364,7 @@ export function MobileChatList({ mode = 'chat' }: { mode?: 'chat' | 'mail' }) {
   const filtered = list.filter((c) => {
     if (mode === 'mail' && c.kind !== 'email') return false
     if (mode === 'chat' && c.kind === 'email') return false
-    if (c.kind === 'whisper') {
-      if (filter !== '私聊' && filter !== '全部') return false
-    } else if (filter === '智能体') {
+    if (filter === '智能体') {
       if (!(c.kind === 'direct' && c.tag !== 'human')) return false
     } else if (filter === '成员') {
       if (c.tag !== 'human') return false

@@ -26,6 +26,13 @@ const activeFiles = [
 for (const retiredPath of [
   join(root, 'server/lingxigraph'),
   join(root, 'server/docker/agent-computer-lingxiloop-web.sh'),
+  join(root, 'server/src/agents/agent-voice.ts'),
+  join(root, 'server/src/agents/private_chat.ts'),
+  join(root, 'server/src/scripts/migrate-whispers-to-conversations.ts'),
+  join(root, 'src/stores/whispers.ts'),
+  join(root, 'src/components/WhisperRoom.tsx'),
+  join(root, 'src/desktop/WhispersView.tsx'),
+  join(root, 'src/mobile/MobileWhispers.tsx'),
 ]) {
   if (existsSync(retiredPath)) {
     failures.push(`${relative(root, retiredPath).replaceAll('\\', '/')}: retired source path must not exist`)
@@ -49,6 +56,54 @@ for (const path of activeFiles) {
 const tool = readFileSync(join(root, 'server/src/agent-os/tool.ts'), 'utf8')
 if (!/MODEL_TOOLS[^\n]*Object\.freeze\(\[IPYTHON_TOOL\]\)/.test(tool)) {
   failures.push('AgentOS model-visible tool surface is not exactly IPython')
+}
+
+const kernel = readFileSync(join(root, 'server/agent-os/kernel_runner.py'), 'utf8')
+const actions = readFileSync(join(root, 'server/src/agent-os/learning-actions.ts'), 'utf8')
+const controlPlane = readFileSync(join(root, 'server/src/agent-os/control-plane.ts'), 'utf8')
+const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8')
+const promptAssembly = readFileSync(join(root, 'server/src/agent-os/prompt-assembly.ts'), 'utf8')
+const canvasService = readFileSync(join(root, 'server/src/canvas/service.ts'), 'utf8')
+const migration = readFileSync(join(root, 'server/src/db/migrate.ts'), 'utf8')
+if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
+  failures.push('learning must exist only as a capability-gated loop.learning Host Bridge namespace')
+}
+if (!runtime.includes('finish_planning') || !actions.includes('planning gate blocked')) {
+  failures.push('learning must retain the Frontier-style planning gate')
+}
+if (!promptAssembly.includes('ef326d07207e8ab4adacfa63861f7a76813192b5')
+  || !promptAssembly.includes('a7c186f5ccac95875c0041aed60398f6ecb6d6c7')
+  || !promptAssembly.includes('<policy>')) {
+  failures.push('prompt assembly must retain its pinned FrontierAgent/grok-prompts structure')
+}
+if (/classifyAgent|agentName.*(?:match|test)|(?:match|test).*agentName/.test(promptAssembly)) {
+  failures.push('execution roles must never be inferred from Agent names')
+}
+if (!promptAssembly.includes('executionRole') || !runtime.includes("work.reason === 'canvas_summary'")) {
+  failures.push('task-scoped execution roles and reporter phase must remain explicit')
+}
+if (!actions.includes('submit_report') || !canvasService.includes('assertCanvasWorkReportReady')
+  || !canvasService.includes('learning_report_v1')) {
+  failures.push('Canvas completion must be gated by a persisted structured report')
+}
+if (!migration.includes('canvas_assignment_verifier_not_self_check')
+  || !canvasService.includes('builder and verifier must be different agents')) {
+  failures.push('builder/verifier separation must be enforced by Host and database')
+}
+if (!migration.includes('progress_fingerprint') || !controlPlane.includes('no_progress_count')) {
+  failures.push('durable no-progress detection must remain enabled')
+}
+const currentProductSurface = [
+  readFileSync(join(root, 'server/src/api/router.ts'), 'utf8'),
+  readFileSync(join(root, 'src/api/client.ts'), 'utf8'),
+  readFileSync(join(root, 'src/types.ts'), 'utf8'),
+].join('\n')
+if (/peek\/agent-chats|ApiWhisper|whisper-link|kind\s*===?\s*['"]whisper['"]/.test(currentProductSurface)) {
+  failures.push('retired Whispers/agent-side-channel product path must not return')
+}
+for (const path of [...activeFiles, ...sourceFiles(join(root, 'server/src/learning'))]) {
+  const source = readFileSync(path, 'utf8')
+  if (/\bAgentBus\b|agent[_-]?bus/i.test(source)) failures.push(`${relative(root, path).replaceAll('\\', '/')}: AgentBus is forbidden`)
 }
 
 if (failures.length > 0) {

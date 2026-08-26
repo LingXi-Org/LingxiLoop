@@ -28,7 +28,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
 
   const candidates = useMemo<Participant[]>(() => {
     return Object.values(byId)
-      .filter((p) => p.id !== meId && !p.departedAt)
+      .filter((p) => p.id !== meId && !p.departedAt && !p.managed)
       .sort((a, b) => {
         // Agents first, then humans, then alphabetical.
         if (a.kind !== b.kind) return a.kind === 'agent' ? -1 : 1

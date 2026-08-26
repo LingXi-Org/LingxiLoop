@@ -128,9 +128,8 @@ export function NotificationToasts() {
 
       // Only toast for conversations the user is actually a member of.
       // The WS bridge fans out CH_MESSAGE_NEW for every message in the
-      // user's company — including agent-to-agent private chats they're
-      // not in. Those land in the Whispers peek tab and must NOT pop
-      // toast notifications.
+      // user's company, including conversations they are not a member of.
+      // Those must never produce toast notifications.
       const convo = useConversations.getState().list.find((c) => c.id === e.conversationId)
       if (!convo) return
       // Exact @mentions are directed alerts: they intentionally bypass the

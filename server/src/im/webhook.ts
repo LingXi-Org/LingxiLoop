@@ -60,7 +60,7 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
   const fromUid = String(source.from_uid ?? source.fromUid ?? '')
   const eventId = String(root.event_id ?? root.eventId ?? `${eventType}:${channelId}:${clientMsgNo}`)
   if (!eventId || !channelId || !clientMsgNo || !fromUid) { res.status(400).json({ error: 'incomplete WuKong message event' }); return }
-  const allowedKinds = new Set(['text', 'attachment', 'system', 'tool_activity', 'approval', 'handoff', 'poll', 'artifact', 'canvas'])
+  const allowedKinds = new Set(['text', 'attachment', 'system', 'tool_activity', 'approval', 'handoff', 'poll', 'artifact', 'canvas', 'learning_mission'])
   if (payload.version !== 1 || !allowedKinds.has(payload.kind) || (payload.body?.length ?? 0) > 64 * 1024) {
     res.status(400).json({ error: 'invalid LingxiMessageV1 payload' }); return
   }
@@ -115,6 +115,20 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
     if (!members.some((member) => member.id === fromUid)) {
       throw new Error('message author is not a bound channel member')
     }
+    const {rows:teacherRooms}=await client.query<{course_id:string;status:'active'|'closed';course_status:string;agent_id:string;is_teacher:boolean}>(
+      `SELECT tr.course_id,tr.status,c.status AS course_status,pta.agent_id,
+              EXISTS(SELECT 1 FROM learning_course_memberships cm WHERE cm.course_id=tr.course_id AND cm.user_id=$2 AND cm.role='teacher') AS is_teacher
+         FROM learning_course_teacher_rooms tr JOIN learning_courses c ON c.id=tr.course_id
+         JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id AND pta.company_id=c.company_id
+        WHERE tr.conversation_id=$1`,[channelId,fromUid],
+    )
+    const teacherRoom=teacherRooms[0]
+    if(teacherRoom){
+      if(teacherRoom.status!=='active'||teacherRoom.course_status==='archived')throw new Error('archived teacher room is read-only')
+      const author=members.find((member)=>member.id===fromUid)
+      if(author?.kind==='human'&&!teacherRoom.is_teacher)throw new Error('teacher room requires current course teacher membership')
+      if(author?.kind==='agent'&&fromUid!==teacherRoom.agent_id)throw new Error('only the registered Pulse Agent may write as an Agent in this room')
+    }
     const refs = payload.refs ?? {}
     const parsedMentions = parseMentions(payload.body ?? '', members)
     const mentionedIds = [...new Set([
@@ -132,13 +146,18 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
           leaderAgentId: bindings[0].leader_agent_id ?? undefined,
           handoffTargetId: payload.kind === 'handoff' && typeof refs.toAgentId === 'string' ? refs.toAgentId : undefined,
         })
+    if(teacherRoom&&recipients.some((agentId)=>agentId!==teacherRoom.agent_id))throw new Error('teacher room can wake only its registered Pulse Agent')
+    if(!teacherRoom&&recipients.length){
+      const {rows:managed}=await client.query(`SELECT 1 FROM learning_project_teacher_agents WHERE company_id=$1 AND agent_id=ANY($2::text[]) LIMIT 1`,[bindings[0].company_id,recipients])
+      if(managed[0])throw new Error('Pulse can only be invoked from its registered teacher room')
+    }
     const wakeRecipients = recipients.map((agentId) => ({
       agentId,
       reason: payload.kind === 'handoff' ? 'handoff' : mentionedIds.includes(agentId) || mentionAll ? 'mention' : 'message',
     }))
     let deferAgentWake = false
     let knowledgeSourceId: string | undefined
-    if (payload.kind === 'attachment') {
+    if (payload.kind === 'attachment' && !teacherRoom) {
       const attachment = record(payload.data)
       const mime = String(attachment.mime ?? '').toLowerCase()
       const size = Number(attachment.size ?? 0)
@@ -171,11 +190,12 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
       const workId = randomUUID()
       const inserted = await client.query<{ id: string }>(
         `INSERT INTO agent_work_items
-           (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)
+           (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,execution_role)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
          ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING
          RETURNING id`,
-        [workId, bindings[0].company_id, agentId, channelId, payload.replyToClientMsgNo ?? null, clientMsgNo, reason],
+        [workId, bindings[0].company_id, agentId, channelId, payload.replyToClientMsgNo ?? null, clientMsgNo, reason,
+          bindings[0].leader_agent_id===agentId?'coordinator':'specialist'],
       )
       if (inserted.rows[0]) queuedStreams.push({ workId: inserted.rows[0].id, agentId })
     }

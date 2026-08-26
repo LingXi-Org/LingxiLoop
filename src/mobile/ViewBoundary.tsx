@@ -1,7 +1,7 @@
 /**
  * ViewBoundary — last-resort error boundary for a mobile tab.
  *
- * Wraps the tree of one tab (Whispers / Library / Agents / Me /
+ * Wraps the tree of one tab (Learning / Library / Agents / Me /
  * Chats) so a render-time throw in any one of them doesn't crash
  * the whole shell into a permanent white screen. Instead the user
  * sees a "this tab hit a snag — tap to retry" panel and the rest

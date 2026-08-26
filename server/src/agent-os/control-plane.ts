@@ -1,13 +1,16 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import { type NextFunction, type Request, type Response, Router } from 'express'
 import type { PoolClient } from 'pg'
-import { completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
+import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
 import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
 import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
+import { roleAllowsAction } from './role-policy.js'
 import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 import { retrieveKnowledge } from '../knowledge/service.js'
+import { loadLearningTurnContext } from '../learning/service.js'
+import { describeTeacherAction, loadTeacherTurnContext } from '../learning/teacher-agent.js'
 
 export const agentOSControlRouter = Router()
 
@@ -46,6 +49,9 @@ interface WorkRow {
   preemptions?: number
   canvas_id: string | null
   canvas_assignment_id: string | null
+  execution_role: AgentWorkItem['executionRole']
+  progress_fingerprint: string | null
+  no_progress_count: number
 }
 
 function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
@@ -58,6 +64,7 @@ function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
     ...(row.thread_root_client_msg_no ? { threadRootClientMsgNo: row.thread_root_client_msg_no } : {}),
     triggerClientMsgNo: row.trigger_client_msg_no,
     reason: row.reason,
+    executionRole: row.execution_role,
     lane: row.lane,
     ...(row.created_at ? { createdAt: row.created_at } : {}),
     ...(row.available_at ? { availableAt: row.available_at } : {}),
@@ -65,6 +72,8 @@ function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
     ...(row.preemptions === undefined ? {} : { preemptions: Number(row.preemptions) }),
     ...(row.canvas_id ? { canvasId: row.canvas_id } : {}),
     ...(row.canvas_assignment_id ? { canvasAssignmentId: row.canvas_assignment_id } : {}),
+    ...(row.progress_fingerprint ? { progressFingerprint: row.progress_fingerprint } : {}),
+    noProgressCount: Number(row.no_progress_count ?? 0),
     leaseToken,
   }
 }
@@ -82,7 +91,7 @@ async function requireLease(req: Request, actionable = false): Promise<{ work: A
   const fence = Number(req.body?.fence ?? req.query.fence)
   const leaseToken = String(req.body?.leaseToken ?? req.query.leaseToken ?? '')
   const { rows } = await pool.query<WorkRow>(
-    `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,canvas_id,canvas_assignment_id
+    `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,canvas_id,canvas_assignment_id,execution_role,progress_fingerprint,no_progress_count
        FROM agent_work_items
        WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND lease_expires_at > NOW()
          ${actionable ? 'AND cancel_requested_at IS NULL' : ''}`,
@@ -101,7 +110,7 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
     await client.query(`DELETE FROM agent_os_session_leases WHERE expires_at <= NOW()`)
     const { rows } = await client.query<WorkRow>(
       `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,
-              canvas_id,canvas_assignment_id,created_at,available_at,attempts,preemptions
+              canvas_id,canvas_assignment_id,created_at,available_at,attempts,preemptions,execution_role,progress_fingerprint,no_progress_count
          FROM agent_work_items
          WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
            AND cancel_requested_at IS NULL
@@ -221,22 +230,35 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
     [work.channelId, work.companyId, work.triggerClientMsgNo],
   )
   const workspaceRow = workspaceRows[0]
-  const knowledgeContext = workspaceRow?.kind === 'group' && learnerMessage
+  const persona = { name: personas[0].name, role: personas[0].role ?? 'Learning Agent', instructions: personas[0].system_prompt ?? '' }
+  const capabilities = personas[0].capabilities ?? []
+  const isTeacherAgent = capabilities.includes('teacher_admin')
+  const teacherContext = isTeacherAgent
+    ? await loadTeacherTurnContext(work).catch(() => undefined)
+    : undefined
+  if (isTeacherAgent && !teacherContext) { res.status(403).json({ error: 'Pulse is not authorized for this teacher room' }); return }
+  const knowledgeContext = !isTeacherAgent && workspaceRow?.kind === 'group' && learnerMessage
     ? await retrieveKnowledge({
         conversationId: work.channelId,
         query: triggerMessage?.body ?? learnerMessage.body,
       }).catch((error) => {
         console.warn('[knowledge] retrieval failed:', error instanceof Error ? error.message : String(error))
         return []
-      })
+    })
     : []
-  const persona = { name: personas[0].name, role: personas[0].role ?? 'Learning Agent', instructions: personas[0].system_prompt ?? '' }
-  const promptContextCandidate = learnerMessage ? await buildPromptContext({
+  const promptContextCandidate = learnerMessage || teacherContext ? await buildPromptContext({
     epoch: 0, companyId: work.companyId, agentId: work.agentId, conversationId: work.channelId,
-    learnerId: learnerMessage.authorId, query: triggerMessage?.body ?? learnerMessage.body,
-    persona, capabilities: personas[0].capabilities ?? [],
+    learnerId: learnerMessage?.authorId ?? teacherContext?.trigger.teacherId ?? 'teacher-room',
+    query: triggerMessage?.body ?? learnerMessage?.body ?? 'Generate the scheduled teacher aggregate digest.',
+    persona, capabilities,
+    executionRole: work.executionRole,
     sourceVersions: { persona: personas[0].updated_at, capabilities: personas[0].updated_at },
+    skipMemories: isTeacherAgent,
   }) : undefined
+  const learningContext = isTeacherAgent ? undefined : await loadLearningTurnContext(work, learnerMessage?.authorId).catch((error) => {
+    console.warn('[learning] transient context failed:', error instanceof Error ? error.message : String(error))
+    return undefined
+  })
   const approvalId = work.reason === 'resume' && work.triggerClientMsgNo.startsWith('approval:')
     ? work.triggerClientMsgNo.slice('approval:'.length)
     : null
@@ -247,16 +269,18 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
         LIMIT 1`, [approvalId, work.agentId, work.channelId],
     )
     : { rows: [] }
-  const canvas = work.canvasId ? await getCanvasSnapshot(work.companyId, work.agentId, work.canvasId) : null
-  const canvasRoster = await listCanvasAvailableAgents(work.companyId)
+  const canvas = !isTeacherAgent && work.canvasId ? await getCanvasSnapshot(work.companyId, work.agentId, work.canvasId) : null
+  const canvasRoster = isTeacherAgent ? [] : await listCanvasAvailableAgents(work.companyId)
   res.json({
     work,
     persona,
     messages,
     knowledgeContext,
-    knowledgeSourceCount: workspaceRow?.source_count ?? 0,
-    ...(workspaceRow?.ingestion_failure ? { knowledgeIngestionFailure: workspaceRow.ingestion_failure } : {}),
-    ...(learnerMessage ? { learnerId: learnerMessage.authorId } : {}),
+    ...(learningContext ? { learningContext } : {}),
+    ...(teacherContext ? { teacherContext } : {}),
+    knowledgeSourceCount: isTeacherAgent ? 0 : workspaceRow?.source_count ?? 0,
+    ...(!isTeacherAgent && workspaceRow?.ingestion_failure ? { knowledgeIngestionFailure: workspaceRow.ingestion_failure } : {}),
+    ...(!isTeacherAgent && learnerMessage ? { learnerId: learnerMessage.authorId } : {}),
     ...(promptContextCandidate ? { promptContextCandidate } : {}),
     canvasRoster,
     ...(canvas ? { canvas: {
@@ -385,7 +409,7 @@ async function actionFromLedger(client: PoolClient, key: string, action: HostAct
 
 const ACTION_CAPABILITIES: Record<string, string> = {
   files: 'files', documents: 'documents', boards: 'documents', calendar: 'calendar',
-  research: 'web', canvas: 'canvas', email: 'email', knowledge: 'knowledge',
+  research: 'web', canvas: 'canvas', email: 'email', knowledge: 'knowledge', learning: 'learning', teacher: 'teacher_admin',
 }
 
 async function assertActionAllowed(work: AgentWorkItem, action: HostAction): Promise<void> {
@@ -394,15 +418,23 @@ async function assertActionAllowed(work: AgentWorkItem, action: HostAction): Pro
   if (action.idempotencyKey !== `${action.runId}:${action.cellId}:${action.callIndex}`) throw new Error('invalid Host Action idempotency key')
   if (action.runId !== work.id) throw new Error('Host Action run identity must equal its durable work id')
   if (JSON.stringify(action.args).length > 64 * 1024) throw new Error('Host Action arguments exceed 64 KiB')
-  const { rows } = await pool.query<{ capabilities: string[] | null }>(
-    `SELECT capabilities FROM participants
-      WHERE id=$1 AND company_id=$2 AND kind='agent' AND departed_at IS NULL`,
+  const { rows } = await pool.query<{ capabilities: string[] | null; teacher_managed: boolean }>(
+    `SELECT p.capabilities,
+            EXISTS(SELECT 1 FROM learning_project_teacher_agents pta WHERE pta.company_id=p.company_id AND pta.agent_id=p.id) AS teacher_managed
+       FROM participants p
+      WHERE p.id=$1 AND p.company_id=$2 AND p.kind='agent' AND p.departed_at IS NULL`,
     [work.agentId, work.companyId],
   )
   if (!rows[0]) throw new Error('Agent identity is not active in this tenant')
   const namespace = action.action.split('.')[0]
+  if (rows[0].teacher_managed && namespace !== 'teacher' && namespace !== 'turn') {
+    throw new Error(`Pulse may only call teacher.* and turn.*; ${action.action} is unavailable`)
+  }
+  if (!rows[0].teacher_managed && namespace === 'teacher') throw new Error('teacher.* is reserved for the product-managed Pulse Agent')
+  if (rows[0].teacher_managed && work.executionRole !== 'coordinator') throw new Error('Pulse work must use the coordinator execution role')
   const required = ACTION_CAPABILITIES[namespace]
   if (required && !(rows[0].capabilities ?? []).includes(required)) throw new Error(`Agent lacks ${required} capability`)
+  if(!roleAllowsAction(work.executionRole,action.action)) throw new Error(`${work.executionRole} execution role cannot call ${action.action}`)
 }
 
 export async function executeActionWithLedger(work: AgentWorkItem, action: HostAction, approved = false): Promise<HostActionResult> {
@@ -428,14 +460,50 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
     // Revalidate every work item after the advisory locks have been acquired.
     // The HTTP entry check may have succeeded before a lease expiry/reclaim;
     // this fence prevents that stale request from executing a side effect.
-    const { rows: actionable } = await client.query<{ id: string }>(
-      `SELECT id FROM agent_work_items WHERE id=$1 AND fence=$2 AND lease_token_hash=$3
-        AND status='leased' AND lease_expires_at > NOW() AND cancel_requested_at IS NULL`,
-      [work.id, work.fence, hash(work.leaseToken)],
-    )
+    const { rows: actionable } = approved
+      ? await client.query<{ id: string;progress_fingerprint:string|null;no_progress_count:number }>(
+        `SELECT w.id,w.progress_fingerprint,w.no_progress_count FROM agent_work_items w
+          JOIN agent_os_approvals a ON a.work_id=w.id AND a.idempotency_key=$2 AND a.status='approved'
+         WHERE w.id=$1 AND w.company_id=$3 AND w.agent_id=$4 AND w.channel_id=$5`,
+        [work.id, action.idempotencyKey, work.companyId, work.agentId, work.channelId],
+      )
+      : await client.query<{ id: string;progress_fingerprint:string|null;no_progress_count:number }>(
+        `SELECT id,progress_fingerprint,no_progress_count FROM agent_work_items WHERE id=$1 AND fence=$2 AND lease_token_hash=$3
+          AND status='leased' AND lease_expires_at > NOW() AND cancel_requested_at IS NULL`,
+        [work.id, work.fence, hash(work.leaseToken)],
+      )
     if (!actionable[0]) throw Object.assign(new Error('work was stopped or lease was replaced'), { status: 409 })
     const replay = await actionFromLedger(client, action.idempotencyKey, action)
     if (replay && !(approved && replay.approval)) { await client.query('COMMIT'); return replay }
+    const {rows:stateRows}=await client.query<{state:unknown}>(
+      `SELECT jsonb_build_object(
+        'mission',(SELECT jsonb_agg(jsonb_build_array(m.id,m.status,m.updated_at)) FROM learning_missions m WHERE m.conversation_id=$1 AND m.status IN ('planning','active','paused')),
+        'steps',(SELECT jsonb_agg(jsonb_build_array(s.id,s.status,s.updated_at)) FROM learning_mission_steps s JOIN learning_missions m ON m.id=s.mission_id WHERE m.conversation_id=$1 AND m.status IN ('planning','active','paused')),
+        'assignments',(SELECT jsonb_agg(jsonb_build_array(a.id,a.status,a.updated_at)) FROM canvas_agent_assignments a WHERE a.canvas_id=$2),
+        'reports',(SELECT jsonb_agg(r.id ORDER BY r.created_at) FROM canvas_assignment_reports r WHERE r.canvas_id=$2),
+        'evidence',(SELECT jsonb_agg(jsonb_build_array(a.id,a.status,a.submitted_at)) FROM learning_attempts a JOIN learning_courses lc ON lc.id=a.course_id JOIN conversations c ON c.project_id=lc.project_id WHERE c.id=$1)
+      ) AS state`,[work.channelId,work.canvasId??null],
+    )
+    const fingerprint=hash(canonicalJson(stateRows[0]?.state??{}))
+    const {rows:lastActions}=await client.query<{action:string;args:unknown}>(
+      `SELECT action,args FROM agent_host_actions WHERE work_id=$1 AND status='succeeded' ORDER BY created_at DESC LIMIT 1`,[work.id],
+    )
+    const repeated=actionable[0].progress_fingerprint===fingerprint&&lastActions[0]?.action===action.action&&canonicalJson(lastActions[0]?.args)===canonicalJson(action.args)
+    const noProgressCount=repeated?Number(actionable[0].no_progress_count??0)+1:0
+    await client.query(`UPDATE agent_work_items SET progress_fingerprint=$2,no_progress_count=$3 WHERE id=$1`,[work.id,fingerprint,noProgressCount])
+    const stallSensitive=new Set(['canvas.get','canvas.start_workspace','canvas.add_agents','canvas.handoff','learning.start_mission','learning.add_steps'])
+    if (noProgressCount>=2&&stallSensitive.has(action.action)) {
+      const error=noProgressCount>=3
+        ? `no-progress guard blocked repeated ${action.action}: synthesize persisted reports, state the unresolved gap, or ask one focused learner question`
+        : `no-progress warning for repeated ${action.action}: no durable Mission, assignment, report, or evidence state changed`
+      await client.query(
+        `INSERT INTO agent_host_actions(idempotency_key,work_id,run_id,cell_id,call_index,action,args,status,error)
+         VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,'failed',$8) ON CONFLICT(idempotency_key) DO NOTHING`,
+        [action.idempotencyKey,work.id,action.runId,action.cellId,action.callIndex,action.action,JSON.stringify(action.args),error],
+      )
+      await client.query('COMMIT');transactionOpen=false
+      return {ok:false,error}
+    }
     await client.query(
       `INSERT INTO agent_host_actions
          (idempotency_key, work_id, run_id, cell_id, call_index, action, args)
@@ -444,14 +512,16 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
       [action.idempotencyKey, work.id, action.runId, action.cellId, action.callIndex, action.action, JSON.stringify(action.args)],
     )
     if (!approved && actionRequiresApproval(action.action)) {
+      const teacherApproval = await describeTeacherAction(work, action, client)
       const approvalId = randomUUID()
       await client.query(
         `INSERT INTO agent_os_approvals
-           (id, company_id, agent_id, channel_id, work_id, idempotency_key, action, args, summary)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)
+           (id, company_id, agent_id, channel_id, work_id, idempotency_key, action, args, summary, requested_by, scope, preview)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11::jsonb,$12::jsonb)
          ON CONFLICT (idempotency_key) DO NOTHING`,
         [approvalId, work.companyId, work.agentId, work.channelId, work.id, action.idempotencyKey,
-          action.action, JSON.stringify(action.args), `${work.agentId} requests ${action.action}`],
+          action.action, JSON.stringify(action.args), teacherApproval?.summary ?? `${work.agentId} requests ${action.action}`,
+          teacherApproval?.requestedBy ?? null, JSON.stringify(teacherApproval?.scope ?? {}), JSON.stringify(teacherApproval?.preview ?? {})],
       )
       const { rows } = await client.query<{ id: string }>(`SELECT id FROM agent_os_approvals WHERE idempotency_key=$1`, [action.idempotencyKey])
       await client.query(`UPDATE agent_host_actions SET status='awaiting_approval', approval_id=$2, updated_at=NOW() WHERE idempotency_key=$1`, [action.idempotencyKey, rows[0].id])
@@ -545,7 +615,8 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
     const { rows: approvals } = await pool.query<{
       id: string; agent_id: string; action: string; args: Record<string, unknown>; summary: string
       status: string; requested_at: string; resolved_at: string | null; resolved_by: string | null
-    }>(`SELECT id, agent_id, action, args, summary, status, requested_at, resolved_at, resolved_by
+      requested_by:string|null;scope:Record<string,unknown>;preview:Record<string,unknown>
+    }>(`SELECT id, agent_id, action, args, summary, status, requested_at, resolved_at, resolved_by,requested_by,scope,preview
           FROM agent_os_approvals WHERE id=$1 AND company_id=$2`, [approvalId, work.companyId])
     const approval = approvals[0]
     if (approval) {
@@ -554,9 +625,10 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
         body: approval.summary, refs: { approvalId: approval.id, runId: event.runId, agentId: work.agentId },
         data: {
           id: approval.id, agentId: approval.agent_id,
-          kind: approval.action.startsWith('email.') ? 'external_communication' : 'sensitive_or_destructive_action',
+          kind: approval.action.startsWith('email.') ? 'external_communication' : String(approval.scope?.risk??'sensitive_or_destructive_action'),
           summary: approval.summary, status: approval.status, payload: { action: approval.action, args: approval.args },
           requestedAt: approval.requested_at, resolvedAt: approval.resolved_at, resolvedBy: approval.resolved_by,
+          requestedBy:approval.requested_by,scope:approval.scope,preview:approval.preview,
           suppressAgentWake: true,
         },
       }).catch(() => undefined)
@@ -587,6 +659,7 @@ agentOSControlRouter.post('/work/:id/complete', safe(async (req, res) => {
   const { work } = await requireLease(req)
   const status = String(req.body.status)
   if (!['completed', 'failed', 'cancelled'].includes(status)) { res.status(400).json({ error: 'invalid status' }); return }
+  if(status==='completed'&&work.canvasId) await assertCanvasWorkReportReady(work.id,work.companyId)
   const client = await pool.connect()
   try {
     await client.query('BEGIN')

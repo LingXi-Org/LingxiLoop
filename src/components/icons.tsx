@@ -14,7 +14,7 @@ const base: IconProps = {
 export const IChat = (p: IconProps) => (
   <svg {...base} {...p}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
 )
-export const IWhisper = (p: IconProps) => (
+export const IDirectChat = (p: IconProps) => (
   <svg {...base} {...p}><path d="M3 12c0-4 4-8 9-8s9 4 9 8-4 8-9 8a10 10 0 01-3-.5L3 21l1.5-5A8 8 0 013 12z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>
 )
 export const IConvene = (p: IconProps) => (

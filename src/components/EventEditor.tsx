@@ -109,7 +109,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
   // "remind teammate" personal events).
   const candidates: Participant[] = useMemo(() => {
     return Object.values(byId)
-      .filter((p) => !p.departedAt)
+      .filter((p) => !p.departedAt && !p.managed)
       .sort((a, b) => {
         if (a.kind !== b.kind) return a.kind === 'agent' ? -1 : 1
         return a.name.localeCompare(b.name)

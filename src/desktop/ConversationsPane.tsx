@@ -126,7 +126,7 @@ export function ConversationsPane() {
   }, [query, mockMode])
 
   const conversations = useMemo(() => {
-    const visible = list.filter((c) => c.kind !== 'whisper')
+    const visible = list
     return [...visible.filter((c) => c.pinned), ...visible.filter((c) => !c.pinned)]
   }, [list])
 
@@ -135,7 +135,6 @@ export function ConversationsPane() {
       const value = query.trim().toLocaleLowerCase()
       if (!value) return [] as Array<{ id: string; title: string; preview: string }>
       return list
-        .filter((conversation) => conversation.kind !== 'whisper')
         .filter((conversation) => `${conversation.title} ${conversation.preview ?? ''}`.toLocaleLowerCase().includes(value))
         .map((conversation) => ({ id: conversation.id, title: conversation.title, preview: conversation.preview ?? '会话' }))
     }
@@ -178,6 +177,7 @@ export function ConversationsPane() {
                 <button type="button" onClick={() => { setLauncherOpen(false); useApp.getState().openComposeNew() }} className="app-menu-item"><span className="app-menu-icon"><IMail /></span>写邮件</button>
                 <div className="my-1 h-px bg-hairline" />
                 {([
+                  ['learning', '学习', IDoc],
                   ['agents', '智能体', IAgent],
                   ['canvas', 'Canvas', ICanvas],
                   ['library', '资料库', IDoc],

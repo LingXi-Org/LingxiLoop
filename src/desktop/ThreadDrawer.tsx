@@ -23,7 +23,6 @@ function apiToMessage(m: ApiMessage): Message {
   const raw = m as unknown as {
     tool?: Message['tool']
     attachment?: Message['attachment']
-    whisperLink?: Message['whisperLink']
     quotedMessageId?: string | null
     quoted?: Message['quoted'] | null
     replyCount?: number | null
@@ -38,7 +37,6 @@ function apiToMessage(m: ApiMessage): Message {
     reactions: m.reactions && m.reactions.length > 0 ? m.reactions : undefined,
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,
-    whisperLink: raw.whisperLink ?? undefined,
     quotedMessageId: raw.quotedMessageId ?? undefined,
     quoted: raw.quoted ?? undefined,
     replyCount: raw.replyCount ?? undefined,

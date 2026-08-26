@@ -21,6 +21,11 @@ import type {
   Status,
   ConversationSourceSelection,
   KnowledgeSource,
+  LearningActivity,
+  LearningCourse,
+  LearningDashboard,
+  LearningObjective,
+  TeacherAgentSummary,
   WorkspaceSummary,
 } from '@/types'
 
@@ -104,6 +109,10 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAuthToken()
   if (token) headers.authorization = `Bearer ${token}`
   const company = getActiveCompanyId()
+  if (company?.startsWith('mock-') && path.startsWith('/learning/')) {
+    const { mockLearningHttp } = await import('@/dev/mockLearning')
+    return mockLearningHttp<T>(path, init)
+  }
   if (company) headers['x-company-id'] = company
   if (getDevModeEnabled()) headers['x-lingxiloop-dev-mode'] = '1'
   const res = await fetch(`${API}${path}`, {
@@ -141,7 +150,7 @@ export interface ApiMessage extends Message {
 
 export interface ApiConversation {
   id: string
-  kind: 'group' | 'direct' | 'whisper' | 'email'
+  kind: 'group' | 'direct' | 'email'
   title: string
   subtitle: string | null
   topic: string | null
@@ -192,7 +201,7 @@ export interface ApiQuotaResponse {
   error?: string
 }
 
-/** @deprecated Project APIs remain only for compatibility with stale, unmounted settings modules. */
+/** Project/workspace summary used by onboarding and workspace navigation. */
 export type ApiProject = WorkspaceSummary
 
 export interface ApiParticipant {
@@ -263,7 +272,7 @@ export interface ApiSearchResults {
   }>
   rooms: Array<{
     id: string
-    kind: 'direct' | 'whisper'
+    kind: 'direct'
     title: string
     members: string[]
     projectName: string | null
@@ -279,7 +288,7 @@ export interface ApiSearchResults {
     id: string
     conversationId: string
     conversationTitle: string
-    conversationKind: 'group' | 'direct' | 'whisper'
+    conversationKind: 'group' | 'direct'
     authorId: string
     authorName: string | null
     snippet: string
@@ -326,36 +335,6 @@ interface PresignResponse {
   mime: string
   size: number
   kind: 'img' | 'file'
-}
-
-/** A peek-view entry — either a 1-on-1 direct chat or a multi-agent
- *  group, where every member is an agent. "Whisper" is the frontend tab
- *  name; on the server these are just regular conversations the user
- *  isn't a member of (so they don't show up in /conversations, but the
- *  peek tab lets the user eavesdrop). */
-export interface ApiWhisper {
-  id: string
-  kind: 'direct' | 'group'
-  title: string
-  members: string[]
-  /** Convenience accessors for the 1-on-1 case — null for groups. */
-  agentA: string | null
-  agentB: string | null
-  about: string | null
-  createdAt: string
-  updatedAt: string
-  msgCount: number
-}
-
-export interface ApiWhisperMessage {
-  id: string
-  conversationId: string
-  authorId: string
-  kind: string
-  body: string
-  sequence: number
-  tool?: { name: string; arg: string; status: string; detail: string; icon?: string } | null
-  createdAt: string
 }
 
 export interface ApiAutonomy {
@@ -749,7 +728,6 @@ export interface ShippingOverview {
 
 export const api = {
   health: () => http<{ ok: boolean; ts: number }>('/health'),
-  me: () => http<{ id: string; name: string; kind: string }>('/me'),
   /** Full-page redirect into the provider's consent screen. Use
    *  `window.location.assign(api.authStartUrl('lingxi'))` rather than
    *  fetch — the browser needs to do the actual navigation so the
@@ -781,6 +759,41 @@ export const api = {
   listCompanies: () =>
     http<Array<{ id: string; name: string; slug: string; createdAt: string; role: string }>>('/companies'),
   listProjects: () => http<ApiProject[]>('/projects'),
+  getLearningDashboard: () => http<LearningDashboard>('/learning/dashboard'),
+  listLearningCourses: () => http<LearningCourse[]>('/learning/courses'),
+  createLearningCourse: (input: { projectId: string; title: string; description?: string; roles: Array<'teacher' | 'learner'> }) =>
+    http<LearningCourse>('/learning/courses', { method: 'POST', body: JSON.stringify(input) }),
+  updateLearningCourse: (courseId: string, input: { title?: string; description?: string; status?: 'draft' | 'active' | 'archived' }) =>
+    http(`/learning/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  getLearningTeacherAgent:(courseId:string)=>http<TeacherAgentSummary>(`/learning/courses/${encodeURIComponent(courseId)}/teacher-agent`),
+  bindLearningRoom: (courseId: string, conversationId: string, purpose: 'study' | 'lab' | 'discussion') =>
+    http(`/learning/courses/${encodeURIComponent(courseId)}/rooms/${encodeURIComponent(conversationId)}`, { method: 'PUT', body: JSON.stringify({ purpose }) }),
+  setLearningCourseMember: (courseId: string, memberId: string, role: 'teacher' | 'learner', enabled = true) =>
+    http(`/learning/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(memberId)}/${role}`, { method: 'PUT', body: JSON.stringify({ enabled }) }),
+  listLearningObjectives: (courseId: string) => http<LearningObjective[]>(`/learning/courses/${encodeURIComponent(courseId)}/objectives`),
+  createLearningObjectives: (courseId: string, objectives: Array<{ title: string; successCriteria: string; targetLevel?: number; prerequisiteIds?: string[] }>) =>
+    http<LearningObjective[]>(`/learning/courses/${encodeURIComponent(courseId)}/objectives`, { method: 'POST', body: JSON.stringify({ objectives }) }),
+  setLearningObjectiveStatus: (courseId: string, objectiveId: string, status: 'draft' | 'published' | 'archived') =>
+    http(`/learning/courses/${encodeURIComponent(courseId)}/objectives/${encodeURIComponent(objectiveId)}/status`, { method: 'POST', body: JSON.stringify({ status }) }),
+  listLearningActivities: (courseId: string) => http<LearningActivity[]>(`/learning/courses/${encodeURIComponent(courseId)}/activities`),
+  createLearningActivity: (courseId: string, input: Omit<LearningActivity, 'id' | 'courseId' | 'status'>) =>
+    http<LearningActivity>(`/learning/courses/${encodeURIComponent(courseId)}/activities`, { method: 'POST', body: JSON.stringify(input) }),
+  publishLearningActivity: (courseId: string, activityId: string) =>
+    http(`/learning/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/publish`, { method: 'POST' }),
+  closeLearningActivity: (courseId: string, activityId: string) =>
+    http(`/learning/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/close`, { method: 'POST' }),
+  submitLearningActivity: (courseId: string, activityId: string, answer: string, assistance: 'none' | 'hint' | 'guided' = 'none') =>
+    http<{ attemptId: string }>(`/learning/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/submit`, { method: 'POST', body: JSON.stringify({ answer, assistance }) }),
+  listLearningMissions: (courseId: string) => http<unknown[]>(`/learning/courses/${encodeURIComponent(courseId)}/missions`),
+  setLearningMissionCoordinator:(courseId:string,missionId:string,agentId:string)=>http(`/learning/courses/${encodeURIComponent(courseId)}/missions/${encodeURIComponent(missionId)}/coordinator`,{method:'PATCH',body:JSON.stringify({agentId})}),
+  listLearningEvidence: (courseId: string, learnerId?: string) => http<unknown[]>(`/learning/courses/${encodeURIComponent(courseId)}/evidence${learnerId ? `?learnerId=${encodeURIComponent(learnerId)}` : ''}`),
+  listLearningReviews: (courseId: string) => http<Array<Record<string, unknown>>>(`/learning/courses/${encodeURIComponent(courseId)}/reviews`),
+  getLearningCourseProgress: (courseId: string) => http<Array<Record<string, unknown>>>(`/learning/courses/${encodeURIComponent(courseId)}/progress`),
+  reviewLearningEvaluation: (courseId: string, evaluationId: string, input: { decision: 'accept' | 'reject'; reason: string; overrideLevel?: number }) =>
+    http(`/learning/courses/${encodeURIComponent(courseId)}/reviews/${encodeURIComponent(evaluationId)}`, { method: 'POST', body: JSON.stringify(input) }),
+  getLearningNotificationPreferences: (courseId?: string) => http<Record<string, unknown>>(`/learning/notification-preferences${courseId ? `?courseId=${encodeURIComponent(courseId)}` : ''}`),
+  setLearningNotificationPreferences: (input: Record<string, unknown>) => http<Record<string, unknown>>('/learning/notification-preferences', { method: 'PUT', body: JSON.stringify(input) }),
+  listLearningDeliveries: () => http<Array<Record<string, unknown>>>('/learning/deliveries'),
   openProject: (id: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}/open`, { method: 'POST' }),
   createProject: (input: { name: string; description?: string; color?: string }) => http<ApiProject>('/projects', { method: 'POST', body: JSON.stringify(input) }),
   archiveProject: (id: string, archive = true) => http<{ ok: boolean; status: string }>(`/projects/${encodeURIComponent(id)}/archive`, { method: 'POST', body: JSON.stringify({ archive }) }),
@@ -1242,11 +1255,6 @@ export const api = {
       `/messages/${encodeURIComponent(messageId)}/reactions`,
       { method: 'POST', body: JSON.stringify({ emoji }) },
     ),
-  /** "Whispers" is a frontend tab name — on the server these are just
-   *  agent-to-agent direct conversations the user can peek at. */
-  getWhispers: () => http<ApiWhisper[]>('/peek/agent-chats'),
-  getWhisperMessages: (id: string) =>
-    http<ApiWhisperMessage[]>(`/peek/agent-chats/${encodeURIComponent(id)}/messages`),
   startConvene: (conversationId: string, topic: string) =>
     http<ApiConveneSession>(`/conversations/${encodeURIComponent(conversationId)}/convene`, {
       method: 'POST',

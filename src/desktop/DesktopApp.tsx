@@ -23,6 +23,7 @@ import { ThreadDrawer } from './ThreadDrawer'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { GroupContextContent } from '@/components/GroupContextContent'
 import { DetailPanel } from '@/components/layout/detail-panel'
+import { LearningCenter } from '@/components/LearningCenter'
 
 const CONTEXT_TITLES: Partial<Record<ViewKey['view'], string>> = {
   agents: '智能体',
@@ -151,7 +152,8 @@ export function DesktopApp() {
   const canvasId = useApp((state) => state.openCanvasId)
   const closeCanvasPeek = useApp((state) => state.closeCanvasPeek)
   const settingsOpen = view === 'me'
-  const workspaceContextOpen = view !== 'conversations' && !settingsOpen
+  const learningOpen = view === 'learning'
+  const workspaceContextOpen = view !== 'conversations' && !settingsOpen && !learningOpen
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const groupContext = selectedConversation?.kind === 'group' ? selectedConversation : null
@@ -331,7 +333,7 @@ export function DesktopApp() {
         if (view === 'conversations' && selectedConversationId) { event.preventDefault(); window.dispatchEvent(new Event('lingxiloop:find-chat')) }
         return
       }
-      const visible = useConversations.getState().list.filter((item) => item.kind !== 'whisper')
+      const visible = useConversations.getState().list
       if (action.id === 'conversation-index') {
         const target = visible[action.index ?? -1]
         if (target) { event.preventDefault(); useApp.getState().selectConversation(target.id) }
@@ -395,7 +397,9 @@ export function DesktopApp() {
             detail={groupDetail}
             detailWidth={groupPanelWidth}
           >
-            {canvasId
+            {learningOpen
+              ? <LearningCenter />
+              : canvasId
               ? <div className="canvas-expanded-pane h-full min-h-0 min-w-0 flex-1"><CanvasContext canvasId={canvasId} onClose={closeCanvasPeek} /></div>
               : <ChatPane onOpenGroupContext={groupContext ? () => setGroupPanelOpen(true) : undefined} />}
           </DetailPanel>

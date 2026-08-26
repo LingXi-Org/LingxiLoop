@@ -313,7 +313,6 @@ function fromApi(m: ApiMessage): Message {
   const raw = m as unknown as {
     tool?: Message['tool']
     attachment?: Message['attachment']
-    whisperLink?: Message['whisperLink']
     quotedMessageId?: string | null
     quoted?: Message['quoted'] | null
     replyCount?: number | null
@@ -327,6 +326,7 @@ function fromApi(m: ApiMessage): Message {
     handoff?: Message['handoff'] | null
     approval?: Message['approval'] | null
     canvas?: Message['canvas'] | null
+    learningMission?: Message['learningMission'] | null
     citations?: Message['citations'] | null
   }
   const out: Message = {
@@ -340,7 +340,6 @@ function fromApi(m: ApiMessage): Message {
     reactions: deriveMineForReactions(m.reactions),
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,
-    whisperLink: raw.whisperLink ?? undefined,
     quotedMessageId: raw.quotedMessageId ?? undefined,
     quoted: raw.quoted ?? undefined,
     replyCount: raw.replyCount ?? undefined,
@@ -354,6 +353,7 @@ function fromApi(m: ApiMessage): Message {
     handoff: raw.handoff ?? undefined,
     approval: raw.approval ?? undefined,
     canvas: raw.canvas ?? undefined,
+    learningMission: raw.learningMission ?? undefined,
     citations: raw.citations ?? undefined,
   }
   ;(out as Message & { sequence?: number }).sequence = m.sequence
@@ -363,6 +363,9 @@ function fromApi(m: ApiMessage): Message {
 function fromIm(message: ImEnvelope): Message {
   const payload = message.payload
   const data = payload.data ?? {}
+  if (payload.kind === 'learning_mission' && typeof window !== 'undefined') {
+    window.queueMicrotask(() => window.dispatchEvent(new Event('lingxiloop:learning-updated')))
+  }
   const kind = payload.kind === 'tool_activity' || payload.kind === 'artifact' ? 'tool' : payload.kind
   const pollClientMsgNo = payload.kind === 'poll'
     ? String(payload.refs?.pollClientMsgNo ?? payload.clientMsgNo)
@@ -396,6 +399,7 @@ function fromIm(message: ImEnvelope): Message {
     handoff: payload.kind === 'handoff' ? data as unknown as Message['handoff'] : undefined,
     approval: payload.kind === 'approval' ? data as unknown as Message['approval'] : undefined,
     canvas: payload.kind === 'canvas' ? data as unknown as Message['canvas'] : undefined,
+    learningMission: payload.kind === 'learning_mission' ? data as unknown as Message['learningMission'] : undefined,
     citations: Array.isArray(data.citations) ? data.citations as Message['citations'] : undefined,
     poll: pollData,
     pollTallies: payload.kind === 'poll' && Array.isArray(data.pollTallies)

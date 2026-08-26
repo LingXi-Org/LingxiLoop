@@ -131,7 +131,7 @@ function _ChatHeader({
     }
   }
 
-  // Group rename — only group chats; a DM/whisper title is derived from the
+  // Group rename — only group chats; a DM title is derived from the
   // other person. Mirrors the topic editor (optimistic update + rollback).
   const canRename = c.kind === 'group'
   const startEditTitle = () => {
@@ -1336,7 +1336,7 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
 function _EmptyConversationState() {
   // Live counts pulled straight from the store so the empty stage carries
   // one tiny piece of "alive" data at the bottom — matches the inline
-  // italic counter pattern in WhispersView's sidebar header.
+  // italic counter pattern used by compact sidebar headers.
   const list = useConversations((s) => s.list)
   const total = list.length
   const unread = useMemo(
@@ -1631,7 +1631,7 @@ function _EmptyConversationState() {
 }
 
 function OpenMausEmptyConversationState() {
-  const total = useConversations((s) => s.list.filter((c) => c.kind !== 'whisper').length)
+  const total = useConversations((s) => s.list.length)
   return (
     <main className="chat-surface omb-titlebar-safe omb-drag grid h-full min-w-0 place-items-center">
       <div className="omb-no-drag flex max-w-sm flex-col items-center gap-3 px-8 text-center">
@@ -2100,10 +2100,10 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
             itemContent={(i, m) => {
               const rowIndex = i >= firstItemIndex ? i - firstItemIndex : i
               const author = byId[m.authorId]
-              // System / whisper rows render without a resolved author (e.g. the
+              // System rows render without a resolved author (e.g. the
               // calendar-fired notice has a synthetic system author id). Only
               // gate real authored messages on the participant being loaded.
-              if (!author && m.kind !== 'system' && m.kind !== 'whisper-link') return <div className="h-0" />
+              if (!author && m.kind !== 'system') return <div className="h-0" />
               const wasInitial = initialIdsRef.current?.has(m.id) ?? false
               const delay = wasInitial ? Math.min(i * 30, 200) : 0
               // Animate a message's rise-in at most once per convo session, so a

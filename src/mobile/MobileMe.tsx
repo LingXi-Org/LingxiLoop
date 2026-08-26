@@ -5,7 +5,6 @@ import { useApp } from '@/stores/app'
 import { useAuth, useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import { useConversations } from '@/stores/conversations'
-import { useWhispers } from '@/stores/whispers'
 import { usePrefs } from '@/stores/preferences'
 import { getPushStatus, initPushNotifications, teardownPushNotifications, type PushStatus } from '@/lib/push'
 import { api } from '@/api/client'
@@ -28,7 +27,6 @@ export function MobileMe() {
   const activeCompanyId = useAuth((s) => s.activeCompanyId)
   const byId = useParticipants((s) => s.byId)
   const convoList = useConversations((s) => s.list)
-  const whisperList = useWhispers((s) => s.list)
   const prefs = usePrefs((s) => s.prefs)
   const autonomy = usePrefs((s) => s.autonomy)
   const setPref = usePrefs((s) => s.setPref)
@@ -49,7 +47,7 @@ export function MobileMe() {
   }, [meId, byId, authUser])
 
   const agents = useMemo(
-    () => Object.values(byId).filter((p): p is Participant => p.kind === 'agent' && !p.departedAt),
+    () => Object.values(byId).filter((p): p is Participant => p.kind === 'agent' && !p.departedAt && !p.managed),
     [byId],
   )
   const activeCompany = companies.find((c) => c.id === activeCompanyId)
@@ -62,10 +60,9 @@ export function MobileMe() {
     const parts: string[] = []
     if (agents.length) parts.push(`${agents.length} 个 Agent`)
     if (convoList.length) parts.push(`${convoList.length} 个对话`)
-    if (whisperList.length) parts.push(`${whisperList.length} 个私聊`)
     if (parts.length === 0) return '工作空间还很安静，邀请一些 Agent 开始协作吧。'
     return `正在管理 ${parts.join(' · ')}`
-  }, [agents.length, convoList.length, whisperList.length])
+  }, [agents.length, convoList.length])
 
   return (
     <section className="flex flex-col h-full overflow-hidden bg-paper">

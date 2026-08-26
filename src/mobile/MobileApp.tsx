@@ -14,12 +14,12 @@ import { MobileLibrary } from './MobileLibrary'
 import { MobileMe } from './MobileMe'
 import { MobileParticipantInfo } from './MobileParticipantInfo'
 import { MobileTabBar } from './MobileTabBar'
-import { MobileWhisperRoom, MobileWhispersList } from './MobileWhispers'
 import { useSwipeBackProps } from './useSwipeBack'
 import { ViewBoundary } from './ViewBoundary'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { useConversations } from '@/stores/conversations'
 import { MobileGroupContext } from './MobileGroupContext'
+import { LearningCenter } from '@/components/LearningCenter'
 
 /** iOS UINavigationController push/pop spring. CRITICALLY DAMPED:
  *  damping ratio ζ = damping / (2·√(k·m)) = 38 / (2·√320) ≈ 1.06,
@@ -112,7 +112,6 @@ export function MobileApp() {
   // overlay (MobileParticipantInfo) below.
   const infoParticipantId = useApp((s) => s.infoAgentId)
   const closeAgentInfo = useApp((s) => s.closeAgentInfo)
-  const [whisperId, setWhisperId] = useState<string | null>(null)
   const activeConversation = useConversations((state) => state.list.find((item) => item.id === convoId) ?? null)
 
   // Edge-swipe-back gestures for deep screens. Hooks are called
@@ -120,10 +119,9 @@ export function MobileApp() {
   // hooks need to be stable across renders).
   const chatSwipe = useSwipeBackProps(() => pushStack('list'))
   const infoSwipe = useSwipeBackProps(() => pushStack('chat'))
-  const whisperSwipe = useSwipeBackProps(() => setWhisperId(null))
   const participantSwipe = useSwipeBackProps(() => closeAgentInfo())
 
-  // Parallax — when a top layer (chat / info / whisper room) is
+  // Parallax — when a top layer (chat / info) is
   // sliding right under the user's finger, the layer ABOUT TO BE
   // REVEALED needs to peek in from the left at ~30% the speed.
   // iOS uses ~30% parallax, which is what these transforms emulate.
@@ -132,7 +130,6 @@ export function MobileApp() {
   // background slides in as the foreground slides out, no extra
   // wiring needed.
   const listPeekX = useParallax(chatSwipe.x)
-  const whisperListPeekX = useParallax(whisperSwipe.x)
   const artifactKey = documentId
     ? `doc-${documentId}`
     : boardId
@@ -149,7 +146,7 @@ export function MobileApp() {
   // stale persisted routes (or legacy deep links) instead of
   // leaving users on a hidden product area.
   useEffect(() => {
-    if (!['conversations', 'agents', 'canvas', 'library', 'me'].includes(view)) {
+    if (!['conversations', 'learning', 'agents', 'canvas', 'library', 'me'].includes(view)) {
       setView('conversations')
     }
   }, [view, convoId, setView])
@@ -169,7 +166,6 @@ export function MobileApp() {
   // hide tab bar in deep flows
   const showTabBar =
     !(view === 'conversations' && (stack === 'chat' || stack === 'info')) &&
-    !(view === 'whispers' && whisperId !== null) &&
     view !== 'canvas' &&
     !infoParticipantId && !mobileGroupContext
 
@@ -261,45 +257,21 @@ export function MobileApp() {
             </motion.div>
           )}
 
-          {/* WHISPERS view — same pattern: whisper list is always
-              the background; whisper room slides in on top with the
-              list parallaxing as it goes. */}
-          {view === 'whispers' && (
-            <motion.div key="wh-root" className="absolute inset-0"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={fadeTransition}>
-              <ViewBoundary name="Whispers">
-              <motion.div
-                className="absolute inset-0 isolate"
-                style={{
-                  x: whisperId !== null ? whisperListPeekX : 0,
-                  zIndex: 0,
-                  willChange: 'transform',
-                }}
-              >
-                <MobileWhispersList onSelect={setWhisperId} />
-              </motion.div>
-              <AnimatePresence>
-                {whisperId !== null && (
-                  <motion.div key={`wh-room-${whisperId}`} className="absolute inset-0"
-                    initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-                    transition={slideTransition}
-                    {...whisperSwipe.props}
-                    style={{ ...whisperSwipe.props.style, background: 'var(--paper)', zIndex: 1 }}>
-                    <MobileWhisperRoom pairId={whisperId} onBack={() => setWhisperId(null)} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              </ViewBoundary>
-            </motion.div>
-          )}
-
           {/* LIBRARY view — documents, boards, calendar */}
           {view === 'library' && (
             <motion.div key="library" className="absolute inset-0"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={fadeTransition}>
               <ViewBoundary name="Library"><MobileLibrary /></ViewBoundary>
+            </motion.div>
+          )}
+
+          {/* AGENTS view */}
+          {view === 'learning' && (
+            <motion.div key="learning" className="absolute inset-0"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={fadeTransition}>
+              <ViewBoundary name="Learning"><LearningCenter /></ViewBoundary>
             </motion.div>
           )}
 

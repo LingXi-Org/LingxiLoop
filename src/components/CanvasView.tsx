@@ -313,7 +313,7 @@ function CanvasHeader({ onBack, onFocusFrame }: {
   return <header className="canvas-header canvas-main-header absolute inset-x-0 top-0 z-30 flex items-center gap-4 border-b border-hairline px-3 backdrop-blur-xl">
     <div className="flex min-w-0 shrink-0 items-center gap-2">
       {onBack && <button type="button" onClick={onBack} aria-label="返回对话" className="grid size-9 place-items-center rounded-full text-ink-secondary hover:bg-raised"><IBack className="size-5" /></button>}
-      <div className="min-w-0 max-w-56"><div className="truncate text-[14px] font-semibold text-ink">{snapshot?.title ?? '画布'}</div><div className="truncate text-[9px] text-ink-secondary">{snapshot?.goal ?? '共同工作的可视空间'}</div></div>
+      <div className="min-w-0 max-w-64"><div className="truncate text-[14px] font-semibold text-ink">{snapshot?.title ?? '画布'}</div><div className="truncate text-[9px] text-ink-secondary">{snapshot ? `${snapshot.goal} · ${snapshot.reports.length} 份结构化报告${snapshot.reports.some((report) => report.executionRole === 'reporter') ? ' · Reporter 已汇聚' : ''}` : '共同工作的可视空间'}</div></div>
     </div>
     <CanvasTimeline onFocusFrame={onFocusFrame} />
   </header>
@@ -372,7 +372,7 @@ function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => v
         const progress = latestAssignmentProgress(snapshot, assignment)
         return <button key={assignment.id} type="button" disabled={!activeFrameId} onClick={() => activeFrameId && onFocusFrame(activeFrameId)} className="canvas-timeline-item group relative flex max-w-52 items-center gap-2 px-3 text-left disabled:cursor-default">
           <span className="canvas-timeline-node relative z-10 grid size-7 shrink-0 place-items-center">{participant ? <AvatarMini p={participant} size={26} statusOverride={assignment.status === 'blocked' || assignment.status === 'waiting' ? 'thinking' : isCanvasAssignmentActive(assignment.status) ? 'working' : 'avail'} /> : <span className="text-[9px] font-bold" style={{ color: assignment.color }}>{assignment.agentId.slice(0, 1).toUpperCase()}</span>}</span>
-          <span className="min-w-0"><span className="block truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? assignment.agentId}</span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}</span></span>
+            <span className="min-w-0"><span className="flex items-center gap-1 truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? assignment.agentId}<span className="rounded bg-raised px-1 py-0.5 text-[7px] uppercase text-ink-secondary">{assignment.executionRole}</span></span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}{snapshot.reports.some((report)=>report.assignmentId===assignment.id)?' · 已提交报告':''}</span></span>
         </button>
       })}
     </div></div>

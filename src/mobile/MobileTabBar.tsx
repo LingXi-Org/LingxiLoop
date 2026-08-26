@@ -6,6 +6,7 @@ import { Pressable } from './Pressable'
 
 const tabs: Array<{ key: ViewKey['view']; Icon: typeof IChat; label: string }> = [
   { key: 'conversations', Icon: IChat, label: '对话' },
+  { key: 'learning', Icon: IDoc, label: '学习' },
   { key: 'agents', Icon: IAgent, label: '智能体' },
   { key: 'library', Icon: IDoc, label: '资料库' },
   { key: 'me', Icon: IAgents, label: '我的' },

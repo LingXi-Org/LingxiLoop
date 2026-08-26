@@ -51,7 +51,7 @@ export function ConversationAvatar({
     )
   }
 
-  if (conversation.kind === 'group' || conversation.kind === 'whisper' || members.length > 1) {
+  if (conversation.kind === 'group' || members.length > 1) {
     if (members.length === 0) {
       return <span className="grid shrink-0 place-items-center rounded-full bg-raised text-ink-secondary" style={{ width: size, height: size }}>群</span>
     }
@@ -87,7 +87,7 @@ export function ConversationListItemContent({
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const muted = isMuted(conversation)
-  const roleLabels = conversation.kind === 'direct' || conversation.kind === 'whisper'
+  const roleLabels = conversation.kind === 'direct'
     ? conversation.members
       .map((id) => byId[id])
       .filter((participant): participant is Participant => Boolean(participant && participant.id !== meId && participant.kind === 'agent'))

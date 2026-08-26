@@ -1527,6 +1527,44 @@ DO $$ BEGIN
       CHECK (status IN ('queued','blocked','working','waiting','completed','failed','cancelled'));
   END IF;
 END $$;
+ALTER TABLE canvas_agent_assignments ADD COLUMN IF NOT EXISTS execution_role TEXT NOT NULL DEFAULT 'specialist';
+ALTER TABLE canvas_agent_assignments ADD COLUMN IF NOT EXISTS verifies_assignment_id TEXT REFERENCES canvas_agent_assignments(id) ON DELETE SET NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='canvas_assignment_execution_role_check') THEN
+    ALTER TABLE canvas_agent_assignments ADD CONSTRAINT canvas_assignment_execution_role_check
+      CHECK (execution_role IN ('specialist','verifier'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='canvas_assignment_verifier_not_self_check') THEN
+    ALTER TABLE canvas_agent_assignments ADD CONSTRAINT canvas_assignment_verifier_not_self_check
+      CHECK (verifies_assignment_id IS NULL OR verifies_assignment_id <> id);
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS canvas_assignment_reports (
+  id                    TEXT PRIMARY KEY,
+  company_id            TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  canvas_id             TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+  assignment_id         TEXT REFERENCES canvas_agent_assignments(id) ON DELETE CASCADE,
+  author_agent_id       TEXT NOT NULL,
+  execution_role        TEXT NOT NULL CHECK (execution_role IN ('specialist','verifier','reporter')),
+  schema_version        TEXT NOT NULL DEFAULT 'learning_report_v1' CHECK (schema_version='learning_report_v1'),
+  finding               TEXT NOT NULL,
+  evidence_refs         JSONB NOT NULL DEFAULT '[]'::jsonb,
+  confidence            DOUBLE PRECISION NOT NULL CHECK (confidence BETWEEN 0 AND 1),
+  unresolved            JSONB NOT NULL DEFAULT '[]'::jsonb,
+  next_step             TEXT,
+  verifies_report_id    TEXT REFERENCES canvas_assignment_reports(id) ON DELETE SET NULL,
+  disconfirming_checks  JSONB NOT NULL DEFAULT '[]'::jsonb,
+  verdict               TEXT CHECK (verdict IN ('supported','rejected','inconclusive')),
+  consumed_report_ids   JSONB NOT NULL DEFAULT '[]'::jsonb,
+  conflict_resolution   JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_canvas_report_assignment
+  ON canvas_assignment_reports(assignment_id) WHERE assignment_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_canvas_reports_canvas ON canvas_assignment_reports(canvas_id, created_at);
 
 CREATE TABLE IF NOT EXISTS canvas_assignment_dependencies (
   assignment_id            TEXT NOT NULL REFERENCES canvas_agent_assignments(id) ON DELETE CASCADE,
@@ -2044,6 +2082,16 @@ ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS preempt_requested_at TIMES
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS preempt_grace_expires_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS preemptions INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS lease_started_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS execution_role TEXT NOT NULL DEFAULT 'specialist';
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS progress_fingerprint TEXT;
+ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS no_progress_count INTEGER NOT NULL DEFAULT 0;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='agent_work_execution_role_check') THEN
+    ALTER TABLE agent_work_items ADD CONSTRAINT agent_work_execution_role_check
+      CHECK (execution_role IN ('coordinator','specialist','verifier','reporter'));
+  END IF;
+END $$;
+UPDATE agent_work_items SET execution_role='reporter' WHERE reason='canvas_summary' AND execution_role<>'reporter';
 UPDATE agent_work_items SET lease_started_at=NOW() WHERE status='leased' AND lease_started_at IS NULL;
 ALTER TABLE agent_work_items ADD COLUMN IF NOT EXISTS lane TEXT GENERATED ALWAYS AS (
   CASE
@@ -2161,6 +2209,9 @@ CREATE TABLE IF NOT EXISTS agent_os_approvals (
   result          JSONB,
   error           TEXT
 );
+ALTER TABLE agent_os_approvals ADD COLUMN IF NOT EXISTS requested_by TEXT;
+ALTER TABLE agent_os_approvals ADD COLUMN IF NOT EXISTS scope JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE agent_os_approvals ADD COLUMN IF NOT EXISTS preview JSONB NOT NULL DEFAULT '{}'::jsonb;
 CREATE INDEX IF NOT EXISTS idx_agent_os_approvals_pending
   ON agent_os_approvals(company_id, status, requested_at DESC);
 
@@ -2433,6 +2484,272 @@ CREATE INDEX IF NOT EXISTS idx_documents_project ON documents(project_id, update
 CREATE INDEX IF NOT EXISTS idx_boards_project ON boards(project_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_calendar_project ON calendar_events(project_id, start_at);
 CREATE INDEX IF NOT EXISTS idx_canvases_project ON canvases(project_id, updated_at DESC);
+
+-- ============== Native learning domain ==================================
+-- Course state belongs to the product control plane. AgentOS only reaches it
+-- through the typed loop.learning Host Bridge namespace.
+CREATE TABLE IF NOT EXISTS learning_courses (
+  id          TEXT PRIMARY KEY,
+  company_id  TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE RESTRICT,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  status      TEXT NOT NULL DEFAULT 'draft'
+              CHECK (status IN ('draft','active','archived')),
+  created_by  TEXT NOT NULL,
+  created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  archived_at TIMESTAMP WITH TIME ZONE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_learning_course_active_project
+  ON learning_courses(company_id, project_id) WHERE status <> 'archived';
+CREATE INDEX IF NOT EXISTS idx_learning_courses_company
+  ON learning_courses(company_id, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS learning_course_memberships (
+  course_id  TEXT NOT NULL REFERENCES learning_courses(id) ON DELETE CASCADE,
+  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role       TEXT NOT NULL CHECK (role IN ('teacher','learner')),
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(course_id, user_id, role)
+);
+CREATE INDEX IF NOT EXISTS idx_learning_memberships_user
+  ON learning_course_memberships(user_id, role, course_id);
+
+CREATE TABLE IF NOT EXISTS learning_course_rooms (
+  course_id      TEXT NOT NULL REFERENCES learning_courses(id) ON DELETE CASCADE,
+  conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  purpose        TEXT NOT NULL CHECK (purpose IN ('study','lab','discussion')),
+  created_by     TEXT NOT NULL,
+  created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(course_id, conversation_id),
+  UNIQUE(conversation_id)
+);
+
+CREATE TABLE IF NOT EXISTS learning_objectives (
+  id               TEXT PRIMARY KEY,
+  course_id        TEXT NOT NULL REFERENCES learning_courses(id) ON DELETE CASCADE,
+  title            TEXT NOT NULL,
+  success_criteria TEXT NOT NULL,
+  target_level     INTEGER NOT NULL DEFAULT 3 CHECK (target_level BETWEEN 1 AND 4),
+  position         DOUBLE PRECISION NOT NULL DEFAULT 0,
+  status           TEXT NOT NULL DEFAULT 'draft'
+                   CHECK (status IN ('draft','published','archived')),
+  created_by       TEXT NOT NULL,
+  created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_learning_objectives_course
+  ON learning_objectives(course_id, status, position);
+
+CREATE TABLE IF NOT EXISTS learning_objective_dependencies (
+  objective_id              TEXT NOT NULL REFERENCES learning_objectives(id) ON DELETE CASCADE,
+  prerequisite_objective_id TEXT NOT NULL REFERENCES learning_objectives(id) ON DELETE CASCADE,
+  PRIMARY KEY(objective_id, prerequisite_objective_id),
+  CHECK (objective_id <> prerequisite_objective_id)
+);
+
+CREATE TABLE IF NOT EXISTS learning_activities (
+  id              TEXT PRIMARY KEY,
+  course_id       TEXT NOT NULL REFERENCES learning_courses(id) ON DELETE CASCADE,
+  title           TEXT NOT NULL,
+  instructions    TEXT NOT NULL,
+  type            TEXT NOT NULL CHECK (type IN ('lesson','practice','assessment','project','review')),
+  status          TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','published','closed')),
+  evaluation_mode TEXT NOT NULL DEFAULT 'teacher_required'
+                  CHECK (evaluation_mode IN ('agent_formative','teacher_required')),
+  target_level    INTEGER NOT NULL DEFAULT 2 CHECK (target_level BETWEEN 1 AND 4),
+  rubric          JSONB NOT NULL DEFAULT '[]'::jsonb,
+  objective_ids   JSONB NOT NULL DEFAULT '[]'::jsonb,
+  due_at          TIMESTAMP WITH TIME ZONE,
+  created_by      TEXT NOT NULL,
+  published_by    TEXT,
+  published_at    TIMESTAMP WITH TIME ZONE,
+  created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_learning_activities_course
+  ON learning_activities(course_id, status, due_at);
+
+CREATE TABLE IF NOT EXISTS learning_missions (
+  id                    TEXT PRIMARY KEY,
+  course_id             TEXT NOT NULL REFERENCES learning_courses(id) ON DELETE CASCADE,
+  learner_id            TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  conversation_id       TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  trigger_client_msg_no TEXT NOT NULL,
+  goal                  TEXT NOT NULL,
+  success_criteria      TEXT NOT NULL,
+  mission_kind          TEXT NOT NULL DEFAULT 'study' CHECK (mission_kind IN ('study','research','project')),
+  coordinator_agent_id  TEXT,
+  status                TEXT NOT NULL DEFAULT 'planning'
+                        CHECK (status IN ('planning','active','paused','completed','cancelled')),
+  created_by            TEXT NOT NULL,
+  completed_at          TIMESTAMP WITH TIME ZONE,
+  created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(course_id, learner_id, conversation_id, trigger_client_msg_no)
+);
+CREATE INDEX IF NOT EXISTS idx_learning_missions_learner
+  ON learning_missions(course_id, learner_id, status, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS learning_mission_steps (
+  id               TEXT PRIMARY KEY,
+  mission_id       TEXT NOT NULL REFERENCES learning_missions(id) ON DELETE CASCADE,
+  type             TEXT NOT NULL CHECK (type IN ('learn','practice','check','reflect')),
+  description      TEXT NOT NULL,
+  success_criteria TEXT NOT NULL,
+  objective_id     TEXT REFERENCES learning_objectives(id) ON DELETE SET NULL,
+  status           TEXT NOT NULL DEFAULT 'open'
+                   CHECK (status IN ('open','in_progress','completed','cancelled')),
+  position         DOUBLE PRECISION NOT NULL DEFAULT 0,
+  outcome          TEXT,
+  created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_learning_mission_steps
+  ON learning_mission_steps(mission_id, position);
+ALTER TABLE learning_mission_steps ADD COLUMN IF NOT EXISTS completion_report_id TEXT REFERENCES canvas_assignment_reports(id) ON DELETE SET NULL;
+ALTER TABLE learning_mission_steps ADD COLUMN IF NOT EXISTS completion_attempt_id TEXT;
+
+CREATE TABLE IF NOT EXISTS learning_attempts (
+  id             TEXT PRIMARY KEY,
+  course_id      TEXT NOT NULL REFERENCES learning_courses(id) ON DELETE CASCADE,
+  learner_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_id    TEXT REFERENCES learning_activities(id) ON DELETE SET NULL,
+  mission_step_id TEXT REFERENCES learning_mission_steps(id) ON DELETE SET NULL,
+  assistance     TEXT NOT NULL DEFAULT 'none' CHECK (assistance IN ('none','hint','guided')),
+  evidence       JSONB NOT NULL,
+  status         TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted','evaluated','rejected')),
+  submitted_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  CHECK (num_nonnulls(activity_id, mission_step_id) = 1)
+);
+CREATE INDEX IF NOT EXISTS idx_learning_attempts_learner
+  ON learning_attempts(course_id, learner_id, submitted_at DESC);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='learning_step_completion_attempt_fk') THEN
+    ALTER TABLE learning_mission_steps ADD CONSTRAINT learning_step_completion_attempt_fk
+      FOREIGN KEY (completion_attempt_id) REFERENCES learning_attempts(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS learning_evaluations (
+  id                 TEXT PRIMARY KEY,
+  attempt_id         TEXT NOT NULL REFERENCES learning_attempts(id) ON DELETE CASCADE,
+  demonstrated_level INTEGER NOT NULL CHECK (demonstrated_level BETWEEN 0 AND 4),
+  confidence         DOUBLE PRECISION NOT NULL CHECK (confidence BETWEEN 0 AND 1),
+  rubric_results     JSONB NOT NULL DEFAULT '[]'::jsonb,
+  feedback           TEXT NOT NULL DEFAULT '',
+  evaluator_id       TEXT NOT NULL,
+  evaluator_kind     TEXT NOT NULL CHECK (evaluator_kind IN ('agent','teacher')),
+  source_report_id   TEXT REFERENCES canvas_assignment_reports(id) ON DELETE SET NULL,
+  verifier_report_id TEXT REFERENCES canvas_assignment_reports(id) ON DELETE SET NULL,
+  status             TEXT NOT NULL DEFAULT 'pending'
+                     CHECK (status IN ('pending','accepted','rejected')),
+  review_reason      TEXT,
+  reviewed_by        TEXT,
+  reviewed_at        TIMESTAMP WITH TIME ZONE,
+  created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_learning_evaluations_review
+  ON learning_evaluations(status, created_at) WHERE status = 'pending';
+
+CREATE TABLE IF NOT EXISTS learning_mastery (
+  course_id       TEXT NOT NULL REFERENCES learning_courses(id) ON DELETE CASCADE,
+  learner_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  objective_id    TEXT NOT NULL REFERENCES learning_objectives(id) ON DELETE CASCADE,
+  level           INTEGER NOT NULL DEFAULT 0 CHECK (level BETWEEN 0 AND 4),
+  status          TEXT NOT NULL DEFAULT 'learning' CHECK (status IN ('learning','verified','needs_review')),
+  independent_evidence_count INTEGER NOT NULL DEFAULT 0,
+  review_interval_days INTEGER NOT NULL DEFAULT 1,
+  next_review_at  TIMESTAMP WITH TIME ZONE,
+  version         BIGINT NOT NULL DEFAULT 1,
+  updated_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(course_id, learner_id, objective_id)
+);
+CREATE INDEX IF NOT EXISTS idx_learning_mastery_due
+  ON learning_mastery(learner_id, next_review_at) WHERE next_review_at IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS learning_mastery_events (
+  id             TEXT PRIMARY KEY,
+  course_id      TEXT NOT NULL REFERENCES learning_courses(id) ON DELETE CASCADE,
+  learner_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  objective_id   TEXT NOT NULL REFERENCES learning_objectives(id) ON DELETE CASCADE,
+  evaluation_id  TEXT REFERENCES learning_evaluations(id) ON DELETE SET NULL,
+  previous_level INTEGER NOT NULL,
+  next_level     INTEGER NOT NULL,
+  kind           TEXT NOT NULL CHECK (kind IN ('evidence','teacher_override','review_flag')),
+  reason         TEXT NOT NULL,
+  actor_id       TEXT NOT NULL,
+  created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_learning_mastery_events
+  ON learning_mastery_events(course_id, learner_id, objective_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS learning_notification_preferences (
+  id               TEXT PRIMARY KEY,
+  user_id          TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  course_id        TEXT REFERENCES learning_courses(id) ON DELETE CASCADE,
+  in_app_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
+  push_enabled     BOOLEAN NOT NULL DEFAULT FALSE,
+  email_enabled    BOOLEAN NOT NULL DEFAULT FALSE,
+  timezone         TEXT NOT NULL DEFAULT 'Asia/Shanghai',
+  preferred_time   TIME NOT NULL DEFAULT '19:00',
+  quiet_start      TIME,
+  quiet_end        TIME,
+  updated_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_learning_notification_preferences_global
+  ON learning_notification_preferences(user_id) WHERE course_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_learning_notification_preferences_course
+  ON learning_notification_preferences(user_id, course_id) WHERE course_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS learning_notification_deliveries (
+  id           TEXT PRIMARY KEY,
+  user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  course_id    TEXT REFERENCES learning_courses(id) ON DELETE CASCADE,
+  channel      TEXT NOT NULL CHECK (channel IN ('in_app','push','email')),
+  kind         TEXT NOT NULL CHECK (kind IN ('review_due','grading_queue')),
+  digest_date  DATE NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','sent','failed','cancelled')),
+  attempts     INTEGER NOT NULL DEFAULT 0,
+  error        TEXT,
+  sent_at      TIMESTAMP WITH TIME ZONE,
+  created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_learning_deliveries_global
+  ON learning_notification_deliveries(user_id, channel, kind, digest_date) WHERE course_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_learning_deliveries_course
+  ON learning_notification_deliveries(user_id, course_id, channel, kind, digest_date) WHERE course_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_learning_notification_pending
+  ON learning_notification_deliveries(status, created_at) WHERE status IN ('pending','failed');
+
+-- One product-managed teacher operations identity per Project. The Agent is
+-- deliberately Project-scoped while its private room is Course-scoped, so a
+-- replacement course cannot inherit the previous cohort's AgentOS session or
+-- management transcript.
+CREATE TABLE IF NOT EXISTS learning_project_teacher_agents (
+  project_id     TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+  company_id     TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  agent_id       TEXT NOT NULL,
+  preset_version INTEGER NOT NULL DEFAULT 1,
+  created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(company_id, agent_id)
+);
+CREATE INDEX IF NOT EXISTS idx_learning_project_teacher_agents_company
+  ON learning_project_teacher_agents(company_id, project_id);
+
+CREATE TABLE IF NOT EXISTS learning_course_teacher_rooms (
+  course_id       TEXT PRIMARY KEY REFERENCES learning_courses(id) ON DELETE CASCADE,
+  conversation_id TEXT NOT NULL UNIQUE REFERENCES conversations(id) ON DELETE CASCADE,
+  status          TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','closed')),
+  created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  closed_at       TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX IF NOT EXISTS idx_learning_course_teacher_rooms_status
+  ON learning_course_teacher_rooms(status, course_id);
 
 CREATE OR REPLACE FUNCTION touch_knowledge_workspace_updated_at() RETURNS trigger AS $$
 BEGIN
@@ -3002,6 +3319,8 @@ async function schemaAlreadyCurrent(client: import('pg').PoolClient): Promise<bo
         AND (SELECT count(*) FROM pg_class WHERE relname = 'knowledge_source_chat_sessions') > 0
         AND (SELECT count(*) FROM information_schema.columns
                WHERE table_name = 'projects' AND column_name = 'is_general') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'learning_courses') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'learning_mastery_events') > 0
         AS ok
     `)
     return rows[0]?.ok === true

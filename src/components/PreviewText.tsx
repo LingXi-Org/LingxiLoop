@@ -1,6 +1,6 @@
 /**
  * Small inline renderer for single-line text previews — conversation
- * list rows, reply-quote stubs, whisper previews. Just like the
+ * list rows and reply-quote stubs. Just like the
  * message renderer, it materializes `(name)` Skype shortcodes into
  * tiny inline animated emoji chips so the preview matches what the
  * full message will display. Everything else (mentions, doc/board

@@ -5,7 +5,7 @@ export type { CanvasActivityKind } from '@/lib/canvasEventKinds'
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
-export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge'
+export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge' | 'learning' | 'teacher_admin'
 
 export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed'
 
@@ -91,15 +91,19 @@ export interface Participant {
   email?: string | null
   /** non-null = agent has been off-boarded; ISO timestamp of when */
   departedAt?: string | null
+  /** Product-managed identities are discoverable only in their dedicated surface. */
+  managed?: boolean
+  projectId?: string | null
+  presetKey?: string | null
 }
 
-export type ConversationKind = 'group' | 'direct' | 'whisper' | 'email'
+export type ConversationKind = 'group' | 'direct' | 'email'
 
 export interface Conversation {
   id: string
   kind: ConversationKind
   title: string
-  /** display subtitle - members or whisper pair */
+  /** Display subtitle or member summary. */
   subtitle?: string
   /** free-form purpose / topic line, editable by any member */
   topic?: string | null
@@ -107,8 +111,6 @@ export interface Conversation {
   members: string[]
   /** Explicit agent responsible for ordinary group messages. */
   leaderId: string | null
-  /** for whispers: the two agents in private chat */
-  whisperPair?: [string, string]
   pinned?: boolean
   /** Per-user mute. When true, the conversation suppresses notifications and
    *  is excluded from the global unread total (but its per-row badge still
@@ -128,12 +130,12 @@ export interface Conversation {
   lastAtIso: string
   preview: string
   /** optional special tag */
-  tag?: 'team' | 'whisper' | 'human' | 'fresh-pulled'
+  tag?: 'team' | 'human' | 'fresh-pulled'
   /** if pulled by an agent: the convener id and reason */
   pulledBy?: { agentId: string; at: string; reason: string }
 }
 
-export type MessageKind = 'text' | 'tool' | 'attachment' | 'whisper-link' | 'thought' | 'system' | 'email' | 'poll' | 'handoff' | 'approval' | 'canvas'
+export type MessageKind = 'text' | 'tool' | 'attachment' | 'thought' | 'system' | 'email' | 'poll' | 'handoff' | 'approval' | 'canvas' | 'learning_mission'
 
 export interface HandoffPayload {
   id: string
@@ -149,13 +151,17 @@ export interface HandoffPayload {
 export interface ApprovalPayload {
   id: string
   agentId: string
-  kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action'
+  kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action' | 'course_management' | 'learning_evaluation'
   summary: string
   status: 'pending' | 'approved' | 'rejected' | 'expired'
   payload: Record<string, unknown>
   requestedAt: string
   resolvedAt?: string | null
   resolvedBy?: string | null
+  requestedBy?: string | null
+  scope?: Record<string,unknown>
+  preview?: Record<string,unknown>
+  error?: string | null
 }
 
 /* ============== Polls (lightweight votes inline in any conversation) ====== */
@@ -280,12 +286,6 @@ export interface Message {
     /** legacy descriptor — fallback when no real file is present (e.g. mock data) */
     meta?: string
   }
-  /** for whisper-link cards in main chat */
-  whisperLink?: {
-    pair: [string, string]
-    snippet: string
-    count: number
-  }
   /** Populated by the server when kind === 'email'. Carries headers,
    *  direction, and transport status so the email bubble can render the
    *  "subject + from / to / cc + sent/failed" chrome. */
@@ -304,6 +304,13 @@ export interface Message {
     status: CanvasWorkspaceStatus
     members: Array<{ agentId: string; assignment: string; color: string; status: CanvasAssignmentStatus }>
     frameCount: number
+  }
+  learningMission?: {
+    missionId: string
+    courseId: string
+    goal: string
+    successCriteria: string
+    status: string
   }
   /** Reply-to / quote pointer: the id of another message in this same
    *  conversation that this one is quoting. Null for non-reply messages. */
@@ -329,7 +336,76 @@ export interface Message {
 }
 
 export interface ViewKey {
-  view: 'sources' | 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library'
+  view: 'sources' | 'conversations' | 'mail' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'learning'
+}
+
+export type LearningRole = 'teacher' | 'learner'
+
+export interface LearningCourse {
+  id: string
+  companyId: string
+  projectId: string
+  title: string
+  description: string
+  status: 'draft' | 'active' | 'archived'
+  roles: LearningRole[]
+  roomCount: number
+  objectiveCount: number
+  learnerCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LearningObjective {
+  id: string
+  courseId: string
+  title: string
+  successCriteria: string
+  targetLevel: 1 | 2 | 3 | 4
+  position: number
+  status: 'draft' | 'published' | 'archived'
+  prerequisiteIds: string[]
+}
+
+export interface LearningActivity {
+  id: string
+  courseId: string
+  title: string
+  instructions: string
+  type: 'lesson' | 'practice' | 'assessment' | 'project' | 'review'
+  status: 'draft' | 'published' | 'closed'
+  evaluationMode: 'agent_formative' | 'teacher_required'
+  targetLevel: 1 | 2 | 3 | 4
+  rubric: unknown[]
+  objectiveIds: string[]
+  dueAt?: string
+}
+
+export interface LearningDashboard {
+  courses: LearningCourse[]
+  due: Array<{ course_id: string; objective_id: string; title: string; level: number; status: string; next_review_at: string }>
+  mastery: Array<{ course_id: string; objective_id: string; title: string; level: number; status: string; next_review_at: string | null; review_interval_days: number }>
+  pendingReviews: number
+}
+
+export interface TeacherDigestSchedule {
+  frequency:'daily'|'weekly'|'off'
+  timezone:string
+  localTime?:string
+  weekday?:'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday'
+  status:'active'|'paused'
+  nextRunAt?:string
+}
+
+export interface TeacherAgentSummary {
+  agentId:string
+  displayName:string
+  projectId:string
+  courseId:string
+  roomId:string
+  roomStatus:'active'|'closed'
+  digest:TeacherDigestSchedule
+  pendingApprovals:number
 }
 
 /* ============== Shared Canvas ======================================== */
@@ -367,6 +443,14 @@ export interface CanvasPresence {
 
 export type CanvasWorkspaceStatus = 'active' | 'summarizing' | 'completed' | 'stopped' | 'failed'
 export type CanvasAssignmentStatus = 'queued' | 'blocked' | 'working' | 'waiting' | 'completed' | 'failed' | 'cancelled'
+export type AgentExecutionRole = 'coordinator' | 'specialist' | 'verifier' | 'reporter'
+export type CanvasAssignmentExecutionRole = 'specialist' | 'verifier'
+export interface CanvasAssignmentReport {
+  id:string;canvasId:string;assignmentId:string|null;authorAgentId:string;executionRole:Exclude<AgentExecutionRole,'coordinator'>
+  schemaVersion:'learning_report_v1';finding:string;evidenceRefs:Array<{kind:'frame'|'message'|'document'|'source'|'attempt'|'report';id:string}>
+  confidence:number;unresolved:string[];nextStep:string|null;verifiesReportId:string|null;disconfirmingChecks:string[]
+  verdict:'supported'|'rejected'|'inconclusive'|null;consumedReportIds:string[];conflictResolution:unknown[];createdAt:string
+}
 
 export interface CanvasAgentAssignment {
   id: string
@@ -380,6 +464,10 @@ export interface CanvasAgentAssignment {
   cursor: { x: number; y: number } | null
   workId: string | null
   dependsOnAgentIds: string[]
+  executionRole: CanvasAssignmentExecutionRole
+  verifiesAssignmentId: string | null
+  progressFingerprint?: string | null
+  noProgressCount?: number
   result: string | null
   error: string | null
   startedAt: string | null
@@ -441,6 +529,7 @@ export interface CanvasSnapshot {
   presence: CanvasPresence[]
   comments: CanvasComment[]
   activity: CanvasActivity[]
+  reports: CanvasAssignmentReport[]
 }
 
 /* ============== Calendar (AI-native shared schedule) ============== */

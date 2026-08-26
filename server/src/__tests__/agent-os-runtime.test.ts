@@ -7,7 +7,7 @@ import { AgentOSRuntime, canvasContextContract, knowledgeContextContract } from 
 import type { AgentContext, AgentWorkItem, KernelExecution, ModelItem } from '../agent-os/types.js'
 
 function work(id: string, trigger: string): AgentWorkItem {
-  return { id, fence: 1, companyId: 'co-1', agentId: 'nova', channelId: 'study', triggerClientMsgNo: trigger, reason: 'message', lane: 'learner', leaseToken: `lease-${id}` }
+  return { id, fence: 1, companyId: 'co-1', agentId: 'nova', channelId: 'study', triggerClientMsgNo: trigger, reason: 'message', executionRole:'coordinator',lane: 'learner', leaseToken: `lease-${id}` }
 }
 
 function context(item: AgentWorkItem, body: string): AgentContext {
@@ -54,7 +54,8 @@ test('Canvas contract tells agents to autonomously decide and start via IPython'
   assert.match(contract, /baseRevision=current\["revision"\]/)
   assert.match(contract, /loop\.canvas\.append_content\(frameId=frame\["id"\]/)
   assert.match(contract, /loop\.canvas\.handoff\(canvasId=canvas_id/)
-  assert.match(contract, /Human right-click @ assignments and card feedback/)
+  assert.match(contract, /Human feedback arrives as current steering input/)
+  assert.match(contract, /loop\.canvas\.submit_report/)
   assert.match(contract, /"id":"sage"/)
 })
 
@@ -114,6 +115,7 @@ test('PromptContext stays frozen within one compaction epoch', async () => {
     ...context(item, marker), learnerId: 'student', promptContextCandidate: {
       version: 1, epoch: 0, assembledAt: '2026-08-24T00:00:00.000Z', systemInstructions: marker,
       persona: { name: 'Nova', role: 'Coach', instructions: marker }, capabilities: ['canvas'],
+      executionRole:'coordinator',
       memories: { learner: [], course: [], agentRole: [] }, sourceVersions: { persona: marker },
     },
   })
@@ -214,7 +216,7 @@ test('Canvas start directive persists the session and defers without a fake chat
 test('Canvas worker stores its final result without replying in the source conversation', async () => {
   const item: AgentWorkItem = { ...work('canvas-worker', 'canvas:c:a'), reason: 'canvas_worker', lane: 'collaboration', canvasId: 'c', canvasAssignmentId: 'a' }
   const host = new MemoryHostAdapter()
-  host.contexts.set(item.id, { ...context(item, 'Research the assigned topic.'), canvas: { id: 'c', title: 'Study', goal: 'Learn', status: 'active', initiatorAgentId: 'nova', assignments: [], frames: [], activity: [] } })
+  host.contexts.set(item.id, { ...context(item, 'Research the assigned topic.'), canvas: { id: 'c', title: 'Study', goal: 'Learn', status: 'active', initiatorAgentId: 'nova', assignments: [], reports: [{ assignmentId: 'a', executionRole: 'specialist' }], frames: [], activity: [] } })
   const model = new ScriptedModelDriver([{ output: [{ role: 'assistant', content: 'Worker result' }], text: 'Worker result', usage: { inputTokens: 10, outputTokens: 3 } }])
   await new AgentOSRuntime(host, model, new StatefulKernel(), { heartbeatMs: 60_000 }).runWork(item)
   assert.equal(host.messages.length, 0)

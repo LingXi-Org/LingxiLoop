@@ -18,7 +18,6 @@ const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: strin
     title: '通知',
     items: [
       { key: 'notify.group_pulled', lbl: 'Agent 邀请你加入群聊时', sub: '始终 · 从不 · 仅紧急情况', default: true },
-      { key: 'notify.whisper_mention', lbl: '私聊中提及你时', sub: '始终 · 摘要 · 从不', default: true },
       { key: 'notify.convene_called', lbl: '有人发起协作会话时', sub: '始终 · 从不', default: true },
       { key: 'notify.daily_summary', lbl: 'Agent 夜间活动每日摘要', sub: '当地时间上午 8:00', default: false },
     ],
@@ -34,7 +33,6 @@ const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: strin
   {
     title: '隐私',
     items: [
-      { key: 'priv.allow_silent_whispers', lbl: '允许 Agent 自主私聊', sub: '对话仍会记录在你的会话中', default: true },
       { key: 'priv.allow_new_tools', lbl: '允许 Agent 自主调用新工具', sub: '仅限你已授予的权限', default: true },
       { key: 'priv.allow_human_invites', lbl: '允许 Agent 邀请成员加入群聊', sub: '每次都需要你的同意', default: false },
     ],
@@ -380,7 +378,7 @@ function TrustTab() {
   const byId = useParticipants((s) => s.byId)
   const autonomy = usePrefs((s) => s.autonomy)
   const setAutonomy = usePrefs((s) => s.setAutonomy)
-  const agents = Object.values(byId).filter((p) => p.kind === 'agent')
+  const agents = Object.values(byId).filter((p) => p.kind === 'agent' && !p.managed)
   const [rules, setRules] = useState<Awaited<ReturnType<typeof api.getAutonomyRules>>>([])
   const [rulesError, setRulesError] = useState<string | null>(null)
   const loadRules = () => void api.getAutonomyRules().then(setRules).catch((error) => {

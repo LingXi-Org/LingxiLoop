@@ -20,6 +20,7 @@ const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; descriptio
   { id: 'documents', label: 'Documents', description: '创建、读取和编辑协作文档' },
   { id: 'calendar', label: 'Calendar', description: '访问日历和日程相关能力' },
   { id: 'knowledge', label: 'Knowledge', description: '检索并操作当前工作区的 Open Notebook 知识库' },
+  { id: 'learning', label: 'Learning', description: '在课程范围内规划 Mission、记录证据并提出形成性评价' },
 ]
 const DEFAULT_CAPABILITIES: AgentCapability[] = ['canvas', 'web', 'files', 'email', 'documents', 'knowledge']
 
@@ -137,6 +138,17 @@ export function AgentEditor({ agent, onClose }: Props) {
               onChange={(e) => setName(e.target.value)}
               placeholder="例如佐贺"
             />
+          </Field>
+
+          <Field label="任务级职责策略" hint="由 AgentOS Host 按每个 durable work item 分配，智能体不能通过名字或提示词提升权限。">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                ['Coordinator', '唯一维护 Mission 任务板并分派最小团队'],
+                ['Specialist', '只完成分配的专业子问题并提交结构化报告'],
+                ['Verifier', '必须独立于 builder，执行反例检查和证据裁决'],
+                ['Reporter', '只消费持久化报告，保留冲突并形成最终汇总'],
+              ].map(([title, description]) => <div key={title} className="rounded-[10px] border border-ink-100 bg-white px-3 py-2.5"><div className="text-[12px] font-semibold text-ink-900">{title}</div><div className="mt-1 text-[11px] leading-4 text-ink-500">{description}</div></div>)}
+            </div>
           </Field>
 
           <Field label="角色" hint="名称旁边显示一个或两个单词的标题。">

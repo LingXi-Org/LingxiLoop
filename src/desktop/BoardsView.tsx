@@ -988,7 +988,7 @@ function AssigneePicker({ value, onChange, meId }: {
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const everyone = useMemo(() =>
-    Object.values(byId).filter((p) => !p.departedAt)
+    Object.values(byId).filter((p) => !p.departedAt && !p.managed)
       .sort((a, b) => {
         // Me first, then humans, then agents, then alphabetical.
         if (a.id === meId) return -1

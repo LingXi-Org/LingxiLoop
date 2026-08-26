@@ -11,7 +11,7 @@ function SearchGlyph() {
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const conversationList = useConversations((state) => state.list)
-  const conversations = useMemo(() => conversationList.filter((item) => item.kind !== 'whisper'), [conversationList])
+  const conversations = conversationList
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)

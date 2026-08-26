@@ -1341,35 +1341,9 @@ function EmailHtmlFrame({ html }: { html: string }) {
   )
 }
 
-function WhisperLink({ msg }: { msg: Message }) {
-  if (!msg.whisperLink) return null
-  const w = msg.whisperLink
-  const byId = useParticipants((s) => s.byId)
-  const a = byId[w.pair[0]]
-  const b = byId[w.pair[1]]
-  return (
-    <div
-      className="my-2 ml-[50px] max-w-[min(calc(100%-50px),540px)] py-2.5 px-3.5 rounded-xl border border-dashed text-[12.5px] flex items-center gap-2.5 cursor-pointer relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(123, 108, 176, 0.09), rgba(123, 108, 176, 0.03))',
-        borderColor: 'rgba(123, 108, 176, 0.42)',
-        color: 'var(--whisper-deep)',
-      }}
-    >
-      <div className="shrink-0 w-[30px] h-[30px] rounded-full grid place-items-center text-whisper" style={{ background: 'rgba(123, 108, 176, 0.18)' }}>
-        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path d="M3 12c0-4 4-8 9-8s9 4 9 8-4 8-9 8a10 10 0 01-3-.5L3 21l1.5-5A8 8 0 013 12z"/></svg>
-      </div>
-      <div className="min-w-0 flex-1">
-        <span className="text-whisper-deep font-bold">{a?.name}</span> 和 <span className="text-whisper-deep font-bold">{b?.name}</span> 正在私聊—— <em className="font-display italic font-normal text-whisper-deep">{w.snippet}</em> · {w.count} 消息
-      </div>
-      <div className="ml-auto text-[11px] font-semibold py-1 px-2.5 rounded-full bg-[rgba(124,92,255,0.15)] text-whisper-deep shrink-0">看→</div>
-    </div>
-  )
-}
-
 interface MessageRowProps {
   msg: Message
-  /** Resolved author. Optional: system / whisper rows render without one
+  /** Resolved author. Optional: system rows render without one
    *  (e.g. the calendar-fired notice is authored by a synthetic system id
    *  that isn't in the participants store). */
   author?: Participant
@@ -1555,10 +1529,7 @@ function ReactionTooltip({ emoji, names, anchorX, anchorY }: {
  * name resolves from the live participants store, and clicking the chip
  * opens that person's info pane (for agents) or no-ops (for humans).
  *
- * Exported so the Whisper peek pane can reuse the same row instead of
- * dumping raw JSON into a bubble — only `body` is read, so any object
- * shaped `{ body: string }` works (covers both Message and
- * ApiWhisperMessage without a type adapter).
+ * Only `body` is read so synthetic system notices can share this renderer.
  */
 export function SystemRow({ msg, delay = 0, animate = true, openMaus = false }: { msg: { body: string }; delay?: number; animate?: boolean; openMaus?: boolean }) {
   const byId = useParticipants((s) => s.byId)
@@ -1830,11 +1801,10 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const openThreadView = useApp((s) => s.openThreadView)
   const meId = useMe()
   const [actionMenu, setActionMenu] = useState<{ x: number; y: number } | null>(null)
-  // System / whisper rows don't need a resolved author — handle them before
+  // System rows don't need a resolved author — handle them before
   // touching `author` so a synthetic-author system message (the calendar-fired
   // notice, authored by CALENDAR_SYSTEM_AUTHOR_ID) renders instead of being
   // dropped by the missing-author guard.
-  if (msg.kind === 'whisper-link') return <WhisperLink msg={msg} />
   if (msg.kind === 'system') return <SystemRow msg={msg} delay={delay} animate={animate} openMaus={openMaus} />
   if (!author) return null
   const isHuman = author.kind === 'human'
@@ -1849,6 +1819,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const isHandoff = msg.kind === 'handoff'
   const isApproval = msg.kind === 'approval'
   const isCanvas = msg.kind === 'canvas'
+  const isLearningMission = msg.kind === 'learning_mission'
   const shell = messageShellCapabilities(msg.kind)
   const isStreaming = Boolean(msg.streaming)
   const openKnowledgeCitation = useKnowledgeSources((state) => state.openCitation)
@@ -1942,7 +1913,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
 
         {!isStreaming && shell.quote && <QuoteCard msg={msg} />}
 
-        {!isToolOnly && !isAttachOnly && !isPoll && !isHandoff && !isApproval && !isCanvas && (
+        {!isToolOnly && !isAttachOnly && !isPoll && !isHandoff && !isApproval && !isCanvas && !isLearningMission && (
           <div
             className={cn(
               'inline-block break-words',
@@ -1992,6 +1963,12 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
         {!isStreaming && isHandoff && <HandoffCard msg={msg} />}
         {!isStreaming && isApproval && <ApprovalCard msg={msg} />}
         {!isStreaming && isCanvas && <CanvasWorkspaceCard msg={msg} />}
+        {!isStreaming && isLearningMission && msg.learningMission && (
+          <button type="button" onClick={() => useApp.getState().setView('learning')} className="mt-1 block w-full max-w-[620px] overflow-hidden rounded-2xl border border-accent/25 bg-card text-left shadow-sm transition hover:border-accent/50">
+            <div className="border-b border-hairline bg-accent/10 px-4 py-3"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Learning Mission</p><h3 className="mt-1 text-[15px] font-semibold text-ink">{msg.learningMission.goal}</h3></div>
+            <div className="px-4 py-3"><p className="text-[11px] font-semibold text-ink-secondary">成功标准</p><p className="mt-1 text-[13px] leading-5 text-ink">{msg.learningMission.successCriteria}</p><div className="mt-3 flex items-center justify-between"><span className="rounded-full bg-raised px-2.5 py-1 text-[10px] font-semibold text-ink-secondary">{msg.learningMission.status}</span><span className="text-[11px] font-semibold text-accent">打开学习中心 →</span></div></div>
+          </button>
+        )}
 
         {!isStreaming && msg.kind === 'tool' && <ToolCard msg={msg} />}
         {!isStreaming && artifactRefs.length > 0 && (

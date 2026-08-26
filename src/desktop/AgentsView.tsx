@@ -247,7 +247,7 @@ function FormerAgentCard({ p, onRehire }: { p: Participant; onRehire: (p: Partic
 export function AgentsView() {
   const byId = useParticipants((s) => s.byId)
   const meId = useMe()
-  const allAgents = Object.values(byId).filter((p) => p.kind === 'agent')
+  const allAgents = Object.values(byId).filter((p) => p.kind === 'agent' && !p.managed)
   const list = allAgents.filter((p) => !p.departedAt)
   const departed = allAgents.filter((p) => p.departedAt).sort((a, b) => (b.departedAt ?? '').localeCompare(a.departedAt ?? ''))
   const humans = Object.values(byId).filter((p) => p.kind === 'human' && p.id !== meId)

@@ -20,7 +20,11 @@ export interface KernelManagerOptions {
 }
 
 export interface KernelExecutor {
-  execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal): Promise<KernelExecution>
+  execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal, options?: KernelExecutionOptions): Promise<KernelExecution>
+}
+
+export interface KernelExecutionOptions {
+  allowedNamespaces?: readonly string[]
 }
 
 interface KernelMessage {
@@ -181,7 +185,7 @@ class PersistentKernel {
     this.pending.clear()
   }
 
-  execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal): Promise<KernelExecution> {
+  execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal, options?: KernelExecutionOptions): Promise<KernelExecution> {
     const operation = this.tail.then(async () => {
       await this.start()
       this.lastUsedAt = Date.now()
@@ -207,7 +211,7 @@ class PersistentKernel {
           resolve: (value) => { signal?.removeEventListener('abort', abort); resolveExecution(value) },
           reject: (error) => { signal?.removeEventListener('abort', abort); rejectExecution(error) },
         })
-        this.write({ type: 'execute', id: executionId, code, context: { runId, cellId } })
+        this.write({ type: 'execute', id: executionId, code, context: { runId, cellId, ...(options?.allowedNamespaces ? { allowedNamespaces: [...options.allowedNamespaces] } : {}) } })
       })
     })
     this.tail = operation.catch(() => undefined)
@@ -259,7 +263,7 @@ export class KernelManager implements KernelExecutor {
     return createHash('sha256').update(value).digest('hex')
   }
 
-  async execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal): Promise<KernelExecution> {
+  async execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal, options?: KernelExecutionOptions): Promise<KernelExecution> {
     const key = this.key(work)
     let kernel = this.kernels.get(key)
     if (!kernel) {
@@ -270,7 +274,7 @@ export class KernelManager implements KernelExecutor {
       this.kernels.set(key, kernel)
     }
     try {
-      return await kernel.execute(work, runId, cellId, code, signal)
+      return await kernel.execute(work, runId, cellId, code, signal, options)
     } catch (error) {
       if (error instanceof KernelTimeoutError || error instanceof KernelCancelledError) this.kernels.delete(key)
       throw error

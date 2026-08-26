@@ -26,7 +26,6 @@ import { bootConversations, isMuted, useConversations } from '@/stores/conversat
 import { bootMessagesStream, useMessages } from '@/stores/messages'
 import { bootParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
-import { bootWhispers, useWhispers } from '@/stores/whispers'
 import '@/admin/admin.css'
 
 /** True iff this browser tab is for the admin panel. An optional `admin.*`
@@ -42,7 +41,6 @@ function isAdminContext(): boolean {
 function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
   const isMobile = useIsMobile()
   const convoId = useApp((s) => s.selectedConversationId)
-  const view = useApp((s) => s.view)
   const hasDockUnread = useConversations((s) =>
     s.list.some((c) => !isMuted(c) && (c.unread ?? 0) > 0),
   )
@@ -55,7 +53,6 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     bootMessagesStream()
     bootParticipants()
     bootConversations()
-    bootWhispers()
     void usePrefs.getState().load()
   }, [mockMode])
 
@@ -77,12 +74,6 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
       void useConversations.getState().reload()
     }).catch(() => { /* swallow */ })
   }, [convoId, selectedConvoExists, mockMode])
-
-  // Lazy-refresh whisper list when entering whispers view
-  useEffect(() => {
-    if (mockMode) return
-    if (view === 'whispers') useWhispers.getState().loadList()
-  }, [view, mockMode])
 
   // Cross-component "open updater" channel — MeView's "Check for
   // updates" button posts this event to ask AuthedApp to open the

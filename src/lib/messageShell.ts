@@ -16,7 +16,7 @@ export interface MessageShellCapabilities {
  * reaction, reply, selection, mobile, and entrance shell as ordinary text.
  */
 export function messageShellCapabilities(kind: MessageKind): MessageShellCapabilities {
-  if (kind === 'system' || kind === 'whisper-link') {
+  if (kind === 'system') {
     return {
       sharedShell: false,
       quote: false,
@@ -32,6 +32,6 @@ export function messageShellCapabilities(kind: MessageKind): MessageShellCapabil
     reactions: true,
     reply: true,
     selection: true,
-    linkPreview: !['tool', 'attachment', 'email', 'poll', 'handoff', 'approval', 'canvas'].includes(kind),
+    linkPreview: !['tool', 'attachment', 'email', 'poll', 'handoff', 'approval', 'canvas', 'learning_mission'].includes(kind),
   }
 }

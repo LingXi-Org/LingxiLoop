@@ -40,7 +40,7 @@ export function MobileAgents() {
   const { agents, humans } = useMemo(() => {
     const all = Object.values(byId).filter((p) => !p.departedAt)
     return {
-      agents: all.filter((p): p is Participant => p.kind === 'agent'),
+      agents: all.filter((p): p is Participant => p.kind === 'agent' && !p.managed),
       humans: all.filter((p): p is Participant => p.kind === 'human' && p.id !== meId),
     }
   }, [byId, meId])

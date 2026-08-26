@@ -550,9 +550,9 @@ export function MobileChat() {
           itemContent={(index, m) => {
             const rowIndex = index >= firstItemIndex ? index - firstItemIndex : index
             const author = byId[m.authorId]
-            // System / whisper rows render without a resolved author (e.g. the
+            // System rows render without a resolved author (e.g. the
             // calendar-fired notice has a synthetic system author id).
-            if (!author && m.kind !== 'system' && m.kind !== 'whisper-link') return <div className="h-0" />
+            if (!author && m.kind !== 'system') return <div className="h-0" />
             // Animate only freshly-arrived messages, not historical
             // rows being remounted as Virtuoso virtualizes the
             // scrollback. Without this gate, scrolling up replays a
@@ -1059,7 +1059,7 @@ export function MobileChatInfo() {
   const [memberQuery, setMemberQuery] = useState('')
   if (!c) return null
 
-  // For DM / whisper, the page is fundamentally about the OTHER person —
+  // For a DM, the page is fundamentally about the OTHER person —
   // show their hero. For a GROUP, there is no single "focus" member, so
   // we render a group-scoped hero (avatar stack + title + counts) and
   // skip the per-agent tools/bio sections. Picking some arbitrary "first

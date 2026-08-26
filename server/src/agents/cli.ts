@@ -3620,7 +3620,7 @@ async function cmdTopicSet(parsed: ParsedArgs): Promise<CliResult> {
   }])
 }
 
-/** Rename a group conversation. Members only; groups only (a DM/whisper title is
+/** Rename a group conversation. Members only; groups only (a DM title is
  *  the other person's name). Mirrors the human POST /conversations/:id/title. */
 async function cmdRename(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
