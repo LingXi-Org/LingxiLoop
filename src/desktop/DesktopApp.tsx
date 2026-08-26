@@ -13,6 +13,7 @@ import { BoardPeekPane } from './BoardPeekPane'
 import { BoardsView } from './BoardsView'
 import { CalendarPeekPane } from './CalendarPeekPane'
 import { CalendarView } from './CalendarView'
+import { CompanyCourseManagement } from './CompanyCourseManagement'
 import { ChatPane } from './ChatPane'
 import { ConversationsPane } from './ConversationsPane'
 import { DocumentPeekPane } from './DocumentPeekPane'
@@ -151,7 +152,8 @@ export function DesktopApp() {
   const canvasId = useApp((state) => state.openCanvasId)
   const closeCanvasPeek = useApp((state) => state.closeCanvasPeek)
   const settingsOpen = view === 'me'
-  const workspaceContextOpen = view !== 'conversations' && !settingsOpen
+  const managementOpen = view === 'management'
+  const workspaceContextOpen = view !== 'conversations' && !settingsOpen && !managementOpen
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const groupContext = selectedConversation?.kind === 'group' ? selectedConversation : null
@@ -395,7 +397,9 @@ export function DesktopApp() {
             detail={groupDetail}
             detailWidth={groupPanelWidth}
           >
-            {canvasId
+            {managementOpen
+              ? <CompanyCourseManagement />
+              : canvasId
               ? <div className="canvas-expanded-pane h-full min-h-0 min-w-0 flex-1"><CanvasContext canvasId={canvasId} onClose={closeCanvasPeek} /></div>
               : <ChatPane onOpenGroupContext={groupContext ? () => setGroupPanelOpen(true) : undefined} />}
           </DetailPanel>

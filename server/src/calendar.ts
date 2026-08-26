@@ -46,6 +46,7 @@ export interface RecurrenceRule {
 export interface CalendarEventRow {
   id: string
   company_id: string
+  project_id: string
   created_by: string
   kind: 'personal' | 'agent_task'
   title: string
@@ -386,6 +387,7 @@ async function sendReminder(event: CalendarEventRow, occurrence: Date, now: Date
       await publish(CH_CALENDAR_REMINDER, {
         type: 'calendar.reminder',
         companyId: event.company_id,
+        workspaceId: event.project_id,
         eventId: event.id,
         title: event.title,
         occurrenceAt: occurrence.toISOString(),
@@ -498,7 +500,7 @@ export async function tickCalendar(now: Date = new Date()): Promise<{ scanned: n
   // considered before their start_at, and "active" keeps the working set
   // small anyway.
   const { rows } = await pool.query<CalendarEventRow>(
-    `SELECT id, company_id, created_by, kind, title, description, assignee_id,
+    `SELECT id,company_id,project_id,created_by,kind,title,description,assignee_id,
             target_conversation_id, agent_prompt, start_at, end_at, all_day,
             recurrence, status, last_fired_at,
             reminder_minutes_before, reminder_channel,

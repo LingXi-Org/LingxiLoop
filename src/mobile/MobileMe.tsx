@@ -9,6 +9,9 @@ import { useWhispers } from '@/stores/whispers'
 import { usePrefs } from '@/stores/preferences'
 import { getPushStatus, initPushNotifications, teardownPushNotifications, type PushStatus } from '@/lib/push'
 import { api } from '@/api/client'
+import type { ApiCourse } from '@/api/client'
+import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
+import { isMockImDevelopment } from '@/lib/devMode'
 import type { Participant } from '@/types'
 
 interface ToggleablePref { key: string; lbl: string; sub: string; default?: boolean }
@@ -32,6 +35,25 @@ export function MobileMe() {
   const prefs = usePrefs((s) => s.prefs)
   const autonomy = usePrefs((s) => s.autonomy)
   const setPref = usePrefs((s) => s.setPref)
+  const [courses, setCourses] = useState<ApiCourse[]>([])
+
+  useEffect(() => {
+    void api.listCourses().then(setCourses).catch(() => setCourses([]))
+  }, [activeCompanyId])
+
+  const switchCourse = async (course: ApiCourse) => {
+    if (!activeCompanyId) return
+    setWorkspaceSession({ companyId: activeCompanyId, projectId: course.projectId })
+    if (isMockImDevelopment()) {
+      const { activateMockWorkspace } = await import('@/dev/mockIm')
+      activateMockWorkspace(course.projectId)
+    } else {
+      await Promise.allSettled([useParticipants.getState().load(), useConversations.getState().reload(), api.openProject(course.projectId)])
+    }
+    useApp.getState().selectConversation(course.studyRoomId)
+    useApp.getState().setView('conversations')
+    useApp.getState().pushMobileStack(course.studyRoomId ? 'chat' : 'list')
+  }
 
   // Real "me" participant (carries Gravatar / status). Falls back to a
   // synthesized record from the auth user if the store hasn't hydrated yet.
@@ -155,6 +177,20 @@ export function MobileMe() {
         {false && <Section title="推送通知">
           <PushStatusTile />
         </Section>}
+
+        <Section title="课程与 Study Room">
+          <div className="space-y-2">
+            {courses.length === 0 && <div className="rounded-[12px] border border-ink-100 bg-cloud p-4 text-[12px] text-ink-500">暂无可见课程</div>}
+            {courses.map((course) => {
+              const active = getWorkspaceSession()?.projectId === course.projectId
+              return <button key={course.id} type="button" onClick={() => void switchCourse(course)} className="flex w-full items-center gap-3 rounded-[12px] border border-ink-100 bg-cloud p-3.5 text-left active:scale-[.98]">
+                <span className="h-9 w-1 rounded-full" style={{ background: course.color }}/>
+                <span className="min-w-0 flex-1"><b className="block truncate text-[13px]">{course.name}</b><small className="text-[10.5px] text-ink-500">{course.courseRole ?? course.companyRole} · {course.memberCount} 位成员</small></span>
+                <span className="text-[11px] font-semibold text-skype">{active ? '当前' : '进入'}</span>
+              </button>
+            })}
+          </div>
+        </Section>
 
         <Section title="偏好设置">
           <div className="bg-cloud rounded-[12px] divide-y divide-ink-100"

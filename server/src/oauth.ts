@@ -109,6 +109,8 @@ interface StateData {
    *  step for net-new users (they don't want their own workspace — they want
    *  to land in the inviter's). */
   inviteToken: string | null
+  /** Distinguishes organization and course invitations across the OAuth round trip. */
+  inviteKind: 'company' | 'course' | null
 }
 
 /** Validate a client-supplied return URL against the configured allow-list.
@@ -128,10 +130,11 @@ export async function createState(
   p: Provider,
   returnUrl: string | null,
   inviteToken: string | null = null,
+  inviteKind: 'company' | 'course' | null = null,
 ): Promise<string> {
   const state = randomBytes(32).toString('base64url')
   const key = `oauth:state:${hashState(state)}`
-  const data: StateData = { provider: p, returnUrl, inviteToken }
+  const data: StateData = { provider: p, returnUrl, inviteToken, inviteKind }
   await redis.set(key, JSON.stringify(data), 'EX', 300)
   return state
 }

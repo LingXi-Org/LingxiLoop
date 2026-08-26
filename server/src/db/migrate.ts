@@ -2434,6 +2434,75 @@ CREATE INDEX IF NOT EXISTS idx_boards_project ON boards(project_id, updated_at D
 CREATE INDEX IF NOT EXISTS idx_calendar_project ON calendar_events(project_id, start_at);
 CREATE INDEX IF NOT EXISTS idx_canvases_project ON canvases(project_id, updated_at DESC);
 
+-- ============== Courses and course-scoped authorization =================
+-- A course owns exactly one non-General Project. Project remains the
+-- storage/knowledge boundary; these tables add human authorization and
+-- invitation semantics without introducing a second artifact scope.
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_id_company ON projects(id, company_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_id_company ON conversations(id, company_id);
+
+CREATE TABLE IF NOT EXISTS courses (
+  id                         TEXT PRIMARY KEY,
+  company_id                 TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  project_id                 TEXT NOT NULL UNIQUE,
+  created_by                 TEXT NOT NULL,
+  study_room_conversation_id TEXT,
+  created_at                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE (id, company_id),
+  FOREIGN KEY (project_id, company_id) REFERENCES projects(id, company_id) ON DELETE CASCADE,
+  FOREIGN KEY (study_room_conversation_id, company_id) REFERENCES conversations(id, company_id)
+);
+CREATE INDEX IF NOT EXISTS idx_courses_company ON courses(company_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS course_members (
+  course_id  TEXT NOT NULL,
+  company_id TEXT NOT NULL,
+  user_id    TEXT NOT NULL,
+  role       TEXT NOT NULL CHECK (role IN ('teacher', 'learner')),
+  joined_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (course_id, user_id),
+  FOREIGN KEY (course_id, company_id) REFERENCES courses(id, company_id) ON DELETE CASCADE,
+  FOREIGN KEY (company_id, user_id) REFERENCES company_members(company_id, user_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_course_members_user ON course_members(company_id, user_id, role);
+
+CREATE TABLE IF NOT EXISTS course_invitations (
+  token_hash       TEXT PRIMARY KEY,
+  course_id        TEXT NOT NULL,
+  company_id       TEXT NOT NULL,
+  invited_by       TEXT NOT NULL,
+  email            TEXT,
+  role             TEXT NOT NULL CHECK (role IN ('teacher', 'learner')),
+  note             TEXT,
+  max_uses         INTEGER NOT NULL CHECK (max_uses BETWEEN 1 AND 100),
+  use_count        INTEGER NOT NULL DEFAULT 0 CHECK (use_count BETWEEN 0 AND max_uses),
+  expires_at       TIMESTAMP WITH TIME ZONE NOT NULL,
+  revoked_at       TIMESTAMP WITH TIME ZONE,
+  last_accepted_at TIMESTAMP WITH TIME ZONE,
+  last_accepted_by TEXT,
+  created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (course_id, company_id) REFERENCES courses(id, company_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_course_invitations_course ON course_invitations(course_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_course_invitations_email ON course_invitations(email) WHERE email IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS course_invitation_acceptances (
+  token_hash  TEXT NOT NULL REFERENCES course_invitations(token_hash) ON DELETE CASCADE,
+  user_id     TEXT NOT NULL,
+  role        TEXT NOT NULL CHECK (role IN ('teacher', 'learner')),
+  accepted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (token_hash, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS course_schema_cutovers (
+  id           TEXT PRIMARY KEY,
+  completed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  detail       JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
 CREATE OR REPLACE FUNCTION touch_knowledge_workspace_updated_at() RETURNS trigger AS $$
 BEGIN
   UPDATE projects SET updated_at = NOW() WHERE id = COALESCE(NEW.project_id, OLD.project_id);
@@ -2582,6 +2651,134 @@ async function runAgentOSCutover(client: import('pg').PoolClient): Promise<void>
       ALTER TABLE participants DROP COLUMN IF EXISTS model;
       ALTER TABLE participants DROP COLUMN IF EXISTS fast_model;
       ALTER TABLE companies DROP COLUMN IF EXISTS pair_token;
+    `)
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  }
+}
+
+/** Convert the non-General Projects that pre-date the Course model exactly
+ * once. Only courses inserted by this cutover receive the legacy company's
+ * full membership. That distinction matters: a later boot must never restore
+ * a course member that a teacher deliberately removed. */
+async function runLegacyCourseCutover(client: import('pg').PoolClient): Promise<void> {
+  await client.query('BEGIN')
+  try {
+    const { rows: marker } = await client.query<{ done: boolean }>(
+      `SELECT EXISTS (SELECT 1 FROM course_schema_cutovers WHERE id='course-model-v1') AS done`,
+    )
+    if (marker[0]?.done) {
+      await client.query('COMMIT')
+      return
+    }
+
+    await client.query(`
+      CREATE TEMP TABLE course_cutover_new_courses (
+        id TEXT PRIMARY KEY,
+        company_id TEXT NOT NULL,
+        project_id TEXT NOT NULL,
+        created_by TEXT NOT NULL
+      ) ON COMMIT DROP
+    `)
+    await client.query(`
+      WITH inserted AS (
+        INSERT INTO courses (id, company_id, project_id, created_by)
+        SELECT 'course-' || substr(md5(project.id), 1, 20), project.company_id, project.id,
+               COALESCE(project_creator.user_id, owner_member.user_id, company.owner_user_id)
+          FROM projects project
+          JOIN companies company ON company.id=project.company_id
+          LEFT JOIN LATERAL (
+            SELECT member.user_id FROM company_members member
+             WHERE member.company_id=project.company_id AND member.role='owner'
+             ORDER BY member.joined_at ASC LIMIT 1
+          ) owner_member ON TRUE
+          LEFT JOIN company_members project_creator
+            ON project_creator.company_id=project.company_id
+           AND project_creator.user_id=project.created_by
+         WHERE project.is_general=FALSE
+        ON CONFLICT (project_id) DO NOTHING
+        RETURNING id,company_id,project_id,created_by
+      )
+      INSERT INTO course_cutover_new_courses (id,company_id,project_id,created_by)
+      SELECT id,company_id,project_id,created_by FROM inserted
+    `)
+    await client.query(`
+      INSERT INTO course_members (course_id,company_id,user_id,role)
+      SELECT course.id,course.company_id,member.user_id,
+             CASE WHEN member.user_id=course.created_by THEN 'teacher' ELSE 'learner' END
+        FROM course_cutover_new_courses course
+        JOIN company_members member ON member.company_id=course.company_id
+      ON CONFLICT (course_id,user_id) DO NOTHING
+    `)
+    await client.query(`
+      INSERT INTO conversations (
+        id,kind,title,subtitle,topic,members,leader_id,pinned,tag,company_id,project_id
+      )
+      SELECT 'course-room-' || substr(md5(course.id), 1, 20),'group',
+             project.name || ' · Study Room','course','课程学习、讨论、练习与错因诊断',
+             COALESCE((
+               SELECT jsonb_agg(member_id ORDER BY member_order,member_id)
+                 FROM (
+                   SELECT member.user_id AS member_id,0 AS member_order
+                     FROM course_members member WHERE member.course_id=course.id
+                   UNION
+                   SELECT participant.id,1
+                     FROM participants participant
+                    WHERE participant.company_id=course.company_id
+                      AND participant.kind='agent'
+                      AND participant.preset_key IN ('nova','sage','milo','trace')
+                      AND participant.departed_at IS NULL
+                 ) room_members
+             ),'[]'::jsonb),
+             (SELECT participant.id FROM participants participant
+               WHERE participant.company_id=course.company_id
+                 AND participant.kind='agent' AND participant.preset_key='nova'
+                 AND participant.departed_at IS NULL LIMIT 1),
+             TRUE,'course',course.company_id,course.project_id
+        FROM course_cutover_new_courses course
+        JOIN projects project ON project.id=course.project_id
+      ON CONFLICT (id) DO NOTHING
+    `)
+    await client.query(`
+      INSERT INTO conversation_counters (conversation_id,next_sequence)
+      SELECT room.id,1
+        FROM course_cutover_new_courses course
+        JOIN conversations room
+          ON room.id='course-room-' || substr(md5(course.id), 1, 20)
+      ON CONFLICT (conversation_id) DO NOTHING
+    `)
+    await client.query(`
+      INSERT INTO im_channel_bindings (channel_id,company_id,profile,leader_agent_id)
+      SELECT room.id,room.company_id,
+             jsonb_build_object(
+               'channelId',room.id,'channelType',2,'kind','group',
+               'title',room.title,'topic',room.topic,'members',room.members,
+               'pinned',TRUE,'createdAt',room.created_at
+             ),room.leader_id
+        FROM course_cutover_new_courses course
+        JOIN conversations room
+          ON room.id='course-room-' || substr(md5(course.id), 1, 20)
+      ON CONFLICT (channel_id) DO UPDATE SET
+        company_id=EXCLUDED.company_id,
+        profile=EXCLUDED.profile,
+        leader_agent_id=EXCLUDED.leader_agent_id
+    `)
+    await client.query(`
+      UPDATE courses course
+         SET study_room_conversation_id=room.id
+        FROM course_cutover_new_courses migrated
+        JOIN conversations room
+          ON room.id='course-room-' || substr(md5(migrated.id), 1, 20)
+       WHERE course.id=migrated.id
+         AND course.study_room_conversation_id IS DISTINCT FROM room.id
+    `)
+    await client.query(`
+      INSERT INTO course_schema_cutovers (id,detail)
+      VALUES ('course-model-v1',jsonb_build_object(
+        'migratedCourses',(SELECT COUNT(*) FROM course_cutover_new_courses)
+      ))
     `)
     await client.query('COMMIT')
   } catch (error) {
@@ -2938,6 +3135,10 @@ export async function ensureSchema(): Promise<void> {
           throw e
         }
       }
+      // This data cutover is deliberately outside the DDL skip branch. On a
+      // busy, already-shaped database the DDL may be skipped after lock
+      // contention, but the persistent cutover marker still has to be applied.
+      await runLegacyCourseCutover(client)
     } finally {
       // Release on the same connection the lock was taken on.
       // `pool.release(client)` below would do it implicitly via
@@ -3002,6 +3203,10 @@ async function schemaAlreadyCurrent(client: import('pg').PoolClient): Promise<bo
         AND (SELECT count(*) FROM pg_class WHERE relname = 'knowledge_source_chat_sessions') > 0
         AND (SELECT count(*) FROM information_schema.columns
                WHERE table_name = 'projects' AND column_name = 'is_general') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'courses') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'course_members') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'course_invitations') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'course_schema_cutovers') > 0
         AS ok
     `)
     return rows[0]?.ok === true

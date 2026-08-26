@@ -246,6 +246,7 @@ export function unsubscribe(documentId: string, sub: DocSubscriber): void {
         evictions.delete(documentId)
       }
     }, ROOM_GRACE_MS)
+    t.unref()
     evictions.set(documentId, t)
   }
 }

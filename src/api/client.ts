@@ -1,4 +1,8 @@
 import { getActiveCompanyId, getAuthToken, useAuth } from '@/stores/auth'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
+import { isMockImDevelopment } from '@/lib/devMode'
+import { normalizeCourseContract } from './courseContract'
+export { normalizeCourseContract } from './courseContract'
 import type {
   AgentCapability,
   BoardCardComment,
@@ -105,6 +109,8 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   if (token) headers.authorization = `Bearer ${token}`
   const company = getActiveCompanyId()
   if (company) headers['x-company-id'] = company
+  const workspace = getWorkspaceSession()
+  if (workspace && workspace.companyId === company) headers['x-project-id'] = workspace.projectId
   if (getDevModeEnabled()) headers['x-lingxiloop-dev-mode'] = '1'
   const res = await fetch(`${API}${path}`, {
     headers: { ...headers, ...(init?.headers ?? {}) },
@@ -614,6 +620,139 @@ export interface ApiInvitationAccept {
   company: { id: string; name: string; slug: string; role: string }
 }
 
+export interface ApiCompanyProfile {
+  id: string
+  name: string
+  slug: string
+  description: string
+  role: 'owner' | 'admin' | 'member'
+  createdAt: string
+}
+
+export interface ApiCompanyMember {
+  id: string
+  name: string
+  email: string
+  role: 'owner' | 'admin' | 'member'
+  joinedAt: string
+  courses: Array<{ courseId: string; name: string; role: 'teacher' | 'learner' }>
+}
+
+export interface ApiCourse {
+  id: string
+  companyId: string
+  projectId: string
+  name: string
+  description: string
+  color: string
+  status: 'active' | 'archived'
+  createdBy: string
+  studyRoomId: string | null
+  companyRole?: 'owner' | 'admin' | 'member'
+  courseRole: 'teacher' | 'learner' | null
+  memberCount: number
+  canManage: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface ApiCourseMember {
+  id: string
+  name: string
+  email: string
+  role: 'teacher' | 'learner'
+  joinedAt: string
+}
+
+export interface ApiCourseInvitation {
+  id: string
+  email: string | null
+  role: 'teacher' | 'learner'
+  note: string | null
+  maxUses: number
+  useCount: number
+  createdAt: string
+  expiresAt: string
+  revokedAt?: string | null
+  lastAcceptedAt?: string | null
+  lastAcceptedBy?: string | null
+  acceptances?: Array<{ userId: string; name: string | null; role: 'teacher' | 'learner'; acceptedAt: string }>
+  status: 'active' | 'revoked' | 'expired' | 'consumed'
+}
+
+export interface ApiCourseInvitationWithToken extends ApiCourseInvitation {
+  token: string
+  url: string
+}
+
+export interface ApiCourseInvitationPreview {
+  kind: 'course'
+  status: ApiInvitationPreviewStatus | 'archived'
+  invitation?: {
+    role: 'teacher' | 'learner'
+    email: string | null
+    note: string | null
+    expiresAt: string
+    inviterName: string | null
+    company: { id: string; name: string; slug: string }
+    course: { id: string; name: string; projectId: string; studyRoomId: string | null }
+  }
+}
+
+export interface ApiCourseInvitationAccept {
+  ok: true
+  alreadyMember: boolean
+  joinedCompany: boolean
+  company: { id: string; name: string; slug: string; role: string }
+  course: { id: string; name: string; projectId: string; studyRoomId: string | null; role: 'teacher' | 'learner' }
+}
+
+const MOCK_COMPANY_ID = 'mock-workspace'
+const MOCK_NOW = '2026-08-26T00:00:00.000Z'
+let MOCK_COURSES: ApiCourse[] = [
+  normalizeCourseContract({ id: 'mock-course-ai', companyId: MOCK_COMPANY_ID, projectId: 'mock-research', name: 'AI 产品研究', description: 'Teacher 示例课程', courseRole: 'teacher', companyRole: 'owner', studyRoomId: 'mock-general', memberCount: 3, canManage: true }),
+  normalizeCourseContract({ id: 'mock-course-design', companyId: MOCK_COMPANY_ID, projectId: 'mock-launch', name: '交互设计基础', description: 'Learner 示例课程', courseRole: 'learner', companyRole: 'owner', studyRoomId: 'mock-launch-room', memberCount: 2, canManage: true, color: '#d97706' }),
+]
+const MOCK_PROJECTS: ApiProject[] = MOCK_COURSES.map((course) => ({
+  id: course.projectId, name: course.name, description: course.description, color: course.color,
+  status: course.status, createdBy: 'mock-me', isGeneral: false, createdAt: MOCK_NOW,
+  updatedAt: MOCK_NOW, archivedAt: null, lastVisitedAt: MOCK_NOW, sourceCount: 2,
+  conversationCount: 2, documentCount: 1, boardCount: 1, calendarEventCount: 1,
+  canvasCount: 1, canManage: course.canManage,
+}))
+let MOCK_COMPANY: ApiCompanyProfile = {
+  id: MOCK_COMPANY_ID, name: 'LingxiLoop 本地工作区', slug: 'local',
+  description: '用于验证 Company 与多课程管理的开发数据。', role: 'owner', createdAt: MOCK_NOW,
+}
+const MOCK_COMPANY_MEMBERS: ApiCompanyMember[] = [
+  { id: 'mock-me', name: '林曦', email: 'dev@localhost', role: 'owner', joinedAt: MOCK_NOW, courses: [
+    { courseId: 'mock-course-ai', name: 'AI 产品研究', role: 'teacher' },
+    { courseId: 'mock-course-design', name: '交互设计基础', role: 'learner' },
+  ] },
+  { id: 'mock-teacher', name: '陈老师', email: 'teacher@example.com', role: 'member', joinedAt: MOCK_NOW, courses: [
+    { courseId: 'mock-course-ai', name: 'AI 产品研究', role: 'teacher' },
+  ] },
+  { id: 'mock-learner', name: '李同学', email: 'learner@example.com', role: 'member', joinedAt: MOCK_NOW, courses: [
+    { courseId: 'mock-course-ai', name: 'AI 产品研究', role: 'learner' },
+    { courseId: 'mock-course-design', name: '交互设计基础', role: 'learner' },
+  ] },
+]
+const MOCK_COURSE_MEMBERS: Record<string, ApiCourseMember[]> = {
+  'mock-course-ai': [
+    { id: 'mock-me', name: '林曦', email: 'dev@localhost', role: 'teacher', joinedAt: MOCK_NOW },
+    { id: 'mock-teacher', name: '陈老师', email: 'teacher@example.com', role: 'teacher', joinedAt: MOCK_NOW },
+    { id: 'mock-learner', name: '李同学', email: 'learner@example.com', role: 'learner', joinedAt: MOCK_NOW },
+  ],
+  'mock-course-design': [
+    { id: 'mock-me', name: '林曦', email: 'dev@localhost', role: 'learner', joinedAt: MOCK_NOW },
+    { id: 'mock-teacher', name: '陈老师', email: 'teacher@example.com', role: 'teacher', joinedAt: MOCK_NOW },
+  ],
+}
+const MOCK_COURSE_INVITATIONS: Record<string, ApiCourseInvitation[]> = {
+  'mock-course-ai': [{ id: 'mock-invite', email: null, role: 'learner', note: '班级公开链接', maxUses: 30, useCount: 4, createdAt: MOCK_NOW, expiresAt: '2026-09-02T00:00:00.000Z', status: 'active' }],
+  'mock-course-design': [],
+}
+
 export type ShippingFeatureStatus =
   | 'draft' | 'contract' | 'building' | 'verifying' | 'ready'
   | 'releasing' | 'watching' | 'learned' | 'paused' | 'archived'
@@ -754,10 +893,11 @@ export const api = {
    *  `window.location.assign(api.authStartUrl('lingxi'))` rather than
    *  fetch — the browser needs to do the actual navigation so the
    *  callback can land back on AUTH_DONE_URL with the session token. */
-  authStartUrl: (provider: 'lingxi', opts?: { inviteToken?: string | null; returnUrl?: string | null }) => {
+  authStartUrl: (provider: 'lingxi', opts?: { inviteToken?: string | null; inviteKind?: 'company' | 'course' | null; returnUrl?: string | null }) => {
     const params = new URLSearchParams()
     if (opts?.returnUrl) params.set('return', opts.returnUrl)
     if (opts?.inviteToken) params.set('invite', opts.inviteToken)
+    if (opts?.inviteKind) params.set('inviteKind', opts.inviteKind)
     const qs = params.toString()
     return `${API}/auth/start/${provider}${qs ? `?${qs}` : ''}`
   },
@@ -780,7 +920,7 @@ export const api = {
     http<ApiQuotaResponse>('/me/quota'),
   listCompanies: () =>
     http<Array<{ id: string; name: string; slug: string; createdAt: string; role: string }>>('/companies'),
-  listProjects: () => http<ApiProject[]>('/projects'),
+  listProjects: () => isMockImDevelopment() ? Promise.resolve(MOCK_PROJECTS) : http<ApiProject[]>('/projects'),
   openProject: (id: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}/open`, { method: 'POST' }),
   createProject: (input: { name: string; description?: string; color?: string }) => http<ApiProject>('/projects', { method: 'POST', body: JSON.stringify(input) }),
   archiveProject: (id: string, archive = true) => http<{ ok: boolean; status: string }>(`/projects/${encodeURIComponent(id)}/archive`, { method: 'POST', body: JSON.stringify({ archive }) }),
@@ -854,6 +994,102 @@ export const api = {
     http<{ id: string; name: string; slug: string; role: string }>('/companies', {
       method: 'POST', body: JSON.stringify({ name }),
     }),
+  getCompany: (companyId: string) => isMockImDevelopment()
+    ? Promise.resolve({ ...MOCK_COMPANY, id: companyId })
+    : http<ApiCompanyProfile>(`/companies/${encodeURIComponent(companyId)}`),
+  updateCompany: (companyId: string, input: { name?: string; description?: string }) => {
+    if (!isMockImDevelopment()) return http<ApiCompanyProfile>(`/companies/${encodeURIComponent(companyId)}`, { method: 'PATCH', body: JSON.stringify(input) })
+    MOCK_COMPANY = { ...MOCK_COMPANY, ...input, id: companyId }
+    return Promise.resolve(MOCK_COMPANY)
+  },
+  listCompanyMembers: (companyId: string) => isMockImDevelopment()
+    ? Promise.resolve(MOCK_COMPANY_MEMBERS)
+    : http<ApiCompanyMember[]>(`/companies/${encodeURIComponent(companyId)}/members`),
+  updateCompanyMember: (companyId: string, userId: string, role: 'admin' | 'member') => {
+    if (!isMockImDevelopment()) return http<{ ok: true; userId: string; role: string }>(`/companies/${encodeURIComponent(companyId)}/members/${encodeURIComponent(userId)}`, { method: 'PATCH', body: JSON.stringify({ role }) })
+    const member = MOCK_COMPANY_MEMBERS.find((row) => row.id === userId)
+    if (member && member.role !== 'owner') member.role = role
+    return Promise.resolve({ ok: true as const, userId, role })
+  },
+  removeCompanyMember: (companyId: string, userId: string) => {
+    if (!isMockImDevelopment()) return http<{ ok: true }>(`/companies/${encodeURIComponent(companyId)}/members/${encodeURIComponent(userId)}`, { method: 'DELETE' })
+    const index = MOCK_COMPANY_MEMBERS.findIndex((row) => row.id === userId && row.role !== 'owner')
+    if (index >= 0) MOCK_COMPANY_MEMBERS.splice(index, 1)
+    return Promise.resolve({ ok: true as const })
+  },
+  listCourses: async () => {
+    if (isMockImDevelopment()) return MOCK_COURSES.map(normalizeCourseContract)
+    return (await http<ApiCourse[]>('/courses')).map(normalizeCourseContract)
+  },
+  getCourse: (courseId: string) => {
+    if (isMockImDevelopment()) {
+      const course = MOCK_COURSES.find((row) => row.id === courseId)
+      return course ? Promise.resolve(course) : Promise.reject(new Error('course not found'))
+    }
+    return http<ApiCourse>(`/courses/${encodeURIComponent(courseId)}`)
+  },
+  createCourse: (input: { name: string; description?: string; color?: string }) => {
+    if (!isMockImDevelopment()) return http<ApiCourse>('/courses', { method: 'POST', body: JSON.stringify(input) })
+    const suffix = String(Date.now())
+    const course = normalizeCourseContract({
+      id: `mock-course-${suffix}`, companyId: MOCK_COMPANY_ID, projectId: `mock-project-${suffix}`,
+      name: input.name, description: input.description ?? '', color: input.color,
+      createdBy: 'mock-me', companyRole: 'owner', courseRole: 'teacher',
+      studyRoomId: 'mock-general', memberCount: 1, canManage: true,
+    })
+    MOCK_COURSES = [course, ...MOCK_COURSES]
+    MOCK_COURSE_MEMBERS[course.id] = [{ id: 'mock-me', name: '林曦', email: 'dev@localhost', role: 'teacher', joinedAt: MOCK_NOW }]
+    MOCK_COURSE_INVITATIONS[course.id] = []
+    return Promise.resolve(course)
+  },
+  updateCourse: (courseId: string, input: { name?: string; description?: string; color?: string }) =>
+    http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  archiveCourse: (courseId: string, archive = true) => {
+    if (!isMockImDevelopment()) return http<{ ok: true; status: 'active' | 'archived' }>(`/courses/${encodeURIComponent(courseId)}/archive`, { method: 'POST', body: JSON.stringify({ archive }) })
+    const status = archive ? 'archived' : 'active'
+    MOCK_COURSES = MOCK_COURSES.map((course) => course.id === courseId ? { ...course, status } : course)
+    return Promise.resolve({ ok: true as const, status })
+  },
+  listCourseMembers: (courseId: string) => isMockImDevelopment()
+    ? Promise.resolve(MOCK_COURSE_MEMBERS[courseId] ?? [])
+    : http<ApiCourseMember[]>(`/courses/${encodeURIComponent(courseId)}/members`),
+  updateCourseMember: (courseId: string, userId: string, role: 'teacher' | 'learner') => {
+    if (!isMockImDevelopment()) return http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(userId)}`, { method: 'PATCH', body: JSON.stringify({ role }) })
+    const member = MOCK_COURSE_MEMBERS[courseId]?.find((row) => row.id === userId)
+    if (member) member.role = role
+    return Promise.resolve({ ok: true as const })
+  },
+  removeCourseMember: (courseId: string, userId: string) => {
+    if (!isMockImDevelopment()) return http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(userId)}`, { method: 'DELETE' })
+    MOCK_COURSE_MEMBERS[courseId] = (MOCK_COURSE_MEMBERS[courseId] ?? []).filter((row) => row.id !== userId)
+    return Promise.resolve({ ok: true as const })
+  },
+  listCourseInvitations: (courseId: string) => isMockImDevelopment()
+    ? Promise.resolve(MOCK_COURSE_INVITATIONS[courseId] ?? [])
+    : http<ApiCourseInvitation[]>(`/courses/${encodeURIComponent(courseId)}/invitations`),
+  createCourseInvitation: (courseId: string, input: { email?: string | null; role: 'teacher' | 'learner'; note?: string | null; expiresInDays?: number; maxUses?: number }) => {
+    if (!isMockImDevelopment()) return http<ApiCourseInvitationWithToken>(`/courses/${encodeURIComponent(courseId)}/invitations`, { method: 'POST', body: JSON.stringify(input) })
+    const id = `mock-invite-${Date.now()}`
+    const invitation: ApiCourseInvitationWithToken = {
+      id, token: id, url: `${location.origin}/invite/course/${id}`, email: input.email ?? null,
+      role: input.role, note: input.note ?? null, maxUses: input.maxUses ?? 1, useCount: 0,
+      createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + (input.expiresInDays ?? 7) * 86_400_000).toISOString(), status: 'active',
+    }
+    MOCK_COURSE_INVITATIONS[courseId] = [invitation, ...(MOCK_COURSE_INVITATIONS[courseId] ?? [])]
+    return Promise.resolve(invitation)
+  },
+  revokeCourseInvitation: (courseId: string, invitationId: string) => {
+    if (!isMockImDevelopment()) return http<{ ok: true; revoked: boolean }>(`/courses/${encodeURIComponent(courseId)}/invitations/${encodeURIComponent(invitationId)}`, { method: 'DELETE' })
+    let revoked = false
+    MOCK_COURSE_INVITATIONS[courseId] = (MOCK_COURSE_INVITATIONS[courseId] ?? []).map((invitation) => {
+      if (invitation.id !== invitationId) return invitation
+      revoked = true
+      return { ...invitation, status: 'revoked' as const, revokedAt: new Date().toISOString() }
+    })
+    return Promise.resolve({ ok: true as const, revoked })
+  },
+  previewCourseInvitation: (token: string) => http<ApiCourseInvitationPreview>(`/course-invitations/${encodeURIComponent(token)}`),
+  acceptCourseInvitation: (token: string) => http<ApiCourseInvitationAccept>(`/course-invitations/${encodeURIComponent(token)}/accept`, { method: 'POST', body: '{}' }),
   /** Owner/admin-only: list every invitation (active + historical) for a
    *  company so the management UI can show recent activity. */
   listInvitations: (companyId: string) =>

@@ -32,6 +32,7 @@ import {
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { imRouter } from '../im/router.js'
+import { wukongClient } from '../im/wukong.js'
 import { type InvitationEmailDelivery, sendInvitationEmail } from '../invitation-email.js'
 import { parseMentions as parseChatMentions } from '../mentions.js'
 import {
@@ -48,7 +49,7 @@ import { OgError, ogPreview } from '../og.js'
 import { onboardStarterAgents, seedMemberDms } from '../onboardCompany.js'
 import { castVote, closePoll, createPoll, PollError } from '../polls.js'
 import { computeMessageRecipients, notifyMessage } from '../push.js'
-import { CH_CALENDAR_EVENTS, CH_CONVO_UPDATED, CH_DOCS, CH_MESSAGE_NEW, CH_REACTIONS, CH_TYPING, publish, redis } from '../redis.js'
+import { CH_CALENDAR_EVENTS, CH_CONVO_UPDATED, CH_DOC_ACCESS_REVOKED, CH_DOCS, CH_MESSAGE_NEW, CH_REACTIONS, CH_TYPING, publish, redis } from '../redis.js'
 import { BUSY_STATUS_LEASE_MS } from '../status.js'
 import { freshenAttachmentUrl, normalizeStorageKey, storage, storageKeyFromPublicUrl, UPLOAD_DIR } from '../storage.js'
 import { getUserQuota, sub2apiConfigured } from '../sub2api.js'
@@ -284,27 +285,78 @@ async function companyArtifactBucket(companyId: string): Promise<string> {
   return rows[0].id
 }
 
-async function requireCompanyArtifactContext(req: Request & AuthedRequest) {
+async function requireCompanyArtifactContext(req: Request & AuthedRequest, writable = false) {
+  const header = typeof req.headers['x-project-id'] === 'string' ? req.headers['x-project-id'].trim() : ''
+  if (header) {
+    const workspace = await requireWorkspace(req, header)
+    if (writable && workspace.projectStatus !== 'active') throw new HttpError(409, 'archived courses are read-only')
+    return { userId: workspace.userId, companyId: workspace.companyId, projectId: workspace.projectId }
+  }
   const company = await requireCompany(req)
   return { ...company, projectId: await companyArtifactBucket(company.companyId) }
+}
+
+async function assertProjectWritable(projectId: string | null): Promise<void> {
+  if (!projectId) return
+  const { rows } = await pool.query<{ status: string }>(`SELECT status FROM projects WHERE id=$1 LIMIT 1`, [projectId])
+  if (!rows[0] || rows[0].status !== 'active') throw new HttpError(409, 'archived courses are read-only')
+}
+
+async function assertConversationWritable(companyId: string, conversationId: string): Promise<void> {
+  const { rows } = await pool.query<{ project_id: string | null }>(
+    `SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2`, [conversationId, companyId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'not found')
+  await assertProjectWritable(rows[0].project_id)
+}
+
+async function assertPollConversationWritable(companyId: string, messageId: string): Promise<void> {
+  const { rows } = await pool.query<{ channel_id: string }>(
+    `SELECT channel_id FROM im_polls WHERE poll_client_msg_no=$1 AND company_id=$2`,
+    [messageId, companyId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'poll not found')
+  await assertConversationWritable(companyId, rows[0].channel_id)
 }
 
 async function requireWorkspace(
   req: Request & AuthedRequest,
   explicitProjectId?: string,
-): Promise<{ userId: string; companyId: string; projectId: string; role: string; projectCreatedBy: string; isGeneral: boolean }> {
+): Promise<{
+  userId: string; companyId: string; projectId: string; role: string
+  projectCreatedBy: string; isGeneral: boolean; projectStatus: string
+  courseId: string | null; courseRole: 'teacher' | 'learner' | null
+}> {
   const { userId, companyId } = await requireCompany(req)
   const header = typeof req.headers['x-project-id'] === 'string' ? req.headers['x-project-id'].trim() : ''
   const projectId = explicitProjectId?.trim() || header
   if (!projectId) throw new HttpError(400, 'x-project-id is required inside a knowledge workspace')
   if (explicitProjectId && header && header !== explicitProjectId) throw new HttpError(409, 'workspace header does not match route')
-  const { rows } = await pool.query<{ created_by: string; is_general: boolean; role: string }>(
-    `SELECT p.created_by, p.is_general, cm.role
+  const { rows } = await pool.query<{
+    created_by: string; is_general: boolean; status: string; role: string
+    course_id: string | null; course_role: 'teacher' | 'learner' | null
+  }>(
+    `SELECT p.created_by, p.is_general, p.status, cm.role,
+            course.id AS course_id, course_member.role AS course_role
        FROM projects p JOIN company_members cm ON cm.company_id = p.company_id AND cm.user_id = $2
+       LEFT JOIN courses course ON course.project_id = p.id AND course.company_id = p.company_id
+       LEFT JOIN course_members course_member
+         ON course_member.course_id = course.id AND course_member.user_id = $2
       WHERE p.id = $1 AND p.company_id = $3 LIMIT 1`, [projectId, userId, companyId],
   )
-  if (!rows[0]) throw new HttpError(404, 'workspace not found')
-  return { userId, companyId, projectId, role: rows[0].role, projectCreatedBy: rows[0].created_by, isGeneral: rows[0].is_general }
+  const row = rows[0]
+  if (!row || (
+    !row.is_general
+    && !PRIVILEGED_ROLES.has(row.role)
+    && (!row.course_id || !row.course_role)
+  )) {
+    throw new HttpError(404, 'workspace not found')
+  }
+  return {
+    userId, companyId, projectId, role: row.role,
+    projectCreatedBy: row.created_by, isGeneral: row.is_general,
+    projectStatus: row.status, courseId: row.course_id, courseRole: row.course_role,
+  }
 }
 
 const DEVTOOLS_HEADER = 'x-lingxiloop-dev-mode'
@@ -369,11 +421,22 @@ async function requireConversationMember(
   conversationId: string,
 ): Promise<{ userId: string; companyId: string; projectId: string | null; members: string[]; kind: string }> {
   const { userId, companyId } = await requireCompany(req)
-  const { rows } = await pool.query<{ project_id: string | null; members: string[]; kind: string }>(
-    `SELECT project_id, members, kind FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
-    [conversationId, companyId],
+  const { rows } = await pool.query<{ project_id: string | null; members: string[]; kind: string; project_allowed: boolean }>(
+    `SELECT conversation.project_id,conversation.members,conversation.kind,
+            (conversation.project_id IS NULL OR project.is_general=TRUE
+             OR company_member.role IN ('owner','admin')
+             OR course_member.user_id IS NOT NULL) AS project_allowed
+       FROM conversations conversation
+       LEFT JOIN projects project ON project.id=conversation.project_id
+       JOIN company_members company_member
+         ON company_member.company_id=conversation.company_id AND company_member.user_id=$3
+       LEFT JOIN courses course ON course.project_id=project.id
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id AND course_member.user_id=$3
+      WHERE conversation.id=$1 AND conversation.company_id=$2 LIMIT 1`,
+    [conversationId, companyId, userId],
   )
-  if (!rows[0]) throw new HttpError(404, 'not found')
+  if (!rows[0] || !rows[0].project_allowed) throw new HttpError(404, 'not found')
   if (!rows[0].members.includes(userId)) {
     // Stay opaque: same 404 a non-existent / cross-tenant convo returns,
     // so a probing client can't tell "doesn't exist" from "I'm not in it".
@@ -389,26 +452,40 @@ async function requireGroupConversation(req: Request & AuthedRequest, conversati
   return { ...membership, role: rows[0]?.role ?? 'member' }
 }
 
-async function requireCanvasWorkspace(req: Request & AuthedRequest, canvasId: string) {
+async function requireCanvasWorkspace(req: Request & AuthedRequest, canvasId: string, writable = false) {
   const { userId, companyId } = await requireCompany(req)
-  const { rows } = await pool.query<{ conversation_id: string }>(
-    `SELECT cv.conversation_id FROM canvases cv JOIN conversations c ON c.id=cv.conversation_id
-      WHERE cv.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text]) LIMIT 1`,
+  const { rows } = await pool.query<{ conversation_id: string; project_id: string | null }>(
+    `SELECT cv.conversation_id,c.project_id FROM canvases cv JOIN conversations c ON c.id=cv.conversation_id
+      JOIN projects project ON project.id=c.project_id
+      JOIN company_members company_member ON company_member.company_id=c.company_id AND company_member.user_id=$3
+      LEFT JOIN courses course ON course.project_id=project.id
+      LEFT JOIN course_members course_member ON course_member.course_id=course.id AND course_member.user_id=$3
+      WHERE cv.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text])
+        AND (project.is_general=TRUE OR company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+      LIMIT 1`,
     [canvasId, companyId, userId],
   )
   if (!rows[0]) throw new HttpError(404, 'canvas not found')
-  return { userId, companyId, projectId: null, conversationId: rows[0].conversation_id }
+  if (writable) await assertProjectWritable(rows[0].project_id)
+  return { userId, companyId, projectId: rows[0].project_id, conversationId: rows[0].conversation_id }
 }
 
-async function requireCanvasFrameWorkspace(req: Request & AuthedRequest, frameId: string) {
+async function requireCanvasFrameWorkspace(req: Request & AuthedRequest, frameId: string, writable = false) {
   const { userId, companyId } = await requireCompany(req)
-  const { rows } = await pool.query(
-    `SELECT 1 FROM canvas_frames f JOIN canvases cv ON cv.id=f.canvas_id JOIN conversations c ON c.id=cv.conversation_id
-      WHERE f.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text]) LIMIT 1`,
+  const { rows } = await pool.query<{ project_id: string | null }>(
+    `SELECT c.project_id FROM canvas_frames f JOIN canvases cv ON cv.id=f.canvas_id JOIN conversations c ON c.id=cv.conversation_id
+      JOIN projects project ON project.id=c.project_id
+      JOIN company_members company_member ON company_member.company_id=c.company_id AND company_member.user_id=$3
+      LEFT JOIN courses course ON course.project_id=project.id
+      LEFT JOIN course_members course_member ON course_member.course_id=course.id AND course_member.user_id=$3
+      WHERE f.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text])
+        AND (project.is_general=TRUE OR company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+      LIMIT 1`,
     [frameId, companyId, userId],
   )
   if (!rows[0]) throw new HttpError(404, 'canvas frame not found')
-  return { userId, companyId, projectId: null }
+  if (writable) await assertProjectWritable(rows[0].project_id)
+  return { userId, companyId, projectId: rows[0].project_id }
 }
 
 async function getDevtoolsState(req: Request & AuthedRequest): Promise<{
@@ -788,7 +865,8 @@ api.get('/auth/start/:provider', safe(async (req, res) => {
   // auto-creating a personal workspace for net-new users.
   const inviteRaw = typeof req.query.invite === 'string' ? req.query.invite : ''
   const inviteToken = inviteRaw && inviteRaw.length >= 8 && inviteRaw.length <= 200 ? inviteRaw : null
-  const state = await createState(provider, returnUrl, inviteToken)
+  const inviteKind = req.query.inviteKind === 'course' ? 'course' : inviteToken ? 'company' : null
+  const state = await createState(provider, returnUrl, inviteToken, inviteKind)
   res.redirect(await authorizeUrl(provider, state))
 }))
 
@@ -1115,6 +1193,162 @@ api.post('/companies', async (req, res) => {
   res.status(500).json({ error: 'failed to create company after retries' })
 })
 
+api.get('/companies/:id', safe(async (req, res) => {
+  const companyId = String(req.params.id)
+  const me = requireAuth(req)
+  const { rows } = await pool.query<{
+    id: string; name: string; slug: string; description: string; role: string; created_at: string
+  }>(
+    `SELECT c.id, c.name, c.slug, c.description, cm.role, c.created_at
+       FROM companies c JOIN company_members cm ON cm.company_id=c.id
+      WHERE c.id=$1 AND cm.user_id=$2`,
+    [companyId, me],
+  )
+  if (!rows[0]) throw new HttpError(404, 'company not found')
+  res.json({
+    id: rows[0].id, name: rows[0].name, slug: rows[0].slug,
+    description: rows[0].description, role: rows[0].role, createdAt: rows[0].created_at,
+  })
+}))
+
+api.patch('/companies/:id', safe(async (req, res) => {
+  const companyId = String(req.params.id)
+  const { userId: me } = await requireCompanyAdmin(req, companyId)
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 80) : null
+  const description = typeof req.body?.description === 'string' ? req.body.description.trim().slice(0, 1000) : null
+  if (name === null && description === null) throw new HttpError(400, 'nothing to update')
+  if (name !== null && !name) throw new HttpError(400, 'name required')
+  await pool.query(
+    `UPDATE companies SET
+       name=COALESCE($2,name), description=COALESCE($3,description), updated_at=NOW()
+     WHERE id=$1`,
+    [companyId, name, description],
+  )
+  await audit({ kind: 'company_update', userId: me, companyId, detail: { name, description } })
+  const { rows } = await pool.query<{ id: string; name: string; slug: string; description: string }>(
+    `SELECT id,name,slug,description FROM companies WHERE id=$1`, [companyId],
+  )
+  res.json(rows[0])
+}))
+
+api.get('/companies/:id/members', safe(async (req, res) => {
+  const companyId = String(req.params.id)
+  await requireCompanyAdmin(req, companyId)
+  const { rows } = await pool.query(
+    `SELECT u.id, u.display_name AS name, u.email, cm.role,
+            cm.joined_at AS "joinedAt",
+            COALESCE(jsonb_agg(jsonb_build_object(
+              'courseId', course.id, 'name', project.name, 'role', course_member.role
+            )) FILTER (WHERE course.id IS NOT NULL), '[]'::jsonb) AS courses
+       FROM company_members cm
+       JOIN users u ON u.id=cm.user_id
+       LEFT JOIN course_members course_member
+         ON course_member.company_id=cm.company_id AND course_member.user_id=cm.user_id
+       LEFT JOIN courses course ON course.id=course_member.course_id
+       LEFT JOIN projects project ON project.id=course.project_id
+      WHERE cm.company_id=$1
+      GROUP BY u.id,u.display_name,u.email,cm.role,cm.joined_at
+      ORDER BY CASE cm.role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, cm.joined_at`,
+    [companyId],
+  )
+  res.json(rows)
+}))
+
+api.patch('/companies/:id/members/:userId', safe(async (req, res) => {
+  const companyId = String(req.params.id)
+  const targetId = String(req.params.userId)
+  const { userId: me } = await requireCompanyAdmin(req, companyId)
+  const role = String(req.body?.role ?? '')
+  if (role !== 'admin' && role !== 'member') throw new HttpError(400, 'role must be admin or member')
+  if (targetId === me) throw new HttpError(409, 'you cannot change your own company role')
+  const { rows } = await pool.query<{ role: string }>(
+    `SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2`, [companyId, targetId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'member not found')
+  if (rows[0].role === 'owner') throw new HttpError(409, 'the company owner cannot be demoted')
+  await pool.query(`UPDATE company_members SET role=$3 WHERE company_id=$1 AND user_id=$2`, [companyId, targetId, role])
+  await audit({ kind: 'company_member_role_update', userId: me, companyId, detail: { targetId, role } })
+  res.json({ ok: true, userId: targetId, role })
+}))
+
+api.delete('/companies/:id/members/:userId', safe(async (req, res) => {
+  const companyId = String(req.params.id)
+  const targetId = String(req.params.userId)
+  const { userId: me } = await requireCompanyAdmin(req, companyId)
+  if (targetId === me) throw new HttpError(409, 'you cannot remove yourself')
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const { rows: members } = await client.query<{ role: string }>(
+      `SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2 FOR UPDATE`,
+      [companyId, targetId],
+    )
+    if (!members[0]) throw new HttpError(404, 'member not found')
+    if (members[0].role === 'owner') throw new HttpError(409, 'the company owner cannot be removed')
+
+    // Company membership deletion cascades into every course membership. Lock
+    // all affected active Course rows in a stable order before counting, so
+    // concurrent removals of different teachers cannot both validate against
+    // the same pre-delete teacher count.
+    const { rows: teachingCourses } = await client.query<{ id: string; name: string }>(
+      `SELECT course.id,project.name
+         FROM course_members member
+         JOIN courses course ON course.id=member.course_id
+         JOIN projects project ON project.id=course.project_id
+        WHERE member.company_id=$1 AND member.user_id=$2 AND member.role='teacher'
+          AND project.status='active'
+        ORDER BY course.id
+        FOR UPDATE OF course`,
+      [companyId, targetId],
+    )
+    for (const course of teachingCourses) {
+      const { rows: teacherCount } = await client.query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`,
+        [course.id],
+      )
+      if ((teacherCount[0]?.count ?? 0) <= 1) {
+        throw new HttpError(409, `${course.name} must keep at least one teacher`)
+      }
+    }
+    await client.query(`DELETE FROM company_members WHERE company_id=$1 AND user_id=$2`, [companyId, targetId])
+    await client.query(
+      `UPDATE participants SET departed_at=NOW(), status='offboarded'
+        WHERE company_id=$1 AND id=$2 AND kind='human'`, [companyId, targetId],
+    )
+    await client.query(
+      `UPDATE conversations conversation
+          SET members=(SELECT COALESCE(jsonb_agg(value), '[]'::jsonb)
+                         FROM jsonb_array_elements(conversation.members) value
+                        WHERE value <> to_jsonb($2::text)), updated_at=NOW()
+        WHERE company_id=$1 AND members @> to_jsonb(ARRAY[$2::text])`,
+      [companyId, targetId],
+    )
+    await client.query(
+      `UPDATE im_channel_bindings binding
+          SET profile=jsonb_set(binding.profile, '{members}', conversation.members, TRUE)
+         FROM conversations conversation
+        WHERE binding.channel_id=conversation.id AND binding.company_id=$1`, [companyId],
+    )
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
+  const { rows: channels } = await pool.query<{ channel_id: string; title: string; members: string[] }>(
+    `SELECT binding.channel_id, COALESCE(binding.profile->>'title',binding.channel_id) AS title,
+            conversation.members
+       FROM im_channel_bindings binding JOIN conversations conversation ON conversation.id=binding.channel_id
+      WHERE binding.company_id=$1`, [companyId],
+  )
+  for (const channel of channels) {
+    void wukongClient().upsertChannel({ channelId: channel.channel_id, channelType: 2, title: channel.title, members: channel.members }).catch(() => undefined)
+  }
+  const { disconnectUserFromCompany } = await import('../ws.js')
+  disconnectUserFromCompany(targetId, companyId)
+  await audit({ kind: 'company_member_remove', userId: me, companyId, detail: { targetId } })
+  res.json({ ok: true })
+}))
+
 /* ============== Shared Canvas (shared state, isolated execution) ======= */
 
 api.get('/conversations/:id/canvas', safe(async (req, res) => {
@@ -1124,6 +1358,7 @@ api.get('/conversations/:id/canvas', safe(async (req, res) => {
 
 api.post('/conversations/:id/canvas', safe(async (req, res) => {
   const membership = await requireGroupConversation(req, String(req.params.id))
+  await assertProjectWritable(membership.projectId)
   res.status(201).json(await ensureConversationCanvas(membership.companyId, String(req.params.id), membership.userId))
 }))
 
@@ -1149,7 +1384,7 @@ api.get('/canvases/:id', safe(async (req, res) => {
 }))
 
 api.post('/canvases/:id/assignments', safe(async (req, res) => {
-  const { userId, companyId } = await requireCanvasWorkspace(req, String(req.params.id))
+  const { userId, companyId } = await requireCanvasWorkspace(req, String(req.params.id), true)
   res.status(201).json(await assignCanvasWorkspaceWork({
     companyId,
     canvasId: String(req.params.id),
@@ -1160,19 +1395,19 @@ api.post('/canvases/:id/assignments', safe(async (req, res) => {
 }))
 
 api.post('/canvases/:id/assignments/:agentId/steer', safe(async (req, res) => {
-  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id))
+  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id), true)
   await steerCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId), text: String(req.body?.text ?? '') })
   res.json({ ok: true })
 }))
 
 api.post('/canvases/:id/assignments/:agentId/stop', safe(async (req, res) => {
-  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id))
+  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id), true)
   await stopCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId) })
   res.json({ ok: true })
 }))
 
 api.post('/canvases/:id/stop', safe(async (req, res) => {
-  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id))
+  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id), true)
   await stopCanvasWorkspace({ companyId, canvasId: String(req.params.id) })
   res.json({ ok: true })
 }))
@@ -1180,14 +1415,14 @@ api.post('/canvases/:id/stop', safe(async (req, res) => {
 api.post('/canvas/frames', safe(async (req, res) => {
   const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
   if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
-  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId)
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId, true)
   res.status(201).json(await createCanvasFrame({
     companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId, frame: req.body ?? {},
   }))
 }))
 
 api.patch('/canvas/frames/:id', safe(async (req, res) => {
-  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id))
+  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id), true)
   try {
     res.json(await updateCanvasFrame({
       companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id), patch: req.body ?? {},
@@ -1200,7 +1435,7 @@ api.patch('/canvas/frames/:id', safe(async (req, res) => {
 }))
 
 api.post('/canvas/frames/:id/append', safe(async (req, res) => {
-  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id))
+  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id), true)
   res.json(await appendCanvasFrameContent({
     companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id),
     content: String(req.body?.content ?? ''),
@@ -1208,7 +1443,7 @@ api.post('/canvas/frames/:id/append', safe(async (req, res) => {
 }))
 
 api.delete('/canvas/frames/:id', safe(async (req, res) => {
-  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id))
+  const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id), true)
   res.json(await deleteCanvasFrame({
     companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id),
   }))
@@ -1217,7 +1452,7 @@ api.delete('/canvas/frames/:id', safe(async (req, res) => {
 api.post('/canvas/status', safe(async (req, res) => {
   const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
   if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
-  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId)
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId, true)
   res.json(await setCanvasStatus({
     companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId,
     status: String(req.body?.status ?? ''),
@@ -1230,7 +1465,7 @@ api.post('/canvas/status', safe(async (req, res) => {
 api.post('/canvas/comments', safe(async (req, res) => {
   const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
   if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
-  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId)
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId, true)
   res.status(201).json(await addCanvasComment({
     companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId,
     frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
@@ -1347,6 +1582,104 @@ async function requireCompanyAdmin(req: Request & AuthedRequest, companyId: stri
     throw new HttpError(403, 'only owners and admins can manage invitations')
   }
   return { userId: me, role: rows[0].role }
+}
+
+async function requireCourseManager(
+  req: Request & AuthedRequest,
+  courseId: string,
+): Promise<{ userId: string; companyId: string; companyRole: string; courseRole: string | null; projectId: string; status: string }> {
+  const me = requireAuth(req)
+  const { rows } = await pool.query<{
+    company_id: string; company_role: string; course_role: string | null; project_id: string; status: string
+  }>(
+    `SELECT course.company_id, company_member.role AS company_role,
+            course_member.role AS course_role, course.project_id, project.status
+       FROM courses course
+       JOIN projects project ON project.id=course.project_id
+       JOIN company_members company_member
+         ON company_member.company_id=course.company_id AND company_member.user_id=$2
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id AND course_member.user_id=$2
+      WHERE course.id=$1`,
+    [courseId, me],
+  )
+  const row = rows[0]
+  if (!row) throw new HttpError(404, 'course not found')
+  if (!PRIVILEGED_ROLES.has(row.company_role) && row.course_role !== 'teacher') {
+    throw new HttpError(403, 'this action requires a course teacher or company admin')
+  }
+  return {
+    userId: me, companyId: row.company_id, companyRole: row.company_role,
+    courseRole: row.course_role, projectId: row.project_id, status: row.status,
+  }
+}
+
+async function assertCanCreateCourse(userId: string, companyId: string): Promise<void> {
+  const { rows } = await pool.query<{ company_role: string; is_teacher: boolean }>(
+    `SELECT company_member.role AS company_role,
+            EXISTS (
+              SELECT 1 FROM course_members course_member
+              JOIN courses course ON course.id=course_member.course_id
+              JOIN projects project ON project.id=course.project_id
+              WHERE course_member.company_id=$1 AND course_member.user_id=$2
+                AND course_member.role='teacher' AND project.status='active'
+            ) AS is_teacher
+       FROM company_members company_member
+      WHERE company_member.company_id=$1 AND company_member.user_id=$2`,
+    [companyId, userId],
+  )
+  if (!rows[0]) throw new HttpError(403, 'not a member of this company')
+  if (!PRIVILEGED_ROLES.has(rows[0].company_role) && !rows[0].is_teacher) {
+    throw new HttpError(403, 'only a company admin or existing teacher can create courses')
+  }
+}
+
+async function syncCourseStudyRoom(courseId: string): Promise<void> {
+  const { rows } = await pool.query<{
+    room_id: string | null; company_id: string; title: string; topic: string | null; leader_id: string | null
+  }>(
+    `SELECT course.study_room_conversation_id AS room_id, course.company_id,
+            conversation.title, conversation.topic, conversation.leader_id
+       FROM courses course
+       LEFT JOIN conversations conversation ON conversation.id=course.study_room_conversation_id
+      WHERE course.id=$1`, [courseId],
+  )
+  const course = rows[0]
+  if (!course?.room_id) return
+  const { rows: members } = await pool.query<{ id: string }>(
+    `SELECT course_member.user_id AS id FROM course_members course_member WHERE course_member.course_id=$1
+     UNION
+     SELECT participant.id FROM participants participant
+      WHERE participant.company_id=$2 AND participant.kind='agent'
+        AND participant.preset_key IN ('nova','sage','milo','trace')
+        AND participant.departed_at IS NULL`,
+    [courseId, course.company_id],
+  )
+  const memberIds = members.map((member) => member.id)
+  await pool.query(
+    `UPDATE conversations SET members=$2::jsonb, subtitle=$3, updated_at=NOW()
+      WHERE id=$1 AND company_id=$4`,
+    [course.room_id, JSON.stringify(memberIds), `course · ${memberIds.length}`, course.company_id],
+  )
+  const profile = {
+    channelId: course.room_id, channelType: 2, kind: 'group', title: course.title,
+    topic: course.topic, members: memberIds, pinned: true, createdAt: new Date().toISOString(),
+  }
+  await pool.query(
+    `INSERT INTO im_channel_bindings (channel_id,company_id,profile,leader_agent_id)
+     VALUES ($1,$2,$3::jsonb,$4)
+     ON CONFLICT (channel_id) DO UPDATE SET profile=EXCLUDED.profile,leader_agent_id=EXCLUDED.leader_agent_id`,
+    [course.room_id, course.company_id, JSON.stringify(profile), course.leader_id],
+  )
+  await wukongClient().upsertChannel({
+    channelId: course.room_id, channelType: 2, title: course.title,
+    members: memberIds, ...(course.leader_id ? { leaderAgentId: course.leader_id } : {}),
+  }).catch((error) => console.warn('[course] Study Room sync failed', error))
+}
+
+function buildCourseInviteUrl(token: string): string {
+  const base = (env.INVITE_BASE_URL || env.AUTH_DONE_URL).replace(/\/+$/, '')
+  return `${base}/invite/course/${encodeURIComponent(token)}`
 }
 
 /** Build the public-facing accept URL for an invite — always an https web
@@ -1758,6 +2091,511 @@ api.post('/invitations/:token/accept', safe(async (req, res) => {
   })
 }))
 
+/* ============== Courses ============== */
+
+api.get('/courses', safe(async (req, res) => {
+  const { userId: me, companyId } = await requireCompany(req)
+  const { rows } = await pool.query(
+    `SELECT course.id, course.company_id AS "companyId", course.created_by AS "createdBy",
+            course.study_room_conversation_id AS "studyRoomId", course.created_at AS "createdAt",
+            project.id AS "projectId", project.name, project.description, project.color,
+            project.status, project.created_at AS "projectCreatedAt", project.updated_at AS "updatedAt",
+            company_member.role AS "companyRole", course_member.role AS "courseRole",
+            (SELECT COUNT(*)::int FROM course_members member WHERE member.course_id=course.id) AS "memberCount",
+            (company_member.role IN ('owner','admin') OR course_member.role='teacher') AS "canManage"
+       FROM courses course
+       JOIN projects project ON project.id=course.project_id
+       JOIN company_members company_member
+         ON company_member.company_id=course.company_id AND company_member.user_id=$2
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id AND course_member.user_id=$2
+      WHERE course.company_id=$1
+        AND (company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+      ORDER BY project.status ASC, project.updated_at DESC`,
+    [companyId, me],
+  )
+  res.json(rows)
+}))
+
+api.post('/courses', safe(async (req, res) => {
+  const { userId: me, companyId } = await requireCompany(req)
+  await assertCanCreateCourse(me, companyId)
+  const name = String(req.body?.name ?? '').trim().slice(0, 80)
+  const description = String(req.body?.description ?? '').trim().slice(0, 1000)
+  const color = req.body?.color == null ? '#5266d6' : String(req.body.color).slice(0, 200)
+  if (!name) throw new HttpError(400, 'name required')
+  const projectId = `p-${randomUUID().slice(0, 10)}`
+  const courseId = `course-${randomUUID().slice(0, 12)}`
+  const roomId = `course-room-${randomUUID().slice(0, 12)}`
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query(
+      `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
+       VALUES ($1,$2,$3,$4,$5,$6,FALSE)`,
+      [projectId, companyId, name, description, color, me],
+    )
+    await client.query(
+      `INSERT INTO courses (id,company_id,project_id,created_by) VALUES ($1,$2,$3,$4)`,
+      [courseId, companyId, projectId, me],
+    )
+    await client.query(
+      `INSERT INTO course_members (course_id,company_id,user_id,role) VALUES ($1,$2,$3,'teacher')`,
+      [courseId, companyId, me],
+    )
+    const { rows: agents } = await client.query<{ id: string; preset_key: string }>(
+      `SELECT id,preset_key FROM participants
+        WHERE company_id=$1 AND kind='agent' AND preset_key IN ('nova','sage','milo','trace')
+          AND departed_at IS NULL`, [companyId],
+    )
+    const memberIds = [me, ...agents.map((agent) => agent.id)]
+    const leaderId = agents.find((agent) => agent.preset_key === 'nova')?.id ?? agents[0]?.id ?? null
+    await client.query(
+      `INSERT INTO conversations
+         (id,kind,title,subtitle,topic,members,leader_id,pinned,tag,company_id,project_id)
+       VALUES ($1,'group',$2,$3,$4,$5::jsonb,$6,TRUE,'course',$7,$8)`,
+      [roomId, `${name} · Study Room`, `course · ${memberIds.length}`,
+       '课程学习、讨论、练习与错因诊断', JSON.stringify(memberIds), leaderId, companyId, projectId],
+    )
+    await client.query(`INSERT INTO conversation_counters (conversation_id,next_sequence) VALUES ($1,1)`, [roomId])
+    await client.query(`UPDATE courses SET study_room_conversation_id=$2 WHERE id=$1`, [courseId, roomId])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
+  await syncCourseStudyRoom(courseId)
+  let knowledgeState: 'disabled' | 'ready' | 'failed' = openNotebookEnabled() ? 'ready' : 'disabled'
+  if (openNotebookEnabled()) {
+    try { await ensureProjectNotebook(projectId, companyId) }
+    catch (error) { knowledgeState = 'failed'; console.warn('[course] notebook provisioning failed', error) }
+  }
+  await audit({ kind: 'course_create', userId: me, companyId, detail: { courseId, projectId, name } })
+  res.status(201).json({
+    id: courseId, companyId, projectId, name, description, color, status: 'active',
+    createdBy: me, studyRoomId: roomId, courseRole: 'teacher', memberCount: 1,
+    canManage: true, knowledgeState,
+  })
+}))
+
+api.get('/courses/:id', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const { userId: me, companyId } = await requireCompany(req)
+  const { rows } = await pool.query(
+    `SELECT course.id,course.company_id AS "companyId",course.project_id AS "projectId",
+            course.created_by AS "createdBy",course.study_room_conversation_id AS "studyRoomId",
+            project.name,project.description,project.color,project.status,
+            company_member.role AS "companyRole",course_member.role AS "courseRole",
+            (SELECT COUNT(*)::int FROM course_members member WHERE member.course_id=course.id) AS "memberCount",
+            (company_member.role IN ('owner','admin') OR course_member.role='teacher') AS "canManage"
+       FROM courses course JOIN projects project ON project.id=course.project_id
+       JOIN company_members company_member ON company_member.company_id=course.company_id AND company_member.user_id=$3
+       LEFT JOIN course_members course_member ON course_member.course_id=course.id AND course_member.user_id=$3
+      WHERE course.id=$1 AND course.company_id=$2
+        AND (company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)`,
+    [courseId, companyId, me],
+  )
+  if (!rows[0]) throw new HttpError(404, 'course not found')
+  res.json(rows[0])
+}))
+
+api.patch('/courses/:id', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const manager = await requireCourseManager(req, courseId)
+  if (manager.status !== 'active') throw new HttpError(409, 'archived courses are read-only')
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 80) : null
+  const description = typeof req.body?.description === 'string' ? req.body.description.trim().slice(0, 1000) : null
+  const color = typeof req.body?.color === 'string' ? req.body.color.slice(0, 200) : null
+  if (name === null && description === null && color === null) throw new HttpError(400, 'nothing to update')
+  if (name !== null && !name) throw new HttpError(400, 'name required')
+  await pool.query(
+    `UPDATE projects SET name=COALESCE($2,name),description=COALESCE($3,description),
+            color=COALESCE($4,color),updated_at=NOW() WHERE id=$1`,
+    [manager.projectId, name, description, color],
+  )
+  if (name) {
+    await pool.query(
+      `UPDATE conversations SET title=$2,updated_at=NOW()
+        WHERE id=(SELECT study_room_conversation_id FROM courses WHERE id=$1)`,
+      [courseId, `${name} · Study Room`],
+    )
+    await syncCourseStudyRoom(courseId)
+  }
+  await syncProjectNotebookMetadata(manager.projectId).catch(() => undefined)
+  await audit({ kind: 'course_update', userId: manager.userId, companyId: manager.companyId, detail: { courseId, name, description, color } })
+  res.json({ ok: true })
+}))
+
+api.post('/courses/:id/archive', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const manager = await requireCourseManager(req, courseId)
+  const archive = req.body?.archive !== false
+  await pool.query(
+    archive
+      ? `UPDATE projects SET status='archived',archived_at=NOW(),updated_at=NOW() WHERE id=$1`
+      : `UPDATE projects SET status='active',archived_at=NULL,updated_at=NOW() WHERE id=$1`,
+    [manager.projectId],
+  )
+  await syncProjectNotebookMetadata(manager.projectId).catch(() => undefined)
+  await audit({ kind: archive ? 'course_archive' : 'course_unarchive', userId: manager.userId, companyId: manager.companyId, detail: { courseId } })
+  res.json({ ok: true, status: archive ? 'archived' : 'active' })
+}))
+
+api.get('/courses/:id/members', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  await requireCourseManager(req, courseId)
+  const { rows } = await pool.query(
+    `SELECT users.id,users.display_name AS name,users.email,course_member.role,
+            course_member.joined_at AS "joinedAt"
+       FROM course_members course_member JOIN users ON users.id=course_member.user_id
+      WHERE course_member.course_id=$1
+      ORDER BY CASE course_member.role WHEN 'teacher' THEN 0 ELSE 1 END, course_member.joined_at`,
+    [courseId],
+  )
+  res.json(rows)
+}))
+
+api.patch('/courses/:id/members/:userId', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const targetId = String(req.params.userId)
+  const manager = await requireCourseManager(req, courseId)
+  if (manager.status !== 'active') throw new HttpError(409, 'archived courses are read-only')
+  const role = String(req.body?.role ?? '')
+  if (role !== 'teacher' && role !== 'learner') throw new HttpError(400, 'role must be teacher or learner')
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    // Serialize teacher removals per course. Without the course-row lock, two
+    // admins could concurrently demote the last two teachers after each sees
+    // the other one, leaving the active course unmanaged.
+    await client.query(`SELECT 1 FROM courses WHERE id=$1 FOR UPDATE`, [courseId])
+    const { rows: member } = await client.query<{ role: string }>(
+      `SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [courseId, targetId],
+    )
+    if (!member[0]) throw new HttpError(404, 'course member not found')
+    if (member[0].role === 'teacher' && role === 'learner') {
+      const { rows: count } = await client.query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`, [courseId],
+      )
+      if ((count[0]?.count ?? 0) <= 1) throw new HttpError(409, 'an active course must keep at least one teacher')
+    }
+    await client.query(
+      `UPDATE course_members SET role=$3,updated_at=NOW() WHERE course_id=$1 AND user_id=$2`,
+      [courseId, targetId, role],
+    )
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
+  await audit({ kind: 'course_member_role_update', userId: manager.userId, companyId: manager.companyId, detail: { courseId, targetId, role } })
+  res.json({ ok: true, userId: targetId, role })
+}))
+
+api.delete('/courses/:id/members/:userId', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const targetId = String(req.params.userId)
+  const manager = await requireCourseManager(req, courseId)
+  if (manager.status !== 'active') throw new HttpError(409, 'archived courses are read-only')
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query(`SELECT 1 FROM courses WHERE id=$1 FOR UPDATE`, [courseId])
+    const { rows: member } = await client.query<{ role: string }>(
+      `SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [courseId, targetId],
+    )
+    if (!member[0]) throw new HttpError(404, 'course member not found')
+    if (member[0].role === 'teacher') {
+      const { rows: count } = await client.query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`, [courseId],
+      )
+      if ((count[0]?.count ?? 0) <= 1) throw new HttpError(409, 'an active course must keep at least one teacher')
+    }
+    await client.query(`DELETE FROM course_members WHERE course_id=$1 AND user_id=$2`, [courseId, targetId])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
+  const { rows: changedChannels } = await pool.query<{ id: string; title: string; members: string[] }>(
+    `UPDATE conversations conversation
+        SET members=(SELECT COALESCE(jsonb_agg(value), '[]'::jsonb)
+                       FROM jsonb_array_elements(conversation.members) value
+                      WHERE value <> to_jsonb($2::text)),updated_at=NOW()
+      WHERE conversation.project_id=$1 AND conversation.members @> to_jsonb(ARRAY[$2::text])
+      RETURNING conversation.id,conversation.title,conversation.members`,
+    [manager.projectId, targetId],
+  )
+  await pool.query(
+    `UPDATE im_channel_bindings binding
+        SET profile=jsonb_set(binding.profile,'{members}',conversation.members,TRUE),updated_at=NOW()
+       FROM conversations conversation
+      WHERE binding.channel_id=conversation.id AND conversation.project_id=$1`, [manager.projectId],
+  )
+  for (const channel of changedChannels) {
+    void wukongClient().upsertChannel({ channelId: channel.id, channelType: 2, title: channel.title, members: channel.members }).catch(() => undefined)
+  }
+  const { revokeUserProjectDocumentSubscriptions } = await import('../ws.js')
+  await revokeUserProjectDocumentSubscriptions(targetId, manager.projectId)
+  await publish(CH_DOC_ACCESS_REVOKED, {
+    type: 'doc.access.revoked', companyId: manager.companyId,
+    workspaceId: manager.projectId, userId: targetId,
+  })
+  await syncCourseStudyRoom(courseId)
+  await audit({ kind: 'course_member_remove', userId: manager.userId, companyId: manager.companyId, detail: { courseId, targetId } })
+  res.json({ ok: true })
+}))
+
+api.get('/courses/:id/invitations', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  await requireCourseManager(req, courseId)
+  const { rows } = await pool.query(
+    `SELECT invitation.token_hash AS id,invitation.email,invitation.role,invitation.note,
+            invitation.max_uses AS "maxUses",invitation.use_count AS "useCount",
+            invitation.created_at AS "createdAt",invitation.expires_at AS "expiresAt",
+            invitation.revoked_at AS "revokedAt",invitation.last_accepted_at AS "lastAcceptedAt",
+            invitation.last_accepted_by AS "lastAcceptedBy",invitation.invited_by AS "invitedBy",
+            users.display_name AS "inviterName",
+            COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'userId', recent.user_id, 'name', recent.display_name,
+                'role', recent.role, 'acceptedAt', recent.accepted_at
+              ) ORDER BY recent.accepted_at DESC)
+              FROM (
+                SELECT acceptance.user_id,accepted_user.display_name,acceptance.role,acceptance.accepted_at
+                  FROM course_invitation_acceptances acceptance
+                  LEFT JOIN users accepted_user ON accepted_user.id=acceptance.user_id
+                 WHERE acceptance.token_hash=invitation.token_hash
+                 ORDER BY acceptance.accepted_at DESC LIMIT 10
+              ) recent
+            ), '[]'::jsonb) AS acceptances,
+            CASE WHEN invitation.revoked_at IS NOT NULL THEN 'revoked'
+                 WHEN invitation.expires_at < NOW() THEN 'expired'
+                 WHEN invitation.use_count >= invitation.max_uses THEN 'consumed'
+                 ELSE 'active' END AS status
+       FROM course_invitations invitation LEFT JOIN users ON users.id=invitation.invited_by
+      WHERE invitation.course_id=$1 ORDER BY invitation.created_at DESC`,
+    [courseId],
+  )
+  res.json(rows)
+}))
+
+api.post('/courses/:id/invitations', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const manager = await requireCourseManager(req, courseId)
+  if (manager.status !== 'active') throw new HttpError(409, 'archived courses cannot issue invitations')
+  const emailRaw = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : ''
+  const email = emailRaw || null
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, 'invalid email')
+  const role = String(req.body?.role ?? '')
+  if (role !== 'teacher' && role !== 'learner') throw new HttpError(400, 'role must be teacher or learner')
+  const note = typeof req.body?.note === 'string' ? req.body.note.trim().slice(0, 280) || null : null
+  const expiresInDays = Number(req.body?.expiresInDays ?? 7)
+  const maxUses = Number(req.body?.maxUses ?? 1)
+  if (!Number.isInteger(expiresInDays) || expiresInDays < 1 || expiresInDays > 30) {
+    throw new HttpError(400, 'expiresInDays must be an integer between 1 and 30')
+  }
+  if (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 100) {
+    throw new HttpError(400, 'maxUses must be an integer between 1 and 100')
+  }
+  if (email) {
+    await pool.query(
+      `UPDATE course_invitations SET revoked_at=NOW()
+        WHERE course_id=$1 AND email=$2 AND revoked_at IS NULL AND expires_at>NOW() AND use_count<max_uses`,
+      [courseId, email],
+    )
+  }
+  const token = generateInviteToken()
+  const tokenHash = hashInviteToken(token)
+  const expiresAt = new Date(Date.now() + expiresInDays * 86_400_000)
+  await pool.query(
+    `INSERT INTO course_invitations
+       (token_hash,course_id,company_id,invited_by,email,role,note,max_uses,expires_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [tokenHash, courseId, manager.companyId, manager.userId, email, role, note, maxUses, expiresAt],
+  )
+  await audit({ kind: 'course_invitation_create', userId: manager.userId, companyId: manager.companyId, detail: { courseId, email, role, maxUses, expiresInDays } })
+  res.status(201).json({
+    id: tokenHash, token, url: buildCourseInviteUrl(token), email, role, note,
+    maxUses, useCount: 0, createdAt: new Date().toISOString(), expiresAt: expiresAt.toISOString(), status: 'active',
+  })
+}))
+
+api.delete('/courses/:id/invitations/:inviteId', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const manager = await requireCourseManager(req, courseId)
+  const { rowCount } = await pool.query(
+    `UPDATE course_invitations SET revoked_at=NOW()
+      WHERE token_hash=$1 AND course_id=$2 AND revoked_at IS NULL`,
+    [String(req.params.inviteId), courseId],
+  )
+  if ((rowCount ?? 0) > 0) await audit({ kind: 'course_invitation_revoke', userId: manager.userId, companyId: manager.companyId, detail: { courseId, inviteId: req.params.inviteId } })
+  res.json({ ok: true, revoked: (rowCount ?? 0) > 0 })
+}))
+
+api.get('/course-invitations/:token', safe(async (req, res) => {
+  const tokenHash = hashInviteToken(String(req.params.token))
+  const { rows } = await pool.query<{
+    course_id: string; company_id: string; email: string | null; role: string; note: string | null
+    max_uses: number; use_count: number; expires_at: string; revoked_at: string | null
+    course_name: string; project_id: string; project_status: string; room_id: string | null
+    company_name: string; company_slug: string; inviter_name: string | null
+  }>(
+    `SELECT invitation.course_id,invitation.company_id,invitation.email,invitation.role,invitation.note,
+            invitation.max_uses,invitation.use_count,invitation.expires_at,invitation.revoked_at,
+            project.name AS course_name,project.id AS project_id,project.status AS project_status,
+            course.study_room_conversation_id AS room_id,company.name AS company_name,
+            company.slug AS company_slug,users.display_name AS inviter_name
+       FROM course_invitations invitation JOIN courses course ON course.id=invitation.course_id
+       JOIN projects project ON project.id=course.project_id JOIN companies company ON company.id=course.company_id
+       LEFT JOIN users ON users.id=invitation.invited_by WHERE invitation.token_hash=$1`,
+    [tokenHash],
+  )
+  const invitation = rows[0]
+  if (!invitation) { res.json({ status: 'not_found', kind: 'course' }); return }
+  let status = invitation.revoked_at ? 'revoked'
+    : new Date(invitation.expires_at).getTime() < Date.now() ? 'expired'
+      : invitation.use_count >= invitation.max_uses ? 'consumed'
+        : invitation.project_status !== 'active' ? 'archived' : 'valid'
+  if (req.authUserId) {
+    const { rows: viewer } = await pool.query<{ email: string; role: string | null }>(
+      `SELECT users.email,course_member.role FROM users
+       LEFT JOIN course_members course_member ON course_member.course_id=$2 AND course_member.user_id=users.id
+       WHERE users.id=$1`, [req.authUserId, invitation.course_id],
+    )
+    if (viewer[0]?.role && (viewer[0].role === 'teacher' || invitation.role === viewer[0].role)) status = 'already_member'
+    else if (invitation.email && viewer[0]?.email.toLowerCase() !== invitation.email) status = 'wrong_email'
+  }
+  res.json({
+    kind: 'course', status,
+    invitation: {
+      role: invitation.role, email: invitation.email, note: invitation.note,
+      expiresAt: new Date(invitation.expires_at).toISOString(), inviterName: invitation.inviter_name,
+      company: { id: invitation.company_id, name: invitation.company_name, slug: invitation.company_slug },
+      course: { id: invitation.course_id, name: invitation.course_name, projectId: invitation.project_id, studyRoomId: invitation.room_id },
+    },
+  })
+}))
+
+api.post('/course-invitations/:token/accept', safe(async (req, res) => {
+  const me = requireAuth(req)
+  const tokenHash = hashInviteToken(String(req.params.token))
+  const { rows: userRows } = await pool.query<{ email: string; display_name: string; avatar_url: string | null; email_verified_at: string | null }>(
+    `SELECT email,display_name,avatar_url,email_verified_at FROM users WHERE id=$1`, [me],
+  )
+  const user = userRows[0]
+  if (!user) throw new HttpError(401, 'session points to missing user')
+  if (!user.email_verified_at) throw new HttpError(403, 'a verified email is required to accept a course invitation')
+  const client = await pool.connect()
+  let result: { companyId: string; companyName: string; companySlug: string; companyRole: string; courseId: string; courseName: string; projectId: string; roomId: string | null; role: string; alreadyMember: boolean; joinedCompany: boolean }
+  try {
+    await client.query('BEGIN')
+    // Invitations have independent token rows, so locking only the invitation
+    // does not serialize two different links accepted by the same user. The
+    // stable user row prevents a learner invite racing a teacher invite from
+    // observing stale membership state (and also serializes auto-join).
+    await client.query(`SELECT 1 FROM users WHERE id=$1 FOR UPDATE`, [me])
+    const { rows } = await client.query<{
+      company_id: string; course_id: string; email: string | null; role: 'teacher' | 'learner'
+      max_uses: number; use_count: number; expires_at: string; revoked_at: string | null
+      project_id: string; project_status: string; room_id: string | null; course_name: string
+      company_name: string; company_slug: string
+    }>(
+      `SELECT invitation.company_id,invitation.course_id,invitation.email,invitation.role,
+              invitation.max_uses,invitation.use_count,invitation.expires_at,invitation.revoked_at,
+              course.project_id,project.status AS project_status,course.study_room_conversation_id AS room_id,
+              project.name AS course_name,company.name AS company_name,company.slug AS company_slug
+         FROM course_invitations invitation JOIN courses course ON course.id=invitation.course_id
+         JOIN projects project ON project.id=course.project_id JOIN companies company ON company.id=course.company_id
+        WHERE invitation.token_hash=$1 FOR UPDATE OF invitation`,
+      [tokenHash],
+    )
+    const invitation = rows[0]
+    if (!invitation) throw new HttpError(404, 'invitation not found')
+    if (invitation.revoked_at) throw new HttpError(410, 'invitation revoked')
+    if (new Date(invitation.expires_at).getTime() < Date.now()) throw new HttpError(410, 'invitation expired')
+    if (invitation.project_status !== 'active') throw new HttpError(410, 'course archived')
+    if (invitation.email && invitation.email !== user.email.toLowerCase()) throw new HttpError(403, `this invitation is reserved for ${invitation.email}`)
+    const { rows: priorAcceptance } = await client.query(
+      `SELECT 1 FROM course_invitation_acceptances WHERE token_hash=$1 AND user_id=$2`, [tokenHash, me],
+    )
+    const { rows: existingCompany } = await client.query<{ role: string }>(
+      `SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2`, [invitation.company_id, me],
+    )
+    const joinedCompany = !existingCompany[0]
+    if (joinedCompany) {
+      await assertUserCompanyLimit(me, client)
+      await assertCompanyHumanLimit(invitation.company_id, client)
+      await client.query(`INSERT INTO company_members (company_id,user_id,role) VALUES ($1,$2,'member')`, [invitation.company_id, me])
+      await client.query(
+        `INSERT INTO participants (id,company_id,kind,name,role,initial,avatar_bg,avatar_url,status,departed_at)
+         VALUES ($1,$2,'human',$3,NULL,$4,'#FF8870',$5,'avail',NULL)
+         ON CONFLICT (id,company_id) DO UPDATE SET name=EXCLUDED.name,avatar_url=EXCLUDED.avatar_url,status='avail',departed_at=NULL`,
+        [me, invitation.company_id, user.display_name, user.display_name.charAt(0).toUpperCase(), user.avatar_url ?? gravatarUrlForEmail(user.email)],
+      )
+    }
+    const { rows: membership } = await client.query<{ role: 'teacher' | 'learner' }>(
+      `SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [invitation.course_id, me],
+    )
+    const existingRole = membership[0]?.role ?? null
+    const isReplay = Boolean(priorAcceptance[0])
+    if (isReplay && !existingRole) {
+      throw new HttpError(410, 'this invitation was already accepted and no longer grants course access')
+    }
+    let effectiveRole: 'teacher' | 'learner' = isReplay
+      ? existingRole!
+      : existingRole === 'teacher' || invitation.role === 'teacher' ? 'teacher' : 'learner'
+    const changesRole = !isReplay && (!existingRole || effectiveRole !== existingRole)
+    if (!priorAcceptance[0] && changesRole && invitation.use_count >= invitation.max_uses) {
+      throw new HttpError(410, 'invitation already used')
+    }
+    if (changesRole) {
+      const { rows: upsertedMembership } = await client.query<{ role: 'teacher' | 'learner' }>(
+        `INSERT INTO course_members (course_id,company_id,user_id,role)
+         VALUES ($1,$2,$3,$4)
+         ON CONFLICT (course_id,user_id) DO UPDATE SET
+           role=CASE
+             WHEN course_members.role='teacher' OR EXCLUDED.role='teacher' THEN 'teacher'
+             ELSE 'learner'
+           END,
+           updated_at=NOW()
+         RETURNING role`,
+        [invitation.course_id, invitation.company_id, me, effectiveRole],
+      )
+      effectiveRole = upsertedMembership[0].role
+    }
+    if (!priorAcceptance[0] && changesRole) {
+      await client.query(
+        `INSERT INTO course_invitation_acceptances (token_hash,user_id,role) VALUES ($1,$2,$3)`,
+        [tokenHash, me, effectiveRole],
+      )
+      await client.query(
+        `UPDATE course_invitations SET use_count=use_count+1,last_accepted_at=NOW(),last_accepted_by=$2 WHERE token_hash=$1`,
+        [tokenHash, me],
+      )
+    }
+    await client.query('COMMIT')
+    result = {
+      companyId: invitation.company_id, companyName: invitation.company_name, companySlug: invitation.company_slug,
+      companyRole: existingCompany[0]?.role ?? 'member',
+      courseId: invitation.course_id, courseName: invitation.course_name, projectId: invitation.project_id,
+      roomId: invitation.room_id, role: effectiveRole,
+      alreadyMember: Boolean(existingRole) && !changesRole, joinedCompany,
+    }
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
+  await syncCourseStudyRoom(result.courseId)
+  if (result.joinedCompany) await seedMemberDms({ companyId: result.companyId, memberId: me }).catch(() => undefined)
+  await audit({ kind: 'course_invitation_accept', userId: me, companyId: result.companyId, detail: { courseId: result.courseId, role: result.role } })
+  res.json({
+    ok: true, alreadyMember: result.alreadyMember, joinedCompany: result.joinedCompany,
+    company: { id: result.companyId, name: result.companyName, slug: result.companySlug, role: result.companyRole },
+    course: { id: result.courseId, name: result.courseName, projectId: result.projectId, studyRoomId: result.roomId, role: result.role },
+  })
+}))
+
 /* ============== Projects ============== */
 
 api.get('/projects', async (req, res) => {
@@ -1772,11 +2610,16 @@ api.get('/projects', async (req, res) => {
             (SELECT COUNT(*)::int FROM boards b WHERE b.project_id = p.id) AS "boardCount",
             (SELECT COUNT(*)::int FROM calendar_events e WHERE e.project_id = p.id) AS "calendarEventCount",
             (SELECT COUNT(*)::int FROM canvases cv WHERE cv.project_id = p.id) AS "canvasCount",
-            (cm.role IN ('owner','admin') OR p.created_by = $2) AS "canManage"
+            (cm.role IN ('owner','admin') OR course_member.role='teacher') AS "canManage",
+            course.id AS "courseId", course_member.role AS "courseRole",
+            course.study_room_conversation_id AS "studyRoomId"
        FROM projects p
        JOIN company_members cm ON cm.company_id = p.company_id AND cm.user_id = $2
+       LEFT JOIN courses course ON course.project_id=p.id
+       LEFT JOIN course_members course_member ON course_member.course_id=course.id AND course_member.user_id=$2
        LEFT JOIN project_visits pv ON pv.project_id = p.id AND pv.user_id = $2
       WHERE p.company_id = $1
+        AND (p.is_general=TRUE OR cm.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
       ORDER BY p.status ASC, pv.visited_at DESC NULLS LAST, p.updated_at DESC`,
     [tenant, userId(req)],
   )
@@ -1784,7 +2627,7 @@ api.get('/projects', async (req, res) => {
 })
 
 api.post('/projects', async (req, res) => {
-  const { companyId: tenant } = await requireCompany(req)
+  const { companyId: tenant } = await requireCompanyRole(req)
   const name = String(req.body?.name ?? '').trim().slice(0, 80)
   const description = String(req.body?.description ?? '').slice(0, 1000)
   const color = req.body?.color ? String(req.body.color).slice(0, 200) : null
@@ -1808,7 +2651,8 @@ api.put('/projects/:id', async (req, res) => {
   // sidebar — gate to owner/admin so a single member can't unilaterally
   // re-brand the team's work.
   const workspace = await requireWorkspace(req, String(req.params.id))
-  if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.projectCreatedBy !== workspace.userId) throw new HttpError(403, 'only the workspace creator or a company admin can edit it')
+  await assertProjectWritable(workspace.projectId)
+  if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.courseRole !== 'teacher') throw new HttpError(403, 'only a course teacher or company admin can edit it')
   const tenant = workspace.companyId
   const { id } = req.params
   const { rows: gate } = await pool.query(
@@ -1837,7 +2681,7 @@ api.post('/projects/:id/archive', async (req, res) => {
   // the active list); owner/admin only.
   const workspace = await requireWorkspace(req, String(req.params.id))
   if (workspace.isGeneral) throw new HttpError(400, 'the General workspace cannot be archived')
-  if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.projectCreatedBy !== workspace.userId) throw new HttpError(403, 'only the workspace creator or a company admin can archive it')
+  if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.courseRole !== 'teacher') throw new HttpError(403, 'only a course teacher or company admin can archive it')
   const tenant = workspace.companyId
   const { id } = req.params
   const archive = req.body?.archive !== false
@@ -1915,6 +2759,7 @@ api.get('/projects/:id/sources/:sourceId', safe(async (req, res) => {
 api.post('/projects/:id/sources', safe(async (req, res) => {
   requireOpenNotebook()
   const workspace = await requireWorkspace(req, String(req.params.id))
+  await assertProjectWritable(workspace.projectId)
   const kind = String(req.body?.kind ?? '').trim()
   if (kind !== 'text' && kind !== 'url') throw new HttpError(400, 'kind must be text or url')
   const rawText = kind === 'text' ? String(req.body?.text ?? '').trim() : null
@@ -1938,6 +2783,7 @@ api.post('/projects/:id/sources', safe(async (req, res) => {
 api.post('/projects/:id/sources/upload', safe(async (req, res) => {
   requireOpenNotebook()
   const workspace = await requireWorkspace(req, String(req.params.id))
+  await assertProjectWritable(workspace.projectId)
   const name = String(req.body?.name ?? '').trim().slice(0, 200)
   const mime = String(req.body?.mime ?? '').trim().toLowerCase()
   const size = Number(req.body?.size ?? 0)
@@ -1963,6 +2809,7 @@ api.post('/projects/:id/sources/upload', safe(async (req, res) => {
 api.post('/projects/:id/sources/upload/presign', safe(async (req, res) => {
   requireOpenNotebook()
   const workspace = await requireWorkspace(req, String(req.params.id))
+  await assertProjectWritable(workspace.projectId)
   if (storage.mode !== 'r2') throw new HttpError(501, 'presigned source upload is not available in local storage mode')
   const name = String(req.body?.name ?? '').trim().slice(0, 200)
   const mime = String(req.body?.mime ?? '').trim().toLowerCase()
@@ -1984,6 +2831,7 @@ api.post('/projects/:id/sources/upload/presign', safe(async (req, res) => {
 api.post('/projects/:id/sources/:sourceId/complete-upload', safe(async (req, res) => {
   requireOpenNotebook()
   const workspace = await requireWorkspace(req, String(req.params.id))
+  await assertProjectWritable(workspace.projectId)
   const { rows } = await pool.query<{ storage_key: string; size_bytes: number; created_by: string }>(
     `SELECT storage_key, size_bytes, created_by FROM knowledge_sources
       WHERE id=$1 AND company_id=$2 AND project_id=$3 AND status='upload_pending' AND deleted_at IS NULL`,
@@ -2000,6 +2848,7 @@ api.post('/projects/:id/sources/:sourceId/complete-upload', safe(async (req, res
 api.post('/projects/:id/sources/:sourceId/retry', safe(async (req, res) => {
   requireOpenNotebook()
   const workspace = await requireWorkspace(req, String(req.params.id))
+  await assertProjectWritable(workspace.projectId)
   const { rows } = await pool.query<{ created_by: string }>(
     `SELECT created_by FROM knowledge_sources WHERE id = $1 AND project_id = $2 AND deleted_at IS NULL`,
     [req.params.sourceId, workspace.projectId],
@@ -2013,6 +2862,7 @@ api.post('/projects/:id/sources/:sourceId/retry', safe(async (req, res) => {
 api.delete('/projects/:id/sources/:sourceId', safe(async (req, res) => {
   requireOpenNotebook()
   const workspace = await requireWorkspace(req, String(req.params.id))
+  await assertProjectWritable(workspace.projectId)
   const { rows } = await pool.query<{ created_by: string; storage_key: string | null }>(
     `SELECT created_by, storage_key FROM knowledge_sources
       WHERE id = $1 AND project_id = $2 AND company_id = $3 AND deleted_at IS NULL`,
@@ -2070,6 +2920,7 @@ api.get('/conversations/:id/sources/:sourceId', safe(async (req, res) => {
 api.post('/conversations/:id/sources', safe(async (req, res) => {
   requireOpenNotebook()
   const membership = await requireGroupConversation(req, String(req.params.id))
+  await assertProjectWritable(membership.projectId)
   if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
   const kind = String(req.body?.kind ?? '').trim()
   if (kind !== 'text' && kind !== 'url') throw new HttpError(400, 'kind must be text or url')
@@ -2094,6 +2945,7 @@ api.post('/conversations/:id/sources', safe(async (req, res) => {
 api.post('/conversations/:id/sources/upload', safe(async (req, res) => {
   requireOpenNotebook()
   const membership = await requireGroupConversation(req, String(req.params.id))
+  await assertProjectWritable(membership.projectId)
   if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
   const name = String(req.body?.name ?? '').trim().slice(0, 200)
   const mime = String(req.body?.mime ?? '').trim().toLowerCase()
@@ -2119,6 +2971,7 @@ api.post('/conversations/:id/sources/upload', safe(async (req, res) => {
 api.post('/conversations/:id/sources/upload/presign', safe(async (req, res) => {
   requireOpenNotebook()
   const membership = await requireGroupConversation(req, String(req.params.id))
+  await assertProjectWritable(membership.projectId)
   if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
   if (storage.mode !== 'r2') throw new HttpError(501, 'presigned source upload is not available in local storage mode')
   const name = String(req.body?.name ?? '').trim().slice(0, 200)
@@ -2137,6 +2990,7 @@ api.post('/conversations/:id/sources/upload/presign', safe(async (req, res) => {
 api.post('/conversations/:id/sources/:sourceId/complete-upload', safe(async (req, res) => {
   requireOpenNotebook()
   const membership = await requireGroupConversation(req, String(req.params.id))
+  await assertProjectWritable(membership.projectId)
   if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
   const { rows } = await pool.query<{ storage_key: string; size_bytes: number; created_by: string }>(`SELECT storage_key, size_bytes, created_by FROM knowledge_sources WHERE id=$1 AND project_id=$2 AND company_id=$3 AND status='upload_pending' AND deleted_at IS NULL`, [req.params.sourceId, membership.projectId, membership.companyId])
   if (!rows[0]) throw new HttpError(404, 'pending source upload not found')
@@ -2149,6 +3003,7 @@ api.post('/conversations/:id/sources/:sourceId/complete-upload', safe(async (req
 api.post('/conversations/:id/sources/:sourceId/retry', safe(async (req, res) => {
   requireOpenNotebook()
   const membership = await requireGroupConversation(req, String(req.params.id))
+  await assertProjectWritable(membership.projectId)
   if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
   const { rows } = await pool.query<{ created_by: string }>(`SELECT created_by FROM knowledge_sources WHERE id=$1 AND project_id=$2 AND company_id=$3 AND deleted_at IS NULL`, [req.params.sourceId, membership.projectId, membership.companyId])
   if (!rows[0]) throw new HttpError(404, 'source not found')
@@ -2159,6 +3014,7 @@ api.post('/conversations/:id/sources/:sourceId/retry', safe(async (req, res) => 
 api.delete('/conversations/:id/sources/:sourceId', safe(async (req, res) => {
   requireOpenNotebook()
   const membership = await requireGroupConversation(req, String(req.params.id))
+  await assertProjectWritable(membership.projectId)
   if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
   const { rows } = await pool.query<{ created_by: string; storage_key: string | null }>(`SELECT created_by, storage_key FROM knowledge_sources WHERE id=$1 AND project_id=$2 AND company_id=$3 AND deleted_at IS NULL`, [req.params.sourceId, membership.projectId, membership.companyId])
   if (!rows[0]) throw new HttpError(404, 'source not found')
@@ -2170,6 +3026,7 @@ api.delete('/conversations/:id/sources/:sourceId', safe(async (req, res) => {
 api.put('/conversations/:id/sources', safe(async (req, res) => {
   requireOpenNotebook()
   const membership = await requireGroupConversation(req, String(req.params.id))
+  await assertProjectWritable(membership.projectId)
   if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
   const excluded = Array.isArray(req.body?.excludedSourceIds) ? [...new Set(req.body.excludedSourceIds.map(String))].slice(0, 500) : []
   const client = await pool.connect()
@@ -2201,11 +3058,8 @@ api.post('/conversations/:id/project', async (req, res) => {
   if (!rows[0].members.includes(me)) {
     res.status(403).json({ error: 'only members can change the project' }); return
   }
-  const { rows: pj } = await pool.query(
-    `SELECT 1 FROM projects WHERE id = $1 AND company_id = $2 AND archived_at IS NULL LIMIT 1`,
-    [projectId, tenant],
-  )
-  if (!pj[0]) { res.status(400).json({ error: 'unknown project' }); return }
+  const target = await requireWorkspace(req, projectId)
+  if (target.projectStatus !== 'active') { res.status(409).json({ error: 'archived courses are read-only' }); return }
   await pool.query(
     `UPDATE conversations SET project_id = $2, updated_at = NOW() WHERE id = $1 AND company_id = $3`,
     [id, projectId, tenant],
@@ -2214,7 +3068,7 @@ api.post('/conversations/:id/project', async (req, res) => {
 })
 
 api.get('/participants', async (req, res) => {
-  const { companyId: tenant } = await requireCompany(req)
+  const { companyId: tenant, projectId } = await requireCompanyArtifactContext(req)
   await pool.query(
     `UPDATE participants
         SET status = 'avail',
@@ -2261,8 +3115,21 @@ api.get('/participants', async (req, res) => {
               ON cm.user_id = p.id AND cm.company_id = p.company_id
        LEFT JOIN users u ON u.id = cm.user_id
       WHERE p.company_id = $1
+        AND (
+          p.kind = 'agent'
+          OR EXISTS (
+            SELECT 1
+              FROM projects selected_project
+              LEFT JOIN courses selected_course ON selected_course.project_id = selected_project.id
+              LEFT JOIN course_members selected_member
+                ON selected_member.course_id = selected_course.id AND selected_member.user_id = p.id
+             WHERE selected_project.id = $2
+               AND selected_project.company_id = p.company_id
+               AND (selected_project.is_general = TRUE OR selected_member.user_id IS NOT NULL)
+          )
+        )
       ORDER BY p.kind DESC, p.name ASC`,
-    [tenant],
+    [tenant, projectId],
   )
   // Compute deterministic addresses for agents who haven't been
   // lazy-minted yet — without this, the renderer's recipient picker hides
@@ -3121,7 +3988,7 @@ api.post('/agents/:id/rehire', async (req, res) => {
 })
 
 api.get('/conversations', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
+  const { userId: me, companyId: tenant, projectId } = await requireCompanyArtifactContext(req)
   const { rows } = await pool.query(
     `SELECT
         c.id, c.kind,
@@ -3186,6 +4053,7 @@ api.get('/conversations', async (req, res) => {
          LIMIT 1
       ) other_participant ON c.kind = 'direct'
       WHERE c.company_id = $2
+        AND c.project_id = $3
         -- Only conversations the caller is actually in. Without this,
         -- agent-to-agent direct chats (members=[agentA, agentB]) leak
         -- into the user's list even though they're not a participant
@@ -3193,7 +4061,7 @@ api.get('/conversations', async (req, res) => {
         -- "Whispers" peek tab.
         AND c.members @> to_jsonb(ARRAY[$1::text])
       ORDER BY c.pinned DESC, c.updated_at DESC`,
-    [me, tenant],
+    [me, tenant, projectId],
   )
   res.json(rows)
 })
@@ -3217,17 +4085,9 @@ api.post('/conversations', async (req, res) => {
   if (members.length < 2) { res.status(400).json({ error: 'pick at least one teammate' }); return }
 
   const requestedProjectId = typeof req.body?.workspaceId === 'string' ? req.body.workspaceId.trim() : ''
-  const { rows: workspaces } = await pool.query<{ id: string }>(
-    requestedProjectId
-      ? `SELECT id FROM projects WHERE id = $1 AND company_id = $2 AND status = 'active' LIMIT 1`
-      : `SELECT id FROM projects WHERE company_id = $1 AND is_general = TRUE AND status = 'active' LIMIT 1`,
-    requestedProjectId ? [requestedProjectId, tenant] : [tenant],
-  )
-  const projectId = workspaces[0]?.id
-  if (!projectId) {
-    res.status(requestedProjectId ? 400 : 409).json({ error: requestedProjectId ? 'workspace not found' : 'General workspace unavailable' })
-    return
-  }
+  const projectId = requestedProjectId || await companyArtifactBucket(tenant)
+  const workspace = await requireWorkspace(req, projectId)
+  if (workspace.projectStatus !== 'active') { res.status(409).json({ error: 'archived courses are read-only' }); return }
 
   // Validate every member exists in this tenant.
   const { rows: existing } = await pool.query<{ id: string; kind: string; departed_at: string | null }>(
@@ -3243,6 +4103,16 @@ api.post('/conversations', async (req, res) => {
   if (!leader || leader.kind !== 'agent' || leader.departed_at) {
     res.status(400).json({ error: 'leaderId must be an active agent member' }); return
   }
+  if (workspace.courseId) {
+    const humanIds = existing.filter((member) => member.kind === 'human').map((member) => member.id)
+    const { rows: enrolled } = await pool.query<{ user_id: string }>(
+      `SELECT user_id FROM course_members WHERE course_id = $1 AND user_id = ANY($2::text[])`,
+      [workspace.courseId, humanIds],
+    )
+    const enrolledIds = new Set(enrolled.map((member) => member.user_id))
+    const outsiders = humanIds.filter((memberId) => !enrolledIds.has(memberId))
+    if (outsiders.length > 0) { res.status(400).json({ error: 'all human members must belong to the course' }); return }
+  }
 
   const id = `g-${randomUUID().slice(0, 8)}`
   await pool.query(
@@ -3256,8 +4126,9 @@ api.post('/conversations', async (req, res) => {
 
 /** Change a group's leader. Any human member may choose an active agent member. */
 api.post('/conversations/:id/leader', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
   const { id } = req.params
+  const { userId: me, companyId: tenant, projectId } = await requireConversationMember(req, id)
+  await assertProjectWritable(projectId)
   const leaderId = typeof req.body?.leaderId === 'string' ? req.body.leaderId.trim() : ''
   if (!leaderId) { res.status(400).json({ error: 'leaderId required' }); return }
   const { rows } = await pool.query<{ members: string[]; kind: string }>(
@@ -3279,15 +4150,16 @@ api.post('/conversations/:id/leader', async (req, res) => {
     [id, leaderId, tenant],
   )
   await publish(CH_CONVO_UPDATED, {
-    type: 'conversation.updated', conversationId: id, companyId: tenant, patch: { leaderId },
+    type: 'conversation.updated', conversationId: id, companyId: tenant, workspaceId: projectId ?? undefined, patch: { leaderId },
   })
   res.json({ ok: true, leaderId })
 })
 
 /** Set or clear a conversation's topic. Any member can change it. */
 api.post('/conversations/:id/topic', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
   const { id } = req.params
+  const { userId: me, companyId: tenant, projectId } = await requireConversationMember(req, id)
+  await assertProjectWritable(projectId)
   const raw = req.body?.topic
   const topic = raw === null || raw === '' ? null : (typeof raw === 'string' ? raw.trim().slice(0, 200) : null)
   const { rows } = await pool.query<{ members: string[] }>(
@@ -3305,6 +4177,7 @@ api.post('/conversations/:id/topic', async (req, res) => {
     type: 'conversation.updated',
     conversationId: id,
     companyId: tenant,
+    workspaceId: projectId ?? undefined,
     patch: { topic },
   })
   res.json({ ok: true, topic })
@@ -3313,8 +4186,9 @@ api.post('/conversations/:id/topic', async (req, res) => {
 /** Rename a group conversation. Members only; groups only — a DM's title is the
  *  other person's name (derived), so renaming it doesn't apply. */
 api.post('/conversations/:id/title', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
   const { id } = req.params
+  const { userId: me, companyId: tenant, projectId } = await requireConversationMember(req, id)
+  await assertProjectWritable(projectId)
   const title = String(req.body?.title ?? '').trim().slice(0, 80)
   if (!title) { res.status(400).json({ error: 'title required' }); return }
   const { rows } = await pool.query<{ members: string[]; kind: string }>(
@@ -3333,6 +4207,7 @@ api.post('/conversations/:id/title', async (req, res) => {
     type: 'conversation.updated',
     conversationId: id,
     companyId: tenant,
+    workspaceId: projectId ?? undefined,
     patch: { title },
   })
   res.json({ ok: true, title })
@@ -3342,7 +4217,8 @@ api.post('/conversations/:id/title', async (req, res) => {
  *  given participant. Idempotent — clicking the DM button repeatedly always
  *  resolves to the same conversation. */
 api.post('/conversations/direct', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
+  const { userId: me, companyId: tenant, projectId } = await requireCompanyArtifactContext(req, true)
+  const workspace = await requireWorkspace(req, projectId)
   const otherId = String(req.body?.otherId ?? '').trim()
   if (!otherId) { res.status(400).json({ error: 'otherId required' }); return }
   if (otherId === me) { res.status(400).json({ error: 'cannot DM yourself' }); return }
@@ -3350,15 +4226,21 @@ api.post('/conversations/direct', async (req, res) => {
     `SELECT id, kind FROM participants WHERE id = $1 AND company_id = $2`, [otherId, tenant],
   )
   if (!pp[0]) { res.status(404).json({ error: 'unknown participant' }); return }
+  if (workspace.courseId && pp[0].kind === 'human') {
+    const { rows: enrollment } = await pool.query(
+      `SELECT 1 FROM course_members WHERE course_id=$1 AND user_id=$2`, [workspace.courseId, otherId],
+    )
+    if (!enrollment[0]) { res.status(404).json({ error: 'unknown participant' }); return }
+  }
 
   // Look for an existing direct chat with exactly these two members.
   const { rows: existing } = await pool.query<{ id: string }>(
     `SELECT id FROM conversations
-      WHERE kind = 'direct' AND company_id = $3
+      WHERE kind = 'direct' AND company_id = $3 AND project_id = $4
         AND members @> to_jsonb(ARRAY[$1::text]) AND members @> to_jsonb(ARRAY[$2::text])
         AND jsonb_array_length(members) = 2
       ORDER BY updated_at DESC LIMIT 1`,
-    [me, otherId, tenant],
+    [me, otherId, tenant, projectId],
   )
   if (existing[0]) { res.json({ id: existing[0].id, created: false }); return }
 
@@ -3367,9 +4249,9 @@ api.post('/conversations/direct', async (req, res) => {
     `SELECT name FROM participants WHERE id = $1 AND company_id = $2`, [otherId, tenant],
   )
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, subtitle, members, pinned, tag, company_id)
-     VALUES ($1, 'direct', $2, NULL, $3::jsonb, FALSE, $4, $5)`,
-    [id, title[0]?.name ?? otherId, JSON.stringify([me, otherId]), pp[0].kind === 'human' ? 'human' : null, tenant],
+    `INSERT INTO conversations (id, kind, title, subtitle, members, pinned, tag, company_id, project_id)
+     VALUES ($1, 'direct', $2, NULL, $3::jsonb, FALSE, $4, $5, $6)`,
+    [id, title[0]?.name ?? otherId, JSON.stringify([me, otherId]), pp[0].kind === 'human' ? 'human' : null, tenant, projectId],
   )
   await pool.query(`INSERT INTO conversation_counters (conversation_id, next_sequence) VALUES ($1, 1)`, [id])
   res.status(201).json({ id, created: true })
@@ -3382,6 +4264,7 @@ api.post('/conversations/:id/pin', async (req, res) => {
   // Without a membership gate, any tenant member could pin/unpin a private
   // DM they're not part of, mutating UI state for the real members.
   const { companyId: tenant } = await requireConversationMember(req, id)
+  await assertConversationWritable(tenant, id)
   const { rows } = await pool.query<{ pinned: boolean }>(
     `SELECT pinned FROM conversations WHERE id = $1 AND company_id = $2`, [id, tenant],
   )
@@ -3456,8 +4339,9 @@ api.post('/conversations/:id/mute', async (req, res) => {
  *  ensures the new member is in `members` when CH_MESSAGE_NEW fires,
  *  so the mailbox scheduler wakes them and they perceive the join. */
 api.post('/conversations/:id/members', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
   const { id } = req.params
+  const { userId: me, companyId: tenant, projectId } = await requireConversationMember(req, id)
+  await assertProjectWritable(projectId)
   const newMember = String(req.body?.id ?? '').trim()
   if (!newMember) { res.status(400).json({ error: 'id required' }); return }
   const { rows } = await pool.query<{ kind: string; members: string[] }>(
@@ -3470,7 +4354,16 @@ api.post('/conversations/:id/members', async (req, res) => {
   if (c.members.includes(newMember)) { res.json({ ok: true, members: c.members, alreadyIn: true }); return }
   // Validate participant exists in this tenant.
   const { rows: existing } = await pool.query<{ id: string }>(
-    `SELECT id FROM participants WHERE id = $1 AND company_id = $2`, [newMember, tenant],
+    `SELECT participant.id FROM participants participant
+      WHERE participant.id=$1 AND participant.company_id=$2
+        AND (
+          participant.kind='agent'
+          OR NOT EXISTS (SELECT 1 FROM courses WHERE project_id=$3)
+          OR EXISTS (
+            SELECT 1 FROM courses course JOIN course_members member ON member.course_id=course.id
+             WHERE course.project_id=$3 AND member.user_id=participant.id
+          )
+        )`, [newMember, tenant, projectId],
   )
   if (!existing[0]) { res.status(400).json({ error: `unknown participant: ${newMember}` }); return }
   const next = [...c.members, newMember]
@@ -3491,8 +4384,9 @@ api.post('/conversations/:id/members', async (req, res) => {
  *  caller's mailbox surfaces this final row in their next wake (the
  *  inbox query filters by current `c.members @> [me]`). */
 api.post('/conversations/:id/leave', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
   const { id } = req.params
+  const { userId: me, companyId: tenant, projectId } = await requireConversationMember(req, id)
+  await assertProjectWritable(projectId)
   const { rows } = await pool.query<{ kind: string; members: string[] }>(
     `SELECT kind, members FROM conversations WHERE id = $1 AND company_id = $2`, [id, tenant],
   )
@@ -3771,6 +4665,7 @@ api.get('/conversations/:id/messages', async (req, res) => {
 api.post('/conversations/:id/messages', async (req, res) => {
   const { id } = req.params
   const { userId: me, companyId: tenant, projectId } = await requireConversationMember(req, String(id))
+  await assertProjectWritable(projectId)
   const body = String(req.body?.body ?? '').trim()
   const rawAttachment = req.body?.attachment
   let attachment: AttachmentPayload | null = null
@@ -4005,6 +4900,7 @@ api.post('/polls', async (req, res) => {
     const body = req.body ?? {}
     const conversationId = String(body.conversationId ?? '')
     if (!conversationId) { res.status(400).json({ error: 'conversationId required' }); return }
+    await assertConversationWritable(tenant, conversationId)
     const optionsRaw = Array.isArray(body.options) ? body.options : []
     const created = await createPoll({
       conversationId,
@@ -4025,6 +4921,7 @@ api.post('/polls/:messageId/vote', async (req, res) => {
   try {
     const { userId: me, companyId: tenant } = await requireCompany(req)
     const messageId = req.params.messageId
+    await assertPollConversationWritable(tenant, messageId)
     const rawOptionIds = Array.isArray(req.body?.optionIds) ? req.body.optionIds : []
     const optionIds = rawOptionIds.map((x: unknown) => String(x ?? '')).filter(Boolean)
     const event = await castVote({
@@ -4042,6 +4939,7 @@ api.post('/polls/:messageId/close', async (req, res) => {
   try {
     const { userId: me, companyId: tenant } = await requireCompany(req)
     const messageId = req.params.messageId
+    await assertPollConversationWritable(tenant, messageId)
     const event = await closePoll({
       messageId,
       companyId: tenant,
@@ -4658,7 +5556,7 @@ api.post('/messages/:id/reactions', async (req, res) => {
  * rooms the caller isn't actually in (same guard `/conversations` uses).
  */
 api.get('/search', async (req, res) => {
-  const { userId: me, companyId: tenant } = await requireCompany(req)
+  const { userId: me, companyId: tenant, projectId } = await requireCompanyArtifactContext(req)
   const raw = typeof req.query.q === 'string' ? req.query.q.trim() : ''
   if (!raw) {
     res.json({ participants: [], rooms: [], groups: [], messages: [] })
@@ -4687,6 +5585,17 @@ api.get('/search', async (req, res) => {
        FROM participants
       WHERE company_id = $1
         AND departed_at IS NULL
+        AND (
+          kind = 'agent'
+          OR EXISTS (
+            SELECT 1 FROM projects selected_project
+            LEFT JOIN courses selected_course ON selected_course.project_id=selected_project.id
+            LEFT JOIN course_members selected_member
+              ON selected_member.course_id=selected_course.id AND selected_member.user_id=participants.id
+            WHERE selected_project.id=$5
+              AND (selected_project.is_general=TRUE OR selected_member.user_id IS NOT NULL)
+          )
+        )
         AND (name ILIKE $2 ESCAPE '\\' OR role ILIKE $2 ESCAPE '\\' OR id ILIKE $2 ESCAPE '\\')
       ORDER BY
         CASE WHEN lower(name) = lower($3) THEN 0
@@ -4697,7 +5606,7 @@ api.get('/search', async (req, res) => {
         CASE kind WHEN 'agent' THEN 0 ELSE 1 END,
         name
       LIMIT ${P_LIMIT}`,
-    [tenant, contains, exact, prefix],
+    [tenant, contains, exact, prefix, projectId],
   )
 
   // 1-on-1 rooms (direct + whisper): direct titles are perspective-specific,
@@ -4725,6 +5634,7 @@ api.get('/search', async (req, res) => {
             LIMIT 1
          ) other_participant ON c.kind = 'direct'
         WHERE c.company_id = $1
+          AND c.project_id = $6
           AND c.kind IN ('direct', 'whisper')
           AND c.members @> to_jsonb(ARRAY[$2::text])
      )
@@ -4744,7 +5654,7 @@ api.get('/search', async (req, res) => {
              ELSE 2 END,
         r.updated_at DESC
       LIMIT ${R_LIMIT}`,
-    [tenant, me, contains, exact, prefix],
+    [tenant, me, contains, exact, prefix, projectId],
   )
 
   const groupsP = pool.query(
@@ -4752,6 +5662,7 @@ api.get('/search', async (req, res) => {
        FROM conversations c
        LEFT JOIN projects p ON p.id = c.project_id
       WHERE c.company_id = $1
+        AND c.project_id = $6
         AND c.kind = 'group'
         AND c.members @> to_jsonb(ARRAY[$2::text])
         AND (c.title ILIKE $3 ESCAPE '\\' OR (c.topic IS NOT NULL AND c.topic ILIKE $3 ESCAPE '\\'))
@@ -4761,7 +5672,7 @@ api.get('/search', async (req, res) => {
              ELSE 2 END,
         c.updated_at DESC
       LIMIT ${G_LIMIT}`,
-    [tenant, me, contains, exact, prefix],
+    [tenant, me, contains, exact, prefix, projectId],
   )
 
   // Skip `tool` / `system` rows — those bodies are machine output, not
@@ -4793,12 +5704,13 @@ api.get('/search', async (req, res) => {
           LIMIT 1
        ) other_participant ON c.kind = 'direct'
       WHERE c.company_id = $1
+        AND c.project_id = $4
         AND c.members @> to_jsonb(ARRAY[$2::text])
         AND m.kind = 'text'
         AND m.body ILIKE $3 ESCAPE '\\'
       ORDER BY m.created_at DESC
       LIMIT ${M_LIMIT}`,
-    [tenant, me, contains],
+    [tenant, me, contains, projectId],
   )
 
   const [participants, rooms, groups, messages] = await Promise.all([
@@ -5336,11 +6248,11 @@ async function parseMentions(companyId: string, text: string): Promise<string[]>
  *  company. Throws 404 if the board doesn't exist OR lives in another
  *  tenant — kept opaque so a probing client can't enumerate cross-tenant
  *  board ids. */
-async function requireBoardAccess(req: Request & AuthedRequest, boardId: string): Promise<{ userId: string; companyId: string; projectId: string }> {
-  const { userId, companyId, projectId } = await requireCompanyArtifactContext(req)
+async function requireBoardAccess(req: Request & AuthedRequest, boardId: string, writable = false): Promise<{ userId: string; companyId: string; projectId: string }> {
+  const { userId, companyId, projectId } = await requireCompanyArtifactContext(req, writable)
   const { rows } = await pool.query<{ company_id: string }>(
-    `SELECT company_id FROM boards WHERE id = $1 AND company_id = $2 LIMIT 1`,
-    [boardId, companyId],
+    `SELECT company_id FROM boards WHERE id = $1 AND company_id = $2 AND project_id = $3 LIMIT 1`,
+    [boardId, companyId, projectId],
   )
   if (!rows[0] || rows[0].company_id !== companyId) throw new HttpError(404, 'not found')
   return { userId, companyId, projectId }
@@ -5407,14 +6319,14 @@ async function wakeMentionedAgents(args: {
 
 /** GET /boards — list every board in the active workspace. */
 api.get('/boards', async (req, res) => {
-  const { companyId } = await requireCompany(req)
+  const { companyId, projectId } = await requireCompanyArtifactContext(req)
   const { rows } = await pool.query<{
     id: string; title: string; description: string | null
     created_by: string; created_at: string; updated_at: string
   }>(
     `SELECT id, title, description, created_by, created_at, updated_at
-       FROM boards WHERE company_id = $1 ORDER BY updated_at DESC`,
-    [companyId],
+       FROM boards WHERE company_id = $1 AND project_id = $2 ORDER BY updated_at DESC`,
+    [companyId, projectId],
   )
   res.json(rows.map((r) => ({
     id: r.id,
@@ -5431,7 +6343,7 @@ api.get('/boards', async (req, res) => {
  *  this lookup to open the right board peek without forcing agents to also
  *  spell out the board id in prose. */
 api.get('/cards/:id', async (req, res) => {
-  const { companyId } = await requireCompany(req)
+  const { companyId, projectId } = await requireCompanyArtifactContext(req)
   const cardId = req.params.id
   const { rows } = await pool.query<{
     id: string
@@ -5466,9 +6378,9 @@ api.get('/cards/:id', async (req, res) => {
        FROM board_cards c
        JOIN boards b ON b.id = c.board_id
        JOIN board_columns col ON col.id = c.column_id
-      WHERE c.id = $1 AND b.company_id = $2
+      WHERE c.id = $1 AND b.company_id = $2 AND b.project_id = $3
       LIMIT 1`,
-    [cardId, companyId],
+    [cardId, companyId, projectId],
   )
   const r = rows[0]
   if (!r) throw new HttpError(404, 'not found')
@@ -5507,7 +6419,7 @@ api.get('/cards/:id', async (req, res) => {
 /** POST /boards — create a board. Auto-seeds the conventional "Todo /
  *  Doing / Done" columns so the new board is immediately usable. */
 api.post('/boards', async (req, res) => {
-  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req, true)
   const title = String(req.body?.title ?? '').trim().slice(0, 200)
   const description = String(req.body?.description ?? '').trim().slice(0, 4000) || null
   if (!title) throw new HttpError(400, 'title required')
@@ -5607,7 +6519,7 @@ api.get('/boards/:id', async (req, res) => {
 /** PATCH /boards/:id — rename / re-describe. */
 api.patch('/boards/:id', async (req, res) => {
   const boardId = req.params.id
-  const { userId: me, companyId, projectId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   const patch: Record<string, unknown> = {}
   if (typeof req.body?.title === 'string') patch.title = req.body.title.trim().slice(0, 200)
   if (typeof req.body?.description === 'string') patch.description = req.body.description.trim().slice(0, 4000) || null
@@ -5629,7 +6541,7 @@ api.patch('/boards/:id', async (req, res) => {
 /** DELETE /boards/:id — full drop, columns + cards + comments cascade. */
 api.delete('/boards/:id', async (req, res) => {
   const boardId = req.params.id
-  const { userId: me, companyId, projectId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId, projectId } = await requireBoardAccess(req, boardId, true)
   await pool.query(`DELETE FROM boards WHERE id = $1`, [boardId])
   await publishBoardEvent({ companyId, workspaceId: projectId, kind: 'board.deleted', boardId, actorId: me })
   res.json({ ok: true })
@@ -5638,7 +6550,7 @@ api.delete('/boards/:id', async (req, res) => {
 /** POST /boards/:id/columns — add a new column at the end. */
 api.post('/boards/:id/columns', async (req, res) => {
   const boardId = req.params.id
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   const title = String(req.body?.title ?? '').trim().slice(0, 100)
   if (!title) throw new HttpError(400, 'title required')
   const { rows: posRows } = await pool.query<{ max: number | null }>(
@@ -5658,7 +6570,7 @@ api.post('/boards/:id/columns', async (req, res) => {
 api.patch('/boards/:bid/columns/:cid', async (req, res) => {
   const boardId = req.params.bid
   const columnId = req.params.cid
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   const sets: string[] = []
   const params: unknown[] = []
   if (typeof req.body?.title === 'string') {
@@ -5682,7 +6594,7 @@ api.patch('/boards/:bid/columns/:cid', async (req, res) => {
 api.delete('/boards/:bid/columns/:cid', async (req, res) => {
   const boardId = req.params.bid
   const columnId = req.params.cid
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   const r = await pool.query(
     `DELETE FROM board_columns WHERE id = $1 AND board_id = $2`,
     [columnId, boardId],
@@ -5696,7 +6608,7 @@ api.delete('/boards/:bid/columns/:cid', async (req, res) => {
  *  the destination column. Title/description parsed for @-mentions. */
 api.post('/boards/:id/cards', async (req, res) => {
   const boardId = req.params.id
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   const title = String(req.body?.title ?? '').trim().slice(0, 200)
   const description = String(req.body?.description ?? '').trim().slice(0, 8000) || null
   const columnId = String(req.body?.columnId ?? '').trim()
@@ -5740,7 +6652,7 @@ api.post('/boards/:id/cards', async (req, res) => {
 api.patch('/boards/:bid/cards/:cid', async (req, res) => {
   const boardId = req.params.bid
   const cardId = req.params.cid
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   // Load current row so we can parse mentions off (possibly partial) input
   // against the existing title/description and decide which broadcast kind
   // to publish (card.moved vs card.updated).
@@ -5819,7 +6731,7 @@ api.patch('/boards/:bid/cards/:cid', async (req, res) => {
 api.delete('/boards/:bid/cards/:cid', async (req, res) => {
   const boardId = req.params.bid
   const cardId = req.params.cid
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   const r = await pool.query(
     `DELETE FROM board_cards WHERE id = $1 AND board_id = $2`,
     [cardId, boardId],
@@ -5860,7 +6772,7 @@ api.get('/boards/:bid/cards/:cid/comments', async (req, res) => {
 api.post('/boards/:bid/cards/:cid/comments', async (req, res) => {
   const boardId = req.params.bid
   const cardId = req.params.cid
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   const body = String(req.body?.body ?? '').trim().slice(0, 8000)
   if (!body) throw new HttpError(400, 'body required')
   const card = await pool.query(
@@ -5890,7 +6802,7 @@ api.delete('/boards/:bid/cards/:cid/comments/:mid', async (req, res) => {
   const boardId = req.params.bid
   const cardId = req.params.cid
   const mid = req.params.mid
-  const { userId: me, companyId } = await requireBoardAccess(req, boardId)
+  const { userId: me, companyId } = await requireBoardAccess(req, boardId, true)
   const r = await pool.query(
     `DELETE FROM board_card_comments
        WHERE id = $1 AND card_id = $2 AND author_id = $3`,
@@ -6031,7 +6943,7 @@ function rowToCalendarEvent(row: Record<string, unknown>): CalendarEventPayload 
   }
 }
 
-const CALENDAR_SELECT = `id, company_id, created_by, kind, title, description,
+const CALENDAR_SELECT = `id,company_id,project_id,created_by,kind,title,description,
   assignee_id, target_conversation_id, agent_prompt, start_at, end_at, all_day,
   recurrence, status, last_fired_at,
   reminder_minutes_before, reminder_channel,
@@ -6119,7 +7031,7 @@ api.get('/calendar/events', async (req, res) => {
 })
 
 api.post('/calendar/events', async (req, res) => {
-  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req, true)
   const body = req.body as Record<string, unknown> | undefined
   if (!body || typeof body !== 'object') throw new HttpError(400, 'body required')
 
@@ -6226,7 +7138,7 @@ api.get('/calendar/events/:id', async (req, res) => {
 })
 
 api.patch('/calendar/events/:id', async (req, res) => {
-  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req, true)
   const id = String(req.params.id)
   const body = req.body as Record<string, unknown> | undefined
   if (!body || typeof body !== 'object') throw new HttpError(400, 'body required')
@@ -6332,7 +7244,7 @@ api.patch('/calendar/events/:id', async (req, res) => {
 })
 
 api.delete('/calendar/events/:id', async (req, res) => {
-  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req, true)
   const id = String(req.params.id)
   // The visibility clause is folded into the DELETE so the same caller
   // who can't read the row can't delete it either. rowCount === 0 covers
@@ -6348,7 +7260,7 @@ api.delete('/calendar/events/:id', async (req, res) => {
 })
 
 api.post('/calendar/events/:id/run-now', async (req, res) => {
-  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req)
+  const { userId: me, companyId, projectId } = await requireCompanyArtifactContext(req, true)
   const id = String(req.params.id)
   const { rows } = await pool.query(
     `SELECT ${CALENDAR_SELECT} FROM calendar_events
@@ -6443,32 +7355,33 @@ async function publishDocumentChanged(
   documentId: string,
   kind: 'document.created' | 'document.updated' | 'document.deleted',
   actorId: string,
+  workspaceId: string,
 ): Promise<void> {
   await publish(CH_DOCS, {
     type: 'doc.changed',
     kind,
     companyId,
+    workspaceId,
     documentId,
     actorId,
   })
 }
 
 api.get('/documents', safe(async (req, res) => {
-  const { companyId } = await requireCompany(req)
+  const { companyId, projectId } = await requireCompanyArtifactContext(req)
   const { rows } = await pool.query<DocumentRow>(
     `SELECT id, company_id, title, created_by, conversation_id, created_at, updated_at
        FROM documents
-      WHERE company_id = $1
+      WHERE company_id = $1 AND project_id = $2
       ORDER BY updated_at DESC
       LIMIT 200`,
-    [companyId],
+    [companyId, projectId],
   )
   res.json({ documents: rows.map(toDocPayload) })
 }))
 
 api.post('/documents', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  const projectId = await companyArtifactBucket(companyId)
+  const { userId, companyId, projectId } = await requireCompanyArtifactContext(req, true)
   const body = (req.body ?? {}) as { title?: unknown; conversationId?: unknown }
   const title = typeof body.title === 'string' && body.title.trim()
     ? body.title.trim().slice(0, 200)
@@ -6477,8 +7390,8 @@ api.post('/documents', safe(async (req, res) => {
   let conversationId: string | null = null
   if (typeof body.conversationId === 'string' && body.conversationId) {
     const { rows: convRows } = await pool.query(
-      `SELECT 1 FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [body.conversationId, companyId],
+      `SELECT 1 FROM conversations WHERE id = $1 AND company_id = $2 AND project_id = $3 LIMIT 1`,
+      [body.conversationId, companyId, projectId],
     )
     if (convRows.length === 0) throw new HttpError(404, 'conversation not found')
     conversationId = body.conversationId
@@ -6494,24 +7407,24 @@ api.post('/documents', safe(async (req, res) => {
        FROM documents WHERE id = $1`, [id],
   )
   const doc = toDocPayload(rows[0])
-  await publishDocumentChanged(companyId, id, 'document.created', userId)
+  await publishDocumentChanged(companyId, id, 'document.created', userId, projectId)
   res.status(201).json(doc)
 }))
 
 api.get('/documents/:id', safe(async (req, res) => {
-  const { companyId } = await requireCompany(req)
+  const { companyId, projectId } = await requireCompanyArtifactContext(req)
   const id = String(req.params.id)
   const { rows } = await pool.query<DocumentRow>(
     `SELECT id, company_id, title, created_by, conversation_id, created_at, updated_at
-       FROM documents WHERE id = $1 AND company_id = $2`,
-    [id, companyId],
+       FROM documents WHERE id = $1 AND company_id = $2 AND project_id = $3`,
+    [id, companyId, projectId],
   )
   if (!rows[0]) throw new HttpError(404, 'not found')
   res.json(toDocPayload(rows[0]))
 }))
 
 api.put('/documents/:id', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const { userId, companyId, projectId } = await requireCompanyArtifactContext(req, true)
   const id = String(req.params.id)
   const body = (req.body ?? {}) as { title?: unknown }
   if (typeof body.title !== 'string' || !body.title.trim()) {
@@ -6520,22 +7433,22 @@ api.put('/documents/:id', safe(async (req, res) => {
   const title = body.title.trim().slice(0, 200)
   const { rowCount } = await pool.query(
     `UPDATE documents SET title = $1, updated_at = NOW()
-      WHERE id = $2 AND company_id = $3`,
-    [title, id, companyId],
+      WHERE id = $2 AND company_id = $3 AND project_id = $4`,
+    [title, id, companyId, projectId],
   )
   if (!rowCount) throw new HttpError(404, 'not found')
-  await publishDocumentChanged(companyId, id, 'document.updated', userId)
+  await publishDocumentChanged(companyId, id, 'document.updated', userId, projectId)
   res.json({ ok: true, title })
 }))
 
 api.delete('/documents/:id', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
+  const { userId, companyId, projectId } = await requireCompanyArtifactContext(req, true)
   const id = String(req.params.id)
   // Only the creator (or an owner/admin) can delete. Mirrors the
   // delete-your-own-agent pattern elsewhere in this router.
   const { rows } = await pool.query<{ created_by: string }>(
-    `SELECT created_by FROM documents WHERE id = $1 AND company_id = $2`,
-    [id, companyId],
+    `SELECT created_by FROM documents WHERE id = $1 AND company_id = $2 AND project_id = $3`,
+    [id, companyId, projectId],
   )
   if (!rows[0]) throw new HttpError(404, 'not found')
   if (rows[0].created_by !== userId) {
@@ -6547,7 +7460,7 @@ api.delete('/documents/:id', safe(async (req, res) => {
     if (!PRIVILEGED_ROLES.has(role)) throw new HttpError(403, 'only the creator or an owner can delete')
   }
   await pool.query(`DELETE FROM documents WHERE id = $1`, [id])
-  await publishDocumentChanged(companyId, id, 'document.deleted', userId)
+  await publishDocumentChanged(companyId, id, 'document.deleted', userId, projectId)
   res.json({ ok: true })
 }))
 
