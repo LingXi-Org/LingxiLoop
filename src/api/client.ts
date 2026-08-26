@@ -109,7 +109,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAuthToken()
   if (token) headers.authorization = `Bearer ${token}`
   const company = getActiveCompanyId()
-  if (company?.startsWith('mock-') && path.startsWith('/learning/')) {
+  if (company?.startsWith('mock-') && (path.startsWith('/learning/') || path.startsWith('/im/approvals/'))) {
     const { mockLearningHttp } = await import('@/dev/mockLearning')
     return mockLearningHttp<T>(path, init)
   }
@@ -1276,8 +1276,8 @@ export const api = {
   getCoworkerActivity: (conversationId: string) =>
     http<ApiCoworkerActivity[]>(`/coworker/activity?conversationId=${encodeURIComponent(conversationId)}`),
   resolveApproval: (approvalId: string, decision: 'approved' | 'rejected') =>
-    http<{ status: 'approved' | 'rejected' }>(`/coworker/approvals/${encodeURIComponent(approvalId)}/resolve`, {
-      method: 'POST', body: JSON.stringify({ decision }),
+    http<{ ok:boolean;approved:boolean;result?:unknown;error?:string|null }>(`/im/approvals/${encodeURIComponent(approvalId)}/resolve`, {
+      method: 'POST', body: JSON.stringify({ approved:decision==='approved' }),
     }),
   getLearnedMemories: () => http<ApiLearnedMemory[]>('/coworker/memories'),
   updateLearnedMemory: (input: { agentId: string; path: string; body: string }) =>

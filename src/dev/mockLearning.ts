@@ -1,4 +1,6 @@
-import type { LearningActivity, LearningCourse, LearningDashboard, LearningObjective } from '@/types'
+import type { LearningActivity, LearningCourse, LearningDashboard, LearningObjective, TeacherAgentSummary } from '@/types'
+import { useMessages } from '@/stores/messages'
+import { MOCK_TEACHER_ROOM_ID } from './mockLearningImFixtures'
 
 // Development-only in-memory implementation of the production
 // /api/learning/* contract. Every fixture below has a durable production table
@@ -12,6 +14,12 @@ const iso = (dayOffset: number, hour = 19) => {
 }
 
 const courseId = 'mock-course-linear-algebra'
+
+let teacherAgent:TeacherAgentSummary={
+  agentId:'mock-pulse-research',displayName:'Pulse · 研究实验室',projectId:'mock-research',courseId,
+  roomId:MOCK_TEACHER_ROOM_ID,roomStatus:'active',pendingApprovals:1,
+  digest:{frequency:'weekly',weekday:'monday',localTime:'08:30',timezone:'Asia/Shanghai',status:'active',nextRunAt:iso(5,8)},
+}
 
 let course: LearningCourse = {
   id: courseId,
@@ -120,12 +128,20 @@ export async function mockLearningHttp<T>(path: string, init?: RequestInit): Pro
   let result: unknown
 
   if (method === 'GET' && url.pathname === '/learning/dashboard') result = dashboard()
+  else if(method==='POST'&&parts[0]==='im'&&parts[1]==='approvals'&&parts[2]==='mock-pulse-publish'&&parts[3]==='resolve'){
+    const approved=data.approved===true
+    teacherAgent={...teacherAgent,pendingApprovals:0}
+    if(approved)objectives=objectives.map((item)=>item.id==='obj-transfer'?{...item,status:'published'}:item)
+    useMessages.setState((state)=>({byConvo:{...state.byConvo,[MOCK_TEACHER_ROOM_ID]:(state.byConvo[MOCK_TEACHER_ROOM_ID]??[]).map((message)=>message.approval?.id==='mock-pulse-publish'?{...message,approval:{...message.approval,status:approved?'approved':'rejected',resolvedAt:new Date().toISOString(),resolvedBy:'mock-me'}}:message)}}))
+    result={ok:true,approved,result:approved?{ok:true}:undefined,error:null}
+  }
   else if (method === 'GET' && url.pathname === '/learning/courses') result = [course]
   else if (method === 'POST' && url.pathname === '/learning/courses') {
     course = { ...course, id: `mock-course-${Date.now()}`, projectId: String(data.projectId), title: String(data.title), description: String(data.description ?? ''), roles: data.roles as LearningCourse['roles'], status: 'draft', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     result = course
   } else if (parts[0] === 'learning' && parts[1] === 'courses' && parts[2] === course.id) {
     if (method === 'PATCH' && parts.length === 3) { course = { ...course, ...data, updatedAt: new Date().toISOString() } as LearningCourse; result = course }
+    else if(method==='GET'&&parts[3]==='teacher-agent')result=teacherAgent
     else if (method === 'GET' && parts[3] === 'objectives') result = objectives
     else if (method === 'POST' && parts[3] === 'objectives' && parts.length === 4) {
       const created = (data.objectives as Array<Record<string, unknown>>).map((item, index): LearningObjective => ({ id: `mock-objective-${Date.now()}-${index}`, courseId, title: String(item.title), successCriteria: String(item.successCriteria), targetLevel: Number(item.targetLevel ?? 3) as 1 | 2 | 3 | 4, position: objectives.length + index + 1, status: 'draft', prerequisiteIds: (item.prerequisiteIds as string[] | undefined) ?? [] }))

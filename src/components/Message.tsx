@@ -1731,6 +1731,7 @@ function HandoffCard({ msg }: { msg: Message }) {
 
 function ApprovalCard({ msg }: { msg: Message }) {
   const approval = msg.approval
+  const participants=useParticipants((state)=>state.byId)
   const [busy, setBusy] = useState<'approved' | 'rejected' | null>(null)
   const [error, setError] = useState<string | null>(null)
   if (!approval) return null
@@ -1744,7 +1745,13 @@ function ApprovalCard({ msg }: { msg: Message }) {
     ? '外部沟通'
     : approval.kind === 'sensitive_or_destructive_action'
       ? '敏感或破坏性操作'
-      : '财务或不可逆操作'
+      : approval.kind === 'course_management'
+        ? '课程管理'
+        : approval.kind === 'learning_evaluation'
+          ? '学习评价与掌握度'
+          : '财务或不可逆操作'
+  const requestedBy=approval.requestedBy?participants[approval.requestedBy]?.name??approval.requestedBy:null
+  const resolvedBy=approval.resolvedBy?participants[approval.resolvedBy]?.name??approval.resolvedBy:null
   return (
     <div className="w-full max-w-[560px] select-text rounded-xl border border-hairline bg-panel px-4 py-3 shadow-sm">
       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-secondary">
@@ -1753,6 +1760,9 @@ function ApprovalCard({ msg }: { msg: Message }) {
       </div>
       <div className="mt-2 text-[14px] font-semibold text-ink-900">{approval.summary}</div>
       <div className="mt-1 text-[11px] text-ink-secondary">{detail}</div>
+      {(requestedBy||resolvedBy)&&<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10.5px] text-ink-secondary">{requestedBy&&<span>发起人：{requestedBy}</span>}{resolvedBy&&<span>确认人：{resolvedBy}</span>}</div>}
+      {approval.preview&&<div className="mt-2 rounded-lg bg-raised px-3 py-2 font-mono text-[10.5px] leading-relaxed text-ink-secondary">{String(approval.preview.method??'operation')} · {String(approval.preview.entityId??'current scope')}<br/>{String(approval.preview.currentState??'—')} → {String(approval.preview.nextState??(approval.preview.args as Record<string,unknown>|undefined)?.status??'requested')}</div>}
+      {approval.error&&<div className="mt-2 text-[11px] text-coral-deep">{approval.error}</div>}
       {pending && (
         <div className="mt-3 flex justify-end gap-2">
           <button type="button" disabled={busy !== null} onClick={() => void resolve('rejected')}

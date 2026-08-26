@@ -130,7 +130,7 @@ export interface Conversation {
   lastAtIso: string
   preview: string
   /** optional special tag */
-  tag?: 'team' | 'human' | 'fresh-pulled'
+  tag?: 'team' | 'human' | 'fresh-pulled' | 'teacher'
   /** if pulled by an agent: the convener id and reason */
   pulledBy?: { agentId: string; at: string; reason: string }
 }
