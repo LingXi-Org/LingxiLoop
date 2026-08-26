@@ -45,6 +45,17 @@ interface AuthedSocket {
 
 const clients = new Set<AuthedSocket>()
 
+/** Force clients to refresh membership state after an administrator removes a
+ * user. A reconnect obtains a fresh ticket and company set, so stale sockets
+ * cannot keep receiving General workspace events from the removed company. */
+export function disconnectUserFromCompany(userId: string, companyId: string): void {
+  for (const client of clients) {
+    if (client.userId !== userId || !client.companies.has(companyId)) continue
+    client.companies.delete(companyId)
+    try { client.ws.close(4403, 'company membership removed') } catch { /* best effort */ }
+  }
+}
+
 // Per-client WebSocket send backpressure caps (OOM fix). A socket that can't
 // drain makes `ws` buffer unsent frames in process memory; without a cap, a high
 // broadcast rate grows that buffer unbounded across clients until the pod OOMs.
@@ -142,14 +153,20 @@ async function loadMemberships(userId: string): Promise<Set<string>> {
 /** Look up a doc + verify the caller's tenant membership in one shot.
  *  Returns null when the doc doesn't exist OR the caller can't see it —
  *  same opaque posture the chat handlers use to avoid leaking existence. */
-async function docCompanyFor(documentId: string, userId: string): Promise<string | null> {
+async function docCompanyFor(documentId: string, userId: string, writable = false): Promise<string | null> {
   const { rows } = await pool.query<{ company_id: string }>(
     `SELECT d.company_id
        FROM documents d
+       JOIN projects project ON project.id=d.project_id
        JOIN company_members m ON m.company_id = d.company_id AND m.user_id = $2
+       LEFT JOIN courses course ON course.project_id=project.id
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id AND course_member.user_id=$2
       WHERE d.id = $1
+        AND (project.is_general=TRUE OR m.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+        AND ($3::boolean=FALSE OR project.status='active')
       LIMIT 1`,
-    [documentId, userId],
+    [documentId, userId, writable],
   )
   return rows[0]?.company_id ?? null
 }
@@ -214,7 +231,7 @@ async function handleDocFrame(c: AuthedSocket, msg: Record<string, unknown>): Pr
     if (!subRec) return  // must subscribe first
     const updateB64 = typeof msg.updateB64 === 'string' ? msg.updateB64 : ''
     if (!updateB64) return
-    const companyId = await docCompanyFor(documentId, c.userId)
+    const companyId = await docCompanyFor(documentId, c.userId, true)
     if (!companyId) return
     const buf = Buffer.from(updateB64, 'base64')
     const update = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
@@ -267,9 +284,16 @@ async function processDocMention(args: {
   // Resolve the mentioned ids that actually belong to this tenant.
   // Match against `participants` (covers both humans + agents).
   const { rows: validRows } = await pool.query<{ id: string; kind: string; name: string }>(
-    `SELECT id, kind, name FROM participants
-      WHERE company_id = $1 AND id = ANY($2::text[])`,
-    [companyId, requestedIds],
+    `SELECT participant.id,participant.kind,participant.name
+       FROM participants participant
+       JOIN documents document ON document.id=$3 AND document.company_id=participant.company_id
+       JOIN projects project ON project.id=document.project_id
+       LEFT JOIN courses course ON course.project_id=project.id
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id AND course_member.user_id=participant.id
+      WHERE participant.company_id=$1 AND participant.id=ANY($2::text[])
+        AND (participant.kind='agent' OR project.is_general=TRUE OR course_member.user_id IS NOT NULL)`,
+    [companyId, requestedIds, documentId],
   )
   if (validRows.length === 0) return
 
@@ -278,8 +302,8 @@ async function processDocMention(args: {
   // surface for the agent-wake chat ping; falling back to a 1:1 DM
   // when the doc isn't pinned avoids dragging unrelated members into
   // a chat noise loop.
-  const { rows: docRows } = await pool.query<{ title: string; conversation_id: string | null }>(
-    `SELECT title, conversation_id FROM documents WHERE id = $1 AND company_id = $2`,
+  const { rows: docRows } = await pool.query<{ title: string; conversation_id: string | null; project_id: string }>(
+    `SELECT title,conversation_id,project_id FROM documents WHERE id=$1 AND company_id=$2`,
     [documentId, companyId],
   )
   const documentTitle = docRows[0]?.title ?? 'Untitled'
@@ -353,6 +377,7 @@ async function processDocMention(args: {
     mentionerId,
     mentionerName,
     mentionedIds: freshIds,
+    workspaceId: docRows[0]?.project_id,
   }
   await publish(CH_DOC_MENTION, event)
 }
@@ -549,15 +574,18 @@ export function attachWebSocket(httpServer: Server) {
   })
 
   sub.on('message', (channel, payload) => {
+    void (async () => {
     // Doc channels are room-scoped, not company-scoped — skip them here.
     if (channel === 'lingxiloop:doc.update' || channel === 'lingxiloop:doc.awareness') return
     // Tenant-aware fan-out: only deliver an event to a socket if the event's
     // companyId is in the socket's set of memberships. Untagged events are
     // dropped (no leakage), since every publisher is expected to tag.
     let companyId: string | undefined
+    let workspaceId: string | undefined
     try {
-      const parsed = JSON.parse(payload) as { companyId?: string }
+      const parsed = JSON.parse(payload) as { companyId?: string; workspaceId?: string }
       if (typeof parsed.companyId === 'string') companyId = parsed.companyId
+      if (typeof parsed.workspaceId === 'string') workspaceId = parsed.workspaceId
     } catch { /* malformed — drop */ return }
 
     if (!companyId) {
@@ -568,8 +596,25 @@ export function attachWebSocket(httpServer: Server) {
       return
     }
 
+    let projectViewers: Set<string> | null = null
+    if (workspaceId) {
+      const { rows } = await pool.query<{ user_id: string }>(
+        `SELECT company_member.user_id
+           FROM projects project
+           JOIN company_members company_member ON company_member.company_id=project.company_id
+           LEFT JOIN courses course ON course.project_id=project.id
+           LEFT JOIN course_members course_member
+             ON course_member.course_id=course.id AND course_member.user_id=company_member.user_id
+          WHERE project.id=$1 AND project.company_id=$2
+            AND (project.is_general=TRUE OR company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)`,
+        [workspaceId, companyId],
+      )
+      projectViewers = new Set(rows.map((row) => row.user_id))
+    }
+
     for (const c of clients) {
       if (!c.companies.has(companyId)) continue
+      if (projectViewers && !projectViewers.has(c.userId)) continue
       if (c.ws.readyState !== c.ws.OPEN) continue
       // Backpressure guard (OOM fix): `ws.send()` buffers unsent frames in
       // process memory when a socket can't drain (slow/stuck client). Under a
@@ -586,6 +631,7 @@ export function attachWebSocket(httpServer: Server) {
       if (buffered > WS_MAX_BUFFERED_BYTES) continue // skip frame; let it drain
       try { c.ws.send(payload) } catch { /* ignore */ }
     }
+    })().catch((error) => console.warn('[ws] event fan-out failed', error))
   })
 
   // Heartbeat sweeper. Real-deal human presence used to drift because TCP

@@ -239,6 +239,7 @@ export interface ConversationUpdatedEvent extends TenantTagged {
   conversationId: string
   /** what changed (so clients can patch surgically instead of refetching) */
   patch: { topic?: string | null; title?: string; leaderId?: string | null }
+  workspaceId?: string
 }
 
 export interface GroupPulledEvent extends TenantTagged {
@@ -281,6 +282,7 @@ export interface BoardEvent extends TenantTagged {
   mentions?: string[]
   /** Actor who triggered the change — used to suppress self-notifications. */
   actorId?: string
+  workspaceId?: string
 }
 
 /** Document metadata/listing changed. Content sync still uses the CRDT
@@ -291,6 +293,7 @@ export interface DocIndexEvent extends TenantTagged {
   kind: 'document.created' | 'document.updated' | 'document.deleted'
   documentId: string
   actorId?: string
+  workspaceId?: string
 }
 
 export interface CanvasEvent extends TenantTagged {
@@ -304,6 +307,7 @@ export interface CanvasEvent extends TenantTagged {
   canvasId: string
   timestamp: string
   conversationId?: string
+  workspaceId?: string
   revision?: number
   frameId?: string
   participantId?: string
@@ -352,6 +356,7 @@ export interface DocMentionEvent extends TenantTagged {
   mentionerId: string
   mentionerName: string
   mentionedIds: string[]
+  workspaceId?: string
 }
 
 /** "Heads-up — this calendar event fires in N minutes." Broadcast on
@@ -374,6 +379,7 @@ export interface CalendarReminderEvent extends TenantTagged {
   /** Surfaces in the toast subtitle. */
   kind: 'personal' | 'agent_task'
   assigneeId: string | null
+  workspaceId?: string
 }
 
 /** A calendar row was created / updated / deleted. We deliberately keep
@@ -393,6 +399,7 @@ export interface CalendarEventChangedEvent extends TenantTagged {
    *  for renderers that want to avoid echoing the actor's own
    *  optimistic write back at them. */
   actorId: string | null
+  workspaceId?: string
 }
 
 /** Poll state changed — a new vote was cast, an existing vote was changed,

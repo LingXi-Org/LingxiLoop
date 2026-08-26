@@ -2434,6 +2434,149 @@ CREATE INDEX IF NOT EXISTS idx_boards_project ON boards(project_id, updated_at D
 CREATE INDEX IF NOT EXISTS idx_calendar_project ON calendar_events(project_id, start_at);
 CREATE INDEX IF NOT EXISTS idx_canvases_project ON canvases(project_id, updated_at DESC);
 
+-- ============== Courses and course-scoped authorization =================
+-- A course owns exactly one non-General Project. Project remains the
+-- storage/knowledge boundary; these tables add human authorization and
+-- invitation semantics without introducing a second artifact scope.
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_id_company ON projects(id, company_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_id_company ON conversations(id, company_id);
+
+CREATE TABLE IF NOT EXISTS courses (
+  id                         TEXT PRIMARY KEY,
+  company_id                 TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  project_id                 TEXT NOT NULL UNIQUE,
+  created_by                 TEXT NOT NULL,
+  study_room_conversation_id TEXT,
+  created_at                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE (id, company_id),
+  FOREIGN KEY (project_id, company_id) REFERENCES projects(id, company_id) ON DELETE CASCADE,
+  FOREIGN KEY (study_room_conversation_id, company_id) REFERENCES conversations(id, company_id)
+);
+CREATE INDEX IF NOT EXISTS idx_courses_company ON courses(company_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS course_members (
+  course_id  TEXT NOT NULL,
+  company_id TEXT NOT NULL,
+  user_id    TEXT NOT NULL,
+  role       TEXT NOT NULL CHECK (role IN ('teacher', 'learner')),
+  joined_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (course_id, user_id),
+  FOREIGN KEY (course_id, company_id) REFERENCES courses(id, company_id) ON DELETE CASCADE,
+  FOREIGN KEY (company_id, user_id) REFERENCES company_members(company_id, user_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_course_members_user ON course_members(company_id, user_id, role);
+
+CREATE TABLE IF NOT EXISTS course_invitations (
+  token_hash       TEXT PRIMARY KEY,
+  course_id        TEXT NOT NULL,
+  company_id       TEXT NOT NULL,
+  invited_by       TEXT NOT NULL,
+  email            TEXT,
+  role             TEXT NOT NULL CHECK (role IN ('teacher', 'learner')),
+  note             TEXT,
+  max_uses         INTEGER NOT NULL CHECK (max_uses BETWEEN 1 AND 100),
+  use_count        INTEGER NOT NULL DEFAULT 0 CHECK (use_count BETWEEN 0 AND max_uses),
+  expires_at       TIMESTAMP WITH TIME ZONE NOT NULL,
+  revoked_at       TIMESTAMP WITH TIME ZONE,
+  last_accepted_at TIMESTAMP WITH TIME ZONE,
+  last_accepted_by TEXT,
+  created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (course_id, company_id) REFERENCES courses(id, company_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_course_invitations_course ON course_invitations(course_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_course_invitations_email ON course_invitations(email) WHERE email IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS course_invitation_acceptances (
+  token_hash  TEXT NOT NULL REFERENCES course_invitations(token_hash) ON DELETE CASCADE,
+  user_id     TEXT NOT NULL,
+  role        TEXT NOT NULL CHECK (role IN ('teacher', 'learner')),
+  accepted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (token_hash, user_id)
+);
+
+-- Preserve access when upgrading an existing deployment. IDs are
+-- deterministic so boot retries and partial deployments converge safely.
+INSERT INTO courses (id, company_id, project_id, created_by)
+SELECT 'course-' || substr(md5(p.id), 1, 20), p.company_id, p.id,
+       COALESCE(project_creator.user_id, owner_member.user_id, c.owner_user_id)
+  FROM projects p
+  JOIN companies c ON c.id = p.company_id
+  LEFT JOIN LATERAL (
+    SELECT cm.user_id FROM company_members cm
+     WHERE cm.company_id = p.company_id AND cm.role = 'owner'
+     ORDER BY cm.joined_at ASC LIMIT 1
+  ) owner_member ON TRUE
+  LEFT JOIN company_members project_creator
+    ON project_creator.company_id=p.company_id AND project_creator.user_id=p.created_by
+ WHERE p.is_general = FALSE
+ON CONFLICT (project_id) DO NOTHING;
+
+INSERT INTO course_members (course_id, company_id, user_id, role)
+SELECT course.id, course.company_id, member.user_id,
+       CASE WHEN member.user_id = course.created_by THEN 'teacher' ELSE 'learner' END
+  FROM courses course
+  JOIN company_members member ON member.company_id = course.company_id
+ON CONFLICT (course_id, user_id) DO NOTHING;
+
+INSERT INTO conversations (
+  id, kind, title, subtitle, topic, members, leader_id, pinned, tag,
+  company_id, project_id
+)
+SELECT 'course-room-' || substr(md5(course.id), 1, 20), 'group',
+       project.name || ' · Study Room', 'course',
+       '课程学习、讨论、练习与错因诊断',
+       COALESCE((
+         SELECT jsonb_agg(member_id ORDER BY member_order, member_id)
+           FROM (
+             SELECT cm.user_id AS member_id, 0 AS member_order
+               FROM course_members cm WHERE cm.course_id = course.id
+             UNION
+             SELECT participant.id, 1
+               FROM participants participant
+              WHERE participant.company_id = course.company_id
+                AND participant.kind = 'agent'
+                AND participant.preset_key IN ('nova', 'sage', 'milo', 'trace')
+                AND participant.departed_at IS NULL
+           ) room_members
+       ), '[]'::jsonb),
+       (SELECT participant.id FROM participants participant
+         WHERE participant.company_id = course.company_id
+           AND participant.kind = 'agent' AND participant.preset_key = 'nova'
+           AND participant.departed_at IS NULL LIMIT 1),
+       TRUE, 'course', course.company_id, course.project_id
+  FROM courses course
+  JOIN projects project ON project.id = course.project_id
+ WHERE course.study_room_conversation_id IS NULL
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO conversation_counters (conversation_id, next_sequence)
+SELECT 'course-room-' || substr(md5(course.id), 1, 20), 1 FROM courses course
+ON CONFLICT (conversation_id) DO NOTHING;
+
+INSERT INTO im_channel_bindings (channel_id, company_id, profile, leader_agent_id)
+SELECT room.id, room.company_id,
+       jsonb_build_object(
+         'channelId', room.id, 'channelType', 2, 'kind', 'group',
+         'title', room.title, 'topic', room.topic, 'members', room.members,
+         'pinned', TRUE, 'createdAt', room.created_at
+       ), room.leader_id
+  FROM courses course
+  JOIN conversations room
+    ON room.id = 'course-room-' || substr(md5(course.id), 1, 20)
+ON CONFLICT (channel_id) DO UPDATE SET
+  company_id = EXCLUDED.company_id,
+  profile = EXCLUDED.profile,
+  leader_agent_id = EXCLUDED.leader_agent_id;
+
+UPDATE courses course
+   SET study_room_conversation_id = room.id
+  FROM conversations room
+ WHERE room.id = 'course-room-' || substr(md5(course.id), 1, 20)
+   AND course.study_room_conversation_id IS DISTINCT FROM room.id;
+
 CREATE OR REPLACE FUNCTION touch_knowledge_workspace_updated_at() RETURNS trigger AS $$
 BEGIN
   UPDATE projects SET updated_at = NOW() WHERE id = COALESCE(NEW.project_id, OLD.project_id);
@@ -3002,6 +3145,9 @@ async function schemaAlreadyCurrent(client: import('pg').PoolClient): Promise<bo
         AND (SELECT count(*) FROM pg_class WHERE relname = 'knowledge_source_chat_sessions') > 0
         AND (SELECT count(*) FROM information_schema.columns
                WHERE table_name = 'projects' AND column_name = 'is_general') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'courses') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'course_members') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'course_invitations') > 0
         AS ok
     `)
     return rows[0]?.ok === true
