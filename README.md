@@ -105,7 +105,11 @@ does not reactivate the retired runtime.
 | `server/agent-os/` | Persistent IPython kernel runner |
 | `server/src/im/` | WuKongIM bootstrap, webhook, routing and payload contracts |
 | `server/src/agents/` | Typed learning-domain services used by the Host Bridge |
+| `server/src/eval/` | Deterministic answer, RAG, tool, and multi-Agent evaluation pipeline |
 | `src/lib/im/` | Browser-side WuKongIM SDK wrapper |
+| `src/admin/EvalPage.tsx` | Eval run pipeline, failure drill-down, and version comparison dashboard |
 | `scripts/guard-agent-os.mjs` | CI guard for the independent runtime boundary |
+
+The Eval request contract and scoring rules are documented in [`docs/agent-eval.md`](docs/agent-eval.md).
 
 Licensed under [MIT](LICENSE).

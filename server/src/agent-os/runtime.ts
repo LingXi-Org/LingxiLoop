@@ -170,6 +170,22 @@ export class AgentOSRuntime {
         return
       }
       const context = await this.host.loadContext(work)
+      // Persist only evidence identity/traceability metadata — never excerpts —
+      // so an Eval run can score RAG recall and citation validity later without
+      // copying potentially sensitive source text into the observability ledger.
+      await this.event(work, runId, {
+        kind: 'knowledge.context.loaded', stage: 'completed', visibility: 'internal',
+        data: {
+          sourceCount: context.knowledgeSourceCount ?? 0,
+          citations: (context.knowledgeContext ?? []).map((citation) => ({
+            sourceId: citation.sourceId,
+            chunkId: citation.chunkId,
+            marker: citation.marker,
+            title: citation.sourceTitle,
+          })),
+          ...(context.knowledgeIngestionFailure ? { ingestionFailure: context.knowledgeIngestionFailure } : {}),
+        },
+      })
       const dynamicKnowledgeItems = knowledgeItems(context)
       const key = sessionKey(work)
       const stored = await this.host.loadSession(key)

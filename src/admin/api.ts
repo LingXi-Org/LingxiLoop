@@ -234,9 +234,119 @@ export interface LlmCallRow {
   extras: Record<string, unknown> | null
 }
 
+export type EvalStageName = 'ingest' | 'answer' | 'rag' | 'tools' | 'collaboration' | 'aggregate'
+export type EvalStageStatus = 'pass' | 'fail' | 'skipped' | 'error'
+
+export interface EvalFinding {
+  checkId: string
+  status: 'pass' | 'fail' | 'not_observed'
+  severity: 'info' | 'warning' | 'error'
+  message: string
+  expected?: unknown
+  actual?: unknown
+}
+
+export interface EvalStageResult {
+  stage: EvalStageName
+  status: EvalStageStatus
+  score: number | null
+  durationMs: number
+  findings: EvalFinding[]
+  metrics: Record<string, number | string | boolean | null>
+  failureReason: string | null
+}
+
+export interface EvalRunSummary {
+  caseCount: number
+  passedCases: number
+  failedCases: number
+  errorCases: number
+  stageScores: Record<'answer' | 'rag' | 'tools' | 'collaboration', number | null>
+}
+
+export interface EvalDashboardRun {
+  id: string
+  suiteKey: string
+  suiteName: string
+  version: string
+  baselineRunId: string | null
+  status: 'pass' | 'fail' | 'error'
+  score: number
+  passThreshold: number
+  caseCount: number
+  passedCases: number
+  failedCases: number
+  errorCases: number
+  source: 'inline' | 'agent-os' | 'mixed'
+  summary: EvalRunSummary
+  metadata: Record<string, unknown>
+  createdBy: string
+  createdAt: string
+  finishedAt: string
+  baselineScore: number | null
+  scoreDelta: number | null
+}
+
+export interface EvalDashboardPayload {
+  summary: { totalRuns: number; passRate: number; averageScore: number; failedRuns: number; suites: number }
+  runs: EvalDashboardRun[]
+  stageAverages: EvalRunSummary['stageScores']
+}
+
+export interface EvalCaseDetail {
+  id: string
+  caseId: string
+  name: string
+  position: number
+  sourceAgentRunId: string | null
+  status: 'pass' | 'fail' | 'error'
+  score: number
+  observation: Record<string, unknown>
+  expectations: Record<string, unknown>
+  failureReasons: string[]
+  stages: EvalStageResult[]
+}
+
+export interface EvalRunDetail extends EvalDashboardRun {
+  cases: EvalCaseDetail[]
+}
+
+export interface EvalCreateRunRequest {
+  schemaVersion?: 'lingxiloop.eval.v1'
+  suiteKey: string
+  suiteName?: string
+  version: string
+  baselineRunId?: string
+  passThreshold?: number
+  cases: Array<{
+    caseId: string
+    name?: string
+    sourceAgentRunId?: string
+    observation?: Record<string, unknown>
+    expectations: Record<string, unknown>
+    metadata?: Record<string, unknown>
+  }>
+  metadata?: Record<string, unknown>
+}
+
 export const adminApi = {
   me: () => http<{ userId: string; isAdmin: true }>('/me'),
   stats: () => http<AdminStats>('/stats'),
+
+  evalDashboard: (params: { suiteKey?: string; sinceDays?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams()
+    if (params.suiteKey) qs.set('suiteKey', params.suiteKey)
+    if (params.sinceDays) qs.set('sinceDays', String(params.sinceDays))
+    if (params.limit) qs.set('limit', String(params.limit))
+    const suffix = qs.toString()
+    return http<EvalDashboardPayload>(suffix ? `/eval/runs?${suffix}` : '/eval/runs')
+  },
+  evalRun: (id: string) => http<EvalRunDetail>(`/eval/runs/${encodeURIComponent(id)}`),
+  createEvalRun: (input: EvalCreateRunRequest) =>
+    http<{ id: string; report: Record<string, unknown> }>('/eval/runs', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 
   observabilityLlm: (params: { sinceDays?: number; model?: string; companyId?: string; fresh?: boolean } = {}) => {
     const qs = new URLSearchParams()
