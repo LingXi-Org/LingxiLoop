@@ -168,6 +168,71 @@ test('[integration] concurrent teacher and learner invitations preserve the teac
   )).rows[0].role, 'teacher')
 })
 
+test('[integration] removing a member invalidates replay of their consumed course invitation', async () => {
+  await seedCompany()
+  const course = await createCourse('Replay revocation')
+  const invitation = await inviteAndAccept(course.id, 'learner')
+
+  const removed = await fetch(`${ownerUrl}/api/courses/${course.id}/members/${LEARNER}`, {
+    method: 'DELETE', headers: { 'x-company-id': 'co-courses' },
+  })
+  assert.equal(removed.status, 200, await removed.text())
+  const replay = await fetch(
+    `${learnerUrl}/api/course-invitations/${encodeURIComponent(invitation.token)}/accept`,
+    { method: 'POST' },
+  )
+  assert.equal(replay.status, 410, await replay.text())
+  assert.equal((await pool.query(
+    `SELECT 1 FROM course_members WHERE course_id=$1 AND user_id=$2`,
+    [course.id, LEARNER],
+  )).rowCount, 0)
+
+  const visible = await fetch(`${learnerUrl}/api/courses`, { headers: { 'x-company-id': 'co-courses' } })
+  assert.equal(visible.status, 200)
+  assert.deepEqual(await visible.json(), [])
+})
+
+test('[integration] concurrent company removals cannot delete every teacher from an active course', async () => {
+  await seedCompany()
+  const course = await createCourse('Teacher invariant')
+  const teachers = ['u-company-teacher-a', 'u-company-teacher-b']
+  await pool.query(
+    `INSERT INTO users (id,email,display_name,tier,email_verified_at) VALUES
+       ($1,'teacher-a@test.local','Teacher A','pro',NOW()),
+       ($2,'teacher-b@test.local','Teacher B','pro',NOW())`,
+    teachers,
+  )
+  await pool.query(
+    `INSERT INTO company_members (company_id,user_id,role) VALUES
+       ('co-courses',$1,'member'),('co-courses',$2,'member')`,
+    teachers,
+  )
+  await pool.query(
+    `INSERT INTO course_members (course_id,company_id,user_id,role) VALUES
+       ($1,'co-courses',$2,'teacher'),($1,'co-courses',$3,'teacher')`,
+    [course.id, ...teachers],
+  )
+  const removeOwnerFromCourse = await fetch(`${ownerUrl}/api/courses/${course.id}/members/${OWNER}`, {
+    method: 'DELETE', headers: { 'x-company-id': 'co-courses' },
+  })
+  assert.equal(removeOwnerFromCourse.status, 200, await removeOwnerFromCourse.text())
+
+  const removals = await Promise.all(teachers.map((teacherId) => fetch(
+    `${ownerUrl}/api/companies/co-courses/members/${teacherId}`,
+    { method: 'DELETE', headers: { 'x-company-id': 'co-courses' } },
+  )))
+  assert.deepEqual(removals.map((response) => response.status).sort(), [200, 409])
+  assert.equal((await pool.query(
+    `SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`,
+    [course.id],
+  )).rows[0].count, 1)
+  assert.equal((await pool.query(
+    `SELECT COUNT(*)::int AS count FROM company_members
+      WHERE company_id='co-courses' AND user_id=ANY($1::text[])`,
+    [teachers],
+  )).rows[0].count, 1)
+})
+
 function waitForSocketMessage(
   socket: WebSocket,
   predicate: (message: Record<string, unknown>) => boolean,

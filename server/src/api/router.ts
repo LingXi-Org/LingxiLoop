@@ -1276,26 +1276,40 @@ api.delete('/companies/:id/members/:userId', safe(async (req, res) => {
   const targetId = String(req.params.userId)
   const { userId: me } = await requireCompanyAdmin(req, companyId)
   if (targetId === me) throw new HttpError(409, 'you cannot remove yourself')
-  const { rows } = await pool.query<{ role: string }>(
-    `SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2`, [companyId, targetId],
-  )
-  if (!rows[0]) throw new HttpError(404, 'member not found')
-  if (rows[0].role === 'owner') throw new HttpError(409, 'the company owner cannot be removed')
-  const { rows: soleTeacher } = await pool.query<{ name: string }>(
-    `SELECT project.name
-       FROM course_members member
-       JOIN courses course ON course.id=member.course_id
-       JOIN projects project ON project.id=course.project_id
-      WHERE member.company_id=$1 AND member.user_id=$2 AND member.role='teacher'
-        AND project.status='active'
-        AND (SELECT COUNT(*) FROM course_members peer WHERE peer.course_id=course.id AND peer.role='teacher') <= 1
-      LIMIT 1`,
-    [companyId, targetId],
-  )
-  if (soleTeacher[0]) throw new HttpError(409, `${soleTeacher[0].name} must keep at least one teacher`)
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+    const { rows: members } = await client.query<{ role: string }>(
+      `SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2 FOR UPDATE`,
+      [companyId, targetId],
+    )
+    if (!members[0]) throw new HttpError(404, 'member not found')
+    if (members[0].role === 'owner') throw new HttpError(409, 'the company owner cannot be removed')
+
+    // Company membership deletion cascades into every course membership. Lock
+    // all affected active Course rows in a stable order before counting, so
+    // concurrent removals of different teachers cannot both validate against
+    // the same pre-delete teacher count.
+    const { rows: teachingCourses } = await client.query<{ id: string; name: string }>(
+      `SELECT course.id,project.name
+         FROM course_members member
+         JOIN courses course ON course.id=member.course_id
+         JOIN projects project ON project.id=course.project_id
+        WHERE member.company_id=$1 AND member.user_id=$2 AND member.role='teacher'
+          AND project.status='active'
+        ORDER BY course.id
+        FOR UPDATE OF course`,
+      [companyId, targetId],
+    )
+    for (const course of teachingCourses) {
+      const { rows: teacherCount } = await client.query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`,
+        [course.id],
+      )
+      if ((teacherCount[0]?.count ?? 0) <= 1) {
+        throw new HttpError(409, `${course.name} must keep at least one teacher`)
+      }
+    }
     await client.query(`DELETE FROM company_members WHERE company_id=$1 AND user_id=$2`, [companyId, targetId])
     await client.query(
       `UPDATE participants SET departed_at=NOW(), status='offboarded'
@@ -2524,8 +2538,14 @@ api.post('/course-invitations/:token/accept', safe(async (req, res) => {
       `SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [invitation.course_id, me],
     )
     const existingRole = membership[0]?.role ?? null
-    let effectiveRole: 'teacher' | 'learner' = existingRole === 'teacher' || invitation.role === 'teacher' ? 'teacher' : 'learner'
-    const changesRole = !existingRole || effectiveRole !== existingRole
+    const isReplay = Boolean(priorAcceptance[0])
+    if (isReplay && !existingRole) {
+      throw new HttpError(410, 'this invitation was already accepted and no longer grants course access')
+    }
+    let effectiveRole: 'teacher' | 'learner' = isReplay
+      ? existingRole!
+      : existingRole === 'teacher' || invitation.role === 'teacher' ? 'teacher' : 'learner'
+    const changesRole = !isReplay && (!existingRole || effectiveRole !== existingRole)
     if (!priorAcceptance[0] && changesRole && invitation.use_count >= invitation.max_uses) {
       throw new HttpError(410, 'invitation already used')
     }
