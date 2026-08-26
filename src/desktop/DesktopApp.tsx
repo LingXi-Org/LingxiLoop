@@ -1,4 +1,5 @@
-import { type CSSProperties, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { Layout } from 'react-resizable-panels'
 import { CanvasView } from '@/components/CanvasView'
 import { CommandPalette } from '@/components/CommandPalette'
 import { EmailComposer } from '@/components/EmailComposer'
@@ -23,8 +24,14 @@ import { GrokSettingsModal } from './GrokSettingsModal'
 import { ThreadDrawer } from './ThreadDrawer'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { GroupContextContent } from '@/components/GroupContextContent'
-import { DetailPanel } from '@/components/layout/detail-panel'
 import { LearningCenter } from '@/components/LearningCenter'
+import { Button } from '@/components/ui/button'
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable'
+import { IconX } from '@tabler/icons-react'
 
 const CONTEXT_TITLES: Partial<Record<ViewKey['view'], string>> = {
   agents: '智能体',
@@ -36,61 +43,31 @@ const CONTEXT_TITLES: Partial<Record<ViewKey['view'], string>> = {
   me: '我的',
 }
 
-const LEFT_COLUMN_STORAGE_KEY = 'lingxiloop:im-left-column-width'
+const DESKTOP_TWO_PANEL_LAYOUT_KEY = 'lingxiloop:desktop-layout:two-panel'
+const DESKTOP_THREE_PANEL_LAYOUT_KEY = 'lingxiloop:desktop-layout:three-panel'
 const LEFT_COLUMN_MIN = 256
 const LEFT_COLUMN_MAX = 424
-const MIDDLE_COLUMN_MIN = 480
-const GROUP_PANEL_STORAGE_KEY = 'lingxiloop:im-group-panel-width'
+const MIDDLE_COLUMN_MIN = 320
 const GROUP_PANEL_MIN = 280
 const GROUP_PANEL_MAX = 480
-const GROUP_PANEL_DEFAULT = 400
+const TWO_PANEL_DEFAULT_LAYOUT: Layout = { conversations: 25, conversation: 75 }
+const THREE_PANEL_DEFAULT_LAYOUT: Layout = { conversations: 25, conversation: 48, detail: 27 }
 
-function defaultLeftColumnWidth(viewportWidth: number): number {
-  return Math.round(Math.min(LEFT_COLUMN_MAX, Math.max(LEFT_COLUMN_MIN, viewportWidth * 0.25)))
-}
-
-function rightColumnWidth(viewportWidth: number): number {
-  return Math.min(424, Math.max(320, viewportWidth * 0.27))
-}
-
-function clampLeftColumnWidth(width: number, viewportWidth: number, contextOpen: boolean): number {
-  const reservedContext = contextOpen && viewportWidth > 1180 ? rightColumnWidth(viewportWidth) : 0
-  const responsiveMax = Math.max(LEFT_COLUMN_MIN, viewportWidth - MIDDLE_COLUMN_MIN - reservedContext)
-  return Math.round(Math.min(LEFT_COLUMN_MAX, responsiveMax, Math.max(LEFT_COLUMN_MIN, width)))
-}
-
-function loadLeftColumnWidth(): number {
-  if (typeof window === 'undefined') return 320
+function loadPanelLayout(storageKey: string, fallback: Layout): Layout {
+  if (typeof window === 'undefined') return fallback
   try {
-    const stored = Number(window.localStorage.getItem(LEFT_COLUMN_STORAGE_KEY))
-    if (Number.isFinite(stored) && stored > 0) return stored
-  } catch { /* private browsing can deny storage access */ }
-  return defaultLeftColumnWidth(window.innerWidth)
-}
-
-function clampGroupPanelWidth(width: number, viewportWidth: number, leftColumnWidth: number): number {
-  const middleMinimum = viewportWidth < 1180 ? 320 : MIDDLE_COLUMN_MIN
-  const responsiveMax = Math.max(GROUP_PANEL_MIN, viewportWidth - leftColumnWidth - middleMinimum)
-  return Math.round(Math.min(GROUP_PANEL_MAX, responsiveMax, Math.max(GROUP_PANEL_MIN, width)))
-}
-
-function loadGroupPanelWidth(): number {
-  if (typeof window === 'undefined') return GROUP_PANEL_DEFAULT
-  try {
-    const stored = Number(window.localStorage.getItem(GROUP_PANEL_STORAGE_KEY))
-    if (Number.isFinite(stored) && stored > 0) return stored
-  } catch { /* private browsing can deny storage access */ }
-  return GROUP_PANEL_DEFAULT
-}
-
-function hasStoredLeftColumnWidth(): boolean {
-  if (typeof window === 'undefined') return false
-  try {
-    const stored = Number(window.localStorage.getItem(LEFT_COLUMN_STORAGE_KEY))
-    return Number.isFinite(stored) && stored > 0
+    const parsed = JSON.parse(window.localStorage.getItem(storageKey) ?? '') as Layout
+    const valid = Object.keys(fallback).every((key) => Number.isFinite(parsed[key]) && parsed[key] > 0)
+    return valid ? parsed : fallback
   } catch {
-    return false
+    return fallback
   }
+}
+
+function persistPanelLayout(storageKey: string, layout: Layout): void {
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(layout))
+  } catch { /* private browsing can deny storage access */ }
 }
 
 function WorkspaceContext({ view }: { view: ViewKey['view'] }) {
@@ -160,168 +137,14 @@ export function DesktopApp() {
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const groupContext = selectedConversation?.kind === 'group' ? selectedConversation : null
   const contextOpen = !canvasId && Boolean(infoParticipantId || openThread || documentId || boardId || calendarEventId || workspaceContextOpen)
-  const [leftColumnWidth, setLeftColumnWidth] = useState(loadLeftColumnWidth)
   const [groupPanelOpen, setGroupPanelOpen] = useState(Boolean(groupContext))
-  const [groupPanelWidth, setGroupPanelWidth] = useState(loadGroupPanelWidth)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const hasCustomLeftWidthRef = useRef(hasStoredLeftColumnWidth())
-  const gridRef = useRef<HTMLDivElement>(null)
-  const resizeRef = useRef<{ pointerId: number; startX: number; startWidth: number } | null>(null)
-  const pendingLeftWidthRef = useRef(leftColumnWidth)
-  const leftResizeFrameRef = useRef<number | null>(null)
-  const groupResizeRef = useRef<{ pointerId: number; startX: number; startWidth: number } | null>(null)
-
-  const persistLeftColumnWidth = useCallback((width: number) => {
-    try { window.localStorage.setItem(LEFT_COLUMN_STORAGE_KEY, String(width)) } catch { /* best effort */ }
-  }, [])
-
-  const persistGroupPanelWidth = useCallback((width: number) => {
-    try { window.localStorage.setItem(GROUP_PANEL_STORAGE_KEY, String(width)) } catch { /* best effort */ }
-  }, [])
-
-  const stopResize = useCallback((target?: HTMLElement, pointerId?: number) => {
-    if (target && pointerId !== undefined && target.hasPointerCapture(pointerId)) {
-      target.releasePointerCapture(pointerId)
-    }
-    resizeRef.current = null
-    document.body.classList.remove('im-column-resizing')
-  }, [])
-
-  const handleResizeStart = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return
-    event.preventDefault()
-    event.currentTarget.setPointerCapture(event.pointerId)
-    hasCustomLeftWidthRef.current = true
-    pendingLeftWidthRef.current = leftColumnWidth
-    resizeRef.current = { pointerId: event.pointerId, startX: event.clientX, startWidth: leftColumnWidth }
-    document.body.classList.add('im-column-resizing')
-  }, [leftColumnWidth])
-
-  const handleResizeMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    const resize = resizeRef.current
-    if (!resize || resize.pointerId !== event.pointerId) return
-    const next = clampLeftColumnWidth(
-      resize.startWidth + event.clientX - resize.startX,
-      window.innerWidth,
-      contextOpen,
-    )
-    pendingLeftWidthRef.current = next
-    if (leftResizeFrameRef.current !== null) return
-    leftResizeFrameRef.current = window.requestAnimationFrame(() => {
-      leftResizeFrameRef.current = null
-      gridRef.current?.style.setProperty('--im-left-column-width', `${pendingLeftWidthRef.current}px`)
-    })
-  }, [contextOpen])
-
-  const handleResizeEnd = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if (resizeRef.current?.pointerId !== event.pointerId) return
-    if (leftResizeFrameRef.current !== null) {
-      window.cancelAnimationFrame(leftResizeFrameRef.current)
-      leftResizeFrameRef.current = null
-    }
-    const next = pendingLeftWidthRef.current
-    gridRef.current?.style.setProperty('--im-left-column-width', `${next}px`)
-    setLeftColumnWidth(next)
-    persistLeftColumnWidth(next)
-    stopResize(event.currentTarget, event.pointerId)
-  }, [persistLeftColumnWidth, stopResize])
-
-  const resetLeftColumnWidth = useCallback(() => {
-    const next = clampLeftColumnWidth(defaultLeftColumnWidth(window.innerWidth), window.innerWidth, contextOpen)
-    hasCustomLeftWidthRef.current = false
-    setLeftColumnWidth(next)
-    try { window.localStorage.removeItem(LEFT_COLUMN_STORAGE_KEY) } catch { /* best effort */ }
-  }, [contextOpen])
-
-  const handleResizeKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    let next: number | null = null
-    if (event.key === 'ArrowLeft') next = leftColumnWidth - (event.shiftKey ? 32 : 8)
-    if (event.key === 'ArrowRight') next = leftColumnWidth + (event.shiftKey ? 32 : 8)
-    if (event.key === 'Home') next = LEFT_COLUMN_MIN
-    if (event.key === 'End') next = LEFT_COLUMN_MAX
-    if (next === null) return
-    event.preventDefault()
-    const clamped = clampLeftColumnWidth(next, window.innerWidth, contextOpen)
-    hasCustomLeftWidthRef.current = true
-    setLeftColumnWidth(clamped)
-    persistLeftColumnWidth(clamped)
-  }, [contextOpen, leftColumnWidth, persistLeftColumnWidth])
-
-  const stopGroupResize = useCallback((target?: HTMLElement, pointerId?: number) => {
-    if (target && pointerId !== undefined && target.hasPointerCapture(pointerId)) {
-      target.releasePointerCapture(pointerId)
-    }
-    groupResizeRef.current = null
-    document.body.classList.remove('im-column-resizing')
-  }, [])
-
-  const handleGroupResizeStart = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return
-    event.preventDefault()
-    event.currentTarget.setPointerCapture(event.pointerId)
-    groupResizeRef.current = { pointerId: event.pointerId, startX: event.clientX, startWidth: groupPanelWidth }
-    document.body.classList.add('im-column-resizing')
-  }, [groupPanelWidth])
-
-  const handleGroupResizeMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    const resize = groupResizeRef.current
-    if (!resize || resize.pointerId !== event.pointerId) return
-    setGroupPanelWidth(clampGroupPanelWidth(
-      resize.startWidth - (event.clientX - resize.startX),
-      window.innerWidth,
-      leftColumnWidth,
-    ))
-  }, [leftColumnWidth])
-
-  const handleGroupResizeEnd = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if (groupResizeRef.current?.pointerId !== event.pointerId) return
-    persistGroupPanelWidth(groupPanelWidth)
-    stopGroupResize(event.currentTarget, event.pointerId)
-  }, [groupPanelWidth, persistGroupPanelWidth, stopGroupResize])
-
-  const handleGroupResizeKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    let next: number | null = null
-    if (event.key === 'ArrowLeft') next = groupPanelWidth + (event.shiftKey ? 32 : 8)
-    if (event.key === 'ArrowRight') next = groupPanelWidth - (event.shiftKey ? 32 : 8)
-    if (event.key === 'Home') next = GROUP_PANEL_MIN
-    if (event.key === 'End') next = GROUP_PANEL_MAX
-    if (next === null) return
-    event.preventDefault()
-    const clamped = clampGroupPanelWidth(next, window.innerWidth, leftColumnWidth)
-    setGroupPanelWidth(clamped)
-    persistGroupPanelWidth(clamped)
-  }, [groupPanelWidth, leftColumnWidth, persistGroupPanelWidth])
-
-  const resetGroupPanelWidth = useCallback(() => {
-    const next = clampGroupPanelWidth(GROUP_PANEL_DEFAULT, window.innerWidth, leftColumnWidth)
-    setGroupPanelWidth(next)
-    try { window.localStorage.removeItem(GROUP_PANEL_STORAGE_KEY) } catch { /* best effort */ }
-  }, [leftColumnWidth])
+  const [twoPanelDefaultLayout] = useState(() => loadPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, TWO_PANEL_DEFAULT_LAYOUT))
+  const [threePanelDefaultLayout] = useState(() => loadPanelLayout(DESKTOP_THREE_PANEL_LAYOUT_KEY, THREE_PANEL_DEFAULT_LAYOUT))
 
   useEffect(() => {
     window.lingxiloop?.windowChrome?.setTheme(theme)
   }, [theme])
-
-  useEffect(() => {
-    const handleWindowResize = () => {
-      setLeftColumnWidth((current) => clampLeftColumnWidth(
-        hasCustomLeftWidthRef.current ? current : defaultLeftColumnWidth(window.innerWidth),
-        window.innerWidth,
-        contextOpen,
-      ))
-      setGroupPanelWidth((current) => clampGroupPanelWidth(current, window.innerWidth, leftColumnWidth))
-    }
-    handleWindowResize()
-    window.addEventListener('resize', handleWindowResize)
-    return () => window.removeEventListener('resize', handleWindowResize)
-  }, [contextOpen, leftColumnWidth])
-
-  useEffect(() => () => {
-    if (leftResizeFrameRef.current !== null) window.cancelAnimationFrame(leftResizeFrameRef.current)
-    resizeRef.current = null
-    groupResizeRef.current = null
-    document.body.classList.remove('im-column-resizing')
-  }, [])
 
   useEffect(() => { setGroupPanelOpen(Boolean(groupContext)) }, [groupContext?.id])
 
@@ -371,10 +194,17 @@ export function DesktopApp() {
     else setGroupPanelOpen(false)
   }
 
-  const groupDetailOpen = !canvasId && Boolean(groupContext) && (groupPanelOpen || contextOpen)
-  const groupDetail = contextOpen
+  const detailPanelOpen = !canvasId && Boolean(contextOpen || (groupContext && groupPanelOpen))
+  const detailContent = contextOpen
     ? context
     : groupContext ? <GroupContextContent conversationId={groupContext.id} /> : null
+  const conversationContent = learningOpen
+    ? <LearningCenter />
+    : managementOpen
+      ? <CompanyCourseManagement />
+      : canvasId
+        ? <div className="canvas-expanded-pane h-full min-h-0 min-w-0 flex-1"><CanvasContext canvasId={canvasId} onClose={closeCanvasPeek} /></div>
+        : <ChatPane onOpenGroupContext={groupContext ? () => setGroupPanelOpen(true) : undefined} />
 
   return (
     <div
@@ -382,71 +212,74 @@ export function DesktopApp() {
       data-electron={isElectron ? 'true' : 'false'}
       data-platform={platform}
     >
-      <div
-        ref={gridRef}
-        className="desktop-im-grid grid min-h-0 flex-1"
-        data-group-context={groupDetailOpen ? 'true' : 'false'}
+      <ResizablePanelGroup
+        key={detailPanelOpen ? 'three-panel' : 'two-panel'}
+        id={detailPanelOpen ? 'desktop-three-panel-layout' : 'desktop-two-panel-layout'}
+        orientation="horizontal"
+        className="desktop-im-grid min-h-0 flex-1"
+        data-group-context={detailPanelOpen ? 'true' : 'false'}
         data-canvas-expanded={canvasId ? 'true' : 'false'}
-        style={{
-          '--im-left-column-width': `${leftColumnWidth}px`,
-        } as CSSProperties}
+        defaultLayout={detailPanelOpen ? threePanelDefaultLayout : twoPanelDefaultLayout}
+        onLayoutChanged={(layout, meta) => {
+          if (!meta.isUserInteraction) return
+          persistPanelLayout(
+            detailPanelOpen ? DESKTOP_THREE_PANEL_LAYOUT_KEY : DESKTOP_TWO_PANEL_LAYOUT_KEY,
+            layout,
+          )
+        }}
       >
-        <ConversationsPane />
-        <div className="desktop-detail-panel-host relative min-h-0 min-w-0 overflow-hidden">
-          <DetailPanel
-            open={groupDetailOpen}
-            onClose={closeDetailPanel}
-            detail={groupDetail}
-            detailWidth={groupPanelWidth}
-          >
-            {learningOpen
-              ? <LearningCenter />
-              : managementOpen
-              ? <CompanyCourseManagement />
-              : canvasId
-              ? <div className="canvas-expanded-pane h-full min-h-0 min-w-0 flex-1"><CanvasContext canvasId={canvasId} onClose={closeCanvasPeek} /></div>
-              : <ChatPane onOpenGroupContext={groupContext ? () => setGroupPanelOpen(true) : undefined} />}
-          </DetailPanel>
-          {groupDetailOpen && (
-            <div
-              role="separator"
-              aria-label="调整群聊上下文栏宽度"
-              aria-orientation="vertical"
-              aria-valuemin={GROUP_PANEL_MIN}
-              aria-valuemax={GROUP_PANEL_MAX}
-              aria-valuenow={groupPanelWidth}
-              tabIndex={0}
-              className="im-group-panel-resize-handle"
-              style={{ right: `${groupPanelWidth - 6}px` }}
-              title="拖动调整上下文栏宽度，双击恢复默认"
-              onPointerDown={handleGroupResizeStart}
-              onPointerMove={handleGroupResizeMove}
-              onPointerUp={handleGroupResizeEnd}
-              onPointerCancel={handleGroupResizeEnd}
-              onDoubleClick={resetGroupPanelWidth}
-              onKeyDown={handleGroupResizeKeyDown}
-            />
-          )}
-        </div>
-        {!canvasId && !groupContext && contextOpen && <aside className="im-floating-context absolute inset-y-0 right-0 z-30 w-[clamp(340px,28vw,420px)] overflow-hidden border-l border-hairline bg-panel shadow-[-18px_0_40px_-24px_rgba(10,30,60,0.35)]">{context}</aside>}
-        <div
-          role="separator"
+        <ResizablePanel
+          id="conversations"
+          defaultSize="25%"
+          minSize={LEFT_COLUMN_MIN}
+          maxSize={LEFT_COLUMN_MAX}
+          className="min-h-0 min-w-0"
+        >
+          <ConversationsPane />
+        </ResizablePanel>
+        <ResizableHandle
+          withHandle
+          className="desktop-panel-resize-handle"
           aria-label="调整会话列表宽度"
-          aria-orientation="vertical"
-          aria-valuemin={LEFT_COLUMN_MIN}
-          aria-valuemax={LEFT_COLUMN_MAX}
-          aria-valuenow={leftColumnWidth}
-          tabIndex={0}
-          className="im-left-resize-handle"
           title="拖动调整会话列表宽度，双击恢复默认"
-          onPointerDown={handleResizeStart}
-          onPointerMove={handleResizeMove}
-          onPointerUp={handleResizeEnd}
-          onPointerCancel={handleResizeEnd}
-          onDoubleClick={resetLeftColumnWidth}
-          onKeyDown={handleResizeKeyDown}
         />
-      </div>
+        <ResizablePanel
+          id="conversation"
+          defaultSize={detailPanelOpen ? '48%' : '75%'}
+          minSize={MIDDLE_COLUMN_MIN}
+          className="min-h-0 min-w-0"
+        >
+          {conversationContent}
+        </ResizablePanel>
+        {detailPanelOpen && (
+          <>
+            <ResizableHandle
+              withHandle
+              className="desktop-panel-resize-handle"
+              aria-label="调整上下文栏宽度"
+              title="拖动调整上下文栏宽度，双击恢复默认"
+            />
+            <ResizablePanel
+              id="detail"
+              defaultSize="27%"
+              minSize={GROUP_PANEL_MIN}
+              maxSize={GROUP_PANEL_MAX}
+              className="desktop-detail-panel-host min-h-0 min-w-0"
+            >
+              <aside className="relative flex h-full min-h-0 flex-col overflow-hidden bg-sidebar text-ink">
+                {groupContext && (
+                  <div className="absolute right-0 top-0 z-20 flex h-12 w-12 items-center justify-center">
+                    <Button onClick={closeDetailPanel} variant="ghost" size="icon" aria-label="关闭上下文栏">
+                      <IconX className="size-4.5" />
+                    </Button>
+                  </div>
+                )}
+                <div className="min-h-0 flex-1 overflow-hidden">{detailContent}</div>
+              </aside>
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
       <EmailComposer />
       <SourceDetailOverlay />
       <GrokSettingsModal isOpen={settingsOpen} onClose={() => useApp.getState().setView('conversations')} />

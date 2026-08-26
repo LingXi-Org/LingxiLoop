@@ -1,8 +1,7 @@
 import { createContext, type ReactNode, useContext, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import Markdown, { type Components } from 'react-markdown'
-import remarkBreaks from 'remark-breaks'
-import remarkGfm from 'remark-gfm'
+import type { Components } from 'react-markdown'
+import { TypesetMarkdown } from '@/components/Typeset'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { remarkLingxiLoop } from '@/lib/remarkLingxiLoop'
 import { cn } from '@/lib/utils'
@@ -205,7 +204,6 @@ function codeText(node: unknown, children: ReactNode): string {
   return Array.isArray(children) ? children.join('') : String(children ?? '')
 }
 
-const TABLE_BORDER = '1px solid rgba(15, 30, 50, 0.1)'
 
 /** A backtick-wrapped value that is exactly an artifact id renders as the
  *  matching artifact link (which resolves git-style short ids) instead of a
@@ -322,7 +320,6 @@ function MessagePeekCard(
 }
 
 const lingxiloopMarkdownComponents = {
-  // ── LingxiLoop custom inline tokens (emitted by remarkLingxiLoop) ──
   cmention: ({ node }: any) => <MentionChip id={nodeProp(node, 'cid')} />,
   cmsgref: ({ node }: any) => <MessageRefChip n={Number(nodeProp(node, 'cn')) || 0} />,
   cartifact: ({ node }: any) => {
@@ -337,118 +334,19 @@ const lingxiloopMarkdownComponents = {
   },
   cemoji: ({ node }: any) => <TwEmoji emoji={nodeProp(node, 'cchar')} size={18} />,
   cskype: ({ node }: any) => <SkypeEmoji name={nodeProp(node, 'cname')} size={20} />,
-
-  // ── Standard block grammar ──
-  p: ({ children }: any) => <p className="m-0 mt-2 first:mt-0 leading-[1.55]">{children}</p>,
-  // Headings use LingxiLoop's display font + tracking-tight, matching how titles
-  // read everywhere else in the app (e.g. `font-display ... tracking-tight`).
-  h1: ({ children }: any) => <h1 className="font-display mt-3 first:mt-0 mb-1 text-[18px] font-semibold tracking-tight leading-snug text-ink-900">{children}</h1>,
-  h2: ({ children }: any) => <h2 className="font-display mt-3 first:mt-0 mb-1 text-[16px] font-semibold tracking-tight leading-snug text-ink-900">{children}</h2>,
-  h3: ({ children }: any) => <h3 className="font-display mt-2.5 first:mt-0 mb-0.5 text-[14.5px] font-semibold tracking-tight leading-snug text-ink-900">{children}</h3>,
-  h4: ({ children }: any) => <h4 className="font-display mt-2 first:mt-0 mb-0.5 text-[13.5px] font-semibold text-ink-800">{children}</h4>,
-  h5: ({ children }: any) => <h5 className="font-display mt-2 first:mt-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-500">{children}</h5>,
-  h6: ({ children }: any) => <h6 className="font-display mt-2 first:mt-0 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-ink-400">{children}</h6>,
-  ul: ({ children }: any) => <ul className="my-1 first:mt-0 last:mb-0 pl-5 list-disc marker:text-ink-300 space-y-0.5">{children}</ul>,
-  ol: ({ children }: any) => <ol className="my-1 first:mt-0 last:mb-0 pl-5 list-decimal marker:text-ink-400 space-y-0.5">{children}</ol>,
-  li: ({ children }: any) => <li className="leading-[1.5] pl-0.5">{children}</li>,
-  // No italic — LingxiLoop messages are CJK-heavy and synthetic-slanted CJK looks
-  // bad. A calm neutral rule + muted text reads as a quote without the slant.
-  blockquote: ({ children }: any) => (
-    <blockquote className="my-1.5 first:mt-0 last:mb-0 border-l-[3px] border-ink-200 pl-3 text-ink-500">{children}</blockquote>
-  ),
-  hr: () => <hr className="my-2.5 border-0 border-t border-ink-100" />,
-  a: ({ href, children }: any) => (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="break-all underline decoration-skype-200 decoration-1 underline-offset-2 hover:decoration-skype-deep transition-colors"
-      style={{ color: 'var(--skype-deep)' }}
-    >{children}</a>
-  ),
-  strong: ({ children }: any) => <strong className="font-semibold text-ink-900">{children}</strong>,
-  // Inline markdown images (`![alt](url)`) arrive with no intrinsic
-  // dimensions, so a bare <img> paints at 0×0 then snaps to natural size on
-  // load — pushing every row below it downward. Inside the virtualized mobile
-  // list that height change re-anchors the scroll and is one of the causes of
-  // the "message I'm reading gets replaced" jitter. Reserve a fixed box up
-  // front (same tactic as AttachmentCard) so the row height is stable from the
-  // first paint; the image letterboxes into it once it loads.
-  img: ({ src, alt }: any) => (
-    src ? (
-      <span
-        className="block my-1.5 first:mt-0 last:mb-0 rounded-[10px] border border-ink-100 bg-cloud overflow-hidden"
-        style={{ aspectRatio: '4 / 3', width: '100%', maxWidth: 420, maxHeight: 360 }}
-      >
-        <img
-          src={src}
-          alt={alt ?? ''}
-          className="w-full h-full object-contain"
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-        />
-      </span>
-    ) : null
-  ),
-  em: ({ children }: any) => <em className="italic">{children}</em>,
-  del: ({ children }: any) => <del className="line-through text-ink-400">{children}</del>,
-  input: ({ checked }: any) => (
-    <input type="checkbox" checked={!!checked} readOnly className="mr-1.5 align-[-0.1em] accent-skype" />
-  ),
-
-  // ── Tables (remark-gfm) ──
-  table: ({ children }: any) => (
-    <div className="my-1.5 first:mt-0 last:mb-0 overflow-x-auto">
-      <table className="border-collapse text-[13px] leading-[1.45]" style={{ border: TABLE_BORDER }}>{children}</table>
-    </div>
-  ),
-  th: ({ children, style }: any) => (
-    <th
-      className="px-2.5 py-1 font-semibold text-ink-900 whitespace-nowrap"
-      style={{ border: TABLE_BORDER, background: 'rgba(15, 30, 50, 0.045)', textAlign: style?.textAlign ?? 'left' }}
-    >{children}</th>
-  ),
-  td: ({ children, style }: any) => (
-    <td
-      className="px-2.5 py-1 text-ink-700 align-top"
-      style={{ border: TABLE_BORDER, textAlign: style?.textAlign ?? 'left' }}
-    >{children}</td>
-  ),
-
-  // ── Code: fenced → CodeBlock (highlight.js); inline → paper chip ──
-  pre: ({ children }: any) => <>{children}</>,
   code: ({ className, children, node }: any) => {
-    const lang = /language-([\w-]+)/.exec(className || '')?.[1] ?? ''
     const raw = codeText(node, children)
-    if (lang || raw.includes('\n')) {
-      return <CodeBlock lang={lang} code={raw.replace(/\n$/, '')} />
-    }
-    // A backtick-wrapped artifact id becomes its clickable link (short-id aware).
-    const artifact = artifactLinkForCode(raw)
-    if (artifact) return artifact
-    return (
-      <code
-        className="font-mono text-[12.5px] py-px px-1.5 rounded-[5px] mx-px align-[0.05em]"
-        style={{ background: 'rgba(15, 30, 50, 0.06)', color: 'var(--ink-900)', border: '1px solid rgba(15, 30, 50, 0.08)' }}
-      >{children}</code>
-    )
+    const artifact = !className && !raw.includes('\n') ? artifactLinkForCode(raw) : null
+    return artifact ?? <code className={className}>{children}</code>
   },
 } as Components
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-const REMARK_PLUGINS = [remarkGfm, remarkBreaks, remarkLingxiLoop]
-
-/** Renders a message body as Markdown — full CommonMark + GFM via react-markdown,
- *  plus LingxiLoop's own tokens (mentions / artifacts / emoji) — all styled to the
- *  app's look (see lingxiloopMarkdownComponents). `skipHtml` drops any raw HTML in
- *  agent/user content so messages can't inject markup. */
+/** Renders CommonMark + GFM through the shared Typeset surface, with safe LingxiLoop tokens. */
 export function RichBody({ body, conversationId }: { body: string; conversationId?: string | null }) {
   return (
     <ConversationIdContext.Provider value={conversationId ?? null}>
-      <Markdown remarkPlugins={REMARK_PLUGINS} components={lingxiloopMarkdownComponents} skipHtml>
-        {body}
-      </Markdown>
+      <TypesetMarkdown content={body} preset="chat" remarkPlugins={[remarkLingxiLoop]} components={lingxiloopMarkdownComponents} />
     </ConversationIdContext.Provider>
   )
 }

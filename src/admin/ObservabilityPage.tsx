@@ -29,8 +29,11 @@
  * worth the complexity.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Select } from '@/components/Select'
 import { Combobox } from '@/components/Combobox'
+import { Select } from '@/components/Select'
+import { Input } from '@/components/ui/input'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   adminApi,
   type LlmCallPurpose,
@@ -314,7 +317,7 @@ export function ObservabilityPage() {
               >{u.label}</button>
             ))}
           </div>
-          <input
+          <Input
             className="admin-input obs-model-input"
             placeholder="过滤模型（例如 deepseek-chat）"
             value={modelFilter}
@@ -481,7 +484,7 @@ function HeroSpendCard({ summary, unit, loading }: { summary: LlmObservabilityPa
     <div className="obs-hero-card obs-hero-spend">
       <div className="obs-hero-spend-shine" aria-hidden />
       <div className="obs-hero-label">{unit === 'usd' ? "花费" : "代币"} ·最后 {summary?.sinceDays ?? 30}d</div>
-      <div className="obs-hero-value">{loading ? '—' : unit === 'usd' ? fmtUsd(totalUsd, totalUsd < 100 ? 4 : 2) : fmtTokens(totalTok)}</div>
+      <div className="obs-hero-value">{loading ? <Skeleton className="h-[1em] w-2/3" /> : unit === 'usd' ? fmtUsd(totalUsd, totalUsd < 100 ? 4 : 2) : fmtTokens(totalTok)}</div>
       <div className="obs-hero-sub">
         {summary
           ? (unit === 'usd'
@@ -500,7 +503,7 @@ function HeroStatCard({ label, value, sub, accent, loading }: {
     <div className="obs-hero-card">
       <div className="obs-hero-label">{label}</div>
       <div className="obs-hero-value" style={accent ? { color: accent } : undefined}>
-        {loading ? '—' : value}
+        {loading ? <Skeleton className="h-[1em] w-2/3" /> : value}
       </div>
       <div className="obs-hero-sub">{sub || ' '}</div>
     </div>
@@ -553,7 +556,7 @@ function TrendChart({ buckets, unit, loading }: { buckets: LlmTrendBucket[]; uni
     return { purposes, series, totalByDay, maxStack }
   }, [buckets, days, unit])
 
-  if (loading) return <div className="obs-chart-empty">加载中…</div>
+  if (loading) return <ResourceSkeleton variant="media" className="min-h-[220px] p-4" label="正在加载趋势图" />
   if (days.length === 0) return <div className="obs-chart-empty">该窗口中没有数据。</div>
 
   const innerW = W - PADL - PADR
@@ -790,7 +793,7 @@ function CacheDailyChart({ days, loading }: {
   const innerW = W - PADL - PADR
   const innerH = H - PADT - PADB
 
-  if (loading) return <div className="obs-chart-empty obs-cache-chart-empty">加载中…</div>
+  if (loading) return <ResourceSkeleton variant="media" className="min-h-[160px] p-4" label="正在加载缓存趋势" />
   if (days.length === 0) return <div className="obs-chart-empty obs-cache-chart-empty">尚无每日数据。</div>
 
   // Points; skip nulls (no traffic) so the line interpolates instead of dropping to 0.
@@ -932,7 +935,7 @@ function RollupTable({ rows, unit, loading, onDrill }: { rows: LlmRollupRow[]; u
     </button>
   )
 
-  if (loading && rows.length === 0) return <div className="obs-empty">加载中…</div>
+  if (loading && rows.length === 0) return <ResourceSkeleton variant="table" count={6} className="p-3" label="正在加载成本明细" />
   if (!loading && rows.length === 0) return <div className="obs-empty">此窗口中没有支出。 （要么没有流量，要么账本还没有记录任何呼叫。）</div>
 
   return (
@@ -1014,7 +1017,7 @@ function TopAgentsTable({ rows, unit, loading, onDrill }: { rows: LlmObservabili
     () => unit === 'usd' ? rows : [...rows].sort((a, b) => totalTokens(b) - totalTokens(a)),
     [rows, unit],
   )
-  if (loading && rows.length === 0) return <div className="obs-empty">加载中…</div>
+  if (loading && rows.length === 0) return <ResourceSkeleton variant="table" count={6} className="p-3" label="正在加载智能体支出" />
   if (!loading && rows.length === 0) return <div className="obs-empty">此窗口中没有智能体归因的支出。</div>
   return (
     <div className="obs-table obs-table-compact">
@@ -1160,7 +1163,7 @@ function DrillPanel({ drill, sinceDays, companyId, unit, refreshSignal, onClose,
 
         <div className="obs-drill-body">
           {err && <div className="obs-error">加载失败： {err}</div>}
-          {loading && !rows && <div className="obs-empty">加载中…</div>}
+          {loading && !rows && <ResourceSkeleton variant="list" count={5} label="正在加载调用明细" />}
           {rows && rows.length === 0 && <div className="obs-empty">此窗口中没有呼叫。</div>}
           {rows && rows.map((c) => (
             <DrillCallCard

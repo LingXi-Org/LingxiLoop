@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, type ApiProject } from "@/api/client";
+import { type ApiProject, api } from "@/api/client";
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { useApp } from "@/stores/app";
 import { useConversations } from "@/stores/conversations";
 import { useParticipants } from "@/stores/participants";
-import { useApp } from "@/stores/app";
 import type {
   LearningActivity,
   LearningCourse,
@@ -218,7 +221,7 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
           </label>
           <label className="grid gap-2 text-[12px] font-semibold text-ink">
             课程名称
-            <input
+            <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
@@ -255,7 +258,7 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
           </label>
           <label className="grid gap-2 text-[12px] font-semibold text-ink md:col-span-2">
             时区
-            <input
+            <Input
               value={timezone}
               onChange={(event) => setTimezone(event.target.value)}
               className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
@@ -263,7 +266,7 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
           </label>
           <label className="grid gap-2 text-[12px] font-semibold text-ink">
             安静时段开始
-            <input
+            <Input
               type="time"
               value={quietStart}
               onChange={(event) => setQuietStart(event.target.value)}
@@ -272,7 +275,7 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
           </label>
           <label className="grid gap-2 text-[12px] font-semibold text-ink">
             安静时段结束
-            <input
+            <Input
               type="time"
               value={quietEnd}
               onChange={(event) => setQuietEnd(event.target.value)}
@@ -377,13 +380,13 @@ function TeacherComposer({
       </Card>
       <Card>
         <h3 className="text-[14px] font-semibold text-ink">新增学习目标</h3>
-        <input
+        <Input
           value={objectiveTitle}
           onChange={(event) => setObjectiveTitle(event.target.value)}
           placeholder="目标标题"
           className="mt-3 h-10 w-full rounded-xl border border-hairline bg-panel px-3 text-[13px]"
         />
-        <textarea
+        <Textarea
           value={criteria}
           onChange={(event) => setCriteria(event.target.value)}
           placeholder="可检查的成功标准"
@@ -413,13 +416,13 @@ function TeacherComposer({
       </Card>
       <Card>
         <h3 className="text-[14px] font-semibold text-ink">创建活动草稿</h3>
-        <input
+        <Input
           value={activityTitle}
           onChange={(event) => setActivityTitle(event.target.value)}
           placeholder="活动标题"
           className="mt-3 h-10 w-full rounded-xl border border-hairline bg-panel px-3 text-[13px]"
         />
-        <textarea
+        <Textarea
           value={instructions}
           onChange={(event) => setInstructions(event.target.value)}
           placeholder="学习者任务说明"
@@ -568,9 +571,9 @@ export function LearningCenter() {
 
   if (!dashboard)
     return (
-      <div className="grid h-full place-items-center text-[13px] text-ink-secondary">
-        {error || "正在加载学习中心…"}
-      </div>
+      error
+        ? <div className="grid h-full place-items-center text-[13px] text-ink-secondary">{error}</div>
+        : <ResourceSkeleton variant="detail" className="h-full" label="正在加载学习中心" />
     );
   if (dashboard.courses.length === 0)
     return <Onboarding onCreated={loadDashboard} />;
@@ -935,7 +938,7 @@ export function LearningCenter() {
                   {perspective === "learner" &&
                     activity.status === "published" && (
                       <div className="mt-4">
-                        <textarea
+                        <Textarea
                           value={answers[activity.id] ?? ""}
                           onChange={(event) =>
                             setAnswers((current) => ({
@@ -1116,7 +1119,7 @@ export function LearningCenter() {
                 ))}
                 <label className="grid gap-2 text-[12px] font-semibold">
                   时区
-                  <input
+                  <Input
                     value={String(
                       notificationPrefs.timezone ?? "Asia/Shanghai",
                     )}
@@ -1131,7 +1134,7 @@ export function LearningCenter() {
                 </label>
                 <label className="grid gap-2 text-[12px] font-semibold">
                   首选时间
-                  <input
+                  <Input
                     type="time"
                     value={String(
                       notificationPrefs.preferred_time ?? "19:00",
@@ -1147,7 +1150,7 @@ export function LearningCenter() {
                 </label>
                 <label className="grid gap-2 text-[12px] font-semibold">
                   安静时段开始
-                  <input
+                  <Input
                     type="time"
                     value={String(notificationPrefs.quiet_start ?? "").slice(
                       0,
@@ -1164,7 +1167,7 @@ export function LearningCenter() {
                 </label>
                 <label className="grid gap-2 text-[12px] font-semibold">
                   安静时段结束
-                  <input
+                  <Input
                     type="time"
                     value={String(notificationPrefs.quiet_end ?? "").slice(
                       0,

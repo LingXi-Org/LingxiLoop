@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 /**
@@ -99,7 +100,7 @@ export function Combobox<T extends string = string>({
         )}
         style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,250,253,0.94))' }}
       >
-        <input
+        <Input
           ref={inputRef}
           id={id}
           role="combobox"

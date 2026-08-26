@@ -30,13 +30,14 @@ test('converts every Lingxi MessageKind into assistant-ui parts without hiding p
     message('thought'),
     message('system'),
     message('email', { email: { subject: 'Hi', from: 'a@b.test', to: ['c@d.test'], cc: [], direction: 'out', transportStatus: 'sent' } }),
+    message('questionnaire', { questionnaire: { title: 'Clarify', items: [{ name: 'scope', prompt: 'Which scope?', required: true, choices: [{ value: 'one', label: 'One' }] }] } }),
     message('poll', { poll: { question: 'Choose', mode: 'single', options: [{ id: 'a', text: 'A' }], expiresAt: null, closedAt: null, closedReason: null } }),
     message('handoff', { handoff: { id: 'h', fromAgentId: 'agent', toAgentId: 'agent-2', title: 'Handoff', status: 'working', sharedPaths: [], browserTargets: [] } }),
     message('approval', { approval: { id: 'a', agentId: 'agent', kind: 'course_management', summary: 'Publish', status: 'pending', payload: {}, requestedAt: '2026-08-26T10:00:00.000Z' } }),
     message('canvas', { canvas: { canvasId: 'canvas', title: 'Canvas', goal: 'Goal', status: 'active', members: [], frameCount: 0 } }),
     message('learning_mission', { learningMission: { missionId: 'mission', courseId: 'course', goal: 'Goal', successCriteria: 'Done', status: 'active' } }),
   ]
-  const expected = ['text', 'tool-call', 'file', 'reasoning', 'text', 'data', 'data', 'data', 'tool-call', 'data', 'data']
+  const expected = ['text', 'tool-call', 'file', 'reasoning', 'text', 'data', 'data', 'data', 'data', 'tool-call', 'data', 'data']
   messages.forEach((item, index) => {
     const converted = createLingxiAssistantMessage(item, index, messages, participants, 'me')
     assert.ok(Array.isArray(converted.content))

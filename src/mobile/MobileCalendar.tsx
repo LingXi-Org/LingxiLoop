@@ -14,6 +14,7 @@ import { useParticipants } from '@/stores/participants'
 import { EventEditor, type EventEditorPrefill } from '@/components/EventEditor'
 import { Avatar } from '@/components/Avatar'
 import { ICalendar, IClock, IRepeat } from '@/components/icons'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { tapHaptic } from '@/lib/native'
 import { cn } from '@/lib/utils'
 import type { CalendarEvent, RecurrenceRule } from '@/types'
@@ -311,7 +312,7 @@ export function MobileCalendar() {
           <div className="px-2 py-6 text-center text-[12.5px] text-ink-400 italic">选择一天查看事件。</div>
         )}
         {!loaded && events.length === 0 && (
-          <div className="px-2 py-6 text-center text-[12.5px] text-ink-300 italic">加载中…</div>
+          <ResourceSkeleton variant="list" count={4} compact label="正在加载日历事件" />
         )}
       </div>
 

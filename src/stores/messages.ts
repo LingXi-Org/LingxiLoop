@@ -322,6 +322,7 @@ function fromApi(m: ApiMessage): Message {
     email?: Message['email'] | null
     poll?: Message['poll'] | null
     pollTallies?: Message['pollTallies'] | null
+    questionnaire?: Message['questionnaire'] | null
     clientId?: string | null
     mentionedIds?: string[] | null
     mentionAll?: boolean | null
@@ -349,6 +350,7 @@ function fromApi(m: ApiMessage): Message {
     email: raw.email ?? undefined,
     poll: raw.poll ?? undefined,
     pollTallies: raw.pollTallies ?? undefined,
+    questionnaire: raw.questionnaire ?? undefined,
     clientId: raw.clientId ?? undefined,
     mentionedIds: raw.mentionedIds ?? undefined,
     mentionAll: raw.mentionAll ?? undefined,
@@ -407,6 +409,11 @@ function fromIm(message: ImEnvelope): Message {
     poll: pollData,
     pollTallies: payload.kind === 'poll' && Array.isArray(data.pollTallies)
       ? data.pollTallies as Message['pollTallies']
+      : undefined,
+    questionnaire: payload.kind === 'questionnaire'
+      ? (data.questionnaire && typeof data.questionnaire === 'object'
+          ? data.questionnaire as Message['questionnaire']
+          : data as unknown as Message['questionnaire'])
       : undefined,
     mentionedIds: Array.isArray(data.mentionedIds) ? data.mentionedIds.map(String) : undefined,
     mentionAll: data.mentionAll === true,

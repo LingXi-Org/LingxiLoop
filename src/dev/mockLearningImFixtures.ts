@@ -7,6 +7,7 @@ export const MOCK_DISCUSSION_ROOM_ID = 'mock-course-discussion'
 export const MOCK_LEARNING_CANVAS_ID = 'mock-learning-canvas'
 export const MOCK_TEACHER_ROOM_ID = 'mock-teacher-room-linear-algebra'
 export const MOCK_PULSE_ID = 'mock-pulse-research'
+export const MOCK_TOOL_GALLERY_ROOM_ID = 'mock-tool-gallery'
 
 const now = new Date()
 export const isoMinutesAgo = (minutes: number) => new Date(now.getTime() - minutes * 60_000).toISOString()
@@ -68,6 +69,12 @@ export const learningParticipants: Participant[] = [
 
 export const learningConversations: Conversation[] = [
   {
+    id: MOCK_TOOL_GALLERY_ROOM_ID, kind: 'group', title: '工具样式总览', subtitle: '全部服务范围与执行状态',
+    topic: '工具卡片视觉验收', members: [MOCK_USER_ID, 'mock-scout', 'mock-forge', 'mock-nova'],
+    leaderId: 'mock-nova', pinned: true, unread: 0, lastAt: timeMinutesAgo(0), lastAtIso: isoMinutesAgo(0),
+    preview: '六类工具能力已准备好，可逐项展开检查。', tag: 'team',
+  },
+  {
     id: MOCK_STUDY_ROOM_ID, kind: 'group', title: '学习室｜线性代数', subtitle: 'Nova、Sage、Milo、Trace',
     topic: '线性代数课程学习', members: [MOCK_USER_ID, 'mock-nova', 'mock-sage', 'mock-milo', 'mock-trace'],
     leaderId: 'mock-nova', pinned: true, unread: 1, lastAt: timeMinutesAgo(1), lastAtIso: isoMinutesAgo(1),
@@ -100,6 +107,14 @@ export const learningConversations: Conversation[] = [
 function message(input: Message & { sequence: number }): Message { return input }
 
 export const learningMessages: Record<string, Message[]> = {
+  [MOCK_TOOL_GALLERY_ROOM_ID]: [
+    message({ id: 'mock-tool-web', conversationId: MOCK_TOOL_GALLERY_ROOM_ID, authorId: 'mock-scout', kind: 'tool', body: '', tool: { name: 'web.search', arg: '检索 assistant-ui 最新组件说明', status: 'completed', detail: '已找到并整理 5 条相关结果。', icon: 'web' }, at: timeMinutesAgo(6), createdAt: isoMinutesAgo(6), sequence: 1 }),
+    message({ id: 'mock-tool-code', conversationId: MOCK_TOOL_GALLERY_ROOM_ID, authorId: 'mock-forge', kind: 'tool', body: '', tool: { name: 'code.test', arg: '运行消息组件定向测试', status: 'running', detail: '正在执行测试用例。', icon: 'github' }, at: timeMinutesAgo(5), createdAt: isoMinutesAgo(5), sequence: 2 }),
+    message({ id: 'mock-tool-data', conversationId: MOCK_TOOL_GALLERY_ROOM_ID, authorId: 'mock-scout', kind: 'tool', body: '', tool: { name: 'knowledge.search', arg: '查询课程知识库中的工具规范与卡片样式说明', status: 'completed', detail: '检索到 8 个知识片段，并完成来源去重与排序。', icon: 'db' }, at: timeMinutesAgo(4), createdAt: isoMinutesAgo(4), sequence: 3 }),
+    message({ id: 'mock-tool-design', conversationId: MOCK_TOOL_GALLERY_ROOM_ID, authorId: 'mock-nova', kind: 'tool', body: '', tool: { name: 'figma.inspect', arg: '读取聊天工具卡片设计稿', status: 'completed', detail: '已读取颜色、图标和间距标注。', icon: 'figma' }, at: timeMinutesAgo(3), createdAt: isoMinutesAgo(3), sequence: 4 }),
+    message({ id: 'mock-tool-communication', conversationId: MOCK_TOOL_GALLERY_ROOM_ID, authorId: 'mock-nova', kind: 'tool', body: '', tool: { name: 'email.send', arg: '发送工具样式验收摘要', status: 'error', detail: '演示状态：收件人地址尚未配置。' }, at: timeMinutesAgo(2), createdAt: isoMinutesAgo(2), sequence: 5 }),
+    message({ id: 'mock-tool-automation', conversationId: MOCK_TOOL_GALLERY_ROOM_ID, authorId: 'mock-forge', kind: 'tool', body: '', tool: { name: 'workflow.run', arg: '执行工具卡片视觉回归流程', status: 'pending', detail: '等待开始执行。' }, at: timeMinutesAgo(1), createdAt: isoMinutesAgo(1), sequence: 6 }),
+  ],
   [MOCK_STUDY_ROOM_ID]: [
     message({ id: 'mock-study-goal', conversationId: MOCK_STUDY_ROOM_ID, authorId: MOCK_USER_ID, kind: 'text', body: '我想在本周真正掌握矩阵可对角化，并能用到一个新问题里。', at: timeMinutesAgo(36), createdAt: isoMinutesAgo(36), sequence: 1 }),
     message({ id: 'mock-study-plan', conversationId: MOCK_STUDY_ROOM_ID, authorId: 'mock-nova', kind: 'text', body: '我先只做规划：把目标拆成概念、练习、独立检查和反思四个可验证步骤；规划门通过后再让 Sage、Milo 和 Trace 分工。', at: timeMinutesAgo(34), createdAt: isoMinutesAgo(34), sequence: 2 }),
@@ -148,6 +163,12 @@ export const learningMessages: Record<string, Message[]> = {
     message({id:'mock-pulse-publish-request',conversationId:MOCK_TEACHER_ROOM_ID,authorId:MOCK_USER_ID,kind:'text',body:'发布“迁移：用谱方法分析真实系统”这个学习目标。',at:timeMinutesAgo(8),createdAt:isoMinutesAgo(8),sequence:12}),
     message({id:'approval-mock-pulse-publish',conversationId:MOCK_TEACHER_ROOM_ID,authorId:MOCK_PULSE_ID,kind:'approval',body:'发布学习目标需要教师确认。',approval:{id:'mock-pulse-publish',agentId:MOCK_PULSE_ID,kind:'course_management',summary:'发布学习目标“迁移：用谱方法分析真实系统”',status:'pending',payload:{action:'teacher.publish_objective',args:{objectiveId:'obj-transfer'}},requestedAt:isoMinutesAgo(6),requestedBy:MOCK_USER_ID,scope:{projectId:'mock-research',courseId:'mock-course-linear-algebra',roomId:MOCK_TEACHER_ROOM_ID,risk:'course_management'},preview:{method:'publish_objective',entityId:'obj-transfer',entityLabel:'迁移：用谱方法分析真实系统',currentState:'draft',nextState:'published'}},at:timeMinutesAgo(6),createdAt:isoMinutesAgo(6),sequence:13}),
   ],
+}
+
+/** Persistent local-preview typing state. Three agents intentionally exercise
+ * the two-visible-plus-overflow presentation in the default mock room. */
+export const learningTyping: Record<string, string[]> = {
+  [MOCK_TOOL_GALLERY_ROOM_ID]: ['mock-scout', 'mock-forge', 'mock-nova'],
 }
 
 export const learningReadReceipts: Record<string, ImReadReceiptAdvance[]> = {

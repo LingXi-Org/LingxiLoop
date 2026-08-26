@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { http } from '@/api/client'
 import { trimUrlTrailing } from '@/lib/utils'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { LinkPreview as ToolUiLinkPreview } from './tool-ui/link-preview'
 
 /**
@@ -13,9 +14,8 @@ import { LinkPreview as ToolUiLinkPreview } from './tool-ui/link-preview'
  * Resolution flow:
  *   1. Module-scope `cache` keyed by URL — mounted/unmounted bubbles share
  *      the same fetched data so scrolling in/out of view never re-fetches.
- *   2. While loading, we render NOTHING (no skeleton). A skeleton would
- *      bloat the message height and pop in/out, which is more disruptive
- *      than a card that simply appears once it's ready.
+ *   2. While loading, reserve one bounded card footprint with the shared
+ *      resource skeleton so virtualized rows do not jump when metadata lands.
  *   3. On success: card with image (if any) + site name + title +
  *      description, clickable to open the URL in a new tab.
  *   4. On failure / no useful metadata: render nothing so the bubble looks
@@ -87,7 +87,8 @@ export function LinkPreview({ url }: { url: string }) {
     return () => { cancelled = true }
   }, [url])
 
-  if (!loaded || !data || (!data.title && !data.image)) return null
+  if (!loaded) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-md" label="正在加载链接预览" />
+  if (!data || (!data.title && !data.image)) return null
 
   // Hostname for the "from foo.com" caption — preferred over og:site_name
   // when the latter is missing, since users recognize hostnames.

@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 
 export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -18,20 +19,15 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
   ref,
 ) {
   return (
-    <textarea
+    <Textarea
       ref={ref}
       className={cn(
-        'w-full bg-paper text-ink-900 placeholder:text-ink-300 leading-[1.5] resize-y',
-        'border-[1.5px] rounded-[10px] outline-none',
-        'transition-[border-color,box-shadow] duration-150',
-        'disabled:opacity-60 disabled:cursor-not-allowed',
-        inputSize === 'sm' ? 'px-2.5 py-1.5 text-[12.5px]' : 'px-3 py-2 text-[13.5px]',
-        invalid
-          ? 'border-coral focus:border-coral-deep focus:shadow-[0_0_0_3px_var(--coral-soft)]'
-          : 'border-ink-100 focus:border-sky2-300 focus:shadow-[0_0_0_3px_var(--sky-50)]',
+        'leading-[1.5] resize-y',
+        inputSize === 'sm' ? 'text-[12.5px]' : 'text-[13.5px]',
         className,
       )}
       {...rest}
+      aria-invalid={invalid || undefined}
     />
   )
 })

@@ -1,24 +1,24 @@
 "use client";
 
-import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  Code2,
+  Database,
+  ExternalLink,
+  File,
   FileText,
   Globe,
-  Code2,
   Newspaper,
-  Database,
-  File,
-  ExternalLink,
 } from "lucide-react";
+import * as React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 import { openSafeNavigationHref, sanitizeHref } from "../shared/media";
 import type {
-  SerializableCitation,
   CitationType,
   CitationVariant,
+  SerializableCitation,
 } from "./schema";
 
 const FALLBACK_LOCALE = "en-US";
@@ -140,14 +140,15 @@ export function Citation(props: CitationProps) {
     <TypeIcon className="size-3.5 shrink-0 opacity-60" aria-hidden="true" />
   );
 
-  const { open, handleMouseEnter, handleMouseLeave } = useHoverPopover();
+  const { open, setOpen, handleMouseEnter, handleMouseLeave } = useHoverPopover();
 
   // Inline variant: compact chip with hover popover
   if (variant === "inline") {
     return (
-      <Popover open={open}>
-        <PopoverTrigger asChild>
-          <button
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          render={(
+            <button
             type="button"
             aria-label={title}
             data-tool-ui-id={id}
@@ -163,10 +164,11 @@ export function Citation(props: CitationProps) {
               "focus-visible:ring-ring focus-visible:ring-2",
               className,
             )}
-          >
-            {iconElement}
-            <span className="text-muted-foreground">{domain}</span>
-          </button>
+            />
+          )}
+        >
+          {iconElement}
+          <span className="text-muted-foreground">{domain}</span>
         </PopoverTrigger>
         <PopoverContent
           side="top"
@@ -174,8 +176,7 @@ export function Citation(props: CitationProps) {
           className="w-72 cursor-pointer p-0"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          onCloseAutoFocus={(e) => e.preventDefault()}
+          initialFocus={false}
           onClick={handleClick}
         >
           <div className="hover:bg-muted/50 flex flex-col gap-2 p-3 transition-colors">

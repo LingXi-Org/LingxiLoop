@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuiState } from '@assistant-ui/react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '@/api/client'
-import { inferAttachmentPreview } from '@/lib/attachmentPreview'
+import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from '@/components/ui/attachment'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
+import { inferAttachmentPreview } from '@/lib/attachmentPreview'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
 import { cn, parseBlocks, parseBody } from '@/lib/utils'
 import { useApp } from '@/stores/app'
@@ -98,6 +102,8 @@ function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conve
     openDocumentPeek(id)
   }
 
+  if (!loaded && !doc) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载文档卡片" />
+
   return (
     <button
       type="button"
@@ -175,9 +181,11 @@ export function CanvasWorkspaceCard() {
     if (window.innerWidth < 768) setView('canvas')
     else openCanvasPeek(canvas.canvasId)
   }
-  return <button type="button" onClick={open} className="message-attachment-bubble canvas-message-card mt-1 block overflow-hidden rounded-2xl border text-left">
-    <CanvasPreview snapshot={live} title={canvas.title} frameCount={frameCount} />
-  </button>
+  return <CardSurface asChild variant="interactive" interactive className="mt-1 w-full max-w-[min(100%,580px)] gap-0 py-0 text-left [--card-spacing:0px]">
+    <button type="button" onClick={open} aria-label={`打开 ${canvas.title} Canvas`}>
+      <CanvasPreview snapshot={live} title={canvas.title} frameCount={frameCount} />
+    </button>
+  </CardSurface>
 }
 
 
@@ -219,6 +227,8 @@ function BoardArtifactCard({ id: rawId }: { id: string }) {
     selectBoard(id)
     openBoardPeek(id)
   }
+
+  if (isBoardPending) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载看板卡片" />
 
   return (
     <button
@@ -308,6 +318,8 @@ function CardArtifactCard({ id: rawId }: { id: string }) {
       .catch(() => setFailed(true))
   }
 
+  if (!card && !failed) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载看板任务" />
+
   return (
     <button
       type="button"
@@ -387,6 +399,8 @@ function CalendarArtifactCard({ id: rawId }: { id: string }) {
     ? `${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
     : null
 
+  if (!event && !failed) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载日历事件" />
+
   return (
     <button
       type="button"
@@ -464,125 +478,6 @@ export function MessageArtifactParts() {
   )
 }
 
-export function AttachmentCard() {
-  const { message: msg } = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
-  const [viewerOpen, setViewerOpen] = useState(false)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const knowledgeSource = useKnowledgeSources((state) => state.list.find((source) =>
-    Boolean(source.originClientMsgNo) && source.originClientMsgNo === (msg.clientId ?? msg.id),
-  ))
-  if (!msg.attachment) throw new Error('Attachment part requires an attachment payload')
-  const a = msg.attachment
-  const previewKind = inferAttachmentPreview(a)
-  const knowledgeBadge = knowledgeSource ? <span className={cn(
-    'mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold',
-    knowledgeSource.status === 'ready' && 'bg-emerald-100 text-emerald-700',
-    knowledgeSource.status === 'failed' && 'bg-red-100 text-red-700',
-    knowledgeSource.status !== 'ready' && knowledgeSource.status !== 'failed' && 'bg-amber-100 text-amber-700',
-  )}>{knowledgeSource.status === 'ready' ? '已加入资料' : knowledgeSource.status === 'failed' ? '摄取失败' : '正在建立知识索引'}</span> : null
-
-  if (a.kind === 'img') {
-    return (
-      <>
-        <button
-          type="button"
-          onClick={() => setViewerOpen(true)}
-          className="message-attachment-bubble block mt-2 text-left cursor-zoom-in group"
-        >
-          {/* The server doesn't store image dimensions today, so we
-              don't know the natural aspect when this row first renders.
-              Without a reserved box, the <img> renders at 0×0 → grows
-              to natural size on load → shifts every message below it
-              downward, which inside a virtualized list compounds into
-              the visible jitter users complain about while scrolling.
-              Wrap in a fixed 4:3 aspect box, contain the image inside,
-              and the layout is stable from first paint. Letterboxing
-              (with the bubble's bg-cloud showing through) is the price
-              of stability; once the upload pipeline records width/height
-              this can switch to natural-aspect again. */}
-          <div
-            className="rounded-[11px] border border-ink-100 bg-cloud overflow-hidden transition group-hover:brightness-95"
-            style={{ aspectRatio: '4 / 3', width: '100%', maxHeight: 360 }}
-          >
-            <img
-              src={a.url}
-              alt={a.name}
-              className="w-full h-full object-contain"
-              loading="lazy"
-              decoding="async"
-              draggable={false}
-            />
-          </div>
-          <div className="mt-1 text-[11px] text-ink-500 truncate">{a.name}{a.size ? ` · ${Math.round(a.size / 1024)}KB` : ''}</div>
-          {knowledgeBadge}
-        </button>
-        {viewerOpen && (
-          <ImageViewer src={a.url} name={a.name} onClose={() => setViewerOpen(false)} />
-        )}
-      </>
-    )
-  }
-
-  if (previewKind === 'audio') {
-    return <div className="message-attachment-bubble audio-attachment-card mt-2"><div data-find-content className="truncate text-[12px] font-semibold text-ink-700">{a.name}</div>{knowledgeBadge}<audio className="mt-2 w-full" controls preload="metadata" src={a.url}>浏览器不支持音频播放。</audio></div>
-  }
-
-  // Native generic file card (PDF / docs / archives / text / etc).
-  const ext = (() => {
-    const fromMime = a.mime?.split('/')?.[1]?.toLowerCase()
-    const fromName = a.name.includes('.') ? a.name.split('.').pop()?.toLowerCase() : null
-    return (fromName || fromMime || a.kind).slice(0, 5)
-  })()
-  const sizeLabel = a.size
-    ? a.size > 1024 * 1024
-      ? `${(a.size / 1024 / 1024).toFixed(1)} MB`
-      : `${Math.max(1, Math.round(a.size / 1024))} KB`
-    : null
-  const inner = (
-    <>
-      <div
-        className="w-14 h-14 rounded-lg relative grid place-items-center overflow-hidden shrink-0"
-        style={{
-          background: a.kind === 'fig'
-            ? 'radial-gradient(circle at 30% 30%, #FF6B9D, transparent 50%), radial-gradient(circle at 70% 70%, #4FC2F4, transparent 50%), linear-gradient(135deg, #2A2545, #1A1525)'
-            : 'linear-gradient(135deg, var(--accent), #075cae)',
-        }}
-      >
-        {a.kind === 'fig' ? <IFigma className="w-5 h-5" stroke="white" strokeWidth={2} /> : <IFile className="w-5 h-5" stroke="white" strokeWidth={1.5} />}
-        <span className="absolute bottom-1 right-1 font-mono text-[9px] font-bold text-white bg-black/55 px-1 rounded tracking-wider uppercase">{ext}</span>
-      </div>
-      <div className="min-w-0">
-        <div data-find-content className="text-[13px] font-semibold text-ink-900 truncate">{a.name}</div>
-        <div className="text-[11px] text-ink-500 truncate">
-          {a.mime ?? ''}{sizeLabel ? ` · ${sizeLabel}` : ''}
-        </div>
-        {knowledgeBadge}
-      </div>
-    </>
-  )
-
-  if (previewKind === 'pdf' || previewKind === 'text' || previewKind === 'video') {
-    return <>
-      <button ref={triggerRef} type="button" onClick={() => setViewerOpen(true)} className="message-attachment-bubble mt-2 grid grid-cols-[56px_1fr] gap-2.5 p-2.5 bg-cloud border border-ink-100 rounded-[11px] items-center cursor-pointer hover:shadow-soft hover:border-sky2-200 transition text-left">
-        {inner}
-      </button>
-      {viewerOpen && <AttachmentViewer attachment={a} kind={previewKind} onClose={() => { setViewerOpen(false); window.requestAnimationFrame(() => triggerRef.current?.focus()) }} />}
-    </>
-  }
-
-  return (
-    <a
-      href={a.url}
-      download={a.name}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="message-attachment-bubble mt-2 grid grid-cols-[56px_1fr] gap-2.5 p-2.5 bg-cloud border border-ink-100 rounded-[11px] items-center cursor-pointer hover:shadow-soft hover:border-sky2-200 transition no-underline"
-    >
-      {inner}
-    </a>
-  )
-}
-
 /* ============== email ==============
  * Distinct chrome from chat bubbles: pale parchment background, subject as
  * a serif headline, then a header row (from / to / cc collapsed onto one
@@ -642,7 +537,9 @@ export function EmailCard() {
     ...e.cc.map((c) => ({ label: "抄送", value: c })),
   ]
   return (
-    <div
+    <CardSurface
+      variant={isFailed ? 'destructive' : 'parchment'}
+      status={isFailed ? 'failed' : isQueued ? 'pending' : 'success'}
       className="mt-1 max-w-[min(100%,640px)] overflow-hidden"
       style={{
         background: 'linear-gradient(180deg, #FBF8F0, #F4EEDD)',
@@ -704,7 +601,7 @@ export function EmailCard() {
       {showHtml ? (
         <div className="px-2 py-2 bg-white">
           {htmlLoading && (
-            <div className="px-3 py-6 text-[12px] text-ink-400 italic">正在加载 html...</div>
+            <div className="space-y-3 px-3 py-4" role="status" aria-label="正在加载邮件 HTML 内容"><Skeleton className="h-3 w-2/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-5/6" /><Skeleton className="h-24 w-full rounded-xl" /></div>
           )}
           {htmlError && (
             <div className="px-3 py-3 text-[12px] text-coral-deep">
@@ -745,7 +642,7 @@ export function EmailCard() {
           回复
         </button>
       </div>
-    </div>
+    </CardSurface>
   )
 }
 
@@ -761,29 +658,19 @@ function EmailAttachmentRow({ att }: { att: NonNullable<NonNullable<Message['ema
   const isPdf = att.mimeType === 'application/pdf'
   const icon = isImg ? '🖼' : isPdf ? '📄' : '📎'
   return (
-    <div className="flex items-center gap-2 text-[12px] text-ink-700">
-      <span className="text-[14px] leading-none">{icon}</span>
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-medium">{att.filename}</div>
-        <div className="text-[10.5px] text-ink-400 uppercase tracking-wider">
+    <Attachment size="xs" state={att.truncated ? 'error' : 'done'} className="w-full">
+      <AttachmentMedia>{icon}</AttachmentMedia>
+      <AttachmentContent>
+        <AttachmentTitle>{att.filename}</AttachmentTitle>
+        <AttachmentDescription>
           {att.mimeType}{att.sizeBytes > 0 && ` · ${humanSize(att.sizeBytes)}`}
           {att.truncated && ' · skipped (too large)'}
-        </div>
-      </div>
+        </AttachmentDescription>
+      </AttachmentContent>
       {att.url ? (
-        <a
-          href={att.url}
-          target="_blank"
-          rel="noreferrer noopener"
-          download={att.filename}
-          className="shrink-0 text-[11.5px] font-semibold text-skype-deep hover:underline"
-        >
-          下载
-        </a>
-      ) : (
-        <span className="shrink-0 text-[11.5px] text-ink-300 italic">不可用</span>
-      )}
-    </div>
+        <AttachmentTrigger render={<a href={att.url} target="_blank" rel="noreferrer noopener" download={att.filename} aria-label={`下载 ${att.filename}`} />} />
+      ) : null}
+    </Attachment>
   )
 }
 

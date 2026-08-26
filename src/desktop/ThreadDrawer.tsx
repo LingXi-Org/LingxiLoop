@@ -17,9 +17,13 @@ import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import { api, type ApiMessage } from '@/api/client'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Composer } from '@/desktop/ChatPane'
 import { LingxiAssistantRuntimeProvider } from '@/im/assistantRuntime'
 import type { Message } from '@/types'
+
+const EMPTY_MESSAGES: readonly Message[] = []
 
 const THREAD_MESSAGE_COMPONENTS = { Message: () => <LingxiImMessage animate={false} /> }
 
@@ -56,7 +60,9 @@ export function ThreadDrawer() {
   const openThread = useApp((s) => s.openThread)
   const close = useApp((s) => s.closeThreadView)
   const byId = useParticipants((s) => s.byId)
-  const convoMessages = useMessages((s) => openThread ? (s.byConvo[openThread.convoId] ?? []) : [])
+  const convoMessages = useMessages((s) =>
+    openThread ? (s.byConvo[openThread.convoId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES,
+  )
   const root = useMessages((s) => {
     if (!openThread) return undefined
     return (s.byConvo[openThread.convoId] ?? []).find((m) => m.id === openThread.rootId)
@@ -135,7 +141,8 @@ export function ThreadDrawer() {
         >×</button>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="flex flex-col gap-4 px-4 py-4">
         {/* Root message — small visual treatment to distinguish from replies. */}
         <div className="rounded-lg border border-ink-100 bg-paper px-3 py-2.5">
           <ThreadMessage messageId={root.id} />
@@ -144,7 +151,7 @@ export function ThreadDrawer() {
           回复
         </div>
 
-        {loading && <div className="text-[12px] text-ink-400 italic">正在加载回复...</div>}
+        {loading && <ResourceSkeleton variant="list" count={3} compact label="正在加载回复" />}
         {err && <div className="text-[12px] text-coral-deep">{err}</div>}
         {!loading && !err && visibleReplies.length === 0 && (
           <div className="text-[12px] text-ink-400 italic">尚未回复 - 成为第一个。</div>
@@ -152,7 +159,8 @@ export function ThreadDrawer() {
         {visibleReplies.map((message) => (
           <ThreadMessage key={message.clientId ?? message.id} messageId={message.id} />
         ))}
-      </div>
+        </div>
+      </ScrollArea>
 
       <div className="border-t border-ink-100 bg-cloud px-3 py-3">
         <div className="text-[10.5px] text-ink-400 mb-1.5">

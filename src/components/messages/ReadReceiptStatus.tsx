@@ -1,12 +1,15 @@
-import { Avatar } from '@/components/Avatar'
 import { useAuiState } from '@assistant-ui/react'
+import { Avatar } from '@/components/Avatar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import type { ImReadReceiptAdvance } from '@/types'
+
+const EMPTY_READ_RECEIPTS: readonly ImReadReceiptAdvance[] = []
 
 function confirmationsForMessage(
   receipts: readonly ImReadReceiptAdvance[],
@@ -29,7 +32,9 @@ export function ReadReceiptStatus() {
   const { message } = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
   const meId = useMe()
   const conversation = useConversations((state) => state.list.find((item) => item.id === message.conversationId))
-  const receipts = useMessages((state) => state.readReceipts[message.conversationId] ?? [])
+  const receipts = useMessages(
+    (state) => state.readReceipts[message.conversationId] ?? EMPTY_READ_RECEIPTS,
+  )
   const participants = useParticipants((state) => state.byId)
   if (message.authorId !== meId) return null
   if (message.failed) return <span className="mt-1 text-[10px] font-medium text-coral-deep">失败</span>
@@ -43,14 +48,16 @@ export function ReadReceiptStatus() {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button type="button" className="mt-1 text-[10px] text-ink-300 underline-offset-2 hover:text-skype-deep hover:underline">
-          {confirmations.length} 人已读
-        </button>
+      <PopoverTrigger
+        render={(
+          <button type="button" className="mt-1 text-[10px] text-ink-300 underline-offset-2 hover:text-skype-deep hover:underline" />
+        )}
+      >
+        {confirmations.length} 人已读
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 p-2" aria-label="已读成员">
         <p className="px-2 pb-1.5 text-[11px] font-semibold text-ink-500">实际确认时间</p>
-        <div className="max-h-64 overflow-y-auto">
+        <ScrollArea style={{ height: Math.min(confirmations.length * 44, 256) }}>
           {confirmations.map((receipt) => {
             const participant = participants[receipt.readerId]
             if (!participant) return null
@@ -64,7 +71,7 @@ export function ReadReceiptStatus() {
               </div>
             )
           })}
-        </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   )

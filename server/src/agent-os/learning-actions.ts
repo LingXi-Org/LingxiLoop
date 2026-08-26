@@ -225,6 +225,65 @@ async function executeChat(work: AgentWorkItem, method: string, args: Record<str
     }
     return { ok: true, value: await wukongClient().sendMessage(channelId, Number(args.channelType ?? 2), work.agentId, payload) }
   }
+  if (method === 'ask') {
+    const rawItems = Array.isArray(args.items) ? args.items : []
+    if (rawItems.length < 1 || rawItems.length > 8) throw new Error('items must contain between 1 and 8 questions')
+    const names = new Set<string>()
+    const items = rawItems.map((rawItem, itemIndex) => {
+      const item = record(rawItem)
+      const name = textArg(item, 'name', false) || `question_${itemIndex + 1}`
+      if (!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name) || names.has(name)) throw new Error('question names must be unique identifiers')
+      names.add(name)
+      const prompt = textArg(item, 'prompt')
+      if (prompt.length > 500) throw new Error('question prompt is too long')
+      const rawChoices = Array.isArray(item.choices) ? item.choices : []
+      if (rawChoices.length > 12) throw new Error('a question can contain at most 12 choices')
+      const values = new Set<string>()
+      const choices = rawChoices.map((rawChoice) => {
+        const choice = record(rawChoice)
+        const value = textArg(choice, 'value')
+        if (value.length > 120 || values.has(value)) throw new Error('choice values must be unique and at most 120 characters')
+        values.add(value)
+        return {
+          value,
+          label: textArg(choice, 'label'),
+          ...(typeof choice.description === 'string' && choice.description.trim() ? { description: choice.description.trim().slice(0, 500) } : {}),
+          ...(choice.disabled === true ? { disabled: true } : {}),
+        }
+      })
+      const input = record(item.input)
+      const freeform = typeof input.label === 'string' && input.label.trim()
+        ? { label: input.label.trim().slice(0, 120), ...(typeof input.placeholder === 'string' ? { placeholder: input.placeholder.trim().slice(0, 160) } : {}) }
+        : undefined
+      if (choices.length === 0 && !freeform) throw new Error('each question requires choices or a freeform input')
+      return {
+        name,
+        prompt,
+        ...(typeof item.description === 'string' && item.description.trim() ? { description: item.description.trim().slice(0, 1_000) } : {}),
+        ...(item.required === true ? { required: true } : {}),
+        ...(item.multiple === true ? { multiple: true } : {}),
+        choices,
+        ...(freeform ? { input: freeform } : {}),
+      }
+    })
+    const title = textArg(args, 'title', false).slice(0, 160) || 'Agent 提问'
+    const channelId = textArg(args, 'channelId', false) || work.channelId
+    const payload: LingxiMessageV1 = {
+      version: 1,
+      kind: 'questionnaire',
+      clientMsgNo: `questionnaire-${action.idempotencyKey}`,
+      body: title,
+      refs: { runId: action.runId, agentId: work.agentId },
+      data: {
+        questionnaire: {
+          title,
+          items,
+          ...(typeof args.submitLabel === 'string' && args.submitLabel.trim() ? { submitLabel: args.submitLabel.trim().slice(0, 80) } : {}),
+        },
+      },
+    }
+    return { ok: true, value: await wukongClient().sendMessage(channelId, Number(args.channelType ?? 2), work.agentId, payload) }
+  }
   if (method === 'handoff') {
     const targetAgentId = textArg(args, 'toAgentId')
     const payload: LingxiMessageV1 = {
@@ -476,6 +535,7 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
       'learning.add_steps', 'learning.finish_planning',
       'knowledge.list_sources', 'knowledge.get_source', 'knowledge.search',
       'knowledge.ask', 'knowledge.list_notes', 'knowledge.get_note',
+      'chat.ask', 'polls.create', 'polls.show',
     ])
     if (!planningAllowed.has(action.action)) {
       throw new Error(

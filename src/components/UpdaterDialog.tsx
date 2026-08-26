@@ -17,6 +17,7 @@
  * skype-blue palette, paper backgrounds, Manrope display font.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { TypesetMarkdown } from '@/components/Typeset'
 import type {
   AppUpdateInfo, AutoUpdateStatus, UpdateReleasePayload,
 } from '@/lib/runtime'
@@ -386,33 +387,6 @@ function fmtBytes(n: number): string {
   return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
 
-/** Very light markdown rendering for release notes — we don't need a
- *  full md parser here, just headings → bold and `- item` → bullet. */
 function formatChangelog(notes: string): React.ReactNode {
-  const lines = notes.split('\n')
-  const out: React.ReactNode[] = []
-  let key = 0
-  for (const raw of lines) {
-    const line = raw.trimEnd()
-    if (!line.trim()) { out.push(<div key={key++} className="h-1.5" />); continue }
-    if (/^#{1,6}\s+/.test(line)) {
-      out.push(
-        <div key={key++} className="font-semibold text-ink-900 mt-2 first:mt-0">
-          {line.replace(/^#{1,6}\s+/, '')}
-        </div>,
-      )
-      continue
-    }
-    if (/^[-*•]\s+/.test(line)) {
-      out.push(
-        <div key={key++} className="flex gap-2">
-          <span className="text-ink-300">•</span>
-          <span className="flex-1">{line.replace(/^[-*•]\s+/, '')}</span>
-        </div>,
-      )
-      continue
-    }
-    out.push(<div key={key++}>{line}</div>)
-  }
-  return out
+  return <TypesetMarkdown content={notes} preset="document" />
 }

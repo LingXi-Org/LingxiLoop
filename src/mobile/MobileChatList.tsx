@@ -6,8 +6,11 @@ import { Avatar, CloudLogo } from '@/components/Avatar'
 import { GroupCreator } from '@/components/GroupCreator'
 import { HiveAvatar } from '@/components/HiveAvatar'
 import { ISearch } from '@/components/icons'
+import { Input } from '@/components/ui/input'
 import { ConversationListItemContent } from '@/im/ConversationList'
 import { cn } from '@/lib/utils'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { isMuted, useConversations } from '@/stores/conversations'
@@ -201,8 +204,13 @@ function convoSwipeActions(c: Conversation): SwipeAction[] {
     label: '退出',
     background: 'var(--coral)',
     onClick: async () => {
-      if (!confirm(`确定退出“${c.title}”吗？其他成员仍可继续对话。`)) return
-      try { await api.leaveConversation(c.id); await reload() }
+      if (!await confirmSensitiveAction({
+        title: '退出对话？',
+        description: `退出“${c.title}”后，其他成员仍可继续对话。`,
+        confirmLabel: '退出对话',
+        tone: 'destructive',
+      })) return
+      try { await toastAction(api.leaveConversation(c.id), { loading: '正在退出对话', success: '已退出对话', error: '退出对话失败' }); await reload() }
       catch (err) { console.warn('leave failed', err) }
     },
   })
@@ -267,9 +275,14 @@ function convoMenuItems(
     label: '退出对话',
     destructive: true,
     onClick: async () => {
-      if (!confirm(`确定退出“${c.title}”吗？其他成员仍可继续对话。`)) return
+      if (!await confirmSensitiveAction({
+        title: '退出对话？',
+        description: `退出“${c.title}”后，其他成员仍可继续对话。`,
+        confirmLabel: '退出对话',
+        tone: 'destructive',
+      })) return
       try {
-        await api.leaveConversation(c.id)
+        await toastAction(api.leaveConversation(c.id), { loading: '正在退出对话', success: '已退出对话', error: '退出对话失败' })
         await reload()
       } catch (err) { console.warn('leave failed', err) }
     },
@@ -399,7 +412,7 @@ export function MobileChatList({ mode = 'chat' }: { mode?: 'chat' | 'mail' }) {
             <div className="flex items-center gap-2 bg-cloud rounded-[14px] py-2 px-3"
               style={{ border: '1px solid var(--ink-100)' }}>
               <ISearch className="w-[16px] h-[16px] text-ink-500 shrink-0" />
-              <input
+              <Input
                 ref={searchRef}
                 type="search"
                 value={searchQ}

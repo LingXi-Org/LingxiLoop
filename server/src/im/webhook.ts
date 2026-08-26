@@ -60,7 +60,7 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
   const fromUid = String(source.from_uid ?? source.fromUid ?? '')
   const eventId = String(root.event_id ?? root.eventId ?? `${eventType}:${channelId}:${clientMsgNo}`)
   if (!eventId || !channelId || !clientMsgNo || !fromUid) { res.status(400).json({ error: 'incomplete WuKong message event' }); return }
-  const allowedKinds = new Set(['text', 'attachment', 'system', 'tool_activity', 'approval', 'handoff', 'poll', 'artifact', 'canvas', 'learning_mission'])
+  const allowedKinds = new Set(['text', 'attachment', 'system', 'tool_activity', 'approval', 'handoff', 'questionnaire', 'poll', 'artifact', 'canvas', 'learning_mission'])
   if (payload.version !== 1 || !allowedKinds.has(payload.kind) || (payload.body?.length ?? 0) > 64 * 1024) {
     res.status(400).json({ error: 'invalid LingxiMessageV1 payload' }); return
   }

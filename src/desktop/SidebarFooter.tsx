@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
@@ -159,7 +160,7 @@ export function SidebarFooter() {
             <span>项目</span>
           </header>
           <div className="grok-sidebar-popover-list">
-            {projectsLoading && <div className="grok-sidebar-popover-empty">正在载入…</div>}
+            {projectsLoading && <ResourceSkeleton variant="list" count={4} compact label="正在加载项目" />}
             {!projectsLoading && projectError && (
               <button type="button" className="grok-sidebar-popover-empty" onClick={() => { setProjectError(false); setProjectsLoaded(false) }}>重新载入</button>
             )}

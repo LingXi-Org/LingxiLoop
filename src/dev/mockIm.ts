@@ -14,6 +14,8 @@ import {
   learningMessages,
   learningParticipants,
   learningReadReceipts,
+  learningTyping,
+  MOCK_TOOL_GALLERY_ROOM_ID,
   MOCK_USER_ID,
 } from './mockLearningImFixtures'
 
@@ -22,7 +24,7 @@ export function activateMockWorkspace(_projectId?: string): void {
   useMessages.setState({
     byConvo: learningMessages,
     streaming: {},
-    typing: {},
+    typing: learningTyping,
     loaded: new Set(learningConversations.map((conversation) => conversation.id)),
     loading: new Set(),
     hasMoreOlder: Object.fromEntries(learningConversations.map((conversation) => [conversation.id, false])),
@@ -32,7 +34,7 @@ export function activateMockWorkspace(_projectId?: string): void {
     readReceipts: learningReadReceipts,
   })
   seedMockLearningCanvas()
-  useApp.getState().selectConversation(null)
+  useApp.getState().selectConversation(MOCK_TOOL_GALLERY_ROOM_ID)
 }
 
 export function seedMockIm(): void {

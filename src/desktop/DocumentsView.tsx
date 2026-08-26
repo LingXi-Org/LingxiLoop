@@ -5,6 +5,7 @@ import { useAuth } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import { cn } from '@/lib/utils'
 import { IPlus } from '@/components/icons'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 
 export function DocumentsView() {
   const list = useDocuments((s) => s.list)
@@ -51,7 +52,7 @@ export function DocumentsView() {
         </header>
         <div className="flex-1 overflow-y-auto py-2">
           {!loaded && (
-            <div className="px-4 py-6 text-xs text-stone-400">加载中…</div>
+            <ResourceSkeleton variant="list" count={5} compact label="正在加载文档" />
           )}
           {loaded && list.length === 0 && (
             <div className="px-4 py-6 text-xs text-stone-400">
@@ -84,7 +85,9 @@ export function DocumentsView() {
         </div>
       </aside>
       <main className="min-h-0 overflow-hidden bg-white">
-        {selectedId ? (
+        {!loaded ? (
+          <ResourceSkeleton variant="detail" className="h-full" label="正在加载文档内容" />
+        ) : selectedId ? (
           <DocumentEditor documentId={selectedId} />
         ) : (
           <div className="h-full grid place-items-center text-stone-400 text-sm">

@@ -135,7 +135,7 @@ export interface Conversation {
   pulledBy?: { agentId: string; at: string; reason: string }
 }
 
-export type MessageKind = 'text' | 'tool' | 'attachment' | 'thought' | 'system' | 'email' | 'poll' | 'handoff' | 'approval' | 'canvas' | 'learning_mission'
+export type MessageKind = 'text' | 'tool' | 'attachment' | 'thought' | 'system' | 'email' | 'questionnaire' | 'poll' | 'handoff' | 'approval' | 'canvas' | 'learning_mission'
 
 export interface HandoffPayload {
   id: string
@@ -187,6 +187,29 @@ export interface PollTally {
   count: number
   /** participant ids of voters who picked this option, sorted ASC. */
   voterIds: string[]
+}
+
+export interface QuestionnaireChoicePayload {
+  value: string
+  label: string
+  description?: string
+  disabled?: boolean
+}
+
+export interface QuestionnaireItemPayload {
+  name: string
+  prompt: string
+  description?: string
+  required?: boolean
+  multiple?: boolean
+  choices: QuestionnaireChoicePayload[]
+  input?: { label: string; placeholder?: string }
+}
+
+export interface QuestionnairePayload {
+  title?: string
+  items: QuestionnaireItemPayload[]
+  submitLabel?: string
 }
 
 /** Headers + transport status for a single email message. Populated by the
@@ -295,6 +318,9 @@ export interface Message {
   /** Per-option aggregated tallies for kind === 'poll'. Empty array for
    *  any other message kind. Updated in place by `poll.updated` WS events. */
   pollTallies?: PollTally[]
+  /** Agent-authored clarification flow. The learner response is posted as a
+   * normal quoted message so the asking Agent is deterministically woken. */
+  questionnaire?: QuestionnairePayload
   handoff?: HandoffPayload
   approval?: ApprovalPayload
   canvas?: {

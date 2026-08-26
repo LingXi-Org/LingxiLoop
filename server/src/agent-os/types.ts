@@ -222,6 +222,7 @@ export type LingxiMessageKind =
   | 'approval'
   | 'handoff'
   | 'poll'
+  | 'questionnaire'
   | 'artifact'
   | 'canvas'
   | 'learning_mission'

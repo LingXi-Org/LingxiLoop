@@ -4,9 +4,13 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { SelectMenu } from '@/components/SelectMenu'
+import { Input } from '@/components/ui/input'
 import { useAuth } from '@/stores/auth'
 import { type AdminStats, type AdminUser, type AdminUserDetail, adminApi, type Tier } from './api'
 import { Pager } from './Pager'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { notifyAction, toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
 
 const PAGE = 50
 
@@ -40,33 +44,57 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
 
   const onTierChange = async (u: AdminUser, next: Tier) => {
     if (u.tier === next) return
+    if (!await confirmSensitiveAction({
+      title: '更改用户套餐？',
+      description: `${u.email} 的套餐将从 ${u.tier} 更改为 ${next}。`,
+      confirmLabel: '更改套餐',
+      tone: 'warning',
+    })) return
     try {
-      const updated = await adminApi.patchUser(u.id, { tier: next })
+      const updated = await toastAction(adminApi.patchUser(u.id, { tier: next }), {
+        loading: '正在更新用户套餐', success: '用户套餐已更新', error: '更新套餐失败', description: u.email,
+      })
       setItems((rows) => rows.map((r) => (r.id === u.id ? updated : r)))
-    } catch (e) { alert(`tier update failed: ${e instanceof Error ? e.message : e}`) }
+    } catch { /* toast owns the visible error state */ }
   }
 
   const onAdminToggle = async (u: AdminUser) => {
     if (u.id === meId && u.isAdmin) {
-      alert("You can't remove your own admin bit.")
+      notifyAction({ title: '不能移除自己的管理员权限', type: 'warning' })
       return
     }
+    if (!await confirmSensitiveAction({
+      title: u.isAdmin ? '移除管理员权限？' : '授予管理员权限？',
+      description: `${u.email} 的全局管理权限将被${u.isAdmin ? '移除' : '授予'}。`,
+      confirmLabel: u.isAdmin ? '移除权限' : '授予权限',
+      tone: u.isAdmin ? 'destructive' : 'warning',
+    })) return
     try {
-      const updated = await adminApi.patchUser(u.id, { isAdmin: !u.isAdmin })
+      const updated = await toastAction(adminApi.patchUser(u.id, { isAdmin: !u.isAdmin }), {
+        loading: '正在更新管理员权限', success: '管理员权限已更新', error: '更新管理员权限失败', description: u.email,
+      })
       setItems((rows) => rows.map((r) => (r.id === u.id ? updated : r)))
-    } catch (e) { alert(`admin toggle failed: ${e instanceof Error ? e.message : e}`) }
+    } catch { /* toast owns the visible error state */ }
   }
 
   /** Suspend / unsuspend. The server enforces "can't suspend self" too —
    *  this client-side guard just spares the operator the round-trip + alert. */
   const onSuspendToggle = async (u: AdminUser): Promise<AdminUser | null> => {
     if (u.id === meId && !u.suspended) {
-      alert("You can't suspend yourself.")
+      notifyAction({ title: '不能停用自己的账户', type: 'warning' })
       return null
     }
     try {
       if (u.suspended) {
-        const updated = await adminApi.unsuspendUser(u.id)
+        if (!await confirmSensitiveAction({
+          title: '恢复用户账户？',
+          description: `${u.email} 将立即恢复登录和工作区访问权限。`,
+          confirmLabel: '恢复账户',
+          tone: 'warning',
+        })) return null
+        const updated = await toastAction(adminApi.unsuspendUser(u.id), {
+          loading: '正在恢复用户', success: '用户账户已恢复', error: '恢复用户失败', description: u.email,
+        })
         setItems((rows) => rows.map((r) => (r.id === u.id ? updated : r)))
         return updated
       }
@@ -74,17 +102,23 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
       // suspended screen so it helps to be specific. Cancelling the
       // prompt aborts the action entirely. Empty string OK (means
       // "no reason given").
-      const reason = window.prompt(
-        `Suspend ${u.name} (${u.email})?\n\nOptional reason — shown to the user on the lockout screen:`,
-        '',
-      )
+      const reason = await promptSensitiveAction({
+        title: '停用用户账户？',
+        description: `${u.name}（${u.email}）将无法登录或访问工作区。停用原因会展示给该用户。`,
+        confirmLabel: '停用账户',
+        tone: 'destructive',
+        inputLabel: '停用原因（可选）',
+        inputDefaultValue: '',
+        inputPlaceholder: '向用户说明停用原因',
+      })
       if (reason === null) return null
       const trimmed = reason.trim()
-      const updated = await adminApi.suspendUser(u.id, trimmed || null)
+      const updated = await toastAction(adminApi.suspendUser(u.id, trimmed || null), {
+        loading: '正在停用用户', success: '用户账户已停用', error: '停用用户失败', description: u.email,
+      })
       setItems((rows) => rows.map((r) => (r.id === u.id ? updated : r)))
       return updated
-    } catch (e) {
-      alert(`suspension toggle failed: ${e instanceof Error ? e.message : e}`)
+    } catch {
       return null
     }
   }
@@ -101,7 +135,7 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
           </div>
         </div>
         <div className="admin-filters">
-          <input
+          <Input
             type="search" placeholder="电子邮件或姓名" className="admin-input"
             value={q} onChange={(e) => setQ(e.target.value)}
           />
@@ -131,7 +165,7 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
           <div>已加入</div>
           <div>上次登录</div>
         </div>
-        {loading && items.length === 0 && <div className="admin-row admin-empty">加载中…</div>}
+        {loading && items.length === 0 && <ResourceSkeleton variant="table" count={6} className="p-3" label="正在加载用户" />}
         {!loading && items.length === 0 && <div className="admin-row admin-empty">没有用户匹配。</div>}
         {items.map((u) => (
           <UserRow
@@ -167,7 +201,7 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
     setLoadingDetail(true)
     adminApi.getUser(u.id)
       .then(setDetail)
-      .catch((e) => alert(`load failed: ${e instanceof Error ? e.message : e}`))
+      .catch((e) => notifyAction({ title: '加载用户详情失败', description: e instanceof Error ? e.message : String(e), type: 'error' }))
       .finally(() => setLoadingDetail(false))
   }, [expanded, detail, u.id])
 
@@ -225,7 +259,7 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
       </div>
       {expanded && (
         <div className="admin-row-detail">
-          {loadingDetail && <div className="admin-empty">正在加载详细信息...</div>}
+          {loadingDetail && <ResourceSkeleton variant="detail" label="正在加载用户详情" />}
           {detail && (
             <div className="admin-detail-grid">
               <DetailField label="用户 ID" value={detail.id} mono />

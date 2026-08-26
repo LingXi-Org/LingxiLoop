@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import Markdown from 'react-markdown'
-import remarkBreaks from 'remark-breaks'
-import remarkGfm from 'remark-gfm'
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '@/api/client'
-import { formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview, type AttachmentPreviewKind, type AttachmentPreviewState } from '@/lib/attachmentPreview'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
 import type { Message } from '@/types'
+import { TypesetMarkdown } from './Typeset'
 
 GlobalWorkerOptions.workerSrc ||= pdfWorkerUrl
 
@@ -98,20 +97,20 @@ function PdfViewer({ attachment, url, onClose }: { attachment: Attachment; url: 
   </ViewerShell>
 }
 
-function PreviewLoading() { return <div className="attachment-preview-state" role="status">正在准备预览…</div> }
+function PreviewLoading() { return <ResourceSkeleton variant="media" className="h-full p-5" label="正在准备附件预览" /> }
 function PreviewError({ message, url, name }: { message: string; url: string; name: string }) { return <div className="attachment-preview-state" role="alert"><strong>无法显示预览</strong><span>{message}</span><a href={url} download={name} target="_blank" rel="noreferrer">下载文件</a></div> }
 
 function MarkdownDocument({ source }: { source: string }) {
-  return <article className="markdown-attachment-preview">
-    <Markdown
-      remarkPlugins={[remarkGfm, remarkBreaks]}
-      skipHtml
+  return <TypesetMarkdown
+      as="article"
+      preset="document"
+      className="markdown-attachment-preview"
+      content={source}
       components={{
         a: ({ children, ...props }) => <a {...props} target="_blank" rel="noreferrer">{children}</a>,
-        img: ({ alt }) => <span className="markdown-attachment-image-placeholder">{alt || '图片'}</span>,
+        img: ({ alt }) => <span className="not-typeset markdown-attachment-image-placeholder">{alt || '图片'}</span>,
       }}
-    >{source}</Markdown>
-  </article>
+    />
 }
 
 function JsonDocument({ source }: { source: string }) {

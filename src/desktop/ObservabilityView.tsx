@@ -11,6 +11,7 @@ import {
 import { Checkbox } from '@/components/Checkbox'
 import { CodeBlock, RichBody } from '@/components/messages/MessageBody'
 import { ResizeHandle } from '@/components/ResizeHandle'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Select } from '@/components/Select'
 import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
@@ -581,18 +582,14 @@ function FileTree({ nodes, depth, expanded, onToggle, selectedPath, onSelect }: 
 }
 
 /** File-content renderer that picks the right view based on extension.
- *   - `.md` → RichBody (LingxiLoop's own markdown-ish renderer)
+ *   - `.md` → the shared Typeset Markdown renderer
  *   - `.json` / `.ts` / `.py` / etc → CodeBlock (syntax-highlit)
  *   - anything else → wrapped plain text in paper theme */
 function FileViewer({ path, body }: { path: string; body: string }) {
   const ext = path.includes('.') ? path.split('.').pop()!.toLowerCase() : ''
   if (!body) return <div className="text-[13px] italic text-ink-400">（空文件）</div>
   if (ext === 'md' || ext === 'markdown') {
-    return (
-      <div className="lingxiloop-prose font-display text-[14px] leading-[1.7] text-ink-900">
-        <RichBody body={body} />
-      </div>
-    )
+    return <RichBody body={body} />
   }
   const codeLangs: Record<string, string> = {
     json: 'json', yaml: 'yaml', yml: 'yaml', ts: 'typescript', tsx: 'tsx',
@@ -744,7 +741,7 @@ function TriageEconomicsPanel(props: {
 
       <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
         {!data ? (
-          <div className="grid h-full place-items-center text-[13px] text-ink-400">{props.loading ? "加载中…" : "无数据。"}</div>
+          props.loading ? <ResourceSkeleton variant="detail" className="h-full" label="正在加载可观测性数据" /> : <div className="grid h-full place-items-center text-[13px] text-ink-400">无数据。</div>
         ) : (
           <div className="mx-auto max-w-[1100px] space-y-5">
             {/* ALWAYS-ON disclaimer: every $ here is an estimate. */}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { Input } from '@/components/ui/input'
 import type { CommandAction } from '@/lib/commands'
 import { useApp } from '@/stores/app'
 import { useConversations } from '@/stores/conversations'
@@ -61,7 +62,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       <section className="command-palette" role="dialog" aria-modal="true" aria-label="命令面板">
         <div className="command-palette-search">
           <SearchGlyph />
-          <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="输入命令或会话名称…"
+          <Input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="输入命令或会话名称…"
             aria-controls="lingxi-command-results" aria-activedescendant={visible[activeIndex] ? `lingxi-command-${visible[activeIndex].id}` : undefined}
             onKeyDown={(event) => {
               if (event.key === 'Escape') { event.preventDefault(); onClose(); return }

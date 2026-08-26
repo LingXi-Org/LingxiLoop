@@ -33,6 +33,8 @@ test('grok-style prompt ordering keeps stable policy first and user information 
   assert.ok(policy >= 0 && policy < tools && tools < workflow && workflow < personality && personality < userInfo && userInfo < date)
   assert.match(prompt, /finish_planning/)
   assert.match(prompt, /Canvas is the only fan-out\/fan-in surface/)
+  assert.match(prompt, /loop\.chat\.ask/)
+  assert.match(prompt, /loop\.polls\.create/)
 })
 
 test('explicit execution role selects verifier or specialist contract independently of persona name', () => {

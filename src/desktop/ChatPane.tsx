@@ -1,31 +1,37 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { useAuiState } from '@assistant-ui/react'
+import { type MutableRefObject, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, type ApiCoworkerActivity, api, ws } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, ICanvas, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
+import { AgentTypingIndicator } from '@/components/messages/AgentTypingIndicator'
 import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { SelectMenu } from '@/components/SelectMenu'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { TwEmoji } from '@/components/TwEmoji'
+import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
+import { Input } from '@/components/ui/input'
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group'
+import { Skeleton } from '@/components/ui/skeleton'
+import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { ComposerSurface } from '@/im/Composer'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { ConversationView } from '@/im/ConversationView'
 import { MessageList } from '@/im/MessageList'
-import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
-import { isImeComposing } from '@/lib/keyboard'
 import { applyFindHighlights, clearFindHighlights } from '@/lib/findHighlights'
+import { isImeComposing } from '@/lib/keyboard'
 import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
-import { cn } from '@/lib/utils'
 import { projectFindMatches } from '@/lib/transcriptExperience'
+import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
@@ -64,8 +70,8 @@ function DesktopRuntimeEntry({
       data-find-message-id={message.id}
       className={cn(
         'mx-auto w-full max-w-[900px] rounded-[10px] px-5 transition-shadow',
-        custom.continuedFromPrevious ? 'pt-[2px]' : 'pt-[9px]',
-        custom.continuedToNext ? 'pb-[2px]' : 'pb-[9px]',
+        custom.continuedFromPrevious ? 'pt-px' : 'pt-[9px]',
+        custom.continuedToNext ? 'pb-px' : 'pb-[9px]',
         isMatch && 'find-row-match',
         isCurrent && 'find-row-current',
       )}
@@ -235,7 +241,7 @@ function _ChatHeader({
               is the minimum that preserves descenders on "g" / "p" /
               "y" inside the clipped box. */}
           {editingTitle ? (
-            <input
+            <Input
               autoFocus
               type="text"
               value={titleDraft}
@@ -299,7 +305,7 @@ function _ChatHeader({
             inline in the subtitle above, so this row only renders when
             there's actual content or the input is open. */}
         {editingTopic ? (
-          <input
+          <Input
             autoFocus
             type="text"
             value={topicDraft}
@@ -1028,26 +1034,15 @@ export function Composer({
       )}
       >
         {attachment && (
-          <div className="mb-2 inline-flex items-center gap-2.5 py-1.5 px-2 bg-sky2-50 border border-sky2-100 rounded-lg max-w-full">
+          <Attachment size="sm" className="mb-2">
             {attachment.kind === 'img' ? (
-              <img src={attachment.url} alt={attachment.name}
-                className="w-10 h-10 object-cover rounded-md" />
+              <AttachmentMedia variant="image"><img src={attachment.url} alt={attachment.name} /></AttachmentMedia>
             ) : (
-              <div className="w-10 h-10 rounded-md grid place-items-center shrink-0"
-                style={{ background: 'linear-gradient(135deg, #2A2A35, #1A1A22)' }}>
-                <IClip className="w-4 h-4 text-white/85" strokeWidth={1.8} />
-              </div>
+              <AttachmentMedia><IClip strokeWidth={1.8} /></AttachmentMedia>
             )}
-            <div className="min-w-0">
-              <div className="text-[12px] font-semibold text-ink-700 truncate max-w-[260px]">{attachment.name}</div>
-              <div className="text-[10.5px] text-ink-500 truncate">{attachment.mime ?? attachment.kind}{attachment.size ? ` · ${Math.round(attachment.size / 1024)}KB` : ''}</div>
-            </div>
-            <button
-              onClick={() => setAttachment(null)}
-              className="ml-1 w-6 h-6 rounded-md grid place-items-center text-ink-500 hover:bg-cloud hover:text-ink-900 transition shrink-0"
-              aria-label="移除附件"
-            >×</button>
-          </div>
+            <AttachmentContent><AttachmentTitle>{attachment.name}</AttachmentTitle><AttachmentDescription>{attachment.mime ?? attachment.kind}{attachment.size ? ` · ${Math.round(attachment.size / 1024)}KB` : ''}</AttachmentDescription></AttachmentContent>
+            <AttachmentActions><AttachmentAction onClick={() => setAttachment(null)} aria-label={`移除 ${attachment.name}`}>×</AttachmentAction></AttachmentActions>
+          </Attachment>
         )}
         {uploading && (
           <div className="mb-2 text-[11.5px] text-ink-500">正在上传…</div>
@@ -1070,7 +1065,7 @@ export function Composer({
               >
                 {replyingToMsg
                   ? <PreviewText body={replyingToMsg.body.slice(0, 140).replace(/\n/g, ' ')} />
-                  : '（正在加载…）'}
+                  : <Skeleton className="h-3 w-32" aria-label="正在加载回复内容" />}
               </div>
             </div>
             <button
@@ -1209,7 +1204,7 @@ export function Composer({
           )}
         </div>
         <div className="flex items-center gap-1 mt-2 text-ink-300">
-          <input
+          <Input
             ref={fileRef}
             type="file"
             // No `accept` — let the user pick anything; the server enforces
@@ -1264,42 +1259,7 @@ export function Composer({
 }
 
 function ThreadLoader() {
-  return (
-    <div
-      className="grid place-items-center py-16"
-      style={{ animation: 'lingxiloop-empty-in 280ms ease-out both' }}
-    >
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative w-14 h-14 grid place-items-center">
-          {/* Ambient halo behind the dots */}
-          <span
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: 'radial-gradient(circle, rgba(0, 168, 240, 0.18), transparent 70%)',
-              animation: 'lingxiloop-halo 2.4s ease-in-out infinite',
-            }}
-          />
-          <div className="relative flex items-end gap-[5px] h-3">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="w-[7px] h-[7px] rounded-full"
-                style={{
-                  background: 'var(--skype)',
-                  boxShadow: '0 1px 4px rgba(0, 168, 240, 0.45)',
-                  animation: 'lingxiloop-pulse-dot 1.2s ease-in-out infinite',
-                  animationDelay: `${i * 160}ms`,
-                }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="font-display italic text-[13px] text-ink-500 tracking-tight">
-          正在加载消息…
-        </div>
-      </div>
-    </div>
-  )
+  return <ResourceSkeleton variant="list" count={6} className="mx-auto max-w-[900px] px-5 py-6" label="正在加载消息" />
 }
 
 function ThreadError({ message, onRetry }: { message: string; onRetry: () => void }) {
@@ -1817,12 +1777,22 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
   const retryLoad = useMessages((s) => s.retryLoad)
   // Compose with memo so the rendered array ref stays stable when inputs do
   const list = useMemo(
-    () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId ? { [convoId]: typingIds } : {} } as MessagesState, convoId),
+    () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId ? { [convoId]: typingIds } : {} } as MessagesState, convoId)
+      .filter((message) => message.streaming !== 'placeholder'),
     [byConvo, streaming, typingIds, convoId],
   )
   const conversations = useConversations((s) => s.list)
   const c = useMemo(() => conversations.find((x) => x.id === convoId), [conversations, convoId])
   const byId = useParticipants((s) => s.byId)
+  const typingAgents = useMemo(() => {
+    const ids = new Set(typingIds ?? [])
+    for (const entry of Object.values(streaming)) {
+      if (entry.conversationId === convoId && !entry.body) ids.add(entry.authorId)
+    }
+    return [...ids]
+      .map((id) => byId[id])
+      .filter((participant): participant is Participant => participant?.kind === 'agent')
+  }, [typingIds, streaming, convoId, byId])
   const streamRef = useRef<HTMLDivElement>(null)
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
   // Whether the scroll is currently anchored to the latest message — drives
@@ -1991,7 +1961,7 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
 
   return (
     <main
-      className="chat-surface grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden"
+      className="chat-surface grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)_auto_auto] overflow-hidden"
     >
       <ConversationHeader
         conversationId={convoId}
@@ -2030,9 +2000,8 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
         <ConversationActivity conversationId={convoId} />
         {searchOpen && (
           <div className="flex items-center gap-2 border-b border-hairline bg-panel px-5 py-2">
-          <div className="flex flex-1 items-center gap-2 rounded-lg bg-raised/70 px-3 py-1.5 text-[13px] text-ink-secondary focus-within:ring-1 focus-within:ring-accent">
-            <ISearch className="w-3.5 h-3.5" strokeWidth={2} />
-            <input
+          <InputGroup className="h-9 flex-1">
+            <InputGroupInput
               ref={searchInputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -2045,14 +2014,14 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
                 if (e.key === 'ArrowDown') { e.preventDefault(); setMatchIdx((i) => (i + 1) % n) }
               }}
               placeholder="搜索当前会话…"
-              className="flex-1 min-w-0 bg-transparent outline-none text-ink-900 placeholder:text-ink-300"
             />
-            <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-300">
+            <InputGroupAddon><ISearch className="size-3.5" strokeWidth={2} /></InputGroupAddon>
+            <InputGroupAddon align="inline-end"><InputGroupText className="font-mono text-[11px] tabular-nums">
               {findMatches.length === 0
                 ? (searchQuery.trim() ? '无匹配' : '')
                 : `${matchIdx + 1} / ${findMatches.length}`}
-            </span>
-          </div>
+            </InputGroupText></InputGroupAddon>
+          </InputGroup>
           <button
             type="button"
             onClick={() => setMatchIdx((i) => (i - 1 + findMatches.length) % Math.max(1, findMatches.length))}
@@ -2125,7 +2094,7 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
                 <div className="mx-auto flex w-full max-w-[900px] flex-col gap-2 px-5 pt-6">
                   {hasMoreOlder ? (
                     <div className="self-center py-1 px-2.5 rounded-full text-[10.5px] font-medium text-ink-400">
-                      {loadingOlder ? '正在加载更早的消息…' : ' '}
+                      {loadingOlder ? <Skeleton className="h-2.5 w-24" aria-label="正在加载更早的消息" /> : ' '}
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 text-ink-300 text-[11px] font-bold tracking-[0.08em] uppercase">
@@ -2155,6 +2124,7 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
             the composer's top edge so it doesn't fight the typing area. */}
         <ScrollToLatestButton visible={!atBottom} onClick={scrollToLatest} zh />
       </div>
+      <AgentTypingIndicator agents={typingAgents} className="mx-auto max-w-[900px]" />
       <Composer convoId={convoId} />
     </main>
   )

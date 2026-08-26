@@ -11,6 +11,8 @@ export interface LingxiImMessagePresentation extends Record<string, unknown> {
   selection: boolean
   linkPreview: boolean
   attachmentHost: boolean
+  bubble: boolean
+  avatarAlignment: 'top' | 'bottom'
 }
 
 export interface LingxiImMessageCustom extends Record<string, unknown> {
@@ -34,21 +36,22 @@ export interface LingxiImMessageCustom extends Record<string, unknown> {
 }
 
 const STANDARD_PRESENTATION: LingxiImMessagePresentation = {
-  variant: 'standard', quote: true, reactions: true, reply: true, selection: true, linkPreview: true, attachmentHost: false,
+  variant: 'standard', quote: true, reactions: true, reply: true, selection: true, linkPreview: true, attachmentHost: false, bubble: true, avatarAlignment: 'bottom',
 }
-const STRUCTURED_PRESENTATION: LingxiImMessagePresentation = { ...STANDARD_PRESENTATION, linkPreview: false }
+const STRUCTURED_PRESENTATION: LingxiImMessagePresentation = { ...STANDARD_PRESENTATION, linkPreview: false, bubble: false }
 const MESSAGE_PRESENTATION = {
   text: STANDARD_PRESENTATION,
-  thought: STANDARD_PRESENTATION,
-  tool: STRUCTURED_PRESENTATION,
-  attachment: { ...STRUCTURED_PRESENTATION, attachmentHost: true },
+  thought: { ...STANDARD_PRESENTATION, bubble: false },
+  tool: { ...STRUCTURED_PRESENTATION, attachmentHost: true, bubble: true, avatarAlignment: 'top' },
+  attachment: { ...STRUCTURED_PRESENTATION, attachmentHost: true, bubble: true },
   email: STRUCTURED_PRESENTATION,
   poll: STRUCTURED_PRESENTATION,
+  questionnaire: STRUCTURED_PRESENTATION,
   handoff: STRUCTURED_PRESENTATION,
   approval: { ...STRUCTURED_PRESENTATION, attachmentHost: true },
   canvas: { ...STRUCTURED_PRESENTATION, attachmentHost: true },
   learning_mission: STRUCTURED_PRESENTATION,
-  system: { variant: 'system', quote: false, reactions: false, reply: false, selection: false, linkPreview: false, attachmentHost: false },
+  system: { variant: 'system', quote: false, reactions: false, reply: false, selection: false, linkPreview: false, attachmentHost: false, bubble: false, avatarAlignment: 'bottom' },
 } satisfies Record<MessageKind, LingxiImMessagePresentation>
 
 const ASSISTANT_NATIVE_KINDS = new Set<MessageKind>(['thought', 'tool', 'handoff', 'approval', 'canvas', 'learning_mission'])
@@ -103,6 +106,7 @@ const MESSAGE_CONTENT_BUILDERS = {
     }
   },
   poll: ({ content }) => { content.push(dataPart('lingxi_poll')) },
+  questionnaire: ({ content }) => { content.push(dataPart('lingxi_questionnaire')) },
   handoff: ({ content }) => { content.push(dataPart('lingxi_handoff')) },
   learning_mission: ({ content }) => { content.push(dataPart('lingxi_learning_mission')) },
   email: ({ content }) => { content.push(dataPart('lingxi_email')) },

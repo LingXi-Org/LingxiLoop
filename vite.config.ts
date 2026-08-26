@@ -25,7 +25,10 @@ export default defineConfig({
     // which happened when @tiptap/extension-table was added — the editor
     // crashes with "Yjs was already imported" + `localsInner` TypeErrors.
     // Force a single module instance for each.
-    dedupe: ['yjs', 'y-prosemirror', 'prosemirror-model', 'prosemirror-state', 'prosemirror-view', 'prosemirror-transform'],
+    dedupe: [
+      '@assistant-ui/react', '@assistant-ui/core', '@assistant-ui/store', '@assistant-ui/tap',
+      'yjs', 'y-prosemirror', 'prosemirror-model', 'prosemirror-state', 'prosemirror-view', 'prosemirror-transform',
+    ],
   },
   optimizeDeps: {
     // Pre-bundle the yjs/prosemirror family as shared entries so every
@@ -33,6 +36,7 @@ export default defineConfig({
     // resolve.dedupe above — both are needed: dedupe fixes source-level
     // resolution, include fixes the dep-optimizer's chunk graph).
     include: [
+      '@assistant-ui/react', '@assistant-ui/react-markdown',
       'yjs',
       '@tiptap/pm/model', '@tiptap/pm/state', '@tiptap/pm/view',
       '@tiptap/react', '@tiptap/starter-kit', '@tiptap/extension-table',

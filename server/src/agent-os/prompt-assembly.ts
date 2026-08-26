@@ -64,6 +64,9 @@ function capabilityModules(capabilities: string[]): string[] {
   if (enabled.has('knowledge')) sections.push(
     '# Source Work\nUse `loop.knowledge` for course material and cite only Host-supplied evidence markers. Separate retrieved facts, derivations, and uncertainty.',
   )
+  sections.push(
+    '# Learner Interaction\nWhen a learner decision is required, use `loop.chat.ask(title=..., items=[...])` for an accessible one- or multi-step clarification. Each item has `name`, `prompt`, optional `description`, `required`, `multiple`, `choices=[{value,label,description?}]`, and optional `input={label,placeholder?}`. Use `loop.polls.create(question=..., options=[...], mode="single"|"multi", expiresInMinutes=...)` when the whole room should vote. Do not imitate either interaction with plain Markdown choices.',
+  )
   return sections
 }
 

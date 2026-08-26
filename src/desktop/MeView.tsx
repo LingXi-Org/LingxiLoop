@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 import { type ApiQuotaSnapshot, type ApiQuotaWindow, api, getServerOrigin } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { Checkbox } from '@/components/Checkbox'
+import { Textarea } from '@/components/ui/textarea'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useDevtools } from '@/stores/devtools'
@@ -272,7 +276,7 @@ function UsageTab() {
               <div key={p.key} className="bg-cloud rounded-[14px] p-5 h-[140px]"
                 style={{ border: '1px solid var(--ink-100)' }}>
                 <div className="font-display font-semibold text-[14px] text-ink-300">{p.label}</div>
-                <div className="font-display italic text-[12px] text-ink-300 mt-2">加载中…</div>
+                <div className="mt-4 space-y-3" role="status" aria-label={`正在加载${p.label}用量`}><Skeleton className="h-6 w-2/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-4/5" /></div>
               </div>
             ))}
           </div>
@@ -436,7 +440,18 @@ function TrustTab() {
                   {rule.mode === 'allow' ? '允许' : rule.mode === 'ask' ? '每次询问' : '拒绝'} · {rule.source === 'explicit_user' ? '用户明确设置' : '已学习'}
                 </div>
               </div>
-              <button type="button" onClick={() => void api.deleteAutonomyRule(rule.id).then(loadRules)} className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">
+              <button type="button" onClick={async () => {
+                if (!await confirmSensitiveAction({
+                  title: '撤销自治规则？',
+                  description: `撤销后，${byId[rule.agentId]?.name ?? rule.agentId} 的 ${rule.scope}.${rule.operation} 操作将恢复默认审批策略。`,
+                  confirmLabel: '撤销规则',
+                  tone: 'destructive',
+                })) return
+                try {
+                  await toastAction(api.deleteAutonomyRule(rule.id), { loading: '正在撤销自治规则', success: '自治规则已撤销', error: '撤销自治规则失败' })
+                  await loadRules()
+                } catch { /* toast owns the visible error state */ }
+              }} className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">
                 撤销
               </button>
             </div>
@@ -597,7 +612,7 @@ function MemoryTab() {
                 <span className="text-skype-deep">✦ 已学习{kindLabel(item.path)}</span><span>·</span><span>{item.agentName}</span>
               </div>
               {isEditing ? (
-                <textarea value={draft} onChange={(event) => setDraft(event.target.value)} className="mt-2 min-h-20 w-full rounded-lg border border-ink-100 bg-paper px-3 py-2 text-[13px] text-ink-700 outline-none focus:border-skype" />
+                <Textarea value={draft} onChange={(event) => setDraft(event.target.value)} className="mt-2 min-h-20 w-full rounded-lg border border-ink-100 bg-paper px-3 py-2 text-[13px] text-ink-700 outline-none focus:border-skype" />
               ) : <div className="mt-2 whitespace-pre-wrap text-[13px] leading-5 text-ink-700">{item.body}</div>}
               <div className="mt-3 flex gap-2">
                 {isEditing ? (

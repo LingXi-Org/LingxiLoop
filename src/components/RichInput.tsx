@@ -740,6 +740,7 @@ export const RichInput = forwardRef<RichInputHandle, Props>(function RichInput(
       autoCapitalize={autoCapitalize}
       autoCorrect={autoCorrect}
       data-placeholder={placeholder ?? ''}
+      data-slot="input-group-control"
       className={className}
       style={style}
       onInput={emitChange}

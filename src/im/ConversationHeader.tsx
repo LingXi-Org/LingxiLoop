@@ -2,6 +2,7 @@ import { type ReactNode, useState } from 'react'
 import { api } from '@/api/client'
 import { AvatarStack } from '@/components/Avatar'
 import { SelectMenu } from '@/components/SelectMenu'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
@@ -103,7 +104,7 @@ export function ConversationHeader({
         </button>
         <span className="min-w-0 flex-1">
           {editingTitle ? (
-            <input
+            <Input
               autoFocus
               value={titleDraft}
               onChange={(event) => setTitleDraft(event.target.value)}
@@ -128,7 +129,7 @@ export function ConversationHeader({
           <span className={cn('mt-1 flex min-w-0 items-center gap-1.5 text-[11px]', active.length > 0 ? 'text-accent' : 'text-ink-secondary')}>
             {active.length > 0 && <span className="size-1.5 shrink-0 animate-pulse-soft rounded-full bg-accent" />}
             {editingTopic ? (
-              <input
+              <Input
                 autoFocus
                 value={topicDraft}
                 onChange={(event) => setTopicDraft(event.target.value)}

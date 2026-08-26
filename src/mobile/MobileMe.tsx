@@ -11,6 +11,8 @@ import { api } from '@/api/client'
 import type { ApiCourse } from '@/api/client'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { isMockImDevelopment } from '@/lib/devMode'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import type { Participant } from '@/types'
 
 interface ToggleablePref { key: string; lbl: string; sub: string; default?: boolean }
@@ -392,76 +394,36 @@ function PushStatusTile() {
   )
 }
 
-/** "Delete account" button + two-step confirmation. Required by
- *  Apple App Store Guideline 5.1.1(v). The confirmation is in-line
- *  (no native confirm() dialog which iOS WKWebView styles poorly)
- *  so the destructive-action UX matches the rest of the app. */
+/** "Delete account" button. Required by Apple App Store Guideline
+ *  5.1.1(v); the global Base UI Alert Dialog owns the destructive
+ *  confirmation and the global Toast reports the request lifecycle. */
 function DeleteAccountButton() {
-  const [stage, setStage] = useState<'idle' | 'confirm' | 'busy'>('idle')
-  const [err, setErr] = useState<string | null>(null)
-
-  if (stage === 'idle') {
-    return (
-      <button
-        type="button"
-        onClick={() => setStage('confirm')}
-        className="w-full py-3 px-4 rounded-[12px] text-[13px] font-semibold text-coral-deep transition text-left active:opacity-70"
-        style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
-      >
-        删除账号
-        <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">永久删除此 LingxiLoop 账号</span>
-      </button>
-    )
-  }
+  const [busy, setBusy] = useState(false)
 
   return (
-    <div
-      className="rounded-[12px] p-3.5"
-      style={{ border: '1px solid var(--coral)', background: 'rgba(255, 122, 107, 0.06)' }}
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        if (!await confirmSensitiveAction({
+          title: '永久删除账号？',
+          description: '登录信息、第三方授权和个人资料将被删除；共享消息会保留但改为“已注销用户”。此操作无法撤销。',
+          confirmLabel: '永久删除账号',
+          tone: 'destructive',
+        })) return
+        setBusy(true)
+        try {
+          await toastAction(api.deleteAccount(), { loading: '正在删除账号', success: '账号已删除', error: '删除账号失败' })
+          useAuth.getState().clear()
+          try { await teardownPushNotifications() } catch { /* ignore */ }
+        } catch { /* toast owns the visible error state */ }
+        finally { setBusy(false) }
+      }}
+      className="w-full py-3 px-4 rounded-[12px] text-[13px] font-semibold text-coral-deep transition text-left active:opacity-70 disabled:opacity-50"
+      style={{ border: '1px solid rgba(255, 122, 107, 0.3)' }}
     >
-      <div className="font-display text-[13px] text-ink-900 font-semibold mb-1">
-        确定永久删除账号？
-      </div>
-      <div className="font-display italic text-[12px] text-ink-700 leading-snug mb-3">
-        登录信息、第三方授权和个人资料将被删除。为保留其他成员的会话历史，
-        你在共享对话中发布的消息仍会保留，但姓名将显示为“已注销用户”。此操作无法撤销。
-      </div>
-      {err && (
-        <div className="text-[11.5px] text-coral-deep font-display italic mb-2 leading-snug">
-          {err}
-        </div>
-      )}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          disabled={stage === 'busy'}
-          onClick={() => { setStage('idle'); setErr(null) }}
-          className="flex-1 h-9 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-paper transition active:opacity-70 disabled:opacity-50"
-          style={{ border: '1px solid var(--ink-100)' }}
-        >取消</button>
-        <button
-          type="button"
-          disabled={stage === 'busy'}
-          onClick={async () => {
-            setStage('busy')
-            setErr(null)
-            try {
-              await api.deleteAccount()
-              // Same race-safe pattern as Sign out: flip auth state
-              // synchronously so AuthGate routes to the auth screen
-              // this frame. The server already invalidated sessions
-              // so any background calls will 401 cleanly.
-              useAuth.getState().clear()
-              try { await teardownPushNotifications() } catch { /* ignore */ }
-            } catch (e) {
-              setErr(e instanceof Error ? e.message : String(e))
-              setStage('confirm')
-            }
-          }}
-          className="flex-1 h-9 rounded-[9px] text-[12.5px] font-semibold text-white transition active:opacity-70 disabled:opacity-50"
-          style={{ background: 'var(--coral)' }}
-        >{stage === 'busy' ? '正在删除…' : '删除'}</button>
-      </div>
-    </div>
+      {busy ? '正在删除账号…' : '删除账号'}
+      <span className="block font-display italic text-[11px] text-ink-500 mt-0.5">永久删除此 LingxiLoop 账号</span>
+    </button>
   )
 }

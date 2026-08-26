@@ -15,6 +15,7 @@ import { useParticipants } from '@/stores/participants'
 import { IDoc, IBoard, ICalendar, IPlus } from '@/components/icons'
 import { MobileCalendar } from './MobileCalendar'
 import { EventEditor } from '@/components/EventEditor'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { cn } from '@/lib/utils'
 
 type LibTab = 'documents' | 'boards' | 'calendar'
@@ -149,7 +150,7 @@ function DocumentsList() {
   return (
     <div className="pb-24">
       {!loaded && (
-        <div className="px-6 py-10 text-center text-[13px] text-ink-300 font-display italic">加载中…</div>
+        <ResourceSkeleton variant="list" count={6} label="正在加载文档" />
       )}
       {loaded && list.length === 0 && (
         <div className="px-6 py-12 text-center text-[13px] text-ink-500 font-display italic leading-relaxed">
@@ -197,7 +198,7 @@ function BoardsList() {
   return (
     <div className="pb-24">
       {loadingList && list.length === 0 && (
-        <div className="px-6 py-10 text-center text-[13px] text-ink-300 font-display italic">加载中…</div>
+        <ResourceSkeleton variant="list" count={6} label="正在加载看板" />
       )}
       {!loadingList && list.length === 0 && (
         <div className="px-6 py-12 text-center text-[13px] text-ink-500 font-display italic leading-relaxed">

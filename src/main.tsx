@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import { ConditionalPostHogProvider } from './components/ConditionalPostHogProvider'
+import { GlobalInteractionProvider } from './components/GlobalInteractionProvider'
 import { PostHogAppTracker } from './components/PostHogAppTracker'
 import { initObservability } from './lib/observability'
 import { isElectron } from './lib/runtime'
@@ -18,7 +19,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ConditionalPostHogProvider>
       <PostHogAppTracker />
-      <App />
+      <GlobalInteractionProvider>
+        <App />
+      </GlobalInteractionProvider>
     </ConditionalPostHogProvider>
   </StrictMode>,
 )

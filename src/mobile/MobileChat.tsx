@@ -1,9 +1,11 @@
+import { useAuiState } from '@assistant-ui/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 import { type ApiAttachment, api } from '@/api/client'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, IBack, IClip, IMore, ISearch, ISend, ISmile } from '@/components/icons'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
+import { AgentTypingIndicator } from '@/components/messages/AgentTypingIndicator'
 import { PollComposer } from '@/components/PollComposer'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
@@ -11,17 +13,21 @@ import { SelectMenu } from '@/components/SelectMenu'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { TwEmoji } from '@/components/TwEmoji'
+import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
+import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
+import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { ComposerSurface } from '@/im/Composer'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { ConversationView } from '@/im/ConversationView'
 import { MessageList } from '@/im/MessageList'
-import { useAuiState } from '@assistant-ui/react'
-import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { tapHaptic } from '@/lib/native'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { findSkypeByShortcode, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
@@ -59,7 +65,8 @@ export function MobileChat() {
   const firstItemIndex = useMessages((s) => (convoId ? s.firstItemIndex[convoId] ?? VIRTUOSO_FIRST_INDEX_BASE : VIRTUOSO_FIRST_INDEX_BASE))
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
   const list = useMemo(
-    () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId && typingIds ? { [convoId]: typingIds } : {} } as MessagesState, convoId),
+    () => messagesFor({ byConvo: byConvo ? { [convoId!]: byConvo } : {}, streaming, typing: convoId && typingIds ? { [convoId]: typingIds } : {} } as MessagesState, convoId)
+      .filter((message) => message.streaming !== 'placeholder'),
     [byConvo, streaming, typingIds, convoId],
   )
   // Drives the bottom-right "scroll to latest" pill — true means we're pinned
@@ -75,6 +82,15 @@ export function MobileChat() {
   const conversations = useConversations((s) => s.list)
   const c = useMemo(() => conversations.find((x) => x.id === convoId), [conversations, convoId])
   const byId = useParticipants((s) => s.byId)
+  const typingAgents = useMemo(() => {
+    const ids = new Set(typingIds ?? [])
+    for (const entry of Object.values(streaming)) {
+      if (entry.conversationId === convoId && !entry.body) ids.add(entry.authorId)
+    }
+    return [...ids]
+      .map((id) => byId[id])
+      .filter((participant): participant is Participant => participant?.kind === 'agent')
+  }, [typingIds, streaming, convoId, byId])
   const meId = useMe()
   // Per-convo composer draft, persisted in the global store so the text
   // survives MobileChat unmounts (chat → list → chat keeps the half-typed
@@ -307,12 +323,17 @@ export function MobileChat() {
 
   const leaveConvo = async () => {
     if (!convoId) return
-    if (!confirm('确定退出此对话吗？其他成员仍可继续对话。')) {
+    if (!await confirmSensitiveAction({
+      title: '退出对话？',
+      description: '退出后其他成员仍可继续对话。',
+      confirmLabel: '退出对话',
+      tone: 'destructive',
+    })) {
       setMenuOpen(false)
       return
     }
     try {
-      await api.leaveConversation(convoId)
+      await toastAction(api.leaveConversation(convoId), { loading: '正在退出对话', success: '已退出对话', error: '退出对话失败' })
       select(null)
       await useConversations.getState().reload()
     } catch (err) { console.warn('leave failed', err) }
@@ -574,6 +595,7 @@ export function MobileChat() {
             larger inset than desktop so it clears the soft-keyboard safe area. */}
         <ScrollToLatestButton visible={!atBottom} onClick={smoothScrollToLatest} bottomOffset={20} />
       </div>
+      <AgentTypingIndicator agents={typingAgents} className="mx-auto max-w-[760px] px-4" />
       {/* Composer */}
       <ComposerSurface variant="mobile">
         <div className="px-1 pb-1">
@@ -589,26 +611,15 @@ export function MobileChat() {
           />
         )}
         {attachment && (
-          <div className="mb-2 inline-flex items-center gap-2.5 py-1.5 px-2 bg-sky2-50 border border-sky2-100 rounded-lg max-w-full">
+          <Attachment size="sm" className="mb-2">
             {attachment.kind === 'img' ? (
-              <img src={attachment.url} alt={attachment.name}
-                className="w-10 h-10 object-cover rounded-md shrink-0" />
+              <AttachmentMedia variant="image"><img src={attachment.url} alt={attachment.name} /></AttachmentMedia>
             ) : (
-              <div className="w-10 h-10 rounded-md grid place-items-center shrink-0"
-                style={{ background: 'linear-gradient(135deg, #2A2A35, #1A1A22)' }}>
-                <IClip className="w-4 h-4 text-white/85" strokeWidth={1.8} />
-              </div>
+              <AttachmentMedia><IClip strokeWidth={1.8} /></AttachmentMedia>
             )}
-            <div className="min-w-0">
-              <div className="text-[12px] font-semibold text-ink-700 truncate max-w-[220px]">{attachment.name}</div>
-              <div className="text-[10.5px] text-ink-500 truncate">{attachment.mime ?? attachment.kind}{attachment.size ? ` · ${Math.round(attachment.size / 1024)}KB` : ''}</div>
-            </div>
-            <button
-              onClick={() => setAttachment(null)}
-              className="ml-1 w-6 h-6 rounded-md grid place-items-center text-ink-500 active:bg-cloud transition shrink-0"
-              aria-label="Remove attachment"
-            >×</button>
-          </div>
+            <AttachmentContent><AttachmentTitle>{attachment.name}</AttachmentTitle><AttachmentDescription>{attachment.mime ?? attachment.kind}{attachment.size ? ` · ${Math.round(attachment.size / 1024)}KB` : ''}</AttachmentDescription></AttachmentContent>
+            <AttachmentActions><AttachmentAction onClick={() => setAttachment(null)} aria-label={`移除 ${attachment.name}`}>×</AttachmentAction></AttachmentActions>
+          </Attachment>
         )}
         {uploading && (
           <div className="mb-2 text-[11.5px] text-ink-500 italic">uploading…</div>
@@ -627,7 +638,7 @@ export function MobileChat() {
               </div>
               <span className="shrink-0 text-[10px] text-ink-300" aria-hidden>·</span>
               <div className="min-w-0 flex-1 truncate text-[12px] text-ink-500">
-                {replyingToMsg ? replyingToMsg.body.slice(0, 140).replace(/\n/g, ' ') : '(loading…)'}
+                {replyingToMsg ? replyingToMsg.body.slice(0, 140).replace(/\n/g, ' ') : <Skeleton className="h-3 w-28" aria-label="正在加载回复内容" />}
               </div>
             </div>
             <button
@@ -697,7 +708,7 @@ export function MobileChat() {
             })}
           </div>
         )}
-        <input
+        <Input
           ref={fileRef}
           type="file"
           // No `accept` filter — server's MIME whitelist is the source
@@ -913,7 +924,7 @@ function StreamHeader({ context }: { context?: StreamCtx }) {
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-3 px-4 pt-4">
       {hasMoreOlder ? (
         <div className="self-center py-1 px-2.5 rounded-full text-[10.5px] font-medium text-ink-400">
-          {loadingOlder ? '正在加载更早的消息…' : ' '}
+          {loadingOlder ? <Skeleton className="h-2.5 w-24" aria-label="正在加载更早的消息" /> : ' '}
         </div>
       ) : (
         <div className="flex items-center gap-3 text-ink-300 text-[10.5px] font-bold tracking-[0.08em] uppercase">
@@ -961,7 +972,7 @@ function MobileRuntimeEntryShell({
   const press = useLongPress((coords) => onLongPress(custom.message, coords))
   return (
     <div
-      className={cn('mx-auto w-full max-w-[760px] px-4', custom.continuedFromPrevious ? 'pt-0.5' : 'pt-2', custom.continuedToNext ? 'pb-0.5' : 'pb-2')}
+      className={cn('mx-auto w-full max-w-[760px] px-4', custom.continuedFromPrevious ? 'pt-px' : 'pt-2', custom.continuedToNext ? 'pb-px' : 'pb-2')}
       style={{
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -1072,9 +1083,14 @@ export function MobileChatInfo() {
 
   const onLeave = async () => {
     if (!convoId) return
-    if (!confirm('确定退出此对话吗？其他成员仍可继续对话。')) return
+    if (!await confirmSensitiveAction({
+      title: '退出对话？',
+      description: '退出后其他成员仍可继续对话。',
+      confirmLabel: '退出对话',
+      tone: 'destructive',
+    })) return
     try {
-      await api.leaveConversation(convoId)
+      await toastAction(api.leaveConversation(convoId), { loading: '正在退出对话', success: '已退出对话', error: '退出对话失败' })
       useApp.getState().selectConversation(null)
       await useConversations.getState().reload()
     } catch (err) { console.warn('leave failed', err) }
@@ -1156,7 +1172,7 @@ export function MobileChatInfo() {
             <AvatarStack ps={groupAgents} size={64} max={5} />
           </div>
           {editingTitle ? (
-            <input
+            <Input
               autoFocus
               type="text"
               value={titleDraft}
@@ -1183,7 +1199,7 @@ export function MobileChatInfo() {
           </div>
           {/* Topic — tap to edit; prompt to add when empty. */}
           {editingTopic ? (
-            <input
+            <Input
               autoFocus
               type="text"
               value={topicDraft}
@@ -1266,7 +1282,7 @@ export function MobileChatInfo() {
           {memberPs.length > 5 && (
             <div className="mb-2.5 flex items-center gap-2 px-2.5 py-1.5 rounded-[10px] bg-paper" style={{ border: '1px solid var(--ink-100)' }}>
               <ISearch className="w-3.5 h-3.5 text-ink-300 shrink-0" strokeWidth={2.4} />
-              <input
+              <Input
                 value={memberQuery}
                 onChange={(e) => setMemberQuery(e.target.value)}
                 placeholder="搜索成员…"
