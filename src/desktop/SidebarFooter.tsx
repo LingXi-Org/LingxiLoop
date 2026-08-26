@@ -12,8 +12,10 @@ import { api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { isMockImDevelopment } from '@/lib/devMode'
+import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
+import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
 import type { Participant } from '@/types'
 
@@ -110,12 +112,36 @@ export function SidebarFooter() {
     if (companyId !== activeCompanyId) {
       useApp.getState().selectConversation(null)
       setActiveCompany(companyId)
+      setWorkspaceSession(null)
       setProjects([])
       setProjectsLoaded(false)
       setSelectedProjectId(null)
     }
     setOpenPanel(null)
   }
+
+  const switchProject = async (projectId: string) => {
+    if (!activeCompanyId) return
+    setWorkspaceSession({ companyId: activeCompanyId, projectId })
+    setSelectedProjectId(projectId)
+    useApp.getState().selectConversation(null)
+    setOpenPanel(null)
+    if (isMockImDevelopment()) {
+      const { activateMockWorkspace } = await import('@/dev/mockIm')
+      activateMockWorkspace(projectId)
+    } else {
+      await Promise.allSettled([
+        api.openProject(projectId),
+        useParticipants.getState().load(),
+        useConversations.getState().reload(),
+      ])
+    }
+  }
+
+  useEffect(() => {
+    const selected = getWorkspaceSession()
+    setSelectedProjectId(selected?.companyId === activeCompanyId ? selected.projectId : null)
+  }, [activeCompanyId])
 
   const signOut = async () => {
     try { await api.authLogout() } catch { /* best effort */ }
@@ -146,7 +172,7 @@ export function SidebarFooter() {
                 role="menuitemradio"
                 aria-checked={selectedProjectId === project.id}
                 data-selected={selectedProjectId === project.id || undefined}
-                onClick={() => { setSelectedProjectId(project.id); setOpenPanel(null) }}
+                onClick={() => void switchProject(project.id)}
               >
                 <ProjectMark color={project.color} />
                 <span className="grok-project-row-copy">
@@ -204,6 +230,11 @@ export function SidebarFooter() {
       <button type="button" className="grok-sidebar-footer-row" data-active={appView === 'me' || undefined} onClick={() => { setOpenPanel(null); useApp.getState().setView('me') }}>
         <IconSettings size={19} stroke={1.55} />
         <span className="grok-sidebar-footer-label">设置</span>
+      </button>
+
+      <button type="button" className="grok-sidebar-footer-row" data-active={appView === 'management' || undefined} onClick={() => { setOpenPanel(null); useApp.getState().setView('management') }}>
+        <IconBuilding size={19} stroke={1.55} />
+        <span className="grok-sidebar-footer-label">Company & Courses</span>
       </button>
 
       <button

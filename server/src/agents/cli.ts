@@ -3592,11 +3592,14 @@ async function cmdTopicSet(parsed: ParsedArgs): Promise<CliResult> {
   const raw = unescapeChat(parsed.positional.slice(1).join(' ')).trim()
   const topic = raw.length > 0 ? raw.slice(0, 200) : null
 
-  const { rows } = await pool.query<{ members: string[]; company_id: string }>(
-    `SELECT members, company_id FROM conversations WHERE id = $1`, [convoId],
+  const { rows } = await pool.query<{ members: string[]; company_id: string; project_id: string | null; project_status: string | null }>(
+    `SELECT conversation.members,conversation.company_id,conversation.project_id,project.status AS project_status
+       FROM conversations conversation LEFT JOIN projects project ON project.id=conversation.project_id
+      WHERE conversation.id=$1`, [convoId],
   )
   if (!rows[0]) return err(`unknown conversation ${convoId}`)
   if (!rows[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
+  if (rows[0].project_status === 'archived') return err('archived courses are read-only')
 
   await pool.query(
     `UPDATE conversations SET topic = $2, updated_at = NOW() WHERE id = $1`,
@@ -3607,6 +3610,7 @@ async function cmdTopicSet(parsed: ParsedArgs): Promise<CliResult> {
     type: 'conversation.updated',
     conversationId: convoId,
     companyId: rows[0].company_id,
+    workspaceId: rows[0].project_id ?? undefined,
     patch: { topic },
   })
   return ok(topic ? `topic set: "${topic}"` : '(topic cleared)', [{
@@ -3629,12 +3633,16 @@ async function cmdRename(parsed: ParsedArgs): Promise<CliResult> {
   const title = unescapeChat(parsed.positional.slice(1).join(' ')).trim().slice(0, 80)
   if (!title) return err('rename requires a non-empty title')
 
-  const { rows } = await pool.query<{ members: string[]; kind: string; company_id: string; title: string }>(
-    `SELECT members, kind, company_id, title FROM conversations WHERE id = $1`, [convoId],
+  const { rows } = await pool.query<{ members: string[]; kind: string; company_id: string; title: string; project_id: string | null; project_status: string | null }>(
+    `SELECT conversation.members,conversation.kind,conversation.company_id,conversation.title,
+            conversation.project_id,project.status AS project_status
+       FROM conversations conversation LEFT JOIN projects project ON project.id=conversation.project_id
+      WHERE conversation.id=$1`, [convoId],
   )
   if (!rows[0]) return err(`unknown conversation ${convoId}`)
   if (rows[0].kind !== 'group') return err(`only group chats can be renamed (${convoId} is a ${rows[0].kind})`)
   if (!rows[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
+  if (rows[0].project_status === 'archived') return err('archived courses are read-only')
   const currentTitle = rows[0].title
 
   // Optimistic-concurrency: --if-equals "<expected current title>" lets a caller
@@ -3668,6 +3676,7 @@ async function cmdRename(parsed: ParsedArgs): Promise<CliResult> {
     type: 'conversation.updated',
     conversationId: convoId,
     companyId: rows[0].company_id,
+    workspaceId: rows[0].project_id ?? undefined,
     patch: { title },
   })
   return ok(`renamed to "${title}" (${convoId})`, [{
@@ -4677,7 +4686,7 @@ async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext =
     if (!id) return err('usage: calendar run-now <event_id>')
     // Privacy gate: only people who can see the row can dispatch it.
     const { rows } = await pool.query(
-      `SELECT id, company_id, created_by, kind, title, description, assignee_id,
+      `SELECT id,company_id,project_id,created_by,kind,title,description,assignee_id,
               target_conversation_id, agent_prompt, start_at, end_at, all_day,
               recurrence, status, last_fired_at,
               reminder_minutes_before, reminder_channel,

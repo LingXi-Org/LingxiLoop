@@ -27,8 +27,10 @@
  *   • not_found — bad link.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { api, getServerOrigin, type ApiInvitationPreview } from '@/api/client'
+import { api, getServerOrigin, type ApiCourseInvitationAccept, type ApiCourseInvitationPreview, type ApiInvitationPreview } from '@/api/client'
 import { useAuth } from '@/stores/auth'
+import { useApp } from '@/stores/app'
+import { setWorkspaceSession } from '@/lib/workspaceSession'
 import { isElectron, isWebAppHost } from '@/lib/runtime'
 import { CloudLogo } from './Avatar'
 import { GetDesktopAppLink } from './GetDesktopAppLink'
@@ -43,6 +45,14 @@ const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
  *  back up on return. */
 export function consumeInviteFromUrl(): { token: string; clear: () => void } | null {
   const url = new URL(window.location.href)
+  const coursePathMatch = url.pathname.match(/^\/invite\/course\/([^/?#]+)\/?$/)
+  if (coursePathMatch) {
+    const token = `course:${decodeURIComponent(coursePathMatch[1])}`
+    const clear = () => {
+      try { history.replaceState(null, '', `${url.origin}/${url.search}${url.hash}`) } catch { /* swallow */ }
+    }
+    return { token, clear }
+  }
   const pathMatch = url.pathname.match(/^\/invite\/([^/?#]+)\/?$/)
   if (pathMatch) {
     const token = decodeURIComponent(pathMatch[1])
@@ -103,6 +113,8 @@ interface Props {
 
 export function InviteAcceptScreen({ token, onDone }: Props) {
   const token_ = token
+  const courseInvite = token_.startsWith('course:')
+  const rawToken = courseInvite ? token_.slice('course:'.length) : token_
   const tokenUserId = useAuth((s) => s.user?.id ?? null)
   const tokenStr = useAuth((s) => s.token)
   const setMe = useAuth((s) => s.setMe)
@@ -111,7 +123,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const companies = useAuth((s) => s.companies)
   const user = useAuth((s) => s.user)
 
-  const [preview, setPreview] = useState<ApiInvitationPreview | null>(null)
+  const [preview, setPreview] = useState<ApiInvitationPreview | ApiCourseInvitationPreview | null>(null)
   const [previewErr, setPreviewErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [acceptErr, setAcceptErr] = useState<string | null>(null)
@@ -124,19 +136,19 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const loadPreview = useCallback(async () => {
     setPreviewErr(null)
     try {
-      const r = await api.previewInvitation(token_)
+      const r = courseInvite ? await api.previewCourseInvitation(rawToken) : await api.previewInvitation(rawToken)
       setPreview(r)
     } catch (e) {
       setPreviewErr(e instanceof Error ? e.message : String(e))
     }
-  }, [token_])
+  }, [courseInvite, rawToken])
 
   useEffect(() => { void loadPreview() }, [loadPreview, tokenStr])
 
   const accept = useCallback(async () => {
     setBusy(true); setAcceptErr(null)
     try {
-      const r = await api.acceptInvitation(token_)
+      const r = courseInvite ? await api.acceptCourseInvitation(rawToken) : await api.acceptInvitation(rawToken)
       // Refresh /auth/me so the companies list (used by the switcher) gets
       // the freshly-joined workspace without a manual reload.
       try {
@@ -160,6 +172,11 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         }
       }
       clearPendingInvite()
+      if (courseInvite && 'course' in r) {
+        const accepted = r as ApiCourseInvitationAccept
+        setWorkspaceSession({ companyId: accepted.company.id, projectId: accepted.course.projectId })
+        useApp.getState().selectConversation(accepted.course.studyRoomId)
+      }
       // Web and native clients both enter the workspace immediately. The Web
       // app is a complete product surface, not a desktop-download handoff.
       onDone()
@@ -168,7 +185,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     } finally {
       setBusy(false)
     }
-  }, [token_, setMe, setServerCapabilities, setActive, companies, user, onDone])
+  }, [courseInvite, rawToken, setMe, setServerCapabilities, setActive, companies, user, onDone])
 
   // Auto-accept the moment we have a session AND the preview is `valid`.
   // Saves a redundant click when the user just signed in to redeem the
@@ -183,6 +200,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
 
   const inv = preview?.invitation
   const companyName = inv?.company.name ?? 'LingxiLoop'
+  const course = inv && 'course' in inv ? inv.course : null
   const inviter = inv?.inviterName ?? 'Someone'
   const signedIn = !!tokenStr && !!tokenUserId
 
@@ -250,6 +268,14 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           />
         )}
 
+        {!joinedCompany && preview && preview.status === 'archived' && (
+          <ErrorBlock
+            title="该课程已归档"
+            body="归档课程为只读状态，无法再接受新成员。"
+            onDismiss={() => { clearPendingInvite(); onDone() }}
+          />
+        )}
+
         {!joinedCompany && preview && preview.status === 'wrong_email' && inv && (
           <div className="flex flex-col items-center gap-4 text-center">
             <h1 className="font-display text-[20px] text-ink-900">账号错误</h1>
@@ -270,7 +296,13 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           <AlreadyMemberBlock
             companyName={companyName}
             onSwitchInBrowser={() => {
-              if (inv) setActive(inv.company.id)
+              if (inv) {
+                setActive(inv.company.id)
+                if ('course' in inv) {
+                  setWorkspaceSession({ companyId: inv.company.id, projectId: inv.course.projectId })
+                  useApp.getState().selectConversation(inv.course.studyRoomId)
+                }
+              }
               clearPendingInvite()
               onDone()
             }}
@@ -284,8 +316,9 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
                 {inviter} 邀请您
               </div>
               <h1 className="font-display text-[24px] tracking-tight text-ink-900">
-                {companyName}
+                {course?.name ?? companyName}
               </h1>
+              {course && <div className="text-[12px] text-ink-400">{companyName} · Study Room</div>}
               {inv.note && (
                 <div className="text-[12.5px] text-ink-500 font-display italic mt-2 px-3 py-2 rounded-[10px]"
                      style={{ background: 'var(--cloud)' }}>
@@ -436,6 +469,7 @@ function SignInToAccept({ token }: { token: string }) {
   const [busy, setBusy] = useState<'lingxi' | null>(null)
   const go = (provider: 'lingxi') => {
     setBusy(provider)
+    const rawToken = token.startsWith('course:') ? token.slice('course:'.length) : token
     // Persist BEFORE redirect so the post-OAuth landing can resume here.
     stashPendingInvite(token)
     if (isElectron && window.lingxiloop?.auth) {
@@ -444,7 +478,7 @@ function SignInToAccept({ token }: { token: string }) {
         setBusy(null)
         return
       }
-      const inv = encodeURIComponent(token)
+      const inv = encodeURIComponent(rawToken)
       // Arm a single-use nonce (anti session-fixation — see AuthScreen). The
       // nonce rides the return URL's query and must match on the inbound token.
       const auth = window.lingxiloop.auth
@@ -455,11 +489,11 @@ function SignInToAccept({ token }: { token: string }) {
           if (nonce) done += `?n=${encodeURIComponent(nonce)}`
         } catch { /* unarmed fallback → token rejected, user retries */ }
         const ret = encodeURIComponent(done)
-        void auth.openExternal(`${origin}/api/auth/start/${provider}?return=${ret}&invite=${inv}`)
+        void auth.openExternal(`${origin}/api/auth/start/${provider}?return=${ret}&invite=${inv}&inviteKind=${token.startsWith('course:') ? 'course' : 'company'}`)
       })()
       return
     }
-    location.assign(api.authStartUrl(provider, { inviteToken: token }))
+    location.assign(api.authStartUrl(provider, { inviteToken: rawToken, inviteKind: token.startsWith('course:') ? 'course' : 'company' }))
   }
   return (
     <div className="w-full flex flex-col gap-2.5">

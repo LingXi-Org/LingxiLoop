@@ -344,7 +344,7 @@ export interface ImReadReceiptAdvance {
 }
 
 export interface ViewKey {
-  view: 'sources' | 'conversations' | 'mail' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'learning'
+  view: 'sources' | 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'learning' | 'management'
 }
 
 export type LearningRole = 'teacher' | 'learner'

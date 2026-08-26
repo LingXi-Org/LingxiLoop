@@ -234,13 +234,14 @@ function toFrame(row: FrameRow): CanvasFrame {
 }
 
 async function publishCanvas(companyId: string, event: Omit<CanvasEvent, 'type' | 'companyId' | 'timestamp'>): Promise<void> {
-  const { rows } = await pool.query<{ conversation_id: string | null }>(
-    `SELECT conversation_id FROM canvases WHERE id=$1 AND company_id=$2`,
+  const { rows } = await pool.query<{ conversation_id: string | null; project_id: string | null }>(
+    `SELECT conversation_id,project_id FROM canvases WHERE id=$1 AND company_id=$2`,
     [event.canvasId, companyId],
   )
   await publish(CH_CANVAS, {
     type: 'canvas.changed', companyId,
     ...(rows[0]?.conversation_id ? { conversationId: rows[0].conversation_id } : {}),
+    ...(rows[0]?.project_id ? { workspaceId: rows[0].project_id } : {}),
     timestamp: new Date().toISOString(), ...event,
   })
 }

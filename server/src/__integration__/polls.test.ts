@@ -95,6 +95,15 @@ async function voteViaHttp(messageId: string, optionIds: string[]): Promise<{ st
   return { status: res.status, body: await res.json().catch(() => null) }
 }
 
+async function closeViaHttp(messageId: string): Promise<{ status: number; body: any }> {
+  const res = await fetch(`${baseUrl}/api/polls/${encodeURIComponent(messageId)}/close`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': COMPANY },
+    body: '{}',
+  })
+  return { status: res.status, body: await res.json().catch(() => null) }
+}
+
 test('[integration] POST /polls creates a poll message with structured payload', async () => {
   const { status, body } = await createPollViaHttp({
     conversationId: CONVO,
@@ -217,6 +226,29 @@ test('[integration] closing a poll blocks further votes; only author can close',
   // Further votes are rejected.
   const vote = await voteViaHttp(created.messageId, [created.poll.options[0].id])
   assert.equal(vote.status, 409)
+})
+
+test('[integration] archived course conversations reject poll create, vote, and close writes', async () => {
+  await pool.query(
+    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general,status)
+     VALUES ('poll-course-project',$1,'Poll course','','#123456',$2,FALSE,'active')`,
+    [COMPANY, ME],
+  )
+  await pool.query(`UPDATE conversations SET project_id='poll-course-project' WHERE id=$1`, [CONVO])
+  const created = await createPollViaHttp({
+    conversationId: CONVO, question: 'Before archive?', mode: 'single', options: ['Yes', 'No'],
+  })
+  assert.equal(created.status, 201)
+  await pool.query(`UPDATE projects SET status='archived',archived_at=NOW() WHERE id='poll-course-project'`)
+
+  const createBlocked = await createPollViaHttp({
+    conversationId: CONVO, question: 'After archive?', mode: 'single', options: ['Yes', 'No'],
+  })
+  assert.equal(createBlocked.status, 409)
+  const voteBlocked = await voteViaHttp(created.body.messageId, [created.body.poll.options[0].id])
+  assert.equal(voteBlocked.status, 409)
+  const closeBlocked = await closeViaHttp(created.body.messageId)
+  assert.equal(closeBlocked.status, 409)
 })
 
 test('[integration] sweepExpiredPolls auto-closes polls past expiresAt', async () => {
