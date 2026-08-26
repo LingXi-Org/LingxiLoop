@@ -49,6 +49,8 @@ export const CH_CANVAS = 'lingxiloop:canvas'
  * fan-out can echo-suppress on the sender's own socket. */
 export const CH_DOC_UPDATE = 'lingxiloop:doc.update'
 export const CH_DOC_AWARENESS = 'lingxiloop:doc.awareness'
+/** Cross-instance revocation for already-open collaborative document rooms. */
+export const CH_DOC_ACCESS_REVOKED = 'lingxiloop:doc.access.revoked'
 /** A user / agent was @-mentioned inside a doc. Fanned out via the
  *  generic tenant-scoped WS bridge (NOT the per-doc subscription
  *  bridge) — recipients listen by their participant id, regardless of
@@ -448,12 +450,18 @@ export interface AgentActivityEvent extends TenantTagged {
   }
 }
 
+export interface DocAccessRevokedEvent extends TenantTagged {
+  type: 'doc.access.revoked'
+  userId: string
+}
+
 export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
   | StatusEvent | AvatarEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
   | BoardEvent | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
   | CalendarEventChangedEvent
   | PollUpdatedEvent
+  | DocAccessRevokedEvent
   | AgentActivityEvent
 
 export async function publish(channel: string, event: BroadcastEvent): Promise<void> {

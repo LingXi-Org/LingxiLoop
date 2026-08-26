@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict'
 import { after, before, beforeEach, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
+import { WebSocket, type RawData } from 'ws'
+import * as Y from 'yjs'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
+import { createWsTicket } from '../auth.js'
 import { ensureSchema } from '../db/migrate.js'
 import { pool } from '../db/pool.js'
+import { applyLocalUpdate } from '../documents/rooms.js'
+import { attachWebSocket } from '../ws.js'
 
 const OWNER = 'u-course-owner'
 const LEARNER = 'u-course-learner'
@@ -12,10 +17,12 @@ let learnerServer: Server
 let ownerUrl = ''
 let learnerUrl = ''
 
-async function listen(userId: string): Promise<{ server: Server; url: string }> {
+async function listen(userId: string, withWebSocket = false): Promise<{ server: Server; url: string }> {
   const app = await buildApiTestApp(userId)
   return await new Promise((resolve) => {
-    const server = createServer(app).listen(0, () => {
+    const server = createServer(app)
+    if (withWebSocket) attachWebSocket(server)
+    server.listen(0, () => {
       const address = server.address()
       resolve({ server, url: `http://127.0.0.1:${typeof address === 'object' && address ? address.port : 0}` })
     })
@@ -25,7 +32,7 @@ async function listen(userId: string): Promise<{ server: Server; url: string }> 
 before(async () => {
   await ensureSchemaOnce()
   const owner = await listen(OWNER); ownerServer = owner.server; ownerUrl = owner.url
-  const learner = await listen(LEARNER); learnerServer = learner.server; learnerUrl = learner.url
+  const learner = await listen(LEARNER, true); learnerServer = learner.server; learnerUrl = learner.url
 })
 beforeEach(resetAllTables)
 after(async () => { await teardownAll(ownerServer); if (learnerServer.listening) await new Promise<void>((resolve) => learnerServer.close(() => resolve())) })
@@ -51,14 +58,18 @@ async function createCourse(name: string, companyId = 'co-courses') {
   return JSON.parse(raw) as { id: string; projectId: string; studyRoomId: string }
 }
 
-async function inviteAndAccept(courseId: string, role: 'teacher' | 'learner', companyId = 'co-courses') {
+async function createInvitation(courseId: string, role: 'teacher' | 'learner', companyId = 'co-courses') {
   const created = await fetch(`${ownerUrl}/api/courses/${courseId}/invitations`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': companyId },
     body: JSON.stringify({ email: 'learner@test.local', role, expiresInDays: 7, maxUses: 1 }),
   })
   const createdRaw = await created.text()
   assert.equal(created.status, 201, createdRaw)
-  const invitation = JSON.parse(createdRaw) as { token: string; id: string }
+  return JSON.parse(createdRaw) as { token: string; id: string }
+}
+
+async function inviteAndAccept(courseId: string, role: 'teacher' | 'learner', companyId = 'co-courses') {
+  const invitation = await createInvitation(courseId, role, companyId)
   const accepted = await fetch(`${learnerUrl}/api/course-invitations/${encodeURIComponent(invitation.token)}/accept`, { method: 'POST' })
   const acceptedRaw = await accepted.text()
   assert.equal(accepted.status, 200, acceptedRaw)
@@ -66,6 +77,7 @@ async function inviteAndAccept(courseId: string, role: 'teacher' | 'learner', co
 }
 
 test('[integration] legacy Projects migrate to one idempotent Course and Study Room', async () => {
+  await pool.query(`DELETE FROM course_schema_cutovers WHERE id='course-model-v1'`)
   await seedCompany('co-legacy')
   await pool.query(
     `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
@@ -79,7 +91,7 @@ test('[integration] legacy Projects migrate to one idempotent Course and Study R
      VALUES ($1,'co-legacy','human','Learner','L','#aaa','avail')`, [LEARNER],
   )
 
-  await ensureSchema(); await ensureSchema()
+  await ensureSchema()
   const course = await pool.query<{ id: string; study_room_conversation_id: string }>(
     `SELECT id,study_room_conversation_id FROM courses WHERE project_id='legacy-project'`,
   )
@@ -90,6 +102,13 @@ test('[integration] legacy Projects migrate to one idempotent Course and Study R
   assert.deepEqual(new Map(roles.rows.map((row) => [row.user_id, row.role])), new Map([[LEARNER, 'learner'], [OWNER, 'teacher']]))
   assert.match(course.rows[0].study_room_conversation_id, /^course-room-/)
   assert.equal((await pool.query(`SELECT 1 FROM conversations WHERE id=$1 AND project_id='legacy-project'`, [course.rows[0].study_room_conversation_id])).rowCount, 1)
+
+  await pool.query(`DELETE FROM course_members WHERE course_id=$1 AND user_id=$2`, [course.rows[0].id, LEARNER])
+  await ensureSchema()
+  assert.equal((await pool.query(
+    `SELECT 1 FROM course_members WHERE course_id=$1 AND user_id=$2`,
+    [course.rows[0].id, LEARNER],
+  )).rowCount, 0)
 })
 
 test('[integration] learner sees only enrolled courses and receives opaque 404 for another Project', async () => {
@@ -129,4 +148,85 @@ test('[integration] course invitation replay is idempotent and teacher upgrade n
   await fetch(`${ownerUrl}/api/courses/${course.id}/archive`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses' }, body: '{}' })
   const write = await fetch(`${learnerUrl}/api/documents`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId }, body: JSON.stringify({ title: 'Blocked' }) })
   assert.equal(write.status, 409)
+})
+
+test('[integration] concurrent teacher and learner invitations preserve the teacher role', async () => {
+  await seedCompany()
+  const course = await createCourse('Concurrency')
+  const [teacherInvite, learnerInvite] = await Promise.all([
+    createInvitation(course.id, 'teacher'),
+    createInvitation(course.id, 'learner'),
+  ])
+  const responses = await Promise.all([teacherInvite, learnerInvite].map((invitation) => fetch(
+    `${learnerUrl}/api/course-invitations/${encodeURIComponent(invitation.token)}/accept`,
+    { method: 'POST' },
+  )))
+  assert.deepEqual(responses.map((response) => response.status), [200, 200])
+  assert.equal((await pool.query(
+    `SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`,
+    [course.id, LEARNER],
+  )).rows[0].role, 'teacher')
+})
+
+function waitForSocketMessage(
+  socket: WebSocket,
+  predicate: (message: Record<string, unknown>) => boolean,
+  timeoutMs = 2_000,
+): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      socket.off('message', onMessage)
+      reject(new Error('timed out waiting for WebSocket message'))
+    }, timeoutMs)
+    const onMessage = (raw: RawData) => {
+      let message: Record<string, unknown>
+      try { message = JSON.parse(raw.toString()) as Record<string, unknown> } catch { return }
+      if (!predicate(message)) return
+      clearTimeout(timeout)
+      socket.off('message', onMessage)
+      resolve(message)
+    }
+    socket.on('message', onMessage)
+  })
+}
+
+test('[integration] removing a course member revokes an existing document WebSocket subscription', async () => {
+  await seedCompany()
+  const course = await createCourse('Realtime security')
+  await inviteAndAccept(course.id, 'learner')
+  await pool.query(
+    `INSERT INTO documents (id,company_id,project_id,title,created_by)
+     VALUES ('doc-live','co-courses',$1,'Live document',$2)`,
+    [course.projectId, OWNER],
+  )
+
+  const { ticket } = await createWsTicket(LEARNER)
+  const socket = new WebSocket(`${learnerUrl.replace('http://', 'ws://')}/ws?t=${encodeURIComponent(ticket)}`)
+  await new Promise<void>((resolve, reject) => {
+    socket.once('open', resolve)
+    socket.once('error', reject)
+  })
+  const synced = waitForSocketMessage(socket, (message) => message.type === 'doc.sync' && message.documentId === 'doc-live')
+  socket.send(JSON.stringify({ type: 'doc.subscribe', documentId: 'doc-live' }))
+  await synced
+
+  const removed = await fetch(`${ownerUrl}/api/courses/${course.id}/members/${LEARNER}`, {
+    method: 'DELETE', headers: { 'x-company-id': 'co-courses' },
+  })
+  assert.equal(removed.status, 200, await removed.text())
+  assert.equal(socket.readyState, WebSocket.OPEN)
+
+  const receivedUpdates: Record<string, unknown>[] = []
+  const capture = (raw: RawData) => {
+    const message = JSON.parse(raw.toString()) as Record<string, unknown>
+    if (message.type === 'doc.update' && message.documentId === 'doc-live') receivedUpdates.push(message)
+  }
+  socket.on('message', capture)
+  const source = new Y.Doc()
+  source.getText('content').insert(0, 'must not leak')
+  await applyLocalUpdate('doc-live', 'co-courses', 'review-test', OWNER, Y.encodeStateAsUpdate(source))
+  await new Promise((resolve) => setTimeout(resolve, 200))
+  socket.off('message', capture)
+  assert.equal(receivedUpdates.length, 0)
+  socket.close()
 })

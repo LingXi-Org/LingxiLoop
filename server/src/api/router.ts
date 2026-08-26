@@ -49,7 +49,7 @@ import { OgError, ogPreview } from '../og.js'
 import { onboardStarterAgents, seedMemberDms } from '../onboardCompany.js'
 import { castVote, closePoll, createPoll, PollError } from '../polls.js'
 import { computeMessageRecipients, notifyMessage } from '../push.js'
-import { CH_CALENDAR_EVENTS, CH_CONVO_UPDATED, CH_DOCS, CH_MESSAGE_NEW, CH_REACTIONS, CH_TYPING, publish, redis } from '../redis.js'
+import { CH_CALENDAR_EVENTS, CH_CONVO_UPDATED, CH_DOC_ACCESS_REVOKED, CH_DOCS, CH_MESSAGE_NEW, CH_REACTIONS, CH_TYPING, publish, redis } from '../redis.js'
 import { BUSY_STATUS_LEASE_MS } from '../status.js'
 import { freshenAttachmentUrl, normalizeStorageKey, storage, storageKeyFromPublicUrl, UPLOAD_DIR } from '../storage.js'
 import { getUserQuota, sub2apiConfigured } from '../sub2api.js'
@@ -308,6 +308,15 @@ async function assertConversationWritable(companyId: string, conversationId: str
   )
   if (!rows[0]) throw new HttpError(404, 'not found')
   await assertProjectWritable(rows[0].project_id)
+}
+
+async function assertPollConversationWritable(companyId: string, messageId: string): Promise<void> {
+  const { rows } = await pool.query<{ channel_id: string }>(
+    `SELECT channel_id FROM im_polls WHERE poll_client_msg_no=$1 AND company_id=$2`,
+    [messageId, companyId],
+  )
+  if (!rows[0]) throw new HttpError(404, 'poll not found')
+  await assertConversationWritable(companyId, rows[0].channel_id)
 }
 
 async function requireWorkspace(
@@ -2312,6 +2321,12 @@ api.delete('/courses/:id/members/:userId', safe(async (req, res) => {
   for (const channel of changedChannels) {
     void wukongClient().upsertChannel({ channelId: channel.id, channelType: 2, title: channel.title, members: channel.members }).catch(() => undefined)
   }
+  const { revokeUserProjectDocumentSubscriptions } = await import('../ws.js')
+  await revokeUserProjectDocumentSubscriptions(targetId, manager.projectId)
+  await publish(CH_DOC_ACCESS_REVOKED, {
+    type: 'doc.access.revoked', companyId: manager.companyId,
+    workspaceId: manager.projectId, userId: targetId,
+  })
   await syncCourseStudyRoom(courseId)
   await audit({ kind: 'course_member_remove', userId: manager.userId, companyId: manager.companyId, detail: { courseId, targetId } })
   res.json({ ok: true })
@@ -2461,6 +2476,11 @@ api.post('/course-invitations/:token/accept', safe(async (req, res) => {
   let result: { companyId: string; companyName: string; companySlug: string; companyRole: string; courseId: string; courseName: string; projectId: string; roomId: string | null; role: string; alreadyMember: boolean; joinedCompany: boolean }
   try {
     await client.query('BEGIN')
+    // Invitations have independent token rows, so locking only the invitation
+    // does not serialize two different links accepted by the same user. The
+    // stable user row prevents a learner invite racing a teacher invite from
+    // observing stale membership state (and also serializes auto-join).
+    await client.query(`SELECT 1 FROM users WHERE id=$1 FOR UPDATE`, [me])
     const { rows } = await client.query<{
       company_id: string; course_id: string; email: string | null; role: 'teacher' | 'learner'
       max_uses: number; use_count: number; expires_at: string; revoked_at: string | null
@@ -2504,18 +2524,25 @@ api.post('/course-invitations/:token/accept', safe(async (req, res) => {
       `SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [invitation.course_id, me],
     )
     const existingRole = membership[0]?.role ?? null
-    const effectiveRole = existingRole === 'teacher' || invitation.role === 'teacher' ? 'teacher' : 'learner'
+    let effectiveRole: 'teacher' | 'learner' = existingRole === 'teacher' || invitation.role === 'teacher' ? 'teacher' : 'learner'
     const changesRole = !existingRole || effectiveRole !== existingRole
     if (!priorAcceptance[0] && changesRole && invitation.use_count >= invitation.max_uses) {
       throw new HttpError(410, 'invitation already used')
     }
     if (changesRole) {
-      await client.query(
+      const { rows: upsertedMembership } = await client.query<{ role: 'teacher' | 'learner' }>(
         `INSERT INTO course_members (course_id,company_id,user_id,role)
          VALUES ($1,$2,$3,$4)
-         ON CONFLICT (course_id,user_id) DO UPDATE SET role=EXCLUDED.role,updated_at=NOW()`,
+         ON CONFLICT (course_id,user_id) DO UPDATE SET
+           role=CASE
+             WHEN course_members.role='teacher' OR EXCLUDED.role='teacher' THEN 'teacher'
+             ELSE 'learner'
+           END,
+           updated_at=NOW()
+         RETURNING role`,
         [invitation.course_id, invitation.company_id, me, effectiveRole],
       )
+      effectiveRole = upsertedMembership[0].role
     }
     if (!priorAcceptance[0] && changesRole) {
       await client.query(
@@ -4853,6 +4880,7 @@ api.post('/polls', async (req, res) => {
     const body = req.body ?? {}
     const conversationId = String(body.conversationId ?? '')
     if (!conversationId) { res.status(400).json({ error: 'conversationId required' }); return }
+    await assertConversationWritable(tenant, conversationId)
     const optionsRaw = Array.isArray(body.options) ? body.options : []
     const created = await createPoll({
       conversationId,
@@ -4873,6 +4901,7 @@ api.post('/polls/:messageId/vote', async (req, res) => {
   try {
     const { userId: me, companyId: tenant } = await requireCompany(req)
     const messageId = req.params.messageId
+    await assertPollConversationWritable(tenant, messageId)
     const rawOptionIds = Array.isArray(req.body?.optionIds) ? req.body.optionIds : []
     const optionIds = rawOptionIds.map((x: unknown) => String(x ?? '')).filter(Boolean)
     const event = await castVote({
@@ -4890,6 +4919,7 @@ api.post('/polls/:messageId/close', async (req, res) => {
   try {
     const { userId: me, companyId: tenant } = await requireCompany(req)
     const messageId = req.params.messageId
+    await assertPollConversationWritable(tenant, messageId)
     const event = await closePoll({
       messageId,
       companyId: tenant,

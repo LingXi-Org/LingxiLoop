@@ -4,7 +4,7 @@ import {
   sub,
   CH_STATUS,
   CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
-  CH_BOARDS, CH_DOCS, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
+  CH_BOARDS, CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
   publish,
   type DocMentionEvent,
 } from './redis.js'
@@ -53,6 +53,28 @@ export function disconnectUserFromCompany(userId: string, companyId: string): vo
     if (client.userId !== userId || !client.companies.has(companyId)) continue
     client.companies.delete(companyId)
     try { client.ws.close(4403, 'company membership removed') } catch { /* best effort */ }
+  }
+}
+
+/** Revoke live collaborative-document subscriptions after a course member is
+ * removed. The socket remains connected for the user's other workspaces, but
+ * every room in the removed Project is detached before the API confirms the
+ * removal, so an already-open tab cannot keep receiving document updates. */
+export async function revokeUserProjectDocumentSubscriptions(userId: string, projectId: string): Promise<void> {
+  const { rows } = await pool.query<{ id: string }>(
+    `SELECT id FROM documents WHERE project_id=$1`,
+    [projectId],
+  )
+  if (rows.length === 0) return
+  const projectDocuments = new Set(rows.map((row) => row.id))
+  for (const client of clients) {
+    if (client.userId !== userId) continue
+    for (const documentId of projectDocuments) {
+      const subscriber = client.docSubs.get(documentId)
+      if (!subscriber) continue
+      docUnsubscribe(documentId, subscriber)
+      client.docSubs.delete(documentId)
+    }
   }
 }
 
@@ -568,7 +590,7 @@ export function attachWebSocket(httpServer: Server) {
   sub.subscribe(
     CH_STATUS,
     CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
-    CH_BOARDS, CH_DOCS, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
+    CH_BOARDS, CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
   ).then((count) => {
     console.log(`[ws] subscribed to ${count} redis channels`)
   })
@@ -577,6 +599,15 @@ export function attachWebSocket(httpServer: Server) {
     void (async () => {
     // Doc channels are room-scoped, not company-scoped — skip them here.
     if (channel === 'lingxiloop:doc.update' || channel === 'lingxiloop:doc.awareness') return
+    if (channel === CH_DOC_ACCESS_REVOKED) {
+      try {
+        const event = JSON.parse(payload) as { userId?: string; workspaceId?: string }
+        if (event.userId && event.workspaceId) {
+          await revokeUserProjectDocumentSubscriptions(event.userId, event.workspaceId)
+        }
+      } catch { /* malformed — drop */ }
+      return
+    }
     // Tenant-aware fan-out: only deliver an event to a socket if the event's
     // companyId is in the socket's set of memberships. Untagged events are
     // dropped (no leakage), since every publisher is expected to tag.
