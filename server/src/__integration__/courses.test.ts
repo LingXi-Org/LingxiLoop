@@ -1,0 +1,132 @@
+import assert from 'node:assert/strict'
+import { after, before, beforeEach, test } from 'node:test'
+import { createServer, type Server } from 'node:http'
+import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
+import { ensureSchema } from '../db/migrate.js'
+import { pool } from '../db/pool.js'
+
+const OWNER = 'u-course-owner'
+const LEARNER = 'u-course-learner'
+let ownerServer: Server
+let learnerServer: Server
+let ownerUrl = ''
+let learnerUrl = ''
+
+async function listen(userId: string): Promise<{ server: Server; url: string }> {
+  const app = await buildApiTestApp(userId)
+  return await new Promise((resolve) => {
+    const server = createServer(app).listen(0, () => {
+      const address = server.address()
+      resolve({ server, url: `http://127.0.0.1:${typeof address === 'object' && address ? address.port : 0}` })
+    })
+  })
+}
+
+before(async () => {
+  await ensureSchemaOnce()
+  const owner = await listen(OWNER); ownerServer = owner.server; ownerUrl = owner.url
+  const learner = await listen(LEARNER); learnerServer = learner.server; learnerUrl = learner.url
+})
+beforeEach(resetAllTables)
+after(async () => { await teardownAll(ownerServer); if (learnerServer.listening) await new Promise<void>((resolve) => learnerServer.close(() => resolve())) })
+
+async function seedCompany(companyId = 'co-courses'): Promise<void> {
+  await pool.query(`INSERT INTO companies (id,name,slug,owner_user_id) VALUES ($1,'Course test',$1,$2)`, [companyId, OWNER])
+  await seedUserMembership(OWNER, companyId, { email: 'owner@test.local', displayName: 'Owner' })
+  await pool.query(
+    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
+     VALUES ($1,$2,'General','','#64748b',$3,TRUE)`,
+    [`general-${companyId}`, companyId, OWNER],
+  )
+  await pool.query(`INSERT INTO users (id,email,display_name,tier,email_verified_at) VALUES ($1,$2,'Learner','pro',NOW())`, [LEARNER, 'learner@test.local'])
+}
+
+async function createCourse(name: string, companyId = 'co-courses') {
+  const response = await fetch(`${ownerUrl}/api/courses`, {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({ name, description: `${name} description` }),
+  })
+  const raw = await response.text()
+  assert.equal(response.status, 201, raw)
+  return JSON.parse(raw) as { id: string; projectId: string; studyRoomId: string }
+}
+
+async function inviteAndAccept(courseId: string, role: 'teacher' | 'learner', companyId = 'co-courses') {
+  const created = await fetch(`${ownerUrl}/api/courses/${courseId}/invitations`, {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({ email: 'learner@test.local', role, expiresInDays: 7, maxUses: 1 }),
+  })
+  const createdRaw = await created.text()
+  assert.equal(created.status, 201, createdRaw)
+  const invitation = JSON.parse(createdRaw) as { token: string; id: string }
+  const accepted = await fetch(`${learnerUrl}/api/course-invitations/${encodeURIComponent(invitation.token)}/accept`, { method: 'POST' })
+  const acceptedRaw = await accepted.text()
+  assert.equal(accepted.status, 200, acceptedRaw)
+  return invitation
+}
+
+test('[integration] legacy Projects migrate to one idempotent Course and Study Room', async () => {
+  await seedCompany('co-legacy')
+  await pool.query(
+    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
+     VALUES ('legacy-project','co-legacy','Legacy Biology','','#123456',$1,FALSE)`, [OWNER],
+  )
+  await pool.query(
+    `INSERT INTO company_members (company_id,user_id,role) VALUES ('co-legacy',$1,'member')`, [LEARNER],
+  )
+  await pool.query(
+    `INSERT INTO participants (id,company_id,kind,name,initial,avatar_bg,status)
+     VALUES ($1,'co-legacy','human','Learner','L','#aaa','avail')`, [LEARNER],
+  )
+
+  await ensureSchema(); await ensureSchema()
+  const course = await pool.query<{ id: string; study_room_conversation_id: string }>(
+    `SELECT id,study_room_conversation_id FROM courses WHERE project_id='legacy-project'`,
+  )
+  assert.equal(course.rowCount, 1)
+  const roles = await pool.query<{ user_id: string; role: string }>(
+    `SELECT user_id,role FROM course_members WHERE course_id=$1 ORDER BY user_id`, [course.rows[0].id],
+  )
+  assert.deepEqual(new Map(roles.rows.map((row) => [row.user_id, row.role])), new Map([[LEARNER, 'learner'], [OWNER, 'teacher']]))
+  assert.match(course.rows[0].study_room_conversation_id, /^course-room-/)
+  assert.equal((await pool.query(`SELECT 1 FROM conversations WHERE id=$1 AND project_id='legacy-project'`, [course.rows[0].study_room_conversation_id])).rowCount, 1)
+})
+
+test('[integration] learner sees only enrolled courses and receives opaque 404 for another Project', async () => {
+  await seedCompany()
+  const first = await createCourse('Physics')
+  const second = await createCourse('Chemistry')
+  await inviteAndAccept(first.id, 'learner')
+  await pool.query(
+    `INSERT INTO documents (id,company_id,project_id,title,created_by) VALUES
+      ('doc-first','co-courses',$1,'First',$3),('doc-second','co-courses',$2,'Second',$3)`,
+    [first.projectId, second.projectId, OWNER],
+  )
+
+  const courses = await fetch(`${learnerUrl}/api/courses`, { headers: { 'x-company-id': 'co-courses' } })
+  assert.equal(courses.status, 200)
+  assert.deepEqual((await courses.json() as Array<{ id: string }>).map((course) => course.id), [first.id])
+  const allowed = await fetch(`${learnerUrl}/api/documents`, { headers: { 'x-company-id': 'co-courses', 'x-project-id': first.projectId } })
+  assert.deepEqual((await allowed.json() as { documents: Array<{ id: string }> }).documents.map((document) => document.id), ['doc-first'])
+  const denied = await fetch(`${learnerUrl}/api/documents/doc-second`, { headers: { 'x-company-id': 'co-courses', 'x-project-id': second.projectId } })
+  assert.equal(denied.status, 404)
+})
+
+test('[integration] course invitation replay is idempotent and teacher upgrade never downgrades', async () => {
+  await seedCompany()
+  const course = await createCourse('Mathematics')
+  const learnerInvite = await inviteAndAccept(course.id, 'learner')
+  const replay = await fetch(`${learnerUrl}/api/course-invitations/${encodeURIComponent(learnerInvite.token)}/accept`, { method: 'POST' })
+  assert.equal(replay.status, 200)
+  assert.equal((await pool.query(`SELECT use_count FROM course_invitations WHERE token_hash=$1`, [learnerInvite.id])).rows[0].use_count, 1)
+
+  await inviteAndAccept(course.id, 'teacher')
+  assert.equal((await pool.query(`SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [course.id, LEARNER])).rows[0].role, 'teacher')
+  const downgrade = await inviteAndAccept(course.id, 'learner')
+  assert.equal((await pool.query(`SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [course.id, LEARNER])).rows[0].role, 'teacher')
+  assert.equal((await pool.query(`SELECT use_count FROM course_invitations WHERE token_hash=$1`, [downgrade.id])).rows[0].use_count, 0)
+
+  await fetch(`${ownerUrl}/api/courses/${course.id}/archive`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses' }, body: '{}' })
+  const write = await fetch(`${learnerUrl}/api/documents`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId }, body: JSON.stringify({ title: 'Blocked' }) })
+  assert.equal(write.status, 409)
+})
