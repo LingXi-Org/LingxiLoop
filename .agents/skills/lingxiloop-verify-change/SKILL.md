@@ -20,7 +20,7 @@ node .agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs --base 
 - With `--base`, compare the verified merge base to `--head` or `HEAD`. The script never guesses or fetches a base.
 - Add `--include-worktree` only when local changes belong to that committed range.
 - Use `--format json` when another tool needs the versioned report.
-- Read the JSON `ci` object when planning automation. In particular, an Eval-focused diff should select focused Eval unit/runtime/persistence evidence without implying Compose, desktop, or vendored checks.
+- Read the JSON `ci` object when planning automation. `evalFocused` is fail-closed and valid only when every path is Eval-owned. Shared runtime/DB/API/integration files restore their owning checks; package manifests, workflows, or classifier changes set `fullMatrix`.
 
 Read [references/check-matrix.md](references/check-matrix.md) before changing the classifier mapping or when a category needs manual interpretation.
 

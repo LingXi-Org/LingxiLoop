@@ -43,7 +43,7 @@ npx tsx scripts/run-agent-eval.ts \
 
 The trusted runtime CLI uses `runtimeScenario` identifiers from its versioned suite. That field is rejected by the Admin/API validator and is not a remote code-execution surface.
 
-Pull-request CI consumes the `$lingxiloop-verify-change` classifier. An Eval-focused PR runs focused Eval unit tests, both Eval gates, applicable guards/typechecks, a build only for Dashboard changes, and `test:integration:eval` only for Eval persistence changes. Open Notebook, Compose, full serial integration, and Windows/macOS packaging run only when their owning paths are classified; `main`, manual, and release callers retain the full matrix. The repository-local `$lingxiloop-eval-change` Skill documents suite/baseline, deterministic/model Eval, trace sanitization, comparison, and verification rules.
+Pull-request CI consumes the fail-closed `$lingxiloop-verify-change` classifier. A PR is Eval-focused only when every path is Eval-owned; it then runs focused Eval unit tests, both Eval gates, applicable guards/typechecks, a build when the Dashboard changes, and focused Eval persistence integration. Shared runtime/DB/API/integration paths restore their owning tests, while package manifests, workflows, and classifier changes run the complete matrix before they are trusted. Open Notebook, Compose, full serial integration, and Windows/macOS packaging otherwise run only when their owning paths are classified; `main`, manual, and release callers retain the full matrix. The repository-local `$lingxiloop-eval-change` Skill documents suite/baseline, deterministic/model Eval, trace sanitization, comparison, and verification rules.
 
 ## Run an evaluation
 

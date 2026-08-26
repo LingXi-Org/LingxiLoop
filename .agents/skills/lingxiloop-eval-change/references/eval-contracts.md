@@ -59,4 +59,6 @@ Expected focused commands:
 - Eval Dashboard: frontend typecheck and production build.
 - All Eval TypeScript: lint, server typecheck, Agent OS architecture guard, and LLM ledger guard.
 
-Open Notebook scope, Compose smoke, full serial integration, and Windows/macOS packaging are path-owned checks. They are not default pull-request evidence for an Eval-focused diff. The reusable quality workflow runs the full matrix for `main`, manual, and release callers.
+Focused means every changed file is Eval-owned: `eval/`, `server/src/eval/`, Eval-specific tests and runners, `src/admin/EvalPage.tsx`, the Eval Skill, or the Eval guide. Do not infer hunk ownership from a shared filename. Changes to Agent OS runtime, DB migration, API/Admin shell, integration infrastructure, root docs, or shared config must fail closed to their owning checks. Package manifests, workflows, and classifier changes run the full matrix once before the dependency/selector change is trusted.
+
+Open Notebook scope, Compose smoke, full serial integration, and Windows/macOS packaging remain path-owned checks for ordinary pull requests. The reusable quality workflow also runs the full matrix for package-manifest or selector changes, `main`, manual, and release callers.

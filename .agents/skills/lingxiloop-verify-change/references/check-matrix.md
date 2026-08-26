@@ -18,7 +18,7 @@ The classifier uses paths as a deterministic first pass. Inspect diff content be
 
 Categories overlap deliberately. `agent-os-im-canvas` and `database-tenant` are specialized views of server risk, not evidence that a change is automatically cross-domain.
 
-An Eval change may deliberately span its suite, runtime trace producer, migration/API persistence, Dashboard, package scripts, workflow, and repository Skills. When every changed path is an Eval-owned path or listed Eval support seam, the classifier emits `ci.evalFocused=true`, suppresses cross-domain/full-matrix escalation, and selects only the owning Eval checks. A genuinely unrelated path breaks that focus and restores normal escalation.
+The Eval fast path is fail-closed. It applies only when every path is Eval-owned: versioned suites/baselines, `server/src/eval/`, Eval-specific tests/runners, `src/admin/EvalPage.tsx`, the Eval Skill, or the Eval guide. Shared Agent OS, DB migration, API/Admin shell, integration-runner, root config/docs, workflow, and classifier paths cannot prove hunk ownership and therefore restore their owning checks. Package manifests, workflows, and classifier changes set `ci.fullMatrix=true` so dependency and selector changes are exercised by the complete matrix before they are trusted.
 
 ## Escalation rules
 
@@ -26,6 +26,7 @@ Recommend a full CI approximation when any of these applies:
 
 - a runtime migration or latest-schema sentinel changes;
 - workflow, dependency, package, Docker, Compose, version, or release machinery changes;
+- the CI workflow or its change classifier changes;
 - two or more primary runtime domains change in one diff;
 - vendored source or provenance changes;
 - the user explicitly asks for a full rehearsal or a CI failure is being reproduced.

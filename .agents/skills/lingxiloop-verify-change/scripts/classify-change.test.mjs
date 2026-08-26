@@ -53,18 +53,17 @@ test('classifies Agent OS changes with architecture and ledger guards', () => {
 
 test('keeps an Eval stack change on the focused deterministic matrix', () => {
   const paths = [
-    '.github/workflows/_quality.yml',
-    'package.json',
     'eval/suites/smoke.v1.json',
     'scripts/run-agent-runtime-eval.ts',
-    'server/src/agent-os/runtime.ts',
-    'server/src/db/migrate.ts',
+    'server/src/eval/evaluator.ts',
     'server/src/__integration__/eval.test.ts',
     'src/admin/EvalPage.tsx',
+    '.agents/skills/lingxiloop-eval-change/SKILL.md',
   ]
   const report = classifyPaths(paths)
   assert.ok(category(report, 'eval'))
   assert.equal(report.ci.evalFocused, true)
+  assert.equal(report.ci.fullMatrix, false)
   assert.equal(report.ci.integration, 'eval')
   assert.equal(report.ci.dashboard, true)
   assert.equal(report.ci.compose, false)
@@ -75,6 +74,46 @@ test('keeps an Eval stack change on the focused deterministic matrix', () => {
   assert.equal(check(report, 'npm run test:integration'), undefined)
   assert.equal(check(report, 'npm test'), undefined)
   assert.equal(report.escalations.some(({ id }) => id === 'full-ci-approximation'), false)
+})
+
+test('fails closed when an Eval diff also changes shared or high-risk files', () => {
+  const evalPath = 'eval/suites/smoke.v1.json'
+  const scenarios = [
+    { path: 'server/src/agent-os/runtime.ts', integration: 'full', compose: true },
+    { path: 'server/src/db/migrate.ts', integration: 'full', compose: false },
+    { path: 'server/src/api/admin-router.ts', integration: 'full', compose: false },
+    { path: 'package.json', integration: 'none', compose: false },
+    { path: 'package-lock.json', integration: 'none', compose: false },
+    { path: 'src/admin/api.ts', integration: 'none', compose: false },
+    { path: 'server/run-integration-tests.mjs', integration: 'full', compose: false },
+    { path: 'server/src/__integration__/_helpers.ts', integration: 'full', compose: false },
+  ]
+  for (const scenario of scenarios) {
+    const plan = buildCiPlan([evalPath, scenario.path])
+    assert.equal(plan.evalFocused, false, scenario.path)
+    assert.equal(plan.fullUnit, true, scenario.path)
+    assert.equal(plan.integration, scenario.integration, scenario.path)
+    assert.equal(plan.compose, scenario.compose, scenario.path)
+  }
+})
+
+test('forces the full matrix when CI workflow or classifier inputs change', () => {
+  for (const path of [
+    '.github/workflows/_quality.yml',
+    '.github/workflows/ci.yml',
+    '.agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs',
+    '.agents/skills/lingxiloop-verify-change/scripts/classify-change.test.mjs',
+    'package.json',
+    'package-lock.json',
+  ]) {
+    const report = classifyPaths(['eval/suites/smoke.v1.json', path])
+    assert.equal(report.ci.evalFocused, false, path)
+    assert.equal(report.ci.fullMatrix, true, path)
+    if (!path.startsWith('package')) {
+      assert.ok(report.escalations.some(({ id }) => id === 'ci-selector-change'), path)
+    }
+    assert.ok(report.escalations.some(({ id }) => id === 'full-ci-approximation'), path)
+  }
 })
 
 test('maps heavy CI jobs only to their owning paths', () => {
@@ -88,6 +127,7 @@ test('maps heavy CI jobs only to their owning paths', () => {
   assert.equal(buildCiPlan(['electron/main.cjs']).desktop, true)
   assert.equal(buildCiPlan(['package.json']).desktop, false)
   assert.equal(buildCiPlan(['.github/workflows/_quality.yml']).compose, false)
+  assert.equal(buildCiPlan(['.github/workflows/_quality.yml']).fullMatrix, true)
 })
 
 test('escalates runtime migrations to the full CI approximation', () => {
@@ -165,7 +205,7 @@ test('default CLI mode includes untracked files and emits valid JSON', () => {
     const result = run(process.execPath, [script, '--format', 'json'], directory)
     assert.equal(result.status, 0, result.stderr)
     const report = JSON.parse(result.stdout)
-    assert.equal(report.version, 2)
+    assert.equal(report.version, 3)
     assert.equal(report.scope.mode, 'worktree')
     assert.deepEqual(report.paths, ['untracked.md'])
   } finally {

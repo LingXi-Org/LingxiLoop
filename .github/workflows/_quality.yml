@@ -52,7 +52,7 @@ jobs:
           const report = JSON.parse(readFileSync('change-plan.json', 'utf8'))
           const ci = report.ci ?? {}
           const output = {
-            full: process.env.FULL_MATRIX === 'true',
+            full: process.env.FULL_MATRIX === 'true' || ci.fullMatrix === true,
             eval: ci.eval ?? false,
             eval_focused: ci.evalFocused ?? false,
             dashboard: ci.dashboard ?? false,
@@ -74,7 +74,7 @@ jobs:
           cat change-plan.json
 
   static:
-    name: Focused static, unit, build and Agent Eval
+    name: Static, unit, build and Agent Eval
     needs: classify
     runs-on: ubuntu-latest
     timeout-minutes: 12

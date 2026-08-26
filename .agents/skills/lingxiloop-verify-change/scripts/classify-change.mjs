@@ -16,10 +16,7 @@ const OPENBOT_TRACKED_PATHS = new Set([
 ])
 
 const EVAL_DASHBOARD_PATHS = new Set([
-  'src/admin/AdminApp.tsx',
   'src/admin/EvalPage.tsx',
-  'src/admin/admin.css',
-  'src/admin/api.ts',
 ])
 
 function isEvalPath(path) {
@@ -32,21 +29,13 @@ function isEvalPath(path) {
     || path.startsWith('.agents/skills/lingxiloop-eval-change/')
 }
 
-function isEvalSupportPath(path) {
-  return isEvalPath(path)
-    || [
-      '.github/workflows/_quality.yml',
-      '.gitignore',
-      'README.md',
-      'package.json',
-      'package-lock.json',
-      'server/run-integration-tests.mjs',
-      'server/src/__integration__/_helpers.ts',
-      'server/src/agent-os/runtime.ts',
-      'server/src/api/admin-router.ts',
-      'server/src/db/migrate.ts',
-    ].includes(path)
+function isCiSelectorPath(path) {
+  return path.startsWith('.github/workflows/')
     || path.startsWith('.agents/skills/lingxiloop-verify-change/')
+}
+
+function isFullMatrixPath(path) {
+  return isCiSelectorPath(path) || ['package.json', 'package-lock.json'].includes(path)
 }
 
 const CATEGORY_DEFINITIONS = [
@@ -156,7 +145,11 @@ function addCheck(checks, command, tier, reason, cwd = '.') {
 export function buildCiPlan(inputPaths) {
   const paths = uniqueSorted(inputPaths)
   const evalChanged = paths.some(isEvalPath)
-  const evalFocused = evalChanged && paths.every(isEvalSupportPath)
+  // Fail closed: only Eval-owned files can prove a focused Eval change.
+  // Shared runtime, DB, API, package and CI files may contain unrelated
+  // hunks, so path classification alone must never exempt their owning tests.
+  const evalFocused = evalChanged && paths.every(isEvalPath)
+  const fullMatrix = paths.some(isFullMatrixPath)
   const evalPersistence = paths.some((path) => path === 'server/src/__integration__/eval.test.ts'
     || path === 'server/src/db/migrate.ts'
     || path === 'server/src/api/admin-router.ts'
@@ -175,22 +168,28 @@ export function buildCiPlan(inputPaths) {
   const agentOs = paths.some((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'agent-os-im-canvas').matches(path))
   const database = paths.some((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'database-tenant').matches(path))
   const buildRelease = paths.some((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'build-release').matches(path))
+  const integrationInfrastructure = paths.some((path) => path === 'server/run-integration-tests.mjs'
+    || path === 'server/src/__integration__/_helpers.ts')
   return {
     eval: evalChanged,
     evalFocused,
+    fullMatrix,
     evalPersistence,
     dashboard,
     frontend,
     server,
     agentOs,
     database,
+    integrationInfrastructure,
     buildRelease,
     openNotebook,
     compose: composeInputs || (agentOs && !evalFocused),
     desktop,
     build: dashboard || (frontend && !evalFocused) || (buildRelease && !evalFocused),
-    fullUnit: !evalFocused && (server || agentOs || database || buildRelease),
-    integration: evalFocused && evalPersistence ? 'eval' : database || agentOs ? 'full' : 'none',
+    fullUnit: !evalFocused && (frontend || server || agentOs || database || buildRelease),
+    integration: evalFocused && evalPersistence
+      ? 'eval'
+      : database || agentOs || integrationInfrastructure ? 'full' : 'none',
   }
 }
 
@@ -333,6 +332,15 @@ export function classifyPaths(inputPaths) {
   const categoryIds = new Set(categories.map(({ id }) => id))
   const escalations = []
 
+  const selectorPaths = paths.filter(isCiSelectorPath)
+  if (selectorPaths.length > 0) {
+    escalations.push({
+      id: 'ci-selector-change',
+      reason: 'CI workflow or its change classifier changed; exercise the full matrix before trusting the new selector.',
+      paths: selectorPaths,
+    })
+  }
+
   const migrationPaths = paths.filter((path) => path === 'server/src/db/migrate.ts'
     || path === 'server/src/migrate-bin.ts'
     || path.startsWith('server/src/scripts/migrate-')
@@ -372,7 +380,7 @@ export function classifyPaths(inputPaths) {
     })
   }
 
-  if (escalations.some(({ id }) => ['runtime-migration', 'build-release-surface', 'vendored-source', 'cross-domain'].includes(id))) {
+  if (escalations.some(({ id }) => ['ci-selector-change', 'runtime-migration', 'build-release-surface', 'vendored-source', 'cross-domain'].includes(id))) {
     escalations.push({
       id: 'full-ci-approximation',
       reason: 'Run the applicable full local quality matrix and leave unavailable platform/service checks to CI.',
@@ -396,7 +404,7 @@ export function classifyPaths(inputPaths) {
 export function buildReport(paths, scope) {
   const classified = classifyPaths(paths)
   return {
-    version: 2,
+    version: 3,
     scope,
     paths: classified.paths,
     categories: classified.categories,
