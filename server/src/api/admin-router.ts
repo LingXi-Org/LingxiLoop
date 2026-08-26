@@ -14,16 +14,19 @@
  *   - All handlers wrapped in safe() so HttpError → status code; the
  *     parent router's errorHandler catches everything else.
  */
-import { Router, type Request, type Response, type NextFunction } from 'express'
-import { pool } from '../db/pool.js'
-import { gravatarUrlForEmail, type AuthedRequest } from '../auth.js'
+import { type NextFunction, type Request, type Response, Router } from 'express'
 import {
-  requireAdmin, HttpError,
-  getSettings, setSetting, type AppSettings,
-  listWaitlist, approveWaitlist, rejectWaitlist,
+  type AppSettings, approveWaitlist,
   changeUserTier,
+  getSettings, HttpError,
+  listWaitlist, rejectWaitlist,
+  requireAdmin, setSetting,
   suspendUser, unsuspendUser,
 } from '../admin.js'
+import { type AuthedRequest, gravatarUrlForEmail } from '../auth.js'
+import { pool } from '../db/pool.js'
+import { EvalInputError, validateEvalRunInput } from '../eval/contracts.js'
+import { createEvalRun, getEvalComparison, getEvalDashboard, getEvalRunDetail } from '../eval/service.js'
 
 export const adminRouter = Router()
 
@@ -349,6 +352,69 @@ adminRouter.get('/stats', safe(async (req, res) => {
     companies: Number(companies.rows[0]?.n ?? 0),
     agents:    Number(agents.rows[0]?.n ?? 0),
   })
+}))
+
+/* ============== Agent Eval — deterministic pipeline + history ========= */
+
+function rethrowEvalError(error: unknown): never {
+  if (error instanceof EvalInputError) throw new HttpError(400, error.message)
+  const status = Number((error as { status?: unknown } | null)?.status)
+  if (status >= 400 && status <= 599) {
+    throw new HttpError(status, error instanceof Error ? error.message : String(error))
+  }
+  throw error
+}
+
+/** Evaluate one immutable suite run. Cases may contain an inline observation,
+ *  an Agent OS run id to hydrate, or both (inline fields override hydrated
+ *  fields for controlled regression fixtures). Evaluation is synchronous and
+ *  deterministic; a successful response means the full report was committed. */
+adminRouter.post('/eval/runs', safe(async (req, res) => {
+  const adminId = await requireAdmin(req)
+  try {
+    const input = validateEvalRunInput(req.body)
+    const result = await createEvalRun(input, adminId)
+    res.status(201).json(result)
+  } catch (error) {
+    rethrowEvalError(error)
+  }
+}))
+
+/** Compact board payload: summary KPIs, stage averages, version deltas and the
+ *  recent immutable run list. Detail/findings are loaded only on selection. */
+adminRouter.get('/eval/runs', safe(async (req, res) => {
+  await requireAdmin(req)
+  const suiteKey = typeof req.query.suiteKey === 'string' && req.query.suiteKey.trim()
+    ? req.query.suiteKey.trim()
+    : undefined
+  const rawLimit = Number(req.query.limit ?? 80)
+  const rawDays = Number(req.query.sinceDays ?? 90)
+  res.json(await getEvalDashboard({
+    suiteKey,
+    limit: Number.isFinite(rawLimit) ? rawLimit : 80,
+    sinceDays: Number.isFinite(rawDays) ? rawDays : 90,
+  }))
+}))
+
+adminRouter.get('/eval/compare', safe(async (req, res) => {
+  await requireAdmin(req)
+  const baseRunId = typeof req.query.baseRunId === 'string' ? req.query.baseRunId.trim() : ''
+  const candidateRunId = typeof req.query.candidateRunId === 'string' ? req.query.candidateRunId.trim() : ''
+  if (!baseRunId || !candidateRunId) throw new HttpError(400, 'baseRunId and candidateRunId are required')
+  try {
+    res.json(await getEvalComparison(baseRunId, candidateRunId))
+  } catch (error) {
+    rethrowEvalError(error)
+  }
+}))
+
+adminRouter.get('/eval/runs/:id', safe(async (req, res) => {
+  await requireAdmin(req)
+  try {
+    res.json(await getEvalRunDetail(String(req.params.id)))
+  } catch (error) {
+    rethrowEvalError(error)
+  }
 }))
 
 /* ============== Observability — per-purpose sub2api spend =========== */

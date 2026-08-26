@@ -58,10 +58,15 @@ async function createCourse(name: string, companyId = 'co-courses') {
   return JSON.parse(raw) as { id: string; projectId: string; studyRoomId: string }
 }
 
-async function createInvitation(courseId: string, role: 'teacher' | 'learner', companyId = 'co-courses') {
+async function createInvitation(
+  courseId: string,
+  role: 'teacher' | 'learner',
+  companyId = 'co-courses',
+  email: string | null = 'learner@test.local',
+) {
   const created = await fetch(`${ownerUrl}/api/courses/${courseId}/invitations`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ email: 'learner@test.local', role, expiresInDays: 7, maxUses: 1 }),
+    body: JSON.stringify({ email, role, expiresInDays: 7, maxUses: 1 }),
   })
   const createdRaw = await created.text()
   assert.equal(created.status, 201, createdRaw)
@@ -154,8 +159,8 @@ test('[integration] concurrent teacher and learner invitations preserve the teac
   await seedCompany()
   const course = await createCourse('Concurrency')
   const [teacherInvite, learnerInvite] = await Promise.all([
-    createInvitation(course.id, 'teacher'),
-    createInvitation(course.id, 'learner'),
+    createInvitation(course.id, 'teacher', 'co-courses', null),
+    createInvitation(course.id, 'learner', 'co-courses', null),
   ])
   const responses = await Promise.all([teacherInvite, learnerInvite].map((invitation) => fetch(
     `${learnerUrl}/api/course-invitations/${encodeURIComponent(invitation.token)}/accept`,
@@ -255,7 +260,7 @@ function waitForSocketMessage(
   })
 }
 
-test('[integration] removing a course member revokes an existing document WebSocket subscription', async () => {
+test('[integration] removing a course member revokes an existing document WebSocket subscription', async (t) => {
   await seedCompany()
   const course = await createCourse('Realtime security')
   await inviteAndAccept(course.id, 'learner')
@@ -267,13 +272,20 @@ test('[integration] removing a course member revokes an existing document WebSoc
 
   const { ticket } = await createWsTicket(LEARNER)
   const socket = new WebSocket(`${learnerUrl.replace('http://', 'ws://')}/ws?t=${encodeURIComponent(ticket)}`)
+  t.after(() => socket.terminate())
+  const hello = waitForSocketMessage(socket, (message) => message.type === 'hello')
   await new Promise<void>((resolve, reject) => {
     socket.once('open', resolve)
     socket.once('error', reject)
   })
-  const synced = waitForSocketMessage(socket, (message) => message.type === 'doc.sync' && message.documentId === 'doc-live')
+  await hello
+  const synced = waitForSocketMessage(
+    socket,
+    (message) => message.documentId === 'doc-live' && (message.type === 'doc.sync' || message.type === 'doc.error'),
+  )
   socket.send(JSON.stringify({ type: 'doc.subscribe', documentId: 'doc-live' }))
-  await synced
+  const syncResult = await synced
+  assert.equal(syncResult.type, 'doc.sync', JSON.stringify(syncResult))
 
   const removed = await fetch(`${ownerUrl}/api/courses/${course.id}/members/${LEARNER}`, {
     method: 'DELETE', headers: { 'x-company-id': 'co-courses' },

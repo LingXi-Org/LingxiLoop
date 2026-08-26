@@ -2503,6 +2503,79 @@ CREATE TABLE IF NOT EXISTS course_schema_cutovers (
   detail       JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 
+-- ============== Agent Eval runs ========================================
+-- Deterministic, offline evaluation reports. Raw Agent OS traces remain in
+-- their authoritative ledgers; these tables store the immutable observation
+-- snapshot and per-stage findings used by the version comparison dashboard.
+CREATE TABLE IF NOT EXISTS eval_runs (
+  id              TEXT PRIMARY KEY,
+  suite_key       TEXT NOT NULL,
+  suite_name      TEXT NOT NULL,
+  version         TEXT NOT NULL,
+  commit_sha      TEXT,
+  prompt_version  TEXT,
+  model           TEXT,
+  baseline_run_id TEXT REFERENCES eval_runs(id) ON DELETE SET NULL,
+  status          TEXT NOT NULL CHECK (status IN ('pass','fail','error')),
+  score           DOUBLE PRECISION NOT NULL CHECK (score BETWEEN 0 AND 1),
+  pass_threshold  DOUBLE PRECISION NOT NULL CHECK (pass_threshold BETWEEN 0 AND 1),
+  case_count      INTEGER NOT NULL,
+  passed_cases    INTEGER NOT NULL,
+  failed_cases    INTEGER NOT NULL,
+  error_cases     INTEGER NOT NULL DEFAULT 0,
+  source          TEXT NOT NULL CHECK (source IN ('inline','agent-os','mixed')),
+  summary         JSONB NOT NULL DEFAULT '{}'::jsonb,
+  metadata        JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_by      TEXT NOT NULL,
+  started_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  finished_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+ALTER TABLE eval_runs ADD COLUMN IF NOT EXISTS commit_sha TEXT;
+ALTER TABLE eval_runs ADD COLUMN IF NOT EXISTS prompt_version TEXT;
+ALTER TABLE eval_runs ADD COLUMN IF NOT EXISTS model TEXT;
+CREATE INDEX IF NOT EXISTS idx_eval_runs_suite_created ON eval_runs(suite_key, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_eval_runs_status_created ON eval_runs(status, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS eval_cases (
+  id                  TEXT PRIMARY KEY,
+  eval_run_id         TEXT NOT NULL REFERENCES eval_runs(id) ON DELETE CASCADE,
+  case_key            TEXT NOT NULL,
+  name                TEXT NOT NULL,
+  position            INTEGER NOT NULL,
+  source_agent_run_id TEXT,
+  status              TEXT NOT NULL CHECK (status IN ('pass','fail','error')),
+  score               DOUBLE PRECISION NOT NULL CHECK (score BETWEEN 0 AND 1),
+  observation         JSONB NOT NULL,
+  expectations        JSONB NOT NULL,
+  failure_reasons     JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(eval_run_id, case_key)
+);
+CREATE INDEX IF NOT EXISTS idx_eval_cases_run_position ON eval_cases(eval_run_id, position);
+CREATE INDEX IF NOT EXISTS idx_eval_cases_source_run ON eval_cases(source_agent_run_id) WHERE source_agent_run_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS eval_stage_results (
+  id             TEXT PRIMARY KEY,
+  eval_run_id    TEXT NOT NULL REFERENCES eval_runs(id) ON DELETE CASCADE,
+  eval_case_id   TEXT NOT NULL REFERENCES eval_cases(id) ON DELETE CASCADE,
+  stage          TEXT NOT NULL CHECK (stage IN ('ingest','answer','teaching','rag','tools','safety','task','collaboration','efficiency','aggregate')),
+  position       INTEGER NOT NULL,
+  status         TEXT NOT NULL CHECK (status IN ('pass','fail','skipped','error')),
+  score          DOUBLE PRECISION CHECK (score BETWEEN 0 AND 1),
+  duration_ms    INTEGER NOT NULL DEFAULT 0,
+  findings       JSONB NOT NULL DEFAULT '[]'::jsonb,
+  metrics        JSONB NOT NULL DEFAULT '{}'::jsonb,
+  failure_reason TEXT,
+  created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(eval_case_id, stage)
+);
+ALTER TABLE eval_stage_results DROP CONSTRAINT IF EXISTS eval_stage_results_stage_check;
+ALTER TABLE eval_stage_results ADD CONSTRAINT eval_stage_results_stage_check
+  CHECK (stage IN ('ingest','answer','teaching','rag','tools','safety','task','collaboration','efficiency','aggregate'));
+CREATE INDEX IF NOT EXISTS idx_eval_stages_run ON eval_stage_results(eval_run_id, position);
+CREATE INDEX IF NOT EXISTS idx_eval_stages_failures ON eval_stage_results(eval_run_id, status) WHERE status IN ('fail','error');
+
 CREATE OR REPLACE FUNCTION touch_knowledge_workspace_updated_at() RETURNS trigger AS $$
 BEGIN
   UPDATE projects SET updated_at = NOW() WHERE id = COALESCE(NEW.project_id, OLD.project_id);
@@ -3207,6 +3280,10 @@ async function schemaAlreadyCurrent(client: import('pg').PoolClient): Promise<bo
         AND (SELECT count(*) FROM pg_class WHERE relname = 'course_members') > 0
         AND (SELECT count(*) FROM pg_class WHERE relname = 'course_invitations') > 0
         AND (SELECT count(*) FROM pg_class WHERE relname = 'course_schema_cutovers') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'eval_runs') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'eval_cases') > 0
+        AND (SELECT count(*) FROM pg_class WHERE relname = 'eval_stage_results') > 0
+        AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='eval_runs' AND column_name='commit_sha')
         AS ok
     `)
     return rows[0]?.ok === true

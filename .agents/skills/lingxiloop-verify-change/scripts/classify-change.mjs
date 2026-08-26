@@ -15,6 +15,29 @@ const OPENBOT_TRACKED_PATHS = new Set([
   'src/lib/motion.ts',
 ])
 
+const EVAL_DASHBOARD_PATHS = new Set([
+  'src/admin/EvalPage.tsx',
+])
+
+function isEvalPath(path) {
+  return path.startsWith('eval/')
+    || path.startsWith('server/src/eval/')
+    || /^server\/src\/__(tests|integration)__\/eval(?:-|\.)/.test(path)
+    || /^scripts\/run-agent-(?:runtime-)?eval\.ts$/.test(path)
+    || path === 'docs/agent-eval.md'
+    || EVAL_DASHBOARD_PATHS.has(path)
+    || path.startsWith('.agents/skills/lingxiloop-eval-change/')
+}
+
+function isCiSelectorPath(path) {
+  return path.startsWith('.github/workflows/')
+    || path.startsWith('.agents/skills/lingxiloop-verify-change/')
+}
+
+function isFullMatrixPath(path) {
+  return isCiSelectorPath(path) || ['package.json', 'package-lock.json'].includes(path)
+}
+
 const CATEGORY_DEFINITIONS = [
   {
     id: 'docs',
@@ -22,6 +45,11 @@ const CATEGORY_DEFINITIONS = [
     matches: (path) => path.startsWith('docs/')
       || path.startsWith('.agents/skills/')
       || /^(README|CONTRIBUTING|SECURITY|THIRD_PARTY_NOTICES)\.md$/.test(path),
+  },
+  {
+    id: 'eval',
+    reason: 'Agent Eval suites, harnesses, runtime smoke, persistence, Dashboard, or Eval guidance changed.',
+    matches: isEvalPath,
   },
   {
     id: 'frontend',
@@ -97,7 +125,7 @@ function uniqueSorted(values) {
 
 function primaryDomain(path) {
   const matched = new Set(CATEGORY_DEFINITIONS.filter((definition) => definition.matches(path)).map(({ id }) => id))
-  for (const id of ['vendored', 'workers', 'build-release', 'agent-os-im-canvas', 'database-tenant', 'frontend', 'server', 'docs']) {
+  for (const id of ['vendored', 'workers', 'eval', 'build-release', 'agent-os-im-canvas', 'database-tenant', 'frontend', 'server', 'docs']) {
     if (matched.has(id)) return id
   }
   return 'other'
@@ -114,7 +142,58 @@ function addCheck(checks, command, tier, reason, cwd = '.') {
   if (!existing.reasons.includes(reason)) existing.reasons.push(reason)
 }
 
-function selectChecks(paths, categoryIds, escalations) {
+export function buildCiPlan(inputPaths) {
+  const paths = uniqueSorted(inputPaths)
+  const evalChanged = paths.some(isEvalPath)
+  // Fail closed: only Eval-owned files can prove a focused Eval change.
+  // Shared runtime, DB, API, package and CI files may contain unrelated
+  // hunks, so path classification alone must never exempt their owning tests.
+  const evalFocused = evalChanged && paths.every(isEvalPath)
+  const fullMatrix = paths.some(isFullMatrixPath)
+  const evalPersistence = paths.some((path) => path === 'server/src/__integration__/eval.test.ts'
+    || path === 'server/src/db/migrate.ts'
+    || path === 'server/src/api/admin-router.ts'
+    || path.startsWith('server/src/eval/'))
+  const dashboard = paths.some((path) => EVAL_DASHBOARD_PATHS.has(path))
+  const openNotebook = paths.some((path) => path.startsWith('third_party/open-notebook/'))
+  const composeInputs = paths.some((path) => /^docker-compose\..+\.yml$/.test(path)
+    || path.startsWith('server/docker/')
+    || path === 'server/scripts/mvp-smoke.ts')
+  const desktop = paths.some((path) => path.startsWith('electron/')
+    || path.startsWith('build/')
+    || path === '.github/workflows/desktop-release.yml'
+    || /^scripts\/(prepare-electron-package|verify-desktop-package|sync-electron)/.test(path))
+  const frontend = paths.some((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'frontend').matches(path))
+  const server = paths.some((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'server').matches(path))
+  const agentOs = paths.some((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'agent-os-im-canvas').matches(path))
+  const database = paths.some((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'database-tenant').matches(path))
+  const buildRelease = paths.some((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'build-release').matches(path))
+  const integrationInfrastructure = paths.some((path) => path === 'server/run-integration-tests.mjs'
+    || path === 'server/src/__integration__/_helpers.ts')
+  return {
+    eval: evalChanged,
+    evalFocused,
+    fullMatrix,
+    evalPersistence,
+    dashboard,
+    frontend,
+    server,
+    agentOs,
+    database,
+    integrationInfrastructure,
+    buildRelease,
+    openNotebook,
+    compose: composeInputs || (agentOs && !evalFocused),
+    desktop,
+    build: dashboard || (frontend && !evalFocused) || (buildRelease && !evalFocused),
+    fullUnit: !evalFocused && (frontend || server || agentOs || database || buildRelease),
+    integration: evalFocused && evalPersistence
+      ? 'eval'
+      : database || agentOs || integrationInfrastructure ? 'full' : 'none',
+  }
+}
+
+function selectChecks(paths, categoryIds, escalations, ci) {
   const checks = new Map()
   const has = (id) => categoryIds.has(id)
 
@@ -122,17 +201,32 @@ function selectChecks(paths, categoryIds, escalations) {
     addCheck(checks, 'npm run guard:brand', 'required', 'The brand guard scans every tracked and untracked text path.')
   }
 
+  if (has('eval')) {
+    addCheck(checks, 'npm run lint', 'required', 'Eval TypeScript, scripts, fixtures, and Dashboard changes must satisfy Biome.')
+    addCheck(checks, 'npm run server:typecheck', 'required', 'Eval contracts, runtime observation, and persistence are server typed.')
+    addCheck(checks, 'npm run test:eval', 'required', 'Run focused evaluator, trace, harness, and deterministic Agent runtime tests.')
+    addCheck(checks, 'npm run eval:check', 'required', 'Run frozen-harness self-test plus the current Agent OS deterministic regression gate.')
+    addCheck(checks, 'npm run guard:agent-os', 'required', 'The runtime Eval must continue through the strict Agent OS and IPython boundary.')
+    if (ci.evalPersistence) {
+      addCheck(checks, 'npm run test:integration:eval', 'required', 'Eval persistence changed; run only its PostgreSQL/Redis integration contract.')
+    }
+    if (ci.dashboard) {
+      addCheck(checks, 'npm run typecheck', 'required', 'The Eval Dashboard is part of the frontend TypeScript graph.')
+      addCheck(checks, 'npm run build', 'required', 'Bundle the changed Eval Dashboard surface.')
+    }
+  }
+
   if (has('frontend')) {
     addCheck(checks, 'npm run lint', 'required', 'Frontend TypeScript and React changes must satisfy Biome.')
     addCheck(checks, 'npm run typecheck', 'required', 'Frontend types or bundler inputs changed.')
-    addCheck(checks, 'npm test', 'recommended', 'Run owning frontend tests and shared unit coverage.')
-    addCheck(checks, 'npm run build', 'recommended', 'Confirm Vite can build the changed frontend surface.')
+    if (!ci.evalFocused) addCheck(checks, 'npm test', 'recommended', 'Run owning frontend tests and shared unit coverage.')
+    if (!ci.evalFocused) addCheck(checks, 'npm run build', 'recommended', 'Confirm Vite can build the changed frontend surface.')
   }
 
   if (has('server')) {
     addCheck(checks, 'npm run lint', 'required', 'Server TypeScript and scripts must satisfy Biome.')
     addCheck(checks, 'npm run server:typecheck', 'required', 'Server runtime types changed.')
-    addCheck(checks, 'npm test', 'required', 'Server behavior needs executable regression evidence.')
+    if (!ci.evalFocused) addCheck(checks, 'npm test', 'required', 'Server behavior needs executable regression evidence.')
     addCheck(checks, 'npm run guard:llm-tracked', 'recommended', 'Inspect whether the server diff can add or bypass a cloud LLM call.')
   }
 
@@ -140,15 +234,19 @@ function selectChecks(paths, categoryIds, escalations) {
     addCheck(checks, 'npm run guard:agent-os', 'required', 'The Agent OS composition and strict IPython tool boundary changed or is adjacent.')
     addCheck(checks, 'npm run guard:llm-tracked', 'required', 'Agent runtime LLM usage must remain in the universal ledger.')
     addCheck(checks, 'npm run server:typecheck', 'required', 'Agent OS, IM, Canvas, or Host Bridge types changed.')
-    addCheck(checks, 'npm test', 'required', 'Run Agent OS, IM, Canvas, and adjacent unit regressions.')
-    addCheck(checks, 'npm run test:integration', 'recommended', 'Durable work, IM, Canvas, and recovery contracts have integration coverage.')
-    addCheck(checks, 'npm run mvp:ci:smoke', 'ci-only', 'The isolated Compose smoke proves WuKong, durable work, IPython, and final reply together.')
+    if (!ci.evalFocused) {
+      addCheck(checks, 'npm test', 'required', 'Run Agent OS, IM, Canvas, and adjacent unit regressions.')
+      addCheck(checks, 'npm run test:integration', 'recommended', 'Durable work, IM, Canvas, and recovery contracts have integration coverage.')
+      addCheck(checks, 'npm run mvp:ci:smoke', 'ci-only', 'The isolated Compose smoke proves WuKong, durable work, IPython, and final reply together.')
+    }
   }
 
   if (has('database-tenant')) {
     addCheck(checks, 'npm run server:typecheck', 'required', 'Persistence and tenant contracts are server typed.')
-    addCheck(checks, 'npm test', 'required', 'Migration helpers and tenant behavior need unit regression evidence.')
-    addCheck(checks, 'npm run test:integration', 'required', 'Schema, transaction, authorization, and tenant isolation require PostgreSQL/Redis evidence.')
+    if (!ci.evalFocused) {
+      addCheck(checks, 'npm test', 'required', 'Migration helpers and tenant behavior need unit regression evidence.')
+      addCheck(checks, 'npm run test:integration', 'required', 'Schema, transaction, authorization, and tenant isolation require PostgreSQL/Redis evidence.')
+    }
   }
 
   if (has('workers')) {
@@ -182,17 +280,19 @@ function selectChecks(paths, categoryIds, escalations) {
 
   if (has('build-release')) {
     addCheck(checks, 'npm run lint', 'required', 'Build and release scripts must satisfy repository lint rules.')
-    addCheck(checks, 'npm run typecheck', 'recommended', 'Build inputs may affect the frontend TypeScript graph.')
-    addCheck(checks, 'npm run server:typecheck', 'recommended', 'Server packaging inputs may affect the server TypeScript graph.')
-    addCheck(checks, 'npm run build', 'required', 'Build, dependency, or packaging inputs changed.')
+    if (!ci.evalFocused) {
+      addCheck(checks, 'npm run typecheck', 'recommended', 'Build inputs may affect the frontend TypeScript graph.')
+      addCheck(checks, 'npm run server:typecheck', 'recommended', 'Server packaging inputs may affect the server TypeScript graph.')
+      addCheck(checks, 'npm run build', 'required', 'Build, dependency, or packaging inputs changed.')
+    }
     if (paths.some((path) => ['VERSION', 'package.json', 'package-lock.json'].includes(path))) {
       addCheck(checks, 'npm run version:check', 'required', 'VERSION, package manifest, and lockfile must agree.')
     }
-    if (paths.some((path) => path.startsWith('electron/') || path === 'package.json' || path.startsWith('build/'))) {
+    if (ci.desktop) {
       addCheck(checks, 'npm run electron:prepare', 'ci-only', 'Prepare the isolated desktop package before platform layout smoke.')
       addCheck(checks, 'node scripts/verify-desktop-package.mjs release', 'ci-only', 'Verify packaged Electron output excludes server/runtime sources and secrets.')
     }
-    if (paths.some((path) => path.startsWith('docker-compose.') || path.startsWith('server/docker/') || path.startsWith('.github/workflows/'))) {
+    if (ci.compose) {
       addCheck(checks, 'npm run mvp:ci:smoke', 'ci-only', 'CI Compose smoke covers multi-service packaging and runtime integration.')
     }
   }
@@ -220,6 +320,7 @@ function selectChecks(paths, categoryIds, escalations) {
 
 export function classifyPaths(inputPaths) {
   const paths = uniqueSorted(inputPaths)
+  const ci = buildCiPlan(paths)
   const categories = CATEGORY_DEFINITIONS.map((definition) => {
     const matchedPaths = paths.filter(definition.matches)
     return matchedPaths.length === 0 ? null : {
@@ -231,11 +332,20 @@ export function classifyPaths(inputPaths) {
   const categoryIds = new Set(categories.map(({ id }) => id))
   const escalations = []
 
+  const selectorPaths = paths.filter(isCiSelectorPath)
+  if (selectorPaths.length > 0) {
+    escalations.push({
+      id: 'ci-selector-change',
+      reason: 'CI workflow or its change classifier changed; exercise the full matrix before trusting the new selector.',
+      paths: selectorPaths,
+    })
+  }
+
   const migrationPaths = paths.filter((path) => path === 'server/src/db/migrate.ts'
     || path === 'server/src/migrate-bin.ts'
     || path.startsWith('server/src/scripts/migrate-')
     || /(^|\/)migrations?\//.test(path))
-  if (migrationPaths.length > 0) {
+  if (migrationPaths.length > 0 && !ci.evalFocused) {
     escalations.push({
       id: 'runtime-migration',
       reason: 'Runtime migration or upgrade behavior changed; verify fresh, upgrade, idempotent, and lock-contention paths.',
@@ -244,7 +354,7 @@ export function classifyPaths(inputPaths) {
   }
 
   const releasePaths = paths.filter((path) => CATEGORY_DEFINITIONS.find(({ id }) => id === 'build-release').matches(path))
-  if (releasePaths.length > 0) {
+  if (releasePaths.length > 0 && !ci.evalFocused) {
     escalations.push({
       id: 'build-release-surface',
       reason: 'Credentialed CI, dependency, platform packaging, version, or release behavior changed.',
@@ -262,7 +372,7 @@ export function classifyPaths(inputPaths) {
   }
 
   const domains = new Set(paths.map(primaryDomain).filter((id) => !['docs', 'other'].includes(id)))
-  if (domains.size >= 2) {
+  if (domains.size >= 2 && !ci.evalFocused) {
     escalations.push({
       id: 'cross-domain',
       reason: `The diff crosses primary domains: ${[...domains].sort().join(', ')}.`,
@@ -270,7 +380,7 @@ export function classifyPaths(inputPaths) {
     })
   }
 
-  if (escalations.some(({ id }) => ['runtime-migration', 'build-release-surface', 'vendored-source', 'cross-domain'].includes(id))) {
+  if (escalations.some(({ id }) => ['ci-selector-change', 'runtime-migration', 'build-release-surface', 'vendored-source', 'cross-domain'].includes(id))) {
     escalations.push({
       id: 'full-ci-approximation',
       reason: 'Run the applicable full local quality matrix and leave unavailable platform/service checks to CI.',
@@ -285,20 +395,22 @@ export function classifyPaths(inputPaths) {
   return {
     paths,
     categories,
-    checks: selectChecks(paths, categoryIds, sortedEscalations),
+    checks: selectChecks(paths, categoryIds, sortedEscalations, ci),
     escalations: sortedEscalations,
+    ci,
   }
 }
 
 export function buildReport(paths, scope) {
   const classified = classifyPaths(paths)
   return {
-    version: 1,
+    version: 3,
     scope,
     paths: classified.paths,
     categories: classified.categories,
     checks: classified.checks,
     escalations: classified.escalations,
+    ci: classified.ci,
   }
 }
 
@@ -328,6 +440,7 @@ export function renderText(report) {
   lines.push('Escalations:')
   if (report.escalations.length === 0) lines.push('  - none')
   for (const escalation of report.escalations) lines.push(`  - ${escalation.id}: ${escalation.reason}`)
+  lines.push(`CI plan: ${JSON.stringify(report.ci)}`)
   return `${lines.join('\n')}\n`
 }
 
