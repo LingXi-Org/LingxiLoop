@@ -140,11 +140,13 @@ console.log(`[integration] running ${selectedFiles.length}/${availableFiles.leng
 // causes deadlocks here: every file's beforeEach TRUNCATEs the same
 // tables on the shared test DB; two TRUNCATE CASCADE statements running
 // concurrently against overlapping tables deadlock at the catalog-lock
-// level. We're not trying to optimize wall-time for this suite, so
-// serializing is the right trade.
+// level. --test-force-exit prevents a failed spec with a leaked socket or
+// timer from hiding the actual assertion behind the workflow timeout.
+// We're not trying to optimize wall-time for this suite, so serializing is
+// the right trade.
 const child = spawn(
   'node',
-  ['--import', 'tsx', '--test', '--test-concurrency=1', ...testFiles],
+  ['--import', 'tsx', '--test', '--test-concurrency=1', '--test-force-exit', ...testFiles],
   { stdio: 'inherit', env: process.env },
 )
 child.on('exit', (code) => process.exit(code ?? 1))
