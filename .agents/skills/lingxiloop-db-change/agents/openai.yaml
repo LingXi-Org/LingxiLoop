@@ -1,0 +1,6 @@
+interface:
+  display_name: "LingxiLoop Database Change"
+  short_description: "Make tenant-safe LingxiLoop database changes"
+  default_prompt: "Use $lingxiloop-db-change to implement this database change safely."
+policy:
+  allow_implicit_invocation: true

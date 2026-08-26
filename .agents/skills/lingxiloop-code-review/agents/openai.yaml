@@ -1,0 +1,6 @@
+interface:
+  display_name: "LingxiLoop Code Review"
+  short_description: "Review LingxiLoop changes against repository contracts"
+  default_prompt: "Use $lingxiloop-code-review to review this LingxiLoop change without modifying it."
+policy:
+  allow_implicit_invocation: true
