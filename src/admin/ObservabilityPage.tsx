@@ -29,7 +29,7 @@
  * worth the complexity.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Select } from '@/components/Select'
+import { SelectField } from '@/components/ui/select-field'
 import { Combobox } from '@/components/Combobox'
 import {
   adminApi,
@@ -339,7 +339,7 @@ export function ObservabilityPage() {
             >
               <span className={`obs-refresh-icon${refreshing ? ' is-spinning' : ''}`} aria-hidden>↻</span>
             </button>
-            <Select
+            <SelectField
               value={String(autoRefreshMs)}
               onValueChange={(v) => setAutoRefreshMs(Number(v))}
               options={REFRESH_INTERVALS.map((r) => ({ value: String(r.ms), label: r.label }))}

@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from 'react'
 import { api } from '@/api/client'
 import { AvatarStack } from '@/components/Avatar'
-import { SelectMenu } from '@/components/SelectMenu'
+import { SelectField } from '@/components/ui/select-field'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
@@ -141,16 +141,16 @@ export function ConversationHeader({
             {conversation.kind === 'group' && agents.length > 0 && (
               <div className="flex shrink-0 items-center gap-1 border-l border-hairline pl-2">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-ink-secondary">Leader</span>
-                <SelectMenu
+                <SelectField
                   ariaLabel="更换群聊 Leader"
                   value={conversation.leaderId ?? ''}
-                  onChange={(value) => void changeLeader(value)}
+                  onValueChange={(value) => void changeLeader(value)}
                   options={[
                     ...(!conversation.leaderId ? [{ value: '', label: '选择', disabled: true }] : []),
                     ...agents.map((agent) => ({ value: agent.id, label: agent.name })),
                   ]}
                   className="max-w-24"
-                  buttonClassName="border-0 bg-transparent px-1 text-[10px] font-semibold text-accent shadow-none"
+                  triggerClassName="border-0 bg-transparent px-1 text-[10px] font-semibold text-accent shadow-none"
                   size="compact"
                 />
               </div>

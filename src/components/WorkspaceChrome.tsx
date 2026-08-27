@@ -1,5 +1,5 @@
 import { type ChangeEvent, type DragEvent, type ReactNode, useEffect, useRef, useState } from 'react'
-import { IconArrowLeft, IconCheck, IconMinus, IconPlus } from '@tabler/icons-react'
+import { ArrowLeft as IconArrowLeft, Check as IconCheck, Minus as IconMinus, Plus as IconPlus } from 'lucide-react'
 import { IFile, IPlus } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { useApp } from '@/stores/app'

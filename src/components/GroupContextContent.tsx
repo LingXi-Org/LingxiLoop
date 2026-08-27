@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react'
-import { IconLayoutDashboard, IconPlus } from '@tabler/icons-react'
+import { LayoutDashboard as IconLayoutDashboard, Plus as IconPlus } from 'lucide-react'
 import { CanvasPreview } from '@/components/CanvasPreview'
 import { Button } from '@/components/ui/button'
 import { SourcePanel } from '@/components/WorkspaceChrome'

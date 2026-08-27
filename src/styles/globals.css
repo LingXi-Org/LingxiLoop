@@ -92,6 +92,8 @@
   --secondary-foreground: var(--ink);
   --muted: var(--raised);
   --muted-foreground: var(--ink-secondary);
+  --destructive-foreground: var(--panel);
+  --accent-foreground: var(--panel);
   --destructive: #dc2626;
   --sidebar: var(--panel);
   --sidebar-foreground: var(--ink);

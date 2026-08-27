@@ -29,8 +29,8 @@ schema with a starter team. Everything else (OAuth login, email, storage, the
 sub2api LLM gateway) soft-disables when its env vars are unset — see
 [`.env.example`](.env.example).
 
-Component-specific setup lives in [`docs/`](docs/), including deployment and
-email integration notes.
+Component-specific setup lives in [`docs/`](docs/), including desktop,
+deployment, and email integration notes.
 
 ## Before you open a PR
 
@@ -82,6 +82,19 @@ handoffs, the Agent OS loop or WuKong events.
   observed bug is the most expensive class of change here — see the
   anti-patterns in `docs/COORDINATION.md`.
 - Prefer `any`-free, well-typed code; both tsconfigs are strict for a reason.
+
+## UI foundation
+
+- `components.json` and the official shadcn registry are the only source for
+  reusable UI primitives. Add or refresh one with
+  `npx shadcn@latest add <component>`.
+- Application and domain code imports primitives through
+  `@/components/ui/*`. Radix implementation imports stay inside that directory;
+  do not import Radix or Base UI directly from a feature.
+- Build application-specific fields and composites on those primitives instead
+  of creating a second `Input`, `Select`, `Checkbox`, or other root primitive.
+- Use `lucide-react` for interface icons and `framer-motion` when JavaScript
+  motion is necessary. Do not add another icon set or motion runtime.
 
 ## Reporting bugs and security issues
 

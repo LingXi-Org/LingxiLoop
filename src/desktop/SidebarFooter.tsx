@@ -1,12 +1,12 @@
 import {
-  IconBuilding,
-  IconCheck,
-  IconChevronDown,
-  IconFolder,
-  IconLogout,
-  IconRefresh,
-  IconSettings,
-} from '@tabler/icons-react'
+  Building2 as IconBuilding,
+  Check as IconCheck,
+  ChevronDown as IconChevronDown,
+  Folder as IconFolder,
+  LogOut as IconLogout,
+  RefreshCw as IconRefresh,
+  Settings as IconSettings,
+} from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
@@ -36,7 +36,7 @@ const MOCK_PROJECTS: SidebarProject[] = [
 type OpenPanel = 'projects' | 'account' | null
 
 function ProjectMark({ color }: { color: string }) {
-  return <span className="grok-project-mark" style={{ '--project-color': color } as React.CSSProperties}><IconFolder size={15} stroke={1.65} /></span>
+  return <span className="grok-project-mark" style={{ '--project-color': color } as React.CSSProperties}><IconFolder size={15} strokeWidth={1.65} /></span>
 }
 
 export function SidebarFooter() {
@@ -178,7 +178,7 @@ export function SidebarFooter() {
                 <span className="grok-project-row-copy">
                   <strong>{project.name}</strong>
                 </span>
-                {selectedProjectId === project.id && <IconCheck size={16} stroke={1.7} />}
+                {selectedProjectId === project.id && <IconCheck size={16} strokeWidth={1.7} />}
               </button>
             ))}
           </div>
@@ -196,9 +196,9 @@ export function SidebarFooter() {
               <div className="grok-account-section-label">组织</div>
               {companies.map((company) => (
                 <button key={company.id} type="button" className="grok-account-menu-row" onClick={() => switchCompany(company.id)}>
-                  <IconBuilding size={17} stroke={1.65} />
+                  <IconBuilding size={17} strokeWidth={1.65} />
                   <span>{company.name}</span>
-                  {company.id === activeCompanyId && <IconCheck size={15} stroke={1.7} />}
+                  {company.id === activeCompanyId && <IconCheck size={15} strokeWidth={1.7} />}
                 </button>
               ))}
             </div>
@@ -206,11 +206,11 @@ export function SidebarFooter() {
           <div className="grok-account-section">
             <ThemeToggle showLabel className="grok-account-menu-row" onToggle={() => setOpenPanel(null)} />
             <button type="button" className="grok-account-menu-row" onClick={() => { window.dispatchEvent(new Event('lingxiloop:open-updater')); setOpenPanel(null) }}>
-              <IconRefresh size={17} stroke={1.65} /><span>检查更新</span>
+              <IconRefresh size={17} strokeWidth={1.65} /><span>检查更新</span>
             </button>
           </div>
           <button type="button" className="grok-account-menu-row is-destructive" onClick={() => void signOut()}>
-            <IconLogout size={17} stroke={1.65} /><span>退出登录</span>
+            <IconLogout size={17} strokeWidth={1.65} /><span>退出登录</span>
           </button>
         </section>
       )}
@@ -222,18 +222,18 @@ export function SidebarFooter() {
         aria-expanded={openPanel === 'projects'}
         onClick={() => togglePanel('projects')}
       >
-        <IconFolder size={19} stroke={1.55} />
+        <IconFolder size={19} strokeWidth={1.55} />
         <span className="grok-sidebar-footer-label">{projects.find((project) => project.id === selectedProjectId)?.name ?? 'Projects'}</span>
-        <IconChevronDown className="grok-sidebar-row-chevron" size={16} stroke={1.55} />
+        <IconChevronDown className="grok-sidebar-row-chevron" size={16} strokeWidth={1.55} />
       </button>
 
       <button type="button" className="grok-sidebar-footer-row" data-active={appView === 'me' || undefined} onClick={() => { setOpenPanel(null); useApp.getState().setView('me') }}>
-        <IconSettings size={19} stroke={1.55} />
+        <IconSettings size={19} strokeWidth={1.55} />
         <span className="grok-sidebar-footer-label">设置</span>
       </button>
 
       <button type="button" className="grok-sidebar-footer-row" data-active={appView === 'management' || undefined} onClick={() => { setOpenPanel(null); useApp.getState().setView('management') }}>
-        <IconBuilding size={19} stroke={1.55} />
+        <IconBuilding size={19} strokeWidth={1.55} />
         <span className="grok-sidebar-footer-label">Company & Courses</span>
       </button>
 
@@ -249,7 +249,7 @@ export function SidebarFooter() {
           <strong>{authUser?.name ?? '我的账号'}</strong>
           <small>{activeCompany?.name ?? authUser?.email ?? ''}</small>
         </span>
-        <IconChevronDown className="grok-sidebar-row-chevron" size={16} stroke={1.55} />
+        <IconChevronDown className="grok-sidebar-row-chevron" size={16} strokeWidth={1.55} />
       </button>
     </div>
   )

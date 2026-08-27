@@ -6,7 +6,7 @@ import { CardLink } from '@/components/CardLink'
 import { DocumentLink } from '@/components/DocumentLink'
 import { IAt, IBoard, IMore, IPlus, ITrash } from '@/components/icons'
 import { ResizeHandle } from '@/components/ResizeHandle'
-import { Select } from '@/components/Select'
+import { SelectField } from '@/components/ui/select-field'
 import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
@@ -874,7 +874,7 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
           <section className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">栏目</div>
-              <Select
+              <SelectField
                 value={card.columnId}
                 onValueChange={(columnId) => void moveToColumn(columnId)}
                 options={columns.map((c) => ({ value: c.id, label: c.title }))}

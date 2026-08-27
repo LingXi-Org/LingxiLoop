@@ -10,7 +10,7 @@ import { useConversations } from '@/stores/conversations'
 import { useApp } from '@/stores/app'
 import { useWorkspace } from '@/stores/workspace'
 import { Avatar } from '@/components/Avatar'
-import { Input } from '@/components/Input'
+import { Input } from '@/components/ui/input'
 import type { Participant } from '@/types'
 
 interface Props {

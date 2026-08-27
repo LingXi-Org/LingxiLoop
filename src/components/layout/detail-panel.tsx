@@ -1,5 +1,5 @@
-import { IconX } from "@tabler/icons-react";
-import { motion, useReducedMotion } from "motion/react";
+import { X as IconX } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { EASE_OUT } from "@/lib/motion";

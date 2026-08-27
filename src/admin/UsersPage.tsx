@@ -3,7 +3,7 @@
  * admin toggles per row.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { SelectMenu } from '@/components/SelectMenu'
+import { SelectField } from '@/components/ui/select-field'
 import { useAuth } from '@/stores/auth'
 import { type AdminStats, type AdminUser, type AdminUserDetail, adminApi, type Tier } from './api'
 import { Pager } from './Pager'
@@ -105,10 +105,10 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
             type="search" placeholder="电子邮件或姓名" className="admin-input"
             value={q} onChange={(e) => setQ(e.target.value)}
           />
-          <SelectMenu
+          <SelectField
             ariaLabel="筛选用户级别"
             value={tier}
-            onChange={(value) => setTier(value as Tier | '')}
+            onValueChange={(value) => setTier(value as Tier | '')}
             options={[
               { value: '', label: '所有级别' },
               { value: 'free', label: '免费' },
@@ -196,10 +196,10 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
           </div>
         </div>
         <div onClick={(e) => e.stopPropagation()} data-label="Tier">
-          <SelectMenu
+          <SelectField
             ariaLabel={`更改 ${u.name || u.email} 的级别`}
             value={u.tier}
-            onChange={(value) => onTierChange(value as Tier)}
+            onValueChange={(value) => onTierChange(value as Tier)}
             options={[
               { value: 'free', label: '免费' },
               { value: 'pro', label: '专业版' },

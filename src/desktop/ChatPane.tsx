@@ -8,7 +8,7 @@ import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
-import { SelectMenu } from '@/components/SelectMenu'
+import { SelectField } from '@/components/ui/select-field'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { TwEmoji } from '@/components/TwEmoji'
 import { ComposerSurface } from '@/im/Composer'
@@ -227,15 +227,15 @@ function _ChatHeader({
               <span className="w-1 h-1 rounded-full bg-ink-300 shrink-0" />
               <div className="flex shrink-0 items-center gap-1" title="普通消息由 Leader 主导回复">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-ink-300">Leader</span>
-                <SelectMenu
+                <SelectField
                   value={c.leaderId ?? ''}
-                  onChange={(value) => void changeLeader(value)}
+                  onValueChange={(value) => void changeLeader(value)}
                   options={[
                     ...(!c.leaderId ? [{ value: '', label: '请选择', disabled: true }] : []),
                     ...activeAgentMembers.map((agent) => ({ value: agent.id, label: agent.name })),
                   ]}
                   className="max-w-[120px]"
-                  buttonClassName="border-0 bg-transparent px-1 text-[11.5px] font-semibold text-skype-deep shadow-none"
+                  triggerClassName="border-0 bg-transparent px-1 text-[11.5px] font-semibold text-skype-deep shadow-none"
                   size="compact"
                   ariaLabel="更换群聊 Leader"
                 />
