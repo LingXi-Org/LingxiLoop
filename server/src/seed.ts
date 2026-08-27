@@ -10,12 +10,16 @@ import { pool } from './db/pool.js'
 async function ensureDevUser(): Promise<void> {
   const DEV_USER_ID = 'yetone'
   const DEV_EMAIL = 'yetone@dev.local'
-  const { rows } = await pool.query(`SELECT 1 FROM users WHERE id = $1 LIMIT 1`, [DEV_USER_ID])
-  if (rows[0]) return
   await pool.query(
     `INSERT INTO users (id, email, display_name, password_hash) VALUES ($1, $2, $3, NULL)
      ON CONFLICT (id) DO NOTHING`,
     [DEV_USER_ID, DEV_EMAIL, 'Yetone'],
+  )
+  await pool.query(
+    `INSERT INTO companies (id, name, slug, owner_user_id, description)
+     VALUES ('personal', 'Personal', 'personal', $1, 'Personal development workspace')
+     ON CONFLICT (id) DO NOTHING`,
+    [DEV_USER_ID],
   )
   await pool.query(
     `INSERT INTO company_members (company_id, user_id, role) VALUES ('personal', $1, 'owner')

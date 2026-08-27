@@ -5,6 +5,7 @@ import test from 'node:test'
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const bootstrap = readFileSync(new URL('../db/bootstrap.ts', import.meta.url), 'utf8')
 const serverBoot = readFileSync(new URL('../index.ts', import.meta.url), 'utf8')
+const seed = readFileSync(new URL('../seed.ts', import.meta.url), 'utf8')
 const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.url), 'utf8')
 const onboarding = readFileSync(new URL('../onboardCompany.ts', import.meta.url), 'utf8')
 const composeFiles = [
@@ -70,4 +71,13 @@ test('runtime startup contains no historical data backfill path', () => {
   const runtime = `${serverBoot}\n${embeddings}\n${onboarding}`
   assert.doesNotMatch(runtime, /backfill(?:StarterAgents|HumanGravatars|MemoryEmbeddings)/)
   assert.doesNotMatch(serverBoot, /embed:backfill|before Gravatar wiring|predating this commit/)
+})
+
+test('fresh-schema seed creates the personal company before its membership', () => {
+  const userInsert = seed.indexOf('INSERT INTO users')
+  const companyInsert = seed.indexOf('INSERT INTO companies')
+  const membershipInsert = seed.indexOf('INSERT INTO company_members')
+  assert.ok(userInsert >= 0 && companyInsert > userInsert && membershipInsert > companyInsert)
+  assert.match(seed, /INSERT INTO companies \(id, name, slug, owner_user_id, description\)/)
+  assert.doesNotMatch(seed, /if \(rows\[0\]\) return/)
 })
