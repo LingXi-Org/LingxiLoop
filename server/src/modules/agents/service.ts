@@ -4,7 +4,7 @@ import { pool } from '../../db/pool.js'
 import { env } from '../../env.js'
 import { requireCompanyRole } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
-import { assertCompanyAgentLimit, requireCompany, requireCompanyArtifactContext, userId } from '../../http/request-context.js'
+import { assertCompanyAgentLimit, requireAuth, requireCompany, requireCompanyArtifactContext } from '../../http/request-context.js'
 import { BUSY_STATUS_LEASE_MS } from '../../status.js'
 import { storage, } from '../../storage.js'
 
@@ -934,7 +934,7 @@ api.post('/agents/:id/rehire', async (req, res) => {
 /* ============== Preferences + autonomy ============== */
 
 api.get('/me/preferences', async (req, res) => {
-  const me = userId(req)
+  const me = requireAuth(req)
   const { rows } = await pool.query<{ prefs: Record<string, unknown> }>(
     `SELECT prefs FROM user_preferences WHERE user_id = $1`,
     [me],
@@ -943,7 +943,7 @@ api.get('/me/preferences', async (req, res) => {
 })
 
 api.put('/me/preferences', async (req, res) => {
-  const me = userId(req)
+  const me = requireAuth(req)
   const prefs = req.body ?? {}
   await pool.query(
     `INSERT INTO user_preferences (user_id, prefs, updated_at)

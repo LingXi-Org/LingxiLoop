@@ -11,7 +11,7 @@ import { safe } from '../../http/async-handler.js'
 import { DEVTOOLS_ROLES } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import { generateInvitationToken as generateInviteToken, hashInvitationToken as hashInviteToken } from '../../http/invitation-token.js'
-import { assertCompanyHumanLimit, assertUserCompanyLimit, companyHumanSeatInfo, requireAuth, userId } from '../../http/request-context.js'
+import { assertCompanyHumanLimit, assertUserCompanyLimit, companyHumanSeatInfo, requireAuth } from '../../http/request-context.js'
 import { wukongClient } from '../../im/wukong.js'
 import { type InvitationEmailDelivery, sendInvitationEmail } from '../../invitation-email.js'
 import { onboardStarterAgents, seedMemberDms } from '../../onboardCompany.js'
@@ -22,7 +22,7 @@ const api = companiesServiceRoutes
 /* ============== Companies (multi-tenant root) ============== */
 
 api.get('/companies', async (req, res) => {
-  const me = userId(req)
+  const me = requireAuth(req)
   const { rows } = await pool.query<{
     id: string; runId: string; agentId: string; agentName: string; runStatus: string;
     kind: string; level: 'debug' | 'info' | 'warn' | 'error'; title: string; createdAt: Date
@@ -37,7 +37,7 @@ api.get('/companies', async (req, res) => {
 })
 
 api.post('/companies', async (req, res) => {
-  const me = userId(req)
+  const me = requireAuth(req)
   const name = String(req.body?.name ?? '').trim().slice(0, 80)
   if (!name) { res.status(400).json({ error: 'name required' }); return }
   await assertUserCompanyLimit(me)

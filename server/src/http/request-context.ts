@@ -11,12 +11,6 @@ export function requireAuth(req: Request & AuthedRequest): string {
   return id
 }
 
-/** Backwards-compat alias for older handlers. Same semantics as requireAuth.
- *  Auth is now enforced everywhere — no more dev-mode header spoofing. */
-export function userId(req: Request & AuthedRequest): string {
-  return requireAuth(req)
-}
-
 export const TIER_LIMITS = {
   free: { companiesPerUser: 3,  agentsPerCompany: 10, humansPerCompany: 5  },
   pro:  { companiesPerUser: 10, agentsPerCompany: 20, humansPerCompany: 10 },

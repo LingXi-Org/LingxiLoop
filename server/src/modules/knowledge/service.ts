@@ -4,7 +4,7 @@ import { pool } from '../../db/pool.js'
 import { safe } from '../../http/async-handler.js'
 import { PRIVILEGED_ROLES, requireCompanyRole, requireGroupConversation } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
-import { assertProjectWritable, requireCompany, requireWorkspace, userId } from '../../http/request-context.js'
+import { assertProjectWritable, requireAuth, requireCompany, requireWorkspace } from '../../http/request-context.js'
 import {
   deleteKnowledgeSource,
   enqueueKnowledgeSource,
@@ -45,7 +45,7 @@ api.get('/projects', async (req, res) => {
       WHERE p.company_id = $1
         AND (p.is_general=TRUE OR cm.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
       ORDER BY p.status ASC, pv.visited_at DESC NULLS LAST, p.updated_at DESC`,
-    [tenant, userId(req)],
+    [tenant, requireAuth(req)],
   )
   res.json(rows)
 })
@@ -60,7 +60,7 @@ api.post('/projects', async (req, res) => {
   await pool.query(
     `INSERT INTO projects (id, company_id, name, description, color, created_by)
      VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, tenant, name, description, color, userId(req)],
+    [id, tenant, name, description, color, requireAuth(req)],
   )
   let knowledgeState: 'disabled' | 'ready' | 'failed' = openNotebookEnabled() ? 'ready' : 'disabled'
   if (openNotebookEnabled()) {
