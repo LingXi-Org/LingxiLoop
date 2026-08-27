@@ -1,4 +1,4 @@
-export type LearningCourseStatus = 'draft' | 'active' | 'archived'
+export type LearningCourseStatus = 'active' | 'archived'
 export type LearningRole = 'teacher' | 'learner'
 export type LearningRoomPurpose = 'study' | 'lab' | 'discussion'
 export type LearningObjectiveStatus = 'draft' | 'published' | 'archived'
@@ -18,7 +18,7 @@ export interface LearningCourseSummary {
   title: string
   description: string
   status: LearningCourseStatus
-  roles: LearningRole[]
+  courseRole: LearningRole
   roomCount: number
   objectiveCount: number
   learnerCount: number
@@ -107,7 +107,7 @@ export interface MasteryProjectionDecision {
 export interface LearningTurnContext {
   course: Pick<LearningCourseSummary, 'id' | 'projectId' | 'title' | 'status'>
   roomPurpose: LearningRoomPurpose
-  actorRoles: LearningRole[]
+  actorRole?: LearningRole
   learnerId?: string
   activeMission?: LearningMission
   objectives: Array<LearningObjective & { masteryLevel: number; masteryStatus: string; nextReviewAt?: string }>

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
+import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 
 const rankSql = `(CASE lane WHEN 'learner' THEN 4 WHEN 'approval' THEN 3 WHEN 'collaboration' THEN 2 ELSE 1 END)`
 const sessionSql = `(company_id || ':' || agent_id || ':' || channel_id || ':' || COALESCE(thread_root_client_msg_no, '-'))`
@@ -70,12 +71,12 @@ export async function sweepAgentWorkWatchdog(now = new Date()): Promise<{ trippe
   return { tripped: trippedRows.length, fenced }
 }
 
-export function startAgentWorkWatchdog(intervalMs = 5_000): NodeJS.Timeout {
+export function startAgentWorkWatchdog(intervalMs = 5_000): WorkerTaskHandle {
   const tick = () => void sweepAgentWorkWatchdog().then(({ tripped, fenced }) => {
     if (tripped || fenced) console.warn(`[agent-os:watchdog] tripped=${tripped} fenced=${fenced}`)
   }).catch((error) => console.warn('[agent-os:watchdog] sweep failed:', error instanceof Error ? error.message : String(error)))
-  setImmediate(tick)
+  const immediate = setImmediate(tick)
   const timer = setInterval(tick, intervalMs)
   timer.unref?.()
-  return timer
+  return { stop: () => { clearImmediate(immediate); clearInterval(timer) } }
 }

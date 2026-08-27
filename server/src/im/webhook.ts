@@ -116,11 +116,19 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
       throw new Error('message author is not a bound channel member')
     }
     const {rows:teacherRooms}=await client.query<{course_id:string;status:'active'|'closed';course_status:string;agent_id:string;is_teacher:boolean}>(
-      `SELECT tr.course_id,tr.status,c.status AS course_status,pta.agent_id,
-              EXISTS(SELECT 1 FROM learning_course_memberships cm WHERE cm.course_id=tr.course_id AND cm.user_id=$2 AND cm.role='teacher') AS is_teacher
-         FROM learning_course_teacher_rooms tr JOIN learning_courses c ON c.id=tr.course_id
-         JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id AND pta.company_id=c.company_id
-        WHERE tr.conversation_id=$1`,[channelId,fromUid],
+      `SELECT tr.course_id,tr.status,project.status AS course_status,pta.agent_id,
+              EXISTS(
+                SELECT 1 FROM course_members cm
+                 WHERE cm.course_id=tr.course_id AND cm.company_id=tr.company_id
+                   AND cm.user_id=$2 AND cm.role='teacher'
+              ) AS is_teacher
+         FROM learning_course_teacher_rooms tr
+         JOIN courses course ON course.id=tr.course_id AND course.company_id=tr.company_id
+         JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+         JOIN learning_project_teacher_agents pta
+           ON pta.project_id=course.project_id AND pta.company_id=course.company_id
+        WHERE tr.conversation_id=$1 AND tr.company_id=$3`,
+      [channelId,fromUid,bindings[0].company_id],
     )
     const teacherRoom=teacherRooms[0]
     if(teacherRoom){

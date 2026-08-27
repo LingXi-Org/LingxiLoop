@@ -11,17 +11,18 @@ import type { CommandAction } from '@/lib/commands'
 import { useApp } from '@/stores/app'
 import { useConversations } from '@/stores/conversations'
 import { useTheme } from '@/stores/theme'
+import { useUiCommands } from '@/stores/uiCommands'
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const conversations = useConversations((state) => state.list)
   const toggleTheme = useTheme((state) => state.toggleTheme)
   const actions = useMemo<CommandAction[]>(() => {
-    const dispatch = (name: string) => window.dispatchEvent(new Event(name))
+    const dispatch = useUiCommands.getState().dispatch
     return [
-      { id: 'conversation-search', label: '搜索会话和消息', keywords: 'search conversations', run: () => dispatch('lingxiloop:focus-conversation-search') },
-      { id: 'find-chat', label: '搜索当前对话', keywords: 'find chat', shortcut: '⌘ F', run: () => dispatch('lingxiloop:find-chat') },
-      { id: 'focus-composer', label: '聚焦消息输入框', keywords: 'focus composer input', run: () => dispatch('lingxiloop:focus-composer') },
-      { id: 'new-group', label: '新建群聊', keywords: 'new group conversation', run: () => dispatch('lingxiloop:new-group') },
+      { id: 'conversation-search', label: '搜索会话和消息', keywords: 'search conversations', run: () => dispatch('focus-conversation-search') },
+      { id: 'find-chat', label: '搜索当前对话', keywords: 'find chat', shortcut: '⌘ F', run: () => dispatch('find-chat') },
+      { id: 'focus-composer', label: '聚焦消息输入框', keywords: 'focus composer input', run: () => dispatch('focus-composer') },
+      { id: 'new-group', label: '新建群聊', keywords: 'new group conversation', run: () => dispatch('new-group') },
       { id: 'agents', label: '打开智能体', keywords: 'agents', run: () => useApp.getState().setView('agents') },
       { id: 'canvas', label: '打开 Canvas', keywords: 'canvas', run: () => useApp.getState().setView('canvas') },
       { id: 'library', label: '打开资料库', keywords: 'library documents', run: () => useApp.getState().setView('library') },

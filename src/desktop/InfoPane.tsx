@@ -1,10 +1,10 @@
 import { ParticipantProfile } from '@/im/Profile'
-import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 
 /** Desktop adapter for the shared IM participant profile. */
 export function InfoPane() {
-  const participantId = useApp((state) => state.infoAgentId)
-  const close = useApp((state) => state.closeAgentInfo)
+  const participantId = useSurface((state) => state.surface?.kind === 'member' ? state.surface.participantId : null)
+  const close = useSurface((state) => state.closeAgentInfo)
   if (!participantId) return null
-  return <ParticipantProfile participantId={participantId} onClose={close} variant="desktop" />
+  return <ParticipantProfile participantId={participantId} onClose={close} />
 }

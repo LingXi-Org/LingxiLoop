@@ -6,6 +6,7 @@ const http = require('node:http')
 const crypto = require('node:crypto')
 const { pathToFileURL } = require('node:url')
 const autoUpdater = require('./autoUpdater.cjs')
+const { createAuthNonceGuard } = require('./authNonce.cjs')
 
 const isDev = !app.isPackaged
 const DEV_URL = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5180'
@@ -410,33 +411,24 @@ const AUTH_DONE_HTML = `<!doctype html>
 // process finds no armed nonce and is (correctly) dropped — they just sign in
 // again from the now-running app. That rare edge is the accepted cost of not
 // persisting a bearer-handoff credential to disk.
-let armedAuthNonce = null
-let armedAuthExpiry = 0
 const AUTH_NONCE_TTL_MS = 10 * 60 * 1000
+const authNonceGuard = createAuthNonceGuard({
+  randomBytes: crypto.randomBytes,
+  timingSafeEqual: crypto.timingSafeEqual,
+  ttlMs: AUTH_NONCE_TTL_MS,
+})
 
 /** Arm for one sign-in and return a fresh nonce the renderer appends to the
  *  OAuth return URL. Supersedes any previous unused nonce. */
 function armAuthHandoff() {
-  armedAuthNonce = crypto.randomBytes(16).toString('hex')
-  armedAuthExpiry = Date.now() + AUTH_NONCE_TTL_MS
-  return armedAuthNonce
+  return authNonceGuard.arm()
 }
 
 /** Validate + single-use-consume an inbound nonce. Constant-time compare so a
- *  mismatch leaks nothing; clears the armed nonce on any check so a token can
- *  be accepted at most once. */
+ *  mismatch leaks nothing; invalid callbacks preserve the current attempt,
+ *  while a match or expiry clears it. */
 function consumeAuthNonce(nonce) {
-  const armed = armedAuthNonce
-  const expiry = armedAuthExpiry
-  armedAuthNonce = null
-  armedAuthExpiry = 0
-  if (!armed || Date.now() > expiry) return false
-  if (typeof nonce !== 'string' || nonce.length !== armed.length) return false
-  try {
-    return crypto.timingSafeEqual(Buffer.from(nonce), Buffer.from(armed))
-  } catch {
-    return false
-  }
+  return authNonceGuard.consume(nonce)
 }
 
 /** Pull token + companyId + nonce out of a `lingxiloop://auth#token=…` URL. The OS
@@ -566,7 +558,7 @@ const NOTIF_MARGIN_TOP = 24
 
 function notificationUrl() {
   if (isDev) return `${DEV_URL}/#notifications`
-  return `file://${path.join(__dirname, '..', 'dist', 'index.html')}#notifications`
+  return 'app://lingxiloop/index.html#notifications'
 }
 
 function positionNotificationWindow() {

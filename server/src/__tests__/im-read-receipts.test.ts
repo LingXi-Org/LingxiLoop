@@ -3,18 +3,18 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import type { PoolClient } from 'pg'
 
-const migration = readFileSync(new URL('../db/migrate.ts', import.meta.url), 'utf8')
+const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const router = readFileSync(new URL('../im/router.ts', import.meta.url), 'utf8')
 const service = readFileSync(new URL('../im/read-receipts.ts', import.meta.url), 'utf8')
 const ws = readFileSync(new URL('../ws.ts', import.meta.url), 'utf8')
 const controlPlane = readFileSync(new URL('../agent-os/control-plane.ts', import.meta.url), 'utf8')
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
 
-test('read receipt migration is append-only, range indexed and uniqueness protected', () => {
-  assert.match(migration, /CREATE TABLE IF NOT EXISTS im_read_receipt_advances/)
-  assert.match(migration, /PRIMARY KEY\(company_id, channel_id, reader_id, read_through_seq\)/)
-  assert.match(migration, /read_through_seq > previous_read_seq/)
-  assert.match(migration, /idx_im_read_receipt_range/)
+test('read receipt schema is append-only, range indexed and uniqueness protected', () => {
+  assert.match(schema, /CREATE TABLE public\.im_read_receipt_advances/)
+  assert.match(schema, /PRIMARY KEY \(company_id, channel_id, reader_id, read_through_seq\)/)
+  assert.match(schema, /read_through_seq > previous_read_seq/)
+  assert.match(schema, /idx_im_read_receipt_range/)
 })
 
 test('read route requires a durable cursor and retains unseen unread messages', () => {

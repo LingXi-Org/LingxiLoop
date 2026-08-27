@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { AdminApp } from '@/admin/AdminApp'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
 import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
 import { AuthGate } from '@/components/AuthGate'
@@ -11,21 +10,23 @@ import {
   InviteAcceptScreen,
 } from '@/components/InviteAcceptScreen'
 import { NotificationToasts } from '@/components/NotificationToasts'
-import { NotificationWindow } from '@/components/NotificationWindow'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
-import { DesktopApp } from '@/desktop/DesktopApp'
 import { seedMockIm } from '@/dev/mockIm'
 import { isMockImDevelopment } from '@/lib/devMode'
-import { isNotificationWindow } from '@/lib/runtime'
-import { useIsMobile } from '@/lib/utils'
-import { MobileApp } from '@/mobile/MobileApp'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
 import { bootMessagesStream, useMessages } from '@/stores/messages'
 import { bootParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
-import '@/admin/admin.css'
+import { useUiCommand } from '@/stores/uiCommands'
+
+const AdminApp = lazy(() => import('@/admin/AdminApp').then((module) => ({ default: module.AdminApp })))
+const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
+
+function SurfaceFallback() {
+  return <div className="fixed inset-0 grid place-items-center text-sm text-ink-400">Loading…</div>
+}
 
 /** True iff this browser tab is for the admin panel. An optional `admin.*`
  *  hostname or the `/admin` path prefix triggers it. We check both so dev can hit
@@ -38,7 +39,6 @@ function isAdminContext(): boolean {
 }
 
 function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
-  const isMobile = useIsMobile()
   const convoId = useApp((s) => s.selectedConversationId)
   const hasDockUnread = useConversations((s) =>
     s.list.some((c) => !isMuted(c) && (c.unread ?? 0) > 0),
@@ -47,6 +47,7 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     convoId ? s.list.some((c) => c.id === convoId) : false,
   )
   const [updaterOpen, setUpdaterOpen] = useState(false)
+  const uiCommand = useUiCommand()
   useEffect(() => {
     if (mockMode) return
     bootMessagesStream()
@@ -63,26 +64,21 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     return () => window.lingxiloop?.dock?.setUnreadDot(false)
   }, [])
 
-  // Lazy-load messages when selected. Read state advances only from the
-  // Virtuoso visible range while the page is focused.
+  // Lazy-load messages when selected. The visible-range receipt path marks
+  // only messages the user has actually seen.
   useEffect(() => {
     if (mockMode) return
     if (!convoId || !selectedConvoExists) return
     void useMessages.getState().loadConversation(convoId)
   }, [convoId, selectedConvoExists, mockMode])
 
-  // Cross-component "open updater" channel — MeView's "Check for
-  // updates" button posts this event to ask AuthedApp to open the
-  // dialog without prop-drilling.
   useEffect(() => {
-    const onOpen = () => setUpdaterOpen(true)
-    window.addEventListener('lingxiloop:open-updater', onOpen)
-    return () => window.removeEventListener('lingxiloop:open-updater', onOpen)
-  }, [])
+    if (uiCommand?.type === 'open-updater') setUpdaterOpen(true)
+  }, [uiCommand])
 
   return (
     <>
-      {isMobile ? <MobileApp /> : <DesktopApp />}
+      <DesktopApp />
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}
@@ -94,12 +90,6 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
 }
 
 export function App() {
-  // The Electron notification BrowserWindow loads this same React bundle
-  // with a `#notifications` hash. Bypass everything else (auth, stores,
-  // routing) and just render the toast stack — it receives payloads over
-  // IPC from the main window.
-  if (isNotificationWindow) return <NotificationWindow />
-
   // Local Vite development opens straight into a deterministic IM workspace.
   // `?api=1` remains available for explicitly testing the real auth/API stack.
   if (isMockImDevelopment() && !isAdminContext()) {
@@ -165,7 +155,7 @@ export function App() {
     return (
       <AuthGate>
         <ErrorBoundary>
-          <AdminApp />
+          <Suspense fallback={<SurfaceFallback />}><AdminApp /></Suspense>
         </ErrorBoundary>
       </AuthGate>
     )

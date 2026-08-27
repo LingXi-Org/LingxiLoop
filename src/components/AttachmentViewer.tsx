@@ -2,7 +2,7 @@ import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type PDFPagePr
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { api } from '@/api/client'
+import { filesApi } from '@/api/files'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
 import type { Message } from '@/types'
@@ -14,7 +14,7 @@ type Attachment = NonNullable<Message['attachment']>
 
 async function freshUrl(url: string): Promise<string> {
   if (/^(data:|blob:)/i.test(url) || url.startsWith('/')) return url
-  try { return (await api.refreshUploadUrl(url)).url } catch { return url }
+  try { return (await filesApi.refreshUploadUrl(url)).url } catch { return url }
 }
 
 function ViewerShell({ name, url, onClose, children }: { name: string; url: string; onClose: () => void; children: React.ReactNode }) {

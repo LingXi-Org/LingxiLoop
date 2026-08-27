@@ -7,6 +7,7 @@ import {
   closeTeacherRoomForCourse,
   ensureTeacherAgentForCourse,
   nextTeacherDigestRun,
+  reactivateTeacherRoomForCourse,
   teacherActionRequiresApproval,
 } from '../learning/teacher-agent.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
@@ -52,26 +53,28 @@ async function seedTeacherCourse():Promise<Fixture>{
     [projectId,companyId,teacherId],
   )
   await pool.query(
-    `INSERT INTO learning_courses(id,company_id,project_id,title,status,created_by)
-     VALUES($1,$2,$3,'线性代数','active',$4)`,
+    `INSERT INTO courses(id,company_id,project_id,created_by)
+     VALUES($1,$2,$3,$4)`,
     [courseId,companyId,projectId,teacherId],
   )
   await pool.query(
-    `INSERT INTO learning_course_memberships(course_id,user_id,role,created_by)
-     VALUES($1,$2,'teacher',$2),($1,$3,'learner',$2)`,
-    [courseId,teacherId,learnerId],
+    `INSERT INTO course_members(course_id,company_id,user_id,role)
+     VALUES($1,$2,$3,'teacher'),($1,$2,$4,'learner')`,
+    [courseId,companyId,teacherId,learnerId],
   )
   return {companyId,projectId,courseId,teacherId,learnerId,adminId}
 }
 
-async function apiRequest(userId:string,companyId:string,path:string):Promise<Response>{
+async function apiRequest(userId:string,companyId:string,path:string,projectId?:string):Promise<Response>{
   const app=await buildApiTestApp(userId)
   const server=createServer(app)
   await new Promise<void>((resolve)=>server.listen(0,'127.0.0.1',resolve))
   const address=server.address()
   if(!address||typeof address==='string')throw new Error('test server did not bind')
   try{
-    return await fetch(`http://127.0.0.1:${address.port}${path}`,{headers:{'x-company-id':companyId}})
+    return await fetch(`http://127.0.0.1:${address.port}${path}`,{
+      headers:{'x-company-id':companyId,...(projectId?{'x-project-id':projectId}:{})},
+    })
   }finally{
     await new Promise<void>((resolve,reject)=>server.close((error)=>error?reject(error):resolve()))
   }
@@ -104,45 +107,41 @@ test('[integration] concurrent provisioning creates one Project Pulse and one Co
   assert.equal(rows[0]?.subtitle,'教师 · 1')
 })
 
-test('[integration] a replacement course reuses Pulse identity but gets a separate room and transcript scope',async()=>{
+test('[integration] archive and restore retain the same Pulse identity and teacher room',async()=>{
   const fixture=await seedTeacherCourse()
   const first=await ensureTeacherAgentForCourse(fixture.courseId)
-  await pool.query(`UPDATE learning_courses SET status='archived',archived_at=NOW() WHERE id=$1`,[fixture.courseId])
+  await pool.query(`UPDATE projects SET status='archived',archived_at=NOW() WHERE id=$1`,[fixture.projectId])
   await closeTeacherRoomForCourse(fixture.courseId)
-  const nextCourseId=`${fixture.courseId}-next`
-  await pool.query(
-    `INSERT INTO learning_courses(id,company_id,project_id,title,status,created_by)
-     VALUES($1,$2,$3,'线性代数（下一期）','active',$4)`,
-    [nextCourseId,fixture.companyId,fixture.projectId,fixture.teacherId],
-  )
-  await pool.query(
-    `INSERT INTO learning_course_memberships(course_id,user_id,role,created_by)
-     VALUES($1,$2,'teacher',$2)`,[nextCourseId,fixture.teacherId],
-  )
-  const second=await ensureTeacherAgentForCourse(nextCourseId)
+  await pool.query(`UPDATE projects SET status='active',archived_at=NULL WHERE id=$1`,[fixture.projectId])
+  await reactivateTeacherRoomForCourse(fixture.courseId)
+  const second=await ensureTeacherAgentForCourse(fixture.courseId)
   assert.equal(second.agentId,first.agentId)
-  assert.notEqual(second.roomId,first.roomId)
+  assert.equal(second.roomId,first.roomId)
   const {rows}=await pool.query<{course_id:string;conversation_id:string;status:string}>(
-    `SELECT course_id,conversation_id,status FROM learning_course_teacher_rooms
-      WHERE course_id=ANY($1::text[]) ORDER BY course_id`,[[fixture.courseId,nextCourseId]],
+    `SELECT course_id,conversation_id,status FROM learning_course_teacher_rooms WHERE course_id=$1`,
+    [fixture.courseId],
   )
-  assert.deepEqual(rows.map((row)=>row.status).sort(),['active','closed'])
-  assert.equal(new Set(rows.map((row)=>row.conversation_id)).size,2)
+  assert.equal(rows.length,1)
+  assert.equal(rows[0]?.status,'active')
+  assert.equal(rows[0]?.conversation_id,first.roomId)
 })
 
 test('[integration] only a current course teacher can discover Pulse or open its teacher endpoint',async()=>{
   const fixture=await seedTeacherCourse()
   const pulse=await ensureTeacherAgentForCourse(fixture.courseId)
-  const path=`/api/learning/courses/${encodeURIComponent(fixture.courseId)}/teacher-agent`
+  const path=`/api/courses/${encodeURIComponent(fixture.courseId)}/teacher-agent`
   const teacherSummary=await apiRequest(fixture.teacherId,fixture.companyId,path)
   assert.equal(teacherSummary.status,200)
   assert.equal((await teacherSummary.json() as {agentId:string}).agentId,pulse.agentId)
   assert.equal((await apiRequest(fixture.learnerId,fixture.companyId,path)).status,403)
   assert.equal((await apiRequest(fixture.adminId,fixture.companyId,path)).status,403)
 
-  const teacherParticipants=await apiRequest(fixture.teacherId,fixture.companyId,'/api/participants')
-  const learnerParticipants=await apiRequest(fixture.learnerId,fixture.companyId,'/api/participants')
-  const adminParticipants=await apiRequest(fixture.adminId,fixture.companyId,'/api/participants')
+  const teacherParticipants=await apiRequest(fixture.teacherId,fixture.companyId,'/api/participants',fixture.projectId)
+  const learnerParticipants=await apiRequest(fixture.learnerId,fixture.companyId,'/api/participants',fixture.projectId)
+  const adminParticipants=await apiRequest(fixture.adminId,fixture.companyId,'/api/participants',fixture.projectId)
+  assert.equal(teacherParticipants.status,200)
+  assert.equal(learnerParticipants.status,200)
+  assert.equal(adminParticipants.status,200)
   const ids=async(response:Response)=>(await response.json() as Array<{id:string}>).map((item)=>item.id)
   assert.ok((await ids(teacherParticipants)).includes(pulse.agentId))
   assert.equal((await ids(learnerParticipants)).includes(pulse.agentId),false)

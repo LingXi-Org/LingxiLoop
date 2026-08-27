@@ -1,39 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { useEffect, useState } from 'react'
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
-}
-
-const MOBILE_BREAKPOINT = 768
-
-function isNativeMobile(): boolean {
-  if (typeof window === 'undefined') return false
-  const w = window as { Capacitor?: { isNativePlatform?: () => boolean; getPlatform?: () => string } }
-  if (!w.Capacitor?.isNativePlatform?.()) return false
-  const platform = w.Capacitor.getPlatform?.()
-  return platform === 'ios' || platform === 'android'
-}
-
-export function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    if (isNativeMobile()) return true
-    return window.innerWidth < MOBILE_BREAKPOINT
-  })
-
-  useEffect(() => {
-    if (isNativeMobile()) {
-      setIsMobile(true)
-      return
-    }
-    const onResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-
-  return isMobile
 }
 
 export function statusColor(status: string): string {

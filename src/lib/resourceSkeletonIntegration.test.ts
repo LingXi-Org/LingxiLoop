@@ -38,8 +38,6 @@ test('global resource surfaces render Skeletons instead of plain initial loading
     '../components/LearningCenter.tsx',
     '../components/LinkPreview.tsx',
     '../components/messages/MessageBusinessParts.tsx',
-    '../mobile/MobileLibrary.tsx',
-    '../mobile/MobileCalendar.tsx',
     '../admin/UsersPage.tsx',
     '../admin/WaitlistPage.tsx',
     '../admin/ObservabilityPage.tsx',
@@ -64,6 +62,6 @@ test('repository skill requires Skeletons for all future asynchronous resources'
   assert.match(resourceSkill, /Choose Drawer, Dialog, or Alert Dialog by intent/)
   assert.match(resourceSkill, /Treat a resource loading state as part of the feature contract/)
   assert.match(resourceSkill, /Do not return `null`, plain “加载中…” text, a spinner alone/)
-  assert.match(resourceSkill, /desktop, mobile, peek\/sheet\/dialog/)
+  assert.match(resourceSkill, /Web, Electron, peek\/sheet\/dialog/)
   assert.match(resourceSkill, /\$lingxiloop-verify-change/)
 })

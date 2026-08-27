@@ -1,6 +1,7 @@
+import { observabilityApi } from '@/api/observability'
+import { setDevModeEnabled } from '@/api/core/http'
+import type { ApiDevtoolsCapabilities } from '@/api/contracts'
 import { create } from 'zustand'
-import { api, setDevModeEnabled, type ApiDevtoolsCapabilities } from '@/api/client'
-
 interface DevtoolsState extends ApiDevtoolsCapabilities {
   loaded: boolean
   load: () => Promise<void>
@@ -20,7 +21,7 @@ export const useDevtools = create<DevtoolsState>((set) => ({
   loaded: false,
   async load() {
     try {
-      const caps = await api.getDevtoolsCapabilities()
+      const caps = await observabilityApi.getDevtoolsCapabilities()
       set({ ...caps, loaded: true })
     } catch (err) {
       console.warn('[devtools] capability check failed', err)
@@ -29,7 +30,7 @@ export const useDevtools = create<DevtoolsState>((set) => ({
   },
   async setDevMode(enabled) {
     setDevModeEnabled(enabled)
-    const caps = await api.getDevtoolsCapabilities()
+    const caps = await observabilityApi.getDevtoolsCapabilities()
     set({ ...caps, loaded: true })
   },
 }))

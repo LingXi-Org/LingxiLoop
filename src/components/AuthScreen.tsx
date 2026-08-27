@@ -1,3 +1,5 @@
+import { platformApi } from '@/api/platform'
+import { getServerOrigin } from '@/api/core/http'
 /**
  * Sign-in screen — OAuth only (Google + GitHub). No password forms, no
  * signup, no forgot. Provider buttons trigger a full-page redirect to
@@ -12,9 +14,7 @@
  * per-server.
  */
 import { useState, useEffect } from 'react'
-import { api, getServerOrigin } from '@/api/client'
 import { isElectron } from '@/lib/runtime'
-import { isNativePlatform, runOAuth } from '@/lib/native'
 import { CloudLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
 
@@ -89,48 +89,6 @@ export function AuthScreen() {
       })()
       return
     }
-    if (isNativePlatform()) {
-      // iOS / Android: run the OAuth flow inside ASWebAuthenticationSession
-      // (our WebAuthPlugin). It hands the final lingxiloop://auth#... callback
-      // straight back to us — no SFSafariViewController, no broken 302
-      // redirect to a custom URL scheme.
-      const origin = getServerOrigin()
-      if (!origin) {
-        setErr('此移动端构建尚未配置 LingxiLoop 服务器。')
-        setBusy(null)
-        return
-      }
-      const ret = encodeURIComponent('lingxiloop://auth')
-      void (async () => {
-        try {
-          const callbackUrl = await runOAuth({
-            url: `${origin}/api/auth/start/${provider}?return=${ret}`,
-            callbackScheme: 'lingxiloop',
-          })
-          if (!callbackUrl) {
-            // User cancelled — re-enable the button.
-            setBusy(null)
-            return
-          }
-          // ASWebAuthenticationSession delivers the final URL with the
-          // token fragment. Plant it as our `location.hash` so AuthGate's
-          // existing fragment-consumption logic picks it up.
-          const u = new URL(callbackUrl)
-          const hash = u.hash || (u.search ? `#${u.search.replace(/^\?/, '')}` : '')
-          if (!hash) {
-            setErr('登录已完成，但未返回登录凭证。')
-            setBusy(null)
-            return
-          }
-          history.replaceState(null, '', location.pathname + location.search + hash)
-          window.dispatchEvent(new CustomEvent('lingxiloop:oauth-token', { detail: hash }))
-        } catch (err) {
-          setErr(err instanceof Error ? err.message : '登录失败')
-          setBusy(null)
-        }
-      })()
-      return
-    }
     // Browser fallback — full-page nav, fragment-on-redirect handled by
     // AuthGate on next mount. Pass the *current* page as `?return=` so
     // a user signing in from the admin origin lands back there rather than
@@ -138,7 +96,7 @@ export function AuthScreen() {
     // LINGXILOOP_AUTH_RETURN_ALLOWLIST or the server
     // will reject it.
     const ret = encodeURIComponent(`${location.origin}${location.pathname}`)
-    location.assign(`${api.authStartUrl(provider)}?return=${ret}`)
+    location.assign(`${platformApi.authStartUrl(provider)}?return=${ret}`)
   }
 
   return (

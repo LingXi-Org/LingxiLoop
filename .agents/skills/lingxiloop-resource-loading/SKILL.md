@@ -41,7 +41,7 @@ Treat a resource loading state as part of the feature contract, not optional pol
 - Prefer `ResourceSkeleton` from `@/components/ResourceSkeleton` for list, cards, detail, media, and table surfaces.
 - Render a skeleton whenever a resource request is pending and usable cached content is absent. Keep cached content visible during background refresh unless stale data would be unsafe.
 - Match the loaded layout's width, height, density, and responsive breakpoints closely enough to prevent layout shift.
-- Cover desktop, mobile, peek/sheet/dialog, empty initial load, pagination, and lazy media paths that the resource supports.
+- Cover Web, Electron, peek/sheet/dialog, empty initial load, pagination, and lazy media paths that the resource supports.
 - Keep loading, empty, error, and ready states mutually exclusive. Never show an empty-state call to action while the first request is pending.
 - Expose `role="status"` or an equivalent accessible busy contract with concise localized text; keep skeleton geometry non-interactive.
 - Preserve existing stores, APIs, retries, focus behavior, and resource protocol boundaries.

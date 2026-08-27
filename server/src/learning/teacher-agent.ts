@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { audit } from '../auth.js'
 import { pool } from '../db/pool.js'
@@ -88,7 +88,7 @@ interface TeacherScope {
   projectName: string
   courseId: string
   courseTitle: string
-  courseStatus: 'draft' | 'active' | 'archived'
+  courseStatus: 'active' | 'archived'
   roomId: string
   roomStatus: 'active' | 'closed'
   agentId: string
@@ -114,16 +114,16 @@ async function triggerAuthor(work: AgentWorkItem, db: Queryable): Promise<string
 export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable = pool): Promise<TeacherScope> {
   const { rows } = await db.query<{
     company_id:string;project_id:string;project_name:string;course_id:string;course_title:string
-    course_status:'draft'|'active'|'archived';room_id:string;room_status:'active'|'closed';agent_id:string;agent_name:string;has_teacher:boolean
+    course_status:'active'|'archived';room_id:string;room_status:'active'|'closed';agent_id:string;agent_name:string;has_teacher:boolean
   }>(
-    `SELECT pta.company_id,pta.project_id,p.name AS project_name,c.id AS course_id,c.title AS course_title,
-            c.status AS course_status,tr.conversation_id AS room_id,tr.status AS room_status,
+    `SELECT pta.company_id,pta.project_id,p.name AS project_name,c.id AS course_id,p.name AS course_title,
+            p.status AS course_status,tr.conversation_id AS room_id,tr.status AS room_status,
             pta.agent_id,pa.name AS agent_name,
-            EXISTS(SELECT 1 FROM learning_course_memberships cm WHERE cm.course_id=c.id AND cm.role='teacher') AS has_teacher
+            EXISTS(SELECT 1 FROM course_members cm WHERE cm.course_id=c.id AND cm.role='teacher') AS has_teacher
        FROM learning_project_teacher_agents pta
        JOIN projects p ON p.id=pta.project_id AND p.company_id=pta.company_id
-       JOIN learning_courses c ON c.project_id=pta.project_id AND c.company_id=pta.company_id
-       JOIN learning_course_teacher_rooms tr ON tr.course_id=c.id
+       JOIN courses c ON c.project_id=pta.project_id AND c.company_id=pta.company_id
+       JOIN learning_course_teacher_rooms tr ON tr.course_id=c.id AND tr.company_id=c.company_id
        JOIN participants pa ON pa.id=pta.agent_id AND pa.company_id=pta.company_id AND pa.departed_at IS NULL
       WHERE pta.company_id=$1 AND pta.agent_id=$2 AND tr.conversation_id=$3 LIMIT 1`,
     [work.companyId, work.agentId, work.channelId],
@@ -169,7 +169,7 @@ export async function loadTeacherTurnContext(work: AgentWorkItem, db: Queryable 
   const [{rows:counts},digest]=await Promise.all([
     db.query<{learners:number;objectives:number;activities:number;pending_reviews:number}>(
       `SELECT
-        (SELECT COUNT(DISTINCT user_id)::int FROM learning_course_memberships WHERE course_id=$1 AND role='learner') AS learners,
+        (SELECT COUNT(*)::int FROM course_members WHERE course_id=$1 AND role='learner') AS learners,
         (SELECT COUNT(*)::int FROM learning_objectives WHERE course_id=$1 AND status<>'archived') AS objectives,
         (SELECT COUNT(*)::int FROM learning_activities WHERE course_id=$1 AND status<>'closed') AS activities,
         (SELECT COUNT(*)::int FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id WHERE a.course_id=$1 AND e.status='pending') AS pending_reviews`,
@@ -190,9 +190,9 @@ export async function loadTeacherTurnContext(work: AgentWorkItem, db: Queryable 
 
 export async function ensureTeacherAgentForCourse(courseId: string, db: Queryable = pool): Promise<{agentId:string;roomId:string;created:boolean}> {
   const {rows:courseRows}=await db.query<{company_id:string;project_id:string;course_title:string;project_name:string}>(
-    `SELECT c.company_id,c.project_id,c.title AS course_title,p.name AS project_name
-       FROM learning_courses c JOIN projects p ON p.id=c.project_id AND p.company_id=c.company_id
-      WHERE c.id=$1 AND c.status<>'archived' LIMIT 1`,[courseId],
+    `SELECT c.company_id,c.project_id,p.name AS course_title,p.name AS project_name
+       FROM courses c JOIN projects p ON p.id=c.project_id AND p.company_id=c.company_id
+      WHERE c.id=$1 AND p.status='active' LIMIT 1`,[courseId],
   )
   const course=courseRows[0]
   if (!course) throw new Error('non-archived course not found')
@@ -214,7 +214,7 @@ export async function ensureTeacherAgentForCourse(courseId: string, db: Queryabl
     [course.project_id,course.company_id,resolvedAgentId,PULSE_PRESET_VERSION],
   )
   const {rows:teachers}=await db.query<{user_id:string}>(
-    `SELECT user_id FROM learning_course_memberships WHERE course_id=$1 AND role='teacher' ORDER BY user_id`,[courseId],
+    `SELECT user_id FROM course_members WHERE course_id=$1 AND role='teacher' ORDER BY user_id`,[courseId],
   )
   const members=[...teachers.map((row)=>row.user_id),resolvedAgentId]
   const title=`教师室｜${course.course_title}`.slice(0,80)
@@ -234,8 +234,8 @@ export async function ensureTeacherAgentForCourse(courseId: string, db: Queryabl
     [roomId,course.company_id,JSON.stringify({channelId:roomId,channelType:2,kind:'group',title,members,topic:'课程管理、学情汇总与教师审批',pinned:true,createdAt:new Date().toISOString()}),resolvedAgentId,`teacher-room:${courseId}`],
   )
   await db.query(
-    `INSERT INTO learning_course_teacher_rooms(course_id,conversation_id,status) VALUES($1,$2,'active')
-     ON CONFLICT(course_id) DO UPDATE SET status='active',closed_at=NULL`,[courseId,roomId],
+    `INSERT INTO learning_course_teacher_rooms(course_id,company_id,conversation_id,status) VALUES($1,$2,$3,'active')
+     ON CONFLICT(course_id) DO UPDATE SET status='active',closed_at=NULL`,[courseId,course.company_id,roomId],
   )
   await db.query(
     `INSERT INTO agent_workspace(agent_id,path,body,company_id,updated_at)
@@ -248,8 +248,10 @@ export async function ensureTeacherAgentForCourse(courseId: string, db: Queryabl
 
 export async function sendTeacherAgentWelcome(courseId:string):Promise<void>{
   const {rows}=await pool.query<{conversation_id:string;agent_id:string;course_title:string}>(
-    `SELECT tr.conversation_id,pta.agent_id,c.title AS course_title FROM learning_course_teacher_rooms tr
-      JOIN learning_courses c ON c.id=tr.course_id JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id
+    `SELECT tr.conversation_id,pta.agent_id,project.name AS course_title FROM learning_course_teacher_rooms tr
+      JOIN courses c ON c.id=tr.course_id AND c.company_id=tr.company_id
+      JOIN projects project ON project.id=c.project_id AND project.company_id=c.company_id
+      JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id AND pta.company_id=c.company_id
      WHERE tr.course_id=$1`,[courseId],
   )
   if(!rows[0])return
@@ -263,11 +265,12 @@ export async function sendTeacherAgentWelcome(courseId:string):Promise<void>{
 export async function syncTeacherRoomMembers(courseId:string,db:Queryable=pool):Promise<void>{
   const {rows}=await db.query<{conversation_id:string;status:string;agent_id:string}>(
     `SELECT tr.conversation_id,tr.status,pta.agent_id FROM learning_course_teacher_rooms tr
-      JOIN learning_courses c ON c.id=tr.course_id JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id
+      JOIN courses c ON c.id=tr.course_id AND c.company_id=tr.company_id
+      JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id AND pta.company_id=c.company_id
      WHERE tr.course_id=$1`,[courseId],
   )
   if(!rows[0]||rows[0].status!=='active')return
-  const {rows:teachers}=await db.query<{user_id:string}>(`SELECT user_id FROM learning_course_memberships WHERE course_id=$1 AND role='teacher' ORDER BY user_id`,[courseId])
+  const {rows:teachers}=await db.query<{user_id:string}>(`SELECT user_id FROM course_members WHERE course_id=$1 AND role='teacher' ORDER BY user_id`,[courseId])
   const members=[...teachers.map((row)=>row.user_id),rows[0].agent_id]
   await db.query(`UPDATE conversations SET members=$2::jsonb,subtitle=$3,updated_at=NOW() WHERE id=$1`,[rows[0].conversation_id,JSON.stringify(members),`教师 · ${teachers.length}`])
   const {rows:bindings}=await db.query<{profile:Record<string,unknown>}>(`UPDATE im_channel_bindings SET profile=profile||jsonb_build_object('members',$2::jsonb),updated_at=NOW() WHERE channel_id=$1 RETURNING profile`,[rows[0].conversation_id,JSON.stringify(members)])
@@ -280,11 +283,40 @@ export async function closeTeacherRoomForCourse(courseId:string,db:Queryable=poo
     FROM learning_course_teacher_rooms tr WHERE tr.course_id=$1 AND r.channel_id=tr.conversation_id AND r.kind='teacher_project_digest'`,[courseId])
 }
 
-export async function backfillTeacherAgents():Promise<void>{
-  const {rows}=await pool.query<{id:string}>(`SELECT id FROM learning_courses WHERE status<>'archived' ORDER BY created_at`)
-  for(const row of rows){
-    try{const result=await ensureTeacherAgentForCourse(row.id);if(result.created)await sendTeacherAgentWelcome(row.id)}
-    catch(error){console.warn(`[learning:pulse] backfill failed for ${row.id}:`,error instanceof Error?error.message:String(error))}
+export async function reactivateTeacherRoomForCourse(courseId:string,db:Queryable=pool):Promise<void>{
+  const {rows:rooms}=await db.query<{conversation_id:string}>(
+    `UPDATE learning_course_teacher_rooms room
+        SET status='active',closed_at=NULL
+       FROM courses course JOIN projects project
+         ON project.id=course.project_id AND project.company_id=course.company_id
+      WHERE room.course_id=$1 AND room.course_id=course.id AND room.company_id=course.company_id
+        AND project.status='active'
+      RETURNING room.conversation_id`,
+    [courseId],
+  )
+  if(!rooms[0])throw new Error('teacher room not found for active course')
+  await syncTeacherRoomMembers(courseId,db)
+  const {rows:routines}=await db.query<{id:string;schedule:Record<string,unknown>;timezone:string}>(
+    `SELECT routine.id,routine.schedule,routine.timezone
+       FROM agent_routines routine
+      WHERE routine.channel_id=$1 AND routine.kind='teacher_project_digest'`,
+    [rooms[0].conversation_id],
+  )
+  for(const routine of routines){
+    if(routine.schedule?.frequency!=='daily'&&routine.schedule?.frequency!=='weekly')continue
+    const localTime=typeof routine.schedule.localTime==='string'?routine.schedule.localTime:'09:00'
+    const weekday=typeof routine.schedule.weekday==='string'&&WEEKDAYS.includes(routine.schedule.weekday as typeof WEEKDAYS[number])
+      ? routine.schedule.weekday as typeof WEEKDAYS[number]
+      : undefined
+    const nextRunAt=await nextTeacherDigestRun({
+      frequency:routine.schedule.frequency,
+      localTime,
+      ...(weekday?{weekday}:{}),
+    },routine.timezone,new Date(),db)
+    await db.query(
+      `UPDATE agent_routines SET status='active',next_run_at=$2,updated_at=NOW() WHERE id=$1`,
+      [routine.id,nextRunAt],
+    )
   }
 }
 
@@ -293,7 +325,7 @@ export async function getTeacherAgentSummary(courseId:string,teacherId:string,db
   const {rows}=await db.query<{agent_id:string;name:string;project_id:string;conversation_id:string;room_status:'active'|'closed';company_id:string;pending:number}>(
     `SELECT pta.agent_id,p.name,c.project_id,tr.conversation_id,tr.status AS room_status,c.company_id,
       (SELECT COUNT(*)::int FROM agent_os_approvals a WHERE a.channel_id=tr.conversation_id AND a.status='pending') AS pending
-     FROM learning_courses c JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id
+     FROM courses c JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id AND pta.company_id=c.company_id
      JOIN participants p ON p.id=pta.agent_id AND p.company_id=pta.company_id
      JOIN learning_course_teacher_rooms tr ON tr.course_id=c.id WHERE c.id=$1`,[courseId],
   )
@@ -306,7 +338,7 @@ async function overview(scope:TeacherScope,windowDays:number,db:Queryable):Promi
   const days=Math.max(1,Math.min(90,Math.trunc(windowDays||30)))
   const [{rows:distribution},{rows:mission},{rows:activity},{rows:attention},{rows:coverage}]=await Promise.all([
     db.query(`WITH totals AS (
-      SELECT (SELECT COUNT(DISTINCT user_id) FROM learning_course_memberships WHERE course_id=$1 AND role='learner')*
+      SELECT (SELECT COUNT(*) FROM course_members WHERE course_id=$1 AND role='learner')*
              (SELECT COUNT(*) FROM learning_objectives WHERE course_id=$1 AND status<>'archived') AS possible
     ),levels AS(SELECT generate_series(0,4) AS level)
     SELECT levels.level,CASE WHEN levels.level=0 THEN GREATEST(totals.possible-COUNT(m.objective_id) FILTER(WHERE m.level<>0),0)::int
@@ -323,7 +355,7 @@ async function overview(scope:TeacherScope,windowDays:number,db:Queryable):Promi
       COUNT(DISTINCT m.objective_id) FILTER(WHERE m.next_review_at<=NOW())::int AS due_reviews,
       COUNT(DISTINCT m.objective_id) FILTER(WHERE m.status='needs_review')::int AS needs_review,
       COUNT(DISTINCT lm.id) FILTER(WHERE lm.status='paused')::int AS paused_missions
-      FROM learning_course_memberships cm JOIN users u ON u.id=cm.user_id
+      FROM course_members cm JOIN users u ON u.id=cm.user_id
       LEFT JOIN learning_mastery m ON m.course_id=cm.course_id AND m.learner_id=cm.user_id
       LEFT JOIN learning_missions lm ON lm.course_id=cm.course_id AND lm.learner_id=cm.user_id
       WHERE cm.course_id=$1 AND cm.role='learner' GROUP BY cm.user_id,u.display_name
@@ -332,7 +364,7 @@ async function overview(scope:TeacherScope,windowDays:number,db:Queryable):Promi
           OR COUNT(DISTINCT lm.id) FILTER(WHERE lm.status='paused')>0
       ORDER BY needs_review DESC,due_reviews DESC LIMIT 20`,[scope.courseId]),
     db.query(`SELECT
-      (SELECT COUNT(DISTINCT user_id)::int FROM learning_course_memberships WHERE course_id=$1 AND role='learner') AS learners,
+      (SELECT COUNT(*)::int FROM course_members WHERE course_id=$1 AND role='learner') AS learners,
       COUNT(DISTINCT a.learner_id)::int AS learners_with_evidence,
       COUNT(DISTINCT a.id)::int AS verified_attempts,
       COUNT(DISTINCT m.learner_id||':'||m.objective_id) FILTER(WHERE m.next_review_at<=NOW())::int AS due_reviews
@@ -356,7 +388,7 @@ async function listLearners(scope:TeacherScope,attentionOnly:boolean,db:Queryabl
     COUNT(DISTINCT m.objective_id) FILTER(WHERE m.next_review_at<=NOW())::int AS due_reviews,
     COUNT(DISTINCT m.objective_id) FILTER(WHERE m.status='needs_review')::int AS needs_review,
     COUNT(DISTINCT lm.id) FILTER(WHERE lm.status='paused')::int AS paused_missions
-    FROM learning_course_memberships cm JOIN users u ON u.id=cm.user_id
+    FROM course_members cm JOIN users u ON u.id=cm.user_id
     LEFT JOIN learning_mastery m ON m.course_id=cm.course_id AND m.learner_id=cm.user_id
     LEFT JOIN learning_missions lm ON lm.course_id=cm.course_id AND lm.learner_id=cm.user_id
     WHERE cm.course_id=$1 AND cm.role='learner' GROUP BY cm.user_id,u.display_name,u.email
@@ -373,7 +405,7 @@ async function listLearners(scope:TeacherScope,attentionOnly:boolean,db:Queryabl
 }
 
 async function learnerDetail(scope:TeacherScope,learnerId:string,db:Queryable):Promise<unknown>{
-  const {rows:member}=await db.query<{display_name:string;email:string}>(`SELECT u.display_name,u.email FROM learning_course_memberships cm JOIN users u ON u.id=cm.user_id WHERE cm.course_id=$1 AND cm.user_id=$2 AND cm.role='learner'`,[scope.courseId,learnerId])
+  const {rows:member}=await db.query<{display_name:string;email:string}>(`SELECT u.display_name,u.email FROM course_members cm JOIN users u ON u.id=cm.user_id WHERE cm.course_id=$1 AND cm.user_id=$2 AND cm.role='learner'`,[scope.courseId,learnerId])
   if(!member[0])throw new Error('learner is outside the current course')
   const [mastery,missions,attempts]=await Promise.all([
     db.query(`SELECT m.objective_id,o.title,m.level,m.status,m.next_review_at,m.review_interval_days FROM learning_mastery m JOIN learning_objectives o ON o.id=m.objective_id WHERE m.course_id=$1 AND m.learner_id=$2 ORDER BY o.position LIMIT 100`,[scope.courseId,learnerId]),
@@ -467,12 +499,18 @@ export async function describeTeacherAction(work:AgentWorkItem,action:HostAction
   }
   else if(method==='set_course_status'){
     entityId=scope.courseId;entityLabel=scope.courseTitle
-    const {rows}=await db.query<{status:string;updated_at:unknown}>(`SELECT status,updated_at FROM learning_courses WHERE id=$1`,[scope.courseId])
+    const {rows}=await db.query<{status:string;updated_at:unknown}>(
+      `SELECT project.status,project.updated_at
+         FROM courses course JOIN projects project
+           ON project.id=course.project_id AND project.company_id=course.company_id
+        WHERE course.id=$1`,
+      [scope.courseId],
+    )
     currentState=rows[0]?.status;currentVersion=versionToken(rows[0]?.updated_at)
   }
   else if(method==='set_teacher_membership'){
     entityId=textArg(args,'userId','user_id')
-    const {rows}=await db.query<{enabled:boolean;name:string|null}>(`SELECT EXISTS(SELECT 1 FROM learning_course_memberships WHERE course_id=$1 AND user_id=$2 AND role='teacher') AS enabled,(SELECT name FROM participants WHERE id=$2 AND company_id=$3 LIMIT 1) AS name`,[scope.courseId,entityId,scope.companyId])
+    const {rows}=await db.query<{enabled:boolean;name:string|null}>(`SELECT EXISTS(SELECT 1 FROM course_members WHERE course_id=$1 AND user_id=$2 AND role='teacher') AS enabled,(SELECT name FROM participants WHERE id=$2 AND company_id=$3 LIMIT 1) AS name`,[scope.courseId,entityId,scope.companyId])
     currentState=Boolean(rows[0]?.enabled);currentVersion=currentState;entityLabel=rows[0]?.name??'课程成员'
   }
   else {
@@ -498,8 +536,8 @@ export async function assertTeacherApprovalFresh(input:{channelId:string;company
   const method=input.action.slice('teacher.'.length);let current=''
   if(method.includes('objective'))current=versionToken((await db.query(`SELECT o.updated_at FROM learning_objectives o JOIN learning_course_teacher_rooms tr ON tr.course_id=o.course_id WHERE o.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.updated_at)
   else if(method.includes('activity'))current=versionToken((await db.query(`SELECT a.updated_at FROM learning_activities a JOIN learning_course_teacher_rooms tr ON tr.course_id=a.course_id WHERE a.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.updated_at)
-  else if(method==='set_course_status')current=versionToken((await db.query(`SELECT c.updated_at FROM learning_courses c JOIN learning_course_teacher_rooms tr ON tr.course_id=c.id WHERE c.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.updated_at)
-  else if(method==='set_teacher_membership')current=String(Boolean((await db.query(`SELECT 1 FROM learning_course_memberships cm JOIN learning_course_teacher_rooms tr ON tr.course_id=cm.course_id WHERE tr.conversation_id=$1 AND cm.user_id=$2 AND cm.role='teacher'`,[input.channelId,entityId])).rows[0]))
+  else if(method==='set_course_status')current=versionToken((await db.query(`SELECT project.updated_at FROM courses course JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id JOIN learning_course_teacher_rooms tr ON tr.course_id=course.id AND tr.company_id=course.company_id WHERE course.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.updated_at)
+  else if(method==='set_teacher_membership')current=String(Boolean((await db.query(`SELECT 1 FROM course_members cm JOIN learning_course_teacher_rooms tr ON tr.course_id=cm.course_id AND tr.company_id=cm.company_id WHERE tr.conversation_id=$1 AND cm.user_id=$2 AND cm.role='teacher'`,[input.channelId,entityId])).rows[0]))
   else current=String((await db.query(`SELECT e.status FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id JOIN learning_course_teacher_rooms tr ON tr.course_id=a.course_id WHERE e.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.status??'')
   if(!current||current!==expected)throw new Error('approval is stale because the target changed; request a fresh approval')
 }
@@ -517,9 +555,11 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   if(method==='list_objectives')return (await db.query(`SELECT o.*,COALESCE(jsonb_agg(d.prerequisite_objective_id) FILTER(WHERE d.prerequisite_objective_id IS NOT NULL),'[]'::jsonb) AS prerequisite_ids FROM learning_objectives o LEFT JOIN learning_objective_dependencies d ON d.objective_id=o.id WHERE o.course_id=$1 GROUP BY o.id ORDER BY o.position`,[scope.courseId])).rows
   if(method==='list_activities')return (await db.query(`SELECT * FROM learning_activities WHERE course_id=$1 ORDER BY created_at DESC`,[scope.courseId])).rows
   if(method==='list_reviews')return (await db.query(`SELECT e.*,a.learner_id,a.activity_id FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id WHERE a.course_id=$1 AND e.status='pending' ORDER BY e.created_at LIMIT 100`,[scope.courseId])).rows
-  if(method==='list_rooms')return (await db.query(`SELECT c.id AS conversation_id,c.title,r.purpose,(r.course_id=$1) AS bound
-    FROM conversations c JOIN learning_courses lc ON lc.project_id=c.project_id AND lc.company_id=c.company_id AND lc.id=$1
-    LEFT JOIN learning_course_rooms r ON r.conversation_id=c.id
+  if(method==='list_rooms')return (await db.query(`SELECT c.id AS conversation_id,c.title,
+      CASE WHEN c.id=lc.study_room_conversation_id THEN 'study'::text ELSE r.purpose END AS purpose,
+      (c.id=lc.study_room_conversation_id OR r.course_id=$1) AS bound
+    FROM courses lc JOIN conversations c ON lc.project_id=c.project_id AND lc.company_id=c.company_id AND lc.id=$1
+    LEFT JOIN learning_course_rooms r ON r.conversation_id=c.id AND r.company_id=lc.company_id
     WHERE c.kind='group' AND NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=c.id)
       AND (r.course_id IS NULL OR r.course_id=$1) ORDER BY c.updated_at DESC LIMIT 100`,[scope.courseId])).rows
   if(method==='get_digest_schedule')return digestSchedule(scope,db)
@@ -535,7 +575,15 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
     const objectiveIds=args.objectiveIds??args.objective_ids
     return draftActivity({courseId:scope.courseId,actorId:scope.teacherId,title:textArg(args,'title'),instructions:textArg(args,'instructions'),type:textArg(args,'type') as LearningActivityType,evaluationMode:(optionalText(args,'evaluationMode','evaluation_mode')??'teacher_required') as LearningEvaluationMode,targetLevel:Number(args.targetLevel??args.target_level??2),rubric:Array.isArray(args.rubric)?args.rubric:[],objectiveIds:Array.isArray(objectiveIds)?objectiveIds.map(String):[],...(optionalText(args,'dueAt','due_at')?{dueAt:optionalText(args,'dueAt','due_at')}:{})},db)
   }
-  if(method==='update_course'){const title=optionalText(args,'title');const description=optionalText(args,'description');if(!title&&!description)throw new Error('title or description is required');const {rows}=await db.query(`UPDATE learning_courses SET title=COALESCE($2,title),description=COALESCE($3,description),updated_at=NOW() WHERE id=$1 RETURNING *`,[scope.courseId,title??null,description??null]);return rows[0]}
+  if(method==='update_course'){
+    const title=optionalText(args,'title');const description=optionalText(args,'description')
+    if(!title&&!description)throw new Error('title or description is required')
+    const {rows}=await db.query(`UPDATE projects project SET name=COALESCE($2,project.name),description=COALESCE($3,project.description),updated_at=NOW() FROM courses course WHERE course.id=$1 AND course.project_id=project.id AND course.company_id=project.company_id RETURNING project.*`,[scope.courseId,title??null,description??null])
+    if(title){
+      await db.query(`UPDATE participants participant SET name=$2,updated_at=NOW() FROM courses course JOIN learning_project_teacher_agents pulse ON pulse.project_id=course.project_id AND pulse.company_id=course.company_id WHERE course.id=$1 AND participant.id=pulse.agent_id AND participant.company_id=pulse.company_id`,[scope.courseId,`Pulse · ${title}`.slice(0,80)])
+    }
+    return rows[0]
+  }
   if(method==='set_learner_membership'){await setCourseMembership({courseId:scope.courseId,teacherId:scope.teacherId,userId:textArg(args,'userId','user_id'),role:'learner',enabled:boolArg(args)},db);return {ok:true}}
   if(method==='set_room_binding'){const conversationId=textArg(args,'conversationId','conversation_id');const purpose=optionalText(args,'purpose');if(args.enabled===false||!purpose){await db.query(`DELETE FROM learning_course_rooms WHERE course_id=$1 AND conversation_id=$2`,[scope.courseId,conversationId]);return {ok:true,enabled:false}};await bindCourseRoom({courseId:scope.courseId,teacherId:scope.teacherId,conversationId,purpose:purpose as LearningRoomPurpose},db);return {ok:true,enabled:true}}
   if(method==='configure_digest')return configureDigest(scope,args,db)
@@ -546,12 +594,12 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   if(method==='set_course_status'){
     const status=textArg(args,'status')
     if(!['active','archived'].includes(status))throw new Error('status must be active or archived')
-    if(scope.courseStatus==='archived'&&status==='active')throw new Error('archived courses cannot be reactivated; create the next course instead')
-    const {rows}=await db.query(`UPDATE learning_courses SET status=$2,updated_at=NOW(),archived_at=CASE WHEN $2='archived' THEN NOW() ELSE archived_at END WHERE id=$1 RETURNING *`,[scope.courseId,status])
+    const {rows}=await db.query(`UPDATE projects project SET status=$2,updated_at=NOW(),archived_at=CASE WHEN $2='archived' THEN NOW() ELSE NULL END FROM courses course WHERE course.id=$1 AND course.project_id=project.id AND course.company_id=project.company_id RETURNING project.*`,[scope.courseId,status])
     if(status==='archived')await closeTeacherRoomForCourse(scope.courseId,db)
+    else await reactivateTeacherRoomForCourse(scope.courseId,db)
     return rows[0]
   }
-  if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);if(!enabled){const {rows}=await db.query<{count:number}>(`SELECT COUNT(*)::int AS count FROM learning_course_memberships WHERE course_id=$1 AND role='teacher'`,[scope.courseId]);if(Number(rows[0]?.count)<=1)throw new Error('cannot remove the final course teacher')};await setCourseMembership({courseId:scope.courseId,teacherId:scope.teacherId,userId,role:'teacher',enabled},db);return {ok:true}}
+  if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);if(!enabled){const {rows}=await db.query<{count:number}>(`SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`,[scope.courseId]);if(Number(rows[0]?.count)<=1)throw new Error('cannot remove the final course teacher')};await setCourseMembership({courseId:scope.courseId,teacherId:scope.teacherId,userId,role:'teacher',enabled},db);return {ok:true}}
   if(method==='review_evaluation'||method==='override_mastery'){await reviewEvaluation({courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:method==='override_mastery'?'accept':optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason'),...(args.overrideLevel!==undefined||args.override_level!==undefined?{overrideLevel:Number(args.overrideLevel??args.override_level)}:{})},db);return {ok:true}}
   throw new Error(`unsupported teacher action: ${method}`)
 }

@@ -19,7 +19,8 @@
  * keeps drawer open + surfaces error inline so the user can edit + retry.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { api } from '@/api/client'
+import { emailApi } from '@/api/email'
+import { filesApi } from '@/api/files'
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
 import { Input } from '@/components/ui/input'
 import {
@@ -37,6 +38,7 @@ import { toastAction } from '@/lib/actionToast'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
+import { useEmailComposer } from '@/stores/emailComposer'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import type { Message, Participant } from '@/types'
@@ -196,8 +198,8 @@ function PillField({
 }
 
 export function EmailComposer() {
-  const compose = useApp((s) => s.composeEmail)
-  const close = useApp((s) => s.closeCompose)
+  const compose = useEmailComposer((s) => s.composition)
+  const close = useEmailComposer((s) => s.closeCompose)
   const select = useApp((s) => s.selectConversation)
   const setView = useApp((s) => s.setView)
   const byId = useParticipants((s) => s.byId)
@@ -277,7 +279,7 @@ export function EmailComposer() {
     ])
     void (async () => {
       try {
-        const uploaded = await api.uploadFile(file)
+        const uploaded = await filesApi.uploadFile(file)
         setAttachments((prev) => prev.map((a) =>
           a.localId === localId
             ? { ...a, state: 'done', key: uploaded.key ?? '' }
@@ -355,12 +357,12 @@ export function EmailComposer() {
     setSending(true)
     try {
       const sendPromise = isReply
-        ? api.replyEmail(compose.replyToMessageId, {
+        ? emailApi.replyEmail(compose.replyToMessageId, {
             body: body.trim(),
             cc: cc.map((e) => e.raw),
             attachments: attachmentArgs.length ? attachmentArgs : undefined,
           })
-        : api.sendEmail({
+        : emailApi.sendEmail({
             to: to.map((e) => e.raw),
             cc: cc.length ? cc.map((e) => e.raw) : undefined,
             subject: subject.trim(),

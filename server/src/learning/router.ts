@@ -1,11 +1,11 @@
 import { type NextFunction, type Request, type Response, Router } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
+import { requireCompany } from '../http/request-context.js'
 import {
   bindCourseRoom,
   closeActivity,
   courseProgress,
-  createLearningCourse,
   createObjectives,
   draftActivity,
   getNotificationPreferences,
@@ -13,23 +13,21 @@ import {
   listActivities,
   listEvaluationQueue,
   listEvidence,
-  listLearningCourses,
   listMissions,
   listObjectives,
   publishActivity,
   requireCourseRole,
-  requireCourseManager,
   reviewEvaluation,
-  setCourseMembership,
   setNotificationPreferences,
   setMissionCoordinator,
   setObjectiveStatus,
   submitActivity,
 } from './service.js'
-import type { LearningActivityType, LearningEvaluationMode, LearningRole, LearningRoomPurpose } from './types.js'
-import { closeTeacherRoomForCourse, ensureTeacherAgentForCourse, getTeacherAgentSummary } from './teacher-agent.js'
+import type { LearningActivityType, LearningEvaluationMode, LearningRoomPurpose } from './types.js'
+import { getTeacherAgentSummary } from './teacher-agent.js'
 
-export const learningRouter = Router()
+export const learningDomainRoutes = Router()
+const learningRouter = learningDomainRoutes
 
 type LearningRequest = Request<Record<string, string>> & AuthedRequest
 
@@ -58,59 +56,17 @@ function text(value: unknown, name: string): string {
 }
 
 async function scope(req: Request & AuthedRequest): Promise<{ userId: string; companyId: string }> {
-  const userId = req.authUserId
-  if (!userId) throw Object.assign(new Error('authentication required'), { status: 401 })
-  const requested = typeof req.headers['x-company-id'] === 'string' ? req.headers['x-company-id'].trim() : ''
-  const { rows } = requested
-    ? await pool.query<{ company_id: string }>(`SELECT company_id FROM company_members WHERE company_id=$1 AND user_id=$2`, [requested, userId])
-    : await pool.query<{ company_id: string }>(`SELECT company_id FROM company_members WHERE user_id=$1 ORDER BY joined_at LIMIT 1`, [userId])
-  if (!rows[0]) throw Object.assign(new Error('company membership required'), { status: requested ? 403 : 404 })
-  return { userId, companyId: rows[0].company_id }
+  return requireCompany(req)
 }
 
 async function assertCourseCompany(courseId: string, companyId: string): Promise<void> {
-  const { rows } = await pool.query(`SELECT 1 FROM learning_courses WHERE id=$1 AND company_id=$2`, [courseId, companyId])
+  const { rows } = await pool.query(`SELECT 1 FROM courses WHERE id=$1 AND company_id=$2`, [courseId, companyId])
   if (!rows[0]) throw Object.assign(new Error('course not found'), { status: 404 })
 }
 
-learningRouter.get('/dashboard', safe(async (req, res) => {
+learningRouter.get('/learning/dashboard', safe(async (req, res) => {
   const { userId, companyId } = await scope(req)
   res.json(await learningDashboard(companyId, userId))
-}))
-
-learningRouter.get('/courses', safe(async (req, res) => {
-  const { userId, companyId } = await scope(req)
-  res.json(await listLearningCourses(companyId, userId))
-}))
-
-learningRouter.post('/courses', safe(async (req, res) => {
-  const { userId, companyId } = await scope(req)
-  const data = body(req)
-  const roles: LearningRole[] = Array.isArray(data.roles) ? data.roles.filter((role): role is LearningRole => role === 'teacher' || role === 'learner') : ['teacher']
-  res.status(201).json(await createLearningCourse({
-    companyId, projectId: text(data.projectId, 'projectId'), title: text(data.title, 'title'),
-    description: typeof data.description === 'string' ? data.description : '', createdBy: userId, roles,
-  }))
-}))
-
-learningRouter.patch('/courses/:courseId', safe(async (req, res) => {
-  const { userId, companyId } = await scope(req)
-  await assertCourseCompany(req.params.courseId, companyId)
-  await requireCourseManager(req.params.courseId, userId)
-  const data = body(req)
-  const status = data.status === 'active' || data.status === 'archived' || data.status === 'draft' ? data.status : undefined
-  const {rows:beforeRows}=await pool.query<{status:string}>(`SELECT status FROM learning_courses WHERE id=$1 AND company_id=$2`,[req.params.courseId,companyId])
-  if(beforeRows[0]?.status==='archived'&&status&&status!=='archived')throw new Error('archived courses cannot be reactivated; create the next course instead')
-  const { rows } = await pool.query(
-    `UPDATE learning_courses SET title=COALESCE($3,title),description=COALESCE($4,description),status=COALESCE($5,status),
-      archived_at=CASE WHEN $5='archived' THEN NOW() ELSE archived_at END,updated_at=NOW()
-      WHERE id=$1 AND company_id=$2 RETURNING *`,
-    [req.params.courseId, companyId, typeof data.title === 'string' ? data.title.trim() || null : null,
-      typeof data.description === 'string' ? data.description : null, status ?? null],
-  )
-  if(status==='archived')await closeTeacherRoomForCourse(req.params.courseId)
-  else if(rows[0])await ensureTeacherAgentForCourse(req.params.courseId)
-  res.json(rows[0])
 }))
 
 learningRouter.get('/courses/:courseId/teacher-agent', safe(async (req,res)=>{
@@ -119,20 +75,11 @@ learningRouter.get('/courses/:courseId/teacher-agent', safe(async (req,res)=>{
   res.json(await getTeacherAgentSummary(req.params.courseId,userId))
 }))
 
-learningRouter.put('/courses/:courseId/members/:memberId/:role', safe(async (req, res) => {
-  const { userId, companyId } = await scope(req)
-  await assertCourseCompany(req.params.courseId, companyId)
-  if (req.params.role !== 'teacher' && req.params.role !== 'learner') throw new Error('role must be teacher or learner')
-  await setCourseMembership({ courseId: req.params.courseId, teacherId: userId, userId: req.params.memberId,
-    role: req.params.role, enabled: body(req).enabled !== false })
-  res.json({ ok: true })
-}))
-
 learningRouter.put('/courses/:courseId/rooms/:conversationId', safe(async (req, res) => {
   const { userId, companyId } = await scope(req)
   await assertCourseCompany(req.params.courseId, companyId)
   const purpose = body(req).purpose
-  if (purpose !== 'study' && purpose !== 'lab' && purpose !== 'discussion') throw new Error('invalid room purpose')
+  if (purpose !== 'lab' && purpose !== 'discussion') throw new Error('purpose must be lab or discussion; Study Room binding is canonical on the Course')
   await bindCourseRoom({ courseId: req.params.courseId, teacherId: userId, conversationId: req.params.conversationId, purpose: purpose as LearningRoomPurpose })
   res.json({ ok: true })
 }))
@@ -140,11 +87,14 @@ learningRouter.put('/courses/:courseId/rooms/:conversationId', safe(async (req, 
 learningRouter.get('/courses/:courseId/objectives', safe(async (req, res) => {
   const { userId, companyId } = await scope(req)
   await assertCourseCompany(req.params.courseId, companyId)
-  const courses = await listLearningCourses(companyId, userId)
-  const course = courses.find((item) => item.id === req.params.courseId)
-  if (!course) throw Object.assign(new Error('course membership required'), { status: 403 })
+  const { rows: membership } = await pool.query<{ role: 'teacher' | 'learner' }>(
+    `SELECT role FROM course_members WHERE course_id=$1 AND company_id=$2 AND user_id=$3`,
+    [req.params.courseId, companyId, userId],
+  )
+  const courseRole = membership[0]?.role
+  if (!courseRole) throw Object.assign(new Error('course membership required'), { status: 403 })
   const objectives = await listObjectives(req.params.courseId)
-  res.json(course.roles.includes('teacher') ? objectives : objectives.filter((objective) => objective.status === 'published'))
+  res.json(courseRole === 'teacher' ? objectives : objectives.filter((objective) => objective.status === 'published'))
 }))
 
 learningRouter.post('/courses/:courseId/objectives', safe(async (req, res) => {
@@ -248,22 +198,26 @@ learningRouter.post('/courses/:courseId/reviews/:evaluationId', safe(async (req,
   res.json({ ok: true })
 }))
 
-learningRouter.get('/notification-preferences', safe(async (req, res) => {
-  const { userId } = await scope(req)
-  res.json(await getNotificationPreferences(userId, typeof req.query.courseId === 'string' ? req.query.courseId : undefined))
+learningRouter.get('/learning/notification-preferences', safe(async (req, res) => {
+  const { userId, companyId } = await scope(req)
+  res.json(await getNotificationPreferences(companyId, userId, typeof req.query.courseId === 'string' ? req.query.courseId : undefined))
 }))
 
-learningRouter.put('/notification-preferences', safe(async (req, res) => {
-  const { userId } = await scope(req); const data = body(req)
-  res.json(await setNotificationPreferences({ userId, ...(typeof data.courseId === 'string' ? { courseId: data.courseId } : {}),
-    inAppEnabled: data.inAppEnabled !== false, pushEnabled: data.pushEnabled === true, emailEnabled: data.emailEnabled === true,
+learningRouter.put('/learning/notification-preferences', safe(async (req, res) => {
+  const { userId, companyId } = await scope(req); const data = body(req)
+  res.json(await setNotificationPreferences({ companyId, userId, ...(typeof data.courseId === 'string' ? { courseId: data.courseId } : {}),
+    inAppEnabled: data.inAppEnabled !== false, emailEnabled: data.emailEnabled === true,
     timezone: typeof data.timezone === 'string' ? data.timezone : 'Asia/Shanghai', preferredTime: typeof data.preferredTime === 'string' ? data.preferredTime : '19:00',
     ...(typeof data.quietStart === 'string' ? { quietStart: data.quietStart } : {}), ...(typeof data.quietEnd === 'string' ? { quietEnd: data.quietEnd } : {}),
   }))
 }))
 
-learningRouter.get('/deliveries', safe(async (req, res) => {
-  const { userId } = await scope(req)
-  const { rows } = await pool.query(`SELECT * FROM learning_notification_deliveries WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100`, [userId])
+learningRouter.get('/learning/deliveries', safe(async (req, res) => {
+  const { userId, companyId } = await scope(req)
+  const { rows } = await pool.query(
+    `SELECT * FROM learning_notification_deliveries
+      WHERE company_id=$1 AND user_id=$2 ORDER BY created_at DESC LIMIT 100`,
+    [companyId, userId],
+  )
   res.json(rows)
 }))

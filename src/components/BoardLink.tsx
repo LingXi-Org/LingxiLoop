@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useBoards } from '@/stores/boards'
 import { useResolvedBoardId } from '@/lib/useArtifactId'
 import { IBoard } from './icons'
@@ -9,7 +10,7 @@ export function BoardLink({ id: rawId }: { id: string }) {
   const id = useResolvedBoardId(rawId)
   const setView = useApp((s) => s.setView)
   const view = useApp((s) => s.view)
-  const openBoardPeek = useApp((s) => s.openBoardPeek)
+  const openBoardPeek = useSurface((s) => s.openBoardPeek)
   const selectBoard = useBoards((s) => s.selectBoard)
   const loadList = useBoards((s) => s.loadList)
   const loadingList = useBoards((s) => s.loadingList)

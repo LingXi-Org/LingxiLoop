@@ -1,6 +1,6 @@
 import { MessagePrimitive } from '@assistant-ui/react'
 import { cn } from '@/lib/utils'
-import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useParticipants } from '@/stores/participants'
 import type { Participant } from '@/types'
 import { Avatar } from '../Avatar'
@@ -8,7 +8,7 @@ import { CalendarLink } from '../CalendarLink'
 
 export function SystemRow({ msg, delay = 0, animate = true, openMaus = false }: { msg: { body: string }; delay?: number; animate?: boolean; openMaus?: boolean }) {
   const byId = useParticipants((state) => state.byId)
-  const openAgentInfo = useApp((state) => state.openAgentInfo)
+  const openAgentInfo = useSurface((state) => state.openAgentInfo)
   const rootProps = { className: cn('flex justify-center my-3', animate && 'animate-rise'), style: animate ? { animationDelay: `${delay}ms` } : undefined }
   let payload: { kind?: string; participantId?: string; actorId?: string; text?: string; title?: string; eventId?: string } = {}
   try { payload = JSON.parse(msg.body) } catch { return null }

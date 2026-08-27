@@ -24,12 +24,13 @@
  * idempotent), but it avoids two replicas scanning llm_calls in lock-step.
  */
 import { pool } from '../db/pool.js'
+import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 
 /** Interval between rollup refresh ticks. Default 120s; set 0 to disable. Read
  *  straight from process.env (not env.ts) to keep this self-contained. */
 const INTERVAL_MS = Number(process.env.LLM_ROLLUP_INTERVAL_MS ?? 120_000)
 
-// Distinct from migrate's SCHEMA_LOCK_KEY (7_643_178_926_104n).
+// Dedicated to rollup ownership; schema bootstrap does not use advisory locks.
 const ROLLUP_LOCK_KEY = 7_643_178_926_211n
 
 // Steady-state trailing window: the current partial hour plus slack for clock
@@ -124,7 +125,7 @@ let timer: NodeJS.Timeout | null = null
 /** Start the periodic rollup refresher. Idempotent. Fires the first tick
  *  immediately (so a fresh deploy backfills right away rather than waiting a
  *  full interval), then on the interval. LLM_ROLLUP_INTERVAL_MS=0 disables. */
-export function startLlmRollupRefresher(): { stop(): void } | null {
+export function startLlmRollupRefresher(): WorkerTaskHandle | null {
   if (timer) return { stop: stopLlmRollupRefresher }
   const intervalMs = INTERVAL_MS
   if (intervalMs <= 0) {

@@ -80,7 +80,7 @@
   --canvas-shadow: 0 12px 35px rgba(25, 35, 60, 0.16);
   --canvas-vignette: linear-gradient(180deg, transparent 55%, rgba(59, 130, 246, 0.08));
 
-  /* OpenBot DetailPanel theme contract. The vendored source remains untouched;
+  /* Shared detail-panel theme contract. Component structure remains untouched;
      these aliases connect its semantic tokens to LingxiLoop's existing theme. */
   --background: var(--panel);
   --foreground: var(--ink);
@@ -109,9 +109,6 @@
   --safe-left: env(safe-area-inset-left);
   --safe-right: env(safe-area-inset-right);
 
-  /* Live keyboard height — set from Capacitor's keyboardWillShow event
-     so bottom-anchored composers can lift above the soft keyboard. */
-  --kb-height: 0px;
 }
 
 :root[data-theme='dark'] {
@@ -545,126 +542,6 @@
   .canvas-preview-loading span { width: 54px; height: 42px; }
 }
 
-/* Native-shell tweaks (iOS / Android Capacitor builds). main.tsx adds
-   the `.native` class to <body> when the Capacitor bridge is present;
-   pure CSS, no impact on the web bundle.
-   NOTE: we do NOT set `user-select: none` on body itself anymore.
-   The earlier blanket rule killed long-press-to-select on message
-   bubbles, which iOS users absolutely expect ("hold to copy"). The
-   chrome-specific rules below opt out individual UI surfaces. */
-body.native {
-  overscroll-behavior: none;
-  -webkit-text-size-adjust: none;
-  /* Native default: nothing is text-selectable and long-press never pops the
-     iOS selection magnifier / callout. We then opt selection BACK IN only for
-     real text content (inputs/contenteditable below, and message rows further
-     down). Without this, long-pressing a list row to open its context menu
-     also kicked off a page-wide text selection — the most web-y tell there is. */
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-/* Opt selection back in for message rows so "hold to copy" still works on
-   chat bubbles (id is `m-<messageId>`). Scoped tightly so it doesn't re-enable
-   selection on list rows / chrome. */
-body.native [id^="m-"],
-body.native [id^="m-"] * {
-  -webkit-user-select: text;
-  user-select: text;
-  -webkit-touch-callout: default;
-}
-body.native input,
-body.native textarea,
-body.native [contenteditable] {
-  user-select: text;
-  -webkit-user-select: text;
-}
-body.native button,
-body.native [role="button"],
-body.native a {
-  touch-action: manipulation;
-}
-
-/* iOS native polish — applied only inside Capacitor's WebView so
-   desktop / browser surfaces keep their normal selection + scroll
-   chrome. The goal is: UI chrome (buttons, headers, list rows,
-   tab bar) cannot be text-selected or callout-magnified; long
-   text content (message bubbles, documents) still can. */
-body.native {
-  /* Block iOS's "double-tap to zoom" gesture system-wide. Without
-     this, double-tapping anywhere quickly fires a viewport zoom
-     animation even with `touch-action: manipulation` on individual
-     buttons, because the zoom is triggered at the document root. */
-  touch-action: manipulation;
-  /* Disable rubber-band overscroll on the BODY — individual scroll
-     containers can still bounce. Without this, dragging up at the
-     top of a list bounces the whole app shell, which exposes the
-     transparent webview background. */
-  overscroll-behavior: none;
-}
-body.native button,
-body.native [role="button"],
-body.native nav,
-body.native header,
-body.native .mobile-chrome {
-  /* Stop iOS's tap-and-hold from popping up a magnifier / "Copy"
-     callout over UI chrome. Apply `.mobile-chrome` to a container
-     whose entire subtree is UI (e.g. tab bar). */
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
-/* iOS-native typography. The `-apple-system` keyword resolves to
-   SF Pro Text / SF Pro Display on Apple platforms — auto-switching
-   between the two by font size (Display ≥20pt, Text below). Using
-   the system stack instead of Manrope is the single highest-leverage
-   "feels native" tweak for an iOS WKWebView app: the moment a user
-   sees SF Pro instead of a custom web font, the cognitive frame
-   flips from "this is a website" to "this is an iOS app".
-   Desktop / browser surfaces keep Manrope for LingxiLoop's brand
-   identity — the override is `body.native`-scoped. */
-body.native,
-body.native .font-display,
-body.native input,
-body.native textarea,
-body.native button,
-body.native [contenteditable] {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  /* Manrope ships with discretionary ligatures + alternate forms via
-     `ss01` / `cv11`; SF Pro doesn't use those tags, so let the
-     system font use its own defaults. */
-  font-feature-settings: normal;
-  /* SF Pro has slightly tighter optical kerning by default; turn it
-     on explicitly so headings don't look "looser" than what a real
-     UIKit Title 1 renders. */
-  font-kerning: normal;
-}
-/* Display sizes — SF Pro Display kicks in automatically at ≥20pt
-   via the `-apple-system` keyword. We just bump the weight a touch
-   so big titles still read as "headings" without leaning on the
-   custom font's display optical sizing. */
-body.native .font-display {
-  font-weight: 600;
-  letter-spacing: -0.012em;
-}
-
-/* `.kb-aware` opts a bottom-anchored row (the composer) into keyboard-following
-   padding. Falls back to safe-area-inset-bottom on web / when the keyboard is
-   down. With Capacitor `resize: 'none'` the WebView stays full height and the
-   keyboard overlays the bottom, so we lift the composer by the keyboard height
-   ourselves. The transition is tuned to iOS's keyboard curve (~0.25s); because
-   `keyboardWillShow` (native.ts) sets `--kb-height` + the `keyboard-open` class
-   as the keyboard animation BEGINS, the input slides up locked to the keyboard
-   instead of snapping into place after it has already appeared. */
-.kb-aware {
-  padding-bottom: max(env(safe-area-inset-bottom), 10px);
-  transition: padding-bottom 0.25s cubic-bezier(0.17, 0.59, 0.4, 0.77);
-}
-body.keyboard-open .kb-aware {
-  padding-bottom: var(--kb-height);
-}
-
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; }
 
@@ -809,79 +686,7 @@ body {
   --sidebar-border: var(--im-divider);
 }
 
-/* Grok's renderer installs one coherent token set per appearance and lets
-   individual columns choose a semantic surface. Mobile uses the same tokens,
-   scoped to the app shell so auth/admin screens retain their own identity. */
-.mobile-grok-shell {
-  --im-chat-surface: #070707;
-  --im-chrome-surface: #111111;
-  --im-elevated-surface: #181818;
-  --im-divider: #fcfcfc0d;
-  --im-divider-weak: #fcfcfc1a;
-  --app: var(--im-chat-surface);
-  --paper: var(--im-chat-surface);
-  --panel: var(--im-chrome-surface);
-  --cloud: var(--im-elevated-surface);
-  --card: var(--im-elevated-surface);
-  --raised: #7777772c;
-  --raised-hover: #7777774a;
-  --inset: var(--im-chrome-surface);
-  --hairline: var(--im-divider-weak);
-  --ink: #fcfcfc;
-  --ink-secondary: #fcfcfc99;
-  --ink-900: #fcfcfc;
-  --ink-700: #fcfcfcd1;
-  --ink-500: #fcfcfc99;
-  --ink-300: #fcfcfc66;
-  --ink-200: #fcfcfc26;
-  --ink-100: #fcfcfc1a;
-  --bubble-agent: #262626;
-  --code-bg: #191919;
-  --background: var(--im-elevated-surface);
-  --foreground: var(--ink);
-  --border: var(--im-divider);
-  --input: var(--im-divider-weak);
-  --secondary: var(--raised);
-  --muted: var(--raised);
-  color: var(--ink);
-  color-scheme: dark;
-}
-
-:root[data-theme='light'] .mobile-grok-shell {
-  --im-chat-surface: #fcfcfc;
-  --im-chrome-surface: #f7f7f7;
-  --im-elevated-surface: #fcfcfc;
-  --im-divider: #1414140d;
-  --im-divider-weak: #1414141a;
-  --app: var(--im-chat-surface);
-  --paper: var(--im-chat-surface);
-  --panel: var(--im-chrome-surface);
-  --cloud: var(--im-elevated-surface);
-  --card: #eeeeee;
-  --raised: #77777717;
-  --raised-hover: #7777772c;
-  --inset: var(--im-chrome-surface);
-  --hairline: var(--im-divider-weak);
-  --ink: #141414;
-  --ink-secondary: #14141499;
-  --ink-900: #141414;
-  --ink-700: #141414d1;
-  --ink-500: #14141499;
-  --ink-300: #14141466;
-  --ink-200: #14141426;
-  --ink-100: #1414141a;
-  --bubble-agent: #eeeeee;
-  --code-bg: #eeeeee;
-  --background: var(--im-elevated-surface);
-  --border: var(--im-divider);
-  --input: var(--im-divider-weak);
-  --secondary: var(--raised);
-  --muted: var(--raised);
-  color-scheme: light;
-}
-
-.desktop-openmaus .chat-surface,
-.mobile-grok-shell .chat-surface {
+.desktop-openmaus .chat-surface {
   background: var(--im-chat-surface);
 }
 
@@ -1467,9 +1272,7 @@ body {
 }
 
 .desktop-openmaus .im-conversation-header,
-.mobile-grok-shell .im-conversation-header,
-.desktop-openmaus .im-composer-surface,
-.mobile-grok-shell .im-composer-surface {
+.desktop-openmaus .im-composer-surface {
   border-color: var(--im-divider);
   background: color-mix(in srgb, var(--panel) 94%, transparent);
 }
@@ -1839,7 +1642,7 @@ input, textarea { font: inherit; }
 }
 /* Grok's workspace chrome is a deliberately separate surface from the
    transcript: base for chat, subtle for chrome, elevated for preview content.
-   Keep the OpenBot panel structure untouched and apply that hierarchy only to
+   Keep the detail-panel structure untouched and apply that hierarchy only to
    the group workspace mounted inside it. */
 .desktop-openmaus [data-context-layout='flat-stacked'] {
   background: var(--im-detail-surface);

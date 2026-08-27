@@ -763,8 +763,5 @@ export async function changeUserTier(userId: string, tier: 'free' | 'pro' | 'max
       throw new HttpError(502, `sub2api tier sync failed: ${msg}`)
     }
   }
-  // Clear any mobile-trial stamp: a manual tier change supersedes the trial,
-  // and a leftover stamp would let the trial-sweep worker auto-downgrade a
-  // genuinely-upgraded user when the old trial window lapses.
-  await pool.query(`UPDATE users SET tier = $2, pro_trial_expires_at = NULL WHERE id = $1`, [userId, tier])
+  await pool.query(`UPDATE users SET tier = $2 WHERE id = $1`, [userId, tier])
 }

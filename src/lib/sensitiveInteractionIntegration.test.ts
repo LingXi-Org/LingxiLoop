@@ -62,9 +62,6 @@ test('all production sensitive operations route through the global Alert Dialog'
     '../desktop/CompanyCourseManagement.tsx',
     '../desktop/ConversationsPane.tsx',
     '../desktop/MeView.tsx',
-    '../mobile/MobileChat.tsx',
-    '../mobile/MobileChatList.tsx',
-    '../mobile/MobileMe.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
 

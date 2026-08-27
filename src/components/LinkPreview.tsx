@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { http } from '@/api/client'
+import { http } from '@/api/core/http'
 import { trimUrlTrailing } from '@/lib/utils'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { LinkPreview as ToolUiLinkPreview } from './tool-ui/link-preview'

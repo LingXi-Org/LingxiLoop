@@ -7,6 +7,12 @@
       "skillPath": "assistant-ui/skills/assistant-ui/SKILL.md",
       "computedHash": "65ced21e17ac905e3e89781931932843eb8d40a9f257ce2e6ff7adda6ea77671"
     },
+    "better-layout": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-layout/SKILL.md",
+      "computedHash": "4d38dfb87825bba2d8359759a3cb25b3da065f7bd8ff41cf72b9936f83c82903"
+    },
     "cloud": {
       "source": "assistant-ui/skills",
       "sourceType": "github",

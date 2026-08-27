@@ -370,76 +370,7 @@ export interface ImReadReceiptAdvance {
 }
 
 export interface ViewKey {
-  view: 'sources' | 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'learning' | 'management'
-}
-
-export type LearningRole = 'teacher' | 'learner'
-
-export interface LearningCourse {
-  id: string
-  companyId: string
-  projectId: string
-  title: string
-  description: string
-  status: 'draft' | 'active' | 'archived'
-  roles: LearningRole[]
-  roomCount: number
-  objectiveCount: number
-  learnerCount: number
-  createdAt: string
-  updatedAt: string
-}
-
-export interface LearningObjective {
-  id: string
-  courseId: string
-  title: string
-  successCriteria: string
-  targetLevel: 1 | 2 | 3 | 4
-  position: number
-  status: 'draft' | 'published' | 'archived'
-  prerequisiteIds: string[]
-}
-
-export interface LearningActivity {
-  id: string
-  courseId: string
-  title: string
-  instructions: string
-  type: 'lesson' | 'practice' | 'assessment' | 'project' | 'review'
-  status: 'draft' | 'published' | 'closed'
-  evaluationMode: 'agent_formative' | 'teacher_required'
-  targetLevel: 1 | 2 | 3 | 4
-  rubric: unknown[]
-  objectiveIds: string[]
-  dueAt?: string
-}
-
-export interface LearningDashboard {
-  courses: LearningCourse[]
-  due: Array<{ course_id: string; objective_id: string; title: string; level: number; status: string; next_review_at: string }>
-  mastery: Array<{ course_id: string; objective_id: string; title: string; level: number; status: string; next_review_at: string | null; review_interval_days: number }>
-  pendingReviews: number
-}
-
-export interface TeacherDigestSchedule {
-  frequency:'daily'|'weekly'|'off'
-  timezone:string
-  localTime?:string
-  weekday?:'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday'
-  status:'active'|'paused'
-  nextRunAt?:string
-}
-
-export interface TeacherAgentSummary {
-  agentId:string
-  displayName:string
-  projectId:string
-  courseId:string
-  roomId:string
-  roomStatus:'active'|'closed'
-  digest:TeacherDigestSchedule
-  pendingApprovals:number
+  view: 'sources' | 'conversations' | 'mail' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'learning' | 'management'
 }
 
 /* ============== Shared Canvas ======================================== */

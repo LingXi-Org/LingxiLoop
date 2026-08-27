@@ -1,0 +1,6 @@
+interface:
+  display_name: "LingxiLoop Eval Change"
+  short_description: "Build and verify deterministic Agent Eval changes"
+  default_prompt: "Use $lingxiloop-eval-change to implement or review this LingxiLoop Eval change with focused evidence."
+policy:
+  allow_implicit_invocation: true

@@ -12,10 +12,11 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { ThreadPrimitive } from '@assistant-ui/react'
-import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
-import { api, type ApiMessage } from '@/api/client'
+import type { ApiMessage } from '@/api/contracts'
+import { messagesApi } from '@/api/messages'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -57,8 +58,9 @@ function apiToMessage(m: ApiMessage): Message {
 }
 
 export function ThreadDrawer() {
-  const openThread = useApp((s) => s.openThread)
-  const close = useApp((s) => s.closeThreadView)
+  const surface = useSurface((s) => s.surface)
+  const openThread = surface?.kind === 'thread' ? surface : null
+  const close = useSurface((s) => s.closeThreadView)
   const byId = useParticipants((s) => s.byId)
   const convoMessages = useMessages((s) =>
     openThread ? (s.byConvo[openThread.convoId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES,
@@ -104,7 +106,7 @@ export function ThreadDrawer() {
     if (!openThread) return
     let cancelled = false
     setLoading(true); setErr(null)
-    api.getReplies(openThread.convoId, openThread.rootId)
+    messagesApi.getReplies(openThread.convoId, openThread.rootId)
       .then((rows) => {
         if (cancelled) return
         setReplies(rows.map(apiToMessage))

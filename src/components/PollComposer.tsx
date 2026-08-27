@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { BarChart3Icon, PlusIcon, XIcon } from 'lucide-react'
-import { api } from '@/api/client'
+import { messagesApi } from '@/api/messages'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -59,7 +59,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
     if (!canSubmit) { setError('请输入问题和至少两个选项。'); return }
     setSubmitting(true)
     setError(null)
-    void api.createPoll({
+    void messagesApi.createPoll({
       conversationId,
       question: question.trim(),
       mode,
@@ -79,7 +79,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
             <span className="grid size-7 place-items-center rounded-lg bg-primary/10 text-primary"><BarChart3Icon className="size-4" /></span>
             <CardTitle>新建投票</CardTitle>
           </div>
-          <Button type="button" variant="ghost" size="icon-sm" onClick={onCancel} aria-label="取消投票"><XIcon /></Button>
+          <Button type="button" variant="ghost" size="icon-xs" onClick={onCancel} aria-label="取消投票"><XIcon /></Button>
         </CardHeader>
         <CardContent>
           <QuestionnaireItem name="mode" required>
@@ -97,7 +97,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
                     aria-label={`投票选项 ${index + 1}`}
                   />
                   {options.length > MIN_OPTIONS ? (
-                    <Button type="button" variant="ghost" size="icon-sm" onClick={() => setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`移除选项 ${index + 1}`}><XIcon /></Button>
+                    <Button type="button" variant="ghost" size="icon-xs" onClick={() => setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`移除选项 ${index + 1}`}><XIcon /></Button>
                   ) : null}
                 </div>
               ))}

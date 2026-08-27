@@ -22,6 +22,7 @@
  */
 import { pool } from './db/pool.js'
 import { env } from './env.js'
+import type { WorkerTaskHandle } from './runtime/lifecycle.js'
 import {
   sendViaProvider, normalizeMessageId, formatAddress, parseAddress,
 } from './email.js'
@@ -219,7 +220,7 @@ export async function runRetryTick(maxBatch = 16): Promise<{ attempted: number }
 let timer: NodeJS.Timeout | null = null
 
 /** Start the periodic retry loop. Idempotent — re-calling is a no-op. */
-export function startEmailRetryWorker(): { stop(): void } | null {
+export function startEmailRetryWorker(): WorkerTaskHandle | null {
   if (timer) return { stop: stopEmailRetryWorker }
   const intervalMs = env.EMAIL_RETRY_INTERVAL_MS
   if (intervalMs <= 0) {
@@ -231,7 +232,7 @@ export function startEmailRetryWorker(): { stop(): void } | null {
     try { await runRetryTick() }
     catch (e) { console.error('[email-retry] tick failed:', e instanceof Error ? e.message : String(e)) }
   }
-  // First tick after one full interval (let migrations + server boot
+  // First tick after one full interval (let server boot
   // complete first). subsequent ticks fire on the interval.
   timer = setInterval(() => { void tick() }, intervalMs)
   return { stop: stopEmailRetryWorker }

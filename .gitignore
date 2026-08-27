@@ -23,6 +23,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+/artifacts/eval-*.json
 
 # Python bytecode cache
 __pycache__/

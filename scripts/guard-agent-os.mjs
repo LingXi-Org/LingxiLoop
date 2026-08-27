@@ -17,7 +17,7 @@ function sourceFiles(directory) {
 // archived migration/reference directories still exist in the repository.
 const activeFiles = [
   ...sourceFiles(join(root, 'server/src/agent-os')),
-  join(root, 'server/src/index.ts'),
+  join(root, 'server/src/web.ts'),
   join(root, 'server/src/im/router.ts'),
   join(root, 'src/lib/im/wukong.ts'),
   join(root, 'src/stores/messages.ts'),
@@ -65,7 +65,7 @@ const controlPlane = readFileSync(join(root, 'server/src/agent-os/control-plane.
 const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8').replaceAll('\r\n', '\n')
 const promptAssembly = readFileSync(join(root, 'server/src/agent-os/prompt-assembly.ts'), 'utf8')
 const canvasService = readFileSync(join(root, 'server/src/canvas/service.ts'), 'utf8')
-const migration = readFileSync(join(root, 'server/src/db/migrate.ts'), 'utf8')
+const schema = readFileSync(join(root, 'server/src/db/schema.sql'), 'utf8')
 const teacherAgent = readFileSync(join(root, 'server/src/learning/teacher-agent.ts'), 'utf8')
 if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
   failures.push('learning must exist only as a capability-gated loop.learning Host Bridge namespace')
@@ -87,7 +87,7 @@ if (!controlPlane.includes("namespace === 'teacher'") || !controlPlane.includes(
   failures.push('ordinary agents must be deterministically blocked from teacher.*')
 }
 for (const table of ['learning_project_teacher_agents','learning_course_teacher_rooms']) {
-  if (!migration.includes(`CREATE TABLE IF NOT EXISTS ${table}`)) failures.push(`missing durable Pulse relation ${table}`)
+  if (!schema.includes(`CREATE TABLE public.${table}`)) failures.push(`missing durable Pulse relation ${table}`)
 }
 if (!runtime.includes('finish_planning') || !actions.includes('planning gate blocked')) {
   failures.push('learning must retain the Frontier-style planning gate')
@@ -107,16 +107,17 @@ if (!actions.includes('submit_report') || !canvasService.includes('assertCanvasW
   || !canvasService.includes('learning_report_v1')) {
   failures.push('Canvas completion must be gated by a persisted structured report')
 }
-if (!migration.includes('canvas_assignment_verifier_not_self_check')
+if (!schema.includes('canvas_assignment_verifier_not_self_check')
   || !canvasService.includes('builder and verifier must be different agents')) {
   failures.push('builder/verifier separation must be enforced by Host and database')
 }
-if (!migration.includes('progress_fingerprint') || !controlPlane.includes('no_progress_count')) {
+if (!schema.includes('progress_fingerprint') || !controlPlane.includes('no_progress_count')) {
   failures.push('durable no-progress detection must remain enabled')
 }
 const currentProductSurface = [
   readFileSync(join(root, 'server/src/api/router.ts'), 'utf8'),
-  readFileSync(join(root, 'src/api/client.ts'), 'utf8'),
+  readFileSync(join(root, 'server/src/modules/conversations/service.ts'), 'utf8'),
+  readFileSync(join(root, 'src/api/contracts.ts'), 'utf8'),
   readFileSync(join(root, 'src/types.ts'), 'utf8'),
 ].join('\n')
 if (/peek\/agent-chats|ApiWhisper|whisper-link|kind\s*===?\s*['"]whisper['"]/.test(currentProductSurface)) {

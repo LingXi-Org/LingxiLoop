@@ -1,5 +1,6 @@
 import { AssistantRuntimeProvider, ThreadPrimitive, useExternalStoreRuntime } from '@assistant-ui/react'
 import { useCallback, useMemo, type ReactNode } from 'react'
+import { agentsApi } from '@/api/agents'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import type { Message } from '@/types'
@@ -24,8 +25,7 @@ export function LingxiAssistantRuntimeProvider({ messages, children }: { message
       if (toolName !== 'lingxi_approval' || !toolCallId.startsWith('approval:')) return
       const decision = typeof result === 'object' && result !== null ? (result as { decision?: unknown }).decision : undefined
       if (decision !== 'approved' && decision !== 'denied') return
-      const { api } = await import('@/api/client')
-      await api.resolveApproval(toolCallId.slice('approval:'.length), decision === 'approved' ? 'approved' : 'rejected')
+      await agentsApi.resolveApproval(toolCallId.slice('approval:'.length), decision === 'approved' ? 'approved' : 'rejected')
     },
   }), [convertMessage, messages])
   const runtime = useExternalStoreRuntime<Message>(adapter)

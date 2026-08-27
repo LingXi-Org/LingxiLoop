@@ -1,5 +1,8 @@
+import { conversationsApi } from '@/api/conversations'
+import { messagesApi } from '@/api/messages'
+import type { ApiMessage, WsEvent } from '@/api/contracts'
 import { create } from 'zustand'
-import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import {
   ACTIVE_STREAM_EXPIRY_MS,
   hasBroadcastMention,
@@ -50,7 +53,6 @@ export interface MessagesState {
    *  so the data growth and the index shift land in one render. */
   firstItemIndex: Record<string, number>
   errors: Record<string, string>
-  /** Append-only real read intervals keyed by conversation. */
   readReceipts: Record<string, ImReadReceiptAdvance[]>
 
   loadConversation: (id: string) => Promise<void>
@@ -447,10 +449,8 @@ function fromImBatch(messages: ImEnvelope[]): Message[] {
 const activeReadTimers = new Map<string, number>()
 const pendingVisibleReadSeq = new Map<string, number>()
 
-/** WuKong-delivered Agent OS messages do not necessarily have a matching app
- * WebSocket message.new event. Mark the open room read from this transport as
- * well, optimistically clearing its badge and debouncing the server cursor so
- * a burst of streamed/final messages advances to the newest one. */
+/** Advance the durable cursor only through a committed message that was
+ * actually inside the focused, visible virtualized range. */
 export function markMessagesVisibleThrough(conversationId: string, readThroughSeq: number): void {
   if (!Number.isSafeInteger(readThroughSeq) || readThroughSeq <= 0) return
   if (typeof document !== 'undefined' && (document.visibilityState !== 'visible' || !document.hasFocus())) return
@@ -463,7 +463,7 @@ export function markMessagesVisibleThrough(conversationId: string, readThroughSe
     const sequence = pendingVisibleReadSeq.get(conversationId)
     pendingVisibleReadSeq.delete(conversationId)
     if (!sequence) return
-    void api.markRead(conversationId, sequence)
+    void conversationsApi.markRead(conversationId, sequence)
       .then((response) => {
         if (response.receipt) {
           useMessages.setState((state) => ({
@@ -667,7 +667,7 @@ export const useMessages = create<MessagesState>((set, get) => ({
 
   async loadReadReceipts(id, fromSeq, toSeq) {
     try {
-      const response = await api.readReceipts(id, fromSeq, toSeq)
+      const response = await conversationsApi.readReceipts(id, fromSeq, toSeq)
       set((state) => ({
         readReceipts: {
           ...state.readReceipts,
@@ -711,7 +711,11 @@ export const useMessages = create<MessagesState>((set, get) => ({
         // — otherwise the row remounts and re-animates.
         const merged: Message = prior?.clientId ? { ...m, clientId: prior.clientId } : m
         const without = existing.filter((x) => x !== prior && x.id !== m.id)
-        let next = sortMessagesStable([...without, merged])
+        let next = [...without, merged].sort((a, b) => {
+          const sa = (a as { sequence?: number }).sequence ?? 0
+          const sb = (b as { sequence?: number }).sequence ?? 0
+          return sa - sb
+        })
         // Live replyCount bump on the quoted-original. Server doesn't publish
         // the new count separately; without this the "N replies" link on the
         // root would only catch up on a full refetch. Only bump for fresh
@@ -832,7 +836,7 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
       // doesn't wrongly suppress an unrelated newer streaming entry.
       && !base.some((m) => m.id === id
         || (m.authorId === x.authorId
-          && (m.sequence ?? 0) >= (x.sequence ?? 0))))
+          && ((m as { sequence?: number }).sequence ?? 0) >= (x.sequence ?? 0))))
     .map(([id, x]) => ({
       id,
       conversationId: convoId,
@@ -840,6 +844,7 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
       kind: 'text' as const,
       body: x.body,
       at: timeFromIso(),
+      sequence: x.sequence,
       streaming: x.mode === 'markdown' || x.body ? 'markdown' as const : 'placeholder' as const,
     }))
   const streamingAuthors = new Set(streaming.map((message) => message.authorId))
@@ -849,17 +854,20 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
     // author. Rendering our own echo created a bogus "thinking" row directly
     // above the composer on every keystroke.
     .filter((authorId) => authorId !== meId && !streamingAuthors.has(authorId))
-    .map((authorId) => ({
+    .map((authorId, index) => ({
       id: `typing:${convoId}:${authorId}`,
       conversationId: convoId,
       authorId,
       kind: 'text' as const,
       body: '',
       at: '',
+      sequence: Number.MAX_SAFE_INTEGER - 1_000 + index,
       streaming: 'placeholder' as const,
     }))
   if (streaming.length === 0 && typing.length === 0) return base
-  return [...base, ...streaming, ...typing]
+  return [...base, ...streaming, ...typing].sort((a, b) =>
+    ((a as Message & { sequence?: number }).sequence ?? 0) - ((b as Message & { sequence?: number }).sequence ?? 0),
+  )
 }
 
 function newTempId(): string {
@@ -895,7 +903,7 @@ function forgetOutbox(nonce: string): void { writeOutbox(readOutbox().filter((it
 export async function sendUserMessage(
   convoId: string,
   body: string,
-  attachment?: import('@/api/client').ApiAttachment | null,
+  attachment?: import('@/api/contracts').ApiAttachment | null,
   quotedMessageId?: string | null,
   clientNonce?: string,
   replayPayload?: LingxiMessageV1,
@@ -925,7 +933,7 @@ export async function sendUserMessage(
         authorId: orig.authorId,
         kind: orig.kind,
         body: orig.body.slice(0, 240),
-        sequence: orig.sequence ?? 0,
+        sequence: (orig as Message & { sequence?: number }).sequence ?? 0,
       }
     }
   }
@@ -952,6 +960,11 @@ export async function sendUserMessage(
     quoted: quotedSummary,
     pending: true,
   }
+  // Pin the optimistic bubble to the tail of the list — applyEvent sorts by
+  // a hidden `sequence` field, so an unrelated message.new arriving mid-send
+  // shouldn't shove our bubble up the timeline.
+  ;(optimistic as Message & { sequence?: number }).sequence = Number.MAX_SAFE_INTEGER
+
   useMessages.setState((s) => {
     const list = s.byConvo[convoId] ?? []
     const exists = list.some((item) => item.id === tempId)
@@ -1067,7 +1080,7 @@ export async function retryFailedMessage(convoId: string, tempId: string): Promi
   // bubble). For retry that's fine — the server resolves the row by
   // url + name + mime + size, and `key` is only used as an internal
   // optimization marker.
-  const retryAttachment: import('@/api/client').ApiAttachment | null = att
+  const retryAttachment: import('@/api/contracts').ApiAttachment | null = att
     ? { url: att.url ?? '', name: att.name, kind: att.kind, mime: att.mime, size: att.size }
     : null
   const quotedId = msg.quotedMessageId ?? null
@@ -1089,7 +1102,7 @@ async function recoverMessageOutbox(): Promise<void> {
         continue
       }
       const data = entry.payload.data ?? {}
-      const attachment = entry.payload.kind === 'attachment' ? data as unknown as import('@/api/client').ApiAttachment : null
+      const attachment = entry.payload.kind === 'attachment' ? data as unknown as import('@/api/contracts').ApiAttachment : null
       await sendUserMessage(entry.convoId, entry.payload.body ?? '', attachment, entry.payload.replyToClientMsgNo, entry.nonce, entry.payload)
     } catch (error) { console.warn('[messages] outbox recovery deferred', error) }
   }
@@ -1101,7 +1114,7 @@ export async function toggleReaction(messageId: string, emoji: string): Promise<
   )
   if (isMockImDevelopment()) return
   try {
-    const res = await api.toggleReaction(messageId, emoji)
+    const res = await messagesApi.toggleReaction(messageId, emoji)
     const incoming = deriveMineForReactions(res.reactions)
     patchMessageReactions(messageId, (reactions) => mergeReactionOrder(reactions, incoming))
   } catch (err) {

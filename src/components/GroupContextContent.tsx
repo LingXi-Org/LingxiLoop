@@ -4,7 +4,7 @@ import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
 import { CanvasPreview } from '@/components/CanvasPreview'
 import { Button } from '@/components/ui/button'
 import { SourcePanel } from '@/components/WorkspaceChrome'
-import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useCanvas } from '@/stores/canvas'
 
 export function GroupCanvasPanel({ conversationId, flat = false, toolbar }: { conversationId: string; flat?: boolean; toolbar?: ReactNode }) {
@@ -14,7 +14,7 @@ export function GroupCanvasPanel({ conversationId, flat = false, toolbar }: { co
   const loadWorkspaces = useCanvas((state) => state.loadWorkspaces)
   const loadPreview = useCanvas((state) => state.loadPreview)
   const createForConversation = useCanvas((state) => state.createForConversation)
-  const openCanvas = useApp((state) => state.openCanvasPeek)
+  const openCanvas = useSurface((state) => state.openCanvasPeek)
   const [creating, setCreating] = useState(false)
   const summary = workspaces.find((item) => item.conversationId === conversationId) ?? null
   const preview = summary ? (previews[summary.id] ?? (snapshot?.id === summary.id ? snapshot : null)) : null
@@ -46,7 +46,7 @@ export function GroupCanvasPanel({ conversationId, flat = false, toolbar }: { co
   </section>
 }
 
-/** Business content rendered inside OpenBot's unmodified DetailPanel. */
+/** Business content rendered inside the shared detail panel. */
 export function GroupContextContent({ conversationId }: { conversationId: string }) {
   return <div className="grid h-full min-h-0 grid-rows-[minmax(0,38fr)_minmax(0,62fr)] overflow-hidden bg-sidebar" data-context-layout="flat-stacked" aria-label="群聊上下文内容">
     <div className="min-h-0 overflow-hidden"><GroupCanvasPanel conversationId={conversationId} flat /></div>

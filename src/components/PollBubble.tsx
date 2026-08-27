@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useAuiState } from '@assistant-ui/react'
 import { BarChart3Icon } from 'lucide-react'
-import { api } from '@/api/client'
+import { messagesApi } from '@/api/messages'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
@@ -71,7 +71,7 @@ export function PollBubble({ zh: _zh = false }: Props) {
     const optionIds = new FormData(event.currentTarget).getAll('poll_vote').map(String)
     setSubmitting(true)
     setError(null)
-    void api.castPollVote(message.id, optionIds)
+    void messagesApi.castPollVote(message.id, optionIds)
       .catch((reason) => setError(reason instanceof Error ? reason.message : '投票失败'))
       .finally(() => setSubmitting(false))
   }

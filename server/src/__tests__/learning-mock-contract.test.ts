@@ -3,12 +3,14 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const router = readFileSync(new URL('../learning/router.ts', import.meta.url), 'utf8')
-const client = readFileSync(new URL('../../../src/api/client.ts', import.meta.url), 'utf8')
+const client = readFileSync(new URL('../../../src/api/learning.ts', import.meta.url), 'utf8')
+const agentsClient = readFileSync(new URL('../../../src/api/agents.ts', import.meta.url), 'utf8')
 const mock = readFileSync(new URL('../../../src/dev/mockLearning.ts', import.meta.url), 'utf8')
 const mockIm = readFileSync(new URL('../../../src/dev/mockLearningImFixtures.ts', import.meta.url), 'utf8')
 
 test('local learning preview is intercepted only for the production learning route family', () => {
-  assert.match(client, /company\?\.startsWith\('mock-'\) && \(path\.startsWith\('\/learning\/'\) \|\| path\.startsWith\('\/im\/approvals\/'\)\)/)
+  assert.match(client, /isMockImDevelopment\(\)[\s\S]*mockLearningHttp<T>\(path, init\)/)
+  assert.match(agentsClient, /\/im\/approvals\/[\s\S]*mockLearningHttp/)
   assert.doesNotMatch(mock, /\/api\/mock|fake-feature/)
 })
 
@@ -20,9 +22,10 @@ test('every mutable learning preview surface has a production route', () => {
   ]) {
     assert.ok(router.includes(route), `production learning router missing ${route}`)
   }
-  for (const operation of ['publishLearningActivity', 'closeLearningActivity', 'submitLearningActivity', 'reviewLearningEvaluation']) {
+  for (const operation of ['publishActivity', 'closeActivity', 'submitActivity', 'reviewEvaluation']) {
     assert.ok(client.includes(operation), `production API client missing ${operation}`)
   }
+  assert.doesNotMatch(client, /\/learning\/courses/)
 })
 
 test('learning demo agents preserve the one-tool production invariant', () => {
@@ -54,7 +57,7 @@ test('Pulse preview uses only production teacher-room, aggregate, drill-down and
   assert.match(mockIm,/活动草稿已保存/)
   assert.match(mockIm,/kind:'approval'/)
   assert.match(mockIm,/kind:'course_management'/)
-  assert.match(mock,/parts\[3\]==='teacher-agent'/)
+  assert.match(mock,/parts\[2\]==='teacher-agent'/)
   assert.match(mock,/parts\[0\]==='im'.*parts\[1\]==='approvals'/)
 })
 

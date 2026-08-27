@@ -1,7 +1,7 @@
 "use client"
 
 import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, CreditCardIcon, LogOutIcon, SparklesIcon } from "lucide-react"
-import { api } from "@/api/client"
+import { platformApi } from "@/api/platform"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/stores/auth"
 import { useApp } from "@/stores/app"
+import { useUiCommands } from "@/stores/uiCommands"
 
 export function NavUser({ user }: {
   user: { name: string; email: string; avatar?: string | null }
@@ -21,9 +22,16 @@ export function NavUser({ user }: {
   const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || "我"
   const signOut = () => {
     useAuth.getState().clear()
-    void api.authLogout().catch(() => undefined)
+    void platformApi.authLogout().catch(() => undefined)
   }
-  const openSettings = (tab: 'Profile' | 'Usage' | 'Preferences') => useApp.getState().openSettings(tab)
+  const openSettings = (tab: 'Profile' | 'Usage' | 'Preferences') => {
+    useApp.getState().setView('me')
+    useUiCommands.getState().dispatch(
+      tab === 'Usage' ? 'open-settings-usage'
+        : tab === 'Preferences' ? 'open-settings-preferences'
+          : 'open-settings-profile',
+    )
+  }
 
   const identity = <>
     <Avatar className="rounded-lg">

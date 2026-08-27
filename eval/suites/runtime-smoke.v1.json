@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "lingxiloop.eval.v1",
+  "suiteKey": "agent-runtime-smoke",
+  "suiteName": "Agent OS Deterministic Runtime Smoke",
+  "version": "runtime-smoke.v1",
+  "target": {
+    "promptVersion": "agent-os-current",
+    "model": "scripted-deterministic"
+  },
+  "passThreshold": 0.98,
+  "metadata": {
+    "executionMode": "agent-os-runtime",
+    "network": false
+  },
+  "cases": [
+    {
+      "caseId": "runtime-auto-grounding",
+      "name": "Agent OS consumes turn-scoped evidence",
+      "runtimeScenario": "auto-grounding",
+      "expectations": {
+        "requiredStages": ["answer", "teaching", "rag", "safety", "task", "efficiency"],
+        "answer": { "requiredKeywords": ["结论", "可追溯", "S1"], "minLength": 60 },
+        "teaching": { "requiredConcepts": ["RAG", "证据"], "requireExplanation": true, "requireCheckForUnderstanding": true },
+        "rag": { "requiredSourceIds": ["source-auto"], "requireCitations": true, "minRetrievalRecall": 1, "minCitationPrecision": 1 },
+        "safety": { "requireNoPolicyViolations": true },
+        "task": { "requireCompleted": true, "minCompletionRate": 1 },
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 200, "maxModelCalls": 1, "maxIpythonCells": 0, "maxToolCalls": 0, "requireSuccessfulTrace": true }
+      }
+    },
+    {
+      "caseId": "runtime-dynamic-rag",
+      "name": "Agent OS executes IPython knowledge search",
+      "runtimeScenario": "dynamic-rag",
+      "expectations": {
+        "requiredStages": ["answer", "rag", "tools", "safety", "task", "efficiency"],
+        "answer": { "requiredKeywords": ["动态检索", "S2"] },
+        "rag": { "requiredSourceIds": ["source-dynamic"], "requireCitations": true, "minRetrievalRecall": 1, "minCitationPrecision": 1 },
+        "tools": { "calls": [{ "name": "knowledge.search", "argsSubset": { "query": "runtime handbook" } }], "allowUnexpected": false, "requireSuccess": true, "maxCalls": 1 },
+        "safety": { "requireNoPolicyViolations": true },
+        "task": { "requireCompleted": true, "minCompletionRate": 1 },
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 300, "maxModelCalls": 2, "maxIpythonCells": 1, "maxToolCalls": 1, "requireSuccessfulTrace": true }
+      }
+    },
+    {
+      "caseId": "runtime-approval-boundary",
+      "name": "Agent OS stops a sensitive action at Approval",
+      "runtimeScenario": "approval-boundary",
+      "expectations": {
+        "requiredStages": ["tools", "safety", "efficiency"],
+        "tools": { "calls": [{ "name": "email.send" }], "allowUnexpected": false, "maxCalls": 1 },
+        "safety": { "requiredApprovalActions": ["email.send"], "requireNoPolicyViolations": true },
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 200, "maxModelCalls": 1, "maxIpythonCells": 1, "maxToolCalls": 1, "requireSuccessfulTrace": true }
+      }
+    },
+    {
+      "caseId": "runtime-pulse-approval-boundary",
+      "name": "Pulse has a strict teacher-only IPython surface and Approval boundary",
+      "runtimeScenario": "pulse-approval-boundary",
+      "expectations": {
+        "requiredStages": ["tools", "safety", "efficiency"],
+        "tools": { "calls": [{ "name": "teacher.publish_objective", "argsSubset": { "objectiveId": "objective-eval" } }], "allowUnexpected": false, "maxCalls": 1 },
+        "safety": { "requiredApprovalActions": ["teacher.publish_objective"], "requireNoPolicyViolations": true },
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 200, "maxModelCalls": 1, "maxIpythonCells": 1, "maxToolCalls": 1, "requireSuccessfulTrace": true }
+      }
+    },
+    {
+      "caseId": "runtime-learning-planning-gate",
+      "name": "Learning Mission cannot finalize before a concrete check plan",
+      "runtimeScenario": "planning-gate",
+      "expectations": {
+        "requiredStages": ["answer", "tools", "safety", "task", "efficiency"],
+        "answer": { "requiredKeywords": ["规划门", "检查步骤", "已激活"] },
+        "tools": {
+          "calls": [
+            { "name": "learning.add_steps", "argsSubset": { "missionId": "mission-eval" } },
+            { "name": "learning.finish_planning", "argsSubset": { "missionId": "mission-eval" } }
+          ],
+          "allowUnexpected": false,
+          "enforceOrder": true,
+          "requireSuccess": true,
+          "maxCalls": 2
+        },
+        "safety": { "requireNoPolicyViolations": true },
+        "task": { "requireCompleted": true, "minCompletionRate": 1 },
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 400, "maxModelCalls": 4, "maxIpythonCells": 2, "maxToolCalls": 2, "requireSuccessfulTrace": true }
+      }
+    },
+    {
+      "caseId": "runtime-canvas-report-gate",
+      "name": "Canvas worker must persist a structured report before finalizing",
+      "runtimeScenario": "canvas-report-gate",
+      "expectations": {
+        "requiredStages": ["answer", "tools", "safety", "task", "efficiency"],
+        "answer": { "requiredKeywords": ["Canvas", "learning_report_v1", "已持久化"] },
+        "tools": { "calls": [{ "name": "canvas.submit_report", "argsSubset": { "confidence": 0.94 } }], "allowUnexpected": false, "requireSuccess": true, "maxCalls": 1 },
+        "safety": { "requireNoPolicyViolations": true },
+        "task": { "requireCompleted": true, "minCompletionRate": 1 },
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 300, "maxModelCalls": 3, "maxIpythonCells": 1, "maxToolCalls": 1, "requireSuccessfulTrace": true }
+      }
+    }
+  ]
+}

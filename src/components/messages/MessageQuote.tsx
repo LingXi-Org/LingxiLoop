@@ -1,10 +1,10 @@
-import { useApp } from '@/stores/app'
+import { useConversationUi } from '@/stores/conversationUi'
 import { useParticipants } from '@/stores/participants'
 import type { Message } from '@/types'
 
 export function QuoteCard({ message }: { message: Message }) {
   const byId = useParticipants((state) => state.byId)
-  const jumpToMessage = useApp((state) => state.jumpToMessage)
+  const jumpToMessage = useConversationUi((state) => state.jumpToMessage)
   if (!message.quotedMessageId) return null
   const jump = () => jumpToMessage(message.quotedMessageId!)
   if (!message.quoted) return <button onClick={jump} data-message-surface="inset" className="mb-1.5 block max-w-full truncate text-left" style={{ width: 'min(580px, 62vw)' }}>

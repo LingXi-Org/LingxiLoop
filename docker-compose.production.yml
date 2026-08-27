@@ -128,16 +128,24 @@ services:
     networks: [lingxiloop]
     logging: *quiet-logging
 
-  migrate:
+  db-bootstrap:
     <<: *lingxiloop-runtime
-    profiles: [tools]
     restart: "no"
-    command: ["npm", "run", "migrate"]
+    command: ["npm", "run", "db:bootstrap"]
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  # Deployment-only reconciler. When R2 is configured, deploy-production.sh
+  # runs this before the application cutover and the script reads the bucket
+  # policy back, failing the deployment if mobile WebView PUT origins are absent.
+  r2-cors:
+    <<: *lingxiloop-runtime
+    profiles: [tools]
+    restart: "no"
+    command: ["node", "server/scripts/r2-cors.mjs"]
 
   lingxiloop:
     <<: *lingxiloop-runtime
@@ -151,6 +159,8 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:5181:5181"
     volumes:
@@ -162,6 +172,24 @@ services:
       timeout: 5s
       retries: 30
       start_period: 20s
+    logging: *quiet-logging
+
+  worker:
+    <<: *lingxiloop-runtime
+    restart: unless-stopped
+    command: ["npm", "run", "worker:start"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      wukongim:
+        condition: service_healthy
+      open-notebook:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/server/uploads
+    networks: [lingxiloop, lingxiloop-knowledge-internal]
     logging: *quiet-logging
 
   agent-os:

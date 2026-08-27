@@ -1,7 +1,11 @@
 import { useAuiState } from '@assistant-ui/react'
 import { type MutableRefObject, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
-import { type ApiAttachment, type ApiCoworkerActivity, api, ws } from '@/api/client'
+import { agentsApi } from '@/api/agents'
+import type { ApiAttachment, ApiCoworkerActivity } from '@/api/contracts'
+import { conversationsApi } from '@/api/conversations'
+import { ws } from '@/api/core/realtime'
+import { filesApi } from '@/api/files'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, ICanvas, IClip, ISearch, ISend, ISmile } from '@/components/icons'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
@@ -34,11 +38,13 @@ import { projectFindMatches } from '@/lib/transcriptExperience'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
+import { useConversationUi } from '@/stores/conversationUi'
 import { useConversations } from '@/stores/conversations'
 import type { MessagesState } from '@/stores/messages'
 import { messagesFor, sendUserMessage, useMessages, VIRTUOSO_FIRST_INDEX_BASE } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import { useSoundStore } from '@/stores/sound'
+import { useSurface } from '@/stores/surface'
 import type { Participant } from '@/types'
 
 function DesktopRuntimeEntry({
@@ -170,7 +176,7 @@ function _ChatHeader({
     useConversations.setState((s) => ({
       list: s.list.map((x) => x.id === c.id ? { ...x, leaderId } : x),
     }))
-    try { await api.setLeader(c.id, leaderId) }
+    try { await conversationsApi.setLeader(c.id, leaderId) }
     catch (error) {
       console.warn('[leader] update failed', error)
       useConversations.setState((s) => ({
@@ -195,7 +201,7 @@ function _ChatHeader({
     useConversations.setState((s) => ({
       list: s.list.map((x) => x.id === c.id ? { ...x, title: next } : x),
     }))
-    try { await api.setTitle(c.id, next) }
+    try { await conversationsApi.setTitle(c.id, next) }
     catch (err) {
       console.warn('[title] rename failed', err)
       useConversations.setState((s) => ({
@@ -217,7 +223,7 @@ function _ChatHeader({
     useConversations.setState((s) => ({
       list: s.list.map((x) => x.id === c.id ? { ...x, topic: next } : x),
     }))
-    try { await api.setTopic(c.id, next) }
+    try { await conversationsApi.setTopic(c.id, next) }
     catch (err) {
       console.warn('[topic] save failed', err)
       // Roll back on failure.
@@ -480,7 +486,7 @@ function useTypingEmitter(convoId: string, text: string) {
 
   const sendTyping = useCallback((targetConvoId: string, done: boolean) => {
     if (isMockImDevelopment()) return
-    void api.emitTyping(targetConvoId, done).catch((e) => {
+    void conversationsApi.emitTyping(targetConvoId, done).catch((e) => {
       console.warn('[typing] emit failed', e)
     })
   }, [])
@@ -555,7 +561,8 @@ export function Composer({
   const fileRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     const focusComposer = () => {
-      const thread = useApp.getState().openThread
+      const surface = useSurface.getState().surface
+      const thread = surface?.kind === 'thread' ? surface : null
       if ((isThread && thread?.rootId === threadRootId) || (!isThread && !thread)) editorRef.current?.focus()
     }
     window.addEventListener('lingxiloop:focus-composer', focusComposer)
@@ -639,8 +646,8 @@ export function Composer({
   // keeps a per-convo map so flipping rooms preserves each room's draft.
   // In thread mode the quoted id is fixed to threadRootId (every reply in the
   // drawer roots at the thread head); the global per-convo replyingTo is ignored.
-  const globalReplyingToId = useApp((s) => s.replyingTo[convoId])
-  const setReplyingTo = useApp((s) => s.setReplyingTo)
+  const globalReplyingToId = useConversationUi((s) => s.replyingTo[convoId])
+  const setReplyingTo = useConversationUi((s) => s.setReplyingTo)
   const replyingToId = isThread ? threadRootId : globalReplyingToId
   // The "Replying to X" pill inside the composer is for the global compose path.
   // In thread mode the parent drawer renders its own header, so we suppress it here.
@@ -748,7 +755,7 @@ export function Composer({
     setUploadingForScope(targetScope, true)
     setUploadErrorForScope(targetScope, null)
     try {
-      const a = await api.uploadFile(file)
+      const a = await filesApi.uploadFile(file)
       setAttachmentForScope(targetScope, a)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
@@ -1660,7 +1667,7 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
           .slice(-12)
       })
     }
-    const refresh = () => void api.getCoworkerActivity(conversationId)
+    const refresh = () => void agentsApi.getCoworkerActivity(conversationId)
       .then(merge)
       .catch(() => { /* activity is best-effort; chat remains primary */ })
     refresh()
@@ -1866,8 +1873,8 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
   // mounts off-screen rows reliably; previously a quote click that lost its
   // DOM element (Virtuoso recycled it) silently did nothing. Once the target
   // is mounted we briefly flash it like the old quote jump did.
-  const pendingJumpId = useApp((s) => s.pendingJumpMessageId)
-  const clearPendingJump = useApp((s) => s.clearPendingJump)
+  const pendingJumpId = useConversationUi((s) => s.pendingJumpMessageId)
+  const clearPendingJump = useConversationUi((s) => s.clearPendingJump)
   useEffect(() => {
     if (!pendingJumpId) return
     const index = list.findIndex((m) => m.id === pendingJumpId)
@@ -1961,7 +1968,7 @@ export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => vo
         conversationId={convoId}
         onOpenDetails={() => {
           const participantId = c.members.find((id) => byId[id]?.kind === 'agent')
-          if (participantId) useApp.getState().openAgentInfo(participantId)
+          if (participantId) useSurface.getState().openAgentInfo(participantId)
         }}
         actions={(
           <>

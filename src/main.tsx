@@ -1,27 +1,35 @@
-import { StrictMode } from 'react'
+import { StrictMode, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
-import { App } from './App'
-import { ConditionalPostHogProvider } from './components/ConditionalPostHogProvider'
-import { GlobalInteractionProvider } from './components/GlobalInteractionProvider'
-import { PostHogAppTracker } from './components/PostHogAppTracker'
-import { initObservability } from './lib/observability'
-import { isElectron } from './lib/runtime'
-import { bootNative, isNativePlatform } from './lib/native'
+import { isElectron, isNotificationWindow } from './lib/runtime'
 import './styles/globals.css'
 
-if (isElectron) document.body.classList.add('electron')
-if (isNativePlatform()) document.body.classList.add('native', `native-${typeof window !== 'undefined' && (window as { Capacitor?: { getPlatform?: () => string } }).Capacitor?.getPlatform?.() || ''}`)
+const root = createRoot(document.getElementById('root')!)
 
-void initObservability()
-void bootNative()
+function render(Component: ComponentType) {
+  root.render(<StrictMode><Component /></StrictMode>)
+}
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ConditionalPostHogProvider>
-      <PostHogAppTracker />
-      <GlobalInteractionProvider>
-        <App />
-      </GlobalInteractionProvider>
-    </ConditionalPostHogProvider>
-  </StrictMode>,
-)
+async function renderApp(Component: ComponentType) {
+  const { GlobalInteractionProvider } = await import('./components/GlobalInteractionProvider')
+  root.render(<StrictMode><GlobalInteractionProvider><Component /></GlobalInteractionProvider></StrictMode>)
+}
+
+async function boot() {
+  if (isNotificationWindow) {
+    const { NotificationWindow } = await import('./components/NotificationWindow')
+    render(NotificationWindow)
+    return
+  }
+
+  if (isElectron) document.body.classList.add('electron')
+  const { App } = await import('./App')
+  await renderApp(App)
+
+  if (import.meta.env.VITE_PUBLIC_POSTHOG_KEY) {
+    const start = () => { void import('./observability-entry').then(({ mountObservability }) => mountObservability()) }
+    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(start)
+    else globalThis.setTimeout(start, 0)
+  }
+}
+
+void boot()

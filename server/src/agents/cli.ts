@@ -2125,34 +2125,6 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     },
   })
 
-  // Humans mentioned by an agent receive a high-priority notification even
-  // when the room itself is muted. Online clients get the same bypass from
-  // the structured message.new metadata.
-  void (async () => {
-    try {
-      const { computeMessageRecipients, notifyMessage } = await import('../push.js')
-      const recipients = await computeMessageRecipients({
-        conversationId: convoId, authorId: me, mentionedUserIds: mentionedIds,
-      })
-      if (recipients.length === 0) return
-      const [{ rows: convoNames }, { rows: authorNames }] = await Promise.all([
-        pool.query<{ title: string }>(`SELECT title FROM conversations WHERE id = $1`, [convoId]),
-        pool.query<{ name: string }>(`SELECT name FROM participants WHERE id = $1 AND company_id = $2`, [me, companyId]),
-      ])
-      await notifyMessage({
-        conversationId: convoId,
-        conversationTitle: convoNames[0]?.title ?? null,
-        authorId: me,
-        authorName: authorNames[0]?.name ?? me,
-        messageId,
-        body: finalBody,
-        companyId,
-        recipientUserIds: recipients,
-      })
-    } catch (error) {
-      console.warn('[push] agent reply notification failed', error)
-    }
-  })()
   const attachmentNote = attachment
     ? ` · attached ${attachment.kind} "${attachment.name}"`
     : ''
@@ -3830,7 +3802,7 @@ function normalizeMemoryKind(raw: unknown): MemoryKind {
  *  `source`, `createdAt`) live in the `meta` JSONB column. Reads use a
  *  `path LIKE 'memory/%'` prefix plus a partial JSONB index on
  *  `meta->>'about'` for the common `--about <subject>` filter. See
- *  migrate.ts for the one-shot copy from the legacy `agent_memory` table. */
+ *  v1 schema for the canonical workspace representation. */
 async function cmdMemory(parsed: ParsedArgs): Promise<CliResult> {
   const op = parsed.positional[0]
   const me = resolveAs(parsed)

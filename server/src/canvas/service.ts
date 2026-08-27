@@ -1123,7 +1123,14 @@ async function validateEvidenceRefs(client: PoolClient, input: { companyId:strin
     else if (ref.kind === 'message') exists = Boolean((await client.query(`SELECT 1 FROM messages m JOIN canvases c ON c.conversation_id=m.conversation_id WHERE m.id=$1 AND c.id=$2 AND c.company_id=$3`,[ref.id,input.canvasId,input.companyId])).rows[0])
     else if (ref.kind === 'document') exists = Boolean((await client.query(`SELECT 1 FROM documents d JOIN canvases c ON c.company_id=d.company_id WHERE d.id=$1 AND c.id=$2 AND c.company_id=$3 AND (d.conversation_id IS NULL OR d.conversation_id=c.conversation_id)`,[ref.id,input.canvasId,input.companyId])).rows[0])
     else if (ref.kind === 'source') exists = Boolean((await client.query(`SELECT 1 FROM knowledge_sources s JOIN canvases c ON c.project_id=s.project_id WHERE s.id=$1 AND c.id=$2 AND s.company_id=$3 AND s.deleted_at IS NULL`,[ref.id,input.canvasId,input.companyId])).rows[0])
-    else if (ref.kind === 'attempt') exists = Boolean((await client.query(`SELECT 1 FROM learning_attempts a JOIN learning_courses lc ON lc.id=a.course_id JOIN canvases c ON c.project_id=lc.project_id WHERE a.id=$1 AND c.id=$2 AND lc.company_id=$3`,[ref.id,input.canvasId,input.companyId])).rows[0])
+    else if (ref.kind === 'attempt') exists = Boolean((await client.query(
+      `SELECT 1
+         FROM learning_attempts attempt
+         JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
+         JOIN canvases canvas ON canvas.project_id=course.project_id AND canvas.company_id=course.company_id
+        WHERE attempt.id=$1 AND canvas.id=$2 AND course.company_id=$3`,
+      [ref.id,input.canvasId,input.companyId],
+    )).rows[0])
     else throw new Error(`unsupported evidence reference kind: ${String((ref as {kind?:unknown}).kind)}`)
     if (!exists) throw new Error(`evidence reference is outside the current Canvas scope: ${ref.kind}:${ref.id}`)
   }

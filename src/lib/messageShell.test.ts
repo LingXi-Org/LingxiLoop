@@ -27,33 +27,24 @@ test('text, poll, artifact, handoff, and approval receive native IM presentation
   assert.equal(presentationFor('approval').attachmentHost, true)
 })
 
-test('desktop and mobile both render the native assistant-ui IM entry', async () => {
+test('desktop renders the native assistant-ui IM entry', async () => {
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const mobile = await readFile(new URL('../mobile/MobileChat.tsx', import.meta.url), 'utf8')
   assert.match(desktop, /<LingxiImMessage\b/)
-  assert.match(mobile, /<LingxiImMessage\b/)
   assert.match(desktop, /useAuiState\(\(state\) => state\.message\.metadata\.custom\)/)
-  assert.match(mobile, /useAuiState\(\(state\) => state\.message\.metadata\.custom\)/)
 })
 
-test('web, desktop, and mobile compose the shared IM core without Telegram runtime code', async () => {
+test('the desktop Web/Electron surface composes the shared IM core without Telegram runtime code', async () => {
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const mobile = await readFile(new URL('../mobile/MobileChat.tsx', import.meta.url), 'utf8')
   const desktopProfile = await readFile(new URL('../desktop/InfoPane.tsx', import.meta.url), 'utf8')
-  const mobileProfile = await readFile(new URL('../mobile/MobileParticipantInfo.tsx', import.meta.url), 'utf8')
   const desktopList = await readFile(new URL('../desktop/ConversationsPane.tsx', import.meta.url), 'utf8')
-  const mobileList = await readFile(new URL('../mobile/MobileChatList.tsx', import.meta.url), 'utf8')
   const desktopShell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const packageJson = await readFile(new URL('../../package.json', import.meta.url), 'utf8')
 
   for (const component of ['ConversationView', 'MessageList', 'ConversationHeader', 'ComposerSurface']) {
     assert.match(desktop, new RegExp(`<${component}\\b`))
-    assert.match(mobile, new RegExp(`<${component}\\b`))
   }
   assert.match(desktopProfile, /<ParticipantProfile\b/)
-  assert.match(mobileProfile, /<ParticipantProfile\b/)
   assert.match(desktopList, /<ConversationListItemContent\b/)
-  assert.match(mobileList, /<ConversationListItemContent\b/)
   assert.match(desktopShell, /<Drawer open=\{drawerOpen\}/)
   assert.match(desktopShell, /swipeDirection="right"/)
   assert.match(desktopShell, /selectedConversation\?\.kind === 'group'/)
@@ -136,7 +127,7 @@ test('desktop conversation column ends with the sidebar-07 account menu instead 
   assert.match(user, /<DropdownMenuContent[\s\S]*?side="right"/)
   assert.match(user, /Upgrade to Pro[\s\S]*?Account[\s\S]*?Billing[\s\S]*?Notifications[\s\S]*?Log out/)
   assert.match(user, /aria-label="打开账户菜单"/)
-  assert.match(user, /api\.authLogout/)
+  assert.match(user, /platformApi\.authLogout/)
   assert.match(user, /openSettings\('Usage'\)[^\n]*Upgrade to Pro/)
   assert.match(user, /openSettings\('Profile'\)[^\n]*Account/)
   assert.match(user, /openSettings\('Usage'\)[^\n]*Billing/)
@@ -149,7 +140,6 @@ test('desktop conversation column ends with the sidebar-07 account menu instead 
 test('desktop group context opens in the shared Drawer without adding a third panel', async () => {
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const chat = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const mobile = await readFile(new URL('../mobile/MobileGroupContext.tsx', import.meta.url), 'utf8')
 
   assert.match(shell, /setGroupDrawerOpen\(true\)/)
   assert.match(shell, /groupContext && groupDrawerOpen/)
@@ -157,7 +147,6 @@ test('desktop group context opens in the shared Drawer without adding a third pa
   assert.match(chat, /aria-label="打开群聊上下文"/)
   assert.match(shell, /drawerContent = <GroupContextContent/)
   assert.doesNotMatch(shell, /调整上下文栏宽度|GROUP_PANEL_MIN|GROUP_PANEL_MAX|id="detail"/)
-  assert.match(mobile, /群聊上下文分区/)
 })
 
 test('desktop group context is a flat top-bottom surface instead of bordered dashboard cards', async () => {
@@ -278,7 +267,6 @@ test('approval is a native Tool UI decision inside the shared attachment host', 
 test('agent typing state reserves a real bottom row and caps the merged label at two names', async () => {
   const indicator = await readFile(new URL('../components/messages/AgentTypingIndicator.tsx', import.meta.url), 'utf8')
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const mobile = await readFile(new URL('../mobile/MobileChat.tsx', import.meta.url), 'utf8')
   const fixtures = await readFile(new URL('../dev/mockLearningImFixtures.ts', import.meta.url), 'utf8')
   const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
 
@@ -290,12 +278,9 @@ test('agent typing state reserves a real bottom row and caps the merged label at
   assert.match(indicator, /visible\.map\(\(agent\) => agent\.name\)\.join\('、'\)/)
   assert.match(indicator, /agents\.length > MAX_VISIBLE_AGENTS \? ' 等' : ''/)
   assert.match(desktop, /<AgentTypingIndicator agents=\{typingAgents\}/)
-  assert.match(mobile, /<AgentTypingIndicator agents=\{typingAgents\}/)
   assert.match(desktop, /grid-rows-\[auto_auto_minmax\(0,1fr\)_auto_auto\]/)
   assert.match(desktop, /<\/div>\s*<AgentTypingIndicator agents=\{typingAgents\}/)
-  assert.match(mobile, /<\/div>\s*<AgentTypingIndicator agents=\{typingAgents\}/)
   assert.match(desktop, /message\.streaming !== 'placeholder'/)
-  assert.match(mobile, /message\.streaming !== 'placeholder'/)
   assert.match(fixtures, /\[MOCK_TOOL_GALLERY_ROOM_ID\]: \['mock-scout', 'mock-forge', 'mock-nova'\]/)
   assert.match(indicator, /agent-typing-indicator/)
   assert.match(css, /\.agent-typing-indicator \{\s*background: var\(--im-chat-surface, var\(--panel\)\);/)
@@ -312,7 +297,6 @@ test('self messages restore the user avatar and author name', async () => {
 test('continuation messages omit repeated identity and time while preserving compact alignment', async () => {
   const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const mobile = await readFile(new URL('../mobile/MobileChat.tsx', import.meta.url), 'utf8')
 
   assert.match(message, /data-message-continuation=\{!groupStart \? 'true' : 'false'\}/)
   assert.match(message, /!groupStart \? \(\s*<MessageAvatar className="!w-12" aria-hidden="true" \/>/)
@@ -321,8 +305,6 @@ test('continuation messages omit repeated identity and time while preserving com
   assert.doesNotMatch(message, /!isStreaming && groupEnd && <span/)
   assert.match(desktop, /continuedFromPrevious \? 'pt-px'/)
   assert.match(desktop, /continuedToNext \? 'pb-px'/)
-  assert.match(mobile, /continuedFromPrevious \? 'pt-px'/)
-  assert.match(mobile, /continuedToNext \? 'pb-px'/)
 })
 
 test('bubble reactions anchor opposite the message owner edge', async () => {

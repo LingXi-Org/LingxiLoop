@@ -33,19 +33,18 @@ When prose and implementation disagree, identify the current shipped behavior an
 - Publish exactly one durable final message. Treat model deltas and activity as previews, and keep raw Python internal or redacted.
 - Route every cloud LLM call through the tracked ledger path, including streaming completion accounting.
 
-### Persistence and migration
+### Persistence and v1 bootstrap
 
 - Use parameterized SQL, transactions for multi-write invariants, and durable idempotency for retryable side effects.
-- Verify boot migrations remain idempotent and safe with multiple pods and live traffic.
-- Update the current-schema sentinels when adding the latest required object; do not let lock-contention fallback skip a real migration.
-- Build large performance-only indexes concurrently and outside the main migration transaction. Do not make an optional optimization block boot.
+- Keep canonical DDL in `server/src/db/schema.sql` and update `bootstrap.ts` completeness checks with required objects.
+- Verify only an empty database is initialized and legacy or incomplete databases fail with reset guidance; do not add runtime migrations or startup backfills.
+- Verify Web, Worker, and Agent OS startup never creates or alters schema.
 
 ### Build, release, and vendored code
 
 - Treat workflow, lockfile, Docker, package, and release-script changes as credentialed supply-chain changes.
 - Preserve version synchronization, immutable image/tag assumptions, packaged Electron boundaries, and rollback evidence.
 - Under `third_party/open-notebook`, follow the closest `AGENTS.md`, preserve native scope-isolation tests, and update provenance when refreshing upstream.
-- Under OpenBot-tracked local files, preserve the pinned manifest/hash contract or update the provenance deliberately.
 
 ## Severity and output
 

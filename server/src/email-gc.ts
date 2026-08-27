@@ -27,6 +27,7 @@
  */
 import { pool } from './db/pool.js'
 import { env } from './env.js'
+import type { WorkerTaskHandle } from './runtime/lifecycle.js'
 import { storage, type StorageObject } from './storage.js'
 import { inc } from './metrics.js'
 
@@ -114,7 +115,7 @@ export async function runGcTick(): Promise<{ inspected: number; deleted: number;
 let timer: NodeJS.Timeout | null = null
 
 /** Start the periodic GC loop. Idempotent — re-calling is a no-op. */
-export function startEmailGcWorker(): { stop(): void } | null {
+export function startEmailGcWorker(): WorkerTaskHandle | null {
   if (timer) return { stop: stopEmailGcWorker }
   const intervalMs = env.EMAIL_GC_INTERVAL_MS
   if (intervalMs <= 0) {

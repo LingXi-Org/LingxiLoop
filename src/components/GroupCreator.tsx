@@ -3,7 +3,7 @@
  * teammates (active agents + other humans). Yetone is auto-included.
  */
 import { useMemo, useState } from 'react'
-import { api } from '@/api/client'
+import { conversationsApi } from '@/api/conversations'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import { useConversations } from '@/stores/conversations'
@@ -75,7 +75,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
     if (!finalTitle) { setErr('请填写标题或选择成员'); return }
     setBusy(true)
     try {
-      const r = await api.createGroup({ title: finalTitle, members: [...picked], leaderId, workspaceId: workspaceId ?? undefined })
+      const r = await conversationsApi.createGroup({ title: finalTitle, members: [...picked], leaderId, workspaceId: workspaceId ?? undefined })
       await useConversations.getState().reload()
       setView('conversations')
       select(r.id)

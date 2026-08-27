@@ -16,7 +16,8 @@
  * regular members.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { type ApiInvitation, type ApiInvitationWithToken, api } from '@/api/client'
+import { companiesApi } from '@/api/companies'
+import type { ApiInvitation, ApiInvitationWithToken } from '@/api/contracts'
 import { Input } from '@/components/ui/input'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
@@ -56,7 +57,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
   const reload = useCallback(async () => {
     setLoadingList(true); setListErr(null)
     try {
-      const rows = await api.listInvitations(companyId)
+      const rows = await companiesApi.listInvitations(companyId)
       setList(rows)
     } catch (e) {
       setListErr(e instanceof Error ? e.message : String(e))
@@ -84,7 +85,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
       const payload = tab === 'email'
         ? { email: email.trim(), role, note: note.trim() || null, sendEmail: emailCapable && sendEmail }
         : { multiUse: true, role, note: note.trim() || null }
-      const inv = await api.createInvitation(companyId, payload)
+      const inv = await companiesApi.createInvitation(companyId, payload)
       setCreated(inv)
       setEmail(''); setNote('')
       void reload()
@@ -103,7 +104,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
       tone: 'destructive',
     })) return
     try {
-      await toastAction(api.revokeInvitation(companyId, id), { loading: '正在撤销邀请', success: '邀请已撤销', error: '撤销邀请失败' })
+      await toastAction(companiesApi.revokeInvitation(companyId, id), { loading: '正在撤销邀请', success: '邀请已撤销', error: '撤销邀请失败' })
       void reload()
     } catch (e) {
       setListErr(e instanceof Error ? e.message : String(e))

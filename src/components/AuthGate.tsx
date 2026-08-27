@@ -1,3 +1,4 @@
+import { platformApi } from '@/api/platform'
 /**
  * AuthGate — wraps the entire app and decides whether to show the
  * sign-in screen or the real UI based on the auth store.
@@ -11,7 +12,6 @@
  *      the app loads, otherwise we fall through to AuthScreen.
  */
 import { useEffect, useState, type ReactNode } from 'react'
-import { api } from '@/api/client'
 import { useAuth } from '@/stores/auth'
 import { isElectron } from '@/lib/runtime'
 import { AuthScreen } from './AuthScreen'
@@ -71,7 +71,7 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
     if (!token) { markReady(); return }
     void (async () => {
       try {
-        const r = await api.authMe()
+        const r = await platformApi.authMe()
         if (cancelled) return
         setMe(r.user, r.companies, r.activeCompanyId)
         setServerCapabilities(r.serverCapabilities)
@@ -97,21 +97,6 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
       setSession(t, { id: '', email: '', name: '' }, companyId)
     })
     return off
-  }, [setSession])
-
-  // Native (iOS / Android): when the SFSafariViewController flow
-  // completes, lib/native.ts plants the token fragment on our location
-  // and fires `lingxiloop:oauth-token`. Consume it the same way as the
-  // top-of-mount `consumeOAuthFragment` so AuthGate's existing probe
-  // logic picks up the new token.
-  useEffect(() => {
-    const handler = () => {
-      const carried = consumeOAuthFragment()
-      if (!carried) return
-      setSession(carried.token, { id: '', email: '', name: '' }, carried.companyId)
-    }
-    window.addEventListener('lingxiloop:oauth-token', handler)
-    return () => window.removeEventListener('lingxiloop:oauth-token', handler)
   }, [setSession])
 
   if (!ready) {

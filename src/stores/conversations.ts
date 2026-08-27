@@ -1,5 +1,7 @@
+import { conversationsApi } from '@/api/conversations'
+import type { ApiConversation } from '@/api/contracts'
 import { create } from 'zustand'
-import { api, ws, type ApiConversation } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import type { Conversation } from '@/types'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
@@ -12,6 +14,9 @@ interface ConversationsState {
   loaded: boolean
   load: () => Promise<void>
   reload: () => Promise<void>
+  setLeader: (id: string, leaderId: string) => Promise<void>
+  setTitle: (id: string, title: string) => Promise<void>
+  setTopic: (id: string, topic: string | null) => Promise<void>
 }
 
 function timeFromIso(iso?: string): string {
@@ -185,7 +190,7 @@ export const useConversations = create<ConversationsState>((set) => ({
     set({ list: [], loaded: false })
     lingxiIm.setWorkspaceChannels([])
     try {
-      const list = await api.getConversations()
+      const list = await conversationsApi.getConversations()
       const conversations = list.map(fromApi)
       lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations, loaded: true })
@@ -196,7 +201,7 @@ export const useConversations = create<ConversationsState>((set) => ({
   },
   async reload() {
     try {
-      const list = await api.getConversations()
+      const list = await conversationsApi.getConversations()
       const conversations = list.map(fromApi)
       lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations })
@@ -204,6 +209,36 @@ export const useConversations = create<ConversationsState>((set) => ({
     } catch (err) {
       console.warn('[conversations] reload failed', err)
     }
+  },
+  async setLeader(id, leaderId) {
+    let previous: string | null = null
+    set((state) => ({ list: state.list.map((item) => {
+      if (item.id !== id) return item
+      previous = item.leaderId ?? null
+      return { ...item, leaderId }
+    }) }))
+    try { await conversationsApi.setLeader(id, leaderId) }
+    catch (error) { set((state) => ({ list: state.list.map((item) => item.id === id ? { ...item, leaderId: previous } : item) })); throw error }
+  },
+  async setTitle(id, title) {
+    let previous = ''
+    set((state) => ({ list: state.list.map((item) => {
+      if (item.id !== id) return item
+      previous = item.title
+      return { ...item, title }
+    }) }))
+    try { await conversationsApi.setTitle(id, title) }
+    catch (error) { set((state) => ({ list: state.list.map((item) => item.id === id ? { ...item, title: previous } : item) })); throw error }
+  },
+  async setTopic(id, topic) {
+    let previous: string | null = null
+    set((state) => ({ list: state.list.map((item) => {
+      if (item.id !== id) return item
+      previous = item.topic ?? null
+      return { ...item, topic }
+    }) }))
+    try { await conversationsApi.setTopic(id, topic) }
+    catch (error) { set((state) => ({ list: state.list.map((item) => item.id === id ? { ...item, topic: previous } : item) })); throw error }
   },
 }))
 
@@ -227,8 +262,8 @@ export function bootConversations() {
       return
     }
     if (e.type === 'message.new' || e.type === 'group.pulled') {
-      // Do not infer "read" from selection alone. MessageList advances the
-      // durable cursor from Virtuoso's actually visible range.
+      // Read cursors advance only from the visible-range observer in the
+      // message store. Arrival alone is not proof that a message was seen.
       void useConversations.getState().reload()
     } else if (e.type === 'conversation.updated') {
       // Surgical patch — apply patch fields to the matching conversation in

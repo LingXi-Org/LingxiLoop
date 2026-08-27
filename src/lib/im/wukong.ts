@@ -1,5 +1,6 @@
+import { getServerOrigin } from '@/api/core/http'
 import WKSDK, { MessageContent, type WKEvent, type Message as WKMessage } from 'wukongimjssdk'
-import { getServerOrigin } from '@/api/client'
+import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
 import { isEmptyHistoryDetail, isInternalAgentStatus } from './historyErrors'
 
@@ -125,7 +126,7 @@ export class LingxiImClient {
 
   async connect(): Promise<void> {
     if (this.started && this.sdk.connectManager.connected()) return
-    const response = await fetch(`${getServerOrigin()}/api/im/bootstrap`, { headers: authHeaders() })
+    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/bootstrap`, { headers: authHeaders() })
     if (!response.ok) throw new Error(`IM bootstrap failed: ${response.status}`)
     const bootstrap = await response.json() as Bootstrap
     this.sdk.config.uid = bootstrap.uid
@@ -152,7 +153,7 @@ export class LingxiImClient {
   }
 
   async history(channelId: string, limit = 80): Promise<ImEnvelope[]> {
-    const response = await fetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?limit=${limit}`, { headers: authHeaders() })
+    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?limit=${limit}`, { headers: authHeaders() })
     if (!response.ok) {
       const detail = await response.text().catch(() => '')
       // Older API deployments can forward WuKongIM's empty-channel result as
@@ -169,7 +170,7 @@ export class LingxiImClient {
   }
 
   async send(channelId: string, payload: LingxiMessageV1, channelType = 2): Promise<ImEnvelope> {
-    const response = await fetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages/accept`, {
+    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages/accept`, {
       method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.clientMsgNo, payload, channelType }),
     })
     if (!response.ok) {
@@ -181,7 +182,7 @@ export class LingxiImClient {
   }
 
   async sendStatus(clientNonce: string): Promise<{ status: string; echo?: ImEnvelope; error?: string }> {
-    const response = await fetch(`${getServerOrigin()}/api/im/sends/${encodeURIComponent(clientNonce)}`, { headers: authHeaders() })
+    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/sends/${encodeURIComponent(clientNonce)}`, { headers: authHeaders() })
     if (response.status === 404) return { status: 'missing' }
     if (!response.ok) throw new Error(`IM send recovery failed: ${response.status}`)
     return await response.json() as { status: string; echo?: ImEnvelope; error?: string }

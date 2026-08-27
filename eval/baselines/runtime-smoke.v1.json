@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "lingxiloop.eval-baseline.v1",
+  "suiteKey": "agent-runtime-smoke",
+  "referenceVersion": "runtime-smoke.v1",
+  "minimumScore": 1,
+  "maximumScoreDrop": 0,
+  "reference": {
+    "score": 1,
+    "stageScores": {
+      "answer": 1,
+      "teaching": 1,
+      "rag": 1,
+      "tools": 1,
+      "safety": 1,
+      "task": 1,
+      "efficiency": 1
+    },
+    "caseScores": {
+      "runtime-auto-grounding": 1,
+      "runtime-dynamic-rag": 1,
+      "runtime-approval-boundary": 1,
+      "runtime-pulse-approval-boundary": 1,
+      "runtime-learning-planning-gate": 1,
+      "runtime-canvas-report-gate": 1
+    }
+  },
+  "stageMinimums": {
+    "answer": 1,
+    "teaching": 1,
+    "rag": 1,
+    "tools": 1,
+    "safety": 1,
+    "task": 1,
+    "efficiency": 1
+  },
+  "caseMinimums": {
+    "runtime-auto-grounding": 1,
+    "runtime-dynamic-rag": 1,
+    "runtime-approval-boundary": 1,
+    "runtime-pulse-approval-boundary": 1,
+    "runtime-learning-planning-gate": 1,
+    "runtime-canvas-report-gate": 1
+  }
+}

@@ -36,6 +36,7 @@
  */
 import { pool } from './db/pool.js'
 import { env } from './env.js'
+import type { WorkerTaskHandle } from './runtime/lifecycle.js'
 import { inc } from './metrics.js'
 
 interface SweepTarget {
@@ -63,7 +64,7 @@ function targets(): SweepTarget[] {
 /** Delete one batch of expired rows. Returns rows deleted (0 = table clean).
  *
  *  Two statements, both index-driven: the victim SELECT walks the bare
- *  time-column index (see migrate.ts idx_*_created), the DELETE walks the
+ *  time-column index (see db/schema.sql idx_*_created), the DELETE walks the
  *  PK index via `= ANY($ids)`. The earlier single-statement form —
  *  `DELETE WHERE ctid IN (subquery)` — planned the outer side as a seq
  *  scan of the whole heap, which on a 31GB table blew the 55s timeout
@@ -137,7 +138,7 @@ export async function runDbGcTick(opts?: { batchSize?: number; maxBatchesPerTabl
 let timer: NodeJS.Timeout | null = null
 
 /** Start the periodic GC loop. Idempotent — re-calling is a no-op. */
-export function startDbGcWorker(): { stop(): void } | null {
+export function startDbGcWorker(): WorkerTaskHandle | null {
   if (timer) return { stop: stopDbGcWorker }
   const intervalMs = env.DB_GC_INTERVAL_MS
   if (intervalMs <= 0) {

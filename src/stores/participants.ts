@@ -1,5 +1,7 @@
+import { agentsApi } from '@/api/agents'
+import type { ApiParticipant } from '@/api/contracts'
 import { create } from 'zustand'
-import { type ApiParticipant, api, ws } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import { clearAvatarCache, invalidateAvatar } from '@/lib/avatarCache'
 import type { Participant, Status } from '@/types'
 
@@ -40,7 +42,7 @@ function normalizeStatus(status: Status, updatedAt?: string): Status {
  *  difference is whether they pre-clear state. */
 async function fetchInto(set: (partial: Partial<ParticipantsState>) => void): Promise<void> {
   try {
-    const list = await api.getParticipants()
+    const list = await agentsApi.getParticipants()
     const byId: Record<string, Participant> = {}
     for (const p of list) byId[p.id] = fromApi(p)
     set({ byId, loaded: true })

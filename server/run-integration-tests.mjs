@@ -16,6 +16,9 @@
  *        export INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test
  *   4. npm run test:integration
  *
+ * Run one or more owning files without enumerating the full suite:
+ *   npm run test:integration -- --file eval.test.ts
+ *
  * If INTEGRATION_DATABASE_URL is unset we print a one-line "skipped" and
  * exit 0 — so this script slots into CI / pre-commit hooks without
  * forcing every developer to maintain a test DB.
@@ -30,6 +33,53 @@ import { dirname, join } from 'node:path'
 // dotenv/config via env.ts, so this is mostly belt-and-braces — the
 // gating checks below need them present in THIS process.
 import 'dotenv/config'
+
+function integrationFileArgs(argv) {
+  const files = []
+  for (let index = 0; index < argv.length; index += 1) {
+    const argument = argv[index]
+    if (argument === '--file') {
+      const value = argv[index + 1]
+      if (!value || value.startsWith('--')) throw new Error('--file requires an integration test filename')
+      files.push(value)
+      index += 1
+      continue
+    }
+    throw new Error(`unknown argument: ${argument}`)
+  }
+  return [...new Set(files)]
+}
+
+let requestedFiles
+try {
+  requestedFiles = integrationFileArgs(process.argv.slice(2))
+} catch (error) {
+  console.error(`[integration] ${error instanceof Error ? error.message : String(error)}`)
+  process.exit(2)
+}
+
+const here = dirname(fileURLToPath(import.meta.url))
+const integrationDir = join(here, 'src/__integration__')
+const availableFiles = readdirSync(integrationDir)
+  .filter((name) => name.endsWith('.test.ts'))
+  .sort()
+if (requestedFiles.some((name) => name.includes('/') || name.includes('\\') || !name.endsWith('.test.ts'))) {
+  console.error('[integration] --file accepts basenames ending in .test.ts from server/src/__integration__ only')
+  process.exit(2)
+}
+const missingFiles = requestedFiles.filter((name) => !availableFiles.includes(name))
+if (missingFiles.length > 0) {
+  console.error(`[integration] unknown test file(s): ${missingFiles.join(', ')}`)
+  process.exit(2)
+}
+const LIVE_RESEND = process.env.RESEND_LIVE_TEST === '1'
+const defaultFiles = availableFiles.filter((name) => name !== 'resend-live.test.ts' || LIVE_RESEND)
+const selectedFiles = requestedFiles.length > 0 ? requestedFiles : defaultFiles
+const testFiles = selectedFiles.map((name) => join(integrationDir, name))
+if (testFiles.length === 0) {
+  console.error(`[integration] no test files found under ${integrationDir}`)
+  process.exit(2)
+}
 
 const INTEGRATION_URL = process.env.INTEGRATION_DATABASE_URL
 if (!INTEGRATION_URL) {
@@ -66,7 +116,6 @@ if (!process.env.LINGXILOOP_DISABLE_EMBEDDINGS) process.env.LINGXILOOP_DISABLE_E
 // the live path: keep the real key + real EMAIL_DOMAIN, and the
 // resend-live.test.ts spec runs against Resend's magic test addresses
 // (delivered@resend.dev / bounced@resend.dev — these consume no quota).
-const LIVE_RESEND = process.env.RESEND_LIVE_TEST === '1'
 if (!LIVE_RESEND) {
   process.env.RESEND_API_KEY = ''
   if (!process.env.EMAIL_DOMAIN) process.env.EMAIL_DOMAIN = 'lingxiloop.local'
@@ -87,25 +136,18 @@ if (!process.env.EMAIL_INBOUND_HMAC_SECRET) process.env.EMAIL_INBOUND_HMAC_SECRE
 
 // Forward to node --import tsx --test against the integration suite.
 // tsx handles TypeScript; node:test handles the test runner.
-const here = dirname(fileURLToPath(import.meta.url))
-const integrationDir = join(here, 'src/__integration__')
-const testFiles = readdirSync(integrationDir)
-  .filter((name) => name.endsWith('.test.ts'))
-  .sort()
-  .map((name) => join(integrationDir, name))
-if (testFiles.length === 0) {
-  console.error(`[integration] no test files found under ${integrationDir}`)
-  process.exit(2)
-}
+console.log(`[integration] running ${selectedFiles.length}/${availableFiles.length} file(s): ${selectedFiles.join(', ')}`)
 // --test-concurrency=1 serializes test FILES. Default is N-cpu which
 // causes deadlocks here: every file's beforeEach TRUNCATEs the same
 // tables on the shared test DB; two TRUNCATE CASCADE statements running
 // concurrently against overlapping tables deadlock at the catalog-lock
-// level. We're not trying to optimize wall-time for this suite, so
-// serializing is the right trade.
+// level. --test-force-exit prevents a failed spec with a leaked socket or
+// timer from hiding the actual assertion behind the workflow timeout.
+// We're not trying to optimize wall-time for this suite, so serializing is
+// the right trade.
 const child = spawn(
   'node',
-  ['--import', 'tsx', '--test', '--test-concurrency=1', ...testFiles],
+  ['--import', 'tsx', '--test', '--test-concurrency=1', '--test-force-exit', ...testFiles],
   { stdio: 'inherit', env: process.env },
 )
 child.on('exit', (code) => process.exit(code ?? 1))

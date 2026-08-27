@@ -39,8 +39,9 @@ import { storage } from './storage.js'
 import { provisionUser as provisionSub2apiUser, sub2apiConfigured } from './sub2api.js'
 import { isWaitlistEnabled, enqueueWaitlist, isAllowlistedAdmin } from './admin.js'
 import { discoverOidc, normalizeOidcProfile, type OidcProfile } from './oidc.js'
+import { isAllowedReturnUrl } from './oauth-return-url.js'
 
-export type Provider = 'lingxi' | 'google' | 'github' | 'apple'
+export type Provider = 'lingxi' | 'google' | 'github'
 
 interface ProviderConfig {
   authorizeUrl: string
@@ -114,14 +115,10 @@ interface StateData {
 }
 
 /** Validate a client-supplied return URL against the configured allow-list.
- *  Without this we'd have an open redirect: an attacker could craft a
- *  provider-callback chain that delivers the user's token to any origin
- *  via the fragment. The check is a strict-prefix match so subpaths are
- *  fine (`http://localhost:5180/anything`) but origin spoofs aren't
- *  (`http://evil.com?https://loop.example.com/`). */
+ *  Parsed URL components are compared so serialized-prefix tricks cannot
+ *  spoof an allowed host, port, custom-scheme callback, or path boundary. */
 export function returnUrlAllowed(url: string): boolean {
-  if (!url) return false
-  return env.AUTH_RETURN_ALLOWLIST.some((prefix) => url.startsWith(prefix))
+  return isAllowedReturnUrl(url, env.AUTH_RETURN_ALLOWLIST)
 }
 
 /** Mint a state token, save it + the requested return URL + optional invite
@@ -349,27 +346,10 @@ export async function completeFlow(
   return await findOrCreateUserByProfile(p, profile, inviteToken)
 }
 
-/** The find-or-create transaction. Provider-agnostic — works for
- *  Google / GitHub (OAuth2 code exchange path) AND Apple (native
- *  identity_token path). The caller is responsible for getting the
- *  `profile` populated however it can (REST userinfo, JWT claims,
- *  etc.) before invoking this. */
-/** Length of the Pro trial granted to net-new users signing up with
- *  Sign in with Apple (the native iOS path — the ONLY signup that gets a
- *  trial). Exists so the App Store review experience (and every fresh
- *  SIWA user) lands in a LIVE workspace — cloud starter agents that
- *  actually respond. The trial-sweep worker downgrades the
- *  tier back to 'free' after expiry. */
-const APPLE_SIGNUP_TRIAL_DAYS = 7
-
 export async function findOrCreateUserByProfile(
   p: Provider,
   profile: NormalizedProfile,
   inviteToken: string | null = null,
-  /** Grant the Apple-signup Pro trial when this is a brand-new user.
-   *  Only the native SIWA route passes true; existing users (Paths A/B)
-   *  are never re-granted. */
-  appleSignupTrial = false,
 ): Promise<CompletionResult> {
   // Find-or-create. Race-safe by leaning on (provider, provider_id) PK and
   // (email_lower) lookup inside a single transaction.
@@ -432,16 +412,10 @@ export async function findOrCreateUserByProfile(
     // leave a stray "Their Name's workspace" they never wanted (the
     // invite-onboarding bug, pre-fix).
     const userId = `u-${randomUUID().slice(0, 12)}`
-    // Apple signups start on a Pro trial (see APPLE_SIGNUP_TRIAL_DAYS) so
-    // their first session has working cloud starter agents. Committed with
-    // the user row before post-commit workspace setup runs.
-    // and seeds the cloud starters immediately.
-    const trialTier = appleSignupTrial ? 'pro' : 'free'
     await client.query(
-      `INSERT INTO users (id, email, display_name, password_hash, email_verified_at, is_admin, tier, pro_trial_expires_at)
-         VALUES ($1, $2, $3, NULL, NOW(), $4, $5,
-                 CASE WHEN $5 = 'pro' THEN NOW() + make_interval(days => $6) END)`,
-      [userId, profile.email, profile.displayName, isAllowlistedAdmin(profile.email), trialTier, APPLE_SIGNUP_TRIAL_DAYS],
+      `INSERT INTO users (id, email, display_name, password_hash, email_verified_at, is_admin, tier)
+         VALUES ($1, $2, $3, NULL, NOW(), $4, 'free')`,
+      [userId, profile.email, profile.displayName, isAllowlistedAdmin(profile.email)],
     )
     await client.query(
       `INSERT INTO user_identities (provider, provider_id, user_id, email_lower)
@@ -511,7 +485,7 @@ export async function findOrCreateUserByProfile(
           lingxiloopUserId: userId,
           email: profile.email,
           displayName: profile.displayName,
-          tier: trialTier,
+          tier: 'free',
         })
         await pool.query(
           `UPDATE users SET sub2api_user_id = $1, sub2api_api_key = $2 WHERE id = $3`,
@@ -635,102 +609,6 @@ export async function handleCallback(args: {
     detail: { provider: args.provider, email: result.email },
   })
   return doneUrl(args.returnUrl ?? env.AUTH_DONE_URL, token, result.companyId)
-}
-
-/** Native Sign in with Apple — the iOS app already drove the
- *  ASAuthorization flow, got an `identity_token` JWT from Apple, and
- *  POSTs it here. We verify the JWT, find-or-create the user, and
- *  return a freshly-minted session token + companyId as JSON. No
- *  browser redirect involved (this is a fetch from the native app).
- *
- *  Apple-specific subtleties handled here:
- *   - `email` and `name` are only populated by Apple on the user's
- *     FIRST sign-in to our app — subsequent sign-ins return a JWT
- *     with `sub` only. Clients can pass cached email/name as a
- *     fallback for users who reinstalled the app, but the primary
- *     identifier is always `sub` via the user_identities lookup. */
-export async function handleAppleNativeSignIn(args: {
-  identityToken: string
-  /** Email passed from the JS layer on FIRST sign-in only, when
-   *  Apple's native callback populated it. Lowercased before use. */
-  fallbackEmail?: string | null
-  /** Name passed from the JS layer on FIRST sign-in only. Used only
-   *  when creating a brand-new user row. */
-  fallbackName?: string | null
-  /** Bundle id(s) the JWT's `aud` must match — usually just our app's
-   *  bundle id. Passed in so the test/dev shell can override. */
-  audiences: string[]
-  /** Pending invite token, if the sign-in started from an /invite/...
-   *  link. Same semantics as the Google/GitHub callback. */
-  inviteToken?: string | null
-  ip: string | null
-  userAgent: string | null
-}): Promise<{ token: string; userId: string; email: string; displayName: string; companyId: string | null }> {
-  const { verifyAppleIdentityToken } = await import('./apple.js')
-  const claims = await verifyAppleIdentityToken(args.identityToken, args.audiences)
-  // Email: from JWT if Apple included it; otherwise the client's
-  // cached fallback. Throw if neither — Apple flat-out won't tell us
-  // and we need *something* for the user record on first sign-in.
-  // (After path A exists, neither email is needed — the linked
-  // user_identities row resolves the user by `sub` alone, and we
-  // pass the still-required `email` placeholder through to finalize.)
-  const linked = await pool.query<{ user_id: string; email_lower: string }>(
-    `SELECT user_id, email_lower FROM user_identities
-      WHERE provider = $1 AND provider_id = $2`,
-    ['apple', claims.sub],
-  )
-  const knownEmail = linked.rows[0]?.email_lower ?? null
-  const email = (claims.email ?? args.fallbackEmail ?? knownEmail ?? '').toLowerCase().trim()
-  if (!email) {
-    throw new Error('apple sign-in: email not available (first-time sign-ins must include the email Apple returned)')
-  }
-  const displayName = (args.fallbackName ?? email.split('@')[0] ?? 'You').trim() || 'You'
-
-  let result: CompletionResult
-  try {
-    // Native SIWA route — the only signup path that grants the Pro trial.
-    result = await findOrCreateUserByProfile('apple', {
-      providerId: claims.sub,
-      email,
-      displayName,
-      avatarUrl: null,
-    }, args.inviteToken ?? null, true)
-  } catch (e) {
-    if (e instanceof WaitlistedError) {
-      await audit({
-        kind: 'signup_waitlisted',
-        ip: args.ip, userAgent: args.userAgent,
-        detail: { provider: 'apple', email: e.email },
-      })
-      throw e
-    }
-    if (e instanceof SuspendedError) {
-      await audit({
-        kind: 'login_suspended',
-        ip: args.ip, userAgent: args.userAgent,
-        detail: { provider: 'apple', email: e.email, reason: e.reason },
-      })
-      throw e
-    }
-    throw e
-  }
-  const { token } = await createSession(result.userId, {
-    ip: args.ip ?? undefined, ua: args.userAgent ?? undefined,
-  })
-  await audit({
-    kind: 'login',
-    userId: result.userId,
-    companyId: result.companyId,
-    ip: args.ip, userAgent: args.userAgent,
-    detail: { provider: 'apple', email: result.email },
-  })
-  return {
-    token,
-    userId: result.userId,
-    email: result.email,
-    displayName: result.displayName,
-    companyId: result.companyId,
-  }
 }
 
 /** Sibling to doneUrl/errorUrl. `?waitlist=1&email=...` tells the

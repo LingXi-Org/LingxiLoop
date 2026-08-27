@@ -1,4 +1,4 @@
-import type { LearningActivity, LearningCourse, LearningDashboard, LearningObjective, TeacherAgentSummary } from '@/types'
+import type { LearningActivity, LearningCourse, LearningDashboard, LearningObjective, TeacherAgentSummary } from '@/api/contracts'
 import { useMessages } from '@/stores/messages'
 import { MOCK_TEACHER_ROOM_ID } from './mockLearningImFixtures'
 
@@ -28,7 +28,7 @@ let course: LearningCourse = {
   title: '线性代数：从概念到迁移项目',
   description: '通过清晰的学习任务、分层练习、证据评价和间隔复习掌握线性代数。',
   status: 'active',
-  roles: ['teacher', 'learner'],
+  courseRole: 'teacher',
   roomCount: 2,
   objectiveCount: 4,
   learnerCount: 2,
@@ -88,7 +88,7 @@ const progress = [
 ]
 
 let preferences: Record<string, unknown> = {
-  course_id: courseId, in_app_enabled: true, push_enabled: false, email_enabled: false,
+  course_id: courseId, in_app_enabled: true, email_enabled: false,
   timezone: 'Asia/Shanghai', preferred_time: '19:00', quiet_start: '22:00', quiet_end: '08:00',
 }
 
@@ -135,42 +135,37 @@ export async function mockLearningHttp<T>(path: string, init?: RequestInit): Pro
     useMessages.setState((state)=>({byConvo:{...state.byConvo,[MOCK_TEACHER_ROOM_ID]:(state.byConvo[MOCK_TEACHER_ROOM_ID]??[]).map((message)=>message.approval?.id==='mock-pulse-publish'?{...message,approval:{...message.approval,status:approved?'approved':'rejected',resolvedAt:new Date().toISOString(),resolvedBy:'mock-me'}}:message)}}))
     result={ok:true,approved,result:approved?{ok:true}:undefined,error:null}
   }
-  else if (method === 'GET' && url.pathname === '/learning/courses') result = [course]
-  else if (method === 'POST' && url.pathname === '/learning/courses') {
-    course = { ...course, id: `mock-course-${Date.now()}`, projectId: String(data.projectId), title: String(data.title), description: String(data.description ?? ''), roles: data.roles as LearningCourse['roles'], status: 'draft', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-    result = course
-  } else if (parts[0] === 'learning' && parts[1] === 'courses' && parts[2] === course.id) {
-    if (method === 'PATCH' && parts.length === 3) { course = { ...course, ...data, updatedAt: new Date().toISOString() } as LearningCourse; result = course }
-    else if(method==='GET'&&parts[3]==='teacher-agent')result=teacherAgent
-    else if (method === 'GET' && parts[3] === 'objectives') result = objectives
-    else if (method === 'POST' && parts[3] === 'objectives' && parts.length === 4) {
+  else if (parts[0] === 'courses' && parts[1] === course.id) {
+    if(method==='GET'&&parts[2]==='teacher-agent')result=teacherAgent
+    else if (method === 'GET' && parts[2] === 'objectives') result = objectives
+    else if (method === 'POST' && parts[2] === 'objectives' && parts.length === 3) {
       const created = (data.objectives as Array<Record<string, unknown>>).map((item, index): LearningObjective => ({ id: `mock-objective-${Date.now()}-${index}`, courseId, title: String(item.title), successCriteria: String(item.successCriteria), targetLevel: Number(item.targetLevel ?? 3) as 1 | 2 | 3 | 4, position: objectives.length + index + 1, status: 'draft', prerequisiteIds: (item.prerequisiteIds as string[] | undefined) ?? [] }))
       objectives = [...objectives, ...created]; course = { ...course, objectiveCount: objectives.length }; result = created
-    } else if (method === 'POST' && parts[3] === 'objectives' && parts[5] === 'status') {
-      objectives = objectives.map((item) => item.id === parts[4] ? { ...item, status: String(data.status) as LearningObjective['status'] } : item); result = { ok: true }
-    } else if (method === 'GET' && parts[3] === 'activities') result = activities
-    else if (method === 'POST' && parts[3] === 'activities' && parts.length === 4) {
+    } else if (method === 'POST' && parts[2] === 'objectives' && parts[4] === 'status') {
+      objectives = objectives.map((item) => item.id === parts[3] ? { ...item, status: String(data.status) as LearningObjective['status'] } : item); result = { ok: true }
+    } else if (method === 'GET' && parts[2] === 'activities') result = activities
+    else if (method === 'POST' && parts[2] === 'activities' && parts.length === 3) {
       const created: LearningActivity = { ...(data as unknown as Omit<LearningActivity, 'id' | 'courseId' | 'status'>), id: `mock-activity-${Date.now()}`, courseId, status: 'draft' }
       activities = [created, ...activities]; result = created
-    } else if (method === 'POST' && parts[3] === 'activities' && parts[5] === 'publish') {
-      activities = activities.map((item) => item.id === parts[4] ? { ...item, status: 'published' } : item); result = { ok: true }
-    } else if (method === 'POST' && parts[3] === 'activities' && parts[5] === 'close') {
-      activities = activities.map((item) => item.id === parts[4] ? { ...item, status: 'closed' } : item); result = { ok: true }
-    } else if (method === 'POST' && parts[3] === 'activities' && parts[5] === 'submit') {
+    } else if (method === 'POST' && parts[2] === 'activities' && parts[4] === 'publish') {
+      activities = activities.map((item) => item.id === parts[3] ? { ...item, status: 'published' } : item); result = { ok: true }
+    } else if (method === 'POST' && parts[2] === 'activities' && parts[4] === 'close') {
+      activities = activities.map((item) => item.id === parts[3] ? { ...item, status: 'closed' } : item); result = { ok: true }
+    } else if (method === 'POST' && parts[2] === 'activities' && parts[4] === 'submit') {
       const id = `mock-attempt-${Date.now()}`
-      evidence = [{ id, activity_id: parts[4], learner_id: 'mock-me', assistance: data.assistance ?? 'none', demonstrated_level: null, feedback: null, status: 'pending', created_at: new Date().toISOString() }, ...evidence]
+      evidence = [{ id, activity_id: parts[3], learner_id: 'mock-me', assistance: data.assistance ?? 'none', demonstrated_level: null, feedback: null, status: 'pending', created_at: new Date().toISOString() }, ...evidence]
       result = { attemptId: id }
-    } else if (method === 'GET' && parts[3] === 'missions') result = missions
-    else if(method==='PATCH'&&parts[3]==='missions'&&parts[5]==='coordinator') { missions=missions.map((mission)=>mission.id===parts[4]?{...mission,coordinatorAgentId:String(data.agentId),coordinatorName:String(data.agentId).replace('mock-','')}:mission);result=missions.find((mission)=>mission.id===parts[4]) }
-    else if (method === 'GET' && parts[3] === 'evidence') result = evidence
-    else if (method === 'GET' && parts[3] === 'reviews') result = reviews
-    else if (method === 'GET' && parts[3] === 'progress') result = progress
-    else if (method === 'POST' && parts[3] === 'reviews' && parts.length === 5) {
-      reviews = reviews.filter((item) => item.id !== parts[4]); result = { ok: true, decision: data.decision }
-    } else if (method === 'PUT' && (parts[3] === 'rooms' || parts[3] === 'members')) result = { ok: true }
+    } else if (method === 'GET' && parts[2] === 'missions') result = missions
+    else if(method==='PATCH'&&parts[2]==='missions'&&parts[4]==='coordinator') { missions=missions.map((mission)=>mission.id===parts[3]?{...mission,coordinatorAgentId:String(data.agentId),coordinatorName:String(data.agentId).replace('mock-','')}:mission);result=missions.find((mission)=>mission.id===parts[3]) }
+    else if (method === 'GET' && parts[2] === 'evidence') result = evidence
+    else if (method === 'GET' && parts[2] === 'reviews') result = reviews
+    else if (method === 'GET' && parts[2] === 'progress') result = progress
+    else if (method === 'POST' && parts[2] === 'reviews' && parts.length === 4) {
+      reviews = reviews.filter((item) => item.id !== parts[3]); result = { ok: true, decision: data.decision }
+    } else if (method === 'PUT' && parts[2] === 'rooms') result = { ok: true }
   } else if (method === 'GET' && url.pathname === '/learning/notification-preferences') result = preferences
   else if (method === 'PUT' && url.pathname === '/learning/notification-preferences') {
-    preferences = { ...preferences, course_id: data.courseId ?? courseId, in_app_enabled: data.inAppEnabled, push_enabled: data.pushEnabled, email_enabled: data.emailEnabled, timezone: data.timezone, preferred_time: data.preferredTime, quiet_start: data.quietStart ?? null, quiet_end: data.quietEnd ?? null }
+    preferences = { ...preferences, course_id: data.courseId ?? courseId, in_app_enabled: data.inAppEnabled, email_enabled: data.emailEnabled, timezone: data.timezone, preferred_time: data.preferredTime, quiet_start: data.quietStart ?? null, quiet_end: data.quietEnd ?? null }
     result = preferences
   } else if (method === 'GET' && url.pathname === '/learning/deliveries') result = deliveries
 

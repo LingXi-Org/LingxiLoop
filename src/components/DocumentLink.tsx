@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useDocuments } from '@/stores/documents'
 import { useResolvedDocumentId } from '@/lib/useArtifactId'
 import { IFile } from './icons'
@@ -9,7 +10,7 @@ export function DocumentLink({ id: rawId }: { id: string }) {
   const id = useResolvedDocumentId(rawId)
   const setView = useApp((s) => s.setView)
   const view = useApp((s) => s.view)
-  const openDocumentPeek = useApp((s) => s.openDocumentPeek)
+  const openDocumentPeek = useSurface((s) => s.openDocumentPeek)
   const selectDocument = useDocuments((s) => s.select)
   const loaded = useDocuments((s) => s.loaded)
   const loadDocuments = useDocuments((s) => s.load)

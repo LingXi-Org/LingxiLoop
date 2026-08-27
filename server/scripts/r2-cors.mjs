@@ -4,8 +4,8 @@
  *
  * Why this exists: the client uploads images by asking the server for a
  * presigned PUT URL (POST /api/uploads/presign) and then PUTting the raw
- * bytes *directly from the browser* to R2 (see src/api/client.ts →
- * `uploadFile`). That cross-origin PUT triggers a CORS preflight, so the
+ * bytes *directly from the browser* to R2 (see src/api/files.ts →
+ * `filesApi.uploadFile`). That cross-origin PUT triggers a CORS preflight, so the
  * R2 bucket itself must allow our renderer origins — the API server's
  * LINGXILOOP_CORS_ORIGINS does NOT cover it. Without a bucket CORS policy the
  * preflight gets no Access-Control-Allow-Origin and the browser rejects
@@ -29,9 +29,18 @@
  * Inspect the current policy without changing anything:
  *
  *   node server/scripts/r2-cors.mjs --print
+ *
+ * Verify that the current policy supports every required origin:
+ *
+ *   node server/scripts/r2-cors.mjs --check
  */
 import 'dotenv/config'
 import { S3Client, PutBucketCorsCommand, GetBucketCorsCommand } from '@aws-sdk/client-s3'
+import {
+  assertR2CorsRules,
+  buildR2CorsRules,
+  uniqueOrigins,
+} from './r2-cors-policy.mjs'
 
 // Origins that must be allowed to PUT directly to R2. Keep these in sync
 // with how each surface loads its renderer:
@@ -39,16 +48,15 @@ import { S3Client, PutBucketCorsCommand, GetBucketCorsCommand } from '@aws-sdk/c
 //   - http://localhost:5180 → Electron dev renderer (electron/main.cjs DEV_URL)
 //   - app://lingxiloop          → packaged Electron (main.cjs loadURL app://lingxiloop/...)
 // Extra origins (prod web, alternate ports, …) come from CLI args.
-const DEFAULT_ORIGINS = [
-  'http://localhost:5173',
-  'http://localhost:5180',
-  'app://lingxiloop',
-]
-
 const cliArgs = process.argv.slice(2)
 const printOnly = cliArgs.includes('--print')
-const extraOrigins = cliArgs.filter((a) => !a.startsWith('--'))
-const origins = [...new Set([...DEFAULT_ORIGINS, ...extraOrigins])]
+const checkOnly = cliArgs.includes('--check')
+const environmentOrigins = [
+  process.env.LINGXILOOP_PUBLIC_ORIGIN ?? '',
+  ...(process.env.R2_CORS_EXTRA_ORIGINS ?? '').split(','),
+]
+const extraOrigins = [...environmentOrigins, ...cliArgs.filter((a) => !a.startsWith('--'))]
+const origins = uniqueOrigins(extraOrigins)
 
 const { R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY } = process.env
 const missing = [
@@ -70,42 +78,44 @@ const client = new S3Client({
   credentials: { accessKeyId: R2_ACCESS_KEY_ID, secretAccessKey: R2_SECRET_ACCESS_KEY },
 })
 
-async function printCurrent(label) {
+async function readCurrent(label) {
   try {
     const cur = await client.send(new GetBucketCorsCommand({ Bucket: R2_BUCKET }))
-    console.log(`[r2-cors] ${label}:`, JSON.stringify(cur.CORSRules ?? [], null, 2))
+    const rules = cur.CORSRules ?? []
+    console.log(`[r2-cors] ${label}:`, JSON.stringify(rules, null, 2))
+    return rules
   } catch (e) {
     // R2 returns NoSuchCORSConfiguration when nothing is set yet.
-    if (e?.name === 'NoSuchCORSConfiguration') console.log(`[r2-cors] ${label}: (none set)`)
+    if (e?.name === 'NoSuchCORSConfiguration') {
+      console.log(`[r2-cors] ${label}: (none set)`)
+      return []
+    }
     else throw e
   }
 }
 
 if (printOnly) {
-  await printCurrent(`current CORS for ${R2_BUCKET}`)
+  await readCurrent(`current CORS for ${R2_BUCKET}`)
+  process.exit(0)
+}
+
+if (checkOnly) {
+  const rules = await readCurrent(`current CORS for ${R2_BUCKET}`)
+  assertR2CorsRules(rules, origins)
+  console.log(`[r2-cors] verified presigned PUT policy for ${origins.length} origins`)
   process.exit(0)
 }
 
 await client.send(new PutBucketCorsCommand({
   Bucket: R2_BUCKET,
   CORSConfiguration: {
-    CORSRules: [
-      {
-        AllowedOrigins: origins,
-        // PUT is what the browser upload does. GET/HEAD are harmless and
-        // cover any future cross-origin presigned read.
-        AllowedMethods: ['PUT', 'GET', 'HEAD'],
-        // "*" so the preflight's Access-Control-Request-Headers (Content-Type,
-        // and anything we add later) always passes.
-        AllowedHeaders: ['*'],
-        ExposeHeaders: ['ETag'],
-        MaxAgeSeconds: 3600,
-      },
-    ],
+    CORSRules: buildR2CorsRules(origins),
   },
 }))
 
 console.log(`[r2-cors] ✅ applied to bucket "${R2_BUCKET}" for origins:`)
 for (const o of origins) console.log(`            - ${o}`)
-await printCurrent('readback')
+const readback = await readCurrent('readback')
+assertR2CorsRules(readback, origins)
+console.log(`[r2-cors] verified presigned PUT policy for ${origins.length} origins`)
 console.log('[r2-cors] done — no server restart needed; just retry the upload.')

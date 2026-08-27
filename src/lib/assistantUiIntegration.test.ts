@@ -35,7 +35,6 @@ const emailComposer = read('../components/EmailComposer.tsx')
 const drawerPrimitive = read('../components/ui/drawer.tsx')
 const globalStyles = read('../styles/globals.css')
 const desktopChat = read('../desktop/ChatPane.tsx')
-const mobileChat = read('../mobile/MobileChat.tsx')
 const markdown = read('../components/assistant-ui/markdown-text.tsx')
 const typesetRenderer = read('../components/Typeset.tsx')
 const typesetStyles = read('../styles/typeset.css')
@@ -136,7 +135,7 @@ test('approval is single-flight and feeds assistant-ui addResult into the native
   assert.match(toolParts, /if \(!pending \|\| busy\) return/)
   assert.match(toolParts, /addResult\(\{ decision \}\)/)
   assert.match(runtime, /onAddToolResult/)
-  assert.match(runtime, /api\.resolveApproval/)
+  assert.match(runtime, /agentsApi\.resolveApproval/)
 })
 
 test('questions and polls share the accessible base-nova Questionnaire contract', () => {
@@ -148,7 +147,7 @@ test('questions and polls share the accessible base-nova Questionnaire contract'
   assert.match(questionnaire, /shortcuts="letters"/)
   assert.match(questionnaire, /<QuestionnaireSkip>/)
   assert.match(poll, /<Questionnaire/)
-  assert.match(poll, /api\.castPollVote/)
+  assert.match(poll, /messagesApi\.castPollVote/)
   assert.match(poll, /VoterStack/)
 })
 
@@ -164,7 +163,6 @@ test('media uses the shared Attachment composition and malformed payload rendere
   assert.match(attachmentCard, /<AttachmentTrigger/)
   assert.match(emailComposer, /<AttachmentGroup/)
   assert.match(desktopChat, /<Attachment size="sm"/)
-  assert.match(mobileChat, /<Attachment size="sm"/)
   assert.match(businessParts, /function EmailAttachmentRow[\s\S]*?<Attachment size="xs"/)
   assert.match(codeBlock, /getDocumentTheme\(\) \?\? getSystemTheme\(\)/)
   assert.match(codeBlock, /resolvedTheme === "dark"/)

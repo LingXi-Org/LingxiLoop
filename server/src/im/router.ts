@@ -8,6 +8,7 @@ import { wukongClient } from './wukong.js'
 import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import { assertTeacherApprovalFresh } from '../learning/teacher-agent.js'
+import { assertTeacherRoomAccessible, isTeacherRoom } from '../learning/visibility.js'
 import {
   listReadReceiptAdvances,
   publishReadReceiptAdvance,
@@ -31,17 +32,6 @@ async function identity(req: Request & AuthedRequest): Promise<{ userId: string;
   )
   if (!rows[0]) throw Object.assign(new Error('not a company member'), { status: 403 })
   return { userId, companyId }
-}
-
-async function assertTeacherRoomAccess(channelId:string,userId:string,write=false):Promise<void>{
-  const {rows}=await pool.query<{status:'active'|'closed';is_teacher:boolean}>(
-    `SELECT tr.status,EXISTS(SELECT 1 FROM learning_course_memberships cm
-       WHERE cm.course_id=tr.course_id AND cm.user_id=$2 AND cm.role='teacher') AS is_teacher
-     FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=$1`,[channelId,userId],
-  )
-  if(!rows[0])return
-  if(!rows[0].is_teacher)throw Object.assign(new Error('teacher room requires current course teacher membership'),{status:403})
-  if(write&&rows[0].status!=='active')throw Object.assign(new Error('archived teacher room is read-only'),{status:409})
 }
 
 function userImToken(uid: string): string {
@@ -77,8 +67,12 @@ imRouter.get('/channels', safe(async (req, res) => {
        WHERE b.company_id=$1 AND c.members @> to_jsonb(ARRAY[$2::text])
          AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=b.channel_id)
            OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr
-             JOIN learning_course_memberships cm ON cm.course_id=tr.course_id AND cm.user_id=$2 AND cm.role='teacher'
-             WHERE tr.conversation_id=b.channel_id))
+             JOIN courses course ON course.id=tr.course_id AND course.company_id=tr.company_id
+             JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+             JOIN course_members cm ON cm.course_id=course.id AND cm.company_id=course.company_id
+               AND cm.user_id=$2 AND cm.role='teacher'
+             WHERE tr.conversation_id=b.channel_id AND tr.company_id=b.company_id
+               AND tr.status='active' AND project.status='active'))
        ORDER BY b.created_at`, [companyId, userId])
   const conversations = await wukongClient().listConversations(userId)
   const state = new Map(conversations.map((item) => [`${item.channelId}:${item.channelType}`, item]))
@@ -122,6 +116,9 @@ imRouter.post('/channels', safe(async (req, res) => {
     [companyId,protectedIds],
   )
   if(protectedAgents[0]){res.status(403).json({error:'Pulse rooms are provisioned only by the learning control plane'});return}
+  if (await isTeacherRoom(profile.channelId, companyId)) {
+    res.status(403).json({ error: 'teacher rooms are provisioned only by the learning control plane' }); return
+  }
   const { rows: conversations } = await pool.query(
     `SELECT 1 FROM conversations WHERE id=$1 AND company_id=$2`,
     [profile.channelId, companyId],
@@ -142,7 +139,7 @@ imRouter.post('/channels', safe(async (req, res) => {
 imRouter.get('/channels/:id/messages', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
-  await assertTeacherRoomAccess(channelId,userId)
+  await assertTeacherRoomAccessible(channelId,companyId,userId)
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
     `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
       WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
@@ -155,7 +152,7 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
 imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
-  await assertTeacherRoomAccess(channelId,userId,true)
+  await assertTeacherRoomAccessible(channelId,companyId,userId)
   const clientNonce = String(req.body?.clientNonce ?? '').trim()
   const rawPayload = req.body?.payload as LingxiMessageV1
   if (!clientNonce || clientNonce.length > 80 || !rawPayload || rawPayload.version !== 1 || rawPayload.clientMsgNo !== clientNonce) {
@@ -237,7 +234,7 @@ imRouter.get('/sends/:clientNonce', safe(async (req, res) => {
 imRouter.post('/channels/:id/read', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
-  await assertTeacherRoomAccess(channelId,userId)
+  await assertTeacherRoomAccessible(channelId,companyId,userId)
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
     `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
       WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
@@ -265,7 +262,7 @@ imRouter.post('/channels/:id/read', safe(async (req, res) => {
 imRouter.get('/channels/:id/read-receipts', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
-  await assertTeacherRoomAccess(channelId, userId)
+  await assertTeacherRoomAccessible(channelId, companyId, userId)
   const member = await pool.query(
     `SELECT 1 FROM conversations
       WHERE id=$1 AND company_id=$2 AND members @> to_jsonb(ARRAY[$3::text])`,
@@ -289,8 +286,12 @@ imRouter.get('/approvals', safe(async (req, res) => {
       WHERE a.company_id=$1 AND c.members @> to_jsonb(ARRAY[$2::text])
         AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=a.channel_id)
           OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr
-            JOIN learning_course_memberships cm ON cm.course_id=tr.course_id AND cm.user_id=$2 AND cm.role='teacher'
-            WHERE tr.conversation_id=a.channel_id))
+            JOIN courses course ON course.id=tr.course_id AND course.company_id=tr.company_id
+            JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+            JOIN course_members cm ON cm.course_id=course.id AND cm.company_id=course.company_id
+              AND cm.user_id=$2 AND cm.role='teacher'
+            WHERE tr.conversation_id=a.channel_id AND tr.company_id=a.company_id
+              AND tr.status='active' AND project.status='active'))
       ORDER BY a.requested_at DESC LIMIT 100`,
     [companyId, userId],
   )
@@ -318,8 +319,12 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
         WHERE a.id=$1 AND a.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])
           AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=a.channel_id)
             OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr
-              JOIN learning_course_memberships cm ON cm.course_id=tr.course_id AND cm.user_id=$3 AND cm.role='teacher'
-              WHERE tr.conversation_id=a.channel_id))
+              JOIN courses course ON course.id=tr.course_id AND course.company_id=tr.company_id
+              JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+              JOIN course_members cm ON cm.course_id=course.id AND cm.company_id=course.company_id
+                AND cm.user_id=$3 AND cm.role='teacher'
+              WHERE tr.conversation_id=a.channel_id AND tr.company_id=a.company_id
+                AND tr.status='active' AND project.status='active'))
         FOR UPDATE OF a`, [req.params.id, companyId, userId],
     )
     if (!rows[0]) { await client.query('ROLLBACK'); res.status(404).json({ error: 'approval not found' }); return }
@@ -422,13 +427,42 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
 }))
 
 imRouter.get('/routines', safe(async (req, res) => {
-  const { companyId } = await identity(req)
-  const { rows } = await pool.query(`SELECT * FROM agent_routines WHERE company_id=$1 ORDER BY created_at DESC`, [companyId])
+  const { userId, companyId } = await identity(req)
+  const { rows } = await pool.query(
+    `SELECT routine.*
+       FROM agent_routines routine
+       JOIN conversations conversation ON conversation.id=routine.channel_id AND conversation.company_id=routine.company_id
+      WHERE routine.company_id=$1 AND conversation.members @> to_jsonb(ARRAY[$2::text])
+        AND (
+          NOT EXISTS (SELECT 1 FROM learning_course_teacher_rooms room WHERE room.conversation_id=routine.channel_id AND room.company_id=routine.company_id)
+          OR EXISTS (
+            SELECT 1 FROM learning_course_teacher_rooms room
+              JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
+              JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+              JOIN course_members teacher ON teacher.course_id=course.id AND teacher.company_id=course.company_id
+               AND teacher.user_id=$2 AND teacher.role='teacher'
+             WHERE room.conversation_id=routine.channel_id AND room.company_id=routine.company_id
+               AND room.status='active' AND project.status='active'
+          )
+        )
+      ORDER BY routine.created_at DESC`,
+    [companyId, userId],
+  )
   res.json(rows)
 }))
 
 imRouter.post('/routines/:id/pause', safe(async (req, res) => {
-  const { companyId } = await identity(req)
+  const { userId, companyId } = await identity(req)
+  const { rows: allowed } = await pool.query<{ channel_id: string }>(
+    `SELECT routine.channel_id
+       FROM agent_routines routine
+       JOIN conversations conversation ON conversation.id=routine.channel_id AND conversation.company_id=routine.company_id
+      WHERE routine.id=$1 AND routine.company_id=$2
+        AND conversation.members @> to_jsonb(ARRAY[$3::text])`,
+    [req.params.id, companyId, userId],
+  )
+  if (!allowed[0]) { res.status(404).json({ error: 'routine not found' }); return }
+  await assertTeacherRoomAccessible(allowed[0].channel_id, companyId, userId)
   const { rows } = await pool.query(`UPDATE agent_routines SET status='paused', updated_at=NOW() WHERE id=$1 AND company_id=$2 RETURNING *`, [req.params.id, companyId])
   if (!rows[0]) { res.status(404).json({ error: 'routine not found' }); return }
   res.json(rows[0])
@@ -451,6 +485,7 @@ imRouter.post('/runs/stop', safe(async (req, res) => {
   const agentId = String(req.body?.agentId ?? '').trim()
   const channelId = String(req.body?.channelId ?? '').trim()
   if (!agentId || !channelId) { res.status(400).json({ error: 'agentId and channelId required' }); return }
+  await assertTeacherRoomAccessible(channelId, companyId, userId)
   const workId = await activeWorkForControl(companyId, userId, agentId, channelId)
   if (!workId) { res.status(404).json({ error: 'no active run' }); return }
   await pool.query(`UPDATE agent_work_items SET cancel_requested_at=NOW(), updated_at=NOW() WHERE id=$1`, [workId])
@@ -471,6 +506,7 @@ imRouter.post('/runs/steer', safe(async (req, res) => {
   const channelId = String(req.body?.channelId ?? '').trim()
   const text = String(req.body?.text ?? '').trim().slice(0, 4_000)
   if (!agentId || !channelId || !text) { res.status(400).json({ error: 'agentId, channelId and text required' }); return }
+  await assertTeacherRoomAccessible(channelId, companyId, userId)
   const workId = await activeWorkForControl(companyId, userId, agentId, channelId)
   if (!workId) { res.status(404).json({ error: 'no active run' }); return }
   const steer = { id: randomUUID(), text, createdAt: new Date().toISOString() }

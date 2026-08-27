@@ -12,8 +12,6 @@
       "!**/build",
       "!**/release",
       "!**/node_modules",
-      "!ios",
-      "!android",
       "!third_party",
       "!**/*.min.js"
     ]

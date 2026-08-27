@@ -9,7 +9,7 @@
  */
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { api } from '@/api/client'
+import { companiesApi } from '@/api/companies'
 import { Input } from '@/components/ui/input'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
@@ -55,7 +55,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
     if (!name) return
     setBusy(true); setErr(null)
     try {
-      const created = await api.createCompany(name)
+      const created = await companiesApi.createCompany(name)
       selectConversation(null)
       addCompany({ id: created.id, name: created.name, slug: created.slug, role: created.role })
       setNewName(''); setCreating(false); setOpen(false)

@@ -18,7 +18,9 @@ import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
 import { useConversations } from '@/stores/conversations'
+import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
+import { useUiCommand } from '@/stores/uiCommands'
 import type { ViewKey } from '@/types'
 import { IconX } from '@tabler/icons-react'
 import { AgentsView } from './AgentsView'
@@ -88,18 +90,20 @@ function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsT
 export function DesktopApp() {
   const theme = useTheme((state) => state.theme)
   const view = useApp((state) => state.view)
-  const settingsTab = useApp((state) => state.settingsTab)
-  const infoParticipantId = useApp((state) => state.infoAgentId)
-  const openThread = useApp((state) => state.openThread)
-  const documentId = useApp((state) => state.openDocumentId)
-  const boardId = useApp((state) => state.openBoardId)
-  const calendarEventId = useApp((state) => state.openCalendarEventId)
-  const canvasId = useApp((state) => state.openCanvasId)
+  const surface = useSurface((state) => state.surface)
+  const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
+  const openThread = surface?.kind === 'thread' ? surface : null
+  const documentId = surface?.kind === 'document' ? surface.documentId : null
+  const boardId = surface?.kind === 'board' ? surface.boardId : null
+  const calendarEventId = surface?.kind === 'calendar' ? surface.eventId : null
+  const canvasId = surface?.kind === 'canvas' ? surface.canvasId : null
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const groupContext = selectedConversation?.kind === 'group' ? selectedConversation : null
   const [groupDrawerOpen, setGroupDrawerOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState<'Profile' | 'Usage' | 'Preferences'>('Profile')
+  const uiCommand = useUiCommand()
   const [defaultLayout] = useState(() => loadPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, TWO_PANEL_DEFAULT_LAYOUT))
 
   useEffect(() => {
@@ -107,6 +111,12 @@ export function DesktopApp() {
   }, [theme])
 
   useEffect(() => { setGroupDrawerOpen(false) }, [groupContext?.id])
+
+  useEffect(() => {
+    if (uiCommand?.type === 'open-settings-profile') setSettingsTab('Profile')
+    else if (uiCommand?.type === 'open-settings-usage') setSettingsTab('Usage')
+    else if (uiCommand?.type === 'open-settings-preferences') setSettingsTab('Preferences')
+  }, [uiCommand])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -150,14 +160,14 @@ export function DesktopApp() {
   else if (groupContext && groupDrawerOpen) { drawerTitle = '群聊资料'; drawerContent = <GroupContextContent conversationId={groupContext.id} /> }
 
   const closeDrawer = () => {
-    const app = useApp.getState()
-    if (infoParticipantId) app.closeAgentInfo()
-    else if (openThread) app.closeThreadView()
-    else if (documentId) app.closeDocumentPeek()
-    else if (boardId) app.closeBoardPeek()
-    else if (calendarEventId) app.closeCalendarEventPeek()
-    else if (canvasId) app.closeCanvasPeek()
-    else if (pageViewOpen) app.setView('conversations')
+    const surfaces = useSurface.getState()
+    if (infoParticipantId) surfaces.closeAgentInfo()
+    else if (openThread) surfaces.closeThreadView()
+    else if (documentId) surfaces.closeDocumentPeek()
+    else if (boardId) surfaces.closeBoardPeek()
+    else if (calendarEventId) surfaces.closeCalendarEventPeek()
+    else if (canvasId) surfaces.closeCanvasPeek()
+    else if (pageViewOpen) useApp.getState().setView('conversations')
     else setGroupDrawerOpen(false)
   }
 

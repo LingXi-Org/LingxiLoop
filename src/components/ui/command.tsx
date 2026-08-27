@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import type { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 

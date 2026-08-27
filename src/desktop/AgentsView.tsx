@@ -1,3 +1,5 @@
+import { agentsApi } from '@/api/agents'
+import { conversationsApi } from '@/api/conversations'
 import { useMemo, useState } from 'react'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
@@ -6,7 +8,6 @@ import { useConversations } from '@/stores/conversations'
 import { Avatar } from '@/components/Avatar'
 import { IPlus } from '@/components/icons'
 import { AgentEditor } from '@/components/AgentEditor'
-import { api } from '@/api/client'
 import type { Participant } from '@/types'
 
 const STATUS_LABEL: Record<string, string> = {
@@ -43,7 +44,7 @@ function AgentCard({ p, onEdit, onDelete }: {
     // endpoint the people-list uses.
     setOpeningChat(true)
     try {
-      const { id } = await api.openDirect(p.id)
+      const { id } = await conversationsApi.openDirect(p.id)
       await useConversations.getState().reload()
       setView('conversations')
       select(id)
@@ -168,7 +169,7 @@ function ConfirmOffboard({ p, onCancel, onConfirmed }: {
   const submit = async () => {
     setBusy(true); setErr(null)
     try {
-      await api.offboardAgent(p.id)
+      await agentsApi.offboardAgent(p.id)
       await useParticipants.getState().load()
       await useConversations.getState().reload()
       onConfirmed()
@@ -260,7 +261,7 @@ export function AgentsView() {
   const openEdit = (p: Participant) => { setEditing(p); setEditorOpen(true) }
   const rehire = async (p: Participant) => {
     try {
-      await api.rehireAgent(p.id)
+      await agentsApi.rehireAgent(p.id)
       await useParticipants.getState().load()
       await useConversations.getState().reload()
     } catch (e) {

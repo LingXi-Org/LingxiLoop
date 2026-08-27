@@ -491,7 +491,14 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
         'steps',(SELECT jsonb_agg(jsonb_build_array(s.id,s.status,s.updated_at)) FROM learning_mission_steps s JOIN learning_missions m ON m.id=s.mission_id WHERE m.conversation_id=$1 AND m.status IN ('planning','active','paused')),
         'assignments',(SELECT jsonb_agg(jsonb_build_array(a.id,a.status,a.updated_at)) FROM canvas_agent_assignments a WHERE a.canvas_id=$2),
         'reports',(SELECT jsonb_agg(r.id ORDER BY r.created_at) FROM canvas_assignment_reports r WHERE r.canvas_id=$2),
-        'evidence',(SELECT jsonb_agg(jsonb_build_array(a.id,a.status,a.submitted_at)) FROM learning_attempts a JOIN learning_courses lc ON lc.id=a.course_id JOIN conversations c ON c.project_id=lc.project_id WHERE c.id=$1)
+        'evidence',(
+          SELECT jsonb_agg(jsonb_build_array(attempt.id,attempt.status,attempt.submitted_at))
+            FROM learning_attempts attempt
+            JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
+            JOIN conversations conversation
+              ON conversation.project_id=course.project_id AND conversation.company_id=course.company_id
+           WHERE conversation.id=$1
+        )
       ) AS state`,[work.channelId,work.canvasId??null],
     )
     const fingerprint=hash(canonicalJson(stateRows[0]?.state??{}))

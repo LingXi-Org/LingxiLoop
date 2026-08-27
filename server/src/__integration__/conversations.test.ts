@@ -41,6 +41,7 @@ after(async () => {
 async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string; conversationId: string }> {
   const companyId = 'c-direct-title'
   const conversationId = 'direct-ada-yetone'
+  const projectId = 'general-c-direct-title'
   await pool.query(
     `INSERT INTO companies (id, name, slug, owner_user_id)
      VALUES ($1, 'Direct Title Co', 'direct-title-co', $2)`,
@@ -55,9 +56,14 @@ async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string
     displayName: 'Ada',
   })
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, members, tag, company_id)
-     VALUES ($1, 'direct', 'Yetone', $2::jsonb, 'human', $3)`,
-    [conversationId, JSON.stringify([OTHER_USER_ID, ME_USER_ID]), companyId],
+    `INSERT INTO projects (id, company_id, name, color, created_by, is_general)
+     VALUES ($1, $2, 'General', '#667085', $3, TRUE)`,
+    [projectId, companyId, ME_USER_ID],
+  )
+  await pool.query(
+    `INSERT INTO conversations (id, kind, title, members, tag, company_id, project_id)
+     VALUES ($1, 'direct', 'Yetone', $2::jsonb, 'human', $3, $4)`,
+    [conversationId, JSON.stringify([OTHER_USER_ID, ME_USER_ID]), companyId, projectId],
   )
   return { companyId, conversationId }
 }
@@ -68,8 +74,9 @@ test('[integration] GET /conversations returns the other member as a direct titl
   const res = await fetch(`${baseUrl}/api/conversations`, {
     headers: { 'x-company-id': companyId },
   })
-  assert.equal(res.status, 200)
-  const rows = await res.json() as Array<{ id: string; title: string }>
+  const raw = await res.text()
+  assert.equal(res.status, 200, raw)
+  const rows = JSON.parse(raw) as Array<{ id: string; title: string }>
   const direct = rows.find((r) => r.id === conversationId)
 
   assert.equal(direct?.title, 'Ada')
@@ -81,8 +88,9 @@ test('[integration] GET /search uses the same perspective-specific direct title'
   const res = await fetch(`${baseUrl}/api/search?q=${encodeURIComponent('Ada')}`, {
     headers: { 'x-company-id': companyId },
   })
-  assert.equal(res.status, 200)
-  const body = await res.json() as { rooms: Array<{ id: string; title: string }> }
+  const raw = await res.text()
+  assert.equal(res.status, 200, raw)
+  const body = JSON.parse(raw) as { rooms: Array<{ id: string; title: string }> }
   const direct = body.rooms.find((r) => r.id === conversationId)
 
   assert.equal(direct?.title, 'Ada')

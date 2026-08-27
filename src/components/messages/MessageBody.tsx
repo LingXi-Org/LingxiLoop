@@ -5,7 +5,8 @@ import { TypesetMarkdown } from '@/components/Typeset'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { remarkLingxiLoop } from '@/lib/remarkLingxiLoop'
 import { cn } from '@/lib/utils'
-import { useApp } from '@/stores/app'
+import { useConversationUi } from '@/stores/conversationUi'
+import { useSurface } from '@/stores/surface'
 import { useMe } from '@/stores/auth'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
@@ -21,7 +22,7 @@ import { CodeBlock as ToolUiCodeBlock } from '../tool-ui/code-block'
 
 function MentionChip({ id }: { id: string }) {
   const byId = useParticipants((s) => s.byId)
-  const openAgentInfo = useApp((s) => s.openAgentInfo)
+  const openAgentInfo = useSurface((s) => s.openAgentInfo)
   const meId = useMe()
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null)
   const ref = useRef<HTMLSpanElement | null>(null)
@@ -242,7 +243,7 @@ function MessageRefChip({ n }: { n: number }) {
     }
     return null
   })
-  const jumpToMessage = useApp((s) => s.jumpToMessage)
+  const jumpToMessage = useConversationUi((s) => s.jumpToMessage)
   const byId = useParticipants((s) => s.byId)
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null)
   const ref = useRef<HTMLSpanElement | null>(null)

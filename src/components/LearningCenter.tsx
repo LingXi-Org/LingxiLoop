@@ -1,21 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { type ApiProject, api } from "@/api/client";
+import type {
+  LearningActivity,
+  LearningCourse,
+  LearningDashboard,
+  LearningDelivery,
+  LearningEvidence,
+  LearningMission,
+  LearningNotificationPreferences,
+  LearningObjective,
+  LearningProgress,
+  LearningReview,
+  TeacherAgentSummary,
+} from "@/api/contracts";
+import { learningApi } from "@/api/learning";
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { useApp } from "@/stores/app";
 import { useConversations } from "@/stores/conversations";
 import { useParticipants } from "@/stores/participants";
-import type {
-  LearningActivity,
-  LearningCourse,
-  LearningDashboard,
-  LearningObjective,
-  LearningRole,
-  TeacherAgentSummary,
-} from "@/types";
-
-type Perspective = "learner" | "teacher";
 type Section =
   | "today"
   | "objectives"
@@ -82,7 +85,6 @@ const ASSISTANCE_LABELS: Record<string, string> = {
 };
 const DELIVERY_CHANNEL_LABELS: Record<string, string> = {
   in_app: "应用内",
-  push: "移动推送",
   email: "邮件",
 };
 
@@ -123,18 +125,7 @@ function MasteryBadge({ level }: { level: number }) {
 }
 
 function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
-  const conversations = useConversations((state) => state.list);
-  const rooms = useMemo(
-    () => conversations.filter((item) => item.kind === "group"),
-    [conversations],
-  );
-  const [projects, setProjects] = useState<ApiProject[]>([]);
-  const [roleChoice, setRoleChoice] = useState<"teacher" | "learner" | "both">(
-    "learner",
-  );
   const [title, setTitle] = useState("我的学习课程");
-  const [projectId, setProjectId] = useState("");
-  const [roomId, setRoomId] = useState("");
   const [timezone, setTimezone] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Shanghai",
   );
@@ -143,44 +134,18 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    void api.listProjects().then((items) => {
-      setProjects(items);
-      setProjectId(items[0]?.id ?? "");
-    });
-  }, []);
-  useEffect(() => {
-    setRoomId(
-      rooms.find((room) => /study room|学习室/i.test(room.title))?.id ??
-        rooms[0]?.id ??
-        "",
-    );
-  }, [rooms]);
-
   const create = async () => {
     setBusy(true);
     setError("");
     try {
-      const roles: LearningRole[] =
-        roleChoice === "teacher"
-          ? ["teacher"]
-          : roleChoice === "both"
-            ? ["teacher", "learner"]
-            : ["teacher", "learner"];
-      const course = await api.createLearningCourse({
-        projectId,
-        title,
-        roles,
-      });
-      if (roomId) await api.bindLearningRoom(course.id, roomId, "study");
-      await api.updateLearningCourse(course.id, { status: "active" });
-      await api.setLearningNotificationPreferences({
+      const course = await learningApi.createCourse({ name: title });
+      await learningApi.setNotificationPreferences({
+        courseId: course.id,
         timezone,
         preferredTime: "19:00",
         quietStart,
         quietEnd,
         inAppEnabled: true,
-        pushEnabled: false,
         emailEnabled: false,
       });
       await onCreated();
@@ -205,56 +170,13 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
           可以协助规划并开展形成性评价，发布内容与确认高阶掌握仍由教师负责。
         </p>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <label className="grid gap-2 text-[12px] font-semibold text-ink">
-            你的角色
-            <select
-              value={roleChoice}
-              onChange={(event) =>
-                setRoleChoice(event.target.value as typeof roleChoice)
-              }
-              className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-            >
-              <option value="learner">学习者 · 创建个人课程</option>
-              <option value="teacher">教师</option>
-              <option value="both">教师 + 学习者</option>
-            </select>
-          </label>
-          <label className="grid gap-2 text-[12px] font-semibold text-ink">
+          <label className="grid gap-2 text-[12px] font-semibold text-ink md:col-span-2">
             课程名称
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
             />
-          </label>
-          <label className="grid gap-2 text-[12px] font-semibold text-ink">
-            所属项目
-            <select
-              value={projectId}
-              onChange={(event) => setProjectId(event.target.value)}
-              className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-            >
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-2 text-[12px] font-semibold text-ink">
-            绑定学习室
-            <select
-              value={roomId}
-              onChange={(event) => setRoomId(event.target.value)}
-              className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-            >
-              <option value="">稍后绑定</option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.title}
-                </option>
-              ))}
-            </select>
           </label>
           <label className="grid gap-2 text-[12px] font-semibold text-ink md:col-span-2">
             时区
@@ -290,10 +212,10 @@ function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
         )}
         <div className="mt-6 flex items-center justify-between gap-4">
           <p className="text-[11px] text-ink-secondary">
-            应用内提醒默认开启；移动推送与邮件可稍后自行订阅。
+            应用内提醒默认开启；邮件可稍后自行订阅。课程会自动创建一对一项目与 Study Room。
           </p>
           <button
-            disabled={busy || !projectId || !title.trim()}
+            disabled={busy || !title.trim()}
             onClick={() => void create()}
             className="rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50"
           >
@@ -314,69 +236,17 @@ function TeacherComposer({
   objectives: LearningObjective[];
   onChanged: () => Promise<void>;
 }) {
-  const participantsById = useParticipants((state) => state.byId);
-  const humans = useMemo(
-    () =>
-      Object.values(participantsById).filter(
-        (participant) =>
-          participant.kind === "human" && !participant.departedAt,
-      ),
-    [participantsById],
-  );
   const [objectiveTitle, setObjectiveTitle] = useState("");
   const [criteria, setCriteria] = useState("");
   const [activityTitle, setActivityTitle] = useState("");
   const [instructions, setInstructions] = useState("");
   const [error, setError] = useState("");
-  const [memberId, setMemberId] = useState("");
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <Card className="xl:col-span-2">
         <h3 className="text-[14px] font-semibold text-ink">课程成员</h3>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <select
-            value={memberId}
-            onChange={(event) => setMemberId(event.target.value)}
-            className="h-10 min-w-52 flex-1 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-          >
-            <option value="">选择公司成员</option>
-            {humans.map((human) => (
-              <option key={human.id} value={human.id}>
-                {human.name}
-              </option>
-            ))}
-          </select>
-          <button
-            disabled={!memberId}
-            onClick={() =>
-              void api
-                .setLearningCourseMember(course.id, memberId, "learner")
-                .then(async () => {
-                  setMemberId("");
-                  await onChanged();
-                })
-                .catch((reason) => setError(String(reason)))
-            }
-            className="rounded-full bg-accent px-4 py-2 text-[12px] font-semibold text-white disabled:opacity-50"
-          >
-            加入为学习者
-          </button>
-          <button
-            disabled={!memberId}
-            onClick={() =>
-              void api
-                .setLearningCourseMember(course.id, memberId, "teacher")
-                .then(async () => {
-                  setMemberId("");
-                  await onChanged();
-                })
-                .catch((reason) => setError(String(reason)))
-            }
-            className="rounded-full bg-raised px-4 py-2 text-[12px] font-semibold text-ink disabled:opacity-50"
-          >
-            加入为教师
-          </button>
-        </div>
+        <p className="mt-2 text-[12px] text-ink-secondary">教师与学习者统一通过 canonical Course 邀请和成员管理维护。</p>
+        <button onClick={() => useApp.getState().setView("management")} className="mt-3 rounded-full bg-raised px-4 py-2 text-[12px] font-semibold text-ink">打开课程管理</button>
       </Card>
       <Card>
         <h3 className="text-[14px] font-semibold text-ink">新增学习目标</h3>
@@ -394,8 +264,8 @@ function TeacherComposer({
         />
         <button
           onClick={() =>
-            void api
-              .createLearningObjectives(course.id, [
+            void learningApi
+              .createObjectives(course.id, [
                 {
                   title: objectiveTitle,
                   successCriteria: criteria,
@@ -430,8 +300,8 @@ function TeacherComposer({
         />
         <button
           onClick={() =>
-            void api
-              .createLearningActivity(course.id, {
+            void learningApi
+              .createActivity(course.id, {
                 title: activityTitle,
                 instructions,
                 type: "practice",
@@ -466,26 +336,29 @@ export function LearningCenter() {
   const coordinatorAgents=useMemo(()=>Object.values(participantsById).filter((participant)=>participant.kind==='agent'&&participant.capabilities?.includes('learning')&&participant.capabilities?.includes('canvas')),[participantsById]);
   const [dashboard, setDashboard] = useState<LearningDashboard | null>(null);
   const [courseId, setCourseId] = useState("");
-  const [perspective, setPerspective] = useState<Perspective>("learner");
   const [section, setSection] = useState<Section>("today");
   const [objectives, setObjectives] = useState<LearningObjective[]>([]);
   const [activities, setActivities] = useState<LearningActivity[]>([]);
-  const [evidence, setEvidence] = useState<unknown[]>([]);
-  const [missions, setMissions] = useState<Array<Record<string, unknown>>>([]);
-  const [reviews, setReviews] = useState<Array<Record<string, unknown>>>([]);
-  const [progress, setProgress] = useState<Array<Record<string, unknown>>>([]);
+  const [evidence, setEvidence] = useState<LearningEvidence[]>([]);
+  const [missions, setMissions] = useState<LearningMission[]>([]);
+  const [reviews, setReviews] = useState<LearningReview[]>([]);
+  const [progress, setProgress] = useState<LearningProgress[]>([]);
   const [teacherAgent,setTeacherAgent]=useState<TeacherAgentSummary|null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [notificationPrefs, setNotificationPrefs] = useState<
-    Record<string, unknown>
-  >({});
-  const [deliveries, setDeliveries] = useState<Array<Record<string, unknown>>>(
-    [],
-  );
+  const [notificationPrefs, setNotificationPrefs] = useState<LearningNotificationPreferences>({
+    course_id: null,
+    in_app_enabled: true,
+    email_enabled: false,
+    timezone: "Asia/Shanghai",
+    preferred_time: "19:00",
+    quiet_start: null,
+    quiet_end: null,
+  });
+  const [deliveries, setDeliveries] = useState<LearningDelivery[]>([]);
   const [error, setError] = useState("");
 
   const loadDashboard = async () => {
-    const next = await api.getLearningDashboard();
+    const next = await learningApi.getDashboard();
     setDashboard(next);
     setCourseId((current) => current || next.courses[0]?.id || "");
   };
@@ -493,32 +366,34 @@ export function LearningCenter() {
     if (!id) return;
     const [nextObjectives, nextActivities, nextEvidence, nextMissions] =
       await Promise.all([
-        api.listLearningObjectives(id),
-        api.listLearningActivities(id),
-        api.listLearningEvidence(id),
-        api.listLearningMissions(id),
+        learningApi.listObjectives(id),
+        learningApi.listActivities(id),
+        learningApi.listEvidence(id),
+        learningApi.listMissions(id),
       ]);
     setObjectives(nextObjectives);
     setActivities(nextActivities);
     setEvidence(nextEvidence);
-    setMissions(nextMissions as Array<Record<string, unknown>>);
+    setMissions(nextMissions);
     const [prefs, nextDeliveries] = await Promise.all([
-      api.getLearningNotificationPreferences(id),
-      api.listLearningDeliveries(),
+      learningApi.getNotificationPreferences(id),
+      learningApi.listDeliveries(),
     ]);
     setNotificationPrefs(prefs);
     setDeliveries(nextDeliveries);
     const current = dashboard?.courses.find((course) => course.id === id);
-    if (current?.roles.includes("teacher")) {
+    if (current?.courseRole === "teacher") {
       const [nextReviews, nextProgress,nextTeacherAgent] = await Promise.all([
-        api.listLearningReviews(id),
-        api.getLearningCourseProgress(id),
-        api.getLearningTeacherAgent(id),
+        learningApi.listReviews(id),
+        learningApi.getCourseProgress(id),
+        learningApi.getTeacherAgent(id),
       ]);
       setReviews(nextReviews);
       setProgress(nextProgress);
       setTeacherAgent(nextTeacherAgent);
     }else{
+      setReviews([]);
+      setProgress([]);
       setTeacherAgent(null);
     }
   };
@@ -543,11 +418,7 @@ export function LearningCenter() {
   }, [courseId, dashboard?.courses.length]);
 
   const course = dashboard?.courses.find((item) => item.id === courseId);
-  useEffect(() => {
-    if (!course) return;
-    if (!course.roles.includes(perspective))
-      setPerspective(course.roles.includes("learner") ? "learner" : "teacher");
-  }, [course?.id]);
+  const perspective = course?.courseRole ?? "learner";
   useEffect(() => {
     if (
       (perspective === "teacher" && section === "evidence") ||
@@ -620,19 +491,9 @@ export function LearningCenter() {
               </option>
             ))}
           </select>
-          {course.roles.length > 1 && (
-            <div className="flex shrink-0 rounded-full bg-raised p-1">
-              {(["learner", "teacher"] as const).map((role) => (
-                <button
-                  key={role}
-                  onClick={() => setPerspective(role)}
-                  className={`rounded-full px-3 py-1.5 text-[11px] font-semibold ${perspective === role ? "bg-card text-accent shadow-sm" : "text-ink-secondary"}`}
-                >
-                  {role === "learner" ? "学习者" : "教师"}
-                </button>
-              ))}
-            </div>
-          )}
+          <span className="rounded-full bg-raised px-3 py-1.5 text-[11px] font-semibold text-ink-secondary">
+            {course.courseRole === "teacher" ? "教师" : "学习者"}
+          </span>
         </div>
         <nav className="mx-auto mt-3 flex max-w-6xl gap-1 overflow-x-auto">
           {sections.map(([key, label]) => (
@@ -677,9 +538,7 @@ export function LearningCenter() {
                 </Card>
               </div>
               {missions.map((mission) => {
-                const steps = Array.isArray(mission.steps)
-                  ? (mission.steps as Array<Record<string, unknown>>)
-                  : [];
+                const steps = mission.steps;
                 const completed = steps.filter(
                   (step) => step.status === "completed",
                 ).length;
@@ -817,7 +676,7 @@ export function LearningCenter() {
                   </div>
                 </Card>
               )}
-              {missions.length>0&&<Card><h3 className="text-[14px] font-semibold">学习任务负责人</h3><p className="mt-1 text-[11px] text-ink-secondary">每项持续学习任务由一名教学智能体负责协调，专业角色仍可在协作画布中分工。</p><div className="mt-3 divide-y divide-hairline">{missions.map((mission)=><div key={String(mission.id)} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="text-[12px] font-semibold">{String(mission.goal)}</p><p className="mt-1 text-[10px] text-ink-secondary">{MISSION_KIND_LABELS[String(mission.missionKind??'study')]??String(mission.missionKind??'study')} · 当前负责人 {String(mission.coordinatorName??mission.coordinatorAgentId??'—')}</p></div><select aria-label={`调整“${String(mission.goal)}”的负责人`} value={String(mission.coordinatorAgentId??'')} onChange={(event)=>void api.setLearningMissionCoordinator(course.id,String(mission.id),event.target.value).then(()=>loadCourse()).catch((reason)=>setError(String(reason)))} className="h-9 rounded-xl border border-hairline bg-panel px-3 text-[11px]">{coordinatorAgents.map((agent)=><option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></div>)}</div></Card>}
+              {missions.length>0&&<Card><h3 className="text-[14px] font-semibold">学习任务负责人</h3><p className="mt-1 text-[11px] text-ink-secondary">每项持续学习任务由一名教学智能体负责协调，专业角色仍可在协作画布中分工。</p><div className="mt-3 divide-y divide-hairline">{missions.map((mission)=><div key={String(mission.id)} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="text-[12px] font-semibold">{String(mission.goal)}</p><p className="mt-1 text-[10px] text-ink-secondary">{MISSION_KIND_LABELS[String(mission.missionKind??'study')]??String(mission.missionKind??'study')} · 当前负责人 {String(mission.coordinatorName??mission.coordinatorAgentId??'—')}</p></div><select aria-label={`调整“${String(mission.goal)}”的负责人`} value={String(mission.coordinatorAgentId??'')} onChange={(event)=>void learningApi.setMissionCoordinator(course.id,String(mission.id),event.target.value).then(()=>loadCourse()).catch((reason)=>setError(String(reason)))} className="h-9 rounded-xl border border-hairline bg-panel px-3 text-[11px]">{coordinatorAgents.map((agent)=><option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></div>)}</div></Card>}
               <TeacherComposer
                 course={course}
                 objectives={objectives}
@@ -856,8 +715,8 @@ export function LearningCenter() {
                         objective.status === "draft" && (
                           <button
                             onClick={() =>
-                              void api
-                                .setLearningObjectiveStatus(
+                              void learningApi
+                                .setObjectiveStatus(
                                   course.id,
                                   objective.id,
                                   "published",
@@ -909,8 +768,8 @@ export function LearningCenter() {
                         {activity.status === "draft" && (
                           <button
                             onClick={() =>
-                              void api
-                                .publishLearningActivity(course.id, activity.id)
+                              void learningApi
+                                .publishActivity(course.id, activity.id)
                                 .then(() => loadCourse())
                                 .catch((reason) => setError(String(reason)))
                             }
@@ -922,8 +781,8 @@ export function LearningCenter() {
                         {activity.status === "published" && (
                           <button
                             onClick={() =>
-                              void api
-                                .closeLearningActivity(course.id, activity.id)
+                              void learningApi
+                                .closeActivity(course.id, activity.id)
                                 .then(() => loadCourse())
                                 .catch((reason) => setError(String(reason)))
                             }
@@ -951,8 +810,8 @@ export function LearningCenter() {
                         />
                         <button
                           onClick={() =>
-                            void api
-                              .submitLearningActivity(
+                            void learningApi
+                              .submitActivity(
                                 course.id,
                                 activity.id,
                                 answers[activity.id] ?? "",
@@ -979,7 +838,7 @@ export function LearningCenter() {
           {section === "evidence" && (
             <div className="space-y-3">
               {evidence.map((raw, index) => {
-                const item = raw as Record<string, unknown>;
+                const item = raw;
                 return (
                   <Card key={String(item.id ?? index)}>
                     <div className="flex items-center justify-between gap-3">
@@ -1029,14 +888,14 @@ export function LearningCenter() {
                   <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold">
                     <span className="rounded-full bg-raised px-2 py-1 text-ink-secondary">评价提交者：{item.builder_agent_id?participantsById[String(item.builder_agent_id)]?.name??"教学智能体":"未绑定"}</span>
                     <span className={`rounded-full px-2 py-1 ${item.verifier_verdict === "supported" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
-                      独立复核：{item.verifier_agent_id?participantsById[String(item.verifier_agent_id)]?.name??"教学智能体":"尚未复核"} · {item.verifier_verdict==="supported"?"证据支持":item.verifier_verdict==="contradicted"?"证据冲突":"需教师审核"}
+                      独立复核：{item.verifier_agent_id?participantsById[String(item.verifier_agent_id)]?.name??"教学智能体":"尚未复核"} · {item.verifier_verdict==="supported"?"证据支持":item.verifier_verdict==="rejected"?"证据冲突":"需教师审核"}
                     </span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       onClick={() =>
-                        void api
-                          .reviewLearningEvaluation(
+                        void learningApi
+                          .reviewEvaluation(
                             course.id,
                             String(item.id),
                             {
@@ -1058,8 +917,8 @@ export function LearningCenter() {
                     </button>
                     <button
                       onClick={() =>
-                        void api
-                          .reviewLearningEvaluation(
+                        void learningApi
+                          .reviewEvaluation(
                             course.id,
                             String(item.id),
                             {
@@ -1096,7 +955,6 @@ export function LearningCenter() {
                 {(
                   [
                     ["in_app_enabled", "应用内"],
-                    ["push_enabled", "移动推送"],
                     ["email_enabled", "邮件"],
                   ] as const
                 ).map(([key, label]) => (
@@ -1185,11 +1043,10 @@ export function LearningCenter() {
               </div>
               <button
                 onClick={() =>
-                  void api
-                    .setLearningNotificationPreferences({
+                  void learningApi
+                    .setNotificationPreferences({
                       courseId: course.id,
                       inAppEnabled: notificationPrefs.in_app_enabled !== false,
-                      pushEnabled: notificationPrefs.push_enabled === true,
                       emailEnabled: notificationPrefs.email_enabled === true,
                       timezone: String(
                         notificationPrefs.timezone ?? "Asia/Shanghai",

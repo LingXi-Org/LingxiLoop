@@ -1,26 +1,24 @@
 import { useAuiState } from '@assistant-ui/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { api } from '@/api/client'
+import { emailApi } from '@/api/email'
 import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from '@/components/ui/attachment'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
-import { inferAttachmentPreview } from '@/lib/attachmentPreview'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
 import { cn, parseBlocks, parseBody } from '@/lib/utils'
 import { useApp } from '@/stores/app'
+import { useEmailComposer } from '@/stores/emailComposer'
+import { useSurface } from '@/stores/surface'
 import { useBoards } from '@/stores/boards'
 import { useCalendar } from '@/stores/calendar'
 import { useCanvas } from '@/stores/canvas'
 import { useDocuments } from '@/stores/documents'
-import { useKnowledgeSources } from '@/stores/knowledgeSources'
 import { useParticipants } from '@/stores/participants'
 import type { Message } from '@/types'
-import { AttachmentViewer } from '../AttachmentViewer'
 import { CanvasPreview } from '../CanvasPreview'
-import { ImageViewer } from '../ImageViewer'
-import { IBoard, ICalendar, IFigma, IFile, IMail } from '../icons'
+import { IBoard, ICalendar, IFile, IMail } from '../icons'
 import { RichBody } from './MessageBody'
 
 type ArtifactRef = { type: 'document' | 'board' | 'card' | 'calendar'; id: string }
@@ -86,7 +84,7 @@ function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conve
   const selectDocument = useDocuments((s) => s.select)
   const doc = useDocuments((s) => s.list.find((d) => d.id === id) ?? null)
   const byId = useParticipants((s) => s.byId)
-  const openDocumentPeek = useApp((s) => s.openDocumentPeek)
+  const openDocumentPeek = useSurface((s) => s.openDocumentPeek)
 
   useEffect(() => {
     if (!loaded) void loadDocuments()
@@ -161,7 +159,7 @@ function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conve
 
 export function CanvasWorkspaceCard() {
   const { message: msg } = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
-  const openCanvasPeek = useApp((state) => state.openCanvasPeek)
+  const openCanvasPeek = useSurface((state) => state.openCanvasPeek)
   const setView = useApp((state) => state.setView)
   const load = useCanvas((state) => state.load)
   const loadPreview = useCanvas((state) => state.loadPreview)
@@ -198,7 +196,7 @@ function BoardArtifactCard({ id: rawId }: { id: string }) {
   const loadingBoardId = useBoards((s) => s.loadingBoardId)
   const snapshot = useBoards((s) => s.snapshots[id])
   const selectBoard = useBoards((s) => s.selectBoard)
-  const openBoardPeek = useApp((s) => s.openBoardPeek)
+  const openBoardPeek = useSurface((s) => s.openBoardPeek)
   const summary = list.find((b) => b.id === id) ?? null
   const didRequestList = useRef(false)
   const requestedBoardId = useRef<string | null>(null)
@@ -287,7 +285,7 @@ function CardArtifactCard({ id: rawId }: { id: string }) {
   const loadingCardId = useBoards((s) => s.loadingCardId)
   const loadCard = useBoards((s) => s.loadCard)
   const selectBoard = useBoards((s) => s.selectBoard)
-  const openBoardPeek = useApp((s) => s.openBoardPeek)
+  const openBoardPeek = useSurface((s) => s.openBoardPeek)
   const byId = useParticipants((s) => s.byId)
   const [failed, setFailed] = useState(false)
   const didRequestCard = useRef(false)
@@ -381,7 +379,7 @@ function CalendarArtifactCard({ id: rawId }: { id: string }) {
   const loadEvent = useCalendar((s) => s.loadEvent)
   const event = useCalendar((s) => s.events.find((e) => e.id === id) ?? null)
   const byId = useParticipants((s) => s.byId)
-  const openCalendarEventPeek = useApp((s) => s.openCalendarEventPeek)
+  const openCalendarEventPeek = useSurface((s) => s.openCalendarEventPeek)
   const [failed, setFailed] = useState(false)
   const didRequestCalendar = useRef(false)
 
@@ -492,7 +490,7 @@ export function MessageArtifactParts() {
  * hostile markup can't escape. */
 export function EmailCard() {
   const { message: msg } = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
-  const openComposeReply = useApp((s) => s.openComposeReply)
+  const openComposeReply = useEmailComposer((s) => s.openComposeReply)
   const [showHtml, setShowHtml] = useState(false)
   const [htmlBody, setHtmlBody] = useState<string | null>(null)
   const [htmlError, setHtmlError] = useState<string | null>(null)
@@ -502,7 +500,7 @@ export function EmailCard() {
     if (!showHtml || htmlBody !== null || htmlError) return
     let cancelled = false
     setHtmlLoading(true)
-    api.fetchEmailHtml(msg.id)
+    emailApi.fetchEmailHtml(msg.id)
       .then((html) => { if (!cancelled) setHtmlBody(html ?? '') })
       .catch((e: unknown) => { if (!cancelled) setHtmlError(e instanceof Error ? e.message : String(e)) })
       .finally(() => { if (!cancelled) setHtmlLoading(false) })

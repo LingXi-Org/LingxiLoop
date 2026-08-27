@@ -2,7 +2,8 @@ import { memo } from 'react'
 import { MessagePrimitive, useAuiState } from '@assistant-ui/react'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { cn } from '@/lib/utils'
-import { useApp } from '@/stores/app'
+import { useConversationUi } from '@/stores/conversationUi'
+import { useSurface } from '@/stores/surface'
 import { discardFailedMessage, retryFailedMessage, toggleReaction } from '@/stores/messages'
 import { Avatar } from '../Avatar'
 import { HumanBadge } from '../HumanBadge'
@@ -43,8 +44,8 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
     isContinuedFromPrevious: custom.continuedFromPrevious,
     isContinuedToNext: custom.continuedToNext,
   }
-  const openAgentInfo = useApp((s) => s.openAgentInfo)
-  const openThreadView = useApp((s) => s.openThreadView)
+  const openAgentInfo = useSurface((s) => s.openAgentInfo)
+  const openThreadView = useSurface((s) => s.openThreadView)
   if (custom.presentation.variant === 'system') return <SystemRow msg={msg} delay={delay} animate={animate} openMaus={openMaus} />
   const isHuman = author.kind === 'human'
   const isMine = custom.isMine
@@ -64,7 +65,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
   const copyBody = () => { if (msg.body) void navigator.clipboard.writeText(msg.body) }
   const actionItems: MessageMenuItem[] = [
     { label: '快速反应', submenu: QUICK_REACTIONS.slice(0, 6).map((emoji) => ({ label: emoji, onSelect: () => void toggleReaction(msg.id, emoji) })) },
-    ...(shell.reply ? [{ label: '回复', onSelect: () => useApp.getState().setReplyingTo(msg.conversationId, msg.id) }] : []),
+    ...(shell.reply ? [{ label: '回复', onSelect: () => useConversationUi.getState().setReplyingTo(msg.conversationId, msg.id) }] : []),
     ...(msg.body ? [{ label: '复制文字', onSelect: copyBody }] : []),
   ]
   const reactionEntries = Array.from(

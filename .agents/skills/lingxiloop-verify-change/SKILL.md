@@ -5,7 +5,7 @@ description: "Classify a LingxiLoop diff and run the smallest credible verificat
 
 # Verify a LingxiLoop Change
 
-Select evidence from the actual outgoing scope. CI owns the exhaustive platform matrix, while local verification must exercise the narrowest check that would fail for the changed behavior.
+Select evidence from the actual outgoing scope. Pull-request CI consumes the classifier's `ci` plan, while `main`, manual, and release callers own the exhaustive platform matrix. Local verification must exercise the narrowest check that would fail for the changed behavior.
 
 ## Classify the scope
 
@@ -20,6 +20,7 @@ node .agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs --base 
 - With `--base`, compare the verified merge base to `--head` or `HEAD`. The script never guesses or fetches a base.
 - Add `--include-worktree` only when local changes belong to that committed range.
 - Use `--format json` when another tool needs the versioned report.
+- Read the JSON `ci` object when planning automation. `evalFocused` is fail-closed and valid only when every path is Eval-owned. Shared runtime/DB/API/integration files restore their owning checks; package manifests, workflows, or classifier changes set `fullMatrix`.
 
 Read [references/check-matrix.md](references/check-matrix.md) before changing the classifier mapping or when a category needs manual interpretation.
 
@@ -32,6 +33,15 @@ Read [references/check-matrix.md](references/check-matrix.md) before changing th
 5. Add a focused test when the classifier cannot name one but the changed behavior has an owning test. Do not use an unrelated green suite as proof.
 
 Do not run fix-mode linters, rewrite generated files, start deployment workflows, or mutate Git as part of verification unless separately authorized.
+
+## Keep verification lean
+
+- Do not wrap a guard, classifier, or script in a second test when the same command already runs in the selected local or CI plan. Keep one owning invocation.
+- Run Skill and classifier self-tests only when their implementation or test contract changes; unrelated product diffs must not pay that cost.
+- Keep credential-gated live tests out of default suites. Give them an explicit command and include them only when the opt-in credential flag is present.
+- Prefer one shared fixture reset operation over repeated per-table or per-resource setup. Optimize fixture mechanics before deleting behavioral coverage.
+- Preserve tests for authorization, tenant isolation, transactions, durable work, public contracts, and reproduced regressions. Remove or combine tests only when they exercise the same boundary with no distinct failure signal.
+- A clean fast path reports no expected skips. Record unavailable optional checks at handoff instead of registering them as routine skipped tests.
 
 ## Report
 

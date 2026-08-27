@@ -14,25 +14,41 @@
  * subsume).
  */
 import { createHmac, randomUUID } from 'node:crypto'
-import { ensureSchema } from '../db/migrate.js'
+import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 
 let schemaReady: Promise<void> | null = null
 
-/** Run the schema migrator exactly once per test process. Idempotent —
- *  ensureSchema is itself `IF NOT EXISTS` throughout. */
+/** Assert the externally bootstrapped v1 schema exactly once per test process. */
 export function ensureSchemaOnce(): Promise<void> {
-  if (!schemaReady) schemaReady = ensureSchema()
+  if (!schemaReady) schemaReady = assertV1SchemaReady()
   return schemaReady
 }
 
-/** Tables we wipe between tests. Order matters when there are FK
- *  constraints; CASCADE on the parents handles it but listing explicitly
- *  keeps the intent visible + lets us spot-check leakage. */
+/** Tables we wipe between tests. Keeping the list explicit makes fixture
+ *  ownership visible; one statement lets PostgreSQL resolve dependencies and
+ *  perform a single durability sync instead of one sync per table. */
 const TABLES_TO_WIPE: readonly string[] = [
+  'eval_stage_results',
+  'eval_cases',
+  'eval_runs',
   'course_invitation_acceptances',
   'course_invitations',
+  'learning_notification_deliveries',
+  'learning_notification_preferences',
+  'learning_mastery_events',
+  'learning_mastery',
+  'learning_evaluations',
+  'learning_attempts',
+  'learning_mission_steps',
+  'learning_missions',
+  'learning_activities',
+  'learning_objective_dependencies',
+  'learning_objectives',
+  'learning_course_rooms',
+  'learning_course_teacher_rooms',
+  'learning_project_teacher_agents',
   'course_members',
   'courses',
   'agent_host_actions',
@@ -42,11 +58,15 @@ const TABLES_TO_WIPE: readonly string[] = [
   'agent_os_sessions',
   'agent_memory_evidence',
   'im_send_acceptances',
+  'im_read_receipt_advances',
   'im_poll_votes',
   'im_polls',
   'wukong_webhook_receipts',
   'im_channel_bindings',
   'canvas_activity',
+  'canvas_assignment_reports',
+  'canvas_assignment_dependencies',
+  'canvas_agent_assignments',
   'canvas_comments',
   'canvas_presence',
   'canvas_frames',
@@ -102,9 +122,7 @@ export async function resetAllTables(): Promise<void> {
     throw new Error(`refusing to TRUNCATE — DATABASE_URL doesn't look like a test DB: ${env.DATABASE_URL}`)
   }
   await ensureSchemaOnce()
-  for (const t of TABLES_TO_WIPE) {
-    await pool.query(`TRUNCATE TABLE ${t} CASCADE`).catch(() => { /* table may not exist on partial schemas */ })
-  }
+  await pool.query(`TRUNCATE TABLE ${TABLES_TO_WIPE.join(', ')} CASCADE`)
 }
 
 /** Compute the HMAC signature the inbound webhook expects. Mirrors the
@@ -132,15 +150,14 @@ export async function seedCompanyWithAgent(opts?: {
      ON CONFLICT DO NOTHING`,
     [companyId, `Test ${companyId}`, companyId, 'test-owner'],
   )
-  // Mirror production onboarding: companies created after the schema
-  // migration need their General workspace established explicitly.
+  // Mirror production onboarding: every company needs its General workspace.
   await pool.query(
     `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
      SELECT $2, $1, '通用工作区', '测试公司的默认工作区', '#667085', 'test-owner', TRUE
       WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
     [companyId, `general-${companyId}`],
   )
-  // participants composite PK is (id, company_id) — see migrate.ts.
+  // participants composite PK is (id, company_id) — see db/schema.sql.
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
      VALUES ($1, $2, 'agent', $3, 'tester', $4, '#abcdef', 'avail', $5)
@@ -158,8 +175,8 @@ export async function buildTestApp(): Promise<import('express').Express> {
   const express = expressMod.default
   const app = express()
   const { inboundEmailRouter } = await import('../api/inbound-email.js')
-  // Match the production mount path: index.ts mounts inboundEmailRouter
-  // at /webhooks/email — see server/src/index.ts.
+  // Match the production mount path: web.ts mounts inboundEmailRouter
+  // at /webhooks/email — see server/src/web.ts.
   app.use('/webhooks/email', inboundEmailRouter)
   return app
 }

@@ -7,7 +7,7 @@ import { useEffect, useRef, type RefObject } from 'react'
 import { Avatar } from './Avatar'
 import { HumanBadge } from './HumanBadge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useMe } from '@/stores/auth'
 import type { Participant } from '@/types'
 
@@ -29,7 +29,7 @@ interface Props {
 
 export function MembersPopover({ members, anchor, triggerRef, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-  const openInfo = useApp((s) => s.openAgentInfo)
+  const openInfo = useSurface((s) => s.openAgentInfo)
   const meId = useMe()
 
   useEffect(() => {

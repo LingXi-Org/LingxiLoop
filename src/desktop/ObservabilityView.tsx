@@ -6,8 +6,8 @@ import {
   type ApiAgentWorkspaceFile,
   type ApiAgentWorkspaceFileContent,
   type ApiTriageEconomics,
-  api,
-} from '@/api/client'
+} from '@/api/contracts'
+import { observabilityApi } from '@/api/observability'
 import { CodeBlock, RichBody } from '@/components/messages/MessageBody'
 import { ResizeHandle } from '@/components/ResizeHandle'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
@@ -946,7 +946,7 @@ export function ObservabilityView() {
     setLoading(true)
     setErr(null)
     try {
-      const data = await api.getAgentRuns({
+      const data = await observabilityApi.getAgentRuns({
         agentId: agentId === 'all' ? null : agentId,
         status,
         limit: 80,
@@ -966,7 +966,7 @@ export function ObservabilityView() {
       return
     }
     try {
-      setEvents(await api.getAgentRunEvents(runId))
+      setEvents(await observabilityApi.getAgentRunEvents(runId))
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e))
     }
@@ -977,7 +977,7 @@ export function ObservabilityView() {
     setWorkspaceLoading(true)
     setWorkspaceErr(null)
     try {
-      const files = await api.listAgentWorkspace(workspaceAgentId)
+      const files = await observabilityApi.listAgentWorkspace(workspaceAgentId)
       setWorkspaceFiles(files)
       setSelectedPath((cur) => cur && files.some((file) => file.path === cur) ? cur : files[0]?.path ?? null)
     } catch (e) {
@@ -1016,7 +1016,7 @@ export function ObservabilityView() {
     setTriageLoading(true)
     setTriageErr(null)
     try {
-      setTriage(await api.getTriageEconomics({ agentId: agentId === 'all' ? null : agentId, sinceHours: triageHours }))
+      setTriage(await observabilityApi.getTriageEconomics({ agentId: agentId === 'all' ? null : agentId, sinceHours: triageHours }))
     } catch (e) {
       setTriageErr(e instanceof Error ? e.message : String(e))
     } finally {
@@ -1035,7 +1035,7 @@ export function ObservabilityView() {
     }
     let cancelled = false
     setWorkspaceErr(null)
-    void api.readAgentWorkspaceFile(workspaceAgentId, selectedPath)
+    void observabilityApi.readAgentWorkspaceFile(workspaceAgentId, selectedPath)
       .then((file) => {
         if (!cancelled) setWorkspaceFile(file)
       })

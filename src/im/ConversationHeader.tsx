@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from 'react'
-import { api } from '@/api/client'
+import { conversationsApi } from '@/api/conversations'
 import { AvatarStack } from '@/components/Avatar'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -54,7 +54,7 @@ export function ConversationHeader({
     if (!next || next === conversation.title) return
     const previous = conversation.title
     updateConversation({ title: next })
-    try { await api.setTitle(conversation.id, next) }
+    try { await conversationsApi.setTitle(conversation.id, next) }
     catch (error) {
       console.warn('[conversation header] rename failed', error)
       updateConversation({ title: previous })
@@ -66,7 +66,7 @@ export function ConversationHeader({
     setEditingTopic(false)
     const previous = conversation.topic ?? null
     updateConversation({ topic: next })
-    try { await api.setTopic(conversation.id, next) }
+    try { await conversationsApi.setTopic(conversation.id, next) }
     catch (error) {
       console.warn('[conversation header] topic update failed', error)
       updateConversation({ topic: previous })
@@ -76,7 +76,7 @@ export function ConversationHeader({
   const changeLeader = async (leaderId: string) => {
     const previous = conversation.leaderId
     updateConversation({ leaderId })
-    try { await api.setLeader(conversation.id, leaderId) }
+    try { await conversationsApi.setLeader(conversation.id, leaderId) }
     catch (error) {
       console.warn('[conversation header] leader update failed', error)
       updateConversation({ leaderId: previous })

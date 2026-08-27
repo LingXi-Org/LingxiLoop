@@ -343,42 +343,14 @@
       }
       .shot-desktop {
         display: block;
-        width: 64%;
-        margin-left: 8%;
+        width: 84%;
+        margin: 0 auto;
         height: auto;
         filter:
           drop-shadow(0 28px 48px rgba(10, 30, 60, 0.18))
           drop-shadow(0 8px 16px rgba(10, 30, 60, 0.12));
         position: relative;
         z-index: 1;
-      }
-      .shot-mobile {
-        position: absolute;
-        top: 50%;
-        right: 4%;
-        height: 102%;
-        width: auto;
-        /* Explicit aspect ratio matches the cropped source
-           (1240×2389 — bbox around any non-transparent pixel, with
-           80px outer padding so the soft drop-shadow halo baked into
-           the source PNG doesn't get clipped at its faintest edges).
-           Without an explicit aspect ratio, mobile Safari sometimes
-           drops the intrinsic aspect on absolute-positioned images
-           with `% height + auto width` and renders a stretched frame. */
-        aspect-ratio: 1240 / 2389;
-        transform: translateY(-50%);
-        filter:
-          drop-shadow(0 28px 48px rgba(10, 30, 60, 0.22))
-          drop-shadow(0 8px 16px rgba(10, 30, 60, 0.16));
-        z-index: 2;
-        animation: shot-mobile-in 900ms cubic-bezier(.2,.7,.2,1) 200ms both;
-      }
-      @keyframes shot-mobile-in {
-        from { opacity: 0; transform: translateY(calc(-50% + 24px)); }
-        to   { opacity: 1; transform: translateY(-50%); }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .shot-mobile { animation: none; }
       }
       /* Legacy class kept so any external link / cached HTML referencing
          .chrome-shot still styles cleanly. */
@@ -624,33 +596,13 @@
         .hero-cta .btn { width: 100%; justify-content: center; }
 
         .chrome { margin-top: 36px; padding: 0 16px; }
-        /* Mobile breakpoint: stack vertically instead of overlapping.
-           At narrow viewports the side-by-side composition crams both
-           images so small that detail is lost. Laptop on top, phone
-           below — both centered, both readable. The animated entrance
-           also gets retargeted to a pure translateY since there's no
-           absolute-center anchor anymore. */
         .shots {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 24px;
+          display: block;
         }
         .shot-desktop {
           width: 100%;
           margin-left: 0;
         }
-        .shot-mobile {
-          position: static;
-          width: 56%;
-          height: auto;
-          transform: none;
-        }
-        @keyframes shot-mobile-in {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
         section { padding: 56px 18px; }
         .section-lede { font-size: 15px; margin-bottom: 32px; }
         .features { gap: 14px; grid-template-columns: 1fr; }
@@ -779,13 +731,10 @@
       </header>
     </div>
 
-    <!-- Product screenshot — desktop base + mobile overlay so the
-         "LingxiLoop runs everywhere" pitch is visible at a glance, no copy
-         needed. -->
+    <!-- Product screenshot for the maintained Web and Desktop experience. -->
     <div class="chrome">
       <div class="shots">
         <img class="shot shot-desktop" src="assets/product-screenshot.png" alt="LingxiLoop app — Everyone group chat with Atlas, Bram, Iris and Nova on desktop" loading="lazy" />
-        <img class="shot shot-mobile" src="assets/mobile-screenshot.png" alt="LingxiLoop app on iPhone — the same workspace, live on mobile" loading="lazy" />
       </div>
     </div>
 
@@ -904,8 +853,8 @@
         <h2 style="margin-bottom: 14px;" data-download-only>Get LingxiLoop on your devices.</h2>
         <h2 style="margin-bottom: 14px;" data-waitlist-only hidden>Join the LingxiLoop waitlist.</h2>
         <p class="section-lede" style="margin-bottom: 24px;" data-download-only>
-          A native app for macOS, Windows, and Linux — with iOS shipping next. Your
-          workspace, your agents, the same live state across every device.
+          Use LingxiLoop on the Web or install the desktop app for macOS, Windows,
+          and Linux. Your workspace and agents stay in sync across supported devices.
         </p>
         <p class="section-lede" style="margin-bottom: 24px;" data-waitlist-only hidden>
           We're letting people in a few at a time so the first experience holds up. Sign in
