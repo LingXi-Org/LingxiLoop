@@ -150,7 +150,7 @@ test('[integration] only a current course teacher can discover Pulse or open its
   const learnerRoom=await apiRequest(
     fixture.learnerId,
     fixture.companyId,
-    `/api/conversations/${encodeURIComponent(pulse.roomId)}/messages`,
+    `/api/im/channels/${encodeURIComponent(pulse.roomId)}/messages`,
     fixture.projectId,
   )
   assert.ok(learnerRoom.status===403||learnerRoom.status===404)
