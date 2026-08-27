@@ -1,7 +1,7 @@
+import { conversationsApi } from '@/api/conversations'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
 import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
-import { api } from '@/api/client'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
@@ -21,6 +21,7 @@ import { bootConversations, isMuted, useConversations } from '@/stores/conversat
 import { bootMessagesStream, useMessages } from '@/stores/messages'
 import { bootParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
+import { useUiCommand } from '@/stores/uiCommands'
 import { bootWhispers, useWhispers } from '@/stores/whispers'
 
 const AdminApp = lazy(() => import('@/admin/AdminApp').then((module) => ({ default: module.AdminApp })))
@@ -50,6 +51,7 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     convoId ? s.list.some((c) => c.id === convoId) : false,
   )
   const [updaterOpen, setUpdaterOpen] = useState(false)
+  const uiCommand = useUiCommand()
   useEffect(() => {
     if (mockMode) return
     bootMessagesStream()
@@ -72,7 +74,7 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     if (mockMode) return
     if (!convoId || !selectedConvoExists) return
     void useMessages.getState().loadConversation(convoId)
-    void api.markRead(convoId).then(() => {
+    void conversationsApi.markRead(convoId).then(() => {
       // refresh list so the badge clears
       void useConversations.getState().reload()
     }).catch(() => { /* swallow */ })
@@ -84,14 +86,9 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     if (view === 'whispers') useWhispers.getState().loadList()
   }, [view, mockMode])
 
-  // Cross-component "open updater" channel — MeView's "Check for
-  // updates" button posts this event to ask AuthedApp to open the
-  // dialog without prop-drilling.
   useEffect(() => {
-    const onOpen = () => setUpdaterOpen(true)
-    window.addEventListener('lingxiloop:open-updater', onOpen)
-    return () => window.removeEventListener('lingxiloop:open-updater', onOpen)
-  }, [])
+    if (uiCommand?.type === 'open-updater') setUpdaterOpen(true)
+  }, [uiCommand])
 
   return (
     <>

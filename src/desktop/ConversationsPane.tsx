@@ -1,7 +1,9 @@
+import { conversationsApi } from '@/api/conversations'
+import { platformApi } from '@/api/platform'
+import type { ApiSearchResults } from '@/api/contracts'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
-import { type ApiSearchResults, api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { ContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { GroupCreator } from '@/components/GroupCreator'
@@ -10,6 +12,8 @@ import { ConversationListItemContent } from '@/im/ConversationList'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
+import { useEmailComposer } from '@/stores/emailComposer'
+import { useUiCommand } from '@/stores/uiCommands'
 import { useAuth } from '@/stores/auth'
 import { isMuted, useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
@@ -51,7 +55,7 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
   const add = async (participant: Participant) => {
     setBusy(participant.id); setError(null)
     try {
-      await api.addMember(conversation.id, participant.id)
+      await conversationsApi.addMember(conversation.id, participant.id)
       await useConversations.getState().reload()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason))
@@ -98,17 +102,14 @@ export function ConversationsPane() {
   const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null)
   const [addingMembers, setAddingMembers] = useState<Conversation | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+  const uiCommand = useUiCommand()
 
   useEffect(() => {
-    const focusSearch = () => { searchRef.current?.focus(); searchRef.current?.select() }
-    const createGroup = () => setCreating([])
-    window.addEventListener('lingxiloop:focus-conversation-search', focusSearch)
-    window.addEventListener('lingxiloop:new-group', createGroup)
-    return () => {
-      window.removeEventListener('lingxiloop:focus-conversation-search', focusSearch)
-      window.removeEventListener('lingxiloop:new-group', createGroup)
-    }
-  }, [])
+    if (uiCommand?.type === 'focus-conversation-search') {
+      searchRef.current?.focus()
+      searchRef.current?.select()
+    } else if (uiCommand?.type === 'new-group') setCreating([])
+  }, [uiCommand])
 
   useEffect(() => {
     const value = query.trim()
@@ -117,7 +118,7 @@ export function ConversationsPane() {
     const controller = new AbortController()
     setSearching(true)
     const timer = window.setTimeout(() => {
-      api.search(value, controller.signal)
+      platformApi.search(value, controller.signal)
         .then((next) => setResults(next))
         .catch((error) => { if ((error as { name?: string }).name !== 'AbortError') console.warn('[search] failed', error) })
         .finally(() => setSearching(false))
@@ -149,12 +150,12 @@ export function ConversationsPane() {
   const openContextMenu = (conversation: Conversation, event: React.MouseEvent) => {
     event.preventDefault()
     const items: ContextMenuItem[] = [
-      { label: conversation.pinned ? '取消置顶' : '置顶会话', onSelect: () => void api.togglePin(conversation.id, !conversation.pinned).then(() => useConversations.getState().reload()) },
-      { label: isMuted(conversation) ? '取消静音' : '静音会话', onSelect: () => void api.setMute(conversation.id, !isMuted(conversation), null).then(() => useConversations.getState().reload()) },
+      { label: conversation.pinned ? '取消置顶' : '置顶会话', onSelect: () => void conversationsApi.togglePin(conversation.id, !conversation.pinned).then(() => useConversations.getState().reload()) },
+      { label: isMuted(conversation) ? '取消静音' : '静音会话', onSelect: () => void conversationsApi.setMute(conversation.id, !isMuted(conversation), null).then(() => useConversations.getState().reload()) },
     ]
     if (conversation.kind === 'group') {
       items.push({ label: '添加成员…', onSelect: () => setAddingMembers(conversation) })
-      items.push({ label: '退出群聊', destructive: true, onSelect: () => void api.leaveConversation(conversation.id).then(async () => { await useConversations.getState().reload(); if (selected === conversation.id) select(null) }) })
+      items.push({ label: '退出群聊', destructive: true, onSelect: () => void conversationsApi.leaveConversation(conversation.id).then(async () => { await useConversations.getState().reload(); if (selected === conversation.id) select(null) }) })
     } else {
       const other = conversation.members.find((id) => id !== authUser?.id)
       if (other) items.push({ label: '创建包含此成员的群聊…', onSelect: () => setCreating([other]) })
@@ -175,7 +176,7 @@ export function ConversationsPane() {
               <div className="app-menu-surface grok-top-menu absolute left-0 top-full z-40 mt-1 min-w-[216px] overflow-hidden p-1" role="menu" aria-label="LingxiLoop">
                 <div className="grok-top-menu-label">LingxiLoop</div>
                 <button type="button" onClick={() => { setLauncherOpen(false); setCreating([]) }} className="app-menu-item"><span className="app-menu-icon"><IPlus /></span>新建群聊</button>
-                <button type="button" onClick={() => { setLauncherOpen(false); useApp.getState().openComposeNew() }} className="app-menu-item"><span className="app-menu-icon"><IMail /></span>写邮件</button>
+                <button type="button" onClick={() => { setLauncherOpen(false); useEmailComposer.getState().openComposeNew() }} className="app-menu-item"><span className="app-menu-icon"><IMail /></span>写邮件</button>
                 <div className="my-1 h-px bg-hairline" />
                 {([
                   ['agents', '智能体', IAgent],

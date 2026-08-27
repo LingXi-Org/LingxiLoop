@@ -1,5 +1,7 @@
+import { calendarApi } from '@/api/calendar'
+import type { CalendarEventInput } from '@/api/contracts'
 import { create } from 'zustand'
-import { api, ws, type CalendarEventInput } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import type { CalendarEvent, CalendarEventStatus } from '@/types'
 
 interface CalendarState {
@@ -43,7 +45,7 @@ export const useCalendar = create<CalendarState>((set, get) => ({
     if (get().loaded || get().loading) return
     set({ loading: true, error: null })
     try {
-      const { events } = await api.listCalendarEvents()
+      const { events } = await calendarApi.listCalendarEvents()
       set({ events: events.sort(byStart), loaded: true, loading: false })
     } catch (err) {
       set({ loading: false, error: err instanceof Error ? err.message : String(err) })
@@ -56,11 +58,11 @@ export const useCalendar = create<CalendarState>((set, get) => ({
     set({ loadingEventId: id, error: null })
     try {
       try {
-        const { event } = await api.getCalendarEvent(id)
+        const { event } = await calendarApi.getCalendarEvent(id)
         set((s) => ({ events: replaceOrInsert(s.events, event) }))
         return event
       } catch (directErr) {
-        const { events } = await api.listCalendarEvents()
+        const { events } = await calendarApi.listCalendarEvents()
         const sorted = events.sort(byStart)
         const event = sorted.find((e) => e.id === id)
         set({ events: sorted, loaded: true })
@@ -78,7 +80,7 @@ export const useCalendar = create<CalendarState>((set, get) => ({
   async reload() {
     set({ loading: true, error: null })
     try {
-      const { events } = await api.listCalendarEvents()
+      const { events } = await calendarApi.listCalendarEvents()
       set({ events: events.sort(byStart), loaded: true, loading: false })
     } catch (err) {
       set({ loading: false, error: err instanceof Error ? err.message : String(err) })
@@ -90,27 +92,27 @@ export const useCalendar = create<CalendarState>((set, get) => ({
   },
 
   async create(input) {
-    const { event } = await api.createCalendarEvent(input)
+    const { event } = await calendarApi.createCalendarEvent(input)
     set((s) => ({ events: replaceOrInsert(s.events, event) }))
     return event
   },
 
   async update(id, patch) {
-    const { event } = await api.updateCalendarEvent(id, patch)
+    const { event } = await calendarApi.updateCalendarEvent(id, patch)
     set((s) => ({ events: replaceOrInsert(s.events, event) }))
     return event
   },
 
   async remove(id) {
-    await api.deleteCalendarEvent(id)
+    await calendarApi.deleteCalendarEvent(id)
     set((s) => ({ events: s.events.filter((e) => e.id !== id) }))
   },
 
   async runNow(id) {
-    const r = await api.runCalendarEventNow(id)
+    const r = await calendarApi.runCalendarEventNow(id)
     // The dispatch updates last_fired_at server-side; refresh that one row.
     try {
-      const { events } = await api.listCalendarEvents()
+      const { events } = await calendarApi.listCalendarEvents()
       set({ events: events.sort(byStart) })
     } catch { /* keep current list */ }
     return r
@@ -136,7 +138,7 @@ ws.on((ev) => {
   // just means we drop the local copy on the next list reload.
   void (async () => {
     try {
-      const { event } = await api.getCalendarEvent(ev.eventId)
+      const { event } = await calendarApi.getCalendarEvent(ev.eventId)
       useCalendar.setState((s) => ({ events: replaceOrInsert(s.events, event) }))
     } catch { /* swallow — next load() reconciles */ }
   })()

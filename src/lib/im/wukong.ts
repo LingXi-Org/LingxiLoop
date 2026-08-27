@@ -1,5 +1,5 @@
+import { getServerOrigin } from '@/api/core/http'
 import WKSDK, { MessageContent, type WKEvent, type Message as WKMessage } from 'wukongimjssdk'
-import { getServerOrigin } from '@/api/client'
 import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
 import { isEmptyHistoryDetail, isInternalAgentStatus } from './historyErrors'

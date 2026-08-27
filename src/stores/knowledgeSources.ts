@@ -1,5 +1,5 @@
+import { knowledgeApi } from '@/api/knowledge'
 import { create } from 'zustand'
-import { api } from '@/api/client'
 import { useApp } from '@/stores/app'
 import { useConversations } from '@/stores/conversations'
 import type { ConversationSourceSelection, KnowledgeCitation, KnowledgeSource } from '@/types'
@@ -90,7 +90,7 @@ export const useKnowledgeSources = create<SourceState>((set, get) => ({
     }
     set({ loading: true })
     try {
-      const list = await api.listSources(id)
+      const list = await knowledgeApi.listSources(id)
       set({ list, loading: false })
       scheduleSourcePoll(list, get().load)
     } catch { set({ loading: false }) }
@@ -99,14 +99,14 @@ export const useKnowledgeSources = create<SourceState>((set, get) => ({
     const cached = get().list.find((source) => source.id === sourceId) ?? null
     set({ selectedSource: cached, selectedCitation: null })
     const id = groupConversationId()
-    if (!id.startsWith('mock-')) set({ selectedSource: await api.getSource(id, sourceId) })
+    if (!id.startsWith('mock-')) set({ selectedSource: await knowledgeApi.getSource(id, sourceId) })
   },
   openCitation: async (citation) => {
     const cached = get().list.find((source) => source.id === citation.sourceId) ?? null
     set({ selectedSource: cached, selectedCitation: citation })
     const id = groupConversationId()
     if (!id.startsWith('mock-')) {
-      try { set({ selectedSource: await api.getSource(id, citation.sourceId) }) }
+      try { set({ selectedSource: await knowledgeApi.getSource(id, citation.sourceId) }) }
       catch { /* keep the immutable citation snapshot when its source was deleted */ }
     }
   },
@@ -114,12 +114,12 @@ export const useKnowledgeSources = create<SourceState>((set, get) => ({
   addText: async (title, text) => {
     const id = groupConversationId()
     if (id.startsWith('mock-')) { mockSourcesFor(id).unshift(source({ id: `mock-source-${Date.now()}`, kind: 'text', title, sizeBytes: new Blob([text]).size, chunkCount: Math.max(1, Math.ceil(text.length / 1800)), extractedText: text, createdAt: new Date().toISOString() })); await get().load(); return }
-    await api.addTextSource(id, { title, text }); await get().load()
+    await knowledgeApi.addTextSource(id, { title, text }); await get().load()
   },
   addUrl: async (url, title) => {
     const id = groupConversationId()
     if (id.startsWith('mock-')) { mockSourcesFor(id).unshift(source({ id: `mock-source-${Date.now()}`, kind: 'url', title: title || new URL(url).hostname, originalUrl: url, status: 'processing', stage: 'parsing', createdAt: new Date().toISOString() })); await get().load(); return }
-    await api.addUrlSource(id, { url, title }); await get().load()
+    await knowledgeApi.addUrlSource(id, { url, title }); await get().load()
   },
   addFiles: async (files) => {
     const id = groupConversationId()
@@ -127,32 +127,32 @@ export const useKnowledgeSources = create<SourceState>((set, get) => ({
       for (const file of files) mockSourcesFor(id).unshift(source({ id: `mock-file-${Date.now()}-${file.name}`, kind: 'file', title: file.name, mimeType: file.type || 'text/plain', sizeBytes: file.size, status: 'queued', stage: 'queued', createdAt: new Date().toISOString() }))
       await get().load(); return
     }
-    for (const file of files) await api.uploadKnowledgeFile(id, file)
+    for (const file of files) await knowledgeApi.uploadKnowledgeFile(id, file)
     await get().load()
   },
   retry: async (sourceId) => {
     const id = groupConversationId()
     if (id.startsWith('mock-')) { const item = mockSourcesFor(id).find((entry) => entry.id === sourceId); if (item) Object.assign(item, { status: 'ready', stage: 'ready', error: null, chunkCount: 6, extractedText: 'Mock 重试成功：该来源已完成解析与索引，可用于当前对话。', updatedAt: new Date().toISOString() }); await get().load(); return }
-    await api.retrySource(id, sourceId); await get().load()
+    await knowledgeApi.retrySource(id, sourceId); await get().load()
   },
   remove: async (sourceId) => {
     const id = groupConversationId()
     if (id.startsWith('mock-')) { mockSourceCatalog[id] = mockSourcesFor(id).filter((source) => source.id !== sourceId); set({ selectedSource: null, selectedCitation: null }); await get().load(); return }
-    await api.deleteSource(id, sourceId); set({ selectedSource: null, selectedCitation: null }); await get().load()
+    await knowledgeApi.deleteSource(id, sourceId); set({ selectedSource: null, selectedCitation: null }); await get().load()
   },
   loadConversationSelection: async (conversationId) => {
     const id = groupConversationId()
     if (id !== conversationId) throw new Error('只能管理当前群聊的知识库')
     if (id.startsWith('mock-')) { const excluded = mockExcludedByConversation[conversationId] ?? new Set<string>(); set({ conversationSelection: { conversationId, sources: mockSourcesFor(id).map((item) => ({ sourceId: item.id, title: item.title, status: item.status, enabled: !excluded.has(item.id) })) } }); return }
-    set({ conversationSelection: await api.getConversationSources(conversationId) })
+    set({ conversationSelection: await knowledgeApi.getConversationSources(conversationId) })
   },
   setSourceEnabled: async (conversationId, sourceId, enabled) => {
     const id = groupConversationId()
     if (id.startsWith('mock-')) { const excluded = mockExcludedByConversation[conversationId] ?? (mockExcludedByConversation[conversationId] = new Set()); if (enabled) excluded.delete(sourceId); else excluded.add(sourceId); await get().loadConversationSelection(conversationId); return }
-    const selection = get().conversationSelection ?? await api.getConversationSources(conversationId)
+    const selection = get().conversationSelection ?? await knowledgeApi.getConversationSources(conversationId)
     const excluded = selection.sources.filter((source) => source.sourceId !== sourceId && !source.enabled).map((source) => source.sourceId)
     if (!enabled) excluded.push(sourceId)
-    await api.updateConversationSources(conversationId, excluded)
+    await knowledgeApi.updateConversationSources(conversationId, excluded)
     await get().loadConversationSelection(conversationId)
   },
 }))

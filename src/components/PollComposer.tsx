@@ -1,5 +1,5 @@
+import { messagesApi } from '@/api/messages'
 import { useEffect, useRef, useState } from 'react'
-import { api } from '@/api/client'
 import { cn } from '@/lib/utils'
 
 /**
@@ -102,7 +102,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
     setSubmitting(true)
     setError(null)
     try {
-      await api.createPoll({
+      await messagesApi.createPoll({
         conversationId,
         question: question.trim(),
         mode,

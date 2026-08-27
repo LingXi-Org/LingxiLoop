@@ -1,5 +1,5 @@
+import { http } from '@/api/core/http'
 import { useEffect, useState, type ReactNode } from 'react'
-import { http } from '@/api/client'
 import { trimUrlTrailing } from '@/lib/utils'
 
 /**

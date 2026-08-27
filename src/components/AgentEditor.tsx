@@ -1,5 +1,6 @@
+import { agentsApi } from '@/api/agents'
+import type { AgentInput } from '@/api/contracts'
 import { useEffect, useState } from 'react'
-import { type AgentInput, api } from '@/api/client'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useConversations } from '@/stores/conversations'
@@ -59,11 +60,11 @@ export function AgentEditor({ agent, onClose }: Props) {
       if (editing) {
         // Only send avatarUrl on change so we don't clobber it on no-op edits.
         if ((agent!.avatarUrl ?? null) !== avatarUrl) payload.avatarUrl = avatarUrl
-        await api.updateAgent(agent!.id, payload)
+        await agentsApi.updateAgent(agent!.id, payload)
       } else {
         // No `id` field on create — server slugifies it from `name`
         // and guarantees global uniqueness.
-        await api.createAgent(payload)
+        await agentsApi.createAgent(payload)
       }
       await useParticipants.getState().load()
       await useConversations.getState().reload()
@@ -83,8 +84,8 @@ export function AgentEditor({ agent, onClose }: Props) {
     setGeneratingAvatar(true)
     try {
       // First save any pending edits so the prompt reflects what the user typed.
-      await api.updateAgent(agent.id, { name, role, systemPrompt, bio, avatarBg })
-      const r = await api.generateAgentAvatar(agent.id)
+      await agentsApi.updateAgent(agent.id, { name, role, systemPrompt, bio, avatarBg })
+      const r = await agentsApi.generateAgentAvatar(agent.id)
       setAvatarUrl(r.url)
       await useParticipants.getState().load()
     } catch (e) {

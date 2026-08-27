@@ -1,3 +1,4 @@
+import { platformApi } from '@/api/platform'
 /**
  * WebShell — the optional handoff-only surface for an operator-selected
  * public `app.*` hostname. The primary production origin uses the full Web UI;
@@ -14,7 +15,6 @@
  * the desktop download fallback even while the public waitlist gate is on.
  */
 import { useEffect, useState } from 'react'
-import { api } from '@/api/client'
 import { useAuth } from '@/stores/auth'
 import { AuthGate } from '@/components/AuthGate'
 import { CloudLogo } from '@/components/Avatar'
@@ -62,7 +62,7 @@ function WebHandoff() {
   }
 
   const signOut = async () => {
-    try { await api.authLogout() } catch { /* swallow */ }
+    try { await platformApi.authLogout() } catch { /* swallow */ }
     clear()
   }
 
@@ -119,7 +119,7 @@ function WebLanding() {
   const go = () => {
     setBusy('lingxi'); setErr(null)
     const returnUrl = `${location.origin}${location.pathname}`
-    location.assign(api.authStartUrl('lingxi', { returnUrl }))
+    location.assign(platformApi.authStartUrl('lingxi', { returnUrl }))
   }
 
   return (

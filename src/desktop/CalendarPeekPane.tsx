@@ -1,9 +1,10 @@
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { CalendarEventPeekContent } from '@/components/ArtifactPeekContent'
 
 export function CalendarPeekPane() {
-  const eventId = useApp((s) => s.openCalendarEventId)
-  const closeCalendarEventPeek = useApp((s) => s.closeCalendarEventPeek)
+  const eventId = useSurface((s) => s.surface?.kind === 'calendar' ? s.surface.eventId : null)
+  const closeCalendarEventPeek = useSurface((s) => s.closeCalendarEventPeek)
   const setView = useApp((s) => s.setView)
 
   if (!eventId) return null

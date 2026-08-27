@@ -1,10 +1,11 @@
+import { agentsApi } from '@/api/agents'
+import { emailApi } from '@/api/email'
 import hljs from 'highlight.js/lib/common'
 import { createContext, memo, type ReactNode, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Markdown, { type Components } from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
-import { api } from '@/api/client'
 import { inferAttachmentPreview } from '@/lib/attachmentPreview'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { messageShellCapabilities } from '@/lib/messageShell'
@@ -14,6 +15,9 @@ import { remarkLingxiLoop } from '@/lib/remarkLingxiLoop'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
 import { cn, parseBlocks, parseBody } from '@/lib/utils'
 import { useApp } from '@/stores/app'
+import { useConversationUi } from '@/stores/conversationUi'
+import { useEmailComposer } from '@/stores/emailComposer'
+import { useSurface } from '@/stores/surface'
 import { useMe } from '@/stores/auth'
 import { useBoards } from '@/stores/boards'
 import { useCalendar } from '@/stores/calendar'
@@ -41,7 +45,7 @@ import { TwEmoji } from './TwEmoji'
 
 function MentionChip({ id }: { id: string }) {
   const byId = useParticipants((s) => s.byId)
-  const openAgentInfo = useApp((s) => s.openAgentInfo)
+  const openAgentInfo = useSurface((s) => s.openAgentInfo)
   const meId = useMe()
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null)
   const ref = useRef<HTMLSpanElement | null>(null)
@@ -315,7 +319,7 @@ function MessageRefChip({ n }: { n: number }) {
     }
     return null
   })
-  const jumpToMessage = useApp((s) => s.jumpToMessage)
+  const jumpToMessage = useConversationUi((s) => s.jumpToMessage)
   const byId = useParticipants((s) => s.byId)
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null)
   const ref = useRef<HTMLSpanElement | null>(null)
@@ -587,7 +591,7 @@ function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conve
   const selectDocument = useDocuments((s) => s.select)
   const doc = useDocuments((s) => s.list.find((d) => d.id === id) ?? null)
   const byId = useParticipants((s) => s.byId)
-  const openDocumentPeek = useApp((s) => s.openDocumentPeek)
+  const openDocumentPeek = useSurface((s) => s.openDocumentPeek)
 
   useEffect(() => {
     if (!loaded) void loadDocuments()
@@ -667,7 +671,7 @@ function BoardArtifactCard({ id: rawId }: { id: string }) {
   const loadingBoardId = useBoards((s) => s.loadingBoardId)
   const snapshot = useBoards((s) => s.snapshots[id])
   const selectBoard = useBoards((s) => s.selectBoard)
-  const openBoardPeek = useApp((s) => s.openBoardPeek)
+  const openBoardPeek = useSurface((s) => s.openBoardPeek)
   const summary = list.find((b) => b.id === id) ?? null
   const didRequestList = useRef(false)
   const requestedBoardId = useRef<string | null>(null)
@@ -754,7 +758,7 @@ function CardArtifactCard({ id: rawId }: { id: string }) {
   const loadingCardId = useBoards((s) => s.loadingCardId)
   const loadCard = useBoards((s) => s.loadCard)
   const selectBoard = useBoards((s) => s.selectBoard)
-  const openBoardPeek = useApp((s) => s.openBoardPeek)
+  const openBoardPeek = useSurface((s) => s.openBoardPeek)
   const byId = useParticipants((s) => s.byId)
   const [failed, setFailed] = useState(false)
   const didRequestCard = useRef(false)
@@ -846,7 +850,7 @@ function CalendarArtifactCard({ id: rawId }: { id: string }) {
   const loadEvent = useCalendar((s) => s.loadEvent)
   const event = useCalendar((s) => s.events.find((e) => e.id === id) ?? null)
   const byId = useParticipants((s) => s.byId)
-  const openCalendarEventPeek = useApp((s) => s.openCalendarEventPeek)
+  const openCalendarEventPeek = useSurface((s) => s.openCalendarEventPeek)
   const [failed, setFailed] = useState(false)
   const didRequestCalendar = useRef(false)
 
@@ -1094,7 +1098,7 @@ function AttachmentCard({ msg }: { msg: Message }) {
  * server sanitizes and the sandbox forbids scripts, so even residual
  * hostile markup can't escape. */
 function _EmailCard({ msg }: { msg: Message }) {
-  const openComposeReply = useApp((s) => s.openComposeReply)
+  const openComposeReply = useEmailComposer((s) => s.openComposeReply)
   const [showHtml, setShowHtml] = useState(false)
   const [htmlBody, setHtmlBody] = useState<string | null>(null)
   const [htmlError, setHtmlError] = useState<string | null>(null)
@@ -1104,7 +1108,7 @@ function _EmailCard({ msg }: { msg: Message }) {
     if (!showHtml || htmlBody !== null || htmlError) return
     let cancelled = false
     setHtmlLoading(true)
-    api.fetchEmailHtml(msg.id)
+    emailApi.fetchEmailHtml(msg.id)
       .then((html) => { if (!cancelled) setHtmlBody(html ?? '') })
       .catch((e: unknown) => { if (!cancelled) setHtmlError(e instanceof Error ? e.message : String(e)) })
       .finally(() => { if (!cancelled) setHtmlLoading(false) })
@@ -1561,7 +1565,7 @@ function ReactionTooltip({ emoji, names, anchorX, anchorY }: {
  */
 export function SystemRow({ msg, delay = 0, animate = true, openMaus = false }: { msg: { body: string }; delay?: number; animate?: boolean; openMaus?: boolean }) {
   const byId = useParticipants((s) => s.byId)
-  const openAgentInfo = useApp((s) => s.openAgentInfo)
+  const openAgentInfo = useSurface((s) => s.openAgentInfo)
   // Same animate-once contract as MessageRow: don't replay the rise-in fade on
   // a Virtuoso remount (scroll / quote-jump).
   const riseCls = animate ? 'animate-rise' : ''
@@ -1668,7 +1672,7 @@ function SystemActor({ p, onClick, disabled = false }: { p: Participant; onClick
  *  carry that id on the wrapper div so it works as a CSS scroll target. */
 function QuoteCard({ msg }: { msg: Message }) {
   const byId = useParticipants((s) => s.byId)
-  const jumpToMessage = useApp((s) => s.jumpToMessage)
+  const jumpToMessage = useConversationUi((s) => s.jumpToMessage)
   if (!msg.quotedMessageId) return null
   const summary = msg.quoted
   // Always go through useApp.jumpToMessage — ChatPane resolves via
@@ -1710,7 +1714,7 @@ function QuoteCard({ msg }: { msg: Message }) {
  *  picks up the quote draft. Composers are responsible for wiring this into
  *  the actual sendUserMessage call. */
 function ReplyIconButton({ msg, zh = false }: { msg: Message; zh?: boolean }) {
-  const setReplyingTo = useApp((s) => s.setReplyingTo)
+  const setReplyingTo = useConversationUi((s) => s.setReplyingTo)
   return (
     <button
       onClick={() => setReplyingTo(msg.conversationId, msg.id)}
@@ -1764,7 +1768,7 @@ function ApprovalCard({ msg }: { msg: Message }) {
   if (!approval) return null
   const resolve = async (decision: 'approved' | 'rejected') => {
     setBusy(decision); setError(null)
-    try { await api.resolveApproval(approval.id, decision) }
+    try { await agentsApi.resolveApproval(approval.id, decision) }
     catch (err) { setError(err instanceof Error ? err.message : String(err)); setBusy(null) }
   }
   const pending = approval.status === 'pending'
@@ -1799,7 +1803,7 @@ function ApprovalCard({ msg }: { msg: Message }) {
 }
 
 function CanvasWorkspaceCard({ msg }: { msg: Message }) {
-  const openCanvasPeek = useApp((state) => state.openCanvasPeek)
+  const openCanvasPeek = useSurface((state) => state.openCanvasPeek)
   const setView = useApp((state) => state.setView)
   const load = useCanvas((state) => state.load)
   const loadPreview = useCanvas((state) => state.loadPreview)
@@ -1825,8 +1829,8 @@ function CanvasWorkspaceCard({ msg }: { msg: Message }) {
 }
 
 function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = false, adjacency }: MessageRowProps) {
-  const openAgentInfo = useApp((s) => s.openAgentInfo)
-  const openThreadView = useApp((s) => s.openThreadView)
+  const openAgentInfo = useSurface((s) => s.openAgentInfo)
+  const openThreadView = useSurface((s) => s.openThreadView)
   const meId = useMe()
   const [actionMenu, setActionMenu] = useState<{ x: number; y: number } | null>(null)
   // System / whisper rows don't need a resolved author — handle them before
@@ -1866,7 +1870,7 @@ function MessageRowImpl({ msg, author, delay = 0, animate = true, openMaus = fal
   const copyBody = () => { if (msg.body) void navigator.clipboard.writeText(msg.body) }
   const actionItems: ContextMenuItem[] = [
     { label: '快速反应', submenu: QUICK_REACTIONS.slice(0, 6).map((emoji) => ({ label: emoji, onSelect: () => void toggleReaction(msg.id, emoji) })) },
-    ...(shell.reply ? [{ label: '回复', onSelect: () => useApp.getState().setReplyingTo(msg.conversationId, msg.id) }] : []),
+    ...(shell.reply ? [{ label: '回复', onSelect: () => useConversationUi.getState().setReplyingTo(msg.conversationId, msg.id) }] : []),
     { label: '在线程中打开', onSelect: () => openThreadView(msg.conversationId, msg.id) },
     ...(msg.body ? [{ label: '复制文字', onSelect: copyBody }] : []),
   ]

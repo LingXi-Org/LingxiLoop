@@ -1,3 +1,5 @@
+import { platformApi } from '@/api/platform'
+import { getServerOrigin } from '@/api/core/http'
 /**
  * Sign-in screen — OAuth only (Google + GitHub). No password forms, no
  * signup, no forgot. Provider buttons trigger a full-page redirect to
@@ -12,7 +14,6 @@
  * per-server.
  */
 import { useState, useEffect } from 'react'
-import { api, getServerOrigin } from '@/api/client'
 import { isElectron } from '@/lib/runtime'
 import { CloudLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
@@ -95,7 +96,7 @@ export function AuthScreen() {
     // LINGXILOOP_AUTH_RETURN_ALLOWLIST or the server
     // will reject it.
     const ret = encodeURIComponent(`${location.origin}${location.pathname}`)
-    location.assign(`${api.authStartUrl(provider)}?return=${ret}`)
+    location.assign(`${platformApi.authStartUrl(provider)}?return=${ret}`)
   }
 
   return (

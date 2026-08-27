@@ -1,3 +1,5 @@
+import { learningApi } from '@/api/learning'
+import { platformApi } from '@/api/platform'
 import {
   Building2 as IconBuilding,
   Check as IconCheck,
@@ -8,12 +10,12 @@ import {
   Settings as IconSettings,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
+import { useUiCommands } from '@/stores/uiCommands'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
@@ -85,7 +87,7 @@ export function SidebarFooter() {
     setProjectError(false)
     const load = isMockImDevelopment()
       ? Promise.resolve(MOCK_PROJECTS)
-      : api.listProjects().then((items) => items
+      : learningApi.listProjects().then((items) => items
         .filter((item) => item.status === 'active')
         .map((item) => ({
           id: item.id,
@@ -131,7 +133,7 @@ export function SidebarFooter() {
       activateMockWorkspace(projectId)
     } else {
       await Promise.allSettled([
-        api.openProject(projectId),
+        learningApi.openProject(projectId),
         useParticipants.getState().load(),
         useConversations.getState().reload(),
       ])
@@ -144,7 +146,7 @@ export function SidebarFooter() {
   }, [activeCompanyId])
 
   const signOut = async () => {
-    try { await api.authLogout() } catch { /* best effort */ }
+    try { await platformApi.authLogout() } catch { /* best effort */ }
     useAuth.getState().clear()
     location.reload()
   }
@@ -205,7 +207,7 @@ export function SidebarFooter() {
           )}
           <div className="grok-account-section">
             <ThemeToggle showLabel className="grok-account-menu-row" onToggle={() => setOpenPanel(null)} />
-            <button type="button" className="grok-account-menu-row" onClick={() => { window.dispatchEvent(new Event('lingxiloop:open-updater')); setOpenPanel(null) }}>
+            <button type="button" className="grok-account-menu-row" onClick={() => { useUiCommands.getState().dispatch('open-updater'); setOpenPanel(null) }}>
               <IconRefresh size={17} strokeWidth={1.65} /><span>检查更新</span>
             </button>
           </div>

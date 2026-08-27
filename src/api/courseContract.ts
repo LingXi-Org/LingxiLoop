@@ -1,4 +1,4 @@
-import type { ApiCourse } from './client'
+import type { ApiCourse } from './contracts'
 
 /** Single production/mock boundary for the course contract. Keeping coercion
  * here prevents development fixtures from silently drifting from API JSON. */

@@ -1,3 +1,5 @@
+import { companiesApi } from '@/api/companies'
+import type { ApiInvitation, ApiInvitationWithToken } from '@/api/contracts'
 /**
  * Modal for inviting humans to a company workspace.
  *
@@ -16,7 +18,6 @@
  * regular members.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { api, type ApiInvitation, type ApiInvitationWithToken } from '@/api/client'
 import { useAuth } from '@/stores/auth'
 
 interface Props {
@@ -52,7 +53,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
   const reload = useCallback(async () => {
     setLoadingList(true); setListErr(null)
     try {
-      const rows = await api.listInvitations(companyId)
+      const rows = await companiesApi.listInvitations(companyId)
       setList(rows)
     } catch (e) {
       setListErr(e instanceof Error ? e.message : String(e))
@@ -80,7 +81,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
       const payload = tab === 'email'
         ? { email: email.trim(), role, note: note.trim() || null, sendEmail: emailCapable && sendEmail }
         : { multiUse: true, role, note: note.trim() || null }
-      const inv = await api.createInvitation(companyId, payload)
+      const inv = await companiesApi.createInvitation(companyId, payload)
       setCreated(inv)
       setEmail(''); setNote('')
       void reload()
@@ -93,7 +94,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
 
   const revoke = async (id: string) => {
     try {
-      await api.revokeInvitation(companyId, id)
+      await companiesApi.revokeInvitation(companyId, id)
       void reload()
     } catch (e) {
       setListErr(e instanceof Error ? e.message : String(e))

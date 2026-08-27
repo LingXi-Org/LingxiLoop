@@ -1,5 +1,6 @@
+import { boardsApi } from '@/api/boards'
 import { create } from 'zustand'
-import { api, ws } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import type {
   BoardSummary, BoardSnapshot, BoardCard, BoardCardComment, BoardCardLookup,
 } from '@/types'
@@ -93,7 +94,7 @@ export const useBoards = create<BoardsState>((set, get) => ({
   loadList: async () => {
     set({ loadingList: true })
     try {
-      const rows = await api.listBoards()
+      const rows = await boardsApi.listBoards()
       set({ list: rows })
     } finally {
       set({ loadingList: false })
@@ -119,7 +120,7 @@ export const useBoards = create<BoardsState>((set, get) => ({
   loadBoard: async (id) => {
     set({ loadingBoardId: id })
     try {
-      const snap = await api.getBoard(id)
+      const snap = await boardsApi.getBoard(id)
       set((s) => ({ snapshots: { ...s.snapshots, [id]: snap } }))
     } finally {
       set((s) => ({ loadingBoardId: s.loadingBoardId === id ? null : s.loadingBoardId }))
@@ -136,11 +137,11 @@ export const useBoards = create<BoardsState>((set, get) => ({
         .find((lookup): lookup is BoardCardLookup => Boolean(lookup))
       const lookup = existing ?? await (async () => {
         try {
-          return await api.getBoardCard(id)
+          return await boardsApi.getBoardCard(id)
         } catch (directErr) {
           await get().loadList()
           for (const board of get().list) {
-            const snap = get().snapshots[board.id] ?? await api.getBoard(board.id)
+            const snap = get().snapshots[board.id] ?? await boardsApi.getBoard(board.id)
             if (!get().snapshots[board.id]) {
               set((s) => ({ snapshots: { ...s.snapshots, [board.id]: snap } }))
             }
@@ -178,13 +179,13 @@ export const useBoards = create<BoardsState>((set, get) => ({
     // Same as loadBoard but doesn't toggle the loading flag — used by WS
     // event handlers so the UI doesn't flicker on every nudge.
     try {
-      const snap = await api.getBoard(id)
+      const snap = await boardsApi.getBoard(id)
       set((s) => ({ snapshots: { ...s.snapshots, [id]: snap } }))
     } catch { /* ignore — stale snapshot is fine */ }
   },
 
   createBoard: async (title, description) => {
-    const r = await api.createBoard({ title, description })
+    const r = await boardsApi.createBoard({ title, description })
     await get().loadList()
     set({ selectedId: r.id })
     await get().loadBoard(r.id)
@@ -192,13 +193,13 @@ export const useBoards = create<BoardsState>((set, get) => ({
   },
 
   renameBoard: async (id, title) => {
-    await api.updateBoard(id, { title })
+    await boardsApi.updateBoard(id, { title })
     await get().loadList()
     await get().refreshBoard(id)
   },
 
   deleteBoard: async (id) => {
-    await api.deleteBoard(id)
+    await boardsApi.deleteBoard(id)
     set((s) => {
       const { [id]: _gone, ...rest } = s.snapshots
       const cardLookups = Object.fromEntries(
@@ -214,25 +215,25 @@ export const useBoards = create<BoardsState>((set, get) => ({
   },
 
   addColumn: async (boardId, title) => {
-    await api.addBoardColumn(boardId, title)
+    await boardsApi.addBoardColumn(boardId, title)
     await get().refreshBoard(boardId)
   },
   renameColumn: async (boardId, columnId, title) => {
-    await api.updateBoardColumn(boardId, columnId, { title })
+    await boardsApi.updateBoardColumn(boardId, columnId, { title })
     await get().refreshBoard(boardId)
   },
   deleteColumn: async (boardId, columnId) => {
-    await api.deleteBoardColumn(boardId, columnId)
+    await boardsApi.deleteBoardColumn(boardId, columnId)
     await get().refreshBoard(boardId)
   },
 
   addCard: async (boardId, input) => {
-    await api.createCard(boardId, input)
+    await boardsApi.createCard(boardId, input)
     await get().refreshBoard(boardId)
   },
 
   patchCard: async (boardId, cardId, input) => {
-    await api.updateCard(boardId, cardId, input)
+    await boardsApi.updateCard(boardId, cardId, input)
     await get().refreshBoard(boardId)
     set((s) => {
       const { [cardId]: _gone, ...cardLookups } = s.cardLookups
@@ -271,7 +272,7 @@ export const useBoards = create<BoardsState>((set, get) => ({
     const next = [...remaining, moved]
     set((s) => ({ snapshots: { ...s.snapshots, [boardId]: { ...prev, cards: next } } }))
     try {
-      await api.updateCard(boardId, cardId, { columnId: toColumnId, position: newPos })
+      await boardsApi.updateCard(boardId, cardId, { columnId: toColumnId, position: newPos })
       set((s) => {
         const { [cardId]: _gone, ...cardLookups } = s.cardLookups
         return { cardLookups }
@@ -283,7 +284,7 @@ export const useBoards = create<BoardsState>((set, get) => ({
   },
 
   deleteCard: async (boardId, cardId) => {
-    await api.deleteCard(boardId, cardId)
+    await boardsApi.deleteCard(boardId, cardId)
     set((s) => {
       const snap = s.snapshots[boardId]
       const { [cardId]: _gone, ...cardLookups } = s.cardLookups
@@ -299,12 +300,12 @@ export const useBoards = create<BoardsState>((set, get) => ({
   },
 
   loadComments: async (boardId, cardId) => {
-    const rows = await api.listCardComments(boardId, cardId)
+    const rows = await boardsApi.listCardComments(boardId, cardId)
     set((s) => ({ comments: { ...s.comments, [cardId]: rows } }))
   },
 
   addComment: async (boardId, cardId, body) => {
-    await api.addCardComment(boardId, cardId, body)
+    await boardsApi.addCardComment(boardId, cardId, body)
     await get().loadComments(boardId, cardId)
     // Bumping commentCount in the snapshot avoids a refetch flicker while
     // the next refreshBoard catches up.

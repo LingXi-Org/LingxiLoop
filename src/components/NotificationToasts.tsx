@@ -16,7 +16,7 @@
  * - Soft de-dup: never toast messages authored by the current user.
  */
 import { useEffect, useRef, useState } from 'react'
-import { ws } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useConversations, isMuted } from '@/stores/conversations'

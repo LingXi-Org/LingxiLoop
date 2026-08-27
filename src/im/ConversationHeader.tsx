@@ -1,5 +1,4 @@
 import { type ReactNode, useState } from 'react'
-import { api } from '@/api/client'
 import { AvatarStack } from '@/components/Avatar'
 import { SelectField } from '@/components/ui/select-field'
 import { cn } from '@/lib/utils'
@@ -36,45 +35,24 @@ export function ConversationHeader({
     : conversation.topic || `${visibleMembers.length || members.length} 位成员`
   const agents = visibleMembers.filter((participant) => participant.kind === 'agent' && !participant.departedAt)
 
-  const updateConversation = (patch: Partial<typeof conversation>) => {
-    useConversations.setState((state) => ({
-      list: state.list.map((item) => item.id === conversation.id ? { ...item, ...patch } : item),
-    }))
-  }
-
   const saveTitle = async () => {
     const next = titleDraft.trim()
     setEditingTitle(false)
     if (!next || next === conversation.title) return
-    const previous = conversation.title
-    updateConversation({ title: next })
-    try { await api.setTitle(conversation.id, next) }
-    catch (error) {
-      console.warn('[conversation header] rename failed', error)
-      updateConversation({ title: previous })
-    }
+    try { await useConversations.getState().setTitle(conversation.id, next) }
+    catch (error) { console.warn('[conversation header] rename failed', error) }
   }
 
   const saveTopic = async () => {
     const next = topicDraft.trim() || null
     setEditingTopic(false)
-    const previous = conversation.topic ?? null
-    updateConversation({ topic: next })
-    try { await api.setTopic(conversation.id, next) }
-    catch (error) {
-      console.warn('[conversation header] topic update failed', error)
-      updateConversation({ topic: previous })
-    }
+    try { await useConversations.getState().setTopic(conversation.id, next) }
+    catch (error) { console.warn('[conversation header] topic update failed', error) }
   }
 
   const changeLeader = async (leaderId: string) => {
-    const previous = conversation.leaderId
-    updateConversation({ leaderId })
-    try { await api.setLeader(conversation.id, leaderId) }
-    catch (error) {
-      console.warn('[conversation header] leader update failed', error)
-      updateConversation({ leaderId: previous })
-    }
+    try { await useConversations.getState().setLeader(conversation.id, leaderId) }
+    catch (error) { console.warn('[conversation header] leader update failed', error) }
   }
 
   return (
