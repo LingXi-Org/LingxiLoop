@@ -31,7 +31,7 @@ import { projectFindMatches, projectTranscriptAdjacency } from '@/lib/transcript
 import { useApp } from '@/stores/app'
 import { useConversationUi } from '@/stores/conversationUi'
 import { useSurface } from '@/stores/surface'
-import { useUiCommands } from '@/stores/uiCommands'
+import { useUiCommand } from '@/stores/uiCommands'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
 import type { MessagesState } from '@/stores/messages'
@@ -490,7 +490,7 @@ export function Composer({
   const [uploadingByScope, setUploadingByScope] = useState<Record<string, boolean>>({})
   const [uploadErrorsByScope, setUploadErrorsByScope] = useState<Record<string, string>>({})
   const editorRef = useRef<RichInputHandle>(null)
-  const uiCommand = useUiCommands((state) => state.command)
+  const uiCommand = useUiCommand()
   const fileRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     if (uiCommand?.type === 'focus-composer') {
@@ -1692,7 +1692,7 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
 
 export function ChatPane({ onOpenGroupContext }: { onOpenGroupContext?: () => void } = {}) {
   const convoId = useApp((s) => s.selectedConversationId)
-  const uiCommand = useUiCommands((state) => state.command)
+  const uiCommand = useUiCommand()
   // Atomic selectors — primitive / stable refs
   const byConvo = useMessages((s) => (convoId ? s.byConvo[convoId] : undefined))
   const streaming = useMessages((s) => s.streaming)

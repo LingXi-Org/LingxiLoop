@@ -13,7 +13,7 @@ import { isMockImDevelopment } from '@/lib/devMode'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useEmailComposer } from '@/stores/emailComposer'
-import { useUiCommands } from '@/stores/uiCommands'
+import { useUiCommand } from '@/stores/uiCommands'
 import { useAuth } from '@/stores/auth'
 import { isMuted, useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
@@ -102,7 +102,7 @@ export function ConversationsPane() {
   const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null)
   const [addingMembers, setAddingMembers] = useState<Conversation | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
-  const uiCommand = useUiCommands((state) => state.command)
+  const uiCommand = useUiCommand()
 
   useEffect(() => {
     if (uiCommand?.type === 'focus-conversation-search') {

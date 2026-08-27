@@ -19,7 +19,7 @@ export const useApp = create<AppState>((set) => ({
     set({ view })
   },
   selectConversation: (id) => {
-    useSurface.getState().closeSurface()
+    useSurface.getState().closeForConversationChange()
     set({ view: 'conversations', selectedConversationId: id })
   },
   setSelectedIfNone: (id) => set((state) => state.selectedConversationId ? {} : { selectedConversationId: id }),

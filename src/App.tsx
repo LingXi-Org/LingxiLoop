@@ -21,7 +21,7 @@ import { bootConversations, isMuted, useConversations } from '@/stores/conversat
 import { bootMessagesStream, useMessages } from '@/stores/messages'
 import { bootParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
-import { useUiCommands } from '@/stores/uiCommands'
+import { useUiCommand } from '@/stores/uiCommands'
 import { bootWhispers, useWhispers } from '@/stores/whispers'
 
 const AdminApp = lazy(() => import('@/admin/AdminApp').then((module) => ({ default: module.AdminApp })))
@@ -51,7 +51,7 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     convoId ? s.list.some((c) => c.id === convoId) : false,
   )
   const [updaterOpen, setUpdaterOpen] = useState(false)
-  const uiCommand = useUiCommands((state) => state.command)
+  const uiCommand = useUiCommand()
   useEffect(() => {
     if (mockMode) return
     bootMessagesStream()

@@ -24,6 +24,7 @@ interface SurfaceState {
   closeCalendarEventPeek: () => void
   openCanvasPeek: (canvasId: string) => void
   closeCanvasPeek: () => void
+  closeForConversationChange: () => void
   closeSurface: () => void
 }
 
@@ -45,5 +46,6 @@ export const useSurface = create<SurfaceState>((set) => ({
   closeCalendarEventPeek: () => set(closeKind('calendar')),
   openCanvasPeek: (canvasId) => { showConversation(); set({ surface: { kind: 'canvas', canvasId } }) },
   closeCanvasPeek: () => set(closeKind('canvas')),
+  closeForConversationChange: () => set((state) => state.surface?.kind === 'member' ? {} : { surface: null }),
   closeSurface: () => set({ surface: null }),
 }))
