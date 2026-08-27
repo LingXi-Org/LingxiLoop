@@ -177,8 +177,8 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         setWorkspaceSession({ companyId: accepted.company.id, projectId: accepted.course.projectId })
         useApp.getState().selectConversation(accepted.course.studyRoomId)
       }
-      // Web and native clients both enter the workspace immediately. The Web
-      // app is a complete product surface, not a desktop-download handoff.
+      // Both supported surfaces enter the workspace immediately. The Web app
+      // is a complete product surface, not a Desktop-download handoff.
       onDone()
     } catch (e) {
       setAcceptErr(e instanceof Error ? e.message : String(e))

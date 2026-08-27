@@ -1,7 +1,7 @@
 /**
  * Compare an OAuth return URL with one configured allow-list entry using URL
  * semantics. Query parameters are intentionally not part of the boundary:
- * clients use them for per-login state such as the native/desktop nonce.
+ * clients use them for per-login state such as the Desktop nonce.
  */
 export function matchesAllowedReturnUrl(candidateRaw: string, allowedRaw: string): boolean {
   let candidate: URL

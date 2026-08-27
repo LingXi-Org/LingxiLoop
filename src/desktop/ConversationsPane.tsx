@@ -38,7 +38,7 @@ function ConversationRow({ conversation, selected, onMenu }: {
         selected ? 'bg-accent text-white' : 'text-ink hover:bg-raised/70',
       )}
     >
-      <ConversationListItemContent conversation={conversation} variant="desktop" selected={selected} />
+      <ConversationListItemContent conversation={conversation} selected={selected} />
     </button>
   )
 }

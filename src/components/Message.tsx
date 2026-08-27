@@ -440,7 +440,7 @@ const lingxiloopMarkdownComponents = {
   strong: ({ children }: any) => <strong className="font-semibold text-ink-900">{children}</strong>,
   // Inline markdown images (`![alt](url)`) arrive with no intrinsic
   // dimensions, so a bare <img> paints at 0×0 then snaps to natural size on
-  // load — pushing every row below it downward. Inside the virtualized mobile
+  // load — pushing every row below it downward. Inside a virtualized message
   // list that height change re-anchors the scroll and is one of the causes of
   // the "message I'm reading gets replaced" jitter. Reserve a fixed box up
   // front (same tactic as AttachmentCard) so the row height is stable from the
@@ -1375,13 +1375,12 @@ interface MessageRowProps {
   author?: Participant
   delay?: number
   /** Whether to play the rise-in fade animation on mount. Default
-   *  `true` for backward compatibility with the desktop view, but
-   *  callers that virtualize rows (e.g. the mobile chat's Virtuoso
-   *  list) should pass `false` for historical rows — otherwise every
+   *  `true` for backward compatibility with the conversation view, but
+   *  callers that virtualize rows should pass `false` for historical rows — otherwise every
    *  scroll-back remounts an off-screen row and replays its fade,
    *  which reads as flicker. */
   animate?: boolean
-  /** Desktop-only OpenMaus presentation. Shared/mobile callers keep the
+  /** Desktop-only OpenMaus presentation. Other callers keep the
    *  established message layout when this flag is omitted. */
   openMaus?: boolean
   adjacency?: TranscriptAdjacency

@@ -4,6 +4,9 @@ LingxiLoop is a learning collaboration product with its own Agent OS. Six
 specialized agents—Nova, Sage, Milo, Trace, Scout and Forge—work with learners
 in direct messages, Study Rooms and Labs.
 
+The supported product surfaces are the Web app and the Electron desktop app
+for macOS, Windows, and Linux. Native iOS and Android apps are not maintained.
+
 The runtime is implemented in this repository. It does not invoke, install or
 pair with Codex, Claude, or another agent CLI. Codex Harness, Ankole and Prime
 Agent are architecture references only.
@@ -62,8 +65,8 @@ the v1 database bootstrap to complete before starting the LingxiLoop Web,
 background Worker, Agent OS and WuKongIM stack. Re-running Compose accepts the already-complete v1
 schema, while an unmarked pre-v1 or partial schema is rejected and must be
 dropped and recreated. API port
-5181 and WuKong WebSocket port 5200 bind to `0.0.0.0` by default for mobile
-clients; use TLS and override the bind addresses for public deployments.
+5181 and WuKong WebSocket port 5200 bind to `0.0.0.0` by default for local and
+container networking; use TLS and override the bind addresses for public deployments.
 Packaged services default to warning-level, size-rotated logs. Canvas state is
 stored in Postgres and broadcast through the existing Redis/WebSocket path; no
 service mounts the Docker socket or shares an Agent execution environment.

@@ -9,13 +9,6 @@ interface AppState {
   selectConversation: (id: string | null) => void
   setSelectedIfNone: (id: string) => void
 
-  /** mobile-only: which level of the navigation stack we're on */
-  mobileStack: 'list' | 'chat' | 'info'
-  pushMobileStack: (s: 'list' | 'chat' | 'info') => void
-  mobileGroupContext: 'knowledge' | 'canvas' | null
-  openMobileGroupContext: (tab?: 'knowledge' | 'canvas') => void
-  closeMobileGroupContext: () => void
-
   /**
    * Right info pane on desktop. null = pane is closed. Set to an agent id to
    * pin that specific agent's profile open. Closing happens explicitly (× in
@@ -34,8 +27,8 @@ interface AppState {
   setReplyingTo: (convoId: string, messageId: string | null) => void
 
   /**
-   * Centralized "scroll to a message" — set this and the active ChatPane (or
-   * MobileChat) picks it up, calls Virtuoso scrollToIndex (which MOUNTS
+   * Centralized "scroll to a message" — set this and the active ChatPane
+   * picks it up, calls Virtuoso scrollToIndex (which MOUNTS
    * off-screen rows reliably, unlike getElementById), flashes the row, then
    * clears the field. Quote-jumps and `#N` chips both go through here so
    * neither silently no-ops when the target isn't currently mounted.
@@ -43,15 +36,6 @@ interface AppState {
   pendingJumpMessageId: string | null
   jumpToMessage: (messageId: string) => void
   clearPendingJump: () => void
-
-  /**
-   * Per-conversation composer text drafts. Mobile lives or dies by this:
-   * navigating from chat → list → chat unmounts MobileChat, which would
-   * blow away a local useState draft. We persist it here so a half-typed
-   * message survives the trip. Cleared on send.
-   */
-  composerDrafts: Record<string, string>
-  setComposerDraft: (convoId: string, text: string) => void
 
   /**
    * Thread drawer state — when set, the right pane shows the thread view
@@ -116,16 +100,9 @@ export const useApp = create<AppState>((set) => ({
   selectConversation: (id) => set({
     view: 'conversations',
     selectedConversationId: id,
-    mobileStack: id ? 'chat' : 'list',
     openCanvasId: null,
   }),
   setSelectedIfNone: (id) => set((s) => s.selectedConversationId ? {} : { selectedConversationId: id }),
-
-  mobileStack: 'list',
-  pushMobileStack: (s) => set({ mobileStack: s }),
-  mobileGroupContext: null,
-  openMobileGroupContext: (tab = 'knowledge') => set({ mobileGroupContext: tab }),
-  closeMobileGroupContext: () => set({ mobileGroupContext: null }),
 
   infoAgentId: null,
   // Opening agent info closes any open thread — they share the same right
@@ -148,14 +125,6 @@ export const useApp = create<AppState>((set) => ({
   // so repeated jumps to the same id transition null→id each time and re-fire.
   jumpToMessage: (messageId) => set({ pendingJumpMessageId: messageId }),
   clearPendingJump: () => set({ pendingJumpMessageId: null }),
-
-  composerDrafts: {},
-  setComposerDraft: (convoId, text) => set((s) => {
-    const next = { ...s.composerDrafts }
-    if (text) next[convoId] = text
-    else delete next[convoId]
-    return { composerDrafts: next }
-  }),
 
   openThread: null,
   openThreadView: (convoId, rootId) =>

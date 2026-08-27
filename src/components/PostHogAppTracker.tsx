@@ -17,7 +17,6 @@ export function PostHogAppTracker() {
   const ready = useAuth((s) => s.ready)
   const companyId = useAuth((s) => s.activeCompanyId)
   const view = useApp((s) => s.view)
-  const mobileStack = useApp((s) => s.mobileStack)
 
   const surface = useMemo(() => getAnalyticsSurface(), [])
   const enabled = isPostHogConfigured() && !isNotificationWindow
@@ -50,11 +49,10 @@ export function PostHogAppTracker() {
       $current_url: currentUrlForAnalytics(view),
       app_surface: surface,
       app_view: view,
-      mobile_stack: mobileStack,
       signed_in: Boolean(user),
       company_id: companyId ?? null,
     })
-  }, [companyId, enabled, mobileStack, posthog, surface, user, view])
+  }, [companyId, enabled, posthog, surface, user, view])
 
   return null
 }

@@ -50,7 +50,7 @@ Out of scope:
 
 ## The trust model, in one paragraph
 
-The LingxiLoop control plane is the trust boundary. Web, Electron, mobile,
+The LingxiLoop control plane is the trust boundary. Web, Electron,
 WuKong webhooks, Agent OS and kernels are untrusted callers. Agent OS work and
 Host Bridge actions authenticate with a service token and are pinned to the
 claimed company and agent; tenants are isolated by server-side checks. Kernels
@@ -67,7 +67,7 @@ If you self-host, at minimum:
   `R2_*` variables) rather than the local-disk fallback, so a hostile upload
   can never run on the app's origin.
 - Keep every other secret (OAuth client secrets, `RESEND_API_KEY`,
-  `EMAIL_INBOUND_HMAC_SECRET`, `R2_URL_SIGNING_SECRET`, APNs/FCM credentials)
+  `EMAIL_INBOUND_HMAC_SECRET`, `R2_URL_SIGNING_SECRET`)
   out of the repo and in your deployment's secret store.
 
 See [`.env.example`](.env.example) for the full annotated list.

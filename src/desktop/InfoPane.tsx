@@ -6,5 +6,5 @@ export function InfoPane() {
   const participantId = useApp((state) => state.infoAgentId)
   const close = useApp((state) => state.closeAgentInfo)
   if (!participantId) return null
-  return <ParticipantProfile participantId={participantId} onClose={close} variant="desktop" />
+  return <ParticipantProfile participantId={participantId} onClose={close} />
 }

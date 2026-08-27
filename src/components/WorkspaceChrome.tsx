@@ -42,7 +42,7 @@ function SourceRow({ source, conversationId, flat = false }: { source: Knowledge
   </article>
 }
 
-export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?: boolean; flat?: boolean; toolbar?: ReactNode }) {
+export function SourcePanel({ flat = false, toolbar }: { flat?: boolean; toolbar?: ReactNode }) {
   const sources = useKnowledgeSources((state) => state.list)
   const loading = useKnowledgeSources((state) => state.loading)
   const load = useKnowledgeSources((state) => state.load)
@@ -77,7 +77,7 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
     setAdding(false); setUrl(''); setTitle(''); setText('')
   }
 
-  return <section className={`knowledge-source-panel flex h-full min-h-0 flex-col ${flat ? 'bg-transparent' : 'bg-app'} ${mobile ? 'w-full' : ''}`} data-source-layout={flat ? 'flat' : 'standard'}>
+  return <section className={`knowledge-source-panel flex h-full min-h-0 flex-col ${flat ? 'bg-transparent' : 'bg-app'}`} data-source-layout={flat ? 'flat' : 'standard'}>
     {flat ? <div className="flex h-10 shrink-0 items-center justify-between px-3">
       {toolbar}
       <Button type="button" onClick={() => setAdding(true)} variant="ghost" size="sm" aria-label="添加资料"><IPlus />添加</Button>

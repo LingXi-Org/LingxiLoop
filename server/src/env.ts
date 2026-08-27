@@ -284,31 +284,5 @@ export const env = {
    *  release announcements don't drown out paging-level signals.
    *  Unset → alerts are no-ops + log only. */
   DISCORD_ALERT_WEBHOOK_URL: process.env.DISCORD_ALERT_WEBHOOK_URL ?? '',
-  /** APNs (Apple Push Notification) credentials. All four must be set or
-   *  push is soft-disabled (registration endpoints still accept tokens,
-   *  but the sender is a no-op). See docs/PUSH_NOTIFICATIONS.md for how
-   *  to mint the .p8 in the Apple Developer Portal. */
-  APNS_KEY_PATH: process.env.APNS_KEY_PATH ?? '',
-  APNS_KEY_ID: process.env.APNS_KEY_ID ?? '',
-  APNS_TEAM_ID: process.env.APNS_TEAM_ID ?? '',
-  /** APNs topic — must match the iOS bundle id (cn.lingxilearn.loop). */
-  APNS_TOPIC: process.env.APNS_TOPIC ?? 'cn.lingxilearn.loop',
-  /** 'development' uses api.sandbox.push.apple.com (TestFlight + dev builds),
-   *  'production' uses api.push.apple.com (App Store). Mismatching env vs.
-   *  build will silently 400 every push — get it right. */
-  APNS_ENV: (process.env.APNS_ENV === 'production' ? 'production' : 'development') as
-    | 'development'
-    | 'production',
-  /** FCM (Firebase Cloud Messaging, HTTP v1) credentials for Android push.
-   *  Supply the Firebase service-account JSON either inline (raw or base64)
-   *  via FCM_SERVICE_ACCOUNT_JSON, or as a file path via
-   *  FCM_SERVICE_ACCOUNT_PATH. Absent → Android push is soft-disabled
-   *  (the /push/register endpoint still accepts android tokens; the sender
-   *  is a no-op). The JSON's `project_id`, `client_email`, and `private_key`
-   *  are read at send time. Generated in Firebase Console → Project settings
-   *  → Service accounts → "Generate new private key".
-   *  Keep it OUT of git — configure it as a server secret only. */
-  FCM_SERVICE_ACCOUNT_JSON: process.env.FCM_SERVICE_ACCOUNT_JSON ?? '',
-  FCM_SERVICE_ACCOUNT_PATH: process.env.FCM_SERVICE_ACCOUNT_PATH ?? '',
 }
 // Keep environment validation side-effect free after module initialization.

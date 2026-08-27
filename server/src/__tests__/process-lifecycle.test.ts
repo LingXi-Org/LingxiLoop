@@ -80,7 +80,6 @@ test('Web composition contains no background scheduler or worker startup', async
     'startEmailRetryWorker',
     'startEmailGcWorker',
     'startDbGcWorker',
-    'startTrialSweepWorker',
     'startKnowledgeWorker',
     'startKnowledgeStorageGc',
     'startCalendarScheduler',
