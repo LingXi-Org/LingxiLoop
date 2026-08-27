@@ -1,5 +1,3 @@
-import { messagesApi } from '@/api/messages'
-import type { ApiMessage } from '@/api/contracts'
 /**
  * Thread drawer — right-pane sidebar that lists every reply to a single
  * root message (i.e. all messages whose quoted_message_id == root.id).
@@ -13,18 +11,31 @@ import type { ApiMessage } from '@/api/contracts'
  *     but keep the drawer open.
  */
 import { useEffect, useMemo, useState } from 'react'
+import { ThreadPrimitive } from '@assistant-ui/react'
 import { useSurface } from '@/stores/surface'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
-import { MessageRow } from '@/components/Message'
+import type { ApiMessage } from '@/api/contracts'
+import { messagesApi } from '@/api/messages'
+import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Composer } from '@/desktop/ChatPane'
-import type { Message, Participant } from '@/types'
+import { LingxiAssistantRuntimeProvider } from '@/im/assistantRuntime'
+import type { Message } from '@/types'
+
+const EMPTY_MESSAGES: readonly Message[] = []
+
+const THREAD_MESSAGE_COMPONENTS = { Message: () => <LingxiImMessage animate={false} /> }
+
+function ThreadMessage({ messageId }: { messageId: string }) {
+  return <ThreadPrimitive.Unstable_MessageById messageId={messageId} components={THREAD_MESSAGE_COMPONENTS} />
+}
 
 function apiToMessage(m: ApiMessage): Message {
   const raw = m as unknown as {
     tool?: Message['tool']
     attachment?: Message['attachment']
-    whisperLink?: Message['whisperLink']
     quotedMessageId?: string | null
     quoted?: Message['quoted'] | null
     replyCount?: number | null
@@ -39,18 +50,21 @@ function apiToMessage(m: ApiMessage): Message {
     reactions: m.reactions && m.reactions.length > 0 ? m.reactions : undefined,
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,
-    whisperLink: raw.whisperLink ?? undefined,
     quotedMessageId: raw.quotedMessageId ?? undefined,
     quoted: raw.quoted ?? undefined,
     replyCount: raw.replyCount ?? undefined,
+    sequence: m.sequence,
   }
 }
 
 export function ThreadDrawer() {
-  const openThread = useSurface((s) => s.surface?.kind === 'thread' ? s.surface : null)
+  const surface = useSurface((s) => s.surface)
+  const openThread = surface?.kind === 'thread' ? surface : null
   const close = useSurface((s) => s.closeThreadView)
   const byId = useParticipants((s) => s.byId)
-  const convoMessages = useMessages((s) => openThread ? (s.byConvo[openThread.convoId] ?? []) : [])
+  const convoMessages = useMessages((s) =>
+    openThread ? (s.byConvo[openThread.convoId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES,
+  )
   const root = useMessages((s) => {
     if (!openThread) return undefined
     return (s.byConvo[openThread.convoId] ?? []).find((m) => m.id === openThread.rootId)
@@ -80,6 +94,10 @@ export function ThreadDrawer() {
 
     return out
   }, [replies, liveReplies])
+  const runtimeMessages = useMemo(
+    () => root ? [root, ...visibleReplies] : visibleReplies,
+    [root, visibleReplies],
+  )
 
   // Refetch on (convoId, rootId) change. The fetched snapshot covers replies
   // already persisted on the server; visibleReplies above folds in messages
@@ -104,21 +122,13 @@ export function ThreadDrawer() {
   if (!openThread || !root) return null
 
   const rootAuthor = byId[root.authorId]
-  const fallbackAuthor: Participant = {
-    id: root.authorId,
-    kind: 'human',
-    name: root.authorId,
-    role: '',
-    initial: (root.authorId[0] ?? '?').toUpperCase(),
-    avatarBg: 'var(--ink-200)',
-    status: 'avail',
-  }
 
   return (
-    <aside
-      className="border-l border-ink-100 overflow-hidden relative flex flex-col"
-      style={{ background: 'linear-gradient(180deg, #FBFDFE, #F4F8FC)' }}
-    >
+    <LingxiAssistantRuntimeProvider messages={runtimeMessages}>
+      <aside
+        className="border-l border-ink-100 overflow-hidden relative flex flex-col"
+        style={{ background: 'linear-gradient(180deg, #FBFDFE, #F4F8FC)' }}
+      >
       <header className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-ink-100">
         <div>
           <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-400">主题</div>
@@ -133,25 +143,26 @@ export function ThreadDrawer() {
         >×</button>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="flex flex-col gap-4 px-4 py-4">
         {/* Root message — small visual treatment to distinguish from replies. */}
         <div className="rounded-lg border border-ink-100 bg-paper px-3 py-2.5">
-          <MessageRow msg={root} author={rootAuthor ?? fallbackAuthor} />
+          <ThreadMessage messageId={root.id} />
         </div>
         <div className="text-[10.5px] font-bold uppercase tracking-wider text-ink-400 pt-1 border-t border-ink-100 -mb-2">
           回复
         </div>
 
-        {loading && <div className="text-[12px] text-ink-400 italic">正在加载回复...</div>}
+        {loading && <ResourceSkeleton variant="list" count={3} compact label="正在加载回复" />}
         {err && <div className="text-[12px] text-coral-deep">{err}</div>}
         {!loading && !err && visibleReplies.length === 0 && (
           <div className="text-[12px] text-ink-400 italic">尚未回复 - 成为第一个。</div>
         )}
-        {visibleReplies.map((m) => {
-          const a = byId[m.authorId] ?? { ...fallbackAuthor, id: m.authorId, name: m.authorId, initial: (m.authorId[0] ?? '?').toUpperCase() }
-          return <MessageRow key={m.clientId ?? m.id} msg={m} author={a} />
-        })}
-      </div>
+        {visibleReplies.map((message) => (
+          <ThreadMessage key={message.clientId ?? message.id} messageId={message.id} />
+        ))}
+        </div>
+      </ScrollArea>
 
       <div className="border-t border-ink-100 bg-cloud px-3 py-3">
         <div className="text-[10.5px] text-ink-400 mb-1.5">
@@ -163,6 +174,7 @@ export function ThreadDrawer() {
           placeholder="在帖子中回复..."
         />
       </div>
-    </aside>
+      </aside>
+    </LingxiAssistantRuntimeProvider>
   )
 }

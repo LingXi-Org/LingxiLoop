@@ -1,8 +1,34 @@
 import { isMockImDevelopment } from '@/lib/devMode'
 import { http } from '@/api/core/http'
 import { normalizeCourseContract } from './courseContract'
-import type { ApiProject, ApiCourse, ApiCourseMember, ApiCourseInvitation, ApiCourseInvitationWithToken, ApiCourseInvitationPreview, ApiCourseInvitationAccept } from './contracts'
+import type {
+  ApiProject,
+  ApiCourse,
+  ApiCourseMember,
+  ApiCourseInvitation,
+  ApiCourseInvitationWithToken,
+  ApiCourseInvitationPreview,
+  ApiCourseInvitationAccept,
+  LearningActivity,
+  LearningDashboard,
+  LearningDelivery,
+  LearningEvidence,
+  LearningMission,
+  LearningNotificationPreferences,
+  LearningObjective,
+  LearningProgress,
+  LearningReview,
+  TeacherAgentSummary,
+} from './contracts'
 import { MOCK_COMPANY_ID, MOCK_NOW, mockApiData } from './mock-data'
+
+async function learningHttp<T>(path: string, init?: RequestInit): Promise<T> {
+  if (isMockImDevelopment()) {
+    const { mockLearningHttp } = await import('@/dev/mockLearning')
+    return mockLearningHttp<T>(path, init)
+  }
+  return http<T>(path, init)
+}
 
 export const learningApi = {
   listProjects: () => isMockImDevelopment() ? Promise.resolve(mockApiData.projects) : http<ApiProject[]>('/projects'),
@@ -81,5 +107,63 @@ export const learningApi = {
     return Promise.resolve({ ok: true as const, revoked })
   },
   previewCourseInvitation: (token: string) => http<ApiCourseInvitationPreview>(`/course-invitations/${encodeURIComponent(token)}`),
-  acceptCourseInvitation: (token: string) => http<ApiCourseInvitationAccept>(`/course-invitations/${encodeURIComponent(token)}/accept`, { method: 'POST', body: '{}' })
+  acceptCourseInvitation: (token: string) => http<ApiCourseInvitationAccept>(`/course-invitations/${encodeURIComponent(token)}/accept`, { method: 'POST', body: '{}' }),
+  getDashboard: () => learningHttp<LearningDashboard>('/learning/dashboard'),
+  getTeacherAgent: (courseId: string) =>
+    learningHttp<TeacherAgentSummary>(`/courses/${encodeURIComponent(courseId)}/teacher-agent`),
+  bindCourseRoom: (courseId: string, conversationId: string, purpose: 'lab' | 'discussion') =>
+    learningHttp<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/rooms/${encodeURIComponent(conversationId)}`, {
+      method: 'PUT', body: JSON.stringify({ purpose }),
+    }),
+  listObjectives: (courseId: string) =>
+    learningHttp<LearningObjective[]>(`/courses/${encodeURIComponent(courseId)}/objectives`),
+  createObjectives: (courseId: string, objectives: Array<{
+    title: string; successCriteria: string; targetLevel?: number; prerequisiteIds?: string[]
+  }>) => learningHttp<LearningObjective[]>(`/courses/${encodeURIComponent(courseId)}/objectives`, {
+    method: 'POST', body: JSON.stringify({ objectives }),
+  }),
+  setObjectiveStatus: (courseId: string, objectiveId: string, status: 'draft' | 'published' | 'archived') =>
+    learningHttp<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/objectives/${encodeURIComponent(objectiveId)}/status`, {
+      method: 'POST', body: JSON.stringify({ status }),
+    }),
+  listActivities: (courseId: string) =>
+    learningHttp<LearningActivity[]>(`/courses/${encodeURIComponent(courseId)}/activities`),
+  createActivity: (courseId: string, input: Omit<LearningActivity, 'id' | 'courseId' | 'status'>) =>
+    learningHttp<LearningActivity>(`/courses/${encodeURIComponent(courseId)}/activities`, {
+      method: 'POST', body: JSON.stringify(input),
+    }),
+  publishActivity: (courseId: string, activityId: string) =>
+    learningHttp<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/publish`, { method: 'POST' }),
+  closeActivity: (courseId: string, activityId: string) =>
+    learningHttp<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/close`, { method: 'POST' }),
+  submitActivity: (courseId: string, activityId: string, answer: string, assistance: 'none' | 'hint' | 'guided' = 'none') =>
+    learningHttp<{ attemptId: string }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/submit`, {
+      method: 'POST', body: JSON.stringify({ answer, assistance }),
+    }),
+  listMissions: (courseId: string) =>
+    learningHttp<LearningMission[]>(`/courses/${encodeURIComponent(courseId)}/missions`),
+  setMissionCoordinator: (courseId: string, missionId: string, agentId: string) =>
+    learningHttp<LearningMission>(`/courses/${encodeURIComponent(courseId)}/missions/${encodeURIComponent(missionId)}/coordinator`, {
+      method: 'PATCH', body: JSON.stringify({ agentId }),
+    }),
+  listEvidence: (courseId: string, learnerId?: string) =>
+    learningHttp<LearningEvidence[]>(`/courses/${encodeURIComponent(courseId)}/evidence${learnerId ? `?learnerId=${encodeURIComponent(learnerId)}` : ''}`),
+  listReviews: (courseId: string) =>
+    learningHttp<LearningReview[]>(`/courses/${encodeURIComponent(courseId)}/reviews`),
+  getCourseProgress: (courseId: string) =>
+    learningHttp<LearningProgress[]>(`/courses/${encodeURIComponent(courseId)}/progress`),
+  reviewEvaluation: (courseId: string, evaluationId: string, input: {
+    decision: 'accept' | 'reject'; reason: string; overrideLevel?: number
+  }) => learningHttp<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/reviews/${encodeURIComponent(evaluationId)}`, {
+    method: 'POST', body: JSON.stringify(input),
+  }),
+  getNotificationPreferences: (courseId?: string) =>
+    learningHttp<LearningNotificationPreferences>(`/learning/notification-preferences${courseId ? `?courseId=${encodeURIComponent(courseId)}` : ''}`),
+  setNotificationPreferences: (input: {
+    courseId?: string; inAppEnabled: boolean; emailEnabled: boolean; timezone: string;
+    preferredTime: string; quietStart?: string; quietEnd?: string
+  }) => learningHttp<LearningNotificationPreferences>('/learning/notification-preferences', {
+    method: 'PUT', body: JSON.stringify(input),
+  }),
+  listDeliveries: () => learningHttp<LearningDelivery[]>('/learning/deliveries'),
 }

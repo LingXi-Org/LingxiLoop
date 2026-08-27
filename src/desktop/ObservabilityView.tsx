@@ -1,10 +1,18 @@
-import { observabilityApi } from '@/api/observability'
-import type { ApiAgentEvent, ApiAgentRun, ApiAgentRunStatus, ApiAgentWorkspaceFile, ApiAgentWorkspaceFileContent, ApiTriageEconomics } from '@/api/contracts'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckboxField } from '@/components/ui/checkbox-field'
-import { CodeBlock, RichBody } from '@/components/Message'
+import {
+  type ApiAgentEvent,
+  type ApiAgentRun,
+  type ApiAgentRunStatus,
+  type ApiAgentWorkspaceFile,
+  type ApiAgentWorkspaceFileContent,
+  type ApiTriageEconomics,
+} from '@/api/contracts'
+import { observabilityApi } from '@/api/observability'
+import { CodeBlock, RichBody } from '@/components/messages/MessageBody'
 import { ResizeHandle } from '@/components/ResizeHandle'
-import { SelectField } from '@/components/ui/select-field'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
 import { useParticipants } from '@/stores/participants'
@@ -574,18 +582,14 @@ function FileTree({ nodes, depth, expanded, onToggle, selectedPath, onSelect }: 
 }
 
 /** File-content renderer that picks the right view based on extension.
- *   - `.md` → RichBody (LingxiLoop's own markdown-ish renderer)
+ *   - `.md` → the shared Typeset Markdown renderer
  *   - `.json` / `.ts` / `.py` / etc → CodeBlock (syntax-highlit)
  *   - anything else → wrapped plain text in paper theme */
 function FileViewer({ path, body }: { path: string; body: string }) {
   const ext = path.includes('.') ? path.split('.').pop()!.toLowerCase() : ''
   if (!body) return <div className="text-[13px] italic text-ink-400">（空文件）</div>
   if (ext === 'md' || ext === 'markdown') {
-    return (
-      <div className="lingxiloop-prose font-display text-[14px] leading-[1.7] text-ink-900">
-        <RichBody body={body} />
-      </div>
-    )
+    return <RichBody body={body} />
   }
   const codeLangs: Record<string, string> = {
     json: 'json', yaml: 'yaml', yml: 'yaml', ts: 'typescript', tsx: 'tsx',
@@ -712,23 +716,20 @@ function TriageEconomicsPanel(props: {
           </div>
           <label className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
             智能体
-            <SelectField
-              ariaLabel="筛选智能体"
-              value={props.agentId}
-              onValueChange={props.setAgentId}
-              options={[{ value: 'all', label: "所有智能体" }, ...props.agents.map((a) => ({ value: a.id, label: a.name }))]}
-              className="mt-1 w-44 normal-case tracking-normal"
-            />
+            <Select value={props.agentId} onValueChange={props.setAgentId}>
+              <SelectTrigger className="mt-1 w-44 normal-case tracking-normal"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">所有智能体</SelectItem>
+                {props.agents.map((agent) => <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </label>
           <label className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
             窗口
-            <SelectField<string>
-              ariaLabel="筛选时间窗口"
-              value={String(props.hours)}
-              onValueChange={(v) => props.setHours(Number(v))}
-              options={TRIAGE_WINDOWS.map((w) => ({ value: String(w.hours), label: w.label }))}
-              className="mt-1 w-24 normal-case tracking-normal"
-            />
+            <Select value={String(props.hours)} onValueChange={(v) => props.setHours(Number(v))}>
+              <SelectTrigger className="mt-1 w-24 normal-case tracking-normal"><SelectValue /></SelectTrigger>
+              <SelectContent>{TRIAGE_WINDOWS.map((window) => <SelectItem key={window.hours} value={String(window.hours)}>{window.label}</SelectItem>)}</SelectContent>
+            </Select>
           </label>
         </div>
       </div>
@@ -739,7 +740,7 @@ function TriageEconomicsPanel(props: {
 
       <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
         {!data ? (
-          <div className="grid h-full place-items-center text-[13px] text-ink-400">{props.loading ? "加载中…" : "无数据。"}</div>
+          props.loading ? <ResourceSkeleton variant="detail" className="h-full" label="正在加载可观测性数据" /> : <div className="grid h-full place-items-center text-[13px] text-ink-400">无数据。</div>
         ) : (
           <div className="mx-auto max-w-[1100px] space-y-5">
             {/* ALWAYS-ON disclaimer: every $ here is an estimate. */}
@@ -1105,57 +1106,46 @@ export function ObservabilityView() {
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <label className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
                   智能体
-                  <SelectField
-                    ariaLabel="筛选执行智能体"
-                    value={agentId}
-                    onValueChange={setAgentId}
-                    options={[
-                      { value: 'all', label: "所有智能体" },
-                      ...agents.map((agent) => ({ value: agent.id, label: agent.name })),
-                    ]}
-                    className="mt-1 normal-case tracking-normal"
-                  />
+                  <Select value={agentId} onValueChange={setAgentId}>
+                    <SelectTrigger className="mt-1 normal-case tracking-normal"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">所有智能体</SelectItem>
+                      {agents.map((agent) => <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </label>
                 <label className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
                   状态
-                  <SelectField<StatusFilter>
-                    ariaLabel="筛选执行状态"
-                    value={status}
-                    onValueChange={setStatus}
-                    options={STATUS_OPTIONS.map((s) => ({
-                      value: s,
-                      label: s === 'all' ? 'All statuses' : STATUS_STYLE[s].label,
-                    }))}
-                    className="mt-1 normal-case tracking-normal"
-                  />
+                  <Select value={status} onValueChange={(value) => setStatus(value as StatusFilter)}>
+                    <SelectTrigger className="mt-1 normal-case tracking-normal"><SelectValue /></SelectTrigger>
+                    <SelectContent>{STATUS_OPTIONS.map((item) => <SelectItem key={item} value={item}>{item === 'all' ? 'All statuses' : STATUS_STYLE[item].label}</SelectItem>)}</SelectContent>
+                  </Select>
                 </label>
               </div>
 
-              <CheckboxField
-                checked={autoRefresh}
-                onCheckedChange={setAutoRefresh}
-                label="自动刷新"
-                description="此面板打开时保持跟踪列表处于活动状态"
-                className="mt-3"
-              />
+              <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-3 rounded-[11px] border border-input px-3 py-2.5">
+                <Checkbox checked={autoRefresh} onCheckedChange={(checked) => setAutoRefresh(checked === true)} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12.5px] font-semibold leading-[1.2]">自动刷新</span>
+                  <span className="mt-0.5 block text-[11.5px] leading-[1.35] text-muted-foreground">此面板打开时保持跟踪列表处于活动状态</span>
+                </span>
+              </label>
             </>
           ) : (
             <label className="mt-4 block text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
               智能体工作区
-              <SelectField
-                ariaLabel="选择智能体工作区"
-                value={workspaceAgentId}
+              <Select
+                value={workspaceAgentId || undefined}
                 onValueChange={(next) => {
                   setWorkspaceAgentId(next)
                   setSelectedPath(null)
                   setWorkspaceFile(null)
                 }}
-                options={agents.length > 0
-                  ? agents.map((agent) => ({ value: agent.id, label: agent.name }))
-                  : [{ value: '', label: "还没有智能体", disabled: true }]}
                 disabled={agents.length === 0}
-                className="mt-1 normal-case tracking-normal"
-              />
+              >
+                <SelectTrigger className="mt-1 normal-case tracking-normal"><SelectValue placeholder="还没有智能体" /></SelectTrigger>
+                <SelectContent>{agents.map((agent) => <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>)}</SelectContent>
+              </Select>
             </label>
           )}
         </div>

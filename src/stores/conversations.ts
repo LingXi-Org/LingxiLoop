@@ -262,14 +262,8 @@ export function bootConversations() {
       return
     }
     if (e.type === 'message.new' || e.type === 'group.pulled') {
-      // If a new message arrives for the conversation the user is currently
-      // viewing, treat it as already-seen — mark read on the server BEFORE we
-      // reload, so the badge never blinks up to 1 just to drop back to 0.
-      const active = useApp.getState().selectedConversationId
-      if (e.type === 'message.new' && e.conversationId === active) {
-        void conversationsApi.markRead(e.conversationId).then(() => useConversations.getState().reload())
-        return
-      }
+      // Read cursors advance only from the visible-range observer in the
+      // message store. Arrival alone is not proof that a message was seen.
       void useConversations.getState().reload()
     } else if (e.type === 'conversation.updated') {
       // Surgical patch — apply patch fields to the matching conversation in

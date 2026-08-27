@@ -2,6 +2,7 @@ export const AGENT_OS_PROTOCOL_VERSION = 1 as const
 
 export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary' | 'memory_synthesis'
 export type WorkLane = 'learner' | 'approval' | 'collaboration' | 'background'
+export type AgentExecutionRole = 'coordinator' | 'specialist' | 'verifier' | 'reporter'
 
 export type MemoryScopeType = 'learner' | 'course' | 'agent_role'
 export interface PromptMemoryV1 {
@@ -26,6 +27,7 @@ export interface PromptContextV1 {
   systemInstructions: string
   persona: { name: string; role: string; instructions: string }
   capabilities: string[]
+  executionRole: AgentExecutionRole
   memories: {
     learner: PromptMemoryV1[]
     course: PromptMemoryV1[]
@@ -69,6 +71,7 @@ export interface AgentWorkItem {
   threadRootClientMsgNo?: string
   triggerClientMsgNo: string
   reason: AgentWorkReason
+  executionRole: AgentExecutionRole
   lane: WorkLane
   createdAt?: string
   availableAt?: string
@@ -77,6 +80,8 @@ export interface AgentWorkItem {
   leaseToken: string
   canvasId?: string
   canvasAssignmentId?: string
+  progressFingerprint?: string
+  noProgressCount?: number
 }
 
 export interface AgentContextMessage {
@@ -110,6 +115,10 @@ export interface AgentContext {
   knowledgeSourceCount?: number
   /** Degraded attachment ingestion detail for the triggering message. */
   knowledgeIngestionFailure?: string
+  /** Fresh course state for this turn only. Never frozen into PromptContext/session. */
+  learningContext?: import('../learning/types.js').LearningTurnContext
+  /** Fresh teacher-room state for Pulse only. Never frozen into PromptContext/session. */
+  teacherContext?: import('../learning/types.js').TeacherTurnContext
   summary?: string
   learnerId?: string
   promptContextCandidate?: PromptContextV1
@@ -122,6 +131,7 @@ export interface AgentContext {
     initiatorAgentId: string | null
     assignment?: unknown
     assignments: unknown[]
+    reports: unknown[]
     frames: unknown[]
     activity: unknown[]
   }
@@ -212,8 +222,10 @@ export type LingxiMessageKind =
   | 'approval'
   | 'handoff'
   | 'poll'
+  | 'questionnaire'
   | 'artifact'
   | 'canvas'
+  | 'learning_mission'
 
 export interface LingxiMessageV1 {
   version: 1

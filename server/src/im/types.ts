@@ -32,6 +32,15 @@ export interface ImMessage {
   payload: LingxiMessageV1
 }
 
+export interface ImReadReceiptAdvance {
+  companyId: string
+  channelId: string
+  readerId: string
+  previousReadSeq: number
+  readThroughSeq: number
+  readAt: string
+}
+
 export interface WukongWebhookMessage {
   eventId: string
   eventType: string

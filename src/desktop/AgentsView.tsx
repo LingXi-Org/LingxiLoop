@@ -11,7 +11,7 @@ import { AgentEditor } from '@/components/AgentEditor'
 import type { Participant } from '@/types'
 
 const STATUS_LABEL: Record<string, string> = {
-  avail: 'Available', working: 'Working', thinking: 'Thinking', waiting: 'Waiting on you', resting: 'Resting',
+  avail: '可用', working: '工作中', thinking: '思考中', waiting: '等待你确认', resting: '休息中',
 }
 const STATUS_COLOR: Record<string, string> = {
   avail: 'var(--avail)', working: 'var(--working)', thinking: 'var(--thinking)', waiting: 'var(--waiting)', resting: 'var(--resting)',
@@ -248,7 +248,7 @@ function FormerAgentCard({ p, onRehire }: { p: Participant; onRehire: (p: Partic
 export function AgentsView() {
   const byId = useParticipants((s) => s.byId)
   const meId = useMe()
-  const allAgents = Object.values(byId).filter((p) => p.kind === 'agent')
+  const allAgents = Object.values(byId).filter((p) => p.kind === 'agent' && !p.managed)
   const list = allAgents.filter((p) => !p.departedAt)
   const departed = allAgents.filter((p) => p.departedAt).sort((a, b) => (b.departedAt ?? '').localeCompare(a.departedAt ?? ''))
   const humans = Object.values(byId).filter((p) => p.kind === 'human' && p.id !== meId)

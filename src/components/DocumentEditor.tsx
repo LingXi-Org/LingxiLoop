@@ -1,28 +1,32 @@
-import { filesApi } from '@/api/files'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { EditorContent, useEditor, type Editor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
 // In TipTap v3, CollaborationCursor was renamed to CollaborationCaret and
 // repointed at the new @tiptap/y-tiptap binding. The legacy
 // extension-collaboration-cursor@3 is a shim still wired to y-prosemirror
 // and crashes against v3's sync plugin (ySyncPluginKey mismatch).
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
-import Placeholder from '@tiptap/extension-placeholder'
-import Link from '@tiptap/extension-link'
 import ImageExtension from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
+import Placeholder from '@tiptap/extension-placeholder'
 import { TableKit } from '@tiptap/extension-table'
+import { type Editor, EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
-import { openDocument, type YDocSession } from '@/lib/yjsClient'
-import { buildMentionExtension } from '@/lib/mentionExtension'
-import { useDocuments } from '@/stores/documents'
-import { useAuth } from '@/stores/auth'
 import { ws } from '@/api/core/realtime'
-import { cn } from '@/lib/utils'
+import { filesApi } from '@/api/files'
 import {
-  IBold, IItalic, IStrike, IH1, IH2, IH3,
-  IList, IListOrdered, IQuote, ICode, ICodeBlock, ILink, IImage, IUndo, IRedo,
+  IBold, ICode, ICodeBlock, IH1, IH2, IH3,IImage, IItalic, ILink,
+  IList, IListOrdered, IQuote, IRedo,IStrike, IUndo,
 } from '@/components/EditorIcons'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { notifyAction, toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { Input } from '@/components/ui/input'
+import { buildMentionExtension } from '@/lib/mentionExtension'
+import { cn } from '@/lib/utils'
+import { openDocument, type YDocSession } from '@/lib/yjsClient'
+import { useAuth } from '@/stores/auth'
+import { useDocuments } from '@/stores/documents'
 
 /** Walk every `mention` node currently in the editor's doc and return
  *  the set of mentioned participant ids (deduped, order-preserving).
@@ -154,9 +158,7 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
     </div>
   )
   if (!user || !session) return (
-    <div className="h-full flex items-center justify-center text-stone-400 text-sm">
-      加载中…
-    </div>
+    <ResourceSkeleton variant="detail" className="h-full" label="正在加载文档编辑器" />
   )
 
   const commitTitle = async () => {
@@ -178,7 +180,7 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
           isPeek ? 'px-4 py-3 bg-gradient-to-b from-white to-sky2-50/35' : 'px-6 py-3',
         )}
       >
-        <input
+        <Input
           value={titleDraft}
           onChange={(e) => setTitleDraft(e.target.value)}
           onBlur={commitTitle}
@@ -223,9 +225,16 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
         ) : (
           <button
             type="button"
-            onClick={() => {
-              if (!confirm('Delete this document?')) return
-              void remove(doc.id).catch(() => { /* swallow */ })
+            onClick={async () => {
+              if (!await confirmSensitiveAction({
+                title: '删除文档？',
+                description: `“${doc.title || '未命名文档'}”将被永久删除。`,
+                confirmLabel: '删除文档',
+                tone: 'destructive',
+              })) return
+              try {
+                await toastAction(remove(doc.id), { loading: '正在删除文档', success: '文档已删除', error: '删除文档失败' })
+              } catch { /* toast owns the visible error state */ }
             }}
             className="text-xs leading-none text-stone-500 hover:text-red-600 transition-colors"
           >
@@ -294,7 +303,7 @@ function CollaborativeEditor({ session, synced, userName, userColor, documentId,
     editorProps: {
       attributes: {
         class: cn(
-          'tiptap prose prose-stone max-w-none focus:outline-none min-h-full font-serif',
+          'tiptap typeset typeset-document max-w-none min-h-full focus:outline-none',
           variant === 'peek' ? 'px-6 py-6' : 'px-10 py-8',
         ),
       },
@@ -511,7 +520,7 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
   }
   const uploadAndInsert = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('Choose an image file.')
+      notifyAction({ title: '请选择图片文件', type: 'warning' })
       return
     }
     setUploading(true)
@@ -522,14 +531,14 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.warn('[docs] image upload failed', msg)
-      alert(`Image upload failed: ${msg}`)
+      notifyAction({ title: '图片上传失败', description: msg, type: 'error' })
     } finally {
       setUploading(false)
     }
   }
   return (
     <>
-      <input
+      <Input
         ref={fileRef}
         type="file"
         accept="image/png,image/jpeg,image/webp,image/gif"
@@ -550,7 +559,7 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
             if (input === null) return
             const url = input.trim()
             if (!url || !isSafeImageUrl(url)) {
-              alert('Use an http(s) URL or an app-relative /path.')
+              notifyAction({ title: '图片地址无效', description: '请使用 http(s) URL 或应用内 /path。', type: 'warning' })
               return
             }
             const altInput = prompt('Alt text:', existing.alt ?? '')

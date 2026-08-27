@@ -11,6 +11,7 @@ import type {
   PromptContextV1,
   PromptMemoryV1,
 } from './types.js'
+import { assembleAgentSystemPrompt } from './prompt-assembly.js'
 
 interface MemoryRow {
   agent_id: string
@@ -147,15 +148,20 @@ export async function buildPromptContext(args: {
   query: string
   persona: { name: string; role: string; instructions: string }
   capabilities: string[]
+  executionRole: import('./types.js').AgentExecutionRole
   sourceVersions?: Record<string, string>
+  /** Product-managed agents use the same prompt assembly without learner memory. */
+  skipMemories?: boolean
 }): Promise<PromptContextV1> {
   const scopes = { learnerId: args.learnerId, conversationId: args.conversationId, agentId: args.agentId }
-  const recalled = await Promise.all((['learner', 'course', 'agent_role'] as const).map((scopeType) =>
-    recallScope({
-      companyId: args.companyId, agentId: args.agentId, scopeType,
-      scopeId: scopeIdFor(scopeType, scopes), query: args.query, conversationId: args.conversationId,
-    }),
-  ))
+  const recalled = args.skipMemories
+    ? [[], [], []] as [PromptMemoryV1[], PromptMemoryV1[], PromptMemoryV1[]]
+    : await Promise.all((['learner', 'course', 'agent_role'] as const).map((scopeType) =>
+      recallScope({
+        companyId: args.companyId, agentId: args.agentId, scopeType,
+        scopeId: scopeIdFor(scopeType, scopes), query: args.query, conversationId: args.conversationId,
+      }),
+    ))
   // Bound all three layers together, not just each query independently. This
   // keeps a large learner profile from silently crowding the live turn out of
   // the model context while preserving each layer's ranked order.
@@ -167,24 +173,23 @@ export async function buildPromptContext(args: {
     return true
   }))
   const [learner, course, agentRole] = bounded
-  const memoryText = [
-    ['Learner memory', learner], ['Course memory', course], ['Agent role memory', agentRole],
-  ].filter(([, items]) => (items as PromptMemoryV1[]).length > 0)
-    .map(([title, items]) => `${title}:\n${(items as PromptMemoryV1[]).map((item) => `- [${item.kind}] ${item.body}`).join('\n')}`).join('\n\n')
   const assembledAt = new Date().toISOString()
+  const memories = { learner, course, agentRole }
   return {
     version: 1,
     epoch: args.epoch,
     assembledAt,
     persona: args.persona,
     capabilities: [...args.capabilities],
-    memories: { learner, course, agentRole },
-    systemInstructions: [
-      args.persona.instructions,
-      `You are ${args.persona.name}, serving as ${args.persona.role}. Your only model-visible tool is persistent IPython.`,
-      `Enabled product capabilities: ${args.capabilities.join(', ') || 'none'}.`,
-      memoryText,
-    ].filter(Boolean).join('\n\n'),
+    executionRole: args.executionRole,
+    memories,
+    systemInstructions: assembleAgentSystemPrompt({
+      persona: args.persona,
+      capabilities: args.capabilities,
+      executionRole: args.executionRole,
+      memories,
+      assembledAt,
+    }),
     sourceVersions: {
       ...(args.sourceVersions ?? { persona: assembledAt, capabilities: assembledAt }),
       learner: learner.map((item) => `${item.id}:${item.version}`).join(','),

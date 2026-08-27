@@ -6,7 +6,7 @@
 - `server/src/eval/evaluator.ts` owns deterministic scoring. A configured required stage must fail when evidence is missing; an unconfigured optional stage remains skipped and must not inflate the score.
 - `server/src/eval/trace.ts` owns Host Action allowlisting, RAG metadata extraction, deduplication, truncation, and redaction.
 - `server/src/eval/harness.ts` owns baseline validation and run/stage/Case regression checks.
-- `server/src/eval/service.ts` and `server/src/db/migrate.ts` own durable Eval ingestion and schema behavior.
+- `server/src/eval/service.ts`, `server/src/db/schema.sql`, and `server/src/db/bootstrap.ts` own durable Eval ingestion and reset-only v1 schema behavior.
 - `eval/suites/` and `eval/baselines/` are reviewable, versioned test data. `scripts/run-agent-eval.ts` replays frozen observations; `scripts/run-agent-runtime-eval.ts` runs the current Agent OS before evaluation.
 
 ## Suite and baseline decisions
@@ -55,10 +55,10 @@ node .agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs \
 Expected focused commands:
 
 - Evaluator/trace/harness/runtime suite: `npm run test:eval` and `npm run eval:check`.
-- Eval persistence/API/migration: `npm run test:integration:eval` with dedicated PostgreSQL and Redis.
+- Eval persistence/API/schema: `npm run test:integration:eval` with dedicated PostgreSQL and Redis.
 - Eval Dashboard: frontend typecheck and production build.
 - All Eval TypeScript: lint, server typecheck, Agent OS architecture guard, and LLM ledger guard.
 
-Focused means every changed file is Eval-owned: `eval/`, `server/src/eval/`, Eval-specific tests and runners, `src/admin/EvalPage.tsx`, the Eval Skill, or the Eval guide. Do not infer hunk ownership from a shared filename. Changes to Agent OS runtime, DB migration, API/Admin shell, integration infrastructure, root docs, or shared config must fail closed to their owning checks. Package manifests, workflows, and classifier changes run the full matrix once before the dependency/selector change is trusted.
+Focused means every changed file is Eval-owned: `eval/`, `server/src/eval/`, Eval-specific tests and runners, `src/admin/EvalPage.tsx`, the Eval Skill, or the Eval guide. Do not infer hunk ownership from a shared filename. Changes to Agent OS runtime, v1 schema/bootstrap, API/Admin shell, integration infrastructure, root docs, or shared config must fail closed to their owning checks. Package manifests, workflows, and classifier changes run the full matrix once before the dependency/selector change is trusted.
 
 Open Notebook scope, Compose smoke, full serial integration, and Windows/macOS packaging remain path-owned checks for ordinary pull requests. The reusable quality workflow also runs the full matrix for package-manifest or selector changes, `main`, manual, and release callers.

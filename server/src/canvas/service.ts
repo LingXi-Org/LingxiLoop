@@ -5,12 +5,23 @@ import { findCanvasPlacement } from '../../../src/lib/canvasLayout.js'
 import { pool } from '../db/pool.js'
 import { type CanvasEvent, CH_CANVAS, publish } from '../redis.js'
 import { assertCanvasDependencyDAG, canvasAgentColor, canvasWorkArea } from './orchestration.js'
+import type { AgentExecutionRole } from '../agent-os/types.js'
 
 export const CANVAS_FRAME_TYPES = ['html', 'markdown', 'document', 'image', 'artifact'] as const
 export type CanvasFrameType = typeof CANVAS_FRAME_TYPES[number]
 export type CanvasActorKind = 'user' | 'agent'
 export type CanvasWorkspaceStatus = 'active' | 'summarizing' | 'completed' | 'stopped' | 'failed'
 export type CanvasAssignmentStatus = 'queued' | 'blocked' | 'working' | 'waiting' | 'completed' | 'failed' | 'cancelled'
+export type CanvasAssignmentExecutionRole = Extract<AgentExecutionRole, 'specialist' | 'verifier'>
+export type CanvasReportVerdict = 'supported' | 'rejected' | 'inconclusive'
+export interface CanvasEvidenceRef { kind: 'frame' | 'message' | 'document' | 'source' | 'attempt' | 'report'; id: string }
+export interface CanvasAssignmentReport {
+  id: string; canvasId: string; assignmentId: string | null; authorAgentId: string
+  executionRole: Exclude<AgentExecutionRole, 'coordinator'>; schemaVersion: 'learning_report_v1'
+  finding: string; evidenceRefs: CanvasEvidenceRef[]; confidence: number; unresolved: string[]
+  nextStep: string | null; verifiesReportId: string | null; disconfirmingChecks: string[]
+  verdict: CanvasReportVerdict | null; consumedReportIds: string[]; conflictResolution: unknown[]; createdAt: string
+}
 
 export interface CanvasFrame {
   id: string
@@ -53,6 +64,10 @@ export interface CanvasAgentAssignment {
   cursor: { x: number; y: number } | null
   workId: string | null
   dependsOnAgentIds: string[]
+  executionRole: CanvasAssignmentExecutionRole
+  verifiesAssignmentId: string | null
+  progressFingerprint: string | null
+  noProgressCount: number
   result: string | null
   error: string | null
   startedAt: string | null
@@ -101,6 +116,7 @@ export interface CanvasSnapshot {
   presence: CanvasPresence[]
   comments: CanvasComment[]
   activity: CanvasActivity[]
+  reports: CanvasAssignmentReport[]
 }
 
 export interface CanvasWorkspaceSummary {
@@ -121,6 +137,8 @@ export interface CanvasMemberInput {
   agentId: string
   assignment: string
   dependsOnAgentIds?: string[]
+  executionRole?: CanvasAssignmentExecutionRole
+  verifiesAgentId?: string
 }
 
 type FrameRow = {
@@ -144,6 +162,15 @@ type AssignmentRow = {
   cursor_x: number | string | null; cursor_y: number | string | null; work_id: string | null
   result: string | null; error: string | null; started_at: string | null; completed_at: string | null
   updated_at: string
+  execution_role: CanvasAssignmentExecutionRole; verifies_assignment_id: string | null
+  progress_fingerprint: string | null; no_progress_count: number | string | null
+}
+
+type ReportRow = {
+  id:string;canvas_id:string;assignment_id:string|null;author_agent_id:string;execution_role:Exclude<AgentExecutionRole,'coordinator'>
+  schema_version:'learning_report_v1';finding:string;evidence_refs:CanvasEvidenceRef[];confidence:number|string;unresolved:string[]
+  next_step:string|null;verifies_report_id:string|null;disconfirming_checks:string[];verdict:CanvasReportVerdict|null
+  consumed_report_ids:string[];conflict_resolution:unknown[];created_at:string
 }
 
 const MAX_FRAME_CONTENT = 1024 * 1024
@@ -226,9 +253,19 @@ function toAssignment(row: AssignmentRow, dependencies: string[] = []): CanvasAg
     workArea: { x: Number(row.work_x), y: Number(row.work_y), width: Number(row.work_width), height: Number(row.work_height) },
     activeFrameId: row.active_frame_id,
     cursor: row.cursor_x === null || row.cursor_y === null ? null : { x: Number(row.cursor_x), y: Number(row.cursor_y) },
-    workId: row.work_id, dependsOnAgentIds: dependencies, result: row.result, error: row.error,
+    workId: row.work_id, dependsOnAgentIds: dependencies, executionRole: row.execution_role,
+    verifiesAssignmentId: row.verifies_assignment_id, progressFingerprint: row.progress_fingerprint,
+    noProgressCount: Number(row.no_progress_count ?? 0), result: row.result, error: row.error,
     startedAt: row.started_at, completedAt: row.completed_at, updatedAt: row.updated_at,
   }
+}
+
+function toReport(row: ReportRow): CanvasAssignmentReport {
+  return { id:row.id,canvasId:row.canvas_id,assignmentId:row.assignment_id,authorAgentId:row.author_agent_id,
+    executionRole:row.execution_role,schemaVersion:row.schema_version,finding:row.finding,evidenceRefs:row.evidence_refs ?? [],
+    confidence:Number(row.confidence),unresolved:row.unresolved ?? [],nextStep:row.next_step,verifiesReportId:row.verifies_report_id,
+    disconfirmingChecks:row.disconfirming_checks ?? [],verdict:row.verdict,consumedReportIds:row.consumed_report_ids ?? [],
+    conflictResolution:row.conflict_resolution ?? [],createdAt:row.created_at }
 }
 
 async function ensureCanvas(companyId: string, actorId: string, projectId?: string): Promise<CanvasRow> {
@@ -349,7 +386,7 @@ export async function getConversationCanvas(companyId: string, conversationId: s
 export async function getCanvasSnapshot(companyId: string, actorId: string, canvasId?: string, projectId?: string): Promise<CanvasSnapshot> {
   void actorId
   const canvas = await resolveCanvasRead(companyId, canvasId, projectId)
-  const [frames, presence, assignments, dependencies, comments, activity] = await Promise.all([
+  const [frames, presence, assignments, dependencies, comments, activity, reports] = await Promise.all([
     pool.query<FrameRow>(`SELECT * FROM canvas_frames WHERE canvas_id=$1 ORDER BY created_at ASC`, [canvas.id]),
     pool.query<{
       participant_id: string; participant_kind: CanvasActorKind; status: string
@@ -361,7 +398,9 @@ export async function getCanvasSnapshot(companyId: string, actorId: string, canv
         WHERE canvas_id=$1 AND last_seen_at > NOW() - INTERVAL '2 minutes'
         ORDER BY last_seen_at DESC`, [canvas.id],
     ),
-    pool.query<AssignmentRow>(`SELECT * FROM canvas_agent_assignments WHERE canvas_id=$1 ORDER BY created_at ASC`, [canvas.id]),
+    pool.query<AssignmentRow>(`SELECT a.*,w.progress_fingerprint,w.no_progress_count
+      FROM canvas_agent_assignments a LEFT JOIN agent_work_items w ON w.id=a.work_id
+      WHERE a.canvas_id=$1 ORDER BY a.created_at ASC`, [canvas.id]),
     pool.query<{ agent_id: string; depends_on_agent_id: string }>(
       `SELECT child.agent_id, parent.agent_id AS depends_on_agent_id
          FROM canvas_assignment_dependencies d
@@ -377,6 +416,7 @@ export async function getCanvasSnapshot(companyId: string, actorId: string, canv
       id: string; canvas_id: string; frame_id: string | null; actor_id: string
       actor_kind: CanvasActorKind; action: string; detail: Record<string, unknown>; created_at: string
     }>(`SELECT * FROM canvas_activity WHERE canvas_id=$1 ORDER BY created_at DESC LIMIT 100`, [canvas.id]),
+    pool.query<ReportRow>(`SELECT * FROM canvas_assignment_reports WHERE canvas_id=$1 ORDER BY created_at ASC`, [canvas.id]),
   ])
   return {
     id: canvas.id,
@@ -410,6 +450,7 @@ export async function getCanvasSnapshot(companyId: string, actorId: string, canv
       actorId: row.actor_id, actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action),
       detail: row.detail ?? {}, createdAt: row.created_at,
     })),
+    reports: reports.rows.map(toReport),
   }
 }
 
@@ -694,6 +735,16 @@ async function assertMembersAvailable(client: PoolClient, companyId: string, mem
        AND departed_at IS NULL AND capabilities @> '["canvas"]'::jsonb`, [companyId, ids],
   )
   if (rows.length !== ids.length) throw new Error('every selected agent must be active and have the canvas capability')
+  for (const member of members) {
+    const role = member.executionRole ?? 'specialist'
+    if (role === 'verifier') {
+      if (!member.verifiesAgentId) throw new Error('verifier assignments require verifiesAgentId')
+      if (member.verifiesAgentId === member.agentId) throw new Error('builder and verifier must be different agents')
+      if (!ids.includes(member.verifiesAgentId) && !members.some((item) => item.agentId === member.verifiesAgentId)) {
+        throw new Error('verifier target must be assigned to the same canvas')
+      }
+    } else if (member.verifiesAgentId) throw new Error('only verifier assignments may set verifiesAgentId')
+  }
 }
 
 async function insertMembers(client: PoolClient, input: {
@@ -714,15 +765,23 @@ async function insertMembers(client: PoolClient, input: {
     const blocked = (member.dependsOnAgentIds?.length ?? 0) > 0
     const { rows } = await client.query<AssignmentRow>(
       `INSERT INTO canvas_agent_assignments
-         (id,canvas_id,agent_id,assignment,color,status,work_x,work_y,work_width,work_height,work_id,cursor_x,cursor_y)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,680,520,$9,$10,$11)
+         (id,canvas_id,agent_id,assignment,color,status,work_x,work_y,work_width,work_height,work_id,cursor_x,cursor_y,execution_role)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,680,520,$9,$10,$11,$12)
        ON CONFLICT (canvas_id,agent_id) DO UPDATE SET updated_at=canvas_agent_assignments.updated_at RETURNING *`,
       [id, input.canvas.id, member.agentId, member.assignment.trim(), color, blocked ? 'blocked' : 'queued',
-        area.x, area.y, workId, area.x + 40, area.y + 60],
+        area.x, area.y, workId, area.x + 40, area.y + 60, member.executionRole ?? 'specialist'],
     )
     created.push(rows[0])
   }
   const all = [...input.existing, ...created]
+  for (const member of input.members) {
+    if (!member.verifiesAgentId) continue
+    const child = all.find((row) => row.agent_id === member.agentId)!
+    const target = all.find((row) => row.agent_id === member.verifiesAgentId)
+    if (!target || target.agent_id === child.agent_id) throw new Error('invalid verifier assignment target')
+    await client.query(`UPDATE canvas_agent_assignments SET verifies_assignment_id=$2 WHERE id=$1`, [child.id, target.id])
+    child.verifies_assignment_id = target.id
+  }
   for (const member of input.members) {
     const child = all.find((row) => row.agent_id === member.agentId)!
     for (const dependencyAgentId of member.dependsOnAgentIds ?? []) {
@@ -737,11 +796,11 @@ async function insertMembers(client: PoolClient, input: {
   for (const row of created) {
     await client.query(
       `INSERT INTO agent_work_items
-         (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id)
-       VALUES ($1,$2,$3,$4,$5,$6,'canvas_worker',$7,180,$8,$9)
+         (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id,execution_role)
+       VALUES ($1,$2,$3,$4,$5,$6,'canvas_worker',$7,180,$8,$9,$10)
        ON CONFLICT (canvas_assignment_id) WHERE canvas_assignment_id IS NOT NULL DO NOTHING`,
       [row.work_id, input.canvas.company_id, row.agent_id, input.canvas.conversation_id,
-        input.canvas.trigger_client_msg_no, `canvas:${input.canvas.id}:${row.agent_id}`, row.status === 'queued' ? 'queued' : 'blocked', input.canvas.id, row.id],
+        input.canvas.trigger_client_msg_no, `canvas:${input.canvas.id}:${row.agent_id}`, row.status === 'queued' ? 'queued' : 'blocked', input.canvas.id, row.id, row.execution_role],
     )
   }
   return created
@@ -760,7 +819,7 @@ export async function startCanvasWorkspace(input: {
     const { rows } = await client.query<CanvasRow>(
       `INSERT INTO canvases
          (id,company_id,project_id,title,conversation_id,trigger_client_msg_no,goal,initiator_agent_id,status,origin,created_by)
-       SELECT $1,$2,NULL,$3,$4,$5,$6,$7,'active','agent_os',$7
+       SELECT $1,$2,c.project_id,$3,$4,$5,$6,$7,'active','agent_os',$7
          FROM conversations c WHERE c.id=$4 AND c.company_id=$2 AND c.kind='group'
        ON CONFLICT (conversation_id) DO UPDATE SET updated_at=NOW(), status='active' RETURNING *`,
       [id, input.companyId, input.title.trim().slice(0, 200) || 'Agent workspace', input.conversationId,
@@ -870,10 +929,10 @@ export async function assignCanvasWorkspaceWork(input: {
         )
         await client.query(
           `INSERT INTO agent_work_items
-             (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id)
-           VALUES ($1,$2,$3,$4,$5,$6,'canvas_worker','queued',180,$7,$8)`,
+             (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id,execution_role)
+           VALUES ($1,$2,$3,$4,$5,$6,'canvas_worker','queued',180,$7,$8,$9)`,
           [workId, canvas.company_id, input.agentId, canvas.conversation_id,
-            canvas.trigger_client_msg_no, `canvas-dialog:${canvas.id}:${steerId}`, canvas.id, existing.id],
+            canvas.trigger_client_msg_no, `canvas-dialog:${canvas.id}:${steerId}`, canvas.id, existing.id,existing.execution_role],
         )
       }
     }
@@ -1003,11 +1062,11 @@ export async function handoffCanvasWork(input: {
         target = reset[0]
         await client.query(
           `INSERT INTO agent_work_items
-             (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id)
-           VALUES ($1,$2,$3,$4,$5,$6,'canvas_worker','queued',180,$7,$8)
+             (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id,execution_role)
+           VALUES ($1,$2,$3,$4,$5,$6,'canvas_worker','queued',180,$7,$8,$9)
            ON CONFLICT (id) DO NOTHING`,
           [workId, canvas.company_id, input.toAgentId, canvas.conversation_id, canvas.trigger_client_msg_no,
-            `canvas-handoff:${canvas.id}:${activityId}`, canvas.id, target.id],
+            `canvas-handoff:${canvas.id}:${activityId}`, canvas.id, target.id,target.execution_role],
         )
       } else {
         const { rows: updated } = await client.query<AssignmentRow>(
@@ -1054,6 +1113,93 @@ async function publishAssignments(companyId: string, canvasId: string): Promise<
     assignment: toAssignment(row, dependencies.filter((item) => item.agent_id === row.agent_id).map((item) => item.depends_on_agent_id)) })))
 }
 
+async function validateEvidenceRefs(client: PoolClient, input: { companyId:string;canvasId:string;refs:CanvasEvidenceRef[] }): Promise<void> {
+  if (input.refs.length > 64) throw new Error('evidenceRefs may contain at most 64 items')
+  for (const ref of input.refs) {
+    if (!ref || typeof ref.id !== 'string' || !ref.id.trim()) throw new Error('every evidence reference requires an id')
+    let exists = false
+    if (ref.kind === 'frame') exists = Boolean((await client.query(`SELECT 1 FROM canvas_frames WHERE id=$1 AND canvas_id=$2`,[ref.id,input.canvasId])).rows[0])
+    else if (ref.kind === 'report') exists = Boolean((await client.query(`SELECT 1 FROM canvas_assignment_reports WHERE id=$1 AND canvas_id=$2 AND company_id=$3`,[ref.id,input.canvasId,input.companyId])).rows[0])
+    else if (ref.kind === 'message') exists = Boolean((await client.query(`SELECT 1 FROM messages m JOIN canvases c ON c.conversation_id=m.conversation_id WHERE m.id=$1 AND c.id=$2 AND c.company_id=$3`,[ref.id,input.canvasId,input.companyId])).rows[0])
+    else if (ref.kind === 'document') exists = Boolean((await client.query(`SELECT 1 FROM documents d JOIN canvases c ON c.company_id=d.company_id WHERE d.id=$1 AND c.id=$2 AND c.company_id=$3 AND (d.conversation_id IS NULL OR d.conversation_id=c.conversation_id)`,[ref.id,input.canvasId,input.companyId])).rows[0])
+    else if (ref.kind === 'source') exists = Boolean((await client.query(`SELECT 1 FROM knowledge_sources s JOIN canvases c ON c.project_id=s.project_id WHERE s.id=$1 AND c.id=$2 AND s.company_id=$3 AND s.deleted_at IS NULL`,[ref.id,input.canvasId,input.companyId])).rows[0])
+    else if (ref.kind === 'attempt') exists = Boolean((await client.query(
+      `SELECT 1
+         FROM learning_attempts attempt
+         JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
+         JOIN canvases canvas ON canvas.project_id=course.project_id AND canvas.company_id=course.company_id
+        WHERE attempt.id=$1 AND canvas.id=$2 AND course.company_id=$3`,
+      [ref.id,input.canvasId,input.companyId],
+    )).rows[0])
+    else throw new Error(`unsupported evidence reference kind: ${String((ref as {kind?:unknown}).kind)}`)
+    if (!exists) throw new Error(`evidence reference is outside the current Canvas scope: ${ref.kind}:${ref.id}`)
+  }
+}
+
+export async function submitCanvasReport(input: {
+  companyId:string;workId:string;agentId:string;canvasId:string;executionRole:AgentExecutionRole
+  finding:string;evidenceRefs:CanvasEvidenceRef[];confidence:number;unresolved?:string[];nextStep?:string
+  verifiesReportId?:string;disconfirmingChecks?:string[];verdict?:CanvasReportVerdict
+  consumedReportIds?:string[];conflictResolution?:unknown[]
+}): Promise<CanvasAssignmentReport> {
+  if (!['specialist','verifier','reporter'].includes(input.executionRole)) throw new Error('coordinator work cannot submit an assignment report')
+  const confidence=Number(input.confidence)
+  if (!Number.isFinite(confidence)||confidence<0||confidence>1) throw new Error('confidence must be between 0 and 1')
+  const finding=input.finding.trim()
+  if (!finding) throw new Error('finding is required')
+  const client=await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const {rows:works}=await client.query<{canvas_assignment_id:string|null;execution_role:AgentExecutionRole}>(
+      `SELECT canvas_assignment_id,execution_role FROM agent_work_items WHERE id=$1 AND company_id=$2 AND agent_id=$3 AND canvas_id=$4 FOR UPDATE`,
+      [input.workId,input.companyId,input.agentId,input.canvasId],
+    )
+    const work=works[0]
+    if (!work||work.execution_role!==input.executionRole) throw new Error('report execution role does not match the current durable work item')
+    await validateEvidenceRefs(client,{companyId:input.companyId,canvasId:input.canvasId,refs:input.evidenceRefs})
+    let verifiesReportId:string|null=null
+    if (input.executionRole==='verifier') {
+      if (!input.verifiesReportId||!input.verdict) throw new Error('verifier reports require verifiesReportId and verdict')
+      const {rows:source}=await client.query<{author_agent_id:string;assignment_id:string|null}>(`SELECT author_agent_id,assignment_id FROM canvas_assignment_reports WHERE id=$1 AND canvas_id=$2 AND company_id=$3`,[input.verifiesReportId,input.canvasId,input.companyId])
+      if (!source[0]) throw new Error('verified report is outside the current Canvas')
+      if (source[0].author_agent_id===input.agentId) throw new Error('builder and verifier must be different agents')
+      const {rows:assignment}=await client.query<{verifies_assignment_id:string|null}>(`SELECT verifies_assignment_id FROM canvas_agent_assignments WHERE id=$1 AND canvas_id=$2 AND agent_id=$3`,[work.canvas_assignment_id,input.canvasId,input.agentId])
+      if (!assignment[0]||assignment[0].verifies_assignment_id!==source[0].assignment_id) throw new Error('verifier report does not match its assigned builder report')
+      verifiesReportId=input.verifiesReportId
+    } else if (input.verifiesReportId||input.verdict) throw new Error('only verifier reports may set verification fields')
+    const consumed=(input.consumedReportIds??[]).map(String)
+    if (input.executionRole==='reporter') {
+      if (!consumed.length) throw new Error('reporter reports must consume at least one persisted report')
+      const {rows}=await client.query<{id:string}>(`SELECT id FROM canvas_assignment_reports WHERE canvas_id=$1 AND company_id=$2 AND id=ANY($3::text[])`,[input.canvasId,input.companyId,consumed])
+      if (new Set(rows.map(row=>row.id)).size!==new Set(consumed).size) throw new Error('reporter consumed report is outside the current Canvas')
+    } else if (consumed.length) throw new Error('only reporter reports may consume reportIds')
+    const id=`report-${createHash('sha256').update(`${input.workId}:learning_report_v1`).digest('hex').slice(0,28)}`
+    const {rows}=await client.query<ReportRow>(
+      `INSERT INTO canvas_assignment_reports(id,company_id,canvas_id,assignment_id,author_agent_id,execution_role,finding,evidence_refs,confidence,unresolved,next_step,verifies_report_id,disconfirming_checks,verdict,consumed_report_ids,conflict_resolution)
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10::jsonb,$11,$12,$13::jsonb,$14,$15::jsonb,$16::jsonb)
+       ON CONFLICT(id) DO UPDATE SET id=canvas_assignment_reports.id RETURNING *`,
+      [id,input.companyId,input.canvasId,work.canvas_assignment_id,input.agentId,input.executionRole,finding,JSON.stringify(input.evidenceRefs),confidence,JSON.stringify(input.unresolved??[]),input.nextStep?.trim()||null,verifiesReportId,JSON.stringify(input.disconfirmingChecks??[]),input.verdict??null,JSON.stringify(consumed),JSON.stringify(input.conflictResolution??[])],
+    )
+    await client.query('COMMIT')
+    return toReport(rows[0])
+  } catch(error) { await client.query('ROLLBACK').catch(()=>undefined); throw error }
+  finally { client.release() }
+}
+
+export async function assertCanvasWorkReportReady(workId:string,companyId:string):Promise<void> {
+  const {rows}=await pool.query<{reason:string;canvas_id:string|null;canvas_assignment_id:string|null;execution_role:AgentExecutionRole}>(
+    `SELECT reason,canvas_id,canvas_assignment_id,execution_role FROM agent_work_items WHERE id=$1 AND company_id=$2`,[workId,companyId],
+  )
+  const work=rows[0]
+  if (!work?.canvas_id) return
+  const {rows:reports}=work.reason==='canvas_summary'
+    ? await pool.query(`SELECT 1 FROM canvas_assignment_reports WHERE canvas_id=$1 AND execution_role='reporter' LIMIT 1`,[work.canvas_id])
+    : await pool.query(`SELECT 1 FROM canvas_assignment_reports WHERE assignment_id=$1 LIMIT 1`,[work.canvas_assignment_id])
+  if (!reports[0]) throw new Error(work.reason==='canvas_summary'
+    ? 'reporter work requires a learning_report_v1 submission before completion'
+    : 'canvas worker requires a learning_report_v1 submission before completion')
+}
+
 export async function completeCanvasWork(input: {
   workId: string; companyId: string; status: 'completed' | 'failed' | 'cancelled'; resultText?: string; error?: string
 }): Promise<void> {
@@ -1067,6 +1213,10 @@ export async function completeCanvasWork(input: {
     const work = works[0]; canvasId = work?.canvas_id ?? null
     if (!work?.canvas_id) { await client.query('COMMIT'); return }
     if (work.reason === 'canvas_summary') {
+      if (input.status === 'completed') {
+        const { rows: reports } = await client.query(`SELECT 1 FROM canvas_assignment_reports WHERE canvas_id=$1 AND execution_role='reporter' LIMIT 1`, [work.canvas_id])
+        if (!reports[0]) throw new Error('reporter work requires a learning_report_v1 submission before completion')
+      }
       const { rows: updated } = await client.query<{ status: CanvasWorkspaceStatus; conversation_id: string | null; title: string; goal: string }>(
         `UPDATE canvases SET status=$2,summary=$3,completed_at=NOW(),updated_at=NOW() WHERE id=$1 AND status='summarizing'
          RETURNING status,conversation_id,title,goal`,
@@ -1079,6 +1229,10 @@ export async function completeCanvasWork(input: {
       return
     }
     if (!work.canvas_assignment_id) { await client.query('COMMIT'); return }
+    if (input.status === 'completed') {
+      const { rows: reports } = await client.query(`SELECT 1 FROM canvas_assignment_reports WHERE assignment_id=$1 LIMIT 1`, [work.canvas_assignment_id])
+      if (!reports[0]) throw new Error('canvas worker requires a learning_report_v1 submission before completion')
+    }
     const assignmentStatus: CanvasAssignmentStatus = input.status === 'completed' ? 'completed' : input.status === 'failed' ? 'failed' : 'cancelled'
     const { rows: completedAssignments } = await client.query<{ active_frame_id: string | null }>(
       `UPDATE canvas_agent_assignments SET status=$2,result=$3,error=$4,completed_at=NOW(),updated_at=NOW()
@@ -1133,8 +1287,8 @@ export async function completeCanvasWork(input: {
         const summaryWorkId = `canvas-summary-${createHash('sha256').update(canvas.id).digest('hex').slice(0, 24)}`
         await client.query(
           `INSERT INTO agent_work_items
-             (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id)
-           VALUES ($1,$2,$3,$4,$5,$6,'canvas_summary','queued',200,$7) ON CONFLICT (id) DO NOTHING`,
+             (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,execution_role)
+           VALUES ($1,$2,$3,$4,$5,$6,'canvas_summary','queued',200,$7,'reporter') ON CONFLICT (id) DO NOTHING`,
           [summaryWorkId, canvas.company_id, canvas.initiator_agent_id, canvas.conversation_id,
             canvas.trigger_client_msg_no, `canvas-summary:${canvas.id}`, canvas.id],
         )
@@ -1241,8 +1395,8 @@ export async function stopCanvasAssignment(input: { companyId: string; canvasId:
       if (canvas?.initiator_agent_id && canvas.conversation_id) {
         const summaryWorkId = `canvas-summary-${createHash('sha256').update(canvas.id).digest('hex').slice(0, 24)}`
         await client.query(
-          `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id)
-           VALUES ($1,$2,$3,$4,$5,$6,'canvas_summary','queued',200,$7) ON CONFLICT (id) DO NOTHING`,
+          `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,execution_role)
+           VALUES ($1,$2,$3,$4,$5,$6,'canvas_summary','queued',200,$7,'reporter') ON CONFLICT (id) DO NOTHING`,
           [summaryWorkId, canvas.company_id, canvas.initiator_agent_id, canvas.conversation_id, canvas.trigger_client_msg_no, `canvas-summary:${canvas.id}`, canvas.id],
         )
       }

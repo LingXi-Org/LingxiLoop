@@ -80,7 +80,7 @@ test('fails closed when an Eval diff also changes shared or high-risk files', ()
   const evalPath = 'eval/suites/smoke.v1.json'
   const scenarios = [
     { path: 'server/src/agent-os/runtime.ts', integration: 'full', compose: true },
-    { path: 'server/src/db/migrate.ts', integration: 'full', compose: false },
+    { path: 'server/src/db/schema.sql', integration: 'full', compose: false },
     { path: 'server/src/api/admin-router.ts', integration: 'full', compose: false },
     { path: 'package.json', integration: 'none', compose: false },
     { path: 'package-lock.json', integration: 'none', compose: false },
@@ -130,10 +130,10 @@ test('maps heavy CI jobs only to their owning paths', () => {
   assert.equal(buildCiPlan(['.github/workflows/_quality.yml']).fullMatrix, true)
 })
 
-test('escalates runtime migrations to the full CI approximation', () => {
-  const report = classifyPaths(['server/src/db/migrate.ts'])
+test('escalates the reset-only v1 schema bootstrap to the full CI approximation', () => {
+  const report = classifyPaths(['server/src/db/schema.sql'])
   assert.ok(category(report, 'database-tenant'))
-  assert.ok(report.escalations.some(({ id }) => id === 'runtime-migration'))
+  assert.ok(report.escalations.some(({ id }) => id === 'v1-schema-bootstrap'))
   assert.ok(report.escalations.some(({ id }) => id === 'full-ci-approximation'))
   assert.equal(check(report, 'npm run test:integration')?.tier, 'required')
 })
@@ -144,7 +144,7 @@ test('selects vendor-specific checks', () => {
     'third_party/open-notebook/open_notebook/domain/notebook.py',
   ])
   assert.ok(category(report, 'vendored'))
-  assert.equal(check(report, 'npm run guard:openbot-vendor')?.tier, 'required')
+  assert.equal(check(report, 'npm run guard:openbot-vendor'), undefined)
   const nativeScope = check(report, 'python -m pytest -q tests/test_lingxiloop_native_scope.py')
   assert.equal(nativeScope?.tier, 'required')
   assert.equal(nativeScope?.cwd, 'third_party/open-notebook')

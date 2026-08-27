@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { CanvasFrame, CanvasSnapshot } from '@/types'
+import { Skeleton } from '@/components/ui/skeleton'
 import { CanvasFrameContent } from './CanvasFrameContent'
 
 interface CanvasPreviewProps {
@@ -72,8 +73,8 @@ export function CanvasPreview({ snapshot, title, frameCount, fill = false }: Can
         </div>
       ) : (
         <div className="absolute inset-0 grid place-items-center">
-          <div className="canvas-preview-loading">
-            {Array.from({ length: Math.max(2, Math.min(frameCount, 4)) }).map((_, index) => <span key={index} />)}
+          <div className="canvas-preview-loading" role="status" aria-label="正在加载 Canvas 预览">
+            {Array.from({ length: Math.max(2, Math.min(frameCount, 4)) }).map((_, index) => <Skeleton key={index} />)}
           </div>
         </div>
       )}

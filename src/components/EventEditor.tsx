@@ -8,8 +8,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import { Input } from '@/components/ui/input'
-import { SelectField } from '@/components/ui/select-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useMe } from '@/stores/auth'
 import { useCalendar } from '@/stores/calendar'
 import { useConversations } from '@/stores/conversations'
@@ -109,7 +111,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
   // "remind teammate" personal events).
   const candidates: Participant[] = useMemo(() => {
     return Object.values(byId)
-      .filter((p) => !p.departedAt)
+      .filter((p) => !p.departedAt && !p.managed)
       .sort((a, b) => {
         if (a.kind !== b.kind) return a.kind === 'agent' ? -1 : 1
         return a.name.localeCompare(b.name)
@@ -159,9 +161,17 @@ export function EventEditor({ event, prefill, onClose }: Props) {
         isPrivate,
       }
       if (event) {
-        await update(event.id, payload)
+        await toastAction(update(event.id, payload), {
+          loading: '正在更新事件',
+          success: '事件已更新',
+          error: '更新事件失败',
+        })
       } else {
-        await create(payload)
+        await toastAction(create(payload), {
+          loading: '正在创建事件',
+          success: payload.kind === 'agent_task' ? '任务事件已创建' : '事件已创建',
+          error: '创建事件失败',
+        })
       }
       onClose()
     } catch (e) {
@@ -173,10 +183,15 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
   const onDelete = async () => {
     if (!event) return
-    if (!confirm(`Delete "${event.title}"? This wipes its dispatch history too.`)) return
+    if (!await confirmSensitiveAction({
+      title: '删除事件及运行记录？',
+      description: `“${event.title}”及其全部任务运行记录都将永久删除。`,
+      confirmLabel: '删除事件',
+      tone: 'destructive',
+    })) return
     setBusy(true)
     try {
-      await remove(event.id)
+      await toastAction(remove(event.id), { loading: '正在删除事件', success: '事件已删除', error: '删除事件失败' })
       onClose()
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e))
@@ -189,7 +204,12 @@ export function EventEditor({ event, prefill, onClose }: Props) {
     if (!event) return
     setBusy(true)
     try {
-      const r = await runNow(event.id)
+      const r = await toastAction(runNow(event.id), {
+        loading: '正在运行任务',
+        success: '任务已触发',
+        error: '任务触发失败',
+        description: event.title,
+      })
       if (r.status === 'dispatched') onClose()
       else setErr(`run-now: ${r.status}${r.error ? ` — ${r.error}` : ''}`)
     } catch (e) {
@@ -312,18 +332,15 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     onChange={(e) => setRecur({ ...recur, interval: Math.max(1, Number(e.target.value) || 1) })}
                     style={{ width: 70 }}
                   />
-                  <SelectField
-                    ariaLabel="重复频率"
-                    value={recur.freq}
-                    onValueChange={(value) => setRecur({ ...recur, freq: value as RecurrenceRule['freq'] })}
-                    options={[
-                      { value: 'daily', label: `日${recur.interval > 1 ? 's' : ''}` },
-                      { value: 'weekly', label: `周${recur.interval > 1 ? 's' : ''}` },
-                      { value: 'monthly', label: `月${recur.interval > 1 ? 's' : ''}` },
-                      { value: 'yearly', label: `年${recur.interval > 1 ? 's' : ''}` },
-                    ]}
-                    className="w-28"
-                  />
+                  <Select value={recur.freq} onValueChange={(value) => setRecur({ ...recur, freq: value as RecurrenceRule['freq'] })}>
+                    <SelectTrigger className="w-28" aria-label="重复频率"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">日{recur.interval > 1 ? 's' : ''}</SelectItem>
+                      <SelectItem value="weekly">周{recur.interval > 1 ? 's' : ''}</SelectItem>
+                      <SelectItem value="monthly">月{recur.interval > 1 ? 's' : ''}</SelectItem>
+                      <SelectItem value="yearly">年{recur.interval > 1 ? 's' : ''}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 {recur.freq === 'weekly' && (
                   <div className="flex flex-wrap gap-1">
@@ -485,16 +502,13 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               </Field>
 
               <Field label="发表于" hint="调度消息触发时到达的位置。留空可与受让人一起使用您的 DM。">
-                <SelectField
-                  ariaLabel="发布到会话"
-                  value={targetConversationId ?? ''}
-                  onValueChange={(value) => setTargetConversationId(value || null)}
-                  options={[
-                    { value: '', label: '— 与受让人的直接消息 —' },
-                    ...targetConvos.map((conversation) => ({ value: conversation.id, label: conversation.title })),
-                  ]}
-                  className="w-full"
-                />
+                <Select value={targetConversationId ?? '__direct__'} onValueChange={(value) => setTargetConversationId(value === '__direct__' ? null : value)}>
+                  <SelectTrigger className="w-full" aria-label="发布到会话"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__direct__">— 与受让人的直接消息 —</SelectItem>
+                    {targetConvos.map((conversation) => <SelectItem key={conversation.id} value={conversation.id}>{conversation.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </Field>
 
               <Field label="提示" hint="智能体每次应该做什么。纯文本——智能体将其视为系统消息。">

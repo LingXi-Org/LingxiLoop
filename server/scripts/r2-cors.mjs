@@ -4,8 +4,8 @@
  *
  * Why this exists: the client uploads images by asking the server for a
  * presigned PUT URL (POST /api/uploads/presign) and then PUTting the raw
- * bytes *directly from the browser* to R2 (see src/api/client.ts →
- * `uploadFile`). That cross-origin PUT triggers a CORS preflight, so the
+ * bytes *directly from the browser* to R2 (see src/api/files.ts →
+ * `filesApi.uploadFile`). That cross-origin PUT triggers a CORS preflight, so the
  * R2 bucket itself must allow our renderer origins — the API server's
  * LINGXILOOP_CORS_ORIGINS does NOT cover it. Without a bucket CORS policy the
  * preflight gets no Access-Control-Allow-Origin and the browser rejects
@@ -47,8 +47,6 @@ import {
 //   - http://localhost:5173 → browser Vite dev (vite.config.ts `port`)
 //   - http://localhost:5180 → Electron dev renderer (electron/main.cjs DEV_URL)
 //   - app://lingxiloop          → packaged Electron (main.cjs loadURL app://lingxiloop/...)
-//   - capacitor://localhost     → iOS Capacitor WebView
-//   - https://localhost         → Android Capacitor WebView
 // Extra origins (prod web, alternate ports, …) come from CLI args.
 const cliArgs = process.argv.slice(2)
 const printOnly = cliArgs.includes('--print')

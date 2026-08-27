@@ -4,12 +4,11 @@ Apply only the sections reached by the change, and confirm current implementatio
 
 ## Schema authority and boot
 
-- `server/src/db/migrate.ts` contains the effective PostgreSQL DDL and boot migration behavior.
-- `server/src/db/schema.ts` supplies selected Drizzle types; it is not a complete catalog of production columns or constraints.
-- `ensureSchema()` uses one session-scoped advisory lock to serialize migrators. The same connection must release it cleanly.
-- The advisory lock does not protect against live traffic. Keep the bounded DDL `lock_timeout` and boot retry behavior for `40P01` and `55P03`.
-- `schemaAlreadyCurrent()` may forgive a lock-contention failure only when all newest required objects exist. Update its sentinels in the same change as each new required table, column, constraint, or index.
-- Extensions and performance-only indexes may degrade gracefully only where application correctness has an explicit fallback.
+- `server/src/db/schema.sql` contains the complete immutable v1 PostgreSQL schema.
+- `server/src/db/bootstrap.ts` accepts only an empty schema or an already-marked, complete v1 schema. It never alters, backfills, or upgrades existing relations.
+- `npm run db:bootstrap` is the explicit initialization entry point. Web, Worker, and Agent OS startup only assert schema readiness.
+- Update the v1 completeness query with every required table or critical column. A marked but incomplete schema must fail closed.
+- Legacy or unmarked databases are reset, not upgraded in place. Keep operator guidance explicit about drop/recreate and backup boundaries.
 
 ## Tenant and authorization
 
@@ -27,17 +26,17 @@ Apply only the sections reached by the change, and confirm current implementatio
 - Preserve cleanup and foreign-key order in integration reset helpers, retention workers, account deletion, and one-way cutovers.
 - Distinguish correctness data from caches, projections, and optimization indexes; their failure and recovery policies need not match.
 
-## Migration shapes
+## V1 schema shapes
 
-- Prefer additive, idempotent DDL and explicit data transformations. Use `IF NOT EXISTS` only when the existing object's shape is independently guaranteed.
-- Make required backfills deterministic and restart-safe. Record progress or use conflict-safe predicates when one transaction is not credible.
-- Do not place a large ordinary `CREATE INDEX` on a hot table in the main DDL batch. Use `CREATE INDEX CONCURRENTLY` outside a transaction, remove invalid remnants, and keep it non-fatal only when it is performance-only.
-- Explain and test any nullable compatibility column or retained legacy field. Do not preserve dead schema by default.
-- For destructive cutovers, verify backup inputs and rollback restoration. Rollback may restore pre-cutover state; it need not reactivate retired runtimes.
+- Put every required object and constraint in `schema.sql`; do not spread effective DDL across process startup paths.
+- Do not add runtime backfills, compatibility columns, dual writes, or migration directories for pre-v1 data.
+- Preserve generated columns as generated; callers must not explicitly insert into them.
+- Evaluate indexes against expected production shape, but remember bootstrap runs only against an empty database.
+- For destructive resets, verify backup inputs and rollback restoration. Rollback may restore a prior database snapshot; it does not imply an in-place upgrade path.
 
 ## Evidence
 
 - Unit-test parsing, retry classification, and pure query-building behavior where applicable.
-- Integration-test schema creation, representative upgrade data, idempotent rerun, tenant-negative access, constraints, and transaction rollback.
-- Exercise multi-replica or lock behavior with targeted mocks/tests when a reliable live concurrency reproduction is impractical.
+- Integration-test empty schema creation, ready-schema assertions, legacy/incomplete-schema rejection, tenant-negative access, constraints, and transaction rollback.
+- Verify Web, Worker, and Agent OS do not execute DDL or startup backfills.
 - Inspect query plans or production-like row counts before claiming an index or query change solves a performance problem.

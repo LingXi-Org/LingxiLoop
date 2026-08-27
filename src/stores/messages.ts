@@ -16,7 +16,7 @@ import { type ImEnvelope, isInternalAgentStatus, type LingxiMessageV1, lingxiIm 
 import { useApp } from '@/stores/app'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
-import type { Message, ReactionEntry } from '@/types'
+import type { ImReadReceiptAdvance, Message, ReactionEntry } from '@/types'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -53,11 +53,13 @@ export interface MessagesState {
    *  so the data growth and the index shift land in one render. */
   firstItemIndex: Record<string, number>
   errors: Record<string, string>
+  readReceipts: Record<string, ImReadReceiptAdvance[]>
 
   loadConversation: (id: string) => Promise<void>
   loadOlder: (id: string) => Promise<void>
   reloadConversation: (id: string) => Promise<void>
   retryLoad: (id: string) => Promise<void>
+  loadReadReceipts: (id: string, fromSeq: number, toSeq: number) => Promise<void>
   applyEvent: (e: WsEvent) => void
 }
 
@@ -316,13 +318,13 @@ function fromApi(m: ApiMessage): Message {
   const raw = m as unknown as {
     tool?: Message['tool']
     attachment?: Message['attachment']
-    whisperLink?: Message['whisperLink']
     quotedMessageId?: string | null
     quoted?: Message['quoted'] | null
     replyCount?: number | null
     email?: Message['email'] | null
     poll?: Message['poll'] | null
     pollTallies?: Message['pollTallies'] | null
+    questionnaire?: Message['questionnaire'] | null
     clientId?: string | null
     mentionedIds?: string[] | null
     mentionAll?: boolean | null
@@ -330,6 +332,7 @@ function fromApi(m: ApiMessage): Message {
     handoff?: Message['handoff'] | null
     approval?: Message['approval'] | null
     canvas?: Message['canvas'] | null
+    learningMission?: Message['learningMission'] | null
     citations?: Message['citations'] | null
   }
   const out: Message = {
@@ -343,13 +346,13 @@ function fromApi(m: ApiMessage): Message {
     reactions: deriveMineForReactions(m.reactions),
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,
-    whisperLink: raw.whisperLink ?? undefined,
     quotedMessageId: raw.quotedMessageId ?? undefined,
     quoted: raw.quoted ?? undefined,
     replyCount: raw.replyCount ?? undefined,
     email: raw.email ?? undefined,
     poll: raw.poll ?? undefined,
     pollTallies: raw.pollTallies ?? undefined,
+    questionnaire: raw.questionnaire ?? undefined,
     clientId: raw.clientId ?? undefined,
     mentionedIds: raw.mentionedIds ?? undefined,
     mentionAll: raw.mentionAll ?? undefined,
@@ -357,15 +360,19 @@ function fromApi(m: ApiMessage): Message {
     handoff: raw.handoff ?? undefined,
     approval: raw.approval ?? undefined,
     canvas: raw.canvas ?? undefined,
+    learningMission: raw.learningMission ?? undefined,
     citations: raw.citations ?? undefined,
   }
-  ;(out as Message & { sequence?: number }).sequence = m.sequence
+  out.sequence = m.sequence
   return out
 }
 
 function fromIm(message: ImEnvelope): Message {
   const payload = message.payload
   const data = payload.data ?? {}
+  if (payload.kind === 'learning_mission' && typeof window !== 'undefined') {
+    window.queueMicrotask(() => window.dispatchEvent(new Event('lingxiloop:learning-updated')))
+  }
   const kind = payload.kind === 'tool_activity' || payload.kind === 'artifact' ? 'tool' : payload.kind
   const pollClientMsgNo = payload.kind === 'poll'
     ? String(payload.refs?.pollClientMsgNo ?? payload.clientMsgNo)
@@ -399,10 +406,16 @@ function fromIm(message: ImEnvelope): Message {
     handoff: payload.kind === 'handoff' ? data as unknown as Message['handoff'] : undefined,
     approval: payload.kind === 'approval' ? data as unknown as Message['approval'] : undefined,
     canvas: payload.kind === 'canvas' ? data as unknown as Message['canvas'] : undefined,
+    learningMission: payload.kind === 'learning_mission' ? data as unknown as Message['learningMission'] : undefined,
     citations: Array.isArray(data.citations) ? data.citations as Message['citations'] : undefined,
     poll: pollData,
     pollTallies: payload.kind === 'poll' && Array.isArray(data.pollTallies)
       ? data.pollTallies as Message['pollTallies']
+      : undefined,
+    questionnaire: payload.kind === 'questionnaire'
+      ? (data.questionnaire && typeof data.questionnaire === 'object'
+          ? data.questionnaire as Message['questionnaire']
+          : data as unknown as Message['questionnaire'])
       : undefined,
     mentionedIds: Array.isArray(data.mentionedIds) ? data.mentionedIds.map(String) : undefined,
     mentionAll: data.mentionAll === true,
@@ -424,7 +437,7 @@ function fromImBatch(messages: ImEnvelope[]): Message[] {
     const previousSeq = sequenceOf(previous)
     const nextSeq = sequenceOf(next)
     const latest = (nextSeq ?? 0) >= (previousSeq ?? 0) ? next : previous
-    ;(latest as Message & { sequence?: number }).sequence = Math.min(
+    latest.sequence = Math.min(
       previousSeq ?? Number.MAX_SAFE_INTEGER,
       nextSeq ?? Number.MAX_SAFE_INTEGER,
     )
@@ -434,34 +447,53 @@ function fromImBatch(messages: ImEnvelope[]): Message[] {
 }
 
 const activeReadTimers = new Map<string, number>()
+const pendingVisibleReadSeq = new Map<string, number>()
 
-/** WuKong-delivered Agent OS messages do not necessarily have a matching app
- * WebSocket message.new event. Mark the open room read from this transport as
- * well, optimistically clearing its badge and debouncing the server cursor so
- * a burst of streamed/final messages advances to the newest one. */
-function markConversationReadWhileOpen(conversationId: string): void {
-  void import('@/stores/conversations').then(({ useConversations }) => {
-    useConversations.setState((state) => ({
-      list: state.list.map((conversation) => conversation.id === conversationId
-        ? { ...conversation, unread: undefined }
-        : conversation),
-    }))
-  })
+/** Advance the durable cursor only through a committed message that was
+ * actually inside the focused, visible virtualized range. */
+export function markMessagesVisibleThrough(conversationId: string, readThroughSeq: number): void {
+  if (!Number.isSafeInteger(readThroughSeq) || readThroughSeq <= 0) return
+  if (typeof document !== 'undefined' && (document.visibilityState !== 'visible' || !document.hasFocus())) return
+  pendingVisibleReadSeq.set(conversationId, Math.max(pendingVisibleReadSeq.get(conversationId) ?? 0, readThroughSeq))
   const current = activeReadTimers.get(conversationId)
   if (current !== undefined) window.clearTimeout(current)
   activeReadTimers.set(conversationId, window.setTimeout(() => {
     activeReadTimers.delete(conversationId)
     if (useApp.getState().selectedConversationId !== conversationId) return
-    void conversationsApi.markRead(conversationId)
-      .then(() => import('@/stores/conversations'))
+    const sequence = pendingVisibleReadSeq.get(conversationId)
+    pendingVisibleReadSeq.delete(conversationId)
+    if (!sequence) return
+    void conversationsApi.markRead(conversationId, sequence)
+      .then((response) => {
+        if (response.receipt) {
+          useMessages.setState((state) => ({
+            readReceipts: {
+              ...state.readReceipts,
+              [conversationId]: mergeReadReceipts(state.readReceipts[conversationId], [response.receipt!]),
+            },
+          }))
+        }
+        return import('@/stores/conversations')
+      })
       .then(({ useConversations }) => useConversations.getState().reload())
-      .catch(() => undefined)
-  }, 50))
+      .catch((error) => console.warn('[im.read-receipt] visible advance failed', error))
+  }, 1_000))
 }
 
 function sequenceOf(m: Message): number | null {
-  const raw = (m as Message & { sequence?: unknown }).sequence
+  const raw = m.sequence
   return typeof raw === 'number' && Number.isFinite(raw) ? raw : null
+}
+
+function mergeReadReceipts(
+  current: readonly ImReadReceiptAdvance[] | undefined,
+  incoming: readonly ImReadReceiptAdvance[],
+): ImReadReceiptAdvance[] {
+  const byKey = new Map<string, ImReadReceiptAdvance>()
+  for (const receipt of [...(current ?? []), ...incoming]) {
+    byKey.set(`${receipt.readerId}:${receipt.readThroughSeq}`, receipt)
+  }
+  return [...byKey.values()].sort((left, right) => left.readAt.localeCompare(right.readAt))
 }
 
 function sortMessagesStable(messages: Message[]): Message[] {
@@ -514,6 +546,7 @@ export const useMessages = create<MessagesState>((set, get) => ({
   loadingOlder: new Set(),
   firstItemIndex: {},
   errors: {},
+  readReceipts: {},
 
   async loadConversation(id) {
     const s = get()
@@ -536,6 +569,10 @@ export const useMessages = create<MessagesState>((set, get) => ({
         hasMoreOlder: { ...s.hasMoreOlder, [id]: hasMore },
         firstItemIndex: { ...s.firstItemIndex, [id]: s.firstItemIndex[id] ?? VIRTUOSO_FIRST_INDEX_BASE },
       }))
+      const durable = normalized
+        .map((message) => message.sequence)
+        .filter((value): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0)
+      if (durable.length) void get().loadReadReceipts(id, Math.min(...durable), Math.max(...durable))
     } catch (err) {
       console.warn('[messages] loadConversation failed', err)
       const msg = err instanceof Error ? err.message : 'Something went wrong.'
@@ -576,6 +613,10 @@ export const useMessages = create<MessagesState>((set, get) => ({
           [id]: s.hasMoreOlder[id] ?? hasMore,
         },
       }))
+      const durable = normalized
+        .map((message) => message.sequence)
+        .filter((value): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0)
+      if (durable.length) void get().loadReadReceipts(id, Math.min(...durable), Math.max(...durable))
     } catch (err) {
       console.warn('[messages] reload failed', err)
     }
@@ -624,8 +665,29 @@ export const useMessages = create<MessagesState>((set, get) => ({
     await get().loadConversation(id)
   },
 
+  async loadReadReceipts(id, fromSeq, toSeq) {
+    try {
+      const response = await conversationsApi.readReceipts(id, fromSeq, toSeq)
+      set((state) => ({
+        readReceipts: {
+          ...state.readReceipts,
+          [id]: mergeReadReceipts(state.readReceipts[id], response.receipts),
+        },
+      }))
+    } catch (error) {
+      console.warn('[im.read-receipt] range sync failed', error)
+    }
+  },
+
   applyEvent(e) {
-    if (e.type === 'message.new') {
+    if (e.type === 'im.read-receipt') {
+      set((state) => ({
+        readReceipts: {
+          ...state.readReceipts,
+          [e.channelId]: mergeReadReceipts(state.readReceipts[e.channelId], [e]),
+        },
+      }))
+    } else if (e.type === 'message.new') {
       const m = fromApi(e.message)
       clearStreamingExpiry(m.id)
       clearTypingExpiry(e.conversationId, m.authorId)
@@ -1073,6 +1135,7 @@ export function bootMessagesStream() {
   clearAllStreamingExpiries()
   for (const timer of activeReadTimers.values()) window.clearTimeout(timer)
   activeReadTimers.clear()
+  pendingVisibleReadSeq.clear()
   useMessages.setState({
     byConvo: {},
     streaming: {},
@@ -1080,6 +1143,7 @@ export function bootMessagesStream() {
     loaded: new Set(),
     loading: new Set(),
     errors: {},
+    readReceipts: {},
   })
   if (!imBound) {
     imBound = true
@@ -1093,9 +1157,6 @@ export function bootMessagesStream() {
           [normalized.conversationId]: mergeFetchedMessages(state.byConvo[normalized.conversationId], [normalized]),
         },
       }))
-      if (message.channelId === useApp.getState().selectedConversationId) {
-        void markConversationReadWhileOpen(message.channelId)
-      }
     })
     lingxiIm.subscribeEvent((event) => {
       const id = event.clientMsgNo

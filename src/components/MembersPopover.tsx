@@ -6,12 +6,13 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { Avatar } from './Avatar'
 import { HumanBadge } from './HumanBadge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useSurface } from '@/stores/surface'
 import { useMe } from '@/stores/auth'
 import type { Participant } from '@/types'
 
 const STATUS_LABEL: Record<string, string> = {
-  avail: 'Available', working: 'Working', thinking: 'Thinking', waiting: 'Waiting on you', resting: 'Resting',
+  avail: '可用', working: '工作中', thinking: '思考中', waiting: '等待你确认', resting: '休息中',
 }
 const STATUS_COLOR: Record<string, string> = {
   avail: 'var(--avail)', working: 'var(--working)', thinking: 'var(--thinking)', waiting: 'var(--waiting)', resting: 'var(--resting)',
@@ -85,7 +86,8 @@ export function MembersPopover({ members, anchor, triggerRef, onClose }: Props) 
       <div className="px-3 pt-2 pb-1.5 text-[10.5px] font-bold tracking-[0.12em] uppercase text-ink-300">
         {members.length} {members.length === 1 ? "成员" : "成员"}
       </div>
-      <div className="max-h-[400px] overflow-y-auto py-0.5">
+      <ScrollArea style={{ height: Math.min(sorted.length * 48, 400), maxHeight: 'calc(100vh - 96px)' }}>
+        <div className="py-0.5">
         {sorted.map((p) => {
           const isYou = p.id === meId
           return (
@@ -117,7 +119,8 @@ export function MembersPopover({ members, anchor, triggerRef, onClose }: Props) 
             </button>
           )
         })}
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   )
 }

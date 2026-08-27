@@ -5,7 +5,7 @@ process.env.DEEPSEEK_API_KEY ||= 'test-key'
 const { LEARNING_PRESET_VERSION, STARTER_ROOMS, STARTER_TEAM } = await import('../onboardCompany.js')
 
 test('learning preset defines exactly the six required personas', () => {
-  assert.equal(LEARNING_PRESET_VERSION, 4)
+  assert.equal(LEARNING_PRESET_VERSION, 8)
   assert.deepEqual(
     STARTER_TEAM.map((agent) => agent.presetKey),
     ['nova', 'sage', 'milo', 'trace', 'scout', 'forge'],
@@ -13,20 +13,19 @@ test('learning preset defines exactly the six required personas', () => {
   assert.deepEqual(
     STARTER_TEAM.map((agent) => agent.role),
     [
-      '团队负责人 · Chief of Staff',
-      '概念导师 · Concept Tutor',
-      '解题陪练 · Problem Coach',
-      '错因诊断 · Learning Diagnostician',
-      '阅读研究 · Research Guide',
-      '实践导师 · Practice Mentor',
+      '学习规划与协调',
+      '概念导师',
+      '解题陪练',
+      '错因诊断与证据复核',
+      '阅读与资料研究',
+      '实践与项目导师',
     ],
   )
   for (const agent of STARTER_TEAM) {
     assert.deepEqual(agent.tools, ['ipython'])
-    assert.match(agent.systemPrompt, /next step/i)
-    assert.match(agent.systemPrompt, /loop\.canvas\.available_agents\(\)/)
-    assert.match(agent.systemPrompt, /loop\.canvas\.start_workspace/)
-    assert.match(agent.systemPrompt, /Do not ask the student to open Canvas, choose agents, or assign work/)
+    assert.ok(agent.capabilities.includes('learning'))
+    assert.doesNotMatch(agent.systemPrompt, /loop\.(learning|canvas)/)
+    assert.match(agent.systemPrompt, /specialist|coordinator|verifier/i)
     assert.equal('avatarUrl' in agent, false)
   }
 })
@@ -34,8 +33,8 @@ test('learning preset defines exactly the six required personas', () => {
 test('learning preset exposes only Study Room and Lab with fixed members', () => {
   assert.equal(STARTER_ROOMS.length, 2)
   assert.deepEqual(STARTER_ROOMS.map((room) => room.title), [
-    'Study Room｜学习室',
-    'Lab｜实践工坊',
+    '学习室',
+    '实践工坊',
   ])
   assert.deepEqual(STARTER_ROOMS[0]?.agentKeys, ['nova', 'sage', 'milo', 'trace'])
   assert.equal(STARTER_ROOMS[0]?.welcomeAuthorKey, 'nova')

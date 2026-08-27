@@ -4,8 +4,12 @@
  * + sub2api) then deletes is row from the queue.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { adminApi, type AdminWaitlistEntry } from './api'
+import { Input } from '@/components/ui/input'
+import { type AdminWaitlistEntry, adminApi } from './api'
 import { Pager } from './Pager'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
 
 type Tab = 'pending' | 'approved' | 'rejected'
 
@@ -38,29 +42,48 @@ export function WaitlistPage({ onChanged }: { onChanged: () => void }) {
 
   const approve = async (entry: AdminWaitlistEntry) => {
     if (busyId) return
-    if (!confirm(`Approve ${entry.email}?\nThis creates a real user + workspace + sub2api account.`)) return
+    if (!await confirmSensitiveAction({
+      title: '批准候补用户？',
+      description: `批准 ${entry.email} 将创建真实用户、工作区和服务账户。`,
+      confirmLabel: '批准并创建账户',
+      tone: 'warning',
+    })) return
     setBusyId(entry.id)
     try {
-      await adminApi.approveWaitlist(entry.id)
+      await toastAction(adminApi.approveWaitlist(entry.id), {
+        loading: '正在批准候补用户',
+        success: '用户已批准',
+        error: '批准用户失败',
+        description: entry.email,
+      })
       await load(offset)
       onChanged()
-    } catch (e) {
-      alert(`approve failed: ${e instanceof Error ? e.message : e}`)
-    } finally { setBusyId(null) }
+    } catch { /* toast owns the visible error state */ } finally { setBusyId(null) }
   }
 
   const reject = async (entry: AdminWaitlistEntry) => {
     if (busyId) return
-    const note = prompt(`Reject ${entry.email}? Optional note:`, '')
+    const note = await promptSensitiveAction({
+      title: '拒绝候补用户？',
+      description: `${entry.email} 将从待审批队列中移除。可填写一条内部备注。`,
+      confirmLabel: '拒绝申请',
+      tone: 'destructive',
+      inputLabel: '内部备注（可选）',
+      inputDefaultValue: '',
+      inputPlaceholder: '说明拒绝原因',
+    })
     if (note === null) return
     setBusyId(entry.id)
     try {
-      await adminApi.rejectWaitlist(entry.id, note.trim() || undefined)
+      await toastAction(adminApi.rejectWaitlist(entry.id, note.trim() || undefined), {
+        loading: '正在拒绝候补申请',
+        success: '候补申请已拒绝',
+        error: '拒绝申请失败',
+        description: entry.email,
+      })
       await load(offset)
       onChanged()
-    } catch (e) {
-      alert(`reject failed: ${e instanceof Error ? e.message : e}`)
-    } finally { setBusyId(null) }
+    } catch { /* toast owns the visible error state */ } finally { setBusyId(null) }
   }
 
   return (
@@ -73,7 +96,7 @@ export function WaitlistPage({ onChanged }: { onChanged: () => void }) {
           </div>
         </div>
         <div className="admin-filters">
-          <input
+          <Input
             type="search"
             placeholder="电子邮件、姓名、提供商、注释"
             className="admin-input"
@@ -104,7 +127,7 @@ export function WaitlistPage({ onChanged }: { onChanged: () => void }) {
           <div>决定</div>
           <div>行动</div>
         </div>
-        {loading && items.length === 0 && <div className="admin-row admin-empty">加载中…</div>}
+        {loading && items.length === 0 && <ResourceSkeleton variant="table" count={6} className="p-3" label="正在加载候补名单" />}
         {!loading && items.length === 0 && (
           <div className="admin-row admin-empty">
             {q

@@ -34,8 +34,8 @@ in-place schema downgrade.
 When all four core `R2_*` secrets are configured, the production deployment
 also reconciles the bucket CORS policy before application cutover. The
 deployment image applies the policy and reads it back, requiring presigned
-`PUT` permission for the production web origin plus Electron, iOS
-(`capacitor://localhost`), and Android (`https://localhost`) renderer origins.
+`PUT` permission for the production web origin plus the Electron renderer
+origin (`app://lingxiloop`).
 Partial R2 configuration or a failed readback aborts the deployment. Operators
 can add comma-separated origins with `R2_CORS_EXTRA_ORIGINS` in `.env.secrets`.
 

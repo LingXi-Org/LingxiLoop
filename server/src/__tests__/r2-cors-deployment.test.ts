@@ -14,23 +14,25 @@ const {
   validateR2CorsRules,
 } = r2CorsPolicy
 
-test('R2 policy covers iOS and Android presigned PUT preflights', () => {
+test('R2 policy covers Web and Electron presigned PUT preflights', () => {
   const origins = uniqueOrigins(['https://loop.example.com/'])
   const rules = buildR2CorsRules(origins)
 
-  assert.ok(origins.includes('capacitor://localhost'))
-  assert.ok(origins.includes('https://localhost'))
+  assert.ok(origins.includes('http://localhost:5173'))
+  assert.ok(origins.includes('app://lingxiloop'))
   assert.ok(origins.includes('https://loop.example.com'))
   assert.deepEqual(validateR2CorsRules(rules, origins), [])
   assert.doesNotThrow(() => assertR2CorsRules(rules, origins))
 })
 
-test('R2 readback validation rejects a policy without mobile PUT access', () => {
-  const webOnly = buildR2CorsRules(['https://loop.example.com'])
+test('R2 readback validation rejects a policy without Electron PUT access', () => {
+  const webOnly = buildR2CorsRules(['https://loop.example.com']).map((rule: { AllowedOrigins: string[] }) => ({
+    ...rule,
+    AllowedOrigins: rule.AllowedOrigins.filter((origin) => origin !== 'app://lingxiloop'),
+  }))
   const errors = validateR2CorsRules(webOnly, DEFAULT_R2_CORS_ORIGINS)
 
-  assert.ok(errors.some((error: string) => error.includes('capacitor://localhost')))
-  assert.ok(errors.some((error: string) => error.includes('https://localhost')))
+  assert.ok(errors.some((error: string) => error.includes('app://lingxiloop')))
   assert.throws(
     () => assertR2CorsRules(webOnly, DEFAULT_R2_CORS_ORIGINS),
     /R2 CORS readback verification failed/,

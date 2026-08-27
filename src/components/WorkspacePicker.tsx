@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { IPlus, ISearch } from '@/components/icons'
+import { Input } from '@/components/ui/input'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { useAuth } from '@/stores/auth'
 import { useWorkspace } from '@/stores/workspace'
 
@@ -62,7 +64,7 @@ export function WorkspacePicker({ mockMode = false }: { mockMode?: boolean }) {
         <div className="my-7 flex flex-col gap-3 sm:flex-row sm:items-center">
           <label className="relative flex-1">
             <ISearch className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-secondary" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索工作区" className="h-11 w-full rounded-xl border border-hairline bg-panel pl-10 pr-4 text-sm outline-none focus:border-accent" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索工作区" className="h-11 w-full rounded-xl border border-hairline bg-panel pl-10 pr-4 text-sm outline-none focus:border-accent" />
           </label>
           <button type="button" onClick={() => setCreating(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-5 text-sm font-semibold text-white shadow-sm transition hover:brightness-105"><IPlus className="size-4" />新建空白工作区</button>
         </div>
@@ -72,7 +74,7 @@ export function WorkspacePicker({ mockMode = false }: { mockMode?: boolean }) {
           <button onClick={() => setShowArchived(true)} className={showArchived ? 'text-accent' : 'text-ink-secondary'}>已归档</button>
         </div>
 
-        {!loaded || loading ? <div className="grid min-h-64 place-items-center text-sm text-ink-secondary">正在加载工作区…</div>
+        {!loaded || loading ? <ResourceSkeleton variant="cards" count={6} className="min-h-64" label="正在加载工作区" />
           : error ? <div className="rounded-2xl border border-coral/30 bg-coral-soft/30 p-5 text-sm text-coral-deep">{error}</div>
             : visible.length === 0 ? <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-hairline bg-panel/40 text-sm text-ink-secondary">没有符合条件的工作区</div>
               : <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -95,7 +97,7 @@ export function WorkspacePicker({ mockMode = false }: { mockMode?: boolean }) {
         <form onSubmit={(event) => { event.preventDefault(); void submit() }} onMouseDown={(event) => event.stopPropagation()} className="w-full max-w-md rounded-2xl border border-hairline bg-panel p-6 shadow-2xl">
           <h2 className="text-xl font-semibold">新建空白工作区</h2>
           <p className="mt-1 text-xs text-ink-secondary">不会自动创建资料、群聊或 Agent 会话。</p>
-          <input autoFocus value={name} onChange={(event) => setName(event.target.value)} maxLength={80} placeholder="工作区名称" className="mt-5 h-11 w-full rounded-xl border border-hairline bg-app px-3 text-sm outline-none focus:border-accent" />
+          <Input autoFocus value={name} onChange={(event) => setName(event.target.value)} maxLength={80} placeholder="工作区名称" className="mt-5 h-11 w-full rounded-xl border border-hairline bg-app px-3 text-sm outline-none focus:border-accent" />
           <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setCreating(false)} className="h-10 rounded-xl px-4 text-sm text-ink-secondary hover:bg-raised">取消</button><button type="submit" disabled={!name.trim()} className="h-10 rounded-xl bg-accent px-5 text-sm font-semibold text-white disabled:opacity-40">创建并进入</button></div>
         </form>
       </div>}

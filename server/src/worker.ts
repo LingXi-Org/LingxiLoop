@@ -12,6 +12,7 @@ import { startEmailRetryWorker } from './email-retry.js'
 import { env } from './env.js'
 import { reconcileLearningChannels } from './im/reconcile.js'
 import { startKnowledgeStorageGc, startKnowledgeWorker } from './knowledge/service.js'
+import { startLearningNotificationScheduler } from './learning/notifications.js'
 import { startPollExpirationSweeper } from './polls.js'
 import { redis, sub } from './redis.js'
 import { Lifecycle, startWorkerTasks, type ServiceHandle, type WorkerTaskDefinition } from './runtime/lifecycle.js'
@@ -26,6 +27,7 @@ import { seedIfEmpty } from './seed.js'
  */
 export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'learning-routines', concurrency: 'queue-claim', start: () => startLearningRoutineScheduler() },
+  { name: 'learning-notifications', concurrency: 'queue-claim', start: () => startLearningNotificationScheduler() },
   { name: 'agent-work-watchdog', concurrency: 'idempotent', start: () => startAgentWorkWatchdog() },
   { name: 'memory-synthesis', concurrency: 'idempotent', start: () => startMemorySynthesisScheduler() },
   { name: 'email-retry', concurrency: 'queue-claim', start: () => startEmailRetryWorker() },

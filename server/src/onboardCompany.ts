@@ -16,8 +16,13 @@ import type { PoolClient } from 'pg'
 import { invalidatePersonaCache } from './agents/personas.js'
 import { pool } from './db/pool.js'
 import { reconcileLearningChannels } from './im/reconcile.js'
+import {
+  LEARNING_PRESET_VERSION as CANONICAL_LEARNING_PRESET_VERSION,
+  STARTER_ROOMS as CANONICAL_STARTER_ROOMS,
+  STARTER_TEAM as CANONICAL_STARTER_TEAM,
+} from './learning/preset.js'
 
-export const LEARNING_PRESET_VERSION = 4
+export const LEARNING_PRESET_VERSION = CANONICAL_LEARNING_PRESET_VERSION
 
 export type LearningPersonaKey = 'nova' | 'sage' | 'milo' | 'trace' | 'scout' | 'forge'
 
@@ -38,7 +43,7 @@ const LEARNING_COLLABORATION_RULES = `Match the student's language. In group con
 
 Canvas autonomy: IPython is your only model-visible tool, and loop.canvas is preloaded inside it. Proactively use loop.canvas.available_agents() and loop.canvas.start_workspace(...) when the request benefits from two or more learning specialties, parallel investigation, a staged dependency, or a shared visual result that the student should watch evolve. Do not ask the student to open Canvas, choose agents, or assign work. Select only the useful capable agents yourself, give each a concrete deliverable, and declare dependsOnAgentIds when order matters. For a quick single-agent answer, reply normally instead of creating ceremony. If you are a Canvas worker, read the workspace with loop.canvas.get(canvasId=...), publish progress with loop.canvas.set_status(canvasId=..., status=..., frameId=...), and create or update usable html, markdown, document, image, or artifact frames. A student's right-click @ assignment or card feedback is actionable steering for this same workspace: apply it to the relevant frame and continue visibly in Canvas rather than replying to the source conversation. Before replacing content, read the latest frame and pass baseRevision to loop.canvas.update_frame(...); use loop.canvas.append_content(...) for atomic additions. When another specialist should own the next step, call loop.canvas.handoff(canvasId=..., toAgentId=..., task=..., context=..., frameIds=[...]) so the task, relevant frame references, and visible activity stay in the same durable workspace. You may recruit another capable learning agent with loop.canvas.add_agents(...) only when a real missing specialty emerges.`
 
-export const STARTER_TEAM: StarterAgent[] = [
+export const LEGACY_STARTER_TEAM: StarterAgent[] = [
   {
     id: 'nova',
     presetKey: 'nova',
@@ -115,7 +120,7 @@ export interface StarterRoom {
   welcome: string
 }
 
-export const STARTER_ROOMS: StarterRoom[] = [
+export const LEGACY_STARTER_ROOMS: StarterRoom[] = [
   {
     presetKey: 'study-room',
     title: 'Study Room｜学习室',
@@ -131,6 +136,9 @@ export const STARTER_ROOMS: StarterRoom[] = [
     welcome: '欢迎来到 Lab｜实践工坊。把实验、代码、论文复现或项目目标，以及现有材料和报错贴上来：我负责推进实践，Scout 查资料和读论文，Sage 补足原理。你可以从“帮我复现这篇论文”“这段代码为什么跑不通”或“帮我设计这个实验”开始。',
   },
 ]
+
+export const STARTER_TEAM = CANONICAL_STARTER_TEAM
+export const STARTER_ROOMS = CANONICAL_STARTER_ROOMS
 
 type QueryClient = Pick<PoolClient, 'query'>
 
@@ -374,11 +382,11 @@ async function seedLearningPreset(
     await db.query(
       `INSERT INTO participants (
          id, preset_key, kind, name, role, initial, avatar_bg, avatar_url, status,
-         bio, tools, system_prompt, company_id
-       ) VALUES ($1, $2, 'agent', $3, $4, $5, $6, NULL, 'avail', $7, $8::jsonb, $9, $10)`,
+         bio, tools, capabilities, system_prompt, company_id
+       ) VALUES ($1, $2, 'agent', $3, $4, $5, $6, NULL, 'avail', $7, $8::jsonb, $9::jsonb, $10, $11)`,
       [
         id, agent.presetKey, agent.name, agent.role, agent.initial, agent.avatarBg,
-        agent.bio, JSON.stringify(agent.tools ?? ['ipython']), agent.systemPrompt, companyId,
+        agent.bio, JSON.stringify(agent.tools), JSON.stringify(agent.capabilities), agent.systemPrompt, companyId,
       ],
     )
 
@@ -432,11 +440,11 @@ async function refreshLearningPreset(db: QueryClient, companyId: string): Promis
       `UPDATE participants
           SET name=$3, role=$4, initial=$5, avatar_bg=$6, avatar_url=NULL,
               status=CASE WHEN status='offboarded' THEN status ELSE 'avail' END,
-              bio=$7, tools=$8::jsonb, system_prompt=$9
+              bio=$7, tools=$8::jsonb, capabilities=$9::jsonb, system_prompt=$10
         WHERE company_id=$1 AND kind='agent' AND preset_key=$2`,
       [
         companyId, agent.presetKey, agent.name, agent.role, agent.initial,
-        agent.avatarBg, agent.bio, JSON.stringify(agent.tools ?? ['ipython']), agent.systemPrompt,
+        agent.avatarBg, agent.bio, JSON.stringify(agent.tools), JSON.stringify(agent.capabilities), agent.systemPrompt,
       ],
     )
   }

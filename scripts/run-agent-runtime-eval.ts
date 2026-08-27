@@ -2,7 +2,11 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { MemoryHostAdapter } from '../server/src/agent-os/host-adapter.js'
-import { ApprovalPendingError, type KernelExecutor } from '../server/src/agent-os/kernel-manager.js'
+import {
+  ApprovalPendingError,
+  type KernelExecutionOptions,
+  type KernelExecutor,
+} from '../server/src/agent-os/kernel-manager.js'
 import { type AgentModelDriver, type ModelTurnResult, ScriptedModelDriver } from '../server/src/agent-os/model-driver.js'
 import { AgentOSRuntime } from '../server/src/agent-os/runtime.js'
 import type {
@@ -43,7 +47,7 @@ function record(value: unknown): Record<string, unknown> {
     : {}
 }
 
-function work(caseId: string): AgentWorkItem {
+function work(caseId: string, overrides: Partial<AgentWorkItem> = {}): AgentWorkItem {
   return {
     id: `eval-${caseId}`,
     fence: 1,
@@ -52,8 +56,10 @@ function work(caseId: string): AgentWorkItem {
     channelId: `eval-${caseId}`,
     triggerClientMsgNo: `trigger-${caseId}`,
     reason: 'message',
+    executionRole: 'coordinator',
     lane: 'learner',
     leaseToken: `lease-${caseId}`,
+    ...overrides,
   }
 }
 
@@ -81,6 +87,7 @@ function context(item: AgentWorkItem, input: string): AgentContext {
       systemInstructions: 'Eval deterministic tutor. Follow the Agent OS runtime contracts.',
       persona: { name: 'Eval Tutor', role: 'Deterministic runtime evaluator', instructions: 'Use evidence and approval boundaries.' },
       capabilities: ['knowledge', 'canvas'],
+      executionRole: item.executionRole,
       memories: { learner: [], course: [], agentRole: [] },
       sourceVersions: { eval: 'runtime-smoke.v1' },
     },
@@ -90,6 +97,8 @@ function context(item: AgentWorkItem, input: string): AgentContext {
 interface CheckedTurn {
   result: ModelTurnResult
   itemFragments: string[]
+  instructionFragments?: string[]
+  forbiddenInstructionFragments?: string[]
 }
 
 class ContractCheckingModel implements AgentModelDriver {
@@ -103,12 +112,21 @@ class ContractCheckingModel implements AgentModelDriver {
   async run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult> {
     const expected = this.turns[this.index]
     if (!expected) throw new Error('runtime Eval model received an unexpected extra turn')
-    for (const fragment of ['Eval deterministic tutor', 'loop.knowledge', 'loop.canvas']) {
+    for (const fragment of expected.instructionFragments ?? ['Eval deterministic tutor', 'loop.knowledge', 'loop.canvas']) {
       if (!args.instructions.includes(fragment)) throw new Error(`runtime Eval prompt contract lost fragment: ${fragment}`)
+    }
+    for (const fragment of expected.forbiddenInstructionFragments ?? []) {
+      if (args.instructions.includes(fragment)) throw new Error(`runtime Eval prompt contract exposed forbidden fragment: ${fragment}`)
     }
     const serialized = JSON.stringify(args.items)
     for (const fragment of expected.itemFragments) {
       if (!serialized.includes(fragment)) throw new Error(`runtime Eval model input lost fragment: ${fragment}`)
+    }
+    const unexpectedTool = expected.result.output.find((item) => 'type' in item
+      && item.type === 'function_call'
+      && item.name !== 'ipython')
+    if (unexpectedTool && 'name' in unexpectedTool) {
+      throw new Error(`runtime Eval model exposed a non-IPython tool: ${unexpectedTool.name}`)
     }
     this.index += 1
     return await this.delegate.run()
@@ -135,19 +153,51 @@ class HostBridgeKernel implements KernelExecutor {
     private readonly actionResults: Map<string, HostActionResult>,
   ) {}
 
-  async execute(workItem: AgentWorkItem, runId: string, cellId: string, code: string): Promise<KernelExecution> {
+  async execute(
+    workItem: AgentWorkItem,
+    runId: string,
+    cellId: string,
+    code: string,
+    _signal?: AbortSignal,
+    options?: KernelExecutionOptions,
+  ): Promise<KernelExecution> {
     const actionName = code.includes('loop.knowledge.search') ? 'knowledge.search'
       : code.includes('loop.email.send') ? 'email.send'
-        : ''
+        : code.includes('loop.teacher.publish_objective') ? 'teacher.publish_objective'
+          : code.includes('loop.learning.add_steps') ? 'learning.add_steps'
+            : code.includes('loop.learning.finish_planning') ? 'learning.finish_planning'
+              : code.includes('loop.canvas.submit_report') ? 'canvas.submit_report'
+                : ''
     if (!actionName) throw new Error(`runtime Eval received unsupported IPython code: ${code}`)
+    const namespace = actionName.split('.')[0]
+    if (options?.allowedNamespaces && !options.allowedNamespaces.includes(namespace)) {
+      throw new Error(`runtime Eval rejected ${actionName} outside the scoped IPython namespaces`)
+    }
+    let args: unknown
+    if (actionName === 'knowledge.search') args = { query: 'runtime handbook', limit: 3 }
+    else if (actionName === 'email.send') args = { to: ['learner@example.invalid'], subject: 'Course summary' }
+    else if (actionName === 'teacher.publish_objective') args = { objectiveId: 'objective-eval' }
+    else if (actionName === 'learning.add_steps') {
+      args = {
+        missionId: 'mission-eval',
+        steps: [{ type: 'check', description: 'Explain the retrieval check', successCriteria: 'Names the evidence source' }],
+      }
+    } else if (actionName === 'learning.finish_planning') args = { missionId: 'mission-eval' }
+    else {
+      args = {
+        finding: 'The runtime enforces the Canvas report completion gate.',
+        evidenceRefs: [{ kind: 'source', id: 'source-eval' }],
+        confidence: 0.94,
+        unresolved: [],
+        nextStep: 'Return the scoped assignment result.',
+      }
+    }
     const action: HostAction = {
       runId,
       cellId,
       callIndex: 0,
       action: actionName,
-      args: actionName === 'knowledge.search'
-        ? { query: 'runtime handbook', limit: 3 }
-        : { to: ['learner@example.invalid'], subject: 'Course summary' },
+      args,
       idempotencyKey: `${runId}:${cellId}:0`,
     }
     const result = await this.host.executeAction(workItem, action)
@@ -259,7 +309,15 @@ function citationsFromEvents(events: AgentRunEvent[]): EvalCitationObservation[]
 
 async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservation> {
   const scenario = testCase.runtimeScenario ?? ''
-  const item = work(testCase.caseId)
+  const item = work(testCase.caseId, scenario === 'canvas-report-gate'
+    ? {
+        reason: 'canvas_worker',
+        executionRole: 'specialist',
+        lane: 'collaboration',
+        canvasId: 'canvas-eval',
+        canvasAssignmentId: 'assignment-eval',
+      }
+    : {})
   const host = new MemoryHostAdapter()
   const actionResults = new Map<string, HostActionResult>()
   let input = ''
@@ -342,6 +400,211 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     host.actionHandler = async (action) => action.action === 'email.send'
       ? { ok: false, approval: { id: 'approval-runtime-email', status: 'pending' } }
       : { ok: false, error: `unexpected action ${action.action}` }
+  } else if (scenario === 'pulse-approval-boundary') {
+    input = 'Publish the prepared retrieval objective.'
+    runtimeContext.persona = {
+      name: 'Pulse',
+      role: 'Project teacher agent',
+      instructions: 'Pulse deterministic teacher agent. Use only the teacher control plane.',
+    }
+    runtimeContext.promptContextCandidate = {
+      ...runtimeContext.promptContextCandidate!,
+      systemInstructions: 'Pulse deterministic teacher agent. Follow the scoped teacher runtime contract.',
+      persona: {
+        name: 'Pulse',
+        role: 'Project teacher agent',
+        instructions: 'Use only the teacher control plane.',
+      },
+      capabilities: ['teacher_admin'],
+    }
+    runtimeContext.teacherContext = {
+      agent: { id: item.agentId, name: 'Pulse', projectId: 'project-eval' },
+      course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'active' },
+      room: { id: item.channelId, status: 'active' },
+      trigger: { mode: 'teacher', teacherId: 'eval-teacher' },
+      counts: { learners: 4, objectives: 2, activities: 1, pendingReviews: 0 },
+      digest: { frequency: 'weekly', timezone: 'Asia/Shanghai', weekday: 'monday', status: 'active' },
+    }
+    runtimeContext.messages[0].authorId = 'eval-teacher'
+    runtimeContext.messages[0].authorName = 'Eval Teacher'
+    turns = [{
+      instructionFragments: ['Pulse deterministic teacher agent', 'loop.teacher', 'loop.turn', 'product-managed Pulse Agent'],
+      forbiddenInstructionFragments: ['loop.learning is the only', 'loop.canvas is preloaded', 'loop.email'],
+      itemFragments: [input, 'Current teacher context', 'course-eval', 'eval-teacher'],
+      result: {
+        output: [{
+          type: 'function_call',
+          callId: 'runtime-pulse-publish',
+          name: 'ipython',
+          arguments: JSON.stringify({ code: 'loop.teacher.publish_objective(objective_id="objective-eval")' }),
+        }],
+        text: '',
+        usage: { inputTokens: 36, outputTokens: 12 },
+      },
+    }]
+    host.actionHandler = async (action) => action.action === 'teacher.publish_objective'
+      ? { ok: false, approval: { id: 'approval-runtime-pulse', status: 'pending' } }
+      : { ok: false, error: `unexpected action ${action.action}` }
+  } else if (scenario === 'planning-gate') {
+    input = 'Start the retrieval mission now.'
+    runtimeContext.learningContext = {
+      course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'active' },
+      roomPurpose: 'study',
+      actorRole: 'learner',
+      learnerId: 'eval-learner',
+      activeMission: {
+        id: 'mission-eval',
+        courseId: 'course-eval',
+        learnerId: 'eval-learner',
+        conversationId: item.channelId,
+        triggerClientMsgNo: item.triggerClientMsgNo,
+        goal: 'Explain retrieval grounding',
+        successCriteria: 'Explain and check the evidence source',
+        missionKind: 'study',
+        coordinatorAgentId: item.agentId,
+        status: 'planning',
+        steps: [],
+        createdAt: '2026-08-26T00:00:00.000Z',
+        updatedAt: '2026-08-26T00:00:00.000Z',
+      },
+      objectives: [],
+      due: [],
+      pendingTeacherReviews: 0,
+    }
+    turns = [
+      {
+        itemFragments: [input, 'status', 'planning'],
+        result: {
+          output: [{ role: 'assistant', content: 'Mission planning is complete.' }],
+          text: 'Mission planning is complete.',
+          usage: { inputTokens: 30, outputTokens: 8 },
+        },
+      },
+      {
+        itemFragments: ['Planning gate:', 'loop.learning.add_steps'],
+        result: {
+          output: [{
+            type: 'function_call',
+            callId: 'runtime-learning-add-steps',
+            name: 'ipython',
+            arguments: JSON.stringify({ code: 'loop.learning.add_steps(mission_id="mission-eval", steps=[{"type":"check"}])' }),
+          }],
+          text: '',
+          usage: { inputTokens: 46, outputTokens: 12 },
+        },
+      },
+      {
+        itemFragments: ['step-eval-check', 'planning'],
+        result: {
+          output: [{
+            type: 'function_call',
+            callId: 'runtime-learning-finish-planning',
+            name: 'ipython',
+            arguments: JSON.stringify({ code: 'loop.learning.finish_planning(mission_id="mission-eval")' }),
+          }],
+          text: '',
+          usage: { inputTokens: 52, outputTokens: 10 },
+        },
+      },
+      {
+        itemFragments: ['active', 'function_call_output'],
+        result: {
+          output: [{ role: 'assistant', content: '规划门已满足：检查步骤已创建，Mission 已激活。' }],
+          text: '规划门已满足：检查步骤已创建，Mission 已激活。',
+          usage: { inputTokens: 54, outputTokens: 16 },
+        },
+      },
+    ]
+    host.actionHandler = async (action) => {
+      const mission = runtimeContext.learningContext?.activeMission
+      if (!mission) return { ok: false, error: 'missing Eval mission' }
+      if (action.action === 'learning.add_steps') {
+        mission.steps = [{
+          id: 'step-eval-check',
+          type: 'check',
+          description: 'Explain the retrieval check',
+          successCriteria: 'Names the evidence source',
+          status: 'open',
+          position: 0,
+        }]
+        return { ok: true, value: { missionId: mission.id, steps: mission.steps } }
+      }
+      if (action.action === 'learning.finish_planning') {
+        if (!mission.steps.some((step) => step.type === 'check')) return { ok: false, error: 'planning requires a check step' }
+        mission.status = 'active'
+        return { ok: true, value: { missionId: mission.id, status: mission.status } }
+      }
+      return { ok: false, error: `unexpected action ${action.action}` }
+    }
+  } else if (scenario === 'canvas-report-gate') {
+    input = 'Complete the assigned runtime verification.'
+    runtimeContext.canvas = {
+      id: item.canvasId!,
+      title: 'Runtime verification',
+      goal: 'Verify Canvas completion behavior',
+      status: 'active',
+      initiatorAgentId: 'eval-coordinator',
+      assignment: { id: item.canvasAssignmentId, executionRole: item.executionRole },
+      assignments: [],
+      reports: [],
+      frames: [],
+      activity: [],
+    }
+    turns = [
+      {
+        itemFragments: [input, 'canvas-eval'],
+        result: {
+          output: [{ role: 'assistant', content: 'The runtime verification is complete.' }],
+          text: 'The runtime verification is complete.',
+          usage: { inputTokens: 32, outputTokens: 8 },
+        },
+      },
+      {
+        itemFragments: ['Completion gate:', 'learning_report_v1', 'loop.canvas.submit_report'],
+        result: {
+          output: [{
+            type: 'function_call',
+            callId: 'runtime-canvas-report',
+            name: 'ipython',
+            arguments: JSON.stringify({ code: 'loop.canvas.submit_report(finding="Runtime gate verified", evidenceRefs=[{"kind":"source","id":"source-eval"}], confidence=0.94)' }),
+          }],
+          text: '',
+          usage: { inputTokens: 48, outputTokens: 14 },
+        },
+      },
+      {
+        itemFragments: ['report-eval-specialist', 'function_call_output'],
+        result: {
+          output: [{ role: 'assistant', content: 'Canvas learning_report_v1 已持久化，阶段发现已提交。' }],
+          text: 'Canvas learning_report_v1 已持久化，阶段发现已提交。',
+          usage: { inputTokens: 50, outputTokens: 16 },
+        },
+      },
+    ]
+    host.actionHandler = async (action) => {
+      if (action.action !== 'canvas.submit_report') return { ok: false, error: `unexpected action ${action.action}` }
+      const report = {
+        id: 'report-eval-specialist',
+        canvasId: item.canvasId,
+        assignmentId: item.canvasAssignmentId,
+        authorAgentId: item.agentId,
+        executionRole: item.executionRole,
+        schemaVersion: 'learning_report_v1',
+        finding: 'The runtime enforces the Canvas report completion gate.',
+        evidenceRefs: [{ kind: 'source', id: 'source-eval' }],
+        confidence: 0.94,
+        unresolved: [],
+        nextStep: 'Return the scoped assignment result.',
+        verifiesReportId: null,
+        disconfirmingChecks: [],
+        verdict: null,
+        consumedReportIds: [],
+        conflictResolution: [],
+        createdAt: '2026-08-26T00:00:01.000Z',
+      }
+      runtimeContext.canvas!.reports.push(report)
+      return { ok: true, value: report }
+    }
   } else {
     throw new Error(`unsupported runtime Eval scenario for ${testCase.caseId}: ${scenario}`)
   }
@@ -355,10 +618,10 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     maxHops: 4,
   }).runWork(item)
   const latencyMs = Math.max(0, Date.now() - startedAt)
-  model.assertComplete()
-
   const outcome = host.outcomes.get(item.id)
   if (!outcome) throw new Error(`${testCase.caseId} did not complete through the Agent OS host`)
+  if (outcome.status === 'failed') throw new Error(`${testCase.caseId} failed in Agent OS: ${outcome.error ?? 'unknown error'}`)
+  model.assertComplete()
   const answer = outcome.resultText ?? host.messages.find((message) => message.refs?.runId === item.id)?.body ?? ''
   const actionCitations = host.actions.flatMap((action) => {
     const result = actionResults.get(action.idempotencyKey)
@@ -376,6 +639,8 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   const approvalId = typeof eventData(pendingEvent).approvalId === 'string'
     ? String(eventData(pendingEvent).approvalId)
     : undefined
+  const approvalCellId = String(eventData(pendingEvent).cellId ?? '')
+  const approvalAction = host.actions.find((action) => action.cellId === approvalCellId)?.action
   const observation: EvalObservation = {
     input,
     ...(answer ? { answer } : {}),
@@ -398,7 +663,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         cellId: action.cellId,
       }
     }),
-    approvals: approvalId ? [{ id: approvalId, action: 'email.send', status: 'pending' }] : [],
+    approvals: approvalId && approvalAction ? [{ id: approvalId, action: approvalAction, status: 'pending' }] : [],
     artifacts: answer ? [{ kind: 'answer', id: `answer-${testCase.caseId}` }] : [],
     trace: runtimeTrace(host.events, host.actions, input),
     taskCompletion: {

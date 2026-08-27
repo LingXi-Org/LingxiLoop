@@ -2,6 +2,7 @@ import type { Request } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import { assertTeacherRoomAccessible } from '../learning/visibility.js'
 import { HttpError } from './errors.js'
 import { assertProjectWritable, requireCompany } from './request-context.js'
 
@@ -54,6 +55,7 @@ export async function requireConversationMember(
   )
   if (!rows[0] || !rows[0].project_allowed) throw new HttpError(404, 'not found')
   if (!rows[0].members.includes(userId)) throw new HttpError(404, 'not found')
+  await assertTeacherRoomAccessible(conversationId, companyId, userId)
   return { userId, companyId, projectId: rows[0].project_id, members: rows[0].members, kind: rows[0].kind }
 }
 

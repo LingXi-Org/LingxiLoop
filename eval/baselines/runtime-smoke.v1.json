@@ -18,7 +18,10 @@
     "caseScores": {
       "runtime-auto-grounding": 1,
       "runtime-dynamic-rag": 1,
-      "runtime-approval-boundary": 1
+      "runtime-approval-boundary": 1,
+      "runtime-pulse-approval-boundary": 1,
+      "runtime-learning-planning-gate": 1,
+      "runtime-canvas-report-gate": 1
     }
   },
   "stageMinimums": {
@@ -33,6 +36,9 @@
   "caseMinimums": {
     "runtime-auto-grounding": 1,
     "runtime-dynamic-rag": 1,
-    "runtime-approval-boundary": 1
+    "runtime-approval-boundary": 1,
+    "runtime-pulse-approval-boundary": 1,
+    "runtime-learning-planning-gate": 1,
+    "runtime-canvas-report-gate": 1
   }
 }

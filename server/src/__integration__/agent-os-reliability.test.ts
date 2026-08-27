@@ -251,7 +251,7 @@ test('[integration] user send acceptance replays one nonce and rejects digest re
 test('[integration] pending Host Action reuses its sink id after a post-side-effect crash', async () => {
   const work: AgentWorkItem = {
     id: `work-${randomUUID()}`, fence: 1, companyId: COMPANY, agentId: AGENT, channelId: CHANNEL,
-    triggerClientMsgNo: 'trigger-host-action', reason: 'message', lane: 'learner', leaseToken: 'unused-direct-call',
+    triggerClientMsgNo: 'trigger-host-action', reason: 'message', executionRole:'coordinator',lane: 'learner', leaseToken: 'unused-direct-call',
   }
   await pool.query(
     `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at)

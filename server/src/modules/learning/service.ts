@@ -17,6 +17,13 @@ import {
 } from '../../knowledge/service.js'
 import { seedMemberDms } from '../../onboardCompany.js'
 import { CH_DOC_ACCESS_REVOKED, publish, } from '../../redis.js'
+import {
+  closeTeacherRoomForCourse,
+  ensureTeacherAgentForCourse,
+  reactivateTeacherRoomForCourse,
+  sendTeacherAgentWelcome,
+  syncTeacherRoomMembers,
+} from '../../learning/teacher-agent.js'
 import { assertCanCreateCourse, buildCourseInviteUrl, requireCourseManager, syncCourseStudyRoom } from './policy.js'
 
 export const learningServiceRoutes = Router()
@@ -57,6 +64,7 @@ api.post('/courses', safe(async (req, res) => {
   const courseId = `course-${randomUUID().slice(0, 12)}`
   const roomId = `course-room-${randomUUID().slice(0, 12)}`
   const client = await pool.connect()
+  let pulseCreated = false
   try {
     await client.query('BEGIN')
     await client.query(
@@ -88,12 +96,19 @@ api.post('/courses', safe(async (req, res) => {
     )
     await client.query(`INSERT INTO conversation_counters (conversation_id,next_sequence) VALUES ($1,1)`, [roomId])
     await client.query(`UPDATE courses SET study_room_conversation_id=$2 WHERE id=$1`, [courseId, roomId])
+    pulseCreated = (await ensureTeacherAgentForCourse(courseId, client)).created
     await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
   } finally { client.release() }
   await syncCourseStudyRoom(courseId)
+  await syncTeacherRoomMembers(courseId)
+  if (pulseCreated) {
+    await sendTeacherAgentWelcome(courseId).catch((error) => {
+      console.warn('[course] Pulse welcome delivery failed', error)
+    })
+  }
   let knowledgeState: 'disabled' | 'ready' | 'failed' = openNotebookEnabled() ? 'ready' : 'disabled'
   if (openNotebookEnabled()) {
     try { await ensureProjectNotebook(projectId, companyId) }
@@ -148,6 +163,14 @@ api.patch('/courses/:id', safe(async (req, res) => {
         WHERE id=(SELECT study_room_conversation_id FROM courses WHERE id=$1)`,
       [courseId, `${name} · Study Room`],
     )
+    await pool.query(
+      `UPDATE participants participant SET name=$2,updated_at=NOW()
+         FROM courses course
+         JOIN learning_project_teacher_agents pulse
+           ON pulse.project_id=course.project_id AND pulse.company_id=course.company_id
+        WHERE course.id=$1 AND participant.id=pulse.agent_id AND participant.company_id=pulse.company_id`,
+      [courseId, `Pulse · ${name}`.slice(0, 80)],
+    )
     await syncCourseStudyRoom(courseId)
   }
   await syncProjectNotebookMetadata(manager.projectId).catch(() => undefined)
@@ -165,6 +188,8 @@ api.post('/courses/:id/archive', safe(async (req, res) => {
       : `UPDATE projects SET status='active',archived_at=NULL,updated_at=NOW() WHERE id=$1`,
     [manager.projectId],
   )
+  if (archive) await closeTeacherRoomForCourse(courseId)
+  else await reactivateTeacherRoomForCourse(courseId)
   await syncProjectNotebookMetadata(manager.projectId).catch(() => undefined)
   await audit({ kind: archive ? 'course_archive' : 'course_unarchive', userId: manager.userId, companyId: manager.companyId, detail: { courseId } })
   res.json({ ok: true, status: archive ? 'archived' : 'active' })
@@ -217,6 +242,7 @@ api.patch('/courses/:id/members/:userId', safe(async (req, res) => {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
   } finally { client.release() }
+  await syncTeacherRoomMembers(courseId)
   await audit({ kind: 'course_member_role_update', userId: manager.userId, companyId: manager.companyId, detail: { courseId, targetId, role } })
   res.json({ ok: true, userId: targetId, role })
 }))
@@ -271,6 +297,7 @@ api.delete('/courses/:id/members/:userId', safe(async (req, res) => {
     workspaceId: manager.projectId, userId: targetId,
   })
   await syncCourseStudyRoom(courseId)
+  await syncTeacherRoomMembers(courseId)
   await audit({ kind: 'course_member_remove', userId: manager.userId, companyId: manager.companyId, detail: { courseId, targetId } })
   res.json({ ok: true })
 }))
@@ -516,6 +543,7 @@ api.post('/course-invitations/:token/accept', safe(async (req, res) => {
     throw error
   } finally { client.release() }
   await syncCourseStudyRoom(result.courseId)
+  await syncTeacherRoomMembers(result.courseId)
   if (result.joinedCompany) await seedMemberDms({ companyId: result.companyId, memberId: me }).catch(() => undefined)
   await audit({ kind: 'course_invitation_accept', userId: me, companyId: result.companyId, detail: { courseId: result.courseId, role: result.role } })
   res.json({

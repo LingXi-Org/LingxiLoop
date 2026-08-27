@@ -1,4 +1,3 @@
-import { companiesApi } from '@/api/companies'
 /**
  * CompanySwitcher — small dropdown in the title bar that shows the active
  * tenant and lets the user hop between companies they're a member of, plus
@@ -10,6 +9,8 @@ import { companiesApi } from '@/api/companies'
  */
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { companiesApi } from '@/api/companies'
+import { Input } from '@/components/ui/input'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { InvitePeopleModal } from './InvitePeopleModal'
@@ -127,7 +128,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
 
           {creating ? (
             <div className="px-3 py-2 space-y-2">
-              <input
+              <Input
                 autoFocus
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}

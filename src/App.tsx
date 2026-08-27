@@ -1,4 +1,3 @@
-import { conversationsApi } from '@/api/conversations'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
 import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
@@ -14,7 +13,6 @@ import { NotificationToasts } from '@/components/NotificationToasts'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
 import { seedMockIm } from '@/dev/mockIm'
 import { isMockImDevelopment } from '@/lib/devMode'
-import { isNotificationWindow } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
@@ -22,7 +20,6 @@ import { bootMessagesStream, useMessages } from '@/stores/messages'
 import { bootParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
 import { useUiCommand } from '@/stores/uiCommands'
-import { bootWhispers, useWhispers } from '@/stores/whispers'
 
 const AdminApp = lazy(() => import('@/admin/AdminApp').then((module) => ({ default: module.AdminApp })))
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
@@ -43,7 +40,6 @@ function isAdminContext(): boolean {
 
 function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
   const convoId = useApp((s) => s.selectedConversationId)
-  const view = useApp((s) => s.view)
   const hasDockUnread = useConversations((s) =>
     s.list.some((c) => !isMuted(c) && (c.unread ?? 0) > 0),
   )
@@ -57,7 +53,6 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     bootMessagesStream()
     bootParticipants()
     bootConversations()
-    bootWhispers()
     void usePrefs.getState().load()
   }, [mockMode])
 
@@ -69,22 +64,13 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     return () => window.lingxiloop?.dock?.setUnreadDot(false)
   }, [])
 
-  // Lazy-load messages + mark conversation as read when selected
+  // Lazy-load messages when selected. The visible-range receipt path marks
+  // only messages the user has actually seen.
   useEffect(() => {
     if (mockMode) return
     if (!convoId || !selectedConvoExists) return
     void useMessages.getState().loadConversation(convoId)
-    void conversationsApi.markRead(convoId).then(() => {
-      // refresh list so the badge clears
-      void useConversations.getState().reload()
-    }).catch(() => { /* swallow */ })
   }, [convoId, selectedConvoExists, mockMode])
-
-  // Lazy-refresh whisper list when entering whispers view
-  useEffect(() => {
-    if (mockMode) return
-    if (view === 'whispers') useWhispers.getState().loadList()
-  }, [view, mockMode])
 
   useEffect(() => {
     if (uiCommand?.type === 'open-updater') setUpdaterOpen(true)

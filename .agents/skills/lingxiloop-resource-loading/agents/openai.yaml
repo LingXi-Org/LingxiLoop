@@ -1,0 +1,4 @@
+interface:
+  display_name: "LingxiLoop Resource Loading"
+  short_description: "Require skeleton states for every async resource surface"
+  default_prompt: "Use $lingxiloop-resource-loading to add or change a resource UI with complete Skeleton loading states."

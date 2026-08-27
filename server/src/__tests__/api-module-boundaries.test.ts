@@ -49,7 +49,7 @@ test('domain routers stay thin and delegate to domain services', async () => {
     routeRegistrations += service.match(/api\.(?:all|get|post|put|patch|delete)\('/g)?.length ?? 0
   }
 
-  assert.equal(routeRegistrations, 161, 'the public Web/Desktop route contract changed unexpectedly')
+  assert.equal(routeRegistrations, 159, 'the public Web/Desktop route contract changed unexpectedly')
 })
 
 test('authentication, request context, authorization, and errors have one shared boundary', async () => {

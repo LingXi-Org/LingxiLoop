@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
+import { advanceAgentReadReceipt } from '../im/read-receipts.js'
 import {
   addKnowledgeFile,
   addKnowledgeText,
@@ -36,6 +37,7 @@ import {
   handoffCanvasWork,
   listCanvasAvailableAgents,
   setCanvasStatus,
+  submitCanvasReport,
   startCanvasWorkspace,
   updateCanvasFrame,
   type CanvasMemberInput,
@@ -43,6 +45,22 @@ import {
 import { readResearch, searchResearch } from './research.js'
 import { recallMemories, verifyExplicitMemory, writeExplicitMemory } from './memory-service.js'
 import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1, MemoryScopeType } from './types.js'
+import {
+  addMissionSteps,
+  completeMission,
+  createObjectives,
+  draftActivity,
+  finishMissionPlanning,
+  getActivity,
+  getMission,
+  loadLearningTurnContext,
+  proposeEvaluation,
+  recordAttempt,
+  startMission,
+  updateMissionStep,
+} from '../learning/service.js'
+import type { LearningActivityType, LearningEvaluationMode, LearningStepStatus, LearningStepType } from '../learning/types.js'
+import { executeTeacherAction, teacherActionRequiresApproval } from '../learning/teacher-agent.js'
 
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
@@ -60,6 +78,75 @@ function textArg(args: Record<string, unknown>, name: string, required = true): 
   const value = typeof args[name] === 'string' ? args[name].trim() : ''
   if (required && !value) throw new Error(`${name} is required`)
   return value
+}
+
+async function executeEducation(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
+  const context = await loadLearningTurnContext(work)
+  if (!context) throw new Error('current conversation is not bound to a learning course')
+  if (method === 'current' || method === 'get_learner_state') return { ok: true, value: context }
+  if (method === 'list_objectives') return { ok: true, value: context.objectives }
+  if (method === 'list_due') return { ok: true, value: context.due }
+  if (method === 'get_mission') {
+    const missionId = textArg(args, 'missionId', false)
+    if (!missionId) return { ok: true, value: context.activeMission ?? null }
+    return { ok: true, value: await getMission(missionId, context.course.id) }
+  }
+  if (method === 'get_activity') return { ok: true, value: await getActivity(textArg(args, 'activityId'), context.course.id) }
+  if (method === 'start_mission') return { ok: true, value: await startMission(work, {
+    goal: textArg(args, 'goal'), successCriteria: textArg(args, 'successCriteria'),
+    ...(typeof args.missionKind === 'string' ? { missionKind: args.missionKind as 'study'|'research'|'project' } : {}),
+    ...(typeof args.sourceClientMsgNo === 'string' ? { sourceClientMsgNo: args.sourceClientMsgNo } : {}),
+    ...(args.explicit === true ? { explicit: true } : {}),
+  }) }
+  if (method === 'add_steps') {
+    const steps = Array.isArray(args.steps) ? args.steps.map((item) => record(item)).map((item) => ({
+      type: textArg(item, 'type') as LearningStepType,
+      description: textArg(item, 'description'), successCriteria: textArg(item, 'successCriteria'),
+      ...(typeof item.objectiveId === 'string' ? { objectiveId: item.objectiveId } : {}),
+    })) : []
+    return { ok: true, value: await addMissionSteps(work, textArg(args, 'missionId'), steps) }
+  }
+  if (method === 'finish_planning') return { ok: true, value: await finishMissionPlanning(work, textArg(args, 'missionId')) }
+  if (method === 'update_step') return { ok: true, value: await updateMissionStep(work, {
+    missionId: textArg(args, 'missionId'), stepId: textArg(args, 'stepId'), status: textArg(args, 'status') as LearningStepStatus,
+    ...(typeof args.outcome === 'string' ? { outcome: args.outcome } : {}),
+    ...(typeof args.sourceReportId==='string'?{sourceReportId:args.sourceReportId}:{}),
+    ...(typeof args.attemptId==='string'?{attemptId:args.attemptId}:{}),
+  }) }
+  if (method === 'complete_mission') return { ok: true, value: await completeMission(work, textArg(args, 'missionId')) }
+  if (method === 'draft_objectives') {
+    const objectives = Array.isArray(args.objectives) ? args.objectives.map((item) => record(item)).map((item) => ({
+      title: textArg(item, 'title'), successCriteria: textArg(item, 'successCriteria'),
+      ...(item.targetLevel !== undefined ? { targetLevel: Number(item.targetLevel) } : {}),
+      ...(Array.isArray(item.prerequisiteIds) ? { prerequisiteIds: item.prerequisiteIds.map(String) } : {}),
+    })) : []
+    return { ok: true, value: await createObjectives({ courseId: context.course.id, actorId: work.agentId, actorKind: 'agent', objectives }) }
+  }
+  if (method === 'draft_activity') return { ok: true, value: await draftActivity({
+    courseId: context.course.id, actorId: work.agentId, title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),
+    type: textArg(args, 'type') as LearningActivityType,
+    ...(typeof args.evaluationMode === 'string' ? { evaluationMode: args.evaluationMode as LearningEvaluationMode } : {}),
+    ...(args.targetLevel !== undefined ? { targetLevel: Number(args.targetLevel) } : {}),
+    ...(Array.isArray(args.rubric) ? { rubric: args.rubric } : {}),
+    ...(Array.isArray(args.objectiveIds) ? { objectiveIds: args.objectiveIds.map(String) } : {}),
+    ...(typeof args.dueAt === 'string' ? { dueAt: args.dueAt } : {}),
+  }) }
+  if (method === 'record_attempt') return { ok: true, value: await recordAttempt(work, {
+    ...(typeof args.activityId === 'string' ? { activityId: args.activityId } : {}),
+    ...(typeof args.missionStepId === 'string' ? { missionStepId: args.missionStepId } : {}),
+    evidenceClientMsgNos: Array.isArray(args.evidenceClientMsgNos) ? args.evidenceClientMsgNos.map(String) : [],
+    documentIds: Array.isArray(args.documentIds) ? args.documentIds.map(String) : [],
+    canvasFrameIds: Array.isArray(args.canvasFrameIds) ? args.canvasFrameIds.map(String) : [],
+    assistance: args.assistance === 'hint' || args.assistance === 'guided' ? args.assistance : 'none',
+  }) }
+  if (method === 'propose_evaluation') return { ok: true, value: await proposeEvaluation(work, {
+    attemptId: textArg(args, 'attemptId'), demonstratedLevel: Number(args.demonstratedLevel), confidence: Number(args.confidence),
+    ...(Array.isArray(args.rubricResults) ? { rubricResults: args.rubricResults } : {}),
+    ...(typeof args.feedback === 'string' ? { feedback: args.feedback } : {}),
+    ...(typeof args.sourceReportId === 'string' ? { sourceReportId: args.sourceReportId } : {}),
+    ...(typeof args.verifierReportId === 'string' ? { verifierReportId: args.verifierReportId } : {}),
+  }) }
+  throw new Error(`unsupported learning action: ${method}`)
 }
 
 async function executeKnowledge(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
@@ -115,7 +202,17 @@ async function executeKnowledge(work: AgentWorkItem, method: string, args: Recor
 
 async function executeChat(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
   if (method === 'history') {
-    const messages = await wukongClient().syncMessages(textArg(args, 'channelId', false) || work.channelId, Number(args.channelType ?? 2), Number(args.limit ?? 50), work.agentId)
+    const channelId = textArg(args, 'channelId', false) || work.channelId
+    const messages = await wukongClient().syncMessages(channelId, Number(args.channelType ?? 2), Number(args.limit ?? 50), work.agentId)
+    const readThroughSeq = messages.reduce((max, message) => Math.max(max, message.messageSeq), 0)
+    if (readThroughSeq > 0) {
+      await advanceAgentReadReceipt({
+        companyId: work.companyId,
+        channelId,
+        agentId: work.agentId,
+        readThroughSeq,
+      })
+    }
     return { ok: true, value: messages }
   }
   if (method === 'send') {
@@ -125,6 +222,65 @@ async function executeChat(work: AgentWorkItem, method: string, args: Record<str
       version: 1, kind: 'text', clientMsgNo: `action-${action.idempotencyKey}`, body,
       ...(typeof args.replyToClientMsgNo === 'string' ? { replyToClientMsgNo: args.replyToClientMsgNo } : {}),
       refs: { runId: action.runId, agentId: work.agentId },
+    }
+    return { ok: true, value: await wukongClient().sendMessage(channelId, Number(args.channelType ?? 2), work.agentId, payload) }
+  }
+  if (method === 'ask') {
+    const rawItems = Array.isArray(args.items) ? args.items : []
+    if (rawItems.length < 1 || rawItems.length > 8) throw new Error('items must contain between 1 and 8 questions')
+    const names = new Set<string>()
+    const items = rawItems.map((rawItem, itemIndex) => {
+      const item = record(rawItem)
+      const name = textArg(item, 'name', false) || `question_${itemIndex + 1}`
+      if (!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name) || names.has(name)) throw new Error('question names must be unique identifiers')
+      names.add(name)
+      const prompt = textArg(item, 'prompt')
+      if (prompt.length > 500) throw new Error('question prompt is too long')
+      const rawChoices = Array.isArray(item.choices) ? item.choices : []
+      if (rawChoices.length > 12) throw new Error('a question can contain at most 12 choices')
+      const values = new Set<string>()
+      const choices = rawChoices.map((rawChoice) => {
+        const choice = record(rawChoice)
+        const value = textArg(choice, 'value')
+        if (value.length > 120 || values.has(value)) throw new Error('choice values must be unique and at most 120 characters')
+        values.add(value)
+        return {
+          value,
+          label: textArg(choice, 'label'),
+          ...(typeof choice.description === 'string' && choice.description.trim() ? { description: choice.description.trim().slice(0, 500) } : {}),
+          ...(choice.disabled === true ? { disabled: true } : {}),
+        }
+      })
+      const input = record(item.input)
+      const freeform = typeof input.label === 'string' && input.label.trim()
+        ? { label: input.label.trim().slice(0, 120), ...(typeof input.placeholder === 'string' ? { placeholder: input.placeholder.trim().slice(0, 160) } : {}) }
+        : undefined
+      if (choices.length === 0 && !freeform) throw new Error('each question requires choices or a freeform input')
+      return {
+        name,
+        prompt,
+        ...(typeof item.description === 'string' && item.description.trim() ? { description: item.description.trim().slice(0, 1_000) } : {}),
+        ...(item.required === true ? { required: true } : {}),
+        ...(item.multiple === true ? { multiple: true } : {}),
+        choices,
+        ...(freeform ? { input: freeform } : {}),
+      }
+    })
+    const title = textArg(args, 'title', false).slice(0, 160) || 'Agent 提问'
+    const channelId = textArg(args, 'channelId', false) || work.channelId
+    const payload: LingxiMessageV1 = {
+      version: 1,
+      kind: 'questionnaire',
+      clientMsgNo: `questionnaire-${action.idempotencyKey}`,
+      body: title,
+      refs: { runId: action.runId, agentId: work.agentId },
+      data: {
+        questionnaire: {
+          title,
+          items,
+          ...(typeof args.submitLabel === 'string' && args.submitLabel.trim() ? { submitLabel: args.submitLabel.trim().slice(0, 80) } : {}),
+        },
+      },
     }
     return { ok: true, value: await wukongClient().sendMessage(channelId, Number(args.channelType ?? 2), work.agentId, payload) }
   }
@@ -251,6 +407,8 @@ async function executeCanvas(
       return {
         agentId: textArg(member, 'agentId'), assignment: textArg(member, 'assignment'),
         ...(Array.isArray(member.dependsOnAgentIds) ? { dependsOnAgentIds: member.dependsOnAgentIds.map(String) } : {}),
+        ...(member.executionRole === 'verifier' ? { executionRole: 'verifier' as const } : {}),
+        ...(typeof member.verifiesAgentId === 'string' ? { verifiesAgentId: member.verifiesAgentId } : {}),
       }
     })
   }
@@ -280,6 +438,21 @@ async function executeCanvas(
   }
   if (method === 'get') {
     return { ok: true, value: await getCanvasSnapshot(work.companyId, work.agentId, canvasId) }
+  }
+  if (method === 'submit_report') {
+    if (!canvasId) throw new Error('canvasId is required for a Canvas report')
+    const evidenceRefs=Array.isArray(args.evidenceRefs)?args.evidenceRefs.map(record).map((ref)=>({kind:textArg(ref,'kind') as 'frame'|'message'|'document'|'source'|'attempt'|'report',id:textArg(ref,'id')})):[]
+    return { ok:true,value:await submitCanvasReport({
+      companyId:work.companyId,workId:work.id,agentId:work.agentId,canvasId,executionRole:work.executionRole,
+      finding:textArg(args,'finding'),evidenceRefs,confidence:Number(args.confidence),
+      ...(Array.isArray(args.unresolved)?{unresolved:args.unresolved.map(String)}:{}),
+      ...(typeof args.nextStep==='string'?{nextStep:args.nextStep}:{}),
+      ...(typeof args.verifiesReportId==='string'?{verifiesReportId:args.verifiesReportId}:{}),
+      ...(Array.isArray(args.disconfirmingChecks)?{disconfirmingChecks:args.disconfirmingChecks.map(String)}:{}),
+      ...(args.verdict==='supported'||args.verdict==='rejected'||args.verdict==='inconclusive'?{verdict:args.verdict}:{}),
+      ...(Array.isArray(args.consumedReportIds)?{consumedReportIds:args.consumedReportIds.map(String)}:{}),
+      ...(Array.isArray(args.conflictResolution)?{conflictResolution:args.conflictResolution}:{}),
+    }) }
   }
   if (method === 'handoff') {
     if (!canvasId) throw new Error('canvasId is required for a Canvas handoff')
@@ -347,12 +520,30 @@ async function executeCanvas(
   throw new Error(`unsupported canvas action: ${method}`)
 }
 
-export function actionRequiresApproval(action: string): boolean { return APPROVAL_REQUIRED.has(action) }
+export function actionRequiresApproval(action: string): boolean { return APPROVAL_REQUIRED.has(action) || teacherActionRequiresApproval(action) }
 
 export async function executeLearningAction(work: AgentWorkItem, action: HostAction): Promise<HostActionResult> {
   const args = record(action.args)
   const [namespace, method] = action.action.split('.')
   if (!namespace || !method) throw new Error('action must use namespace.method')
+  if (namespace === 'teacher') return { ok: true, value: await executeTeacherAction(work, method, args) }
+  const learningContext = await loadLearningTurnContext(work).catch(() => null)
+  if (learningContext?.activeMission?.status === 'planning') {
+    const planningAllowed = new Set([
+      'learning.current', 'learning.get_learner_state', 'learning.list_objectives',
+      'learning.list_due', 'learning.get_mission', 'learning.get_activity',
+      'learning.add_steps', 'learning.finish_planning',
+      'knowledge.list_sources', 'knowledge.get_source', 'knowledge.search',
+      'knowledge.ask', 'knowledge.list_notes', 'knowledge.get_note',
+      'chat.ask', 'polls.create', 'polls.show',
+    ])
+    if (!planningAllowed.has(action.action)) {
+      throw new Error(
+        `planning gate blocked ${action.action}: finish the current Mission board with ` +
+        'learning.add_steps, then call learning.finish_planning before execution',
+      )
+    }
+  }
   if (namespace === 'chat') return executeChat(work, method, args, action)
   if (namespace === 'routines') return executeRoutine(work, method, args, action)
   if (namespace === 'polls') return executePoll(work, method, args, action)
@@ -360,6 +551,7 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (namespace === 'research') return executeResearch(work, method, args)
   if (namespace === 'canvas') return executeCanvas(work, method, args, action)
   if (namespace === 'knowledge') return executeKnowledge(work, method, args)
+  if (namespace === 'learning') return executeEducation(work, method, args)
   if (namespace === 'memory') {
     const rawScope = String(args.scope ?? 'course')
     const scopeType: MemoryScopeType = rawScope === 'learner' || rawScope === 'agent_role' ? rawScope : 'course'

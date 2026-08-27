@@ -9,12 +9,6 @@ const TIER_ORDER = new Map([
   ['ci-only', 2],
 ])
 
-const OPENBOT_TRACKED_PATHS = new Set([
-  'src/components/layout/detail-panel.tsx',
-  'src/components/ui/button.tsx',
-  'src/lib/motion.ts',
-])
-
 const EVAL_DASHBOARD_PATHS = new Set([
   'src/admin/EvalPage.tsx',
 ])
@@ -99,7 +93,7 @@ const CATEGORY_DEFINITIONS = [
   {
     id: 'vendored',
     reason: 'Vendored source, provenance, or vendor-scoped tests changed.',
-    matches: (path) => path.startsWith('third_party/') || OPENBOT_TRACKED_PATHS.has(path),
+    matches: (path) => path.startsWith('third_party/'),
   },
   {
     id: 'build-release',
@@ -110,8 +104,8 @@ const CATEGORY_DEFINITIONS = [
       || path.startsWith('ios/')
       || path.startsWith('server/docker/')
       || /^docker-compose\..+\.yml$/.test(path)
-      || ['package.json', 'package-lock.json', 'VERSION', 'capacitor.config.ts', 'ecosystem.config.cjs'].includes(path)
-      || /^scripts\/(release|rollback|deploy|prepare|verify|sync-version|guard-openbot)/.test(path),
+      || ['package.json', 'package-lock.json', 'VERSION', 'ecosystem.config.cjs'].includes(path)
+      || /^scripts\/(release|rollback|deploy|prepare|verify|sync-version)/.test(path),
   },
 ]
 
@@ -151,7 +145,8 @@ export function buildCiPlan(inputPaths) {
   const evalFocused = evalChanged && paths.every(isEvalPath)
   const fullMatrix = paths.some(isFullMatrixPath)
   const evalPersistence = paths.some((path) => path === 'server/src/__integration__/eval.test.ts'
-    || path === 'server/src/db/migrate.ts'
+    || path === 'server/src/db/schema.sql'
+    || path === 'server/src/db/bootstrap.ts'
     || path === 'server/src/api/admin-router.ts'
     || path.startsWith('server/src/eval/'))
   const dashboard = paths.some((path) => EVAL_DASHBOARD_PATHS.has(path))
@@ -244,7 +239,7 @@ function selectChecks(paths, categoryIds, escalations, ci) {
   if (has('database-tenant')) {
     addCheck(checks, 'npm run server:typecheck', 'required', 'Persistence and tenant contracts are server typed.')
     if (!ci.evalFocused) {
-      addCheck(checks, 'npm test', 'required', 'Migration helpers and tenant behavior need unit regression evidence.')
+      addCheck(checks, 'npm test', 'required', 'Schema bootstrap and tenant behavior need unit regression evidence.')
       addCheck(checks, 'npm run test:integration', 'required', 'Schema, transaction, authorization, and tenant isolation require PostgreSQL/Redis evidence.')
     }
   }
@@ -262,11 +257,6 @@ function selectChecks(paths, categoryIds, escalations, ci) {
   }
 
   if (has('vendored')) {
-    if (paths.some((path) => path.startsWith('third_party/openbot/')
-      || path === 'scripts/guard-openbot-vendor.mjs'
-      || OPENBOT_TRACKED_PATHS.has(path))) {
-      addCheck(checks, 'npm run guard:openbot-vendor', 'required', 'OpenBot-tracked files must match their pinned manifest hashes.')
-    }
     if (paths.some((path) => path.startsWith('third_party/open-notebook/'))) {
       addCheck(
         checks,
@@ -341,15 +331,18 @@ export function classifyPaths(inputPaths) {
     })
   }
 
-  const migrationPaths = paths.filter((path) => path === 'server/src/db/migrate.ts'
+  const bootstrapPaths = paths.filter((path) => path === 'server/src/db/schema.sql'
+    || path === 'server/src/db/bootstrap.ts'
+    || path === 'server/src/bootstrap-bin.ts'
+    || path === 'server/src/db/migrate.ts'
     || path === 'server/src/migrate-bin.ts'
     || path.startsWith('server/src/scripts/migrate-')
     || /(^|\/)migrations?\//.test(path))
-  if (migrationPaths.length > 0 && !ci.evalFocused) {
+  if (bootstrapPaths.length > 0 && !ci.evalFocused) {
     escalations.push({
-      id: 'runtime-migration',
-      reason: 'Runtime migration or upgrade behavior changed; verify fresh, upgrade, idempotent, and lock-contention paths.',
-      paths: migrationPaths,
+      id: 'v1-schema-bootstrap',
+      reason: 'The reset-only v1 schema bootstrap changed; verify empty-database initialization, completeness checks, and rejection of legacy schemas.',
+      paths: bootstrapPaths,
     })
   }
 
@@ -380,7 +373,7 @@ export function classifyPaths(inputPaths) {
     })
   }
 
-  if (escalations.some(({ id }) => ['ci-selector-change', 'runtime-migration', 'build-release-surface', 'vendored-source', 'cross-domain'].includes(id))) {
+  if (escalations.some(({ id }) => ['ci-selector-change', 'v1-schema-bootstrap', 'build-release-surface', 'vendored-source', 'cross-domain'].includes(id))) {
     escalations.push({
       id: 'full-ci-approximation',
       reason: 'Run the applicable full local quality matrix and leave unavailable platform/service checks to CI.',

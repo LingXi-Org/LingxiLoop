@@ -2,7 +2,7 @@ import { conversationsApi } from '@/api/conversations'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
-import { IConvene, IMail, IWhisper } from '@/components/icons'
+import { IConvene, IDirectChat, IMail } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
@@ -10,11 +10,11 @@ import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
 
 const STATUS_LABEL: Record<string, string> = {
-  avail: 'Available',
-  working: 'Working',
-  thinking: 'Thinking',
-  waiting: 'Waiting on you',
-  resting: 'Resting',
+  avail: '可用',
+  working: '工作中',
+  thinking: '思考中',
+  waiting: '等待你确认',
+  resting: '休息中',
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -57,6 +57,7 @@ export function ParticipantProfile({
 
   if (!participant) return null
   const isAgent = participant.kind === 'agent'
+  const isManaged=participant.managed===true
   const isSelf = participant.id === meId
   const statusColor = STATUS_COLOR[participant.status] ?? 'var(--resting)'
 
@@ -126,7 +127,9 @@ export function ParticipantProfile({
         </motion.div>
 
         <ProfileSection title="Actions">
-          {isSelf ? (
+          {isManaged ? (
+            <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">Pulse 仅在学习中心的共享教师室中使用，不支持私聊、召开群组或邮件。</div>
+          ) : isSelf ? (
             <button type="button" onClick={() => { setView('me'); onClose() }} className="w-full rounded-xl bg-raised px-4 py-3 text-[13px] font-semibold text-accent hover:bg-raised-hover">打开我的设置</button>
           ) : (
             <div className={cn('grid gap-2', isAgent ? 'grid-cols-3' : 'grid-cols-1')}>
@@ -136,7 +139,7 @@ export function ParticipantProfile({
               </button>
               {isAgent && (
                 <>
-                  <button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-skype-ink px-3 text-[12px] font-semibold text-white transition active:scale-[0.97]"><IWhisper className="size-4" />私聊</button>
+                  <button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-skype-ink px-3 text-[12px] font-semibold text-white transition active:scale-[0.97]"><IDirectChat className="size-4" />私聊</button>
                   <button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-panel px-3 text-[12px] font-semibold text-ink transition active:scale-[0.97]"><IConvene className="size-4" />召开</button>
                 </>
               )}

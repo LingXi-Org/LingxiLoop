@@ -5,6 +5,7 @@ import {
   CH_STATUS,
   CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
   CH_BOARDS, CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
+  CH_IM_READ_RECEIPTS,
   publish,
   type DocMentionEvent,
 } from './redis.js'
@@ -591,6 +592,7 @@ export function attachWebSocket(httpServer: Server) {
     CH_STATUS,
     CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
     CH_BOARDS, CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
+    CH_IM_READ_RECEIPTS,
   ).then((count) => {
     console.log(`[ws] subscribed to ${count} redis channels`)
   })
@@ -612,9 +614,10 @@ export function attachWebSocket(httpServer: Server) {
     // companyId is in the socket's set of memberships. Untagged events are
     // dropped (no leakage), since every publisher is expected to tag.
     let companyId: string | undefined
+    let parsed: Record<string, unknown>
     let workspaceId: string | undefined
     try {
-      const parsed = JSON.parse(payload) as { companyId?: string; workspaceId?: string }
+      parsed = JSON.parse(payload) as Record<string, unknown>
       if (typeof parsed.companyId === 'string') companyId = parsed.companyId
       if (typeof parsed.workspaceId === 'string') workspaceId = parsed.workspaceId
     } catch { /* malformed — drop */ return }
@@ -646,6 +649,15 @@ export function attachWebSocket(httpServer: Server) {
     for (const c of clients) {
       if (!c.companies.has(companyId)) continue
       if (projectViewers && !projectViewers.has(c.userId)) continue
+      let outbound = payload
+      if (channel === CH_IM_READ_RECEIPTS) {
+        const recipientIds = Array.isArray(parsed.recipientIds)
+          ? parsed.recipientIds.filter((value): value is string => typeof value === 'string')
+          : []
+        if (!recipientIds.includes(c.userId)) continue
+        const { recipientIds: _internalRecipients, companyId: _internalCompany, ...publicEvent } = parsed
+        outbound = JSON.stringify(publicEvent)
+      }
       if (c.ws.readyState !== c.ws.OPEN) continue
       // Backpressure guard (OOM fix): `ws.send()` buffers unsent frames in
       // process memory when a socket can't drain (slow/stuck client). Under a
@@ -660,7 +672,7 @@ export function attachWebSocket(httpServer: Server) {
         continue
       }
       if (buffered > WS_MAX_BUFFERED_BYTES) continue // skip frame; let it drain
-      try { c.ws.send(payload) } catch { /* ignore */ }
+      try { c.ws.send(outbound) } catch { /* ignore */ }
     }
     })().catch((error) => console.warn('[ws] event fan-out failed', error))
   })

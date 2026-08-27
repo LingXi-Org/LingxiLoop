@@ -5,7 +5,7 @@ import test from 'node:test'
 const domains = [
   'agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations',
   'documents', 'email', 'files', 'knowledge', 'learning', 'messages',
-  'observability', 'platform', 'shipping', 'whispers',
+  'observability', 'platform', 'shipping',
 ] as const
 
 test('frontend API implementations and consumers stay domain-scoped', async () => {

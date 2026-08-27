@@ -109,7 +109,11 @@ class Namespace:
 class LoopBridge:
     NAMESPACES = (
         "chat", "memory", "skills", "files", "documents", "boards",
-        "canvas", "calendar", "routines", "research", "email", "knowledge", "polls", "turn",
+        "canvas", "calendar", "routines", "research", "email", "knowledge", "learning", "polls", "teacher", "turn",
+    )
+    DEFAULT_NAMESPACES = (
+        "chat", "memory", "skills", "files", "documents", "boards",
+        "canvas", "calendar", "routines", "research", "email", "knowledge", "learning", "polls", "turn",
     )
 
     def __init__(self) -> None:
@@ -118,7 +122,7 @@ class LoopBridge:
         self.cell_id = ""
         self.call_index = 0
         self.directives: list[dict[str, Any]] = []
-        for name in self.NAMESPACES:
+        for name in self.DEFAULT_NAMESPACES:
             setattr(self, name, Namespace(self, name))
 
     def begin(self, execution_id: str, context: dict[str, Any]) -> None:
@@ -127,6 +131,15 @@ class LoopBridge:
         self.cell_id = str(context.get("cellId", execution_id))
         self.call_index = 0
         self.directives = []
+        requested = context.get("allowedNamespaces")
+        allowed = self.DEFAULT_NAMESPACES if requested is None else tuple(
+            name for name in requested if isinstance(name, str) and name in self.NAMESPACES
+        )
+        for name in self.NAMESPACES:
+            if name in self.__dict__:
+                delattr(self, name)
+        for name in allowed:
+            setattr(self, name, Namespace(self, name))
 
     def call(self, action: str, args: dict[str, Any]) -> Any:
         index = self.call_index

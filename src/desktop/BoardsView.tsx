@@ -6,7 +6,12 @@ import { CardLink } from '@/components/CardLink'
 import { DocumentLink } from '@/components/DocumentLink'
 import { IAt, IBoard, IMore, IPlus, ITrash } from '@/components/icons'
 import { ResizeHandle } from '@/components/ResizeHandle'
-import { SelectField } from '@/components/ui/select-field'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
@@ -51,7 +56,9 @@ export function BoardsView() {
       <BoardsSidebar onResizeStart={onResizeStart} />
       {selectedId
         ? <BoardCanvas boardId={selectedId} />
-        : <EmptyBoardsState empty={!loadingList && list.length === 0} />}
+        : loadingList
+          ? <ResourceSkeleton variant="cards" count={3} className="h-full p-6" label="正在加载看板" />
+          : <EmptyBoardsState empty={list.length === 0} />}
     </div>
   )
 }
@@ -60,6 +67,7 @@ export function BoardsView() {
 
 function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent) => void }) {
   const list = useBoards((s) => s.list)
+  const loadingList = useBoards((s) => s.loadingList)
   const selectedId = useBoards((s) => s.selectedId)
   const selectBoard = useBoards((s) => s.selectBoard)
   const createBoard = useBoards((s) => s.createBoard)
@@ -94,7 +102,7 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
       </div>
       {creating && (
         <div className="px-4 pb-2">
-          <input
+          <Input
             autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -108,6 +116,7 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
           />
         </div>
       )}
+      {loadingList && list.length === 0 && <ResourceSkeleton variant="list" count={5} compact label="正在加载看板列表" />}
       <ul className="pb-4">
         {list.map((b) => {
           const active = b.id === selectedId
@@ -126,7 +135,7 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
             </li>
           )
         })}
-        {list.length === 0 && !creating && (
+        {!loadingList && list.length === 0 && !creating && (
           <li className="px-4 py-3 text-xs text-ink-400">
             还没有板。单击 + 开始一个。
           </li>
@@ -183,11 +192,9 @@ function BoardCanvas({ boardId }: { boardId: string }) {
   }, [snap])
 
   if (!snap) {
-    return (
-      <div className="h-full grid place-items-center text-ink-400 text-sm">
-        {loadingBoardId === boardId ? "加载中…" : "无数据。"}
-      </div>
-    )
+    return loadingBoardId === boardId
+      ? <ResourceSkeleton variant="cards" count={3} className="h-full p-6" label="正在加载看板内容" />
+      : <div className="h-full grid place-items-center text-ink-400 text-sm">无数据。</div>
   }
 
   const openCard = openCardId ? snap.cards.find((c) => c.id === openCardId) ?? null : null
@@ -212,7 +219,7 @@ function BoardCanvas({ boardId }: { boardId: string }) {
       <header className="flex items-center justify-between px-6 py-4 border-b border-ink-100">
         <div className="min-w-0 flex-1">
           {editingTitle ? (
-            <input
+            <Input
               autoFocus
               value={titleDraft}
               onChange={(e) => setTitleDraft(e.target.value)}
@@ -239,8 +246,15 @@ function BoardCanvas({ boardId }: { boardId: string }) {
         </div>
         <button
           onClick={async () => {
-            if (!confirm(`Delete board "${snap.title}"? All columns and cards will be lost.`)) return
-            try { await deleteBoard(boardId) } catch (e) { console.warn('[boards] delete failed', e) }
+            if (!await confirmSensitiveAction({
+              title: '删除看板？',
+              description: `“${snap.title}”中的所有列和卡片都将永久删除。`,
+              confirmLabel: '删除看板',
+              tone: 'destructive',
+            })) return
+            try {
+              await toastAction(deleteBoard(boardId), { loading: '正在删除看板', success: '看板已删除', error: '删除看板失败' })
+            } catch (e) { console.warn('[boards] delete failed', e) }
           }}
           className="w-8 h-8 rounded-md grid place-items-center text-ink-400 hover:bg-coral-50 hover:text-coral-deep"
           title="删除板"
@@ -263,7 +277,7 @@ function BoardCanvas({ boardId }: { boardId: string }) {
           ))}
           {addingCol ? (
             <div className="w-72 flex-shrink-0 p-3 rounded-lg bg-cloud/60">
-              <input
+              <Input
                 autoFocus
                 value={colDraft}
                 onChange={(e) => setColDraft(e.target.value)}
@@ -353,7 +367,7 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
     >
       <div className="px-3 pt-3 pb-2 flex items-center justify-between gap-2">
         {editingTitle ? (
-          <input
+          <Input
             autoFocus
             value={titleDraft}
             onChange={(e) => setTitleDraft(e.target.value)}
@@ -375,8 +389,17 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
         <span className="text-xs text-ink-400">{cards.length}</span>
         <button
           onClick={async () => {
-            if (cards.length > 0 && !confirm(`Delete "${column.title}"? ${cards.length} card(s) will be lost.`)) return
-            try { await deleteColumn(boardId, column.id) } catch (e) { console.warn('[boards] delete col failed', e) }
+            if (!await confirmSensitiveAction({
+              title: '删除看板列？',
+              description: cards.length > 0
+                ? `“${column.title}”中的 ${cards.length} 张卡片也会被永久删除。`
+                : `“${column.title}”将被永久删除。`,
+              confirmLabel: '删除列',
+              tone: 'destructive',
+            })) return
+            try {
+              await toastAction(deleteColumn(boardId, column.id), { loading: '正在删除看板列', success: '看板列已删除', error: '删除看板列失败' })
+            } catch (e) { console.warn('[boards] delete col failed', e) }
           }}
           className="w-5 h-5 rounded grid place-items-center text-ink-300 hover:text-coral-deep"
           title="删除列"
@@ -728,7 +751,7 @@ function MentionInput(props: {
   return (
     <div className="relative">
       {props.multiline ? (
-        <textarea
+        <Textarea
           ref={ref as React.RefObject<HTMLTextAreaElement>}
           autoFocus={props.autoFocus}
           value={props.value}
@@ -743,7 +766,7 @@ function MentionInput(props: {
           )}
         />
       ) : (
-        <input
+        <Input
           ref={ref as React.RefObject<HTMLInputElement>}
           autoFocus={props.autoFocus}
           value={props.value}
@@ -874,12 +897,10 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
           <section className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">栏目</div>
-              <SelectField
-                value={card.columnId}
-                onValueChange={(columnId) => void moveToColumn(columnId)}
-                options={columns.map((c) => ({ value: c.id, label: c.title }))}
-                ariaLabel="Column"
-              />
+              <Select value={card.columnId} onValueChange={(columnId) => void moveToColumn(columnId)}>
+                <SelectTrigger aria-label="Column"><SelectValue /></SelectTrigger>
+                <SelectContent>{columns.map((column) => <SelectItem key={column.id} value={column.id}>{column.title}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div>
               <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">受让人</div>
@@ -966,8 +987,16 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
           </div>
           <button
             onClick={async () => {
-              if (!confirm('Delete this card?')) return
-              try { await deleteCard(boardId, card.id); onClose() } catch (e) { console.warn(e) }
+              if (!await confirmSensitiveAction({
+                title: '删除卡片？',
+                description: `“${card.title}”将被永久删除。`,
+                confirmLabel: '删除卡片',
+                tone: 'destructive',
+              })) return
+              try {
+                await toastAction(deleteCard(boardId, card.id), { loading: '正在删除卡片', success: '卡片已删除', error: '删除卡片失败' })
+                onClose()
+              } catch (e) { console.warn(e) }
             }}
             className="text-xs text-coral-deep hover:underline"
           >删除卡</button>
@@ -988,7 +1017,7 @@ function AssigneePicker({ value, onChange, meId }: {
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const everyone = useMemo(() =>
-    Object.values(byId).filter((p) => !p.departedAt)
+    Object.values(byId).filter((p) => !p.departedAt && !p.managed)
       .sort((a, b) => {
         // Me first, then humans, then agents, then alphabetical.
         if (a.id === meId) return -1
@@ -1072,7 +1101,7 @@ function AssigneePicker({ value, onChange, meId }: {
               : <span className="grid h-[26px] w-[26px] place-items-center rounded-full bg-ink-100 text-[12px] text-ink-400">-</span>}
           </span>
         )}
-        <input
+        <Input
           ref={inputRef}
           id={id}
           role="combobox"

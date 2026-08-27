@@ -16,15 +16,19 @@
  * 30-minute snap (SLOT_MINUTES). Selections never collapse below one slot
  * so a click without drag still produces a valid range.
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useCalendar } from '@/stores/calendar'
-import { useParticipants } from '@/stores/participants'
-import { useConversations } from '@/stores/conversations'
-import { useMe } from '@/stores/auth'
+import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { Avatar } from '@/components/Avatar'
-import { IPlus, ICalendar, IClock, IRepeat, ITrash } from '@/components/icons'
 import { EventEditor, type EventEditorPrefill } from '@/components/EventEditor'
+import { ICalendar, IClock, IPlus, IRepeat, ITrash } from '@/components/icons'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { ContextMenu as ContextMenuRoot, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { cn } from '@/lib/utils'
+import { useMe } from '@/stores/auth'
+import { useCalendar } from '@/stores/calendar'
+import { useConversations } from '@/stores/conversations'
+import { useParticipants } from '@/stores/participants'
 import type { CalendarEvent, RecurrenceRule } from '@/types'
 
 interface AgendaItem {
@@ -163,45 +167,17 @@ interface MenuItem {
   danger?: boolean
 }
 
-function ContextMenu({ x, y, items, onClose }: {
-  x: number; y: number
+function CalendarMenu({ trigger, children, items }: {
+  trigger: ReactElement
+  children: ReactNode
   items: MenuItem[]
-  onClose: () => void
 }) {
-  useEffect(() => {
-    const onDown = () => onClose()
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('mousedown', onDown)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('mousedown', onDown)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [onClose])
-  // Clamp to viewport so a click in the bottom-right corner doesn't push
-  // the menu off-screen. Approximate width 220, height = items * 32 + 8.
-  const w = 220
-  const h = items.length * 32 + 8
-  const left = Math.min(x, window.innerWidth - w - 8)
-  const top = Math.min(y, window.innerHeight - h - 8)
-  return (
-    <div
-      className="fixed z-[100] bg-cloud rounded-lg shadow-pop py-1"
-      style={{ left, top, minWidth: w, border: '1px solid var(--ink-100)' }}
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      {items.map((it, i) => (
-        <button
-          key={i}
-          onClick={() => { it.onClick(); onClose() }}
-          className={cn(
-            'w-full text-left px-3 py-1.5 text-[13px] transition hover:bg-sky2-50',
-            it.danger ? 'text-coral-deep' : 'text-ink-700',
-          )}
-        >{it.label}</button>
-      ))}
-    </div>
-  )
+  return <ContextMenuRoot>
+    <ContextMenuTrigger render={trigger}>{children}</ContextMenuTrigger>
+    <ContextMenuContent aria-label="日历操作" className="min-w-[200px]">
+      {items.map((item, index) => <ContextMenuItem key={`${item.label}:${index}`} variant={item.danger ? 'destructive' : 'default'} onClick={item.onClick}>{item.label}</ContextMenuItem>)}
+    </ContextMenuContent>
+  </ContextMenuRoot>
 }
 
 /* ─────────────────────────── MonthGrid ─────────────────────────── */
@@ -243,7 +219,6 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
   // cells via DOM; instead each cell has an onMouseEnter that updates the
   // current index while dragging.
   const [drag, setDrag] = useState<{ startIdx: number; currentIdx: number; moved: boolean } | null>(null)
-  const [menu, setMenu] = useState<{ x: number; y: number; date: Date } | null>(null)
 
   // mouseup handler — kept on window so a drag that leaves the grid still
   // completes cleanly. Reads the latest `drag` snapshot via closure on
@@ -287,9 +262,11 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
             const inSelection = drag !== null
               && idx >= Math.min(drag.startIdx, drag.currentIdx)
               && idx <= Math.max(drag.startIdx, drag.currentIdx)
+            const date = new Date(d)
             return (
-              <div
+              <CalendarMenu
                 key={k}
+                trigger={<div
                 className={cn(
                   'bg-cloud p-1.5 min-h-0 flex flex-col gap-1 text-xs cursor-pointer relative',
                   !isCurMonth && 'opacity-40',
@@ -305,10 +282,11 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
                     setDrag({ ...drag, currentIdx: idx, moved: true })
                   }
                 }}
-                onContextMenu={(e) => {
-                  e.preventDefault()
-                  setMenu({ x: e.clientX, y: e.clientY, date: new Date(d) })
-                }}
+                />}
+                items={[
+                  { label: `New event on ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`, onClick: () => { const start = new Date(date); start.setHours(9, 0, 0, 0); const end = new Date(date); end.setHours(10, 0, 0, 0); onNew({ startAt: start, endAt: end }) } },
+                  { label: '新的全天活动', onClick: () => { const start = new Date(date); start.setHours(0, 0, 0, 0); const end = new Date(date); end.setHours(23, 59, 0, 0); onNew({ startAt: start, endAt: end, allDay: true }) } },
+                ]}
               >
                 <div className="flex items-center justify-between">
                   <span className={cn(
@@ -337,35 +315,11 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
                     </button>
                   ))}
                 </div>
-              </div>
+              </CalendarMenu>
             )
           })}
         </div>
       </div>
-      {menu && (
-        <ContextMenu
-          x={menu.x} y={menu.y}
-          onClose={() => setMenu(null)}
-          items={[
-            {
-              label: `New event on ${menu.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`,
-              onClick: () => {
-                const start = new Date(menu.date); start.setHours(9, 0, 0, 0)
-                const end = new Date(menu.date); end.setHours(10, 0, 0, 0)
-                onNew({ startAt: start, endAt: end })
-              },
-            },
-            {
-              label: "新的全天活动",
-              onClick: () => {
-                const start = new Date(menu.date); start.setHours(0, 0, 0, 0)
-                const end = new Date(menu.date); end.setHours(23, 59, 0, 0)
-                onNew({ startAt: start, endAt: end, allDay: true })
-              },
-            },
-          ]}
-        />
-      )}
     </>
   )
 }
@@ -401,7 +355,7 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
 
   const colRefs = useRef<Array<HTMLDivElement | null>>([])
   const [drag, setDrag] = useState<{ dayIdx: number; anchorMin: number; cursorMin: number; moved: boolean } | null>(null)
-  const [menu, setMenu] = useState<{ x: number; y: number; date: Date } | null>(null)
+  const [contextDate, setContextDate] = useState<Date | null>(null)
 
   // Snap a clientY to a 30-min slot start in a given column. Returns the
   // minute-of-day for the slot containing the cursor.
@@ -493,9 +447,10 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
           </div>
           {/* Day columns */}
           {days.map((d, dayIdx) => (
-            <div
+            <CalendarMenu
               key={dayIdx}
-              ref={(el) => { colRefs.current[dayIdx] = el }}
+              trigger={<div
+              ref={(el: HTMLDivElement | null) => { colRefs.current[dayIdx] = el }}
               className="relative border-l border-ink-100 cursor-cell"
               onMouseDown={(e) => {
                 if (e.button !== 0) return
@@ -505,11 +460,15 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
                 e.preventDefault()
               }}
               onContextMenu={(e) => {
-                e.preventDefault()
                 const min = pickSlotMinutes(e.clientY, dayIdx)
                 const date = new Date(d); date.setHours(0, min, 0, 0)
-                setMenu({ x: e.clientX, y: e.clientY, date })
+                setContextDate(date)
               }}
+            />}
+              items={[
+                { label: `New event at ${contextDate ? formatTime(contextDate) : ''}`, onClick: () => { if (!contextDate) return; const end = new Date(contextDate); end.setHours(end.getHours() + 1); onNew({ startAt: contextDate, endAt: end }) } },
+                { label: '新的全天活动', onClick: () => { if (!contextDate) return; const start = new Date(contextDate); start.setHours(0, 0, 0, 0); const end = new Date(contextDate); end.setHours(23, 59, 0, 0); onNew({ startAt: start, endAt: end, allDay: true }) } },
+              ]}
             >
               {/* Hour & half-hour rules */}
               {Array.from({ length: 24 }, (_, h) => (
@@ -582,33 +541,10 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
                   </button>
                 )
               })}
-            </div>
+            </CalendarMenu>
           ))}
         </div>
       </div>
-      {menu && (
-        <ContextMenu
-          x={menu.x} y={menu.y}
-          onClose={() => setMenu(null)}
-          items={[
-            {
-              label: `New event at ${formatTime(menu.date)}`,
-              onClick: () => {
-                const end = new Date(menu.date); end.setHours(end.getHours() + 1)
-                onNew({ startAt: menu.date, endAt: end })
-              },
-            },
-            {
-              label: "新的全天活动",
-              onClick: () => {
-                const s = new Date(menu.date); s.setHours(0, 0, 0, 0)
-                const e = new Date(menu.date); e.setHours(23, 59, 0, 0)
-                onNew({ startAt: s, endAt: e, allDay: true })
-              },
-            },
-          ]}
-        />
-      )}
     </>
   )
 }
@@ -744,7 +680,7 @@ export function CalendarView() {
         </div>
         <div className="flex-1 min-h-0 overflow-auto px-3 py-2 space-y-2">
           {!loaded && (
-            <div className="text-sm text-ink-400 px-1 py-2">加载中…</div>
+            <ResourceSkeleton variant="list" count={4} compact label="正在加载日历事件" />
           )}
           {loaded && agenda.length === 0 && (
             <div className="px-1 py-6 text-center">
@@ -808,7 +744,14 @@ export function CalendarView() {
                       <button
                         title="立即运行"
                         onClick={async () => {
-                          try { await runNow(it.event.id) } catch (err) { console.warn('[calendar] run-now failed', err) }
+                          try {
+                            await toastAction(runNow(it.event.id), {
+                              loading: '正在运行日历任务',
+                              success: '任务已触发',
+                              error: '任务触发失败',
+                              description: it.event.title,
+                            })
+                          } catch (err) { console.warn('[calendar] run-now failed', err) }
                         }}
                         className="text-[10px] text-skype-deep px-1.5 py-0.5 rounded hover:bg-sky2-100"
                       >立即运行</button>
@@ -817,8 +760,15 @@ export function CalendarView() {
                       <button
                         title="删除事件"
                         onClick={async () => {
-                          if (!confirm(`Delete "${it.event.title}"?`)) return
-                          try { await remove(it.event.id) } catch (err) { console.warn('[calendar] delete failed', err) }
+                          if (!await confirmSensitiveAction({
+                            title: '删除日历事件？',
+                            description: `“${it.event.title}”将被永久删除。`,
+                            confirmLabel: '删除事件',
+                            tone: 'destructive',
+                          })) return
+                          try {
+                            await toastAction(remove(it.event.id), { loading: '正在删除事件', success: '事件已删除', error: '删除事件失败' })
+                          } catch (err) { console.warn('[calendar] delete failed', err) }
                         }}
                         className="text-ink-400 hover:text-coral-deep p-0.5 rounded"
                       ><ITrash className="w-3 h-3" /></button>

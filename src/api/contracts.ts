@@ -23,7 +23,7 @@ export interface ApiMessage extends Message {
 
 export interface ApiConversation {
   id: string
-  kind: 'group' | 'direct' | 'whisper' | 'email'
+  kind: 'group' | 'direct' | 'email'
   title: string
   subtitle: string | null
   topic: string | null
@@ -145,7 +145,7 @@ export interface ApiSearchResults {
   }>
   rooms: Array<{
     id: string
-    kind: 'direct' | 'whisper'
+    kind: 'direct'
     title: string
     members: string[]
     projectName: string | null
@@ -161,7 +161,7 @@ export interface ApiSearchResults {
     id: string
     conversationId: string
     conversationTitle: string
-    conversationKind: 'group' | 'direct' | 'whisper'
+    conversationKind: 'group' | 'direct'
     authorId: string
     authorName: string | null
     snippet: string
@@ -208,36 +208,6 @@ export interface PresignResponse {
   mime: string
   size: number
   kind: 'img' | 'file'
-}
-
-/** A peek-view entry — either a 1-on-1 direct chat or a multi-agent
- *  group, where every member is an agent. "Whisper" is the frontend tab
- *  name; on the server these are just regular conversations the user
- *  isn't a member of (so they don't show up in /conversations, but the
- *  peek tab lets the user eavesdrop). */
-export interface ApiWhisper {
-  id: string
-  kind: 'direct' | 'group'
-  title: string
-  members: string[]
-  /** Convenience accessors for the 1-on-1 case — null for groups. */
-  agentA: string | null
-  agentB: string | null
-  about: string | null
-  createdAt: string
-  updatedAt: string
-  msgCount: number
-}
-
-export interface ApiWhisperMessage {
-  id: string
-  conversationId: string
-  authorId: string
-  kind: string
-  body: string
-  sequence: number
-  tool?: { name: string; arg: string; status: string; detail: string; icon?: string } | null
-  createdAt: string
 }
 
 export interface ApiAutonomy {
@@ -583,6 +553,173 @@ export interface ApiCourseInvitationAccept {
   course: { id: string; name: string; projectId: string; studyRoomId: string | null; role: 'teacher' | 'learner' }
 }
 
+export type LearningRole = 'teacher' | 'learner'
+
+export interface LearningCourse {
+  id: string
+  companyId: string
+  projectId: string
+  title: string
+  description: string
+  status: 'active' | 'archived'
+  courseRole: LearningRole
+  roomCount: number
+  objectiveCount: number
+  learnerCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LearningObjective {
+  id: string
+  courseId: string
+  title: string
+  successCriteria: string
+  targetLevel: 1 | 2 | 3 | 4
+  position: number
+  status: 'draft' | 'published' | 'archived'
+  prerequisiteIds: string[]
+}
+
+export interface LearningActivity {
+  id: string
+  courseId: string
+  title: string
+  instructions: string
+  type: 'lesson' | 'practice' | 'assessment' | 'project' | 'review'
+  status: 'draft' | 'published' | 'closed'
+  evaluationMode: 'agent_formative' | 'teacher_required'
+  targetLevel: 1 | 2 | 3 | 4
+  rubric: unknown[]
+  objectiveIds: string[]
+  dueAt?: string
+}
+
+export interface LearningMissionStep {
+  id: string
+  type: 'learn' | 'practice' | 'check' | 'reflect'
+  description: string
+  successCriteria: string
+  objectiveId?: string
+  status: 'open' | 'in_progress' | 'completed' | 'cancelled'
+  position: number
+  outcome?: string
+  completionReportId?: string
+  completionAttemptId?: string
+}
+
+export interface LearningMission {
+  id: string
+  courseId: string
+  learnerId: string
+  conversationId: string
+  triggerClientMsgNo: string
+  goal: string
+  successCriteria: string
+  missionKind: 'study' | 'research' | 'project'
+  coordinatorAgentId: string
+  coordinatorName?: string
+  status: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled'
+  steps: LearningMissionStep[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LearningEvidence {
+  id: string
+  activity_id: string | null
+  mission_step_id: string | null
+  assistance: 'none' | 'hint' | 'guided'
+  status: string
+  evidence: unknown
+  created_at: string
+  evaluation_id: string | null
+  demonstrated_level: number | null
+  confidence: number | null
+  rubric_results: unknown
+  feedback: string | null
+  evaluation_status: string | null
+  learner_id?: string
+}
+
+export interface LearningReview {
+  id: string
+  attempt_id: string
+  learner_id: string
+  activity_id: string | null
+  activity_title: string | null
+  demonstrated_level: number
+  confidence: number
+  feedback: string
+  source_report_id: string | null
+  verifier_report_id: string | null
+  builder_agent_id: string | null
+  verifier_agent_id: string | null
+  verifier_verdict: 'supported' | 'rejected' | 'inconclusive' | null
+  status?: string
+  [key: string]: unknown
+}
+
+export interface LearningProgress {
+  user_id: string
+  display_name: string
+  email: string
+  average_level: number
+  verified_objectives: number
+  due_objectives: number
+  attempts: number
+}
+
+export interface LearningDashboard {
+  courses: LearningCourse[]
+  due: Array<{ course_id: string; objective_id: string; title: string; level: number; status: string; next_review_at: string }>
+  mastery: Array<{ course_id: string; objective_id: string; title: string; level: number; status: string; next_review_at: string | null; review_interval_days: number }>
+  pendingReviews: number
+}
+
+export interface LearningNotificationPreferences {
+  company_id?: string
+  user_id?: string
+  course_id: string | null
+  in_app_enabled: boolean
+  email_enabled: boolean
+  timezone: string
+  preferred_time: string
+  quiet_start: string | null
+  quiet_end: string | null
+}
+
+export interface LearningDelivery {
+  id: string
+  kind: string
+  channel: 'in_app' | 'email'
+  status: 'pending' | 'processing' | 'sent' | 'failed'
+  digest_date: string | null
+  sent_at?: string | null
+  last_error?: string | null
+  created_at?: string
+}
+
+export interface TeacherDigestSchedule {
+  frequency: 'daily' | 'weekly' | 'off'
+  timezone: string
+  localTime?: string
+  weekday?: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
+  status: 'active' | 'paused'
+  nextRunAt?: string
+}
+
+export interface TeacherAgentSummary {
+  agentId: string
+  displayName: string
+  projectId: string
+  courseId: string
+  roomId: string
+  roomStatus: 'active' | 'closed'
+  digest: TeacherDigestSchedule
+  pendingApprovals: number
+}
+
 export type ShippingFeatureStatus =
   | 'draft' | 'contract' | 'building' | 'verifying' | 'ready'
   | 'releasing' | 'watching' | 'learned' | 'paused' | 'archived'
@@ -755,6 +892,7 @@ export type WsEvent =
   | { type: 'hello'; instanceId: string; ts: number }
   | { type: 'message.new'; conversationId: string; message: ApiMessage }
   | { type: 'message.delta'; conversationId: string; messageId: string; authorId: string; delta: string; sequence: number; done: boolean }
+  | { type: 'im.read-receipt'; companyId: string; channelId: string; readerId: string; previousReadSeq: number; readThroughSeq: number; readAt: string }
   | { type: 'typing'; conversationId: string; agentId: string; done: boolean }
   | { type: 'agent.activity'; conversationIds: string[]; activity: ApiCoworkerActivity }
   | { type: 'participants.status'; participantId: string; status: Status; statusUpdatedAt?: string }

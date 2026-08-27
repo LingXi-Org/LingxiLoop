@@ -160,6 +160,18 @@ export class WukongClient {
     }
   }
 
+  async setUnread(uid: string, channelId: string, channelType: number, unread: number): Promise<void> {
+    const next = Math.max(0, Math.trunc(unread))
+    try {
+      await this.request('/conversations/setUnread', {
+        method: 'POST',
+        body: JSON.stringify({ uid, channel_id: channelId, channel_type: channelType, unread: next }),
+      })
+    } catch (error) {
+      if (!isEmptyChannelResult(error)) throw error
+    }
+  }
+
   async syncMessages(channelId: string, channelType: number, limit = 80, loginUid = ''): Promise<ImMessage[]> {
     let value: unknown
     try {

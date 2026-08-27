@@ -2,8 +2,6 @@ export const DEFAULT_R2_CORS_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5180',
   'app://lingxiloop',
-  'capacitor://localhost',
-  'https://localhost',
 ]
 
 export function uniqueOrigins(extraOrigins = []) {

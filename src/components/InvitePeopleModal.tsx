@@ -1,5 +1,3 @@
-import { companiesApi } from '@/api/companies'
-import type { ApiInvitation, ApiInvitationWithToken } from '@/api/contracts'
 /**
  * Modal for inviting humans to a company workspace.
  *
@@ -18,6 +16,12 @@ import type { ApiInvitation, ApiInvitationWithToken } from '@/api/contracts'
  * regular members.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { companiesApi } from '@/api/companies'
+import type { ApiInvitation, ApiInvitationWithToken } from '@/api/contracts'
+import { Input } from '@/components/ui/input'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useAuth } from '@/stores/auth'
 
 interface Props {
@@ -93,8 +97,14 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
   }
 
   const revoke = async (id: string) => {
+    if (!await confirmSensitiveAction({
+      title: '撤销邀请？',
+      description: '撤销后，此邀请链接将立即失效且无法再被兑换。',
+      confirmLabel: '撤销邀请',
+      tone: 'destructive',
+    })) return
     try {
-      await companiesApi.revokeInvitation(companyId, id)
+      await toastAction(companiesApi.revokeInvitation(companyId, id), { loading: '正在撤销邀请', success: '邀请已撤销', error: '撤销邀请失败' })
       void reload()
     } catch (e) {
       setListErr(e instanceof Error ? e.message : String(e))
@@ -156,7 +166,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                 <div className="text-[11.5px] text-ink-300 mb-1.5 font-display italic">
                   一次性使用，锁定到该地址。他们必须使用同一电子邮件登录才能兑换。
                 </div>
-                <input
+                <Input
                   type="email"
                   autoFocus
                   autoComplete="off"
@@ -228,7 +238,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                 注意
                 <span className="ml-1.5 text-ink-300 normal-case font-medium tracking-normal">— 可选</span>
               </label>
-              <input
+              <Input
                 type="text"
                 maxLength={120}
                 value={note}
@@ -272,7 +282,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
               <span className="text-[11px] text-ink-300">{activeInvitations.length}</span>
             </div>
             {loadingList && (
-              <div className="text-[12px] text-ink-300 italic font-display py-4 text-center">加载中...</div>
+              <ResourceSkeleton variant="list" count={3} compact label="正在加载邀请" />
             )}
             {!loadingList && activeInvitations.length === 0 && (
               <div className="text-[12.5px] text-ink-400 italic font-display py-3">没有待处理的邀请。</div>
@@ -364,7 +374,7 @@ function CreatedInviteCard({ invite, onDone }: { invite: ApiInvitationWithToken;
         </div>
       )}
       <div className="flex items-stretch gap-2">
-        <input
+        <Input
           readOnly
           value={invite.url}
           className="flex-1 px-3 py-2 text-[12px] rounded-[8px] font-mono"

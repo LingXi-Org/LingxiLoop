@@ -9,6 +9,11 @@ function render(Component: ComponentType) {
   root.render(<StrictMode><Component /></StrictMode>)
 }
 
+async function renderApp(Component: ComponentType) {
+  const { GlobalInteractionProvider } = await import('./components/GlobalInteractionProvider')
+  root.render(<StrictMode><GlobalInteractionProvider><Component /></GlobalInteractionProvider></StrictMode>)
+}
+
 async function boot() {
   if (isNotificationWindow) {
     const { NotificationWindow } = await import('./components/NotificationWindow')
@@ -18,7 +23,7 @@ async function boot() {
 
   if (isElectron) document.body.classList.add('electron')
   const { App } = await import('./App')
-  render(App)
+  await renderApp(App)
 
   if (import.meta.env.VITE_PUBLIC_POSTHOG_KEY) {
     const start = () => { void import('./observability-entry').then(({ mountObservability }) => mountObservability()) }

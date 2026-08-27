@@ -1,13 +1,16 @@
-import { agentsApi } from '@/api/agents'
-import { platformApi } from '@/api/platform'
-import { getServerOrigin } from '@/api/core/http'
-import type { ApiQuotaSnapshot, ApiQuotaWindow } from '@/api/contracts'
 import { useEffect, useState } from 'react'
+import { agentsApi } from '@/api/agents'
+import type { ApiQuotaSnapshot, ApiQuotaWindow } from '@/api/contracts'
+import { getServerOrigin } from '@/api/core/http'
+import { platformApi } from '@/api/platform'
 import { Avatar } from '@/components/Avatar'
-import { CheckboxField } from '@/components/ui/checkbox-field'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useApp } from '@/stores/app'
-import { useUiCommands } from '@/stores/uiCommands'
 import { useAuth } from '@/stores/auth'
 import { useDevtools } from '@/stores/devtools'
 import { useParticipants } from '@/stores/participants'
@@ -22,7 +25,6 @@ const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: strin
     title: '通知',
     items: [
       { key: 'notify.group_pulled', lbl: 'Agent 邀请你加入群聊时', sub: '始终 · 从不 · 仅紧急情况', default: true },
-      { key: 'notify.whisper_mention', lbl: '私聊中提及你时', sub: '始终 · 摘要 · 从不', default: true },
       { key: 'notify.convene_called', lbl: '有人发起协作会话时', sub: '始终 · 从不', default: true },
       { key: 'notify.daily_summary', lbl: 'Agent 夜间活动每日摘要', sub: '当地时间上午 8:00', default: false },
     ],
@@ -38,7 +40,6 @@ const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: strin
   {
     title: '隐私',
     items: [
-      { key: 'priv.allow_silent_whispers', lbl: '允许 Agent 自主私聊', sub: '对话仍会记录在你的会话中', default: true },
       { key: 'priv.allow_new_tools', lbl: '允许 Agent 自主调用新工具', sub: '仅限你已授予的权限', default: true },
       { key: 'priv.allow_human_invites', lbl: '允许 Agent 邀请成员加入群聊', sub: '每次都需要你的同意', default: false },
     ],
@@ -143,7 +144,7 @@ function AboutSection() {
         </div>
         <button
           type="button"
-          onClick={() => useUiCommands.getState().dispatch('open-updater')}
+          onClick={() => window.dispatchEvent(new CustomEvent('lingxiloop:open-updater'))}
           className="shrink-0 h-9 px-4 rounded-[8px] text-[13px] font-display transition-colors text-white"
           style={{ background: 'var(--skype)' }}
         >
@@ -278,7 +279,7 @@ function UsageTab() {
               <div key={p.key} className="bg-cloud rounded-[14px] p-5 h-[140px]"
                 style={{ border: '1px solid var(--ink-100)' }}>
                 <div className="font-display font-semibold text-[14px] text-ink-300">{p.label}</div>
-                <div className="font-display italic text-[12px] text-ink-300 mt-2">加载中…</div>
+                <div className="mt-4 space-y-3" role="status" aria-label={`正在加载${p.label}用量`}><Skeleton className="h-6 w-2/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-4/5" /></div>
               </div>
             ))}
           </div>
@@ -384,7 +385,7 @@ function TrustTab() {
   const byId = useParticipants((s) => s.byId)
   const autonomy = usePrefs((s) => s.autonomy)
   const setAutonomy = usePrefs((s) => s.setAutonomy)
-  const agents = Object.values(byId).filter((p) => p.kind === 'agent')
+  const agents = Object.values(byId).filter((p) => p.kind === 'agent' && !p.managed)
   const [rules, setRules] = useState<Awaited<ReturnType<typeof agentsApi.getAutonomyRules>>>([])
   const [rulesError, setRulesError] = useState<string | null>(null)
   const loadRules = () => void agentsApi.getAutonomyRules().then(setRules).catch((error) => {
@@ -442,7 +443,18 @@ function TrustTab() {
                   {rule.mode === 'allow' ? '允许' : rule.mode === 'ask' ? '每次询问' : '拒绝'} · {rule.source === 'explicit_user' ? '用户明确设置' : '已学习'}
                 </div>
               </div>
-              <button type="button" onClick={() => void agentsApi.deleteAutonomyRule(rule.id).then(loadRules)} className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">
+              <button type="button" onClick={async () => {
+                if (!await confirmSensitiveAction({
+                  title: '撤销自治规则？',
+                  description: `撤销后，${byId[rule.agentId]?.name ?? rule.agentId} 的 ${rule.scope}.${rule.operation} 操作将恢复默认审批策略。`,
+                  confirmLabel: '撤销规则',
+                  tone: 'destructive',
+                })) return
+                try {
+                  await toastAction(agentsApi.deleteAutonomyRule(rule.id), { loading: '正在撤销自治规则', success: '自治规则已撤销', error: '撤销自治规则失败' })
+                  await loadRules()
+                } catch { /* toast owns the visible error state */ }
+              }} className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">
                 撤销
               </button>
             </div>
@@ -526,15 +538,19 @@ function PreferencesTab() {
       <SkypeSoundSection />
       {devtoolsCanEnable && (
         <Section title="↳ 开发者">
-          <CheckboxField
-            checked={devtoolsEnabled}
-            disabled={devtoolsLocal}
-            onCheckedChange={(next) => { void setDevMode(next) }}
-            label="开发者模式"
-            description={devtoolsLocal
-              ? '本地开发版本中始终启用'
-              : '显示观测页面并解锁此设备上的开发工具'}
-          />
+          <label className="flex min-h-11 items-center gap-3 rounded-[11px] border border-input px-3 py-2.5">
+            <Checkbox
+              checked={devtoolsEnabled}
+              disabled={devtoolsLocal}
+              onCheckedChange={(next) => { void setDevMode(next === true) }}
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12.5px] font-semibold leading-[1.2]">开发者模式</span>
+              <span className="mt-0.5 block text-[11.5px] leading-[1.35] text-muted-foreground">
+                {devtoolsLocal ? '本地开发版本中始终启用' : '显示观测页面并解锁此设备上的开发工具'}
+              </span>
+            </span>
+          </label>
         </Section>
       )}
     </div>
@@ -603,7 +619,7 @@ function MemoryTab() {
                 <span className="text-skype-deep">✦ 已学习{kindLabel(item.path)}</span><span>·</span><span>{item.agentName}</span>
               </div>
               {isEditing ? (
-                <textarea value={draft} onChange={(event) => setDraft(event.target.value)} className="mt-2 min-h-20 w-full rounded-lg border border-ink-100 bg-paper px-3 py-2 text-[13px] text-ink-700 outline-none focus:border-skype" />
+                <Textarea value={draft} onChange={(event) => setDraft(event.target.value)} className="mt-2 min-h-20 w-full rounded-lg border border-ink-100 bg-paper px-3 py-2 text-[13px] text-ink-700 outline-none focus:border-skype" />
               ) : <div className="mt-2 whitespace-pre-wrap text-[13px] leading-5 text-ink-700">{item.body}</div>}
               <div className="mt-3 flex gap-2">
                 {isEditing ? (
@@ -627,8 +643,8 @@ function MemoryTab() {
   )
 }
 
-export function MeView() {
-  const [tab, setTab] = useState<Tab>('Profile')
+export function MeView({ initialTab = 'Profile' }: { initialTab?: 'Profile' | 'Usage' | 'Preferences' } = {}) {
+  const [tab, setTab] = useState<Tab>(initialTab)
 
   return (
     <main className="overflow-y-auto p-8 pt-6"

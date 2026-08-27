@@ -1,5 +1,3 @@
-import { emailApi } from '@/api/email'
-import { filesApi } from '@/api/files'
 /**
  * EmailComposer — slide-in drawer for writing real email.
  *
@@ -21,11 +19,26 @@ import { filesApi } from '@/api/files'
  * keeps drawer open + surfaces error inline so the user can edit + retry.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { emailApi } from '@/api/email'
+import { filesApi } from '@/api/files'
+import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
+import { Input } from '@/components/ui/input'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { toastAction } from '@/lib/actionToast'
 import { useApp } from '@/stores/app'
-import { useEmailComposer } from '@/stores/emailComposer'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
+import { useEmailComposer } from '@/stores/emailComposer'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import type { Message, Participant } from '@/types'
@@ -146,7 +159,7 @@ function PillField({
             >×</button>
           </span>
         ))}
-        <input
+        <Input
           ref={inputRef}
           type="text"
           value={draft}
@@ -235,15 +248,11 @@ export function EmailComposer() {
     setAttachments([])
   }, [open, compose?.mode, isReply ? compose.replyToMessageId : null])
 
-  // Esc closes the drawer.
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, close])
-
-  if (!open || !compose) return null
+  // Keep the controlled drawer root mounted while closed. The composer is
+  // opened by business controls outside DrawerTrigger (menu items and reply
+  // actions); mounting Root midway through that pointer event would let the
+  // new dismiss layer interpret the opening click as an outside interaction.
+  if (!open || !compose) return <Drawer open={false} swipeDirection="right" />
 
   // Autocomplete pool: every participant in this workspace EXCEPT the user
   // themselves. Filter to those with an email (agents always have one once
@@ -347,19 +356,24 @@ export function EmailComposer() {
       .map((a) => ({ key: a.key!, filename: a.filename, mimeType: a.mimeType, sizeBytes: a.sizeBytes }))
     setSending(true)
     try {
-      const result = isReply
-        ? await emailApi.replyEmail(compose.replyToMessageId, {
+      const sendPromise = isReply
+        ? emailApi.replyEmail(compose.replyToMessageId, {
             body: body.trim(),
             cc: cc.map((e) => e.raw),
             attachments: attachmentArgs.length ? attachmentArgs : undefined,
           })
-        : await emailApi.sendEmail({
+        : emailApi.sendEmail({
             to: to.map((e) => e.raw),
             cc: cc.length ? cc.map((e) => e.raw) : undefined,
             subject: subject.trim(),
             body: body.trim(),
             attachments: attachmentArgs.length ? attachmentArgs : undefined,
           })
+      const result = await toastAction(Promise.resolve(sendPromise), {
+        loading: isReply ? '正在发送邮件回复' : '正在发送邮件',
+        success: isReply ? '邮件回复已发送' : '邮件已发送',
+        error: isReply ? '发送邮件回复失败' : '发送邮件失败',
+      })
       // Reload conversations + the affected thread's messages so the new
       // bubble appears immediately. The WS pubsub will also deliver the
       // `message.new` event but a hard reload is simpler than racing it.
@@ -376,16 +390,9 @@ export function EmailComposer() {
   }
 
   return (
-    <div className="fixed inset-0 z-[55] grid place-items-end p-3 pointer-events-none" aria-modal="true">
-      {/* Click-outside backdrop. Click anywhere outside the panel to close. */}
-      <button
-        aria-label="关闭作曲家背景"
-        onClick={close}
-        className="email-composer-backdrop absolute inset-0 pointer-events-auto animate-fade-in"
-        style={{ animationDuration: '120ms' }}
-      />
-      <div
-        className="email-composer-panel relative flex h-full w-full max-w-[660px] flex-col overflow-hidden rounded-[22px] border border-hairline bg-panel pointer-events-auto animate-slide-in-right"
+    <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) close() }} swipeDirection="right">
+      <DrawerContent
+        className="email-composer-drawer w-[calc(100vw-1rem)] max-w-[660px] gap-0 overflow-hidden p-0"
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
         onDragOver={onDragOver}
@@ -400,7 +407,6 @@ export function EmailComposer() {
             style={{
               background: 'color-mix(in srgb, var(--accent) 12%, var(--panel))',
               border: '2px dashed var(--skype)',
-              borderRadius: '22px',
               animationDuration: '120ms',
             }}
           >
@@ -411,20 +417,30 @@ export function EmailComposer() {
             </div>
           </div>
         )}
-        <div className="flex items-center gap-2.5 border-b border-hairline bg-card px-4 py-3.5">
+        <DrawerHeader className="relative flex-row items-center gap-2.5 border-b border-hairline bg-card px-4 py-3.5 pr-14 text-left">
           <span className="grid size-8 place-items-center rounded-xl bg-sky2-100 text-skype-deep">
             <IMail className="h-4 w-4" strokeWidth={2} />
           </span>
-          <h2 className="text-[14px] font-semibold tracking-tight text-ink">
-            {isReply ? "通过电子邮件回复" : "新电子邮件"}
-          </h2>
-          <button
-            type="button"
-            onClick={close}
-            className="ml-auto grid size-8 place-items-center rounded-xl text-ink-secondary transition hover:bg-raised hover:text-ink"
-            aria-label="关闭作曲家"
-          >×</button>
-        </div>
+          <div className="min-w-0">
+            <DrawerTitle className="text-[14px] font-semibold tracking-tight text-ink">
+              {isReply ? "通过电子邮件回复" : "新电子邮件"}
+            </DrawerTitle>
+            <DrawerDescription className="sr-only">
+              {isReply ? "撰写并发送邮件回复" : "撰写并发送新邮件"}
+            </DrawerDescription>
+          </div>
+          <DrawerClose
+            render={
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-lg leading-none text-ink-secondary transition hover:bg-raised hover:text-ink"
+                aria-label="关闭邮件编辑器"
+              />
+            }
+          >
+            ×
+          </DrawerClose>
+        </DrawerHeader>
 
         {!isReply && (
           <PillField
@@ -455,7 +471,7 @@ export function EmailComposer() {
         {!isReply && (
           <div className="email-composer-row grid grid-cols-[60px_1fr] items-center gap-2 px-4 py-3">
             <span className="text-[10.5px] font-bold uppercase tracking-wider text-ink-secondary">主题</span>
-            <input
+            <Input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
@@ -485,7 +501,7 @@ export function EmailComposer() {
           />
         )}
 
-        <textarea
+        <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={isReply ? "写下你的回复..." : "写下您的信息..."}
@@ -494,29 +510,22 @@ export function EmailComposer() {
         />
 
         {attachments.length > 0 && (
-          <div className="mx-3 mb-2 space-y-1 rounded-xl border border-hairline bg-card px-3 py-2">
+          <AttachmentGroup className="mx-3 mb-2" role="group" aria-label="邮件附件" tabIndex={0}>
             {attachments.map((a) => (
-              <div key={a.localId} className="flex items-center gap-2 text-[12px]">
-                <span className="text-[14px] leading-none">
-                  {a.state === 'uploading' ? '⏳' : a.state === 'error' ? '⚠️' : '📎'}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-ink-700 font-medium">{a.filename}</div>
-                  <div className="text-[10.5px] text-ink-400 uppercase tracking-wider">
+              <Attachment key={a.localId} size="sm" state={a.state}>
+                <AttachmentMedia>{a.state === 'uploading' ? '⏳' : a.state === 'error' ? '⚠️' : '📎'}</AttachmentMedia>
+                <AttachmentContent>
+                  <AttachmentTitle>{a.filename}</AttachmentTitle>
+                  <AttachmentDescription>
                     {a.mimeType} · {humanBytes(a.sizeBytes)}
                     {a.state === 'uploading' && ' · uploading…'}
                     {a.state === 'error' && ` · ${a.error ?? 'upload failed'}`}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeAttachment(a.localId)}
-                  className="shrink-0 text-ink-300 hover:text-coral-deep text-[16px] leading-none px-1"
-                  aria-label={`Remove ${a.filename}`}
-                >×</button>
-              </div>
+                  </AttachmentDescription>
+                </AttachmentContent>
+                <AttachmentActions><AttachmentAction onClick={() => removeAttachment(a.localId)} aria-label={`移除 ${a.filename}`}>×</AttachmentAction></AttachmentActions>
+              </Attachment>
             ))}
-          </div>
+          </AttachmentGroup>
         )}
 
         {error && (
@@ -525,8 +534,8 @@ export function EmailComposer() {
           </div>
         )}
 
-        <div className="email-composer-footer flex items-center gap-2 border-t border-hairline bg-card px-4 py-3">
-          <input
+        <DrawerFooter className="email-composer-footer mt-auto flex-row items-center gap-2 border-t border-hairline bg-card px-4 py-3">
+          <Input
             ref={fileInputRef}
             type="file"
             multiple
@@ -557,8 +566,8 @@ export function EmailComposer() {
               'rounded-xl bg-accent px-4 py-2 text-[12px] font-semibold text-white transition hover:brightness-110 disabled:opacity-50',
             )}
           >{sending ? "正在发送..." : isReply ? "发送回复" : "发送"}</button>
-        </div>
-      </div>
-    </div>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }

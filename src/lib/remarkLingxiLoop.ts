@@ -13,7 +13,7 @@
  * It runs `parseBody` (the single source of truth for LingxiLoop tokenization) on
  * every remaining text node and splits matches into custom mdast nodes carrying
  * a `data.hName` so mdast→hast emits a custom element that react-markdown maps
- * to the matching component (see `lingxiloopMarkdownComponents` in Message.tsx).
+ * to the matching component (see `lingxiloopMarkdownComponents` in MessageBody.tsx).
  *
  * Text nodes only reach here AFTER remark has consumed the standard markers
  * (bold/italic/code/links), so in practice parseBody only finds the four custom

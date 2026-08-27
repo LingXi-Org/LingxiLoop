@@ -4,7 +4,7 @@ import type { CanvasActivity, CanvasAgentAssignment } from '@/types'
 import { canvasActivityLabel, canvasAssignmentProgress, formatCanvasDuration, isCanvasAssignmentActive } from './canvasCollaboration'
 
 function assignment(status: CanvasAgentAssignment['status']): CanvasAgentAssignment {
-  return { id: status, canvasId: 'c', agentId: status, assignment: status, color: '#000', status, workArea: { x: 0, y: 0, width: 10, height: 10 }, activeFrameId: null, cursor: null, workId: null, dependsOnAgentIds: [], result: null, error: null, startedAt: null, completedAt: null, updatedAt: '2026-01-01T00:00:00.000Z' }
+  return { id: status, canvasId: 'c', agentId: status, assignment: status, color: '#000', status, workArea: { x: 0, y: 0, width: 10, height: 10 }, activeFrameId: null, cursor: null, workId: null, dependsOnAgentIds: [], executionRole:'specialist',verifiesAssignmentId:null,result: null, error: null, startedAt: null, completedAt: null, updatedAt: '2026-01-01T00:00:00.000Z' }
 }
 
 test('calculates useful progress for parallel work', () => {

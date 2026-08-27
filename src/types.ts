@@ -5,7 +5,7 @@ export type { CanvasActivityKind } from '@/lib/canvasEventKinds'
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
-export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge'
+export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge' | 'learning' | 'teacher_admin'
 
 export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed'
 
@@ -91,15 +91,19 @@ export interface Participant {
   email?: string | null
   /** non-null = agent has been off-boarded; ISO timestamp of when */
   departedAt?: string | null
+  /** Product-managed identities are discoverable only in their dedicated surface. */
+  managed?: boolean
+  projectId?: string | null
+  presetKey?: string | null
 }
 
-export type ConversationKind = 'group' | 'direct' | 'whisper' | 'email'
+export type ConversationKind = 'group' | 'direct' | 'email'
 
 export interface Conversation {
   id: string
   kind: ConversationKind
   title: string
-  /** display subtitle - members or whisper pair */
+  /** Display subtitle or member summary. */
   subtitle?: string
   /** free-form purpose / topic line, editable by any member */
   topic?: string | null
@@ -107,8 +111,6 @@ export interface Conversation {
   members: string[]
   /** Explicit agent responsible for ordinary group messages. */
   leaderId: string | null
-  /** for whispers: the two agents in private chat */
-  whisperPair?: [string, string]
   pinned?: boolean
   /** Per-user mute. When true, the conversation suppresses notifications and
    *  is excluded from the global unread total (but its per-row badge still
@@ -128,12 +130,12 @@ export interface Conversation {
   lastAtIso: string
   preview: string
   /** optional special tag */
-  tag?: 'team' | 'whisper' | 'human' | 'fresh-pulled'
+  tag?: 'team' | 'human' | 'fresh-pulled' | 'teacher'
   /** if pulled by an agent: the convener id and reason */
   pulledBy?: { agentId: string; at: string; reason: string }
 }
 
-export type MessageKind = 'text' | 'tool' | 'attachment' | 'whisper-link' | 'thought' | 'system' | 'email' | 'poll' | 'handoff' | 'approval' | 'canvas'
+export type MessageKind = 'text' | 'tool' | 'attachment' | 'thought' | 'system' | 'email' | 'questionnaire' | 'poll' | 'handoff' | 'approval' | 'canvas' | 'learning_mission'
 
 export interface HandoffPayload {
   id: string
@@ -149,13 +151,17 @@ export interface HandoffPayload {
 export interface ApprovalPayload {
   id: string
   agentId: string
-  kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action'
+  kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action' | 'course_management' | 'learning_evaluation'
   summary: string
   status: 'pending' | 'approved' | 'rejected' | 'expired'
   payload: Record<string, unknown>
   requestedAt: string
   resolvedAt?: string | null
   resolvedBy?: string | null
+  requestedBy?: string | null
+  scope?: Record<string,unknown>
+  preview?: Record<string,unknown>
+  error?: string | null
 }
 
 /* ============== Polls (lightweight votes inline in any conversation) ====== */
@@ -181,6 +187,29 @@ export interface PollTally {
   count: number
   /** participant ids of voters who picked this option, sorted ASC. */
   voterIds: string[]
+}
+
+export interface QuestionnaireChoicePayload {
+  value: string
+  label: string
+  description?: string
+  disabled?: boolean
+}
+
+export interface QuestionnaireItemPayload {
+  name: string
+  prompt: string
+  description?: string
+  required?: boolean
+  multiple?: boolean
+  choices: QuestionnaireChoicePayload[]
+  input?: { label: string; placeholder?: string }
+}
+
+export interface QuestionnairePayload {
+  title?: string
+  items: QuestionnaireItemPayload[]
+  submitLabel?: string
 }
 
 /** Headers + transport status for a single email message. Populated by the
@@ -247,6 +276,9 @@ export interface Message {
   id: string
   conversationId: string
   authorId: string
+  /** Persisted WuKong/Lingxi sequence. Optimistic, typing and streaming-only
+   * rows intentionally omit it and never participate in read receipts. */
+  sequence?: number
   kind: MessageKind
   body: string
   citations?: KnowledgeCitation[]
@@ -273,18 +305,9 @@ export interface Message {
     name: string
     /** kind 'img' renders inline; others render as a file card */
     kind: 'img' | 'pdf' | 'file' | 'fig'
-    /** real assets carry a URL; mock/legacy data may not */
-    url?: string
+    url: string
     mime?: string
     size?: number
-    /** legacy descriptor — fallback when no real file is present (e.g. mock data) */
-    meta?: string
-  }
-  /** for whisper-link cards in main chat */
-  whisperLink?: {
-    pair: [string, string]
-    snippet: string
-    count: number
   }
   /** Populated by the server when kind === 'email'. Carries headers,
    *  direction, and transport status so the email bubble can render the
@@ -295,6 +318,9 @@ export interface Message {
   /** Per-option aggregated tallies for kind === 'poll'. Empty array for
    *  any other message kind. Updated in place by `poll.updated` WS events. */
   pollTallies?: PollTally[]
+  /** Agent-authored clarification flow. The learner response is posted as a
+   * normal quoted message so the asking Agent is deterministically woken. */
+  questionnaire?: QuestionnairePayload
   handoff?: HandoffPayload
   approval?: ApprovalPayload
   canvas?: {
@@ -304,6 +330,13 @@ export interface Message {
     status: CanvasWorkspaceStatus
     members: Array<{ agentId: string; assignment: string; color: string; status: CanvasAssignmentStatus }>
     frameCount: number
+  }
+  learningMission?: {
+    missionId: string
+    courseId: string
+    goal: string
+    successCriteria: string
+    status: string
   }
   /** Reply-to / quote pointer: the id of another message in this same
    *  conversation that this one is quoting. Null for non-reply messages. */
@@ -328,8 +361,16 @@ export interface Message {
   streaming?: 'placeholder' | 'markdown'
 }
 
+export interface ImReadReceiptAdvance {
+  channelId: string
+  readerId: string
+  previousReadSeq: number
+  readThroughSeq: number
+  readAt: string
+}
+
 export interface ViewKey {
-  view: 'sources' | 'conversations' | 'mail' | 'whispers' | 'convene' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'management'
+  view: 'sources' | 'conversations' | 'mail' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'learning' | 'management'
 }
 
 /* ============== Shared Canvas ======================================== */
@@ -367,6 +408,14 @@ export interface CanvasPresence {
 
 export type CanvasWorkspaceStatus = 'active' | 'summarizing' | 'completed' | 'stopped' | 'failed'
 export type CanvasAssignmentStatus = 'queued' | 'blocked' | 'working' | 'waiting' | 'completed' | 'failed' | 'cancelled'
+export type AgentExecutionRole = 'coordinator' | 'specialist' | 'verifier' | 'reporter'
+export type CanvasAssignmentExecutionRole = 'specialist' | 'verifier'
+export interface CanvasAssignmentReport {
+  id:string;canvasId:string;assignmentId:string|null;authorAgentId:string;executionRole:Exclude<AgentExecutionRole,'coordinator'>
+  schemaVersion:'learning_report_v1';finding:string;evidenceRefs:Array<{kind:'frame'|'message'|'document'|'source'|'attempt'|'report';id:string}>
+  confidence:number;unresolved:string[];nextStep:string|null;verifiesReportId:string|null;disconfirmingChecks:string[]
+  verdict:'supported'|'rejected'|'inconclusive'|null;consumedReportIds:string[];conflictResolution:unknown[];createdAt:string
+}
 
 export interface CanvasAgentAssignment {
   id: string
@@ -380,6 +429,10 @@ export interface CanvasAgentAssignment {
   cursor: { x: number; y: number } | null
   workId: string | null
   dependsOnAgentIds: string[]
+  executionRole: CanvasAssignmentExecutionRole
+  verifiesAssignmentId: string | null
+  progressFingerprint?: string | null
+  noProgressCount?: number
   result: string | null
   error: string | null
   startedAt: string | null
@@ -441,6 +494,7 @@ export interface CanvasSnapshot {
   presence: CanvasPresence[]
   comments: CanvasComment[]
   activity: CanvasActivity[]
+  reports: CanvasAssignmentReport[]
 }
 
 /* ============== Calendar (AI-native shared schedule) ============== */

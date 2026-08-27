@@ -5,6 +5,7 @@ import { env } from '../../env.js'
 import { requireCompanyRole } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import { assertCompanyAgentLimit, requireAuth, requireCompany, requireCompanyArtifactContext } from '../../http/request-context.js'
+import { assertNotManagedPulse, assertPulseVisible } from '../../learning/visibility.js'
 import { BUSY_STATUS_LEASE_MS } from '../../status.js'
 import { storage, } from '../../storage.js'
 
@@ -12,7 +13,7 @@ export const agentsServiceRoutes = Router()
 const api = agentsServiceRoutes
 
 api.get('/participants', async (req, res) => {
-  const { companyId: tenant, projectId } = await requireCompanyArtifactContext(req)
+  const { userId: me, companyId: tenant, projectId } = await requireCompanyArtifactContext(req)
   await pool.query(
     `UPDATE participants
         SET status = 'avail',
@@ -31,7 +32,7 @@ api.get('/participants', async (req, res) => {
     bio: string | null; tools: string[] | null; capabilities: string[] | null
     systemPrompt: string | null
     email: string | null; companySlug: string | null
-    departedAt: string | null
+    departedAt: string | null; managed: boolean; projectId: string | null; presetKey: string | null
   }>(
     `SELECT p.id, p.kind, p.name, p.role, p.initial,
             p.avatar_bg AS "avatarBg", p.avatar_url AS "avatarUrl",
@@ -52,13 +53,35 @@ api.get('/participants', async (req, res) => {
               CASE WHEN p.kind = 'human' AND cm.user_id IS NOT NULL THEN u.email END
             ) AS email,
             comp.slug AS "companySlug",
-            p.departed_at AS "departedAt"
+            p.departed_at AS "departedAt",p.preset_key AS "presetKey",
+            EXISTS(
+              SELECT 1 FROM learning_project_teacher_agents managed_pulse
+               WHERE managed_pulse.agent_id=p.id AND managed_pulse.company_id=p.company_id
+            ) AS managed,
+            (SELECT managed_pulse.project_id FROM learning_project_teacher_agents managed_pulse
+              WHERE managed_pulse.agent_id=p.id AND managed_pulse.company_id=p.company_id LIMIT 1) AS "projectId"
        FROM participants p
        JOIN companies comp ON comp.id = p.company_id
        LEFT JOIN company_members cm
               ON cm.user_id = p.id AND cm.company_id = p.company_id
        LEFT JOIN users u ON u.id = cm.user_id
       WHERE p.company_id = $1
+        AND (
+          NOT EXISTS (
+            SELECT 1 FROM learning_project_teacher_agents pulse
+             WHERE pulse.agent_id=p.id AND pulse.company_id=p.company_id
+          )
+          OR EXISTS (
+            SELECT 1
+              FROM learning_project_teacher_agents pulse
+              JOIN courses pulse_course
+                ON pulse_course.project_id=pulse.project_id AND pulse_course.company_id=pulse.company_id
+              JOIN course_members pulse_teacher
+                ON pulse_teacher.course_id=pulse_course.id AND pulse_teacher.company_id=pulse_course.company_id
+               AND pulse_teacher.user_id=$3 AND pulse_teacher.role='teacher'
+             WHERE pulse.agent_id=p.id AND pulse.company_id=p.company_id AND pulse.project_id=$2
+          )
+        )
         AND (
           p.kind = 'agent'
           OR EXISTS (
@@ -73,7 +96,7 @@ api.get('/participants', async (req, res) => {
           )
         )
       ORDER BY p.kind DESC, p.name ASC`,
-    [tenant, projectId],
+    [tenant, projectId, me],
   )
   // Compute deterministic addresses for agents who haven't been
   // lazy-minted yet — without this, the renderer's recipient picker hides
@@ -83,9 +106,9 @@ api.get('/participants', async (req, res) => {
   // address that WILL be used.
   const { computeAgentAddress } = await import('../../email.js')
   const finalRows = rows.map((r) => {
-    if (r.email || r.kind !== 'agent' || !r.companySlug) {
+    if (r.managed || r.email || r.kind !== 'agent' || !r.companySlug) {
       const { companySlug: _drop, ...rest } = r
-      return rest
+      return r.managed ? { ...rest, email: null } : rest
     }
     const computed = computeAgentAddress(r.id, r.companySlug)
     const { companySlug: _drop, ...rest } = r
@@ -684,6 +707,7 @@ api.put('/agents/:id', async (req, res) => {
   // every member talks to. Gate to owner/admin — same bar as creation.
   const { companyId: tenant } = await requireCompanyRole(req)
   const id = req.params.id
+  await assertNotManagedPulse(id, tenant)
   const { rows: existing } = await pool.query<{ kind: string }>(
     `SELECT kind FROM participants WHERE id = $1 AND company_id = $2`, [id, tenant],
   )
@@ -727,6 +751,7 @@ api.delete('/agents/:id', async (req, res) => {
   // it from every conversation's wake roster — destructive, owner/admin only.
   const { companyId: tenant } = await requireCompanyRole(req)
   const id = req.params.id
+  await assertNotManagedPulse(id, tenant)
   const { rows: existing } = await pool.query<{ kind: string; departed_at: string | null }>(
     `SELECT kind, departed_at FROM participants WHERE id = $1 AND company_id = $2`, [id, tenant],
   )
@@ -896,6 +921,7 @@ api.post('/agents/:id/avatar/generate', async (req, res) => {
   // member could re-roll every agent's portrait in a loop and run up the
   // bill / consume the per-tenant image quota.
   const { companyId: tenant } = await requireCompanyRole(req)
+  await assertNotManagedPulse(req.params.id, tenant)
   try {
     const { url } = await generateAndPersistAvatar({ agentId: req.params.id, tenant })
     res.json({ url })
@@ -911,6 +937,7 @@ api.post('/agents/:id/rehire', async (req, res) => {
   // Same gate as off-boarding (DELETE /agents/:id) — owner/admin only.
   const { companyId: tenant } = await requireCompanyRole(req)
   const id = req.params.id
+  await assertNotManagedPulse(id, tenant)
   const { rows: existing } = await pool.query<{ kind: string; departed_at: string | null }>(
     `SELECT kind, departed_at FROM participants WHERE id = $1 AND company_id = $2`, [id, tenant],
   )
@@ -957,6 +984,7 @@ api.put('/me/preferences', async (req, res) => {
 
 api.get('/agents/:id/autonomy', async (req, res) => {
   const { userId: me, companyId: tenant } = await requireCompany(req)
+  await assertPulseVisible(req.params.id, tenant, me)
   const { rows: gate } = await pool.query(
     `SELECT 1 FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
     [req.params.id, tenant],
@@ -972,6 +1000,7 @@ api.get('/agents/:id/autonomy', async (req, res) => {
 
 api.put('/agents/:id/autonomy', async (req, res) => {
   const { userId: me, companyId: tenant } = await requireCompany(req)
+  await assertNotManagedPulse(req.params.id, tenant)
   const { rows: gate } = await pool.query(
     `SELECT 1 FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
     [req.params.id, tenant],
@@ -992,9 +1021,19 @@ api.get('/agents/autonomy', async (req, res) => {
   const { rows } = await pool.query(
     `SELECT a.user_id AS "userId", a.agent_id AS "agentId",
             a.threshold, a.pulled, a.led, a.dissolved
-       FROM agent_autonomy a
+      FROM agent_autonomy a
        JOIN participants p ON p.id = a.agent_id
-      WHERE a.user_id = $1 AND p.company_id = $2`,
+      WHERE a.user_id = $1 AND p.company_id = $2
+        AND (
+          NOT EXISTS (SELECT 1 FROM learning_project_teacher_agents pulse WHERE pulse.agent_id=p.id AND pulse.company_id=p.company_id)
+          OR EXISTS (
+            SELECT 1 FROM learning_project_teacher_agents pulse
+              JOIN courses course ON course.project_id=pulse.project_id AND course.company_id=pulse.company_id
+              JOIN course_members teacher ON teacher.course_id=course.id AND teacher.company_id=course.company_id
+               AND teacher.user_id=$1 AND teacher.role='teacher'
+             WHERE pulse.agent_id=p.id AND pulse.company_id=p.company_id
+          )
+        )`,
     [me, tenant],
   )
   res.json(rows)

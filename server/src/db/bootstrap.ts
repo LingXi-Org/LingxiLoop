@@ -32,7 +32,25 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
        AND to_regclass('public.agent_work_items') IS NOT NULL
        AND to_regclass('public.knowledge_sources') IS NOT NULL
        AND to_regclass('public.courses') IS NOT NULL
-       AND to_regclass('public.llm_calls') IS NOT NULL AS ready
+       AND to_regclass('public.learning_objectives') IS NOT NULL
+       AND to_regclass('public.learning_notification_deliveries') IS NOT NULL
+       AND to_regclass('public.learning_project_teacher_agents') IS NOT NULL
+       AND to_regclass('public.learning_course_teacher_rooms') IS NOT NULL
+       AND to_regclass('public.canvas_assignment_reports') IS NOT NULL
+       AND to_regclass('public.im_read_receipt_advances') IS NOT NULL
+       AND to_regclass('public.llm_calls') IS NOT NULL
+       AND EXISTS (
+         SELECT 1 FROM information_schema.columns
+          WHERE table_schema='public' AND table_name='agent_work_items' AND column_name='execution_role'
+       )
+       AND EXISTS (
+         SELECT 1 FROM information_schema.columns
+          WHERE table_schema='public' AND table_name='agent_os_approvals' AND column_name='scope'
+       )
+       AND EXISTS (
+         SELECT 1 FROM information_schema.columns
+          WHERE table_schema='public' AND table_name='canvas_agent_assignments' AND column_name='verifies_assignment_id'
+       ) AS ready
   `)
   return rows[0]?.ready === true
 }

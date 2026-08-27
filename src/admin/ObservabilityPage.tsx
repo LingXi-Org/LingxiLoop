@@ -29,8 +29,15 @@
  * worth the complexity.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { SelectField } from '@/components/ui/select-field'
-import { Combobox } from '@/components/Combobox'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 import {
   adminApi,
   type LlmCallPurpose,
@@ -314,7 +321,7 @@ export function ObservabilityPage() {
               >{u.label}</button>
             ))}
           </div>
-          <input
+          <Input
             className="admin-input obs-model-input"
             placeholder="过滤模型（例如 deepseek-chat）"
             value={modelFilter}
@@ -339,13 +346,10 @@ export function ObservabilityPage() {
             >
               <span className={`obs-refresh-icon${refreshing ? ' is-spinning' : ''}`} aria-hidden>↻</span>
             </button>
-            <SelectField
-              value={String(autoRefreshMs)}
-              onValueChange={(v) => setAutoRefreshMs(Number(v))}
-              options={REFRESH_INTERVALS.map((r) => ({ value: String(r.ms), label: r.label }))}
-              ariaLabel="Auto-refresh interval"
-              className="min-w-[150px]"
-            />
+            <Select value={String(autoRefreshMs)} onValueChange={(v) => setAutoRefreshMs(Number(v))}>
+              <SelectTrigger className="min-w-[150px]" aria-label="Auto-refresh interval"><SelectValue /></SelectTrigger>
+              <SelectContent>{REFRESH_INTERVALS.map((item) => <SelectItem key={item.ms} value={String(item.ms)}>{item.label}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
         </div>
         {lastUpdated && (
@@ -481,7 +485,7 @@ function HeroSpendCard({ summary, unit, loading }: { summary: LlmObservabilityPa
     <div className="obs-hero-card obs-hero-spend">
       <div className="obs-hero-spend-shine" aria-hidden />
       <div className="obs-hero-label">{unit === 'usd' ? "花费" : "代币"} ·最后 {summary?.sinceDays ?? 30}d</div>
-      <div className="obs-hero-value">{loading ? '—' : unit === 'usd' ? fmtUsd(totalUsd, totalUsd < 100 ? 4 : 2) : fmtTokens(totalTok)}</div>
+      <div className="obs-hero-value">{loading ? <Skeleton className="h-[1em] w-2/3" /> : unit === 'usd' ? fmtUsd(totalUsd, totalUsd < 100 ? 4 : 2) : fmtTokens(totalTok)}</div>
       <div className="obs-hero-sub">
         {summary
           ? (unit === 'usd'
@@ -500,7 +504,7 @@ function HeroStatCard({ label, value, sub, accent, loading }: {
     <div className="obs-hero-card">
       <div className="obs-hero-label">{label}</div>
       <div className="obs-hero-value" style={accent ? { color: accent } : undefined}>
-        {loading ? '—' : value}
+        {loading ? <Skeleton className="h-[1em] w-2/3" /> : value}
       </div>
       <div className="obs-hero-sub">{sub || ' '}</div>
     </div>
@@ -553,7 +557,7 @@ function TrendChart({ buckets, unit, loading }: { buckets: LlmTrendBucket[]; uni
     return { purposes, series, totalByDay, maxStack }
   }, [buckets, days, unit])
 
-  if (loading) return <div className="obs-chart-empty">加载中…</div>
+  if (loading) return <ResourceSkeleton variant="media" className="min-h-[220px] p-4" label="正在加载趋势图" />
   if (days.length === 0) return <div className="obs-chart-empty">该窗口中没有数据。</div>
 
   const innerW = W - PADL - PADR
@@ -790,7 +794,7 @@ function CacheDailyChart({ days, loading }: {
   const innerW = W - PADL - PADR
   const innerH = H - PADT - PADB
 
-  if (loading) return <div className="obs-chart-empty obs-cache-chart-empty">加载中…</div>
+  if (loading) return <ResourceSkeleton variant="media" className="min-h-[160px] p-4" label="正在加载缓存趋势" />
   if (days.length === 0) return <div className="obs-chart-empty obs-cache-chart-empty">尚无每日数据。</div>
 
   // Points; skip nulls (no traffic) so the line interpolates instead of dropping to 0.
@@ -932,7 +936,7 @@ function RollupTable({ rows, unit, loading, onDrill }: { rows: LlmRollupRow[]; u
     </button>
   )
 
-  if (loading && rows.length === 0) return <div className="obs-empty">加载中…</div>
+  if (loading && rows.length === 0) return <ResourceSkeleton variant="table" count={6} className="p-3" label="正在加载成本明细" />
   if (!loading && rows.length === 0) return <div className="obs-empty">此窗口中没有支出。 （要么没有流量，要么账本还没有记录任何呼叫。）</div>
 
   return (
@@ -1014,7 +1018,7 @@ function TopAgentsTable({ rows, unit, loading, onDrill }: { rows: LlmObservabili
     () => unit === 'usd' ? rows : [...rows].sort((a, b) => totalTokens(b) - totalTokens(a)),
     [rows, unit],
   )
-  if (loading && rows.length === 0) return <div className="obs-empty">加载中…</div>
+  if (loading && rows.length === 0) return <ResourceSkeleton variant="table" count={6} className="p-3" label="正在加载智能体支出" />
   if (!loading && rows.length === 0) return <div className="obs-empty">此窗口中没有智能体归因的支出。</div>
   return (
     <div className="obs-table obs-table-compact">
@@ -1160,7 +1164,7 @@ function DrillPanel({ drill, sinceDays, companyId, unit, refreshSignal, onClose,
 
         <div className="obs-drill-body">
           {err && <div className="obs-error">加载失败： {err}</div>}
-          {loading && !rows && <div className="obs-empty">加载中…</div>}
+          {loading && !rows && <ResourceSkeleton variant="list" count={5} label="正在加载调用明细" />}
           {rows && rows.length === 0 && <div className="obs-empty">此窗口中没有呼叫。</div>}
           {rows && rows.map((c) => (
             <DrillCallCard
@@ -1308,8 +1312,8 @@ function NumCell({ label, value, hint }: { label: string; value: string; hint?: 
 // global tenants slice of the payload — it isn't filtered by the page's own
 // companyFilter so the picker can always offer every active account.
 //
-// Uses the shared searchable <Combobox> (200 tenants is too many to scroll —
-// the operator types to filter). Options are cost/token-ranked with the spend
+// Uses the shadcn Popover + Command composition (200 tenants is too many to
+// scroll — the operator types to filter). Options are cost/token-ranked with the spend
 // in the right-aligned `hint`, "All accounts" first.
 
 function TenantPicker({ tenants, value, unit, onChange }: {
@@ -1318,10 +1322,11 @@ function TenantPicker({ tenants, value, unit, onChange }: {
   unit: Unit
   onChange: (companyId: string) => void
 }) {
+  const [open, setOpen] = useState(false)
   // Stable label per tenant so a partially-resolved companies join doesn't
   // surface bare ids in the picker. Format: "Name · $cost" / "Name · NtokT"
   // depending on the active unit; falls back to the company id when unnamed.
-  const options = useMemo(() => {
+  const options = useMemo<Array<{ value: string; label: string; hint?: string }>>(() => {
     const name = (t: LlmTenantRow): string => t.name?.trim() || t.slug?.trim() || `(${t.companyId.slice(0, 8)}…)`
     // Sort by the metric that's actually ON SCREEN, descending. The server
     // ranks tenants by $; in token mode that order looks random (a cheap model
@@ -1340,15 +1345,33 @@ function TenantPicker({ tenants, value, unit, onChange }: {
       })),
     ]
   }, [tenants, unit])
+  const selected = options.find((option) => option.value === value)
   return (
-    <Combobox
-      value={value}
-      onValueChange={onChange}
-      options={options}
-      ariaLabel="Filter by tenant"
-      placeholder="所有帐户"
-      searchPlaceholder="Search workspaces…"
-      className="w-[320px]"
-    />
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger render={<Button variant="outline" role="combobox" aria-label="Filter by tenant" aria-expanded={open} className="w-[320px] justify-between" />}>
+        <span className="min-w-0 flex-1 truncate text-left">{selected?.label ?? '所有帐户'}</span>
+        {selected?.hint && <span className="shrink-0 text-xs text-muted-foreground">{selected.hint}</span>}
+        <ChevronsUpDown className="ml-1 opacity-50" />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[320px] p-0">
+        <Command>
+          <CommandInput placeholder="Search workspaces…" />
+          <CommandList>
+            <CommandEmpty>No matches</CommandEmpty>
+            {options.map((option) => (
+              <CommandItem
+                key={option.value || '__all__'}
+                value={`${option.label} ${option.hint ?? ''}`}
+                onSelect={() => { onChange(option.value); setOpen(false) }}
+              >
+                <Check className={cn('size-4', option.value === value ? 'opacity-100' : 'opacity-0')} />
+                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                {option.hint && <span className="shrink-0 text-xs text-muted-foreground">{option.hint}</span>}
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }

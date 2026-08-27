@@ -41,12 +41,12 @@ export interface StarterBloubProfile extends BloubIdentity {
 }
 
 export const STARTER_PERSONA_ROLES: Record<StarterPersonaKey, string> = {
-  nova: '学习教练 · Study Coach',
-  sage: '概念导师 · Concept Tutor',
-  milo: '解题陪练 · Problem Coach',
-  trace: '错因诊断 · Learning Diagnostician',
-  scout: '阅读研究 · Research Guide',
-  forge: '实践导师 · Practice Mentor',
+  nova: '学习规划与协调',
+  sage: '概念导师',
+  milo: '解题陪练',
+  trace: '错因诊断与证据复核',
+  scout: '阅读与资料研究',
+  forge: '实践与项目导师',
 }
 
 /**

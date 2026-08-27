@@ -34,8 +34,7 @@ api.get('/conversations/:id/messages', async (req, res) => {
     // Membership-gated read. Tenant-gate alone used to let any peer in the
     // same workspace pull the full transcript of someone else's DM as long
     // as they knew (or guessed) the conversation id; requireConversationMember
-    // closes that path. The /peek/agent-chats surface intentionally bypasses
-    // membership for fully-agent rooms — see that handler.
+    // closes that path. There is no observer bypass for agent-only rooms.
     const { companyId: tenant } = await requireConversationMember(req, id)
     // Cursor pagination. No params → most recent `limit` messages, sorted
     // ASC (the historical contract). `before=<sequence>` returns the page

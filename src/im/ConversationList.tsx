@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Avatar, AvatarStack } from '@/components/Avatar'
+import { HiveAvatar } from '@/components/HiveAvatar'
 import { PreviewText } from '@/components/PreviewText'
 import { participantRoleZh } from '@/lib/participantRole'
 import { cn } from '@/lib/utils'
@@ -21,10 +22,12 @@ function backfillRosterOnce() {
 
 export function ConversationAvatar({
   conversation,
-  size = 54,
+  size = 48,
+  variant = 'mobile',
 }: {
   conversation: Conversation
   size?: number
+  variant?: 'desktop' | 'mobile'
 }) {
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
@@ -48,11 +51,13 @@ export function ConversationAvatar({
     )
   }
 
-  if (conversation.kind === 'group' || conversation.kind === 'whisper' || members.length > 1) {
+  if (conversation.kind === 'group' || members.length > 1) {
     if (members.length === 0) {
       return <span className="grid shrink-0 place-items-center rounded-full bg-raised text-ink-secondary" style={{ width: size, height: size }}>群</span>
     }
-    return <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} />
+    return variant === 'mobile'
+      ? <HiveAvatar ps={members} size={size} ringColor="var(--panel)" />
+      : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} />
   }
 
   const person = members[0] ?? conversation.members.map((id) => byId[id]).find(Boolean)
@@ -64,12 +69,16 @@ export function ConversationAvatar({
   )
 }
 
-/** Shared content for responsive Web/Desktop conversation rows. */
+/** Shared content for conversation rows. Desktop and mobile keep their own
+ * pointer/gesture wrappers but render the same titles, activity, previews,
+ * mute state and unread semantics. */
 export function ConversationListItemContent({
   conversation,
+  variant = 'desktop',
   selected = false,
 }: {
   conversation: Conversation
+  variant?: 'desktop' | 'mobile'
   selected?: boolean
 }) {
   // Zustand's external-store selector must return a stable snapshot when no
@@ -78,7 +87,7 @@ export function ConversationListItemContent({
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const muted = isMuted(conversation)
-  const roleLabels = conversation.kind === 'direct' || conversation.kind === 'whisper'
+  const roleLabels = conversation.kind === 'direct'
     ? conversation.members
       .map((id) => byId[id])
       .filter((participant): participant is Participant => Boolean(participant && participant.id !== meId && participant.kind === 'agent'))
@@ -89,12 +98,15 @@ export function ConversationListItemContent({
     .filter((id) => id !== meId)
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
+  const isMobile = variant === 'mobile'
+  const isDirectAgent = conversation.kind === 'direct' && conversation.members.some((id) => id !== meId && byId[id]?.kind === 'agent')
+
   return (
     <>
-      <ConversationAvatar conversation={conversation} />
+      <ConversationAvatar conversation={conversation} size={isMobile || !isDirectAgent ? 48 : 54} variant={variant} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
-          {conversation.pinned && <span className={cn('text-[9px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已置顶">◆</span>}
+          {conversation.pinned && !isMobile && <span className={cn('text-[9px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已置顶">◆</span>}
           <span className={cn('truncate text-[16px] font-semibold', selected ? 'text-white' : muted ? 'text-ink-secondary' : 'text-ink')}>
             {conversation.title}
           </span>

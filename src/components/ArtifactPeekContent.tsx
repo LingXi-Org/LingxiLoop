@@ -8,6 +8,9 @@ import { useParticipants } from '@/stores/participants'
 import { IBoard, ICalendar, IClock, IRepeat } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { EventEditor } from '@/components/EventEditor'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
 import type { BoardCard, CalendarEvent, RecurrenceRule } from '@/types'
 
 const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -83,13 +86,9 @@ function PeekHeader({
 
 function PeekLoading({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <div className="h-full bg-cloud grid place-items-center">
-      <div className="flex flex-col items-center gap-3 text-ink-400">
-        <div className="w-12 h-12 rounded-[12px] grid place-items-center bg-sky2-50 text-skype-deep">
-          {icon}
-        </div>
-        <div className="text-[12.5px] font-display italic">{label}</div>
-      </div>
+    <div className="relative h-full bg-cloud">
+      <ResourceSkeleton variant="detail" className="h-full" label={label} />
+      <div className="pointer-events-none absolute left-4 top-4 grid size-10 place-items-center text-skype-deep" aria-hidden>{icon}</div>
     </div>
   )
 }
@@ -431,7 +430,14 @@ export function CalendarEventPeekContent({
             onClick={async () => {
               if (busy) return
               setBusy('run')
-              try { await runEventNow(event.id) } catch (err) { console.warn('runNow failed', err) }
+              try {
+                await toastAction(runEventNow(event.id), {
+                  loading: '正在运行日历任务',
+                  success: '任务已触发',
+                  error: '任务触发失败',
+                  description: event.title || '未命名事件',
+                })
+              } catch (err) { console.warn('runNow failed', err) }
               setBusy(null)
             }}
             disabled={busy !== null}
@@ -447,10 +453,19 @@ export function CalendarEventPeekContent({
           type="button"
           onClick={async () => {
             if (busy) return
-            if (!confirm(`Delete “${event.title || 'Untitled event'}”?`)) return
+            if (!await confirmSensitiveAction({
+              title: '删除日历事件？',
+              description: `“${event.title || '未命名事件'}”将被永久删除。`,
+              confirmLabel: '删除事件',
+              tone: 'destructive',
+            })) return
             setBusy('delete')
             try {
-              await removeEvent(event.id)
+              await toastAction(removeEvent(event.id), {
+                loading: '正在删除事件',
+                success: '事件已删除',
+                error: '删除事件失败',
+              })
               onClose()
             } catch (err) {
               console.warn('delete failed', err)
