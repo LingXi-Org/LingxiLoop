@@ -38,11 +38,15 @@ import { S3Client, PutBucketCorsCommand, GetBucketCorsCommand } from '@aws-sdk/c
 //   - http://localhost:5173 → browser Vite dev (vite.config.ts `port`)
 //   - http://localhost:5180 → Electron dev renderer (electron/main.cjs DEV_URL)
 //   - app://lingxiloop          → packaged Electron (main.cjs loadURL app://lingxiloop/...)
+//   - capacitor://localhost     → iOS Capacitor WebView
+//   - https://localhost         → Android Capacitor WebView
 // Extra origins (prod web, alternate ports, …) come from CLI args.
 const DEFAULT_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5180',
   'app://lingxiloop',
+  'capacitor://localhost',
+  'https://localhost',
 ]
 
 const cliArgs = process.argv.slice(2)
