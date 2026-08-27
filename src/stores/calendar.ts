@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { api, ws, type CalendarEventInput } from '@/api/client'
+import { api, type CalendarEventInput } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import type { CalendarEvent, CalendarEventStatus } from '@/types'
 
 interface CalendarState {

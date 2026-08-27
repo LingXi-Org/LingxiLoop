@@ -4,6 +4,7 @@ import { Avatar } from '@/components/Avatar'
 import { CheckboxField } from '@/components/ui/checkbox-field'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
+import { useUiCommands } from '@/stores/uiCommands'
 import { useAuth } from '@/stores/auth'
 import { useDevtools } from '@/stores/devtools'
 import { useParticipants } from '@/stores/participants'
@@ -139,7 +140,7 @@ function AboutSection() {
         </div>
         <button
           type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent('lingxiloop:open-updater'))}
+          onClick={() => useUiCommands.getState().dispatch('open-updater')}
           className="shrink-0 h-9 px-4 rounded-[8px] text-[13px] font-display transition-colors text-white"
           style={{ background: 'var(--skype)' }}
         >

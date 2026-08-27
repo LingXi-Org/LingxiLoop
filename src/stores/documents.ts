@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { api, ws, type ApiDocument } from '@/api/client'
+import { api, type ApiDocument } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 
 interface DocumentsState {
   list: ApiDocument[]

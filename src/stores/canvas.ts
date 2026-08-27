@@ -1,9 +1,11 @@
 import { create } from 'zustand'
-import { api, type WsEvent, ws } from '@/api/client'
+import { api, type WsEvent } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import { findCanvasPlacement } from '@/lib/canvasLayout'
 import { mergeCanvasActivities } from '@/lib/canvasEvents'
 import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from '@/lib/canvasRealtime'
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import type {
   CanvasFrame,
   CanvasFrameType,
@@ -379,7 +381,7 @@ ws.on((event) => {
       void useCanvas.getState().loadWorkspaces(event.conversationId)
       const app = useApp.getState()
       if (window.innerWidth >= 768 && app.view === 'conversations' && app.selectedConversationId === event.conversationId) {
-        app.openCanvasPeek(event.canvasId)
+        useSurface.getState().openCanvasPeek(event.canvasId)
         void useCanvas.getState().load(event.canvasId)
       }
     }

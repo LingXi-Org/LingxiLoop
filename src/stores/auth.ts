@@ -59,7 +59,7 @@ export const useAuth = create<AuthState>((set) => ({
     set({ token, user, activeCompanyId: companyId, ready: true })
     // Fresh auth → rebind the WS connection so it carries the new
     // session's ticket instead of staying on whatever it had before.
-    void import('@/api/client').then(({ ws }) => ws.reconnect())
+    void import('@/api/core/realtime').then(({ ws }) => ws.reconnect())
   },
   setMe(user, companies, activeCompanyId) {
     // Honour a previously-chosen company if it's still in the user's set.
@@ -84,7 +84,7 @@ export const useAuth = create<AuthState>((set) => ({
     // by company-membership which is the same regardless of "active"
     // company, but logging in / switching identities should still rebind
     // — and this is the natural place to handle it.
-    void import('@/api/client').then(({ ws }) => ws.reconnect())
+    void import('@/api/core/realtime').then(({ ws }) => ws.reconnect())
     // Wipe library stores so the Library tab doesn't briefly render the
     // previous workspace's documents / boards / calendar before the
     // next listXXX() lands. These stores are global singletons that
@@ -120,7 +120,7 @@ export const useAuth = create<AuthState>((set) => ({
     // linger; clear them so the next sign-in doesn't briefly render a
     // dead URL.createObjectURL pointing at a freed blob.
     void import('@/lib/avatarCache').then(({ clearAvatarCache }) => clearAvatarCache())
-    void import('@/api/client').then(({ ws }) => ws.close())
+    void import('@/api/core/realtime').then(({ ws }) => ws.close())
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([
       import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),

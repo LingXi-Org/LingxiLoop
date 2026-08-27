@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { type ApiMessage, api, type WsEvent, ws } from '@/api/client'
+import { type ApiMessage, api, type WsEvent } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import {
   ACTIVE_STREAM_EXPIRY_MS,
   hasBroadcastMention,

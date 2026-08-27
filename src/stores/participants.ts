@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { type ApiParticipant, api, ws } from '@/api/client'
+import { type ApiParticipant, api } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import { clearAvatarCache, invalidateAvatar } from '@/lib/avatarCache'
 import type { Participant, Status } from '@/types'
 

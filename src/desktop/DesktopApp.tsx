@@ -5,6 +5,8 @@ import { EmailComposer } from '@/components/EmailComposer'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
+import { useUiCommands } from '@/stores/uiCommands'
 import { useConversations } from '@/stores/conversations'
 import { useTheme } from '@/stores/theme'
 import type { ViewKey } from '@/types'
@@ -144,13 +146,15 @@ function CanvasContext({ canvasId, onClose }: { canvasId: string; onClose: () =>
 export function DesktopApp() {
   const theme = useTheme((state) => state.theme)
   const view = useApp((state) => state.view)
-  const infoParticipantId = useApp((state) => state.infoAgentId)
-  const openThread = useApp((state) => state.openThread)
-  const documentId = useApp((state) => state.openDocumentId)
-  const boardId = useApp((state) => state.openBoardId)
-  const calendarEventId = useApp((state) => state.openCalendarEventId)
-  const canvasId = useApp((state) => state.openCanvasId)
-  const closeCanvasPeek = useApp((state) => state.closeCanvasPeek)
+  const surface = useSurface((state) => state.surface)
+  const closeSurface = useSurface((state) => state.closeSurface)
+  const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
+  const openThread = surface?.kind === 'thread' ? surface : null
+  const documentId = surface?.kind === 'document' ? surface.documentId : null
+  const boardId = surface?.kind === 'board' ? surface.boardId : null
+  const calendarEventId = surface?.kind === 'calendar' ? surface.eventId : null
+  const canvasId = surface?.kind === 'canvas' ? surface.canvasId : null
+  const closeCanvasPeek = useSurface((state) => state.closeCanvasPeek)
   const settingsOpen = view === 'me'
   const managementOpen = view === 'management'
   const workspaceContextOpen = view !== 'conversations' && !settingsOpen && !managementOpen
@@ -330,7 +334,7 @@ export function DesktopApp() {
       if (!action) return
       if (action.id === 'palette') { event.preventDefault(); setCommandPaletteOpen(true); return }
       if (action.id === 'find-chat') {
-        if (view === 'conversations' && selectedConversationId) { event.preventDefault(); window.dispatchEvent(new Event('lingxiloop:find-chat')) }
+        if (view === 'conversations' && selectedConversationId) { event.preventDefault(); useUiCommands.getState().dispatch('find-chat') }
         return
       }
       const visible = useConversations.getState().list.filter((item) => item.kind !== 'whisper')
@@ -359,13 +363,8 @@ export function DesktopApp() {
   else if (workspaceContextOpen) context = <WorkspaceContext view={view} />
 
   const closeDetailPanel = () => {
-    const app = useApp.getState()
-    if (infoParticipantId) app.closeAgentInfo()
-    else if (openThread) app.closeThreadView()
-    else if (documentId) app.closeDocumentPeek()
-    else if (boardId) app.closeBoardPeek()
-    else if (calendarEventId) app.closeCalendarEventPeek()
-    else if (workspaceContextOpen) app.setView('conversations')
+    if (surface) closeSurface()
+    else if (workspaceContextOpen) useApp.getState().setView('conversations')
     else setGroupPanelOpen(false)
   }
 

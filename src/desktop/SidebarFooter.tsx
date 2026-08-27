@@ -14,6 +14,7 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
+import { useUiCommands } from '@/stores/uiCommands'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
@@ -205,7 +206,7 @@ export function SidebarFooter() {
           )}
           <div className="grok-account-section">
             <ThemeToggle showLabel className="grok-account-menu-row" onToggle={() => setOpenPanel(null)} />
-            <button type="button" className="grok-account-menu-row" onClick={() => { window.dispatchEvent(new Event('lingxiloop:open-updater')); setOpenPanel(null) }}>
+            <button type="button" className="grok-account-menu-row" onClick={() => { useUiCommands.getState().dispatch('open-updater'); setOpenPanel(null) }}>
               <IconRefresh size={17} strokeWidth={1.65} /><span>检查更新</span>
             </button>
           </div>

@@ -10,7 +10,8 @@
  * has no notion of it.
  */
 import { create } from 'zustand'
-import { api, ws, type ApiWhisper, type ApiWhisperMessage } from '@/api/client'
+import { api, type ApiWhisper, type ApiWhisperMessage } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 
 export interface WhispersState {
   list: ApiWhisper[]

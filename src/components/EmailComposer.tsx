@@ -22,6 +22,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '@/api/client'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
+import { useEmailComposer } from '@/stores/emailComposer'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
 import { useMessages } from '@/stores/messages'
@@ -183,8 +184,8 @@ function PillField({
 }
 
 export function EmailComposer() {
-  const compose = useApp((s) => s.composeEmail)
-  const close = useApp((s) => s.closeCompose)
+  const compose = useEmailComposer((s) => s.composition)
+  const close = useEmailComposer((s) => s.closeCompose)
   const select = useApp((s) => s.selectConversation)
   const setView = useApp((s) => s.setView)
   const byId = useParticipants((s) => s.byId)

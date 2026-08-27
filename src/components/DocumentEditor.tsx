@@ -16,7 +16,8 @@ import { openDocument, type YDocSession } from '@/lib/yjsClient'
 import { buildMentionExtension } from '@/lib/mentionExtension'
 import { useDocuments } from '@/stores/documents'
 import { useAuth } from '@/stores/auth'
-import { api, ws } from '@/api/client'
+import { api } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import { cn } from '@/lib/utils'
 import {
   IBold, IItalic, IStrike, IH1, IH2, IH3,

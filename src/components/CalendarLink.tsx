@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useCalendar } from '@/stores/calendar'
 import { useResolvedCalendarId } from '@/lib/useArtifactId'
 import { ICalendar } from './icons'
@@ -9,7 +10,7 @@ export function CalendarLink({ id: rawId }: { id: string }) {
   const id = useResolvedCalendarId(rawId)
   const setView = useApp((s) => s.setView)
   const view = useApp((s) => s.view)
-  const openCalendarEventPeek = useApp((s) => s.openCalendarEventPeek)
+  const openCalendarEventPeek = useSurface((s) => s.openCalendarEventPeek)
   const loadingEventId = useCalendar((s) => s.loadingEventId)
   const loadEvent = useCalendar((s) => s.loadEvent)
   const event = useCalendar((s) => s.events.find((e) => e.id === id) ?? null)

@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useDocuments } from '@/stores/documents'
 import { DocumentEditor } from '@/components/DocumentEditor'
 import { IDoc } from '@/components/icons'
 
 export function DocumentPeekPane() {
-  const documentId = useApp((s) => s.openDocumentId)
-  const closeDocumentPeek = useApp((s) => s.closeDocumentPeek)
+  const documentId = useSurface((s) => s.surface?.kind === 'document' ? s.surface.documentId : null)
+  const closeDocumentPeek = useSurface((s) => s.closeDocumentPeek)
   const setView = useApp((s) => s.setView)
   const list = useDocuments((s) => s.list)
   const loaded = useDocuments((s) => s.loaded)

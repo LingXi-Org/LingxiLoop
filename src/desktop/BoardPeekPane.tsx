@@ -1,11 +1,13 @@
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useBoards } from '@/stores/boards'
 import { BoardPeekContent } from '@/components/ArtifactPeekContent'
 
 export function BoardPeekPane() {
-  const boardId = useApp((s) => s.openBoardId)
-  const cardId = useApp((s) => s.openBoardCardId)
-  const closeBoardPeek = useApp((s) => s.closeBoardPeek)
+  const board = useSurface((s) => s.surface?.kind === 'board' ? s.surface : null)
+  const boardId = board?.boardId ?? null
+  const cardId = board?.cardId ?? null
+  const closeBoardPeek = useSurface((s) => s.closeBoardPeek)
   const setView = useApp((s) => s.setView)
   const selectBoard = useBoards((s) => s.selectBoard)
 

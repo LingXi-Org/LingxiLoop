@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { api, ws } from '@/api/client'
+import { api } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import type {
   BoardSummary, BoardSnapshot, BoardCard, BoardCardComment, BoardCardLookup,
 } from '@/types'

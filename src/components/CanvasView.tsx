@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { ws } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 import { AvatarMini } from '@/components/Avatar'
 import { CanvasFrameContent } from '@/components/CanvasFrameContent'
 import { IAt, IBack, IPlus, ISend, ITrash } from '@/components/icons'

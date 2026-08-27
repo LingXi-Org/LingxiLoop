@@ -13,7 +13,8 @@
  */
 import * as Y from 'yjs'
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate, removeAwarenessStates } from 'y-protocols/awareness'
-import { ws, type WsEvent } from '@/api/client'
+import type { WsEvent } from '@/api/client'
+import { ws } from '@/api/core/realtime'
 
 function bytesToB64(bytes: Uint8Array): string {
   let binary = ''
