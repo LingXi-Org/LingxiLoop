@@ -4,6 +4,9 @@ import test from 'node:test'
 
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const bootstrap = readFileSync(new URL('../db/bootstrap.ts', import.meta.url), 'utf8')
+const serverBoot = readFileSync(new URL('../index.ts', import.meta.url), 'utf8')
+const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.url), 'utf8')
+const onboarding = readFileSync(new URL('../onboardCompany.ts', import.meta.url), 'utf8')
 
 test('v1 schema is a complete bootstrap definition without historical data mutations', () => {
   for (const table of [
@@ -42,4 +45,10 @@ test('bootstrap rejects non-empty schemas instead of upgrading them', () => {
     .replace(/^\s*\/\/.*$/gm, '')
   assert.match(bootstrap, /requires an empty schema/)
   assert.doesNotMatch(executableBootstrap, /advisory|backfill|lock_timeout|ALTER TABLE/i)
+})
+
+test('runtime startup contains no historical data backfill path', () => {
+  const runtime = `${serverBoot}\n${embeddings}\n${onboarding}`
+  assert.doesNotMatch(runtime, /backfill(?:StarterAgents|HumanGravatars|MemoryEmbeddings)/)
+  assert.doesNotMatch(serverBoot, /embed:backfill|before Gravatar wiring|predating this commit/)
 })
