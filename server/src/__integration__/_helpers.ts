@@ -26,9 +26,9 @@ export function ensureSchemaOnce(): Promise<void> {
   return schemaReady
 }
 
-/** Tables we wipe between tests. Order matters when there are FK
- *  constraints; CASCADE on the parents handles it but listing explicitly
- *  keeps the intent visible + lets us spot-check leakage. */
+/** Tables we wipe between tests. Keeping the list explicit makes fixture
+ *  ownership visible; one statement lets PostgreSQL resolve dependencies and
+ *  perform a single durability sync instead of one sync per table. */
 const TABLES_TO_WIPE: readonly string[] = [
   'eval_stage_results',
   'eval_cases',
@@ -104,9 +104,7 @@ export async function resetAllTables(): Promise<void> {
     throw new Error(`refusing to TRUNCATE — DATABASE_URL doesn't look like a test DB: ${env.DATABASE_URL}`)
   }
   await ensureSchemaOnce()
-  for (const t of TABLES_TO_WIPE) {
-    await pool.query(`TRUNCATE TABLE ${t} CASCADE`).catch(() => { /* table may not exist on partial schemas */ })
-  }
+  await pool.query(`TRUNCATE TABLE ${TABLES_TO_WIPE.join(', ')} CASCADE`)
 }
 
 /** Compute the HMAC signature the inbound webhook expects. Mirrors the

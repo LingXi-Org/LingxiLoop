@@ -5066,6 +5066,10 @@ ALTER TABLE ONLY public.ws_tickets
     ADD CONSTRAINT ws_tickets_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
+-- Written last so a failed or partial bootstrap is never accepted as v1.
+COMMENT ON SCHEMA public IS 'LingxiLoop schema v1';
+
+
 --
 -- PostgreSQL database dump complete
 --

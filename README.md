@@ -50,17 +50,18 @@ npm run agent-os:start
 ```
 
 For the packaged MVP topology, copy `.env.example` to `.env`, provide the
-required secrets, and bootstrap a new empty database once before starting the
-runtime:
+required secrets, and start the runtime:
 
 ```powershell
-docker compose -f docker-compose.mvp.yml run --rm db-bootstrap
 npm run mvp:up
 ```
 
 Compose pulls the `mvp` GHCR packages through
 `accel.way2api.fun/ghcr.io` by default—nothing is built locally—and waits for
-the LingxiLoop Web, background Worker, Agent OS and WuKongIM stack to start. API port
+the v1 database bootstrap to complete before starting the LingxiLoop Web,
+background Worker, Agent OS and WuKongIM stack. Re-running Compose accepts the already-complete v1
+schema, while an unmarked pre-v1 or partial schema is rejected and must be
+dropped and recreated. API port
 5181 and WuKong WebSocket port 5200 bind to `0.0.0.0` by default for mobile
 clients; use TLS and override the bind addresses for public deployments.
 Packaged services default to warning-level, size-rotated logs. Canvas state is
@@ -94,12 +95,12 @@ are pinned to commit `c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47`; production must
 verified immutable image digest. Its management API remains private, while the
 TLS client endpoint is published by the deployment proxy.
 
-LingxiLoop v1 intentionally has no database upgrade path. Initialize an empty
-PostgreSQL database once with `npm run db:bootstrap`; existing development
-databases must be dropped and recreated. Web Server startup never executes DDL.
-Web and Worker run from the same immutable server image as independently
-restartable/scalable services; changing Web replica count never creates more
-scheduler, retry, sweeper or GC loops.
+LingxiLoop v1 intentionally has no database upgrade path. For PostgreSQL not
+managed by the supplied Compose files, initialize an empty database with
+`npm run db:bootstrap`; existing development databases must be dropped and
+recreated. Web and Worker startup never executes DDL. They run from the same
+immutable server image as independently restartable/scalable services; changing
+Web replica count never creates more scheduler, retry, sweeper or GC loops.
 
 ## Repository map
 

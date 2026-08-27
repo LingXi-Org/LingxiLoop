@@ -7,6 +7,11 @@ const bootstrap = readFileSync(new URL('../db/bootstrap.ts', import.meta.url), '
 const serverBoot = readFileSync(new URL('../index.ts', import.meta.url), 'utf8')
 const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.url), 'utf8')
 const onboarding = readFileSync(new URL('../onboardCompany.ts', import.meta.url), 'utf8')
+const composeFiles = [
+  '../../../docker-compose.mvp.ci.yml',
+  '../../../docker-compose.mvp.yml',
+  '../../../docker-compose.production.yml',
+].map((path) => readFileSync(new URL(path, import.meta.url), 'utf8').replaceAll('\r\n', '\n'))
 
 test('v1 schema is a complete bootstrap definition without historical data mutations', () => {
   for (const table of [
@@ -39,12 +44,26 @@ test('v1 defaults preserve current capability and Canvas contracts', () => {
   assert.match(schema, /CREATE TABLE public\.canvases \([\s\S]*?conversation_id text,/)
 })
 
-test('bootstrap rejects non-empty schemas instead of upgrading them', () => {
+test('bootstrap only reuses a complete marked v1 schema and rejects every unmarked non-empty schema', () => {
   const executableBootstrap = bootstrap
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/^\s*\/\/.*$/gm, '')
   assert.match(bootstrap, /requires an empty schema/)
+  assert.match(schema, /COMMENT ON SCHEMA public IS 'LingxiLoop schema v1';/)
+  assert.match(executableBootstrap, /schemaMarker\(client\)[\s\S]*V1_SCHEMA_MARKER/)
   assert.doesNotMatch(executableBootstrap, /advisory|backfill|lock_timeout|ALTER TABLE/i)
+})
+
+test('every Compose runtime gates Web startup on the v1 bootstrap service', () => {
+  for (const compose of composeFiles) {
+    const bootstrapService = compose.match(/\n {2}db-bootstrap:\n([\s\S]*?)(?=\n {2}[\w-]+:\n)/)?.[1] ?? ''
+    assert.match(bootstrapService, /command: \["npm", "run", "db:bootstrap"\]/)
+    assert.doesNotMatch(bootstrapService, /profiles:/)
+    assert.match(
+      compose,
+      /\n {2}lingxiloop:\n[\s\S]*?depends_on:\n[\s\S]*?db-bootstrap:\n {8}condition: service_completed_successfully/,
+    )
+  }
 })
 
 test('runtime startup contains no historical data backfill path', () => {

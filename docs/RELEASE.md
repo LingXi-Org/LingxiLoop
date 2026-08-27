@@ -16,16 +16,28 @@ and deployment scripts.
 
 LingxiLoop v1 requires an empty PostgreSQL database. The release has no schema
 upgrade, compatibility ALTER, or data backfill path: discard pre-v1 development
-databases, create a new database, then run `npm run db:bootstrap` exactly once.
-Seed data is created separately by the background Worker after the schema exists.
+databases and create a new database. For an external database, run
+`npm run db:bootstrap`; the supplied Compose topology runs the same bootstrap
+before Web startup. Seed data is created separately by the background Worker
+after the schema exists.
 
-For a new environment, operators run the Compose `db-bootstrap` tool once before
-starting WuKongIM, Web, Worker, and Agent OS, then verify `/api/meta`, dependency health,
-authenticated channel access and the release version. Web, Worker, and Agent OS
-processes never execute DDL. Web and Worker use the same server image but have
-separate Compose services, commands, restart policies, and replica counts.
-Rollback recreates an empty v1 database and deploys
-the previous digest manifest; it does not attempt an in-place schema downgrade.
+For a new environment, the Compose `db-bootstrap` service creates the schema
+before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
+the complete marked v1 schema; an unmarked or partial database fails closed.
+Operators then verify `/api/meta`, dependency health, authenticated channel
+access and the release version. Web, Worker, and Agent OS processes never
+execute DDL. Web and Worker use the same server image but have separate Compose
+services, commands, restart policies, and replica counts. Rollback reuses the
+complete v1 schema with the previous digest manifest; it does not attempt an
+in-place schema downgrade.
+
+When all four core `R2_*` secrets are configured, the production deployment
+also reconciles the bucket CORS policy before application cutover. The
+deployment image applies the policy and reads it back, requiring presigned
+`PUT` permission for the production web origin plus Electron, iOS
+(`capacitor://localhost`), and Android (`https://localhost`) renderer origins.
+Partial R2 configuration or a failed readback aborts the deployment. Operators
+can add comma-separated origins with `R2_CORS_EXTRA_ORIGINS` in `.env.secrets`.
 
 Desktop artifacts contain only the renderer and Electron shell. Package
 verification rejects server/runtime source and environment files.

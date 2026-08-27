@@ -118,7 +118,6 @@ services:
       context: .
       dockerfile: server/docker/lingxiloop-server.Dockerfile
     restart: "no"
-    profiles: [tools]
     command: ["npm", "run", "db:bootstrap"]
     depends_on:
       postgres:
@@ -141,6 +140,8 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     environment: &lingxiloop-environment
       NODE_ENV: production
       LINGXILOOP_LOG_LEVEL: warn

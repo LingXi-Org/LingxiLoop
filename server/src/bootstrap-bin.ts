@@ -5,8 +5,8 @@ import { pool } from './db/pool.js'
 async function main(): Promise<void> {
   const startedAt = Date.now()
   try {
-    await bootstrapV1Schema()
-    console.log(`[db:bootstrap] LingxiLoop v1 schema created · ${Date.now() - startedAt}ms`)
+    const result = await bootstrapV1Schema()
+    console.log(`[db:bootstrap] LingxiLoop v1 schema ${result === 'created' ? 'created' : 'already ready'} · ${Date.now() - startedAt}ms`)
   } finally {
     await pool.end()
   }

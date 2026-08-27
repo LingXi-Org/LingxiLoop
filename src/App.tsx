@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { AdminApp } from '@/admin/AdminApp'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
 import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
 import { api } from '@/api/client'
@@ -12,14 +11,10 @@ import {
   InviteAcceptScreen,
 } from '@/components/InviteAcceptScreen'
 import { NotificationToasts } from '@/components/NotificationToasts'
-import { NotificationWindow } from '@/components/NotificationWindow'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
-import { DesktopApp } from '@/desktop/DesktopApp'
 import { seedMockIm } from '@/dev/mockIm'
 import { isMockImDevelopment } from '@/lib/devMode'
-import { isNotificationWindow } from '@/lib/runtime'
 import { useIsMobile } from '@/lib/utils'
-import { MobileApp } from '@/mobile/MobileApp'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
@@ -27,7 +22,14 @@ import { bootMessagesStream, useMessages } from '@/stores/messages'
 import { bootParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
 import { bootWhispers, useWhispers } from '@/stores/whispers'
-import '@/admin/admin.css'
+
+const AdminApp = lazy(() => import('@/admin/AdminApp').then((module) => ({ default: module.AdminApp })))
+const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
+const MobileApp = lazy(() => import('@/mobile/MobileApp').then((module) => ({ default: module.MobileApp })))
+
+function SurfaceFallback() {
+  return <div className="fixed inset-0 grid place-items-center text-sm text-ink-400">Loading…</div>
+}
 
 /** True iff this browser tab is for the admin panel. An optional `admin.*`
  *  hostname or the `/admin` path prefix triggers it. We check both so dev can hit
@@ -95,7 +97,9 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
 
   return (
     <>
-      {isMobile ? <MobileApp /> : <DesktopApp />}
+      <Suspense fallback={<SurfaceFallback />}>
+        {isMobile ? <MobileApp /> : <DesktopApp />}
+      </Suspense>
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}
@@ -107,12 +111,6 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
 }
 
 export function App() {
-  // The Electron notification BrowserWindow loads this same React bundle
-  // with a `#notifications` hash. Bypass everything else (auth, stores,
-  // routing) and just render the toast stack — it receives payloads over
-  // IPC from the main window.
-  if (isNotificationWindow) return <NotificationWindow />
-
   // Local Vite development opens straight into a deterministic IM workspace.
   // `?api=1` remains available for explicitly testing the real auth/API stack.
   if (isMockImDevelopment() && !isAdminContext()) {
@@ -178,7 +176,7 @@ export function App() {
     return (
       <AuthGate>
         <ErrorBoundary>
-          <AdminApp />
+          <Suspense fallback={<SurfaceFallback />}><AdminApp /></Suspense>
         </ErrorBoundary>
       </AuthGate>
     )

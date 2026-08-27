@@ -130,7 +130,6 @@ services:
 
   db-bootstrap:
     <<: *lingxiloop-runtime
-    profiles: [tools]
     restart: "no"
     command: ["npm", "run", "db:bootstrap"]
     depends_on:
@@ -138,6 +137,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  # Deployment-only reconciler. When R2 is configured, deploy-production.sh
+  # runs this before the application cutover and the script reads the bucket
+  # policy back, failing the deployment if mobile WebView PUT origins are absent.
+  r2-cors:
+    <<: *lingxiloop-runtime
+    profiles: [tools]
+    restart: "no"
+    command: ["node", "server/scripts/r2-cors.mjs"]
 
   lingxiloop:
     <<: *lingxiloop-runtime
@@ -151,6 +159,8 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:5181:5181"
     volumes:
