@@ -892,6 +892,19 @@ body {
   container-type: inline-size;
 }
 
+.desktop-openmaus .server-rail {
+  border-color: var(--im-divider);
+  background: color-mix(in srgb, var(--im-nav-surface) 88%, var(--app));
+}
+
+.desktop-openmaus .server-rail-scroll {
+  scrollbar-width: none;
+}
+
+.desktop-openmaus .server-rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* Grok-inspired sidebar footer. The reference groups Projects, Settings and
    the signed-in identity into quiet full-width rows instead of a boxed dock. */
 .grok-sidebar-footer {

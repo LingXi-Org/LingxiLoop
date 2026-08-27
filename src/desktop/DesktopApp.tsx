@@ -33,6 +33,7 @@ import { DocumentPeekPane } from './DocumentPeekPane'
 import { DocumentsView } from './DocumentsView'
 import { InfoPane } from './InfoPane'
 import { MeView } from './MeView'
+import { ServerRail } from './ServerRail'
 import { ThreadDrawer } from './ThreadDrawer'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 
@@ -161,11 +162,12 @@ export function DesktopApp() {
   }
 
   return (
-    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-col overflow-hidden bg-app" data-electron={isElectron ? 'true' : 'false'} data-platform={platform}>
+    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-app" data-electron={isElectron ? 'true' : 'false'} data-platform={platform}>
+      <ServerRail />
       <ResizablePanelGroup
         id="desktop-two-panel-layout"
         orientation="horizontal"
-        className="desktop-im-grid min-h-0 flex-1"
+        className="desktop-im-grid min-h-0 min-w-0 flex-1"
         defaultLayout={defaultLayout}
         onLayoutChanged={(layout, meta) => { if (meta.isUserInteraction) persistPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, layout) }}
       >

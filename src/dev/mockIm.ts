@@ -43,7 +43,11 @@ export function seedMockIm(): void {
   useAuth.setState({
     token: 'local-mock-token',
     user: { id: MOCK_USER_ID, name: '林曦', email: 'dev@localhost', emailVerified: true },
-    companies: [{ id: 'mock-workspace', name: 'LingxiLoop 本地学习空间', slug: 'local-learning', role: 'owner', tier: 'max' }],
+    companies: [
+      { id: 'mock-workspace', name: '林曦的工作区', slug: 'local-learning', role: 'owner', tier: 'max' },
+      { id: 'mock-linear-algebra-course', name: '线性代数进阶班', slug: 'linear-algebra-course', role: 'member', tier: 'pro' },
+      { id: 'mock-ai-seminar', name: 'AI 产品研究课', slug: 'ai-seminar', role: 'member', tier: 'pro' },
+    ],
     activeCompanyId: 'mock-workspace',
     ready: true,
     serverCapabilities: null,
