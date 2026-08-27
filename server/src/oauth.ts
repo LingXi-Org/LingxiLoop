@@ -39,6 +39,7 @@ import { storage } from './storage.js'
 import { provisionUser as provisionSub2apiUser, sub2apiConfigured } from './sub2api.js'
 import { isWaitlistEnabled, enqueueWaitlist, isAllowlistedAdmin } from './admin.js'
 import { discoverOidc, normalizeOidcProfile, type OidcProfile } from './oidc.js'
+import { isAllowedReturnUrl } from './oauth-return-url.js'
 
 export type Provider = 'lingxi' | 'google' | 'github' | 'apple'
 
@@ -114,14 +115,10 @@ interface StateData {
 }
 
 /** Validate a client-supplied return URL against the configured allow-list.
- *  Without this we'd have an open redirect: an attacker could craft a
- *  provider-callback chain that delivers the user's token to any origin
- *  via the fragment. The check is a strict-prefix match so subpaths are
- *  fine (`http://localhost:5180/anything`) but origin spoofs aren't
- *  (`http://evil.com?https://loop.example.com/`). */
+ *  Parsed URL components are compared so serialized-prefix tricks cannot
+ *  spoof an allowed host, port, custom-scheme callback, or path boundary. */
 export function returnUrlAllowed(url: string): boolean {
-  if (!url) return false
-  return env.AUTH_RETURN_ALLOWLIST.some((prefix) => url.startsWith(prefix))
+  return isAllowedReturnUrl(url, env.AUTH_RETURN_ALLOWLIST)
 }
 
 /** Mint a state token, save it + the requested return URL + optional invite

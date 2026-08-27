@@ -16,6 +16,7 @@ import { Keyboard } from '@capacitor/keyboard'
 import { SplashScreen } from '@capacitor/splash-screen'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { registerPlugin } from '@capacitor/core'
+import { armNativeOAuth, consumeNativeOAuthCallback } from './nativeOAuthState'
 
 /**
  * iOS-only bridge to `ASWebAuthenticationSession` — Apple's dedicated
@@ -188,25 +189,32 @@ async function handleDeepLink(rawUrl: string): Promise<void> {
     // pathname `//auth`), so the host-based check silently missed and the OAuth
     // token was dropped on Android. The string match is parser-independent.
     if (/^lingxiloop:\/\/auth(?:[/?#]|$)/i.test(rawUrl)) {
-      // Pull the fragment (or a query-shaped token) straight out of the raw
-      // URL so we don't depend on the parser splitting host vs path correctly.
-      const hashIdx = rawUrl.indexOf('#')
-      const qIdx = rawUrl.indexOf('?')
-      const hash = hashIdx >= 0
-        ? rawUrl.slice(hashIdx)
-        : (qIdx >= 0 ? `#${rawUrl.slice(qIdx + 1)}` : '')
-      console.log('[native] OAuth deep link, hash=', hash)
-      if (hash) {
-        history.replaceState(null, '', location.pathname + location.search + hash)
-        window.dispatchEvent(new CustomEvent('lingxiloop:oauth-token', { detail: hash }))
-      }
-      await Browser.close().catch(() => undefined)
+      await handleNativeOAuthCallback(rawUrl)
       return
     }
     window.dispatchEvent(new CustomEvent('lingxiloop:deep-link', { detail: rawUrl }))
   } catch (err) {
     console.warn('[native] deep-link parse failed', rawUrl, err)
   }
+}
+
+/** Arm a mobile OAuth attempt and return the nonce to include in its return URL. */
+export function armNativeOAuthHandoff(): string {
+  return armNativeOAuth()
+}
+
+/** Accept a native OAuth callback only when it matches the armed attempt. */
+export async function handleNativeOAuthCallback(rawUrl: string): Promise<boolean> {
+  const callback = consumeNativeOAuthCallback(rawUrl)
+  if (!callback) {
+    console.warn('[native] dropped OAuth callback without a matching login nonce')
+    await Browser.close().catch(() => undefined)
+    return false
+  }
+  history.replaceState(null, '', location.pathname + location.search + callback.hash)
+  window.dispatchEvent(new CustomEvent('lingxiloop:oauth-token', { detail: callback.hash }))
+  await Browser.close().catch(() => undefined)
+  return true
 }
 
 /**

@@ -566,7 +566,7 @@ const NOTIF_MARGIN_TOP = 24
 
 function notificationUrl() {
   if (isDev) return `${DEV_URL}/#notifications`
-  return `file://${path.join(__dirname, '..', 'dist', 'index.html')}#notifications`
+  return 'app://lingxiloop/index.html#notifications'
 }
 
 function positionNotificationWindow() {

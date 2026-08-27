@@ -154,8 +154,8 @@ export const env = {
   /** Allow-list of return URLs the client may pass via /auth/start
    *  `?return=...`. Without this we'd have an open-redirect: any
    *  attacker could craft a malicious provider-callback chain that
-   *  delivers the user's token to a foreign origin. A return URL is
-   *  accepted iff it startsWith one of these prefixes. Comma-separated.
+   *  delivers the user's token to a foreign origin. Entries are matched by
+   *  parsed scheme, host, effective port, and path boundary. Comma-separated.
    *  Common values:
    *    lingxiloop://auth                       (packaged Electron deep link)
    *    http://localhost:5173/              (Vite dev renderer)
