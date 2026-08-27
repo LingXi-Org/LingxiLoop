@@ -128,11 +128,11 @@ services:
     networks: [lingxiloop]
     logging: *quiet-logging
 
-  migrate:
+  db-bootstrap:
     <<: *lingxiloop-runtime
     profiles: [tools]
     restart: "no"
-    command: ["npm", "run", "migrate"]
+    command: ["npm", "run", "db:bootstrap"]
     depends_on:
       postgres:
         condition: service_healthy

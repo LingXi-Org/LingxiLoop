@@ -2,7 +2,7 @@
  * Postgres-backed ledger for communication-action idempotency (issue #7).
  *
  * Read the header comment on `agent_action_executions` in
- * `server/src/db/migrate.ts` first: this ledger gives replay detection +
+ * `server/src/db/schema.sql` first: this ledger gives replay detection +
  * observability, but is NOT by itself the exactly-once guarantee — a
  * process crash between "claimed" and "marked succeeded" leaves a
  * `pending` row that a retry is allowed to reclaim and re-execute. The

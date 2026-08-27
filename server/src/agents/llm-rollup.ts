@@ -29,7 +29,7 @@ import { pool } from '../db/pool.js'
  *  straight from process.env (not env.ts) to keep this self-contained. */
 const INTERVAL_MS = Number(process.env.LLM_ROLLUP_INTERVAL_MS ?? 120_000)
 
-// Distinct from migrate's SCHEMA_LOCK_KEY (7_643_178_926_104n).
+// Dedicated to rollup ownership; schema bootstrap does not use advisory locks.
 const ROLLUP_LOCK_KEY = 7_643_178_926_211n
 
 // Steady-state trailing window: the current partial hour plus slack for clock

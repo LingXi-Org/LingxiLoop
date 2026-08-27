@@ -5,7 +5,6 @@ import { WebSocket, type RawData } from 'ws'
 import * as Y from 'yjs'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
 import { createWsTicket } from '../auth.js'
-import { ensureSchema } from '../db/migrate.js'
 import { pool } from '../db/pool.js'
 import { applyLocalUpdate } from '../documents/rooms.js'
 import { attachWebSocket } from '../ws.js'
@@ -80,41 +79,6 @@ async function inviteAndAccept(courseId: string, role: 'teacher' | 'learner', co
   assert.equal(accepted.status, 200, acceptedRaw)
   return invitation
 }
-
-test('[integration] legacy Projects migrate to one idempotent Course and Study Room', async () => {
-  await pool.query(`DELETE FROM course_schema_cutovers WHERE id='course-model-v1'`)
-  await seedCompany('co-legacy')
-  await pool.query(
-    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
-     VALUES ('legacy-project','co-legacy','Legacy Biology','','#123456',$1,FALSE)`, [OWNER],
-  )
-  await pool.query(
-    `INSERT INTO company_members (company_id,user_id,role) VALUES ('co-legacy',$1,'member')`, [LEARNER],
-  )
-  await pool.query(
-    `INSERT INTO participants (id,company_id,kind,name,initial,avatar_bg,status)
-     VALUES ($1,'co-legacy','human','Learner','L','#aaa','avail')`, [LEARNER],
-  )
-
-  await ensureSchema()
-  const course = await pool.query<{ id: string; study_room_conversation_id: string }>(
-    `SELECT id,study_room_conversation_id FROM courses WHERE project_id='legacy-project'`,
-  )
-  assert.equal(course.rowCount, 1)
-  const roles = await pool.query<{ user_id: string; role: string }>(
-    `SELECT user_id,role FROM course_members WHERE course_id=$1 ORDER BY user_id`, [course.rows[0].id],
-  )
-  assert.deepEqual(new Map(roles.rows.map((row) => [row.user_id, row.role])), new Map([[LEARNER, 'learner'], [OWNER, 'teacher']]))
-  assert.match(course.rows[0].study_room_conversation_id, /^course-room-/)
-  assert.equal((await pool.query(`SELECT 1 FROM conversations WHERE id=$1 AND project_id='legacy-project'`, [course.rows[0].study_room_conversation_id])).rowCount, 1)
-
-  await pool.query(`DELETE FROM course_members WHERE course_id=$1 AND user_id=$2`, [course.rows[0].id, LEARNER])
-  await ensureSchema()
-  assert.equal((await pool.query(
-    `SELECT 1 FROM course_members WHERE course_id=$1 AND user_id=$2`,
-    [course.rows[0].id, LEARNER],
-  )).rowCount, 0)
-})
 
 test('[integration] learner sees only enrolled courses and receives opaque 404 for another Project', async () => {
   await seedCompany()

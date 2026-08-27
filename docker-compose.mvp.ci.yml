@@ -113,6 +113,21 @@ services:
       start_period: 5s
     networks: [lingxiloop-mvp-ci]
 
+  db-bootstrap:
+    build:
+      context: .
+      dockerfile: server/docker/lingxiloop-server.Dockerfile
+    restart: "no"
+    profiles: [tools]
+    command: ["npm", "run", "db:bootstrap"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
+      DEEPSEEK_API_KEY: sk-smoke-test-not-a-real-key
+    networks: [lingxiloop-mvp-ci]
+
   lingxiloop:
     build:
       context: .

@@ -43,15 +43,17 @@ $env:DEEPSEEK_API_KEY = '...'
 $env:DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'
 $env:DEEPSEEK_MODEL = 'deepseek-chat'
 $env:AGENT_OS_SERVICE_TOKEN = 'replace-with-a-long-random-secret'
-npm run migrate
+npm run db:bootstrap
 npm run dev:all
 npm run agent-os:start
 ```
 
 For the packaged MVP topology, copy `.env.example` to `.env`, provide the
-required secrets, then run exactly one deployment command:
+required secrets, and bootstrap a new empty database once before starting the
+runtime:
 
 ```powershell
+docker compose -f docker-compose.mvp.yml run --rm db-bootstrap
 npm run mvp:up
 ```
 
@@ -91,11 +93,9 @@ are pinned to commit `c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47`; production must
 verified immutable image digest. Its management API remains private, while the
 TLS client endpoint is published by the deployment proxy.
 
-Cutover is intentionally one-way. The migration removes BYOA agents and their
-owned data, resets legacy chat/runtime data, preserves human-owned learning
-assets, removes Shared Computer state, and provisions fresh Study Room and Lab bindings.
-Rollback restores the pre-cutover PostgreSQL and WuKongIM volume backups; it
-does not reactivate the retired runtime.
+LingxiLoop v1 intentionally has no database upgrade path. Initialize an empty
+PostgreSQL database once with `npm run db:bootstrap`; existing development
+databases must be dropped and recreated. Web Server startup never executes DDL.
 
 ## Repository map
 

@@ -342,7 +342,7 @@ async function purgeLegacyLearningPreset(
       [ids, companyId],
     )
 
-    for (const table of ['agent_workspace', 'agent_memory', 'agent_log', 'agent_tasks', 'agent_autonomy', 'agent_climate', 'tool_calls', 'agent_events', 'agent_runs', 'agent_triages', 'llm_calls', 'llm_calls_rollup'] as const) {
+    for (const table of ['agent_workspace', 'agent_log', 'agent_tasks', 'agent_autonomy', 'agent_climate', 'tool_calls', 'agent_events', 'agent_runs', 'agent_triages', 'llm_calls', 'llm_calls_rollup'] as const) {
       await db.query(`DELETE FROM ${table} WHERE company_id = $1 AND agent_id = ANY($2::text[])`, [companyId, ids])
     }
     // This ledger predates tenant columns, but agent ids are globally unique.

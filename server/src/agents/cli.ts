@@ -3830,7 +3830,7 @@ function normalizeMemoryKind(raw: unknown): MemoryKind {
  *  `source`, `createdAt`) live in the `meta` JSONB column. Reads use a
  *  `path LIKE 'memory/%'` prefix plus a partial JSONB index on
  *  `meta->>'about'` for the common `--about <subject>` filter. See
- *  migrate.ts for the one-shot copy from the legacy `agent_memory` table. */
+ *  v1 schema for the canonical workspace representation. */
 async function cmdMemory(parsed: ParsedArgs): Promise<CliResult> {
   const op = parsed.positional[0]
   const me = resolveAs(parsed)

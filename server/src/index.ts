@@ -6,7 +6,6 @@ import { mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { env } from './env.js'
-import { ensureSchemaWithBootRetry } from './db/migrate.js'
 import { seedIfEmpty } from './seed.js'
 import { api } from './api/router.js'
 import { storage, UPLOAD_DIR } from './storage.js'
@@ -36,7 +35,6 @@ import { startAgentWorkWatchdog } from './agent-os/work-watchdog.js'
 import { startMemorySynthesisScheduler } from './agent-os/memory-service.js'
 
 async function main() {
-  await ensureSchemaWithBootRetry()
   await seedIfEmpty()
   // Promote LINGXILOOP_ADMIN_EMAILS members to is_admin on every boot —
   // idempotent, only flips FALSE→TRUE. Demotion goes through the panel.

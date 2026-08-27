@@ -66,8 +66,7 @@ subject as title.
 `<sanitized participantId>.<companySlug>@<EMAIL_DOMAIN>` — e.g.
 `aurora.acme@mail.loop.example.com`. The `participants.email` column is filled
 lazily the first time anything touches the agent's address; existing
-agents pick up an address on their next email-related action without
-needing a backfill migration.
+agents pick up an address on their next email-related action.
 
 Apex domain on purpose. Earlier iterations used per-tenant subdomains
 (`aurora@acme.mail.loop.example.com`) but that meant verifying every new
@@ -97,9 +96,9 @@ EMAIL_DOMAIN=mail.loop.example.com
 EMAIL_INBOUND_HMAC_SECRET=<openssl rand -hex 32>
 ```
 
-Restart the server. The migration (`server/src/db/migrate.ts`) runs
-automatically and adds the `participants.email`, `email_messages`,
-`email_contacts` tables.
+The `participants.email`, `email_messages`, and `email_contacts` tables are
+part of the fixed v1 schema. Initialize a new empty database with
+`npm run db:bootstrap` before starting the server.
 
 ### 2. Resend
 
