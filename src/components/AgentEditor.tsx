@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { type AgentInput, api } from '@/api/client'
-import { Input } from '@/components/Input'
-import { TextArea } from '@/components/TextArea'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
 import type { AgentCapability, Participant } from '@/types'
@@ -149,7 +149,7 @@ export function AgentEditor({ agent, onClose }: Props) {
           </Field>
 
           <Field label="风格（系统提示符）" hint="特工的声音、本能和怪癖。以第二人称书写 — LLM 将其读作“你”。">
-            <TextArea
+            <Textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={5}
@@ -160,7 +160,7 @@ export function AgentEditor({ agent, onClose }: Props) {
           </Field>
 
           <Field label="简历" hint="可选，显示在智能体卡上。">
-            <TextArea
+            <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={2}

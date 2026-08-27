@@ -1,13 +1,13 @@
 import {
-  IconGitBranch,
-  IconChartBar,
-  IconCheck,
-  IconCloudDownload,
-  IconExternalLink,
-  IconRefresh,
-  IconSettings,
-  IconX,
-} from '@tabler/icons-react'
+  BarChart3 as IconChartBar,
+  Check as IconCheck,
+  DownloadCloud as IconCloudDownload,
+  ExternalLink as IconExternalLink,
+  GitBranch as IconGitBranch,
+  RefreshCw as IconRefresh,
+  Settings as IconSettings,
+  X as IconX,
+} from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { useAuth } from '@/stores/auth'
@@ -68,7 +68,7 @@ function GeneralPanel() {
         <div className="sand-account-card">
           <div className="sand-account-card__avatar"><Avatar p={me ?? fallback} size={36} showStatus={false} /></div>
           <div className="sand-account-card__body"><strong>{authUser?.name ?? 'LingxiLoop User'}</strong><span>{authUser?.email ?? 'Signed in'}</span></div>
-          <button type="button">Manage account <IconExternalLink size={13} stroke={1.7} /></button>
+          <button type="button">Manage account <IconExternalLink size={13} strokeWidth={1.7} /></button>
         </div>
       </section>
       <section>
@@ -97,7 +97,7 @@ function RouterPanel() {
           <button key={item.id} type="button" className="sand-router-provider" data-active={provider === item.id || undefined} onClick={() => setProvider(item.id)}>
             <span className="sand-router-provider__radio">{provider === item.id && <span />}</span>
             <span className="sand-router-provider__copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-            {provider === item.id && <IconCheck size={17} stroke={1.8} />}
+            {provider === item.id && <IconCheck size={17} strokeWidth={1.8} />}
           </button>
         ))}
       </div>
@@ -136,7 +136,7 @@ function UpdatesPanel() {
   }
   return (
     <div className="sand-settings-beta-stack">
-      <div className="sand-settings-uptodate-banner"><strong>LingxiLoop is up to date</strong><span>Version 0.1.0-beta</span>{checked && <span>Last checked just now</span>}<button type="button" className="sand-settings-force-refresh" onClick={check} disabled={checking}><IconRefresh size={14} stroke={1.7} /> {checking ? 'Checking…' : 'Check for updates'}</button></div>
+      <div className="sand-settings-uptodate-banner"><strong>LingxiLoop is up to date</strong><span>Version 0.1.0-beta</span>{checked && <span>Last checked just now</span>}<button type="button" className="sand-settings-force-refresh" onClick={check} disabled={checking}><IconRefresh size={14} strokeWidth={1.7} /> {checking ? 'Checking…' : 'Check for updates'}</button></div>
       <SettingsRow title="Automatic updates" hint="Download and install updates when the app is closed."><DemoSwitch checked={automatic} onChange={setAutomatic} label="Automatic updates" /></SettingsRow>
       <SettingsRow title="Release channel" hint="Receive stable product updates."><button type="button" className="ui-select-trigger">Stable</button></SettingsRow>
     </div>
@@ -174,13 +174,13 @@ export function GrokSettingsModal({ isOpen, onClose }: { isOpen: boolean; onClos
               const selected = section.id === active.id
               return (
                 <button aria-controls={selected ? panelId : undefined} aria-current={selected ? 'page' : undefined} className="sand-settings-nav__item" data-active={selected || undefined} key={section.id} onClick={() => setActiveSection(section.id)} type="button">
-                  <Icon size={17} stroke={1.55} /><span>{section.label}</span>
+                  <Icon size={17} strokeWidth={1.55} /><span>{section.label}</span>
                 </button>
               )
             })}
           </nav>
           <section aria-labelledby={headingId} className="sand-settings-panel" id={panelId}>
-            <button type="button" aria-label="Close" className="sand-settings-panel__close" onClick={onClose}><IconX size={18} stroke={1.65} /></button>
+            <button type="button" aria-label="Close" className="sand-settings-panel__close" onClick={onClose}><IconX size={18} strokeWidth={1.65} /></button>
             <h2 id={headingId}>{active.label}</h2>
             <div className="sand-settings-panel__body">{renderPanel(active.id)}</div>
           </section>

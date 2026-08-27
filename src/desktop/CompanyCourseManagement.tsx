@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { IconArchive, IconBook2, IconCopy, IconPlus, IconTrash, IconUsers } from '@tabler/icons-react'
+import {
+  Archive as IconArchive,
+  BookOpen as IconBook2,
+  Copy as IconCopy,
+  Plus as IconPlus,
+  Trash2 as IconTrash,
+  Users as IconUsers,
+} from 'lucide-react'
 import {
   api,
   type ApiCompanyMember,

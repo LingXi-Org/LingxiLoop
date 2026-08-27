@@ -7,9 +7,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { DateTimePicker } from '@/components/DateTimePicker'
-import { Input } from '@/components/Input'
-import { SelectMenu } from '@/components/SelectMenu'
-import { TextArea } from '@/components/TextArea'
+import { Input } from '@/components/ui/input'
+import { SelectField } from '@/components/ui/select-field'
+import { Textarea } from '@/components/ui/textarea'
 import { useMe } from '@/stores/auth'
 import { useCalendar } from '@/stores/calendar'
 import { useConversations } from '@/stores/conversations'
@@ -312,10 +312,10 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     onChange={(e) => setRecur({ ...recur, interval: Math.max(1, Number(e.target.value) || 1) })}
                     style={{ width: 70 }}
                   />
-                  <SelectMenu
+                  <SelectField
                     ariaLabel="重复频率"
                     value={recur.freq}
-                    onChange={(value) => setRecur({ ...recur, freq: value as RecurrenceRule['freq'] })}
+                    onValueChange={(value) => setRecur({ ...recur, freq: value as RecurrenceRule['freq'] })}
                     options={[
                       { value: 'daily', label: `日${recur.interval > 1 ? 's' : ''}` },
                       { value: 'weekly', label: `周${recur.interval > 1 ? 's' : ''}` },
@@ -485,10 +485,10 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               </Field>
 
               <Field label="发表于" hint="调度消息触发时到达的位置。留空可与受让人一起使用您的 DM。">
-                <SelectMenu
+                <SelectField
                   ariaLabel="发布到会话"
                   value={targetConversationId ?? ''}
-                  onChange={(value) => setTargetConversationId(value || null)}
+                  onValueChange={(value) => setTargetConversationId(value || null)}
                   options={[
                     { value: '', label: '— 与受让人的直接消息 —' },
                     ...targetConvos.map((conversation) => ({ value: conversation.id, label: conversation.title })),
@@ -498,7 +498,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               </Field>
 
               <Field label="提示" hint="智能体每次应该做什么。纯文本——智能体将其视为系统消息。">
-                <TextArea
+                <Textarea
                   value={agentPrompt}
                   onChange={(e) => setAgentPrompt(e.target.value)}
                   placeholder="例如总结过去 24 小时的对话活动并在此处发布摘要。"
@@ -521,7 +521,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
           </Field>
 
           <Field label="注释" hint="可选上下文 - 显示在调度提示旁边。">
-            <TextArea
+            <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="还有什么值得知道的......"

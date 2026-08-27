@@ -79,8 +79,7 @@
   --canvas-shadow: 0 12px 35px rgba(25, 35, 60, 0.16);
   --canvas-vignette: linear-gradient(180deg, transparent 55%, rgba(59, 130, 246, 0.08));
 
-  /* OpenBot DetailPanel theme contract. The vendored source remains untouched;
-     these aliases connect its semantic tokens to LingxiLoop's existing theme. */
+  /* shadcn semantic tokens mapped onto the LingxiLoop theme. */
   --background: var(--panel);
   --foreground: var(--ink);
   --border: var(--hairline);
@@ -92,6 +91,8 @@
   --secondary-foreground: var(--ink);
   --muted: var(--raised);
   --muted-foreground: var(--ink-secondary);
+  --destructive-foreground: var(--panel);
+  --accent-foreground: var(--panel);
   --destructive: #dc2626;
   --sidebar: var(--panel);
   --sidebar-foreground: var(--ink);
@@ -1531,10 +1532,8 @@ input, textarea { font: inherit; }
   background: var(--im-detail-surface);
   color: var(--ink);
 }
-/* Grok's workspace chrome is a deliberately separate surface from the
-   transcript: base for chat, subtle for chrome, elevated for preview content.
-   Keep the OpenBot panel structure untouched and apply that hierarchy only to
-   the group workspace mounted inside it. */
+/* The workspace chrome is a deliberately separate surface from the transcript:
+   base for chat, subtle for chrome, elevated for preview content. */
 .desktop-openmaus [data-context-layout='flat-stacked'] {
   background: var(--im-detail-surface);
   color: var(--ink);
@@ -1558,9 +1557,8 @@ input, textarea { font: inherit; }
 .desktop-openmaus .knowledge-source-panel[data-source-layout='flat'] article:hover {
   background: var(--raised);
 }
-/* Keep OpenBot's exact DetailPanel source while letting the flat group context
-   occupy the header row. The upstream close button becomes a lightweight
-   overlay instead of reserving an otherwise empty 48px strip. */
+/* Let the flat group context occupy the header row while the close action stays
+   available as a lightweight overlay. */
 .desktop-detail-panel-host > .flex > .shrink-0 > .flex:has([data-context-layout='flat-stacked']) > .sticky {
   position: absolute;
   z-index: 20;

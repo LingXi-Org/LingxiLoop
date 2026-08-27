@@ -22,7 +22,14 @@ const config: Config = {
           DEFAULT: 'var(--muted)',
           foreground: 'var(--muted-foreground)',
         },
-        destructive: 'var(--destructive)',
+        destructive: {
+          DEFAULT: 'var(--destructive)',
+          foreground: 'var(--destructive-foreground)',
+        },
+        popover: {
+          DEFAULT: 'var(--panel)',
+          foreground: 'var(--ink)',
+        },
         sidebar: {
           DEFAULT: 'var(--sidebar)',
           foreground: 'var(--sidebar-foreground)',
@@ -48,7 +55,10 @@ const config: Config = {
           200: 'var(--ink-200)',
           100: 'var(--ink-100)',
         },
-        accent: 'var(--accent)',
+        accent: {
+          DEFAULT: 'var(--accent)',
+          foreground: 'var(--accent-foreground)',
+        },
         'accent-ink': 'var(--accent-ink)',
         skype: {
           DEFAULT: 'var(--skype)',

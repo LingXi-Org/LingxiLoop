@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react'
-import { IconLayoutDashboard, IconPlus } from '@tabler/icons-react'
+import { LayoutDashboard as IconLayoutDashboard, Plus as IconPlus } from 'lucide-react'
 import { CanvasPreview } from '@/components/CanvasPreview'
 import { Button } from '@/components/ui/button'
 import { SourcePanel } from '@/components/WorkspaceChrome'
@@ -43,7 +43,7 @@ export function GroupCanvasPanel({ conversationId, flat = false, toolbar }: { co
   </section>
 }
 
-/** Business content rendered inside OpenBot's unmodified DetailPanel. */
+/** Group workspace content rendered inside the desktop detail surface. */
 export function GroupContextContent({ conversationId }: { conversationId: string }) {
   return <div className="grid h-full min-h-0 grid-rows-[minmax(0,38fr)_minmax(0,62fr)] overflow-hidden bg-sidebar" data-context-layout="flat-stacked" aria-label="群聊上下文内容">
     <div className="min-h-0 overflow-hidden"><GroupCanvasPanel conversationId={conversationId} flat /></div>

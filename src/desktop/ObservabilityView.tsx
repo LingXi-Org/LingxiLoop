@@ -8,10 +8,10 @@ import {
   type ApiTriageEconomics,
   api,
 } from '@/api/client'
-import { Checkbox } from '@/components/Checkbox'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { CodeBlock, RichBody } from '@/components/Message'
 import { ResizeHandle } from '@/components/ResizeHandle'
-import { Select } from '@/components/Select'
+import { SelectField } from '@/components/ui/select-field'
 import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
 import { useParticipants } from '@/stores/participants'
@@ -719,7 +719,8 @@ function TriageEconomicsPanel(props: {
           </div>
           <label className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
             智能体
-            <Select
+            <SelectField
+              ariaLabel="筛选智能体"
               value={props.agentId}
               onValueChange={props.setAgentId}
               options={[{ value: 'all', label: "所有智能体" }, ...props.agents.map((a) => ({ value: a.id, label: a.name }))]}
@@ -728,7 +729,8 @@ function TriageEconomicsPanel(props: {
           </label>
           <label className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
             窗口
-            <Select<string>
+            <SelectField<string>
+              ariaLabel="筛选时间窗口"
               value={String(props.hours)}
               onValueChange={(v) => props.setHours(Number(v))}
               options={TRIAGE_WINDOWS.map((w) => ({ value: String(w.hours), label: w.label }))}
@@ -1110,7 +1112,8 @@ export function ObservabilityView() {
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <label className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
                   智能体
-                  <Select
+                  <SelectField
+                    ariaLabel="筛选执行智能体"
                     value={agentId}
                     onValueChange={setAgentId}
                     options={[
@@ -1122,7 +1125,8 @@ export function ObservabilityView() {
                 </label>
                 <label className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
                   状态
-                  <Select<StatusFilter>
+                  <SelectField<StatusFilter>
+                    ariaLabel="筛选执行状态"
                     value={status}
                     onValueChange={setStatus}
                     options={STATUS_OPTIONS.map((s) => ({
@@ -1134,7 +1138,7 @@ export function ObservabilityView() {
                 </label>
               </div>
 
-              <Checkbox
+              <CheckboxField
                 checked={autoRefresh}
                 onCheckedChange={setAutoRefresh}
                 label="自动刷新"
@@ -1145,7 +1149,8 @@ export function ObservabilityView() {
           ) : (
             <label className="mt-4 block text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-400">
               智能体工作区
-              <Select
+              <SelectField
+                ariaLabel="选择智能体工作区"
                 value={workspaceAgentId}
                 onValueChange={(next) => {
                   setWorkspaceAgentId(next)

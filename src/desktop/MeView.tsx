@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { type ApiQuotaSnapshot, type ApiQuotaWindow, api, getServerOrigin } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
-import { Checkbox } from '@/components/Checkbox'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
@@ -522,7 +522,7 @@ function PreferencesTab() {
       <SkypeSoundSection />
       {devtoolsCanEnable && (
         <Section title="↳ 开发者">
-          <Checkbox
+          <CheckboxField
             checked={devtoolsEnabled}
             disabled={devtoolsLocal}
             onCheckedChange={(next) => { void setDevMode(next) }}
