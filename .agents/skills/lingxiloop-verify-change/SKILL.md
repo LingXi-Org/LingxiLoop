@@ -34,6 +34,15 @@ Read [references/check-matrix.md](references/check-matrix.md) before changing th
 
 Do not run fix-mode linters, rewrite generated files, start deployment workflows, or mutate Git as part of verification unless separately authorized.
 
+## Keep verification lean
+
+- Do not wrap a guard, classifier, or script in a second test when the same command already runs in the selected local or CI plan. Keep one owning invocation.
+- Run Skill and classifier self-tests only when their implementation or test contract changes; unrelated product diffs must not pay that cost.
+- Keep credential-gated live tests out of default suites. Give them an explicit command and include them only when the opt-in credential flag is present.
+- Prefer one shared fixture reset operation over repeated per-table or per-resource setup. Optimize fixture mechanics before deleting behavioral coverage.
+- Preserve tests for authorization, tenant isolation, transactions, durable work, public contracts, and reproduced regressions. Remove or combine tests only when they exercise the same boundary with no distinct failure signal.
+- A clean fast path reports no expected skips. Record unavailable optional checks at handoff instead of registering them as routine skipped tests.
+
 ## Report
 
 Report:

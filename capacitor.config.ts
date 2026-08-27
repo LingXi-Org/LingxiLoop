@@ -40,14 +40,12 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
   },
   plugins: {
-    // Patch window.fetch + XMLHttpRequest to route through Swift's
-    // URLSession. The WKWebView's origin is `capacitor://localhost`,
-    // which CORS-blocks calls to the build-time configured HTTPS API unless
-    // the server explicitly allows that origin. Routing through the native layer sidesteps
-    // CORS entirely — the request reaches the API the same way curl
-    // would, no browser preflight involved.
+    // Do not patch window.fetch globally. LingxiLoop JSON requests explicitly
+    // use CapacitorHttp (src/api/transport.ts), while presigned File/Blob PUTs
+    // stay in the WebView fetch implementation and never cross the JS/native
+    // bridge as a duplicated binary payload.
     CapacitorHttp: {
-      enabled: true,
+      enabled: false,
     },
     SplashScreen: {
       // Hide as soon as the WebView is ready — the launch storyboard

@@ -2,6 +2,7 @@ import { getActiveCompanyId, getAuthToken, useAuth } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { normalizeCourseContract } from './courseContract'
+import { lingxiApiFetch, mergeRequestHeaders, putPresignedFile } from './transport'
 export { normalizeCourseContract } from './courseContract'
 import type {
   AgentCapability,
@@ -112,9 +113,9 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const workspace = getWorkspaceSession()
   if (workspace && workspace.companyId === company) headers['x-project-id'] = workspace.projectId
   if (getDevModeEnabled()) headers['x-lingxiloop-dev-mode'] = '1'
-  const res = await fetch(`${API}${path}`, {
-    headers: { ...headers, ...(init?.headers ?? {}) },
+  const res = await lingxiApiFetch(`${API}${path}`, {
     ...init,
+    headers: mergeRequestHeaders(headers, init?.headers),
   })
   // Auto-clear session on 401 so the AuthGate boots back to the login screen.
   if (res.status === 401 && !path.startsWith('/auth/')) {
@@ -936,7 +937,7 @@ export const api = {
       const signed = await http<{ id: string; uploadUrl: string; mime: string; size: number }>(`/conversations/${encodeURIComponent(conversationId)}/sources/upload/presign`, {
         method: 'POST', body: JSON.stringify({ name: file.name, mime, size: file.size }),
       })
-      const response = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': mime }, body: file })
+      const response = await putPresignedFile(signed.uploadUrl, file, mime)
       if (!response.ok) throw new Error(`source upload failed: ${response.status}`)
       await http(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(signed.id)}/complete-upload`, { method: 'POST' })
       return
@@ -1366,7 +1367,7 @@ export const api = {
     const company = getActiveCompanyId()
     if (company) headers['x-company-id'] = company
     if (getDevModeEnabled()) headers['x-lingxiloop-dev-mode'] = '1'
-    const res = await fetch(`${API}/email/${encodeURIComponent(messageId)}/html`, { headers })
+    const res = await lingxiApiFetch(`${API}/email/${encodeURIComponent(messageId)}/html`, { headers })
     if (res.status === 204) return null
     if (!res.ok) {
       const text = await res.text().catch(() => '')
@@ -1421,11 +1422,7 @@ export const api = {
       })
       // Step 2 — PUT the raw bytes directly to R2. No auth header; the
       // presigned URL carries everything the bucket needs.
-      const r = await fetch(signed.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': mime },
-        body: file,
-      })
+      const r = await putPresignedFile(signed.uploadUrl, file, mime)
       if (!r.ok) {
         const text = await r.text().catch(() => '')
         throw new Error(`R2 PUT failed: ${r.status} ${text.slice(0, 200)}`)
@@ -1787,7 +1784,7 @@ class WsClient {
     // / referrer headers). The ticket is consumed atomically server-side.
     let ticket: string
     try {
-      const r = await fetch(`${API}/auth/ws-ticket`, {
+      const r = await lingxiApiFetch(`${API}/auth/ws-ticket`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
       })

@@ -13,13 +13,7 @@
  */
 import { useState, useEffect } from 'react'
 import { api, getServerOrigin } from '@/api/client'
-import { isElectron } from '@/lib/runtime'
-import {
-  armNativeOAuthHandoff,
-  handleNativeOAuthCallback,
-  isNativePlatform,
-  runOAuth,
-} from '@/lib/native'
+import { isCapacitorNative, isElectron } from '@/lib/runtime'
 import { CloudLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
 
@@ -94,7 +88,7 @@ export function AuthScreen() {
       })()
       return
     }
-    if (isNativePlatform()) {
+    if (isCapacitorNative) {
       // iOS / Android: run the OAuth flow inside ASWebAuthenticationSession
       // (our WebAuthPlugin). It hands the final lingxiloop://auth#... callback
       // straight back to us — no SFSafariViewController, no broken 302
@@ -105,10 +99,15 @@ export function AuthScreen() {
         setBusy(null)
         return
       }
-      const nonce = armNativeOAuthHandoff()
-      const ret = encodeURIComponent(`lingxiloop://auth?n=${encodeURIComponent(nonce)}`)
       void (async () => {
         try {
+          const {
+            armNativeOAuthHandoff,
+            handleNativeOAuthCallback,
+            runOAuth,
+          } = await import('@/lib/native')
+          const nonce = armNativeOAuthHandoff()
+          const ret = encodeURIComponent(`lingxiloop://auth?n=${encodeURIComponent(nonce)}`)
           const callbackUrl = await runOAuth({
             url: `${origin}/api/auth/start/${provider}?return=${ret}`,
             callbackScheme: 'lingxiloop',

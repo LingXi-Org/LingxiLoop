@@ -25,6 +25,25 @@ for secret in OPEN_NOTEBOOK_PASSWORD OPEN_NOTEBOOK_ENCRYPTION_KEY OPEN_NOTEBOOK_
     exit 2
   fi
 done
+
+r2_present=0
+r2_missing=""
+for secret in R2_ENDPOINT R2_BUCKET R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY; do
+  if grep -Eq "^${secret}=.+" .env.secrets; then
+    r2_present=$((r2_present + 1))
+  else
+    r2_missing="${r2_missing} ${secret}"
+  fi
+done
+if [ "$r2_present" -gt 0 ] && [ "$r2_present" -lt 4 ]; then
+  echo "Incomplete R2 production configuration; missing:${r2_missing}" >&2
+  exit 2
+fi
+if [ "$r2_present" -eq 4 ]; then
+  r2_configured=true
+else
+  r2_configured=false
+fi
 if ! grep -Eq '^OPEN_NOTEBOOK_CHAT_MODEL=.+' .env.secrets &&
    { ! grep -Eq '^OPEN_NOTEBOOK_STRATEGY_MODEL=.+' .env.secrets ||
      ! grep -Eq '^OPEN_NOTEBOOK_ANSWER_MODEL=.+' .env.secrets ||
@@ -52,6 +71,15 @@ cp "$next_env" "$active_env"
 
 compose() {
   docker compose --env-file "$active_env" --env-file .env.secrets -f "$compose_file" "$@"
+}
+
+configure_r2_cors() {
+  if [ "$r2_configured" = "true" ]; then
+    echo "Applying and verifying R2 CORS policy"
+    compose --profile tools run --rm --no-deps r2-cors
+  else
+    echo "R2 is not configured; skipping bucket CORS reconciliation"
+  fi
 }
 
 verify() {
@@ -85,6 +113,7 @@ rollback() {
 }
 
 if ! compose pull ||
+   ! configure_r2_cors ||
    ! compose --profile tools run --rm migrate ||
    ! compose up -d --remove-orphans ||
    ! verify ||

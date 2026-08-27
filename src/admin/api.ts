@@ -9,6 +9,7 @@
  * is what authenticates admin calls.
  */
 import { getAuthToken, useAuth } from '@/stores/auth'
+import { lingxiApiFetch, mergeRequestHeaders } from '@/api/transport'
 
 function origin(): string {
   if (typeof localStorage !== 'undefined') {
@@ -24,9 +25,9 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { 'content-type': 'application/json' }
   const token = getAuthToken()
   if (token) headers.authorization = `Bearer ${token}`
-  const res = await fetch(`${origin()}/api/admin${path}`, {
-    headers: { ...headers, ...(init?.headers ?? {}) },
+  const res = await lingxiApiFetch(`${origin()}/api/admin${path}`, {
     ...init,
+    headers: mergeRequestHeaders(headers, init?.headers),
   })
   if (res.status === 401) {
     useAuth.getState().clear()
