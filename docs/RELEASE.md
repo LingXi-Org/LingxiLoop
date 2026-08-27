@@ -25,5 +25,13 @@ OS, and verifies `/api/meta`, dependency health, authenticated channel access
 and the release version. Rollback restores both pre-cutover backups and the
 previous digest manifest. It never re-enables a retired runtime.
 
+When all four core `R2_*` secrets are configured, the production deployment
+also reconciles the bucket CORS policy before application cutover. The
+deployment image applies the policy and reads it back, requiring presigned
+`PUT` permission for the production web origin plus Electron, iOS
+(`capacitor://localhost`), and Android (`https://localhost`) renderer origins.
+Partial R2 configuration or a failed readback aborts the deployment. Operators
+can add comma-separated origins with `R2_CORS_EXTRA_ORIGINS` in `.env.secrets`.
+
 Desktop artifacts contain only the renderer and Electron shell. Package
 verification rejects server/runtime source and environment files.

@@ -97,12 +97,7 @@ export function nativePlatform(): string | null {
 
 let booted = false
 
-export async function bootNative(): Promise<void> {
-  if (booted) return
-  booted = true
-  if (!isNativePlatform()) return
-
-  // Status bar — DARK glyphs on a light app background.
+async function configureNativeChrome(): Promise<void> {
   try {
     await StatusBar.setStyle({ style: Style.Light })
     if (nativePlatform() === 'android') {
@@ -112,6 +107,12 @@ export async function bootNative(): Promise<void> {
   } catch (err) {
     console.warn('[native] status bar setup failed', err)
   }
+}
+
+export function bootNative(): void {
+  if (booted) return
+  booted = true
+  if (!isNativePlatform()) return
 
   // Splash — hide once React has mounted past the launch image.
   try {
@@ -167,6 +168,10 @@ export async function bootNative(): Promise<void> {
   } catch (err) {
     console.warn('[native] appUrlOpen listener failed', err)
   }
+
+  // Status-bar bridge latency is non-critical for the product shell. Start it
+  // only after event listeners are armed, and never block first paint on it.
+  void configureNativeChrome()
 }
 
 /**

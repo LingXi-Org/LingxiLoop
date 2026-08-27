@@ -10,7 +10,11 @@ test('shared entry keeps notification, native, analytics, and app surfaces behin
 
   assert.match(main, /import\('\.\/components\/NotificationWindow'\)/)
   assert.match(main, /import\('\.\/lib\/native'\)/)
+  assert.doesNotMatch(main, /await bootNative\(\)/)
+  assert.match(main, /void import\('\.\/lib\/native'\)\.then/)
   assert.match(main, /import\('\.\/observability-entry'\)/)
+  assert.match(main, /VITE_MOBILE_UPLOAD_SMOKE === '1'/)
+  assert.match(main, /import\('\.\/dev\/mobileUploadSmoke'\)/)
   assert.match(main, /import\('\.\/App'\)/)
   assert.match(app, /lazy\(\(\) => import\('@\/admin\/AdminApp'\)/)
   assert.match(app, /lazy\(\(\) => import\('@\/desktop\/DesktopApp'\)/)

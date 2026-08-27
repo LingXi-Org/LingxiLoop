@@ -20,12 +20,19 @@ async function boot() {
   if (isCapacitorNative) {
     const platform = window.Capacitor?.getPlatform?.() || ''
     document.body.classList.add('native', `native-${platform}`)
-    const { bootNative } = await import('./lib/native')
-    await bootNative()
+    // Start native bridge setup in parallel with the product shell. Status-bar
+    // and listener registration must never delay App import or first paint.
+    void import('./lib/native').then(({ bootNative }) => bootNative())
   }
 
   const { App } = await import('./App')
   render(App)
+
+  if (isCapacitorNative && import.meta.env.VITE_MOBILE_UPLOAD_SMOKE === '1') {
+    void import('./dev/mobileUploadSmoke').then(({ installMobileUploadSmoke }) => {
+      installMobileUploadSmoke()
+    })
+  }
 
   // Analytics is non-critical: load it after the product shell has painted.
   if (import.meta.env.VITE_PUBLIC_POSTHOG_KEY) {
