@@ -12,7 +12,7 @@ async function userRelationCount(client: PoolClient): Promise<number> {
     SELECT COUNT(*)::text AS count
       FROM pg_class relation
       JOIN pg_namespace namespace ON namespace.oid = relation.relnamespace
-     WHERE namespace.nspname = current_schema()
+     WHERE namespace.nspname = 'public'
        AND relation.relkind IN ('r', 'p', 'v', 'm', 'S', 'f')
   `)
   return Number(rows[0]?.count ?? 0)
