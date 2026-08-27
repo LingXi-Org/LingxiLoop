@@ -25,11 +25,11 @@ Open http://localhost:5180 for the web app, or `npm run electron:dev` for the
 desktop shell. Web and worker processes never execute DDL: `db:bootstrap`
 accepts only an empty database or the already-marked v1 schema. Development
 databases from before v1 must be dropped and recreated. Startup seeds the v1
-schema with a starter team. Everything else (OAuth login, email, storage, push, the
+schema with a starter team. Everything else (OAuth login, email, storage, the
 sub2api LLM gateway) soft-disables when its env vars are unset — see
 [`.env.example`](.env.example).
 
-Component-specific setup lives in [`docs/`](docs/), including mobile, push and
+Component-specific setup lives in [`docs/`](docs/), including deployment and
 email integration notes.
 
 ## Before you open a PR
