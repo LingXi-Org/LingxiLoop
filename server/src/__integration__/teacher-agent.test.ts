@@ -147,7 +147,12 @@ test('[integration] only a current course teacher can discover Pulse or open its
   assert.equal((await ids(learnerParticipants)).includes(pulse.agentId),false)
   assert.equal((await ids(adminParticipants)).includes(pulse.agentId),false)
 
-  const learnerRoom=await apiRequest(fixture.learnerId,fixture.companyId,`/api/conversations/${encodeURIComponent(pulse.roomId)}/messages`)
+  const learnerRoom=await apiRequest(
+    fixture.learnerId,
+    fixture.companyId,
+    `/api/conversations/${encodeURIComponent(pulse.roomId)}/messages`,
+    fixture.projectId,
+  )
   assert.ok(learnerRoom.status===403||learnerRoom.status===404)
 })
 

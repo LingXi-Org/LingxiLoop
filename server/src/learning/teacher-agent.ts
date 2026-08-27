@@ -274,7 +274,10 @@ export async function syncTeacherRoomMembers(courseId:string,db:Queryable=pool):
   const members=[...teachers.map((row)=>row.user_id),rows[0].agent_id]
   await db.query(`UPDATE conversations SET members=$2::jsonb,subtitle=$3,updated_at=NOW() WHERE id=$1`,[rows[0].conversation_id,JSON.stringify(members),`教师 · ${teachers.length}`])
   const {rows:bindings}=await db.query<{profile:Record<string,unknown>}>(`UPDATE im_channel_bindings SET profile=profile||jsonb_build_object('members',$2::jsonb),updated_at=NOW() WHERE channel_id=$1 RETURNING profile`,[rows[0].conversation_id,JSON.stringify(members)])
-  if(bindings[0]?.profile)await wukongClient().upsertChannel(bindings[0].profile as unknown as ImChannelProfile)
+  if(bindings[0]?.profile){
+    await wukongClient().upsertChannel(bindings[0].profile as unknown as ImChannelProfile)
+      .catch((error)=>console.warn('[course] Teacher Room sync failed',error))
+  }
 }
 
 export async function closeTeacherRoomForCourse(courseId:string,db:Queryable=pool):Promise<void>{
