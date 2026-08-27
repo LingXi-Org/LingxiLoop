@@ -4,6 +4,8 @@ import type { ViewKey } from '@/types'
 interface AppState {
   view: ViewKey['view']
   setView: (v: ViewKey['view']) => void
+  settingsTab: 'Profile' | 'Usage' | 'Preferences'
+  openSettings: (tab: 'Profile' | 'Usage' | 'Preferences') => void
 
   selectedConversationId: string | null
   selectConversation: (id: string | null) => void
@@ -96,6 +98,8 @@ interface AppState {
 
 export const useApp = create<AppState>((set) => ({
   view: 'conversations',
+  settingsTab: 'Profile',
+  openSettings: (settingsTab) => set({ view: 'me', settingsTab }),
   setView: (v) => set(v === 'conversations'
     ? { view: v }
     : {

@@ -2,7 +2,7 @@
  * Modal for creating a new group conversation. User picks a title and a set of
  * teammates (active agents + other humans). Yetone is auto-included.
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { api } from '@/api/client'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
@@ -10,7 +10,8 @@ import { useConversations } from '@/stores/conversations'
 import { useApp } from '@/stores/app'
 import { useWorkspace } from '@/stores/workspace'
 import { Avatar } from '@/components/Avatar'
-import { Input } from '@/components/Input'
+import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { Participant } from '@/types'
 
 interface Props {
@@ -41,12 +42,6 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
   const [leaderId, setLeaderId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   const toggle = (id: string) => {
     setPicked((s) => {
@@ -96,23 +91,14 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
   const canSubmit = picked.size > 0 && Boolean(leaderId) && !busy
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center p-6"
-      style={{ background: 'rgba(15, 30, 50, 0.55)', backdropFilter: 'blur(6px)' }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-cloud rounded-[18px] shadow-pop w-full max-w-[520px] max-h-[88vh] flex flex-col overflow-hidden"
-        style={{ border: '1px solid var(--ink-100)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-5 border-b border-ink-100 shrink-0">
-          <h2 className="font-display font-medium text-[20px] tracking-tight">新建群聊</h2>
-          <div className="text-[12.5px] text-ink-500 italic font-display mt-0.5">
+    <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose() }}>
+      <DialogContent className="flex max-h-[88vh] max-w-[520px] flex-col gap-0 overflow-hidden bg-cloud p-0" showCloseButton={!busy}>
+        <DialogHeader className="shrink-0 border-b border-ink-100 px-6 py-5 pr-14">
+          <DialogTitle className="font-display text-[20px] font-medium tracking-tight">新建群聊</DialogTitle>
+          <DialogDescription className="mt-0.5 font-display text-[12.5px] italic text-ink-500">
             邀请成员加入共享对话；你会自动成为群成员。
-          </div>
-
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0">
           <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">
@@ -233,7 +219,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
             }}
           >{busy ? "正在创建…" : `创建群聊${picked.size > 0 ? `（${picked.size + 1} 人）` : ''}`}</button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

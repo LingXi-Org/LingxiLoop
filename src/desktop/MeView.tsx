@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { type ApiQuotaSnapshot, type ApiQuotaWindow, api, getServerOrigin } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
-import { Checkbox } from '@/components/Checkbox'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -535,15 +535,19 @@ function PreferencesTab() {
       <SkypeSoundSection />
       {devtoolsCanEnable && (
         <Section title="↳ 开发者">
-          <Checkbox
-            checked={devtoolsEnabled}
-            disabled={devtoolsLocal}
-            onCheckedChange={(next) => { void setDevMode(next) }}
-            label="开发者模式"
-            description={devtoolsLocal
-              ? '本地开发版本中始终启用'
-              : '显示观测页面并解锁此设备上的开发工具'}
-          />
+          <label className="flex min-h-11 items-center gap-3 rounded-[11px] border border-input px-3 py-2.5">
+            <Checkbox
+              checked={devtoolsEnabled}
+              disabled={devtoolsLocal}
+              onCheckedChange={(next) => { void setDevMode(next === true) }}
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12.5px] font-semibold leading-[1.2]">开发者模式</span>
+              <span className="mt-0.5 block text-[11.5px] leading-[1.35] text-muted-foreground">
+                {devtoolsLocal ? '本地开发版本中始终启用' : '显示观测页面并解锁此设备上的开发工具'}
+              </span>
+            </span>
+          </label>
         </Section>
       )}
     </div>
@@ -636,8 +640,8 @@ function MemoryTab() {
   )
 }
 
-export function MeView() {
-  const [tab, setTab] = useState<Tab>('Profile')
+export function MeView({ initialTab = 'Profile' }: { initialTab?: 'Profile' | 'Usage' | 'Preferences' } = {}) {
+  const [tab, setTab] = useState<Tab>(initialTab)
 
   return (
     <main className="overflow-y-auto p-8 pt-6"

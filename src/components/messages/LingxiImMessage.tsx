@@ -1,11 +1,10 @@
-import { memo, useState } from 'react'
+import { memo } from 'react'
 import { MessagePrimitive, useAuiState } from '@assistant-ui/react'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { discardFailedMessage, retryFailedMessage, toggleReaction } from '@/stores/messages'
 import { Avatar } from '../Avatar'
-import { ContextMenu, type ContextMenuItem } from '../ContextMenu'
 import { HumanBadge } from '../HumanBadge'
 import { LingxiMessageParts } from './LingxiMessageParts'
 import { QuoteCard } from './MessageQuote'
@@ -13,6 +12,19 @@ import { QUICK_REACTIONS, ReactionPill } from './MessageReactions'
 import { ReadReceiptStatus } from './ReadReceiptStatus'
 import { SystemRow } from './SystemMessageRow'
 import { Message, MessageAvatar, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
+
+interface MessageMenuItem {
+  label: string
+  onSelect?: () => void
+  submenu?: MessageMenuItem[]
+}
+
+function MessageMenuItems({ items }: { items: MessageMenuItem[] }) {
+  return items.map((item, index) => item.submenu?.length
+    ? <ContextMenuSub key={`${item.label}:${index}`}><ContextMenuSubTrigger>{item.label}</ContextMenuSubTrigger><ContextMenuSubContent><MessageMenuItems items={item.submenu} /></ContextMenuSubContent></ContextMenuSub>
+    : <ContextMenuItem key={`${item.label}:${index}`} onClick={item.onSelect}>{item.label}</ContextMenuItem>)
+}
 
 interface LingxiImMessageProps {
   delay?: number
@@ -33,7 +45,6 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
   }
   const openAgentInfo = useApp((s) => s.openAgentInfo)
   const openThreadView = useApp((s) => s.openThreadView)
-  const [actionMenu, setActionMenu] = useState<{ x: number; y: number } | null>(null)
   if (custom.presentation.variant === 'system') return <SystemRow msg={msg} delay={delay} animate={animate} openMaus={openMaus} />
   const isHuman = author.kind === 'human'
   const isMine = custom.isMine
@@ -51,7 +62,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
     if (!isMine) openAgentInfo(author.id)
   }
   const copyBody = () => { if (msg.body) void navigator.clipboard.writeText(msg.body) }
-  const actionItems: ContextMenuItem[] = [
+  const actionItems: MessageMenuItem[] = [
     { label: '快速反应', submenu: QUICK_REACTIONS.slice(0, 6).map((emoji) => ({ label: emoji, onSelect: () => void toggleReaction(msg.id, emoji) })) },
     ...(shell.reply ? [{ label: '回复', onSelect: () => useApp.getState().setReplyingTo(msg.conversationId, msg.id) }] : []),
     ...(msg.body ? [{ label: '复制文字', onSelect: copyBody }] : []),
@@ -77,17 +88,16 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
       )}
       style={animate ? { animationDelay: `${delay}ms` } : undefined}
     >
-      <Message
+      <ContextMenu>
+      <ContextMenuTrigger render={<Message
         align={isMine ? 'end' : 'start'}
         className={cn(!isMine && 'gap-3')}
         data-message-continuation={!groupStart ? 'true' : 'false'}
-      onContextMenu={(event) => {
+      onContextMenuCapture={(event) => {
         const target = event.target as HTMLElement
-        if (target.closest('a, button, input, textarea, video, audio, [contenteditable="true"]')) return
-        if (window.getSelection()?.toString()) return
-        event.preventDefault(); setActionMenu({ x: event.clientX, y: event.clientY })
+        if (target.closest('a, button, input, textarea, video, audio, [contenteditable="true"]') || window.getSelection()?.toString()) event.stopPropagation()
       }}
-      >
+      />}>
       {!groupStart ? (
         <MessageAvatar className="!w-12" aria-hidden="true" />
       ) : openMaus ? (
@@ -184,8 +194,9 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
         {!hasTextBubble && bubbleReactions && <div className="mt-2 flex flex-wrap items-center gap-1">{bubbleReactions}</div>}
         </MessageFooter>
       </MessageContent>
-      </Message>
-      {actionMenu && <ContextMenu x={actionMenu.x} y={actionMenu.y} items={actionItems} onClose={() => setActionMenu(null)} />}
+      </ContextMenuTrigger>
+      <ContextMenuContent aria-label="消息操作"><MessageMenuItems items={actionItems} /></ContextMenuContent>
+      </ContextMenu>
     </MessagePrimitive.Root>
   )
 }

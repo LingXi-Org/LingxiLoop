@@ -3,7 +3,7 @@
  * admin toggles per row.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { SelectMenu } from '@/components/SelectMenu'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/stores/auth'
 import { type AdminStats, type AdminUser, type AdminUserDetail, adminApi, type Tier } from './api'
@@ -139,18 +139,13 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
             type="search" placeholder="电子邮件或姓名" className="admin-input"
             value={q} onChange={(e) => setQ(e.target.value)}
           />
-          <SelectMenu
-            ariaLabel="筛选用户级别"
-            value={tier}
-            onChange={(value) => setTier(value as Tier | '')}
-            options={[
-              { value: '', label: '所有级别' },
-              { value: 'free', label: '免费' },
-              { value: 'pro', label: '专业版' },
-              { value: 'max', label: '最大' },
-            ]}
-            className="w-36"
-          />
+          <Select value={tier || '__all__'} onValueChange={(value) => setTier(value === '__all__' ? '' : value as Tier)}>
+            <SelectTrigger className="w-36" aria-label="筛选用户级别"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">所有级别</SelectItem>
+              <SelectItem value="free">免费</SelectItem><SelectItem value="pro">专业版</SelectItem><SelectItem value="max">最大</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </header>
 
@@ -230,18 +225,12 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
           </div>
         </div>
         <div onClick={(e) => e.stopPropagation()} data-label="Tier">
-          <SelectMenu
-            ariaLabel={`更改 ${u.name || u.email} 的级别`}
-            value={u.tier}
-            onChange={(value) => onTierChange(value as Tier)}
-            options={[
-              { value: 'free', label: '免费' },
-              { value: 'pro', label: '专业版' },
-              { value: 'max', label: '最大' },
-            ]}
-            size="compact"
-            className="w-24"
-          />
+          <Select value={u.tier} onValueChange={(value) => onTierChange(value as Tier)}>
+            <SelectTrigger className="h-8 w-24" aria-label={`更改 ${u.name || u.email} 的级别`}><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="free">免费</SelectItem><SelectItem value="pro">专业版</SelectItem><SelectItem value="max">最大</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div onClick={(e) => e.stopPropagation()} data-label="Admin">
           <button

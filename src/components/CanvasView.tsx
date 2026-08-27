@@ -2,9 +2,9 @@ import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { ws } from '@/api/client'
 import { AvatarMini } from '@/components/Avatar'
 import { CanvasFrameContent } from '@/components/CanvasFrameContent'
-import { ContextMenu } from '@/components/ContextMenu'
 import { IAt, IBack, IPlus, ISend, ITrash } from '@/components/icons'
 import { Textarea } from '@/components/ui/textarea'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { canvasStatusLabel, isCanvasAssignmentActive } from '@/lib/canvasCollaboration'
@@ -28,8 +28,8 @@ const TYPE_LABELS: Record<CanvasFrameType, string> = {
 const EDITABLE_FRAME_TYPES = new Set<CanvasFrameType>(['markdown', 'document'])
 
 type Viewport = { x: number; y: number; zoom: number }
-type CanvasMenu = { x: number; y: number; worldX: number; worldY: number; addOpen: boolean }
-type FrameMenu = { x: number; y: number; frameId: string }
+type CanvasMenu = { worldX: number; worldY: number }
+type FrameMenu = { frameId: string }
 type GesturePoint = { x: number; y: number; pointerType: string }
 type PinchGesture = { distance: number; zoom: number; worldX: number; worldY: number }
 
@@ -221,23 +221,19 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
   }
 
   function onStageContextMenu(event: React.MouseEvent<HTMLDivElement>) {
-    event.preventDefault()
     const stage = stageRef.current
     if (!stage) return
     const frameElement = (event.target as HTMLElement).closest<HTMLElement>('[data-canvas-frame]')
     if (frameElement?.dataset.canvasFrame) {
       setMenu(null)
-      setFrameMenu({ frameId: frameElement.dataset.canvasFrame, x: event.clientX, y: event.clientY })
+      setFrameMenu({ frameId: frameElement.dataset.canvasFrame })
       return
     }
     setFrameMenu(null)
     const world = worldPoint(event.clientX, event.clientY)
     setMenu({
-      x: event.clientX,
-      y: event.clientY,
       worldX: world.x,
       worldY: world.y,
-      addOpen: false,
     })
   }
 
@@ -275,7 +271,8 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
 
   return <div className="canvas-shell relative h-full min-h-0 overflow-hidden">
     <CanvasHeader onBack={onBack} onFocusFrame={focusFrame} />
-    <div
+    <ContextMenu onOpenChange={(open) => { if (!open) { setMenu(null); setFrameMenu(null) } }}>
+    <ContextMenuTrigger render={<div
       ref={stageRef}
       className={`canvas-stage canvas-main-stage absolute inset-x-0 bottom-0 overflow-hidden ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
       onPointerDownCapture={onStagePointerDown}
@@ -286,7 +283,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
       onWheel={onWheel}
       onDragStart={(event) => event.preventDefault()}
       style={{ backgroundPosition: `${viewport.x}px ${viewport.y}px`, backgroundSize: `${24 * viewport.zoom}px ${24 * viewport.zoom}px` }}
-    >
+    />}>
       <div data-canvas-world="true" className="absolute left-0 top-0 h-full w-full origin-top-left" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}>
         {snapshot && visibleFrames.map((frame) => {
           const assignment = assignmentForFrame(frame, snapshot.assignments)
@@ -296,9 +293,13 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
       </div>
       {snapshot && visibleFrames.length === 0 && <div className="pointer-events-none absolute inset-0 grid place-items-center"><div className="rounded-2xl border border-hairline bg-panel/80 px-5 py-4 text-center shadow-sm backdrop-blur"><div className="text-sm font-semibold text-ink">画布还没有卡片</div><div className="mt-1 text-xs text-ink-secondary">在空白处单击右键，选择“新增”或“对话”。</div></div></div>}
       {error && <div className="absolute left-4 top-4 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 shadow">{error}</div>}
-      {menu && <CanvasContextMenu menu={menu} onClose={() => setMenu(null)} onTalk={() => { setMenu(null); setDialogOpen(true) }} onCreate={createAt} />}
-      {frameMenu && snapshot && <CanvasFrameMenu menu={frameMenu} frame={snapshot.frames.find((frame) => frame.id === frameMenu.frameId)} onClose={() => setFrameMenu(null)} onFeedback={(frameId) => { setFrameMenu(null); setFeedbackFrameId(frameId) }} />}
-    </div>
+    </ContextMenuTrigger>
+    <ContextMenuContent aria-label={frameMenu && snapshot ? `${snapshot.frames.find((frame) => frame.id === frameMenu.frameId)?.title ?? ''}卡片操作` : '画布操作'} className="min-w-[200px]">
+      {frameMenu && snapshot
+        ? <CanvasFrameMenu frame={snapshot.frames.find((frame) => frame.id === frameMenu.frameId)} onClose={() => setFrameMenu(null)} onFeedback={(frameId) => { setFrameMenu(null); setFeedbackFrameId(frameId) }} />
+        : menu && <CanvasContextMenu menu={menu} onTalk={() => { setMenu(null); setDialogOpen(true) }} onCreate={createAt} />}
+    </ContextMenuContent>
+    </ContextMenu>
     {feedbackFrame && <FrameFeedbackDialog frame={feedbackFrame} viewport={viewport} onClose={() => setFeedbackFrameId(null)} />}
     {dialogOpen && snapshot && <CanvasAgentDialog onClose={() => setDialogOpen(false)} />}
   </div>
@@ -400,20 +401,37 @@ function latestAssignmentProgress(snapshot: CanvasSnapshot, assignment: CanvasAg
   return `${localizeStatus(canvasStatusLabel(assignment.status))} · ${assignment.assignment}`
 }
 
-function CanvasContextMenu({ menu, onClose, onTalk, onCreate }: {
+interface CanvasContextItem {
+  label: string
+  onSelect?: () => void
+  icon?: React.ReactNode
+  destructive?: boolean
+  hint?: string
+  disabled?: boolean
+  submenu?: CanvasContextItem[]
+  keepOpen?: boolean
+}
+
+function CanvasMenuItems({ items, onClose }: { items: CanvasContextItem[]; onClose: () => void }) {
+  return items.map((item, index) => {
+    const content = <>{item.icon}<span className="flex-1">{item.label}</span>{item.hint && <ContextMenuShortcut>{item.hint}</ContextMenuShortcut>}</>
+    if (item.submenu?.length) return <ContextMenuSub key={`${item.label}:${index}`}><ContextMenuSubTrigger disabled={item.disabled}>{content}</ContextMenuSubTrigger><ContextMenuSubContent><CanvasMenuItems items={item.submenu} onClose={onClose} /></ContextMenuSubContent></ContextMenuSub>
+    return <ContextMenuItem key={`${item.label}:${index}`} disabled={item.disabled} variant={item.destructive ? 'destructive' : 'default'} onClick={(event) => { if (item.keepOpen) event.preventDefault(); item.onSelect?.(); if (!item.keepOpen) onClose() }}>{content}</ContextMenuItem>
+  })
+}
+
+function CanvasContextMenu({ menu, onTalk, onCreate }: {
   menu: CanvasMenu
-  onClose: () => void
   onTalk: () => void
   onCreate: (type: CanvasFrameType, at: { x: number; y: number }) => void
 }) {
-  return <ContextMenu x={menu.x} y={menu.y} onClose={onClose} label="画布操作" items={[
+  return <CanvasMenuItems onClose={() => undefined} items={[
     { label: '对话', icon: <IAt />, onSelect: onTalk },
     { label: '新增', icon: <IPlus />, submenu: FRAME_TYPES.map((item) => ({ label: item.label, hint: item.detail, onSelect: () => onCreate(item.type, { x: menu.worldX, y: menu.worldY }) })) },
   ]} />
 }
 
-function CanvasFrameMenu({ menu, frame: targetFrame, onClose, onFeedback }: {
-  menu: FrameMenu
+function CanvasFrameMenu({ frame: targetFrame, onClose, onFeedback }: {
   frame?: CanvasFrame
   onClose: () => void
   onFeedback: (frameId: string) => void
@@ -460,7 +478,7 @@ function CanvasFrameMenu({ menu, frame: targetFrame, onClose, onFeedback }: {
     }
   }
 
-  return <ContextMenu x={menu.x} y={menu.y} onClose={onClose} label={`${frame.title}卡片操作`} items={[
+  return <CanvasMenuItems onClose={onClose} items={[
     { label: frame.title, hint: `${TYPE_LABELS[frame.type]} · 第 ${frame.revision} 版`, disabled: true },
     { label: '反馈给智能体', icon: <IAt />, onSelect: () => onFeedback(frame.id) },
     { label: notice ?? '复制内容', keepOpen: true, onSelect: () => void copyContent() },

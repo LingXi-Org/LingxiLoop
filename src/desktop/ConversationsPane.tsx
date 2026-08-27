@@ -3,11 +3,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { type ApiSearchResults, api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
-import { ContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { GroupCreator } from '@/components/GroupCreator'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { NavUser } from '@/components/nav-user'
 import { IAgent, ICanvas, IDoc, IMail, IPlus, ISettings } from '@/components/icons'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { ConversationListItemContent } from '@/im/ConversationList'
 import { isMockImDevelopment } from '@/lib/devMode'
 import { toastAction } from '@/lib/actionToast'
@@ -18,7 +19,6 @@ import { useAuth } from '@/stores/auth'
 import { isMuted, useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
 import type { Conversation, Participant } from '@/types'
-import { SidebarFooter } from './SidebarFooter'
 
 const SearchIcon = ({ className = '' }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className} aria-hidden>
@@ -26,24 +26,44 @@ const SearchIcon = ({ className = '' }: { className?: string }) => (
   </svg>
 )
 
-function ConversationRow({ conversation, selected, onMenu }: {
+interface ConversationMenuItem {
+  label: string
+  onSelect?: () => void
+  icon?: React.ReactNode
+  destructive?: boolean
+  hint?: string
+  disabled?: boolean
+  submenu?: ConversationMenuItem[]
+}
+
+function ConversationMenuItems({ items }: { items: ConversationMenuItem[] }) {
+  return items.map((item, index) => {
+    const content = <>{item.icon}<span className="flex-1">{item.label}</span>{item.hint && <ContextMenuShortcut>{item.hint}</ContextMenuShortcut>}</>
+    if (item.submenu?.length) return <ContextMenuSub key={`${item.label}:${index}`}><ContextMenuSubTrigger disabled={item.disabled}>{content}</ContextMenuSubTrigger><ContextMenuSubContent><ConversationMenuItems items={item.submenu} /></ContextMenuSubContent></ContextMenuSub>
+    return <ContextMenuItem key={`${item.label}:${index}`} disabled={item.disabled} variant={item.destructive ? 'destructive' : 'default'} onClick={item.onSelect}>{content}</ContextMenuItem>
+  })
+}
+
+function ConversationRow({ conversation, selected, items }: {
   conversation: Conversation
   selected: boolean
-  onMenu: (event: React.MouseEvent) => void
+  items: ConversationMenuItem[]
 }) {
   const select = useApp((s) => s.selectConversation)
   return (
-    <button
+    <ContextMenu>
+    <ContextMenuTrigger render={<button
       type="button"
       onClick={() => select(conversation.id)}
-      onContextMenu={onMenu}
       className={cn(
         'group flex w-full items-center gap-2 rounded-xl px-[9px] py-[9px] text-left transition-colors',
-        selected ? 'bg-accent text-white' : 'text-ink hover:bg-raised/70',
+        selected ? 'bg-[var(--brand-im-blue)] text-white' : 'text-ink hover:bg-raised/70',
       )}
-    >
+    />}>
       <ConversationListItemContent conversation={conversation} variant="desktop" selected={selected} />
-    </button>
+    </ContextMenuTrigger>
+    <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
+    </ContextMenu>
   )
 }
 
@@ -94,12 +114,12 @@ export function ConversationsPane() {
   const selected = useApp((s) => s.selectedConversationId)
   const select = useApp((s) => s.selectConversation)
   const authUser = useAuth((s) => s.user)
+  const authParticipant = useParticipants((s) => authUser ? s.byId[authUser.id] : undefined)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ApiSearchResults | null>(null)
   const [searching, setSearching] = useState(false)
   const [launcherOpen, setLauncherOpen] = useState(false)
   const [creating, setCreating] = useState<string[] | null>(null)
-  const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null)
   const [addingMembers, setAddingMembers] = useState<Conversation | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -149,9 +169,8 @@ export function ConversationsPane() {
     return [...unique.values()]
   }, [list, mockMode, query, results])
 
-  const openContextMenu = (conversation: Conversation, event: React.MouseEvent) => {
-    event.preventDefault()
-    const items: ContextMenuItem[] = [
+  const conversationMenuItems = (conversation: Conversation): ConversationMenuItem[] => {
+    const items: ConversationMenuItem[] = [
       { label: conversation.pinned ? '取消置顶' : '置顶会话', onSelect: () => void api.togglePin(conversation.id, !conversation.pinned).then(() => useConversations.getState().reload()) },
       { label: isMuted(conversation) ? '取消静音' : '静音会话', onSelect: () => void api.setMute(conversation.id, !isMuted(conversation), null).then(() => useConversations.getState().reload()) },
     ]
@@ -178,7 +197,7 @@ export function ConversationsPane() {
       const other = conversation.members.find((id) => id !== authUser?.id)
       if (other) items.push({ label: '创建包含此成员的群聊…', onSelect: () => setCreating([other]) })
     }
-    setMenu({ x: event.clientX, y: event.clientY, items })
+    return items
   }
 
   return (
@@ -234,13 +253,12 @@ export function ConversationsPane() {
             defaultItemHeight={72}
             increaseViewportBy={{ top: 500, bottom: 500 }}
             components={{ EmptyPlaceholder: () => loaded ? <p className="px-3 py-8 text-center text-[13px] text-ink-secondary">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
-            itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} onMenu={(event) => openContextMenu(conversation, event)} />}
+            itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} />}
           />
         )}
       </div>
 
-      <SidebarFooter />
-      {menu && <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />}
+      {authUser && <div className="shrink-0 border-t border-sidebar-border p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></div>}
       {creating && <GroupCreator initialPicked={creating} onClose={() => setCreating(null)} />}
       {addingMembers && <AddMembersDialog conversation={addingMembers} onClose={() => setAddingMembers(null)} />}
     </aside>

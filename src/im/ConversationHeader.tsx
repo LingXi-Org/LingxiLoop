@@ -1,8 +1,8 @@
 import { type ReactNode, useState } from 'react'
 import { api } from '@/api/client'
 import { AvatarStack } from '@/components/Avatar'
-import { SelectMenu } from '@/components/SelectMenu'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/stores/conversations'
@@ -153,18 +153,10 @@ export function ConversationHeader({
             {!mobile && conversation.kind === 'group' && agents.length > 0 && (
               <div className="flex shrink-0 items-center gap-1 border-l border-hairline pl-2">
                 <span className="text-[9px] font-bold tracking-wider text-ink-secondary">负责人</span>
-                <SelectMenu
-                  ariaLabel="更换群聊负责人"
-                  value={conversation.leaderId ?? ''}
-                  onChange={(value) => void changeLeader(value)}
-                  options={[
-                    ...(!conversation.leaderId ? [{ value: '', label: '选择', disabled: true }] : []),
-                    ...agents.map((agent) => ({ value: agent.id, label: agent.name })),
-                  ]}
-                  className="max-w-24"
-                  buttonClassName="border-0 bg-transparent px-1 text-[10px] font-semibold text-accent shadow-none"
-                  size="compact"
-                />
+                <Select value={conversation.leaderId ?? undefined} onValueChange={(value) => void changeLeader(value)}>
+                  <SelectTrigger className="h-7 max-w-24 border-0 bg-transparent px-1 text-[10px] font-semibold text-accent shadow-none" aria-label="更换群聊负责人"><SelectValue placeholder="选择" /></SelectTrigger>
+                  <SelectContent>{agents.map((agent) => <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
             )}
           </span>

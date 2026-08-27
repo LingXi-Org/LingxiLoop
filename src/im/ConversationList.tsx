@@ -99,10 +99,11 @@ export function ConversationListItemContent({
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
   const isMobile = variant === 'mobile'
+  const isDirectAgent = conversation.kind === 'direct' && conversation.members.some((id) => id !== meId && byId[id]?.kind === 'agent')
 
   return (
     <>
-      <ConversationAvatar conversation={conversation} size={isMobile ? 48 : 54} variant={variant} />
+      <ConversationAvatar conversation={conversation} size={isMobile || !isDirectAgent ? 48 : 54} variant={variant} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
           {conversation.pinned && !isMobile && <span className={cn('text-[9px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已置顶">◆</span>}

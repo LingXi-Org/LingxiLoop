@@ -6,8 +6,8 @@ import { CardLink } from '@/components/CardLink'
 import { DocumentLink } from '@/components/DocumentLink'
 import { IAt, IBoard, IMore, IPlus, ITrash } from '@/components/icons'
 import { ResizeHandle } from '@/components/ResizeHandle'
-import { Select } from '@/components/Select'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
@@ -897,12 +897,10 @@ function CardDetailModal({ boardId, card, columns, onClose }: {
           <section className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">栏目</div>
-              <Select
-                value={card.columnId}
-                onValueChange={(columnId) => void moveToColumn(columnId)}
-                options={columns.map((c) => ({ value: c.id, label: c.title }))}
-                ariaLabel="Column"
-              />
+              <Select value={card.columnId} onValueChange={(columnId) => void moveToColumn(columnId)}>
+                <SelectTrigger aria-label="Column"><SelectValue /></SelectTrigger>
+                <SelectContent>{columns.map((column) => <SelectItem key={column.id} value={column.id}>{column.title}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div>
               <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">受让人</div>

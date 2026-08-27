@@ -9,12 +9,12 @@ import { AgentTypingIndicator } from '@/components/messages/AgentTypingIndicator
 import { PollComposer } from '@/components/PollComposer'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
-import { SelectMenu } from '@/components/SelectMenu'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { TwEmoji } from '@/components/TwEmoji'
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { ComposerSurface } from '@/im/Composer'
@@ -1258,16 +1258,10 @@ export function MobileChatInfo() {
           {isGroup && (
             <div className="mb-4">
               <h4 className="text-[10.5px] font-bold text-ink-300 tracking-wider mb-2">负责人</h4>
-              <SelectMenu
-                value={c.leaderId ?? ''}
-                onChange={(value) => void changeLeader(value)}
-                options={[
-                  ...(!c.leaderId ? [{ value: '', label: '选择一名可用智能体', disabled: true }] : []),
-                  ...activeGroupAgents.map((agent) => ({ value: agent.id, label: agent.name })),
-                ]}
-                className="w-full"
-                ariaLabel="更换群聊负责人"
-              />
+              <Select value={c.leaderId ?? undefined} onValueChange={(value) => void changeLeader(value)}>
+                <SelectTrigger className="w-full" aria-label="更换群聊负责人"><SelectValue placeholder="选择一名可用智能体" /></SelectTrigger>
+                <SelectContent>{activeGroupAgents.map((agent) => <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>)}</SelectContent>
+              </Select>
               <p className="mt-1.5 text-[11px] text-ink-400">普通消息会唤醒该智能体；负责人可通过 @成员 分派工作。</p>
             </div>
           )}

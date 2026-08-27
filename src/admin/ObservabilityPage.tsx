@@ -29,11 +29,15 @@
  * worth the complexity.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Combobox } from '@/components/Combobox'
-import { Select } from '@/components/Select'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 import {
   adminApi,
   type LlmCallPurpose,
@@ -342,13 +346,10 @@ export function ObservabilityPage() {
             >
               <span className={`obs-refresh-icon${refreshing ? ' is-spinning' : ''}`} aria-hidden>↻</span>
             </button>
-            <Select
-              value={String(autoRefreshMs)}
-              onValueChange={(v) => setAutoRefreshMs(Number(v))}
-              options={REFRESH_INTERVALS.map((r) => ({ value: String(r.ms), label: r.label }))}
-              ariaLabel="Auto-refresh interval"
-              className="min-w-[150px]"
-            />
+            <Select value={String(autoRefreshMs)} onValueChange={(v) => setAutoRefreshMs(Number(v))}>
+              <SelectTrigger className="min-w-[150px]" aria-label="Auto-refresh interval"><SelectValue /></SelectTrigger>
+              <SelectContent>{REFRESH_INTERVALS.map((item) => <SelectItem key={item.ms} value={String(item.ms)}>{item.label}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
         </div>
         {lastUpdated && (
@@ -1311,8 +1312,8 @@ function NumCell({ label, value, hint }: { label: string; value: string; hint?: 
 // global tenants slice of the payload — it isn't filtered by the page's own
 // companyFilter so the picker can always offer every active account.
 //
-// Uses the shared searchable <Combobox> (200 tenants is too many to scroll —
-// the operator types to filter). Options are cost/token-ranked with the spend
+// Uses the shadcn Popover + Command composition (200 tenants is too many to
+// scroll — the operator types to filter). Options are cost/token-ranked with the spend
 // in the right-aligned `hint`, "All accounts" first.
 
 function TenantPicker({ tenants, value, unit, onChange }: {
@@ -1321,10 +1322,11 @@ function TenantPicker({ tenants, value, unit, onChange }: {
   unit: Unit
   onChange: (companyId: string) => void
 }) {
+  const [open, setOpen] = useState(false)
   // Stable label per tenant so a partially-resolved companies join doesn't
   // surface bare ids in the picker. Format: "Name · $cost" / "Name · NtokT"
   // depending on the active unit; falls back to the company id when unnamed.
-  const options = useMemo(() => {
+  const options = useMemo<Array<{ value: string; label: string; hint?: string }>>(() => {
     const name = (t: LlmTenantRow): string => t.name?.trim() || t.slug?.trim() || `(${t.companyId.slice(0, 8)}…)`
     // Sort by the metric that's actually ON SCREEN, descending. The server
     // ranks tenants by $; in token mode that order looks random (a cheap model
@@ -1343,15 +1345,33 @@ function TenantPicker({ tenants, value, unit, onChange }: {
       })),
     ]
   }, [tenants, unit])
+  const selected = options.find((option) => option.value === value)
   return (
-    <Combobox
-      value={value}
-      onValueChange={onChange}
-      options={options}
-      ariaLabel="Filter by tenant"
-      placeholder="所有帐户"
-      searchPlaceholder="Search workspaces…"
-      className="w-[320px]"
-    />
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger render={<Button variant="outline" role="combobox" aria-label="Filter by tenant" aria-expanded={open} className="w-[320px] justify-between" />}>
+        <span className="min-w-0 flex-1 truncate text-left">{selected?.label ?? '所有帐户'}</span>
+        {selected?.hint && <span className="shrink-0 text-xs text-muted-foreground">{selected.hint}</span>}
+        <ChevronsUpDown className="ml-1 opacity-50" />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[320px] p-0">
+        <Command>
+          <CommandInput placeholder="Search workspaces…" />
+          <CommandList>
+            <CommandEmpty>No matches</CommandEmpty>
+            {options.map((option) => (
+              <CommandItem
+                key={option.value || '__all__'}
+                value={`${option.label} ${option.hint ?? ''}`}
+                onSelect={() => { onChange(option.value); setOpen(false) }}
+              >
+                <Check className={cn('size-4', option.value === value ? 'opacity-100' : 'opacity-0')} />
+                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                {option.hint && <span className="shrink-0 text-xs text-muted-foreground">{option.hint}</span>}
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }

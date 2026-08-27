@@ -54,7 +54,14 @@ test('global resource surfaces render Skeletons instead of plain initial loading
 
 test('repository skill requires Skeletons for all future asynchronous resources', () => {
   assert.match(resourceSkill, /name: lingxiloop-resource-loading/)
-  assert.match(resourceSkill, /any LingxiLoop UI that loads resources asynchronously/)
+  assert.match(resourceSkill, /any LingxiLoop resource UI, page-like destination, or focused creation\/editing flow/)
+  assert.match(resourceSkill, /shared shadcn `Drawer`/)
+  assert.match(resourceSkill, /permanently limited to two columns/)
+  assert.match(resourceSkill, /Never render developer-facing annotations/)
+  assert.match(resourceSkill, /temporary debug copy as prohibited production UI/)
+  assert.match(resourceSkill, /Creating a group chat is a required Dialog use case/)
+  assert.match(resourceSkill, /Do not turn every overlay into a Drawer/)
+  assert.match(resourceSkill, /Choose Drawer, Dialog, or Alert Dialog by intent/)
   assert.match(resourceSkill, /Treat a resource loading state as part of the feature contract/)
   assert.match(resourceSkill, /Do not return `null`, plain “加载中…” text, a spinner alone/)
   assert.match(resourceSkill, /desktop, mobile, peek\/sheet\/dialog/)

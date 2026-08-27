@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { type AgentInput, api } from '@/api/client'
-import { Input } from '@/components/Input'
-import { TextArea } from '@/components/TextArea'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
 import type { AgentCapability, Participant } from '@/types'
@@ -161,7 +161,7 @@ export function AgentEditor({ agent, onClose }: Props) {
           </Field>
 
           <Field label="行为提示词" hint="描述智能体的语气、原则和工作边界。请用第二人称“你”来书写。">
-            <TextArea
+            <Textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={5}
@@ -172,7 +172,7 @@ export function AgentEditor({ agent, onClose }: Props) {
           </Field>
 
           <Field label="简介" hint="可选，显示在智能体资料卡上。">
-            <TextArea
+            <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={2}

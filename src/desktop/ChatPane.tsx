@@ -11,11 +11,11 @@ import { PreviewText } from '@/components/PreviewText'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { RichInput, type RichInputHandle } from '@/components/RichInput'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
-import { SelectMenu } from '@/components/SelectMenu'
 import { SkypeEmoji } from '@/components/SkypeEmoji'
 import { TwEmoji } from '@/components/TwEmoji'
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
@@ -275,18 +275,12 @@ function _ChatHeader({
               <span className="w-1 h-1 rounded-full bg-ink-300 shrink-0" />
               <div className="flex shrink-0 items-center gap-1" title="普通消息由群聊负责人主导回复">
                 <span className="text-[10px] font-bold tracking-wider text-ink-300">负责人</span>
-                <SelectMenu
-                  value={c.leaderId ?? ''}
-                  onChange={(value) => void changeLeader(value)}
-                  options={[
-                    ...(!c.leaderId ? [{ value: '', label: '请选择', disabled: true }] : []),
-                    ...activeAgentMembers.map((agent) => ({ value: agent.id, label: agent.name })),
-                  ]}
-                  className="max-w-[120px]"
-                  buttonClassName="border-0 bg-transparent px-1 text-[11.5px] font-semibold text-skype-deep shadow-none"
-                  size="compact"
-                  ariaLabel="更换群聊负责人"
-                />
+                <Select value={c.leaderId ?? undefined} onValueChange={(value) => void changeLeader(value)}>
+                  <SelectTrigger className="h-7 max-w-[120px] border-0 bg-transparent px-1 text-[11.5px] font-semibold text-skype-deep shadow-none" aria-label="更换群聊负责人">
+                    <SelectValue placeholder="请选择" />
+                  </SelectTrigger>
+                  <SelectContent>{activeAgentMembers.map((agent) => <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
             </>
           )}

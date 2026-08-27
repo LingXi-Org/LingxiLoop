@@ -21,7 +21,10 @@ const cardPrimitive = read('../components/ui/card.tsx')
 const contextMenuPrimitive = read('../components/ui/context-menu.tsx')
 const dropdownMenuPrimitive = read('../components/ui/dropdown-menu.tsx')
 const scrollAreaPrimitive = read('../components/ui/scroll-area.tsx')
-const contextMenu = read('../components/ContextMenu.tsx')
+const canvasView = read('../components/CanvasView.tsx')
+const groupCreator = read('../components/GroupCreator.tsx')
+const dialog = read('../components/ui/dialog.tsx')
+const contextMenu = `${message}\n${canvasView}`
 const textareaPrimitive = read('../components/ui/textarea.tsx')
 const inputPrimitive = read('../components/ui/input.tsx')
 const inputGroupPrimitive = read('../components/ui/input-group.tsx')
@@ -298,7 +301,8 @@ test('desktop right-click actions use the shared Base UI context menu', () => {
   assert.match(contextMenuPrimitive, /data-\[variant=destructive\]/)
   assert.match(contextMenu, /<ContextMenuTrigger/)
   assert.match(contextMenu, /<ContextMenuSubTrigger/)
-  assert.doesNotMatch(contextMenu, /app-menu-surface|role="menu"|addEventListener/)
+  assert.doesNotMatch(contextMenu, /components\/ContextMenu|\.\.\/ContextMenu/)
+  assert.doesNotMatch(contextMenu, /dispatchEvent\(new MouseEvent\('contextmenu'/)
 })
 
 test('Canvas editors retain the base-nova Textarea contract', () => {
@@ -361,6 +365,16 @@ test('global menus expose the complete Base UI dropdown composition', () => {
   assert.match(dropdownMenuPrimitive, /@base-ui\/react\/menu/)
   assert.match(dropdownMenuPrimitive, /cn-menu-target cn-menu-translucent/)
   assert.match(dropdownMenuPrimitive, /variant\?: "default" \| "destructive"/)
+})
+
+test('group creation uses the shared Base UI Dialog instead of a handwritten overlay', () => {
+  assert.match(dialog, /@base-ui\/react\/dialog/)
+  assert.match(groupCreator, /<Dialog open/)
+  assert.match(groupCreator, /<DialogContent/)
+  assert.match(groupCreator, /<DialogTitle/)
+  assert.match(groupCreator, /<DialogDescription/)
+  assert.doesNotMatch(groupCreator, /fixed inset-0 z-50 grid place-items-center/)
+  assert.doesNotMatch(dialog, /@radix-ui\/react-dialog/)
 })
 
 test('scrolling surfaces use the base-nova Scroll Area contract', () => {
