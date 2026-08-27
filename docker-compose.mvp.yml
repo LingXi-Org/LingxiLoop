@@ -143,7 +143,7 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
-    environment:
+    environment: &lingxiloop-environment
       NODE_ENV: production
       LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
       PORT: 5181
@@ -204,6 +204,26 @@ services:
       timeout: 3s
       retries: 20
       start_period: 10s
+    networks: [lingxiloop-mvp, lingxiloop-knowledge-internal]
+    logging: *quiet-logging
+
+  worker:
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
+    pull_policy: always
+    restart: unless-stopped
+    command: ["npm", "run", "worker:start"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      wukongim:
+        condition: service_healthy
+      open-notebook:
+        condition: service_healthy
+    environment: *lingxiloop-environment
+    volumes:
+      - lingxiloop-uploads:/app/server/uploads
     networks: [lingxiloop-mvp, lingxiloop-knowledge-internal]
     logging: *quiet-logging
 

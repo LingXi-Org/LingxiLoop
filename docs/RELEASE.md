@@ -17,12 +17,14 @@ and deployment scripts.
 LingxiLoop v1 requires an empty PostgreSQL database. The release has no schema
 upgrade, compatibility ALTER, or data backfill path: discard pre-v1 development
 databases, create a new database, then run `npm run db:bootstrap` exactly once.
-Seed data is created separately by the application after the schema exists.
+Seed data is created separately by the background Worker after the schema exists.
 
 For a new environment, operators run the Compose `db-bootstrap` tool once before
-starting WuKongIM, the control plane, and Agent OS, then verify `/api/meta`, dependency health,
-authenticated channel access and the release version. Web and Agent OS
-processes never execute DDL. Rollback recreates an empty v1 database and deploys
+starting WuKongIM, Web, Worker, and Agent OS, then verify `/api/meta`, dependency health,
+authenticated channel access and the release version. Web, Worker, and Agent OS
+processes never execute DDL. Web and Worker use the same server image but have
+separate Compose services, commands, restart policies, and replica counts.
+Rollback recreates an empty v1 database and deploys
 the previous digest manifest; it does not attempt an in-place schema downgrade.
 
 Desktop artifacts contain only the renderer and Electron shell. Package

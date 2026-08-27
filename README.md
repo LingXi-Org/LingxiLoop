@@ -13,10 +13,11 @@ Agent are architecture references only.
 ```text
 Web / Electron
   ├─ WuKongIM v3 — messages, channels, ordering, membership, threads, read state
-  └─ LingxiLoop control plane — identity, learning assets, approvals, work queue
-       └─ Agent OS — stateless model loop, sessions, compaction, stop/steer
-            └─ isolated persistent IPython kernel per Agent OS session
-                 └─ typed loop SDK → approved Host Bridge actions
+  └─ LingxiLoop Web — HTTP, WebSocket, webhook and online control-plane requests
+LingxiLoop Worker — schedulers, queue claims, retry, notification and GC
+Agent OS — stateless model loop, sessions, compaction, stop/steer
+  └─ isolated persistent IPython kernel per Agent OS session
+       └─ typed loop SDK → approved Host Bridge actions through LingxiLoop Web
 ```
 
 The model receives exactly one tool:
@@ -59,7 +60,7 @@ npm run mvp:up
 
 Compose pulls the `mvp` GHCR packages through
 `accel.way2api.fun/ghcr.io` by default—nothing is built locally—and waits for
-the LingxiLoop API, Agent OS and WuKongIM stack to become healthy. API port
+the LingxiLoop Web, background Worker, Agent OS and WuKongIM stack to start. API port
 5181 and WuKong WebSocket port 5200 bind to `0.0.0.0` by default for mobile
 clients; use TLS and override the bind addresses for public deployments.
 Packaged services default to warning-level, size-rotated logs. Canvas state is
@@ -96,11 +97,16 @@ TLS client endpoint is published by the deployment proxy.
 LingxiLoop v1 intentionally has no database upgrade path. Initialize an empty
 PostgreSQL database once with `npm run db:bootstrap`; existing development
 databases must be dropped and recreated. Web Server startup never executes DDL.
+Web and Worker run from the same immutable server image as independently
+restartable/scalable services; changing Web replica count never creates more
+scheduler, retry, sweeper or GC loops.
 
 ## Repository map
 
 | Path | Purpose |
 | --- | --- |
+| `server/src/bin/` | Explicit Web, Worker and Agent OS process entrypoints |
+| `server/src/worker.ts` | Background task registry and documented concurrency policy |
 | `server/src/agent-os/` | Agent OS host, model loop, queue and Host Bridge contracts |
 | `server/agent-os/` | Persistent IPython kernel runner |
 | `server/src/im/` | WuKongIM bootstrap, webhook, routing and payload contracts |

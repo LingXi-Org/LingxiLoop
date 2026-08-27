@@ -813,7 +813,7 @@ export async function applyAgentEdit(
   return { replaced, imagePlaced, imagesDeleted, blocksReplaced }
 }
 
-/** Cross-instance bus bootstrap. Idempotent — safe to call from index.ts
+/** Cross-instance bus bootstrap. Idempotent — safe to call from web.ts
  *  alongside the regular Redis subscriber. */
 let busBootstrapped = false
 export function bootDocumentBus(): void {

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
+import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 
 type Schedule = { everyMinutes?: number; time?: string }
 
@@ -58,12 +59,12 @@ export async function scheduleDueLearningRoutines(now = new Date()): Promise<num
   } finally { client.release() }
 }
 
-export function startLearningRoutineScheduler(intervalMs = 60_000): NodeJS.Timeout {
+export function startLearningRoutineScheduler(intervalMs = 60_000): WorkerTaskHandle {
   const tick = () => void scheduleDueLearningRoutines().catch((error) =>
     console.warn('[agent-os:routines] scheduler failed:', error instanceof Error ? error.message : String(error)),
   )
-  setImmediate(tick)
+  const immediate = setImmediate(tick)
   const timer = setInterval(tick, intervalMs)
   timer.unref?.()
-  return timer
+  return { stop: () => { clearImmediate(immediate); clearInterval(timer) } }
 }

@@ -1,6 +1,6 @@
 /**
  * Process-level alerting hook. The unhandledRejection /
- * uncaughtException handlers in index.ts and pod-agent.ts log the
+ * uncaughtException handlers in the process entrypoints log the
  * crash to stderr — fine for a local dev box, useless in prod where
  * nobody's tailing logs. Route those through here too so a webhook
  * (Discord-compatible by default) gets a copy and the on-call sees

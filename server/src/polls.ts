@@ -7,6 +7,7 @@
  */
 import { createHash, randomUUID } from 'node:crypto'
 import { pool } from './db/pool.js'
+import type { WorkerTaskHandle } from './runtime/lifecycle.js'
 import type { PollPayload, PollOption } from './db/schema.js'
 import type { PollUpdatedEvent } from './redis.js'
 import { wukongClient } from './im/wukong.js'
@@ -292,7 +293,7 @@ async function buildPollUpdatedEvent(messageId: string, actorId: string | null):
 
 let sweepTimer: NodeJS.Timeout | null = null
 
-export function startPollExpirationSweeper(intervalMs: number): { stop(): void } | null {
+export function startPollExpirationSweeper(intervalMs: number): WorkerTaskHandle | null {
   if (sweepTimer) return { stop: stopPollExpirationSweeper }
   if (intervalMs <= 0) return null
   const tick = async () => {

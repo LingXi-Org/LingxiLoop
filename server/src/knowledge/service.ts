@@ -5,6 +5,7 @@ import type { PoolClient } from 'pg'
 import { pool } from '../db/pool.js'
 import { inc } from '../metrics.js'
 import { storage } from '../storage.js'
+import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 import {
   openNotebookClient,
   OpenNotebookError,
@@ -363,8 +364,8 @@ export async function runKnowledgeWorkerOnce(workerId = `open-notebook-${process
   return true
 }
 
-export function startKnowledgeWorker(): () => void {
-  if (!openNotebookEnabled()) return () => undefined
+export function startKnowledgeWorker(): WorkerTaskHandle | null {
+  if (!openNotebookEnabled()) return null
   let stopped = false
   let running = false
   const tick = async () => {
@@ -378,7 +379,7 @@ export function startKnowledgeWorker(): () => void {
   const timer = setInterval(() => void tick(), 1_500)
   timer.unref?.()
   void tick()
-  return () => { stopped = true; clearInterval(timer) }
+  return { stop: () => { stopped = true; clearInterval(timer) } }
 }
 
 export async function runKnowledgeStorageGcOnce(): Promise<{ inspected: number; deleted: number }> {
@@ -393,12 +394,12 @@ export async function runKnowledgeStorageGcOnce(): Promise<{ inspected: number; 
   return { inspected: objects.length, deleted }
 }
 
-export function startKnowledgeStorageGc(): () => void {
+export function startKnowledgeStorageGc(): WorkerTaskHandle | null {
   const interval = Number(process.env.KNOWLEDGE_STORAGE_GC_INTERVAL_MS ?? 24 * 60 * 60_000)
-  if (!interval) return () => undefined
+  if (!interval) return null
   const timer = setInterval(() => void runKnowledgeStorageGcOnce().catch((error) => console.warn('[knowledge] storage GC failed', error)), interval)
   timer.unref?.()
-  return () => clearInterval(timer)
+  return { stop: () => clearInterval(timer) }
 }
 
 function hitExcerpt(hit: OpenNotebookSearchHit): string {

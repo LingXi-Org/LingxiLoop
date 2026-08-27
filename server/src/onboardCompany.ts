@@ -426,7 +426,6 @@ async function seedLearningPreset(
     )
   }
 }
-
 async function refreshLearningPreset(db: QueryClient, companyId: string): Promise<void> {
   for (const agent of STARTER_TEAM) {
     await db.query(

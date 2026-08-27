@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
 import { CH_AGENT_ACTIVITY, publish } from '../redis.js'
+import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 import { publicActivityTitle } from './activity-visibility.js'
 import { EMPTY_USAGE, effectiveCostUsd, modelPriceTable, priceFor, type TokenUsage } from './cost.js'
 
@@ -307,7 +308,7 @@ export async function markStaleAgentRuns(maxAgeMs: number = 10 * 60_000): Promis
 export function startStaleAgentRunSweeper(
   intervalMs: number = 60_000,
   maxAgeMs: number = 10 * 60_000,
-): NodeJS.Timeout {
+): WorkerTaskHandle {
   const tick = (): void => {
     void markStaleAgentRuns(maxAgeMs).then((rows) => {
       if (rows.length > 0) {
@@ -317,10 +318,10 @@ export function startStaleAgentRunSweeper(
       console.warn('[observability] stale agent run sweeper failed:', err instanceof Error ? err.message : err)
     })
   }
-  setImmediate(tick)
+  const immediate = setImmediate(tick)
   const t = setInterval(tick, intervalMs)
   t.unref?.()
-  return t
+  return { stop: () => { clearImmediate(immediate); clearInterval(t) } }
 }
 
 // ─── triage economics ─────────────────────────────────────────────────────

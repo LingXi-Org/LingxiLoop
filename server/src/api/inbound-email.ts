@@ -42,7 +42,7 @@ import {
 export const inboundEmailRouter = Router()
 
 /** Capture the raw body bytes so we can HMAC-verify before the global
- *  express.json (in index.ts) gets to it — `verify` runs as part of
+ *  express.json (in web.ts) gets to it — `verify` runs as part of
  *  body-parser's parse step, perfect spot to stash the raw buffer.
  *  Mount this router BEFORE the generic `express.json` in the app
  *  middleware chain; body-parser sets `req._body = true` after parsing,
