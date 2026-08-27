@@ -18,7 +18,7 @@
  * swap to the new objectUrl first.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { isNativePlatform } from './native'
+import { isCapacitorNative } from './runtime'
 
 interface Entry {
   /** The remote URL we fetched FROM — used to invalidate when the URL
@@ -161,21 +161,20 @@ export function useAvatarImg(cachedSrc: string | null): {
  *  silently never fire inside transformed/virtualized scroll containers
  *  (the row count is already bounded by virtualization, so eager is
  *  cheap there); browsers keep the lazy win. */
-export const AVATAR_IMG_LOADING: 'eager' | 'lazy' = isNativePlatform() ? 'eager' : 'lazy'
+export const AVATAR_IMG_LOADING: 'eager' | 'lazy' = isCapacitorNative ? 'eager' : 'lazy'
 
 export function useCachedAvatarSrc(
   participantId: string,
   url: string | null | undefined,
 ): string | null {
   // On native (iOS/Android) skip the fetch→blob cache entirely and hand the
-  // raw CDN URL straight to <img>. Two reasons: (1) with CapacitorHttp enabled
-  // every `fetch()` is proxied through the slow JS↔native bridge (and stampedes
-  // when many avatars mount at once), whereas <img> loads go through the
-  // WebView's native image pipeline — fast and HTTP-cached; (2) it sidesteps
-  // the cache-stampede of N components fetching the same URL before it's cached.
+  // raw CDN URL straight to <img>. This keeps avatar loads in the WebView's
+  // native image pipeline (HTTP-cached and free of extra Blob copies), avoids
+  // a cache stampede when many avatars mount, and keeps CDN reads separate
+  // from the JSON-oriented native API transport.
   // Invalidation still works: a regenerated avatar gets a new URL, so the prop
   // changes and <img> reloads.
-  const native = isNativePlatform()
+  const native = isCapacitorNative
 
   const initial = (() => {
     if (!url) return null

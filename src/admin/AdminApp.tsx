@@ -15,6 +15,7 @@
  * the basePath is `/admin`.
  */
 import { useEffect, useState } from 'react'
+import './admin.css'
 import { CloudLogo } from '@/components/Avatar'
 import { useAuth } from '@/stores/auth'
 import { type AdminStats, adminApi } from './api'
