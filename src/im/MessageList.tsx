@@ -18,7 +18,7 @@ interface MessageListProps {
   className?: string
 }
 
-/** The shared virtual transcript used by desktop, web, iOS, and Android.
+/** The shared virtual transcript used by Web and Desktop.
  * Platform hosts provide row interaction shells, while Virtuoso ownership,
  * follow behavior, and identity are centralized here. */
 export function MessageList({

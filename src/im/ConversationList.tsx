@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { Avatar, AvatarStack } from '@/components/Avatar'
-import { HiveAvatar } from '@/components/HiveAvatar'
 import { PreviewText } from '@/components/PreviewText'
 import { participantRoleZh } from '@/lib/participantRole'
 import { cn } from '@/lib/utils'
@@ -22,12 +21,10 @@ function backfillRosterOnce() {
 
 export function ConversationAvatar({
   conversation,
-  size = 48,
-  variant = 'mobile',
+  size = 54,
 }: {
   conversation: Conversation
   size?: number
-  variant?: 'desktop' | 'mobile'
 }) {
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
@@ -55,9 +52,7 @@ export function ConversationAvatar({
     if (members.length === 0) {
       return <span className="grid shrink-0 place-items-center rounded-full bg-raised text-ink-secondary" style={{ width: size, height: size }}>群</span>
     }
-    return variant === 'mobile'
-      ? <HiveAvatar ps={members} size={size} ringColor="var(--panel)" />
-      : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} />
+    return <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} />
   }
 
   const person = members[0] ?? conversation.members.map((id) => byId[id]).find(Boolean)
@@ -69,16 +64,12 @@ export function ConversationAvatar({
   )
 }
 
-/** Shared content for conversation rows. Desktop and mobile keep their own
- * pointer/gesture wrappers but render the same titles, activity, previews,
- * mute state and unread semantics. */
+/** Shared content for responsive Web/Desktop conversation rows. */
 export function ConversationListItemContent({
   conversation,
-  variant = 'desktop',
   selected = false,
 }: {
   conversation: Conversation
-  variant?: 'desktop' | 'mobile'
   selected?: boolean
 }) {
   // Zustand's external-store selector must return a stable snapshot when no
@@ -98,14 +89,12 @@ export function ConversationListItemContent({
     .filter((id) => id !== meId)
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
-  const isMobile = variant === 'mobile'
-
   return (
     <>
-      <ConversationAvatar conversation={conversation} size={isMobile ? 48 : 54} variant={variant} />
+      <ConversationAvatar conversation={conversation} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
-          {conversation.pinned && !isMobile && <span className={cn('text-[9px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已置顶">◆</span>}
+          {conversation.pinned && <span className={cn('text-[9px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已置顶">◆</span>}
           <span className={cn('truncate text-[16px] font-semibold', selected ? 'text-white' : muted ? 'text-ink-secondary' : 'text-ink')}>
             {conversation.title}
           </span>

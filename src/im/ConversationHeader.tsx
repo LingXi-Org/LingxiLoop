@@ -10,14 +10,10 @@ import type { Participant } from '@/types'
 
 export function ConversationHeader({
   conversationId,
-  variant = 'desktop',
-  onBack,
   onOpenDetails,
   actions,
 }: {
   conversationId: string
-  variant?: 'desktop' | 'mobile'
-  onBack?: () => void
   onOpenDetails?: () => void
   actions?: ReactNode
 }) {
@@ -38,7 +34,6 @@ export function ConversationHeader({
   const subtitle = active.length > 0
     ? `${active.map((participant) => participant.name).join('、')} 正在工作`
     : conversation.topic || `${visibleMembers.length || members.length} 位成员`
-  const mobile = variant === 'mobile'
   const agents = visibleMembers.filter((participant) => participant.kind === 'agent' && !participant.departedAt)
 
   const updateConversation = (patch: Partial<typeof conversation>) => {
@@ -86,19 +81,13 @@ export function ConversationHeader({
     <header
       className={cn(
         'im-conversation-header omb-drag z-20 flex shrink-0 items-center border-b border-hairline bg-panel/92 backdrop-blur-xl',
-        mobile ? 'min-h-14 gap-1 px-2 py-2' : 'omb-titlebar-safe min-h-16 gap-3 px-4 py-2.5',
+        'omb-titlebar-safe min-h-16 gap-3 px-4 py-2.5',
       )}
-      style={mobile ? { paddingTop: 'max(env(safe-area-inset-top), 8px)' } : undefined}
     >
-      {onBack && (
-        <button type="button" onClick={onBack} className="omb-no-drag grid size-10 shrink-0 place-items-center rounded-full text-ink-secondary hover:bg-raised" aria-label="返回会话列表">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="m15 18-6-6 6-6" /></svg>
-        </button>
-      )}
       <div className="omb-no-drag flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left">
         <button type="button" onClick={onOpenDetails} className="grid size-10 shrink-0 place-items-center rounded-full transition hover:bg-raised" aria-label="打开会话资料">
           {visibleMembers.length > 0
-            ? <AvatarStack ps={visibleMembers} size={mobile ? 26 : 30} max={3} />
+            ? <AvatarStack ps={visibleMembers} size={30} max={3} />
             : <span className="grid size-9 place-items-center rounded-full bg-raised text-[13px] font-semibold text-ink-secondary">{conversation.title.charAt(0)}</span>}
         </button>
         <span className="min-w-0 flex-1">
@@ -118,11 +107,11 @@ export function ConversationHeader({
           ) : (
             <button
               type="button"
-              onClick={mobile || conversation.kind !== 'group'
+              onClick={conversation.kind !== 'group'
                 ? onOpenDetails
                 : () => { setTitleDraft(conversation.title); setEditingTitle(true) }}
               className="block max-w-full truncate text-[15px] font-semibold leading-tight text-ink hover:text-accent"
-              title={mobile || conversation.kind !== 'group' ? conversation.title : '点击重命名群聊'}
+              title={conversation.kind !== 'group' ? conversation.title : '点击重命名群聊'}
             >{conversation.title}</button>
           )}
           <span className={cn('mt-1 flex min-w-0 items-center gap-1.5 text-[11px]', active.length > 0 ? 'text-accent' : 'text-ink-secondary')}>
@@ -144,12 +133,12 @@ export function ConversationHeader({
             ) : (
               <button
                 type="button"
-                onClick={mobile ? onOpenDetails : () => { setTopicDraft(conversation.topic ?? ''); setEditingTopic(true) }}
+                onClick={() => { setTopicDraft(conversation.topic ?? ''); setEditingTopic(true) }}
                 className="min-w-0 truncate text-left"
-                title={mobile ? subtitle : '点击编辑话题'}
+                title="点击编辑话题"
               >{subtitle}</button>
             )}
-            {!mobile && conversation.kind === 'group' && agents.length > 0 && (
+            {conversation.kind === 'group' && agents.length > 0 && (
               <div className="flex shrink-0 items-center gap-1 border-l border-hairline pl-2">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-ink-secondary">Leader</span>
                 <SelectMenu

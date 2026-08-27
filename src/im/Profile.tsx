@@ -34,17 +34,13 @@ function ProfileSection({ title, children }: { title: string; children: React.Re
   )
 }
 
-/** Shared Telegram-style participant profile. The hero collapses into the
- * sticky navigation header as the user scrolls, matching the same component
- * and motion contract on desktop, web and native mobile shells. */
+/** Participant profile for the responsive Web/Desktop shell. */
 export function ParticipantProfile({
   participantId,
   onClose,
-  variant = 'desktop',
 }: {
   participantId: string
   onClose: () => void
-  variant?: 'desktop' | 'mobile'
 }) {
   const participant = useParticipants((state) => state.byId[participantId])
   const meId = useMe()
@@ -92,15 +88,12 @@ export function ParticipantProfile({
   }
 
   return (
-    <aside className="im-profile relative flex h-full min-h-0 flex-col overflow-hidden bg-app" data-im-variant={variant}>
+    <aside className="im-profile relative flex h-full min-h-0 flex-col overflow-hidden bg-app">
       <div
         className="absolute inset-x-0 top-0 z-20 flex h-14 items-center border-b border-hairline bg-panel/88 px-2 backdrop-blur-xl"
-        style={variant === 'mobile' ? { paddingTop: 'env(safe-area-inset-top)', height: 'calc(56px + env(safe-area-inset-top))' } : undefined}
       >
-        <button type="button" onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-secondary hover:bg-raised" aria-label={variant === 'mobile' ? '返回' : '关闭资料'}>
-          {variant === 'mobile' ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="m15 18-6-6 6-6" /></svg>
-          ) : <span className="text-xl leading-none">×</span>}
+        <button type="button" onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-secondary hover:bg-raised" aria-label="关闭资料">
+          <span className="text-xl leading-none">×</span>
         </button>
         <motion.div style={{ opacity: compactOpacity }} className="ml-1 flex min-w-0 items-center gap-2.5">
           <Avatar p={participant} size={32} ringColor="var(--panel)" showStatus={false} />
@@ -114,7 +107,6 @@ export function ParticipantProfile({
       <div
         ref={scrollerRef}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-14"
-        style={variant === 'mobile' ? { paddingTop: 'calc(56px + env(safe-area-inset-top))' } : undefined}
         onScroll={(event) => scrollTop.set(event.currentTarget.scrollTop)}
       >
         <motion.div

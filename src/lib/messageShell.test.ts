@@ -16,31 +16,26 @@ test('text, poll, artifact, handoff, and approval retain the shared MessageRow b
   assert.equal(messageShellCapabilities('approval').linkPreview, false)
 })
 
-test('desktop and mobile both render the shared MessageRow component', async () => {
+test('the Web/Desktop chat renders the shared MessageRow component', async () => {
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const mobile = await readFile(new URL('../mobile/MobileChat.tsx', import.meta.url), 'utf8')
   assert.match(desktop, /<MessageRow\b/)
-  assert.match(mobile, /<MessageRow\b/)
 })
 
-test('web, desktop, and mobile compose the shared IM core without Telegram runtime code', async () => {
+test('Web and Desktop compose one IM core without a viewport-selected product shell', async () => {
+  const app = await readFile(new URL('../App.tsx', import.meta.url), 'utf8')
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const mobile = await readFile(new URL('../mobile/MobileChat.tsx', import.meta.url), 'utf8')
   const desktopProfile = await readFile(new URL('../desktop/InfoPane.tsx', import.meta.url), 'utf8')
-  const mobileProfile = await readFile(new URL('../mobile/MobileParticipantInfo.tsx', import.meta.url), 'utf8')
   const desktopList = await readFile(new URL('../desktop/ConversationsPane.tsx', import.meta.url), 'utf8')
-  const mobileList = await readFile(new URL('../mobile/MobileChatList.tsx', import.meta.url), 'utf8')
   const desktopShell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const packageJson = await readFile(new URL('../../package.json', import.meta.url), 'utf8')
 
   for (const component of ['ConversationView', 'MessageList', 'ConversationHeader', 'ComposerSurface']) {
     assert.match(desktop, new RegExp(`<${component}\\b`))
-    assert.match(mobile, new RegExp(`<${component}\\b`))
   }
+  assert.match(app, /<DesktopApp \/>/)
+  assert.doesNotMatch(app, /MobileApp|useIsMobile/)
   assert.match(desktopProfile, /<ParticipantProfile\b/)
-  assert.match(mobileProfile, /<ParticipantProfile\b/)
   assert.match(desktopList, /<ConversationListItemContent\b/)
-  assert.match(mobileList, /<ConversationListItemContent\b/)
   assert.match(desktopShell, /data-group-context=/)
   assert.match(desktopShell, /selectedConversation\?\.kind === 'group'/)
   assert.doesNotMatch(desktopShell, /DesktopNavigation/)
@@ -75,7 +70,7 @@ test('desktop IM columns resize without changing the message/composer grid contr
   assert.doesNotMatch(shell, /compactRailClosed|GroupContextRail/)
 })
 
-test('mobile self messages align right and never render an avatar slot', async () => {
+test('self messages align right and never render an avatar slot', async () => {
   const message = await readFile(new URL('../components/Message.tsx', import.meta.url), 'utf8')
   assert.match(message, /data-message-owner=\{isMine \? 'self' : 'other'\}/)
   assert.match(message, /isMine\s*\? 'flex justify-end'/)
@@ -99,7 +94,6 @@ test('desktop group context delegates its complete panel lifecycle to pinned Ope
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const chat = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
   const panel = await readFile(new URL('../components/layout/detail-panel.tsx', import.meta.url), 'utf8')
-  const mobile = await readFile(new URL('../mobile/MobileGroupContext.tsx', import.meta.url), 'utf8')
 
   assert.match(shell, /<DetailPanel/)
   assert.match(shell, /setGroupPanelOpen\(Boolean\(groupContext\)\)/)
@@ -110,7 +104,6 @@ test('desktop group context delegates its complete panel lifecycle to pinned Ope
   assert.match(panel, /duration: shouldReduceMotion \? 0 : ANIMATION_DURATION_SECONDS/)
   assert.match(panel, /\{open \? \(/)
   assert.match(panel, /CONTENT_ENTRANCE_DELAY_SECONDS/)
-  assert.match(mobile, /群聊上下文分区/)
 })
 
 test('desktop group context is a flat top-bottom surface instead of bordered dashboard cards', async () => {
@@ -192,7 +185,7 @@ test('Canvas bubble and full view share the attachment preview theme surfaces', 
   assert.match(css, /--brand-bubble-surface: #262626/)
   assert.match(css, /--bubble-user: #1084FE/)
   assert.match(css, /--bubble-user: #4682f6/)
-  assert.match(css, /:root\[data-theme='light'\] :is\(\.desktop-openmaus, \.mobile-grok-shell\) \.message-bubble-user \{[\s\S]*?background: #4682f6;/)
+  assert.match(css, /:root\[data-theme='light'\] \.desktop-openmaus \.message-bubble-user \{[\s\S]*?background: #4682f6;/)
   assert.doesNotMatch(canvasPreview, /FRAME_TYPE_LABELS|canvas-preview-frame-header/)
   assert.match(canvasView, /<header[^>]*className="canvas-frame-header cursor-grab active:cursor-grabbing"[^>]*\/>/)
   assert.match(canvasView, /className="canvas-frame-agent-label"/)

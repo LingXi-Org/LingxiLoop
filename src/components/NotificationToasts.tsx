@@ -134,7 +134,7 @@ export function NotificationToasts() {
       const convo = useConversations.getState().list.find((c) => c.id === e.conversationId)
       if (!convo) return
       // Exact @mentions are directed alerts: they intentionally bypass the
-      // room mute. The server/APNs path applies the same structured rule.
+      // room mute. The in-app notification path applies the same structured rule.
       const mentionedMe = Boolean(meRef.current && m.mentionedIds?.includes(meRef.current))
       if (isMuted(convo) && !mentionedMe) return
       const title = convo.title

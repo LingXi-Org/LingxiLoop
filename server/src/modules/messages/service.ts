@@ -6,7 +6,6 @@ import { requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import { assertProjectWritable, requireCompany } from '../../http/request-context.js'
 import { parseMentions as parseChatMentions } from '../../mentions.js'
-import { computeMessageRecipients, notifyMessage } from '../../push.js'
 import { CH_MESSAGE_NEW, CH_REACTIONS, publish, } from '../../redis.js'
 import { freshenAttachmentUrl, storage, } from '../../storage.js'
 
@@ -391,33 +390,6 @@ api.post('/conversations/:id/messages', async (req, res) => {
       clientId: clientId ?? undefined,
     },
   })
-
-  // Fan out APNs to recipients who aren't currently looking at the app
-  // (NotificationToasts handles those). Fire-and-forget — push delivery
-  // must never block the HTTP response. The push module soft-disables
-  // when APNs creds aren't configured, so this is safe even in dev.
-  void (async () => {
-    try {
-      const [recipients, convoRow, authorRow] = await Promise.all([
-        computeMessageRecipients({ conversationId: id, authorId: me, mentionedUserIds: mentionedIds }),
-        pool.query<{ title: string }>(`SELECT title FROM conversations WHERE id = $1`, [id]).then((r) => r.rows[0]),
-        pool.query<{ display_name: string }>(`SELECT display_name FROM users WHERE id = $1`, [me]).then((r) => r.rows[0]),
-      ])
-      if (recipients.length === 0) return
-      await notifyMessage({
-        conversationId: id,
-        conversationTitle: convoRow?.title ?? null,
-        authorId: me,
-        authorName: authorRow?.display_name ?? me,
-        messageId,
-        body,
-        companyId: tenant,
-        recipientUserIds: recipients,
-      })
-    } catch (e) {
-      console.warn('[push] notifyMessage post-/messages failed', e)
-    }
-  })()
 
   // Climate signal: @-mentioned agents feel mildly more affinity / trust
   // toward the speaker (engagement is positive). Fire-and-forget so we

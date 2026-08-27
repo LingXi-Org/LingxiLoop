@@ -18,7 +18,6 @@
  * swap to the new objectUrl first.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { isCapacitorNative } from './runtime'
 
 interface Entry {
   /** The remote URL we fetched FROM — used to invalidate when the URL
@@ -102,16 +101,7 @@ const AVATAR_MAX_RETRIES = 3
 
 /** Bounded-but-revivable retry for an avatar `<img>` load.
  *
- *  On native the raw CDN URL is handed straight to `<img>` (see
- *  `useCachedAvatarSrc` below). iOS makes one-shot loading hopeless:
- *  the WebView resumes before the radio on cold start, and WKWebView
- *  kills in-flight image loads when the app backgrounds. A single
- *  `onError` used to latch the initial-letter fallback PERMANENTLY —
- *  the URL rarely changes, so the reset-on-src-change never fired and
- *  every avatar in the session stayed a letter. That's the "iOS never
- *  fetches the real avatar" bug.
- *
- *  Strategy: retry the SAME url a few times with a short backoff by
+ *  Retry the same URL a few times with a short backoff by
  *  remounting the `<img>` (key bump). If all attempts fail, give up —
  *  but re-open a fresh retry epoch whenever the app returns to the
  *  foreground or the network comes back, instead of staying broken
@@ -157,28 +147,14 @@ export function useAvatarImg(cachedSrc: string | null): {
   return { showImg: Boolean(cachedSrc) && !broke, imgKey: `${cachedSrc ?? ''}#${key}`, onError }
 }
 
-/** `loading` attribute for avatar <img>s. WKWebView's lazy loader can
- *  silently never fire inside transformed/virtualized scroll containers
- *  (the row count is already bounded by virtualization, so eager is
- *  cheap there); browsers keep the lazy win. */
-export const AVATAR_IMG_LOADING: 'eager' | 'lazy' = isCapacitorNative ? 'eager' : 'lazy'
+export const AVATAR_IMG_LOADING: 'lazy' = 'lazy'
 
 export function useCachedAvatarSrc(
   participantId: string,
   url: string | null | undefined,
 ): string | null {
-  // On native (iOS/Android) skip the fetch→blob cache entirely and hand the
-  // raw CDN URL straight to <img>. This keeps avatar loads in the WebView's
-  // native image pipeline (HTTP-cached and free of extra Blob copies), avoids
-  // a cache stampede when many avatars mount, and keeps CDN reads separate
-  // from the JSON-oriented native API transport.
-  // Invalidation still works: a regenerated avatar gets a new URL, so the prop
-  // changes and <img> reloads.
-  const native = isCapacitorNative
-
   const initial = (() => {
     if (!url) return null
-    if (native) return url
     const e = cache.get(participantId)
     if (e && e.fetchedFrom === url) return e.objectUrl
     return url
@@ -187,7 +163,6 @@ export function useCachedAvatarSrc(
 
   useEffect(() => {
     if (!url) { setSrc(null); return }
-    if (native) { setSrc(url); return }
     let cancelled = false
     const refresh = () => {
       void fetchAndCache(participantId, url).then((s) => {
@@ -203,7 +178,7 @@ export function useCachedAvatarSrc(
       cancelled = true
       listeners.delete(onChange)
     }
-  }, [participantId, url, native])
+  }, [participantId, url])
 
   return src
 }

@@ -1646,23 +1646,6 @@ CREATE TABLE public.projects (
 
 
 --
--- Name: push_devices; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.push_devices (
-    id text NOT NULL,
-    user_id text NOT NULL,
-    platform text NOT NULL,
-    token text NOT NULL,
-    app_version text,
-    device_model text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    last_seen_at timestamp with time zone DEFAULT now() NOT NULL,
-    disabled_at timestamp with time zone
-);
-
-
---
 -- Name: sessions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1921,7 +1904,6 @@ CREATE TABLE public.users (
     tier text DEFAULT 'free'::text NOT NULL,
     sub2api_user_id bigint,
     sub2api_api_key text,
-    pro_trial_expires_at timestamp with time zone,
     deleted_at timestamp with time zone,
     is_admin boolean DEFAULT false NOT NULL,
     suspended_at timestamp with time zone,
@@ -2756,14 +2738,6 @@ ALTER TABLE ONLY public.project_visits
 
 ALTER TABLE ONLY public.projects
     ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
-
-
---
--- Name: push_devices push_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.push_devices
-    ADD CONSTRAINT push_devices_pkey PRIMARY KEY (id);
 
 
 --
@@ -3796,20 +3770,6 @@ CREATE UNIQUE INDEX idx_projects_id_company ON public.projects USING btree (id, 
 --
 
 CREATE UNIQUE INDEX idx_projects_one_general ON public.projects USING btree (company_id) WHERE (is_general = true);
-
-
---
--- Name: idx_push_devices_platform_token; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_push_devices_platform_token ON public.push_devices USING btree (platform, token);
-
-
---
--- Name: idx_push_devices_user; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_push_devices_user ON public.push_devices USING btree (user_id) WHERE (disabled_at IS NULL);
 
 
 --
@@ -4888,14 +4848,6 @@ ALTER TABLE ONLY public.project_visits
 
 ALTER TABLE ONLY public.projects
     ADD CONSTRAINT projects_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
-
-
---
--- Name: push_devices push_devices_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.push_devices
-    ADD CONSTRAINT push_devices_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --

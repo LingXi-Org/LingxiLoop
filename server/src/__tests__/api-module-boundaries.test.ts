@@ -18,7 +18,6 @@ const domains = [
   'boards',
   'calendar',
   'documents',
-  'push',
 ] as const
 
 test('the API entrypoint is a composition root, not a business router', async () => {
@@ -50,7 +49,7 @@ test('domain routers stay thin and delegate to domain services', async () => {
     routeRegistrations += service.match(/api\.(?:all|get|post|put|patch|delete)\('/g)?.length ?? 0
   }
 
-  assert.equal(routeRegistrations, 163, 'the public route contract changed unexpectedly')
+  assert.equal(routeRegistrations, 161, 'the public Web/Desktop route contract changed unexpectedly')
 })
 
 test('authentication, request context, authorization, and errors have one shared boundary', async () => {

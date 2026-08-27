@@ -39,7 +39,7 @@ const SERVER_URL_KEY = 'lingxiloop.serverUrl'
  *       'https://loop.example.com')`. Lets a packaged build switch between
  *       prod and a custom endpoint without rebuilding.
  *    2. import.meta.env.VITE_LINGXILOOP_API_BASE — baked at build time,
- *       supplied by CI for packaged desktop/native builds.
+ *       supplied by CI for packaged Desktop builds.
  *    3. '' — falls back to relative URLs, which work in Vite dev (the
  *       proxy rewrites /api → LINGXILOOP_DEV_API_TARGET) and in any same-
  *       origin static deploy.
@@ -1228,29 +1228,6 @@ export const api = {
    * `until` ISO string for a finite mute window (omit for "forever"). The
    * server validates `until` and rejects past timestamps.
    */
-  /**
-   * Register a push-notification device token. Called from src/lib/push.ts
-   * after the user grants permission and Capacitor's `registration` event
-   * fires with the APNs/FCM token. Idempotent server-side (upsert on
-   * platform+token).
-   */
-  registerPushDevice: (input: {
-    platform: 'ios' | 'android' | 'web'
-    token: string
-    appVersion?: string
-    deviceModel?: string
-  }) =>
-    http<{ ok: boolean }>(`/push/register`, {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
-  /** Best-effort sign-out housekeeping. Soft-disables the token row so
-   *  the server stops sending APNs but keeps the audit trail. */
-  unregisterPushDevice: (input: { token: string }) =>
-    http<{ ok: boolean }>(`/push/unregister`, {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
   setMute: (conversationId: string, mute: boolean, until?: string | null) =>
     http<{ ok: boolean; muted: boolean; mutedUntil: string | null }>(
       `/conversations/${encodeURIComponent(conversationId)}/mute`,

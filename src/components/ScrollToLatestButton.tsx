@@ -1,7 +1,7 @@
 /**
  * A small, refined "scroll to latest message" pill that appears in the
  * bottom-right of the chat stream once the user has scrolled up off the
- * bottom. Both ChatPane (desktop) and MobileChat use this — the host owns
+ * bottom. ChatPane owns
  * the at-bottom signal (via Virtuoso's `atBottomStateChange`) and the
  * scroll action; this component is presentation-only.
  *
@@ -23,8 +23,7 @@ interface Props {
   visible: boolean
   onClick: () => void
   /** Optional override of the pill's vertical inset from the bottom of its
-   *  positioned ancestor — mobile uses a larger value to clear the composer
-   *  + safe-area; desktop's default sits just above the composer line. */
+   *  positioned ancestor. The default sits just above the composer line. */
   bottomOffset?: number
   zh?: boolean
 }

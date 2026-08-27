@@ -13,7 +13,7 @@ export interface MessageShellCapabilities {
  *
  * Structured cards are still first-class messages. They intentionally skip a
  * duplicate text bubble/link preview, but retain the same author, quote,
- * reaction, reply, selection, mobile, and entrance shell as ordinary text.
+ * reaction, reply, selection, and entrance shell as ordinary text.
  */
 export function messageShellCapabilities(kind: MessageKind): MessageShellCapabilities {
   if (kind === 'system' || kind === 'whisper-link') {

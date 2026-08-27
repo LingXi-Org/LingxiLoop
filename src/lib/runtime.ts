@@ -1,4 +1,4 @@
-/** Runtime detection — is this LingxiLoop running inside Electron, mobile webview, or browser? */
+/** Runtime detection for the supported Electron and Web surfaces. */
 
 export interface NotificationPushPayload {
   id: string
@@ -174,30 +174,3 @@ export const trafficLightInset = isElectron && isMac ? 84 : 0
  *  on this to render only the toast stack. */
 export const isNotificationWindow: boolean =
   typeof window !== 'undefined' && window.location.hash === '#notifications'
-
-interface CapacitorGlobal {
-  isNativePlatform?: () => boolean
-  getPlatform?: () => string
-}
-declare global {
-  interface Window {
-    Capacitor?: CapacitorGlobal
-  }
-}
-
-/** True when running inside a Capacitor-wrapped native shell (iOS / Android).
- *  Electron is a separate path — `isElectron` above. The Capacitor bridge
- *  injects `window.Capacitor` at first paint; the browser build doesn't
- *  ship it. */
-export const isCapacitor: boolean =
-  typeof window !== 'undefined' && typeof window.Capacitor?.isNativePlatform === 'function'
-    ? window.Capacitor.isNativePlatform()
-    : false
-
-export const isCapacitorIOS: boolean = isCapacitor && window.Capacitor?.getPlatform?.() === 'ios'
-
-export const isCapacitorAndroid: boolean = isCapacitor && window.Capacitor?.getPlatform?.() === 'android'
-
-/** True inside either native shell (iOS or Android) — both run real push
- *  via @capacitor/push-notifications (APNs on iOS, FCM on Android). */
-export const isCapacitorNative: boolean = isCapacitorIOS || isCapacitorAndroid

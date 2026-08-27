@@ -17,7 +17,6 @@ import { messagesRouter } from '../modules/messages/router.js'
 import { observabilityRouter } from '../modules/observability/router.js'
 import { platformRouter } from '../modules/platform/router.js'
 import { pollsRouter } from '../modules/polls/router.js'
-import { pushRouter } from '../modules/push/router.js'
 import { adminRouter } from './admin-router.js'
 
 export { generateAndPersistAvatar } from '../modules/agents/service.js'
@@ -43,5 +42,4 @@ api.use(observabilityRouter)
 api.use(boardsRouter)
 api.use(calendarRouter)
 api.use(documentsRouter)
-api.use(pushRouter)
 api.use(errorHandler)

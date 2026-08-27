@@ -16,7 +16,6 @@ import { startPollExpirationSweeper } from './polls.js'
 import { redis, sub } from './redis.js'
 import { Lifecycle, startWorkerTasks, type ServiceHandle, type WorkerTaskDefinition } from './runtime/lifecycle.js'
 import { seedIfEmpty } from './seed.js'
-import { startTrialSweepWorker } from './trial-sweep.js'
 
 /**
  * Concurrency is part of each task's contract, rather than an accidental
@@ -32,7 +31,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'email-retry', concurrency: 'queue-claim', start: () => startEmailRetryWorker() },
   { name: 'email-storage-gc', concurrency: 'idempotent', start: () => startEmailGcWorker() },
   { name: 'database-gc', concurrency: 'idempotent', start: () => startDbGcWorker() },
-  { name: 'trial-sweep', concurrency: 'idempotent', start: () => startTrialSweepWorker() },
   { name: 'knowledge-ingestion', concurrency: 'queue-claim', start: () => startKnowledgeWorker() },
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },
   { name: 'calendar-dispatch', concurrency: 'idempotent', start: () => startCalendarScheduler() },

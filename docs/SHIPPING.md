@@ -31,7 +31,7 @@ multi-replica-safe maintenance worker.
 
 ## Product surfaces
 
-Open **Ship** in the desktop rail or mobile tab bar. The workspace provides:
+Open **Ship** from the Web or Desktop navigation. The workspace provides:
 
 1. A portfolio ordered by active risk, state, and update time.
 2. A contract editor for problem, outcome, builders, priority, risk, and target.

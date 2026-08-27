@@ -13,7 +13,7 @@
  */
 import { useState, useEffect } from 'react'
 import { api, getServerOrigin } from '@/api/client'
-import { isCapacitorNative, isElectron } from '@/lib/runtime'
+import { isElectron } from '@/lib/runtime'
 import { CloudLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
 
@@ -85,50 +85,6 @@ export function AuthScreen() {
         void auth.openExternal(
           `${origin}/api/auth/start/${provider}?return=${encodeURIComponent(ret)}`,
         )
-      })()
-      return
-    }
-    if (isCapacitorNative) {
-      // iOS / Android: run the OAuth flow inside ASWebAuthenticationSession
-      // (our WebAuthPlugin). It hands the final lingxiloop://auth#... callback
-      // straight back to us — no SFSafariViewController, no broken 302
-      // redirect to a custom URL scheme.
-      const origin = getServerOrigin()
-      if (!origin) {
-        setErr('此移动端构建尚未配置 LingxiLoop 服务器。')
-        setBusy(null)
-        return
-      }
-      void (async () => {
-        try {
-          const {
-            armNativeOAuthHandoff,
-            handleNativeOAuthCallback,
-            runOAuth,
-          } = await import('@/lib/native')
-          const nonce = armNativeOAuthHandoff()
-          const ret = encodeURIComponent(`lingxiloop://auth?n=${encodeURIComponent(nonce)}`)
-          const callbackUrl = await runOAuth({
-            url: `${origin}/api/auth/start/${provider}?return=${ret}`,
-            callbackScheme: 'lingxiloop',
-          })
-          if (!callbackUrl) {
-            // User cancelled — re-enable the button.
-            setBusy(null)
-            return
-          }
-          // ASWebAuthenticationSession returns the same untrusted callback URL
-          // as the OS deep-link path. Validate its one-time nonce before
-          // exposing the token fragment to AuthGate.
-          if (!await handleNativeOAuthCallback(callbackUrl)) {
-            setErr('登录回调验证失败，请重试。')
-            setBusy(null)
-            return
-          }
-        } catch (err) {
-          setErr(err instanceof Error ? err.message : '登录失败')
-          setBusy(null)
-        }
       })()
       return
     }

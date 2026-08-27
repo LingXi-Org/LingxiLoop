@@ -14,7 +14,7 @@ import { NotificationToasts } from '@/components/NotificationToasts'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
 import { seedMockIm } from '@/dev/mockIm'
 import { isMockImDevelopment } from '@/lib/devMode'
-import { useIsMobile } from '@/lib/utils'
+import { isNotificationWindow } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
@@ -25,7 +25,6 @@ import { bootWhispers, useWhispers } from '@/stores/whispers'
 
 const AdminApp = lazy(() => import('@/admin/AdminApp').then((module) => ({ default: module.AdminApp })))
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
-const MobileApp = lazy(() => import('@/mobile/MobileApp').then((module) => ({ default: module.MobileApp })))
 
 function SurfaceFallback() {
   return <div className="fixed inset-0 grid place-items-center text-sm text-ink-400">Loading…</div>
@@ -42,7 +41,6 @@ function isAdminContext(): boolean {
 }
 
 function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
-  const isMobile = useIsMobile()
   const convoId = useApp((s) => s.selectedConversationId)
   const view = useApp((s) => s.view)
   const hasDockUnread = useConversations((s) =>
@@ -97,9 +95,7 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
 
   return (
     <>
-      <Suspense fallback={<SurfaceFallback />}>
-        {isMobile ? <MobileApp /> : <DesktopApp />}
-      </Suspense>
+      <DesktopApp />
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}

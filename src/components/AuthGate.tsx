@@ -99,21 +99,6 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
     return off
   }, [setSession])
 
-  // Native (iOS / Android): when the SFSafariViewController flow
-  // completes, lib/native.ts plants the token fragment on our location
-  // and fires `lingxiloop:oauth-token`. Consume it the same way as the
-  // top-of-mount `consumeOAuthFragment` so AuthGate's existing probe
-  // logic picks up the new token.
-  useEffect(() => {
-    const handler = () => {
-      const carried = consumeOAuthFragment()
-      if (!carried) return
-      setSession(carried.token, { id: '', email: '', name: '' }, carried.companyId)
-    }
-    window.addEventListener('lingxiloop:oauth-token', handler)
-    return () => window.removeEventListener('lingxiloop:oauth-token', handler)
-  }, [setSession])
-
   if (!ready) {
     // Brief loading flash while we probe — keeps the app from flashing
     // login → main on a valid token reload.
