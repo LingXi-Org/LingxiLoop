@@ -29,7 +29,6 @@
     "guard:agent-os": "node scripts/guard-agent-os.mjs",
     "guard:llm-tracked": "node scripts/guard-llm-tracked.mjs",
     "guard:brand": "node scripts/guard-brand.mjs",
-    "guard:openbot-vendor": "node scripts/guard-openbot-vendor.mjs",
     "version:sync": "node scripts/sync-version.mjs --write",
     "version:check": "node scripts/sync-version.mjs --check",
     "lint": "biome lint .",

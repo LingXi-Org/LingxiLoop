@@ -78,7 +78,7 @@ test('self messages align right and never render an avatar slot', async () => {
   assert.match(message, /!openMaus && isMine && 'ml-auto flex max-w-\[84%\] flex-col items-end'/)
 })
 
-test('OpenBot group panel gets a responsive persisted resize handle from its outer shell', async () => {
+test('group detail panel gets a responsive persisted resize handle from its outer shell', async () => {
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
   assert.match(shell, /GROUP_PANEL_STORAGE_KEY/)
@@ -90,7 +90,7 @@ test('OpenBot group panel gets a responsive persisted resize handle from its out
   assert.match(css, /--im-divider: #1414140d/)
 })
 
-test('desktop group context delegates its complete panel lifecycle to pinned OpenBot source', async () => {
+test('desktop group context delegates its complete lifecycle to the shared detail panel', async () => {
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const chat = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
   const panel = await readFile(new URL('../components/layout/detail-panel.tsx', import.meta.url), 'utf8')
@@ -101,9 +101,9 @@ test('desktop group context delegates its complete panel lifecycle to pinned Ope
   assert.match(shell, /<ChatPane onOpenGroupContext=/)
   assert.match(chat, /aria-label="打开群聊上下文"/)
   assert.match(panel, /animate=\{\{ width: open \? detailWidth : 0 \}\}/)
-  assert.match(panel, /duration: shouldReduceMotion \? 0 : ANIMATION_DURATION_SECONDS/)
-  assert.match(panel, /\{open \? \(/)
-  assert.match(panel, /CONTENT_ENTRANCE_DELAY_SECONDS/)
+  assert.match(panel, /const duration = reduceMotion \? 0 :/)
+  assert.match(panel, /aria-hidden=\{!open\}/)
+  assert.match(panel, /\{open \? <motion\.div/)
 })
 
 test('desktop group context is a flat top-bottom surface instead of bordered dashboard cards', async () => {
