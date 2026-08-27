@@ -14,7 +14,6 @@
 import { randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { invalidatePersonaCache } from './agents/personas.js'
-import { gravatarUrlForEmail } from './auth.js'
 import { pool } from './db/pool.js'
 import { reconcileLearningChannels } from './im/reconcile.js'
 
@@ -342,7 +341,7 @@ async function purgeLegacyLearningPreset(
       [ids, companyId],
     )
 
-    for (const table of ['agent_workspace', 'agent_memory', 'agent_log', 'agent_tasks', 'agent_autonomy', 'agent_climate', 'tool_calls', 'agent_events', 'agent_runs', 'agent_triages', 'llm_calls', 'llm_calls_rollup'] as const) {
+    for (const table of ['agent_workspace', 'agent_log', 'agent_tasks', 'agent_autonomy', 'agent_climate', 'tool_calls', 'agent_events', 'agent_runs', 'agent_triages', 'llm_calls', 'llm_calls_rollup'] as const) {
       await db.query(`DELETE FROM ${table} WHERE company_id = $1 AND agent_id = ANY($2::text[])`, [companyId, ids])
     }
     // This ledger predates tenant columns, but agent ids are globally unique.
@@ -618,48 +617,5 @@ export async function seedMemberDms(args: {
        ON CONFLICT (conversation_id) DO NOTHING`,
       [dmId],
     )
-  }
-}
-
-/**
- * Boot-time backfill: assign Gravatar URLs to any human participant who
- * doesn't have an avatar_url yet. Joins on users.email so people who were
- * created before the Gravatar wiring get a portrait without manual fix-up.
- * Idempotent — only touches rows where avatar_url IS NULL.
- */
-export async function backfillHumanGravatars(): Promise<void> {
-  const { rows } = await pool.query<{ id: string; company_id: string; email: string | null }>(
-    `SELECT p.id, p.company_id, u.email
-       FROM participants p
-       JOIN users u ON u.id = p.id
-      WHERE p.kind = 'human' AND p.avatar_url IS NULL AND u.email IS NOT NULL`,
-  )
-  if (rows.length === 0) return
-  for (const r of rows) {
-    if (!r.email) continue
-    await pool.query(
-      `UPDATE participants SET avatar_url = $1 WHERE id = $2 AND company_id = $3`,
-      [gravatarUrlForEmail(r.email), r.id, r.company_id],
-    )
-  }
-  console.log(`[onboard] backfilled gravatars for ${rows.length} human participant(s)`)
-}
-
-/** Force-upgrade every owned workspace that has not reached this preset version. */
-export async function backfillStarterAgents(): Promise<void> {
-  const { rows } = await pool.query<{ id: string }>(
-    `SELECT c.id FROM companies c
-      WHERE c.starter_preset_version < $1
-        AND (c.owner_user_id IS NOT NULL OR EXISTS (
-          SELECT 1 FROM company_members cm
-           WHERE cm.company_id = c.id AND cm.role = 'owner'
-        ))`,
-    [LEARNING_PRESET_VERSION],
-  )
-  if (rows.length === 0) return
-  console.log(`[onboard] upgrading ${rows.length} compan${rows.length === 1 ? 'y' : 'ies'} to learning preset v${LEARNING_PRESET_VERSION}`)
-  for (const { id } of rows) {
-    try { await onboardStarterAgents(id) }
-    catch (e) { console.warn(`[onboard] learning preset upgrade failed for ${id}`, e) }
   }
 }

@@ -6,7 +6,6 @@ import { mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { env } from './env.js'
-import { ensureSchemaWithBootRetry } from './db/migrate.js'
 import { seedIfEmpty } from './seed.js'
 import { api } from './api/router.js'
 import { storage, UPLOAD_DIR } from './storage.js'
@@ -14,8 +13,6 @@ import { attachWebSocket, resetHumanPresenceOnBoot } from './ws.js'
 import { bootDocumentBus } from './documents/rooms.js'
 import { pool } from './db/pool.js'
 import { redis } from './redis.js'
-import { backfillStarterAgents, backfillHumanGravatars } from './onboardCompany.js'
-import { backfillMemoryEmbeddings } from './agents/embeddings.js'
 import { startStaleAgentRunSweeper } from './agents/observability.js'
 import { inboundEmailRouter } from './api/inbound-email.js'
 import { startEmailRetryWorker } from './email-retry.js'
@@ -36,28 +33,13 @@ import { startAgentWorkWatchdog } from './agent-os/work-watchdog.js'
 import { startMemorySynthesisScheduler } from './agent-os/memory-service.js'
 
 async function main() {
-  await ensureSchemaWithBootRetry()
   await seedIfEmpty()
   // Promote LINGXILOOP_ADMIN_EMAILS members to is_admin on every boot —
   // idempotent, only flips FALSE→TRUE. Demotion goes through the panel.
   await seedAdmins()
-  // Catch any company that was created before the auto-onboarding wiring
-  // existed (e.g. dev workspaces predating this commit).
-  await backfillStarterAgents()
   void reconcileLearningChannels().then(({ channels, failures }) =>
     console.log(`[im] reconciled ${channels - failures}/${channels} learning channels`),
   )
-  // Catch human participants who were created before Gravatar wiring.
-  await backfillHumanGravatars()
-  // Compute embeddings for any memory rows that don't have one yet
-  // (existing data from before pgvector was wired in, or rows whose
-  // OpenAI call failed at write time). Fire-and-forget — the server
-  // accepts traffic immediately and memory retrieval gracefully
-  // degrades to recency-only on rows still missing an embedding.
-  void backfillMemoryEmbeddings().catch((e) =>
-    console.warn('[embed:backfill] crashed', e instanceof Error ? e.message : String(e)),
-  )
-
   // In local-storage mode the uploads dir backs the /uploads/ static handler
   // below. In R2 mode neither is needed — files live in object storage and
   // public URLs are served directly by R2 / CDN.

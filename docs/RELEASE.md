@@ -14,16 +14,20 @@ Redis/WebSocket path. WuKongIM v3 is built from verified commit
 Operators provide `.env.secrets`; CI uploads only `.release.next.env`, Compose
 and deployment scripts.
 
-Before the maintenance cutover, back up PostgreSQL, WuKongIM, SurrealDB, and
-the Open Notebook data volume.
-The migration is one-way: it removes retired Agent-host identities and data,
-resets legacy conversations/runtime state, drops retired schema fields and
-creates the Agent OS/WuKong projections. It does not dual-write.
+LingxiLoop v1 requires an empty PostgreSQL database. The release has no schema
+upgrade, compatibility ALTER, or data backfill path: discard pre-v1 development
+databases and create a new database. For an external database, run
+`npm run db:bootstrap`; the supplied Compose topology runs the same bootstrap
+before Web startup. Seed data is created separately by the application after
+the schema exists.
 
-Deployment runs migrations, starts WuKongIM and the control plane, then Agent
-OS, and verifies `/api/meta`, dependency health, authenticated channel access
-and the release version. Rollback restores both pre-cutover backups and the
-previous digest manifest. It never re-enables a retired runtime.
+For a new environment, the Compose `db-bootstrap` service creates the schema
+before WuKongIM, the control plane, and Agent OS start. Later starts accept only
+the complete marked v1 schema; an unmarked or partial database fails closed.
+Operators then verify `/api/meta`, dependency health, authenticated channel
+access and the release version. Web and Agent OS processes never execute DDL.
+Rollback reuses the complete v1 schema with the previous digest manifest; it
+does not attempt an in-place schema downgrade.
 
 When all four core `R2_*` secrets are configured, the production deployment
 also reconciles the bucket CORS policy before application cutover. The

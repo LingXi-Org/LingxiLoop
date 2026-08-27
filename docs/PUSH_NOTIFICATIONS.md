@@ -19,7 +19,7 @@ recipient calculation) is already in the repo.
 | `@capacitor/push-notifications` plugin | `package.json` + `ios/App/Podfile`-equivalent SPM bundle (synced by `npx cap sync ios`) |
 | AppDelegate APNs callbacks → Capacitor bridge | `ios/App/App/AppDelegate.swift` |
 | `aps-environment` entitlement | `ios/App/App/App.Debug.entitlements` (development) + `ios/App/App/App.Release.entitlements` (production) — selected automatically by Xcode build config |
-| `push_devices` table | `server/src/db/migrate.ts` |
+| `push_devices` table | `server/src/db/schema.sql` |
 | `POST /push/register` / `POST /push/unregister` | `server/src/api/router.ts` (near the bottom) |
 | APNs sender (HTTP/2 + ES256 JWT, no third-party lib) | `server/src/push.ts` |
 | FCM sender (HTTP v1, service-account JWT) | `server/src/fcm.ts` |

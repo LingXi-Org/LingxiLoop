@@ -231,7 +231,7 @@ export function startEmailRetryWorker(): { stop(): void } | null {
     try { await runRetryTick() }
     catch (e) { console.error('[email-retry] tick failed:', e instanceof Error ? e.message : String(e)) }
   }
-  // First tick after one full interval (let migrations + server boot
+  // First tick after one full interval (let server boot
   // complete first). subsequent ticks fire on the interval.
   timer = setInterval(() => { void tick() }, intervalMs)
   return { stop: stopEmailRetryWorker }

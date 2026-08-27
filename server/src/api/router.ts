@@ -1945,7 +1945,7 @@ api.post('/invitations/:token/accept', safe(async (req, res) => {
   // Reuse the user's OAuth-mirrored avatar (stamped on users.avatar_url at
   // signup) so they show up in the inviter's workspace with the same face
   // they have everywhere else. Fall back to gravatar for users who pre-date
-  // the avatar_url column (NULL after migration backfill).
+  // the optional avatar_url column.
   const userAvatar = userRow[0].avatar_url ?? gravatarUrlForEmail(userRow[0].email)
 
   const client = await pool.connect()

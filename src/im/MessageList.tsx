@@ -4,7 +4,7 @@ import type { Message } from '@/types'
 
 interface MessageListProps {
   messages: Message[]
-  virtuosoRef: React.RefObject<VirtuosoHandle>
+  virtuosoRef: React.MutableRefObject<VirtuosoHandle | null>
   firstItemIndex: number
   itemContent: (index: number, message: Message) => React.ReactNode
   computeItemKey?: (index: number, message: Message) => React.Key
@@ -38,7 +38,9 @@ export function MessageList({
 }: MessageListProps) {
   return (
     <Virtuoso
-      ref={virtuosoRef}
+      ref={(handle) => {
+        virtuosoRef.current = handle
+      }}
       className={className}
       data={messages}
       firstItemIndex={firstItemIndex}

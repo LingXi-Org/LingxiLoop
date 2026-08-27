@@ -14,16 +14,15 @@
  * subsume).
  */
 import { createHmac, randomUUID } from 'node:crypto'
-import { ensureSchema } from '../db/migrate.js'
+import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 
 let schemaReady: Promise<void> | null = null
 
-/** Run the schema migrator exactly once per test process. Idempotent —
- *  ensureSchema is itself `IF NOT EXISTS` throughout. */
+/** Assert the externally bootstrapped v1 schema exactly once per test process. */
 export function ensureSchemaOnce(): Promise<void> {
-  if (!schemaReady) schemaReady = ensureSchema()
+  if (!schemaReady) schemaReady = assertV1SchemaReady()
   return schemaReady
 }
 
@@ -133,15 +132,14 @@ export async function seedCompanyWithAgent(opts?: {
      ON CONFLICT DO NOTHING`,
     [companyId, `Test ${companyId}`, companyId, 'test-owner'],
   )
-  // Mirror production onboarding: companies created after the schema
-  // migration need their General workspace established explicitly.
+  // Mirror production onboarding: every company needs its General workspace.
   await pool.query(
     `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
      SELECT $2, $1, '通用工作区', '测试公司的默认工作区', '#667085', 'test-owner', TRUE
       WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
     [companyId, `general-${companyId}`],
   )
-  // participants composite PK is (id, company_id) — see migrate.ts.
+  // participants composite PK is (id, company_id) — see db/schema.sql.
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
      VALUES ($1, $2, 'agent', $3, 'tester', $4, '#abcdef', 'avail', $5)

@@ -188,6 +188,7 @@ jobs:
           --health-retries 12
     env:
       INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       REDIS_URL: redis://127.0.0.1:6379
       DEEPSEEK_API_KEY: integration-test-key
     steps:
@@ -197,6 +198,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Bootstrap v1 integration schema
+        run: npm run db:bootstrap
       - name: Run selected integration scope
         shell: bash
         run: |
