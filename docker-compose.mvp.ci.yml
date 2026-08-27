@@ -142,7 +142,7 @@ services:
         condition: service_healthy
       db-bootstrap:
         condition: service_completed_successfully
-    environment:
+    environment: &lingxiloop-environment
       NODE_ENV: production
       LINGXILOOP_LOG_LEVEL: warn
       PORT: 5181
@@ -162,12 +162,33 @@ services:
       OPEN_NOTEBOOK_PASSWORD: ci-open-notebook-password
     ports:
       - "${LINGXILOOP_PORT:-5181}:5181"
+    volumes:
+      - lingxiloop-uploads:/app/server/uploads
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 10s
+    networks: [lingxiloop-mvp-ci, lingxiloop-knowledge-internal-ci]
+
+  worker:
+    build:
+      context: .
+      dockerfile: server/docker/lingxiloop-server.Dockerfile
+    command: ["npm", "run", "worker:start"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      wukongim:
+        condition: service_healthy
+      open-notebook:
+        condition: service_healthy
+    environment: *lingxiloop-environment
+    volumes:
+      - lingxiloop-uploads:/app/server/uploads
     networks: [lingxiloop-mvp-ci, lingxiloop-knowledge-internal-ci]
 
   agent-os:
@@ -202,3 +223,6 @@ networks:
   lingxiloop-knowledge-internal-ci:
     internal: true
   lingxiloop-knowledge-egress-ci: {}
+
+volumes:
+  lingxiloop-uploads: {}

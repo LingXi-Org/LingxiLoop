@@ -19,7 +19,10 @@ export const redis = new IORedis(env.REDIS_URL, {
 /** Separate connection for blocking SUBSCRIBE — required by the Redis protocol. */
 export const sub = new IORedis(env.REDIS_URL, {
   maxRetriesPerRequest: null,
-  enableReadyCheck: true,
+  // The Web composition registers multiple subscriptions immediately. A
+  // subscriber can enter subscriber mode before IORedis sends its INFO-based
+  // ready check, at which point Redis correctly rejects that normal command.
+  enableReadyCheck: false,
   lazyConnect,
 })
 

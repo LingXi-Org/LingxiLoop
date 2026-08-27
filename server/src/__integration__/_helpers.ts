@@ -157,8 +157,8 @@ export async function buildTestApp(): Promise<import('express').Express> {
   const express = expressMod.default
   const app = express()
   const { inboundEmailRouter } = await import('../api/inbound-email.js')
-  // Match the production mount path: index.ts mounts inboundEmailRouter
-  // at /webhooks/email — see server/src/index.ts.
+  // Match the production mount path: web.ts mounts inboundEmailRouter
+  // at /webhooks/email — see server/src/web.ts.
   app.use('/webhooks/email', inboundEmailRouter)
   return app
 }

@@ -17,7 +17,7 @@ function sourceFiles(directory) {
 // archived migration/reference directories still exist in the repository.
 const activeFiles = [
   ...sourceFiles(join(root, 'server/src/agent-os')),
-  join(root, 'server/src/index.ts'),
+  join(root, 'server/src/web.ts'),
   join(root, 'server/src/im/router.ts'),
   join(root, 'src/lib/im/wukong.ts'),
   join(root, 'src/stores/messages.ts'),

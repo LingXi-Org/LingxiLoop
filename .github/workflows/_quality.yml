@@ -210,7 +210,7 @@ jobs:
           fi
 
   agent-os-compose-smoke:
-    name: Agent OS + WuKongIM Compose smoke
+    name: Web + Worker + Agent OS Compose smoke
     needs: classify
     if: needs.classify.outputs.full == 'true' || needs.classify.outputs.compose == 'true'
     runs-on: ubuntu-latest

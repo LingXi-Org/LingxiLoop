@@ -36,6 +36,7 @@
  */
 import { pool } from './db/pool.js'
 import { env } from './env.js'
+import type { WorkerTaskHandle } from './runtime/lifecycle.js'
 import { inc } from './metrics.js'
 
 interface SweepTarget {
@@ -137,7 +138,7 @@ export async function runDbGcTick(opts?: { batchSize?: number; maxBatchesPerTabl
 let timer: NodeJS.Timeout | null = null
 
 /** Start the periodic GC loop. Idempotent — re-calling is a no-op. */
-export function startDbGcWorker(): { stop(): void } | null {
+export function startDbGcWorker(): WorkerTaskHandle | null {
   if (timer) return { stop: stopDbGcWorker }
   const intervalMs = env.DB_GC_INTERVAL_MS
   if (intervalMs <= 0) {

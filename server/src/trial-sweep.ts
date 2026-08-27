@@ -18,6 +18,7 @@
  */
 import { pool } from './db/pool.js'
 import { changeUserTier } from './admin.js'
+import type { WorkerTaskHandle } from './runtime/lifecycle.js'
 
 const SWEEP_INTERVAL_MS = 60 * 60 * 1000
 const BATCH = 100
@@ -47,21 +48,25 @@ export async function runTrialSweepTick(): Promise<{ expired: number; failed: nu
 }
 
 let timer: NodeJS.Timeout | null = null
+let kickoff: NodeJS.Timeout | null = null
 
 /** Start the hourly sweep. Idempotent — re-calling is a no-op. Runs one
  *  pass shortly after boot so a long-down server catches up quickly. */
-export function startTrialSweepWorker(): { stop(): void } {
+export function startTrialSweepWorker(): WorkerTaskHandle {
   if (timer) return { stop: stopTrialSweepWorker }
   const tick = async () => {
     try { await runTrialSweepTick() }
     catch (e) { console.error('[trial-sweep] tick failed:', e instanceof Error ? e.message : String(e)) }
   }
-  setTimeout(() => { void tick() }, 30_000)
+  kickoff = setTimeout(() => { kickoff = null; void tick() }, 30_000)
+  kickoff.unref?.()
   timer = setInterval(() => { void tick() }, SWEEP_INTERVAL_MS)
   console.log(`[trial-sweep] starting · interval=${SWEEP_INTERVAL_MS}ms`)
   return { stop: stopTrialSweepWorker }
 }
 
 export function stopTrialSweepWorker(): void {
+  if (kickoff) clearTimeout(kickoff)
   if (timer) { clearInterval(timer); timer = null }
+  kickoff = null
 }

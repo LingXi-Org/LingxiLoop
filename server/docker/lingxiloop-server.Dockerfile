@@ -6,7 +6,8 @@
 #   everything else — the React SPA bundle (built into /app/dist below)
 #
 # Entry points:
-#   npm run server:start  →  tsx server/src/index.ts  (main runtime)
+#   npm run server:start  →  tsx server/src/bin/web.ts  (HTTP/WS runtime)
+#   npm run worker:start  →  tsx server/src/bin/worker.ts  (background tasks)
 #   npm run db:bootstrap  →  tsx server/src/bootstrap-bin.ts  (empty DB only)
 #
 # Model turns run only in the separate Agent OS service. The control plane
@@ -98,7 +99,7 @@ COPY server ./server
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
 COPY src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts ./src/lib/
-# Web SPA bundle — read by server/src/index.ts at boot via existsSync().
+# Web SPA bundle — read by server/src/web.ts at boot via existsSync().
 # When this is absent (e.g. an older runtime image) the server falls
 # back to a JSON `/` response.
 COPY --from=spa-build /app/dist ./dist

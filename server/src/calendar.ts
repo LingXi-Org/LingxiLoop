@@ -20,6 +20,7 @@ import { pool } from './db/pool.js'
 import { CH_MESSAGE_NEW, CH_CALENDAR_REMINDER, publish } from './redis.js'
 import { env } from './env.js'
 import { formatAddress, sendViaProvider, mintMessageId } from './email.js'
+import type { WorkerTaskHandle } from './runtime/lifecycle.js'
 
 const TICK_INTERVAL_MS = 60_000
 const CALENDAR_SYSTEM_AUTHOR_ID = 'calendar'
@@ -587,9 +588,10 @@ async function publishCalendarChanged(
 
 let started = false
 let timer: NodeJS.Timeout | null = null
+let kickoff: NodeJS.Timeout | null = null
 
-export function startCalendarScheduler(): void {
-  if (started) return
+export function startCalendarScheduler(): WorkerTaskHandle {
+  if (started) return { stop: stopCalendarScheduler }
   started = true
   const loop = async () => {
     try {
@@ -602,13 +604,17 @@ export function startCalendarScheduler(): void {
     }
   }
   // First tick on the next event-loop turn so the server is fully up.
-  setTimeout(() => { void loop() }, 5_000)
+  kickoff = setTimeout(() => { kickoff = null; void loop() }, 5_000)
+  kickoff.unref?.()
   timer = setInterval(() => { void loop() }, TICK_INTERVAL_MS)
   console.log(`[calendar] scheduler started (tick=${TICK_INTERVAL_MS}ms)`)
+  return { stop: stopCalendarScheduler }
 }
 
 export function stopCalendarScheduler(): void {
+  if (kickoff) clearTimeout(kickoff)
   if (timer) clearInterval(timer)
+  kickoff = null
   timer = null
   started = false
 }

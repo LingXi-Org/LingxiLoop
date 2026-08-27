@@ -18,16 +18,18 @@ LingxiLoop v1 requires an empty PostgreSQL database. The release has no schema
 upgrade, compatibility ALTER, or data backfill path: discard pre-v1 development
 databases and create a new database. For an external database, run
 `npm run db:bootstrap`; the supplied Compose topology runs the same bootstrap
-before Web startup. Seed data is created separately by the application after
-the schema exists.
+before Web startup. Seed data is created separately by the background Worker
+after the schema exists.
 
 For a new environment, the Compose `db-bootstrap` service creates the schema
-before WuKongIM, the control plane, and Agent OS start. Later starts accept only
+before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.
 Operators then verify `/api/meta`, dependency health, authenticated channel
-access and the release version. Web and Agent OS processes never execute DDL.
-Rollback reuses the complete v1 schema with the previous digest manifest; it
-does not attempt an in-place schema downgrade.
+access and the release version. Web, Worker, and Agent OS processes never
+execute DDL. Web and Worker use the same server image but have separate Compose
+services, commands, restart policies, and replica counts. Rollback reuses the
+complete v1 schema with the previous digest manifest; it does not attempt an
+in-place schema downgrade.
 
 When all four core `R2_*` secrets are configured, the production deployment
 also reconciles the bucket CORS policy before application cutover. The

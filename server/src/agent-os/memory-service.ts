@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { embedText, hasPgVector } from '../agents/embeddings.js'
 import { pool } from '../db/pool.js'
+import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 import type {
   AgentWorkItem,
   MemoryScopeType,
@@ -235,12 +236,12 @@ export async function enqueuePendingMemorySynthesis(companyId?: string, agentId?
   return rows.length
 }
 
-export function startMemorySynthesisScheduler(intervalMs = 15_000): NodeJS.Timeout {
+export function startMemorySynthesisScheduler(intervalMs = 15_000): WorkerTaskHandle {
   const tick = () => void enqueuePendingMemorySynthesis().catch((error) => console.warn('[memory:synthesis] enqueue failed:', error instanceof Error ? error.message : String(error)))
-  setImmediate(tick)
+  const immediate = setImmediate(tick)
   const timer = setInterval(tick, intervalMs)
   timer.unref?.()
-  return timer
+  return { stop: () => { clearImmediate(immediate); clearInterval(timer) } }
 }
 
 export async function loadMemorySynthesisBatch(work: AgentWorkItem): Promise<MemorySynthesisBatch | null> {
