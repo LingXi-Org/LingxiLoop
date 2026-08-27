@@ -4,6 +4,8 @@ import test from 'node:test'
 // @ts-expect-error The production helper is plain ESM so Node can execute it directly.
 import * as r2CorsPolicy from '../../scripts/r2-cors-policy.mjs'
 
+const readText = (url: URL) => readFileSync(url, 'utf8').replaceAll('\r\n', '\n')
+
 const {
   assertR2CorsRules,
   buildR2CorsRules,
@@ -36,9 +38,9 @@ test('R2 readback validation rejects a policy without mobile PUT access', () => 
 })
 
 test('production deployment applies and verifies R2 CORS before cutover', () => {
-  const compose = readFileSync(new URL('../../../docker-compose.production.yml', import.meta.url), 'utf8')
-  const deploy = readFileSync(new URL('../../../scripts/deploy-production.sh', import.meta.url), 'utf8')
-  const cors = readFileSync(new URL('../../scripts/r2-cors.mjs', import.meta.url), 'utf8')
+  const compose = readText(new URL('../../../docker-compose.production.yml', import.meta.url))
+  const deploy = readText(new URL('../../../scripts/deploy-production.sh', import.meta.url))
+  const cors = readText(new URL('../../scripts/r2-cors.mjs', import.meta.url))
 
   assert.match(compose, /\n {2}r2-cors:\n[\s\S]*command: \["node", "server\/scripts\/r2-cors\.mjs"\]/)
   assert.match(deploy, /! configure_r2_cors \|\|\n\s+! compose --profile tools run --rm migrate/)
