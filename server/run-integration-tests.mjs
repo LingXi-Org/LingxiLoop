@@ -72,7 +72,9 @@ if (missingFiles.length > 0) {
   console.error(`[integration] unknown test file(s): ${missingFiles.join(', ')}`)
   process.exit(2)
 }
-const selectedFiles = requestedFiles.length > 0 ? requestedFiles : availableFiles
+const LIVE_RESEND = process.env.RESEND_LIVE_TEST === '1'
+const defaultFiles = availableFiles.filter((name) => name !== 'resend-live.test.ts' || LIVE_RESEND)
+const selectedFiles = requestedFiles.length > 0 ? requestedFiles : defaultFiles
 const testFiles = selectedFiles.map((name) => join(integrationDir, name))
 if (testFiles.length === 0) {
   console.error(`[integration] no test files found under ${integrationDir}`)
@@ -114,7 +116,6 @@ if (!process.env.LINGXILOOP_DISABLE_EMBEDDINGS) process.env.LINGXILOOP_DISABLE_E
 // the live path: keep the real key + real EMAIL_DOMAIN, and the
 // resend-live.test.ts spec runs against Resend's magic test addresses
 // (delivered@resend.dev / bounced@resend.dev — these consume no quota).
-const LIVE_RESEND = process.env.RESEND_LIVE_TEST === '1'
 if (!LIVE_RESEND) {
   process.env.RESEND_API_KEY = ''
   if (!process.env.EMAIL_DOMAIN) process.env.EMAIL_DOMAIN = 'lingxiloop.local'
