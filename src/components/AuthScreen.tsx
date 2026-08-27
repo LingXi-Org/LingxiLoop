@@ -14,7 +14,12 @@
 import { useState, useEffect } from 'react'
 import { api, getServerOrigin } from '@/api/client'
 import { isElectron } from '@/lib/runtime'
-import { isNativePlatform, runOAuth } from '@/lib/native'
+import {
+  armNativeOAuthHandoff,
+  handleNativeOAuthCallback,
+  isNativePlatform,
+  runOAuth,
+} from '@/lib/native'
 import { CloudLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
 
@@ -100,7 +105,8 @@ export function AuthScreen() {
         setBusy(null)
         return
       }
-      const ret = encodeURIComponent('lingxiloop://auth')
+      const nonce = armNativeOAuthHandoff()
+      const ret = encodeURIComponent(`lingxiloop://auth?n=${encodeURIComponent(nonce)}`)
       void (async () => {
         try {
           const callbackUrl = await runOAuth({
@@ -112,18 +118,14 @@ export function AuthScreen() {
             setBusy(null)
             return
           }
-          // ASWebAuthenticationSession delivers the final URL with the
-          // token fragment. Plant it as our `location.hash` so AuthGate's
-          // existing fragment-consumption logic picks it up.
-          const u = new URL(callbackUrl)
-          const hash = u.hash || (u.search ? `#${u.search.replace(/^\?/, '')}` : '')
-          if (!hash) {
-            setErr('登录已完成，但未返回登录凭证。')
+          // ASWebAuthenticationSession returns the same untrusted callback URL
+          // as the OS deep-link path. Validate its one-time nonce before
+          // exposing the token fragment to AuthGate.
+          if (!await handleNativeOAuthCallback(callbackUrl)) {
+            setErr('登录回调验证失败，请重试。')
             setBusy(null)
             return
           }
-          history.replaceState(null, '', location.pathname + location.search + hash)
-          window.dispatchEvent(new CustomEvent('lingxiloop:oauth-token', { detail: hash }))
         } catch (err) {
           setErr(err instanceof Error ? err.message : '登录失败')
           setBusy(null)

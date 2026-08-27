@@ -841,8 +841,8 @@ api.get('/metrics', async (req, res) => {
  *  we mint it server-side, save to Redis (5min TTL), and verify on the
  *  callback to defend against CSRF + cross-provider mixups.
  *
- *  `?return=<url>` is the post-callback redirect target. Must startsWith
- *  one of LINGXILOOP_AUTH_RETURN_ALLOWLIST entries; otherwise rejected so we
+ *  `?return=<url>` is the post-callback redirect target. Must semantically
+ *  match one of LINGXILOOP_AUTH_RETURN_ALLOWLIST entries; otherwise rejected so we
  *  can't be turned into an open redirect. Omit to use AUTH_DONE_URL. */
 api.get('/auth/start/:provider', safe(async (req, res) => {
   const provider = req.params.provider as Provider
