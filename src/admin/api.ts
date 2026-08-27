@@ -1,6 +1,7 @@
+
 /**
  * Admin API client — talks to /api/admin/*. Mirrors the shape of
- * src/api/client.ts but stays in this folder so the admin bundle can
+ * the shared HTTP transport but stays in this folder so the admin bundle can
  * load it without dragging the entire main client (and its zustand
  * stores) along for the ride.
  *

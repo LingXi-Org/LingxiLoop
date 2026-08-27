@@ -1,5 +1,6 @@
+import { conversationsApi } from '@/api/conversations'
+import type { ApiConversation } from '@/api/contracts'
 import { create } from 'zustand'
-import { api, type ApiConversation } from '@/api/client'
 import { ws } from '@/api/core/realtime'
 import type { Conversation } from '@/types'
 import { useApp } from '@/stores/app'
@@ -189,7 +190,7 @@ export const useConversations = create<ConversationsState>((set) => ({
     set({ list: [], loaded: false })
     lingxiIm.setWorkspaceChannels([])
     try {
-      const list = await api.getConversations()
+      const list = await conversationsApi.getConversations()
       const conversations = list.map(fromApi)
       lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations, loaded: true })
@@ -200,7 +201,7 @@ export const useConversations = create<ConversationsState>((set) => ({
   },
   async reload() {
     try {
-      const list = await api.getConversations()
+      const list = await conversationsApi.getConversations()
       const conversations = list.map(fromApi)
       lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations })
@@ -216,7 +217,7 @@ export const useConversations = create<ConversationsState>((set) => ({
       previous = item.leaderId ?? null
       return { ...item, leaderId }
     }) }))
-    try { await api.setLeader(id, leaderId) }
+    try { await conversationsApi.setLeader(id, leaderId) }
     catch (error) { set((state) => ({ list: state.list.map((item) => item.id === id ? { ...item, leaderId: previous } : item) })); throw error }
   },
   async setTitle(id, title) {
@@ -226,7 +227,7 @@ export const useConversations = create<ConversationsState>((set) => ({
       previous = item.title
       return { ...item, title }
     }) }))
-    try { await api.setTitle(id, title) }
+    try { await conversationsApi.setTitle(id, title) }
     catch (error) { set((state) => ({ list: state.list.map((item) => item.id === id ? { ...item, title: previous } : item) })); throw error }
   },
   async setTopic(id, topic) {
@@ -236,7 +237,7 @@ export const useConversations = create<ConversationsState>((set) => ({
       previous = item.topic ?? null
       return { ...item, topic }
     }) }))
-    try { await api.setTopic(id, topic) }
+    try { await conversationsApi.setTopic(id, topic) }
     catch (error) { set((state) => ({ list: state.list.map((item) => item.id === id ? { ...item, topic: previous } : item) })); throw error }
   },
 }))
@@ -266,7 +267,7 @@ export function bootConversations() {
       // reload, so the badge never blinks up to 1 just to drop back to 0.
       const active = useApp.getState().selectedConversationId
       if (e.type === 'message.new' && e.conversationId === active) {
-        void api.markRead(e.conversationId).then(() => useConversations.getState().reload())
+        void conversationsApi.markRead(e.conversationId).then(() => useConversations.getState().reload())
         return
       }
       void useConversations.getState().reload()

@@ -1,3 +1,4 @@
+import type { ApiWhisperMessage } from '@/api/contracts'
 import { useEffect, useMemo } from 'react'
 import { Avatar, AvatarStack } from './Avatar'
 import { SkypeEmoji } from './SkypeEmoji'
@@ -11,7 +12,6 @@ import { BoardLink } from './BoardLink'
 import { CardLink } from './CardLink'
 import { DocumentLink } from './DocumentLink'
 import { CalendarLink } from './CalendarLink'
-import type { ApiWhisperMessage } from '@/api/client'
 import type { Participant } from '@/types'
 
 /** Inline-only renderer for whisper bubbles — keeps the dashed-coral

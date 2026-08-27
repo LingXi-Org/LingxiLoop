@@ -1,5 +1,6 @@
+import { canvasApi } from '@/api/canvas'
+import type { WsEvent } from '@/api/contracts'
 import { create } from 'zustand'
-import { api, type WsEvent } from '@/api/client'
 import { ws } from '@/api/core/realtime'
 import { findCanvasPlacement } from '@/lib/canvasLayout'
 import { mergeCanvasActivities } from '@/lib/canvasEvents'
@@ -68,7 +69,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   load: async (canvasId) => {
     set({ loading: true, error: null })
     try {
-      const snapshot = await api.getCanvas(canvasId ?? get().activeCanvasId ?? undefined)
+      const snapshot = await canvasApi.getCanvas(canvasId ?? get().activeCanvasId ?? undefined)
       set((state) => {
         const current = state.activityByCanvas[snapshot.id]
           ?? (state.snapshot?.id === snapshot.id ? state.snapshot.activity : [])
@@ -102,7 +103,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     const state = get()
     if (state.snapshot?.id === canvasId || state.previews[canvasId]) return
     try {
-      const snapshot = await api.getCanvas(canvasId)
+      const snapshot = await canvasApi.getCanvas(canvasId)
       set((current) => {
         const activity = mergeCanvasActivities(current.activityByCanvas[canvasId] ?? [], snapshot.activity)
         return {
@@ -117,12 +118,12 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
 
   loadWorkspaces: async (conversationId) => {
-    try { set({ workspaces: await api.getCanvases(conversationId) }) }
+    try { set({ workspaces: await canvasApi.getCanvases(conversationId) }) }
     catch (error) { set({ error: error instanceof Error ? error.message : String(error) }) }
   },
 
   createForConversation: async (conversationId) => {
-    const snapshot = await api.createConversationCanvas(conversationId)
+    const snapshot = await canvasApi.createConversationCanvas(conversationId)
     const summary: CanvasWorkspaceSummary = {
       id: snapshot.id,
       title: snapshot.title,
@@ -165,7 +166,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   createFrame: async (type, at = { x: 80, y: 80 }) => {
     const preset = defaults[type]
     const placement = findCanvasPlacement(get().snapshot?.frames ?? [], preset, at)
-    const frame = await api.createCanvasFrame({ canvasId: get().activeCanvasId ?? undefined, type, x: placement.x, y: placement.y, ...preset })
+    const frame = await canvasApi.createCanvasFrame({ canvasId: get().activeCanvasId ?? undefined, type, x: placement.x, y: placement.y, ...preset })
     set((state) => ({
       selectedFrameId: frame.id,
       snapshot: state.snapshot
@@ -190,7 +191,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     }
     try {
       const contentChange = patch.type !== undefined || patch.title !== undefined || patch.content !== undefined || patch.data !== undefined
-      const frame = await api.updateCanvasFrame(id, { ...patch, ...(contentChange && before ? { baseRevision: baseRevision ?? before.revision } : {}) })
+      const frame = await canvasApi.updateCanvasFrame(id, { ...patch, ...(contentChange && before ? { baseRevision: baseRevision ?? before.revision } : {}) })
       set((state) => ({
         ...(state.snapshot ? { snapshot: { ...state.snapshot, frames: upsertCanvasFrame(state.snapshot.frames, frame) } } : {}),
         ...(state.previews[frame.canvasId] ? {
@@ -210,7 +211,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
 
   deleteFrame: async (id) => {
     const canvasId = get().snapshot?.frames.find((frame) => frame.id === id)?.canvasId
-    await api.deleteCanvasFrame(id)
+    await canvasApi.deleteCanvasFrame(id)
     set((state) => ({
       selectedFrameId: state.selectedFrameId === id ? null : state.selectedFrameId,
       ...(state.snapshot ? { snapshot: { ...state.snapshot, frames: state.snapshot.frames.filter((frame) => frame.id !== id) } } : {}),
@@ -221,14 +222,14 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
 
   addComment: async (body, frameId = null) => {
-    const comment = await api.addCanvasComment(body, frameId, get().activeCanvasId ?? undefined)
+    const comment = await canvasApi.addCanvasComment(body, frameId, get().activeCanvasId ?? undefined)
     set((state) => state.snapshot ? {
       snapshot: { ...state.snapshot, comments: [comment, ...state.snapshot.comments.filter((item) => item.id !== comment.id)] },
     } : {})
   },
 
   setStatus: async (status, frameId = null, cursor) => {
-    const presence = await api.setCanvasStatus(status, frameId, get().activeCanvasId ?? undefined, cursor)
+    const presence = await canvasApi.setCanvasStatus(status, frameId, get().activeCanvasId ?? undefined, cursor)
     set((state) => {
       if (!state.snapshot) return {}
       const without = state.snapshot.presence.filter((item) => item.participantId !== presence?.participantId)
@@ -238,11 +239,11 @@ export const useCanvas = create<CanvasState>((set, get) => ({
 
   steerAgent: async (agentId, text) => {
     const canvasId = get().activeCanvasId; if (!canvasId) return
-    await api.steerCanvasAssignment(canvasId, agentId, text)
+    await canvasApi.steerCanvasAssignment(canvasId, agentId, text)
   },
   assignAgent: async (agentId, assignment) => {
     const canvasId = get().activeCanvasId; if (!canvasId) return
-    const snapshot = await api.assignCanvasWork(canvasId, agentId, assignment)
+    const snapshot = await canvasApi.assignCanvasWork(canvasId, agentId, assignment)
     set((state) => ({
       snapshot,
       previews: { ...state.previews, [snapshot.id]: snapshot },
@@ -251,11 +252,11 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
   stopAgent: async (agentId) => {
     const canvasId = get().activeCanvasId; if (!canvasId) return
-    await api.stopCanvasAssignment(canvasId, agentId); await get().load(canvasId)
+    await canvasApi.stopCanvasAssignment(canvasId, agentId); await get().load(canvasId)
   },
   stopWorkspace: async () => {
     const canvasId = get().activeCanvasId; if (!canvasId) return
-    await api.stopCanvas(canvasId); await get().load(canvasId)
+    await canvasApi.stopCanvas(canvasId); await get().load(canvasId)
   },
 
   applyEvent: (event) => {

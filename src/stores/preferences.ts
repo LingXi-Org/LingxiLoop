@@ -1,5 +1,6 @@
+import { agentsApi } from '@/api/agents'
+import type { ApiAutonomy } from '@/api/contracts'
 import { create } from 'zustand'
-import { api, type ApiAutonomy } from '@/api/client'
 import { useAuth } from '@/stores/auth'
 
 interface PrefsState {
@@ -17,7 +18,7 @@ export const usePrefs = create<PrefsState>((set, get) => ({
   loaded: false,
   async load() {
     try {
-      const [prefs, auto] = await Promise.all([api.getPreferences(), api.getAllAutonomy()])
+      const [prefs, auto] = await Promise.all([agentsApi.getPreferences(), agentsApi.getAllAutonomy()])
       const map: Record<string, ApiAutonomy> = {}
       for (const a of auto) map[a.agentId] = a
       set({ prefs, autonomy: map, loaded: true })
@@ -29,7 +30,7 @@ export const usePrefs = create<PrefsState>((set, get) => ({
     const next = { ...get().prefs, [key]: value }
     set({ prefs: next })
     try {
-      await api.putPreferences(next)
+      await agentsApi.putPreferences(next)
     } catch (err) {
       console.warn('[prefs] save failed', err)
     }
@@ -45,7 +46,7 @@ export const usePrefs = create<PrefsState>((set, get) => ({
       },
     }))
     try {
-      await api.putAutonomy(agentId, threshold)
+      await agentsApi.putAutonomy(agentId, threshold)
     } catch (err) {
       console.warn('[prefs] autonomy save failed', err)
     }

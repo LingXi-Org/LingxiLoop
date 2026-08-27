@@ -1,3 +1,4 @@
+import { filesApi } from '@/api/files'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Markdown from 'react-markdown'
@@ -5,7 +6,6 @@ import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
-import { api } from '@/api/client'
 import { formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview, type AttachmentPreviewKind, type AttachmentPreviewState } from '@/lib/attachmentPreview'
 import type { Message } from '@/types'
 
@@ -15,7 +15,7 @@ type Attachment = NonNullable<Message['attachment']>
 
 async function freshUrl(url: string): Promise<string> {
   if (/^(data:|blob:)/i.test(url) || url.startsWith('/')) return url
-  try { return (await api.refreshUploadUrl(url)).url } catch { return url }
+  try { return (await filesApi.refreshUploadUrl(url)).url } catch { return url }
 }
 
 function ViewerShell({ name, url, onClose, children }: { name: string; url: string; onClose: () => void; children: React.ReactNode }) {

@@ -1,3 +1,8 @@
+import { companiesApi } from '@/api/companies'
+import { learningApi } from '@/api/learning'
+import { platformApi } from '@/api/platform'
+import { getServerOrigin } from '@/api/core/http'
+import type { ApiCourseInvitationAccept, ApiCourseInvitationPreview, ApiInvitationPreview } from '@/api/contracts'
 /**
  * InviteAcceptScreen — the "you've been invited to <workspace>" landing
  * page. Renders when the URL carries an invite token via either:
@@ -27,7 +32,6 @@
  *   • not_found — bad link.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { api, getServerOrigin, type ApiCourseInvitationAccept, type ApiCourseInvitationPreview, type ApiInvitationPreview } from '@/api/client'
 import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
 import { setWorkspaceSession } from '@/lib/workspaceSession'
@@ -136,7 +140,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const loadPreview = useCallback(async () => {
     setPreviewErr(null)
     try {
-      const r = courseInvite ? await api.previewCourseInvitation(rawToken) : await api.previewInvitation(rawToken)
+      const r = courseInvite ? await learningApi.previewCourseInvitation(rawToken) : await companiesApi.previewInvitation(rawToken)
       setPreview(r)
     } catch (e) {
       setPreviewErr(e instanceof Error ? e.message : String(e))
@@ -148,11 +152,11 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const accept = useCallback(async () => {
     setBusy(true); setAcceptErr(null)
     try {
-      const r = courseInvite ? await api.acceptCourseInvitation(rawToken) : await api.acceptInvitation(rawToken)
+      const r = courseInvite ? await learningApi.acceptCourseInvitation(rawToken) : await companiesApi.acceptInvitation(rawToken)
       // Refresh /auth/me so the companies list (used by the switcher) gets
       // the freshly-joined workspace without a manual reload.
       try {
-        const me = await api.authMe()
+        const me = await platformApi.authMe()
         setMe(me.user, me.companies, r.company.id)
         setServerCapabilities(me.serverCapabilities)
       } catch {
@@ -163,7 +167,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           // but if THAT fails we still want the user to land in the new
           // company. Mutate via setActiveCompany after a manual reload of
           // companies via listCompanies as a last resort.
-          const list = await api.listCompanies().catch(() => null)
+          const list = await companiesApi.listCompanies().catch(() => null)
           if (list && user) setMe(user, list.map((c) => ({
             id: c.id, name: c.name, slug: c.slug, role: c.role,
           })), r.company.id)
@@ -493,7 +497,7 @@ function SignInToAccept({ token }: { token: string }) {
       })()
       return
     }
-    location.assign(api.authStartUrl(provider, { inviteToken: rawToken, inviteKind: token.startsWith('course:') ? 'course' : 'company' }))
+    location.assign(platformApi.authStartUrl(provider, { inviteToken: rawToken, inviteKind: token.startsWith('course:') ? 'course' : 'company' }))
   }
   return (
     <div className="w-full flex flex-col gap-2.5">

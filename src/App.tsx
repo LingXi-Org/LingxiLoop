@@ -1,7 +1,7 @@
+import { conversationsApi } from '@/api/conversations'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
 import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
-import { api } from '@/api/client'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
@@ -74,7 +74,7 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
     if (mockMode) return
     if (!convoId || !selectedConvoExists) return
     void useMessages.getState().loadConversation(convoId)
-    void api.markRead(convoId).then(() => {
+    void conversationsApi.markRead(convoId).then(() => {
       // refresh list so the badge clears
       void useConversations.getState().reload()
     }).catch(() => { /* swallow */ })

@@ -1,6 +1,6 @@
+import { messagesApi } from '@/api/messages'
 import { useMemo, useState } from 'react'
 import type { Message, PollTally } from '@/types'
-import { api } from '@/api/client'
 import { useParticipants } from '@/stores/participants'
 import { useMe } from '@/stores/auth'
 import { Avatar } from './Avatar'
@@ -89,7 +89,7 @@ export function PollBubble({ msg, zh = false }: Props) {
     setSubmitting(true)
     setErrorMsg(null)
     try {
-      await api.castPollVote(msg.id, optionIds)
+      await messagesApi.castPollVote(msg.id, optionIds)
       // The WS echo will repaint via the messages store; clear the local
       // overlay so we render from the canonical tallies.
       setPendingPicks(null)

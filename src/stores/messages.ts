@@ -1,5 +1,7 @@
+import { conversationsApi } from '@/api/conversations'
+import { messagesApi } from '@/api/messages'
+import type { ApiMessage, WsEvent } from '@/api/contracts'
 import { create } from 'zustand'
-import { type ApiMessage, api, type WsEvent } from '@/api/client'
 import { ws } from '@/api/core/realtime'
 import {
   ACTIVE_STREAM_EXPIRY_MS,
@@ -450,7 +452,7 @@ function markConversationReadWhileOpen(conversationId: string): void {
   activeReadTimers.set(conversationId, window.setTimeout(() => {
     activeReadTimers.delete(conversationId)
     if (useApp.getState().selectedConversationId !== conversationId) return
-    void api.markRead(conversationId)
+    void conversationsApi.markRead(conversationId)
       .then(() => import('@/stores/conversations'))
       .then(({ useConversations }) => useConversations.getState().reload())
       .catch(() => undefined)
@@ -839,7 +841,7 @@ function forgetOutbox(nonce: string): void { writeOutbox(readOutbox().filter((it
 export async function sendUserMessage(
   convoId: string,
   body: string,
-  attachment?: import('@/api/client').ApiAttachment | null,
+  attachment?: import('@/api/contracts').ApiAttachment | null,
   quotedMessageId?: string | null,
   clientNonce?: string,
   replayPayload?: LingxiMessageV1,
@@ -1016,7 +1018,7 @@ export async function retryFailedMessage(convoId: string, tempId: string): Promi
   // bubble). For retry that's fine — the server resolves the row by
   // url + name + mime + size, and `key` is only used as an internal
   // optimization marker.
-  const retryAttachment: import('@/api/client').ApiAttachment | null = att
+  const retryAttachment: import('@/api/contracts').ApiAttachment | null = att
     ? { url: att.url ?? '', name: att.name, kind: att.kind, mime: att.mime, size: att.size }
     : null
   const quotedId = msg.quotedMessageId ?? null
@@ -1038,7 +1040,7 @@ async function recoverMessageOutbox(): Promise<void> {
         continue
       }
       const data = entry.payload.data ?? {}
-      const attachment = entry.payload.kind === 'attachment' ? data as unknown as import('@/api/client').ApiAttachment : null
+      const attachment = entry.payload.kind === 'attachment' ? data as unknown as import('@/api/contracts').ApiAttachment : null
       await sendUserMessage(entry.convoId, entry.payload.body ?? '', attachment, entry.payload.replyToClientMsgNo, entry.nonce, entry.payload)
     } catch (error) { console.warn('[messages] outbox recovery deferred', error) }
   }
@@ -1050,7 +1052,7 @@ export async function toggleReaction(messageId: string, emoji: string): Promise<
   )
   if (isMockImDevelopment()) return
   try {
-    const res = await api.toggleReaction(messageId, emoji)
+    const res = await messagesApi.toggleReaction(messageId, emoji)
     const incoming = deriveMineForReactions(res.reactions)
     patchMessageReactions(messageId, (reactions) => mergeReactionOrder(reactions, incoming))
   } catch (err) {

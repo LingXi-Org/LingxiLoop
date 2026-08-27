@@ -1,6 +1,6 @@
+import { conversationsApi } from '@/api/conversations'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { useRef, useState } from 'react'
-import { api } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { IConvene, IMail, IWhisper } from '@/components/icons'
 import { cn } from '@/lib/utils'
@@ -64,7 +64,7 @@ export function ParticipantProfile({
     if (opening || isSelf) return
     setOpening(true)
     try {
-      const conversation = await api.openDirect(participant.id)
+      const conversation = await conversationsApi.openDirect(participant.id)
       await useConversations.getState().reload()
       setView('conversations')
       selectConversation(conversation.id)

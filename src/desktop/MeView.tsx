@@ -1,5 +1,8 @@
+import { agentsApi } from '@/api/agents'
+import { platformApi } from '@/api/platform'
+import { getServerOrigin } from '@/api/core/http'
+import type { ApiQuotaSnapshot, ApiQuotaWindow } from '@/api/contracts'
 import { useEffect, useState } from 'react'
-import { type ApiQuotaSnapshot, type ApiQuotaWindow, api, getServerOrigin } from '@/api/client'
 import { Avatar } from '@/components/Avatar'
 import { CheckboxField } from '@/components/ui/checkbox-field'
 import { cn } from '@/lib/utils'
@@ -53,7 +56,7 @@ function ProfileTab() {
   async function signOut() {
     // Server-side: revoke the session row so the token is dead even if it
     // leaks. Best-effort — client clear still happens on network failure.
-    try { await api.authLogout() } catch (e) { console.warn('[signout] server call failed', e) }
+    try { await platformApi.authLogout() } catch (e) { console.warn('[signout] server call failed', e) }
     useAuth.getState().clear()
     location.reload()
   }
@@ -260,7 +263,7 @@ function UsageTab() {
 
   const load = () => {
     setState({ kind: 'loading' })
-    api.getQuota()
+    platformApi.getQuota()
       .then((r) => setState({ kind: 'ready', configured: r.configured, snapshot: r.snapshot, error: r.error }))
       .catch((e) => setState({ kind: 'error', message: e instanceof Error ? e.message : String(e) }))
   }
@@ -382,9 +385,9 @@ function TrustTab() {
   const autonomy = usePrefs((s) => s.autonomy)
   const setAutonomy = usePrefs((s) => s.setAutonomy)
   const agents = Object.values(byId).filter((p) => p.kind === 'agent')
-  const [rules, setRules] = useState<Awaited<ReturnType<typeof api.getAutonomyRules>>>([])
+  const [rules, setRules] = useState<Awaited<ReturnType<typeof agentsApi.getAutonomyRules>>>([])
   const [rulesError, setRulesError] = useState<string | null>(null)
-  const loadRules = () => void api.getAutonomyRules().then(setRules).catch((error) => {
+  const loadRules = () => void agentsApi.getAutonomyRules().then(setRules).catch((error) => {
     setRulesError(error instanceof Error ? error.message : String(error))
   })
   useEffect(loadRules, [])
@@ -439,7 +442,7 @@ function TrustTab() {
                   {rule.mode === 'allow' ? '允许' : rule.mode === 'ask' ? '每次询问' : '拒绝'} · {rule.source === 'explicit_user' ? '用户明确设置' : '已学习'}
                 </div>
               </div>
-              <button type="button" onClick={() => void api.deleteAutonomyRule(rule.id).then(loadRules)} className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">
+              <button type="button" onClick={() => void agentsApi.deleteAutonomyRule(rule.id).then(loadRules)} className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">
                 撤销
               </button>
             </div>
@@ -576,11 +579,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function MemoryTab() {
-  const [items, setItems] = useState<Awaited<ReturnType<typeof api.getLearnedMemories>>>([])
+  const [items, setItems] = useState<Awaited<ReturnType<typeof agentsApi.getLearnedMemories>>>([])
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const load = () => void api.getLearnedMemories().then(setItems).catch((err) => setError(err instanceof Error ? err.message : String(err)))
+  const load = () => void agentsApi.getLearnedMemories().then(setItems).catch((err) => setError(err instanceof Error ? err.message : String(err)))
   useEffect(load, [])
   const kindLabel = (path: string) => ({ fact: '事实', preference: '偏好', instruction: '指令', relationship: '关系' } as Record<string, string>)[path.split('/')[1] ?? ''] ?? '记忆'
   return (
@@ -605,13 +608,13 @@ function MemoryTab() {
               <div className="mt-3 flex gap-2">
                 {isEditing ? (
                   <>
-                    <button type="button" onClick={() => void api.updateLearnedMemory({ agentId: item.agentId, path: item.path, body: draft }).then(() => { setEditing(null); load() })} className="rounded-lg bg-skype px-3 py-1.5 text-[11px] font-semibold text-white">保存</button>
+                    <button type="button" onClick={() => void agentsApi.updateLearnedMemory({ agentId: item.agentId, path: item.path, body: draft }).then(() => { setEditing(null); load() })} className="rounded-lg bg-skype px-3 py-1.5 text-[11px] font-semibold text-white">保存</button>
                     <button type="button" onClick={() => setEditing(null)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-ink-500 hover:bg-raised">取消</button>
                   </>
                 ) : (
                   <>
                     <button type="button" onClick={() => { setEditing(key); setDraft(item.body) }} className="rounded-lg border border-ink-100 px-3 py-1.5 text-[11px] font-semibold text-ink-600 hover:bg-raised">编辑</button>
-                    <button type="button" onClick={() => void api.forgetLearnedMemory(item.agentId, item.path).then(load)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">忘记</button>
+                    <button type="button" onClick={() => void agentsApi.forgetLearnedMemory(item.agentId, item.path).then(load)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">忘记</button>
                   </>
                 )}
               </div>

@@ -1,11 +1,10 @@
+import type { ServerCapabilities } from '@/api/contracts'
 /**
  * Auth state — token + current user + active company. Token persists in
  * localStorage so reloads stay signed in. Every API request reads the
- * current token from this store via getToken() (see api/client.ts).
+ * current token from this store through the shared HTTP transport.
  */
 import { create } from 'zustand'
-import type { ServerCapabilities } from '@/api/client'
-
 export interface AuthCompany {
   id: string
   name: string

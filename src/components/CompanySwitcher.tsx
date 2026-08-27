@@ -1,3 +1,4 @@
+import { companiesApi } from '@/api/companies'
 /**
  * CompanySwitcher — small dropdown in the title bar that shows the active
  * tenant and lets the user hop between companies they're a member of, plus
@@ -9,7 +10,6 @@
  */
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { api } from '@/api/client'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { InvitePeopleModal } from './InvitePeopleModal'
@@ -54,7 +54,7 @@ export function CompanySwitcher({ zh = false }: { zh?: boolean }) {
     if (!name) return
     setBusy(true); setErr(null)
     try {
-      const created = await api.createCompany(name)
+      const created = await companiesApi.createCompany(name)
       selectConversation(null)
       addCompany({ id: created.id, name: created.name, slug: created.slug, role: created.role })
       setNewName(''); setCreating(false); setOpen(false)

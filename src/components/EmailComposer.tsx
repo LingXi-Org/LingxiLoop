@@ -1,3 +1,5 @@
+import { emailApi } from '@/api/email'
+import { filesApi } from '@/api/files'
 /**
  * EmailComposer — slide-in drawer for writing real email.
  *
@@ -19,7 +21,6 @@
  * keeps drawer open + surfaces error inline so the user can edit + retry.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { api } from '@/api/client'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useEmailComposer } from '@/stores/emailComposer'
@@ -269,7 +270,7 @@ export function EmailComposer() {
     ])
     void (async () => {
       try {
-        const uploaded = await api.uploadFile(file)
+        const uploaded = await filesApi.uploadFile(file)
         setAttachments((prev) => prev.map((a) =>
           a.localId === localId
             ? { ...a, state: 'done', key: uploaded.key ?? '' }
@@ -347,12 +348,12 @@ export function EmailComposer() {
     setSending(true)
     try {
       const result = isReply
-        ? await api.replyEmail(compose.replyToMessageId, {
+        ? await emailApi.replyEmail(compose.replyToMessageId, {
             body: body.trim(),
             cc: cc.map((e) => e.raw),
             attachments: attachmentArgs.length ? attachmentArgs : undefined,
           })
-        : await api.sendEmail({
+        : await emailApi.sendEmail({
             to: to.map((e) => e.raw),
             cc: cc.length ? cc.map((e) => e.raw) : undefined,
             subject: subject.trim(),

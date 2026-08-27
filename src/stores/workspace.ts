@@ -1,5 +1,5 @@
+import { learningApi } from '@/api/learning'
 import { create } from 'zustand'
-import { api } from '@/api/client'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
 import { getActiveCompanyId } from '@/stores/auth'
@@ -32,7 +32,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       const companyId = getActiveCompanyId() ?? (mockMode ? 'mock-company' : null)
-      const list = mockMode ? mockWorkspaces : await api.listProjects()
+      const list = mockMode ? mockWorkspaces : await learningApi.listProjects()
       const stored = getWorkspaceSession()
       const selectedId = stored?.companyId === companyId && list.some((workspace) => workspace.id === stored.projectId && workspace.status === 'active')
         ? stored.projectId : null
@@ -56,7 +56,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     if (projectId.startsWith('mock-')) {
       const { activateMockWorkspace } = await import('@/dev/mockIm')
       activateMockWorkspace(projectId)
-    } else await api.openProject(projectId)
+    } else await learningApi.openProject(projectId)
   },
   leave: () => {
     setWorkspaceSession(null)
@@ -71,7 +71,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
       await get().select(id)
       return id
     }
-    const created = await api.createProject({ name, description })
+    const created = await learningApi.createProject({ name, description })
     await get().load(false)
     await get().select(created.id)
     return created.id

@@ -1,3 +1,5 @@
+import { whispersApi } from '@/api/whispers'
+import type { ApiWhisper, ApiWhisperMessage } from '@/api/contracts'
 /**
  * Frontend "Whispers" tab — the user's peek view into agent-to-agent
  * private 1-on-1 chats. On the server these are just regular
@@ -10,7 +12,6 @@
  * has no notion of it.
  */
 import { create } from 'zustand'
-import { api, type ApiWhisper, type ApiWhisperMessage } from '@/api/client'
 import { ws } from '@/api/core/realtime'
 
 export interface WhispersState {
@@ -42,7 +43,7 @@ export const useWhispers = create<WhispersState>((set) => ({
     // tenant's peek list + per-pair message cache before fetching fresh.
     set({ list: [], byId: {}, streaming: {}, loaded: false })
     try {
-      const list = await api.getWhispers()
+      const list = await whispersApi.getWhispers()
       set({ list, loaded: true })
     } catch (err) {
       console.warn('[whispers] loadList failed', err)
@@ -54,7 +55,7 @@ export const useWhispers = create<WhispersState>((set) => ({
     // handlers call this so the per-conversation `byId` cache doesn't
     // get wiped (which would flash the open thread empty).
     try {
-      const list = await api.getWhispers()
+      const list = await whispersApi.getWhispers()
       set({ list, loaded: true })
     } catch (err) {
       console.warn('[whispers] refreshList failed', err)
@@ -63,7 +64,7 @@ export const useWhispers = create<WhispersState>((set) => ({
 
   async loadMessages(id) {
     try {
-      const msgs = await api.getWhisperMessages(id)
+      const msgs = await whispersApi.getWhisperMessages(id)
       set((s) => ({ byId: { ...s.byId, [id]: msgs } }))
     } catch (err) {
       console.warn('[whispers] loadMessages failed', err)

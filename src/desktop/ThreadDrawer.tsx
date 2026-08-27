@@ -1,3 +1,5 @@
+import { messagesApi } from '@/api/messages'
+import type { ApiMessage } from '@/api/contracts'
 /**
  * Thread drawer — right-pane sidebar that lists every reply to a single
  * root message (i.e. all messages whose quoted_message_id == root.id).
@@ -14,7 +16,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSurface } from '@/stores/surface'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
-import { api, type ApiMessage } from '@/api/client'
 import { MessageRow } from '@/components/Message'
 import { Composer } from '@/desktop/ChatPane'
 import type { Message, Participant } from '@/types'
@@ -87,7 +88,7 @@ export function ThreadDrawer() {
     if (!openThread) return
     let cancelled = false
     setLoading(true); setErr(null)
-    api.getReplies(openThread.convoId, openThread.rootId)
+    messagesApi.getReplies(openThread.convoId, openThread.rootId)
       .then((rows) => {
         if (cancelled) return
         setReplies(rows.map(apiToMessage))

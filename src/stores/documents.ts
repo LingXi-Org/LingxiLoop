@@ -1,5 +1,6 @@
+import { documentsApi } from '@/api/documents'
+import type { ApiDocument } from '@/api/contracts'
 import { create } from 'zustand'
-import { api, type ApiDocument } from '@/api/client'
 import { ws } from '@/api/core/realtime'
 
 interface DocumentsState {
@@ -25,11 +26,11 @@ export const useDocuments = create<DocumentsState>((set, get) => ({
   select: (id) => set({ selectedId: id }),
   load: async () => {
     if (get().loaded) return
-    const { documents } = await api.listDocuments()
+    const { documents } = await documentsApi.listDocuments()
     set({ list: documents, loaded: true })
   },
   reload: async () => {
-    const { documents } = await api.listDocuments()
+    const { documents } = await documentsApi.listDocuments()
     set((s) => ({
       list: documents,
       loaded: true,
@@ -38,18 +39,18 @@ export const useDocuments = create<DocumentsState>((set, get) => ({
   },
   reset: () => set({ list: [], loaded: false, selectedId: null }),
   create: async (input) => {
-    const doc = await api.createDocument(input ?? {})
+    const doc = await documentsApi.createDocument(input ?? {})
     set((s) => ({ list: [doc, ...s.list.filter((d) => d.id !== doc.id)], selectedId: doc.id }))
     return doc
   },
   rename: async (id, title) => {
-    await api.renameDocument(id, title)
+    await documentsApi.renameDocument(id, title)
     set((s) => ({
       list: s.list.map((d) => d.id === id ? { ...d, title, updatedAt: new Date().toISOString() } : d),
     }))
   },
   remove: async (id) => {
-    await api.deleteDocument(id)
+    await documentsApi.deleteDocument(id)
     set((s) => ({
       list: s.list.filter((d) => d.id !== id),
       selectedId: s.selectedId === id ? null : s.selectedId,

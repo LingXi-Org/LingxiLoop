@@ -1,10 +1,11 @@
+import { agentsApi } from '@/api/agents'
+import { emailApi } from '@/api/email'
 import hljs from 'highlight.js/lib/common'
 import { createContext, memo, type ReactNode, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Markdown, { type Components } from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
-import { api } from '@/api/client'
 import { inferAttachmentPreview } from '@/lib/attachmentPreview'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { messageShellCapabilities } from '@/lib/messageShell'
@@ -1107,7 +1108,7 @@ function _EmailCard({ msg }: { msg: Message }) {
     if (!showHtml || htmlBody !== null || htmlError) return
     let cancelled = false
     setHtmlLoading(true)
-    api.fetchEmailHtml(msg.id)
+    emailApi.fetchEmailHtml(msg.id)
       .then((html) => { if (!cancelled) setHtmlBody(html ?? '') })
       .catch((e: unknown) => { if (!cancelled) setHtmlError(e instanceof Error ? e.message : String(e)) })
       .finally(() => { if (!cancelled) setHtmlLoading(false) })
@@ -1767,7 +1768,7 @@ function ApprovalCard({ msg }: { msg: Message }) {
   if (!approval) return null
   const resolve = async (decision: 'approved' | 'rejected') => {
     setBusy(decision); setError(null)
-    try { await api.resolveApproval(approval.id, decision) }
+    try { await agentsApi.resolveApproval(approval.id, decision) }
     catch (err) { setError(err instanceof Error ? err.message : String(err)); setBusy(null) }
   }
   const pending = approval.status === 'pending'

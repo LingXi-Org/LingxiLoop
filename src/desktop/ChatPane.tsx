@@ -1,6 +1,9 @@
+import { agentsApi } from '@/api/agents'
+import { conversationsApi } from '@/api/conversations'
+import { filesApi } from '@/api/files'
+import type { ApiAttachment, ApiCoworkerActivity } from '@/api/contracts'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
-import { type ApiAttachment, type ApiCoworkerActivity, api } from '@/api/client'
 import { ws } from '@/api/core/realtime'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { IAt, ICanvas, IClip, ISearch, ISend, ISmile } from '@/components/icons'
@@ -415,7 +418,7 @@ function useTypingEmitter(convoId: string, text: string) {
 
   const sendTyping = useCallback((targetConvoId: string, done: boolean) => {
     if (isMockImDevelopment()) return
-    void api.emitTyping(targetConvoId, done).catch((e) => {
+    void conversationsApi.emitTyping(targetConvoId, done).catch((e) => {
       console.warn('[typing] emit failed', e)
     })
   }, [])
@@ -683,7 +686,7 @@ export function Composer({
     setUploadingForScope(targetScope, true)
     setUploadErrorForScope(targetScope, null)
     try {
-      const a = await api.uploadFile(file)
+      const a = await filesApi.uploadFile(file)
       setAttachmentForScope(targetScope, a)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
@@ -1641,7 +1644,7 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
           .slice(-12)
       })
     }
-    const refresh = () => void api.getCoworkerActivity(conversationId)
+    const refresh = () => void agentsApi.getCoworkerActivity(conversationId)
       .then(merge)
       .catch(() => { /* activity is best-effort; chat remains primary */ })
     refresh()

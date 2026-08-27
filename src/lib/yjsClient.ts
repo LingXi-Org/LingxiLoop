@@ -1,3 +1,4 @@
+import type { WsEvent } from '@/api/contracts'
 /**
  * Browser-side Y.Doc session for a single collaborative document.
  *
@@ -13,7 +14,6 @@
  */
 import * as Y from 'yjs'
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate, removeAwarenessStates } from 'y-protocols/awareness'
-import type { WsEvent } from '@/api/client'
 import { ws } from '@/api/core/realtime'
 
 function bytesToB64(bytes: Uint8Array): string {
