@@ -114,7 +114,6 @@ rollback() {
 
 if ! compose pull ||
    ! configure_r2_cors ||
-   ! compose --profile tools run --rm migrate ||
    ! compose up -d --remove-orphans ||
    ! verify ||
    ! compose exec -T -e MVP_SMOKE_CLEANUP=1 -e MVP_SMOKE_SKIP_FAULT_CHECK=1 lingxiloop npx tsx server/scripts/mvp-smoke.ts; then

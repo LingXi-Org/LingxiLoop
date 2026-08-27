@@ -130,7 +130,6 @@ services:
 
   db-bootstrap:
     <<: *lingxiloop-runtime
-    profiles: [tools]
     restart: "no"
     command: ["npm", "run", "db:bootstrap"]
     depends_on:
@@ -160,6 +159,8 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:5181:5181"
     volumes:

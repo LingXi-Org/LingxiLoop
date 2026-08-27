@@ -43,7 +43,8 @@ test('production deployment applies and verifies R2 CORS before cutover', () => 
   const cors = readText(new URL('../../scripts/r2-cors.mjs', import.meta.url))
 
   assert.match(compose, /\n {2}r2-cors:\n[\s\S]*command: \["node", "server\/scripts\/r2-cors\.mjs"\]/)
-  assert.match(deploy, /! configure_r2_cors \|\|\n\s+! compose --profile tools run --rm migrate/)
+  assert.match(deploy, /! configure_r2_cors \|\|\n\s+! compose up -d --remove-orphans/)
+  assert.doesNotMatch(deploy, /run --rm migrate/)
   assert.match(deploy, /compose --profile tools run --rm --no-deps r2-cors/)
   assert.match(cors, /assertR2CorsRules\(readback, origins\)/)
 })

@@ -118,7 +118,6 @@ services:
   db-bootstrap:
     image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
-    profiles: [tools]
     restart: "no"
     command: ["npm", "run", "db:bootstrap"]
     depends_on:
@@ -143,6 +142,8 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
