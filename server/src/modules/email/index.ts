@@ -1,11 +1,27 @@
 export {
   createInboundEmailRouter,
   emailApplication,
+  getAgentEmailIdentity,
+  getAgentEmailThread,
   inboundEmailRouter,
+  isAgentEmailAddressingConfigured,
+  listAgentEmailContacts,
+  listAgentEmailInbox,
+  replyToAgentEmail,
+  sendAgentEmail,
   sendCalendarReminderEmail,
 } from './facade.js'
 export { EmailApplicationError } from './application.js'
-export type { EmailHtmlPayload, EmailScope, EmailSendPayload } from './contracts.js'
+export type {
+  AgentEmailCommandIdentity,
+  AgentEmailContact,
+  AgentEmailDeliveryResult,
+  AgentEmailThread,
+  AgentEmailThreadView,
+  EmailHtmlPayload,
+  EmailScope,
+  EmailSendPayload,
+} from './contracts.js'
 export {
   computeAgentAddress,
   formatAddress,

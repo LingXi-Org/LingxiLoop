@@ -5,19 +5,39 @@ export async function findCompletedOutboundByKey(
   db: Queryable,
   companyId: string,
   idempotencyKey: string,
-): Promise<{ messageId: string; conversationId: string; transportStatus: 'sent'|'failed'; error: string | null } | null> {
+): Promise<{
+  messageId: string
+  conversationId: string
+  transportStatus: 'sent' | 'failed'
+  error: string | null
+  subject: string
+  to: string[]
+  cc: string[]
+} | null> {
   const messageId = `m-agent-${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 32)}`
   const { rows } = await db.query<{
-    message_id: string; conversation_id: string; transport_status: 'sent'|'failed'; transport_error: string | null
+    message_id: string
+    conversation_id: string
+    transport_status: 'sent' | 'failed'
+    transport_error: string | null
+    subject: string
+    to_addrs: string[]
+    cc_addrs: string[]
   }>(
-    `SELECT message_id,conversation_id,transport_status,transport_error FROM email_messages
-      WHERE message_id=$1 AND company_id=$2 AND direction='out' AND transport_status IN ('sent','failed')`,
-    [messageId,companyId],
+    `SELECT message_id, conversation_id, transport_status, transport_error,
+            subject, to_addrs, cc_addrs
+       FROM email_messages
+      WHERE message_id = $1
+        AND company_id = $2
+        AND direction = 'out'
+        AND transport_status IN ('sent', 'failed')`,
+    [messageId, companyId],
   )
   const row = rows[0]
   return row ? {
     messageId: row.message_id, conversationId: row.conversation_id,
     transportStatus: row.transport_status, error: row.transport_error,
+    subject: row.subject, to: row.to_addrs, cc: row.cc_addrs,
   } : null
 }
 
@@ -62,7 +82,23 @@ export async function findEmailParticipant(
       LIMIT 1`,
     [participantId, companyId],
   )
-  return rows[0] ?? null
+  if (rows[0]) return rows[0]
+  const directUser = await db.query<{
+    id: string
+    name: string
+    kind: 'human'
+    participant_email: null
+    user_email: string
+  }>(
+    `SELECT app_user.id, app_user.display_name AS name, 'human'::text AS kind,
+            NULL::text AS participant_email, app_user.email AS user_email
+       FROM users app_user
+       JOIN company_members member ON member.user_id = app_user.id
+      WHERE app_user.id = $1 AND member.company_id = $2
+      LIMIT 1`,
+    [participantId, companyId],
+  )
+  return directUser.rows[0] ?? null
 }
 
 export async function findTenantMemberIdsByAddresses(

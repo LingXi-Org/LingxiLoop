@@ -1,6 +1,7 @@
 import { pool } from '../../db/pool.js'
 import { env } from '../../env.js'
 import {
+  computeAgentAddress,
   formatAddress,
   mintMessageId,
   normalizeMessageId,
@@ -23,6 +24,16 @@ import { InboundEmailApplication } from './inbound-application.js'
 import { createInboundEmailHttpRouter } from './inbound-router.js'
 import { inc } from '../../metrics.js'
 import { alertDiscord } from '../../alert.js'
+import { AgentEmailApplication } from './agent-application.js'
+import type {
+  AgentEmailCommandIdentity,
+  AgentEmailContact,
+  AgentEmailDeliveryResult,
+  AgentEmailThread,
+  AgentEmailThreadView,
+  EmailScope,
+  OutboundAttachmentInput,
+} from './contracts.js'
 
 export const emailApplication = new EmailApplication(pool, {
   assertAvailable: assertEmailProviderConfigured,
@@ -40,6 +51,65 @@ export const emailApplication = new EmailApplication(pool, {
   findOrCreateConversation: (args) => findOrCreateEmailConversation(args),
   persist: (args) => persistEmailMessage(args),
 })
+
+const agentEmailApplication = new AgentEmailApplication(pool, emailApplication, {
+  addressingConfigured: () => Boolean(env.EMAIL_DOMAIN),
+  computeAgentAddress,
+  ensureAddress: async (userId, companyId) => ensureParticipantAddress(userId, companyId),
+})
+
+export function isAgentEmailAddressingConfigured(): boolean {
+  return agentEmailApplication.isAddressingConfigured()
+}
+
+export function getAgentEmailIdentity(scope: EmailScope): Promise<{
+  email: string
+  displayName: string
+} | null> {
+  return agentEmailApplication.whoami(scope)
+}
+
+export function listAgentEmailContacts(scope: EmailScope, query: string): Promise<AgentEmailContact[]> {
+  return agentEmailApplication.contacts(scope, query)
+}
+
+export function listAgentEmailInbox(
+  scope: EmailScope,
+  input: { unreadOnly: boolean; limit: number },
+): Promise<AgentEmailThread[]> {
+  return agentEmailApplication.inbox(scope, input)
+}
+
+export function getAgentEmailThread(
+  scope: EmailScope,
+  conversationId: string,
+  limit: number,
+): Promise<AgentEmailThreadView> {
+  return agentEmailApplication.thread(scope, conversationId, limit)
+}
+
+export function sendAgentEmail(
+  scope: EmailScope,
+  input: {
+    to: string[]
+    cc: string[]
+    subject: string
+    body: string
+    attachments: OutboundAttachmentInput[]
+  },
+  identity: AgentEmailCommandIdentity,
+): Promise<AgentEmailDeliveryResult> {
+  return agentEmailApplication.send(scope, input, identity)
+}
+
+export function replyToAgentEmail(
+  scope: EmailScope,
+  messageId: string,
+  input: { body: string; cc: string[]; attachments: OutboundAttachmentInput[] },
+  identity: AgentEmailCommandIdentity,
+): Promise<AgentEmailDeliveryResult> {
+  return agentEmailApplication.reply(scope, messageId, input, identity)
+}
 
 export function createInboundEmailRouter(dependencies: { storage: Pick<Storage, 'put'> }) {
   const application = new InboundEmailApplication(pool, {

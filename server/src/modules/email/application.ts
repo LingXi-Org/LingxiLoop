@@ -1,6 +1,7 @@
 import type { Queryable } from '../../db/queryable.js'
 import type { ProviderSendResult, SendArgs } from './provider.js'
 import type {
+  AgentEmailDeliveryResult,
   EmailHtmlPayload,
   EmailScope,
   EmailSendPayload,
@@ -21,6 +22,11 @@ import {
 type Address = { addr: string; name: string | null }
 type Sender = { email: string; displayName: string }
 type ResolvedAttachment = OutboundAttachmentInput & { publicUrl: string }
+
+export interface AgentEmailDeliveryContext {
+  projectId?: string
+  autoSubmitted: 'auto-generated' | 'auto-replied'
+}
 
 export type EmailErrorCode =
   | 'message_not_found'
@@ -60,6 +66,7 @@ export interface EmailInfrastructure {
   ): Promise<void>
   findOrCreateConversation(args: {
     companyId: string
+    projectId?: string
     inReplyTo: string | null
     references: string[]
     subject: string
@@ -81,6 +88,7 @@ export interface EmailInfrastructure {
     toAddrs: string[]
     ccAddrs: string[]
     body: string
+    autoSubmitted?: boolean
     attachments: Array<{
       filename: string
       mimeType: string
@@ -98,11 +106,28 @@ export class EmailApplication {
   ) {}
 
   async send(scope: EmailScope, input: SendEmailInput): Promise<EmailSendPayload> {
+    return this.publicPayload(await this.executeSend(scope, input))
+  }
+
+  async sendFromAgent(
+    scope: EmailScope,
+    input: SendEmailInput,
+    context: AgentEmailDeliveryContext,
+  ): Promise<AgentEmailDeliveryResult> {
+    return this.executeSend(scope, input, context)
+  }
+
+  private async executeSend(
+    scope: EmailScope,
+    input: SendEmailInput,
+    context?: AgentEmailDeliveryContext,
+  ): Promise<AgentEmailDeliveryResult> {
     this.infrastructure.assertAvailable()
     const replay = await findCompletedOutboundByKey(this.db, scope.companyId, input.idempotencyKey)
     if (replay) return {
       messageId: replay.messageId, conversationId: replay.conversationId,
       transportStatus: replay.transportStatus, ...(replay.error ? { error: replay.error } : {}),
+      replayed: true, subject: replay.subject, to: replay.to, cc: replay.cc,
     }
     const subject = this.infrastructure.sanitizeSubject(input.subject)
     if (!subject) throw new EmailApplicationError('recipient_unresolved', 'subject required')
@@ -120,6 +145,7 @@ export class EmailApplication {
     const messageId = this.infrastructure.mintMessageId()
     const conversation = await this.infrastructure.findOrCreateConversation({
       companyId: scope.companyId,
+      ...(context?.projectId ? { projectId: context.projectId } : {}),
       inReplyTo: null,
       references: [],
       subject,
@@ -141,6 +167,7 @@ export class EmailApplication {
       toAddrs: to.map((address) => this.infrastructure.formatAddress(address.addr, address.name)),
       ccAddrs: cc.map((address) => this.infrastructure.formatAddress(address.addr, address.name)),
       body: input.body,
+      ...(context ? { autoSubmitted: true } : {}),
       attachments: this.persistedAttachments(attachments),
       idempotencyKey: input.idempotencyKey,
     })
@@ -154,6 +181,7 @@ export class EmailApplication {
       text: input.body,
       messageId,
       idempotencyKey: input.idempotencyKey,
+      ...(context ? { autoSubmitted: context.autoSubmitted } : {}),
       attachments: attachments.map((attachment) => ({
         filename: attachment.filename,
         mimeType: attachment.mimeType,
@@ -161,7 +189,14 @@ export class EmailApplication {
       })),
     })
     await this.infrastructure.completeDelivery(scope.companyId, persisted.messageId, result, messageId)
-    return this.sendPayload(persisted.messageId, conversation.conversationId, result)
+    return this.deliveryResult(
+      persisted.messageId,
+      conversation.conversationId,
+      result,
+      subject,
+      to.map((address) => address.addr),
+      cc.map((address) => address.addr),
+    )
   }
 
   async html(scope: EmailScope, messageId: string): Promise<EmailHtmlPayload> {
@@ -174,11 +209,30 @@ export class EmailApplication {
   }
 
   async reply(scope: EmailScope, targetId: string, input: ReplyEmailInput): Promise<EmailSendPayload> {
+    return this.publicPayload(await this.executeReply(scope, targetId, input))
+  }
+
+  async replyFromAgent(
+    scope: EmailScope,
+    targetId: string,
+    input: ReplyEmailInput,
+    context: AgentEmailDeliveryContext,
+  ): Promise<AgentEmailDeliveryResult> {
+    return this.executeReply(scope, targetId, input, context)
+  }
+
+  private async executeReply(
+    scope: EmailScope,
+    targetId: string,
+    input: ReplyEmailInput,
+    context?: AgentEmailDeliveryContext,
+  ): Promise<AgentEmailDeliveryResult> {
     this.infrastructure.assertAvailable()
     const replay = await findCompletedOutboundByKey(this.db, scope.companyId, input.idempotencyKey)
     if (replay) return {
       messageId: replay.messageId, conversationId: replay.conversationId,
       transportStatus: replay.transportStatus, ...(replay.error ? { error: replay.error } : {}),
+      replayed: true, subject: replay.subject, to: replay.to, cc: replay.cc,
     }
     const target = await findEmailReplyTarget(this.db, scope.companyId, targetId)
     if (!target) throw new EmailApplicationError('message_not_found', 'unknown email message')
@@ -222,6 +276,7 @@ export class EmailApplication {
       toAddrs: addresses.to,
       ccAddrs: combinedCc,
       body: input.body,
+      ...(context ? { autoSubmitted: true } : {}),
       attachments: this.persistedAttachments(attachments),
       idempotencyKey: input.idempotencyKey,
     })
@@ -235,6 +290,7 @@ export class EmailApplication {
       references,
       messageId,
       idempotencyKey: input.idempotencyKey,
+      ...(context ? { autoSubmitted: context.autoSubmitted } : {}),
       attachments: attachments.map((attachment) => ({
         filename: attachment.filename,
         mimeType: attachment.mimeType,
@@ -243,7 +299,14 @@ export class EmailApplication {
     })
     await this.infrastructure.completeDelivery(scope.companyId, persisted.messageId, result, messageId)
     await markEmailConversationRead(this.db, scope.companyId, scope.userId, target.conversation_id)
-    return this.sendPayload(persisted.messageId, target.conversation_id, result)
+    return this.deliveryResult(
+      persisted.messageId,
+      target.conversation_id,
+      result,
+      subject,
+      addresses.to,
+      combinedCc,
+    )
   }
 
   private async requireSender(scope: EmailScope): Promise<Sender> {
@@ -308,11 +371,31 @@ export class EmailApplication {
     return combined
   }
 
-  private sendPayload(messageId: string, conversationId: string, result: ProviderSendResult): EmailSendPayload {
+  private deliveryResult(
+    messageId: string,
+    conversationId: string,
+    result: ProviderSendResult,
+    subject: string,
+    to: string[],
+    cc: string[],
+  ): AgentEmailDeliveryResult {
     return {
       messageId,
       conversationId,
       transportStatus: result.ok ? 'sent' : 'failed',
+      ...(result.error ? { error: result.error } : {}),
+      replayed: false,
+      subject,
+      to,
+      cc,
+    }
+  }
+
+  private publicPayload(result: AgentEmailDeliveryResult): EmailSendPayload {
+    return {
+      messageId: result.messageId,
+      conversationId: result.conversationId,
+      transportStatus: result.transportStatus,
       ...(result.error ? { error: result.error } : {}),
     }
   }

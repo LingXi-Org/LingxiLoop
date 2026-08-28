@@ -102,6 +102,46 @@ test('[integration] explicit provider injection uses the real persistence path w
   assert.deepEqual(stored.rows, [{ company_id: COMPANY_ID, transport_status: 'sent' }])
 })
 
+test('[integration] Agent Email CLI uses one tenant-scoped idempotent domain path', async () => {
+  const agentId = 'agent-email-slice'
+  await pool.query(
+    `INSERT INTO participants
+       (id, company_id, kind, name, role, initial, avatar_bg, status, email)
+     VALUES ($1, $2, 'agent', 'Mailer', 'operator', 'M', '#000000', 'avail', $3)`,
+    [agentId, COMPANY_ID, 'mailer@email-slice.example'],
+  )
+  let providerCalls = 0
+  __setEmailProviderOverrideForTesting(async () => {
+    providerCalls += 1
+    return { ok: true, smtpMessageId: 'agent-provider-message@example.com', error: null }
+  })
+  const { runCli } = await import('../agents/cli.js')
+  const argv = [
+    'email', 'send',
+    '--to', 'recipient@example.com',
+    '--subject', 'Agent domain boundary',
+    '--body', 'One authoritative path.',
+    '--as', agentId,
+  ]
+  const identity = { idempotencyKey: 'agent-email-vertical-slice-1', projectId: PROJECT_ID }
+  const first = await runCli(argv, identity)
+  const replay = await runCli(argv, identity)
+  assert.match(first.text, /^sent ·/)
+  assert.match(replay.text, /^sent \(replayed\) ·/)
+  assert.equal(first.sideEffects?.length, 1)
+  assert.equal(replay.sideEffects?.length ?? 0, 0)
+  assert.equal(providerCalls, 1)
+  const stored = await pool.query<{ project_id: string; message_count: number }>(
+    `SELECT conversation.project_id, COUNT(email.message_id)::int AS message_count
+       FROM conversations conversation
+       JOIN email_messages email ON email.conversation_id = conversation.id
+      WHERE conversation.company_id = $1 AND conversation.kind = 'email'
+      GROUP BY conversation.project_id`,
+    [COMPANY_ID],
+  )
+  assert.deepEqual(stored.rows, [{ project_id: PROJECT_ID, message_count: 1 }])
+})
+
 test('[integration] email persistence rejects cross-tenant conversations and projects', async () => {
   const otherCompanyId = 'co-email-slice-other'
   await pool.query(

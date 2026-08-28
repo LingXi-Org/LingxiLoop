@@ -76,6 +76,13 @@ if (/from ['"][^'"]*db\/|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH
 if (/from ['"][^'"]*redis\.js['"]|enqueueAgentWork|modules\/boards\/(?:application|contracts|facade|repository)\.js/.test(boardCli)) {
   violations.push('server/src/agents/cli/board.ts: Agent Board actions bypass the public domain facade')
 }
+const emailCli = await read(resolve('server/src/agents/cli/email.ts'))
+if (/from ['"][^'"]*db\/|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is.test(emailCli)) {
+  violations.push('server/src/agents/cli/email.ts: Agent Email actions bypass modules/email/index.ts')
+}
+if (/modules\/email\/(?:agent-)?(?:application|contracts|facade|repository)\.js/.test(emailCli)) {
+  violations.push('server/src/agents/cli/email.ts: Agent Email actions bypass the public domain facade')
+}
 
 const observabilityRouter = await read(resolve('server/src/modules/observability/router.ts'))
 if (/\/agents\/observability\/runs/.test(observabilityRouter)) violations.push('server/src/modules/observability/router.ts: retired observability HTTP view is forbidden')

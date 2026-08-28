@@ -1892,16 +1892,12 @@ function extToMime(ext: string): string | null {
   }
 }
 
-/** Load a local file for use as an outbound email attachment. Reads the
- *  bytes off the agent's filesystem, uploads them to object storage under
- *  the `email-attachments/` prefix (same prefix the inbound webhook uses
- *  — keeps the renderer's JOIN agnostic to direction), and returns the
- *  combined metadata. The returned `base64` is what we hand to Resend;
- *  the `storageKey` + `publicUrl` are how the recipient's UI downloads
- *  the file after the fact. */
+/** Load a local outbound attachment into the authoritative R2 data plane.
+ *  Resend receives a short-lived URL from the Email domain; the CLI keeps
+ *  only durable object metadata and never carries a second Base64 payload. */
 async function loadEmailAttachmentFromPath(path: string): Promise<{
   filename: string; mimeType: string; sizeBytes: number;
-  base64: string; storageKey: string; publicUrl: string;
+  storageKey: string;
 }> {
   const fs = await import('node:fs/promises')
   const nodePath = await import('node:path')
@@ -1917,11 +1913,10 @@ async function loadEmailAttachmentFromPath(path: string): Promise<{
   const mimeType = extToMime(ext) ?? 'application/octet-stream'
   const id = cryptoMod.randomUUID().replace(/-/g, '')
   const storageKey = `email-attachments/${id}${ext ? '.' + ext : ''}`
-  const publicUrl = await storage.put(storageKey, buf, mimeType)
+  await storage.put(storageKey, buf, mimeType)
   return {
     filename, mimeType, sizeBytes: buf.length,
-    base64: buf.toString('base64'),
-    storageKey, publicUrl,
+    storageKey,
   }
 }
 

@@ -81,6 +81,57 @@ export interface EmailSendPayload {
   error?: string
 }
 
+export interface AgentEmailCommandIdentity {
+  idempotencyKey?: string
+  projectId?: string
+}
+
+export interface AgentEmailContact {
+  participantId: string | null
+  name: string
+  address: string
+  kind: 'agent' | 'human' | 'external'
+  role?: string | null
+}
+
+export interface AgentEmailThread {
+  conversationId: string
+  title: string
+  updatedAt: string
+  unreadCount: number
+  lastSubject: string | null
+  lastFrom: string | null
+  lastAt: string | null
+  lastBody: string | null
+}
+
+export interface AgentEmailThreadMessage {
+  id: string
+  createdAt: string
+  body: string
+  fromAddress: string
+  toAddresses: string[]
+  ccAddresses: string[]
+  subject: string
+  smtpMessageId: string | null
+  inReplyTo: string | null
+  direction: 'in' | 'out'
+  transportStatus: string
+}
+
+export interface AgentEmailThreadView {
+  conversationId: string
+  title: string
+  messages: AgentEmailThreadMessage[]
+}
+
+export interface AgentEmailDeliveryResult extends EmailSendPayload {
+  replayed: boolean
+  subject: string
+  to: string[]
+  cc: string[]
+}
+
 export type EmailHtmlPayload =
   | { kind: 'empty' }
   | { kind: 'html'; html: string }

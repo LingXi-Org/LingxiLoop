@@ -143,6 +143,11 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.doesNotMatch(calendarCli, /from ['"][^'"]*db\/pool\.js['"]|\bpool\.query\b/)
   assert.doesNotMatch(calendarCli, /`\s*(?:SELECT|INSERT|UPDATE|DELETE)\b/is)
   assert.doesNotMatch(calendarCli, /from ['"][^'"]*calendar\.js['"]|import\(['"][^'"]*calendar\.js['"]\)/)
+  const emailCli = await readFile(new URL('../agents/cli/email.ts', import.meta.url), 'utf8')
+  assert.match(emailCli, /from ['"]\.\.\/\.\.\/modules\/email\/index\.js['"]/)
+  assert.doesNotMatch(emailCli, /from ['"][^'"]*db\/|\bpool\.query\b/)
+  assert.doesNotMatch(emailCli, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  assert.doesNotMatch(emailCli, /modules\/email\/(?:agent-)?(?:application|contracts|facade|repository)\.js/)
   await assert.rejects(readFile(new URL('../calendar.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../email-retry.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
@@ -171,6 +176,7 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.doesNotMatch(emailProvider, /\b(?:pool|db)\.query\b|from ['"]express['"]/)
   assert.doesNotMatch(emailAddressing, /\b(?:pool|db)\.query\b|\bfetch\s*\(/)
   for (const repositoryName of [
+    'agent-repository.ts',
     'address-repository.ts',
     'attachment-repository.ts',
     'conversation-repository.ts',
