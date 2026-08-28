@@ -30,6 +30,32 @@ export async function listDocuments(
   return rows
 }
 
+export async function findDocumentCollaborationCompany(
+  db: Queryable,
+  args: { documentId: string; userId: string; writable: boolean },
+): Promise<string | null> {
+  const { rows } = await db.query<{ company_id: string }>(
+    `SELECT document.company_id
+       FROM documents document
+       JOIN projects project
+         ON project.id=document.project_id AND project.company_id=document.company_id
+       JOIN company_members membership
+         ON membership.company_id=document.company_id AND membership.user_id=$2
+       LEFT JOIN courses course
+         ON course.project_id=project.id AND course.company_id=project.company_id
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id
+        AND course_member.company_id=course.company_id
+        AND course_member.user_id=$2
+      WHERE document.id=$1
+        AND (project.is_general=TRUE OR membership.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+        AND ($3::boolean=FALSE OR project.status='active')
+      LIMIT 1`,
+    [args.documentId, args.userId, args.writable],
+  )
+  return rows[0]?.company_id ?? null
+}
+
 export async function findDocument(
   db: Queryable,
   companyId: string,

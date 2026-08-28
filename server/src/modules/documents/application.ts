@@ -5,6 +5,7 @@ import type { DocumentChangedEvent, DocumentPayload, DocumentScope } from './con
 import {
   conversationExists,
   deleteDocument,
+  findDocumentCollaborationCompany,
   findDocument,
   insertDocument,
   listDocuments,
@@ -44,6 +45,10 @@ export class DocumentsApplication {
 
   async list(scope: Omit<DocumentScope, 'userId'>): Promise<DocumentPayload[]> {
     return (await listDocuments(this.db, scope.companyId, scope.projectId)).map(toPayload)
+  }
+
+  collaborationCompanyFor(documentId: string, userId: string, writable: boolean): Promise<string | null> {
+    return findDocumentCollaborationCompany(this.db, { documentId, userId, writable })
   }
 
   async create(

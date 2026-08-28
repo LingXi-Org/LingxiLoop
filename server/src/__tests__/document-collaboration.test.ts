@@ -7,6 +7,7 @@ import {
 } from '../modules/documents/collaboration-application.js'
 import type { DocumentAwarenessEvent, DocumentUpdateEvent } from '../modules/documents/contracts.js'
 import { listProjectDocumentIds } from '../modules/documents/collaboration-repository.js'
+import { findDocumentCollaborationCompany } from '../modules/documents/repository.js'
 
 function emptyDocumentDb() {
   const calls: Array<{ text: string; params: readonly unknown[] }> = []
@@ -161,4 +162,22 @@ test('project document lookup carries company and project tenant predicates', as
   assert.deepEqual(await listProjectDocumentIds(db, 'company-1', 'project-1'), ['document-1'])
   assert.match(calls[0]!.text, /company_id=\$1 AND project_id=\$2/)
   assert.deepEqual(calls[0]!.params, ['company-1', 'project-1'])
+})
+
+test('collaboration access is resolved by the Documents repository with owning tenant joins', async () => {
+  const calls: Array<{ text: string; params: readonly unknown[] }> = []
+  const db: Queryable = {
+    query: async (text, params = []) => {
+      calls.push({ text, params })
+      return { rows: [{ company_id: 'company-1' }], rowCount: 1 } as never
+    },
+  }
+
+  assert.equal(await findDocumentCollaborationCompany(db, {
+    documentId: 'document-1', userId: 'user-1', writable: true,
+  }), 'company-1')
+  assert.match(calls[0]!.text, /project\.company_id=document\.company_id/)
+  assert.match(calls[0]!.text, /membership\.company_id=document\.company_id/)
+  assert.match(calls[0]!.text, /course_member\.company_id=course\.company_id/)
+  assert.deepEqual(calls[0]!.params, ['document-1', 'user-1', true])
 })

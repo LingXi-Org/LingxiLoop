@@ -1,4 +1,5 @@
 import { documentCollaboration } from './collaboration-facade.js'
+import { documentsApplication } from './facade.js'
 export { projectDocumentIds } from './collaboration-facade.js'
 
 export const subscribe = documentCollaboration.subscribe
@@ -9,6 +10,14 @@ export const bootDocumentBus = documentCollaboration.boot
 export const instanceOrigin = documentCollaboration.instanceOrigin
 export const readDocumentText = documentCollaboration.readDocumentText
 export const applyAgentEdit = documentCollaboration.applyAgentEdit
+
+export function documentCollaborationCompanyFor(
+  documentId: string,
+  userId: string,
+  writable = false,
+): Promise<string | null> {
+  return documentsApplication.collaborationCompanyFor(documentId, userId, writable)
+}
 
 export {
   isAnchoredImagePlacement,

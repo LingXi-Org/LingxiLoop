@@ -19,6 +19,7 @@ import {
   unsubscribe as docUnsubscribe,
   applyLocalUpdate as docApplyLocalUpdate,
   broadcastAwareness as docBroadcastAwareness,
+  documentCollaborationCompanyFor,
   projectDocumentIds,
   type DocSubscriber,
 } from './modules/documents/public.js'
@@ -154,21 +155,7 @@ async function loadMemberships(userId: string): Promise<Set<string>> {
  *  Returns null when the doc doesn't exist OR the caller can't see it —
  *  same opaque posture the chat handlers use to avoid leaking existence. */
 async function docCompanyFor(documentId: string, userId: string, writable = false): Promise<string | null> {
-  const { rows } = await pool.query<{ company_id: string }>(
-    `SELECT d.company_id
-       FROM documents d
-       JOIN projects project ON project.id=d.project_id
-       JOIN company_members m ON m.company_id = d.company_id AND m.user_id = $2
-       LEFT JOIN courses course ON course.project_id=project.id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id=course.id AND course_member.user_id=$2
-      WHERE d.id = $1
-        AND (project.is_general=TRUE OR m.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
-        AND ($3::boolean=FALSE OR project.status='active')
-      LIMIT 1`,
-    [documentId, userId, writable],
-  )
-  return rows[0]?.company_id ?? null
+  return documentCollaborationCompanyFor(documentId, userId, writable)
 }
 
 function sendJson(ws: WebSocket, payload: unknown): void {
