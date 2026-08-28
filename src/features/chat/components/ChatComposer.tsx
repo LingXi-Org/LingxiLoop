@@ -1,123 +1,30 @@
 import { uploadsApi } from '@/features/platform/api'
-import { conversationsApi } from '@/features/conversations/api'
 import type { ApiAttachment } from '@/api/contracts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { IAt, IClip, ISend, ISmile } from '@/components/icons'
-import { Avatar } from '@/components/Avatar'
 import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
-import { RichInput, type RichInputHandle } from '@/components/RichInput'
-import { SkypeEmoji } from '@/components/SkypeEmoji'
-import { TwEmoji } from '@/components/TwEmoji'
-import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
+import type { RichInputHandle } from '@/components/RichInput'
 import { ComposerSurface } from '@/im/Composer'
-import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
-import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
-import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
+import { findSkypeByShortcode } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
 import { getActiveCompanyId, useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
 import { useConversationUi } from '@/stores/conversationUi'
-import { sendUserMessage, useMessages } from '../state/messages'
+import { useMessages } from '../state/messages'
 import { useParticipants } from '@/features/agents/state'
-import { useSoundStore } from '@/stores/sound'
 import { useSurface } from '@/stores/surface'
 import { useUiCommand } from '@/stores/uiCommands'
 import type { Participant } from '@/types'
 import { readComposerDraftTexts, saveComposerDraftText } from '../drafts'
-
-type EmojiTab = 'std' | 'skype'
-const EMOJI_TAB_STORAGE_KEY = 'lingxiloop.composer.emojiTab'
-
-function readInitialEmojiTab(): EmojiTab {
-  if (typeof window === 'undefined') return 'std'
-  try {
-    const v = window.localStorage.getItem(EMOJI_TAB_STORAGE_KEY)
-    return v === 'skype' ? 'skype' : 'std'
-  } catch { return 'std' }
-}
-
-function EmojiPopover({ onPick, onClose }: { onPick: (e: string) => void; onClose: () => void }) {
-  const ref = useRef<HTMLDivElement | null>(null)
-  // Remember the last-used tab across opens (and across app restarts).
-  // The persisted choice survives reloads — most users settle into one
-  // mode and getting bounced back to "Standard" every open is annoying.
-  const [tab, setTabState] = useState<EmojiTab>(readInitialEmojiTab)
-  const setTab = (next: EmojiTab) => {
-    setTabState(next)
-    try { window.localStorage.setItem(EMOJI_TAB_STORAGE_KEY, next) } catch { /* private mode */ }
-  }
-  useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
-    }
-    // Defer one frame so the click that opened us doesn't immediately close us.
-    const id = requestAnimationFrame(() => document.addEventListener('mousedown', onDoc))
-    return () => {
-      cancelAnimationFrame(id)
-      document.removeEventListener('mousedown', onDoc)
-    }
-  }, [onClose])
-  return (
-    <div
-      ref={ref}
-      className="app-menu-surface absolute bottom-full left-0 z-30 mb-2 px-2 py-2 animate-rise"
-      style={{
-        // Wider + taller in the Skype tab: 107 emoticons in 7 cols means
-        // the user sees ~10 rows at once (still has to scroll for the
-        // tail, but the panel doesn't read as "a handful").
-        width: tab === 'skype' ? 332 : 260,
-      }}
-      onMouseDown={(e) => e.preventDefault()}
-    >
-      <div className="flex gap-1 mb-2 px-0.5">
-        {(['std', 'skype'] as const).map((k) => (
-          <button
-            key={k}
-            onClick={() => setTab(k)}
-            className={cn(
-              'flex-1 text-[11px] font-semibold uppercase tracking-wider py-1 rounded-[6px] transition',
-              tab === k ? 'bg-sky2-100 text-skype-deep' : 'text-ink-500 hover:bg-sky2-50',
-            )}
-          >{k === 'std' ? '常用表情' : 'LingxiLoop 表情'}</button>
-        ))}
-      </div>
-      {tab === 'std' ? (
-        <div className="grid grid-cols-6 gap-1">
-          {COMPOSER_EMOJIS.map((e) => (
-            <button
-              key={e}
-              onClick={() => onPick(e)}
-              className="size-10 rounded grid place-items-center hover:bg-sky2-50 transition"
-              title={e}
-            ><TwEmoji emoji={e} size={20} /></button>
-          ))}
-        </div>
-      ) : (
-        <div
-          className="grid grid-cols-7 gap-1 max-h-[360px] overflow-y-auto pr-0.5"
-        >
-          {SKYPE_EMOJIS.map((e) => (
-            <button
-              key={e.key}
-              onClick={() => {
-                onPick(e.shortcodes[0])
-                // Picker double-duty: insert into the composer AND play
-                // a one-shot preview so the user hears what'll fire on
-                // the recipient side. Mute toggle silences both paths.
-                if (!useSoundStore.getState().muted) playSkypeSound(e.key)
-              }}
-              className="size-10 rounded grid place-items-center hover:bg-sky2-50 transition"
-              title={`${e.label} — ${e.shortcodes[0]}`}
-            ><SkypeEmoji name={e.key} size={26} autoPlaySound={false} /></button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+import { ComposerAttachment } from './ComposerAttachment'
+import { ComposerEditor } from './ComposerEditor'
+import { ComposerEmojiPopover } from './ComposerEmojiPopover'
+import type { ComposerCommand, MentionEntry } from './ComposerMenus'
+import { sendComposerMessage } from '../sendComposerMessage'
+import { useTypingEmitter } from '../useTypingEmitter'
 
 type ComposerDraftState = {
   text: string
@@ -128,82 +35,6 @@ const EMPTY_COMPOSER_DRAFT: ComposerDraftState = { text: '', attachment: null }
 
 function resolveDraftText(next: string | ((prev: string) => string), prev: string) {
   return typeof next === 'function' ? next(prev) : next
-}
-
-/**
- * Drives the local human's typing indicator. Two cadences run in parallel:
- *
- *   - **Throttle**: while the user keeps typing, we emit `done:false` at
- *     most once every ~3 s. The server-side typing store auto-clears after
- *     45 s, so a long compose session still needs the occasional re-ping
- *     to stay "alive" for late-joining viewers.
- *   - **Debounce**: 2 s after the last keystroke, we emit `done:true`. Same
- *     fire when the composer empties, the convo switches, the send button
- *     fires, or the component unmounts.
- *
- * Returns a `finalize()` callback the parent calls right before sending so
- * the typing indicator clears the moment the message lands, not 2 s later.
- */
-function useTypingEmitter(convoId: string, text: string) {
-  const stateRef = useRef<{ convoId: string; lastSentAt: number } | null>(null)
-  const idleTimerRef = useRef<number | null>(null)
-
-  const clearIdle = useCallback(() => {
-    if (idleTimerRef.current !== null) {
-      window.clearTimeout(idleTimerRef.current)
-      idleTimerRef.current = null
-    }
-  }, [])
-
-  const sendTyping = useCallback((targetConvoId: string, done: boolean) => {
-    void conversationsApi.emitTyping(targetConvoId, done).catch((e) => {
-      console.warn('[typing] emit failed', e)
-    })
-  }, [])
-
-  const finalize = useCallback(() => {
-    clearIdle()
-    const cur = stateRef.current
-    if (cur) {
-      sendTyping(cur.convoId, true)
-      stateRef.current = null
-    }
-  }, [clearIdle, sendTyping])
-
-  // Drive the indicator off draft changes. We do this synchronously inside
-  // a layout effect so a rapid type-then-send sequence still fires done.
-  useEffect(() => {
-    const trimmed = text.trim()
-    if (!trimmed) {
-      finalize()
-      return
-    }
-    const now = Date.now()
-    const cur = stateRef.current
-    if (!cur || cur.convoId !== convoId) {
-      // Finalize a stale session on the previous convo before starting fresh.
-      if (cur) sendTyping(cur.convoId, true)
-      sendTyping(convoId, false)
-      stateRef.current = { convoId, lastSentAt: now }
-    } else if (now - cur.lastSentAt > 3000) {
-      sendTyping(convoId, false)
-      cur.lastSentAt = now
-    }
-    clearIdle()
-    idleTimerRef.current = window.setTimeout(() => {
-      idleTimerRef.current = null
-      const live = stateRef.current
-      if (live) {
-        sendTyping(live.convoId, true)
-        stateRef.current = null
-      }
-    }, 2000)
-  }, [text, convoId, sendTyping, clearIdle, finalize])
-
-  // On unmount or convoId change, finalize any lingering session.
-  useEffect(() => () => finalize(), [finalize])
-
-  return finalize
 }
 
 export function Composer({
@@ -351,7 +182,6 @@ export function Composer({
   // Picker shows the broadcast token `@all` alongside individual members.
   // Tagged union so insert / keyboard nav can tell them apart without a
   // sentinel id collision (a participant could theoretically be named "all").
-  type MentionEntry = { kind: 'all' } | { kind: 'participant'; p: Participant }
   const filteredMentions = useMemo<MentionEntry[]>(() => {
     if (!mention) return []
     const q = mention.query.toLowerCase()
@@ -518,13 +348,6 @@ export function Composer({
   // line, navigated by arrow keys, accepted with Enter/Tab. Currently
   // hosts a single command — `poll` — but the picker is shaped as a list
   // so future commands (`/dm`, `/topic`, …) drop in without restructuring.
-  type SlashCommand = {
-    id: string
-    label: string
-    hint: string
-    keywords: string[]
-    run: () => void
-  }
   const [slashOpen, setSlashOpen] = useState(false)
   const [slashQuery, setSlashQuery] = useState('')
   const [slashIndex, setSlashIndex] = useState(0)
@@ -540,7 +363,7 @@ export function Composer({
     requestAnimationFrame(() => editorRef.current?.focus())
   }, [])
 
-  const slashCommands = useMemo<SlashCommand[]>(() => [
+  const slashCommands = useMemo<ComposerCommand[]>(() => [
     {
       id: 'poll',
       label: 'Poll',
@@ -551,7 +374,7 @@ export function Composer({
   ], [openPollComposer])
 
   const filteredSlashCommands = useMemo(() => {
-    if (!slashOpen) return [] as SlashCommand[]
+    if (!slashOpen) return [] as ComposerCommand[]
     const q = slashQuery.toLowerCase()
     if (!q) return slashCommands
     return slashCommands.filter((c) =>
@@ -578,7 +401,7 @@ export function Composer({
     }
   }, [slashOpen, slashQuery])
 
-  const runSlashCommand = useCallback((cmd: SlashCommand) => {
+  const runSlashCommand = useCallback((cmd: ComposerCommand) => {
     cmd.run()
     setSlashOpen(false)
     setSlashQuery('')
@@ -594,10 +417,10 @@ export function Composer({
     if (!v && !attachment) return
     finalizeTyping()
     if (!meId) {
-      void sendUserMessage(convoId, v, attachment, replyingToId ?? null)
+      void sendComposerMessage({ conversationId: convoId, text: v, attachment, replyingToId: replyingToId ?? null })
       return
     }
-    void sendUserMessage(convoId, v, attachment, replyingToId ?? null)
+    void sendComposerMessage({ conversationId: convoId, text: v, attachment, replyingToId: replyingToId ?? null })
     clearComposerDraft()
     editorRef.current?.setValue('')
     if (!isThread) setReplyingTo(convoId, null)
@@ -717,30 +540,12 @@ export function Composer({
         isThread ? 'bg-paper' : '',
       )}
       >
-        {attachment && (
-          <Attachment size="sm" className="mb-2">
-            {attachment.kind === 'img' ? (
-              <AttachmentMedia variant="image"><img src={attachment.url} alt={attachment.name} /></AttachmentMedia>
-            ) : (
-              <AttachmentMedia><IClip strokeWidth={1.8} /></AttachmentMedia>
-            )}
-            <AttachmentContent>
-              <AttachmentTitle>{attachment.name}</AttachmentTitle>
-              <AttachmentDescription>{attachment.mime ?? attachment.kind}{attachment.size ? ` · ${Math.round(attachment.size / 1024)}KB` : ''}</AttachmentDescription>
-            </AttachmentContent>
-            <AttachmentActions>
-              <AttachmentAction onClick={() => setAttachment(null)} aria-label={`移除 ${attachment.name}`}>×</AttachmentAction>
-            </AttachmentActions>
-          </Attachment>
-        )}
-        {uploading && (
-          <div className="mb-2 text-[11.5px] text-ink-500">正在上传…</div>
-        )}
-        {uploadError && (
-          <div className="mb-2 text-[11.5px] py-1 px-2 rounded-md text-coral-deep bg-coral-soft inline-block max-w-full truncate">
-            {uploadError}
-          </div>
-        )}
+        <ComposerAttachment
+          attachment={attachment}
+          uploading={uploading}
+          error={uploadError}
+          onRemove={() => setAttachment(null)}
+        />
         {showReplyingPill && (
           <div className="openmaus-reply-preview mb-2 flex min-w-0 items-center gap-2 rounded-xl py-1.5 ps-2.5 pe-1.5">
             <div className="h-4 w-0.5 shrink-0 rounded bg-skype" />
@@ -765,133 +570,43 @@ export function Composer({
             >×</button>
           </div>
         )}
-        <div className="relative">
-          <RichInput
-            ref={editorRef}
-            defaultValue={draft}
-            placeholder={placeholder ?? '输入消息，使用 @ 提及成员，或拖入文件作为附件'}
-            ariaLabel="消息输入框"
-            className="rich-input whitespace-pre-wrap w-full bg-transparent text-[14px] text-ink-900 leading-[1.5]"
-            style={{ minHeight: '1.5em' }}
-            maxHeight={200}
-            onChange={(value, caret) => {
-              setDraft(value)
-              updateMention(value, caret)
-              updateSlash(value, caret)
-            }}
-            onKeyDown={onKeyDown}
-            onPaste={onPaste}
-            onBlur={() => setTimeout(() => setMention(null), 120)}
-            resolveMention={(id) => {
-              const p = byId[id]
-              if (!p) return null
-              return {
-                name: p.id === meId ? 'you' : p.name,
-                initial: p.initial || p.name.charAt(0).toUpperCase(),
-                avatarBg: typeof p.avatarBg === 'string' ? p.avatarBg : 'var(--ink-300)',
-                kind: p.kind,
-                avatarUrl: p.kind === 'agent'
-                  ? staticBloubAvatarUrl(p)
-                  : typeof p.avatarUrl === 'string' ? p.avatarUrl : undefined,
-              }
-            }}
-          />
-          {slashOpen && filteredSlashCommands.length > 0 && (
-            <div
-              className="app-menu-surface absolute bottom-full left-0 z-20 mb-2 min-w-[280px] p-1 animate-rise"
-              onMouseDown={(e) => e.preventDefault()}
-            >
-              <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-300">
-                快捷命令 {slashQuery ? `· "/${slashQuery}"` : ''}
-              </div>
-              {filteredSlashCommands.map((cmd, i) => {
-                const active = i === slashIndex
-                return (
-                  <button
-                    key={cmd.id}
-                    type="button"
-                    onMouseEnter={() => setSlashIndex(i)}
-                    onClick={() => runSlashCommand(cmd)}
-                    className={cn(
-                      'app-menu-item',
-                      active && 'is-active',
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'inline-flex items-center justify-center w-[26px] h-[26px] rounded-full font-mono text-[12px] font-semibold',
-                        active ? 'bg-skype-deep text-cloud' : 'bg-sky2-100 text-skype-deep',
-                      )}
-                    >/</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[12.5px] font-semibold text-ink-900 truncate">{cmd.label}</div>
-                      <div className="text-[10.5px] text-ink-500 truncate">{cmd.hint}</div>
-                    </div>
-                    <span className="text-[10px] text-ink-300 tracking-wide tabular-nums">/{cmd.id}</span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-          {mention && filteredMentions.length > 0 && (
-            <div
-              className="app-menu-surface absolute bottom-full left-0 z-20 mb-2 min-w-[240px] p-1 animate-rise"
-              onMouseDown={(e) => e.preventDefault()}
-            >
-              <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-300">
-                提及成员 {mention.query ? `· "${mention.query}"` : ''}
-              </div>
-              {filteredMentions.map((entry, i) => {
-                const active = i === mentionIndex
-                if (entry.kind === 'all') {
-                  return (
-                    <button
-                      key="__all"
-                      type="button"
-                      onMouseEnter={() => setMentionIndex(i)}
-                      onClick={() => insertMention(entry)}
-                      className={cn(
-                        'app-menu-item',
-                        active && 'is-active',
-                      )}
-                    >
-                      <Avatar
-                        p={EVERYONE_BLOUB_PARTICIPANT}
-                        size={28}
-                        ringColor="transparent"
-                        showStatus={false}
-                        animated={false}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[12.5px] font-semibold text-ink-900 truncate">所有人</div>
-                        <div className="text-[10.5px] text-ink-500 truncate">通知会话中的全部成员</div>
-                      </div>
-                    </button>
-                  )
-                }
-                const p = entry.p
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onMouseEnter={() => setMentionIndex(i)}
-                    onClick={() => insertMention(entry)}
-                    className={cn(
-                      'app-menu-item',
-                      active && 'is-active',
-                    )}
-                  >
-                    <Avatar p={p} size={26} ringColor="var(--cloud)" showStatus={false} animated={false} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[12.5px] font-semibold text-ink-900 truncate">{p.name}</div>
-                      <div className="text-[10.5px] text-ink-500 truncate">@{p.id}</div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        <ComposerEditor
+          editorRef={editorRef}
+          draft={draft}
+          placeholder={placeholder ?? '输入消息，使用 @ 提及成员，或拖入文件作为附件'}
+          onChange={(value, caret) => {
+            setDraft(value)
+            updateMention(value, caret)
+            updateSlash(value, caret)
+          }}
+          onKeyDown={onKeyDown}
+          onPaste={onPaste}
+          onBlur={() => setTimeout(() => setMention(null), 120)}
+          resolveMention={(id) => {
+            const participant = byId[id]
+            if (!participant) return null
+            return {
+              name: participant.id === meId ? 'you' : participant.name,
+              initial: participant.initial || participant.name.charAt(0).toUpperCase(),
+              avatarBg: typeof participant.avatarBg === 'string' ? participant.avatarBg : 'var(--ink-300)',
+              kind: participant.kind,
+              avatarUrl: participant.kind === 'agent'
+                ? staticBloubAvatarUrl(participant)
+                : typeof participant.avatarUrl === 'string' ? participant.avatarUrl : undefined,
+            }
+          }}
+          mention={mention}
+          mentionEntries={filteredMentions}
+          mentionIndex={mentionIndex}
+          onMentionHover={setMentionIndex}
+          onMentionPick={insertMention}
+          commandOpen={slashOpen}
+          commandQuery={slashQuery}
+          commands={filteredSlashCommands}
+          commandIndex={slashIndex}
+          onCommandHover={setSlashIndex}
+          onCommandPick={runSlashCommand}
+        />
         <div className="mt-2 flex items-center gap-1 text-ink-300">
           <input
             ref={fileRef}
@@ -924,7 +639,7 @@ export function Composer({
               title="表情"
             ><ISmile className="w-[17px] h-[17px]" /></button>
             {emojiOpen && (
-              <EmojiPopover
+              <ComposerEmojiPopover
                 onPick={(e) => { insertAtCursor(e); setEmojiOpen(false) }}
                 onClose={() => setEmojiOpen(false)}
               />

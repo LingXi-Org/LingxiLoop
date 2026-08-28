@@ -130,7 +130,12 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   assert.doesNotMatch(conversationsState, /stores\/conversations|api\/conversations/)
   assert.match(conversationsState, /error: string \| null/)
 
-  for (const file of ['api.ts', 'state/messages.ts', 'components/ChatComposer.tsx']) {
+  for (const file of [
+    'api.ts', 'state/messages.ts', 'components/ChatComposer.tsx',
+    'components/ComposerAttachment.tsx', 'components/ComposerEditor.tsx',
+    'components/ComposerEmojiPopover.tsx', 'components/ComposerMenus.tsx',
+    'sendComposerMessage.ts', 'useTypingEmitter.ts',
+  ]) {
     await access(new URL(`../features/chat/${file}`, import.meta.url))
   }
   await assert.rejects(access(new URL('./messages.ts', import.meta.url)))
@@ -140,6 +145,12 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   const chatApi = await readFile(new URL('../features/chat/api.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(chatApi, /sendMessage\s*:/)
   assert.match(messagesState, /lingxiIm\.send\(convoId, payload\)/)
+  const composer = await readFile(new URL('../features/chat/components/ChatComposer.tsx', import.meta.url), 'utf8')
+  assert.ok(composer.length < 34_000, 'ChatComposer must remain an orchestration shell')
+  assert.match(composer, /<ComposerEditor/)
+  assert.match(composer, /<ComposerAttachment/)
+  assert.match(composer, /<ComposerEmojiPopover/)
+  assert.doesNotMatch(composer, /<RichInput\b|<Attachment\b|function useTypingEmitter|function EmojiPopover/)
 
   for (const file of ['api.ts', 'contracts.ts', 'state.ts']) {
     await access(new URL(`../features/knowledge/${file}`, import.meta.url))
