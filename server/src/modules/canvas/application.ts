@@ -1,80 +1,48 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { type CanvasActivityKind, parseCanvasActivityKind } from '../../../../src/lib/canvasEventKinds.js'
-import { findCanvasPlacement } from '../../../../src/lib/canvasLayout.js'
-import type { AgentExecutionRole } from '../../agent-os/types.js'
 import { assertCanvasDependencyDAG, canvasAgentColor, canvasWorkArea } from '../../canvas/orchestration.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { CanvasEvent } from '../../redis.js'
-import {
-  CANVAS_FRAME_TYPES,
-  type CanvasActivity,
-  type CanvasActorKind,
-  type CanvasAgentAssignment,
-  type CanvasAssignmentReport,
-  type CanvasAssignmentStatus,
-  type CanvasComment,
-  type CanvasEvidenceRef,
-  type CanvasFrame,
-  type CanvasFrameType,
-  type CanvasMemberInput,
-  type CanvasPresence,
-  type CanvasReportVerdict,
-  type CanvasSnapshot,
-  type CanvasWorkspaceSummary,
+import type {
+  CanvasActivity,
+  CanvasActorKind,
+  CanvasAgentAssignment,
+  CanvasAssignmentReport,
+  CanvasMemberInput,
+  CanvasSnapshot,
+  CanvasWorkspaceSummary,
 } from './contracts.js'
 import {
   type ActivityRow,
   acquireCanvasSharedFence,
   appendIdempotentAssignmentSteer,
-  appendFrame,
   appendAssignmentSteer,
-  assignmentVerifierId,
-  assignmentOrigin,
   assignmentExists,
-  availableAgents,
   availableCanvasMemberIds,
   canvasAssignmentPublicationRows,
   canvasById,
   canvasEventScope,
   canvasFrameIds,
   conversationCanvasId,
-  completeCanvasWorkState,
-  currentPresence,
-  deleteFrame,
   deleteAssignmentDependencies,
-  deletePresence,
   detachAssignmentWork,
   ensureConversationCanvasId,
-  missingEvidenceRefs,
-  existingReportIds,
   findCanvas,
   findActivity,
-  findFrame,
   type AssignmentRow,
   type CanvasRow,
-  type FrameRow,
-  type FrameUpdateField,
   insertActivity,
   insertAgentWorkspace,
   insertAssignment,
   insertAssignmentDependency,
   insertCanvasWork,
-  insertComment,
-  insertFrame,
-  insertReport,
   listWorkspaceRows,
   listAssignments,
   lockAssignment,
   lockCanvas,
-  lockCanvasLayout,
-  lockReportWork,
-  markAssignmentFrame,
-  occupiedFrames,
   participantNames,
   type ReportRow,
   resetAssignment,
-  reportExists,
-  reportIdentity,
   releaseCanvasSharedFence,
   snapshotRows,
   steerCanvasWork,
@@ -84,72 +52,17 @@ import {
   touchCanvas,
   updateAssignmentText,
   updateAssignmentTextReturning,
-  updateAssignmentPresence,
-  updateFrame,
-  upsertPresence,
-  workReportContext,
 } from './repository.js'
 import type { CanvasInfrastructure } from './infrastructure.js'
+import { createCanvasFrameApplication, toFrame } from './frames-application.js'
+import { createCanvasCollaborationApplication } from './collaboration-application.js'
+import { createCanvasReportApplication } from './reports-application.js'
 
-const MAX_FRAME_CONTENT = 1024 * 1024
-const MAX_FRAME_TITLE = 200
-const MIN_FRAME_SIZE = 120
-const MAX_FRAME_SIZE = 8_000
 
 function stableCanvasId(companyId: string): string {
   return `canvas-${createHash('sha256').update(companyId).digest('hex').slice(0, 20)}`
 }
 
-function finiteNumber(value: unknown, name: string): number {
-  const number = Number(value)
-  if (!Number.isFinite(number)) throw new Error(`${name} must be a finite number`)
-  return number
-}
-
-function frameSize(value: unknown, name: string, defaultValue: number): number {
-  if (value === undefined) return defaultValue
-  return Math.min(MAX_FRAME_SIZE, Math.max(MIN_FRAME_SIZE, finiteNumber(value, name)))
-}
-
-function frameType(value: unknown): CanvasFrameType {
-  const type = String(value ?? 'markdown')
-  if (!(CANVAS_FRAME_TYPES as readonly string[]).includes(type)) {
-    throw new Error(`type must be one of: ${CANVAS_FRAME_TYPES.join(', ')}`)
-  }
-  return type as CanvasFrameType
-}
-
-function contentValue(value: unknown): string {
-  const content = typeof value === 'string' ? value : ''
-  if (Buffer.byteLength(content, 'utf8') > MAX_FRAME_CONTENT) throw new Error('frame content exceeds 1 MiB')
-  return content
-}
-
-function objectValue(value: unknown): Record<string, unknown> {
-  if (value === undefined || value === null) return {}
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('data must be an object')
-  return value as Record<string, unknown>
-}
-
-function toFrame(row: FrameRow): CanvasFrame {
-  return {
-    id: row.id,
-    canvasId: row.canvas_id,
-    type: row.type,
-    title: row.title,
-    x: Number(row.x),
-    y: Number(row.y),
-    width: Number(row.width),
-    height: Number(row.height),
-    content: row.content,
-    data: row.data ?? {},
-    revision: Number(row.revision),
-    createdBy: row.created_by,
-    updatedBy: row.updated_by,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }
-}
 
 export interface CanvasHandoffResult {
   snapshot: CanvasSnapshot
@@ -221,11 +134,6 @@ async function resolveCanvasRead(companyId: string, canvasId?: string, projectId
 }
 
 
-async function requireFrame(companyId: string, frameId: string): Promise<CanvasFrame> {
-  const row = await findFrame(db, companyId, frameId)
-  if (!row) throw new Error('frame not found')
-  return toFrame(row)
-}
 
 async function logActivity(input: {
   companyId: string; canvasId: string; actorId: string; actorKind: CanvasActorKind
@@ -251,6 +159,22 @@ async function logActivity(input: {
   await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
   return activity
 }
+
+const {
+  appendCanvasFrameContent,
+  createCanvasFrame,
+  deleteCanvasFrame,
+  requireFrame,
+  updateCanvasFrame,
+} = createCanvasFrameApplication({ db, transaction, resolveCanvas, publishCanvas, logActivity })
+
+const {
+  addCanvasComment,
+  listCanvasAvailableAgents,
+  setCanvasStatus,
+} = createCanvasCollaborationApplication({
+  db, resolveCanvas, requireFrame, publishCanvas, publishAssignments, logActivity,
+})
 
 async function listCanvasWorkspaces(companyId: string, conversationId?: string, projectId?: string): Promise<CanvasWorkspaceSummary[]> {
   const rows = await listWorkspaceRows(db, companyId, conversationId, projectId)
@@ -315,233 +239,7 @@ async function getCanvasSnapshot(companyId: string, actorId: string, canvasId?: 
   }
 }
 
-async function createCanvasFrame(input: {
-  companyId: string; actorId: string; actorKind: CanvasActorKind; idempotencyKey?: string
-  canvasId?: string; projectId?: string
-  frame: Record<string, unknown>
-}): Promise<CanvasFrame> {
-  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
-  const type = frameType(input.frame.type)
-  const title = String(input.frame.title ?? `${type[0].toUpperCase()}${type.slice(1)} frame`).trim().slice(0, MAX_FRAME_TITLE) || 'Untitled frame'
-  const content = contentValue(input.frame.content)
-  const data = objectValue(input.frame.data)
-  const id = input.idempotencyKey
-    ? `frame-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 24)}`
-    : `frame-${randomUUID()}`
-  const width = frameSize(input.frame.width, 'width', 420)
-  const height = frameSize(input.frame.height, 'height', 300)
-  const frame = await transaction(async (client) => {
-    // Serialise automatic placement per workspace. Locking the canvas id,
-    // rather than existing frame rows, also covers an initially empty board.
-    await lockCanvasLayout(client, canvas.id)
-    let defaultX = 80; let defaultY = 80
-    if (input.actorKind === 'agent') {
-      const area = await assignmentOrigin(client, canvas.id, input.actorId)
-      if (area) { defaultX = Number(area.work_x) + 40; defaultY = Number(area.work_y) + 100 }
-    }
-    let x = finiteNumber(input.frame.x ?? defaultX, 'x')
-    let y = finiteNumber(input.frame.y ?? defaultY, 'y')
-    const occupied = await occupiedFrames(client, canvas.id)
-    const placement = findCanvasPlacement(
-      occupied.map((item) => ({ x: Number(item.x), y: Number(item.y), width: Number(item.width), height: Number(item.height) })),
-      { width, height },
-      { x, y },
-    )
-    x = placement.x; y = placement.y
-    const created = toFrame(await insertFrame(client, {
-      id, canvasId: canvas.id, type, title, x, y, width, height, content, data, actorId: input.actorId,
-    }))
-    if (input.actorKind === 'agent') {
-      await markAssignmentFrame(client, canvas.id, input.actorId, created, true)
-    }
-    await touchCanvas(client, canvas.id)
-    return created
-  })
-  await publishCanvas(input.companyId, { kind: 'frame.created', canvasId: canvas.id, revision: frame.revision, frame })
-  await logActivity({
-    companyId: input.companyId, canvasId: canvas.id, actorId: input.actorId,
-    actorKind: input.actorKind, frameId: frame.id, action: 'frame_created',
-    detail: { title: frame.title, type: frame.type },
-  })
-  return frame
-}
 
-async function updateCanvasFrame(input: {
-  companyId: string; actorId: string; actorKind: CanvasActorKind; frameId: string
-  patch: Record<string, unknown>
-}): Promise<CanvasFrame> {
-  const current = await requireFrame(input.companyId, input.frameId)
-  const changes: Array<{ field: FrameUpdateField; value: unknown; json?: boolean }> = []
-  const add = (field: FrameUpdateField, value: unknown, json = false) => {
-    changes.push({ field, value, json })
-  }
-  if (input.patch.type !== undefined) add('type', frameType(input.patch.type))
-  if (input.patch.title !== undefined) add('title', String(input.patch.title).trim().slice(0, MAX_FRAME_TITLE) || 'Untitled frame')
-  if (input.patch.x !== undefined) add('x', finiteNumber(input.patch.x, 'x'))
-  if (input.patch.y !== undefined) add('y', finiteNumber(input.patch.y, 'y'))
-  if (input.patch.width !== undefined) add('width', frameSize(input.patch.width, 'width', current.width))
-  if (input.patch.height !== undefined) add('height', frameSize(input.patch.height, 'height', current.height))
-  if (input.patch.content !== undefined) add('content', contentValue(input.patch.content))
-  if (input.patch.data !== undefined) add('data', JSON.stringify(objectValue(input.patch.data)), true)
-  if (changes.length === 0) return current
-  add('updated_by', input.actorId)
-  const contentMutation = ['type', 'title', 'content', 'data'].some((key) => input.patch[key] !== undefined)
-  const baseRevision = input.patch.baseRevision === undefined ? null : Number(input.patch.baseRevision)
-  if (contentMutation && !Number.isInteger(baseRevision)) throw new Error('baseRevision is required for content updates')
-  const updated = await updateFrame(db, {
-    companyId: input.companyId, frameId: input.frameId, baseRevision, changes,
-  })
-  if (!updated) {
-    const latest = await requireFrame(input.companyId, input.frameId)
-    throw Object.assign(new Error(`frame revision conflict; latest revision is ${latest.revision}`), { status: 409, latestFrame: latest })
-  }
-  const frame = toFrame(updated)
-  if (input.actorKind === 'agent') {
-    await markAssignmentFrame(db, frame.canvasId, input.actorId, frame, false)
-  }
-  await touchCanvas(db, frame.canvasId)
-  await publishCanvas(input.companyId, { kind: 'frame.updated', canvasId: frame.canvasId, revision: frame.revision, frame })
-  await logActivity({
-    companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
-    actorKind: input.actorKind, frameId: frame.id, action: 'frame_updated',
-    detail: { fields: Object.keys(input.patch) },
-  })
-  return frame
-}
-
-async function appendCanvasFrameContent(input: {
-  companyId: string; actorId: string; actorKind: CanvasActorKind; frameId: string; content: string
-}): Promise<CanvasFrame> {
-  if (!input.content) return requireFrame(input.companyId, input.frameId)
-  if (Buffer.byteLength(input.content, 'utf8') > 64 * 1024) throw new Error('append content exceeds 64 KiB')
-  const updated = await appendFrame(db, {
-    companyId: input.companyId, frameId: input.frameId, actorId: input.actorId,
-    content: input.content, maxBytes: MAX_FRAME_CONTENT,
-  })
-  if (!updated) {
-    await requireFrame(input.companyId, input.frameId)
-    throw new Error('frame content exceeds 1 MiB')
-  }
-  const frame = toFrame(updated)
-  await touchCanvas(db, frame.canvasId)
-  await publishCanvas(input.companyId, { kind: 'frame.updated', canvasId: frame.canvasId, revision: frame.revision, frame })
-  await logActivity({
-    companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
-    actorKind: input.actorKind, frameId: frame.id, action: 'frame_updated',
-    detail: { operation: 'append', characters: input.content.length, title: frame.title },
-  })
-  return frame
-}
-
-async function deleteCanvasFrame(input: {
-  companyId: string; actorId: string; actorKind: CanvasActorKind; frameId: string
-}): Promise<{ id: string; canvasId: string }> {
-  const frame = await requireFrame(input.companyId, input.frameId)
-  await deleteFrame(db, frame.id)
-  await touchCanvas(db, frame.canvasId)
-  await publishCanvas(input.companyId, { kind: 'frame.deleted', canvasId: frame.canvasId, frameId: frame.id })
-  await logActivity({
-    companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
-    actorKind: input.actorKind, action: 'frame_deleted', detail: { title: frame.title, type: frame.type },
-  })
-  return { id: frame.id, canvasId: frame.canvasId }
-}
-
-async function setCanvasStatus(input: {
-  companyId: string; actorId: string; actorKind: CanvasActorKind; status: string; canvasId?: string
-  projectId?: string; frameId?: string | null; cursorX?: number | null; cursorY?: number | null
-}): Promise<CanvasPresence | null> {
-  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
-  const status = input.status.trim().slice(0, 120)
-  const previous = input.actorKind === 'agent'
-    ? await currentPresence(db, canvas.id, input.actorId)
-    : undefined
-  if (!status || status === 'offline') {
-    await deletePresence(db, canvas.id, input.actorId)
-    await publishCanvas(input.companyId, {
-      kind: 'presence.removed', canvasId: canvas.id, participantId: input.actorId,
-    })
-    return null
-  }
-  if (input.frameId) await requireFrame(input.companyId, input.frameId)
-  const row = await upsertPresence(db, {
-    canvasId: canvas.id,
-    participantId: input.actorId,
-    participantKind: input.actorKind,
-    status,
-    frameId: input.frameId ?? null,
-    cursorX: input.cursorX ?? null,
-    cursorY: input.cursorY ?? null,
-  })
-  const presence: CanvasPresence = {
-    participantId: row.participant_id, participantKind: row.participant_kind,
-    status: row.status, frameId: row.frame_id, color: row.color,
-    cursorX: row.cursor_x === null ? null : Number(row.cursor_x), cursorY: row.cursor_y === null ? null : Number(row.cursor_y),
-    lastSeenAt: row.last_seen_at,
-  }
-  if (input.actorKind === 'agent') {
-    const assignmentStatus = (['queued','blocked','working','waiting','completed','failed','cancelled'] as string[]).includes(status)
-      ? status as CanvasAssignmentStatus
-      : 'working'
-    await updateAssignmentPresence(db, {
-      canvasId: canvas.id,
-      agentId: input.actorId,
-      status: assignmentStatus,
-      frameId: input.frameId ?? null,
-      cursorX: input.cursorX ?? null,
-      cursorY: input.cursorY ?? null,
-    })
-  }
-  await publishCanvas(input.companyId, { kind: 'presence.updated', canvasId: canvas.id, presence })
-  if (input.actorKind === 'agent') {
-    await publishAssignments(input.companyId, canvas.id)
-    if (previous?.status !== status || previous?.frame_id !== (input.frameId ?? null)) {
-      await logActivity({
-        companyId: input.companyId,
-        canvasId: canvas.id,
-        actorId: input.actorId,
-        actorKind: input.actorKind,
-        frameId: input.frameId,
-        action: 'agent_status',
-        detail: { status },
-      })
-    }
-  }
-  return presence
-}
-
-async function addCanvasComment(input: {
-  companyId: string; actorId: string; actorKind: CanvasActorKind; canvasId?: string; projectId?: string; frameId?: string | null; body: string
-}): Promise<CanvasComment> {
-  const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
-  if (input.frameId) await requireFrame(input.companyId, input.frameId)
-  const body = input.body.trim().slice(0, 8_000)
-  if (!body) throw new Error('body is required')
-  const id = `comment-${randomUUID()}`
-  const row = await insertComment(db, {
-    id,
-    canvasId: canvas.id,
-    frameId: input.frameId ?? null,
-    authorId: input.actorId,
-    authorKind: input.actorKind,
-    body,
-  })
-  const comment: CanvasComment = {
-    id: row.id, canvasId: row.canvas_id, frameId: row.frame_id,
-    authorId: row.author_id, authorKind: row.author_kind, body: row.body, createdAt: row.created_at,
-  }
-  await publishCanvas(input.companyId, { kind: 'comment.created', canvasId: canvas.id, comment })
-  await logActivity({
-    companyId: input.companyId, canvasId: canvas.id, actorId: input.actorId,
-    actorKind: input.actorKind, frameId: input.frameId, action: 'comment_created',
-  })
-  return comment
-}
-
-async function listCanvasAvailableAgents(companyId: string): Promise<Array<{ id: string; name: string; role: string; status: string }>> {
-  const rows = await availableAgents(db, companyId)
-  return rows.map((row) => ({ id: row.id, name: row.name, role: row.role ?? 'Learning Agent', status: row.status ?? 'available' }))
-}
 
 async function assertMembersAvailable(client: Queryable, companyId: string, members: CanvasMemberInput[]): Promise<void> {
   if (members.length === 0) throw new Error('at least one canvas member is required')
@@ -825,115 +523,19 @@ async function publishAssignments(companyId: string, canvasId: string): Promise<
     assignment: toAssignment(row, rows.dependencies.filter((item) => item.agent_id === row.agent_id).map((item) => item.depends_on_agent_id)) })))
 }
 
-async function validateEvidenceRefs(client: Queryable, input: { companyId:string;canvasId:string;refs:CanvasEvidenceRef[] }): Promise<void> {
-  if (input.refs.length > 64) throw new Error('evidenceRefs may contain at most 64 items')
-  for (const ref of input.refs) {
-    if (!ref || typeof ref.id !== 'string' || !ref.id.trim()) throw new Error('every evidence reference requires an id')
-  }
-  const missing = await missingEvidenceRefs(client, input)
-  if (missing[0]) throw new Error(`evidence reference is outside the current Canvas scope: ${missing[0].kind}:${missing[0].id}`)
-}
+const {
+  assertCanvasWorkReportReady,
+  completeCanvasWork,
+  submitCanvasReport,
+} = createCanvasReportApplication({
+  db,
+  transaction,
+  toReport,
+  publishCanvas,
+  publishAssignments,
+  logActivity,
+})
 
-async function submitCanvasReport(input: {
-  companyId:string;workId:string;agentId:string;canvasId:string;executionRole:AgentExecutionRole
-  finding:string;evidenceRefs:CanvasEvidenceRef[];confidence:number;unresolved?:string[];nextStep?:string
-  verifiesReportId?:string;disconfirmingChecks?:string[];verdict?:CanvasReportVerdict
-  consumedReportIds?:string[];conflictResolution?:unknown[]
-}): Promise<CanvasAssignmentReport> {
-  if (!['specialist','verifier','reporter'].includes(input.executionRole)) throw new Error('coordinator work cannot submit an assignment report')
-  const confidence=Number(input.confidence)
-  if (!Number.isFinite(confidence)||confidence<0||confidence>1) throw new Error('confidence must be between 0 and 1')
-  const finding=input.finding.trim()
-  if (!finding) throw new Error('finding is required')
-  return transaction(async (client) => {
-    const work = await lockReportWork(client, {
-      workId: input.workId, companyId: input.companyId, agentId: input.agentId, canvasId: input.canvasId,
-    })
-    if (!work||work.execution_role!==input.executionRole) throw new Error('report execution role does not match the current durable work item')
-    await validateEvidenceRefs(client,{companyId:input.companyId,canvasId:input.canvasId,refs:input.evidenceRefs})
-    let verifiesReportId:string|null=null
-    if (input.executionRole==='verifier') {
-      if (!input.verifiesReportId||!input.verdict) throw new Error('verifier reports require verifiesReportId and verdict')
-      const source = await reportIdentity(client, input.companyId, input.canvasId, input.verifiesReportId)
-      if (!source) throw new Error('verified report is outside the current Canvas')
-      if (source.author_agent_id===input.agentId) throw new Error('builder and verifier must be different agents')
-      const verifiesAssignmentId = work.canvas_assignment_id
-        ? await assignmentVerifierId(client,input.canvasId,work.canvas_assignment_id,input.agentId)
-        : null
-      if (!verifiesAssignmentId||verifiesAssignmentId!==source.assignment_id) throw new Error('verifier report does not match its assigned builder report')
-      verifiesReportId=input.verifiesReportId
-    } else if (input.verifiesReportId||input.verdict) throw new Error('only verifier reports may set verification fields')
-    const consumed=(input.consumedReportIds??[]).map(String)
-    if (input.executionRole==='reporter') {
-      if (!consumed.length) throw new Error('reporter reports must consume at least one persisted report')
-      const persisted = await existingReportIds(client,input.companyId,input.canvasId,consumed)
-      if (new Set(persisted).size!==new Set(consumed).size) throw new Error('reporter consumed report is outside the current Canvas')
-    } else if (consumed.length) throw new Error('only reporter reports may consume reportIds')
-    const id=`report-${createHash('sha256').update(`${input.workId}:learning_report_v1`).digest('hex').slice(0,28)}`
-    return toReport(await insertReport(client, {
-      id, companyId: input.companyId, canvasId: input.canvasId, assignmentId: work.canvas_assignment_id,
-      agentId: input.agentId, executionRole: input.executionRole, finding, evidenceRefs: input.evidenceRefs,
-      confidence, unresolved: input.unresolved ?? [], nextStep: input.nextStep?.trim() || null,
-      verifiesReportId, disconfirmingChecks: input.disconfirmingChecks ?? [], verdict: input.verdict ?? null,
-      consumedReportIds: consumed, conflictResolution: input.conflictResolution ?? [],
-    }))
-  })
-}
-
-async function assertCanvasWorkReportReady(workId:string,companyId:string):Promise<void> {
-  const work = await workReportContext(db, workId, companyId)
-  if (!work?.canvas_id) return
-  const ready = work.reason==='canvas_summary'
-    ? await reportExists(db, { canvasId: work.canvas_id, reporter: true })
-    : await reportExists(db, { assignmentId: work.canvas_assignment_id ?? undefined })
-  if (!ready) throw new Error(work.reason==='canvas_summary'
-    ? 'reporter work requires a learning_report_v1 submission before completion'
-    : 'canvas worker requires a learning_report_v1 submission before completion')
-}
-
-async function completeCanvasWork(input: {
-  workId: string; companyId: string; status: 'completed' | 'failed' | 'cancelled'; resultText?: string; error?: string
-}): Promise<void> {
-  const state = await transaction((client) => completeCanvasWorkState(client, input))
-  if (!state.canvasId) return
-  if (state.workspace) {
-    await publishCanvas(input.companyId, {
-      kind: 'workspace.updated',
-      canvasId: state.canvasId,
-      conversationId: state.workspace.conversation_id ?? undefined,
-      workspace: {
-        id: state.canvasId,
-        status: state.workspace.status,
-        title: state.workspace.title,
-        goal: state.workspace.goal,
-      },
-    })
-    return
-  }
-  await publishAssignments(input.companyId, state.canvasId)
-  if (state.completion) {
-    await logActivity({
-      companyId: input.companyId,
-      canvasId: state.canvasId,
-      actorId: state.completion.agentId,
-      actorKind: 'agent',
-      frameId: state.completion.frameId,
-      action: state.completion.status === 'completed'
-        ? 'task_completed'
-        : state.completion.status === 'failed' ? 'task_failed' : 'task_cancelled',
-      detail: { status: state.completion.status, result: input.resultText, error: input.error },
-    })
-  }
-  const canvas = await canvasById(db, input.companyId, state.canvasId)
-  if (canvas) {
-    await publishCanvas(input.companyId, {
-      kind: 'workspace.updated',
-      canvasId: state.canvasId,
-      conversationId: canvas.conversation_id ?? undefined,
-      workspace: { id: state.canvasId, status: canvas.status, title: canvas.title, goal: canvas.goal },
-    })
-  }
-}
 
 async function steerCanvasAssignment(input: { companyId: string; canvasId: string; agentId: string; text: string }): Promise<void> {
   const text = input.text.trim().slice(0, 4000)
