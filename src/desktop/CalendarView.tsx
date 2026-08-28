@@ -26,10 +26,10 @@ import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
-import { useCalendar } from '@/stores/calendar'
+import { useCalendar } from '@/features/calendar/state'
 import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
-import type { CalendarEvent, RecurrenceRule } from '@/types'
+import type { CalendarEvent, RecurrenceRule } from '@/features/calendar/contracts'
 
 interface AgendaItem {
   event: CalendarEvent

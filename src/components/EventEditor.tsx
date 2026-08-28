@@ -13,10 +13,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useMe } from '@/stores/auth'
-import { useCalendar } from '@/stores/calendar'
+import { useCalendar } from '@/features/calendar/state'
 import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
-import type { CalendarEvent, CalendarEventKind, Participant, RecurrenceRule } from '@/types'
+import type { CalendarEvent, CalendarEventKind, RecurrenceRule } from '@/features/calendar/contracts'
+import type { Participant } from '@/types'
 
 /** Prefilled defaults passed in when creating a NEW event from a calendar
  *  drag-select or right-click. Ignored when `event` is supplied (edit

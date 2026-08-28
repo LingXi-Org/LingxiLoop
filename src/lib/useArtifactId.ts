@@ -13,7 +13,7 @@
  * `useResolvedCardId` is best-effort against in-memory board snapshots.
  */
 import { useEffect, useMemo } from 'react'
-import { useCalendar } from '@/stores/calendar'
+import { useCalendar } from '@/features/calendar/state'
 import { useDocuments } from '@/stores/documents'
 import { useBoards } from '@/stores/boards'
 

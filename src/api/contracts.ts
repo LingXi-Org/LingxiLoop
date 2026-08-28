@@ -1,15 +1,11 @@
 import type {
   AgentCapability,
-  CalendarEventKind,
-  CalendarEventStatus,
-  CalendarReminderChannel,
   CanvasActivity,
   CanvasComment,
   CanvasFrame,
   CanvasPresence,
   CanvasSnapshot,
   Message,
-  RecurrenceRule,
   Status,
   WorkspaceSummary,
 } from '@/types'
@@ -737,28 +733,6 @@ export interface ApiDocument {
   updatedAt: string
 }
 
-/** Body shape for create/update calendar event. The server validates each
- *  field independently so partial updates work. */
-export interface CalendarEventInput {
-  title: string
-  kind?: CalendarEventKind
-  description?: string | null
-  assigneeId?: string | null
-  targetConversationId?: string | null
-  agentPrompt?: string | null
-  startAt: string
-  endAt?: string | null
-  allDay?: boolean
-  recurrence?: RecurrenceRule | null
-  status?: CalendarEventStatus
-  reminderMinutesBefore?: number | null
-  reminderChannel?: CalendarReminderChannel | null
-  /** Privacy flag. When true, only the creator + assignee see the row
-   *  (and the workspace owner, if the row involves an agent). Default
-   *  false = same shared-workspace behavior as before. */
-  isPrivate?: boolean
-}
-
 /* ============== WebSocket bridge ============== */
 
 export type WsEvent =
@@ -821,7 +795,7 @@ export type WsEvent =
       /** Server limits this to humans only; renderer further filters by
        *  meId === one-of(recipientUserIds) before showing the toast. */
       recipientUserIds: string[]
-      kind: CalendarEventKind
+      kind: 'personal' | 'agent_task'
       assigneeId: string | null
     }
   | {

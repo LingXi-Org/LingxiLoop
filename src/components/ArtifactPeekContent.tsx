@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AvatarMini } from '@/components/Avatar'
 import { useBoards } from '@/stores/boards'
-import { useCalendar } from '@/stores/calendar'
+import { useCalendar } from '@/features/calendar/state'
 import { useConversations } from '@/stores/conversations'
 import { useParticipants } from '@/stores/participants'
 import { IBoard, ICalendar, IClock, IRepeat } from '@/components/icons'
@@ -11,7 +11,8 @@ import { EventEditor } from '@/components/EventEditor'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
-import type { BoardCard, CalendarEvent, RecurrenceRule } from '@/types'
+import type { CalendarEvent, RecurrenceRule } from '@/features/calendar/contracts'
+import type { BoardCard } from '@/types'
 
 const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 

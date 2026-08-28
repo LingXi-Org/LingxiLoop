@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
-import { useCalendar } from '@/stores/calendar'
+import { useCalendar } from '@/features/calendar/state'
 import { useResolvedCalendarId } from '@/lib/useArtifactId'
 import { ICalendar } from './icons'
 

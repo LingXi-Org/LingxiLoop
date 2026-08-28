@@ -90,7 +90,7 @@ export const useAuth = create<AuthState>((set) => ({
     void Promise.all([
       import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
       import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-      import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
+      import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
   /** Append a freshly-created company to the user's set and switch to it. */
@@ -105,7 +105,7 @@ export const useAuth = create<AuthState>((set) => ({
       void Promise.all([
         import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
         import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-        import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
+        import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
       ])
     }
   },
@@ -122,7 +122,7 @@ export const useAuth = create<AuthState>((set) => ({
     void Promise.all([
       import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
       import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-      import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
+      import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
   markReady() {
