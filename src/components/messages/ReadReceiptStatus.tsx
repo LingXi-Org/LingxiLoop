@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
-import { useMessages } from '@/stores/messages'
+import { useMessages } from '@/features/chat/state/messages'
 import { useParticipants } from '@/stores/participants'
 import type { ImReadReceiptAdvance } from '@/types'
 

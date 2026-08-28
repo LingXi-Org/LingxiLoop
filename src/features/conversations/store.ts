@@ -5,7 +5,7 @@ import { ws } from '@/api/core/realtime'
 import type { Conversation } from '@/types'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { useMessages } from '@/stores/messages'
+import { useMessages } from '@/features/chat/state/messages'
 import { useParticipants } from '@/stores/participants'
 import { lingxiIm } from '@/lib/im/wukong'
 

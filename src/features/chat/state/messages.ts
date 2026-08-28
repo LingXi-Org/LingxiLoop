@@ -1,5 +1,5 @@
 import { conversationsApi } from '@/features/conversations/api'
-import { messagesApi } from '@/api/messages'
+import { messagesApi } from '../api'
 import type { ApiMessage, WsEvent } from '@/api/contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
@@ -12,9 +12,12 @@ import {
 } from '@/lib/chatMessages'
 import { type ImEnvelope, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
-import { getActiveCompanyId, getMeId } from '@/stores/auth'
+import { getMeId } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
 import type { ImReadReceiptAdvance, Message, ReactionEntry } from '@/types'
+import { notifyAction } from '@/lib/actionToast'
+import { forgetOutbox, readOutbox, rememberOutbox } from './outbox'
+import { deriveMineForReactions, mergeReactionOrder, optimisticToggleReactions } from './reactions'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -171,87 +174,6 @@ function scheduleTypingExpiry(conversationId: string, agentId: string): void {
     }))
   }, TYPING_STALE_MS)
   typingExpiryTimers.set(typingKey(conversationId, agentId), timer)
-}
-
-/** Re-derive every reaction's `mine` flag from `users` + the local user id.
- *  The server no longer computes `mine` because the same reactions array is
- *  reused over WS broadcasts where "I" is recipient-specific — see
- *  server/src/api/router.ts and server/src/agents/tools.ts for the
- *  matching server-side rationale. Anonymous (no meId) means mine=false. */
-function deriveMineForReactions<R extends { users?: string[] | null }>(
-  reactions: R[] | null | undefined,
-): Array<R & { mine: boolean }> | undefined {
-  if (!reactions || reactions.length === 0) return undefined
-  const meId = getMeId()
-  return reactions.map((r) => ({
-    ...r,
-    mine: !!meId && Array.isArray(r.users) && r.users.includes(meId),
-  }))
-}
-
-function compactReactions(reactions: ReactionEntry[]): ReactionEntry[] | undefined {
-  const next = reactions.filter((r) => r.count > 0)
-  return next.length > 0 ? next : undefined
-}
-
-function mergeReactionOrder(
-  current: ReactionEntry[] | undefined,
-  incoming: ReactionEntry[] | undefined,
-): ReactionEntry[] | undefined {
-  if (!incoming || incoming.length === 0) return undefined
-  if (!current || current.length === 0) return incoming
-
-  const byEmoji = new Map(incoming.map((r) => [r.emoji, r]))
-  const next: ReactionEntry[] = []
-  const seen = new Set<string>()
-  for (const r of current) {
-    // Guard against a `current` array that already contains duplicates of
-    // the same emoji — without this check the inner push would emit the
-    // same `updated` entry once per duplicate, producing visible
-    // "✅ 2 2 3"-style stutter in the pill row when rapid clicks race
-    // with WS echoes. Defensive: nothing in our own pipeline should
-    // produce duplicates, but we'd rather collapse than amplify.
-    if (seen.has(r.emoji)) continue
-    const updated = byEmoji.get(r.emoji)
-    if (!updated || updated.count <= 0) continue
-    next.push(updated)
-    seen.add(r.emoji)
-  }
-  for (const r of incoming) {
-    if (seen.has(r.emoji) || r.count <= 0) continue
-    next.push(r)
-    seen.add(r.emoji)
-  }
-  return next.length > 0 ? next : undefined
-}
-
-function optimisticToggleReactions(
-  reactions: ReactionEntry[] | undefined,
-  emoji: string,
-): ReactionEntry[] | undefined {
-  const meId = getMeId()
-  const next = reactions ? reactions.map((r) => ({ ...r, users: r.users ? [...r.users] : undefined })) : []
-  const idx = next.findIndex((r) => r.emoji === emoji)
-  if (idx === -1) {
-    next.push({ emoji, count: 1, mine: true, users: meId ? [meId] : undefined })
-    return next
-  }
-
-  const cur = next[idx]
-  const users = cur.users
-  const hadMine = meId
-    ? !!cur.mine || (Array.isArray(users) && users.includes(meId))
-    : !!cur.mine
-  const count = hadMine ? Math.max(0, cur.count - 1) : cur.count + 1
-  const patchedUsers = meId
-    ? hadMine
-      ? users?.filter((id) => id !== meId)
-      : Array.from(new Set([...(users ?? []), meId]))
-    : users
-
-  if (count === 0) next.splice(idx, 1)
-  else next[idx] = { ...cur, count, mine: !hadMine, users: patchedUsers }
-  return compactReactions(next)
 }
 
 function patchMessageReactions(
@@ -871,34 +793,8 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
 }
 
 function newTempId(): string {
-  const rnd =
-    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : Math.random().toString(36).slice(2) + Date.now().toString(36)
-  return `temp-${rnd}`
+  return `temp-${crypto.randomUUID()}`
 }
-
-interface MessageOutboxEntry { convoId: string; nonce: string; payload: LingxiMessageV1; createdAt: string }
-function outboxKey(): string | null {
-  const companyId = getActiveCompanyId(), userId = getMeId()
-  return companyId && userId ? `lingxiloop.im.outbox:${companyId}:${userId}` : null
-}
-function readOutbox(): MessageOutboxEntry[] {
-  const key = outboxKey(); if (!key) return []
-  try {
-    const value = JSON.parse(localStorage.getItem(key) ?? '[]') as unknown
-    return Array.isArray(value) ? value.filter((item): item is MessageOutboxEntry => Boolean(item && typeof item === 'object' && typeof (item as MessageOutboxEntry).nonce === 'string')) : []
-  } catch { return [] }
-}
-function writeOutbox(entries: MessageOutboxEntry[]): void {
-  const key = outboxKey(); if (!key) return
-  try { localStorage.setItem(key, JSON.stringify(entries.slice(-100))) } catch { /* best effort */ }
-}
-function rememberOutbox(entry: MessageOutboxEntry): void {
-  const entries = readOutbox().filter((item) => item.nonce !== entry.nonce)
-  writeOutbox([...entries, entry])
-}
-function forgetOutbox(nonce: string): void { writeOutbox(readOutbox().filter((item) => item.nonce !== nonce)) }
 
 export async function sendUserMessage(
   convoId: string,
@@ -914,7 +810,7 @@ export async function sendUserMessage(
   // WuKong identity is derived from the signed-in user; never fall back to a
   // second message store when that identity is missing.
   if (!meId) {
-    console.warn('[messages] send skipped: no authenticated WuKong identity')
+    notifyAction({ title: '消息发送失败', description: '当前登录身份不可用，请重新登录。', type: 'error' })
     return
   }
 
@@ -1104,7 +1000,11 @@ export async function toggleReaction(messageId: string, emoji: string): Promise<
     patchMessageReactions(messageId, (reactions) => mergeReactionOrder(reactions, incoming))
   } catch (err) {
     restoreMessageReactions(messageId, previous)
-    console.warn('[reactions] toggle failed', err)
+    notifyAction({
+      title: '表态更新失败',
+      description: err instanceof Error ? err.message : String(err),
+      type: 'error',
+    })
   }
 }
 

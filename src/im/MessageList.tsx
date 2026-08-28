@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import type React from 'react'
 import { Virtuoso, type ListRange, type VirtuosoHandle } from 'react-virtuoso'
 import type { Message } from '@/types'
-import { markMessagesVisibleThrough } from '@/stores/messages'
+import { markMessagesVisibleThrough } from '@/features/chat/state/messages'
 import { LingxiAssistantRuntimeProvider } from './assistantRuntime'
 
 interface MessageListProps {

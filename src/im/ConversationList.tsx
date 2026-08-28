@@ -6,7 +6,7 @@ import { participantRoleZh } from '@/lib/participantRole'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
 import { isMuted } from '@/features/conversations/store'
-import { useMessages } from '@/stores/messages'
+import { useMessages } from '@/features/chat/state/messages'
 import { useParticipants } from '@/stores/participants'
 import type { Conversation, Participant } from '@/types'
 

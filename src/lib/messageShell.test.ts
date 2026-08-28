@@ -43,7 +43,7 @@ test('desktop renders the native assistant-ui IM entry', async () => {
 
 test('the desktop Web/Electron surface composes the shared IM core without Telegram runtime code', async () => {
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const composer = await readFile(new URL('../desktop/ChatComposer.tsx', import.meta.url), 'utf8')
+  const composer = await readFile(new URL('../features/chat/components/ChatComposer.tsx', import.meta.url), 'utf8')
   const desktopProfile = await readFile(new URL('../desktop/InfoPane.tsx', import.meta.url), 'utf8')
   const desktopList = await readFile(new URL('../features/conversations/components/ConversationsPane.tsx', import.meta.url), 'utf8')
   const desktopShell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')

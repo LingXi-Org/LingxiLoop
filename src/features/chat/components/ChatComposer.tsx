@@ -17,15 +17,16 @@ import { COMPOSER_EMOJIS } from '@/lib/emoji'
 import { isImeComposing } from '@/lib/keyboard'
 import { findSkypeByShortcode, playSkypeSound, SKYPE_EMOJIS } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
-import { useMe } from '@/stores/auth'
+import { getActiveCompanyId, useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
 import { useConversationUi } from '@/stores/conversationUi'
-import { sendUserMessage, useMessages } from '@/stores/messages'
+import { sendUserMessage, useMessages } from '../state/messages'
 import { useParticipants } from '@/stores/participants'
 import { useSoundStore } from '@/stores/sound'
 import { useSurface } from '@/stores/surface'
 import { useUiCommand } from '@/stores/uiCommands'
 import type { Participant } from '@/types'
+import { readComposerDraftTexts, saveComposerDraftText } from '../drafts'
 
 type EmojiTab = 'std' | 'skype'
 const EMOJI_TAB_STORAGE_KEY = 'lingxiloop.composer.emojiTab'
@@ -223,7 +224,14 @@ export function Composer({
   // Draft scope key — distinct namespace for thread mode so swapping between
   // the main composer and a thread drawer doesn't share text.
   const scopeKey = isThread ? `${convoId}::thread::${threadRootId}` : convoId
-  const [draftsByScope, setDraftsByScope] = useState<Record<string, ComposerDraftState>>({})
+  const meId = useMe()
+  const companyId = getActiveCompanyId()
+  const [draftsByScope, setDraftsByScope] = useState<Record<string, ComposerDraftState>>(() =>
+    Object.fromEntries(Object.entries(readComposerDraftTexts(companyId, meId)).map(([scope, text]) => [
+      scope,
+      { text, attachment: null },
+    ])),
+  )
   const [uploadingByScope, setUploadingByScope] = useState<Record<string, boolean>>({})
   const [uploadErrorsByScope, setUploadErrorsByScope] = useState<Record<string, string>>({})
   const editorRef = useRef<RichInputHandle>(null)
@@ -249,6 +257,10 @@ export function Composer({
   const attachment = currentDraft.attachment
   const uploading = Boolean(uploadingByScope[scopeKey])
   const uploadError = uploadErrorsByScope[scopeKey] ?? null
+
+  useEffect(() => {
+    saveComposerDraftText(companyId, meId, scopeKey, draft)
+  }, [companyId, draft, meId, scopeKey])
 
   const updateComposerDraft = useCallback((
     targetScope: string,
@@ -328,7 +340,6 @@ export function Composer({
   // cursor, we open a picker showing matching members of the current convo.
   const conversation = useConversations((s) => s.list.find((x) => x.id === convoId))
   const byId = useParticipants((s) => s.byId)
-  const meId = useMe()
   const memberPool = useMemo<Participant[]>(() => {
     if (!conversation) return []
     return conversation.members
@@ -582,7 +593,11 @@ export function Composer({
     }
     if (!v && !attachment) return
     finalizeTyping()
-    sendUserMessage(convoId, v, attachment, replyingToId ?? null)
+    if (!meId) {
+      void sendUserMessage(convoId, v, attachment, replyingToId ?? null)
+      return
+    }
+    void sendUserMessage(convoId, v, attachment, replyingToId ?? null)
     clearComposerDraft()
     editorRef.current?.setValue('')
     if (!isThread) setReplyingTo(convoId, null)

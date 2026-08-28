@@ -26,6 +26,10 @@ test('frontend has one production data plane and no local preview application', 
   assert.equal(existsSync(`${sourceRoot}/stores/conversations.ts`), false)
   assert.equal(existsSync(`${sourceRoot}/features/conversations/api.ts`), true)
   assert.equal(existsSync(`${sourceRoot}/features/conversations/store.ts`), true)
+  assert.equal(existsSync(`${sourceRoot}/api/messages.ts`), false)
+  assert.equal(existsSync(`${sourceRoot}/stores/messages.ts`), false)
+  assert.equal(existsSync(`${sourceRoot}/features/chat/api.ts`), true)
+  assert.equal(existsSync(`${sourceRoot}/features/chat/state/messages.ts`), true)
 })
 
 test('frontend typecheck never emits a second Vite configuration', () => {

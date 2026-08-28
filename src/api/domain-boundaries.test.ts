@@ -4,7 +4,7 @@ import test from 'node:test'
 
 const domains = [
   'agents', 'boards', 'canvas', 'companies',
-  'documents', 'email', 'files', 'knowledge', 'learning', 'messages',
+  'documents', 'email', 'files', 'knowledge', 'learning',
   'observability', 'platform', 'shipping',
 ] as const
 
@@ -19,7 +19,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   }
 
   const consumers = await Promise.all([
-    '../stores/messages.ts', '../features/conversations/store.ts', '../stores/boards.ts',
+    '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../stores/boards.ts',
     '../features/calendar/state.ts', '../stores/canvas.ts', '../stores/documents.ts',
     '../stores/knowledgeSources.ts', '../stores/participants.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
@@ -45,4 +45,15 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   const conversationsState = await readFile(new URL('../features/conversations/store.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(conversationsState, /stores\/conversations|api\/conversations/)
   assert.match(conversationsState, /error: string \| null/)
+
+  for (const file of ['api.ts', 'state/messages.ts', 'components/ChatComposer.tsx']) {
+    await access(new URL(`../features/chat/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./messages.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../stores/messages.ts', import.meta.url)))
+  const messagesState = await readFile(new URL('../features/chat/state/messages.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(messagesState, /stores\/messages|api\/messages/)
+  const chatApi = await readFile(new URL('../features/chat/api.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(chatApi, /sendMessage\s*:/)
+  assert.match(messagesState, /lingxiIm\.send\(convoId, payload\)/)
 })

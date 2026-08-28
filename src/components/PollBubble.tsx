@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useAuiState } from '@assistant-ui/react'
 import { BarChart3Icon } from 'lucide-react'
-import { messagesApi } from '@/api/messages'
+import { messagesApi } from '@/features/chat/api'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'

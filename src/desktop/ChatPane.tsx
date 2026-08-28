@@ -19,13 +19,13 @@ import { useConversationUi } from '@/stores/conversationUi'
 import { useSurface } from '@/stores/surface'
 import { useUiCommand } from '@/stores/uiCommands'
 import { useConversations } from '@/features/conversations/store'
-import type { MessagesState } from '@/stores/messages'
-import { messagesFor, useMessages, VIRTUOSO_FIRST_INDEX_BASE } from '@/stores/messages'
+import type { MessagesState } from '@/features/chat/state/messages'
+import { messagesFor, useMessages, VIRTUOSO_FIRST_INDEX_BASE } from '@/features/chat/state/messages'
 import { useParticipants } from '@/stores/participants'
 import type { Participant } from '@/types'
-import { Composer } from './ChatComposer'
+import { Composer } from '@/features/chat/components/ChatComposer'
 
-export { Composer } from './ChatComposer'
+export { Composer } from '@/features/chat/components/ChatComposer'
 
 function DesktopRuntimeEntry({ index, initialIdsRef, animatedIdsRef, searchOpen, matchedIds, currentMessageId }: {
   index: number

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { BarChart3Icon, PlusIcon, XIcon } from 'lucide-react'
-import { messagesApi } from '@/api/messages'
+import { messagesApi } from '@/features/chat/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
