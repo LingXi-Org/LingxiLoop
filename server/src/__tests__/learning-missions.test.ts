@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
-import { startLearningMission } from '../modules/learning/application.js'
+import { recordLearningAttempt, startLearningMission } from '../modules/learning/application.js'
 import {
   completeLearningMissionRecord,
   findLearningMission,
@@ -177,4 +177,38 @@ test('mission start validates human learner evidence and publishes the committed
   assert.deepEqual(metrics, ['learning.mission.created'])
   assert.equal(statements.filter((text) => text.includes('INSERT INTO learning_missions')).length, 1)
   assert.equal(statements.filter((text) => text.includes('INSERT INTO agent_work_items')).length, 1)
+})
+
+test('Agent OS attempt recording binds message evidence to one course learner', async () => {
+  let insertedValues: readonly unknown[] | undefined
+  const db = queryable((text, params) => {
+    if (text.includes('FROM courses course') && text.includes('learning_course_rooms')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
+      status: 'active', purpose: 'study',
+    }] }
+    if (text.includes('FROM im_channel_bindings')) return { rows: [{ channel_type: 2 }] }
+    if (text.includes('FROM course_members')) return { rows: [{ role: 'learner' }] }
+    if (text.includes('INSERT INTO learning_attempts')) {
+      insertedValues = params
+      return { rowCount: 1 }
+    }
+    throw new Error(`unexpected query: ${text}`)
+  })
+  const metrics: string[] = []
+
+  const attempt = await recordLearningAttempt(db, async (work) => work(db), {
+    syncMessages: async () => [{
+      clientMsgNo: 'message-1', fromUid: 'learner-1', authoredByAgent: false,
+    }],
+    metric: (name) => { metrics.push(name) },
+  }, {
+    companyId: 'company-1', channelId: 'room-1', agentId: 'agent-1',
+    activityId: 'activity-1', evidenceClientMsgNos: ['message-1'], assistance: 'hint',
+  })
+
+  assert.equal(attempt.learnerId, 'learner-1')
+  assert.deepEqual(insertedValues?.slice(1, 8), [
+    'course-1','company-1','room-1','learner-1','activity-1',null,'hint',
+  ])
+  assert.deepEqual(metrics, ['learning.attempt.accepted'])
 })

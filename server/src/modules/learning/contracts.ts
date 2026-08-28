@@ -122,6 +122,16 @@ export interface StartLearningMissionCommand extends LearningAgentRoomScope {
   explicit?: boolean
 }
 
+export interface RecordLearningAttemptCommand extends LearningAgentRoomScope {
+  agentId: string
+  activityId?: string
+  missionStepId?: string
+  evidenceClientMsgNos?: string[]
+  documentIds?: string[]
+  canvasFrameIds?: string[]
+  assistance?: 'none' | 'hint' | 'guided'
+}
+
 export interface LearningScope { userId: string; companyId: string }
 export interface LearningNotificationPreferences {
   company_id: string

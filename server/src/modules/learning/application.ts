@@ -24,6 +24,7 @@ import type {
   NotificationPreferencesInput,
   ObjectiveStatusInput,
   ReviewEvaluationInput,
+  RecordLearningAttemptCommand,
   StartLearningMissionCommand,
   SubmitActivityInput,
   UpdateCourseInput,
@@ -45,6 +46,8 @@ import {
   countPublishedCourseObjectives,
   findCourse,
   findLearningActivity,
+  findLearningCanvasEvidence,
+  findLearningDocumentEvidence,
   findLearningMission,
   findEligibleLearningMissionCoordinator,
   findLearningRoomState,
@@ -56,6 +59,7 @@ import {
   insertLearningObjectiveDependency,
   insertLearningActivity,
   insertLearningActivityAttempt,
+  insertAgentLearningAttempt,
   insertLearningMissionStep,
   enqueueLearningMissionCoordinatorWork,
   invitationViewer,
@@ -394,6 +398,92 @@ export async function startLearningMission(
     mission: result.mission, courseId: room.courseId,
   })
   return result.mission
+}
+
+export async function recordLearningAttempt(
+  db: Queryable,
+  transaction: LearningTransaction,
+  infrastructure: Pick<LearningMissionInfrastructure, 'syncMessages' | 'metric'>,
+  input: RecordLearningAttemptCommand,
+): Promise<{ id: string; learnerId: string }> {
+  if (Boolean(input.activityId) === Boolean(input.missionStepId)) {
+    throw new LearningApplicationError('invalid', 'exactly one activityId or missionStepId is required')
+  }
+  const refs = [...new Set((input.evidenceClientMsgNos ?? []).map(String).filter(Boolean))]
+  const documentIds = [...new Set((input.documentIds ?? []).map(String).filter(Boolean))]
+  const canvasFrameIds = [...new Set((input.canvasFrameIds ?? []).map(String).filter(Boolean))]
+  if (!refs.length && !documentIds.length && !canvasFrameIds.length) {
+    throw new LearningApplicationError('invalid', 'at least one Host-verifiable learner evidence source is required')
+  }
+  if (refs.length > 20) {
+    throw new LearningApplicationError('invalid', 'one attempt may reference at most 20 evidence messages')
+  }
+  if (documentIds.length > 20 || canvasFrameIds.length > 20) {
+    throw new LearningApplicationError('invalid', 'one attempt may reference at most 20 documents and 20 Canvas Frames')
+  }
+  const room = await requireLearningRoomState(db, input)
+  const channelType = await learningChannelType(db, input.companyId, input.channelId)
+  const messages = refs.length ? await infrastructure.syncMessages({
+    channelId: input.channelId, channelType, limit: 100, loginUid: input.agentId,
+  }) : []
+  const result = await transaction(async (client) => {
+    const learnerIds = new Set<string>()
+    for (const ref of refs) {
+      const message = messages.find((candidate) => candidate.clientMsgNo === ref)
+      if (!message || message.authoredByAgent) {
+        throw new LearningApplicationError('invalid', 'evidence must reference an existing human message in the current room')
+      }
+      if (await courseRole(client, room.courseId, room.companyId, message.fromUid) !== 'learner') {
+        throw new LearningApplicationError('forbidden', 'evidence author must be a learner in the current course')
+      }
+      learnerIds.add(message.fromUid)
+    }
+    const documents: Array<{ id: string; revision: number; authorId: string }> = []
+    for (const documentId of documentIds) {
+      const evidence = await findLearningDocumentEvidence(client, {
+        companyId: room.companyId, projectId: room.projectId, documentId,
+      })
+      if (!evidence) throw new LearningApplicationError('not_found', 'document evidence is outside the current course project')
+      if (await courseRole(client, room.courseId, room.companyId, evidence.authorId) !== 'learner') {
+        throw new LearningApplicationError('forbidden', 'document evidence author must be a learner in the current course')
+      }
+      learnerIds.add(evidence.authorId)
+      documents.push(evidence)
+    }
+    const canvasFrames: Array<{ id: string; revision: number; authorId: string }> = []
+    for (const frameId of canvasFrameIds) {
+      const evidence = await findLearningCanvasEvidence(client, {
+        companyId: room.companyId, projectId: room.projectId, frameId,
+      })
+      if (!evidence) throw new LearningApplicationError('not_found', 'Canvas Frame evidence is outside the current course project')
+      if (await courseRole(client, room.courseId, room.companyId, evidence.authorId) !== 'learner') {
+        throw new LearningApplicationError('forbidden', 'Canvas Frame evidence author must be a learner in the current course')
+      }
+      learnerIds.add(evidence.authorId)
+      canvasFrames.push(evidence)
+    }
+    if (learnerIds.size !== 1) {
+      throw new LearningApplicationError('invalid', 'one attempt cannot combine evidence from multiple learners')
+    }
+    const learnerId = [...learnerIds][0]
+    const id = randomUUID()
+    const inserted = await insertAgentLearningAttempt(client, {
+      id, companyId: room.companyId, courseId: room.courseId, channelId: input.channelId,
+      learnerId, ...(input.activityId ? { activityId: input.activityId } : {}),
+      ...(input.missionStepId ? { missionStepId: input.missionStepId } : {}),
+      assistance: input.assistance ?? 'none',
+      evidence: {
+        kind: 'host_references', conversationId: input.channelId,
+        clientMsgNos: refs, documents, canvasFrames,
+      },
+    })
+    if (!inserted) {
+      throw new LearningApplicationError('not_found', 'published activity or mission step is outside the current course')
+    }
+    return { id, learnerId }
+  })
+  infrastructure.metric('learning.attempt.accepted', { source: 'message' })
+  return result
 }
 
 export async function addLearningMissionSteps(

@@ -8,7 +8,6 @@
 export {
   loadLearningTurnContext,
   proposeEvaluation,
-  recordAttempt,
 } from '../../learning/service.js'
 
 export function createObjectives(input: CreateLearningObjectivesCommand) {
@@ -118,6 +117,7 @@ import {
   finishLearningMissionPlanning,
   publishLearningActivity,
   preferredLearningMissionCoordinator,
+  recordLearningAttempt,
   setLearningObjectiveStatus,
   submitLearningActivity,
   startLearningMission,
@@ -133,6 +133,19 @@ import type { AgentWorkItem } from '../../agent-os/types.js'
 
 export const preferredCoordinatorPreset = preferredLearningMissionCoordinator
 
+async function syncLearningMessages(input: {
+  channelId: string; channelType: number; limit: number; loginUid: string
+}) {
+  const messages = await wukongClient().syncMessages(
+    input.channelId, input.channelType, input.limit, input.loginUid,
+  )
+  return messages.map((message) => ({
+    clientMsgNo: message.clientMsgNo,
+    fromUid: message.fromUid,
+    authoredByAgent: Boolean(message.payload.refs?.agentId),
+  }))
+}
+
 export function startMission(
   work: AgentWorkItem,
   input: {
@@ -141,14 +154,7 @@ export function startMission(
   },
 ) {
   return startLearningMission(pool, (run) => withTransaction(pool, run), {
-    syncMessages: async ({ channelId, channelType, limit, loginUid }) => {
-      const messages = await wukongClient().syncMessages(channelId, channelType, limit, loginUid)
-      return messages.map((message) => ({
-        clientMsgNo: message.clientMsgNo,
-        fromUid: message.fromUid,
-        authoredByAgent: Boolean(message.payload.refs?.agentId),
-      }))
-    },
+    syncMessages: syncLearningMessages,
     publishMission: async ({ channelId, channelType, senderId, mission, courseId }) => {
       await wukongClient().sendMessage(channelId, channelType, senderId, {
         version: 1, kind: 'learning_mission', clientMsgNo: `learning-mission-${mission.id}`,
@@ -167,6 +173,21 @@ export function startMission(
     channelId: work.channelId, triggerClientMsgNo: work.triggerClientMsgNo,
     ...(work.threadRootClientMsgNo ? { threadRootClientMsgNo: work.threadRootClientMsgNo } : {}),
     ...input,
+  })
+}
+
+export function recordAttempt(
+  work: AgentWorkItem,
+  input: {
+    activityId?: string; missionStepId?: string; evidenceClientMsgNos?: string[]
+    documentIds?: string[]; canvasFrameIds?: string[]; assistance?: 'none'|'hint'|'guided'
+  },
+) {
+  return recordLearningAttempt(pool, (run) => withTransaction(pool, run), {
+    syncMessages: syncLearningMessages,
+    metric: inc,
+  }, {
+    companyId: work.companyId, channelId: work.channelId, agentId: work.agentId, ...input,
   })
 }
 

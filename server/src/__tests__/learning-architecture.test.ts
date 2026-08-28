@@ -88,6 +88,15 @@ test('mission start uses the public vertical slice instead of the legacy service
   assert.match(repository, /ON CONFLICT\(course_id,learner_id,conversation_id,trigger_client_msg_no\)/)
 })
 
+test('Agent OS attempt recording uses the tenant-scoped Learning vertical slice', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_attempts/)
+  assert.doesNotMatch(learningRuntimeSource, /recordAttempt,[\s\S]*from '..\/..\/learning\/service\.js'/)
+  assert.match(learningApplicationSource, /recordLearningAttempt/)
+  assert.match(repository, /mission\.conversation_id=\$4 AND mission\.learner_id=\$5/)
+  assert.match(repository, /document\.company_id=\$2 AND document\.project_id=\$3/)
+  assert.match(repository, /canvas\.company_id=\$2 AND canvas\.project_id=\$3/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
   const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')

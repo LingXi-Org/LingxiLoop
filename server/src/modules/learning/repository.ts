@@ -1122,6 +1122,67 @@ export async function learningChannelType(
   return Number(rows[0]?.channel_type ?? 2)
 }
 
+export async function findLearningDocumentEvidence(
+  db: Queryable,
+  args: { companyId: string; projectId: string; documentId: string },
+): Promise<{ id: string; revision: number; authorId: string } | null> {
+  const { rows } = await db.query<{ id: string; revision: number; author_id: string }>(
+    `SELECT document.id,COALESCE(MAX(document_update.id),0)::int AS revision,
+            COALESCE((array_agg(document_update.author_id ORDER BY document_update.id DESC)
+              FILTER(WHERE document_update.author_id IS NOT NULL))[1],document.created_by) AS author_id
+       FROM documents document
+       LEFT JOIN document_updates document_update ON document_update.document_id=document.id
+      WHERE document.id=$1 AND document.company_id=$2 AND document.project_id=$3
+      GROUP BY document.id`,
+    [args.documentId,args.companyId,args.projectId],
+  )
+  const row = rows[0]
+  return row ? { id: row.id, revision: Number(row.revision), authorId: row.author_id } : null
+}
+
+export async function findLearningCanvasEvidence(
+  db: Queryable,
+  args: { companyId: string; projectId: string; frameId: string },
+): Promise<{ id: string; revision: number; authorId: string } | null> {
+  const { rows } = await db.query<{ id: string; revision: number; updated_by: string }>(
+    `SELECT frame.id,frame.revision,frame.updated_by
+       FROM canvas_frames frame JOIN canvases canvas ON canvas.id=frame.canvas_id
+      WHERE frame.id=$1 AND canvas.company_id=$2 AND canvas.project_id=$3`,
+    [args.frameId,args.companyId,args.projectId],
+  )
+  const row = rows[0]
+  return row ? { id: row.id, revision: Number(row.revision), authorId: row.updated_by } : null
+}
+
+export async function insertAgentLearningAttempt(
+  db: Queryable,
+  args: {
+    id: string; companyId: string; courseId: string; channelId: string; learnerId: string
+    activityId?: string; missionStepId?: string; assistance: 'none'|'hint'|'guided'
+    evidence: Record<string, unknown>
+  },
+): Promise<boolean> {
+  const result = await db.query(
+    `INSERT INTO learning_attempts
+       (id,course_id,company_id,learner_id,activity_id,mission_step_id,assistance,evidence)
+     SELECT $1,course.id,course.company_id,$5,activity.id,step.id,$8,$9::jsonb
+       FROM courses course
+       LEFT JOIN learning_activities activity
+         ON activity.id=$6 AND activity.course_id=course.id AND activity.company_id=course.company_id
+           AND activity.status='published'
+       LEFT JOIN learning_mission_steps step ON step.id=$7
+       LEFT JOIN learning_missions mission
+         ON mission.id=step.mission_id AND mission.course_id=course.id
+           AND mission.company_id=course.company_id AND mission.conversation_id=$4 AND mission.learner_id=$5
+      WHERE course.id=$2 AND course.company_id=$3
+        AND (($6::text IS NOT NULL AND activity.id IS NOT NULL AND $7::text IS NULL)
+          OR ($7::text IS NOT NULL AND mission.id IS NOT NULL AND $6::text IS NULL))`,
+    [args.id,args.courseId,args.companyId,args.channelId,args.learnerId,args.activityId ?? null,
+      args.missionStepId ?? null,args.assistance,JSON.stringify(args.evidence)],
+  )
+  return Boolean(result.rowCount)
+}
+
 export async function findNotificationPreferences(
   db: Queryable,
   companyId: string,
