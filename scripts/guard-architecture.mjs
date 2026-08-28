@@ -90,6 +90,13 @@ if (/from ['"][^'"]*(?:db\/|redis\.js)|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDA
 if (/modules\/conversations\/(?:application|contracts|facade|repository)\.js/.test(conversationMetadataCli)) {
   violations.push('server/src/agents/cli/conversation-metadata.ts: conversation metadata bypasses public.ts')
 }
+const conversationDeliveryCli = await read(resolve('server/src/agents/cli/conversation-delivery.ts'))
+if (/from ['"][^'"]*(?:db\/|redis\.js)|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is.test(conversationDeliveryCli)) {
+  violations.push('server/src/agents/cli/conversation-delivery.ts: conversation delivery bypasses its domain')
+}
+if (/modules\/conversations\/(?:application|contracts|facade|repository)\.js/.test(conversationDeliveryCli)) {
+  violations.push('server/src/agents/cli/conversation-delivery.ts: conversation delivery bypasses public.ts')
+}
 
 const observabilityRouter = await read(resolve('server/src/modules/observability/router.ts'))
 if (/\/agents\/observability\/runs/.test(observabilityRouter)) violations.push('server/src/modules/observability/router.ts: retired observability HTTP view is forbidden')

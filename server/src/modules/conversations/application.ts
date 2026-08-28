@@ -11,6 +11,7 @@ import type {
 } from './contracts.js'
 import {
   createConversationBundle,
+  findActiveAgentCompanyId,
   findConversation,
   findBindingForUpdate,
   findConversationForUpdate,
@@ -19,8 +20,10 @@ import {
   findDirectConversation,
   hasManagedPulse,
   listCourseHumanIds,
+  listActiveConversationMutes,
   listParticipants,
   participantAllowedInProject,
+  markConversationReadNow,
   searchWorkspace,
   setMute,
   updateConversation,
@@ -61,6 +64,7 @@ export interface ConversationInfrastructure {
     kind: 'joined' | 'left'
     participantId: string
   }): Promise<void>
+  clearReplyHold(agentId: string, conversationId: string): Promise<void>
 }
 
 function deterministicId(prefix: string, ...parts: string[]): string {
@@ -335,6 +339,54 @@ export class ConversationsApplication {
     if (!conversation.members.includes(scope.userId)) throw new ConversationApplicationError('not_member', 'not a member')
     await setMute(this.db, { ...scope, conversationId, mute, until })
     return { ok: true as const, muted: mute, mutedUntil: mute && until ? until.toISOString() : null }
+  }
+
+  async listAgentMutes(agentId: string) {
+    const companyId = await findActiveAgentCompanyId(this.db, agentId)
+    if (!companyId) throw new ConversationApplicationError('not_found', `unknown agent ${agentId} (no company)`)
+    return listActiveConversationMutes(this.db, companyId, agentId)
+  }
+
+  async setAgentMuted(
+    agentId: string,
+    conversationId: string,
+    mute: boolean,
+    until: Date | null,
+  ) {
+    const context = await this.requireAgentContext(agentId, conversationId)
+    const changed = await this.infrastructure.transaction(async (db) => {
+      const conversation = await findConversationForUpdate(db, context.companyId, conversationId)
+      if (!conversation) throw new ConversationApplicationError('not_found', `conversation not found: ${conversationId}`)
+      if (!conversation.members.includes(agentId)) {
+        throw new ConversationApplicationError('not_member', `you are not a member of ${conversationId}`)
+      }
+      if (conversation.kind === 'direct' && mute) {
+        throw new ConversationApplicationError('invalid_direct', 'direct conversations always deliver; mute a group instead')
+      }
+      const updated = await setMute(db, {
+        userId: agentId,
+        companyId: context.companyId,
+        conversationId,
+        until,
+        mute,
+      })
+      if (mute) {
+        await markConversationReadNow(db, {
+          userId: agentId,
+          companyId: context.companyId,
+          conversationId,
+        })
+      }
+      return updated
+    })
+    if (mute) await this.infrastructure.clearReplyHold(agentId, conversationId)
+    return {
+      ok: true as const,
+      changed,
+      title: context.title,
+      muted: mute,
+      mutedUntil: mute && until ? until.toISOString() : null,
+    }
   }
 
   async addMember(scope: ConversationScope, conversationId: string, participantId: string) {

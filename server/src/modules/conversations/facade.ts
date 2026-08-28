@@ -1,4 +1,5 @@
 import { postMembershipSystemMessage } from '../../agents/membership.js'
+import { clearHold } from '../../agents/seen-boundary.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { wukongClient } from '../../im/wukong.js'
@@ -13,4 +14,5 @@ export const conversationsApplication = new ConversationsApplication(pool, {
   publishTyping: (event) => publish(CH_TYPING, event),
   isTeacherRoom: (companyId, conversationId) => isTeacherRoom(conversationId, companyId),
   postMembershipMessage: async (args) => { await postMembershipSystemMessage(args) },
+  clearReplyHold: async (agentId, conversationId) => { await clearHold(agentId, `reply:${conversationId}`) },
 })

@@ -159,6 +159,17 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
     conversationMetadataCli,
     /modules\/conversations\/(?:application|contracts|facade|repository)\.js/,
   )
+  const conversationDeliveryCli = await readFile(
+    new URL('../agents/cli/conversation-delivery.ts', import.meta.url),
+    'utf8',
+  )
+  assert.match(conversationDeliveryCli, /modules\/conversations\/public\.js/)
+  assert.doesNotMatch(conversationDeliveryCli, /from ['"][^'"]*(?:db\/|redis\.js)|\bpool\.query\b/)
+  assert.doesNotMatch(conversationDeliveryCli, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  assert.doesNotMatch(
+    conversationDeliveryCli,
+    /modules\/conversations\/(?:application|contracts|facade|repository)\.js/,
+  )
   await assert.rejects(readFile(new URL('../calendar.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../email-retry.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })

@@ -18,6 +18,7 @@ import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } fro
 import { stripLoneSurrogates } from './text-safety.js'
 import { createBoardCommands } from './cli/board.js'
 import { createCalendarCommand } from './cli/calendar.js'
+import { createConversationDeliveryCommands } from './cli/conversation-delivery.js'
 import { createConversationMetadataCommands } from './cli/conversation-metadata.js'
 import { createEmailCommand } from './cli/email.js'
 import { createHelpCommand } from './cli/help.js'
@@ -786,105 +787,7 @@ async function cmdAck(parsed: ParsedArgs): Promise<CliResult> {
   return ok(`acked ${convoId}`)
 }
 
-function parseMuteUntil(parsed: ParsedArgs): Date | null {
-  const untilRaw = typeof parsed.flags.until === 'string' ? parsed.flags.until : null
-  const forRaw = typeof parsed.flags.for === 'string' ? parsed.flags.for : null
-  if (untilRaw && forRaw) throw new Error('use either --until or --for, not both')
-  if (untilRaw) {
-    const until = new Date(untilRaw)
-    if (Number.isNaN(until.getTime())) throw new Error('invalid --until timestamp')
-    if (until.getTime() <= Date.now()) throw new Error('--until must be in the future')
-    return until
-  }
-  if (!forRaw) return null
-  const match = /^(\d+)(m|h|d|w)$/i.exec(forRaw.trim())
-  if (!match) throw new Error('invalid --for duration (use e.g. 30m, 2h, 1d, or 1w)')
-  const amount = Number(match[1])
-  const unitMs = { m: 60_000, h: 3_600_000, d: 86_400_000, w: 604_800_000 }[match[2].toLowerCase() as 'm' | 'h' | 'd' | 'w']
-  if (amount < 1 || amount * unitMs > 90 * 86_400_000) throw new Error('--for duration must be between 1 minute and 90 days')
-  return new Date(Date.now() + amount * unitMs)
-}
-
-async function cmdMute(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  if (parsed.positional[0] === 'list') {
-    const { rows } = await pool.query<{ id: string; title: string; muted_until: string | null }>(
-      `SELECT c.id, c.title, mu.muted_until
-         FROM conversation_mutes mu
-         JOIN conversations c ON c.id = mu.conversation_id
-        WHERE mu.user_id = $1 AND c.company_id = $2
-          AND (mu.muted_until IS NULL OR mu.muted_until > NOW())
-        ORDER BY mu.muted_at DESC`,
-      [me, companyId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    if (rows.length === 0) return ok('(no muted groups)')
-    return ok(rows.map((row) => `• ${row.id}  "${row.title}"  — ${row.muted_until ? `until ${new Date(row.muted_until).toISOString()}` : 'until you follow it'}`).join('\n'))
-  }
-  const conversationId = parsed.positional[0]
-  if (!conversationId) return err('usage: mute <conversation_id> [--for 30m|2h|1d|1w] [--until <iso>]  OR  mute list')
-  let until: Date | null
-  try { until = parseMuteUntil(parsed) } catch (error) { return err(error instanceof Error ? error.message : String(error)) }
-  const { rows } = await pool.query<{ kind: string; title: string; members: string[] }>(
-    `SELECT kind, title, members FROM conversations WHERE id = $1 AND company_id = $2`,
-    [conversationId, companyId],
-  )
-  const conversation = rows[0]
-  if (!conversation) return err(`conversation not found: ${conversationId}`)
-  if (!conversation.members.includes(me)) return err(`you are not a member of ${conversationId}`)
-  if (conversation.kind === 'direct') return err('direct conversations always deliver; mute a group instead')
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    await client.query(
-      `INSERT INTO conversation_mutes (user_id, conversation_id, muted_at, muted_until)
-       VALUES ($1, $2, NOW(), $3)
-       ON CONFLICT (user_id, conversation_id)
-       DO UPDATE SET muted_at = NOW(), muted_until = EXCLUDED.muted_until`,
-      [me, conversationId, until],
-    )
-    // Muting is a deliberate stand-down. Seal the current unread tail so
-    // following later resumes from that point instead of replaying a backlog.
-    await client.query(
-      `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-       VALUES ($1, $2, NOW())
-       ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = NOW()`,
-      [me, conversationId],
-    )
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => {})
-    throw error
-  } finally {
-    client.release()
-  }
-  void clearHold(me, `reply:${conversationId}`)
-  const expiry = until ? ` until ${until.toISOString()}` : ' until you follow it again'
-  return ok(
-    `Muted ${conversationId} ("${conversation.title}")${expiry}. ` +
-    `New group messages will not wake you or enter your inbox. A direct @${me} mention or a reply quoting your message still gets through. ` +
-    `Resume with: lingxiloop follow ${conversationId}`,
-  )
-}
-
-async function cmdFollow(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const conversationId = parsed.positional[0]
-  if (!conversationId) return err('usage: follow <conversation_id>')
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  const { rowCount } = await pool.query(
-    `DELETE FROM conversation_mutes mu USING conversations c
-      WHERE mu.user_id = $1 AND mu.conversation_id = $2
-        AND c.id = mu.conversation_id AND c.company_id = $3`,
-    [me, conversationId, companyId],
-  )
-  return ok(rowCount
-    ? `Following ${conversationId} again. New messages will resume normal inbox delivery.`
-    : `${conversationId} was not muted; normal delivery is already active.`)
-}
+const { cmdFollow, cmdMute } = createConversationDeliveryCommands({ ok, err })
 
 // Membership system-message + counter helpers live in
 // `agents/membership.ts` so the HTTP endpoints (POST /members,

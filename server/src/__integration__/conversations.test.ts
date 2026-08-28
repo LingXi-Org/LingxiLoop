@@ -195,6 +195,49 @@ test('[integration] Agent metadata commands share the locked Conversations domai
   assert.deepEqual(stored.rows, [{ title: 'Canonical title', topic: 'One domain path' }])
 })
 
+test('[integration] Agent mute seals the read cursor in the same domain transaction', async () => {
+  const { companyId, agentId, currentId } = await seedGroupCreationFixture()
+  const created = await fetch(`${baseUrl}/api/conversations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({
+      clientRequestId: 'agent-delivery-0001',
+      title: 'Delivery group',
+      members: [agentId],
+      leaderId: agentId,
+      workspaceId: currentId,
+    }),
+  })
+  assert.equal(created.status, 201)
+  const conversationId = (await created.json() as { id: string }).id
+  const { runCli } = await import('../agents/cli.js')
+
+  const muted = await runCli(['mute', conversationId, '--for', '30m', '--as', agentId])
+  assert.equal(muted.ok, true, muted.text)
+  const persisted = await pool.query<{ muted: boolean; read: boolean }>(
+    `SELECT
+       EXISTS(SELECT 1 FROM conversation_mutes
+         WHERE user_id = $1 AND conversation_id = $2) AS muted,
+       EXISTS(SELECT 1 FROM conversation_reads
+         WHERE user_id = $1 AND conversation_id = $2) AS read`,
+    [agentId, conversationId],
+  )
+  assert.deepEqual(persisted.rows, [{ muted: true, read: true }])
+
+  const listed = await runCli(['mute', 'list', '--json', '--as', agentId])
+  assert.equal(listed.ok, true, listed.text)
+  assert.equal((JSON.parse(listed.text) as Array<{ id: string }>)[0]?.id, conversationId)
+
+  const followed = await runCli(['follow', conversationId, '--as', agentId])
+  assert.match(followed.text, /^Following/)
+  const alreadyFollowing = await runCli(['follow', conversationId, '--as', agentId])
+  assert.match(alreadyFollowing.text, /was not muted/)
+  assert.equal((await pool.query(
+    `SELECT 1 FROM conversation_mutes WHERE user_id = $1 AND conversation_id = $2`,
+    [agentId, conversationId],
+  )).rowCount, 0)
+})
+
 test('[integration] new group rejects a missing current workspace', async () => {
   const { companyId, agentId } = await seedGroupCreationFixture()
   const res = await fetch(`${baseUrl}/api/conversations`, {

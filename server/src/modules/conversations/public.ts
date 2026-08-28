@@ -46,3 +46,16 @@ export function setAgentConversationTitle(
 ) {
   return conversationsApplication.setAgentTitle(agentId, conversationId, title, expectedTitle)
 }
+
+export function listAgentConversationMutes(agentId: string) {
+  return conversationsApplication.listAgentMutes(agentId)
+}
+
+export function setAgentConversationMuted(
+  agentId: string,
+  conversationId: string,
+  mute: boolean,
+  until: Date | null,
+) {
+  return conversationsApplication.setAgentMuted(agentId, conversationId, mute, until)
+}

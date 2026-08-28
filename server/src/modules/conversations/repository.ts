@@ -136,6 +136,20 @@ export interface AgentConversationContextRow {
   members: string[]
 }
 
+export async function findActiveAgentCompanyId(
+  db: Queryable,
+  agentId: string,
+): Promise<string | null> {
+  const { rows } = await db.query<{ company_id: string }>(
+    `SELECT company_id
+       FROM participants
+      WHERE id = $1 AND kind = 'agent' AND departed_at IS NULL
+      LIMIT 1`,
+    [agentId],
+  )
+  return rows[0]?.company_id ?? null
+}
+
 export async function findAgentConversationContext(
   db: Queryable,
   agentId: string,
@@ -277,18 +291,18 @@ export async function updateConversation(
 export async function setMute(
   db: Queryable,
   args: { userId: string; companyId: string; conversationId: string; until: Date | null; mute: boolean },
-): Promise<void> {
+): Promise<boolean> {
   if (!args.mute) {
-    await db.query(
+    const result = await db.query(
       `DELETE FROM conversation_mutes mute
         USING conversations conversation
        WHERE mute.user_id=$1 AND mute.conversation_id=$2
          AND conversation.id=mute.conversation_id AND conversation.company_id=$3`,
       [args.userId, args.conversationId, args.companyId],
     )
-    return
+    return (result.rowCount ?? 0) > 0
   }
-  await db.query(
+  const result = await db.query(
     `INSERT INTO conversation_mutes (user_id,conversation_id,muted_at,muted_until)
      SELECT $1,$2,NOW(),$3
        FROM conversations
@@ -297,6 +311,43 @@ export async function setMute(
      DO UPDATE SET muted_at=NOW(),muted_until=EXCLUDED.muted_until`,
     [args.userId, args.conversationId, args.until, args.companyId],
   )
+  return (result.rowCount ?? 0) > 0
+}
+
+export async function markConversationReadNow(
+  db: Queryable,
+  args: { userId: string; companyId: string; conversationId: string },
+): Promise<void> {
+  await db.query(
+    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
+     SELECT $1, conversation.id, NOW()
+       FROM conversations conversation
+      WHERE conversation.id = $2
+        AND conversation.company_id = $3
+        AND conversation.members @> to_jsonb(ARRAY[$1::text])
+     ON CONFLICT (user_id, conversation_id)
+     DO UPDATE SET last_read_at = NOW()`,
+    [args.userId, args.conversationId, args.companyId],
+  )
+}
+
+export async function listActiveConversationMutes(
+  db: Queryable,
+  companyId: string,
+  userId: string,
+): Promise<Array<{ id: string; title: string; mutedUntil: string | null }>> {
+  const { rows } = await db.query<{ id: string; title: string; muted_until: string | null }>(
+    `SELECT conversation.id, conversation.title, mute.muted_until
+       FROM conversation_mutes mute
+       JOIN conversations conversation ON conversation.id = mute.conversation_id
+      WHERE mute.user_id = $1
+        AND conversation.company_id = $2
+        AND conversation.members @> to_jsonb(ARRAY[$1::text])
+        AND (mute.muted_until IS NULL OR mute.muted_until > NOW())
+      ORDER BY mute.muted_at DESC`,
+    [userId, companyId],
+  )
+  return rows.map((row) => ({ id: row.id, title: row.title, mutedUntil: row.muted_until }))
 }
 
 export async function participantAllowedInProject(
