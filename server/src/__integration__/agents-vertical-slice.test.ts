@@ -103,7 +103,7 @@ test('[integration] Agent CLI directory is tenant scoped through the Agents publ
   assert.ok(participantIds.includes(teammateId))
   assert.ok(!participantIds.includes(foreign.agentId))
 
-  const statuses = await runCli(['status', '--json', '--as', agentId])
+  const statuses = await runCli(['participants-status', '--json', '--as', agentId])
   assert.equal(statuses.ok, true, statuses.text)
   assert.ok(!(JSON.parse(statuses.text) as Array<{ id: string }>).some((row) => row.id === foreign.agentId))
 
