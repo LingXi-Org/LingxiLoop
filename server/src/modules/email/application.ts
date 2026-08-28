@@ -1,5 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { ProviderSendResult, SendArgs } from '../../email.js'
+import type { ProviderSendResult, SendArgs } from './provider.js'
 import type {
   EmailHtmlPayload,
   EmailScope,
@@ -52,7 +52,12 @@ export interface EmailInfrastructure {
     selfAddresses: string[]
   }): { to: string[]; cc: string[] }
   send(args: SendArgs): Promise<ProviderSendResult>
-  completeDelivery(messageId: string, result: ProviderSendResult, fallbackSmtpMessageId: string): Promise<void>
+  completeDelivery(
+    companyId: string,
+    messageId: string,
+    result: ProviderSendResult,
+    fallbackSmtpMessageId: string,
+  ): Promise<void>
   findOrCreateConversation(args: {
     companyId: string
     inReplyTo: string | null
@@ -155,7 +160,7 @@ export class EmailApplication {
         path: attachment.publicUrl,
       })),
     })
-    await this.infrastructure.completeDelivery(persisted.messageId, result, messageId)
+    await this.infrastructure.completeDelivery(scope.companyId, persisted.messageId, result, messageId)
     return this.sendPayload(persisted.messageId, conversation.conversationId, result)
   }
 
@@ -236,7 +241,7 @@ export class EmailApplication {
         path: attachment.publicUrl,
       })),
     })
-    await this.infrastructure.completeDelivery(persisted.messageId, result, messageId)
+    await this.infrastructure.completeDelivery(scope.companyId, persisted.messageId, result, messageId)
     await markEmailConversationRead(this.db, scope.companyId, scope.userId, target.conversation_id)
     return this.sendPayload(persisted.messageId, target.conversation_id, result)
   }

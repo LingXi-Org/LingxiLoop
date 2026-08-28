@@ -1,20 +1,21 @@
 import { pool } from '../../db/pool.js'
 import { env } from '../../env.js'
 import {
-  assertEmailProviderConfigured,
-  completeOutboundEmail,
-  ensureParticipantAddress,
-  findOrCreateEmailConversation,
   formatAddress,
   mintMessageId,
   normalizeMessageId,
   parseAddress,
-  persistEmailMessage,
   sanitizeEmailHtml,
   sanitizeSubject,
-  sendViaProvider,
   splitReplyAddresses,
-} from '../../email.js'
+} from './addressing.js'
+import { assertEmailProviderConfigured, sendViaProvider } from './provider.js'
+import {
+  completeOutboundEmail,
+  ensureParticipantAddress,
+  findOrCreateEmailConversation,
+  persistEmailMessage,
+} from './runtime.js'
 import { storage } from '../../storage.js'
 import { EmailApplication } from './application.js'
 

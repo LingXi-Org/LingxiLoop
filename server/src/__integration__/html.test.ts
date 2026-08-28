@@ -20,7 +20,7 @@ import {
   seedUserMembership, teardownAll,
 } from './_helpers.js'
 import { pool } from '../db/pool.js'
-import { findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
+import { findOrCreateEmailConversation, persistEmailMessage } from '../modules/email/index.js'
 
 const ME_USER_ID = 'u-test-html'
 let server: Server

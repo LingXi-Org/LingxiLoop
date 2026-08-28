@@ -188,7 +188,7 @@ test('[integration] inbound SES boomerang is deduplicated against the outbound r
   // the bug the user observed in production. Verify the heuristic catches
   // it: same from/to/subject within 10 minutes ⇒ inbound returns
   // deduplicated and writes NO new row.
-  const { findOrCreateEmailConversation, persistEmailMessage, mintMessageId } = await import('../email.js')
+  const { findOrCreateEmailConversation, persistEmailMessage, mintMessageId } = await import('../modules/email/index.js')
   const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
   const fromAddrFull = `yetone <user-x@${process.env.EMAIL_DOMAIN}>`
 
@@ -242,7 +242,7 @@ test('[integration] inbound reply threads back to the original outbound conversa
   // must look it up against email_messages.smtp_message_id and reuse the
   // same conversation rather than spawning a new one. Bug version split
   // every reply into a fresh thread.
-  const { findOrCreateEmailConversation, persistEmailMessage, mintMessageId } = await import('../email.js')
+  const { findOrCreateEmailConversation, persistEmailMessage, mintMessageId } = await import('../modules/email/index.js')
   const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
 
   // 1. Seed the outbound row as if the user just composed + sent.

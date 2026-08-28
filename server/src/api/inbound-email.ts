@@ -37,7 +37,7 @@ import {
   persistEmailMessage,
   recordExternalContact,
   computeAgentAddress,
-} from '../email.js'
+} from '../modules/email/index.js'
 
 /** Capture the raw body bytes so we can HMAC-verify before the global
  *  express.json (in web.ts) gets to it — `verify` runs as part of

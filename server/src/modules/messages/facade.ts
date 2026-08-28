@@ -1,7 +1,7 @@
 import { bumpClimate } from '../../agents/climate.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
-import { replyInEmailConversation } from '../../email.js'
+import { replyInEmailConversation } from '../email/index.js'
 import { CH_REACTIONS, publish } from '../../redis.js'
 import { storage } from '../../storage.js'
 import { MessagesApplication } from './application.js'

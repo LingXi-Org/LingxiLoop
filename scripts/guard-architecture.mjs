@@ -84,6 +84,14 @@ for (const file of server) {
   const source = await read(file)
   const fileName = name(file)
   if (fileName === 'server/src/admin.ts') violations.push(`${fileName}: retired root admin implementation is forbidden`)
+  if (fileName === 'server/src/email.ts') violations.push(`${fileName}: retired root email implementation is forbidden`)
+  const importsEmailRouterAtCompositionRoot = fileName === 'server/src/api/router.ts'
+    && /modules\/email\/router\.js/.test(source)
+  if (!fileName.startsWith('server/src/modules/email/')
+    && /modules\/email\/(?:addressing|application|facade|provider|runtime|(?:[a-z-]+-)?repository|router)\.js/.test(source)
+    && !importsEmailRouterAtCompositionRoot) {
+    violations.push(`${fileName}: Email access must use modules/email/index.ts`)
+  }
   if (/\bnew\s+OpenAI\s*\(/.test(source) && fileName !== 'server/src/llm-client.ts') violations.push(`${fileName}: OpenAI construction bypasses llm-client.ts`)
   if (/\bnew\s+S3Client\s*\(/.test(source) && fileName !== 'server/src/storage.ts') violations.push(`${fileName}: object storage construction bypasses storage.ts`)
   if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|SUB2API|DEEPSEEK_API_KEY/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)

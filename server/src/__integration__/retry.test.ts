@@ -19,7 +19,7 @@ import { test, before, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, teardownAll } from './_helpers.js'
 import { pool } from '../db/pool.js'
-import { __setEmailProviderOverrideForTesting, findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
+import { __setEmailProviderOverrideForTesting, findOrCreateEmailConversation, persistEmailMessage } from '../modules/email/index.js'
 
 before(async () => {
   await ensureSchemaOnce()

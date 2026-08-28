@@ -14,7 +14,7 @@ import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
-import { __setEmailProviderOverrideForTesting, findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
+import { __setEmailProviderOverrideForTesting, findOrCreateEmailConversation, persistEmailMessage } from '../modules/email/index.js'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent,
   seedUserMembership, teardownAll,
@@ -136,7 +136,7 @@ test('[integration] reply continues the thread when the latest row is our own ou
   // OUR OWN outbound (parent.from = self), get an empty TO list, and
   // throw "no remaining recipients". The reply should instead continue
   // the thread to the same recipients we just addressed.
-  const { findOrCreateEmailConversation, persistEmailMessage } = await import('../email.js')
+  const { findOrCreateEmailConversation, persistEmailMessage } = await import('../modules/email/index.js')
   const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
 

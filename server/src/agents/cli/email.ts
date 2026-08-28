@@ -42,7 +42,7 @@ export function createEmailCommand(dependencies: EmailCommandDependencies) {
     query?: string,
   ): Promise<EmailContact[]> {
     const out: EmailContact[] = []
-    const { computeAgentAddress } = await import('../../email.js')
+    const { computeAgentAddress } = await import('../../modules/email/index.js')
     // Optional fuzzy filter. Applied uniformly across name / id / email so a
     // single query like "wey" matches an agent's id, a human's display
     // name, OR an external email-contacts row. We do the match in JS (after
@@ -121,7 +121,7 @@ export function createEmailCommand(dependencies: EmailCommandDependencies) {
     // address instead (which lives in `email_contacts` and shows up under
     // `lingxiloop email contacts`).
     if (raw.startsWith('external:')) return null
-    const { parseAddress, ensureParticipantAddress } = await import('../../email.js')
+    const { parseAddress, ensureParticipantAddress } = await import('../../modules/email/index.js')
     const direct = parseAddress(raw)
     if (direct) return direct
     // Participant id lookup. Per-kind delivery target:
@@ -252,7 +252,7 @@ export function createEmailCommand(dependencies: EmailCommandDependencies) {
   }
   
   async function cmdEmailWhoami(me: string, companyId: string): Promise<CliResult> {
-    const { ensureParticipantAddress } = await import('../../email.js')
+    const { ensureParticipantAddress } = await import('../../modules/email/index.js')
     const { env } = await import('../../env.js')
     const addr = await ensureParticipantAddress(me, companyId)
     if (!addr) {
@@ -398,7 +398,7 @@ export function createEmailCommand(dependencies: EmailCommandDependencies) {
       persistEmailMessage,
       mintMessageId,
       sanitizeSubject,
-    } = await import('../../email.js')
+    } = await import('../../modules/email/index.js')
     const subject = sanitizeSubject(unescapeChat(String(parsed.flags.subject ?? '')))
     const body = unescapeChat(String(parsed.flags.body ?? '')).trim()
     // --attach takes a comma-separated list of paths (also accepts the same
@@ -568,7 +568,7 @@ export function createEmailCommand(dependencies: EmailCommandDependencies) {
       ensureParticipantAddress, formatAddress,
       sendViaProvider, persistEmailMessage, mintMessageId, normalizeMessageId,
       sanitizeSubject, splitReplyAddresses,
-    } = await import('../../email.js')
+    } = await import('../../modules/email/index.js')
     const sender = await ensureParticipantAddress(me, companyId)
     if (!sender) return err('agent has no email address (EMAIL_DOMAIN unset or company missing)')
   

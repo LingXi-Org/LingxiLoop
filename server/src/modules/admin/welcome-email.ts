@@ -1,5 +1,5 @@
 import { env } from '../../env.js'
-import { formatAddress, mintMessageId, sendViaProvider } from '../../email.js'
+import { formatAddress, mintMessageId, sendViaProvider } from '../email/index.js'
 
 function escapeHtml(value: string): string {
   return value

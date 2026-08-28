@@ -41,7 +41,7 @@ import { pool } from '../db/pool.js'
 import {
   findOrCreateEmailConversation, persistEmailMessage,
   sendViaProvider, mintMessageId, formatAddress,
-} from '../email.js'
+} from '../modules/email/index.js'
 
 const LIVE = process.env.RESEND_LIVE_TEST === '1' && Boolean(process.env.RESEND_API_KEY)
 

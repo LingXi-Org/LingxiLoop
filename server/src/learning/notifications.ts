@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import { formatAddress, mintMessageId, sendViaProvider } from '../email.js'
+import { formatAddress, mintMessageId, sendViaProvider } from '../modules/email/index.js'
 import { inc } from '../metrics.js'
 import { findNotificationPreferences } from '../modules/learning/repository.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'

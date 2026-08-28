@@ -12,14 +12,19 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  sanitizeSubject,
-  splitReplyAddresses,
-  sanitizeEmailHtml,
-  parseAddress,
+  computeAgentAddress,
   formatAddress,
   normalizeMessageId,
-  computeAgentAddress,
-} from '../email.js'
+  parseAddress,
+  sanitizeEmailHtml,
+  sanitizeSubject,
+  splitReplyAddresses,
+} from '../modules/email/addressing.js'
+import {
+  __setEmailProviderOverrideForTesting,
+  assertEmailProviderConfigured,
+  sendViaProvider,
+} from '../modules/email/provider.js'
 
 /* ============================== sanitizeSubject ============================ */
 
@@ -206,4 +211,42 @@ test('computeAgentAddress strips dots from id portion', () => {
   // The id portion ("a.b.c") gets sanitized — dots removed (replaced with -).
   // The slug separator remains the LAST dot only.
   assert.equal(addr.split('@')[0].split('.').length, 2, `expected exactly one dot separator, got: ${addr}`)
+})
+
+test('email provider is unavailable without configuration or an explicit test seam', async () => {
+  const previous = process.env.RESEND_API_KEY
+  delete process.env.RESEND_API_KEY
+  __setEmailProviderOverrideForTesting(null)
+  try {
+    assert.throws(() => assertEmailProviderConfigured(), /RESEND_API_KEY is required/)
+    await assert.rejects(sendViaProvider({
+      from: 'sender@example.com',
+      to: ['recipient@example.com'],
+      subject: 'Unavailable provider',
+      text: 'This must not fake success.',
+    }), /RESEND_API_KEY is required/)
+  } finally {
+    if (previous === undefined) delete process.env.RESEND_API_KEY
+    else process.env.RESEND_API_KEY = previous
+  }
+})
+
+test('email provider tests use the explicit injected seam', async () => {
+  __setEmailProviderOverrideForTesting(async (input) => ({
+    ok: true,
+    smtpMessageId: input.messageId ?? 'provider-message-id',
+    error: null,
+  }))
+  try {
+    assert.doesNotThrow(() => assertEmailProviderConfigured())
+    assert.deepEqual(await sendViaProvider({
+      from: 'sender@example.com',
+      to: ['recipient@example.com'],
+      subject: 'Injected provider',
+      text: 'Delivered through the test seam.',
+      messageId: 'explicit-message-id',
+    }), { ok: true, smtpMessageId: 'explicit-message-id', error: null })
+  } finally {
+    __setEmailProviderOverrideForTesting(null)
+  }
 })

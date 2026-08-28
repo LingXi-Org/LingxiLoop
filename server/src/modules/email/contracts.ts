@@ -49,3 +49,41 @@ export interface EmailSendPayload {
 export type EmailHtmlPayload =
   | { kind: 'empty' }
   | { kind: 'html'; html: string }
+
+export interface PersistEmailMessageInput {
+  conversationId: string
+  companyId: string
+  authorId: string
+  direction: 'in' | 'out'
+  transportStatus: 'queued' | 'sending' | 'sent' | 'failed' | 'received'
+  transportError?: string | null
+  smtpMessageId: string | null
+  inReplyTo: string | null
+  references: string[]
+  subject: string
+  fromAddr: string
+  toAddrs: string[]
+  ccAddrs?: string[]
+  bccAddrs?: string[]
+  body: string
+  html?: string | null
+  rawSizeBytes?: number | null
+  autoSubmitted?: boolean
+  idempotencyKey?: string
+  attachments?: Array<{
+    filename: string
+    mimeType: string
+    sizeBytes: number
+    storageKey: string | null
+    truncated?: boolean
+  }>
+}
+
+export interface PersistedEmailAttachment {
+  id: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+  storageKey: string | null
+  truncated: boolean
+}

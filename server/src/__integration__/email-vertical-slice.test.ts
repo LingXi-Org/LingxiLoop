@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import { after, afterEach, before, beforeEach, test } from 'node:test'
-import { __setEmailProviderOverrideForTesting } from '../email.js'
+import {
+  __setEmailProviderOverrideForTesting,
+  findOrCreateEmailConversation,
+  persistEmailMessage,
+} from '../modules/email/index.js'
 import { pool } from '../db/pool.js'
 import {
   buildApiTestApp,
@@ -96,4 +100,47 @@ test('[integration] explicit provider injection uses the real persistence path w
     `SELECT company_id, transport_status FROM email_messages`,
   )
   assert.deepEqual(stored.rows, [{ company_id: COMPANY_ID, transport_status: 'sent' }])
+})
+
+test('[integration] email persistence rejects cross-tenant conversations and projects', async () => {
+  const otherCompanyId = 'co-email-slice-other'
+  await pool.query(
+    `INSERT INTO companies (id, name, slug, owner_user_id)
+     VALUES ($1, 'Other Email Slice', 'other-email-slice', $2)`,
+    [otherCompanyId, USER_ID],
+  )
+  const conversation = await findOrCreateEmailConversation({
+    companyId: COMPANY_ID,
+    projectId: PROJECT_ID,
+    inReplyTo: null,
+    references: [],
+    subject: 'Owned conversation',
+    memberIds: [USER_ID],
+  })
+  await assert.rejects(persistEmailMessage({
+    conversationId: conversation.conversationId,
+    companyId: otherCompanyId,
+    authorId: USER_ID,
+    direction: 'out',
+    transportStatus: 'queued',
+    smtpMessageId: 'cross-tenant-message@example.com',
+    inReplyTo: null,
+    references: [],
+    subject: 'Must fail closed',
+    fromAddr: 'sender@example.com',
+    toAddrs: ['recipient@example.com'],
+    body: 'No cross-tenant write.',
+  }), /does not belong/)
+  await assert.rejects(findOrCreateEmailConversation({
+    companyId: otherCompanyId,
+    projectId: PROJECT_ID,
+    inReplyTo: null,
+    references: [],
+    subject: 'Cross-tenant project',
+    memberIds: [USER_ID],
+  }), /does not belong/)
+  assert.equal((await pool.query(
+    `SELECT 1 FROM email_messages WHERE company_id = $1`,
+    [otherCompanyId],
+  )).rowCount, 0)
 })

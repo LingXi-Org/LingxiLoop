@@ -12,7 +12,7 @@
  *
  */
 import { env } from './env.js'
-import { formatAddress, mintMessageId, sendViaProvider } from './email.js'
+import { formatAddress, mintMessageId, sendViaProvider } from './modules/email/index.js'
 
 export interface InvitationEmailDelivery {
   ok: true

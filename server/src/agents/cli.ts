@@ -1189,7 +1189,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       return err('email replies require a non-empty body')
     }
     try {
-      const { replyInEmailConversation } = await import('../email.js')
+      const { replyInEmailConversation } = await import('../modules/email/index.js')
       const result = await replyInEmailConversation({
         conversationId: convoId, companyId, authorId: me, body, autoSubmitted: true,
       })

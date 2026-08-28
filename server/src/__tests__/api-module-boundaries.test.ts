@@ -103,6 +103,35 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.doesNotMatch(calendarCli, /`\s*(?:SELECT|INSERT|UPDATE|DELETE)\b/is)
   assert.doesNotMatch(calendarCli, /from ['"][^'"]*calendar\.js['"]|import\(['"][^'"]*calendar\.js['"]\)/)
   await assert.rejects(readFile(new URL('../calendar.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  const emailCallers = await Promise.all([
+    '../api/inbound-email.ts',
+    '../email-retry.ts',
+    '../invitation-email.ts',
+    '../learning/notifications.ts',
+    '../agents/cli.ts',
+    '../agents/cli/email.ts',
+    '../modules/admin/welcome-email.ts',
+    '../modules/agents/facade.ts',
+    '../modules/messages/facade.ts',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(
+    emailCallers.join('\n'),
+    /modules\/email\/(?:addressing|application|facade|provider|runtime|(?:[a-z-]+-)?repository|router)\.js/
+  )
+  assert.match(emailCallers.join('\n'), /modules\/email\/index\.js/)
+  const emailRuntime = await readFile(new URL('../modules/email/runtime.ts', import.meta.url), 'utf8')
+  const emailProvider = await readFile(new URL('../modules/email/provider.ts', import.meta.url), 'utf8')
+  const emailAddressing = await readFile(new URL('../modules/email/addressing.ts', import.meta.url), 'utf8')
+  assert.ok(emailRuntime.split('\n').length < 500, 'Email runtime must remain bounded after capability extraction')
+  assert.doesNotMatch(emailRuntime, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i)
+  assert.doesNotMatch(emailProvider, /\b(?:pool|db)\.query\b|from ['"]express['"]/)
+  assert.doesNotMatch(emailAddressing, /\b(?:pool|db)\.query\b|\bfetch\s*\(/)
+  for (const repositoryName of ['address-repository.ts', 'conversation-repository.ts', 'message-repository.ts']) {
+    const emailRepository = await readFile(new URL(`../modules/email/${repositoryName}`, import.meta.url), 'utf8')
+    assert.match(emailRepository, /Queryable/)
+    assert.doesNotMatch(emailRepository, /from ['"]express['"]|\bfetch\s*\(/)
+  }
   const calendarScheduler = await readFile(new URL('../modules/calendar/scheduler.ts', import.meta.url), 'utf8')
   const calendarWorker = await readFile(new URL('../worker.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(calendarScheduler, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)

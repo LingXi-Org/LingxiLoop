@@ -25,7 +25,7 @@ import { env } from './env.js'
 import type { WorkerTaskHandle } from './runtime/lifecycle.js'
 import {
   sendViaProvider, normalizeMessageId, formatAddress, parseAddress,
-} from './email.js'
+} from './modules/email/index.js'
 import { inc } from './metrics.js'
 import { alertDiscord } from './alert.js'
 
