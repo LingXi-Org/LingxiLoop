@@ -1,7 +1,8 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type {
   BoardEventInput,
+  BoardCommandIdentity,
   BoardScope,
   CreateBoardInput,
   CreateCardInput,
@@ -10,11 +11,13 @@ import type {
   UpdateColumnInput,
 } from './contracts.js'
 import {
+  advanceBoardMentionCursor,
   appendCard,
   appendColumn,
   appendComment,
   boardExists,
   boardSnapshot,
+  claimCardForAgent,
   columnExists,
   currentCard,
   deleteBoard,
@@ -24,10 +27,15 @@ import {
   findCard,
   insertBoard,
   listBoards,
+  listBoardMentionCards,
+  listBoardMentionComments,
   listComments,
+  lockBoardMentionWindow,
   mentionedAgents,
   mentionTargets,
+  moveCardToColumn,
   participantExists,
+  readBoardMentionWindow,
   updateBoard,
   updateCard,
   updateColumn,
@@ -40,7 +48,10 @@ export class BoardApplicationError extends Error {
 export interface BoardInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   publish(event: BoardEventInput): Promise<void>
-  enqueueAgent(args: { companyId: string; agentId: string; reason: 'mention' }): Promise<void>
+  enqueueAgent(args: {
+    companyId: string; agentId: string; reason: 'mention'; triggerClientMsgNo: string
+  }): Promise<void>
+  reportPublishFailure(event: BoardEventInput, error: unknown): void
 }
 
 type MentionTarget = { id: string; name: string }
@@ -89,17 +100,26 @@ export class BoardApplication {
     return card
   }
 
-  async createBoard(scope: BoardScope, input: CreateBoardInput) {
-    const id = `board-${randomUUID().slice(0, 12)}`
+  async createBoard(scope: BoardScope, input: CreateBoardInput, identity: BoardCommandIdentity = {}) {
+    const id = identity.idempotencyKey
+      ? stableBoardId('board-agent', identity.idempotencyKey)
+      : `board-${randomUUID().slice(0, 12)}`
     const columns = ['Todo', 'Doing', 'Done'].map((title, index) => ({
-      id: `col-${randomUUID().slice(0, 12)}`, title, position: (index + 1) * 1000,
+      id: identity.idempotencyKey
+        ? stableBoardId('col-agent', `${identity.idempotencyKey}:${index}`, 24)
+        : `col-${randomUUID().slice(0, 12)}`,
+      title,
+      position: (index + 1) * 1000,
     }))
-    await this.infrastructure.transaction((db) => insertBoard(db, {
+    const created = await this.infrastructure.transaction((db) => insertBoard(db, {
       id, ...scope, title: input.title, description: input.description || null,
       createdBy: scope.userId, columns,
     }))
-    await this.publish(scope, { kind: 'board.created', boardId: id })
-    return { id }
+    if (!created && !await boardExists(this.db, scope.companyId, scope.projectId, id)) {
+      throw new BoardApplicationError('not_found', 'idempotent board is outside this workspace')
+    }
+    if (created) await this.publish(scope, { kind: 'board.created', boardId: id })
+    return identity.idempotencyKey ? { id, replayed: !created } : { id }
   }
 
   async snapshot(scope: Omit<BoardScope, 'userId'>, boardId: string) {
@@ -150,25 +170,53 @@ export class BoardApplication {
     return { ok: true as const }
   }
 
-  async createCard(scope: BoardScope, boardId: string, input: CreateCardInput) {
+  async createCard(
+    scope: BoardScope,
+    boardId: string,
+    input: CreateCardInput,
+    identity: BoardCommandIdentity = {},
+  ) {
     if (input.assigneeId && !await participantExists(this.db, scope.companyId, input.assigneeId)) {
       throw new BoardApplicationError('not_found', 'assignee not found')
     }
     const mentions = await this.mentions(scope.companyId, `${input.title}\n${input.description ?? ''}`)
-    const id = `card-${randomUUID().slice(0, 12)}`
-    const position = await this.infrastructure.transaction((db) => appendCard(db, {
+    const id = identity.idempotencyKey
+      ? stableBoardId('card-agent', identity.idempotencyKey)
+      : `card-${randomUUID().slice(0, 12)}`
+    const appended = await this.infrastructure.transaction((db) => appendCard(db, {
       ...scope, boardId, id, input, mentions,
     }))
-    if (position === null) throw new BoardApplicationError('not_found', 'column not found')
-    await this.publish(scope, {
-      kind: 'card.created', boardId, cardId: id, columnId: input.columnId, mentions,
-    })
-    await this.wake(scope.companyId, scope.userId, mentions)
-    if (input.assigneeId) await this.wake(scope.companyId, scope.userId, [input.assigneeId])
-    return { id, position, mentions }
+    if (appended === null) throw new BoardApplicationError('not_found', 'column not found')
+    const replayedCard = appended.created
+      ? null
+      : await findCard(this.db, scope.companyId, scope.projectId, id)
+    const effectiveMentions = appended.created
+      ? mentions
+      : replayedCard?.card.mentions ?? []
+    if (appended.created) {
+      await this.publish(scope, {
+        kind: 'card.created', boardId, cardId: id, columnId: input.columnId, mentions,
+      })
+    }
+    const wakeTrigger = boardWakeTrigger(identity, `card:${id}:created`)
+    await this.wake(scope.companyId, scope.userId, effectiveMentions, wakeTrigger)
+    const assigneeId = appended.created ? input.assigneeId : replayedCard?.card.assigneeId
+    if (assigneeId) await this.wake(scope.companyId, scope.userId, [assigneeId], wakeTrigger)
+    return {
+      id,
+      position: appended.position,
+      mentions: effectiveMentions,
+      ...(identity.idempotencyKey ? { replayed: !appended.created } : {}),
+    }
   }
 
-  async editCard(scope: BoardScope, boardId: string, cardId: string, patch: UpdateCardInput) {
+  async editCard(
+    scope: BoardScope,
+    boardId: string,
+    cardId: string,
+    patch: UpdateCardInput,
+    identity: BoardCommandIdentity = {},
+  ) {
     const current = await currentCard(this.db, { ...scope, boardId, cardId })
     if (!current) throw new BoardApplicationError('not_found', 'not found')
     const columnChanged = patch.columnId !== undefined && patch.columnId !== current.column_id
@@ -191,8 +239,11 @@ export class BoardApplication {
       await this.publish(scope, {
         kind: columnChanged ? 'card.moved' : 'card.updated', boardId, cardId, mentions,
       })
-      await this.wake(scope.companyId, scope.userId, mentions)
-      if (patch.assigneeId) await this.wake(scope.companyId, scope.userId, [patch.assigneeId])
+      const wakeTrigger = boardWakeTrigger(identity, `card:${cardId}:updated`)
+      await this.wake(scope.companyId, scope.userId, mentions, wakeTrigger)
+      if (patch.assigneeId) {
+        await this.wake(scope.companyId, scope.userId, [patch.assigneeId], wakeTrigger)
+      }
     }
     return { ok: true as const, mentions }
   }
@@ -203,6 +254,28 @@ export class BoardApplication {
     }
     await this.publish(scope, { kind: 'card.deleted', boardId, cardId })
     return { ok: true as const }
+  }
+
+  async moveCard(scope: BoardScope, boardId: string, cardId: string, columnId: string) {
+    const current = await currentCard(this.db, { ...scope, boardId, cardId })
+    if (!current) throw new BoardApplicationError('not_found', 'not found')
+    const position = await this.infrastructure.transaction((db) => moveCardToColumn(db, {
+      ...scope, boardId, cardId, columnId,
+    }))
+    if (position === null) throw new BoardApplicationError('not_found', 'column not found')
+    await this.publish(scope, { kind: 'card.moved', boardId, cardId, columnId })
+    return { fromColumnId: current.column_id, columnId, position }
+  }
+
+  async claimCard(scope: BoardScope, boardId: string, cardId: string) {
+    const result = await this.infrastructure.transaction((db) => claimCardForAgent(db, {
+      ...scope, boardId, cardId, agentId: scope.userId,
+    }))
+    if (result.outcome === 'not_found') throw new BoardApplicationError('not_found', 'not found')
+    if (result.outcome === 'claimed') {
+      await this.publish(scope, { kind: 'card.updated', boardId, cardId })
+    }
+    return result
   }
 
   async comments(scope: Omit<BoardScope, 'userId'>, boardId: string, cardId: string) {
@@ -216,15 +289,40 @@ export class BoardApplication {
     return comments
   }
 
-  async addComment(scope: BoardScope, boardId: string, cardId: string, body: string) {
+  async addComment(
+    scope: BoardScope,
+    boardId: string,
+    cardId: string,
+    body: string,
+    identity: BoardCommandIdentity = {},
+  ) {
     const mentions = await this.mentions(scope.companyId, body)
-    const id = `cmt-${randomUUID().slice(0, 12)}`
-    if (!await this.infrastructure.transaction((db) => appendComment(db, {
+    const id = identity.idempotencyKey
+      ? stableBoardId('cmt-agent', identity.idempotencyKey)
+      : `cmt-${randomUUID().slice(0, 12)}`
+    const outcome = await this.infrastructure.transaction((db) => appendComment(db, {
       ...scope, boardId, cardId, id, body, mentions,
-    }))) throw new BoardApplicationError('not_found', 'not found')
-    await this.publish(scope, { kind: 'comment.created', boardId, cardId, commentId: id, mentions })
-    await this.wake(scope.companyId, scope.userId, mentions)
-    return { id, mentions }
+    }))
+    if (outcome === 'not_found') throw new BoardApplicationError('not_found', 'not found')
+    let effectiveMentions = mentions
+    if (outcome === 'replayed') {
+      effectiveMentions = (await listComments(this.db, { ...scope, boardId, cardId }))
+        .find((comment) => comment.id === id)?.mentions ?? []
+    }
+    if (outcome === 'created') {
+      await this.publish(scope, { kind: 'comment.created', boardId, cardId, commentId: id, mentions })
+    }
+    await this.wake(
+      scope.companyId,
+      scope.userId,
+      effectiveMentions,
+      boardWakeTrigger(identity, `comment:${id}:created`),
+    )
+    return {
+      id,
+      mentions: effectiveMentions,
+      ...(identity.idempotencyKey ? { replayed: outcome === 'replayed' } : {}),
+    }
   }
 
   async removeComment(scope: BoardScope, boardId: string, cardId: string, commentId: string) {
@@ -235,21 +333,58 @@ export class BoardApplication {
     return { ok: true as const }
   }
 
+  async mentionInbox(scope: Pick<BoardScope, 'companyId' | 'userId'>, peek: boolean) {
+    return this.infrastructure.transaction(async (db) => {
+      const window = peek
+        ? await readBoardMentionWindow(db, scope.userId)
+        : await lockBoardMentionWindow(db, scope.userId)
+      const [cards, comments] = await Promise.all([
+        listBoardMentionCards(db, { ...scope, ...window }),
+        listBoardMentionComments(db, { ...scope, ...window }),
+      ])
+      if (!peek) await advanceBoardMentionCursor(db, scope.userId, window.until)
+      return { since: window.since, until: window.until, cards, comments }
+    })
+  }
+
   private async mentions(companyId: string, text: string): Promise<string[]> {
     return parseBoardMentions(text, await mentionTargets(this.db, companyId))
   }
 
-  private async wake(companyId: string, actorId: string, participants: string[] | undefined): Promise<void> {
+  private async wake(
+    companyId: string,
+    actorId: string,
+    participants: string[] | undefined,
+    triggerClientMsgNo: string,
+  ): Promise<void> {
     const targets = [...new Set((participants ?? []).filter((id) => id !== actorId))]
     const agents = await mentionedAgents(this.db, companyId, targets)
     await Promise.all(agents.map((agentId) => (
-      this.infrastructure.enqueueAgent({ companyId, agentId, reason: 'mention' })
+      this.infrastructure.enqueueAgent({ companyId, agentId, reason: 'mention', triggerClientMsgNo })
     )))
   }
 
-  private publish(scope: BoardScope, event: Omit<BoardEventInput, 'companyId' | 'workspaceId' | 'actorId'>) {
-    return this.infrastructure.publish({
+  private async publish(
+    scope: BoardScope,
+    event: Omit<BoardEventInput, 'companyId' | 'workspaceId' | 'actorId'>,
+  ): Promise<void> {
+    const published = {
       ...event, companyId: scope.companyId, workspaceId: scope.projectId, actorId: scope.userId,
-    }).catch(() => undefined)
+    }
+    try {
+      await this.infrastructure.publish(published)
+    } catch (error) {
+      this.infrastructure.reportPublishFailure(published, error)
+    }
   }
+}
+
+function stableBoardId(prefix: string, idempotencyKey: string, length = 32): string {
+  return `${prefix}-${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, length)}`
+}
+
+function boardWakeTrigger(identity: BoardCommandIdentity, fallback: string): string {
+  return identity.idempotencyKey
+    ? `board-action:${createHash('sha256').update(identity.idempotencyKey).digest('hex').slice(0, 32)}`
+    : `${fallback}:${randomUUID()}`
 }

@@ -69,6 +69,14 @@ const rootRouter = await read(resolve('server/src/api/router.ts'))
 if (/\b(?:pool|sql|query)\b|\b(?:SELECT|INSERT|UPDATE|DELETE)\b/i.test(rootRouter)) violations.push('server/src/api/router.ts: composition root contains persistence or business logic')
 if (/^export\s+\{.+\}\s+from/m.test(rootRouter)) violations.push('server/src/api/router.ts: composition root must not export domain capabilities')
 
+const boardCli = await read(resolve('server/src/agents/cli/board.ts'))
+if (/from ['"][^'"]*db\/|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is.test(boardCli)) {
+  violations.push('server/src/agents/cli/board.ts: Agent Board actions bypass modules/boards/public.ts')
+}
+if (/from ['"][^'"]*redis\.js['"]|enqueueAgentWork|modules\/boards\/(?:application|contracts|facade|repository)\.js/.test(boardCli)) {
+  violations.push('server/src/agents/cli/board.ts: Agent Board actions bypass the public domain facade')
+}
+
 const observabilityRouter = await read(resolve('server/src/modules/observability/router.ts'))
 if (/\/agents\/observability\/runs/.test(observabilityRouter)) violations.push('server/src/modules/observability/router.ts: retired observability HTTP view is forbidden')
 

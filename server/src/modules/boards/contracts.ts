@@ -64,3 +64,28 @@ export interface BoardEventInput {
   mentions?: string[]
   actorId: string
 }
+
+export interface BoardCommandIdentity {
+  idempotencyKey?: string
+}
+
+export interface BoardMentionCard {
+  id: string
+  boardId: string
+  columnId: string
+  title: string
+  updatedAt: string
+  createdBy: string
+  boardTitle: string
+}
+
+export interface BoardMentionComment {
+  id: string
+  cardId: string
+  body: string
+  authorId: string
+  createdAt: string
+  boardId: string
+  cardTitle: string
+  boardTitle: string
+}

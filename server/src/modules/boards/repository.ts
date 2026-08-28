@@ -72,17 +72,20 @@ export async function findCard(db: Queryable, companyId: string, projectId: stri
 export async function insertBoard(db: Queryable, args: {
   id: string; companyId: string; projectId: string; title: string; description: string | null
   createdBy: string; columns: Array<{ id: string; title: string; position: number }>
-}): Promise<void> {
-  await db.query(
-    `INSERT INTO boards (id,company_id,project_id,title,description,created_by) VALUES ($1,$2,$3,$4,$5,$6)`,
+}): Promise<boolean> {
+  const inserted = await db.query(
+    `INSERT INTO boards (id,company_id,project_id,title,description,created_by)
+     VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT(id) DO NOTHING RETURNING id`,
     [args.id, args.companyId, args.projectId, args.title, args.description, args.createdBy],
   )
+  if ((inserted.rowCount ?? 0) === 0) return false
   for (const column of args.columns) {
     await db.query(
       `INSERT INTO board_columns (id,board_id,title,position) VALUES ($1,$2,$3,$4)`,
       [column.id, args.id, column.title, column.position],
     )
   }
+  return true
 }
 
 export async function boardSnapshot(db: Queryable, companyId: string, projectId: string, boardId: string) {
@@ -224,7 +227,7 @@ export async function columnExists(
 export async function appendCard(db: Queryable, args: {
   companyId: string; projectId: string; boardId: string; id: string; userId: string
   input: CreateCardInput; mentions: string[]
-}): Promise<number | null> {
+}): Promise<{ position: number; created: boolean } | null> {
   if (!await boardExists(db, args.companyId, args.projectId, args.boardId, true)) return null
   if (!await columnExists(db, args.companyId, args.projectId, args.boardId, args.input.columnId)) return null
   const { rows } = await db.query<{ max: number | null }>(
@@ -234,15 +237,22 @@ export async function appendCard(db: Queryable, args: {
     [args.input.columnId, args.boardId, args.companyId, args.projectId],
   )
   const position = Number(rows[0]?.max ?? 0) + 1000
-  await db.query(
+  const inserted = await db.query(
     `INSERT INTO board_cards
        (id,board_id,column_id,title,description,position,assignee_id,mentions,created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)
+     ON CONFLICT(id) DO NOTHING RETURNING id`,
     [args.id, args.boardId, args.input.columnId, args.input.title, args.input.description || null,
       position, args.input.assigneeId ?? null, JSON.stringify(args.mentions), args.userId],
   )
+  if ((inserted.rowCount ?? 0) === 0) {
+    const replay = await findCard(db, args.companyId, args.projectId, args.id)
+    return replay?.card.boardId === args.boardId
+      ? { position: replay.card.position, created: false }
+      : null
+  }
   await touchBoard(db, args.companyId, args.projectId, args.boardId)
-  return position
+  return { position, created: true }
 }
 
 export async function currentCard(db: Queryable, args: {
@@ -323,23 +333,168 @@ export async function listComments(db: Queryable, args: {
 export async function appendComment(db: Queryable, args: {
   companyId: string; projectId: string; boardId: string; cardId: string
   id: string; userId: string; body: string; mentions: string[]
-}): Promise<boolean> {
+}): Promise<'created' | 'replayed' | 'not_found'> {
   const result = await db.query(
     `INSERT INTO board_card_comments (id,card_id,author_id,body,mentions)
      SELECT $1,card.id,$2,$3,$4::jsonb FROM board_cards card
      JOIN boards board ON board.id=card.board_id
-      WHERE card.id=$5 AND card.board_id=$6 AND board.company_id=$7 AND board.project_id=$8`,
+      WHERE card.id=$5 AND card.board_id=$6 AND board.company_id=$7 AND board.project_id=$8
+     ON CONFLICT(id) DO NOTHING RETURNING id`,
     [args.id, args.userId, args.body, JSON.stringify(args.mentions), args.cardId, args.boardId,
       args.companyId, args.projectId],
   )
-  if ((result.rowCount ?? 0) === 0) return false
+  if ((result.rowCount ?? 0) === 0) {
+    const { rows } = await db.query(
+      `SELECT 1 FROM board_card_comments comment
+       JOIN board_cards card ON card.id=comment.card_id
+       JOIN boards board ON board.id=card.board_id
+       WHERE comment.id=$1 AND comment.card_id=$2 AND comment.author_id=$3
+         AND card.board_id=$4 AND board.company_id=$5 AND board.project_id=$6`,
+      [args.id, args.cardId, args.userId, args.boardId, args.companyId, args.projectId],
+    )
+    return rows[0] ? 'replayed' : 'not_found'
+  }
   await db.query(
     `UPDATE board_cards card SET updated_at=NOW() FROM boards board
       WHERE card.id=$1 AND board.id=card.board_id AND board.id=$2 AND board.company_id=$3 AND board.project_id=$4`,
     [args.cardId, args.boardId, args.companyId, args.projectId],
   )
   await touchBoard(db, args.companyId, args.projectId, args.boardId)
-  return true
+  return 'created'
+}
+
+export async function moveCardToColumn(db: Queryable, args: {
+  companyId: string; projectId: string; boardId: string; cardId: string; columnId: string
+}): Promise<number | null> {
+  if (!await boardExists(db, args.companyId, args.projectId, args.boardId, true)) return null
+  if (!await columnExists(db, args.companyId, args.projectId, args.boardId, args.columnId)) return null
+  const { rows } = await db.query<{ max: number | null }>(
+    `SELECT MAX(card.position) AS max FROM board_cards card
+     JOIN boards board ON board.id=card.board_id
+     WHERE card.column_id=$1 AND card.board_id=$2 AND board.company_id=$3 AND board.project_id=$4`,
+    [args.columnId, args.boardId, args.companyId, args.projectId],
+  )
+  const position = Number(rows[0]?.max ?? 0) + 1000
+  const moved = await db.query(
+    `UPDATE board_cards card SET column_id=$1,position=$2,updated_at=NOW()
+     FROM boards board WHERE card.id=$3 AND card.board_id=$4 AND board.id=card.board_id
+       AND board.company_id=$5 AND board.project_id=$6`,
+    [args.columnId, position, args.cardId, args.boardId, args.companyId, args.projectId],
+  )
+  if ((moved.rowCount ?? 0) === 0) return null
+  await touchBoard(db, args.companyId, args.projectId, args.boardId)
+  return position
+}
+
+export async function claimCardForAgent(db: Queryable, args: {
+  companyId: string; projectId: string; boardId: string; cardId: string; agentId: string
+}): Promise<{ outcome: 'claimed' | 'held' | 'not_found'; holder: string | null }> {
+  const claimed = await db.query(
+    `UPDATE board_cards card SET assignee_id=$1,updated_at=NOW()
+     FROM boards board
+     WHERE card.id=$2 AND card.board_id=$3 AND board.id=card.board_id
+       AND board.company_id=$4 AND board.project_id=$5
+       AND (card.assignee_id IS NULL OR card.assignee_id=$1
+         OR card.updated_at<NOW()-INTERVAL '20 minutes')
+     RETURNING card.id`,
+    [args.agentId, args.cardId, args.boardId, args.companyId, args.projectId],
+  )
+  if ((claimed.rowCount ?? 0) > 0) {
+    await touchBoard(db, args.companyId, args.projectId, args.boardId)
+    return { outcome: 'claimed', holder: args.agentId }
+  }
+  const { rows } = await db.query<{ assignee_id: string | null }>(
+    `SELECT card.assignee_id FROM board_cards card
+     JOIN boards board ON board.id=card.board_id
+     WHERE card.id=$1 AND card.board_id=$2 AND board.company_id=$3 AND board.project_id=$4`,
+    [args.cardId, args.boardId, args.companyId, args.projectId],
+  )
+  return rows[0]
+    ? { outcome: 'held', holder: rows[0].assignee_id }
+    : { outcome: 'not_found', holder: null }
+}
+
+export async function lockBoardMentionWindow(
+  db: Queryable,
+  userId: string,
+): Promise<{ since: string; until: string }> {
+  await db.query(
+    `INSERT INTO board_mention_reads(user_id,last_read_at)
+     VALUES($1,TIMESTAMPTZ 'epoch') ON CONFLICT(user_id) DO NOTHING`,
+    [userId],
+  )
+  const { rows } = await db.query<{ since: string; until: string }>(
+    `SELECT cursor.last_read_at::text AS since,NOW()::text AS until
+     FROM board_mention_reads cursor WHERE cursor.user_id=$1 FOR UPDATE`,
+    [userId],
+  )
+  return rows[0]
+}
+
+export async function readBoardMentionWindow(
+  db: Queryable,
+  userId: string,
+): Promise<{ since: string; until: string }> {
+  const { rows } = await db.query<{ since: string; until: string }>(
+    `SELECT COALESCE(
+       (SELECT cursor.last_read_at FROM board_mention_reads cursor WHERE cursor.user_id=$1),
+       TIMESTAMPTZ 'epoch'
+     )::text AS since,NOW()::text AS until`,
+    [userId],
+  )
+  return rows[0]
+}
+
+export async function listBoardMentionCards(db: Queryable, args: {
+  companyId: string; userId: string; since: string; until: string
+}) {
+  const { rows } = await db.query<{
+    id: string; board_id: string; column_id: string; title: string; updated_at: string
+    created_by: string; board_title: string
+  }>(
+    `SELECT card.id,card.board_id,card.column_id,card.title,card.updated_at,card.created_by,
+            board.title AS board_title
+     FROM board_cards card JOIN boards board ON board.id=card.board_id
+     WHERE board.company_id=$1 AND card.updated_at>$2 AND card.updated_at<=$3
+       AND card.mentions @> to_jsonb($4::text)
+     ORDER BY card.updated_at DESC LIMIT 50`,
+    [args.companyId, args.since, args.until, args.userId],
+  )
+  return rows.map((row) => ({
+    id: row.id, boardId: row.board_id, columnId: row.column_id, title: row.title,
+    updatedAt: row.updated_at, createdBy: row.created_by, boardTitle: row.board_title,
+  }))
+}
+
+export async function listBoardMentionComments(db: Queryable, args: {
+  companyId: string; userId: string; since: string; until: string
+}) {
+  const { rows } = await db.query<{
+    id: string; card_id: string; body: string; author_id: string; created_at: string
+    board_id: string; card_title: string; board_title: string
+  }>(
+    `SELECT comment.id,comment.card_id,comment.body,comment.author_id,comment.created_at,
+            card.board_id,card.title AS card_title,board.title AS board_title
+     FROM board_card_comments comment
+     JOIN board_cards card ON card.id=comment.card_id
+     JOIN boards board ON board.id=card.board_id
+     WHERE board.company_id=$1 AND comment.created_at>$2 AND comment.created_at<=$3
+       AND comment.mentions @> to_jsonb($4::text)
+     ORDER BY comment.created_at DESC LIMIT 50`,
+    [args.companyId, args.since, args.until, args.userId],
+  )
+  return rows.map((row) => ({
+    id: row.id, cardId: row.card_id, body: row.body, authorId: row.author_id,
+    createdAt: row.created_at, boardId: row.board_id, cardTitle: row.card_title,
+    boardTitle: row.board_title,
+  }))
+}
+
+export async function advanceBoardMentionCursor(db: Queryable, userId: string, until: string): Promise<void> {
+  await db.query(
+    `UPDATE board_mention_reads SET last_read_at=$2 WHERE user_id=$1`,
+    [userId, until],
+  )
 }
 
 export async function deleteComment(db: Queryable, args: {
