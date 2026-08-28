@@ -59,11 +59,11 @@ const REQUIRED_V1_COLUMNS = [
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [
-  ['message_reactions', 'company_id'],
-  ['agent_climate', 'company_id'],
-  ['calendar_events', 'project_id'],
-  ['document_mention_deliveries', 'recipients'],
-  ['document_mention_deliveries', 'status'],
+  ['message_reactions', 'company_id', null],
+  ['agent_climate', 'company_id', null],
+  ['calendar_events', 'project_id', null],
+  ['document_mention_deliveries', 'recipients', null],
+  ['document_mention_deliveries', 'status', "'queued'::text"],
 ] as const
 
 const REQUIRED_V1_PRIMARY_KEYS = [
@@ -135,14 +135,14 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     [tables, columns],
   )
   if (columnRows.length > 0) return false
-  for (const [tableName, columnName] of REQUIRED_V1_NOT_NULL_COLUMNS) {
+  for (const [tableName, columnName, expectedDefault] of REQUIRED_V1_NOT_NULL_COLUMNS) {
     const { rows } = await client.query<{ is_nullable: string; column_default: string | null }>(
       `SELECT is_nullable, column_default
          FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = $1 AND column_name = $2`,
       [tableName, columnName],
     )
-    if (rows[0]?.is_nullable !== 'NO' || rows[0].column_default !== null) return false
+    if (rows[0]?.is_nullable !== 'NO' || rows[0].column_default !== expectedDefault) return false
   }
   for (const [tableName, expectedColumns] of REQUIRED_V1_PRIMARY_KEYS) {
     const { rows } = await client.query<{ columns: string[] }>(

@@ -79,7 +79,7 @@ test('document mentions use a durable tenant-scoped delivery ledger', () => {
   assert.match(schema, /idx_document_mention_deliveries_due/)
   assert.match(schema, /document_mention_deliveries_project_id_company_id_fkey/)
   assert.match(bootstrap, /'document_mention_deliveries'/)
-  assert.match(bootstrap, /\['document_mention_deliveries', 'status'\]/)
+  assert.match(bootstrap, /\['document_mention_deliveries', 'status', "'queued'::text"\]/)
 })
 
 test('bootstrap only reuses a complete marked v1 schema and rejects every unmarked non-empty schema', () => {
