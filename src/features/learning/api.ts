@@ -70,10 +70,19 @@ export const learningApi = {
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/publish`, { method: 'POST' }),
   closeActivity: (courseId: string, activityId: string) =>
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/close`, { method: 'POST' }),
-  submitActivity: (courseId: string, activityId: string, answer: string, assistance: 'none' | 'hint' | 'guided' = 'none') =>
-    http<{ attemptId: string }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/submit`, {
-      method: 'POST', body: JSON.stringify({ answer, assistance }),
-    }),
+  submitActivity: (() => {
+    const keys = new Map<string, string>()
+    return async (courseId: string, activityId: string, answer: string, assistance: 'none' | 'hint' | 'guided' = 'none') => {
+      const fingerprint = JSON.stringify([courseId, activityId, answer, assistance])
+      const idempotencyKey = keys.get(fingerprint) ?? crypto.randomUUID()
+      keys.set(fingerprint, idempotencyKey)
+      const result = await http<{ attemptId: string }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/submit`, {
+        method: 'POST', body: JSON.stringify({ answer, assistance, idempotencyKey }),
+      })
+      keys.delete(fingerprint)
+      return result
+    }
+  })(),
   listMissions: (courseId: string) =>
     http<LearningMission[]>(`/courses/${encodeURIComponent(courseId)}/missions`),
   setMissionCoordinator: (courseId: string, missionId: string, agentId: string) =>

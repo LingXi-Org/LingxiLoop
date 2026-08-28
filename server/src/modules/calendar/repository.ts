@@ -311,7 +311,11 @@ export async function claimCalendarDispatch(
   const result = await db.query(
     `INSERT INTO calendar_dispatches (id, event_id, company_id, scheduled_for, status)
      VALUES ($1,$2,$3,$4,'pending')
-     ON CONFLICT (event_id, scheduled_for) DO NOTHING`,
+     ON CONFLICT (event_id, scheduled_for) DO UPDATE
+       SET id=EXCLUDED.id,status='pending',claimed_at=NOW(),attempt_count=calendar_dispatches.attempt_count+1,error=NULL
+     WHERE calendar_dispatches.status='failed'
+        OR (calendar_dispatches.status='pending' AND calendar_dispatches.claimed_at < NOW() - INTERVAL '5 minutes')
+     RETURNING id`,
     [args.id, args.eventId, args.companyId, args.scheduledFor],
   )
   return (result.rowCount ?? 0) > 0
@@ -346,6 +350,21 @@ export async function calendarConversationMembers(
     [args.conversationId, args.companyId, args.projectId],
   )
   return rows[0]?.members ?? null
+}
+
+export async function findCalendarDirectConversation(
+  db: Queryable,
+  args: { companyId: string; projectId: string; creatorId: string; assigneeId: string },
+): Promise<string | null> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id FROM conversations
+      WHERE company_id=$1 AND project_id=$2 AND kind='direct'
+        AND members @> to_jsonb(ARRAY[$3::text,$4::text])
+        AND jsonb_array_length(members)=2
+      ORDER BY id LIMIT 1`,
+    [args.companyId,args.projectId,args.creatorId,args.assigneeId],
+  )
+  return rows[0]?.id ?? null
 }
 
 export async function allocateCalendarMessageSequence(
@@ -424,7 +443,12 @@ export async function claimCalendarReminder(
     `INSERT INTO calendar_reminders
        (id, event_id, company_id, scheduled_for, channel, recipients, status)
      VALUES ($1,$2,$3,$4,$5,'[]'::jsonb,'pending')
-     ON CONFLICT (event_id, scheduled_for) DO NOTHING`,
+     ON CONFLICT (event_id, scheduled_for) DO UPDATE
+       SET id=EXCLUDED.id,status='pending',claimed_at=NOW(),attempt_count=calendar_reminders.attempt_count+1,error=NULL,
+           channel=EXCLUDED.channel
+     WHERE calendar_reminders.status='failed'
+        OR (calendar_reminders.status='pending' AND calendar_reminders.claimed_at < NOW() - INTERVAL '5 minutes')
+     RETURNING id`,
     [args.id, args.eventId, args.companyId, args.scheduledFor, args.channel],
   )
   return (result.rowCount ?? 0) > 0

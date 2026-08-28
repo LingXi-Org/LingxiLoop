@@ -496,7 +496,7 @@ export async function insertLearningObjectiveDependency(
   db: Queryable,
   args: { companyId: string; courseId: string; objectiveId: string; prerequisiteId: string },
 ): Promise<void> {
-  await db.query(
+  const result = await db.query(
     `INSERT INTO learning_objective_dependencies(objective_id,prerequisite_objective_id)
      SELECT objective.id,prerequisite.id
        FROM learning_objectives objective
@@ -507,6 +507,7 @@ export async function insertLearningObjectiveDependency(
      ON CONFLICT DO NOTHING`,
     [args.objectiveId,args.courseId,args.companyId,args.prerequisiteId],
   )
+  if (!result.rowCount) throw new Error('prerequisite objective not found in the current course')
 }
 
 export async function listLearningObjectives(
@@ -641,6 +642,21 @@ export async function findLearningActivity(
   return rows[0] ? mapLearningActivity(rows[0]) : null
 }
 
+export async function findVisibleLearningActivity(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  activityId: string,
+): Promise<LearningActivity | null> {
+  const { rows } = await db.query<LearningActivityRow>(
+    `SELECT id,course_id,title,instructions,type,status,evaluation_mode,target_level,rubric,objective_ids,due_at
+       FROM learning_activities
+      WHERE company_id=$1 AND course_id=$2 AND id=$3 AND status IN ('published','closed')`,
+    [companyId,courseId,activityId],
+  )
+  return rows[0] ? mapLearningActivity(rows[0]) : null
+}
+
 export async function listLearningActivities(
   db: Queryable,
   companyId: string,
@@ -729,12 +745,12 @@ export async function insertLearningActivityAttempt(
   db: Queryable,
   args: {
     id: string; companyId: string; courseId: string; activityId: string; learnerId: string
-    assistance: 'none'|'hint'|'guided'; answer: string
+    assistance: 'none'|'hint'|'guided'; answer: string; idempotencyKey: string
   },
-): Promise<boolean> {
-  const result = await db.query(
-    `INSERT INTO learning_attempts(id,course_id,company_id,learner_id,activity_id,assistance,evidence)
-     SELECT $1,course.id,course.company_id,$5,activity.id,$6,$7::jsonb
+): Promise<string | null> {
+  const { rows } = await db.query<{ id: string }>(
+    `INSERT INTO learning_attempts(id,course_id,company_id,learner_id,activity_id,assistance,evidence,client_submission_id)
+     SELECT $1,course.id,course.company_id,$5,activity.id,$6,$7::jsonb,$8
        FROM courses course
        JOIN learning_activities activity
          ON activity.course_id=course.id AND activity.company_id=course.company_id
@@ -742,11 +758,15 @@ export async function insertLearningActivityAttempt(
        JOIN course_members learner
          ON learner.course_id=course.id AND learner.company_id=course.company_id
         AND learner.user_id=$5 AND learner.role='learner'
-      WHERE course.company_id=$2 AND course.id=$3`,
+      WHERE course.company_id=$2 AND course.id=$3
+     ON CONFLICT(company_id,course_id,activity_id,learner_id,client_submission_id)
+       WHERE client_submission_id IS NOT NULL
+     DO UPDATE SET id=learning_attempts.id
+     RETURNING id`,
     [args.id,args.companyId,args.courseId,args.activityId,args.learnerId,args.assistance,
-      JSON.stringify({ kind: 'ui_submission', submittedBy: args.learnerId, answer: args.answer })],
+      JSON.stringify({ kind: 'ui_submission', submittedBy: args.learnerId, answer: args.answer }),args.idempotencyKey],
   )
-  return Boolean(result.rowCount)
+  return rows[0]?.id ?? null
 }
 
 interface LearningMissionRow {
@@ -1029,6 +1049,77 @@ export async function completeLearningMissionRecord(db: Queryable, missionId: st
     [missionId],
   )
   return Boolean(result.rowCount)
+}
+
+export async function findEligibleLearningMissionCoordinator(
+  db: Queryable,
+  args: { companyId: string; channelId: string; preferredPreset: string; currentAgentId: string },
+): Promise<string | null> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT participant.id FROM participants participant
+       JOIN conversations conversation ON conversation.id=$2 AND conversation.company_id=$1
+      WHERE participant.company_id=$1 AND participant.kind='agent' AND participant.departed_at IS NULL
+        AND participant.capabilities @> '["canvas","learning"]'::jsonb
+        AND conversation.members ? participant.id
+      ORDER BY CASE WHEN participant.preset_key=$3 THEN 0 WHEN participant.preset_key='nova' THEN 1
+        WHEN participant.id=$4 THEN 2 ELSE 3 END,participant.id LIMIT 1`,
+    [args.companyId,args.channelId,args.preferredPreset,args.currentAgentId],
+  )
+  return rows[0]?.id ?? null
+}
+
+export async function upsertLearningMission(
+  db: Queryable,
+  args: {
+    id: string; companyId: string; courseId: string; learnerId: string; channelId: string
+    triggerClientMsgNo: string; goal: string; successCriteria: string; missionKind: LearningMission['missionKind']
+    coordinatorAgentId: string; createdBy: string
+  },
+): Promise<{ id: string; inserted: boolean }> {
+  const { rows } = await db.query<{ id: string; inserted: boolean }>(
+    `INSERT INTO learning_missions
+       (id,course_id,company_id,learner_id,conversation_id,trigger_client_msg_no,goal,success_criteria,
+        mission_kind,coordinator_agent_id,created_by)
+     SELECT $1,course.id,course.company_id,$4,$5,$6,$7,$8,$9,$10,$11
+       FROM courses course WHERE course.id=$2 AND course.company_id=$3
+     ON CONFLICT(course_id,learner_id,conversation_id,trigger_client_msg_no)
+     DO UPDATE SET updated_at=learning_missions.updated_at RETURNING id,(xmax=0) AS inserted`,
+    [args.id,args.courseId,args.companyId,args.learnerId,args.channelId,args.triggerClientMsgNo,args.goal,
+      args.successCriteria,args.missionKind,args.coordinatorAgentId,args.createdBy],
+  )
+  if (!rows[0]) throw new Error('course not found')
+  return rows[0]
+}
+
+export async function enqueueLearningMissionCoordinatorWork(
+  db: Queryable,
+  args: {
+    id: string; companyId: string; coordinatorAgentId: string; channelId: string
+    threadRootClientMsgNo: string; missionId: string
+  },
+): Promise<void> {
+  await db.query(
+    `INSERT INTO agent_work_items
+       (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,
+        reason,status,priority,execution_role)
+     VALUES($1,$2,$3,$4,$5,$6,'handoff','queued',190,'coordinator')
+     ON CONFLICT(agent_id,trigger_client_msg_no,reason) DO NOTHING`,
+    [args.id,args.companyId,args.coordinatorAgentId,args.channelId,args.threadRootClientMsgNo,
+      `mission-coordinator:${args.missionId}`],
+  )
+}
+
+export async function learningChannelType(
+  db: Queryable,
+  companyId: string,
+  channelId: string,
+): Promise<number> {
+  const { rows } = await db.query<{ channel_type: number }>(
+    `SELECT COALESCE((profile->>'channelType')::int,2) AS channel_type
+       FROM im_channel_bindings WHERE company_id=$1 AND channel_id=$2`,
+    [companyId,channelId],
+  )
+  return Number(rows[0]?.channel_type ?? 2)
 }
 
 export async function findNotificationPreferences(

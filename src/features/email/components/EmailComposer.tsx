@@ -217,6 +217,7 @@ export function EmailComposer() {
   const [error, setError] = useState<string | null>(null)
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const idempotencyKeyRef = useRef(crypto.randomUUID())
   // Drag-and-drop depth counter — incremented on dragenter, decremented
   // on dragleave. Counting (rather than a single boolean) handles the
   // browser firing dragleave when the cursor crosses between nested
@@ -246,6 +247,7 @@ export function EmailComposer() {
     setTo([]); setCc([]); setSubject(''); setBody('')
     setShowCc(false); setSending(false); setError(null)
     setAttachments([])
+    idempotencyKeyRef.current = crypto.randomUUID()
   }, [open, compose?.mode, isReply ? compose.replyToMessageId : null])
 
   // Keep the controlled drawer root mounted while closed. The composer is
@@ -358,11 +360,13 @@ export function EmailComposer() {
     try {
       const sendPromise = isReply
         ? emailApi.replyEmail(compose.replyToMessageId, {
+            idempotencyKey: idempotencyKeyRef.current,
             body: body.trim(),
             cc: cc.map((e) => e.raw),
             attachments: attachmentArgs.length ? attachmentArgs : undefined,
           })
         : emailApi.sendEmail({
+            idempotencyKey: idempotencyKeyRef.current,
             to: to.map((e) => e.raw),
             cc: cc.length ? cc.map((e) => e.raw) : undefined,
             subject: subject.trim(),

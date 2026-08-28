@@ -3,6 +3,7 @@ import { type NextFunction, type Request, type Response, Router } from 'express'
 import type { PoolClient } from 'pg'
 import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../modules/canvas/index.js'
 import { pool } from '../db/pool.js'
+import { withTransaction } from '../db/transaction.js'
 import { wukongClient } from '../im/wukong.js'
 import { advanceAgentReadReceipt } from '../im/read-receipts.js'
 import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
@@ -588,12 +589,13 @@ agentOSControlRouter.post('/work/:id/actions', safe(async (req, res) => {
 agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
   const { work } = await requireLease(req)
   const event = req.body.event as AgentRunEvent
-  await pool.query(
+  await withTransaction(pool, async (db) => {
+    await db.query(
     `INSERT INTO agent_runs (id, agent_id, company_id, trigger, status, stage, reasoning_runtime)
      VALUES ($1,$2,$3,$4::jsonb,'running',$5,'agent-os') ON CONFLICT (id) DO NOTHING`,
     [event.runId, work.agentId, work.companyId, JSON.stringify({ reason: work.reason, clientMsgNo: work.triggerClientMsgNo }), event.kind],
   )
-  const { rows: insertedEvents } = await pool.query<{ id: string }>(
+    const { rows: insertedEvents } = await db.query<{ id: string }>(
     `INSERT INTO agent_events (id, run_id, agent_id, company_id, kind, level, title, data, sequence)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)
      ON CONFLICT (run_id, sequence) WHERE sequence IS NOT NULL DO NOTHING RETURNING id`,
@@ -606,7 +608,7 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
       purpose?: unknown
       usage?: { inputTokens?: unknown; outputTokens?: unknown; available?: unknown }
     }
-    await recordLlmCall({
+      await recordLlmCall({
       context: {
         source: 'agent-os', companyId: work.companyId, agentId: work.agentId,
         runId: event.runId, conversationId: work.channelId,
@@ -621,8 +623,9 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
       latencyMs: 0,
       status: event.kind === 'model.completed' ? 'succeeded' : 'failed',
       error: event.kind === 'model.failed' ? (data as { error?: unknown }).error : undefined,
-    })
-  }
+      }, db, `llm-event-${event.runId}-${event.seq}`)
+    }
+  })
   await pool.query(`UPDATE agent_runs SET stage=$2, updated_at=NOW() WHERE id=$1`, [event.runId, event.kind])
   if (work.reason === 'canvas_worker' && work.canvasId) {
     if (event.kind === 'run.started') {

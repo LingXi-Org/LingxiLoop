@@ -93,7 +93,11 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
   if (method === 'get_mission') {
     const missionId = textArg(args, 'missionId', false)
     if (!missionId) return { ok: true, value: context.activeMission ?? null }
-    return { ok: true, value: await getMission(missionId, work.companyId, context.course.id) }
+    if (!context.learnerId) throw new Error('current learning room has no learner scope')
+    return {
+      ok: true,
+      value: await getMission(missionId, work.companyId, context.course.id, context.learnerId, work.channelId),
+    }
   }
   if (method === 'get_activity') return {
     ok: true,

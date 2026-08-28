@@ -13,6 +13,7 @@ import {
   calendarConversationExists,
   calendarParticipantExists,
   deleteVisibleCalendarEvent,
+  findCalendarDirectConversation,
   findVisibleCalendarEvent,
   insertCalendarEvent,
   listCalendarDispatches,
@@ -129,10 +130,16 @@ export class CalendarApplication {
     input: CreateCalendarEventInput,
     options: { eventId?: string; replayExisting?: boolean } = {},
   ): Promise<CalendarEventPayload> {
+    const targetConversationId = input.kind === 'agent_task' && input.assigneeId && !input.targetConversationId
+      ? await findCalendarDirectConversation(this.db, {
+        companyId: scope.companyId, projectId: scope.projectId,
+        creatorId: scope.userId, assigneeId: input.assigneeId,
+      })
+      : input.targetConversationId ?? null
     const normalized = {
       kind: input.kind,
       assigneeId: input.assigneeId ?? null,
-      targetConversationId: input.targetConversationId ?? null,
+      targetConversationId,
       startAt: input.startAt,
       endAt: input.endAt ?? null,
       reminderMinutesBefore: input.reminderMinutesBefore ?? null,
@@ -164,7 +171,7 @@ export class CalendarApplication {
       reminderChannel: normalized.reminderChannel,
       isPrivate: input.isPrivate,
     })
-    await this.changed(scope, row.id, 'event.created')
+    await this.changed(scope, row.id, 'event.created').catch(() => undefined)
     return toPayload(row)
   }
 
@@ -217,7 +224,7 @@ export class CalendarApplication {
     await this.assertReferences(scope, merged.assigneeId, merged.targetConversationId)
     const row = await updateVisibleCalendarEvent(this.db, { id: eventId, ...scope }, patch)
     if (!row) throw new CalendarApplicationError('event_not_found', 'event not found')
-    await this.changed(scope, eventId, 'event.updated')
+    await this.changed(scope, eventId, 'event.updated').catch(() => undefined)
     return toPayload(row)
   }
 
@@ -225,7 +232,7 @@ export class CalendarApplication {
     if (!await deleteVisibleCalendarEvent(this.db, { id: eventId, ...scope })) {
       throw new CalendarApplicationError('event_not_found', 'event not found')
     }
-    await this.changed(scope, eventId, 'event.deleted')
+    await this.changed(scope, eventId, 'event.deleted').catch(() => undefined)
     return { ok: true }
   }
 

@@ -32,7 +32,7 @@ export function draftActivity(input: CreateLearningActivityCommand) {
 }
 
 export async function getActivity(activityId: string, companyId: string, courseId: string) {
-  const activity = await findLearningActivity(pool, companyId, courseId, activityId)
+  const activity = await findVisibleLearningActivity(pool, companyId, courseId, activityId)
   if (!activity) throw new Error('activity not found')
   return activity
 }
@@ -51,7 +51,7 @@ export function closeActivity(input: {
 
 export function submitActivity(input: {
   companyId: string; courseId: string; activityId: string; learnerId: string
-  answer: string; assistance?: 'none'|'hint'|'guided'
+  answer: string; assistance?: 'none'|'hint'|'guided'; idempotencyKey: string
 }) {
   return submitLearningActivity(pool, input)
 }
@@ -127,10 +127,18 @@ import type {
   CreateLearningActivityCommand,
   CreateLearningObjectivesCommand,
 } from './contracts.js'
-import { findLearningActivity, findLearningMission } from './repository.js'
+import { findLearningMission, findVisibleLearningActivity } from './repository.js'
 
-export async function getMission(missionId: string, companyId: string, courseId: string) {
+export async function getMission(
+  missionId: string,
+  companyId: string,
+  courseId: string,
+  learnerId: string,
+  conversationId: string,
+) {
   const mission = await findLearningMission(pool, companyId, courseId, missionId)
-  if (!mission) throw new Error('mission not found')
+  if (!mission || mission.learnerId !== learnerId || mission.conversationId !== conversationId) {
+    throw new Error('mission not found')
+  }
   return mission
 }

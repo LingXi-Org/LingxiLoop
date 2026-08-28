@@ -242,14 +242,14 @@ export class BoardApplication {
   private async wake(companyId: string, actorId: string, participants: string[] | undefined): Promise<void> {
     const targets = [...new Set((participants ?? []).filter((id) => id !== actorId))]
     const agents = await mentionedAgents(this.db, companyId, targets)
-    for (const agentId of agents) {
-      await this.infrastructure.enqueueAgent({ companyId, agentId, reason: 'mention' })
-    }
+    await Promise.allSettled(agents.map((agentId) => (
+      this.infrastructure.enqueueAgent({ companyId, agentId, reason: 'mention' })
+    )))
   }
 
   private publish(scope: BoardScope, event: Omit<BoardEventInput, 'companyId' | 'workspaceId' | 'actorId'>) {
     return this.infrastructure.publish({
       ...event, companyId: scope.companyId, workspaceId: scope.projectId, actorId: scope.userId,
-    })
+    }).catch(() => undefined)
   }
 }

@@ -15,6 +15,7 @@ const attachmentsSchema = z.array(outboundAttachmentSchema).max(16).default([]).
 })
 
 export const sendEmailRequestSchema = z.object({
+  idempotencyKey: z.string().trim().min(8).max(256),
   to: z.array(z.string().trim().min(1)).min(1),
   cc: z.array(z.string().trim().min(1)).default([]),
   subject: z.string().trim().min(1).max(998),
@@ -23,6 +24,7 @@ export const sendEmailRequestSchema = z.object({
 }).strict()
 
 export const replyEmailRequestSchema = z.object({
+  idempotencyKey: z.string().trim().min(8).max(256),
   body: z.string().trim().min(1).max(50_000),
   cc: z.array(z.string().trim().min(1)).default([]),
   attachments: attachmentsSchema,

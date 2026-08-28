@@ -2,6 +2,7 @@ import { pool } from '../../db/pool.js'
 import { env } from '../../env.js'
 import {
   assertEmailProviderConfigured,
+  completeOutboundEmail,
   ensureParticipantAddress,
   findOrCreateEmailConversation,
   formatAddress,
@@ -29,6 +30,7 @@ export const emailApplication = new EmailApplication(pool, {
   normalizeMessageId,
   splitReplyAddresses,
   send: (args) => sendViaProvider(args),
+  completeDelivery: completeOutboundEmail,
   findOrCreateConversation: (args) => findOrCreateEmailConversation(args),
   persist: (args) => persistEmailMessage(args),
 })

@@ -68,15 +68,15 @@ test('UI submission is one authoritative insert that binds published activity an
   const db = queryable((text, params) => {
     statement = text
     values = params
-    return { rowCount: 1 }
+    return { rows: [{ id: 'attempt-1' }], rowCount: 1 }
   })
 
   const inserted = await insertLearningActivityAttempt(db, {
     id: 'attempt-1', companyId: 'company-1', courseId: 'course-1', activityId: 'activity-1',
-    learnerId: 'learner-1', assistance: 'none', answer: 'evidence',
+    learnerId: 'learner-1', assistance: 'none', answer: 'evidence', idempotencyKey: 'submission-1',
   })
 
-  assert.equal(inserted, true)
+  assert.equal(inserted, 'attempt-1')
   assert.deepEqual(values?.slice(0, 5), ['attempt-1','company-1','course-1','activity-1','learner-1'])
   assert.match(statement, /activity\.status='published'/)
   assert.match(statement, /learner\.user_id=\$5 AND learner\.role='learner'/)

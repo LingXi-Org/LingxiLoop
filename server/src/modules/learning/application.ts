@@ -247,11 +247,11 @@ export async function submitLearningActivity(
   db: Queryable,
   input: {
     companyId: string; courseId: string; activityId: string; learnerId: string
-    answer: string; assistance?: 'none'|'hint'|'guided'
+    answer: string; assistance?: 'none'|'hint'|'guided'; idempotencyKey: string
   },
 ): Promise<{ attemptId: string }> {
   const attemptId = randomUUID()
-  const accepted = await insertLearningActivityAttempt(db, {
+  const acceptedId = await insertLearningActivityAttempt(db, {
     id: attemptId,
     companyId: input.companyId,
     courseId: input.courseId,
@@ -259,9 +259,10 @@ export async function submitLearningActivity(
     learnerId: input.learnerId,
     assistance: input.assistance ?? 'none',
     answer: learningText(input.answer, 'answer', 100_000),
+    idempotencyKey: input.idempotencyKey,
   })
-  if (!accepted) throw new LearningApplicationError('not_found', 'published activity not found')
-  return { attemptId }
+  if (!acceptedId) throw new LearningApplicationError('not_found', 'published activity not found')
+  return { attemptId: acceptedId }
 }
 
 export async function getLearningMission(

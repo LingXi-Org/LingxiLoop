@@ -49,8 +49,8 @@ export const createCalendarEventRequestSchema = z.object({
   reminderChannel: z.enum(['toast', 'email', 'both']).nullable().optional(),
   isPrivate: z.boolean().default(false),
 }).strict().superRefine((value, context) => {
-  if (value.kind === 'agent_task' && (!value.assigneeId || !value.targetConversationId)) {
-    context.addIssue({ code: 'custom', message: 'agent_task events require assigneeId and targetConversationId' })
+  if (value.kind === 'agent_task' && !value.assigneeId) {
+    context.addIssue({ code: 'custom', message: 'agent_task events require assigneeId' })
   }
   if ((value.reminderMinutesBefore != null) !== (value.reminderChannel != null)) {
     context.addIssue({

@@ -51,6 +51,7 @@ export interface EmailInfrastructure {
     selfAddresses: string[]
   }): { to: string[]; cc: string[] }
   send(args: SendArgs): Promise<ProviderSendResult>
+  completeDelivery(messageId: string, result: ProviderSendResult, fallbackSmtpMessageId: string): Promise<void>
   findOrCreateConversation(args: {
     companyId: string
     inReplyTo: string | null
@@ -63,7 +64,7 @@ export interface EmailInfrastructure {
     companyId: string
     authorId: string
     direction: 'out'
-    transportStatus: 'sent' | 'failed'
+    transportStatus: 'queued' | 'sent' | 'failed'
     transportError?: string | null
     smtpMessageId: string | null
     inReplyTo: string | null
@@ -79,6 +80,7 @@ export interface EmailInfrastructure {
       sizeBytes: number
       storageKey: string
     }>
+    idempotencyKey?: string
   }): Promise<{ messageId: string }>
 }
 
@@ -112,6 +114,23 @@ export class EmailApplication {
       memberIds: [...memberIds],
     })
     const from = this.infrastructure.formatAddress(sender.email, sender.displayName)
+    const persisted = await this.infrastructure.persist({
+      conversationId: conversation.conversationId,
+      companyId: scope.companyId,
+      authorId: scope.userId,
+      direction: 'out',
+      transportStatus: 'queued',
+      smtpMessageId: messageId,
+      inReplyTo: null,
+      references: [],
+      subject,
+      fromAddr: from,
+      toAddrs: to.map((address) => this.infrastructure.formatAddress(address.addr, address.name)),
+      ccAddrs: cc.map((address) => this.infrastructure.formatAddress(address.addr, address.name)),
+      body: input.body,
+      attachments: this.persistedAttachments(attachments),
+      idempotencyKey: input.idempotencyKey,
+    })
     const result = await this.infrastructure.send({
       from,
       to: to.map((address) => this.infrastructure.formatAddress(address.addr, address.name)),
@@ -121,29 +140,14 @@ export class EmailApplication {
       subject,
       text: input.body,
       messageId,
+      idempotencyKey: input.idempotencyKey,
       attachments: attachments.map((attachment) => ({
         filename: attachment.filename,
         mimeType: attachment.mimeType,
         path: attachment.publicUrl,
       })),
     })
-    const persisted = await this.infrastructure.persist({
-      conversationId: conversation.conversationId,
-      companyId: scope.companyId,
-      authorId: scope.userId,
-      direction: 'out',
-      transportStatus: result.ok ? 'sent' : 'failed',
-      transportError: result.error,
-      smtpMessageId: result.smtpMessageId ?? messageId,
-      inReplyTo: null,
-      references: [],
-      subject,
-      fromAddr: from,
-      toAddrs: to.map((address) => this.infrastructure.formatAddress(address.addr, address.name)),
-      ccAddrs: cc.map((address) => this.infrastructure.formatAddress(address.addr, address.name)),
-      body: input.body,
-      attachments: this.persistedAttachments(attachments),
-    })
+    await this.infrastructure.completeDelivery(persisted.messageId, result, messageId)
     return this.sendPayload(persisted.messageId, conversation.conversationId, result)
   }
 
@@ -186,6 +190,23 @@ export class EmailApplication {
     const inReplyTo = this.infrastructure.normalizeMessageId(target.smtp_message_id)
     const messageId = this.infrastructure.mintMessageId()
     const from = this.infrastructure.formatAddress(sender.email, sender.displayName)
+    const persisted = await this.infrastructure.persist({
+      conversationId: target.conversation_id,
+      companyId: scope.companyId,
+      authorId: scope.userId,
+      direction: 'out',
+      transportStatus: 'queued',
+      smtpMessageId: messageId,
+      inReplyTo,
+      references,
+      subject,
+      fromAddr: from,
+      toAddrs: addresses.to,
+      ccAddrs: combinedCc,
+      body: input.body,
+      attachments: this.persistedAttachments(attachments),
+      idempotencyKey: input.idempotencyKey,
+    })
     const result = await this.infrastructure.send({
       from,
       to: addresses.to,
@@ -195,29 +216,14 @@ export class EmailApplication {
       inReplyTo: inReplyTo ?? undefined,
       references,
       messageId,
+      idempotencyKey: input.idempotencyKey,
       attachments: attachments.map((attachment) => ({
         filename: attachment.filename,
         mimeType: attachment.mimeType,
         path: attachment.publicUrl,
       })),
     })
-    const persisted = await this.infrastructure.persist({
-      conversationId: target.conversation_id,
-      companyId: scope.companyId,
-      authorId: scope.userId,
-      direction: 'out',
-      transportStatus: result.ok ? 'sent' : 'failed',
-      transportError: result.error,
-      smtpMessageId: result.smtpMessageId ?? messageId,
-      inReplyTo,
-      references,
-      subject,
-      fromAddr: from,
-      toAddrs: addresses.to,
-      ccAddrs: combinedCc,
-      body: input.body,
-      attachments: this.persistedAttachments(attachments),
-    })
+    await this.infrastructure.completeDelivery(persisted.messageId, result, messageId)
     await markEmailConversationRead(this.db, scope.companyId, scope.userId, target.conversation_id)
     return this.sendPayload(persisted.messageId, target.conversation_id, result)
   }

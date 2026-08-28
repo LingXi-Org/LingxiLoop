@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { ProjectPatch } from './contracts.js'
 
@@ -150,6 +151,21 @@ export async function insertSource(db: Queryable, args: {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12)`,
     [args.id, args.companyId, args.projectId, args.conversationId, args.kind, args.title,
       args.mime, args.size, args.storageKey, args.originalUrl, args.status, args.userId],
+  )
+}
+
+export async function enqueueSourceJob(db: Queryable, sourceId: string): Promise<void> {
+  await db.query(
+    `INSERT INTO knowledge_source_jobs (id, source_id, status, available_at)
+     VALUES ($1,$2,'queued',NOW())
+     ON CONFLICT (source_id) DO UPDATE SET status='queued',available_at=NOW(),leased_until=NULL,leased_by=NULL,
+       last_error=NULL,updated_at=NOW()`,
+    [`ksj-${randomUUID()}`, sourceId],
+  )
+  await db.query(
+    `UPDATE knowledge_sources SET status='queued',stage='queued',error=NULL,updated_at=NOW()
+      WHERE id=$1 AND deleted_at IS NULL`,
+    [sourceId],
   )
 }
 

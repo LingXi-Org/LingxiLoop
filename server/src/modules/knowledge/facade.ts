@@ -2,7 +2,6 @@ import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import {
   deleteKnowledgeSource,
-  enqueueKnowledgeSource,
   ensureProjectNotebook,
   getKnowledgeSourceText,
   MAX_SOURCE_BYTES,
@@ -19,7 +18,6 @@ export const knowledgeApplication = new KnowledgeApplication(pool, {
   ensureNotebook: async (projectId, companyId) => { await ensureProjectNotebook(projectId, companyId) },
   syncNotebookMetadata: syncProjectNotebookMetadata,
   sourceText: getKnowledgeSourceText,
-  enqueueSource: enqueueKnowledgeSource,
   retrySource: retryKnowledgeSource,
   deleteSource: deleteKnowledgeSource,
   putObject: async (key, body, contentType) => { await storage.put(key, body, contentType) },

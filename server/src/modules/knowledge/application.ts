@@ -5,6 +5,7 @@ import {
   findSource,
   insertProject,
   insertSource,
+  enqueueSourceJob,
   listConversationSources,
   listProjects,
   listSources,
@@ -35,7 +36,6 @@ export interface KnowledgeInfrastructure {
   ensureNotebook(projectId: string, companyId: string): Promise<void>
   syncNotebookMetadata(projectId: string): Promise<void>
   sourceText(sourceId: string, companyId: string, projectId: string): Promise<string | null>
-  enqueueSource(sourceId: string): Promise<void>
   retrySource(sourceId: string, companyId: string, projectId: string): Promise<void>
   deleteSource(sourceId: string, companyId: string, projectId: string): Promise<void>
   putObject(key: string, body: Buffer, contentType: string): Promise<void>
@@ -136,11 +136,13 @@ export class KnowledgeApplication {
     const title = input.title || (input.kind === 'url' ? input.url : '粘贴文本')
     const storageKey = text ? `knowledge-sources/${scope.companyId}/${scope.projectId}/${id}.txt` : null
     if (text && storageKey) await this.infrastructure.putObject(storageKey, Buffer.from(text, 'utf8'), 'text/plain')
-    await insertSource(this.db, {
-      id, ...scope, conversationId, kind: input.kind, title, mime: input.kind === 'text' ? 'text/plain' : null,
-      size, storageKey, originalUrl, status: 'queued',
+    await this.infrastructure.transaction(async (db) => {
+      await insertSource(db, {
+        id, ...scope, conversationId, kind: input.kind, title, mime: input.kind === 'text' ? 'text/plain' : null,
+        size, storageKey, originalUrl, status: 'queued',
+      })
+      await enqueueSourceJob(db, id)
     })
-    await this.infrastructure.enqueueSource(id)
     return { id, kind: input.kind, title, status: 'queued' as const, stage: 'queued' as const }
   }
 
@@ -170,7 +172,7 @@ export class KnowledgeApplication {
     if (body.length !== source.sizeBytes || body.length > this.infrastructure.maxSourceBytes) {
       throw new KnowledgeApplicationError('upload_size_mismatch', 'uploaded object size does not match the declaration')
     }
-    await this.infrastructure.enqueueSource(sourceId)
+    await this.infrastructure.transaction((db) => enqueueSourceJob(db, sourceId))
     return { ok: true as const, id: sourceId, status: 'queued' as const }
   }
 

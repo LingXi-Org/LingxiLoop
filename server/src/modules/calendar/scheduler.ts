@@ -229,7 +229,7 @@ export class CalendarScheduler {
           sequence: created.sequence,
           at: new Date().toISOString(),
         },
-      })
+      }).catch(() => undefined)
       return { status: 'dispatched', messageId: created.messageId, conversationId }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -273,7 +273,7 @@ export class CalendarScheduler {
         continue
       }
       const result = await this.dispatch(event, occurrence)
-      if (!['dispatched', 'skipped', 'failed'].includes(result.status)) continue
+      if (!['dispatched', 'skipped'].includes(result.status)) continue
       await markCalendarEventFired(this.infrastructure.db, {
         id: event.id,
         companyId: event.company_id,

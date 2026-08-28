@@ -109,6 +109,6 @@ export class DocumentsApplication {
       workspaceId: scope.projectId,
       documentId,
       actorId: scope.userId,
-    })
+    }).catch(() => undefined)
   }
 }

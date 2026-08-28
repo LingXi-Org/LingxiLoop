@@ -44,6 +44,7 @@ export const createActivityRequestSchema = z.object({
   dueAt: z.string().optional(),
 }).strict()
 export const submitActivityRequestSchema = z.object({
+  idempotencyKey: z.string().trim().min(8).max(200),
   answer: z.string().trim().min(1),
   assistance: z.enum(['none', 'hint', 'guided']).default('none'),
 }).strict()
@@ -107,6 +108,18 @@ export interface AddLearningMissionStepInput {
   description: string
   successCriteria: string
   objectiveId?: string
+}
+
+export interface StartLearningMissionCommand extends LearningAgentRoomScope {
+  workId: string
+  agentId: string
+  triggerClientMsgNo: string
+  threadRootClientMsgNo?: string
+  goal: string
+  successCriteria: string
+  missionKind?: 'study' | 'research' | 'project'
+  sourceClientMsgNo?: string
+  explicit?: boolean
 }
 
 export interface LearningScope { userId: string; companyId: string }

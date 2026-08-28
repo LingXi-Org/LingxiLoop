@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from './db/pool.js'
+import type { Queryable } from './db/queryable.js'
 
 export type LlmCallContext = {
   purpose: string
@@ -35,16 +36,16 @@ async function persistLlmCall(args: {
   status: 'succeeded' | 'failed'
   error?: unknown
   measured?: boolean
-}): Promise<void> {
+}, db: Queryable = pool, id = `llm-${randomUUID()}`): Promise<void> {
   const usage = args.usage
-  await pool.query(
+  await db.query(
     `INSERT INTO llm_calls (
        id, company_id, agent_id, run_id, conversation_id, purpose, source, model,
        input_tokens, cached_input_tokens, output_tokens, cost_usd, cost_estimated,
        measured, latency_ms, status, error, extras
      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,0,TRUE,$12,$13,$14,$15,$16::jsonb)`,
     [
-      `llm-${randomUUID()}`,
+      id,
       args.context.companyId,
       args.context.agentId ?? null,
       args.context.runId ?? null,
@@ -64,7 +65,7 @@ async function persistLlmCall(args: {
   )
 }
 
-export async function recordLlmCall(args: LlmCallRecord): Promise<void> {
+export async function recordLlmCall(args: LlmCallRecord, db: Queryable = pool, id?: string): Promise<void> {
   if (recorderOverride) return recorderOverride(args)
-  return persistLlmCall(args)
+  return persistLlmCall(args, db, id)
 }

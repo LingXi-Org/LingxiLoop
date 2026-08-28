@@ -6,6 +6,7 @@ export interface EmailAttachmentInput {
 }
 
 export interface SendEmailInput {
+  idempotencyKey: string
   to: string[]
   cc?: string[]
   subject: string
@@ -14,6 +15,7 @@ export interface SendEmailInput {
 }
 
 export interface ReplyEmailInput {
+  idempotencyKey: string
   body: string
   cc?: string[]
   attachments?: EmailAttachmentInput[]

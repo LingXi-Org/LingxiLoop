@@ -12,14 +12,12 @@ const OTHER_COMPANY_ID = 'co-knowledge-other'
 const OTHER_PROJECT_ID = 'project-knowledge-other'
 
 const objects = new Map<string, Buffer>()
-const enqueued: string[] = []
 const application = new KnowledgeApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
   notebookEnabled: () => true,
   ensureNotebook: async () => undefined,
   syncNotebookMetadata: async () => undefined,
   sourceText: async () => 'extracted',
-  enqueueSource: async (sourceId) => { enqueued.push(sourceId) },
   retrySource: async () => undefined,
   deleteSource: async () => undefined,
   putObject: async (key, body) => { objects.set(key, body) },
@@ -33,7 +31,6 @@ before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => {
   await resetAllTables()
   objects.clear()
-  enqueued.length = 0
   await pool.query(
     `INSERT INTO companies (id,name,slug,owner_user_id)
      VALUES ($1,'Knowledge Slice','knowledge-slice',$3),($2,'Knowledge Other','knowledge-other',$3)`,
@@ -56,7 +53,8 @@ test('[integration] knowledge source creation keeps explicit tenant and project 
     null,
     { kind: 'text', title: 'Strict source', text: 'authoritative text' },
   )
-  assert.deepEqual(enqueued, [created.id])
+  const queued = await pool.query(`SELECT 1 FROM knowledge_source_jobs WHERE source_id=$1 AND status='queued'`, [created.id])
+  assert.equal(queued.rowCount, 1)
   const row = await pool.query<{ company_id: string; project_id: string; storage_key: string }>(
     `SELECT company_id,project_id,storage_key FROM knowledge_sources WHERE id=$1`,
     [created.id],
@@ -85,7 +83,8 @@ test('[integration] presigned upload confirmation rejects a mismatched R2 object
     application.completeUpload(scope, pending.id),
     (error) => error instanceof KnowledgeApplicationError && error.code === 'upload_size_mismatch',
   )
-  assert.equal(enqueued.includes(pending.id), false)
+  const queued = await pool.query(`SELECT 1 FROM knowledge_source_jobs WHERE source_id=$1`, [pending.id])
+  assert.equal(queued.rowCount, 0)
 })
 
 test('[integration] conversation source selection accepts only same-tenant project sources', async () => {

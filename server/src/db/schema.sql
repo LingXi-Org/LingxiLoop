@@ -645,7 +645,10 @@ CREATE TABLE public.calendar_dispatches (
     status text DEFAULT 'dispatched'::text NOT NULL,
     conversation_id text,
     message_id text,
-    error text
+    error text,
+    claimed_at timestamp with time zone DEFAULT now() NOT NULL,
+    attempt_count integer DEFAULT 1 NOT NULL,
+    CONSTRAINT calendar_dispatches_attempt_count_check CHECK (attempt_count > 0)
 );
 
 
@@ -697,7 +700,10 @@ CREATE TABLE public.calendar_reminders (
     channel text NOT NULL,
     recipients jsonb DEFAULT '[]'::jsonb NOT NULL,
     status text DEFAULT 'sent'::text NOT NULL,
-    error text
+    error text,
+    claimed_at timestamp with time zone DEFAULT now() NOT NULL,
+    attempt_count integer DEFAULT 1 NOT NULL,
+    CONSTRAINT calendar_reminders_attempt_count_check CHECK (attempt_count > 0)
 );
 
 
@@ -4784,6 +4790,7 @@ CREATE TABLE public.learning_attempts (
     assistance text DEFAULT 'none'::text NOT NULL,
     evidence jsonb NOT NULL,
     status text DEFAULT 'submitted'::text NOT NULL,
+    client_submission_id text,
     submitted_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT learning_attempts_single_source_check CHECK (num_nonnulls(activity_id, mission_step_id) = 1),
     CONSTRAINT learning_attempts_assistance_check
@@ -4802,6 +4809,10 @@ ALTER TABLE ONLY public.learning_mission_steps
 
 CREATE INDEX idx_learning_attempts_learner
     ON public.learning_attempts USING btree (company_id, course_id, learner_id, submitted_at DESC);
+
+CREATE UNIQUE INDEX uniq_learning_activity_submission
+    ON public.learning_attempts USING btree (company_id, course_id, activity_id, learner_id, client_submission_id)
+    WHERE client_submission_id IS NOT NULL;
 
 CREATE TABLE public.learning_evaluations (
     id text PRIMARY KEY,
