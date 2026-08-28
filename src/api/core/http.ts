@@ -2,13 +2,7 @@ import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { getActiveCompanyId, getAuthToken, useAuth } from '@/stores/auth'
 import { lingxiApiFetch, mergeRequestHeaders } from '@/api/transport'
 
-const SERVER_URL_KEY = 'lingxiloop.serverUrl'
-
 function resolveServerOrigin(): string {
-  if (typeof localStorage !== 'undefined') {
-    const override = localStorage.getItem(SERVER_URL_KEY)
-    if (override) return override.replace(/\/+$/, '')
-  }
   const baked = import.meta.env.VITE_LINGXILOOP_API_BASE as string | undefined
   return baked ? baked.replace(/\/+$/, '') : ''
 }
@@ -17,12 +11,6 @@ const SERVER_ORIGIN = resolveServerOrigin()
 export const API = `${SERVER_ORIGIN}/api`
 
 export const getServerOrigin = () => SERVER_ORIGIN
-
-export function setServerOrigin(origin: string | null): void {
-  if (origin == null || origin.trim() === '') localStorage.removeItem(SERVER_URL_KEY)
-  else localStorage.setItem(SERVER_URL_KEY, origin.trim().replace(/\/+$/, ''))
-  useAuth.getState().clear()
-}
 
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { 'content-type': 'application/json' }

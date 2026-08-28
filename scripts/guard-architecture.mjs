@@ -26,6 +26,8 @@ for (const [label, pattern] of [
   ['native browser dialog', /\b(?:window\.)?(?:alert|confirm|prompt)\s*\(/],
   ['Base64 upload data plane', /dataBase64|\/uploads['"]\s*,/],
   ['retired device dev mode', /x-lingxiloop-dev-mode|lingxiloop\.devtools\.enabled/],
+  ['retired device server override', /lingxiloop\.serverUrl|setServerOrigin\s*\(/],
+  ['retired root API facade', /\b(?:platformApi|filesApi|observabilityApi)\b/],
   ['retired agent portrait path', /agents?\/[^'"`]*avatar\/generate|generateAgentAvatar|AI生成的肖像|AI portrait/],
 ]) if (pattern.test(productionFrontend)) violations.push(`frontend: ${label} is forbidden`)
 
@@ -36,8 +38,10 @@ const fetchAllowlist = new Set([
 ])
 for (const file of frontend) {
   const source = await read(file)
-  if (/\bfetch\s*\(/.test(source) && !fetchAllowlist.has(name(file))) violations.push(`${name(file)}: raw fetch bypasses the shared transport`)
-  if (/\bnew\s+WebSocket\s*\(/.test(source) && name(file) !== 'src/api/core/realtime.ts') violations.push(`${name(file)}: WebSocket construction bypasses realtime.ts`)
+  const fileName = name(file)
+  if (new Set(['src/api/files.ts', 'src/api/observability.ts', 'src/api/platform.ts']).has(fileName)) violations.push(`${fileName}: retired root API facade is forbidden`)
+  if (/\bfetch\s*\(/.test(source) && !fetchAllowlist.has(fileName)) violations.push(`${fileName}: raw fetch bypasses the shared transport`)
+  if (/\bnew\s+WebSocket\s*\(/.test(source) && fileName !== 'src/api/core/realtime.ts') violations.push(`${fileName}: WebSocket construction bypasses realtime.ts`)
 }
 
 const rootRouter = await read(resolve('server/src/api/router.ts'))

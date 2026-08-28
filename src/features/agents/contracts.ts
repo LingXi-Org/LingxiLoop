@@ -1,5 +1,20 @@
 import type { AgentCapability, Status } from '@/types'
 
+export type AgentRunStatus = 'running' | 'waiting_for_human' | 'completed' | 'failed' | 'skipped' | 'stalled'
+export type AgentEventLevel = 'debug' | 'info' | 'warn' | 'error'
+
+export interface CoworkerActivity {
+  id: string
+  runId: string
+  agentId: string
+  agentName: string
+  runStatus: AgentRunStatus
+  kind: string
+  level: AgentEventLevel
+  title: string
+  createdAt: string
+}
+
 export interface ApiParticipant {
   id: string
   kind: 'agent' | 'human'

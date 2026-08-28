@@ -1,10 +1,10 @@
 
 import { http } from '@/api/core/http'
-import type { ApiCoworkerActivity } from '@/api/contracts'
 import type {
   AgentInput,
   ApiAutonomy,
   ApiAutonomyRule,
+  CoworkerActivity,
   ApiLearnedMemory,
   ApiParticipant,
 } from './contracts'
@@ -37,7 +37,7 @@ export const agentsApi = {
       body: JSON.stringify({ threshold }),
     }),
   getCoworkerActivity: (conversationId: string) =>
-    http<ApiCoworkerActivity[]>(`/coworker/activity?conversationId=${encodeURIComponent(conversationId)}`),
+    http<CoworkerActivity[]>(`/coworker/activity?conversationId=${encodeURIComponent(conversationId)}`),
   resolveApproval: (approvalId: string, decision: 'approved' | 'rejected') => {
     const path = `/im/approvals/${encodeURIComponent(approvalId)}/resolve`
     const init = { method: 'POST', body: JSON.stringify({ approved: decision === 'approved' }) }

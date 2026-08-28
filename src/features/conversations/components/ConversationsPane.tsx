@@ -1,9 +1,8 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
-import type { ApiSearchResults } from '@/api/contracts'
+import type { ConversationSearchResults } from '../contracts'
 import { conversationsApi } from '@/features/conversations/api'
-import { platformApi } from '@/api/platform'
 import { Avatar } from '@/components/Avatar'
 import { GroupCreator } from '@/features/conversations/components/GroupCreator'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
@@ -118,7 +117,7 @@ export function ConversationsPane() {
   const authUser = useAuth((s) => s.user)
   const authParticipant = useParticipants((s) => authUser ? s.byId[authUser.id] : undefined)
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<ApiSearchResults | null>(null)
+  const [results, setResults] = useState<ConversationSearchResults | null>(null)
   const [searching, setSearching] = useState(false)
   const [launcherOpen, setLauncherOpen] = useState(false)
   const [creating, setCreating] = useState<string[] | null>(null)
@@ -142,7 +141,7 @@ export function ConversationsPane() {
     const controller = new AbortController()
     setSearching(true)
     const timer = window.setTimeout(() => {
-      platformApi.search(value, controller.signal)
+      conversationsApi.search(value, controller.signal)
         .then((next) => setResults(next))
         .catch((error) => { if ((error as { name?: string }).name !== 'AbortError') console.warn('[search] failed', error) })
         .finally(() => setSearching(false))

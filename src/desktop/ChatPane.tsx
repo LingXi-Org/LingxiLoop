@@ -1,6 +1,6 @@
 import { useAuiState } from '@assistant-ui/react'
 import { agentsApi } from '@/features/agents/api'
-import type { ApiCoworkerActivity } from '@/api/contracts'
+import type { CoworkerActivity } from '@/features/agents/contracts'
 import { type MutableRefObject, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 import { ws } from '@/api/core/realtime'
@@ -191,11 +191,11 @@ function OpenMausEmptyConversationState() {
 }
 
 function ConversationActivity({ conversationId }: { conversationId: string }) {
-  const [events, setEvents] = useState<ApiCoworkerActivity[]>([])
+  const [events, setEvents] = useState<CoworkerActivity[]>([])
   useEffect(() => {
     let cancelled = false
     setEvents([])
-    const merge = (rows: ApiCoworkerActivity[]) => {
+    const merge = (rows: CoworkerActivity[]) => {
       if (cancelled) return
       setEvents((current) => {
         const byId = new Map(current.map((event) => [event.id, event]))
@@ -228,7 +228,7 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
   // A run emits multiple activity rows. Only its newest row represents the
   // current state; otherwise an older run.started row can outlive a later
   // run.completed row and leave the strip pulsing forever.
-  const latestByRun = new Map<string, ApiCoworkerActivity>()
+  const latestByRun = new Map<string, CoworkerActivity>()
   for (const event of events) latestByRun.set(event.runId, event)
   const active = [...latestByRun.values()].reverse()
     .find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')

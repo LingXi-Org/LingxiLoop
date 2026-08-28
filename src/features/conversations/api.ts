@@ -1,9 +1,11 @@
 
 import { http } from '@/api/core/http'
-import type { ApiConversation } from './contracts'
+import type { ApiConversation, ConversationSearchResults } from './contracts'
 import type { ImReadReceiptAdvance } from '@/types'
 
 export const conversationsApi = {
+  search: (query: string, signal?: AbortSignal) =>
+    http<ConversationSearchResults>(`/search?q=${encodeURIComponent(query)}`, { signal }),
   getConversations: () => http<ApiConversation[]>('/im/channels'),
   createGroup: (input: { clientRequestId: string; title: string; members: string[]; leaderId: string; workspaceId: string }) =>
     http<{ id: string; members: string[]; leaderId: string; projectId: string; created: boolean }>('/conversations', {

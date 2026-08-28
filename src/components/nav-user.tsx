@@ -1,7 +1,7 @@
 "use client"
 
 import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
-import { platformApi } from "@/api/platform"
+import { authApi } from '@/auth/api'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -22,7 +22,7 @@ export function NavUser({ user }: {
   const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || "我"
   const signOut = () => {
     useAuth.getState().clear()
-    void platformApi.authLogout().catch(() => undefined)
+    void authApi.logout().catch(() => undefined)
   }
   const openSettings = (tab: 'Profile' | 'Preferences') => {
     useApp.getState().setView('me')

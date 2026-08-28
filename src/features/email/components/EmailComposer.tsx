@@ -20,7 +20,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { emailApi } from '../api'
-import { filesApi } from '@/api/files'
+import { uploadsApi } from '@/features/platform/api'
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
 import { Input } from '@/components/ui/input'
 import {
@@ -279,7 +279,7 @@ export function EmailComposer() {
     ])
     void (async () => {
       try {
-        const uploaded = await filesApi.uploadFile(file)
+        const uploaded = await uploadsApi.uploadFile(file)
         setAttachments((prev) => prev.map((a) =>
           a.localId === localId
             ? { ...a, state: 'done', key: uploaded.key ?? '' }

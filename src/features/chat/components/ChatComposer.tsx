@@ -1,4 +1,4 @@
-import { filesApi } from '@/api/files'
+import { uploadsApi } from '@/features/platform/api'
 import { conversationsApi } from '@/features/conversations/api'
 import type { ApiAttachment } from '@/api/contracts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -434,7 +434,7 @@ export function Composer({
     setUploadingForScope(targetScope, true)
     setUploadErrorForScope(targetScope, null)
     try {
-      const a = await filesApi.uploadFile(file)
+      const a = await uploadsApi.uploadFile(file)
       setAttachmentForScope(targetScope, a)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)

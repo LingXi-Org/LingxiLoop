@@ -1,9 +1,10 @@
 
 import { http } from '@/api/core/http'
-import { putPresignedFile } from './transport'
-import type { ApiAttachment, UploadCapabilities, PresignResponse, } from './contracts'
+import { putPresignedFile } from '@/api/transport'
+import type { ApiAttachment } from '@/api/contracts'
+import type { PresignedUpload, UploadCapabilities } from './contracts'
 
-export const filesApi = {
+export const uploadsApi = {
   uploadCapabilities: (() => {
     let cache: Promise<UploadCapabilities> | null = null
     return (): Promise<UploadCapabilities> => {
@@ -23,7 +24,7 @@ export const filesApi = {
     }
   })(),
   uploadFile: async (file: File): Promise<ApiAttachment> => {
-    const caps = await filesApi.uploadCapabilities()
+    const caps = await uploadsApi.uploadCapabilities()
     if (caps.maxBytes && file.size > caps.maxBytes) {
       throw new Error(`file too large: ${Math.round(file.size / 1024 / 1024)}MB (max ${Math.round(caps.maxBytes / 1024 / 1024)}MB)`)
     }
@@ -32,7 +33,7 @@ export const filesApi = {
       throw new Error(`file type not allowed: ${mime}`)
     }
 
-    const signed = await http<PresignResponse>('/uploads/presign', {
+    const signed = await http<PresignedUpload>('/uploads/presign', {
       method: 'POST',
       body: JSON.stringify({ name: file.name, mime, size: file.size }),
     })

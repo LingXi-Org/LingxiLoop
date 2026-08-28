@@ -1,26 +1,11 @@
-import type { ServerCapabilities } from '@/api/contracts'
+import type { AuthCompany, AuthUser, ServerCapabilities } from '@/auth/contracts'
+export type { AuthCompany, AuthUser } from '@/auth/contracts'
 /**
  * Auth state — token + current user + active company. Token persists in
  * localStorage so reloads stay signed in. Every API request reads the
  * current token from this store through the shared HTTP transport.
  */
 import { create } from 'zustand'
-export interface AuthCompany {
-  id: string
-  name: string
-  slug: string
-  role: string
-}
-
-export interface AuthUser {
-  id: string
-  email: string
-  name: string
-  emailVerified?: boolean
-  /** Verified identity providers linked to this account. */
-  providers?: string[]
-}
-
 interface AuthState {
   token: string | null
   user: AuthUser | null

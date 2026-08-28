@@ -1,54 +1,7 @@
 
-/**
- * Admin API client — talks to /api/admin/*. Mirrors the shape of
- * the shared HTTP transport but stays in this folder so the admin bundle can
- * load it without dragging the entire main client (and its zustand
- * stores) along for the ride.
- *
- * Auth + base URL come from the same auth store + resolveServerOrigin
- * the main client uses, so a token minted by the regular sign-in flow
- * is what authenticates admin calls.
- */
-import { getAuthToken, useAuth } from '@/stores/auth'
-import { lingxiApiFetch, mergeRequestHeaders } from '@/api/transport'
+import { http as rootHttp } from '@/api/core/http'
 
-function origin(): string {
-  if (typeof localStorage !== 'undefined') {
-    const override = localStorage.getItem('lingxiloop.serverUrl')
-    if (override) return override.replace(/\/+$/, '')
-  }
-  const baked = import.meta.env.VITE_LINGXILOOP_API_BASE as string | undefined
-  if (baked) return baked.replace(/\/+$/, '')
-  return ''
-}
-
-async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers: Record<string, string> = { 'content-type': 'application/json' }
-  const token = getAuthToken()
-  if (token) headers.authorization = `Bearer ${token}`
-  const res = await lingxiApiFetch(`${origin()}/api/admin${path}`, {
-    ...init,
-    headers: mergeRequestHeaders(headers, init?.headers),
-  })
-  if (res.status === 401) {
-    useAuth.getState().clear()
-    throw new Error('signed out')
-  }
-  if (!res.ok) {
-    let detail: string | null = null
-    try {
-      const text = await res.text()
-      if (text) {
-        try {
-          const j = JSON.parse(text) as { error?: string }
-          detail = j.error ?? text.slice(0, 200)
-        } catch { detail = text.slice(0, 200) }
-      }
-    } catch { /* ignore */ }
-    throw new Error(detail ? `${detail} (${res.status})` : `${res.status} ${res.statusText}`)
-  }
-  return res.json() as Promise<T>
-}
+const http = <T>(path: string, init?: RequestInit) => rootHttp<T>(`/admin${path}`, init)
 
 export interface AdminUser {
   id: string

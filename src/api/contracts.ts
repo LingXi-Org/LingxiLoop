@@ -11,65 +11,13 @@ import type {
   CanvasSnapshot,
 } from '@/features/canvas/contracts'
 import type { DocumentChangedEvent } from '@/features/documents/contracts'
+import type { CoworkerActivity } from '@/features/agents/contracts'
 
 
 export interface ApiMessage extends Message {
   sequence: number
   createdAt: string
   reactions?: Array<{ emoji: string; count: number; mine?: boolean; users?: string[] }>
-}
-
-export interface ApiCoworkerActivity {
-  id: string
-  runId: string
-  agentId: string
-  agentName: string
-  runStatus: ApiAgentRunStatus
-  kind: string
-  level: ApiAgentEventLevel
-  title: string
-  createdAt: string
-}
-
-/** Universal-search response. The backend ranks results inside each bucket;
- *  the frontend renders them in this declared order (participants → rooms →
- *  groups → messages), matching the product priority. */
-export interface ApiSearchResults {
-  participants: Array<{
-    id: string
-    kind: 'agent' | 'human'
-    name: string
-    role: string | null
-    initial: string
-    avatarBg: string
-    avatarUrl: string | null
-    status: Status
-    bio: string | null
-  }>
-  rooms: Array<{
-    id: string
-    kind: 'direct'
-    title: string
-    members: string[]
-    projectName: string | null
-  }>
-  groups: Array<{
-    id: string
-    kind: 'group'
-    title: string
-    members: string[]
-    projectName: string | null
-  }>
-  messages: Array<{
-    id: string
-    conversationId: string
-    conversationTitle: string
-    conversationKind: 'group' | 'direct'
-    authorId: string
-    authorName: string | null
-    snippet: string
-    createdAt: string
-  }>
 }
 
 export interface ApiAttachment {
@@ -80,59 +28,6 @@ export interface ApiAttachment {
   size?: number
   /** Object-storage key, present when the file lives in R2. */
   key?: string
-}
-
-export interface UploadCapabilities {
-  mode: 'r2'
-  maxBytes: number
-  allowedMimes: string[]
-}
-
-export interface PresignResponse {
-  uploadUrl: string
-  publicUrl: string
-  key: string
-  name: string
-  mime: string
-  size: number
-  kind: 'img' | 'file'
-}
-
-export type ApiAgentRunStatus = 'running' | 'waiting_for_human' | 'completed' | 'failed' | 'skipped' | 'stalled'
-export type ApiAgentEventLevel = 'debug' | 'info' | 'warn' | 'error'
-
-export interface ApiAgentRun {
-  id: string
-  agentId: string
-  agentName: string
-  agentRole: string | null
-  agentAvatarUrl: string | null
-  companyId: string
-  status: ApiAgentRunStatus
-  stage: string | null
-  summary: string | null
-  error: string | null
-  trigger: Record<string, unknown>
-  inputMessageIds: string[]
-  inboxCount: number
-  toolCallCount: number
-  tokenCount: number
-  fingerprint: string | null
-  startedAt: string
-  updatedAt: string
-  finishedAt: string | null
-  durationMs: number
-}
-
-export interface ApiAgentEvent {
-  id: string
-  runId: string
-  agentId: string
-  kind: string
-  level: ApiAgentEventLevel
-  title: string
-  data: Record<string, unknown>
-  createdAt: string
 }
 
 export interface ApiConveneSession {
@@ -157,20 +52,6 @@ export interface ApiConveneTranscript {
   createdAt: string
 }
 
-export interface MeResponse {
-  user: { id: string; email: string; name: string; emailVerified: boolean; providers: string[] }
-  companies: Array<{ id: string; name: string; slug: string; role: string }>
-  activeCompanyId: string | null
-  serverCapabilities: ServerCapabilities
-}
-
-export interface ServerCapabilities {
-  /** Whether the server can send outbound invitation / welcome emails.
-   *  Driven by EMAIL_DOMAIN being set on the server. The invite modal
-   *  hides the "Email this invite" checkbox when false. */
-  invitationEmail: boolean
-}
-
 /* ============== WebSocket bridge ============== */
 
 export type WsEvent =
@@ -179,7 +60,7 @@ export type WsEvent =
   | { type: 'message.delta'; conversationId: string; messageId: string; authorId: string; delta: string; sequence: number; done: boolean }
   | { type: 'im.read-receipt'; companyId: string; channelId: string; readerId: string; previousReadSeq: number; readThroughSeq: number; readAt: string }
   | { type: 'typing'; conversationId: string; agentId: string; done: boolean }
-  | { type: 'agent.activity'; conversationIds: string[]; activity: ApiCoworkerActivity }
+  | { type: 'agent.activity'; conversationIds: string[]; activity: CoworkerActivity }
   | { type: 'participants.status'; participantId: string; status: Status; statusUpdatedAt?: string }
   | { type: 'participants.avatar'; participantId: string; avatarUrl: string }
   | { type: 'participants.added'; conversationId?: string; participant: {

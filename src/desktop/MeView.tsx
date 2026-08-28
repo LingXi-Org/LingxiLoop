@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { agentsApi } from '@/features/agents/api'
-import { getServerOrigin } from '@/api/core/http'
-import { platformApi } from '@/api/platform'
+import { authApi } from '@/auth/api'
 import { Avatar } from '@/components/Avatar'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -48,12 +47,10 @@ function ProfileTab() {
   // participant rows can lag in the local cache, so we don't gate on it.
   const authUser = useAuth((s) => s.user)
   const meParticipant = useParticipants((s) => (authUser ? s.byId[authUser.id] : null))
-  const serverOrigin = getServerOrigin() || 'same-origin (Vite proxy)'
-
   async function signOut() {
     // Server-side: revoke the session row so the token is dead even if it
     // leaks. Best-effort — client clear still happens on network failure.
-    try { await platformApi.authLogout() } catch (e) { console.warn('[signout] server call failed', e) }
+    try { await authApi.logout() } catch (e) { console.warn('[signout] server call failed', e) }
     useAuth.getState().clear()
     location.reload()
   }
@@ -86,7 +83,7 @@ function ProfileTab() {
         <div className="bg-cloud rounded-[14px] p-5 flex items-center justify-between gap-4"
           style={{ border: '1px solid var(--ink-100)' }}>
           <div className="min-w-0">
-            <div className="font-display text-[14px] text-ink-800">当前登录到 <span className="font-mono text-[12px]">{serverOrigin}</span></div>
+            <div className="font-display text-[14px] text-ink-800">当前会话已通过 LingxiIdentity 验证</div>
             <div className="font-display italic text-[12px] text-ink-400 mt-0.5">
               退出登录会清除本地凭据，并在服务器端撤销当前会话。
             </div>

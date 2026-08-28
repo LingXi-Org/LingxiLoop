@@ -2,20 +2,26 @@ import assert from 'node:assert/strict'
 import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
-const domains = [
-  'files',
-  'observability', 'platform',
-] as const
-
 test('frontend API implementations and consumers stay domain-scoped', async () => {
   await assert.rejects(access(new URL('./client.ts', import.meta.url)))
   await assert.rejects(access(new URL('./calendar.ts', import.meta.url)))
+  await assert.rejects(access(new URL('./files.ts', import.meta.url)))
+  await assert.rejects(access(new URL('./observability.ts', import.meta.url)))
+  await assert.rejects(access(new URL('./platform.ts', import.meta.url)))
 
-  for (const domain of domains) {
-    const source = await readFile(new URL(`./${domain}.ts`, import.meta.url), 'utf8')
-    assert.match(source, new RegExp(`export const ${domain}Api =`))
-    assert.doesNotMatch(source, /export const api =/)
-  }
+  for (const path of [
+    '../auth/api.ts', '../auth/contracts.ts',
+    '../features/platform/api.ts', '../features/platform/contracts.ts',
+  ]) await access(new URL(path, import.meta.url))
+
+  const platformSources = await Promise.all([
+    './core/http.ts', '../admin/api.ts', '../auth/api.ts',
+    '../features/platform/api.ts', '../features/conversations/api.ts',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(platformSources.join('\n'), /lingxiloop\.serverUrl|setServerOrigin|platformApi|filesApi|observabilityApi/)
+  assert.match(platformSources[3], /export const uploadsApi =/)
+  assert.match(platformSources[4], /search:/)
+  assert.doesNotMatch(platformSources[4], /platformApi/)
 
   const consumers = await Promise.all([
     '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../features/boards/state.ts',

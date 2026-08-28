@@ -1,6 +1,6 @@
 import { companiesApi } from '@/features/companies/api'
 import { learningApi } from '@/features/learning/api'
-import { platformApi } from '@/api/platform'
+import { authApi } from '@/auth/api'
 import { getServerOrigin } from '@/api/core/http'
 import type { ApiCourseInvitationAccept, ApiCourseInvitationPreview } from '@/features/learning/contracts'
 import type { ApiInvitationPreview } from '@/features/companies/contracts'
@@ -84,7 +84,7 @@ export function consumeInviteFromUrl(): { token: string; clear: () => void } | n
 }
 
 /** Persist a pending invite token across the OAuth round-trip. The
- *  AuthScreen redirects the browser away (Google / GitHub) — when the
+ *  AuthScreen redirects the browser to LingxiIdentity — when the
  *  user lands back on AUTH_DONE_URL the path/hash is reset to the auth
  *  fragment shape, and `consumeInviteFromUrl` won't find the token.
  *  Pulling it from localStorage instead keeps the flow seamless. */
@@ -142,7 +142,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     setBusy(true); setAcceptErr(null)
     try {
       const r = courseInvite ? await learningApi.acceptCourseInvitation(rawToken) : await companiesApi.acceptInvitation(rawToken)
-      const me = await platformApi.authMe()
+      const me = await authApi.me()
       setMe(me.user, me.companies, r.company.id)
       setServerCapabilities(me.serverCapabilities)
       clearPendingInvite()
@@ -455,7 +455,6 @@ function SignInToAccept({ token }: { token: string }) {
         setError('桌面端未配置服务地址，无法继续登录')
         return
       }
-      const inv = encodeURIComponent(rawToken)
       // Arm a single-use nonce (anti session-fixation — see AuthScreen). The
       // nonce rides the return URL's query and must match on the inbound token.
       const auth = window.lingxiloop.auth
@@ -474,12 +473,18 @@ function SignInToAccept({ token }: { token: string }) {
           setError(reason instanceof Error ? reason.message : '无法建立安全的桌面登录会话')
           return
         }
-        const ret = encodeURIComponent(done)
-        void auth.openExternal(`${origin}/api/auth/start/${provider}?return=${ret}&invite=${inv}&inviteKind=${token.startsWith('course:') ? 'course' : 'company'}`)
+        void auth.openExternal(authApi.startUrl({
+          returnUrl: done,
+          inviteToken: rawToken,
+          inviteKind: token.startsWith('course:') ? 'course' : 'company',
+        }))
       })()
       return
     }
-    location.assign(platformApi.authStartUrl(provider, { inviteToken: rawToken, inviteKind: token.startsWith('course:') ? 'course' : 'company' }))
+    location.assign(authApi.startUrl({
+      inviteToken: rawToken,
+      inviteKind: token.startsWith('course:') ? 'course' : 'company',
+    }))
   }
   return (
     <div className="w-full flex flex-col gap-2.5">

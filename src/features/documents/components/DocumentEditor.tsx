@@ -10,7 +10,7 @@ import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
 import { ws } from '@/api/core/realtime'
-import { filesApi } from '@/api/files'
+import { uploadsApi } from '@/features/platform/api'
 import {
   IBold, ICode, ICodeBlock, IH1, IH2, IH3,IImage, IItalic, ILink,
   IList, IListOrdered, IQuote, IRedo,IStrike, IUndo,
@@ -353,7 +353,7 @@ function CollaborativeEditor({ session, synced, userName, userColor, documentId,
       const refreshId = storageKey || src
       if (!refreshId || refreshingImagesRef.current.has(refreshId)) return
       refreshingImagesRef.current.add(refreshId)
-      void filesApi.refreshUploadUrl({ url: src, key: storageKey || undefined })
+      void uploadsApi.refreshUploadUrl({ url: src, key: storageKey || undefined })
         .then(({ key, url }) => {
           if (!url || url === src) return
           if (!updateImageNodeAttrs(editor, src, storageKey, { src: url, storageKey: key })) {
@@ -526,7 +526,7 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
     }
     setUploading(true)
     try {
-      const attachment = await filesApi.uploadFile(file)
+      const attachment = await uploadsApi.uploadFile(file)
       if (attachment.kind !== 'img') throw new Error('Uploaded file is not an image.')
       insertImage({ src: attachment.url, alt: attachment.name, storageKey: attachment.key ?? null })
     } catch (err) {

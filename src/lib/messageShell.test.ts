@@ -137,7 +137,7 @@ test('desktop conversation column ends with the sidebar-07 account menu instead 
   assert.match(user, /<DropdownMenuContent[\s\S]*?side="right"/)
   assert.match(user, /Account[\s\S]*?Notifications[\s\S]*?Log out/)
   assert.match(user, /aria-label="打开账户菜单"/)
-  assert.match(user, /platformApi\.authLogout/)
+  assert.match(user, /authApi\.logout/)
   assert.match(user, /openSettings\('Profile'\)[^\n]*Account/)
   assert.doesNotMatch(user, /Billing|Upgrade to Pro|openSettings\('Usage'\)/)
   assert.match(user, /openSettings\('Preferences'\)[^\n]*Notifications/)

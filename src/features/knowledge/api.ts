@@ -5,7 +5,7 @@ import type {
   ConversationSourceSelection,
   KnowledgeSource,
 } from './contracts'
-import { filesApi } from '@/api/files'
+import { uploadsApi } from '@/features/platform/api'
 import type { WorkspaceSummary } from '@/types'
 
 export const knowledgeApi = {
@@ -22,7 +22,7 @@ export const knowledgeApi = {
   addTextSource: (conversationId: string, input: { title?: string; text: string }) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources`, { method: 'POST', body: JSON.stringify({ kind: 'text', ...input }) }),
   addUrlSource: (conversationId: string, input: { title?: string; url: string }) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources`, { method: 'POST', body: JSON.stringify({ kind: 'url', ...input }) }),
   uploadKnowledgeFile: async (conversationId: string, file: File): Promise<void> => {
-    const caps = await filesApi.uploadCapabilities()
+    const caps = await uploadsApi.uploadCapabilities()
     const mime = file.type || 'text/plain'
     if (file.size > caps.maxBytes) throw new Error(`file exceeds the ${Math.round(caps.maxBytes / 1024 / 1024)} MB limit`)
     if (!caps.allowedMimes.includes(mime)) throw new Error(`file type not allowed: ${mime}`)
