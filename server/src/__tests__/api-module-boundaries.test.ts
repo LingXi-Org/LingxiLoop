@@ -94,6 +94,8 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.match(documentConsumers.join('\n'), /modules\/documents\/public\.js/)
   assert.doesNotMatch(documentConsumers.join('\n'), /modules\/documents\/(?:collaboration-|markdown)/)
+  assert.doesNotMatch(documentConsumers[0], /db\/pool\.js|\bpool\.query\b|redis\.js/)
+  assert.match(documentConsumers[0], /modules\/conversations\/public\.js/)
   const wsDocumentAuthorization = documentConsumers[2].slice(
     documentConsumers[2].indexOf('async function docCompanyFor'),
     documentConsumers[2].indexOf('function sendJson'),

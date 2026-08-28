@@ -30,6 +30,22 @@ export async function listDocuments(
   return rows
 }
 
+export async function listRecentDocumentsCreatedByOthers(
+  db: Queryable,
+  args: { companyId: string; projectId: string; actorId: string; sinceMinutes: number },
+): Promise<Array<{ id: string; title: string; created_by: string; created_at: Date }>> {
+  const { rows } = await db.query<{ id: string; title: string; created_by: string; created_at: Date }>(
+    `SELECT id,title,created_by,created_at
+       FROM documents
+      WHERE company_id=$1 AND project_id=$2 AND created_by<>$3
+        AND created_at>NOW()-($4::int*INTERVAL '1 minute')
+      ORDER BY created_at DESC
+      LIMIT 50`,
+    [args.companyId, args.projectId, args.actorId, args.sinceMinutes],
+  )
+  return rows
+}
+
 export async function findDocumentCollaborationCompany(
   db: Queryable,
   args: { documentId: string; userId: string; writable: boolean },

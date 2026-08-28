@@ -1,5 +1,18 @@
-import { createHash, randomUUID } from 'node:crypto'
-import { pool } from '../../db/pool.js'
+import { createHash } from 'node:crypto'
+import { authorizeConversationForDocumentShare } from '../../modules/conversations/public.js'
+import {
+  agentDocumentExists,
+  createAgentDocument,
+  deleteAgentDocument,
+  editAgentDocument,
+  getAgentDocument,
+  isAnchoredImagePlacement,
+  listAgentDocuments,
+  listRecentAgentDocumentCreations,
+  readAgentDocument,
+  renameAgentDocument,
+  type AgentImageDeleteMatch,
+} from '../../modules/documents/public.js'
 import type { CliResult, CliSideEffect } from '../cli-result.js'
 import { resolveAs } from '../cli-identity.js'
 import { type ParsedArgs, unescapeChat } from '../cli-parse.js'
@@ -24,28 +37,7 @@ interface DocumentCommandDependencies {
 
 export function createDocumentCommand(dependencies: DocumentCommandDependencies) {
   const { ok, err, agentCompany, resolveCliProjectId, tryClaimTenantWork, releaseTenantWork, cmdReply } = dependencies
-  async function publishDocChanged(
-    companyId: string,
-    documentId: string,
-    kind: 'document.created' | 'document.updated' | 'document.deleted',
-    actorId: string,
-    requestedWorkspaceId?: string,
-  ): Promise<void> {
-    const workspaceId = requestedWorkspaceId ?? (await pool.query<{ project_id: string }>(
-      `SELECT project_id FROM documents WHERE id=$1 AND company_id=$2 LIMIT 1`,
-      [documentId, companyId],
-    )).rows[0]?.project_id
-    const { CH_DOCS, publish } = await import('../../redis.js')
-    await publish(CH_DOCS, {
-      type: 'doc.changed',
-      kind,
-      companyId,
-      workspaceId,
-      documentId,
-      actorId,
-    })
-  }
-  
+
   async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
     const op = parsed.positional[0] ?? 'ls'
     const me = resolveAs(parsed)
@@ -55,24 +47,20 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
   
     if (!['ls', 'list', 'create', 'new'].includes(op)) {
       const documentId = parsed.positional[1]
-      if (documentId) {
-        const access = await pool.query(
-          `SELECT 1 FROM documents WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
-          [documentId, companyId, projectId],
-        )
-        if (!access.rows[0]) return err(`document ${documentId} not found`)
+      if (documentId && !await agentDocumentExists({ companyId, projectId }, documentId)) {
+        return err(`document ${documentId} not found`)
       }
     }
   
     if (op === 'ls' || op === 'list') {
-      const { rows } = await pool.query<{
-        id: string; title: string; created_by: string; updated_at: Date
-      }>(
-        `SELECT id, title, created_by, updated_at FROM documents
-          WHERE company_id = $1 AND project_id = $2 ORDER BY updated_at DESC LIMIT 200`,
-        [companyId, projectId],
-      )
-      if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
+      const rows = await listAgentDocuments({ companyId, projectId })
+      const cliRows = rows.map((document) => ({
+        id: document.id,
+        title: document.title,
+        created_by: document.createdBy,
+        updated_at: document.updatedAt,
+      }))
+      if (parsed.flags.json) return ok(JSON.stringify(cliRows, null, 2))
       if (rows.length === 0) return ok('(no documents in this workspace)')
       return ok([
         `${rows.length} document(s):`,
@@ -88,9 +76,14 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
       const stableDocumentId = internal.idempotencyKey
         ? `doc_agent_${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
         : null
-      if (stableDocumentId) {
-        const { rows } = await pool.query(`SELECT 1 FROM documents WHERE id=$1 AND company_id=$2 AND project_id=$3`, [stableDocumentId, companyId, projectId])
-        if (rows[0]) return ok(`created document ${stableDocumentId}: ${title} [replayed]`)
+      const body = typeof parsed.flags.body === 'string' ? unescapeChat(parsed.flags.body) : ''
+      if (stableDocumentId && await agentDocumentExists({ companyId, projectId }, stableDocumentId)) {
+        await createAgentDocument({ companyId, projectId, userId: me }, {
+          id: stableDocumentId,
+          title: title.slice(0, 200),
+          body,
+        })
+        return ok(`created document ${stableDocumentId}: ${title} [replayed]`)
       }
   
       // Tenant-scoped claim by title so two agents don't independently
@@ -114,21 +107,15 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
         const docHoldScope = `doc-create:${normTitle}`
         const forceArmed = Boolean(parsed.flags.force) && (await consumeHold(me, docHoldScope)).armed
         if (!forceArmed) {
-          const { rows: recentDups } = await pool.query<{
-            id: string; title: string; created_by: string; created_at: Date
-          }>(
-            `SELECT id, title, created_by, created_at FROM documents
-              WHERE company_id = $1 AND created_by <> $2 AND project_id = $3
-                AND created_at > NOW() - INTERVAL '15 minutes'
-              ORDER BY created_at DESC LIMIT 50`,
-            [companyId, me, projectId],
-          )
+          const recentDups = await listRecentAgentDocumentCreations({
+            companyId, projectId, userId: me,
+          }, 15)
           const dup = recentDups.find((d) => normalizeWorkSubject(d.title) === normTitle)
           if (dup) {
             await recordHold(me, docHoldScope)
-            const ageSec = Math.max(1, Math.round((Date.now() - dup.created_at.getTime()) / 1000))
+            const ageSec = Math.max(1, Math.round((Date.now() - dup.createdAt.getTime()) / 1000))
             return err(
-              `HELD — document NOT created. ${dup.created_by} already created "${dup.title}" (${dup.id}) ${ageSec}s ago — ` +
+              `HELD — document NOT created. ${dup.createdBy} already created "${dup.title}" (${dup.id}) ${ageSec}s ago — ` +
               `this work is DONE; a second copy is duplicate clutter. ` +
               `Build on theirs instead: \`lingxiloop doc read ${dup.id}\` / \`lingxiloop doc append ${dup.id} "..."\`. ` +
               `If you GENUINELY need a separate doc with this same title, rerun with --force ` +
@@ -137,20 +124,16 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
             )
           }
         }
-        const id = stableDocumentId ?? `doc_${randomUUID().replace(/-/g, '').slice(0, 16)}`
-        await pool.query(
-          `INSERT INTO documents (id, company_id, project_id, title, created_by) VALUES ($1, $2, $3, $4, $5)`,
-          [id, companyId, projectId, title.slice(0, 200), me],
-        )
         // If --body was supplied, seed the doc as one or more paragraphs.
         // Newlines split, so a multi-line body lands as proper block
         // structure (not a single 1500-char paragraph) in the rich editor.
-        const body = typeof parsed.flags.body === 'string' ? unescapeChat(parsed.flags.body) : ''
-        if (body) {
-          const { applyAgentEdit } = await import('../../modules/documents/public.js')
-          await applyAgentEdit(id, companyId, me, [{ kind: 'append', text: body }])
-        }
-        await publishDocChanged(companyId, id, 'document.created', me)
+        const created = await createAgentDocument({ companyId, projectId, userId: me }, {
+          id: stableDocumentId ?? undefined,
+          title: title.slice(0, 200),
+          body,
+        })
+        const id = created.document.id
+        if (created.replayed) return ok(`created document ${id}: ${title} [replayed]`)
         return ok(`created document ${id}: ${title}`, [{
           event: 'document.created',
           command: 'doc create',
@@ -169,17 +152,12 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
     if (op === 'read' || op === 'show') {
       const docId = parsed.positional[1]
       if (!docId) return err('usage: doc read <document_id>')
-      const { rows } = await pool.query<{ company_id: string; title: string }>(
-        `SELECT company_id, title FROM documents WHERE id = $1 LIMIT 1`, [docId],
-      )
-      if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-      const { readDocumentText } = await import('../../modules/documents/public.js')
-      const body = await readDocumentText(docId, companyId)
-      if (parsed.flags.json) return ok(JSON.stringify({ id: docId, title: rows[0].title, body }, null, 2))
+      const document = await readAgentDocument({ companyId, projectId, userId: me }, docId)
+      if (parsed.flags.json) return ok(JSON.stringify({ id: docId, title: document.title, body: document.body }, null, 2))
       return ok([
-        `# ${rows[0].title}  (${docId})`,
+        `# ${document.title}  (${docId})`,
         '',
-        body || '(empty)',
+        document.body || '(empty)',
       ].join('\n'))
     }
   
@@ -195,18 +173,12 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
         return err('usage: doc share <document_id> --conversation <conversation_id> [--comment "<text>"]')
       }
   
-      const { rows: documents } = await pool.query<{ title: string }>(
-        `SELECT title FROM documents WHERE id = $1 AND company_id = $2 LIMIT 1`,
-        [docId, companyId],
-      )
-      if (!documents[0]) return err(`document ${docId} not found`)
-  
-      const { rows: conversations } = await pool.query<{ members: string[] }>(
-        `SELECT members FROM conversations WHERE id = $1 AND company_id = $2 AND project_id = $3 LIMIT 1`,
-        [conversationId, companyId, projectId],
-      )
-      if (!conversations[0]) return err(`unknown conversation ${conversationId}`)
-      if (!conversations[0].members.includes(me)) {
+      await getAgentDocument({ companyId, projectId }, docId)
+      const shareAccess = await authorizeConversationForDocumentShare({
+        companyId, projectId, actorId: me, conversationId,
+      })
+      if (shareAccess === 'not_found') return err(`unknown conversation ${conversationId}`)
+      if (shareAccess === 'not_member') {
         return err(`${me} is not a member of ${conversationId}`)
       }
   
@@ -220,13 +192,7 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
       const text = parsed.positional.slice(2).join(' ').trim()
         || (typeof parsed.flags.text === 'string' ? unescapeChat(parsed.flags.text) : '')
       if (!docId || !text) return err('usage: doc append <document_id> "<text>"')
-      const { rows } = await pool.query<{ company_id: string }>(
-        `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-      )
-      if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-      const { applyAgentEdit } = await import('../../modules/documents/public.js')
-      await applyAgentEdit(docId, companyId, me, [{ kind: 'append', text }])
-      await publishDocChanged(companyId, docId, 'document.updated', me)
+      await editAgentDocument({ companyId, projectId, userId: me }, docId, [{ kind: 'append', text }])
       return ok(`appended ${text.length} chars to ${docId}`, [{
         event: 'document.updated',
         command: 'doc append',
@@ -244,13 +210,7 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
       const text = parsed.positional.slice(2).join(' ').trim()
         || (typeof parsed.flags.text === 'string' ? unescapeChat(parsed.flags.text) : '')
       if (!docId || !text) return err('usage: doc prepend <document_id> "<text>"')
-      const { rows } = await pool.query<{ company_id: string }>(
-        `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-      )
-      if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-      const { applyAgentEdit } = await import('../../modules/documents/public.js')
-      await applyAgentEdit(docId, companyId, me, [{ kind: 'insertParagraph', at: 'start', text }])
-      await publishDocChanged(companyId, docId, 'document.updated', me)
+      await editAgentDocument({ companyId, projectId, userId: me }, docId, [{ kind: 'insertParagraph', at: 'start', text }])
       return ok(`prepended ${text.length} chars to ${docId}`, [{
         event: 'document.updated',
         command: 'doc prepend',
@@ -307,12 +267,9 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
         placement = { mode: atRaw === 'start' ? 'start' : 'end' }
       }
   
-      const { rows } = await pool.query<{ company_id: string }>(
-        `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-      )
-      if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-      const { applyAgentEdit, isAnchoredImagePlacement } = await import('../../modules/documents/public.js')
-      const result = await applyAgentEdit(docId, companyId, me, [{ kind: 'image', src, alt: alt || null, placement }])
+      const result = await editAgentDocument({ companyId, projectId, userId: me }, docId, [{
+        kind: 'image', src, alt: alt || null, placement,
+      }])
   
       // Anchor miss is a HARD error now — falling back to end-of-doc on a
       // missed snippet is how the doc collected duplicate inert images
@@ -323,8 +280,6 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
         const snippet = placement.anchorText.slice(0, 60)
         return err(`anchor not found in ${docId}: "${snippet}". Re-read the doc and pick a snippet that uniquely identifies the target block — no image was inserted.`)
       }
-      await publishDocChanged(companyId, docId, 'document.updated', me)
-  
       let where: string
       if (isAnchoredImagePlacement(placement)) {
         where = `${placement.mode} block containing "${placement.anchorText.slice(0, 60)}"`
@@ -358,20 +313,14 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
       if (provided.length > 1) {
         return err('pass only one of --src / --src-contains / --alt')
       }
-      const { rows } = await pool.query<{ company_id: string }>(
-        `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-      )
-      if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-      const match: import('../../modules/documents/public.js').AgentImageDeleteMatch =
+      const match: AgentImageDeleteMatch =
         srcExact ? { by: 'src', src: srcExact }
           : srcContains ? { by: 'src-contains', substring: srcContains }
             : { by: 'alt', alt: altMatch }
-      const { applyAgentEdit } = await import('../../modules/documents/public.js')
-      const result = await applyAgentEdit(docId, companyId, me, [{ kind: 'imageDelete', match }])
+      const result = await editAgentDocument({ companyId, projectId, userId: me }, docId, [{ kind: 'imageDelete', match }])
       if (result.imagesDeleted === 0) {
         return err(`no images in ${docId} matched the criterion`)
       }
-      await publishDocChanged(companyId, docId, 'document.updated', me)
       return ok(`deleted ${result.imagesDeleted} image${result.imagesDeleted === 1 ? '' : 's'} from ${docId}`, [{
         event: 'document.updated',
         command: 'doc image-delete',
@@ -389,14 +338,8 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
       const find = typeof parsed.flags.find === 'string' ? unescapeChat(parsed.flags.find) : ''
       const replace = typeof parsed.flags.replace === 'string' ? unescapeChat(parsed.flags.replace) : ''
       if (!docId || !find) return err('usage: doc replace <document_id> --find "..." --replace "..."')
-      const { rows } = await pool.query<{ company_id: string }>(
-        `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-      )
-      if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-      const { applyAgentEdit } = await import('../../modules/documents/public.js')
-      const r = await applyAgentEdit(docId, companyId, me, [{ kind: 'replace', find, replace }])
+      const r = await editAgentDocument({ companyId, projectId, userId: me }, docId, [{ kind: 'replace', find, replace }])
       if (r.replaced === 0) return err(`text not found in ${docId}: ${JSON.stringify(find).slice(0, 80)}`)
-      await publishDocChanged(companyId, docId, 'document.updated', me)
       return ok(`replaced ${r.replaced} occurrence in ${docId}`, [{
         event: 'document.updated',
         command: 'doc replace',
@@ -415,14 +358,10 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
       const text = parsed.positional.slice(2).join(' ').trim()
         || (typeof parsed.flags.text === 'string' ? unescapeChat(parsed.flags.text) : '')
       if (!docId || !anchor || !text) return err('usage: doc replace-block <document_id> --anchor "<snippet in the block>" "<replacement markdown>"')
-      const { rows } = await pool.query<{ company_id: string }>(
-        `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-      )
-      if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-      const { applyAgentEdit } = await import('../../modules/documents/public.js')
-      const r = await applyAgentEdit(docId, companyId, me, [{ kind: 'replaceBlock', anchorText: anchor, text }])
+      const r = await editAgentDocument({ companyId, projectId, userId: me }, docId, [{
+        kind: 'replaceBlock', anchorText: anchor, text,
+      }])
       if (r.blocksReplaced === 0) return err(`no block containing ${JSON.stringify(anchor).slice(0, 80)} in ${docId}`)
-      await publishDocChanged(companyId, docId, 'document.updated', me)
       return ok(`replaced 1 block in ${docId}`, [{
         event: 'document.updated',
         command: 'doc replace-block',
@@ -439,13 +378,7 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
       const title = parsed.positional.slice(2).join(' ').trim()
         || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
       if (!docId || !title) return err('usage: doc rename <document_id> "<title>"')
-      const r = await pool.query(
-        `UPDATE documents SET title = $1, updated_at = NOW()
-          WHERE id = $2 AND company_id = $3`,
-        [title.slice(0, 200), docId, companyId],
-      )
-      if (!r.rowCount) return err(`document ${docId} not found`)
-      await publishDocChanged(companyId, docId, 'document.updated', me)
+      await renameAgentDocument({ companyId, projectId, userId: me }, docId, title.slice(0, 200))
       return ok(`renamed ${docId} to "${title}"`, [{
         event: 'document.updated',
         command: 'doc rename',
@@ -461,14 +394,9 @@ export function createDocumentCommand(dependencies: DocumentCommandDependencies)
     if (op === 'delete' || op === 'rm') {
       const docId = parsed.positional[1]
       if (!docId) return err('usage: doc delete <document_id>')
-      const { rows } = await pool.query<{ created_by: string }>(
-        `SELECT created_by FROM documents WHERE id = $1 AND company_id = $2 LIMIT 1`,
-        [docId, companyId],
-      )
-      if (rows.length === 0) return err(`document ${docId} not found`)
-      if (rows[0].created_by !== me) return err(`only the creator can delete document ${docId}`)
-      await pool.query(`DELETE FROM documents WHERE id = $1`, [docId])
-      await publishDocChanged(companyId, docId, 'document.deleted', me, projectId)
+      const document = await getAgentDocument({ companyId, projectId }, docId)
+      if (document.createdBy !== me) return err(`only the creator can delete document ${docId}`)
+      await deleteAgentDocument({ companyId, projectId, userId: me }, docId)
       return ok(`deleted document ${docId}`, [{
         event: 'document.deleted',
         command: 'doc delete',

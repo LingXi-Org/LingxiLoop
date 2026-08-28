@@ -12,3 +12,16 @@ export function openDirectConversationForDocumentMention(args: {
     userId: args.mentionerId,
   }, args.agentId)
 }
+
+export function authorizeConversationForDocumentShare(args: {
+  companyId: string
+  projectId: string
+  actorId: string
+  conversationId: string
+}): Promise<'allowed' | 'not_found' | 'not_member'> {
+  return conversationsApplication.authorizeDocumentShare({
+    companyId: args.companyId,
+    projectId: args.projectId,
+    userId: args.actorId,
+  }, args.conversationId)
+}

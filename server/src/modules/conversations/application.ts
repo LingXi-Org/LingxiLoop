@@ -205,6 +205,15 @@ export class ConversationsApplication {
     return this.openDirect(scope, workspace, agentId)
   }
 
+  async authorizeDocumentShare(
+    scope: ConversationScope,
+    conversationId: string,
+  ): Promise<'allowed' | 'not_found' | 'not_member'> {
+    const conversation = await findConversation(this.db, scope.companyId, conversationId)
+    if (!conversation || conversation.project_id !== scope.projectId) return 'not_found'
+    return conversation.members.includes(scope.userId) ? 'allowed' : 'not_member'
+  }
+
   async setLeader(scope: ConversationScope, conversationId: string, leaderId: string) {
     if (await hasManagedPulse(this.db, scope.companyId, [leaderId])) {
       throw new ConversationApplicationError('managed_pulse', 'Pulse can only belong to its provisioned teacher room')

@@ -18,6 +18,13 @@ export interface DocumentPayload {
   updatedAt: string
 }
 
+export interface RecentDocumentCreation {
+  id: string
+  title: string
+  createdBy: string
+  createdAt: Date
+}
+
 export interface DocumentScope {
   userId: string
   companyId: string

@@ -29,6 +29,16 @@ export function notifyDocumentMention(args: {
   return documentMentionApplication.notify(args)
 }
 
+export const listAgentDocuments = documentsApplication.list.bind(documentsApplication)
+export const getAgentDocument = documentsApplication.get.bind(documentsApplication)
+export const agentDocumentExists = documentsApplication.exists.bind(documentsApplication)
+export const createAgentDocument = documentsApplication.createForAgent.bind(documentsApplication)
+export const listRecentAgentDocumentCreations = documentsApplication.listRecentCreationsByOthers.bind(documentsApplication)
+export const readAgentDocument = documentsApplication.readForAgent.bind(documentsApplication)
+export const editAgentDocument = documentsApplication.editForAgent.bind(documentsApplication)
+export const renameAgentDocument = documentsApplication.rename.bind(documentsApplication)
+export const deleteAgentDocument = documentsApplication.delete.bind(documentsApplication)
+
 export {
   isAnchoredImagePlacement,
   type DocSubscriber,
