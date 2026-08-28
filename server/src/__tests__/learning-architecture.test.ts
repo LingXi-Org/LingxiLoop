@@ -19,6 +19,9 @@ const learningApplicationSource = readdirSync(learningModuleUrl)
   .map((name) => readFileSync(new URL(name, learningModuleUrl), 'utf8'))
   .join('\n')
 const learningRuntimeSource = readFileSync(new URL('../modules/learning/runtime.ts', import.meta.url), 'utf8')
+const learningRouterSource = readFileSync(new URL('../modules/learning/router.ts', import.meta.url), 'utf8')
+const classroomRouterSource = readFileSync(new URL('../modules/learning/classroom-router.ts', import.meta.url), 'utf8')
+const learningHttpAdapterSource = readFileSync(new URL('../modules/learning/http-adapter.ts', import.meta.url), 'utf8')
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
 
 function productionTypeScriptFiles(root: string): string[] {
@@ -52,6 +55,16 @@ test('the legacy Learning service implementation is deleted', () => {
   assert.doesNotMatch(teacher, /from '.\/service\.js'/)
   assert.match(repository, /WHERE course_id=\$1 AND company_id=\$2 AND role='teacher'/)
   assert.match(repository, /teacher_room\.company_id=\$1 AND teacher_room\.conversation_id=conversation\.id/)
+})
+
+test('Learning routers share one private request and error adapter', () => {
+  for (const router of [learningRouterSource, classroomRouterSource]) {
+    assert.match(router, /from '.\/http-adapter\.js'/)
+    assert.doesNotMatch(router, /function (?:parse|mapLearningError|respond)\b/)
+  }
+  assert.match(learningHttpAdapterSource, /export function parseLearningRequest/)
+  assert.match(learningHttpAdapterSource, /function mapLearningError/)
+  assert.match(learningHttpAdapterSource, /export async function respondWithLearning/)
 })
 
 test('native learning schema keeps evidence, projection and delivery ledgers durable', () => {

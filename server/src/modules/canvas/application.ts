@@ -14,7 +14,6 @@ import type {
 } from './contracts.js'
 import {
   type ActivityRow,
-  acquireCanvasSharedFence,
   appendIdempotentAssignmentSteer,
   appendAssignmentSteer,
   assignmentExists,
@@ -43,7 +42,6 @@ import {
   participantNames,
   type ReportRow,
   resetAssignment,
-  releaseCanvasSharedFence,
   snapshotRows,
   steerCanvasWork,
   stopCanvasAssignmentState,
@@ -70,7 +68,7 @@ export interface CanvasHandoffResult {
 }
 
 export function createCanvasApplication(infrastructure: CanvasInfrastructure) {
-const { db, transaction, connectionTransaction, acquireConnection, publishEvent } = infrastructure
+const { db, transaction, withCanvasFence, publishEvent } = infrastructure
 
 async function publishCanvas(companyId: string, event: Omit<CanvasEvent, 'type' | 'companyId' | 'timestamp'>): Promise<void> {
   const scope = await canvasEventScope(db, companyId, event.canvasId)
@@ -551,15 +549,10 @@ async function steerCanvasAssignment(input: { companyId: string; canvasId: strin
 }
 
 async function stopCanvasAssignment(input: { companyId: string; canvasId: string; agentId: string }): Promise<void> {
-  const client = await acquireConnection()
-  let activity: CanvasActivity
-  try {
-    await acquireCanvasSharedFence(client, input.canvasId)
-    activity = toActivity(await connectionTransaction(client, (transactionDb) => stopCanvasAssignmentState(transactionDb, input)))
-  } finally {
-    await releaseCanvasSharedFence(client, input.canvasId).catch(() => undefined)
-    client.release()
-  }
+  const activity = toActivity(await withCanvasFence(
+    input.canvasId,
+    (transactionDb) => stopCanvasAssignmentState(transactionDb, input),
+  ))
   await publishAssignments(input.companyId, input.canvasId)
   await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
   const canvas = await canvasById(db, input.companyId, input.canvasId)

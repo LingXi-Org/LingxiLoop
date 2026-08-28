@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto'
-import type { PoolClient } from 'pg'
 import type { Queryable } from '../../db/queryable.js'
 import type {
   BindCourseRoomInput,
@@ -103,9 +102,9 @@ export {
 export type { LearningTransaction } from './membership-application.js'
 
 export interface LearningInfrastructure {
-  transaction<T>(work: (db: PoolClient) => Promise<T>): Promise<T>
+  transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   audit(event: { kind: string; userId: string; companyId: string; detail: Record<string, unknown> }): Promise<void>
-  ensureTeacherAgent(courseId: string, db: Pick<PoolClient, 'query'>): Promise<{ created: boolean }>
+  ensureTeacherAgent(courseId: string, db: Queryable): Promise<{ created: boolean }>
   syncTeacherRoom(courseId: string): Promise<void>
   welcomeTeacherAgent(courseId: string): Promise<void>
   closeTeacherRoom(courseId: string): Promise<void>

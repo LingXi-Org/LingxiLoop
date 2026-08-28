@@ -2,12 +2,21 @@ import { pool } from '../../db/pool.js'
 import { withClientTransaction, withTransaction } from '../../db/transaction.js'
 import { createCanvasApplication } from './application.js'
 import { CH_CANVAS, publish } from '../../redis.js'
+import { acquireCanvasSharedFence, releaseCanvasSharedFence } from './repository.js'
 
 const canvasApplication = createCanvasApplication({
   db: pool,
   transaction: (work) => withTransaction(pool, work),
-  connectionTransaction: withClientTransaction,
-  acquireConnection: () => pool.connect(),
+  withCanvasFence: async (canvasId, work) => {
+    const client = await pool.connect()
+    try {
+      await acquireCanvasSharedFence(client, canvasId)
+      return await withClientTransaction(client, work)
+    } finally {
+      await releaseCanvasSharedFence(client, canvasId).catch(() => undefined)
+      client.release()
+    }
+  },
   publishEvent: (event) => publish(CH_CANVAS, event),
 })
 
