@@ -9,6 +9,7 @@ const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url),
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
 const service = readFileSync(new URL('../learning/service.ts', import.meta.url), 'utf8')
 const repository = readFileSync(new URL('../modules/learning/repository.ts', import.meta.url), 'utf8')
+const learningApplicationSource = readFileSync(new URL('../modules/learning/application.ts', import.meta.url), 'utf8')
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
 
 function productionTypeScriptFiles(root: string): string[] {
@@ -69,6 +70,14 @@ test('mission reads and coordinator assignment have one tenant-scoped repository
   assert.match(repository, /teacher\.user_id=\$4 AND teacher\.role='teacher'/)
 })
 
+test('mission planning and completion writes live only in application and repository', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_mission_steps/)
+  assert.doesNotMatch(service, /UPDATE learning_mission_steps/)
+  assert.doesNotMatch(service, /SET status='completed',completed_at=/)
+  assert.match(learningApplicationSource, /lockLearningMission/)
+  assert.match(repository, /mission\.company_id=\$1 AND mission\.course_id=\$2 AND mission\.conversation_id=\$3/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
   const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')
@@ -92,7 +101,7 @@ test('learning remains an IPython namespace with transient per-turn context', ()
   assert.match(actions, /if \(method === 'ask'\)/)
   assert.match(actions, /kind: 'questionnaire'/)
   assert.match(actions, /'chat\.ask', 'polls\.create', 'polls\.show'/)
-  assert.match(service, /finishMissionPlanning/)
-  assert.match(service, /s\.type='check'/)
-  assert.match(service, /s\.type='reflect'/)
+  assert.match(learningApplicationSource, /finishLearningMissionPlanning/)
+  assert.match(learningApplicationSource, /summary\.checks < 1/)
+  assert.match(learningApplicationSource, /summary\.reflections < 1/)
 })

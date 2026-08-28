@@ -6,15 +6,11 @@
  * import those implementation files directly.
  */
 export {
-  addMissionSteps,
-  completeMission,
-  finishMissionPlanning,
   loadLearningTurnContext,
   preferredCoordinatorPreset,
   proposeEvaluation,
   recordAttempt,
   startMission,
-  updateMissionStep,
 } from '../../learning/service.js'
 
 export function createObjectives(input: CreateLearningObjectivesCommand) {
@@ -60,6 +56,40 @@ export function submitActivity(input: {
   return submitLearningActivity(pool, input)
 }
 
+type RuntimeRoomScope = { companyId: string; channelId: string }
+
+export function addMissionSteps(
+  work: RuntimeRoomScope,
+  missionId: string,
+  steps: AddLearningMissionStepInput[],
+) {
+  return addLearningMissionSteps(
+    pool, (run) => withTransaction(pool, run), work, missionId, steps,
+  )
+}
+
+export async function finishMissionPlanning(work: RuntimeRoomScope, missionId: string) {
+  const mission = await finishLearningMissionPlanning(
+    pool, (run) => withTransaction(pool, run), work, missionId,
+  )
+  inc('learning.mission.planning_completed', { mode: 'agent' })
+  return mission
+}
+
+export function updateMissionStep(
+  work: RuntimeRoomScope,
+  input: {
+    missionId: string; stepId: string; status: 'open'|'in_progress'|'completed'|'cancelled'
+    outcome?: string; sourceReportId?: string; attemptId?: string
+  },
+) {
+  return updateLearningMissionStep(pool, (run) => withTransaction(pool, run), work, input)
+}
+
+export function completeMission(work: RuntimeRoomScope, missionId: string) {
+  return completeLearningMission(pool, (run) => withTransaction(pool, run), work, missionId)
+}
+
 export {
   assertTeacherApprovalFresh,
   describeTeacherAction,
@@ -79,17 +109,25 @@ export type {
 } from '../../learning/types.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
+import { inc } from '../../metrics.js'
 import {
+  addLearningMissionSteps,
   closeLearningActivity,
+  completeLearningMission,
   createLearningActivity,
   createLearningObjectives,
+  finishLearningMissionPlanning,
   publishLearningActivity,
   setLearningObjectiveStatus,
   submitLearningActivity,
+  updateLearningMissionStep,
 } from './application.js'
-import type { CreateLearningActivityCommand, CreateLearningObjectivesCommand } from './contracts.js'
-import { findLearningActivity } from './repository.js'
-import { findLearningMission } from './repository.js'
+import type {
+  AddLearningMissionStepInput,
+  CreateLearningActivityCommand,
+  CreateLearningObjectivesCommand,
+} from './contracts.js'
+import { findLearningActivity, findLearningMission } from './repository.js'
 
 export async function getMission(missionId: string, companyId: string, courseId: string) {
   const mission = await findLearningMission(pool, companyId, courseId, missionId)

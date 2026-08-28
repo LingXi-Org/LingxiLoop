@@ -2,8 +2,12 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import {
+  completeLearningMissionRecord,
   findLearningMission,
+  findLearningRoomState,
   listLearningMissions,
+  lockLearningMission,
+  updateLearningMissionStepRecord,
   updateLearningMissionCoordinator,
 } from '../modules/learning/repository.js'
 
@@ -79,4 +83,59 @@ test('coordinator update atomically authorizes teacher and eligible room agent',
   assert.deepEqual(values, ['company-1','course-1','mission-1','teacher-1','nova'])
   assert.match(statement, /conversation\.members \? agent\.id/)
   assert.match(statement, /teacher\.user_id=\$4 AND teacher\.role='teacher'/)
+})
+
+test('runtime room resolution and mission lock retain tenant, course and conversation predicates', async () => {
+  const calls: Array<{ text: string; params: readonly unknown[] | undefined }> = []
+  const db = queryable((text, params) => {
+    calls.push({ text, params })
+    if (text.includes('FROM courses course')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
+      status: 'active', purpose: 'study',
+    }] }
+    return { rows: [{ exists: 1 }] }
+  })
+
+  const room = await findLearningRoomState(db, { companyId: 'company-1', channelId: 'room-1' })
+  const locked = await lockLearningMission(db, {
+    companyId: 'company-1', channelId: 'room-1', courseId: 'course-1', missionId: 'mission-1',
+    statuses: ['active','paused'],
+  })
+
+  assert.equal(room?.courseId, 'course-1')
+  assert.equal(locked, true)
+  assert.deepEqual(calls[0]?.params, ['room-1','company-1'])
+  assert.deepEqual(calls[1]?.params, ['company-1','course-1','room-1','mission-1',['active','paused']])
+  assert.match(calls[1]?.text ?? '', /company_id=\$1 AND course_id=\$2 AND conversation_id=\$3/)
+})
+
+test('step completion binds evidence to the mission tenant and learner', async () => {
+  let statement = ''
+  let values: readonly unknown[] | undefined
+  const db = queryable((text, params) => {
+    statement = text
+    values = params
+    return { rowCount: 1 }
+  })
+
+  const updated = await updateLearningMissionStepRecord(db, {
+    companyId: 'company-1', courseId: 'course-1', channelId: 'room-1', missionId: 'mission-1',
+    stepId: 'step-1', status: 'completed', outcome: 'verified', attemptId: 'attempt-1',
+  })
+
+  assert.equal(updated, true)
+  assert.deepEqual(values?.slice(0, 6), ['company-1','course-1','room-1','mission-1','step-1','completed'])
+  assert.match(statement, /mission\.company_id=\$1 AND mission\.course_id=\$2 AND mission\.conversation_id=\$3/)
+  assert.match(statement, /attempt\.learner_id=mission\.learner_id/)
+})
+
+test('mission completion updates only active or paused state', async () => {
+  let statement = ''
+  const db = queryable((text) => {
+    statement = text
+    return { rowCount: 1 }
+  })
+
+  assert.equal(await completeLearningMissionRecord(db, 'mission-1'), true)
+  assert.match(statement, /status IN \('active','paused'\)/)
 })

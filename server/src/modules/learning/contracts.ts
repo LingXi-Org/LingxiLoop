@@ -97,6 +97,18 @@ export interface CreateLearningActivityCommand {
   dueAt?: string
 }
 
+export interface LearningAgentRoomScope {
+  companyId: string
+  channelId: string
+}
+
+export interface AddLearningMissionStepInput {
+  type: 'learn' | 'practice' | 'check' | 'reflect'
+  description: string
+  successCriteria: string
+  objectiveId?: string
+}
+
 export interface LearningScope { userId: string; companyId: string }
 export interface LearningNotificationPreferences {
   company_id: string

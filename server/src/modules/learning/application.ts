@@ -10,6 +10,7 @@ import {
   reviewEvaluation,
 } from '../../learning/service.js'
 import type {
+  AddLearningMissionStepInput,
   BindCourseRoomInput,
   CreateActivityInput,
   CreateLearningActivityCommand,
@@ -17,6 +18,7 @@ import type {
   CreateCourseInvitationInput,
   CreateObjectivesInput,
   CreateLearningObjectivesCommand,
+  LearningAgentRoomScope,
   LearningScope,
   MissionCoordinatorInput,
   NotificationPreferencesInput,
@@ -26,9 +28,11 @@ import type {
   UpdateCourseInput,
 } from './contracts.js'
 import {
+  activateLearningMission,
   canCreateCourse,
   changeCourseMember,
   closeLearningActivityRecord,
+  completeLearningMissionRecord,
   companyMembershipRole,
   courseInvitationPreview,
   courseExists,
@@ -36,10 +40,12 @@ import {
   courseMembershipRole,
   courseRole,
   countCourseObjectives,
+  countLearningMissionSteps,
   countPublishedCourseObjectives,
   findCourse,
   findLearningActivity,
   findLearningMission,
+  findLearningRoomState,
   findNotificationPreferences,
   findVerifiedUser,
   insertCourse,
@@ -48,6 +54,7 @@ import {
   insertLearningObjectiveDependency,
   insertLearningActivity,
   insertLearningActivityAttempt,
+  insertLearningMissionStep,
   invitationViewer,
   joinInvitationCompany,
   listCourseInvitations,
@@ -57,6 +64,8 @@ import {
   listLearningObjectives,
   listLearningActivities,
   listLearningMissions,
+  learningMissionCompletionSummary,
+  learningMissionPlanningSummary,
   lockCourseInvitation,
   priorCourseAcceptance,
   publishLearningActivityRecord,
@@ -67,9 +76,11 @@ import {
   studyRoomState,
   syncStudyRoomMembers,
   lockLearningActivityForPublish,
+  lockLearningMission,
   updateCourseMetadata,
   updateLearningObjectiveStatus,
   updateLearningMissionCoordinator,
+  updateLearningMissionStepRecord,
   upsertNotificationPreferences,
   upsertAcceptedCourseMembership,
 } from './repository.js'
@@ -290,6 +301,121 @@ export async function assignLearningMissionCoordinator(
     )
   }
   return getLearningMission(db, input.companyId, input.courseId, input.missionId)
+}
+
+async function requireLearningRoomState(db: Queryable, scope: LearningAgentRoomScope) {
+  const room = await findLearningRoomState(db, scope)
+  if (!room) throw new LearningApplicationError('not_found', 'current conversation is not bound to a learning course')
+  return room
+}
+
+export async function addLearningMissionSteps(
+  db: Queryable,
+  transaction: LearningTransaction,
+  scope: LearningAgentRoomScope,
+  missionId: string,
+  steps: AddLearningMissionStepInput[],
+) {
+  if (!steps.length || steps.length > 64) {
+    throw new LearningApplicationError('invalid', 'steps must contain between 1 and 64 items')
+  }
+  const room = await requireLearningRoomState(db, scope)
+  await transaction(async (client) => {
+    if (!await lockLearningMission(client, {
+      ...scope, courseId: room.courseId, missionId, statuses: ['planning','active','paused'],
+    })) throw new LearningApplicationError('not_found', 'mission not found in current learning room')
+    let position = await countLearningMissionSteps(client, missionId)
+    for (const step of steps) {
+      if (step.objectiveId
+        && await countCourseObjectives(client, room.companyId, room.courseId, [step.objectiveId]) !== 1) {
+        throw new LearningApplicationError('invalid', 'mission step objective must belong to the current course')
+      }
+      const inserted = await insertLearningMissionStep(client, {
+        id: randomUUID(),
+        missionId,
+        type: step.type,
+        description: learningText(step.description, 'step description'),
+        successCriteria: learningText(step.successCriteria, 'step successCriteria'),
+        ...(step.objectiveId ? { objectiveId: step.objectiveId } : {}),
+        position: position++,
+      })
+      if (!inserted) position--
+    }
+    if (await countLearningMissionSteps(client, missionId) < 1) {
+      throw new LearningApplicationError('conflict', 'mission requires at least one checkable step')
+    }
+  })
+  return getLearningMission(db, room.companyId, room.courseId, missionId)
+}
+
+export async function finishLearningMissionPlanning(
+  db: Queryable,
+  transaction: LearningTransaction,
+  scope: LearningAgentRoomScope,
+  missionId: string,
+) {
+  const room = await requireLearningRoomState(db, scope)
+  await transaction(async (client) => {
+    if (!await lockLearningMission(client, {
+      ...scope, courseId: room.courseId, missionId, statuses: ['planning'],
+    })) throw new LearningApplicationError('not_found', 'planning Mission not found in the current learning room')
+    const summary = await learningMissionPlanningSummary(client, missionId)
+    if (summary.total < 1) throw new LearningApplicationError('conflict', 'planning gate blocked: add concrete Mission steps first')
+    if (summary.checks < 1) throw new LearningApplicationError('conflict', 'planning gate blocked: add at least one check step with observable success criteria')
+    if (summary.reflections < 1) throw new LearningApplicationError('conflict', 'planning gate blocked: add a reflect step before execution')
+    if (!await activateLearningMission(client, missionId)) {
+      throw new LearningApplicationError('conflict', 'Mission planning state changed')
+    }
+  })
+  return getLearningMission(db, room.companyId, room.courseId, missionId)
+}
+
+export async function updateLearningMissionStep(
+  db: Queryable,
+  transaction: LearningTransaction,
+  scope: LearningAgentRoomScope,
+  input: {
+    missionId: string; stepId: string; status: 'open'|'in_progress'|'completed'|'cancelled'
+    outcome?: string; sourceReportId?: string; attemptId?: string
+  },
+) {
+  if (input.status === 'completed' && !input.outcome?.trim()) {
+    throw new LearningApplicationError('invalid', 'completed mission steps require an outcome')
+  }
+  if (input.status === 'completed' && !input.sourceReportId && !input.attemptId) {
+    throw new LearningApplicationError('invalid', 'completed mission steps require a persisted report or learner attempt')
+  }
+  const room = await requireLearningRoomState(db, scope)
+  await transaction(async (client) => {
+    if (!await lockLearningMission(client, {
+      ...scope, courseId: room.courseId, missionId: input.missionId, statuses: ['active','paused'],
+    })) throw new LearningApplicationError('not_found', 'active Mission not found in the current learning room')
+    if (!await updateLearningMissionStepRecord(client, {
+      ...scope, courseId: room.courseId, ...input,
+    })) throw new LearningApplicationError('not_found', 'mission step or completion evidence not found')
+  })
+  return getLearningMission(db, room.companyId, room.courseId, input.missionId)
+}
+
+export async function completeLearningMission(
+  db: Queryable,
+  transaction: LearningTransaction,
+  scope: LearningAgentRoomScope,
+  missionId: string,
+) {
+  const room = await requireLearningRoomState(db, scope)
+  await transaction(async (client) => {
+    if (!await lockLearningMission(client, {
+      ...scope, courseId: room.courseId, missionId, statuses: ['active','paused'],
+    })) throw new LearningApplicationError('not_found', 'active Mission not found in the current learning room')
+    const summary = await learningMissionCompletionSummary(client, missionId)
+    if (summary.unresolved > 0) throw new LearningApplicationError('conflict', 'mission has unresolved steps')
+    if (summary.reflections < 1) throw new LearningApplicationError('conflict', 'mission requires a completed reflection step')
+    if (!await completeLearningMissionRecord(client, missionId)) {
+      throw new LearningApplicationError('conflict', 'Mission state changed before completion')
+    }
+  })
+  return getLearningMission(db, room.companyId, room.courseId, missionId)
 }
 
 export async function setLearningObjectiveStatus(

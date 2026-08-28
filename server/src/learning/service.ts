@@ -14,8 +14,6 @@ import type {
   LearningMission,
   LearningRole,
   LearningRoomPurpose,
-  LearningStepStatus,
-  LearningStepType,
   LearningTurnContext,
   MasteryProjectionDecision,
 } from './types.js'
@@ -285,110 +283,6 @@ export async function startMission(work: AgentWorkItem, input: {
     data: { missionId: mission.id, courseId: scope.courseId, goal: mission.goal, successCriteria: mission.successCriteria, missionKind:mission.missionKind, coordinatorAgentId:mission.coordinatorAgentId, status: mission.status, suppressAgentWake: true },
   })
   return mission
-}
-
-export async function addMissionSteps(work: AgentWorkItem, missionId: string, rawSteps: Array<{
-  type: LearningStepType; description: string; successCriteria: string; objectiveId?: string
-}>, db: Queryable = pool): Promise<LearningMission> {
-  const scope = await roomScope(work, db)
-  if (!rawSteps.length || rawSteps.length > 64) throw new Error('steps must contain between 1 and 64 items')
-  const { rows: missionRows } = await db.query<{ id: string }>(
-    `SELECT id FROM learning_missions WHERE id=$1 AND course_id=$2 AND conversation_id=$3 AND status IN ('planning','active','paused')`,
-    [missionId, scope.courseId, work.channelId],
-  )
-  if (!missionRows[0]) throw new Error('mission not found in current learning room')
-  const ownsClient = db === pool
-  const client = ownsClient ? await pool.connect() : db as unknown as PoolClient
-  try {
-    await client.query('BEGIN')
-    const { rows: countRows } = await client.query<{ count: number }>(`SELECT COUNT(*)::int AS count FROM learning_mission_steps WHERE mission_id=$1`, [missionId])
-    let position = Number(countRows[0]?.count ?? 0)
-    for (const step of rawSteps) {
-      if (step.objectiveId) {
-        const { rows: objective } = await client.query(`SELECT 1 FROM learning_objectives WHERE id=$1 AND course_id=$2`, [step.objectiveId,scope.courseId])
-        if (!objective[0]) throw new Error('mission step objective must belong to the current course')
-      }
-      await client.query(
-        `INSERT INTO learning_mission_steps(id,mission_id,type,description,success_criteria,objective_id,position)
-         SELECT $1,$2,$3,$4,$5,o.id,$7 FROM (SELECT $6::text AS id) x
-         LEFT JOIN learning_objectives o ON o.id=x.id AND o.course_id=$8
-         WHERE NOT EXISTS(SELECT 1 FROM learning_mission_steps s WHERE s.mission_id=$2 AND lower(s.description)=lower($4))`,
-        [randomUUID(), missionId, step.type, asText(step.description, 'step description'), asText(step.successCriteria, 'step successCriteria'), step.objectiveId ?? null, position++, scope.courseId],
-      )
-    }
-    const { rows: total } = await client.query<{ count: number }>(`SELECT COUNT(*)::int AS count FROM learning_mission_steps WHERE mission_id=$1`, [missionId])
-    if (!total[0]?.count) throw new Error('mission requires at least one checkable step')
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => undefined)
-    throw error
-  } finally { if (ownsClient) client.release() }
-  return requireLearningMission(db, scope.companyId, scope.courseId, missionId)
-}
-
-/** FrontierAgent-style finish_planning gate, projected onto a learning Mission.
- * Planning writes the task board; no execution action is permitted until the
- * board contains an observable check and a reflection close-out. */
-export async function finishMissionPlanning(
-  work: AgentWorkItem,
-  missionId: string,
-  db: Queryable = pool,
-): Promise<LearningMission> {
-  const scope = await roomScope(work, db)
-  const { rows } = await db.query<{ total: number; checks: number; reflections: number }>(
-    `SELECT COUNT(s.id)::int AS total,
-            COUNT(s.id) FILTER (WHERE s.type='check')::int AS checks,
-            COUNT(s.id) FILTER (WHERE s.type='reflect')::int AS reflections
-       FROM learning_missions m LEFT JOIN learning_mission_steps s ON s.mission_id=m.id
-      WHERE m.id=$1 AND m.course_id=$2 AND m.conversation_id=$3 AND m.status='planning'
-      GROUP BY m.id`,
-    [missionId, scope.courseId, work.channelId],
-  )
-  if (!rows[0]) throw new Error('planning Mission not found in the current learning room')
-  if (rows[0].total < 1) throw new Error('planning gate blocked: add concrete Mission steps first')
-  if (rows[0].checks < 1) throw new Error('planning gate blocked: add at least one check step with observable success criteria')
-  if (rows[0].reflections < 1) throw new Error('planning gate blocked: add a reflect step before execution')
-  await db.query(
-    `UPDATE learning_missions SET status='active',updated_at=NOW()
-      WHERE id=$1 AND course_id=$2 AND status='planning'`,
-    [missionId, scope.courseId],
-  )
-  inc('learning.mission.planning_completed', { mode: 'agent' })
-  return requireLearningMission(db, scope.companyId, scope.courseId, missionId)
-}
-
-export async function updateMissionStep(work: AgentWorkItem, input: {
-  missionId: string; stepId: string; status: LearningStepStatus; outcome?: string; sourceReportId?:string; attemptId?:string
-}, db: Queryable = pool): Promise<LearningMission> {
-  const scope = await roomScope(work, db)
-  if (input.status === 'completed' && !input.outcome?.trim()) throw new Error('completed mission steps require an outcome')
-  if (input.status==='completed'&&!input.sourceReportId&&!input.attemptId) throw new Error('completed mission steps require a persisted report or learner attempt')
-  const { rowCount } = await db.query(
-    `UPDATE learning_mission_steps s SET status=$4,outcome=$5,completion_report_id=report.id,completion_attempt_id=attempt.id,updated_at=NOW()
-      FROM learning_missions m
-      LEFT JOIN canvas_assignment_reports report ON report.id=$6 AND report.company_id=$8
-      LEFT JOIN learning_attempts attempt ON attempt.id=$7 AND attempt.course_id=$3
-      WHERE s.id=$1 AND s.mission_id=$2 AND m.id=s.mission_id AND m.course_id=$3
-        AND ($4<>'completed' OR report.id IS NOT NULL OR attempt.id IS NOT NULL)`,
-    [input.stepId,input.missionId,scope.courseId,input.status,input.outcome?.trim()??null,input.sourceReportId??null,input.attemptId??null,work.companyId],
-  )
-  if (!rowCount) throw new Error('mission step not found')
-  return requireLearningMission(db, scope.companyId, scope.courseId, input.missionId)
-}
-
-export async function completeMission(work: AgentWorkItem, missionId: string, db: Queryable = pool): Promise<LearningMission> {
-  const scope = await roomScope(work, db)
-  const { rows } = await db.query<{ unresolved: number; reflections: number }>(
-    `SELECT COUNT(*) FILTER (WHERE s.status IN ('open','in_progress'))::int AS unresolved,
-            COUNT(*) FILTER (WHERE s.type='reflect' AND s.status='completed')::int AS reflections
-       FROM learning_missions m LEFT JOIN learning_mission_steps s ON s.mission_id=m.id
-      WHERE m.id=$1 AND m.course_id=$2 GROUP BY m.id`, [missionId, scope.courseId],
-  )
-  if (!rows[0]) throw new Error('mission not found')
-  if (rows[0].unresolved > 0) throw new Error('mission has unresolved steps')
-  if (rows[0].reflections < 1) throw new Error('mission requires a completed reflection step')
-  await db.query(`UPDATE learning_missions SET status='completed',completed_at=NOW(),updated_at=NOW() WHERE id=$1`, [missionId])
-  return requireLearningMission(db, scope.companyId, scope.courseId, missionId)
 }
 
 async function validateLearnerMessage(work: AgentWorkItem, courseId: string, clientMsgNo: string, db: Queryable = pool): Promise<string> {
