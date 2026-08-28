@@ -118,68 +118,73 @@ async function seedLearningPreset(
     )
   }
 }
-/** Install the native learning preset exactly once. Partial preset state is
- * rejected because silently repairing it would create a second lifecycle. */
-export async function onboardStarterAgents(
-  companyId: string,
-): Promise<void> {
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    const { rows } = await client.query<{ owner_user_id: string | null }>(
+/** Install the native learning preset inside the caller's transaction. Partial
+ * preset state is rejected because silently repairing it would create a second
+ * lifecycle. Returns whether a new preset was written. */
+export async function installStarterAgents(db: QueryClient, companyId: string): Promise<boolean> {
+  const { rows } = await db.query<{ owner_user_id: string | null }>(
       `SELECT owner_user_id FROM companies WHERE id = $1 FOR UPDATE`,
       [companyId],
-    )
-    const company = rows[0]
-    if (!company) throw new Error(`company not found: ${companyId}`)
+  )
+  const company = rows[0]
+  if (!company) throw new Error(`company not found: ${companyId}`)
 
-    let ownerId = company.owner_user_id
-    if (!ownerId) {
-      const owner = await client.query<{ user_id: string }>(
-        `SELECT user_id FROM company_members
-          WHERE company_id = $1 AND role = 'owner'
-          ORDER BY joined_at ASC LIMIT 1`,
-        [companyId],
-      )
-      ownerId = owner.rows[0]?.user_id ?? null
-    }
-    if (!ownerId) throw new Error(`company ${companyId} has no owner`)
-
-    // New companies created after the schema migration do not pass through
-    // the historical backfill. Establish their immutable landing workspace
-    // before starter conversations are inserted.
-    await client.query(
-      `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
-       SELECT $2, $1, '通用工作区', '未指定工作区的会话与资料', '#667085', $3, TRUE
-        WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
-      [companyId, `general-${randomUUID().slice(0, 18)}`, ownerId],
+  let ownerId = company.owner_user_id
+  if (!ownerId) {
+    const owner = await db.query<{ user_id: string }>(
+      `SELECT user_id FROM company_members
+        WHERE company_id = $1 AND role = 'owner'
+        ORDER BY joined_at ASC LIMIT 1`,
+      [companyId],
     )
+    ownerId = owner.rows[0]?.user_id ?? null
+  }
+  if (!ownerId) throw new Error(`company ${companyId} has no owner`)
 
-    const expectedKeys = STARTER_TEAM.map((agent) => agent.presetKey)
-    const existing = await client.query<{ preset_key: string }>(
-      `SELECT preset_key FROM participants
-        WHERE company_id = $1 AND kind = 'agent' AND preset_key = ANY($2::text[])`,
-      [companyId, expectedKeys],
-    )
-    if (existing.rows.length === expectedKeys.length) {
-      await client.query('COMMIT')
-    } else if (existing.rows.length !== 0) {
-      throw new Error(`company ${companyId} has a partial native learning preset (${existing.rows.length}/${expectedKeys.length})`)
-    } else {
-      await seedLearningPreset(client, companyId, ownerId)
-      await client.query('COMMIT')
-      invalidatePersonaCache()
-    }
+  await db.query(
+    `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
+     SELECT $2, $1, '通用工作区', '未指定工作区的会话与资料', '#667085', $3, TRUE
+      WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
+    [companyId, `general-${randomUUID().slice(0, 18)}`, ownerId],
+  )
+
+  const expectedKeys = STARTER_TEAM.map((agent) => agent.presetKey)
+  const existing = await db.query<{ preset_key: string }>(
+    `SELECT preset_key FROM participants
+      WHERE company_id = $1 AND kind = 'agent' AND preset_key = ANY($2::text[])`,
+    [companyId, expectedKeys],
+  )
+  if (existing.rows.length === expectedKeys.length) return false
+  if (existing.rows.length !== 0) {
+    throw new Error(`company ${companyId} has a partial native learning preset (${existing.rows.length}/${expectedKeys.length})`)
+  }
+  await seedLearningPreset(db, companyId, ownerId)
+  return true
+}
+
+export async function finalizeStarterAgents(installed: boolean): Promise<void> {
+  if (installed) invalidatePersonaCache()
+  const reconciliation = await reconcileLearningChannels()
+  if (reconciliation.failures > 0) {
+    throw new Error(`WuKongIM learning channel reconciliation failed (${reconciliation.failures}/${reconciliation.channels})`)
+  }
+}
+
+/** Transaction-owning facade used by startup and identity onboarding. */
+export async function onboardStarterAgents(companyId: string): Promise<void> {
+  const client = await pool.connect()
+  let installed = false
+  try {
+    await client.query('BEGIN')
+    installed = await installStarterAgents(client, companyId)
+    await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK')
     throw error
   } finally {
     client.release()
   }
-  const reconciliation = await reconcileLearningChannels()
-  if (reconciliation.failures > 0) {
-    throw new Error(`WuKongIM learning channel reconciliation failed (${reconciliation.failures}/${reconciliation.channels})`)
-  }
+  await finalizeStarterAgents(installed)
 }
 
 /**
