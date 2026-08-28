@@ -3,7 +3,7 @@ import test from 'node:test'
 import { roleAllowsAction } from '../agent-os/role-policy.js'
 import { assembleAgentSystemPrompt } from '../agent-os/prompt-assembly.js'
 import { IPYTHON_TOOL } from '../agent-os/tool.js'
-import { preferredCoordinatorPreset } from '../learning/service.js'
+import { preferredLearningMissionCoordinator } from '../modules/learning/application.js'
 
 const emptyMemory={learner:[],course:[],agentRole:[]}
 
@@ -14,9 +14,9 @@ test('runtime execution role, not persona name, selects the Frontier workflow',(
 })
 
 test('Mission kind chooses the deterministic default coordinator persona',()=>{
-  assert.equal(preferredCoordinatorPreset('study'),'nova')
-  assert.equal(preferredCoordinatorPreset('research'),'scout')
-  assert.equal(preferredCoordinatorPreset('project'),'forge')
+  assert.equal(preferredLearningMissionCoordinator('study'),'nova')
+  assert.equal(preferredLearningMissionCoordinator('research'),'scout')
+  assert.equal(preferredLearningMissionCoordinator('project'),'forge')
 })
 
 test('verifier and reporter Host action policies are least privilege',()=>{

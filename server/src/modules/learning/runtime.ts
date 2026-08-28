@@ -7,10 +7,8 @@
  */
 export {
   loadLearningTurnContext,
-  preferredCoordinatorPreset,
   proposeEvaluation,
   recordAttempt,
-  startMission,
 } from '../../learning/service.js'
 
 export function createObjectives(input: CreateLearningObjectivesCommand) {
@@ -109,6 +107,7 @@ export type {
 } from '../../learning/types.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
+import { wukongClient } from '../../im/wukong.js'
 import { inc } from '../../metrics.js'
 import {
   addLearningMissionSteps,
@@ -118,8 +117,10 @@ import {
   createLearningObjectives,
   finishLearningMissionPlanning,
   publishLearningActivity,
+  preferredLearningMissionCoordinator,
   setLearningObjectiveStatus,
   submitLearningActivity,
+  startLearningMission,
   updateLearningMissionStep,
 } from './application.js'
 import type {
@@ -128,6 +129,46 @@ import type {
   CreateLearningObjectivesCommand,
 } from './contracts.js'
 import { findLearningMission, findVisibleLearningActivity } from './repository.js'
+import type { AgentWorkItem } from '../../agent-os/types.js'
+
+export const preferredCoordinatorPreset = preferredLearningMissionCoordinator
+
+export function startMission(
+  work: AgentWorkItem,
+  input: {
+    goal: string; successCriteria: string; missionKind?: 'study'|'research'|'project'
+    sourceClientMsgNo?: string; explicit?: boolean
+  },
+) {
+  return startLearningMission(pool, (run) => withTransaction(pool, run), {
+    syncMessages: async ({ channelId, channelType, limit, loginUid }) => {
+      const messages = await wukongClient().syncMessages(channelId, channelType, limit, loginUid)
+      return messages.map((message) => ({
+        clientMsgNo: message.clientMsgNo,
+        fromUid: message.fromUid,
+        authoredByAgent: Boolean(message.payload.refs?.agentId),
+      }))
+    },
+    publishMission: async ({ channelId, channelType, senderId, mission, courseId }) => {
+      await wukongClient().sendMessage(channelId, channelType, senderId, {
+        version: 1, kind: 'learning_mission', clientMsgNo: `learning-mission-${mission.id}`,
+        body: mission.goal, refs: { agentId: senderId },
+        data: {
+          missionId: mission.id, courseId, goal: mission.goal,
+          successCriteria: mission.successCriteria, missionKind: mission.missionKind,
+          coordinatorAgentId: mission.coordinatorAgentId, status: mission.status,
+          suppressAgentWake: true,
+        },
+      })
+    },
+    metric: inc,
+  }, {
+    workId: work.id, companyId: work.companyId, agentId: work.agentId,
+    channelId: work.channelId, triggerClientMsgNo: work.triggerClientMsgNo,
+    ...(work.threadRootClientMsgNo ? { threadRootClientMsgNo: work.threadRootClientMsgNo } : {}),
+    ...input,
+  })
+}
 
 export async function getMission(
   missionId: string,

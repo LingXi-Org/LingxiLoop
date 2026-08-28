@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
@@ -19,13 +19,6 @@ import type {
 } from './types.js'
 import { projectMastery } from './mastery.js'
 export { projectMastery } from './mastery.js'
-
-function asText(value: unknown, name: string, maxLength = 10_000): string {
-  const text = String(value ?? '').trim()
-  if (!text) throw new Error(`${name} is required`)
-  if (text.length > maxLength) throw new Error(`${name} exceeds ${maxLength} characters`)
-  return text
-}
 
 const REVIEW_INTERVAL_BY_LEVEL = [1, 1, 3, 7, 21] as const
 
@@ -228,60 +221,6 @@ async function requireLearningMission(
 ): Promise<LearningMission> {
   const mission = await findLearningMission(db, companyId, courseId, missionId)
   if (!mission) throw new Error('mission not found')
-  return mission
-}
-
-export function preferredCoordinatorPreset(kind:import('./types.js').LearningMissionKind):'nova'|'scout'|'forge' {
-  return kind==='project'?'forge':kind==='research'?'scout':'nova'
-}
-
-export async function startMission(work: AgentWorkItem, input: {
-  goal: string; successCriteria: string; missionKind?: import('./types.js').LearningMissionKind; sourceClientMsgNo?: string; explicit?: boolean
-}, db: Queryable = pool): Promise<LearningMission> {
-  const scope = await roomScope(work, db)
-  if (scope.purpose !== 'study' && input.explicit !== true) throw new Error('automatic missions are allowed only in course-bound study rooms; set explicit=true only for a direct learner request')
-  const triggerClientMsgNo = input.sourceClientMsgNo?.trim() || work.triggerClientMsgNo
-  const learnerId = await validateLearnerMessage(work, scope.courseId, triggerClientMsgNo, db)
-  const missionKind = input.missionKind ?? (scope.purpose === 'lab' ? 'project' : 'study')
-  if (!['study','research','project'].includes(missionKind)) throw new Error('missionKind must be study, research, or project')
-  const preferredPreset = preferredCoordinatorPreset(missionKind)
-  const { rows: coordinators } = await db.query<{ id:string }>(
-    `SELECT p.id FROM participants p JOIN conversations c ON c.id=$2 AND c.company_id=$1
-      WHERE p.company_id=$1 AND p.kind='agent' AND p.departed_at IS NULL
-        AND p.capabilities @> '["canvas","learning"]'::jsonb AND c.members ? p.id
-      ORDER BY CASE WHEN p.preset_key=$3 THEN 0 WHEN p.preset_key='nova' THEN 1 WHEN p.id=$4 THEN 2 ELSE 3 END,p.id LIMIT 1`,
-    [work.companyId,work.channelId,preferredPreset,work.agentId],
-  )
-  const coordinatorAgentId=coordinators[0]?.id
-  if (!coordinatorAgentId) throw new Error('no eligible Mission coordinator is available in the current learning room')
-  const id = randomUUID()
-  const { rows } = await db.query<{ id: string; inserted: boolean }>(
-    `INSERT INTO learning_missions(id,course_id,company_id,learner_id,conversation_id,trigger_client_msg_no,goal,success_criteria,mission_kind,coordinator_agent_id,created_by)
-     SELECT $1,$2,course.company_id,$3,$4,$5,$6,$7,$8,$9,$10
-       FROM courses course WHERE course.id=$2
-     ON CONFLICT(course_id,learner_id,conversation_id,trigger_client_msg_no)
-     DO UPDATE SET updated_at=learning_missions.updated_at RETURNING id,(xmax=0) AS inserted`,
-    [id, scope.courseId, learnerId, work.channelId, triggerClientMsgNo, asText(input.goal, 'goal'), asText(input.successCriteria, 'successCriteria'), missionKind, coordinatorAgentId, work.agentId],
-  )
-  inc(rows[0].inserted ? 'learning.mission.created' : 'learning.mission.deduplicated', rows[0].inserted ? { mode: 'agent' } : undefined)
-  const mission = await requireLearningMission(db, scope.companyId, scope.courseId, rows[0].id)
-  if (rows[0].inserted&&coordinatorAgentId!==work.agentId) {
-    const coordinatorWorkId=`mission-coordinator-${createHash('sha256').update(mission.id).digest('hex').slice(0,24)}`
-    await db.query(
-      `INSERT INTO agent_work_items(id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,execution_role)
-       VALUES($1,$2,$3,$4,$5,$6,'handoff','queued',190,'coordinator') ON CONFLICT(agent_id,trigger_client_msg_no,reason) DO NOTHING`,
-      [coordinatorWorkId,work.companyId,coordinatorAgentId,work.channelId,work.threadRootClientMsgNo??triggerClientMsgNo,`mission-coordinator:${mission.id}`],
-    )
-  }
-  const { rows: binding } = await db.query<{ channel_type: number }>(
-    `SELECT COALESCE((profile->>'channelType')::int,2) AS channel_type FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`,
-    [work.channelId, work.companyId],
-  )
-  await wukongClient().sendMessage(work.channelId, Number(binding[0]?.channel_type ?? 2), work.agentId, {
-    version: 1, kind: 'learning_mission', clientMsgNo: `learning-mission-${mission.id}`,
-    body: mission.goal, refs: { agentId: work.agentId },
-    data: { missionId: mission.id, courseId: scope.courseId, goal: mission.goal, successCriteria: mission.successCriteria, missionKind:mission.missionKind, coordinatorAgentId:mission.coordinatorAgentId, status: mission.status, suppressAgentWake: true },
-  })
   return mission
 }
 

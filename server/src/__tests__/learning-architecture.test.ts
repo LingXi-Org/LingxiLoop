@@ -10,6 +10,7 @@ const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.m
 const service = readFileSync(new URL('../learning/service.ts', import.meta.url), 'utf8')
 const repository = readFileSync(new URL('../modules/learning/repository.ts', import.meta.url), 'utf8')
 const learningApplicationSource = readFileSync(new URL('../modules/learning/application.ts', import.meta.url), 'utf8')
+const learningRuntimeSource = readFileSync(new URL('../modules/learning/runtime.ts', import.meta.url), 'utf8')
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
 
 function productionTypeScriptFiles(root: string): string[] {
@@ -76,6 +77,15 @@ test('mission planning and completion writes live only in application and reposi
   assert.doesNotMatch(service, /SET status='completed',completed_at=/)
   assert.match(learningApplicationSource, /lockLearningMission/)
   assert.match(repository, /mission\.company_id=\$1 AND mission\.course_id=\$2 AND mission\.conversation_id=\$3/)
+})
+
+test('mission start uses the public vertical slice instead of the legacy service', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_missions/)
+  assert.doesNotMatch(service, /mission-coordinator-/)
+  assert.doesNotMatch(learningRuntimeSource, /startMission,[\s\S]*from '..\/..\/learning\/service\.js'/)
+  assert.match(learningApplicationSource, /startLearningMission/)
+  assert.match(learningApplicationSource, /infrastructure\.syncMessages/)
+  assert.match(repository, /ON CONFLICT\(course_id,learner_id,conversation_id,trigger_client_msg_no\)/)
 })
 
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{

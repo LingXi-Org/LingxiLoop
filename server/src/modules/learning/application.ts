@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import type { Queryable } from '../../db/queryable.js'
 import {
@@ -24,6 +24,7 @@ import type {
   NotificationPreferencesInput,
   ObjectiveStatusInput,
   ReviewEvaluationInput,
+  StartLearningMissionCommand,
   SubmitActivityInput,
   UpdateCourseInput,
 } from './contracts.js'
@@ -45,6 +46,7 @@ import {
   findCourse,
   findLearningActivity,
   findLearningMission,
+  findEligibleLearningMissionCoordinator,
   findLearningRoomState,
   findNotificationPreferences,
   findVerifiedUser,
@@ -55,6 +57,7 @@ import {
   insertLearningActivity,
   insertLearningActivityAttempt,
   insertLearningMissionStep,
+  enqueueLearningMissionCoordinatorWork,
   invitationViewer,
   joinInvitationCompany,
   listCourseInvitations,
@@ -66,6 +69,7 @@ import {
   listLearningMissions,
   learningMissionCompletionSummary,
   learningMissionPlanningSummary,
+  learningChannelType,
   lockCourseInvitation,
   priorCourseAcceptance,
   publishLearningActivityRecord,
@@ -82,8 +86,10 @@ import {
   updateLearningMissionCoordinator,
   updateLearningMissionStepRecord,
   upsertNotificationPreferences,
+  upsertLearningMission,
   upsertAcceptedCourseMembership,
 } from './repository.js'
+import type { LearningMission, LearningMissionKind } from '../../learning/types.js'
 
 export type LearningApplicationErrorCode = 'invalid' | 'not_found' | 'forbidden' | 'conflict' | 'gone' | 'unauthorized'
 
@@ -308,6 +314,86 @@ async function requireLearningRoomState(db: Queryable, scope: LearningAgentRoomS
   const room = await findLearningRoomState(db, scope)
   if (!room) throw new LearningApplicationError('not_found', 'current conversation is not bound to a learning course')
   return room
+}
+
+export interface LearningMissionInfrastructure {
+  syncMessages(input: {
+    channelId: string; channelType: number; limit: number; loginUid: string
+  }): Promise<Array<{ clientMsgNo: string; fromUid: string; authoredByAgent: boolean }>>
+  publishMission(input: {
+    channelId: string; channelType: number; senderId: string; mission: LearningMission; courseId: string
+  }): Promise<void>
+  metric(name: string, labels?: Record<string, string>): void
+}
+
+export function preferredLearningMissionCoordinator(kind: LearningMissionKind): 'nova'|'scout'|'forge' {
+  return kind === 'project' ? 'forge' : kind === 'research' ? 'scout' : 'nova'
+}
+
+export async function startLearningMission(
+  db: Queryable,
+  transaction: LearningTransaction,
+  infrastructure: LearningMissionInfrastructure,
+  input: StartLearningMissionCommand,
+): Promise<LearningMission> {
+  const room = await requireLearningRoomState(db, input)
+  if (room.purpose !== 'study' && input.explicit !== true) {
+    throw new LearningApplicationError(
+      'forbidden',
+      'automatic missions are allowed only in course-bound study rooms; set explicit=true only for a direct learner request',
+    )
+  }
+  const triggerClientMsgNo = input.sourceClientMsgNo?.trim() || input.triggerClientMsgNo
+  const channelType = await learningChannelType(db, input.companyId, input.channelId)
+  const messages = await infrastructure.syncMessages({
+    channelId: input.channelId, channelType, limit: 100, loginUid: input.agentId,
+  })
+  const trigger = messages.find((message) => message.clientMsgNo === triggerClientMsgNo)
+  if (!trigger || trigger.authoredByAgent) {
+    throw new LearningApplicationError('invalid', 'evidence must reference an existing human message in the current room')
+  }
+  if (await courseRole(db, room.courseId, room.companyId, trigger.fromUid) !== 'learner') {
+    throw new LearningApplicationError('forbidden', 'mission evidence author must be a learner in the current course')
+  }
+  const missionKind = input.missionKind ?? (room.purpose === 'lab' ? 'project' : 'study')
+  const goal = learningText(input.goal, 'goal')
+  const successCriteria = learningText(input.successCriteria, 'successCriteria')
+  const result = await transaction(async (client) => {
+    const coordinatorAgentId = await findEligibleLearningMissionCoordinator(client, {
+      companyId: input.companyId,
+      channelId: input.channelId,
+      preferredPreset: preferredLearningMissionCoordinator(missionKind),
+      currentAgentId: input.agentId,
+    })
+    if (!coordinatorAgentId) {
+      throw new LearningApplicationError('conflict', 'no eligible Mission coordinator is available in the current learning room')
+    }
+    const stored = await upsertLearningMission(client, {
+      id: randomUUID(), companyId: room.companyId, courseId: room.courseId,
+      learnerId: trigger.fromUid, channelId: input.channelId, triggerClientMsgNo,
+      goal, successCriteria, missionKind, coordinatorAgentId, createdBy: input.agentId,
+    })
+    if (stored.inserted && coordinatorAgentId !== input.agentId) {
+      await enqueueLearningMissionCoordinatorWork(client, {
+        id: `mission-coordinator-${createHash('sha256').update(stored.id).digest('hex').slice(0, 24)}`,
+        companyId: input.companyId, coordinatorAgentId, channelId: input.channelId,
+        threadRootClientMsgNo: input.threadRootClientMsgNo ?? triggerClientMsgNo,
+        missionId: stored.id,
+      })
+    }
+    const mission = await findLearningMission(client, room.companyId, room.courseId, stored.id)
+    if (!mission) throw new LearningApplicationError('conflict', 'mission could not be loaded after creation')
+    return { mission, inserted: stored.inserted }
+  })
+  infrastructure.metric(
+    result.inserted ? 'learning.mission.created' : 'learning.mission.deduplicated',
+    result.inserted ? { mode: 'agent' } : undefined,
+  )
+  await infrastructure.publishMission({
+    channelId: input.channelId, channelType, senderId: input.agentId,
+    mission: result.mission, courseId: room.courseId,
+  })
+  return result.mission
 }
 
 export async function addLearningMissionSteps(

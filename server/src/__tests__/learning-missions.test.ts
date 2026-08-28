@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
+import { startLearningMission } from '../modules/learning/application.js'
 import {
   completeLearningMissionRecord,
   findLearningMission,
@@ -138,4 +139,42 @@ test('mission completion updates only active or paused state', async () => {
 
   assert.equal(await completeLearningMissionRecord(db, 'mission-1'), true)
   assert.match(statement, /status IN \('active','paused'\)/)
+})
+
+test('mission start validates human learner evidence and publishes the committed mission', async () => {
+  const statements: string[] = []
+  const db = queryable((text) => {
+    statements.push(text)
+    if (text.includes('FROM courses course') && text.includes('learning_course_rooms')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
+      status: 'active', purpose: 'study',
+    }] }
+    if (text.includes('FROM im_channel_bindings')) return { rows: [{ channel_type: 2 }] }
+    if (text.includes('FROM course_members')) return { rows: [{ role: 'learner' }] }
+    if (text.includes('FROM participants participant')) return { rows: [{ id: 'nova' }] }
+    if (text.includes('INSERT INTO learning_missions')) return { rows: [{ id: 'mission-1', inserted: true }] }
+    if (text.includes('INSERT INTO agent_work_items')) return { rowCount: 1 }
+    if (text.includes('FROM learning_missions mission')) return { rows: [missionRow] }
+    if (text.includes('FROM learning_mission_steps')) return { rows: [] }
+    throw new Error(`unexpected query: ${text}`)
+  })
+  const published: string[] = []
+  const metrics: string[] = []
+
+  const mission = await startLearningMission(db, async (work) => work(db), {
+    syncMessages: async () => [{
+      clientMsgNo: 'message-1', fromUid: 'learner-1', authoredByAgent: false,
+    }],
+    publishMission: async ({ mission: committed }) => { published.push(committed.id) },
+    metric: (name) => { metrics.push(name) },
+  }, {
+    workId: 'work-1', companyId: 'company-1', channelId: 'room-1', agentId: 'agent-1',
+    triggerClientMsgNo: 'message-1', goal: 'Understand leases', successCriteria: 'Explain fencing',
+  })
+
+  assert.equal(mission.id, 'mission-1')
+  assert.deepEqual(published, ['mission-1'])
+  assert.deepEqual(metrics, ['learning.mission.created'])
+  assert.equal(statements.filter((text) => text.includes('INSERT INTO learning_missions')).length, 1)
+  assert.equal(statements.filter((text) => text.includes('INSERT INTO agent_work_items')).length, 1)
 })
