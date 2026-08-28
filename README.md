@@ -136,6 +136,7 @@ Web replica count never creates more scheduler, retry, sweeper or GC loops.
 | `server/agent-os/` | Persistent IPython kernel runner |
 | `server/src/im/` | WuKongIM bootstrap, webhook, routing and payload contracts |
 | `server/src/modules/` | HTTP domain slices and their public domain facades |
+| `server/src/modules/documents/` | Document HTTP/collaboration boundary and durable, lease-claimed mention delivery |
 | `server/src/agents/` | Typed learning-domain services used by the Host Bridge |
 | `server/src/eval/` | Deterministic answer, RAG, tool, and multi-Agent evaluation pipeline |
 | `eval/suites/` + `eval/baselines/` | Versioned golden Eval datasets and merge-gating baselines |

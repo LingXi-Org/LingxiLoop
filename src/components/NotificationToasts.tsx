@@ -90,6 +90,7 @@ export function NotificationToasts() {
   // always reads fresh state without resubscribing on every render.
   const meRef = useRef(meId)
   const focusRef = useRef({ selectedId, view })
+  const seenMentionDeliveriesRef = useRef(new Set<string>())
   useEffect(() => { meRef.current = meId }, [meId])
   useEffect(() => { focusRef.current = { selectedId, view } }, [selectedId, view])
 
@@ -215,6 +216,15 @@ export function NotificationToasts() {
       if (e.mentionerId === meRef.current) return
       // Only fire when the current user is on the mentioned list.
       if (!e.mentionedIds.includes(meRef.current ?? '')) return
+      // Delivery retries intentionally reuse the same durable id. Suppress a
+      // replay before it can increment a toast or ring the notification chime.
+      const seenDeliveries = seenMentionDeliveriesRef.current
+      if (seenDeliveries.has(e.deliveryId)) return
+      seenDeliveries.add(e.deliveryId)
+      if (seenDeliveries.size > 256) {
+        const oldest = seenDeliveries.values().next().value
+        if (oldest) seenDeliveries.delete(oldest)
+      }
       const at = Date.now()
       setToasts((prev) => {
         const idx = prev.findIndex((t) => t.kind === 'doc.mention' && t.documentId === e.documentId)

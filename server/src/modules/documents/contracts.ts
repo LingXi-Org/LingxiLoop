@@ -50,6 +50,37 @@ export interface DocumentAwarenessEvent {
   originId: string
 }
 
+export interface DocumentMentionRecipient {
+  id: string
+  kind: 'human' | 'agent'
+  name: string
+}
+
+export interface DocumentMentionEvent {
+  type: 'doc.mention'
+  deliveryId: string
+  companyId: string
+  documentId: string
+  documentTitle: string
+  mentionerId: string
+  mentionerName: string
+  mentionedIds: string[]
+  workspaceId: string
+}
+
+export interface DocumentMentionDelivery {
+  id: string
+  companyId: string
+  documentId: string
+  projectId: string
+  mentionerId: string
+  mentionerName: string
+  documentTitle: string
+  recipients: DocumentMentionRecipient[]
+  leaseOwner: string
+  attempts: number
+}
+
 export type AgentImagePlacement =
   | { mode: 'start' | 'end' }
   | { mode: 'replace' | 'after' | 'before'; anchorText: string }

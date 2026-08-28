@@ -1,6 +1,6 @@
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
-import type { SearchBuckets } from './contracts.js'
+import type { SearchBuckets, WorkspacePolicy } from './contracts.js'
 
 export interface ParticipantRow {
   id: string
@@ -78,6 +78,23 @@ export async function findDirectConversation(
     [args.companyId, args.projectId, args.firstId, args.secondId],
   )
   return rows[0] ?? null
+}
+
+export async function findConversationWorkspacePolicy(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+): Promise<WorkspacePolicy | null> {
+  const { rows } = await db.query<{ project_status: string; course_id: string | null }>(
+    `SELECT project.status AS project_status,course.id AS course_id
+       FROM projects project
+       LEFT JOIN courses course
+         ON course.project_id=project.id AND course.company_id=project.company_id
+      WHERE project.id=$1 AND project.company_id=$2`,
+    [projectId, companyId],
+  )
+  const row = rows[0]
+  return row ? { projectStatus: row.project_status, courseId: row.course_id } : null
 }
 
 export async function findConversationForUpdate(

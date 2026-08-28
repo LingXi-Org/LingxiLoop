@@ -82,6 +82,7 @@ test('Web composition contains no background scheduler or worker startup', async
     'startMemorySynthesisScheduler',
     'startEmailRetryWorker',
     'startEmailGcWorker',
+    'startDocumentMentionDeliveryWorker',
     'startDbGcWorker',
     'startKnowledgeWorker',
     'startKnowledgeStorageGc',

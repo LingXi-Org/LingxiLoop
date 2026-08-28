@@ -95,7 +95,7 @@ for (const file of server) {
     violations.push(`${fileName}: retired root Documents capability is forbidden`)
   }
   if (!fileName.startsWith('server/src/modules/documents/')
-    && /modules\/documents\/(?:collaboration-(?:application|facade|repository)|markdown)\.js/.test(source)) {
+    && /modules\/documents\/(?:(?:collaboration|mention)-(?:application|facade|repository)|markdown)\.js/.test(source)) {
     violations.push(`${fileName}: Documents access must use modules/documents/public.ts`)
   }
   if (fileName === 'server/src/knowledge/service.ts') violations.push(`${fileName}: retired root Knowledge implementation is forbidden`)

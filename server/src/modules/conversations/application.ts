@@ -14,6 +14,7 @@ import {
   findConversation,
   findBindingForUpdate,
   findConversationForUpdate,
+  findConversationWorkspacePolicy,
   findDirectConversation,
   hasManagedPulse,
   listCourseHumanIds,
@@ -190,6 +191,18 @@ export class ConversationsApplication {
     })
     await this.infrastructure.syncChannel(result.profile)
     return { id: result.profile.channelId, created: result.created }
+  }
+
+  async openDirectForDocumentMention(
+    scope: ConversationScope,
+    agentId: string,
+  ): Promise<{ id: string; created: boolean }> {
+    const workspace = await findConversationWorkspacePolicy(this.db, scope.companyId, scope.projectId)
+    if (!workspace) throw new ConversationApplicationError('not_found', 'workspace not found')
+    if (workspace.projectStatus !== 'active') {
+      throw new ConversationApplicationError('workspace_read_only', 'workspace is read-only')
+    }
+    return this.openDirect(scope, workspace, agentId)
   }
 
   async setLeader(scope: ConversationScope, conversationId: string, leaderId: string) {

@@ -350,6 +350,7 @@ export interface DocAwarenessEvent extends TenantTagged {
  *  in `mentionedIds`. */
 export interface DocMentionEvent extends TenantTagged {
   type: 'doc.mention'
+  deliveryId: string
   documentId: string
   documentTitle: string
   mentionerId: string

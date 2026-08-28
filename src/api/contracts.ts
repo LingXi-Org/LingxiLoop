@@ -83,7 +83,7 @@ export type WsEvent =
   | { type: 'doc.awareness'; documentId: string; updateB64: string; originId: string }
   | { type: 'doc.error'; documentId?: string; error: string }
   | DocumentChangedEvent
-  | { type: 'doc.mention'; documentId: string; documentTitle: string; mentionerId: string; mentionerName: string; mentionedIds: string[] }
+  | { type: 'doc.mention'; deliveryId: string; documentId: string; documentTitle: string; mentionerId: string; mentionerName: string; mentionedIds: string[] }
   | {
       type: 'canvas.changed'
       kind:

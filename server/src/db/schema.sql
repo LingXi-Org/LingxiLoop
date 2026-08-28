@@ -1496,6 +1496,33 @@ CREATE TABLE public.knowledge_sources (
 
 
 --
+-- Name: document_mention_deliveries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.document_mention_deliveries (
+    id text NOT NULL,
+    company_id text NOT NULL,
+    document_id text NOT NULL,
+    project_id text NOT NULL,
+    mentioner_id text NOT NULL,
+    mentioner_name text NOT NULL,
+    document_title text NOT NULL,
+    recipients jsonb NOT NULL,
+    status text DEFAULT 'queued'::text NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    available_at timestamp with time zone DEFAULT now() NOT NULL,
+    leased_until timestamp with time zone,
+    leased_by text,
+    last_error text,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT document_mention_deliveries_recipients_check CHECK (((jsonb_typeof(recipients) = 'array'::text) AND (jsonb_array_length(recipients) > 0))),
+    CONSTRAINT document_mention_deliveries_status_check CHECK ((status = ANY (ARRAY['queued'::text, 'processing'::text, 'completed'::text, 'failed'::text])))
+);
+
+
+--
 -- Name: llm_calls; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2270,6 +2297,14 @@ ALTER TABLE ONLY public.courses
 
 ALTER TABLE ONLY public.document_mentions
     ADD CONSTRAINT document_mentions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: document_mention_deliveries document_mention_deliveries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.document_mention_deliveries
+    ADD CONSTRAINT document_mention_deliveries_pkey PRIMARY KEY (id);
 
 
 --
@@ -3161,6 +3196,20 @@ CREATE INDEX idx_document_mentions_doc ON public.document_mentions USING btree (
 --
 
 CREATE INDEX idx_document_mentions_recipient ON public.document_mentions USING btree (mentioned_id, created_at DESC);
+
+
+--
+-- Name: idx_document_mention_deliveries_due; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_document_mention_deliveries_due ON public.document_mention_deliveries USING btree (available_at, created_at) WHERE (status = ANY (ARRAY['queued'::text, 'processing'::text]));
+
+
+--
+-- Name: idx_document_mention_deliveries_company; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_document_mention_deliveries_company ON public.document_mention_deliveries USING btree (company_id, created_at DESC);
 
 
 --
@@ -4183,6 +4232,30 @@ ALTER TABLE ONLY public.courses
 
 ALTER TABLE ONLY public.document_mentions
     ADD CONSTRAINT document_mentions_document_id_fkey FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE CASCADE;
+
+
+--
+-- Name: document_mention_deliveries document_mention_deliveries_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.document_mention_deliveries
+    ADD CONSTRAINT document_mention_deliveries_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: document_mention_deliveries document_mention_deliveries_document_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.document_mention_deliveries
+    ADD CONSTRAINT document_mention_deliveries_document_id_fkey FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE CASCADE;
+
+
+--
+-- Name: document_mention_deliveries document_mention_deliveries_project_id_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.document_mention_deliveries
+    ADD CONSTRAINT document_mention_deliveries_project_id_company_id_fkey FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE;
 
 
 --

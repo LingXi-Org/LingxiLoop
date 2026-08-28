@@ -23,7 +23,7 @@ const REQUIRED_V1_RELATIONS = [
   'convene_transcript', 'convening_info', 'conversation_counters',
   'conversation_mutes', 'conversation_reads', 'conversation_source_exclusions',
   'conversations', 'course_invitation_acceptances', 'course_invitations',
-  'course_members', 'courses', 'document_mentions', 'document_snapshots',
+  'course_members', 'courses', 'document_mention_deliveries', 'document_mentions', 'document_snapshots',
   'document_updates', 'documents', 'email_attachments', 'email_contacts',
   'email_messages', 'eval_cases', 'eval_runs', 'eval_stage_results',
   'im_channel_bindings', 'im_poll_votes', 'im_polls',
@@ -52,6 +52,8 @@ const REQUIRED_V1_COLUMNS = [
   ['message_reactions', 'company_id'],
   ['agent_climate', 'company_id'],
   ['calendar_events', 'project_id'],
+  ['document_mention_deliveries', 'recipients'],
+  ['document_mention_deliveries', 'status'],
   ['im_polls', 'published_revision'],
   ['im_polls', 'request_fingerprint'],
 ] as const
@@ -60,6 +62,8 @@ const REQUIRED_V1_NOT_NULL_COLUMNS = [
   ['message_reactions', 'company_id'],
   ['agent_climate', 'company_id'],
   ['calendar_events', 'project_id'],
+  ['document_mention_deliveries', 'recipients'],
+  ['document_mention_deliveries', 'status'],
 ] as const
 
 const REQUIRED_V1_PRIMARY_KEYS = [
@@ -73,11 +77,15 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['llm_calls', 'llm_calls_status_check', 'c'],
   ['llm_calls', 'llm_calls_tokens_check', 'c'],
   ['participants', 'participants_agent_bloub_only', 'c'],
+  ['document_mention_deliveries', 'document_mention_deliveries_recipients_check', 'c'],
+  ['document_mention_deliveries', 'document_mention_deliveries_status_check', 'c'],
 ] as const
 
 const REQUIRED_V1_INDEXES = [
   'idx_llm_calls_company_created',
   'idx_llm_calls_run_created',
+  'idx_document_mention_deliveries_due',
+  'idx_document_mention_deliveries_company',
   'uniq_email_messages_smtp_id',
 ] as const
 

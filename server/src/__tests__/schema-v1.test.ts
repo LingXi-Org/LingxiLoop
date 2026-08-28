@@ -73,6 +73,15 @@ test('calendar rows require one workspace and coherent native event fields', () 
   assert.match(bootstrap, /\['calendar_events', 'project_id'\]/)
 })
 
+test('document mentions use a durable tenant-scoped delivery ledger', () => {
+  assert.match(schema, /CREATE TABLE public\.document_mention_deliveries \([\s\S]*?company_id text NOT NULL[\s\S]*?recipients jsonb NOT NULL[\s\S]*?status text DEFAULT 'queued'/)
+  assert.match(schema, /document_mention_deliveries_status_check/)
+  assert.match(schema, /idx_document_mention_deliveries_due/)
+  assert.match(schema, /document_mention_deliveries_project_id_company_id_fkey/)
+  assert.match(bootstrap, /'document_mention_deliveries'/)
+  assert.match(bootstrap, /\['document_mention_deliveries', 'status'\]/)
+})
+
 test('bootstrap only reuses a complete marked v1 schema and rejects every unmarked non-empty schema', () => {
   const executableBootstrap = bootstrap
     .replace(/\/\*[\s\S]*?\*\//g, '')

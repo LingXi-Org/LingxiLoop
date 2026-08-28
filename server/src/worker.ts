@@ -5,6 +5,7 @@ import { startStaleAgentRunSweeper } from './agents/observability.js'
 import { seedAdmins } from './modules/admin/facade.js'
 import { startCalendarScheduler } from './modules/calendar/index.js'
 import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
+import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
 import { startDbGcWorker } from './db-gc.js'
 import { pool } from './db/pool.js'
 import { env } from './env.js'
@@ -32,6 +33,7 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'memory-synthesis', concurrency: 'idempotent', start: () => startMemorySynthesisScheduler() },
   { name: 'email-retry', concurrency: 'queue-claim', start: () => startEmailRetryWorker() },
   { name: 'email-storage-gc', concurrency: 'idempotent', start: () => startEmailGcWorker() },
+  { name: 'document-mention-delivery', concurrency: 'queue-claim', start: () => startDocumentMentionDeliveryWorker() },
   { name: 'database-gc', concurrency: 'idempotent', start: () => startDbGcWorker() },
   { name: 'knowledge-ingestion', concurrency: 'queue-claim', start: () => startKnowledgeWorker() },
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },

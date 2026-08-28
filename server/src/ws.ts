@@ -7,9 +7,7 @@ import {
   CH_BOARDS, CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
   CH_IM_READ_RECEIPTS,
   publish,
-  type DocMentionEvent,
 } from './redis.js'
-import { wukongClient } from './im/wukong.js'
 import { env } from './env.js'
 import { consumeWsTicket } from './modules/identity/public.js'
 import { pool } from './db/pool.js'
@@ -20,6 +18,7 @@ import {
   applyLocalUpdate as docApplyLocalUpdate,
   broadcastAwareness as docBroadcastAwareness,
   documentCollaborationCompanyFor,
+  notifyDocumentMention,
   projectDocumentIds,
   type DocSubscriber,
 } from './modules/documents/public.js'
@@ -246,178 +245,11 @@ async function handleDocFrame(c: AuthedSocket, msg: Record<string, unknown>): Pr
     if (requestedIds.length === 0) return
     const companyId = await docCompanyFor(documentId, c.userId)
     if (!companyId) return
-    await processDocMention({
+    await notifyDocumentMention({
       documentId, companyId, mentionerId: c.userId, requestedIds,
     })
     return
   }
-}
-
-/** Persist + fan out one or more @-mentions inside a doc. Filters the
- *  caller-supplied list against tenant membership (so a stale client
- *  can't notify someone in a different company) and dedups against the
- *  most recent mention-row for the same (doc, mentioner, mentioned)
- *  tuple — we don't want a noisily editing user spamming the
- *  recipient. For mentioned AGENTS, also writes an `agent_log` row so
- *  the agent's history surfaces the mention. */
-async function processDocMention(args: {
-  documentId: string
-  companyId: string
-  mentionerId: string
-  requestedIds: string[]
-}): Promise<void> {
-  const { documentId, companyId, mentionerId, requestedIds } = args
-
-  // Resolve the mentioned ids that actually belong to this tenant.
-  // Match against `participants` (covers both humans + agents).
-  const { rows: validRows } = await pool.query<{ id: string; kind: string; name: string }>(
-    `SELECT participant.id,participant.kind,participant.name
-       FROM participants participant
-       JOIN documents document ON document.id=$3 AND document.company_id=participant.company_id
-       JOIN projects project ON project.id=document.project_id
-       LEFT JOIN courses course ON course.project_id=project.id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id=course.id AND course_member.user_id=participant.id
-      WHERE participant.company_id=$1 AND participant.id=ANY($2::text[])
-        AND (participant.kind='agent' OR project.is_general=TRUE OR course_member.user_id IS NOT NULL)`,
-    [companyId, requestedIds, documentId],
-  )
-  if (validRows.length === 0) return
-
-  const { rows: docRows } = await pool.query<{ title: string; project_id: string }>(
-    `SELECT title,project_id FROM documents WHERE id=$1 AND company_id=$2`,
-    [documentId, companyId],
-  )
-  if (!docRows[0]) throw new Error(`document ${documentId} not found in company ${companyId}`)
-  const documentTitle = docRows[0].title
-
-  // Mentioner display name comes from the tenant participant record.
-  const mentionerName = await resolveDisplayName(mentionerId, companyId)
-
-  // Dedup against the last 60 seconds. We don't try for global
-  // uniqueness — that would falsely block legitimate re-mentions hours
-  // later — just enough to absorb the editor's per-keystroke chatter.
-  const freshIds: string[] = []
-  for (const row of validRows) {
-    const { rows: recent } = await pool.query<{ id: string }>(
-      `SELECT id FROM document_mentions
-        WHERE document_id = $1 AND mentioner_id = $2 AND mentioned_id = $3
-          AND created_at > NOW() - INTERVAL '60 seconds'
-        LIMIT 1`,
-      [documentId, mentionerId, row.id],
-    )
-    if (recent[0]) continue
-    freshIds.push(row.id)
-    await pool.query(
-      `INSERT INTO document_mentions
-        (id, document_id, company_id, mentioner_id, mentioned_id)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [`dm_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
-       documentId, companyId, mentionerId, row.id],
-    )
-    // Agents: drop an agent_log breadcrumb so the mention surfaces in
-    // `lingxiloop log`. Humans don't have this surface; the toast is
-    // their notification.
-    if (row.kind === 'agent') {
-      await pool.query(
-        `INSERT INTO agent_log (id, agent_id, company_id, kind, body, ref)
-         VALUES ($1, $2, $3, 'doc_mention', $4, $5::jsonb)`,
-        [
-          `log_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
-          row.id, companyId,
-          `${mentionerName} @-mentioned you in doc "${documentTitle}"`,
-          JSON.stringify({ documentId, mentionerId }),
-        ],
-      )
-
-      // Also post a WuKong text message authored by the mentioner so the
-      // post-commit webhook deterministically wakes the mentioned agent.
-      await postDocMentionWake({
-        companyId,
-        mentionerId,
-        agentId: row.id,
-        agentName: row.name,
-        documentId,
-        documentTitle,
-      })
-    }
-  }
-  if (freshIds.length === 0) return
-
-  const event: DocMentionEvent = {
-    type: 'doc.mention',
-    companyId,
-    documentId,
-    documentTitle,
-    mentionerId,
-    mentionerName,
-    mentionedIds: freshIds,
-    workspaceId: docRows[0].project_id,
-  }
-  await publish(CH_DOC_MENTION, event)
-}
-
-/** Post a WuKong message that wakes the mentioned agent with enough context
- *  to act. The post-commit webhook is the sole work-enqueue boundary.
- *
- *  Document mentions use the canonical 1:1 conversation between mentioner
- *  and agent, creating that native conversation when it does not exist.
- *
- *  Body is plain prose — looks like a regular nudge to the agent's
- *  inbox parser, but carries the doc id verbatim so the agent's tool
- *  loop can call `lingxiloop doc read <id>` without guessing. */
-async function postDocMentionWake(args: {
-  companyId: string
-  mentionerId: string
-  agentId: string
-  agentName: string
-  documentId: string
-  documentTitle: string
-}): Promise<void> {
-  const {
-    companyId, mentionerId, agentId, agentName,
-    documentId, documentTitle,
-  } = args
-
-  const { rows } = await pool.query<{ channel_id: string }>(
-      `SELECT channel_id FROM im_channel_bindings
-        WHERE company_id = $3 AND profile->>'kind' = 'direct'
-          AND profile->'members' @> to_jsonb(ARRAY[$1::text])
-          AND profile->'members' @> to_jsonb(ARRAY[$2::text])
-          AND jsonb_array_length(profile->'members') = 2
-        ORDER BY updated_at DESC LIMIT 1`,
-      [mentionerId, agentId, companyId],
-    )
-  let conversationId = rows[0]?.channel_id ?? null
-
-  // Create the native direct conversation when this pair has not spoken yet.
-  if (!conversationId) {
-    const fresh = `direct-${agentId}-${randomUUID().slice(0, 6)}`
-    const profile = { channelId: fresh, channelType: 2 as const, kind: 'direct' as const, title: agentName, members: [mentionerId, agentId] }
-    await wukongClient().upsertChannel(profile)
-    await pool.query(
-      `INSERT INTO im_channel_bindings (channel_id, company_id, profile)
-       VALUES ($1,$2,$3::jsonb) ON CONFLICT (channel_id) DO NOTHING`,
-      [fresh, companyId, JSON.stringify(profile)],
-    )
-    conversationId = fresh
-  }
-
-  const body = `@${agentId} heads-up — I mentioned you in the document "${documentTitle}". Please read document ${documentId}.`
-  await wukongClient().sendMessage(conversationId, 2, mentionerId, {
-    version: 1, kind: 'text', clientMsgNo: `doc-mention-${randomUUID()}`, body,
-    refs: { documentId }, data: { mentionedIds: [agentId], mentionAll: false },
-  })
-}
-
-/** Display-name lookup for the mention payload. */
-async function resolveDisplayName(id: string, companyId: string): Promise<string> {
-  const { rows } = await pool.query<{ name: string }>(
-    `SELECT name FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
-    [id, companyId],
-  )
-  if (!rows[0]) throw new Error(`participant ${id} not found in company ${companyId}`)
-  return rows[0].name
 }
 
 export function attachWebSocket(httpServer: Server) {

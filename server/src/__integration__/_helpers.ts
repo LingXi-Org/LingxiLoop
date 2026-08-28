@@ -112,7 +112,7 @@ const TABLES_TO_WIPE: readonly string[] = [
   'agent_approvals',
   'agent_handoffs',
   'agent_action_executions',
-  'document_mentions',
+  'document_mention_deliveries', 'document_mentions',
   'document_snapshots',
   'document_updates',
   'documents',
