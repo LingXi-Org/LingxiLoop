@@ -193,6 +193,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       REDIS_URL: redis://127.0.0.1:6379
       OPENAI_API_KEY: integration-test-key
+      OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+      LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
