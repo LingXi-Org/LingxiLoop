@@ -27,7 +27,7 @@ import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
 import { useCalendar } from '@/features/calendar/state'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/stores/participants'
 import type { CalendarEvent, RecurrenceRule } from '@/features/calendar/contracts'
 

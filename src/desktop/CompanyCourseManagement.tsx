@@ -11,7 +11,7 @@ import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 
 type Tab = 'courses' | 'organization' | 'projects'
 

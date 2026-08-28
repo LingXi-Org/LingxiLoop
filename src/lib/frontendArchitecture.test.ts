@@ -22,6 +22,10 @@ test('frontend has one production data plane and no local preview application', 
     .join('\n')
   assert.doesNotMatch(production, /isMockImDevelopment|mockLearning|mock-user|mock-source|startsWith\(['"]mock-|@\/dev\//)
   assert.doesNotMatch(production, /dataBase64|\/uploads['"]\s*,/)
+  assert.equal(existsSync(`${sourceRoot}/api/conversations.ts`), false)
+  assert.equal(existsSync(`${sourceRoot}/stores/conversations.ts`), false)
+  assert.equal(existsSync(`${sourceRoot}/features/conversations/api.ts`), true)
+  assert.equal(existsSync(`${sourceRoot}/features/conversations/store.ts`), true)
 })
 
 test('frontend typecheck never emits a second Vite configuration', () => {

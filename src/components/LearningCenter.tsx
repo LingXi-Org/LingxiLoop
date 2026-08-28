@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { useApp } from "@/stores/app";
-import { useConversations } from "@/stores/conversations";
+import { useConversations } from "@/features/conversations/store";
 import { useParticipants } from "@/stores/participants";
 type Section =
   | "today"

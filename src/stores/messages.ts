@@ -1,4 +1,4 @@
-import { conversationsApi } from '@/api/conversations'
+import { conversationsApi } from '@/features/conversations/api'
 import { messagesApi } from '@/api/messages'
 import type { ApiMessage, WsEvent } from '@/api/contracts'
 import { create } from 'zustand'
@@ -471,7 +471,7 @@ export function markMessagesVisibleThrough(conversationId: string, readThroughSe
             },
           }))
         }
-        return import('@/stores/conversations')
+        return import('@/features/conversations/store')
       })
       .then(({ useConversations }) => useConversations.getState().reload())
       .catch((error) => console.warn('[im.read-receipt] visible advance failed', error))

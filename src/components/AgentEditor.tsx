@@ -3,7 +3,7 @@ import { agentsApi } from '@/api/agents'
 import type { AgentInput } from '@/api/contracts'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/stores/participants'
 import type { AgentCapability, Participant } from '@/types'
 

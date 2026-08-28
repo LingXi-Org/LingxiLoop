@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useMe } from '@/stores/auth'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 import { useMessages } from '@/stores/messages'
 import { useParticipants } from '@/stores/participants'
 import type { ImReadReceiptAdvance } from '@/types'

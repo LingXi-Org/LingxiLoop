@@ -45,7 +45,7 @@ test('the desktop Web/Electron surface composes the shared IM core without Teleg
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
   const composer = await readFile(new URL('../desktop/ChatComposer.tsx', import.meta.url), 'utf8')
   const desktopProfile = await readFile(new URL('../desktop/InfoPane.tsx', import.meta.url), 'utf8')
-  const desktopList = await readFile(new URL('../desktop/ConversationsPane.tsx', import.meta.url), 'utf8')
+  const desktopList = await readFile(new URL('../features/conversations/components/ConversationsPane.tsx', import.meta.url), 'utf8')
   const desktopShell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const packageJson = await readFile(new URL('../../package.json', import.meta.url), 'utf8')
 
@@ -128,7 +128,7 @@ test('desktop keeps one persisted two-panel IM layout and opens pages in the Bas
 })
 
 test('desktop conversation column ends with the sidebar-07 account menu instead of the personal center', async () => {
-  const list = await readFile(new URL('../desktop/ConversationsPane.tsx', import.meta.url), 'utf8')
+  const list = await readFile(new URL('../features/conversations/components/ConversationsPane.tsx', import.meta.url), 'utf8')
   const conversationList = await readFile(new URL('../im/ConversationList.tsx', import.meta.url), 'utf8')
   const user = await readFile(new URL('../components/nav-user.tsx', import.meta.url), 'utf8')
   const avatar = await readFile(new URL('../components/ui/avatar.tsx', import.meta.url), 'utf8')

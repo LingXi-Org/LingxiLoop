@@ -2,10 +2,10 @@ import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import type { ApiSearchResults } from '@/api/contracts'
-import { conversationsApi } from '@/api/conversations'
+import { conversationsApi } from '@/features/conversations/api'
 import { platformApi } from '@/api/platform'
 import { Avatar } from '@/components/Avatar'
-import { GroupCreator } from '@/components/GroupCreator'
+import { GroupCreator } from '@/features/conversations/components/GroupCreator'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { NavUser } from '@/components/nav-user'
 import { IAgent, ICanvas, IDoc, IMail, IPlus, ISettings } from '@/components/icons'
@@ -17,7 +17,7 @@ import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { isMuted, useConversations } from '@/stores/conversations'
+import { isMuted, useConversations } from '@/features/conversations/store'
 import { useEmailComposer } from '@/stores/emailComposer'
 import { useParticipants } from '@/stores/participants'
 import type { Conversation, Participant } from '@/types'
@@ -112,6 +112,7 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
 export function ConversationsPane() {
   const list = useConversations((s) => s.list)
   const loaded = useConversations((s) => s.loaded)
+  const error = useConversations((s) => s.error)
   const selected = useApp((s) => s.selectedConversationId)
   const select = useApp((s) => s.selectConversation)
   const authUser = useAuth((s) => s.user)
@@ -239,15 +240,18 @@ export function ConversationsPane() {
             {resultRows.map((row) => <button key={row.id} type="button" onClick={() => { select(row.id); setQuery('') }} className="w-full rounded-xl px-3 py-3 text-left hover:bg-raised"><span className="block truncate text-[14px] font-semibold text-ink">{row.title}</span><span className="mt-0.5 block truncate text-[12px] text-ink-secondary">{row.preview}</span></button>)}
           </div>
         ) : (
+          <div className="relative h-full">
+          {error && conversations.length > 0 && <div role="alert" className="absolute inset-x-2 top-2 z-10 flex items-center gap-2 rounded-xl border border-red-400/30 bg-card/95 px-3 py-2 text-[12px] text-red-500 shadow-sm backdrop-blur"><span className="min-w-0 flex-1 truncate">刷新失败：{error}</span><button type="button" className="font-semibold text-accent" onClick={() => void useConversations.getState().reload()}>重试</button></div>}
           <Virtuoso
             className="h-full"
             data={conversations}
             computeItemKey={(_, conversation) => conversation.id}
             defaultItemHeight={72}
             increaseViewportBy={{ top: 500, bottom: 500 }}
-            components={{ EmptyPlaceholder: () => loaded ? <p className="px-3 py-8 text-center text-[13px] text-ink-secondary">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
+            components={{ EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-[13px] font-semibold text-ink">会话加载失败</p><p className="mt-1 text-[12px] text-ink-secondary">{error}</p><button type="button" className="mt-3 rounded-full bg-accent px-4 py-2 text-[12px] font-semibold text-white" onClick={() => void useConversations.getState().load()}>重试</button></div> : loaded ? <p className="px-3 py-8 text-center text-[13px] text-ink-secondary">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
             itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} />}
           />
+          </div>
         )}
       </div>
 

@@ -1,4 +1,4 @@
-import { conversationsApi } from '@/api/conversations'
+import { conversationsApi } from '@/features/conversations/api'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
@@ -6,7 +6,7 @@ import { IConvene, IDirectChat, IMail } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/stores/participants'
 
 const STATUS_LABEL: Record<string, string> = {

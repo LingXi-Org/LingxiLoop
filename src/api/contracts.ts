@@ -17,37 +17,6 @@ export interface ApiMessage extends Message {
   reactions?: Array<{ emoji: string; count: number; mine?: boolean; users?: string[] }>
 }
 
-export interface ApiConversation {
-  id: string
-  kind: 'group' | 'direct' | 'email'
-  title: string
-  subtitle: string | null
-  topic: string | null
-  members: string[]
-  leaderId: string | null
-  pinned: boolean
-  muted: boolean
-  /** ISO timestamp when the mute auto-expires; null if muted forever or not muted. */
-  mutedUntil: string | null
-  tag: string | null
-  pulledBy: { agentId: string; at: string; reason: string } | null
-  createdAt: string
-  updatedAt: string
-  unreadCount: number
-  lastMessage: {
-    id: string
-    authorId: string
-    kind: string
-    body: string
-    tool?: unknown
-    attachment?: { name?: string; kind?: 'img' | 'pdf' | 'file' | 'fig' } | null
-    createdAt: string
-    /** Set when last message is an email — used to render "Re: subject"
-     *  previews in the sidebar instead of the raw body excerpt. */
-    email?: { subject: string; direction: 'in' | 'out'; from: string } | null
-  } | null
-}
-
 /** Workspace record returned by project APIs. */
 export type ApiProject = WorkspaceSummary
 

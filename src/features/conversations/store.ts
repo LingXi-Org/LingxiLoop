@@ -1,5 +1,5 @@
-import { conversationsApi } from '@/api/conversations'
-import type { ApiConversation } from '@/api/contracts'
+import { conversationsApi } from './api'
+import type { ApiConversation } from './contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 import type { Conversation } from '@/types'
@@ -12,6 +12,8 @@ import { lingxiIm } from '@/lib/im/wukong'
 interface ConversationsState {
   list: Conversation[]
   loaded: boolean
+  loading: boolean
+  error: string | null
   load: () => Promise<void>
   reload: () => Promise<void>
   setLeader: (id: string, leaderId: string) => Promise<void>
@@ -184,30 +186,35 @@ export function isMuted(c: Pick<Conversation, 'muted' | 'mutedUntil'>): boolean 
 export const useConversations = create<ConversationsState>((set) => ({
   list: [],
   loaded: false,
+  loading: false,
+  error: null,
   async load() {
     // Clear stale data immediately so a workspace switch never shows the
     // previous tenant's conversations during the loading window.
-    set({ list: [], loaded: false })
+    set({ list: [], loaded: false, loading: true, error: null })
     lingxiIm.setWorkspaceChannels([])
     try {
       const list = await conversationsApi.getConversations()
       const conversations = list.map(fromApi)
       lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
-      set({ list: conversations, loaded: true })
+      set({ list: conversations, loaded: true, loading: false, error: null })
       refreshActiveMessagesIfSidebarMoved(conversations)
-    } catch (err) {
-      console.warn('[conversations] load failed', err)
+    } catch (error) {
+      set({ loading: false, error: error instanceof Error ? error.message : String(error) })
     }
   },
   async reload() {
+    set({ loading: true, error: null })
     try {
       const list = await conversationsApi.getConversations()
       const conversations = list.map(fromApi)
       lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
-      set({ list: conversations })
+      set({ list: conversations, loaded: true, loading: false, error: null })
       refreshActiveMessagesIfSidebarMoved(conversations)
-    } catch (err) {
-      console.warn('[conversations] reload failed', err)
+    } catch (error) {
+      // A refresh failure keeps the last safe projection visible, but is
+      // explicit so the shell can render a retry affordance.
+      set({ loading: false, error: error instanceof Error ? error.message : String(error) })
     }
   },
   async setLeader(id, leaderId) {

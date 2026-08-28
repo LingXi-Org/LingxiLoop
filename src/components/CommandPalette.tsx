@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/command'
 import type { CommandAction } from '@/lib/commands'
 import { useApp } from '@/stores/app'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 import { useTheme } from '@/stores/theme'
 import { useUiCommands } from '@/stores/uiCommands'
 

@@ -1,6 +1,6 @@
 
 import { http } from '@/api/core/http'
-import type { ApiConversation, } from './contracts'
+import type { ApiConversation } from './contracts'
 import type { ImReadReceiptAdvance } from '@/types'
 
 export const conversationsApi = {

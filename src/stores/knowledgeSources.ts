@@ -1,7 +1,7 @@
 import { knowledgeApi } from '@/api/knowledge'
 import { create } from 'zustand'
 import { useApp } from '@/stores/app'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 import type { ConversationSourceSelection, KnowledgeCitation, KnowledgeSource } from '@/types'
 
 let sourcePollTimer: number | null = null

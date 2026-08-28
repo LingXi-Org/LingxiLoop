@@ -3,10 +3,10 @@
  * teammates (active agents + other humans). Yetone is auto-included.
  */
 import { useMemo, useRef, useState } from 'react'
-import { conversationsApi } from '@/api/conversations'
+import { conversationsApi } from '../api'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '../store'
 import { useApp } from '@/stores/app'
 import { useWorkspace } from '@/stores/workspace'
 import { Avatar } from '@/components/Avatar'

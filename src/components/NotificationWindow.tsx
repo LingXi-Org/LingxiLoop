@@ -333,7 +333,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
             {toast.unreadCount !== undefined && toast.unreadCount > 1 && (
               <span
                 // Matches the canonical unread chip in the conversation list
-                // (ConversationsPane.tsx:289-300) — solid coral + white digit,
+                // (features/conversations/components/ConversationsPane.tsx) — solid coral + white digit,
                 // tabular nums, fixed 18px circle. Earlier soft-coral variant
                 // looked like a foreign dialect of the same color family.
                 className="ml-auto inline-grid place-items-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold shrink-0 tabular-nums"
