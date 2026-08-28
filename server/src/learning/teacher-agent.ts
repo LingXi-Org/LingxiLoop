@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
-import type { PoolClient } from 'pg'
 import { audit } from '../auth.js'
 import { pool } from '../db/pool.js'
+import type { Queryable } from '../db/queryable.js'
 import { wukongClient } from '../im/wukong.js'
 import type { ImChannelProfile } from '../im/types.js'
 import { inc } from '../metrics.js'
@@ -25,8 +25,6 @@ import type {
   TeacherDigestSchedule,
   TeacherTurnContext,
 } from './types.js'
-
-type Queryable = Pick<PoolClient, 'query'> | typeof pool
 
 const PULSE_PRESET_VERSION = 2
 const PULSE_CAPABILITIES = ['teacher_admin'] as const

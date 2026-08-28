@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { pool } from '../db/pool.js'
+import type { Queryable } from '../db/queryable.js'
 import { wukongClient } from '../im/wukong.js'
 import { inc } from '../metrics.js'
 import type { AgentWorkItem } from '../agent-os/types.js'
@@ -22,8 +23,6 @@ import type {
 } from './types.js'
 import { projectMastery } from './mastery.js'
 export { projectMastery } from './mastery.js'
-
-type Queryable = Pick<PoolClient, 'query'> | typeof pool
 
 function asText(value: unknown, name: string, maxLength = 10_000): string {
   const text = String(value ?? '').trim()
@@ -189,8 +188,8 @@ export async function createObjectives(input: {
 }, db: Queryable = pool): Promise<LearningObjective[]> {
   if (input.actorKind === 'teacher') await requireCourseRole(input.courseId, input.actorId, 'teacher', db)
   if (!input.objectives.length || input.objectives.length > 100) throw new Error('objectives must contain between 1 and 100 items')
-  const client = 'connect' in db ? await db.connect() : db as PoolClient
-  const ownsClient = 'connect' in db
+  const ownsClient = db === pool
+  const client = ownsClient ? await pool.connect() : db as unknown as PoolClient
   try {
     await client.query('BEGIN')
     let position = 0
@@ -518,8 +517,8 @@ export async function addMissionSteps(work: AgentWorkItem, missionId: string, ra
     [missionId, scope.courseId, work.channelId],
   )
   if (!missionRows[0]) throw new Error('mission not found in current learning room')
-  const client = 'connect' in db ? await db.connect() : db as PoolClient
-  const ownsClient = 'connect' in db
+  const ownsClient = db === pool
+  const client = ownsClient ? await pool.connect() : db as unknown as PoolClient
   try {
     await client.query('BEGIN')
     const { rows: countRows } = await client.query<{ count: number }>(`SELECT COUNT(*)::int AS count FROM learning_mission_steps WHERE mission_id=$1`, [missionId])
@@ -751,8 +750,8 @@ export async function proposeEvaluation(work: AgentWorkItem, input: {
   const teacherRequired = attempt.evaluation_mode !== 'agent_formative' || demonstratedLevel >= 4 || confidence < 0.7 || suggestedDowngrade || (demonstratedLevel>=3&&!verified)
   const status: 'accepted'|'pending' = teacherRequired ? 'pending' : 'accepted'
   inc('learning.evaluation.proposed', { status })
-  const client = 'connect' in db ? await db.connect() : db as PoolClient
-  const ownsClient = 'connect' in db
+  const ownsClient = db === pool
+  const client = ownsClient ? await pool.connect() : db as unknown as PoolClient
   const decisions: MasteryProjectionDecision[] = []
   try {
     await client.query('BEGIN')
@@ -873,8 +872,8 @@ export async function reviewEvaluation(input: {
 }, db: Queryable = pool): Promise<void> {
   await requireCourseRole(input.courseId,input.teacherId,'teacher',db)
   if (!input.reason.trim()) throw new Error('review reason is required')
-  const client = 'connect' in db ? await db.connect() : db as PoolClient
-  const ownsClient = 'connect' in db
+  const ownsClient = db === pool
+  const client = ownsClient ? await pool.connect() : db as unknown as PoolClient
   try {
     await client.query('BEGIN')
     const { rows } = await client.query<{

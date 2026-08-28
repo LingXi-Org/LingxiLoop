@@ -441,8 +441,10 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
 
 function SignInToAccept({ token }: { token: string }) {
   const [busy, setBusy] = useState<'lingxi' | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const go = (provider: 'lingxi') => {
     setBusy(provider)
+    setError(null)
     const rawToken = token.startsWith('course:') ? token.slice('course:'.length) : token
     // Persist BEFORE redirect so the post-OAuth landing can resume here.
     stashPendingInvite(token)
@@ -450,6 +452,7 @@ function SignInToAccept({ token }: { token: string }) {
       const origin = getServerOrigin()
       if (!origin) {
         setBusy(null)
+        setError('桌面端未配置服务地址，无法继续登录')
         return
       }
       const inv = encodeURIComponent(rawToken)
@@ -458,10 +461,19 @@ function SignInToAccept({ token }: { token: string }) {
       const auth = window.lingxiloop.auth
       void (async () => {
         let done = 'http://127.0.0.1:47823/auth/done'
+        if (!auth.arm) {
+          setBusy(null)
+          setError('当前桌面版本不支持安全登录会话，请更新后重试')
+          return
+        }
         try {
-          const nonce = await auth.arm?.()
+          const nonce = await auth.arm()
           if (nonce) done += `?n=${encodeURIComponent(nonce)}`
-        } catch { /* unarmed fallback → token rejected, user retries */ }
+        } catch (reason) {
+          setBusy(null)
+          setError(reason instanceof Error ? reason.message : '无法建立安全的桌面登录会话')
+          return
+        }
         const ret = encodeURIComponent(done)
         void auth.openExternal(`${origin}/api/auth/start/${provider}?return=${ret}&invite=${inv}&inviteKind=${token.startsWith('course:') ? 'course' : 'company'}`)
       })()
@@ -474,6 +486,7 @@ function SignInToAccept({ token }: { token: string }) {
       <div className="text-[12.5px] text-ink-500 font-display italic text-center">
         登录以接受此邀请
       </div>
+      {error && <div role="alert" className="rounded-lg bg-coral-soft px-3 py-2 text-center text-[12px] text-coral-deep">{error}</div>}
       <button
         type="button"
         onClick={() => go('lingxi')}

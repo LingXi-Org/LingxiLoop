@@ -1,0 +1,502 @@
+import type { Queryable } from '../../db/queryable.js'
+import type { CourseManager, CreateCourseInput, UpdateCourseInput } from './contracts.js'
+
+export async function listCourses(db: Queryable, companyId: string, userId: string) {
+  const { rows } = await db.query(
+    `SELECT course.id,course.company_id AS "companyId",course.created_by AS "createdBy",
+            course.study_room_conversation_id AS "studyRoomId",course.created_at AS "createdAt",
+            project.id AS "projectId",project.name,project.description,project.color,project.status,
+            project.created_at AS "projectCreatedAt",project.updated_at AS "updatedAt",
+            company_member.role AS "companyRole",course_member.role AS "courseRole",
+            (SELECT COUNT(*)::int FROM course_members member WHERE member.course_id=course.id) AS "memberCount",
+            (company_member.role IN ('owner','admin') OR course_member.role='teacher') AS "canManage"
+       FROM courses course JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       JOIN company_members company_member ON company_member.company_id=course.company_id AND company_member.user_id=$2
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id AND course_member.company_id=course.company_id AND course_member.user_id=$2
+      WHERE course.company_id=$1
+        AND (company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+      ORDER BY project.status,project.updated_at DESC`,
+    [companyId, userId],
+  )
+  return rows
+}
+
+export async function canCreateCourse(db: Queryable, companyId: string, userId: string) {
+  const { rows } = await db.query<{ company_role: string; is_teacher: boolean }>(
+    `SELECT company_member.role AS company_role,
+            EXISTS (SELECT 1 FROM course_members course_member
+              JOIN courses course ON course.id=course_member.course_id AND course.company_id=course_member.company_id
+              JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+             WHERE course_member.company_id=$1 AND course_member.user_id=$2
+               AND course_member.role='teacher' AND project.status='active') AS is_teacher
+       FROM company_members company_member
+      WHERE company_member.company_id=$1 AND company_member.user_id=$2`,
+    [companyId, userId],
+  )
+  return rows[0] ?? null
+}
+
+export async function insertCourse(db: Queryable, args: {
+  companyId: string; userId: string; projectId: string; courseId: string; roomId: string; input: CreateCourseInput
+}): Promise<void> {
+  await db.query(
+    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
+     VALUES ($1,$2,$3,$4,$5,$6,FALSE)`,
+    [args.projectId, args.companyId, args.input.name, args.input.description, args.input.color, args.userId],
+  )
+  await db.query(
+    `INSERT INTO courses (id,company_id,project_id,created_by) VALUES ($1,$2,$3,$4)`,
+    [args.courseId, args.companyId, args.projectId, args.userId],
+  )
+  await db.query(
+    `INSERT INTO course_members (course_id,company_id,user_id,role) VALUES ($1,$2,$3,'teacher')`,
+    [args.courseId, args.companyId, args.userId],
+  )
+  const { rows: agents } = await db.query<{ id: string; preset_key: string }>(
+    `SELECT id,preset_key FROM participants
+      WHERE company_id=$1 AND kind='agent' AND preset_key IN ('nova','sage','milo','trace') AND departed_at IS NULL`,
+    [args.companyId],
+  )
+  const memberIds = [args.userId, ...agents.map((agent) => agent.id)]
+  const leaderId = agents.find((agent) => agent.preset_key === 'nova')?.id ?? agents[0]?.id ?? null
+  await db.query(
+    `INSERT INTO conversations
+       (id,kind,title,subtitle,topic,members,leader_id,pinned,tag,company_id,project_id)
+     VALUES ($1,'group',$2,$3,$4,$5::jsonb,$6,TRUE,'course',$7,$8)`,
+    [args.roomId, `${args.input.name} · Study Room`, `course · ${memberIds.length}`,
+      '课程学习、讨论、练习与错因诊断', JSON.stringify(memberIds), leaderId, args.companyId, args.projectId],
+  )
+  await db.query(`INSERT INTO conversation_counters (conversation_id,next_sequence) VALUES ($1,1)`, [args.roomId])
+  await db.query(
+    `UPDATE courses SET study_room_conversation_id=$2 WHERE id=$1 AND company_id=$3`,
+    [args.courseId, args.roomId, args.companyId],
+  )
+}
+
+export async function findCourse(db: Queryable, courseId: string, companyId: string, userId: string) {
+  const { rows } = await db.query(
+    `SELECT course.id,course.company_id AS "companyId",course.project_id AS "projectId",
+            course.created_by AS "createdBy",course.study_room_conversation_id AS "studyRoomId",
+            project.name,project.description,project.color,project.status,
+            company_member.role AS "companyRole",course_member.role AS "courseRole",
+            (SELECT COUNT(*)::int FROM course_members member WHERE member.course_id=course.id) AS "memberCount",
+            (company_member.role IN ('owner','admin') OR course_member.role='teacher') AS "canManage"
+       FROM courses course JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       JOIN company_members company_member ON company_member.company_id=course.company_id AND company_member.user_id=$3
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id AND course_member.company_id=course.company_id AND course_member.user_id=$3
+      WHERE course.id=$1 AND course.company_id=$2
+        AND (company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)`,
+    [courseId, companyId, userId],
+  )
+  return rows[0] ?? null
+}
+
+export async function courseManager(db: Queryable, courseId: string, userId: string): Promise<CourseManager | null> {
+  const { rows } = await db.query<{
+    company_id: string; company_role: string; course_role: string | null; project_id: string; status: string
+  }>(
+    `SELECT course.company_id,company_member.role AS company_role,course_member.role AS course_role,
+            course.project_id,project.status
+       FROM courses course JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       JOIN company_members company_member ON company_member.company_id=course.company_id AND company_member.user_id=$2
+       LEFT JOIN course_members course_member
+         ON course_member.course_id=course.id AND course_member.company_id=course.company_id AND course_member.user_id=$2
+      WHERE course.id=$1`,
+    [courseId, userId],
+  )
+  const row = rows[0]
+  return row ? {
+    userId, companyId: row.company_id, companyRole: row.company_role,
+    courseRole: row.course_role, projectId: row.project_id, status: row.status,
+  } : null
+}
+
+export async function updateCourseMetadata(db: Queryable, args: {
+  courseId: string; companyId: string; projectId: string; patch: UpdateCourseInput
+}): Promise<void> {
+  const values: unknown[] = []
+  const sets: string[] = []
+  for (const [field, column] of Object.entries({ name: 'name', description: 'description', color: 'color' }) as Array<[keyof UpdateCourseInput, string]>) {
+    if (!Object.hasOwn(args.patch, field)) continue
+    values.push(args.patch[field]); sets.push(`${column}=$${values.length}`)
+  }
+  values.push(args.projectId, args.companyId)
+  await db.query(
+    `UPDATE projects SET ${sets.join(',')},updated_at=NOW()
+      WHERE id=$${values.length - 1} AND company_id=$${values.length}`,
+    values,
+  )
+  if (args.patch.name !== undefined) {
+    await db.query(
+      `UPDATE conversations conversation SET title=$3,updated_at=NOW()
+        FROM courses course
+       WHERE course.id=$1 AND course.company_id=$2
+         AND conversation.id=course.study_room_conversation_id AND conversation.company_id=course.company_id`,
+      [args.courseId, args.companyId, `${args.patch.name} · Study Room`],
+    )
+    await db.query(
+      `UPDATE participants participant SET name=$3,updated_at=NOW()
+       FROM courses course JOIN learning_project_teacher_agents pulse
+         ON pulse.project_id=course.project_id AND pulse.company_id=course.company_id
+      WHERE course.id=$1 AND course.company_id=$2
+        AND participant.id=pulse.agent_id AND participant.company_id=pulse.company_id`,
+      [args.courseId, args.companyId, `Pulse · ${args.patch.name}`.slice(0, 80)],
+    )
+  }
+}
+
+export async function setCourseArchived(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+  archive: boolean,
+): Promise<void> {
+  await db.query(
+    `UPDATE projects SET status=$3,archived_at=CASE WHEN $3='archived' THEN NOW() ELSE NULL END,updated_at=NOW()
+      WHERE id=$1 AND company_id=$2`,
+    [projectId, companyId, archive ? 'archived' : 'active'],
+  )
+}
+
+export async function listCourseMembers(db: Queryable, courseId: string, companyId: string) {
+  const { rows } = await db.query(
+    `SELECT user_account.id,user_account.display_name AS name,user_account.email,course_member.role,
+            course_member.joined_at AS "joinedAt"
+       FROM course_members course_member JOIN users user_account ON user_account.id=course_member.user_id
+       JOIN courses course ON course.id=course_member.course_id AND course.company_id=course_member.company_id
+      WHERE course_member.course_id=$1 AND course_member.company_id=$2
+      ORDER BY CASE course_member.role WHEN 'teacher' THEN 0 ELSE 1 END,course_member.joined_at`,
+    [courseId, companyId],
+  )
+  return rows
+}
+
+export async function changeCourseMember(db: Queryable, args: {
+  courseId: string; companyId: string; userId: string; role: 'teacher' | 'learner' | null
+}): Promise<'updated' | 'not_found' | 'last_teacher'> {
+  const { rows: locked } = await db.query(
+    `SELECT 1 FROM courses WHERE id=$1 AND company_id=$2 FOR UPDATE`,
+    [args.courseId, args.companyId],
+  )
+  if (!locked[0]) return 'not_found'
+  const { rows } = await db.query<{ role: string }>(
+    `SELECT role FROM course_members WHERE course_id=$1 AND company_id=$2 AND user_id=$3`,
+    [args.courseId, args.companyId, args.userId],
+  )
+  const current = rows[0]?.role
+  if (!current) return 'not_found'
+  if (current === 'teacher' && args.role !== 'teacher') {
+    const { rows: counts } = await db.query<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM course_members
+        WHERE course_id=$1 AND company_id=$2 AND role='teacher'`,
+      [args.courseId, args.companyId],
+    )
+    if ((counts[0]?.count ?? 0) <= 1) return 'last_teacher'
+  }
+  if (args.role) {
+    await db.query(
+      `UPDATE course_members SET role=$4,updated_at=NOW()
+        WHERE course_id=$1 AND company_id=$2 AND user_id=$3`,
+      [args.courseId, args.companyId, args.userId, args.role],
+    )
+  } else {
+    await db.query(
+      `DELETE FROM course_members WHERE course_id=$1 AND company_id=$2 AND user_id=$3`,
+      [args.courseId, args.companyId, args.userId],
+    )
+  }
+  return 'updated'
+}
+
+export async function removeMemberFromProjectChannels(db: Queryable, args: {
+  companyId: string; projectId: string; userId: string
+}) {
+  const { rows } = await db.query<{ id: string; title: string; members: string[] }>(
+    `UPDATE conversations conversation
+        SET members=(SELECT COALESCE(jsonb_agg(value),'[]'::jsonb)
+                       FROM jsonb_array_elements(conversation.members) value
+                      WHERE value<>to_jsonb($3::text)),updated_at=NOW()
+      WHERE conversation.company_id=$1 AND conversation.project_id=$2
+        AND conversation.members@>to_jsonb(ARRAY[$3::text])
+      RETURNING conversation.id,conversation.title,conversation.members`,
+    [args.companyId, args.projectId, args.userId],
+  )
+  await db.query(
+    `UPDATE im_channel_bindings binding
+        SET profile=jsonb_set(binding.profile,'{members}',conversation.members,TRUE),updated_at=NOW()
+       FROM conversations conversation
+      WHERE binding.channel_id=conversation.id AND binding.company_id=$1 AND conversation.company_id=$1
+        AND conversation.project_id=$2`,
+    [args.companyId, args.projectId],
+  )
+  return rows
+}
+
+export async function listCourseInvitations(db: Queryable, courseId: string, companyId: string) {
+  const { rows } = await db.query(
+    `SELECT invitation.token_hash AS id,invitation.email,invitation.role,invitation.note,
+            invitation.max_uses AS "maxUses",invitation.use_count AS "useCount",
+            invitation.created_at AS "createdAt",invitation.expires_at AS "expiresAt",
+            invitation.revoked_at AS "revokedAt",invitation.last_accepted_at AS "lastAcceptedAt",
+            invitation.last_accepted_by AS "lastAcceptedBy",invitation.invited_by AS "invitedBy",
+            user_account.display_name AS "inviterName",
+            COALESCE((SELECT jsonb_agg(jsonb_build_object(
+              'userId',recent.user_id,'name',recent.display_name,'role',recent.role,'acceptedAt',recent.accepted_at
+            ) ORDER BY recent.accepted_at DESC) FROM (
+              SELECT acceptance.user_id,accepted_user.display_name,acceptance.role,acceptance.accepted_at
+                FROM course_invitation_acceptances acceptance
+                LEFT JOIN users accepted_user ON accepted_user.id=acceptance.user_id
+               WHERE acceptance.token_hash=invitation.token_hash ORDER BY acceptance.accepted_at DESC LIMIT 10
+            ) recent),'[]'::jsonb) AS acceptances,
+            CASE WHEN invitation.revoked_at IS NOT NULL THEN 'revoked'
+                 WHEN invitation.expires_at<NOW() THEN 'expired'
+                 WHEN invitation.use_count>=invitation.max_uses THEN 'consumed' ELSE 'active' END AS status
+       FROM course_invitations invitation
+       JOIN courses course ON course.id=invitation.course_id AND course.company_id=invitation.company_id
+       LEFT JOIN users user_account ON user_account.id=invitation.invited_by
+      WHERE invitation.course_id=$1 AND invitation.company_id=$2 ORDER BY invitation.created_at DESC`,
+    [courseId, companyId],
+  )
+  return rows
+}
+
+export async function insertCourseInvitation(db: Queryable, args: {
+  tokenHash: string; courseId: string; companyId: string; userId: string; email: string | null
+  role: 'teacher' | 'learner'; note: string | null; maxUses: number; expiresAt: Date
+}): Promise<void> {
+  await db.query(`SELECT 1 FROM courses WHERE id=$1 AND company_id=$2 FOR UPDATE`, [args.courseId, args.companyId])
+  if (args.email) {
+    await db.query(
+      `UPDATE course_invitations SET revoked_at=NOW()
+        WHERE course_id=$1 AND company_id=$2 AND email=$3
+          AND revoked_at IS NULL AND expires_at>NOW() AND use_count<max_uses`,
+      [args.courseId, args.companyId, args.email],
+    )
+  }
+  await db.query(
+    `INSERT INTO course_invitations
+       (token_hash,course_id,company_id,invited_by,email,role,note,max_uses,expires_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [args.tokenHash, args.courseId, args.companyId, args.userId, args.email,
+      args.role, args.note, args.maxUses, args.expiresAt],
+  )
+}
+
+export async function revokeCourseInvitation(
+  db: Queryable,
+  courseId: string,
+  companyId: string,
+  invitationId: string,
+): Promise<boolean> {
+  const result = await db.query(
+    `UPDATE course_invitations SET revoked_at=NOW()
+      WHERE token_hash=$1 AND course_id=$2 AND company_id=$3 AND revoked_at IS NULL`,
+    [invitationId, courseId, companyId],
+  )
+  return (result.rowCount ?? 0) > 0
+}
+
+export async function courseInvitationPreview(db: Queryable, tokenHash: string) {
+  const { rows } = await db.query<{
+    course_id: string; company_id: string; email: string | null; role: string; note: string | null
+    max_uses: number; use_count: number; expires_at: string; revoked_at: string | null
+    course_name: string; project_id: string; project_status: string; room_id: string | null
+    company_name: string; company_slug: string; inviter_name: string | null
+  }>(
+    `SELECT invitation.course_id,invitation.company_id,invitation.email,invitation.role,invitation.note,
+            invitation.max_uses,invitation.use_count,invitation.expires_at,invitation.revoked_at,
+            project.name AS course_name,project.id AS project_id,project.status AS project_status,
+            course.study_room_conversation_id AS room_id,company.name AS company_name,
+            company.slug AS company_slug,user_account.display_name AS inviter_name
+       FROM course_invitations invitation
+       JOIN courses course ON course.id=invitation.course_id AND course.company_id=invitation.company_id
+       JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       JOIN companies company ON company.id=course.company_id
+       LEFT JOIN users user_account ON user_account.id=invitation.invited_by
+      WHERE invitation.token_hash=$1`,
+    [tokenHash],
+  )
+  return rows[0] ?? null
+}
+
+export async function invitationViewer(db: Queryable, userId: string, courseId: string) {
+  const { rows } = await db.query<{ email: string; role: string | null }>(
+    `SELECT user_account.email,course_member.role FROM users user_account
+       LEFT JOIN course_members course_member ON course_member.course_id=$2 AND course_member.user_id=user_account.id
+      WHERE user_account.id=$1`,
+    [userId, courseId],
+  )
+  return rows[0] ?? null
+}
+
+export async function findVerifiedUser(db: Queryable, userId: string) {
+  const { rows } = await db.query<{
+    email: string; display_name: string; avatar_url: string | null; email_verified_at: string | null
+  }>(
+    `SELECT email,display_name,avatar_url,email_verified_at FROM users WHERE id=$1`,
+    [userId],
+  )
+  return rows[0] ?? null
+}
+
+export interface LockedCourseInvitation {
+  company_id: string; course_id: string; email: string | null; role: 'teacher' | 'learner'
+  max_uses: number; use_count: number; expires_at: string; revoked_at: string | null
+  project_id: string; project_status: string; room_id: string | null; course_name: string
+  company_name: string; company_slug: string
+}
+
+export async function lockCourseInvitation(db: Queryable, tokenHash: string, userId: string): Promise<LockedCourseInvitation | null> {
+  await db.query(`SELECT 1 FROM users WHERE id=$1 FOR UPDATE`, [userId])
+  const { rows } = await db.query<LockedCourseInvitation>(
+    `SELECT invitation.company_id,invitation.course_id,invitation.email,invitation.role,
+            invitation.max_uses,invitation.use_count,invitation.expires_at,invitation.revoked_at,
+            course.project_id,project.status AS project_status,course.study_room_conversation_id AS room_id,
+            project.name AS course_name,company.name AS company_name,company.slug AS company_slug
+       FROM course_invitations invitation
+       JOIN courses course ON course.id=invitation.course_id AND course.company_id=invitation.company_id
+       JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       JOIN companies company ON company.id=course.company_id
+      WHERE invitation.token_hash=$1 FOR UPDATE OF invitation`,
+    [tokenHash],
+  )
+  return rows[0] ?? null
+}
+
+export async function priorCourseAcceptance(db: Queryable, tokenHash: string, userId: string): Promise<boolean> {
+  const { rows } = await db.query(
+    `SELECT 1 FROM course_invitation_acceptances WHERE token_hash=$1 AND user_id=$2`,
+    [tokenHash, userId],
+  )
+  return Boolean(rows[0])
+}
+
+export async function companyMembershipRole(db: Queryable, companyId: string, userId: string): Promise<string | null> {
+  const { rows } = await db.query<{ role: string }>(
+    `SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2`,
+    [companyId, userId],
+  )
+  return rows[0]?.role ?? null
+}
+
+export async function joinInvitationCompany(db: Queryable, args: {
+  companyId: string; userId: string; displayName: string; avatarUrl: string
+}): Promise<void> {
+  await db.query(
+    `INSERT INTO company_members (company_id,user_id,role) VALUES ($1,$2,'member')`,
+    [args.companyId, args.userId],
+  )
+  await db.query(
+    `INSERT INTO participants (id,company_id,kind,name,role,initial,avatar_bg,avatar_url,status,departed_at)
+     VALUES ($1,$2,'human',$3,NULL,$4,'#FF8870',$5,'avail',NULL)
+     ON CONFLICT (id,company_id) DO UPDATE SET
+       name=EXCLUDED.name,avatar_url=EXCLUDED.avatar_url,status='avail',departed_at=NULL`,
+    [args.userId, args.companyId, args.displayName, args.displayName.charAt(0).toUpperCase(), args.avatarUrl],
+  )
+}
+
+export async function courseMembershipRole(db: Queryable, courseId: string, userId: string): Promise<'teacher' | 'learner' | null> {
+  const { rows } = await db.query<{ role: 'teacher' | 'learner' }>(
+    `SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`,
+    [courseId, userId],
+  )
+  return rows[0]?.role ?? null
+}
+
+export async function upsertAcceptedCourseMembership(db: Queryable, args: {
+  invitation: LockedCourseInvitation; userId: string; role: 'teacher' | 'learner'
+}): Promise<'teacher' | 'learner'> {
+  const { rows } = await db.query<{ role: 'teacher' | 'learner' }>(
+    `INSERT INTO course_members (course_id,company_id,user_id,role) VALUES ($1,$2,$3,$4)
+     ON CONFLICT (course_id,user_id) DO UPDATE SET
+       role=CASE WHEN course_members.role='teacher' OR EXCLUDED.role='teacher' THEN 'teacher' ELSE 'learner' END,
+       updated_at=NOW() RETURNING role`,
+    [args.invitation.course_id, args.invitation.company_id, args.userId, args.role],
+  )
+  return rows[0].role
+}
+
+export async function recordCourseAcceptance(db: Queryable, args: {
+  tokenHash: string; userId: string; role: 'teacher' | 'learner'
+}): Promise<void> {
+  await db.query(
+    `INSERT INTO course_invitation_acceptances (token_hash,user_id,role) VALUES ($1,$2,$3)`,
+    [args.tokenHash, args.userId, args.role],
+  )
+  await db.query(
+    `UPDATE course_invitations SET use_count=use_count+1,last_accepted_at=NOW(),last_accepted_by=$2
+      WHERE token_hash=$1`,
+    [args.tokenHash, args.userId],
+  )
+}
+
+export async function courseExists(db: Queryable, courseId: string, companyId: string): Promise<boolean> {
+  const { rows } = await db.query(`SELECT 1 FROM courses WHERE id=$1 AND company_id=$2`, [courseId, companyId])
+  return Boolean(rows[0])
+}
+
+export async function courseRole(db: Queryable, courseId: string, companyId: string, userId: string) {
+  const { rows } = await db.query<{ role: 'teacher' | 'learner' }>(
+    `SELECT role FROM course_members WHERE course_id=$1 AND company_id=$2 AND user_id=$3`,
+    [courseId, companyId, userId],
+  )
+  return rows[0]?.role ?? null
+}
+
+export async function listDeliveries(db: Queryable, companyId: string, userId: string) {
+  const { rows } = await db.query(
+    `SELECT * FROM learning_notification_deliveries
+      WHERE company_id=$1 AND user_id=$2 ORDER BY created_at DESC LIMIT 100`,
+    [companyId, userId],
+  )
+  return rows
+}
+
+export async function studyRoomState(db: Queryable, courseId: string) {
+  const { rows } = await db.query<{
+    room_id: string | null; company_id: string; title: string; topic: string | null; leader_id: string | null
+  }>(
+    `SELECT course.study_room_conversation_id AS room_id,course.company_id,
+            conversation.title,conversation.topic,conversation.leader_id
+       FROM courses course
+       LEFT JOIN conversations conversation
+         ON conversation.id=course.study_room_conversation_id AND conversation.company_id=course.company_id
+      WHERE course.id=$1`,
+    [courseId],
+  )
+  return rows[0] ?? null
+}
+
+export async function syncStudyRoomMembers(db: Queryable, args: {
+  courseId: string; companyId: string; roomId: string; title: string; topic: string | null; leaderId: string | null
+}) {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT course_member.user_id AS id FROM course_members course_member
+      WHERE course_member.course_id=$1 AND course_member.company_id=$2
+     UNION
+     SELECT participant.id FROM participants participant
+      WHERE participant.company_id=$2 AND participant.kind='agent'
+        AND participant.preset_key IN ('nova','sage','milo','trace') AND participant.departed_at IS NULL`,
+    [args.courseId, args.companyId],
+  )
+  const members = rows.map((row) => row.id)
+  await db.query(
+    `UPDATE conversations SET members=$2::jsonb,subtitle=$3,updated_at=NOW()
+      WHERE id=$1 AND company_id=$4`,
+    [args.roomId, JSON.stringify(members), `course · ${members.length}`, args.companyId],
+  )
+  const profile = {
+    channelId: args.roomId, channelType: 2, kind: 'group', title: args.title,
+    topic: args.topic, members, pinned: true, createdAt: new Date().toISOString(),
+  }
+  await db.query(
+    `INSERT INTO im_channel_bindings (channel_id,company_id,profile,leader_agent_id)
+     VALUES ($1,$2,$3::jsonb,$4)
+     ON CONFLICT (channel_id) DO UPDATE SET
+       company_id=EXCLUDED.company_id,profile=EXCLUDED.profile,leader_agent_id=EXCLUDED.leader_agent_id`,
+    [args.roomId, args.companyId, JSON.stringify(profile), args.leaderId],
+  )
+  return members
+}
