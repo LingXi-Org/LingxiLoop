@@ -380,7 +380,13 @@ export class AgentOSRuntime {
       if (work.reason !== 'canvas_worker') await this.host.commitMessage(work, messagePayload(work, finalText, runId, context))
       if ((work.reason === 'message' || work.reason === 'mention') && context.learnerId) {
         const trigger = context.messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)
-        if (trigger) await this.host.recordMemoryEvidence(work, { learnerId: context.learnerId, userText: trigger.body, assistantText: finalText })
+        if (trigger) {
+          await this.host.recordMemoryEvidence(work, {
+            learnerId: context.learnerId, userText: trigger.body, assistantText: finalText,
+          }).catch((error: unknown) => {
+            console.error('[agent-os] post-commit memory capture failed', error)
+          })
+        }
       }
       await this.host.saveSession(work, session)
       await this.event(work, runId, { kind: 'run.completed', stage: 'completed', visibility: 'user', data: {} })

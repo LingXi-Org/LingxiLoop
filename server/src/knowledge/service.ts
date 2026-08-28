@@ -282,8 +282,12 @@ async function processSource(sourceId: string): Promise<'ready' | 'pending' | 'f
   )
   if (status === 'ready') {
     if (source.kind === 'text' && source.storage_key) {
-      await storage.deleteObject(source.storage_key)
-      await pool.query(`UPDATE knowledge_sources SET storage_key=NULL, updated_at=NOW() WHERE id=$1`, [sourceId])
+      try {
+        await storage.deleteObject(source.storage_key)
+        await pool.query(`UPDATE knowledge_sources SET storage_key=NULL, updated_at=NOW() WHERE id=$1`, [sourceId])
+      } catch (cleanupError) {
+        console.error('[knowledge] staging object cleanup failed after ingestion completed', cleanupError)
+      }
     }
     await pool.query(`UPDATE knowledge_source_jobs SET status='completed', leased_until=NULL, leased_by=NULL, updated_at=NOW() WHERE source_id=$1`, [sourceId])
     await releaseDeferredWake(sourceId)

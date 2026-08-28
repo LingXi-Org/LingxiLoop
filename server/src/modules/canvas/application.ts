@@ -659,12 +659,14 @@ async function startCanvasWorkspace(input: {
   })
   const { canvasId, activity } = created
   const snapshot = await getCanvasSnapshot(input.companyId, input.initiatorAgentId, canvasId)
-  await publishCanvas(input.companyId, {
-    kind: 'workspace.started', canvasId, conversationId: input.conversationId,
-    workspace: { id: canvasId, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
-      assignmentCount: snapshot.assignments.length, frameCount: snapshot.frames.length },
-  })
-  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId, activity })
+  await Promise.allSettled([
+    publishCanvas(input.companyId, {
+      kind: 'workspace.started', canvasId, conversationId: input.conversationId,
+      workspace: { id: canvasId, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
+        assignmentCount: snapshot.assignments.length, frameCount: snapshot.frames.length },
+    }),
+    publishCanvas(input.companyId, { kind: 'activity.created', canvasId, activity }),
+  ])
   return { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }
 }
 
