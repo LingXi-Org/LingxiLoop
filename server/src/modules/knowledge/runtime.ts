@@ -1,6 +1,4 @@
 import { randomUUID } from 'node:crypto'
-import { lookup } from 'node:dns/promises'
-import { isIP } from 'node:net'
 import type { PoolClient } from 'pg'
 import { pool } from '../../db/pool.js'
 import { inc } from '../../metrics.js'
@@ -12,8 +10,22 @@ import {
   type OpenNotebookSearchHit,
   type OpenNotebookSource,
 } from './provider.js'
+import {
+  acquireNotebookLock,
+  findKnowledgeProject,
+  findReadyNotebookId,
+  markNotebookFailed,
+  markNotebookPending,
+  markNotebookReady,
+  releaseNotebookLock,
+} from './notebook-repository.js'
+import { findKnowledgeRetrievalProject, listKnowledgeRetrievalSources } from './retrieval-repository.js'
+import {
+  MAX_SOURCE_BYTES,
+  openNotebookEnabled,
+  validateKnowledgeUrl,
+} from './policy.js'
 
-export const MAX_SOURCE_BYTES = 25 * 1024 * 1024
 const LEASE_MS = 2 * 60_000
 const MAX_ATTEMPTS = 5
 const POLL_MS = 5_000
@@ -48,54 +60,9 @@ type SourceRow = {
   stage: string
 }
 
-function blockedIp(raw: string): boolean {
-  const ip = raw.toLowerCase().replace(/^::ffff:/, '')
-  if (ip === '::' || ip === '::1' || ip === '0.0.0.0') return true
-  if (ip.startsWith('10.') || ip.startsWith('127.') || ip.startsWith('169.254.') || ip.startsWith('192.168.')) return true
-  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true
-  return ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80:')
-}
-
-async function assertPublicUrl(raw: string): Promise<URL> {
-  if (raw.length > 2_048) throw new Error('URL is too long')
-  let url: URL
-  try { url = new URL(raw) } catch { throw new Error('invalid URL') }
-  if (!['http:', 'https:'].includes(url.protocol)) throw new Error('URL must use http or https')
-  if (url.username || url.password) throw new Error('URL credentials are not allowed')
-  const host = url.hostname.toLowerCase()
-  if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) throw new Error('URL host is blocked')
-  const addresses = isIP(host) ? [{ address: host }] : await lookup(host, { all: true, verbatim: true })
-  if (addresses.length === 0 || addresses.some((entry) => blockedIp(entry.address))) throw new Error('URL resolves to a private or blocked address')
-  return url
-}
-
-/** Validate URL sources before handing them to Open Notebook. */
-export async function validateKnowledgeUrl(raw: string): Promise<string> {
-  return (await assertPublicUrl(raw)).toString()
-}
-
-export function openNotebookEnabled(): boolean {
-  return /^(1|true|yes|on)$/i.test(process.env.OPEN_NOTEBOOK_ENABLED ?? '')
-}
-
 export async function knowledgeEngineHealth(): Promise<void> {
   if (!openNotebookEnabled()) throw new Error('Open Notebook integration is disabled')
   if (!await openNotebookClient.health()) throw new Error('Open Notebook health check failed')
-}
-
-export const KNOWLEDGE_ATTACHMENT_MIMES = new Set([
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'text/plain', 'text/markdown', 'text/csv', 'text/html', 'application/json',
-  'image/png', 'image/jpeg', 'image/webp',
-  'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/x-wav', 'audio/webm',
-  'video/mp4', 'video/webm',
-])
-
-export function isKnowledgeAttachmentMime(mime: string, size = 0): boolean {
-  return openNotebookEnabled() && KNOWLEDGE_ATTACHMENT_MIMES.has(mime.toLowerCase())
-    && size > 0 && size <= MAX_SOURCE_BYTES
 }
 
 function externalKey(projectId: string): string { return `lingxiloop:project:${projectId}` }
@@ -105,57 +72,43 @@ export async function ensureProjectNotebook(projectId: string, companyId?: strin
   if (!openNotebookEnabled()) throw new OpenNotebookError('Open Notebook integration is disabled', 503)
   const client = await pool.connect()
   try {
-    await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [`open-notebook:${projectId}`])
-    const { rows: existing } = await client.query<{ external_notebook_id: string | null; state: string }>(
-      `SELECT external_notebook_id, state FROM knowledge_notebook_bindings WHERE project_id=$1`, [projectId],
-    )
-    if (existing[0]?.external_notebook_id && existing[0].state === 'ready') return existing[0].external_notebook_id
-    const { rows: projects } = await client.query<{ company_id: string; name: string; description: string | null; status: string }>(
-      `SELECT company_id, name, description, status FROM projects WHERE id=$1 AND ($2::text IS NULL OR company_id=$2) LIMIT 1`,
-      [projectId, companyId ?? null],
-    )
-    const project = projects[0]
+    await acquireNotebookLock(client, projectId)
+    const existingId = await findReadyNotebookId(client, projectId)
+    if (existingId) return existingId
+    const project = await findKnowledgeProject(client, projectId, companyId)
     if (!project) throw new Error('workspace not found')
-    await client.query(
-      `INSERT INTO knowledge_notebook_bindings (project_id, company_id, external_key, state)
-       VALUES ($1,$2,$3,'pending') ON CONFLICT (project_id) DO UPDATE SET state='pending', last_error=NULL, updated_at=NOW()`,
-      [projectId, project.company_id, externalKey(projectId)],
-    )
+    await markNotebookPending(client, {
+      projectId,
+      companyId: project.companyId,
+      externalKey: externalKey(projectId),
+    })
     const found = await openNotebookClient.createNotebook({
       name: project.name,
       description: project.description?.trim() ?? '',
       externalKey: externalKey(projectId),
     })
-    await client.query(
-      `UPDATE knowledge_notebook_bindings SET external_notebook_id=$2, state='ready', last_error=NULL, updated_at=NOW() WHERE project_id=$1`,
-      [projectId, found.id],
-    )
+    await markNotebookReady(client, projectId, found.id)
     inc('knowledge.notebook.provisioned')
     return found.id
   } catch (error) {
-    await client.query(
-      `UPDATE knowledge_notebook_bindings SET state='failed', last_error=$2, updated_at=NOW() WHERE project_id=$1`,
-      [projectId, error instanceof Error ? error.message.slice(0, 2_000) : String(error).slice(0, 2_000)],
-    ).catch(() => undefined)
+    await markNotebookFailed(client, projectId, error instanceof Error ? error.message : String(error)).catch(() => undefined)
     inc('knowledge.notebook.provision_failed')
     throw error
   } finally {
-    await client.query(`SELECT pg_advisory_unlock(hashtextextended($1, 0))`, [`open-notebook:${projectId}`]).catch(() => undefined)
+    await releaseNotebookLock(client, projectId).catch(() => undefined)
     client.release()
   }
 }
 
 export async function syncProjectNotebookMetadata(projectId: string): Promise<void> {
   if (!openNotebookEnabled()) return
-  const { rows } = await pool.query<{ company_id: string; name: string; description: string | null; status: string }>(
-    `SELECT company_id, name, description, status FROM projects WHERE id=$1`, [projectId],
-  )
-  if (!rows[0]) return
-  const id = await ensureProjectNotebook(projectId, rows[0].company_id)
+  const project = await findKnowledgeProject(pool, projectId)
+  if (!project) return
+  const id = await ensureProjectNotebook(projectId, project.companyId)
   await openNotebookClient.updateNotebook(id, {
-    name: rows[0].name,
-    description: rows[0].description?.trim() ?? '',
-    archived: rows[0].status === 'archived',
+    name: project.name,
+    description: project.description?.trim() ?? '',
+    archived: project.status === 'archived',
   })
 }
 
@@ -416,23 +369,21 @@ function hitExcerpt(hit: OpenNotebookSearchHit): string {
   return (Array.isArray(value) ? value.join('\n') : String(value)).replace(/`/g, '').trim().slice(0, 2_000)
 }
 
-export async function retrieveKnowledge(args: { conversationId: string; query: string; limit?: number }): Promise<KnowledgeCitation[]> {
+export async function retrieveKnowledge(args: {
+  companyId: string; conversationId: string; query: string; limit?: number
+}): Promise<KnowledgeCitation[]> {
   if (!openNotebookEnabled() || !args.query.trim()) return []
-  const { rows: scopes } = await pool.query<{ company_id: string; project_id: string | null }>(
-    `SELECT company_id, project_id FROM conversations WHERE id=$1 AND kind='group'`, [args.conversationId],
-  )
-  if (!scopes[0]?.project_id) return []
-  const { rows: sources } = await pool.query<{ id: string; title: string; external_source_id: string; original_url: string | null; excluded: boolean }>(
-    `SELECT s.id, s.title, s.external_source_id, s.original_url, (e.source_id IS NOT NULL) AS excluded
-       FROM knowledge_sources s LEFT JOIN conversation_source_exclusions e
-         ON e.source_id=s.id AND e.conversation_id=$1
-      WHERE s.company_id=$2 AND s.project_id=$3 AND s.status='ready' AND s.deleted_at IS NULL AND s.external_source_id IS NOT NULL`,
-    [args.conversationId, scopes[0].company_id, scopes[0].project_id],
-  )
+  const projectId = await findKnowledgeRetrievalProject(pool, args.companyId, args.conversationId)
+  if (!projectId) return []
+  const sources = await listKnowledgeRetrievalSources(pool, {
+    companyId: args.companyId,
+    projectId,
+    conversationId: args.conversationId,
+  })
   if (!sources.length) return []
-  const notebookId = await ensureProjectNotebook(scopes[0].project_id, scopes[0].company_id)
-  const externalIds = sources.map((source) => source.external_source_id)
-  const excludedIds = sources.filter((source) => source.excluded).map((source) => source.external_source_id)
+  const notebookId = await ensureProjectNotebook(projectId, args.companyId)
+  const externalIds = sources.map((source) => source.externalSourceId)
+  const excludedIds = sources.filter((source) => source.excluded).map((source) => source.externalSourceId)
   inc('knowledge.retrieval.queries')
   const searchStartedAt = Date.now()
   let hits: OpenNotebookSearchHit[]
@@ -447,7 +398,7 @@ export async function retrieveKnowledge(args: { conversationId: string; query: s
   } finally {
     inc('knowledge.retrieval.latency_ms', undefined, Date.now() - searchStartedAt)
   }
-  const byExternal = new Map(sources.map((source) => [source.external_source_id, source]))
+  const byExternal = new Map(sources.map((source) => [source.externalSourceId, source]))
   const citations = hits.flatMap((hit, index) => {
     const externalId = String(hit.parent_id ?? hit.id ?? '')
     const source = byExternal.get(externalId)
@@ -455,7 +406,7 @@ export async function retrieveKnowledge(args: { conversationId: string; query: s
     if (!source || !excerpt) return []
     return [{
       sourceId: source.id, sourceTitle: source.title, chunkId: String(hit.id ?? `${externalId}:${index}`), excerpt,
-      ...(source.original_url ? { sourceUrl: source.original_url } : {}), position: index, marker: `S${index + 1}`,
+      ...(source.originalUrl ? { sourceUrl: source.originalUrl } : {}), position: index, marker: `S${index + 1}`,
     }]
   })
   if (citations.length) inc('knowledge.retrieval.hits', undefined, citations.length)

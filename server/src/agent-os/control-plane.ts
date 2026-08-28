@@ -260,6 +260,7 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   if (isTeacherAgent && !teacherContext) { res.status(403).json({ error: 'Pulse is not authorized for this teacher room' }); return }
   const knowledgeContext = !isTeacherAgent && workspaceRow?.kind === 'group' && learnerMessage
     ? await retrieveKnowledge({
+        companyId: work.companyId,
         conversationId: work.channelId,
         query: triggerMessage?.body ?? learnerMessage.body,
       })

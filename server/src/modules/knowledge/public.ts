@@ -5,18 +5,22 @@ export {
   enqueueKnowledgeSource,
   ensureProjectNotebook,
   getKnowledgeSourceText,
-  isKnowledgeAttachmentMime,
   knowledgeEngineHealth,
-  KNOWLEDGE_ATTACHMENT_MIMES,
-  MAX_SOURCE_BYTES,
-  openNotebookEnabled,
   retrieveKnowledge,
   retryKnowledgeSource,
   syncProjectNotebookMetadata,
-  validateKnowledgeUrl,
 } from './runtime.js'
-export type { KnowledgeCitation, KnowledgeSourceStatus } from './runtime.js'
 export {
+  isKnowledgeAttachmentMime,
+  KNOWLEDGE_ATTACHMENT_MIMES,
+  MAX_SOURCE_BYTES,
+  openNotebookEnabled,
+  validateKnowledgeUrl,
+} from './policy.js'
+export type { KnowledgeCitation, KnowledgeSourceStatus } from './runtime.js'
+import { knowledgeAgentApplication } from './facade.js'
+
+export const {
   addKnowledgeFile,
   addKnowledgeText,
   addKnowledgeUrl,
@@ -40,4 +44,4 @@ export {
   updateKnowledgeInsight,
   updateKnowledgeNote,
   updateKnowledgeSourceForAgent,
-} from './agent-actions.js'
+} = knowledgeAgentApplication

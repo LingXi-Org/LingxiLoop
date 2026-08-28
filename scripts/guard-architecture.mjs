@@ -97,7 +97,7 @@ for (const file of server) {
   }
   if (/knowledge\/service\.js/.test(source)) violations.push(`${fileName}: Knowledge access must use modules/knowledge public or worker surface`)
   if (!fileName.startsWith('server/src/modules/knowledge/')
-    && /modules\/knowledge\/(?:agent-actions|provider|runtime)\.js/.test(source)) {
+    && /modules\/knowledge\/(?:agent-application|provider|runtime)\.js/.test(source)) {
     violations.push(`${fileName}: Knowledge internals must be accessed through public.ts or worker.ts`)
   }
   const importsEmailRouterAtCompositionRoot = fileName === 'server/src/api/router.ts'

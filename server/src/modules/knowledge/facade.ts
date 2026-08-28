@@ -4,13 +4,14 @@ import {
   deleteKnowledgeSource,
   ensureProjectNotebook,
   getKnowledgeSourceText,
-  MAX_SOURCE_BYTES,
-  openNotebookEnabled,
   retryKnowledgeSource,
   syncProjectNotebookMetadata,
 } from './runtime.js'
 import { storage } from '../../storage.js'
+import { createKnowledgeAgentApplication } from './agent-application.js'
 import { KnowledgeApplication } from './application.js'
+import { openNotebookClient } from './provider.js'
+import { MAX_SOURCE_BYTES, openNotebookEnabled } from './policy.js'
 
 export const knowledgeApplication = new KnowledgeApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
@@ -25,4 +26,9 @@ export const knowledgeApplication = new KnowledgeApplication(pool, {
   readObject: (key) => storage.readObject(key),
   publicUrl: (key) => storage.publicUrl(key),
   maxSourceBytes: MAX_SOURCE_BYTES,
+})
+
+export const knowledgeAgentApplication = createKnowledgeAgentApplication(pool, {
+  storage,
+  provider: openNotebookClient,
 })
