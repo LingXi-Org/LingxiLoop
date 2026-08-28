@@ -21,11 +21,22 @@ const read = async (file) => readFile(file, 'utf8')
 const name = (file) => relative(process.cwd(), file).replaceAll('\\', '/')
 
 const productionFrontend = (await Promise.all(frontend.map(read))).join('\n')
+const frontendTheme = await readFile(resolve('src/styles/globals.css'), 'utf8')
 const shadcnConfig = JSON.parse(await readFile(resolve('components.json'), 'utf8'))
 if (shadcnConfig.style !== 'radix-luma' || shadcnConfig.tailwind?.baseColor !== 'mist' || shadcnConfig.iconLibrary !== 'hugeicons') {
   violations.push('components.json: canonical shadcn preset b3bZWXGcRE (radix-luma/mist/hugeicons) is required')
 }
 if (/@base-ui\/react/.test(productionFrontend)) violations.push('frontend: Base UI is forbidden; use the canonical shadcn primitives')
+const canonicalThemeOverride = /--(?:background|foreground|card|card-foreground|popover|popover-foreground|primary|primary-foreground|secondary|secondary-foreground|muted|muted-foreground|accent|accent-foreground|destructive|border|input|ring|sidebar)(?:-foreground|-border|-ring)?:/
+for (const scope of ['assistant-ui-scope', 'desktop-openmaus']) {
+  const block = frontendTheme.match(new RegExp(`\\.${scope}\\s*\\{([^}]*)\\}`, 's'))?.[1] ?? ''
+  if (canonicalThemeOverride.test(block)) {
+    violations.push(`src/styles/globals.css: .${scope} must inherit canonical Luma tokens`)
+  }
+}
+if (!/--app:\s*var\(--background\)/.test(frontendTheme) || !/--panel:\s*var\(--card\)/.test(frontendTheme)) {
+  violations.push('src/styles/globals.css: product surface aliases must derive from canonical Luma tokens')
+}
 for (const [label, pattern] of [
   ['production mock identity', /mock-(?:user|source)|startsWith\(['"]mock-/],
   ['native browser dialog', /\b(?:window\.)?(?:alert|confirm|prompt)\s*\(/],

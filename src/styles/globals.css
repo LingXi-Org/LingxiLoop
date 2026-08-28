@@ -11,14 +11,16 @@
 @config "../../tailwind.config.ts";
 
 :root {
-  --skype: #00A8F0;
-  --skype-deep: #0078C8;
-  --skype-ink: #003B6F;
-  --sky-50: #F2FAFE;
-  --sky-100: #E1F3FD;
-  --sky-200: #C2E6FB;
-  --sky-300: #8FD3F7;
-  --sky-glow: #4FC2F4;
+  /* Product aliases derive from the canonical shadcn/Luma tokens below.
+   * They remain only while feature CSS is migrated to semantic utilities. */
+  --skype: var(--primary);
+  --skype-deep: color-mix(in srgb, var(--primary) 82%, var(--foreground));
+  --skype-ink: var(--primary-foreground);
+  --sky-50: color-mix(in srgb, var(--primary) 6%, var(--background));
+  --sky-100: color-mix(in srgb, var(--primary) 12%, var(--background));
+  --sky-200: color-mix(in srgb, var(--primary) 22%, var(--background));
+  --sky-300: color-mix(in srgb, var(--primary) 68%, var(--background));
+  --sky-glow: color-mix(in srgb, var(--primary) 72%, var(--background));
   /* Aliases matching the Tailwind palette name ("sky2"). Components refer to
    * both spellings; an undefined var() here doesn't just miss a color — it
    * invalidates the whole shorthand it appears in (a `border: 1.5px solid
@@ -28,63 +30,54 @@
   --sky2-200: var(--sky-200);
   --sky2-300: var(--sky-300);
   --sky2-glow: var(--sky-glow);
-  --coral: #FF7A6B;
-  --coral-soft: #FFD9D2;
-  --coral-deep: #C84E3F;
-  --gold: #F4B740;
-  --gold-deep: #BA8418;
-  /* Whisper accent — a refined dusty iris / wisteria purple. Clearly
-   * reads as PURPLE (not gray, not candy), more sophisticated than the
-   * original electric #7C5CFF candy violet. Sits as the "private /
-   * intimate" register opposite the brand sky-blue and the warm coral. */
-  --whisper: #7B6CB0;
-  --whisper-deep: #4E3F8C;
-  --whisper-50: #F7F5FB;
-  --whisper-100: #ECE7F5;
-  --whisper-200: #D2C9E9;
-  --avail: #6EC56A;
-  --working: #F4B740;
-  /* Thinking = agent is mid-compute / about to act. Sits in the same
-   * purple register as --whisper but a touch more saturated so the small
-   * status dot still reads ACTIVE (not the muted resting gray). */
-  --thinking: #8A78C8;
-  --waiting: #FF7A6B;
-  --resting: #B8C4D1;
-  --ink-900: #0A1B2E;
-  --ink-700: #233A53;
-  --ink-500: #5B7186;
-  --ink-300: #94A8BC;
-  --ink-200: #C5D2DE;
-  --ink-100: #E5ECF2;
-  --paper: #FAFCFE;
-  --cloud: #FFFFFF;
+  --coral: var(--destructive);
+  --coral-soft: color-mix(in srgb, var(--destructive) 18%, var(--background));
+  --coral-deep: color-mix(in srgb, var(--destructive) 78%, var(--foreground));
+  --gold: var(--chart-1);
+  --gold-deep: color-mix(in srgb, var(--chart-1) 78%, var(--foreground));
+  --whisper: var(--secondary-foreground);
+  --whisper-deep: color-mix(in srgb, var(--secondary-foreground) 84%, var(--foreground));
+  --whisper-50: var(--secondary);
+  --whisper-100: color-mix(in srgb, var(--secondary) 78%, var(--foreground));
+  --whisper-200: var(--border);
+  --avail: var(--primary);
+  --working: var(--chart-1);
+  --thinking: var(--chart-2);
+  --waiting: var(--destructive);
+  --resting: var(--muted-foreground);
+  --ink-900: var(--foreground);
+  --ink-700: color-mix(in srgb, var(--foreground) 86%, transparent);
+  --ink-500: var(--muted-foreground);
+  --ink-300: color-mix(in srgb, var(--muted-foreground) 68%, transparent);
+  --ink-200: color-mix(in srgb, var(--border) 82%, transparent);
+  --ink-100: var(--border);
+  --paper: var(--background);
+  --cloud: var(--card);
 
-  --app: #F4F5F7;
-  --panel: #FFFFFF;
-  --card: oklch(1 0 0);
-  --raised: #EFF6FD;
-  --raised-hover: #E2EFFC;
-  --inset: #F3F6F9;
-  --hairline: rgba(15, 23, 42, 0.11);
-  --ink: #111318;
-  --ink-secondary: #626873;
-  --brand-im-blue: #1084fe;
-  --brand-bubble-surface: #EEEEEE;
-  --brand-bubble-border: rgba(20, 20, 20, 0.10);
-  --brand-bubble-ink: #141414;
-  --brand-bubble-muted: rgba(20, 20, 20, 0.60);
-  --bubble-agent: #F1F2F4;
-  --accent: oklch(0.963 0.002 197.1);
-  --accent-ink: #FFFFFF;
-  --selection-bg: rgba(59, 130, 246, 0.22);
-  --code-bg: #E9EBEF;
-  --canvas-bg: #EEF1F5;
-  --canvas-dot: rgba(70, 83, 104, 0.2);
-  --canvas-surface: #FFFFFF;
-  --canvas-surface-muted: #F7F8FA;
-  --canvas-frame-border: rgba(15, 23, 42, 0.12);
-  --canvas-shadow: 0 12px 35px rgba(25, 35, 60, 0.16);
-  --canvas-vignette: linear-gradient(180deg, transparent 55%, rgba(59, 130, 246, 0.08));
+  --app: var(--background);
+  --panel: var(--card);
+  --raised: var(--muted);
+  --raised-hover: var(--accent);
+  --inset: color-mix(in srgb, var(--muted) 60%, var(--background));
+  --hairline: var(--border);
+  --ink: var(--foreground);
+  --ink-secondary: var(--muted-foreground);
+  --brand-im-blue: var(--primary);
+  --brand-bubble-surface: var(--muted);
+  --brand-bubble-border: var(--border);
+  --brand-bubble-ink: var(--foreground);
+  --brand-bubble-muted: var(--muted-foreground);
+  --bubble-agent: var(--muted);
+  --accent-ink: var(--primary-foreground);
+  --selection-bg: color-mix(in srgb, var(--primary) 22%, transparent);
+  --code-bg: var(--muted);
+  --canvas-bg: var(--background);
+  --canvas-dot: color-mix(in srgb, var(--muted-foreground) 20%, transparent);
+  --canvas-surface: var(--card);
+  --canvas-surface-muted: var(--muted);
+  --canvas-frame-border: var(--border);
+  --canvas-shadow: 0 12px 35px color-mix(in srgb, var(--foreground) 16%, transparent);
+  --canvas-vignette: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--primary) 8%, transparent));
 
   /* Shared detail-panel theme contract. Component structure remains untouched;
      these aliases connect its semantic tokens to LingxiLoop's existing theme. */
@@ -127,105 +120,9 @@
 
 }
 
-:root[data-theme='dark'] {
-  --skype: #60A5FA;
-  --skype-deep: #93C5FD;
-  --skype-ink: #DBEAFE;
-  --sky-50: #182236;
-  --sky-100: #1D2B43;
-  --sky-200: #29466D;
-  --sky-300: #3B82F6;
-  --sky-glow: #60A5FA;
-  --coral-soft: #422824;
-  --coral-deep: #FDA197;
-  --gold-deep: #F4C760;
-  --whisper-50: #201D2D;
-  --whisper-100: #29243C;
-  --whisper-200: #453B65;
-  --whisper-deep: #C4B5FD;
-  --ink-900: #F4F5F7;
-  --ink-700: #E0E3E8;
-  --ink-500: #A7ADB7;
-  --ink-300: #777F8C;
-  --ink-200: #434A55;
-  --ink-100: #2C313A;
-  --paper: #111317;
-  --cloud: #17191E;
-  --resting: #68707D;
-
-  --app: #0D0F12;
-  --panel: #14161A;
-  --card: #1C1F25;
-  --raised: #202A36;
-  --raised-hover: #29384A;
-  --inset: #11161D;
-  --hairline: rgba(255, 255, 255, 0.1);
-  --ink: #F5F6F8;
-  --ink-secondary: #A7ADB7;
-  --brand-bubble-surface: #262626;
-  --brand-bubble-border: rgba(252, 252, 252, 0.10);
-  --brand-bubble-ink: #FCFCFC;
-  --brand-bubble-muted: rgba(252, 252, 252, 0.60);
-  --bubble-agent: #22252B;
-  --accent: #4682f6;
-  --accent-ink: #0B1220;
-  --selection-bg: rgba(96, 165, 250, 0.28);
-  --code-bg: #111318;
-  --canvas-bg: #101318;
-  --canvas-dot: rgba(190, 202, 222, 0.18);
-  --canvas-surface: #1A1D23;
-  --canvas-surface-muted: #20242B;
-  --canvas-frame-border: rgba(255, 255, 255, 0.12);
-  --canvas-shadow: 0 14px 38px rgba(0, 0, 0, 0.42);
-  --canvas-vignette: linear-gradient(180deg, transparent 48%, rgba(0, 0, 0, 0.38));
-}
-
-/* assistant-ui Elements and Tool UI semantic theme. */
+/* assistant-ui inherits the same canonical Luma tokens as every feature. */
 .assistant-ui-scope {
-  color-scheme: light;
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #4682f6;
-  --primary-foreground: #ffffff;
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: #4682f6;
-  --accent-foreground: #ffffff;
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: #4682f6;
-}
-
-:root[data-theme='dark'] .assistant-ui-scope {
-  color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: #4682f6;
-  --primary-foreground: #ffffff;
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: #4682f6;
-  --accent-foreground: #ffffff;
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: #4682f6;
+  color-scheme: inherit;
 }
 
 :root[data-theme='dark'] .assistant-ui-scope .shimmer { --shimmer-color: white; }
@@ -596,37 +493,14 @@ body {
 }
 .auth-provider-lingxi:hover { background: #0068ad; }
 
-/* Desktop conversation shell — intentionally scoped so the existing mobile,
-   auth, admin and notification surfaces retain their current visual system. */
+/* Desktop product aliases are compositions of the canonical Luma tokens. */
 .desktop-openmaus {
-  --im-chat-surface: #070707;
-  --im-nav-surface: #111111;
-  --im-detail-surface: #111111;
-  --im-elevated-surface: #181818;
-  --im-divider: #fcfcfc0d;
-  --im-divider-weak: #fcfcfc1a;
-  --app: #070707;
-  --panel: #111111;
-  --card: #181818;
-  --raised: #7777772c;
-  --raised-hover: #7777774a;
-  --inset: #181818;
-  --hairline: var(--im-divider-weak);
-  --ink: #fcfcfc;
-  --ink-secondary: #fcfcfc99;
-  --accent: #4682f6;
-  --accent-ink: #ffffff;
-  --selection-bg: rgba(16, 132, 254, 0.28);
-  --bubble-agent: #262626;
-  --code-bg: #191919;
-  --background: var(--im-elevated-surface);
-  --foreground: var(--ink);
-  --border: var(--im-divider);
-  --input: var(--im-divider-weak);
-  --secondary: var(--raised);
-  --muted: var(--raised);
-  --sidebar: var(--im-detail-surface);
-  --sidebar-border: var(--im-divider);
+  --im-chat-surface: var(--background);
+  --im-nav-surface: var(--sidebar);
+  --im-detail-surface: var(--sidebar);
+  --im-elevated-surface: var(--card);
+  --im-divider: var(--border);
+  --im-divider-weak: color-mix(in srgb, var(--border) 72%, transparent);
 
   /* Canvas is part of the same product surface, not a separate blackboard.
      These semantic aliases follow the surrounding panel/card palette in both
@@ -639,67 +513,9 @@ body {
   --canvas-shadow: 0 16px 34px -24px color-mix(in srgb, var(--ink) 44%, transparent), 0 1px 2px color-mix(in srgb, var(--ink) 12%, transparent);
   --canvas-vignette: linear-gradient(180deg, transparent 70%, color-mix(in srgb, var(--accent) 5%, transparent));
 
-  /* Product color vocabulary shared by chat, rich messages, and admin. */
-  --skype: #1084fe;
-  --skype-deep: #459ffe;
-  --skype-ink: #dbeafe;
-  --sky-50: rgba(16, 132, 254, 0.08);
-  --sky-100: rgba(16, 132, 254, 0.14);
-  --sky-200: rgba(69, 159, 254, 0.24);
-  --sky-300: #459ffe;
-  --sky2-50: var(--sky-50);
-  --sky2-100: var(--sky-100);
-  --sky2-200: var(--sky-200);
-  --sky2-300: var(--sky-300);
-  --paper: #070707;
-  --cloud: #262626;
-  --ink-900: #fcfcfc;
-  --ink-700: rgba(252, 252, 252, 0.86);
-  --ink-500: rgba(252, 252, 252, 0.6);
-  --ink-300: rgba(252, 252, 252, 0.38);
-  --ink-200: rgba(252, 252, 252, 0.22);
-  --ink-100: rgba(252, 252, 252, 0.12);
-
   color: var(--ink);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-
-:root[data-theme='light'] .desktop-openmaus {
-  --im-chat-surface: #fcfcfc;
-  --im-nav-surface: #f7f7f7;
-  --im-detail-surface: #f7f7f7;
-  --im-elevated-surface: #fcfcfc;
-  --im-divider: #1414140d;
-  --im-divider-weak: #1414141a;
-  --app: #fcfcfc;
-  --panel: #f7f7f7;
-  --card: #eeeeee;
-  --raised: #77777717;
-  --raised-hover: #7777772c;
-  --inset: #f7f7f7;
-  --hairline: var(--im-divider-weak);
-  --ink: #141414;
-  --ink-secondary: #14141499;
-  --accent-ink: #ffffff;
-  --selection-bg: rgba(16, 132, 254, 0.2);
-  --bubble-agent: #eeeeee;
-  --code-bg: #eeeeee;
-  --paper: #fcfcfc;
-  --cloud: #f7f7f7;
-  --ink-900: #141414;
-  --ink-700: #141414d1;
-  --ink-500: #14141499;
-  --ink-300: #14141466;
-  --ink-200: #14141426;
-  --ink-100: #1414141a;
-  --background: var(--im-elevated-surface);
-  --border: var(--im-divider);
-  --input: var(--im-divider-weak);
-  --secondary: var(--raised);
-  --muted: var(--raised);
-  --sidebar: var(--im-detail-surface);
-  --sidebar-border: var(--im-divider);
 }
 
 .desktop-openmaus .chat-surface {
