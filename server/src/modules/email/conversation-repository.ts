@@ -43,6 +43,7 @@ export async function mergeConversationMembers(
                 SELECT unnest($3::text[]) AS member_id
               ) member_set
           ))
+        )
       WHERE id = $1 AND company_id = $2`,
     [conversationId, companyId, memberIds],
   )
