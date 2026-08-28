@@ -1,0 +1,49 @@
+import { z } from 'zod'
+
+export const outboundAttachmentSchema = z.object({
+  key: z.string().trim().min(1),
+  filename: z.string().trim().min(1).max(200),
+  mimeType: z.string().trim().min(1).max(120),
+  sizeBytes: z.number().int().min(0),
+}).strict()
+
+const attachmentsSchema = z.array(outboundAttachmentSchema).max(16).default([]).superRefine((attachments, context) => {
+  const total = attachments.reduce((sum, attachment) => sum + attachment.sizeBytes, 0)
+  if (total > 25 * 1024 * 1024) {
+    context.addIssue({ code: 'custom', message: 'attachments exceed 26214400 bytes total' })
+  }
+})
+
+export const sendEmailRequestSchema = z.object({
+  to: z.array(z.string().trim().min(1)).min(1),
+  cc: z.array(z.string().trim().min(1)).default([]),
+  subject: z.string().trim().min(1).max(998),
+  body: z.string().trim().min(1).max(50_000),
+  attachments: attachmentsSchema,
+}).strict()
+
+export const replyEmailRequestSchema = z.object({
+  body: z.string().trim().min(1).max(50_000),
+  cc: z.array(z.string().trim().min(1)).default([]),
+  attachments: attachmentsSchema,
+}).strict()
+
+export type SendEmailInput = z.infer<typeof sendEmailRequestSchema>
+export type ReplyEmailInput = z.infer<typeof replyEmailRequestSchema>
+export type OutboundAttachmentInput = z.infer<typeof outboundAttachmentSchema>
+
+export interface EmailScope {
+  userId: string
+  companyId: string
+}
+
+export interface EmailSendPayload {
+  messageId: string
+  conversationId: string
+  transportStatus: 'sent' | 'failed'
+  error?: string
+}
+
+export type EmailHtmlPayload =
+  | { kind: 'empty' }
+  | { kind: 'html'; html: string }
