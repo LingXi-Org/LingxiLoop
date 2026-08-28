@@ -54,7 +54,11 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   for (const domain of ['admin', 'agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
-    const application = await readFile(new URL('application.ts', base), 'utf8')
+    const application = domain === 'learning'
+      ? (await Promise.all((await readdir(new URL('.', base)))
+        .filter((name) => name.endsWith('application.ts'))
+        .map((name) => readFile(new URL(name, base), 'utf8')))).join('\n')
+      : await readFile(new URL('application.ts', base), 'utf8')
     const repository = domain === 'learning'
       ? (await Promise.all((await readdir(new URL('.', base)))
         .filter((name) => name.endsWith('-repository.ts'))

@@ -116,7 +116,9 @@ for (const file of server) {
       }
     }
   }
-  const domainApplication = fileName.match(/^server\/src\/modules\/([^/]+)\/application\.ts$/)?.[1]
+  const domainApplication = fileName.match(
+    /^server\/src\/modules\/([^/]+)\/(?:application|[^/]+-application)\.ts$/,
+  )?.[1]
   if (domainApplication && strictServerDomains.has(domainApplication)) {
     if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]/.test(source)) {
       violations.push(`${fileName}: application imports concrete database infrastructure`)

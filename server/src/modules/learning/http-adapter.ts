@@ -1,5 +1,5 @@
 import { HttpError } from '../../http/errors.js'
-import { LearningApplicationError } from './application.js'
+import { LearningApplicationError } from './errors.js'
 
 type ParseResult<T> =
   | { success: true; data: T }
