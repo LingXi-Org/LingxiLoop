@@ -62,7 +62,6 @@ export type WsEvent =
   | { type: 'typing'; conversationId: string; agentId: string; done: boolean }
   | { type: 'agent.activity'; conversationIds: string[]; activity: CoworkerActivity }
   | { type: 'participants.status'; participantId: string; status: Status; statusUpdatedAt?: string }
-  | { type: 'participants.avatar'; participantId: string; avatarUrl: string }
   | { type: 'participants.added'; conversationId?: string; participant: {
       id: string; kind: 'human' | 'agent'; name: string; role: string | null;
       initial: string; avatarBg: string; avatarUrl: string | null;

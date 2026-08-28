@@ -49,6 +49,7 @@ for (const [label, pattern] of [
   ['retired root API facade', /\b(?:platformApi|filesApi|observabilityApi)\b/],
   ['retired agent portrait path', /agents?\/[^'"`]*avatar\/generate|generateAgentAvatar|AI生成的肖像|AI portrait/],
   ['retired agent notification signature', /authorAvatarBg/],
+  ['retired participant avatar event', /participants\.avatar/],
 ]) if (pattern.test(productionFrontend)) violations.push(`frontend: ${label} is forbidden`)
 
 const fetchAllowlist = new Set([
@@ -100,6 +101,7 @@ for (const file of server) {
   if (/\bnew\s+S3Client\s*\(/.test(source) && fileName !== 'server/src/storage.ts') violations.push(`${fileName}: object storage construction bypasses storage.ts`)
   if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|SUB2API|DEEPSEEK_API_KEY/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)
   if (/agent-gender|agent-avatar|generateAndPersistAvatar|visualSignatureFor|cmdAvatar\b|\/avatar\/generate/.test(source)) violations.push(`${fileName}: agent portraits are retired; agents use Bloub`)
+  if (/participants\.avatar/.test(source)) violations.push(`${fileName}: retired participant avatar event is forbidden`)
   if (/\/devtools\//.test(source) || /api\.post\(['"]\/uploads['"]/.test(source) || /sources\/upload['"]/.test(source)) violations.push(`${fileName}: retired endpoint is forbidden`)
   const domainRouter = fileName.match(/^server\/src\/modules\/([^/]+)\/(?:[a-z-]+-)?router\.ts$/)?.[1]
   if (domainRouter && strictServerDomains.has(domainRouter)) {

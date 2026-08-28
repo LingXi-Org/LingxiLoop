@@ -5,7 +5,7 @@ import test from 'node:test'
 const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8')
 
 test('agent identity has one Bloub rendering path and no portrait generation surface', async () => {
-  const [router, cli, api, editor, avatar, notification, runtime, message, chatStyles, schema, guard] = await Promise.all([
+  const [router, cli, api, editor, avatar, notification, runtime, events, participantState, redis, message, chatStyles, schema, guard] = await Promise.all([
     read('../../server/src/modules/agents/router.ts'),
     read('../../server/src/agents/cli.ts'),
     read('../features/agents/api.ts'),
@@ -13,6 +13,9 @@ test('agent identity has one Bloub rendering path and no portrait generation sur
     read('../components/Avatar.tsx'),
     read('../components/NotificationWindow.tsx'),
     read('./runtime.ts'),
+    read('../api/contracts.ts'),
+    read('../features/agents/state.ts'),
+    read('../../server/src/redis.ts'),
     read('../components/messages/LingxiImMessage.tsx'),
     read('../styles/chat.css'),
     read('../../server/src/db/schema.sql'),
@@ -27,6 +30,7 @@ test('agent identity has one Bloub rendering path and no portrait generation sur
   assert.match(notification, /toast\.authorKind === 'agent'/)
   assert.match(notification, /<BloubAvatar/)
   assert.doesNotMatch(`${notification}\n${runtime}`, /authorAvatarBg|stable color block/)
+  assert.doesNotMatch(`${events}\n${participantState}\n${redis}`, /participants\.avatar/)
   assert.match(message, /`bloub-activity-\$\{avatarActivity\}`/)
   assert.doesNotMatch(`${message}\n${chatStyles}`, /agent-avatar/)
   assert.match(schema, /participants_agent_bloub_only CHECK/)

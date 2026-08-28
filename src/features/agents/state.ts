@@ -2,7 +2,7 @@ import { agentsApi } from './api'
 import type { ApiParticipant } from './contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
-import { clearAvatarCache, invalidateAvatar } from '@/lib/avatarCache'
+import { clearAvatarCache } from '@/lib/avatarCache'
 import type { Participant, Status } from '@/types'
 
 interface ParticipantsState {
@@ -136,27 +136,11 @@ export function bootParticipants() {
     if (e.type === 'hello') {
       // Fresh WS connection — could be the initial connect OR a reconnect
       // after a network blip / server rollout. Redis pubsub doesn't
-      // queue messages, so any `participants.avatar` / `.status` event
-      // that fired while we were disconnected is gone. Refetch the
-      // roster to backfill those misses. Cheap (single JSON GET) and
-      // covers the only failure mode where avatar updates silently
-      // stick at stale.
+      // queue messages, so any `.status` event that fired while we were
+      // disconnected is gone. Refetch the roster to backfill those misses.
       void useParticipants.getState().refresh()
     } else if (e.type === 'participants.status') {
       useParticipants.getState().applyStatus(e.participantId, e.status, e.statusUpdatedAt)
-    } else if (e.type === 'participants.avatar') {
-      // Drop the local image cache entry for this participant so the
-      // next render fetches the new portrait bytes — beats waiting for
-      // the URL-keyed browser cache to expire when the URL hasn't
-      // changed (e.g., overwritten-in-place Gravatar).
-      invalidateAvatar(e.participantId)
-      // Patch the participant row's avatarUrl in place so the new
-      // remote URL flows down without a full refetch.
-      useParticipants.setState((s) => {
-        const cur = s.byId[e.participantId]
-        if (!cur) return {}
-        return { byId: { ...s.byId, [e.participantId]: { ...cur, avatarUrl: e.avatarUrl } } }
-      })
     } else if (e.type === 'participants.added') {
       // A new human (or agent) joined the workspace. Upsert into byId so
       // the system-row referencing them resolves immediately (otherwise
