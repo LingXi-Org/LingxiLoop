@@ -11,7 +11,6 @@ import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import {
   bindCourseRoom,
   requireCourseRole,
-  reviewEvaluation,
   setCourseMembership,
 } from './service.js'
 import {
@@ -19,6 +18,7 @@ import {
   createLearningActivity,
   createLearningObjectives,
   publishLearningActivity,
+  reviewLearningEvaluation,
   setLearningObjectiveStatus,
 } from '../modules/learning/application.js'
 import type {
@@ -616,6 +616,6 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
     return rows[0]
   }
   if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);if(!enabled){const {rows}=await db.query<{count:number}>(`SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`,[scope.courseId]);if(Number(rows[0]?.count)<=1)throw new Error('cannot remove the final course teacher')};await setCourseMembership({courseId:scope.courseId,teacherId:scope.teacherId,userId,role:'teacher',enabled},db);return {ok:true}}
-  if(method==='review_evaluation'||method==='override_mastery'){await reviewEvaluation({courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:method==='override_mastery'?'accept':optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason'),...(args.overrideLevel!==undefined||args.override_level!==undefined?{overrideLevel:Number(args.overrideLevel??args.override_level)}:{})},db);return {ok:true}}
+  if(method==='review_evaluation'||method==='override_mastery'){await reviewLearningEvaluation(db,learningTransaction(db),inc,{companyId:scope.companyId,courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:method==='override_mastery'?'accept':optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason'),...(args.overrideLevel!==undefined||args.override_level!==undefined?{overrideLevel:Number(args.overrideLevel??args.override_level)}:{})});return {ok:true}}
   throw new Error(`unsupported teacher action: ${method}`)
 }

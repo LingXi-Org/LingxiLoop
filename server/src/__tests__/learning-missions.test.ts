@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
-import { loadLearningContext, recordLearningAttempt, startLearningMission } from '../modules/learning/application.js'
+import {
+  loadLearningContext,
+  proposeLearningEvaluation,
+  recordLearningAttempt,
+  reviewLearningEvaluation,
+  startLearningMission,
+} from '../modules/learning/application.js'
 import {
   completeLearningMissionRecord,
   findLearningMission,
@@ -247,4 +253,73 @@ test('learning turn context binds mastery and active mission reads to the room t
   assert.equal(context?.learnerId, 'learner-1')
   assert.equal(context?.objectives[0]?.masteryLevel, 2)
   assert.equal(context?.pendingTeacherReviews, 0)
+})
+
+test('agent evaluation proposal commits the ledger row before returning accepted mastery', async () => {
+  const statements: string[] = []
+  const db = queryable((text) => {
+    statements.push(text)
+    if (text.includes('FROM courses course') && text.includes('learning_course_rooms')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
+      status: 'active', purpose: 'study',
+    }] }
+    if (text.includes('FROM learning_attempts attempt') && text.includes('activity.evaluation_mode')) return { rows: [{
+      learner_id: 'learner-1', assistance: 'none', activity_id: 'activity-1',
+      activity_type: 'practice', evaluation_mode: 'agent_formative', target_level: 2,
+      objective_ids: ['objective-1'],
+    }] }
+    if (text.includes('SELECT mastery.level FROM learning_mastery')) return { rows: [] }
+    if (text.includes('INSERT INTO learning_evaluations')) return { rowCount: 1 }
+    if (text.includes('SELECT DISTINCT COALESCE')) return { rows: [] }
+    if (text.includes('SELECT COALESCE(attempt.activity_id')) return { rows: [{ evidence_key: 'activity-1' }] }
+    if (text.includes('FROM learning_mastery mastery') && text.includes('FOR UPDATE')) return { rows: [] }
+    if (text.includes('INSERT INTO learning_mastery')) return { rowCount: 1 }
+    if (text.includes('INSERT INTO learning_mastery_events')) return { rowCount: 1 }
+    if (text.includes("UPDATE learning_attempts SET status='evaluated'")) return { rowCount: 1 }
+    throw new Error(`unexpected query: ${text}`)
+  })
+  const metrics: string[] = []
+
+  const result = await proposeLearningEvaluation(db, async (work) => work(db), (name) => {
+    metrics.push(name)
+  }, {
+    companyId: 'company-1', channelId: 'room-1', agentId: 'agent-1', attemptId: 'attempt-1',
+    demonstratedLevel: 2, confidence: 0.9,
+  })
+
+  assert.equal(result.status, 'accepted')
+  assert.equal(result.decisions.length, 1)
+  assert.ok(statements.findIndex((text) => text.includes('INSERT INTO learning_evaluations'))
+    < statements.findIndex((text) => text.includes('INSERT INTO learning_mastery')))
+  assert.ok(metrics.includes('learning.evaluation.proposed'))
+})
+
+test('teacher override reviews and projects mastery in one tenant-scoped transaction', async () => {
+  const statements: string[] = []
+  const db = queryable((text) => {
+    statements.push(text)
+    if (text.includes('FROM course_members')) return { rows: [{ role: 'teacher' }] }
+    if (text.includes('FROM learning_evaluations evaluation') && text.includes('FOR UPDATE')) return { rows: [{
+      attempt_id: 'attempt-1', demonstrated_level: 3, confidence: 0.8, learner_id: 'learner-1',
+      assistance: 'none', activity_type: 'project', target_level: 3, objective_ids: ['objective-1'],
+    }] }
+    if (text.includes('UPDATE learning_evaluations evaluation')) return { rowCount: 1 }
+    if (text.includes('FROM learning_mastery mastery') && text.includes('FOR UPDATE')) return { rows: [{
+      level: 2, independent_evidence_count: 1, review_interval_days: 3,
+    }] }
+    if (text.includes('INSERT INTO learning_mastery')) return { rowCount: 1 }
+    if (text.includes('INSERT INTO learning_mastery_events')) return { rowCount: 1 }
+    if (text.includes("UPDATE learning_attempts SET status='evaluated'")) return { rowCount: 1 }
+    throw new Error(`unexpected query: ${text}`)
+  })
+
+  await reviewLearningEvaluation(db, async (work) => work(db), () => undefined, {
+    companyId: 'company-1', courseId: 'course-1', evaluationId: 'evaluation-1',
+    teacherId: 'teacher-1', decision: 'accept', overrideLevel: 4, reason: 'Verified project transfer',
+  })
+
+  assert.ok(statements.findIndex((text) => text.includes('UPDATE learning_evaluations evaluation'))
+    < statements.findIndex((text) => text.includes('INSERT INTO learning_mastery')))
+  assert.ok(statements.some((text) => text.includes("kind,reason,actor_id")))
+  assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='evaluated'")))
 })

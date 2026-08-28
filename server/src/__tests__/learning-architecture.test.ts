@@ -106,6 +106,25 @@ test('Agent OS turn context uses repository reads without legacy fallback handli
   assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
 })
 
+test('Agent OS evaluation proposals use the tenant-scoped Learning vertical slice', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_evaluations/)
+  assert.doesNotMatch(learningRuntimeSource, /proposeEvaluation,[\s\S]*from '..\/..\/learning\/service\.js'/)
+  assert.match(learningApplicationSource, /proposeLearningEvaluation/)
+  assert.match(repository, /attempt\.id=\$1 AND attempt\.company_id=\$2 AND attempt\.course_id=\$3/)
+  assert.match(repository, /source\.company_id=\$3 AND course\.id=\$4/)
+  assert.match(repository, /event\.company_id=\$1 AND event\.course_id=\$2/)
+})
+
+test('teacher evaluation review shares the same repository and mastery projection boundary', () => {
+  const teacher = readFileSync(new URL('../learning/teacher-agent.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(service, /\breviewEvaluation\b|INSERT INTO learning_mastery|UPDATE learning_evaluations/)
+  assert.doesNotMatch(teacher, /\breviewEvaluation\b/)
+  assert.match(teacher, /reviewLearningEvaluation/)
+  assert.match(learningApplicationSource, /reviewLearningEvaluation/)
+  assert.match(repository, /attempt\.company_id=\$2 AND attempt\.course_id=\$3/)
+  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND evaluation\.status='pending'/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
   const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')

@@ -5,10 +5,6 @@
  * their persistence is migrated into the domain repository. Consumers must not
  * import those implementation files directly.
  */
-export {
-  proposeEvaluation,
-} from '../../learning/service.js'
-
 export function createObjectives(input: CreateLearningObjectivesCommand) {
   return createLearningObjectives(pool, (work) => withTransaction(pool, work), input)
 }
@@ -117,6 +113,7 @@ import {
   loadLearningContext,
   publishLearningActivity,
   preferredLearningMissionCoordinator,
+  proposeLearningEvaluation,
   recordLearningAttempt,
   setLearningObjectiveStatus,
   submitLearningActivity,
@@ -196,6 +193,18 @@ export function loadLearningTurnContext(work: AgentWorkItem, actorId?: string) {
     companyId: work.companyId, channelId: work.channelId, agentId: work.agentId,
     triggerClientMsgNo: work.triggerClientMsgNo,
     ...(actorId ? { actorId } : {}),
+  })
+}
+
+export function proposeEvaluation(
+  work: AgentWorkItem,
+  input: {
+    attemptId: string; demonstratedLevel: number; confidence: number; rubricResults?: unknown[]
+    feedback?: string; sourceReportId?: string; verifierReportId?: string
+  },
+) {
+  return proposeLearningEvaluation(pool, (run) => withTransaction(pool, run), inc, {
+    companyId: work.companyId, channelId: work.channelId, agentId: work.agentId, ...input,
   })
 }
 

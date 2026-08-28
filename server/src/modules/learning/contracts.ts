@@ -132,6 +132,17 @@ export interface RecordLearningAttemptCommand extends LearningAgentRoomScope {
   assistance?: 'none' | 'hint' | 'guided'
 }
 
+export interface ProposeLearningEvaluationCommand extends LearningAgentRoomScope {
+  agentId: string
+  attemptId: string
+  demonstratedLevel: number
+  confidence: number
+  rubricResults?: unknown[]
+  feedback?: string
+  sourceReportId?: string
+  verifierReportId?: string
+}
+
 export interface LearningScope { userId: string; companyId: string }
 export interface LearningNotificationPreferences {
   company_id: string
