@@ -390,48 +390,6 @@ export async function listEvaluationQueue(courseId: string, teacherId: string, d
   return rows
 }
 
-export async function getNotificationPreferences(companyId: string, userId: string, courseId?: string, db: Queryable = pool): Promise<unknown> {
-  const { rows } = await db.query(
-    `SELECT * FROM learning_notification_preferences WHERE company_id=$1 AND user_id=$2
-      AND (course_id IS NOT DISTINCT FROM $3 OR ($3::text IS NOT NULL AND course_id IS NULL))
-      ORDER BY course_id NULLS LAST LIMIT 1`,
-    [companyId, userId, courseId ?? null],
-  )
-  return rows[0] ?? { company_id: companyId, user_id: userId, course_id: courseId ?? null, in_app_enabled: true,
-    email_enabled: false, timezone: 'Asia/Shanghai', preferred_time: '19:00', quiet_start: null, quiet_end: null }
-}
-
-export async function setNotificationPreferences(input: {
-  companyId: string; userId: string; courseId?: string; inAppEnabled: boolean; emailEnabled: boolean;
-  timezone: string; preferredTime: string; quietStart?: string; quietEnd?: string
-}, db: Queryable = pool): Promise<unknown> {
-  if (input.courseId) {
-    const role = await courseRole(db, input.courseId, input.userId)
-    if (!role) throw new Error('course membership required')
-  }
-  const id = randomUUID()
-  if (input.courseId) {
-    await db.query(
-      `INSERT INTO learning_notification_preferences(id,company_id,user_id,course_id,in_app_enabled,email_enabled,timezone,preferred_time,quiet_start,quiet_end)
-       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       ON CONFLICT(company_id,user_id,course_id) WHERE course_id IS NOT NULL DO UPDATE SET
-       in_app_enabled=EXCLUDED.in_app_enabled,email_enabled=EXCLUDED.email_enabled,
-       timezone=EXCLUDED.timezone,preferred_time=EXCLUDED.preferred_time,quiet_start=EXCLUDED.quiet_start,quiet_end=EXCLUDED.quiet_end,updated_at=NOW()`,
-      [id,input.companyId,input.userId,input.courseId,input.inAppEnabled,input.emailEnabled,input.timezone,input.preferredTime,input.quietStart??null,input.quietEnd??null],
-    )
-  } else {
-    await db.query(
-      `INSERT INTO learning_notification_preferences(id,company_id,user_id,course_id,in_app_enabled,email_enabled,timezone,preferred_time,quiet_start,quiet_end)
-       VALUES($1,$2,$3,NULL,$4,$5,$6,$7,$8,$9)
-       ON CONFLICT(company_id,user_id) WHERE course_id IS NULL DO UPDATE SET
-       in_app_enabled=EXCLUDED.in_app_enabled,email_enabled=EXCLUDED.email_enabled,
-       timezone=EXCLUDED.timezone,preferred_time=EXCLUDED.preferred_time,quiet_start=EXCLUDED.quiet_start,quiet_end=EXCLUDED.quiet_end,updated_at=NOW()`,
-      [id,input.companyId,input.userId,input.inAppEnabled,input.emailEnabled,input.timezone,input.preferredTime,input.quietStart??null,input.quietEnd??null],
-    )
-  }
-  return getNotificationPreferences(input.companyId, input.userId, input.courseId, db)
-}
-
 async function roomScope(work: AgentWorkItem, db: Queryable = pool): Promise<{
   courseId: string; projectId: string; courseTitle: string; courseStatus: 'active'|'archived'; purpose: LearningRoomPurpose
 }> {

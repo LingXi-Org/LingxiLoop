@@ -76,6 +76,17 @@ export type ReviewEvaluationInput = z.infer<typeof reviewEvaluationRequestSchema
 export type NotificationPreferencesInput = z.infer<typeof notificationPreferencesRequestSchema>
 
 export interface LearningScope { userId: string; companyId: string }
+export interface LearningNotificationPreferences {
+  company_id: string
+  user_id: string
+  course_id: string | null
+  in_app_enabled: boolean
+  email_enabled: boolean
+  timezone: string
+  preferred_time: string
+  quiet_start: string | null
+  quiet_end: string | null
+}
 export interface CourseManager extends LearningScope {
   companyRole: string
   courseRole: string | null

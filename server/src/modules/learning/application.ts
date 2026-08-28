@@ -7,7 +7,6 @@ import {
   courseProgress,
   createObjectives,
   draftActivity,
-  getNotificationPreferences,
   learningDashboard,
   listActivities,
   listEvaluationQueue,
@@ -17,7 +16,6 @@ import {
   publishActivity,
   reviewEvaluation,
   setMissionCoordinator,
-  setNotificationPreferences,
   setObjectiveStatus,
   submitActivity,
 } from '../../learning/service.js'
@@ -45,6 +43,7 @@ import {
   courseMembershipRole,
   courseRole,
   findCourse,
+  findNotificationPreferences,
   findVerifiedUser,
   insertCourse,
   insertCourseInvitation,
@@ -63,6 +62,7 @@ import {
   studyRoomState,
   syncStudyRoomMembers,
   updateCourseMetadata,
+  upsertNotificationPreferences,
   upsertAcceptedCourseMembership,
 } from './repository.js'
 
@@ -459,11 +459,28 @@ export class LearningApplication {
   }
 
   notificationPreferences(scope: LearningScope, courseId?: string) {
-    return this.classroom(() => getNotificationPreferences(scope.companyId, scope.userId, courseId, this.db))
+    return this.classroom(async () => await findNotificationPreferences(
+      this.db, scope.companyId, scope.userId, courseId,
+    ) ?? {
+      company_id: scope.companyId,
+      user_id: scope.userId,
+      course_id: courseId ?? null,
+      in_app_enabled: true,
+      email_enabled: false,
+      timezone: 'Asia/Shanghai',
+      preferred_time: '19:00',
+      quiet_start: null,
+      quiet_end: null,
+    })
   }
 
-  setNotificationPreferences(scope: LearningScope, input: NotificationPreferencesInput) {
-    return this.classroom(() => setNotificationPreferences({ ...scope, ...input }, this.db))
+  async setNotificationPreferences(scope: LearningScope, input: NotificationPreferencesInput) {
+    if (input.courseId) {
+      const role = await courseRole(this.db, input.courseId, scope.companyId, scope.userId)
+      if (!role) throw new LearningApplicationError('forbidden', 'course membership required')
+    }
+    await upsertNotificationPreferences(this.db, { id: randomUUID(), ...scope, ...input })
+    return this.notificationPreferences(scope, input.courseId)
   }
 
   deliveries(scope: LearningScope) { return listDeliveries(this.db, scope.companyId, scope.userId) }

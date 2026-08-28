@@ -3,8 +3,8 @@ import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { formatAddress, mintMessageId, sendViaProvider } from '../email.js'
 import { inc } from '../metrics.js'
+import { findNotificationPreferences } from '../modules/learning/repository.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
-import { getNotificationPreferences } from './service.js'
 
 type DigestKind = 'review_due' | 'grading_queue'
 type DeliveryChannel = 'in_app' | 'email'
@@ -75,11 +75,19 @@ async function candidates(now: Date): Promise<DigestCandidate[]> {
 
 async function prepareDeliveries(now: Date): Promise<void> {
   for (const candidate of await candidates(now)) {
-    const pref = await getNotificationPreferences(
+    const pref = await findNotificationPreferences(
+      pool,
       candidate.company_id,
       candidate.user_id,
       candidate.course_id,
-    ) as Record<string, unknown>
+    ) ?? {
+      in_app_enabled: true,
+      email_enabled: false,
+      timezone: 'Asia/Shanghai',
+      preferred_time: '19:00',
+      quiet_start: null,
+      quiet_end: null,
+    }
     const timezone = String(pref.timezone ?? 'Asia/Shanghai')
     const clock = localClock(timezone, now)
     const preferred = String(pref.preferred_time ?? '19:00').slice(0, 5)
