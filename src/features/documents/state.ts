@@ -1,10 +1,10 @@
-import { documentsApi } from '@/api/documents'
-import type { ApiDocument } from '@/api/contracts'
+import { documentsApi } from './api'
+import type { DocumentRecord } from './contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 
 interface DocumentsState {
-  list: ApiDocument[]
+  list: DocumentRecord[]
   loaded: boolean
   selectedId: string | null
   select: (id: string | null) => void
@@ -14,7 +14,7 @@ interface DocumentsState {
    *  next view doesn't briefly render the previous tenant's documents
    *  before the API call lands. */
   reset: () => void
-  create: (input?: { title?: string; conversationId?: string | null }) => Promise<ApiDocument>
+  create: (input?: { title?: string; conversationId?: string | null }) => Promise<DocumentRecord>
   rename: (id: string, title: string) => Promise<void>
   remove: (id: string) => Promise<void>
 }

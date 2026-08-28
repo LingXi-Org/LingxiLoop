@@ -3,7 +3,7 @@ import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const domains = [
-  'documents', 'email', 'files',
+  'email', 'files',
   'observability', 'platform',
 ] as const
 
@@ -19,7 +19,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
 
   const consumers = await Promise.all([
     '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../features/boards/state.ts',
-    '../features/calendar/state.ts', '../features/canvas/state.ts', '../stores/documents.ts',
+    '../features/calendar/state.ts', '../features/canvas/state.ts', '../features/documents/state.ts',
     '../features/knowledge/state.ts', '../features/agents/state.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(consumers.join('\n'), /api\/client|\bapi\.[A-Za-z]/)
@@ -53,6 +53,29 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
     '../features/canvas/components/CanvasPreview.tsx',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(canvasSources.join('\n'), /api\/canvas|stores\/canvas|components\/Canvas(?:View|Preview|FrameContent)/)
+
+  for (const file of [
+    'api.ts', 'contracts.ts', 'state.ts',
+    'components/DocumentEditor.tsx', 'components/DocumentLink.tsx',
+    'components/DocumentsView.tsx', 'components/DocumentPeekPane.tsx',
+  ]) {
+    await access(new URL(`../features/documents/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./documents.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../stores/documents.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../components/DocumentEditor.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../components/DocumentLink.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../desktop/DocumentsView.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../desktop/DocumentPeekPane.tsx', import.meta.url)))
+  const documentSources = await Promise.all([
+    '../features/documents/api.ts',
+    '../features/documents/state.ts',
+    '../features/documents/components/DocumentEditor.tsx',
+    '../features/documents/components/DocumentLink.tsx',
+    '../features/documents/components/DocumentsView.tsx',
+    '../features/documents/components/DocumentPeekPane.tsx',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(documentSources.join('\n'), /api\/documents|stores\/documents|components\/Document(?:Editor|Link)|desktop\/Document/)
 
   for (const file of ['api.ts', 'contracts.ts', 'store.ts']) {
     await access(new URL(`../features/conversations/${file}`, import.meta.url))

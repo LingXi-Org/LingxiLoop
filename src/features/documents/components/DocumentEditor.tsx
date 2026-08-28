@@ -24,7 +24,7 @@ import { buildMentionExtension } from '@/lib/mentionExtension'
 import { cn } from '@/lib/utils'
 import { openDocument, type YDocSession } from '@/lib/yjsClient'
 import { useAuth } from '@/stores/auth'
-import { useDocuments } from '@/stores/documents'
+import { useDocuments } from '../state'
 
 /** Walk every `mention` node currently in the editor's doc and return
  *  the set of mentioned participant ids (deduped, order-preserving).

@@ -14,7 +14,7 @@
  */
 import { useEffect, useMemo } from 'react'
 import { useCalendar } from '@/features/calendar/state'
-import { useDocuments } from '@/stores/documents'
+import { useDocuments } from '@/features/documents/state'
 import { useBoards } from '@/features/boards/state'
 
 /** If `id` is an unambiguous prefix of exactly one item's id, return that full

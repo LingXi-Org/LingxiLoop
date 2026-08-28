@@ -27,14 +27,14 @@ test('shared resource placeholders cover every global layout shape accessibly', 
 
 test('global resource surfaces render Skeletons instead of plain initial loading text', () => {
   const surfaces = [
-    '../desktop/DocumentsView.tsx',
+    '../features/documents/components/DocumentsView.tsx',
     '../features/boards/components/BoardsView.tsx',
     '../desktop/CalendarView.tsx',
     '../components/WorkspaceChrome.tsx',
     '../components/WorkspacePicker.tsx',
     '../components/ArtifactPeekContent.tsx',
     '../components/AttachmentViewer.tsx',
-    '../components/DocumentEditor.tsx',
+    '../features/documents/components/DocumentEditor.tsx',
     '../features/learning/components/LearningCenter.tsx',
     '../components/LinkPreview.tsx',
     '../components/messages/MessageBusinessParts.tsx',

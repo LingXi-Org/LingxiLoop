@@ -316,7 +316,7 @@ export function NotificationToasts() {
       setView('documents')
       // Lazy-import to avoid pulling the documents store into every
       // boot path even when the user never visits the docs view.
-      void import('@/stores/documents').then(({ useDocuments }) => {
+      void import('@/features/documents/state').then(({ useDocuments }) => {
         useDocuments.getState().select(t.documentId!)
       })
     } else if (t.kind === 'calendar.reminder') {

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { useDocuments } from '@/stores/documents'
-import { DocumentEditor } from '@/components/DocumentEditor'
+import { useDocuments } from '../state'
+import { DocumentEditor } from './DocumentEditor'
 import { useAuth } from '@/stores/auth'
 import { useParticipants } from '@/features/agents/state'
 import { cn } from '@/lib/utils'

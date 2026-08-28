@@ -88,7 +88,7 @@ export const useAuth = create<AuthState>((set) => ({
     // outlive the AuthedApp remount, so a key-change alone doesn't
     // clear them.
     void Promise.all([
-      import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
+      import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
       import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
       import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
@@ -103,7 +103,7 @@ export const useAuth = create<AuthState>((set) => ({
     // one's data while the first listXXX() is in flight.
     if (prevId && prevId !== c.id) {
       void Promise.all([
-        import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
+        import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
         import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
         import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
       ])
@@ -120,7 +120,7 @@ export const useAuth = create<AuthState>((set) => ({
     void import('@/api/core/realtime').then(({ ws }) => ws.close())
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([
-      import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
+      import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
       import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
       import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])

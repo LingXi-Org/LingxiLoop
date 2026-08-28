@@ -10,6 +10,7 @@ import type {
   CanvasPresence,
   CanvasSnapshot,
 } from '@/features/canvas/contracts'
+import type { DocumentChangedEvent } from '@/features/documents/contracts'
 
 
 export interface ApiMessage extends Message {
@@ -170,15 +171,6 @@ export interface ServerCapabilities {
   invitationEmail: boolean
 }
 
-export interface ApiDocument {
-  id: string
-  title: string
-  createdBy: string
-  conversationId: string | null
-  createdAt: string
-  updatedAt: string
-}
-
 /* ============== WebSocket bridge ============== */
 
 export type WsEvent =
@@ -210,7 +202,7 @@ export type WsEvent =
   | { type: 'doc.update'; documentId: string; updateB64: string; originId: string }
   | { type: 'doc.awareness'; documentId: string; updateB64: string; originId: string }
   | { type: 'doc.error'; documentId?: string; error: string }
-  | { type: 'doc.changed'; kind: 'document.created' | 'document.updated' | 'document.deleted'; documentId: string; actorId?: string }
+  | DocumentChangedEvent
   | { type: 'doc.mention'; documentId: string; documentTitle: string; mentionerId: string; mentionerName: string; mentionedIds: string[] }
   | {
       type: 'canvas.changed'

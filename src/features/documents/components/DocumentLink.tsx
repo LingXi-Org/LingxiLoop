@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
-import { useDocuments } from '@/stores/documents'
+import { useDocuments } from '../state'
 import { useResolvedDocumentId } from '@/lib/useArtifactId'
-import { IFile } from './icons'
+import { IFile } from '@/components/icons'
 
 export function DocumentLink({ id: rawId }: { id: string }) {
   // Resolve a git-style short id (e.g. `doc_ab12`) to the full document id.

@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
-import { useDocuments } from '@/stores/documents'
-import { DocumentEditor } from '@/components/DocumentEditor'
+import { useDocuments } from '../state'
+import { DocumentEditor } from './DocumentEditor'
 import { IDoc } from '@/components/icons'
 
 export function DocumentPeekPane() {
