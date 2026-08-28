@@ -2,16 +2,16 @@ import { randomUUID } from 'node:crypto'
 import { lookup } from 'node:dns/promises'
 import { isIP } from 'node:net'
 import type { PoolClient } from 'pg'
-import { pool } from '../db/pool.js'
-import { inc } from '../metrics.js'
-import { storage } from '../storage.js'
-import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
+import { pool } from '../../db/pool.js'
+import { inc } from '../../metrics.js'
+import { storage } from '../../storage.js'
+import type { WorkerTaskHandle } from '../../runtime/lifecycle.js'
 import {
   openNotebookClient,
   OpenNotebookError,
   type OpenNotebookSearchHit,
   type OpenNotebookSource,
-} from './open-notebook-client.js'
+} from './provider.js'
 
 export const MAX_SOURCE_BYTES = 25 * 1024 * 1024
 const LEASE_MS = 2 * 60_000
@@ -76,6 +76,11 @@ export async function validateKnowledgeUrl(raw: string): Promise<string> {
 
 export function openNotebookEnabled(): boolean {
   return /^(1|true|yes|on)$/i.test(process.env.OPEN_NOTEBOOK_ENABLED ?? '')
+}
+
+export async function knowledgeEngineHealth(): Promise<void> {
+  if (!openNotebookEnabled()) throw new Error('Open Notebook integration is disabled')
+  if (!await openNotebookClient.health()) throw new Error('Open Notebook health check failed')
 }
 
 export const KNOWLEDGE_ATTACHMENT_MIMES = new Set([

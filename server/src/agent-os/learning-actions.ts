@@ -27,7 +27,7 @@ import {
   updateKnowledgeInsight,
   updateKnowledgeSourceForAgent,
   unlinkKnowledgeSourceForAgent,
-} from '../knowledge/agent-knowledge.js'
+} from '../modules/knowledge/public.js'
 import {
   addCanvasWorkspaceAgents,
   appendCanvasFrameContent,

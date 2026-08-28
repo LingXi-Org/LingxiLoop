@@ -4,7 +4,7 @@ import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
 import { generateInvitationToken, hashInvitationToken } from '../../http/invitation-token.js'
 import { wukongClient } from '../../im/wukong.js'
-import { ensureProjectNotebook, syncProjectNotebookMetadata } from '../../knowledge/service.js'
+import { ensureProjectNotebook, syncProjectNotebookMetadata } from '../knowledge/public.js'
 import {
   closeTeacherRoomForCourse,
   ensureTeacherAgentForCourse,

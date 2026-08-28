@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto'
-import { pool } from '../db/pool.js'
-import type { AgentWorkItem } from '../agent-os/types.js'
-import { storage } from '../storage.js'
-import { openNotebookClient, type OpenNotebookInsight, type OpenNotebookNote } from './open-notebook-client.js'
+import { pool } from '../../db/pool.js'
+import type { AgentWorkItem } from '../../agent-os/types.js'
+import { storage } from '../../storage.js'
+import { openNotebookClient, type OpenNotebookInsight, type OpenNotebookNote } from './provider.js'
 import {
   MAX_SOURCE_BYTES,
   cancelKnowledgeSourceJob,
@@ -13,7 +13,7 @@ import {
   retrieveKnowledge,
   retryKnowledgeSource,
   validateKnowledgeUrl,
-} from './service.js'
+} from './runtime.js'
 
 type LocalSource = {
   id: string

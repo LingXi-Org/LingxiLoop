@@ -8,7 +8,7 @@ import {
   openNotebookEnabled,
   retryKnowledgeSource,
   syncProjectNotebookMetadata,
-} from '../../knowledge/service.js'
+} from './runtime.js'
 import { storage } from '../../storage.js'
 import { KnowledgeApplication } from './application.js'
 

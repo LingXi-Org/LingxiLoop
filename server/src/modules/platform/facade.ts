@@ -1,10 +1,9 @@
 import { pool } from '../../db/pool.js'
-import { openNotebookClient } from '../../knowledge/open-notebook-client.js'
-import { openNotebookEnabled } from '../../knowledge/service.js'
 import { ogPreview } from '../../og.js'
 import { redis } from '../../redis.js'
 import { storage } from '../../storage.js'
 import { isWaitlistEnabled } from '../admin/facade.js'
+import { knowledgeEngineHealth, openNotebookEnabled } from '../knowledge/public.js'
 import { PlatformApplication } from './application.js'
 
 async function agentOsHealth(): Promise<void> {
@@ -22,9 +21,7 @@ export const platformApplication = new PlatformApplication({
   redisPing: async () => { await redis.ping() },
   agentOsHealth,
   openNotebookEnabled,
-  openNotebookHealth: async () => {
-    if (!await openNotebookClient.health()) throw new Error('Open Notebook health check failed')
-  },
+  openNotebookHealth: knowledgeEngineHealth,
   loadOpenGraph: ogPreview,
   waitlistEnabled: isWaitlistEnabled,
 })

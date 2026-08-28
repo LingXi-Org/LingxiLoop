@@ -10,7 +10,7 @@ import { actionRequiresApproval, executeLearningAction } from './learning-action
 import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
 import { roleAllowsAction } from './role-policy.js'
 import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
-import { retrieveKnowledge } from '../knowledge/service.js'
+import { retrieveKnowledge } from '../modules/knowledge/public.js'
 import {
   describeTeacherAction,
   loadLearningTurnContext,

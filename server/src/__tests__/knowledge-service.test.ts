@@ -6,7 +6,7 @@ import {
   isKnowledgeAttachmentMime,
   openNotebookEnabled,
   validateKnowledgeUrl,
-} from '../knowledge/service.js'
+} from '../modules/knowledge/public.js'
 
 test('native Open Notebook ingestion accepts the supported attachment contract', () => {
   const previous = process.env.OPEN_NOTEBOOK_ENABLED

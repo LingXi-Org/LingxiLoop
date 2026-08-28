@@ -91,6 +91,15 @@ for (const file of server) {
     violations.push(`${fileName}: retired root Email capability is forbidden`)
   }
   if (fileName === 'server/src/oauth.ts') violations.push(`${fileName}: retired root OAuth implementation is forbidden`)
+  if (fileName === 'server/src/knowledge/service.ts') violations.push(`${fileName}: retired root Knowledge implementation is forbidden`)
+  if (fileName === 'server/src/knowledge/agent-knowledge.ts' || fileName === 'server/src/knowledge/open-notebook-client.ts') {
+    violations.push(`${fileName}: retired root Knowledge capability is forbidden`)
+  }
+  if (/knowledge\/service\.js/.test(source)) violations.push(`${fileName}: Knowledge access must use modules/knowledge public or worker surface`)
+  if (!fileName.startsWith('server/src/modules/knowledge/')
+    && /modules\/knowledge\/(?:agent-actions|provider|runtime)\.js/.test(source)) {
+    violations.push(`${fileName}: Knowledge internals must be accessed through public.ts or worker.ts`)
+  }
   const importsEmailRouterAtCompositionRoot = fileName === 'server/src/api/router.ts'
     && /modules\/email\/router\.js/.test(source)
   if (!fileName.startsWith('server/src/modules/email/')
@@ -122,6 +131,10 @@ for (const file of server) {
   if (owningDomain === 'identity' && /\bfetch\s*\(/.test(source)
     && fileName !== 'server/src/modules/identity/oidc-infrastructure.ts') {
     violations.push(`${fileName}: LingxiIdentity HTTP bypasses oidc-infrastructure.ts`)
+  }
+  if (owningDomain === 'knowledge' && /\bfetch\s*\(/.test(source)
+    && fileName !== 'server/src/modules/knowledge/provider.ts') {
+    violations.push(`${fileName}: Open Notebook HTTP bypasses the Knowledge provider`)
   }
   if (owningDomain) {
     for (const match of source.matchAll(/(?:from\s+|import\(\s*)['"]([^'"]+)['"]/g)) {

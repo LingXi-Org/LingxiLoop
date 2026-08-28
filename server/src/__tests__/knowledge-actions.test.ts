@@ -15,7 +15,7 @@ test('knowledge mutations use the native approval boundary', () => {
 })
 
 test('IPython knowledge results are projected to local IDs', () => {
-  const source = readFileSync(new URL('../knowledge/agent-knowledge.ts', import.meta.url), 'utf8')
+  const source = readFileSync(new URL('../modules/knowledge/agent-actions.ts', import.meta.url), 'utf8')
   assert.match(source, /map\(agentSourceView\)/)
   assert.match(source, /return \{ status: result\.status, sourceId \}/)
   assert.match(source, /return \{ answer: result\.answer \}/)
