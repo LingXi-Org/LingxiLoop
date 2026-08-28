@@ -16,6 +16,8 @@ import {
   lockLearningMission,
   updateLearningMissionStepRecord,
   updateLearningMissionCoordinator,
+  listLearningEvidenceRecords,
+  listPendingLearningEvaluationRecords,
 } from '../modules/learning/repository.js'
 
 function queryable(
@@ -322,4 +324,22 @@ test('teacher override reviews and projects mastery in one tenant-scoped transac
     < statements.findIndex((text) => text.includes('INSERT INTO learning_mastery')))
   assert.ok(statements.some((text) => text.includes("kind,reason,actor_id")))
   assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='evaluated'")))
+})
+
+test('evidence and pending review reads carry explicit tenant and course scope', async () => {
+  const calls: Array<{ text: string; params: readonly unknown[] | undefined }> = []
+  const db = queryable((text, params) => {
+    calls.push({ text, params })
+    return { rows: [] }
+  })
+
+  await listLearningEvidenceRecords(db, {
+    companyId: 'company-1', courseId: 'course-1', learnerId: 'learner-1',
+  })
+  await listPendingLearningEvaluationRecords(db, 'company-1', 'course-1')
+
+  assert.deepEqual(calls[0]?.params, ['company-1','course-1','learner-1'])
+  assert.match(calls[0]?.text ?? '', /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+  assert.deepEqual(calls[1]?.params, ['company-1','course-1'])
+  assert.match(calls[1]?.text ?? '', /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
 })

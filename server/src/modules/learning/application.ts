@@ -1,13 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import type { Queryable } from '../../db/queryable.js'
-import {
-  bindCourseRoom,
-  courseProgress,
-  learningDashboard,
-  listEvaluationQueue,
-  listEvidence,
-} from '../../learning/service.js'
+import { bindCourseRoom } from '../../learning/service.js'
 import { projectMastery } from '../../learning/mastery.js'
 import type {
   AddLearningMissionStepInput,
@@ -46,6 +40,7 @@ import {
   countCourseObjectives,
   countLearningMissionSteps,
   countPendingLearningEvaluations,
+  countViewerPendingLearningReviews,
   countPublishedCourseObjectives,
   findCourse,
   findLearningActivity,
@@ -75,9 +70,15 @@ import {
   listCourseMembers,
   listCourses,
   listDeliveries,
+  listDueLearningMastery,
+  listLearningCourseProgress,
+  listLearningCourseSummaries,
+  listLearningEvidenceRecords,
   listLearningObjectives,
   listLearningActivities,
   listLearningMissions,
+  listPendingLearningEvaluationRecords,
+  listViewerLearningMastery,
   learningMissionCompletionSummary,
   learningMissionPlanningSummary,
   learningChannelType,
@@ -1166,7 +1167,22 @@ export class LearningApplication {
   }
 
   dashboard(scope: LearningScope) {
-    return this.classroom(() => learningDashboard(scope.companyId, scope.userId, this.db))
+    return this.classroom(async () => {
+      const [courseRows, due, pendingReviews, mastery] = await Promise.all([
+        listLearningCourseSummaries(this.db, scope.companyId, scope.userId),
+        listDueLearningMastery(this.db, scope.companyId, scope.userId),
+        countViewerPendingLearningReviews(this.db, scope.companyId, scope.userId),
+        listViewerLearningMastery(this.db, scope.companyId, scope.userId),
+      ])
+      const courses = courseRows.map((row) => ({
+        id: row.id, companyId: row.company_id, projectId: row.project_id, title: row.title,
+        description: row.description, status: row.status, courseRole: row.course_role,
+        roomCount: Number(row.room_count), objectiveCount: Number(row.objective_count),
+        learnerCount: Number(row.learner_count), createdAt: String(row.created_at),
+        updatedAt: String(row.updated_at),
+      }))
+      return { courses, due, mastery, pendingReviews }
+    })
   }
 
   async teacherAgent(scope: LearningScope, courseId: string) {
@@ -1292,17 +1308,35 @@ export class LearningApplication {
 
   async evidence(scope: LearningScope, courseId: string, learnerId = scope.userId) {
     await this.assertCourseScope(scope.companyId, courseId)
-    return this.classroom(() => listEvidence(courseId, scope.userId, learnerId, this.db))
+    return this.classroom(async () => {
+      const role = await courseRole(this.db, courseId, scope.companyId, scope.userId)
+      if (role !== 'teacher' && (role !== 'learner' || learnerId !== scope.userId)) {
+        throw new LearningApplicationError('forbidden', 'course evidence access denied')
+      }
+      return listLearningEvidenceRecords(this.db, {
+        companyId: scope.companyId, courseId, learnerId,
+      })
+    })
   }
 
   async reviews(scope: LearningScope, courseId: string) {
     await this.assertCourseScope(scope.companyId, courseId)
-    return this.classroom(() => listEvaluationQueue(courseId, scope.userId, this.db))
+    return this.classroom(async () => {
+      if (await courseRole(this.db, courseId, scope.companyId, scope.userId) !== 'teacher') {
+        throw new LearningApplicationError('forbidden', 'course teacher role required')
+      }
+      return listPendingLearningEvaluationRecords(this.db, scope.companyId, courseId)
+    })
   }
 
   async progress(scope: LearningScope, courseId: string) {
     await this.assertCourseScope(scope.companyId, courseId)
-    return this.classroom(() => courseProgress(courseId, scope.userId, this.db))
+    return this.classroom(async () => {
+      if (await courseRole(this.db, courseId, scope.companyId, scope.userId) !== 'teacher') {
+        throw new LearningApplicationError('forbidden', 'course teacher role required')
+      }
+      return listLearningCourseProgress(this.db, scope.companyId, courseId)
+    })
   }
 
   async review(scope: LearningScope, courseId: string, evaluationId: string, input: ReviewEvaluationInput) {

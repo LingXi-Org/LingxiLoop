@@ -125,6 +125,17 @@ test('teacher evaluation review shares the same repository and mastery projectio
   assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND evaluation\.status='pending'/)
 })
 
+test('Learning dashboard and evidence reads no longer use the legacy service data plane', () => {
+  for (const legacyRead of ['learningDashboard','courseProgress','listEvidence','listEvaluationQueue']) {
+    assert.doesNotMatch(service, new RegExp(`\\b${legacyRead}\\b`))
+    assert.doesNotMatch(learningApplicationSource, new RegExp(`from '../../learning/service\\.js'[\\s\\S]*\\b${legacyRead}\\b`))
+  }
+  assert.match(learningApplicationSource, /listLearningEvidenceRecords/)
+  assert.match(learningApplicationSource, /countViewerPendingLearningReviews/)
+  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND attempt\.learner_id=\$3/)
+  assert.match(repository, /member\.company_id=\$1 AND member\.course_id=\$2 AND member\.role='learner'/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
   const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')

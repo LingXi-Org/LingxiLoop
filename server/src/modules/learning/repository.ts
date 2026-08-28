@@ -1501,6 +1501,156 @@ export async function reviewLearningEvaluationRecord(
   return Boolean(result.rowCount)
 }
 
+export async function listLearningCourseSummaries(db: Queryable, companyId: string, userId: string) {
+  const { rows } = await db.query(
+    `SELECT course.id,course.company_id,course.project_id,project.name AS title,project.description,
+            project.status,member.role AS course_role,
+            ((course.study_room_conversation_id IS NOT NULL)::int
+              + (SELECT COUNT(*)::int FROM learning_course_rooms room
+                  WHERE room.course_id=course.id AND room.company_id=course.company_id)) AS room_count,
+            (SELECT COUNT(*)::int FROM learning_objectives objective
+              WHERE objective.course_id=course.id AND objective.company_id=course.company_id
+                AND objective.status<>'archived') AS objective_count,
+            (SELECT COUNT(*)::int FROM course_members learner
+              WHERE learner.course_id=course.id AND learner.company_id=course.company_id
+                AND learner.role='learner') AS learner_count,
+            course.created_at,project.updated_at
+       FROM courses course
+       JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       JOIN course_members member ON member.course_id=course.id
+         AND member.company_id=course.company_id AND member.user_id=$2
+       JOIN company_members company_member ON company_member.company_id=member.company_id
+         AND company_member.user_id=member.user_id
+      WHERE course.company_id=$1 ORDER BY project.status,project.updated_at DESC`,
+    [companyId,userId],
+  )
+  return rows
+}
+
+export async function listDueLearningMastery(db: Queryable, companyId: string, userId: string) {
+  const { rows } = await db.query(
+    `SELECT mastery.course_id,mastery.objective_id,objective.title,mastery.level,
+            mastery.status,mastery.next_review_at
+       FROM learning_mastery mastery
+       JOIN learning_objectives objective ON objective.id=mastery.objective_id
+         AND objective.company_id=mastery.company_id AND objective.course_id=mastery.course_id
+       JOIN course_members member ON member.course_id=mastery.course_id
+         AND member.company_id=mastery.company_id AND member.user_id=mastery.learner_id
+         AND member.role='learner'
+      WHERE mastery.company_id=$1 AND mastery.learner_id=$2 AND mastery.next_review_at<=NOW()
+      ORDER BY mastery.next_review_at LIMIT 50`,
+    [companyId,userId],
+  )
+  return rows
+}
+
+export async function countViewerPendingLearningReviews(
+  db: Queryable,
+  companyId: string,
+  userId: string,
+): Promise<number> {
+  const { rows } = await db.query<{ count: number }>(
+    `SELECT COUNT(*)::int AS count
+       FROM learning_evaluations evaluation
+       JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
+       JOIN course_members member ON member.course_id=attempt.course_id
+         AND member.company_id=attempt.company_id AND member.user_id=$2 AND member.role='teacher'
+      WHERE attempt.company_id=$1 AND evaluation.status='pending'`,
+    [companyId,userId],
+  )
+  return Number(rows[0]?.count ?? 0)
+}
+
+export async function listViewerLearningMastery(db: Queryable, companyId: string, userId: string) {
+  const { rows } = await db.query(
+    `SELECT mastery.course_id,mastery.objective_id,objective.title,mastery.level,
+            mastery.status,mastery.next_review_at,mastery.review_interval_days
+       FROM learning_mastery mastery
+       JOIN learning_objectives objective ON objective.id=mastery.objective_id
+         AND objective.company_id=mastery.company_id AND objective.course_id=mastery.course_id
+       JOIN course_members member ON member.course_id=mastery.course_id
+         AND member.company_id=mastery.company_id AND member.user_id=mastery.learner_id
+         AND member.role='learner'
+      WHERE mastery.company_id=$1 AND mastery.learner_id=$2 ORDER BY objective.position`,
+    [companyId,userId],
+  )
+  return rows
+}
+
+export async function listLearningEvidenceRecords(
+  db: Queryable,
+  args: { companyId: string; courseId: string; learnerId: string },
+) {
+  const { rows } = await db.query(
+    `SELECT attempt.id,attempt.activity_id,attempt.mission_step_id,attempt.assistance,attempt.status,
+            attempt.evidence,attempt.submitted_at AS created_at,evaluation.id AS evaluation_id,
+            evaluation.demonstrated_level,evaluation.confidence,evaluation.rubric_results,
+            evaluation.feedback,evaluation.status AS evaluation_status
+       FROM learning_attempts attempt
+       LEFT JOIN learning_evaluations evaluation ON evaluation.attempt_id=attempt.id
+      WHERE attempt.company_id=$1 AND attempt.course_id=$2 AND attempt.learner_id=$3
+      ORDER BY attempt.submitted_at DESC LIMIT 200`,
+    [args.companyId,args.courseId,args.learnerId],
+  )
+  return rows
+}
+
+export async function listPendingLearningEvaluationRecords(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+) {
+  const { rows } = await db.query(
+    `SELECT evaluation.id,evaluation.attempt_id,evaluation.demonstrated_level,evaluation.confidence,
+            evaluation.rubric_results,evaluation.feedback,evaluation.created_at,
+            evaluation.source_report_id,evaluation.verifier_report_id,
+            source.author_agent_id AS builder_agent_id,verifier.author_agent_id AS verifier_agent_id,
+            verifier.verdict AS verifier_verdict,attempt.learner_id,attempt.activity_id,
+            attempt.assistance,attempt.evidence,activity.title AS activity_title
+       FROM learning_evaluations evaluation
+       JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
+       LEFT JOIN learning_activities activity ON activity.id=attempt.activity_id
+         AND activity.company_id=attempt.company_id AND activity.course_id=attempt.course_id
+       LEFT JOIN canvas_assignment_reports source ON source.id=evaluation.source_report_id
+         AND source.company_id=attempt.company_id
+       LEFT JOIN canvas_assignment_reports verifier ON verifier.id=evaluation.verifier_report_id
+         AND verifier.company_id=attempt.company_id
+      WHERE attempt.company_id=$1 AND attempt.course_id=$2 AND evaluation.status='pending'
+      ORDER BY evaluation.created_at ASC`,
+    [companyId,courseId],
+  )
+  return rows
+}
+
+export async function listLearningCourseProgress(db: Queryable, companyId: string, courseId: string) {
+  const { rows } = await db.query(
+    `SELECT member.user_id,user_account.display_name,user_account.email,
+            COALESCE(mastery_summary.average_level,0)::float AS average_level,
+            COALESCE(mastery_summary.verified_objectives,0)::int AS verified_objectives,
+            COALESCE(mastery_summary.due_objectives,0)::int AS due_objectives,
+            COALESCE(attempt_summary.attempts,0)::int AS attempts
+       FROM course_members member
+       JOIN users user_account ON user_account.id=member.user_id
+       LEFT JOIN LATERAL (
+         SELECT AVG(mastery.level) AS average_level,
+                COUNT(*) FILTER(WHERE mastery.level>=3) AS verified_objectives,
+                COUNT(*) FILTER(WHERE mastery.next_review_at<=NOW()) AS due_objectives
+           FROM learning_mastery mastery
+          WHERE mastery.company_id=member.company_id AND mastery.course_id=member.course_id
+            AND mastery.learner_id=member.user_id
+       ) mastery_summary ON TRUE
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*) AS attempts FROM learning_attempts attempt
+          WHERE attempt.company_id=member.company_id AND attempt.course_id=member.course_id
+            AND attempt.learner_id=member.user_id
+       ) attempt_summary ON TRUE
+      WHERE member.company_id=$1 AND member.course_id=$2 AND member.role='learner'
+      ORDER BY user_account.display_name`,
+    [companyId,courseId],
+  )
+  return rows
+}
+
 export async function findNotificationPreferences(
   db: Queryable,
   companyId: string,
