@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import type { CanvasFrame, CanvasSnapshot } from '@/types'
+import type { CanvasFrame, CanvasSnapshot } from '../contracts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CanvasFrameContent } from './CanvasFrameContent'
 

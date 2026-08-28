@@ -41,7 +41,7 @@ import {
   startCanvasWorkspace,
   updateCanvasFrame,
   type CanvasMemberInput,
-} from '../canvas/service.js'
+} from '../modules/canvas/index.js'
 import { readResearch, searchResearch } from './research.js'
 import { recallMemories, verifyExplicitMemory, writeExplicitMemory } from './memory-service.js'
 import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1, MemoryScopeType } from './types.js'

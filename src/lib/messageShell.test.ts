@@ -214,8 +214,8 @@ test('Canvas bubble and full view share the Card surface and preview theme', asy
   const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
   const business = await readFile(new URL('../components/messages/MessageBusinessParts.tsx', import.meta.url), 'utf8')
   const attachment = await readFile(new URL('../components/messages/MessageAttachmentCard.tsx', import.meta.url), 'utf8')
-  const canvasView = await readFile(new URL('../components/CanvasView.tsx', import.meta.url), 'utf8')
-  const canvasPreview = await readFile(new URL('../components/CanvasPreview.tsx', import.meta.url), 'utf8')
+  const canvasView = await readFile(new URL('../features/canvas/components/CanvasView.tsx', import.meta.url), 'utf8')
+  const canvasPreview = await readFile(new URL('../features/canvas/components/CanvasPreview.tsx', import.meta.url), 'utf8')
   const card = await readFile(new URL('../components/ui/card.tsx', import.meta.url), 'utf8')
   const canvasCard = business.slice(business.indexOf('export function CanvasWorkspaceCard'), business.indexOf('function BoardArtifactCard'))
   const full = `${css.slice(css.indexOf('.canvas-shell,'), css.indexOf('.canvas-work-timeline {'))}\n${css.slice(css.indexOf('.canvas-frame-card {'), css.indexOf('.canvas-inline-editor,'))}`

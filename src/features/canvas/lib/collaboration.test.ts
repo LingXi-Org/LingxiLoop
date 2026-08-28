@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { CanvasActivity, CanvasAgentAssignment } from '@/types'
-import { canvasActivityLabel, canvasAssignmentProgress, formatCanvasDuration, isCanvasAssignmentActive } from './canvasCollaboration'
+import type { CanvasActivity, CanvasAgentAssignment } from '@/features/canvas/contracts'
+import { canvasActivityLabel, canvasAssignmentProgress, formatCanvasDuration, isCanvasAssignmentActive } from './collaboration'
 
 function assignment(status: CanvasAgentAssignment['status']): CanvasAgentAssignment {
   return { id: status, canvasId: 'c', agentId: status, assignment: status, color: '#000', status, workArea: { x: 0, y: 0, width: 10, height: 10 }, activeFrameId: null, cursor: null, workId: null, dependsOnAgentIds: [], executionRole:'specialist',verifiesAssignmentId:null,result: null, error: null, startedAt: null, completedAt: null, updatedAt: '2026-01-01T00:00:00.000Z' }

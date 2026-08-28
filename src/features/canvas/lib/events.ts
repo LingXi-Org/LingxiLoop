@@ -1,4 +1,4 @@
-import type { CanvasActivity } from '@/types'
+import type { CanvasActivity } from '@/features/canvas/contracts'
 
 /** REST history and WebSocket events share this reducer. Stable ids make the
  * reconnect overlap harmless, and newest-first sorting keeps late packets from

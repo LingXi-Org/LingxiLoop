@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import { type NextFunction, type Request, type Response, Router } from 'express'
 import type { PoolClient } from 'pg'
-import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../canvas/service.js'
+import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../modules/canvas/index.js'
 import { pool } from '../db/pool.js'
 import { wukongClient } from '../im/wukong.js'
 import { advanceAgentReadReceipt } from '../im/read-receipts.js'

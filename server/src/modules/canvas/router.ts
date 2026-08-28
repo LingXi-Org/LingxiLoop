@@ -15,11 +15,21 @@ import {
   stopCanvasAssignment,
   stopCanvasWorkspace,
   updateCanvasFrame,
-} from '../../canvas/service.js'
+} from './application.js'
 import { safe } from '../../http/async-handler.js'
 import { requireCanvasFrameWorkspace, requireCanvasWorkspace, requireGroupConversation } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import { assertProjectWritable } from '../../http/request-context.js'
+import {
+  canvasAppendRequestSchema,
+  canvasAssignmentRequestSchema,
+  canvasCommentRequestSchema,
+  canvasConversationQuerySchema,
+  canvasFrameCreateRequestSchema,
+  canvasFrameUpdateRequestSchema,
+  canvasStatusRequestSchema,
+  canvasSteerRequestSchema,
+} from './contracts.js'
 
 export const canvasRouter = Router()
 const api = canvasRouter
@@ -38,8 +48,7 @@ api.post('/conversations/:id/canvas', safe(async (req, res) => {
 }))
 
 api.get('/canvas', safe(async (req, res) => {
-  const conversationId = typeof req.query.conversationId === 'string' ? req.query.conversationId : ''
-  if (!conversationId) throw new HttpError(400, 'conversationId is required')
+  const { conversationId } = canvasConversationQuerySchema.parse(req.query)
   const membership = await requireGroupConversation(req, conversationId)
   const canvas = await getConversationCanvas(membership.companyId, conversationId, membership.userId)
   if (!canvas) throw new HttpError(404, 'canvas not found')
@@ -47,8 +56,7 @@ api.get('/canvas', safe(async (req, res) => {
 }))
 
 api.get('/canvases', safe(async (req, res) => {
-  const conversationId = typeof req.query.conversationId === 'string' ? req.query.conversationId : ''
-  if (!conversationId) throw new HttpError(400, 'conversationId is required')
+  const { conversationId } = canvasConversationQuerySchema.parse(req.query)
   const membership = await requireGroupConversation(req, conversationId)
   res.json(await listCanvasWorkspaces(membership.companyId, conversationId))
 }))
@@ -60,18 +68,20 @@ api.get('/canvases/:id', safe(async (req, res) => {
 
 api.post('/canvases/:id/assignments', safe(async (req, res) => {
   const { userId, companyId } = await requireCanvasWorkspace(req, String(req.params.id), true)
+  const input = canvasAssignmentRequestSchema.parse(req.body)
   res.status(201).json(await assignCanvasWorkspaceWork({
     companyId,
     canvasId: String(req.params.id),
     actorId: userId,
-    agentId: String(req.body?.agentId ?? ''),
-    assignment: String(req.body?.assignment ?? ''),
+    agentId: input.agentId,
+    assignment: input.assignment,
   }))
 }))
 
 api.post('/canvases/:id/assignments/:agentId/steer', safe(async (req, res) => {
   const { companyId } = await requireCanvasWorkspace(req, String(req.params.id), true)
-  await steerCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId), text: String(req.body?.text ?? '') })
+  const input = canvasSteerRequestSchema.parse(req.body)
+  await steerCanvasAssignment({ companyId, canvasId: String(req.params.id), agentId: String(req.params.agentId), text: input.text })
   res.json({ ok: true })
 }))
 
@@ -88,19 +98,19 @@ api.post('/canvases/:id/stop', safe(async (req, res) => {
 }))
 
 api.post('/canvas/frames', safe(async (req, res) => {
-  const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
-  if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
-  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId, true)
+  const input = canvasFrameCreateRequestSchema.parse(req.body)
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, input.canvasId, true)
   res.status(201).json(await createCanvasFrame({
-    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId, frame: req.body ?? {},
+    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: input.canvasId, frame: input,
   }))
 }))
 
 api.patch('/canvas/frames/:id', safe(async (req, res) => {
   const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id), true)
+  const patch = canvasFrameUpdateRequestSchema.parse(req.body)
   try {
     res.json(await updateCanvasFrame({
-      companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id), patch: req.body ?? {},
+      companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id), patch,
     }))
   } catch (error) {
     const conflict = error as Error & { status?: number; latestFrame?: unknown }
@@ -111,9 +121,10 @@ api.patch('/canvas/frames/:id', safe(async (req, res) => {
 
 api.post('/canvas/frames/:id/append', safe(async (req, res) => {
   const { userId, companyId } = await requireCanvasFrameWorkspace(req, String(req.params.id), true)
+  const input = canvasAppendRequestSchema.parse(req.body)
   res.json(await appendCanvasFrameContent({
     companyId, actorId: userId, actorKind: 'user', frameId: String(req.params.id),
-    content: String(req.body?.content ?? ''),
+    content: input.content,
   }))
 }))
 
@@ -125,25 +136,23 @@ api.delete('/canvas/frames/:id', safe(async (req, res) => {
 }))
 
 api.post('/canvas/status', safe(async (req, res) => {
-  const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
-  if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
-  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId, true)
+  const input = canvasStatusRequestSchema.parse(req.body)
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, input.canvasId, true)
   res.json(await setCanvasStatus({
-    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId,
-    status: String(req.body?.status ?? ''),
-    frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
-    cursorX: typeof req.body?.cursorX === 'number' ? req.body.cursorX : null,
-    cursorY: typeof req.body?.cursorY === 'number' ? req.body.cursorY : null,
+    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: input.canvasId,
+    status: input.status,
+    frameId: input.frameId ?? null,
+    cursorX: input.cursorX ?? null,
+    cursorY: input.cursorY ?? null,
   }))
 }))
 
 api.post('/canvas/comments', safe(async (req, res) => {
-  const requestedCanvasId = typeof req.body?.canvasId === 'string' ? req.body.canvasId : undefined
-  if (!requestedCanvasId) throw new HttpError(400, 'canvasId is required')
-  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, requestedCanvasId, true)
+  const input = canvasCommentRequestSchema.parse(req.body)
+  const { userId, companyId, projectId } = await requireCanvasWorkspace(req, input.canvasId, true)
   res.status(201).json(await addCanvasComment({
-    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: requestedCanvasId,
-    frameId: typeof req.body?.frameId === 'string' ? req.body.frameId : null,
-    body: String(req.body?.body ?? ''),
+    companyId, projectId: projectId ?? undefined, actorId: userId, actorKind: 'user', canvasId: input.canvasId,
+    frameId: input.frameId ?? null,
+    body: input.body,
   }))
 }))

@@ -3,7 +3,6 @@ import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const domains = [
-  'canvas',
   'documents', 'email', 'files',
   'observability', 'platform',
 ] as const
@@ -20,7 +19,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
 
   const consumers = await Promise.all([
     '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../features/boards/state.ts',
-    '../features/calendar/state.ts', '../stores/canvas.ts', '../stores/documents.ts',
+    '../features/calendar/state.ts', '../features/canvas/state.ts', '../stores/documents.ts',
     '../features/knowledge/state.ts', '../features/agents/state.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(consumers.join('\n'), /api\/client|\bapi\.[A-Za-z]/)
@@ -36,6 +35,24 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   )
   assert.match(loadEvent, /calendarApi\.get\(id\)/)
   assert.doesNotMatch(loadEvent, /calendarApi\.list\(/)
+
+  for (const file of [
+    'api.ts', 'contracts.ts', 'state.ts',
+    'components/CanvasView.tsx', 'components/CanvasPreview.tsx', 'components/CanvasFrameContent.tsx',
+    'lib/collaboration.ts', 'lib/events.ts', 'lib/realtime.ts',
+  ]) {
+    await access(new URL(`../features/canvas/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./canvas.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../stores/canvas.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../components/CanvasView.tsx', import.meta.url)))
+  const canvasSources = await Promise.all([
+    '../features/canvas/api.ts',
+    '../features/canvas/state.ts',
+    '../features/canvas/components/CanvasView.tsx',
+    '../features/canvas/components/CanvasPreview.tsx',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(canvasSources.join('\n'), /api\/canvas|stores\/canvas|components\/Canvas(?:View|Preview|FrameContent)/)
 
   for (const file of ['api.ts', 'contracts.ts', 'store.ts']) {
     await access(new URL(`../features/conversations/${file}`, import.meta.url))

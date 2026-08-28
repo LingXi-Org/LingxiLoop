@@ -64,7 +64,11 @@ const controlPlane = readFileSync(join(root, 'server/src/agent-os/control-plane.
 // Keep the architecture guard deterministic across Windows and POSIX worktrees.
 const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8').replaceAll('\r\n', '\n')
 const promptAssembly = readFileSync(join(root, 'server/src/agent-os/prompt-assembly.ts'), 'utf8')
-const canvasService = readFileSync(join(root, 'server/src/canvas/service.ts'), 'utf8')
+const canvasDomain = [
+  'server/src/modules/canvas/application.ts',
+  'server/src/modules/canvas/contracts.ts',
+  'server/src/modules/canvas/repository.ts',
+].map((path) => readFileSync(join(root, path), 'utf8')).join('\n')
 const schema = readFileSync(join(root, 'server/src/db/schema.sql'), 'utf8')
 const teacherAgent = readFileSync(join(root, 'server/src/learning/teacher-agent.ts'), 'utf8')
 if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
@@ -103,12 +107,12 @@ if (/classifyAgent|agentName.*(?:match|test)|(?:match|test).*agentName/.test(pro
 if (!promptAssembly.includes('executionRole') || !runtime.includes("work.reason === 'canvas_summary'")) {
   failures.push('task-scoped execution roles and reporter phase must remain explicit')
 }
-if (!actions.includes('submit_report') || !canvasService.includes('assertCanvasWorkReportReady')
-  || !canvasService.includes('learning_report_v1')) {
+if (!actions.includes('submit_report') || !canvasDomain.includes('assertCanvasWorkReportReady')
+  || !canvasDomain.includes('learning_report_v1')) {
   failures.push('Canvas completion must be gated by a persisted structured report')
 }
 if (!schema.includes('canvas_assignment_verifier_not_self_check')
-  || !canvasService.includes('builder and verifier must be different agents')) {
+  || !canvasDomain.includes('builder and verifier must be different agents')) {
   failures.push('builder/verifier separation must be enforced by Host and database')
 }
 if (!schema.includes('progress_fingerprint') || !controlPlane.includes('no_progress_count')) {

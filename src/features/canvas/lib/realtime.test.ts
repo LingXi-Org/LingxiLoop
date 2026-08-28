@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from './canvasRealtime.js'
-import type { CanvasFrame } from '@/types'
+import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from './realtime.js'
+import type { CanvasFrame } from '@/features/canvas/contracts'
 
 function frame(revision: number, title = `v${revision}`): CanvasFrame {
   return { id: 'f', canvasId: 'c', type: 'markdown', title, x: 0, y: 0, width: 420, height: 300,

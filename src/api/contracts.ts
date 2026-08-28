@@ -1,12 +1,15 @@
 import type {
+  Message,
+  Status,
+} from '@/types'
+import type {
   CanvasActivity,
+  CanvasAgentAssignment,
   CanvasComment,
   CanvasFrame,
   CanvasPresence,
   CanvasSnapshot,
-  Message,
-  Status,
-} from '@/types'
+} from '@/features/canvas/contracts'
 
 
 export interface ApiMessage extends Message {
@@ -224,7 +227,7 @@ export type WsEvent =
       participantId?: string
       frame?: CanvasFrame
       presence?: CanvasPresence
-      assignment?: import('@/types').CanvasAgentAssignment
+      assignment?: CanvasAgentAssignment
       workspace?: Partial<CanvasSnapshot> & { id: string }
       comment?: CanvasComment
       activity?: CanvasActivity

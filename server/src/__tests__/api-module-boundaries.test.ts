@@ -49,7 +49,7 @@ test('domain modules expose one native router implementation without forwarding 
 })
 
 test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
-  for (const domain of ['agents', 'boards', 'calendar', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
+  for (const domain of ['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const application = await readFile(new URL('application.ts', base), 'utf8')
@@ -59,11 +59,13 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
     assert.doesNotMatch(router, /\bpool\.query\b|\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
     assert.doesNotMatch(router, /from ['"][^'"]*db\//)
     assert.doesNotMatch(application, /from ['"]express['"]|\b(?:req|res)\s*[.:]/)
+    assert.doesNotMatch(application, /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i)
     assert.doesNotMatch(repository, /from ['"]express['"]|\b(?:Request|Response)\b/)
     assert.match(repository, /Queryable/)
     assert.match(contracts, /z\.object/)
   }
   await assert.rejects(readFile(new URL('../polls.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../canvas/service.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   const pollCallers = await Promise.all([
     '../agent-os/learning-actions.ts',
     '../agents/cli.ts',
@@ -71,6 +73,13 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(pollCallers.join('\n'), /from ['"][^'"]*modules\/polls\/(?:application|repository|facade|contracts)/)
   assert.doesNotMatch(pollCallers.join('\n'), /from ['"][^'"]*polls\.js/)
+  const canvasCallers = await Promise.all([
+    '../agent-os/learning-actions.ts',
+    '../agent-os/control-plane.ts',
+    '../__integration__/canvas.test.ts',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(canvasCallers.join('\n'), /from ['"][^'"]*modules\/canvas\/(?:application|repository|contracts)/)
+  assert.doesNotMatch(canvasCallers.join('\n'), /from ['"][^'"]*canvas\/service\.js/)
 })
 
 test('authentication, request context, authorization, and errors have one shared boundary', async () => {

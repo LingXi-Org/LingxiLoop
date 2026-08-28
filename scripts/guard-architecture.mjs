@@ -31,7 +31,7 @@ for (const [label, pattern] of [
 
 const fetchAllowlist = new Set([
   'src/api/transport.ts',
-  'src/components/AttachmentViewer.tsx', 'src/components/CanvasView.tsx',
+  'src/components/AttachmentViewer.tsx', 'src/features/canvas/components/CanvasView.tsx',
   'src/components/ImageViewer.tsx', 'src/lib/avatarCache.ts',
 ])
 for (const file of frontend) {
@@ -47,7 +47,7 @@ if (/^export\s+\{.+\}\s+from/m.test(rootRouter)) violations.push('server/src/api
 // Domains enter this set only after their router/application/repository split
 // is complete. Keeping the assertion here makes a later regression impossible
 // while the remaining domains are migrated deliberately.
-const strictServerDomains = new Set(['agents', 'boards', 'calendar', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls'])
+const strictServerDomains = new Set(['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls'])
 
 for (const file of server) {
   const source = await read(file)
@@ -64,6 +64,12 @@ for (const file of server) {
   }
   if (fileName.endsWith('/repository.ts') && /from ['"]express['"]|\b(?:Request|Response)\b/.test(source)) violations.push(`${fileName}: repository depends on HTTP`)
   if (fileName.endsWith('/application.ts') && /from ['"]express['"]|\b(?:req|res)\s*[.:]/.test(source)) violations.push(`${fileName}: application depends on HTTP objects`)
+  const domainApplication = fileName.match(/^server\/src\/modules\/([^/]+)\/application\.ts$/)?.[1]
+  if (domainApplication && strictServerDomains.has(domainApplication)) {
+    if (/\b(?:pool|client|db)\.query\s*\(/.test(source) || /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(source)) {
+      violations.push(`${fileName}: application bypasses its repository`)
+    }
+  }
 }
 
 if (violations.length > 0) {

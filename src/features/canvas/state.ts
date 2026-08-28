@@ -1,10 +1,10 @@
-import { canvasApi } from '@/api/canvas'
+import { canvasApi } from './api'
 import type { WsEvent } from '@/api/contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 import { findCanvasPlacement } from '@/lib/canvasLayout'
-import { mergeCanvasActivities } from '@/lib/canvasEvents'
-import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from '@/lib/canvasRealtime'
+import { mergeCanvasActivities } from './lib/events'
+import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from './lib/realtime'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import type {
@@ -12,7 +12,7 @@ import type {
   CanvasFrameType,
   CanvasSnapshot,
   CanvasWorkspaceSummary,
-} from '@/types'
+} from './contracts'
 
 interface CanvasState {
   snapshot: CanvasSnapshot | null
@@ -164,9 +164,11 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   }),
 
   createFrame: async (type, at = { x: 80, y: 80 }) => {
+    const canvasId = get().activeCanvasId
+    if (!canvasId) throw new Error('active Canvas workspace is required')
     const preset = defaults[type]
     const placement = findCanvasPlacement(get().snapshot?.frames ?? [], preset, at)
-    const frame = await canvasApi.createCanvasFrame({ canvasId: get().activeCanvasId ?? undefined, type, x: placement.x, y: placement.y, ...preset })
+    const frame = await canvasApi.createCanvasFrame({ canvasId, type, x: placement.x, y: placement.y, ...preset })
     set((state) => ({
       selectedFrameId: frame.id,
       snapshot: state.snapshot
@@ -222,14 +224,18 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
 
   addComment: async (body, frameId = null) => {
-    const comment = await canvasApi.addCanvasComment(body, frameId, get().activeCanvasId ?? undefined)
+    const canvasId = get().activeCanvasId
+    if (!canvasId) throw new Error('active Canvas workspace is required')
+    const comment = await canvasApi.addCanvasComment(body, frameId, canvasId)
     set((state) => state.snapshot ? {
       snapshot: { ...state.snapshot, comments: [comment, ...state.snapshot.comments.filter((item) => item.id !== comment.id)] },
     } : {})
   },
 
   setStatus: async (status, frameId = null, cursor) => {
-    const presence = await canvasApi.setCanvasStatus(status, frameId, get().activeCanvasId ?? undefined, cursor)
+    const canvasId = get().activeCanvasId
+    if (!canvasId) throw new Error('active Canvas workspace is required')
+    const presence = await canvasApi.setCanvasStatus(status, frameId, canvasId, cursor)
     set((state) => {
       if (!state.snapshot) return {}
       const without = state.snapshot.presence.filter((item) => item.participantId !== presence?.participantId)
@@ -238,11 +244,11 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
 
   steerAgent: async (agentId, text) => {
-    const canvasId = get().activeCanvasId; if (!canvasId) return
+    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('active Canvas workspace is required')
     await canvasApi.steerCanvasAssignment(canvasId, agentId, text)
   },
   assignAgent: async (agentId, assignment) => {
-    const canvasId = get().activeCanvasId; if (!canvasId) return
+    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('active Canvas workspace is required')
     const snapshot = await canvasApi.assignCanvasWork(canvasId, agentId, assignment)
     set((state) => ({
       snapshot,
@@ -251,11 +257,11 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     }))
   },
   stopAgent: async (agentId) => {
-    const canvasId = get().activeCanvasId; if (!canvasId) return
+    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('active Canvas workspace is required')
     await canvasApi.stopCanvasAssignment(canvasId, agentId); await get().load(canvasId)
   },
   stopWorkspace: async () => {
-    const canvasId = get().activeCanvasId; if (!canvasId) return
+    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('active Canvas workspace is required')
     await canvasApi.stopCanvas(canvasId); await get().load(canvasId)
   },
 

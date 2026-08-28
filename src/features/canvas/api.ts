@@ -6,16 +6,17 @@ import type {
   CanvasFrameType,
   CanvasPresence,
   CanvasSnapshot,
-} from '@/types'
+  CanvasWorkspaceSummary,
+} from './contracts'
 
 export const canvasApi = {
   getCanvas: (canvasId?: string) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas'),
-  getCanvases: (conversationId?: string) => http<import('@/types').CanvasWorkspaceSummary[]>(`/canvases${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`),
+  getCanvases: (conversationId?: string) => http<CanvasWorkspaceSummary[]>(`/canvases${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`),
   getConversationCanvas: (conversationId: string) => http<CanvasSnapshot | null>(`/conversations/${encodeURIComponent(conversationId)}/canvas`),
   createConversationCanvas: (conversationId: string) => http<CanvasSnapshot>(`/conversations/${encodeURIComponent(conversationId)}/canvas`, { method: 'POST' }),
   createCanvasFrame: (input: {
     type: CanvasFrameType; title?: string; x?: number; y?: number; width?: number
-    canvasId?: string; height?: number; content?: string; data?: Record<string, unknown>
+    canvasId: string; height?: number; content?: string; data?: Record<string, unknown>
   }) => http<CanvasFrame>('/canvas/frames', { method: 'POST', body: JSON.stringify(input) }),
   updateCanvasFrame: (frameId: string, patch: Partial<Pick<CanvasFrame,
     'type' | 'title' | 'x' | 'y' | 'width' | 'height' | 'content' | 'data'
@@ -28,9 +29,9 @@ export const canvasApi = {
     }),
   deleteCanvasFrame: (frameId: string) =>
     http<{ id: string; canvasId: string }>(`/canvas/frames/${encodeURIComponent(frameId)}`, { method: 'DELETE' }),
-  setCanvasStatus: (status: string, frameId?: string | null, canvasId?: string, cursor?: { x: number; y: number }) =>
+  setCanvasStatus: (status: string, frameId: string | null, canvasId: string, cursor?: { x: number; y: number }) =>
     http<CanvasPresence | null>('/canvas/status', { method: 'POST', body: JSON.stringify({ status, frameId, canvasId, cursorX: cursor?.x, cursorY: cursor?.y }) }),
-  addCanvasComment: (body: string, frameId?: string | null, canvasId?: string) =>
+  addCanvasComment: (body: string, frameId: string | null, canvasId: string) =>
     http<CanvasComment>('/canvas/comments', { method: 'POST', body: JSON.stringify({ body, frameId, canvasId }) }),
   assignCanvasWork: (canvasId: string, agentId: string, assignment: string) =>
     http<CanvasSnapshot>(`/canvases/${encodeURIComponent(canvasId)}/assignments`, {

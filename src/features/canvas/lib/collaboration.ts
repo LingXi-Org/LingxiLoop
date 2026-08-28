@@ -1,4 +1,4 @@
-import type { CanvasActivity, CanvasAgentAssignment } from '@/types'
+import type { CanvasActivity, CanvasAgentAssignment } from '@/features/canvas/contracts'
 
 const TERMINAL_STATUSES = new Set<CanvasAgentAssignment['status']>(['completed', 'failed', 'cancelled'])
 

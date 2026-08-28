@@ -52,7 +52,7 @@ test('production code never uses native alert, confirm, or prompt', () => {
   for (const path of [
     '../admin/UsersPage.tsx',
     '../admin/WaitlistPage.tsx',
-    '../components/CanvasView.tsx',
+    '../features/canvas/components/CanvasView.tsx',
     '../components/DocumentEditor.tsx',
     '../components/EventEditor.tsx',
     '../features/companies/components/InvitePeopleModal.tsx',

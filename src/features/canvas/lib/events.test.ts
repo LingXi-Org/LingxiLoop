@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { mergeCanvasActivities } from './canvasEvents.js'
-import type { CanvasActivity } from '@/types'
+import { mergeCanvasActivities } from './events.js'
+import type { CanvasActivity } from '@/features/canvas/contracts'
 
 function event(id: string, action: CanvasActivity['action'], createdAt: string): CanvasActivity {
   return { id, canvasId: 'canvas', frameId: null, actorId: 'agent', actorKind: 'agent', action, detail: {}, createdAt }

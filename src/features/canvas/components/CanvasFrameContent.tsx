@@ -1,5 +1,5 @@
-import type { CanvasFrame } from '@/types'
-import { TypesetMarkdown } from './Typeset'
+import type { CanvasFrame } from '../contracts'
+import { TypesetMarkdown } from '@/components/Typeset'
 
 export function CanvasFrameContent({ frame, preview = false }: { frame: CanvasFrame; preview?: boolean }) {
   if (frame.type === 'html') {

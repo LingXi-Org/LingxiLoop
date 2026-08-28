@@ -1,4 +1,4 @@
-import type { CanvasFrame } from '@/types'
+import type { CanvasFrame } from '@/features/canvas/contracts'
 
 export function acceptsCanvasEventTimestamp(previous: string | undefined, incoming: string): boolean {
   if (!previous) return true

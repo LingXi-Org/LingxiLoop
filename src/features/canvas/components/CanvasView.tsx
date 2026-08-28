@@ -1,16 +1,16 @@
 import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ws } from '@/api/core/realtime'
 import { AvatarMini } from '@/components/Avatar'
-import { CanvasFrameContent } from '@/components/CanvasFrameContent'
+import { CanvasFrameContent } from './CanvasFrameContent'
 import { IAt, IBack, IPlus, ISend, ITrash } from '@/components/icons'
 import { Textarea } from '@/components/ui/textarea'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
-import { canvasStatusLabel, isCanvasAssignmentActive } from '@/lib/canvasCollaboration'
-import { useCanvas } from '@/stores/canvas'
+import { canvasStatusLabel, isCanvasAssignmentActive } from '../lib/collaboration'
+import { useCanvas } from '../state'
 import { useParticipants } from '@/features/agents/state'
-import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType, CanvasSnapshot } from '@/types'
+import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType, CanvasSnapshot } from '../contracts'
 
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 2.5
