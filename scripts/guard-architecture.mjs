@@ -78,6 +78,9 @@ for (const file of server) {
   if (fileName.endsWith('/application.ts') && /from ['"]express['"]|\b(?:req|res)\s*[.:]/.test(source)) violations.push(`${fileName}: application depends on HTTP objects`)
   const domainApplication = fileName.match(/^server\/src\/modules\/([^/]+)\/application\.ts$/)?.[1]
   if (domainApplication && strictServerDomains.has(domainApplication)) {
+    if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]/.test(source)) {
+      violations.push(`${fileName}: application imports concrete database infrastructure`)
+    }
     if (/\b(?:pool|client|db)\.query\s*\(/.test(source) || /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(source)) {
       violations.push(`${fileName}: application bypasses its repository`)
     }

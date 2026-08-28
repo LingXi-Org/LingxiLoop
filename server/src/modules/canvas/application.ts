@@ -4,8 +4,7 @@ import { type CanvasActivityKind, parseCanvasActivityKind } from '../../../../sr
 import { findCanvasPlacement } from '../../../../src/lib/canvasLayout.js'
 import type { AgentExecutionRole } from '../../agent-os/types.js'
 import { assertCanvasDependencyDAG, canvasAgentColor, canvasWorkArea } from '../../canvas/orchestration.js'
-import { pool } from '../../db/pool.js'
-import { withClientTransaction, withTransaction } from '../../db/transaction.js'
+import type { Queryable } from '../../db/queryable.js'
 import { type CanvasEvent, CH_CANVAS, publish } from '../../redis.js'
 import {
   CANVAS_FRAME_TYPES,
@@ -152,8 +151,23 @@ function toFrame(row: FrameRow): CanvasFrame {
   }
 }
 
+export interface CanvasInfrastructure {
+  db: Queryable
+  transaction: <T>(work: (db: PoolClient) => Promise<T>) => Promise<T>
+  clientTransaction: <T>(client: PoolClient, work: (db: PoolClient) => Promise<T>) => Promise<T>
+  connect: () => Promise<PoolClient>
+}
+
+export interface CanvasHandoffResult {
+  snapshot: CanvasSnapshot
+  activity: CanvasActivity
+}
+
+export function createCanvasApplication(infrastructure: CanvasInfrastructure) {
+const { db, transaction, clientTransaction, connect } = infrastructure
+
 async function publishCanvas(companyId: string, event: Omit<CanvasEvent, 'type' | 'companyId' | 'timestamp'>): Promise<void> {
-  const scope = await canvasEventScope(pool, companyId, event.canvasId)
+  const scope = await canvasEventScope(db, companyId, event.canvasId)
   await publish(CH_CANVAS, {
     type: 'canvas.changed', companyId,
     ...(scope?.conversation_id ? { conversationId: scope.conversation_id } : {}),
@@ -185,7 +199,7 @@ function toReport(row: ReportRow): CanvasAssignmentReport {
 }
 
 async function requireCanvas(companyId: string, canvasId: string, projectId?: string): Promise<CanvasRow> {
-  const row = await findCanvas(pool, companyId, canvasId, projectId)
+  const row = await findCanvas(db, companyId, canvasId, projectId)
   if (!row) throw new Error('canvas not found')
   return row
 }
@@ -215,7 +229,7 @@ async function resolveCanvasRead(companyId: string, canvasId?: string, projectId
 
 
 async function requireFrame(companyId: string, frameId: string): Promise<CanvasFrame> {
-  const row = await findFrame(pool, companyId, frameId)
+  const row = await findFrame(db, companyId, frameId)
   if (!row) throw new Error('frame not found')
   return toFrame(row)
 }
@@ -227,7 +241,7 @@ async function logActivity(input: {
   const id = input.idempotencyKey
     ? `activity-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 32)}`
     : `activity-${randomUUID()}`
-  const row = await insertActivity(pool, {
+  const row = await insertActivity(db, {
     id,
     canvasId: input.canvasId,
     frameId: input.frameId ?? null,
@@ -245,8 +259,8 @@ async function logActivity(input: {
   return activity
 }
 
-export async function listCanvasWorkspaces(companyId: string, conversationId?: string, projectId?: string): Promise<CanvasWorkspaceSummary[]> {
-  const rows = await listWorkspaceRows(pool, companyId, conversationId, projectId)
+async function listCanvasWorkspaces(companyId: string, conversationId?: string, projectId?: string): Promise<CanvasWorkspaceSummary[]> {
+  const rows = await listWorkspaceRows(db, companyId, conversationId, projectId)
   return rows.map((row) => ({
     id: row.id, title: row.title, goal: row.goal, conversationId: row.conversation_id,
     initiatorAgentId: row.initiator_agent_id, status: row.status, origin: row.origin,
@@ -256,22 +270,22 @@ export async function listCanvasWorkspaces(companyId: string, conversationId?: s
 }
 
 /** Group-scoped Canvas is created lazily and is unique per conversation. */
-export async function ensureConversationCanvas(companyId: string, conversationId: string, actorId: string): Promise<CanvasSnapshot> {
+async function ensureConversationCanvas(companyId: string, conversationId: string, actorId: string): Promise<CanvasSnapshot> {
   const id = stableCanvasId(`${companyId}:${conversationId}`)
-  const canvasId = await ensureConversationCanvasId(pool, { id, companyId, conversationId, actorId })
+  const canvasId = await ensureConversationCanvasId(db, { id, companyId, conversationId, actorId })
   if (!canvasId) throw Object.assign(new Error('group conversation not found'), { status: 404 })
   return getCanvasSnapshot(companyId, actorId, canvasId)
 }
 
-export async function getConversationCanvas(companyId: string, conversationId: string, actorId: string): Promise<CanvasSnapshot | null> {
-  const canvasId = await conversationCanvasId(pool, companyId, conversationId)
+async function getConversationCanvas(companyId: string, conversationId: string, actorId: string): Promise<CanvasSnapshot | null> {
+  const canvasId = await conversationCanvasId(db, companyId, conversationId)
   return canvasId ? getCanvasSnapshot(companyId, actorId, canvasId) : null
 }
 
-export async function getCanvasSnapshot(companyId: string, actorId: string, canvasId?: string, projectId?: string): Promise<CanvasSnapshot> {
+async function getCanvasSnapshot(companyId: string, actorId: string, canvasId?: string, projectId?: string): Promise<CanvasSnapshot> {
   void actorId
   const canvas = await resolveCanvasRead(companyId, canvasId, projectId)
-  const snapshot = await snapshotRows(pool, canvas.id)
+  const snapshot = await snapshotRows(db, canvas.id)
   return {
     id: canvas.id,
     title: canvas.title,
@@ -308,7 +322,7 @@ export async function getCanvasSnapshot(companyId: string, actorId: string, canv
   }
 }
 
-export async function createCanvasFrame(input: {
+async function createCanvasFrame(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; idempotencyKey?: string
   canvasId?: string; projectId?: string
   frame: Record<string, unknown>
@@ -323,7 +337,7 @@ export async function createCanvasFrame(input: {
     : `frame-${randomUUID()}`
   const width = frameSize(input.frame.width, 'width', 420)
   const height = frameSize(input.frame.height, 'height', 300)
-  const frame = await withTransaction(pool, async (client) => {
+  const frame = await transaction(async (client) => {
     // Serialise automatic placement per workspace. Locking the canvas id,
     // rather than existing frame rows, also covers an initially empty board.
     await lockCanvasLayout(client, canvas.id)
@@ -359,7 +373,7 @@ export async function createCanvasFrame(input: {
   return frame
 }
 
-export async function updateCanvasFrame(input: {
+async function updateCanvasFrame(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; frameId: string
   patch: Record<string, unknown>
 }): Promise<CanvasFrame> {
@@ -381,7 +395,7 @@ export async function updateCanvasFrame(input: {
   const contentMutation = ['type', 'title', 'content', 'data'].some((key) => input.patch[key] !== undefined)
   const baseRevision = input.patch.baseRevision === undefined ? null : Number(input.patch.baseRevision)
   if (contentMutation && !Number.isInteger(baseRevision)) throw new Error('baseRevision is required for content updates')
-  const updated = await updateFrame(pool, {
+  const updated = await updateFrame(db, {
     companyId: input.companyId, frameId: input.frameId, baseRevision, changes,
   })
   if (!updated) {
@@ -390,9 +404,9 @@ export async function updateCanvasFrame(input: {
   }
   const frame = toFrame(updated)
   if (input.actorKind === 'agent') {
-    await markAssignmentFrame(pool, frame.canvasId, input.actorId, frame, false)
+    await markAssignmentFrame(db, frame.canvasId, input.actorId, frame, false)
   }
-  await touchCanvas(pool, frame.canvasId)
+  await touchCanvas(db, frame.canvasId)
   await publishCanvas(input.companyId, { kind: 'frame.updated', canvasId: frame.canvasId, revision: frame.revision, frame })
   await logActivity({
     companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
@@ -402,12 +416,12 @@ export async function updateCanvasFrame(input: {
   return frame
 }
 
-export async function appendCanvasFrameContent(input: {
+async function appendCanvasFrameContent(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; frameId: string; content: string
 }): Promise<CanvasFrame> {
   if (!input.content) return requireFrame(input.companyId, input.frameId)
   if (Buffer.byteLength(input.content, 'utf8') > 64 * 1024) throw new Error('append content exceeds 64 KiB')
-  const updated = await appendFrame(pool, {
+  const updated = await appendFrame(db, {
     companyId: input.companyId, frameId: input.frameId, actorId: input.actorId,
     content: input.content, maxBytes: MAX_FRAME_CONTENT,
   })
@@ -416,7 +430,7 @@ export async function appendCanvasFrameContent(input: {
     throw new Error('frame content exceeds 1 MiB')
   }
   const frame = toFrame(updated)
-  await touchCanvas(pool, frame.canvasId)
+  await touchCanvas(db, frame.canvasId)
   await publishCanvas(input.companyId, { kind: 'frame.updated', canvasId: frame.canvasId, revision: frame.revision, frame })
   await logActivity({
     companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
@@ -426,12 +440,12 @@ export async function appendCanvasFrameContent(input: {
   return frame
 }
 
-export async function deleteCanvasFrame(input: {
+async function deleteCanvasFrame(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; frameId: string
 }): Promise<{ id: string; canvasId: string }> {
   const frame = await requireFrame(input.companyId, input.frameId)
-  await deleteFrame(pool, frame.id)
-  await touchCanvas(pool, frame.canvasId)
+  await deleteFrame(db, frame.id)
+  await touchCanvas(db, frame.canvasId)
   await publishCanvas(input.companyId, { kind: 'frame.deleted', canvasId: frame.canvasId, frameId: frame.id })
   await logActivity({
     companyId: input.companyId, canvasId: frame.canvasId, actorId: input.actorId,
@@ -440,24 +454,24 @@ export async function deleteCanvasFrame(input: {
   return { id: frame.id, canvasId: frame.canvasId }
 }
 
-export async function setCanvasStatus(input: {
+async function setCanvasStatus(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; status: string; canvasId?: string
   projectId?: string; frameId?: string | null; cursorX?: number | null; cursorY?: number | null
 }): Promise<CanvasPresence | null> {
   const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
   const status = input.status.trim().slice(0, 120)
   const previous = input.actorKind === 'agent'
-    ? await currentPresence(pool, canvas.id, input.actorId)
+    ? await currentPresence(db, canvas.id, input.actorId)
     : undefined
   if (!status || status === 'offline') {
-    await deletePresence(pool, canvas.id, input.actorId)
+    await deletePresence(db, canvas.id, input.actorId)
     await publishCanvas(input.companyId, {
       kind: 'presence.removed', canvasId: canvas.id, participantId: input.actorId,
     })
     return null
   }
   if (input.frameId) await requireFrame(input.companyId, input.frameId)
-  const row = await upsertPresence(pool, {
+  const row = await upsertPresence(db, {
     canvasId: canvas.id,
     participantId: input.actorId,
     participantKind: input.actorKind,
@@ -476,7 +490,7 @@ export async function setCanvasStatus(input: {
     const assignmentStatus = (['queued','blocked','working','waiting','completed','failed','cancelled'] as string[]).includes(status)
       ? status as CanvasAssignmentStatus
       : 'working'
-    await updateAssignmentPresence(pool, {
+    await updateAssignmentPresence(db, {
       canvasId: canvas.id,
       agentId: input.actorId,
       status: assignmentStatus,
@@ -503,7 +517,7 @@ export async function setCanvasStatus(input: {
   return presence
 }
 
-export async function addCanvasComment(input: {
+async function addCanvasComment(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; canvasId?: string; projectId?: string; frameId?: string | null; body: string
 }): Promise<CanvasComment> {
   const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
@@ -511,7 +525,7 @@ export async function addCanvasComment(input: {
   const body = input.body.trim().slice(0, 8_000)
   if (!body) throw new Error('body is required')
   const id = `comment-${randomUUID()}`
-  const row = await insertComment(pool, {
+  const row = await insertComment(db, {
     id,
     canvasId: canvas.id,
     frameId: input.frameId ?? null,
@@ -531,8 +545,8 @@ export async function addCanvasComment(input: {
   return comment
 }
 
-export async function listCanvasAvailableAgents(companyId: string): Promise<Array<{ id: string; name: string; role: string; status: string }>> {
-  const rows = await availableAgents(pool, companyId)
+async function listCanvasAvailableAgents(companyId: string): Promise<Array<{ id: string; name: string; role: string; status: string }>> {
+  const rows = await availableAgents(db, companyId)
   return rows.map((row) => ({ id: row.id, name: row.name, role: row.role ?? 'Learning Agent', status: row.status ?? 'available' }))
 }
 
@@ -616,12 +630,12 @@ async function insertMembers(client: PoolClient, input: {
   return created
 }
 
-export async function startCanvasWorkspace(input: {
+async function startCanvasWorkspace(input: {
   companyId: string; initiatorAgentId: string; conversationId: string; triggerClientMsgNo: string
   title: string; goal: string; members: CanvasMemberInput[]; idempotencyKey: string
 }): Promise<CanvasSnapshot> {
   const id = `canvas-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 28)}`
-  const created = await withTransaction(pool, async (client) => {
+  const created = await transaction(async (client) => {
     const canvas = await insertAgentWorkspace(client, {
       id,
       companyId: input.companyId,
@@ -654,10 +668,10 @@ export async function startCanvasWorkspace(input: {
   return { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }
 }
 
-export async function addCanvasWorkspaceAgents(input: {
+async function addCanvasWorkspaceAgents(input: {
   companyId: string; canvasId: string; actorId: string; members: CanvasMemberInput[]
 }): Promise<CanvasSnapshot> {
-  await withTransaction(pool, async (client) => {
+  await transaction(async (client) => {
     const canvas = await lockCanvas(client, input.companyId, input.canvasId)
     if (!canvas || canvas.status !== 'active') throw new Error('only an active canvas can recruit agents')
     const actorAssigned = await assignmentExists(client, canvas.id, input.actorId)
@@ -671,14 +685,14 @@ export async function addCanvasWorkspaceAgents(input: {
   return snapshot
 }
 
-export async function assignCanvasWorkspaceWork(input: {
+async function assignCanvasWorkspaceWork(input: {
   companyId: string; canvasId: string; actorId: string; agentId: string; assignment: string
   actorKind?: CanvasActorKind
 }): Promise<CanvasSnapshot> {
   const assignment = input.assignment.trim().slice(0, 4_000)
   if (!assignment) throw new Error('assignment is required')
   let action: CanvasActivityKind = 'assignment_created'
-  await withTransaction(pool, async (client) => {
+  await transaction(async (client) => {
     const canvas = await lockCanvas(client, input.companyId, input.canvasId)
     if (!canvas || canvas.status !== 'active') throw new Error('only an active canvas accepts new work')
     await assertMembersAvailable(client, input.companyId, [{ agentId: input.agentId, assignment }])
@@ -724,15 +738,10 @@ export async function assignCanvasWorkspaceWork(input: {
   return snapshot
 }
 
-export interface CanvasHandoffResult {
-  snapshot: CanvasSnapshot
-  activity: CanvasActivity
-}
-
 /** Transfer owned Canvas work through the existing durable assignment queue.
  * The handoff itself is an immutable Canvas activity carrying only the context
  * needed by the receiving worker; no parallel memory/runtime is introduced. */
-export async function handoffCanvasWork(input: {
+async function handoffCanvasWork(input: {
   companyId: string
   canvasId: string
   fromAgentId: string
@@ -747,7 +756,7 @@ export async function handoffCanvasWork(input: {
   if (!task) throw new Error('handoff task is required')
   const context = input.context?.trim().slice(0, 8_000) ?? ''
   const activityId = `activity-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 32)}`
-  const activity = await withTransaction(pool, async (client) => {
+  const activity = await transaction(async (client) => {
     // This canvas row lock makes the activity ledger and its assignment/work
     // mutation one atomic, serialised operation. A crash rolls back both; a
     // retry observes the same activity and never creates a second worker or steer.
@@ -816,7 +825,7 @@ export async function handoffCanvasWork(input: {
 }
 
 async function publishAssignments(companyId: string, canvasId: string): Promise<void> {
-  const rows = await canvasAssignmentPublicationRows(pool, companyId, canvasId)
+  const rows = await canvasAssignmentPublicationRows(db, companyId, canvasId)
   await Promise.all(rows.assignments.map((row) => publishCanvas(companyId, { kind: 'assignment.updated', canvasId,
     assignment: toAssignment(row, rows.dependencies.filter((item) => item.agent_id === row.agent_id).map((item) => item.depends_on_agent_id)) })))
 }
@@ -832,7 +841,7 @@ async function validateEvidenceRefs(client: PoolClient, input: { companyId:strin
   }
 }
 
-export async function submitCanvasReport(input: {
+async function submitCanvasReport(input: {
   companyId:string;workId:string;agentId:string;canvasId:string;executionRole:AgentExecutionRole
   finding:string;evidenceRefs:CanvasEvidenceRef[];confidence:number;unresolved?:string[];nextStep?:string
   verifiesReportId?:string;disconfirmingChecks?:string[];verdict?:CanvasReportVerdict
@@ -843,7 +852,7 @@ export async function submitCanvasReport(input: {
   if (!Number.isFinite(confidence)||confidence<0||confidence>1) throw new Error('confidence must be between 0 and 1')
   const finding=input.finding.trim()
   if (!finding) throw new Error('finding is required')
-  return withTransaction(pool, async (client) => {
+  return transaction(async (client) => {
     const work = await lockReportWork(client, {
       workId: input.workId, companyId: input.companyId, agentId: input.agentId, canvasId: input.canvasId,
     })
@@ -878,21 +887,21 @@ export async function submitCanvasReport(input: {
   })
 }
 
-export async function assertCanvasWorkReportReady(workId:string,companyId:string):Promise<void> {
-  const work = await workReportContext(pool, workId, companyId)
+async function assertCanvasWorkReportReady(workId:string,companyId:string):Promise<void> {
+  const work = await workReportContext(db, workId, companyId)
   if (!work?.canvas_id) return
   const ready = work.reason==='canvas_summary'
-    ? await reportExists(pool, { canvasId: work.canvas_id, reporter: true })
-    : await reportExists(pool, { assignmentId: work.canvas_assignment_id ?? undefined })
+    ? await reportExists(db, { canvasId: work.canvas_id, reporter: true })
+    : await reportExists(db, { assignmentId: work.canvas_assignment_id ?? undefined })
   if (!ready) throw new Error(work.reason==='canvas_summary'
     ? 'reporter work requires a learning_report_v1 submission before completion'
     : 'canvas worker requires a learning_report_v1 submission before completion')
 }
 
-export async function completeCanvasWork(input: {
+async function completeCanvasWork(input: {
   workId: string; companyId: string; status: 'completed' | 'failed' | 'cancelled'; resultText?: string; error?: string
 }): Promise<void> {
-  const state = await withTransaction(pool, (client) => completeCanvasWorkState(client, input))
+  const state = await transaction((client) => completeCanvasWorkState(client, input))
   if (!state.canvasId) return
   if (state.workspace) {
     await publishCanvas(input.companyId, {
@@ -922,7 +931,7 @@ export async function completeCanvasWork(input: {
       detail: { status: state.completion.status, result: input.resultText, error: input.error },
     })
   }
-  const canvas = await canvasById(pool, input.companyId, state.canvasId)
+  const canvas = await canvasById(db, input.companyId, state.canvasId)
   if (canvas) {
     await publishCanvas(input.companyId, {
       kind: 'workspace.updated',
@@ -933,10 +942,10 @@ export async function completeCanvasWork(input: {
   }
 }
 
-export async function steerCanvasAssignment(input: { companyId: string; canvasId: string; agentId: string; text: string }): Promise<void> {
+async function steerCanvasAssignment(input: { companyId: string; canvasId: string; agentId: string; text: string }): Promise<void> {
   const text = input.text.trim().slice(0, 4000)
   if (!text) throw new Error('steer text is required')
-  const workId = await steerCanvasWork(pool, {
+  const workId = await steerCanvasWork(db, {
     companyId: input.companyId,
     canvasId: input.canvasId,
     agentId: input.agentId,
@@ -946,19 +955,19 @@ export async function steerCanvasAssignment(input: { companyId: string; canvasId
   if (!workId) throw new Error('active canvas assignment not found')
 }
 
-export async function stopCanvasAssignment(input: { companyId: string; canvasId: string; agentId: string }): Promise<void> {
-  const client = await pool.connect()
+async function stopCanvasAssignment(input: { companyId: string; canvasId: string; agentId: string }): Promise<void> {
+  const client = await connect()
   let activity: CanvasActivity
   try {
     await acquireCanvasSharedFence(client, input.canvasId)
-    activity = toActivity(await withClientTransaction(client, (db) => stopCanvasAssignmentState(db, input)))
+    activity = toActivity(await clientTransaction(client, (transactionDb) => stopCanvasAssignmentState(transactionDb, input)))
   } finally {
     await releaseCanvasSharedFence(client, input.canvasId).catch(() => undefined)
     client.release()
   }
   await publishAssignments(input.companyId, input.canvasId)
   await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
-  const canvas = await canvasById(pool, input.companyId, input.canvasId)
+  const canvas = await canvasById(db, input.companyId, input.canvasId)
   if (canvas) {
     await publishCanvas(input.companyId, {
       kind: 'workspace.updated',
@@ -969,11 +978,36 @@ export async function stopCanvasAssignment(input: { companyId: string; canvasId:
   }
 }
 
-export async function stopCanvasWorkspace(input: { companyId: string; canvasId: string }): Promise<void> {
-  await withTransaction(pool, (client) => stopCanvasWorkspaceState(client, input.companyId, input.canvasId))
+async function stopCanvasWorkspace(input: { companyId: string; canvasId: string }): Promise<void> {
+  await transaction((client) => stopCanvasWorkspaceState(client, input.companyId, input.canvasId))
   await publishCanvas(input.companyId, {
     kind: 'workspace.updated',
     canvasId: input.canvasId,
     workspace: { id: input.canvasId, status: 'stopped' },
   })
+}
+
+return {
+  addCanvasComment,
+  addCanvasWorkspaceAgents,
+  appendCanvasFrameContent,
+  assertCanvasWorkReportReady,
+  assignCanvasWorkspaceWork,
+  completeCanvasWork,
+  createCanvasFrame,
+  deleteCanvasFrame,
+  ensureConversationCanvas,
+  getCanvasSnapshot,
+  getConversationCanvas,
+  handoffCanvasWork,
+  listCanvasAvailableAgents,
+  listCanvasWorkspaces,
+  setCanvasStatus,
+  startCanvasWorkspace,
+  steerCanvasAssignment,
+  stopCanvasAssignment,
+  stopCanvasWorkspace,
+  submitCanvasReport,
+  updateCanvasFrame,
+}
 }

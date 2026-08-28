@@ -15,7 +15,7 @@ import {
   stopCanvasAssignment,
   stopCanvasWorkspace,
   updateCanvasFrame,
-} from './application.js'
+} from './facade.js'
 import { safe } from '../../http/async-handler.js'
 import { requireCanvasFrameWorkspace, requireCanvasWorkspace, requireGroupConversation } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'

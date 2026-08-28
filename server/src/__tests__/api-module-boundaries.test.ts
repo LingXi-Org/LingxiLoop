@@ -61,6 +61,7 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
     assert.doesNotMatch(router, /\bpool\.query\b|\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
     assert.doesNotMatch(router, /from ['"][^'"]*db\//)
     assert.doesNotMatch(application, /from ['"]express['"]|\b(?:req|res)\s*[.:]/)
+    assert.doesNotMatch(application, /from ['"][^'"]*db\/(?:pool|transaction)\.js['"]/)
     assert.doesNotMatch(application, /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i)
     assert.doesNotMatch(repository, /from ['"]express['"]|\b(?:Request|Response)\b/)
     assert.match(repository, /Queryable/)
