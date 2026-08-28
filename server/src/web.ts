@@ -175,8 +175,6 @@ export async function startWebProcess(): Promise<ServiceHandle> {
     // Cross-instance Y.Doc fan-out — the room manager subscribes to the
     // doc redis channels here so two server instances stay convergent.
     await bootDocumentBus()
-    await resetHumanPresenceOnBoot()
-
     await new Promise<void>((resolveListen, rejectListen) => {
       const onError = (error: Error) => rejectListen(error)
       server.once('error', onError)
@@ -185,6 +183,9 @@ export async function startWebProcess(): Promise<ServiceHandle> {
         console.log(`[web] listening :${env.PORT} · instance ${env.INSTANCE_ID} · OpenAI model ${env.OPENAI_MODEL}`)
         resolveListen()
       })
+    })
+    void resetHumanPresenceOnBoot().catch((error: unknown) => {
+      console.error('[ws] stale presence reset failed after listener startup', error)
     })
   } catch (error) {
     await lifecycle.stop('startup-failure').catch(() => undefined)

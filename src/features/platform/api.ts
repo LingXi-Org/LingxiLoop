@@ -44,9 +44,9 @@ export const uploadsApi = {
     }
     return { url: signed.publicUrl, key: signed.key, name: signed.name, mime: signed.mime, size: signed.size, kind: signed.kind === 'img' ? 'img' : 'file' }
   },
-  refreshUploadUrl: (input: string | { url?: string; key?: string }) =>
+  refreshUploadUrl: (input: { key: string }) =>
     http<{ key: string; url: string }>('/uploads/refresh-url', {
       method: 'POST',
-      body: JSON.stringify(typeof input === 'string' ? { url: input } : input),
+      body: JSON.stringify(input),
     })
 }

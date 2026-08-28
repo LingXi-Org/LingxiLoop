@@ -281,12 +281,12 @@ export class ConversationsApplication {
       await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
       return next
     })
+    await this.infrastructure.syncChannel(profile).catch(() => undefined)
     if (!alreadyIn) {
-      await this.infrastructure.syncChannel(profile)
       await this.infrastructure.postMembershipMessage({
         conversationId, companyId: scope.companyId, actorId: scope.userId,
         kind: 'joined', participantId,
-      })
+      }).catch(() => undefined)
     }
     return { ok: true as const, members: profile.members, ...(alreadyIn ? { alreadyIn: true as const } : {}) }
   }
@@ -305,10 +305,6 @@ export class ConversationsApplication {
     if (current.kind === 'direct') {
       throw new ConversationApplicationError('invalid_direct', 'cannot leave a direct conversation')
     }
-    await this.infrastructure.postMembershipMessage({
-      conversationId, companyId: scope.companyId, actorId: scope.userId,
-      kind: 'left', participantId: scope.userId,
-    })
     const profile = await this.mutate(scope, conversationId, async (db, conversation, binding) => {
       if (conversation.kind === 'direct') throw new ConversationApplicationError('invalid_direct', 'cannot leave a direct conversation')
       const members = conversation.members.filter((member) => member !== scope.userId)
@@ -318,7 +314,13 @@ export class ConversationsApplication {
       await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
       return next
     })
-    await this.infrastructure.syncChannel(profile)
+    await Promise.allSettled([
+      this.infrastructure.syncChannel(profile),
+      this.infrastructure.postMembershipMessage({
+        conversationId, companyId: scope.companyId, actorId: scope.userId,
+        kind: 'left', participantId: scope.userId,
+      }),
+    ])
     return { ok: true as const, members: profile.members }
   }
 

@@ -22,14 +22,23 @@ async function tracked<T>(
   usageOf: (value: T) => LlmUsage | null = () => null,
 ): Promise<T> {
   const startedAt = Date.now()
+  let value: T
   try {
-    const value = await operation(await providerClient())
-    await recordLlmCall({ context, model, usage: usageOf(value), latencyMs: Date.now() - startedAt, status: 'succeeded' })
-    return value
+    value = await operation(await providerClient())
   } catch (error) {
-    await recordLlmCall({ context, model, latencyMs: Date.now() - startedAt, status: 'failed', error, measured: false })
+    await recordLlmCall({
+      context, model, latencyMs: Date.now() - startedAt, status: 'failed', error, measured: false,
+    }).catch((ledgerError: unknown) => {
+      console.error('[llm] failed to persist provider failure', ledgerError)
+    })
     throw error
   }
+  await recordLlmCall({
+    context, model, usage: usageOf(value), latencyMs: Date.now() - startedAt, status: 'succeeded',
+  }).catch((ledgerError: unknown) => {
+    console.error('[llm] failed to persist successful provider call', ledgerError)
+  })
+  return value
 }
 
 export async function createChatCompletion(

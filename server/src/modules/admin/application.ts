@@ -136,11 +136,13 @@ export class AdminApplication {
       return { userId, companyId, email: row.email, displayName: row.displayName }
     })
 
-    if (approved.companyId) await this.infrastructure.onboardStarterAgents(approved.companyId)
-    await this.infrastructure.sendWaitlistApprovedEmail({
-      email: approved.email,
-      displayName: approved.displayName,
-    })
+    await Promise.allSettled([
+      ...(approved.companyId ? [this.infrastructure.onboardStarterAgents(approved.companyId)] : []),
+      this.infrastructure.sendWaitlistApprovedEmail({
+        email: approved.email,
+        displayName: approved.displayName,
+      }),
+    ])
     return { userId: approved.userId, companyId: approved.companyId }
   }
 

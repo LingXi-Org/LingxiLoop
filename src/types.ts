@@ -274,6 +274,7 @@ export interface Message {
     /** kind 'img' renders inline; others render as a file card */
     kind: 'img' | 'pdf' | 'file' | 'fig'
     url: string
+    key?: string
     mime?: string
     size?: number
   }

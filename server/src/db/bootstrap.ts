@@ -66,12 +66,12 @@ const REQUIRED_V1_PRIMARY_KEYS = [
 ] as const
 
 const REQUIRED_V1_CONSTRAINTS = [
-  'llm_calls_pkey',
-  'llm_calls_company_id_fkey',
-  'llm_calls_source_check',
-  'llm_calls_status_check',
-  'llm_calls_tokens_check',
-  'participants_agent_bloub_only',
+  ['llm_calls', 'llm_calls_pkey', 'p'],
+  ['llm_calls', 'llm_calls_company_id_fkey', 'f'],
+  ['llm_calls', 'llm_calls_source_check', 'c'],
+  ['llm_calls', 'llm_calls_status_check', 'c'],
+  ['llm_calls', 'llm_calls_tokens_check', 'c'],
+  ['participants', 'participants_agent_bloub_only', 'c'],
 ] as const
 
 const REQUIRED_V1_INDEXES = [
@@ -141,10 +141,23 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     )
     if (JSON.stringify(rows[0]?.columns ?? []) !== JSON.stringify(expectedColumns)) return false
   }
+  const constraintTables = REQUIRED_V1_CONSTRAINTS.map(([table]) => table)
+  const constraintNames = REQUIRED_V1_CONSTRAINTS.map(([, name]) => name)
+  const constraintTypes = REQUIRED_V1_CONSTRAINTS.map(([, , type]) => type)
   const { rows: constraintRows } = await client.query<{ name: string }>(
-    `SELECT required.name FROM unnest($1::text[]) AS required(name)
-      WHERE NOT EXISTS (SELECT 1 FROM pg_constraint actual WHERE actual.conname = required.name)`,
-    [REQUIRED_V1_CONSTRAINTS],
+    `SELECT required.name
+       FROM unnest($1::text[], $2::text[], $3::text[]) AS required(table_name, name, constraint_type)
+      WHERE NOT EXISTS (
+        SELECT 1
+          FROM pg_constraint actual
+          JOIN pg_class owning_table ON owning_table.oid=actual.conrelid
+          JOIN pg_namespace owning_schema ON owning_schema.oid=owning_table.relnamespace
+         WHERE owning_schema.nspname='public'
+           AND owning_table.relname=required.table_name
+           AND actual.conname=required.name
+           AND actual.contype=required.constraint_type::"char"
+      )`,
+    [constraintTables, constraintNames, constraintTypes],
   )
   if (constraintRows.length > 0) return false
   const { rows: indexRows } = await client.query<{ name: string }>(

@@ -110,11 +110,13 @@ export class CompanyApplication {
           await insertCompanyRoot(db, { id, name: input.name, slug, userId, projectId })
           return this.infrastructure.installCompany(db, id)
         })
-        await this.infrastructure.finalizeCompany(installed)
-        await this.infrastructure.audit({
+        await Promise.allSettled([
+          this.infrastructure.finalizeCompany(installed),
+          this.infrastructure.audit({
           kind: 'company_create', userId, companyId: id, ...auditContext,
           detail: { name: input.name, slug },
-        })
+          }),
+        ])
         return { id, name: input.name, slug, role: 'owner' as const }
       } catch (error) {
         if (!isUniqueViolation(error)) throw error
@@ -195,7 +197,7 @@ export class CompanyApplication {
       await removeMemberState(db, args.companyId, args.targetId)
     })
     const channels = await listCompanyChannels(this.db, args.companyId)
-    await Promise.all(channels.map((channel) => this.infrastructure.syncChannel({
+    await Promise.allSettled(channels.map((channel) => this.infrastructure.syncChannel({
       channelId: channel.channel_id, channelType: 2, title: channel.title, members: channel.members,
     })))
     await this.infrastructure.disconnectUser(args.targetId, args.companyId)
@@ -295,7 +297,10 @@ export class CompanyApplication {
         role: args.input.role,
         note,
         inviteUrl: url,
-      })
+      }).catch((error: unknown) => ({
+        status: 'failed',
+        error: error instanceof Error ? error.message : String(error),
+      }))
     }
     return {
       id: tokenHash, token, url, email, role: args.input.role, note, maxUses, useCount: 0,
@@ -337,7 +342,9 @@ export class CompanyApplication {
       return { invitation, alreadyMember: false }
     })
     if (!result.alreadyMember) {
-      await this.infrastructure.seedMemberDms({ companyId: result.invitation.company_id, memberId: userId })
+      await this.infrastructure.seedMemberDms({
+        companyId: result.invitation.company_id, memberId: userId,
+      }).catch(() => undefined)
     }
     const company = await companyMembershipSummary(this.db, result.invitation.company_id, userId)
     if (!company) throw new CompanyApplicationError('not_found', 'accepted company membership missing')

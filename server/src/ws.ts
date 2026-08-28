@@ -112,7 +112,7 @@ export async function resetHumanPresenceOnBoot(): Promise<void> {
       console.log(`[ws] demoted ${rows.length} stale 'avail' human(s) to 'resting' on boot`)
     }
   if (rows.length === 0) return
-  await Promise.all(rows.map((r) => publish(CH_STATUS, {
+  await Promise.allSettled(rows.map((r) => publish(CH_STATUS, {
         type: 'participants.status',
         participantId: r.id,
         status: 'resting',

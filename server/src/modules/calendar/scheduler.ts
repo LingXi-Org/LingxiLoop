@@ -83,12 +83,10 @@ function stepOnce(from: Date, rule: RecurrenceRule): Date {
   if (rule.freq === 'yearly') return addYears(from, interval)
   const weekdays = rule.byweekday?.length ? [...rule.byweekday].sort((a, b) => a - b) : null
   if (!weekdays) return addDays(from, interval * 7)
-  let candidate = addDays(from, interval > 1 ? (interval - 1) * 7 + 1 : 1)
-  for (let index = 0; index < 14; index += 1) {
-    if (weekdays.includes(candidate.getUTCDay())) return candidate
-    candidate = addDays(candidate, 1)
-  }
-  return candidate
+  const currentWeekday = from.getUTCDay()
+  const remainingWeekday = weekdays.find((weekday) => weekday > currentWeekday)
+  if (remainingWeekday !== undefined) return addDays(from, remainingWeekday - currentWeekday)
+  return addDays(from, interval * 7 - currentWeekday + weekdays[0])
 }
 
 export function nextOccurrenceOnOrAfter(

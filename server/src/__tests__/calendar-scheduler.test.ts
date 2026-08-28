@@ -17,6 +17,22 @@ test('calendar recurrence advances on the one authoritative scheduler path', () 
     )?.toISOString(),
     '2026-08-26T09:00:00.000Z',
   )
+  assert.equal(
+    nextOccurrenceOnOrAfter(
+      seed,
+      { freq: 'weekly', interval: 2, byweekday: [1, 3] },
+      new Date('2026-08-25T00:00:00.000Z'),
+    )?.toISOString(),
+    '2026-08-26T09:00:00.000Z',
+  )
+  assert.equal(
+    nextOccurrenceOnOrAfter(
+      seed,
+      { freq: 'weekly', interval: 2, byweekday: [1, 3] },
+      new Date('2026-08-27T00:00:00.000Z'),
+    )?.toISOString(),
+    '2026-09-07T09:00:00.000Z',
+  )
 })
 
 test('calendar recurrence stops at count and until boundaries', () => {

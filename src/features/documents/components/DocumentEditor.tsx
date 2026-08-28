@@ -353,7 +353,8 @@ function CollaborativeEditor({ session, synced, userName, userColor, documentId,
       const refreshId = storageKey || src
       if (!refreshId || refreshingImagesRef.current.has(refreshId)) return
       refreshingImagesRef.current.add(refreshId)
-      void uploadsApi.refreshUploadUrl({ url: src, key: storageKey || undefined })
+      if (!storageKey) return
+      void uploadsApi.refreshUploadUrl({ key: storageKey })
         .then(({ key, url }) => {
           if (!url || url === src) return
           if (!updateImageNodeAttrs(editor, src, storageKey, { src: url, storageKey: key })) {

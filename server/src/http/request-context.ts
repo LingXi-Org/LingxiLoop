@@ -41,8 +41,21 @@ export async function requireCompany(req: Request & AuthedRequest): Promise<{ us
 
 export async function requireCompanyArtifactContext(req: Request & AuthedRequest, writable = false) {
   const header = typeof req.headers['x-project-id'] === 'string' ? req.headers['x-project-id'].trim() : ''
-  if (!header) throw new HttpError(400, 'x-project-id is required')
-  const workspace = await requireWorkspace(req, header)
+  let projectId = header
+  if (!projectId) {
+    const { userId, companyId } = await requireCompany(req)
+    const { rows } = await pool.query<{ id: string }>(
+      `SELECT project.id
+         FROM projects project
+         JOIN company_members member ON member.company_id=project.company_id AND member.user_id=$2
+        WHERE project.company_id=$1 AND project.is_general=TRUE AND project.status='active'
+        ORDER BY project.id LIMIT 1`,
+      [companyId, userId],
+    )
+    projectId = rows[0]?.id ?? ''
+  }
+  if (!projectId) throw new HttpError(409, 'company has no active general project')
+  const workspace = await requireWorkspace(req, projectId)
   if (writable && workspace.projectStatus !== 'active') throw new HttpError(409, 'archived courses are read-only')
   return { userId: workspace.userId, companyId: workspace.companyId, projectId: workspace.projectId }
 }

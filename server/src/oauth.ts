@@ -312,7 +312,7 @@ export async function findOrCreateUserByProfile(
     // from LingxiLoop's CDN, not third-party hosts.
     // Stamp onto users.avatar_url so every workspace this user later joins
     // (via invite or self-created) re-uses ONE face, not per-tenant
-    const mirroredAvatar = await mirrorIdentityAvatar(storage, userId, profile.avatarUrl)
+    const mirroredAvatar = await mirrorIdentityAvatar(storage, userId, profile.avatarUrl).catch(() => null)
     const avatar = mirroredAvatar
     await client.query(`UPDATE users SET avatar_url = $1 WHERE id = $2`, [avatar, userId])
 
@@ -351,7 +351,7 @@ export async function findOrCreateUserByProfile(
     // workspace, which already has its own learning team and rooms.
     if (companyId) {
       // Starter agents are provisioned directly into the managed AgentOS runtime.
-      await onboardStarterAgents(companyId)
+      await onboardStarterAgents(companyId).catch(() => undefined)
     }
 
     return { userId, email: profile.email, displayName: profile.displayName, companyId }

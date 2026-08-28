@@ -451,19 +451,22 @@ export class LearningApplication {
       await insertCourse(db, { ...scope, projectId, courseId, roomId, input })
       return this.infrastructure.ensureTeacherAgent(courseId, db)
     })
-    await this.syncStudyRoom(courseId)
-    await this.infrastructure.syncTeacherRoom(courseId)
-    if (teacher.created) await this.infrastructure.welcomeTeacherAgent(courseId)
-    await this.infrastructure.ensureNotebook(projectId, scope.companyId)
-    await this.infrastructure.audit({
-      kind: 'course_create', userId: scope.userId, companyId: scope.companyId,
-      detail: { courseId, projectId, name: input.name },
-    })
+    const provisioning = await Promise.allSettled([
+      this.syncStudyRoom(courseId),
+      this.infrastructure.syncTeacherRoom(courseId),
+      ...(teacher.created ? [this.infrastructure.welcomeTeacherAgent(courseId)] : []),
+      this.infrastructure.ensureNotebook(projectId, scope.companyId),
+      this.infrastructure.audit({
+        kind: 'course_create', userId: scope.userId, companyId: scope.companyId,
+        detail: { courseId, projectId, name: input.name },
+      }),
+    ])
+    const knowledgeReady = provisioning[teacher.created ? 3 : 2]?.status === 'fulfilled'
     return {
       id: courseId, companyId: scope.companyId, projectId, name: input.name,
       description: input.description, color: input.color, status: 'active',
       createdBy: scope.userId, studyRoomId: roomId, courseRole: 'teacher', memberCount: 1,
-      canManage: true, knowledgeState: 'ready',
+      canManage: true, knowledgeState: knowledgeReady ? 'ready' : 'failed',
     }
   }
 
@@ -528,19 +531,21 @@ export class LearningApplication {
         companyId: manager.companyId, projectId: manager.projectId, userId: targetId,
       })
     })
-    await Promise.all(channels.map((channel) => this.infrastructure.syncChannel({
-      channelId: channel.id, title: channel.title, members: channel.members,
-    })))
-    await this.infrastructure.revokeDocumentSubscriptions(targetId, manager.projectId)
-    await this.infrastructure.publishDocumentAccessRevoked({
-      companyId: manager.companyId, workspaceId: manager.projectId, userId: targetId,
-    })
-    await this.syncStudyRoom(courseId)
-    await this.infrastructure.syncTeacherRoom(courseId)
-    await this.infrastructure.audit({
-      kind: 'course_member_remove', userId, companyId: manager.companyId,
-      detail: { courseId, targetId },
-    })
+    await Promise.allSettled([
+      ...channels.map((channel) => this.infrastructure.syncChannel({
+        channelId: channel.id, title: channel.title, members: channel.members,
+      })),
+      this.infrastructure.revokeDocumentSubscriptions(targetId, manager.projectId),
+      this.infrastructure.publishDocumentAccessRevoked({
+        companyId: manager.companyId, workspaceId: manager.projectId, userId: targetId,
+      }),
+      this.syncStudyRoom(courseId),
+      this.infrastructure.syncTeacherRoom(courseId),
+      this.infrastructure.audit({
+        kind: 'course_member_remove', userId, companyId: manager.companyId,
+        detail: { courseId, targetId },
+      }),
+    ])
     return { ok: true as const }
   }
 

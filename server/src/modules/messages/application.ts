@@ -99,7 +99,7 @@ export class MessagesApplication {
         agentId: changed.messageAuthorId,
         aboutId: input.userId,
         emoji: input.emoji,
-      })
+      }).catch(() => undefined)
     }
     await this.infrastructure.publishReaction({
       type: 'message.reactions',
@@ -107,7 +107,7 @@ export class MessagesApplication {
       companyId: input.companyId,
       messageId: input.messageId,
       reactions: changed.reactions,
-    })
+    }).catch(() => undefined)
     return { reactions: changed.reactions }
   }
 
