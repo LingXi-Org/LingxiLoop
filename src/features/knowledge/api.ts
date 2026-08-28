@@ -1,11 +1,11 @@
 
 import { http } from '@/api/core/http'
-import { putPresignedFile } from './transport'
+import { putPresignedFile } from '@/api/transport'
 import type {
   ConversationSourceSelection,
   KnowledgeSource,
-} from '@/types'
-import { filesApi } from './files'
+} from './contracts'
+import { filesApi } from '@/api/files'
 
 export const knowledgeApi = {
   listSources: (conversationId: string) => http<KnowledgeSource[]>(`/conversations/${encodeURIComponent(conversationId)}/sources`),

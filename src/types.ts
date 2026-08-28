@@ -7,8 +7,6 @@ export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
 export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge' | 'learning' | 'teacher_admin'
 
-export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed'
-
 export interface WorkspaceSummary {
   id: string
   name: string
@@ -28,42 +26,6 @@ export interface WorkspaceSummary {
   calendarEventCount: number
   canvasCount: number
   canManage: boolean
-}
-
-export interface KnowledgeSource {
-  id: string
-  kind: 'file' | 'url' | 'text'
-  title: string
-  mimeType: string | null
-  sizeBytes: number
-  originalUrl: string | null
-  originalFileUrl?: string | null
-  status: KnowledgeSourceStatus
-  stage: string
-  error: string | null
-  isTruncated: boolean
-  createdBy: string
-  createdAt: string
-  updatedAt: string
-  chunkCount?: number
-  extractedText?: string | null
-  /** Present for sources automatically ingested from a chat attachment. */
-  originClientMsgNo?: string | null
-}
-
-export interface KnowledgeCitation {
-  sourceId: string
-  sourceTitle: string
-  chunkId: string
-  excerpt: string
-  sourceUrl?: string
-  position: number
-  marker: string
-}
-
-export interface ConversationSourceSelection {
-  conversationId: string
-  sources: Array<{ sourceId: string; title: string; status: KnowledgeSourceStatus; enabled: boolean }>
 }
 
 export interface Participant {
@@ -281,7 +243,15 @@ export interface Message {
   sequence?: number
   kind: MessageKind
   body: string
-  citations?: KnowledgeCitation[]
+  citations?: Array<{
+    sourceId: string
+    sourceTitle: string
+    chunkId: string
+    excerpt: string
+    sourceUrl?: string
+    position: number
+    marker: string
+  }>
   /** Structured mention metadata resolved against the conversation roster. */
   mentionedIds?: string[]
   mentionAll?: boolean

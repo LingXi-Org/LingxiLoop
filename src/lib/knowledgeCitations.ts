@@ -1,4 +1,4 @@
-import type { KnowledgeCitation } from '@/types'
+import type { KnowledgeCitation } from '@/features/knowledge/contracts'
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

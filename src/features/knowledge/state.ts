@@ -1,8 +1,8 @@
-import { knowledgeApi } from '@/api/knowledge'
+import { knowledgeApi } from './api'
 import { create } from 'zustand'
 import { useApp } from '@/stores/app'
 import { useConversations } from '@/features/conversations/store'
-import type { ConversationSourceSelection, KnowledgeCitation, KnowledgeSource } from '@/types'
+import type { ConversationSourceSelection, KnowledgeCitation, KnowledgeSource } from './contracts'
 
 let sourcePollTimer: number | null = null
 function scheduleSourcePoll(sources: KnowledgeSource[], reload: () => Promise<void>): void {

@@ -916,7 +916,7 @@ export async function sendUserMessage(
       // queued row is visible, the existing SourcePanel poll follows it to a
       // terminal Open Notebook state.
       window.setTimeout(() => {
-        void import('@/stores/knowledgeSources')
+        void import('@/features/knowledge/state')
           .then(({ useKnowledgeSources }) => useKnowledgeSources.getState().load())
           .catch(() => undefined)
       }, 750)

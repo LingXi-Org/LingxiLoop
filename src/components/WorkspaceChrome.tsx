@@ -7,11 +7,11 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useApp } from '@/stores/app'
-import { useKnowledgeSources } from '@/stores/knowledgeSources'
+import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useParticipants } from '@/stores/participants'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
-import type { KnowledgeSource } from '@/types'
+import type { KnowledgeSource } from '@/features/knowledge/contracts'
 
 const ACCEPT = '.pdf,.docx,.txt,.md,.csv,.json'
 const statusLabel: Record<string, string> = {

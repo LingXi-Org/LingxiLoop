@@ -4,7 +4,7 @@ import test from 'node:test'
 
 const domains = [
   'agents', 'boards', 'canvas', 'companies',
-  'documents', 'email', 'files', 'knowledge', 'learning',
+  'documents', 'email', 'files', 'learning',
   'observability', 'platform', 'shipping',
 ] as const
 
@@ -21,7 +21,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   const consumers = await Promise.all([
     '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../stores/boards.ts',
     '../features/calendar/state.ts', '../stores/canvas.ts', '../stores/documents.ts',
-    '../stores/knowledgeSources.ts', '../stores/participants.ts',
+    '../features/knowledge/state.ts', '../stores/participants.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(consumers.join('\n'), /api\/client|\bapi\.[A-Za-z]/)
 
@@ -56,4 +56,10 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   const chatApi = await readFile(new URL('../features/chat/api.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(chatApi, /sendMessage\s*:/)
   assert.match(messagesState, /lingxiIm\.send\(convoId, payload\)/)
+
+  for (const file of ['api.ts', 'contracts.ts', 'state.ts']) {
+    await access(new URL(`../features/knowledge/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./knowledge.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../stores/knowledgeSources.ts', import.meta.url)))
 })
