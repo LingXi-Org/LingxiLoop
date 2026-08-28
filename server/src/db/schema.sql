@@ -1339,12 +1339,15 @@ CREATE TABLE public.im_polls (
     channel_type integer DEFAULT 2 NOT NULL,
     company_id text NOT NULL,
     author_id text NOT NULL,
+    request_fingerprint text NOT NULL,
     poll jsonb NOT NULL,
     revision bigint DEFAULT 1 NOT NULL,
+    published_revision bigint DEFAULT 0 NOT NULL,
     wukong_message_id text,
     wukong_message_seq bigint,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT im_polls_revision_check CHECK (published_revision >= 0 AND published_revision <= revision)
 );
 
 

@@ -38,6 +38,12 @@ IPython variables survive across turns while
 the kernel lives; durable state must be written to Agent Home or a typed
 `loop.*` learning service. WuKongIM is the only authoritative message store.
 
+Poll creation requires a stable client request identity. PostgreSQL stores the
+tenant-scoped voting projection and its last published revision; the Worker
+replays only unpublished deterministic snapshots to the same WuKongIM channel.
+This reconciliation repairs the authoritative IM data plane rather than
+creating a second message store or alternate delivery path.
+
 ## Local development
 
 Requirements: Node.js 20+, Python 3 with IPython, PostgreSQL and Redis.

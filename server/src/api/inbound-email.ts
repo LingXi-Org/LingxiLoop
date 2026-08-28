@@ -24,7 +24,7 @@ import express, { Router, type Request, type Response } from 'express'
 import { createHmac, timingSafeEqual, randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import { storage } from '../storage.js'
+import { storage, type Storage } from '../storage.js'
 import { inc } from '../metrics.js'
 import { alertDiscord } from '../alert.js'
 import {
@@ -38,8 +38,6 @@ import {
   recordExternalContact,
 } from '../email.js'
 
-export const inboundEmailRouter = Router()
-
 /** Capture the raw body bytes so we can HMAC-verify before the global
  *  express.json (in web.ts) gets to it — `verify` runs as part of
  *  body-parser's parse step, perfect spot to stash the raw buffer.
@@ -49,14 +47,12 @@ export const inboundEmailRouter = Router()
  *
  *  25mb mirrors the upload ceiling — same rationale (don't accept emails
  *  bigger than what we'd let a human upload). */
-inboundEmailRouter.use(
-  express.json({
+const inboundJsonParser = express.json({
     limit: '25mb',
     verify: (req, _res, buf) => {
       (req as Request & { rawBody?: Buffer }).rawBody = Buffer.from(buf)
     },
-  }),
-)
+  })
 
 interface InboundPayload {
   /** The full RFC 5322 Message-ID, with or without angle brackets. */
@@ -176,7 +172,8 @@ async function resolveSender(args: {
   }
 }
 
-inboundEmailRouter.post('/inbound', async (req: Request, res: Response) => {
+function createInboundHandler(storageProvider: Pick<Storage, 'put'>) {
+  return async (req: Request, res: Response) => {
   const raw = (req as Request & { rawBody?: Buffer }).rawBody
   const sig = String(req.headers['x-lingxiloop-signature'] ?? '')
   if (!raw || !sig) {
@@ -305,7 +302,7 @@ inboundEmailRouter.post('/inbound', async (req: Request, res: Response) => {
       const dotIdx = filename.lastIndexOf('.')
       const ext = dotIdx > 0 ? filename.slice(dotIdx + 1).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) : ''
       const key = `email-attachments/${randomUUID()}${ext ? '.' + ext : ''}`
-      await storage.put(key, bytes, mimeType)
+      await storageProvider.put(key, bytes, mimeType)
       uploaded.push({ filename, mimeType, sizeBytes, storageKey: key, truncated: false })
     } catch (e) {
       console.error(JSON.stringify({
@@ -416,4 +413,14 @@ inboundEmailRouter.post('/inbound', async (req: Request, res: Response) => {
   }))
   inc('email.inbound.delivered', { auto_submitted: Boolean(payload.autoSubmitted) })
   res.json({ ok: true, deliveries: inserts })
-})
+  }
+}
+
+export function createInboundEmailRouter(dependencies: { storage: Pick<Storage, 'put'> }): Router {
+  const router = Router()
+  router.use(inboundJsonParser)
+  router.post('/inbound', createInboundHandler(dependencies.storage))
+  return router
+}
+
+export const inboundEmailRouter = createInboundEmailRouter({ storage })

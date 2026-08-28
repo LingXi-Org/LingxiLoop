@@ -143,6 +143,9 @@ export function createCalendarCommand(dependencies: CalendarCommandDependencies)
       if (kind === 'agent_task' && !assigneeId) {
         return err('agent_task events need an --assignee')
       }
+      if (kind === 'agent_task' && !targetConvo) {
+        return err('agent_task events need --in <conversation_id>')
+      }
       let recurrence: Record<string, unknown> | null = null
       if (parsed.flags.every) {
         const freq = String(parsed.flags.every)

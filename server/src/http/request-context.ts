@@ -1,6 +1,7 @@
 import type { Request } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
+import { pollApplication } from '../modules/polls/index.js'
 import { HttpError } from './errors.js'
 import { PRIVILEGED_ROLES } from './roles.js'
 
@@ -61,12 +62,9 @@ export async function assertConversationWritable(companyId: string, conversation
 }
 
 export async function assertPollConversationWritable(companyId: string, messageId: string): Promise<void> {
-  const { rows } = await pool.query<{ channel_id: string }>(
-    `SELECT channel_id FROM im_polls WHERE poll_client_msg_no=$1 AND company_id=$2`,
-    [messageId, companyId],
-  )
-  if (!rows[0]) throw new HttpError(404, 'poll not found')
-  await assertConversationWritable(companyId, rows[0].channel_id)
+  const conversationId = await pollApplication.conversationId(companyId, messageId)
+  if (!conversationId) throw new HttpError(404, 'poll not found')
+  await assertConversationWritable(companyId, conversationId)
 }
 
 export async function requireWorkspace(

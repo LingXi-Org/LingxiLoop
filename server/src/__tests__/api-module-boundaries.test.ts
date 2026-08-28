@@ -49,7 +49,7 @@ test('domain modules expose one native router implementation without forwarding 
 })
 
 test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
-  for (const domain of ['agents', 'boards', 'calendar', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform']) {
+  for (const domain of ['agents', 'boards', 'calendar', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const application = await readFile(new URL('application.ts', base), 'utf8')
@@ -63,6 +63,14 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
     assert.match(repository, /Queryable/)
     assert.match(contracts, /z\.object/)
   }
+  await assert.rejects(readFile(new URL('../polls.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  const pollCallers = await Promise.all([
+    '../agent-os/learning-actions.ts',
+    '../agents/cli.ts',
+    '../worker.ts',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(pollCallers.join('\n'), /from ['"][^'"]*modules\/polls\/(?:application|repository|facade|contracts)/)
+  assert.doesNotMatch(pollCallers.join('\n'), /from ['"][^'"]*polls\.js/)
 })
 
 test('authentication, request context, authorization, and errors have one shared boundary', async () => {
@@ -81,8 +89,10 @@ test('authentication, request context, authorization, and errors have one shared
     assert.match(authorization, new RegExp(`export async function ${boundary}\\b`))
   }
   assert.match(asyncHandler, /export function safe\b/)
+  assert.doesNotMatch(asyncHandler, /res\.status|console\.error|instanceof HttpError/)
   assert.match(errors, /export class HttpError\b/)
   assert.match(errors, /export function errorHandler\b/)
+  assert.match(errors, /err instanceof ZodError/)
   for (const router of routers) {
     assert.doesNotMatch(router, /import \{[^}]*\bauthMiddleware\b[^}]*\} from ['"]\.\.\/\.\.\/auth\.js['"]/s)
     assert.doesNotMatch(router, /\.use\(authMiddleware/)

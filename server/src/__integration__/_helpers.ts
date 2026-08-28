@@ -18,6 +18,7 @@ import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
+import type { Storage } from '../storage.js'
 
 let schemaReady: Promise<void> | null = null
 
@@ -185,14 +186,17 @@ export function installFakeWukong(): void {
 /** Build a minimum-viable Express app that mounts only the routes under
  *  test. Avoids booting the full server (auth middleware, schedulers,
  *  etc.) — slow, more failure modes. */
-export async function buildTestApp(): Promise<import('express').Express> {
+export async function buildTestApp(storageProvider?: Pick<Storage, 'put'>): Promise<import('express').Express> {
   const expressMod = await import('express')
   const express = expressMod.default
   const app = express()
-  const { inboundEmailRouter } = await import('../api/inbound-email.js')
+  const { createInboundEmailRouter, inboundEmailRouter } = await import('../api/inbound-email.js')
   // Match the production mount path: web.ts mounts inboundEmailRouter
   // at /webhooks/email — see server/src/web.ts.
-  app.use('/webhooks/email', inboundEmailRouter)
+  app.use(
+    '/webhooks/email',
+    storageProvider ? createInboundEmailRouter({ storage: storageProvider }) : inboundEmailRouter,
+  )
   return app
 }
 

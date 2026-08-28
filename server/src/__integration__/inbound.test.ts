@@ -20,13 +20,21 @@ import {
   signInboundPayload, teardownAll,
 } from './_helpers.js'
 import { pool } from '../db/pool.js'
+import type { Storage } from '../storage.js'
 
 let server: Server
 let baseUrl = ''
+const storedObjects = new Map<string, Buffer>()
+const storageFake: Pick<Storage, 'put'> = {
+  async put(key, body) {
+    storedObjects.set(key, Buffer.from(body))
+    return `https://storage.test/${key}`
+  },
+}
 
 before(async () => {
   await ensureSchemaOnce()
-  const app = await buildTestApp()
+  const app = await buildTestApp(storageFake)
   await new Promise<void>((resolve) => {
     server = createServer(app).listen(0, () => {
       const addr = server.address()
@@ -37,6 +45,7 @@ before(async () => {
 })
 
 beforeEach(async () => {
+  storedObjects.clear()
   await resetAllTables()
 })
 
@@ -305,4 +314,5 @@ test('[integration] inbound attachments land in email_attachments + storage', as
   assert.equal(note.truncated, false)
   assert.ok(note.storage_key && note.storage_key.startsWith('email-attachments/'),
     `expected storage_key under email-attachments/, got: ${note.storage_key}`)
+  assert.equal(storedObjects.get(note.storage_key!)?.toString('utf8'), 'Hello, world')
 })

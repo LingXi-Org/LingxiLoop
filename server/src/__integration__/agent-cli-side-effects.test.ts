@@ -54,6 +54,12 @@ test('[integration] calendar create/cancel/delete emit typed CLI side effects', 
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   const runProjectCli = (args: string[]) => runCli(args, { projectId })
   const startAt = '2026-06-01T10:00:00.000Z'
+  const targetConversationId = `co-${companyId}`
+  await pool.query(
+    `INSERT INTO conversations (id,kind,title,members,company_id,project_id)
+     VALUES ($1,'group','Review room',$2::jsonb,$3,$4)`,
+    [targetConversationId, JSON.stringify([agentId]), companyId, projectId],
+  )
 
   const create = await runProjectCli([
     '--as', agentId,
@@ -62,6 +68,7 @@ test('[integration] calendar create/cancel/delete emit typed CLI side effects', 
     '--assignee', agentId,
     '--prompt', 'Run the review',
     '--kind', 'agent_task',
+    '--in', targetConversationId,
     '--remind', '10',
     '--remind-channel', 'toast',
   ])
@@ -78,7 +85,7 @@ test('[integration] calendar create/cancel/delete emit typed CLI side effects', 
     title: 'Review harness',
     kind: 'agent_task',
     assigneeId: agentId,
-    targetConversationId: null,
+    targetConversationId,
     startAt,
     recurrence: null,
     reminderMinutesBefore: 10,
@@ -105,7 +112,7 @@ test('[integration] calendar create/cancel/delete emit typed CLI side effects', 
     kind: 'agent_task',
     status: 'active',
     assigneeId: agentId,
-    targetConversationId: null,
+    targetConversationId,
     startAt: updatedAt,
     visibleToUser: true,
   }])

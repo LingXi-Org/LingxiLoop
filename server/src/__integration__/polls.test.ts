@@ -8,12 +8,13 @@
  */
 import { test, before, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'
+import { createHash, randomUUID } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll,
 } from './_helpers.js'
 import { pool } from '../db/pool.js'
-import { castVote, closePoll, sweepExpiredPolls } from '../polls.js'
+import { pollApplication } from '../modules/polls/index.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 
 const ME = 'u-me'
@@ -25,13 +26,18 @@ let server: Server
 let baseUrl = ''
 let messageSeq = 0
 
-before(async () => {
+function installWukongFake(fail = false): void {
   _setWukongClientForTests(new class extends WukongClient {
     override async sendMessage(): Promise<{ messageId: string; messageSeq: number }> {
+      if (fail) throw new Error('wukong unavailable')
       messageSeq += 1
       return { messageId: `wk-${messageSeq}`, messageSeq }
     }
   }({ apiUrl: 'http://unused', wsUrl: 'ws://unused', apiToken: 'test', webhookSecret: 'test' }))
+}
+
+before(async () => {
+  installWukongFake()
   await ensureSchemaOnce()
   const app = await buildApiTestApp(ME)
   await new Promise<void>((resolve) => {
@@ -81,7 +87,7 @@ async function createPollViaHttp(body: Record<string, unknown>): Promise<{ statu
   const res = await fetch(`${baseUrl}/api/polls`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-company-id': COMPANY },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ clientRequestId: randomUUID(), ...body }),
   })
   return { status: res.status, body: await res.json().catch(() => null) }
 }
@@ -126,6 +132,111 @@ test('[integration] POST /polls creates a poll message with structured payload',
   assert.equal(legacy.rowCount, 0)
 })
 
+test('[integration] poll creation is idempotent per tenant request identity', async () => {
+  const clientRequestId = randomUUID()
+  const input = {
+    clientRequestId,
+    conversationId: CONVO,
+    question: 'Choose once?',
+    mode: 'single',
+    options: ['A', 'B'],
+  }
+  const first = await createPollViaHttp(input)
+  const second = await createPollViaHttp(input)
+  assert.equal(first.status, 201)
+  assert.equal(second.status, 201)
+  assert.equal(second.body.messageId, first.body.messageId)
+  const conflict = await createPollViaHttp({ ...input, question: 'Different meaning' })
+  assert.equal(conflict.status, 409)
+  assert.match(String(conflict.body.error), /idempotency conflict/)
+  const { rows } = await pool.query<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM im_polls
+      WHERE poll_client_msg_no=$1 AND company_id=$2`,
+    [first.body.messageId, COMPANY],
+  )
+  assert.equal(rows[0].count, 1)
+})
+
+test('[integration] poll identities and reads stay tenant-scoped', async () => {
+  const otherCompany = 'c-polls-other'
+  const otherConversation = 'co-polls-other'
+  await pool.query(
+    `INSERT INTO companies (id,name,slug,owner_user_id)
+     VALUES ($1,'Other Polls Co','other-polls-co',$2)`,
+    [otherCompany, ME],
+  )
+  await seedUserMembership(ME, otherCompany)
+  await pool.query(
+    `INSERT INTO im_channel_bindings (channel_id,company_id,profile)
+     VALUES ($1,$2,$3::jsonb)`,
+    [otherConversation, otherCompany, JSON.stringify({
+      channelId: otherConversation,
+      channelType: 2,
+      title: 'Other Polls Group',
+      members: [ME],
+    })],
+  )
+  const idempotencyKey = randomUUID()
+  const first = await pollApplication.create({
+    companyId: COMPANY,
+    actorId: ME,
+    conversationId: CONVO,
+    question: 'Tenant A?',
+    mode: 'single',
+    options: ['Yes', 'No'],
+    idempotencyKey,
+  })
+  const second = await pollApplication.create({
+    companyId: otherCompany,
+    actorId: ME,
+    conversationId: otherConversation,
+    question: 'Tenant B?',
+    mode: 'single',
+    options: ['Yes', 'No'],
+    idempotencyKey,
+  })
+  assert.notEqual(second.messageId, first.messageId)
+  await assert.rejects(
+    () => pollApplication.show(otherCompany, first.messageId),
+    /poll not found/,
+  )
+})
+
+test('[integration] unpublished poll snapshots remain durable and reconcile to WuKong', async () => {
+  const idempotencyKey = randomUUID()
+  installWukongFake(true)
+  try {
+    await assert.rejects(
+      () => pollApplication.create({
+        companyId: COMPANY,
+        actorId: ME,
+        conversationId: CONVO,
+        question: 'Repair me?',
+        mode: 'single',
+        options: ['Yes', 'No'],
+        idempotencyKey,
+      }),
+      /wukong unavailable/,
+    )
+  } finally {
+    installWukongFake()
+  }
+  const messageId = `poll-${createHash('sha256').update(`${COMPANY}:${idempotencyKey}`).digest('hex').slice(0, 32)}`
+  const beforeRepair = await pool.query<{ revision: string; published_revision: string }>(
+    `SELECT revision,published_revision FROM im_polls
+      WHERE poll_client_msg_no=$1 AND company_id=$2`,
+    [messageId, COMPANY],
+  )
+  assert.equal(beforeRepair.rows[0].published_revision, '0')
+  assert.equal(await pollApplication.reconcilePendingPublications(), 1)
+  const afterRepair = await pool.query<{ revision: string; published_revision: string }>(
+    `SELECT revision,published_revision FROM im_polls
+      WHERE poll_client_msg_no=$1 AND company_id=$2`,
+    [messageId, COMPANY],
+  )
+  assert.equal(afterRepair.rows[0].published_revision, afterRepair.rows[0].revision)
+})
+
 test('[integration] POST /polls rejects fewer than 2 distinct options', async () => {
   const { status, body } = await createPollViaHttp({
     conversationId: CONVO,
@@ -135,6 +246,19 @@ test('[integration] POST /polls rejects fewer than 2 distinct options', async ()
   })
   assert.equal(status, 400)
   assert.match(String(body.error), /at least 2/)
+})
+
+test('[integration] POST /polls rejects a missing stable client request identity', async () => {
+  const { status, body } = await createPollViaHttp({
+    clientRequestId: undefined,
+    conversationId: CONVO,
+    question: 'No request id?',
+    mode: 'single',
+    options: ['Yes', 'No'],
+  })
+  assert.equal(status, 400)
+  assert.equal(body.error, 'invalid request')
+  assert.ok(Array.isArray(body.issues))
 })
 
 test('[integration] vote tally aggregates across voters & changing a vote is idempotent', async () => {
@@ -149,9 +273,9 @@ test('[integration] vote tally aggregates across voters & changing a vote is ide
   // (this is the same path the CLI takes).
   const first = await voteViaHttp(created.messageId, [ramen])
   assert.equal(first.status, 200)
-  await castVote({
+  await pollApplication.vote({
     messageId: created.messageId, companyId: COMPANY,
-    voterParticipantId: AGENT, voterKind: 'agent', optionIds: [hotpot],
+    actorId: AGENT, voterKind: 'agent', optionIds: [hotpot],
   })
 
   // Change ME's vote from Ramen → Hotpot. The DELETE/INSERT inside the
@@ -214,12 +338,12 @@ test('[integration] closing a poll blocks further votes; only author can close',
 
   // Peer cannot close — they aren't the author.
   await assert.rejects(
-    () => closePoll({ messageId: created.messageId, companyId: COMPANY, actorId: PEER, reason: 'manual' }),
+    () => pollApplication.close({ messageId: created.messageId, companyId: COMPANY, actorId: PEER, reason: 'manual' }),
     /only the poll author/,
   )
 
   // Author (= ME) closes successfully.
-  const ev = await closePoll({ messageId: created.messageId, companyId: COMPANY, actorId: ME, reason: 'manual' })
+  const ev = await pollApplication.close({ messageId: created.messageId, companyId: COMPANY, actorId: ME, reason: 'manual' })
   assert.ok(ev)
   assert.equal(ev!.poll.closedReason, 'manual')
 
@@ -264,7 +388,7 @@ test('[integration] sweepExpiredPolls auto-closes polls past expiresAt', async (
       WHERE poll_client_msg_no = $1`,
     [created.messageId],
   )
-  const closed = await sweepExpiredPolls()
+  const closed = await pollApplication.sweepExpired()
   assert.ok(closed >= 1)
   const { rows } = await pool.query<{ poll: { closedAt: string | null; closedReason: string | null } }>(
     `SELECT poll FROM im_polls WHERE poll_client_msg_no = $1`, [created.messageId],

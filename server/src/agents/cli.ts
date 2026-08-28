@@ -2087,7 +2087,7 @@ on demand via \`lingxiloop skills read ${name} references/<file>\`._
 
 /* ============== Polls ================================================
  * Agents create, vote on, inspect, and close native conversation polls. */
-async function cmdPoll(parsed: ParsedArgs): Promise<CliResult> {
+async function cmdPoll(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const sub = parsed.positional[0]
   if (!sub) {
     return err(
@@ -2102,7 +2102,7 @@ async function cmdPoll(parsed: ParsedArgs): Promise<CliResult> {
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
   switch (sub) {
-    case 'create': return cmdPollCreate(parsed, me, companyId)
+    case 'create': return cmdPollCreate(parsed, me, companyId, internal.idempotencyKey)
     case 'vote':   return cmdPollVote(parsed, me, companyId)
     case 'close':  return cmdPollClose(parsed, me, companyId)
     case 'show':   return cmdPollShow(parsed, me, companyId)
@@ -2110,7 +2110,12 @@ async function cmdPoll(parsed: ParsedArgs): Promise<CliResult> {
   }
 }
 
-async function cmdPollCreate(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
+async function cmdPollCreate(
+  parsed: ParsedArgs,
+  me: string,
+  companyId: string,
+  idempotencyKey?: string,
+): Promise<CliResult> {
   const convoId = parsed.positional[1]
   const question = parsed.positional[2]
   const options = parsed.positional.slice(3).map(unescapeChat)
@@ -2126,15 +2131,16 @@ async function cmdPollCreate(parsed: ParsedArgs, me: string, companyId: string):
     return err('--expires-in must be a number of minutes')
   }
   try {
-    const { createPoll } = await import('../polls.js')
-    const created = await createPoll({
+    const { pollApplication } = await import('../modules/polls/index.js')
+    const created = await pollApplication.create({
       conversationId: convoId,
       companyId,
-      authorId: me,
+      actorId: me,
       question: unescapeChat(question),
       mode,
       options,
       expiresInMinutes,
+      idempotencyKey,
     })
     const optsTxt = created.poll.options.map((o) => `  ${o.id} → ${o.text}`).join('\n')
     return ok(
@@ -2168,11 +2174,11 @@ async function cmdPollVote(parsed: ParsedArgs, me: string, companyId: string): P
     return err('provide at least one option id, or pass --clear to retract')
   }
   try {
-    const { castVote } = await import('../polls.js')
-    const event = await castVote({
+    const { pollApplication } = await import('../modules/polls/index.js')
+    const event = await pollApplication.vote({
       messageId,
       companyId,
-      voterParticipantId: me,
+      actorId: me,
       voterKind: 'agent',
       optionIds,
     })
@@ -2193,8 +2199,8 @@ async function cmdPollClose(parsed: ParsedArgs, me: string, companyId: string): 
   const messageId = parsed.positional[1]
   if (!messageId) return err('usage: poll close <message_id>')
   try {
-    const { closePoll } = await import('../polls.js')
-    const event = await closePoll({ messageId, companyId, actorId: me, reason: 'manual' })
+    const { pollApplication } = await import('../modules/polls/index.js')
+    const event = await pollApplication.close({ messageId, companyId, actorId: me, reason: 'manual' })
     if (!event) return ok(`poll ${messageId} was already closed`)
     return ok(`poll ${messageId} closed`)
   } catch (e) {
@@ -2205,31 +2211,27 @@ async function cmdPollClose(parsed: ParsedArgs, me: string, companyId: string): 
 async function cmdPollShow(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
   const messageId = parsed.positional[1]
   if (!messageId) return err('usage: poll show <message_id>')
-  const { rows } = await pool.query<{ poll: { question: string; mode: string; options: Array<{ id: string; text: string }>; expiresAt: string | null; closedAt: string | null } | null; author_id: string }>(
-    `SELECT poll, author_id FROM im_polls
-      WHERE poll_client_msg_no = $1 AND company_id = $2 LIMIT 1`,
-    [messageId, companyId],
-  )
-  const row = rows[0]
-  if (!row || !row.poll) return err(`poll ${messageId} not found`)
-  const { rows: tallyRows } = await pool.query<{ option_id: string; cnt: number; voter_ids: string[] }>(
-    `SELECT option_id, COUNT(*)::int AS cnt,
-            array_agg(voter_participant_id ORDER BY voter_participant_id) AS voter_ids
-       FROM im_poll_votes WHERE poll_client_msg_no = $1 GROUP BY option_id`,
-    [messageId],
-  )
-  const tallyMap = new Map(tallyRows.map((t) => [t.option_id, { cnt: t.cnt, voters: t.voter_ids }]))
-  const lines = row.poll.options.map((o) => {
-    const t = tallyMap.get(o.id) ?? { cnt: 0, voters: [] as string[] }
-    const mine = t.voters.includes(me) ? ' ← you' : ''
-    return `  ${o.id} (${t.cnt}) · ${o.text}${mine}`
-  }).join('\n')
-  const head = [
-    `poll ${messageId} · by ${row.author_id} · mode=${row.poll.mode}`,
-    row.poll.closedAt ? `closed at ${row.poll.closedAt}` : (row.poll.expiresAt ? `expires ${row.poll.expiresAt}` : 'open'),
-    row.poll.question,
-  ].join('\n')
-  return ok(`${head}\n${lines}`)
+  try {
+    const { pollApplication } = await import('../modules/polls/index.js')
+    const row = await pollApplication.show(companyId, messageId)
+    const tallyMap = new Map(row.tallies.map((tally) => [
+      tally.optionId,
+      { cnt: tally.count, voters: tally.voterIds },
+    ]))
+    const lines = row.poll.options.map((option) => {
+      const tally = tallyMap.get(option.id) ?? { cnt: 0, voters: [] as string[] }
+      const mine = tally.voters.includes(me) ? ' ← you' : ''
+      return `  ${option.id} (${tally.cnt}) · ${option.text}${mine}`
+    }).join('\n')
+    const head = [
+      `poll ${messageId} · by ${row.author_id} · mode=${row.poll.mode}`,
+      row.poll.closedAt ? `closed at ${row.poll.closedAt}` : (row.poll.expiresAt ? `expires ${row.poll.expiresAt}` : 'open'),
+      row.poll.question,
+    ].join('\n')
+    return ok(`${head}\n${lines}`)
+  } catch (error) {
+    return err(`poll show failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 const { cmdEmail } = createEmailCommand({
@@ -3241,7 +3243,7 @@ export async function runStructuredLearningAction(
       case 'kanban': return await cmdBoard(parsed, internal)
       case 'card': return await cmdCard(parsed, internal)
       case 'calendar': return await cmdCalendar(parsed, internal)
-      case 'poll': return await cmdPoll(parsed)
+      case 'poll': return await cmdPoll(parsed, internal)
       case 'email': return await cmdEmail(parsed, internal)
       default: return err(`unsupported structured action: ${action}`)
     }
@@ -3314,7 +3316,7 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'rename':              return await cmdRename(parsed)
       case 'skills':              return await cmdSkills(parsed)
       case 'email':               return await cmdEmail(parsed, internal)
-      case 'poll':                return await cmdPoll(parsed)
+      case 'poll':                return await cmdPoll(parsed, internal)
       // ====== other actions (each wraps a tool implementation) ======
       // `kanban` is the canonical verb for the shared boards feature.
       // `card` for the cards inside them. No CJK aliases — easier to

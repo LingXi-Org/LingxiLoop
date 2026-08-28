@@ -339,15 +339,15 @@ async function executeRoutine(work: AgentWorkItem, method: string, args: Record<
 }
 
 async function executePoll(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
-  const { castVote, closePoll, createPoll } = await import('../polls.js')
+  const { pollApplication } = await import('../modules/polls/index.js')
   if (method === 'create') {
     const rawOptions = Array.isArray(args.options) ? args.options.map(String) : []
     return {
       ok: true,
-      value: await createPoll({
+      value: await pollApplication.create({
         conversationId: textArg(args, 'channelId', false) || work.channelId,
         companyId: work.companyId,
-        authorId: work.agentId,
+        actorId: work.agentId,
         question: textArg(args, 'question'),
         mode: args.mode === 'multi' ? 'multi' : 'single',
         options: rawOptions,
@@ -361,28 +361,15 @@ async function executePoll(work: AgentWorkItem, method: string, args: Record<str
     const optionIds = Array.isArray(args.optionIds) ? args.optionIds.map(String) : []
     return {
       ok: true,
-      value: await castVote({
-        messageId, companyId: work.companyId, voterParticipantId: work.agentId,
+      value: await pollApplication.vote({
+        messageId, companyId: work.companyId, actorId: work.agentId,
         voterKind: 'agent', optionIds,
       }),
     }
   }
-  if (method === 'close') return { ok: true, value: await closePoll({ messageId, companyId: work.companyId, actorId: work.agentId, reason: 'manual' }) }
+  if (method === 'close') return { ok: true, value: await pollApplication.close({ messageId, companyId: work.companyId, actorId: work.agentId, reason: 'manual' }) }
   if (method === 'show') {
-    const { rows } = await pool.query(
-      `SELECT p.*, COALESCE(v.tallies, '[]'::jsonb) AS tallies
-         FROM im_polls p
-         LEFT JOIN LATERAL (
-           SELECT jsonb_agg(jsonb_build_object('optionId', option_id, 'count', count, 'voterIds', voter_ids)) AS tallies
-             FROM (SELECT option_id, COUNT(*)::int AS count,
-                          array_agg(voter_participant_id ORDER BY voter_participant_id) AS voter_ids
-                     FROM im_poll_votes WHERE poll_client_msg_no=p.poll_client_msg_no GROUP BY option_id) x
-         ) v ON TRUE
-        WHERE p.poll_client_msg_no=$1 AND p.company_id=$2`,
-      [messageId, work.companyId],
-    )
-    if (!rows[0]) throw new Error('poll not found')
-    return { ok: true, value: rows[0] }
+    return { ok: true, value: await pollApplication.show(work.companyId, messageId) }
   }
   throw new Error(`unsupported poll action: ${method}`)
 }

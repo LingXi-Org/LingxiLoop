@@ -8,6 +8,7 @@ export const messagesApi = {
       `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(rootId)}/replies`,
     ),
   createPoll: (args: {
+    clientRequestId: string
     conversationId: string
     question: string
     mode: 'single' | 'multi'

@@ -13,7 +13,8 @@ const REQUIRED_V1_RELATIONS = [
   'agent_os_approvals', 'knowledge_sources', 'courses', 'learning_objectives',
   'learning_notification_deliveries', 'learning_project_teacher_agents',
   'learning_course_teacher_rooms', 'canvas_assignment_reports',
-  'canvas_agent_assignments', 'im_read_receipt_advances', 'llm_calls',
+  'canvas_agent_assignments', 'im_read_receipt_advances', 'im_polls',
+  'im_poll_votes', 'llm_calls',
 ] as const
 
 const REQUIRED_V1_COLUMNS = [
@@ -26,6 +27,8 @@ const REQUIRED_V1_COLUMNS = [
   ['message_reactions', 'company_id'],
   ['agent_climate', 'company_id'],
   ['calendar_events', 'project_id'],
+  ['im_polls', 'published_revision'],
+  ['im_polls', 'request_fingerprint'],
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [
@@ -117,7 +120,9 @@ export async function bootstrapV1Schema(): Promise<'created' | 'ready'> {
     if (existingRelations > 0) {
       if ((await schemaMarker(client)) === V1_SCHEMA_MARKER) {
         if (!(await v1SchemaReady(client))) {
-          throw new Error('LingxiLoop v1 schema marker exists, but required relations are missing.')
+          throw new Error(
+            'LingxiLoop v1 schema marker exists, but required V1 objects are missing or invalid. Drop and recreate the database from the current schema.sql.',
+          )
         }
         return 'ready'
       }
