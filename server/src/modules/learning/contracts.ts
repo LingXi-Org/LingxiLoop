@@ -75,6 +75,13 @@ export type MissionCoordinatorInput = z.infer<typeof missionCoordinatorRequestSc
 export type ReviewEvaluationInput = z.infer<typeof reviewEvaluationRequestSchema>
 export type NotificationPreferencesInput = z.infer<typeof notificationPreferencesRequestSchema>
 
+export interface CreateLearningObjectivesCommand extends CreateObjectivesInput {
+  companyId: string
+  courseId: string
+  actorId: string
+  actorKind: 'agent' | 'teacher'
+}
+
 export interface LearningScope { userId: string; companyId: string }
 export interface LearningNotificationPreferences {
   company_id: string

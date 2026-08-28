@@ -8,7 +8,6 @@
 export {
   addMissionSteps,
   completeMission,
-  createObjectives,
   draftActivity,
   finishMissionPlanning,
   getActivity,
@@ -20,6 +19,20 @@ export {
   startMission,
   updateMissionStep,
 } from '../../learning/service.js'
+
+export function createObjectives(input: CreateLearningObjectivesCommand) {
+  return createLearningObjectives(pool, (work) => withTransaction(pool, work), input)
+}
+
+export function setObjectiveStatus(input: {
+  companyId: string
+  courseId: string
+  objectiveId: string
+  teacherId: string
+  status: 'draft' | 'published' | 'archived'
+}) {
+  return setLearningObjectiveStatus(pool, input)
+}
 
 export {
   assertTeacherApprovalFresh,
@@ -38,3 +51,10 @@ export type {
   LearningTurnContext,
   TeacherTurnContext,
 } from '../../learning/types.js'
+import { pool } from '../../db/pool.js'
+import { withTransaction } from '../../db/transaction.js'
+import {
+  createLearningObjectives,
+  setLearningObjectiveStatus,
+} from './application.js'
+import type { CreateLearningObjectivesCommand } from './contracts.js'

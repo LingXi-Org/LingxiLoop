@@ -6,6 +6,7 @@ import type {
   NotificationPreferencesInput,
   UpdateCourseInput,
 } from './contracts.js'
+import type { LearningObjective, LearningObjectiveStatus } from '../../learning/types.js'
 
 export async function listCourses(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query(
@@ -458,6 +459,100 @@ export async function listDeliveries(db: Queryable, companyId: string, userId: s
     [companyId, userId],
   )
   return rows
+}
+
+export async function insertLearningObjective(
+  db: Queryable,
+  args: {
+    id: string
+    companyId: string
+    courseId: string
+    actorId: string
+    title: string
+    successCriteria: string
+    targetLevel: 1 | 2 | 3 | 4
+    position: number
+  },
+): Promise<void> {
+  const result = await db.query(
+    `INSERT INTO learning_objectives
+       (id,course_id,company_id,title,success_criteria,target_level,position,status,created_by)
+     SELECT $1,course.id,course.company_id,$4,$5,$6,$7,'draft',$8
+       FROM courses course WHERE course.id=$2 AND course.company_id=$3`,
+    [args.id,args.courseId,args.companyId,args.title,args.successCriteria,args.targetLevel,args.position,args.actorId],
+  )
+  if (!result.rowCount) throw new Error('course not found')
+}
+
+export async function insertLearningObjectiveDependency(
+  db: Queryable,
+  args: { companyId: string; courseId: string; objectiveId: string; prerequisiteId: string },
+): Promise<void> {
+  await db.query(
+    `INSERT INTO learning_objective_dependencies(objective_id,prerequisite_objective_id)
+     SELECT objective.id,prerequisite.id
+       FROM learning_objectives objective
+       JOIN learning_objectives prerequisite
+         ON prerequisite.id=$4 AND prerequisite.course_id=objective.course_id
+        AND prerequisite.company_id=objective.company_id
+      WHERE objective.id=$1 AND objective.course_id=$2 AND objective.company_id=$3
+     ON CONFLICT DO NOTHING`,
+    [args.objectiveId,args.courseId,args.companyId,args.prerequisiteId],
+  )
+}
+
+export async function listLearningObjectives(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+): Promise<LearningObjective[]> {
+  const { rows } = await db.query<{
+    id: string; course_id: string; title: string; success_criteria: string; target_level: 1|2|3|4
+    position: number; status: LearningObjectiveStatus; prerequisite_ids: string[]
+  }>(
+    `SELECT objective.id,objective.course_id,objective.title,objective.success_criteria,
+            objective.target_level,objective.position,objective.status,
+            COALESCE(array_agg(dependency.prerequisite_objective_id)
+              FILTER (WHERE dependency.prerequisite_objective_id IS NOT NULL),'{}') AS prerequisite_ids
+       FROM learning_objectives objective
+       LEFT JOIN learning_objective_dependencies dependency ON dependency.objective_id=objective.id
+      WHERE objective.course_id=$2 AND objective.company_id=$1
+      GROUP BY objective.id ORDER BY objective.position,objective.created_at`,
+    [companyId, courseId],
+  )
+  return rows.map((row) => ({
+    id: row.id,
+    courseId: row.course_id,
+    title: row.title,
+    successCriteria: row.success_criteria,
+    targetLevel: row.target_level,
+    position: Number(row.position),
+    status: row.status,
+    prerequisiteIds: row.prerequisite_ids,
+  }))
+}
+
+export async function updateLearningObjectiveStatus(
+  db: Queryable,
+  args: {
+    companyId: string
+    courseId: string
+    objectiveId: string
+    teacherId: string
+    status: LearningObjectiveStatus
+  },
+): Promise<boolean> {
+  const result = await db.query(
+    `UPDATE learning_objectives objective SET status=$5,updated_at=NOW()
+      WHERE objective.id=$3 AND objective.course_id=$2 AND objective.company_id=$1
+        AND EXISTS(
+          SELECT 1 FROM course_members member
+           WHERE member.course_id=objective.course_id AND member.company_id=objective.company_id
+             AND member.user_id=$4 AND member.role='teacher'
+        )`,
+    [args.companyId,args.courseId,args.objectiveId,args.teacherId,args.status],
+  )
+  return Boolean(result.rowCount)
 }
 
 export async function findNotificationPreferences(

@@ -8,6 +8,7 @@ const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8'
 const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url), 'utf8')
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
 const service = readFileSync(new URL('../learning/service.ts', import.meta.url), 'utf8')
+const repository = readFileSync(new URL('../modules/learning/repository.ts', import.meta.url), 'utf8')
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
 
 function productionTypeScriptFiles(root: string): string[] {
@@ -44,6 +45,13 @@ test('native learning schema keeps evidence, projection and delivery ledgers dur
   assert.match(schema, /UNIQUE \(course_id, learner_id, conversation_id, trigger_client_msg_no\)/)
   assert.match(schema, /uq_learning_deliveries_course/)
   assert.doesNotMatch(schema, /CREATE TABLE public\.learning_(?:courses|course_memberships)\b/)
+})
+
+test('objective persistence has one tenant-scoped repository path', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_objectives/)
+  assert.doesNotMatch(service, /UPDATE learning_objectives SET status/)
+  assert.match(repository, /course\.id=\$2 AND course\.company_id=\$3/)
+  assert.match(repository, /objective\.course_id=\$2 AND objective\.company_id=\$1/)
 })
 
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{

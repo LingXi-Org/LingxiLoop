@@ -124,7 +124,13 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
       ...(item.targetLevel !== undefined ? { targetLevel: Number(item.targetLevel) } : {}),
       ...(Array.isArray(item.prerequisiteIds) ? { prerequisiteIds: item.prerequisiteIds.map(String) } : {}),
     })) : []
-    return { ok: true, value: await createObjectives({ courseId: context.course.id, actorId: work.agentId, actorKind: 'agent', objectives }) }
+    return { ok: true, value: await createObjectives({
+      companyId: work.companyId,
+      courseId: context.course.id,
+      actorId: work.agentId,
+      actorKind: 'agent',
+      objectives,
+    }) }
   }
   if (method === 'draft_activity') return { ok: true, value: await draftActivity({
     courseId: context.course.id, actorId: work.agentId, title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),

@@ -4,6 +4,7 @@ import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
 import { wukongClient } from '../im/wukong.js'
 import { inc } from '../metrics.js'
+import { listLearningObjectives } from '../modules/learning/repository.js'
 import type { AgentWorkItem } from '../agent-os/types.js'
 import type {
   LearningActivity,
@@ -13,7 +14,6 @@ import type {
   LearningEvaluationMode,
   LearningMission,
   LearningMissionStep,
-  LearningObjective,
   LearningRole,
   LearningRoomPurpose,
   LearningStepStatus,
@@ -181,64 +181,6 @@ export async function bindCourseRoom(input: {
   )
 }
 
-export async function createObjectives(input: {
-  courseId: string; actorId: string; actorKind: 'agent' | 'teacher'; objectives: Array<{
-    title: string; successCriteria: string; targetLevel?: number; prerequisiteIds?: string[]
-  }>
-}, db: Queryable = pool): Promise<LearningObjective[]> {
-  if (input.actorKind === 'teacher') await requireCourseRole(input.courseId, input.actorId, 'teacher', db)
-  if (!input.objectives.length || input.objectives.length > 100) throw new Error('objectives must contain between 1 and 100 items')
-  const ownsClient = db === pool
-  const client = ownsClient ? await pool.connect() : db as unknown as PoolClient
-  try {
-    await client.query('BEGIN')
-    let position = 0
-    for (const raw of input.objectives) {
-      const id = randomUUID()
-      await client.query(
-        `INSERT INTO learning_objectives(id,course_id,company_id,title,success_criteria,target_level,position,status,created_by)
-         SELECT $1,$2,course.company_id,$3,$4,$5,$6,'draft',$7
-           FROM courses course WHERE course.id=$2`,
-        [id, input.courseId, asText(raw.title, 'objective title'), asText(raw.successCriteria, 'successCriteria'), asLevel(raw.targetLevel, 3), position++, input.actorId],
-      )
-      for (const prerequisiteId of raw.prerequisiteIds ?? []) {
-        await client.query(
-          `INSERT INTO learning_objective_dependencies(objective_id,prerequisite_objective_id)
-           SELECT $1,id FROM learning_objectives WHERE id=$2 AND course_id=$3 ON CONFLICT DO NOTHING`,
-          [id, prerequisiteId, input.courseId],
-        )
-      }
-    }
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => undefined)
-    throw error
-  } finally { if (ownsClient) client.release() }
-  return listObjectives(input.courseId, db)
-}
-
-export async function listObjectives(courseId: string, db: Queryable = pool): Promise<LearningObjective[]> {
-  const { rows } = await db.query<{
-    id: string; course_id: string; title: string; success_criteria: string; target_level: 1|2|3|4
-    position: number; status: LearningObjective['status']; prerequisite_ids: string[]
-  }>(
-    `SELECT o.id,o.course_id,o.title,o.success_criteria,o.target_level,o.position,o.status,
-            COALESCE(array_agg(d.prerequisite_objective_id) FILTER (WHERE d.prerequisite_objective_id IS NOT NULL),'{}') AS prerequisite_ids
-       FROM learning_objectives o LEFT JOIN learning_objective_dependencies d ON d.objective_id=o.id
-      WHERE o.course_id=$1 GROUP BY o.id ORDER BY o.position,o.created_at`, [courseId],
-  )
-  return rows.map((row) => ({
-    id: row.id, courseId: row.course_id, title: row.title, successCriteria: row.success_criteria,
-    targetLevel: row.target_level, position: Number(row.position), status: row.status, prerequisiteIds: row.prerequisite_ids,
-  }))
-}
-
-export async function setObjectiveStatus(courseId: string, objectiveId: string, teacherId: string, status: LearningObjective['status'], db: Queryable = pool): Promise<void> {
-  await requireCourseRole(courseId, teacherId, 'teacher', db)
-  const { rowCount } = await db.query(`UPDATE learning_objectives SET status=$3,updated_at=NOW() WHERE id=$1 AND course_id=$2`, [objectiveId,courseId,status])
-  if (!rowCount) throw new Error('objective not found')
-}
-
 export async function draftActivity(input: {
   courseId: string; actorId: string; title: string; instructions: string; type: LearningActivityType
   evaluationMode?: LearningEvaluationMode; targetLevel?: number; rubric?: unknown[]; objectiveIds?: string[]; dueAt?: string
@@ -391,12 +333,12 @@ export async function listEvaluationQueue(courseId: string, teacherId: string, d
 }
 
 async function roomScope(work: AgentWorkItem, db: Queryable = pool): Promise<{
-  courseId: string; projectId: string; courseTitle: string; courseStatus: 'active'|'archived'; purpose: LearningRoomPurpose
+  companyId: string; courseId: string; projectId: string; courseTitle: string; courseStatus: 'active'|'archived'; purpose: LearningRoomPurpose
 }> {
   const { rows } = await db.query<{
-    course_id:string;project_id:string;title:string;status:'active'|'archived';purpose:LearningRoomPurpose
+    company_id:string;course_id:string;project_id:string;title:string;status:'active'|'archived';purpose:LearningRoomPurpose
   }>(
-    `SELECT course.id AS course_id,course.project_id,project.name AS title,project.status,
+    `SELECT course.company_id,course.id AS course_id,course.project_id,project.name AS title,project.status,
             CASE WHEN course.study_room_conversation_id=$1 THEN 'study'::text ELSE room.purpose END AS purpose
        FROM courses course
        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
@@ -408,7 +350,7 @@ async function roomScope(work: AgentWorkItem, db: Queryable = pool): Promise<{
   )
   const row = rows[0]
   if (!row) throw new Error('current conversation is not bound to a learning course')
-  return { courseId: row.course_id, projectId: row.project_id, courseTitle: row.title, courseStatus: row.status, purpose: row.purpose }
+  return { companyId: row.company_id, courseId: row.course_id, projectId: row.project_id, courseTitle: row.title, courseStatus: row.status, purpose: row.purpose }
 }
 
 export function preferredCoordinatorPreset(kind:import('./types.js').LearningMissionKind):'nova'|'scout'|'forge' {
@@ -889,7 +831,7 @@ export async function loadLearningTurnContext(work: AgentWorkItem, actorId?: str
   }
   const role = resolvedActorId ? await courseRole(db, scope.courseId, resolvedActorId) : undefined
   const learnerId = role === 'learner' ? resolvedActorId : undefined
-  const objectives = await listObjectives(scope.courseId, db)
+  const objectives = await listLearningObjectives(db, scope.companyId, scope.courseId)
   const { rows: mastery } = learnerId ? await db.query<{ objective_id:string;level:number;status:string;next_review_at:string|null }>(
     `SELECT objective_id,level,status,next_review_at FROM learning_mastery WHERE course_id=$1 AND learner_id=$2`, [scope.courseId,learnerId],
   ) : { rows: [] }

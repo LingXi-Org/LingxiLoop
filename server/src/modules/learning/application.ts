@@ -5,18 +5,15 @@ import {
   bindCourseRoom,
   closeActivity,
   courseProgress,
-  createObjectives,
   draftActivity,
   learningDashboard,
   listActivities,
   listEvaluationQueue,
   listEvidence,
   listMissions,
-  listObjectives,
   publishActivity,
   reviewEvaluation,
   setMissionCoordinator,
-  setObjectiveStatus,
   submitActivity,
 } from '../../learning/service.js'
 import type {
@@ -25,6 +22,7 @@ import type {
   CreateCourseInput,
   CreateCourseInvitationInput,
   CreateObjectivesInput,
+  CreateLearningObjectivesCommand,
   LearningScope,
   MissionCoordinatorInput,
   NotificationPreferencesInput,
@@ -47,12 +45,15 @@ import {
   findVerifiedUser,
   insertCourse,
   insertCourseInvitation,
+  insertLearningObjective,
+  insertLearningObjectiveDependency,
   invitationViewer,
   joinInvitationCompany,
   listCourseInvitations,
   listCourseMembers,
   listCourses,
   listDeliveries,
+  listLearningObjectives,
   lockCourseInvitation,
   priorCourseAcceptance,
   recordCourseAcceptance,
@@ -62,6 +63,7 @@ import {
   studyRoomState,
   syncStudyRoomMembers,
   updateCourseMetadata,
+  updateLearningObjectiveStatus,
   upsertNotificationPreferences,
   upsertAcceptedCourseMembership,
 } from './repository.js'
@@ -94,6 +96,75 @@ export interface LearningInfrastructure {
 }
 
 const privilegedRoles = new Set(['owner', 'admin'])
+
+export type LearningTransaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
+
+function objectiveText(value: string, name: string): string {
+  const text = value.trim()
+  if (!text || text.length > 10_000) throw new LearningApplicationError('invalid', `${name} is required`)
+  return text
+}
+
+function objectiveLevel(value: number | undefined): 1 | 2 | 3 | 4 {
+  const level = value ?? 3
+  if (!Number.isInteger(level) || level < 1 || level > 4) {
+    throw new LearningApplicationError('invalid', 'targetLevel must be between 1 and 4')
+  }
+  return level as 1 | 2 | 3 | 4
+}
+
+export async function createLearningObjectives(
+  db: Queryable,
+  transaction: LearningTransaction,
+  input: CreateLearningObjectivesCommand,
+) {
+  if (!input.objectives.length || input.objectives.length > 100) {
+    throw new LearningApplicationError('invalid', 'objectives must contain between 1 and 100 items')
+  }
+  await transaction(async (client) => {
+    if (input.actorKind === 'teacher') {
+      const role = await courseRole(client, input.courseId, input.companyId, input.actorId)
+      if (role !== 'teacher') throw new LearningApplicationError('forbidden', 'course teacher role required')
+    }
+    for (const [position, objective] of input.objectives.entries()) {
+      const objectiveId = randomUUID()
+      await insertLearningObjective(client, {
+        id: objectiveId,
+        companyId: input.companyId,
+        courseId: input.courseId,
+        actorId: input.actorId,
+        title: objectiveText(objective.title, 'objective title'),
+        successCriteria: objectiveText(objective.successCriteria, 'successCriteria'),
+        targetLevel: objectiveLevel(objective.targetLevel),
+        position,
+      })
+      for (const prerequisiteId of objective.prerequisiteIds ?? []) {
+        await insertLearningObjectiveDependency(client, {
+          companyId: input.companyId,
+          courseId: input.courseId,
+          objectiveId,
+          prerequisiteId,
+        })
+      }
+    }
+  })
+  return listLearningObjectives(db, input.companyId, input.courseId)
+}
+
+export async function setLearningObjectiveStatus(
+  db: Queryable,
+  input: {
+    companyId: string
+    courseId: string
+    objectiveId: string
+    teacherId: string
+    status: 'draft' | 'published' | 'archived'
+  },
+): Promise<void> {
+  if (!await updateLearningObjectiveStatus(db, input)) {
+    throw new LearningApplicationError('not_found', 'objective not found')
+  }
+}
 
 export class LearningApplication {
   constructor(private readonly db: Queryable, private readonly infrastructure: LearningInfrastructure) {}
@@ -355,21 +426,31 @@ export class LearningApplication {
     await this.assertCourseScope(scope.companyId, courseId)
     const role = await courseRole(this.db, courseId, scope.companyId, scope.userId)
     if (!role) throw new LearningApplicationError('forbidden', 'course membership required')
-    const objectives = await this.classroom(() => listObjectives(courseId, this.db))
+    const objectives = await this.classroom(() => listLearningObjectives(this.db, scope.companyId, courseId))
     return role === 'teacher' ? objectives : objectives.filter((objective) => objective.status === 'published')
   }
 
   async createObjectives(scope: LearningScope, courseId: string, input: CreateObjectivesInput) {
     await this.assertCourseScope(scope.companyId, courseId)
-    return this.classroom(() => createObjectives({
-      courseId, actorId: scope.userId, actorKind: 'teacher', objectives: input.objectives,
-    }, this.db))
+    return this.classroom(() => createLearningObjectives(this.db, (work) => this.infrastructure.transaction(work), {
+      companyId: scope.companyId,
+      courseId,
+      actorId: scope.userId,
+      actorKind: 'teacher',
+      objectives: input.objectives,
+    }))
   }
 
   async setObjectiveStatus(scope: LearningScope, courseId: string, objectiveId: string, input: ObjectiveStatusInput) {
     await this.assertCourseScope(scope.companyId, courseId)
     return this.classroom(async () => {
-      await setObjectiveStatus(courseId, objectiveId, scope.userId, input.status, this.db)
+      await setLearningObjectiveStatus(this.db, {
+        companyId: scope.companyId,
+        courseId,
+        objectiveId,
+        teacherId: scope.userId,
+        status: input.status,
+      })
       return { ok: true as const }
     })
   }

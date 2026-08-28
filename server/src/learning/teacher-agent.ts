@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 import { audit } from '../auth.js'
 import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
+import { withClientTransaction, withTransaction } from '../db/transaction.js'
+import type { PoolClient } from 'pg'
 import { wukongClient } from '../im/wukong.js'
 import type { ImChannelProfile } from '../im/types.js'
 import { inc } from '../metrics.js'
@@ -9,14 +11,13 @@ import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import {
   bindCourseRoom,
   closeActivity,
-  createObjectives,
   draftActivity,
   publishActivity,
   requireCourseRole,
   reviewEvaluation,
   setCourseMembership,
-  setObjectiveStatus,
 } from './service.js'
+import { createLearningObjectives, setLearningObjectiveStatus } from '../modules/learning/application.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,
@@ -39,6 +40,12 @@ const WRITE_METHODS = new Set([
   'draft_objectives', 'draft_activity', 'update_course', 'set_learner_membership',
   'set_room_binding', 'configure_digest', ...APPROVAL_METHODS,
 ])
+
+function learningTransaction(db: Queryable) {
+  return <T>(work: (client: Queryable) => Promise<T>): Promise<T> => db === pool
+    ? withTransaction(pool, work)
+    : withClientTransaction(db as PoolClient, work)
+}
 
 function stableSegment(value: string): string {
   return createHash('sha256').update(value).digest('hex').slice(0, 18)
@@ -569,7 +576,13 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
       const prerequisites=item.prerequisiteIds??item.prerequisite_ids
       return {title:textArg(item,'title'),successCriteria:textArg(item,'successCriteria','success_criteria'),targetLevel:Number(item.targetLevel??item.target_level??3),prerequisiteIds:Array.isArray(prerequisites)?prerequisites.map(String):[]}
     }):[]
-    return createObjectives({courseId:scope.courseId,actorId:scope.teacherId,actorKind:'teacher',objectives:values},db)
+    return createLearningObjectives(db, learningTransaction(db), {
+      companyId: scope.companyId,
+      courseId: scope.courseId,
+      actorId: scope.teacherId,
+      actorKind: 'teacher',
+      objectives: values,
+    })
   }
   if(method==='draft_activity'){
     const objectiveIds=args.objectiveIds??args.objective_ids
@@ -587,8 +600,8 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   if(method==='set_learner_membership'){await setCourseMembership({courseId:scope.courseId,teacherId:scope.teacherId,userId:textArg(args,'userId','user_id'),role:'learner',enabled:boolArg(args)},db);return {ok:true}}
   if(method==='set_room_binding'){const conversationId=textArg(args,'conversationId','conversation_id');const purpose=optionalText(args,'purpose');if(args.enabled===false||!purpose){await db.query(`DELETE FROM learning_course_rooms WHERE course_id=$1 AND conversation_id=$2`,[scope.courseId,conversationId]);return {ok:true,enabled:false}};await bindCourseRoom({courseId:scope.courseId,teacherId:scope.teacherId,conversationId,purpose:purpose as LearningRoomPurpose},db);return {ok:true,enabled:true}}
   if(method==='configure_digest')return configureDigest(scope,args,db)
-  if(method==='publish_objective'){await setObjectiveStatus(scope.courseId,textArg(args,'objectiveId','objective_id'),scope.teacherId,'published',db);return {ok:true}}
-  if(method==='archive_objective'){await setObjectiveStatus(scope.courseId,textArg(args,'objectiveId','objective_id'),scope.teacherId,'archived',db);return {ok:true}}
+  if(method==='publish_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'published'});return {ok:true}}
+  if(method==='archive_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'archived'});return {ok:true}}
   if(method==='publish_activity'){await publishActivity(scope.courseId,textArg(args,'activityId','activity_id'),scope.teacherId,db);return {ok:true}}
   if(method==='close_activity'){await closeActivity(scope.courseId,textArg(args,'activityId','activity_id'),scope.teacherId,db);return {ok:true}}
   if(method==='set_course_status'){
