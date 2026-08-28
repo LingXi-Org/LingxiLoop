@@ -418,6 +418,7 @@ export interface PollUpdatedEvent extends TenantTagged {
   type: 'poll.updated'
   conversationId: string
   messageId: string
+  revision: number
   /** Poll payload as stored on messages.poll — includes closedAt when this
    *  event marks the poll as closed. */
   poll: {

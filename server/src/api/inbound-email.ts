@@ -36,6 +36,7 @@ import {
   findOrCreateEmailConversation,
   persistEmailMessage,
   recordExternalContact,
+  computeAgentAddress,
 } from '../email.js'
 
 /** Capture the raw body bytes so we can HMAC-verify before the global
@@ -133,6 +134,25 @@ async function resolveRecipient(addr: string): Promise<{
     participantName: rows[0].name,
     participantKind: rows[0].kind,
   }
+  const { rows: candidates } = await pool.query<{
+    id: string; name: string; kind: string; company_id: string; slug: string
+  }>(
+    `SELECT participant.id,participant.name,participant.kind,participant.company_id,company.slug
+       FROM participants participant
+       JOIN companies company ON company.id=participant.company_id
+      WHERE participant.kind='agent' AND participant.departed_at IS NULL AND participant.email IS NULL`,
+  )
+  const candidate = candidates.find((row) => computeAgentAddress(row.id, row.slug)?.toLowerCase() === lc)
+  if (candidate) {
+    await pool.query(
+      `UPDATE participants SET email=$3 WHERE id=$1 AND company_id=$2 AND email IS NULL`,
+      [candidate.id,candidate.company_id,lc],
+    )
+    return {
+      companyId: candidate.company_id, participantId: candidate.id,
+      participantName: candidate.name, participantKind: candidate.kind,
+    }
+  }
   return null
 }
 
@@ -211,12 +231,12 @@ function createInboundHandler(storageProvider: Pick<Storage, 'put'>) {
   }
 
   const subject = (payload.subject ?? '').trim()
-  const body = (payload.text ?? '').trim()
+  const html = payload.html ?? null
+  const body = ((payload.text ?? '').trim() || (html ? htmlToReadableText(html) : ''))
   if (!body) {
     res.status(400).json({ error: 'native inbound payload requires text' })
     return
   }
-  const html = payload.html ?? null
   const messageIdNorm = normalizeMessageId(payload.messageId)
   if (!messageIdNorm) {
     res.status(400).json({ error: 'invalid messageId' })
@@ -414,6 +434,23 @@ function createInboundHandler(storageProvider: Pick<Storage, 'put'>) {
   inc('email.inbound.delivered', { auto_submitted: Boolean(payload.autoSubmitted) })
   res.json({ ok: true, deliveries: inserts })
   }
+}
+
+function htmlToReadableText(html: string): string {
+  return html
+    .replace(/<\s*(script|style)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, ' ')
+    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\s*\/\s*(p|div|li|tr|h[1-6])\s*>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n\s+/g, '\n')
+    .trim()
 }
 
 export function createInboundEmailRouter(dependencies: { storage: Pick<Storage, 'put'> }): Router {

@@ -287,6 +287,7 @@ export interface Message {
   /** Per-option aggregated tallies for kind === 'poll'. Empty array for
    *  any other message kind. Updated in place by `poll.updated` WS events. */
   pollTallies?: PollTally[]
+  pollRevision?: number
   /** Agent-authored clarification flow. The learner response is posted as a
    * normal quoted message so the asking Agent is deterministically woken. */
   questionnaire?: QuestionnairePayload

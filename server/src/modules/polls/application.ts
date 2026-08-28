@@ -261,6 +261,7 @@ export class PollApplication {
       conversationId: row.channel_id,
       companyId: row.company_id,
       messageId,
+      revision: Number(row.revision),
       poll: row.poll,
       tallies: await pollTallies(this.db, companyId, messageId),
       actorId,

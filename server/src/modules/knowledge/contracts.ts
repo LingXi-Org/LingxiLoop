@@ -15,11 +15,12 @@ export const updateProjectRequestSchema = z.object({
 export const archiveProjectRequestSchema = z.object({ archive: z.boolean().default(true) }).strict()
 
 export const createSourceRequestSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('text'), title: z.string().trim().max(200).optional(), text: z.string().trim().min(1) }).strict(),
-  z.object({ kind: z.literal('url'), title: z.string().trim().max(200).optional(), url: z.string().trim().url() }).strict(),
+  z.object({ kind: z.literal('text'), idempotencyKey: z.string().trim().min(8).max(200), title: z.string().trim().max(200).optional(), text: z.string().trim().min(1) }).strict(),
+  z.object({ kind: z.literal('url'), idempotencyKey: z.string().trim().min(8).max(200), title: z.string().trim().max(200).optional(), url: z.string().trim().url() }).strict(),
 ])
 
 export const presignSourceRequestSchema = z.object({
+  idempotencyKey: z.string().trim().min(8).max(200),
   name: z.string().trim().min(1).max(200),
   mime: z.enum([
     'application/pdf',

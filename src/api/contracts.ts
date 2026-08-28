@@ -131,6 +131,7 @@ export type WsEvent =
       type: 'poll.updated'
       conversationId: string
       messageId: string
+      revision: number
       poll: import('../types.js').PollPayload
       tallies: import('../types.js').PollTally[]
       actorId: string | null

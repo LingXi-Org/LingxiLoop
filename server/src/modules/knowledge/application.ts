@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { CreateSourceInput, KnowledgeScope, PresignSourceInput, ProjectPatch } from './contracts.js'
 import {
@@ -126,7 +126,9 @@ export class KnowledgeApplication {
   }
 
   async createSource(scope: KnowledgeScope, conversationId: string | null, input: CreateSourceInput) {
-    const id = `ks-${randomUUID().slice(0, 16)}`
+    const id = `ks-${createHash('sha256').update(`${scope.companyId}:${scope.projectId}:${scope.userId}:${input.idempotencyKey}`).digest('hex').slice(0, 16)}`
+    const replay = await findSource(this.db, scope.companyId, scope.projectId, id)
+    if (replay) return { id, kind: replay.kind, title: replay.title, status: replay.status, stage: replay.stage }
     const text = input.kind === 'text' ? input.text : null
     const originalUrl = input.kind === 'url' ? input.url : null
     const size = text ? Buffer.byteLength(text, 'utf8') : 0
@@ -150,7 +152,12 @@ export class KnowledgeApplication {
     if (input.size > this.infrastructure.maxSourceBytes) {
       throw new KnowledgeApplicationError('too_large', 'file size is outside the 25 MB limit')
     }
-    const id = `ks-${randomUUID().slice(0, 16)}`
+    const id = `ks-${createHash('sha256').update(`${scope.companyId}:${scope.projectId}:${scope.userId}:${input.idempotencyKey}`).digest('hex').slice(0, 16)}`
+    const replay = await findSource(this.db, scope.companyId, scope.projectId, id)
+    if (replay?.storageKey) {
+      const signed = await this.infrastructure.presignPut(replay.storageKey, input.mime)
+      return { id, uploadUrl: signed.uploadUrl, mime: input.mime, size: input.size }
+    }
     const key = `knowledge-sources/${scope.companyId}/${scope.projectId}/${id}.${EXTENSIONS[input.mime]}`
     const signed = await this.infrastructure.presignPut(key, input.mime)
     await insertSource(this.db, {

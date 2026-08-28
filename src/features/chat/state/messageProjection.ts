@@ -58,6 +58,7 @@ export function fromApi(message: ApiMessage): Message {
     email?: Message['email'] | null
     poll?: Message['poll'] | null
     pollTallies?: Message['pollTallies'] | null
+    pollRevision?: number | null
     questionnaire?: Message['questionnaire'] | null
     clientId?: string | null
     mentionedIds?: string[] | null
@@ -86,6 +87,7 @@ export function fromApi(message: ApiMessage): Message {
     email: raw.email ?? undefined,
     poll: raw.poll ?? undefined,
     pollTallies: raw.pollTallies ?? undefined,
+    pollRevision: raw.pollRevision ?? undefined,
     questionnaire: raw.questionnaire ?? undefined,
     clientId: raw.clientId ?? undefined,
     mentionedIds: raw.mentionedIds ?? undefined,
@@ -145,6 +147,7 @@ export function fromIm(message: ImEnvelope): Message {
     pollTallies: payload.kind === 'poll' && Array.isArray(data.pollTallies)
       ? data.pollTallies as Message['pollTallies']
       : undefined,
+    pollRevision: payload.kind === 'poll' && typeof data.revision === 'number' ? data.revision : undefined,
     questionnaire: payload.kind === 'questionnaire'
       ? (data.questionnaire && typeof data.questionnaire === 'object'
           ? data.questionnaire as Message['questionnaire']

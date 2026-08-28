@@ -51,7 +51,7 @@ test('[integration] knowledge source creation keeps explicit tenant and project 
   const created = await application.createSource(
     { userId: USER_ID, companyId: COMPANY_ID, projectId: PROJECT_ID },
     null,
-    { kind: 'text', title: 'Strict source', text: 'authoritative text' },
+    { kind: 'text', idempotencyKey: 'knowledge-text-1', title: 'Strict source', text: 'authoritative text' },
   )
   const queued = await pool.query(`SELECT 1 FROM knowledge_source_jobs WHERE source_id=$1 AND status='queued'`, [created.id])
   assert.equal(queued.rowCount, 1)
@@ -72,7 +72,7 @@ test('[integration] knowledge source creation keeps explicit tenant and project 
 test('[integration] presigned upload confirmation rejects a mismatched R2 object size', async () => {
   const scope = { userId: USER_ID, companyId: COMPANY_ID, projectId: PROJECT_ID }
   const pending = await application.presignSource(scope, null, {
-    name: 'source.txt', mime: 'text/plain', size: 5,
+    idempotencyKey: 'knowledge-file-1', name: 'source.txt', mime: 'text/plain', size: 5,
   })
   const source = await pool.query<{ storage_key: string }>(
     `SELECT storage_key FROM knowledge_sources WHERE id=$1 AND company_id=$2 AND project_id=$3`,
@@ -90,7 +90,7 @@ test('[integration] presigned upload confirmation rejects a mismatched R2 object
 test('[integration] conversation source selection accepts only same-tenant project sources', async () => {
   const own = await application.createSource(
     { userId: USER_ID, companyId: COMPANY_ID, projectId: PROJECT_ID }, null,
-    { kind: 'url', url: 'https://example.com/own' },
+    { kind: 'url', idempotencyKey: 'knowledge-url-1', url: 'https://example.com/own' },
   )
   const foreignId = 'ks-foreign-source'
   await pool.query(

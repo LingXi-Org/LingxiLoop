@@ -526,7 +526,9 @@ export const useMessages = create<MessagesState>((set, get) => ({
         if (!list) return {}
         const next = list.map((m) =>
           m.id === e.messageId
-            ? { ...m, poll: e.poll, pollTallies: e.tallies }
+            ? e.revision >= (m.pollRevision ?? 0)
+              ? { ...m, poll: e.poll, pollTallies: e.tallies, pollRevision: e.revision }
+              : m
             : m,
         )
         return { byConvo: { ...s.byConvo, [e.conversationId]: next } }
