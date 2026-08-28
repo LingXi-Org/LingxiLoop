@@ -18,7 +18,7 @@
  */
 import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { Avatar } from '@/components/Avatar'
-import { EventEditor, type EventEditorPrefill } from '@/components/EventEditor'
+import { EventEditor, type EventEditorPrefill } from './EventEditor'
 import { ICalendar, IClock, IPlus, IRepeat, ITrash } from '@/components/icons'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { ContextMenu as ContextMenuRoot, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
@@ -26,10 +26,10 @@ import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
-import { useCalendar } from '@/features/calendar/state'
+import { useCalendar } from '../state'
 import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/features/agents/state'
-import type { CalendarEvent, RecurrenceRule } from '@/features/calendar/contracts'
+import type { CalendarEvent, RecurrenceRule } from '../contracts'
 
 interface AgendaItem {
   event: CalendarEvent

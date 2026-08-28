@@ -54,11 +54,12 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../admin/WaitlistPage.tsx',
     '../features/canvas/components/CanvasView.tsx',
     '../features/documents/components/DocumentEditor.tsx',
-    '../components/EventEditor.tsx',
+    '../features/calendar/components/EventEditor.tsx',
+    '../features/calendar/components/CalendarEventPeekContent.tsx',
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
     '../features/boards/components/BoardsView.tsx',
-    '../desktop/CalendarView.tsx',
+    '../features/calendar/components/CalendarView.tsx',
     '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
     '../desktop/MeView.tsx',
@@ -72,9 +73,17 @@ test('approval decisions and user-triggered tasks publish through the global Toa
   assert.match(provider, /<Toaster \/>/)
   assert.match(provider, /<AlertDialog open=\{current !== null\}/)
   assert.match(read('../components/messages/MessageToolParts.tsx'), /toastAction\(Promise\.resolve\(addResult/)
-  assert.match(read('../components/EventEditor.tsx'), /toastAction\(runNow/)
+  assert.match(read('../features/calendar/components/EventEditor.tsx'), /toastAction\(runNow/)
+  assert.match(read('../features/calendar/components/CalendarEventPeekContent.tsx'), /toastAction\(runEventNow/)
   assert.match(read('../features/email/components/EmailComposer.tsx'), /toastAction\(Promise\.resolve\(sendPromise\)/)
   assert.match(read('../lib/actionToast.ts'), /toast\.promise\(/)
+})
+
+test('calendar editing uses the controlled Base UI Dialog without a handwritten modal shell', () => {
+  const editor = read('../features/calendar/components/EventEditor.tsx')
+  assert.match(editor, /<Dialog open onOpenChange=/)
+  assert.match(editor, /<DialogContent[\s\S]*?<DialogTitle[\s\S]*?<DialogDescription/)
+  assert.doesNotMatch(editor, /fixed inset-0|addEventListener\(['"]keydown/)
 })
 
 test('repository skill requires Alert Dialog and Toast for future sensitive work', () => {

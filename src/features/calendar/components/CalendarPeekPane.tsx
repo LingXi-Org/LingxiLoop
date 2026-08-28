@@ -1,6 +1,6 @@
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
-import { CalendarEventPeekContent } from '@/components/ArtifactPeekContent'
+import { CalendarEventPeekContent } from './CalendarEventPeekContent'
 
 export function CalendarPeekPane() {
   const eventId = useSurface((s) => s.surface?.kind === 'calendar' ? s.surface.eventId : null)

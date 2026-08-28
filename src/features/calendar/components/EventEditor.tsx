@@ -4,19 +4,20 @@
  * prompt + recurrence. Reuses the same API as the agent CLI's
  * `lingxiloop calendar create`, so the two stay shape-compatible.
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { DateTimePicker } from '@/components/DateTimePicker'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useMe } from '@/stores/auth'
-import { useCalendar } from '@/features/calendar/state'
+import { useCalendar } from '../state'
 import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/features/agents/state'
-import type { CalendarEvent, CalendarEventKind, RecurrenceRule } from '@/features/calendar/contracts'
+import type { CalendarEvent, CalendarEventKind, RecurrenceRule } from '../contracts'
 import type { Participant } from '@/types'
 
 /** Prefilled defaults passed in when creating a NEW event from a calendar
@@ -100,12 +101,6 @@ export function EventEditor({ event, prefill, onClose }: Props) {
   const [isPrivate, setIsPrivate] = useState<boolean>(event?.isPrivate ?? false)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   // Assignee picker source: every active participant (agents preferred at
   // top — that's the primary use case — but humans are valid too for
@@ -223,26 +218,21 @@ export function EventEditor({ event, prefill, onClose }: Props) {
   const canDelete = event && event.createdBy === meId
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center p-6"
-      style={{ background: 'rgba(15, 30, 50, 0.55)', backdropFilter: 'blur(6px)' }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-cloud rounded-[18px] shadow-pop w-full max-w-[600px] max-h-[88vh] flex flex-col overflow-hidden"
-        style={{ border: '1px solid var(--ink-100)' }}
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose() }}>
+      <DialogContent
+        className="max-h-[88vh] max-w-[600px] gap-0 overflow-hidden bg-cloud p-0 shadow-pop"
+        showCloseButton={!busy}
       >
-        <div className="px-6 py-5 border-b border-ink-100 shrink-0">
-          <h2 className="font-display font-medium text-[20px] tracking-tight">
+        <DialogHeader className="shrink-0 border-b border-ink-100 px-6 py-5 pr-14">
+          <DialogTitle className="font-display text-[20px] font-medium tracking-tight">
             {isEdit ? "编辑事件" : "新活动"}
-          </h2>
-          <div className="text-[12.5px] text-ink-500 italic font-display mt-0.5">
+          </DialogTitle>
+          <DialogDescription className="mt-0.5 font-display text-[12.5px] italic text-ink-500">
             {kind === 'agent_task'
               ? "选择智能体和时间。当它触发时，你的提示会出现在对话中并唤醒他们。"
               : "个人时间标记 — 没有智能体被 ping 到。"}
-          </div>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="px-6 py-5 overflow-y-auto overflow-x-hidden flex-1 min-h-0 space-y-5">
           <Field label="标题">
@@ -550,7 +540,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-ink-100 flex items-center gap-2 bg-paper shrink-0">
+        <DialogFooter className="shrink-0 flex-row items-center gap-2 border-t border-ink-100 bg-paper px-6 py-4 sm:justify-start">
           {canDelete && (
             <button
               onClick={onDelete}
@@ -584,11 +574,9 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
             }}
           >{busy ? "正在保存..." : isEdit ? "保存" : "时间表"}</button>
-        </div>
-      </div>
-
-      <style>{".ev-输入 {\n          宽度：100%；\n          内边距：8 像素 12 像素；\n          字体大小：13.5px；\n          背景：var(--paper);\n          边框：1.5px 实心 var(--ink-100);\n          边框半径：10px；\n          概要：无；\n          过渡：边框颜色0.15s，框阴影0.15s；\n          颜色：var(--ink-900)；\n        }\n        .ev-输入：焦点{\n          边框颜色：var(--sky2-300);\n          盒子阴影：0 0 0 3px var(--sky-50);\n        }"}</style>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

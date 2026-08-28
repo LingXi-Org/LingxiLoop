@@ -24,9 +24,18 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(consumers.join('\n'), /api\/client|\bapi\.[A-Za-z]/)
 
-  for (const file of ['api.ts', 'contracts.ts', 'state.ts']) {
+  for (const file of [
+    'api.ts', 'contracts.ts', 'state.ts',
+    'components/CalendarView.tsx', 'components/CalendarPeekPane.tsx',
+    'components/CalendarEventPeekContent.tsx', 'components/CalendarLink.tsx',
+    'components/EventEditor.tsx',
+  ]) {
     await access(new URL(`../features/calendar/${file}`, import.meta.url))
   }
+  await assert.rejects(access(new URL('../desktop/CalendarView.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../desktop/CalendarPeekPane.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../components/CalendarLink.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../components/EventEditor.tsx', import.meta.url)))
   const calendarState = await readFile(new URL('../features/calendar/state.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(calendarState, /stores\/calendar|api\/calendar/)
   const loadEvent = calendarState.slice(
@@ -35,6 +44,19 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   )
   assert.match(loadEvent, /calendarApi\.get\(id\)/)
   assert.doesNotMatch(loadEvent, /calendarApi\.list\(/)
+  const calendarSources = await Promise.all([
+    '../features/calendar/api.ts',
+    '../features/calendar/state.ts',
+    '../features/calendar/components/CalendarView.tsx',
+    '../features/calendar/components/CalendarPeekPane.tsx',
+    '../features/calendar/components/CalendarEventPeekContent.tsx',
+    '../features/calendar/components/CalendarLink.tsx',
+    '../features/calendar/components/EventEditor.tsx',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(
+    calendarSources.join('\n'),
+    /(?:from\s+|import\()['"]@\/(?:api\/calendar|stores\/calendar|components\/(?:CalendarLink|EventEditor)|desktop\/Calendar)/,
+  )
 
   for (const file of [
     'api.ts', 'contracts.ts', 'state.ts',
@@ -131,11 +153,15 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(companySources.join('\n'), /api\/companies|components\/InvitePeopleModal/)
 
-  for (const file of ['api.ts', 'contracts.ts', 'state.ts', 'components/BoardsView.tsx', 'components/BoardPeekPane.tsx']) {
+  for (const file of [
+    'api.ts', 'contracts.ts', 'state.ts',
+    'components/BoardsView.tsx', 'components/BoardPeekPane.tsx', 'components/BoardPeekContent.tsx',
+  ]) {
     await access(new URL(`../features/boards/${file}`, import.meta.url))
   }
   await assert.rejects(access(new URL('./boards.ts', import.meta.url)))
   await assert.rejects(access(new URL('../stores/boards.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../components/ArtifactPeekContent.tsx', import.meta.url)))
   const boardState = await readFile(new URL('../features/boards/state.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(boardState, /api\/boards|stores\/boards/)
 

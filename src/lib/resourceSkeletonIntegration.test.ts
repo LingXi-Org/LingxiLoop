@@ -29,10 +29,11 @@ test('global resource surfaces render Skeletons instead of plain initial loading
   const surfaces = [
     '../features/documents/components/DocumentsView.tsx',
     '../features/boards/components/BoardsView.tsx',
-    '../desktop/CalendarView.tsx',
+    '../features/calendar/components/CalendarView.tsx',
+    '../features/calendar/components/CalendarEventPeekContent.tsx',
     '../components/WorkspaceChrome.tsx',
     '../components/WorkspacePicker.tsx',
-    '../components/ArtifactPeekContent.tsx',
+    '../features/boards/components/BoardPeekContent.tsx',
     '../components/AttachmentViewer.tsx',
     '../features/documents/components/DocumentEditor.tsx',
     '../features/learning/components/LearningCenter.tsx',
@@ -43,7 +44,7 @@ test('global resource surfaces render Skeletons instead of plain initial loading
   ]
   for (const path of surfaces) {
     const source = read(path)
-    assert.match(source, /<(?:ResourceSkeleton|Skeleton)\b/, `${path} has no Skeleton pending branch`)
+    assert.match(source, /<(?:ResourceSkeleton|Skeleton|PeekLoading)\b/, `${path} has no Skeleton pending branch`)
   }
   assert.match(read('../components/LinkPreview.tsx'), /if \(!loaded\) return <ResourceSkeleton/)
   assert.doesNotMatch(read('../components/LinkPreview.tsx'), /render NOTHING \(no skeleton\)/)

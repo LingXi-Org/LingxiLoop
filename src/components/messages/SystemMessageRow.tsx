@@ -4,7 +4,7 @@ import { useSurface } from '@/stores/surface'
 import { useParticipants } from '@/features/agents/state'
 import type { Participant } from '@/types'
 import { Avatar } from '../Avatar'
-import { CalendarLink } from '../CalendarLink'
+import { CalendarLink } from '@/features/calendar/components/CalendarLink'
 
 export function SystemRow({ msg, delay = 0, animate = true, openMaus = false }: { msg: { body: string }; delay?: number; animate?: boolean; openMaus?: boolean }) {
   const byId = useParticipants((state) => state.byId)

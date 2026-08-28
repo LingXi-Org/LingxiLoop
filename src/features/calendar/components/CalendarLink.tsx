@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
-import { useCalendar } from '@/features/calendar/state'
+import { useCalendar } from '../state'
 import { useResolvedCalendarId } from '@/lib/useArtifactId'
-import { ICalendar } from './icons'
+import { ICalendar } from '@/components/icons'
 
 export function CalendarLink({ id: rawId }: { id: string }) {
   // Resolve a git-style short id (e.g. `ce-d53fa1f5`) to the full event id.

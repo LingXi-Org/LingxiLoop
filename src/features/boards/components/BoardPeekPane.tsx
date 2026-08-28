@@ -1,7 +1,7 @@
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { useBoards } from '../state'
-import { BoardPeekContent } from '@/components/ArtifactPeekContent'
+import { BoardPeekContent } from './BoardPeekContent'
 
 export function BoardPeekPane() {
   const board = useSurface((s) => s.surface?.kind === 'board' ? s.surface : null)

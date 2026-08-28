@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { AvatarMini } from '@/components/Avatar'
 import { BoardLink } from '@/features/boards/components/BoardLink'
-import { CalendarLink } from '@/components/CalendarLink'
+import { CalendarLink } from '@/features/calendar/components/CalendarLink'
 import { CardLink } from '@/features/boards/components/CardLink'
 import { DocumentLink } from '@/features/documents/components/DocumentLink'
 import { Input } from '@/components/ui/input'
