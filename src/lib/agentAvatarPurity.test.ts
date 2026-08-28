@@ -8,8 +8,8 @@ test('agent identity has one Bloub rendering path and no portrait generation sur
   const [router, cli, api, editor, avatar, schema, guard] = await Promise.all([
     read('../../server/src/modules/agents/router.ts'),
     read('../../server/src/agents/cli.ts'),
-    read('../api/agents.ts'),
-    read('../components/AgentEditor.tsx'),
+    read('../features/agents/api.ts'),
+    read('../features/agents/components/AgentEditor.tsx'),
     read('../components/Avatar.tsx'),
     read('../../server/src/db/schema.sql'),
     read('../../scripts/guard-architecture.mjs'),

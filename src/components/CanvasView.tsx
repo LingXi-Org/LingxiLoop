@@ -9,7 +9,7 @@ import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { canvasStatusLabel, isCanvasAssignmentActive } from '@/lib/canvasCollaboration'
 import { useCanvas } from '@/stores/canvas'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType, CanvasSnapshot } from '@/types'
 
 const MIN_ZOOM = 0.2

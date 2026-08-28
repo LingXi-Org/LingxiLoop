@@ -8,7 +8,7 @@ import {
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { useAuth } from '@/stores/auth'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import { useTheme } from '@/stores/theme'
 import type { Participant } from '@/types'
 

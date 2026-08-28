@@ -3,7 +3,7 @@ import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const domains = [
-  'agents', 'canvas',
+  'canvas',
   'documents', 'email', 'files',
   'observability', 'platform',
 ] as const
@@ -21,7 +21,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   const consumers = await Promise.all([
     '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../features/boards/state.ts',
     '../features/calendar/state.ts', '../stores/canvas.ts', '../stores/documents.ts',
-    '../features/knowledge/state.ts', '../stores/participants.ts',
+    '../features/knowledge/state.ts', '../features/agents/state.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(consumers.join('\n'), /api\/client|\bapi\.[A-Za-z]/)
 
@@ -92,4 +92,19 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   assert.doesNotMatch(learningApi, /listProjects|createProject|openProject|archiveProject/)
   await access(new URL('../features/knowledge/workspace.ts', import.meta.url))
   await assert.rejects(access(new URL('../stores/workspace.ts', import.meta.url)))
+
+  for (const file of ['api.ts', 'contracts.ts', 'state.ts', 'components/AgentEditor.tsx', 'components/AgentsView.tsx']) {
+    await access(new URL(`../features/agents/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./agents.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../stores/participants.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../components/AgentEditor.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../desktop/AgentsView.tsx', import.meta.url)))
+  const agentSources = await Promise.all([
+    '../features/agents/api.ts',
+    '../features/agents/state.ts',
+    '../features/agents/components/AgentEditor.tsx',
+    '../features/agents/components/AgentsView.tsx',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(agentSources.join('\n'), /api\/agents|stores\/participants|components\/AgentEditor|desktop\/AgentsView/)
 })

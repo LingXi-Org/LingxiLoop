@@ -5,7 +5,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { conversationsApi } from '../api'
 import { useMe } from '@/stores/auth'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '../store'
 import { useApp } from '@/stores/app'
 import { useWorkspace } from '@/features/knowledge/workspace'

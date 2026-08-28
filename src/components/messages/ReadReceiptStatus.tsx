@@ -6,7 +6,7 @@ import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
 import { useMessages } from '@/features/chat/state/messages'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { ImReadReceiptAdvance } from '@/types'
 
 const EMPTY_READ_RECEIPTS: readonly ImReadReceiptAdvance[] = []

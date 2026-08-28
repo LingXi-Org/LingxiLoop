@@ -1,5 +1,5 @@
-import { agentsApi } from '@/api/agents'
-import type { ApiAutonomy } from '@/api/contracts'
+import { agentsApi } from '@/features/agents/api'
+import type { ApiAutonomy } from '@/features/agents/contracts'
 import { create } from 'zustand'
 import { useAuth } from '@/stores/auth'
 

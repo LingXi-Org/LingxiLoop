@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
 import { toggleReaction } from '@/features/chat/state/messages'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { ReactionEntry } from '@/types'
 import { TwEmoji } from '../TwEmoji'
 

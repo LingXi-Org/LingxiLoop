@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { Participant } from '@/types'
 
 export function ConversationHeader({

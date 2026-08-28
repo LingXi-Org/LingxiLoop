@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { agentsApi } from '@/api/agents'
-import type { AgentInput } from '@/api/contracts'
+import { agentsApi } from '../api'
+import type { AgentInput } from '../contracts'
 import { Avatar } from '@/components/Avatar'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useConversations } from '@/features/conversations/store'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '../state'
 import type { AgentCapability, Participant } from '@/types'
 
 const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; description: string }> = [

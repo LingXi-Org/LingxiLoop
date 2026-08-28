@@ -13,7 +13,7 @@ import {
 import { type ImEnvelope, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
 import { getMeId } from '@/stores/auth'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { ImReadReceiptAdvance, Message, ReactionEntry } from '@/types'
 import { notifyAction } from '@/lib/actionToast'
 import { forgetOutbox, readOutbox, rememberOutbox } from './outbox'

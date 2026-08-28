@@ -15,7 +15,7 @@ import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { bootConversations, isMuted, useConversations } from '@/features/conversations/store'
 import { bootMessagesStream, useMessages } from '@/features/chat/state/messages'
-import { bootParticipants } from '@/stores/participants'
+import { bootParticipants } from '@/features/agents/state'
 import { usePrefs } from '@/stores/preferences'
 import { useUiCommand } from '@/stores/uiCommands'
 

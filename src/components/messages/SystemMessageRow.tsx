@@ -1,7 +1,7 @@
 import { MessagePrimitive } from '@assistant-ui/react'
 import { cn } from '@/lib/utils'
 import { useSurface } from '@/stores/surface'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { Participant } from '@/types'
 import { Avatar } from '../Avatar'
 import { CalendarLink } from '../CalendarLink'

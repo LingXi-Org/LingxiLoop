@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 
 const STATUS_LABEL: Record<string, string> = {
   avail: '可用',

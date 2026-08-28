@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
 import { isMuted } from '@/features/conversations/store'
 import { useMessages } from '@/features/chat/state/messages'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
 
 let lastRosterBackfillAt = 0

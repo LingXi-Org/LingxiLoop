@@ -7,7 +7,7 @@ import { DocumentLink } from '@/components/DocumentLink'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { Participant } from '@/types'
 
 /* ============== Mention helpers ============== */
@@ -318,4 +318,3 @@ export function MentionInput(props: {
     </div>
   )
 }
-

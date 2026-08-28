@@ -6,7 +6,7 @@ import type { Conversation } from '@/types'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useMessages } from '@/features/chat/state/messages'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import { lingxiIm } from '@/lib/im/wukong'
 
 interface ConversationsState {

@@ -1,6 +1,13 @@
 
 import { http } from '@/api/core/http'
-import type { ApiParticipant, ApiCoworkerActivity, ApiLearnedMemory, ApiAutonomyRule, AgentInput, ApiAutonomy, } from './contracts'
+import type { ApiCoworkerActivity } from '@/api/contracts'
+import type {
+  AgentInput,
+  ApiAutonomy,
+  ApiAutonomyRule,
+  ApiLearnedMemory,
+  ApiParticipant,
+} from './contracts'
 
 export const agentsApi = {
   getParticipants: () => http<ApiParticipant[]>('/participants'),

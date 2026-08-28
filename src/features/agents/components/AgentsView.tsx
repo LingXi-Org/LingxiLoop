@@ -1,13 +1,13 @@
-import { agentsApi } from '@/api/agents'
+import { agentsApi } from '../api'
 import { conversationsApi } from '@/features/conversations/api'
 import { useState } from 'react'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '../state'
 import { useConversations } from '@/features/conversations/store'
 import { Avatar } from '@/components/Avatar'
 import { IPlus } from '@/components/icons'
-import { AgentEditor } from '@/components/AgentEditor'
+import { AgentEditor } from './AgentEditor'
 import type { Participant } from '@/types'
 
 const STATUS_LABEL: Record<string, string> = {

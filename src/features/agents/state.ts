@@ -1,5 +1,5 @@
-import { agentsApi } from '@/api/agents'
-import type { ApiParticipant } from '@/api/contracts'
+import { agentsApi } from './api'
+import type { ApiParticipant } from './contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 import { clearAvatarCache, invalidateAvatar } from '@/lib/avatarCache'
@@ -11,8 +11,8 @@ interface ParticipantsState {
   /** Hard reload — clears state first, used at boot / workspace switch. */
   load: () => Promise<void>
   /** Quiet re-fetch — keeps the existing roster visible during the network
-   *  round-trip, then swaps. Used by the 60s background refresher so a
-   *  regenerated avatar or a status nudge picks up without a blank flash. */
+   *  round-trip, then swaps. Used by the 60s background refresher so human
+   *  profile changes or a status nudge arrive without a blank flash. */
   refresh: () => Promise<void>
   applyStatus: (id: string, status: Status, statusUpdatedAt?: string) => void
   expireStaleStatuses: () => void
@@ -182,8 +182,8 @@ export function bootParticipants() {
       }))
     }
   })
-  // Quiet background refresh — picks up regenerated avatars and any
-  // other roster drift without a workspace switch. 60s cadence is well
+  // Quiet background refresh — picks up human profile changes and other
+  // roster drift without a workspace switch. 60s cadence is well
   // below the signed-URL TTL we'd ever bake in, so URLs never expire on
   // the client between refreshes.
   setInterval(() => {

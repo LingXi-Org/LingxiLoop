@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
 import { useCalendar } from '@/features/calendar/state'
 import { useConversations } from '@/features/conversations/store'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { CalendarEvent, RecurrenceRule } from '@/features/calendar/contracts'
 
 interface AgendaItem {

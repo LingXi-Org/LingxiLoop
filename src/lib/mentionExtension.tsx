@@ -19,7 +19,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import type { SuggestionOptions } from '@tiptap/suggestion'
 import Mention from '@tiptap/extension-mention'
 import type { Participant } from '@/types'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import { MentionList, filterMentionCandidates, type MentionListHandle } from '@/components/MentionList'
 
 /** Floating popup pinned near the caret's `clientRect`. We can't use
