@@ -68,7 +68,12 @@ export async function recordFreshDocumentMention(db: Queryable, args: {
   documentTitle: string
   recipient: DocumentMentionRecipient
 }): Promise<boolean> {
-  const lockKey = `${args.companyId}\0${args.documentId}\0${args.mentionerId}\0${args.recipient.id}`
+  const lockKey = JSON.stringify([
+    args.companyId,
+    args.documentId,
+    args.mentionerId,
+    args.recipient.id,
+  ])
   await db.query(`SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, [lockKey])
   const { rows: recent } = await db.query<{ id: string }>(
     `SELECT id FROM document_mentions
