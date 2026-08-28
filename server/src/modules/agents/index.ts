@@ -1,2 +1,2 @@
 /** Public Agents domain facade. Cross-domain callers import only this file. */
-export {}
+export { agentApplication } from './facade.js'
