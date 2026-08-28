@@ -131,7 +131,8 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   assert.match(conversationsState, /error: string \| null/)
 
   for (const file of [
-    'api.ts', 'state/messages.ts', 'components/ChatComposer.tsx',
+    'api.ts', 'state/messages.ts', 'state/messageProjection.ts', 'state/messageTimeline.ts',
+    'components/ChatComposer.tsx',
     'components/ComposerAttachment.tsx', 'components/ComposerEditor.tsx',
     'components/ComposerEmojiPopover.tsx', 'components/ComposerMenus.tsx',
     'sendComposerMessage.ts', 'useTypingEmitter.ts',
@@ -142,6 +143,10 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   await assert.rejects(access(new URL('../stores/messages.ts', import.meta.url)))
   const messagesState = await readFile(new URL('../features/chat/state/messages.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(messagesState, /stores\/messages|api\/messages/)
+  assert.ok(messagesState.length < 40_000, 'messages.ts must remain a Zustand orchestration shell')
+  assert.match(messagesState, /from '\.\/messageProjection'/)
+  assert.match(messagesState, /from '\.\/messageTimeline'/)
+  assert.doesNotMatch(messagesState, /function fromApi|function fromImBatch|withoutFinalizedActiveRuns/)
   const chatApi = await readFile(new URL('../features/chat/api.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(chatApi, /sendMessage\s*:/)
   assert.match(messagesState, /lingxiIm\.send\(convoId, payload\)/)

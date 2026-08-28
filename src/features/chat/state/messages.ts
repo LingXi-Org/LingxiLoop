@@ -1,6 +1,6 @@
 import { conversationsApi } from '@/features/conversations/api'
 import { messagesApi } from '../api'
-import type { ApiMessage, WsEvent } from '@/api/contracts'
+import type { WsEvent } from '@/api/contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 import {
@@ -8,9 +8,8 @@ import {
   hasBroadcastMention,
   shouldApplyStreamEvent,
   streamExpiryForOpen,
-  withoutFinalizedActiveRuns,
 } from '@/lib/chatMessages'
-import { type ImEnvelope, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
+import { type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
 import { getMeId } from '@/stores/auth'
 import { useParticipants } from '@/features/agents/state'
@@ -18,8 +17,16 @@ import type { ImReadReceiptAdvance, Message, ReactionEntry } from '@/types'
 import { notifyAction } from '@/lib/actionToast'
 import { forgetOutbox, readOutbox, rememberOutbox } from './outbox'
 import { deriveMineForReactions, mergeReactionOrder, optimisticToggleReactions } from './reactions'
-
-const EMPTY_MESSAGES: Message[] = []
+import {
+  fromApi,
+  fromIm,
+  fromImBatch,
+  mergeFetchedMessages,
+  mergeReadReceipts,
+  sequenceOf,
+  timeFromIso,
+} from './messageProjection'
+import { selectMessagesFor } from './messageTimeline'
 
 /** Default page size for both initial load and "load older". Matches the
  *  server's default cap; keep these in sync. */
@@ -64,14 +71,6 @@ export interface MessagesState {
   applyEvent: (e: WsEvent) => void
 }
 
-function timeFromIso(iso?: string): string {
-  const d = iso ? new Date(iso) : new Date()
-  const h = String(d.getHours()).padStart(2, '0')
-  const m = String(d.getMinutes()).padStart(2, '0')
-  return `${h}:${m}`
-}
-
-const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/
 const TYPING_STALE_MS = 45_000
 const typingExpiryTimers = new Map<string, number>()
 // A real turn can go quiet between deltas for longer than a token gap —
@@ -222,150 +221,6 @@ function restoreMessageReactions(
   })
 }
 
-function fromApi(m: ApiMessage): Message {
-  // Always render local HH:MM. If `at` came back as an ISO timestamp, reformat;
-  // if `at` is missing, derive from createdAt; if neither, use now.
-  let at: string
-  if (m.at && !ISO_RE.test(m.at)) {
-    at = m.at
-  } else if (m.at && ISO_RE.test(m.at)) {
-    at = timeFromIso(m.at)
-  } else if (m.createdAt) {
-    at = timeFromIso(m.createdAt)
-  } else {
-    at = timeFromIso()
-  }
-  const raw = m as unknown as {
-    tool?: Message['tool']
-    attachment?: Message['attachment']
-    quotedMessageId?: string | null
-    quoted?: Message['quoted'] | null
-    replyCount?: number | null
-    email?: Message['email'] | null
-    poll?: Message['poll'] | null
-    pollTallies?: Message['pollTallies'] | null
-    questionnaire?: Message['questionnaire'] | null
-    clientId?: string | null
-    mentionedIds?: string[] | null
-    mentionAll?: boolean | null
-    runId?: string | null
-    handoff?: Message['handoff'] | null
-    approval?: Message['approval'] | null
-    canvas?: Message['canvas'] | null
-    learningMission?: Message['learningMission'] | null
-    citations?: Message['citations'] | null
-  }
-  const out: Message = {
-    id: m.id,
-    conversationId: m.conversationId,
-    authorId: m.authorId,
-    kind: m.kind as Message['kind'],
-    body: m.body,
-    at,
-    createdAt: m.createdAt,
-    reactions: deriveMineForReactions(m.reactions),
-    tool: raw.tool ?? undefined,
-    attachment: raw.attachment ?? undefined,
-    quotedMessageId: raw.quotedMessageId ?? undefined,
-    quoted: raw.quoted ?? undefined,
-    replyCount: raw.replyCount ?? undefined,
-    email: raw.email ?? undefined,
-    poll: raw.poll ?? undefined,
-    pollTallies: raw.pollTallies ?? undefined,
-    questionnaire: raw.questionnaire ?? undefined,
-    clientId: raw.clientId ?? undefined,
-    mentionedIds: raw.mentionedIds ?? undefined,
-    mentionAll: raw.mentionAll ?? undefined,
-    runId: raw.runId ?? undefined,
-    handoff: raw.handoff ?? undefined,
-    approval: raw.approval ?? undefined,
-    canvas: raw.canvas ?? undefined,
-    learningMission: raw.learningMission ?? undefined,
-    citations: raw.citations ?? undefined,
-  }
-  out.sequence = m.sequence
-  return out
-}
-
-function fromIm(message: ImEnvelope): Message {
-  const payload = message.payload
-  const data = payload.data ?? {}
-  if (payload.kind === 'learning_mission' && typeof window !== 'undefined') {
-    window.queueMicrotask(() => window.dispatchEvent(new Event('lingxiloop:learning-updated')))
-  }
-  const kind = payload.kind === 'tool_activity' || payload.kind === 'artifact' ? 'tool' : payload.kind
-  const pollClientMsgNo = payload.kind === 'poll'
-    ? String(payload.refs?.pollClientMsgNo ?? payload.clientMsgNo)
-    : null
-  const approvalId = payload.kind === 'approval' && payload.refs?.approvalId
-    ? `approval-${payload.refs.approvalId}`
-    : null
-  const pollData = payload.kind === 'poll' && data.poll && typeof data.poll === 'object'
-    ? data.poll as Message['poll']
-    : payload.kind === 'poll' ? data as unknown as Message['poll'] : undefined
-  return fromApi({
-    // Poll update messages deliberately share the original poll's stable
-    // client id so a WuKong event snapshot replaces the bubble in place.
-    id: pollClientMsgNo ?? approvalId ?? (message.messageId || payload.clientMsgNo),
-    clientId: payload.clientMsgNo,
-    conversationId: message.channelId,
-    authorId: message.fromUid,
-    kind: kind as Message['kind'],
-    body: payload.body ?? '',
-    at: new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString(),
-    createdAt: new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString(),
-    sequence: message.messageSeq,
-    quotedMessageId: payload.replyToClientMsgNo,
-    attachment: payload.kind === 'attachment' ? data as Message['attachment'] : undefined,
-    tool: payload.kind === 'tool_activity' || payload.kind === 'artifact' ? {
-      name: String(data.name ?? payload.body ?? payload.kind),
-      arg: String(data.arg ?? ''),
-      status: String(data.status ?? data.stage ?? 'completed'),
-      detail: String(data.detail ?? ''),
-    } : undefined,
-    handoff: payload.kind === 'handoff' ? data as unknown as Message['handoff'] : undefined,
-    approval: payload.kind === 'approval' ? data as unknown as Message['approval'] : undefined,
-    canvas: payload.kind === 'canvas' ? data as unknown as Message['canvas'] : undefined,
-    learningMission: payload.kind === 'learning_mission' ? data as unknown as Message['learningMission'] : undefined,
-    citations: Array.isArray(data.citations) ? data.citations as Message['citations'] : undefined,
-    poll: pollData,
-    pollTallies: payload.kind === 'poll' && Array.isArray(data.pollTallies)
-      ? data.pollTallies as Message['pollTallies']
-      : undefined,
-    questionnaire: payload.kind === 'questionnaire'
-      ? (data.questionnaire && typeof data.questionnaire === 'object'
-          ? data.questionnaire as Message['questionnaire']
-          : data as unknown as Message['questionnaire'])
-      : undefined,
-    mentionedIds: Array.isArray(data.mentionedIds) ? data.mentionedIds.map(String) : undefined,
-    mentionAll: data.mentionAll === true,
-    runId: typeof payload.refs?.runId === 'string' ? payload.refs.runId : undefined,
-  })
-}
-
-function fromImBatch(messages: ImEnvelope[]): Message[] {
-  const byId = new Map<string, Message>()
-  for (const envelope of messages) {
-    const next = fromIm(envelope)
-    const previous = byId.get(next.id)
-    if (!previous) {
-      byId.set(next.id, next)
-      continue
-    }
-    // WuKong keeps each poll revision as a durable message. Collapse those
-    // snapshots to one bubble while retaining the original timeline slot.
-    const previousSeq = sequenceOf(previous)
-    const nextSeq = sequenceOf(next)
-    const latest = (nextSeq ?? 0) >= (previousSeq ?? 0) ? next : previous
-    latest.sequence = Math.min(
-      previousSeq ?? Number.MAX_SAFE_INTEGER,
-      nextSeq ?? Number.MAX_SAFE_INTEGER,
-    )
-    byId.set(next.id, latest)
-  }
-  return sortMessagesStable([...byId.values()])
-}
-
 const activeReadTimers = new Map<string, number>()
 const pendingVisibleReadSeq = new Map<string, number>()
 
@@ -398,62 +253,6 @@ export function markMessagesVisibleThrough(conversationId: string, readThroughSe
       .then(({ useConversations }) => useConversations.getState().reload())
       .catch((error) => console.warn('[im.read-receipt] visible advance failed', error))
   }, 1_000))
-}
-
-function sequenceOf(m: Message): number | null {
-  const raw = m.sequence
-  return typeof raw === 'number' && Number.isFinite(raw) ? raw : null
-}
-
-function mergeReadReceipts(
-  current: readonly ImReadReceiptAdvance[] | undefined,
-  incoming: readonly ImReadReceiptAdvance[],
-): ImReadReceiptAdvance[] {
-  const byKey = new Map<string, ImReadReceiptAdvance>()
-  for (const receipt of [...(current ?? []), ...incoming]) {
-    byKey.set(`${receipt.readerId}:${receipt.readThroughSeq}`, receipt)
-  }
-  return [...byKey.values()].sort((left, right) => left.readAt.localeCompare(right.readAt))
-}
-
-function sortMessagesStable(messages: Message[]): Message[] {
-  return messages
-    .map((message, index) => ({ message, index }))
-    .sort((a, b) => {
-      const sa = sequenceOf(a.message)
-      const sb = sequenceOf(b.message)
-      if (sa !== null && sb !== null && sa !== sb) return sa - sb
-      if (sa !== null && sb === null) return -1
-      if (sa === null && sb !== null) return 1
-      return a.index - b.index
-    })
-    .map((x) => x.message)
-}
-
-function mergeFetchedMessages(current: Message[] | undefined, incoming: Message[]): Message[] {
-  if (!current || current.length === 0) return incoming
-
-  const currentById = new Map(current.map((m) => [m.id, m]))
-  const incomingIds = new Set(incoming.map((m) => m.id))
-  const incomingClientIds = new Set(incoming.map((m) => m.clientId).filter(Boolean))
-  const merged = incoming.map((m) => {
-    const prev = currentById.get(m.id)
-    // Keep the local optimistic key stable after a fetch returns the same
-    // persisted row. The API snapshot is authoritative for message content,
-    // but `clientId` is a renderer-only identity.
-    return prev?.clientId && !m.clientId ? { ...m, clientId: prev.clientId } : m
-  })
-
-  for (const m of current) {
-    if (incomingIds.has(m.id)) continue
-    if (m.clientId && incomingClientIds.has(m.clientId)) continue
-    // A fetch response can be older than the WS events already applied to this
-    // store. Never let that snapshot delete a message the UI has already seen;
-    // later fresher fetches will merge into the same row by id.
-    merged.push(m)
-  }
-
-  return sortMessagesStable(merged)
 }
 
 export const useMessages = create<MessagesState>((set, get) => ({
@@ -736,61 +535,9 @@ export const useMessages = create<MessagesState>((set, get) => ({
   },
 }))
 
-export const messagesFor = (s: MessagesState, convoId: string | null): Message[] => {
-  if (!convoId) return EMPTY_MESSAGES
-  const stored = s.byConvo[convoId] ?? EMPTY_MESSAGES
-  const activeRunIds = new Set(Object.values(s.streaming)
-    .flatMap((entry) => entry.conversationId === convoId && entry.runId ? [entry.runId] : []))
-  // The durable final WuKong message can land just before stream.close.
-  // Keep showing the live Markdown row until that terminal event, then the
-  // already-cached final row takes over in the same timeline position.
-  const base = withoutFinalizedActiveRuns(stored, activeRunIds)
-  const streaming = Object.entries(s.streaming)
-    .filter(([id, x]) => x.conversationId === convoId
-      // A streaming row's synthetic id never equals a real DB message id, so
-      // this also has to check for a finalized message from the same author
-      // that landed at or after the streaming point (only one live reply per
-      // author/conversation is ever in flight) — otherwise a dropped `done`
-      // delta leaves the full text rendered twice. Compare by sequence, not
-      // just authorId, so an older finalized message from the same author
-      // doesn't wrongly suppress an unrelated newer streaming entry.
-      && !base.some((m) => m.id === id
-        || (m.authorId === x.authorId
-          && ((m as { sequence?: number }).sequence ?? 0) >= (x.sequence ?? 0))))
-    .map(([id, x]) => ({
-      id,
-      conversationId: convoId,
-      authorId: x.authorId,
-      kind: 'text' as const,
-      body: x.body,
-      at: timeFromIso(),
-      createdAt: new Date().toISOString(),
-      sequence: x.sequence,
-      streaming: x.mode === 'markdown' || x.body ? 'markdown' as const : 'placeholder' as const,
-    }))
-  const streamingAuthors = new Set(streaming.map((message) => message.authorId))
-  const meId = getMeId()
-  const typing = (s.typing?.[convoId] ?? [])
-    // The server echoes typing events to every member, including their
-    // author. Rendering our own echo created a bogus "thinking" row directly
-    // above the composer on every keystroke.
-    .filter((authorId) => authorId !== meId && !streamingAuthors.has(authorId))
-    .map((authorId, index) => ({
-      id: `typing:${convoId}:${authorId}`,
-      conversationId: convoId,
-      authorId,
-      kind: 'text' as const,
-      body: '',
-      at: '',
-      createdAt: new Date().toISOString(),
-      sequence: Number.MAX_SAFE_INTEGER - 1_000 + index,
-      streaming: 'placeholder' as const,
-    }))
-  if (streaming.length === 0 && typing.length === 0) return base
-  return [...base, ...streaming, ...typing].sort((a, b) =>
-    ((a as Message & { sequence?: number }).sequence ?? 0) - ((b as Message & { sequence?: number }).sequence ?? 0),
-  )
-}
+export const messagesFor = (state: MessagesState, conversationId: string | null): Message[] => (
+  selectMessagesFor(state, conversationId)
+)
 
 function newTempId(): string {
   return `temp-${crypto.randomUUID()}`
