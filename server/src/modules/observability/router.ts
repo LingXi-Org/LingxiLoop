@@ -1,222 +1,92 @@
-
 import { Router } from 'express'
-import { PUBLIC_ACTIVITY_KINDS, publicActivityTitle } from '../../agents/activity-visibility.js'
 import { deleteAutonomyRule, listAutonomyRules, listHandoffs, upsertAutonomyRule } from '../../agents/coworker.js'
-import { pool } from '../../db/pool.js'
 import { safe } from '../../http/async-handler.js'
 import { requireCompanyRole, requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import { requireCompany } from '../../http/request-context.js'
+import { ObservabilityNotFoundError } from './application.js'
+import {
+  activityQuerySchema,
+  autonomyRuleSchema,
+  memoryDeleteSchema,
+  memoryUpdateSchema,
+  runQuerySchema,
+} from './contracts.js'
+import { observabilityApplication } from './facade.js'
 
 export const observabilityRouter = Router()
-const api = observabilityRouter
 
-/* ============== Agent observability ============== */
+function parsedOr400<T>(result: { success: true; data: T } | { success: false; error: { issues: Array<{ message: string }> } }): T {
+  if (!result.success) throw new HttpError(400, result.error.issues[0]?.message ?? 'invalid request')
+  return result.data
+}
 
-/* ============== Coworker activity / handoff / approval / learning ====== */
-
-api.get('/coworker/activity', safe(async (req, res) => {
-  const conversationId = String(req.query.conversationId ?? '').trim()
-  if (!conversationId) throw new HttpError(400, 'conversationId required')
-  const { companyId } = await requireConversationMember(req, conversationId)
-  const { rows } = await pool.query(
-    `SELECT e.id, e.run_id AS "runId", e.agent_id AS "agentId",
-       COALESCE(p.name, e.agent_id) AS "agentName", r.status AS "runStatus", e.kind, e.level, e.title,
-       e.created_at AS "createdAt"
-     FROM agent_events e
-     JOIN agent_runs r ON r.id = e.run_id
-     LEFT JOIN participants p ON p.id = e.agent_id AND p.company_id = e.company_id
-     WHERE e.company_id = $1 AND e.level <> 'debug'
-       AND (
-         r.trigger->>'conversationId' = $2
-         OR COALESCE(r.trigger->'conversationIds', '[]'::jsonb) ? $2
-         OR EXISTS (
-           SELECT 1 FROM jsonb_array_elements_text(r.input_message_ids) input(message_id)
-           JOIN messages m ON m.id = input.message_id
-           WHERE m.conversation_id = $2
-         )
-       )
-       AND e.kind = ANY($3::text[])
-       AND e.kind !~* '(prompt|reasoning|chain[._-]?of[._-]?thought|secret|credential)'
-     ORDER BY e.created_at DESC LIMIT 12`, [companyId, conversationId, PUBLIC_ACTIVITY_KINDS],
-  )
-  res.json(rows.reverse().map((row) => ({
-    ...row,
-    title: publicActivityTitle(row.kind, row.level) ?? 'Agent activity updated',
-  })))
+observabilityRouter.get('/coworker/activity', safe(async (req, res) => {
+  const input = parsedOr400(activityQuerySchema.safeParse(req.query))
+  const { companyId } = await requireConversationMember(req, input.conversationId)
+  res.json(await observabilityApplication.activity(companyId, input.conversationId))
 }))
 
-api.get('/coworker/handoffs', safe(async (req, res) => {
+observabilityRouter.get('/coworker/handoffs', safe(async (req, res) => {
   const { companyId } = await requireCompany(req)
   const conversationId = typeof req.query.conversationId === 'string' ? req.query.conversationId.trim() : undefined
   if (conversationId) await requireConversationMember(req, conversationId)
   res.json(await listHandoffs(companyId, conversationId || undefined))
 }))
 
-api.get('/coworker/memories', safe(async (req, res) => {
+observabilityRouter.get('/coworker/memories', safe(async (req, res) => {
   const { companyId } = await requireCompany(req)
-  const { rows } = await pool.query(
-    `SELECT w.agent_id AS "agentId", COALESCE(p.name, w.agent_id) AS "agentName",
-       w.path, w.body, w.meta, w.updated_at AS "updatedAt"
-     FROM agent_workspace w
-     LEFT JOIN participants p ON p.id = w.agent_id AND p.company_id = w.company_id
-     WHERE w.company_id = $1 AND w.path LIKE 'memory/%'
-     ORDER BY w.updated_at DESC LIMIT 200`, [companyId],
-  )
-  res.json(rows)
+  res.json(await observabilityApplication.memories(companyId))
 }))
 
-api.patch('/coworker/memories', safe(async (req, res) => {
+observabilityRouter.patch('/coworker/memories', safe(async (req, res) => {
   const { companyId } = await requireCompany(req)
-  const agentId = String(req.body?.agentId ?? '').trim()
-  const path = String(req.body?.path ?? '').trim()
-  const body = String(req.body?.body ?? '').trim()
-  if (!agentId || !/^memory\/(fact|preference|instruction|relationship|observation|decision|note)\/[A-Za-z0-9._-]+\.md$/.test(path) || !body) {
-    throw new HttpError(400, 'valid agentId, memory path and body required')
+  const input = parsedOr400(memoryUpdateSchema.safeParse(req.body ?? {}))
+  try { res.json(await observabilityApplication.updateMemory(companyId, input)) }
+  catch (error) {
+    if (error instanceof ObservabilityNotFoundError) throw new HttpError(404, error.message)
+    throw error
   }
-  const updated = await pool.query(
-    `UPDATE agent_workspace SET body = $4, updated_at = NOW(), embedding = NULL
-     WHERE agent_id = $1 AND path = $2 AND company_id = $3
-     RETURNING agent_id AS "agentId", path, body, meta, updated_at AS "updatedAt"`,
-    [agentId, path, companyId, body],
-  )
-  if (!updated.rows[0]) throw new HttpError(404, 'memory not found')
-  res.json(updated.rows[0])
 }))
 
-api.delete('/coworker/memories', safe(async (req, res) => {
+observabilityRouter.delete('/coworker/memories', safe(async (req, res) => {
   const { companyId } = await requireCompany(req)
-  const agentId = String(req.query.agentId ?? '').trim()
-  const path = String(req.query.path ?? '').trim()
-  if (!agentId || !path.startsWith('memory/')) throw new HttpError(400, 'agentId and memory path required')
-  const result = await pool.query(`DELETE FROM agent_workspace WHERE agent_id = $1 AND path = $2 AND company_id = $3`, [agentId, path, companyId])
-  if ((result.rowCount ?? 0) === 0) throw new HttpError(404, 'memory not found')
-  res.json({ ok: true })
+  const input = parsedOr400(memoryDeleteSchema.safeParse(req.query))
+  try { res.json(await observabilityApplication.deleteMemory(companyId, input)) }
+  catch (error) {
+    if (error instanceof ObservabilityNotFoundError) throw new HttpError(404, error.message)
+    throw error
+  }
 }))
 
-api.get('/coworker/autonomy-rules', safe(async (req, res) => {
+observabilityRouter.get('/coworker/autonomy-rules', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
   res.json(await listAutonomyRules(companyId, userId))
 }))
 
-api.put('/coworker/autonomy-rules', safe(async (req, res) => {
+observabilityRouter.put('/coworker/autonomy-rules', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
-  const agentId = String(req.body?.agentId ?? '').trim()
-  const scope = String(req.body?.scope ?? '').trim()
-  const operation = String(req.body?.operation ?? '').trim()
-  const mode = String(req.body?.mode ?? '')
-  if (!agentId || !scope || !operation || !['allow', 'ask', 'deny'].includes(mode)) throw new HttpError(400, 'agentId, scope, operation and valid mode required')
-  res.json(await upsertAutonomyRule({ companyId, userId, agentId, scope, operation, mode: mode as 'allow' | 'ask' | 'deny' }))
+  const input = parsedOr400(autonomyRuleSchema.safeParse(req.body ?? {}))
+  res.json(await upsertAutonomyRule({ companyId, userId, ...input }))
 }))
 
-api.delete('/coworker/autonomy-rules/:id', safe(async (req, res) => {
+observabilityRouter.delete('/coworker/autonomy-rules/:id', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
   if (!await deleteAutonomyRule(companyId, userId, String(req.params.id))) throw new HttpError(404, 'rule not found')
   res.json({ ok: true })
 }))
 
-const AGENT_RUN_STATUSES = new Set(['running', 'waiting_for_human', 'completed', 'failed', 'skipped', 'stalled'])
+observabilityRouter.get('/agents/observability/runs', safe(async (req, res) => {
+  const { companyId } = await requireCompanyRole(req)
+  const input = parsedOr400(runQuerySchema.safeParse(req.query))
+  res.json(await observabilityApplication.runs(companyId, input))
+}))
 
-/** Window after which a `running` row is rendered as `stalled` in the UI.
- *  Postgres INTERVAL literal so we can inject it straight into the SQL.
- *
- *  Sizing rationale: `agent_runs.updated_at` only bumps when the agent
- *  emits an observability event (tool start / end, message send, etc.).
- *  A single tool call — `yt-dlp` downloading a long video, `ffmpeg`
- *  transcoding, `opencli browser` rendering a JS-heavy page, a slow
- *  LLM stream on a rate-limited account — can legitimately run for
- *  several minutes between events. The earlier 90-second window was
- *  flagging healthy long-running calls as stalled.
- *
- *  5 minutes gives the UI an honest "this is taking unusually long"
- *  signal while still firing well before the 10-minute stale-run
- *  reaper (`markStaleAgentRuns`, agents/observability.ts) flips the
- *  row to `failed`. */
-const STALLED_INTERVAL = `5 minutes`
-
-api.get('/agents/observability/runs', async (req, res) => {
-  const { companyId: tenant } = await requireCompanyRole(req)
-  const clauses = ['r.company_id = $1']
-  const params: unknown[] = [tenant]
-
-  const agentId = typeof req.query.agentId === 'string' ? req.query.agentId.trim() : ''
-  if (agentId) {
-    params.push(agentId)
-    clauses.push(`r.agent_id = $${params.length}`)
+observabilityRouter.get('/agents/observability/runs/:id/events', safe(async (req, res) => {
+  const { companyId } = await requireCompanyRole(req)
+  try { res.json(await observabilityApplication.runEvents(companyId, String(req.params.id))) }
+  catch (error) {
+    if (error instanceof ObservabilityNotFoundError) throw new HttpError(404, error.message)
+    throw error
   }
-
-  const status = typeof req.query.status === 'string' ? req.query.status.trim() : ''
-  if (status && AGENT_RUN_STATUSES.has(status)) {
-    if (status === 'stalled') {
-      clauses.push(`r.status = 'running' AND r.updated_at < NOW() - INTERVAL '${STALLED_INTERVAL}'`)
-    } else if (status === 'running') {
-      clauses.push(`r.status = 'running' AND r.updated_at >= NOW() - INTERVAL '${STALLED_INTERVAL}'`)
-    } else {
-      params.push(status)
-      clauses.push(`r.status = $${params.length}`)
-    }
-  }
-
-  const rawLimit = Number(req.query.limit ?? 50)
-  const limit = Math.max(10, Math.min(100, Number.isFinite(rawLimit) ? rawLimit : 50))
-  params.push(limit)
-
-  const { rows } = await pool.query(
-    `SELECT
-        r.id,
-        r.agent_id AS "agentId",
-        COALESCE(p.name, r.agent_id) AS "agentName",
-        p.role AS "agentRole",
-        p.avatar_url AS "agentAvatarUrl",
-        r.company_id AS "companyId",
-        CASE
-          WHEN r.status = 'running' AND r.updated_at < NOW() - INTERVAL '${STALLED_INTERVAL}' THEN 'stalled'
-          ELSE r.status
-        END AS status,
-        r.stage,
-        r.summary,
-        r.error,
-        r.trigger,
-        r.input_message_ids AS "inputMessageIds",
-        r.inbox_count AS "inboxCount",
-        r.tool_call_count AS "toolCallCount",
-        (r.input_tokens + r.cached_input_tokens + r.cache_creation_tokens + r.output_tokens) AS "tokenCount",
-        r.fingerprint,
-        r.started_at AS "startedAt",
-        r.updated_at AS "updatedAt",
-        r.finished_at AS "finishedAt",
-        ROUND(EXTRACT(EPOCH FROM (COALESCE(r.finished_at, NOW()) - r.started_at)) * 1000)::int AS "durationMs"
-       FROM agent_runs r
-       LEFT JOIN participants p ON p.id = r.agent_id AND p.company_id = r.company_id
-      WHERE ${clauses.join(' AND ')}
-      ORDER BY r.started_at DESC
-      LIMIT $${params.length}`,
-    params,
-  )
-  res.json(rows)
-})
-api.get('/agents/observability/runs/:id/events', async (req, res) => {
-  const { companyId: tenant } = await requireCompanyRole(req)
-  const { rows: gate } = await pool.query(
-    `SELECT 1 FROM agent_runs WHERE id = $1 AND company_id = $2 LIMIT 1`,
-    [req.params.id, tenant],
-  )
-  if (!gate[0]) { res.status(404).json({ error: 'not found' }); return }
-
-  const { rows } = await pool.query(
-    `SELECT
-        id,
-        run_id AS "runId",
-        agent_id AS "agentId",
-        kind,
-        level,
-        title,
-        data,
-        created_at AS "createdAt"
-       FROM agent_events
-      WHERE run_id = $1 AND company_id = $2
-      ORDER BY created_at ASC, id ASC`,
-    [req.params.id, tenant],
-  )
-  res.json(rows)
-})
+}))

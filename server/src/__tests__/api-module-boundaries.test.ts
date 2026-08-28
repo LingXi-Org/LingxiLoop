@@ -48,6 +48,23 @@ test('domain modules expose one native router implementation without forwarding 
   assert.ok(routeRegistrations > 100, 'domain route registrations unexpectedly disappeared')
 })
 
+test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
+  for (const domain of ['documents', 'observability', 'platform']) {
+    const base = new URL(`../modules/${domain}/`, import.meta.url)
+    const router = await readFile(new URL('router.ts', base), 'utf8')
+    const application = await readFile(new URL('application.ts', base), 'utf8')
+    const repository = await readFile(new URL('repository.ts', base), 'utf8')
+    const contracts = await readFile(new URL('contracts.ts', base), 'utf8')
+
+    assert.doesNotMatch(router, /\bpool\.query\b|\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
+    assert.doesNotMatch(router, /from ['"][^'"]*db\//)
+    assert.doesNotMatch(application, /from ['"]express['"]|\b(?:req|res)\s*[.:]/)
+    assert.doesNotMatch(repository, /from ['"]express['"]|\b(?:Request|Response)\b/)
+    assert.match(repository, /Queryable/)
+    assert.match(contracts, /z\.object/)
+  }
+})
+
 test('authentication, request context, authorization, and errors have one shared boundary', async () => {
   const context = await readFile(new URL('../http/request-context.ts', import.meta.url), 'utf8')
   const authorization = await readFile(new URL('../http/authorization.ts', import.meta.url), 'utf8')

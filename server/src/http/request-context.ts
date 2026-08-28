@@ -11,10 +11,6 @@ export function requireAuth(req: Request & AuthedRequest): string {
   return id
 }
 
-export type Queryable = {
-  query<T extends object = Record<string, unknown>>(text: string, params?: readonly unknown[]): Promise<{ rows: T[] }>
-}
-
 /**
  * Resolve the active company for an authenticated request.
  *  - Reads `x-company-id` header for the requested tenant
