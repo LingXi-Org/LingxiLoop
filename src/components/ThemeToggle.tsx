@@ -8,8 +8,7 @@ interface Props {
 }
 
 export function ThemeToggle({ className, showLabel = false, onToggle }: Props) {
-  const theme = useTheme((s) => s.theme)
-  const toggleTheme = useTheme((s) => s.toggleTheme)
+  const { theme, toggleTheme } = useTheme()
   const next = theme === 'dark' ? 'light' : 'dark'
 
   return (

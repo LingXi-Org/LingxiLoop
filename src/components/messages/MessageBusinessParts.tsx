@@ -7,7 +7,8 @@ import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, 
 import { Skeleton } from '@/components/ui/skeleton'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
-import { cn, parseBlocks, parseBody } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { parseBlocks, parseBody } from '@/lib/messageTokens'
 import { useApp } from '@/stores/app'
 import { useEmailComposer } from '@/features/email/state'
 import { useSurface } from '@/stores/surface'
@@ -666,7 +667,7 @@ function EmailAttachmentRow({ att }: { att: NonNullable<NonNullable<Message['ema
         </AttachmentDescription>
       </AttachmentContent>
       {att.url ? (
-        <AttachmentTrigger render={<a href={att.url} target="_blank" rel="noreferrer noopener" download={att.filename} aria-label={`下载 ${att.filename}`} />} />
+        <AttachmentTrigger asChild><a href={att.url} target="_blank" rel="noreferrer noopener" download={att.filename} aria-label={`下载 ${att.filename}`} /></AttachmentTrigger>
       ) : null}
     </Attachment>
   )

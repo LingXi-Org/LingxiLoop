@@ -44,9 +44,11 @@ export function NavUser({ user }: {
   </>
 
   return <DropdownMenu>
-    <DropdownMenuTrigger render={<button type="button" className="flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors hover:bg-muted aria-expanded:bg-muted" aria-label="打开账户菜单" />}>
-      {identity}
-      <ChevronsUpDownIcon className="ml-auto size-4" />
+    <DropdownMenuTrigger asChild>
+      <button type="button" className="flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors hover:bg-muted aria-expanded:bg-muted" aria-label="打开账户菜单">
+        {identity}
+        <ChevronsUpDownIcon className="ml-auto size-4" />
+      </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent className="min-w-64 rounded-lg" side="right" align="end" sideOffset={8}>
       <DropdownMenuGroup>

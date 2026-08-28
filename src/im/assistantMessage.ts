@@ -1,6 +1,6 @@
 import type { ThreadMessageLike } from '@assistant-ui/react'
 import { projectTranscriptAdjacency } from '@/lib/transcriptExperience'
-import { trimUrlTrailing } from '@/lib/utils'
+import { trimUrlTrailing } from '@/lib/messageTokens'
 import type { Message, MessageKind, Participant } from '@/types'
 
 export interface LingxiImMessagePresentation extends Record<string, unknown> {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { http } from '@/api/core/http'
-import { trimUrlTrailing } from '@/lib/utils'
+import { trimUrlTrailing } from '@/lib/messageTokens'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { LinkPreview as ToolUiLinkPreview } from './tool-ui/link-preview'
 

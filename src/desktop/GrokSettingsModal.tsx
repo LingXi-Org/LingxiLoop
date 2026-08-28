@@ -39,8 +39,7 @@ function SettingsRow({ title, hint, children }: { title: string; hint: string; c
 function GeneralPanel() {
   const authUser = useAuth((state) => state.user)
   const me = useParticipants((state) => authUser?.id ? state.byId[authUser.id] : undefined)
-  const theme = useTheme((state) => state.theme)
-  const toggleTheme = useTheme((state) => state.toggleTheme)
+  const { theme, toggleTheme } = useTheme()
   const [notifications, setNotifications] = useState(true)
   const [launchAtLogin, setLaunchAtLogin] = useState(false)
   const [sound, setSound] = useState(true)

@@ -48,12 +48,10 @@ export function ReadReceiptStatus() {
 
   return (
     <Popover>
-      <PopoverTrigger
-        render={(
-          <button type="button" className="mt-1 text-[10px] text-ink-300 underline-offset-2 hover:text-skype-deep hover:underline" />
-        )}
-      >
-        {confirmations.length} 人已读
+      <PopoverTrigger asChild>
+        <button type="button" className="mt-1 text-[10px] text-ink-300 underline-offset-2 hover:text-skype-deep hover:underline">
+          {confirmations.length} 人已读
+        </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 p-2" aria-label="已读成员">
         <p className="px-2 pb-1.5 text-[11px] font-semibold text-ink-500">实际确认时间</p>

@@ -1,4 +1,4 @@
-import { toast } from '@/components/ui/toast'
+import { toast } from 'sonner'
 
 interface ActionToastMessages<T> {
   loading: string
@@ -13,26 +13,15 @@ function errorMessage(error: unknown): string {
 
 export function toastAction<T>(promise: Promise<T>, messages: ActionToastMessages<T>): Promise<T> {
   return toast.promise(promise, {
-    loading: {
-      title: messages.loading,
-      description: messages.description,
-      type: 'loading',
-      timeout: 0,
-    },
-    success: (value) => ({
-      title: typeof messages.success === 'function' ? messages.success(value) : messages.success,
-      description: messages.description,
-      type: 'success',
-    }),
-    error: (error) => ({
-      title: typeof messages.error === 'function'
-        ? messages.error(error)
-        : messages.error ?? '操作失败',
-      description: messages.error ? errorMessage(error) : undefined,
-      type: 'error',
-      priority: 'high',
-    }),
-  })
+    loading: messages.loading,
+    success: (value) => typeof messages.success === 'function' ? messages.success(value) : messages.success,
+    error: (error) => typeof messages.error === 'function'
+      ? messages.error(error)
+      : messages.error ?? '操作失败',
+    description: (value) => messages.error && value instanceof Error
+      ? errorMessage(value)
+      : messages.description,
+  }).unwrap()
 }
 
 export function notifyAction(options: {
@@ -40,5 +29,6 @@ export function notifyAction(options: {
   description?: string
   type?: 'success' | 'info' | 'warning' | 'error' | 'loading'
 }) {
-  return toast.add({ ...options, type: options.type ?? 'success' })
+  const method = options.type ?? 'success'
+  return toast[method](options.title, { description: options.description })
 }

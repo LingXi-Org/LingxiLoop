@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { AVATAR_IMG_LOADING, useAvatarImg, useCachedAvatarSrc } from '@/lib/avatarCache'
-import { cn, statusColor } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { statusColor } from '@/lib/participantStatus'
 import { useAuth } from '@/stores/auth'
 import type { Participant } from '@/types'
 import { BloubAvatar } from './BloubAvatar'

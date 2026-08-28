@@ -15,7 +15,7 @@ import { useUiCommands } from '@/stores/uiCommands'
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const conversations = useConversations((state) => state.list)
-  const toggleTheme = useTheme((state) => state.toggleTheme)
+  const { toggleTheme } = useTheme()
   const actions = useMemo<CommandAction[]>(() => {
     const dispatch = useUiCommands.getState().dispatch
     return [

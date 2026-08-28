@@ -146,9 +146,8 @@ export function Citation(props: CitationProps) {
   if (variant === "inline") {
     return (
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
-          render={(
-            <button
+        <PopoverTrigger asChild>
+          <button
             type="button"
             aria-label={title}
             data-tool-ui-id={id}
@@ -164,11 +163,10 @@ export function Citation(props: CitationProps) {
               "focus-visible:ring-ring focus-visible:ring-2",
               className,
             )}
-            />
-          )}
-        >
-          {iconElement}
-          <span className="text-muted-foreground">{domain}</span>
+          >
+            {iconElement}
+            <span className="text-muted-foreground">{domain}</span>
+          </button>
         </PopoverTrigger>
         <PopoverContent
           side="top"
@@ -176,7 +174,7 @@ export function Citation(props: CitationProps) {
           className="w-72 cursor-pointer p-0"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          initialFocus={false}
+          onOpenAutoFocus={(event) => event.preventDefault()}
           onClick={handleClick}
         >
           <div className="hover:bg-muted/50 flex flex-col gap-2 p-3 transition-colors">

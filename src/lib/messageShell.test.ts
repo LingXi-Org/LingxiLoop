@@ -56,7 +56,7 @@ test('the desktop Web/Electron surface composes the shared IM core without Teleg
   assert.match(desktopProfile, /<ParticipantProfile\b/)
   assert.match(desktopList, /<ConversationListItemContent\b/)
   assert.match(desktopShell, /<Drawer open=\{drawerOpen\}/)
-  assert.match(desktopShell, /swipeDirection="right"/)
+  assert.match(desktopShell, /direction="right"/)
   assert.match(desktopShell, /selectedConversation\?\.kind === 'group'/)
   assert.doesNotMatch(desktopShell, /id="detail"|DESKTOP_THREE_PANEL_LAYOUT_KEY|data-group-context=/)
   assert.doesNotMatch(desktopShell, /DesktopNavigation/)
@@ -101,7 +101,7 @@ test('self messages align right and render the restored user identity', async ()
   assert.doesNotMatch(message, /max-w-\[(?:70|84)%\]/)
 })
 
-test('desktop keeps one persisted two-panel IM layout and opens pages in the Base UI Drawer', async () => {
+test('desktop keeps one persisted two-panel IM layout and opens pages in the Luma Drawer', async () => {
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const resizable = await readFile(new URL('../components/ui/resizable.tsx', import.meta.url), 'utf8')
   const css = await readImStyles()
@@ -112,7 +112,7 @@ test('desktop keeps one persisted two-panel IM layout and opens pages in the Bas
   assert.match(shell, /onLayoutChanged=/)
   assert.match(shell, /id="conversations"[\s\S]*?id="conversation"/)
   assert.doesNotMatch(shell, /id="detail"/)
-  assert.match(shell, /<Drawer open=\{drawerOpen\}[\s\S]*?swipeDirection="right"/)
+  assert.match(shell, /<Drawer open=\{drawerOpen\}[\s\S]*?direction="right"/)
   assert.match(shell, /<DrawerTitle/)
   assert.match(shell, /<DrawerDescription/)
   assert.match(shell, /<DrawerDescription className="sr-only">/)
@@ -143,7 +143,7 @@ test('desktop conversation column ends with the sidebar-07 account menu instead 
   assert.match(user, /openSettings\('Preferences'\)[^\n]*Notifications/)
   assert.match(conversationList, /isDirectAgent[\s\S]*?isMobile \|\| !isDirectAgent \? 48 : 54/)
   assert.doesNotMatch(user, /size=\{54\}|size-13\.5/)
-  assert.match(avatar, /@base-ui\/react\/avatar/)
+  assert.match(avatar, /Avatar as AvatarPrimitive.*from "radix-ui"/)
 })
 
 test('desktop group context opens in the shared Drawer without adding a third panel', async () => {
@@ -220,7 +220,8 @@ test('Canvas bubble and full view share the Card surface and preview theme', asy
   const canvasCard = business.slice(business.indexOf('export function CanvasWorkspaceCard'), business.indexOf('function BoardArtifactCard'))
   const full = `${css.slice(css.indexOf('.canvas-shell,'), css.indexOf('.canvas-work-timeline {'))}\n${css.slice(css.indexOf('.canvas-frame-card {'), css.indexOf('.canvas-inline-editor,'))}`
   assert.match(card, /data-slot="card"/)
-  assert.match(card, /ring-1 ring-foreground\/10/)
+  assert.match(card, /ring-1 ring-foreground\/5/)
+  assert.match(card, /dark:ring-foreground\/10/)
   assert.match(card, /--card-spacing/)
   assert.match(full, /var\(--im-chat-surface, var\(--canvas-bg\)\)/)
   assert.match(full, /\.canvas-stage \{[\s\S]*?background-image: none/)
@@ -245,7 +246,7 @@ test('Canvas bubble and full view share the Card surface and preview theme', asy
   assert.match(css, /--brand-bubble-surface: #EEEEEE/)
   assert.match(css, /--brand-bubble-surface: #262626/)
   assert.match(css, /--brand-im-blue: #1084fe/)
-  assert.match(await readFile(new URL('../components/ui/bubble.tsx', import.meta.url), 'utf8'), /bubble-content\]:bg-\[var\(--brand-im-blue\)\]/)
+  assert.match(await readFile(new URL('../components/ui/bubble.tsx', import.meta.url), 'utf8'), /bubble-content\]:bg-primary/)
   assert.doesNotMatch(css, /--bubble-user|\.message-bubble-user/)
   assert.doesNotMatch(canvasPreview, /FRAME_TYPE_LABELS|canvas-preview-frame-header/)
   assert.match(canvasView, /<header[^>]*className="canvas-frame-header cursor-grab active:cursor-grabbing"[^>]*\/>/)

@@ -252,7 +252,7 @@ export function EmailComposer() {
   // opened by business controls outside DrawerTrigger (menu items and reply
   // actions); mounting Root midway through that pointer event would let the
   // new dismiss layer interpret the opening click as an outside interaction.
-  if (!open || !compose) return <Drawer open={false} swipeDirection="right" />
+  if (!open || !compose) return <Drawer open={false} direction="right" />
 
   // Autocomplete pool: every participant in this workspace EXCEPT the user
   // themselves. Filter to those with an email (agents always have one once
@@ -390,7 +390,7 @@ export function EmailComposer() {
   }
 
   return (
-    <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) close() }} swipeDirection="right">
+    <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) close() }} direction="right">
       <DrawerContent
         className="email-composer-drawer w-[calc(100vw-1rem)] max-w-[660px] gap-0 overflow-hidden p-0"
         onDragEnter={onDragEnter}
@@ -429,16 +429,12 @@ export function EmailComposer() {
               {isReply ? "撰写并发送邮件回复" : "撰写并发送新邮件"}
             </DrawerDescription>
           </div>
-          <DrawerClose
-            render={
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-lg leading-none text-ink-secondary transition hover:bg-raised hover:text-ink"
-                aria-label="关闭邮件编辑器"
-              />
-            }
-          >
-            ×
+          <DrawerClose asChild>
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-lg leading-none text-ink-secondary transition hover:bg-raised hover:text-ink"
+              aria-label="关闭邮件编辑器"
+            >×</button>
           </DrawerClose>
         </DrawerHeader>
 

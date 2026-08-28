@@ -65,6 +65,6 @@ export function AttachmentCard() {
   </>
 
   return <Attachment state={state} data-message-surface="card" data-card-variant="interactive" className="mt-2 w-[min(580px,78vw)]">
-    {fileMedia}{metadata}<AttachmentTrigger render={<a href={attachment.url} download={attachment.name} target="_blank" rel="noopener noreferrer" aria-label={`下载 ${attachment.name}`} />} />
+    {fileMedia}{metadata}<AttachmentTrigger asChild><a href={attachment.url} download={attachment.name} target="_blank" rel="noopener noreferrer" aria-label={`下载 ${attachment.name}`} /></AttachmentTrigger>
   </Attachment>
 }

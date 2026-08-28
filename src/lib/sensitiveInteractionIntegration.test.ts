@@ -16,30 +16,25 @@ function sourceFiles(dir: string): string[] {
   })
 }
 
-test('Alert Dialog remains shaped like the official base-nova Base UI primitive', () => {
+test('Alert Dialog remains shaped like the official Luma Radix primitive', () => {
   const source = read('../components/ui/alert-dialog.tsx')
-  assert.match(source, /@base-ui\/react\/alert-dialog/)
+  assert.match(source, /AlertDialog as AlertDialogPrimitive.*from "radix-ui"/)
   for (const slot of [
     'alert-dialog', 'alert-dialog-trigger', 'alert-dialog-portal',
     'alert-dialog-overlay', 'alert-dialog-content', 'alert-dialog-header',
     'alert-dialog-footer', 'alert-dialog-media', 'alert-dialog-title',
     'alert-dialog-description', 'alert-dialog-action', 'alert-dialog-cancel',
   ]) assert.ok(source.includes(`data-slot="${slot}"`), `missing ${slot}`)
-  assert.match(source, /data-\[size=default\]:sm:max-w-sm/)
-  assert.match(source, /AlertDialogPrimitive\.Close[\s\S]*?render=\{<Button variant=\{variant\} size=\{size\} \/>\}/)
+  assert.match(source, /rounded-4xl bg-popover/)
+  assert.match(source, /<Button variant=\{variant\} size=\{size\} asChild>/)
 })
 
-test('Toast remains shaped like the official base-nova manager and stack', () => {
-  const source = read('../components/ui/toast.tsx')
-  assert.match(source, /@base-ui\/react\/toast/)
-  assert.match(source, /ToastPrimitive\.createToastManager\(\)/)
-  assert.match(source, /ToastPrimitive\.useToastManager\(\)/)
-  for (const slot of [
-    'toast-portal', 'toast-viewport', 'toast', 'toast-content',
-    'toast-title', 'toast-description', 'toast-action', 'toast-close', 'toast-icon',
-  ]) assert.ok(source.includes(`data-slot="${slot}"`), `missing ${slot}`)
-  assert.match(source, /data-expanded:\[transform:translateX/)
-  assert.match(source, /<ToastProvider toastManager=\{toastManager\}/)
+test('Toast remains the official Luma sonner composition', () => {
+  const source = read('../components/ui/sonner.tsx')
+  assert.match(source, /from "sonner"/)
+  assert.match(source, /@hugeicons\/react/)
+  assert.match(source, /--normal-bg.*var\(--popover\)/s)
+  assert.match(source, /toast: "cn-toast"/)
 })
 
 test('production code never uses native alert, confirm, or prompt', () => {
@@ -77,6 +72,7 @@ test('approval decisions and user-triggered tasks publish through the global Toa
   assert.match(read('../features/calendar/components/CalendarEventPeekContent.tsx'), /toastAction\(runEventNow/)
   assert.match(read('../features/email/components/EmailComposer.tsx'), /toastAction\(Promise\.resolve\(sendPromise\)/)
   assert.match(read('../lib/actionToast.ts'), /toast\.promise\(/)
+  assert.match(read('../lib/actionToast.ts'), /\.unwrap\(\)/)
 })
 
 test('calendar editing uses the controlled Base UI Dialog without a handwritten modal shell', () => {

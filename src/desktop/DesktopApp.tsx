@@ -88,7 +88,7 @@ function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsT
 /** The desktop shell is always a pure two-column IM surface. Every page-like
  * destination opens above it in the shared Base UI Drawer. */
 export function DesktopApp() {
-  const theme = useTheme((state) => state.theme)
+  const { theme } = useTheme()
   const view = useApp((state) => state.view)
   const surface = useSurface((state) => state.surface)
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
@@ -189,7 +189,7 @@ export function DesktopApp() {
         </ResizablePanel>
       </ResizablePanelGroup>
 
-      <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} swipeDirection="right">
+      <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} direction="right">
         <DrawerContent className="w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]">
           <DrawerHeader className="border-b border-hairline p-4">
             <div className="flex items-center justify-between gap-4">
@@ -197,8 +197,10 @@ export function DesktopApp() {
                 <DrawerTitle className="truncate">{drawerTitle}</DrawerTitle>
                 <DrawerDescription className="sr-only">{drawerTitle}</DrawerDescription>
               </div>
-              <DrawerClose render={<button type="button" className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted" aria-label="关闭" />}>
-                <IconX className="size-4" />
+              <DrawerClose asChild>
+                <button type="button" className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted" aria-label="关闭">
+                  <IconX className="size-4" />
+                </button>
               </DrawerClose>
             </div>
           </DrawerHeader>

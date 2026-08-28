@@ -122,14 +122,14 @@ export function SourceDetailOverlay() {
     } catch { /* toast owns the visible error state */ }
   }
   const open = Boolean(selectedSource || selectedCitation)
-  return <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) close() }} swipeDirection="right">
+  return <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) close() }} direction="right">
     <DrawerContent className="w-[min(92vw,48rem)] sm:[--drawer-content-width:min(92vw,48rem)]">
       <DrawerHeader className="border-b border-hairline p-6">
         <div className="flex items-start justify-between gap-4"><div>
           <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">{selectedSource ? statusLabel[selectedSource.status] : '历史引用'}</div>
           <DrawerTitle className="mt-1 text-xl">{selectedSource?.title ?? selectedCitation?.sourceTitle ?? '资料'}</DrawerTitle>
           <DrawerDescription>资料详情与引用依据</DrawerDescription>
-        </div><DrawerClose render={<button type="button" className="size-9 rounded-xl hover:bg-raised" aria-label="关闭资料" />}>×</DrawerClose></div>
+        </div><DrawerClose asChild><button type="button" className="size-9 rounded-xl hover:bg-raised" aria-label="关闭资料">×</button></DrawerClose></div>
       </DrawerHeader>
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
       {selectedSource && <><div className="mt-5 flex flex-wrap gap-2 text-[10px] text-ink-secondary"><span className="rounded-full bg-raised px-2.5 py-1">{selectedSource.kind}</span><span className="rounded-full bg-raised px-2.5 py-1">{Math.max(1, Math.round(selectedSource.sizeBytes / 1024))} KB</span>{selectedSource.isTruncated && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">已截断</span>}</div>{selectedSource.originalUrl && <a href={selectedSource.originalUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始网页</a>}{selectedSource.originalFileUrl && <a href={selectedSource.originalFileUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始文件</a>}</>}

@@ -271,7 +271,8 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
   return <div className="canvas-shell relative h-full min-h-0 overflow-hidden">
     <CanvasHeader onBack={onBack} onFocusFrame={focusFrame} />
     <ContextMenu onOpenChange={(open) => { if (!open) { setMenu(null); setFrameMenu(null) } }}>
-    <ContextMenuTrigger render={<div
+    <ContextMenuTrigger asChild>
+    <div
       ref={stageRef}
       className={`canvas-stage canvas-main-stage absolute inset-x-0 bottom-0 overflow-hidden ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
       onPointerDownCapture={onStagePointerDown}
@@ -282,7 +283,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
       onWheel={onWheel}
       onDragStart={(event) => event.preventDefault()}
       style={{ backgroundPosition: `${viewport.x}px ${viewport.y}px`, backgroundSize: `${24 * viewport.zoom}px ${24 * viewport.zoom}px` }}
-    />}>
+    >
       <div data-canvas-world="true" className="absolute left-0 top-0 h-full w-full origin-top-left" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}>
         {snapshot && visibleFrames.map((frame) => {
           const assignment = assignmentForFrame(frame, snapshot.assignments)
@@ -292,6 +293,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
       </div>
       {snapshot && visibleFrames.length === 0 && <div className="pointer-events-none absolute inset-0 grid place-items-center"><div className="rounded-2xl border border-hairline bg-panel/80 px-5 py-4 text-center shadow-sm backdrop-blur"><div className="text-sm font-semibold text-ink">画布还没有卡片</div><div className="mt-1 text-xs text-ink-secondary">在空白处单击右键，选择“新增”或“对话”。</div></div></div>}
       {error && <div className="absolute left-4 top-4 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 shadow">{error}</div>}
+    </div>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label={frameMenu && snapshot ? `${snapshot.frames.find((frame) => frame.id === frameMenu.frameId)?.title ?? ''}卡片操作` : '画布操作'} className="min-w-[200px]">
       {frameMenu && snapshot

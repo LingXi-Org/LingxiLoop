@@ -16,7 +16,7 @@
  * 30-minute snap (SLOT_MINUTES). Selections never collapse below one slot
  * so a click without drag still produces a valid range.
  */
-import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react'
+import { cloneElement, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { EventEditor, type EventEditorPrefill } from './EventEditor'
 import { ICalendar, IClock, IPlus, IRepeat, ITrash } from '@/components/icons'
@@ -173,7 +173,7 @@ function CalendarMenu({ trigger, children, items }: {
   items: MenuItem[]
 }) {
   return <ContextMenuRoot>
-    <ContextMenuTrigger render={trigger}>{children}</ContextMenuTrigger>
+    <ContextMenuTrigger asChild>{cloneElement(trigger, undefined, children)}</ContextMenuTrigger>
     <ContextMenuContent aria-label="日历操作" className="min-w-[200px]">
       {items.map((item, index) => <ContextMenuItem key={`${item.label}:${index}`} variant={item.danger ? 'destructive' : 'default'} onClick={item.onClick}>{item.label}</ContextMenuItem>)}
     </ContextMenuContent>

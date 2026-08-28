@@ -53,15 +53,17 @@ function ConversationRow({ conversation, selected, items }: {
   const select = useApp((s) => s.selectConversation)
   return (
     <ContextMenu>
-    <ContextMenuTrigger render={<button
-      type="button"
-      onClick={() => select(conversation.id)}
-      className={cn(
-        'group flex w-full items-center gap-2 rounded-xl px-[9px] py-[9px] text-left transition-colors',
-        selected ? 'bg-[var(--brand-im-blue)] text-white' : 'text-ink hover:bg-raised/70',
-      )}
-    />}>
-      <ConversationListItemContent conversation={conversation} variant="desktop" selected={selected} />
+    <ContextMenuTrigger asChild>
+      <button
+        type="button"
+        onClick={() => select(conversation.id)}
+        className={cn(
+          'group flex w-full items-center gap-2 rounded-xl px-[9px] py-[9px] text-left transition-colors',
+          selected ? 'bg-[var(--brand-im-blue)] text-white' : 'text-ink hover:bg-raised/70',
+        )}
+      >
+        <ConversationListItemContent conversation={conversation} variant="desktop" selected={selected} />
+      </button>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
     </ContextMenu>

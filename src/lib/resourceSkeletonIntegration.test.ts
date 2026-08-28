@@ -7,9 +7,9 @@ const skeleton = read('../components/ui/skeleton.tsx')
 const resourceSkeleton = read('../components/ResourceSkeleton.tsx')
 const resourceSkill = read('../../.agents/skills/lingxiloop-resource-loading/SKILL.md')
 
-test('Skeleton remains byte-shaped like the official base-nova primitive', () => {
+test('Skeleton remains byte-shaped like the official Luma primitive', () => {
   assert.match(skeleton, /data-slot="skeleton"/)
-  assert.match(skeleton, /animate-pulse rounded-md bg-muted/)
+  assert.match(skeleton, /animate-pulse rounded-2xl bg-muted/)
   assert.match(skeleton, /React\.ComponentProps<"div">/)
   assert.doesNotMatch(skeleton, /variant|loading|spinner/i)
 })
