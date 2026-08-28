@@ -4,7 +4,7 @@ import test from 'node:test'
 
 const domains = [
   'agents', 'canvas',
-  'documents', 'email', 'files', 'learning',
+  'documents', 'email', 'files',
   'observability', 'platform',
 ] as const
 
@@ -82,4 +82,14 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   await assert.rejects(access(new URL('../stores/boards.ts', import.meta.url)))
   const boardState = await readFile(new URL('../features/boards/state.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(boardState, /api\/boards|stores\/boards/)
+
+  for (const file of ['api.ts', 'contracts.ts', 'courseContract.ts', 'components/LearningCenter.tsx']) {
+    await access(new URL(`../features/learning/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./learning.ts', import.meta.url)))
+  await assert.rejects(access(new URL('./courseContract.ts', import.meta.url)))
+  const learningApi = await readFile(new URL('../features/learning/api.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(learningApi, /listProjects|createProject|openProject|archiveProject/)
+  await access(new URL('../features/knowledge/workspace.ts', import.meta.url))
+  await assert.rejects(access(new URL('../stores/workspace.ts', import.meta.url)))
 })

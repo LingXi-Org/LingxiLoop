@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { normalizeCourseContract } from '../api/courseContract.js'
+import { normalizeCourseContract } from '../features/learning/courseContract.js'
 
 test('course responses are strict and never receive production mock defaults', () => {
   assert.throws(() => normalizeCourseContract({

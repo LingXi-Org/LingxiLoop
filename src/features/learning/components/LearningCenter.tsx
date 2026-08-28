@@ -11,8 +11,8 @@ import type {
   LearningProgress,
   LearningReview,
   TeacherAgentSummary,
-} from "@/api/contracts";
-import { learningApi } from "@/api/learning";
+} from "../contracts";
+import { learningApi } from "../api";
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'

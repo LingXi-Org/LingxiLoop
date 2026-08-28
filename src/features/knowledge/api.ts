@@ -6,8 +6,17 @@ import type {
   KnowledgeSource,
 } from './contracts'
 import { filesApi } from '@/api/files'
+import type { WorkspaceSummary } from '@/types'
 
 export const knowledgeApi = {
+  listProjects: () => http<WorkspaceSummary[]>('/projects'),
+  openProject: (id: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}/open`, { method: 'POST' }),
+  createProject: (input: { name: string; description?: string; color?: string }) =>
+    http<WorkspaceSummary>('/projects', { method: 'POST', body: JSON.stringify(input) }),
+  archiveProject: (id: string, archive = true) =>
+    http<{ ok: boolean; status: string }>(`/projects/${encodeURIComponent(id)}/archive`, {
+      method: 'POST', body: JSON.stringify({ archive }),
+    }),
   listSources: (conversationId: string) => http<KnowledgeSource[]>(`/conversations/${encodeURIComponent(conversationId)}/sources`),
   getSource: (conversationId: string, sourceId: string) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`),
   addTextSource: (conversationId: string, input: { title?: string; text: string }) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources`, { method: 'POST', body: JSON.stringify({ kind: 'text', ...input }) }),

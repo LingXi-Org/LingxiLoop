@@ -1,4 +1,4 @@
-import { learningApi } from '@/api/learning'
+import { knowledgeApi } from './api'
 import { create } from 'zustand'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
@@ -23,7 +23,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       const companyId = getActiveCompanyId()
-      const list = await learningApi.listProjects()
+      const list = await knowledgeApi.listProjects()
       const stored = getWorkspaceSession()
       const selectedId = stored?.companyId === companyId && list.some((workspace) => workspace.id === stored.projectId && workspace.status === 'active')
         ? stored.projectId : null
@@ -41,7 +41,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     setWorkspaceSession({ companyId, projectId })
     set({ selectedId: projectId })
     useApp.getState().selectConversation(null)
-    await learningApi.openProject(projectId)
+    await knowledgeApi.openProject(projectId)
   },
   leave: () => {
     setWorkspaceSession(null)
@@ -49,7 +49,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     useApp.getState().selectConversation(null)
   },
   createBlank: async (name, description = '') => {
-    const created = await learningApi.createProject({ name, description })
+    const created = await knowledgeApi.createProject({ name, description })
     await get().load()
     await get().select(created.id)
     return created.id

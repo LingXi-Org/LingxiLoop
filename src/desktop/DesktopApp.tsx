@@ -4,7 +4,7 @@ import { CanvasView } from '@/components/CanvasView'
 import { CommandPalette } from '@/components/CommandPalette'
 import { EmailComposer } from '@/components/EmailComposer'
 import { GroupContextContent } from '@/components/GroupContextContent'
-import { LearningCenter } from '@/components/LearningCenter'
+import { LearningCenter } from '@/features/learning/components/LearningCenter'
 import {
   Drawer,
   DrawerClose,

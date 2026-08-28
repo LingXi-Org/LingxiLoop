@@ -35,7 +35,7 @@ test('global resource surfaces render Skeletons instead of plain initial loading
     '../components/ArtifactPeekContent.tsx',
     '../components/AttachmentViewer.tsx',
     '../components/DocumentEditor.tsx',
-    '../components/LearningCenter.tsx',
+    '../features/learning/components/LearningCenter.tsx',
     '../components/LinkPreview.tsx',
     '../components/messages/MessageBusinessParts.tsx',
     '../admin/UsersPage.tsx',

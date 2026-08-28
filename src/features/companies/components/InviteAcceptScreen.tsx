@@ -1,8 +1,8 @@
 import { companiesApi } from '@/features/companies/api'
-import { learningApi } from '@/api/learning'
+import { learningApi } from '@/features/learning/api'
 import { platformApi } from '@/api/platform'
 import { getServerOrigin } from '@/api/core/http'
-import type { ApiCourseInvitationAccept, ApiCourseInvitationPreview } from '@/api/contracts'
+import type { ApiCourseInvitationAccept, ApiCourseInvitationPreview } from '@/features/learning/contracts'
 import type { ApiInvitationPreview } from '@/features/companies/contracts'
 /**
  * InviteAcceptScreen — the "you've been invited to <workspace>" landing

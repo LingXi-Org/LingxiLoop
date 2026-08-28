@@ -3,7 +3,7 @@ import { IPlus, ISearch } from '@/components/icons'
 import { Input } from '@/components/ui/input'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { useAuth } from '@/stores/auth'
-import { useWorkspace } from '@/stores/workspace'
+import { useWorkspace } from '@/features/knowledge/workspace'
 
 function relativeTime(raw: string | null): string {
   if (!raw) return '尚未访问'

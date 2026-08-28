@@ -1,9 +1,10 @@
 import { IconArchive, IconBook2, IconCopy, IconPlus, IconTrash, IconUsers } from '@tabler/icons-react'
 import { useCallback, useEffect, useState } from 'react'
 import { companiesApi } from '@/features/companies/api'
-import type { ApiCourse, ApiCourseInvitation, ApiCourseMember } from '@/api/contracts'
+import type { ApiCourse, ApiCourseInvitation, ApiCourseMember } from '@/features/learning/contracts'
 import type { ApiCompanyMember, ApiCompanyProfile } from '@/features/companies/contracts'
-import { learningApi } from '@/api/learning'
+import { learningApi } from '@/features/learning/api'
+import { knowledgeApi } from '@/features/knowledge/api'
 import { InvitePeopleModal } from './InvitePeopleModal'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -26,7 +27,7 @@ export function CompanyCourseManagement() {
   const [tab, setTab] = useState<Tab>('courses')
   const [profile, setProfile] = useState<ApiCompanyProfile | null>(null)
   const [courses, setCourses] = useState<ApiCourse[]>([])
-  const [projects, setProjects] = useState<Awaited<ReturnType<typeof learningApi.listProjects>>>([])
+  const [projects, setProjects] = useState<Awaited<ReturnType<typeof knowledgeApi.listProjects>>>([])
   const [members, setMembers] = useState<ApiCompanyMember[]>([])
   const [selectedCourse, setSelectedCourse] = useState<ApiCourse | null>(null)
   const [courseMembers, setCourseMembers] = useState<ApiCourseMember[]>([])
@@ -42,7 +43,7 @@ export function CompanyCourseManagement() {
     setError(null)
     try {
       const [courseRows, projectRows, company] = await Promise.all([
-        learningApi.listCourses(), learningApi.listProjects(), companiesApi.getCompany(companyId),
+        learningApi.listCourses(), knowledgeApi.listProjects(), companiesApi.getCompany(companyId),
       ])
       setCourses(courseRows); setProjects(projectRows); setProfile(company)
       if (isAdmin) setMembers(await companiesApi.listCompanyMembers(companyId))

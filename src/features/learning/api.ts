@@ -1,7 +1,6 @@
 import { http } from '@/api/core/http'
 import { normalizeCourseContract } from './courseContract'
 import type {
-  ApiProject,
   ApiCourse,
   ApiCourseMember,
   ApiCourseInvitation,
@@ -21,10 +20,6 @@ import type {
 } from './contracts'
 
 export const learningApi = {
-  listProjects: () => http<ApiProject[]>('/projects'),
-  openProject: (id: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}/open`, { method: 'POST' }),
-  createProject: (input: { name: string; description?: string; color?: string }) => http<ApiProject>('/projects', { method: 'POST', body: JSON.stringify(input) }),
-  archiveProject: (id: string, archive = true) => http<{ ok: boolean; status: string }>(`/projects/${encodeURIComponent(id)}/archive`, { method: 'POST', body: JSON.stringify({ archive }) }),
   listCourses: async () => (await http<ApiCourse[]>('/courses')).map(normalizeCourseContract),
   getCourse: (courseId: string) => http<ApiCourse>(`/courses/${encodeURIComponent(courseId)}`),
   createCourse: (input: { name: string; description?: string; color?: string }) =>
