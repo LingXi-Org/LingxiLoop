@@ -64,41 +64,23 @@ export async function findTeacherScopeBinding(
   return rows[0]
 }
 
-export async function findTeacherTriggerAuthor(
+export async function findTeacherApprovalTriggerAuthor(
   db: Queryable,
   input: {
     companyId: string
     agentId: string
     channelId: string
-    triggerClientMsgNo: string
-    reason: 'message' | 'routine' | 'resume' | string
+    approvalId: string
   },
 ): Promise<string | undefined> {
-  if (input.reason === 'routine') return undefined
-  if (input.reason === 'resume' && input.triggerClientMsgNo.startsWith('approval:')) {
-    const { rows } = await db.query<{ actor_id: string | null }>(
-      `SELECT COALESCE(approval.resolved_by,approval.requested_by) AS actor_id
-         FROM agent_os_approvals approval
-        WHERE approval.id=$2 AND approval.company_id=$1 AND approval.agent_id=$3
-          AND approval.channel_id=$4`,
-      [
-        input.companyId,
-        input.triggerClientMsgNo.slice('approval:'.length),
-        input.agentId,
-        input.channelId,
-      ],
-    )
-    return rows[0]?.actor_id || undefined
-  }
-  const { rows } = await db.query<{ author_id: string }>(
-    `SELECT message.author_id
-       FROM messages message
-      WHERE message.company_id=$1 AND message.conversation_id=$2
-        AND message.client_msg_no=$3
-      LIMIT 1`,
-    [input.companyId, input.channelId, input.triggerClientMsgNo],
+  const { rows } = await db.query<{ actor_id: string | null }>(
+    `SELECT COALESCE(approval.resolved_by,approval.requested_by) AS actor_id
+       FROM agent_os_approvals approval
+      WHERE approval.id=$2 AND approval.company_id=$1 AND approval.agent_id=$3
+        AND approval.channel_id=$4`,
+    [input.companyId, input.approvalId, input.agentId, input.channelId],
   )
-  return rows[0]?.author_id || undefined
+  return rows[0]?.actor_id || undefined
 }
 
 export async function pauseTeacherDigestForMissingTeacher(

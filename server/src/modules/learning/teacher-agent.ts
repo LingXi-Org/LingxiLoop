@@ -43,9 +43,9 @@ import {
   findTeacherObjectiveApprovalVersion,
 } from './teacher-approval-repository.js'
 import {
+  findTeacherApprovalTriggerAuthor,
   findTeacherDigestSchedule,
   findTeacherScopeBinding,
-  findTeacherTriggerAuthor,
   findTeacherTurnCounts,
   pauseTeacherDigestForMissingTeacher,
 } from './teacher-runtime-repository.js'
@@ -132,6 +132,20 @@ interface TeacherScope {
   mode: 'teacher' | 'routine' | 'approval'
 }
 
+async function resolveTeacherTriggerAuthor(work: AgentWorkItem, db: Queryable): Promise<string | undefined> {
+  if (work.reason === 'routine') return undefined
+  if (work.reason === 'resume' && work.triggerClientMsgNo.startsWith('approval:')) {
+    return findTeacherApprovalTriggerAuthor(db, {
+      companyId: work.companyId,
+      agentId: work.agentId,
+      channelId: work.channelId,
+      approvalId: work.triggerClientMsgNo.slice('approval:'.length),
+    })
+  }
+  const messages = await wukongClient().syncMessages(work.channelId, 2, 80, work.agentId)
+  return messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)?.fromUid
+}
+
 export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable = pool): Promise<TeacherScope> {
   const row = await findTeacherScopeBinding(db, work.companyId, work.agentId, work.channelId)
   if (!row) { inc('learning.teacher_agent.authorization_denied', { reason: 'scope' }); throw new Error('teacher Agent is not registered for this room') }
@@ -140,7 +154,7 @@ export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable = p
     await pauseTeacherDigestForMissingTeacher(db,work.companyId,work.agentId,work.channelId)
     throw new Error('teacher digest paused because the course has no teacher')
   }
-  const teacherId = await findTeacherTriggerAuthor(db, work)
+  const teacherId = await resolveTeacherTriggerAuthor(work, db)
   if (work.reason !== 'routine') {
     if (!teacherId) throw new Error('teacher action requires a human trigger')
     await requireLearningCourseRole(db, {
