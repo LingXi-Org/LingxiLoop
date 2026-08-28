@@ -93,7 +93,7 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
   if (method === 'get_mission') {
     const missionId = textArg(args, 'missionId', false)
     if (!missionId) return { ok: true, value: context.activeMission ?? null }
-    return { ok: true, value: await getMission(missionId, context.course.id) }
+    return { ok: true, value: await getMission(missionId, work.companyId, context.course.id) }
   }
   if (method === 'get_activity') return {
     ok: true,

@@ -9,6 +9,8 @@ import type {
 import type {
   LearningActivity,
   LearningActivityType,
+  LearningMission,
+  LearningMissionStep,
   LearningObjective,
   LearningObjectiveStatus,
 } from '../../learning/types.js'
@@ -742,6 +744,128 @@ export async function insertLearningActivityAttempt(
       WHERE course.company_id=$2 AND course.id=$3`,
     [args.id,args.companyId,args.courseId,args.activityId,args.learnerId,args.assistance,
       JSON.stringify({ kind: 'ui_submission', submittedBy: args.learnerId, answer: args.answer })],
+  )
+  return Boolean(result.rowCount)
+}
+
+interface LearningMissionRow {
+  id: string; course_id: string; learner_id: string; conversation_id: string; trigger_client_msg_no: string
+  goal: string; success_criteria: string; status: LearningMission['status']; mission_kind: LearningMission['missionKind']
+  coordinator_agent_id: string; created_at: string; updated_at: string
+}
+
+interface LearningMissionStepRow {
+  id: string; mission_id: string; type: LearningMissionStep['type']; description: string; success_criteria: string
+  objective_id: string | null; status: LearningMissionStep['status']; position: number; outcome: string | null
+  completion_report_id: string | null; completion_attempt_id: string | null
+}
+
+function mapLearningMissionStep(step: LearningMissionStepRow): LearningMissionStep {
+  return {
+    id: step.id,
+    type: step.type,
+    description: step.description,
+    successCriteria: step.success_criteria,
+    ...(step.objective_id ? { objectiveId: step.objective_id } : {}),
+    status: step.status,
+    position: Number(step.position),
+    ...(step.outcome ? { outcome: step.outcome } : {}),
+    ...(step.completion_report_id ? { completionReportId: step.completion_report_id } : {}),
+    ...(step.completion_attempt_id ? { completionAttemptId: step.completion_attempt_id } : {}),
+  }
+}
+
+function mapLearningMission(row: LearningMissionRow, steps: LearningMissionStepRow[]): LearningMission {
+  return {
+    id: row.id,
+    courseId: row.course_id,
+    learnerId: row.learner_id,
+    conversationId: row.conversation_id,
+    triggerClientMsgNo: row.trigger_client_msg_no,
+    goal: row.goal,
+    successCriteria: row.success_criteria,
+    missionKind: row.mission_kind,
+    coordinatorAgentId: row.coordinator_agent_id,
+    status: row.status,
+    steps: steps.map(mapLearningMissionStep),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
+  }
+}
+
+const learningMissionColumns = `mission.id,mission.course_id,mission.learner_id,mission.conversation_id,
+  mission.trigger_client_msg_no,mission.goal,mission.success_criteria,mission.status,mission.mission_kind,
+  mission.coordinator_agent_id,mission.created_at,mission.updated_at`
+
+async function learningMissionSteps(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  missionIds: string[],
+): Promise<LearningMissionStepRow[]> {
+  if (!missionIds.length) return []
+  const { rows } = await db.query<LearningMissionStepRow>(
+    `SELECT step.id,step.mission_id,step.type,step.description,step.success_criteria,step.objective_id,
+            step.status,step.position,step.outcome,step.completion_report_id,step.completion_attempt_id
+       FROM learning_mission_steps step
+       JOIN learning_missions mission ON mission.id=step.mission_id
+      WHERE mission.company_id=$1 AND mission.course_id=$2 AND mission.id=ANY($3::text[])
+      ORDER BY step.mission_id,step.position,step.created_at`,
+    [companyId,courseId,missionIds],
+  )
+  return rows
+}
+
+export async function findLearningMission(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  missionId: string,
+): Promise<LearningMission | null> {
+  const { rows } = await db.query<LearningMissionRow>(
+    `SELECT ${learningMissionColumns} FROM learning_missions mission
+      WHERE mission.company_id=$1 AND mission.course_id=$2 AND mission.id=$3`,
+    [companyId,courseId,missionId],
+  )
+  if (!rows[0]) return null
+  return mapLearningMission(rows[0], await learningMissionSteps(db, companyId, courseId, [missionId]))
+}
+
+export async function listLearningMissions(
+  db: Queryable,
+  args: { companyId: string; courseId: string; userId: string; includeAllLearners: boolean },
+): Promise<LearningMission[]> {
+  const { rows } = await db.query<LearningMissionRow>(
+    `SELECT ${learningMissionColumns} FROM learning_missions mission
+      WHERE mission.company_id=$1 AND mission.course_id=$2 AND ($3::boolean OR mission.learner_id=$4)
+      ORDER BY mission.updated_at DESC LIMIT 100`,
+    [args.companyId,args.courseId,args.includeAllLearners,args.userId],
+  )
+  const steps = await learningMissionSteps(db, args.companyId, args.courseId, rows.map((row) => row.id))
+  const byMission = new Map<string, LearningMissionStepRow[]>()
+  for (const step of steps) {
+    const bucket = byMission.get(step.mission_id)
+    if (bucket) bucket.push(step)
+    else byMission.set(step.mission_id, [step])
+  }
+  return rows.map((row) => mapLearningMission(row, byMission.get(row.id) ?? []))
+}
+
+export async function updateLearningMissionCoordinator(
+  db: Queryable,
+  args: { companyId: string; courseId: string; missionId: string; teacherId: string; agentId: string },
+): Promise<boolean> {
+  const result = await db.query(
+    `UPDATE learning_missions mission SET coordinator_agent_id=agent.id,updated_at=NOW()
+       FROM participants agent,conversations conversation
+      WHERE mission.company_id=$1 AND mission.course_id=$2 AND mission.id=$3
+        AND conversation.id=mission.conversation_id AND conversation.company_id=mission.company_id
+        AND agent.id=$5 AND agent.company_id=mission.company_id AND agent.kind='agent' AND agent.departed_at IS NULL
+        AND agent.capabilities @> '["canvas","learning"]'::jsonb AND conversation.members ? agent.id
+        AND EXISTS(SELECT 1 FROM course_members teacher
+          WHERE teacher.company_id=mission.company_id AND teacher.course_id=mission.course_id
+            AND teacher.user_id=$4 AND teacher.role='teacher')`,
+    [args.companyId,args.courseId,args.missionId,args.teacherId,args.agentId],
   )
   return Boolean(result.rowCount)
 }

@@ -7,9 +7,7 @@ import {
   learningDashboard,
   listEvaluationQueue,
   listEvidence,
-  listMissions,
   reviewEvaluation,
-  setMissionCoordinator,
 } from '../../learning/service.js'
 import type {
   BindCourseRoomInput,
@@ -41,6 +39,7 @@ import {
   countPublishedCourseObjectives,
   findCourse,
   findLearningActivity,
+  findLearningMission,
   findNotificationPreferences,
   findVerifiedUser,
   insertCourse,
@@ -57,6 +56,7 @@ import {
   listDeliveries,
   listLearningObjectives,
   listLearningActivities,
+  listLearningMissions,
   lockCourseInvitation,
   priorCourseAcceptance,
   publishLearningActivityRecord,
@@ -69,6 +69,7 @@ import {
   lockLearningActivityForPublish,
   updateCourseMetadata,
   updateLearningObjectiveStatus,
+  updateLearningMissionCoordinator,
   upsertNotificationPreferences,
   upsertAcceptedCourseMembership,
 } from './repository.js'
@@ -250,6 +251,45 @@ export async function submitLearningActivity(
   })
   if (!accepted) throw new LearningApplicationError('not_found', 'published activity not found')
   return { attemptId }
+}
+
+export async function getLearningMission(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  missionId: string,
+) {
+  const mission = await findLearningMission(db, companyId, courseId, missionId)
+  if (!mission) throw new LearningApplicationError('not_found', 'mission not found')
+  return mission
+}
+
+export async function listVisibleLearningMissions(
+  db: Queryable,
+  scope: LearningScope,
+  courseId: string,
+) {
+  const role = await courseRole(db, courseId, scope.companyId, scope.userId)
+  if (!role) throw new LearningApplicationError('forbidden', 'course membership required')
+  return listLearningMissions(db, {
+    companyId: scope.companyId,
+    courseId,
+    userId: scope.userId,
+    includeAllLearners: role === 'teacher',
+  })
+}
+
+export async function assignLearningMissionCoordinator(
+  db: Queryable,
+  input: { companyId: string; courseId: string; missionId: string; teacherId: string; agentId: string },
+) {
+  if (!await updateLearningMissionCoordinator(db, input)) {
+    throw new LearningApplicationError(
+      'not_found',
+      'mission or eligible learning/canvas coordinator not found',
+    )
+  }
+  return getLearningMission(db, input.companyId, input.courseId, input.missionId)
 }
 
 export async function setLearningObjectiveStatus(
@@ -612,7 +652,7 @@ export class LearningApplication {
 
   async missions(scope: LearningScope, courseId: string) {
     await this.assertCourseScope(scope.companyId, courseId)
-    return this.classroom(() => listMissions(courseId, scope.userId, this.db))
+    return this.classroom(() => listVisibleLearningMissions(this.db, scope, courseId))
   }
 
   async setMissionCoordinator(
@@ -622,9 +662,13 @@ export class LearningApplication {
     input: MissionCoordinatorInput,
   ) {
     await this.assertCourseScope(scope.companyId, courseId)
-    return this.classroom(() => setMissionCoordinator({
-      courseId, missionId, teacherId: scope.userId, agentId: input.agentId,
-    }, this.db))
+    return this.classroom(() => assignLearningMissionCoordinator(this.db, {
+      companyId: scope.companyId,
+      courseId,
+      missionId,
+      teacherId: scope.userId,
+      agentId: input.agentId,
+    }))
   }
 
   async evidence(scope: LearningScope, courseId: string, learnerId = scope.userId) {

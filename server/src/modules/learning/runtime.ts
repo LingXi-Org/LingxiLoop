@@ -9,7 +9,6 @@ export {
   addMissionSteps,
   completeMission,
   finishMissionPlanning,
-  getMission,
   loadLearningTurnContext,
   preferredCoordinatorPreset,
   proposeEvaluation,
@@ -90,3 +89,10 @@ import {
 } from './application.js'
 import type { CreateLearningActivityCommand, CreateLearningObjectivesCommand } from './contracts.js'
 import { findLearningActivity } from './repository.js'
+import { findLearningMission } from './repository.js'
+
+export async function getMission(missionId: string, companyId: string, courseId: string) {
+  const mission = await findLearningMission(pool, companyId, courseId, missionId)
+  if (!mission) throw new Error('mission not found')
+  return mission
+}

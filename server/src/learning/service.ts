@@ -4,7 +4,7 @@ import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
 import { wukongClient } from '../im/wukong.js'
 import { inc } from '../metrics.js'
-import { listLearningObjectives } from '../modules/learning/repository.js'
+import { findLearningMission, listLearningObjectives } from '../modules/learning/repository.js'
 import type { AgentWorkItem } from '../agent-os/types.js'
 import type {
   LearningActivityType,
@@ -12,7 +12,6 @@ import type {
   LearningCourseSummary,
   LearningEvaluationMode,
   LearningMission,
-  LearningMissionStep,
   LearningRole,
   LearningRoomPurpose,
   LearningStepStatus,
@@ -172,31 +171,6 @@ export async function bindCourseRoom(input: {
   )
 }
 
-export async function listMissions(courseId: string, userId: string, db: Queryable = pool): Promise<LearningMission[]> {
-  const role = await courseRole(db, courseId, userId)
-  if (!role) throw new Error('course membership required')
-  const { rows } = await db.query<{ id: string }>(
-    `SELECT id FROM learning_missions WHERE course_id=$1 AND ($2::boolean OR learner_id=$3)
-     ORDER BY updated_at DESC LIMIT 100`, [courseId, role === 'teacher', userId],
-  )
-  return Promise.all(rows.map((row) => getMission(row.id, courseId, db)))
-}
-
-export async function setMissionCoordinator(input:{courseId:string;missionId:string;teacherId:string;agentId:string},db:Queryable=pool):Promise<LearningMission> {
-  await requireCourseRole(input.courseId,input.teacherId,'teacher',db)
-  const {rows}=await db.query<{id:string}>(
-    `SELECT p.id FROM learning_missions m JOIN courses lc ON lc.id=m.course_id
-      JOIN conversations c ON c.id=m.conversation_id
-      JOIN participants p ON p.id=$3 AND p.company_id=lc.company_id
-      WHERE m.id=$1 AND m.course_id=$2 AND p.kind='agent' AND p.departed_at IS NULL
-        AND p.capabilities @> '["canvas","learning"]'::jsonb AND c.members ? p.id`,
-    [input.missionId,input.courseId,input.agentId],
-  )
-  if (!rows[0]) throw new Error('coordinator must be an active learning/canvas agent in the Mission room')
-  await db.query(`UPDATE learning_missions SET coordinator_agent_id=$3,updated_at=NOW() WHERE id=$1 AND course_id=$2`,[input.missionId,input.courseId,input.agentId])
-  return getMission(input.missionId,input.courseId,db)
-}
-
 /** A learner pressing Submit is itself a Host-verified evidence source. The
  * API binds authorship to the authenticated session and published activity. */
 export async function listEvidence(courseId: string, userId: string, learnerId = userId, db: Queryable = pool): Promise<unknown[]> {
@@ -248,6 +222,17 @@ async function roomScope(work: AgentWorkItem, db: Queryable = pool): Promise<{
   return { companyId: row.company_id, courseId: row.course_id, projectId: row.project_id, courseTitle: row.title, courseStatus: row.status, purpose: row.purpose }
 }
 
+async function requireLearningMission(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  missionId: string,
+): Promise<LearningMission> {
+  const mission = await findLearningMission(db, companyId, courseId, missionId)
+  if (!mission) throw new Error('mission not found')
+  return mission
+}
+
 export function preferredCoordinatorPreset(kind:import('./types.js').LearningMissionKind):'nova'|'scout'|'forge' {
   return kind==='project'?'forge':kind==='research'?'scout':'nova'
 }
@@ -281,7 +266,7 @@ export async function startMission(work: AgentWorkItem, input: {
     [id, scope.courseId, learnerId, work.channelId, triggerClientMsgNo, asText(input.goal, 'goal'), asText(input.successCriteria, 'successCriteria'), missionKind, coordinatorAgentId, work.agentId],
   )
   inc(rows[0].inserted ? 'learning.mission.created' : 'learning.mission.deduplicated', rows[0].inserted ? { mode: 'agent' } : undefined)
-  const mission = await getMission(rows[0].id, scope.courseId, db)
+  const mission = await requireLearningMission(db, scope.companyId, scope.courseId, rows[0].id)
   if (rows[0].inserted&&coordinatorAgentId!==work.agentId) {
     const coordinatorWorkId=`mission-coordinator-${createHash('sha256').update(mission.id).digest('hex').slice(0,24)}`
     await db.query(
@@ -338,7 +323,7 @@ export async function addMissionSteps(work: AgentWorkItem, missionId: string, ra
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
   } finally { if (ownsClient) client.release() }
-  return getMission(missionId, scope.courseId, db)
+  return requireLearningMission(db, scope.companyId, scope.courseId, missionId)
 }
 
 /** FrontierAgent-style finish_planning gate, projected onto a learning Mission.
@@ -369,7 +354,7 @@ export async function finishMissionPlanning(
     [missionId, scope.courseId],
   )
   inc('learning.mission.planning_completed', { mode: 'agent' })
-  return getMission(missionId, scope.courseId, db)
+  return requireLearningMission(db, scope.companyId, scope.courseId, missionId)
 }
 
 export async function updateMissionStep(work: AgentWorkItem, input: {
@@ -388,7 +373,7 @@ export async function updateMissionStep(work: AgentWorkItem, input: {
     [input.stepId,input.missionId,scope.courseId,input.status,input.outcome?.trim()??null,input.sourceReportId??null,input.attemptId??null,work.companyId],
   )
   if (!rowCount) throw new Error('mission step not found')
-  return getMission(input.missionId, scope.courseId, db)
+  return requireLearningMission(db, scope.companyId, scope.courseId, input.missionId)
 }
 
 export async function completeMission(work: AgentWorkItem, missionId: string, db: Queryable = pool): Promise<LearningMission> {
@@ -403,29 +388,7 @@ export async function completeMission(work: AgentWorkItem, missionId: string, db
   if (rows[0].unresolved > 0) throw new Error('mission has unresolved steps')
   if (rows[0].reflections < 1) throw new Error('mission requires a completed reflection step')
   await db.query(`UPDATE learning_missions SET status='completed',completed_at=NOW(),updated_at=NOW() WHERE id=$1`, [missionId])
-  return getMission(missionId, scope.courseId, db)
-}
-
-export async function getMission(missionId: string, courseId: string, db: Queryable = pool): Promise<LearningMission> {
-  const { rows } = await db.query<{
-    id:string;course_id:string;learner_id:string;conversation_id:string;trigger_client_msg_no:string;goal:string;success_criteria:string;
-    status:LearningMission['status'];mission_kind:LearningMission['missionKind'];coordinator_agent_id:string;created_at:string;updated_at:string
-  }>(`SELECT * FROM learning_missions WHERE id=$1 AND course_id=$2`, [missionId, courseId])
-  if (!rows[0]) throw new Error('mission not found')
-  const { rows: steps } = await db.query<{
-    id:string;type:LearningStepType;description:string;success_criteria:string;objective_id:string|null;status:LearningStepStatus;position:number;outcome:string|null;completion_report_id:string|null;completion_attempt_id:string|null
-  }>(`SELECT * FROM learning_mission_steps WHERE mission_id=$1 ORDER BY position,created_at`, [missionId])
-  const row = rows[0]
-  return {
-    id: row.id, courseId: row.course_id, learnerId: row.learner_id, conversationId: row.conversation_id,
-    triggerClientMsgNo: row.trigger_client_msg_no, goal: row.goal, successCriteria: row.success_criteria,
-    missionKind:row.mission_kind,coordinatorAgentId:row.coordinator_agent_id,status: row.status,
-    steps: steps.map((step): LearningMissionStep => ({ id: step.id, type: step.type, description: step.description,
-      successCriteria: step.success_criteria, ...(step.objective_id ? { objectiveId: step.objective_id } : {}),
-      status: step.status, position: Number(step.position), ...(step.outcome ? { outcome: step.outcome } : {}),
-      ...(step.completion_report_id?{completionReportId:step.completion_report_id}:{}),...(step.completion_attempt_id?{completionAttemptId:step.completion_attempt_id}:{}) })),
-    createdAt: String(row.created_at), updatedAt: String(row.updated_at),
-  }
+  return requireLearningMission(db, scope.companyId, scope.courseId, missionId)
 }
 
 async function validateLearnerMessage(work: AgentWorkItem, courseId: string, clientMsgNo: string, db: Queryable = pool): Promise<string> {
@@ -747,7 +710,7 @@ export async function loadLearningTurnContext(work: AgentWorkItem, actorId?: str
   return {
     course:{ id:scope.courseId,projectId:scope.projectId,title:scope.courseTitle,status:scope.courseStatus },
     roomPurpose:scope.purpose,...(role?{actorRole:role}:{}),...(learnerId?{learnerId}:{}),
-    ...(missionRows[0]?{activeMission:await getMission(missionRows[0].id,scope.courseId,db)}:{}),
+    ...(missionRows[0]?{activeMission:await requireLearningMission(db,scope.companyId,scope.courseId,missionRows[0].id)}:{}),
     objectives:mapped,
     due:mapped.filter((item)=>item.nextReviewAt && new Date(item.nextReviewAt)<=new Date()).slice(0,12).map((item)=>({
       objectiveId:item.id,title:item.title,level:item.masteryLevel,nextReviewAt:item.nextReviewAt!,

@@ -62,6 +62,13 @@ test('activity writes and UI submissions have one tenant-scoped repository path'
   assert.match(repository, /learner\.user_id=\$5 AND learner\.role='learner'/)
 })
 
+test('mission reads and coordinator assignment have one tenant-scoped repository path', () => {
+  assert.doesNotMatch(service, /SELECT \* FROM learning_missions WHERE id=/)
+  assert.doesNotMatch(service, /SET coordinator_agent_id=\$3/)
+  assert.match(repository, /mission\.company_id=\$1 AND mission\.course_id=\$2/)
+  assert.match(repository, /teacher\.user_id=\$4 AND teacher\.role='teacher'/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
   const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')
