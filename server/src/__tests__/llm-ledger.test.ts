@@ -38,3 +38,38 @@ test('failed product LLM calls are recorded and propagate', async () => {
     __setLlmLedgerOverrideForTesting(null)
   }
 })
+
+test('successful provider results are not returned until the ledger write succeeds', async () => {
+  let attempts = 0
+  __setLlmLedgerOverrideForTesting(async () => {
+    attempts++
+    if (attempts < 3) throw new Error('ledger unavailable')
+  })
+  __setLlmClientOverrideForTesting(() => ({
+    chat: { completions: { create: async () => ({ choices: [{ message: { content: 'ok' } }] }) } },
+  }) as never)
+  try {
+    await createChatCompletion({ purpose: 'ledger-retry', companyId: 'company-1' }, {
+      model: 'test-model', messages: [{ role: 'user', content: 'hello' }],
+    })
+    assert.equal(attempts, 3)
+  } finally {
+    __setLlmClientOverrideForTesting(null)
+    __setLlmLedgerOverrideForTesting(null)
+  }
+})
+
+test('a missing authoritative ledger record fails the product call', async () => {
+  __setLlmLedgerOverrideForTesting(async () => { throw new Error('ledger unavailable') })
+  __setLlmClientOverrideForTesting(() => ({
+    chat: { completions: { create: async () => ({ choices: [{ message: { content: 'ok' } }] }) } },
+  }) as never)
+  try {
+    await assert.rejects(() => createChatCompletion({ purpose: 'ledger-required', companyId: 'company-1' }, {
+      model: 'test-model', messages: [{ role: 'user', content: 'hello' }],
+    }), /ledger unavailable/)
+  } finally {
+    __setLlmClientOverrideForTesting(null)
+    __setLlmLedgerOverrideForTesting(null)
+  }
+})

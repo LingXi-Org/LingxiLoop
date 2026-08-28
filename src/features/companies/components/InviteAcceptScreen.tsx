@@ -142,15 +142,25 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     setBusy(true); setAcceptErr(null)
     try {
       const r = courseInvite ? await learningApi.acceptCourseInvitation(rawToken) : await companiesApi.acceptInvitation(rawToken)
-      const me = await authApi.me()
-      setMe(me.user, me.companies, r.company.id)
-      setServerCapabilities(me.serverCapabilities)
+      const auth = useAuth.getState()
+      if (auth.user) {
+        const companies = auth.companies.some((company) => company.id === r.company.id)
+          ? auth.companies
+          : [...auth.companies, r.company]
+        setMe(auth.user, companies, r.company.id)
+      } else {
+        setActive(r.company.id)
+      }
       clearPendingInvite()
       if (courseInvite && 'course' in r) {
         const accepted = r as ApiCourseInvitationAccept
         setWorkspaceSession({ companyId: accepted.company.id, projectId: accepted.course.projectId })
         useApp.getState().selectConversation(accepted.course.studyRoomId)
       }
+      void authApi.me().then((me) => {
+        setMe(me.user, me.companies, r.company.id)
+        setServerCapabilities(me.serverCapabilities)
+      }).catch(() => undefined)
       // Both supported surfaces enter the workspace immediately. The Web app
       // is a complete product surface, not a Desktop-download handoff.
       onDone()
@@ -159,7 +169,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     } finally {
       setBusy(false)
     }
-  }, [courseInvite, rawToken, setMe, setServerCapabilities, onDone])
+  }, [courseInvite, rawToken, setMe, setServerCapabilities, setActive, onDone])
 
   // Auto-accept the moment we have a session AND the preview is `valid`.
   // Saves a redundant click when the user just signed in to redeem the

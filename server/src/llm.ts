@@ -15,6 +15,19 @@ async function providerClient(): Promise<OpenAI> {
   return client
 }
 
+async function persistTrackedCall(record: Parameters<typeof recordLlmCall>[0]): Promise<void> {
+  let lastError: unknown
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await recordLlmCall(record)
+      return
+    } catch (error) {
+      lastError = error
+    }
+  }
+  throw lastError
+}
+
 async function tracked<T>(
   context: LlmCallContext,
   model: string,
@@ -26,17 +39,13 @@ async function tracked<T>(
   try {
     value = await operation(await providerClient())
   } catch (error) {
-    await recordLlmCall({
+    await persistTrackedCall({
       context, model, latencyMs: Date.now() - startedAt, status: 'failed', error, measured: false,
-    }).catch((ledgerError: unknown) => {
-      console.error('[llm] failed to persist provider failure', ledgerError)
     })
     throw error
   }
-  await recordLlmCall({
+  await persistTrackedCall({
     context, model, usage: usageOf(value), latencyMs: Date.now() - startedAt, status: 'succeeded',
-  }).catch((ledgerError: unknown) => {
-    console.error('[llm] failed to persist successful provider call', ledgerError)
   })
   return value
 }
