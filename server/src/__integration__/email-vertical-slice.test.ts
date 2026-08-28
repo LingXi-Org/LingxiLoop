@@ -56,6 +56,7 @@ function send(body: Record<string, unknown>) {
 }
 
 const validBody = {
+  idempotencyKey: 'email-vertical-slice-1',
   to: ['recipient@example.com'],
   subject: 'First release',
   body: 'Architecture is explicit.',
