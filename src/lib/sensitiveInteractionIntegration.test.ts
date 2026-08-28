@@ -55,11 +55,11 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../components/CanvasView.tsx',
     '../components/DocumentEditor.tsx',
     '../components/EventEditor.tsx',
-    '../components/InvitePeopleModal.tsx',
+    '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
     '../desktop/BoardsView.tsx',
     '../desktop/CalendarView.tsx',
-    '../desktop/CompanyCourseManagement.tsx',
+    '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
     '../desktop/MeView.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)

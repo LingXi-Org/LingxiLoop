@@ -3,7 +3,7 @@ import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const domains = [
-  'agents', 'boards', 'canvas', 'companies',
+  'agents', 'boards', 'canvas',
   'documents', 'email', 'files', 'learning',
   'observability', 'platform',
 ] as const
@@ -62,4 +62,16 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   }
   await assert.rejects(access(new URL('./knowledge.ts', import.meta.url)))
   await assert.rejects(access(new URL('../stores/knowledgeSources.ts', import.meta.url)))
+
+  for (const file of ['api.ts', 'contracts.ts', 'components/InvitePeopleModal.tsx', 'components/WorkspaceCreateDialog.tsx']) {
+    await access(new URL(`../features/companies/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./companies.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../components/CompanySwitcher.tsx', import.meta.url)))
+  const companySources = await Promise.all([
+    '../features/companies/components/InvitePeopleModal.tsx',
+    '../features/companies/components/CompanyCourseManagement.tsx',
+    '../features/companies/components/InviteAcceptScreen.tsx',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(companySources.join('\n'), /api\/companies|components\/InvitePeopleModal/)
 })

@@ -1,8 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { type AuthCompany, useAuth } from '@/stores/auth'
+import { WorkspaceCreateDialog } from '@/features/companies/components/WorkspaceCreateDialog'
+import { IconPlus } from '@tabler/icons-react'
 
 function initials(name: string): string {
   const value = name.trim()
@@ -79,6 +81,7 @@ function RailGroup({ label, companies, activeId, onSelect }: {
 }
 
 export function ServerRail() {
+  const [createOpen, setCreateOpen] = useState(false)
   const companies = useAuth((state) => state.companies)
   const activeId = useAuth((state) => state.activeCompanyId)
   const setActive = useAuth((state) => state.setActiveCompany)
@@ -102,7 +105,21 @@ export function ServerRail() {
           <RailGroup label="个人工作区" companies={groups.personal} activeId={activeId} onSelect={select} />
           <RailGroup label="加入的课程工作区" companies={groups.courses} activeId={activeId} onSelect={select} />
         </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="创建工作区"
+              onClick={() => setCreateOpen(true)}
+              className="mt-2 grid size-11 shrink-0 place-items-center rounded-2xl border border-hairline bg-panel text-ink-secondary transition hover:rounded-xl hover:bg-raised hover:text-ink"
+            >
+              <IconPlus size={20} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={10}>创建工作区</TooltipContent>
+        </Tooltip>
       </nav>
+      <WorkspaceCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
     </TooltipProvider>
   )
 }

@@ -14,9 +14,9 @@ export const updateMemberRoleRequestSchema = z.object({
 }).strict()
 
 export const createInvitationRequestSchema = z.object({
-  email: z.string().trim().email('invalid email').optional(),
+  email: z.string().trim().email('invalid email').nullable().optional(),
   role: z.enum(['member', 'admin']).default('member'),
-  note: z.string().trim().max(280).optional(),
+  note: z.string().trim().max(280).nullable().optional(),
   multiUse: z.boolean().optional(),
   maxUses: z.coerce.number().int().positive().optional(),
   sendEmail: z.boolean().optional(),

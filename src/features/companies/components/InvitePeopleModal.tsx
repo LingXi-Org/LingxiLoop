@@ -16,9 +16,10 @@
  * regular members.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { companiesApi } from '@/api/companies'
-import type { ApiInvitation, ApiInvitationWithToken } from '@/api/contracts'
+import { companiesApi } from '@/features/companies/api'
+import type { ApiInvitation, ApiInvitationWithToken } from '@/features/companies/contracts'
 import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
@@ -67,11 +68,6 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
   }, [companyId])
 
   useEffect(() => { void reload() }, [reload])
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   const submit = async () => {
     setFormErr(null); setCreated(null)
@@ -115,24 +111,16 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
   const historicalInvitations = useMemo(() => list.filter((i) => i.status !== 'active'), [list])
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center p-6"
-      style={{ background: 'rgba(15, 30, 50, 0.55)', backdropFilter: 'blur(6px)' }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-cloud rounded-[18px] shadow-pop w-full max-w-[600px] max-h-[88vh] flex flex-col overflow-hidden"
-        style={{ border: '1px solid var(--ink-100)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-5 border-b border-ink-100 shrink-0">
-          <h2 className="font-display font-medium text-[20px] tracking-tight">
+    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="max-h-[88vh] max-w-[600px] gap-0 overflow-hidden bg-cloud p-0 shadow-pop">
+        <DialogHeader className="shrink-0 border-b border-ink-100 px-6 py-5 pr-14">
+          <DialogTitle className="font-display text-[20px] font-medium tracking-tight">
             邀请参加 {companyName}
-          </h2>
-          <div className="text-[12.5px] text-ink-500 italic font-display mt-0.5">
+          </DialogTitle>
+          <DialogDescription className="mt-0.5 font-display text-[12.5px] italic text-ink-500">
             将人员添加到此工作区。通过电子邮件分享链接或邀请。
-          </div>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0 space-y-5">
           {/* Tabs */}
@@ -321,10 +309,8 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
             style={{ border: '1px solid var(--ink-100)' }}
           >完成</button>
         </div>
-      </div>
-
-      <style>{".ip-输入 {\n          宽度：100%；\n          内边距：8 像素 12 像素；\n          字体大小：13.5px；\n          背景：var(--paper);\n          边框：1.5px 实心 var(--ink-100);\n          边框半径：10px；\n          概要：无；\n          过渡：边框颜色0.15s，框阴影0.15s；\n          颜色：var(--ink-900)；\n        }\n        .ip-输入：焦点{\n          边框颜色：var(--sky2-300);\n          盒子阴影：0 0 0 3px var(--sky-50);\n        }"}</style>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 

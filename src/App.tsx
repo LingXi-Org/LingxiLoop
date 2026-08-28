@@ -8,7 +8,7 @@ import {
   consumeInviteFromUrl,
   getPendingInvite,
   InviteAcceptScreen,
-} from '@/components/InviteAcceptScreen'
+} from '@/features/companies/components/InviteAcceptScreen'
 import { NotificationToasts } from '@/components/NotificationToasts'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
 import { useApp } from '@/stores/app'

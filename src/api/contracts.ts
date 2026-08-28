@@ -9,6 +9,7 @@ import type {
   Status,
   WorkspaceSummary,
 } from '@/types'
+import type { ApiInvitationPreviewStatus } from '@/features/companies/contracts'
 
 
 export interface ApiMessage extends Message {
@@ -232,94 +233,6 @@ export interface ServerCapabilities {
    *  Driven by EMAIL_DOMAIN being set on the server. The invite modal
    *  hides the "Email this invite" checkbox when false. */
   invitationEmail: boolean
-}
-
-export type ApiInvitationStatus = 'active' | 'revoked' | 'expired' | 'consumed'
-
-export interface ApiInvitation {
-  /** Stable identifier (= server-side token_hash). Used by the revoke
-   *  endpoint. The raw token itself is ONLY returned on create — never
-   *  re-exposed. */
-  id: string
-  email: string | null
-  role: 'member' | 'admin'
-  note: string | null
-  maxUses: number
-  useCount: number
-  createdAt: string
-  expiresAt: string
-  revokedAt: string | null
-  lastAcceptedAt: string | null
-  lastAcceptedBy: string | null
-  invitedBy: string
-  inviterName: string | null
-  status: ApiInvitationStatus
-}
-
-/** Returned exactly ONCE from the create endpoint. Embeds the freshly-minted
- *  raw token + the public accept URL — the server keeps only the hash, so
- *  the UI must surface this immediately for the user to copy / send. */
-export interface ApiInvitationWithToken {
-  id: string
-  token: string
-  url: string
-  email: string | null
-  role: 'member' | 'admin'
-  note: string | null
-  maxUses: number
-  useCount: number
-  createdAt: string
-  expiresAt: string
-  status: 'active'
-  /** Present when the server sent the invitation email. Null when email
-   *  delivery was not requested. Delivery failures reject the request. */
-  emailDelivery: ApiInvitationEmailDelivery | null
-}
-
-export interface ApiInvitationEmailDelivery {
-  ok: true
-}
-
-export type ApiInvitationPreviewStatus =
-  | 'valid' | 'revoked' | 'expired' | 'consumed'
-  | 'wrong_email' | 'already_member' | 'not_found'
-
-export interface ApiInvitationPreview {
-  status: ApiInvitationPreviewStatus
-  invitation?: {
-    role: string
-    email: string | null
-    note: string | null
-    expiresAt: string
-    createdAt: string
-    inviterName: string | null
-    company: { id: string; name: string; slug: string }
-    multiUse: boolean
-  }
-}
-
-export interface ApiInvitationAccept {
-  ok: true
-  alreadyMember: boolean
-  company: { id: string; name: string; slug: string; role: string }
-}
-
-export interface ApiCompanyProfile {
-  id: string
-  name: string
-  slug: string
-  description: string
-  role: 'owner' | 'admin' | 'member'
-  createdAt: string
-}
-
-export interface ApiCompanyMember {
-  id: string
-  name: string
-  email: string
-  role: 'owner' | 'admin' | 'member'
-  joinedAt: string
-  courses: Array<{ courseId: string; name: string; role: 'teacher' | 'learner' }>
 }
 
 export interface ApiCourse {

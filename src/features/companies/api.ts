@@ -1,9 +1,17 @@
 import { http } from '@/api/core/http'
-import type { ApiInvitation, ApiInvitationWithToken, ApiInvitationPreview, ApiInvitationAccept, ApiCompanyProfile, ApiCompanyMember } from './contracts'
+import type {
+  ApiCompanyMember,
+  ApiCompanyProfile,
+  ApiInvitation,
+  ApiInvitationAccept,
+  ApiInvitationPreview,
+  ApiInvitationWithToken,
+  CompanySummary,
+} from './contracts'
 
 export const companiesApi = {
   listCompanies: () =>
-    http<Array<{ id: string; name: string; slug: string; createdAt: string; role: string }>>('/companies'),
+    http<CompanySummary[]>('/companies'),
   createCompany: (name: string) =>
     http<{ id: string; name: string; slug: string; role: string }>('/companies', {
       method: 'POST', body: JSON.stringify({ name }),

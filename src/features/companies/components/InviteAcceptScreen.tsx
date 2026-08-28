@@ -1,8 +1,9 @@
-import { companiesApi } from '@/api/companies'
+import { companiesApi } from '@/features/companies/api'
 import { learningApi } from '@/api/learning'
 import { platformApi } from '@/api/platform'
 import { getServerOrigin } from '@/api/core/http'
-import type { ApiCourseInvitationAccept, ApiCourseInvitationPreview, ApiInvitationPreview } from '@/api/contracts'
+import type { ApiCourseInvitationAccept, ApiCourseInvitationPreview } from '@/api/contracts'
+import type { ApiInvitationPreview } from '@/features/companies/contracts'
 /**
  * InviteAcceptScreen — the "you've been invited to <workspace>" landing
  * page. Renders when the URL carries an invite token via either:
@@ -35,9 +36,9 @@ import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
 import { setWorkspaceSession } from '@/lib/workspaceSession'
 import { isElectron, isWebAppHost } from '@/lib/runtime'
-import { CloudLogo } from './Avatar'
-import { GetDesktopAppLink } from './GetDesktopAppLink'
-import { WindowDragStrip } from './WindowDragStrip'
+import { CloudLogo } from '@/components/Avatar'
+import { GetDesktopAppLink } from '@/components/GetDesktopAppLink'
+import { WindowDragStrip } from '@/components/WindowDragStrip'
 
 const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
 
