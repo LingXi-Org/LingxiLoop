@@ -104,4 +104,3 @@ export async function bindCourseRoom(input: {
     [input.courseId, rows[0].company_id, input.conversationId, input.purpose, input.teacherId],
   )
 }
-
