@@ -9,7 +9,7 @@ import {
   nextTeacherDigestRun,
   reactivateTeacherRoomForCourse,
   teacherActionRequiresApproval,
-} from '../learning/teacher-agent.js'
+} from '../modules/learning/teacher-agent.js'
 import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })

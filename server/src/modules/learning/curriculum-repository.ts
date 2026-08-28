@@ -1,5 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { LearningActivity, LearningActivityType, LearningObjective, LearningObjectiveStatus } from '../../learning/types.js'
+import type { LearningActivity, LearningActivityType, LearningObjective, LearningObjectiveStatus } from './types.js'
 
 export async function listDeliveries(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query(
@@ -309,4 +309,3 @@ export async function insertLearningActivityAttempt(
   )
   return rows[0]?.id ?? null
 }
-

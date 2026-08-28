@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto'
-import { audit } from '../modules/identity/public.js'
-import { pool } from '../db/pool.js'
-import type { Queryable } from '../db/queryable.js'
-import { withClientTransaction, withTransaction } from '../db/transaction.js'
+import { audit } from '../identity/public.js'
+import { pool } from '../../db/pool.js'
+import type { Queryable } from '../../db/queryable.js'
+import { withClientTransaction, withTransaction } from '../../db/transaction.js'
 import type { PoolClient } from 'pg'
-import { wukongClient } from '../im/wukong.js'
-import type { ImChannelProfile } from '../im/types.js'
-import { inc } from '../metrics.js'
-import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
+import { wukongClient } from '../../im/wukong.js'
+import type { ImChannelProfile } from '../../im/types.js'
+import { inc } from '../../metrics.js'
+import type { AgentWorkItem, HostAction } from '../../agent-os/types.js'
 import {
   bindLearningCourseRoom,
   closeLearningActivity,
@@ -18,7 +18,7 @@ import {
   requireLearningCourseRole,
   setLearningCourseMembership,
   setLearningObjectiveStatus,
-} from '../modules/learning/application.js'
+} from './application.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,

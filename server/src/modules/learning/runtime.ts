@@ -88,7 +88,7 @@ export {
   loadTeacherTurnContext,
   nextTeacherDigestRun,
   teacherActionRequiresApproval,
-} from '../../learning/teacher-agent.js'
+} from './teacher-agent.js'
 
 export type {
   LearningActivityType,
@@ -97,7 +97,7 @@ export type {
   LearningStepType,
   LearningTurnContext,
   TeacherTurnContext,
-} from '../../learning/types.js'
+} from './types.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { wukongClient } from '../../im/wukong.js'

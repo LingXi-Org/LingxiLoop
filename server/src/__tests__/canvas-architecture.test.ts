@@ -6,6 +6,7 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 
 test('Canvas application receives domain transactions and typed publication without connection ownership', () => {
   const application = read('../modules/canvas/application.ts')
+  const assignments = read('../modules/canvas/assignments-application.ts')
   const infrastructure = read('../modules/canvas/infrastructure.ts')
   const facade = read('../modules/canvas/facade.ts')
 
@@ -13,7 +14,8 @@ test('Canvas application receives domain transactions and typed publication with
   assert.match(infrastructure, /publishEvent\(event: CanvasEvent\)/)
   assert.doesNotMatch(infrastructure, /PoolClient|connect\(|release\(|acquireConnection|connectionTransaction/)
   assert.doesNotMatch(application, /PoolClient|\.connect\(|\.release\(|acquireCanvasSharedFence|releaseCanvasSharedFence/)
-  assert.match(application, /withCanvasFence\(/)
+  assert.match(application, /withCanvasFence,/)
+  assert.match(assignments, /withCanvasFence\(/)
   assert.match(facade, /acquireCanvasSharedFence/)
   assert.match(facade, /releaseCanvasSharedFence/)
 })
@@ -31,13 +33,16 @@ test('Canvas report evidence is validated in one tenant-scoped repository query'
 test('Canvas capabilities own separate application and repository modules', () => {
   const application = read('../modules/canvas/application.ts')
   const capabilities = [
-    ['frames', 'createCanvasFrameApplication'],
-    ['collaboration', 'createCanvasCollaborationApplication'],
-    ['reports', 'createCanvasReportApplication'],
+    ['frames', 'frames', 'createCanvasFrameApplication'],
+    ['workspaces', 'workspace', 'createCanvasWorkspacesApplication'],
+    ['assignments', 'assignments', 'createCanvasAssignmentsApplication'],
+    ['collaboration', 'collaboration', 'createCanvasCollaborationApplication'],
+    ['reports', 'reports', 'createCanvasReportApplication'],
   ] as const
-  for (const [capability, factory] of capabilities) {
+  assert.ok(application.split('\n').length < 250)
+  for (const [applicationCapability, repositoryCapability, factory] of capabilities) {
     assert.match(application, new RegExp(factory))
-    assert.match(read(`../modules/canvas/${capability}-application.ts`), /export function createCanvas/)
-    assert.match(read(`../modules/canvas/${capability}-repository.ts`), /export async function/)
+    assert.match(read(`../modules/canvas/${applicationCapability}-application.ts`), /export function createCanvas/)
+    assert.match(read(`../modules/canvas/${repositoryCapability}-repository.ts`), /export async function/)
   }
 })

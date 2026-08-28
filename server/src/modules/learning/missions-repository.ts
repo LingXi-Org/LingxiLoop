@@ -1,5 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { LearningMission, LearningMissionStep } from '../../learning/types.js'
+import type { LearningMission, LearningMissionStep } from './types.js'
 import type { LearningAgentRoomScope } from './contracts.js'
 
 interface LearningMissionRow {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { projectMastery } from '../learning/mastery.js'
+import { projectMastery } from '../modules/learning/mastery.js'
 
 const base = { previousLevel: 0, previousIndependentEvidenceCount: 0, demonstratedLevel: 3, assistance: 'none' as const,
   confidence: 0.9, activityType: 'practice' as const, activityTargetLevel: 3, evaluatorKind: 'agent' as const, teacherConfirmed: false }

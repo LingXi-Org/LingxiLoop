@@ -150,7 +150,7 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   await assert.rejects(readFile(new URL('../api/inbound-email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   const emailCallers = await Promise.all([
     '../invitation-email.ts',
-    '../learning/notifications.ts',
+    '../modules/learning/notifications.ts',
     '../agents/cli.ts',
     '../agents/cli/email.ts',
     '../modules/admin/welcome-email.ts',

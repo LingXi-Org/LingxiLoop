@@ -1,6 +1,6 @@
 import type { PoolClient } from 'pg'
-import { pool } from '../db/pool.js'
-import { HttpError } from '../http/errors.js'
+import { pool } from '../../db/pool.js'
+import { HttpError } from '../../http/errors.js'
 
 type Queryable = Pick<PoolClient, 'query'> | typeof pool
 

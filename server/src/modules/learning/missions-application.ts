@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { AddLearningMissionStepInput, LearningAgentRoomScope, LearningScope, RecordLearningAttemptCommand, StartLearningMissionCommand } from './contracts.js'
-import type { LearningMission, LearningMissionKind, LearningTurnContext } from '../../learning/types.js'
+import type { LearningMission, LearningMissionKind, LearningTurnContext } from './types.js'
 import { LearningApplicationError } from './errors.js'
 import {
   activateLearningMission, activeLearningMissionId, completeLearningMissionRecord, countCourseObjectives,
@@ -407,4 +407,3 @@ export async function completeLearningMission(
   })
   return getLearningMission(db, room.companyId, room.courseId, missionId)
 }
-

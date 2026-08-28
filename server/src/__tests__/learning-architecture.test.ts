@@ -7,6 +7,7 @@ import test from 'node:test'
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url), 'utf8')
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
+const legacyLearningUrl = new URL('../learning/', import.meta.url)
 const legacyServiceUrl = new URL('../learning/service.ts', import.meta.url)
 const service = existsSync(legacyServiceUrl) ? readFileSync(legacyServiceUrl, 'utf8') : ''
 const learningModuleUrl = new URL('../modules/learning/', import.meta.url)
@@ -49,9 +50,10 @@ test('production consumers use only public Learning capability surfaces', () => 
 })
 
 test('the legacy Learning service implementation is deleted', () => {
+  assert.equal(existsSync(legacyLearningUrl), false)
   assert.equal(existsSync(legacyServiceUrl), false)
   assert.doesNotMatch(learningApplicationSource, /learning\/service\.js/)
-  const teacher = readFileSync(new URL('../learning/teacher-agent.ts', import.meta.url), 'utf8')
+  const teacher = readFileSync(new URL('../modules/learning/teacher-agent.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(teacher, /from '.\/service\.js'/)
   assert.match(repository, /WHERE course_id=\$1 AND company_id=\$2 AND role='teacher'/)
   assert.match(repository, /teacher_room\.company_id=\$1 AND teacher_room\.conversation_id=conversation\.id/)
@@ -149,7 +151,7 @@ test('Agent OS evaluation proposals use the tenant-scoped Learning vertical slic
 })
 
 test('teacher evaluation review shares the same repository and mastery projection boundary', () => {
-  const teacher = readFileSync(new URL('../learning/teacher-agent.ts', import.meta.url), 'utf8')
+  const teacher = readFileSync(new URL('../modules/learning/teacher-agent.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(service, /\breviewEvaluation\b|INSERT INTO learning_mastery|UPDATE learning_evaluations/)
   assert.doesNotMatch(teacher, /\breviewEvaluation\b/)
   assert.match(teacher, /reviewLearningEvaluation/)
@@ -170,7 +172,7 @@ test('Learning dashboard and evidence reads no longer use the legacy service dat
 })
 
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
-  const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
+  const teacher=readFileSync(new URL('../modules/learning/teacher-agent.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')
   assert.match(teacher,/PULSE_CAPABILITIES = \['teacher_admin'\]/)
   assert.match(teacher,/JSON\.stringify\(\['ipython'\]\)/)

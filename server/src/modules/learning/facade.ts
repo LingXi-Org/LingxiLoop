@@ -11,7 +11,7 @@ import {
   reactivateTeacherRoomForCourse,
   sendTeacherAgentWelcome,
   syncTeacherRoomMembers,
-} from '../../learning/teacher-agent.js'
+} from './teacher-agent.js'
 import { seedMemberDms } from '../../onboardCompany.js'
 import { CH_DOC_ACCESS_REVOKED, publish } from '../../redis.js'
 import { LearningApplication } from './application.js'
@@ -46,7 +46,7 @@ export const learningApplication = new LearningApplication(pool, {
   },
   avatarForEmail: gravatarUrlForEmail,
   teacherAgentSummary: async (courseId, userId) => {
-    const { getTeacherAgentSummary } = await import('../../learning/teacher-agent.js')
+    const { getTeacherAgentSummary } = await import('./teacher-agent.js')
     return getTeacherAgentSummary(courseId, userId)
   },
   metric: inc,

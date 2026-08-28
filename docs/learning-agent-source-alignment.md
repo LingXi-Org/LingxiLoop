@@ -43,7 +43,7 @@ verbatim into this MIT project.
 
 ## Current module boundaries
 
-- `server/src/learning/preset.ts` is the single canonical six-role team and
+- `server/src/modules/learning/preset.ts` is the single canonical six-role team and
   room definition; `onboardCompany.ts` only persists or refreshes it.
 - `server/src/modules/learning/router.ts` and `classroom-router.ts` expose the
   authenticated HTTP boundary; policy checks remain in the learning domain.

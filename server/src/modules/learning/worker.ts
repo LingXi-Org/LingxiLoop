@@ -7,7 +7,7 @@ import {
   failLearningEffect,
 } from './effects-repository.js'
 
-export { startLearningNotificationScheduler } from '../../learning/notifications.js'
+export { startLearningNotificationScheduler } from './notifications.js'
 
 export async function runLearningEffects(): Promise<void> {
   const effects = await claimLearningEffects(pool)

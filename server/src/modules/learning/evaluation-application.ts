@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
-import { projectMastery } from '../../learning/mastery.js'
-import type { LearningActivityType, LearningAssistance, MasteryProjectionDecision } from '../../learning/types.js'
+import { projectMastery } from './mastery.js'
+import type { LearningActivityType, LearningAssistance, MasteryProjectionDecision } from './types.js'
 import type { LearningAgentRoomScope, ProposeLearningEvaluationCommand } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
 import {

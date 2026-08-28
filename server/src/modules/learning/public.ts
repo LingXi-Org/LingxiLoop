@@ -4,4 +4,4 @@ export {
   assertPulseVisible,
   assertTeacherRoomAccessible,
   isTeacherRoom,
-} from '../../learning/visibility.js'
+} from './visibility.js'

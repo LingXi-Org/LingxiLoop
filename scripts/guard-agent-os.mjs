@@ -69,7 +69,7 @@ const canvasDomain = sourceFiles(join(root, 'server/src/modules/canvas'))
   .map((path) => readFileSync(path, 'utf8'))
   .join('\n')
 const schema = readFileSync(join(root, 'server/src/db/schema.sql'), 'utf8')
-const teacherAgent = readFileSync(join(root, 'server/src/learning/teacher-agent.ts'), 'utf8')
+const teacherAgent = readFileSync(join(root, 'server/src/modules/learning/teacher-agent.ts'), 'utf8')
 if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
   failures.push('learning must exist only as a capability-gated loop.learning Host Bridge namespace')
 }
@@ -126,7 +126,7 @@ const currentProductSurface = [
 if (/peek\/agent-chats|ApiWhisper|whisper-link|kind\s*===?\s*['"]whisper['"]/.test(currentProductSurface)) {
   failures.push('retired Whispers/agent-side-channel product path must not return')
 }
-for (const path of [...activeFiles, ...sourceFiles(join(root, 'server/src/learning'))]) {
+for (const path of [...activeFiles, ...sourceFiles(join(root, 'server/src/modules/learning'))]) {
   const source = readFileSync(path, 'utf8')
   if (/\bAgentBus\b|agent[_-]?bus/i.test(source)) failures.push(`${relative(root, path).replaceAll('\\', '/')}: AgentBus is forbidden`)
 }
