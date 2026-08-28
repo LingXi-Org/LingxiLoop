@@ -19,7 +19,12 @@ import { test, before, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, teardownAll } from './_helpers.js'
 import { pool } from '../db/pool.js'
-import { __setEmailProviderOverrideForTesting, findOrCreateEmailConversation, persistEmailMessage } from '../modules/email/index.js'
+import {
+  __setEmailProviderOverrideForTesting,
+  findOrCreateEmailConversation,
+  persistEmailMessage,
+} from '../modules/email/index.js'
+import { runEmailRetryTick } from '../modules/email/worker.js'
 
 before(async () => {
   await ensureSchemaOnce()
@@ -68,8 +73,7 @@ async function seedFailedOutbound(): Promise<{
 test('[integration] retry worker promotes a failed row to sent when the provider succeeds', async (t) => {
   const { messageId } = await seedFailedOutbound()
   __setEmailProviderOverrideForTesting(async () => ({ ok: true, smtpMessageId: 'provider-success', error: null }))
-  const { runRetryTick } = await import('../email-retry.js')
-  const r = await runRetryTick(8)
+  const r = await runEmailRetryTick(8)
   assert.equal(r.attempted, 1)
 
   const { rows } = await pool.query<{
@@ -89,8 +93,7 @@ test('[integration] retry worker promotes a failed row to sent when the provider
 test('[integration] retry worker advances backoff on a still-failing send', async () => {
   const { messageId } = await seedFailedOutbound()
   __setEmailProviderOverrideForTesting(async () => ({ ok: false, smtpMessageId: null, error: 'provider rejected request' }))
-  const { runRetryTick } = await import('../email-retry.js')
-  await runRetryTick(8)
+  await runEmailRetryTick(8)
   const { rows } = await pool.query<{
     transport_status: string; retry_attempts: number; next_retry_at: string | null;
   }>(
@@ -116,8 +119,7 @@ test('[integration] retry worker terminates the row after exhausting backoff ste
     [messageId],
   )
   __setEmailProviderOverrideForTesting(async () => ({ ok: false, smtpMessageId: null, error: 'provider rejected request' }))
-  const { runRetryTick } = await import('../email-retry.js')
-  await runRetryTick(8)
+  await runEmailRetryTick(8)
   const { rows } = await pool.query<{
     transport_status: string; retry_attempts: number; next_retry_at: string | null;
   }>(
@@ -138,8 +140,7 @@ test('[integration] retry worker ignores rows with next_retry_at in the future',
     `UPDATE email_messages SET next_retry_at = NOW() + INTERVAL '10 minutes' WHERE message_id = $1`,
     [messageId],
   )
-  const { runRetryTick } = await import('../email-retry.js')
-  const r = await runRetryTick(8)
+  const r = await runEmailRetryTick(8)
   assert.equal(r.attempted, 0)
   const { rows } = await pool.query<{ transport_status: string; retry_attempts: number }>(
     `SELECT transport_status, retry_attempts FROM email_messages WHERE message_id = $1`,
@@ -168,7 +169,6 @@ test('[integration] retry worker ignores inbound rows (only out + failed are eli
   // Force next_retry_at into the past on every row — if the filter were
   // wrong, the inbound row would get picked up.
   await pool.query(`UPDATE email_messages SET next_retry_at = NOW() - INTERVAL '1 second'`)
-  const { runRetryTick } = await import('../email-retry.js')
-  const r = await runRetryTick(8)
+  const r = await runEmailRetryTick(8)
   assert.equal(r.attempted, 0)
 })

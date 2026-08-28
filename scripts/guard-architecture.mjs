@@ -85,10 +85,13 @@ for (const file of server) {
   const fileName = name(file)
   if (fileName === 'server/src/admin.ts') violations.push(`${fileName}: retired root admin implementation is forbidden`)
   if (fileName === 'server/src/email.ts') violations.push(`${fileName}: retired root email implementation is forbidden`)
+  if (fileName === 'server/src/email-retry.ts' || fileName === 'server/src/email-gc.ts' || fileName === 'server/src/api/inbound-email.ts') {
+    violations.push(`${fileName}: retired root Email capability is forbidden`)
+  }
   const importsEmailRouterAtCompositionRoot = fileName === 'server/src/api/router.ts'
     && /modules\/email\/router\.js/.test(source)
   if (!fileName.startsWith('server/src/modules/email/')
-    && /modules\/email\/(?:addressing|application|facade|provider|runtime|(?:[a-z-]+-)?repository|router)\.js/.test(source)
+    && /modules\/email\/(?:addressing|facade|provider|runtime|(?:[a-z-]+-)?(?:application|repository|router))\.js/.test(source)
     && !importsEmailRouterAtCompositionRoot) {
     violations.push(`${fileName}: Email access must use modules/email/index.ts`)
   }

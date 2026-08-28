@@ -13,7 +13,7 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { pickOrphans } from '../email-gc.js'
+import { pickEmailAttachmentOrphans } from '../modules/email/retention.js'
 
 const NOW = 1_700_000_000_000  // arbitrary fixed wall-clock
 const HOUR = 60 * 60_000
@@ -21,12 +21,12 @@ const HOUR = 60 * 60_000
 test('pickOrphans returns empty when storage and db agree', () => {
   const keys = ['email-attachments/a', 'email-attachments/b']
   const inStorage = keys.map((k) => ({ key: k, sizeBytes: 100, lastModifiedMs: NOW - 10 * HOUR }))
-  const result = pickOrphans({ inStorage, inDb: new Set(keys), nowMs: NOW })
+  const result = pickEmailAttachmentOrphans({ inStorage, inDb: new Set(keys), nowMs: NOW })
   assert.deepEqual(result, [])
 })
 
 test('pickOrphans flags storage objects with no DB row (when old enough)', () => {
-  const result = pickOrphans({
+  const result = pickEmailAttachmentOrphans({
     inStorage: [
       { key: 'email-attachments/orphan', sizeBytes: 100, lastModifiedMs: NOW - 10 * HOUR },
       { key: 'email-attachments/keep',   sizeBytes: 100, lastModifiedMs: NOW - 10 * HOUR },
@@ -40,7 +40,7 @@ test('pickOrphans flags storage objects with no DB row (when old enough)', () =>
 test('pickOrphans spares fresh uploads even if no DB row exists yet', () => {
   // The classic upload-then-persist race: bytes are in storage, the
   // email_attachments INSERT is in flight. Default safety = 1h.
-  const result = pickOrphans({
+  const result = pickEmailAttachmentOrphans({
     inStorage: [
       { key: 'email-attachments/just-uploaded', sizeBytes: 100, lastModifiedMs: NOW - 30 * 60_000 }, // 30m ago
     ],
@@ -58,7 +58,7 @@ test('pickOrphans respects a custom safety threshold', () => {
     { key: 'email-attachments/just-uploaded', sizeBytes: 100, lastModifiedMs: NOW - 10 },
   ]
   assert.deepEqual(
-    pickOrphans({ inStorage, inDb: new Set(), nowMs: NOW, safetyAgeMs: 0 }),
+    pickEmailAttachmentOrphans({ inStorage, inDb: new Set(), nowMs: NOW, safetyAgeMs: 0 }),
     ['email-attachments/just-uploaded'],
   )
 })
@@ -67,7 +67,7 @@ test('pickOrphans ignores DB-only ghosts (key in DB, not in storage)', () => {
   // A storage_key referenced by a row that the storage backend doesn't
   // have any object for is harmless from a "delete bytes" perspective —
   // there are no bytes to delete. pickOrphans should NOT surface it.
-  const result = pickOrphans({
+  const result = pickEmailAttachmentOrphans({
     inStorage: [],
     inDb: new Set(['email-attachments/ghost']),
     nowMs: NOW,
@@ -76,7 +76,7 @@ test('pickOrphans ignores DB-only ghosts (key in DB, not in storage)', () => {
 })
 
 test('pickOrphans handles a mix of all three states', () => {
-  const result = pickOrphans({
+  const result = pickEmailAttachmentOrphans({
     inStorage: [
       { key: 'email-attachments/live',  sizeBytes: 100, lastModifiedMs: NOW - 24 * HOUR }, // KEEP (in db)
       { key: 'email-attachments/old',   sizeBytes: 100, lastModifiedMs: NOW - 24 * HOUR }, // DELETE (orphan, old)
@@ -91,7 +91,7 @@ test('pickOrphans handles a mix of all three states', () => {
 test('pickOrphans treats lastModifiedMs of 0 as ancient (deletable)', () => {
   // Some backends omit LastModified for newly-listed objects. Treat the
   // fall-through 0 as "very old" so we don't leak forever on those.
-  const result = pickOrphans({
+  const result = pickEmailAttachmentOrphans({
     inStorage: [{ key: 'email-attachments/no-mtime', sizeBytes: 100, lastModifiedMs: 0 }],
     inDb: new Set(),
     nowMs: NOW,

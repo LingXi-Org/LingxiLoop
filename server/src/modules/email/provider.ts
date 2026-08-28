@@ -49,7 +49,10 @@ export async function sendViaProvider(args: SendArgs): Promise<ProviderSendResul
   if (!apiKey) throw new Error('RESEND_API_KEY is required')
 
   const headers: Record<string, string> = {}
-  if (args.messageId) headers['Message-ID'] = `<${args.messageId}>`
+  if (args.messageId) {
+    headers['Message-ID'] = `<${args.messageId}>`
+    headers['X-LingxiLoop-Message-ID'] = args.messageId
+  }
   if (args.inReplyTo) headers['In-Reply-To'] = `<${args.inReplyTo}>`
   if (args.references?.length) headers.References = args.references.map((reference) => `<${reference}>`).join(' ')
   if (args.autoSubmitted) headers['Auto-Submitted'] = args.autoSubmitted

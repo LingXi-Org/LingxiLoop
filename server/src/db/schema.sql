@@ -3622,7 +3622,7 @@ CREATE UNIQUE INDEX uniq_calendar_reminders_slot ON public.calendar_reminders US
 -- Name: uniq_email_messages_smtp_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX uniq_email_messages_smtp_id ON public.email_messages USING btree (lower(smtp_message_id)) WHERE (smtp_message_id IS NOT NULL);
+CREATE UNIQUE INDEX uniq_email_messages_smtp_id ON public.email_messages USING btree (company_id, lower(smtp_message_id)) WHERE (smtp_message_id IS NOT NULL);
 
 
 --

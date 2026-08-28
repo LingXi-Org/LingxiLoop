@@ -17,7 +17,12 @@ import {
   persistEmailMessage,
 } from './runtime.js'
 import { storage } from '../../storage.js'
+import type { Storage } from '../../storage.js'
 import { EmailApplication } from './application.js'
+import { InboundEmailApplication } from './inbound-application.js'
+import { createInboundEmailHttpRouter } from './inbound-router.js'
+import { inc } from '../../metrics.js'
+import { alertDiscord } from '../../alert.js'
 
 export const emailApplication = new EmailApplication(pool, {
   assertAvailable: assertEmailProviderConfigured,
@@ -35,6 +40,23 @@ export const emailApplication = new EmailApplication(pool, {
   findOrCreateConversation: (args) => findOrCreateEmailConversation(args),
   persist: (args) => persistEmailMessage(args),
 })
+
+export function createInboundEmailRouter(dependencies: { storage: Pick<Storage, 'put'> }) {
+  const application = new InboundEmailApplication(pool, {
+    storage: dependencies.storage,
+    findOrCreateConversation: (input) => findOrCreateEmailConversation(input),
+    persistMessage: (input) => persistEmailMessage(input),
+    metric: (name, labels) => inc(name, labels),
+    alert: async (input) => { await alertDiscord(input) },
+  })
+  return createInboundEmailHttpRouter({
+    application,
+    secret: env.EMAIL_INBOUND_HMAC_SECRET,
+    metric: (name) => inc(name),
+  })
+}
+
+export const inboundEmailRouter = createInboundEmailRouter({ storage })
 
 export async function sendCalendarReminderEmail(args: {
   to: string

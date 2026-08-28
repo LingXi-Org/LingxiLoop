@@ -30,9 +30,44 @@ export const replyEmailRequestSchema = z.object({
   attachments: attachmentsSchema,
 }).strict()
 
+const inboundAttachmentSchema = z.object({
+  filename: z.string().trim().min(1).max(200),
+  mimeType: z.string().trim().min(1).max(120),
+  sizeBytes: z.number().int().min(0),
+  contentBase64: z.string().max(14_000_000),
+  truncated: z.boolean(),
+}).strict().superRefine((attachment, context) => {
+  if (!attachment.truncated && attachment.sizeBytes > 10 * 1024 * 1024) {
+    context.addIssue({ code: 'custom', message: 'non-truncated attachment exceeds 10 MiB' })
+  }
+})
+
+export const inboundEmailPayloadSchema = z.object({
+  messageId: z.string().trim().min(1).max(998),
+  inReplyTo: z.string().trim().min(1).max(998).nullable(),
+  references: z.array(z.string().trim().min(1).max(998)).max(128),
+  from: z.string().trim().min(1).max(998),
+  to: z.array(z.string().trim().min(1).max(998)).max(64),
+  cc: z.array(z.string().trim().min(1).max(998)).max(64),
+  subject: z.string().max(998),
+  text: z.string().max(5_000_000),
+  html: z.string().max(20_000_000).nullable(),
+  rawSizeBytes: z.number().int().min(0).max(25 * 1024 * 1024),
+  autoSubmitted: z.string().trim().max(200).nullable(),
+  attachments: z.array(inboundAttachmentSchema).max(32),
+}).strict().superRefine((payload, context) => {
+  const forwardedBytes = payload.attachments
+    .filter((attachment) => !attachment.truncated)
+    .reduce((total, attachment) => total + attachment.sizeBytes, 0)
+  if (forwardedBytes > 18 * 1024 * 1024) {
+    context.addIssue({ code: 'custom', message: 'forwarded attachments exceed 18 MiB' })
+  }
+})
+
 export type SendEmailInput = z.infer<typeof sendEmailRequestSchema>
 export type ReplyEmailInput = z.infer<typeof replyEmailRequestSchema>
 export type OutboundAttachmentInput = z.infer<typeof outboundAttachmentSchema>
+export type InboundEmailPayload = z.infer<typeof inboundEmailPayloadSchema>
 
 export interface EmailScope {
   userId: string
@@ -81,6 +116,30 @@ export interface PersistEmailMessageInput {
 
 export interface PersistedEmailAttachment {
   id: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+  storageKey: string | null
+  truncated: boolean
+}
+
+export interface EmailRetryCandidate {
+  messageId: string
+  conversationId: string
+  companyId: string
+  smtpMessageId: string | null
+  inReplyTo: string | null
+  references: string[]
+  subject: string
+  fromAddress: string
+  toAddresses: string[]
+  ccAddresses: string[]
+  body: string
+  autoSubmitted: boolean
+  retryAttempts: number
+}
+
+export interface EmailRetryAttachment {
   filename: string
   mimeType: string
   sizeBytes: number

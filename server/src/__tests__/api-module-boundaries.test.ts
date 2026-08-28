@@ -104,9 +104,10 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.doesNotMatch(calendarCli, /from ['"][^'"]*calendar\.js['"]|import\(['"][^'"]*calendar\.js['"]\)/)
   await assert.rejects(readFile(new URL('../calendar.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../email-retry.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../email-gc.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../api/inbound-email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   const emailCallers = await Promise.all([
-    '../api/inbound-email.ts',
-    '../email-retry.ts',
     '../invitation-email.ts',
     '../learning/notifications.ts',
     '../agents/cli.ts',
@@ -114,10 +115,11 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
     '../modules/admin/welcome-email.ts',
     '../modules/agents/facade.ts',
     '../modules/messages/facade.ts',
+    '../web.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(
     emailCallers.join('\n'),
-    /modules\/email\/(?:addressing|application|facade|provider|runtime|(?:[a-z-]+-)?repository|router)\.js/
+    /modules\/email\/(?:addressing|facade|provider|runtime|(?:[a-z-]+-)?(?:application|repository|router))\.js/
   )
   assert.match(emailCallers.join('\n'), /modules\/email\/index\.js/)
   const emailRuntime = await readFile(new URL('../modules/email/runtime.ts', import.meta.url), 'utf8')
@@ -127,11 +129,30 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.doesNotMatch(emailRuntime, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i)
   assert.doesNotMatch(emailProvider, /\b(?:pool|db)\.query\b|from ['"]express['"]/)
   assert.doesNotMatch(emailAddressing, /\b(?:pool|db)\.query\b|\bfetch\s*\(/)
-  for (const repositoryName of ['address-repository.ts', 'conversation-repository.ts', 'message-repository.ts']) {
+  for (const repositoryName of [
+    'address-repository.ts',
+    'attachment-repository.ts',
+    'conversation-repository.ts',
+    'inbound-repository.ts',
+    'message-repository.ts',
+    'retry-repository.ts',
+  ]) {
     const emailRepository = await readFile(new URL(`../modules/email/${repositoryName}`, import.meta.url), 'utf8')
     assert.match(emailRepository, /Queryable/)
     assert.doesNotMatch(emailRepository, /from ['"]express['"]|\bfetch\s*\(/)
   }
+  const inboundApplication = await readFile(new URL('../modules/email/inbound-application.ts', import.meta.url), 'utf8')
+  const retryApplication = await readFile(new URL('../modules/email/retry-application.ts', import.meta.url), 'utf8')
+  const gcApplication = await readFile(new URL('../modules/email/gc-application.ts', import.meta.url), 'utf8')
+  const inboundRouter = await readFile(new URL('../modules/email/inbound-router.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(inboundApplication, /from ['"][^'"]*db\/pool\.js['"]|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  assert.doesNotMatch(retryApplication, /from ['"][^'"]*db\/|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  assert.doesNotMatch(gcApplication, /from ['"][^'"]*db\/|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  assert.doesNotMatch(inboundRouter, /from ['"][^'"]*db\/|\b(?:pool|db)\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  const workerComposition = await readFile(new URL('../worker.ts', import.meta.url), 'utf8')
+  assert.match(workerComposition, /from ['"]\.\/modules\/email\/worker\.js['"]/)
+  const webComposition = await readFile(new URL('../web.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(webComposition, /modules\/email\/worker\.js/)
   const calendarScheduler = await readFile(new URL('../modules/calendar/scheduler.ts', import.meta.url), 'utf8')
   const calendarWorker = await readFile(new URL('../worker.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(calendarScheduler, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)

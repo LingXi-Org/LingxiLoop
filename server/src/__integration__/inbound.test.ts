@@ -55,7 +55,25 @@ after(async () => {
 
 /** Wrap a POST helper so each test stays a one-liner. */
 async function postInbound(body: unknown, opts?: { signature?: string }): Promise<{ status: number; body: any }> {
-  const raw = JSON.stringify(body)
+  const record = body && typeof body === 'object' ? body as Record<string, unknown> : {}
+  const attachments = Array.isArray(record.attachments)
+    ? record.attachments.map((attachment) => ({
+        ...(attachment as Record<string, unknown>),
+        truncated: (attachment as Record<string, unknown>).truncated === true,
+      }))
+    : []
+  const raw = JSON.stringify({
+    inReplyTo: null,
+    references: [],
+    cc: [],
+    subject: '',
+    text: '',
+    html: null,
+    rawSizeBytes: 0,
+    autoSubmitted: null,
+    ...record,
+    attachments,
+  })
   const sig = opts?.signature ?? signInboundPayload(raw)
   const res = await fetch(`${baseUrl}/webhooks/email/inbound`, {
     method: 'POST',
@@ -180,60 +198,31 @@ test('[integration] flags inbound auto_submitted when worker forwarded the heade
   assert.equal(rows[0].auto_submitted, true)
 })
 
-test('[integration] inbound SES boomerang is deduplicated against the outbound row', async () => {
-  // SES rewrites Message-ID on the wire, so when we send to a lingxiloop-domain
-  // address the boomerang inbound carries an SES-minted id that doesn't
-  // match the smtp_message_id we stored on the outbound. Without echo
-  // dedup, this creates a second conversation with the same message —
-  // the bug the user observed in production. Verify the heuristic catches
-  // it: same from/to/subject within 10 minutes ⇒ inbound returns
-  // deduplicated and writes NO new row.
-  const { findOrCreateEmailConversation, persistEmailMessage, mintMessageId } = await import('../modules/email/index.js')
-  const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
-  const fromAddrFull = `yetone <user-x@${process.env.EMAIL_DOMAIN}>`
+test('[integration] exact Message-ID dedup is scoped independently to each tenant', async () => {
+  const first = await seedCompanyWithAgent({ companyId: 'c-inbound-first', agentEmail: 'first@lingxiloop.local' })
+  const second = await seedCompanyWithAgent({ companyId: 'c-inbound-second', agentEmail: 'second@lingxiloop.local' })
+  const payload = {
+    messageId: 'shared-delivery@host',
+    from: 'alice@external.com',
+    to: [first.agentEmail, second.agentEmail],
+    subject: 'shared delivery',
+    text: 'one SMTP delivery, two isolated tenants',
+  }
 
-  // Seed the outbound row, as if compose just sent.
-  const conv = await findOrCreateEmailConversation({
-    companyId, inReplyTo: null, references: [],
-    subject: '你好', memberIds: [agentId],
-  })
-  const ourId = mintMessageId()
-  await persistEmailMessage({
-    conversationId: conv.conversationId, companyId, authorId: agentId,
-    direction: 'out', transportStatus: 'sent',
-    smtpMessageId: ourId,
-    inReplyTo: null, references: [],
-    subject: '你好',
-    fromAddr: fromAddrFull,
-    toAddrs: [agentEmail],
-    body: '你好啊',
-  })
+  const delivered = await postInbound(payload)
+  assert.equal(delivered.status, 200)
+  assert.equal(delivered.body.deliveries.length, 2)
+  const { rows } = await pool.query<{ company_id: string }>(
+    `SELECT company_id FROM email_messages WHERE smtp_message_id=$1 ORDER BY company_id`,
+    ['shared-delivery@host'],
+  )
+  assert.deepEqual(rows.map((row) => row.company_id), [first.companyId, second.companyId])
 
-  // Now fire the boomerang: SES-flavored Message-ID, but same from/to/subject.
-  const sesId = `0106019e2ac91d15-${randomHex(8)}-fa0180f0be6f-000000@ap-northeast-1.amazonses.com`
-  const r = await postInbound({
-    messageId: sesId,
-    from: fromAddrFull,
-    to: [agentEmail],
-    subject: '你好',
-    text: '你好啊',
-  })
-  assert.equal(r.status, 200)
-  assert.equal(r.body.deduplicated, true)
-  assert.equal(r.body.echo, true, 'echo dedup must flag this as the SES boomerang')
-
-  // Confirm: only one conversation, only one email_messages row.
-  const { rows: convs } = await pool.query('SELECT count(*)::int AS n FROM conversations WHERE kind = $1', ['email'])
-  assert.equal(convs[0].n, 1, 'echo dedup should NOT create a second conversation')
-  const { rows: msgs } = await pool.query('SELECT count(*)::int AS n FROM email_messages')
-  assert.equal(msgs[0].n, 1, 'echo dedup should NOT create a second email_messages row')
+  const duplicate = await postInbound(payload)
+  assert.equal(duplicate.status, 200)
+  assert.equal(duplicate.body.deduplicated, true)
+  assert.deepEqual(new Set(duplicate.body.companyIds), new Set([first.companyId, second.companyId]))
 })
-
-function randomHex(n: number): string {
-  let s = ''
-  for (let i = 0; i < n; i++) s += Math.floor(Math.random() * 16).toString(16)
-  return s
-}
 
 test('[integration] inbound reply threads back to the original outbound conversation', async () => {
   // Regression test for the threading bug surfaced in production:

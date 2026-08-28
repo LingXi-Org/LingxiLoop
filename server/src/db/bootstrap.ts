@@ -78,6 +78,14 @@ const REQUIRED_V1_CONSTRAINTS = [
 const REQUIRED_V1_INDEXES = [
   'idx_llm_calls_company_created',
   'idx_llm_calls_run_created',
+  'uniq_email_messages_smtp_id',
+] as const
+
+const REQUIRED_V1_INDEX_DEFINITIONS = [
+  [
+    'uniq_email_messages_smtp_id',
+    'CREATE UNIQUE INDEX uniq_email_messages_smtp_id ON public.email_messages USING btree (company_id, lower(smtp_message_id)) WHERE (smtp_message_id IS NOT NULL)',
+  ],
 ] as const
 
 async function userRelationCount(client: PoolClient): Promise<number> {
@@ -167,6 +175,14 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     [REQUIRED_V1_INDEXES],
   )
   if (indexRows.length > 0) return false
+  for (const [indexName, expectedDefinition] of REQUIRED_V1_INDEX_DEFINITIONS) {
+    const { rows } = await client.query<{ definition: string | null }>(
+      `SELECT pg_get_indexdef(to_regclass('public.' || $1)) AS definition`,
+      [indexName],
+    )
+    const normalize = (value: string | null | undefined) => value?.replace(/\s+/g, ' ').trim() ?? ''
+    if (normalize(rows[0]?.definition) !== normalize(expectedDefinition)) return false
+  }
   return true
 }
 

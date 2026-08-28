@@ -227,7 +227,7 @@ export async function buildTestApp(storageProvider?: Pick<Storage, 'put'>): Prom
   const expressMod = await import('express')
   const express = expressMod.default
   const app = express()
-  const { createInboundEmailRouter, inboundEmailRouter } = await import('../api/inbound-email.js')
+  const { createInboundEmailRouter, inboundEmailRouter } = await import('../modules/email/index.js')
   // Match the production mount path: web.ts mounts inboundEmailRouter
   // at /webhooks/email — see server/src/web.ts.
   app.use(
