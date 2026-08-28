@@ -2,6 +2,16 @@
 import { http } from '@/api/core/http'
 import type { ApiMessage } from '@/api/contracts'
 
+export interface LinkPreviewMetadata {
+  url: string
+  title?: string
+  description?: string
+  image?: string
+  siteName?: string
+  finalUrl?: string
+  empty?: boolean
+}
+
 export const messagesApi = {
   getReplies: (conversationId: string, rootId: string) =>
     http<ApiMessage[]>(
@@ -34,5 +44,7 @@ export const messagesApi = {
     http<{ reactions: Array<{ emoji: string; count: number; mine?: boolean; users?: string[] }> }>(
       `/messages/${encodeURIComponent(messageId)}/reactions`,
       { method: 'POST', body: JSON.stringify({ emoji }) },
-    )
+    ),
+  getLinkPreview: (url: string) =>
+    http<LinkPreviewMetadata>(`/og?url=${encodeURIComponent(url)}`),
 }

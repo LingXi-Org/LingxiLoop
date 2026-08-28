@@ -9,7 +9,11 @@ const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url),
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
 const legacyServiceUrl = new URL('../learning/service.ts', import.meta.url)
 const service = existsSync(legacyServiceUrl) ? readFileSync(legacyServiceUrl, 'utf8') : ''
-const repository = readFileSync(new URL('../modules/learning/repository.ts', import.meta.url), 'utf8')
+const learningModuleUrl = new URL('../modules/learning/', import.meta.url)
+const repository = readdirSync(learningModuleUrl)
+  .filter((name) => name.endsWith('-repository.ts'))
+  .map((name) => readFileSync(new URL(name, learningModuleUrl), 'utf8'))
+  .join('\n')
 const learningApplicationSource = readFileSync(new URL('../modules/learning/application.ts', import.meta.url), 'utf8')
 const learningRuntimeSource = readFileSync(new URL('../modules/learning/runtime.ts', import.meta.url), 'utf8')
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
@@ -49,13 +53,16 @@ test('the legacy Learning service implementation is deleted', () => {
 
 test('native learning schema keeps evidence, projection and delivery ledgers durable', () => {
   for (const table of ['courses','course_members','learning_course_rooms','learning_objectives','learning_activities',
-    'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_mastery','learning_mastery_events','learning_notification_deliveries',
+    'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_mastery','learning_mastery_events','learning_notification_deliveries','learning_effects',
     'learning_project_teacher_agents','learning_course_teacher_rooms']) {
     assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
   }
   assert.match(schema, /num_nonnulls\(activity_id, mission_step_id\) = 1/)
   assert.match(schema, /UNIQUE \(course_id, learner_id, conversation_id, trigger_client_msg_no\)/)
   assert.match(schema, /uq_learning_deliveries_course/)
+  assert.match(schema, /idx_learning_effects_pending/)
+  assert.match(learningApplicationSource, /enqueueLearningEffect/)
+  assert.doesNotMatch(learningApplicationSource, /const provisioning = await Promise\.allSettled/)
   assert.doesNotMatch(schema, /CREATE TABLE public\.learning_(?:courses|course_memberships)\b/)
 })
 

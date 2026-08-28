@@ -121,6 +121,8 @@ import type {
   LearningTurnContext,
   MasteryProjectionDecision,
 } from '../../learning/types.js'
+import { enqueueLearningEffect } from './effects-repository.js'
+import type { LearningEffect } from './effects-repository.js'
 
 export type LearningApplicationErrorCode = 'invalid' | 'not_found' | 'forbidden' | 'conflict' | 'gone' | 'unauthorized'
 
@@ -998,6 +1000,33 @@ export class LearningApplication {
 
   courses(scope: LearningScope) { return listCourses(this.db, scope.companyId, scope.userId) }
 
+  async runEffect(effect: LearningEffect): Promise<void> {
+    const payload = effect.payload
+    switch (effect.kind) {
+      case 'study_room.sync':
+        await this.syncStudyRoom(effect.courseId)
+        return
+      case 'teacher_room.sync':
+        await this.infrastructure.syncTeacherRoom(effect.courseId)
+        return
+      case 'teacher_agent.welcome':
+        await this.infrastructure.welcomeTeacherAgent(effect.courseId)
+        return
+      case 'notebook.ensure': {
+        const projectId = String(payload.projectId ?? '')
+        if (!projectId) throw new Error('notebook effect requires projectId')
+        await this.infrastructure.ensureNotebook(projectId, effect.companyId)
+        return
+      }
+      case 'course_create.audit':
+        await this.infrastructure.audit({
+          kind: 'course_create', companyId: effect.companyId,
+          userId: String(payload.userId ?? ''),
+          detail: { courseId: effect.courseId, projectId: payload.projectId, name: payload.name },
+        })
+    }
+  }
+
   async createCourse(scope: LearningScope, input: CreateCourseInput) {
     const permission = await canCreateCourse(this.db, scope.companyId, scope.userId)
     if (!permission) throw new LearningApplicationError('forbidden', 'not a member of this company')
@@ -1007,26 +1036,27 @@ export class LearningApplication {
     const projectId = `p-${randomUUID().slice(0, 10)}`
     const courseId = `course-${randomUUID().slice(0, 12)}`
     const roomId = `course-room-${randomUUID().slice(0, 12)}`
-    const teacher = await this.infrastructure.transaction(async (db) => {
+    await this.infrastructure.transaction(async (db) => {
       await insertCourse(db, { ...scope, projectId, courseId, roomId, input })
-      return this.infrastructure.ensureTeacherAgent(courseId, db)
+      const teacher = await this.infrastructure.ensureTeacherAgent(courseId, db)
+      const effects = [
+        { kind: 'study_room.sync' as const },
+        { kind: 'teacher_room.sync' as const },
+        ...(teacher.created ? [{ kind: 'teacher_agent.welcome' as const }] : []),
+        { kind: 'notebook.ensure' as const, payload: { projectId } },
+        { kind: 'course_create.audit' as const, payload: { userId: scope.userId, projectId, name: input.name } },
+      ]
+      for (const effect of effects) {
+        await enqueueLearningEffect(db, {
+          companyId: scope.companyId, courseId, kind: effect.kind, payload: effect.payload,
+        })
+      }
     })
-    const provisioning = await Promise.allSettled([
-      this.syncStudyRoom(courseId),
-      this.infrastructure.syncTeacherRoom(courseId),
-      ...(teacher.created ? [this.infrastructure.welcomeTeacherAgent(courseId)] : []),
-      this.infrastructure.ensureNotebook(projectId, scope.companyId),
-      this.infrastructure.audit({
-        kind: 'course_create', userId: scope.userId, companyId: scope.companyId,
-        detail: { courseId, projectId, name: input.name },
-      }),
-    ])
-    const knowledgeReady = provisioning[teacher.created ? 3 : 2]?.status === 'fulfilled'
     return {
       id: courseId, companyId: scope.companyId, projectId, name: input.name,
       description: input.description, color: input.color, status: 'active',
       createdBy: scope.userId, studyRoomId: roomId, courseRole: 'teacher', memberCount: 1,
-      canManage: true, knowledgeState: knowledgeReady ? 'ready' : 'failed',
+      canManage: true, knowledgeState: 'pending' as const,
     }
   }
 

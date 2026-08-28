@@ -48,6 +48,12 @@ test('global resource surfaces render Skeletons instead of plain initial loading
   }
   assert.match(read('../components/LinkPreview.tsx'), /if \(!loaded\) return <ResourceSkeleton/)
   assert.doesNotMatch(read('../components/LinkPreview.tsx'), /render NOTHING \(no skeleton\)/)
+  const linkPreview = read('../components/LinkPreview.tsx')
+  assert.match(linkPreview, /messagesApi\.getLinkPreview/)
+  assert.match(linkPreview, /role="alert"/)
+  assert.match(linkPreview, /链接预览加载失败/)
+  assert.match(linkPreview, /setRetryRevision/)
+  assert.doesNotMatch(linkPreview, /@\/api\/core\/http/)
 })
 
 test('repository skill requires Skeletons for all future asynchronous resources', () => {

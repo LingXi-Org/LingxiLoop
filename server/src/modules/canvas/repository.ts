@@ -527,25 +527,37 @@ export async function participantNames(db: Queryable, companyId: string, ids: st
   return rows
 }
 
-export async function evidenceRefExists(db: Queryable, args: {
-  companyId: string; canvasId: string; kind: CanvasEvidenceRef['kind']; id: string
-}) {
-  const queries: Record<CanvasEvidenceRef['kind'], string> = {
-    frame: `SELECT 1 FROM canvas_frames WHERE id=$1 AND canvas_id=$2`,
-    report: `SELECT 1 FROM canvas_assignment_reports WHERE id=$1 AND canvas_id=$2 AND company_id=$3`,
-    message: `SELECT 1 FROM messages m JOIN canvases c ON c.conversation_id=m.conversation_id
-      WHERE m.id=$1 AND c.id=$2 AND c.company_id=$3`,
-    document: `SELECT 1 FROM documents d JOIN canvases c ON c.company_id=d.company_id
-      WHERE d.id=$1 AND c.id=$2 AND c.company_id=$3 AND (d.conversation_id IS NULL OR d.conversation_id=c.conversation_id)`,
-    source: `SELECT 1 FROM knowledge_sources s JOIN canvases c ON c.project_id=s.project_id
-      WHERE s.id=$1 AND c.id=$2 AND s.company_id=$3 AND s.deleted_at IS NULL`,
-    attempt: `SELECT 1 FROM learning_attempts attempt
-      JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
-      JOIN canvases canvas ON canvas.project_id=course.project_id AND canvas.company_id=course.company_id
-      WHERE attempt.id=$1 AND canvas.id=$2 AND course.company_id=$3`,
-  }
-  const { rows } = await db.query(queries[args.kind], [args.id, args.canvasId, args.companyId])
-  return Boolean(rows[0])
+export async function missingEvidenceRefs(db: Queryable, args: {
+  companyId: string; canvasId: string; refs: CanvasEvidenceRef[]
+}): Promise<CanvasEvidenceRef[]> {
+  if (args.refs.length === 0) return []
+  const { rows } = await db.query<{ kind: CanvasEvidenceRef['kind']; id: string }>(
+    `WITH requested(kind,id) AS (
+       SELECT kind::text,id::text FROM jsonb_to_recordset($3::jsonb) AS ref(kind text,id text)
+     ), available(kind,id) AS (
+       SELECT 'frame',frame.id FROM canvas_frames frame WHERE frame.canvas_id=$1
+       UNION ALL SELECT 'report',report.id FROM canvas_assignment_reports report
+         WHERE report.canvas_id=$1 AND report.company_id=$2
+       UNION ALL SELECT 'message',message.id FROM messages message
+         JOIN canvases canvas ON canvas.conversation_id=message.conversation_id
+         WHERE canvas.id=$1 AND canvas.company_id=$2
+       UNION ALL SELECT 'document',document.id FROM documents document
+         JOIN canvases canvas ON canvas.company_id=document.company_id
+         WHERE canvas.id=$1 AND canvas.company_id=$2
+           AND (document.conversation_id IS NULL OR document.conversation_id=canvas.conversation_id)
+       UNION ALL SELECT 'source',source.id FROM knowledge_sources source
+         JOIN canvases canvas ON canvas.project_id=source.project_id
+         WHERE canvas.id=$1 AND source.company_id=$2 AND source.deleted_at IS NULL
+       UNION ALL SELECT 'attempt',attempt.id FROM learning_attempts attempt
+         JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
+         JOIN canvases canvas ON canvas.project_id=course.project_id AND canvas.company_id=course.company_id
+         WHERE canvas.id=$1 AND course.company_id=$2
+     )
+     SELECT requested.kind,requested.id FROM requested
+     LEFT JOIN available USING(kind,id) WHERE available.id IS NULL`,
+    [args.canvasId, args.companyId, JSON.stringify(args.refs)],
+  )
+  return rows
 }
 
 export async function lockReportWork(db: Queryable, args: {

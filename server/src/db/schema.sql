@@ -4951,6 +4951,38 @@ CREATE INDEX idx_learning_notification_pending
     ON public.learning_notification_deliveries USING btree (status, available_at, created_at)
     WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]));
 
+CREATE TABLE public.learning_effects (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    course_id text NOT NULL,
+    kind text NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    status text DEFAULT 'pending'::text NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    available_at timestamp with time zone DEFAULT now() NOT NULL,
+    lease_token text,
+    lease_expires_at timestamp with time zone,
+    error text,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT learning_effects_kind_check CHECK (kind = ANY (ARRAY[
+      'study_room.sync'::text, 'teacher_room.sync'::text, 'teacher_agent.welcome'::text,
+      'notebook.ensure'::text, 'course_create.audit'::text
+    ])),
+    CONSTRAINT learning_effects_status_check CHECK (status = ANY (ARRAY[
+      'pending'::text, 'processing'::text, 'completed'::text, 'failed'::text
+    ])),
+    CONSTRAINT learning_effects_course_company_fkey
+      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT learning_effects_attempts_check CHECK (attempts >= 0),
+    UNIQUE(company_id, course_id, kind)
+);
+
+CREATE INDEX idx_learning_effects_pending
+    ON public.learning_effects USING btree (status, available_at, created_at)
+    WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]));
+
 
 -- Written last so a failed or partial bootstrap is never accepted as v1.
 COMMENT ON SCHEMA public IS 'LingxiLoop schema v1';

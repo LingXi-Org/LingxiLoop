@@ -1,17 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import type {
-  LearningActivity,
-  LearningCourse,
-  LearningDashboard,
-  LearningDelivery,
-  LearningEvidence,
-  LearningMission,
-  LearningNotificationPreferences,
-  LearningObjective,
-  LearningProgress,
-  LearningReview,
-  TeacherAgentSummary,
-} from "../contracts";
 import { learningApi } from "../api";
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,6 +6,9 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { useApp } from "@/stores/app";
 import { useConversations } from "@/features/conversations/store";
 import { useParticipants } from "@/features/agents/state";
+import { useLearningCenter } from "../hooks/useLearningCenter";
+import { LearningCard as Card } from './LearningPrimitives'
+import { Onboarding, TeacherComposer } from './LearningSetup'
 type Section =
   | "today"
   | "objectives"
@@ -93,22 +83,6 @@ function statusLabel(value: unknown): string {
   return STATUS_LABELS[raw] ?? raw;
 }
 
-function Card({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      className={`rounded-2xl border border-hairline bg-card p-4 shadow-sm ${className}`}
-    >
-      {children}
-    </section>
-  );
-}
-
 function MasteryBadge({ level }: { level: number }) {
   const labels = [
     "尚无证据",
@@ -124,298 +98,18 @@ function MasteryBadge({ level }: { level: number }) {
   );
 }
 
-function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
-  const [title, setTitle] = useState("我的学习课程");
-  const [timezone, setTimezone] = useState(
-    Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Shanghai",
-  );
-  const [quietStart, setQuietStart] = useState("22:00");
-  const [quietEnd, setQuietEnd] = useState("08:00");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const create = async () => {
-    setBusy(true);
-    setError("");
-    try {
-      const course = await learningApi.createCourse({ name: title });
-      await learningApi.setNotificationPreferences({
-        courseId: course.id,
-        timezone,
-        preferredTime: "19:00",
-        quietStart,
-        quietEnd,
-        inAppEnabled: true,
-        emailEnabled: false,
-      });
-      await onCreated();
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="mx-auto flex min-h-full max-w-3xl items-center px-5 py-10">
-      <Card className="w-full p-6 md:p-8">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
-          学习中心
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-ink">
-          建立你的第一个课程空间
-        </h1>
-        <p className="mt-2 max-w-xl text-[13px] leading-6 text-ink-secondary">
-          课程把学习目标、学习室、练习证据与掌握度连成一个闭环。教学智能体
-          可以协助规划并开展形成性评价，发布内容与确认高阶掌握仍由教师负责。
-        </p>
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <label className="grid gap-2 text-[12px] font-semibold text-ink md:col-span-2">
-            课程名称
-            <Input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-            />
-          </label>
-          <label className="grid gap-2 text-[12px] font-semibold text-ink md:col-span-2">
-            时区
-            <Input
-              value={timezone}
-              onChange={(event) => setTimezone(event.target.value)}
-              className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-            />
-          </label>
-          <label className="grid gap-2 text-[12px] font-semibold text-ink">
-            安静时段开始
-            <Input
-              type="time"
-              value={quietStart}
-              onChange={(event) => setQuietStart(event.target.value)}
-              className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-            />
-          </label>
-          <label className="grid gap-2 text-[12px] font-semibold text-ink">
-            安静时段结束
-            <Input
-              type="time"
-              value={quietEnd}
-              onChange={(event) => setQuietEnd(event.target.value)}
-              className="h-10 rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-            />
-          </label>
-        </div>
-        {error && (
-          <p className="mt-4 rounded-xl bg-red-500/10 px-3 py-2 text-[12px] text-red-500">
-            {error}
-          </p>
-        )}
-        <div className="mt-6 flex items-center justify-between gap-4">
-          <p className="text-[11px] text-ink-secondary">
-            应用内提醒默认开启；邮件可稍后自行订阅。课程会自动创建一对一项目与 Study Room。
-          </p>
-          <button
-            disabled={busy || !title.trim()}
-            onClick={() => void create()}
-            className="rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50"
-          >
-            {busy ? "正在创建…" : "创建课程"}
-          </button>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function TeacherComposer({
-  course,
-  objectives,
-  onChanged,
-}: {
-  course: LearningCourse;
-  objectives: LearningObjective[];
-  onChanged: () => Promise<void>;
-}) {
-  const [objectiveTitle, setObjectiveTitle] = useState("");
-  const [criteria, setCriteria] = useState("");
-  const [activityTitle, setActivityTitle] = useState("");
-  const [instructions, setInstructions] = useState("");
-  const [error, setError] = useState("");
-  return (
-    <div className="grid gap-4 xl:grid-cols-2">
-      <Card className="xl:col-span-2">
-        <h3 className="text-[14px] font-semibold text-ink">课程成员</h3>
-        <p className="mt-2 text-[12px] text-ink-secondary">教师与学习者统一通过 canonical Course 邀请和成员管理维护。</p>
-        <button onClick={() => useApp.getState().setView("management")} className="mt-3 rounded-full bg-raised px-4 py-2 text-[12px] font-semibold text-ink">打开课程管理</button>
-      </Card>
-      <Card>
-        <h3 className="text-[14px] font-semibold text-ink">新增学习目标</h3>
-        <Input
-          value={objectiveTitle}
-          onChange={(event) => setObjectiveTitle(event.target.value)}
-          placeholder="目标标题"
-          className="mt-3 h-10 w-full rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-        />
-        <Textarea
-          value={criteria}
-          onChange={(event) => setCriteria(event.target.value)}
-          placeholder="可检查的成功标准"
-          className="mt-2 min-h-20 w-full rounded-xl border border-hairline bg-panel p-3 text-[13px]"
-        />
-        <button
-          onClick={() =>
-            void learningApi
-              .createObjectives(course.id, [
-                {
-                  title: objectiveTitle,
-                  successCriteria: criteria,
-                  targetLevel: 3,
-                },
-              ])
-              .then(async () => {
-                setObjectiveTitle("");
-                setCriteria("");
-                await onChanged();
-              })
-              .catch((reason) => setError(String(reason)))
-          }
-          className="mt-3 rounded-full bg-accent px-4 py-2 text-[12px] font-semibold text-white"
-        >
-          保存目标
-        </button>
-      </Card>
-      <Card>
-        <h3 className="text-[14px] font-semibold text-ink">创建活动草稿</h3>
-        <Input
-          value={activityTitle}
-          onChange={(event) => setActivityTitle(event.target.value)}
-          placeholder="活动标题"
-          className="mt-3 h-10 w-full rounded-xl border border-hairline bg-panel px-3 text-[13px]"
-        />
-        <Textarea
-          value={instructions}
-          onChange={(event) => setInstructions(event.target.value)}
-          placeholder="学习者任务说明"
-          className="mt-2 min-h-20 w-full rounded-xl border border-hairline bg-panel p-3 text-[13px]"
-        />
-        <button
-          onClick={() =>
-            void learningApi
-              .createActivity(course.id, {
-                title: activityTitle,
-                instructions,
-                type: "practice",
-                evaluationMode: "agent_formative",
-                targetLevel: 3,
-                rubric: [],
-                objectiveIds: objectives[0] ? [objectives[0].id] : [],
-              })
-              .then(async () => {
-                setActivityTitle("");
-                setInstructions("");
-                await onChanged();
-              })
-              .catch((reason) => setError(String(reason)))
-          }
-          className="mt-3 rounded-full bg-accent px-4 py-2 text-[12px] font-semibold text-white"
-        >
-          保存草稿
-        </button>
-      </Card>
-      {error && (
-        <p className="text-[12px] text-red-500 xl:col-span-2">{error}</p>
-      )}
-    </div>
-  );
-}
 
 export function LearningCenter() {
   const setView=useApp((state)=>state.setView);
   const selectConversation=useApp((state)=>state.selectConversation);
   const participantsById=useParticipants((state)=>state.byId);
   const coordinatorAgents=useMemo(()=>Object.values(participantsById).filter((participant)=>participant.kind==='agent'&&participant.capabilities?.includes('learning')&&participant.capabilities?.includes('canvas')),[participantsById]);
-  const [dashboard, setDashboard] = useState<LearningDashboard | null>(null);
-  const [courseId, setCourseId] = useState("");
   const [section, setSection] = useState<Section>("today");
-  const [objectives, setObjectives] = useState<LearningObjective[]>([]);
-  const [activities, setActivities] = useState<LearningActivity[]>([]);
-  const [evidence, setEvidence] = useState<LearningEvidence[]>([]);
-  const [missions, setMissions] = useState<LearningMission[]>([]);
-  const [reviews, setReviews] = useState<LearningReview[]>([]);
-  const [progress, setProgress] = useState<LearningProgress[]>([]);
-  const [teacherAgent,setTeacherAgent]=useState<TeacherAgentSummary|null>(null);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [notificationPrefs, setNotificationPrefs] = useState<LearningNotificationPreferences>({
-    course_id: null,
-    in_app_enabled: true,
-    email_enabled: false,
-    timezone: "Asia/Shanghai",
-    preferred_time: "19:00",
-    quiet_start: null,
-    quiet_end: null,
-  });
-  const [deliveries, setDeliveries] = useState<LearningDelivery[]>([]);
-  const [error, setError] = useState("");
-
-  const loadDashboard = async () => {
-    const next = await learningApi.getDashboard();
-    setDashboard(next);
-    setCourseId((current) => current || next.courses[0]?.id || "");
-  };
-  const loadCourse = async (id = courseId) => {
-    if (!id) return;
-    const [nextObjectives, nextActivities, nextEvidence, nextMissions] =
-      await Promise.all([
-        learningApi.listObjectives(id),
-        learningApi.listActivities(id),
-        learningApi.listEvidence(id),
-        learningApi.listMissions(id),
-      ]);
-    setObjectives(nextObjectives);
-    setActivities(nextActivities);
-    setEvidence(nextEvidence);
-    setMissions(nextMissions);
-    const [prefs, nextDeliveries] = await Promise.all([
-      learningApi.getNotificationPreferences(id),
-      learningApi.listDeliveries(),
-    ]);
-    setNotificationPrefs(prefs);
-    setDeliveries(nextDeliveries);
-    const current = dashboard?.courses.find((course) => course.id === id);
-    if (current?.courseRole === "teacher") {
-      const [nextReviews, nextProgress,nextTeacherAgent] = await Promise.all([
-        learningApi.listReviews(id),
-        learningApi.getCourseProgress(id),
-        learningApi.getTeacherAgent(id),
-      ]);
-      setReviews(nextReviews);
-      setProgress(nextProgress);
-      setTeacherAgent(nextTeacherAgent);
-    }else{
-      setReviews([]);
-      setProgress([]);
-      setTeacherAgent(null);
-    }
-  };
-  useEffect(() => {
-    void loadDashboard().catch((reason) =>
-      setError(reason instanceof Error ? reason.message : String(reason)),
-    );
-  }, []);
-  useEffect(() => {
-    const refresh = () =>
-      void loadDashboard()
-        .then(() => loadCourse())
-        .catch((reason) => setError(String(reason)));
-    window.addEventListener("lingxiloop:learning-updated", refresh);
-    return () =>
-      window.removeEventListener("lingxiloop:learning-updated", refresh);
-  }, [courseId]);
-  useEffect(() => {
-    void loadCourse(courseId).catch((reason) =>
-      setError(reason instanceof Error ? reason.message : String(reason)),
-    );
-  }, [courseId, dashboard?.courses.length]);
+  const {
+    dashboard, courseId, setCourseId, objectives, activities, evidence, missions, reviews, progress,
+    teacherAgent, answers, setAnswers, notificationPrefs, setNotificationPrefs, deliveries,
+    error, setError, loadDashboard, refreshCourse: loadCourse,
+  } = useLearningCenter();
 
   const course = dashboard?.courses.find((item) => item.id === courseId);
   const perspective = course?.courseRole ?? "learner";

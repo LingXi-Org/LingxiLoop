@@ -1,8 +1,6 @@
 import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
-import { HttpError } from '../../http/errors.js'
 import { requireAuth, requireCompany } from '../../http/request-context.js'
-import { LearningApplicationError } from './application.js'
 import { classroomRouter } from './classroom-router.js'
 import {
   archiveCourseRequestSchema,
@@ -12,31 +10,9 @@ import {
   updateCourseRequestSchema,
 } from './contracts.js'
 import { learningApplication } from './facade.js'
+import { parseLearningRequest as parse, respondWithLearning as respond } from './http-adapter.js'
 
 export const learningRouter = Router()
-
-function parse<T>(result: { success: true; data: T } | { success: false; error: { issues: Array<{ message: string }> } }): T {
-  if (!result.success) throw new HttpError(400, result.error.issues[0]?.message ?? 'invalid request')
-  return result.data
-}
-
-function mapLearningError(error: unknown): never {
-  if (!(error instanceof LearningApplicationError)) throw error
-  const status = {
-    invalid: 400,
-    not_found: 404,
-    forbidden: 403,
-    conflict: 409,
-    gone: 410,
-    unauthorized: 401,
-  }[error.code]
-  throw new HttpError(status, error.message)
-}
-
-async function respond<T>(work: () => Promise<T>): Promise<T> {
-  try { return await work() }
-  catch (error) { mapLearningError(error) }
-}
 
 learningRouter.use(classroomRouter)
 

@@ -11,7 +11,7 @@ import { startEmailRetryWorker } from './email-retry.js'
 import { env } from './env.js'
 import { reconcileLearningChannels } from './im/reconcile.js'
 import { startKnowledgeStorageGc, startKnowledgeWorker } from './knowledge/service.js'
-import { startLearningNotificationScheduler } from './modules/learning/worker.js'
+import { startLearningEffectWorker, startLearningNotificationScheduler } from './modules/learning/worker.js'
 import { startPollExpirationSweeper } from './modules/polls/index.js'
 import { redis, sub } from './redis.js'
 import { Lifecycle, startWorkerTasks, type ServiceHandle, type WorkerTaskDefinition } from './runtime/lifecycle.js'
@@ -28,6 +28,7 @@ import { initializeNativeStorage } from './storage.js'
 export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'learning-routines', concurrency: 'queue-claim', start: () => startLearningRoutineScheduler() },
   { name: 'learning-notifications', concurrency: 'queue-claim', start: () => startLearningNotificationScheduler() },
+  { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },
   { name: 'agent-work-watchdog', concurrency: 'idempotent', start: () => startAgentWorkWatchdog() },
   { name: 'memory-synthesis', concurrency: 'idempotent', start: () => startMemorySynthesisScheduler() },
   { name: 'email-retry', concurrency: 'queue-claim', start: () => startEmailRetryWorker() },

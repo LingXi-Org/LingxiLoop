@@ -34,6 +34,7 @@ const REQUIRED_V1_RELATIONS = [
   'learning_course_teacher_rooms', 'learning_evaluations', 'learning_mastery',
   'learning_mastery_events', 'learning_mission_steps', 'learning_missions',
   'learning_notification_deliveries', 'learning_notification_preferences',
+  'learning_effects',
   'learning_objective_dependencies', 'learning_objectives',
   'learning_project_teacher_agents', 'llm_calls', 'message_reactions', 'messages',
   'participants', 'poll_votes', 'project_visits', 'projects', 'sessions',

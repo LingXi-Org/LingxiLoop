@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import test from 'node:test'
 
 const domains = [
@@ -55,7 +55,11 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const application = await readFile(new URL('application.ts', base), 'utf8')
-    const repository = await readFile(new URL('repository.ts', base), 'utf8')
+    const repository = domain === 'learning'
+      ? (await Promise.all((await readdir(new URL('.', base)))
+        .filter((name) => name.endsWith('-repository.ts'))
+        .map((name) => readFile(new URL(name, base), 'utf8')))).join('\n')
+      : await readFile(new URL('repository.ts', base), 'utf8')
     const contracts = await readFile(new URL('contracts.ts', base), 'utf8')
 
     assert.doesNotMatch(router, /\bpool\.query\b|\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)

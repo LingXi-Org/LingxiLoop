@@ -77,6 +77,7 @@ test('Web composition contains no background scheduler or worker startup', async
   const worker = await readFile(new URL('../worker.ts', import.meta.url), 'utf8')
   const starters = [
     'startLearningRoutineScheduler',
+    'startLearningEffectWorker',
     'startAgentWorkWatchdog',
     'startMemorySynthesisScheduler',
     'startEmailRetryWorker',

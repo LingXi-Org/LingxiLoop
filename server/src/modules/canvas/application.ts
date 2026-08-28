@@ -1,11 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto'
-import type { PoolClient } from 'pg'
 import { type CanvasActivityKind, parseCanvasActivityKind } from '../../../../src/lib/canvasEventKinds.js'
 import { findCanvasPlacement } from '../../../../src/lib/canvasLayout.js'
 import type { AgentExecutionRole } from '../../agent-os/types.js'
 import { assertCanvasDependencyDAG, canvasAgentColor, canvasWorkArea } from '../../canvas/orchestration.js'
 import type { Queryable } from '../../db/queryable.js'
-import { type CanvasEvent, CH_CANVAS, publish } from '../../redis.js'
+import type { CanvasEvent } from '../../redis.js'
 import {
   CANVAS_FRAME_TYPES,
   type CanvasActivity,
@@ -46,7 +45,7 @@ import {
   deletePresence,
   detachAssignmentWork,
   ensureConversationCanvasId,
-  evidenceRefExists,
+  missingEvidenceRefs,
   existingReportIds,
   findCanvas,
   findActivity,
@@ -90,6 +89,7 @@ import {
   upsertPresence,
   workReportContext,
 } from './repository.js'
+import type { CanvasInfrastructure } from './infrastructure.js'
 
 const MAX_FRAME_CONTENT = 1024 * 1024
 const MAX_FRAME_TITLE = 200
@@ -151,24 +151,17 @@ function toFrame(row: FrameRow): CanvasFrame {
   }
 }
 
-export interface CanvasInfrastructure {
-  db: Queryable
-  transaction: <T>(work: (db: PoolClient) => Promise<T>) => Promise<T>
-  clientTransaction: <T>(client: PoolClient, work: (db: PoolClient) => Promise<T>) => Promise<T>
-  connect: () => Promise<PoolClient>
-}
-
 export interface CanvasHandoffResult {
   snapshot: CanvasSnapshot
   activity: CanvasActivity
 }
 
 export function createCanvasApplication(infrastructure: CanvasInfrastructure) {
-const { db, transaction, clientTransaction, connect } = infrastructure
+const { db, transaction, connectionTransaction, acquireConnection, publishEvent } = infrastructure
 
 async function publishCanvas(companyId: string, event: Omit<CanvasEvent, 'type' | 'companyId' | 'timestamp'>): Promise<void> {
   const scope = await canvasEventScope(db, companyId, event.canvasId)
-  await publish(CH_CANVAS, {
+  await publishEvent({
     type: 'canvas.changed', companyId,
     ...(scope?.conversation_id ? { conversationId: scope.conversation_id } : {}),
     ...(scope?.project_id ? { workspaceId: scope.project_id } : {}),
@@ -550,7 +543,7 @@ async function listCanvasAvailableAgents(companyId: string): Promise<Array<{ id:
   return rows.map((row) => ({ id: row.id, name: row.name, role: row.role ?? 'Learning Agent', status: row.status ?? 'available' }))
 }
 
-async function assertMembersAvailable(client: PoolClient, companyId: string, members: CanvasMemberInput[]): Promise<void> {
+async function assertMembersAvailable(client: Queryable, companyId: string, members: CanvasMemberInput[]): Promise<void> {
   if (members.length === 0) throw new Error('at least one canvas member is required')
   const ids = members.map((member) => member.agentId)
   if (new Set(ids).size !== ids.length) throw new Error('canvas members must be unique')
@@ -568,7 +561,7 @@ async function assertMembersAvailable(client: PoolClient, companyId: string, mem
   }
 }
 
-async function insertMembers(client: PoolClient, input: {
+async function insertMembers(client: Queryable, input: {
   canvas: CanvasRow; members: CanvasMemberInput[]; existing: AssignmentRow[]
 }): Promise<AssignmentRow[]> {
   await assertMembersAvailable(client, input.canvas.company_id, input.members)
@@ -832,15 +825,13 @@ async function publishAssignments(companyId: string, canvasId: string): Promise<
     assignment: toAssignment(row, rows.dependencies.filter((item) => item.agent_id === row.agent_id).map((item) => item.depends_on_agent_id)) })))
 }
 
-async function validateEvidenceRefs(client: PoolClient, input: { companyId:string;canvasId:string;refs:CanvasEvidenceRef[] }): Promise<void> {
+async function validateEvidenceRefs(client: Queryable, input: { companyId:string;canvasId:string;refs:CanvasEvidenceRef[] }): Promise<void> {
   if (input.refs.length > 64) throw new Error('evidenceRefs may contain at most 64 items')
   for (const ref of input.refs) {
     if (!ref || typeof ref.id !== 'string' || !ref.id.trim()) throw new Error('every evidence reference requires an id')
-    const exists = await evidenceRefExists(client, {
-      companyId: input.companyId, canvasId: input.canvasId, kind: ref.kind, id: ref.id,
-    })
-    if (!exists) throw new Error(`evidence reference is outside the current Canvas scope: ${ref.kind}:${ref.id}`)
   }
+  const missing = await missingEvidenceRefs(client, input)
+  if (missing[0]) throw new Error(`evidence reference is outside the current Canvas scope: ${missing[0].kind}:${missing[0].id}`)
 }
 
 async function submitCanvasReport(input: {
@@ -958,11 +949,11 @@ async function steerCanvasAssignment(input: { companyId: string; canvasId: strin
 }
 
 async function stopCanvasAssignment(input: { companyId: string; canvasId: string; agentId: string }): Promise<void> {
-  const client = await connect()
+  const client = await acquireConnection()
   let activity: CanvasActivity
   try {
     await acquireCanvasSharedFence(client, input.canvasId)
-    activity = toActivity(await clientTransaction(client, (transactionDb) => stopCanvasAssignmentState(transactionDb, input)))
+    activity = toActivity(await connectionTransaction(client, (transactionDb) => stopCanvasAssignmentState(transactionDb, input)))
   } finally {
     await releaseCanvasSharedFence(client, input.canvasId).catch(() => undefined)
     client.release()
