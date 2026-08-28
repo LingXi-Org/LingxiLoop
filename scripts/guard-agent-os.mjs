@@ -20,7 +20,7 @@ const activeFiles = [
   join(root, 'server/src/web.ts'),
   join(root, 'server/src/im/router.ts'),
   join(root, 'src/lib/im/wukong.ts'),
-  join(root, 'src/features/chat/state/messages.ts'),
+  ...sourceFiles(join(root, 'src/features/chat/state')).filter((path) => !path.includes('.test.')),
 ]
 
 for (const retiredPath of [
@@ -64,11 +64,10 @@ const controlPlane = readFileSync(join(root, 'server/src/agent-os/control-plane.
 // Keep the architecture guard deterministic across Windows and POSIX worktrees.
 const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8').replaceAll('\r\n', '\n')
 const promptAssembly = readFileSync(join(root, 'server/src/agent-os/prompt-assembly.ts'), 'utf8')
-const canvasDomain = [
-  'server/src/modules/canvas/application.ts',
-  'server/src/modules/canvas/contracts.ts',
-  'server/src/modules/canvas/repository.ts',
-].map((path) => readFileSync(join(root, path), 'utf8')).join('\n')
+const canvasDomain = sourceFiles(join(root, 'server/src/modules/canvas'))
+  .filter((path) => !path.includes('.test.'))
+  .map((path) => readFileSync(path, 'utf8'))
+  .join('\n')
 const schema = readFileSync(join(root, 'server/src/db/schema.sql'), 'utf8')
 const teacherAgent = readFileSync(join(root, 'server/src/learning/teacher-agent.ts'), 'utf8')
 if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {

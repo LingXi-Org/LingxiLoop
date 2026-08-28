@@ -172,11 +172,29 @@ export class WukongClient {
     }
   }
 
-  async syncMessages(channelId: string, channelType: number, limit = 80, loginUid = ''): Promise<ImMessage[]> {
+  async syncMessages(
+    channelId: string,
+    channelType: number,
+    limit = 80,
+    loginUid = '',
+    beforeMessageSeq = 0,
+  ): Promise<ImMessage[]> {
+    if (!Number.isSafeInteger(limit) || limit <= 0) throw new Error('message sync limit must be a positive safe integer')
+    if (!Number.isSafeInteger(beforeMessageSeq) || beforeMessageSeq < 0) {
+      throw new Error('message sync cursor must be a non-negative safe integer')
+    }
     let value: unknown
     try {
       value = await this.request<unknown>('/channel/messagesync', {
-        method: 'POST', body: JSON.stringify({ login_uid: loginUid, channel_id: channelId, channel_type: channelType, start_message_seq: 0, end_message_seq: 0, limit, pull_mode: 1 }),
+        method: 'POST', body: JSON.stringify({
+          login_uid: loginUid,
+          channel_id: channelId,
+          channel_type: channelType,
+          start_message_seq: 0,
+          end_message_seq: beforeMessageSeq,
+          limit,
+          pull_mode: 1,
+        }),
       })
     } catch (error) {
       // An empty channel has no sync state yet; expose it as an empty history.
@@ -192,7 +210,7 @@ export class WukongClient {
       try { payload = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')) as LingxiMessageV1 }
       catch { payload = { version: 1, kind: 'system', clientMsgNo: String(item.client_msg_no ?? ''), body: encoded } }
       return {
-        messageId: String(item.message_id ?? item.messageId ?? ''),
+        messageId: String(item.message_idstr ?? item.message_id ?? item.messageId ?? ''),
         messageSeq: Number(item.message_seq ?? item.messageSeq ?? 0),
         clientMsgNo: String(item.client_msg_no ?? item.clientMsgNo ?? payload.clientMsgNo ?? ''),
         channelId: String(item.channel_id ?? item.channelId ?? channelId),

@@ -51,11 +51,23 @@ test('WuKong adapter syncs channel history and decodes Lingxi payloads', async (
     }] }), { status: 200 })
   }
   const client = new WukongClient({ apiUrl: 'http://wk:5001', wsUrl: 'ws://wk:5200', apiToken: 'token', webhookSecret: 'secret' })
-  const messages = await client.syncMessages('study', 2, 80, 'student')
+  const messages = await client.syncMessages('study', 2, 80, 'student', 9)
   assert.equal(calls[0]?.url, 'http://wk:5001/channel/messagesync')
   assert.equal(calls[0]?.body.login_uid, 'student')
+  assert.equal(calls[0]?.body.end_message_seq, 9)
+  assert.equal(calls[0]?.body.pull_mode, 1)
   assert.equal(messages[0]?.payload.body, 'learn')
+  assert.equal(messages[0]?.messageId, 'wk-9')
   assert.equal(messages[0]?.clientMsgNo, 'client-9')
+})
+
+test('WuKong history rejects invalid pagination before making a provider request', async () => {
+  let called = false
+  globalThis.fetch = async () => { called = true; return new Response('{}') }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  await assert.rejects(() => client.syncMessages('study', 2, 0), /limit/)
+  await assert.rejects(() => client.syncMessages('study', 2, 80, 'student', -1), /cursor/)
+  assert.equal(called, false)
 })
 
 test('WuKong adapter treats missing empty-channel sync state as empty results', async () => {

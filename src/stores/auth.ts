@@ -102,6 +102,7 @@ export const useAuth = create<AuthState>((set) => ({
     // linger; clear them so the next sign-in doesn't briefly render a
     // dead URL.createObjectURL pointing at a freed blob.
     void import('@/lib/avatarCache').then(({ clearAvatarCache }) => clearAvatarCache())
+    void import('@/lib/im/wukong').then(({ lingxiIm }) => lingxiIm.disconnect())
     void import('@/api/core/realtime').then(({ ws }) => ws.close())
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([

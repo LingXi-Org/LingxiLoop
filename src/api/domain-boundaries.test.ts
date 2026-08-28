@@ -131,7 +131,11 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   assert.match(conversationsState, /error: string \| null/)
 
   for (const file of [
-    'api.ts', 'state/messages.ts', 'state/messageProjection.ts', 'state/messageTimeline.ts',
+    'api.ts', 'state/messages.ts', 'state/messageState.ts', 'state/messageStore.ts',
+    'state/messageHistory.ts', 'state/messageCommands.ts', 'state/messageRealtime.ts',
+    'state/messageReconciliation.ts', 'state/messageProjection.ts', 'state/messageTimeline.ts',
+    'state/messagePagination.ts',
+    'state/readReceipts.ts', 'state/reactionCommands.ts', 'state/outbox.ts', 'state/reactions.ts',
     'components/ChatComposer.tsx',
     'components/ComposerAttachment.tsx', 'components/ComposerEditor.tsx',
     'components/ComposerEmojiPopover.tsx', 'components/ComposerMenus.tsx',
@@ -141,15 +145,29 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   }
   await assert.rejects(access(new URL('./messages.ts', import.meta.url)))
   await assert.rejects(access(new URL('../stores/messages.ts', import.meta.url)))
-  const messagesState = await readFile(new URL('../features/chat/state/messages.ts', import.meta.url), 'utf8')
-  assert.doesNotMatch(messagesState, /stores\/messages|api\/messages/)
-  assert.ok(messagesState.length < 40_000, 'messages.ts must remain a Zustand orchestration shell')
-  assert.match(messagesState, /from '\.\/messageProjection'/)
-  assert.match(messagesState, /from '\.\/messageTimeline'/)
-  assert.doesNotMatch(messagesState, /function fromApi|function fromImBatch|withoutFinalizedActiveRuns/)
+  const chatStateFiles = [
+    'messages.ts', 'messageState.ts', 'messageStore.ts', 'messageHistory.ts',
+    'messageCommands.ts', 'messageRealtime.ts', 'messageReconciliation.ts',
+    'messageProjection.ts', 'messageTimeline.ts', 'messagePagination.ts', 'readReceipts.ts',
+    'reactionCommands.ts', 'reactions.ts', 'outbox.ts',
+  ]
+  const chatStateSources = await Promise.all(chatStateFiles.map((file) => (
+    readFile(new URL(`../features/chat/state/${file}`, import.meta.url), 'utf8')
+  )))
+  const [messagesFacade, , messageStore, messageHistory, messageCommands, messageRealtime,
+    messageReconciliation] = chatStateSources
+  assert.doesNotMatch(chatStateSources.join('\n'), /stores\/messages|api\/messages/)
+  assert.ok(messagesFacade.length < 2_000, 'messages.ts must remain a public facade')
+  assert.ok(chatStateSources.every((source) => source.length < 20_000), 'chat state capabilities must stay bounded')
+  assert.match(messageStore, /createMessageHistoryActions/)
+  assert.match(messageStore, /selectMessagesFor/)
+  assert.match(messageHistory, /lingxiIm\.history\(id, MESSAGES_PAGE_SIZE, oldest\)/)
+  assert.match(messageCommands, /lingxiIm\.send\(conversationId, payload\)/)
+  assert.match(messageRealtime, /lingxiIm\.subscribe\(reconcileCommittedMessage\)/)
+  assert.match(messageReconciliation, /function reconcileCommittedMessage/)
+  assert.doesNotMatch(messagesFacade, /create\(|lingxiIm|fromImBatch|withoutFinalizedActiveRuns/)
   const chatApi = await readFile(new URL('../features/chat/api.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(chatApi, /sendMessage\s*:/)
-  assert.match(messagesState, /lingxiIm\.send\(convoId, payload\)/)
   const composer = await readFile(new URL('../features/chat/components/ChatComposer.tsx', import.meta.url), 'utf8')
   assert.ok(composer.length < 34_000, 'ChatComposer must remain an orchestration shell')
   assert.match(composer, /<ComposerEditor/)

@@ -160,8 +160,24 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
       WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
   )
   if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
-  const limit = Math.max(1, Math.min(200, Number(req.query.limit ?? 80)))
-  res.json(await wukongClient().syncMessages(channelId, Number(rows[0].profile.channelType ?? 2), limit, userId))
+  const requestedLimit = Number(req.query.limit ?? 80)
+  if (!Number.isSafeInteger(requestedLimit) || requestedLimit <= 0) {
+    res.status(400).json({ error: 'limit must be a positive safe integer' })
+    return
+  }
+  const limit = Math.min(200, requestedLimit)
+  const beforeSeq = req.query.beforeSeq === undefined ? 0 : Number(req.query.beforeSeq)
+  if (!Number.isSafeInteger(beforeSeq) || beforeSeq < 0) {
+    res.status(400).json({ error: 'beforeSeq must be a non-negative safe integer' })
+    return
+  }
+  res.json(await wukongClient().syncMessages(
+    channelId,
+    Number(rows[0].profile.channelType ?? 2),
+    limit,
+    userId,
+    beforeSeq,
+  ))
 }))
 
 imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {

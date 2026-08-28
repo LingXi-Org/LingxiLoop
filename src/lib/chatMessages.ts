@@ -23,3 +23,16 @@ export function shouldApplyStreamEvent(lastSequence: number | undefined, incomin
   if (incomingSequence === undefined) return false
   return lastSequence === undefined || incomingSequence > lastSequence
 }
+
+export function isStreamSupersededByCommitted(
+  streamId: string,
+  stream: { conversationId: string; authorId: string; runId?: string },
+  message: { id: string; conversationId: string; authorId: string; runId?: string },
+): boolean {
+  if (streamId === message.id) return true
+  if (stream.runId && message.runId) return stream.runId === message.runId
+  return !stream.runId
+    && !message.runId
+    && stream.conversationId === message.conversationId
+    && stream.authorId === message.authorId
+}

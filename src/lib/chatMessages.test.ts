@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import {
   ACTIVE_STREAM_EXPIRY_MS,
   hasBroadcastMention,
+  isStreamSupersededByCommitted,
   QUEUED_STREAM_EXPIRY_MS,
   shouldApplyStreamEvent,
   streamExpiryForOpen,
@@ -36,4 +37,17 @@ test('hides a persisted reply only while its matching markdown stream is active'
   const messages = [{ id: 'one', runId: 'run-1' }, { id: 'two', runId: 'run-2' }, { id: 'human' }]
   assert.deepEqual(withoutFinalizedActiveRuns(messages, new Set(['run-1'])), [messages[1], messages[2]])
   assert.equal(withoutFinalizedActiveRuns(messages, new Set()), messages)
+})
+
+test('a durable final supersedes only its own preview run', () => {
+  const final = { id: 'wk-final', conversationId: 'study', authorId: 'nova', runId: 'run-1' }
+  assert.equal(isStreamSupersededByCommitted('preview-run-1', {
+    conversationId: 'study', authorId: 'nova', runId: 'run-1',
+  }, final), true)
+  assert.equal(isStreamSupersededByCommitted('preview-run-2', {
+    conversationId: 'study', authorId: 'nova', runId: 'run-2',
+  }, final), false)
+  assert.equal(isStreamSupersededByCommitted('preview-run-1', {
+    conversationId: 'other', authorId: 'nova', runId: 'run-1',
+  }, { ...final, runId: undefined }), false)
 })
