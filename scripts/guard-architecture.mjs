@@ -48,6 +48,9 @@ const rootRouter = await read(resolve('server/src/api/router.ts'))
 if (/\b(?:pool|sql|query)\b|\b(?:SELECT|INSERT|UPDATE|DELETE)\b/i.test(rootRouter)) violations.push('server/src/api/router.ts: composition root contains persistence or business logic')
 if (/^export\s+\{.+\}\s+from/m.test(rootRouter)) violations.push('server/src/api/router.ts: composition root must not export domain capabilities')
 
+const observabilityRouter = await read(resolve('server/src/modules/observability/router.ts'))
+if (/\/agents\/observability\/runs/.test(observabilityRouter)) violations.push('server/src/modules/observability/router.ts: retired observability HTTP view is forbidden')
+
 // Domains enter this set only after their router/application/repository split
 // is complete. Keeping the assertion here makes a later regression impossible
 // while the remaining domains are migrated deliberately.

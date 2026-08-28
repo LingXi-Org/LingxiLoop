@@ -21,9 +21,3 @@ export const autonomyRuleSchema = z.object({
   operation: z.string().trim().min(1),
   mode: z.enum(['allow', 'ask', 'deny']),
 }).strict()
-
-export const runQuerySchema = z.object({
-  agentId: z.string().trim().optional(),
-  status: z.enum(['running', 'waiting_for_human', 'completed', 'failed', 'skipped', 'stalled']).optional(),
-  limit: z.coerce.number().finite().int().min(10).max(100).default(50),
-})

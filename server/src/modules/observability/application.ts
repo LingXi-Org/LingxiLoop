@@ -4,9 +4,6 @@ import {
   deleteMemory,
   listMemories,
   listPublicActivity,
-  listRunEvents,
-  listRuns,
-  runExists,
   updateMemory,
 } from './repository.js'
 
@@ -36,14 +33,5 @@ export class ObservabilityApplication {
   async deleteMemory(companyId: string, input: { agentId: string; path: string }) {
     if (!await deleteMemory(this.db, companyId, input)) throw new ObservabilityNotFoundError('memory not found')
     return { ok: true as const }
-  }
-
-  runs(companyId: string, input: { agentId?: string; status?: string; limit: number }) {
-    return listRuns(this.db, companyId, input)
-  }
-
-  async runEvents(companyId: string, runId: string) {
-    if (!await runExists(this.db, companyId, runId)) throw new ObservabilityNotFoundError('not found')
-    return listRunEvents(this.db, companyId, runId)
   }
 }

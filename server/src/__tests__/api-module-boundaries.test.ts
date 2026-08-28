@@ -82,6 +82,18 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.doesNotMatch(canvasCallers.join('\n'), /from ['"][^'"]*canvas\/service\.js/)
 })
 
+test('retired observability HTTP views cannot return', async () => {
+  const router = await readFile(new URL('../modules/observability/router.ts', import.meta.url), 'utf8')
+  const application = await readFile(new URL('../modules/observability/application.ts', import.meta.url), 'utf8')
+  const repository = await readFile(new URL('../modules/observability/repository.ts', import.meta.url), 'utf8')
+  const contracts = await readFile(new URL('../modules/observability/contracts.ts', import.meta.url), 'utf8')
+
+  assert.doesNotMatch(router, /\/agents\/observability\/runs/)
+  assert.doesNotMatch(application, /\bruns\(|\brunEvents\(/)
+  assert.doesNotMatch(repository, /\blistRuns\b|\blistRunEvents\b|\brunExists\b/)
+  assert.doesNotMatch(contracts, /runQuerySchema/)
+})
+
 test('authentication, request context, authorization, and errors have one shared boundary', async () => {
   const context = await readFile(new URL('../http/request-context.ts', import.meta.url), 'utf8')
   const authorization = await readFile(new URL('../http/authorization.ts', import.meta.url), 'utf8')

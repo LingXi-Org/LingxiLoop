@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { deleteAutonomyRule, listAutonomyRules, listHandoffs, upsertAutonomyRule } from '../../agents/coworker.js'
 import { safe } from '../../http/async-handler.js'
-import { requireCompanyRole, requireConversationMember } from '../../http/authorization.js'
+import { requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import { requireCompany } from '../../http/request-context.js'
 import { ObservabilityNotFoundError } from './application.js'
@@ -10,7 +10,6 @@ import {
   autonomyRuleSchema,
   memoryDeleteSchema,
   memoryUpdateSchema,
-  runQuerySchema,
 } from './contracts.js'
 import { observabilityApplication } from './facade.js'
 
@@ -74,19 +73,4 @@ observabilityRouter.delete('/coworker/autonomy-rules/:id', safe(async (req, res)
   const { userId, companyId } = await requireCompany(req)
   if (!await deleteAutonomyRule(companyId, userId, String(req.params.id))) throw new HttpError(404, 'rule not found')
   res.json({ ok: true })
-}))
-
-observabilityRouter.get('/agents/observability/runs', safe(async (req, res) => {
-  const { companyId } = await requireCompanyRole(req)
-  const input = parsedOr400(runQuerySchema.safeParse(req.query))
-  res.json(await observabilityApplication.runs(companyId, input))
-}))
-
-observabilityRouter.get('/agents/observability/runs/:id/events', safe(async (req, res) => {
-  const { companyId } = await requireCompanyRole(req)
-  try { res.json(await observabilityApplication.runEvents(companyId, String(req.params.id))) }
-  catch (error) {
-    if (error instanceof ObservabilityNotFoundError) throw new HttpError(404, error.message)
-    throw error
-  }
 }))

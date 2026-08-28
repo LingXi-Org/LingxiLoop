@@ -1,7 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
 
-const STALLED_INTERVAL = '5 minutes'
-
 export async function listPublicActivity(
   db: Queryable,
   companyId: string,
@@ -72,68 +70,6 @@ export async function deleteMemory(
   const { rowCount } = await db.query(
     `DELETE FROM agent_workspace WHERE agent_id = $1 AND path = $2 AND company_id = $3`,
     [input.agentId, input.path, companyId],
-  )
-  return Boolean(rowCount)
-}
-
-export async function listRuns(
-  db: Queryable,
-  companyId: string,
-  input: { agentId?: string; status?: string; limit: number },
-) {
-  const clauses = ['r.company_id = $1']
-  const params: unknown[] = [companyId]
-  if (input.agentId) {
-    params.push(input.agentId)
-    clauses.push(`r.agent_id = $${params.length}`)
-  }
-  if (input.status === 'stalled') {
-    clauses.push(`r.status = 'running' AND r.updated_at < NOW() - INTERVAL '${STALLED_INTERVAL}'`)
-  } else if (input.status === 'running') {
-    clauses.push(`r.status = 'running' AND r.updated_at >= NOW() - INTERVAL '${STALLED_INTERVAL}'`)
-  } else if (input.status) {
-    params.push(input.status)
-    clauses.push(`r.status = $${params.length}`)
-  }
-  params.push(input.limit)
-  const { rows } = await db.query(
-    `SELECT r.id, r.agent_id AS "agentId", COALESCE(p.name, r.agent_id) AS "agentName",
-        p.role AS "agentRole", NULL::text AS "agentAvatarUrl", r.company_id AS "companyId",
-        CASE WHEN r.status = 'running' AND r.updated_at < NOW() - INTERVAL '${STALLED_INTERVAL}'
-          THEN 'stalled' ELSE r.status END AS status,
-        r.stage, r.summary, r.error, r.trigger, r.input_message_ids AS "inputMessageIds",
-        r.inbox_count AS "inboxCount", r.tool_call_count AS "toolCallCount",
-        (r.input_tokens + r.cached_input_tokens + r.cache_creation_tokens + r.output_tokens) AS "tokenCount",
-        r.fingerprint, r.started_at AS "startedAt", r.updated_at AS "updatedAt",
-        r.finished_at AS "finishedAt",
-        ROUND(EXTRACT(EPOCH FROM (COALESCE(r.finished_at, NOW()) - r.started_at)) * 1000)::int AS "durationMs"
-       FROM agent_runs r
-       LEFT JOIN participants p ON p.id = r.agent_id AND p.company_id = r.company_id
-      WHERE ${clauses.join(' AND ')}
-      ORDER BY r.started_at DESC
-      LIMIT $${params.length}`,
-    params,
-  )
-  return rows
-}
-
-export async function listRunEvents(db: Queryable, companyId: string, runId: string) {
-  const { rows } = await db.query(
-    `SELECT e.id, e.run_id AS "runId", e.agent_id AS "agentId", e.kind, e.level,
-        e.title, e.data, e.created_at AS "createdAt"
-       FROM agent_events e
-       JOIN agent_runs r ON r.id = e.run_id AND r.company_id = e.company_id
-      WHERE e.run_id = $1 AND e.company_id = $2
-      ORDER BY e.created_at ASC, e.id ASC`,
-    [runId, companyId],
-  )
-  return rows
-}
-
-export async function runExists(db: Queryable, companyId: string, runId: string): Promise<boolean> {
-  const { rowCount } = await db.query(
-    `SELECT 1 FROM agent_runs WHERE id = $1 AND company_id = $2 LIMIT 1`,
-    [runId, companyId],
   )
   return Boolean(rowCount)
 }
