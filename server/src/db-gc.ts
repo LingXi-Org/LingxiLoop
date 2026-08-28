@@ -9,7 +9,7 @@
  * database and the Cloud SQL disk was auto-growing ~1.3 GB/day.
  *
  * Readers only ever look at recent rows (`lingxiloop log` reads the last
- * ≤100 per agent; observability drill-down and shipping-maintenance look
+ * ≤100 per agent; observability drill-down and maintenance look
  * at bounded windows), so old rows are pure dead weight.
  *
  * Strategy: a periodic sweep deletes rows past a per-table retention

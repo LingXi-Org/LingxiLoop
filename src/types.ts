@@ -340,7 +340,7 @@ export interface ImReadReceiptAdvance {
 }
 
 export interface ViewKey {
-  view: 'sources' | 'conversations' | 'mail' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'learning' | 'management'
+  view: 'sources' | 'conversations' | 'mail' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'observability' | 'me' | 'library' | 'learning' | 'management'
 }
 
 /* ============== Shared Canvas ======================================== */
