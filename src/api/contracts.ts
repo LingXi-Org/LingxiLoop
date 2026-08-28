@@ -109,16 +109,10 @@ export interface ApiSearchResults {
 }
 
 export interface AgentInput {
-  id?: string
   name?: string
   role?: string
   systemPrompt?: string
   bio?: string
-  initial?: string
-  avatarBg?: string
-  /** pass null to clear the AI portrait and fall back to the color block */
-  avatarUrl?: string | null
-  tools?: string[]
   capabilities?: AgentCapability[]
 }
 

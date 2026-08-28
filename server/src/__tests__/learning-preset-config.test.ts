@@ -27,6 +27,7 @@ test('learning preset defines exactly the six required personas', () => {
     assert.doesNotMatch(agent.systemPrompt, /loop\.(learning|canvas)/)
     assert.match(agent.systemPrompt, /specialist|coordinator|verifier/i)
     assert.equal('avatarUrl' in agent, false)
+    assert.equal('avatarBg' in agent, false)
   }
 })
 

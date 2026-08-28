@@ -67,9 +67,9 @@ async function seedLearningPreset(
       `INSERT INTO participants (
          id, preset_key, kind, name, role, initial, avatar_bg, avatar_url, status,
          bio, tools, capabilities, system_prompt, company_id
-       ) VALUES ($1, $2, 'agent', $3, $4, $5, $6, NULL, 'avail', $7, $8::jsonb, $9::jsonb, $10, $11)`,
+       ) VALUES ($1, $2, 'agent', $3, $4, $5, 'transparent', NULL, 'avail', $6, $7::jsonb, $8::jsonb, $9, $10)`,
       [
-        id, agent.presetKey, agent.name, agent.role, agent.initial, agent.avatarBg,
+        id, agent.presetKey, agent.name, agent.role, agent.initial,
         agent.bio, JSON.stringify(agent.tools), JSON.stringify(agent.capabilities), agent.systemPrompt, companyId,
       ],
     )

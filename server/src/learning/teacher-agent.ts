@@ -201,7 +201,7 @@ export async function ensureTeacherAgentForCourse(courseId: string, db: Queryabl
   const resolvedAgentId=existing[0]?.agent_id??agentId
   await db.query(
     `INSERT INTO participants(id,preset_key,kind,name,role,initial,avatar_bg,status,bio,tools,capabilities,system_prompt,company_id)
-     VALUES($1,$2,'agent',$3,$4,'P','#7756D8','avail','项目级教师专用智能体；负责课程管理与学情汇总',$5::jsonb,$6::jsonb,$7,$8)
+     VALUES($1,$2,'agent',$3,$4,'P','transparent','avail','项目级教师专用智能体；负责课程管理与学情汇总',$5::jsonb,$6::jsonb,$7,$8)
      ON CONFLICT(id,company_id) DO UPDATE SET name=EXCLUDED.name,role=EXCLUDED.role,tools=EXCLUDED.tools,
        capabilities=EXCLUDED.capabilities,system_prompt=EXCLUDED.system_prompt,departed_at=NULL`,
     [resolvedAgentId,`teacher-agent:${course.project_id}`,displayName,PULSE_ROLE,JSON.stringify(['ipython']),JSON.stringify(PULSE_CAPABILITIES),PULSE_PROMPT,course.company_id],

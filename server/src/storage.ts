@@ -10,7 +10,7 @@
  *
  * Keys look like `<prefix>/<uuid>.<ext>`. Prefixes are conventional:
  *   - `attachments/` — user uploads
- *   - `avatars/`     — agent portraits
+ *   - `avatars/`     — human profile images mirrored from identity providers
  */
 import { createHmac } from 'node:crypto'
 import {

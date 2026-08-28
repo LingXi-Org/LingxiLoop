@@ -36,7 +36,7 @@ export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringCo
   const fontSize = Math.round(size * 0.36)
   const status = useResolvedAvatarStatus(p, statusOverride)
   // Route human images through the local cache so they survive re-mounts.
-  // Agent portrait URLs are intentionally ignored: their single source of
+  // Agent image URLs are intentionally ignored: their single source of
   // visual identity is the deterministic Bloub renderer. Human cache entries
   // are still invalidated by participant avatar events and the refresh ticker.
   const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : p.avatarUrl)

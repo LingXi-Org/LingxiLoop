@@ -263,7 +263,8 @@ export async function searchWorkspace(
   const common = [args.companyId, args.userId, contains, exact, prefix, args.projectId]
   const participantsPromise = db.query(
     `SELECT participant.id,participant.kind,participant.name,participant.role,participant.initial,
-            participant.avatar_bg AS "avatarBg",participant.avatar_url AS "avatarUrl",
+            CASE WHEN participant.kind='agent' THEN 'transparent' ELSE participant.avatar_bg END AS "avatarBg",
+            CASE WHEN participant.kind='agent' THEN NULL ELSE participant.avatar_url END AS "avatarUrl",
             participant.status,participant.bio
        FROM participants participant
        LEFT JOIN learning_project_teacher_agents pulse

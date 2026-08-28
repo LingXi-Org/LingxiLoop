@@ -34,9 +34,9 @@ export interface Participant {
   name: string
   role?: string
   initial: string
-  /** linear-gradient or any css background — fallback when avatarUrl is empty */
+  /** Human fallback background; agents use the deterministic Bloub renderer. */
   avatarBg: string
-  /** AI-generated portrait URL (preferred over avatarBg when set) */
+  /** Human profile image. Agent values are always null and ignored by the renderer. */
   avatarUrl?: string | null
   status: Status
   statusUpdatedAt?: string

@@ -1576,7 +1576,8 @@ CREATE TABLE public.participants (
     avatar_url text,
     preset_key text,
     company_id text NOT NULL,
-    email text
+    email text,
+    CONSTRAINT participants_agent_bloub_only CHECK (((kind <> 'agent'::text) OR (avatar_url IS NULL)))
 );
 
 

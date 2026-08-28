@@ -189,9 +189,9 @@ async function cmdParticipants(parsed: ParsedArgs): Promise<CliResult> {
   let where = `WHERE company_id = $1 AND departed_at IS NULL`
   if (kind) { params.push(kind); where += ` AND kind = $2` }
   const { rows } = await pool.query<{
-    id: string; kind: string; name: string; role: string | null; status: string; avatar_url: string | null
+    id: string; kind: string; name: string; role: string | null; status: string
   }>(
-    `SELECT id, kind, name, role, status, avatar_url FROM participants ${where} ORDER BY kind DESC, name ASC`,
+    `SELECT id, kind, name, role, status FROM participants ${where} ORDER BY kind DESC, name ASC`,
     params,
   )
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
@@ -201,9 +201,6 @@ async function cmdParticipants(parsed: ParsedArgs): Promise<CliResult> {
   ]
   for (const r of rows) {
     lines.push(`${r.id.padEnd(15)} ${r.kind.padEnd(6)} ${r.status.padEnd(11)} ${r.role ?? ''}`)
-    // Surface the avatar URL on its own line when set, so an agent can fetch the
-    // image and view it (\`lingxiloop avatar show <id>\` is the convenience wrapper).
-    if (r.avatar_url) lines.push(`  ↳ avatar: ${r.avatar_url}`)
   }
   return ok(lines.join('\n'))
 }
@@ -254,16 +251,15 @@ async function cmdMembers(parsed: ParsedArgs): Promise<CliResult> {
   if (!rows[0]) return err(`unknown conversation: ${id}`)
   const memberIds = rows[0].members
   const { rows: peeps } = await pool.query<{
-    id: string; name: string; kind: string; role: string | null; status: string; avatar_url: string | null
+    id: string; name: string; kind: string; role: string | null; status: string
   }>(
-    `SELECT id, name, kind, role, status, avatar_url FROM participants WHERE id = ANY($1::text[])`,
+    `SELECT id, name, kind, role, status FROM participants WHERE id = ANY($1::text[])`,
     [memberIds],
   )
   if (parsed.flags.json) return ok(JSON.stringify(peeps, null, 2))
   const memberLines: string[] = []
   for (const p of peeps) {
     memberLines.push(`  · ${p.id.padEnd(12)} ${p.kind.padEnd(6)} ${p.status.padEnd(10)} ${p.name}${p.role ? ` (${p.role})` : ''}`)
-    if (p.avatar_url) memberLines.push(`      ↳ avatar: ${p.avatar_url}`)
   }
   const lines = [
     `${id} has ${peeps.length} member(s):`,
@@ -1733,10 +1729,7 @@ async function generateAndUploadImage(opts: {
     throw new Error('OPENAI_IMAGE_MODEL is required for image generation')
   }
   const size = IMAGE_SIZE_MAP[opts.size] ?? '1024x1024'
-  // The agent-tool image generation lives on its own purpose so it doesn't
-  // get pooled with avatar regeneration. Both ultimately hit the same image
-  // model but the spend driver is very different (per agent action vs per
-  // agent creation), and the operator will want to slice them apart.
+  // Product image generation uses the tracked LLM image entrypoint.
   const { createImage } = await import('../llm.js')
   const r = await createImage({ purpose: 'agent-image', companyId: opts.tenant, agentId: opts.agentId }, {
     model: env.OPENAI_IMAGE_MODEL,
@@ -1932,11 +1925,6 @@ async function loadEmailAttachmentFromPath(path: string): Promise<{
   }
 }
 
-/** Regenerate the calling agent's portrait via the image API. Composes
- *  the same prompt the HTTP endpoint uses, uploads to storage as
- *  `avatars/avatar-<id>-<rand>.png`, and stamps `participants.avatar_url`.
- *  Heavy — image-gen takes several seconds; the bash() tool call will
- *  block for that long. */
 /** `lingxiloop skills <op>` — manage Agent Skills (progressive-disclosure
  *  capability packs) stored in this agent's workspace under
  *  `skills/<name>/`. See server/src/agents/skills.ts for the spec. */
@@ -2250,138 +2238,6 @@ const { cmdEmail } = createEmailCommand({
   agentCompany,
   loadEmailAttachmentFromPath,
 })
-async function cmdAvatar(parsed: ParsedArgs): Promise<CliResult> {
-  const op = parsed.positional[0]
-  if (op !== 'regen' && op !== 'regenerate' && op !== 'set' && op !== 'show') {
-    return err(
-      'usage:\n' +
-      '  avatar show <participant_id>        view a teammate\'s portrait URL (download + open it to actually see the image)\n' +
-      '  avatar regen [--as <id>]            regenerate your portrait from your persona\n' +
-      '  avatar set <image_url> [--as <id>]  adopt an existing image URL as your portrait',
-    )
-  }
-  const me = resolveAs(parsed)
-
-  // Resolve the agent's tenant — avatar lookups are tenant-scoped (you can only
-  // look at teammates in your own workspace).
-  const { rows } = await pool.query<{ company_id: string; kind: string }>(
-    `SELECT company_id, kind FROM participants WHERE id = $1`, [me],
-  )
-  if (!rows[0]) return err(`unknown participant ${me}`)
-  // `show` is read-only and works for any caller (agent OR human); `regen`/`set`
-  // mutate the caller's OWN portrait, so they stay agent-only.
-  if (op !== 'show' && rows[0].kind !== 'agent') return err('avatar ops are only for agents')
-  const tenant = rows[0].company_id
-
-  if (op === 'show') {
-    const target = parsed.positional[1]
-    if (!target) return err('usage: avatar show <participant_id>')
-    const { rows: t } = await pool.query<{
-      id: string; name: string; role: string | null; kind: string; avatar_url: string | null
-    }>(
-      `SELECT id, name, role, kind, avatar_url FROM participants
-        WHERE id = $1 AND company_id = $2 AND departed_at IS NULL`,
-      [target, tenant],
-    )
-    if (!t[0]) return err(`unknown participant ${target} in this workspace`)
-    const r = t[0]
-    const who = `${r.name} (${r.id}) — ${r.kind}${r.role ? `, ${r.role}` : ''}`
-    if (!r.avatar_url) return ok(`${who}\n(no avatar set)`)
-    // Return the URL and an artifact recipe. The Host Bridge result channel
-    // does not automatically feed image bytes back into the model.
-    return ok(
-      `${who}\n` +
-      `avatar URL: ${r.avatar_url}\n\n` +
-      `To actually SEE the image, save it locally then open it with your image-reading tool:\n` +
-      `  curl -sL '${r.avatar_url}' -o /tmp/${r.id}-avatar\n` +
-      `then inspect \`/tmp/${r.id}-avatar\` as an artifact.`,
-    )
-  }
-
-  if (op === 'set') {
-    const url = parsed.positional[1]
-    if (!url) return err('usage: avatar set <image_url> [--as <id>]')
-    try {
-      const result = await setAgentAvatarFromUrl({ agentId: me, tenant, sourceUrl: url })
-      return ok(`portrait set → ${result.url}`, [{
-        event: 'avatar.updated',
-        command: 'avatar set',
-        agentId: me,
-        companyId: tenant,
-        avatarUrl: result.url,
-      }])
-    } catch (e) {
-      return err(`avatar set failed: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  // op === 'regen' | 'regenerate'
-  try {
-    const { generateAndPersistAvatar } = await import('../modules/agents/index.js')
-    const { url } = await generateAndPersistAvatar({ agentId: me, tenant })
-    return ok(`new portrait → ${url}`, [{
-      event: 'avatar.updated',
-      command: 'avatar regen',
-      agentId: me,
-      companyId: tenant,
-      avatarUrl: url,
-    }])
-  } catch (e) {
-    return err(`avatar regen failed: ${e instanceof Error ? e.message : String(e)}`)
-  }
-}
-
-/** Fetch an image at `sourceUrl`, validate it, re-upload it under the
- *  agent's `avatars/` storage key, stamp participants.avatar_url, and
- *  broadcast the change so connected clients refresh. The source URL
- *  can be one of our own attachments (e.g. an image the user just sent
- *  the agent) or any external URL — we always re-upload so the canonical
- *  avatar lives under our storage and serves through our CDN. */
-async function setAgentAvatarFromUrl(args: {
-  agentId: string
-  tenant: string
-  sourceUrl: string
-}): Promise<{ url: string }> {
-  if (!/^https?:\/\//.test(args.sourceUrl)) {
-    throw new Error('avatar source must be an http(s) URL')
-  }
-  const MAX_BYTES = 8 * 1024 * 1024  // 8MB ceiling for portraits
-  const fetched = await fetch(args.sourceUrl, { signal: AbortSignal.timeout(15_000) })
-  if (!fetched.ok) throw new Error(`source URL returned ${fetched.status}`)
-  const mime = (fetched.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase()
-  if (!mime.startsWith('image/')) throw new Error(`source URL is not an image (content-type: ${mime || 'unknown'})`)
-  const buf = Buffer.from(await fetched.arrayBuffer())
-  if (buf.length === 0) throw new Error('source image is empty')
-  if (buf.length > MAX_BYTES) throw new Error(`source image too large (${buf.length} > ${MAX_BYTES})`)
-
-  // Pick a sensible extension from the mime so the stored object has a
-  // useful filename and the Worker serves the right content-type.
-  const ext = mime === 'image/jpeg' ? 'jpg'
-            : mime === 'image/webp' ? 'webp'
-            : mime === 'image/gif'  ? 'gif'
-            : mime === 'image/svg+xml' ? 'svg'
-            : 'png'
-  const { storage } = await import('../storage.js')
-  const { randomUUID } = await import('node:crypto')
-  const key = `avatars/avatar-${args.agentId}-${randomUUID().slice(0, 8)}.${ext}`
-  const url = await storage.put(key, buf, mime)
-
-  await pool.query(
-    `UPDATE participants SET avatar_url = $2 WHERE id = $1 AND company_id = $3`,
-    [args.agentId, url, args.tenant],
-  )
-  const { invalidatePersonaCache } = await import('./personas.js')
-  invalidatePersonaCache(args.agentId)
-  const { CH_STATUS, publish } = await import('../redis.js')
-  await publish(CH_STATUS, {
-    type: 'participants.avatar',
-    participantId: args.agentId,
-    avatarUrl: url,
-    companyId: args.tenant,
-  })
-  return { url }
-}
-
 async function saveTextAttachment(
   filename: string,
   content: string,
@@ -3456,7 +3312,6 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'topic':               return await cmdTopicRead(parsed)
       case 'topic-set':           return await cmdTopicSet(parsed)
       case 'rename':              return await cmdRename(parsed)
-      case 'avatar':              return await cmdAvatar(parsed)
       case 'skills':              return await cmdSkills(parsed)
       case 'email':               return await cmdEmail(parsed, internal)
       case 'poll':                return await cmdPoll(parsed)

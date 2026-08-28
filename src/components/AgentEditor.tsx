@@ -1,17 +1,12 @@
 import { useEffect, useState } from 'react'
 import { agentsApi } from '@/api/agents'
 import type { AgentInput } from '@/api/contracts'
+import { Avatar } from '@/components/Avatar'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/stores/participants'
 import type { AgentCapability, Participant } from '@/types'
-
-const PALETTE = [
-  '#FFB088', '#FFD9D2', '#FFB7AF', '#F4B740',
-  '#7C5CFF', '#A593FF', '#4FC2F4', '#41B5DC',
-  '#4FC2A1', '#6EC56A', '#E9A0E9', '#FF7AB6',
-]
 
 const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; description: string }> = [
   { id: 'canvas', label: '共享画布', description: '查看并修改工作区共享画布与内容卡片' },
@@ -37,13 +32,9 @@ export function AgentEditor({ agent, onClose }: Props) {
   const [role, setRole] = useState(agent?.role ?? '')
   const [systemPrompt, setSystemPrompt] = useState(agent?.systemPrompt ?? '')
   const [bio, setBio] = useState(agent?.bio ?? '')
-  const [avatarBg, setAvatarBg] = useState(agent?.avatarBg ?? PALETTE[0])
   const [capabilities, setCapabilities] = useState<AgentCapability[]>(agent?.capabilities ?? DEFAULT_CAPABILITIES)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(agent?.avatarUrl ?? null)
-  const [generatingAvatar, setGeneratingAvatar] = useState(false)
-  const [avatarErr, setAvatarErr] = useState<string | null>(null)
   // Esc to close
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -56,11 +47,9 @@ export function AgentEditor({ agent, onClose }: Props) {
     setBusy(true)
     try {
       const payload: AgentInput = {
-        name, role, systemPrompt, bio, avatarBg, capabilities,
+        name, role, systemPrompt, bio, capabilities,
       }
       if (editing) {
-        // Only send avatarUrl on change so we don't clobber it on no-op edits.
-        if ((agent!.avatarUrl ?? null) !== avatarUrl) payload.avatarUrl = avatarUrl
         await agentsApi.updateAgent(agent!.id, payload)
       } else {
         // No `id` field on create — server slugifies it from `name`
@@ -79,21 +68,10 @@ export function AgentEditor({ agent, onClose }: Props) {
 
   const initial = (name || agent?.id || '?').charAt(0).toUpperCase()
 
-  const generateAvatar = async () => {
-    if (!editing || !agent) return
-    setAvatarErr(null)
-    setGeneratingAvatar(true)
-    try {
-      // First save any pending edits so the prompt reflects what the user typed.
-      await agentsApi.updateAgent(agent.id, { name, role, systemPrompt, bio, avatarBg })
-      const r = await agentsApi.generateAgentAvatar(agent.id)
-      setAvatarUrl(r.url)
-      await useParticipants.getState().load()
-    } catch (e) {
-      setAvatarErr(e instanceof Error ? e.message : String(e))
-    } finally {
-      setGeneratingAvatar(false)
-    }
+  const previewId = agent?.id ?? (name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'agent-preview')
+  const previewParticipant: Participant = {
+    id: previewId, kind: 'agent', name: name || 'Agent', role, initial,
+    avatarBg: 'transparent', status: 'avail',
   }
 
   return (
@@ -108,14 +86,7 @@ export function AgentEditor({ agent, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 border-b border-ink-100 flex items-center gap-3 shrink-0">
-          <div
-            className="w-12 h-12 rounded-full grid place-items-center text-white font-bold text-[18px] shrink-0 overflow-hidden relative"
-            style={{ background: avatarUrl ? 'transparent' : avatarBg }}
-          >
-            {avatarUrl
-              ? <img src={avatarUrl} alt={name || initial} className="absolute inset-0 w-full h-full object-cover" />
-              : initial}
-          </div>
+          <Avatar p={previewParticipant} size={48} showStatus={false} animated={false} />
           <div className="flex-1">
             <h2 className="font-display font-medium text-[20px] tracking-tight">
               {editing ? `编辑 ${agent!.name}` : "新建智能体"}
@@ -221,137 +192,10 @@ export function AgentEditor({ agent, onClose }: Props) {
             </div>
           </Field>
 
-          <Field label="头像颜色" hint="用作未生成 AI 肖像时的后备。">
-            <div className="flex flex-wrap gap-2">
-              {PALETTE.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setAvatarBg(c)}
-                  className="w-8 h-8 rounded-full transition"
-                  style={{
-                    background: c,
-                    boxShadow: avatarBg === c
-                      ? '0 0 0 3px var(--cloud), 0 0 0 5px var(--skype)'
-                      : 'inset 0 0 0 1px rgba(0,0,0,0.06)',
-                  }}
-                  aria-label={c}
-                />
-              ))}
-            </div>
-          </Field>
-
-          <Field
-            label="AI生成的肖像"
-            hint={editing
-              ? "生成适合该特工的姓名、角色和风格的社论肖像。如果您调整了样式，请先保存您的编辑。"
-              : "创建智能体后可用。先保存，然后重新打开生成。"}
-          >
-            <div className="flex items-center gap-4">
-              {/* Avatar preview with breathing/sparkle animation while generating */}
-              <div className="relative shrink-0" style={{ width: 88, height: 88 }}>
-                {/* Soft outer glow that breathes */}
-                {generatingAvatar && (
-                  <div
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      inset: -8,
-                      background: 'conic-gradient(from 0deg, #FFB088, #7C5CFF, #4FC2F4, #6EC56A, #FFB088)',
-                      filter: 'blur(8px)',
-                      opacity: 0.55,
-                      animation: 'ae-spin 3s linear infinite, ae-breathe 1.6s ease-in-out infinite',
-                    }}
-                  />
-                )}
-                {/* Avatar bubble */}
-                <div
-                  className="absolute inset-0 rounded-full grid place-items-center text-white font-bold text-[28px]"
-                  style={{
-                    background: avatarUrl ? 'transparent' : avatarBg,
-                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
-                    transform: generatingAvatar ? undefined : 'scale(1)',
-                    animation: generatingAvatar ? 'ae-pop 1.6s cubic-bezier(.36,1.6,.4,1) infinite' : undefined,
-                  }}
-                >
-                  {avatarUrl
-                    ? <img src={avatarUrl} alt={name || initial} className="absolute inset-0 w-full h-full object-cover rounded-full" />
-                    : initial}
-                  {/* Diagonal shimmer sweep */}
-                  {generatingAvatar && (
-                    <div
-                      className="absolute inset-0 rounded-full pointer-events-none overflow-hidden"
-                    >
-                      <div
-                        className="absolute"
-                        style={{
-                          inset: '-50%',
-                          background: 'linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)',
-                          animation: 'ae-sheen 2.2s cubic-bezier(.4,0,.2,1) infinite',
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-                {/* Twinkling sparkles ✦ */}
-                {generatingAvatar && (
-                  <>
-                    <span className="absolute text-whisper select-none pointer-events-none"
-                      style={{ top: -2, right: 6, fontSize: 14, animation: 'ae-twinkle 1.4s ease-in-out infinite', animationDelay: '0s' }}>✦</span>
-                    <span className="absolute text-skype-deep select-none pointer-events-none"
-                      style={{ bottom: 4, left: -4, fontSize: 11, animation: 'ae-twinkle 1.4s ease-in-out infinite', animationDelay: '0.45s' }}>✦</span>
-                    <span className="absolute text-gold select-none pointer-events-none"
-                      style={{ top: '40%', left: -6, fontSize: 9, animation: 'ae-twinkle 1.4s ease-in-out infinite', animationDelay: '0.9s' }}>✦</span>
-                  </>
-                )}
-              </div>
-
-              <div className="flex-1 flex flex-col gap-2 min-w-0">
-                <button
-                  type="button"
-                  onClick={generateAvatar}
-                  disabled={!editing || generatingAvatar}
-                  className="self-start inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] text-[12.5px] font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    // Hardcoded purple — this button intentionally keeps the
-                    // old AI-portrait accent, decoupled from the whisper
-                    // palette which has since moved to sage. Don't switch
-                    // back to var(--whisper) here.
-                    background: editing
-                      ? 'linear-gradient(135deg, #7C5CFF, #4A2D9E)'
-                      : 'var(--ink-100)',
-                    color: editing ? 'white' : 'var(--ink-500)',
-                    boxShadow: editing && !generatingAvatar ? '0 4px 12px -3px rgba(124, 92, 255, 0.45)' : 'none',
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                    style={generatingAvatar ? { animation: 'ae-icon-twinkle 1.2s ease-in-out infinite', transformOrigin: 'center' } : undefined}>
-                    <path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M19 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/>
-                  </svg>
-                  {generatingAvatar
-                    ? <span>绘画<span className="ae-dots" /></span>
-                    : (avatarUrl ? "再生" : "用 AI 生成")}
-                </button>
-
-                {generatingAvatar && (
-                  <div className="text-[11.5px] text-whisper-deep font-display italic leading-[1.5]">
-                    作曲 {name || 'your agent'}的肖像 — 通常为 15-30 秒。您可以继续编辑其他字段。
-                  </div>
-                )}
-
-                {avatarUrl && !generatingAvatar && (
-                  <button
-                    type="button"
-                    onClick={() => setAvatarUrl(null)}
-                    className="self-start text-[11.5px] text-ink-500 hover:text-coral-deep transition"
-                  >清晰肖像（使用色块代替）</button>
-                )}
-
-                {avatarErr && (
-                  <div className="text-[11.5px] text-coral-deep bg-coral-soft py-1.5 px-2 rounded-md leading-[1.4]">
-                    {avatarErr}
-                  </div>
-                )}
-              </div>
+          <Field label="Bloub 头像" hint="智能体统一使用确定性的 Bloub 身份；颜色、形状与表情由身份和状态驱动。">
+            <div className="flex items-center gap-3 rounded-[12px] border border-ink-100 bg-white px-4 py-3">
+              <Avatar p={previewParticipant} size={72} showStatus={false} animated={false} />
+              <div className="text-[12.5px] leading-5 text-ink-500">无需上传或生成图片；同一智能体在聊天、成员列表和管理界面保持一致。</div>
             </div>
           </Field>
 
@@ -383,43 +227,6 @@ export function AgentEditor({ agent, onClose }: Props) {
         </div>
       </div>
 
-      <style>{`
-        /* === avatar generation animations === */
-        @keyframes ae-spin   { to { transform: rotate(360deg); } }
-        @keyframes ae-breathe {
-          0%, 100% { opacity: 0.45; transform: scale(1); }
-          50%      { opacity: 0.75; transform: scale(1.08); }
-        }
-        @keyframes ae-pop {
-          0%, 100% { transform: scale(1); }
-          40%      { transform: scale(1.04); }
-          70%      { transform: scale(0.985); }
-        }
-        @keyframes ae-sheen {
-          0%   { transform: translateX(-60%) translateY(-60%) rotate(0deg); }
-          100% { transform: translateX(60%)  translateY(60%)  rotate(0deg); }
-        }
-        @keyframes ae-twinkle {
-          0%, 100% { opacity: 0.2; transform: scale(0.7); }
-          50%      { opacity: 1;   transform: scale(1.15); }
-        }
-        @keyframes ae-icon-twinkle {
-          0%, 100% { opacity: 0.7; transform: scale(0.92); }
-          50%      { opacity: 1;   transform: scale(1.08); }
-        }
-        @keyframes ae-dot {
-          0%, 20%  { opacity: 0; }
-          50%      { opacity: 1; }
-          80%, 100%{ opacity: 0; }
-        }
-        .ae-dots::after {
-          content: '...';
-          letter-spacing: 2px;
-          display: inline-block;
-          margin-left: 2px;
-          animation: ae-dot 1.4s steps(4, end) infinite;
-        }
-      `}</style>
     </div>
   )
 }

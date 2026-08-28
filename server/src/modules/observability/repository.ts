@@ -98,7 +98,7 @@ export async function listRuns(
   params.push(input.limit)
   const { rows } = await db.query(
     `SELECT r.id, r.agent_id AS "agentId", COALESCE(p.name, r.agent_id) AS "agentName",
-        p.role AS "agentRole", p.avatar_url AS "agentAvatarUrl", r.company_id AS "companyId",
+        p.role AS "agentRole", NULL::text AS "agentAvatarUrl", r.company_id AS "companyId",
         CASE WHEN r.status = 'running' AND r.updated_at < NOW() - INTERVAL '${STALLED_INTERVAL}'
           THEN 'stalled' ELSE r.status END AS status,
         r.stage, r.summary, r.error, r.trigger, r.input_message_ids AS "inputMessageIds",
