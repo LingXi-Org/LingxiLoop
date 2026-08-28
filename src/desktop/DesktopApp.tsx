@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Layout } from 'react-resizable-panels'
 import { CanvasView } from '@/features/canvas/components/CanvasView'
 import { CommandPalette } from '@/components/CommandPalette'
-import { EmailComposer } from '@/components/EmailComposer'
+import { EmailComposer } from '@/features/email/components/EmailComposer'
 import { GroupContextContent } from '@/components/GroupContextContent'
 import { LearningCenter } from '@/features/learning/components/LearningCenter'
 import {

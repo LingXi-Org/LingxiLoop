@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { isMuted, useConversations } from '@/features/conversations/store'
-import { useEmailComposer } from '@/stores/emailComposer'
+import { useEmailComposer } from '@/features/email/state'
 import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
 

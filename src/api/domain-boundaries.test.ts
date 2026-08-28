@@ -3,7 +3,7 @@ import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const domains = [
-  'email', 'files',
+  'files',
   'observability', 'platform',
 ] as const
 
@@ -76,6 +76,22 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
     '../features/documents/components/DocumentPeekPane.tsx',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(documentSources.join('\n'), /api\/documents|stores\/documents|components\/Document(?:Editor|Link)|desktop\/Document/)
+
+  for (const file of ['api.ts', 'contracts.ts', 'state.ts', 'components/EmailComposer.tsx']) {
+    await access(new URL(`../features/email/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./email.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../stores/emailComposer.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../components/EmailComposer.tsx', import.meta.url)))
+  const emailSources = await Promise.all([
+    '../features/email/api.ts',
+    '../features/email/state.ts',
+    '../features/email/components/EmailComposer.tsx',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.doesNotMatch(
+    emailSources.join('\n'),
+    /(?:from\s+|import\()['"]@\/(?:api\/email|stores\/emailComposer|components\/EmailComposer)/,
+  )
 
   for (const file of ['api.ts', 'contracts.ts', 'store.ts']) {
     await access(new URL(`../features/conversations/${file}`, import.meta.url))

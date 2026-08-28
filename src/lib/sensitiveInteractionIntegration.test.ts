@@ -73,7 +73,7 @@ test('approval decisions and user-triggered tasks publish through the global Toa
   assert.match(provider, /<AlertDialog open=\{current !== null\}/)
   assert.match(read('../components/messages/MessageToolParts.tsx'), /toastAction\(Promise\.resolve\(addResult/)
   assert.match(read('../components/EventEditor.tsx'), /toastAction\(runNow/)
-  assert.match(read('../components/EmailComposer.tsx'), /toastAction\(Promise\.resolve\(sendPromise\)/)
+  assert.match(read('../features/email/components/EmailComposer.tsx'), /toastAction\(Promise\.resolve\(sendPromise\)/)
   assert.match(read('../lib/actionToast.ts'), /toast\.promise\(/)
 })
 

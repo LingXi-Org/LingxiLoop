@@ -19,7 +19,7 @@
  * keeps drawer open + surfaces error inline so the user can edit + retry.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { emailApi } from '@/api/email'
+import { emailApi } from '../api'
 import { filesApi } from '@/api/files'
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
 import { Input } from '@/components/ui/input'
@@ -38,12 +38,12 @@ import { toastAction } from '@/lib/actionToast'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
-import { useEmailComposer } from '@/stores/emailComposer'
+import { useEmailComposer } from '../state'
 import { useMessages } from '@/features/chat/state/messages'
 import { useParticipants } from '@/features/agents/state'
 import type { Message, Participant } from '@/types'
-import { Avatar } from './Avatar'
-import { IMail } from './icons'
+import { Avatar } from '@/components/Avatar'
+import { IMail } from '@/components/icons'
 
 /** Pending or completed file attachment in the composer. We track the
  *  upload lifecycle locally so the user gets immediate feedback (filename

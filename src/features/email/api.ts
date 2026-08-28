@@ -1,26 +1,17 @@
 
 import { API, http } from '@/api/core/http'
+import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
-import { lingxiApiFetch, } from './transport'
+import type { EmailDeliveryResult, ReplyEmailInput, SendEmailInput } from './contracts'
 
 export const emailApi = {
-  sendEmail: (args: {
-    to: string[]
-    cc?: string[]
-    subject: string
-    body: string
-    attachments?: Array<{ key: string; filename: string; mimeType: string; sizeBytes: number }>
-  }) =>
-    http<{ messageId: string; conversationId: string; transportStatus: string; error?: string | null }>(
+  sendEmail: (args: SendEmailInput) =>
+    http<EmailDeliveryResult>(
       '/email/send',
       { method: 'POST', body: JSON.stringify(args) },
     ),
-  replyEmail: (messageId: string, args: {
-    body: string
-    cc?: string[]
-    attachments?: Array<{ key: string; filename: string; mimeType: string; sizeBytes: number }>
-  }) =>
-    http<{ messageId: string; conversationId: string; transportStatus: string; error?: string | null }>(
+  replyEmail: (messageId: string, args: ReplyEmailInput) =>
+    http<EmailDeliveryResult>(
       `/email/reply/${encodeURIComponent(messageId)}`,
       { method: 'POST', body: JSON.stringify(args) },
     ),

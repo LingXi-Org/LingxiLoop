@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-
-type EmailComposition = { mode: 'new' } | { mode: 'reply'; replyToMessageId: string } | null
+import type { EmailComposition } from './contracts'
 
 interface EmailComposerState {
   composition: EmailComposition
