@@ -23,7 +23,7 @@ const learningRuntimeSource = readFileSync(new URL('../modules/learning/runtime.
 const learningRouterSource = readFileSync(new URL('../modules/learning/router.ts', import.meta.url), 'utf8')
 const classroomRouterSource = readFileSync(new URL('../modules/learning/classroom-router.ts', import.meta.url), 'utf8')
 const learningHttpAdapterSource = readFileSync(new URL('../modules/learning/http-adapter.ts', import.meta.url), 'utf8')
-const teacherAgentSource = readFileSync(new URL('../modules/learning/teacher-agent.ts', import.meta.url), 'utf8')
+const teacherAgentSource = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
 const teacherApprovalRepositorySource = readFileSync(
   new URL('../modules/learning/teacher-approval-repository.ts', import.meta.url),
   'utf8',
@@ -34,6 +34,18 @@ const teacherReportingRepositorySource = readFileSync(
 )
 const teacherRuntimeRepositorySource = readFileSync(
   new URL('../modules/learning/teacher-runtime-repository.ts', import.meta.url),
+  'utf8',
+)
+const teacherProvisioningRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-provisioning-repository.ts', import.meta.url),
+  'utf8',
+)
+const teacherDigestRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-digest-repository.ts', import.meta.url),
+  'utf8',
+)
+const teacherManagementRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-management-repository.ts', import.meta.url),
   'utf8',
 )
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
@@ -66,7 +78,7 @@ test('the legacy Learning service implementation is deleted', () => {
   assert.equal(existsSync(legacyLearningUrl), false)
   assert.equal(existsSync(legacyServiceUrl), false)
   assert.doesNotMatch(learningApplicationSource, /learning\/service\.js/)
-  const teacher = readFileSync(new URL('../modules/learning/teacher-agent.ts', import.meta.url), 'utf8')
+  const teacher = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(teacher, /from '.\/service\.js'/)
   assert.match(repository, /WHERE course_id=\$1 AND company_id=\$2 AND role='teacher'/)
   assert.match(repository, /teacher_room\.company_id=\$1 AND teacher_room\.conversation_id=conversation\.id/)
@@ -164,7 +176,7 @@ test('Agent OS evaluation proposals use the tenant-scoped Learning vertical slic
 })
 
 test('teacher evaluation review shares the same repository and mastery projection boundary', () => {
-  const teacher = readFileSync(new URL('../modules/learning/teacher-agent.ts', import.meta.url), 'utf8')
+  const teacher = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(service, /\breviewEvaluation\b|INSERT INTO learning_mastery|UPDATE learning_evaluations/)
   assert.doesNotMatch(teacher, /\breviewEvaluation\b/)
   assert.match(teacher, /reviewLearningEvaluation/)
@@ -221,13 +233,26 @@ test('Pulse runtime scope and turn counts use one tenant-scoped repository', () 
   assert.match(teacherRuntimeRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
 })
 
+test('Pulse application orchestration contains no SQL and lifecycle scope is explicit', () => {
+  assert.doesNotMatch(teacherAgentSource, /\b(?:SELECT|INSERT INTO|UPDATE|DELETE FROM)\b/)
+  assert.doesNotMatch(teacherAgentSource, /\b(?:db|pool)\.query\b/)
+  assert.match(teacherProvisioningRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
+  assert.match(teacherProvisioningRepositorySource, /teacher_room\.company_id=\$1 AND teacher_room\.course_id=\$2/)
+  assert.match(teacherProvisioningRepositorySource, /WHERE company_id=\$1 AND course_id=\$2 AND role='teacher'/)
+  assert.match(teacherProvisioningRepositorySource, /approval\.company_id=course\.company_id/)
+  assert.match(teacherDigestRepositorySource, /WHERE company_id=\$1 AND id=\$2/)
+  assert.match(teacherManagementRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
+  assert.match(learningApplicationSource, /ensureTeacherAgent\(scope\.companyId, courseId, db\)/)
+  assert.match(learningApplicationSource, /syncTeacherRoom\(effect\.companyId, effect\.courseId\)/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
-  const teacher=readFileSync(new URL('../modules/learning/teacher-agent.ts',import.meta.url),'utf8')
+  const teacher=readFileSync(new URL('../modules/learning/teacher-agent-application.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')
   assert.match(teacher,/PULSE_CAPABILITIES = \['teacher_admin'\]/)
-  assert.match(teacher,/JSON\.stringify\(\['ipython'\]\)/)
-  assert.match(teacher,/learning_project_teacher_agents/)
-  assert.match(teacher,/learning_course_teacher_rooms/)
+  assert.match(teacherProvisioningRepositorySource,/JSON\.stringify\(\['ipython'\]\)/)
+  assert.match(teacherProvisioningRepositorySource,/learning_project_teacher_agents/)
+  assert.match(teacherProvisioningRepositorySource,/learning_course_teacher_rooms/)
   assert.match(runtime,/allowedNamespaces: \['teacher', 'turn'\]/)
   assert.match(kernel,/allowedNamespaces/)
   assert.match(control,/Pulse may only call teacher\.\* and turn\.\*/)

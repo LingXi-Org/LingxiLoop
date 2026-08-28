@@ -3,6 +3,8 @@ import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
+import type { Queryable } from '../db/queryable.js'
+import { withTransaction } from '../db/transaction.js'
 import {
   assertTeacherApprovalFresh,
   closeTeacherRoomForCourse,
@@ -10,7 +12,7 @@ import {
   nextTeacherDigestRun,
   reactivateTeacherRoomForCourse,
   teacherActionRequiresApproval,
-} from '../modules/learning/teacher-agent.js'
+} from '../modules/learning/teacher-agent-application.js'
 import {
   findTeacherAttemptDetail,
   listTeacherLearnerRows,
@@ -26,6 +28,8 @@ import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, t
 before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => { installFakeWukong(); await resetAllTables() })
 after(async () => { await teardownAll() })
+
+const teacherTransaction = <T>(work: (client: Queryable) => Promise<T>) => withTransaction(pool, work)
 
 interface Fixture {
   companyId:string
@@ -93,7 +97,7 @@ async function apiRequest(userId:string,companyId:string,path:string,projectId?:
 
 test('[integration] concurrent provisioning creates one Project Pulse and one Course teacher room',async()=>{
   const fixture=await seedTeacherCourse()
-  const results=await Promise.all(Array.from({length:6},()=>ensureTeacherAgentForCourse(fixture.courseId)))
+  const results=await Promise.all(Array.from({length:6},()=>ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)))
   assert.equal(new Set(results.map((item)=>item.agentId)).size,1)
   assert.equal(new Set(results.map((item)=>item.roomId)).size,1)
   assert.equal(results.filter((item)=>item.created).length,1)
@@ -118,14 +122,59 @@ test('[integration] concurrent provisioning creates one Project Pulse and one Co
   assert.equal(rows[0]?.subtitle,'教师 · 1')
 })
 
+test('[integration] Pulse provisioning rolls back every owned row on persistence failure',async()=>{
+  const fixture=await seedTeacherCourse()
+  await pool.query(`CREATE OR REPLACE FUNCTION test_teacher_provision_failure() RETURNS trigger AS $$
+    BEGIN RAISE EXCEPTION 'test teacher provision failure'; END; $$ LANGUAGE plpgsql`)
+  await pool.query(`CREATE TRIGGER test_teacher_provision_failure
+    BEFORE INSERT ON agent_workspace FOR EACH ROW EXECUTE FUNCTION test_teacher_provision_failure()`)
+  try{
+    await assert.rejects(
+      ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction),
+      /test teacher provision failure/,
+    )
+  }finally{
+    await pool.query(`DROP TRIGGER IF EXISTS test_teacher_provision_failure ON agent_workspace`)
+    await pool.query(`DROP FUNCTION IF EXISTS test_teacher_provision_failure()`)
+  }
+  const {rows}=await pool.query<{agents:number;rooms:number;participants:number}>(
+    `SELECT
+      (SELECT COUNT(*)::int FROM learning_project_teacher_agents
+        WHERE company_id=$1 AND project_id=$2) AS agents,
+      (SELECT COUNT(*)::int FROM learning_course_teacher_rooms
+        WHERE company_id=$1 AND course_id=$3) AS rooms,
+      (SELECT COUNT(*)::int FROM participants
+        WHERE company_id=$1 AND preset_key=$4) AS participants`,
+    [fixture.companyId,fixture.projectId,fixture.courseId,`teacher-agent:${fixture.projectId}`],
+  )
+  assert.deepEqual(rows[0],{agents:0,rooms:0,participants:0})
+})
+
+test('[integration] Pulse provisioning and lifecycle reject a foreign tenant scope',async()=>{
+  const own=await seedTeacherCourse()
+  const foreign=await seedTeacherCourse()
+  await assert.rejects(
+    ensureTeacherAgentForCourse(own.companyId,foreign.courseId,pool,teacherTransaction),
+    /non-archived course not found/,
+  )
+  await ensureTeacherAgentForCourse(foreign.companyId,foreign.courseId,pool,teacherTransaction)
+  await closeTeacherRoomForCourse(own.companyId,foreign.courseId,pool,teacherTransaction)
+  const {rows}=await pool.query<{status:string}>(
+    `SELECT status FROM learning_course_teacher_rooms
+      WHERE company_id=$1 AND course_id=$2`,
+    [foreign.companyId,foreign.courseId],
+  )
+  assert.equal(rows[0]?.status,'active')
+})
+
 test('[integration] archive and restore retain the same Pulse identity and teacher room',async()=>{
   const fixture=await seedTeacherCourse()
-  const first=await ensureTeacherAgentForCourse(fixture.courseId)
+  const first=await ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
   await pool.query(`UPDATE projects SET status='archived',archived_at=NOW() WHERE id=$1`,[fixture.projectId])
-  await closeTeacherRoomForCourse(fixture.courseId)
+  await closeTeacherRoomForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
   await pool.query(`UPDATE projects SET status='active',archived_at=NULL WHERE id=$1`,[fixture.projectId])
-  await reactivateTeacherRoomForCourse(fixture.courseId)
-  const second=await ensureTeacherAgentForCourse(fixture.courseId)
+  await reactivateTeacherRoomForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
+  const second=await ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
   assert.equal(second.agentId,first.agentId)
   assert.equal(second.roomId,first.roomId)
   const {rows}=await pool.query<{course_id:string;conversation_id:string;status:string}>(
@@ -139,7 +188,7 @@ test('[integration] archive and restore retain the same Pulse identity and teach
 
 test('[integration] only a current course teacher can discover Pulse or open its teacher endpoint',async()=>{
   const fixture=await seedTeacherCourse()
-  const pulse=await ensureTeacherAgentForCourse(fixture.courseId)
+  const pulse=await ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
   const path=`/api/courses/${encodeURIComponent(fixture.courseId)}/teacher-agent`
   const teacherSummary=await apiRequest(fixture.teacherId,fixture.companyId,path)
   assert.equal(teacherSummary.status,200)
@@ -258,8 +307,8 @@ test('[integration] Pulse reporting repository cannot cross tenant course bounda
 test('[integration] Pulse approval freshness binds the target room to the trusted tenant',async()=>{
   const own=await seedTeacherCourse()
   const foreign=await seedTeacherCourse()
-  const ownPulse=await ensureTeacherAgentForCourse(own.courseId)
-  const foreignPulse=await ensureTeacherAgentForCourse(foreign.courseId)
+  const ownPulse=await ensureTeacherAgentForCourse(own.companyId,own.courseId,pool,teacherTransaction)
+  const foreignPulse=await ensureTeacherAgentForCourse(foreign.companyId,foreign.courseId,pool,teacherTransaction)
   const ownObjective=`objective-${randomUUID()}`
   const foreignObjective=`objective-${randomUUID()}`
   const {rows}=await pool.query<{id:string;updated_at:Date}>(
@@ -281,14 +330,14 @@ test('[integration] Pulse approval freshness binds the target room to the truste
     channelId:ownPulse.roomId,
     action:'teacher.publish_objective',
     preview:{entityId:ownObjective,currentVersion:versions.get(ownObjective)},
-  })
+  },pool)
   await assert.rejects(
     assertTeacherApprovalFresh({
       companyId:own.companyId,
       channelId:foreignPulse.roomId,
       action:'teacher.publish_objective',
       preview:{entityId:foreignObjective,currentVersion:versions.get(foreignObjective)},
-    }),
+    },pool),
     /approval is stale/,
   )
 })
@@ -296,7 +345,7 @@ test('[integration] Pulse approval freshness binds the target room to the truste
 test('[integration] Pulse runtime scope and counts reject foreign tenant state',async()=>{
   const own=await seedTeacherCourse()
   const foreign=await seedTeacherCourse()
-  const foreignPulse=await ensureTeacherAgentForCourse(foreign.courseId)
+  const foreignPulse=await ensureTeacherAgentForCourse(foreign.companyId,foreign.courseId,pool,teacherTransaction)
 
   assert.equal(
     await findTeacherScopeBinding(pool,own.companyId,foreignPulse.agentId,foreignPulse.roomId),

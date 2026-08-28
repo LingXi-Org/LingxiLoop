@@ -1,5 +1,6 @@
 import { audit, gravatarUrlForEmail } from '../identity/public.js'
 import { pool } from '../../db/pool.js'
+import type { Queryable } from '../../db/queryable.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
 import { generateInvitationToken, hashInvitationToken } from '../../http/invitation-token.js'
@@ -11,20 +12,26 @@ import {
   reactivateTeacherRoomForCourse,
   sendTeacherAgentWelcome,
   syncTeacherRoomMembers,
-} from './teacher-agent.js'
+} from './teacher-agent-application.js'
 import { seedMemberDms } from '../../onboardCompany.js'
 import { CH_DOC_ACCESS_REVOKED, publish } from '../../redis.js'
 import { LearningApplication } from './application.js'
 import { inc } from '../../metrics.js'
 
+function teacherTransaction(db: Queryable) {
+  return <T>(work: (client: Queryable) => Promise<T>): Promise<T> => db === pool
+    ? withTransaction(pool, work)
+    : work(db)
+}
+
 export const learningApplication = new LearningApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
   audit: async (event) => { await audit(event) },
-  ensureTeacherAgent: (courseId, db) => ensureTeacherAgentForCourse(courseId, db),
-  syncTeacherRoom: syncTeacherRoomMembers,
-  welcomeTeacherAgent: sendTeacherAgentWelcome,
-  closeTeacherRoom: closeTeacherRoomForCourse,
-  reactivateTeacherRoom: reactivateTeacherRoomForCourse,
+  ensureTeacherAgent: (companyId, courseId, db) => ensureTeacherAgentForCourse(companyId, courseId, db, teacherTransaction(db)),
+  syncTeacherRoom: (companyId, courseId) => syncTeacherRoomMembers(companyId, courseId, pool, teacherTransaction(pool)),
+  welcomeTeacherAgent: (companyId, courseId) => sendTeacherAgentWelcome(companyId, courseId, pool),
+  closeTeacherRoom: (companyId, courseId) => closeTeacherRoomForCourse(companyId, courseId, pool, teacherTransaction(pool)),
+  reactivateTeacherRoom: (companyId, courseId) => reactivateTeacherRoomForCourse(companyId, courseId, pool, teacherTransaction(pool)),
   ensureNotebook: async (projectId, companyId) => { await ensureProjectNotebook(projectId, companyId) },
   syncNotebook: syncProjectNotebookMetadata,
   syncChannel: async (channel) => {
@@ -45,9 +52,9 @@ export const learningApplication = new LearningApplication(pool, {
     return `${base}/invite/course/${encodeURIComponent(token)}`
   },
   avatarForEmail: gravatarUrlForEmail,
-  teacherAgentSummary: async (courseId, userId) => {
-    const { getTeacherAgentSummary } = await import('./teacher-agent.js')
-    return getTeacherAgentSummary(courseId, userId)
+  teacherAgentSummary: async (companyId, courseId, userId) => {
+    const { getTeacherAgentSummary } = await import('./teacher-agent-application.js')
+    return getTeacherAgentSummary(companyId, courseId, userId, pool)
   },
   metric: inc,
 })

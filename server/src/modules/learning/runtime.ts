@@ -81,14 +81,7 @@ export function completeMission(work: RuntimeRoomScope, missionId: string) {
   return completeLearningMission(pool, (run) => withTransaction(pool, run), work, missionId)
 }
 
-export {
-  assertTeacherApprovalFresh,
-  describeTeacherAction,
-  executeTeacherAction,
-  loadTeacherTurnContext,
-  nextTeacherDigestRun,
-  teacherActionRequiresApproval,
-} from './teacher-agent.js'
+export { teacherActionRequiresApproval } from './teacher-agent-application.js'
 
 export type {
   LearningActivityType,
@@ -99,6 +92,7 @@ export type {
   TeacherTurnContext,
 } from './types.js'
 import { pool } from '../../db/pool.js'
+import type { Queryable } from '../../db/queryable.js'
 import { withTransaction } from '../../db/transaction.js'
 import { wukongClient } from '../../im/wukong.js'
 import { inc } from '../../metrics.js'
@@ -126,6 +120,53 @@ import type {
 } from './contracts.js'
 import { findLearningMission, findVisibleLearningActivity } from './repository.js'
 import type { AgentWorkItem } from '../../agent-os/types.js'
+import type { HostAction } from '../../agent-os/types.js'
+import {
+  assertTeacherApprovalFresh as assertTeacherApprovalFreshApplication,
+  describeTeacherAction as describeTeacherActionApplication,
+  executeTeacherAction as executeTeacherActionApplication,
+  loadTeacherTurnContext as loadTeacherTurnContextApplication,
+  nextTeacherDigestRun as nextTeacherDigestRunApplication,
+} from './teacher-agent-application.js'
+
+function teacherTransaction(db: Queryable) {
+  return <T>(work: (client: Queryable) => Promise<T>): Promise<T> => db === pool
+    ? withTransaction(pool, work)
+    : work(db)
+}
+
+export function loadTeacherTurnContext(work: AgentWorkItem, db: Queryable = pool) {
+  return loadTeacherTurnContextApplication(work, db)
+}
+
+export function describeTeacherAction(work: AgentWorkItem, action: HostAction, db: Queryable = pool) {
+  return describeTeacherActionApplication(work, action, db)
+}
+
+export function assertTeacherApprovalFresh(
+  input: { channelId: string; companyId: string; action: string; preview: Record<string, unknown> },
+  db: Queryable = pool,
+) {
+  return assertTeacherApprovalFreshApplication(input, db)
+}
+
+export function executeTeacherAction(
+  work: AgentWorkItem,
+  method: string,
+  args: Record<string, unknown>,
+  db: Queryable = pool,
+) {
+  return executeTeacherActionApplication(work, method, args, db, teacherTransaction(db))
+}
+
+export function nextTeacherDigestRun(
+  schedule: { frequency: 'daily'|'weekly'; localTime: string; weekday?: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday' },
+  timezone: string,
+  from: Date,
+  db: Queryable = pool,
+) {
+  return nextTeacherDigestRunApplication(schedule, timezone, from, db)
+}
 
 export const preferredCoordinatorPreset = preferredLearningMissionCoordinator
 

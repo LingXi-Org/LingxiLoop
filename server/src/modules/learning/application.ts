@@ -104,11 +104,11 @@ export type { LearningTransaction } from './membership-application.js'
 export interface LearningInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   audit(event: { kind: string; userId: string; companyId: string; detail: Record<string, unknown> }): Promise<void>
-  ensureTeacherAgent(courseId: string, db: Queryable): Promise<{ created: boolean }>
-  syncTeacherRoom(courseId: string): Promise<void>
-  welcomeTeacherAgent(courseId: string): Promise<void>
-  closeTeacherRoom(courseId: string): Promise<void>
-  reactivateTeacherRoom(courseId: string): Promise<void>
+  ensureTeacherAgent(companyId: string, courseId: string, db: Queryable): Promise<{ created: boolean }>
+  syncTeacherRoom(companyId: string, courseId: string): Promise<void>
+  welcomeTeacherAgent(companyId: string, courseId: string): Promise<void>
+  closeTeacherRoom(companyId: string, courseId: string): Promise<void>
+  reactivateTeacherRoom(companyId: string, courseId: string): Promise<void>
   ensureNotebook(projectId: string, companyId: string): Promise<void>
   syncNotebook(projectId: string): Promise<void>
   syncChannel(channel: { channelId: string; title: string; members: string[]; leaderAgentId?: string }): Promise<void>
@@ -119,7 +119,7 @@ export interface LearningInfrastructure {
   hashInvitationToken(token: string): string
   invitationUrl(token: string): string
   avatarForEmail(email: string): string
-  teacherAgentSummary(courseId: string, userId: string): Promise<unknown>
+  teacherAgentSummary(companyId: string, courseId: string, userId: string): Promise<unknown>
   metric(name: string, tags?: Record<string, string>): void
 }
 
@@ -139,10 +139,10 @@ export class LearningApplication {
         await this.syncStudyRoom(effect.courseId)
         return
       case 'teacher_room.sync':
-        await this.infrastructure.syncTeacherRoom(effect.courseId)
+        await this.infrastructure.syncTeacherRoom(effect.companyId, effect.courseId)
         return
       case 'teacher_agent.welcome':
-        await this.infrastructure.welcomeTeacherAgent(effect.courseId)
+        await this.infrastructure.welcomeTeacherAgent(effect.companyId, effect.courseId)
         return
       case 'notebook.ensure': {
         const projectId = String(payload.projectId ?? '')
@@ -170,7 +170,7 @@ export class LearningApplication {
     const roomId = `course-room-${randomUUID().slice(0, 12)}`
     await this.infrastructure.transaction(async (db) => {
       await insertCourse(db, { ...scope, projectId, courseId, roomId, input })
-      const teacher = await this.infrastructure.ensureTeacherAgent(courseId, db)
+      const teacher = await this.infrastructure.ensureTeacherAgent(scope.companyId, courseId, db)
       const effects = [
         { kind: 'study_room.sync' as const },
         { kind: 'teacher_room.sync' as const },
@@ -213,8 +213,8 @@ export class LearningApplication {
   async archiveCourse(userId: string, courseId: string, archive: boolean) {
     const manager = await this.manager(userId, courseId)
     await setCourseArchived(this.db, manager.companyId, manager.projectId, archive)
-    if (archive) await this.infrastructure.closeTeacherRoom(courseId)
-    else await this.infrastructure.reactivateTeacherRoom(courseId)
+    if (archive) await this.infrastructure.closeTeacherRoom(manager.companyId, courseId)
+    else await this.infrastructure.reactivateTeacherRoom(manager.companyId, courseId)
     await this.infrastructure.syncNotebook(manager.projectId)
     await this.infrastructure.audit({
       kind: archive ? 'course_archive' : 'course_unarchive', userId, companyId: manager.companyId,
@@ -234,7 +234,7 @@ export class LearningApplication {
       courseId, companyId: manager.companyId, userId: targetId, role,
     }))
     this.assertMemberChange(outcome)
-    await this.infrastructure.syncTeacherRoom(courseId)
+    await this.infrastructure.syncTeacherRoom(manager.companyId, courseId)
     await this.infrastructure.audit({
       kind: 'course_member_role_update', userId, companyId: manager.companyId,
       detail: { courseId, targetId, role },
@@ -262,7 +262,7 @@ export class LearningApplication {
         companyId: manager.companyId, workspaceId: manager.projectId, userId: targetId,
       }),
       this.syncStudyRoom(courseId),
-      this.infrastructure.syncTeacherRoom(courseId),
+      this.infrastructure.syncTeacherRoom(manager.companyId, courseId),
       this.infrastructure.audit({
         kind: 'course_member_remove', userId, companyId: manager.companyId,
         detail: { courseId, targetId },
@@ -381,7 +381,7 @@ export class LearningApplication {
       }
     })
     await this.syncStudyRoom(result.courseId)
-    await this.infrastructure.syncTeacherRoom(result.courseId)
+    await this.infrastructure.syncTeacherRoom(result.companyId, result.courseId)
     if (result.joinedCompany) await this.infrastructure.seedMemberDms(result.companyId, userId)
     await this.infrastructure.audit({
       kind: 'course_invitation_accept', userId, companyId: result.companyId,
@@ -420,7 +420,7 @@ export class LearningApplication {
 
   async teacherAgent(scope: LearningScope, courseId: string) {
     await this.assertCourseScope(scope.companyId, courseId)
-    return this.classroom(() => this.infrastructure.teacherAgentSummary(courseId, scope.userId))
+    return this.classroom(() => this.infrastructure.teacherAgentSummary(scope.companyId, courseId, scope.userId))
   }
 
   async bindRoom(scope: LearningScope, courseId: string, conversationId: string, input: BindCourseRoomInput) {

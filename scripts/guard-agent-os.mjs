@@ -69,7 +69,8 @@ const canvasDomain = sourceFiles(join(root, 'server/src/modules/canvas'))
   .map((path) => readFileSync(path, 'utf8'))
   .join('\n')
 const schema = readFileSync(join(root, 'server/src/db/schema.sql'), 'utf8')
-const teacherAgent = readFileSync(join(root, 'server/src/modules/learning/teacher-agent.ts'), 'utf8')
+const teacherAgent = readFileSync(join(root, 'server/src/modules/learning/teacher-agent-application.ts'), 'utf8')
+const teacherProvisioningRepository = readFileSync(join(root, 'server/src/modules/learning/teacher-provisioning-repository.ts'), 'utf8')
 if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
   failures.push('learning must exist only as a capability-gated loop.learning Host Bridge namespace')
 }
@@ -82,8 +83,8 @@ if (!runtime.includes("allowedNamespaces: ['teacher', 'turn']")
   failures.push('Pulse IPython must expose only teacher/turn and use a dedicated transient contract')
 }
 if (!teacherAgent.includes("PULSE_CAPABILITIES = ['teacher_admin']")
-  || !teacherAgent.includes("JSON.stringify(['ipython'])")
-  || /loop\.learning/.test(teacherAgent)) {
+  || !teacherProvisioningRepository.includes("JSON.stringify(['ipython'])")
+  || /loop\.learning/.test(`${teacherAgent}\n${teacherProvisioningRepository}`)) {
   failures.push('Pulse identity must remain product-managed with tools=[ipython] and no learner SDK')
 }
 if (!controlPlane.includes("namespace === 'teacher'") || !controlPlane.includes('teacher_managed')) {

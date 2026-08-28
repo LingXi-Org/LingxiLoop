@@ -1,9 +1,7 @@
+/** Pulse application orchestration. Persistence is owned by teacher-* repositories. */
 import { createHash } from 'node:crypto'
 import { audit } from '../identity/public.js'
-import { pool } from '../../db/pool.js'
 import type { Queryable } from '../../db/queryable.js'
-import { withClientTransaction, withTransaction } from '../../db/transaction.js'
-import type { PoolClient } from 'pg'
 import { wukongClient } from '../../im/wukong.js'
 import type { ImChannelProfile } from '../../im/types.js'
 import { inc } from '../../metrics.js'
@@ -49,6 +47,29 @@ import {
   findTeacherTurnCounts,
   pauseTeacherDigestForMissingTeacher,
 } from './teacher-runtime-repository.js'
+import {
+  calculateTeacherDigestRun,
+  pauseTeacherDigest,
+  upsertTeacherDigest,
+} from './teacher-digest-repository.js'
+import {
+  activateTeacherRoomRoutine,
+  closeTeacherRoomState,
+  findActiveTeacherRoom,
+  findProjectTeacherAgentId,
+  findTeacherAgentSummaryRow,
+  findTeacherProvisioningCourse,
+  findTeacherWelcomeDescriptor,
+  listCourseTeacherIds,
+  listTeacherRoomRoutines,
+  persistTeacherProvisioning,
+  reactivateTeacherRoomState,
+  updateTeacherRoomMembers,
+} from './teacher-provisioning-repository.js'
+import {
+  setTeacherCourseStatus,
+  updateTeacherCourseMetadata,
+} from './teacher-management-repository.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,
@@ -71,11 +92,7 @@ const WRITE_METHODS = new Set([
   'set_room_binding', 'configure_digest', ...APPROVAL_METHODS,
 ])
 
-function learningTransaction(db: Queryable) {
-  return <T>(work: (client: Queryable) => Promise<T>): Promise<T> => db === pool
-    ? withTransaction(pool, work)
-    : withClientTransaction(db as PoolClient, work)
-}
+export type TeacherTransaction = <T>(work: (client: Queryable) => Promise<T>) => Promise<T>
 
 function stableSegment(value: string): string {
   return createHash('sha256').update(value).digest('hex').slice(0, 18)
@@ -146,7 +163,7 @@ async function resolveTeacherTriggerAuthor(work: AgentWorkItem, db: Queryable): 
   return messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)?.fromUid
 }
 
-export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable = pool): Promise<TeacherScope> {
+export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable): Promise<TeacherScope> {
   const row = await findTeacherScopeBinding(db, work.companyId, work.agentId, work.channelId)
   if (!row) { inc('learning.teacher_agent.authorization_denied', { reason: 'scope' }); throw new Error('teacher Agent is not registered for this room') }
   if (row.room_status !== 'active' || row.course_status === 'archived') throw new Error('teacher room is closed')
@@ -169,7 +186,7 @@ export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable = p
   }
 }
 
-async function digestSchedule(scope: Pick<TeacherScope, 'companyId'|'agentId'|'roomId'>, db: Queryable = pool): Promise<TeacherDigestSchedule> {
+async function digestSchedule(scope: Pick<TeacherScope, 'companyId'|'agentId'|'roomId'>, db: Queryable): Promise<TeacherDigestSchedule> {
   const row=await findTeacherDigestSchedule(db,scope.companyId,scope.agentId,scope.roomId)
   if (!row) return { frequency:'off',timezone:'Asia/Shanghai',status:'paused' }
   const frequency=row.schedule?.frequency==='daily'||row.schedule?.frequency==='weekly'?row.schedule.frequency:'off'
@@ -179,7 +196,7 @@ async function digestSchedule(scope: Pick<TeacherScope, 'companyId'|'agentId'|'r
     ...(weekday?{weekday}:{}),status:row.status==='active'?'active':'paused',...(row.next_run_at?{nextRunAt:String(row.next_run_at)}:{}) }
 }
 
-export async function loadTeacherTurnContext(work: AgentWorkItem, db: Queryable = pool): Promise<TeacherTurnContext | undefined> {
+export async function loadTeacherTurnContext(work: AgentWorkItem, db: Queryable): Promise<TeacherTurnContext | undefined> {
   let scope:TeacherScope
   try { scope=await resolveTeacherScope(work,db) } catch { return undefined }
   const [counts,digest]=await Promise.all([
@@ -196,122 +213,60 @@ export async function loadTeacherTurnContext(work: AgentWorkItem, db: Queryable 
   }
 }
 
-export async function ensureTeacherAgentForCourse(courseId: string, db: Queryable = pool): Promise<{agentId:string;roomId:string;created:boolean}> {
-  const {rows:courseRows}=await db.query<{company_id:string;project_id:string;course_title:string;project_name:string}>(
-    `SELECT c.company_id,c.project_id,p.name AS course_title,p.name AS project_name
-       FROM courses c JOIN projects p ON p.id=c.project_id AND p.company_id=c.company_id
-      WHERE c.id=$1 AND p.status='active' LIMIT 1`,[courseId],
-  )
-  const course=courseRows[0]
-  if (!course) throw new Error('non-archived course not found')
-  const agentId=`pulse-${stableSegment(`${course.company_id}:${course.project_id}`)}`
-  const roomId=`teacher-${stableSegment(courseId)}`
-  const displayName=`Pulse · ${course.project_name}`.slice(0,80)
-  const {rows:existing}=await db.query<{agent_id:string}>(`SELECT agent_id FROM learning_project_teacher_agents WHERE project_id=$1`,[course.project_id])
-  const resolvedAgentId=existing[0]?.agent_id??agentId
-  await db.query(
-    `INSERT INTO participants(id,preset_key,kind,name,role,initial,avatar_bg,status,bio,tools,capabilities,system_prompt,company_id)
-     VALUES($1,$2,'agent',$3,$4,'P','transparent','avail','项目级教师专用智能体；负责课程管理与学情汇总',$5::jsonb,$6::jsonb,$7,$8)
-     ON CONFLICT(id,company_id) DO UPDATE SET name=EXCLUDED.name,role=EXCLUDED.role,tools=EXCLUDED.tools,
-       capabilities=EXCLUDED.capabilities,system_prompt=EXCLUDED.system_prompt,departed_at=NULL`,
-    [resolvedAgentId,`teacher-agent:${course.project_id}`,displayName,PULSE_ROLE,JSON.stringify(['ipython']),JSON.stringify(PULSE_CAPABILITIES),PULSE_PROMPT,course.company_id],
-  )
-  await db.query(
-    `INSERT INTO learning_project_teacher_agents(project_id,company_id,agent_id,preset_version)
-     VALUES($1,$2,$3,$4) ON CONFLICT(project_id) DO UPDATE SET preset_version=EXCLUDED.preset_version,updated_at=NOW()`,
-    [course.project_id,course.company_id,resolvedAgentId,PULSE_PRESET_VERSION],
-  )
-  const {rows:teachers}=await db.query<{user_id:string}>(
-    `SELECT user_id FROM course_members WHERE course_id=$1 AND role='teacher' ORDER BY user_id`,[courseId],
-  )
-  const members=[...teachers.map((row)=>row.user_id),resolvedAgentId]
-  const title=`教师室｜${course.course_title}`.slice(0,80)
-  const {rowCount}=await db.query(
-    `INSERT INTO conversations(id,preset_key,kind,title,subtitle,topic,members,leader_id,pinned,tag,company_id,project_id)
-     VALUES($1,$2,'group',$3,$4,'课程管理、学情汇总与教师审批',$5::jsonb,$6,TRUE,'teacher',$7,$8)
-     ON CONFLICT(id) DO NOTHING`,
-    [roomId,`teacher-room:${courseId}`,title,`教师 · ${teachers.length}`,JSON.stringify(members),resolvedAgentId,course.company_id,course.project_id],
-  )
-  await db.query(
-    `INSERT INTO conversation_counters(conversation_id,next_sequence) VALUES($1,1) ON CONFLICT(conversation_id) DO NOTHING`,[roomId],
-  )
-  await db.query(
-    `INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id,preset_key)
-     VALUES($1,$2,$3::jsonb,$4,$5)
-     ON CONFLICT(channel_id) DO UPDATE SET profile=EXCLUDED.profile,leader_agent_id=EXCLUDED.leader_agent_id,preset_key=EXCLUDED.preset_key`,
-    [roomId,course.company_id,JSON.stringify({channelId:roomId,channelType:2,kind:'group',title,members,topic:'课程管理、学情汇总与教师审批',pinned:true,createdAt:new Date().toISOString()}),resolvedAgentId,`teacher-room:${courseId}`],
-  )
-  await db.query(
-    `INSERT INTO learning_course_teacher_rooms(course_id,company_id,conversation_id,status) VALUES($1,$2,$3,'active')
-     ON CONFLICT(course_id) DO UPDATE SET status='active',closed_at=NULL`,[courseId,course.company_id,roomId],
-  )
-  await db.query(
-    `INSERT INTO agent_workspace(agent_id,path,body,company_id,updated_at)
-     VALUES($1,'IDENTITY.md',$2,$3,NOW()),($1,'SOUL.md',$4,$3,NOW()) ON CONFLICT(agent_id,path) DO NOTHING`,
-    [resolvedAgentId,`# ${displayName}\n\n**Role:** ${PULSE_ROLE}\n`,course.company_id,`# Pulse operating policy\n\n${PULSE_PROMPT}\n`],
-  )
-  if ((rowCount??0)>0) inc('learning.teacher_agent.provisioned')
-  return {agentId:resolvedAgentId,roomId,created:(rowCount??0)>0}
+export async function ensureTeacherAgentForCourse(companyId: string,courseId: string,db: Queryable,transaction:TeacherTransaction): Promise<{agentId:string;roomId:string;created:boolean}> {
+  const provision=async(persistence:Queryable)=>{
+    const course=await findTeacherProvisioningCourse(persistence,companyId,courseId)
+    if (!course) throw new Error('non-archived course not found')
+    const agentId=`pulse-${stableSegment(`${companyId}:${course.projectId}`)}`
+    const roomId=`teacher-${stableSegment(courseId)}`
+    const displayName=`Pulse · ${course.projectName}`.slice(0,80)
+    const resolvedAgentId=await findProjectTeacherAgentId(persistence,companyId,course.projectId)??agentId
+    const result=await persistTeacherProvisioning(persistence,{
+      ...course,courseId,agentId:resolvedAgentId,roomId,displayName,role:PULSE_ROLE,
+      capabilities:PULSE_CAPABILITIES,prompt:PULSE_PROMPT,presetVersion:PULSE_PRESET_VERSION,
+    })
+    if(result.created)inc('learning.teacher_agent.provisioned')
+    return {agentId:resolvedAgentId,roomId,created:result.created}
+  }
+  return transaction(provision)
 }
 
-export async function sendTeacherAgentWelcome(courseId:string):Promise<void>{
-  const {rows}=await pool.query<{conversation_id:string;agent_id:string;course_title:string}>(
-    `SELECT tr.conversation_id,pta.agent_id,project.name AS course_title FROM learning_course_teacher_rooms tr
-      JOIN courses c ON c.id=tr.course_id AND c.company_id=tr.company_id
-      JOIN projects project ON project.id=c.project_id AND project.company_id=c.company_id
-      JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id AND pta.company_id=c.company_id
-     WHERE tr.course_id=$1`,[courseId],
-  )
-  if(!rows[0])return
-  await wukongClient().sendMessage(rows[0].conversation_id,2,rows[0].agent_id,{
+export async function sendTeacherAgentWelcome(companyId:string,courseId:string,db:Queryable):Promise<void>{
+  const descriptor=await findTeacherWelcomeDescriptor(db,companyId,courseId)
+  if(!descriptor)return
+  await wukongClient().sendMessage(descriptor.conversationId,2,descriptor.agentId,{
     version:1,kind:'system',clientMsgNo:`teacher-welcome-${courseId}`,
-    body:`Pulse 已就绪：我可以汇总“${rows[0].course_title}”的学情、管理草稿与成员，并把关键变更提交给教师审批。`,
-    refs:{agentId:rows[0].agent_id},data:{suppressAgentWake:true},
+    body:`Pulse 已就绪：我可以汇总“${descriptor.courseTitle}”的学情、管理草稿与成员，并把关键变更提交给教师审批。`,
+    refs:{agentId:descriptor.agentId},data:{suppressAgentWake:true},
   })
 }
 
-export async function syncTeacherRoomMembers(courseId:string,db:Queryable=pool):Promise<void>{
-  const {rows}=await db.query<{conversation_id:string;status:string;agent_id:string}>(
-    `SELECT tr.conversation_id,tr.status,pta.agent_id FROM learning_course_teacher_rooms tr
-      JOIN courses c ON c.id=tr.course_id AND c.company_id=tr.company_id
-      JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id AND pta.company_id=c.company_id
-     WHERE tr.course_id=$1`,[courseId],
-  )
-  if(!rows[0]||rows[0].status!=='active')return
-  const {rows:teachers}=await db.query<{user_id:string}>(`SELECT user_id FROM course_members WHERE course_id=$1 AND role='teacher' ORDER BY user_id`,[courseId])
-  const members=[...teachers.map((row)=>row.user_id),rows[0].agent_id]
-  await db.query(`UPDATE conversations SET members=$2::jsonb,subtitle=$3,updated_at=NOW() WHERE id=$1`,[rows[0].conversation_id,JSON.stringify(members),`教师 · ${teachers.length}`])
-  const {rows:bindings}=await db.query<{profile:Record<string,unknown>}>(`UPDATE im_channel_bindings SET profile=profile||jsonb_build_object('members',$2::jsonb),updated_at=NOW() WHERE channel_id=$1 RETURNING profile`,[rows[0].conversation_id,JSON.stringify(members)])
-  if(bindings[0]?.profile){
-    await wukongClient().upsertChannel(bindings[0].profile as unknown as ImChannelProfile)
+export async function syncTeacherRoomMembers(companyId:string,courseId:string,db:Queryable,transaction:TeacherTransaction):Promise<void>{
+  const persist=async(persistence:Queryable)=>{
+    const room=await findActiveTeacherRoom(persistence,companyId,courseId)
+    if(!room)return undefined
+    const teachers=await listCourseTeacherIds(persistence,companyId,courseId)
+    const members=[...teachers,room.agentId]
+    return updateTeacherRoomMembers(persistence,{
+      companyId,conversationId:room.conversationId,members,teacherCount:teachers.length,
+    })
+  }
+  const profile=await transaction(persist)
+  if(profile){
+    await wukongClient().upsertChannel(profile as unknown as ImChannelProfile)
   }
 }
 
-export async function closeTeacherRoomForCourse(courseId:string,db:Queryable=pool):Promise<void>{
-  await db.query(`UPDATE learning_course_teacher_rooms SET status='closed',closed_at=NOW() WHERE course_id=$1 AND status='active'`,[courseId])
-  await db.query(`UPDATE agent_routines r SET status='paused',next_run_at=NULL,updated_at=NOW()
-    FROM learning_course_teacher_rooms tr WHERE tr.course_id=$1 AND r.channel_id=tr.conversation_id AND r.kind='teacher_project_digest'`,[courseId])
+export async function closeTeacherRoomForCourse(companyId:string,courseId:string,db:Queryable,transaction:TeacherTransaction):Promise<void>{
+  const close=(persistence:Queryable)=>closeTeacherRoomState(persistence,companyId,courseId)
+  await transaction(close)
 }
 
-export async function reactivateTeacherRoomForCourse(courseId:string,db:Queryable=pool):Promise<void>{
-  const {rows:rooms}=await db.query<{conversation_id:string}>(
-    `UPDATE learning_course_teacher_rooms room
-        SET status='active',closed_at=NULL
-       FROM courses course JOIN projects project
-         ON project.id=course.project_id AND project.company_id=course.company_id
-      WHERE room.course_id=$1 AND room.course_id=course.id AND room.company_id=course.company_id
-        AND project.status='active'
-      RETURNING room.conversation_id`,
-    [courseId],
-  )
-  if(!rooms[0])throw new Error('teacher room not found for active course')
-  await syncTeacherRoomMembers(courseId,db)
-  const {rows:routines}=await db.query<{id:string;schedule:Record<string,unknown>;timezone:string}>(
-    `SELECT routine.id,routine.schedule,routine.timezone
-       FROM agent_routines routine
-      WHERE routine.channel_id=$1 AND routine.kind='teacher_project_digest'`,
-    [rooms[0].conversation_id],
-  )
+export async function reactivateTeacherRoomForCourse(companyId:string,courseId:string,db:Queryable,transaction:TeacherTransaction):Promise<void>{
+  const roomId=await reactivateTeacherRoomState(db,companyId,courseId)
+  if(!roomId)throw new Error('teacher room not found for active course')
+  await syncTeacherRoomMembers(companyId,courseId,db,transaction)
+  const routines=await listTeacherRoomRoutines(db,companyId,roomId)
   for(const routine of routines){
     if(routine.schedule?.frequency!=='daily'&&routine.schedule?.frequency!=='weekly')continue
     const localTime=typeof routine.schedule.localTime==='string'?routine.schedule.localTime:'09:00'
@@ -323,23 +278,14 @@ export async function reactivateTeacherRoomForCourse(courseId:string,db:Queryabl
       localTime,
       ...(weekday?{weekday}:{}),
     },routine.timezone,new Date(),db)
-    await db.query(
-      `UPDATE agent_routines SET status='active',next_run_at=$2,updated_at=NOW() WHERE id=$1`,
-      [routine.id,nextRunAt],
-    )
+    await activateTeacherRoomRoutine(db,companyId,routine.id,nextRunAt)
   }
 }
 
-export async function getTeacherAgentSummary(courseId:string,teacherId:string,db:Queryable=pool):Promise<TeacherAgentSummary>{
-  await requireLearningCourseRole(db,{courseId,userId:teacherId,role:'teacher'})
-  const {rows}=await db.query<{agent_id:string;name:string;project_id:string;conversation_id:string;room_status:'active'|'closed';company_id:string;pending:number}>(
-    `SELECT pta.agent_id,p.name,c.project_id,tr.conversation_id,tr.status AS room_status,c.company_id,
-      (SELECT COUNT(*)::int FROM agent_os_approvals a WHERE a.channel_id=tr.conversation_id AND a.status='pending') AS pending
-     FROM courses c JOIN learning_project_teacher_agents pta ON pta.project_id=c.project_id AND pta.company_id=c.company_id
-     JOIN participants p ON p.id=pta.agent_id AND p.company_id=pta.company_id
-     JOIN learning_course_teacher_rooms tr ON tr.course_id=c.id WHERE c.id=$1`,[courseId],
-  )
-  const row=rows[0];if(!row)throw new Error('teacher Agent not provisioned')
+export async function getTeacherAgentSummary(companyId:string,courseId:string,teacherId:string,db:Queryable):Promise<TeacherAgentSummary>{
+  await requireLearningCourseRole(db,{companyId,courseId,userId:teacherId,role:'teacher'})
+  const row=await findTeacherAgentSummaryRow(db,companyId,courseId)
+  if(!row)throw new Error('teacher Agent not provisioned')
   return {agentId:row.agent_id,displayName:row.name,projectId:row.project_id,courseId,roomId:row.conversation_id,roomStatus:row.room_status,
     digest:await digestSchedule({companyId:row.company_id,agentId:row.agent_id,roomId:row.conversation_id},db),pendingApprovals:Number(row.pending)}
 }
@@ -402,21 +348,12 @@ export async function nextTeacherDigestRun(
   schedule:{frequency:'daily'|'weekly';localTime:string;weekday?:typeof WEEKDAYS[number]},
   timezone:string,
   from:Date,
-  db:Queryable=pool,
+  db:Queryable,
 ):Promise<string>{
   const weekdayIndex=schedule.weekday?WEEKDAYS.indexOf(schedule.weekday)+1:1
-  const {rows}=await db.query<{next_run_at:string}>(
-    `WITH x AS (SELECT $5::timestamptz AT TIME ZONE $1 AS local_now), candidate AS (
-       SELECT CASE WHEN $2='daily' THEN
-         ((CASE WHEN local_now::time < $3::time THEN local_now::date ELSE local_now::date+1 END)+$3::time)
-       ELSE
-         ((local_now::date + (($4::int-EXTRACT(ISODOW FROM local_now)::int+7)%7))+$3::time)
-       END AS local_candidate,local_now FROM x
-     ) SELECT ((CASE WHEN $2='weekly' AND local_candidate<=local_now THEN local_candidate+INTERVAL '7 days' ELSE local_candidate END) AT TIME ZONE $1)::text AS next_run_at FROM candidate`,
-    [timezone,schedule.frequency,schedule.localTime,weekdayIndex,from],
-  )
-  if(!rows[0])throw new Error('could not calculate next digest time')
-  return String(rows[0].next_run_at)
+  return calculateTeacherDigestRun(db,{
+    timezone,frequency:schedule.frequency,localTime:schedule.localTime,weekdayIndex,from,
+  })
 }
 
 async function configureDigest(scope:TeacherScope,args:Record<string,unknown>,db:Queryable):Promise<TeacherDigestSchedule>{
@@ -424,7 +361,7 @@ async function configureDigest(scope:TeacherScope,args:Record<string,unknown>,db
   const frequency=textArg(args,'frequency')
   const id=`teacher-digest-${stableSegment(scope.courseId)}`
   if(frequency==='off'){
-    await db.query(`UPDATE agent_routines SET status='paused',next_run_at=NULL,updated_at=NOW() WHERE id=$1 AND company_id=$2`,[id,scope.companyId])
+    await pauseTeacherDigest(db,scope.companyId,id)
     inc('learning.teacher_agent.digest_configured',{frequency:'off'})
     return {frequency:'off',timezone:optionalText(args,'timezone')??'Asia/Shanghai',status:'paused'}
   }
@@ -438,17 +375,17 @@ async function configureDigest(scope:TeacherScope,args:Record<string,unknown>,db
   if(frequency==='weekly'&&!weekday)throw new Error('weekly digest requires weekday')
   const schedule:{frequency:'daily'|'weekly';localTime:string;weekday?:typeof WEEKDAYS[number]}={frequency,localTime,...(weekday?{weekday}:{})}
   const nextRunAt=await nextTeacherDigestRun(schedule,timezone,new Date(),db)
-  await db.query(`INSERT INTO agent_routines(id,company_id,agent_id,channel_id,kind,title,instructions,schedule,timezone,status,next_run_at,created_by,approved_by)
-    VALUES($1,$2,$3,$4,'teacher_project_digest','项目学情摘要','Generate a bounded aggregate teacher digest with loop.teacher.overview. Do not read raw attempts or perform writes.',$5::jsonb,$6,'active',$7,$8,$8)
-    ON CONFLICT(id) DO UPDATE SET schedule=EXCLUDED.schedule,timezone=EXCLUDED.timezone,status='active',next_run_at=EXCLUDED.next_run_at,updated_at=NOW(),created_by=EXCLUDED.created_by`,
-    [id,scope.companyId,scope.agentId,scope.roomId,JSON.stringify(schedule),timezone,nextRunAt,scope.teacherId])
+  await upsertTeacherDigest(db,{
+    id,companyId:scope.companyId,agentId:scope.agentId,roomId:scope.roomId,
+    schedule,timezone,nextRunAt,teacherId:scope.teacherId,
+  })
   inc('learning.teacher_agent.digest_configured',{frequency})
   return {frequency,timezone,localTime,...(weekday?{weekday}:{}),status:'active',nextRunAt}
 }
 
 export interface TeacherApprovalMetadata {requestedBy:string;summary:string;scope:Record<string,unknown>;preview:Record<string,unknown>}
 
-export async function describeTeacherAction(work:AgentWorkItem,action:HostAction,db:Queryable=pool):Promise<TeacherApprovalMetadata|undefined>{
+export async function describeTeacherAction(work:AgentWorkItem,action:HostAction,db:Queryable):Promise<TeacherApprovalMetadata|undefined>{
   if(!action.action.startsWith('teacher.'))return undefined
   const scope=await resolveTeacherScope(work,db)
   const method=action.action.slice('teacher.'.length)
@@ -496,7 +433,7 @@ export async function describeTeacherAction(work:AgentWorkItem,action:HostAction
     preview:{method,entityId,entityLabel,currentState,currentVersion,args}}
 }
 
-export async function assertTeacherApprovalFresh(input:{channelId:string;companyId:string;action:string;preview:Record<string,unknown>},db:Queryable=pool):Promise<void>{
+export async function assertTeacherApprovalFresh(input:{channelId:string;companyId:string;action:string;preview:Record<string,unknown>},db:Queryable):Promise<void>{
   if(!input.action.startsWith('teacher.'))return
   const entityId=String(input.preview.entityId??'');const expected=String(input.preview.currentVersion??'')
   const method=input.action.slice('teacher.'.length);let current=''
@@ -510,7 +447,7 @@ export async function assertTeacherApprovalFresh(input:{channelId:string;company
 
 export function teacherActionRequiresApproval(action:string):boolean{return action.startsWith('teacher.')&&APPROVAL_METHODS.has(action.slice('teacher.'.length))}
 
-export async function executeTeacherAction(work:AgentWorkItem,method:string,args:Record<string,unknown>,db:Queryable=pool):Promise<unknown>{
+export async function executeTeacherAction(work:AgentWorkItem,method:string,args:Record<string,unknown>,db:Queryable,transaction:TeacherTransaction):Promise<unknown>{
   const scope=await resolveTeacherScope(work,db)
   if(scope.mode==='routine'&&WRITE_METHODS.has(method))throw new Error('scheduled teacher summaries are read-only')
   if(method==='current')return loadTeacherTurnContext(work,db)
@@ -530,7 +467,7 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
       const prerequisites=item.prerequisiteIds??item.prerequisite_ids
       return {title:textArg(item,'title'),successCriteria:textArg(item,'successCriteria','success_criteria'),targetLevel:Number(item.targetLevel??item.target_level??3),prerequisiteIds:Array.isArray(prerequisites)?prerequisites.map(String):[]}
     }):[]
-    return createLearningObjectives(db, learningTransaction(db), {
+    return createLearningObjectives(db, transaction, {
       companyId: scope.companyId,
       courseId: scope.courseId,
       actorId: scope.teacherId,
@@ -540,33 +477,32 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   }
   if(method==='draft_activity'){
     const objectiveIds=args.objectiveIds??args.objective_ids
-    return createLearningActivity(db,learningTransaction(db),{companyId:scope.companyId,courseId:scope.courseId,actorId:scope.teacherId,actorKind:'teacher',title:textArg(args,'title'),instructions:textArg(args,'instructions'),type:textArg(args,'type') as LearningActivityType,evaluationMode:(optionalText(args,'evaluationMode','evaluation_mode')??'teacher_required') as LearningEvaluationMode,targetLevel:Number(args.targetLevel??args.target_level??2),rubric:Array.isArray(args.rubric)?args.rubric:[],objectiveIds:Array.isArray(objectiveIds)?objectiveIds.map(String):[],...(optionalText(args,'dueAt','due_at')?{dueAt:optionalText(args,'dueAt','due_at')}:{})})
+    return createLearningActivity(db,transaction,{companyId:scope.companyId,courseId:scope.courseId,actorId:scope.teacherId,actorKind:'teacher',title:textArg(args,'title'),instructions:textArg(args,'instructions'),type:textArg(args,'type') as LearningActivityType,evaluationMode:(optionalText(args,'evaluationMode','evaluation_mode')??'teacher_required') as LearningEvaluationMode,targetLevel:Number(args.targetLevel??args.target_level??2),rubric:Array.isArray(args.rubric)?args.rubric:[],objectiveIds:Array.isArray(objectiveIds)?objectiveIds.map(String):[],...(optionalText(args,'dueAt','due_at')?{dueAt:optionalText(args,'dueAt','due_at')}:{})})
   }
   if(method==='update_course'){
     const title=optionalText(args,'title');const description=optionalText(args,'description')
     if(!title&&!description)throw new Error('title or description is required')
-    const {rows}=await db.query(`UPDATE projects project SET name=COALESCE($2,project.name),description=COALESCE($3,project.description),updated_at=NOW() FROM courses course WHERE course.id=$1 AND course.project_id=project.id AND course.company_id=project.company_id RETURNING project.*`,[scope.courseId,title??null,description??null])
-    if(title){
-      await db.query(`UPDATE participants participant SET name=$2,updated_at=NOW() FROM courses course JOIN learning_project_teacher_agents pulse ON pulse.project_id=course.project_id AND pulse.company_id=course.company_id WHERE course.id=$1 AND participant.id=pulse.agent_id AND participant.company_id=pulse.company_id`,[scope.courseId,`Pulse · ${title}`.slice(0,80)])
-    }
-    return rows[0]
+    return updateTeacherCourseMetadata(db,{
+      companyId:scope.companyId,courseId:scope.courseId,...(title?{title}:{}),...(description?{description}:{}),
+    })
   }
-  if(method==='set_learner_membership'){await setLearningCourseMembership(db,learningTransaction(db),{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,userId:textArg(args,'userId','user_id'),role:'learner',enabled:boolArg(args)});return {ok:true}}
+  if(method==='set_learner_membership'){await setLearningCourseMembership(db,transaction,{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,userId:textArg(args,'userId','user_id'),role:'learner',enabled:boolArg(args)});return {ok:true}}
   if(method==='set_room_binding'){const conversationId=textArg(args,'conversationId','conversation_id');const purpose=optionalText(args,'purpose');const enabled=args.enabled!==false&&Boolean(purpose);await bindLearningCourseRoom(db,{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,conversationId,enabled,...(enabled?{purpose:purpose as 'lab'|'discussion'}:{})});return {ok:true,enabled}}
   if(method==='configure_digest')return configureDigest(scope,args,db)
   if(method==='publish_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'published'});return {ok:true}}
   if(method==='archive_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'archived'});return {ok:true}}
-  if(method==='publish_activity'){await publishLearningActivity(learningTransaction(db),{companyId:scope.companyId,courseId:scope.courseId,activityId:textArg(args,'activityId','activity_id'),teacherId:scope.teacherId});return {ok:true}}
+  if(method==='publish_activity'){await publishLearningActivity(transaction,{companyId:scope.companyId,courseId:scope.courseId,activityId:textArg(args,'activityId','activity_id'),teacherId:scope.teacherId});return {ok:true}}
   if(method==='close_activity'){await closeLearningActivity(db,{companyId:scope.companyId,courseId:scope.courseId,activityId:textArg(args,'activityId','activity_id'),teacherId:scope.teacherId});return {ok:true}}
   if(method==='set_course_status'){
     const status=textArg(args,'status')
     if(!['active','archived'].includes(status))throw new Error('status must be active or archived')
-    const {rows}=await db.query(`UPDATE projects project SET status=$2,updated_at=NOW(),archived_at=CASE WHEN $2='archived' THEN NOW() ELSE NULL END FROM courses course WHERE course.id=$1 AND course.project_id=project.id AND course.company_id=project.company_id RETURNING project.*`,[scope.courseId,status])
-    if(status==='archived')await closeTeacherRoomForCourse(scope.courseId,db)
-    else await reactivateTeacherRoomForCourse(scope.courseId,db)
-    return rows[0]
+    const courseStatus=status as 'active'|'archived'
+    const updated=await setTeacherCourseStatus(db,scope.companyId,scope.courseId,courseStatus)
+    if(courseStatus==='archived')await closeTeacherRoomForCourse(scope.companyId,scope.courseId,db,transaction)
+    else await reactivateTeacherRoomForCourse(scope.companyId,scope.courseId,db,transaction)
+    return updated
   }
-  if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);await setLearningCourseMembership(db,learningTransaction(db),{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,userId,role:'teacher',enabled});await syncTeacherRoomMembers(scope.courseId,db);return {ok:true}}
-  if(method==='review_evaluation'||method==='override_mastery'){await reviewLearningEvaluation(db,learningTransaction(db),inc,{companyId:scope.companyId,courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:method==='override_mastery'?'accept':optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason'),...(args.overrideLevel!==undefined||args.override_level!==undefined?{overrideLevel:Number(args.overrideLevel??args.override_level)}:{})});return {ok:true}}
+  if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);await setLearningCourseMembership(db,transaction,{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,userId,role:'teacher',enabled});await syncTeacherRoomMembers(scope.companyId,scope.courseId,db,transaction);return {ok:true}}
+  if(method==='review_evaluation'||method==='override_mastery'){await reviewLearningEvaluation(db,transaction,inc,{companyId:scope.companyId,courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:method==='override_mastery'?'accept':optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason'),...(args.overrideLevel!==undefined||args.override_level!==undefined?{overrideLevel:Number(args.overrideLevel??args.override_level)}:{})});return {ok:true}}
   throw new Error(`unsupported teacher action: ${method}`)
 }
