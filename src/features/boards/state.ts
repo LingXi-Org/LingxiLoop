@@ -22,6 +22,8 @@ interface BoardsState {
   /** Per-card comment cache. Populated on demand when a card detail
    *  panel opens; WS comment events invalidate the relevant entry. */
   comments: Record<string, BoardCardComment[]>
+  loadingCommentCardIds: Set<string>
+  commentErrors: Record<string, string>
   /** Card-id resolver cache for artifact links that only mention `card-*`. */
   cardLookups: Record<string, BoardCardLookup>
   loadingCardId: string | null
@@ -62,6 +64,9 @@ interface BoardsState {
   applyEvent: (kind: string, boardId: string, cardId?: string) => void
 }
 
+const pendingCommentReloadIds = new Set<string>()
+let commentCacheGeneration = 0
+
 function lookupCardInSnapshot(snap: BoardSnapshot, cardId: string): BoardCardLookup | null {
   const card = snap.cards.find((c) => c.id === cardId)
   if (!card) return null
@@ -88,6 +93,8 @@ export const useBoards = create<BoardsState>((set, get) => ({
   snapshots: {},
   loadingBoardId: null,
   comments: {},
+  loadingCommentCardIds: new Set(),
+  commentErrors: {},
   cardLookups: {},
   loadingCardId: null,
 
@@ -101,16 +108,22 @@ export const useBoards = create<BoardsState>((set, get) => ({
     }
   },
 
-  reset: () => set({
-    list: [],
-    loadingList: false,
-    selectedId: null,
-    snapshots: {},
-    loadingBoardId: null,
-    comments: {},
-    cardLookups: {},
-    loadingCardId: null,
-  }),
+  reset: () => {
+    commentCacheGeneration += 1
+    pendingCommentReloadIds.clear()
+    set({
+      list: [],
+      loadingList: false,
+      selectedId: null,
+      snapshots: {},
+      loadingBoardId: null,
+      comments: {},
+      loadingCommentCardIds: new Set(),
+      commentErrors: {},
+      cardLookups: {},
+      loadingCardId: null,
+    })
+  },
 
   selectBoard: (id) => {
     set({ selectedId: id })
@@ -280,6 +293,7 @@ export const useBoards = create<BoardsState>((set, get) => ({
     } catch (e) {
       console.warn('[boards] move failed, refetching', e)
       await get().refreshBoard(boardId)
+      throw e
     }
   },
 
@@ -300,8 +314,38 @@ export const useBoards = create<BoardsState>((set, get) => ({
   },
 
   loadComments: async (boardId, cardId) => {
-    const rows = await boardsApi.listCardComments(boardId, cardId)
-    set((s) => ({ comments: { ...s.comments, [cardId]: rows } }))
+    if (get().loadingCommentCardIds.has(cardId)) return
+    const generation = commentCacheGeneration
+    set((state) => {
+      const { [cardId]: _drop, ...commentErrors } = state.commentErrors
+      return {
+        loadingCommentCardIds: new Set(state.loadingCommentCardIds).add(cardId),
+        commentErrors,
+      }
+    })
+    try {
+      const rows = await boardsApi.listCardComments(boardId, cardId)
+      if (generation !== commentCacheGeneration) return
+      set((state) => ({ comments: { ...state.comments, [cardId]: rows } }))
+    } catch (error) {
+      if (generation !== commentCacheGeneration) return
+      console.warn('[boards] load comments failed', error)
+      set((state) => ({
+        commentErrors: {
+          ...state.commentErrors,
+          [cardId]: error instanceof Error ? error.message : '评论加载失败',
+        },
+      }))
+    } finally {
+      if (generation === commentCacheGeneration) {
+        set((state) => ({
+          loadingCommentCardIds: new Set(
+            [...state.loadingCommentCardIds].filter((id) => id !== cardId),
+          ),
+        }))
+        if (pendingCommentReloadIds.delete(cardId)) void get().loadComments(boardId, cardId)
+      }
+    }
   },
 
   addComment: async (boardId, cardId, body) => {
@@ -332,6 +376,10 @@ export const useBoards = create<BoardsState>((set, get) => ({
         const { [cardId]: _gone, ...cardLookups } = s.cardLookups
         return { cardLookups }
       })
+    }
+    if (cardId && kind.startsWith('comment.') && get().comments[cardId] !== undefined) {
+      if (get().loadingCommentCardIds.has(cardId)) pendingCommentReloadIds.add(cardId)
+      else void get().loadComments(boardId, cardId)
     }
     if (kind.startsWith('board.') && (kind === 'board.created' || kind === 'board.deleted' || kind === 'board.updated')) {
       void get().loadList()

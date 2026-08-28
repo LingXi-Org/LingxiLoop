@@ -29,6 +29,7 @@ test('global resource surfaces render Skeletons instead of plain initial loading
   const surfaces = [
     '../features/documents/components/DocumentsView.tsx',
     '../features/boards/components/BoardsView.tsx',
+    '../features/boards/components/BoardCardDialog.tsx',
     '../features/calendar/components/CalendarView.tsx',
     '../features/calendar/components/CalendarEventPeekContent.tsx',
     '../components/WorkspaceChrome.tsx',

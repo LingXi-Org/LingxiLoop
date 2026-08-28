@@ -195,7 +195,8 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
 
   for (const file of [
     'api.ts', 'contracts.ts', 'state.ts',
-    'components/BoardsView.tsx', 'components/BoardPeekPane.tsx', 'components/BoardPeekContent.tsx',
+    'components/BoardsView.tsx', 'components/BoardCardDialog.tsx',
+    'components/BoardPeekPane.tsx', 'components/BoardPeekContent.tsx',
   ]) {
     await access(new URL(`../features/boards/${file}`, import.meta.url))
   }
@@ -204,6 +205,18 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   await assert.rejects(access(new URL('../components/ArtifactPeekContent.tsx', import.meta.url)))
   const boardState = await readFile(new URL('../features/boards/state.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(boardState, /api\/boards|stores\/boards/)
+  assert.match(boardState, /loadingCommentCardIds: Set<string>/)
+  assert.match(boardState, /commentErrors: Record<string, string>/)
+  assert.match(boardState, /kind\.startsWith\('comment\.'\)/)
+  const boardsView = await readFile(new URL('../features/boards/components/BoardsView.tsx', import.meta.url), 'utf8')
+  const boardCardDialog = await readFile(new URL('../features/boards/components/BoardCardDialog.tsx', import.meta.url), 'utf8')
+  assert.ok(boardsView.length < 24_000, 'BoardsView must remain a board orchestration shell')
+  assert.ok(boardCardDialog.length < 20_000, 'card editing must remain a bounded business composition')
+  assert.match(boardsView, /<BoardCardDialog/)
+  for (const primitive of ['Dialog', 'Popover', 'Command', 'Button', 'ScrollArea']) {
+    assert.match(boardCardDialog, new RegExp(`<${primitive}\\b`), `card editing must compose ${primitive}`)
+  }
+  assert.doesNotMatch(boardCardDialog, /fixed inset-0|role="listbox"|<button\b|\b(?:ink|cloud|skype|coral)-/)
 
   for (const file of ['api.ts', 'contracts.ts', 'courseContract.ts', 'components/LearningCenter.tsx']) {
     await access(new URL(`../features/learning/${file}`, import.meta.url))

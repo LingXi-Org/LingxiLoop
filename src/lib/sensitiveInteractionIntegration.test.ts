@@ -54,6 +54,7 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
     '../features/boards/components/BoardsView.tsx',
+    '../features/boards/components/BoardCardDialog.tsx',
     '../features/calendar/components/CalendarView.tsx',
     '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
@@ -80,6 +81,15 @@ test('calendar editing uses the controlled Base UI Dialog without a handwritten 
   assert.match(editor, /<Dialog open onOpenChange=/)
   assert.match(editor, /<DialogContent[\s\S]*?<DialogTitle[\s\S]*?<DialogDescription/)
   assert.doesNotMatch(editor, /fixed inset-0|addEventListener\(['"]keydown/)
+})
+
+test('board card editing composes the official Dialog and keeps deletion behind Alert Dialog', () => {
+  const editor = read('../features/boards/components/BoardCardDialog.tsx')
+  assert.match(editor, /<Dialog open onOpenChange=/)
+  assert.match(editor, /<DialogContent[\s\S]*?<DialogTitle[\s\S]*?<DialogDescription/)
+  assert.match(editor, /confirmSensitiveAction\(/)
+  assert.match(editor, /toastAction\(deleteCard/)
+  assert.doesNotMatch(editor, /fixed inset-0|addEventListener\(['"]keydown|<button\b/)
 })
 
 test('repository skill requires Alert Dialog and Toast for future sensitive work', () => {

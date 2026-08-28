@@ -1,20 +1,19 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AvatarMini } from '@/components/Avatar'
 import { IAt, IBoard, IMore, IPlus, ITrash } from '@/components/icons'
 import { ResizeHandle } from '@/components/ResizeHandle'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
-import { useMe } from '@/stores/auth'
 import { useBoards } from '../state'
 import { useParticipants } from '@/features/agents/state'
-import type { Participant } from '@/types'
-import type { BoardCard, BoardCardComment, BoardColumn } from '../contracts'
-import { hasLinkedReference, MentionedText, MentionInput } from './BoardMentions'
+import type { BoardCard, BoardColumn } from '../contracts'
+import { MentionedText, MentionInput } from './BoardMentions'
+import { BoardCardDialog } from './BoardCardDialog'
 
 /**
  * Boards view — Kanban for both humans and agents.
@@ -77,25 +76,28 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
     setCreating(false)
     setDraft('')
     try {
-      await createBoard(title)
+      await toastAction(createBoard(title), {
+        loading: '正在创建看板', success: '看板已创建', error: '创建看板失败',
+      })
     } catch (e) {
       console.warn('[boards] create failed', e)
     }
   }
 
   return (
-    <aside className="h-full overflow-y-auto border-r border-ink-100 bg-cloud/40 relative">
+    <aside className="relative h-full overflow-y-auto border-e border-border bg-muted/30">
       <ResizeHandle onMouseDown={onResizeStart} />
       <div className="px-4 py-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-ink-900">看板</h2>
-        <button
+        <h2 className="text-lg font-semibold text-foreground">看板</h2>
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setCreating(true)}
-          className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-50 hover:text-skype-deep"
           title="新板"
           aria-label="新板"
         >
-          <IPlus className="w-4 h-4" />
-        </button>
+          <IPlus className="size-4" />
+        </Button>
       </div>
       {creating && (
         <div className="px-4 pb-2">
@@ -109,7 +111,7 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
             }}
             onBlur={() => void submit()}
             placeholder="董事会标题..."
-            className="w-full px-2.5 py-1.5 text-sm rounded-md border border-ink-200 bg-white focus:outline-none focus:border-skype"
+            className="w-full"
           />
         </div>
       )}
@@ -119,21 +121,22 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
           const active = b.id === selectedId
           return (
             <li key={b.id}>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => selectBoard(b.id)}
                 className={cn(
-                  'w-full text-left px-4 py-2.5 flex items-center gap-2.5 transition-colors',
-                  active ? 'bg-skype/10 text-skype-deep' : 'text-ink-700 hover:bg-ink-50',
+                  'h-auto w-full justify-start rounded-none px-4 py-2.5',
+                  active ? 'bg-muted text-foreground' : 'text-muted-foreground',
                 )}
               >
-                <IBoard className="w-4 h-4 flex-shrink-0" />
+                <IBoard className="size-4 shrink-0" />
                 <span className="text-sm truncate">{b.title}</span>
-              </button>
+              </Button>
             </li>
           )
         })}
         {!loadingList && list.length === 0 && !creating && (
-          <li className="px-4 py-3 text-xs text-ink-400">
+          <li className="px-4 py-3 text-xs text-muted-foreground">
             还没有板。单击 + 开始一个。
           </li>
         )}
@@ -144,9 +147,9 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
 
 function EmptyBoardsState({ empty }: { empty: boolean }) {
   return (
-    <div className="h-full grid place-items-center text-ink-400">
+    <div className="grid h-full place-items-center text-muted-foreground">
       <div className="text-center">
-        <IBoard className="w-12 h-12 mx-auto mb-3 opacity-50" />
+        <IBoard className="mx-auto mb-3 size-12 opacity-50" />
         <p className="text-sm">
           {empty ? "创建您的第一个看板以开始使用。" : "选择一个板将其打开。"}
         </p>
@@ -191,7 +194,7 @@ function BoardCanvas({ boardId }: { boardId: string }) {
   if (!snap) {
     return loadingBoardId === boardId
       ? <ResourceSkeleton variant="cards" count={3} className="h-full p-6" label="正在加载看板内容" />
-      : <div className="h-full grid place-items-center text-ink-400 text-sm">无数据。</div>
+      : <div className="grid h-full place-items-center text-sm text-muted-foreground">无数据。</div>
   }
 
   const openCard = openCardId ? snap.cards.find((c) => c.id === openCardId) ?? null : null
@@ -201,19 +204,27 @@ function BoardCanvas({ boardId }: { boardId: string }) {
     setAddingCol(false)
     setColDraft('')
     if (!t) return
-    try { await addColumn(boardId, t) } catch (e) { console.warn('[boards] add column failed', e) }
+    try {
+      await toastAction(addColumn(boardId, t), {
+        loading: '正在添加看板列', success: '看板列已添加', error: '添加看板列失败',
+      })
+    } catch (e) { console.warn('[boards] add column failed', e) }
   }
 
   async function submitTitle() {
     const t = titleDraft.trim()
     setEditingTitle(false)
     if (!t || t === snap.title) return
-    try { await renameBoard(boardId, t) } catch (e) { console.warn('[boards] rename failed', e) }
+    try {
+      await toastAction(renameBoard(boardId, t), {
+        loading: '正在重命名看板', success: '看板已重命名', error: '重命名看板失败',
+      })
+    } catch (e) { console.warn('[boards] rename failed', e) }
   }
 
   return (
     <div className="h-full flex flex-col min-h-0">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-ink-100">
+      <header className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="min-w-0 flex-1">
           {editingTitle ? (
             <Input
@@ -225,23 +236,26 @@ function BoardCanvas({ boardId }: { boardId: string }) {
                 if (e.key === 'Escape') setEditingTitle(false)
               }}
               onBlur={() => void submitTitle()}
-              className="text-2xl font-semibold text-ink-900 bg-transparent border-b border-skype outline-none"
+              className="border-ring bg-transparent text-2xl font-semibold text-foreground"
             />
           ) : (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => { setTitleDraft(snap.title); setEditingTitle(true) }}
-              className="text-2xl font-semibold text-ink-900 hover:text-skype-deep text-left truncate"
+              className="h-auto max-w-full justify-start px-0 text-start text-2xl font-semibold text-foreground"
             >
-              {snap.title}
-            </button>
+              <span className="truncate">{snap.title}</span>
+            </Button>
           )}
           {snap.description && (
-            <p className="text-sm text-ink-500 mt-1 truncate">
+            <p className="mt-1 truncate text-sm text-muted-foreground">
               <MentionedText text={snap.description} byId={byId} />
             </p>
           )}
         </div>
-        <button
+        <Button
+          variant="destructive"
+          size="icon-sm"
           onClick={async () => {
             if (!await confirmSensitiveAction({
               title: '删除看板？',
@@ -253,12 +267,11 @@ function BoardCanvas({ boardId }: { boardId: string }) {
               await toastAction(deleteBoard(boardId), { loading: '正在删除看板', success: '看板已删除', error: '删除看板失败' })
             } catch (e) { console.warn('[boards] delete failed', e) }
           }}
-          className="w-8 h-8 rounded-md grid place-items-center text-ink-400 hover:bg-coral-50 hover:text-coral-deep"
           title="删除板"
           aria-label="删除板"
         >
-          <ITrash className="w-4 h-4" />
-        </button>
+          <ITrash className="size-4" />
+        </Button>
       </header>
 
       <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0">
@@ -273,7 +286,7 @@ function BoardCanvas({ boardId }: { boardId: string }) {
             />
           ))}
           {addingCol ? (
-            <div className="w-72 flex-shrink-0 p-3 rounded-lg bg-cloud/60">
+            <div className="w-72 shrink-0 rounded-3xl bg-muted/50 p-3">
               <Input
                 autoFocus
                 value={colDraft}
@@ -284,22 +297,23 @@ function BoardCanvas({ boardId }: { boardId: string }) {
                 }}
                 onBlur={() => void submitNewColumn()}
                 placeholder="列标题..."
-                className="w-full px-2.5 py-1.5 text-sm rounded-md border border-ink-200 bg-white focus:outline-none focus:border-skype"
+                className="w-full"
               />
             </div>
           ) : (
-            <button
+            <Button
+              variant="outline"
               onClick={() => setAddingCol(true)}
-              className="w-72 flex-shrink-0 px-3 py-2.5 rounded-lg text-sm text-ink-500 border border-dashed border-ink-200 hover:bg-cloud/40 hover:text-ink-700 transition-colors text-left"
+              className="h-auto w-72 shrink-0 justify-start border-dashed px-3 py-2.5 text-muted-foreground"
             >
               + 添加列
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {openCard && (
-        <CardDetailModal
+        <BoardCardDialog
           boardId={boardId}
           card={openCard}
           columns={snap.columns}
@@ -332,7 +346,9 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
     setDraft('')
     if (!title) return
     try {
-      await addCard(boardId, { columnId: column.id, title })
+      await toastAction(addCard(boardId, { columnId: column.id, title }), {
+        loading: '正在添加卡片', success: '卡片已添加', error: '添加卡片失败',
+      })
     } catch (e) { console.warn('[boards] add card failed', e) }
   }
 
@@ -340,14 +356,18 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
     const t = titleDraft.trim()
     setEditingTitle(false)
     if (!t || t === column.title) return
-    try { await renameColumn(boardId, column.id, t) } catch (e) { console.warn('[boards] rename col failed', e) }
+    try {
+      await toastAction(renameColumn(boardId, column.id, t), {
+        loading: '正在重命名看板列', success: '看板列已重命名', error: '重命名看板列失败',
+      })
+    } catch (e) { console.warn('[boards] rename col failed', e) }
   }
 
   return (
     <div
       className={cn(
-        'w-72 flex-shrink-0 h-full flex flex-col rounded-lg bg-cloud/60 transition-colors',
-        dragOver && 'ring-2 ring-skype/40 bg-skype/5',
+        'flex h-full w-72 shrink-0 flex-col rounded-3xl bg-muted/50 transition-colors',
+        dragOver && 'bg-accent ring-2 ring-ring/40',
       )}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
       onDragLeave={() => setDragOver(false)}
@@ -359,7 +379,9 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
         // Drop at the end of this column. Per-card drop targets would be
         // nicer for fine-grained ordering, but end-of-column covers the
         // common "move to Done" gesture.
-        void moveCardOptimistic(boardId, cardId, column.id, cards.length)
+        void toastAction(moveCardOptimistic(boardId, cardId, column.id, cards.length), {
+          loading: '正在移动卡片', success: '卡片已移动', error: '移动卡片失败',
+        }).catch((error) => console.warn('[boards] move card failed', error))
       }}
     >
       <div className="px-3 pt-3 pb-2 flex items-center justify-between gap-2">
@@ -373,18 +395,22 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
               if (e.key === 'Escape') setEditingTitle(false)
             }}
             onBlur={() => void submitTitle()}
-            className="flex-1 px-1.5 py-0.5 text-sm font-medium rounded-md border border-skype/50 bg-white focus:outline-none"
+            className="h-8 flex-1 text-sm font-medium"
           />
         ) : (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => { setTitleDraft(column.title); setEditingTitle(true) }}
-            className="text-sm font-medium text-ink-700 hover:text-skype-deep flex-1 text-left truncate"
+            className="min-w-0 flex-1 justify-start px-1.5 text-foreground"
           >
-            {column.title}
-          </button>
+            <span className="truncate">{column.title}</span>
+          </Button>
         )}
-        <span className="text-xs text-ink-400">{cards.length}</span>
-        <button
+        <span className="text-xs text-muted-foreground">{cards.length}</span>
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={async () => {
             if (!await confirmSensitiveAction({
               title: '删除看板列？',
@@ -398,12 +424,11 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
               await toastAction(deleteColumn(boardId, column.id), { loading: '正在删除看板列', success: '看板列已删除', error: '删除看板列失败' })
             } catch (e) { console.warn('[boards] delete col failed', e) }
           }}
-          className="w-5 h-5 rounded grid place-items-center text-ink-300 hover:text-coral-deep"
           title="删除列"
           aria-label="删除列"
         >
-          <IMore className="w-3.5 h-3.5" />
-        </button>
+          <IMore className="size-3.5" />
+        </Button>
       </div>
       <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-2">
         {cards.map((c) => (
@@ -421,15 +446,17 @@ function ColumnView({ boardId, column, cards, onOpenCard }: {
             multiline
             submitOnEnter
             rows={2}
-            className="w-full px-2.5 py-2 text-sm rounded-md border border-ink-200 bg-white focus:outline-none focus:border-skype resize-none"
+            className="w-full resize-none"
           />
         ) : (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setAdding(true)}
-            className="w-full text-left text-xs text-ink-400 px-2.5 py-1.5 rounded-md hover:bg-white hover:text-ink-600 transition-colors"
+            className="w-full justify-start text-xs text-muted-foreground"
           >
             + 添加卡
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -452,462 +479,30 @@ function CardTile({ card, onOpen }: { card: BoardCard; onOpen: () => void }) {
       }}
       onClick={onOpen}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } }}
-      className="px-3 py-2.5 rounded-md bg-white border border-ink-100 shadow-soft text-left cursor-pointer hover:border-skype/40 transition-colors"
+      className="cursor-pointer rounded-3xl border border-border bg-card px-3 py-2.5 text-start shadow-sm transition-colors hover:border-ring/40"
     >
-      <div className="text-sm text-ink-800 leading-snug">
+      <div className="text-sm leading-snug text-card-foreground">
         <MentionedText text={card.title} byId={byId} />
       </div>
       {(card.assigneeId || card.mentions.length > 0 || card.commentCount > 0) && (
         <div className="mt-2 flex items-center gap-2">
           {assignee && (
-            <span className="flex items-center gap-1 text-[11px] text-ink-500">
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <AvatarMini p={assignee} size={18} />
               <span>{assignee.name}</span>
             </span>
           )}
           {card.mentions.length > 0 && !card.assigneeId && (
-            <span className="flex items-center gap-0.5 text-[11px] text-ink-400">
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
               <IAt className="w-3 h-3" />
               {card.mentions.slice(0, 3).map((m) => '@' + (byId[m]?.name ?? m)).join(' ')}
             </span>
           )}
           {card.commentCount > 0 && (
-            <span className="ml-auto text-[11px] text-ink-400">{card.commentCount} 💬</span>
+            <span className="ms-auto text-xs text-muted-foreground">{card.commentCount} 💬</span>
           )}
         </div>
       )}
     </article>
   )
-}
-
-/* ============== Card detail modal ============== */
-
-/** Module-level constant so the "no comments yet" fallback is referentially
- *  stable across renders — see the comment in CardDetailModal where it's used. */
-const EMPTY_COMMENTS: BoardCardComment[] = []
-
-function CardDetailModal({ boardId, card, columns, onClose }: {
-  boardId: string; card: BoardCard; columns: BoardColumn[]; onClose: () => void
-}) {
-  const byId = useParticipants((s) => s.byId)
-  const meId = useMe()
-  const patchCard = useBoards((s) => s.patchCard)
-  const deleteCard = useBoards((s) => s.deleteCard)
-  const loadComments = useBoards((s) => s.loadComments)
-  const addComment = useBoards((s) => s.addComment)
-  // Select the raw entry (may be undefined), then fall back OUTSIDE the
-  // selector — `?? []` inside would mint a new array literal on every
-  // call, fail Object.is, and cycle render → reselect → render forever.
-  const commentsRaw = useBoards((s) => s.comments[card.id])
-  const comments: BoardCardComment[] = commentsRaw ?? EMPTY_COMMENTS
-  const [title, setTitle] = useState(card.title)
-  const [description, setDescription] = useState(card.description ?? '')
-  const [draftComment, setDraftComment] = useState('')
-  const [posting, setPosting] = useState(false)
-
-  useEffect(() => {
-    setTitle(card.title)
-    setDescription(card.description ?? '')
-  }, [card.id, card.title, card.description])
-
-  useEffect(() => {
-    void loadComments(boardId, card.id)
-  }, [loadComments, boardId, card.id])
-
-  async function saveTitle() {
-    const next = title.trim()
-    if (!next || next === card.title) return
-    try { await patchCard(boardId, card.id, { title: next }) } catch (e) { console.warn(e) }
-  }
-  async function saveDescription() {
-    const next = description.trim()
-    if (next === (card.description ?? '')) return
-    try { await patchCard(boardId, card.id, { description: next }) } catch (e) { console.warn(e) }
-  }
-  async function moveToColumn(columnId: string) {
-    if (columnId === card.columnId) return
-    try { await patchCard(boardId, card.id, { columnId }) } catch (e) { console.warn(e) }
-  }
-  async function setAssignee(id: string | null) {
-    try { await patchCard(boardId, card.id, { assigneeId: id }) } catch (e) { console.warn(e) }
-  }
-  async function postComment() {
-    const body = draftComment.trim()
-    if (!body || posting) return
-    setPosting(true)
-    try {
-      await addComment(boardId, card.id, body)
-      setDraftComment('')
-    } catch (e) {
-      console.warn(e)
-    } finally {
-      setPosting(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-ink-900/40 p-6" onClick={onClose}>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="bg-cloud w-full max-w-2xl max-h-[85vh] rounded-xl shadow-xl flex flex-col"
-      >
-        <header className="px-5 py-4 border-b border-ink-100 flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <MentionInput
-              value={title}
-              onChange={setTitle}
-              onSubmit={() => void saveTitle()}
-              placeholder="卡片标题 — @提及任何人"
-              className="-ml-2 w-full border-transparent bg-transparent px-2 py-1.5 text-[19px] font-semibold leading-7 text-ink-900 placeholder:text-ink-300 focus:border-skype/30 focus:bg-white focus:ring-2 focus:ring-skype/15"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => { void saveTitle().then(onClose) }}
-            className="shrink-0 rounded-md px-2.5 py-1.5 text-sm text-ink-500 hover:bg-sky2-50 hover:text-skype-deep"
-          >关闭</button>
-        </header>
-
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-          <section className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">栏目</div>
-              <Select value={card.columnId} onValueChange={(columnId) => void moveToColumn(columnId)}>
-                <SelectTrigger aria-label="Column"><SelectValue /></SelectTrigger>
-                <SelectContent>{columns.map((column) => <SelectItem key={column.id} value={column.id}>{column.title}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">受让人</div>
-              <AssigneePicker
-                value={card.assigneeId}
-                onChange={(id) => void setAssignee(id)}
-                meId={meId ?? null}
-              />
-            </div>
-          </section>
-
-          <section>
-            <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">说明</div>
-            <MentionInput
-              value={description}
-              onChange={setDescription}
-              onSubmit={() => void saveDescription()}
-              placeholder="这张卡是关于什么的？ （@提及特工或人类——他们会看到的）"
-              multiline
-              rows={4}
-            />
-            {hasLinkedReference(description) && (
-              <div className="mt-2 text-sm text-ink-700 whitespace-pre-wrap">
-                <MentionedText text={description} byId={byId} />
-              </div>
-            )}
-            <div className="mt-1 flex justify-end">
-              <button
-                onClick={() => void saveDescription()}
-                className="text-xs text-ink-500 hover:text-skype-deep px-2 py-1"
-              >保存描述</button>
-            </div>
-          </section>
-
-          <section>
-            <div className="text-[11px] uppercase tracking-wide text-ink-400 mb-1">
-              评论 {comments.length > 0 && <span className="text-ink-500">· {comments.length}</span>}
-            </div>
-            <ul className="space-y-2">
-              {comments.map((c) => {
-                const author = byId[c.authorId]
-                return (
-                  <li key={c.id} className="flex items-start gap-2.5">
-                    {author ? <AvatarMini p={author} size={26} /> : <span className="w-6 h-6 rounded-full bg-ink-200" />}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-sm font-medium text-ink-800">{author?.name ?? c.authorId}</span>
-                        <span className="text-[11px] text-ink-400">{formatTime(c.createdAt)}</span>
-                      </div>
-                      <div className="text-sm text-ink-700 whitespace-pre-wrap">
-                        <MentionedText text={c.body} byId={byId} />
-                      </div>
-                    </div>
-                  </li>
-                )
-              })}
-              {comments.length === 0 && (
-                <li className="text-xs text-ink-400">还没有评论。</li>
-              )}
-            </ul>
-            <div className="mt-3">
-              <MentionInput
-                value={draftComment}
-                onChange={setDraftComment}
-                onSubmit={() => void postComment()}
-                placeholder="评论…（⌘↵发帖·@提及ping）"
-                multiline
-                rows={2}
-              />
-              <div className="mt-1 flex justify-end gap-2">
-                <button
-                  onClick={() => void postComment()}
-                  disabled={!draftComment.trim() || posting}
-                  className="px-3 py-1.5 text-sm rounded-md bg-skype text-white hover:bg-skype-deep disabled:opacity-40 disabled:hover:bg-skype"
-                >发表评论</button>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <footer className="px-5 py-3 border-t border-ink-100 flex items-center justify-between">
-          <div className="text-[11px] text-ink-400">
-            已创建 {formatTime(card.createdAt)} ·由 {byId[card.createdBy]?.name ?? card.createdBy}
-          </div>
-          <button
-            onClick={async () => {
-              if (!await confirmSensitiveAction({
-                title: '删除卡片？',
-                description: `“${card.title}”将被永久删除。`,
-                confirmLabel: '删除卡片',
-                tone: 'destructive',
-              })) return
-              try {
-                await toastAction(deleteCard(boardId, card.id), { loading: '正在删除卡片', success: '卡片已删除', error: '删除卡片失败' })
-                onClose()
-              } catch (e) { console.warn(e) }
-            }}
-            className="text-xs text-coral-deep hover:underline"
-          >删除卡</button>
-        </footer>
-      </div>
-    </div>
-  )
-}
-
-function AssigneePicker({ value, onChange, meId }: {
-  value: string | null; onChange: (id: string | null) => void; meId: string | null
-}) {
-  const byId = useParticipants((s) => s.byId)
-  const id = useId()
-  const rootRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState('')
-  const [activeIndex, setActiveIndex] = useState(0)
-  const everyone = useMemo(() =>
-    Object.values(byId).filter((p) => !p.departedAt && !p.managed)
-      .sort((a, b) => {
-        // Me first, then humans, then agents, then alphabetical.
-        if (a.id === meId) return -1
-        if (b.id === meId) return 1
-        if (a.kind !== b.kind) return a.kind === 'human' ? -1 : 1
-        return a.name.localeCompare(b.name)
-      }),
-    [byId, meId],
-  )
-  const selected = value ? everyone.find((p) => p.id === value) ?? null : null
-  const options = useMemo(() => [
-    { id: null, label: "未分配", meta: '', participant: null as Participant | null },
-    ...everyone.map((p) => ({
-      id: p.id,
-      label: p.name,
-      meta: p.kind === 'agent' ? 'agent' : (p.id === meId ? 'you' : 'human'),
-      participant: p,
-    })),
-  ], [everyone, meId])
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    if (!needle) return options
-    return options.filter((option) =>
-      option.label.toLowerCase().includes(needle) ||
-      option.meta.toLowerCase().includes(needle) ||
-      (option.id ?? '').toLowerCase().includes(needle)
-    )
-  }, [options, query])
-
-  useEffect(() => {
-    if (!open) return
-    const idx = filtered.findIndex((option) => option.id === value)
-    setActiveIndex(Math.max(0, idx))
-  }, [filtered, open, value])
-
-  useEffect(() => {
-    if (!open) return
-    const onDown = (event: MouseEvent) => {
-      const target = event.target as Node | null
-      if (target && rootRef.current?.contains(target)) return
-      setOpen(false)
-      setQuery('')
-    }
-    window.addEventListener('mousedown', onDown, true)
-    return () => window.removeEventListener('mousedown', onDown, true)
-  }, [open])
-
-  function openMenu() {
-    setOpen(true)
-    setQuery('')
-    queueMicrotask(() => inputRef.current?.focus())
-  }
-
-  function commit(option: (typeof options)[number] | undefined) {
-    if (!option) return
-    onChange(option.id)
-    setOpen(false)
-    setQuery('')
-    inputRef.current?.blur()
-  }
-
-  const displayValue = open ? query : (selected ? `${selected.name}${selected.kind === 'agent' ? ' · agent' : ''}` : 'Unassigned')
-
-  return (
-    <div ref={rootRef} className="relative">
-      <div
-        className={cn(
-          'group relative flex h-11 w-full items-center rounded-[14px] border border-ink-100 bg-cloud text-left text-[13px] font-semibold text-ink-900 outline-none transition',
-          'shadow-[0_1px_0_rgba(255,255,255,0.92)_inset,0_10px_24px_-24px_rgba(26,78,120,0.55)]',
-          'hover:border-sky2-200 hover:bg-sky2-50/60',
-          open && 'border-sky2-300 bg-white ring-4 ring-sky2-100',
-        )}
-        style={{
-          backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,250,253,0.94))',
-        }}
-      >
-        {!open && (
-          <span className="pointer-events-none absolute left-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center">
-            {selected
-              ? <AvatarMini p={selected} size={26} />
-              : <span className="grid h-[26px] w-[26px] place-items-center rounded-full bg-ink-100 text-[12px] text-ink-400">-</span>}
-          </span>
-        )}
-        <Input
-          ref={inputRef}
-          id={id}
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={open}
-          aria-controls={`${id}-listbox`}
-          aria-activedescendant={open && filtered[activeIndex] ? `${id}-option-${activeIndex}` : undefined}
-          value={displayValue}
-          placeholder="搜索受让人..."
-          onFocus={openMenu}
-          onMouseDown={() => {
-            if (!open) openMenu()
-          }}
-          onChange={(event) => {
-            if (!open) setOpen(true)
-            setQuery(event.target.value)
-          }}
-          onKeyDown={(event) => {
-            if (event.nativeEvent.isComposing) return
-            if (event.key === 'ArrowDown') {
-              event.preventDefault()
-              if (!open) { openMenu(); return }
-              setActiveIndex((idx) => Math.min(filtered.length - 1, idx + 1))
-              return
-            }
-            if (event.key === 'ArrowUp') {
-              event.preventDefault()
-              if (!open) { openMenu(); return }
-              setActiveIndex((idx) => Math.max(0, idx - 1))
-              return
-            }
-            if (event.key === 'Enter') {
-              event.preventDefault()
-              commit(filtered[activeIndex])
-              return
-            }
-            if (event.key === 'Escape') {
-              event.preventDefault()
-              setOpen(false)
-              setQuery('')
-            }
-          }}
-          className={cn(
-            'h-full min-w-0 flex-1 rounded-[14px] bg-transparent px-3.5 pr-[76px] text-[13px] font-semibold text-ink-900 outline-none placeholder:text-ink-300',
-            !open && 'pl-11',
-          )}
-        />
-        {value && (
-          <button
-            type="button"
-            aria-label="清除受让人"
-            title="清除受让人"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => onChange(null)}
-            className="absolute right-[45px] grid h-7 w-7 place-items-center rounded-[9px] text-ink-300 transition hover:bg-sky2-50 hover:text-ink-600"
-          >
-            <span aria-hidden="true" className="text-base leading-none">×</span>
-          </button>
-        )}
-        <button
-          type="button"
-          aria-label="打开受让人菜单"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => openMenu()}
-          className={cn(
-            'absolute right-2 grid h-7 w-7 place-items-center rounded-[9px] border border-sky2-100 bg-sky2-50 text-skype-deep transition',
-            'group-hover:bg-white group-focus-within:bg-sky2-50',
-            open && 'border-sky2-200 bg-sky2-50',
-          )}
-        >
-          <svg viewBox="0 0 14 14" className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')} fill="none">
-            <path d="M3.5 5.5 7 9l3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
-      {open && (
-        <div
-          id={`${id}-listbox`}
-          role="listbox"
-          className="app-menu-surface absolute left-0 right-0 top-full z-[70] mt-2 max-h-72 overflow-auto p-1.5 animate-rise"
-        >
-          {filtered.map((option, idx) => {
-            const active = idx === activeIndex
-            const selectedOption = option.id === value
-            return (
-              <button
-                key={option.id ?? 'unassigned'}
-                id={`${id}-option-${idx}`}
-                type="button"
-                role="option"
-                aria-selected={selectedOption}
-                onMouseDown={(event) => event.preventDefault()}
-                onMouseEnter={() => setActiveIndex(idx)}
-                onClick={() => commit(option)}
-                className={cn(
-                  'app-menu-item',
-                  selectedOption
-                    ? 'bg-skype text-white shadow-[0_10px_22px_-16px_rgba(0,120,200,0.82)]'
-                    : active
-                      ? 'bg-sky2-50 text-skype-deep'
-                      : 'text-ink-700 hover:bg-sky2-50 hover:text-skype-deep',
-                )}
-              >
-                {option.participant
-                  ? <AvatarMini p={option.participant} size={22} />
-                  : <span className="grid h-[22px] w-[22px] place-items-center rounded-full bg-ink-100 text-[11px] text-ink-400">-</span>}
-                <span className="min-w-0 flex-1 truncate font-medium">{option.label}</span>
-                {option.meta && (
-                  <span className={cn(
-                    'shrink-0 text-[10px] uppercase tracking-wide',
-                    selectedOption ? 'text-white/70' : 'text-ink-300',
-                  )}>{option.meta}</span>
-                )}
-              </button>
-            )
-          })}
-          {filtered.length === 0 && (
-            <div className="px-3 py-3 text-[12.5px] font-semibold text-ink-400">没有匹配的队友。</div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function formatTime(iso: string): string {
-  try {
-    const d = new Date(iso)
-    return d.toLocaleString(undefined, {
-      month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    })
-  } catch { return iso }
 }
