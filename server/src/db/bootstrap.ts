@@ -8,13 +8,37 @@ const V1_SCHEMA_MARKER = 'LingxiLoop schema v1'
 type Queryable = Pick<PoolClient, 'query'>
 
 const REQUIRED_V1_RELATIONS = [
-  'companies', 'participants', 'conversations', 'messages', 'message_reactions',
-  'agent_climate', 'agent_work_items',
-  'agent_os_approvals', 'knowledge_sources', 'courses', 'learning_objectives',
-  'learning_notification_deliveries', 'learning_project_teacher_agents',
-  'learning_course_teacher_rooms', 'canvas_assignment_reports',
-  'canvas_agent_assignments', 'im_read_receipt_advances', 'im_polls',
-  'im_poll_votes', 'llm_calls',
+  'agent_action_executions', 'agent_approvals', 'agent_autonomy',
+  'agent_autonomy_rules', 'agent_climate', 'agent_events', 'agent_handoffs',
+  'agent_host_actions', 'agent_log', 'agent_memory_evidence',
+  'agent_os_approvals', 'agent_os_session_leases', 'agent_os_sessions',
+  'agent_routine_runs', 'agent_routines', 'agent_runs', 'agent_tasks',
+  'agent_triages', 'agent_work_items', 'agent_workspace', 'app_settings',
+  'audit_events', 'board_card_comments', 'board_cards', 'board_columns',
+  'board_mention_reads', 'boards', 'calendar_dispatches', 'calendar_events',
+  'calendar_reminders', 'canvas_activity', 'canvas_agent_assignments',
+  'canvas_assignment_dependencies', 'canvas_assignment_reports',
+  'canvas_comments', 'canvas_frames', 'canvas_presence', 'canvases', 'companies',
+  'company_invitations', 'company_members', 'convene_sessions',
+  'convene_transcript', 'convening_info', 'conversation_counters',
+  'conversation_mutes', 'conversation_reads', 'conversation_source_exclusions',
+  'conversations', 'course_invitation_acceptances', 'course_invitations',
+  'course_members', 'courses', 'document_mentions', 'document_snapshots',
+  'document_updates', 'documents', 'email_attachments', 'email_contacts',
+  'email_messages', 'eval_cases', 'eval_runs', 'eval_stage_results',
+  'im_channel_bindings', 'im_poll_votes', 'im_polls',
+  'im_read_receipt_advances', 'im_send_acceptances', 'knowledge_insight_bindings',
+  'knowledge_note_bindings', 'knowledge_notebook_bindings',
+  'knowledge_source_chat_sessions', 'knowledge_source_jobs', 'knowledge_sources',
+  'learning_activities', 'learning_attempts', 'learning_course_rooms',
+  'learning_course_teacher_rooms', 'learning_evaluations', 'learning_mastery',
+  'learning_mastery_events', 'learning_mission_steps', 'learning_missions',
+  'learning_notification_deliveries', 'learning_notification_preferences',
+  'learning_objective_dependencies', 'learning_objectives',
+  'learning_project_teacher_agents', 'llm_calls', 'message_reactions', 'messages',
+  'participants', 'poll_votes', 'project_visits', 'projects', 'sessions',
+  'tool_calls', 'user_identities', 'user_preferences', 'users', 'waitlist',
+  'ws_tickets', 'wukong_webhook_receipts',
 ] as const
 
 const REQUIRED_V1_COLUMNS = [
@@ -39,6 +63,20 @@ const REQUIRED_V1_NOT_NULL_COLUMNS = [
 
 const REQUIRED_V1_PRIMARY_KEYS = [
   ['agent_climate', ['company_id', 'agent_id', 'about_id']],
+] as const
+
+const REQUIRED_V1_CONSTRAINTS = [
+  'llm_calls_pkey',
+  'llm_calls_company_id_fkey',
+  'llm_calls_source_check',
+  'llm_calls_status_check',
+  'llm_calls_tokens_check',
+  'participants_agent_bloub_only',
+] as const
+
+const REQUIRED_V1_INDEXES = [
+  'idx_llm_calls_company_created',
+  'idx_llm_calls_run_created',
 ] as const
 
 async function userRelationCount(client: PoolClient): Promise<number> {
@@ -103,6 +141,18 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     )
     if (JSON.stringify(rows[0]?.columns ?? []) !== JSON.stringify(expectedColumns)) return false
   }
+  const { rows: constraintRows } = await client.query<{ name: string }>(
+    `SELECT required.name FROM unnest($1::text[]) AS required(name)
+      WHERE NOT EXISTS (SELECT 1 FROM pg_constraint actual WHERE actual.conname = required.name)`,
+    [REQUIRED_V1_CONSTRAINTS],
+  )
+  if (constraintRows.length > 0) return false
+  const { rows: indexRows } = await client.query<{ name: string }>(
+    `SELECT required.name FROM unnest($1::text[]) AS required(name)
+      WHERE to_regclass('public.' || required.name) IS NULL`,
+    [REQUIRED_V1_INDEXES],
+  )
+  if (indexRows.length > 0) return false
   return true
 }
 

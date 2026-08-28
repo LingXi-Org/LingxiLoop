@@ -83,6 +83,27 @@ test('bootstrap only reuses a complete marked v1 schema and rejects every unmark
   assert.doesNotMatch(executableBootstrap, /advisory|backfill|lock_timeout|ALTER TABLE/i)
 })
 
+test('bootstrap completeness tracks every canonical v1 relation and the LLM ledger invariants', () => {
+  const tables = [...schema.matchAll(/^CREATE TABLE public\.([a-z0-9_]+)\b/gm)]
+    .map((match) => match[1]!)
+  assert.ok(tables.length > 100, 'canonical v1 relation inventory unexpectedly shrank')
+  for (const table of tables) assert.match(bootstrap, new RegExp(`'${table}'`), table)
+  for (const object of [
+    'llm_calls_pkey',
+    'llm_calls_company_id_fkey',
+    'llm_calls_source_check',
+    'llm_calls_status_check',
+    'llm_calls_tokens_check',
+    'idx_llm_calls_company_created',
+    'idx_llm_calls_run_created',
+    'participants_agent_bloub_only',
+  ]) {
+    assert.match(bootstrap, new RegExp(`'${object}'`), object)
+  }
+  assert.match(bootstrap, /REQUIRED_V1_CONSTRAINTS/)
+  assert.match(bootstrap, /REQUIRED_V1_INDEXES/)
+})
+
 test('every Compose runtime gates Web startup on the v1 bootstrap service', () => {
   for (const compose of composeFiles) {
     const bootstrapService = compose.match(/\n {2}db-bootstrap:\n([\s\S]*?)(?=\n {2}[\w-]+:\n)/)?.[1] ?? ''
