@@ -36,6 +36,7 @@ test('Worker composition has injectable startup and connection shutdown boundari
   const { startWorkerProcess } = await import('../worker.js')
   const events: string[] = []
   const service = await startWorkerProcess({
+    initializeStorage: () => { events.push('storage') },
     prepare: async () => { events.push('prepare') },
     tasks: [{
       name: 'fixture',
@@ -52,6 +53,7 @@ test('Worker composition has injectable startup and connection shutdown boundari
   await service.stop('test')
 
   assert.deepEqual(events, [
+    'storage',
     'prepare',
     'start:fixture',
     'stop:fixture',
@@ -90,6 +92,8 @@ test('Web composition contains no background scheduler or worker startup', async
     assert.doesNotMatch(web, new RegExp(`\\b${starter}\\b`))
     assert.match(worker, new RegExp(`\\b${starter}\\b`))
   }
+  assert.match(web, /initializeNativeStorage\(\)/)
+  assert.match(worker, /initializeStorage\(\)/)
   await assert.rejects(readFile(new URL('../index.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
 })
 

@@ -16,6 +16,7 @@ import { startPollExpirationSweeper } from './modules/polls/index.js'
 import { redis, sub } from './redis.js'
 import { Lifecycle, startWorkerTasks, type ServiceHandle, type WorkerTaskDefinition } from './runtime/lifecycle.js'
 import { seedIfEmpty } from './seed.js'
+import { initializeNativeStorage } from './storage.js'
 
 /**
  * Concurrency is part of each task's contract, rather than an accidental
@@ -53,6 +54,7 @@ export interface WorkerProcessOptions {
   prepare?: () => Promise<void>
   closePostgres?: () => void | Promise<void>
   closeRedis?: () => void | Promise<void>
+  initializeStorage?: () => void
 }
 
 export async function startWorkerProcess(options: WorkerProcessOptions = {}): Promise<ServiceHandle> {
@@ -63,6 +65,8 @@ export async function startWorkerProcess(options: WorkerProcessOptions = {}): Pr
   lifecycle.addDisposer('redis', options.closeRedis ?? (() => { sub.disconnect(); redis.disconnect() }))
 
   try {
+    const initializeStorage = options.initializeStorage ?? initializeNativeStorage
+    initializeStorage()
     await prepare()
     startWorkerTasks(lifecycle, tasks)
     console.log(`[worker] ready · tasks=${tasks.length}`)

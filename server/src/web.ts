@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { env } from './env.js'
 import { api } from './api/router.js'
-import './storage.js'
+import { initializeNativeStorage } from './storage.js'
 import { attachWebSocket, resetHumanPresenceOnBoot } from './ws.js'
 import { bootDocumentBus } from './documents/rooms.js'
 import { pool } from './db/pool.js'
@@ -20,6 +20,7 @@ import { Lifecycle, type ServiceHandle } from './runtime/lifecycle.js'
 export async function startWebProcess(): Promise<ServiceHandle> {
   // Construct every mandatory infrastructure adapter before exposing HTTP.
   // Missing WuKongIM configuration is a startup error, never a latent fallback.
+  initializeNativeStorage()
   wukongClient()
   const app = express()
   // gzip responses ≥1kb to keep control-plane and asset traffic compact. SSE

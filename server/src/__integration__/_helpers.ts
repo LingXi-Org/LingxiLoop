@@ -18,7 +18,43 @@ import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
-import type { Storage } from '../storage.js'
+import { installStorageProvider, type Storage, type StorageObject } from '../storage.js'
+
+const storageObjects = new Map<string, { body: Buffer; mime: string; modifiedAt: number }>()
+const integrationStorage: Storage = {
+  mode: 'r2',
+  async put(key, body, mime) {
+    storageObjects.set(key, { body: Buffer.from(body), mime, modifiedAt: Date.now() })
+    return this.publicUrl(key)
+  },
+  async presignPut(key) {
+    return {
+      uploadUrl: `https://storage.test.invalid/upload/${encodeURIComponent(key)}`,
+      publicUrl: await this.publicUrl(key),
+    }
+  },
+  async publicUrl(key) {
+    return `https://storage.test.invalid/${key}`
+  },
+  async readObject(key) {
+    const object = storageObjects.get(key)
+    if (!object) throw new Error(`integration storage object not found: ${key}`)
+    return Buffer.from(object.body)
+  },
+  async listObjectsByPrefix(prefix): Promise<StorageObject[]> {
+    return [...storageObjects.entries()]
+      .filter(([key]) => key.startsWith(prefix))
+      .map(([key, value]) => ({
+        key,
+        sizeBytes: value.body.byteLength,
+        lastModifiedMs: value.modifiedAt,
+      }))
+  },
+  async deleteObject(key) {
+    return storageObjects.delete(key)
+  },
+}
+installStorageProvider(integrationStorage)
 
 let schemaReady: Promise<void> | null = null
 
@@ -119,6 +155,7 @@ export async function resetAllTables(): Promise<void> {
     throw new Error(`refusing to TRUNCATE — DATABASE_URL doesn't look like a test DB: ${env.DATABASE_URL}`)
   }
   await ensureSchemaOnce()
+  storageObjects.clear()
   await pool.query(`TRUNCATE TABLE ${TABLES_TO_WIPE.join(', ')} CASCADE`)
 }
 

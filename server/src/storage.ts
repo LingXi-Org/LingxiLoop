@@ -236,7 +236,41 @@ function buildStorage(): Storage {
   })
 }
 
-export const storage: Storage = buildStorage()
+let activeStorage: Storage | null = null
+
+/** Install the process-wide storage adapter at the composition boundary.
+ * Tests pass an explicit in-memory provider; production calls
+ * `initializeNativeStorage` and therefore still fails before readiness when
+ * the canonical R2 contract is incomplete. */
+export function installStorageProvider(provider: Storage): void {
+  if (activeStorage && activeStorage !== provider) {
+    throw new Error('storage provider is already installed')
+  }
+  activeStorage = provider
+}
+
+export function initializeNativeStorage(): void {
+  if (activeStorage) return
+  installStorageProvider(buildStorage())
+}
+
+function requireStorage(): Storage {
+  if (!activeStorage) throw new Error('storage provider is not installed')
+  return activeStorage
+}
+
+/** Stable delegating port captured by domain applications during module
+ * composition. The provider itself must be installed explicitly before any
+ * process exposes readiness or any test invokes a storage-backed use case. */
+export const storage: Storage = {
+  get mode() { return requireStorage().mode },
+  put: (...args) => requireStorage().put(...args),
+  presignPut: (...args) => requireStorage().presignPut(...args),
+  publicUrl: (...args) => requireStorage().publicUrl(...args),
+  readObject: (...args) => requireStorage().readObject(...args),
+  listObjectsByPrefix: (...args) => requireStorage().listObjectsByPrefix(...args),
+  deleteObject: (...args) => requireStorage().deleteObject(...args),
+}
 
 /** Stored attachment shape — mirror of AttachmentPayload in the router.
  *  Defined here so the freshening helper has no circular import. */
