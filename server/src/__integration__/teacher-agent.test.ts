@@ -10,6 +10,12 @@ import {
   reactivateTeacherRoomForCourse,
   teacherActionRequiresApproval,
 } from '../modules/learning/teacher-agent.js'
+import {
+  findTeacherAttemptDetail,
+  listTeacherLearnerRows,
+  listTeacherObjectives,
+  loadTeacherOverviewRows,
+} from '../modules/learning/teacher-reporting-repository.js'
 import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })
@@ -175,4 +181,71 @@ test('[integration] only critical teacher operations cross the approval boundary
   for(const method of ['overview','get_learner','get_attempt','draft_objectives','draft_activity','update_course','set_learner_membership','set_room_binding','configure_digest']){
     assert.equal(teacherActionRequiresApproval(`teacher.${method}`),false,method)
   }
+})
+
+test('[integration] Pulse reporting repository cannot cross tenant course boundaries',async()=>{
+  const own=await seedTeacherCourse()
+  const foreign=await seedTeacherCourse()
+  const ownObjective=`objective-${randomUUID()}`
+  const foreignObjective=`objective-${randomUUID()}`
+  const ownActivity=`activity-${randomUUID()}`
+  const foreignActivity=`activity-${randomUUID()}`
+  const ownAttempt=`attempt-${randomUUID()}`
+  const foreignAttempt=`attempt-${randomUUID()}`
+
+  await pool.query(
+    `INSERT INTO learning_objectives(
+      id,course_id,company_id,title,success_criteria,target_level,position,status,created_by
+    ) VALUES
+      ($1,$2,$3,'本租户目标','完成本租户目标',3,1,'published',$4),
+      ($5,$6,$7,'外租户目标','完成外租户目标',3,1,'published',$8)`,
+    [
+      ownObjective,own.courseId,own.companyId,own.teacherId,
+      foreignObjective,foreign.courseId,foreign.companyId,foreign.teacherId,
+    ],
+  )
+  await pool.query(
+    `INSERT INTO learning_activities(
+      id,course_id,company_id,title,instructions,type,status,evaluation_mode,target_level,created_by
+    ) VALUES
+      ($1,$2,$3,'本租户活动','完成活动','practice','published','teacher_required',2,$4),
+      ($5,$6,$7,'外租户活动','完成活动','practice','published','teacher_required',2,$8)`,
+    [
+      ownActivity,own.courseId,own.companyId,own.teacherId,
+      foreignActivity,foreign.courseId,foreign.companyId,foreign.teacherId,
+    ],
+  )
+  await pool.query(
+    `INSERT INTO learning_attempts(
+      id,course_id,company_id,learner_id,activity_id,assistance,evidence,status
+    ) VALUES
+      ($1,$2,$3,$4,$5,'none','[]'::jsonb,'submitted'),
+      ($6,$7,$8,$9,$10,'none','[]'::jsonb,'submitted')`,
+    [
+      ownAttempt,own.courseId,own.companyId,own.learnerId,ownActivity,
+      foreignAttempt,foreign.courseId,foreign.companyId,foreign.learnerId,foreignActivity,
+    ],
+  )
+  await pool.query(
+    `INSERT INTO learning_mastery(
+      course_id,company_id,learner_id,objective_id,level,status,independent_evidence_count
+    ) VALUES
+      ($1,$2,$3,$4,3,'verified',2),
+      ($5,$6,$7,$8,4,'verified',3)`,
+    [
+      own.courseId,own.companyId,own.learnerId,ownObjective,
+      foreign.courseId,foreign.companyId,foreign.learnerId,foreignObjective,
+    ],
+  )
+
+  const scope={companyId:own.companyId,courseId:own.courseId}
+  const learners=await listTeacherLearnerRows(pool,scope,false)
+  assert.deepEqual(learners.map((row)=>row.user_id),[own.learnerId])
+  const objectives=await listTeacherObjectives(pool,scope)
+  assert.deepEqual(objectives.map((row)=>row.id),[ownObjective])
+  const overview=await loadTeacherOverviewRows(pool,scope,30)
+  assert.equal(overview.coverage[0]?.learners,1)
+  assert.equal(overview.coverage[0]?.learners_with_evidence,1)
+  assert.equal(await findTeacherAttemptDetail(pool,scope,foreignAttempt),undefined)
+  assert.equal((await findTeacherAttemptDetail(pool,scope,ownAttempt))?.id,ownAttempt)
 })

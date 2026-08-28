@@ -23,6 +23,11 @@ const learningRuntimeSource = readFileSync(new URL('../modules/learning/runtime.
 const learningRouterSource = readFileSync(new URL('../modules/learning/router.ts', import.meta.url), 'utf8')
 const classroomRouterSource = readFileSync(new URL('../modules/learning/classroom-router.ts', import.meta.url), 'utf8')
 const learningHttpAdapterSource = readFileSync(new URL('../modules/learning/http-adapter.ts', import.meta.url), 'utf8')
+const teacherAgentSource = readFileSync(new URL('../modules/learning/teacher-agent.ts', import.meta.url), 'utf8')
+const teacherReportingRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-reporting-repository.ts', import.meta.url),
+  'utf8',
+)
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
 
 function productionTypeScriptFiles(root: string): string[] {
@@ -169,6 +174,18 @@ test('Learning dashboard and evidence reads no longer use the legacy service dat
   assert.match(learningApplicationSource, /countViewerPendingLearningReviews/)
   assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND attempt\.learner_id=\$3/)
   assert.match(repository, /member\.company_id=\$1 AND member\.course_id=\$2 AND member\.role='learner'/)
+})
+
+test('Pulse reporting reads use one explicit tenant-scoped repository', () => {
+  assert.match(teacherAgentSource, /from '.\/teacher-reporting-repository\.js'/)
+  assert.doesNotMatch(teacherAgentSource, /if\(method==='list_objectives'\)return \(await db\.query/)
+  assert.doesNotMatch(teacherAgentSource, /if\(method==='list_activities'\)return \(await db\.query/)
+  assert.doesNotMatch(teacherAgentSource, /if\(method==='list_reviews'\)return \(await db\.query/)
+  assert.doesNotMatch(teacherAgentSource, /if\(method==='list_rooms'\)return \(await db\.query/)
+  assert.match(teacherReportingRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /mastery\.company_id=\$1 AND mastery\.course_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /member\.company_id=\$1 AND member\.course_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
 })
 
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{

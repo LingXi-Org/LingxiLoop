@@ -19,6 +19,17 @@ import {
   setLearningCourseMembership,
   setLearningObjectiveStatus,
 } from './application.js'
+import {
+  findTeacherAttemptDetail,
+  findTeacherLearner,
+  listTeacherActivities,
+  listTeacherBindableRooms,
+  listTeacherLearnerRows,
+  listTeacherObjectives,
+  listTeacherReviews,
+  loadTeacherLearnerDetailRows,
+  loadTeacherOverviewRows,
+} from './teacher-reporting-repository.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,
@@ -345,40 +356,11 @@ export async function getTeacherAgentSummary(courseId:string,teacherId:string,db
 
 async function overview(scope:TeacherScope,windowDays:number,db:Queryable):Promise<unknown>{
   const days=Math.max(1,Math.min(90,Math.trunc(windowDays||30)))
-  const [{rows:distribution},{rows:mission},{rows:activity},{rows:attention},{rows:coverage}]=await Promise.all([
-    db.query(`WITH totals AS (
-      SELECT (SELECT COUNT(*) FROM course_members WHERE course_id=$1 AND role='learner')*
-             (SELECT COUNT(*) FROM learning_objectives WHERE course_id=$1 AND status<>'archived') AS possible
-    ),levels AS(SELECT generate_series(0,4) AS level)
-    SELECT levels.level,CASE WHEN levels.level=0 THEN GREATEST(totals.possible-COUNT(m.objective_id) FILTER(WHERE m.level<>0),0)::int
-      ELSE COUNT(m.objective_id) FILTER(WHERE m.level=levels.level)::int END AS objective_states
-    FROM levels CROSS JOIN totals LEFT JOIN learning_mastery m ON m.course_id=$1 GROUP BY levels.level,totals.possible ORDER BY levels.level`,[scope.courseId]),
-    db.query(`SELECT status,COUNT(*)::int AS count FROM learning_missions WHERE course_id=$1 GROUP BY status ORDER BY status`,[scope.courseId]),
-    db.query(`SELECT
-      COUNT(DISTINCT a.id) FILTER(WHERE a.submitted_at>=NOW()-($2::int*INTERVAL '1 day'))::int AS attempts,
-      COUNT(DISTINCT e.id) FILTER(WHERE e.status='pending')::int AS pending_reviews,
-      COUNT(DISTINCT e.id) FILTER(WHERE e.status='accepted')::int AS accepted_evaluations,
-      COUNT(DISTINCT e.id) FILTER(WHERE e.status='rejected')::int AS rejected_evaluations
-      FROM learning_attempts a LEFT JOIN learning_evaluations e ON e.attempt_id=a.id WHERE a.course_id=$1`,[scope.courseId,days]),
-    db.query(`SELECT cm.user_id,u.display_name,
-      COUNT(DISTINCT m.objective_id) FILTER(WHERE m.next_review_at<=NOW())::int AS due_reviews,
-      COUNT(DISTINCT m.objective_id) FILTER(WHERE m.status='needs_review')::int AS needs_review,
-      COUNT(DISTINCT lm.id) FILTER(WHERE lm.status='paused')::int AS paused_missions
-      FROM course_members cm JOIN users u ON u.id=cm.user_id
-      LEFT JOIN learning_mastery m ON m.course_id=cm.course_id AND m.learner_id=cm.user_id
-      LEFT JOIN learning_missions lm ON lm.course_id=cm.course_id AND lm.learner_id=cm.user_id
-      WHERE cm.course_id=$1 AND cm.role='learner' GROUP BY cm.user_id,u.display_name
-      HAVING COUNT(DISTINCT m.objective_id) FILTER(WHERE m.next_review_at<=NOW())>0
-          OR COUNT(DISTINCT m.objective_id) FILTER(WHERE m.status='needs_review')>0
-          OR COUNT(DISTINCT lm.id) FILTER(WHERE lm.status='paused')>0
-      ORDER BY needs_review DESC,due_reviews DESC LIMIT 20`,[scope.courseId]),
-    db.query(`SELECT
-      (SELECT COUNT(*)::int FROM course_members WHERE course_id=$1 AND role='learner') AS learners,
-      COUNT(DISTINCT a.learner_id)::int AS learners_with_evidence,
-      COUNT(DISTINCT a.id)::int AS verified_attempts,
-      COUNT(DISTINCT m.learner_id||':'||m.objective_id) FILTER(WHERE m.next_review_at<=NOW())::int AS due_reviews
-      FROM learning_attempts a FULL JOIN learning_mastery m ON m.course_id=a.course_id AND m.learner_id=a.learner_id WHERE COALESCE(a.course_id,m.course_id)=$1`,[scope.courseId]),
-  ])
+  const {distribution,missions,activity,attention,coverage}=await loadTeacherOverviewRows(
+    db,
+    {companyId:scope.companyId,courseId:scope.courseId},
+    days,
+  )
   inc('learning.teacher_agent.summary_generated')
   const attentionWithReasons=attention.map((item)=>{
     const row=object(item);const reasons:string[]=[]
@@ -387,23 +369,15 @@ async function overview(scope:TeacherScope,windowDays:number,db:Queryable):Promi
     if(Number(row.paused_missions)>0)reasons.push('paused_mission')
     return {...row,reasons}
   })
-  return {generatedAt:new Date().toISOString(),windowDays:days,course:{id:scope.courseId,title:scope.courseTitle},masteryDistribution:distribution,missions:mission,activity:activity[0]??{},evidenceCoverage:coverage[0]??{},attention:attentionWithReasons}
+  return {generatedAt:new Date().toISOString(),windowDays:days,course:{id:scope.courseId,title:scope.courseTitle},masteryDistribution:distribution,missions,activity:activity[0]??{},evidenceCoverage:coverage[0]??{},attention:attentionWithReasons}
 }
 
 async function listLearners(scope:TeacherScope,attentionOnly:boolean,db:Queryable):Promise<unknown[]>{
-  const {rows}=await db.query(`SELECT cm.user_id,u.display_name,u.email,
-    COALESCE(AVG(m.level),0)::float AS average_level,
-    COUNT(DISTINCT m.objective_id) FILTER(WHERE m.level>=3)::int AS verified_objectives,
-    COUNT(DISTINCT m.objective_id) FILTER(WHERE m.next_review_at<=NOW())::int AS due_reviews,
-    COUNT(DISTINCT m.objective_id) FILTER(WHERE m.status='needs_review')::int AS needs_review,
-    COUNT(DISTINCT lm.id) FILTER(WHERE lm.status='paused')::int AS paused_missions
-    FROM course_members cm JOIN users u ON u.id=cm.user_id
-    LEFT JOIN learning_mastery m ON m.course_id=cm.course_id AND m.learner_id=cm.user_id
-    LEFT JOIN learning_missions lm ON lm.course_id=cm.course_id AND lm.learner_id=cm.user_id
-    WHERE cm.course_id=$1 AND cm.role='learner' GROUP BY cm.user_id,u.display_name,u.email
-    HAVING NOT $2::boolean OR COUNT(DISTINCT m.objective_id) FILTER(WHERE m.next_review_at<=NOW())>0
-      OR COUNT(DISTINCT m.objective_id) FILTER(WHERE m.status='needs_review')>0 OR COUNT(DISTINCT lm.id) FILTER(WHERE lm.status='paused')>0
-    ORDER BY needs_review DESC,due_reviews DESC,u.display_name LIMIT 100`,[scope.courseId,attentionOnly])
+  const rows=await listTeacherLearnerRows(
+    db,
+    {companyId:scope.companyId,courseId:scope.courseId},
+    attentionOnly,
+  )
   return rows.map((item)=>{
     const row=object(item);const attentionReasons:string[]=[]
     if(Number(row.due_reviews)>0)attentionReasons.push('due_review')
@@ -414,25 +388,24 @@ async function listLearners(scope:TeacherScope,attentionOnly:boolean,db:Queryabl
 }
 
 async function learnerDetail(scope:TeacherScope,learnerId:string,db:Queryable):Promise<unknown>{
-  const {rows:member}=await db.query<{display_name:string;email:string}>(`SELECT u.display_name,u.email FROM course_members cm JOIN users u ON u.id=cm.user_id WHERE cm.course_id=$1 AND cm.user_id=$2 AND cm.role='learner'`,[scope.courseId,learnerId])
-  if(!member[0])throw new Error('learner is outside the current course')
-  const [mastery,missions,attempts]=await Promise.all([
-    db.query(`SELECT m.objective_id,o.title,m.level,m.status,m.next_review_at,m.review_interval_days FROM learning_mastery m JOIN learning_objectives o ON o.id=m.objective_id WHERE m.course_id=$1 AND m.learner_id=$2 ORDER BY o.position LIMIT 100`,[scope.courseId,learnerId]),
-    db.query(`SELECT id,goal,success_criteria,status,updated_at FROM learning_missions WHERE course_id=$1 AND learner_id=$2 ORDER BY updated_at DESC LIMIT 20`,[scope.courseId,learnerId]),
-    db.query(`SELECT a.id,a.activity_id,a.mission_step_id,a.assistance,a.status,a.submitted_at,e.demonstrated_level,e.confidence,e.status AS evaluation_status,e.feedback FROM learning_attempts a LEFT JOIN LATERAL(SELECT * FROM learning_evaluations e WHERE e.attempt_id=a.id ORDER BY e.created_at DESC LIMIT 1)e ON TRUE WHERE a.course_id=$1 AND a.learner_id=$2 ORDER BY a.submitted_at DESC LIMIT 20`,[scope.courseId,learnerId]),
-  ])
+  const reportingScope={companyId:scope.companyId,courseId:scope.courseId}
+  const member=await findTeacherLearner(db,reportingScope,learnerId)
+  if(!member)throw new Error('learner is outside the current course')
+  const detail=await loadTeacherLearnerDetailRows(db,reportingScope,learnerId)
   inc('learning.teacher_agent.learner_drilldown')
-  return {learner:{id:learnerId,...member[0]},mastery:mastery.rows,missions:missions.rows,attempts:attempts.rows}
+  return {learner:{id:learnerId,...member},...detail}
 }
 
 async function attemptDetail(scope:TeacherScope,attemptId:string,db:Queryable):Promise<unknown>{
-  const {rows}=await db.query(`SELECT a.id,a.learner_id,a.activity_id,a.mission_step_id,a.assistance,a.status,a.submitted_at,a.evidence,
-    COALESCE(jsonb_agg(jsonb_build_object('id',e.id,'level',e.demonstrated_level,'confidence',e.confidence,'status',e.status,'feedback',e.feedback)) FILTER(WHERE e.id IS NOT NULL),'[]'::jsonb) AS evaluations
-    FROM learning_attempts a LEFT JOIN learning_evaluations e ON e.attempt_id=a.id WHERE a.id=$1 AND a.course_id=$2 GROUP BY a.id`,[attemptId,scope.courseId])
-  if(!rows[0])throw new Error('attempt is outside the current course')
+  const attempt=await findTeacherAttemptDetail(
+    db,
+    {companyId:scope.companyId,courseId:scope.courseId},
+    attemptId,
+  )
+  if(!attempt)throw new Error('attempt is outside the current course')
   await audit({kind:'teacher_agent_attempt_access',userId:scope.teacherId,companyId:scope.companyId,detail:{courseId:scope.courseId,attemptId,agentId:scope.agentId}})
   inc('learning.teacher_agent.evidence_accessed')
-  return rows[0]
+  return attempt
 }
 
 export async function nextTeacherDigestRun(
@@ -561,16 +534,11 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   if(method==='list_learners')return listLearners(scope,args.attentionOnly===true||args.attention_only===true,db)
   if(method==='get_learner')return learnerDetail(scope,textArg(args,'learnerId','learner_id'),db)
   if(method==='get_attempt')return attemptDetail(scope,textArg(args,'attemptId','attempt_id'),db)
-  if(method==='list_objectives')return (await db.query(`SELECT o.*,COALESCE(jsonb_agg(d.prerequisite_objective_id) FILTER(WHERE d.prerequisite_objective_id IS NOT NULL),'[]'::jsonb) AS prerequisite_ids FROM learning_objectives o LEFT JOIN learning_objective_dependencies d ON d.objective_id=o.id WHERE o.course_id=$1 GROUP BY o.id ORDER BY o.position`,[scope.courseId])).rows
-  if(method==='list_activities')return (await db.query(`SELECT * FROM learning_activities WHERE course_id=$1 ORDER BY created_at DESC`,[scope.courseId])).rows
-  if(method==='list_reviews')return (await db.query(`SELECT e.*,a.learner_id,a.activity_id FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id WHERE a.course_id=$1 AND e.status='pending' ORDER BY e.created_at LIMIT 100`,[scope.courseId])).rows
-  if(method==='list_rooms')return (await db.query(`SELECT c.id AS conversation_id,c.title,
-      CASE WHEN c.id=lc.study_room_conversation_id THEN 'study'::text ELSE r.purpose END AS purpose,
-      (c.id=lc.study_room_conversation_id OR r.course_id=$1) AS bound
-    FROM courses lc JOIN conversations c ON lc.project_id=c.project_id AND lc.company_id=c.company_id AND lc.id=$1
-    LEFT JOIN learning_course_rooms r ON r.conversation_id=c.id AND r.company_id=lc.company_id
-    WHERE c.kind='group' AND NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=c.id)
-      AND (r.course_id IS NULL OR r.course_id=$1) ORDER BY c.updated_at DESC LIMIT 100`,[scope.courseId])).rows
+  const reportingScope={companyId:scope.companyId,courseId:scope.courseId}
+  if(method==='list_objectives')return listTeacherObjectives(db,reportingScope)
+  if(method==='list_activities')return listTeacherActivities(db,reportingScope)
+  if(method==='list_reviews')return listTeacherReviews(db,reportingScope)
+  if(method==='list_rooms')return listTeacherBindableRooms(db,reportingScope)
   if(method==='get_digest_schedule')return digestSchedule(scope,db)
   if(!scope.teacherId)throw new Error('teacher management action requires a teacher trigger')
   if(method==='draft_objectives'){
