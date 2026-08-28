@@ -35,7 +35,8 @@ import { env } from './env.js'
 import { audit, createSession } from './auth.js'
 import { onboardStarterAgents } from './onboardCompany.js'
 import { storage } from './storage.js'
-import { isWaitlistEnabled, enqueueWaitlist, isAllowlistedAdmin } from './admin.js'
+import { mirrorIdentityAvatar } from './avatar.js'
+import { enqueueWaitlist, isAllowlistedAdmin, isWaitlistEnabled } from './modules/admin/facade.js'
 import { discoverOidc, normalizeOidcProfile, type OidcProfile } from './oidc.js'
 import { isAllowedReturnUrl } from './oauth-return-url.js'
 
@@ -184,50 +185,6 @@ async function fetchProfile(p: Provider, accessToken: string): Promise<Normalize
   return normalizeOidcProfile(await r.json() as OidcProfile)
 }
 
-/** Common image content types we accept. The Google/GitHub avatar URLs
- *  both serve JPEG today; we still inspect Content-Type so a provider
- *  surprise PNG or WebP doesn't get mis-labeled. Anything outside this
- *  set is rejected. */
-const AVATAR_MIME_TO_EXT: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png':  'png',
-  'image/webp': 'webp',
-  'image/gif':  'gif',
-}
-const AVATAR_MAX_BYTES = 2 * 1024 * 1024  // 2MB — way more than any real avatar
-const AVATAR_FETCH_TIMEOUT_MS = 5000
-
-/** Pull the provider's avatar URL down and re-host on LingxiLoop storage so
- *  the renderer fetches from our CDN. Three wins:
- *    - Provider URL rotation doesn't break us
- *    - Same-origin in the renderer → no third-party CORS / Referer / CSP
- *      surprises, no broken-image races
- *    - One stable URL per user → avatar-cache invalidation is meaningful
- *
- *  Any failure propagates; third-party URLs are never persisted. */
-export async function mirrorAvatar(userId: string, providerUrl: string | null): Promise<string | null> {
-  if (!providerUrl) return null
-  const ctl = new AbortController()
-  const timer = setTimeout(() => ctl.abort(), AVATAR_FETCH_TIMEOUT_MS)
-  try {
-    const r = await fetch(providerUrl, {
-      signal: ctl.signal,
-      headers: { 'user-agent': 'lingxiloop' },
-    })
-    if (!r.ok) throw new Error(`avatar fetch failed: HTTP ${r.status}`)
-    const mime = (r.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase()
-    const ext = AVATAR_MIME_TO_EXT[mime]
-    if (!ext) throw new Error(`unsupported avatar content type: ${mime || 'missing'}`)
-    const ab = await r.arrayBuffer()
-    if (ab.byteLength > AVATAR_MAX_BYTES) throw new Error('avatar exceeds 2 MB')
-    const buf = Buffer.from(ab)
-    const key = `avatars/${userId}.${ext}`
-    return await storage.put(key, buf, mime)
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
 export interface CompletionResult {
   userId: string
   email: string
@@ -355,7 +312,7 @@ export async function findOrCreateUserByProfile(
     // from LingxiLoop's CDN, not third-party hosts.
     // Stamp onto users.avatar_url so every workspace this user later joins
     // (via invite or self-created) re-uses ONE face, not per-tenant
-    const mirroredAvatar = await mirrorAvatar(userId, profile.avatarUrl)
+    const mirroredAvatar = await mirrorIdentityAvatar(storage, userId, profile.avatarUrl)
     const avatar = mirroredAvatar
     await client.query(`UPDATE users SET avatar_url = $1 WHERE id = $2`, [avatar, userId])
 

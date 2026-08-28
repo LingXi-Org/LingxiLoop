@@ -70,6 +70,10 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   await assert.rejects(readFile(new URL('../polls.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../canvas/service.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../api/admin-router.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../admin.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  const adminRouter = await readFile(new URL('../modules/admin/router.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(adminRouter, /from ['"]\.\.\/\.\.\/eval\/(?:contracts|service|repository)\.js['"]/)
+  assert.match(adminRouter, /from ['"]\.\.\/\.\.\/eval\/public\.js['"]/)
   const pollCallers = await Promise.all([
     '../agent-os/learning-actions.ts',
     '../agents/cli.ts',

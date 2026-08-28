@@ -69,6 +69,7 @@ const strictServerDomains = new Set(['admin', 'agents', 'boards', 'calendar', 'c
 for (const file of server) {
   const source = await read(file)
   const fileName = name(file)
+  if (fileName === 'server/src/admin.ts') violations.push(`${fileName}: retired root admin implementation is forbidden`)
   if (/\bnew\s+OpenAI\s*\(/.test(source) && fileName !== 'server/src/llm-client.ts') violations.push(`${fileName}: OpenAI construction bypasses llm-client.ts`)
   if (/\bnew\s+S3Client\s*\(/.test(source) && fileName !== 'server/src/storage.ts') violations.push(`${fileName}: object storage construction bypasses storage.ts`)
   if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|SUB2API|DEEPSEEK_API_KEY/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)
@@ -78,6 +79,9 @@ for (const file of server) {
   if (domainRouter && strictServerDomains.has(domainRouter)) {
     if (/from ['"][^'"]*db\//.test(source) || /\b(?:pool|db)\.query\b/.test(source)) violations.push(`${fileName}: router bypasses its repository`)
     if (/`[^`]*\b(?:SELECT|INSERT|UPDATE|DELETE)\b[^`]*`/is.test(source)) violations.push(`${fileName}: router contains SQL`)
+    if (domainRouter === 'admin' && /from ['"]\.\.\/\.\.\/eval\/(?:contracts|service|repository)\.js['"]/.test(source)) {
+      violations.push(`${fileName}: cross-domain Eval access must use eval/public.ts`)
+    }
   }
   if (fileName.endsWith('/repository.ts') && /from ['"]express['"]|\b(?:Request|Response)\b/.test(source)) violations.push(`${fileName}: repository depends on HTTP`)
   if (fileName.endsWith('/application.ts') && /from ['"]express['"]|\b(?:req|res)\s*[.:]/.test(source)) violations.push(`${fileName}: application depends on HTTP objects`)

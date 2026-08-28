@@ -18,7 +18,7 @@
 import 'dotenv/config'
 import { randomUUID } from 'node:crypto'
 import { pool } from './db/pool.js'
-import { approveWaitlist } from './admin.js'
+import { approveWaitlist } from './modules/admin/facade.js'
 
 async function main(): Promise<void> {
   const stamp = Date.now()

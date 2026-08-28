@@ -9,23 +9,29 @@
  *
  * Conventions:
  *   - JSON in, JSON out. Camel-case fields on the wire.
- *   - Mutations call the helpers in admin.ts (so they can be reused by
- *     a future CLI without duplicating the logic).
+ *   - Handlers call the Admin public facade; persistence stays in the domain.
  *   - All handlers use the shared async/error boundary.
  */
 import { Router } from 'express'
 import {
-  type AppSettings, approveWaitlist,
-  getSettings,
-  listWaitlist, rejectWaitlist,
-  setSetting,
-} from '../../admin.js'
-import { EvalInputError, validateEvalRunInput } from '../../eval/contracts.js'
-import { createEvalRun, getEvalComparison, getEvalDashboard, getEvalRunDetail } from '../../eval/service.js'
+  EvalInputError,
+  createEvalRun,
+  getEvalComparison,
+  getEvalDashboard,
+  getEvalRunDetail,
+  validateEvalRunInput,
+} from '../../eval/public.js'
 import { safe } from '../../http/async-handler.js'
 import { HttpError } from '../../http/errors.js'
-import { adminUserListQuerySchema, adminUserPatchSchema } from './contracts.js'
-import { adminApplication } from './facade.js'
+import { type AppSettings, adminUserListQuerySchema, adminUserPatchSchema } from './contracts.js'
+import {
+  adminApplication,
+  approveWaitlist,
+  getSettings,
+  listWaitlist,
+  rejectWaitlist,
+  setSetting,
+} from './facade.js'
 
 export const adminRouter = Router()
 

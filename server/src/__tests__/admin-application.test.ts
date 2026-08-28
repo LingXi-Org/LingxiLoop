@@ -3,11 +3,6 @@ import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import { AdminApplication, AdminApplicationError } from '../modules/admin/application.js'
 
-const infrastructure = {
-  suspendUser: async () => undefined,
-  unsuspendUser: async () => undefined,
-}
-
 function adminDb(isAdmin: boolean): Queryable {
   return {
     async query() {
@@ -16,8 +11,21 @@ function adminDb(isAdmin: boolean): Queryable {
   }
 }
 
+function infrastructure(db: Queryable) {
+  return {
+    db,
+    transaction: async <T>(work: (transactionDb: Queryable) => Promise<T>) => work(db),
+    adminEmails: [] as string[],
+    mirrorAvatar: async () => null,
+    onboardStarterAgents: async () => undefined,
+    sendWaitlistApprovedEmail: async () => undefined,
+    audit: async () => undefined,
+  }
+}
+
 test('admin application rejects missing and non-admin identities explicitly', async () => {
-  const application = new AdminApplication(adminDb(false), infrastructure)
+  const db = adminDb(false)
+  const application = new AdminApplication(infrastructure(db))
   await assert.rejects(application.authorize(undefined), (error: unknown) => {
     assert.ok(error instanceof AdminApplicationError)
     assert.equal(error.status, 401)
@@ -31,12 +39,14 @@ test('admin application rejects missing and non-admin identities explicitly', as
 })
 
 test('admin application returns the trusted actor id after repository authorization', async () => {
-  const application = new AdminApplication(adminDb(true), infrastructure)
+  const db = adminDb(true)
+  const application = new AdminApplication(infrastructure(db))
   assert.equal(await application.authorize('admin-1'), 'admin-1')
 })
 
 test('admin application prevents self-demotion before issuing a mutation', async () => {
-  const application = new AdminApplication(adminDb(true), infrastructure)
+  const db = adminDb(true)
+  const application = new AdminApplication(infrastructure(db))
   await assert.rejects(
     application.patchUser('admin-1', 'admin-1', { isAdmin: false }),
     (error: unknown) => {

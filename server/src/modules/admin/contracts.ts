@@ -36,3 +36,44 @@ export interface AdminStats {
   companies: number
   agents: number
 }
+
+export interface AppSettings {
+  waitlist_enabled: boolean
+  signups_paused: boolean
+}
+
+export type AppSettingKey = keyof AppSettings
+
+export interface WaitlistRow {
+  id: string
+  provider: string
+  providerId: string
+  email: string
+  displayName: string
+  avatarUrl: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  note: string | null
+  requestedAt: string
+  decidedAt: string | null
+  decidedBy: string | null
+}
+
+export interface WaitlistFilter {
+  status?: WaitlistRow['status']
+  q?: string
+  limit?: number
+  offset?: number
+}
+
+export interface EnqueueWaitlistInput {
+  provider: string
+  providerId: string
+  email: string
+  displayName: string
+  avatarUrl: string | null
+}
+
+export interface ApprovedWaitlist {
+  userId: string
+  companyId: string | null
+}
