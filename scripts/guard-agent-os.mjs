@@ -20,7 +20,7 @@ const activeFiles = [
   join(root, 'server/src/web.ts'),
   join(root, 'server/src/im/router.ts'),
   join(root, 'src/lib/im/wukong.ts'),
-  join(root, 'src/stores/messages.ts'),
+  join(root, 'src/features/chat/state/messages.ts'),
 ]
 
 for (const retiredPath of [

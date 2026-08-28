@@ -42,14 +42,14 @@ test('domain modules expose one native router implementation without forwarding 
     assert.match(router, new RegExp(`export const ${domain}Router = Router\\(\\)`))
     assert.doesNotMatch(router, /ServiceRoutes|from ['"]\.\/service\.js['"]/)
     await assert.rejects(readFile(new URL(`../modules/${domain}/service.ts`, import.meta.url), 'utf8'), { code: 'ENOENT' })
-    routeRegistrations += router.match(/api\.(?:all|get|post|put|patch|delete)\('/g)?.length ?? 0
+    routeRegistrations += router.match(/(?:api|[a-z]+Router)\.(?:all|get|post|put|patch|delete)\('/g)?.length ?? 0
   }
 
   assert.ok(routeRegistrations > 100, 'domain route registrations unexpectedly disappeared')
 })
 
 test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
-  for (const domain of ['calendar', 'documents', 'email', 'identity', 'messages', 'observability', 'platform']) {
+  for (const domain of ['calendar', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'messages', 'observability', 'platform']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const application = await readFile(new URL('application.ts', base), 'utf8')
