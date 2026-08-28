@@ -1,4 +1,10 @@
-export { calendarApplication, CalendarApplicationError } from './facade.js'
+export {
+  calendarApplication,
+  CalendarApplicationError,
+  startCalendarScheduler,
+  tickCalendar,
+} from './facade.js'
+export { nextOccurrenceOnOrAfter } from './scheduler.js'
 export type {
   CalendarDispatchPayload,
   CalendarDispatchResult,

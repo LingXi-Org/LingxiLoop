@@ -49,6 +49,11 @@ export interface RecentCalendarEventRow {
   created_at: Date
 }
 
+export interface CalendarReminderRecipientRow {
+  user_id: string
+  email: string | null
+}
+
 export interface InsertCalendarEventArgs {
   id: string
   companyId: string
@@ -297,4 +302,178 @@ export async function listCalendarDispatches(
     [eventId, companyId, projectId],
   )
   return rows
+}
+
+export async function claimCalendarDispatch(
+  db: Queryable,
+  args: { id: string; eventId: string; companyId: string; scheduledFor: Date },
+): Promise<boolean> {
+  const result = await db.query(
+    `INSERT INTO calendar_dispatches (id, event_id, company_id, scheduled_for, status)
+     VALUES ($1,$2,$3,$4,'pending')
+     ON CONFLICT (event_id, scheduled_for) DO NOTHING`,
+    [args.id, args.eventId, args.companyId, args.scheduledFor],
+  )
+  return (result.rowCount ?? 0) > 0
+}
+
+export async function completeCalendarDispatch(
+  db: Queryable,
+  args: {
+    id: string
+    status: 'dispatched' | 'skipped' | 'failed'
+    conversationId?: string | null
+    messageId?: string | null
+    error?: string | null
+  },
+): Promise<void> {
+  await db.query(
+    `UPDATE calendar_dispatches
+        SET status = $2, conversation_id = $3, message_id = $4, error = $5
+      WHERE id = $1`,
+    [args.id, args.status, args.conversationId ?? null, args.messageId ?? null, args.error ?? null],
+  )
+}
+
+export async function calendarConversationMembers(
+  db: Queryable,
+  args: { conversationId: string; companyId: string; projectId: string },
+): Promise<string[] | null> {
+  const { rows } = await db.query<{ members: string[] }>(
+    `SELECT members FROM conversations
+      WHERE id = $1 AND company_id = $2 AND project_id = $3
+      LIMIT 1`,
+    [args.conversationId, args.companyId, args.projectId],
+  )
+  return rows[0]?.members ?? null
+}
+
+export async function allocateCalendarMessageSequence(
+  db: Queryable,
+  conversationId: string,
+): Promise<number> {
+  const { rows } = await db.query<{ seq: number }>(
+    `INSERT INTO conversation_counters (conversation_id, next_sequence)
+     VALUES ($1, 2)
+     ON CONFLICT (conversation_id)
+     DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
+     RETURNING next_sequence - 1 AS seq`,
+    [conversationId],
+  )
+  if (!rows[0]) throw new Error('calendar message sequence allocation returned no row')
+  return rows[0].seq
+}
+
+export async function insertCalendarSystemMessage(
+  db: Queryable,
+  args: {
+    id: string
+    conversationId: string
+    body: string
+    sequence: number
+    companyId: string
+    authorId: string
+  },
+): Promise<void> {
+  await db.query(
+    `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
+     VALUES ($1,$2,$3,'system',$4,$5,$6)`,
+    [args.id, args.conversationId, args.authorId, args.body, args.sequence, args.companyId],
+  )
+  await db.query(
+    `UPDATE conversations SET updated_at = NOW()
+      WHERE id = $1 AND company_id = $2`,
+    [args.conversationId, args.companyId],
+  )
+}
+
+export async function listCalendarReminderRecipients(
+  db: Queryable,
+  args: { companyId: string; creatorId: string; assigneeId: string | null },
+): Promise<CalendarReminderRecipientRow[]> {
+  const { rows } = await db.query<CalendarReminderRecipientRow>(
+    `WITH recipient_ids AS (
+       SELECT $2::text AS user_id
+       UNION
+       SELECT participant.id
+         FROM participants participant
+        WHERE participant.company_id = $1
+          AND participant.id = $3
+          AND participant.kind = 'human'
+          AND participant.departed_at IS NULL
+     )
+     SELECT recipient.user_id, users.email
+       FROM recipient_ids recipient
+       LEFT JOIN users ON users.id = recipient.user_id`,
+    [args.companyId, args.creatorId, args.assigneeId],
+  )
+  return rows
+}
+
+export async function claimCalendarReminder(
+  db: Queryable,
+  args: {
+    id: string
+    eventId: string
+    companyId: string
+    scheduledFor: Date
+    channel: ReminderChannel
+  },
+): Promise<boolean> {
+  const result = await db.query(
+    `INSERT INTO calendar_reminders
+       (id, event_id, company_id, scheduled_for, channel, recipients, status)
+     VALUES ($1,$2,$3,$4,$5,'[]'::jsonb,'pending')
+     ON CONFLICT (event_id, scheduled_for) DO NOTHING`,
+    [args.id, args.eventId, args.companyId, args.scheduledFor, args.channel],
+  )
+  return (result.rowCount ?? 0) > 0
+}
+
+export async function completeCalendarReminder(
+  db: Queryable,
+  args: {
+    id: string
+    recipients: string[]
+    status: 'sent' | 'skipped' | 'failed'
+    error?: string | null
+  },
+): Promise<void> {
+  await db.query(
+    `UPDATE calendar_reminders
+        SET recipients = $2::jsonb, status = $3, error = $4
+      WHERE id = $1`,
+    [args.id, JSON.stringify(args.recipients), args.status, args.error ?? null],
+  )
+}
+
+export async function listActiveCalendarEvents(db: Queryable): Promise<CalendarEventRow[]> {
+  const { rows } = await db.query<CalendarEventRow>(
+    `SELECT ${CALENDAR_SELECT} FROM calendar_events WHERE status = 'active'`,
+  )
+  return rows
+}
+
+export async function markCalendarEventDone(
+  db: Queryable,
+  args: { id: string; companyId: string },
+): Promise<void> {
+  await db.query(
+    `UPDATE calendar_events
+        SET status = 'done', updated_at = NOW()
+      WHERE id = $1 AND company_id = $2`,
+    [args.id, args.companyId],
+  )
+}
+
+export async function markCalendarEventFired(
+  db: Queryable,
+  args: { id: string; companyId: string; scheduledFor: Date },
+): Promise<void> {
+  await db.query(
+    `UPDATE calendar_events
+        SET last_fired_at = $3, updated_at = NOW()
+      WHERE id = $1 AND company_id = $2`,
+    [args.id, args.companyId, args.scheduledFor],
+  )
 }
