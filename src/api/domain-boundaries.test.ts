@@ -3,7 +3,7 @@ import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const domains = [
-  'agents', 'boards', 'canvas',
+  'agents', 'canvas',
   'documents', 'email', 'files', 'learning',
   'observability', 'platform',
 ] as const
@@ -19,7 +19,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   }
 
   const consumers = await Promise.all([
-    '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../stores/boards.ts',
+    '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../features/boards/state.ts',
     '../features/calendar/state.ts', '../stores/canvas.ts', '../stores/documents.ts',
     '../features/knowledge/state.ts', '../stores/participants.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
@@ -74,4 +74,12 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
     '../features/companies/components/InviteAcceptScreen.tsx',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(companySources.join('\n'), /api\/companies|components\/InvitePeopleModal/)
+
+  for (const file of ['api.ts', 'contracts.ts', 'state.ts', 'components/BoardsView.tsx', 'components/BoardPeekPane.tsx']) {
+    await access(new URL(`../features/boards/${file}`, import.meta.url))
+  }
+  await assert.rejects(access(new URL('./boards.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../stores/boards.ts', import.meta.url)))
+  const boardState = await readFile(new URL('../features/boards/state.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(boardState, /api\/boards|stores\/boards/)
 })

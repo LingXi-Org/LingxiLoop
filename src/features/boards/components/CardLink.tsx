@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
-import { useBoards } from '@/stores/boards'
+import { useBoards } from '../state'
 import { useResolvedCardId } from '@/lib/useArtifactId'
-import { IBoard } from './icons'
-import type { BoardCardLookup } from '@/types'
+import { IBoard } from '@/components/icons'
+import type { BoardCardLookup } from '../contracts'
 
 export function CardLink({ id: rawId }: { id: string }) {
   // Resolve a git-style short id to the full card id (best-effort: cards are

@@ -57,7 +57,7 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../components/EventEditor.tsx',
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
-    '../desktop/BoardsView.tsx',
+    '../features/boards/components/BoardsView.tsx',
     '../desktop/CalendarView.tsx',
     '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/conversations/components/ConversationsPane.tsx',

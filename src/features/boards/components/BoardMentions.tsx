@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from 'react'
 import { AvatarMini } from '@/components/Avatar'
-import { BoardLink } from '@/components/BoardLink'
+import { BoardLink } from '@/features/boards/components/BoardLink'
 import { CalendarLink } from '@/components/CalendarLink'
-import { CardLink } from '@/components/CardLink'
+import { CardLink } from '@/features/boards/components/CardLink'
 import { DocumentLink } from '@/components/DocumentLink'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -318,5 +318,4 @@ export function MentionInput(props: {
     </div>
   )
 }
-
 

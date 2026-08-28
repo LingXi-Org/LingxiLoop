@@ -10,10 +10,11 @@ import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
-import { useBoards } from '@/stores/boards'
+import { useBoards } from '../state'
 import { useParticipants } from '@/stores/participants'
-import type { BoardCard, BoardCardComment, BoardColumn, Participant } from '@/types'
-import { hasLinkedReference, MentionedText, MentionInput } from './boards/BoardMentions'
+import type { Participant } from '@/types'
+import type { BoardCard, BoardCardComment, BoardColumn } from '../contracts'
+import { hasLinkedReference, MentionedText, MentionInput } from './BoardMentions'
 
 /**
  * Boards view — Kanban for both humans and agents.

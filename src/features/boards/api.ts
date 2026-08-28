@@ -5,7 +5,7 @@ import type {
   BoardCardLookup,
   BoardSnapshot,
   BoardSummary,
-} from '@/types'
+} from './contracts'
 
 export const boardsApi = {
   listBoards: () => http<BoardSummary[]>('/boards'),

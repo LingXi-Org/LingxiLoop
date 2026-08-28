@@ -1,6 +1,6 @@
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
-import { useBoards } from '@/stores/boards'
+import { useBoards } from '../state'
 import { BoardPeekContent } from '@/components/ArtifactPeekContent'
 
 export function BoardPeekPane() {

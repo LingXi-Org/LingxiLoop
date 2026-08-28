@@ -1,9 +1,9 @@
-import { boardsApi } from '@/api/boards'
+import { boardsApi } from './api'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 import type {
   BoardSummary, BoardSnapshot, BoardCard, BoardCardComment, BoardCardLookup,
-} from '@/types'
+} from './contracts'
 
 interface BoardsState {
   /** Workspace-wide list of board summaries. Loaded once on view mount;

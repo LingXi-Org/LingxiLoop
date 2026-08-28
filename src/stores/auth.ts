@@ -89,7 +89,7 @@ export const useAuth = create<AuthState>((set) => ({
     // clear them.
     void Promise.all([
       import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
+      import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
       import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
@@ -104,7 +104,7 @@ export const useAuth = create<AuthState>((set) => ({
     if (prevId && prevId !== c.id) {
       void Promise.all([
         import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-        import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
+        import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
         import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
       ])
     }
@@ -121,7 +121,7 @@ export const useAuth = create<AuthState>((set) => ({
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([
       import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
+      import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
       import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AvatarMini } from '@/components/Avatar'
-import { useBoards } from '@/stores/boards'
+import { useBoards } from '@/features/boards/state'
 import { useCalendar } from '@/features/calendar/state'
 import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/stores/participants'
@@ -12,7 +12,7 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import type { CalendarEvent, RecurrenceRule } from '@/features/calendar/contracts'
-import type { BoardCard } from '@/types'
+import type { BoardCard } from '@/features/boards/contracts'
 
 const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
