@@ -23,10 +23,12 @@ import { COLOR_BY_ID, SHAPE_BY_ID } from '@/lib/bloub/skins'
 import { STATE_BY_ID, type StateId } from '@/lib/bloub/states'
 import { getBloubClockTime, subscribeBloubClock } from '@/lib/bloub/clock'
 
+type BloubParticipant = Pick<Participant, 'id' | 'name' | 'role' | 'status' | 'statusUpdatedAt'>
+
 /** Each entry into `working` advances a local epoch. Server-driven working
  *  states additionally use statusUpdatedAt, so remounts during one work spell
  *  remain stable while a new server work spell is reseeded. */
-function useWorkingEpoch(participant: Participant, status: string): number {
+function useWorkingEpoch(participant: BloubParticipant, status: string): number {
   const epoch = useRef({ previousStatus: null as string | null, localRound: 0 })
   if (epoch.current.previousStatus !== status) {
     if (status === 'working') epoch.current.localRound += 1
@@ -62,7 +64,7 @@ function useDisplayState(workingSeed: number, status: string, baseState: StateId
 }
 
 interface Props {
-  participant: Participant
+  participant: BloubParticipant
   status: string
   size: number
   paper?: string

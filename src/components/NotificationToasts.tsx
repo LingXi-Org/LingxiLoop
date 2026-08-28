@@ -158,9 +158,13 @@ export function NotificationToasts() {
           conversationId: e.conversationId,
           authorId: m.authorId,
           authorName: author?.name ?? m.authorId,
-          authorAvatarUrl: author?.avatarUrl ?? null,
-          authorInitial: author?.initial ?? (author?.name ?? m.authorId).charAt(0).toUpperCase(),
-          authorAvatarBg: author?.avatarBg,
+          authorKind: author?.kind ?? null,
+          authorRole: author?.role ?? null,
+          authorStatus: author?.status ?? null,
+          authorAvatarUrl: author?.kind === 'human' ? author.avatarUrl ?? null : null,
+          authorInitial: author?.kind === 'human'
+            ? author.initial || author.name.charAt(0).toUpperCase()
+            : null,
           conversationTitle: title,
           body: m.body || '(empty)',
           at,

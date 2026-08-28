@@ -48,6 +48,7 @@ for (const [label, pattern] of [
   ['retired device server override', /lingxiloop\.serverUrl|setServerOrigin\s*\(/],
   ['retired root API facade', /\b(?:platformApi|filesApi|observabilityApi)\b/],
   ['retired agent portrait path', /agents?\/[^'"`]*avatar\/generate|generateAgentAvatar|AI生成的肖像|AI portrait/],
+  ['retired agent notification signature', /authorAvatarBg/],
 ]) if (pattern.test(productionFrontend)) violations.push(`frontend: ${label} is forbidden`)
 
 const fetchAllowlist = new Set([
