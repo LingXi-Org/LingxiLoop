@@ -3,6 +3,7 @@ import { authMiddleware } from '../auth.js'
 import { errorHandler } from '../http/errors.js'
 import { imRouter } from '../im/router.js'
 import { agentsRouter } from '../modules/agents/router.js'
+import { adminRouter } from '../modules/admin/router.js'
 import { boardsRouter } from '../modules/boards/router.js'
 import { calendarRouter } from '../modules/calendar/router.js'
 import { canvasRouter } from '../modules/canvas/router.js'
@@ -17,7 +18,6 @@ import { messagesRouter } from '../modules/messages/router.js'
 import { observabilityRouter } from '../modules/observability/router.js'
 import { platformRouter } from '../modules/platform/router.js'
 import { pollsRouter } from '../modules/polls/router.js'
-import { adminRouter } from './admin-router.js'
 
 export const api = Router()
 

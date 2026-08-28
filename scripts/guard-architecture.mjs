@@ -54,7 +54,7 @@ if (/\/agents\/observability\/runs/.test(observabilityRouter)) violations.push('
 // Domains enter this set only after their router/application/repository split
 // is complete. Keeping the assertion here makes a later regression impossible
 // while the remaining domains are migrated deliberately.
-const strictServerDomains = new Set(['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls'])
+const strictServerDomains = new Set(['admin', 'agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls'])
 
 for (const file of server) {
   const source = await read(file)

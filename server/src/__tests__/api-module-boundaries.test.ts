@@ -28,6 +28,8 @@ test('the API entrypoint is a composition root, not a business router', async ()
   assert.doesNotMatch(source, /\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
   assert.doesNotMatch(source, /\bpool\.query\b/)
   assert.match(source, /api\.use\(errorHandler\)/)
+  assert.match(source, /import \{ adminRouter \} from '\.\.\/modules\/admin\/router\.js'/)
+  assert.match(source, /api\.use\('\/admin', adminRouter\)/)
 
   for (const domain of domains) {
     assert.match(source, new RegExp(`import \\{ ${domain}Router \\} from '../modules/${domain}/router\\.js'`))
@@ -49,7 +51,7 @@ test('domain modules expose one native router implementation without forwarding 
 })
 
 test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
-  for (const domain of ['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
+  for (const domain of ['admin', 'agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const application = await readFile(new URL('application.ts', base), 'utf8')
@@ -66,6 +68,7 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   }
   await assert.rejects(readFile(new URL('../polls.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../canvas/service.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../api/admin-router.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   const pollCallers = await Promise.all([
     '../agent-os/learning-actions.ts',
     '../agents/cli.ts',

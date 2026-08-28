@@ -111,14 +111,10 @@ export async function setSetting(key: keyof AppSettings, value: boolean, updated
 /** Single-key read — small helper for oauth.ts so we don't have to pull
  *  the whole settings object every signup. */
 export async function isWaitlistEnabled(): Promise<boolean> {
-  try {
-    const { rows } = await pool.query<{ value: unknown }>(
-      `SELECT value FROM app_settings WHERE key = 'waitlist_enabled' LIMIT 1`,
-    )
-    return rows[0]?.value === true
-  } catch {
-    return false
-  }
+  const { rows } = await pool.query<{ value: unknown }>(
+    `SELECT value FROM app_settings WHERE key = 'waitlist_enabled' LIMIT 1`,
+  )
+  return rows[0]?.value === true
 }
 
 /* ============== Waitlist mutations ============== */
