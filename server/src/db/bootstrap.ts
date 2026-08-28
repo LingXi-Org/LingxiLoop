@@ -25,11 +25,13 @@ const REQUIRED_V1_COLUMNS = [
   ['llm_calls', 'status'],
   ['message_reactions', 'company_id'],
   ['agent_climate', 'company_id'],
+  ['calendar_events', 'project_id'],
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [
   ['message_reactions', 'company_id'],
   ['agent_climate', 'company_id'],
+  ['calendar_events', 'project_id'],
 ] as const
 
 const REQUIRED_V1_PRIMARY_KEYS = [

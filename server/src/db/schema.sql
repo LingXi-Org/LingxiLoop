@@ -674,7 +674,13 @@ CREATE TABLE public.calendar_events (
     reminder_minutes_before integer,
     reminder_channel text,
     is_private boolean DEFAULT false NOT NULL,
-    project_id text
+    project_id text NOT NULL,
+    CONSTRAINT calendar_events_kind_check CHECK (kind = ANY (ARRAY['personal'::text, 'agent_task'::text])),
+    CONSTRAINT calendar_events_status_check CHECK (status = ANY (ARRAY['active'::text, 'paused'::text, 'done'::text, 'cancelled'::text])),
+    CONSTRAINT calendar_events_agent_task_check CHECK (kind <> 'agent_task'::text OR (assignee_id IS NOT NULL AND target_conversation_id IS NOT NULL)),
+    CONSTRAINT calendar_events_reminder_check CHECK ((reminder_minutes_before IS NULL) = (reminder_channel IS NULL)),
+    CONSTRAINT calendar_events_reminder_minutes_check CHECK (reminder_minutes_before IS NULL OR (reminder_minutes_before >= 0 AND reminder_minutes_before <= 20160)),
+    CONSTRAINT calendar_events_reminder_channel_check CHECK (reminder_channel IS NULL OR reminder_channel = ANY (ARRAY['toast'::text, 'email'::text, 'both'::text]))
 );
 
 

@@ -58,6 +58,21 @@ test('tenant-owned reaction and climate rows have no legacy tenant default', () 
   assert.match(bootstrap, /REQUIRED_V1_PRIMARY_KEYS/)
 })
 
+test('calendar rows require one workspace and coherent native event fields', () => {
+  assert.match(schema, /CREATE TABLE public\.calendar_events \([\s\S]*?project_id text NOT NULL[\s\S]*?\);/)
+  for (const constraint of [
+    'calendar_events_kind_check',
+    'calendar_events_status_check',
+    'calendar_events_agent_task_check',
+    'calendar_events_reminder_check',
+    'calendar_events_reminder_minutes_check',
+    'calendar_events_reminder_channel_check',
+  ]) {
+    assert.match(schema, new RegExp(`CONSTRAINT ${constraint}\\b`))
+  }
+  assert.match(bootstrap, /\['calendar_events', 'project_id'\]/)
+})
+
 test('bootstrap only reuses a complete marked v1 schema and rejects every unmarked non-empty schema', () => {
   const executableBootstrap = bootstrap
     .replace(/\/\*[\s\S]*?\*\//g, '')

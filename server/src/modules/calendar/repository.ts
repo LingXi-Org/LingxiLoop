@@ -1,0 +1,276 @@
+import type { Queryable } from '../../db/queryable.js'
+import type {
+  CalendarEventKind,
+  CalendarStatus,
+  RecurrenceRule,
+  ReminderChannel,
+  UpdateCalendarEventInput,
+} from './contracts.js'
+
+export interface CalendarEventRow {
+  id: string
+  company_id: string
+  project_id: string
+  created_by: string
+  kind: CalendarEventKind
+  title: string
+  description: string | null
+  assignee_id: string | null
+  target_conversation_id: string | null
+  agent_prompt: string | null
+  start_at: Date
+  end_at: Date | null
+  all_day: boolean
+  recurrence: RecurrenceRule | null
+  status: CalendarStatus
+  last_fired_at: Date | null
+  reminder_minutes_before: number | null
+  reminder_channel: ReminderChannel | null
+  is_private: boolean
+  created_at: Date
+  updated_at: Date
+}
+
+export interface CalendarDispatchRow {
+  id: string
+  event_id: string
+  scheduled_for: Date
+  dispatched_at: Date
+  status: string
+  conversation_id: string | null
+  message_id: string | null
+  error: string | null
+}
+
+export interface InsertCalendarEventArgs {
+  id: string
+  companyId: string
+  projectId: string
+  createdBy: string
+  kind: CalendarEventKind
+  title: string
+  description: string | null
+  assigneeId: string | null
+  targetConversationId: string | null
+  agentPrompt: string | null
+  startAt: Date
+  endAt: Date | null
+  allDay: boolean
+  recurrence: RecurrenceRule | null
+  status: CalendarStatus
+  reminderMinutesBefore: number | null
+  reminderChannel: ReminderChannel | null
+  isPrivate: boolean
+}
+
+const CALENDAR_SELECT = `id, company_id, project_id, created_by, kind, title, description,
+  assignee_id, target_conversation_id, agent_prompt, start_at, end_at, all_day,
+  recurrence, status, last_fired_at, reminder_minutes_before, reminder_channel,
+  is_private, created_at, updated_at`
+
+function visibilityClause(userParameter: number, companyParameter: number): string {
+  return `(
+    is_private = false
+    OR created_by = $${userParameter}
+    OR assignee_id = $${userParameter}
+    OR (
+      EXISTS (
+        SELECT 1 FROM companies
+         WHERE id = $${companyParameter} AND owner_user_id = $${userParameter}
+      )
+      AND (
+        created_by IN (
+          SELECT id FROM participants
+           WHERE company_id = $${companyParameter} AND kind = 'agent'
+        )
+        OR assignee_id IN (
+          SELECT id FROM participants
+           WHERE company_id = $${companyParameter} AND kind = 'agent'
+        )
+      )
+    )
+  )`
+}
+
+export async function listCalendarEvents(
+  db: Queryable,
+  args: { companyId: string; projectId: string; userId: string; from?: Date; to?: Date },
+): Promise<CalendarEventRow[]> {
+  const parameters: unknown[] = [args.companyId, args.userId, args.projectId]
+  let sql = `SELECT ${CALENDAR_SELECT} FROM calendar_events
+              WHERE company_id = $1 AND project_id = $3 AND ${visibilityClause(2, 1)}`
+  if (args.from) {
+    parameters.push(args.from)
+    sql += ` AND (start_at >= $${parameters.length} OR (recurrence IS NOT NULL AND status = 'active'))`
+  }
+  if (args.to) {
+    parameters.push(args.to)
+    sql += ` AND start_at <= $${parameters.length}`
+  }
+  sql += ' ORDER BY start_at ASC LIMIT 1000'
+  const { rows } = await db.query<CalendarEventRow>(sql, parameters)
+  return rows
+}
+
+export async function calendarParticipantExists(
+  db: Queryable,
+  companyId: string,
+  participantId: string,
+): Promise<boolean> {
+  const { rows } = await db.query(
+    `SELECT 1 FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
+    [participantId, companyId],
+  )
+  return rows.length > 0
+}
+
+export async function calendarConversationExists(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+  conversationId: string,
+): Promise<boolean> {
+  const { rows } = await db.query(
+    `SELECT 1 FROM conversations
+      WHERE id = $1 AND company_id = $2 AND project_id = $3
+      LIMIT 1`,
+    [conversationId, companyId, projectId],
+  )
+  return rows.length > 0
+}
+
+export async function insertCalendarEvent(
+  db: Queryable,
+  args: InsertCalendarEventArgs,
+): Promise<CalendarEventRow> {
+  const { rows } = await db.query<CalendarEventRow>(
+    `INSERT INTO calendar_events
+       (id, company_id, project_id, created_by, kind, title, description, assignee_id,
+        target_conversation_id, agent_prompt, start_at, end_at, all_day, recurrence,
+        status, reminder_minutes_before, reminder_channel, is_private)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15,$16,$17,$18)
+     RETURNING ${CALENDAR_SELECT}`,
+    [
+      args.id,
+      args.companyId,
+      args.projectId,
+      args.createdBy,
+      args.kind,
+      args.title,
+      args.description,
+      args.assigneeId,
+      args.targetConversationId,
+      args.agentPrompt,
+      args.startAt,
+      args.endAt,
+      args.allDay,
+      args.recurrence ? JSON.stringify(args.recurrence) : null,
+      args.status,
+      args.reminderMinutesBefore,
+      args.reminderChannel,
+      args.isPrivate,
+    ],
+  )
+  if (!rows[0]) throw new Error('calendar event insert returned no row')
+  return rows[0]
+}
+
+export async function findVisibleCalendarEvent(
+  db: Queryable,
+  args: { id: string; companyId: string; projectId: string; userId: string },
+): Promise<CalendarEventRow | null> {
+  const { rows } = await db.query<CalendarEventRow>(
+    `SELECT ${CALENDAR_SELECT} FROM calendar_events
+      WHERE id = $1 AND company_id = $2 AND project_id = $4
+        AND ${visibilityClause(3, 2)}
+      LIMIT 1`,
+    [args.id, args.companyId, args.userId, args.projectId],
+  )
+  return rows[0] ?? null
+}
+
+const UPDATE_COLUMNS = {
+  title: 'title',
+  kind: 'kind',
+  description: 'description',
+  assigneeId: 'assignee_id',
+  targetConversationId: 'target_conversation_id',
+  agentPrompt: 'agent_prompt',
+  startAt: 'start_at',
+  endAt: 'end_at',
+  allDay: 'all_day',
+  recurrence: 'recurrence',
+  status: 'status',
+  reminderMinutesBefore: 'reminder_minutes_before',
+  reminderChannel: 'reminder_channel',
+  isPrivate: 'is_private',
+} as const
+
+export async function updateVisibleCalendarEvent(
+  db: Queryable,
+  scope: { id: string; companyId: string; projectId: string; userId: string },
+  patch: UpdateCalendarEventInput,
+): Promise<CalendarEventRow | null> {
+  const parameters: unknown[] = []
+  const sets: string[] = []
+  for (const key of Object.keys(UPDATE_COLUMNS) as Array<keyof typeof UPDATE_COLUMNS>) {
+    if (!Object.hasOwn(patch, key)) continue
+    const value = patch[key]
+    parameters.push(key === 'recurrence' && value != null ? JSON.stringify(value) : value)
+    const cast = key === 'recurrence' ? '::jsonb' : ''
+    sets.push(`${UPDATE_COLUMNS[key]} = $${parameters.length}${cast}`)
+  }
+  parameters.push(scope.id, scope.companyId, scope.userId, scope.projectId)
+  const idParameter = parameters.length - 3
+  const companyParameter = parameters.length - 2
+  const userParameter = parameters.length - 1
+  const projectParameter = parameters.length
+  const { rows } = await db.query<CalendarEventRow>(
+    `UPDATE calendar_events
+        SET ${sets.join(', ')}, updated_at = NOW()
+      WHERE id = $${idParameter}
+        AND company_id = $${companyParameter}
+        AND project_id = $${projectParameter}
+        AND ${visibilityClause(userParameter, companyParameter)}
+      RETURNING ${CALENDAR_SELECT}`,
+    parameters,
+  )
+  return rows[0] ?? null
+}
+
+export async function deleteVisibleCalendarEvent(
+  db: Queryable,
+  args: { id: string; companyId: string; projectId: string; userId: string },
+): Promise<boolean> {
+  const result = await db.query(
+    `DELETE FROM calendar_events
+      WHERE id = $1 AND company_id = $2 AND project_id = $4
+        AND ${visibilityClause(3, 2)}`,
+    [args.id, args.companyId, args.userId, args.projectId],
+  )
+  return (result.rowCount ?? 0) > 0
+}
+
+export async function listCalendarDispatches(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+  eventId: string,
+): Promise<CalendarDispatchRow[]> {
+  const { rows } = await db.query<CalendarDispatchRow>(
+    `SELECT dispatch.id, dispatch.event_id, dispatch.scheduled_for, dispatch.dispatched_at,
+            dispatch.status, dispatch.conversation_id, dispatch.message_id, dispatch.error
+       FROM calendar_dispatches dispatch
+       JOIN calendar_events event
+         ON event.id = dispatch.event_id
+        AND event.company_id = dispatch.company_id
+      WHERE dispatch.event_id = $1
+        AND dispatch.company_id = $2
+        AND event.company_id = $2
+        AND event.project_id = $3
+      ORDER BY dispatch.scheduled_for DESC
+      LIMIT 200`,
+    [eventId, companyId, projectId],
+  )
+  return rows
+}
