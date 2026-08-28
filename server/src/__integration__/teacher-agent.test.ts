@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import {
+  assertTeacherApprovalFresh,
   closeTeacherRoomForCourse,
   ensureTeacherAgentForCourse,
   nextTeacherDigestRun,
@@ -248,4 +249,42 @@ test('[integration] Pulse reporting repository cannot cross tenant course bounda
   assert.equal(overview.coverage[0]?.learners_with_evidence,1)
   assert.equal(await findTeacherAttemptDetail(pool,scope,foreignAttempt),undefined)
   assert.equal((await findTeacherAttemptDetail(pool,scope,ownAttempt))?.id,ownAttempt)
+})
+
+test('[integration] Pulse approval freshness binds the target room to the trusted tenant',async()=>{
+  const own=await seedTeacherCourse()
+  const foreign=await seedTeacherCourse()
+  const ownPulse=await ensureTeacherAgentForCourse(own.courseId)
+  const foreignPulse=await ensureTeacherAgentForCourse(foreign.courseId)
+  const ownObjective=`objective-${randomUUID()}`
+  const foreignObjective=`objective-${randomUUID()}`
+  const {rows}=await pool.query<{id:string;updated_at:Date}>(
+    `INSERT INTO learning_objectives(
+      id,course_id,company_id,title,success_criteria,target_level,position,status,created_by
+    ) VALUES
+      ($1,$2,$3,'本租户审批目标','完成目标',3,1,'draft',$4),
+      ($5,$6,$7,'外租户审批目标','完成目标',3,1,'draft',$8)
+    RETURNING id,updated_at`,
+    [
+      ownObjective,own.courseId,own.companyId,own.teacherId,
+      foreignObjective,foreign.courseId,foreign.companyId,foreign.teacherId,
+    ],
+  )
+  const versions=new Map(rows.map((row)=>[row.id,row.updated_at.toISOString()]))
+
+  await assertTeacherApprovalFresh({
+    companyId:own.companyId,
+    channelId:ownPulse.roomId,
+    action:'teacher.publish_objective',
+    preview:{entityId:ownObjective,currentVersion:versions.get(ownObjective)},
+  })
+  await assert.rejects(
+    assertTeacherApprovalFresh({
+      companyId:own.companyId,
+      channelId:foreignPulse.roomId,
+      action:'teacher.publish_objective',
+      preview:{entityId:foreignObjective,currentVersion:versions.get(foreignObjective)},
+    }),
+    /approval is stale/,
+  )
 })

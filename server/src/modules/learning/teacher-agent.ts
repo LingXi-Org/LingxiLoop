@@ -30,6 +30,18 @@ import {
   loadTeacherLearnerDetailRows,
   loadTeacherOverviewRows,
 } from './teacher-reporting-repository.js'
+import {
+  findTeacherActivityApprovalTarget,
+  findTeacherActivityApprovalVersion,
+  findTeacherCourseApprovalTarget,
+  findTeacherCourseApprovalVersion,
+  findTeacherEvaluationApprovalTarget,
+  findTeacherEvaluationApprovalVersion,
+  findTeacherMembershipApprovalTarget,
+  findTeacherMembershipApprovalVersion,
+  findTeacherObjectiveApprovalTarget,
+  findTeacherObjectiveApprovalVersion,
+} from './teacher-approval-repository.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,
@@ -469,37 +481,31 @@ export async function describeTeacherAction(work:AgentWorkItem,action:HostAction
   let entityId:string|undefined;let entityLabel:string|undefined;let currentState:unknown;let currentVersion:unknown
   if(method.includes('objective')){
     entityId=textArg(args,'objectiveId','objective_id')
-    const {rows}=await db.query<{status:string;updated_at:unknown;title:string}>(`SELECT status,updated_at,title FROM learning_objectives WHERE id=$1 AND course_id=$2`,[entityId,scope.courseId])
-    if(!rows[0])throw new Error('objective is outside the current course')
-    currentState=rows[0].status;currentVersion=versionToken(rows[0].updated_at);entityLabel=rows[0].title
+    const target=await findTeacherObjectiveApprovalTarget(db,scope.companyId,scope.courseId,entityId)
+    if(!target)throw new Error('objective is outside the current course')
+    currentState=target.status;currentVersion=versionToken(target.updatedAt);entityLabel=target.label??undefined
   }
   else if(method.includes('activity')){
     entityId=textArg(args,'activityId','activity_id')
-    const {rows}=await db.query<{status:string;updated_at:unknown;title:string}>(`SELECT status,updated_at,title FROM learning_activities WHERE id=$1 AND course_id=$2`,[entityId,scope.courseId])
-    if(!rows[0])throw new Error('activity is outside the current course')
-    currentState=rows[0].status;currentVersion=versionToken(rows[0].updated_at);entityLabel=rows[0].title
+    const target=await findTeacherActivityApprovalTarget(db,scope.companyId,scope.courseId,entityId)
+    if(!target)throw new Error('activity is outside the current course')
+    currentState=target.status;currentVersion=versionToken(target.updatedAt);entityLabel=target.label??undefined
   }
   else if(method==='set_course_status'){
     entityId=scope.courseId;entityLabel=scope.courseTitle
-    const {rows}=await db.query<{status:string;updated_at:unknown}>(
-      `SELECT project.status,project.updated_at
-         FROM courses course JOIN projects project
-           ON project.id=course.project_id AND project.company_id=course.company_id
-        WHERE course.id=$1`,
-      [scope.courseId],
-    )
-    currentState=rows[0]?.status;currentVersion=versionToken(rows[0]?.updated_at)
+    const target=await findTeacherCourseApprovalTarget(db,scope.companyId,scope.courseId)
+    currentState=target?.status;currentVersion=versionToken(target?.updatedAt)
   }
   else if(method==='set_teacher_membership'){
     entityId=textArg(args,'userId','user_id')
-    const {rows}=await db.query<{enabled:boolean;name:string|null}>(`SELECT EXISTS(SELECT 1 FROM course_members WHERE course_id=$1 AND user_id=$2 AND role='teacher') AS enabled,(SELECT name FROM participants WHERE id=$2 AND company_id=$3 LIMIT 1) AS name`,[scope.courseId,entityId,scope.companyId])
-    currentState=Boolean(rows[0]?.enabled);currentVersion=currentState;entityLabel=rows[0]?.name??'课程成员'
+    const target=await findTeacherMembershipApprovalTarget(db,scope.companyId,scope.courseId,entityId)
+    currentState=target.enabled;currentVersion=currentState;entityLabel=target.label??'课程成员'
   }
   else {
     entityId=textArg(args,'evaluationId','evaluation_id')
-    const {rows}=await db.query<{status:string;title:string|null}>(`SELECT e.status,act.title FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id LEFT JOIN learning_activities act ON act.id=a.activity_id WHERE e.id=$1 AND a.course_id=$2`,[entityId,scope.courseId])
-    if(!rows[0])throw new Error('evaluation is outside the current course')
-    currentState=rows[0].status;currentVersion=currentState;entityLabel=rows[0].title??'学习评价'
+    const target=await findTeacherEvaluationApprovalTarget(db,scope.companyId,scope.courseId,entityId)
+    if(!target)throw new Error('evaluation is outside the current course')
+    currentState=target.status;currentVersion=currentState;entityLabel=target.label??'学习评价'
   }
   const operationLabel:Record<string,string>={
     publish_objective:'发布学习目标',archive_objective:'归档学习目标',publish_activity:'发布学习活动',close_activity:'关闭学习活动',
@@ -516,11 +522,11 @@ export async function assertTeacherApprovalFresh(input:{channelId:string;company
   if(!input.action.startsWith('teacher.'))return
   const entityId=String(input.preview.entityId??'');const expected=String(input.preview.currentVersion??'')
   const method=input.action.slice('teacher.'.length);let current=''
-  if(method.includes('objective'))current=versionToken((await db.query(`SELECT o.updated_at FROM learning_objectives o JOIN learning_course_teacher_rooms tr ON tr.course_id=o.course_id WHERE o.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.updated_at)
-  else if(method.includes('activity'))current=versionToken((await db.query(`SELECT a.updated_at FROM learning_activities a JOIN learning_course_teacher_rooms tr ON tr.course_id=a.course_id WHERE a.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.updated_at)
-  else if(method==='set_course_status')current=versionToken((await db.query(`SELECT project.updated_at FROM courses course JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id JOIN learning_course_teacher_rooms tr ON tr.course_id=course.id AND tr.company_id=course.company_id WHERE course.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.updated_at)
-  else if(method==='set_teacher_membership')current=String(Boolean((await db.query(`SELECT 1 FROM course_members cm JOIN learning_course_teacher_rooms tr ON tr.course_id=cm.course_id AND tr.company_id=cm.company_id WHERE tr.conversation_id=$1 AND cm.user_id=$2 AND cm.role='teacher'`,[input.channelId,entityId])).rows[0]))
-  else current=String((await db.query(`SELECT e.status FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id JOIN learning_course_teacher_rooms tr ON tr.course_id=a.course_id WHERE e.id=$1 AND tr.conversation_id=$2`,[entityId,input.channelId])).rows[0]?.status??'')
+  if(method.includes('objective'))current=versionToken(await findTeacherObjectiveApprovalVersion(db,input.companyId,input.channelId,entityId))
+  else if(method.includes('activity'))current=versionToken(await findTeacherActivityApprovalVersion(db,input.companyId,input.channelId,entityId))
+  else if(method==='set_course_status')current=versionToken(await findTeacherCourseApprovalVersion(db,input.companyId,input.channelId,entityId))
+  else if(method==='set_teacher_membership')current=String(await findTeacherMembershipApprovalVersion(db,input.companyId,input.channelId,entityId))
+  else current=String(await findTeacherEvaluationApprovalVersion(db,input.companyId,input.channelId,entityId)??'')
   if(!current||current!==expected)throw new Error('approval is stale because the target changed; request a fresh approval')
 }
 

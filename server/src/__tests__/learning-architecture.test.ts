@@ -24,6 +24,10 @@ const learningRouterSource = readFileSync(new URL('../modules/learning/router.ts
 const classroomRouterSource = readFileSync(new URL('../modules/learning/classroom-router.ts', import.meta.url), 'utf8')
 const learningHttpAdapterSource = readFileSync(new URL('../modules/learning/http-adapter.ts', import.meta.url), 'utf8')
 const teacherAgentSource = readFileSync(new URL('../modules/learning/teacher-agent.ts', import.meta.url), 'utf8')
+const teacherApprovalRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-approval-repository.ts', import.meta.url),
+  'utf8',
+)
 const teacherReportingRepositorySource = readFileSync(
   new URL('../modules/learning/teacher-reporting-repository.ts', import.meta.url),
   'utf8',
@@ -186,6 +190,17 @@ test('Pulse reporting reads use one explicit tenant-scoped repository', () => {
   assert.match(teacherReportingRepositorySource, /mastery\.company_id=\$1 AND mastery\.course_id=\$2/)
   assert.match(teacherReportingRepositorySource, /member\.company_id=\$1 AND member\.course_id=\$2/)
   assert.match(teacherReportingRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
+})
+
+test('Pulse approval snapshots and freshness use one tenant-scoped repository', () => {
+  assert.match(teacherAgentSource, /from '.\/teacher-approval-repository\.js'/)
+  assert.doesNotMatch(teacherAgentSource, /SELECT objective\.updated_at AS value/)
+  assert.doesNotMatch(teacherAgentSource, /SELECT activity\.updated_at AS value/)
+  assert.match(teacherApprovalRepositorySource, /objective\.company_id=\$1 AND objective\.id=\$3/)
+  assert.match(teacherApprovalRepositorySource, /activity\.company_id=\$1 AND activity\.id=\$3/)
+  assert.match(teacherApprovalRepositorySource, /course\.company_id=\$1 AND course\.id=\$3/)
+  assert.match(teacherApprovalRepositorySource, /member\.company_id=\$1 AND teacher_room\.conversation_id=\$2/)
+  assert.match(teacherApprovalRepositorySource, /attempt\.company_id=\$1 AND teacher_room\.conversation_id=\$2/)
 })
 
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
