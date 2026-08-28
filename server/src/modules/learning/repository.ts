@@ -1183,6 +1183,55 @@ export async function insertAgentLearningAttempt(
   return Boolean(result.rowCount)
 }
 
+export async function learningMasteryContext(
+  db: Queryable,
+  args: { companyId: string; courseId: string; learnerId: string },
+) {
+  const { rows } = await db.query<{
+    objective_id: string; level: number; status: string; next_review_at: string | null
+  }>(
+    `SELECT mastery.objective_id,mastery.level,mastery.status,mastery.next_review_at
+       FROM learning_mastery mastery
+      WHERE mastery.company_id=$1 AND mastery.course_id=$2 AND mastery.learner_id=$3`,
+    [args.companyId,args.courseId,args.learnerId],
+  )
+  return rows.map((row) => ({
+    objectiveId: row.objective_id,
+    level: Number(row.level),
+    status: row.status,
+    nextReviewAt: row.next_review_at ? String(row.next_review_at) : null,
+  }))
+}
+
+export async function activeLearningMissionId(
+  db: Queryable,
+  args: { companyId: string; courseId: string; learnerId: string; channelId: string },
+): Promise<string | null> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT mission.id FROM learning_missions mission
+      WHERE mission.company_id=$1 AND mission.course_id=$2 AND mission.learner_id=$3
+        AND mission.conversation_id=$4 AND mission.status IN ('planning','active','paused')
+      ORDER BY mission.updated_at DESC LIMIT 1`,
+    [args.companyId,args.courseId,args.learnerId,args.channelId],
+  )
+  return rows[0]?.id ?? null
+}
+
+export async function countPendingLearningEvaluations(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+): Promise<number> {
+  const { rows } = await db.query<{ count: number }>(
+    `SELECT COUNT(*)::int AS count
+       FROM learning_evaluations evaluation
+       JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
+      WHERE attempt.company_id=$1 AND attempt.course_id=$2 AND evaluation.status='pending'`,
+    [companyId,courseId],
+  )
+  return Number(rows[0]?.count ?? 0)
+}
+
 export async function findNotificationPreferences(
   db: Queryable,
   companyId: string,

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
-import { recordLearningAttempt, startLearningMission } from '../modules/learning/application.js'
+import { loadLearningContext, recordLearningAttempt, startLearningMission } from '../modules/learning/application.js'
 import {
   completeLearningMissionRecord,
   findLearningMission,
@@ -211,4 +211,40 @@ test('Agent OS attempt recording binds message evidence to one course learner', 
     'course-1','company-1','room-1','learner-1','activity-1',null,'hint',
   ])
   assert.deepEqual(metrics, ['learning.attempt.accepted'])
+})
+
+test('learning turn context binds mastery and active mission reads to the room tenant', async () => {
+  const db = queryable((text, params) => {
+    if (text.includes('FROM courses course') && text.includes('learning_course_rooms')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
+      status: 'active', purpose: 'study',
+    }] }
+    if (text.includes('FROM course_members')) return { rows: [{ role: 'learner' }] }
+    if (text.includes('FROM learning_objectives objective')) return { rows: [{
+      id: 'objective-1', course_id: 'course-1', title: 'Leases', success_criteria: 'Explain fencing',
+      target_level: 3, position: 0, status: 'published', prerequisite_ids: [],
+    }] }
+    if (text.includes('FROM learning_mastery mastery')) {
+      assert.deepEqual(params, ['company-1','course-1','learner-1'])
+      return { rows: [{
+        objective_id: 'objective-1', level: 2, status: 'learning', next_review_at: null,
+      }] }
+    }
+    if (text.includes('SELECT mission.id FROM learning_missions')) {
+      assert.deepEqual(params, ['company-1','course-1','learner-1','room-1'])
+      return { rows: [] }
+    }
+    throw new Error(`unexpected query: ${text}`)
+  })
+
+  const context = await loadLearningContext(db, {
+    syncMessages: async () => { throw new Error('explicit actor must not sync messages') },
+  }, {
+    companyId: 'company-1', channelId: 'room-1', agentId: 'agent-1',
+    triggerClientMsgNo: 'message-1', actorId: 'learner-1',
+  })
+
+  assert.equal(context?.learnerId, 'learner-1')
+  assert.equal(context?.objectives[0]?.masteryLevel, 2)
+  assert.equal(context?.pendingTeacherReviews, 0)
 })

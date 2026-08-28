@@ -6,7 +6,6 @@
  * import those implementation files directly.
  */
 export {
-  loadLearningTurnContext,
   proposeEvaluation,
 } from '../../learning/service.js'
 
@@ -115,6 +114,7 @@ import {
   createLearningActivity,
   createLearningObjectives,
   finishLearningMissionPlanning,
+  loadLearningContext,
   publishLearningActivity,
   preferredLearningMissionCoordinator,
   recordLearningAttempt,
@@ -188,6 +188,14 @@ export function recordAttempt(
     metric: inc,
   }, {
     companyId: work.companyId, channelId: work.channelId, agentId: work.agentId, ...input,
+  })
+}
+
+export function loadLearningTurnContext(work: AgentWorkItem, actorId?: string) {
+  return loadLearningContext(pool, { syncMessages: syncLearningMessages }, {
+    companyId: work.companyId, channelId: work.channelId, agentId: work.agentId,
+    triggerClientMsgNo: work.triggerClientMsgNo,
+    ...(actorId ? { actorId } : {}),
   })
 }
 

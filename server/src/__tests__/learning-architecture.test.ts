@@ -97,6 +97,15 @@ test('Agent OS attempt recording uses the tenant-scoped Learning vertical slice'
   assert.match(repository, /canvas\.company_id=\$2 AND canvas\.project_id=\$3/)
 })
 
+test('Agent OS turn context uses repository reads without legacy fallback handling', () => {
+  assert.doesNotMatch(service, /loadLearningTurnContext/)
+  assert.doesNotMatch(learningRuntimeSource, /loadLearningTurnContext,[\s\S]*from '..\/..\/learning\/service\.js'/)
+  assert.match(learningApplicationSource, /loadLearningContext/)
+  assert.doesNotMatch(learningApplicationSource, /try \{ room = await findLearningRoomState[\s\S]*catch/)
+  assert.match(repository, /mastery\.company_id=\$1 AND mastery\.course_id=\$2/)
+  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
   const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')

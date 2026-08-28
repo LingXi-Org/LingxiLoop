@@ -31,6 +31,7 @@ import type {
 } from './contracts.js'
 import {
   activateLearningMission,
+  activeLearningMissionId,
   canCreateCourse,
   changeCourseMember,
   closeLearningActivityRecord,
@@ -43,6 +44,7 @@ import {
   courseRole,
   countCourseObjectives,
   countLearningMissionSteps,
+  countPendingLearningEvaluations,
   countPublishedCourseObjectives,
   findCourse,
   findLearningActivity,
@@ -74,6 +76,7 @@ import {
   learningMissionCompletionSummary,
   learningMissionPlanningSummary,
   learningChannelType,
+  learningMasteryContext,
   lockCourseInvitation,
   priorCourseAcceptance,
   publishLearningActivityRecord,
@@ -93,7 +96,7 @@ import {
   upsertLearningMission,
   upsertAcceptedCourseMembership,
 } from './repository.js'
-import type { LearningMission, LearningMissionKind } from '../../learning/types.js'
+import type { LearningMission, LearningMissionKind, LearningTurnContext } from '../../learning/types.js'
 
 export type LearningApplicationErrorCode = 'invalid' | 'not_found' | 'forbidden' | 'conflict' | 'gone' | 'unauthorized'
 
@@ -484,6 +487,72 @@ export async function recordLearningAttempt(
   })
   infrastructure.metric('learning.attempt.accepted', { source: 'message' })
   return result
+}
+
+export async function loadLearningContext(
+  db: Queryable,
+  infrastructure: Pick<LearningMissionInfrastructure, 'syncMessages'>,
+  input: LearningAgentRoomScope & {
+    agentId: string; triggerClientMsgNo: string; actorId?: string
+  },
+): Promise<LearningTurnContext | undefined> {
+  const room = await findLearningRoomState(db, input)
+  if (!room) return undefined
+  let resolvedActorId = input.actorId
+  if (!resolvedActorId) {
+    const channelType = await learningChannelType(db, input.companyId, input.channelId)
+    const messages = await infrastructure.syncMessages({
+      channelId: input.channelId, channelType, limit: 100, loginUid: input.agentId,
+    })
+    const trigger = messages.find((message) => (
+      message.clientMsgNo === input.triggerClientMsgNo && !message.authoredByAgent
+    ))
+    resolvedActorId = trigger?.fromUid
+      ?? [...messages].reverse().find((message) => !message.authoredByAgent)?.fromUid
+  }
+  const role = resolvedActorId
+    ? await courseRole(db, room.courseId, room.companyId, resolvedActorId)
+    : null
+  const learnerId = role === 'learner' ? resolvedActorId : undefined
+  const objectives = await listLearningObjectives(db, room.companyId, room.courseId)
+  const mastery = learnerId ? await learningMasteryContext(db, {
+    companyId: room.companyId, courseId: room.courseId, learnerId,
+  }) : []
+  const byObjective = new Map(mastery.map((item) => [item.objectiveId,item]))
+  const missionId = learnerId ? await activeLearningMissionId(db, {
+    companyId: room.companyId, courseId: room.courseId, learnerId, channelId: input.channelId,
+  }) : null
+  const pendingTeacherReviews = role === 'teacher'
+    ? await countPendingLearningEvaluations(db, room.companyId, room.courseId)
+    : 0
+  const mapped = objectives.slice(0, 40).map((objective) => {
+    const state = byObjective.get(objective.id)
+    return {
+      ...objective,
+      masteryLevel: state?.level ?? 0,
+      masteryStatus: state?.status ?? 'learning',
+      ...(state?.nextReviewAt ? { nextReviewAt: state.nextReviewAt } : {}),
+    }
+  })
+  const activeMission = missionId
+    ? await findLearningMission(db, room.companyId, room.courseId, missionId)
+    : null
+  return {
+    course: {
+      id: room.courseId, projectId: room.projectId, title: room.courseTitle, status: room.courseStatus,
+    },
+    roomPurpose: room.purpose,
+    ...(role ? { actorRole: role } : {}),
+    ...(learnerId ? { learnerId } : {}),
+    ...(activeMission ? { activeMission } : {}),
+    objectives: mapped,
+    due: mapped.filter((item) => item.nextReviewAt && new Date(item.nextReviewAt) <= new Date())
+      .slice(0, 12).map((item) => ({
+        objectiveId: item.id, title: item.title, level: item.masteryLevel,
+        nextReviewAt: item.nextReviewAt as string,
+      })),
+    pendingTeacherReviews,
+  }
 }
 
 export async function addLearningMissionSteps(

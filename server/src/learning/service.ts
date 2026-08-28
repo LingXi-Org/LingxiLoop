@@ -2,19 +2,15 @@ import { randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
-import { wukongClient } from '../im/wukong.js'
 import { inc } from '../metrics.js'
-import { findLearningMission, listLearningObjectives } from '../modules/learning/repository.js'
 import type { AgentWorkItem } from '../agent-os/types.js'
 import type {
   LearningActivityType,
   LearningAssistance,
   LearningCourseSummary,
   LearningEvaluationMode,
-  LearningMission,
   LearningRole,
   LearningRoomPurpose,
-  LearningTurnContext,
   MasteryProjectionDecision,
 } from './types.js'
 import { projectMastery } from './mastery.js'
@@ -211,17 +207,6 @@ async function roomScope(work: AgentWorkItem, db: Queryable = pool): Promise<{
   const row = rows[0]
   if (!row) throw new Error('current conversation is not bound to a learning course')
   return { companyId: row.company_id, courseId: row.course_id, projectId: row.project_id, courseTitle: row.title, courseStatus: row.status, purpose: row.purpose }
-}
-
-async function requireLearningMission(
-  db: Queryable,
-  companyId: string,
-  courseId: string,
-  missionId: string,
-): Promise<LearningMission> {
-  const mission = await findLearningMission(db, companyId, courseId, missionId)
-  if (!mission) throw new Error('mission not found')
-  return mission
 }
 
 export async function proposeEvaluation(work: AgentWorkItem, input: {
@@ -439,51 +424,6 @@ export async function reviewEvaluation(input: {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
   } finally { if (ownsClient) client.release() }
-}
-
-export async function loadLearningTurnContext(work: AgentWorkItem, actorId?: string, db: Queryable = pool): Promise<LearningTurnContext | undefined> {
-  let scope: Awaited<ReturnType<typeof roomScope>>
-  try { scope = await roomScope(work, db) } catch { return undefined }
-  let resolvedActorId = actorId
-  if (!resolvedActorId) {
-    const { rows: binding } = await db.query<{ channel_type: number }>(
-      `SELECT COALESCE((profile->>'channelType')::int,2) AS channel_type FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`,
-      [work.channelId, work.companyId],
-    )
-    const messages = await wukongClient().syncMessages(work.channelId, Number(binding[0]?.channel_type ?? 2), 100, work.agentId)
-    const trigger = messages.find((item) => item.clientMsgNo === work.triggerClientMsgNo && !item.payload.refs?.agentId)
-    resolvedActorId = trigger?.fromUid ?? [...messages].reverse().find((item) => !item.payload.refs?.agentId)?.fromUid
-  }
-  const role = resolvedActorId ? await courseRole(db, scope.courseId, resolvedActorId) : undefined
-  const learnerId = role === 'learner' ? resolvedActorId : undefined
-  const objectives = await listLearningObjectives(db, scope.companyId, scope.courseId)
-  const { rows: mastery } = learnerId ? await db.query<{ objective_id:string;level:number;status:string;next_review_at:string|null }>(
-    `SELECT objective_id,level,status,next_review_at FROM learning_mastery WHERE course_id=$1 AND learner_id=$2`, [scope.courseId,learnerId],
-  ) : { rows: [] }
-  const byObjective = new Map(mastery.map((item) => [item.objective_id,item]))
-  const { rows: missionRows } = learnerId ? await db.query<{ id:string }>(
-    `SELECT id FROM learning_missions WHERE course_id=$1 AND learner_id=$2 AND conversation_id=$3
-     AND status IN ('planning','active','paused') ORDER BY updated_at DESC LIMIT 1`, [scope.courseId,learnerId,work.channelId],
-  ) : { rows: [] }
-  const { rows: pendingRows } = role === 'teacher' ? await db.query<{ count:number }>(
-    `SELECT COUNT(*)::int AS count FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id
-     WHERE a.course_id=$1 AND e.status='pending'`, [scope.courseId],
-  ) : { rows: [] }
-  const mapped = objectives.slice(0, 40).map((objective) => {
-    const state = byObjective.get(objective.id)
-    return { ...objective, masteryLevel:Number(state?.level ?? 0), masteryStatus:state?.status ?? 'learning',
-      ...(state?.next_review_at ? { nextReviewAt:String(state.next_review_at) } : {}) }
-  })
-  return {
-    course:{ id:scope.courseId,projectId:scope.projectId,title:scope.courseTitle,status:scope.courseStatus },
-    roomPurpose:scope.purpose,...(role?{actorRole:role}:{}),...(learnerId?{learnerId}:{}),
-    ...(missionRows[0]?{activeMission:await requireLearningMission(db,scope.companyId,scope.courseId,missionRows[0].id)}:{}),
-    objectives:mapped,
-    due:mapped.filter((item)=>item.nextReviewAt && new Date(item.nextReviewAt)<=new Date()).slice(0,12).map((item)=>({
-      objectiveId:item.id,title:item.title,level:item.masteryLevel,nextReviewAt:item.nextReviewAt!,
-    })),
-    pendingTeacherReviews:Number(pendingRows[0]?.count ?? 0),
-  }
 }
 
 export async function learningDashboard(companyId:string,userId:string,db:Queryable=pool):Promise<{
