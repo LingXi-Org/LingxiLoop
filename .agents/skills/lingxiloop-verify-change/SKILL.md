@@ -5,7 +5,7 @@ description: "Classify a LingxiLoop diff and run the smallest credible verificat
 
 # Verify a LingxiLoop Change
 
-Select evidence from the actual outgoing scope. Pull-request CI consumes the classifier's `ci` plan, while `main`, manual, and release callers own the exhaustive platform matrix. Local verification must exercise the narrowest check that would fail for the changed behavior.
+Select evidence from the actual outgoing scope. Local verification is deliberately fast: changed-file lint, affected type graphs, guards, and owning focused tests. Pull-request CI consumes the classifier's `ci` plan and owns full unit, integration, build, Eval, Compose, and packaging work; `main`, manual, and release callers own the exhaustive platform matrix.
 
 ## Classify the scope
 
@@ -27,9 +27,9 @@ Read [references/check-matrix.md](references/check-matrix.md) before changing th
 ## Select and run evidence
 
 1. Inspect the classified paths and diff. Correct any path-only false positive or content-level omission before selecting checks.
-2. Run every available `required` check once.
-3. Run `recommended` checks when the behavior is reachable, the escalation applies, or the user requests stronger confidence. A missing database, Redis, Docker, platform, or credential is a recorded limitation, not a pass.
-4. Treat `CI-only` checks as a handoff unless the user requested a full local rehearsal and the environment supports it.
+2. Run every local `required` check once. `npm run test:local` selects changed tests, sibling tests, feature/domain-owned tests, and the small architecture contracts; pass explicit test files when the classifier cannot infer ownership. For a committed classifier range, use `npm run test:local -- --base <verified-ref>` and `npm run lint:local -- --base <verified-ref>` so the runners inspect the same merge-base range instead of guessing.
+3. Run `recommended` checks only when they are still narrow and directly reachable. Do not expand a local verification turn into a repository-wide rehearsal.
+4. Treat `CI-only` checks as a handoff. Run one locally only when the user explicitly requests it or when reproducing that exact failing CI job; prefer its focused file/scope instead of the full command.
 5. Add a focused test when the classifier cannot name one but the changed behavior has an owning test. Do not use an unrelated green suite as proof.
 
 Do not run fix-mode linters, rewrite generated files, start deployment workflows, or mutate Git as part of verification unless separately authorized.
@@ -37,6 +37,9 @@ Do not run fix-mode linters, rewrite generated files, start deployment workflows
 ## Keep verification lean
 
 - Do not wrap a guard, classifier, or script in a second test when the same command already runs in the selected local or CI plan. Keep one owning invocation.
+- Never run `npm test`, `npm run test:integration`, `npm run build`, `npm run eval:check`, Compose smoke, or desktop packaging as a default local gate. CI owns them. Do not start or rebuild Postgres, Redis, WuKongIM, Docker, or external-provider fixtures solely for local verification.
+- Use `npm run lint:local` instead of repository-wide lint during iteration. Run full `npm run lint` only in CI or to reproduce its failure.
+- Stop after one credible focused evidence set. Do not rerun an unchanged successful command merely because another category mentions it.
 - Run Skill and classifier self-tests only when their implementation or test contract changes; unrelated product diffs must not pay that cost.
 - Keep credential-gated live tests out of default suites. Give them an explicit command and include them only when the opt-in credential flag is present.
 - Prefer one shared fixture reset operation over repeated per-table or per-resource setup. Optimize fixture mechanics before deleting behavioral coverage.
@@ -49,7 +52,7 @@ Report:
 
 - resolved scope and changed categories;
 - exact commands run, working directory when non-root, exit status, and relevant failure;
-- recommended or CI-only checks not run and why;
+- recommended or CI-only checks handed to CI, without describing their absence as a local failure;
 - the strongest remaining blind spot;
 - `pass`, `fail`, or `incomplete` without overstating confidence.
 

@@ -89,16 +89,20 @@ npm run guard:architecture
 npm run guard:llm-tracked
 npm run guard:brand
 npm run version:check
-npm run lint
+npm run lint:local
 npm run server:typecheck
 npm run typecheck
-npm test
+npm run test:local
 ```
 
 The guards reject retired endpoints and switches, production mock branches,
 provider/storage/transport bypasses, executable Codex/Claude adapters,
 LingxiGraph runtime dependencies, and any model tool surface other than
 `ipython`.
+
+These are the fast local gates; the change classifier narrows them to the
+domains actually touched. CI owns full lint and unit suites, integration,
+production build, Eval, Compose smoke, and packaging checks.
 
 ## Package publishing and production
 

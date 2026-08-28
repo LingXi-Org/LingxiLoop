@@ -36,18 +36,25 @@ deployment, and email integration notes.
 
 ## Before you open a PR
 
-Run the same gates CI runs. All of these must pass:
+Run the fast local gates selected for your worktree:
 
 ```bash
-npm run lint               # Biome lint (autofix with `npm run lint:fix`)
+npm run lint:local         # Biome lint for changed files only
 npm run typecheck          # frontend types
 npm run server:typecheck   # server types
-npm test                   # unit tests (node:test) for server + workers
-npm run test:integration   # integration suite (needs local Postgres + Redis)
+npm run test:local         # changed/sibling/domain-owned unit tests
 npm run guard:architecture # vertical boundaries and single-provider paths
 npm run guard:agent-os     # independent runtime/tool-boundary guard
 npm run guard:llm-tracked  # architecture guard, see below
 ```
+
+Use the `lingxiloop-verify-change` classifier to omit unrelated typechecks and
+guards. CI runs full repository lint, `npm test`, production build, Agent Eval,
+Postgres/Redis integration, Compose smoke, and package-layout checks. Do not
+provision those services or repeat that exhaustive matrix locally unless you
+are reproducing its exact failure or explicitly rehearsing a release.
+After committing, pass the same verified base to the fast runners, for example
+`npm run test:local -- --base origin/main`; neither runner guesses a branch.
 
 Biome is configured (`biome.json`) as a **linter only** — it is not a
 formatter here, so it won't reflow existing code. The rule set is a
@@ -55,9 +62,9 @@ pragmatic subset of Biome's recommended rules: correctness and real-bug
 rules are on; noisy or intentional-pattern style rules (and the a11y
 group, tracked as separate follow-up work) are off.
 
-Both TypeScript projects are `strict`. There are no frontend unit tests yet;
-server and worker logic is covered by `server/src/__tests__` and
-`server/src/__integration__`.
+Both TypeScript projects are `strict`. Frontend, server, and worker unit tests
+are selected locally by ownership; CI retains the exhaustive unit and
+integration entry points.
 
 ## Architecture invariants (enforced in CI)
 
@@ -114,4 +121,5 @@ handoffs, the Agent OS loop or WuKong events.
 
 - Write focused commits with a clear message explaining *why*, not just what.
 - Keep a PR to one logical change; smaller PRs get reviewed faster.
-- Make sure the full check list above is green before requesting review.
+- Make sure the classifier-selected local checks are green; the exhaustive
+  matrix must be green in CI before merge.

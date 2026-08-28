@@ -29,13 +29,12 @@ Run these for every Eval change:
 npm run guard:brand
 npm run guard:agent-os
 npm run guard:llm-tracked
-npm run lint
+npm run lint:local
 npm run server:typecheck
 npm run test:eval
-npm run eval:check
 ```
 
-Add `npm run typecheck && npm run build` for the Eval Dashboard. Add `npm run test:integration:eval` when Eval-owned service or persistence behavior changes. The fail-closed classifier is the source of truth for whether full unit, full integration, Compose, vendored Open Notebook, desktop packaging, or the complete matrix is also required.
+Add `npm run typecheck` for the Eval Dashboard. CI owns `npm run eval:check`, Dashboard build, Eval persistence integration, full unit/integration, Compose, vendored Open Notebook, desktop packaging, and the complete matrix. Run a CI-owned command locally only when explicitly requested or reproducing that exact failure.
 
 ## Completion bar
 
