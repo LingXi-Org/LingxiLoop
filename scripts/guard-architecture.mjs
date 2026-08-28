@@ -46,7 +46,7 @@ if (/^export\s+\{.+\}\s+from/m.test(rootRouter)) violations.push('server/src/api
 // Domains enter this set only after their router/application/repository split
 // is complete. Keeping the assertion here makes a later regression impossible
 // while the remaining domains are migrated deliberately.
-const strictServerDomains = new Set(['calendar', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'messages', 'observability', 'platform'])
+const strictServerDomains = new Set(['boards', 'calendar', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'messages', 'observability', 'platform'])
 
 for (const file of server) {
   const source = await read(file)
