@@ -20,7 +20,7 @@ import {
   STARTER_ROOMS as CANONICAL_STARTER_ROOMS,
   STARTER_TEAM as CANONICAL_STARTER_TEAM,
   type LearningPersonaKey,
-} from './learning/preset.js'
+} from './modules/learning/preset.js'
 
 
 export const STARTER_TEAM = CANONICAL_STARTER_TEAM

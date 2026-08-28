@@ -58,9 +58,13 @@ import {
   recordAttempt,
   startMission,
   updateMissionStep,
-} from '../learning/service.js'
-import type { LearningActivityType, LearningEvaluationMode, LearningStepStatus, LearningStepType } from '../learning/types.js'
-import { executeTeacherAction, teacherActionRequiresApproval } from '../learning/teacher-agent.js'
+  executeTeacherAction,
+  teacherActionRequiresApproval,
+  type LearningActivityType,
+  type LearningEvaluationMode,
+  type LearningStepStatus,
+  type LearningStepType,
+} from '../modules/learning/runtime.js'
 
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',

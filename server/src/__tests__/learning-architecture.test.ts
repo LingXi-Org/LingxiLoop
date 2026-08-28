@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
+import { dirname, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
@@ -7,6 +9,30 @@ const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url),
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
 const service = readFileSync(new URL('../learning/service.ts', import.meta.url), 'utf8')
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
+
+function productionTypeScriptFiles(root: string): string[] {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(root, entry.name)
+    if (entry.isDirectory()) {
+      if (entry.name === '__tests__' || entry.name === '__integration__' || entry.name === 'learning') return []
+      return productionTypeScriptFiles(path)
+    }
+    return entry.isFile() && entry.name.endsWith('.ts') ? [path] : []
+  })
+}
+
+test('production consumers use only public Learning capability surfaces', () => {
+  const serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+  const violations = productionTypeScriptFiles(serverRoot)
+    .filter((path) => !relative(serverRoot, path).replaceAll('\\', '/').startsWith('modules/learning/'))
+    .flatMap((path) => {
+      const source = readFileSync(path, 'utf8')
+      return /(?:from\s+|import\(\s*)['"][^'"]*\/learning\/(?!runtime\.js|access\.js|worker\.js|preset\.js|router\.js)[^'"]+['"]/.test(source)
+        ? [relative(serverRoot, path)]
+        : []
+    })
+  assert.deepEqual(violations, [])
+})
 
 test('native learning schema keeps evidence, projection and delivery ledgers durable', () => {
   for (const table of ['courses','course_members','learning_course_rooms','learning_objectives','learning_activities',

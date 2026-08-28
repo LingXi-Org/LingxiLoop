@@ -2,7 +2,7 @@ import { postMembershipSystemMessage } from '../../agents/membership.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { wukongClient } from '../../im/wukong.js'
-import { isTeacherRoom } from '../../learning/visibility.js'
+import { isTeacherRoom } from '../learning/access.js'
 import { CH_CONVO_UPDATED, CH_TYPING, publish } from '../../redis.js'
 import { ConversationsApplication } from './application.js'
 

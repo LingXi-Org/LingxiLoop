@@ -10,8 +10,11 @@ import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, rec
 import { roleAllowsAction } from './role-policy.js'
 import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
 import { retrieveKnowledge } from '../knowledge/service.js'
-import { loadLearningTurnContext } from '../learning/service.js'
-import { describeTeacherAction, loadTeacherTurnContext } from '../learning/teacher-agent.js'
+import {
+  describeTeacherAction,
+  loadLearningTurnContext,
+  loadTeacherTurnContext,
+} from '../modules/learning/runtime.js'
 import { recordLlmCall } from '../llm-ledger.js'
 
 export const agentOSControlRouter = Router()

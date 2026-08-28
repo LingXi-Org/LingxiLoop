@@ -7,8 +7,8 @@ import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import { wukongClient } from './wukong.js'
 import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
-import { assertTeacherApprovalFresh } from '../learning/teacher-agent.js'
-import { assertTeacherRoomAccessible, isTeacherRoom } from '../learning/visibility.js'
+import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
+import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/access.js'
 import {
   listReadReceiptAdvances,
   publishReadReceiptAdvance,
