@@ -23,6 +23,7 @@ import { createConversationMetadataCommands } from './cli/conversation-metadata.
 import { createEmailCommand } from './cli/email.js'
 import { createHelpCommand } from './cli/help.js'
 import { createDocumentCommand } from './cli/document.js'
+import { createParticipantDirectoryCommands } from './cli/participant-directory.js'
 
 // Every CLI result flows through ok()/err(), so scrubbing lone UTF-16 surrogates
 // here means CLI output (read by agents as tool results) can never carry a split
@@ -145,67 +146,7 @@ function renderAttachment(att: StoredAttachment | null | undefined): string | nu
 /* ============== commands ============== */
 
 const cmdHelp = createHelpCommand(ok)
-async function cmdWhoami(parsed: ParsedArgs): Promise<CliResult> {
-  const id = resolveAs(parsed)
-  const { rows } = await pool.query<{
-    id: string; kind: string; name: string; role: string | null;
-    status: string; bio: string | null; tools: string[] | null
-  }>(
-    `SELECT id, kind, name, role, status, bio, tools FROM participants WHERE id = $1`,
-    [id],
-  )
-  const p = rows[0]
-  if (!p) return err(`unknown participant: ${id}`)
-  if (parsed.flags.json) return ok(JSON.stringify(p, null, 2))
-
-  const { rows: convos } = await pool.query<{ id: string; title: string; kind: string }>(
-    `SELECT id, title, kind FROM conversations
-      WHERE members @> to_jsonb(ARRAY[$1::text])
-      ORDER BY updated_at DESC`,
-    [id],
-  )
-  const lines = [
-    `id:        ${p.id}`,
-    `name:      ${p.name}`,
-    `kind:      ${p.kind}`,
-    p.role ? `role:      ${p.role}` : '',
-    `status:    ${p.status}`,
-    p.bio ? `bio:       ${p.bio}` : '',
-    p.tools && p.tools.length ? `tools:     ${p.tools.join(', ')}` : '',
-    '',
-    `member of ${convos.length} conversation(s):`,
-    ...convos.map((c) => `  · [${c.kind.padEnd(7)}] ${c.id.padEnd(28)} ${c.title}`),
-  ].filter(Boolean)
-  return ok(lines.join('\n'))
-}
-
-async function cmdParticipants(parsed: ParsedArgs): Promise<CliResult> {
-  // TENANT SCOPE: only this agent's OWN company. Without the company_id filter
-  // this listed every participant in EVERY LingxiLoop company (cross-tenant leak —
-  // agents reported "thousands of resting humans" = all users globally).
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`cannot resolve company for ${me}`)
-  const kind = parsed.flags.kind ? String(parsed.flags.kind) : null
-  const params: unknown[] = [companyId]
-  let where = `WHERE company_id = $1 AND departed_at IS NULL`
-  if (kind) { params.push(kind); where += ` AND kind = $2` }
-  const { rows } = await pool.query<{
-    id: string; kind: string; name: string; role: string | null; status: string
-  }>(
-    `SELECT id, kind, name, role, status FROM participants ${where} ORDER BY kind DESC, name ASC`,
-    params,
-  )
-  if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-  const lines = [
-    `id              kind   status      role`,
-    `-----------------------------------------------------`,
-  ]
-  for (const r of rows) {
-    lines.push(`${r.id.padEnd(15)} ${r.kind.padEnd(6)} ${r.status.padEnd(11)} ${r.role ?? ''}`)
-  }
-  return ok(lines.join('\n'))
-}
+const { cmdParticipants, cmdStatus, cmdWhoami } = createParticipantDirectoryCommands({ ok, err })
 
 async function cmdConversations(parsed: ParsedArgs, kindFilter?: 'group' | 'direct'): Promise<CliResult> {
   const me = resolveAs(parsed)
@@ -471,25 +412,6 @@ async function cmdToolsLog(parsed: ParsedArgs): Promise<CliResult> {
       const argsBrief = JSON.stringify(r.args).slice(0, 100)
       return `  [${t}] ${r.agent_id.padEnd(8)} ${r.name.padEnd(22)} ${r.status.padEnd(7)} ${r.duration_ms ?? '-'}ms  ${argsBrief}`
     }),
-  ].join('\n'))
-}
-
-async function cmdStatus(parsed: ParsedArgs): Promise<CliResult> {
-  // TENANT SCOPE: this agent's own company only (was leaking every agent in
-  // every company — same cross-tenant hole as cmdParticipants).
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`cannot resolve company for ${me}`)
-  const { rows } = await pool.query<{ id: string; name: string; status: string; kind: string }>(
-    `SELECT id, name, status, kind FROM participants
-      WHERE company_id = $1 AND kind = 'agent' AND departed_at IS NULL ORDER BY name ASC`,
-    [companyId],
-  )
-  if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-  return ok([
-    `agent              status`,
-    `-----------------------------`,
-    ...rows.map((r) => `${r.name.padEnd(8)} (${r.id.padEnd(6)})  ${r.status}`),
   ].join('\n'))
 }
 
