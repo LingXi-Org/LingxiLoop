@@ -21,6 +21,11 @@ const read = async (file) => readFile(file, 'utf8')
 const name = (file) => relative(process.cwd(), file).replaceAll('\\', '/')
 
 const productionFrontend = (await Promise.all(frontend.map(read))).join('\n')
+const shadcnConfig = JSON.parse(await readFile(resolve('components.json'), 'utf8'))
+if (shadcnConfig.style !== 'radix-luma' || shadcnConfig.tailwind?.baseColor !== 'mist' || shadcnConfig.iconLibrary !== 'hugeicons') {
+  violations.push('components.json: canonical shadcn preset b3bZWXGcRE (radix-luma/mist/hugeicons) is required')
+}
+if (/@base-ui\/react/.test(productionFrontend)) violations.push('frontend: Base UI is forbidden; use the canonical shadcn primitives')
 for (const [label, pattern] of [
   ['production mock identity', /mock-(?:user|source)|startsWith\(['"]mock-/],
   ['native browser dialog', /\b(?:window\.)?(?:alert|confirm|prompt)\s*\(/],
