@@ -120,6 +120,13 @@ export interface CalendarDispatchPayload {
   error: string | null
 }
 
+export interface RecentCalendarEventPayload {
+  id: string
+  title: string
+  createdBy: string
+  createdAt: string
+}
+
 export interface CalendarChangedEvent {
   type: 'calendar.changed'
   kind: 'event.created' | 'event.updated' | 'event.deleted' | 'event.dispatched'

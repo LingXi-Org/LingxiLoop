@@ -42,6 +42,13 @@ export interface CalendarDispatchRow {
   error: string | null
 }
 
+export interface RecentCalendarEventRow {
+  id: string
+  title: string
+  created_by: string
+  created_at: Date
+}
+
 export interface InsertCalendarEventArgs {
   id: string
   companyId: string
@@ -109,6 +116,23 @@ export async function listCalendarEvents(
   }
   sql += ' ORDER BY start_at ASC LIMIT 1000'
   const { rows } = await db.query<CalendarEventRow>(sql, parameters)
+  return rows
+}
+
+export async function listRecentSharedCalendarEvents(
+  db: Queryable,
+  args: { companyId: string; projectId: string; excludeCreatorId: string; sinceMinutes: number },
+): Promise<RecentCalendarEventRow[]> {
+  const { rows } = await db.query<RecentCalendarEventRow>(
+    `SELECT id, title, created_by, created_at
+       FROM calendar_events
+      WHERE company_id = $1 AND project_id = $2 AND created_by <> $3
+        AND status = 'active' AND is_private = FALSE
+        AND created_at > NOW() - ($4 * INTERVAL '1 minute')
+      ORDER BY created_at DESC
+      LIMIT 50`,
+    [args.companyId, args.projectId, args.excludeCreatorId, args.sinceMinutes],
+  )
   return rows
 }
 

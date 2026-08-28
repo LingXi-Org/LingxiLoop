@@ -88,6 +88,12 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(canvasCallers.join('\n'), /from ['"][^'"]*modules\/canvas\/(?:application|repository|contracts)/)
   assert.doesNotMatch(canvasCallers.join('\n'), /from ['"][^'"]*canvas\/service\.js/)
+  const calendarCli = await readFile(new URL('../agents/cli/calendar.ts', import.meta.url), 'utf8')
+  assert.match(calendarCli, /from ['"]\.\.\/\.\.\/modules\/calendar\/index\.js['"]/)
+  assert.doesNotMatch(calendarCli, /modules\/calendar\/(?:application|contracts|facade|repository)\.js/)
+  assert.doesNotMatch(calendarCli, /from ['"][^'"]*db\/pool\.js['"]|\bpool\.query\b/)
+  assert.doesNotMatch(calendarCli, /`\s*(?:SELECT|INSERT|UPDATE|DELETE)\b/is)
+  assert.doesNotMatch(calendarCli, /from ['"][^'"]*calendar\.js['"]|import\(['"][^'"]*calendar\.js['"]\)/)
 })
 
 test('retired observability HTTP views cannot return', async () => {

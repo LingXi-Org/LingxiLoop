@@ -17,6 +17,7 @@ import {
   insertCalendarEvent,
   listCalendarDispatches,
   listCalendarEvents,
+  listRecentSharedCalendarEvents,
   type CalendarEventRow,
   updateVisibleCalendarEvent,
 } from './repository.js'
@@ -123,7 +124,11 @@ export class CalendarApplication {
     return rows.map(toPayload)
   }
 
-  async create(scope: CalendarScope, input: CreateCalendarEventInput): Promise<CalendarEventPayload> {
+  async create(
+    scope: CalendarScope,
+    input: CreateCalendarEventInput,
+    options: { eventId?: string; replayExisting?: boolean } = {},
+  ): Promise<CalendarEventPayload> {
     const normalized = {
       kind: input.kind,
       assigneeId: input.assigneeId ?? null,
@@ -135,8 +140,12 @@ export class CalendarApplication {
     }
     assertCoherentEvent(normalized)
     await this.assertReferences(scope, normalized.assigneeId, normalized.targetConversationId)
+    if (options.eventId && options.replayExisting) {
+      const existing = await findVisibleCalendarEvent(this.db, { id: options.eventId, ...scope })
+      if (existing) return toPayload(existing)
+    }
     const row = await insertCalendarEvent(this.db, {
-      id: `ce-${randomUUID()}`,
+      id: options.eventId ?? `ce-${randomUUID()}`,
       companyId: scope.companyId,
       projectId: scope.projectId,
       createdBy: scope.userId,
@@ -159,8 +168,28 @@ export class CalendarApplication {
     return toPayload(row)
   }
 
+  async recentSharedEvents(scope: CalendarScope, sinceMinutes = 15) {
+    const rows = await listRecentSharedCalendarEvents(this.db, {
+      companyId: scope.companyId,
+      projectId: scope.projectId,
+      excludeCreatorId: scope.userId,
+      sinceMinutes,
+    })
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      createdBy: row.created_by,
+      createdAt: row.created_at.toISOString(),
+    }))
+  }
+
   async get(scope: CalendarScope, eventId: string): Promise<CalendarEventPayload> {
     return toPayload(await this.requireVisible(scope, eventId))
+  }
+
+  async find(scope: CalendarScope, eventId: string): Promise<CalendarEventPayload | null> {
+    const event = await findVisibleCalendarEvent(this.db, { id: eventId, ...scope })
+    return event ? toPayload(event) : null
   }
 
   async update(
