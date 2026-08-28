@@ -1,4 +1,3 @@
-import { audit, createWsTicket, deleteSession } from '../../auth.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
@@ -12,6 +11,7 @@ import {
   returnUrlAllowed,
 } from '../../oauth.js'
 import { IdentityApplication } from './application.js'
+import { audit, createWsTicket, deleteSession } from './session-facade.js'
 
 export const identityApplication = new IdentityApplication(pool, {
   providerEnabled,

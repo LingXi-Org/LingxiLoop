@@ -1,4 +1,4 @@
-import { audit, gravatarUrlForEmail } from '../../auth.js'
+import { audit, gravatarUrlForEmail } from '../identity/public.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'

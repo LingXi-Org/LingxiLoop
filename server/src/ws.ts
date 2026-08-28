@@ -11,7 +11,7 @@ import {
 } from './redis.js'
 import { wukongClient } from './im/wukong.js'
 import { env } from './env.js'
-import { consumeWsTicket } from './auth.js'
+import { consumeWsTicket } from './modules/identity/public.js'
 import { pool } from './db/pool.js'
 import { setStatus } from './status.js'
 import {

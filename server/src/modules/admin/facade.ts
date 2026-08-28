@@ -1,4 +1,4 @@
-import { audit } from '../../auth.js'
+import { audit } from '../identity/public.js'
 import { mirrorIdentityAvatar } from '../../avatar.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'

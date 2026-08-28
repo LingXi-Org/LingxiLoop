@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { audit } from '../auth.js'
+import { audit } from '../modules/identity/public.js'
 import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
 import { withClientTransaction, withTransaction } from '../db/transaction.js'

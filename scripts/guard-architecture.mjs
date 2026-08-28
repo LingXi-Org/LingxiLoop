@@ -144,8 +144,11 @@ for (const file of server) {
 }
 
 const authSource = await read(resolve('server/src/auth.ts'))
-if (/export async function audit[\s\S]*?catch\s*\([^)]*\)\s*\{[\s\S]*?\}/.test(authSource)) {
-  violations.push('server/src/auth.ts: audit ledger writes must fail closed instead of being swallowed')
+if (/from ['"][^'"]*db\//.test(authSource) || /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(authSource)) {
+  violations.push('server/src/auth.ts: global authentication middleware must not own persistence')
+}
+if (!/modules\/identity\/public\.js/.test(authSource)) {
+  violations.push('server/src/auth.ts: session resolution must use the Identity public surface')
 }
 
 if (violations.length > 0) {

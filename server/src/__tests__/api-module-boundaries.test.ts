@@ -157,6 +157,11 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   const calendarWorker = await readFile(new URL('../worker.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(calendarScheduler, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
   assert.match(calendarWorker, /from ['"]\.\/modules\/calendar\/index\.js['"]/)
+
+  const auth = await readFile(new URL('../auth.ts', import.meta.url), 'utf8')
+  assert.match(auth, /from ['"]\.\/modules\/identity\/public\.js['"]/)
+  assert.doesNotMatch(auth, /from ['"][^'"]*db\/|\b(?:pool|db)\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  assert.doesNotMatch(auth, /export (?:async )?function (?:audit|createSession|createWsTicket|consumeWsTicket)\b/)
 })
 
 test('retired observability HTTP views cannot return', async () => {
