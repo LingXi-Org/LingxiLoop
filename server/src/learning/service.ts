@@ -7,7 +7,6 @@ import { inc } from '../metrics.js'
 import { listLearningObjectives } from '../modules/learning/repository.js'
 import type { AgentWorkItem } from '../agent-os/types.js'
 import type {
-  LearningActivity,
   LearningActivityType,
   LearningAssistance,
   LearningCourseSummary,
@@ -30,14 +29,6 @@ function asText(value: unknown, name: string, maxLength = 10_000): string {
   if (text.length > maxLength) throw new Error(`${name} exceeds ${maxLength} characters`)
   return text
 }
-
-function asLevel(value: unknown, defaultValue = 2): 1 | 2 | 3 | 4 {
-  const level = Number(value ?? defaultValue)
-  if (!Number.isInteger(level) || level < 1 || level > 4) throw new Error('targetLevel must be between 1 and 4')
-  return level as 1 | 2 | 3 | 4
-}
-
-function rowsArray(value: unknown): unknown[] { return Array.isArray(value) ? value : [] }
 
 const REVIEW_INTERVAL_BY_LEVEL = [1, 1, 3, 7, 21] as const
 
@@ -181,79 +172,6 @@ export async function bindCourseRoom(input: {
   )
 }
 
-export async function draftActivity(input: {
-  courseId: string; actorId: string; title: string; instructions: string; type: LearningActivityType
-  evaluationMode?: LearningEvaluationMode; targetLevel?: number; rubric?: unknown[]; objectiveIds?: string[]; dueAt?: string
-}, db: Queryable = pool): Promise<LearningActivity> {
-  const id = randomUUID()
-  const objectiveIds = [...new Set(input.objectiveIds ?? [])]
-  if (objectiveIds.length > 100 || rowsArray(input.rubric).length > 100) throw new Error('activity objective and rubric lists are limited to 100 items')
-  if (objectiveIds.length) {
-    const { rows } = await db.query<{ count:number }>(`SELECT COUNT(*)::int AS count FROM learning_objectives WHERE course_id=$1 AND id=ANY($2::text[])`, [input.courseId,objectiveIds])
-    if (Number(rows[0]?.count ?? 0) !== objectiveIds.length) throw new Error('every activity objective must belong to the current course')
-  }
-  await db.query(
-    `INSERT INTO learning_activities(id,course_id,company_id,title,instructions,type,evaluation_mode,target_level,rubric,objective_ids,due_at,created_by)
-     SELECT $1,$2,course.company_id,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10,$11
-       FROM courses course WHERE course.id=$2`,
-    [id, input.courseId, asText(input.title, 'title'), asText(input.instructions, 'instructions'), input.type,
-      input.evaluationMode ?? 'teacher_required', asLevel(input.targetLevel), JSON.stringify(input.rubric ?? []),
-      JSON.stringify(objectiveIds), input.dueAt ?? null, input.actorId],
-  )
-  return getActivity(id, input.courseId, db)
-}
-
-export async function getActivity(id: string, courseId: string, db: Queryable = pool): Promise<LearningActivity> {
-  const { rows } = await db.query<{
-    id:string;course_id:string;title:string;instructions:string;type:LearningActivity['type'];status:LearningActivity['status'];
-    evaluation_mode:LearningActivity['evaluationMode'];target_level:1|2|3|4;rubric:unknown[];objective_ids:string[];due_at:string|null
-  }>(`SELECT * FROM learning_activities WHERE id=$1 AND course_id=$2`, [id, courseId])
-  const row = rows[0]
-  if (!row) throw new Error('activity not found')
-  return { id: row.id, courseId: row.course_id, title: row.title, instructions: row.instructions, type: row.type,
-    status: row.status, evaluationMode: row.evaluation_mode, targetLevel: row.target_level,
-    rubric: rowsArray(row.rubric), objectiveIds: (row.objective_ids ?? []).map(String), ...(row.due_at ? { dueAt: String(row.due_at) } : {}) }
-}
-
-export async function publishActivity(courseId: string, activityId: string, teacherId: string, db: Queryable = pool): Promise<void> {
-  await requireCourseRole(courseId, teacherId, 'teacher', db)
-  const { rows: readiness } = await db.query<{ type:LearningActivityType;rubric:unknown[];objective_ids:string[];published_objectives:number }>(
-    `SELECT a.type,a.rubric,a.objective_ids,COUNT(o.id)::int AS published_objectives
-       FROM learning_activities a LEFT JOIN LATERAL jsonb_array_elements_text(a.objective_ids) ids(id) ON TRUE
-       LEFT JOIN learning_objectives o ON o.id=ids.id AND o.course_id=a.course_id AND o.status='published'
-      WHERE a.id=$1 AND a.course_id=$2 AND a.status='draft' GROUP BY a.id`, [activityId,courseId],
-  )
-  const ready = readiness[0]
-  if (!ready) throw new Error('draft activity not found')
-  if (!ready.objective_ids?.length || Number(ready.published_objectives) !== ready.objective_ids.length) throw new Error('published activities require at least one published objective')
-  if (['assessment','project'].includes(ready.type) && !rowsArray(ready.rubric).length) throw new Error('assessment and project activities require a rubric')
-  const { rowCount } = await db.query(
-    `UPDATE learning_activities SET status='published',published_by=$3,published_at=NOW(),updated_at=NOW()
-     WHERE id=$1 AND course_id=$2 AND status='draft'`, [activityId, courseId, teacherId],
-  )
-  if (!rowCount) throw new Error('draft activity not found')
-}
-
-export async function closeActivity(courseId: string, activityId: string, teacherId: string, db: Queryable = pool): Promise<void> {
-  await requireCourseRole(courseId, teacherId, 'teacher', db)
-  const { rowCount } = await db.query(
-    `UPDATE learning_activities SET status='closed',updated_at=NOW() WHERE id=$1 AND course_id=$2 AND status='published'`,
-    [activityId, courseId],
-  )
-  if (!rowCount) throw new Error('published activity not found')
-}
-
-export async function listActivities(courseId: string, userId: string, db: Queryable = pool): Promise<LearningActivity[]> {
-  const role = await courseRole(db, courseId, userId)
-  if (!role) throw new Error('course membership required')
-  const { rows } = await db.query<{ id: string }>(
-    `SELECT id FROM learning_activities WHERE course_id=$1
-      AND ($2::boolean OR status IN ('published','closed')) ORDER BY created_at DESC`,
-    [courseId, role === 'teacher'],
-  )
-  return Promise.all(rows.map((row) => getActivity(row.id, courseId, db)))
-}
-
 export async function listMissions(courseId: string, userId: string, db: Queryable = pool): Promise<LearningMission[]> {
   const role = await courseRole(db, courseId, userId)
   if (!role) throw new Error('course membership required')
@@ -281,29 +199,6 @@ export async function setMissionCoordinator(input:{courseId:string;missionId:str
 
 /** A learner pressing Submit is itself a Host-verified evidence source. The
  * API binds authorship to the authenticated session and published activity. */
-export async function submitActivity(input: {
-  courseId: string; activityId: string; learnerId: string; answer: string; assistance?: LearningAssistance
-}, db: Queryable = pool): Promise<{ attemptId: string }> {
-  await requireCourseRole(input.courseId, input.learnerId, 'learner', db)
-  const answer = asText(input.answer, 'answer', 100_000)
-  if (answer.length > 100_000) throw new Error('answer exceeds 100000 characters')
-  const { rows } = await db.query<{ id: string }>(
-    `SELECT id FROM learning_activities WHERE id=$1 AND course_id=$2 AND status='published'`,
-    [input.activityId, input.courseId],
-  )
-  if (!rows[0]) throw new Error('published activity not found')
-  const attemptId = randomUUID()
-  await db.query(
-    `INSERT INTO learning_attempts(id,course_id,company_id,learner_id,activity_id,assistance,evidence)
-     SELECT $1,$2,course.company_id,$3,$4,$5,$6::jsonb
-       FROM courses course WHERE course.id=$2`,
-    [attemptId, input.courseId, input.learnerId, input.activityId, input.assistance ?? 'none',
-      JSON.stringify({ kind: 'ui_submission', submittedBy: input.learnerId, answer })],
-  )
-  inc('learning.attempt.accepted', { source: 'ui' })
-  return { attemptId }
-}
-
 export async function listEvidence(courseId: string, userId: string, learnerId = userId, db: Queryable = pool): Promise<unknown[]> {
   const role = await courseRole(db, courseId, userId)
   if (role !== 'teacher' && (role !== 'learner' || learnerId !== userId)) throw new Error('course evidence access denied')

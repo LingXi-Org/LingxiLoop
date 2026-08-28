@@ -10,14 +10,17 @@ import { inc } from '../metrics.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import {
   bindCourseRoom,
-  closeActivity,
-  draftActivity,
-  publishActivity,
   requireCourseRole,
   reviewEvaluation,
   setCourseMembership,
 } from './service.js'
-import { createLearningObjectives, setLearningObjectiveStatus } from '../modules/learning/application.js'
+import {
+  closeLearningActivity,
+  createLearningActivity,
+  createLearningObjectives,
+  publishLearningActivity,
+  setLearningObjectiveStatus,
+} from '../modules/learning/application.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,
@@ -586,7 +589,7 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   }
   if(method==='draft_activity'){
     const objectiveIds=args.objectiveIds??args.objective_ids
-    return draftActivity({courseId:scope.courseId,actorId:scope.teacherId,title:textArg(args,'title'),instructions:textArg(args,'instructions'),type:textArg(args,'type') as LearningActivityType,evaluationMode:(optionalText(args,'evaluationMode','evaluation_mode')??'teacher_required') as LearningEvaluationMode,targetLevel:Number(args.targetLevel??args.target_level??2),rubric:Array.isArray(args.rubric)?args.rubric:[],objectiveIds:Array.isArray(objectiveIds)?objectiveIds.map(String):[],...(optionalText(args,'dueAt','due_at')?{dueAt:optionalText(args,'dueAt','due_at')}:{})},db)
+    return createLearningActivity(db,learningTransaction(db),{companyId:scope.companyId,courseId:scope.courseId,actorId:scope.teacherId,actorKind:'teacher',title:textArg(args,'title'),instructions:textArg(args,'instructions'),type:textArg(args,'type') as LearningActivityType,evaluationMode:(optionalText(args,'evaluationMode','evaluation_mode')??'teacher_required') as LearningEvaluationMode,targetLevel:Number(args.targetLevel??args.target_level??2),rubric:Array.isArray(args.rubric)?args.rubric:[],objectiveIds:Array.isArray(objectiveIds)?objectiveIds.map(String):[],...(optionalText(args,'dueAt','due_at')?{dueAt:optionalText(args,'dueAt','due_at')}:{})})
   }
   if(method==='update_course'){
     const title=optionalText(args,'title');const description=optionalText(args,'description')
@@ -602,8 +605,8 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   if(method==='configure_digest')return configureDigest(scope,args,db)
   if(method==='publish_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'published'});return {ok:true}}
   if(method==='archive_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'archived'});return {ok:true}}
-  if(method==='publish_activity'){await publishActivity(scope.courseId,textArg(args,'activityId','activity_id'),scope.teacherId,db);return {ok:true}}
-  if(method==='close_activity'){await closeActivity(scope.courseId,textArg(args,'activityId','activity_id'),scope.teacherId,db);return {ok:true}}
+  if(method==='publish_activity'){await publishLearningActivity(learningTransaction(db),{companyId:scope.companyId,courseId:scope.courseId,activityId:textArg(args,'activityId','activity_id'),teacherId:scope.teacherId});return {ok:true}}
+  if(method==='close_activity'){await closeLearningActivity(db,{companyId:scope.companyId,courseId:scope.courseId,activityId:textArg(args,'activityId','activity_id'),teacherId:scope.teacherId});return {ok:true}}
   if(method==='set_course_status'){
     const status=textArg(args,'status')
     if(!['active','archived'].includes(status))throw new Error('status must be active or archived')

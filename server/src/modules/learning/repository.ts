@@ -6,7 +6,12 @@ import type {
   NotificationPreferencesInput,
   UpdateCourseInput,
 } from './contracts.js'
-import type { LearningObjective, LearningObjectiveStatus } from '../../learning/types.js'
+import type {
+  LearningActivity,
+  LearningActivityType,
+  LearningObjective,
+  LearningObjectiveStatus,
+} from '../../learning/types.js'
 
 export async function listCourses(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query(
@@ -551,6 +556,192 @@ export async function updateLearningObjectiveStatus(
              AND member.user_id=$4 AND member.role='teacher'
         )`,
     [args.companyId,args.courseId,args.objectiveId,args.teacherId,args.status],
+  )
+  return Boolean(result.rowCount)
+}
+
+interface LearningActivityRow {
+  id: string
+  course_id: string
+  title: string
+  instructions: string
+  type: LearningActivity['type']
+  status: LearningActivity['status']
+  evaluation_mode: LearningActivity['evaluationMode']
+  target_level: 1 | 2 | 3 | 4
+  rubric: unknown[]
+  objective_ids: string[]
+  due_at: string | null
+}
+
+function mapLearningActivity(row: LearningActivityRow): LearningActivity {
+  return {
+    id: row.id,
+    courseId: row.course_id,
+    title: row.title,
+    instructions: row.instructions,
+    type: row.type,
+    status: row.status,
+    evaluationMode: row.evaluation_mode,
+    targetLevel: row.target_level,
+    rubric: Array.isArray(row.rubric) ? row.rubric : [],
+    objectiveIds: Array.isArray(row.objective_ids) ? row.objective_ids.map(String) : [],
+    ...(row.due_at ? { dueAt: String(row.due_at) } : {}),
+  }
+}
+
+export async function countCourseObjectives(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  objectiveIds: string[],
+): Promise<number> {
+  if (!objectiveIds.length) return 0
+  const { rows } = await db.query<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM learning_objectives
+      WHERE company_id=$1 AND course_id=$2 AND id=ANY($3::text[])`,
+    [companyId,courseId,objectiveIds],
+  )
+  return Number(rows[0]?.count ?? 0)
+}
+
+export async function insertLearningActivity(
+  db: Queryable,
+  args: {
+    id: string; companyId: string; courseId: string; actorId: string; title: string; instructions: string
+    type: LearningActivityType; evaluationMode: LearningActivity['evaluationMode']; targetLevel: 1|2|3|4
+    rubric: unknown[]; objectiveIds: string[]; dueAt?: string
+  },
+): Promise<void> {
+  const result = await db.query(
+    `INSERT INTO learning_activities
+       (id,course_id,company_id,title,instructions,type,evaluation_mode,target_level,rubric,objective_ids,due_at,created_by)
+     SELECT $1,course.id,course.company_id,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12
+       FROM courses course WHERE course.id=$2 AND course.company_id=$3`,
+    [args.id,args.courseId,args.companyId,args.title,args.instructions,args.type,args.evaluationMode,args.targetLevel,
+      JSON.stringify(args.rubric),JSON.stringify(args.objectiveIds),args.dueAt ?? null,args.actorId],
+  )
+  if (!result.rowCount) throw new Error('course not found')
+}
+
+export async function findLearningActivity(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  activityId: string,
+): Promise<LearningActivity | null> {
+  const { rows } = await db.query<LearningActivityRow>(
+    `SELECT id,course_id,title,instructions,type,status,evaluation_mode,target_level,rubric,objective_ids,due_at
+       FROM learning_activities WHERE company_id=$1 AND course_id=$2 AND id=$3`,
+    [companyId,courseId,activityId],
+  )
+  return rows[0] ? mapLearningActivity(rows[0]) : null
+}
+
+export async function listLearningActivities(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  includeDrafts: boolean,
+): Promise<LearningActivity[]> {
+  const { rows } = await db.query<LearningActivityRow>(
+    `SELECT id,course_id,title,instructions,type,status,evaluation_mode,target_level,rubric,objective_ids,due_at
+       FROM learning_activities
+      WHERE company_id=$1 AND course_id=$2 AND ($3::boolean OR status IN ('published','closed'))
+      ORDER BY created_at DESC`,
+    [companyId,courseId,includeDrafts],
+  )
+  return rows.map(mapLearningActivity)
+}
+
+export async function lockLearningActivityForPublish(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  activityId: string,
+): Promise<Pick<LearningActivity, 'type' | 'rubric' | 'objectiveIds'> | null> {
+  const { rows } = await db.query<Pick<LearningActivityRow, 'type' | 'rubric' | 'objective_ids'>>(
+    `SELECT type,rubric,objective_ids FROM learning_activities
+      WHERE company_id=$1 AND course_id=$2 AND id=$3 AND status='draft' FOR UPDATE`,
+    [companyId,courseId,activityId],
+  )
+  const row = rows[0]
+  return row ? {
+    type: row.type,
+    rubric: Array.isArray(row.rubric) ? row.rubric : [],
+    objectiveIds: Array.isArray(row.objective_ids) ? row.objective_ids.map(String) : [],
+  } : null
+}
+
+export async function countPublishedCourseObjectives(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  objectiveIds: string[],
+): Promise<number> {
+  if (!objectiveIds.length) return 0
+  const { rows } = await db.query<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM (
+       SELECT id FROM learning_objectives
+        WHERE company_id=$1 AND course_id=$2 AND status='published' AND id=ANY($3::text[])
+        FOR SHARE
+     ) locked_objective`,
+    [companyId,courseId,objectiveIds],
+  )
+  return Number(rows[0]?.count ?? 0)
+}
+
+export async function publishLearningActivityRecord(
+  db: Queryable,
+  args: { companyId: string; courseId: string; activityId: string; teacherId: string },
+): Promise<boolean> {
+  const result = await db.query(
+    `UPDATE learning_activities activity
+        SET status='published',published_by=$4,published_at=NOW(),updated_at=NOW()
+      WHERE activity.company_id=$1 AND activity.course_id=$2 AND activity.id=$3 AND activity.status='draft'
+        AND EXISTS(SELECT 1 FROM course_members member
+          WHERE member.company_id=activity.company_id AND member.course_id=activity.course_id
+            AND member.user_id=$4 AND member.role='teacher')`,
+    [args.companyId,args.courseId,args.activityId,args.teacherId],
+  )
+  return Boolean(result.rowCount)
+}
+
+export async function closeLearningActivityRecord(
+  db: Queryable,
+  args: { companyId: string; courseId: string; activityId: string; teacherId: string },
+): Promise<boolean> {
+  const result = await db.query(
+    `UPDATE learning_activities activity SET status='closed',updated_at=NOW()
+      WHERE activity.company_id=$1 AND activity.course_id=$2 AND activity.id=$3 AND activity.status='published'
+        AND EXISTS(SELECT 1 FROM course_members member
+          WHERE member.company_id=activity.company_id AND member.course_id=activity.course_id
+            AND member.user_id=$4 AND member.role='teacher')`,
+    [args.companyId,args.courseId,args.activityId,args.teacherId],
+  )
+  return Boolean(result.rowCount)
+}
+
+export async function insertLearningActivityAttempt(
+  db: Queryable,
+  args: {
+    id: string; companyId: string; courseId: string; activityId: string; learnerId: string
+    assistance: 'none'|'hint'|'guided'; answer: string
+  },
+): Promise<boolean> {
+  const result = await db.query(
+    `INSERT INTO learning_attempts(id,course_id,company_id,learner_id,activity_id,assistance,evidence)
+     SELECT $1,course.id,course.company_id,$5,activity.id,$6,$7::jsonb
+       FROM courses course
+       JOIN learning_activities activity
+         ON activity.course_id=course.id AND activity.company_id=course.company_id
+        AND activity.id=$4 AND activity.status='published'
+       JOIN course_members learner
+         ON learner.course_id=course.id AND learner.company_id=course.company_id
+        AND learner.user_id=$5 AND learner.role='learner'
+      WHERE course.company_id=$2 AND course.id=$3`,
+    [args.id,args.companyId,args.courseId,args.activityId,args.learnerId,args.assistance,
+      JSON.stringify({ kind: 'ui_submission', submittedBy: args.learnerId, answer: args.answer })],
   )
   return Boolean(result.rowCount)
 }

@@ -95,7 +95,10 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
     if (!missionId) return { ok: true, value: context.activeMission ?? null }
     return { ok: true, value: await getMission(missionId, context.course.id) }
   }
-  if (method === 'get_activity') return { ok: true, value: await getActivity(textArg(args, 'activityId'), context.course.id) }
+  if (method === 'get_activity') return {
+    ok: true,
+    value: await getActivity(textArg(args, 'activityId'), work.companyId, context.course.id),
+  }
   if (method === 'start_mission') return { ok: true, value: await startMission(work, {
     goal: textArg(args, 'goal'), successCriteria: textArg(args, 'successCriteria'),
     ...(typeof args.missionKind === 'string' ? { missionKind: args.missionKind as 'study'|'research'|'project' } : {}),
@@ -133,7 +136,8 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
     }) }
   }
   if (method === 'draft_activity') return { ok: true, value: await draftActivity({
-    courseId: context.course.id, actorId: work.agentId, title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),
+    companyId: work.companyId, courseId: context.course.id, actorId: work.agentId, actorKind: 'agent',
+    title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),
     type: textArg(args, 'type') as LearningActivityType,
     ...(typeof args.evaluationMode === 'string' ? { evaluationMode: args.evaluationMode as LearningEvaluationMode } : {}),
     ...(args.targetLevel !== undefined ? { targetLevel: Number(args.targetLevel) } : {}),

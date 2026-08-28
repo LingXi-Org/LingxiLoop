@@ -82,6 +82,21 @@ export interface CreateLearningObjectivesCommand extends CreateObjectivesInput {
   actorKind: 'agent' | 'teacher'
 }
 
+export interface CreateLearningActivityCommand {
+  companyId: string
+  courseId: string
+  actorId: string
+  actorKind: 'agent' | 'teacher'
+  title: string
+  instructions: string
+  type: 'lesson' | 'practice' | 'assessment' | 'project' | 'review'
+  evaluationMode?: 'agent_formative' | 'teacher_required'
+  targetLevel?: number
+  rubric?: unknown[]
+  objectiveIds?: string[]
+  dueAt?: string
+}
+
 export interface LearningScope { userId: string; companyId: string }
 export interface LearningNotificationPreferences {
   company_id: string

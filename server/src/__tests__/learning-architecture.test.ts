@@ -54,6 +54,14 @@ test('objective persistence has one tenant-scoped repository path', () => {
   assert.match(repository, /objective\.course_id=\$2 AND objective\.company_id=\$1/)
 })
 
+test('activity writes and UI submissions have one tenant-scoped repository path', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_activities/)
+  assert.doesNotMatch(service, /UPDATE learning_activities/)
+  assert.doesNotMatch(service, /kind: 'ui_submission'/)
+  assert.match(repository, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
+  assert.match(repository, /learner\.user_id=\$5 AND learner\.role='learner'/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
   const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')

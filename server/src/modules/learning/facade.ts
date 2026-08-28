@@ -15,6 +15,7 @@ import {
 import { seedMemberDms } from '../../onboardCompany.js'
 import { CH_DOC_ACCESS_REVOKED, publish } from '../../redis.js'
 import { LearningApplication } from './application.js'
+import { inc } from '../../metrics.js'
 
 export const learningApplication = new LearningApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
@@ -48,4 +49,5 @@ export const learningApplication = new LearningApplication(pool, {
     const { getTeacherAgentSummary } = await import('../../learning/teacher-agent.js')
     return getTeacherAgentSummary(courseId, userId)
   },
+  metric: inc,
 })

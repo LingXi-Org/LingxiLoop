@@ -8,9 +8,7 @@
 export {
   addMissionSteps,
   completeMission,
-  draftActivity,
   finishMissionPlanning,
-  getActivity,
   getMission,
   loadLearningTurnContext,
   preferredCoordinatorPreset,
@@ -34,6 +32,35 @@ export function setObjectiveStatus(input: {
   return setLearningObjectiveStatus(pool, input)
 }
 
+export function draftActivity(input: CreateLearningActivityCommand) {
+  return createLearningActivity(pool, (work) => withTransaction(pool, work), input)
+}
+
+export async function getActivity(activityId: string, companyId: string, courseId: string) {
+  const activity = await findLearningActivity(pool, companyId, courseId, activityId)
+  if (!activity) throw new Error('activity not found')
+  return activity
+}
+
+export function publishActivity(input: {
+  companyId: string; courseId: string; activityId: string; teacherId: string
+}) {
+  return publishLearningActivity((work) => withTransaction(pool, work), input)
+}
+
+export function closeActivity(input: {
+  companyId: string; courseId: string; activityId: string; teacherId: string
+}) {
+  return closeLearningActivity(pool, input)
+}
+
+export function submitActivity(input: {
+  companyId: string; courseId: string; activityId: string; learnerId: string
+  answer: string; assistance?: 'none'|'hint'|'guided'
+}) {
+  return submitLearningActivity(pool, input)
+}
+
 export {
   assertTeacherApprovalFresh,
   describeTeacherAction,
@@ -54,7 +81,12 @@ export type {
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import {
+  closeLearningActivity,
+  createLearningActivity,
   createLearningObjectives,
+  publishLearningActivity,
   setLearningObjectiveStatus,
+  submitLearningActivity,
 } from './application.js'
-import type { CreateLearningObjectivesCommand } from './contracts.js'
+import type { CreateLearningActivityCommand, CreateLearningObjectivesCommand } from './contracts.js'
+import { findLearningActivity } from './repository.js'
