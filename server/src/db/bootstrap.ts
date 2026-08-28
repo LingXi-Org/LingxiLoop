@@ -8,7 +8,8 @@ const V1_SCHEMA_MARKER = 'LingxiLoop schema v1'
 type Queryable = Pick<PoolClient, 'query'>
 
 const REQUIRED_V1_RELATIONS = [
-  'companies', 'participants', 'conversations', 'messages', 'agent_work_items',
+  'companies', 'participants', 'conversations', 'messages', 'message_reactions',
+  'agent_climate', 'agent_work_items',
   'agent_os_approvals', 'knowledge_sources', 'courses', 'learning_objectives',
   'learning_notification_deliveries', 'learning_project_teacher_agents',
   'learning_course_teacher_rooms', 'canvas_assignment_reports',
@@ -22,6 +23,17 @@ const REQUIRED_V1_COLUMNS = [
   ['llm_calls', 'company_id'],
   ['llm_calls', 'purpose'],
   ['llm_calls', 'status'],
+  ['message_reactions', 'company_id'],
+  ['agent_climate', 'company_id'],
+] as const
+
+const REQUIRED_V1_NOT_NULL_COLUMNS = [
+  ['message_reactions', 'company_id'],
+  ['agent_climate', 'company_id'],
+] as const
+
+const REQUIRED_V1_PRIMARY_KEYS = [
+  ['agent_climate', ['company_id', 'agent_id', 'about_id']],
 ] as const
 
 async function userRelationCount(client: PoolClient): Promise<number> {
@@ -62,7 +74,31 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
       )`,
     [tables, columns],
   )
-  return columnRows.length === 0
+  if (columnRows.length > 0) return false
+  for (const [tableName, columnName] of REQUIRED_V1_NOT_NULL_COLUMNS) {
+    const { rows } = await client.query<{ is_nullable: string; column_default: string | null }>(
+      `SELECT is_nullable, column_default
+         FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = $1 AND column_name = $2`,
+      [tableName, columnName],
+    )
+    if (rows[0]?.is_nullable !== 'NO' || rows[0].column_default !== null) return false
+  }
+  for (const [tableName, expectedColumns] of REQUIRED_V1_PRIMARY_KEYS) {
+    const { rows } = await client.query<{ columns: string[] }>(
+      `SELECT json_agg(key_column.column_name ORDER BY key_column.ordinal_position) AS columns
+         FROM information_schema.table_constraints constraint_info
+         JOIN information_schema.key_column_usage key_column
+           ON key_column.constraint_schema = constraint_info.constraint_schema
+          AND key_column.constraint_name = constraint_info.constraint_name
+        WHERE constraint_info.table_schema = 'public'
+          AND constraint_info.table_name = $1
+          AND constraint_info.constraint_type = 'PRIMARY KEY'`,
+      [tableName],
+    )
+    if (JSON.stringify(rows[0]?.columns ?? []) !== JSON.stringify(expectedColumns)) return false
+  }
+  return true
 }
 
 /**

@@ -181,7 +181,7 @@ CREATE TABLE public.agent_autonomy_rules (
 CREATE TABLE public.agent_climate (
     agent_id text NOT NULL,
     about_id text NOT NULL,
-    company_id text DEFAULT 'personal'::text NOT NULL,
+    company_id text NOT NULL,
     affinity real DEFAULT 0 NOT NULL,
     trust real DEFAULT 0 NOT NULL,
     last_note text DEFAULT ''::text NOT NULL,
@@ -1518,7 +1518,7 @@ CREATE TABLE public.message_reactions (
     user_id text NOT NULL,
     emoji text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    company_id text
+    company_id text NOT NULL
 );
 
 
@@ -1987,7 +1987,7 @@ ALTER TABLE ONLY public.agent_autonomy_rules
 --
 
 ALTER TABLE ONLY public.agent_climate
-    ADD CONSTRAINT agent_climate_pkey PRIMARY KEY (agent_id, about_id);
+    ADD CONSTRAINT agent_climate_pkey PRIMARY KEY (company_id, agent_id, about_id);
 
 
 --

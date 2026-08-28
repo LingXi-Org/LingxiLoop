@@ -20,6 +20,8 @@ test('v1 schema is a complete bootstrap definition without historical data mutat
     'participants',
     'conversations',
     'messages',
+    'message_reactions',
+    'agent_climate',
     'agent_work_items',
     'knowledge_sources',
     'llm_calls',
@@ -45,6 +47,15 @@ test('v1 defaults preserve current capability and Canvas contracts', () => {
   assert.match(schema, /capabilities jsonb DEFAULT '\["canvas", "web", "files", "email", "documents"\]'::jsonb NOT NULL/)
   assert.doesNotMatch(schema, /capabilities jsonb DEFAULT '[^']*knowledge/)
   assert.match(schema, /CREATE TABLE public\.canvases \([\s\S]*?conversation_id text,/)
+})
+
+test('tenant-owned reaction and climate rows have no legacy tenant default', () => {
+  assert.match(schema, /CREATE TABLE public\.message_reactions \([\s\S]*?company_id text NOT NULL[\s\S]*?\);/)
+  assert.match(schema, /CREATE TABLE public\.agent_climate \([\s\S]*?company_id text NOT NULL[\s\S]*?\);/)
+  assert.match(schema, /agent_climate_pkey PRIMARY KEY \(company_id, agent_id, about_id\)/)
+  assert.doesNotMatch(schema, /company_id text DEFAULT 'personal'::text/)
+  assert.match(bootstrap, /REQUIRED_V1_NOT_NULL_COLUMNS/)
+  assert.match(bootstrap, /REQUIRED_V1_PRIMARY_KEYS/)
 })
 
 test('bootstrap only reuses a complete marked v1 schema and rejects every unmarked non-empty schema', () => {

@@ -17,12 +17,15 @@
  *   takes dozens to grind affinity to ±1, so it stays meaningful.
  */
 import { pool } from '../db/pool.js'
+import type { Queryable } from '../db/queryable.js'
 
 function clamp(v: number): number {
   return Math.max(-1, Math.min(1, v))
 }
 
 interface BumpArgs {
+  /** Trusted tenant scope owning both participants and the climate row. */
+  companyId: string
   /** Whose feelings are being adjusted (must be an agent). */
   agentId: string
   /** Subject of those feelings — can be human or agent. */
@@ -39,30 +42,30 @@ interface BumpArgs {
  * to skip when the agent_id isn't actually an agent (humans don't get
  * climate rows). Provider and database failures propagate.
  */
-export async function bumpClimate(args: BumpArgs): Promise<void> {
-  const { agentId, aboutId, affinity = 0, trust = 0, note } = args
+export async function bumpClimate(args: BumpArgs, db: Queryable = pool): Promise<void> {
+  const { companyId, agentId, aboutId, affinity = 0, trust = 0, note } = args
   if (!agentId || !aboutId) return
   if (agentId === aboutId) return  // self-climate is noise
   if (affinity === 0 && trust === 0) return
 
   // Guard: only insert/update climate WHEN agent_id refers to an agent.
-  const { rows: kind } = await pool.query<{ kind: string }>(
-    `SELECT kind FROM participants WHERE id = $1 LIMIT 1`, [agentId],
+  const { rows: kind } = await db.query<{ kind: string }>(
+    `SELECT kind FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`, [agentId, companyId],
   )
   if (!kind[0] || kind[0].kind !== 'agent') return
 
-  await pool.query(
-      `INSERT INTO agent_climate (agent_id, about_id, affinity, trust, last_note, updated_at)
-       VALUES ($1, $2,
-               GREATEST(-1, LEAST(1, $3::real)),
+  await db.query(
+      `INSERT INTO agent_climate (company_id, agent_id, about_id, affinity, trust, last_note, updated_at)
+       VALUES ($1, $2, $3,
                GREATEST(-1, LEAST(1, $4::real)),
-               $5, NOW())
-       ON CONFLICT (agent_id, about_id) DO UPDATE
-          SET affinity = GREATEST(-1, LEAST(1, agent_climate.affinity + $3::real)),
-              trust    = GREATEST(-1, LEAST(1, agent_climate.trust    + $4::real)),
-              last_note = COALESCE($5, agent_climate.last_note),
+               GREATEST(-1, LEAST(1, $5::real)),
+               $6, NOW())
+       ON CONFLICT (company_id, agent_id, about_id) DO UPDATE
+          SET affinity = GREATEST(-1, LEAST(1, agent_climate.affinity + $4::real)),
+              trust    = GREATEST(-1, LEAST(1, agent_climate.trust    + $5::real)),
+              last_note = COALESCE($6, agent_climate.last_note),
               updated_at = NOW()`,
-      [agentId, aboutId, clamp(affinity), clamp(trust), note ?? null],
+      [companyId, agentId, aboutId, clamp(affinity), clamp(trust), note ?? null],
   )
 }
 
@@ -92,6 +95,7 @@ export async function bumpClimateFromMentions(args: {
   for (const r of matched) {
     // Being @-mentioned by someone is mild positive engagement.
     await bumpClimate({
+      companyId,
       agentId: r.id,
       aboutId: speakerId,
       affinity: 0.04,

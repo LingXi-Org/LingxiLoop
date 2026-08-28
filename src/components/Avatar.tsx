@@ -14,6 +14,8 @@ interface Props {
   className?: string
   /** Disable continuous motion for dense composite surfaces such as HiveAvatar. */
   animated?: boolean
+  /** Live agent states are reserved for avatars rendered in the Chat Panel. */
+  mode?: 'chat' | 'neutral'
 }
 
 function useResolvedAvatarStatus(p: Participant, statusOverride?: string) {
@@ -29,7 +31,7 @@ function useResolvedAvatarStatus(p: Participant, statusOverride?: string) {
   return statusOverride ?? ownStatus
 }
 
-export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringColor = 'var(--paper)', className, animated = true }: Props) {
+export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringColor = 'var(--paper)', className, animated = true, mode = 'neutral' }: Props) {
   const dotSize = Math.max(10, Math.round(size * 0.27))
   const fontSize = Math.round(size * 0.36)
   const status = useResolvedAvatarStatus(p, statusOverride)
@@ -51,7 +53,7 @@ export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringCo
   return (
     <div className={cn('relative inline-grid place-items-center rounded-full font-display font-medium text-white tracking-tight shrink-0', className)} style={style}>
       {p.kind === 'agent' ? (
-        <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} />
+        <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} mode={mode} />
       ) : showImg ? (
         <img
           key={imgKey}
@@ -87,12 +89,14 @@ export function AvatarMini({
   ringColor = 'var(--cloud)',
   statusOverride,
   animated = true,
+  mode = 'neutral',
 }: {
   p: Participant
   size?: number
   ringColor?: string
   statusOverride?: string
   animated?: boolean
+  mode?: 'chat' | 'neutral'
 }) {
   const status = useResolvedAvatarStatus(p, statusOverride)
   const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : p.avatarUrl)
@@ -108,7 +112,7 @@ export function AvatarMini({
       }}
     >
       {p.kind === 'agent'
-        ? <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} />
+        ? <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} mode={mode} />
         : showImg
         ? <img
             key={imgKey}

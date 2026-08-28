@@ -2983,11 +2983,12 @@ function clamp01(v: unknown): number {
 async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
   const op = parsed.positional[0] ?? 'read'
   const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
 
   if (op === 'read') {
     const about = parsed.positional[1]
-    const params: unknown[] = [me]
-    let where = `agent_id = $1`
+    const params: unknown[] = [companyId, me]
+    let where = `company_id = $1 AND agent_id = $2`
     if (about) { params.push(about); where += ` AND about_id = $${params.length}` }
     const { rows } = await pool.query<{
       about_id: string; affinity: number; trust: number; last_note: string; updated_at: string
@@ -3027,8 +3028,9 @@ async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
     const { rows: prior } = await pool.query<{
       affinity: number; trust: number; history: unknown
     }>(
-      `SELECT affinity, trust, history FROM agent_climate WHERE agent_id = $1 AND about_id = $2`,
-      [me, aboutId],
+      `SELECT affinity, trust, history FROM agent_climate
+        WHERE company_id = $1 AND agent_id = $2 AND about_id = $3`,
+      [companyId, me, aboutId],
     )
     const prevAffinity = prior[0]?.affinity ?? 0
     const prevTrust = prior[0]?.trust ?? 0
@@ -3042,15 +3044,15 @@ async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
       { at: new Date().toISOString(), affinity: nextAffinity, trust: nextTrust, note: note.slice(0, 400) },
     ]
     await pool.query(
-      `INSERT INTO agent_climate (agent_id, about_id, affinity, trust, last_note, history, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, NOW())
-       ON CONFLICT (agent_id, about_id) DO UPDATE
+      `INSERT INTO agent_climate (company_id, agent_id, about_id, affinity, trust, last_note, history, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, NOW())
+       ON CONFLICT (company_id, agent_id, about_id) DO UPDATE
          SET affinity = EXCLUDED.affinity,
              trust    = EXCLUDED.trust,
              last_note = EXCLUDED.last_note,
              history   = EXCLUDED.history,
              updated_at = NOW()`,
-      [me, aboutId, nextAffinity, nextTrust, note.slice(0, 400), JSON.stringify(newHistory)],
+      [companyId, me, aboutId, nextAffinity, nextTrust, note.slice(0, 400), JSON.stringify(newHistory)],
     )
     return ok(`climate updated: ${me} → ${aboutId}  affinity=${nextAffinity.toFixed(2)}  trust=${nextTrust.toFixed(2)}`, [{
       event: 'climate.updated',
@@ -3066,8 +3068,8 @@ async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
     const aboutId = parsed.positional[1]
     if (!aboutId) return err('usage: climate forget <about_id>')
     const r = await pool.query(
-      `DELETE FROM agent_climate WHERE agent_id = $1 AND about_id = $2`,
-      [me, aboutId],
+      `DELETE FROM agent_climate WHERE company_id = $1 AND agent_id = $2 AND about_id = $3`,
+      [companyId, me, aboutId],
     )
     if ((r.rowCount ?? 0) === 0) return err(`no climate to forget for ${me} → ${aboutId}`)
     return ok(`forgot climate ${me} → ${aboutId}`, [{

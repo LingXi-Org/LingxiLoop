@@ -108,6 +108,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
             size={48}
             ringColor="transparent"
             statusOverride={avatarActivity}
+            mode="chat"
             className={cn('chat-message-avatar', avatarActivity && `agent-avatar-${avatarActivity}`)}
           />
         </MessageAvatar>
@@ -123,6 +124,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
               size={48}
               ringColor="transparent"
               statusOverride={avatarActivity}
+              mode="chat"
               className={cn('chat-message-avatar', avatarActivity && `agent-avatar-${avatarActivity}`)}
             />
           </button>
@@ -133,6 +135,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
             p={author}
             size={48}
             ringColor="transparent"
+            mode="chat"
             className="chat-message-avatar"
           />
         </MessageAvatar>
