@@ -9,6 +9,7 @@ import type {
   SendEmailInput,
 } from './contracts.js'
 import {
+  findCompletedOutboundByKey,
   findEmailHtml,
   findEmailParticipant,
   findEmailReplyTarget,
@@ -58,6 +59,7 @@ export interface EmailInfrastructure {
     references: string[]
     subject: string
     memberIds: string[]
+    idempotencyKey?: string
   }): Promise<{ conversationId: string }>
   persist(args: {
     conversationId: string
@@ -92,6 +94,11 @@ export class EmailApplication {
 
   async send(scope: EmailScope, input: SendEmailInput): Promise<EmailSendPayload> {
     this.infrastructure.assertAvailable()
+    const replay = await findCompletedOutboundByKey(this.db, scope.companyId, input.idempotencyKey)
+    if (replay) return {
+      messageId: replay.messageId, conversationId: replay.conversationId,
+      transportStatus: replay.transportStatus, ...(replay.error ? { error: replay.error } : {}),
+    }
     const subject = this.infrastructure.sanitizeSubject(input.subject)
     if (!subject) throw new EmailApplicationError('recipient_unresolved', 'subject required')
     const attachments = await this.resolveAttachments(input.attachments)
@@ -112,6 +119,7 @@ export class EmailApplication {
       references: [],
       subject,
       memberIds: [...memberIds],
+      idempotencyKey: input.idempotencyKey,
     })
     const from = this.infrastructure.formatAddress(sender.email, sender.displayName)
     const persisted = await this.infrastructure.persist({
@@ -162,6 +170,11 @@ export class EmailApplication {
 
   async reply(scope: EmailScope, targetId: string, input: ReplyEmailInput): Promise<EmailSendPayload> {
     this.infrastructure.assertAvailable()
+    const replay = await findCompletedOutboundByKey(this.db, scope.companyId, input.idempotencyKey)
+    if (replay) return {
+      messageId: replay.messageId, conversationId: replay.conversationId,
+      transportStatus: replay.transportStatus, ...(replay.error ? { error: replay.error } : {}),
+    }
     const target = await findEmailReplyTarget(this.db, scope.companyId, targetId)
     if (!target) throw new EmailApplicationError('message_not_found', 'unknown email message')
     if (!target.members?.includes(scope.userId)) {

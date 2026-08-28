@@ -699,6 +699,7 @@ CREATE TABLE public.calendar_reminders (
     fired_at timestamp with time zone DEFAULT now() NOT NULL,
     channel text NOT NULL,
     recipients jsonb DEFAULT '[]'::jsonb NOT NULL,
+    delivered_legs jsonb DEFAULT '[]'::jsonb NOT NULL,
     status text DEFAULT 'sent'::text NOT NULL,
     error text,
     claimed_at timestamp with time zone DEFAULT now() NOT NULL,

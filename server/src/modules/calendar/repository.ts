@@ -438,8 +438,8 @@ export async function claimCalendarReminder(
     scheduledFor: Date
     channel: ReminderChannel
   },
-): Promise<boolean> {
-  const result = await db.query(
+): Promise<string[] | null> {
+  const { rows } = await db.query<{ delivered_legs: string[] }>(
     `INSERT INTO calendar_reminders
        (id, event_id, company_id, scheduled_for, channel, recipients, status)
      VALUES ($1,$2,$3,$4,$5,'[]'::jsonb,'pending')
@@ -448,10 +448,10 @@ export async function claimCalendarReminder(
            channel=EXCLUDED.channel
      WHERE calendar_reminders.status='failed'
         OR (calendar_reminders.status='pending' AND calendar_reminders.claimed_at < NOW() - INTERVAL '5 minutes')
-     RETURNING id`,
+     RETURNING delivered_legs`,
     [args.id, args.eventId, args.companyId, args.scheduledFor, args.channel],
   )
-  return (result.rowCount ?? 0) > 0
+  return rows[0]?.delivered_legs ?? null
 }
 
 export async function completeCalendarReminder(
@@ -460,14 +460,15 @@ export async function completeCalendarReminder(
     id: string
     recipients: string[]
     status: 'sent' | 'skipped' | 'failed'
+    deliveredLegs: string[]
     error?: string | null
   },
 ): Promise<void> {
   await db.query(
     `UPDATE calendar_reminders
-        SET recipients = $2::jsonb, status = $3, error = $4
+        SET recipients = $2::jsonb, status = $3, error = $4, delivered_legs=$5::jsonb
       WHERE id = $1`,
-    [args.id, JSON.stringify(args.recipients), args.status, args.error ?? null],
+    [args.id, JSON.stringify(args.recipients), args.status, args.error ?? null, JSON.stringify(args.deliveredLegs)],
   )
 }
 

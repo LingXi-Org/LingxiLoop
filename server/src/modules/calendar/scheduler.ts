@@ -320,13 +320,15 @@ export class CalendarScheduler {
   private async remind(event: CalendarEventRow, occurrence: Date, now: Date): Promise<boolean> {
     if (event.reminder_minutes_before === null || !event.reminder_channel) return false
     const reminderId = `cr-${randomUUID()}`
-    if (!await claimCalendarReminder(this.infrastructure.db, {
+    const claimedLegs = await claimCalendarReminder(this.infrastructure.db, {
       id: reminderId,
       eventId: event.id,
       companyId: event.company_id,
       scheduledFor: occurrence,
       channel: event.reminder_channel,
-    })) return false
+    })
+    if (!claimedLegs) return false
+    const deliveredLegs = new Set(claimedLegs)
     const recipients = await listCalendarReminderRecipients(this.infrastructure.db, {
       companyId: event.company_id,
       creatorId: event.created_by,
@@ -337,13 +339,14 @@ export class CalendarScheduler {
         id: reminderId,
         recipients: [],
         status: 'skipped',
+        deliveredLegs: [...deliveredLegs],
         error: 'no reminder recipients',
       })
       return false
     }
     const leadMinutes = Math.max(0, Math.round((occurrence.getTime() - now.getTime()) / 60_000))
     const errors: string[] = []
-    if (event.reminder_channel === 'toast' || event.reminder_channel === 'both') {
+    if ((event.reminder_channel === 'toast' || event.reminder_channel === 'both') && !deliveredLegs.has('toast')) {
       try {
         await this.infrastructure.publishReminder({
           type: 'calendar.reminder',
@@ -357,6 +360,7 @@ export class CalendarScheduler {
           kind: event.kind,
           assigneeId: event.assignee_id,
         })
+        deliveredLegs.add('toast')
       } catch (error) {
         errors.push(`toast: ${error instanceof Error ? error.message : String(error)}`)
       }
@@ -365,6 +369,8 @@ export class CalendarScheduler {
       const emailRecipients = recipients.flatMap((recipient) => recipient.email ? [recipient.email] : [])
       if (emailRecipients.length === 0) errors.push('email: no mailable recipients')
       for (const to of emailRecipients) {
+        const leg = `email:${to.toLowerCase()}`
+        if (deliveredLegs.has(leg)) continue
         try {
           await this.infrastructure.sendReminderEmail({
             to,
@@ -372,6 +378,7 @@ export class CalendarScheduler {
             text: reminderText(event, occurrence, leadMinutes),
             html: reminderHtml(event, occurrence, leadMinutes),
           })
+          deliveredLegs.add(leg)
         } catch (error) {
           errors.push(`email[${to}]: ${error instanceof Error ? error.message : String(error)}`)
         }
@@ -381,6 +388,7 @@ export class CalendarScheduler {
       id: reminderId,
       recipients: recipients.map((recipient) => recipient.user_id),
       status: errors.length ? 'failed' : 'sent',
+      deliveredLegs: [...deliveredLegs],
       error: errors.length ? errors.join('; ') : null,
     })
     return errors.length === 0

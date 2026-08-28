@@ -1,4 +1,25 @@
+import { createHash } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
+
+export async function findCompletedOutboundByKey(
+  db: Queryable,
+  companyId: string,
+  idempotencyKey: string,
+): Promise<{ messageId: string; conversationId: string; transportStatus: 'sent'|'failed'; error: string | null } | null> {
+  const messageId = `m-agent-${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 32)}`
+  const { rows } = await db.query<{
+    message_id: string; conversation_id: string; transport_status: 'sent'|'failed'; transport_error: string | null
+  }>(
+    `SELECT message_id,conversation_id,transport_status,transport_error FROM email_messages
+      WHERE message_id=$1 AND company_id=$2 AND direction='out' AND transport_status IN ('sent','failed')`,
+    [messageId,companyId],
+  )
+  const row = rows[0]
+  return row ? {
+    messageId: row.message_id, conversationId: row.conversation_id,
+    transportStatus: row.transport_status, error: row.transport_error,
+  } : null
+}
 
 export interface EmailParticipantRow {
   id: string

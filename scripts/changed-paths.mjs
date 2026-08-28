@@ -41,14 +41,14 @@ export function parseBaseArgument(arguments_) {
 
 export function changedPaths(base) {
   const local = [
-    ...zeroSeparatedPaths(runGit(['diff', '--name-only', '--diff-filter=ACMR', '-z', 'HEAD', '--'])),
+    ...zeroSeparatedPaths(runGit(['diff', '--name-only', '--diff-filter=ACMRD', '-z', 'HEAD', '--'])),
     ...zeroSeparatedPaths(runGit(['ls-files', '--others', '--exclude-standard', '-z'])),
   ]
   if (!base) return [...new Set(local)].sort((a, b) => a.localeCompare(b, 'en'))
 
   const mergeBase = runGit(['merge-base', base, 'HEAD']).trim()
   const committed = zeroSeparatedPaths(runGit([
-    'diff', '--name-only', '--diff-filter=ACMR', '-z', mergeBase, 'HEAD', '--',
+    'diff', '--name-only', '--diff-filter=ACMRD', '-z', mergeBase, 'HEAD', '--',
   ]))
   return [...new Set([...committed, ...local])].sort((a, b) => a.localeCompare(b, 'en'))
 }
