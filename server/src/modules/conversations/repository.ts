@@ -126,6 +126,58 @@ export async function findConversation(
   return rows[0] ?? null
 }
 
+export interface AgentConversationContextRow {
+  companyId: string
+  projectId: string | null
+  projectStatus: string | null
+  kind: 'direct' | 'group' | 'email'
+  title: string
+  topic: string | null
+  members: string[]
+}
+
+export async function findAgentConversationContext(
+  db: Queryable,
+  agentId: string,
+  conversationId: string,
+): Promise<AgentConversationContextRow | null> {
+  const { rows } = await db.query<{
+    company_id: string
+    project_id: string | null
+    project_status: string | null
+    kind: 'direct' | 'group' | 'email'
+    title: string
+    topic: string | null
+    members: string[]
+  }>(
+    `SELECT conversation.company_id, conversation.project_id,
+            project.status AS project_status, conversation.kind,
+            conversation.title, conversation.topic, conversation.members
+       FROM conversations conversation
+       JOIN participants actor
+         ON actor.id = $1
+        AND actor.company_id = conversation.company_id
+        AND actor.kind = 'agent'
+        AND actor.departed_at IS NULL
+       LEFT JOIN projects project
+         ON project.id = conversation.project_id
+        AND project.company_id = conversation.company_id
+      WHERE conversation.id = $2
+      LIMIT 1`,
+    [agentId, conversationId],
+  )
+  const row = rows[0]
+  return row ? {
+    companyId: row.company_id,
+    projectId: row.project_id,
+    projectStatus: row.project_status,
+    kind: row.kind,
+    title: row.title,
+    topic: row.topic,
+    members: row.members,
+  } : null
+}
+
 export async function findBindingForUpdate(
   db: Queryable,
   companyId: string,

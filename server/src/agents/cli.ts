@@ -18,6 +18,7 @@ import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } fro
 import { stripLoneSurrogates } from './text-safety.js'
 import { createBoardCommands } from './cli/board.js'
 import { createCalendarCommand } from './cli/calendar.js'
+import { createConversationMetadataCommands } from './cli/conversation-metadata.js'
 import { createEmailCommand } from './cli/email.js'
 import { createHelpCommand } from './cli/help.js'
 import { createDocumentCommand } from './cli/document.js'
@@ -2262,122 +2263,7 @@ async function saveTextAttachment(
   return { url, key, name: filename, kind: 'file', mime, size: buf.length }
 }
 
-async function cmdTopicRead(parsed: ParsedArgs): Promise<CliResult> {
-  const convoId = parsed.positional[0]
-  if (!convoId) return err('usage: topic <conversation_id>')
-  const { rows } = await pool.query<{ topic: string | null; title: string }>(
-    `SELECT topic, title FROM conversations WHERE id = $1`, [convoId],
-  )
-  if (!rows[0]) return err(`unknown conversation ${convoId}`)
-  const t = rows[0].topic
-  if (!t) return ok(`(no topic set on "${rows[0].title}")`)
-  return ok(t)
-}
-
-async function cmdTopicSet(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const convoId = parsed.positional[0]
-  if (!convoId) return err('usage: topic-set <conversation_id> "<text>"  (empty body clears the topic)')
-  const raw = unescapeChat(parsed.positional.slice(1).join(' ')).trim()
-  const topic = raw.length > 0 ? raw.slice(0, 200) : null
-
-  const { rows } = await pool.query<{ members: string[]; company_id: string; project_id: string | null; project_status: string | null }>(
-    `SELECT conversation.members,conversation.company_id,conversation.project_id,project.status AS project_status
-       FROM conversations conversation LEFT JOIN projects project ON project.id=conversation.project_id
-      WHERE conversation.id=$1`, [convoId],
-  )
-  if (!rows[0]) return err(`unknown conversation ${convoId}`)
-  if (!rows[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  if (rows[0].project_status === 'archived') return err('archived courses are read-only')
-
-  await pool.query(
-    `UPDATE conversations SET topic = $2, updated_at = NOW() WHERE id = $1`,
-    [convoId, topic],
-  )
-  const { CH_CONVO_UPDATED, publish } = await import('../redis.js')
-  await publish(CH_CONVO_UPDATED, {
-    type: 'conversation.updated',
-    conversationId: convoId,
-    companyId: rows[0].company_id,
-    workspaceId: rows[0].project_id ?? undefined,
-    patch: { topic },
-  })
-  return ok(topic ? `topic set: "${topic}"` : '(topic cleared)', [{
-    event: 'conversation.topic_updated',
-    command: 'topic-set',
-    conversationId: convoId,
-    actorId: me,
-    companyId: rows[0].company_id,
-    topic,
-    visibleToUser: true,
-  }])
-}
-
-/** Rename a group conversation. Members only; groups only (a DM title is
- *  the other person's name). Mirrors the human POST /conversations/:id/title. */
-async function cmdRename(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const convoId = parsed.positional[0]
-  if (!convoId) return err('usage: rename <conversation_id> "<new title>"')
-  const title = unescapeChat(parsed.positional.slice(1).join(' ')).trim().slice(0, 80)
-  if (!title) return err('rename requires a non-empty title')
-
-  const { rows } = await pool.query<{ members: string[]; kind: string; company_id: string; title: string; project_id: string | null; project_status: string | null }>(
-    `SELECT conversation.members,conversation.kind,conversation.company_id,conversation.title,
-            conversation.project_id,project.status AS project_status
-       FROM conversations conversation LEFT JOIN projects project ON project.id=conversation.project_id
-      WHERE conversation.id=$1`, [convoId],
-  )
-  if (!rows[0]) return err(`unknown conversation ${convoId}`)
-  if (rows[0].kind !== 'group') return err(`only group chats can be renamed (${convoId} is a ${rows[0].kind})`)
-  if (!rows[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  if (rows[0].project_status === 'archived') return err('archived courses are read-only')
-  const currentTitle = rows[0].title
-
-  // Optimistic-concurrency: --if-equals "<expected current title>" lets a caller
-  // declare what title they BELIEVE is current. A mismatch means someone else
-  // already renamed it (or it never matched) → reject so the caller re-reads the
-  // state rather than blindly overwriting. Catches the "I'll rename it for you,
-  // Yulemi" pile-on race where Atlas guesses a different name than Nova.
-  const ifEqualsRaw = parsed.flags['if-equals']
-  if (typeof ifEqualsRaw === 'string') {
-    const ifEquals = unescapeChat(ifEqualsRaw).trim().slice(0, 80)
-    if (currentTitle !== ifEquals) {
-      return err(`stale: current title is "${currentTitle}", you passed --if-equals "${ifEquals}". Re-read with \`lingxiloop conversations\` and decide if you still want to rename.`)
-    }
-  }
-  // IDEMPOTENT no-op: if the title is already what you'd set, return success
-  // WITHOUT firing a conversation.renamed event or broadcasting an update. This
-  // suppresses the noise when N agents all decide to rename to the same string
-  // at the same instant — the chat doesn't see N identical rename events. Only
-  // a TRUE change writes through. (A divergent-names race still last-writer-wins
-  // for the storage; --if-equals is the lever against that.)
-  if (currentTitle === title) {
-    return ok(`(no-op — title was already "${title}")`)
-  }
-
-  await pool.query(
-    `UPDATE conversations SET title = $2, updated_at = NOW() WHERE id = $1`,
-    [convoId, title],
-  )
-  const { CH_CONVO_UPDATED, publish } = await import('../redis.js')
-  await publish(CH_CONVO_UPDATED, {
-    type: 'conversation.updated',
-    conversationId: convoId,
-    companyId: rows[0].company_id,
-    workspaceId: rows[0].project_id ?? undefined,
-    patch: { title },
-  })
-  return ok(`renamed to "${title}" (${convoId})`, [{
-    event: 'conversation.renamed',
-    command: 'rename',
-    conversationId: convoId,
-    actorId: me,
-    companyId: rows[0].company_id,
-    title,
-    visibleToUser: true,
-  }])
-}
+const { cmdRename, cmdTopicRead, cmdTopicSet } = createConversationMetadataCommands({ ok, err })
 
 /* ============== explicit coworker ownership / approval ================== */
 

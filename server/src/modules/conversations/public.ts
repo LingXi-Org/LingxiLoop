@@ -25,3 +25,24 @@ export function authorizeConversationForDocumentShare(args: {
     userId: args.actorId,
   }, args.conversationId)
 }
+
+export function getAgentConversationMetadata(agentId: string, conversationId: string) {
+  return conversationsApplication.getAgentMetadata(agentId, conversationId)
+}
+
+export function setAgentConversationTopic(
+  agentId: string,
+  conversationId: string,
+  topic: string | null,
+) {
+  return conversationsApplication.setAgentTopic(agentId, conversationId, topic)
+}
+
+export function setAgentConversationTitle(
+  agentId: string,
+  conversationId: string,
+  title: string,
+  expectedTitle?: string,
+) {
+  return conversationsApplication.setAgentTitle(agentId, conversationId, title, expectedTitle)
+}

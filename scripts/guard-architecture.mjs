@@ -83,6 +83,13 @@ if (/from ['"][^'"]*db\/|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH
 if (/modules\/email\/(?:agent-)?(?:application|contracts|facade|repository)\.js/.test(emailCli)) {
   violations.push('server/src/agents/cli/email.ts: Agent Email actions bypass the public domain facade')
 }
+const conversationMetadataCli = await read(resolve('server/src/agents/cli/conversation-metadata.ts'))
+if (/from ['"][^'"]*(?:db\/|redis\.js)|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is.test(conversationMetadataCli)) {
+  violations.push('server/src/agents/cli/conversation-metadata.ts: conversation metadata bypasses its domain')
+}
+if (/modules\/conversations\/(?:application|contracts|facade|repository)\.js/.test(conversationMetadataCli)) {
+  violations.push('server/src/agents/cli/conversation-metadata.ts: conversation metadata bypasses public.ts')
+}
 
 const observabilityRouter = await read(resolve('server/src/modules/observability/router.ts'))
 if (/\/agents\/observability\/runs/.test(observabilityRouter)) violations.push('server/src/modules/observability/router.ts: retired observability HTTP view is forbidden')

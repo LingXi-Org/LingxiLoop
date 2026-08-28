@@ -14,6 +14,7 @@ import {
   findConversation,
   findBindingForUpdate,
   findConversationForUpdate,
+  findAgentConversationContext,
   findConversationWorkspacePolicy,
   findDirectConversation,
   hasManagedPulse,
@@ -39,6 +40,7 @@ export type ConversationErrorCode =
   | 'idempotency_conflict'
   | 'binding_missing'
   | 'invalid_direct'
+  | 'stale_title'
 
 export class ConversationApplicationError extends Error {
   constructor(readonly code: ConversationErrorCode, message: string) {
@@ -242,16 +244,75 @@ export class ConversationsApplication {
   }
 
   async setTitle(scope: ConversationScope, conversationId: string, title: string) {
+    const result = await this.setTitleInternal(scope, conversationId, title)
+    return { ok: true as const, title: result.title }
+  }
+
+  async getAgentMetadata(agentId: string, conversationId: string) {
+    return this.requireAgentContext(agentId, conversationId)
+  }
+
+  async setAgentTopic(agentId: string, conversationId: string, topic: string | null) {
+    const context = await this.requireAgentContext(agentId, conversationId)
+    this.assertAgentWorkspaceWritable(context.projectStatus)
+    if (!context.projectId) {
+      throw new ConversationApplicationError('not_found', 'conversation workspace is missing')
+    }
+    await this.setTopic({
+      userId: agentId,
+      companyId: context.companyId,
+      projectId: context.projectId,
+    }, conversationId, topic)
+    return { ok: true as const, topic, companyId: context.companyId }
+  }
+
+  async setAgentTitle(
+    agentId: string,
+    conversationId: string,
+    title: string,
+    expectedTitle?: string,
+  ) {
+    const context = await this.requireAgentContext(agentId, conversationId)
+    this.assertAgentWorkspaceWritable(context.projectStatus)
+    if (!context.projectId) {
+      throw new ConversationApplicationError('not_found', 'conversation workspace is missing')
+    }
+    const result = await this.setTitleInternal({
+      userId: agentId,
+      companyId: context.companyId,
+      projectId: context.projectId,
+    }, conversationId, title, expectedTitle)
+    return { ...result, companyId: context.companyId }
+  }
+
+  private async setTitleInternal(
+    scope: ConversationScope,
+    conversationId: string,
+    title: string,
+    expectedTitle?: string,
+  ) {
+    let changed = false
     const profile = await this.mutate(scope, conversationId, async (db, conversation, binding) => {
       if (conversation.kind !== 'group') throw new ConversationApplicationError('not_group', 'only group chats can be renamed')
+      if (expectedTitle !== undefined && conversation.title !== expectedTitle) {
+        throw new ConversationApplicationError(
+          'stale_title',
+          `stale: current title is "${conversation.title}", you passed --if-equals "${expectedTitle}". Re-read with \`lingxiloop conversations\` and decide if you still want to rename.`,
+        )
+      }
+      if (conversation.title === title) {
+        return { ...profileFor(conversation), ...binding.profile,
+          channelId: conversationId, title, members: conversation.members } as ImChannelProfile
+      }
+      changed = true
       await updateConversation(db, { id: conversationId, companyId: scope.companyId, title })
       const next = { ...profileFor({ ...conversation, title }), ...binding.profile,
         channelId: conversationId, title, members: conversation.members } as ImChannelProfile
       await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
       return next
     })
-    await this.afterMutation(scope, conversationId, profile, { title })
-    return { ok: true as const, title }
+    if (changed) await this.afterMutation(scope, conversationId, profile, { title })
+    return { ok: true as const, title, changed }
   }
 
   async setPinned(scope: ConversationScope, conversationId: string, requested?: boolean) {
@@ -414,6 +475,21 @@ export class ConversationsApplication {
         const end = Math.min(body.length, index < 0 ? 120 : index + needle.length + 80)
         return { ...message, snippet: `${start > 0 ? '…' : ''}${body.slice(start, end)}${end < body.length ? '…' : ''}` }
       }),
+    }
+  }
+
+  private async requireAgentContext(agentId: string, conversationId: string) {
+    const context = await findAgentConversationContext(this.db, agentId, conversationId)
+    if (!context) throw new ConversationApplicationError('not_found', `unknown conversation ${conversationId}`)
+    if (!context.members.includes(agentId)) {
+      throw new ConversationApplicationError('not_member', `${agentId} is not a member of ${conversationId}`)
+    }
+    return context
+  }
+
+  private assertAgentWorkspaceWritable(projectStatus: string | null): void {
+    if (projectStatus === 'archived') {
+      throw new ConversationApplicationError('workspace_read_only', 'archived courses are read-only')
     }
   }
 }

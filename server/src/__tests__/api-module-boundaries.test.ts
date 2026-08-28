@@ -148,6 +148,17 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.doesNotMatch(emailCli, /from ['"][^'"]*db\/|\bpool\.query\b/)
   assert.doesNotMatch(emailCli, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
   assert.doesNotMatch(emailCli, /modules\/email\/(?:agent-)?(?:application|contracts|facade|repository)\.js/)
+  const conversationMetadataCli = await readFile(
+    new URL('../agents/cli/conversation-metadata.ts', import.meta.url),
+    'utf8',
+  )
+  assert.match(conversationMetadataCli, /modules\/conversations\/public\.js/)
+  assert.doesNotMatch(conversationMetadataCli, /from ['"][^'"]*(?:db\/|redis\.js)|\bpool\.query\b/)
+  assert.doesNotMatch(conversationMetadataCli, /`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  assert.doesNotMatch(
+    conversationMetadataCli,
+    /modules\/conversations\/(?:application|contracts|facade|repository)\.js/,
+  )
   await assert.rejects(readFile(new URL('../calendar.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../email-retry.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })

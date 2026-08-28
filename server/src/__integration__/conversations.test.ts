@@ -146,6 +146,55 @@ test('[integration] new group binds to the current workspace immediately', async
   assert.equal(count.rows[0]?.count, '1')
 })
 
+test('[integration] Agent metadata commands share the locked Conversations domain path', async () => {
+  const { companyId, agentId, currentId } = await seedGroupCreationFixture()
+  const created = await fetch(`${baseUrl}/api/conversations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({
+      clientRequestId: 'agent-metadata-0001',
+      title: 'Original title',
+      members: [agentId],
+      leaderId: agentId,
+      workspaceId: currentId,
+    }),
+  })
+  assert.equal(created.status, 201)
+  const conversationId = (await created.json() as { id: string }).id
+  const { runCli } = await import('../agents/cli.js')
+
+  const renamed = await runCli([
+    'rename', conversationId, 'Canonical title',
+    '--if-equals', 'Original title', '--as', agentId,
+  ])
+  assert.equal(renamed.ok, true, renamed.text)
+  assert.equal(renamed.sideEffects?.length, 1)
+
+  const noOp = await runCli(['rename', conversationId, 'Canonical title', '--as', agentId])
+  assert.equal(noOp.ok, true, noOp.text)
+  assert.match(noOp.text, /no-op/)
+  assert.equal(noOp.sideEffects?.length ?? 0, 0)
+
+  const stale = await runCli([
+    'rename', conversationId, 'Conflicting title',
+    '--if-equals', 'Original title', '--as', agentId,
+  ])
+  assert.equal(stale.ok, false)
+  assert.match(stale.text, /stale: current title is "Canonical title"/)
+
+  const topic = await runCli(['topic-set', conversationId, 'One domain path', '--as', agentId])
+  assert.equal(topic.ok, true, topic.text)
+  assert.equal(topic.sideEffects?.length, 1)
+  const read = await runCli(['topic', conversationId, '--as', agentId])
+  assert.equal(read.text, 'One domain path')
+
+  const stored = await pool.query<{ title: string; topic: string }>(
+    `SELECT title, topic FROM conversations WHERE id = $1 AND company_id = $2`,
+    [conversationId, companyId],
+  )
+  assert.deepEqual(stored.rows, [{ title: 'Canonical title', topic: 'One domain path' }])
+})
+
 test('[integration] new group rejects a missing current workspace', async () => {
   const { companyId, agentId } = await seedGroupCreationFixture()
   const res = await fetch(`${baseUrl}/api/conversations`, {
