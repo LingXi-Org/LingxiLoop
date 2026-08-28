@@ -652,7 +652,7 @@ async function startCanvasWorkspace(input: {
   })
   const { canvasId, activity } = created
   const snapshot = await getCanvasSnapshot(input.companyId, input.initiatorAgentId, canvasId)
-  await Promise.allSettled([
+  await Promise.all([
     publishCanvas(input.companyId, {
       kind: 'workspace.started', canvasId, conversationId: input.conversationId,
       workspace: { id: canvasId, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,

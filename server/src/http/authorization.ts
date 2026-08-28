@@ -1,7 +1,7 @@
 import type { Request } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
-import { assertTeacherRoomAccessible } from '../modules/learning/access.js'
+import { assertTeacherRoomAccessible } from '../modules/learning/public.js'
 import { HttpError } from './errors.js'
 import { assertProjectWritable, requireCompany } from './request-context.js'
 

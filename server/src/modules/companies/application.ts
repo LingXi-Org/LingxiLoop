@@ -110,7 +110,7 @@ export class CompanyApplication {
           await insertCompanyRoot(db, { id, name: input.name, slug, userId, projectId })
           return this.infrastructure.installCompany(db, id)
         })
-        await Promise.allSettled([
+        await Promise.all([
           this.infrastructure.finalizeCompany(installed),
           this.infrastructure.audit({
           kind: 'company_create', userId, companyId: id, ...auditContext,
@@ -197,7 +197,7 @@ export class CompanyApplication {
       await removeMemberState(db, args.companyId, args.targetId)
     })
     const channels = await listCompanyChannels(this.db, args.companyId)
-    await Promise.allSettled(channels.map((channel) => this.infrastructure.syncChannel({
+    await Promise.all(channels.map((channel) => this.infrastructure.syncChannel({
       channelId: channel.channel_id, channelType: 2, title: channel.title, members: channel.members,
     })))
     await this.infrastructure.disconnectUser(args.targetId, args.companyId)
@@ -344,7 +344,7 @@ export class CompanyApplication {
     if (!result.alreadyMember) {
       await this.infrastructure.seedMemberDms({
         companyId: result.invitation.company_id, memberId: userId,
-      }).catch(() => undefined)
+      })
     }
     const company = await companyMembershipSummary(this.db, result.invitation.company_id, userId)
     if (!company) throw new CompanyApplicationError('not_found', 'accepted company membership missing')

@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises'
-import { relative, resolve } from 'node:path'
+import { dirname, relative, resolve } from 'node:path'
 
 async function filesUnder(root) {
   const output = []
@@ -97,8 +97,25 @@ for (const file of server) {
       violations.push(`${fileName}: cross-domain Eval access must use eval/public.ts`)
     }
   }
-  if (fileName.endsWith('/repository.ts') && /from ['"]express['"]|\b(?:Request|Response)\b/.test(source)) violations.push(`${fileName}: repository depends on HTTP`)
-  if (fileName.endsWith('/application.ts') && /from ['"]express['"]|\b(?:req|res)\s*[.:]/.test(source)) violations.push(`${fileName}: application depends on HTTP objects`)
+  if (/(?:^|\/)(?:repository|[^/]+-repository)\.ts$/.test(fileName) && /from ['"]express['"]|\b(?:Request|Response)\b/.test(source)) {
+    violations.push(`${fileName}: repository depends on HTTP`)
+  }
+  if (/(?:^|\/)(?:application|[^/]+-application)\.ts$/.test(fileName) && /from ['"]express['"]|\b(?:req|res)\s*[.:]/.test(source)) {
+    violations.push(`${fileName}: application depends on HTTP objects`)
+  }
+  const owningDomain = fileName.match(/^server\/src\/modules\/([^/]+)\//)?.[1]
+  if (owningDomain) {
+    for (const match of source.matchAll(/(?:from\s+|import\(\s*)['"]([^'"]+)['"]/g)) {
+      const specifier = match[1]
+      if (!specifier.startsWith('.')) continue
+      const target = relative(process.cwd(), resolve(dirname(file), specifier.replace(/\.js$/, '.ts'))).replaceAll('\\', '/')
+      const targetMatch = target.match(/^server\/src\/modules\/([^/]+)\/([^/]+)\.ts$/)
+      if (!targetMatch || targetMatch[1] === owningDomain) continue
+      if (!new Set(['index', 'facade', 'contracts', 'public']).has(targetMatch[2])) {
+        violations.push(`${fileName}: cross-domain import bypasses ${targetMatch[1]}'s public surface (${target})`)
+      }
+    }
+  }
   const domainApplication = fileName.match(/^server\/src\/modules\/([^/]+)\/application\.ts$/)?.[1]
   if (domainApplication && strictServerDomains.has(domainApplication)) {
     if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]/.test(source)) {
@@ -108,6 +125,11 @@ for (const file of server) {
       violations.push(`${fileName}: application bypasses its repository`)
     }
   }
+}
+
+const authSource = await read(resolve('server/src/auth.ts'))
+if (/export async function audit[\s\S]*?catch\s*\([^)]*\)\s*\{[\s\S]*?\}/.test(authSource)) {
+  violations.push('server/src/auth.ts: audit ledger writes must fail closed instead of being swallowed')
 }
 
 if (violations.length > 0) {

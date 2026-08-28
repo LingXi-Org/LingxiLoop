@@ -281,12 +281,12 @@ export class ConversationsApplication {
       await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
       return next
     })
-    await this.infrastructure.syncChannel(profile).catch(() => undefined)
+    await this.infrastructure.syncChannel(profile)
     if (!alreadyIn) {
       await this.infrastructure.postMembershipMessage({
         conversationId, companyId: scope.companyId, actorId: scope.userId,
         kind: 'joined', participantId,
-      }).catch(() => undefined)
+      })
     }
     return { ok: true as const, members: profile.members, ...(alreadyIn ? { alreadyIn: true as const } : {}) }
   }
@@ -314,7 +314,7 @@ export class ConversationsApplication {
       await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
       return next
     })
-    await Promise.allSettled([
+    await Promise.all([
       this.infrastructure.syncChannel(profile),
       this.infrastructure.postMembershipMessage({
         conversationId, companyId: scope.companyId, actorId: scope.userId,

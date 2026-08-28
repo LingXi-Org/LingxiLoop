@@ -8,7 +8,7 @@ import { wukongClient } from './wukong.js'
 import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
-import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/access.js'
+import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/public.js'
 import {
   listReadReceiptAdvances,
   publishReadReceiptAdvance,

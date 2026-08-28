@@ -1121,7 +1121,7 @@ export class LearningApplication {
         companyId: manager.companyId, projectId: manager.projectId, userId: targetId,
       })
     })
-    await Promise.allSettled([
+    await Promise.all([
       ...channels.map((channel) => this.infrastructure.syncChannel({
         channelId: channel.id, title: channel.title, members: channel.members,
       })),

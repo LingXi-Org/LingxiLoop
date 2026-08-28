@@ -242,7 +242,7 @@ export class BoardApplication {
   private async wake(companyId: string, actorId: string, participants: string[] | undefined): Promise<void> {
     const targets = [...new Set((participants ?? []).filter((id) => id !== actorId))]
     const agents = await mentionedAgents(this.db, companyId, targets)
-    await Promise.allSettled(agents.map((agentId) => (
+    await Promise.all(agents.map((agentId) => (
       this.infrastructure.enqueueAgent({ companyId, agentId, reason: 'mention' })
     )))
   }

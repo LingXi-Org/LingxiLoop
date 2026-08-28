@@ -35,7 +35,7 @@ test('production consumers use only public Learning capability surfaces', () => 
     .filter((path) => !relative(serverRoot, path).replaceAll('\\', '/').startsWith('modules/learning/'))
     .flatMap((path) => {
       const source = readFileSync(path, 'utf8')
-      return /(?:from\s+|import\(\s*)['"][^'"]*\/learning\/(?!runtime\.js|access\.js|worker\.js|preset\.js|router\.js)[^'"]+['"]/.test(source)
+      return /(?:from\s+|import\(\s*)['"][^'"]*\/learning\/(?!runtime\.js|public\.js|worker\.js|preset\.js|router\.js)[^'"]+['"]/.test(source)
         ? [relative(serverRoot, path)]
         : []
     })

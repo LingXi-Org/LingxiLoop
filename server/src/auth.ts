@@ -120,20 +120,15 @@ export async function audit(args: {
   userAgent?: string | null
   detail?: Record<string, unknown>
 }): Promise<void> {
-  // Audit must never break the request path — fire-and-forget on failure.
-  try {
-    await pool.query(
-      `INSERT INTO audit_events (user_id, company_id, ip, user_agent, kind, detail)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb)`,
-      [
-        args.userId ?? null, args.companyId ?? null, args.ip ?? null,
-        args.userAgent ?? null, args.kind,
-        args.detail ? JSON.stringify(args.detail) : null,
-      ],
-    )
-  } catch (e) {
-    console.warn('[audit] write failed', e)
-  }
+  await pool.query(
+    `INSERT INTO audit_events (user_id, company_id, ip, user_agent, kind, detail)
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb)`,
+    [
+      args.userId ?? null, args.companyId ?? null, args.ip ?? null,
+      args.userAgent ?? null, args.kind,
+      args.detail ? JSON.stringify(args.detail) : null,
+    ],
+  )
 }
 
 /* ============== WebSocket short-lived tickets ============== */

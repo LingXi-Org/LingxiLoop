@@ -1,9 +1,8 @@
 /**
  * Public Learning runtime surface consumed by Agent OS and IM approval handling.
  *
- * The legacy implementation files remain private to the Learning domain while
- * their persistence is migrated into the domain repository. Consumers must not
- * import those implementation files directly.
+ * This is the only Agent OS/IM entry point into Learning application use cases.
+ * Persistence remains private to capability repositories behind this surface.
  */
 export function createObjectives(input: CreateLearningObjectivesCommand) {
   return createLearningObjectives(pool, (work) => withTransaction(pool, work), input)
