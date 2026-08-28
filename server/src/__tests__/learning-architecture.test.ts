@@ -32,6 +32,10 @@ const teacherReportingRepositorySource = readFileSync(
   new URL('../modules/learning/teacher-reporting-repository.ts', import.meta.url),
   'utf8',
 )
+const teacherRuntimeRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-runtime-repository.ts', import.meta.url),
+  'utf8',
+)
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
 
 function productionTypeScriptFiles(root: string): string[] {
@@ -201,6 +205,19 @@ test('Pulse approval snapshots and freshness use one tenant-scoped repository', 
   assert.match(teacherApprovalRepositorySource, /course\.company_id=\$1 AND course\.id=\$3/)
   assert.match(teacherApprovalRepositorySource, /member\.company_id=\$1 AND teacher_room\.conversation_id=\$2/)
   assert.match(teacherApprovalRepositorySource, /attempt\.company_id=\$1 AND teacher_room\.conversation_id=\$2/)
+})
+
+test('Pulse runtime scope and turn counts use one tenant-scoped repository', () => {
+  assert.match(teacherAgentSource, /from '.\/teacher-runtime-repository\.js'/)
+  assert.doesNotMatch(teacherAgentSource, /SELECT message\.author_id/)
+  assert.doesNotMatch(teacherAgentSource, /AS pending_reviews/)
+  assert.match(teacherRuntimeRepositorySource, /project_agent\.company_id=\$1 AND project_agent\.agent_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /approval\.company_id=\$1 AND approval\.agent_id=\$3[\s\S]*approval\.channel_id=\$4/)
+  assert.match(teacherRuntimeRepositorySource, /message\.company_id=\$1 AND message\.conversation_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /member\.company_id=\$1 AND member\.course_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /objective\.company_id=\$1 AND objective\.course_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
 })
 
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{

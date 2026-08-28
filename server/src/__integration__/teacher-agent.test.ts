@@ -17,6 +17,11 @@ import {
   listTeacherObjectives,
   loadTeacherOverviewRows,
 } from '../modules/learning/teacher-reporting-repository.js'
+import {
+  findTeacherScopeBinding,
+  findTeacherTriggerAuthor,
+  findTeacherTurnCounts,
+} from '../modules/learning/teacher-runtime-repository.js'
 import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })
@@ -286,5 +291,39 @@ test('[integration] Pulse approval freshness binds the target room to the truste
       preview:{entityId:foreignObjective,currentVersion:versions.get(foreignObjective)},
     }),
     /approval is stale/,
+  )
+})
+
+test('[integration] Pulse runtime scope, trigger and counts reject foreign tenant state',async()=>{
+  const own=await seedTeacherCourse()
+  const foreign=await seedTeacherCourse()
+  const foreignPulse=await ensureTeacherAgentForCourse(foreign.courseId)
+  const clientMsgNo=`teacher-trigger-${randomUUID()}`
+  await pool.query(
+    `INSERT INTO messages(
+      id,conversation_id,author_id,kind,body,sequence,company_id,client_msg_no
+    ) VALUES($1,$2,$3,'text','foreign trigger',1,$4,$5)`,
+    [`message-${randomUUID()}`,foreignPulse.roomId,foreign.teacherId,foreign.companyId,clientMsgNo],
+  )
+
+  assert.equal(
+    await findTeacherScopeBinding(pool,own.companyId,foreignPulse.agentId,foreignPulse.roomId),
+    undefined,
+  )
+  const trigger={
+    companyId:own.companyId,
+    agentId:foreignPulse.agentId,
+    channelId:foreignPulse.roomId,
+    triggerClientMsgNo:clientMsgNo,
+    reason:'message',
+  }
+  assert.equal(await findTeacherTriggerAuthor(pool,trigger),undefined)
+  assert.equal(
+    await findTeacherTriggerAuthor(pool,{...trigger,companyId:foreign.companyId}),
+    foreign.teacherId,
+  )
+  assert.deepEqual(
+    await findTeacherTurnCounts(pool,own.companyId,foreign.courseId),
+    {learners:0,objectives:0,activities:0,pending_reviews:0},
   )
 })

@@ -42,6 +42,13 @@ import {
   findTeacherObjectiveApprovalTarget,
   findTeacherObjectiveApprovalVersion,
 } from './teacher-approval-repository.js'
+import {
+  findTeacherDigestSchedule,
+  findTeacherScopeBinding,
+  findTeacherTriggerAuthor,
+  findTeacherTurnCounts,
+  pauseTeacherDigestForMissingTeacher,
+} from './teacher-runtime-repository.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,
@@ -125,45 +132,15 @@ interface TeacherScope {
   mode: 'teacher' | 'routine' | 'approval'
 }
 
-async function triggerAuthor(work: AgentWorkItem, db: Queryable): Promise<string | undefined> {
-  if (work.reason === 'routine') return undefined
-  const trigger = work.reason === 'resume' && work.triggerClientMsgNo.startsWith('approval:')
-    ? (await db.query<{ actor_id: string | null }>(
-        `SELECT COALESCE(resolved_by,requested_by) AS actor_id FROM agent_os_approvals WHERE id=$1 AND company_id=$2 AND agent_id=$3`,
-        [work.triggerClientMsgNo.slice('approval:'.length), work.companyId, work.agentId],
-      )).rows[0]?.actor_id
-    : (await db.query<{ author_id: string }>(
-        `SELECT author_id FROM messages WHERE conversation_id=$1 AND client_msg_no=$2 LIMIT 1`,
-        [work.channelId, work.triggerClientMsgNo],
-      )).rows[0]?.author_id
-  return trigger || undefined
-}
-
 export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable = pool): Promise<TeacherScope> {
-  const { rows } = await db.query<{
-    company_id:string;project_id:string;project_name:string;course_id:string;course_title:string
-    course_status:'active'|'archived';room_id:string;room_status:'active'|'closed';agent_id:string;agent_name:string;has_teacher:boolean
-  }>(
-    `SELECT pta.company_id,pta.project_id,p.name AS project_name,c.id AS course_id,p.name AS course_title,
-            p.status AS course_status,tr.conversation_id AS room_id,tr.status AS room_status,
-            pta.agent_id,pa.name AS agent_name,
-            EXISTS(SELECT 1 FROM course_members cm WHERE cm.course_id=c.id AND cm.role='teacher') AS has_teacher
-       FROM learning_project_teacher_agents pta
-       JOIN projects p ON p.id=pta.project_id AND p.company_id=pta.company_id
-       JOIN courses c ON c.project_id=pta.project_id AND c.company_id=pta.company_id
-       JOIN learning_course_teacher_rooms tr ON tr.course_id=c.id AND tr.company_id=c.company_id
-       JOIN participants pa ON pa.id=pta.agent_id AND pa.company_id=pta.company_id AND pa.departed_at IS NULL
-      WHERE pta.company_id=$1 AND pta.agent_id=$2 AND tr.conversation_id=$3 LIMIT 1`,
-    [work.companyId, work.agentId, work.channelId],
-  )
-  const row = rows[0]
+  const row = await findTeacherScopeBinding(db, work.companyId, work.agentId, work.channelId)
   if (!row) { inc('learning.teacher_agent.authorization_denied', { reason: 'scope' }); throw new Error('teacher Agent is not registered for this room') }
   if (row.room_status !== 'active' || row.course_status === 'archived') throw new Error('teacher room is closed')
   if(work.reason==='routine'&&!row.has_teacher){
-    await db.query(`UPDATE agent_routines SET status='paused',next_run_at=NULL,updated_at=NOW() WHERE company_id=$1 AND agent_id=$2 AND channel_id=$3 AND kind='teacher_project_digest'`,[work.companyId,work.agentId,work.channelId])
+    await pauseTeacherDigestForMissingTeacher(db,work.companyId,work.agentId,work.channelId)
     throw new Error('teacher digest paused because the course has no teacher')
   }
-  const teacherId = await triggerAuthor(work, db)
+  const teacherId = await findTeacherTriggerAuthor(db, work)
   if (work.reason !== 'routine') {
     if (!teacherId) throw new Error('teacher action requires a human trigger')
     await requireLearningCourseRole(db, {
@@ -179,12 +156,7 @@ export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable = p
 }
 
 async function digestSchedule(scope: Pick<TeacherScope, 'companyId'|'agentId'|'roomId'>, db: Queryable = pool): Promise<TeacherDigestSchedule> {
-  const { rows } = await db.query<{ schedule:Record<string,unknown>;timezone:string;status:string;next_run_at:string|null }>(
-    `SELECT schedule,timezone,status,next_run_at FROM agent_routines
-      WHERE company_id=$1 AND agent_id=$2 AND channel_id=$3 AND kind='teacher_project_digest' LIMIT 1`,
-    [scope.companyId,scope.agentId,scope.roomId],
-  )
-  const row=rows[0]
+  const row=await findTeacherDigestSchedule(db,scope.companyId,scope.agentId,scope.roomId)
   if (!row) return { frequency:'off',timezone:'Asia/Shanghai',status:'paused' }
   const frequency=row.schedule?.frequency==='daily'||row.schedule?.frequency==='weekly'?row.schedule.frequency:'off'
   const weekday=typeof row.schedule?.weekday==='string'&&WEEKDAYS.includes(row.schedule.weekday as typeof WEEKDAYS[number])
@@ -196,24 +168,16 @@ async function digestSchedule(scope: Pick<TeacherScope, 'companyId'|'agentId'|'r
 export async function loadTeacherTurnContext(work: AgentWorkItem, db: Queryable = pool): Promise<TeacherTurnContext | undefined> {
   let scope:TeacherScope
   try { scope=await resolveTeacherScope(work,db) } catch { return undefined }
-  const [{rows:counts},digest]=await Promise.all([
-    db.query<{learners:number;objectives:number;activities:number;pending_reviews:number}>(
-      `SELECT
-        (SELECT COUNT(*)::int FROM course_members WHERE course_id=$1 AND role='learner') AS learners,
-        (SELECT COUNT(*)::int FROM learning_objectives WHERE course_id=$1 AND status<>'archived') AS objectives,
-        (SELECT COUNT(*)::int FROM learning_activities WHERE course_id=$1 AND status<>'closed') AS activities,
-        (SELECT COUNT(*)::int FROM learning_evaluations e JOIN learning_attempts a ON a.id=e.attempt_id WHERE a.course_id=$1 AND e.status='pending') AS pending_reviews`,
-      [scope.courseId],
-    ),
+  const [counts,digest]=await Promise.all([
+    findTeacherTurnCounts(db,scope.companyId,scope.courseId),
     digestSchedule(scope,db),
   ])
-  const count=counts[0]??{learners:0,objectives:0,activities:0,pending_reviews:0}
   return {
     agent:{id:scope.agentId,name:scope.agentName,projectId:scope.projectId},
     course:{id:scope.courseId,projectId:scope.projectId,title:scope.courseTitle,status:scope.courseStatus},
     room:{id:scope.roomId,status:scope.roomStatus},
     trigger:{mode:scope.mode,...(scope.teacherId?{teacherId:scope.teacherId}:{})},
-    counts:{learners:Number(count.learners),objectives:Number(count.objectives),activities:Number(count.activities),pendingReviews:Number(count.pending_reviews)},
+    counts:{learners:Number(counts.learners),objectives:Number(counts.objectives),activities:Number(counts.activities),pendingReviews:Number(counts.pending_reviews)},
     digest,
   }
 }
