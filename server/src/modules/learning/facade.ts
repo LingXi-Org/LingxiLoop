@@ -30,9 +30,9 @@ export const learningApplication = new LearningApplication(pool, {
   syncChannel: async (channel) => {
     await wukongClient().upsertChannel({ channelType: 2, ...channel })
   },
-  revokeDocumentSubscriptions: async (userId, projectId) => {
+  revokeDocumentSubscriptions: async (userId, companyId, projectId) => {
     const { revokeUserProjectDocumentSubscriptions } = await import('../../ws.js')
-    await revokeUserProjectDocumentSubscriptions(userId, projectId)
+    await revokeUserProjectDocumentSubscriptions(userId, companyId, projectId)
   },
   publishDocumentAccessRevoked: async (event) => {
     await publish(CH_DOC_ACCESS_REVOKED, { type: 'doc.access.revoked', ...event })

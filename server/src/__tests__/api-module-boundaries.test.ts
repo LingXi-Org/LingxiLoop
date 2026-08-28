@@ -80,6 +80,20 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   await assert.rejects(readFile(new URL('../api/admin-router.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../admin.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../oauth.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../documents/rooms.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../documents/markdown.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  const documentCollaboration = await readFile(new URL('../modules/documents/collaboration-application.ts', import.meta.url), 'utf8')
+  const documentRepository = await readFile(new URL('../modules/documents/collaboration-repository.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(documentCollaboration, /from ['"][^'"]*(?:db\/pool|db\/transaction|redis|storage|env)\.js['"]/)
+  assert.doesNotMatch(documentCollaboration, /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i)
+  assert.match(documentRepository, /Queryable/)
+  const documentConsumers = await Promise.all([
+    '../agents/cli/document.ts',
+    '../web.ts',
+    '../ws.ts',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  assert.match(documentConsumers.join('\n'), /modules\/documents\/public\.js/)
+  assert.doesNotMatch(documentConsumers.join('\n'), /modules\/documents\/(?:collaboration-|markdown)/)
   await assert.rejects(readFile(new URL('../knowledge/service.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../knowledge/agent-knowledge.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../knowledge/open-notebook-client.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })

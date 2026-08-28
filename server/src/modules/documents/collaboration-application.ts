@@ -15,20 +15,27 @@
  * twice is a no-op.
  */
 import * as Y from 'yjs'
-import { pool } from '../db/pool.js'
-import {
-  redis, sub, publish,
-  CH_DOC_UPDATE, CH_DOC_AWARENESS,
-  type DocUpdateEvent, type DocAwarenessEvent,
-} from '../redis.js'
-import { env } from '../env.js'
-import { normalizeStorageKey, signedUrlExpiresSoon, storage, storageKeyFromPublicUrl } from '../storage.js'
+import type { Queryable } from '../../db/queryable.js'
+import type {
+  AgentDocumentEditOperation,
+  AgentDocumentEditResult,
+  AgentImagePlacement,
+  DocumentAwarenessEvent,
+  DocumentUpdateEvent,
+} from './contracts.js'
 import {
   markdownToYXml,
   parseMarkdownImageBlock,
   proseMirrorNodeToYXml,
   type ProseMirrorJsonNode,
 } from './markdown.js'
+import {
+  compactDocumentUpdates,
+  loadDocumentSnapshot,
+  loadDocumentUpdatesAfter,
+  lockTenantDocument,
+  persistDocumentUpdate,
+} from './collaboration-repository.js'
 
 /** A subscriber attached to a room. Updates emitted by the local Y.Doc
  *  are pushed to every subscriber except the one whose `originId`
@@ -62,247 +69,240 @@ interface Room {
 const COMPACT_AFTER_UPDATES = 200
 const ROOM_GRACE_MS = 60_000
 
-const rooms = new Map<string, Room>()
-/** Pending eviction timers, keyed by documentId — cleared when a fresh
- *  subscriber re-attaches inside the grace window. */
-const evictions = new Map<string, NodeJS.Timeout>()
-
-/** Stable per-process id so cross-instance Redis events can be
- *  echo-suppressed when they originated here. */
-const INSTANCE_ORIGIN = `instance:${env.INSTANCE_ID}`
-
-async function loadSnapshot(documentId: string): Promise<{ state: Uint8Array | null; lastIncluded: bigint }> {
-  const { rows } = await pool.query<{ state_bytes: Buffer; snapshot_at_update_id: string }>(
-    `SELECT state_bytes, snapshot_at_update_id
-       FROM document_snapshots
-      WHERE document_id = $1`,
-    [documentId],
-  )
-  const row = rows[0]
-  if (!row) return { state: null, lastIncluded: 0n }
-  return { state: new Uint8Array(row.state_bytes), lastIncluded: BigInt(row.snapshot_at_update_id) }
+export interface DocumentCollaborationBus {
+  publish(event: DocumentUpdateEvent | DocumentAwarenessEvent): Promise<void>
+  subscribe(listener: (event: DocumentUpdateEvent | DocumentAwarenessEvent) => void): Promise<void>
 }
 
-async function loadUpdatesAfter(
-  documentId: string,
-  afterId: bigint,
-): Promise<Array<{ id: bigint; bytes: Uint8Array }>> {
-  const { rows } = await pool.query<{ id: string; update_bytes: Buffer }>(
-    `SELECT id, update_bytes
-       FROM document_updates
-      WHERE document_id = $1 AND id > $2
-      ORDER BY id ASC`,
-    [documentId, afterId.toString()],
-  )
-  return rows.map((r) => ({ id: BigInt(r.id), bytes: new Uint8Array(r.update_bytes) }))
+export interface DocumentImageStorage {
+  normalizeKey(value: string | null | undefined): string | null
+  keyFromPublicUrl(url: string | null | undefined): string | null
+  signedUrlExpiresSoon(url: string, withinSeconds?: number): boolean
+  publicUrl(key: string): Promise<string>
 }
 
-async function persistUpdate(documentId: string, authorId: string, bytes: Uint8Array): Promise<void> {
-  await pool.query(
-    `INSERT INTO document_updates (document_id, author_id, update_bytes)
-     VALUES ($1, $2, $3)`,
-    [documentId, authorId, Buffer.from(bytes)],
-  )
-  // Bump the parent doc's updated_at so the listing API sorts the
-  // freshly-edited doc to the top without a separate write.
-  await pool.query(
-    `UPDATE documents SET updated_at = NOW() WHERE id = $1`,
-    [documentId],
-  )
+export interface DocumentCollaborationDependencies {
+  transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
+  bus: DocumentCollaborationBus
+  imageStorage: DocumentImageStorage
+  instanceId: string
 }
 
-async function maybeCompact(room: Room): Promise<void> {
-  if (room.updatesSinceSnapshot < COMPACT_AFTER_UPDATES) return
-  // Snapshot the current state and find the latest update id covered.
-  const state = Y.encodeStateAsUpdate(room.doc)
-  const { rows } = await pool.query<{ max_id: string | null }>(
-    `SELECT MAX(id)::text AS max_id FROM document_updates WHERE document_id = $1`,
-    [room.documentId],
-  )
-  const maxId = rows[0]?.max_id ? BigInt(rows[0].max_id) : 0n
-  await pool.query(
-    `INSERT INTO document_snapshots (document_id, state_bytes, snapshot_at_update_id, updated_at)
-     VALUES ($1, $2, $3, NOW())
-     ON CONFLICT (document_id)
-       DO UPDATE SET state_bytes = EXCLUDED.state_bytes,
-                     snapshot_at_update_id = EXCLUDED.snapshot_at_update_id,
-                     updated_at = NOW()`,
-    [room.documentId, Buffer.from(state), maxId.toString()],
-  )
-  // Trim updates that are now safely captured in the snapshot.
-  await pool.query(
-    `DELETE FROM document_updates WHERE document_id = $1 AND id <= $2`,
-    [room.documentId, maxId.toString()],
-  )
-  room.updatesSinceSnapshot = 0
-}
+class DocumentRoomRuntime {
+  private readonly rooms = new Map<string, Room>()
+  private readonly evictions = new Map<string, NodeJS.Timeout>()
+  private readonly origin: string
+  private busBootstrapped = false
 
-async function hydrateDoc(documentId: string, doc: Y.Doc): Promise<void> {
-  const snap = await loadSnapshot(documentId)
-  if (snap.state) Y.applyUpdate(doc, snap.state, 'hydrate')
-  const tail = await loadUpdatesAfter(documentId, snap.lastIncluded)
-  for (const u of tail) {
-    Y.applyUpdate(doc, u.bytes, 'hydrate')
-  }
-}
-
-function roomKey(documentId: string): string {
-  return documentId
-}
-
-async function getOrCreateRoom(documentId: string, companyId: string): Promise<Room> {
-  // Clear any pending eviction — we're reusing the warm room.
-  const pending = evictions.get(documentId)
-  if (pending) { clearTimeout(pending); evictions.delete(documentId) }
-
-  const existing = rooms.get(roomKey(documentId))
-  if (existing) {
-    await existing.loaded
-    return existing
+  constructor(private readonly dependencies: DocumentCollaborationDependencies) {
+    this.origin = `instance:${dependencies.instanceId}`
   }
 
-  const doc = new Y.Doc()
-  const room: Room = {
-    documentId,
-    companyId,
-    doc,
-    subs: new Set(),
-    updatesSinceSnapshot: 0,
-    hydrated: false,
-    loaded: Promise.resolve(),
-    pendingEffects: Promise.resolve(),
-  }
-  rooms.set(roomKey(documentId), room)
+  instanceOrigin(): string { return this.origin }
 
-  room.loaded = (async () => {
-    await hydrateDoc(documentId, doc)
-    room.hydrated = true
-    doc.on('update', (update: Uint8Array, origin: unknown) => {
-      // Hydration replays are tagged 'hydrate' to skip persistence + fan-out.
-      if (origin === 'hydrate') return
-      const isRemote = typeof origin === 'object' && origin !== null && 'remote' in origin
-      const originId = (() => {
-        if (typeof origin === 'string') return origin
-        if (isRemote) return (origin as { remote: string }).remote
-        return INSTANCE_ORIGIN
-      })()
-      const authorId = (() => {
-        if (typeof origin === 'object' && origin !== null && 'authorId' in origin) {
-          return String((origin as { authorId: string }).authorId)
-        }
-        return originId
-      })()
-
-      // Local subscribers get the binary update directly.
-      for (const s of room.subs) {
-        if (s.originId === originId) continue
-        s.onUpdate(update, originId)
-      }
-
-      // Persist + fan-out unless this update arrived FROM another instance
-      // (it's already persisted there + already on the bus).
-      if (!isRemote) {
-        room.updatesSinceSnapshot += 1
-        room.pendingEffects = room.pendingEffects.then(async () => {
-          await persistUpdate(documentId, authorId, update)
-          await publish(CH_DOC_UPDATE, {
-            type: 'doc.update',
-            companyId: room.companyId,
-            documentId,
-            updateB64: Buffer.from(update).toString('base64'),
-            originId,
-            authorId,
-          })
-          await maybeCompact(room)
-        })
-      }
+  private async maybeCompact(room: Room): Promise<void> {
+    if (room.updatesSinceSnapshot < COMPACT_AFTER_UPDATES) return
+    await this.dependencies.transaction(async (db) => {
+      await lockTenantDocument(db, room.documentId, room.companyId)
+      const snapshot = await loadDocumentSnapshot(db, room.documentId, room.companyId)
+      const tail = await loadDocumentUpdatesAfter(db, room.documentId, room.companyId, snapshot.lastIncluded)
+      const authoritative = new Y.Doc()
+      if (snapshot.state) Y.applyUpdate(authoritative, snapshot.state, 'hydrate')
+      for (const update of tail) Y.applyUpdate(authoritative, update.bytes, 'hydrate')
+      await compactDocumentUpdates(
+        db,
+        room.documentId,
+        room.companyId,
+        Y.encodeStateAsUpdate(authoritative),
+      )
     })
-    normalizeMarkdownImageParagraphs(doc, pmFragment(doc), { originId: 'system:doc-image-normalize', authorId: 'system' })
-    await refreshDocumentImageUrls(doc, pmFragment(doc), { originId: 'system:doc-image-refresh', authorId: 'system' })
-    await room.pendingEffects
-  })()
-
-  await room.loaded
-  return room
-}
-
-/** Subscribe to live updates for a doc; returns the current encoded
- *  state so the caller can sync immediately. */
-export async function subscribe(
-  documentId: string,
-  companyId: string,
-  sub: DocSubscriber,
-): Promise<{ initialState: Uint8Array }> {
-  const room = await getOrCreateRoom(documentId, companyId)
-  await refreshDocumentImageUrls(room.doc, pmFragment(room.doc), { originId: 'system:doc-image-refresh', authorId: 'system' })
-  room.subs.add(sub)
-  return { initialState: Y.encodeStateAsUpdate(room.doc) }
-}
-
-export function unsubscribe(documentId: string, sub: DocSubscriber): void {
-  const room = rooms.get(roomKey(documentId))
-  if (!room) return
-  room.subs.delete(sub)
-  if (room.subs.size === 0) {
-    // Schedule an eviction so flapping reconnects don't churn cold loads.
-    const t = setTimeout(() => {
-      const stillEmpty = (rooms.get(roomKey(documentId))?.subs.size ?? 0) === 0
-      if (stillEmpty) {
-        rooms.delete(roomKey(documentId))
-        evictions.delete(documentId)
-      }
-    }, ROOM_GRACE_MS)
-    t.unref()
-    evictions.set(documentId, t)
+    room.updatesSinceSnapshot = 0
   }
-}
 
-/** Apply a Yjs update produced by a local subscriber. The room's
- *  doc.on('update') hook is responsible for persistence + fan-out. */
-export async function applyLocalUpdate(
-  documentId: string,
-  companyId: string,
-  originId: string,
-  authorId: string,
-  update: Uint8Array,
-): Promise<void> {
-  const room = await getOrCreateRoom(documentId, companyId)
-  // origin carries everything the persistence hook needs to route the
-  // event correctly. Plain object so the `remote` discriminator is absent
-  // (i.e. it's a LOCAL update — must persist + fan-out).
-  Y.applyUpdate(room.doc, update, { originId, authorId } as never)
-  await room.pendingEffects
-}
+  private async hydrateDoc(documentId: string, companyId: string, doc: Y.Doc): Promise<void> {
+    const { snapshot, tail } = await this.dependencies.transaction(async (db) => {
+      await lockTenantDocument(db, documentId, companyId)
+      const snapshot = await loadDocumentSnapshot(db, documentId, companyId)
+      const tail = await loadDocumentUpdatesAfter(db, documentId, companyId, snapshot.lastIncluded)
+      return { snapshot, tail }
+    })
+    if (snapshot.state) Y.applyUpdate(doc, snapshot.state, 'hydrate')
+    for (const update of tail) Y.applyUpdate(doc, update.bytes, 'hydrate')
+  }
 
-/** Apply a Yjs update that came FROM another server instance via Redis.
- *  Tagged with `remote` so the persistence hook skips re-writing it. */
-function applyRemoteUpdate(documentId: string, originId: string, update: Uint8Array): void {
-  const room = rooms.get(roomKey(documentId))
-  if (!room || !room.hydrated) return  // nobody's listening locally
-  Y.applyUpdate(room.doc, update, { remote: originId } as never)
-}
+  async getOrCreateRoom(documentId: string, companyId: string): Promise<Room> {
+    const pending = this.evictions.get(documentId)
+    if (pending) { clearTimeout(pending); this.evictions.delete(documentId) }
 
-/** Awareness is ephemeral — no DB, just fan-out. */
-export async function broadcastAwareness(
-  documentId: string,
-  companyId: string,
-  originId: string,
-  update: Uint8Array,
-): Promise<void> {
-  const room = rooms.get(roomKey(documentId))
-  if (room) {
-    for (const s of room.subs) {
-      if (s.originId === originId) continue
-      s.onAwareness(update, originId)
+    const existing = this.rooms.get(documentId)
+    if (existing) {
+      await existing.loaded
+      if (existing.companyId !== companyId) throw new Error('document room tenant mismatch')
+      return existing
+    }
+
+    const doc = new Y.Doc()
+    const room: Room = {
+      documentId,
+      companyId,
+      doc,
+      subs: new Set(),
+      updatesSinceSnapshot: 0,
+      hydrated: false,
+      loaded: Promise.resolve(),
+      pendingEffects: Promise.resolve(),
+    }
+    this.rooms.set(documentId, room)
+
+    room.loaded = (async () => {
+      await this.hydrateDoc(documentId, companyId, doc)
+      room.hydrated = true
+      doc.on('update', (update: Uint8Array, updateOrigin: unknown) => {
+        if (updateOrigin === 'hydrate') return
+        const isRemote = typeof updateOrigin === 'object' && updateOrigin !== null && 'remote' in updateOrigin
+        const originId = (() => {
+          if (typeof updateOrigin === 'string') return updateOrigin
+          if (isRemote) return (updateOrigin as { remote: string }).remote
+          if (typeof updateOrigin === 'object' && updateOrigin !== null && 'originId' in updateOrigin) {
+            return String((updateOrigin as { originId: string }).originId)
+          }
+          return this.origin
+        })()
+        const authorId = typeof updateOrigin === 'object' && updateOrigin !== null && 'authorId' in updateOrigin
+          ? String((updateOrigin as { authorId: string }).authorId)
+          : originId
+
+        for (const subscriber of room.subs) {
+          if (subscriber.originId !== originId) subscriber.onUpdate(update, originId)
+        }
+        if (!isRemote) {
+          room.updatesSinceSnapshot += 1
+          room.pendingEffects = room.pendingEffects.then(async () => {
+            await this.dependencies.transaction(async (db) => {
+              await lockTenantDocument(db, documentId, room.companyId)
+              await persistDocumentUpdate(db, {
+                documentId, companyId: room.companyId, authorId, bytes: update,
+              })
+            })
+            await this.dependencies.bus.publish({
+              type: 'doc.update',
+              companyId: room.companyId,
+              documentId,
+              updateB64: Buffer.from(update).toString('base64'),
+              originId,
+              authorId,
+            })
+            await this.maybeCompact(room)
+          })
+        }
+      })
+      normalizeMarkdownImageParagraphs(doc, pmFragment(doc), {
+        originId: 'system:doc-image-normalize', authorId: 'system',
+      })
+      await refreshDocumentImageUrls(this.dependencies.imageStorage, doc, pmFragment(doc), {
+        originId: 'system:doc-image-refresh', authorId: 'system',
+      })
+      await room.pendingEffects
+    })()
+
+    try {
+      await room.loaded
+      return room
+    } catch (error) {
+      if (this.rooms.get(documentId) === room) this.rooms.delete(documentId)
+      throw error
     }
   }
-  await publish(CH_DOC_AWARENESS, {
-    type: 'doc.awareness',
-    companyId,
-    documentId,
-    updateB64: Buffer.from(update).toString('base64'),
-    originId,
-  })
+
+  async subscribe(documentId: string, companyId: string, subscriber: DocSubscriber): Promise<{ initialState: Uint8Array }> {
+    const room = await this.getOrCreateRoom(documentId, companyId)
+    await refreshDocumentImageUrls(this.dependencies.imageStorage, room.doc, pmFragment(room.doc), {
+      originId: 'system:doc-image-refresh', authorId: 'system',
+    })
+    room.subs.add(subscriber)
+    return { initialState: Y.encodeStateAsUpdate(room.doc) }
+  }
+
+  unsubscribe(documentId: string, subscriber: DocSubscriber): void {
+    const room = this.rooms.get(documentId)
+    if (!room) return
+    room.subs.delete(subscriber)
+    if (room.subs.size !== 0) return
+    const timer = setTimeout(() => {
+      if ((this.rooms.get(documentId)?.subs.size ?? 0) === 0) {
+        this.rooms.delete(documentId)
+        this.evictions.delete(documentId)
+      }
+    }, ROOM_GRACE_MS)
+    timer.unref()
+    this.evictions.set(documentId, timer)
+  }
+
+  async applyLocalUpdate(
+    documentId: string,
+    companyId: string,
+    originId: string,
+    authorId: string,
+    update: Uint8Array,
+  ): Promise<void> {
+    const room = await this.getOrCreateRoom(documentId, companyId)
+    Y.applyUpdate(room.doc, update, { originId, authorId } as never)
+    await room.pendingEffects
+  }
+
+  private applyRemoteUpdate(
+    documentId: string,
+    companyId: string,
+    originId: string,
+    update: Uint8Array,
+  ): void {
+    const room = this.rooms.get(documentId)
+    if (room?.hydrated && room.companyId === companyId) {
+      Y.applyUpdate(room.doc, update, { remote: originId } as never)
+    }
+  }
+
+  async broadcastAwareness(
+    documentId: string,
+    companyId: string,
+    originId: string,
+    update: Uint8Array,
+  ): Promise<void> {
+    const room = this.rooms.get(documentId)
+    if (room) {
+      for (const subscriber of room.subs) {
+        if (subscriber.originId !== originId) subscriber.onAwareness(update, originId)
+      }
+    }
+    await this.dependencies.bus.publish({
+      type: 'doc.awareness', companyId, documentId,
+      updateB64: Buffer.from(update).toString('base64'), originId,
+    })
+  }
+
+  async boot(): Promise<void> {
+    if (this.busBootstrapped) return
+    this.busBootstrapped = true
+    try {
+      await this.dependencies.bus.subscribe((event) => {
+        if (event.originId === this.origin) return
+        const bytes = Buffer.from(event.updateB64, 'base64')
+        const update = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+        if (event.type === 'doc.update') {
+          this.applyRemoteUpdate(event.documentId, event.companyId, event.originId, update)
+          return
+        }
+        const room = this.rooms.get(event.documentId)
+        if (!room || room.companyId !== event.companyId) return
+        for (const subscriber of room.subs) {
+          if (subscriber.originId !== event.originId) subscriber.onAwareness(update, event.originId)
+        }
+      })
+    } catch (error) {
+      this.busBootstrapped = false
+      throw error
+    }
+  }
 }
 
 /* ============== ProseMirror-aware helpers ==============
@@ -411,17 +411,17 @@ function normalizeMarkdownImageParagraphs(
   return changed
 }
 
-function imageStorageKey(el: Y.XmlElement): string | null {
-  return normalizeStorageKey(xmlAttrString(el, 'storageKey'))
+function imageStorageKey(imageStorage: DocumentImageStorage, el: Y.XmlElement): string | null {
+  return imageStorage.normalizeKey(xmlAttrString(el, 'storageKey'))
 }
 
-function shouldRefreshDocumentImageUrl(src: string, key: string): boolean {
+function shouldRefreshDocumentImageUrl(imageStorage: DocumentImageStorage, src: string, key: string): boolean {
   if (!src) return true
-  const srcKey = storageKeyFromPublicUrl(src)
+  const srcKey = imageStorage.keyFromPublicUrl(src)
   if (!srcKey) return true
   if (srcKey !== key) return true
   if (!src.includes('exp=') && !src.includes('sig=')) return key.startsWith('attachments/')
-  return signedUrlExpiresSoon(src)
+  return imageStorage.signedUrlExpiresSoon(src)
 }
 
 function collectImageElements(parent: Y.XmlFragment | Y.XmlElement, out: Y.XmlElement[]): void {
@@ -434,6 +434,7 @@ function collectImageElements(parent: Y.XmlFragment | Y.XmlElement, out: Y.XmlEl
 }
 
 async function refreshDocumentImageUrls(
+  imageStorage: DocumentImageStorage,
   doc: Y.Doc,
   fragment: Y.XmlFragment,
   origin: ImageNormalizeOrigin,
@@ -443,11 +444,11 @@ async function refreshDocumentImageUrls(
   const updates: Array<{ el: Y.XmlElement; key: string; url: string | null }> = []
   for (const el of images) {
     const src = xmlAttrString(el, 'src')
-    const currentKey = normalizeStorageKey(xmlAttrString(el, 'storageKey'))
-    const key = currentKey ?? imageStorageKey(el)
+    const currentKey = imageStorage.normalizeKey(xmlAttrString(el, 'storageKey'))
+    const key = currentKey ?? imageStorageKey(imageStorage, el)
     if (!key) continue
-    const shouldRefresh = shouldRefreshDocumentImageUrl(src, key)
-    const url = shouldRefresh ? await storage.publicUrl(key) : null
+    const shouldRefresh = shouldRefreshDocumentImageUrl(imageStorage, src, key)
+    const url = shouldRefresh ? await imageStorage.publicUrl(key) : null
     if (!currentKey || (url && url !== src)) updates.push({ el, key, url })
   }
   if (updates.length === 0) return 0
@@ -602,9 +603,16 @@ function fragmentToPlainText(fragment: Y.XmlFragment): string {
 /** Read-only access to the doc's current plain-text body. Used by REST
  *  bootstrap responses + agent tools that don't want to hold a WS
  *  session. Extracted by walking the ProseMirror fragment. */
-export async function readDocumentText(documentId: string, companyId: string): Promise<string> {
-  const room = await getOrCreateRoom(documentId, companyId)
-  await refreshDocumentImageUrls(room.doc, pmFragment(room.doc), { originId: 'system:doc-image-refresh', authorId: 'system' })
+async function readDocumentText(
+  runtime: DocumentRoomRuntime,
+  imageStorage: DocumentImageStorage,
+  documentId: string,
+  companyId: string,
+): Promise<string> {
+  const room = await runtime.getOrCreateRoom(documentId, companyId)
+  await refreshDocumentImageUrls(imageStorage, room.doc, pmFragment(room.doc), {
+    originId: 'system:doc-image-refresh', authorId: 'system',
+  })
   return fragmentToPlainText(pmFragment(room.doc))
 }
 
@@ -643,10 +651,6 @@ function insertAgentMarkdown(fragment: Y.XmlFragment, text: string, index?: numb
  *  `replace` is the killer: agents can swap a previously-emitted but
  *  inert `![alt](url)` markdown paragraph for a real image node by
  *  passing the exact markdown text as the anchor. */
-export type AgentImagePlacement =
-  | { mode: 'start' | 'end' }
-  | { mode: 'replace' | 'after' | 'before'; anchorText: string }
-
 /** Explicit type guard for the anchored half of {@link AgentImagePlacement}.
  *  Some TS versions (including the one CI runs) don't narrow
  *  `placement.anchorText` after `mode === 'start' / 'end'` checks even
@@ -674,11 +678,6 @@ function findFirstBlockContaining(
 }
 
 /** Match spec for the image-delete agent op. */
-export type AgentImageDeleteMatch =
-  | { by: 'src'; src: string }
-  | { by: 'src-contains'; substring: string }
-  | { by: 'alt'; alt: string }
-
 /** Find every image element under `parent` (recursively) and return their
  *  (parent-index, element) pairs. Used by the image-delete op to locate
  *  matches without mutating mid-traversal. */
@@ -695,20 +694,14 @@ function collectImageBlocks(
   return out
 }
 
-export async function applyAgentEdit(
+async function applyAgentEdit(
+  runtime: DocumentRoomRuntime,
   documentId: string,
   companyId: string,
   agentId: string,
-  ops: Array<
-    | { kind: 'append'; text: string }
-    | { kind: 'replace'; find: string; replace: string }
-    | { kind: 'insertParagraph'; at: 'start' | 'end'; text: string }
-    | { kind: 'replaceBlock'; anchorText: string; text: string }
-    | { kind: 'image'; src: string; alt: string | null; placement: AgentImagePlacement }
-    | { kind: 'imageDelete'; match: AgentImageDeleteMatch }
-  >,
-): Promise<{ replaced: number; imagePlaced: 'absolute' | 'anchor' | 'anchor-missed' | null; imagesDeleted: number; blocksReplaced: number }> {
-  const room = await getOrCreateRoom(documentId, companyId)
+  ops: AgentDocumentEditOperation[],
+): Promise<AgentDocumentEditResult> {
+  const room = await runtime.getOrCreateRoom(documentId, companyId)
   const fragment = pmFragment(room.doc)
   let replaced = 0
   let imagePlaced: 'absolute' | 'anchor' | 'anchor-missed' | null = null
@@ -819,42 +812,25 @@ export async function applyAgentEdit(
   return { replaced, imagePlaced, imagesDeleted, blocksReplaced }
 }
 
-/** Cross-instance bus bootstrap. Idempotent — safe to call from web.ts
- *  alongside the regular Redis subscriber. */
-let busBootstrapped = false
-export async function bootDocumentBus(): Promise<void> {
-  if (busBootstrapped) return
-  busBootstrapped = true
-
-  await sub.subscribe(CH_DOC_UPDATE, CH_DOC_AWARENESS)
-  console.log('[docs] subscribed to doc redis channels')
-
-  sub.on('message', (channel, payload) => {
-    if (channel !== CH_DOC_UPDATE && channel !== CH_DOC_AWARENESS) return
-    let parsed: DocUpdateEvent | DocAwarenessEvent
-    try { parsed = JSON.parse(payload) } catch { return }
-    // Drop our own loop-back so we don't double-apply locally-originated updates.
-    if (parsed.originId === INSTANCE_ORIGIN) return
-
-    const bytes = Buffer.from(parsed.updateB64, 'base64')
-    const update = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-    if (channel === CH_DOC_UPDATE) {
-      applyRemoteUpdate(parsed.documentId, parsed.originId, update)
-    } else {
-      // For awareness, just fan out to local subs — no Y.Doc mutation.
-      const room = rooms.get(roomKey(parsed.documentId))
-      if (!room) return
-      for (const s of room.subs) {
-        if (s.originId === parsed.originId) continue
-        s.onAwareness(update, parsed.originId)
-      }
-    }
-  })
+export function createDocumentCollaborationApplication(dependencies: DocumentCollaborationDependencies) {
+  const runtime = new DocumentRoomRuntime(dependencies)
+  return {
+    subscribe: runtime.subscribe.bind(runtime),
+    unsubscribe: runtime.unsubscribe.bind(runtime),
+    applyLocalUpdate: runtime.applyLocalUpdate.bind(runtime),
+    broadcastAwareness: runtime.broadcastAwareness.bind(runtime),
+    boot: runtime.boot.bind(runtime),
+    instanceOrigin: runtime.instanceOrigin.bind(runtime),
+    readDocumentText: (documentId: string, companyId: string) => (
+      readDocumentText(runtime, dependencies.imageStorage, documentId, companyId)
+    ),
+    applyAgentEdit: (
+      documentId: string,
+      companyId: string,
+      agentId: string,
+      operations: AgentDocumentEditOperation[],
+    ) => applyAgentEdit(runtime, documentId, companyId, agentId, operations),
+  }
 }
 
-/** Expose the per-process origin so the WS bridge can stamp it on
- *  outbound payloads. */
-export function instanceOrigin(): string { return INSTANCE_ORIGIN }
-
-// Re-export redis client surface so callers don't pull from two places.
-export { redis }
+export type DocumentCollaborationApplication = ReturnType<typeof createDocumentCollaborationApplication>

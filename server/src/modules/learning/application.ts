@@ -112,7 +112,7 @@ export interface LearningInfrastructure {
   ensureNotebook(projectId: string, companyId: string): Promise<void>
   syncNotebook(projectId: string): Promise<void>
   syncChannel(channel: { channelId: string; title: string; members: string[]; leaderAgentId?: string }): Promise<void>
-  revokeDocumentSubscriptions(userId: string, projectId: string): Promise<void>
+  revokeDocumentSubscriptions(userId: string, companyId: string, projectId: string): Promise<void>
   publishDocumentAccessRevoked(event: { companyId: string; workspaceId: string; userId: string }): Promise<void>
   seedMemberDms(companyId: string, userId: string): Promise<void>
   generateInvitationToken(): string
@@ -257,7 +257,7 @@ export class LearningApplication {
       ...channels.map((channel) => this.infrastructure.syncChannel({
         channelId: channel.id, title: channel.title, members: channel.members,
       })),
-      this.infrastructure.revokeDocumentSubscriptions(targetId, manager.projectId),
+      this.infrastructure.revokeDocumentSubscriptions(targetId, manager.companyId, manager.projectId),
       this.infrastructure.publishDocumentAccessRevoked({
         companyId: manager.companyId, workspaceId: manager.projectId, userId: targetId,
       }),

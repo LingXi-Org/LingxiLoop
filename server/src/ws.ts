@@ -19,8 +19,9 @@ import {
   unsubscribe as docUnsubscribe,
   applyLocalUpdate as docApplyLocalUpdate,
   broadcastAwareness as docBroadcastAwareness,
+  projectDocumentIds,
   type DocSubscriber,
-} from './documents/rooms.js'
+} from './modules/documents/public.js'
 import { randomUUID } from 'node:crypto'
 
 interface AuthedSocket {
@@ -61,13 +62,13 @@ export function disconnectUserFromCompany(userId: string, companyId: string): vo
  * removed. The socket remains connected for the user's other workspaces, but
  * every room in the removed Project is detached before the API confirms the
  * removal, so an already-open tab cannot keep receiving document updates. */
-export async function revokeUserProjectDocumentSubscriptions(userId: string, projectId: string): Promise<void> {
-  const { rows } = await pool.query<{ id: string }>(
-    `SELECT id FROM documents WHERE project_id=$1`,
-    [projectId],
-  )
-  if (rows.length === 0) return
-  const projectDocuments = new Set(rows.map((row) => row.id))
+export async function revokeUserProjectDocumentSubscriptions(
+  userId: string,
+  companyId: string,
+  projectId: string,
+): Promise<void> {
+  const projectDocuments = new Set(await projectDocumentIds(companyId, projectId))
+  if (projectDocuments.size === 0) return
   for (const client of clients) {
     if (client.userId !== userId) continue
     for (const documentId of projectDocuments) {
@@ -536,9 +537,9 @@ export function attachWebSocket(httpServer: Server) {
     if (channel === 'lingxiloop:doc.update' || channel === 'lingxiloop:doc.awareness') return
     if (channel === CH_DOC_ACCESS_REVOKED) {
       try {
-        const event = JSON.parse(payload) as { userId?: string; workspaceId?: string }
-        if (event.userId && event.workspaceId) {
-          await revokeUserProjectDocumentSubscriptions(event.userId, event.workspaceId)
+        const event = JSON.parse(payload) as { userId?: string; companyId?: string; workspaceId?: string }
+        if (event.userId && event.companyId && event.workspaceId) {
+          await revokeUserProjectDocumentSubscriptions(event.userId, event.companyId, event.workspaceId)
         }
       } catch { /* malformed — drop */ }
       return

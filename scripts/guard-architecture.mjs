@@ -91,6 +91,13 @@ for (const file of server) {
     violations.push(`${fileName}: retired root Email capability is forbidden`)
   }
   if (fileName === 'server/src/oauth.ts') violations.push(`${fileName}: retired root OAuth implementation is forbidden`)
+  if (fileName === 'server/src/documents/rooms.ts' || fileName === 'server/src/documents/markdown.ts') {
+    violations.push(`${fileName}: retired root Documents capability is forbidden`)
+  }
+  if (!fileName.startsWith('server/src/modules/documents/')
+    && /modules\/documents\/(?:collaboration-(?:application|facade|repository)|markdown)\.js/.test(source)) {
+    violations.push(`${fileName}: Documents access must use modules/documents/public.ts`)
+  }
   if (fileName === 'server/src/knowledge/service.ts') violations.push(`${fileName}: retired root Knowledge implementation is forbidden`)
   if (fileName === 'server/src/knowledge/agent-knowledge.ts' || fileName === 'server/src/knowledge/open-notebook-client.ts') {
     violations.push(`${fileName}: retired root Knowledge capability is forbidden`)

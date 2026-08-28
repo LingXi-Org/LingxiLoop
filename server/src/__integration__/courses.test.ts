@@ -6,7 +6,7 @@ import * as Y from 'yjs'
 import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
 import { createWsTicket } from '../modules/identity/public.js'
 import { pool } from '../db/pool.js'
-import { applyLocalUpdate } from '../documents/rooms.js'
+import { applyLocalUpdate } from '../modules/documents/public.js'
 import { attachWebSocket } from '../ws.js'
 import { __setCreateNotebookOverrideForTesting, __setUpdateNotebookOverrideForTesting } from '../modules/knowledge/provider.js'
 

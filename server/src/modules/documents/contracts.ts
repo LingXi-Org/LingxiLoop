@@ -32,3 +32,44 @@ export interface DocumentChangedEvent {
   documentId: string
   actorId: string
 }
+
+export interface DocumentUpdateEvent {
+  type: 'doc.update'
+  companyId: string
+  documentId: string
+  updateB64: string
+  originId: string
+  authorId: string
+}
+
+export interface DocumentAwarenessEvent {
+  type: 'doc.awareness'
+  companyId: string
+  documentId: string
+  updateB64: string
+  originId: string
+}
+
+export type AgentImagePlacement =
+  | { mode: 'start' | 'end' }
+  | { mode: 'replace' | 'after' | 'before'; anchorText: string }
+
+export type AgentImageDeleteMatch =
+  | { by: 'src'; src: string }
+  | { by: 'src-contains'; substring: string }
+  | { by: 'alt'; alt: string }
+
+export type AgentDocumentEditOperation =
+  | { kind: 'append'; text: string }
+  | { kind: 'replace'; find: string; replace: string }
+  | { kind: 'insertParagraph'; at: 'start' | 'end'; text: string }
+  | { kind: 'replaceBlock'; anchorText: string; text: string }
+  | { kind: 'image'; src: string; alt: string | null; placement: AgentImagePlacement }
+  | { kind: 'imageDelete'; match: AgentImageDeleteMatch }
+
+export interface AgentDocumentEditResult {
+  replaced: number
+  imagePlaced: 'absolute' | 'anchor' | 'anchor-missed' | null
+  imagesDeleted: number
+  blocksReplaced: number
+}

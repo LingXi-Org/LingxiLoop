@@ -6,7 +6,7 @@ import {
   markdownToProseMirrorContent,
   markdownToYXml,
   parseInlineMarkdown,
-} from '../documents/markdown.js'
+} from '../modules/documents/markdown.js'
 
 test('parseInlineMarkdown converts common marks', () => {
   assert.deepEqual(parseInlineMarkdown('Use **bold**, *italic*, ~~gone~~, `code`, and [docs](https://loop.example.com).'), [
