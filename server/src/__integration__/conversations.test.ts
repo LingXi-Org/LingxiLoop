@@ -10,6 +10,7 @@ import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll,
+  installFakeWukong,
 } from './_helpers.js'
 import { pool } from '../db/pool.js'
 
@@ -20,6 +21,7 @@ let baseUrl = ''
 
 before(async () => {
   await ensureSchemaOnce()
+  installFakeWukong()
   const app = await buildApiTestApp(ME_USER_ID)
   await new Promise<void>((resolve) => {
     server = createServer(app).listen(0, () => {
@@ -68,18 +70,14 @@ async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string
   return { companyId, projectId, conversationId }
 }
 
-test('[integration] GET /conversations returns the other member as a direct title', async () => {
+test('[integration] retired GET /conversations has no compatibility data plane', async () => {
   const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
 
   const res = await fetch(`${baseUrl}/api/conversations`, {
     headers: { 'x-company-id': companyId, 'x-project-id': projectId },
   })
   const raw = await res.text()
-  assert.equal(res.status, 200, raw)
-  const rows = JSON.parse(raw) as Array<{ id: string; title: string }>
-  const direct = rows.find((r) => r.id === conversationId)
-
-  assert.equal(direct?.title, 'Ada')
+  assert.equal(res.status, 404, `${conversationId}: ${raw}`)
 })
 
 test('[integration] GET /search uses the same perspective-specific direct title', async () => {
@@ -124,13 +122,28 @@ test('[integration] new group binds to the current workspace immediately', async
   const res = await fetch(`${baseUrl}/api/conversations`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
+    body: JSON.stringify({ clientRequestId: 'group-current-0001', title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
   })
   assert.equal(res.status, 201)
   const body = await res.json() as { id: string; projectId: string }
   assert.equal(body.projectId, currentId)
   const stored = await pool.query<{ project_id: string }>(`SELECT project_id FROM conversations WHERE id=$1`, [body.id])
   assert.equal(stored.rows[0]?.project_id, currentId)
+  const binding = await pool.query<{ profile: { members: string[] } }>(
+    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`,
+    [body.id, companyId],
+  )
+  assert.deepEqual(binding.rows[0]?.profile.members.sort(), [ME_USER_ID, agentId].sort())
+
+  const duplicate = await fetch(`${baseUrl}/api/conversations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({ clientRequestId: 'group-current-0001', title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
+  })
+  assert.equal(duplicate.status, 200)
+  assert.equal((await duplicate.json() as { id: string; created: boolean }).id, body.id)
+  const count = await pool.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM conversations WHERE id=$1`, [body.id])
+  assert.equal(count.rows[0]?.count, '1')
 })
 
 test('[integration] new group rejects a missing current workspace', async () => {
@@ -138,7 +151,7 @@ test('[integration] new group rejects a missing current workspace', async () => 
   const res = await fetch(`${baseUrl}/api/conversations`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ title: 'General group', members: [agentId], leaderId: agentId }),
+    body: JSON.stringify({ clientRequestId: 'group-missing-0001', title: 'General group', members: [agentId], leaderId: agentId }),
   })
   assert.equal(res.status, 400)
   const body = await res.json() as { error: string }

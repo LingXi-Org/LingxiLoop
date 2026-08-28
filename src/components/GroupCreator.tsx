@@ -2,7 +2,7 @@
  * Modal for creating a new group conversation. User picks a title and a set of
  * teammates (active agents + other humans). Yetone is auto-included.
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { conversationsApi } from '@/api/conversations'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
@@ -42,6 +42,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
   const [leaderId, setLeaderId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const requestIdRef = useRef<string | null>(null)
 
   const toggle = (id: string) => {
     setPicked((s) => {
@@ -71,11 +72,20 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
     setErr(null)
     if (picked.size === 0) { setErr('请至少选择一名成员'); return }
     if (!leaderId) { setErr('请选择一名智能体作为负责人'); return }
+    if (!workspaceId) { setErr('请先选择工作区'); return }
     const finalTitle = title.trim() || autoTitle
     if (!finalTitle) { setErr('请填写标题或选择成员'); return }
     setBusy(true)
     try {
-      const r = await conversationsApi.createGroup({ title: finalTitle, members: [...picked], leaderId, workspaceId: workspaceId ?? undefined })
+      requestIdRef.current ??= crypto.randomUUID()
+      const r = await conversationsApi.createGroup({
+        clientRequestId: requestIdRef.current,
+        title: finalTitle,
+        members: [...picked],
+        leaderId,
+        workspaceId,
+      })
+      requestIdRef.current = null
       await useConversations.getState().reload()
       setView('conversations')
       select(r.id)

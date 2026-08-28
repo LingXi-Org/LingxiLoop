@@ -5,8 +5,8 @@ import type { ImReadReceiptAdvance } from '@/types'
 
 export const conversationsApi = {
   getConversations: () => http<ApiConversation[]>('/im/channels'),
-  createGroup: (input: { title: string; members: string[]; leaderId: string; subtitle?: string; workspaceId?: string }) =>
-    http<{ id: string; members: string[]; leaderId: string; projectId: string }>('/conversations', {
+  createGroup: (input: { clientRequestId: string; title: string; members: string[]; leaderId: string; workspaceId: string }) =>
+    http<{ id: string; members: string[]; leaderId: string; projectId: string; created: boolean }>('/conversations', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
