@@ -1,13 +1,10 @@
 import type { Queryable } from '../../db/queryable.js'
+import { HttpError } from '../../http/errors.js'
 import type { z } from 'zod'
 import type { adminUserListQuerySchema, adminUserPatchSchema } from './contracts.js'
 import { findUser, isAdmin, listUserCompanies, listUsers, readStats, setAdmin } from './repository.js'
 
-export class AdminApplicationError extends Error {
-  constructor(public readonly status: number, message: string) {
-    super(message)
-  }
-}
+export class AdminApplicationError extends HttpError {}
 
 export interface AdminInfrastructure {
   suspendUser: (input: { userId: string; adminId: string; reason: string | null }) => Promise<void>

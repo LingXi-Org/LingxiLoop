@@ -21,6 +21,7 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from './db/pool.js'
 import { env } from './env.js'
+import { HttpError } from './http/errors.js'
 import type { AuthedRequest } from './auth.js'
 import { audit } from './auth.js'
 import { onboardStarterAgents } from './onboardCompany.js'
@@ -52,9 +53,7 @@ export function isAllowlistedAdmin(email: string): boolean {
 }
 /* ============== requireAdmin middleware ============== */
 
-export class HttpError extends Error {
-  constructor(public status: number, message: string) { super(message) }
-}
+export { HttpError }
 
 /** Resolve the request's user, throw 401 if anonymous and 403 if not admin.
  *  Returns the user id so handlers can use it directly. */

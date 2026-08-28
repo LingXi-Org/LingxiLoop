@@ -11,39 +11,23 @@
  *   - JSON in, JSON out. Camel-case fields on the wire.
  *   - Mutations call the helpers in admin.ts (so they can be reused by
  *     a future CLI without duplicating the logic).
- *   - All handlers wrapped in safe() so HttpError → status code; the
- *     parent router's errorHandler catches everything else.
+ *   - All handlers use the shared async/error boundary.
  */
-import { type NextFunction, type Request, type Response, Router } from 'express'
+import { Router } from 'express'
 import {
   type AppSettings, approveWaitlist,
-  getSettings, HttpError,
+  getSettings,
   listWaitlist, rejectWaitlist,
   setSetting,
 } from '../../admin.js'
-import type { AuthedRequest } from '../../auth.js'
 import { EvalInputError, validateEvalRunInput } from '../../eval/contracts.js'
 import { createEvalRun, getEvalComparison, getEvalDashboard, getEvalRunDetail } from '../../eval/service.js'
-import { AdminApplicationError } from './application.js'
+import { safe } from '../../http/async-handler.js'
+import { HttpError } from '../../http/errors.js'
 import { adminUserListQuerySchema, adminUserPatchSchema } from './contracts.js'
 import { adminApplication } from './facade.js'
 
 export const adminRouter = Router()
-
-function safe(handler: (req: Request & AuthedRequest, res: Response) => Promise<void> | void) {
-  return async (req: Request & AuthedRequest, res: Response, next: NextFunction) => {
-    try {
-      await handler(req, res)
-    } catch (e) {
-      if (e instanceof HttpError || e instanceof AdminApplicationError) {
-        res.status(e.status).json({ error: e.message })
-        return
-      }
-      console.error('[admin-api] unhandled', e)
-      next(e)
-    }
-  }
-}
 
 /**
  * Tiny in-process TTL cache for expensive read-only admin aggregations.

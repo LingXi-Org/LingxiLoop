@@ -51,6 +51,11 @@ if (/^export\s+\{.+\}\s+from/m.test(rootRouter)) violations.push('server/src/api
 const observabilityRouter = await read(resolve('server/src/modules/observability/router.ts'))
 if (/\/agents\/observability\/runs/.test(observabilityRouter)) violations.push('server/src/modules/observability/router.ts: retired observability HTTP view is forbidden')
 
+const evalService = await read(resolve('server/src/eval/service.ts'))
+if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(evalService)) {
+  violations.push('server/src/eval/service.ts: Eval application logic bypasses repository.ts')
+}
+
 // Domains enter this set only after their router/application/repository split
 // is complete. Keeping the assertion here makes a later regression impossible
 // while the remaining domains are migrated deliberately.

@@ -105,6 +105,7 @@ test('authentication, request context, authorization, and errors have one shared
   const routers = await Promise.all(domains.map((domain) => (
     readFile(new URL(`../modules/${domain}/router.ts`, import.meta.url), 'utf8')
   )))
+  routers.push(await readFile(new URL('../modules/admin/router.ts', import.meta.url), 'utf8'))
 
   for (const boundary of ['requireAuth', 'requireCompany', 'requireWorkspace']) {
     assert.match(context, new RegExp(`export (?:async )?function ${boundary}\\b`))
@@ -120,5 +121,6 @@ test('authentication, request context, authorization, and errors have one shared
   for (const router of routers) {
     assert.doesNotMatch(router, /import \{[^}]*\bauthMiddleware\b[^}]*\} from ['"]\.\.\/\.\.\/auth\.js['"]/s)
     assert.doesNotMatch(router, /\.use\(authMiddleware/)
+    assert.doesNotMatch(router, /function safe\b|console\.error\(['"]\[admin-api\]/)
   }
 })
