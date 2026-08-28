@@ -86,8 +86,8 @@ function AuthedApp() {
 }
 
 export function App() {
-  // Waitlist landing — handleCallback redirects here with `#waitlist=1`
-  // when a brand-new OAuth visitor hit the gate. Consume the fragment
+  // Waitlist landing — handleCallback redirects here with `?waitlist=1`
+  // when a brand-new OAuth visitor hit the gate. Consume the query marker
   // once so refresh doesn't pin them on this screen forever. State is
   // read-only — the screen's dismiss button calls location.reload() to
   // fall back into the normal flow.

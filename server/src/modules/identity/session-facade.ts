@@ -19,6 +19,12 @@ export const createSession = (
   options: { ip?: string; ua?: string },
 ) => sessionApplication.createSession(userId, options)
 
+export const createLoginSession = (
+  userId: string,
+  options: { ip?: string; ua?: string },
+  auditInput: AuditInput,
+) => sessionApplication.createSession(userId, options, auditInput)
+
 export const resolveSession = (token: string) => sessionApplication.resolveSession(token)
 export const deleteSession = (token: string) => sessionApplication.deleteSession(token)
 export const audit = (input: AuditInput) => sessionApplication.audit(input)

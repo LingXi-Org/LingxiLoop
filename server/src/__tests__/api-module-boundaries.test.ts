@@ -79,6 +79,7 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   await assert.rejects(readFile(new URL('../canvas/service.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../api/admin-router.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../admin.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
+  await assert.rejects(readFile(new URL('../oauth.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   const adminRouter = await readFile(new URL('../modules/admin/router.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(adminRouter, /from ['"]\.\.\/\.\.\/eval\/(?:contracts|service|repository)\.js['"]/)
   assert.match(adminRouter, /from ['"]\.\.\/\.\.\/eval\/public\.js['"]/)
@@ -162,6 +163,13 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.match(auth, /from ['"]\.\/modules\/identity\/public\.js['"]/)
   assert.doesNotMatch(auth, /from ['"][^'"]*db\/|\b(?:pool|db)\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
   assert.doesNotMatch(auth, /export (?:async )?function (?:audit|createSession|createWsTicket|consumeWsTicket)\b/)
+  const oidcInfrastructure = await readFile(new URL('../modules/identity/oidc-infrastructure.ts', import.meta.url), 'utf8')
+  const oauthApplication = await readFile(new URL('../modules/identity/oauth-application.ts', import.meta.url), 'utf8')
+  const oauthRepository = await readFile(new URL('../modules/identity/oauth-repository.ts', import.meta.url), 'utf8')
+  assert.match(oidcInfrastructure, /\bfetch\s*\(/)
+  assert.doesNotMatch(oauthApplication, /\bfetch\s*\(|from ['"][^'"]*db\/(?:pool|transaction)\.js['"]|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
+  assert.match(oauthRepository, /Queryable/)
+  assert.doesNotMatch(oauthRepository, /from ['"]express['"]|\bfetch\s*\(/)
 })
 
 test('retired observability HTTP views cannot return', async () => {

@@ -43,6 +43,7 @@ export class SessionApplication {
   async createSession(
     userId: string,
     options: { ip?: string; ua?: string },
+    loginAudit?: AuditInput,
   ): Promise<{ token: string; expiresAt: Date }> {
     const token = this.dependencies.sessionToken()
     const expiresAt = new Date(this.dependencies.now() + SESSION_TTL_MS)
@@ -54,6 +55,16 @@ export class SessionApplication {
         ip: options.ip ?? null,
         userAgent: options.ua ?? null,
       })
+      if (loginAudit) {
+        await insertAuditEvent(db, {
+          kind: loginAudit.kind,
+          userId: loginAudit.userId ?? userId,
+          companyId: loginAudit.companyId ?? null,
+          ip: loginAudit.ip ?? options.ip ?? null,
+          userAgent: loginAudit.userAgent ?? options.ua ?? null,
+          detail: loginAudit.detail ?? null,
+        })
+      }
     })
     return { token, expiresAt }
   }

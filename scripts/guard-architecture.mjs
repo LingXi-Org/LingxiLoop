@@ -90,6 +90,7 @@ for (const file of server) {
   if (fileName === 'server/src/email-retry.ts' || fileName === 'server/src/email-gc.ts' || fileName === 'server/src/api/inbound-email.ts') {
     violations.push(`${fileName}: retired root Email capability is forbidden`)
   }
+  if (fileName === 'server/src/oauth.ts') violations.push(`${fileName}: retired root OAuth implementation is forbidden`)
   const importsEmailRouterAtCompositionRoot = fileName === 'server/src/api/router.ts'
     && /modules\/email\/router\.js/.test(source)
   if (!fileName.startsWith('server/src/modules/email/')
@@ -118,6 +119,10 @@ for (const file of server) {
     violations.push(`${fileName}: application depends on HTTP objects`)
   }
   const owningDomain = fileName.match(/^server\/src\/modules\/([^/]+)\//)?.[1]
+  if (owningDomain === 'identity' && /\bfetch\s*\(/.test(source)
+    && fileName !== 'server/src/modules/identity/oidc-infrastructure.ts') {
+    violations.push(`${fileName}: LingxiIdentity HTTP bypasses oidc-infrastructure.ts`)
+  }
   if (owningDomain) {
     for (const match of source.matchAll(/(?:from\s+|import\(\s*)['"]([^'"]+)['"]/g)) {
       const specifier = match[1]

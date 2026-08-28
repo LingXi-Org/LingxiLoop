@@ -99,6 +99,14 @@ export class CompanyApplication {
 
   companies(userId: string) { return listCompanies(this.db, userId) }
 
+  async provisionPersonalCompany(
+    db: Queryable,
+    input: { id: string; name: string; slug: string; userId: string; projectId: string },
+  ): Promise<boolean> {
+    await insertCompanyRoot(db, input)
+    return this.infrastructure.installCompany(db, input.id)
+  }
+
   async createCompany(userId: string, input: CreateCompanyInput, auditContext: RequestAuditContext) {
     const baseSlug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'company'
     for (let attempt = 0; attempt < 3; attempt += 1) {

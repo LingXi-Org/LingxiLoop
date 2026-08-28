@@ -20,6 +20,13 @@ export interface IdentityRequestMetadata {
   userAgent: string | null
 }
 
+export interface NormalizedIdentityProfile {
+  providerId: string
+  email: string
+  displayName: string
+  avatarUrl: string | null
+}
+
 export interface IdentityUserPayload {
   id: string
   email: string

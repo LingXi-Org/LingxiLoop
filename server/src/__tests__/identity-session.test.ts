@@ -43,6 +43,39 @@ test('session creation hashes the token and commits the session plus login times
   assert.match(queries[1]!.text, /UPDATE users SET last_login_at/)
 })
 
+test('login audit is committed in the same transaction as the session and login timestamp', async () => {
+  const queries: Array<{ text: string; params: readonly unknown[] }> = []
+  const db = queryable((text, params) => {
+    queries.push({ text, params })
+    return { rows: [], rowCount: 1 }
+  })
+  const application = new SessionApplication(db, {
+    transaction: async (work) => work(db),
+    now: () => 1_700_000_000_000,
+    sessionToken: () => 'raw-session-token',
+    wsTicket: () => 'raw-ws-ticket',
+  })
+
+  await application.createSession(
+    'user-1',
+    { ip: '127.0.0.1', ua: 'test' },
+    {
+      kind: 'login',
+      userId: 'user-1',
+      companyId: 'company-1',
+      detail: { provider: 'lingxi' },
+    },
+  )
+
+  assert.equal(queries.length, 3)
+  assert.match(queries[0]!.text, /INSERT INTO sessions/)
+  assert.match(queries[1]!.text, /UPDATE users SET last_login_at/)
+  assert.match(queries[2]!.text, /INSERT INTO audit_events/)
+  assert.equal(queries[2]!.params[0], 'user-1')
+  assert.equal(queries[2]!.params[1], 'company-1')
+  assert.equal(queries[2]!.params[4], 'login')
+})
+
 test('active session resolution awaits the authoritative last-used write', async () => {
   const queries: string[] = []
   const db = queryable((text) => {
