@@ -9,22 +9,19 @@ import type { ImChannelProfile } from '../im/types.js'
 import { inc } from '../metrics.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import {
-  bindCourseRoom,
-  requireCourseRole,
-  setCourseMembership,
-} from './service.js'
-import {
+  bindLearningCourseRoom,
   closeLearningActivity,
   createLearningActivity,
   createLearningObjectives,
   publishLearningActivity,
   reviewLearningEvaluation,
+  requireLearningCourseRole,
+  setLearningCourseMembership,
   setLearningObjectiveStatus,
 } from '../modules/learning/application.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,
-  LearningRoomPurpose,
   TeacherAgentSummary,
   TeacherDigestSchedule,
   TeacherTurnContext,
@@ -146,7 +143,9 @@ export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable = p
   const teacherId = await triggerAuthor(work, db)
   if (work.reason !== 'routine') {
     if (!teacherId) throw new Error('teacher action requires a human trigger')
-    await requireCourseRole(row.course_id, teacherId, 'teacher', db)
+    await requireLearningCourseRole(db, {
+      companyId: row.company_id, courseId: row.course_id, userId: teacherId, role: 'teacher',
+    })
   }
   return {
     companyId:row.company_id,projectId:row.project_id,projectName:row.project_name,
@@ -331,7 +330,7 @@ export async function reactivateTeacherRoomForCourse(courseId:string,db:Queryabl
 }
 
 export async function getTeacherAgentSummary(courseId:string,teacherId:string,db:Queryable=pool):Promise<TeacherAgentSummary>{
-  await requireCourseRole(courseId,teacherId,'teacher',db)
+  await requireLearningCourseRole(db,{courseId,userId:teacherId,role:'teacher'})
   const {rows}=await db.query<{agent_id:string;name:string;project_id:string;conversation_id:string;room_status:'active'|'closed';company_id:string;pending:number}>(
     `SELECT pta.agent_id,p.name,c.project_id,tr.conversation_id,tr.status AS room_status,c.company_id,
       (SELECT COUNT(*)::int FROM agent_os_approvals a WHERE a.channel_id=tr.conversation_id AND a.status='pending') AS pending
@@ -600,8 +599,8 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
     }
     return rows[0]
   }
-  if(method==='set_learner_membership'){await setCourseMembership({courseId:scope.courseId,teacherId:scope.teacherId,userId:textArg(args,'userId','user_id'),role:'learner',enabled:boolArg(args)},db);return {ok:true}}
-  if(method==='set_room_binding'){const conversationId=textArg(args,'conversationId','conversation_id');const purpose=optionalText(args,'purpose');if(args.enabled===false||!purpose){await db.query(`DELETE FROM learning_course_rooms WHERE course_id=$1 AND conversation_id=$2`,[scope.courseId,conversationId]);return {ok:true,enabled:false}};await bindCourseRoom({courseId:scope.courseId,teacherId:scope.teacherId,conversationId,purpose:purpose as LearningRoomPurpose},db);return {ok:true,enabled:true}}
+  if(method==='set_learner_membership'){await setLearningCourseMembership(db,learningTransaction(db),{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,userId:textArg(args,'userId','user_id'),role:'learner',enabled:boolArg(args)});return {ok:true}}
+  if(method==='set_room_binding'){const conversationId=textArg(args,'conversationId','conversation_id');const purpose=optionalText(args,'purpose');const enabled=args.enabled!==false&&Boolean(purpose);await bindLearningCourseRoom(db,{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,conversationId,enabled,...(enabled?{purpose:purpose as 'lab'|'discussion'}:{})});return {ok:true,enabled}}
   if(method==='configure_digest')return configureDigest(scope,args,db)
   if(method==='publish_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'published'});return {ok:true}}
   if(method==='archive_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'archived'});return {ok:true}}
@@ -615,7 +614,7 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
     else await reactivateTeacherRoomForCourse(scope.courseId,db)
     return rows[0]
   }
-  if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);if(!enabled){const {rows}=await db.query<{count:number}>(`SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`,[scope.courseId]);if(Number(rows[0]?.count)<=1)throw new Error('cannot remove the final course teacher')};await setCourseMembership({courseId:scope.courseId,teacherId:scope.teacherId,userId,role:'teacher',enabled},db);return {ok:true}}
+  if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);await setLearningCourseMembership(db,learningTransaction(db),{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,userId,role:'teacher',enabled});await syncTeacherRoomMembers(scope.courseId,db);return {ok:true}}
   if(method==='review_evaluation'||method==='override_mastery'){await reviewLearningEvaluation(db,learningTransaction(db),inc,{companyId:scope.companyId,courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:method==='override_mastery'?'accept':optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason'),...(args.overrideLevel!==undefined||args.override_level!==undefined?{overrideLevel:Number(args.overrideLevel??args.override_level)}:{})});return {ok:true}}
   throw new Error(`unsupported teacher action: ${method}`)
 }

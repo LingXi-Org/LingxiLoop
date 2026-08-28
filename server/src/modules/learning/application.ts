@@ -1,7 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import type { Queryable } from '../../db/queryable.js'
-import { bindCourseRoom } from '../../learning/service.js'
 import { projectMastery } from '../../learning/mastery.js'
 import type {
   AddLearningMissionStepInput,
@@ -37,6 +36,7 @@ import {
   courseManager,
   courseMembershipRole,
   courseRole,
+  deleteLearningCourseRoom,
   countCourseObjectives,
   countLearningMissionSteps,
   countPendingLearningEvaluations,
@@ -93,17 +93,20 @@ import {
   reviewLearningEvaluationRecord,
   revokeCourseInvitation,
   setCourseArchived,
+  setLearningCourseMembershipRecord,
   studyRoomState,
   syncStudyRoomMembers,
   lockLearningActivityForPublish,
   lockLearningMission,
   lockLearningMastery,
   lockPendingLearningEvaluation,
+  owningCourseRole,
   updateCourseMetadata,
   updateLearningObjectiveStatus,
   updateLearningMissionCoordinator,
   updateLearningMissionStepRecord,
   upsertLearningMastery,
+  upsertLearningCourseRoom,
   upsertNotificationPreferences,
   upsertLearningMission,
   upsertAcceptedCourseMembership,
@@ -152,6 +155,74 @@ export interface LearningInfrastructure {
 const privilegedRoles = new Set(['owner', 'admin'])
 
 export type LearningTransaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
+
+export async function requireLearningCourseRole(
+  db: Queryable,
+  input: { courseId: string; userId: string; role: 'teacher'|'learner'; companyId?: string },
+): Promise<void> {
+  const membership = input.companyId
+    ? await courseRole(db, input.courseId, input.companyId, input.userId).then((role) => (
+      role ? { company_id: input.companyId as string, role } : null
+    ))
+    : await owningCourseRole(db, input.courseId, input.userId)
+  if (!membership || membership.role !== input.role) {
+    throw new LearningApplicationError('forbidden', `course ${input.role} role required`)
+  }
+}
+
+async function requireLearningCourseManager(
+  db: Queryable,
+  input: { companyId: string; courseId: string; userId: string },
+) {
+  const manager = await courseManager(db, input.courseId, input.userId)
+  if (!manager || manager.companyId !== input.companyId) {
+    throw new LearningApplicationError('not_found', 'course not found')
+  }
+  if (!privilegedRoles.has(manager.companyRole) && manager.courseRole !== 'teacher') {
+    throw new LearningApplicationError('forbidden', 'course manager role required')
+  }
+  return manager
+}
+
+export async function setLearningCourseMembership(
+  db: Queryable,
+  transaction: LearningTransaction,
+  input: {
+    companyId: string; courseId: string; managerId: string; userId: string
+    role: 'teacher'|'learner'; enabled: boolean
+  },
+): Promise<void> {
+  await requireLearningCourseManager(db, {
+    companyId: input.companyId, courseId: input.courseId, userId: input.managerId,
+  })
+  const outcome = await transaction((client) => setLearningCourseMembershipRecord(client, input))
+  if (outcome === 'not_found') {
+    throw new LearningApplicationError('not_found', 'course or company member not found')
+  }
+  if (outcome === 'last_teacher') {
+    throw new LearningApplicationError('conflict', 'cannot remove the final course teacher')
+  }
+}
+
+export async function bindLearningCourseRoom(
+  db: Queryable,
+  input: {
+    companyId: string; courseId: string; managerId: string; conversationId: string
+    purpose?: 'lab'|'discussion'; enabled: boolean
+  },
+): Promise<void> {
+  await requireLearningCourseManager(db, {
+    companyId: input.companyId, courseId: input.courseId, userId: input.managerId,
+  })
+  if (!input.enabled) {
+    await deleteLearningCourseRoom(db, input)
+    return
+  }
+  if (!input.purpose) throw new LearningApplicationError('invalid', 'room purpose is required')
+  if (!await upsertLearningCourseRoom(db, {
+    ...input, purpose: input.purpose, createdBy: input.managerId,
+  })) throw new LearningApplicationError('not_found', 'room must be a group in the course project')
+}
 
 function learningText(value: string, name: string, maxLength = 10_000): string {
   const text = value.trim()
@@ -1193,7 +1264,10 @@ export class LearningApplication {
   async bindRoom(scope: LearningScope, courseId: string, conversationId: string, input: BindCourseRoomInput) {
     await this.assertCourseScope(scope.companyId, courseId)
     return this.classroom(async () => {
-      await bindCourseRoom({ courseId, teacherId: scope.userId, conversationId, purpose: input.purpose }, this.db)
+      await bindLearningCourseRoom(this.db, {
+        companyId: scope.companyId, courseId, managerId: scope.userId,
+        conversationId, purpose: input.purpose, enabled: true,
+      })
       return { ok: true as const }
     })
   }

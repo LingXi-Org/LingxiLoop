@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
@@ -7,7 +7,8 @@ import test from 'node:test'
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url), 'utf8')
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
-const service = readFileSync(new URL('../learning/service.ts', import.meta.url), 'utf8')
+const legacyServiceUrl = new URL('../learning/service.ts', import.meta.url)
+const service = existsSync(legacyServiceUrl) ? readFileSync(legacyServiceUrl, 'utf8') : ''
 const repository = readFileSync(new URL('../modules/learning/repository.ts', import.meta.url), 'utf8')
 const learningApplicationSource = readFileSync(new URL('../modules/learning/application.ts', import.meta.url), 'utf8')
 const learningRuntimeSource = readFileSync(new URL('../modules/learning/runtime.ts', import.meta.url), 'utf8')
@@ -35,6 +36,15 @@ test('production consumers use only public Learning capability surfaces', () => 
         : []
     })
   assert.deepEqual(violations, [])
+})
+
+test('the legacy Learning service implementation is deleted', () => {
+  assert.equal(existsSync(legacyServiceUrl), false)
+  assert.doesNotMatch(learningApplicationSource, /learning\/service\.js/)
+  const teacher = readFileSync(new URL('../learning/teacher-agent.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(teacher, /from '.\/service\.js'/)
+  assert.match(repository, /WHERE course_id=\$1 AND company_id=\$2 AND role='teacher'/)
+  assert.match(repository, /teacher_room\.company_id=\$1 AND teacher_room\.conversation_id=conversation\.id/)
 })
 
 test('native learning schema keeps evidence, projection and delivery ledgers durable', () => {

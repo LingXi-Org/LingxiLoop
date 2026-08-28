@@ -3,9 +3,11 @@ import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import {
   loadLearningContext,
+  bindLearningCourseRoom,
   proposeLearningEvaluation,
   recordLearningAttempt,
   reviewLearningEvaluation,
+  setLearningCourseMembership,
   startLearningMission,
 } from '../modules/learning/application.js'
 import {
@@ -342,4 +344,45 @@ test('evidence and pending review reads carry explicit tenant and course scope',
   assert.match(calls[0]?.text ?? '', /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
   assert.deepEqual(calls[1]?.params, ['company-1','course-1'])
   assert.match(calls[1]?.text ?? '', /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+})
+
+test('membership management refuses to remove the final tenant-scoped teacher', async () => {
+  const db = queryable((text) => {
+    if (text.includes('FROM courses course JOIN projects project')) return { rows: [{
+      company_id: 'company-1', company_role: 'member', course_role: 'teacher',
+      project_id: 'project-1', status: 'active',
+    }] }
+    if (text.includes('SELECT 1 FROM courses')) return { rows: [{ exists: 1 }] }
+    if (text.includes('SELECT 1 FROM company_members')) return { rows: [{ exists: 1 }] }
+    if (text.includes('SELECT role FROM course_members')) return { rows: [{ role: 'teacher' }] }
+    if (text.includes('SELECT COUNT(*)::int AS count FROM course_members')) return { rows: [{ count: 1 }] }
+    throw new Error(`unexpected query: ${text}`)
+  })
+
+  await assert.rejects(() => setLearningCourseMembership(db, async (work) => work(db), {
+    companyId: 'company-1', courseId: 'course-1', managerId: 'teacher-1',
+    userId: 'teacher-1', role: 'teacher', enabled: false,
+  }), /cannot remove the final course teacher/)
+})
+
+test('room binding authorizes the manager and persists one tenant-scoped project room', async () => {
+  let bindingValues: readonly unknown[] | undefined
+  const db = queryable((text, params) => {
+    if (text.includes('FROM courses course JOIN projects project')) return { rows: [{
+      company_id: 'company-1', company_role: 'member', course_role: 'teacher',
+      project_id: 'project-1', status: 'active',
+    }] }
+    if (text.includes('INSERT INTO learning_course_rooms')) {
+      bindingValues = params
+      return { rowCount: 1 }
+    }
+    throw new Error(`unexpected query: ${text}`)
+  })
+
+  await bindLearningCourseRoom(db, {
+    companyId: 'company-1', courseId: 'course-1', managerId: 'teacher-1',
+    conversationId: 'room-1', purpose: 'lab', enabled: true,
+  })
+
+  assert.deepEqual(bindingValues, ['company-1','course-1','room-1','lab','teacher-1'])
 })
