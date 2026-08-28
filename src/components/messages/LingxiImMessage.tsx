@@ -110,7 +110,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
             ringColor="transparent"
             statusOverride={avatarActivity}
             mode="chat"
-            className={cn('chat-message-avatar', avatarActivity && `agent-avatar-${avatarActivity}`)}
+            className={cn('chat-message-avatar', avatarActivity && `bloub-activity-${avatarActivity}`)}
           />
         </MessageAvatar>
       ) : !isMine ? (
@@ -126,7 +126,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
               ringColor="transparent"
               statusOverride={avatarActivity}
               mode="chat"
-              className={cn('chat-message-avatar', avatarActivity && `agent-avatar-${avatarActivity}`)}
+              className={cn('chat-message-avatar', avatarActivity && `bloub-activity-${avatarActivity}`)}
             />
           </button>
         </MessageAvatar>

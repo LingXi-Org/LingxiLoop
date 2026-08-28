@@ -406,8 +406,8 @@ input:focus, textarea:focus, button:focus { outline: none; }
 /* The active chat avatar gets a deliberately stronger, quicker bounce while
    an agent is thinking or its answer is arriving. The child Bloub keeps its
    organic morph; this wrapper adds the readable messaging-app motion cue. */
-.agent-avatar-thinking,
-.agent-avatar-working {
+.bloub-activity-thinking,
+.bloub-activity-working {
   transform-origin: 50% 72%;
   will-change: transform;
 }
@@ -415,8 +415,8 @@ input:focus, textarea:focus, button:focus { outline: none; }
   animation-name: chat-message-avatar-float;
   animation-duration: 2.45s;
 }
-.agent-avatar-thinking { animation: agent-avatar-thinking 760ms cubic-bezier(.34, 0, .18, 1) infinite; }
-.agent-avatar-working { animation: agent-avatar-streaming 520ms cubic-bezier(.28, 0, .2, 1) infinite; }
+.bloub-activity-thinking { animation: bloub-activity-thinking 760ms cubic-bezier(.34, 0, .18, 1) infinite; }
+.bloub-activity-working { animation: bloub-activity-streaming 520ms cubic-bezier(.28, 0, .2, 1) infinite; }
 
 @keyframes chat-message-avatar-float {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(-1.2deg) scale(1); }
@@ -424,12 +424,12 @@ input:focus, textarea:focus, button:focus { outline: none; }
   72% { transform: translate3d(0, -1px, 0) rotate(.35deg) scale(1.018); }
 }
 
-@keyframes agent-avatar-thinking {
+@keyframes bloub-activity-thinking {
   0%, 100% { transform: translateY(0) scale(1); }
   40% { transform: translateY(-7px) scale(1.1, .92) rotate(-1.5deg); }
   64% { transform: translateY(2px) scale(.95, 1.075) rotate(1deg); }
 }
-@keyframes agent-avatar-streaming {
+@keyframes bloub-activity-streaming {
   0%, 100% { transform: translateY(0) scale(1); }
   46% { transform: translateY(-8px) scale(1.12, .9) rotate(-2deg); }
   72% { transform: translateY(2px) scale(.94, 1.085) rotate(1.25deg); }
@@ -475,8 +475,8 @@ input:focus, textarea:focus, button:focus { outline: none; }
     transform: none !important;
     will-change: auto !important;
   }
-  .agent-avatar-thinking,
-  .agent-avatar-working,
+  .bloub-activity-thinking,
+  .bloub-activity-working,
   .thinking-card-dots i,
   .streaming-caret {
     animation: none !important;
@@ -536,4 +536,3 @@ input:focus, textarea:focus, button:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   .agent-typing-dots > i { animation: none; }
 }
-

@@ -27,6 +27,9 @@ if (shadcnConfig.style !== 'radix-luma' || shadcnConfig.tailwind?.baseColor !== 
   violations.push('components.json: canonical shadcn preset b3bZWXGcRE (radix-luma/mist/hugeicons) is required')
 }
 if (/@base-ui\/react/.test(productionFrontend)) violations.push('frontend: Base UI is forbidden; use the canonical shadcn primitives')
+if (/agent-avatar/.test(`${productionFrontend}\n${frontendTheme}`)) {
+  violations.push('frontend: retired Agent avatar styling is forbidden; animate the Bloub surface directly')
+}
 const canonicalThemeOverride = /--(?:background|foreground|card|card-foreground|popover|popover-foreground|primary|primary-foreground|secondary|secondary-foreground|muted|muted-foreground|accent|accent-foreground|destructive|border|input|ring|sidebar)(?:-foreground|-border|-ring)?:/
 for (const scope of ['assistant-ui-scope', 'desktop-openmaus']) {
   const block = frontendTheme.match(new RegExp(`\\.${scope}\\s*\\{([^}]*)\\}`, 's'))?.[1] ?? ''
