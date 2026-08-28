@@ -402,7 +402,6 @@ CREATE TABLE public.agent_runs (
     input_message_ids jsonb DEFAULT '[]'::jsonb NOT NULL,
     inbox_count integer DEFAULT 0 NOT NULL,
     tool_call_count integer DEFAULT 0 NOT NULL,
-    token_count integer DEFAULT 0 NOT NULL,
     fingerprint text,
     started_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -411,8 +410,6 @@ CREATE TABLE public.agent_runs (
     cached_input_tokens integer DEFAULT 0 NOT NULL,
     cache_creation_tokens integer DEFAULT 0 NOT NULL,
     output_tokens integer DEFAULT 0 NOT NULL,
-    cost_usd double precision DEFAULT 0 NOT NULL,
-    cost_estimated boolean DEFAULT true NOT NULL,
     model text,
     reasoning_runtime text,
     external_runtime_run_id text
@@ -452,8 +449,6 @@ CREATE TABLE public.agent_triages (
     cached_input_tokens integer DEFAULT 0 NOT NULL,
     cache_creation_tokens integer DEFAULT 0 NOT NULL,
     output_tokens integer DEFAULT 0 NOT NULL,
-    cost_usd double precision DEFAULT 0 NOT NULL,
-    cost_estimated boolean DEFAULT true NOT NULL,
     measured boolean DEFAULT true NOT NULL,
     run_id text,
     created_at timestamp with time zone DEFAULT now() NOT NULL
@@ -713,7 +708,14 @@ CREATE TABLE public.canvas_activity (
     action text NOT NULL,
     detail jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT canvas_activity_actor_kind_check CHECK ((actor_kind = ANY (ARRAY['user'::text, 'agent'::text])))
+    CONSTRAINT canvas_activity_actor_kind_check CHECK ((actor_kind = ANY (ARRAY['user'::text, 'agent'::text]))),
+    CONSTRAINT canvas_activity_action_check CHECK ((action = ANY (ARRAY[
+      'workspace_started'::text, 'workspace_updated'::text,
+      'frame_created'::text, 'frame_updated'::text, 'frame_deleted'::text,
+      'comment_created'::text, 'agent_status'::text,
+      'assignment_created'::text, 'assignment_updated'::text,
+      'handoff'::text, 'task_completed'::text, 'task_failed'::text, 'task_cancelled'::text
+    ])))
 );
 
 
@@ -831,7 +833,7 @@ CREATE TABLE public.canvases (
     goal text DEFAULT ''::text NOT NULL,
     initiator_agent_id text,
     status text DEFAULT 'active'::text NOT NULL,
-    origin text DEFAULT 'legacy'::text NOT NULL,
+    origin text NOT NULL,
     summary text,
     completed_at timestamp with time zone,
     project_id text,
@@ -850,11 +852,6 @@ CREATE TABLE public.companies (
     owner_user_id text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    starter_seeded_at timestamp with time zone,
-    starter_dms_seeded_at timestamp with time zone,
-    all_hands_conversation_id text,
-    all_hands_seeded_at timestamp with time zone,
-    starter_preset_version integer DEFAULT 0 NOT NULL,
     description text DEFAULT ''::text NOT NULL
 );
 
@@ -1488,51 +1485,27 @@ CREATE TABLE public.knowledge_sources (
 
 CREATE TABLE public.llm_calls (
     id text NOT NULL,
-    company_id text,
+    company_id text NOT NULL,
     agent_id text,
     run_id text,
     conversation_id text,
     purpose text NOT NULL,
-    source text DEFAULT 'cloud'::text NOT NULL,
+    source text NOT NULL,
     model text NOT NULL,
     input_tokens integer DEFAULT 0 NOT NULL,
     cached_input_tokens integer DEFAULT 0 NOT NULL,
-    cache_creation_tokens integer DEFAULT 0 NOT NULL,
     output_tokens integer DEFAULT 0 NOT NULL,
-    reasoning_tokens integer DEFAULT 0 NOT NULL,
-    cost_usd double precision DEFAULT 0 NOT NULL,
+    cost_usd numeric(14,8) DEFAULT 0 NOT NULL,
     cost_estimated boolean DEFAULT true NOT NULL,
-    measured boolean DEFAULT true NOT NULL,
-    latency_ms integer,
-    status text DEFAULT 'ok'::text NOT NULL,
+    measured boolean DEFAULT false NOT NULL,
+    latency_ms integer DEFAULT 0 NOT NULL,
+    status text NOT NULL,
     error text,
-    extras jsonb,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: llm_calls_rollup; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.llm_calls_rollup (
-    bucket_hour timestamp with time zone NOT NULL,
-    company_id text,
-    agent_id text,
-    purpose text NOT NULL,
-    model text NOT NULL,
-    source text NOT NULL,
-    calls bigint DEFAULT 0 NOT NULL,
-    ok_calls bigint DEFAULT 0 NOT NULL,
-    failed_calls bigint DEFAULT 0 NOT NULL,
-    rate_limited_calls bigint DEFAULT 0 NOT NULL,
-    input_tokens bigint DEFAULT 0 NOT NULL,
-    cached_input_tokens bigint DEFAULT 0 NOT NULL,
-    cache_creation_tokens bigint DEFAULT 0 NOT NULL,
-    output_tokens bigint DEFAULT 0 NOT NULL,
-    reasoning_tokens bigint DEFAULT 0 NOT NULL,
-    cost_usd double precision DEFAULT 0 NOT NULL,
-    cost_estimated boolean DEFAULT true NOT NULL
+    extras jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT llm_calls_source_check CHECK (source = ANY (ARRAY['product'::text, 'agent-os'::text, 'eval'::text])),
+    CONSTRAINT llm_calls_status_check CHECK (status = ANY (ARRAY['succeeded'::text, 'failed'::text])),
+    CONSTRAINT llm_calls_tokens_check CHECK (input_tokens >= 0 AND cached_input_tokens >= 0 AND output_tokens >= 0 AND latency_ms >= 0 AND cost_usd >= 0)
 );
 
 
@@ -1901,9 +1874,6 @@ CREATE TABLE public.users (
     last_login_at timestamp with time zone,
     email_verified_at timestamp with time zone,
     avatar_url text,
-    tier text DEFAULT 'free'::text NOT NULL,
-    sub2api_user_id bigint,
-    sub2api_api_key text,
     deleted_at timestamp with time zone,
     is_admin boolean DEFAULT false NOT NULL,
     suspended_at timestamp with time zone,
@@ -3598,38 +3568,10 @@ CREATE INDEX idx_knowledge_sources_project ON public.knowledge_sources USING btr
 
 
 --
--- Name: idx_llm_calls_agent_created; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_llm_calls_company_created; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_llm_calls_agent_created ON public.llm_calls USING btree (agent_id, created_at DESC) WHERE (agent_id IS NOT NULL);
-
-
---
--- Name: idx_llm_calls_company_purpose_created; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_calls_company_purpose_created ON public.llm_calls USING btree (company_id, purpose, created_at DESC);
-
-
---
--- Name: idx_llm_calls_created; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_calls_created ON public.llm_calls USING btree (created_at);
-
-
---
--- Name: idx_llm_calls_created_brin; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_calls_created_brin ON public.llm_calls USING brin (created_at);
-
-
---
--- Name: idx_llm_calls_model_purpose_created; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_calls_model_purpose_created ON public.llm_calls USING btree (model, purpose, created_at DESC);
+CREATE INDEX idx_llm_calls_company_created ON public.llm_calls USING btree (company_id, created_at DESC);
 
 
 --
@@ -3637,20 +3579,6 @@ CREATE INDEX idx_llm_calls_model_purpose_created ON public.llm_calls USING btree
 --
 
 CREATE INDEX idx_llm_calls_run_created ON public.llm_calls USING btree (run_id, created_at) WHERE (run_id IS NOT NULL);
-
-
---
--- Name: idx_llm_rollup_bucket; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_rollup_bucket ON public.llm_calls_rollup USING btree (bucket_hour DESC);
-
-
---
--- Name: idx_llm_rollup_key; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_llm_rollup_key ON public.llm_calls_rollup USING btree (bucket_hour, company_id, agent_id, purpose, model, source) NULLS NOT DISTINCT;
 
 
 --
@@ -4411,13 +4339,6 @@ ALTER TABLE ONLY public.canvases
 
 
 --
--- Name: companies companies_all_hands_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.companies
-    ADD CONSTRAINT companies_all_hands_conversation_id_fkey FOREIGN KEY (all_hands_conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
-
-
 --
 -- Name: company_invitations company_invitations_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
@@ -4760,6 +4681,14 @@ ALTER TABLE ONLY public.knowledge_notebook_bindings
 
 ALTER TABLE ONLY public.knowledge_source_chat_sessions
     ADD CONSTRAINT knowledge_source_chat_sessions_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: llm_calls llm_calls_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.llm_calls
+    ADD CONSTRAINT llm_calls_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
 
 
 --

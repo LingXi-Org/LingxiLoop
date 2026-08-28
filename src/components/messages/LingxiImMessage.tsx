@@ -71,9 +71,9 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
   const reactionEntries = Array.from(
     new Map((msg.reactions ?? []).map((reaction) => [reaction.emoji, reaction])).values(),
   )
-  const bubbleReactions = !isStreaming && shell.reactions && reactionEntries.length > 0 ? <>
-    {reactionEntries.map((reaction) => <ReactionPill key={reaction.emoji} msgId={msg.id} reaction={reaction} />)}
-  </> : undefined
+  const bubbleReactions = !isStreaming && shell.reactions && reactionEntries.length > 0
+    ? reactionEntries.map((reaction) => <ReactionPill key={reaction.emoji} msgId={msg.id} reaction={reaction} />)
+    : undefined
   const hasTextBubble = Boolean(msg.body) && shell.bubble
   return (
     <MessagePrimitive.Root

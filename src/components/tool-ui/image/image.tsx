@@ -91,8 +91,7 @@ export function Image(props: ImageProps) {
           "border-border bg-card border text-sm shadow-xs",
         )}
       >
-        <>
-          <div
+        <div
             className={cn(
               "bg-muted group relative w-full overflow-hidden",
               ratio !== "auto" ? RATIO_CLASS_MAP[ratio] : "min-h-[160px]",
@@ -120,19 +119,18 @@ export function Image(props: ImageProps) {
               className={cn("absolute inset-0 h-full w-full", getFitClass(fit))}
             />
           </div>
-          {hasMetadata && (
-            <div className="flex items-center gap-3 px-4 py-3">
-              <SourceAttribution
-                source={source}
-                sourceLabel={sourceLabel}
-                fallbackInitial={fallbackInitial}
-                hasClickableUrl={Boolean(resolvedSourceUrl)}
-                onSourceClick={handleSourceClick}
-                title={title}
-              />
-            </div>
-          )}
-        </>
+        {hasMetadata && (
+          <div className="flex items-center gap-3 px-4 py-3">
+            <SourceAttribution
+              source={source}
+              sourceLabel={sourceLabel}
+              fallbackInitial={fallbackInitial}
+              hasClickableUrl={Boolean(resolvedSourceUrl)}
+              onSourceClick={handleSourceClick}
+              title={title}
+            />
+          </div>
+        )}
       </div>
     </article>
   );

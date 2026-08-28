@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
-import { type CanvasActivityKind, normalizeCanvasActivityKind } from '../../../src/lib/canvasEventKinds.js'
+import { type CanvasActivityKind, parseCanvasActivityKind } from '../../../src/lib/canvasEventKinds.js'
 import { findCanvasPlacement } from '../../../src/lib/canvasLayout.js'
 import { pool } from '../db/pool.js'
 import { type CanvasEvent, CH_CANVAS, publish } from '../redis.js'
@@ -188,8 +188,8 @@ function finiteNumber(value: unknown, name: string): number {
   return number
 }
 
-function frameSize(value: unknown, name: string, fallback: number): number {
-  if (value === undefined) return fallback
+function frameSize(value: unknown, name: string, defaultValue: number): number {
+  if (value === undefined) return defaultValue
   return Math.min(MAX_FRAME_SIZE, Math.max(MIN_FRAME_SIZE, finiteNumber(value, name)))
 }
 
@@ -268,36 +268,20 @@ function toReport(row: ReportRow): CanvasAssignmentReport {
     conflictResolution:row.conflict_resolution ?? [],createdAt:row.created_at }
 }
 
-async function ensureCanvas(companyId: string, actorId: string, projectId?: string): Promise<CanvasRow> {
-  const id = stableCanvasId(projectId ? `${companyId}:${projectId}` : companyId)
-  await pool.query(
-    `INSERT INTO canvases (id, company_id, project_id, title, created_by, origin)
-     VALUES ($1, $2, $3, 'Legacy Canvas', $4, 'legacy')
-     ON CONFLICT (id) DO NOTHING`,
-    [id, companyId, projectId ?? null, actorId],
-  )
-  const { rows } = await pool.query<CanvasRow>(
-    `SELECT * FROM canvases WHERE id=$1 AND company_id=$2 LIMIT 1`, [id, companyId],
-  )
-  if (!rows[0]) throw new Error('canvas is not available')
-  return rows[0]
-}
-
 async function requireCanvas(companyId: string, canvasId: string, projectId?: string): Promise<CanvasRow> {
   const { rows } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE id=$1 AND company_id=$2 AND ($3::text IS NULL OR project_id=$3) LIMIT 1`, [canvasId, companyId, projectId ?? null])
   if (!rows[0]) throw new Error('canvas not found')
   return rows[0]
 }
 
-async function resolveCanvas(companyId: string, actorId: string, canvasId?: string, projectId?: string): Promise<CanvasRow> {
-  return canvasId ? requireCanvas(companyId, canvasId, projectId) : ensureCanvas(companyId, actorId, projectId)
+async function resolveCanvas(companyId: string, _actorId: string, canvasId?: string, projectId?: string): Promise<CanvasRow> {
+  if (!canvasId) throw new Error('canvasId is required')
+  return requireCanvas(companyId, canvasId, projectId)
 }
 
 async function resolveCanvasRead(companyId: string, canvasId?: string, projectId?: string): Promise<CanvasRow> {
-  if (canvasId) return requireCanvas(companyId, canvasId, projectId)
-  const { rows } = await pool.query<CanvasRow>(`SELECT * FROM canvases WHERE company_id=$1 AND ($2::text IS NULL OR project_id=$2) ORDER BY updated_at DESC LIMIT 1`, [companyId, projectId ?? null])
-  if (!rows[0]) throw Object.assign(new Error('canvas not found'), { status: 404 })
-  return rows[0]
+  if (!canvasId) throw new Error('canvasId is required')
+  return requireCanvas(companyId, canvasId, projectId)
 }
 
 
@@ -332,7 +316,7 @@ async function logActivity(input: {
   const row = rows[0]
   const activity: CanvasActivity = {
     id: row.id, canvasId: row.canvas_id, frameId: row.frame_id,
-    actorId: row.actor_id, actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action),
+    actorId: row.actor_id, actorKind: row.actor_kind, action: parseCanvasActivityKind(row.action),
     detail: row.detail ?? {}, createdAt: row.created_at,
   }
   await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
@@ -447,7 +431,7 @@ export async function getCanvasSnapshot(companyId: string, actorId: string, canv
     })),
     activity: activity.rows.map((row) => ({
       id: row.id, canvasId: row.canvas_id, frameId: row.frame_id,
-      actorId: row.actor_id, actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action),
+      actorId: row.actor_id, actorKind: row.actor_kind, action: parseCanvasActivityKind(row.action),
       detail: row.detail ?? {}, createdAt: row.created_at,
     })),
     reports: reports.rows.map(toReport),
@@ -841,7 +825,7 @@ export async function startCanvasWorkspace(input: {
     )
     const row = activities[0]
     activity = { id: row.id, canvasId: row.canvas_id, frameId: row.frame_id, actorId: row.actor_id,
-      actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at }
+      actorKind: row.actor_kind, action: parseCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at }
     await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined); throw error
@@ -851,8 +835,8 @@ export async function startCanvasWorkspace(input: {
     kind: 'workspace.started', canvasId, conversationId: input.conversationId,
     workspace: { id: canvasId, title: snapshot.title, goal: snapshot.goal, status: snapshot.status,
       assignmentCount: snapshot.assignments.length, frameCount: snapshot.frames.length },
-  }).catch(() => undefined)
-  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId, activity }).catch(() => undefined)
+  })
+  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId, activity })
   return { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }
 }
 
@@ -983,7 +967,7 @@ export async function handoffCanvasWork(input: {
   type ActivityRow = { id: string; canvas_id: string; frame_id: string | null; actor_id: string; actor_kind: CanvasActorKind; action: string; detail: Record<string, unknown>; created_at: string }
   const toActivity = (row: ActivityRow): CanvasActivity => ({
     id: row.id, canvasId: row.canvas_id, frameId: row.frame_id, actorId: row.actor_id,
-    actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at,
+    actorKind: row.actor_kind, action: parseCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at,
   })
   const client = await pool.connect()
   let activity: CanvasActivity
@@ -1007,7 +991,7 @@ export async function handoffCanvasWork(input: {
       // Publishing is intentionally replay-safe. The durable activity is the
       // source of truth; a lost post-commit Redis delivery is recovered when
       // the caller retries the same idempotency key.
-      await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity }).catch(() => undefined)
+      await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
       return { snapshot: { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }, activity }
     }
     if (canvas.status !== 'active') throw new Error('only an active canvas accepts handoffs')
@@ -1095,10 +1079,8 @@ export async function handoffCanvasWork(input: {
     throw error
   } finally { client.release() }
   const snapshot = await getCanvasSnapshot(input.companyId, input.fromAgentId, input.canvasId)
-  // The database transaction above is the handoff acknowledgement. Realtime
-  // delivery is opportunistic and a retry of this key will republish it.
-  await publishAssignments(input.companyId, input.canvasId).catch(() => undefined)
-  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity }).catch(() => undefined)
+  await publishAssignments(input.companyId, input.canvasId)
+  await publishCanvas(input.companyId, { kind: 'activity.created', canvasId: input.canvasId, activity })
   return { snapshot: { ...snapshot, activity: [activity, ...snapshot.activity.filter((item) => item.id !== activity.id)] }, activity }
 }
 
@@ -1369,7 +1351,7 @@ export async function stopCanvasAssignment(input: { companyId: string; canvasId:
     )
     const row = activities[0]
     activity = { id: row.id, canvasId: row.canvas_id, frameId: row.frame_id, actorId: row.actor_id,
-      actorKind: row.actor_kind, action: normalizeCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at }
+      actorKind: row.actor_kind, action: parseCanvasActivityKind(row.action), detail: row.detail ?? {}, createdAt: row.created_at }
     await client.query(
       `WITH RECURSIVE blocked_descendants(id) AS (
          SELECT d.assignment_id FROM canvas_assignment_dependencies d JOIN canvas_agent_assignments parent ON parent.id=d.depends_on_assignment_id
@@ -1435,5 +1417,5 @@ export async function stopCanvasWorkspace(input: { companyId: string; canvasId: 
     await client.query('COMMIT')
   } catch (error) { await client.query('ROLLBACK').catch(() => undefined); throw error }
   finally { client.release() }
-  await publishCanvas(input.companyId, { kind: 'workspace.updated', canvasId: input.canvasId, workspace: { id: input.canvasId, status: 'stopped' } }).catch(() => undefined)
+  await publishCanvas(input.companyId, { kind: 'workspace.updated', canvasId: input.canvasId, workspace: { id: input.canvasId, status: 'stopped' } })
 }

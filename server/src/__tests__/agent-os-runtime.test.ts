@@ -37,8 +37,8 @@ class RecordingModel implements AgentModelDriver {
     this.items.push(structuredClone(args.items))
     return { output: [{ role: 'assistant', content: 'ok' }], text: 'ok', usage: { inputTokens: 1, outputTokens: 1 } }
   }
-  async compact(): Promise<string> { return 'summary' }
-  async structured(): Promise<unknown> { return {} }
+  async compact() { return { model: 'test', value: 'summary', usage: { inputTokens: 0, outputTokens: 0, available: false } } }
+  async structured() { return { model: 'test', value: {}, usage: { inputTokens: 0, outputTokens: 0, available: false } } }
 }
 
 test('Canvas contract tells agents to autonomously decide and start via IPython', () => {
@@ -94,8 +94,8 @@ test('an empty model response fails once with adapter diagnostics, not a hop-lim
   const diagnostics = { chunkCount: 1, choiceCount: 1, finishReasons: ['stop'], contentLength: 0, toolCallCount: 0, chunkShapes: ['{"deltaKeys":["role"]}'] }
   const model: AgentModelDriver = {
     run: async () => { throw new ModelAdapterError('model returned no assistant content or supported tool calls', diagnostics) },
-    compact: async () => '',
-    structured: async () => ({}),
+    compact: async () => ({ model: 'test', value: '', usage: { inputTokens: 0, outputTokens: 0, available: false } }),
+    structured: async () => ({ model: 'test', value: {}, usage: { inputTokens: 0, outputTokens: 0, available: false } }),
   }
   await new AgentOSRuntime(host, model, new StatefulKernel(), { heartbeatMs: 60_000 }).runWork(item)
   const started = host.events.filter((event) => event.kind === 'model.started')

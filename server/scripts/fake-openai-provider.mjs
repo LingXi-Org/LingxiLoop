@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Deterministic DeepSeek Chat Completions-compatible provider for CI. */
+/** Deterministic OpenAI Chat Completions and Embeddings provider for CI. */
 import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 
@@ -25,7 +25,7 @@ function response(body) {
     id: `chatcmpl_${randomUUID()}`,
     object: 'chat.completion',
     created: Math.floor(Date.now() / 1000),
-    model: body.model ?? 'deepseek-chat',
+    model: body.model ?? 'gpt-5-mini',
     choices: [{ index: 0, message: { role: 'assistant', content: REPLY }, finish_reason: 'stop' }],
     usage: { prompt_tokens: 20, completion_tokens: 18, total_tokens: 38 },
   }
@@ -33,6 +33,26 @@ function response(body) {
 
 const server = createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/health') { json(res, 200, { status: 'ok' }); return }
+  if (req.method === 'POST' && req.url === '/v1/embeddings') {
+    let body
+    try { body = await readJson(req) } catch (error) {
+      json(res, 400, { error: { message: `invalid JSON: ${String(error)}`, type: 'invalid_request_error' } }); return
+    }
+    const inputs = Array.isArray(body.input) ? body.input : [body.input]
+    const vector = Array(1536).fill(0.001)
+    const encoded = Buffer.alloc(vector.length * Float32Array.BYTES_PER_ELEMENT)
+    vector.forEach((value, index) => {
+      encoded.writeFloatLE(value, index * Float32Array.BYTES_PER_ELEMENT)
+    })
+    const embedding = body.encoding_format === 'base64' ? encoded.toString('base64') : vector
+    json(res, 200, {
+      object: 'list',
+      model: body.model ?? 'text-embedding-3-small',
+      data: inputs.map((_, index) => ({ object: 'embedding', index, embedding })),
+      usage: { prompt_tokens: Math.max(1, inputs.length), total_tokens: Math.max(1, inputs.length) },
+    })
+    return
+  }
   if (req.method !== 'POST' || req.url !== '/v1/chat/completions') {
     json(res, 404, { error: { message: `unsupported endpoint ${req.url}`, type: 'invalid_request_error' } }); return
   }
@@ -76,4 +96,4 @@ const server = createServer(async (req, res) => {
   res.end()
 })
 
-server.listen(PORT, () => console.log(`[fake-deepseek-provider] listening on :${PORT}`))
+server.listen(PORT, () => console.log(`[fake-openai-provider] listening on :${PORT}`))

@@ -1,5 +1,5 @@
 
-import { API, getDevModeEnabled, http } from '@/api/core/http'
+import { API, http } from '@/api/core/http'
 import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
 import { lingxiApiFetch, } from './transport'
 
@@ -11,7 +11,7 @@ export const emailApi = {
     body: string
     attachments?: Array<{ key: string; filename: string; mimeType: string; sizeBytes: number }>
   }) =>
-    http<{ messageId: string; conversationId: string; transportStatus: string; mock?: boolean; error?: string | null }>(
+    http<{ messageId: string; conversationId: string; transportStatus: string; error?: string | null }>(
       '/email/send',
       { method: 'POST', body: JSON.stringify(args) },
     ),
@@ -20,7 +20,7 @@ export const emailApi = {
     cc?: string[]
     attachments?: Array<{ key: string; filename: string; mimeType: string; sizeBytes: number }>
   }) =>
-    http<{ messageId: string; conversationId: string; transportStatus: string; mock?: boolean; error?: string | null }>(
+    http<{ messageId: string; conversationId: string; transportStatus: string; error?: string | null }>(
       `/email/reply/${encodeURIComponent(messageId)}`,
       { method: 'POST', body: JSON.stringify(args) },
     ),
@@ -30,7 +30,6 @@ export const emailApi = {
     if (token) headers.authorization = `Bearer ${token}`
     const company = getActiveCompanyId()
     if (company) headers['x-company-id'] = company
-    if (getDevModeEnabled()) headers['x-lingxiloop-dev-mode'] = '1'
     const res = await lingxiApiFetch(`${API}/email/${encodeURIComponent(messageId)}/html`, { headers })
     if (res.status === 204) return null
     if (!res.ok) {

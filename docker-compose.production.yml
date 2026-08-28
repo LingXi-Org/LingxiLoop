@@ -163,8 +163,6 @@ services:
         condition: service_completed_successfully
     ports:
       - "127.0.0.1:5181:5181"
-    volumes:
-      - uploads:/app/server/uploads
     networks: [lingxiloop, lingxiloop-knowledge-internal]
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
@@ -187,8 +185,6 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
-    volumes:
-      - uploads:/app/server/uploads
     networks: [lingxiloop, lingxiloop-knowledge-internal]
     logging: *quiet-logging
 
@@ -229,7 +225,6 @@ networks:
 volumes:
   postgres-data: {}
   redis-data: {}
-  uploads: {}
   wukong-data: {}
   agent-os-data: {}
   open-notebook-surreal-data: {}

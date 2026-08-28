@@ -116,7 +116,7 @@ if (!schema.includes('progress_fingerprint') || !controlPlane.includes('no_progr
 }
 const currentProductSurface = [
   readFileSync(join(root, 'server/src/api/router.ts'), 'utf8'),
-  readFileSync(join(root, 'server/src/modules/conversations/service.ts'), 'utf8'),
+  readFileSync(join(root, 'server/src/modules/conversations/router.ts'), 'utf8'),
   readFileSync(join(root, 'src/api/contracts.ts'), 'utf8'),
   readFileSync(join(root, 'src/types.ts'), 'utf8'),
 ].join('\n')

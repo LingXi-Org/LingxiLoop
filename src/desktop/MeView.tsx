@@ -1,23 +1,19 @@
 import { useEffect, useState } from 'react'
 import { agentsApi } from '@/api/agents'
-import type { ApiQuotaSnapshot, ApiQuotaWindow } from '@/api/contracts'
 import { getServerOrigin } from '@/api/core/http'
 import { platformApi } from '@/api/platform'
 import { Avatar } from '@/components/Avatar'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { useDevtools } from '@/stores/devtools'
 import { useParticipants } from '@/stores/participants'
 import { usePrefs } from '@/stores/preferences'
 import { useSoundStore } from '@/stores/sound'
 
-const tabs = ['Profile', 'Usage', 'Memory', 'Trust & autonomy', 'Preferences'] as const
+const tabs = ['Profile', 'Memory', 'Trust & autonomy', 'Preferences'] as const
 type Tab = (typeof tabs)[number]
 
 const PREF_GROUPS: Array<{ title: string; items: Array<{ key: string; lbl: string; sub: string; default: boolean }> }> = [
@@ -155,232 +151,6 @@ function AboutSection() {
   )
 }
 
-/* ============================ Usage / Quota ============================
- * Three rounded "weather cards" — daily / weekly / monthly — mirroring
- * the lingxiloop cloud-and-paper feel. The bars use --skype on a faint
- * sky2-100 track until usage crosses 75% (turns coral) and 95% (deep
- * coral with a quiet pulse). Numbers come from sub2api's subscription
- * summary; everything is best-effort — missing data renders a soft
- * "unavailable" card rather than a hard error. */
-
-type PeriodKey = 'daily' | 'weekly' | 'monthly'
-
-const PERIOD_META: Array<{ key: PeriodKey; label: string; sub: string }> = [
-  { key: 'daily',   label: '每日',   sub: '当地时间零点重置' },
-  { key: 'weekly',  label: '每周',   sub: '每周重置' },
-  { key: 'monthly', label: '每月', sub: '每月重置' },
-]
-
-function fmtUsd(n: number): string {
-  if (!Number.isFinite(n)) return '—'
-  if (n === 0) return '$0.00'
-  if (n < 0.01) return '<$0.01'
-  if (n < 10) return `$${n.toFixed(2)}`
-  if (n < 1000) return `$${n.toFixed(2)}`
-  return `$${Math.round(n).toLocaleString()}`
-}
-
-/** Best-effort "resets in 3h" / "resets in 2d" string. Falls back to a
- *  blank string when sub2api didn't hand back a window start (older
- *  rows). The period length is fixed (24h / 7d / ~30d) — sub2api uses
- *  rolling windows, so we count forward from window_start. */
-function resetsHint(period: PeriodKey, windowStart: string | null): string {
-  if (!windowStart) return ''
-  const start = new Date(windowStart).getTime()
-  if (Number.isNaN(start)) return ''
-  const lenMs = period === 'daily' ? 86_400_000
-              : period === 'weekly' ? 7 * 86_400_000
-              : 30 * 86_400_000
-  const remaining = start + lenMs - Date.now()
-  if (remaining <= 0) return 'resets soon'
-  const h = Math.floor(remaining / 3_600_000)
-  if (h < 1) {
-    const m = Math.max(1, Math.floor(remaining / 60_000))
-    return `resets in ${m}m`
-  }
-  if (h < 48) return `resets in ${h}h`
-  const d = Math.floor(h / 24)
-  return `resets in ${d}d`
-}
-
-function QuotaCard({ period, label, sub, window }: {
-  period: PeriodKey
-  label: string
-  sub: string
-  window: ApiQuotaWindow | null
-}) {
-  const used = window?.usedUsd ?? 0
-  const limit = window?.limitUsd ?? null
-  const pct = limit != null && limit > 0 ? Math.min(100, (used / limit) * 100) : 0
-  // Tone shifts as the user gets close to the cap. Default is the brand
-  // skype blue; coral takes over past the 75% mark so a glance at the
-  // cards still tells the user "you're fine" vs "slow down".
-  const tone = limit == null ? 'neutral'
-             : pct >= 95 ? 'danger'
-             : pct >= 75 ? 'warn'
-             : 'ok'
-  const barColor = tone === 'danger' ? 'var(--coral-deep, #C84E3F)'
-                 : tone === 'warn'   ? 'var(--coral, #FF7A6B)'
-                 : tone === 'ok'     ? 'var(--skype, #00A8F0)'
-                 : 'var(--ink-300, #94A8BC)'
-  const resets = window ? resetsHint(period, window.windowStart) : ''
-  return (
-    <div className="bg-cloud rounded-[14px] p-5 flex flex-col gap-3"
-      style={{ border: '1px solid var(--ink-100)' }}>
-      <div className="flex items-baseline justify-between gap-3">
-        <div className="font-display font-semibold text-[14px] text-ink-900">{label}</div>
-        {limit != null
-          ? <div className="font-mono text-[11px] font-semibold text-ink-500">{pct.toFixed(0)}%</div>
-          : <div className="font-mono text-[10px] tracking-wider uppercase text-ink-300">unlimited</div>}
-      </div>
-      <div className="font-display tabular-nums text-[22px] tracking-tight text-ink-900" style={{ letterSpacing: '-0.02em' }}>
-        {fmtUsd(used)}
-        <span className="text-ink-300 text-[15px] font-normal"> / {limit != null ? fmtUsd(limit) : '∞'}</span>
-      </div>
-      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--sky2-100, #E1F3FD)' }}>
-        <div
-          className="h-full rounded-full transition-[width,background-color,opacity] duration-500"
-          style={{
-            width: limit != null ? `${Math.max(2, pct)}%` : '100%',
-            background: barColor,
-            opacity: limit != null ? 1 : 0.35,
-          }}
-        />
-      </div>
-      <div className="flex items-center justify-between text-[11px]">
-        <span className="font-display italic text-ink-400">{sub}</span>
-        {resets && <span className="font-mono text-ink-500">{resets}</span>}
-      </div>
-    </div>
-  )
-}
-
-function UsageTab() {
-  const [state, setState] = useState<
-    | { kind: 'loading' }
-    | { kind: 'ready'; configured: boolean; snapshot: ApiQuotaSnapshot | null; error?: string }
-    | { kind: 'error'; message: string }
-  >({ kind: 'loading' })
-
-  const load = () => {
-    setState({ kind: 'loading' })
-    platformApi.getQuota()
-      .then((r) => setState({ kind: 'ready', configured: r.configured, snapshot: r.snapshot, error: r.error }))
-      .catch((e) => setState({ kind: 'error', message: e instanceof Error ? e.message : String(e) }))
-  }
-  useEffect(load, [])
-
-  if (state.kind === 'loading') {
-    return (
-      <div className="space-y-6">
-        <Section title="↳ 用量额度">
-          <div className="grid grid-cols-3 gap-3">
-            {PERIOD_META.map((p) => (
-              <div key={p.key} className="bg-cloud rounded-[14px] p-5 h-[140px]"
-                style={{ border: '1px solid var(--ink-100)' }}>
-                <div className="font-display font-semibold text-[14px] text-ink-300">{p.label}</div>
-                <div className="mt-4 space-y-3" role="status" aria-label={`正在加载${p.label}用量`}><Skeleton className="h-6 w-2/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-4/5" /></div>
-              </div>
-            ))}
-          </div>
-        </Section>
-      </div>
-    )
-  }
-
-  if (state.kind === 'error') {
-    return (
-      <div className="space-y-6">
-        <Section title="↳ Quota">
-          <div className="bg-cloud rounded-[14px] p-6 text-center"
-            style={{ border: '1px solid var(--ink-100)' }}>
-            <div className="font-display text-[14px] text-ink-700 mb-1">无法获取用量额度</div>
-            <div className="font-display italic text-[12px] text-coral-deep mb-3">{state.message}</div>
-            <button onClick={load}
-              className="px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-white"
-              style={{ background: 'var(--skype)' }}>
-              重试
-            </button>
-          </div>
-        </Section>
-      </div>
-    )
-  }
-
-  // ready
-  const { configured, snapshot, error } = state
-  if (!configured) {
-    return (
-      <div className="space-y-6">
-        <Section title="↳ Quota">
-          <div className="bg-cloud rounded-[14px] p-6"
-            style={{ border: '1px dashed var(--ink-100)' }}>
-            <div className="font-display text-[14px] text-ink-700">No quota gateway on this deployment</div>
-            <div className="font-display italic text-[12px] text-ink-500 mt-1 max-w-xl">
-              This server isn't running a sub2api gateway, so per-period quotas aren't tracked. Usage is governed by the host's own API key allowance.
-            </div>
-          </div>
-        </Section>
-      </div>
-    )
-  }
-
-  if (!snapshot) {
-    return (
-      <div className="space-y-6">
-        <Section title="↳ Quota">
-          <div className="bg-cloud rounded-[14px] p-6"
-            style={{ border: '1px dashed var(--ink-100)' }}>
-            <div className="font-display text-[14px] text-ink-700">
-              {error ? 'Quota gateway is unreachable' : 'No active subscription'}
-            </div>
-            <div className="font-display italic text-[12px] text-ink-500 mt-1 max-w-xl">
-              {error
-                ? 'The lingxiloop server couldn\'t reach the quota gateway. Try again in a moment.'
-                : 'Your account hasn\'t been provisioned on the quota gateway yet. This usually clears up on its own — try again in a minute.'}
-            </div>
-            <button onClick={load}
-              className="mt-3 px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-50 transition"
-              style={{ border: '1px dashed var(--sky2-300)' }}>
-              Refresh
-            </button>
-          </div>
-        </Section>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      <Section title="↳ Quota">
-        <div className="text-[13px] text-ink-500 leading-[1.55] mb-4 max-w-2xl font-display italic">
-          What your agents have spent on this account, across the rolling windows the gateway enforces. Numbers are in USD.
-          {snapshot.groupName ? <> Plan: <span className="not-italic font-semibold text-skype-deep">{snapshot.groupName}</span>.</> : null}
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {PERIOD_META.map((p) => (
-            <QuotaCard
-              key={p.key}
-              period={p.key}
-              label={p.label}
-              sub={p.sub}
-              window={snapshot[p.key]}
-            />
-          ))}
-        </div>
-        <div className="mt-4 flex items-center gap-3">
-          <button onClick={load}
-            className="px-4 py-1.5 rounded-[8px] text-[12px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-50 transition"
-            style={{ border: '1px solid var(--ink-100)' }}>
-            Refresh
-          </button>
-          {error && <span className="text-[11.5px] text-coral-deep font-display italic">last refresh had a hiccup: {error}</span>}
-        </div>
-      </Section>
-    </div>
-  )
-}
-
 function TrustTab() {
   const byId = useParticipants((s) => s.byId)
   const autonomy = usePrefs((s) => s.autonomy)
@@ -500,16 +270,7 @@ function Stat({ n, l, tone }: { n: number; l: string; tone: 'good' | 'warn' }) {
 function PreferencesTab() {
   const prefs = usePrefs((s) => s.prefs)
   const setPref = usePrefs((s) => s.setPref)
-  const devtoolsEnabled = useDevtools((s) => s.enabled)
-  const devtoolsCanEnable = useDevtools((s) => s.canEnable)
-  const devtoolsLocal = useDevtools((s) => s.localDev)
-  const setDevMode = useDevtools((s) => s.setDevMode)
-  const loadDevtools = useDevtools((s) => s.load)
   const get = (k: string, fallback: boolean) => (prefs[k] === undefined ? fallback : Boolean(prefs[k]))
-
-  useEffect(() => {
-    void loadDevtools()
-  }, [loadDevtools])
 
   return (
     <div className="space-y-6">
@@ -536,23 +297,6 @@ function PreferencesTab() {
         </Section>
       ))}
       <SkypeSoundSection />
-      {devtoolsCanEnable && (
-        <Section title="↳ 开发者">
-          <label className="flex min-h-11 items-center gap-3 rounded-[11px] border border-input px-3 py-2.5">
-            <Checkbox
-              checked={devtoolsEnabled}
-              disabled={devtoolsLocal}
-              onCheckedChange={(next) => { void setDevMode(next === true) }}
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block text-[12.5px] font-semibold leading-[1.2]">开发者模式</span>
-              <span className="mt-0.5 block text-[11.5px] leading-[1.35] text-muted-foreground">
-                {devtoolsLocal ? '本地开发版本中始终启用' : '显示观测页面并解锁此设备上的开发工具'}
-              </span>
-            </span>
-          </label>
-        </Section>
-      )}
     </div>
   )
 }
@@ -643,7 +387,7 @@ function MemoryTab() {
   )
 }
 
-export function MeView({ initialTab = 'Profile' }: { initialTab?: 'Profile' | 'Usage' | 'Preferences' } = {}) {
+export function MeView({ initialTab = 'Profile' }: { initialTab?: 'Profile' | 'Preferences' } = {}) {
   const [tab, setTab] = useState<Tab>(initialTab)
 
   return (
@@ -670,13 +414,12 @@ export function MeView({ initialTab = 'Profile' }: { initialTab?: 'Profile' | 'U
                 i === 0 ? 'pl-0 pr-5' : 'px-5',
                 tab === t ? 'border-skype text-skype-deep' : 'border-transparent text-ink-500 hover:text-ink-700',
               )}>
-              {({ Profile: '个人资料', Usage: '用量', Memory: '记忆', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
+              {({ Profile: '个人资料', Memory: '记忆', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
             </button>
           ))}
         </div>
 
         {tab === 'Profile' && <ProfileTab />}
-        {tab === 'Usage' && <UsageTab />}
         {tab === 'Memory' && <MemoryTab />}
         {tab === 'Trust & autonomy' && <TrustTab />}
         {tab === 'Preferences' && <PreferencesTab />}

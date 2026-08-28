@@ -35,12 +35,10 @@ interface AgentRunSourceRow {
   started_at: string
   finished_at: string | null
   latency_ms: string | number | null
-  token_count: number
   input_tokens: number
   cached_input_tokens: number
   cache_creation_tokens: number
   output_tokens: number
-  cost_usd: number
   model: string | null
 }
 
@@ -339,8 +337,8 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
             COALESCE(w.finished_at, r.finished_at, r.updated_at) AS finished_at,
             EXTRACT(EPOCH FROM (COALESCE(w.finished_at, r.finished_at, r.updated_at) -
               COALESCE(w.lease_started_at, r.started_at))) * 1000 AS latency_ms,
-            r.token_count, r.input_tokens, r.cached_input_tokens,
-            r.cache_creation_tokens, r.output_tokens, r.cost_usd, r.model
+            r.input_tokens, r.cached_input_tokens,
+            r.cache_creation_tokens, r.output_tokens, r.model
        FROM agent_runs r
        LEFT JOIN agent_work_items w ON w.id = r.id
       WHERE r.id = $1
@@ -350,7 +348,7 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
   const run = rows[0]
   if (!run) throw Object.assign(new Error(`Agent OS run not found: ${runId}`), { status: 404 })
 
-  const [eventsResult, hostActionsResult, legacyToolsResult, approvalsResult] = await Promise.all([
+  const [eventsResult, hostActionsResult, approvalsResult] = await Promise.all([
     pool.query<AgentEventRow>(
       `SELECT id,kind,data,created_at,sequence FROM agent_events
         WHERE run_id=$1 ORDER BY created_at ASC, sequence ASC NULLS LAST`,
@@ -359,10 +357,6 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
     pool.query<HostActionRow>(
       `SELECT idempotency_key,action,args,result,status,error,approval_id,cell_id,call_index,created_at,updated_at
          FROM agent_host_actions WHERE run_id=$1 ORDER BY created_at ASC`,
-      [runId],
-    ),
-    pool.query<{ name: string; args: unknown; result: unknown; status: string; error: string | null; duration_ms: number | null; created_at: string }>(
-      `SELECT name,args,result,status,error,duration_ms,created_at FROM tool_calls WHERE run_id=$1 ORDER BY created_at ASC`,
       [runId],
     ),
     pool.query<ApprovalRow>(
@@ -406,13 +400,6 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
     durationMs: Math.max(0, Date.parse(row.updated_at) - Date.parse(row.created_at)),
     ...(row.approval_id ? { approvalId: row.approval_id } : {}),
     cellId: row.cell_id,
-  }))
-  const legacyTools: EvalToolCallObservation[] = legacyToolsResult.rows.map((row) => ({
-    name: row.name,
-    args: sanitizeHostActionArgs(row.name, row.args),
-    result: sanitizeHostActionResult(row.name, row.result),
-    status: row.status === 'ok' ? 'ok' : row.status === 'error' ? 'error' : 'pending',
-    ...(row.duration_ms !== null ? { durationMs: row.duration_ms } : {}),
   }))
   const approvals: EvalApprovalObservation[] = approvalsResult.rows.map((row) => ({
     id: row.id,
@@ -510,7 +497,7 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
     answer: run.result_text ?? '',
     retrievedSourceIds: [...new Set(citations.map((item) => item.sourceId))],
     citations,
-    toolCalls: [...nativeTools, ...legacyTools],
+    toolCalls: nativeTools,
     agentTurns,
     approvals,
     artifacts,
@@ -522,8 +509,7 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
     },
     policyViolations: [],
     latencyMs: finiteNumber(run.latency_ms),
-    tokenCount: tokenBreakdown || run.token_count || eventTokenCount || undefined,
-    costUsd: finiteNumber(run.cost_usd),
+    tokenCount: tokenBreakdown || eventTokenCount || undefined,
     ...(run.run_error ? { error: run.run_error } : {}),
     metadata: {
       sourceAgentRunId: runId,

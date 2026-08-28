@@ -1,7 +1,7 @@
 /**
  * Waitlist queue. Three sub-tabs: pending / approved / rejected.
  * Approve calls the server which provisions everything (user + company
- * + sub2api) then deletes is row from the queue.
+ * then removes its row from the queue.
  */
 import { useCallback, useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
@@ -138,7 +138,7 @@ export function WaitlistPage({ onChanged }: { onChanged: () => void }) {
         {items.map((entry) => (
           <div key={entry.id} className="admin-row admin-row-waitlist">
             <div className="admin-cell-user">
-              <img className="admin-avatar" src={entry.avatarUrl} alt="" loading="lazy" />
+              {entry.avatarUrl ? <img className="admin-avatar" src={entry.avatarUrl} alt="" loading="lazy" /> : <span className="admin-avatar" />}
               <div className="admin-cell-user-text">
                 <div className="admin-cell-user-name">{entry.displayName}</div>
                 <div className="admin-cell-user-email">{entry.email}</div>

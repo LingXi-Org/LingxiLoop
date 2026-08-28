@@ -1,7 +1,6 @@
 import { startMemorySynthesisScheduler } from './agent-os/memory-service.js'
 import { startLearningRoutineScheduler } from './agent-os/routine-scheduler.js'
 import { startAgentWorkWatchdog } from './agent-os/work-watchdog.js'
-import { startLlmRollupRefresher } from './agents/llm-rollup.js'
 import { startStaleAgentRunSweeper } from './agents/observability.js'
 import { seedAdmins } from './admin.js'
 import { startCalendarScheduler } from './calendar.js'
@@ -37,7 +36,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },
   { name: 'calendar-dispatch', concurrency: 'idempotent', start: () => startCalendarScheduler() },
   { name: 'poll-expiration', concurrency: 'database-lock', start: () => startPollExpirationSweeper(env.POLL_SWEEP_INTERVAL_MS) },
-  { name: 'llm-rollup', concurrency: 'database-lock', start: () => startLlmRollupRefresher() },
   ...(process.env.ENABLE_AGENT_RUN_SWEEPER === 'false' ? [] : [
     { name: 'stale-agent-runs', concurrency: 'idempotent' as const, start: () => startStaleAgentRunSweeper() },
   ]),

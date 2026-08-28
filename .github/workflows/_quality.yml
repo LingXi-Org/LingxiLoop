@@ -119,6 +119,8 @@ jobs:
           python -m pytest -q tests/test_lingxiloop_native_scope.py
       - name: Verify brand contract
         run: npm run guard:brand
+      - name: Verify architecture boundaries
+        run: npm run guard:architecture
       - name: Verify Agent OS architecture
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.agent_os == 'true' || needs.classify.outputs.eval == 'true'
         run: npm run guard:agent-os
@@ -190,7 +192,7 @@ jobs:
       INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       REDIS_URL: redis://127.0.0.1:6379
-      DEEPSEEK_API_KEY: integration-test-key
+      OPENAI_API_KEY: integration-test-key
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

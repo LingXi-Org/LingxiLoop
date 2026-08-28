@@ -8,7 +8,6 @@ import type { ApiCourseInvitationAccept, ApiCourseInvitationPreview, ApiInvitati
  * page. Renders when the URL carries an invite token via either:
  *   • path:   /invite/<token>           (web)
  *   • hash:   #invite=<token>           (electron deep link)
- *   • query:  ?invite=<token>           (legacy fallback)
  *
  * Flow:
  *   1. On mount, parse the token from the URL and call previewInvitation —
@@ -42,7 +41,7 @@ import { WindowDragStrip } from './WindowDragStrip'
 
 const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
 
-/** Look at the URL (path / hash / query) for an invite token. Returns
+/** Look at the URL path or app deep-link hash for an invite token. Returns
  *  the token + a no-op cleanup that scrubs it from the URL so a refresh
  *  doesn't trip the same handler again. The token is stashed in
  *  localStorage before scrubbing so the OAuth round-trip can pick it
@@ -76,16 +75,6 @@ export function consumeInviteFromUrl(): { token: string; clear: () => void } | n
       hashParams.delete('invite')
       const remaining = hashParams.toString()
       const nextUrl = `${url.origin}${url.pathname}${url.search}${remaining ? '#' + remaining : ''}`
-      try { history.replaceState(null, '', nextUrl) } catch { /* swallow */ }
-    }
-    return { token, clear }
-  }
-  const fromQuery = url.searchParams.get('invite')
-  if (fromQuery) {
-    const token = decodeURIComponent(fromQuery)
-    const clear = () => {
-      url.searchParams.delete('invite')
-      const nextUrl = `${url.origin}${url.pathname}${url.searchParams.toString() ? '?' + url.searchParams.toString() : ''}${url.hash}`
       try { history.replaceState(null, '', nextUrl) } catch { /* swallow */ }
     }
     return { token, clear }
@@ -124,7 +113,6 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const setMe = useAuth((s) => s.setMe)
   const setServerCapabilities = useAuth((s) => s.setServerCapabilities)
   const setActive = useAuth((s) => s.setActiveCompany)
-  const companies = useAuth((s) => s.companies)
   const user = useAuth((s) => s.user)
 
   const [preview, setPreview] = useState<ApiInvitationPreview | ApiCourseInvitationPreview | null>(null)
@@ -153,28 +141,9 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     setBusy(true); setAcceptErr(null)
     try {
       const r = courseInvite ? await learningApi.acceptCourseInvitation(rawToken) : await companiesApi.acceptInvitation(rawToken)
-      // Refresh /auth/me so the companies list (used by the switcher) gets
-      // the freshly-joined workspace without a manual reload.
-      try {
-        const me = await platformApi.authMe()
-        setMe(me.user, me.companies, r.company.id)
-        setServerCapabilities(me.serverCapabilities)
-      } catch {
-        // Fallback — surgically append + switch with what we already have.
-        const existing = companies.find((c) => c.id === r.company.id)
-        if (!existing) {
-          // Minimal augmentation — re-fetching authMe is the normal path,
-          // but if THAT fails we still want the user to land in the new
-          // company. Mutate via setActiveCompany after a manual reload of
-          // companies via listCompanies as a last resort.
-          const list = await companiesApi.listCompanies().catch(() => null)
-          if (list && user) setMe(user, list.map((c) => ({
-            id: c.id, name: c.name, slug: c.slug, role: c.role,
-          })), r.company.id)
-        } else {
-          setActive(r.company.id)
-        }
-      }
+      const me = await platformApi.authMe()
+      setMe(me.user, me.companies, r.company.id)
+      setServerCapabilities(me.serverCapabilities)
       clearPendingInvite()
       if (courseInvite && 'course' in r) {
         const accepted = r as ApiCourseInvitationAccept
@@ -189,7 +158,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     } finally {
       setBusy(false)
     }
-  }, [courseInvite, rawToken, setMe, setServerCapabilities, setActive, companies, user, onDone])
+  }, [courseInvite, rawToken, setMe, setServerCapabilities, onDone])
 
   // Auto-accept the moment we have a session AND the preview is `valid`.
   // Saves a redundant click when the user just signed in to redeem the

@@ -576,3 +576,4 @@ function EmptyEval({ onCreate }: { onCreate: () => void }) {
 function EvalSkeleton({ compact = false }: { compact?: boolean }) {
   return <div className={`eval-skeleton${compact ? ' is-compact' : ''}`}><span /><span /><span /><span /></div>
 }
+import './eval.css'

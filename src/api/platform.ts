@@ -1,10 +1,9 @@
 
 import { API, http } from '@/api/core/http'
-import type { ApiQuotaResponse, ApiSearchResults, MeResponse, } from './contracts'
+import type { ApiSearchResults, MeResponse, } from './contracts'
 
 export const platformApi = {
   health: () => http<{ ok: boolean; ts: number }>('/health'),
-  me: () => http<{ id: string; name: string; kind: string }>('/me'),
   authStartUrl: (provider: 'lingxi', opts?: { inviteToken?: string | null; inviteKind?: 'company' | 'course' | null; returnUrl?: string | null }) => {
     const params = new URLSearchParams()
     if (opts?.returnUrl) params.set('return', opts.returnUrl)
@@ -19,8 +18,6 @@ export const platformApi = {
     http<{ ok: boolean }>('/me/account', { method: 'DELETE' }),
   authMe: () =>
     http<MeResponse>('/auth/me'),
-  getQuota: () =>
-    http<ApiQuotaResponse>('/me/quota'),
   search: (q: string, signal?: AbortSignal) =>
     http<ApiSearchResults>(`/search?q=${encodeURIComponent(q)}`, { signal })
 }

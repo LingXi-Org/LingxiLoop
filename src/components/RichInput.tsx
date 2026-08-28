@@ -196,10 +196,7 @@ function serializeNode(root: Node): string {
     if (node.nodeType !== Node.ELEMENT_NODE) return
     const el = node as HTMLElement
     if (el.tagName === 'BR') { out += '\n'; return }
-    // Skype emoji chips — serialize back to their canonical shortcode.
-    // Accept either <span> (current) or <img> (legacy drafts that
-    // pre-date the sprite migration). The marker is the
-    // `data-skype-emoji` attribute, not the tag name.
+    // Skype emoji chips serialize back to their canonical shortcode.
     const skypeKey = el.dataset.skypeEmoji
     if (skypeKey) {
       const meta = findSkypeByKey(skypeKey)

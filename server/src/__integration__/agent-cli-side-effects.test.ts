@@ -51,10 +51,11 @@ test('[integration] tasks add/set emit typed CLI side effects', async () => {
 })
 
 test('[integration] calendar create/cancel/delete emit typed CLI side effects', async () => {
-  const { companyId, agentId } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
+  const runProjectCli = (args: string[]) => runCli(args, { projectId })
   const startAt = '2026-06-01T10:00:00.000Z'
 
-  const create = await runCli([
+  const create = await runProjectCli([
     '--as', agentId,
     'calendar', 'create', 'Review harness',
     '--at', startAt,
@@ -86,7 +87,7 @@ test('[integration] calendar create/cancel/delete emit typed CLI side effects', 
   }])
 
   const updatedAt = '2026-06-01T11:30:00.000Z'
-  const update = await runCli([
+  const update = await runProjectCli([
     '--as', agentId,
     'calendar', 'update', calendarEventId,
     '--title', 'Review harness deeply',
@@ -109,7 +110,7 @@ test('[integration] calendar create/cancel/delete emit typed CLI side effects', 
     visibleToUser: true,
   }])
 
-  const cancel = await runCli(['--as', agentId, 'calendar', 'cancel', calendarEventId])
+  const cancel = await runProjectCli(['--as', agentId, 'calendar', 'cancel', calendarEventId])
   assert.equal(cancel.ok, true, `calendar cancel failed: ${cancel.text}`)
   assert.deepEqual(cancel.sideEffects, [{
     event: 'calendar.event_cancelled',
@@ -120,7 +121,7 @@ test('[integration] calendar create/cancel/delete emit typed CLI side effects', 
     visibleToUser: true,
   }])
 
-  const del = await runCli(['--as', agentId, 'calendar', 'delete', calendarEventId])
+  const del = await runProjectCli(['--as', agentId, 'calendar', 'delete', calendarEventId])
   assert.equal(del.ok, true, `calendar delete failed: ${del.text}`)
   assert.deepEqual(del.sideEffects, [{
     event: 'calendar.event_deleted',
@@ -133,14 +134,15 @@ test('[integration] calendar create/cancel/delete emit typed CLI side effects', 
 })
 
 test('[integration] doc delete emits typed CLI side effect and removes the document', async () => {
-  const { companyId, agentId } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
+  const runProjectCli = (args: string[]) => runCli(args, { projectId })
 
-  const create = await runCli(['--as', agentId, 'doc', 'create', 'Harness Notes'])
+  const create = await runProjectCli(['--as', agentId, 'doc', 'create', 'Harness Notes'])
   assert.equal(create.ok, true, `doc create failed: ${create.text}`)
   const documentId = String(create.sideEffects?.[0]?.documentId ?? '')
   assert.match(documentId, /^doc_/)
 
-  const del = await runCli(['--as', agentId, 'doc', 'delete', documentId])
+  const del = await runProjectCli(['--as', agentId, 'doc', 'delete', documentId])
   assert.equal(del.ok, true, `doc delete failed: ${del.text}`)
   assert.deepEqual(del.sideEffects, [{
     event: 'document.deleted',
@@ -156,14 +158,15 @@ test('[integration] doc delete emits typed CLI side effect and removes the docum
 })
 
 test('[integration] kanban board/column/comment parity emits typed CLI side effects', async () => {
-  const { companyId, agentId } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
+  const runProjectCli = (args: string[]) => runCli(args, { projectId })
 
-  const create = await runCli(['--as', agentId, 'kanban', 'create', 'Ops Board', '--description', 'Initial'])
+  const create = await runProjectCli(['--as', agentId, 'kanban', 'create', 'Ops Board', '--description', 'Initial'])
   assert.equal(create.ok, true, `kanban create failed: ${create.text}`)
   const boardId = String(create.sideEffects?.[0]?.boardId ?? '')
   assert.match(boardId, /^board-/)
 
-  const rename = await runCli([
+  const rename = await runProjectCli([
     '--as', agentId,
     'kanban', 'rename', boardId,
     '--title', 'Ops Board v2',
@@ -181,12 +184,12 @@ test('[integration] kanban board/column/comment parity emits typed CLI side effe
     visibleToUser: true,
   }])
 
-  const addColumn = await runCli(['--as', agentId, 'kanban', 'add-column', boardId, 'Review'])
+  const addColumn = await runProjectCli(['--as', agentId, 'kanban', 'add-column', boardId, 'Review'])
   assert.equal(addColumn.ok, true, `kanban add-column failed: ${addColumn.text}`)
   const columnId = String(addColumn.sideEffects?.[0]?.columnId ?? '')
   assert.match(columnId, /^col-/)
 
-  const editColumn = await runCli([
+  const editColumn = await runProjectCli([
     '--as', agentId,
     'kanban', 'edit-column', boardId, columnId,
     '--title', 'QA',
@@ -205,17 +208,17 @@ test('[integration] kanban board/column/comment parity emits typed CLI side effe
     visibleToUser: true,
   }])
 
-  const addCard = await runCli(['--as', agentId, 'card', 'add', boardId, 'Check harness', '--column', columnId])
+  const addCard = await runProjectCli(['--as', agentId, 'card', 'add', boardId, 'Check harness', '--column', columnId])
   assert.equal(addCard.ok, true, `card add failed: ${addCard.text}`)
   const cardId = String(addCard.sideEffects?.[0]?.cardId ?? '')
   assert.match(cardId, /^card-/)
 
-  const comment = await runCli(['--as', agentId, 'card', 'comment', cardId, 'Looks good'])
+  const comment = await runProjectCli(['--as', agentId, 'card', 'comment', cardId, 'Looks good'])
   assert.equal(comment.ok, true, `card comment failed: ${comment.text}`)
   const commentId = String(comment.sideEffects?.[0]?.commentId ?? '')
   assert.match(commentId, /^cmt-/)
 
-  const deleteComment = await runCli(['--as', agentId, 'card', 'delete-comment', cardId, commentId])
+  const deleteComment = await runProjectCli(['--as', agentId, 'card', 'delete-comment', cardId, commentId])
   assert.equal(deleteComment.ok, true, `card delete-comment failed: ${deleteComment.text}`)
   assert.deepEqual(deleteComment.sideEffects, [{
     event: 'kanban.comment_deleted',
@@ -228,7 +231,7 @@ test('[integration] kanban board/column/comment parity emits typed CLI side effe
     visibleToUser: true,
   }])
 
-  const deleteColumn = await runCli(['--as', agentId, 'kanban', 'delete-column', boardId, columnId])
+  const deleteColumn = await runProjectCli(['--as', agentId, 'kanban', 'delete-column', boardId, columnId])
   assert.equal(deleteColumn.ok, true, `kanban delete-column failed: ${deleteColumn.text}`)
   assert.deepEqual(deleteColumn.sideEffects, [{
     event: 'kanban.column_deleted',

@@ -59,8 +59,8 @@ export class OgError extends Error {
   }
 }
 
-/** Fetch + parse OG metadata for a URL. Returns null when there's nothing
- *  useful to display (no title / og:title fallback path produced anything),
+/** Fetch + parse OG metadata for a URL. Returns null when there is no title
+ *  or image to display,
  *  so callers can skip rendering an empty card. Throws `OgError` for
  *  rejected URLs (bad scheme, SSRF host) so the route handler can map them
  *  to a 4xx instead of leaking 500s. */
@@ -74,7 +74,7 @@ export async function ogPreview(rawUrl: string): Promise<OgResult | null> {
   const cached = await redis.get(cacheKey)
   if (cached !== null) {
     if (cached === 'null') return null
-    try { return JSON.parse(cached) as OgResult } catch { /* corrupt entry, refetch */ }
+    return JSON.parse(cached) as OgResult
   }
 
   // DNS check happens AFTER URL validation but BEFORE fetch — protects
@@ -82,16 +82,7 @@ export async function ogPreview(rawUrl: string): Promise<OgResult | null> {
   // hostname (e.g. someone resolves to 10.0.0.1).
   await assertPublicHost(new URL(url).hostname)
 
-  let result: OgResult | null = null
-  try {
-    result = await fetchAndParse(url)
-  } catch (e) {
-    // Network or parse failure — cache the miss briefly so we don't hammer
-    // the upstream. Real protocol errors (bad host, scheme) already threw
-    // before this point.
-    console.warn(`[og] fetch failed for ${url}:`, e instanceof Error ? e.message : e)
-    result = null
-  }
+  let result: OgResult | null = await fetchAndParse(url)
 
   // Discard cards that have no usable display data (no title and no image)
   // — rendering an empty card is worse than rendering nothing.
@@ -170,7 +161,7 @@ async function fetchAndParse(url: string): Promise<OgResult> {
       headers: {
         // A descriptive UA + Accept header improves the OG hit rate (some
         // sites serve a stripped page to bots that look like cURL).
-        'user-agent': 'Mozilla/5.0 (compatible; LingxiLoopBot/1.0; +https://github.com/LingXi-Org/LingxiLoop)',
+        'user-agent': 'LingxiLoopBot/1.0 (+https://github.com/LingXi-Org/LingxiLoop)',
         'accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5',
         'accept-language': 'en-US,en;q=0.9',
       },
@@ -243,12 +234,9 @@ function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-/** Resolve a relative URL (og:image often is) against the final response
- *  URL so the renderer doesn't have to. Returns the original on parse
- *  failure so we still try to render — better a broken `<img>` than a
- *  missing card. */
+/** Resolve a relative URL (og:image often is) against the final response URL. */
 function resolveUrl(href: string, base: string): string {
-  try { return new URL(href, base).toString() } catch { return href }
+  return new URL(href, base).toString()
 }
 
 /** Minimal HTML entity decode for the common meta-tag escapes. Pages tend

@@ -31,7 +31,6 @@ export interface SkillFrontmatter {
   name: string
   description: string
   license?: string
-  compatibility?: string
   metadata?: Record<string, string>
   'allowed-tools'?: string
 }
@@ -82,7 +81,7 @@ export function parseSkillMd(content: string): { frontmatter: SkillFrontmatter |
     if (!m) continue
     const [, key, raw] = m
     if (key === 'name' || key === 'description' || key === 'license'
-        || key === 'compatibility' || key === 'allowed-tools') {
+        || key === 'allowed-tools') {
       ;(parsed as Record<string, unknown>)[key] = scalar(raw)
     }
   }
@@ -108,9 +107,6 @@ export interface SkillHubSearchHit {
   description: string
   version?: string
   author?: string
-  /** Full URL to fetch the install manifest. Optional — if absent we
-   *  fall back to `<hub>/skills/<name>`. */
-  install_url?: string
 }
 
 /** Self-contained install manifest — the entire skill folder serialized
@@ -141,16 +137,11 @@ export async function searchSkillHub(query: string, hubUrl: string): Promise<Ski
   return json as SkillHubSearchHit[]
 }
 
-/** Resolve a skill id (or full install URL) to a manifest. When called
- *  with a bare id we look it up on the configured hub; with an http(s)
- *  URL we fetch directly (lets agents install from non-hub sources). */
-export async function fetchSkillManifest(idOrUrl: string, hubUrl: string): Promise<SkillManifest> {
-  const url = /^https?:\/\//.test(idOrUrl)
-    ? idOrUrl
-    : (() => {
-        if (!hubUrl) throw new Error('SkillHub URL not configured — set SKILLHUB_URL or pass a full install URL')
-        return `${hubUrl.replace(/\/+$/, '')}/skills/${encodeURIComponent(idOrUrl)}`
-      })()
+/** Resolve a canonical SkillHub id to its manifest. */
+export async function fetchSkillManifest(skillId: string, hubUrl: string): Promise<SkillManifest> {
+  if (!/^[a-z0-9][a-z0-9._-]{0,127}$/i.test(skillId)) throw new Error('invalid SkillHub id')
+  if (!hubUrl) throw new Error('SkillHub URL not configured — set SKILLHUB_URL')
+  const url = `${hubUrl.replace(/\/+$/, '')}/skills/${encodeURIComponent(skillId)}`
   const r = await fetch(url, { signal: AbortSignal.timeout(HUB_TIMEOUT_MS) })
   if (!r.ok) throw new Error(`hub install failed: HTTP ${r.status}`)
   const json = await r.json() as Partial<SkillManifest>

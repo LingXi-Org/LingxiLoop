@@ -20,12 +20,11 @@ import { CloudLogo } from '@/components/Avatar'
 import { useAuth } from '@/stores/auth'
 import { type AdminStats, adminApi } from './api'
 import { EvalPage } from './EvalPage'
-import { ObservabilityPage } from './ObservabilityPage'
 import { SettingsPage } from './SettingsPage'
 import { UsersPage } from './UsersPage'
 import { WaitlistPage } from './WaitlistPage'
 
-type Route = 'users' | 'waitlist' | 'settings' | 'observability' | 'eval'
+type Route = 'users' | 'waitlist' | 'settings' | 'eval'
 
 /** Empty string on the admin origin, `/admin` on localhost dev. Kept as
  *  a function (not a constant) so tests / SSR don't crash on a missing
@@ -43,7 +42,6 @@ function parseRoute(): Route {
   rest = rest.replace(/^\/+/, '').replace(/\/+$/, '')
   if (rest.startsWith('waitlist')) return 'waitlist'
   if (rest.startsWith('settings')) return 'settings'
-  if (rest.startsWith('observability')) return 'observability'
   if (rest.startsWith('eval')) return 'eval'
   return 'users'
 }
@@ -129,7 +127,6 @@ export function AdminApp() {
         <nav className="admin-nav">
           <NavLink current={route} target="users"         label="用户"         badge={stats?.users.total} />
           <NavLink current={route} target="waitlist"      label="候补名单"      badge={stats?.waitlist.pending || undefined} highlight={!!stats?.waitlist.pending} />
-          <NavLink current={route} target="observability" label="可观察性" />
           <NavLink current={route} target="eval"          label="Agent Eval" />
           <NavLink current={route} target="settings"      label="设置" />
         </nav>
@@ -143,7 +140,6 @@ export function AdminApp() {
           // Refresh stats so the sidebar badge clears immediately.
           void adminApi.stats().then(setStats).catch(() => {})
         }} />}
-        {route === 'observability' && <ObservabilityPage />}
         {route === 'eval'          && <EvalPage />}
         {route === 'settings'      && <SettingsPage />}
       </main>

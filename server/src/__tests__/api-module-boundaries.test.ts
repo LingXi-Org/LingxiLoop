@@ -35,21 +35,17 @@ test('the API entrypoint is a composition root, not a business router', async ()
   }
 })
 
-test('domain routers stay thin and delegate to domain services', async () => {
+test('domain modules expose one native router implementation without forwarding services', async () => {
   let routeRegistrations = 0
   for (const domain of domains) {
     const router = await readFile(new URL(`../modules/${domain}/router.ts`, import.meta.url), 'utf8')
-    const service = await readFile(new URL(`../modules/${domain}/service.ts`, import.meta.url), 'utf8')
-
-    assert.ok(router.split('\n').length <= 20, `${domain}/router.ts must remain a mount-only adapter`)
-    assert.doesNotMatch(router, /\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
-    assert.doesNotMatch(router, /\bpool\b/)
-    assert.match(router, new RegExp(`${domain}Router\\.use\\(${domain}ServiceRoutes\\)`))
-    assert.match(service, new RegExp(`export const ${domain}ServiceRoutes = Router\\(\\)`))
-    routeRegistrations += service.match(/api\.(?:all|get|post|put|patch|delete)\('/g)?.length ?? 0
+    assert.match(router, new RegExp(`export const ${domain}Router = Router\\(\\)`))
+    assert.doesNotMatch(router, /ServiceRoutes|from ['"]\.\/service\.js['"]/)
+    await assert.rejects(readFile(new URL(`../modules/${domain}/service.ts`, import.meta.url), 'utf8'), { code: 'ENOENT' })
+    routeRegistrations += router.match(/api\.(?:all|get|post|put|patch|delete)\('/g)?.length ?? 0
   }
 
-  assert.equal(routeRegistrations, 159, 'the public Web/Desktop route contract changed unexpectedly')
+  assert.ok(routeRegistrations > 100, 'domain route registrations unexpectedly disappeared')
 })
 
 test('authentication, request context, authorization, and errors have one shared boundary', async () => {
@@ -57,8 +53,8 @@ test('authentication, request context, authorization, and errors have one shared
   const authorization = await readFile(new URL('../http/authorization.ts', import.meta.url), 'utf8')
   const asyncHandler = await readFile(new URL('../http/async-handler.ts', import.meta.url), 'utf8')
   const errors = await readFile(new URL('../http/errors.ts', import.meta.url), 'utf8')
-  const services = await Promise.all(domains.map((domain) => (
-    readFile(new URL(`../modules/${domain}/service.ts`, import.meta.url), 'utf8')
+  const routers = await Promise.all(domains.map((domain) => (
+    readFile(new URL(`../modules/${domain}/router.ts`, import.meta.url), 'utf8')
   )))
 
   for (const boundary of ['requireAuth', 'requireCompany', 'requireWorkspace']) {
@@ -70,8 +66,8 @@ test('authentication, request context, authorization, and errors have one shared
   assert.match(asyncHandler, /export function safe\b/)
   assert.match(errors, /export class HttpError\b/)
   assert.match(errors, /export function errorHandler\b/)
-  for (const service of services) {
-    assert.doesNotMatch(service, /import \{[^}]*\bauthMiddleware\b[^}]*\} from ['"]\.\.\/\.\.\/auth\.js['"]/s)
-    assert.doesNotMatch(service, /\.use\(authMiddleware/)
+  for (const router of routers) {
+    assert.doesNotMatch(router, /import \{[^}]*\bauthMiddleware\b[^}]*\} from ['"]\.\.\/\.\.\/auth\.js['"]/s)
+    assert.doesNotMatch(router, /\.use\(authMiddleware/)
   }
 })

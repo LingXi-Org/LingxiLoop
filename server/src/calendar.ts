@@ -183,35 +183,18 @@ function renderDispatchBody(event: CalendarEventRow, scheduledFor: Date): string
   })
 }
 
-/** Resolve a conversation where the dispatch should land. Falls back to a
- *  direct DM between the creator and the assignee when no explicit target
- *  was set on the event. Returns null when we can't safely post (assignee
- *  missing, target conversation deleted, etc.). */
-async function resolveTargetConversation(event: CalendarEventRow): Promise<string | null> {
-  if (event.target_conversation_id) {
-    const { rows } = await pool.query<{ members: string[] }>(
+/** Resolve the explicit native dispatch conversation. */
+async function resolveTargetConversation(event: CalendarEventRow): Promise<string> {
+  if (!event.target_conversation_id) throw new Error('targetConversationId is required')
+  const { rows } = await pool.query<{ members: string[] }>(
       `SELECT members FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
       [event.target_conversation_id, event.company_id],
     )
-    if (!rows[0]) return null
-    // Best-effort: skip dispatch if the assignee isn't a member of the
-    // target conversation. Avoids the @mention dangling in a room the
-    // agent can't see.
-    if (event.assignee_id && !rows[0].members.includes(event.assignee_id)) return null
-    return event.target_conversation_id
+  if (!rows[0]) throw new Error('target conversation not found')
+  if (!event.assignee_id || !rows[0].members.includes(event.assignee_id)) {
+    throw new Error('assignee is not a target conversation member')
   }
-  if (!event.assignee_id) return null
-  // Fallback: look for an existing direct conversation between the
-  // creator and the assignee. We don't auto-create one — if it doesn't
-  // exist the dispatch records 'skipped'.
-  const { rows } = await pool.query<{ id: string }>(
-    `SELECT id FROM conversations
-      WHERE company_id = $1 AND kind = 'direct'
-        AND members @> $2::jsonb AND members @> $3::jsonb
-      LIMIT 1`,
-    [event.company_id, JSON.stringify([event.created_by]), JSON.stringify([event.assignee_id])],
-  )
-  return rows[0]?.id ?? null
+  return event.target_conversation_id
 }
 
 async function postDispatchMessage(args: {
@@ -296,13 +279,6 @@ export async function dispatchEvent(event: CalendarEventRow, scheduledFor: Date)
   let conversationId: string | null = null
   try {
     conversationId = await resolveTargetConversation(event)
-    if (!conversationId) {
-      await pool.query(
-        `UPDATE calendar_dispatches SET status = 'skipped', error = $2 WHERE id = $1`,
-        [dispatchId, 'no target conversation'],
-      )
-      return { status: 'skipped', error: 'no target conversation' }
-    }
     const body = renderDispatchBody(event, scheduledFor)
     const messageId = await postDispatchMessage({ event, conversationId, body })
     await pool.query(

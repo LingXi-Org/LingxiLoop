@@ -42,12 +42,12 @@ test('Toast remains shaped like the official base-nova manager and stack', () =>
   assert.match(source, /<ToastProvider toastManager=\{toastManager\}/)
 })
 
-test('all production sensitive operations route through the global Alert Dialog', () => {
-  const nativeConfirmUsers = sourceFiles(srcRoot).filter((path) => {
+test('production code never uses native alert, confirm, or prompt', () => {
+  const nativeDialogUsers = sourceFiles(srcRoot).filter((path) => {
     const source = readFileSync(path, 'utf8')
-    return /\b(?:window\.)?confirm\s*\(/.test(source)
+    return /\b(?:window\.)?(?:alert|confirm|prompt)\s*\(/.test(source)
   })
-  assert.deepEqual(nativeConfirmUsers, [], `native confirm found in: ${nativeConfirmUsers.join(', ')}`)
+  assert.deepEqual(nativeDialogUsers, [], `native browser dialog found in: ${nativeDialogUsers.join(', ')}`)
 
   for (const path of [
     '../admin/UsersPage.tsx',

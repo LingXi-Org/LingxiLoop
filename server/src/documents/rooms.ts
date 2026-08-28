@@ -50,6 +50,10 @@ interface Room {
   updatesSinceSnapshot: number
   /** Set during cold-load to coalesce concurrent waiters. */
   loaded: Promise<void>
+  /** Serializes persistence, Redis publication, and compaction. Mutating
+   *  APIs await this promise so an infrastructure failure rejects the
+   *  originating request instead of being hidden. */
+  pendingEffects: Promise<void>
   /** Marked true after the doc is hydrated from DB; flips OFF doc.on('update')
    *  persistence to skip writing replays back into the log. */
   hydrated: boolean
@@ -104,7 +108,7 @@ async function persistUpdate(documentId: string, authorId: string, bytes: Uint8A
   await pool.query(
     `UPDATE documents SET updated_at = NOW() WHERE id = $1`,
     [documentId],
-  ).catch(() => { /* swallow — list ordering is best-effort */ })
+  )
 }
 
 async function maybeCompact(room: Room): Promise<void> {
@@ -166,6 +170,7 @@ async function getOrCreateRoom(documentId: string, companyId: string): Promise<R
     updatesSinceSnapshot: 0,
     hydrated: false,
     loaded: Promise.resolve(),
+    pendingEffects: Promise.resolve(),
   }
   rooms.set(roomKey(documentId), room)
 
@@ -191,29 +196,30 @@ async function getOrCreateRoom(documentId: string, companyId: string): Promise<R
       // Local subscribers get the binary update directly.
       for (const s of room.subs) {
         if (s.originId === originId) continue
-        try { s.onUpdate(update, originId) } catch (e) { console.warn('[docs] sub error', e) }
+        s.onUpdate(update, originId)
       }
 
       // Persist + fan-out unless this update arrived FROM another instance
       // (it's already persisted there + already on the bus).
       if (!isRemote) {
         room.updatesSinceSnapshot += 1
-        void persistUpdate(documentId, authorId, update).catch((e) => {
-          console.warn('[docs] persistUpdate failed', e)
+        room.pendingEffects = room.pendingEffects.then(async () => {
+          await persistUpdate(documentId, authorId, update)
+          await publish(CH_DOC_UPDATE, {
+            type: 'doc.update',
+            companyId: room.companyId,
+            documentId,
+            updateB64: Buffer.from(update).toString('base64'),
+            originId,
+            authorId,
+          })
+          await maybeCompact(room)
         })
-        void publish(CH_DOC_UPDATE, {
-          type: 'doc.update',
-          companyId: room.companyId,
-          documentId,
-          updateB64: Buffer.from(update).toString('base64'),
-          originId,
-          authorId,
-        }).catch(() => { /* swallow */ })
-        void maybeCompact(room).catch((e) => console.warn('[docs] compact failed', e))
       }
     })
     normalizeMarkdownImageParagraphs(doc, pmFragment(doc), { originId: 'system:doc-image-normalize', authorId: 'system' })
     await refreshDocumentImageUrls(doc, pmFragment(doc), { originId: 'system:doc-image-refresh', authorId: 'system' })
+    await room.pendingEffects
   })()
 
   await room.loaded
@@ -265,6 +271,7 @@ export async function applyLocalUpdate(
   // event correctly. Plain object so the `remote` discriminator is absent
   // (i.e. it's a LOCAL update — must persist + fan-out).
   Y.applyUpdate(room.doc, update, { originId, authorId } as never)
+  await room.pendingEffects
 }
 
 /** Apply a Yjs update that came FROM another server instance via Redis.
@@ -286,7 +293,7 @@ export async function broadcastAwareness(
   if (room) {
     for (const s of room.subs) {
       if (s.originId === originId) continue
-      try { s.onAwareness(update, originId) } catch { /* ignore */ }
+      s.onAwareness(update, originId)
     }
   }
   await publish(CH_DOC_AWARENESS, {
@@ -295,7 +302,7 @@ export async function broadcastAwareness(
     documentId,
     updateB64: Buffer.from(update).toString('base64'),
     originId,
-  }).catch(() => { /* swallow */ })
+  })
 }
 
 /* ============== ProseMirror-aware helpers ==============
@@ -405,8 +412,7 @@ function normalizeMarkdownImageParagraphs(
 }
 
 function imageStorageKey(el: Y.XmlElement): string | null {
-  return normalizeStorageKey(xmlAttrString(el, 'storageKey')) ??
-    storageKeyFromPublicUrl(xmlAttrString(el, 'src'))
+  return normalizeStorageKey(xmlAttrString(el, 'storageKey'))
 }
 
 function shouldRefreshDocumentImageUrl(src: string, key: string): boolean {
@@ -414,8 +420,7 @@ function shouldRefreshDocumentImageUrl(src: string, key: string): boolean {
   const srcKey = storageKeyFromPublicUrl(src)
   if (!srcKey) return true
   if (srcKey !== key) return true
-  if (src.startsWith('/uploads/')) return storage.mode === 'r2'
-  if (!src.includes('exp=') && !src.includes('sig=')) return storage.mode === 'r2' && key.startsWith('attachments/')
+  if (!src.includes('exp=') && !src.includes('sig=')) return key.startsWith('attachments/')
   return signedUrlExpiresSoon(src)
 }
 
@@ -478,10 +483,10 @@ function inlineText(parent: Y.XmlFragment | Y.XmlElement): string {
   return buf.join('')
 }
 
-function xmlAttrNumber(el: Y.XmlElement, key: string, fallback: number): number {
+function xmlAttrNumber(el: Y.XmlElement, key: string, defaultValue: number): number {
   const value = el.getAttribute(key)
   const n = typeof value === 'number' ? value : Number(value)
-  return Number.isFinite(n) ? n : fallback
+  return Number.isFinite(n) ? n : defaultValue
 }
 
 function xmlAttrString(el: Y.XmlElement, key: string): string {
@@ -655,7 +660,7 @@ export function isAnchoredImagePlacement(
 
 /** Walk the fragment top-to-bottom, return (index, element) of the first
  *  XmlElement whose flattened text content contains `needle`. Returns
- *  null when no block matches — caller decides whether to fall back. */
+ *  null when no block matches. */
 function findFirstBlockContaining(
   fragment: Y.XmlFragment,
   needle: string,
@@ -726,7 +731,7 @@ export async function applyAgentEdit(
         // `replace` can't do — that op only edits text inside a block, so
         // e.g. a flattened markdown table stuck in a paragraph could never
         // be turned back into a real table without this. Anchor miss is a
-        // no-op (mirrors the image-replace rule: never fall back to append).
+        // no-op (mirrors the image-replace rule: never append on a miss).
         const hit = findFirstBlockContaining(fragment, op.anchorText)
         if (hit) {
           fragment.delete(hit.index, 1)
@@ -748,7 +753,7 @@ export async function applyAgentEdit(
         if (isAnchoredImagePlacement(p)) {
           const hit = findFirstBlockContaining(fragment, p.anchorText)
           if (!hit) {
-            // Anchor not found — DO NOT fall back to end. Falling back
+            // Anchor not found — do not append at the end. Doing so
             // would mean every `--replace` miss silently re-appends a
             // duplicate image, which is how the doc collected the mess
             // it has now. Skip the op and let the CLI return an error
@@ -810,19 +815,19 @@ export async function applyAgentEdit(
     }
     normalizeMarkdownImageParagraphChildren(fragment)
   }, origin)
+  await room.pendingEffects
   return { replaced, imagePlaced, imagesDeleted, blocksReplaced }
 }
 
 /** Cross-instance bus bootstrap. Idempotent — safe to call from web.ts
  *  alongside the regular Redis subscriber. */
 let busBootstrapped = false
-export function bootDocumentBus(): void {
+export async function bootDocumentBus(): Promise<void> {
   if (busBootstrapped) return
   busBootstrapped = true
 
-  void sub.subscribe(CH_DOC_UPDATE, CH_DOC_AWARENESS).then(() => {
-    console.log('[docs] subscribed to doc redis channels')
-  }).catch((e) => console.warn('[docs] redis subscribe failed', e))
+  await sub.subscribe(CH_DOC_UPDATE, CH_DOC_AWARENESS)
+  console.log('[docs] subscribed to doc redis channels')
 
   sub.on('message', (channel, payload) => {
     if (channel !== CH_DOC_UPDATE && channel !== CH_DOC_AWARENESS) return
@@ -841,7 +846,7 @@ export function bootDocumentBus(): void {
       if (!room) return
       for (const s of room.subs) {
         if (s.originId === parsed.originId) continue
-        try { s.onAwareness(update, parsed.originId) } catch { /* ignore */ }
+        s.onAwareness(update, parsed.originId)
       }
     }
   })

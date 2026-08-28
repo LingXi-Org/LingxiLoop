@@ -4,7 +4,7 @@ import test from 'node:test'
 
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const bootstrap = readFileSync(new URL('../db/bootstrap.ts', import.meta.url), 'utf8')
-const serverBoot = readFileSync(new URL('../index.ts', import.meta.url), 'utf8')
+const serverBoot = readFileSync(new URL('../web.ts', import.meta.url), 'utf8')
 const seed = readFileSync(new URL('../seed.ts', import.meta.url), 'utf8')
 const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.url), 'utf8')
 const onboarding = readFileSync(new URL('../onboardCompany.ts', import.meta.url), 'utf8')
@@ -22,8 +22,8 @@ test('v1 schema is a complete bootstrap definition without historical data mutat
     'messages',
     'agent_work_items',
     'knowledge_sources',
-    'courses',
     'llm_calls',
+    'courses',
   ]) {
     assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
   }
@@ -37,6 +37,8 @@ test('v1 schema excludes migration markers and retired host structures', () => {
   assert.doesNotMatch(schema, /CREATE TABLE public\.agent_memory\b/)
   assert.doesNotMatch(schema, /CREATE TABLE public\.(?:computers|computer_events|lingxigraph_steering_receipts)\b/)
   assert.doesNotMatch(schema, /\b(?:computer_id|fast_model|pair_token)\b/)
+  assert.doesNotMatch(schema, /\b(?:sub2api_user_id|sub2api_api_key|tier)\b/i)
+  assert.match(schema, /CREATE TABLE public\.llm_calls[\s\S]*cost_usd[\s\S]*cost_estimated/)
 })
 
 test('v1 defaults preserve current capability and Canvas contracts', () => {

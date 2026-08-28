@@ -3,11 +3,12 @@ import { after, before, beforeEach, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
 import { WebSocket, type RawData } from 'ws'
 import * as Y from 'yjs'
-import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
+import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
 import { createWsTicket } from '../auth.js'
 import { pool } from '../db/pool.js'
 import { applyLocalUpdate } from '../documents/rooms.js'
 import { attachWebSocket } from '../ws.js'
+import { __setCreateNotebookOverrideForTesting, __setUpdateNotebookOverrideForTesting } from '../knowledge/open-notebook-client.js'
 
 const OWNER = 'u-course-owner'
 const LEARNER = 'u-course-learner'
@@ -29,12 +30,32 @@ async function listen(userId: string, withWebSocket = false): Promise<{ server: 
 }
 
 before(async () => {
+  process.env.OPEN_NOTEBOOK_ENABLED = 'true'
+  __setCreateNotebookOverrideForTesting(async (input) => ({
+    id: `notebook-${input.externalKey.replaceAll(':', '-')}`,
+    name: input.name,
+    description: input.description,
+    archived: false,
+    external_key: input.externalKey,
+  }))
+  __setUpdateNotebookOverrideForTesting(async (id, input) => ({
+    id,
+    name: input.name ?? 'Course notebook',
+    description: input.description ?? '',
+    archived: input.archived ?? false,
+  }))
   await ensureSchemaOnce()
   const owner = await listen(OWNER); ownerServer = owner.server; ownerUrl = owner.url
   const learner = await listen(LEARNER, true); learnerServer = learner.server; learnerUrl = learner.url
 })
-beforeEach(resetAllTables)
-after(async () => { await teardownAll(ownerServer); if (learnerServer.listening) await new Promise<void>((resolve) => learnerServer.close(() => resolve())) })
+beforeEach(async () => { installFakeWukong(); await resetAllTables() })
+after(async () => {
+  __setCreateNotebookOverrideForTesting(null)
+  __setUpdateNotebookOverrideForTesting(null)
+  delete process.env.OPEN_NOTEBOOK_ENABLED
+  await teardownAll(ownerServer)
+  if (learnerServer.listening) await new Promise<void>((resolve) => learnerServer.close(() => resolve()))
+})
 
 async function seedCompany(companyId = 'co-courses'): Promise<void> {
   await pool.query(`INSERT INTO companies (id,name,slug,owner_user_id) VALUES ($1,'Course test',$1,$2)`, [companyId, OWNER])
@@ -44,7 +65,7 @@ async function seedCompany(companyId = 'co-courses'): Promise<void> {
      VALUES ($1,$2,'General','','#64748b',$3,TRUE)`,
     [`general-${companyId}`, companyId, OWNER],
   )
-  await pool.query(`INSERT INTO users (id,email,display_name,tier,email_verified_at) VALUES ($1,$2,'Learner','pro',NOW())`, [LEARNER, 'learner@test.local'])
+  await pool.query(`INSERT INTO users (id,email,display_name,email_verified_at) VALUES ($1,$2,'Learner',NOW())`, [LEARNER, 'learner@test.local'])
 }
 
 async function createCourse(name: string, companyId = 'co-courses') {
@@ -166,9 +187,9 @@ test('[integration] concurrent company removals cannot delete every teacher from
   const course = await createCourse('Teacher invariant')
   const teachers = ['u-company-teacher-a', 'u-company-teacher-b']
   await pool.query(
-    `INSERT INTO users (id,email,display_name,tier,email_verified_at) VALUES
-       ($1,'teacher-a@test.local','Teacher A','pro',NOW()),
-       ($2,'teacher-b@test.local','Teacher B','pro',NOW())`,
+    `INSERT INTO users (id,email,display_name,email_verified_at) VALUES
+       ($1,'teacher-a@test.local','Teacher A',NOW()),
+       ($2,'teacher-b@test.local','Teacher B',NOW())`,
     teachers,
   )
   await pool.query(

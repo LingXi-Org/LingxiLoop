@@ -8,7 +8,6 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, 
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { canvasStatusLabel, isCanvasAssignmentActive } from '@/lib/canvasCollaboration'
-import { isMockImDevelopment } from '@/lib/devMode'
 import { useCanvas } from '@/stores/canvas'
 import { useParticipants } from '@/stores/participants'
 import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType, CanvasSnapshot } from '@/types'
@@ -59,7 +58,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
   const visibleFrames = useMemo(() => snapshot?.frames.filter((frame) => frame.type !== 'artifact') ?? [], [snapshot?.frames])
 
   useEffect(() => {
-    if (!isMockImDevelopment()) void ws.connect()
+    void ws.connect()
     void (async () => {
       await loadWorkspaces()
       const target = canvasId ?? useCanvas.getState().activeCanvasId ?? useCanvas.getState().workspaces[0]?.id

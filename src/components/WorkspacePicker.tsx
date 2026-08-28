@@ -13,7 +13,7 @@ function relativeTime(raw: string | null): string {
   return `${Math.floor(hours / 24)} 天前`
 }
 
-export function WorkspacePicker({ mockMode = false }: { mockMode?: boolean }) {
+export function WorkspacePicker() {
   const list = useWorkspace((state) => state.list)
   const loaded = useWorkspace((state) => state.loaded)
   const loading = useWorkspace((state) => state.loading)
@@ -29,7 +29,7 @@ export function WorkspacePicker({ mockMode = false }: { mockMode?: boolean }) {
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
 
-  useEffect(() => { void load(mockMode) }, [activeCompanyId, load, mockMode])
+  useEffect(() => { void load() }, [activeCompanyId, load])
   const visible = useMemo(() => list.filter((workspace) =>
     (showArchived ? workspace.status === 'archived' : workspace.status === 'active') &&
     `${workspace.name} ${workspace.description}`.toLowerCase().includes(query.trim().toLowerCase()),

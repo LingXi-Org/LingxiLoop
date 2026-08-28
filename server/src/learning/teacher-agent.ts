@@ -64,8 +64,8 @@ function optionalText(args: Record<string, unknown>, ...names: string[]): string
   return undefined
 }
 
-function boolArg(args: Record<string, unknown>, fallback = true): boolean {
-  return typeof args.enabled === 'boolean' ? args.enabled : fallback
+function boolArg(args: Record<string, unknown>, defaultValue = true): boolean {
+  return typeof args.enabled === 'boolean' ? args.enabled : defaultValue
 }
 
 function validTimezone(value: string): boolean {
@@ -276,7 +276,6 @@ export async function syncTeacherRoomMembers(courseId:string,db:Queryable=pool):
   const {rows:bindings}=await db.query<{profile:Record<string,unknown>}>(`UPDATE im_channel_bindings SET profile=profile||jsonb_build_object('members',$2::jsonb),updated_at=NOW() WHERE channel_id=$1 RETURNING profile`,[rows[0].conversation_id,JSON.stringify(members)])
   if(bindings[0]?.profile){
     await wukongClient().upsertChannel(bindings[0].profile as unknown as ImChannelProfile)
-      .catch((error)=>console.warn('[course] Teacher Room sync failed',error))
   }
 }
 

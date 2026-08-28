@@ -7,6 +7,23 @@ const V1_SCHEMA_MARKER = 'LingxiLoop schema v1'
 
 type Queryable = Pick<PoolClient, 'query'>
 
+const REQUIRED_V1_RELATIONS = [
+  'companies', 'participants', 'conversations', 'messages', 'agent_work_items',
+  'agent_os_approvals', 'knowledge_sources', 'courses', 'learning_objectives',
+  'learning_notification_deliveries', 'learning_project_teacher_agents',
+  'learning_course_teacher_rooms', 'canvas_assignment_reports',
+  'canvas_agent_assignments', 'im_read_receipt_advances', 'llm_calls',
+] as const
+
+const REQUIRED_V1_COLUMNS = [
+  ['agent_work_items', 'execution_role'],
+  ['agent_os_approvals', 'scope'],
+  ['canvas_agent_assignments', 'verifies_assignment_id'],
+  ['llm_calls', 'company_id'],
+  ['llm_calls', 'purpose'],
+  ['llm_calls', 'status'],
+] as const
+
 async function userRelationCount(client: PoolClient): Promise<number> {
   const { rows } = await client.query<{ count: string }>(`
     SELECT COUNT(*)::text AS count
@@ -26,33 +43,26 @@ async function schemaMarker(client: Queryable): Promise<string | null> {
 }
 
 async function v1SchemaReady(client: Queryable): Promise<boolean> {
-  const { rows } = await client.query<{ ready: boolean }>(`
-    SELECT to_regclass('public.companies') IS NOT NULL
-       AND to_regclass('public.conversations') IS NOT NULL
-       AND to_regclass('public.agent_work_items') IS NOT NULL
-       AND to_regclass('public.knowledge_sources') IS NOT NULL
-       AND to_regclass('public.courses') IS NOT NULL
-       AND to_regclass('public.learning_objectives') IS NOT NULL
-       AND to_regclass('public.learning_notification_deliveries') IS NOT NULL
-       AND to_regclass('public.learning_project_teacher_agents') IS NOT NULL
-       AND to_regclass('public.learning_course_teacher_rooms') IS NOT NULL
-       AND to_regclass('public.canvas_assignment_reports') IS NOT NULL
-       AND to_regclass('public.im_read_receipt_advances') IS NOT NULL
-       AND to_regclass('public.llm_calls') IS NOT NULL
-       AND EXISTS (
-         SELECT 1 FROM information_schema.columns
-          WHERE table_schema='public' AND table_name='agent_work_items' AND column_name='execution_role'
-       )
-       AND EXISTS (
-         SELECT 1 FROM information_schema.columns
-          WHERE table_schema='public' AND table_name='agent_os_approvals' AND column_name='scope'
-       )
-       AND EXISTS (
-         SELECT 1 FROM information_schema.columns
-          WHERE table_schema='public' AND table_name='canvas_agent_assignments' AND column_name='verifies_assignment_id'
-       ) AS ready
-  `)
-  return rows[0]?.ready === true
+  const { rows: relationRows } = await client.query<{ name: string }>(
+    `SELECT name FROM unnest($1::text[]) AS required(name)
+      WHERE to_regclass('public.' || required.name) IS NULL`,
+    [REQUIRED_V1_RELATIONS],
+  )
+  if (relationRows.length > 0) return false
+  const tables = REQUIRED_V1_COLUMNS.map(([table]) => table)
+  const columns = REQUIRED_V1_COLUMNS.map(([, column]) => column)
+  const { rows: columnRows } = await client.query<{ table_name: string; column_name: string }>(
+    `SELECT required.table_name, required.column_name
+       FROM unnest($1::text[], $2::text[]) AS required(table_name, column_name)
+      WHERE NOT EXISTS (
+        SELECT 1 FROM information_schema.columns actual
+         WHERE actual.table_schema='public'
+           AND actual.table_name=required.table_name
+           AND actual.column_name=required.column_name
+      )`,
+    [tables, columns],
+  )
+  return columnRows.length === 0
 }
 
 /**

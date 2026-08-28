@@ -1,6 +1,6 @@
 import { agentsApi } from '@/api/agents'
 import { conversationsApi } from '@/api/conversations'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
@@ -24,24 +24,11 @@ function AgentCard({ p, onEdit, onDelete }: {
 }) {
   const setView = useApp((s) => s.setView)
   const select = useApp((s) => s.selectConversation)
-  const conversations = useConversations((s) => s.list)
   const displayStatus = p.status
   const displayStatusLabel = STATUS_LABEL[p.status]
-  const direct = useMemo(
-    () => conversations.find((c) => c.kind === 'direct' && c.members.includes(p.id)),
-    [conversations, p.id],
-  )
   const [openingChat, setOpeningChat] = useState(false)
 
   const openChat = async () => {
-    if (direct) {
-      setView('conversations')
-      select(direct.id)
-      return
-    }
-    // No direct convo yet (e.g. older agent created before auto-create
-    // was wired up). Create-or-find on demand via the same idempotent
-    // endpoint the people-list uses.
     setOpeningChat(true)
     try {
       const { id } = await conversationsApi.openDirect(p.id)

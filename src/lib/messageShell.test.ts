@@ -4,10 +4,18 @@ import test from 'node:test'
 import { createLingxiAssistantMessage, type LingxiImMessageCustom } from '@/im/assistantMessage'
 import type { Message, MessageKind, Participant } from '@/types'
 
+async function readImStyles(): Promise<string> {
+  const files = await Promise.all([
+    readFile(new URL('../styles/globals.css', import.meta.url), 'utf8'),
+    readFile(new URL('../styles/chat.css', import.meta.url), 'utf8'),
+  ])
+  return files.join('\n')
+}
+
 test('text, poll, artifact, handoff, and approval receive native IM presentation metadata', () => {
   const participant: Participant = { id: 'agent', kind: 'agent', name: 'Agent', initial: 'A', avatarBg: '#000', status: 'avail' }
   for (const kind of ['text', 'poll', 'tool', 'handoff', 'approval'] as const) {
-    const raw: Message = { id: kind, conversationId: 'room', authorId: participant.id, kind: kind as MessageKind, body: '', at: '10:00' }
+    const raw: Message = { id: kind, conversationId: 'room', authorId: participant.id, kind: kind as MessageKind, body: '', at: '10:00', createdAt: '2026-01-01T10:00:00.000Z' }
     const converted = createLingxiAssistantMessage(raw, 0, [raw], { [participant.id]: participant }, 'me')
     const shell = converted.metadata?.custom as unknown as LingxiImMessageCustom
     assert.equal(shell.presentation.variant, 'standard', `${kind} must stay in LingxiImMessage`)
@@ -17,7 +25,7 @@ test('text, poll, artifact, handoff, and approval receive native IM presentation
     assert.equal(shell.presentation.selection, true)
   }
   const presentationFor = (kind: MessageKind) => {
-    const raw: Message = { id: kind, conversationId: 'room', authorId: participant.id, kind, body: '', at: '10:00' }
+    const raw: Message = { id: kind, conversationId: 'room', authorId: participant.id, kind, body: '', at: '10:00', createdAt: '2026-01-01T10:00:00.000Z' }
     const converted = createLingxiAssistantMessage(raw, 0, [raw], { [participant.id]: participant }, 'me')
     assert.ok(converted.metadata?.custom)
     return (converted.metadata.custom as unknown as LingxiImMessageCustom).presentation
@@ -35,14 +43,16 @@ test('desktop renders the native assistant-ui IM entry', async () => {
 
 test('the desktop Web/Electron surface composes the shared IM core without Telegram runtime code', async () => {
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
+  const composer = await readFile(new URL('../desktop/ChatComposer.tsx', import.meta.url), 'utf8')
   const desktopProfile = await readFile(new URL('../desktop/InfoPane.tsx', import.meta.url), 'utf8')
   const desktopList = await readFile(new URL('../desktop/ConversationsPane.tsx', import.meta.url), 'utf8')
   const desktopShell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const packageJson = await readFile(new URL('../../package.json', import.meta.url), 'utf8')
 
-  for (const component of ['ConversationView', 'MessageList', 'ConversationHeader', 'ComposerSurface']) {
+  for (const component of ['MessageList', 'ConversationHeader']) {
     assert.match(desktop, new RegExp(`<${component}\\b`))
   }
+  assert.match(composer, /<ComposerSurface\b/)
   assert.match(desktopProfile, /<ParticipantProfile\b/)
   assert.match(desktopList, /<ConversationListItemContent\b/)
   assert.match(desktopShell, /<Drawer open=\{drawerOpen\}/)
@@ -65,7 +75,7 @@ test('desktop chat reserves a scrollable middle row so the composer stays at the
 test('desktop IM columns resize without changing the message/composer grid contract', async () => {
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const resizable = await readFile(new URL('../components/ui/resizable.tsx', import.meta.url), 'utf8')
-  const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
+  const css = await readImStyles()
   assert.match(shell, /<ResizablePanelGroup/)
   assert.match(shell, /<ResizableHandle[\s\S]*?withHandle/)
   assert.match(shell, /minSize=\{LEFT_COLUMN_MIN\}/)
@@ -94,7 +104,7 @@ test('self messages align right and render the restored user identity', async ()
 test('desktop keeps one persisted two-panel IM layout and opens pages in the Base UI Drawer', async () => {
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
   const resizable = await readFile(new URL('../components/ui/resizable.tsx', import.meta.url), 'utf8')
-  const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
+  const css = await readImStyles()
   assert.match(shell, /DESKTOP_TWO_PANEL_LAYOUT_KEY/)
   assert.doesNotMatch(shell, /DESKTOP_THREE_PANEL_LAYOUT_KEY/)
   assert.match(shell, /<ResizablePanelGroup/)
@@ -125,12 +135,11 @@ test('desktop conversation column ends with the sidebar-07 account menu instead 
   assert.match(list, /<NavUser user=\{\{ name: authUser\.name, email: authUser\.email, avatar: authParticipant\?\.avatarUrl \}\}/)
   assert.doesNotMatch(list.slice(list.indexOf('{authUser &&')), /setView\('me'\)/)
   assert.match(user, /<DropdownMenuContent[\s\S]*?side="right"/)
-  assert.match(user, /Upgrade to Pro[\s\S]*?Account[\s\S]*?Billing[\s\S]*?Notifications[\s\S]*?Log out/)
+  assert.match(user, /Account[\s\S]*?Notifications[\s\S]*?Log out/)
   assert.match(user, /aria-label="打开账户菜单"/)
   assert.match(user, /platformApi\.authLogout/)
-  assert.match(user, /openSettings\('Usage'\)[^\n]*Upgrade to Pro/)
   assert.match(user, /openSettings\('Profile'\)[^\n]*Account/)
-  assert.match(user, /openSettings\('Usage'\)[^\n]*Billing/)
+  assert.doesNotMatch(user, /Billing|Upgrade to Pro|openSettings\('Usage'\)/)
   assert.match(user, /openSettings\('Preferences'\)[^\n]*Notifications/)
   assert.match(conversationList, /isDirectAgent[\s\S]*?isMobile \|\| !isDirectAgent \? 48 : 54/)
   assert.doesNotMatch(user, /size=\{54\}|size-13\.5/)
@@ -153,7 +162,7 @@ test('desktop group context is a flat top-bottom surface instead of bordered das
   const context = await readFile(new URL('../components/GroupContextContent.tsx', import.meta.url), 'utf8')
   const sources = await readFile(new URL('../components/WorkspaceChrome.tsx', import.meta.url), 'utf8')
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
-  const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
+  const css = await readImStyles()
 
   assert.match(context, /data-context-layout="flat-stacked"/)
   assert.match(context, /grid-rows-\[minmax\(0,38fr\)_minmax\(0,62fr\)\]/)
@@ -185,7 +194,7 @@ test('Coworker cards use semantic light/dark tokens and expose the shared shell 
   const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
   const parts = await readFile(new URL('../components/messages/LingxiMessageParts.tsx', import.meta.url), 'utf8')
   const activity = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
+  const css = await readImStyles()
 
   for (const token of ['--panel', '--raised', '--raised-hover', '--hairline', '--ink', '--ink-secondary', '--accent', '--accent-ink']) {
     assert.match(css, new RegExp(`${token}:`))
@@ -201,7 +210,7 @@ test('Coworker cards use semantic light/dark tokens and expose the shared shell 
 })
 
 test('Canvas bubble and full view share the Card surface and preview theme', async () => {
-  const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
+  const css = await readImStyles()
   const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
   const business = await readFile(new URL('../components/messages/MessageBusinessParts.tsx', import.meta.url), 'utf8')
   const attachment = await readFile(new URL('../components/messages/MessageAttachmentCard.tsx', import.meta.url), 'utf8')
@@ -267,8 +276,7 @@ test('approval is a native Tool UI decision inside the shared attachment host', 
 test('agent typing state reserves a real bottom row and caps the merged label at two names', async () => {
   const indicator = await readFile(new URL('../components/messages/AgentTypingIndicator.tsx', import.meta.url), 'utf8')
   const desktop = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
-  const fixtures = await readFile(new URL('../dev/mockLearningImFixtures.ts', import.meta.url), 'utf8')
-  const css = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8')
+  const css = await readImStyles()
 
   assert.match(indicator, /const MAX_VISIBLE_AGENTS = 2/)
   assert.doesNotMatch(indicator, /<Avatar\b|<MessageAvatar\b/)
@@ -281,7 +289,6 @@ test('agent typing state reserves a real bottom row and caps the merged label at
   assert.match(desktop, /grid-rows-\[auto_auto_minmax\(0,1fr\)_auto_auto\]/)
   assert.match(desktop, /<\/div>\s*<AgentTypingIndicator agents=\{typingAgents\}/)
   assert.match(desktop, /message\.streaming !== 'placeholder'/)
-  assert.match(fixtures, /\[MOCK_TOOL_GALLERY_ROOM_ID\]: \['mock-scout', 'mock-forge', 'mock-nova'\]/)
   assert.match(indicator, /agent-typing-indicator/)
   assert.match(css, /\.agent-typing-indicator \{\s*background: var\(--im-chat-surface, var\(--panel\)\);/)
 })

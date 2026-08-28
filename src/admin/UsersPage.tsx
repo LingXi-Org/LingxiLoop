@@ -1,12 +1,10 @@
 /**
- * Users — paginated, searchable, with inline detail expand + tier /
- * admin toggles per row.
+ * Users — paginated, searchable, with inline detail and admin controls.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/stores/auth'
-import { type AdminStats, type AdminUser, type AdminUserDetail, adminApi, type Tier } from './api'
+import { type AdminStats, type AdminUser, type AdminUserDetail, adminApi } from './api'
 import { Pager } from './Pager'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { notifyAction, toastAction } from '@/lib/actionToast'
@@ -17,7 +15,6 @@ const PAGE = 50
 export function UsersPage({ stats }: { stats: AdminStats | null }) {
   const meId = useAuth((s) => s.user?.id ?? null)
   const [q, setQ] = useState('')
-  const [tier, setTier] = useState<Tier | ''>('')
   const [items, setItems] = useState<AdminUser[]>([])
   const [total, setTotal] = useState(0)
   const [offset, setOffset] = useState(0)
@@ -28,35 +25,19 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
   const load = useCallback(async (nextOffset: number) => {
     setLoading(true); setErr(null)
     try {
-      const r = await adminApi.listUsers({ q, tier, limit: PAGE, offset: nextOffset })
+      const r = await adminApi.listUsers({ q, limit: PAGE, offset: nextOffset })
       setItems(r.items); setTotal(r.total); setOffset(r.offset)
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e))
     } finally { setLoading(false) }
-  }, [q, tier])
+  }, [q])
 
   // Reload on search/filter change with a light debounce so each keystroke
   // doesn't spam the API.
   useEffect(() => {
     const t = setTimeout(() => { void load(0) }, q ? 250 : 0)
     return () => clearTimeout(t)
-  }, [q, tier, load])
-
-  const onTierChange = async (u: AdminUser, next: Tier) => {
-    if (u.tier === next) return
-    if (!await confirmSensitiveAction({
-      title: '更改用户套餐？',
-      description: `${u.email} 的套餐将从 ${u.tier} 更改为 ${next}。`,
-      confirmLabel: '更改套餐',
-      tone: 'warning',
-    })) return
-    try {
-      const updated = await toastAction(adminApi.patchUser(u.id, { tier: next }), {
-        loading: '正在更新用户套餐', success: '用户套餐已更新', error: '更新套餐失败', description: u.email,
-      })
-      setItems((rows) => rows.map((r) => (r.id === u.id ? updated : r)))
-    } catch { /* toast owns the visible error state */ }
-  }
+  }, [q, load])
 
   const onAdminToggle = async (u: AdminUser) => {
     if (u.id === meId && u.isAdmin) {
@@ -130,7 +111,7 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
           <h1 className="admin-h1">用户</h1>
           <div className="admin-sub">
             {stats
-              ? <>{stats.users.total} 总计· {stats.users.admins} 管理· {stats.users.tiers.free} 免费· {stats.users.tiers.pro} 亲· {stats.users.tiers.max} 最大</>
+              ? <>{stats.users.total} 总计 · {stats.users.admins} 管理员</>
               : <>&nbsp;</>}
           </div>
         </div>
@@ -139,13 +120,6 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
             type="search" placeholder="电子邮件或姓名" className="admin-input"
             value={q} onChange={(e) => setQ(e.target.value)}
           />
-          <Select value={tier || '__all__'} onValueChange={(value) => setTier(value === '__all__' ? '' : value as Tier)}>
-            <SelectTrigger className="w-36" aria-label="筛选用户级别"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">所有级别</SelectItem>
-              <SelectItem value="free">免费</SelectItem><SelectItem value="pro">专业版</SelectItem><SelectItem value="max">最大</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </header>
 
@@ -154,7 +128,6 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
       <div className="admin-table">
         <div className="admin-thead">
           <div>用户</div>
-          <div>等级</div>
           <div>管理员</div>
           <div>公司</div>
           <div>已加入</div>
@@ -166,7 +139,6 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
           <UserRow
             key={u.id} u={u} expanded={expandedId === u.id}
             onToggleExpand={() => setExpandedId((cur) => (cur === u.id ? null : u.id))}
-            onTierChange={(t) => onTierChange(u, t)}
             onAdminToggle={() => onAdminToggle(u)}
             onSuspendToggle={() => onSuspendToggle(u)}
             isMe={u.id === meId}
@@ -179,11 +151,10 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
   )
 }
 
-function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onSuspendToggle, isMe }: {
+function UserRow({ u, expanded, onToggleExpand, onAdminToggle, onSuspendToggle, isMe }: {
   u: AdminUser
   expanded: boolean
   onToggleExpand: () => void
-  onTierChange: (t: Tier) => void
   onAdminToggle: () => void
   onSuspendToggle: () => Promise<AdminUser | null>
   isMe: boolean
@@ -214,7 +185,7 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
     <>
       <div className={`admin-row ${u.suspended ? 'admin-row-suspended' : ''}`} onClick={onToggleExpand} role="button">
         <div className="admin-cell-user">
-          <img className="admin-avatar" src={u.avatarUrl} alt="" loading="lazy" />
+          {u.avatarUrl ? <img className="admin-avatar" src={u.avatarUrl} alt="" loading="lazy" /> : <span className="admin-avatar" />}
           <div className="admin-cell-user-text">
             <div className="admin-cell-user-name">
               {u.name}
@@ -223,14 +194,6 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
             </div>
             <div className="admin-cell-user-email">{u.email}</div>
           </div>
-        </div>
-        <div onClick={(e) => e.stopPropagation()} data-label="Tier">
-          <Select value={u.tier} onValueChange={(value) => onTierChange(value as Tier)}>
-            <SelectTrigger className="h-8 w-24" aria-label={`更改 ${u.name || u.email} 的级别`}><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="free">免费</SelectItem><SelectItem value="pro">专业版</SelectItem><SelectItem value="max">最大</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
         <div onClick={(e) => e.stopPropagation()} data-label="Admin">
           <button
@@ -252,7 +215,6 @@ function UserRow({ u, expanded, onToggleExpand, onTierChange, onAdminToggle, onS
           {detail && (
             <div className="admin-detail-grid">
               <DetailField label="用户 ID" value={detail.id} mono />
-              <DetailField label="sub2api ID" value={detail.sub2apiUserId ? String(detail.sub2apiUserId) : '—'} mono />
               <DetailField label="已创建"   value={fmtDateTime(detail.createdAt)} mono />
               <DetailField label="上次登录" value={detail.lastLoginAt ? fmtDateTime(detail.lastLoginAt) : '—'} mono />
               {/* Suspension card — only shown when the row IS suspended. We

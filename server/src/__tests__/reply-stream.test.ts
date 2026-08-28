@@ -29,16 +29,18 @@ test('publishes an empty placeholder before Markdown deltas', async () => {
   assert.ok(events.every((event) => event.done === false))
 })
 
-test('returns false after a delta failure so the caller can publish the final message', async () => {
+test('propagates a delta transport failure without publishing a fallback message', async () => {
   let calls = 0
-  const ok = await replayReplyStream(
-    { conversationId: 'c1', messageId: 'm1', authorId: 'agent', sequence: 7 },
-    'hello',
-    async () => {
-      calls += 1
-      if (calls === 2) throw new Error('transport down')
-    },
+  await assert.rejects(
+    replayReplyStream(
+      { conversationId: 'c1', messageId: 'm1', authorId: 'agent', sequence: 7 },
+      'hello',
+      async () => {
+        calls += 1
+        if (calls === 2) throw new Error('transport down')
+      },
+    ),
+    /transport down/,
   )
-  assert.equal(ok, false)
   assert.equal(calls, 2)
 })

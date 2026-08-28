@@ -26,8 +26,8 @@ async function waitForHealth(): Promise<void> {
 
 async function seed(): Promise<{ channelId: string; agentId: string }> {
   await pool.query(
-    `INSERT INTO users (id,email,display_name,email_verified_at,is_admin,tier)
-     VALUES ($1,$2,'Agent OS Smoke',NOW(),FALSE,'pro')`,
+    `INSERT INTO users (id,email,display_name,email_verified_at,is_admin)
+     VALUES ($1,$2,'Agent OS Smoke',NOW(),FALSE)`,
     [userId, `${userId}@example.invalid`],
   )
   await pool.query(

@@ -6,21 +6,15 @@ import {
   QUEUED_STREAM_EXPIRY_MS,
   shouldApplyStreamEvent,
   streamExpiryForOpen,
-  streamModeForOpen,
   withoutFinalizedActiveRuns,
 } from './chatMessages'
 
-test('recognizes canonical @all and legacy @everyone broadcasts', () => {
+test('recognizes the canonical @all broadcast', () => {
   assert.equal(hasBroadcastMention('@all 请都回答'), true)
   assert.equal(hasBroadcastMention('请@all 都回答'), true)
-  assert.equal(hasBroadcastMention('@everyone answer'), true)
+  assert.equal(hasBroadcastMention('@everyone answer'), false)
   assert.equal(hasBroadcastMention('mail@all.example'), false)
   assert.equal(hasBroadcastMention('@alligator'), false)
-})
-
-test('thinking opens as a placeholder while legacy opens remain markdown', () => {
-  assert.equal(streamModeForOpen('thinking'), 'placeholder')
-  assert.equal(streamModeForOpen(undefined), 'markdown')
 })
 
 test('queued placeholders outlive active stream silence protection', () => {
@@ -35,7 +29,7 @@ test('stream sequence rejects a queued preview that arrives after output or term
   assert.equal(shouldApplyStreamEvent(4, 0), false)
   assert.equal(shouldApplyStreamEvent(4, 4), false)
   assert.equal(shouldApplyStreamEvent(4, 5), true)
-  assert.equal(shouldApplyStreamEvent(4, undefined), true)
+  assert.equal(shouldApplyStreamEvent(4, undefined), false)
 })
 
 test('hides a persisted reply only while its matching markdown stream is active', () => {

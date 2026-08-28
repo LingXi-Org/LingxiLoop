@@ -2,10 +2,7 @@
  * Optional outbound "you've been invited to <workspace>" email.
  *
  * Fired from POST /companies/:id/invitations when the inviter ticks the
- * Send email checkbox. Best-effort: a failure here NEVER fails the
- * invitation create — the invite row is already in the DB and the inviter
- * has the URL on screen to share manually. We just surface the delivery
- * result so the modal can show "email sent / email failed" feedback.
+ * Send email checkbox. Provider and configuration failures reject the request.
  *
  * Sender:    Display = "<Inviter> (via LingxiLoop)", address = invites@<EMAIL_DOMAIN>
  * Reply-To:  inviter's own email — replies land in the human's inbox, not a
@@ -13,22 +10,12 @@
  * Auto-Submitted: auto-generated — keeps vacation responders from bounce-
  *                 looping with us.
  *
- * If EMAIL_DOMAIN is unset (a deployment with no outbound mail at all)
- * we short-circuit with `skipped: 'no_email_config'` so the UI can show
- * "this server isn't configured for outbound mail" rather than a generic
- * provider error.
  */
 import { env } from './env.js'
 import { formatAddress, mintMessageId, sendViaProvider } from './email.js'
 
 export interface InvitationEmailDelivery {
-  attempted: boolean
-  ok: boolean
-  error: string | null
-  /** Non-null when we deliberately didn't try (e.g. EMAIL_DOMAIN unset).
-   *  Distinct from `error` so the UI can render a different message —
-   *  "your server isn't set up for email" vs "the send failed". */
-  skipped: 'no_email_config' | null
+  ok: true
 }
 
 export interface InvitationEmailArgs {
@@ -56,7 +43,7 @@ function escapeHtml(s: string): string {
 }
 
 /** HTML body — mirrors the welcome-email layout (table-based, inline
- *  styles, Manrope stack with system fallback, sky-blue CTA). Same
+ *  styles, system font stack, sky-blue CTA). Same
  *  visual language so a recipient who later gets the waitlist-approved
  *  welcome email recognises the brand. */
 function buildInvitationEmailHtml(args: {
@@ -192,8 +179,7 @@ function buildInvitationEmailHtml(args: {
 
 export async function sendInvitationEmail(args: InvitationEmailArgs): Promise<InvitationEmailDelivery> {
   if (!env.EMAIL_DOMAIN) {
-    console.warn('[invite-email] skip: EMAIL_DOMAIN unset')
-    return { attempted: false, ok: false, error: null, skipped: 'no_email_config' }
+    throw new Error('EMAIL_DOMAIN is required to send invitations')
   }
 
   const fromAddr = `invites@${env.EMAIL_DOMAIN}`
@@ -226,25 +212,16 @@ export async function sendInvitationEmail(args: InvitationEmailArgs): Promise<In
     inviteUrl: args.inviteUrl,
   })
 
-  try {
-    const res = await sendViaProvider({
-      from: formatAddress(fromAddr, senderDisplay),
-      to: [args.to],
-      replyTo: formatAddress(args.inviterEmail, args.inviterName),
-      subject,
-      text,
-      html,
-      messageId: mintMessageId(),
-      autoSubmitted: 'auto-generated',
-    })
-    if (!res.ok) {
-      console.warn(`[invite-email] send failed to=${args.to}: ${res.error}`)
-      return { attempted: true, ok: false, error: res.error ?? 'send failed', skipped: null }
-    }
-    return { attempted: true, ok: true, error: null, skipped: null }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    console.warn(`[invite-email] threw to=${args.to}: ${msg}`)
-    return { attempted: true, ok: false, error: msg, skipped: null }
-  }
+  const result = await sendViaProvider({
+    from: formatAddress(fromAddr, senderDisplay),
+    to: [args.to],
+    replyTo: formatAddress(args.inviterEmail, args.inviterName),
+    subject,
+    text,
+    html,
+    messageId: mintMessageId(),
+    autoSubmitted: 'auto-generated',
+  })
+  if (!result.ok) throw new Error(result.error ?? 'invitation email send failed')
+  return { ok: true }
 }

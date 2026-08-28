@@ -429,7 +429,7 @@ async function executeCanvas(
     const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
       `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [work.channelId, work.companyId],
     )
-    await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card).catch(() => undefined)
+    await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card)
     return { ok: true, value: snapshot, directive: { type: 'defer_to_canvas', canvasId: snapshot.id } }
   }
   if (method === 'add_agents') {
@@ -527,7 +527,7 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   const [namespace, method] = action.action.split('.')
   if (!namespace || !method) throw new Error('action must use namespace.method')
   if (namespace === 'teacher') return { ok: true, value: await executeTeacherAction(work, method, args) }
-  const learningContext = await loadLearningTurnContext(work).catch(() => null)
+  const learningContext = await loadLearningTurnContext(work)
   if (learningContext?.activeMission?.status === 'planning') {
     const planningAllowed = new Set([
       'learning.current', 'learning.get_learner_state', 'learning.list_objectives',

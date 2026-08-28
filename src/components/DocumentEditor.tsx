@@ -1,8 +1,5 @@
 import Collaboration from '@tiptap/extension-collaboration'
-// In TipTap v3, CollaborationCursor was renamed to CollaborationCaret and
-// repointed at the new @tiptap/y-tiptap binding. The legacy
-// extension-collaboration-cursor@3 is a shim still wired to y-prosemirror
-// and crashes against v3's sync plugin (ySyncPluginKey mismatch).
+// TipTap v3 collaboration uses the Caret extension with @tiptap/y-tiptap.
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
 import ImageExtension from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
@@ -22,6 +19,7 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { notifyAction, toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { buildMentionExtension } from '@/lib/mentionExtension'
 import { cn } from '@/lib/utils'
 import { openDocument, type YDocSession } from '@/lib/yjsClient'
@@ -508,6 +506,9 @@ function ToolbarSep() {
 }
 
 function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }) {
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [imageUrl, setImageUrl] = useState('')
+  const [imageAlt, setImageAlt] = useState('')
   const fileRef = useRef<HTMLInputElement | null>(null)
   const [uploading, setUploading] = useState(false)
   const insertImage = (attrs: { src: string; alt?: string; storageKey?: string | null }) => {
@@ -555,17 +556,9 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
         onClick={(event) => {
           if (event.altKey) {
             const existing = editor.getAttributes('image') as { src?: string; alt?: string }
-            const input = prompt('Image URL:', existing.src ?? '')
-            if (input === null) return
-            const url = input.trim()
-            if (!url || !isSafeImageUrl(url)) {
-              notifyAction({ title: '图片地址无效', description: '请使用 http(s) URL 或应用内 /path。', type: 'warning' })
-              return
-            }
-            const altInput = prompt('Alt text:', existing.alt ?? '')
-            if (altInput === null) return
-            const alt = altInput.trim()
-            insertImage(alt ? { src: url, alt } : { src: url })
+            setImageUrl(existing.src ?? '')
+            setImageAlt(existing.alt ?? '')
+            setDialogOpen(true)
             return
           }
           fileRef.current?.click()
@@ -582,39 +575,63 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
       >
         <IImage className="w-4 h-4" />
       </button>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>插入图片地址</DialogTitle>
+            <DialogDescription>使用 HTTPS 地址或应用内绝对路径。</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Input value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="https://…" aria-label="图片地址" />
+            <Input value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} placeholder="替代文本（可选）" aria-label="图片替代文本" />
+          </div>
+          <DialogFooter>
+            <button type="button" className="rounded-md px-3 py-2 text-sm" onClick={() => setDialogOpen(false)}>取消</button>
+            <button type="button" className="rounded-md bg-skype px-3 py-2 text-sm font-semibold text-white" onClick={() => {
+              const url = imageUrl.trim()
+              if (!url || !isSafeImageUrl(url)) {
+                notifyAction({ title: '图片地址无效', description: '请使用 http(s) URL 或应用内 /path。', type: 'warning' })
+                return
+              }
+              const alt = imageAlt.trim()
+              insertImage(alt ? { src: url, alt } : { src: url })
+              setDialogOpen(false)
+            }}>插入</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
 
 function LinkButton({ editor, disabled }: { editor: Editor; disabled: boolean }) {
   const isActive = editor.isActive('link')
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={() => {
-        const existing = editor.getAttributes('link').href as string | undefined
-        const input = prompt('Link URL (leave empty to unlink):', existing ?? '')
-        if (input === null) return
-        const url = input.trim()
-        if (!url) {
-          editor.chain().focus().extendMarkRange('link').unsetLink().run()
-        } else {
-          editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-        }
-      }}
-      className={cn(
-        'w-8 h-8 grid place-items-center rounded-md transition-colors',
-        disabled ? 'text-stone-300' : (
-          isActive
-            ? 'bg-skype/15 text-skype-deep'
-            : 'text-stone-600 hover:bg-stone-100'
-        ),
-      )}
-      title="链接"
-    >
-      <ILink className="w-4 h-4" />
-    </button>
+    <>
+      <button type="button" disabled={disabled} onClick={() => {
+        setLinkUrl((editor.getAttributes('link').href as string | undefined) ?? '')
+        setDialogOpen(true)
+      }} className={cn('w-8 h-8 grid place-items-center rounded-md transition-colors', disabled ? 'text-stone-300' : (isActive ? 'bg-skype/15 text-skype-deep' : 'text-stone-600 hover:bg-stone-100'))} title="链接">
+        <ILink className="w-4 h-4" />
+      </button>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>设置链接</DialogTitle><DialogDescription>留空并保存可移除当前链接。</DialogDescription></DialogHeader>
+          <Input value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} placeholder="https://…" aria-label="链接地址" />
+          <DialogFooter>
+            <button type="button" className="rounded-md px-3 py-2 text-sm" onClick={() => setDialogOpen(false)}>取消</button>
+            <button type="button" className="rounded-md bg-skype px-3 py-2 text-sm font-semibold text-white" onClick={() => {
+              const url = linkUrl.trim()
+              if (!url) editor.chain().focus().extendMarkRange('link').unsetLink().run()
+              else editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+              setDialogOpen(false)
+            }}>保存</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

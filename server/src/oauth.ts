@@ -1,5 +1,5 @@
 /**
- * OAuth/OIDC — LingxiIdentity, Google + GitHub. Server-side authorization-code flow.
+ * Native LingxiIdentity OIDC authorization-code flow.
  *
  * Flow per provider:
  *   1. GET /api/auth/start/<provider> — server saves a random `state` to
@@ -22,8 +22,7 @@
  *   - If a user_identities row already exists for (provider, provider_id):
  *     log them in as that user.
  *   - Else if the provider returned a verified email AND we have a user
- *     with that email_lower (whether via another provider or a legacy
- *     password account), link the new identity to that user.
+ *     with that email_lower, link the LingxiIdentity subject to that user.
  *   - Else create a fresh user + their personal company.
  *
  * For GitHub specifically: `email` from /user is often null because users
@@ -33,15 +32,14 @@ import { randomBytes, createHash, randomUUID } from 'node:crypto'
 import { pool } from './db/pool.js'
 import { redis } from './redis.js'
 import { env } from './env.js'
-import { audit, createSession, gravatarUrlForEmail } from './auth.js'
+import { audit, createSession } from './auth.js'
 import { onboardStarterAgents } from './onboardCompany.js'
 import { storage } from './storage.js'
-import { provisionUser as provisionSub2apiUser, sub2apiConfigured } from './sub2api.js'
 import { isWaitlistEnabled, enqueueWaitlist, isAllowlistedAdmin } from './admin.js'
 import { discoverOidc, normalizeOidcProfile, type OidcProfile } from './oidc.js'
 import { isAllowedReturnUrl } from './oauth-return-url.js'
 
-export type Provider = 'lingxi' | 'google' | 'github'
+export type Provider = 'lingxi'
 
 interface ProviderConfig {
   authorizeUrl: string
@@ -54,9 +52,8 @@ interface ProviderConfig {
 }
 
 async function providerConfig(p: Provider): Promise<ProviderConfig> {
-  if (p === 'lingxi') {
-    const discovered = await discoverOidc(env.LINGXI_IDENTITY_ISSUER)
-    return {
+  const discovered = await discoverOidc(env.LINGXI_IDENTITY_ISSUER)
+  return {
       authorizeUrl: discovered.authorization_endpoint,
       tokenUrl: discovered.token_endpoint,
       userInfoUrl: discovered.userinfo_endpoint,
@@ -66,31 +63,11 @@ async function providerConfig(p: Provider): Promise<ProviderConfig> {
       tokenAuthMethod: discovered.token_endpoint_auth_methods_supported?.includes('client_secret_basic')
         ? 'client_secret_basic'
         : 'client_secret_post',
-    }
-  }
-  if (p === 'google') return {
-    authorizeUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenUrl:     'https://oauth2.googleapis.com/token',
-    userInfoUrl:  'https://openidconnect.googleapis.com/v1/userinfo',
-    scope:        'openid email profile',
-    clientId:     env.GOOGLE_CLIENT_ID,
-    clientSecret: env.GOOGLE_CLIENT_SECRET,
-  }
-  return {
-    authorizeUrl: 'https://github.com/login/oauth/authorize',
-    tokenUrl:     'https://github.com/login/oauth/access_token',
-    userInfoUrl:  'https://api.github.com/user',
-    scope:        'read:user user:email',
-    clientId:     env.GITHUB_CLIENT_ID,
-    clientSecret: env.GITHUB_CLIENT_SECRET,
   }
 }
 
 export function providerEnabled(p: Provider): boolean {
-  if (p === 'lingxi') return Boolean(env.LINGXI_IDENTITY_ISSUER && env.LINGXI_IDENTITY_CLIENT_ID && env.LINGXI_IDENTITY_CLIENT_SECRET)
-  if (p === 'google') return Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
-  if (p === 'github') return Boolean(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET)
-  return false
+  return p === 'lingxi' && Boolean(env.LINGXI_IDENTITY_ISSUER && env.LINGXI_IDENTITY_CLIENT_ID && env.LINGXI_IDENTITY_CLIENT_SECRET)
 }
 
 function redirectUri(p: Provider): string {
@@ -144,7 +121,7 @@ export async function consumeState(state: string): Promise<StateData | null> {
   if (!v) return null
   try {
     const parsed = JSON.parse(v) as StateData
-    if (parsed.provider !== 'lingxi' && parsed.provider !== 'google' && parsed.provider !== 'github') return null
+    if (parsed.provider !== 'lingxi') return null
     return parsed
   } catch {
     return null
@@ -161,12 +138,6 @@ export async function authorizeUrl(p: Provider, state: string): Promise<string> 
     scope: cfg.scope,
     state,
   })
-  if (p === 'google') {
-    // Always prompt = consent so we don't get a silent re-auth that bypasses
-    // account selection (helps when the user has multiple Google accounts).
-    params.set('prompt', 'select_account')
-    params.set('access_type', 'online')
-  }
   return `${cfg.authorizeUrl}?${params.toString()}`
 }
 
@@ -206,54 +177,17 @@ async function exchangeCode(p: Provider, code: string): Promise<string> {
   return j.access_token
 }
 
-interface GoogleProfile { sub: string; email?: string; email_verified?: boolean; name?: string; picture?: string }
-interface GitHubProfile { id: number; login: string; name?: string | null; email?: string | null; avatar_url?: string }
-interface GitHubEmail   { email: string; primary: boolean; verified: boolean }
-
 async function fetchProfile(p: Provider, accessToken: string): Promise<NormalizedProfile> {
   const cfg = await providerConfig(p)
-  if (p === 'lingxi') {
-    const r = await fetch(cfg.userInfoUrl, { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' } })
-    if (!r.ok) throw new Error(`LingxiIdentity userinfo ${r.status}`)
-    return normalizeOidcProfile(await r.json() as OidcProfile)
-  }
-  if (p === 'google') {
-    const r = await fetch(cfg.userInfoUrl, { headers: { authorization: `Bearer ${accessToken}` } })
-    if (!r.ok) throw new Error(`google userinfo ${r.status}`)
-    const g = await r.json() as GoogleProfile
-    if (!g.email || !g.email_verified) throw new Error('google account has no verified email')
-    return {
-      providerId: g.sub,
-      email: g.email.toLowerCase(),
-      displayName: (g.name && g.name.trim()) || g.email.split('@')[0]!,
-      avatarUrl: g.picture ?? null,
-    }
-  }
-  // GitHub: /user doesn't expose email when the user hides it. Hit /user/emails
-  // and pick `primary && verified`. Otherwise refuse — we need a real address
-  // for the user record + cross-provider auto-binding.
-  const [userR, emailsR] = await Promise.all([
-    fetch(cfg.userInfoUrl, { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json', 'user-agent': 'lingxiloop' } }),
-    fetch('https://api.github.com/user/emails', { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json', 'user-agent': 'lingxiloop' } }),
-  ])
-  if (!userR.ok) throw new Error(`github user ${userR.status}`)
-  if (!emailsR.ok) throw new Error(`github emails ${emailsR.status}`)
-  const u = await userR.json() as GitHubProfile
-  const emails = await emailsR.json() as GitHubEmail[]
-  const primary = emails.find((e) => e.primary && e.verified)
-  if (!primary) throw new Error('github account has no verified primary email')
-  return {
-    providerId: String(u.id),
-    email: primary.email.toLowerCase(),
-    displayName: (u.name && u.name.trim()) || u.login,
-    avatarUrl: u.avatar_url ?? null,
-  }
+  const r = await fetch(cfg.userInfoUrl, { headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' } })
+  if (!r.ok) throw new Error(`LingxiIdentity userinfo ${r.status}`)
+  return normalizeOidcProfile(await r.json() as OidcProfile)
 }
 
 /** Common image content types we accept. The Google/GitHub avatar URLs
  *  both serve JPEG today; we still inspect Content-Type so a provider
  *  surprise PNG or WebP doesn't get mis-labeled. Anything outside this
- *  set falls back to the provider URL unchanged. */
+ *  set is rejected. */
 const AVATAR_MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png':  'png',
@@ -264,16 +198,13 @@ const AVATAR_MAX_BYTES = 2 * 1024 * 1024  // 2MB — way more than any real avat
 const AVATAR_FETCH_TIMEOUT_MS = 5000
 
 /** Pull the provider's avatar URL down and re-host on LingxiLoop storage so
- *  the renderer fetches from our CDN, not lh3.googleusercontent.com /
- *  avatars.githubusercontent.com. Three wins:
- *    - Provider URL rotation (Google changes the ACg8oc... path when the
- *      user updates their photo) doesn't break us
+ *  the renderer fetches from our CDN. Three wins:
+ *    - Provider URL rotation doesn't break us
  *    - Same-origin in the renderer → no third-party CORS / Referer / CSP
  *      surprises, no broken-image races
  *    - One stable URL per user → avatar-cache invalidation is meaningful
  *
- *  Best-effort: any failure (slow fetch, non-image response, oversized
- *  body) returns the original URL so sign-in is never blocked. */
+ *  Any failure propagates; third-party URLs are never persisted. */
 export async function mirrorAvatar(userId: string, providerUrl: string | null): Promise<string | null> {
   if (!providerUrl) return null
   const ctl = new AbortController()
@@ -283,18 +214,15 @@ export async function mirrorAvatar(userId: string, providerUrl: string | null): 
       signal: ctl.signal,
       headers: { 'user-agent': 'lingxiloop' },
     })
-    if (!r.ok) return providerUrl
+    if (!r.ok) throw new Error(`avatar fetch failed: HTTP ${r.status}`)
     const mime = (r.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase()
     const ext = AVATAR_MIME_TO_EXT[mime]
-    if (!ext) return providerUrl
+    if (!ext) throw new Error(`unsupported avatar content type: ${mime || 'missing'}`)
     const ab = await r.arrayBuffer()
-    if (ab.byteLength > AVATAR_MAX_BYTES) return providerUrl
+    if (ab.byteLength > AVATAR_MAX_BYTES) throw new Error('avatar exceeds 2 MB')
     const buf = Buffer.from(ab)
     const key = `avatars/${userId}.${ext}`
     return await storage.put(key, buf, mime)
-  } catch (e) {
-    console.warn(`[oauth] avatar mirror failed for ${userId}; falling back to provider URL`, e instanceof Error ? e.message : e)
-    return providerUrl
   } finally {
     clearTimeout(timer)
   }
@@ -413,8 +341,8 @@ export async function findOrCreateUserByProfile(
     // invite-onboarding bug, pre-fix).
     const userId = `u-${randomUUID().slice(0, 12)}`
     await client.query(
-      `INSERT INTO users (id, email, display_name, password_hash, email_verified_at, is_admin, tier)
-         VALUES ($1, $2, $3, NULL, NOW(), $4, 'free')`,
+      `INSERT INTO users (id, email, display_name, password_hash, email_verified_at, is_admin)
+         VALUES ($1, $2, $3, NULL, NOW(), $4)`,
       [userId, profile.email, profile.displayName, isAllowlistedAdmin(profile.email)],
     )
     await client.query(
@@ -424,13 +352,11 @@ export async function findOrCreateUserByProfile(
     )
 
     // Mirror the provider's avatar to our storage so the renderer fetches
-    // from lingxiloop's CDN, not third-party hosts. Falls back to provider
-    // URL on failure, then to Gravatar — never empty on first login.
+    // from LingxiLoop's CDN, not third-party hosts.
     // Stamp onto users.avatar_url so every workspace this user later joins
     // (via invite or self-created) re-uses ONE face, not per-tenant
-    // gravatar fallbacks.
     const mirroredAvatar = await mirrorAvatar(userId, profile.avatarUrl)
-    const avatar = mirroredAvatar ?? gravatarUrlForEmail(profile.email)
+    const avatar = mirroredAvatar
     await client.query(`UPDATE users SET avatar_url = $1 WHERE id = $2`, [avatar, userId])
 
     let companyId: string | null = null
@@ -464,36 +390,11 @@ export async function findOrCreateUserByProfile(
     }
     await client.query('COMMIT')
 
-    // Learning-team onboarding is best-effort — never block first login.
     // Skipped on the invite path: the user is about to land in the inviter's
     // workspace, which already has its own learning team and rooms.
     if (companyId) {
       // Starter agents are provisioned directly into the managed AgentOS runtime.
-      try {
-        await onboardStarterAgents(companyId)
-      } catch (e) { console.warn('[oauth] starter onboarding failed', e) }
-    }
-
-    // Mirror the user into sub2api so their LLM calls land on a
-    // per-user quota counter from now on. Pool query is outside the
-    // create transaction so a sub2api hiccup never rolls back signup.
-    // A future backfill can pick up users whose sub2api_user_id stays
-    // NULL (sub2api was down at signup time).
-    if (sub2apiConfigured()) {
-      try {
-        const r = await provisionSub2apiUser({
-          lingxiloopUserId: userId,
-          email: profile.email,
-          displayName: profile.displayName,
-          tier: 'free',
-        })
-        await pool.query(
-          `UPDATE users SET sub2api_user_id = $1, sub2api_api_key = $2 WHERE id = $3`,
-          [r.sub2apiUserId, r.apiKey, userId],
-        )
-      } catch (e) {
-        console.warn(`[oauth] sub2api provisioning failed for ${userId}; legacy fallback`, e instanceof Error ? e.message : e)
-      }
+      await onboardStarterAgents(companyId)
     }
 
     return { userId, email: profile.email, displayName: profile.displayName, companyId }
@@ -552,8 +453,8 @@ export function doneUrl(base: string, token: string, companyId: string | null): 
 
 /** Convenience for the callback handler: trade the code, mint a session,
  *  audit, return the done URL. The `returnUrl` came from the state row
- *  (already validated against the allow-list at /auth/start time); when
- *  absent we fall back to env.AUTH_DONE_URL.
+ *  (already validated against the allow-list at /auth/start time). An absent
+ *  per-flow URL uses the configured application callback URL.
  *
  *  Three terminal states besides "success":
  *   - WaitlistedError: brand-new user while the waitlist gate is on —

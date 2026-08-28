@@ -15,7 +15,7 @@ function jsonRecord(value: unknown): Record<string, unknown> {
 
 function isEmptyChannelResult(error: unknown): boolean {
   if (!(error instanceof Error)) return false
-  // The pinned WuKongIM v3 compatibility API sends application/store errors
+  // The pinned WuKongIM v3 HTTP API sends application/store errors
   // through writeJSONError, which uses HTTP 400 even for a missing message
   // channel or conversation membership. Older builds used 404/500. All three
   // mean the same thing here: there is no history/unread state yet. Only
@@ -57,7 +57,7 @@ export class WukongClient {
   async upsertChannel(profile: ImChannelProfile): Promise<void> {
     await this.request('/channel', {
       method: 'POST',
-      // WuKongIM v3's compatibility API uses integer switches, not JSON
+      // WuKongIM v3's HTTP API uses integer switches, not JSON
       // booleans. Reset makes reconciliation converge membership exactly and
       // remains safe to replay after a partial cutover.
       body: JSON.stringify({
@@ -215,13 +215,19 @@ export class WukongClient {
 
 let singleton: WukongClient | null = null
 
+function requiredConfig(name: 'WUKONG_API_URL' | 'WUKONG_WS_URL' | 'WUKONG_API_TOKEN' | 'WUKONG_WEBHOOK_SECRET'): string {
+  const value = process.env[name]?.trim()
+  if (!value) throw new Error(`${name} is required`)
+  return value
+}
+
 export function wukongClient(): WukongClient {
   if (!singleton) {
     singleton = new WukongClient({
-      apiUrl: process.env.WUKONG_API_URL ?? 'http://localhost:5001',
-      wsUrl: process.env.WUKONG_WS_URL ?? 'ws://localhost:5200',
-      apiToken: process.env.WUKONG_API_TOKEN ?? 'dev-wukong-api-token',
-      webhookSecret: process.env.WUKONG_WEBHOOK_SECRET ?? 'dev-wukong-webhook-secret',
+      apiUrl: requiredConfig('WUKONG_API_URL'),
+      wsUrl: requiredConfig('WUKONG_WS_URL'),
+      apiToken: requiredConfig('WUKONG_API_TOKEN'),
+      webhookSecret: requiredConfig('WUKONG_WEBHOOK_SECRET'),
     })
   }
   return singleton

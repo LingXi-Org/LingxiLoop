@@ -1,10 +1,4 @@
-import type { CanvasActivity, CanvasActivityKind } from '@/types'
-import { normalizeCanvasActivityKind } from '@/lib/canvasEventKinds'
-
-export function normalizeCanvasActivity(activity: CanvasActivity): CanvasActivity {
-  const action: CanvasActivityKind = normalizeCanvasActivityKind(activity.action)
-  return action === activity.action ? activity : { ...activity, action }
-}
+import type { CanvasActivity } from '@/types'
 
 /** REST history and WebSocket events share this reducer. Stable ids make the
  * reconnect overlap harmless, and newest-first sorting keeps late packets from
@@ -16,8 +10,7 @@ export function mergeCanvasActivities(
 ): CanvasActivity[] {
   const byId = new Map<string, CanvasActivity>()
   for (const activity of [...current, ...incoming]) {
-    const normalized = normalizeCanvasActivity(activity)
-    if (!byId.has(normalized.id)) byId.set(normalized.id, normalized)
+    if (!byId.has(activity.id)) byId.set(activity.id, activity)
   }
   return [...byId.values()]
     .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))

@@ -97,7 +97,7 @@ export async function syncCourseStudyRoom(courseId: string): Promise<void> {
   await wukongClient().upsertChannel({
     channelId: course.room_id, channelType: 2, title: course.title,
     members: memberIds, ...(course.leader_id ? { leaderAgentId: course.leader_id } : {}),
-  }).catch((error) => console.warn('[course] Study Room sync failed', error))
+  })
 }
 
 export function buildCourseInviteUrl(token: string): string {

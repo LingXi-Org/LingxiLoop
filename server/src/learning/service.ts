@@ -32,8 +32,8 @@ function asText(value: unknown, name: string, maxLength = 10_000): string {
   return text
 }
 
-function asLevel(value: unknown, fallback = 2): 1 | 2 | 3 | 4 {
-  const level = Number(value ?? fallback)
+function asLevel(value: unknown, defaultValue = 2): 1 | 2 | 3 | 4 {
+  const level = Number(value ?? defaultValue)
   if (!Number.isInteger(level) || level < 1 || level > 4) throw new Error('targetLevel must be between 1 and 4')
   return level as 1 | 2 | 3 | 4
 }
@@ -504,7 +504,7 @@ export async function startMission(work: AgentWorkItem, input: {
     version: 1, kind: 'learning_mission', clientMsgNo: `learning-mission-${mission.id}`,
     body: mission.goal, refs: { agentId: work.agentId },
     data: { missionId: mission.id, courseId: scope.courseId, goal: mission.goal, successCriteria: mission.successCriteria, missionKind:mission.missionKind, coordinatorAgentId:mission.coordinatorAgentId, status: mission.status, suppressAgentWake: true },
-  }).catch((error) => console.warn('[learning] mission card delivery failed:', error instanceof Error ? error.message : String(error)))
+  })
   return mission
 }
 

@@ -12,6 +12,7 @@ import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, Host
 import { retrieveKnowledge } from '../knowledge/service.js'
 import { loadLearningTurnContext } from '../learning/service.js'
 import { describeTeacherAction, loadTeacherTurnContext } from '../learning/teacher-agent.js'
+import { recordLlmCall } from '../llm-ledger.js'
 
 export const agentOSControlRouter = Router()
 
@@ -229,13 +230,19 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   }))
   const triggerMessage = messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)
   const learnerMessage = triggerMessage?.authorKind === 'human' ? triggerMessage : [...messages].reverse().find((message) => message.authorKind === 'human')
-  const { rows: workspaceRows } = await pool.query<{ kind: string; source_count: number; ingestion_failure: string | null }>(
+  const { rows: workspaceRows } = await pool.query<{ kind: string; source_count: number; ingestion_failure: string | null; is_learning: boolean }>(
     `SELECT c.kind,
             (SELECT COUNT(*)::int FROM knowledge_sources s WHERE s.project_id = c.project_id AND s.status = 'ready' AND s.deleted_at IS NULL) AS source_count,
             (SELECT COALESCE(j.wake_error, s.error) FROM knowledge_sources s
                LEFT JOIN knowledge_source_jobs j ON j.source_id=s.id
               WHERE s.company_id=c.company_id AND s.origin_client_msg_no=$3 AND s.deleted_at IS NULL
-              ORDER BY s.created_at DESC LIMIT 1) AS ingestion_failure
+              ORDER BY s.created_at DESC LIMIT 1) AS ingestion_failure,
+            EXISTS(
+              SELECT 1 FROM courses course
+              LEFT JOIN learning_course_rooms room ON room.course_id=course.id AND room.company_id=course.company_id
+              WHERE course.company_id=c.company_id
+                AND (course.study_room_conversation_id=c.id OR room.conversation_id=c.id)
+            ) AS is_learning
        FROM conversations c WHERE c.id = $1 AND c.company_id = $2 LIMIT 1`,
     [work.channelId, work.companyId, work.triggerClientMsgNo],
   )
@@ -244,17 +251,14 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   const capabilities = personas[0].capabilities ?? []
   const isTeacherAgent = capabilities.includes('teacher_admin')
   const teacherContext = isTeacherAgent
-    ? await loadTeacherTurnContext(work).catch(() => undefined)
+    ? await loadTeacherTurnContext(work)
     : undefined
   if (isTeacherAgent && !teacherContext) { res.status(403).json({ error: 'Pulse is not authorized for this teacher room' }); return }
   const knowledgeContext = !isTeacherAgent && workspaceRow?.kind === 'group' && learnerMessage
     ? await retrieveKnowledge({
         conversationId: work.channelId,
         query: triggerMessage?.body ?? learnerMessage.body,
-      }).catch((error) => {
-        console.warn('[knowledge] retrieval failed:', error instanceof Error ? error.message : String(error))
-        return []
-    })
+      })
     : []
   const promptContextCandidate = learnerMessage || teacherContext ? await buildPromptContext({
     epoch: 0, companyId: work.companyId, agentId: work.agentId, conversationId: work.channelId,
@@ -265,10 +269,9 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
     sourceVersions: { persona: personas[0].updated_at, capabilities: personas[0].updated_at },
     skipMemories: isTeacherAgent,
   }) : undefined
-  const learningContext = isTeacherAgent ? undefined : await loadLearningTurnContext(work, learnerMessage?.authorId).catch((error) => {
-    console.warn('[learning] transient context failed:', error instanceof Error ? error.message : String(error))
-    return undefined
-  })
+  const learningContext = !isTeacherAgent && workspaceRow?.is_learning
+    ? await loadLearningTurnContext(work, learnerMessage?.authorId)
+    : undefined
   const approvalId = work.reason === 'resume' && work.triggerClientMsgNo.startsWith('approval:')
     ? work.triggerClientMsgNo.slice('approval:'.length)
     : null
@@ -587,12 +590,36 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
      VALUES ($1,$2,$3,$4::jsonb,'running',$5,'agent-os') ON CONFLICT (id) DO NOTHING`,
     [event.runId, work.agentId, work.companyId, JSON.stringify({ reason: work.reason, clientMsgNo: work.triggerClientMsgNo }), event.kind],
   )
-  await pool.query(
+  const { rows: insertedEvents } = await pool.query<{ id: string }>(
     `INSERT INTO agent_events (id, run_id, agent_id, company_id, kind, level, title, data, sequence)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9) ON CONFLICT (run_id, sequence) WHERE sequence IS NOT NULL DO NOTHING`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)
+     ON CONFLICT (run_id, sequence) WHERE sequence IS NOT NULL DO NOTHING RETURNING id`,
     [randomUUID(), event.runId, work.agentId, work.companyId, event.kind,
       event.stage === 'failed' ? 'error' : 'info', event.kind, JSON.stringify(event.data), event.seq],
   )
+  if (insertedEvents.length > 0 && (event.kind === 'model.completed' || event.kind === 'model.failed')) {
+    const data = event.data as {
+      model?: unknown
+      purpose?: unknown
+      usage?: { inputTokens?: unknown; outputTokens?: unknown; available?: unknown }
+    }
+    await recordLlmCall({
+      context: {
+        source: 'agent-os', companyId: work.companyId, agentId: work.agentId,
+        runId: event.runId, conversationId: work.channelId,
+        purpose: typeof data.purpose === 'string' ? data.purpose : 'agent-os-turn',
+      },
+      model: typeof data.model === 'string' ? data.model : 'unknown',
+      usage: {
+        prompt_tokens: typeof data.usage?.inputTokens === 'number' ? data.usage.inputTokens : 0,
+        completion_tokens: typeof data.usage?.outputTokens === 'number' ? data.usage.outputTokens : 0,
+      },
+      measured: event.kind === 'model.completed' && data.usage?.available !== false,
+      latencyMs: 0,
+      status: event.kind === 'model.completed' ? 'succeeded' : 'failed',
+      error: event.kind === 'model.failed' ? (data as { error?: unknown }).error : undefined,
+    })
+  }
   await pool.query(`UPDATE agent_runs SET stage=$2, updated_at=NOW() WHERE id=$1`, [event.runId, event.kind])
   if (work.reason === 'canvas_worker' && work.canvasId) {
     if (event.kind === 'run.started') {
@@ -600,7 +627,7 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
         `UPDATE canvas_agent_assignments SET status='working',started_at=COALESCE(started_at,NOW()),updated_at=NOW()
           WHERE id=$1 AND status NOT IN ('completed','failed','cancelled') RETURNING id`, [work.canvasAssignmentId],
       )
-      if (started[0]) await setCanvasStatus({ companyId: work.companyId, canvasId: work.canvasId, actorId: work.agentId, actorKind: 'agent', status: 'working' }).catch(() => undefined)
+      if (started[0]) await setCanvasStatus({ companyId: work.companyId, canvasId: work.canvasId, actorId: work.agentId, actorKind: 'agent', status: 'working' })
     }
     res.json({ ok: true }); return
   }
@@ -614,19 +641,19 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
       channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
       eventId: `${event.runId}:${event.seq}`, eventType: 'stream.open',
       data: { kind: 'text', text: '', phase: 'thinking', streamSeq: event.seq },
-    }).catch(() => undefined)
+    })
   } else if (event.kind === 'model.delta') {
     await wukongClient().emitEvent({
       channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
       eventId: `${event.runId}:${event.seq}`, eventType: 'stream.delta',
       data: { kind: 'text', delta: String((event.data as { delta?: unknown } | null)?.delta ?? ''), streamSeq: event.seq },
-    }).catch(() => undefined)
+    })
   } else if (event.kind === 'run.completed' || event.kind === 'run.failed' || event.kind === 'run.cancelled') {
     const eventType = event.kind === 'run.completed' ? 'stream.close' : event.kind === 'run.cancelled' ? 'stream.cancel' : 'stream.error'
     await wukongClient().emitEvent({
       channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
       eventId: `${event.runId}:${event.seq}`, eventType, data: { kind: 'text', event, streamSeq: event.seq },
-    }).catch(() => undefined)
+    })
   } else if (event.kind === 'approval.pending') {
     const approvalId = String((event.data as { approvalId?: unknown } | null)?.approvalId ?? '')
     const { rows: approvals } = await pool.query<{
@@ -648,7 +675,7 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
           requestedBy:approval.requested_by,scope:approval.scope,preview:approval.preview,
           suppressAgentWake: true,
         },
-      }).catch(() => undefined)
+      })
     }
   } else if (event.visibility === 'user') {
     const activity: LingxiMessageV1 = {
@@ -656,7 +683,7 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
       clientMsgNo: `activity-${event.runId}-${event.seq}`, body: event.kind,
       refs: { runId: event.runId, agentId: work.agentId }, data: { stage: event.stage, suppressAgentWake: true },
     }
-    await wukongClient().sendMessage(work.channelId, channelType, work.agentId, activity).catch(() => undefined)
+    await wukongClient().sendMessage(work.channelId, channelType, work.agentId, activity)
   }
   res.json({ ok: true })
 }))

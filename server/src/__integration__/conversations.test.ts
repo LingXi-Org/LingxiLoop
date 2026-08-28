@@ -38,7 +38,7 @@ after(async () => {
   await teardownAll(server)
 })
 
-async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string; conversationId: string }> {
+async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string; projectId: string; conversationId: string }> {
   const companyId = 'c-direct-title'
   const conversationId = 'direct-ada-yetone'
   const projectId = 'general-c-direct-title'
@@ -65,14 +65,14 @@ async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string
      VALUES ($1, 'direct', 'Yetone', $2::jsonb, 'human', $3, $4)`,
     [conversationId, JSON.stringify([OTHER_USER_ID, ME_USER_ID]), companyId, projectId],
   )
-  return { companyId, conversationId }
+  return { companyId, projectId, conversationId }
 }
 
 test('[integration] GET /conversations returns the other member as a direct title', async () => {
-  const { companyId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
+  const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
 
   const res = await fetch(`${baseUrl}/api/conversations`, {
-    headers: { 'x-company-id': companyId },
+    headers: { 'x-company-id': companyId, 'x-project-id': projectId },
   })
   const raw = await res.text()
   assert.equal(res.status, 200, raw)
@@ -83,10 +83,10 @@ test('[integration] GET /conversations returns the other member as a direct titl
 })
 
 test('[integration] GET /search uses the same perspective-specific direct title', async () => {
-  const { companyId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
+  const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
 
   const res = await fetch(`${baseUrl}/api/search?q=${encodeURIComponent('Ada')}`, {
-    headers: { 'x-company-id': companyId },
+    headers: { 'x-company-id': companyId, 'x-project-id': projectId },
   })
   const raw = await res.text()
   assert.equal(res.status, 200, raw)
@@ -133,16 +133,14 @@ test('[integration] new group binds to the current workspace immediately', async
   assert.equal(stored.rows[0]?.project_id, currentId)
 })
 
-test('[integration] new group falls back to General when no current workspace is supplied', async () => {
-  const { companyId, agentId, generalId } = await seedGroupCreationFixture()
+test('[integration] new group rejects a missing current workspace', async () => {
+  const { companyId, agentId } = await seedGroupCreationFixture()
   const res = await fetch(`${baseUrl}/api/conversations`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-company-id': companyId },
     body: JSON.stringify({ title: 'General group', members: [agentId], leaderId: agentId }),
   })
-  assert.equal(res.status, 201)
-  const body = await res.json() as { id: string; projectId: string }
-  assert.equal(body.projectId, generalId)
-  const stored = await pool.query<{ project_id: string }>(`SELECT project_id FROM conversations WHERE id=$1`, [body.id])
-  assert.equal(stored.rows[0]?.project_id, generalId)
+  assert.equal(res.status, 400)
+  const body = await res.json() as { error: string }
+  assert.match(body.error, /workspaceId required/)
 })

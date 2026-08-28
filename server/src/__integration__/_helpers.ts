@@ -17,6 +17,7 @@ import { createHmac, randomUUID } from 'node:crypto'
 import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 
 let schemaReady: Promise<void> | null = null
 
@@ -103,6 +104,7 @@ const TABLES_TO_WIPE: readonly string[] = [
   'conversations',
   'agent_climate',
   'agent_workspace',
+  'llm_calls',
   'agent_runs',
   'agent_events',
   'agent_tasks',
@@ -139,8 +141,9 @@ export function signInboundPayload(body: string): string {
  *  ids the caller will use as recipient / sender. */
 export async function seedCompanyWithAgent(opts?: {
   companyId?: string; agentId?: string; agentEmail?: string
-}): Promise<{ companyId: string; agentId: string; agentEmail: string }> {
+}): Promise<{ companyId: string; projectId: string; agentId: string; agentEmail: string }> {
   const companyId = opts?.companyId ?? `c-${randomUUID().slice(0, 8)}`
+  const projectId = `general-${companyId}`
   const agentId = opts?.agentId ?? `a-${randomUUID().slice(0, 8)}`
   const dom = env.EMAIL_DOMAIN || 'lingxiloop.local'
   const agentEmail = opts?.agentEmail ?? `${agentId}.${companyId}@${dom}`
@@ -155,7 +158,7 @@ export async function seedCompanyWithAgent(opts?: {
     `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
      SELECT $2, $1, '通用工作区', '测试公司的默认工作区', '#667085', 'test-owner', TRUE
       WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
-    [companyId, `general-${companyId}`],
+    [companyId, projectId],
   )
   // participants composite PK is (id, company_id) — see db/schema.sql.
   await pool.query(
@@ -164,7 +167,25 @@ export async function seedCompanyWithAgent(opts?: {
      ON CONFLICT DO NOTHING`,
     [agentId, companyId, `Agent ${agentId}`, agentId.slice(0, 1).toUpperCase(), agentEmail],
   )
-  return { companyId, agentId, agentEmail }
+  return { companyId, projectId, agentId, agentEmail }
+}
+
+/** Install an explicit in-process WuKongIM provider for domain integration
+ * tests that exercise persistence rather than the pinned Compose service. */
+export function installFakeWukong(): void {
+  let sequence = 0
+  _setWukongClientForTests(new class extends WukongClient {
+    override async bootstrap(uid: string, token: string) {
+      return { uid, token, wsUrl: 'ws://unused', apiVersion: 3 as const, sdkVersion: '1.3.5' as const }
+    }
+    override async upsertChannel(): Promise<void> {}
+    override async sendMessage() { sequence += 1; return { messageId: `wk-test-${sequence}`, messageSeq: sequence } }
+    override async emitEvent(): Promise<void> {}
+    override async listConversations() { return [] }
+    override async clearUnread(): Promise<void> {}
+    override async setUnread(): Promise<void> {}
+    override async syncMessages() { return [] }
+  }({ apiUrl: 'http://unused', wsUrl: 'ws://unused', apiToken: 'test', webhookSecret: 'test' }))
 }
 
 /** Build a minimum-viable Express app that mounts only the routes under
@@ -214,8 +235,8 @@ export async function seedUserMembership(userId: string, companyId: string, opts
   const displayName = opts?.displayName ?? userId
   const authEmail = opts?.email ?? `${userId}@test.local`
   await pool.query(
-    `INSERT INTO users (id, email, display_name, tier)
-     VALUES ($1, $2, $3, 'free')
+    `INSERT INTO users (id, email, display_name)
+     VALUES ($1, $2, $3)
      ON CONFLICT (id) DO NOTHING`,
     [userId, authEmail, displayName],
   )

@@ -47,6 +47,7 @@ function apiToMessage(m: ApiMessage): Message {
     kind: m.kind,
     body: m.body,
     at: m.at ?? '',
+    createdAt: m.createdAt,
     reactions: m.reactions && m.reactions.length > 0 ? m.reactions : undefined,
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,

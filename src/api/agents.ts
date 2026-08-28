@@ -1,6 +1,5 @@
 
 import { http } from '@/api/core/http'
-import { isMockImDevelopment } from '@/lib/devMode'
 import type { ApiParticipant, ApiCoworkerActivity, ApiLearnedMemory, ApiAutonomyRule, AgentInput, ApiAutonomy, } from './contracts'
 
 export const agentsApi = {
@@ -34,13 +33,9 @@ export const agentsApi = {
     }),
   getCoworkerActivity: (conversationId: string) =>
     http<ApiCoworkerActivity[]>(`/coworker/activity?conversationId=${encodeURIComponent(conversationId)}`),
-  resolveApproval: async (approvalId: string, decision: 'approved' | 'rejected') => {
+  resolveApproval: (approvalId: string, decision: 'approved' | 'rejected') => {
     const path = `/im/approvals/${encodeURIComponent(approvalId)}/resolve`
     const init = { method: 'POST', body: JSON.stringify({ approved: decision === 'approved' }) }
-    if (isMockImDevelopment()) {
-      const { mockLearningHttp } = await import('@/dev/mockLearning')
-      return mockLearningHttp<{ ok: boolean; approved: boolean; result?: unknown; error?: string | null }>(path, init)
-    }
     return http<{ ok: boolean; approved: boolean; result?: unknown; error?: string | null }>(path, init)
   },
   getLearnedMemories: () => http<ApiLearnedMemory[]>('/coworker/memories'),

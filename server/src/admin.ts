@@ -11,7 +11,7 @@
  *      generic so adding a third toggle is free.
  *   3. Waitlist approve flow. An admin click here has to do everything
  *      oauth.ts Path C does (user row + identity link + company +
- *      starter agents + sub2api provisioning) PLUS delete the waitlist
+ *      starter agents) PLUS delete the waitlist
  *      row — wrapped so we never half-promote a user.
  *
  * Auth boundary: `requireAdmin` is the only thing routes call; it relies
@@ -22,10 +22,9 @@ import { randomUUID } from 'node:crypto'
 import { pool } from './db/pool.js'
 import { env } from './env.js'
 import type { AuthedRequest } from './auth.js'
-import { audit, gravatarUrlForEmail } from './auth.js'
+import { audit } from './auth.js'
 import { onboardStarterAgents } from './onboardCompany.js'
 import { mirrorAvatar } from './oauth.js'
-import { provisionUser as provisionSub2apiUser, sub2apiConfigured, setUserTier } from './sub2api.js'
 import { formatAddress, mintMessageId, sendViaProvider } from './email.js'
 
 /* ============== Bootstrap admin allow-list ============== */
@@ -33,30 +32,24 @@ import { formatAddress, mintMessageId, sendViaProvider } from './email.js'
 /** On boot, force `is_admin = TRUE` for every email in LINGXILOOP_ADMIN_EMAILS
  *  that already has a users row. Emails not yet signed up are skipped
  *  silently — they get the bit on their next /auth/me probe via the
- *  pre-set check below. Best-effort: a DB blip here must not block boot. */
+ *  pre-set check below. */
 export async function seedAdmins(): Promise<void> {
   if (env.ADMIN_EMAILS.length === 0) return
-  try {
-    const r = await pool.query(
-      `UPDATE users SET is_admin = TRUE
-        WHERE LOWER(email) = ANY($1::text[]) AND is_admin = FALSE`,
-      [env.ADMIN_EMAILS],
-    )
-    if ((r.rowCount ?? 0) > 0) {
-      console.log(`[admin] promoted ${r.rowCount} user(s) to admin via env allow-list`)
-    }
-  } catch (e) {
-    console.warn('[admin] seedAdmins failed', e instanceof Error ? e.message : e)
+  const r = await pool.query(
+    `UPDATE users SET is_admin = TRUE
+      WHERE LOWER(email) = ANY($1::text[]) AND is_admin = FALSE`,
+    [env.ADMIN_EMAILS],
+  )
+  if ((r.rowCount ?? 0) > 0) {
+    console.log(`[admin] promoted ${r.rowCount} user(s) to admin via env allow-list`)
   }
 }
-
 /** True iff the email is on the env allow-list. Used by oauth.ts at user
  *  creation time so the first admin can sign in via OAuth and immediately
  *  be admin (without waiting for the next boot's reconcile). */
 export function isAllowlistedAdmin(email: string): boolean {
   return env.ADMIN_EMAILS.includes(email.trim().toLowerCase())
 }
-
 /* ============== requireAdmin middleware ============== */
 
 export class HttpError extends Error {
@@ -138,7 +131,7 @@ export interface WaitlistRow {
   displayName: string
   /** Always non-null on read: falls back to a gravatar identicon so
    *  every waitlist row has SOMETHING to render in the admin queue. */
-  avatarUrl: string
+  avatarUrl: string | null
   status: 'pending' | 'approved' | 'rejected'
   note: string | null
   requestedAt: string
@@ -196,7 +189,7 @@ function rowToWaitlist(r: WaitlistRowDb): WaitlistRow {
     providerId: r.provider_id,
     email: r.email,
     displayName: r.display_name,
-    avatarUrl: r.avatar_url ?? gravatarUrlForEmail(r.email),
+    avatarUrl: r.avatar_url,
     status: r.status,
     note: r.note,
     requestedAt: r.requested_at,
@@ -266,49 +259,42 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;')
 }
 
-/** Mark approved-user entry URLs so any web fallback can expose downloads
- *  even while the public waitlist gate stays enabled. */
-function approvedEntryUrl(raw: string): string | null {
-  try {
-    const u = new URL(raw)
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null
-    u.searchParams.set('approved', '1')
-    return u.toString()
-  } catch {
-    return null
-  }
+/** Mark the configured approved-user entry URL for the waitlist gate. */
+function approvedEntryUrl(raw: string): string {
+  const u = new URL(raw)
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('approved entry URL must use http(s)')
+  u.searchParams.set('approved', '1')
+  return u.toString()
 }
 
 /** Build the HTML body for the welcome email. Brand-aligned (Manrope
- *  font stack with system fallback, sky-blue → wisteria gradient CTA,
+ *  system font stack, sky-blue → wisteria gradient CTA,
  *  paper background) and email-client-safe (table-based layout, inline
  *  styles, no external CSS). The hero + logo images live on R2 at
- *  deterministic keys under `email/`. If R2_PUBLIC_BASE isn't set we omit the image rows;
- *  the rest of the layout still renders nicely. */
+ *  deterministic keys under `email/`. */
 function buildWelcomeEmailHtml(args: {
   firstName: string
-  signInUrl: string | null
+  signInUrl: string
 }): string {
   const cdn = env.R2_PUBLIC_BASE
-  const heroUrl = cdn ? `${cdn}/email/welcome-hero.png` : null
-  const logoUrl = cdn ? `${cdn}/email/logo.png` : null
+  if (!cdn) throw new Error('R2_PUBLIC_BASE is required for welcome email assets')
+  const heroUrl = `${cdn}/email/welcome-hero.png`
+  const logoUrl = `${cdn}/email/logo.png`
   const name = escapeHtml(args.firstName)
   const fontStack = `'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif`
 
   // Crop the hero to a banner via object-fit so the CTA stays above the
   // mobile fold. Native source is 1536×1024 (1.5:1) — without cropping it
   // renders 600×400, pushing the button off-screen on phones. Outlook
-  // desktop ignores object-fit and falls back to the full image; every
-  // other major client (Gmail web/iOS/Android, Apple Mail, Outlook 365)
-  // honors it. Acceptable degrade.
-  const heroRow = heroUrl ? `
+  // desktop ignores object-fit; other major clients honor it.
+  const heroRow = `
         <tr>
           <td style="padding:0; line-height:0; font-size:0;">
             <img src="${heroUrl}" alt="" width="600" height="220" style="display:block; width:100%; max-width:600px; height:220px; object-fit:cover; object-position:center 55%; border-radius:16px 16px 0 0;" />
           </td>
-        </tr>` : ''
+        </tr>`
 
-  const logoRow = logoUrl ? `
+  const logoRow = `
         <tr>
           <td align="center" style="padding:36px 0 24px;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
@@ -322,18 +308,13 @@ function buildWelcomeEmailHtml(args: {
               </tr>
             </table>
           </td>
-        </tr>` : `
-        <tr>
-          <td align="center" style="padding:36px 0 24px; font-family:${fontStack}; font-size:18px; font-weight:700; color:#0A1B2E; letter-spacing:-0.01em;">
-            LingxiLoop
-          </td>
         </tr>`
 
   // Match the app's .btn-primary: solid var(--skype) (#00A8F0), white
   // text, 8px radius, ~14px font, weight 600. Bumped padding (14×28 vs
   // the app's tight 7×14) because email CTA needs a fatter touch target
   // than an in-app button.
-  const ctaBlock = args.signInUrl ? `
+  const ctaBlock = `
                   <tr>
                     <td style="padding:8px 0 0;">
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
@@ -345,11 +326,6 @@ function buildWelcomeEmailHtml(args: {
                           </td>
                         </tr>
                       </table>
-                    </td>
-                  </tr>` : `
-                  <tr>
-                    <td style="padding:4px 0 0; font-family:${fontStack}; font-size:15px; font-weight:600; color:#4E3F8C;">
-                      Open the LingxiLoop app and sign in with the account you used to join the waitlist.
                     </td>
                   </tr>`
 
@@ -368,7 +344,7 @@ function buildWelcomeEmailHtml(args: {
       <td align="center" style="padding:24px 16px 48px;">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; width:100%;">${logoRow}${heroRow}
           <tr>
-            <td style="background:#FFFFFF; ${heroUrl ? 'border-radius:0 0 16px 16px;' : 'border-radius:16px;'} padding:44px 44px 40px; box-shadow:0 1px 0 #E5ECF2;">
+            <td style="background:#FFFFFF; border-radius:0 0 16px 16px; padding:44px 44px 40px; box-shadow:0 1px 0 #E5ECF2;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="font-family:${fontStack}; font-size:36px; font-weight:800; line-height:1.1; color:#0A1B2E; letter-spacing:-0.02em; padding:0 0 8px;">
@@ -418,31 +394,22 @@ function buildWelcomeEmailHtml(args: {
 </html>`
 }
 
-/** Notify a freshly approved waitlist user that they're in. Best-effort:
- *  failures only warn — the user is already approved in the DB; the worst
- *  case is they're confused until they next try signing in. Skips when
- *  EMAIL_DOMAIN isn't configured (the platform has no outbound email
- *  setup at all). In mock mode (RESEND_API_KEY empty) sendViaProvider
- *  logs but doesn't actually send.
+/** Notify a freshly approved waitlist user that they're in. Delivery is part
+ *  of the approval contract; configuration and provider failures reject.
  *
  *  We emit both an HTML and a plain-text body — HTML clients render the
  *  branded layout (hero + Manrope-styled card + gradient CTA); text-only
- *  clients fall back to the plain version with the same info. */
+ *  clients receive the plain version with the same information. */
 async function sendWaitlistApprovedEmail(args: {
   email: string
   displayName: string
 }): Promise<void> {
-  if (!env.EMAIL_DOMAIN) {
-    console.warn('[admin] skip waitlist-approved email: EMAIL_DOMAIN unset')
-    return
-  }
+  if (!env.EMAIL_DOMAIN) throw new Error('EMAIL_DOMAIN is required')
   const fromAddr = `welcome@${env.EMAIL_DOMAIN}`
-  const signInUrl = env.INVITE_BASE_URL || env.AUTH_DONE_URL
+  const signInUrl = env.INVITE_BASE_URL
   const httpUrl = approvedEntryUrl(signInUrl)
   const firstName = (args.displayName.split(/\s+/)[0] || args.displayName).trim() || 'there'
-  const ctaLine = httpUrl
-    ? `Sign in here: ${httpUrl}`
-    : `Open the LingxiLoop app and sign in with the same account you used to join the waitlist.`
+  const ctaLine = `Sign in here: ${httpUrl}`
   const text = [
     `Hi ${firstName},`,
     ``,
@@ -451,7 +418,7 @@ async function sendWaitlistApprovedEmail(args: {
     `Your workspace is set up and your learning team (Nova, Sage, Milo, Trace, Scout, Forge) is already gathered there, ready to study with you.`,
     ``,
     ctaLine,
-    `Use the same Google or GitHub account you used to join the waitlist.`,
+    `Use the same LingxiIdentity account you used to join the waitlist.`,
     ``,
     `LingxiLoop works directly in your browser; no desktop installation is required.`,
     ``,
@@ -469,13 +436,11 @@ async function sendWaitlistApprovedEmail(args: {
     messageId: mintMessageId(),
     autoSubmitted: 'auto-generated',
   })
-  if (!res.ok) {
-    console.warn(`[admin] waitlist-approved email failed for ${args.email}: ${res.error}`)
-  }
+  if (!res.ok) throw new Error(`waitlist-approved email failed: ${res.error}`)
 }
 
 /** Approve a waitlist row → create the real user + identity + personal
- *  company + sub2api account. Same shape as oauth.ts Path C; we have to
+ *  company. Same shape as oauth.ts Path C; we have to
  *  duplicate the inserts here because oauth.ts assumes the
  *  exchange-code+fetch-profile preamble has just run. The waitlist row
  *  already carries everything we need including the OAuth provider's
@@ -568,10 +533,9 @@ export async function approveWaitlist(waitlistId: string, decidedBy: string): Pr
 
     // Mirror the provider avatar to our CDN and stamp users.avatar_url so
     // any later invite-accept into a second workspace reuses the same
-    // face instead of falling back to a gravatar identicon (the
-    // invite-avatar bug fixed in oauth.ts Path C — duplicated here).
+    // face.
     const mirroredAvatar = await mirrorAvatar(userId, row.avatar_url)
-    const avatar = mirroredAvatar ?? gravatarUrlForEmail(row.email)
+    const avatar = mirroredAvatar
     await client.query(`UPDATE users SET avatar_url = $1 WHERE id = $2`, [avatar, userId])
 
     if (companyId) {
@@ -588,30 +552,10 @@ export async function approveWaitlist(waitlistId: string, decidedBy: string): Pr
     )
     await client.query('COMMIT')
 
-    // Post-commit side effects — same best-effort pattern as oauth.ts.
     if (companyId) {
-      // Starter agents are server-managed and available on every tier.
-      try {
-        await onboardStarterAgents(companyId)
-      } catch (e) { console.warn('[admin] starter onboarding failed', e) }
+      await onboardStarterAgents(companyId)
     }
-    try { await sendWaitlistApprovedEmail({ email: row.email, displayName: row.display_name }) } catch (e) { console.warn('[admin] waitlist-approved email failed', e) }
-    if (sub2apiConfigured()) {
-      try {
-        const r = await provisionSub2apiUser({
-          lingxiloopUserId: userId,
-          email: row.email,
-          displayName: row.display_name,
-          tier: 'free',
-        })
-        await pool.query(
-          `UPDATE users SET sub2api_user_id = $1, sub2api_api_key = $2 WHERE id = $3`,
-          [r.sub2apiUserId, r.apiKey, userId],
-        )
-      } catch (e) {
-        console.warn(`[admin] sub2api provisioning failed for ${userId}; legacy fallback`, e instanceof Error ? e.message : e)
-      }
-    }
+    await sendWaitlistApprovedEmail({ email: row.email, displayName: row.display_name })
     return { userId, companyId }
   } catch (e) {
     await client.query('ROLLBACK').catch(() => {})
@@ -739,29 +683,4 @@ export async function unsuspendUser(args: {
     userId: args.adminId,
     detail: { targetUserId: args.userId },
   })
-}
-
-/* ============== Tier change (admin-driven) ============== */
-
-/** Set a user's tier in lingxiloop DB AND mirror to sub2api. Used by the
- *  user-detail UI. If the sub2api mirror exists, it is the quota
- *  enforcement layer, so a failed mirror must fail the admin action
- *  instead of reporting success while the gateway keeps the old tier. */
-export async function changeUserTier(userId: string, tier: 'free' | 'pro' | 'max'): Promise<void> {
-  const { rows } = await pool.query<{ sub2api_user_id: number | null }>(
-    `SELECT sub2api_user_id FROM users WHERE id = $1`,
-    [userId],
-  )
-  if (rows.length === 0) throw new HttpError(404, 'user not found')
-  const sub2 = rows[0].sub2api_user_id
-  if (sub2 && sub2apiConfigured()) {
-    try {
-      await setUserTier(sub2, tier)
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      console.warn(`[admin] sub2api tier swap failed for user ${userId}`, msg)
-      throw new HttpError(502, `sub2api tier sync failed: ${msg}`)
-    }
-  }
-  await pool.query(`UPDATE users SET tier = $2 WHERE id = $1`, [userId, tier])
 }

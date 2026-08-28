@@ -1,9 +1,6 @@
 import {
-  BarChart3 as IconChartBar,
-  Check as IconCheck,
   DownloadCloud as IconCloudDownload,
   ExternalLink as IconExternalLink,
-  GitBranch as IconGitBranch,
   RefreshCw as IconRefresh,
   Settings as IconSettings,
   X as IconX,
@@ -15,20 +12,11 @@ import { useParticipants } from '@/stores/participants'
 import { useTheme } from '@/stores/theme'
 import type { Participant } from '@/types'
 
-type SettingsSectionId = 'general' | 'router' | 'usage' | 'beta'
+type SettingsSectionId = 'general' | 'beta'
 
 const SETTINGS_SECTIONS = [
   { id: 'general', label: 'General', icon: IconSettings },
-  { id: 'router', label: 'Router', icon: IconGitBranch },
-  { id: 'usage', label: 'Usage & Billing', icon: IconChartBar },
   { id: 'beta', label: 'Updates', icon: IconCloudDownload },
-] as const
-
-const ROUTER_PROVIDERS = [
-  { id: 'cursor', label: 'Cursor', description: 'Use your signed-in Cursor account and its hosted agent models.' },
-  { id: 'claude-code', label: 'Claude Code', description: "Use Anthropic's Claude Code provider for agent requests." },
-  { id: 'codex', label: 'Codex', description: "Use OpenAI's Codex provider for agent requests." },
-  { id: 'openrouter', label: 'OpenRouter', description: 'Use models and billing from your OpenRouter account.' },
 ] as const
 
 function DemoSwitch({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) {
@@ -87,45 +75,6 @@ function GeneralPanel() {
   )
 }
 
-function RouterPanel() {
-  const [provider, setProvider] = useState<(typeof ROUTER_PROVIDERS)[number]['id']>('cursor')
-  return (
-    <div className="sand-router-section">
-      <div className="sand-settings-intro"><strong>Agent router</strong><span>Choose which provider handles new agent requests.</span></div>
-      <div className="sand-router-provider-list">
-        {ROUTER_PROVIDERS.map((item) => (
-          <button key={item.id} type="button" className="sand-router-provider" data-active={provider === item.id || undefined} onClick={() => setProvider(item.id)}>
-            <span className="sand-router-provider__radio">{provider === item.id && <span />}</span>
-            <span className="sand-router-provider__copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-            {provider === item.id && <IconCheck size={17} strokeWidth={1.8} />}
-          </button>
-        ))}
-      </div>
-      <SettingsRow title="Default model" hint="Used when a conversation does not select a model."><button type="button" className="ui-select-trigger">Auto</button></SettingsRow>
-    </div>
-  )
-}
-
-function UsageMeter({ label, percent, note }: { label: string; percent: number; note: string }) {
-  return (
-    <div className="sand-usage-meter">
-      <div className="sand-usage-meter__header"><strong>{label}</strong><small>{note}</small></div>
-      <span className="sand-usage-meter__track"><span className="sand-usage-meter__fill" style={{ width: `${percent}%` }} /></span>
-      <small>{percent}% used</small>
-    </div>
-  )
-}
-
-function UsagePanel() {
-  return (
-    <div className="sand-usage-section">
-      <div><h3>Current plan</h3><div className="sand-usage-state"><span><strong>Max</strong><small>Renews Sep 18, 2026</small></span><button type="button">Manage plan</button></div></div>
-      <div><h3>Included usage</h3><UsageMeter label="Weekly agent usage" percent={42} note="Resets in 4 days" /><UsageMeter label="On-demand usage" percent={18} note="US$9.20 remaining" /></div>
-      <div className="sand-provider-usage-card"><strong>Provider usage</strong><span>Usage from external providers is managed by the connected provider account.</span></div>
-    </div>
-  )
-}
-
 function UpdatesPanel() {
   const [automatic, setAutomatic] = useState(true)
   const [checking, setChecking] = useState(false)
@@ -144,8 +93,6 @@ function UpdatesPanel() {
 }
 
 function renderPanel(section: SettingsSectionId) {
-  if (section === 'router') return <RouterPanel />
-  if (section === 'usage') return <UsagePanel />
   if (section === 'beta') return <UpdatesPanel />
   return <GeneralPanel />
 }

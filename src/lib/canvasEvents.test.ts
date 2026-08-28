@@ -12,8 +12,3 @@ test('Canvas REST history and WebSocket activity use one deduplicating ordered r
   const live = [event('new', 'frame_updated', '2026-01-01T00:00:02.000Z'), history[0]]
   assert.deepEqual(mergeCanvasActivities(live, history).map((item) => item.id), ['new', 'old'])
 })
-
-test('legacy persisted activity names are normalized at the history boundary', () => {
-  const legacy = { ...event('legacy', 'frame_updated', '2026-01-01T00:00:00.000Z'), action: 'frame.content_appended' } as unknown as CanvasActivity
-  assert.equal(mergeCanvasActivities([], [legacy])[0].action, 'frame_updated')
-})

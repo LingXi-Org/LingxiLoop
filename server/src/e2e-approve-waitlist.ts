@@ -75,8 +75,8 @@ async function main(): Promise<void> {
   const { userId, companyId } = result
 
   const user = await pool.query<{
-    id: string; email: string; display_name: string; is_admin: boolean; sub2api_user_id: string | null
-  }>(`SELECT id, email, display_name, is_admin, sub2api_user_id FROM users WHERE id = $1`, [userId])
+    id: string; email: string; display_name: string; is_admin: boolean
+  }>(`SELECT id, email, display_name, is_admin FROM users WHERE id = $1`, [userId])
   console.log(`[e2e] user row:`, user.rows[0])
 
   const company = await pool.query<{

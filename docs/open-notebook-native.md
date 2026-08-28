@@ -29,20 +29,20 @@ Production must provide:
 - `OPEN_NOTEBOOK_CHAT_MODEL` or the three stage-specific model record IDs for
   Agent `loop.knowledge.ask()`.
 
-`OPEN_NOTEBOOK_ENABLED=false` disables the knowledge gateway and workers while
-leaving ordinary messaging available. This is an availability switch, not a
-legacy-RAG fallback.
+The v1 release requires the knowledge service for knowledge operations. If it
+is unavailable, those operations fail explicitly; ordinary messaging remains
+an independent domain and continues to operate.
 
 ## Artifact storage
 
-Open Notebook reuses LingxiLoop's existing private R2 bucket. When
-`R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY` are
-all set, `OPEN_NOTEBOOK_R2_ENABLED=auto` persists uploaded Source originals and
-generated Podcast audio under `OPEN_NOTEBOOK_R2_PREFIX` (default
+Open Notebook reuses LingxiLoop's private R2 bucket. `R2_ENDPOINT`,
+`R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_PUBLIC_BASE`
+and `R2_URL_SIGNING_SECRET` are required. Uploaded Source originals and
+generated Podcast audio live under `OPEN_NOTEBOOK_R2_PREFIX` (default
 `open-notebook/`). Objects are represented internally as opaque `r2://`
-references and are never exposed as direct bucket URLs; authenticated APIs
-stream them to callers. If R2 is not configured, the upstream-compatible local
-filesystem behavior remains active.
+references; authenticated APIs resolve them without exposing credentials.
+There is no local-filesystem object-storage mode and browsers upload through
+presigned PUT only.
 
 SurrealDB data, LangGraph SQLite checkpoints, and parser/model/browser caches
 remain on their existing persistent volume. They are databases or disposable
@@ -57,9 +57,8 @@ candidates. Source Chat verifies the same Notebook–Source relationship. The
 LingxiLoop gateway never accepts or returns those external IDs to a browser or
 Agent.
 
-## Cutover
+## Initialization
 
-The `open_notebook_native_v1` schema cutover intentionally deletes old local
-knowledge sources and drops the retired chunk table and content columns. No
-migration, dual read, or pgvector RAG fallback is performed. Re-upload sources
-after the first native deployment.
+Open Notebook and LingxiLoop are initialized only as the complete v1 shape.
+There is no migration, dual read, alternative RAG engine, or in-place upgrade
+path. Rebuild non-v1 development environments before release.

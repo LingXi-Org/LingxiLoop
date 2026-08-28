@@ -37,7 +37,7 @@ interface BumpArgs {
 /**
  * Atomic upsert + clamp. Cheap — single SQL roundtrip + a guard SELECT
  * to skip when the agent_id isn't actually an agent (humans don't get
- * climate rows). Never throws on caller; logs and swallows on failure.
+ * climate rows). Provider and database failures propagate.
  */
 export async function bumpClimate(args: BumpArgs): Promise<void> {
   const { agentId, aboutId, affinity = 0, trust = 0, note } = args
@@ -45,15 +45,13 @@ export async function bumpClimate(args: BumpArgs): Promise<void> {
   if (agentId === aboutId) return  // self-climate is noise
   if (affinity === 0 && trust === 0) return
 
-  try {
-    // Guard: only insert/update climate WHEN agent_id refers to an agent.
-    // (Reaction events fire for human authors too; skip those.)
-    const { rows: kind } = await pool.query<{ kind: string }>(
-      `SELECT kind FROM participants WHERE id = $1 LIMIT 1`, [agentId],
-    )
-    if (!kind[0] || kind[0].kind !== 'agent') return
+  // Guard: only insert/update climate WHEN agent_id refers to an agent.
+  const { rows: kind } = await pool.query<{ kind: string }>(
+    `SELECT kind FROM participants WHERE id = $1 LIMIT 1`, [agentId],
+  )
+  if (!kind[0] || kind[0].kind !== 'agent') return
 
-    await pool.query(
+  await pool.query(
       `INSERT INTO agent_climate (agent_id, about_id, affinity, trust, last_note, updated_at)
        VALUES ($1, $2,
                GREATEST(-1, LEAST(1, $3::real)),
@@ -65,10 +63,7 @@ export async function bumpClimate(args: BumpArgs): Promise<void> {
               last_note = COALESCE($5, agent_climate.last_note),
               updated_at = NOW()`,
       [agentId, aboutId, clamp(affinity), clamp(trust), note ?? null],
-    )
-  } catch (e) {
-    console.warn('[climate] bump failed', e)
-  }
+  )
 }
 
 /** Pull every agent_id mentioned in a body and bump their climate toward

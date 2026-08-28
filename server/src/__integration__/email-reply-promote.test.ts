@@ -8,13 +8,13 @@
  * reply, so users assumed the email feature was half-broken. Now both
  * paths converge on replyInEmailConversation, which builds reply
  * headers from the latest email_messages row in the convo and routes
- * the body through Resend (or mock).
+ * the body through the injected provider seam.
  */
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
-import { findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
+import { __setEmailProviderOverrideForTesting, findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent,
   seedUserMembership, teardownAll,
@@ -38,9 +38,11 @@ before(async () => {
 
 beforeEach(async () => {
   await resetAllTables()
+  __setEmailProviderOverrideForTesting(async () => ({ ok: true, smtpMessageId: `provider-${Date.now()}`, error: null }))
 })
 
 after(async () => {
+  __setEmailProviderOverrideForTesting(null)
   await teardownAll(server)
 })
 
@@ -74,9 +76,8 @@ test('[integration] POST /conversations/:id/messages in an email convo auto-prom
     body: JSON.stringify({ body: 'going great — full status attached below.' }),
   })
   assert.equal(res.status, 202)
-  const payload = await res.json() as { id: string; transportStatus: string; mock: boolean }
+  const payload = await res.json() as { id: string; transportStatus: string }
   assert.equal(payload.transportStatus, 'sent')
-  assert.equal(payload.mock, true, 'expect mock mode in default integration env')
 
   // The new row must be kind='email', direction='out', author=ME, and
   // its from_addr must derive from a minted participants.email — NOT a
@@ -174,7 +175,7 @@ test('[integration] reply continues the thread when the latest row is our own ou
     `follow-up TO should preserve the parent's recipients, got: ${JSON.stringify(rows[0].to_addrs)}`)
 })
 
-test('[integration] lingxiloop reply CLI on an email convo auto-promotes via sendViaProvider mock', async () => {
+test('[integration] lingxiloop reply CLI on an email convo uses the injected provider', async () => {
   // Mirror of the HTTP-side auto-promote test, but exercising the
   // `runCli` entrypoint that the agent's `bash` tool actually shells
   // into. Pre-fix this used to silently write a kind='text' row and
@@ -186,7 +187,6 @@ test('[integration] lingxiloop reply CLI on an email convo auto-promotes via sen
   const res = await runCli(['--as', agentId, 'reply', conversationId, 'taking a look now'])
   assert.equal(res.ok, true, `runCli failed: ${res.text}`)
   assert.match(res.text, /replied via email/, 'CLI reports the email auto-promote path')
-  assert.match(res.text, /\(mock\)/, 'mock mode in default integration env')
   assert.equal(res.sideEffects?.[0]?.event, 'message.posted')
   assert.equal(res.sideEffects?.[0]?.command, 'reply')
   assert.equal(res.sideEffects?.[0]?.medium, 'email')
@@ -249,18 +249,18 @@ test('[integration] lingxiloop reply CLI on a non-email convo writes a plain tex
 test('[integration] non-email conversation POST is retired in favor of WuKongIM', async () => {
   // Chat messages are written through the WuKongIM SDK. The legacy REST
   // endpoint remains available only for email conversations.
-  const { companyId } = await seedCompanyWithAgent()
+  const { companyId, projectId } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
   // Insert a minimal group conversation with the user as a member.
   const convId = `g-test-${Date.now()}`
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, members, company_id, topic)
-     VALUES ($1, 'group', $2, $3::jsonb, $4, $5)`,
-    [convId, 'plain group', JSON.stringify([ME_USER_ID]), companyId, 'group'],
+    `INSERT INTO conversations (id, kind, title, members, company_id, project_id, topic)
+     VALUES ($1, 'group', $2, $3::jsonb, $4, $5, $6)`,
+    [convId, 'plain group', JSON.stringify([ME_USER_ID]), companyId, projectId, 'group'],
   )
   const res = await fetch(`${baseUrl}/api/conversations/${encodeURIComponent(convId)}/messages`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId, 'x-project-id': projectId },
     body: JSON.stringify({ body: 'just a chat message' }),
   })
   assert.equal(res.status, 410)

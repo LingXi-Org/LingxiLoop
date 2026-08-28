@@ -338,7 +338,7 @@ function CreatedInviteCard({ invite, onDone }: { invite: ApiInvitationWithToken;
     } catch { /* swallow */ }
   }
   const delivery = invite.emailDelivery
-  const headline = delivery?.attempted && delivery.ok
+  const headline = delivery?.ok
     ? 'Invite sent'
     : 'Invite ready to share'
   return (
@@ -356,23 +356,11 @@ function CreatedInviteCard({ invite, onDone }: { invite: ApiInvitationWithToken;
       </div>
       <div className="text-[11.5px] text-ink-500 italic font-display">
         {invite.email
-          ? delivery?.attempted && delivery.ok
+          ? delivery?.ok
             ? <>电子邮件已发送至 <b className="not-italic text-ink-700">{invite.email}</b>。下面的链接与我们发送的链接相同 - 如果您想将它们推送到另一个频道，请复制该链接。</>
             : <>锁定至 <b className="not-italic text-ink-700">{invite.email}</b> — 他们必须使用该电子邮件登录。</>
           : <>知道此链接的任何人都可以作为 {invite.role}.</>}
       </div>
-      {delivery && delivery.attempted && !delivery.ok && (
-        <div className="text-[11.5px] py-1.5 px-2.5 rounded-[8px]"
-             style={{ background: 'var(--coral-soft)', color: 'var(--coral-deep)', border: '1px solid var(--coral-deep)' }}>
-          电子邮件发送失败： {delivery.error ?? 'unknown error'}。复制链接并手动共享。
-        </div>
-      )}
-      {delivery?.skipped === 'no_email_config' && (
-        <div className="text-[11.5px] text-ink-500 py-1.5 px-2.5 rounded-[8px]"
-             style={{ background: 'var(--cloud)', border: '1px dashed var(--ink-200)' }}>
-          此服务器未设置用于出站电子邮件 - 复制链接并手动共享。
-        </div>
-      )}
       <div className="flex items-stretch gap-2">
         <Input
           readOnly

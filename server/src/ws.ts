@@ -53,7 +53,7 @@ export function disconnectUserFromCompany(userId: string, companyId: string): vo
   for (const client of clients) {
     if (client.userId !== userId || !client.companies.has(companyId)) continue
     client.companies.delete(companyId)
-    try { client.ws.close(4403, 'company membership removed') } catch { /* best effort */ }
+    client.ws.close(4403, 'company membership removed')
   }
 }
 
@@ -101,8 +101,7 @@ const humanConnections = new Map<string, number>()
  *  Agents are handled by their own runtime lease + the GET /participants
  *  auto-expiry, so we leave their status alone here. */
 export async function resetHumanPresenceOnBoot(): Promise<void> {
-  try {
-    const { rows } = await pool.query<{ id: string; company_id: string; status_updated_at: Date }>(
+  const { rows } = await pool.query<{ id: string; company_id: string; status_updated_at: Date }>(
       `UPDATE participants
           SET status = 'resting',
               status_updated_at = NOW()
@@ -112,37 +111,14 @@ export async function resetHumanPresenceOnBoot(): Promise<void> {
     if (rows.length > 0) {
       console.log(`[ws] demoted ${rows.length} stale 'avail' human(s) to 'resting' on boot`)
     }
-    // Broadcast each transition so any already-connected clients in a
-    // multi-instance setup see the reset. We fire publishes in
-    // parallel and bound the whole batch with a hard timeout: the
-    // old code was a sequential `for await publish` that hung
-    // server.listen() at first deploy when the table was full of
-    // pre-feature stale rows. Failures are swallowed (Promise.race
-    // against a timeout) — at boot there are typically zero connected
-    // clients anyway, so the publish is best-effort.
-    if (rows.length === 0) return
-    const PUBLISH_BATCH_TIMEOUT_MS = 10_000
-    const broadcastAll = Promise.allSettled(rows.map((r) =>
-      publish(CH_STATUS, {
+  if (rows.length === 0) return
+  await Promise.all(rows.map((r) => publish(CH_STATUS, {
         type: 'participants.status',
         participantId: r.id,
         status: 'resting',
         statusUpdatedAt: r.status_updated_at.toISOString(),
         companyId: r.company_id,
-      }),
-    ))
-    await Promise.race([
-      broadcastAll,
-      new Promise<void>((resolve) =>
-        setTimeout(() => {
-          console.warn(`[ws] resetHumanPresenceOnBoot publishes still pending after ${PUBLISH_BATCH_TIMEOUT_MS}ms — continuing without them`)
-          resolve()
-        }, PUBLISH_BATCH_TIMEOUT_MS),
-      ),
-    ])
-  } catch (e) {
-    console.warn('[ws] resetHumanPresenceOnBoot failed', e)
-  }
+  })))
 }
 
 async function onHumanConnect(userId: string): Promise<void> {
@@ -320,20 +296,14 @@ async function processDocMention(args: {
   )
   if (validRows.length === 0) return
 
-  // Doc metadata for the broadcast payload — title + the conversation
-  // (if any) the doc is pinned to. The pinned convo is the preferred
-  // surface for the agent-wake chat ping; falling back to a 1:1 DM
-  // when the doc isn't pinned avoids dragging unrelated members into
-  // a chat noise loop.
-  const { rows: docRows } = await pool.query<{ title: string; conversation_id: string | null; project_id: string }>(
-    `SELECT title,conversation_id,project_id FROM documents WHERE id=$1 AND company_id=$2`,
+  const { rows: docRows } = await pool.query<{ title: string; project_id: string }>(
+    `SELECT title,project_id FROM documents WHERE id=$1 AND company_id=$2`,
     [documentId, companyId],
   )
-  const documentTitle = docRows[0]?.title ?? 'Untitled'
-  const pinnedConversationId = docRows[0]?.conversation_id ?? null
+  if (!docRows[0]) throw new Error(`document ${documentId} not found in company ${companyId}`)
+  const documentTitle = docRows[0].title
 
-  // Mentioner display name (humans live in `users`, agents in
-  // `participants`). Fall back to the id if neither has a name.
+  // Mentioner display name comes from the tenant participant record.
   const mentionerName = await resolveDisplayName(mentionerId, companyId)
 
   // Dedup against the last 60 seconds. We don't try for global
@@ -370,24 +340,18 @@ async function processDocMention(args: {
           `${mentionerName} @-mentioned you in doc "${documentTitle}"`,
           JSON.stringify({ documentId, mentionerId }),
         ],
-      ).catch((e) => console.warn('[doc.mention] agent_log insert failed', e))
+      )
 
       // Also post a WuKong text message authored by the mentioner so the
       // post-commit webhook deterministically wakes the mentioned agent.
-      try {
-        await postDocMentionWake({
-          companyId,
-          mentionerId,
-          mentionerName,
-          agentId: row.id,
-          agentName: row.name,
-          documentId,
-          documentTitle,
-          pinnedConversationId,
-        })
-      } catch (e) {
-        console.warn(`[doc.mention] wake post for ${row.id} failed`, e)
-      }
+      await postDocMentionWake({
+        companyId,
+        mentionerId,
+        agentId: row.id,
+        agentName: row.name,
+        documentId,
+        documentTitle,
+      })
     }
   }
   if (freshIds.length === 0) return
@@ -400,7 +364,7 @@ async function processDocMention(args: {
     mentionerId,
     mentionerName,
     mentionedIds: freshIds,
-    workspaceId: docRows[0]?.project_id,
+    workspaceId: docRows[0].project_id,
   }
   await publish(CH_DOC_MENTION, event)
 }
@@ -408,11 +372,8 @@ async function processDocMention(args: {
 /** Post a WuKong message that wakes the mentioned agent with enough context
  *  to act. The post-commit webhook is the sole work-enqueue boundary.
  *
- *  Conversation selection — first match wins:
- *    1. The doc's pinned `conversation_id`, IF the agent is a member.
- *    2. An existing 1:1 DM between mentioner + agent.
- *    3. A freshly-created DM (idempotent — same shape as the auto-DM
- *       created on agent onboarding).
+ *  Document mentions use the canonical 1:1 conversation between mentioner
+ *  and agent, creating that native conversation when it does not exist.
  *
  *  Body is plain prose — looks like a regular nudge to the agent's
  *  inbox parser, but carries the doc id verbatim so the agent's tool
@@ -420,35 +381,17 @@ async function processDocMention(args: {
 async function postDocMentionWake(args: {
   companyId: string
   mentionerId: string
-  mentionerName: string
   agentId: string
   agentName: string
   documentId: string
   documentTitle: string
-  pinnedConversationId: string | null
 }): Promise<void> {
   const {
     companyId, mentionerId, agentId, agentName,
-    documentId, documentTitle, pinnedConversationId,
+    documentId, documentTitle,
   } = args
 
-  // 1) Try the pinned WuKong channel if both mentioner + agent are members.
-  let conversationId: string | null = null
-  if (pinnedConversationId) {
-    const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
-      `SELECT profile FROM im_channel_bindings WHERE channel_id = $1 AND company_id = $2`,
-      [pinnedConversationId, companyId],
-    )
-    const members = Array.isArray(rows[0]?.profile.members) ? rows[0].profile.members.map(String) : []
-    if (members.includes(mentionerId) && members.includes(agentId)) {
-      conversationId = pinnedConversationId
-    }
-  }
-
-  // 2) Existing DM (same 2-member query the /conversations/direct
-  //    handler uses — single source of truth for the dedup shape).
-  if (!conversationId) {
-    const { rows } = await pool.query<{ channel_id: string }>(
+  const { rows } = await pool.query<{ channel_id: string }>(
       `SELECT channel_id FROM im_channel_bindings
         WHERE company_id = $3 AND profile->>'kind' = 'direct'
           AND profile->'members' @> to_jsonb(ARRAY[$1::text])
@@ -457,10 +400,9 @@ async function postDocMentionWake(args: {
         ORDER BY updated_at DESC LIMIT 1`,
       [mentionerId, agentId, companyId],
     )
-    if (rows[0]) conversationId = rows[0].channel_id
-  }
+  let conversationId = rows[0]?.channel_id ?? null
 
-  // 3) Create one.
+  // Create the native direct conversation when this pair has not spoken yet.
   if (!conversationId) {
     const fresh = `direct-${agentId}-${randomUUID().slice(0, 6)}`
     const profile = { channelId: fresh, channelType: 2 as const, kind: 'direct' as const, title: agentName, members: [mentionerId, agentId] }
@@ -480,23 +422,14 @@ async function postDocMentionWake(args: {
   })
 }
 
-/** Display-name lookup for the mention payload. Tries users first
- *  (humans live there), falls back to participants (covers agents and
- *  is also a backstop for humans that haven't logged in yet), finally
- *  defaults to the raw id. Best-effort — the renderer will fall back
- *  to its own participant store if the name comes back blank. */
+/** Display-name lookup for the mention payload. */
 async function resolveDisplayName(id: string, companyId: string): Promise<string> {
-  try {
-    const { rows } = await pool.query<{ name: string }>(
-      `SELECT name FROM users WHERE id = $1 LIMIT 1`, [id],
-    )
-    if (rows[0]?.name) return rows[0].name
-  } catch { /* table may not exist in legacy schemas — fall through */ }
   const { rows } = await pool.query<{ name: string }>(
     `SELECT name FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
     [id, companyId],
   )
-  return rows[0]?.name ?? id
+  if (!rows[0]) throw new Error(`participant ${id} not found in company ${companyId}`)
+  return rows[0].name
 }
 
 export function attachWebSocket(httpServer: Server) {

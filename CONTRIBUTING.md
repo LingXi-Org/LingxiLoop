@@ -14,7 +14,8 @@ WuKongIM v3 instance running locally.
 
 ```bash
 createdb -h localhost lingxiloop
-export DEEPSEEK_API_KEY=sk-...        # the only hard-required model credential
+export OPENAI_API_KEY=sk-...          # the only model credential
+export OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 
 npm install
 npm run db:bootstrap                # initialize the immutable v1 schema once
@@ -25,8 +26,9 @@ Open http://localhost:5180 for the web app, or `npm run electron:dev` for the
 desktop shell. Web and worker processes never execute DDL: `db:bootstrap`
 accepts only an empty database or the already-marked v1 schema. Development
 databases from before v1 must be dropped and recreated. Startup seeds the v1
-schema with a starter team. Everything else (OAuth login, email, storage, the
-sub2api LLM gateway) soft-disables when its env vars are unset — see
+schema with a starter team. OAuth login and every enabled external capability
+are configured explicitly; required providers fail closed rather than
+manufacturing local success — see
 [`.env.example`](.env.example).
 
 Component-specific setup lives in [`docs/`](docs/), including desktop,
@@ -42,6 +44,7 @@ npm run typecheck          # frontend types
 npm run server:typecheck   # server types
 npm test                   # unit tests (node:test) for server + workers
 npm run test:integration   # integration suite (needs local Postgres + Redis)
+npm run guard:architecture # vertical boundaries and single-provider paths
 npm run guard:agent-os     # independent runtime/tool-boundary guard
 npm run guard:llm-tracked  # architecture guard, see below
 ```
@@ -67,6 +70,10 @@ broken:
 2. **Every LLM call must be tracked** in the cost ledger. Untracked spend is a
    correctness bug here, not just an oversight. `npm run guard:llm-tracked`
    checks this.
+3. **Production has one authoritative path per capability.** Routers,
+   providers, storage, transports and sensitive interactions cannot bypass
+   their domain/shared boundary. `npm run guard:architecture` checks retired
+   surfaces and direct-provider shortcuts.
 
 The learning-agent coordination model is documented in
 [`docs/COORDINATION.md`](docs/COORDINATION.md). Read it before changing routing,

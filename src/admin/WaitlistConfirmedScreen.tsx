@@ -1,8 +1,7 @@
 /**
  * Shown to a brand-new OAuth visitor whose sign-in attempt landed
  * them on the waitlist instead of creating an account. Triggered by
- * the `?waitlist=1&email=...` query (or legacy `#waitlist=1&...`
- * fragment) that handleCallback redirects to. The signal is consumed
+ * the `?waitlist=1&email=...` query that handleCallback redirects to. The signal is consumed
  * once and scrubbed so a reload doesn't stick the user on this page
  * forever — they can re-attempt sign-in normally.
  */
@@ -14,19 +13,11 @@ interface CarriedWaitlist { email: string | null }
 
 export function consumeWaitlistFragment(): CarriedWaitlist | null {
   const search = new URLSearchParams(location.search)
-  const hash = new URLSearchParams(location.hash.replace(/^#/, ''))
-  // Query string is the new shape (survives cross-origin redirects that
-  // drop fragments); hash kept as a fallback for older server builds.
   const fromQuery = search.get('waitlist') === '1'
-  const fromHash = hash.get('waitlist') === '1'
-  if (!fromQuery && !fromHash) return null
-  const email = (fromQuery ? search.get('email') : hash.get('email'))
-  // Scrub both the waitlist params and any leftover hash so a refresh
-  // lands the user back on the normal sign-in flow.
-  if (fromQuery) {
-    search.delete('waitlist')
-    search.delete('email')
-  }
+  if (!fromQuery) return null
+  const email = search.get('email')
+  search.delete('waitlist')
+  search.delete('email')
   const q = search.toString()
   history.replaceState(null, '', location.pathname + (q ? `?${q}` : ''))
   return { email }

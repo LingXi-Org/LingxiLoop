@@ -29,9 +29,12 @@ The model receives exactly one tool:
 { name: "ipython", arguments: { code: string } }
 ```
 
-Agent OS uses DeepSeek's OpenAI-compatible Chat Completions protocol and owns
-conversation history itself. `DEEPSEEK_BASE_URL` may point to an approved
-DeepSeek gateway, but there is no alternate provider registry. IPython variables survive across turns while
+Agent OS uses the OpenAI Chat Completions API and owns conversation history
+itself. There is no provider registry, billing gateway, or alternate transport.
+Every chat, compaction, structured, embedding and image call enters the
+append-only `llm_calls` technical ledger; run-level token fields are projections,
+not the usage authority.
+IPython variables survive across turns while
 the kernel lives; durable state must be written to Agent Home or a typed
 `loop.*` learning service. WuKongIM is the only authoritative message store.
 
@@ -43,9 +46,10 @@ Requirements: Node.js 20+, Python 3 with IPython, PostgreSQL and Redis.
 npm ci
 $env:DATABASE_URL = 'postgres://lingxiloop:lingxiloop@localhost:5432/lingxiloop'
 $env:REDIS_URL = 'redis://localhost:6379'
-$env:DEEPSEEK_API_KEY = '...'
-$env:DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'
-$env:DEEPSEEK_MODEL = 'deepseek-chat'
+$env:OPENAI_API_KEY = '...'
+$env:OPENAI_BASE_URL = 'https://api.openai.com/v1'
+$env:OPENAI_MODEL = 'gpt-5-mini'
+$env:OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small'
 $env:AGENT_OS_SERVICE_TOKEN = 'replace-with-a-long-random-secret'
 npm run db:bootstrap
 npm run dev:all
@@ -75,14 +79,20 @@ service mounts the Docker socket or shares an Agent execution environment.
 
 ```powershell
 npm run guard:agent-os
+npm run guard:architecture
+npm run guard:llm-tracked
+npm run guard:brand
+npm run version:check
+npm run lint
 npm run server:typecheck
 npm run typecheck
 npm test
 ```
 
-The architecture guard rejects retired runtime files, executable Codex/Claude
-adapters, BYOA pairing configuration, LingxiGraph runtime dependencies and any
-model tool surface other than `ipython`.
+The guards reject retired endpoints and switches, production mock branches,
+provider/storage/transport bypasses, executable Codex/Claude adapters,
+LingxiGraph runtime dependencies, and any model tool surface other than
+`ipython`.
 
 ## Package publishing and production
 
@@ -114,6 +124,7 @@ Web replica count never creates more scheduler, retry, sweeper or GC loops.
 | `server/src/agent-os/` | Agent OS host, model loop, queue and Host Bridge contracts |
 | `server/agent-os/` | Persistent IPython kernel runner |
 | `server/src/im/` | WuKongIM bootstrap, webhook, routing and payload contracts |
+| `server/src/modules/` | HTTP domain slices and their public domain facades |
 | `server/src/agents/` | Typed learning-domain services used by the Host Bridge |
 | `server/src/eval/` | Deterministic answer, RAG, tool, and multi-Agent evaluation pipeline |
 | `eval/suites/` + `eval/baselines/` | Versioned golden Eval datasets and merge-gating baselines |
@@ -123,6 +134,8 @@ Web replica count never creates more scheduler, retry, sweeper or GC loops.
 | `src/admin/EvalPage.tsx` | Eval run pipeline, failure drill-down, and version comparison dashboard |
 | `.agents/skills/lingxiloop-eval-change/` | Eval suite, baseline, trace-safety, comparison, and focused-CI workflow |
 | `scripts/guard-agent-os.mjs` | CI guard for the independent runtime boundary |
+| `scripts/guard-architecture.mjs` | CI guard for single-path frontend/backend boundaries |
+| `scripts/guard-llm-tracked.mjs` | CI guard for the universal LLM ledger |
 
 The Eval request contract and scoring rules are documented in [`docs/agent-eval.md`](docs/agent-eval.md).
 

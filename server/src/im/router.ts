@@ -35,7 +35,8 @@ async function identity(req: Request & AuthedRequest): Promise<{ userId: string;
 }
 
 function userImToken(uid: string): string {
-  const secret = process.env.WUKONG_USER_TOKEN_SECRET ?? process.env.AGENT_OS_SERVICE_TOKEN ?? 'dev-wukong-user-token-secret'
+  const secret = process.env.WUKONG_USER_TOKEN_SECRET?.trim() || process.env.AGENT_OS_SERVICE_TOKEN?.trim()
+  if (!secret) throw new Error('WUKONG_USER_TOKEN_SECRET or AGENT_OS_SERVICE_TOKEN is required')
   return createHmac('sha256', secret).update(`wukong-user:${uid}`).digest('base64url')
 }
 

@@ -1,14 +1,18 @@
 import type { ApiCourse } from './contracts'
 
-/** Single production/mock boundary for the course contract. Keeping coercion
- * here prevents development fixtures from silently drifting from API JSON. */
-export function normalizeCourseContract(value: Partial<ApiCourse> & Pick<ApiCourse, 'id' | 'companyId' | 'projectId' | 'name'>): ApiCourse {
-  return {
-    id: value.id, companyId: value.companyId, projectId: value.projectId, name: value.name,
-    description: value.description ?? '', color: value.color ?? '#5266d6',
-    status: value.status === 'archived' ? 'archived' : 'active', createdBy: value.createdBy ?? 'mock-user',
-    studyRoomId: value.studyRoomId ?? null, companyRole: value.companyRole,
-    courseRole: value.courseRole ?? null, memberCount: Number(value.memberCount ?? 0),
-    canManage: Boolean(value.canManage), createdAt: value.createdAt, updatedAt: value.updatedAt,
+const requiredStrings = ['id', 'companyId', 'projectId', 'name', 'description', 'color', 'createdBy'] as const
+
+/** Reject contract drift at the HTTP boundary; production data is never padded. */
+export function normalizeCourseContract(value: unknown): ApiCourse {
+  if (!value || typeof value !== 'object') throw new Error('invalid course response')
+  const course = value as Record<string, unknown>
+  for (const key of requiredStrings) {
+    if (typeof course[key] !== 'string') throw new Error(`invalid course response: ${key} is required`)
   }
+  if (course.status !== 'active' && course.status !== 'archived') throw new Error('invalid course response: status')
+  if (course.courseRole !== null && course.courseRole !== 'teacher' && course.courseRole !== 'learner') throw new Error('invalid course response: courseRole')
+  if (course.studyRoomId !== null && typeof course.studyRoomId !== 'string') throw new Error('invalid course response: studyRoomId')
+  if (typeof course.memberCount !== 'number' || !Number.isFinite(course.memberCount)) throw new Error('invalid course response: memberCount')
+  if (typeof course.canManage !== 'boolean') throw new Error('invalid course response: canManage')
+  return course as unknown as ApiCourse
 }

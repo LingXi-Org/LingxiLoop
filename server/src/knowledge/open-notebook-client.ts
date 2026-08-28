@@ -14,6 +14,19 @@ export interface OpenNotebookNotebook {
   external_key?: string | null
 }
 
+type CreateNotebookOverride = ((input: { name: string; description: string; externalKey: string }) => Promise<OpenNotebookNotebook>) | null
+let createNotebookOverride: CreateNotebookOverride = null
+type UpdateNotebookOverride = ((id: string, input: { name?: string; description?: string; archived?: boolean }) => Promise<OpenNotebookNotebook>) | null
+let updateNotebookOverride: UpdateNotebookOverride = null
+
+export function __setCreateNotebookOverrideForTesting(override: CreateNotebookOverride): void {
+  createNotebookOverride = override
+}
+
+export function __setUpdateNotebookOverrideForTesting(override: UpdateNotebookOverride): void {
+  updateNotebookOverride = override
+}
+
 export interface OpenNotebookSource {
   id: string
   title?: string | null
@@ -135,6 +148,7 @@ export class OpenNotebookClient {
   }
 
   createNotebook(input: { name: string; description: string; externalKey: string }): Promise<OpenNotebookNotebook> {
+    if (createNotebookOverride) return createNotebookOverride(input)
     return this.json('/api/notebooks', {
       method: 'POST', headers: this.headers(true),
       body: JSON.stringify({ name: input.name, description: input.description, external_key: input.externalKey }),
@@ -142,6 +156,7 @@ export class OpenNotebookClient {
   }
 
   updateNotebook(id: string, input: { name?: string; description?: string; archived?: boolean }): Promise<OpenNotebookNotebook> {
+    if (updateNotebookOverride) return updateNotebookOverride(id, input)
     return this.json(`/api/notebooks/${encodeURIComponent(id)}`, {
       method: 'PUT', headers: this.headers(true), body: JSON.stringify(input),
     })

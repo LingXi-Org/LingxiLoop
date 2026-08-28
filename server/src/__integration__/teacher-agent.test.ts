@@ -10,10 +10,10 @@ import {
   reactivateTeacherRoomForCourse,
   teacherActionRequiresApproval,
 } from '../learning/teacher-agent.js'
-import { buildApiTestApp, ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
+import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })
-beforeEach(async () => { await resetAllTables() })
+beforeEach(async () => { installFakeWukong(); await resetAllTables() })
 after(async () => { await teardownAll() })
 
 interface Fixture {
@@ -34,7 +34,7 @@ async function seedTeacherCourse():Promise<Fixture>{
   const learnerId=`learner-${suffix}`
   const adminId=`admin-${suffix}`
   for(const [id,name] of [[teacherId,'周老师'],[learnerId,'陈同学'],[adminId,'公司管理员']] as const){
-    await pool.query(`INSERT INTO users(id,email,display_name,tier) VALUES($1,$2,$3,'free')`,[id,`${id}@test.local`,name])
+    await pool.query(`INSERT INTO users(id,email,display_name) VALUES($1,$2,$3)`,[id,`${id}@test.local`,name])
   }
   await pool.query(`INSERT INTO companies(id,name,slug,owner_user_id) VALUES($1,'Pulse 测试公司',$1,$2)`,[companyId,adminId])
   for(const [id,role] of [[teacherId,'member'],[learnerId,'member'],[adminId,'owner']] as const){

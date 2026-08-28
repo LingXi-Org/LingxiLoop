@@ -33,8 +33,9 @@ const attachmentPrimitive = read('../components/ui/attachment.tsx')
 const attachmentCard = read('../components/messages/MessageAttachmentCard.tsx')
 const emailComposer = read('../components/EmailComposer.tsx')
 const drawerPrimitive = read('../components/ui/drawer.tsx')
-const globalStyles = read('../styles/globals.css')
-const desktopChat = read('../desktop/ChatPane.tsx')
+const chatStyles = read('../styles/chat.css')
+const globalStyles = read('../styles/globals.css') + chatStyles
+const desktopComposer = read('../desktop/ChatComposer.tsx')
 const markdown = read('../components/assistant-ui/markdown-text.tsx')
 const typesetRenderer = read('../components/Typeset.tsx')
 const typesetStyles = read('../styles/typeset.css')
@@ -44,7 +45,7 @@ const documentEditor = read('../components/DocumentEditor.tsx')
 const updaterDialog = read('../components/UpdaterDialog.tsx')
 const reasoning = read('../components/assistant-ui/elements/reasoning-panel.tsx')
 const surfaces = read('../components/assistant-ui/elements/surfaces.tsx')
-const styles = read('../styles/globals.css')
+const styles = globalStyles
 const businessParts = read('../components/messages/MessageBusinessParts.tsx')
 const groupContext = read('../components/GroupContextContent.tsx')
 const poll = read('../components/PollBubble.tsx')
@@ -55,7 +56,6 @@ const codeBlock = read('../components/tool-ui/code-block/code-block.tsx')
 const promptKitTool = read('../components/prompt-kit/tool.tsx')
 const readReceiptStatus = read('../components/messages/ReadReceiptStatus.tsx')
 const threadDrawer = read('../desktop/ThreadDrawer.tsx')
-const mockLearningImFixtures = read('../dev/mockLearningImFixtures.ts')
 
 test('optional Zustand collections use stable empty snapshots', () => {
   assert.match(readReceiptStatus, /const EMPTY_READ_RECEIPTS/)
@@ -162,7 +162,7 @@ test('media uses the shared Attachment composition and malformed payload rendere
   assert.match(attachmentCard, /<AttachmentContent/)
   assert.match(attachmentCard, /<AttachmentTrigger/)
   assert.match(emailComposer, /<AttachmentGroup/)
-  assert.match(desktopChat, /<Attachment size="sm"/)
+  assert.match(desktopComposer, /<Attachment size="sm"/)
   assert.match(businessParts, /function EmailAttachmentRow[\s\S]*?<Attachment size="xs"/)
   assert.match(codeBlock, /getDocumentTheme\(\) \?\? getSystemTheme\(\)/)
   assert.match(codeBlock, /resolvedTheme === "dark"/)
@@ -244,13 +244,6 @@ test('native tool activity uses localized service presentation without exposing 
   assert.match(promptKitTool, />错误信息</)
   const activity = toolParts.slice(toolParts.indexOf('export function ToolActivityPart'), toolParts.indexOf('export function HandoffPart'))
   assert.doesNotMatch(activity, /ProgressTracker/)
-})
-
-test('the mock tool gallery exposes every localized service scope in one conversation', () => {
-  assert.match(mockLearningImFixtures, /MOCK_TOOL_GALLERY_ROOM_ID/)
-  for (const toolName of ['web.search', 'code.test', 'knowledge.search', 'figma.inspect', 'email.send', 'workflow.run']) {
-    assert.ok(mockLearningImFixtures.includes(toolName), `missing ${toolName}`)
-  }
 })
 
 test('message surfaces expose stable visual variants without owning message protocol decisions', () => {

@@ -19,9 +19,6 @@ import { platformRouter } from '../modules/platform/router.js'
 import { pollsRouter } from '../modules/polls/router.js'
 import { adminRouter } from './admin-router.js'
 
-export { generateAndPersistAvatar } from '../modules/agents/service.js'
-export { UPLOAD_DIR } from '../storage.js'
-
 export const api = Router()
 
 api.use(authMiddleware as never)

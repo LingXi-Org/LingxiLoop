@@ -12,7 +12,6 @@ import { IAgent, ICanvas, IDoc, IMail, IPlus, ISettings } from '@/components/ico
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { ConversationListItemContent } from '@/im/ConversationList'
-import { isMockImDevelopment } from '@/lib/devMode'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { cn } from '@/lib/utils'
@@ -111,7 +110,6 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
 }
 
 export function ConversationsPane() {
-  const mockMode = isMockImDevelopment()
   const list = useConversations((s) => s.list)
   const loaded = useConversations((s) => s.loaded)
   const selected = useApp((s) => s.selectedConversationId)
@@ -140,7 +138,6 @@ export function ConversationsPane() {
   useEffect(() => {
     const value = query.trim()
     if (!value) { setResults(null); setSearching(false); return }
-    if (mockMode) { setResults(null); setSearching(false); return }
     const controller = new AbortController()
     setSearching(true)
     const timer = window.setTimeout(() => {
@@ -150,7 +147,7 @@ export function ConversationsPane() {
         .finally(() => setSearching(false))
     }, 150)
     return () => { window.clearTimeout(timer); controller.abort() }
-  }, [query, mockMode])
+  }, [query])
 
   const conversations = useMemo(() => {
     const visible = list
@@ -158,19 +155,12 @@ export function ConversationsPane() {
   }, [list])
 
   const resultRows = useMemo(() => {
-    if (mockMode) {
-      const value = query.trim().toLocaleLowerCase()
-      if (!value) return [] as Array<{ id: string; title: string; preview: string }>
-      return list
-        .filter((conversation) => `${conversation.title} ${conversation.preview ?? ''}`.toLocaleLowerCase().includes(value))
-        .map((conversation) => ({ id: conversation.id, title: conversation.title, preview: conversation.preview ?? '会话' }))
-    }
     if (!results) return [] as Array<{ id: string; title: string; preview: string }>
     const unique = new Map<string, { id: string; title: string; preview: string }>()
     for (const room of [...results.rooms, ...results.groups]) unique.set(room.id, { id: room.id, title: room.title, preview: room.projectName ?? '会话' })
     for (const message of results.messages) unique.set(message.conversationId, { id: message.conversationId, title: message.conversationTitle, preview: `${message.authorName ?? '成员'}：${message.snippet}` })
     return [...unique.values()]
-  }, [list, mockMode, query, results])
+  }, [results])
 
   const conversationMenuItems = (conversation: Conversation): ConversationMenuItem[] => {
     const items: ConversationMenuItem[] = [

@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
-import { isMockImDevelopment } from '@/lib/devMode'
 import { setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
@@ -63,12 +62,7 @@ export function CompanyCourseManagement() {
   const enterCourse = async (course: ApiCourse) => {
     if (!companyId) return
     setWorkspaceSession({ companyId, projectId: course.projectId })
-    if (isMockImDevelopment()) {
-      const { activateMockWorkspace } = await import('@/dev/mockIm')
-      activateMockWorkspace(course.projectId)
-    } else {
-      await useConversations.getState().reload()
-    }
+    await useConversations.getState().reload()
     useApp.getState().selectConversation(course.studyRoomId)
     useApp.getState().setView('conversations')
   }

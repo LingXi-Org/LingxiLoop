@@ -1,7 +1,7 @@
 import { type NextFunction, type Request, type Response, Router } from 'express'
-import type { AuthedRequest } from '../auth.js'
-import { pool } from '../db/pool.js'
-import { requireCompany } from '../http/request-context.js'
+import type { AuthedRequest } from '../../auth.js'
+import { pool } from '../../db/pool.js'
+import { requireCompany } from '../../http/request-context.js'
 import {
   bindCourseRoom,
   closeActivity,
@@ -22,12 +22,12 @@ import {
   setMissionCoordinator,
   setObjectiveStatus,
   submitActivity,
-} from './service.js'
-import type { LearningActivityType, LearningEvaluationMode, LearningRoomPurpose } from './types.js'
-import { getTeacherAgentSummary } from './teacher-agent.js'
+} from '../../learning/service.js'
+import type { LearningActivityType, LearningEvaluationMode, LearningRoomPurpose } from '../../learning/types.js'
+import { getTeacherAgentSummary } from '../../learning/teacher-agent.js'
 
-export const learningDomainRoutes = Router()
-const learningRouter = learningDomainRoutes
+export const classroomRouter = Router()
+const learningRouter = classroomRouter
 
 type LearningRequest = Request<Record<string, string>> & AuthedRequest
 

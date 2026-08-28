@@ -1,4 +1,4 @@
-export interface DeepSeekFunctionTool {
+export interface OpenAIFunctionTool {
   type: 'function'
   function: {
     name: 'ipython'
@@ -10,7 +10,7 @@ export interface DeepSeekFunctionTool {
 
 /** The complete model-visible tool surface. Product capabilities are composed
  * through the preloaded `loop` object inside the persistent IPython kernel. */
-export const IPYTHON_TOOL: DeepSeekFunctionTool = {
+export const IPYTHON_TOOL: OpenAIFunctionTool = {
   type: 'function',
   function: {
     name: 'ipython',
@@ -30,7 +30,7 @@ export const IPYTHON_TOOL: DeepSeekFunctionTool = {
   },
 }
 
-export const MODEL_TOOLS: readonly DeepSeekFunctionTool[] = Object.freeze([IPYTHON_TOOL])
+export const MODEL_TOOLS: readonly OpenAIFunctionTool[] = Object.freeze([IPYTHON_TOOL])
 
 export function parseIPythonArguments(value: string): { code: string } {
   let parsed: unknown

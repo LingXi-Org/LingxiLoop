@@ -31,7 +31,8 @@ test('worker tasks start in registry order and stop exactly once in reverse orde
 
 test('Worker composition has injectable startup and connection shutdown boundaries', async () => {
   process.env.LINGXILOOP_RUNTIME_CLIENT = 'http'
-  process.env.DEEPSEEK_API_KEY = 'test-key'
+  process.env.OPENAI_API_KEY = 'test-key'
+  process.env.OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small'
   const { startWorkerProcess } = await import('../worker.js')
   const events: string[] = []
   const service = await startWorkerProcess({
@@ -71,7 +72,6 @@ test('a failing disposer does not prevent the remaining resources from closing',
 
 test('Web composition contains no background scheduler or worker startup', async () => {
   const web = await readFile(new URL('../web.ts', import.meta.url), 'utf8')
-  const index = await readFile(new URL('../index.ts', import.meta.url), 'utf8')
   const worker = await readFile(new URL('../worker.ts', import.meta.url), 'utf8')
   const starters = [
     'startLearningRoutineScheduler',
@@ -84,14 +84,13 @@ test('Web composition contains no background scheduler or worker startup', async
     'startKnowledgeStorageGc',
     'startCalendarScheduler',
     'startPollExpirationSweeper',
-    'startLlmRollupRefresher',
     'startStaleAgentRunSweeper',
   ]
   for (const starter of starters) {
     assert.doesNotMatch(web, new RegExp(`\\b${starter}\\b`))
     assert.match(worker, new RegExp(`\\b${starter}\\b`))
   }
-  assert.match(index, /^\/\/ Compatibility entrypoint[\s\S]*import '\.\/bin\/web\.js'\s*$/)
+  await assert.rejects(readFile(new URL('../index.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
 })
 
 test('every deployment defines an independently runnable worker service', async () => {

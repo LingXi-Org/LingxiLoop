@@ -74,7 +74,7 @@ function persistPanelLayout(storageKey: string, layout: Layout): void {
   } catch { /* private browsing can deny storage access */ }
 }
 
-function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsTab: 'Profile' | 'Usage' | 'Preferences' }) {
+function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsTab: 'Profile' | 'Preferences' }) {
   if (view === 'agents') return <AgentsView />
   if (view === 'canvas') return <CanvasView />
   if (view === 'boards') return <BoardsView />
@@ -102,7 +102,7 @@ export function DesktopApp() {
   const groupContext = selectedConversation?.kind === 'group' ? selectedConversation : null
   const [groupDrawerOpen, setGroupDrawerOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [settingsTab, setSettingsTab] = useState<'Profile' | 'Usage' | 'Preferences'>('Profile')
+  const [settingsTab, setSettingsTab] = useState<'Profile' | 'Preferences'>('Profile')
   const uiCommand = useUiCommand()
   const [defaultLayout] = useState(() => loadPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, TWO_PANEL_DEFAULT_LAYOUT))
 
@@ -114,7 +114,6 @@ export function DesktopApp() {
 
   useEffect(() => {
     if (uiCommand?.type === 'open-settings-profile') setSettingsTab('Profile')
-    else if (uiCommand?.type === 'open-settings-usage') setSettingsTab('Usage')
     else if (uiCommand?.type === 'open-settings-preferences') setSettingsTab('Preferences')
   }, [uiCommand])
 

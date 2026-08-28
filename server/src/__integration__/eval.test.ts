@@ -24,8 +24,8 @@ beforeEach(async () => {
     [RUN, COMPANY, AGENT],
   )
   await pool.query(
-    `INSERT INTO agent_runs(id,agent_id,company_id,status,token_count,cost_usd,model,finished_at)
-     VALUES($1,$2,$3,'completed',120,0.001,'fixture-model',NOW())`,
+    `INSERT INTO agent_runs(id,agent_id,company_id,status,input_tokens,output_tokens,model,finished_at)
+     VALUES($1,$2,$3,'completed',80,40,'fixture-model',NOW())`,
     [RUN, AGENT, COMPANY],
   )
 })

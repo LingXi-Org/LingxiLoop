@@ -3,7 +3,7 @@
  * uncaughtException handlers in the process entrypoints log the
  * crash to stderr — fine for a local dev box, useless in prod where
  * nobody's tailing logs. Route those through here too so a webhook
- * (Discord-compatible by default) gets a copy and the on-call sees
+ * (Discord webhook JSON by default) gets a copy and the on-call sees
  * the silent crashes.
  *
  * Design goals:

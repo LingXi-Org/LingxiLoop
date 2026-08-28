@@ -289,8 +289,8 @@ export interface Message {
    * persisted final message without briefly rendering both. */
   runId?: string
   at: string
-  /** Canonical timestamp used for transcript grouping. Legacy/mock rows may omit it. */
-  createdAt?: string
+  /** Canonical timestamp used for transcript grouping. */
+  createdAt: string
   reactions?: ReactionEntry[]
   /** for tool messages */
   tool?: {

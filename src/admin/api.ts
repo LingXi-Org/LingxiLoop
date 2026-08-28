@@ -50,18 +50,13 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export type Tier = 'free' | 'pro' | 'max'
-
 export interface AdminUser {
   id: string
   email: string
   name: string
-  /** Always non-null: server falls back to a gravatar identicon when
-   *  users.avatar_url is NULL (legacy users / dev seed). */
-  avatarUrl: string
-  tier: Tier
+  /** Persisted user avatar URL. */
+  avatarUrl: string | null
   isAdmin: boolean
-  sub2apiUserId: number | null
   createdAt: string
   lastLoginAt: string | null
   companyCount: number
@@ -92,7 +87,7 @@ export interface AdminWaitlistEntry {
   providerId: string
   email: string
   displayName: string
-  avatarUrl: string
+  avatarUrl: string | null
   status: 'pending' | 'approved' | 'rejected'
   note: string | null
   requestedAt: string
@@ -106,134 +101,10 @@ export interface AdminSettings {
 }
 
 export interface AdminStats {
-  users: { total: number; admins: number; tiers: { free: number; pro: number; max: number } }
+  users: { total: number; admins: number }
   waitlist: { pending: number; approved: number; rejected: number }
   companies: number
   agents: number
-}
-
-/** The exhaustive purpose set the server's LlmCallPurpose enum exports. The
- *  client mirrors it so the page can render purpose-specific labels / colors
- *  without paying a runtime fetch. Keep in lockstep with llm-ledger.ts. */
-export type LlmCallPurpose =
-  | 'agent-turn' | 'convene-speech'
-  | 'inbox-triage' | 'synthetic-wake-gate' | 'agenda'
-  | 'compaction' | 'completion-verify' | 'steer-summary' | 'convene-decision'
-  | 'palette' | 'gender' | 'avatar-image' | 'agent-image'
-
-export type LlmCallStatus = 'ok' | 'rate_limited' | 'timeout' | 'failed'
-export type LlmCallSource = 'cloud' | 'agent-os' | 'product'
-
-export interface LlmSummary {
-  sinceDays: number
-  totalCalls: number
-  totalCostUsd: number
-  totalInputTokens: number
-  totalCachedInputTokens: number
-  totalOutputTokens: number
-  failureRate: number
-  rateLimitedCalls: number
-  topPurpose: { purpose: LlmCallPurpose; costUsd: number } | null
-  activeTenants: number
-  /** Overall cache hit rate over the window. Null when there's no input
-   *  traffic at all. The single best optimization knob — every cached input
-   *  token costs ~10× less. */
-  cacheHitRate: number | null
-  /** Upper-bound $ savings if EVERY input token were cached at the model's
-   *  own cached rate. Aspirational (cold one-shots can't cache). */
-  savableUsd: number
-}
-
-export interface LlmRollupRow {
-  purpose: LlmCallPurpose
-  model: string
-  source: LlmCallSource
-  calls: number
-  okCalls: number
-  failedCalls: number
-  rateLimitedCalls: number
-  inputTokens: number
-  cachedInputTokens: number
-  cacheCreationTokens: number
-  outputTokens: number
-  reasoningTokens: number
-  costUsd: number
-  costEstimated: boolean
-  /** Upper-bound $ saved if this row's input were 100% cached (at the row
-   *  model's own cached rate). 'Money on the table'. */
-  savableUsd: number
-}
-
-export interface LlmTrendBucket {
-  day: string
-  purpose: LlmCallPurpose
-  costUsd: number
-  calls: number
-  /** Uncached input tokens for this (day, purpose) bucket. */
-  inputTokens: number
-  /** Cache-read input tokens for this bucket. */
-  cachedInputTokens: number
-}
-
-export interface LlmTopAgentRow {
-  agentId: string | null
-  companyId: string | null
-  agentName: string | null
-  agentAvatarUrl: string | null
-  agentAvatarBg: string | null
-  agentInitial: string | null
-  companyName: string | null
-  costUsd: number
-  calls: number
-  inputTokens: number
-  cachedInputTokens: number
-  outputTokens: number
-}
-
-export interface LlmTenantRow {
-  companyId: string
-  name: string | null
-  slug: string | null
-  costUsd: number
-  calls: number
-  inputTokens: number
-  cachedInputTokens: number
-  outputTokens: number
-}
-
-export interface LlmObservabilityPayload {
-  summary: LlmSummary
-  rollup: LlmRollupRow[]
-  trend: LlmTrendBucket[]
-  topAgents: LlmTopAgentRow[]
-  tenants: LlmTenantRow[]
-}
-
-/** One raw call row returned by the drill-down endpoint. Same shape as the
- *  server's LlmCallRow — kept here to avoid a server-only import. */
-export interface LlmCallRow {
-  id: string
-  createdAt: string
-  companyId: string | null
-  agentId: string | null
-  agentName: string | null
-  runId: string | null
-  conversationId: string | null
-  purpose: LlmCallPurpose
-  source: LlmCallSource
-  model: string
-  inputTokens: number
-  cachedInputTokens: number
-  cacheCreationTokens: number
-  outputTokens: number
-  reasoningTokens: number
-  costUsd: number
-  costEstimated: boolean
-  measured: boolean
-  latencyMs: number | null
-  status: LlmCallStatus
-  error: string | null
-  extras: Record<string, unknown> | null
 }
 
 export type EvalDimensionName = 'answer' | 'teaching' | 'rag' | 'tools' | 'safety' | 'task' | 'collaboration' | 'efficiency'
@@ -415,53 +286,13 @@ export const adminApi = {
     return http<EvalComparison>(`/eval/compare?${qs.toString()}`)
   },
 
-  observabilityLlm: (params: { sinceDays?: number; model?: string; companyId?: string; fresh?: boolean } = {}) => {
-    const qs = new URLSearchParams()
-    if (params.sinceDays) qs.set('sinceDays', String(params.sinceDays))
-    if (params.model)     qs.set('model', params.model)
-    if (params.companyId) qs.set('companyId', params.companyId)
-    // `fresh` bypasses the server's short response cache — used by the manual
-    // refresh button and auto-refresh so they actually re-read current data.
-    if (params.fresh)     qs.set('fresh', '1')
-    const s = qs.toString()
-    return http<LlmObservabilityPayload>(s ? `/observability/llm?${s}` : '/observability/llm')
-  },
-  /** Drill-down: raw call rows for a (purpose × model × source) bucket OR
-   *  for a specific run / agent. Used by the panel that opens when the
-   *  operator clicks a rollup row on the Observability page. */
-  observabilityLlmCalls: (params: {
-    sinceDays?: number
-    purpose?: LlmCallPurpose
-    model?: string
-    source?: LlmCallSource
-    runId?: string
-    agentId?: string
-    companyId?: string
-    limit?: number
-    sortBy?: 'cost' | 'latency' | 'hop' | 'created'
-  } = {}) => {
-    const qs = new URLSearchParams()
-    if (params.sinceDays) qs.set('sinceDays', String(params.sinceDays))
-    if (params.purpose)   qs.set('purpose', params.purpose)
-    if (params.model)     qs.set('model', params.model)
-    if (params.source)    qs.set('source', params.source)
-    if (params.runId)     qs.set('runId', params.runId)
-    if (params.agentId)   qs.set('agentId', params.agentId)
-    if (params.companyId) qs.set('companyId', params.companyId)
-    if (params.limit)     qs.set('limit', String(params.limit))
-    if (params.sortBy)    qs.set('sortBy', params.sortBy)
-    const s = qs.toString()
-    return http<LlmCallRow[]>(s ? `/observability/llm/calls?${s}` : '/observability/llm/calls')
-  },
-
   settings: () => http<AdminSettings>('/settings'),
   setSettings: (patch: Partial<AdminSettings>) =>
     http<AdminSettings>('/settings', { method: 'PUT', body: JSON.stringify(patch) }),
 
-  listUsers: (params: { q?: string; tier?: Tier | ''; limit?: number; offset?: number } = {}) => {
+  listUsers: (params: { q?: string; limit?: number; offset?: number } = {}) => {
     const qs = new URLSearchParams()
     if (params.q)      qs.set('q', params.q)
-    if (params.tier)   qs.set('tier', params.tier)
     if (params.limit)  qs.set('limit', String(params.limit))
     if (params.offset) qs.set('offset', String(params.offset))
     const s = qs.toString()
@@ -472,7 +303,7 @@ export const adminApi = {
   getUser: (id: string) => http<AdminUserDetail>(`/users/${id}`),
   patchUser: (
     id: string,
-    patch: { tier?: Tier; isAdmin?: boolean; suspended?: boolean; suspensionReason?: string | null },
+    patch: { isAdmin?: boolean; suspended?: boolean; suspensionReason?: string | null },
   ) =>
     http<AdminUser>(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
 

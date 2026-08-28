@@ -24,11 +24,6 @@ export function getAnalyticsSurface(): 'electron' | 'web' | 'admin' | 'notificat
   return 'browser'
 }
 
-export async function initObservability(): Promise<void> {
-  // Keep an Alma-compatible init seam. PostHog itself is initialized by
-  // PostHogProvider so telemetry never starts unless the provider mounts.
-}
-
 export { posthog, PHProvider as PostHogProvider }
 
 export function isPostHogConfigured(): boolean {

@@ -32,7 +32,7 @@ function PdfPage({ pageNumber, document, scale, onVisible }: { pageNumber: numbe
   const hostRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [visible, setVisible] = useState(pageNumber <= 2)
-  const [ratio, setRatio] = useState(1.414)
+  const [ratio, setRatio] = useState(Math.SQRT2)
   useEffect(() => {
     const host = hostRef.current
     if (!host || !('IntersectionObserver' in window)) { setVisible(true); return }

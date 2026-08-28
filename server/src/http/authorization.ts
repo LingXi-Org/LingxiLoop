@@ -1,21 +1,13 @@
 import type { Request } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
-import { env } from '../env.js'
 import { assertTeacherRoomAccessible } from '../learning/visibility.js'
 import { HttpError } from './errors.js'
 import { assertProjectWritable, requireCompany } from './request-context.js'
 
-export { DEVTOOLS_ROLES, OWNER_ONLY, PRIVILEGED_ROLES } from './roles.js'
+export { ADMIN_ROLES, OWNER_ONLY, PRIVILEGED_ROLES } from './roles.js'
 
-import { DEVTOOLS_ROLES, PRIVILEGED_ROLES } from './roles.js'
-
-export const DEVTOOLS_HEADER = 'x-lingxiloop-dev-mode'
-
-export function requestedDevMode(req: Request): boolean {
-  const header = req.headers[DEVTOOLS_HEADER]
-  return header === '1' || header === 'true'
-}
+import { PRIVILEGED_ROLES } from './roles.js'
 
 export async function requireCompanyRole(
   req: Request & AuthedRequest,
@@ -103,35 +95,4 @@ export async function requireCanvasFrameWorkspace(req: Request & AuthedRequest, 
   if (!rows[0]) throw new HttpError(404, 'canvas frame not found')
   if (writable) await assertProjectWritable(rows[0].project_id)
   return { userId, companyId, projectId: rows[0].project_id }
-}
-
-export async function getDevtoolsState(req: Request & AuthedRequest): Promise<{
-  userId: string
-  companyId: string
-  role: string
-  localDev: boolean
-  requested: boolean
-  canEnable: boolean
-  enabled: boolean
-}> {
-  const { userId, companyId } = await requireCompany(req)
-  const { rows } = await pool.query<{ role: string }>(
-    `SELECT role FROM company_members WHERE company_id = $1 AND user_id = $2 LIMIT 1`,
-    [companyId, userId],
-  )
-  const role = rows[0]?.role ?? 'member'
-  const localDev = env.NODE_ENV !== 'production'
-  const requested = requestedDevMode(req)
-  const privileged = DEVTOOLS_ROLES.has(role)
-  const canEnable = localDev || privileged
-  const enabled = localDev || (requested && privileged)
-  return { userId, companyId, role, localDev, requested, canEnable, enabled }
-}
-
-export async function requireDevtools(
-  req: Request & AuthedRequest,
-): Promise<{ userId: string; companyId: string; role: string }> {
-  const state = await getDevtoolsState(req)
-  if (!state.enabled) throw new HttpError(403, 'developer tools are not enabled')
-  return { userId: state.userId, companyId: state.companyId, role: state.role }
 }

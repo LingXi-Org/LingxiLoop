@@ -20,7 +20,7 @@
  *   INTEGRATION_DATABASE_URL=postgres://...
  *   npm run test:integration
  *
- * What this CAN catch that mock-mode integration tests can't:
+ * What this CAN catch that injected-provider integration tests can't:
  *   - Real HTTP path to api.resend.com (TLS, redirects, header parsing)
  *   - Resend's validation of From / Reply-To / In-Reply-To / References
  *   - Resend's attachment shape requirements (filename / content base64)
@@ -90,7 +90,6 @@ liveTest('[integration:live] Resend accepts a fresh send to delivered@resend.dev
     autoSubmitted: 'auto-generated',
   })
   assert.equal(sendRes.ok, true, `live send must succeed; error: ${sendRes.error}`)
-  assert.equal(sendRes.mock, false, 'should be running against real Resend, not mock')
   assert.ok(sendRes.smtpMessageId, 'live send must return a non-null smtpMessageId')
 
   await persistEmailMessage({

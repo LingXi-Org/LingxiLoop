@@ -125,7 +125,8 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required in .env}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
     networks: [lingxiloop-mvp]
     logging: *quiet-logging
 
@@ -157,15 +158,15 @@ services:
       WUKONG_WEBHOOK_SECRET: ${WUKONG_WEBHOOK_SECRET:-dev-wukong-webhook-secret}
       WUKONG_USER_TOKEN_SECRET: ${WUKONG_USER_TOKEN_SECRET:?WUKONG_USER_TOKEN_SECRET is required in .env}
       WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
-      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
-      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
-      DEEPSEEK_EMBEDDING_MODEL: ${DEEPSEEK_EMBEDDING_MODEL:-}
-      DEEPSEEK_IMAGE_MODEL: ${DEEPSEEK_IMAGE_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required in .env}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-}
       LINGXILOOP_PUBLIC_ORIGIN: ${LINGXILOOP_PUBLIC_ORIGIN:-http://localhost:5181}
       LINGXILOOP_AUTH_DONE_URL: ${LINGXILOOP_AUTH_DONE_URL:-http://localhost:5181/}
       LINGXILOOP_AUTH_RETURN_ALLOWLIST: ${LINGXILOOP_AUTH_RETURN_ALLOWLIST:-}
-      LINGXILOOP_INVITE_BASE_URL: ${LINGXILOOP_INVITE_BASE_URL:-}
+      LINGXILOOP_INVITE_BASE_URL: ${LINGXILOOP_INVITE_BASE_URL:?LINGXILOOP_INVITE_BASE_URL is required}
       LINGXILOOP_CORS_ORIGINS: ${LINGXILOOP_CORS_ORIGINS:-}
       LINGXI_IDENTITY_ISSUER: ${LINGXI_IDENTITY_ISSUER:-}
       LINGXI_IDENTITY_CLIENT_ID: ${LINGXI_IDENTITY_CLIENT_ID:-}
@@ -197,8 +198,6 @@ services:
     ports:
       # Public by default so the mobile client can reach the API backend.
       - "${LINGXILOOP_BIND_ADDRESS:-0.0.0.0}:${LINGXILOOP_PORT:-5181}:5181"
-    volumes:
-      - lingxiloop-uploads:/app/server/uploads
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 5s
@@ -223,8 +222,6 @@ services:
       open-notebook:
         condition: service_healthy
     environment: *lingxiloop-environment
-    volumes:
-      - lingxiloop-uploads:/app/server/uploads
     networks: [lingxiloop-mvp, lingxiloop-knowledge-internal]
     logging: *quiet-logging
 
@@ -244,9 +241,10 @@ services:
       AGENT_OS_MAX_CONCURRENT_RUNS: ${AGENT_OS_MAX_CONCURRENT_RUNS:-8}
       AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required in .env}
       LINGXILOOP_CONTROL_PLANE_URL: http://lingxiloop:5181
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
-      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
-      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required in .env}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
       AGENT_OS_HOMES_ROOT: /var/lib/lingxiloop-agent-os/homes
     volumes:
       - lingxiloop-agent-os-data:/var/lib/lingxiloop-agent-os
@@ -268,7 +266,6 @@ networks:
 volumes:
   lingxiloop-postgres-data: {}
   lingxiloop-redis-data: {}
-  lingxiloop-uploads: {}
   lingxiloop-wukong-data: {}
   lingxiloop-agent-os-data: {}
   open-notebook-surreal-data: {}

@@ -10,8 +10,6 @@ export interface AuthCompany {
   name: string
   slug: string
   role: string
-  /** Plan tier of the active company (owner's tier). */
-  tier?: 'free' | 'pro' | 'max' | string
 }
 
 export interface AuthUser {

@@ -31,7 +31,6 @@ import {
   parseAddress,
   formatAddress,
   normalizeMessageId,
-  ensureParticipantAddress,
   findParticipantByAddress,
   findUserInCompanyByAuthEmail,
   findOrCreateEmailConversation,
@@ -138,43 +137,9 @@ async function resolveRecipient(addr: string): Promise<{
     participantName: rows[0].name,
     participantKind: rows[0].kind,
   }
-  // Fallback: pattern-decode `<id>.<companySlug>@<EMAIL_DOMAIN>` for
-  // participants whose email column hasn't been lazy-minted yet.
-  // Domain must match EMAIL_DOMAIN exactly; local-part splits on the LAST
-  // `.` (id portion never contains `.` per safeLocalPart, so this is
-  // unambiguous even for ids that contain dashes / underscores).
-  const dom = env.EMAIL_DOMAIN
-  if (!dom) return null
-  const at = lc.indexOf('@')
-  if (at < 0) return null
-  const localPart = lc.slice(0, at)
-  const domPart = lc.slice(at + 1)
-  if (domPart !== dom) return null
-  const lastDot = localPart.lastIndexOf('.')
-  if (lastDot <= 0 || lastDot >= localPart.length - 1) return null
-  const localId = localPart.slice(0, lastDot)
-  const slug = localPart.slice(lastDot + 1)
-  const r2 = await pool.query<{ id: string; name: string; kind: string; company_id: string }>(
-    `SELECT p.id, p.name, p.kind, p.company_id
-       FROM participants p
-       JOIN companies c ON c.id = p.company_id
-      WHERE p.departed_at IS NULL
-        AND LOWER(c.slug) = $2
-        AND (LOWER(p.id) = $1 OR LOWER(REPLACE(p.id, '_', '-')) = $1)
-      LIMIT 1`,
-    [localId, slug],
-  )
-  const a = r2.rows[0]
-  if (!a) return null
-  // Mint the address now so future inbound resolutions hit the fast path.
-  await ensureParticipantAddress(a.id, a.company_id).catch(() => { /* swallow */ })
-  return {
-    companyId: a.company_id,
-    participantId: a.id,
-    participantName: a.name,
-    participantKind: a.kind,
-  }
+  return null
 }
+
 
 interface ResolvedSender {
   /** Author id stored on the messages row. */
@@ -249,7 +214,11 @@ inboundEmailRouter.post('/inbound', async (req: Request, res: Response) => {
   }
 
   const subject = (payload.subject ?? '').trim()
-  const body = (payload.text ?? '').trim() || stripHtml(payload.html ?? '')
+  const body = (payload.text ?? '').trim()
+  if (!body) {
+    res.status(400).json({ error: 'native inbound payload requires text' })
+    return
+  }
   const html = payload.html ?? null
   const messageIdNorm = normalizeMessageId(payload.messageId)
   if (!messageIdNorm) {
@@ -448,24 +417,3 @@ inboundEmailRouter.post('/inbound', async (req: Request, res: Response) => {
   inc('email.inbound.delivered', { auto_submitted: Boolean(payload.autoSubmitted) })
   res.json({ ok: true, deliveries: inserts })
 })
-
-/** Coarse HTML→text fallback for inbound mail that arrives html-only.
- *  Real-world MIME parsing happens in the CF worker; this is just the
- *  "we got given an html field, get me something readable" path. */
-function stripHtml(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-}

@@ -8,7 +8,6 @@ export type UiCommand =
   | 'new-group'
   | 'open-updater'
   | 'open-settings-profile'
-  | 'open-settings-usage'
   | 'open-settings-preferences'
 
 interface UiCommandState {

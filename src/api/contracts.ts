@@ -17,7 +17,7 @@ import type {
 
 export interface ApiMessage extends Message {
   sequence: number
-  createdAt?: string
+  createdAt: string
   reactions?: Array<{ emoji: string; count: number; mine?: boolean; users?: string[] }>
 }
 
@@ -52,29 +52,7 @@ export interface ApiConversation {
   } | null
 }
 
-export interface ApiQuotaWindow {
-  usedUsd: number
-  limitUsd: number | null
-  windowStart: string | null
-}
-
-export interface ApiQuotaSnapshot {
-  groupId: number
-  groupName: string | null
-  status: string
-  expiresAt: string | null
-  daily: ApiQuotaWindow
-  weekly: ApiQuotaWindow
-  monthly: ApiQuotaWindow
-}
-
-export interface ApiQuotaResponse {
-  configured: boolean
-  snapshot: ApiQuotaSnapshot | null
-  error?: string
-}
-
-/** @deprecated Project APIs remain only for compatibility with stale, unmounted settings modules. */
+/** Workspace record returned by project APIs. */
 export type ApiProject = WorkspaceSummary
 
 export interface ApiParticipant {
@@ -194,8 +172,7 @@ export interface ApiAttachment {
 }
 
 export interface UploadCapabilities {
-  mode: 'local' | 'r2'
-  presignSupported: boolean
+  mode: 'r2'
   maxBytes: number
   allowedMimes: string[]
 }
@@ -245,83 +222,6 @@ export interface ApiAgentRun {
   durationMs: number
 }
 
-// ── Triage cost-effectiveness ledger ──
-export type ApiTriageSource = 'cloud' | 'agent-os' | 'product'
-
-export interface ApiTriageAgentRow {
-  agentId: string
-  agentName: string
-  triageCount: number
-  skipCount: number
-  wakeCount: number
-  triageCostUsd: number
-  triageOverheadUsd: number
-  turnCount: number
-  avgTurnCostUsd: number
-  turnCacheHitRate: number
-  estimatedNetSavingsUsd: number
-}
-
-export interface ApiTriageLedgerRow {
-  id: string
-  agentId: string
-  agentName: string
-  source: ApiTriageSource
-  model: string | null
-  actionable: boolean
-  reason: string | null
-  inputTokens: number
-  cachedInputTokens: number
-  outputTokens: number
-  costUsd: number
-  costEstimated: boolean
-  measured: boolean
-  estSavingUsd: number | null
-  createdAt: string
-}
-
-export interface ApiTriageUnitPrice {
-  role: 'triage' | 'turn'
-  model: string
-  inPer1M: number
-  cachedInPer1M: number
-  outPer1M: number
-  estimated: boolean
-}
-
-export interface ApiTriagePriceRow {
-  model: string
-  inPer1M: number
-  cachedInPer1M: number
-  cacheWritePer1M: number
-  outPer1M: number
-  estimated: boolean
-}
-
-export interface ApiTriageEconomics {
-  sinceHours: number
-  triageCount: number
-  triageSkipCount: number
-  triageWakeCount: number
-  triageMeasuredCount: number
-  triageCostUsd: number
-  triageOverheadUsd: number
-  triageInputTokens: number
-  triageCachedInputTokens: number
-  triageOutputTokens: number
-  turnCount: number
-  turnCostUsd: number
-  avgTurnCostUsd: number
-  turnCacheHitRate: number
-  estimatedAvoidedUsd: number
-  estimatedNetSavingsUsd: number
-  costEstimated: boolean
-  unitPrices: ApiTriageUnitPrice[]
-  priceTable: ApiTriagePriceRow[]
-  perAgent: ApiTriageAgentRow[]
-  recent: ApiTriageLedgerRow[]
-}
-
 export interface ApiAgentEvent {
   id: string
   runId: string
@@ -355,28 +255,9 @@ export interface ApiConveneTranscript {
   createdAt: string
 }
 
-export interface ApiDevtoolsCapabilities {
-  enabled: boolean
-  canEnable: boolean
-  localDev: boolean
-  productionDevMode: boolean
-  role: string
-}
-
-export interface ApiAgentWorkspaceFile {
-  path: string
-  size: number
-  lineCount: number
-  updatedAt: string
-}
-
-export interface ApiAgentWorkspaceFileContent extends ApiAgentWorkspaceFile {
-  body: string
-}
-
 export interface MeResponse {
   user: { id: string; email: string; name: string; emailVerified: boolean; providers: string[] }
-  companies: Array<{ id: string; name: string; slug: string; role: string; tier?: string }>
+  companies: Array<{ id: string; name: string; slug: string; role: string }>
   activeCompanyId: string | null
   serverCapabilities: ServerCapabilities
 }
@@ -425,21 +306,13 @@ export interface ApiInvitationWithToken {
   createdAt: string
   expiresAt: string
   status: 'active'
-  /** Present when the inviter asked the server to send the invite email
-   *  on their behalf (`sendEmail: true` in the create payload). Null when
-   *  they did not. The UI uses this to render "email sent" /
-   *  "email failed: <reason>" feedback alongside the copy-link card. */
+  /** Present when the server sent the invitation email. Null when email
+   *  delivery was not requested. Delivery failures reject the request. */
   emailDelivery: ApiInvitationEmailDelivery | null
 }
 
 export interface ApiInvitationEmailDelivery {
-  attempted: boolean
-  ok: boolean
-  error: string | null
-  /** Set when the server deliberately didn't try — today only
-   *  'no_email_config' (EMAIL_DOMAIN unset). Distinct from `error` so
-   *  the UI can show a different message. */
-  skipped: 'no_email_config' | null
+  ok: true
 }
 
 export type ApiInvitationPreviewStatus =

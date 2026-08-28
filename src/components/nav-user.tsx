@@ -1,6 +1,6 @@
 "use client"
 
-import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, CreditCardIcon, LogOutIcon, SparklesIcon } from "lucide-react"
+import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
 import { platformApi } from "@/api/platform"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -24,11 +24,10 @@ export function NavUser({ user }: {
     useAuth.getState().clear()
     void platformApi.authLogout().catch(() => undefined)
   }
-  const openSettings = (tab: 'Profile' | 'Usage' | 'Preferences') => {
+  const openSettings = (tab: 'Profile' | 'Preferences') => {
     useApp.getState().setView('me')
     useUiCommands.getState().dispatch(
-      tab === 'Usage' ? 'open-settings-usage'
-        : tab === 'Preferences' ? 'open-settings-preferences'
+      tab === 'Preferences' ? 'open-settings-preferences'
           : 'open-settings-profile',
     )
   }
@@ -57,12 +56,7 @@ export function NavUser({ user }: {
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
-        <DropdownMenuItem onClick={() => openSettings('Usage')}><SparklesIcon />Upgrade to Pro</DropdownMenuItem>
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
         <DropdownMenuItem onClick={() => openSettings('Profile')}><BadgeCheckIcon />Account</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => openSettings('Usage')}><CreditCardIcon />Billing</DropdownMenuItem>
         <DropdownMenuItem onClick={() => openSettings('Preferences')}><BellIcon />Notifications</DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />

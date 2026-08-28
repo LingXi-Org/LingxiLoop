@@ -8,11 +8,9 @@ import {
   hasBroadcastMention,
   shouldApplyStreamEvent,
   streamExpiryForOpen,
-  streamModeForOpen,
   withoutFinalizedActiveRuns,
 } from '@/lib/chatMessages'
-import { isMockImDevelopment } from '@/lib/devMode'
-import { type ImEnvelope, isInternalAgentStatus, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
+import { type ImEnvelope, type LingxiMessageV1, lingxiIm } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { useParticipants } from '@/stores/participants'
@@ -342,7 +340,7 @@ function fromApi(m: ApiMessage): Message {
     kind: m.kind as Message['kind'],
     body: m.body,
     at,
-    createdAt: m.createdAt ?? (m.at && ISO_RE.test(m.at) ? m.at : undefined),
+    createdAt: m.createdAt,
     reactions: deriveMineForReactions(m.reactions),
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,
@@ -844,6 +842,7 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
       kind: 'text' as const,
       body: x.body,
       at: timeFromIso(),
+      createdAt: new Date().toISOString(),
       sequence: x.sequence,
       streaming: x.mode === 'markdown' || x.body ? 'markdown' as const : 'placeholder' as const,
     }))
@@ -861,6 +860,7 @@ export const messagesFor = (s: MessagesState, convoId: string | null): Message[]
       kind: 'text' as const,
       body: '',
       at: '',
+      createdAt: new Date().toISOString(),
       sequence: Number.MAX_SAFE_INTEGER - 1_000 + index,
       streaming: 'placeholder' as const,
     }))
@@ -947,6 +947,7 @@ export async function sendUserMessage(
     kind: 'text',
     body: v,
     at: timeFromIso(),
+    createdAt: new Date().toISOString(),
     attachment: attachment
       ? {
           name: attachment.name,
@@ -972,21 +973,6 @@ export async function sendUserMessage(
       ? list.map((item) => item.id === tempId ? { ...item, pending: true, failed: false } : item)
       : [...list, optimistic] } }
   })
-
-  if (isMockImDevelopment()) {
-    const realId = `mock-${Date.now()}`
-    useMessages.setState((s) => ({
-      byConvo: {
-        ...s.byConvo,
-        [convoId]: (s.byConvo[convoId] ?? []).map((item) =>
-          item.id === tempId
-            ? { ...item, id: realId, pending: false, sequence: Date.now() }
-            : item,
-        ),
-      },
-    }))
-    return
-  }
 
   try {
     const mentionAll = hasBroadcastMention(v)
@@ -1112,7 +1098,6 @@ export async function toggleReaction(messageId: string, emoji: string): Promise<
   const previous = patchMessageReactions(messageId, (reactions) =>
     optimisticToggleReactions(reactions, emoji),
   )
-  if (isMockImDevelopment()) return
   try {
     const res = await messagesApi.toggleReaction(messageId, emoji)
     const incoming = deriveMineForReactions(res.reactions)
@@ -1148,7 +1133,6 @@ export function bootMessagesStream() {
   if (!imBound) {
     imBound = true
     lingxiIm.subscribe((message) => {
-      if (isInternalAgentStatus(message)) return
       const normalized = fromIm(message)
       forgetOutbox(message.clientMsgNo)
       useMessages.setState((state) => ({
@@ -1167,7 +1151,7 @@ export function bootMessagesStream() {
             ...state.streaming,
             [id]: {
               body: event.text ?? '', conversationId: event.channelId, authorId: event.fromUid,
-              sequence: Number.MAX_SAFE_INTEGER - 10, mode: streamModeForOpen(event.phase),
+              sequence: Number.MAX_SAFE_INTEGER - 10, mode: 'placeholder',
               runId: id.startsWith('preview-') ? id.slice('preview-'.length) : undefined,
             },
           },
@@ -1217,8 +1201,8 @@ export function bootMessagesStream() {
       if (active) void useMessages.getState().reloadConversation(active)
       return
     }
-    // Chat transport is WuKongIM-authoritative. Keep the legacy socket for
-    // documents, boards, calendar and presence only.
+    // Chat transport is WuKongIM-authoritative; the workspace socket owns
+    // documents, boards, calendar and presence.
     if (e.type === 'message.new' || e.type === 'message.delta' || e.type === 'message.reactions' || e.type === 'typing') return
     useMessages.getState().applyEvent(e)
   })

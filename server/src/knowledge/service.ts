@@ -282,7 +282,7 @@ async function processSource(sourceId: string): Promise<'ready' | 'pending' | 'f
   )
   if (status === 'ready') {
     if (source.kind === 'text' && source.storage_key) {
-      await storage.deleteObject(source.storage_key).catch(() => undefined)
+      await storage.deleteObject(source.storage_key)
       await pool.query(`UPDATE knowledge_sources SET storage_key=NULL, updated_at=NOW() WHERE id=$1`, [sourceId])
     }
     await pool.query(`UPDATE knowledge_source_jobs SET status='completed', leased_until=NULL, leased_by=NULL, updated_at=NOW() WHERE source_id=$1`, [sourceId])
@@ -343,8 +343,8 @@ export async function runKnowledgeWorkerOnce(workerId = `open-notebook-${process
         `SELECT external_source_id FROM knowledge_sources WHERE id=$1`, [job.sourceId],
       )
       if (sources[0]?.external_source_id) {
-        const retried = await openNotebookClient.retrySource(sources[0].external_source_id).catch(() => null)
-        if (retried) await pool.query(
+        const retried = await openNotebookClient.retrySource(sources[0].external_source_id)
+        await pool.query(
           `UPDATE knowledge_sources SET external_command_id=COALESCE($2,external_command_id), updated_at=NOW() WHERE id=$1`,
           [job.sourceId, retried.command_id ?? null],
         )
@@ -450,7 +450,7 @@ export async function retrieveKnowledge(args: { conversationId: string; query: s
     }]
   })
   if (citations.length) inc('knowledge.retrieval.hits', undefined, citations.length)
-  else inc('knowledge.retrieval.generic_fallback')
+  else inc('knowledge.retrieval.miss')
   return citations
 }
 
@@ -534,7 +534,7 @@ export async function deleteKnowledgeSource(sourceId: string, companyId: string,
   if (rows[0].external_source_id) await openNotebookClient.deleteSource(rows[0].external_source_id)
   await pool.query(`UPDATE knowledge_sources SET deleted_at=NOW(), updated_at=NOW() WHERE id=$1`, [sourceId])
   await cancelKnowledgeSourceJob(sourceId, '资料已在摄取完成前被删除')
-  if (rows[0].storage_key) await storage.deleteObject(rows[0].storage_key).catch(() => undefined)
+  if (rows[0].storage_key) await storage.deleteObject(rows[0].storage_key)
 }
 
 export async function getKnowledgeSourceText(sourceId: string, companyId: string, projectId: string): Promise<string | null> {
