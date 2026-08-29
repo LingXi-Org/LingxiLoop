@@ -265,6 +265,18 @@ const agentReactBody = agentCli.match(/async function cmdReact\b[\s\S]*?(?=funct
 if (!agentReactBody || !/toggleAgentChannelReaction\s*\(/.test(agentReactBody) || /runTool\s*\(\s*['"]react/.test(agentCli)) {
   violations.push('server/src/agents/cli.ts: Agent reactions must use an explicit channel and the public IM application')
 }
+const membershipMessages = await read(resolve('server/src/agents/membership.ts'))
+if (/from ['"][^'"]*(?:db\/|redis\.js)|\b(?:pool|db)\.query\s*\(|conversation_counters|CH_MESSAGE_NEW|INSERT\s+INTO\s+messages/i.test(membershipMessages)
+  || !/sendSystemChannelMessage\s*\(/.test(membershipMessages)) {
+  violations.push('server/src/agents/membership.ts: membership activity must publish through the public authoritative IM application')
+}
+const agentMembershipBody = agentCli.match(/async function cmdLeave\b[\s\S]*?(?=async function cmdReply\b)/)?.[0] ?? ''
+if (!agentMembershipBody || /\bpool\.query\s*\(|UPDATE\s+conversations/i.test(agentMembershipBody)
+  || !/leaveAgentConversation\s*\(/.test(agentMembershipBody)
+  || !/addAgentConversationMember\s*\(/.test(agentMembershipBody)
+  || /function cmdKick\b|case ['"]kick['"]/.test(agentCli)) {
+  violations.push('server/src/agents/cli.ts: membership commands must use Conversations public application and retired kick must stay absent')
+}
 const conversationsRepository = await read(resolve('server/src/modules/conversations/repository.ts'))
 const conversationsApplication = await read(resolve('server/src/modules/conversations/application.ts'))
 if (/FROM\s+messages\b|JOIN\s+messages\b/i.test(conversationsRepository)) {

@@ -17,7 +17,7 @@ const conversations = new ConversationsApplication(pool, {
   publishUpdated: async () => undefined,
   publishTyping: async () => undefined,
   isTeacherRoom: async () => false,
-  postMembershipMessage: async () => undefined,
+  postMembershipMessage: async () => ({ messageId: 'membership-message', sequence: 1 }),
   clearReplyHold: async () => undefined,
   searchMessages: async () => [],
 })

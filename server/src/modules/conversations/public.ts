@@ -47,6 +47,14 @@ export function getAgentConversationMetadata(agentId: string, conversationId: st
   return conversationsApplication.getAgentMetadata(agentId, conversationId)
 }
 
+export function addAgentConversationMember(agentId: string, conversationId: string, participantId: string) {
+  return conversationsApplication.addAgentMember(agentId, conversationId, participantId)
+}
+
+export function leaveAgentConversation(agentId: string, conversationId: string) {
+  return conversationsApplication.leaveAgentConversation(agentId, conversationId)
+}
+
 export function setAgentConversationTopic(
   agentId: string,
   conversationId: string,

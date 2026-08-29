@@ -97,7 +97,6 @@ export function createHelpCommand(ok: (text: string) => CliResult) {
     pull-group <title> --members a,b,c --leader a --reason "..." --say "..."   create a new group + post first msg
     invite <convo_id> <member_id>                    pull a teammate into a group you're in
     leave <convo_id>                                 leave a group (no-op for direct chats)
-    kick <convo_id> <member_id>                      remove a member from a group you're in
   
   KANBAN  (shared boards — the same ones humans see in the Boards view):
     kanban ls                                          list every kanban board in this workspace

@@ -23,6 +23,7 @@ import {
   toggleAgentChannelReaction,
 } from '../im/public.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
+import { addAgentConversationMember, leaveAgentConversation } from '../modules/conversations/public.js'
 import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
 import { stripLoneSurrogates } from './text-safety.js'
 import { createBoardCommands } from './cli/board.js'
@@ -721,61 +722,27 @@ async function cmdAck(parsed: ParsedArgs): Promise<CliResult> {
 
 const { cmdFollow, cmdMute } = createConversationDeliveryCommands({ ok, err })
 
-// Membership system-message + counter helpers live in
-// `agents/membership.ts` so the HTTP endpoints (POST /members,
-// POST /leave) and the agent CLI share one implementation. Importing
-// here re-exposes the names this file already used.
-import { postMembershipSystemMessage } from './membership.js'
-
 async function cmdLeave(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
   const convoId = parsed.positional[0]
   if (!convoId) return err('usage: leave <conversation_id>')
-
-  const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
-  }>(
-    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
-    [convoId],
-  )
-  const c = rows[0]
-  if (!c) return err(`unknown conversation ${convoId}`)
-  if (c.kind === 'direct') {
-    return err('cannot leave a direct conversation — use `lingxiloop ack` to mute it from your inbox instead')
-  }
-  if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  if (c.leader_id === me) return err(`cannot leave while ${me} is Leader; ask a human member to change the Leader first`)
-
-  // Post the system message BEFORE updating members so the leaving
-  // agent's inbox (filtered by c.members @> [me]) still surfaces this
-  // final row in their next wake — that's how they "perceive" their own
-  // departure cleanly.
-  const systemMessage = await postMembershipSystemMessage({
-    conversationId: convoId,
-    companyId: c.company_id,
-    actorId: me,
-    kind: 'left',
-    participantId: me,
-  })
-
-  const next = c.members.filter((m) => m !== me)
-  await pool.query(
-    `UPDATE conversations SET members = $2::jsonb, updated_at = NOW() WHERE id = $1`,
-    [convoId, JSON.stringify(next)],
-  )
-
-  return ok(`left "${c.title}" (${convoId}); ${next.length} member(s) remain`, [{
+  try {
+    const result = await leaveAgentConversation(me, convoId)
+    return ok(`left "${result.title}" (${convoId}); ${result.members.length} member(s) remain`, [{
     event: 'conversation.membership_changed',
     command: 'leave',
     action: 'left',
     conversationId: convoId,
     actorId: me,
     participantId: me,
-    companyId: c.company_id ?? undefined,
-    systemMessageId: systemMessage.messageId,
-    memberCount: next.length,
+    companyId: result.companyId,
+    systemMessageId: result.systemMessageId,
+    memberCount: result.members.length,
     visibleToUser: true,
-  }])
+    }])
+  } catch (error) {
+    return err(`leave failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 async function cmdInvite(parsed: ParsedArgs): Promise<CliResult> {
@@ -784,119 +751,24 @@ async function cmdInvite(parsed: ParsedArgs): Promise<CliResult> {
   const target = parsed.positional[1]
   if (!convoId || !target) return err('usage: invite <conversation_id> <member_id>')
   if (target === me) return err(`${me} is already the one inviting`)
-
-  const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
-  }>(
-    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
-    [convoId],
-  )
-  const c = rows[0]
-  if (!c) return err(`unknown conversation ${convoId}`)
-  if (c.kind === 'direct') {
-    return err('cannot invite into a direct conversation — use `lingxiloop pull-group` to start a fresh thread')
-  }
-  if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId} — can't invite into a group you're not in`)
-  if (c.members.includes(target)) return ok(`${target} is already a member of ${convoId}`)
-
-  // Verify the invitee exists in this tenant.
-  const tenant = c.company_id
-  if (tenant) {
-    const { rows: pp } = await pool.query<{ id: string }>(
-      `SELECT id FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [target, tenant],
-    )
-    if (!pp[0]) return err(`${target} is not a participant in this workspace`)
-  }
-
-  const next = [...c.members, target]
-  await pool.query(
-    `UPDATE conversations SET members = $2::jsonb, updated_at = NOW() WHERE id = $1`,
-    [convoId, JSON.stringify(next)],
-  )
-
-  const systemMessage = await postMembershipSystemMessage({
-    conversationId: convoId,
-    companyId: c.company_id,
-    actorId: me,
-    kind: 'joined',
-    participantId: target,
-  })
-
-  return ok(`invited ${target} into "${c.title}" (${convoId}); ${next.length} member(s) total`, [{
+  try {
+    const result = await addAgentConversationMember(me, convoId, target)
+    if (result.alreadyIn) return ok(`${target} is already a member of ${convoId}`)
+    return ok(`invited ${target} into "${result.title}" (${convoId}); ${result.members.length} member(s) total`, [{
     event: 'conversation.membership_changed',
     command: 'invite',
     action: 'joined',
     conversationId: convoId,
     actorId: me,
     participantId: target,
-    companyId: c.company_id ?? undefined,
-    systemMessageId: systemMessage.messageId,
-    memberCount: next.length,
+    companyId: result.companyId,
+    systemMessageId: result.systemMessageId,
+    memberCount: result.members.length,
     visibleToUser: true,
-  }])
-}
-
-async function cmdKick(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const convoId = parsed.positional[0]
-  const target = parsed.positional[1]
-  if (!convoId || !target) return err('usage: kick <conversation_id> <member_id>')
-  if (target === me) return err('use `lingxiloop leave <convo_id>` to leave a group yourself')
-
-  const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
-  }>(
-    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
-    [convoId],
-  )
-  const c = rows[0]
-  if (!c) return err(`unknown conversation ${convoId}`)
-  if (c.kind === 'direct') return err('cannot kick from a direct conversation')
-  if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId} — can't kick from a group you're not in`)
-  if (!c.members.includes(target)) return err(`${target} is not a member of ${convoId}`)
-  if (c.leader_id === target) return err(`cannot remove ${target} while they are Leader; ask a human member to change the Leader first`)
-
-  const next = c.members.filter((m) => m !== target)
-  // Refuse to leave a group with just one member as a side-effect of kick —
-  // if there'd only be the actor left, that's "everyone else gone", which
-  // is fine, but require explicit confirmation via --confirm-empty for the
-  // case where the kick removes the LAST other member. Cheap guard against
-  // accidental group-clearing.
-  if (next.length === 1 && !parsed.flags['confirm-empty']) {
-    return err(`kicking ${target} would leave only ${me} in this group; pass --confirm-empty if that's intended`)
+    }])
+  } catch (error) {
+    return err(`invite failed: ${error instanceof Error ? error.message : String(error)}`)
   }
-
-  // Post BEFORE removing the target from members. The mailbox query
-  // filters by current `c.members @> [agentId]`, so if we updated first
-  // the kicked agent would never see the row that explains why their
-  // inbox went quiet on this conversation. Posting first means the
-  // target gets one last wake with this exact message.
-  const systemMessage = await postMembershipSystemMessage({
-    conversationId: convoId,
-    companyId: c.company_id,
-    actorId: me,
-    kind: 'kicked',
-    participantId: target,
-  })
-
-  await pool.query(
-    `UPDATE conversations SET members = $2::jsonb, updated_at = NOW() WHERE id = $1`,
-    [convoId, JSON.stringify(next)],
-  )
-
-  return ok(`kicked ${target} from "${c.title}" (${convoId}); ${next.length} member(s) remain`, [{
-    event: 'conversation.membership_changed',
-    command: 'kick',
-    action: 'kicked',
-    conversationId: convoId,
-    actorId: me,
-    participantId: target,
-    companyId: c.company_id ?? undefined,
-    systemMessageId: systemMessage.messageId,
-    memberCount: next.length,
-    visibleToUser: true,
-  }])
 }
 
 async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
@@ -2861,7 +2733,6 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'follow':              return await cmdFollow(parsed)
       case 'reply':               return await cmdReply(parsed, internal)
       case 'leave':               return await cmdLeave(parsed)
-      case 'kick':                return await cmdKick(parsed)
       case 'invite':              return await cmdInvite(parsed)
       case 'topic':               return await cmdTopicRead(parsed)
       case 'topic-set':           return await cmdTopicSet(parsed)

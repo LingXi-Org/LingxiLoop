@@ -4,6 +4,7 @@ import type { Queryable } from '../db/queryable.js'
 import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
 import {
   acceptSend,
+  channelProfileForCompany,
   channelProfileForMember,
   deferSend,
   ensureSendAcceptance,
@@ -375,6 +376,29 @@ export class ImMessagesApplication {
     const channelType = await this.channelType(input)
     if (channelType === null) return { kind: 'channel_not_found' }
     return this.infrastructure.withConnection((db) => this.acceptMessage(db, channelType, input))
+  }
+
+  async acceptSystemMessage(input: {
+    companyId: string
+    actorId: string
+    channelId: string
+    clientNonce: string
+    payload: LingxiMessageV1
+  }): Promise<
+    | { kind: 'channel_not_found' }
+    | { kind: 'nonce_conflict' }
+    | { kind: 'accepted'; duplicate: boolean; echo: Record<string, unknown> }
+  > {
+    const profile = await channelProfileForCompany(this.infrastructure.db, input)
+    if (!profile) return { kind: 'channel_not_found' }
+    const channelType = Number(profile.channelType ?? 2)
+    return this.infrastructure.withConnection((db) => this.acceptMessage(db, channelType, {
+      companyId: input.companyId,
+      userId: input.actorId,
+      channelId: input.channelId,
+      clientNonce: input.clientNonce,
+      payload: input.payload,
+    }))
   }
 
   async acceptAgentMessage(input: {

@@ -50,6 +50,27 @@ export async function sendAgentChannelMessage(input: {
   return { kind: 'accepted', duplicate: result.duplicate, messageId, sequence }
 }
 
+export async function sendSystemChannelMessage(input: {
+  companyId: string
+  actorId: string
+  channelId: string
+  clientNonce: string
+  payload: LingxiMessageV1
+}): Promise<
+  | { kind: 'channel_not_found' }
+  | { kind: 'nonce_conflict' }
+  | { kind: 'accepted'; duplicate: boolean; messageId: string; sequence: number }
+> {
+  const result = await imMessagesApplication.acceptSystemMessage(input)
+  if (result.kind !== 'accepted') return result
+  const messageId = String(result.echo.messageId ?? '')
+  const sequence = Number(result.echo.messageSeq)
+  if (!messageId || !Number.isSafeInteger(sequence) || sequence <= 0) {
+    throw new Error('WuKong system send acceptance returned an invalid echo')
+  }
+  return { kind: 'accepted', duplicate: result.duplicate, messageId, sequence }
+}
+
 export function getAgentInbox(input: { companyId: string; agentId: string; limit?: number }) {
   return imMessagesApplication.inbox({
     companyId: input.companyId,

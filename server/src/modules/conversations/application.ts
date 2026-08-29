@@ -65,7 +65,7 @@ export interface ConversationInfrastructure {
     actorId: string
     kind: 'joined' | 'left'
     participantId: string
-  }): Promise<void>
+  }): Promise<{ messageId: string; sequence: number }>
   clearReplyHold(agentId: string, conversationId: string): Promise<void>
   searchMessages(input: {
     companyId: string
@@ -302,6 +302,30 @@ export class ConversationsApplication {
     return this.requireAgentContext(agentId, conversationId)
   }
 
+  async addAgentMember(agentId: string, conversationId: string, participantId: string) {
+    const context = await this.requireAgentContext(agentId, conversationId)
+    this.assertAgentWorkspaceWritable(context.projectStatus)
+    if (!context.projectId) throw new ConversationApplicationError('not_found', 'conversation workspace is missing')
+    const result = await this.addMember({
+      userId: agentId,
+      companyId: context.companyId,
+      projectId: context.projectId,
+    }, conversationId, participantId)
+    return { ...result, title: context.title, companyId: context.companyId }
+  }
+
+  async leaveAgentConversation(agentId: string, conversationId: string) {
+    const context = await this.requireAgentContext(agentId, conversationId)
+    this.assertAgentWorkspaceWritable(context.projectStatus)
+    if (!context.projectId) throw new ConversationApplicationError('not_found', 'conversation workspace is missing')
+    const result = await this.leave({
+      userId: agentId,
+      companyId: context.companyId,
+      projectId: context.projectId,
+    }, conversationId)
+    return { ...result, title: context.title, companyId: context.companyId }
+  }
+
   async setAgentTopic(agentId: string, conversationId: string, topic: string | null) {
     const context = await this.requireAgentContext(agentId, conversationId)
     this.assertAgentWorkspaceWritable(context.projectStatus)
@@ -463,13 +487,19 @@ export class ConversationsApplication {
       return next
     })
     await this.infrastructure.syncChannel(profile)
+    let membershipMessage: { messageId: string; sequence: number } | undefined
     if (!alreadyIn) {
-      await this.infrastructure.postMembershipMessage({
+      membershipMessage = await this.infrastructure.postMembershipMessage({
         conversationId, companyId: scope.companyId, actorId: scope.userId,
         kind: 'joined', participantId,
       })
     }
-    return { ok: true as const, members: profile.members, ...(alreadyIn ? { alreadyIn: true as const } : {}) }
+    return {
+      ok: true as const,
+      members: profile.members,
+      ...(membershipMessage ? { systemMessageId: membershipMessage.messageId } : {}),
+      ...(alreadyIn ? { alreadyIn: true as const } : {}),
+    }
   }
 
   async leave(scope: ConversationScope, conversationId: string) {
@@ -495,14 +525,16 @@ export class ConversationsApplication {
       await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
       return next
     })
-    await Promise.all([
-      this.infrastructure.syncChannel(profile),
-      this.infrastructure.postMembershipMessage({
+    const membershipMessage = await this.infrastructure.postMembershipMessage({
         conversationId, companyId: scope.companyId, actorId: scope.userId,
         kind: 'left', participantId: scope.userId,
-      }),
-    ])
-    return { ok: true as const, members: profile.members }
+      }).catch(() => undefined)
+    await this.infrastructure.syncChannel(profile)
+    return {
+      ok: true as const,
+      members: profile.members,
+      ...(membershipMessage ? { systemMessageId: membershipMessage.messageId } : {}),
+    }
   }
 
   async typing(scope: Omit<ConversationScope, 'projectId'>, conversationId: string, done: boolean) {

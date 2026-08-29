@@ -14,7 +14,7 @@ export const conversationsApplication = new ConversationsApplication(pool, {
   publishUpdated: (event) => publish(CH_CONVO_UPDATED, event),
   publishTyping: (event) => publish(CH_TYPING, event),
   isTeacherRoom: (companyId, conversationId) => isTeacherRoom(conversationId, companyId),
-  postMembershipMessage: async (args) => { await postMembershipSystemMessage(args) },
+  postMembershipMessage: postMembershipSystemMessage,
   clearReplyHold: async (agentId, conversationId) => { await clearHold(agentId, `reply:${conversationId}`) },
   searchMessages: (input) => searchMemberMessages({ ...input, query: input.query }),
 })
