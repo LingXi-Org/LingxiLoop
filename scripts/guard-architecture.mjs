@@ -193,6 +193,9 @@ if (/agent-os\/(?:approval|control)-(?:application|repository)\.js/.test(imRoute
 if (/from ['"][^'"]*db\/|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(imRouter)) {
   violations.push('server/src/im/router.ts: IM router must not own SQL or database infrastructure')
 }
+if (/\b(?:process\.env|wukongClient\s*\()/.test(imRouter)) {
+  violations.push('server/src/im/router.ts: IM router must use session and capability facades')
+}
 const metricsSource = await read(resolve('server/src/metrics.ts'))
 if (/['"]email\.send\.(?:ok|fail)['"]\s*:\s*\{[^}]*labels:\s*\[[^\]]*mock/s.test(metricsSource)) {
   violations.push('server/src/metrics.ts: retired email mock dimension is forbidden')

@@ -32,6 +32,7 @@ export const env = {
   APP_VERSION: process.env.LINGXILOOP_VERSION?.trim() || '0.0.0-dev',
   COMMIT_SHA: process.env.LINGXILOOP_COMMIT_SHA?.trim() || 'dev',
   AGENT_OS_APPROVAL_TTL_MS: numberAtLeast('AGENT_OS_APPROVAL_TTL_MS', 24 * 60 * 60_000, 60_000),
+  WUKONG_USER_TOKEN_SECRET: required('WUKONG_USER_TOKEN_SECRET'),
   DATABASE_URL: required('DATABASE_URL'),
   REDIS_URL: required('REDIS_URL'),
   OPENAI_API_KEY: required('OPENAI_API_KEY'),
