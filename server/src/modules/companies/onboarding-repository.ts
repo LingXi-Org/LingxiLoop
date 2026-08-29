@@ -12,23 +12,18 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import type { PoolClient } from 'pg'
-import { invalidatePersonaCache } from './agents/personas.js'
-import { pool } from './db/pool.js'
-import { reconcileImChannels } from './im/reconcile.js'
+import type { Queryable } from '../../db/queryable.js'
 import {
   STARTER_ROOMS as CANONICAL_STARTER_ROOMS,
   STARTER_TEAM as CANONICAL_STARTER_TEAM,
   type LearningPersonaKey,
-} from './modules/learning/preset.js'
+} from '../learning/public.js'
 
 
 export const STARTER_TEAM = CANONICAL_STARTER_TEAM
 export const STARTER_ROOMS = CANONICAL_STARTER_ROOMS
 
-type QueryClient = Pick<PoolClient, 'query'>
-
-async function uniqueId(db: QueryClient, preferredId: string): Promise<string> {
+async function uniqueId(db: Queryable, preferredId: string): Promise<string> {
   const { rows } = await db.query(
     `SELECT 1 FROM participants WHERE id = $1 LIMIT 1`,
     [preferredId],
@@ -49,7 +44,7 @@ async function uniqueId(db: QueryClient, preferredId: string): Promise<string> {
 
 
 async function seedLearningPreset(
-  db: QueryClient,
+  db: Queryable,
   companyId: string,
   ownerId: string,
 ): Promise<void> {
@@ -121,7 +116,7 @@ async function seedLearningPreset(
 /** Install the native learning preset inside the caller's transaction. Partial
  * preset state is rejected because silently repairing it would create a second
  * lifecycle. Returns whether a new preset was written. */
-export async function installStarterAgents(db: QueryClient, companyId: string): Promise<boolean> {
+export async function installStarterAgents(db: Queryable, companyId: string): Promise<boolean> {
   const { rows } = await db.query<{ owner_user_id: string | null }>(
       `SELECT owner_user_id FROM companies WHERE id = $1 FOR UPDATE`,
       [companyId],
@@ -160,29 +155,4 @@ export async function installStarterAgents(db: QueryClient, companyId: string): 
   }
   await seedLearningPreset(db, companyId, ownerId)
   return true
-}
-
-export async function finalizeStarterAgents(installed: boolean): Promise<void> {
-  if (installed) invalidatePersonaCache()
-  const reconciliation = await reconcileImChannels()
-  if (reconciliation.failures > 0) {
-    throw new Error(`WuKongIM learning channel reconciliation failed (${reconciliation.failures}/${reconciliation.channels})`)
-  }
-}
-
-/** Transaction-owning facade used by startup and identity onboarding. */
-export async function onboardStarterAgents(companyId: string): Promise<void> {
-  const client = await pool.connect()
-  let installed = false
-  try {
-    await client.query('BEGIN')
-    installed = await installStarterAgents(client, companyId)
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK')
-    throw error
-  } finally {
-    client.release()
-  }
-  await finalizeStarterAgents(installed)
 }

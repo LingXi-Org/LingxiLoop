@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
-import { onboardStarterAgents } from '../onboardCompany.js'
+import { onboardCompanyStarterWorkspace } from '../modules/companies/public.js'
 import { ensureSchemaOnce, installFakeWukong, resetAllTables, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })
@@ -31,7 +31,7 @@ async function seedEmptyWorkspace(): Promise<{ companyId: string; ownerId: strin
 
 test('[integration] canonical learning preset seeds a fresh workspace', async () => {
   const { companyId } = await seedEmptyWorkspace()
-  await onboardStarterAgents(companyId)
+  await onboardCompanyStarterWorkspace(companyId)
 
   const counts = await pool.query<{ agents: number; dms: number; rooms: number; all_hands: number }>(
     `SELECT
@@ -57,13 +57,13 @@ test('[integration] canonical learning preset seeds a fresh workspace', async ()
 
 test('[integration] canonical learning preset is idempotent', async () => {
   const { companyId } = await seedEmptyWorkspace()
-  await onboardStarterAgents(companyId)
+  await onboardCompanyStarterWorkspace(companyId)
   const before = await pool.query<{ id: string; preset_key: string }>(
     `SELECT id, preset_key FROM participants
       WHERE company_id=$1 AND kind='agent' ORDER BY preset_key`,
     [companyId],
   )
-  await onboardStarterAgents(companyId)
+  await onboardCompanyStarterWorkspace(companyId)
 
   const after = await pool.query<{ id: string; preset_key: string }>(
     `SELECT id, preset_key FROM participants
@@ -77,7 +77,7 @@ test('[integration] canonical learning preset is idempotent', async () => {
        (SELECT COUNT(*)::int FROM conversations WHERE company_id=$1) AS conversations`,
     [companyId],
   )
-  await onboardStarterAgents(companyId)
+  await onboardCompanyStarterWorkspace(companyId)
   const countsAfter = await pool.query<{ agents: number; conversations: number }>(
     `SELECT
        (SELECT COUNT(*)::int FROM participants WHERE company_id=$1 AND kind='agent') AS agents,
@@ -97,7 +97,7 @@ test('[integration] partial preset is rejected instead of repaired', async () =>
   )
 
   await assert.rejects(
-    onboardStarterAgents(companyId),
+    onboardCompanyStarterWorkspace(companyId),
     /partial native learning preset/i,
   )
 

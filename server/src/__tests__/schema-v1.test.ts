@@ -7,7 +7,7 @@ const bootstrap = readFileSync(new URL('../db/bootstrap.ts', import.meta.url), '
 const serverBoot = readFileSync(new URL('../web.ts', import.meta.url), 'utf8')
 const seed = readFileSync(new URL('../seed.ts', import.meta.url), 'utf8')
 const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.url), 'utf8')
-const onboarding = readFileSync(new URL('../onboardCompany.ts', import.meta.url), 'utf8')
+const onboarding = readFileSync(new URL('../modules/companies/onboarding-repository.ts', import.meta.url), 'utf8')
 const composeFiles = [
   '../../../docker-compose.mvp.ci.yml',
   '../../../docker-compose.mvp.yml',

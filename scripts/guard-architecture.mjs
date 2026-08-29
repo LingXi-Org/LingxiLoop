@@ -167,9 +167,8 @@ for (const file of server) {
     violations.push(`${fileName}: retired root Email capability is forbidden`)
   }
   if (fileName === 'server/src/oauth.ts') violations.push(`${fileName}: retired root OAuth implementation is forbidden`)
-  if (fileName === 'server/src/onboardCompany.ts'
-    && /\bseedMemberDms\b|\bconversation_counters\b/i.test(source)) {
-    violations.push(`${fileName}: member conversation onboarding must use modules/conversations/public.ts`)
+  if (fileName === 'server/src/onboardCompany.ts') {
+    violations.push(`${fileName}: company onboarding must remain inside modules/companies`)
   }
   if (fileName === 'server/src/documents/rooms.ts' || fileName === 'server/src/documents/markdown.ts') {
     violations.push(`${fileName}: retired root Documents capability is forbidden`)

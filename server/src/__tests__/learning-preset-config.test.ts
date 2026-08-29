@@ -3,7 +3,7 @@ import test from 'node:test'
 
 process.env.OPENAI_API_KEY ||= 'test-key'
 process.env.OPENAI_EMBEDDING_MODEL ||= 'text-embedding-3-small'
-const { STARTER_ROOMS, STARTER_TEAM } = await import('../onboardCompany.js')
+const { STARTER_ROOMS, STARTER_TEAM } = await import('../modules/companies/onboarding-repository.js')
 
 test('learning preset defines exactly the six required personas', () => {
   assert.deepEqual(

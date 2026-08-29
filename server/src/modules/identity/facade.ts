@@ -7,8 +7,10 @@ import {
   isAllowlistedAdmin,
   isWaitlistEnabled,
 } from '../admin/facade.js'
-import { provisionPersonalCompany } from '../companies/public.js'
-import { finalizeStarterAgents } from '../../onboardCompany.js'
+import {
+  finalizeCompanyStarterWorkspace,
+  provisionPersonalCompany,
+} from '../companies/public.js'
 import { storage } from '../../storage.js'
 import {
   consumeIdentityState,
@@ -42,7 +44,7 @@ const oauthApplication = new OAuthApplication({
   enqueueWaitlist,
   mirrorAvatar: (userId, providerUrl) => mirrorIdentityAvatar(storage, userId, providerUrl),
   provisionCompany: provisionPersonalCompany,
-  finalizeCompany: finalizeStarterAgents,
+  finalizeCompany: finalizeCompanyStarterWorkspace,
   createLoginSession,
   audit,
   defaultDoneUrl: env.AUTH_DONE_URL,
