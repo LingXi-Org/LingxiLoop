@@ -9,7 +9,7 @@ import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
 import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/public.js'
-import { messagesApplication } from '../modules/messages/facade.js'
+import { toggleWukongReaction, wukongReactions } from '../modules/messages/public.js'
 import {
   listReadReceiptAdvances,
   publishReadReceiptAdvance,
@@ -24,21 +24,10 @@ async function withReactionMetadata<T extends { messageId: string; payload: Ling
   messages: T[],
 ): Promise<T[]> {
   if (messages.length === 0) return messages
-  const { rows } = await pool.query<{ message_id: string; reactions: Array<{ emoji: string; count: number; users: string[] }> }>(
-    `SELECT message_id, jsonb_agg(jsonb_build_object('emoji', emoji, 'count', count, 'users', users) ORDER BY count DESC, emoji ASC) AS reactions
-       FROM (
-         SELECT message_id, emoji, COUNT(*)::int AS count, array_agg(user_id ORDER BY user_id) AS users
-           FROM message_reactions
-          WHERE company_id=$1 AND conversation_id=$2 AND message_id=ANY($3::text[])
-          GROUP BY message_id, emoji
-       ) grouped
-      GROUP BY message_id`,
-    [companyId, conversationId, messages.map((message) => message.messageId)],
-  )
-  const reactions = new Map(rows.map((row) => [row.message_id, row.reactions]))
+  const reactions = await wukongReactions(companyId, conversationId, messages.map((message) => message.messageId))
   return messages.map((message) => ({
     ...message,
-    payload: { ...message.payload, data: { ...(message.payload.data ?? {}), reactions: reactions.get(message.messageId) ?? [] } },
+    payload: { ...message.payload, data: { ...(message.payload.data ?? {}), reactions: reactions[message.messageId] ?? [] } },
   }))
 }
 
@@ -225,7 +214,7 @@ imRouter.post('/channels/:id/reactions', safe(async (req, res) => {
   const window = await wukongClient().syncMessages(channelId, channelType, 80, userId, messageSeq + 1)
   const target = window.find((message) => message.messageId === messageId && message.messageSeq === messageSeq)
   if (!target) { res.status(404).json({ error: 'message not found in the authoritative channel history' }); return }
-  res.json(await messagesApplication.toggleWukongReaction({
+  res.json(await toggleWukongReaction({
     companyId, userId, conversationId: channelId, messageId, messageSeq, messageAuthorId: target.fromUid, emoji,
   }))
 }))

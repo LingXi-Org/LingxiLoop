@@ -190,6 +190,10 @@ for (const file of server) {
     && /modules\/knowledge\/(?:agent-application|provider|runtime)\.js/.test(source)) {
     violations.push(`${fileName}: Knowledge internals must be accessed through public.ts or worker.ts`)
   }
+  if (!fileName.startsWith('server/src/modules/messages/')
+    && /modules\/messages\/(?:application|contracts|facade|repository)\.js/.test(source)) {
+    violations.push(`${fileName}: Messages internals must be accessed through public.ts`)
+  }
   const importsEmailRouterAtCompositionRoot = fileName === 'server/src/api/router.ts'
     && /modules\/email\/router\.js/.test(source)
   if (!fileName.startsWith('server/src/modules/email/')

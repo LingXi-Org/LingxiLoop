@@ -252,3 +252,26 @@ export async function aggregateReactions(
   )
   return rows
 }
+
+export async function reactionsForWukongMessages(
+  db: Queryable,
+  companyId: string,
+  conversationId: string,
+  messageIds: string[],
+): Promise<Record<string, ReactionPayload[]>> {
+  if (messageIds.length === 0) return {}
+  const { rows } = await db.query<{ message_id: string; reactions: ReactionPayload[] } & QueryResultRow>(
+    `SELECT message_id, jsonb_agg(jsonb_build_object(
+              'emoji', emoji, 'count', count, 'users', users
+            ) ORDER BY count DESC, emoji ASC) AS reactions
+       FROM (
+         SELECT message_id, emoji, COUNT(*)::int AS count, array_agg(user_id ORDER BY user_id) AS users
+           FROM message_reactions
+          WHERE company_id=$1 AND conversation_id=$2 AND message_id=ANY($3::text[])
+          GROUP BY message_id, emoji
+       ) grouped
+      GROUP BY message_id`,
+    [companyId, conversationId, messageIds],
+  )
+  return Object.fromEntries(rows.map((row) => [row.message_id, row.reactions]))
+}

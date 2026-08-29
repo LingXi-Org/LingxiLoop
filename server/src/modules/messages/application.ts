@@ -12,6 +12,7 @@ import {
   lockWukongReaction,
   reactionExists,
   removeReaction,
+  reactionsForWukongMessages,
   type MessageProjectionRow,
 } from './repository.js'
 
@@ -133,6 +134,10 @@ export class MessagesApplication {
       messageId: input.messageId, reactions: changed.reactions,
     }).catch(() => undefined)
     return { reactions: changed.reactions }
+  }
+
+  wukongReactions(companyId: string, conversationId: string, messageIds: string[]) {
+    return reactionsForWukongMessages(this.infrastructure.db, companyId, conversationId, messageIds)
   }
 
   private async freshen(rows: MessageProjectionRow[]): Promise<void> {
