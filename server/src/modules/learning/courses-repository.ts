@@ -3,7 +3,7 @@ import { projectRoleFromLearningWire, type ProjectRole } from '../../domain/acce
 import type { CourseManager, CreateCourseInput, UpdateCourseInput } from './contracts.js'
 
 export async function listCourses(db: Queryable, companyId: string, userId: string) {
-  const { rows } = await db.query(
+  const { rows } = await db.query<Record<string, unknown> & { id: string }>(
     `SELECT course.id,course.company_id AS "companyId",course.created_by AS "createdBy",
             course.study_room_conversation_id AS "studyRoomId",course.created_at AS "createdAt",
             project.id AS "projectId",project.kind AS "projectKind",
@@ -15,52 +15,18 @@ export async function listCourses(db: Queryable, companyId: string, userId: stri
             (SELECT COUNT(*)::int FROM project_memberships member
               WHERE member.project_id=course.project_id AND member.company_id=course.company_id
                 AND member.status='ACTIVE') AS "memberCount",
-            (company_member.role IN ('OWNER','ADMIN') OR course_member.role IN ('OWNER','TEACHER')) AS "canManage"
+            (course_member.role IN ('OWNER','TEACHER')) AS "canManage"
        FROM courses course JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
        JOIN company_memberships company_member ON company_member.company_id=course.company_id AND company_member.user_id=$2
         AND company_member.status='ACTIVE'
-       LEFT JOIN project_memberships course_member
+       JOIN project_memberships course_member
          ON course_member.project_id=course.project_id AND course_member.company_id=course.company_id
         AND course_member.user_id=$2 AND course_member.status='ACTIVE'
       WHERE course.company_id=$1
-        AND (company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       ORDER BY project.status,project.updated_at DESC`,
     [companyId, userId],
   )
   return rows
-}
-
-export async function canCreateCourse(db: Queryable, companyId: string, userId: string, lock = false) {
-  const { rows } = await db.query<{ company_role: string; company_type: 'PERSONAL' | 'EDUCATION'; is_teacher: boolean }>(
-    `SELECT LOWER(company_member.role) AS company_role,
-            company.type AS company_type,
-            EXISTS (SELECT 1 FROM project_memberships course_member
-              JOIN courses course ON course.project_id=course_member.project_id AND course.company_id=course_member.company_id
-              JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-             WHERE course_member.company_id=$1 AND course_member.user_id=$2
-               AND course_member.status='ACTIVE' AND course_member.role IN ('OWNER','TEACHER')
-               AND project.status='active') AS is_teacher
-       FROM company_memberships company_member
-       JOIN companies company ON company.id=company_member.company_id AND company.status='ACTIVE'
-      WHERE company_member.company_id=$1 AND company_member.user_id=$2 AND company_member.status='ACTIVE'
-      ${lock ? 'FOR UPDATE OF company_member,company' : ''}`,
-    [companyId, userId],
-  )
-  const permission = rows[0] ?? null
-  if (permission && lock && permission.company_role !== 'owner' && permission.company_role !== 'admin') {
-    const teacher = await db.query(
-      `SELECT 1 FROM project_memberships course_member
-        JOIN courses course ON course.project_id=course_member.project_id AND course.company_id=course_member.company_id
-        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-       WHERE course_member.company_id=$1 AND course_member.user_id=$2
-         AND course_member.status='ACTIVE' AND course_member.role IN ('OWNER','TEACHER')
-         AND project.status='active'
-       ORDER BY course_member.project_id LIMIT 1 FOR UPDATE OF course_member`,
-      [companyId, userId],
-    )
-    permission.is_teacher = Boolean(teacher.rows[0])
-  }
-  return permission
 }
 
 export async function insertTeachingCourse(db: Queryable, args: {
@@ -111,15 +77,14 @@ export async function findCourse(db: Queryable, courseId: string, companyId: str
             (SELECT COUNT(*)::int FROM project_memberships member
               WHERE member.project_id=course.project_id AND member.company_id=course.company_id
                 AND member.status='ACTIVE') AS "memberCount",
-            (company_member.role IN ('OWNER','ADMIN') OR course_member.role IN ('OWNER','TEACHER')) AS "canManage"
+            (course_member.role IN ('OWNER','TEACHER')) AS "canManage"
        FROM courses course JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
        JOIN company_memberships company_member ON company_member.company_id=course.company_id AND company_member.user_id=$3
         AND company_member.status='ACTIVE'
-       LEFT JOIN project_memberships course_member
+       JOIN project_memberships course_member
          ON course_member.project_id=course.project_id AND course_member.company_id=course.company_id
         AND course_member.user_id=$3 AND course_member.status='ACTIVE'
-      WHERE course.id=$1 AND course.company_id=$2
-        AND (company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)`,
+      WHERE course.id=$1 AND course.company_id=$2`,
     [courseId, companyId, userId],
   )
   return rows[0] ?? null
@@ -141,26 +106,16 @@ export async function courseManager(
        FROM courses course JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
        JOIN company_memberships company_member ON company_member.company_id=course.company_id AND company_member.user_id=$2
         AND company_member.status='ACTIVE'
-       LEFT JOIN project_memberships course_member
+       JOIN project_memberships course_member
          ON course_member.project_id=course.project_id AND course_member.company_id=course.company_id
         AND course_member.user_id=$2 AND course_member.status='ACTIVE'
-      WHERE course.id=$1${lock ? ' FOR UPDATE OF course,project,company_member' : ''}`,
+      WHERE course.id=$1${lock ? ' FOR UPDATE OF course,project,company_member,course_member' : ''}`,
     [courseId, userId],
   )
   const row = rows[0]
-  let courseRole = row?.course_role ?? null
-  if (row && lock && row.company_role !== 'owner' && row.company_role !== 'admin') {
-    const lockedRole = await db.query<{ role: string }>(
-      `SELECT CASE WHEN role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS role
-         FROM project_memberships
-        WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND status='ACTIVE' FOR UPDATE`,
-      [row.project_id, row.company_id, userId],
-    )
-    courseRole = lockedRole.rows[0]?.role ?? null
-  }
   return row ? {
     userId, companyId: row.company_id, companyRole: row.company_role,
-    courseRole, projectId: row.project_id, status: row.status,
+    courseRole: row.course_role, projectId: row.project_id, status: row.status,
   } : null
 }
 

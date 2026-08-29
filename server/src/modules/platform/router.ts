@@ -4,6 +4,7 @@ import { env } from '../../env.js'
 import { safe } from '../../http/async-handler.js'
 import { HttpError } from '../../http/errors.js'
 import { requireCompany } from '../../http/request-context.js'
+import { permissionService } from '../access/public.js'
 import { OgError } from '../../og.js'
 import { PlatformApplicationError } from './application.js'
 import { presignUploadRequestSchema, refreshUploadUrlRequestSchema } from './contracts.js'
@@ -16,7 +17,8 @@ platformRouter.get('/uploads/capabilities', (_req, res) => {
 })
 
 platformRouter.post('/uploads/presign', safe(async (req, res) => {
-  const { companyId } = await requireCompany(req)
+  const { companyId, userId } = await requireCompany(req)
+  await permissionService.assertCan({ actorUserId: userId, action: 'attachment:write', companyId })
   const parsed = presignUploadRequestSchema.safeParse(req.body ?? {})
   if (!parsed.success) {
     const tooLarge = parsed.error.issues.some((issue) => issue.path[0] === 'size' && issue.code === 'too_big')
@@ -33,7 +35,8 @@ platformRouter.post('/uploads/presign', safe(async (req, res) => {
 }))
 
 platformRouter.post('/uploads/refresh-url', safe(async (req, res) => {
-  await requireCompany(req)
+  const { companyId, userId } = await requireCompany(req)
+  await permissionService.assertCan({ actorUserId: userId, action: 'attachment:write', companyId })
   const parsed = refreshUploadUrlRequestSchema.safeParse(req.body ?? {})
   if (!parsed.success) throw new HttpError(400, parsed.error.issues[0]?.message ?? 'invalid storage key')
   try {

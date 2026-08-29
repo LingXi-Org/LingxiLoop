@@ -22,6 +22,7 @@ export interface ApprovalResolutionRow {
 
 export interface ApprovalWorkSourceRow {
   company_id: string
+  authorization_user_id: string | null
   agent_id: string
   channel_id: string
   thread_root_client_msg_no: string | null
@@ -39,19 +40,6 @@ export async function listVisibleApprovals(
       JOIN conversations conversation ON conversation.id=approval.channel_id
      WHERE approval.company_id=$1 AND conversation.company_id=approval.company_id
        AND conversation.members @> to_jsonb(ARRAY[$2::text])
-       AND (NOT EXISTS(
-         SELECT 1 FROM learning_course_teacher_rooms room WHERE room.conversation_id=approval.channel_id
-       ) OR EXISTS(
-         SELECT 1 FROM learning_course_teacher_rooms room
-         JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
-         JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-         JOIN project_memberships teacher
-           ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
-          AND teacher.user_id=$2 AND teacher.status='ACTIVE'
-          AND teacher.role IN ('OWNER','TEACHER')
-         WHERE room.conversation_id=approval.channel_id AND room.company_id=approval.company_id
-           AND room.status='active' AND project.status='active'
-       ))
      ORDER BY approval.requested_at DESC LIMIT 100`,
     [input.companyId, input.userId],
   )
@@ -71,21 +59,8 @@ export async function lockVisibleApproval(
        JOIN agent_host_actions host ON host.idempotency_key=approval.idempotency_key
        JOIN conversations conversation ON conversation.id=approval.channel_id
       WHERE approval.id=$1 AND approval.company_id=$2
-        AND conversation.company_id=approval.company_id
-        AND conversation.members @> to_jsonb(ARRAY[$3::text])
-        AND (NOT EXISTS(
-          SELECT 1 FROM learning_course_teacher_rooms room WHERE room.conversation_id=approval.channel_id
-        ) OR EXISTS(
-          SELECT 1 FROM learning_course_teacher_rooms room
-          JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
-          JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-          JOIN project_memberships teacher
-            ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
-           AND teacher.user_id=$3 AND teacher.status='ACTIVE'
-           AND teacher.role IN ('OWNER','TEACHER')
-          WHERE room.conversation_id=approval.channel_id AND room.company_id=approval.company_id
-            AND room.status='active' AND project.status='active'
-        ))
+         AND conversation.company_id=approval.company_id
+         AND conversation.members @> to_jsonb(ARRAY[$3::text])
       FOR UPDATE OF approval`,
     [input.approvalId, input.companyId, input.userId],
   )
@@ -119,7 +94,7 @@ export async function approvalWorkSource(
   workId: string,
 ): Promise<ApprovalWorkSourceRow | null> {
   const { rows } = await db.query<ApprovalWorkSourceRow>(
-    `SELECT company_id,agent_id,channel_id,thread_root_client_msg_no,reason,fence,execution_role
+    `SELECT company_id,authorization_user_id,agent_id,channel_id,thread_root_client_msg_no,reason,fence,execution_role
        FROM agent_work_items WHERE id=$1`,
     [workId],
   )
@@ -155,16 +130,18 @@ export async function enqueueApprovalResume(
     agentId: string
     channelId: string
     executionRole: AgentWorkItem['executionRole']
+    authorizationUserId: string | null
   },
 ): Promise<void> {
   await db.query(
     `INSERT INTO agent_work_items(
-       id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,priority,execution_role
-     ) VALUES($1,$2,$3,$4,$5,'resume',200,$6)
+       id,company_id,authorization_user_id,agent_id,channel_id,trigger_client_msg_no,reason,priority,execution_role
+     ) VALUES($1,$2,$3,$4,$5,$6,'resume',200,$7)
      ON CONFLICT(agent_id,trigger_client_msg_no,reason) DO NOTHING`,
     [
       `resume-${input.approvalId}`,
       input.companyId,
+      input.authorizationUserId,
       input.agentId,
       input.channelId,
       `approval:${input.approvalId}`,

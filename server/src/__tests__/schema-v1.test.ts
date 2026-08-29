@@ -88,6 +88,16 @@ test('Plan and Entitlement are independent and accept JSON scalar values only', 
   assert.match(schema, /plan_entitlements_pkey PRIMARY KEY \(plan_id, entitlement_id\)/)
   assert.match(schema, /jsonb_typeof\(value\).*?'boolean'.*?'number'.*?'string'/s)
   assert.doesNotMatch(schema, /CREATE TABLE public\.(?:subscriptions|project_entitlement_overrides)\b/)
+  assert.match(entitlementRepository, /ENTITLEMENT_CODES/)
+  assert.match(entitlementRepository, /'true'::jsonb/)
+})
+
+test('durable Agent work preserves a human authorization principal', () => {
+  assert.match(schema, /CREATE TABLE public\.agent_work_items \([\s\S]*?authorization_user_id text,/)
+  assert.match(schema, /agent_work_items_authorization_user_id_fkey[\s\S]*?REFERENCES public\.users\(id\) ON DELETE RESTRICT/)
+  assert.match(schema, /CREATE TABLE public\.canvases \([\s\S]*?authorization_user_id text,/)
+  assert.match(bootstrap, /\['agent_work_items', 'authorization_user_id'\]/)
+  assert.match(bootstrap, /\['canvases', 'authorization_user_id'\]/)
 })
 
 test('v1 defaults preserve current capability and Canvas contracts', () => {

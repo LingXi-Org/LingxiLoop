@@ -69,6 +69,7 @@ const canvasDomain = sourceFiles(join(root, 'server/src/modules/canvas'))
   .map((path) => readFileSync(path, 'utf8'))
   .join('\n')
 const schema = readFileSync(join(root, 'server/src/db/schema.sql'), 'utf8')
+const authorization = readFileSync(join(root, 'server/src/agent-os/authorization.ts'), 'utf8')
 const teacherAgent = readFileSync(join(root, 'server/src/modules/learning/teacher-agent-application.ts'), 'utf8')
 const teacherProvisioningRepository = readFileSync(join(root, 'server/src/modules/learning/teacher-provisioning-repository.ts'), 'utf8')
 if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
@@ -117,6 +118,22 @@ if (!schema.includes('canvas_assignment_verifier_not_self_check')
 }
 if (!schema.includes('progress_fingerprint') || !controlPlane.includes('no_progress_count')) {
   failures.push('durable no-progress detection must remain enabled')
+}
+if (!/CREATE TABLE public\.agent_work_items[\s\S]*authorization_user_id text/.test(schema)
+  || !/CREATE TABLE public\.canvases[\s\S]*authorization_user_id text/.test(schema)
+  || !schema.includes('agent_work_items_authorization_user_id_fkey')
+  || !schema.includes('canvases_authorization_user_id_fkey')) {
+  failures.push('durable Agent work and Canvas work must persist a human authorization principal')
+}
+const permissionCheck = controlPlane.indexOf('await assertHostActionPermission(client, work, action)')
+const hostLedgerInsert = controlPlane.indexOf('INSERT INTO agent_host_actions', permissionCheck)
+if (permissionCheck < 0 || hostLedgerInsert < 0 || permissionCheck > hostLedgerInsert) {
+  failures.push('Host Actions must re-authorize immediately before the final durable action boundary')
+}
+if (!authorization.includes('work.authorizationUserId')
+  || !authorization.includes('createPermissionService(db, { lockDependencies: true })')
+  || /personal_owner|company owner|work\.agentId[^\n]{0,80}actorUserId/i.test(authorization)) {
+  failures.push('Host authorization must use only the persisted human principal with no owner or Agent fallback')
 }
 const currentProductSurface = [
   readFileSync(join(root, 'server/src/api/router.ts'), 'utf8'),

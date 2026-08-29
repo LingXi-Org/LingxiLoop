@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
+import { createPermissionService } from '../access/public.js'
 import type {
   DocumentMentionDelivery,
   DocumentMentionEvent,
@@ -49,6 +50,12 @@ export class DocumentMentionApplication {
     const requestedIds = [...new Set(args.requestedIds.filter((id) => id && id !== args.mentionerId))]
     if (requestedIds.length === 0) return { deliveryId: null, mentionedIds: [] }
     return this.infrastructure.transaction(async (db) => {
+      await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: args.mentionerId,
+        action: 'document:write',
+        companyId: args.companyId,
+        resource: { type: 'document', id: args.documentId },
+      })
       const context = await findDocumentMentionContext(db, args)
       if (!context) return { deliveryId: null, mentionedIds: [] }
       const candidates = await listMentionableDocumentParticipants(db, {

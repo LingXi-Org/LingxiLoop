@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import type { PoolClient } from 'pg'
 import { pool } from './pool.js'
+import { ensurePersonalFreePlan } from '../modules/entitlements/public.js'
 
 const V1_SCHEMA_URL = new URL('./schema.sql', import.meta.url)
 const V1_SCHEMA_MARKER = 'LingxiLoop schema v1'
@@ -63,8 +64,10 @@ const FORBIDDEN_V1_COLUMNS = [
 
 const REQUIRED_V1_COLUMNS = [
   ['agent_work_items', 'execution_role'],
+  ['agent_work_items', 'authorization_user_id'],
   ['agent_os_approvals', 'scope'],
   ['canvas_agent_assignments', 'verifies_assignment_id'],
+  ['canvases', 'authorization_user_id'],
   ['llm_calls', 'company_id'],
   ['llm_calls', 'purpose'],
   ['llm_calls', 'status'],
@@ -131,12 +134,14 @@ const REQUIRED_V1_PRIMARY_KEYS = [
 ] as const
 
 const REQUIRED_V1_CONSTRAINTS = [
+  ['agent_work_items', 'agent_work_items_authorization_user_id_fkey', 'f'],
   ['llm_calls', 'llm_calls_pkey', 'p'],
   ['llm_calls', 'llm_calls_company_id_fkey', 'f'],
   ['llm_calls', 'llm_calls_source_check', 'c'],
   ['llm_calls', 'llm_calls_status_check', 'c'],
   ['llm_calls', 'llm_calls_tokens_check', 'c'],
   ['participants', 'participants_agent_bloub_only', 'c'],
+  ['canvases', 'canvases_authorization_user_id_fkey', 'f'],
   ['document_mention_deliveries', 'document_mention_deliveries_recipients_check', 'c'],
   ['document_mention_deliveries', 'document_mention_deliveries_status_check', 'c'],
   ['learning_effects', 'learning_effects_effect_identity_key', 'u'],
@@ -326,6 +331,20 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     const normalize = (value: string | null | undefined) => value?.replace(/\s+/g, ' ').trim() ?? ''
     if (normalize(rows[0]?.definition) !== normalize(expectedDefinition)) return false
   }
+  const { rows: accessReferenceRows } = await client.query<{ count: string }>(`
+    SELECT COUNT(*)::text AS count
+      FROM plan_entitlements plan_entitlement
+      JOIN plans plan ON plan.id=plan_entitlement.plan_id
+      JOIN entitlements entitlement ON entitlement.id=plan_entitlement.entitlement_id
+     WHERE plan.code='PERSONAL_FREE' AND plan.status='ACTIVE'
+       AND entitlement.code = ANY($1::text[])
+       AND jsonb_typeof(plan_entitlement.value)='boolean'
+       AND plan_entitlement.value='true'::jsonb
+  `, [[
+    'project.core', 'project.members.manage', 'learning.core',
+    'knowledge.core', 'conversation.core', 'agent.core',
+  ]])
+  if (Number(accessReferenceRows[0]?.count ?? 0) !== 6) return false
   return true
 }
 
@@ -355,6 +374,7 @@ export async function bootstrapV1Schema(): Promise<'created' | 'ready'> {
     }
     const schema = await readFile(V1_SCHEMA_URL, 'utf8')
     await client.query(schema)
+    await ensurePersonalFreePlan(client)
     return 'created'
   } finally {
     client.release()

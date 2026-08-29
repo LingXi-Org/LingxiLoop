@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
+import { createPermissionService } from '../access/public.js'
 import type { CreateLearningActivityCommand, CreateLearningObjectivesCommand } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
 import {
   closeLearningActivityRecord,
   countCourseObjectives,
   countPublishedCourseObjectives,
-  courseRole,
   findLearningActivity,
   insertLearningActivity,
   insertLearningActivityAttempt,
@@ -45,8 +45,12 @@ export async function createLearningObjectives(
   }
   await transaction(async (client) => {
     if (input.actorKind === 'teacher') {
-      const role = await courseRole(client, input.courseId, input.companyId, input.actorId)
-      if (role !== 'teacher') throw new LearningApplicationError('forbidden', 'course teacher role required')
+      await createPermissionService(client, { lockDependencies: true }).assertCan({
+        actorUserId: input.actorId,
+        action: 'learning:manage',
+        companyId: input.companyId,
+        resource: { type: 'course', id: input.courseId },
+      })
     }
     for (const [position, objective] of input.objectives.entries()) {
       const objectiveId = randomUUID()
@@ -86,8 +90,12 @@ export async function createLearningActivity(
   const activityId = randomUUID()
   await transaction(async (client) => {
     if (input.actorKind === 'teacher') {
-      const role = await courseRole(client, input.courseId, input.companyId, input.actorId)
-      if (role !== 'teacher') throw new LearningApplicationError('forbidden', 'course teacher role required')
+      await createPermissionService(client, { lockDependencies: true }).assertCan({
+        actorUserId: input.actorId,
+        action: 'learning:manage',
+        companyId: input.companyId,
+        resource: { type: 'course', id: input.courseId },
+      })
     }
     if (objectiveIds.length
       && await countCourseObjectives(client, input.companyId, input.courseId, objectiveIds) !== objectiveIds.length) {
@@ -185,4 +193,3 @@ export async function setLearningObjectiveStatus(
     throw new LearningApplicationError('not_found', 'objective not found')
   }
 }
-

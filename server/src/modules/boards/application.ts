@@ -49,7 +49,7 @@ export interface BoardInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   publish(event: BoardEventInput): Promise<void>
   enqueueAgent(args: {
-    companyId: string; agentId: string; reason: 'mention'; triggerClientMsgNo: string
+    companyId: string; authorizationUserId: string; agentId: string; reason: 'mention'; triggerClientMsgNo: string
   }): Promise<void>
   reportPublishFailure(event: BoardEventInput, error: unknown): void
 }
@@ -360,7 +360,7 @@ export class BoardApplication {
     const targets = [...new Set((participants ?? []).filter((id) => id !== actorId))]
     const agents = await mentionedAgents(this.db, companyId, targets)
     await Promise.all(agents.map((agentId) => (
-      this.infrastructure.enqueueAgent({ companyId, agentId, reason: 'mention', triggerClientMsgNo })
+        this.infrastructure.enqueueAgent({ companyId, authorizationUserId: actorId, agentId, reason: 'mention', triggerClientMsgNo })
     )))
   }
 

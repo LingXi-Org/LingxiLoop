@@ -46,31 +46,6 @@ export async function listRecentDocumentsCreatedByOthers(
   return rows
 }
 
-export async function findDocumentCollaborationCompany(
-  db: Queryable,
-  args: { documentId: string; userId: string; writable: boolean },
-): Promise<string | null> {
-  const { rows } = await db.query<{ company_id: string }>(
-    `SELECT document.company_id
-       FROM documents document
-       JOIN projects project
-         ON project.id=document.project_id AND project.company_id=document.company_id
-       JOIN company_memberships membership
-         ON membership.company_id=document.company_id AND membership.user_id=$2
-        AND membership.status='ACTIVE'
-       LEFT JOIN project_memberships course_member
-         ON course_member.project_id=project.id
-        AND course_member.company_id=project.company_id
-        AND course_member.user_id=$2 AND course_member.status='ACTIVE'
-      WHERE document.id=$1
-        AND (membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
-        AND ($3::boolean=FALSE OR project.status='active')
-      LIMIT 1`,
-    [args.documentId, args.userId, args.writable],
-  )
-  return rows[0]?.company_id ?? null
-}
-
 export async function findDocument(
   db: Queryable,
   companyId: string,
@@ -138,21 +113,6 @@ export async function renameDocument(
     [title, documentId, companyId, projectId],
   )
   return Boolean(rowCount)
-}
-
-export async function memberRole(
-  db: Queryable,
-  companyId: string,
-  userId: string,
-): Promise<string | undefined> {
-  const { rows } = await db.query<{ role: string }>(
-    `SELECT LOWER(role) AS role
-       FROM company_memberships
-      WHERE company_id = $1 AND user_id = $2 AND status='ACTIVE'
-      LIMIT 1`,
-    [companyId, userId],
-  )
-  return rows[0]?.role
 }
 
 export async function deleteDocument(

@@ -171,6 +171,7 @@ export class WukongWebhookApplication {
         const workId = await enqueueWebhookWork(db, {
           workId: randomUUID(),
           companyId: binding.company_id,
+          authorizationUserId: input.fromUid,
           agentId,
           channelId: input.channelId,
           threadRootClientMsgNo: input.payload.replyToClientMsgNo ?? null,

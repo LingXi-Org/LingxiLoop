@@ -3,12 +3,12 @@ import { safe } from '../../http/async-handler.js'
 import { requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import {
-  assertConversationWritable,
-  assertProjectWritable,
   requireCompany,
   requireCompanyArtifactContext,
   requireWorkspace,
 } from '../../http/request-context.js'
+import type { PermissionAction } from '../access/public.js'
+import { permissionService } from '../access/public.js'
 import { ConversationApplicationError } from './application.js'
 import {
   addMemberRequestSchema,
@@ -29,8 +29,9 @@ export const conversationsRouter = Router()
 async function requireConversationScope(
   req: Parameters<typeof requireConversationMember>[0],
   conversationId: string,
+  action: PermissionAction = 'conversation:read',
 ) {
-  const scope = await requireConversationMember(req, conversationId)
+  const scope = await requireConversationMember(req, conversationId, action)
   if (!scope.projectId) throw new HttpError(409, 'conversation workspace is missing')
   return { ...scope, projectId: scope.projectId }
 }
@@ -55,7 +56,7 @@ function mapApplicationError(error: unknown): never {
 conversationsRouter.post('/conversations', safe(async (req, res) => {
   const identity = await requireCompany(req)
   const input = parse(createGroupRequestSchema.safeParse(req.body ?? {}))
-  const workspace = await requireWorkspace(req, input.workspaceId)
+  const workspace = await requireWorkspace(req, input.workspaceId, 'conversation:write')
   try {
     const result = await conversationsApplication.createGroup(identity, workspace, input)
     res.status(result.created ? 201 : 200).json(result)
@@ -65,9 +66,9 @@ conversationsRouter.post('/conversations', safe(async (req, res) => {
 }))
 
 conversationsRouter.post('/conversations/direct', safe(async (req, res) => {
-  const scope = await requireCompanyArtifactContext(req, true)
+  const scope = await requireCompanyArtifactContext(req, 'conversation:write')
   const input = parse(openDirectRequestSchema.safeParse(req.body ?? {}))
-  const workspace = await requireWorkspace(req, scope.projectId)
+  const workspace = await requireWorkspace(req, scope.projectId, 'conversation:write')
   try {
     const result = await conversationsApplication.openDirect(scope, workspace, input.otherId)
     res.status(result.created ? 201 : 200).json(result)
@@ -78,8 +79,7 @@ conversationsRouter.post('/conversations/direct', safe(async (req, res) => {
 
 conversationsRouter.post('/conversations/:id/leader', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationScope(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:manage')
   const input = parse(leaderRequestSchema.safeParse(req.body ?? {}))
   try {
     res.json(await conversationsApplication.setLeader(scope, conversationId, input.leaderId))
@@ -90,8 +90,7 @@ conversationsRouter.post('/conversations/:id/leader', safe(async (req, res) => {
 
 conversationsRouter.post('/conversations/:id/topic', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationScope(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:manage')
   const input = parse(topicRequestSchema.safeParse(req.body ?? {}))
   try {
     res.json(await conversationsApplication.setTopic(scope, conversationId, input.topic))
@@ -102,8 +101,7 @@ conversationsRouter.post('/conversations/:id/topic', safe(async (req, res) => {
 
 conversationsRouter.post('/conversations/:id/title', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationScope(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:manage')
   const input = parse(titleRequestSchema.safeParse(req.body ?? {}))
   try {
     res.json(await conversationsApplication.setTitle(scope, conversationId, input.title))
@@ -114,8 +112,7 @@ conversationsRouter.post('/conversations/:id/title', safe(async (req, res) => {
 
 conversationsRouter.post('/conversations/:id/pin', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationScope(req, conversationId)
-  await assertConversationWritable(scope.companyId, conversationId)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:write')
   const input = parse(pinRequestSchema.safeParse(req.body ?? {}))
   try {
     res.json(await conversationsApplication.setPinned(scope, conversationId, input.pinned))
@@ -126,7 +123,7 @@ conversationsRouter.post('/conversations/:id/pin', safe(async (req, res) => {
 
 conversationsRouter.post('/conversations/:id/mute', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationScope(req, conversationId)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:write')
   const input = parse(muteRequestSchema.safeParse(req.body ?? {}))
   const until = input.until ? new Date(input.until) : null
   if (input.mute && until && until.getTime() <= Date.now()) {
@@ -141,8 +138,7 @@ conversationsRouter.post('/conversations/:id/mute', safe(async (req, res) => {
 
 conversationsRouter.post('/conversations/:id/members', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationScope(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:manage')
   const input = parse(addMemberRequestSchema.safeParse(req.body ?? {}))
   try {
     res.json(await conversationsApplication.addMember(scope, conversationId, input.id))
@@ -153,8 +149,7 @@ conversationsRouter.post('/conversations/:id/members', safe(async (req, res) => 
 
 conversationsRouter.post('/conversations/:id/leave', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationScope(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:write')
   try {
     res.json(await conversationsApplication.leave(scope, conversationId))
   } catch (error) {
@@ -164,14 +159,20 @@ conversationsRouter.post('/conversations/:id/leave', safe(async (req, res) => {
 
 conversationsRouter.post('/conversations/:id/typing', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationMember(req, conversationId)
+  const scope = await requireConversationMember(req, conversationId, 'conversation:write')
   const input = parse(typingRequestSchema.safeParse(req.body ?? {}))
   await conversationsApplication.typing(scope, conversationId, input.done)
   res.json({ ok: true })
 }))
 
 conversationsRouter.get('/search', safe(async (req, res) => {
-  const scope = await requireCompanyArtifactContext(req)
+  const scope = await requireCompanyArtifactContext(req, 'conversation:read')
+  await permissionService.assertCan({
+    actorUserId: scope.userId,
+    action: 'conversation:read',
+    companyId: scope.companyId,
+    projectId: scope.projectId,
+  })
   const input = parse(searchQuerySchema.safeParse(req.query))
   res.json(await conversationsApplication.search(scope, input.q))
 }))

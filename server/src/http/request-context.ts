@@ -1,10 +1,9 @@
 import type { Request } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
-import type { ProjectKind } from '../domain/public.js'
-import { pollApplication } from '../modules/polls/index.js'
+import type { PermissionAction, ProjectKind } from '../domain/public.js'
+import { permissionService } from '../modules/access/public.js'
 import { HttpError } from './errors.js'
-import { PRIVILEGED_ROLES } from './roles.js'
 
 /** Throw 401 if the request has no valid session. Returns the user_id. */
 export function requireAuth(req: Request & AuthedRequest): string {
@@ -13,117 +12,100 @@ export function requireAuth(req: Request & AuthedRequest): string {
   return id
 }
 
-/**
- * Resolve the active company for an authenticated request.
- *  - Reads `x-company-id` header for the requested tenant
- *  - Verifies the authed user is a member of it (company_memberships)
- *  - Requires an explicit company header
- *  - Throws 403 on any membership mismatch — never trusts the header alone
- *
- * Async + DB-validated by design: there's no scenario where a header alone
- * grants access to a company.
- */
-export async function requireCompany(req: Request & AuthedRequest): Promise<{ userId: string; companyId: string }> {
-  const userId = requireAuth(req)
-  const requested = (() => {
-    const h = req.headers['x-company-id']
-    return typeof h === 'string' && h ? h.trim() : null
-  })()
-  if (requested) {
-    const { rows } = await pool.query(
-      `SELECT 1 FROM company_memberships
-        WHERE company_id = $1 AND user_id = $2 AND status='ACTIVE' LIMIT 1`,
-      [requested, userId],
-    )
-    if (rows.length === 0) throw new HttpError(403, 'not a member of this company')
-    return { userId, companyId: requested }
-  }
-  throw new HttpError(400, 'x-company-id is required')
+export function requestedCompanyId(req: Request): string {
+  const header = req.headers['x-company-id']
+  const companyId = typeof header === 'string' ? header.trim() : ''
+  if (!companyId) throw new HttpError(400, 'x-company-id is required')
+  return companyId
 }
 
-export async function requireCompanyArtifactContext(req: Request & AuthedRequest, writable = false) {
-  const header = typeof req.headers['x-project-id'] === 'string' ? req.headers['x-project-id'].trim() : ''
-  let projectId = header
+export function requestedProjectId(req: Request): string {
+  const header = req.headers['x-project-id']
+  return typeof header === 'string' ? header.trim() : ''
+}
+
+/** Resolve Company access exclusively through the product Permission Resolver. */
+export async function requireCompany(req: Request & AuthedRequest): Promise<{ userId: string; companyId: string }> {
+  const userId = requireAuth(req)
+  const companyId = requestedCompanyId(req)
+  await permissionService.assertCan({ actorUserId: userId, action: 'company:read', companyId })
+  return { userId, companyId }
+}
+
+export async function requireCompanyArtifactContext(
+  req: Request & AuthedRequest,
+  action: PermissionAction = 'project:read',
+): Promise<{ userId: string; companyId: string; projectId: string }> {
+  const userId = requireAuth(req)
+  const companyId = requestedCompanyId(req)
+  let projectId = requestedProjectId(req)
   if (!projectId) {
-    const { userId, companyId } = await requireCompany(req)
     const { rows } = await pool.query<{ id: string }>(
-      `SELECT project.id
-         FROM projects project
-         JOIN company_memberships member ON member.company_id=project.company_id AND member.user_id=$2
-          AND member.status='ACTIVE'
-        WHERE project.company_id=$1 AND project.is_default=TRUE AND project.status='active'
-        ORDER BY project.id LIMIT 1`,
-      [companyId, userId],
+      `SELECT id FROM projects
+        WHERE company_id=$1 AND is_default=TRUE AND status='active'
+        ORDER BY id LIMIT 1`,
+      [companyId],
     )
     projectId = rows[0]?.id ?? ''
   }
   if (!projectId) throw new HttpError(409, 'company has no active default Project')
-  const workspace = await requireWorkspace(req, projectId)
-  if (writable && workspace.projectStatus !== 'active') throw new HttpError(409, 'archived courses are read-only')
-  return { userId: workspace.userId, companyId: workspace.companyId, projectId: workspace.projectId }
-}
-
-export async function assertProjectWritable(projectId: string | null): Promise<void> {
-  if (!projectId) return
-  const { rows } = await pool.query<{ status: string }>(`SELECT status FROM projects WHERE id=$1 LIMIT 1`, [projectId])
-  if (!rows[0] || rows[0].status !== 'active') throw new HttpError(409, 'archived courses are read-only')
-}
-
-export async function assertConversationWritable(companyId: string, conversationId: string): Promise<void> {
-  const { rows } = await pool.query<{ project_id: string | null }>(
-    `SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2`, [conversationId, companyId],
-  )
-  if (!rows[0]) throw new HttpError(404, 'not found')
-  await assertProjectWritable(rows[0].project_id)
-}
-
-export async function assertPollConversationWritable(companyId: string, messageId: string): Promise<void> {
-  const conversationId = await pollApplication.conversationId(companyId, messageId)
-  if (!conversationId) throw new HttpError(404, 'poll not found')
-  await assertConversationWritable(companyId, conversationId)
+  await permissionService.assertCan({
+    actorUserId: userId,
+    action,
+    companyId,
+    projectId,
+  })
+  return { userId, companyId, projectId }
 }
 
 export async function requireWorkspace(
   req: Request & AuthedRequest,
   explicitProjectId?: string,
+  action: PermissionAction = 'project:read',
 ): Promise<{
-  userId: string; companyId: string; projectId: string; role: string
-  projectCreatedBy: string; projectKind: ProjectKind; isDefault: boolean; projectStatus: string
-  courseId: string | null; courseRole: 'teacher' | 'learner' | null
+  userId: string
+  companyId: string
+  projectId: string
+  role: string
+  projectCreatedBy: string
+  projectKind: ProjectKind
+  isDefault: boolean
+  projectStatus: string
+  courseId: string | null
+  courseRole: 'teacher' | 'learner' | null
 }> {
-  const { userId, companyId } = await requireCompany(req)
-  const header = typeof req.headers['x-project-id'] === 'string' ? req.headers['x-project-id'].trim() : ''
+  const userId = requireAuth(req)
+  const companyId = requestedCompanyId(req)
+  const header = requestedProjectId(req)
   const projectId = explicitProjectId?.trim() || header
   if (!projectId) throw new HttpError(400, 'x-project-id is required inside a knowledge workspace')
-  if (explicitProjectId && header && header !== explicitProjectId) throw new HttpError(409, 'workspace header does not match route')
+  const context = await permissionService.assertCan({ actorUserId: userId, action, companyId, projectId })
   const { rows } = await pool.query<{
-    created_by: string; kind: ProjectKind; is_default: boolean; status: string; role: string
-    project_member_user_id: string | null
-    course_id: string | null; course_role: 'teacher' | 'learner' | null
+    created_by: string | null
+    kind: ProjectKind
+    is_default: boolean
+    status: string
+    course_id: string | null
   }>(
-    `SELECT p.created_by,p.kind,p.is_default,p.status,LOWER(cm.role) AS role,
-            project_member.user_id AS project_member_user_id,course.id AS course_id,
-            CASE WHEN course.id IS NULL OR project_member.role IS NULL THEN NULL
-                 WHEN project_member.role IN ('STUDENT','OBSERVER') THEN 'learner'
-                 ELSE 'teacher' END AS course_role
-       FROM projects p JOIN company_memberships cm ON cm.company_id = p.company_id AND cm.user_id = $2
-        AND cm.status='ACTIVE'
-       LEFT JOIN courses course ON course.project_id = p.id AND course.company_id = p.company_id
-       LEFT JOIN project_memberships project_member
-         ON project_member.project_id = p.id AND project_member.company_id=p.company_id
-        AND project_member.user_id = $2 AND project_member.status='ACTIVE'
-      WHERE p.id = $1 AND p.company_id = $3 LIMIT 1`, [projectId, userId, companyId],
+    `SELECT project.created_by,project.kind,project.is_default,project.status,course.id AS course_id
+       FROM projects project
+       LEFT JOIN courses course ON course.project_id=project.id AND course.company_id=project.company_id
+      WHERE project.id=$1 AND project.company_id=$2 LIMIT 1`,
+    [projectId, companyId],
   )
   const row = rows[0]
-  if (!row || (
-    !PRIVILEGED_ROLES.has(row.role)
-    && !row.project_member_user_id
-  )) {
-    throw new HttpError(404, 'workspace not found')
-  }
+  if (!row || !context.projectMembership) throw new HttpError(404, 'workspace not found')
+  const projectRole = context.projectMembership.role
   return {
-    userId, companyId, projectId, role: row.role,
-    projectCreatedBy: row.created_by, projectKind: row.kind, isDefault: row.is_default,
-    projectStatus: row.status, courseId: row.course_id, courseRole: row.course_role,
+    userId,
+    companyId,
+    projectId,
+    role: context.companyMembership.role.toLowerCase(),
+    projectCreatedBy: row.created_by ?? '',
+    projectKind: row.kind,
+    isDefault: row.is_default,
+    projectStatus: row.status,
+    courseId: row.course_id,
+    courseRole: projectRole === 'STUDENT' || projectRole === 'OBSERVER' ? 'learner' : 'teacher',
   }
 }

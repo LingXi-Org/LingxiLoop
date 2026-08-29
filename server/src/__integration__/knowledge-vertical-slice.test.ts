@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
+import { ForbiddenError } from '../modules/access/public.js'
 import { KnowledgeApplication, KnowledgeApplicationError } from '../modules/knowledge/application.js'
 import { ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
 
@@ -73,8 +74,8 @@ test('[integration] knowledge source creation keeps explicit tenant and project 
   assert.equal(objects.get(row.rows[0]?.storage_key ?? '')?.toString('utf8'), 'authoritative text')
 
   await assert.rejects(
-    application.source({ companyId: OTHER_COMPANY_ID, projectId: OTHER_PROJECT_ID }, created.id),
-    (error) => error instanceof KnowledgeApplicationError && error.code === 'not_found',
+    application.source({ companyId: OTHER_COMPANY_ID, projectId: OTHER_PROJECT_ID, userId: USER_ID }, created.id),
+    (error) => error instanceof ForbiddenError && error.status === 404,
   )
 })
 

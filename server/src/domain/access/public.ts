@@ -11,14 +11,18 @@ export {
   PROJECT_ROLES,
   companyRoleFromWire,
   companyRoleToWire,
-  isCompanyManager,
-  isProjectTeachingManager,
   projectRoleFromLearningWire,
   projectRoleToLearningWire,
 } from './role.js'
 export type {
+  EntitlementCode,
   PermissionAction,
-  PermissionContext,
   PermissionDecision,
+  PermissionReason,
+  PermissionRequest,
+  PermissionResource,
   PermissionService,
+  ResolvedAccessContext,
+  ResolvedEntitlements,
 } from './permission.js'
+export { ENTITLEMENT_CODES, PERMISSION_ACTIONS } from './permission.js'

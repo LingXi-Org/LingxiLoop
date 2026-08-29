@@ -227,9 +227,11 @@ export async function enqueuePendingMemorySynthesis(companyId?: string, agentId?
   if (companyId) { params.push(companyId); filters.push(`e.company_id=$${params.length}`) }
   if (agentId) { params.push(agentId); filters.push(`e.agent_id=$${params.length}`) }
   if (channelId) { params.push(channelId); filters.push(`e.conversation_id=$${params.length}`) }
-  const { rows } = await pool.query<{ company_id: string; agent_id: string; conversation_id: string; id: string }>(
+  const { rows } = await pool.query<{
+    company_id: string; agent_id: string; conversation_id: string; id: string; authorization_user_id: string
+  }>(
     `SELECT DISTINCT ON (e.company_id,e.agent_id,e.conversation_id)
-            e.company_id,e.agent_id,e.conversation_id,e.id
+            e.company_id,e.agent_id,e.conversation_id,e.id,e.learner_id AS authorization_user_id
        FROM agent_memory_evidence e
       WHERE ${filters.join(' AND ')}
         AND NOT EXISTS (SELECT 1 FROM agent_work_items w WHERE w.company_id=e.company_id AND w.agent_id=e.agent_id
@@ -239,9 +241,10 @@ export async function enqueuePendingMemorySynthesis(companyId?: string, agentId?
   const bucket = Math.floor(Date.now() / 15_000)
   for (const row of rows) {
     await pool.query(
-      `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,priority)
-       VALUES ($1,$2,$3,$4,$5,'memory_synthesis',10) ON CONFLICT (agent_id,trigger_client_msg_no,reason) DO NOTHING`,
-      [`memory-synthesis-${randomUUID()}`, row.company_id, row.agent_id, row.conversation_id, `memory:${row.id}:${bucket}`],
+      `INSERT INTO agent_work_items (id,company_id,authorization_user_id,agent_id,channel_id,trigger_client_msg_no,reason,priority)
+       VALUES ($1,$2,$3,$4,$5,$6,'memory_synthesis',10) ON CONFLICT (agent_id,trigger_client_msg_no,reason) DO NOTHING`,
+      [`memory-synthesis-${randomUUID()}`, row.company_id, row.authorization_user_id,
+        row.agent_id, row.conversation_id, `memory:${row.id}:${bucket}`],
     )
   }
   return rows.length

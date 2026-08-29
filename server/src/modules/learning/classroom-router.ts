@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
 import { requireCompany } from '../../http/request-context.js'
+import type { PermissionAction } from '../access/public.js'
+import { permissionService } from '../access/public.js'
 import {
   bindCourseRoomRequestSchema,
   createActivityRequestSchema,
@@ -16,18 +18,34 @@ import { parseLearningRequest as parse, respondWithLearning as respond } from '.
 
 export const classroomRouter = Router()
 
+async function requireCoursePermission(
+  req: Parameters<typeof requireCompany>[0],
+  courseId: string,
+  action: PermissionAction,
+) {
+  const scope = await requireCompany(req)
+  await permissionService.assertCan({
+    actorUserId: scope.userId,
+    action,
+    companyId: scope.companyId,
+    resource: { type: 'course', id: courseId },
+  })
+  return scope
+}
+
 classroomRouter.get('/learning/dashboard', safe(async (req, res) => {
   const scope = await requireCompany(req)
   res.json(await respond(() => learningApplication.dashboard(scope)))
 }))
 
 classroomRouter.get('/courses/:courseId/teacher-agent', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  res.json(await respond(() => learningApplication.teacherAgent(scope, String(req.params.courseId))))
+  const courseId = String(req.params.courseId)
+  const scope = await requireCoursePermission(req, courseId, 'learning:read')
+  res.json(await respond(() => learningApplication.teacherAgent(scope, courseId)))
 }))
 
 classroomRouter.put('/courses/:courseId/rooms/:conversationId', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:manage')
   const input = parse(bindCourseRoomRequestSchema.safeParse(req.body ?? {}))
   res.json(await respond(() => learningApplication.bindRoom(
     scope, String(req.params.courseId), String(req.params.conversationId), input,
@@ -35,12 +53,12 @@ classroomRouter.put('/courses/:courseId/rooms/:conversationId', safe(async (req,
 }))
 
 classroomRouter.get('/courses/:courseId/objectives', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:read')
   res.json(await respond(() => learningApplication.objectives(scope, String(req.params.courseId))))
 }))
 
 classroomRouter.post('/courses/:courseId/objectives', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:manage')
   const input = parse(createObjectivesRequestSchema.safeParse(req.body ?? {}))
   res.status(201).json(await respond(() => learningApplication.createObjectives(
     scope, String(req.params.courseId), input,
@@ -48,7 +66,7 @@ classroomRouter.post('/courses/:courseId/objectives', safe(async (req, res) => {
 }))
 
 classroomRouter.post('/courses/:courseId/objectives/:objectiveId/status', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:manage')
   const input = parse(objectiveStatusRequestSchema.safeParse(req.body ?? {}))
   res.json(await respond(() => learningApplication.setObjectiveStatus(
     scope, String(req.params.courseId), String(req.params.objectiveId), input,
@@ -56,12 +74,12 @@ classroomRouter.post('/courses/:courseId/objectives/:objectiveId/status', safe(a
 }))
 
 classroomRouter.get('/courses/:courseId/activities', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:read')
   res.json(await respond(() => learningApplication.activities(scope, String(req.params.courseId))))
 }))
 
 classroomRouter.post('/courses/:courseId/activities', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:manage')
   const input = parse(createActivityRequestSchema.safeParse(req.body ?? {}))
   res.status(201).json(await respond(() => learningApplication.createActivity(
     scope, String(req.params.courseId), input,
@@ -69,28 +87,28 @@ classroomRouter.post('/courses/:courseId/activities', safe(async (req, res) => {
 }))
 
 classroomRouter.get('/courses/:courseId/activities/:activityId', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:read')
   res.json(await respond(() => learningApplication.activity(
     scope, String(req.params.courseId), String(req.params.activityId),
   )))
 }))
 
 classroomRouter.post('/courses/:courseId/activities/:activityId/publish', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:manage')
   res.json(await respond(() => learningApplication.publishActivity(
     scope, String(req.params.courseId), String(req.params.activityId),
   )))
 }))
 
 classroomRouter.post('/courses/:courseId/activities/:activityId/close', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:manage')
   res.json(await respond(() => learningApplication.closeActivity(
     scope, String(req.params.courseId), String(req.params.activityId),
   )))
 }))
 
 classroomRouter.post('/courses/:courseId/activities/:activityId/submit', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:submit')
   const input = parse(submitActivityRequestSchema.safeParse(req.body ?? {}))
   res.status(201).json(await respond(() => learningApplication.submitActivity(
     scope, String(req.params.courseId), String(req.params.activityId), input,
@@ -98,12 +116,12 @@ classroomRouter.post('/courses/:courseId/activities/:activityId/submit', safe(as
 }))
 
 classroomRouter.get('/courses/:courseId/missions', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:read')
   res.json(await respond(() => learningApplication.missions(scope, String(req.params.courseId))))
 }))
 
 classroomRouter.patch('/courses/:courseId/missions/:missionId/coordinator', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:manage')
   const input = parse(missionCoordinatorRequestSchema.safeParse(req.body ?? {}))
   res.json(await respond(() => learningApplication.setMissionCoordinator(
     scope, String(req.params.courseId), String(req.params.missionId), input,
@@ -111,23 +129,23 @@ classroomRouter.patch('/courses/:courseId/missions/:missionId/coordinator', safe
 }))
 
 classroomRouter.get('/courses/:courseId/evidence', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:read')
   const learnerId = typeof req.query.learnerId === 'string' ? req.query.learnerId : undefined
   res.json(await respond(() => learningApplication.evidence(scope, String(req.params.courseId), learnerId)))
 }))
 
 classroomRouter.get('/courses/:courseId/reviews', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:review')
   res.json(await respond(() => learningApplication.reviews(scope, String(req.params.courseId))))
 }))
 
 classroomRouter.get('/courses/:courseId/progress', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:read')
   res.json(await respond(() => learningApplication.progress(scope, String(req.params.courseId))))
 }))
 
 classroomRouter.post('/courses/:courseId/reviews/:evaluationId', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = await requireCoursePermission(req, String(req.params.courseId), 'learning:review')
   const input = parse(reviewEvaluationRequestSchema.safeParse(req.body ?? {}))
   res.json(await respond(() => learningApplication.review(
     scope, String(req.params.courseId), String(req.params.evaluationId), input,
@@ -137,12 +155,14 @@ classroomRouter.post('/courses/:courseId/reviews/:evaluationId', safe(async (req
 classroomRouter.get('/learning/notification-preferences', safe(async (req, res) => {
   const scope = await requireCompany(req)
   const courseId = typeof req.query.courseId === 'string' ? req.query.courseId : undefined
+  if (courseId) await requireCoursePermission(req, courseId, 'learning:preference')
   res.json(await respond(() => learningApplication.notificationPreferences(scope, courseId)))
 }))
 
 classroomRouter.put('/learning/notification-preferences', safe(async (req, res) => {
   const scope = await requireCompany(req)
   const input = parse(notificationPreferencesRequestSchema.safeParse(req.body ?? {}))
+  if (input.courseId) await requireCoursePermission(req, input.courseId, 'learning:preference')
   res.json(await respond(() => learningApplication.setNotificationPreferences(scope, input)))
 }))
 

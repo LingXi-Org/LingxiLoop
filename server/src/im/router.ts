@@ -4,6 +4,8 @@ import type { AuthedRequest } from '../auth.js'
 import { agentApprovalApplication, agentControlApplication } from '../agent-os/public.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import { assertTeacherRoomAccessible } from '../modules/learning/public.js'
+import type { PermissionAction } from '../modules/access/public.js'
+import { permissionService } from '../modules/access/public.js'
 import { imAccessApplication } from './access-facade.js'
 import { imChannelsApplication } from './channels-facade.js'
 import { imMessagesApplication } from './messages-facade.js'
@@ -48,6 +50,20 @@ async function identity(req: Request & AuthedRequest): Promise<{ userId: string;
   return { userId, companyId }
 }
 
+async function assertChannelPermission(
+  userId: string,
+  companyId: string,
+  channelId: string,
+  action: PermissionAction,
+): Promise<void> {
+  await permissionService.assertCan({
+    actorUserId: userId,
+    action,
+    companyId,
+    resource: { type: 'conversation', id: channelId },
+  })
+}
+
 imRouter.get('/bootstrap', safe(async (req, res) => {
   const { userId } = await identity(req)
   res.json(await imSessionApplication.bootstrap(userId))
@@ -62,12 +78,14 @@ imRouter.get('/channels', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const projectId = String(req.headers['x-project-id'] ?? '').trim()
   if (!projectId) { res.status(400).json({ error: 'x-project-id required' }); return }
+  await permissionService.assertCan({ actorUserId: userId, action: 'project:read', companyId, projectId })
   res.json(await imChannelsApplication.list({ companyId, userId, projectId }))
 }))
 
 imRouter.get('/channels/:id/messages', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
+  await assertChannelPermission(userId, companyId, channelId, 'conversation:read')
   await assertTeacherRoomAccessible(channelId,companyId,userId)
   const { limit, beforeSeq } = requestInput(imHistoryQuerySchema, req.query)
   const messages = await imMessagesApplication.history({ companyId, userId, channelId, limit, beforeSequence: beforeSeq })
@@ -78,6 +96,7 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
 imRouter.post('/channels/:id/reactions', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
+  await assertChannelPermission(userId, companyId, channelId, 'conversation:write')
   await assertTeacherRoomAccessible(channelId, companyId, userId)
   const { messageId, messageSeq, emoji } = requestInput(imReactionRequestSchema, req.body)
   const result = await imMessagesApplication.toggleReaction({
@@ -90,6 +109,7 @@ imRouter.post('/channels/:id/reactions', safe(async (req, res) => {
 imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
+  await assertChannelPermission(userId, companyId, channelId, 'conversation:write')
   await assertTeacherRoomAccessible(channelId,companyId,userId)
   const { clientNonce, payload: parsedPayload } = requestInput(imSendAcceptanceRequestSchema, req.body)
   if (parsedPayload.clientMsgNo !== clientNonce) {
@@ -123,6 +143,7 @@ imRouter.get('/sends/:clientNonce', safe(async (req, res) => {
 imRouter.post('/channels/:id/read', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
+  await assertChannelPermission(userId, companyId, channelId, 'conversation:write')
   await assertTeacherRoomAccessible(channelId,companyId,userId)
   const { readThroughSeq } = requestInput(imReadRequestSchema, req.body)
   const result = await imMessagesApplication.markRead({ companyId, userId, channelId, readThroughSeq })
@@ -137,6 +158,7 @@ imRouter.post('/channels/:id/read', safe(async (req, res) => {
 imRouter.get('/channels/:id/read-receipts', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
+  await assertChannelPermission(userId, companyId, channelId, 'conversation:read')
   await assertTeacherRoomAccessible(channelId, companyId, userId)
   if (!await isReadReceiptChannelMember({ companyId, channelId, userId })) {
     res.status(404).json({ error: 'channel not found' }); return
@@ -165,11 +187,18 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
 
 imRouter.get('/routines', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
+  await permissionService.assertCan({ actorUserId: userId, action: 'agent_run:control', companyId })
   res.json(await agentControlApplication.listRoutines({ companyId, userId }))
 }))
 
 imRouter.post('/routines/:id/pause', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
+  await permissionService.assertCan({
+    actorUserId: userId,
+    action: 'agent_run:control',
+    companyId,
+    resource: { type: 'routine', id: String(req.params.id) },
+  })
   const routine = await agentControlApplication.pauseRoutine({ routineId: String(req.params.id), companyId, userId })
   if (!routine) { res.status(404).json({ error: 'routine not found' }); return }
   res.json(routine)
@@ -178,6 +207,7 @@ imRouter.post('/routines/:id/pause', safe(async (req, res) => {
 imRouter.post('/runs/stop', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const { agentId, channelId } = requestInput(agentRunControlRequestSchema, req.body)
+  await assertChannelPermission(userId, companyId, channelId, 'agent_run:control')
   const result = await agentControlApplication.stop({ companyId, userId, agentId, channelId })
   if (!result) { res.status(404).json({ error: 'no active run' }); return }
   res.json({ ok: true, workId: result.workId })
@@ -186,6 +216,7 @@ imRouter.post('/runs/stop', safe(async (req, res) => {
 imRouter.post('/runs/steer', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const { agentId, channelId, text, clientRequestId } = requestInput(agentRunSteerRequestSchema, req.body)
+  await assertChannelPermission(userId, companyId, channelId, 'agent_run:control')
   const result = await agentControlApplication.steer({ companyId, userId, agentId, channelId, text, clientRequestId })
   if (!result) { res.status(404).json({ error: 'no active run' }); return }
   if (result.kind === 'conflict') { res.status(409).json({ error: 'clientRequestId was reused with different text' }); return }

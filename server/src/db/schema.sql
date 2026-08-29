@@ -464,6 +464,7 @@ CREATE TABLE public.agent_work_items (
     company_id text NOT NULL,
     agent_id text NOT NULL,
     channel_id text NOT NULL,
+    authorization_user_id text,
     thread_root_client_msg_no text,
     trigger_client_msg_no text NOT NULL,
     reason text NOT NULL,
@@ -837,6 +838,7 @@ CREATE TABLE public.canvases (
     summary text,
     completed_at timestamp with time zone,
     project_id text,
+    authorization_user_id text,
     CONSTRAINT canvases_status_check CHECK ((status = ANY (ARRAY['active'::text, 'summarizing'::text, 'completed'::text, 'stopped'::text, 'failed'::text])))
 );
 
@@ -5041,6 +5043,13 @@ CREATE INDEX idx_company_onboarding_effects_due
     ON public.company_onboarding_effects USING btree (status, available_at, created_at)
     WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text, 'processing'::text]));
 
+ALTER TABLE ONLY public.agent_work_items
+    ADD CONSTRAINT agent_work_items_authorization_user_id_fkey
+    FOREIGN KEY (authorization_user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.canvases
+    ADD CONSTRAINT canvases_authorization_user_id_fkey
+    FOREIGN KEY (authorization_user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
 
 -- Written last so a failed or partial bootstrap is never accepted as v1.
 COMMENT ON SCHEMA public IS 'LingxiLoop schema v1';

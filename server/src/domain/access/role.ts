@@ -27,11 +27,3 @@ export function projectRoleFromLearningWire(role: LearningRoleWire): 'TEACHER' |
 export function projectRoleToLearningWire(role: ProjectRole): LearningRoleWire {
   return role === 'STUDENT' || role === 'OBSERVER' ? 'learner' : 'teacher'
 }
-
-export function isCompanyManager(role: CompanyRole): boolean {
-  return role === 'OWNER' || role === 'ADMIN'
-}
-
-export function isProjectTeachingManager(role: ProjectRole): boolean {
-  return role === 'OWNER' || role === 'TEACHER'
-}

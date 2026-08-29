@@ -9,6 +9,7 @@ import { AgentControlApplication } from './control-application.js'
 
 export const agentControlApplication = new AgentControlApplication({
   db: pool,
+  transaction: (work) => withTransaction(pool, work),
   assertChannelAccessible: assertTeacherRoomAccessible,
   sendMessage: (...args) => wukongClient().sendMessage(...args),
 })

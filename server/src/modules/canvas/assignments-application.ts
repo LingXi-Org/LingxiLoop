@@ -62,6 +62,11 @@ export interface CanvasHandoffResult {
   activity: CanvasActivity
 }
 
+function canvasAuthorizationUserId(canvas: CanvasRow): string {
+  if (!canvas.authorization_user_id) throw new Error('Canvas has no persisted human authorization principal')
+  return canvas.authorization_user_id
+}
+
 export function toAssignment(row: AssignmentRow, dependencies: string[] = []): CanvasAgentAssignment {
   return {
     id: row.id,
@@ -176,6 +181,7 @@ export async function insertCanvasMembers(
     await insertCanvasWork(db, {
       id: row.work_id!,
       companyId: input.canvas.company_id,
+      authorizationUserId: canvasAuthorizationUserId(input.canvas),
       agentId: row.agent_id,
       channelId: input.canvas.conversation_id,
       triggerClientMsgNo: input.canvas.trigger_client_msg_no,
@@ -284,6 +290,7 @@ export function createCanvasAssignmentsApplication(context: CanvasAssignmentsApp
           await insertCanvasWork(transactionDb, {
             id: workId,
             companyId: canvas.company_id,
+            authorizationUserId: canvasAuthorizationUserId(canvas),
             agentId: input.agentId,
             channelId: canvas.conversation_id,
             triggerClientMsgNo: canvas.trigger_client_msg_no,
@@ -377,6 +384,7 @@ export function createCanvasAssignmentsApplication(context: CanvasAssignmentsApp
           await insertCanvasWork(transactionDb, {
             id: workId,
             companyId: canvas.company_id,
+            authorizationUserId: canvasAuthorizationUserId(canvas),
             agentId: input.toAgentId,
             channelId: canvas.conversation_id,
             triggerClientMsgNo: canvas.trigger_client_msg_no,

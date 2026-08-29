@@ -1,8 +1,7 @@
-import type { PoolClient } from 'pg'
+import type { Queryable } from '../../db/queryable.js'
 import { pool } from '../../db/pool.js'
 import { HttpError } from '../../http/errors.js'
-
-type Queryable = Pick<PoolClient, 'query'> | typeof pool
+import { createPermissionService } from '../access/public.js'
 
 export async function isManagedPulse(
   agentId: string,
@@ -23,20 +22,18 @@ export async function canDiscoverPulse(
   userId: string,
   db: Queryable = pool,
 ): Promise<boolean> {
-  const { rows } = await db.query(
-    `SELECT 1
-       FROM learning_project_teacher_agents pulse
-       JOIN courses course
-         ON course.project_id=pulse.project_id AND course.company_id=pulse.company_id
-       JOIN project_memberships member
-         ON member.project_id=course.project_id AND member.company_id=course.company_id
-        AND member.user_id=$3 AND member.status='ACTIVE'
-        AND member.role IN ('OWNER','TEACHER')
-      WHERE pulse.agent_id=$1 AND pulse.company_id=$2
-      LIMIT 1`,
-    [agentId, companyId, userId],
+  const { rows } = await db.query<{ project_id: string }>(
+    `SELECT project_id FROM learning_project_teacher_agents
+      WHERE agent_id=$1 AND company_id=$2 LIMIT 1`,
+    [agentId, companyId],
   )
-  return Boolean(rows[0])
+  if (!rows[0]) return true
+  return (await createPermissionService(db).can({
+    actorUserId: userId,
+    action: 'learning:manage',
+    companyId,
+    projectId: rows[0].project_id,
+  })).allowed
 }
 
 export async function assertPulseVisible(
@@ -87,26 +84,25 @@ export async function assertTeacherRoomAccessible(
 ): Promise<void> {
   const { rows } = await db.query<{
     room_status: 'active' | 'closed'
-    project_status: 'active' | 'archived'
-    current_teacher: boolean
+    project_id: string
   }>(
-    `SELECT room.status AS room_status,project.status AS project_status,
-            EXISTS(
-              SELECT 1 FROM project_memberships member
-               WHERE member.project_id=course.project_id AND member.company_id=course.company_id
-                 AND member.user_id=$3 AND member.status='ACTIVE'
-                 AND member.role IN ('OWNER','TEACHER')
-            ) AS current_teacher
+    `SELECT room.status AS room_status,project.id AS project_id
        FROM learning_course_teacher_rooms room
        JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
       WHERE room.conversation_id=$1 AND room.company_id=$2
       LIMIT 1`,
-    [conversationId, companyId, userId],
+    [conversationId, companyId],
   )
   const room = rows[0]
   if (!room) return
-  if (room.room_status !== 'active' || room.project_status !== 'active' || !room.current_teacher) {
+  const allowed = room.room_status === 'active' && (await createPermissionService(db).can({
+    actorUserId: userId,
+    action: 'learning:manage',
+    companyId,
+    projectId: room.project_id,
+  })).allowed
+  if (!allowed) {
     throw new HttpError(404, 'not found')
   }
 }

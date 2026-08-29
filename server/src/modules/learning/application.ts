@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { projectKindBelongsToCompanyType } from '../../domain/public.js'
+import type { PermissionAction } from '../access/public.js'
+import { createPermissionService } from '../access/public.js'
 import type { Queryable } from '../../db/queryable.js'
 import type {
   BindCourseRoomInput,
@@ -16,11 +18,9 @@ import type {
   UpdateCourseInput,
 } from './contracts.js'
 import {
-  canCreateCourse,
   changeCourseMember,
   companyMembershipRole,
   courseInvitationPreview,
-  courseExists,
   courseManager,
   courseMembershipRole,
   courseRole,
@@ -129,14 +129,28 @@ export interface LearningInfrastructure {
   metric(name: string, tags?: Record<string, string>): void
 }
 
-const privilegedRoles = new Set(['owner', 'admin'])
-
-
-
 export class LearningApplication {
   constructor(private readonly db: Queryable, private readonly infrastructure: LearningInfrastructure) {}
 
-  courses(scope: LearningScope) { return listCourses(this.db, scope.companyId, scope.userId) }
+  async courses(scope: LearningScope) {
+    await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId,
+      action: 'project:list',
+      companyId: scope.companyId,
+    })
+    const courses = await listCourses(this.db, scope.companyId, scope.userId)
+    const permissions = createPermissionService(this.db)
+    const visible = await Promise.all(courses.map(async (course: { id: string }) => ({
+      course,
+      decision: await permissions.can({
+        actorUserId: scope.userId,
+        action: 'course:read',
+        companyId: scope.companyId,
+        resource: { type: 'course', id: course.id },
+      }),
+    })))
+    return visible.filter(({ decision }) => decision.allowed).map(({ course }) => course)
+  }
 
   async runEffect(effect: LearningEffect): Promise<void> {
     const payload = effect.payload
@@ -205,13 +219,13 @@ export class LearningApplication {
     const courseId = `course-${randomUUID().slice(0, 12)}`
     const roomId = `course-room-${randomUUID().slice(0, 12)}`
     await this.infrastructure.transaction(async (db) => {
-      const permission = await canCreateCourse(db, scope.companyId, scope.userId, true)
-      if (!permission) throw new LearningApplicationError('forbidden', 'not a member of this company')
-      if (!projectKindBelongsToCompanyType('TEACHING', permission.company_type)) {
+      const context = await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: scope.userId,
+        action: 'course:create',
+        companyId: scope.companyId,
+      })
+      if (!projectKindBelongsToCompanyType('TEACHING', context.company.type)) {
         throw new LearningApplicationError('forbidden', 'Teaching Projects require a Personal Company')
-      }
-      if (!privilegedRoles.has(permission.company_role) && !permission.is_teacher) {
-        throw new LearningApplicationError('forbidden', 'only a company admin or existing teacher can create courses')
       }
       await insertTeachingCourse(db, { ...scope, projectId, courseId, roomId, input })
       const teacher = await this.infrastructure.ensureTeacherAgent(scope.companyId, courseId, db)
@@ -240,6 +254,12 @@ export class LearningApplication {
   }
 
   async course(scope: LearningScope, courseId: string) {
+    await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId,
+      action: 'course:read',
+      companyId: scope.companyId,
+      resource: { type: 'course', id: courseId },
+    })
     const course = await findCourse(this.db, courseId, scope.companyId, scope.userId)
     if (!course) throw new LearningApplicationError('not_found', 'course not found')
     return course
@@ -247,7 +267,7 @@ export class LearningApplication {
 
   async updateCourse(userId: string, courseId: string, patch: UpdateCourseInput) {
     await this.infrastructure.transaction(async (db) => {
-      const manager = await this.manager(userId, courseId, true, undefined, db, true)
+      const manager = await this.manager(userId, courseId, 'course:update', db, true)
       await updateCourseMetadata(db, { courseId, companyId: manager.companyId, projectId: manager.projectId, patch })
       await this.infrastructure.auditInTransaction(db, {
         kind: 'course_update', userId, companyId: manager.companyId,
@@ -265,7 +285,7 @@ export class LearningApplication {
 
   async archiveCourse(userId: string, courseId: string, archive: boolean) {
     await this.infrastructure.transaction(async (db) => {
-      const manager = await this.manager(userId, courseId, false, undefined, db, true)
+      const manager = await this.manager(userId, courseId, 'course:archive', db, true)
       await setCourseArchived(db, manager.companyId, manager.projectId, archive)
       await this.infrastructure.auditInTransaction(db, {
         kind: archive ? 'course_archive' : 'course_unarchive', userId, companyId: manager.companyId,
@@ -282,13 +302,13 @@ export class LearningApplication {
   }
 
   async members(userId: string, courseId: string) {
-    const manager = await this.manager(userId, courseId)
+    const manager = await this.manager(userId, courseId, 'project_member:list')
     return listCourseMembers(this.db, courseId, manager.companyId)
   }
 
   async updateMember(userId: string, courseId: string, targetId: string, role: 'teacher' | 'learner') {
     await this.infrastructure.transaction(async (db) => {
-      const manager = await this.manager(userId, courseId, true, undefined, db, true)
+      const manager = await this.manager(userId, courseId, 'project_member:update', db, true)
       const outcome = await changeCourseMember(db, {
         courseId, companyId: manager.companyId, userId: targetId, role,
       })
@@ -306,7 +326,7 @@ export class LearningApplication {
 
   async removeMember(userId: string, courseId: string, targetId: string) {
     await this.infrastructure.transaction(async (db) => {
-      const manager = await this.manager(userId, courseId, true, undefined, db, true)
+      const manager = await this.manager(userId, courseId, 'project_member:remove', db, true)
       const outcome = await changeCourseMember(db, {
         courseId, companyId: manager.companyId, userId: targetId, role: null,
       })
@@ -330,7 +350,7 @@ export class LearningApplication {
   }
 
   async invitations(userId: string, courseId: string) {
-    const manager = await this.manager(userId, courseId)
+    const manager = await this.manager(userId, courseId, 'project_invitation:list')
     return listCourseInvitations(this.db, courseId, manager.companyId)
   }
 
@@ -341,9 +361,7 @@ export class LearningApplication {
     const email = input.email?.toLowerCase() || null
     const note = input.note || null
     await this.infrastructure.transaction(async (db) => {
-      const manager = await this.manager(
-        userId, courseId, true, 'archived courses cannot issue invitations', db, true,
-      )
+      const manager = await this.manager(userId, courseId, 'project_invitation:create', db, true)
       await insertCourseInvitation(db, {
         tokenHash, courseId, companyId: manager.companyId, userId, email,
         role: input.role, note, maxUses: input.maxUses, expiresAt,
@@ -362,7 +380,7 @@ export class LearningApplication {
 
   async revokeInvitation(userId: string, courseId: string, invitationId: string) {
     const revoked = await this.infrastructure.transaction(async (db) => {
-      const manager = await this.manager(userId, courseId, false, undefined, db, true)
+      const manager = await this.manager(userId, courseId, 'project_invitation:revoke', db, true)
       const revoked = await revokeCourseInvitation(db, courseId, manager.companyId, invitationId)
       if (revoked) await this.infrastructure.auditInTransaction(db, {
         kind: 'course_invitation_revoke', userId, companyId: manager.companyId,
@@ -494,12 +512,12 @@ export class LearningApplication {
   }
 
   async teacherAgent(scope: LearningScope, courseId: string) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:read')
     return this.classroom(() => this.infrastructure.teacherAgentSummary(scope.companyId, courseId, scope.userId))
   }
 
   async bindRoom(scope: LearningScope, courseId: string, conversationId: string, input: BindCourseRoomInput) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:manage')
     return this.classroom(async () => {
       await bindLearningCourseRoom(this.db, {
         companyId: scope.companyId, courseId, managerId: scope.userId,
@@ -510,15 +528,14 @@ export class LearningApplication {
   }
 
   async objectives(scope: LearningScope, courseId: string) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:read')
     const role = await courseRole(this.db, courseId, scope.companyId, scope.userId)
-    if (!role) throw new LearningApplicationError('forbidden', 'course membership required')
     const objectives = await this.classroom(() => listLearningObjectives(this.db, scope.companyId, courseId))
     return role === 'teacher' ? objectives : objectives.filter((objective) => objective.status === 'published')
   }
 
   async createObjectives(scope: LearningScope, courseId: string, input: CreateObjectivesInput) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:manage')
     return this.classroom(() => createLearningObjectives(this.db, (work) => this.infrastructure.transaction(work), {
       companyId: scope.companyId,
       courseId,
@@ -529,7 +546,7 @@ export class LearningApplication {
   }
 
   async setObjectiveStatus(scope: LearningScope, courseId: string, objectiveId: string, input: ObjectiveStatusInput) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:manage')
     return this.classroom(async () => {
       await setLearningObjectiveStatus(this.db, {
         companyId: scope.companyId,
@@ -543,14 +560,13 @@ export class LearningApplication {
   }
 
   async activities(scope: LearningScope, courseId: string) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:read')
     const role = await courseRole(this.db, courseId, scope.companyId, scope.userId)
-    if (!role) throw new LearningApplicationError('forbidden', 'course membership required')
     return listLearningActivities(this.db, scope.companyId, courseId, role === 'teacher')
   }
 
   async createActivity(scope: LearningScope, courseId: string, input: CreateActivityInput) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:manage')
     return this.classroom(() => createLearningActivity(this.db, (work) => this.infrastructure.transaction(work), {
       companyId: scope.companyId,
       courseId,
@@ -568,7 +584,7 @@ export class LearningApplication {
   }
 
   async publishActivity(scope: LearningScope, courseId: string, activityId: string) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:manage')
     return this.classroom(async () => {
       await publishLearningActivity((work) => this.infrastructure.transaction(work), {
         companyId: scope.companyId, courseId, activityId, teacherId: scope.userId,
@@ -578,7 +594,7 @@ export class LearningApplication {
   }
 
   async closeActivity(scope: LearningScope, courseId: string, activityId: string) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:manage')
     return this.classroom(async () => {
       await closeLearningActivity(this.db, {
         companyId: scope.companyId, courseId, activityId, teacherId: scope.userId,
@@ -588,7 +604,7 @@ export class LearningApplication {
   }
 
   async submitActivity(scope: LearningScope, courseId: string, activityId: string, input: SubmitActivityInput) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:submit')
     const result = await this.classroom(() => submitLearningActivity(this.db, {
       companyId: scope.companyId, courseId, activityId, learnerId: scope.userId, ...input,
     }))
@@ -597,7 +613,7 @@ export class LearningApplication {
   }
 
   async missions(scope: LearningScope, courseId: string) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:read')
     return this.classroom(() => listVisibleLearningMissions(this.db, scope, courseId))
   }
 
@@ -607,7 +623,7 @@ export class LearningApplication {
     missionId: string,
     input: MissionCoordinatorInput,
   ) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:manage')
     return this.classroom(() => assignLearningMissionCoordinator(this.db, {
       companyId: scope.companyId,
       courseId,
@@ -618,12 +634,14 @@ export class LearningApplication {
   }
 
   async evidence(scope: LearningScope, courseId: string, learnerId = scope.userId) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, learnerId === scope.userId ? 'learning:read' : 'learning:review')
     return this.classroom(async () => {
-      const role = await courseRole(this.db, courseId, scope.companyId, scope.userId)
-      if (role !== 'teacher' && (role !== 'learner' || learnerId !== scope.userId)) {
-        throw new LearningApplicationError('forbidden', 'course evidence access denied')
-      }
+      await createPermissionService(this.db).assertCan({
+        actorUserId: scope.userId,
+        action: learnerId === scope.userId ? 'learning:read' : 'learning:review',
+        companyId: scope.companyId,
+        resource: { type: 'course', id: courseId },
+      })
       return listLearningEvidenceRecords(this.db, {
         companyId: scope.companyId, courseId, learnerId,
       })
@@ -631,27 +649,33 @@ export class LearningApplication {
   }
 
   async reviews(scope: LearningScope, courseId: string) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:review')
     return this.classroom(async () => {
-      if (await courseRole(this.db, courseId, scope.companyId, scope.userId) !== 'teacher') {
-        throw new LearningApplicationError('forbidden', 'course teacher role required')
-      }
+      await createPermissionService(this.db).assertCan({
+        actorUserId: scope.userId,
+        action: 'learning:review',
+        companyId: scope.companyId,
+        resource: { type: 'course', id: courseId },
+      })
       return listPendingLearningEvaluationRecords(this.db, scope.companyId, courseId)
     })
   }
 
   async progress(scope: LearningScope, courseId: string) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:review')
     return this.classroom(async () => {
-      if (await courseRole(this.db, courseId, scope.companyId, scope.userId) !== 'teacher') {
-        throw new LearningApplicationError('forbidden', 'course teacher role required')
-      }
+      await createPermissionService(this.db).assertCan({
+        actorUserId: scope.userId,
+        action: 'learning:review',
+        companyId: scope.companyId,
+        resource: { type: 'course', id: courseId },
+      })
       return listLearningCourseProgress(this.db, scope.companyId, courseId)
     })
   }
 
   async review(scope: LearningScope, courseId: string, evaluationId: string, input: ReviewEvaluationInput) {
-    await this.assertCourseScope(scope.companyId, courseId)
+    await this.assertCourseScope(scope, courseId, 'learning:review')
     return this.classroom(async () => {
       await reviewLearningEvaluation(this.db, this.infrastructure.transaction, this.infrastructure.metric, {
         companyId: scope.companyId, courseId, evaluationId, teacherId: scope.userId, ...input,
@@ -678,8 +702,12 @@ export class LearningApplication {
 
   async setNotificationPreferences(scope: LearningScope, input: NotificationPreferencesInput) {
     if (input.courseId) {
-      const role = await courseRole(this.db, input.courseId, scope.companyId, scope.userId)
-      if (!role) throw new LearningApplicationError('forbidden', 'course membership required')
+      await createPermissionService(this.db).assertCan({
+        actorUserId: scope.userId,
+        action: 'learning:preference',
+        companyId: scope.companyId,
+        resource: { type: 'course', id: input.courseId },
+      })
     }
     await upsertNotificationPreferences(this.db, { id: randomUUID(), ...scope, ...input })
     return this.notificationPreferences(scope, input.courseId)
@@ -690,24 +718,27 @@ export class LearningApplication {
   private async manager(
     userId: string,
     courseId: string,
-    active = false,
-    archivedMessage = 'archived courses are read-only',
+    action: PermissionAction,
     db: Queryable = this.db,
     lock = false,
   ) {
+    await createPermissionService(db, { lockDependencies: lock }).assertCan({
+      actorUserId: userId,
+      action,
+      resource: { type: 'course', id: courseId },
+    })
     const manager = await courseManager(db, courseId, userId, lock)
     if (!manager) throw new LearningApplicationError('not_found', 'course not found')
-    if (!privilegedRoles.has(manager.companyRole) && manager.courseRole !== 'teacher') {
-      throw new LearningApplicationError('forbidden', 'this action requires a course teacher or company admin')
-    }
-    if (active && manager.status !== 'active') throw new LearningApplicationError('conflict', archivedMessage)
     return manager
   }
 
-  private async assertCourseScope(companyId: string, courseId: string): Promise<void> {
-    if (!await courseExists(this.db, courseId, companyId)) {
-      throw new LearningApplicationError('not_found', 'course not found')
-    }
+  private async assertCourseScope(scope: LearningScope, courseId: string, action: PermissionAction): Promise<void> {
+    await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId,
+      action,
+      companyId: scope.companyId,
+      resource: { type: 'course', id: courseId },
+    })
   }
 
   private async classroom<T>(work: () => Promise<T>): Promise<T> {

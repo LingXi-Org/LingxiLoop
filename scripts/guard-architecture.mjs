@@ -96,15 +96,10 @@ for (const file of [...server, ...frontend]) {
   }
 }
 
-// Domain Foundation v1 keeps current authorization behavior temporarily, but
-// freezes every direct Membership-table caller. New product code must wait for
-// the canonical PermissionService resolver instead of inventing another path.
+// Membership SQL is owned by Access or by narrow persistence/lifecycle projections.
+// Routers and applications must authorize through modules/access/public.ts.
 const legacyMembershipSqlAllowlist = new Set([
-  'server/src/agent-os/approval-repository.ts',
   'server/src/agent-os/control-repository.ts',
-  'server/src/agent-os/routine-scheduler.ts',
-  'server/src/http/authorization.ts',
-  'server/src/http/request-context.ts',
   'server/src/im/access-repository.ts',
   'server/src/im/channels-repository.ts',
   'server/src/im/webhook-repository.ts',
@@ -115,7 +110,7 @@ const legacyMembershipSqlAllowlist = new Set([
   'server/src/modules/companies/repository.ts',
   'server/src/modules/conversations/repository.ts',
   'server/src/modules/documents/mention-repository.ts',
-  'server/src/modules/documents/repository.ts',
+  'server/src/modules/access/repository.ts',
   'server/src/modules/email/address-repository.ts',
   'server/src/modules/email/agent-repository.ts',
   'server/src/modules/email/repository.ts',
@@ -133,7 +128,6 @@ const legacyMembershipSqlAllowlist = new Set([
   'server/src/modules/learning/teacher-provisioning-repository.ts',
   'server/src/modules/learning/teacher-reporting-repository.ts',
   'server/src/modules/learning/teacher-runtime-repository.ts',
-  'server/src/modules/learning/visibility.ts',
   'server/src/ws.ts',
 ])
 for (const file of server) {
@@ -144,6 +138,38 @@ for (const file of server) {
     && !legacyMembershipSqlAllowlist.has(fileName)) {
     violations.push(`${fileName}: direct Membership access is not in the Domain Foundation legacy allowlist`)
   }
+}
+
+const accessImplementationPattern = /modules\/access\/(?:application|contracts|context-resolver|entitlement-resolver|errors|policy|repository)\.js/
+const forbiddenAuthorizationShortcut = /\b(?:user|actor|company)\.(?:isTeacher|isPro|isEnterprise|isAdmin|isPaid)\b|\busers\.is_admin\b/
+const membershipRoleDecision = /\b(?:membership|companyMembership|projectMembership|companyRole|projectRole|courseRole)\b[^\n]{0,100}(?:===?|!==?)\s*['"](?:OWNER|ADMIN|TEACHER|TA|STUDENT|OBSERVER|owner|admin|teacher|learner)['"]/
+const membershipRoleDecisionAllowlist = new Set([
+  'server/src/modules/companies/application.ts',
+  'server/src/modules/companies/personal-workspace.ts',
+])
+for (const file of server) {
+  const fileName = name(file)
+  const source = await read(file)
+  if (!fileName.startsWith('server/src/modules/access/') && accessImplementationPattern.test(source)) {
+    violations.push(`${fileName}: Access internals are private; import modules/access/public.ts`)
+  }
+  if (forbiddenAuthorizationShortcut.test(source)) {
+    violations.push(`${fileName}: global identity or billing authorization shortcuts are forbidden`)
+  }
+  if (/\b(?:PRIVILEGED_ROLES|privilegedRoles|requireCompanyRole)\b|http\/roles\.js/.test(source)) {
+    violations.push(`${fileName}: legacy role authorization helpers are forbidden`)
+  }
+  if (/(?:router|application)\.ts$/.test(fileName)
+    && membershipRoleDecision.test(source)
+    && !membershipRoleDecisionAllowlist.has(fileName)) {
+    violations.push(`${fileName}: Membership Role decisions must be made by the Access policy`)
+  }
+}
+const accessSources = (await Promise.all(
+  server.filter((file) => name(file).startsWith('server/src/modules/access/')).map(read),
+)).join('\n')
+if (/personal_owner_user_id|personalOwnerUserId/.test(accessSources)) {
+  violations.push('server/src/modules/access: personal ownership is a lifecycle invariant and cannot grant authorization')
 }
 
 for (const retired of ['src/features/admin', 'src/features/eval']) {

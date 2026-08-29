@@ -1,8 +1,8 @@
 import type { Queryable } from '../../db/queryable.js'
 import {
   companyRoleToWire,
-  type CompanyRole,
 } from '../../domain/access/public.js'
+import { createPermissionService } from '../access/public.js'
 import type {
   CreateInvitationInput,
   InvitationPreview,
@@ -12,7 +12,6 @@ import type {
 } from './contracts.js'
 import {
   companyMembershipSummary,
-  companyRole,
   emailAlreadyMember,
   findCompany,
   findCompanyForMember,
@@ -71,8 +70,6 @@ export interface CompanyInfrastructure {
 
 const INVITE_TTL_MS = 1000 * 60 * 60 * 24 * 7
 const INVITE_MAX_LINK_USES = 100
-const ADMIN_ROLES = new Set<CompanyRole>(['OWNER', 'ADMIN'])
-
 function baseInvitation(invitation: Awaited<ReturnType<typeof invitationWithCompany>> & {}) {
   return {
     role: companyRoleToWire(invitation.role),
@@ -93,32 +90,35 @@ function baseInvitation(invitation: Awaited<ReturnType<typeof invitationWithComp
 export class CompanyApplication {
   constructor(private readonly db: Queryable, private readonly infrastructure: CompanyInfrastructure) {}
 
-  companies(userId: string) { return listCompanies(this.db, userId) }
+  async companies(userId: string) {
+    const companies = await listCompanies(this.db, userId)
+    const decisions = await Promise.all(companies.map(async (company) => ({
+      company,
+      decision: await createPermissionService(this.db).can({
+        actorUserId: userId,
+        action: 'company:list',
+        companyId: company.id,
+      }),
+    })))
+    return decisions.filter(({ decision }) => decision.allowed).map(({ company }) => company)
+  }
 
   async company(companyId: string, userId: string) {
+    await createPermissionService(this.db).assertCan({ actorUserId: userId, action: 'company:read', companyId })
     const company = await findCompanyForMember(this.db, companyId, userId)
     if (!company) throw new CompanyApplicationError('not_found', 'company not found')
     return company
   }
 
-  async requireAdmin(companyId: string, userId: string): Promise<CompanyRole> {
-    return this.requireAdminOn(this.db, companyId, userId, false)
-  }
-
-  private async requireAdminOn(
+  private async assertPermission(
     db: Queryable,
     companyId: string,
     userId: string,
-    lock: boolean,
-  ): Promise<CompanyRole> {
-    const role = lock
-      ? await memberRole(db, companyId, userId, true)
-      : await companyRole(db, companyId, userId)
-    if (!role) throw new CompanyApplicationError('forbidden', 'not a member of this company')
-    if (!ADMIN_ROLES.has(role)) {
-      throw new CompanyApplicationError('forbidden', 'only owners and admins can manage this workspace')
-    }
-    return role
+    action: 'company:update' | 'company_member:list' | 'company_member:update' | 'company_member:remove'
+      | 'company_invitation:list' | 'company_invitation:create' | 'company_invitation:revoke',
+    lockDependencies = false,
+  ): Promise<void> {
+    await createPermissionService(db, { lockDependencies }).assertCan({ actorUserId: userId, action, companyId })
   }
 
   async editCompany(
@@ -128,7 +128,7 @@ export class CompanyApplication {
     auditContext: RequestAuditContext,
   ) {
     await this.infrastructure.transaction(async (db) => {
-      await this.requireAdminOn(db, companyId, userId, true)
+      await this.assertPermission(db, companyId, userId, 'company:update', true)
       if (!await updateCompany(db, companyId, input)) {
         throw new CompanyApplicationError('not_found', 'company not found')
       }
@@ -142,7 +142,7 @@ export class CompanyApplication {
   }
 
   async members(companyId: string, userId: string) {
-    await this.requireAdmin(companyId, userId)
+    await this.assertPermission(this.db, companyId, userId, 'company_member:list')
     return listMembers(this.db, companyId)
   }
 
@@ -151,7 +151,7 @@ export class CompanyApplication {
   }) {
     if (args.targetId === args.userId) throw new CompanyApplicationError('conflict', 'you cannot change your own company role')
     await this.infrastructure.transaction(async (db) => {
-      await this.requireAdminOn(db, args.companyId, args.userId, true)
+      await this.assertPermission(db, args.companyId, args.userId, 'company_member:update', true)
       const current = await memberRole(db, args.companyId, args.targetId, true)
       if (!current) throw new CompanyApplicationError('not_found', 'member not found')
       if (current === 'OWNER') throw new CompanyApplicationError('conflict', 'the company owner cannot be demoted')
@@ -169,7 +169,7 @@ export class CompanyApplication {
   }) {
     if (args.targetId === args.userId) throw new CompanyApplicationError('conflict', 'you cannot remove yourself')
     await this.infrastructure.transaction(async (db) => {
-      await this.requireAdminOn(db, args.companyId, args.userId, true)
+      await this.assertPermission(db, args.companyId, args.userId, 'company_member:remove', true)
       const role = await memberRole(db, args.companyId, args.targetId, true)
       if (!role) {
         if (await isDepartedCompanyHuman(db, args.companyId, args.targetId)) return
@@ -221,7 +221,7 @@ export class CompanyApplication {
   }
 
   async invitations(companyId: string, userId: string) {
-    await this.requireAdmin(companyId, userId)
+    await this.assertPermission(this.db, companyId, userId, 'company_invitation:list')
     const rows = await listInvitations(this.db, companyId)
     const now = Date.now()
     return rows.map((invitation) => ({
@@ -260,7 +260,7 @@ export class CompanyApplication {
     const tokenHash = this.infrastructure.hashInvitationToken(token)
     const expiresAt = new Date(Date.now() + INVITE_TTL_MS)
     await this.infrastructure.transaction(async (db) => {
-      await this.requireAdminOn(db, args.companyId, args.userId, true)
+      await this.assertPermission(db, args.companyId, args.userId, 'company_invitation:create', true)
       if (!await lockCompany(db, args.companyId)) throw new CompanyApplicationError('not_found', 'company not found')
       if (email) {
         if (await emailAlreadyMember(db, args.companyId, email)) {
@@ -306,7 +306,7 @@ export class CompanyApplication {
     companyId: string; userId: string; invitationId: string; audit: RequestAuditContext
   }) {
     const revoked = await this.infrastructure.transaction(async (db) => {
-      await this.requireAdminOn(db, args.companyId, args.userId, true)
+      await this.assertPermission(db, args.companyId, args.userId, 'company_invitation:revoke', true)
       const revoked = await revokeInvitation(db, args.companyId, args.invitationId)
       if (revoked) await this.infrastructure.auditInTransaction(db, {
         kind: 'invitation_revoke', userId: args.userId, companyId: args.companyId,

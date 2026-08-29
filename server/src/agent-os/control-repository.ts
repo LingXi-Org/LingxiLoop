@@ -10,22 +10,6 @@ export async function listVisibleRoutines(
        JOIN conversations conversation
          ON conversation.id=routine.channel_id AND conversation.company_id=routine.company_id
       WHERE routine.company_id=$1 AND conversation.members @> to_jsonb(ARRAY[$2::text])
-        AND (
-          NOT EXISTS (
-            SELECT 1 FROM learning_course_teacher_rooms room
-             WHERE room.conversation_id=routine.channel_id AND room.company_id=routine.company_id
-          ) OR EXISTS (
-            SELECT 1 FROM learning_course_teacher_rooms room
-            JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
-            JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-            JOIN project_memberships teacher
-              ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
-             AND teacher.user_id=$2 AND teacher.status='ACTIVE'
-             AND teacher.role IN ('OWNER','TEACHER')
-            WHERE room.conversation_id=routine.channel_id AND room.company_id=routine.company_id
-              AND room.status='active' AND project.status='active'
-          )
-        )
       ORDER BY routine.created_at DESC`,
     [input.companyId, input.userId],
   )

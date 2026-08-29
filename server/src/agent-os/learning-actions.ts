@@ -78,6 +78,11 @@ function record(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
+function authorizationUserId(work: AgentWorkItem): string {
+  if (!work.authorizationUserId) throw new Error('Agent work has no persisted human authorization principal')
+  return work.authorizationUserId
+}
+
 function textArg(args: Record<string, unknown>, name: string, required = true): string {
   const value = typeof args[name] === 'string' ? args[name].trim() : ''
   if (required && !value) throw new Error(`${name} is required`)
@@ -313,10 +318,11 @@ async function executeChat(work: AgentWorkItem, method: string, args: Record<str
     const sent = await wukongClient().sendMessage(work.channelId, Number(args.channelType ?? 2), work.agentId, payload)
     await pool.query(
       `INSERT INTO agent_work_items
-         (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason, priority)
-       VALUES ($1,$2,$3,$4,$5,$6,'handoff',150)
+         (id, company_id, authorization_user_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason, priority)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'handoff',150)
        ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING`,
-      [randomUUID(), work.companyId, targetAgentId, work.channelId, payload.clientMsgNo, payload.clientMsgNo],
+      [randomUUID(), work.companyId, authorizationUserId(work), targetAgentId,
+        work.channelId, payload.clientMsgNo, payload.clientMsgNo],
     )
     return { ok: true, value: sent }
   }
@@ -346,10 +352,11 @@ async function executeRoutine(work: AgentWorkItem, method: string, args: Record<
     const { rows } = await pool.query(
       `INSERT INTO agent_routines
          (id, company_id, agent_id, channel_id, kind, title, instructions, schedule, timezone, status, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,'paused',$3)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,'paused',$10)
        ON CONFLICT (id) DO UPDATE SET updated_at=agent_routines.updated_at RETURNING *`,
       [id, work.companyId, work.agentId, work.channelId, textArg(args, 'kind'), textArg(args, 'title'),
-        textArg(args, 'instructions'), JSON.stringify(record(args.schedule)), textArg(args, 'timezone', false) || 'Asia/Shanghai'],
+        textArg(args, 'instructions'), JSON.stringify(record(args.schedule)),
+        textArg(args, 'timezone', false) || 'Asia/Shanghai', authorizationUserId(work)],
     )
     return { ok: true, value: rows[0] }
   }
@@ -423,6 +430,7 @@ async function executeCanvas(
       companyId: work.companyId, initiatorAgentId: work.agentId, conversationId: work.channelId,
       triggerClientMsgNo: work.triggerClientMsgNo, title: textArg(args, 'title'), goal: textArg(args, 'goal'),
       members: members(), idempotencyKey: action.idempotencyKey,
+      authorizationUserId: authorizationUserId(work),
     })
     const card: LingxiMessageV1 = {
       version: 1, kind: 'canvas', clientMsgNo: `canvas-card-${snapshot.id}`,

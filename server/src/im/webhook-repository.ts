@@ -116,6 +116,7 @@ export async function enqueueWebhookWork(
   input: {
     workId: string
     companyId: string
+    authorizationUserId: string
     agentId: string
     channelId: string
     threadRootClientMsgNo: string | null
@@ -126,14 +127,15 @@ export async function enqueueWebhookWork(
 ): Promise<string | null> {
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO agent_work_items(
-       id,company_id,agent_id,channel_id,thread_root_client_msg_no,
+       id,company_id,authorization_user_id,agent_id,channel_id,thread_root_client_msg_no,
        trigger_client_msg_no,reason,execution_role
-     ) VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+     ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
      ON CONFLICT(agent_id,trigger_client_msg_no,reason) DO NOTHING
      RETURNING id`,
     [
       input.workId,
       input.companyId,
+      input.authorizationUserId,
       input.agentId,
       input.channelId,
       input.threadRootClientMsgNo,

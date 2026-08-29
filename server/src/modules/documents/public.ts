@@ -12,14 +12,6 @@ export const instanceOrigin = documentCollaboration.instanceOrigin
 export const readDocumentText = documentCollaboration.readDocumentText
 export const applyAgentEdit = documentCollaboration.applyAgentEdit
 
-export function documentCollaborationCompanyFor(
-  documentId: string,
-  userId: string,
-  writable = false,
-): Promise<string | null> {
-  return documentsApplication.collaborationCompanyFor(documentId, userId, writable)
-}
-
 export function notifyDocumentMention(args: {
   documentId: string
   companyId: string

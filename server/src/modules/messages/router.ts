@@ -2,7 +2,6 @@ import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
 import { requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
-import { assertProjectWritable } from '../../http/request-context.js'
 import {
   emailReplyRequestSchema,
   messageHistoryQuerySchema,
@@ -17,7 +16,7 @@ function badRequest(result: { error: { issues: Array<{ message: string }> } }): 
 
 messagesRouter.get('/conversations/:id/messages', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const { companyId, kind } = await requireConversationMember(req, conversationId)
+  const { companyId, kind } = await requireConversationMember(req, conversationId, 'email:read')
   if (kind !== 'email') throw new HttpError(404, 'not found')
   const parsed = messageHistoryQuerySchema.safeParse(req.query)
   if (!parsed.success) badRequest(parsed)
@@ -26,8 +25,7 @@ messagesRouter.get('/conversations/:id/messages', safe(async (req, res) => {
 
 messagesRouter.post('/conversations/:id/messages', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationMember(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await requireConversationMember(req, conversationId, 'email:write')
   if (scope.kind !== 'email') throw new HttpError(404, 'not found')
   const parsed = emailReplyRequestSchema.safeParse(req.body ?? {})
   if (!parsed.success) badRequest(parsed)

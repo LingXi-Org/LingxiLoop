@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
 import { HttpError } from '../../http/errors.js'
 import { requireCompanyArtifactContext } from '../../http/request-context.js'
+import { permissionService } from '../access/public.js'
 import { DocumentApplicationError } from './application.js'
 import { createDocumentRequestSchema, renameDocumentRequestSchema } from './contracts.js'
 import { documentsApplication } from './facade.js'
@@ -17,12 +18,12 @@ function mapDocumentError(error: unknown): never {
 }
 
 documentsRouter.get('/documents', safe(async (req, res) => {
-  const scope = await requireCompanyArtifactContext(req)
+  const scope = await requireCompanyArtifactContext(req, 'document:read')
   res.json({ documents: await documentsApplication.list(scope) })
 }))
 
 documentsRouter.post('/documents', safe(async (req, res) => {
-  const scope = await requireCompanyArtifactContext(req, true)
+  const scope = await requireCompanyArtifactContext(req, 'document:write')
   const parsed = createDocumentRequestSchema.safeParse(req.body ?? {})
   if (!parsed.success) throw new HttpError(400, parsed.error.issues[0]?.message ?? 'invalid document')
   try {
@@ -33,7 +34,11 @@ documentsRouter.post('/documents', safe(async (req, res) => {
 }))
 
 documentsRouter.get('/documents/:id', safe(async (req, res) => {
-  const scope = await requireCompanyArtifactContext(req)
+  const scope = await requireCompanyArtifactContext(req, 'document:read')
+  await permissionService.assertCan({
+    actorUserId: scope.userId, action: 'document:read', companyId: scope.companyId, projectId: scope.projectId,
+    resource: { type: 'document', id: String(req.params.id) },
+  })
   try {
     res.json(await documentsApplication.get(scope, String(req.params.id)))
   } catch (error) {
@@ -42,7 +47,11 @@ documentsRouter.get('/documents/:id', safe(async (req, res) => {
 }))
 
 documentsRouter.put('/documents/:id', safe(async (req, res) => {
-  const scope = await requireCompanyArtifactContext(req, true)
+  const scope = await requireCompanyArtifactContext(req, 'document:write')
+  await permissionService.assertCan({
+    actorUserId: scope.userId, action: 'document:write', companyId: scope.companyId, projectId: scope.projectId,
+    resource: { type: 'document', id: String(req.params.id) },
+  })
   const parsed = renameDocumentRequestSchema.safeParse(req.body ?? {})
   if (!parsed.success) throw new HttpError(400, parsed.error.issues[0]?.message ?? 'invalid title')
   try {
@@ -53,7 +62,11 @@ documentsRouter.put('/documents/:id', safe(async (req, res) => {
 }))
 
 documentsRouter.delete('/documents/:id', safe(async (req, res) => {
-  const scope = await requireCompanyArtifactContext(req, true)
+  const scope = await requireCompanyArtifactContext(req, 'document:delete')
+  await permissionService.assertCan({
+    actorUserId: scope.userId, action: 'document:delete', companyId: scope.companyId, projectId: scope.projectId,
+    resource: { type: 'document', id: String(req.params.id) },
+  })
   try {
     res.json(await documentsApplication.delete(scope, String(req.params.id)))
   } catch (error) {

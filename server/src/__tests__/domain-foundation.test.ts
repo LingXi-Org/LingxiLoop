@@ -4,7 +4,6 @@ import test from 'node:test'
 import {
   companyRoleFromWire,
   companyRoleToWire,
-  isProjectTeachingManager,
   projectRoleFromLearningWire,
   projectRoleToLearningWire,
 } from '../domain/access/public.js'
@@ -33,8 +32,10 @@ test('Permission has one canonical context-aware contract and no persistence mod
   assert.equal(definitions.length, 1)
   assert.match(definitions[0]!, /\/access\/permission\.ts$/)
   const permission = await readFile(new URL('../domain/access/permission.ts', import.meta.url), 'utf8')
-  assert.match(permission, /userId: string[\s\S]*companyId: string[\s\S]*projectId\?: string/)
-  assert.match(permission, /can\(action: PermissionAction, context: PermissionContext\): Promise<PermissionDecision>/)
+  assert.match(permission, /actorUserId: string[\s\S]*action: PermissionAction[\s\S]*companyId\?: string[\s\S]*projectId\?: string/)
+  assert.match(permission, /can\(request: PermissionRequest\): Promise<PermissionDecision>/)
+  assert.match(permission, /assertCan\(request: PermissionRequest\): Promise<ResolvedAccessContext>/)
+  assert.match(permission, /context: ResolvedAccessContext \| null/)
   const schema = await readFile(new URL('../db/schema.sql', import.meta.url), 'utf8')
   assert.doesNotMatch(schema, /CREATE TABLE public\.permissions\b/)
 })
@@ -47,9 +48,6 @@ test('User remains identity-only while contextual roles retain lowercase wire co
   assert.equal(projectRoleFromLearningWire('learner'), 'STUDENT')
   assert.equal(projectRoleToLearningWire('OWNER'), 'teacher')
   assert.equal(projectRoleToLearningWire('OBSERVER'), 'learner')
-  assert.equal(isProjectTeachingManager('OWNER'), true)
-  assert.equal(isProjectTeachingManager('TEACHER'), true)
-  assert.equal(isProjectTeachingManager('TA'), false)
 })
 
 test('Membership and Entitlement domain values remain separate concepts', async () => {

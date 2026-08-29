@@ -331,16 +331,16 @@ export async function enqueueLearningMissionCoordinatorWork(
   db: Queryable,
   args: {
     id: string; companyId: string; coordinatorAgentId: string; channelId: string
-    threadRootClientMsgNo: string; missionId: string
+    threadRootClientMsgNo: string; missionId: string; authorizationUserId: string
   },
 ): Promise<void> {
   await db.query(
     `INSERT INTO agent_work_items
-       (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,
+       (id,company_id,authorization_user_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,
         reason,status,priority,execution_role)
-     VALUES($1,$2,$3,$4,$5,$6,'handoff','queued',190,'coordinator')
+     VALUES($1,$2,$3,$4,$5,$6,$7,'handoff','queued',190,'coordinator')
      ON CONFLICT(agent_id,trigger_client_msg_no,reason) DO NOTHING`,
-    [args.id,args.companyId,args.coordinatorAgentId,args.channelId,args.threadRootClientMsgNo,
+    [args.id,args.companyId,args.authorizationUserId,args.coordinatorAgentId,args.channelId,args.threadRootClientMsgNo,
       `mission-coordinator:${args.missionId}`],
   )
 }

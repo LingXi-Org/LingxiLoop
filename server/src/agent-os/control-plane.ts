@@ -17,6 +17,7 @@ import {
   loadTeacherTurnContext,
 } from '../modules/learning/runtime.js'
 import { recordLlmCall } from '../llm-ledger.js'
+import { assertHostActionPermission } from './authorization.js'
 
 export const agentOSControlRouter = Router()
 
@@ -43,6 +44,7 @@ interface WorkRow {
   id: string
   fence: string | number
   company_id: string
+  authorization_user_id: string | null
   agent_id: string
   channel_id: string
   thread_root_client_msg_no: string | null
@@ -65,6 +67,7 @@ function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
     id: row.id,
     fence: Number(row.fence),
     companyId: row.company_id,
+    ...(row.authorization_user_id ? { authorizationUserId: row.authorization_user_id } : {}),
     agentId: row.agent_id,
     channelId: row.channel_id,
     ...(row.thread_root_client_msg_no ? { threadRootClientMsgNo: row.thread_root_client_msg_no } : {}),
@@ -97,7 +100,7 @@ async function requireLease(req: Request, actionable = false): Promise<{ work: A
   const fence = Number(req.body?.fence ?? req.query.fence)
   const leaseToken = String(req.body?.leaseToken ?? req.query.leaseToken ?? '')
   const { rows } = await pool.query<WorkRow>(
-    `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,canvas_id,canvas_assignment_id,execution_role,progress_fingerprint,no_progress_count
+    `SELECT id, fence, company_id, authorization_user_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,canvas_id,canvas_assignment_id,execution_role,progress_fingerprint,no_progress_count
        FROM agent_work_items
        WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased' AND lease_expires_at > NOW()
          ${actionable ? 'AND cancel_requested_at IS NULL' : ''}`,
@@ -115,7 +118,7 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
     await client.query('BEGIN')
     await client.query(`DELETE FROM agent_os_session_leases WHERE expires_at <= NOW()`)
     const { rows } = await client.query<WorkRow>(
-      `SELECT id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,
+      `SELECT id, fence, company_id, authorization_user_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,
               canvas_id,canvas_assignment_id,created_at,available_at,attempts,preemptions,execution_role,progress_fingerprint,no_progress_count
          FROM agent_work_items
          WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
@@ -146,8 +149,8 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
           SET status='leased', fence=fence+1, lease_token_hash=$2, leased_by=$3, lease_started_at=NOW(),
               lease_expires_at=NOW()+INTERVAL '45 seconds', attempts=attempts+1, updated_at=NOW()
         WHERE id=$1
-      RETURNING id, fence, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,
-                canvas_id,canvas_assignment_id,created_at,available_at,attempts,preemptions`,
+      RETURNING id, fence, company_id, authorization_user_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,
+                canvas_id,canvas_assignment_id,created_at,available_at,attempts,preemptions,execution_role,progress_fingerprint,no_progress_count`,
       [rows[0].id, hash(token), workerId],
     )
     await client.query('COMMIT')
@@ -529,6 +532,7 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
       await client.query('COMMIT');transactionOpen=false
       return {ok:false,error}
     }
+    await assertHostActionPermission(client, work, action)
     await client.query(
       `INSERT INTO agent_host_actions
          (idempotency_key, work_id, run_id, cell_id, call_index, action, args)

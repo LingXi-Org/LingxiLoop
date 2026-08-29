@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
 import { requireAuth, requireCompany } from '../../http/request-context.js'
+import type { PermissionAction } from '../access/public.js'
+import { permissionService } from '../access/public.js'
 import { classroomRouter } from './classroom-router.js'
 import {
   archiveCourseRequestSchema,
@@ -14,6 +16,21 @@ import { parseLearningRequest as parse, respondWithLearning as respond } from '.
 
 export const learningRouter = Router()
 
+async function requireCoursePermission(
+  req: Parameters<typeof requireCompany>[0],
+  courseId: string,
+  action: PermissionAction,
+) {
+  const scope = await requireCompany(req)
+  await permissionService.assertCan({
+    actorUserId: scope.userId,
+    action,
+    companyId: scope.companyId,
+    resource: { type: 'course', id: courseId },
+  })
+  return scope
+}
+
 learningRouter.use(classroomRouter)
 
 learningRouter.get('/courses', safe(async (req, res) => {
@@ -23,64 +40,74 @@ learningRouter.get('/courses', safe(async (req, res) => {
 
 learningRouter.post('/courses', safe(async (req, res) => {
   const scope = await requireCompany(req)
+  await permissionService.assertCan({ actorUserId: scope.userId, action: 'course:create', companyId: scope.companyId })
   const input = parse(createCourseRequestSchema.safeParse(req.body ?? {}))
   res.status(201).json(await respond(() => learningApplication.createCourse(scope, input)))
 }))
 
 learningRouter.get('/courses/:id', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  res.json(await respond(() => learningApplication.course(scope, String(req.params.id))))
+  const courseId = String(req.params.id)
+  const scope = await requireCoursePermission(req, courseId, 'course:read')
+  res.json(await respond(() => learningApplication.course(scope, courseId)))
 }))
 
 learningRouter.patch('/courses/:id', safe(async (req, res) => {
-  const userId = requireAuth(req)
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'course:update')
   const input = parse(updateCourseRequestSchema.safeParse(req.body ?? {}))
-  res.json(await respond(() => learningApplication.updateCourse(userId, String(req.params.id), input)))
+  res.json(await respond(() => learningApplication.updateCourse(userId, courseId, input)))
 }))
 
 learningRouter.post('/courses/:id/archive', safe(async (req, res) => {
-  const userId = requireAuth(req)
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'course:archive')
   const input = parse(archiveCourseRequestSchema.safeParse(req.body ?? {}))
-  res.json(await respond(() => learningApplication.archiveCourse(userId, String(req.params.id), input.archive)))
+  res.json(await respond(() => learningApplication.archiveCourse(userId, courseId, input.archive)))
 }))
 
 learningRouter.get('/courses/:id/members', safe(async (req, res) => {
-  const userId = requireAuth(req)
-  res.json(await respond(() => learningApplication.members(userId, String(req.params.id))))
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'project_member:list')
+  res.json(await respond(() => learningApplication.members(userId, courseId)))
 }))
 
 learningRouter.patch('/courses/:id/members/:userId', safe(async (req, res) => {
-  const userId = requireAuth(req)
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'project_member:update')
   const input = parse(updateCourseMemberRequestSchema.safeParse(req.body ?? {}))
   res.json(await respond(() => learningApplication.updateMember(
-    userId, String(req.params.id), String(req.params.userId), input.role,
+    userId, courseId, String(req.params.userId), input.role,
   )))
 }))
 
 learningRouter.delete('/courses/:id/members/:userId', safe(async (req, res) => {
-  const userId = requireAuth(req)
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'project_member:remove')
   res.json(await respond(() => learningApplication.removeMember(
-    userId, String(req.params.id), String(req.params.userId),
+    userId, courseId, String(req.params.userId),
   )))
 }))
 
 learningRouter.get('/courses/:id/invitations', safe(async (req, res) => {
-  const userId = requireAuth(req)
-  res.json(await respond(() => learningApplication.invitations(userId, String(req.params.id))))
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'project_invitation:list')
+  res.json(await respond(() => learningApplication.invitations(userId, courseId)))
 }))
 
 learningRouter.post('/courses/:id/invitations', safe(async (req, res) => {
-  const userId = requireAuth(req)
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'project_invitation:create')
   const input = parse(createCourseInvitationRequestSchema.safeParse(req.body ?? {}))
   res.status(201).json(await respond(() => learningApplication.createInvitation(
-    userId, String(req.params.id), input,
+    userId, courseId, input,
   )))
 }))
 
 learningRouter.delete('/courses/:id/invitations/:inviteId', safe(async (req, res) => {
-  const userId = requireAuth(req)
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'project_invitation:revoke')
   res.json(await respond(() => learningApplication.revokeInvitation(
-    userId, String(req.params.id), String(req.params.inviteId),
+    userId, courseId, String(req.params.inviteId),
   )))
 }))
 

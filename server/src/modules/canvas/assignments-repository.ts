@@ -33,15 +33,16 @@ export function insertAssignmentDependency(db: Queryable, assignmentId: string, 
 
 export function insertCanvasWork(db: Queryable, args: {
   id: string; companyId: string; agentId: string; channelId: string | null
+  authorizationUserId: string | null
   triggerClientMsgNo: string | null; status: 'queued' | 'blocked'; canvasId: string
   assignmentId: string; executionRole: CanvasAssignmentExecutionRole; workTriggerClientMsgNo?: string
 }) {
   return db.query(
     `INSERT INTO agent_work_items
-       (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id,execution_role)
-     VALUES ($1,$2,$3,$4,$5,$6,'canvas_worker',$7,180,$8,$9,$10)
+       (id,company_id,authorization_user_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,canvas_assignment_id,execution_role)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'canvas_worker',$8,180,$9,$10,$11)
      ON CONFLICT (canvas_assignment_id) WHERE canvas_assignment_id IS NOT NULL DO NOTHING`,
-    [args.id, args.companyId, args.agentId, args.channelId, args.triggerClientMsgNo,
+    [args.id, args.companyId, args.authorizationUserId, args.agentId, args.channelId, args.triggerClientMsgNo,
       args.workTriggerClientMsgNo ?? `canvas:${args.canvasId}:${args.agentId}`,
       args.status, args.canvasId, args.assignmentId, args.executionRole],
   )
@@ -49,15 +50,16 @@ export function insertCanvasWork(db: Queryable, args: {
 
 export async function insertAgentWorkspace(db: Queryable, args: {
   id: string; companyId: string; title: string; conversationId: string; triggerClientMsgNo: string
-  goal: string; initiatorAgentId: string
+  goal: string; initiatorAgentId: string; authorizationUserId: string | null
 }) {
   const { rows } = await db.query<CanvasRow>(
     `INSERT INTO canvases
-       (id,company_id,project_id,title,conversation_id,trigger_client_msg_no,goal,initiator_agent_id,status,origin,created_by)
-     SELECT $1,$2,c.project_id,$3,$4,$5,$6,$7,'active','agent_os',$7
+       (id,company_id,project_id,title,conversation_id,trigger_client_msg_no,goal,initiator_agent_id,status,origin,created_by,authorization_user_id)
+     SELECT $1,$2,c.project_id,$3,$4,$5,$6,$7,'active','agent_os',$7,$8
        FROM conversations c WHERE c.id=$4 AND c.company_id=$2 AND c.kind='group'
      ON CONFLICT (conversation_id) DO UPDATE SET updated_at=NOW(),status='active' RETURNING *`,
-    [args.id, args.companyId, args.title, args.conversationId, args.triggerClientMsgNo, args.goal, args.initiatorAgentId],
+    [args.id, args.companyId, args.title, args.conversationId, args.triggerClientMsgNo,
+      args.goal, args.initiatorAgentId, args.authorizationUserId],
   )
   return rows[0] ?? null
 }
@@ -234,13 +236,14 @@ async function beginSummaryIfFinished(db: Queryable, canvasId: string): Promise<
   )
   const canvas = rows[0]
   if (!canvas?.initiator_agent_id || !canvas.conversation_id) return
+  if (!canvas.authorization_user_id) throw new Error('Canvas has no persisted human authorization principal')
   const summaryWorkId = `canvas-summary-${createHash('sha256').update(canvas.id).digest('hex').slice(0,24)}`
   await db.query(
     `INSERT INTO agent_work_items
-       (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,execution_role)
-     VALUES ($1,$2,$3,$4,$5,$6,'canvas_summary','queued',200,$7,'reporter') ON CONFLICT (id) DO NOTHING`,
-    [summaryWorkId, canvas.company_id, canvas.initiator_agent_id, canvas.conversation_id,
-      canvas.trigger_client_msg_no, `canvas-summary:${canvas.id}`, canvas.id],
+       (id,company_id,authorization_user_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,execution_role)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'canvas_summary','queued',200,$8,'reporter') ON CONFLICT (id) DO NOTHING`,
+    [summaryWorkId, canvas.company_id, canvas.authorization_user_id, canvas.initiator_agent_id,
+      canvas.conversation_id, canvas.trigger_client_msg_no, `canvas-summary:${canvas.id}`, canvas.id],
   )
 }
 

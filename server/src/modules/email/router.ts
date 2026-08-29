@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
 import { HttpError } from '../../http/errors.js'
 import { requireCompany } from '../../http/request-context.js'
+import { permissionService } from '../access/public.js'
 import { EmailApplicationError } from './application.js'
 import { replyEmailRequestSchema, sendEmailRequestSchema } from './contracts.js'
 import { emailApplication } from './facade.js'
@@ -26,6 +27,7 @@ function mapEmailError(error: unknown): never {
 
 emailRouter.post('/email/send', safe(async (req, res) => {
   const scope = await requireCompany(req)
+  await permissionService.assertCan({ actorUserId: scope.userId, action: 'email:write', companyId: scope.companyId })
   const parsed = sendEmailRequestSchema.safeParse(req.body)
   if (!parsed.success) throw invalidRequest(parsed.error)
   try {
@@ -38,6 +40,12 @@ emailRouter.post('/email/send', safe(async (req, res) => {
 
 emailRouter.get('/email/:messageId/html', safe(async (req, res) => {
   const scope = await requireCompany(req)
+  await permissionService.assertCan({
+    actorUserId: scope.userId,
+    action: 'email:read',
+    companyId: scope.companyId,
+    resource: { type: 'message', id: String(req.params.messageId) },
+  })
   try {
     const payload = await emailApplication.html(scope, String(req.params.messageId))
     if (payload.kind === 'empty') {
@@ -58,6 +66,12 @@ emailRouter.get('/email/:messageId/html', safe(async (req, res) => {
 
 emailRouter.post('/email/reply/:messageId', safe(async (req, res) => {
   const scope = await requireCompany(req)
+  await permissionService.assertCan({
+    actorUserId: scope.userId,
+    action: 'email:write',
+    companyId: scope.companyId,
+    resource: { type: 'message', id: String(req.params.messageId) },
+  })
   const parsed = replyEmailRequestSchema.safeParse(req.body)
   if (!parsed.success) throw invalidRequest(parsed.error)
   try {

@@ -189,13 +189,14 @@ export async function completeCanvasWorkState(db: Queryable, input: {
     )
     const canvas = rows[0]
     if (canvas?.initiator_agent_id && canvas.conversation_id) {
+      if (!canvas.authorization_user_id) throw new Error('Canvas has no persisted human authorization principal')
       const summaryWorkId = `canvas-summary-${createHash('sha256').update(canvas.id).digest('hex').slice(0, 24)}`
       await db.query(
         `INSERT INTO agent_work_items
-           (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,execution_role)
-         VALUES ($1,$2,$3,$4,$5,$6,'canvas_summary','queued',200,$7,'reporter') ON CONFLICT (id) DO NOTHING`,
-        [summaryWorkId, canvas.company_id, canvas.initiator_agent_id, canvas.conversation_id,
-          canvas.trigger_client_msg_no, `canvas-summary:${canvas.id}`, canvas.id],
+           (id,company_id,authorization_user_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,priority,canvas_id,execution_role)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'canvas_summary','queued',200,$8,'reporter') ON CONFLICT (id) DO NOTHING`,
+        [summaryWorkId, canvas.company_id, canvas.authorization_user_id, canvas.initiator_agent_id,
+          canvas.conversation_id, canvas.trigger_client_msg_no, `canvas-summary:${canvas.id}`, canvas.id],
       )
     }
   }

@@ -65,8 +65,8 @@ export async function ensureConversationCanvasId(db: Queryable, args: {
   id: string; companyId: string; conversationId: string; actorId: string
 }) {
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO canvases (id,company_id,conversation_id,title,goal,created_by,origin)
-     SELECT $1,c.company_id,c.id,c.title || ' Canvas',COALESCE(c.topic,''),$4,'conversation'
+    `INSERT INTO canvases (id,company_id,conversation_id,title,goal,created_by,authorization_user_id,origin)
+     SELECT $1,c.company_id,c.id,c.title || ' Canvas',COALESCE(c.topic,''),$4,$4,'conversation'
        FROM conversations c WHERE c.id=$2 AND c.company_id=$3 AND c.kind='group'
      ON CONFLICT (conversation_id) DO UPDATE SET conversation_id=EXCLUDED.conversation_id RETURNING id`,
     [args.id, args.conversationId, args.companyId, args.actorId],

@@ -24,7 +24,7 @@ export interface KnowledgeSourceRow extends Record<string, unknown> {
 }
 
 export async function listProjects(db: Queryable, companyId: string, userId: string) {
-  const { rows } = await db.query(
+  const { rows } = await db.query<Record<string, unknown> & { id: string }>(
     `SELECT project.id,project.company_id AS "companyId",project.kind,project.plan_id AS "planId",
             project.name,project.description,project.color,project.status,
             project.created_by AS "createdBy",project.is_default AS "isDefault",
@@ -36,7 +36,7 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
             (SELECT COUNT(*)::int FROM boards WHERE project_id=project.id AND company_id=project.company_id) AS "boardCount",
             (SELECT COUNT(*)::int FROM calendar_events WHERE project_id=project.id AND company_id=project.company_id) AS "calendarEventCount",
             (SELECT COUNT(*)::int FROM canvases WHERE project_id=project.id AND company_id=project.company_id) AS "canvasCount",
-            (membership.role IN ('OWNER','ADMIN') OR course_member.role IN ('OWNER','TEACHER')) AS "canManage",
+            (course_member.role IN ('OWNER','TEACHER')) AS "canManage",
             course.id AS "courseId",
             CASE WHEN course.id IS NULL OR course_member.role IS NULL THEN NULL
                  WHEN course_member.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS "courseRole",
@@ -45,12 +45,11 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
        JOIN company_memberships membership ON membership.company_id=project.company_id AND membership.user_id=$2
         AND membership.status='ACTIVE'
        LEFT JOIN courses course ON course.project_id=project.id AND course.company_id=project.company_id
-       LEFT JOIN project_memberships course_member
+       JOIN project_memberships course_member
          ON course_member.project_id=project.id AND course_member.company_id=project.company_id
         AND course_member.user_id=$2 AND course_member.status='ACTIVE'
        LEFT JOIN project_visits visit ON visit.project_id=project.id AND visit.user_id=$2
       WHERE project.company_id=$1
-        AND (membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       ORDER BY project.status,visit.visited_at DESC NULLS LAST,project.updated_at DESC`,
     [companyId, userId],
   )

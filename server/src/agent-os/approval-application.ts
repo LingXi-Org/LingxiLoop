@@ -1,5 +1,7 @@
 import type { Queryable } from '../db/queryable.js'
 import type { HostAction, AgentWorkItem, LingxiMessageV1 } from './types.js'
+import { createPermissionService } from '../modules/access/public.js'
+import { assertHostActionPermission } from './authorization.js'
 import {
   approvalChannelType,
   approvalWorkSource,
@@ -33,8 +35,29 @@ type Decision =
 export class AgentApprovalApplication {
   constructor(private readonly infrastructure: AgentApprovalInfrastructure) {}
 
-  list(input: { companyId: string; userId: string }) {
-    return listVisibleApprovals(this.infrastructure.db, input)
+  async list(input: { companyId: string; userId: string }) {
+    const permissions = createPermissionService(this.infrastructure.db)
+    await permissions.assertCan({
+      actorUserId: input.userId,
+      action: 'agent_approval:list',
+      companyId: input.companyId,
+    })
+    const approvals = await listVisibleApprovals(this.infrastructure.db, input)
+    const visible: Record<string, unknown>[] = []
+    for (const approval of approvals) {
+      const id = typeof approval.id === 'string' ? approval.id : ''
+      if (!id) continue
+      const request = {
+        actorUserId: input.userId,
+        companyId: input.companyId,
+        resource: { type: 'approval' as const, id },
+      }
+      if (!(await permissions.can({ ...request, action: 'agent_approval:list' })).allowed) continue
+      if (typeof approval.action === 'string' && approval.action.startsWith('teacher.')
+        && !(await permissions.can({ ...request, action: 'learning:manage' })).allowed) continue
+      visible.push(approval)
+    }
+    return visible
   }
 
   private decide(input: {
@@ -44,8 +67,22 @@ export class AgentApprovalApplication {
     approved: boolean
   }): Promise<Decision> {
     return this.infrastructure.transaction(async (db) => {
+      await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: input.userId,
+        action: 'agent_approval:resolve',
+        companyId: input.companyId,
+        resource: { type: 'approval', id: input.approvalId },
+      })
       const approval = await lockVisibleApproval(db, input)
       if (!approval) return { kind: 'not_found' }
+      if (approval.action.startsWith('teacher.')) {
+        await createPermissionService(db, { lockDependencies: true }).assertCan({
+          actorUserId: input.userId,
+          action: 'learning:manage',
+          companyId: input.companyId,
+          resource: { type: 'approval', id: input.approvalId },
+        })
+      }
       const requestedStatus = input.approved ? 'approved' : 'rejected'
       if (approval.status !== 'pending' && approval.status !== requestedStatus) {
         return { kind: 'conflict', status: approval.status }
@@ -69,6 +106,30 @@ export class AgentApprovalApplication {
           await expireApproval(db, { approvalId: approval.id, userId: input.userId, error: message })
           return { kind: 'expired', error: message }
         }
+      }
+      if (approval.status === 'pending' && input.approved) {
+        const source = await approvalWorkSource(db, approval.work_id)
+        if (!source?.authorization_user_id) throw new Error('approval source authorization principal missing')
+        await assertHostActionPermission(db, {
+          id: approval.work_id,
+          companyId: source.company_id,
+          authorizationUserId: source.authorization_user_id,
+          agentId: source.agent_id,
+          channelId: source.channel_id,
+          triggerClientMsgNo: `approval:${approval.id}`,
+          reason: 'resume',
+          lane: 'approval',
+          fence: Number(source.fence),
+          leaseToken: 'approval-resolution',
+          executionRole: source.execution_role,
+        }, {
+          runId: approval.run_id,
+          cellId: approval.cell_id,
+          callIndex: approval.call_index,
+          action: approval.action,
+          args: approval.args,
+          idempotencyKey: approval.idempotency_key,
+        })
       }
       if (approval.status === 'pending') {
         await decideApproval(db, {
@@ -103,6 +164,7 @@ export class AgentApprovalApplication {
       const work: AgentWorkItem = {
         id: approval.work_id,
         companyId: source.company_id,
+        ...(source.authorization_user_id ? { authorizationUserId: source.authorization_user_id } : {}),
         agentId: source.agent_id,
         channelId: source.channel_id,
         triggerClientMsgNo: `approval:${approval.id}`,
@@ -170,6 +232,7 @@ export class AgentApprovalApplication {
       agentId: approval.agent_id,
       channelId: approval.channel_id,
       executionRole: source.execution_role,
+      authorizationUserId: source.authorization_user_id,
     })
     return {
       kind: 'resolved',

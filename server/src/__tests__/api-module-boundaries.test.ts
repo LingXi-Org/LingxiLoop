@@ -99,7 +99,8 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
     documentConsumers[2].indexOf('async function docCompanyFor'),
     documentConsumers[2].indexOf('function sendJson'),
   )
-  assert.match(wsDocumentAuthorization, /documentCollaborationCompanyFor/)
+  assert.match(wsDocumentAuthorization, /permissionService\.can/)
+  assert.match(wsDocumentAuthorization, /action: writable \? 'document:write' : 'document:read'/)
   assert.doesNotMatch(wsDocumentAuthorization, /\bpool\.query\b|`\s*SELECT\b/i)
   const wsDocumentMention = documentConsumers[2].slice(
     documentConsumers[2].indexOf("if (type === 'doc.mention.notify')"),
@@ -277,7 +278,7 @@ test('authentication, request context, authorization, and errors have one shared
   for (const boundary of ['requireAuth', 'requireCompany', 'requireWorkspace']) {
     assert.match(context, new RegExp(`export (?:async )?function ${boundary}\\b`))
   }
-  for (const boundary of ['requireCompanyRole', 'requireConversationMember', 'requireCanvasWorkspace']) {
+  for (const boundary of ['requireConversationMember', 'requireCanvasWorkspace']) {
     assert.match(authorization, new RegExp(`export async function ${boundary}\\b`))
   }
   assert.match(asyncHandler, /export function safe\b/)

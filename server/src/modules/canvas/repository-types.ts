@@ -11,7 +11,7 @@ export interface CanvasRow {
   id: string; company_id: string; project_id: string | null; title: string; conversation_id: string | null
   trigger_client_msg_no: string | null; goal: string; initiator_agent_id: string | null
   status: CanvasWorkspaceStatus; origin: string; summary: string | null
-  created_by: string; created_at: string; updated_at: string
+  created_by: string; authorization_user_id: string | null; created_at: string; updated_at: string
 }
 
 export interface AssignmentRow {
@@ -47,4 +47,3 @@ export interface CommentRow {
   id: string; canvas_id: string; frame_id: string | null; author_id: string
   author_kind: CanvasActorKind; body: string; created_at: string
 }
-

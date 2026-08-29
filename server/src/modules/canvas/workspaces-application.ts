@@ -155,6 +155,7 @@ export function createCanvasWorkspacesApplication(context: CanvasWorkspacesAppli
     goal: string
     members: CanvasMemberInput[]
     idempotencyKey: string
+    authorizationUserId: string | null
   }): Promise<CanvasSnapshot> {
     const id = `canvas-${createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 28)}`
     const created = await transaction(async (transactionDb) => {
@@ -166,6 +167,7 @@ export function createCanvasWorkspacesApplication(context: CanvasWorkspacesAppli
         triggerClientMsgNo: input.triggerClientMsgNo,
         goal: input.goal.trim(),
         initiatorAgentId: input.initiatorAgentId,
+        authorizationUserId: input.authorizationUserId,
       })
       if (!canvas) throw new Error('canvas requires a group conversation')
       const existing = await listAssignments(transactionDb, canvas.id)

@@ -56,9 +56,11 @@ export async function releaseDeferredWakeState(
     wake_thread_root_client_msg_no: string | null
     wake_released_at: string | null
     company_id: string
+    authorization_user_id: string
   }>(
     `SELECT job.wake_recipients, job.wake_channel_id, job.wake_trigger_client_msg_no,
-            job.wake_thread_root_client_msg_no, job.wake_released_at, source.company_id
+            job.wake_thread_root_client_msg_no, job.wake_released_at, source.company_id,
+            source.created_by AS authorization_user_id
        FROM knowledge_source_jobs job
        JOIN knowledge_sources source ON source.id=job.source_id
       WHERE job.source_id=$1
@@ -70,10 +72,10 @@ export async function releaseDeferredWakeState(
   for (const recipient of job.wake_recipients ?? []) {
     await db.query(
       `INSERT INTO agent_work_items
-         (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
+         (id, company_id, authorization_user_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
        ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING`,
-      [randomUUID(), job.company_id, recipient.agentId, job.wake_channel_id,
+      [randomUUID(), job.company_id, job.authorization_user_id, recipient.agentId, job.wake_channel_id,
         job.wake_thread_root_client_msg_no, job.wake_trigger_client_msg_no, recipient.reason],
     )
   }

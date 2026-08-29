@@ -1,8 +1,9 @@
 import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
-import { PRIVILEGED_ROLES, requireCompanyRole, requireGroupConversation } from '../../http/authorization.js'
+import { requireGroupConversation } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
-import { assertProjectWritable, requireAuth, requireCompany, requireWorkspace } from '../../http/request-context.js'
+import { requireAuth, requireCompany, requireWorkspace } from '../../http/request-context.js'
+import { permissionService } from '../access/public.js'
 import { KnowledgeApplicationError } from './application.js'
 import {
   archiveProjectRequestSchema,
@@ -44,11 +45,17 @@ function requireKnowledge(): void {
 
 knowledgeRouter.get('/projects', safe(async (req, res) => {
   const identity = await requireCompany(req)
+  await permissionService.assertCan({ actorUserId: identity.userId, action: 'project:list', companyId: identity.companyId })
   res.json(await knowledgeApplication.projects(identity.companyId, requireAuth(req)))
 }))
 
 knowledgeRouter.post('/projects', safe(async (req, res) => {
-  const identity = await requireCompanyRole(req)
+  const identity = await requireCompany(req)
+  await permissionService.assertCan({
+    actorUserId: identity.userId,
+    action: 'project:create_personal_learning',
+    companyId: identity.companyId,
+  })
   const input = parse(createProjectRequestSchema.safeParse(req.body ?? {}))
   try {
     res.status(201).json(await knowledgeApplication.createPersonalLearningProject({ ...identity, ...input }))
@@ -59,25 +66,18 @@ knowledgeRouter.post('/projects', safe(async (req, res) => {
 
 knowledgeRouter.put('/projects/:id', safe(async (req, res) => {
   const projectId = String(req.params.id)
-  const workspace = await requireWorkspace(req, projectId)
-  await assertProjectWritable(workspace.projectId)
-  if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.courseRole !== 'teacher') {
-    throw new HttpError(403, 'only a course teacher or company admin can edit it')
-  }
+  const workspace = await requireWorkspace(req, projectId, 'project:update')
   const input = parse(updateProjectRequestSchema.safeParse(req.body ?? {}))
-  try { res.json(await knowledgeApplication.editProject(workspace.companyId, projectId, input)) }
+  try { res.json(await knowledgeApplication.editProject(workspace, input)) }
   catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.post('/projects/:id/archive', safe(async (req, res) => {
   const projectId = String(req.params.id)
-  const workspace = await requireWorkspace(req, projectId)
+  const workspace = await requireWorkspace(req, projectId, 'project:archive')
   if (workspace.isDefault) throw new HttpError(400, 'the default Project cannot be archived')
-  if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.courseRole !== 'teacher') {
-    throw new HttpError(403, 'only a course teacher or company admin can archive it')
-  }
   const input = parse(archiveProjectRequestSchema.safeParse(req.body ?? {}))
-  res.json(await knowledgeApplication.archiveProject(workspace.companyId, projectId, input.archive))
+  res.json(await knowledgeApplication.archiveProject(workspace, input.archive))
 }))
 
 knowledgeRouter.post('/projects/:id/open', safe(async (req, res) => {
@@ -87,21 +87,27 @@ knowledgeRouter.post('/projects/:id/open', safe(async (req, res) => {
 
 knowledgeRouter.get('/projects/:id/sources', safe(async (req, res) => {
   requireKnowledge()
-  const workspace = await requireWorkspace(req, String(req.params.id))
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
   res.json(await knowledgeApplication.sources(workspace))
 }))
 
 knowledgeRouter.get('/projects/:id/sources/:sourceId', safe(async (req, res) => {
   requireKnowledge()
-  const workspace = await requireWorkspace(req, String(req.params.id))
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
+  await permissionService.assertCan({
+    actorUserId: workspace.userId,
+    action: 'knowledge:read',
+    companyId: workspace.companyId,
+    projectId: workspace.projectId,
+    resource: { type: 'knowledge_source', id: String(req.params.sourceId) },
+  })
   try { res.json(await knowledgeApplication.source(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.post('/projects/:id/sources', safe(async (req, res) => {
   requireKnowledge()
-  const workspace = await requireWorkspace(req, String(req.params.id))
-  await assertProjectWritable(workspace.projectId)
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
   const input = parse(createSourceRequestSchema.safeParse(req.body ?? {}))
   try { res.status(201).json(await knowledgeApplication.createSource(workspace, null, input)) }
   catch (error) { mapKnowledgeError(error) }
@@ -109,8 +115,7 @@ knowledgeRouter.post('/projects/:id/sources', safe(async (req, res) => {
 
 knowledgeRouter.post('/projects/:id/sources/upload/presign', safe(async (req, res) => {
   requireKnowledge()
-  const workspace = await requireWorkspace(req, String(req.params.id))
-  await assertProjectWritable(workspace.projectId)
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
   const input = parse(presignSourceRequestSchema.safeParse(req.body ?? {}))
   try { res.status(201).json(await knowledgeApplication.presignSource(workspace, null, input)) }
   catch (error) { mapKnowledgeError(error) }
@@ -118,32 +123,45 @@ knowledgeRouter.post('/projects/:id/sources/upload/presign', safe(async (req, re
 
 knowledgeRouter.post('/projects/:id/sources/:sourceId/complete-upload', safe(async (req, res) => {
   requireKnowledge()
-  const workspace = await requireWorkspace(req, String(req.params.id))
-  await assertProjectWritable(workspace.projectId)
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
   try { res.json(await knowledgeApplication.completeUpload(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.post('/projects/:id/sources/:sourceId/retry', safe(async (req, res) => {
   requireKnowledge()
-  const workspace = await requireWorkspace(req, String(req.params.id))
-  await assertProjectWritable(workspace.projectId)
-  const canManage = workspace.projectCreatedBy === workspace.userId || PRIVILEGED_ROLES.has(workspace.role)
-  try { res.json(await knowledgeApplication.retry(workspace, String(req.params.sourceId), canManage)) }
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
+  await permissionService.assertCan({
+    actorUserId: workspace.userId,
+    action: 'knowledge:manage',
+    companyId: workspace.companyId,
+    projectId: workspace.projectId,
+    resource: { type: 'knowledge_source', id: String(req.params.sourceId) },
+  })
+  try { res.json(await knowledgeApplication.retry(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.delete('/projects/:id/sources/:sourceId', safe(async (req, res) => {
   requireKnowledge()
-  const workspace = await requireWorkspace(req, String(req.params.id))
-  await assertProjectWritable(workspace.projectId)
-  const canManage = workspace.projectCreatedBy === workspace.userId || PRIVILEGED_ROLES.has(workspace.role)
-  try { res.json(await knowledgeApplication.delete(workspace, String(req.params.sourceId), canManage)) }
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
+  await permissionService.assertCan({
+    actorUserId: workspace.userId,
+    action: 'knowledge:manage',
+    companyId: workspace.companyId,
+    projectId: workspace.projectId,
+    resource: { type: 'knowledge_source', id: String(req.params.sourceId) },
+  })
+  try { res.json(await knowledgeApplication.delete(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
 }))
 
-async function conversationScope(req: Parameters<typeof requireGroupConversation>[0], conversationId: string) {
-  const membership = await requireGroupConversation(req, conversationId)
+async function conversationScope(
+  req: Parameters<typeof requireGroupConversation>[0],
+  conversationId: string,
+  action: 'conversation:read' | 'conversation:write' = 'conversation:read',
+) {
+  const membership = await requireGroupConversation(req, conversationId, action)
   if (!membership.projectId) throw new HttpError(409, 'conversation has no workspace')
   return { ...membership, projectId: membership.projectId }
 }
@@ -165,8 +183,13 @@ knowledgeRouter.get('/conversations/:id/sources/:sourceId', safe(async (req, res
 knowledgeRouter.post('/conversations/:id/sources', safe(async (req, res) => {
   requireKnowledge()
   const conversationId = String(req.params.id)
-  const scope = await conversationScope(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await conversationScope(req, conversationId, 'conversation:write')
+  await permissionService.assertCan({
+    actorUserId: scope.userId,
+    action: 'knowledge:write',
+    companyId: scope.companyId,
+    projectId: scope.projectId,
+  })
   const input = parse(createSourceRequestSchema.safeParse(req.body ?? {}))
   try { res.status(201).json(await knowledgeApplication.createSource(scope, conversationId, input)) }
   catch (error) { mapKnowledgeError(error) }
@@ -175,8 +198,8 @@ knowledgeRouter.post('/conversations/:id/sources', safe(async (req, res) => {
 knowledgeRouter.post('/conversations/:id/sources/upload/presign', safe(async (req, res) => {
   requireKnowledge()
   const conversationId = String(req.params.id)
-  const scope = await conversationScope(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await conversationScope(req, conversationId, 'conversation:write')
+  await permissionService.assertCan({ actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId })
   const input = parse(presignSourceRequestSchema.safeParse(req.body ?? {}))
   try { res.status(201).json(await knowledgeApplication.presignSource(scope, conversationId, input)) }
   catch (error) { mapKnowledgeError(error) }
@@ -184,41 +207,53 @@ knowledgeRouter.post('/conversations/:id/sources/upload/presign', safe(async (re
 
 knowledgeRouter.post('/conversations/:id/sources/:sourceId/complete-upload', safe(async (req, res) => {
   requireKnowledge()
-  const scope = await conversationScope(req, String(req.params.id))
-  await assertProjectWritable(scope.projectId)
+  const scope = await conversationScope(req, String(req.params.id), 'conversation:write')
+  await permissionService.assertCan({ actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId })
   try { res.json(await knowledgeApplication.completeUpload(scope, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.post('/conversations/:id/sources/:sourceId/retry', safe(async (req, res) => {
   requireKnowledge()
-  const scope = await conversationScope(req, String(req.params.id))
-  await assertProjectWritable(scope.projectId)
-  try { res.json(await knowledgeApplication.retry(scope, String(req.params.sourceId), PRIVILEGED_ROLES.has(scope.role))) }
+  const scope = await conversationScope(req, String(req.params.id), 'conversation:write')
+  await permissionService.assertCan({
+    actorUserId: scope.userId, action: 'knowledge:manage', companyId: scope.companyId, projectId: scope.projectId,
+    resource: { type: 'knowledge_source', id: String(req.params.sourceId) },
+  })
+  try { res.json(await knowledgeApplication.retry(scope, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.delete('/conversations/:id/sources/:sourceId', safe(async (req, res) => {
   requireKnowledge()
-  const scope = await conversationScope(req, String(req.params.id))
-  await assertProjectWritable(scope.projectId)
-  try { res.json(await knowledgeApplication.delete(scope, String(req.params.sourceId), PRIVILEGED_ROLES.has(scope.role))) }
+  const scope = await conversationScope(req, String(req.params.id), 'conversation:write')
+  await permissionService.assertCan({
+    actorUserId: scope.userId, action: 'knowledge:manage', companyId: scope.companyId, projectId: scope.projectId,
+    resource: { type: 'knowledge_source', id: String(req.params.sourceId) },
+  })
+  try { res.json(await knowledgeApplication.delete(scope, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.put('/conversations/:id/sources', safe(async (req, res) => {
   requireKnowledge()
   const conversationId = String(req.params.id)
-  const scope = await conversationScope(req, conversationId)
-  await assertProjectWritable(scope.projectId)
+  const scope = await conversationScope(req, conversationId, 'conversation:write')
+  await permissionService.assertCan({ actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId })
   const input = parse(sourceSelectionRequestSchema.safeParse(req.body ?? {}))
   res.json(await knowledgeApplication.selectSources(scope, conversationId, input.excludedSourceIds))
 }))
 
 knowledgeRouter.post('/conversations/:id/project', safe(async (req, res) => {
   const identity = await requireCompany(req)
+  await permissionService.assertCan({
+    actorUserId: identity.userId,
+    action: 'conversation:manage',
+    companyId: identity.companyId,
+    resource: { type: 'conversation', id: String(req.params.id) },
+  })
   const input = parse(moveConversationRequestSchema.safeParse(req.body ?? {}))
-  const target = await requireWorkspace(req, input.projectId)
+  const target = await requireWorkspace(req, input.projectId, 'project:read')
   try {
     res.json(await knowledgeApplication.moveConversation({
       ...identity, projectId: target.projectId, conversationId: String(req.params.id),

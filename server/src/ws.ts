@@ -16,12 +16,12 @@ import {
   unsubscribe as docUnsubscribe,
   applyLocalUpdate as docApplyLocalUpdate,
   broadcastAwareness as docBroadcastAwareness,
-  documentCollaborationCompanyFor,
   notifyDocumentMention,
   projectDocumentIds,
   type DocSubscriber,
 } from './modules/documents/public.js'
 import { randomUUID } from 'node:crypto'
+import { permissionService } from './modules/access/public.js'
 
 interface AuthedSocket {
   ws: WebSocket
@@ -160,14 +160,27 @@ async function loadMemberships(userId: string): Promise<Set<string>> {
     `SELECT company_id FROM company_memberships WHERE user_id = $1 AND status='ACTIVE'`,
     [userId],
   )
-  return new Set(rows.map((r) => r.company_id))
+  const decisions = await Promise.all(rows.map(async (row) => ({
+    companyId: row.company_id,
+    decision: await permissionService.can({
+      actorUserId: userId,
+      action: 'company:read',
+      companyId: row.company_id,
+    }),
+  })))
+  return new Set(decisions.filter(({ decision }) => decision.allowed).map(({ companyId }) => companyId))
 }
 
 /** Look up a doc + verify the caller's tenant membership in one shot.
  *  Returns null when the doc doesn't exist OR the caller can't see it —
  *  same opaque posture the chat handlers use to avoid leaking existence. */
 async function docCompanyFor(documentId: string, userId: string, writable = false): Promise<string | null> {
-  return documentCollaborationCompanyFor(documentId, userId, writable)
+  const decision = await permissionService.can({
+    actorUserId: userId,
+    action: writable ? 'document:write' : 'document:read',
+    resource: { type: 'document', id: documentId },
+  })
+  return decision.allowed ? decision.context?.company.id ?? null : null
 }
 
 function sendJson(ws: WebSocket, payload: unknown): void {
@@ -398,23 +411,30 @@ export function attachWebSocket(httpServer: Server) {
 
     let projectViewers: Set<string> | null = null
     if (workspaceId) {
-      const { rows } = await pool.query<{ user_id: string }>(
-        `SELECT company_member.user_id
-           FROM projects project
-           JOIN company_memberships company_member ON company_member.company_id=project.company_id
-             AND company_member.status='ACTIVE'
-           LEFT JOIN project_memberships course_member
-             ON course_member.project_id=project.id AND course_member.company_id=project.company_id
-            AND course_member.user_id=company_member.user_id AND course_member.status='ACTIVE'
-          WHERE project.id=$1 AND project.company_id=$2
-            AND (company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)`,
-        [workspaceId, companyId],
-      )
-      projectViewers = new Set(rows.map((row) => row.user_id))
+      const candidates = [...clients].filter((client) => client.companies.has(companyId))
+      const decisions = await Promise.all(candidates.map(async (client) => ({
+        userId: client.userId,
+        decision: await permissionService.can({
+          actorUserId: client.userId,
+          action: 'project:read',
+          companyId,
+          projectId: workspaceId,
+        }),
+      })))
+      projectViewers = new Set(decisions.filter(({ decision }) => decision.allowed).map(({ userId }) => userId))
     }
 
     for (const c of clients) {
       if (!c.companies.has(companyId)) continue
+      const companyAccess = await permissionService.can({
+        actorUserId: c.userId,
+        action: 'company:read',
+        companyId,
+      })
+      if (!companyAccess.allowed) {
+        c.companies.delete(companyId)
+        continue
+      }
       if (projectViewers && !projectViewers.has(c.userId)) continue
       let outbound = payload
       if (channel === CH_IM_READ_RECEIPTS) {

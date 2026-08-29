@@ -66,6 +66,7 @@ export interface AgentWorkItem {
   id: string
   fence: number
   companyId: string
+  authorizationUserId?: string
   agentId: string
   channelId: string
   threadRootClientMsgNo?: string

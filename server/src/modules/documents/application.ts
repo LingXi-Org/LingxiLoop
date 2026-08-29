@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
-import { PRIVILEGED_ROLES } from '../../http/roles.js'
+import { createPermissionService } from '../access/public.js'
 import type {
   AgentDocumentEditOperation,
   AgentDocumentEditResult,
@@ -12,12 +12,10 @@ import type {
 import {
   conversationExists,
   deleteDocument,
-  findDocumentCollaborationCompany,
   findDocument,
   insertDocument,
   listDocuments,
   listRecentDocumentsCreatedByOthers,
-  memberRole,
   renameDocument,
   type DocumentRow,
 } from './repository.js'
@@ -64,10 +62,6 @@ export class DocumentsApplication {
 
   async list(scope: Omit<DocumentScope, 'userId'>): Promise<DocumentPayload[]> {
     return (await listDocuments(this.db, scope.companyId, scope.projectId)).map(toPayload)
-  }
-
-  collaborationCompanyFor(documentId: string, userId: string, writable: boolean): Promise<string | null> {
-    return findDocumentCollaborationCompany(this.db, { documentId, userId, writable })
   }
 
   async create(
@@ -190,14 +184,13 @@ export class DocumentsApplication {
   }
 
   async delete(scope: DocumentScope, documentId: string): Promise<{ ok: true }> {
-    const row = await findDocument(this.db, scope.companyId, scope.projectId, documentId)
-    if (!row) throw new DocumentApplicationError('document_not_found', 'not found')
-    if (row.created_by !== scope.userId) {
-      const role = await memberRole(this.db, scope.companyId, scope.userId)
-      if (!role || !PRIVILEGED_ROLES.has(role)) {
-        throw new DocumentApplicationError('delete_forbidden', 'only the creator or an owner can delete')
-      }
-    }
+    await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId,
+      action: 'document:delete',
+      companyId: scope.companyId,
+      projectId: scope.projectId,
+      resource: { type: 'document', id: documentId },
+    })
     if (!await deleteDocument(this.db, scope.companyId, scope.projectId, documentId)) {
       throw new DocumentApplicationError('document_not_found', 'not found')
     }

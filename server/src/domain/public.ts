@@ -1,12 +1,18 @@
 export type {
   CompanyRole,
+  EntitlementCode,
   MembershipStatus,
   PermissionAction,
-  PermissionContext,
   PermissionDecision,
+  PermissionReason,
+  PermissionRequest,
+  PermissionResource,
   PermissionService,
   ProjectRole,
+  ResolvedAccessContext,
+  ResolvedEntitlements,
 } from './access/public.js'
+export { ENTITLEMENT_CODES, PERMISSION_ACTIONS } from './access/public.js'
 export type { Entitlement, EntitlementValue, Plan, PlanEntitlement, PlanStatus } from './entitlement/public.js'
 export { PERSONAL_FREE_PLAN } from './entitlement/public.js'
 export type { User } from './identity/user.js'

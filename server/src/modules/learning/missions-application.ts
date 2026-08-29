@@ -1,11 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
+import { createPermissionService } from '../access/public.js'
 import type { AddLearningMissionStepInput, LearningAgentRoomScope, LearningScope, RecordLearningAttemptCommand, StartLearningMissionCommand } from './contracts.js'
 import type { LearningMission, LearningMissionKind, LearningTurnContext } from './types.js'
 import { LearningApplicationError } from './errors.js'
 import {
   activateLearningMission, activeLearningMissionId, completeLearningMissionRecord, countCourseObjectives,
-  countLearningMissionSteps, countPendingLearningEvaluations, courseRole, enqueueLearningMissionCoordinatorWork,
+  countLearningMissionSteps, countPendingLearningEvaluations, enqueueLearningMissionCoordinatorWork,
   findEligibleLearningMissionCoordinator, findLearningCanvasEvidence, findLearningDocumentEvidence,
   findLearningMission, findLearningRoomState, insertAgentLearningAttempt, insertLearningMissionStep,
   learningChannelType, learningMasteryContext, learningMissionCompletionSummary, learningMissionPlanningSummary,
@@ -14,6 +15,20 @@ import {
 } from './repository.js'
 
 export type LearningTransaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
+
+async function assertCourseLearner(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+  userId: string,
+): Promise<void> {
+  await createPermissionService(db).assertCan({
+    actorUserId: userId,
+    action: 'learning:submit',
+    companyId,
+    resource: { type: 'course', id: courseId },
+  })
+}
 
 function learningText(value: string, name: string, maxLength = 10_000): string {
   const text = String(value ?? '').trim()
@@ -38,13 +53,24 @@ export async function listVisibleLearningMissions(
   scope: LearningScope,
   courseId: string,
 ) {
-  const role = await courseRole(db, courseId, scope.companyId, scope.userId)
-  if (!role) throw new LearningApplicationError('forbidden', 'course membership required')
+  const permissions = createPermissionService(db)
+  await permissions.assertCan({
+    actorUserId: scope.userId,
+    action: 'learning:read',
+    companyId: scope.companyId,
+    resource: { type: 'course', id: courseId },
+  })
+  const manage = await permissions.can({
+    actorUserId: scope.userId,
+    action: 'learning:manage',
+    companyId: scope.companyId,
+    resource: { type: 'course', id: courseId },
+  })
   return listLearningMissions(db, {
     companyId: scope.companyId,
     courseId,
     userId: scope.userId,
-    includeAllLearners: role === 'teacher',
+    includeAllLearners: manage.allowed,
   })
 }
 
@@ -103,9 +129,7 @@ export async function startLearningMission(
   if (!trigger || trigger.authoredByAgent) {
     throw new LearningApplicationError('invalid', 'evidence must reference an existing human message in the current room')
   }
-  if (await courseRole(db, room.courseId, room.companyId, trigger.fromUid) !== 'learner') {
-    throw new LearningApplicationError('forbidden', 'mission evidence author must be a learner in the current course')
-  }
+  await assertCourseLearner(db, room.companyId, room.courseId, trigger.fromUid)
   const missionKind = input.missionKind ?? (room.purpose === 'lab' ? 'project' : 'study')
   const goal = learningText(input.goal, 'goal')
   const successCriteria = learningText(input.successCriteria, 'successCriteria')
@@ -130,6 +154,7 @@ export async function startLearningMission(
         companyId: input.companyId, coordinatorAgentId, channelId: input.channelId,
         threadRootClientMsgNo: input.threadRootClientMsgNo ?? triggerClientMsgNo,
         missionId: stored.id,
+        authorizationUserId: trigger.fromUid,
       })
     }
     const mission = await findLearningMission(client, room.companyId, room.courseId, stored.id)
@@ -180,9 +205,7 @@ export async function recordLearningAttempt(
       if (!message || message.authoredByAgent) {
         throw new LearningApplicationError('invalid', 'evidence must reference an existing human message in the current room')
       }
-      if (await courseRole(client, room.courseId, room.companyId, message.fromUid) !== 'learner') {
-        throw new LearningApplicationError('forbidden', 'evidence author must be a learner in the current course')
-      }
+      await assertCourseLearner(client, room.companyId, room.courseId, message.fromUid)
       learnerIds.add(message.fromUid)
     }
     const documents: Array<{ id: string; revision: number; authorId: string }> = []
@@ -191,9 +214,7 @@ export async function recordLearningAttempt(
         companyId: room.companyId, projectId: room.projectId, documentId,
       })
       if (!evidence) throw new LearningApplicationError('not_found', 'document evidence is outside the current course project')
-      if (await courseRole(client, room.courseId, room.companyId, evidence.authorId) !== 'learner') {
-        throw new LearningApplicationError('forbidden', 'document evidence author must be a learner in the current course')
-      }
+      await assertCourseLearner(client, room.companyId, room.courseId, evidence.authorId)
       learnerIds.add(evidence.authorId)
       documents.push(evidence)
     }
@@ -203,9 +224,7 @@ export async function recordLearningAttempt(
         companyId: room.companyId, projectId: room.projectId, frameId,
       })
       if (!evidence) throw new LearningApplicationError('not_found', 'Canvas Frame evidence is outside the current course project')
-      if (await courseRole(client, room.courseId, room.companyId, evidence.authorId) !== 'learner') {
-        throw new LearningApplicationError('forbidden', 'Canvas Frame evidence author must be a learner in the current course')
-      }
+      await assertCourseLearner(client, room.companyId, room.courseId, evidence.authorId)
       learnerIds.add(evidence.authorId)
       canvasFrames.push(evidence)
     }
@@ -254,10 +273,21 @@ export async function loadLearningContext(
     resolvedActorId = trigger?.fromUid
       ?? [...messages].reverse().find((message) => !message.authoredByAgent)?.fromUid
   }
-  const role = resolvedActorId
-    ? await courseRole(db, room.courseId, room.companyId, resolvedActorId)
-    : null
-  const learnerId = role === 'learner' ? resolvedActorId : undefined
+  const permissions = createPermissionService(db)
+  const learnerDecision = resolvedActorId ? await permissions.can({
+    actorUserId: resolvedActorId,
+    action: 'learning:submit',
+    companyId: room.companyId,
+    resource: { type: 'course', id: room.courseId },
+  }) : null
+  const managerDecision = resolvedActorId ? await permissions.can({
+    actorUserId: resolvedActorId,
+    action: 'learning:manage',
+    companyId: room.companyId,
+    resource: { type: 'course', id: room.courseId },
+  }) : null
+  const learnerId = learnerDecision?.allowed ? resolvedActorId : undefined
+  const actorRole = managerDecision?.allowed ? 'teacher' : learnerDecision?.allowed ? 'learner' : undefined
   const objectives = await listLearningObjectives(db, room.companyId, room.courseId)
   const mastery = learnerId ? await learningMasteryContext(db, {
     companyId: room.companyId, courseId: room.courseId, learnerId,
@@ -266,7 +296,7 @@ export async function loadLearningContext(
   const missionId = learnerId ? await activeLearningMissionId(db, {
     companyId: room.companyId, courseId: room.courseId, learnerId, channelId: input.channelId,
   }) : null
-  const pendingTeacherReviews = role === 'teacher'
+  const pendingTeacherReviews = managerDecision?.allowed
     ? await countPendingLearningEvaluations(db, room.companyId, room.courseId)
     : 0
   const mapped = objectives.slice(0, 40).map((objective) => {
@@ -286,7 +316,7 @@ export async function loadLearningContext(
       id: room.courseId, projectId: room.projectId, title: room.courseTitle, status: room.courseStatus,
     },
     roomPurpose: room.purpose,
-    ...(role ? { actorRole: role } : {}),
+    ...(actorRole ? { actorRole } : {}),
     ...(learnerId ? { learnerId } : {}),
     ...(activeMission ? { activeMission } : {}),
     objectives: mapped,

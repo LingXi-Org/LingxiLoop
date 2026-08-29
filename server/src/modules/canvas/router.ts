@@ -19,7 +19,6 @@ import {
 import { safe } from '../../http/async-handler.js'
 import { requireCanvasFrameWorkspace, requireCanvasWorkspace, requireGroupConversation } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
-import { assertProjectWritable } from '../../http/request-context.js'
 import {
   canvasAppendRequestSchema,
   canvasAssignmentRequestSchema,
@@ -42,8 +41,7 @@ api.get('/conversations/:id/canvas', safe(async (req, res) => {
 }))
 
 api.post('/conversations/:id/canvas', safe(async (req, res) => {
-  const membership = await requireGroupConversation(req, String(req.params.id))
-  await assertProjectWritable(membership.projectId)
+  const membership = await requireGroupConversation(req, String(req.params.id), 'canvas:write')
   res.status(201).json(await ensureConversationCanvas(membership.companyId, String(req.params.id), membership.userId))
 }))
 

@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
+import { createPermissionService } from '../access/public.js'
 import { projectMastery } from './mastery.js'
 import type { LearningActivityType, LearningAssistance, MasteryProjectionDecision } from './types.js'
 import type { LearningAgentRoomScope, ProposeLearningEvaluationCommand } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
 import {
-  courseRole,
   findLearningEvaluationAttempt,
   findLearningRoomState,
   independentLearningEvidenceKeys,
@@ -214,9 +214,12 @@ export async function reviewLearningEvaluation(
     decision: 'accept'|'reject'; overrideLevel?: number; reason: string
   },
 ): Promise<void> {
-  if (await courseRole(db, input.courseId, input.companyId, input.teacherId) !== 'teacher') {
-    throw new LearningApplicationError('forbidden', 'teacher course role required')
-  }
+  await createPermissionService(db).assertCan({
+    actorUserId: input.teacherId,
+    action: 'learning:review',
+    companyId: input.companyId,
+    resource: { type: 'course', id: input.courseId },
+  })
   const reason = input.reason.trim()
   if (!reason) throw new LearningApplicationError('invalid', 'review reason is required')
   await transaction(async (client) => {
