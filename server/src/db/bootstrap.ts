@@ -38,7 +38,7 @@ const REQUIRED_V1_RELATIONS = [
   'learning_effects',
   'learning_objective_dependencies', 'learning_objectives',
   'learning_project_teacher_agents', 'llm_calls', 'message_reactions', 'messages',
-  'participants', 'poll_votes', 'project_visits', 'projects', 'sessions',
+  'participants', 'project_visits', 'projects', 'sessions',
   'tool_calls', 'user_identities', 'user_preferences', 'users', 'waitlist',
   'ws_tickets', 'wukong_webhook_receipts',
 ] as const

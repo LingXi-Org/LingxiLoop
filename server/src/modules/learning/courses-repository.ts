@@ -81,7 +81,6 @@ export async function insertCourse(db: Queryable, args: {
     [args.roomId, `${args.input.name} · Study Room`, `course · ${memberIds.length}`,
       '课程学习、讨论、练习与错因诊断', JSON.stringify(memberIds), leaderId, args.companyId, args.projectId],
   )
-  await db.query(`INSERT INTO conversation_counters (conversation_id,next_sequence) VALUES ($1,1)`, [args.roomId])
   await db.query(
     `UPDATE courses SET study_room_conversation_id=$2 WHERE id=$1 AND company_id=$3`,
     [args.courseId, args.roomId, args.companyId],

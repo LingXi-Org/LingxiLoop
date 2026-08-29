@@ -1,7 +1,8 @@
 import { pool } from '../../db/pool.js'
 import { withClientTransaction, withTransaction } from '../../db/transaction.js'
-import { createCanvasApplication } from './application.js'
+import { missingAgentChannelMessageIds } from '../../im/public.js'
 import { CH_CANVAS, publish } from '../../redis.js'
+import { createCanvasApplication } from './application.js'
 import { acquireCanvasSharedFence, releaseCanvasSharedFence } from './repository.js'
 
 const canvasApplication = createCanvasApplication({
@@ -17,6 +18,12 @@ const canvasApplication = createCanvasApplication({
       client.release()
     }
   },
+  missingChannelMessageIds: (input) => missingAgentChannelMessageIds({
+    companyId: input.companyId,
+    agentId: input.actorId,
+    channelId: input.channelId,
+    messageIds: input.messageIds,
+  }),
   publishEvent: (event) => publish(CH_CANVAS, event),
 })
 

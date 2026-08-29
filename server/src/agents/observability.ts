@@ -65,13 +65,15 @@ async function publishAgentActivity(args: {
               COALESCE(p.name, r.agent_id) AS agent_name,
               ARRAY(
                 SELECT DISTINCT conversation_id
-                  FROM (
-                    SELECT jsonb_array_elements_text(COALESCE(r.trigger->'conversationIds', '[]'::jsonb)) AS conversation_id
-                    UNION ALL
-                    SELECT m.conversation_id
-                      FROM jsonb_array_elements_text(COALESCE(r.input_message_ids, '[]'::jsonb)) input(message_id)
-                      JOIN messages m ON m.id = input.message_id
-                  ) activity_conversations
+                  FROM jsonb_array_elements_text(
+                    COALESCE(
+                      r.trigger->'conversationIds',
+                      CASE
+                        WHEN NULLIF(r.trigger->>'conversationId', '') IS NULL THEN '[]'::jsonb
+                        ELSE jsonb_build_array(r.trigger->>'conversationId')
+                      END
+                    )
+                  ) activity_conversations(conversation_id)
                  WHERE conversation_id IS NOT NULL AND conversation_id <> ''
               ) AS conversation_ids
          FROM agent_runs r

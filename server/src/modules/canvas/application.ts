@@ -1,27 +1,27 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { type CanvasActivityKind, parseCanvasActivityKind } from '../../../../src/lib/canvasEventKinds.js'
 import type { CanvasEvent } from '../../redis.js'
+import { createCanvasAssignmentsApplication } from './assignments-application.js'
+import { createCanvasCollaborationApplication } from './collaboration-application.js'
 import type {
   CanvasActivity,
   CanvasActorKind,
   CanvasAssignmentReport,
 } from './contracts.js'
+import { createCanvasFrameApplication } from './frames-application.js'
+import type { CanvasInfrastructure } from './infrastructure.js'
+import { createCanvasReportApplication } from './reports-application.js'
 import {
+  type CanvasRow,
   canvasEventScope,
   findCanvas,
   insertActivity,
-  type CanvasRow,
   type ReportRow,
 } from './repository.js'
-import type { CanvasInfrastructure } from './infrastructure.js'
-import { createCanvasAssignmentsApplication } from './assignments-application.js'
-import { createCanvasCollaborationApplication } from './collaboration-application.js'
-import { createCanvasFrameApplication } from './frames-application.js'
-import { createCanvasReportApplication } from './reports-application.js'
 import { createCanvasWorkspacesApplication } from './workspaces-application.js'
 
 export function createCanvasApplication(infrastructure: CanvasInfrastructure) {
-  const { db, transaction, withCanvasFence, publishEvent } = infrastructure
+  const { db, transaction, withCanvasFence, missingChannelMessageIds, publishEvent } = infrastructure
 
   async function publishCanvas(
     companyId: string,
@@ -170,6 +170,7 @@ export function createCanvasApplication(infrastructure: CanvasInfrastructure) {
     publishCanvas,
     publishAssignments: assignmentApplication.publishAssignments,
     logActivity,
+    missingChannelMessageIds,
   })
 
   return {

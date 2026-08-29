@@ -18,6 +18,35 @@ export function getAgentChannelHistory(input: {
   })
 }
 
+export async function missingAgentChannelMessageIds(input: {
+  companyId: string
+  agentId: string
+  channelId: string
+  messageIds: string[]
+}): Promise<string[]> {
+  const missing = new Set(input.messageIds)
+  if (missing.size === 0) return []
+  let beforeSequence = 0
+  while (missing.size > 0) {
+    const page = await getAgentChannelHistory({
+      companyId: input.companyId,
+      agentId: input.agentId,
+      channelId: input.channelId,
+      limit: 200,
+      beforeSequence,
+    })
+    if (!page || page.length === 0) break
+    for (const message of page) {
+      missing.delete(message.messageId)
+      missing.delete(message.clientMsgNo)
+    }
+    const next = Math.min(...page.map((message) => message.messageSeq).filter((sequence) => sequence > 0))
+    if (!Number.isSafeInteger(next) || next <= 1 || next === beforeSequence) break
+    beforeSequence = next
+  }
+  return input.messageIds.filter((messageId) => missing.has(messageId))
+}
+
 export async function sendAgentChannelMessage(input: {
   companyId: string
   agentId: string

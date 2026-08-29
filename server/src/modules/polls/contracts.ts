@@ -1,6 +1,19 @@
 import { z } from 'zod'
-import type { PollPayload } from '../../db/schema.js'
 import type { PollUpdatedEvent } from '../../redis.js'
+
+export interface PollOption {
+  id: string
+  text: string
+}
+
+export interface PollPayload {
+  question: string
+  mode: 'single' | 'multi'
+  options: PollOption[]
+  expiresAt: string | null
+  closedAt: string | null
+  closedReason: 'expired' | 'manual' | null
+}
 
 export const createPollRequestSchema = z.object({
   clientRequestId: z.string().uuid(),

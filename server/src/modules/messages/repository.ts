@@ -27,18 +27,7 @@ const MESSAGE_PROJECTION = `
   m.author_id AS "authorId", m.kind, m.body, m.sequence,
   m.mentioned_ids AS "mentionedIds", m.mention_all AS "mentionAll",
   m.tool, m.attachment, m.poll, m.handoff, m.approval,
-  COALESCE((
-    SELECT jsonb_agg(jsonb_build_object(
-      'optionId', vote.option_id, 'count', vote.count, 'voterIds', vote.voter_ids
-    ) ORDER BY vote.count DESC, vote.option_id ASC)
-    FROM (
-      SELECT option_id, COUNT(*)::int AS count,
-             array_agg(voter_participant_id ORDER BY voter_participant_id) AS voter_ids
-        FROM poll_votes
-       WHERE message_id = m.id
-       GROUP BY option_id
-    ) vote
-  ), '[]'::jsonb) AS "pollTallies",
+  '[]'::jsonb AS "pollTallies",
   m.quoted_message_id AS "quotedMessageId", m.created_at AS "createdAt",
   (
     SELECT jsonb_build_object(

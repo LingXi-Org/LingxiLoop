@@ -2,21 +2,20 @@ import { startMemorySynthesisScheduler } from './agent-os/memory-service.js'
 import { startLearningRoutineScheduler } from './agent-os/routine-scheduler.js'
 import { startAgentWorkWatchdog } from './agent-os/work-watchdog.js'
 import { startStaleAgentRunSweeper } from './agents/observability.js'
+import { pool } from './db/pool.js'
+import { startDbGcWorker } from './db-gc.js'
+import { env } from './env.js'
+import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
 import { seedAdmins } from './modules/admin/facade.js'
 import { startCalendarScheduler } from './modules/calendar/index.js'
 import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
-import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
 import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
-import { startDbGcWorker } from './db-gc.js'
-import { pool } from './db/pool.js'
-import { env } from './env.js'
-import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
+import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
 import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowledge/worker.js'
 import { startLearningEffectWorker, startLearningNotificationScheduler } from './modules/learning/worker.js'
 import { startPollExpirationSweeper } from './modules/polls/index.js'
 import { redis, sub } from './redis.js'
-import { Lifecycle, startWorkerTasks, type ServiceHandle, type WorkerTaskDefinition } from './runtime/lifecycle.js'
-import { seedIfEmpty } from './seed.js'
+import { Lifecycle, type ServiceHandle, startWorkerTasks, type WorkerTaskDefinition } from './runtime/lifecycle.js'
 import { initializeNativeStorage } from './storage.js'
 
 /**
@@ -48,7 +47,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
 ]
 
 async function prepareWorkerData(): Promise<void> {
-  await seedIfEmpty()
   await seedAdmins()
   const { channels, failures } = await reconcileImChannels()
   console.log(`[worker] reconciled ${channels - failures}/${channels} IM channels`)

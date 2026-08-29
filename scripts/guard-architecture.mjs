@@ -20,6 +20,7 @@ const server = await filesUnder('server/src')
 const read = async (file) => readFile(file, 'utf8')
 const name = (file) => relative(process.cwd(), file).replaceAll('\\', '/')
 const frontendNames = new Set(frontend.map(name))
+const serverNames = new Set(server.map(name))
 
 for (const retired of ['src/features/admin', 'src/features/eval']) {
   if ([...frontendNames].some((fileName) => fileName.startsWith(`${retired}/`))) {
@@ -266,6 +267,43 @@ if (!agentReactBody || !/toggleAgentChannelReaction\s*\(/.test(agentReactBody) |
   violations.push('server/src/agents/cli.ts: Agent reactions must use an explicit channel and the public IM application')
 }
 const schemaSql = await read(resolve('server/src/db/schema.sql'))
+const workerBoot = await read(resolve('server/src/worker.ts'))
+const packageManifest = await read(resolve('package.json'))
+if (/drizzle-(?:orm|kit)/.test(packageManifest) || serverNames.has('server/src/db/schema.ts')) {
+  violations.push('database: retired parallel Drizzle schema and migration toolchain must not return')
+}
+if (/seedIfEmpty|from ['"]\.\/seed\.js['"]/.test(workerBoot) || serverNames.has('server/src/seed.ts')) {
+  violations.push('server/src/worker.ts: production runtime must not create demo users, conversations, or messages')
+}
+for (const file of server) {
+  const fileName = name(file)
+  if (fileName.includes('/__integration__/')) continue
+  const source = await read(file)
+  if (/\bconversation_counters\b/.test(source)
+    && !new Set(['server/src/db/bootstrap.ts', 'server/src/modules/email/message-repository.ts']).has(fileName)) {
+    violations.push(`${fileName}: SQL conversation sequence counters are reserved for the email projection`)
+  }
+  if (/\bpoll_votes\b/.test(source)) {
+    violations.push(`${fileName}: legacy SQL-message poll votes are forbidden; use im_poll_votes`)
+  }
+}
+if (/CREATE TABLE public\.poll_votes\b|poll_votes_message_id_fkey/.test(schemaSql)) {
+  violations.push('server/src/db/schema.sql: legacy SQL-message poll projection must not return')
+}
+for (const observabilityFile of [
+  'server/src/agents/observability.ts',
+  'server/src/modules/observability/repository.ts',
+]) {
+  if (/\b(?:FROM|JOIN)\s+messages\b/i.test(await read(resolve(observabilityFile)))) {
+    violations.push(`${observabilityFile}: run visibility must use explicit trigger channel identities`)
+  }
+}
+const canvasReportsRepository = await read(resolve('server/src/modules/canvas/reports-repository.ts'))
+const canvasFacade = await read(resolve('server/src/modules/canvas/facade.ts'))
+if (/\b(?:FROM|JOIN)\s+messages\b/i.test(canvasReportsRepository)
+  || !/missingAgentChannelMessageIds\s*\(/.test(canvasFacade)) {
+  violations.push('server/src/modules/canvas: message evidence must be verified through the public authoritative IM application')
+}
 const membershipMessages = await read(resolve('server/src/agents/membership.ts'))
 if (/from ['"][^'"]*(?:db\/|redis\.js)|\b(?:pool|db)\.query\s*\(|conversation_counters|CH_MESSAGE_NEW|INSERT\s+INTO\s+messages/i.test(membershipMessages)
   || !/sendSystemChannelMessage\s*\(/.test(membershipMessages)) {
@@ -281,6 +319,7 @@ for (const retiredConstraint of [
   'agent_approvals_message_id_fkey',
   'agent_handoffs_source_message_id_fkey',
   'agent_handoffs_result_message_id_fkey',
+  'tool_calls_message_id_fkey',
 ]) {
   if (schemaSql.includes(retiredConstraint)) {
     violations.push(`server/src/db/schema.sql: ${retiredConstraint} must not bind WuKong identities to SQL messages`)

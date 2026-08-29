@@ -1621,20 +1621,6 @@ CREATE TABLE public.participants (
 
 
 --
--- Name: poll_votes; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.poll_votes (
-    message_id text NOT NULL,
-    voter_participant_id text NOT NULL,
-    voter_kind text NOT NULL,
-    option_id text NOT NULL,
-    company_id text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
 -- Name: project_visits; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1685,7 +1671,6 @@ CREATE TABLE public.sessions (
 
 CREATE TABLE public.tool_calls (
     id text NOT NULL,
-    message_id text,
     agent_id text NOT NULL,
     name text NOT NULL,
     args jsonb NOT NULL,
@@ -2555,14 +2540,6 @@ ALTER TABLE ONLY public.messages
 
 ALTER TABLE ONLY public.participants
     ADD CONSTRAINT participants_pkey PRIMARY KEY (id, company_id);
-
-
---
--- Name: poll_votes poll_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.poll_votes
-    ADD CONSTRAINT poll_votes_pkey PRIMARY KEY (message_id, voter_participant_id, option_id);
 
 
 --
@@ -3478,20 +3455,6 @@ CREATE UNIQUE INDEX idx_participants_company_preset_key ON public.participants U
 --
 
 CREATE INDEX idx_participants_email_lower ON public.participants USING btree (lower(email)) WHERE (email IS NOT NULL);
-
-
---
--- Name: idx_poll_votes_message; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_poll_votes_message ON public.poll_votes USING btree (message_id);
-
-
---
--- Name: idx_poll_votes_voter; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_poll_votes_voter ON public.poll_votes USING btree (voter_participant_id);
 
 
 --
@@ -4493,14 +4456,6 @@ ALTER TABLE ONLY public.messages
 
 
 --
--- Name: poll_votes poll_votes_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.poll_votes
-    ADD CONSTRAINT poll_votes_message_id_fkey FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE;
-
-
---
 -- Name: project_visits project_visits_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4522,14 +4477,6 @@ ALTER TABLE ONLY public.projects
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- Name: tool_calls tool_calls_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tool_calls
-    ADD CONSTRAINT tool_calls_message_id_fkey FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE;
 
 
 --

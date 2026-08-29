@@ -259,10 +259,6 @@ export async function createConversationBundle(
       args.tag, args.companyId, args.projectId],
   )
   if ((inserted.rowCount ?? 0) === 0) return false
-  await db.query(
-    `INSERT INTO conversation_counters (conversation_id,next_sequence) VALUES ($1,1)`,
-    [args.id],
-  )
   await upsertBinding(db, args.companyId, args.profile, args.leaderId, null)
   return true
 }

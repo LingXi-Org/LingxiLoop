@@ -41,18 +41,42 @@ export interface CanvasReportApplicationContext {
   publishCanvas: PublishCanvas
   publishAssignments(companyId: string, canvasId: string): Promise<void>
   logActivity: LogActivity
+  missingChannelMessageIds(input: {
+    companyId: string; actorId: string; channelId: string; messageIds: string[]
+  }): Promise<string[]>
 }
 
 export function createCanvasReportApplication(context: CanvasReportApplicationContext) {
-  const { db, transaction, toReport, publishCanvas, publishAssignments, logActivity } = context
+  const { db, transaction, toReport, publishCanvas, publishAssignments, logActivity, missingChannelMessageIds } = context
 
-async function validateEvidenceRefs(client: Queryable, input: { companyId:string;canvasId:string;refs:CanvasEvidenceRef[] }): Promise<void> {
-  if (input.refs.length > 64) throw new Error('evidenceRefs may contain at most 64 items')
-  for (const ref of input.refs) {
+function validateEvidenceRefShape(refs: CanvasEvidenceRef[]): void {
+  if (refs.length > 64) throw new Error('evidenceRefs may contain at most 64 items')
+  for (const ref of refs) {
     if (!ref || typeof ref.id !== 'string' || !ref.id.trim()) throw new Error('every evidence reference requires an id')
   }
+}
+
+async function validateEvidenceRefs(client: Queryable, input: { companyId:string;canvasId:string;refs:CanvasEvidenceRef[] }): Promise<void> {
   const missing = await missingEvidenceRefs(client, input)
   if (missing[0]) throw new Error(`evidence reference is outside the current Canvas scope: ${missing[0].kind}:${missing[0].id}`)
+}
+
+async function validateMessageEvidenceRefs(input: {
+  companyId: string; canvasId: string; agentId: string; refs: CanvasEvidenceRef[]
+}): Promise<void> {
+  const messageIds = input.refs.filter((ref) => ref.kind === 'message').map((ref) => ref.id)
+  if (messageIds.length === 0) return
+  const canvas = await canvasById(db, input.companyId, input.canvasId)
+  if (!canvas?.conversation_id) {
+    throw new Error(`evidence reference is outside the current Canvas scope: message:${messageIds[0]}`)
+  }
+  const missing = await missingChannelMessageIds({
+    companyId: input.companyId,
+    actorId: input.agentId,
+    channelId: canvas.conversation_id,
+    messageIds,
+  })
+  if (missing[0]) throw new Error(`evidence reference is outside the current Canvas scope: message:${missing[0]}`)
 }
 
 async function submitCanvasReport(input: {
@@ -66,6 +90,10 @@ async function submitCanvasReport(input: {
   if (!Number.isFinite(confidence)||confidence<0||confidence>1) throw new Error('confidence must be between 0 and 1')
   const finding=input.finding.trim()
   if (!finding) throw new Error('finding is required')
+  validateEvidenceRefShape(input.evidenceRefs)
+  await validateMessageEvidenceRefs({
+    companyId: input.companyId, canvasId: input.canvasId, agentId: input.agentId, refs: input.evidenceRefs,
+  })
   return transaction(async (client) => {
     const work = await lockReportWork(client, {
       workId: input.workId, companyId: input.companyId, agentId: input.agentId, canvasId: input.canvasId,
@@ -157,4 +185,3 @@ async function completeCanvasWork(input: {
 }
   return { assertCanvasWorkReportReady, completeCanvasWork, submitCanvasReport }
 }
-

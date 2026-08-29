@@ -5,9 +5,10 @@ import test from 'node:test'
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const bootstrap = readFileSync(new URL('../db/bootstrap.ts', import.meta.url), 'utf8')
 const serverBoot = readFileSync(new URL('../web.ts', import.meta.url), 'utf8')
-const seed = readFileSync(new URL('../seed.ts', import.meta.url), 'utf8')
+const workerBoot = readFileSync(new URL('../worker.ts', import.meta.url), 'utf8')
 const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.url), 'utf8')
 const onboarding = readFileSync(new URL('../modules/companies/onboarding-repository.ts', import.meta.url), 'utf8')
+const canvasReports = readFileSync(new URL('../modules/canvas/reports-repository.ts', import.meta.url), 'utf8')
 const composeFiles = [
   '../../../docker-compose.mvp.ci.yml',
   '../../../docker-compose.mvp.yml',
@@ -54,7 +55,9 @@ test('structured Agent cards store WuKong identities without SQL message foreign
     'agent_approvals_message_id_fkey',
     'agent_handoffs_source_message_id_fkey',
     'agent_handoffs_result_message_id_fkey',
+    'tool_calls_message_id_fkey',
   ]) assert.doesNotMatch(schema, new RegExp(`\\b${constraint}\\b`))
+  assert.doesNotMatch(schema, /CREATE TABLE public\.tool_calls \([\s\S]*?\bmessage_id text/)
 })
 
 test('tenant-owned reaction and climate rows have no legacy tenant default', () => {
@@ -161,11 +164,11 @@ test('runtime startup contains no historical data backfill path', () => {
   assert.doesNotMatch(serverBoot, /embed:backfill|before Gravatar wiring|predating this commit/)
 })
 
-test('fresh-schema seed creates the personal company before its membership', () => {
-  const userInsert = seed.indexOf('INSERT INTO users')
-  const companyInsert = seed.indexOf('INSERT INTO companies')
-  const membershipInsert = seed.indexOf('INSERT INTO company_members')
-  assert.ok(userInsert >= 0 && companyInsert > userInsert && membershipInsert > companyInsert)
-  assert.match(seed, /INSERT INTO companies \(id, name, slug, owner_user_id, description\)/)
-  assert.doesNotMatch(seed, /if \(rows\[0\]\) return/)
+test('production worker has no demo-data or starter-message seed path', () => {
+  assert.doesNotMatch(workerBoot, /seedIfEmpty|seed\.js/)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.poll_votes\b/)
+})
+
+test('Canvas message evidence does not restore the SQL chat data plane', () => {
+  assert.doesNotMatch(canvasReports, /\b(?:FROM|JOIN)\s+messages\b/i)
 })

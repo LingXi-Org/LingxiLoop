@@ -1,6 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { PollPayload } from '../../db/schema.js'
-import type { PollRow } from './contracts.js'
+import type { PollPayload, PollRow } from './contracts.js'
 
 export async function channelBinding(db: Queryable, companyId: string, channelId: string) {
   const { rows } = await db.query<{ profile: Record<string, unknown> }>(

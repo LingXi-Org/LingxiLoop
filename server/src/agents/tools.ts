@@ -15,7 +15,6 @@ export async function executeTool(args: {
   agentId: string
   name: string
   argsJson: string
-  messageId?: string | null
   runId?: string | null
   companyId: string
   idempotencyKey?: string
@@ -27,9 +26,9 @@ export async function executeTool(args: {
   catch { parsed = {} }
 
   await pool.query(
-    `INSERT INTO tool_calls (id, message_id, agent_id, name, args, status, run_id, company_id)
-     VALUES ($1,$2,$3,$4,$5::jsonb,'pending',$6,$7)`,
-    [id, args.messageId ?? null, args.agentId, args.name, JSON.stringify(parsed), args.runId ?? null, args.companyId ?? null],
+    `INSERT INTO tool_calls (id, agent_id, name, args, status, run_id, company_id)
+     VALUES ($1,$2,$3,$4::jsonb,'pending',$5,$6)`,
+    [id, args.agentId, args.name, JSON.stringify(parsed), args.runId ?? null, args.companyId ?? null],
   )
 
   let result: ToolResult

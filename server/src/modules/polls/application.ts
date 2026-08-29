@@ -1,13 +1,14 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import type { Queryable } from '../../db/queryable.js'
-import type { PollOption, PollPayload } from '../../db/schema.js'
 import type { PollUpdatedEvent } from '../../redis.js'
 import type {
   CastVoteCommand,
   ClosePollCommand,
-  CreatePollCommand,
   CreatedPoll,
+  CreatePollCommand,
+  PollOption,
+  PollPayload,
   PollRow,
   PollSnapshot,
 } from './contracts.js'
@@ -19,8 +20,8 @@ import {
   findPoll,
   insertPoll,
   lockPoll,
-  pollTallies,
   pendingPollPublications,
+  pollTallies,
   recordPublishedSequence,
   replaceVotes,
 } from './repository.js'

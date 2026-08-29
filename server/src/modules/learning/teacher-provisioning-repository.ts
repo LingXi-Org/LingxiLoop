@@ -131,11 +131,6 @@ export async function persistTeacherProvisioning(
     ],
   )
   await db.query(
-    `INSERT INTO conversation_counters(conversation_id,next_sequence)
-     VALUES($1,1) ON CONFLICT(conversation_id) DO NOTHING`,
-    [input.roomId],
-  )
-  await db.query(
     `INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id,preset_key)
      VALUES($1,$2,$3::jsonb,$4,$5)
      ON CONFLICT(channel_id) DO UPDATE SET

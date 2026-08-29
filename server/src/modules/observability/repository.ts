@@ -21,11 +21,6 @@ export async function listPublicActivity(
        AND (
          r.trigger->>'conversationId' = $2
          OR COALESCE(r.trigger->'conversationIds', '[]'::jsonb) ? $2
-         OR EXISTS (
-           SELECT 1 FROM jsonb_array_elements_text(r.input_message_ids) input(message_id)
-           JOIN messages m ON m.id = input.message_id
-           WHERE m.conversation_id = $2
-         )
        )
        AND e.kind = ANY($3::text[])
        AND e.kind !~* '(prompt|reasoning|chain[._-]?of[._-]?thought|secret|credential)'

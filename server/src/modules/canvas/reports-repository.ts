@@ -14,9 +14,6 @@ export async function missingEvidenceRefs(db: Queryable, args: {
        SELECT 'frame',frame.id FROM canvas_frames frame WHERE frame.canvas_id=$1
        UNION ALL SELECT 'report',report.id FROM canvas_assignment_reports report
          WHERE report.canvas_id=$1 AND report.company_id=$2
-       UNION ALL SELECT 'message',message.id FROM messages message
-         JOIN canvases canvas ON canvas.conversation_id=message.conversation_id
-         WHERE canvas.id=$1 AND canvas.company_id=$2
        UNION ALL SELECT 'document',document.id FROM documents document
          JOIN canvases canvas ON canvas.company_id=document.company_id
          WHERE canvas.id=$1 AND canvas.company_id=$2
@@ -30,7 +27,8 @@ export async function missingEvidenceRefs(db: Queryable, args: {
          WHERE canvas.id=$1 AND course.company_id=$2
      )
      SELECT requested.kind,requested.id FROM requested
-     LEFT JOIN available USING(kind,id) WHERE available.id IS NULL`,
+     LEFT JOIN available USING(kind,id)
+     WHERE requested.kind <> 'message' AND available.id IS NULL`,
     [args.canvasId, args.companyId, JSON.stringify(args.refs)],
   )
   return rows
@@ -209,4 +207,3 @@ export async function completeCanvasWorkState(db: Queryable, input: {
     workspace: null,
   }
 }
-
