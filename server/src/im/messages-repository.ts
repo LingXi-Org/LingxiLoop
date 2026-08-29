@@ -6,6 +6,33 @@ export interface ImSendAcceptanceRow {
   echo: Record<string, unknown> | null
 }
 
+export interface ImMemberChannelRow {
+  channelId: string
+  title: string
+  kind: string
+  topic: string | null
+  channelType: number
+}
+
+export async function memberChannels(
+  db: Queryable,
+  input: { companyId: string; userId: string; channelIds: string[] },
+): Promise<ImMemberChannelRow[]> {
+  if (input.channelIds.length === 0) return []
+  const { rows } = await db.query<ImMemberChannelRow>(
+    `SELECT conversation.id AS "channelId",conversation.title,conversation.kind,conversation.topic,
+            COALESCE((binding.profile->>'channelType')::int,2) AS "channelType"
+       FROM conversations conversation
+       JOIN im_channel_bindings binding
+         ON binding.channel_id=conversation.id AND binding.company_id=conversation.company_id
+      WHERE conversation.company_id=$1
+        AND conversation.id=ANY($2::text[])
+        AND conversation.members @> to_jsonb(ARRAY[$3::text])`,
+    [input.companyId, input.channelIds, input.userId],
+  )
+  return rows
+}
+
 export async function channelProfileForMember(
   db: Queryable,
   input: { companyId: string; channelId: string; userId: string },

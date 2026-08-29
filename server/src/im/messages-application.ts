@@ -10,6 +10,7 @@ import {
   getSendAcceptance,
   lockAgentReplyChannel,
   lockSendAcceptance,
+  memberChannels,
   sendAcceptanceStatus,
   unlockSendAcceptance,
   unlockAgentReplyChannel,
@@ -41,6 +42,14 @@ export interface ImMessagesInfrastructure {
     userId: string,
     beforeSequence?: number,
   ): Promise<ImMessageEnvelope[]>
+  listConversations(userId: string): Promise<Array<{
+    channelId: string
+    channelType: number
+    unread: number
+    activeAt: number
+    lastMessage: ImMessageEnvelope | null
+  }>>
+  clearUnread(userId: string, channelId: string, channelType: number): Promise<void>
   reactions(companyId: string, conversationId: string, messageIds: string[]): Promise<Record<string, unknown[]>>
   toggleReaction(input: {
     companyId: string
@@ -113,6 +122,85 @@ export class ImMessagesApplication {
         data: { ...(message.payload.data ?? {}), reactions: reactions[message.messageId] ?? [] },
       },
     }))
+  }
+
+  async inbox(input: {
+    companyId: string
+    userId: string
+    limit: number
+  }): Promise<Array<{
+    channelId: string
+    title: string
+    kind: string
+    topic: string | null
+    unread: number
+    message: ImMessageEnvelope
+    quotedMessage: ImMessageEnvelope | null
+  }>> {
+    const conversations = (await this.infrastructure.listConversations(input.userId))
+      .filter((conversation) => conversation.unread > 0)
+    const metadata = await memberChannels(this.infrastructure.db, {
+      companyId: input.companyId,
+      userId: input.userId,
+      channelIds: conversations.map((conversation) => conversation.channelId),
+    })
+    const metadataById = new Map(metadata.map((channel) => [channel.channelId, channel]))
+    const batches = await Promise.all(conversations.map(async (conversation) => {
+      const channel = metadataById.get(conversation.channelId)
+      if (!channel || channel.channelType !== conversation.channelType) return []
+      const messages = await this.infrastructure.syncMessages(
+        conversation.channelId,
+        conversation.channelType,
+        Math.min(200, Math.max(80, conversation.unread)),
+        input.userId,
+      )
+      const ordered = [...messages].sort((left, right) => left.messageSeq - right.messageSeq)
+      return ordered
+        .slice(-conversation.unread)
+        .filter((message) => message.fromUid !== input.userId)
+        .map((message) => {
+          const quotedId = message.payload.replyToClientMsgNo
+          return {
+            channelId: conversation.channelId,
+            title: channel.title,
+            kind: channel.kind,
+            topic: channel.topic,
+            unread: conversation.unread,
+            message,
+            quotedMessage: quotedId
+              ? ordered.find((candidate) => candidate.messageId === quotedId || candidate.clientMsgNo === quotedId) ?? null
+              : null,
+          }
+        })
+    }))
+    return batches.flat()
+      .sort((left, right) => left.message.timestamp - right.message.timestamp || left.message.messageSeq - right.message.messageSeq)
+      .slice(-Math.min(200, Math.max(1, input.limit)))
+  }
+
+  async clearChannelUnread(input: { companyId: string; userId: string; channelId: string }): Promise<boolean> {
+    const channelType = await this.channelType(input)
+    if (channelType === null) return false
+    await this.infrastructure.clearUnread(input.userId, input.channelId, channelType)
+    return true
+  }
+
+  async clearAllUnread(input: { companyId: string; userId: string }): Promise<string[]> {
+    const conversations = (await this.infrastructure.listConversations(input.userId))
+      .filter((conversation) => conversation.unread > 0)
+    const metadata = await memberChannels(this.infrastructure.db, {
+      companyId: input.companyId,
+      userId: input.userId,
+      channelIds: conversations.map((conversation) => conversation.channelId),
+    })
+    const allowed = new Map(metadata.map((channel) => [channel.channelId, channel.channelType]))
+    const targets = conversations.filter((conversation) => allowed.get(conversation.channelId) === conversation.channelType)
+    await Promise.all(targets.map((conversation) => this.infrastructure.clearUnread(
+      input.userId,
+      conversation.channelId,
+      conversation.channelType,
+    )))
+    return targets.map((conversation) => conversation.channelId)
   }
 
   async toggleReaction(input: {

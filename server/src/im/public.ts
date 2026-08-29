@@ -49,3 +49,23 @@ export async function sendAgentChannelMessage(input: {
   }
   return { kind: 'accepted', duplicate: result.duplicate, messageId, sequence }
 }
+
+export function getAgentInbox(input: { companyId: string; agentId: string; limit?: number }) {
+  return imMessagesApplication.inbox({
+    companyId: input.companyId,
+    userId: input.agentId,
+    limit: input.limit ?? 200,
+  })
+}
+
+export function clearAgentChannelUnread(input: { companyId: string; agentId: string; channelId: string }) {
+  return imMessagesApplication.clearChannelUnread({
+    companyId: input.companyId,
+    userId: input.agentId,
+    channelId: input.channelId,
+  })
+}
+
+export function clearAllAgentUnread(input: { companyId: string; agentId: string }) {
+  return imMessagesApplication.clearAllUnread({ companyId: input.companyId, userId: input.agentId })
+}

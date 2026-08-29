@@ -15,6 +15,8 @@ export const imMessagesApplication = new ImMessagesApplication({
     }
   },
   syncMessages: (...args) => wukongClient().syncMessages(...args),
+  listConversations: (...args) => wukongClient().listConversations(...args),
+  clearUnread: (...args) => wukongClient().clearUnread(...args),
   reactions: wukongReactions,
   toggleReaction: toggleWukongReaction,
   sendMessage: (...args) => wukongClient().sendMessage(...args),

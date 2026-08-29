@@ -238,6 +238,14 @@ for (const [command, nextCommand] of [['Messages', 'Thread'], ['Glance', 'Ack']]
     violations.push(`server/src/agents/cli.ts: cmd${command} must read authoritative WuKong history through im/public.ts`)
   }
 }
+const agentInboxBody = agentCli.match(/async function loadInbox\b[\s\S]*?(?=async function cmdGlance\b)/)?.[0] ?? ''
+const agentAckBody = agentCli.match(/async function cmdAck\b[\s\S]*?(?=const \{ cmdFollow)/)?.[0] ?? ''
+if (!agentInboxBody || /FROM\s+messages\b|JOIN\s+messages\b|conversation_reads/i.test(agentInboxBody) || !/getAgentInbox\s*\(/.test(agentInboxBody)) {
+  violations.push('server/src/agents/cli.ts: Agent inbox must use WuKong unread/history through im/public.ts')
+}
+if (!agentAckBody || /conversation_reads/i.test(agentAckBody) || !/clear(?:AgentChannel|AllAgent)Unread\s*\(/.test(agentAckBody)) {
+  violations.push('server/src/agents/cli.ts: Agent ack must clear authoritative WuKong unread state through im/public.ts')
+}
 
 const evalService = await read(resolve('server/src/eval/service.ts'))
 if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(evalService)) {

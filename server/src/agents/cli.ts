@@ -13,7 +13,13 @@ import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { parseMentions } from '../mentions.js'
 import { freshenAttachmentUrl, type StoredAttachment, storage, storageKeyFromPublicUrl } from '../storage.js'
-import { getAgentChannelHistory, sendAgentChannelMessage } from '../im/public.js'
+import {
+  clearAgentChannelUnread,
+  clearAllAgentUnread,
+  getAgentChannelHistory,
+  getAgentInbox,
+  sendAgentChannelMessage,
+} from '../im/public.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
 import { stripLoneSurrogates } from './text-safety.js'
@@ -520,69 +526,49 @@ function renderPollBlock(messageId: string, poll: InboxPollPayload): string[] {
 }
 
 async function loadInbox(agentId: string): Promise<InboxItem[]> {
-  const { rows } = await pool.query<InboxItem>(
-    `SELECT
-        m.id,
-        m.conversation_id,
-        c.title AS conversation_title,
-        c.kind  AS conversation_kind,
-        c.topic AS conversation_topic,
-        m.author_id,
-        COALESCE(p.name, m.author_id) AS author_name,
-        m.body,
-        m.kind,
-        m.sequence,
-        m.created_at,
-        m.attachment,
-        m.poll,
-        m.quoted_message_id,
-        (
-          SELECT jsonb_build_object(
-            'id', qm.id,
-            'authorId', qm.author_id,
-            'authorName', COALESCE(qp.name, qm.author_id),
-            'kind', qm.kind,
-            'body', LEFT(qm.body, 240),
-            'sequence', qm.sequence
-          )
-            FROM messages qm
-            LEFT JOIN participants qp ON qp.id = qm.author_id AND qp.company_id = c.company_id
-           WHERE qm.id = m.quoted_message_id
-             AND qm.conversation_id = m.conversation_id
-        ) AS quoted
-       FROM messages m
-       JOIN conversations c ON c.id = m.conversation_id
-       LEFT JOIN participants p ON p.id = m.author_id AND p.company_id = c.company_id
-      WHERE c.members @> to_jsonb(ARRAY[$1::text])
-        AND m.author_id <> $1
-        AND m.created_at > COALESCE(
-          (SELECT last_read_at FROM conversation_reads
-            WHERE user_id = $1 AND conversation_id = c.id),
-          '1970-01-01T00:00:00Z'::timestamptz)
-        AND (
-          c.kind = 'direct'
-          OR NOT EXISTS (
-            SELECT 1 FROM conversation_mutes mu
-             WHERE mu.user_id = $1 AND mu.conversation_id = c.id
-               AND (mu.muted_until IS NULL OR mu.muted_until > NOW())
-          )
-          OR EXISTS (
-            SELECT 1 FROM regexp_matches(m.body, '@([[:alnum:]_-]+)', 'g') mention
-             WHERE LOWER(mention[1]) = LOWER($1)
-          )
-          OR EXISTS (
-            SELECT 1 FROM messages quoted
-             WHERE quoted.id = m.quoted_message_id
-               AND quoted.conversation_id = m.conversation_id
-               AND quoted.author_id = $1
-          )
-        )
-      ORDER BY m.created_at ASC
-      LIMIT 200`,
-    [agentId],
-  )
-  for (const row of rows) await freshenRowAttachment(row)
-  return rows
+  const companyId = await agentCompany(agentId)
+  if (!companyId) return []
+  const entries = await getAgentInbox({ companyId, agentId, limit: 200 })
+  const participantIds = [...new Set(entries.flatMap((entry) => [
+    entry.message.fromUid,
+    entry.quotedMessage?.fromUid,
+  ].filter((value): value is string => Boolean(value))))]
+  const { rows: participants } = participantIds.length > 0
+    ? await pool.query<{ id: string; name: string }>(
+      `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
+      [companyId, participantIds],
+    )
+    : { rows: [] }
+  const names = new Map(participants.map((participant) => [participant.id, participant.name]))
+  return Promise.all(entries.map(async (entry): Promise<InboxItem> => {
+    const message = entry.message
+    const quoted = entry.quotedMessage
+    const attachment = attachmentFromImData(companyId, message.payload.data)
+    return {
+      id: message.messageId,
+      conversation_id: entry.channelId,
+      conversation_title: entry.title,
+      conversation_kind: entry.kind,
+      conversation_topic: entry.topic,
+      author_id: message.fromUid,
+      author_name: names.get(message.fromUid) ?? message.fromUid,
+      body: message.payload.body ?? '',
+      kind: message.payload.kind,
+      sequence: message.messageSeq,
+      created_at: imTimestamp(message.timestamp),
+      attachment: attachment ? await freshenAttachmentUrl(attachment) : null,
+      poll: message.payload.data?.poll as InboxPollPayload | undefined ?? null,
+      quoted_message_id: message.payload.replyToClientMsgNo ?? null,
+      quoted: quoted ? {
+        id: quoted.messageId,
+        authorId: quoted.fromUid,
+        authorName: names.get(quoted.fromUid) ?? quoted.fromUid,
+        kind: quoted.payload.kind,
+        body: quoted.payload.body ?? '',
+        sequence: quoted.messageSeq,
+      } : null,
+    }
+  }))
 }
 
 async function cmdInbox(parsed: ParsedArgs): Promise<CliResult> {
@@ -715,32 +701,17 @@ async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
 
 async function cmdAck(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
   if (parsed.flags.all) {
-    // Ack every conversation that currently has unread items for me
-    const items = await loadInbox(me)
-    const convoIds = [...new Set(items.map((i) => i.conversation_id))]
-    for (const id of convoIds) {
-      await pool.query(
-        `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-         VALUES ($1, $2, NOW())
-         ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = NOW()`,
-        [me, id],
-      )
-      // Acking = standing down on this conversation. Any un-used HELD
-      // acknowledgement is void — it must not arm a later turn's
-      // preemptive --send-anyway (the 2026-07-08 stale-"6" path).
-      void clearHold(me, `reply:${id}`)
-    }
-    return ok(`acked ${convoIds.length} conversation(s)`)
+    const channelIds = await clearAllAgentUnread({ companyId, agentId: me })
+    for (const channelId of channelIds) void clearHold(me, `reply:${channelId}`)
+    return ok(`acked ${channelIds.length} conversation(s)`)
   }
   const convoId = parsed.positional[0]
   if (!convoId) return err('usage: ack <conversation_id>  OR  ack --all')
-  await pool.query(
-    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-     VALUES ($1, $2, NOW())
-     ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = NOW()`,
-    [me, convoId],
-  )
+  const cleared = await clearAgentChannelUnread({ companyId, agentId: me, channelId: convoId })
+  if (!cleared) return err(`unknown authoritative channel ${convoId}`)
   // Standing down — see the --all branch above.
   void clearHold(me, `reply:${convoId}`)
   return ok(`acked ${convoId}`)
