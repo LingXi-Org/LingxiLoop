@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import '../logging.js'
 import http from 'node:http'
 import { parseAgentOSConcurrency } from './concurrency-config.js'
