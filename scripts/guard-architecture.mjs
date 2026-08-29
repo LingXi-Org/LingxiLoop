@@ -62,8 +62,8 @@ for (const file of frontend) {
 const productionFrontend = (await Promise.all(frontend.map(read))).join('\n')
 const frontendTheme = await readFile(resolve('src/styles/globals.css'), 'utf8')
 const shadcnConfig = JSON.parse(await readFile(resolve('components.json'), 'utf8'))
-if (shadcnConfig.style !== 'radix-luma' || shadcnConfig.tailwind?.baseColor !== 'mist' || shadcnConfig.iconLibrary !== 'hugeicons') {
-  violations.push('components.json: canonical shadcn preset b3bZWXGcRE (radix-luma/mist/hugeicons) is required')
+if (shadcnConfig.style !== 'base-luma' || shadcnConfig.tailwind?.baseColor !== 'mist' || shadcnConfig.iconLibrary !== 'hugeicons') {
+  violations.push('components.json: canonical shadcn preset b3bZWXGcRE (base-luma/mist/hugeicons) is required')
 }
 if (/@base-ui\/react/.test(productionFrontend)) violations.push('frontend: Base UI is forbidden; use the canonical shadcn primitives')
 if (/agent-avatar/.test(`${productionFrontend}\n${frontendTheme}`)) {
