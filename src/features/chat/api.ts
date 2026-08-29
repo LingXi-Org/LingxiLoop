@@ -40,10 +40,10 @@ export const messagesApi = {
       `/polls/${encodeURIComponent(messageId)}/close`,
       { method: 'POST' },
     ),
-  toggleReaction: (messageId: string, emoji: string) =>
+  toggleReaction: (conversationId: string, messageId: string, messageSeq: number, emoji: string) =>
     http<{ reactions: Array<{ emoji: string; count: number; mine?: boolean; users?: string[] }> }>(
-      `/messages/${encodeURIComponent(messageId)}/reactions`,
-      { method: 'POST', body: JSON.stringify({ emoji }) },
+      `/im/channels/${encodeURIComponent(conversationId)}/reactions`,
+      { method: 'POST', body: JSON.stringify({ messageId, messageSeq, emoji }) },
     ),
   getLinkPreview: (url: string) =>
     http<LinkPreviewMetadata>(`/og?url=${encodeURIComponent(url)}`),

@@ -3,6 +3,7 @@ import type { Storage } from '../../storage.js'
 import type { ReactionChangedEvent } from './contracts.js'
 import {
   addReaction,
+  addWukongReaction,
   aggregateReactions,
   conversationKind,
   listMessages,
@@ -107,6 +108,30 @@ export class MessagesApplication {
       companyId: input.companyId,
       messageId: input.messageId,
       reactions: changed.reactions,
+    }).catch(() => undefined)
+    return { reactions: changed.reactions }
+  }
+
+  async toggleWukongReaction(input: {
+    companyId: string; userId: string; conversationId: string; messageId: string; messageSeq: number; messageAuthorId: string; emoji: string
+  }) {
+    const changed = await this.infrastructure.transaction(async (db) => {
+      await db.query(`SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, [
+        `wukong-reaction:${input.companyId}:${input.messageId}:${input.userId}:${input.emoji}`,
+      ])
+      const removed = await reactionExists(db, input.companyId, input.messageId, input.userId, input.emoji)
+      if (removed) await removeReaction(db, input.companyId, input.messageId, input.userId, input.emoji)
+      else await addWukongReaction(db, input)
+      return { removed, reactions: await aggregateReactions(db, input.companyId, input.messageId) }
+    })
+    if (!changed.removed) {
+      await this.infrastructure.bumpReactionClimate({
+        companyId: input.companyId, agentId: input.messageAuthorId, aboutId: input.userId, emoji: input.emoji,
+      }).catch(() => undefined)
+    }
+    await this.infrastructure.publishReaction({
+      type: 'message.reactions', companyId: input.companyId, conversationId: input.conversationId,
+      messageId: input.messageId, reactions: changed.reactions,
     }).catch(() => undefined)
     return { reactions: changed.reactions }
   }

@@ -9,6 +9,7 @@ import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
 import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/public.js'
+import { messagesApplication } from '../modules/messages/facade.js'
 import {
   listReadReceiptAdvances,
   publishReadReceiptAdvance,
@@ -16,6 +17,30 @@ import {
 } from './read-receipts.js'
 
 export const imRouter = Router()
+
+async function withReactionMetadata<T extends { messageId: string; payload: LingxiMessageV1 }>(
+  companyId: string,
+  conversationId: string,
+  messages: T[],
+): Promise<T[]> {
+  if (messages.length === 0) return messages
+  const { rows } = await pool.query<{ message_id: string; reactions: Array<{ emoji: string; count: number; users: string[] }> }>(
+    `SELECT message_id, jsonb_agg(jsonb_build_object('emoji', emoji, 'count', count, 'users', users) ORDER BY count DESC, emoji ASC) AS reactions
+       FROM (
+         SELECT message_id, emoji, COUNT(*)::int AS count, array_agg(user_id ORDER BY user_id) AS users
+           FROM message_reactions
+          WHERE company_id=$1 AND conversation_id=$2 AND message_id=ANY($3::text[])
+          GROUP BY message_id, emoji
+       ) grouped
+      GROUP BY message_id`,
+    [companyId, conversationId, messages.map((message) => message.messageId)],
+  )
+  const reactions = new Map(rows.map((row) => [row.message_id, row.reactions]))
+  return messages.map((message) => ({
+    ...message,
+    payload: { ...message.payload, data: { ...(message.payload.data ?? {}), reactions: reactions.get(message.messageId) ?? [] } },
+  }))
+}
 
 function safe(handler: (req: Request & AuthedRequest, res: Response) => Promise<void>): (req: Request & AuthedRequest, res: Response, next: NextFunction) => void {
   return (req, res, next) => { void handler(req, res).catch(next) }
@@ -171,13 +196,38 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
     res.status(400).json({ error: 'beforeSeq must be a non-negative safe integer' })
     return
   }
-  res.json(await wukongClient().syncMessages(
+  const messages = await wukongClient().syncMessages(
     channelId,
     Number(rows[0].profile.channelType ?? 2),
     limit,
     userId,
     beforeSeq,
-  ))
+  )
+  res.json(await withReactionMetadata(companyId, channelId, messages))
+}))
+
+imRouter.post('/channels/:id/reactions', safe(async (req, res) => {
+  const { userId, companyId } = await identity(req)
+  const channelId = String(req.params.id)
+  await assertTeacherRoomAccessible(channelId, companyId, userId)
+  const messageId = String(req.body?.messageId ?? '').trim()
+  const messageSeq = Number(req.body?.messageSeq)
+  const emoji = String(req.body?.emoji ?? '').trim()
+  if (!messageId || !Number.isSafeInteger(messageSeq) || messageSeq <= 0 || !emoji || emoji.length > 32) {
+    res.status(400).json({ error: 'messageId, messageSeq, and emoji are required' }); return
+  }
+  const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
+    `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id AND c.company_id=b.company_id
+      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
+  )
+  if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
+  const channelType = Number(rows[0].profile.channelType ?? 2)
+  const window = await wukongClient().syncMessages(channelId, channelType, 80, userId, messageSeq + 1)
+  const target = window.find((message) => message.messageId === messageId && message.messageSeq === messageSeq)
+  if (!target) { res.status(404).json({ error: 'message not found in the authoritative channel history' }); return }
+  res.json(await messagesApplication.toggleWukongReaction({
+    companyId, userId, conversationId: channelId, messageId, messageSeq, messageAuthorId: target.fromUid, emoji,
+  }))
 }))
 
 imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {

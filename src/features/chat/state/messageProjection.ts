@@ -69,6 +69,7 @@ export function fromApi(message: ApiMessage): Message {
     canvas?: Message['canvas'] | null
     learningMission?: Message['learningMission'] | null
     citations?: Message['citations'] | null
+    reactions?: Message['reactions'] | null
   }
   const projected: Message = {
     id: message.id,
@@ -78,7 +79,7 @@ export function fromApi(message: ApiMessage): Message {
     body: message.body,
     at,
     createdAt: message.createdAt,
-    reactions: deriveMineForReactions(message.reactions),
+    reactions: deriveMineForReactions(raw.reactions ?? message.reactions),
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,
     quotedMessageId: raw.quotedMessageId ?? undefined,

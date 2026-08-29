@@ -212,6 +212,18 @@ export async function addReaction(
   )
 }
 
+export async function addWukongReaction(
+  db: Queryable,
+  input: { companyId: string; conversationId: string; messageId: string; messageSeq: number; userId: string; emoji: string },
+): Promise<void> {
+  await db.query(
+    `INSERT INTO message_reactions (message_id, user_id, emoji, company_id, conversation_id, message_seq)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT DO NOTHING`,
+    [input.messageId, input.userId, input.emoji, input.companyId, input.conversationId, input.messageSeq],
+  )
+}
+
 export async function aggregateReactions(
   db: Queryable,
   companyId: string,

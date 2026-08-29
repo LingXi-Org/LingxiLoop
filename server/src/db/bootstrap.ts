@@ -51,6 +51,8 @@ const REQUIRED_V1_COLUMNS = [
   ['llm_calls', 'purpose'],
   ['llm_calls', 'status'],
   ['message_reactions', 'company_id'],
+  ['message_reactions', 'conversation_id'],
+  ['message_reactions', 'message_seq'],
   ['agent_climate', 'company_id'],
   ['calendar_events', 'project_id'],
   ['document_mention_deliveries', 'recipients'],
@@ -88,6 +90,10 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['company_onboarding_effects', 'company_onboarding_effects_identity_key', 'u'],
   ['company_onboarding_effects', 'company_onboarding_effects_member_fkey', 'f'],
   ['company_onboarding_effects', 'company_onboarding_effects_lease_check', 'c'],
+] as const
+
+const FORBIDDEN_V1_CONSTRAINTS = [
+  ['message_reactions', 'message_reactions_message_id_fkey'],
 ] as const
 
 const REQUIRED_V1_INDEXES = [
@@ -187,6 +193,18 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     [constraintTables, constraintNames, constraintTypes],
   )
   if (constraintRows.length > 0) return false
+  for (const [tableName, constraintName] of FORBIDDEN_V1_CONSTRAINTS) {
+    const { rows } = await client.query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM pg_constraint constraint_info
+          JOIN pg_class owning_table ON owning_table.oid=constraint_info.conrelid
+          JOIN pg_namespace owning_schema ON owning_schema.oid=owning_table.relnamespace
+         WHERE owning_schema.nspname='public' AND owning_table.relname=$1 AND constraint_info.conname=$2
+       ) AS exists`,
+      [tableName, constraintName],
+    )
+    if (rows[0]?.exists) return false
+  }
   const { rows: indexRows } = await client.query<{ name: string }>(
     `SELECT required.name FROM unnest($1::text[]) AS required(name)
       WHERE to_regclass('public.' || required.name) IS NULL`,

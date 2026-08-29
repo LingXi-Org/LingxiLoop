@@ -1561,7 +1561,9 @@ CREATE TABLE public.message_reactions (
     user_id text NOT NULL,
     emoji text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    company_id text NOT NULL
+    company_id text NOT NULL,
+    conversation_id text,
+    message_seq bigint
 );
 
 
@@ -4504,14 +4506,6 @@ ALTER TABLE ONLY public.knowledge_sources
 
 ALTER TABLE ONLY public.knowledge_sources
     ADD CONSTRAINT knowledge_sources_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
-
-
---
--- Name: message_reactions message_reactions_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.message_reactions
-    ADD CONSTRAINT message_reactions_message_id_fkey FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE;
 
 
 --
