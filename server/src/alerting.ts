@@ -36,6 +36,12 @@ export interface AlertContext {
   extras?: Record<string, unknown>
 }
 
+export interface OperationalAlert {
+  title: string
+  detail: string
+  level?: 'warn' | 'error' | 'info'
+}
+
 const DISCORD_CONTENT_MAX = 1950 // Discord caps `content` at 2000 chars
 const FINGERPRINT_PREFIX_LEN = 80
 
@@ -132,6 +138,15 @@ export async function notifyAlert(ctx: AlertContext): Promise<number | null> {
     } catch { /* see above */ }
     return null
   }
+}
+
+/** Structured application alert adapter. All operational signals share the
+ * same configured webhook, timeout, dedupe and failure policy. */
+export async function notifyOperationalAlert(alert: OperationalAlert): Promise<void> {
+  await notifyAlert({
+    label: `application.${alert.level ?? 'warn'}.${alert.title}`,
+    error: alert.detail,
+  })
 }
 
 /** Reset module-level dedupe state. Test-only — production code must

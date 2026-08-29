@@ -23,7 +23,7 @@ import { EmailApplication } from './application.js'
 import { InboundEmailApplication } from './inbound-application.js'
 import { createInboundEmailHttpRouter } from './inbound-router.js'
 import { inc } from '../../metrics.js'
-import { alertDiscord } from '../../alert.js'
+import { notifyOperationalAlert } from '../../alerting.js'
 import { AgentEmailApplication } from './agent-application.js'
 import type {
   AgentEmailCommandIdentity,
@@ -117,7 +117,7 @@ export function createInboundEmailRouter(dependencies: { storage: Pick<Storage, 
     findOrCreateConversation: (input) => findOrCreateEmailConversation(input),
     persistMessage: (input) => persistEmailMessage(input),
     metric: (name, labels) => inc(name, labels),
-    alert: async (input) => { await alertDiscord(input) },
+    alert: notifyOperationalAlert,
   })
   return createInboundEmailHttpRouter({
     application,

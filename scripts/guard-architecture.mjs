@@ -161,6 +161,7 @@ for (const file of server) {
   const source = await read(file)
   const fileName = name(file)
   if (fileName === 'server/src/admin.ts') violations.push(`${fileName}: retired root admin implementation is forbidden`)
+  if (fileName === 'server/src/alert.ts') violations.push(`${fileName}: operational alerts must use alerting.ts`)
   if (fileName === 'server/src/email.ts') violations.push(`${fileName}: retired root email implementation is forbidden`)
   if (fileName === 'server/src/invitation-email.ts') violations.push(`${fileName}: Companies email capability must remain inside its vertical slice`)
   if (fileName === 'server/src/email-retry.ts' || fileName === 'server/src/email-gc.ts' || fileName === 'server/src/api/inbound-email.ts') {
@@ -196,7 +197,7 @@ for (const file of server) {
   }
   if (/\bnew\s+OpenAI\s*\(/.test(source) && fileName !== 'server/src/llm-client.ts') violations.push(`${fileName}: OpenAI construction bypasses llm-client.ts`)
   if (/\bnew\s+S3Client\s*\(/.test(source) && fileName !== 'server/src/storage.ts') violations.push(`${fileName}: object storage construction bypasses storage.ts`)
-  if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|SUB2API|DEEPSEEK_API_KEY/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)
+  if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|SUB2API|DEEPSEEK_API_KEY|DISCORD_ALERT_WEBHOOK_URL/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)
   if (/agent-gender|agent-avatar|generateAndPersistAvatar|visualSignatureFor|cmdAvatar\b|\/avatar\/generate/.test(source)) violations.push(`${fileName}: agent portraits are retired; agents use Bloub`)
   if (/participants\.avatar/.test(source)) violations.push(`${fileName}: retired participant avatar event is forbidden`)
   if (/\/devtools\//.test(source) || /api\.post\(['"]\/uploads['"]/.test(source) || /sources\/upload['"]/.test(source)) violations.push(`${fileName}: retired endpoint is forbidden`)

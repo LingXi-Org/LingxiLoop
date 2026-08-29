@@ -1,4 +1,4 @@
-import { alertDiscord } from '../../alert.js'
+import { notifyOperationalAlert } from '../../alerting.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
@@ -32,12 +32,10 @@ const retryApplication = new EmailRetryApplication({
   markFailed: (input) => markEmailRetryFailed(pool, input),
   metric: (name) => inc(name),
   terminalAlert: async (candidate, error) => {
-    await alertDiscord({
+    await notifyOperationalAlert({
       title: 'email retry: terminal failure (message lost)',
       detail: `message_id=\`${candidate.messageId}\`\ncompany=\`${candidate.companyId}\`\nsubject=${candidate.subject.slice(0, 100)}\nerror: ${(error ?? '').slice(0, 800)}`,
       level: 'error',
-    }).catch((alertError) => {
-      console.warn('[email-retry] terminal alert failed:', alertError instanceof Error ? alertError.message : alertError)
     })
   },
   unexpected: (candidate: EmailRetryCandidate, error: unknown) => {

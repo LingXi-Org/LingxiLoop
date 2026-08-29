@@ -211,6 +211,5 @@ export const env = {
    *  attachment upload error). Separate from the release webhook so
    *  release announcements don't drown out paging-level signals.
    *  Unset → alerts are no-ops + log only. */
-  DISCORD_ALERT_WEBHOOK_URL: process.env.DISCORD_ALERT_WEBHOOK_URL ?? '',
 }
 // Keep environment validation side-effect free after module initialization.
