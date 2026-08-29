@@ -83,8 +83,8 @@ export async function listAgentEmailHumanContacts(
   const { rows } = await db.query<{ id: string; display_name: string; email: string }>(
     `SELECT app_user.id, app_user.display_name, app_user.email
        FROM users app_user
-       JOIN company_members member ON member.user_id = app_user.id
-      WHERE member.company_id = $1 AND app_user.email IS NOT NULL
+       JOIN company_memberships member ON member.user_id = app_user.id
+      WHERE member.company_id = $1 AND member.status='ACTIVE' AND app_user.email IS NOT NULL
       ORDER BY app_user.display_name ASC`,
     [companyId],
   )

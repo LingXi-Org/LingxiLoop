@@ -34,16 +34,21 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
             (SELECT COUNT(*)::int FROM boards WHERE project_id=project.id AND company_id=project.company_id) AS "boardCount",
             (SELECT COUNT(*)::int FROM calendar_events WHERE project_id=project.id AND company_id=project.company_id) AS "calendarEventCount",
             (SELECT COUNT(*)::int FROM canvases WHERE project_id=project.id AND company_id=project.company_id) AS "canvasCount",
-            (membership.role IN ('owner','admin') OR course_member.role='teacher') AS "canManage",
-            course.id AS "courseId",course_member.role AS "courseRole",
+            (membership.role IN ('OWNER','ADMIN') OR course_member.role IN ('OWNER','TEACHER')) AS "canManage",
+            course.id AS "courseId",
+            CASE WHEN course_member.role IS NULL THEN NULL
+                 WHEN course_member.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS "courseRole",
             course.study_room_conversation_id AS "studyRoomId"
        FROM projects project
-       JOIN company_members membership ON membership.company_id=project.company_id AND membership.user_id=$2
+       JOIN company_memberships membership ON membership.company_id=project.company_id AND membership.user_id=$2
+        AND membership.status='ACTIVE'
        LEFT JOIN courses course ON course.project_id=project.id AND course.company_id=project.company_id
-       LEFT JOIN course_members course_member ON course_member.course_id=course.id AND course_member.company_id=course.company_id AND course_member.user_id=$2
+       LEFT JOIN project_memberships course_member
+         ON course_member.project_id=project.id AND course_member.company_id=project.company_id
+        AND course_member.user_id=$2 AND course_member.status='ACTIVE'
        LEFT JOIN project_visits visit ON visit.project_id=project.id AND visit.user_id=$2
       WHERE project.company_id=$1
-        AND (project.is_general=TRUE OR membership.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+        AND (project.is_general=TRUE OR membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       ORDER BY project.status,visit.visited_at DESC NULLS LAST,project.updated_at DESC`,
     [companyId, userId],
   )
@@ -56,6 +61,10 @@ export async function insertProject(db: Queryable, args: {
   await db.query(
     `INSERT INTO projects (id,company_id,name,description,color,created_by) VALUES ($1,$2,$3,$4,$5,$6)`,
     [args.id, args.companyId, args.name, args.description, args.color, args.userId],
+  )
+  await db.query(
+    `INSERT INTO project_memberships (project_id,company_id,user_id,role) VALUES ($1,$2,$3,'OWNER')`,
+    [args.id, args.companyId, args.userId],
   )
 }
 
@@ -93,7 +102,8 @@ export async function recordProjectVisit(db: Queryable, companyId: string, proje
   await db.query(
     `INSERT INTO project_visits (project_id,user_id,visited_at)
      SELECT project.id,$3,NOW() FROM projects project
-     JOIN company_members membership ON membership.company_id=project.company_id AND membership.user_id=$3
+     JOIN company_memberships membership ON membership.company_id=project.company_id AND membership.user_id=$3
+       AND membership.status='ACTIVE'
       WHERE project.id=$2 AND project.company_id=$1
      ON CONFLICT (project_id,user_id) DO UPDATE SET visited_at=NOW()`,
     [companyId, projectId, userId],

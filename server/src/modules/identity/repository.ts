@@ -5,7 +5,6 @@ export interface IdentityUserRow {
   email: string
   display_name: string
   email_verified_at: Date | string | null
-  is_admin: boolean
 }
 
 export interface IdentityCompanyRow {
@@ -17,7 +16,7 @@ export interface IdentityCompanyRow {
 
 export async function findIdentityUser(db: Queryable, userId: string): Promise<IdentityUserRow | null> {
   const { rows } = await db.query<IdentityUserRow>(
-    `SELECT id, email, display_name, email_verified_at, is_admin
+    `SELECT id, email, display_name, email_verified_at
        FROM users
       WHERE id = $1 AND deleted_at IS NULL
       LIMIT 1`,
@@ -28,11 +27,11 @@ export async function findIdentityUser(db: Queryable, userId: string): Promise<I
 
 export async function listIdentityCompanies(db: Queryable, userId: string): Promise<IdentityCompanyRow[]> {
   const { rows } = await db.query<IdentityCompanyRow>(
-    `SELECT company.id, company.name, company.slug, member.role
-       FROM company_members member
+    `SELECT company.id, company.name, company.slug, LOWER(member.role) AS role
+       FROM company_memberships member
        JOIN companies company ON company.id = member.company_id
-      WHERE member.user_id = $1
-      ORDER BY member.joined_at ASC`,
+      WHERE member.user_id = $1 AND member.status='ACTIVE'
+      ORDER BY member.created_at ASC`,
     [userId],
   )
   return rows

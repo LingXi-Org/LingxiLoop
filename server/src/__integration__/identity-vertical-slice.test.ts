@@ -31,9 +31,9 @@ before(async () => {
 beforeEach(async () => {
   await resetAllTables()
   await pool.query(
-    `INSERT INTO companies (id, name, slug, owner_user_id)
-     VALUES ($1, 'Identity Slice', 'identity-slice', $2)`,
-    [COMPANY_ID, USER_ID],
+    `INSERT INTO companies (id, name, slug)
+     VALUES ($1, 'Identity Slice', 'identity-slice')`,
+    [COMPANY_ID],
   )
   await seedUserMembership(USER_ID, COMPANY_ID, {
     email: 'identity@example.com',

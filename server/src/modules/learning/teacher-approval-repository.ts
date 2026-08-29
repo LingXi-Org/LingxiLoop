@@ -63,9 +63,12 @@ export async function findTeacherMembershipApprovalTarget(
 ): Promise<{ enabled: boolean; label: string | null }> {
   const { rows } = await db.query<{ enabled: boolean; label: string | null }>(
     `SELECT EXISTS(
-       SELECT 1 FROM course_members member
-        WHERE member.company_id=$1 AND member.course_id=$2
-          AND member.user_id=$3 AND member.role='teacher'
+       SELECT 1 FROM courses course
+       JOIN project_memberships member
+         ON member.project_id=course.project_id AND member.company_id=course.company_id
+        AND member.status='ACTIVE'
+        WHERE member.company_id=$1 AND course.id=$2
+          AND member.user_id=$3 AND member.role IN ('OWNER','TEACHER')
      ) AS enabled,
      (SELECT participant.name FROM participants participant
        WHERE participant.company_id=$1 AND participant.id=$3 LIMIT 1) AS label`,
@@ -160,12 +163,14 @@ export async function findTeacherMembershipApprovalVersion(
 ): Promise<boolean> {
   const { rows } = await db.query(
     `SELECT 1
-       FROM course_members member
+       FROM project_memberships member
+       JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
        JOIN learning_course_teacher_rooms teacher_room
          ON teacher_room.company_id=member.company_id
-        AND teacher_room.course_id=member.course_id
+        AND teacher_room.course_id=course.id
       WHERE member.company_id=$1 AND teacher_room.conversation_id=$2
-        AND member.user_id=$3 AND member.role='teacher'`,
+        AND member.user_id=$3 AND member.status='ACTIVE'
+        AND member.role IN ('OWNER','TEACHER')`,
     [companyId, channelId, userId],
   )
   return Boolean(rows[0])

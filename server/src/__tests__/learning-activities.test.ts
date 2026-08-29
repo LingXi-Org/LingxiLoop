@@ -58,7 +58,8 @@ test('publish and close writes authorize the teacher inside the tenant-scoped up
 
   for (const statement of calls) {
     assert.match(statement, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
-    assert.match(statement, /member\.user_id=\$4 AND member\.role='teacher'/)
+    assert.match(statement, /member\.user_id=\$4 AND member\.role IN \('OWNER','TEACHER'\)/)
+    assert.match(statement, /member\.status='ACTIVE'/)
   }
 })
 
@@ -79,5 +80,6 @@ test('UI submission is one authoritative insert that binds published activity an
   assert.equal(inserted, 'attempt-1')
   assert.deepEqual(values?.slice(0, 5), ['attempt-1','company-1','course-1','activity-1','learner-1'])
   assert.match(statement, /activity\.status='published'/)
-  assert.match(statement, /learner\.user_id=\$5 AND learner\.role='learner'/)
+  assert.match(statement, /learner\.user_id=\$5 AND learner\.status='ACTIVE'/)
+  assert.match(statement, /learner\.role IN \('STUDENT','OBSERVER'\)/)
 })

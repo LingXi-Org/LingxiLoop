@@ -116,9 +116,12 @@ export async function updateLearningMissionCoordinator(
         AND conversation.id=mission.conversation_id AND conversation.company_id=mission.company_id
         AND agent.id=$5 AND agent.company_id=mission.company_id AND agent.kind='agent' AND agent.departed_at IS NULL
         AND agent.capabilities @> '["canvas","learning"]'::jsonb AND conversation.members ? agent.id
-        AND EXISTS(SELECT 1 FROM course_members teacher
-          WHERE teacher.company_id=mission.company_id AND teacher.course_id=mission.course_id
-            AND teacher.user_id=$4 AND teacher.role='teacher')`,
+        AND EXISTS(SELECT 1 FROM courses course
+          JOIN project_memberships teacher
+            ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
+           AND teacher.status='ACTIVE'
+          WHERE course.company_id=mission.company_id AND course.id=mission.course_id
+            AND teacher.user_id=$4 AND teacher.role IN ('OWNER','TEACHER'))`,
     [args.companyId,args.courseId,args.missionId,args.teacherId,args.agentId],
   )
   return Boolean(result.rowCount)

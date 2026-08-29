@@ -17,7 +17,7 @@ import {
   STARTER_ROOMS as CANONICAL_STARTER_ROOMS,
   STARTER_TEAM as CANONICAL_STARTER_TEAM,
   type LearningPersonaKey,
-} from '../learning/public.js'
+} from '../learning/contracts.js'
 
 
 export const STARTER_TEAM = CANONICAL_STARTER_TEAM
@@ -117,23 +117,20 @@ async function seedLearningPreset(
  * preset state is rejected because silently repairing it would create a second
  * lifecycle. Returns whether a new preset was written. */
 export async function installStarterAgents(db: Queryable, companyId: string): Promise<boolean> {
-  const { rows } = await db.query<{ owner_user_id: string | null }>(
-      `SELECT owner_user_id FROM companies WHERE id = $1 FOR UPDATE`,
+  const { rows } = await db.query<{ id: string }>(
+      `SELECT id FROM companies WHERE id = $1 FOR UPDATE`,
       [companyId],
   )
   const company = rows[0]
   if (!company) throw new Error(`company not found: ${companyId}`)
 
-  let ownerId = company.owner_user_id
-  if (!ownerId) {
-    const owner = await db.query<{ user_id: string }>(
-      `SELECT user_id FROM company_members
-        WHERE company_id = $1 AND role = 'owner'
-        ORDER BY joined_at ASC LIMIT 1`,
-      [companyId],
-    )
-    ownerId = owner.rows[0]?.user_id ?? null
-  }
+  const owner = await db.query<{ user_id: string }>(
+    `SELECT user_id FROM company_memberships
+      WHERE company_id = $1 AND role = 'OWNER' AND status='ACTIVE'
+      ORDER BY created_at ASC LIMIT 1`,
+    [companyId],
+  )
+  const ownerId = owner.rows[0]?.user_id ?? null
   if (!ownerId) throw new Error(`company ${companyId} has no owner`)
 
   await db.query(
@@ -141,6 +138,13 @@ export async function installStarterAgents(db: Queryable, companyId: string): Pr
      SELECT $2, $1, '通用工作区', '未指定工作区的会话与资料', '#667085', $3, TRUE
       WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
     [companyId, `general-${randomUUID().slice(0, 18)}`, ownerId],
+  )
+  await db.query(
+    `INSERT INTO project_memberships (project_id,company_id,user_id,role)
+     SELECT project.id,project.company_id,$2,'OWNER' FROM projects project
+      WHERE project.company_id=$1 AND project.is_general=TRUE
+     ON CONFLICT (user_id,project_id) DO NOTHING`,
+    [companyId, ownerId],
   )
 
   const expectedKeys = STARTER_TEAM.map((agent) => agent.presetKey)

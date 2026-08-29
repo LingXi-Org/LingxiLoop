@@ -32,7 +32,6 @@ export interface IdentityUserPayload {
   email: string
   name: string
   emailVerified: boolean
-  isAdmin: boolean
   providers: string[]
 }
 

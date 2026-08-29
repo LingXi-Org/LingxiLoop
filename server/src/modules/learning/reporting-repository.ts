@@ -4,23 +4,24 @@ import type { LearningNotificationPreferences, NotificationPreferencesInput } fr
 export async function listLearningCourseSummaries(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query(
     `SELECT course.id,course.company_id,course.project_id,project.name AS title,project.description,
-            project.status,member.role AS course_role,
+            project.status,
+            CASE WHEN member.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS course_role,
             ((course.study_room_conversation_id IS NOT NULL)::int
               + (SELECT COUNT(*)::int FROM learning_course_rooms room
                   WHERE room.course_id=course.id AND room.company_id=course.company_id)) AS room_count,
             (SELECT COUNT(*)::int FROM learning_objectives objective
               WHERE objective.course_id=course.id AND objective.company_id=course.company_id
                 AND objective.status<>'archived') AS objective_count,
-            (SELECT COUNT(*)::int FROM course_members learner
-              WHERE learner.course_id=course.id AND learner.company_id=course.company_id
-                AND learner.role='learner') AS learner_count,
+            (SELECT COUNT(*)::int FROM project_memberships learner
+              WHERE learner.project_id=course.project_id AND learner.company_id=course.company_id
+                AND learner.status='ACTIVE' AND learner.role IN ('STUDENT','OBSERVER')) AS learner_count,
             course.created_at,project.updated_at
        FROM courses course
        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-       JOIN course_members member ON member.course_id=course.id
-         AND member.company_id=course.company_id AND member.user_id=$2
-       JOIN company_members company_member ON company_member.company_id=member.company_id
-         AND company_member.user_id=member.user_id
+       JOIN project_memberships member ON member.project_id=course.project_id
+         AND member.company_id=course.company_id AND member.user_id=$2 AND member.status='ACTIVE'
+       JOIN company_memberships company_member ON company_member.company_id=member.company_id
+         AND company_member.user_id=member.user_id AND company_member.status='ACTIVE'
       WHERE course.company_id=$1 ORDER BY project.status,project.updated_at DESC`,
     [companyId,userId],
   )
@@ -34,9 +35,10 @@ export async function listDueLearningMastery(db: Queryable, companyId: string, u
        FROM learning_mastery mastery
        JOIN learning_objectives objective ON objective.id=mastery.objective_id
          AND objective.company_id=mastery.company_id AND objective.course_id=mastery.course_id
-       JOIN course_members member ON member.course_id=mastery.course_id
+       JOIN courses course ON course.id=mastery.course_id AND course.company_id=mastery.company_id
+       JOIN project_memberships member ON member.project_id=course.project_id
          AND member.company_id=mastery.company_id AND member.user_id=mastery.learner_id
-         AND member.role='learner'
+         AND member.status='ACTIVE' AND member.role IN ('STUDENT','OBSERVER')
       WHERE mastery.company_id=$1 AND mastery.learner_id=$2 AND mastery.next_review_at<=NOW()
       ORDER BY mastery.next_review_at LIMIT 50`,
     [companyId,userId],
@@ -53,8 +55,10 @@ export async function countViewerPendingLearningReviews(
     `SELECT COUNT(*)::int AS count
        FROM learning_evaluations evaluation
        JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
-       JOIN course_members member ON member.course_id=attempt.course_id
-         AND member.company_id=attempt.company_id AND member.user_id=$2 AND member.role='teacher'
+       JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
+       JOIN project_memberships member ON member.project_id=course.project_id
+         AND member.company_id=attempt.company_id AND member.user_id=$2
+        AND member.status='ACTIVE' AND member.role IN ('OWNER','TEACHER')
       WHERE attempt.company_id=$1 AND evaluation.status='pending'`,
     [companyId,userId],
   )
@@ -68,9 +72,10 @@ export async function listViewerLearningMastery(db: Queryable, companyId: string
        FROM learning_mastery mastery
        JOIN learning_objectives objective ON objective.id=mastery.objective_id
          AND objective.company_id=mastery.company_id AND objective.course_id=mastery.course_id
-       JOIN course_members member ON member.course_id=mastery.course_id
+       JOIN courses course ON course.id=mastery.course_id AND course.company_id=mastery.company_id
+       JOIN project_memberships member ON member.project_id=course.project_id
          AND member.company_id=mastery.company_id AND member.user_id=mastery.learner_id
-         AND member.role='learner'
+         AND member.status='ACTIVE' AND member.role IN ('STUDENT','OBSERVER')
       WHERE mastery.company_id=$1 AND mastery.learner_id=$2 ORDER BY objective.position`,
     [companyId,userId],
   )
@@ -129,22 +134,24 @@ export async function listLearningCourseProgress(db: Queryable, companyId: strin
             COALESCE(mastery_summary.verified_objectives,0)::int AS verified_objectives,
             COALESCE(mastery_summary.due_objectives,0)::int AS due_objectives,
             COALESCE(attempt_summary.attempts,0)::int AS attempts
-       FROM course_members member
+       FROM project_memberships member
        JOIN users user_account ON user_account.id=member.user_id
+       JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
        LEFT JOIN LATERAL (
          SELECT AVG(mastery.level) AS average_level,
                 COUNT(*) FILTER(WHERE mastery.level>=3) AS verified_objectives,
                 COUNT(*) FILTER(WHERE mastery.next_review_at<=NOW()) AS due_objectives
            FROM learning_mastery mastery
-          WHERE mastery.company_id=member.company_id AND mastery.course_id=member.course_id
+          WHERE mastery.company_id=member.company_id AND mastery.course_id=course.id
             AND mastery.learner_id=member.user_id
        ) mastery_summary ON TRUE
        LEFT JOIN LATERAL (
          SELECT COUNT(*) AS attempts FROM learning_attempts attempt
-          WHERE attempt.company_id=member.company_id AND attempt.course_id=member.course_id
+          WHERE attempt.company_id=member.company_id AND attempt.course_id=course.id
             AND attempt.learner_id=member.user_id
        ) attempt_summary ON TRUE
-      WHERE member.company_id=$1 AND member.course_id=$2 AND member.role='learner'
+      WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+        AND member.role IN ('STUDENT','OBSERVER')
       ORDER BY user_account.display_name`,
     [companyId,courseId],
   )
@@ -225,8 +232,9 @@ export async function syncStudyRoomMembers(db: Queryable, args: {
   courseId: string; companyId: string; roomId: string; title: string; topic: string | null; leaderId: string | null
 }) {
   const { rows } = await db.query<{ id: string }>(
-    `SELECT course_member.user_id AS id FROM course_members course_member
-      WHERE course_member.course_id=$1 AND course_member.company_id=$2
+    `SELECT course_member.user_id AS id FROM project_memberships course_member
+       JOIN courses course ON course.project_id=course_member.project_id AND course.company_id=course_member.company_id
+      WHERE course.id=$1 AND course_member.company_id=$2 AND course_member.status='ACTIVE'
      UNION
      SELECT participant.id FROM participants participant
       WHERE participant.company_id=$2 AND participant.kind='agent'

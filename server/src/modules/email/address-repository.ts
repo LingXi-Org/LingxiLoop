@@ -98,8 +98,8 @@ export async function findCompanyUserByAuthEmail(
   const { rows } = await db.query<{ id: string; display_name: string }>(
     `SELECT app_user.id, app_user.display_name
        FROM users app_user
-       JOIN company_members member ON member.user_id = app_user.id
-      WHERE LOWER(app_user.email) = $1 AND member.company_id = $2
+       JOIN company_memberships member ON member.user_id = app_user.id
+      WHERE LOWER(app_user.email) = $1 AND member.company_id = $2 AND member.status='ACTIVE'
       LIMIT 1`,
     [email, companyId],
   )
@@ -114,8 +114,9 @@ export async function findCompanyUserEmail(
   const { rows } = await db.query<{ email: string | null }>(
     `SELECT app_user.email
        FROM users app_user
-       JOIN company_members member
+       JOIN company_memberships member
          ON member.user_id = app_user.id AND member.company_id = $1
+        AND member.status='ACTIVE'
       WHERE app_user.id = $2
       LIMIT 1`,
     [companyId, userId],

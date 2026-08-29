@@ -69,8 +69,10 @@ export async function listCourseHumanIds(
   ids: string[],
 ): Promise<string[]> {
   const { rows } = await db.query<{ user_id: string }>(
-    `SELECT user_id FROM course_members
-      WHERE company_id=$1 AND course_id=$2 AND user_id=ANY($3::text[])`,
+    `SELECT member.user_id FROM project_memberships member
+       JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
+      WHERE member.company_id=$1 AND course.id=$2 AND member.user_id=ANY($3::text[])
+        AND member.status='ACTIVE'`,
     [companyId, courseId, ids],
   )
   return rows.map((row) => row.user_id)
@@ -386,8 +388,9 @@ export async function participantAllowedInProject(
           OR NOT EXISTS (SELECT 1 FROM courses WHERE company_id=$2 AND project_id=$3)
           OR EXISTS (
             SELECT 1 FROM courses course
-            JOIN course_members member
-              ON member.course_id=course.id AND member.company_id=course.company_id
+            JOIN project_memberships member
+              ON member.project_id=course.project_id AND member.company_id=course.company_id
+             AND member.status='ACTIVE'
             WHERE course.company_id=$2 AND course.project_id=$3 AND member.user_id=participant.id
           )
         )`,
@@ -420,14 +423,14 @@ export async function searchWorkspaceDirectory(
       WHERE participant.company_id=$1 AND participant.departed_at IS NULL
         AND (pulse.agent_id IS NULL OR EXISTS (
           SELECT 1 FROM courses course
-          JOIN course_members teacher ON teacher.course_id=course.id AND teacher.company_id=course.company_id
-            AND teacher.user_id=$2 AND teacher.role='teacher'
+          JOIN project_memberships teacher ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
+            AND teacher.user_id=$2 AND teacher.status='ACTIVE'
+            AND teacher.role IN ('OWNER','TEACHER')
           WHERE course.company_id=pulse.company_id AND course.project_id=pulse.project_id AND pulse.project_id=$6))
         AND (participant.kind='agent' OR EXISTS (
           SELECT 1 FROM projects project
-          LEFT JOIN courses course ON course.project_id=project.id AND course.company_id=project.company_id
-          LEFT JOIN course_members member ON member.course_id=course.id AND member.company_id=course.company_id
-            AND member.user_id=participant.id
+          LEFT JOIN project_memberships member ON member.project_id=project.id AND member.company_id=project.company_id
+            AND member.user_id=participant.id AND member.status='ACTIVE'
           WHERE project.id=$6 AND project.company_id=$1
             AND (project.is_general=TRUE OR member.user_id IS NOT NULL)))
         AND (participant.name ILIKE $3 ESCAPE '\\' OR participant.role ILIKE $3 ESCAPE '\\' OR participant.id ILIKE $3 ESCAPE '\\')
@@ -474,8 +477,9 @@ export async function searchWorkspaceDirectory(
             SELECT 1 FROM learning_course_teacher_rooms room
             JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
             JOIN projects course_project ON course_project.id=course.project_id AND course_project.company_id=course.company_id
-            JOIN course_members teacher ON teacher.course_id=course.id AND teacher.company_id=course.company_id
-              AND teacher.user_id=$2 AND teacher.role='teacher'
+            JOIN project_memberships teacher ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
+              AND teacher.user_id=$2 AND teacher.status='ACTIVE'
+              AND teacher.role IN ('OWNER','TEACHER')
             WHERE room.conversation_id=conversation.id AND room.company_id=conversation.company_id
               AND room.status='active' AND course_project.status='active'))
         AND (conversation.title ILIKE $3 ESCAPE '\\' OR conversation.topic ILIKE $3 ESCAPE '\\')

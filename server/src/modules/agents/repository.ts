@@ -66,20 +66,23 @@ export async function listParticipants(db: Queryable, scope: ParticipantScope) {
             (SELECT pulse.project_id FROM learning_project_teacher_agents pulse
               WHERE pulse.agent_id=participant.id AND pulse.company_id=participant.company_id LIMIT 1) AS "projectId"
        FROM participants participant JOIN companies company ON company.id=participant.company_id
-       LEFT JOIN company_members company_member
+       LEFT JOIN company_memberships company_member
          ON company_member.user_id=participant.id AND company_member.company_id=participant.company_id
+        AND company_member.status='ACTIVE'
        LEFT JOIN users user_account ON user_account.id=company_member.user_id
       WHERE participant.company_id=$1
         AND (NOT EXISTS(SELECT 1 FROM learning_project_teacher_agents pulse
               WHERE pulse.agent_id=participant.id AND pulse.company_id=participant.company_id)
           OR EXISTS(SELECT 1 FROM learning_project_teacher_agents pulse
               JOIN courses course ON course.project_id=pulse.project_id AND course.company_id=pulse.company_id
-              JOIN course_members teacher ON teacher.course_id=course.id AND teacher.company_id=course.company_id
-                AND teacher.user_id=$3 AND teacher.role='teacher'
+              JOIN project_memberships teacher ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
+                AND teacher.user_id=$3 AND teacher.status='ACTIVE'
+                AND teacher.role IN ('OWNER','TEACHER')
              WHERE pulse.agent_id=participant.id AND pulse.company_id=participant.company_id AND pulse.project_id=$2))
         AND (participant.kind='agent' OR EXISTS(SELECT 1 FROM projects project
-              LEFT JOIN courses course ON course.project_id=project.id AND course.company_id=project.company_id
-              LEFT JOIN course_members member ON member.course_id=course.id AND member.user_id=participant.id
+              LEFT JOIN project_memberships member
+                ON member.project_id=project.id AND member.company_id=project.company_id
+               AND member.user_id=participant.id AND member.status='ACTIVE'
              WHERE project.id=$2 AND project.company_id=participant.company_id
                AND (project.is_general=TRUE OR member.user_id IS NOT NULL)))
       ORDER BY participant.kind DESC,participant.name`,
@@ -196,8 +199,9 @@ export async function allAutonomy(db: Queryable, userId: string, companyId: stri
               WHERE pulse.agent_id=participant.id AND pulse.company_id=participant.company_id)
           OR EXISTS(SELECT 1 FROM learning_project_teacher_agents pulse
               JOIN courses course ON course.project_id=pulse.project_id AND course.company_id=pulse.company_id
-              JOIN course_members teacher ON teacher.course_id=course.id AND teacher.company_id=course.company_id
-                AND teacher.user_id=$1 AND teacher.role='teacher'
+              JOIN project_memberships teacher ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
+                AND teacher.user_id=$1 AND teacher.status='ACTIVE'
+                AND teacher.role IN ('OWNER','TEACHER')
              WHERE pulse.agent_id=participant.id AND pulse.company_id=participant.company_id))`,
     [userId, companyId],
   )

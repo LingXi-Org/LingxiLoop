@@ -15,11 +15,9 @@ async function getAppVersion(): Promise<string> {
   return 'web'
 }
 
-export function getAnalyticsSurface(): 'electron' | 'web' | 'admin' | 'notification' | 'browser' {
+export function getAnalyticsSurface(): 'electron' | 'web' | 'notification' | 'browser' {
   if (isNotificationWindow) return 'notification'
   if (isElectron) return 'electron'
-  if (typeof location !== 'undefined' && location.hostname.startsWith('admin.')) return 'admin'
-  if (typeof location !== 'undefined' && location.pathname.startsWith('/admin')) return 'admin'
   if (isWebAppHost) return 'web'
   return 'browser'
 }

@@ -36,12 +36,12 @@ beforeEach(async () => {
     [USER],
   )
   await pool.query(
-    `INSERT INTO companies (id,name,slug,owner_user_id) VALUES
-       ($1,'Board Slice','board-slice',$3),($2,'Board Other','board-other',$3)`,
-    [COMPANY, OTHER_COMPANY, USER],
+    `INSERT INTO companies (id,name,slug) VALUES
+       ($1,'Board Slice','board-slice'),($2,'Board Other','board-other')`,
+    [COMPANY, OTHER_COMPANY],
   )
   await pool.query(
-    `INSERT INTO company_members (company_id,user_id,role) VALUES ($1,$3,'owner'),($2,$3,'owner')`,
+    `INSERT INTO company_memberships (company_id,user_id,role) VALUES ($1,$3,'OWNER'),($2,$3,'OWNER')`,
     [COMPANY, OTHER_COMPANY, USER],
   )
   await pool.query(

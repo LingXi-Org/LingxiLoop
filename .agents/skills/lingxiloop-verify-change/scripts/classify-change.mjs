@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
+import { normalizeTaskPaths } from '../../../../scripts/changed-paths.mjs'
 
 const TIER_ORDER = new Map([
   ['required', 0],
@@ -32,10 +34,100 @@ function isExecutableEvalPath(path) {
 function isCiSelectorPath(path) {
   return path.startsWith('.github/workflows/')
     || path.startsWith('.agents/skills/lingxiloop-verify-change/')
+    || [
+      'scripts/changed-paths.mjs',
+      'scripts/local-test-selection.mjs',
+      'scripts/local-test-selection.test.mjs',
+      'scripts/run-local-lint.mjs',
+      'scripts/run-tests.mjs',
+    ].includes(path)
 }
 
 function isFullMatrixPath(path) {
   return isCiSelectorPath(path) || ['package.json', 'package-lock.json'].includes(path)
+}
+
+const biomePath = /\.(?:cjs|css|js|json|jsonc|jsx|mjs|ts|tsx)$/
+
+function isFrontendTypeContract(path) {
+  return ['package.json', 'package-lock.json', 'tsconfig.json', 'tsconfig.node.json', 'vite.config.ts'].includes(path)
+    || (path.startsWith('src/') && path.endsWith('.d.ts'))
+    || ['src/App.tsx', 'src/main.tsx', 'src/types.ts', 'src/api/contracts.ts', 'src/api/index.ts'].includes(path)
+    || /^src\/.+\/(?:contracts|public|index)\.tsx?$/.test(path)
+}
+
+function isServerTypeContract(path) {
+  return ['package.json', 'package-lock.json', 'server/tsconfig.json'].includes(path)
+    || /^server\/src\/.+\.d\.ts$/.test(path)
+    || ['server/src/web.ts', 'server/src/worker.ts', 'server/src/api/router.ts', 'server/src/domain/public.ts'].includes(path)
+    || /^server\/src\/bin\/.+\.ts$/.test(path)
+    || /^server\/src\/(?:domain|modules)\/.+\/(?:contracts|public|index)\.ts$/.test(path)
+}
+
+function isArchitectureContract(path) {
+  return path === 'scripts/guard-architecture.mjs'
+    || [
+      'components.json',
+      'server/src/api/router.ts',
+      'server/src/db/schema.sql',
+      'server/src/domain/access/permission.ts',
+      'server/src/domain/identity/user.ts',
+      'src/styles/globals.css',
+    ].includes(path)
+    || /^server\/src\/(?:domain|modules)\/.+\/(?:contracts|public|index)\.ts$/.test(path)
+}
+
+function isAgentOsContract(path) {
+  return path === 'scripts/guard-agent-os.mjs'
+    || [
+      'server/agent-os/kernel_runner.py',
+      'server/src/agent-os/control-plane.ts',
+      'server/src/agent-os/learning-actions.ts',
+      'server/src/agent-os/prompt-assembly.ts',
+      'server/src/agent-os/runtime.ts',
+      'server/src/agent-os/tool.ts',
+      'server/src/db/schema.sql',
+      'server/src/modules/learning/teacher-agent-application.ts',
+      'server/src/modules/learning/teacher-provisioning-repository.ts',
+    ].includes(path)
+}
+
+function isLlmContract(path) {
+  return path === 'scripts/guard-llm-tracked.mjs'
+    || [
+      'server/src/agent-os/control-plane.ts',
+      'server/src/agent-os/model-driver.ts',
+      'server/src/db/schema.sql',
+      'server/src/llm-client.ts',
+      'server/src/llm.ts',
+    ].includes(path)
+}
+
+function isBrandContract(path) {
+  return path === 'scripts/guard-brand.mjs'
+    || /^(?:README|CONTRIBUTING|SECURITY|THIRD_PARTY_NOTICES)\.md$/.test(path)
+    || path.startsWith('docs/')
+    || path.startsWith('website/')
+    || path.startsWith('electron/')
+    || ['package.json', 'VERSION'].includes(path)
+}
+
+function hasDirectUnitCandidate(path) {
+  return path === 'server/src/db/schema.sql'
+    || path === 'server/src/db/bootstrap.ts'
+    || /^src\/.+\.[cm]?[jt]sx?$/.test(path)
+    || /^server\/src\/(?!__integration__\/).+\.[cm]?[jt]sx?$/.test(path)
+    || /^workers\/.+\.[cm]?[jt]sx?$/.test(path)
+}
+
+function inspectContentSignals(paths) {
+  const providerCall = /\bnew\s+OpenAI\s*\(|\.(?:chat\.completions|embeddings|images)\.(?:create|generate)\s*\(/
+  return {
+    llmProviderCall: paths.some((path) => {
+      if (!/\.[cm]?[jt]sx?$/.test(path) || !existsSync(path)) return false
+      return providerCall.test(readFileSync(path, 'utf8'))
+    }),
+  }
 }
 
 const CATEGORY_DEFINITIONS = [
@@ -196,80 +288,82 @@ export function buildCiPlan(inputPaths) {
   }
 }
 
-function selectChecks(paths, categoryIds, escalations, ci) {
+function selectChecks(paths, categoryIds, escalations, ci, signals = {}) {
   const checks = new Map()
   const has = (id) => categoryIds.has(id)
 
-  if (paths.length > 0) {
-    addCheck(checks, 'npm run guard:brand', 'required', 'The brand guard scans every tracked and untracked text path.')
+  if (paths.some(isBrandContract)) {
+    addCheck(checks, 'npm run guard:brand', 'required', 'Brand copy, product metadata, or the brand guard changed.')
   }
 
-  if (has('frontend') || has('server') || has('workers')) {
-    addCheck(checks, 'npm run guard:architecture', 'required', 'Production code must preserve vertical boundaries and single-authority paths.')
+  if (paths.some(isArchitectureContract)) {
+    addCheck(checks, 'npm run guard:architecture', 'required', 'A canonical architecture contract or its guard changed.')
+  }
+
+  if (paths.some((path) => biomePath.test(path))) {
+    addCheck(checks, 'npm run lint:local', 'required', 'Lint only the explicit task paths owned by Biome.')
+  }
+
+  if (paths.some(isFrontendTypeContract)) {
+    addCheck(checks, 'npm run typecheck', 'required', 'A frontend public type or composition contract changed.')
+  }
+
+  if (paths.some(isServerTypeContract)) {
+    addCheck(checks, 'npm run server:typecheck', 'required', 'A server public type or composition contract changed.')
+  }
+
+  if (paths.some(hasDirectUnitCandidate)) {
+    addCheck(checks, 'npm run test:local', 'required', 'Run only changed tests, direct sibling tests, explicit owning tests, and the schema mapping.')
+  }
+
+  if (paths.some(isAgentOsContract)) {
+    addCheck(checks, 'npm run guard:agent-os', 'required', 'An authoritative Agent OS composition contract changed.')
+  }
+
+  if (paths.some(isLlmContract) || signals.llmProviderCall) {
+    addCheck(checks, 'npm run guard:llm-tracked', 'required', 'An LLM boundary changed or a task path contains a provider call.')
   }
 
   if (paths.some(isCiSelectorPath)) {
     addCheck(
       checks,
-      'node --test .agents/skills/lingxiloop-verify-change/scripts/classify-change.test.mjs',
+      'node --test .agents/skills/lingxiloop-verify-change/scripts/classify-change.test.mjs scripts/local-test-selection.test.mjs',
       'required',
       'The verification selector changed; run its small deterministic contract suite locally.',
     )
   }
 
   if (has('eval') && ci.evalRuntime) {
-    addCheck(checks, 'npm run lint:local', 'required', 'Changed Eval files must satisfy Biome without scanning the repository.')
-    addCheck(checks, 'npm run server:typecheck', 'required', 'Eval contracts, runtime observation, and persistence are server typed.')
     addCheck(checks, 'npm run test:eval', 'required', 'Run focused evaluator, trace, harness, and deterministic Agent runtime tests.')
     addCheck(checks, 'npm run eval:check', 'ci-only', 'CI owns the full frozen-harness and Agent OS deterministic regression gate.')
-    addCheck(checks, 'npm run guard:agent-os', 'required', 'The runtime Eval must continue through the strict Agent OS and IPython boundary.')
     if (ci.evalPersistence) {
       addCheck(checks, 'npm run test:integration:eval', 'ci-only', 'CI owns the PostgreSQL/Redis Eval persistence contract.')
     }
     if (ci.dashboard) {
-      addCheck(checks, 'npm run typecheck', 'required', 'The Eval Dashboard is part of the frontend TypeScript graph.')
       addCheck(checks, 'npm run build', 'ci-only', 'CI bundles the changed Eval Dashboard surface.')
     }
   }
 
   if (has('frontend')) {
-    addCheck(checks, 'npm run lint:local', 'required', 'Changed frontend files must satisfy Biome without scanning the repository.')
-    addCheck(checks, 'npm run typecheck', 'required', 'Frontend types or bundler inputs changed.')
-    if (!ci.evalFocused) addCheck(checks, 'npm run test:local', 'required', 'Run changed, sibling, feature-owned, and frontend architecture unit tests only.')
     if (!ci.evalFocused) addCheck(checks, 'npm run build', 'ci-only', 'CI confirms the complete Vite production bundle.')
   }
 
-  if (has('server')) {
-    addCheck(checks, 'npm run lint:local', 'required', 'Changed server files must satisfy Biome without scanning the repository.')
-    addCheck(checks, 'npm run server:typecheck', 'required', 'Server runtime types changed.')
-    if (!ci.evalFocused) addCheck(checks, 'npm run test:local', 'required', 'Run changed, sibling, domain-owned, and server architecture unit tests only.')
-    addCheck(checks, 'npm run guard:llm-tracked', 'required', 'Server cloud LLM calls must remain behind the universal ledger boundary.')
-  }
-
   if (has('agent-os-im-canvas')) {
-    addCheck(checks, 'npm run guard:agent-os', 'required', 'The Agent OS composition and strict IPython tool boundary changed or is adjacent.')
-    addCheck(checks, 'npm run guard:llm-tracked', 'required', 'Agent runtime LLM usage must remain in the universal ledger.')
-    addCheck(checks, 'npm run server:typecheck', 'required', 'Agent OS, IM, Canvas, or Host Bridge types changed.')
     if (!ci.evalFocused) {
-      addCheck(checks, 'npm run test:local', 'required', 'Run only the owning Agent OS, IM, Canvas, and architecture unit regressions.')
       addCheck(checks, 'npm run test:integration', 'ci-only', 'CI owns durable work, IM, Canvas, and recovery integration coverage.')
       addCheck(checks, 'npm run mvp:ci:smoke', 'ci-only', 'The isolated Compose smoke proves WuKong, durable work, IPython, and final reply together.')
     }
   }
 
   if (has('database-tenant')) {
-    addCheck(checks, 'npm run server:typecheck', 'required', 'Persistence and tenant contracts are server typed.')
     if (!ci.evalFocused) {
-      addCheck(checks, 'npm run test:local', 'required', 'Run only owning schema, tenant, and architecture unit regressions.')
       addCheck(checks, 'npm run test:integration', 'ci-only', 'CI owns schema, transaction, authorization, and tenant-isolation integration evidence.')
     }
   }
 
   if (has('workers')) {
-    addCheck(checks, 'npm run lint:local', 'required', 'Changed Worker files must satisfy Biome without scanning the repository.')
-    addCheck(checks, 'npm run test:local', 'required', 'Run changed and worker-owned unit tests only.')
     const workerNames = new Set(paths
-      .filter((path) => path.startsWith('workers/'))
+      .filter((path) => /^workers\/[^/]+\/(?:tsconfig\.json|src\/(?:contracts|public|index)\.ts)$/.test(path))
       .map((path) => path.split('/')[1])
       .filter(Boolean))
     for (const name of [...workerNames].sort()) {
@@ -290,7 +384,6 @@ function selectChecks(paths, categoryIds, escalations, ci) {
   }
 
   if (has('build-release')) {
-    addCheck(checks, 'npm run lint:local', 'required', 'Changed build and release files must satisfy Biome without scanning the repository.')
     if (!ci.evalFocused) {
       addCheck(checks, 'npm run build', 'ci-only', 'CI owns full build, dependency, and packaging verification.')
     }
@@ -321,7 +414,7 @@ function selectChecks(paths, categoryIds, escalations, ci) {
       || a.command.localeCompare(b.command, 'en'))
 }
 
-export function classifyPaths(inputPaths) {
+export function classifyPaths(inputPaths, signals = {}) {
   const paths = uniqueSorted(inputPaths)
   const ci = buildCiPlan(paths)
   const categories = CATEGORY_DEFINITIONS.map((definition) => {
@@ -401,20 +494,32 @@ export function classifyPaths(inputPaths) {
   return {
     paths,
     categories,
-    checks: selectChecks(paths, categoryIds, sortedEscalations, ci),
+    checks: selectChecks(paths, categoryIds, sortedEscalations, ci, signals),
     escalations: sortedEscalations,
     ci,
   }
 }
 
-export function buildReport(paths, scope) {
-  const classified = classifyPaths(paths)
+function localScopeArgs(scope, paths) {
+  if (scope.mode === 'paths') return ['--', ...paths.flatMap((path) => ['--path', path])]
+  if (scope.mode === 'range' && scope.base) return ['--', '--base', scope.base.ref]
+  if (scope.mode === 'range+worktree') return ['--', ...paths.flatMap((path) => ['--path', path])]
+  return []
+}
+
+export function buildReport(paths, scope, signals = {}) {
+  const classified = classifyPaths(paths, signals)
+  const args = localScopeArgs(scope, classified.paths)
   return {
-    version: 4,
+    version: 5,
     scope,
     paths: classified.paths,
     categories: classified.categories,
-    checks: classified.checks,
+    checks: classified.checks.map((check) => (
+      ['npm run lint:local', 'npm run test:local'].includes(check.command) && args.length > 0
+        ? { ...check, args }
+        : check
+    )),
     escalations: classified.escalations,
     ci: classified.ci,
   }
@@ -428,6 +533,7 @@ export function renderText(report) {
   if (report.scope.base) lines.push(`Base: ${report.scope.base.ref} (${report.scope.base.oid})`)
   if (report.scope.head) lines.push(`Head: ${report.scope.head.ref} (${report.scope.head.oid})`)
   if (report.scope.mergeBase) lines.push(`Merge base: ${report.scope.mergeBase}`)
+  if (report.scope.mode === 'none') lines.push('No task paths supplied; no local verification selected.')
   lines.push(`Changed paths: ${report.paths.length}`)
   for (const path of report.paths) lines.push(`  - ${path}`)
 
@@ -439,7 +545,8 @@ export function renderText(report) {
   if (report.checks.length === 0) lines.push('  - none')
   for (const check of report.checks) {
     const cwd = check.cwd ? ` [cwd: ${check.cwd}]` : ''
-    lines.push(`  - ${check.tier}: ${check.command}${cwd}`)
+    const args = check.args?.map((argument) => JSON.stringify(argument)).join(' ') ?? ''
+    lines.push(`  - ${check.tier}: ${check.command}${args ? ` ${args}` : ''}${cwd}`)
     for (const reason of check.reasons) lines.push(`      ${reason}`)
   }
 
@@ -480,11 +587,11 @@ function worktreePaths() {
 }
 
 function usage() {
-  return `Usage: node classify-change.mjs [--base <ref>] [--head <ref>] [--include-worktree] [--format text|json]\n`
+  return `Usage: node classify-change.mjs [--path <file> ... | --base <ref> [--head <ref>] [--include-worktree]] [--format text|json]\n`
 }
 
 export function parseArgs(argv) {
-  const options = { format: 'text', includeWorktree: false }
+  const options = { format: 'text', includeWorktree: false, paths: [] }
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index]
     if (argument === '--help' || argument === '-h') return { ...options, help: true }
@@ -492,23 +599,32 @@ export function parseArgs(argv) {
       options.includeWorktree = true
       continue
     }
-    if (argument === '--base' || argument === '--head' || argument === '--format') {
+    if (argument === '--base' || argument === '--head' || argument === '--format' || argument === '--path') {
       const value = argv[index + 1]
       if (!value || value.startsWith('--')) throw new Error(`${argument} requires a value`)
-      options[argument.slice(2)] = value
+      if (argument === '--path') options.paths.push(value)
+      else options[argument.slice(2)] = value
       index += 1
       continue
     }
     throw new Error(`unknown argument: ${argument}`)
   }
+  options.paths = normalizeTaskPaths(options.paths)
+  if (options.paths.length > 0 && (options.base || options.head || options.includeWorktree)) {
+    throw new Error('--path cannot be combined with --base, --head, or --include-worktree')
+  }
   if (options.head && !options.base) throw new Error('--head requires --base')
+  if (options.includeWorktree && !options.base) throw new Error('--include-worktree requires --base')
   if (!['text', 'json'].includes(options.format)) throw new Error('--format must be text or json')
   return options
 }
 
 function reportFromGit(options) {
+  if (options.paths.length > 0) {
+    return buildReport(options.paths, { mode: 'paths' }, inspectContentSignals(options.paths))
+  }
   if (!options.base) {
-    return buildReport(worktreePaths(), { mode: 'worktree' })
+    return buildReport([], { mode: 'none' })
   }
 
   const headRef = options.head ?? 'HEAD'
@@ -517,12 +633,13 @@ function reportFromGit(options) {
   const mergeBase = runGit(['merge-base', baseOid, headOid]).trim()
   const committedPaths = zeroSeparatedPaths(runGit(['diff', '--name-only', '-z', mergeBase, headOid, '--']))
   const localPaths = options.includeWorktree ? worktreePaths() : []
-  return buildReport([...committedPaths, ...localPaths], {
+  const paths = [...committedPaths, ...localPaths]
+  return buildReport(paths, {
     mode: options.includeWorktree ? 'range+worktree' : 'range',
     base: { ref: options.base, oid: baseOid },
     head: { ref: headRef, oid: headOid },
     mergeBase,
-  })
+  }, inspectContentSignals(paths))
 }
 
 function main() {

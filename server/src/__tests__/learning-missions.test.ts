@@ -93,7 +93,8 @@ test('coordinator update atomically authorizes teacher and eligible room agent',
   assert.equal(updated, true)
   assert.deepEqual(values, ['company-1','course-1','mission-1','teacher-1','nova'])
   assert.match(statement, /conversation\.members \? agent\.id/)
-  assert.match(statement, /teacher\.user_id=\$4 AND teacher\.role='teacher'/)
+  assert.match(statement, /teacher\.user_id=\$4 AND teacher\.role IN \('OWNER','TEACHER'\)/)
+  assert.match(statement, /teacher\.status='ACTIVE'/)
 })
 
 test('runtime room resolution and mission lock retain tenant, course and conversation predicates', async () => {
@@ -160,7 +161,7 @@ test('mission start validates human learner evidence and publishes the committed
       status: 'active', purpose: 'study',
     }] }
     if (text.includes('FROM im_channel_bindings')) return { rows: [{ channel_type: 2 }] }
-    if (text.includes('FROM course_members')) return { rows: [{ role: 'learner' }] }
+    if (text.includes('FROM project_memberships')) return { rows: [{ role: 'learner' }] }
     if (text.includes('FROM participants participant')) return { rows: [{ id: 'nova' }] }
     if (text.includes('INSERT INTO learning_missions')) return { rows: [{ id: 'mission-1', inserted: true }] }
     if (text.includes('INSERT INTO agent_work_items')) return { rowCount: 1 }
@@ -197,7 +198,7 @@ test('Agent OS attempt recording binds message evidence to one course learner', 
       status: 'active', purpose: 'study',
     }] }
     if (text.includes('FROM im_channel_bindings')) return { rows: [{ channel_type: 2 }] }
-    if (text.includes('FROM course_members')) return { rows: [{ role: 'learner' }] }
+    if (text.includes('FROM project_memberships')) return { rows: [{ role: 'learner' }] }
     if (text.includes('INSERT INTO learning_attempts')) {
       insertedValues = params
       return { rowCount: 1 }
@@ -229,7 +230,7 @@ test('learning turn context binds mastery and active mission reads to the room t
       company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
       status: 'active', purpose: 'study',
     }] }
-    if (text.includes('FROM course_members')) return { rows: [{ role: 'learner' }] }
+    if (text.includes('FROM project_memberships')) return { rows: [{ role: 'learner' }] }
     if (text.includes('FROM learning_objectives objective')) return { rows: [{
       id: 'objective-1', course_id: 'course-1', title: 'Leases', success_criteria: 'Explain fencing',
       target_level: 3, position: 0, status: 'published', prerequisite_ids: [],
@@ -302,7 +303,7 @@ test('teacher override reviews and projects mastery in one tenant-scoped transac
   const statements: string[] = []
   const db = queryable((text) => {
     statements.push(text)
-    if (text.includes('FROM course_members')) return { rows: [{ role: 'teacher' }] }
+    if (text.includes('FROM project_memberships')) return { rows: [{ role: 'teacher' }] }
     if (text.includes('FROM learning_evaluations evaluation') && text.includes('FOR UPDATE')) return { rows: [{
       attempt_id: 'attempt-1', demonstrated_level: 3, confidence: 0.8, learner_id: 'learner-1',
       assistance: 'none', activity_type: 'project', target_level: 3, objective_ids: ['objective-1'],
@@ -352,10 +353,10 @@ test('membership management refuses to remove the final tenant-scoped teacher', 
       company_id: 'company-1', company_role: 'member', course_role: 'teacher',
       project_id: 'project-1', status: 'active',
     }] }
-    if (text.includes('SELECT 1 FROM courses')) return { rows: [{ exists: 1 }] }
-    if (text.includes('SELECT 1 FROM company_members')) return { rows: [{ exists: 1 }] }
-    if (text.includes('SELECT role FROM course_members')) return { rows: [{ role: 'teacher' }] }
-    if (text.includes('SELECT COUNT(*)::int AS count FROM course_members')) return { rows: [{ count: 1 }] }
+    if (text.includes('SELECT project_id FROM courses')) return { rows: [{ project_id: 'project-1' }] }
+    if (text.includes('SELECT 1 FROM company_memberships')) return { rows: [{ exists: 1 }] }
+    if (text.includes('SELECT role FROM project_memberships')) return { rows: [{ role: 'TEACHER' }] }
+    if (text.includes('SELECT COUNT(*)::int AS count FROM project_memberships')) return { rows: [{ count: 1 }] }
     throw new Error(`unexpected query: ${text}`)
   })
 

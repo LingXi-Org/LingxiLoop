@@ -95,8 +95,8 @@ export async function findEmailParticipant(
     `SELECT app_user.id, app_user.display_name AS name, 'human'::text AS kind,
             NULL::text AS participant_email, app_user.email AS user_email
        FROM users app_user
-       JOIN company_members member ON member.user_id = app_user.id
-      WHERE app_user.id = $1 AND member.company_id = $2
+       JOIN company_memberships member ON member.user_id = app_user.id
+      WHERE app_user.id = $1 AND member.company_id = $2 AND member.status='ACTIVE'
       LIMIT 1`,
     [participantId, companyId],
   )
@@ -118,8 +118,9 @@ export async function findTenantMemberIdsByAddresses(
      UNION
      SELECT app_user.id
        FROM users app_user
-       JOIN company_members member
+       JOIN company_memberships member
          ON member.user_id = app_user.id AND member.company_id = $1
+        AND member.status='ACTIVE'
       WHERE LOWER(app_user.email) = ANY($2::text[])`,
     [companyId, addresses],
   )

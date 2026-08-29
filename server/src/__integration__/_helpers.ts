@@ -18,6 +18,7 @@ import { Webhook } from 'svix'
 import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import { ensureFoundationPlan } from '../modules/entitlements/public.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 import type { InboundEmailPayload } from '../modules/email/contracts.js'
 import { installStorageProvider, type Storage, type StorageObject } from '../storage.js'
@@ -91,7 +92,7 @@ const TABLES_TO_WIPE: readonly string[] = [
   'learning_course_rooms',
   'learning_course_teacher_rooms',
   'learning_project_teacher_agents',
-  'course_members',
+  'project_memberships',
   'courses',
   'agent_host_actions',
   'agent_os_approvals',
@@ -143,10 +144,13 @@ const TABLES_TO_WIPE: readonly string[] = [
   'agent_tasks',
   'agent_log',
   'company_invitations',
-  'company_members',
+  'company_memberships',
   'participants',
   'users',
   'companies',
+  'plan_entitlements',
+  'entitlements',
+  'plans',
 ]
 
 /** Wipe every test table. Call from beforeEach. The check at the top
@@ -160,6 +164,7 @@ export async function resetAllTables(): Promise<void> {
   await ensureSchemaOnce()
   storageObjects.clear()
   await pool.query(`TRUNCATE TABLE ${TABLES_TO_WIPE.join(', ')} CASCADE`)
+  await ensureFoundationPlan(pool)
 }
 
 export function signInboundPayload(body: string): Record<string, string> {
@@ -194,10 +199,19 @@ export async function seedCompanyWithAgent(opts?: {
   const dom = env.EMAIL_DOMAIN || 'lingxiloop.local'
   const agentEmail = opts?.agentEmail ?? `${agentId}.${companyId}@${dom}`
   await pool.query(
-    `INSERT INTO companies (id, name, slug, owner_user_id)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO users (id,email,display_name) VALUES ('test-owner','test-owner@test.local','Test owner')
+     ON CONFLICT (id) DO NOTHING`,
+  )
+  await pool.query(
+    `INSERT INTO companies (id, name, slug)
+     VALUES ($1, $2, $3)
      ON CONFLICT DO NOTHING`,
-    [companyId, `Test ${companyId}`, companyId, 'test-owner'],
+    [companyId, `Test ${companyId}`, companyId],
+  )
+  await pool.query(
+    `INSERT INTO company_memberships (company_id,user_id,role) VALUES ($1,'test-owner','OWNER')
+     ON CONFLICT DO NOTHING`,
+    [companyId],
   )
   // Mirror production onboarding: every company needs its General workspace.
   await pool.query(
@@ -205,6 +219,11 @@ export async function seedCompanyWithAgent(opts?: {
      SELECT $2, $1, '通用工作区', '测试公司的默认工作区', '#667085', 'test-owner', TRUE
       WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
     [companyId, projectId],
+  )
+  await pool.query(
+    `INSERT INTO project_memberships (project_id,company_id,user_id,role)
+     VALUES ($1,$2,'test-owner','OWNER') ON CONFLICT DO NOTHING`,
+    [projectId, companyId],
   )
   // participants composite PK is (id, company_id) — see db/schema.sql.
   await pool.query(
@@ -262,7 +281,7 @@ export async function buildTestApp(storageProvider?: Pick<Storage, 'put'>): Prom
  *  middleware that stamps every request as the given userId. Used for
  *  exercising auth-gated endpoints (HTML viewer, send/reply) without
  *  having to mint real sessions. The caller is responsible for seeding
- *  the user + company_members rows so requireCompany() succeeds. */
+ *  the user + company_memberships rows so requireCompany() succeeds. */
 export async function buildApiTestApp(userId: string): Promise<import('express').Express> {
   const expressMod = await import('express')
   const express = expressMod.default
@@ -279,7 +298,7 @@ export async function buildApiTestApp(userId: string): Promise<import('express')
   return app
 }
 
-/** Insert a user + company_members row so requireCompany resolves to the
+/** Insert a user + company_memberships row so requireCompany resolves to the
  *  given tenant. ALSO inserts a corresponding participants row, matching
  *  what production onboarding does — human users get a participants
  *  entry so they can have a minted lingxiloop email, climate signals,
@@ -297,8 +316,8 @@ export async function seedUserMembership(userId: string, companyId: string, opts
     [userId, authEmail, displayName],
   )
   await pool.query(
-    `INSERT INTO company_members (company_id, user_id, role)
-     VALUES ($1, $2, 'owner')
+    `INSERT INTO company_memberships (company_id, user_id, role)
+     VALUES ($1, $2, 'OWNER')
      ON CONFLICT DO NOTHING`,
     [companyId, userId],
   )

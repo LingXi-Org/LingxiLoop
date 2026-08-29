@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { consumeSuspendedFragment, consumeWaitlistFragment, SuspendedScreen, WaitlistConfirmedScreen } from '@/auth/AuthStateScreens'
+import { consumeSuspendedFragment, SuspendedScreen } from '@/auth/AuthStateScreens'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { NotificationToasts } from '@/components/NotificationToasts'
@@ -79,16 +79,9 @@ function AuthedApp() {
 }
 
 export function App() {
-  // Waitlist landing — handleCallback redirects here with `?waitlist=1`
-  // when a brand-new OAuth visitor hit the gate. Consume the query marker
-  // once so refresh doesn't pin them on this screen forever. State is
-  // read-only — the screen's dismiss button calls location.reload() to
-  // fall back into the normal flow.
-  const [waitlist] = useState<{ email: string | null } | null>(() => consumeWaitlistFragment())
   // Suspension landing — handleCallback redirects here with
   // `#suspended=1&email=...&reason=...` when a returning user whose
-  // account is currently suspended finishes OAuth. Same consume-once
-  // semantics as the waitlist screen.
+  // account is currently suspended finishes OAuth.
   const [suspended] = useState<{ email: string | null; reason: string | null } | null>(
     () => consumeSuspendedFragment(),
   )
@@ -98,10 +91,6 @@ export function App() {
   // the simplest way to reload all data without stale rows leaking across.
   const userId = useAuth((s) => s.user?.id ?? null)
   const companyId = useAuth((s) => s.activeCompanyId)
-
-  if (waitlist) {
-    return <WaitlistConfirmedScreen email={waitlist.email} />
-  }
 
   if (suspended) {
     return <SuspendedScreen email={suspended.email} reason={suspended.reason} />

@@ -55,16 +55,15 @@ export async function findDocumentCollaborationCompany(
        FROM documents document
        JOIN projects project
          ON project.id=document.project_id AND project.company_id=document.company_id
-       JOIN company_members membership
+       JOIN company_memberships membership
          ON membership.company_id=document.company_id AND membership.user_id=$2
-       LEFT JOIN courses course
-         ON course.project_id=project.id AND course.company_id=project.company_id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id=course.id
-        AND course_member.company_id=course.company_id
-        AND course_member.user_id=$2
+        AND membership.status='ACTIVE'
+       LEFT JOIN project_memberships course_member
+         ON course_member.project_id=project.id
+        AND course_member.company_id=project.company_id
+        AND course_member.user_id=$2 AND course_member.status='ACTIVE'
       WHERE document.id=$1
-        AND (project.is_general=TRUE OR membership.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+        AND (project.is_general=TRUE OR membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
         AND ($3::boolean=FALSE OR project.status='active')
       LIMIT 1`,
     [args.documentId, args.userId, args.writable],
@@ -147,9 +146,9 @@ export async function memberRole(
   userId: string,
 ): Promise<string | undefined> {
   const { rows } = await db.query<{ role: string }>(
-    `SELECT role
-       FROM company_members
-      WHERE company_id = $1 AND user_id = $2
+    `SELECT LOWER(role) AS role
+       FROM company_memberships
+      WHERE company_id = $1 AND user_id = $2 AND status='ACTIVE'
       LIMIT 1`,
     [companyId, userId],
   )

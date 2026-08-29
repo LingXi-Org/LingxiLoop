@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { GetDesktopAppLink } from '@/components/GetDesktopAppLink'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface CarriedSuspension { email: string | null; reason: string | null }
-interface CarriedWaitlist { email: string | null }
 
 export function consumeSuspendedFragment(): CarriedSuspension | null {
   const hash = location.hash.replace(/^#/, '')
@@ -15,18 +13,6 @@ export function consumeSuspendedFragment(): CarriedSuspension | null {
   history.replaceState(null, '', location.pathname + location.search)
   return result
 }
-
-export function consumeWaitlistFragment(): CarriedWaitlist | null {
-  const search = new URLSearchParams(location.search)
-  if (search.get('waitlist') !== '1') return null
-  const email = search.get('email')
-  search.delete('waitlist')
-  search.delete('email')
-  const query = search.toString()
-  history.replaceState(null, '', location.pathname + (query ? `?${query}` : ''))
-  return { email }
-}
-
 function AuthStateSurface({ icon, title, description, children }: {
   icon: string
   title: string
@@ -54,7 +40,6 @@ function AuthStateSurface({ icon, title, description, children }: {
     </main>
   )
 }
-
 export function SuspendedScreen({ email, reason }: { email: string | null; reason: string | null }) {
   return (
     <AuthStateSurface
@@ -69,18 +54,6 @@ export function SuspendedScreen({ email, reason }: { email: string | null; reaso
         </section>
       )}
       <p className="text-sm leading-relaxed text-muted-foreground">如果您认为这是一个错误，请联系您的工作区所有者。</p>
-    </AuthStateSurface>
-  )
-}
-
-export function WaitlistConfirmedScreen({ email }: { email: string | null }) {
-  return (
-    <AuthStateSurface
-      icon="⏳"
-      title="您已加入候补名单"
-      description={<>我们保存了 <strong className="text-foreground">{email ?? '您的邮箱'}</strong>，帐户准备就绪时会通知您。</>}
-    >
-      <p className="text-center text-sm text-muted-foreground">想要提前准备？<GetDesktopAppLink variant="text" /></p>
     </AuthStateSurface>
   )
 }

@@ -42,9 +42,10 @@ export async function workspaceChannels(
           SELECT 1 FROM learning_course_teacher_rooms room
           JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
           JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-          JOIN course_members course_member
-            ON course_member.course_id=course.id AND course_member.company_id=course.company_id
-            AND course_member.user_id=$2 AND course_member.role='teacher'
+          JOIN project_memberships course_member
+            ON course_member.project_id=course.project_id AND course_member.company_id=course.company_id
+            AND course_member.user_id=$2 AND course_member.status='ACTIVE'
+            AND course_member.role IN ('OWNER','TEACHER')
           WHERE room.conversation_id=binding.channel_id AND room.company_id=binding.company_id
             AND room.status='active' AND project.status='active'
         ))

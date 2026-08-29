@@ -49,16 +49,15 @@ Run the classifier before choosing checks:
 
 ```bash
 node .agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs \
-  --base origin/main --include-worktree --format json
+  --path eval/suites/example.v1.json --path server/src/eval/example.ts --format json
 ```
 
-Expected focused commands:
+Local direct evidence:
 
-- Evaluator/trace/harness/runtime suite: `npm run test:eval` and `npm run eval:check`.
-- Eval persistence/API/schema: `npm run test:integration:eval` with dedicated PostgreSQL and Redis.
-- Eval Dashboard: frontend typecheck and production build.
-- All Eval TypeScript: lint, server typecheck, Agent OS architecture guard, and LLM ledger guard.
+- Evaluator/trace/harness/runtime implementation: task-path lint and `npm run test:eval`.
+- Public type or authoritative Agent OS/LLM contract inputs add their owning typecheck or guard.
+- Eval persistence, production build, full Eval gate, and service-backed evidence remain CI-owned.
 
-Focused means every changed file is Eval-owned: `eval/`, `server/src/eval/`, Eval-specific tests and runners, `src/admin/EvalPage.tsx`, the Eval Skill, or the Eval guide. Do not infer hunk ownership from a shared filename. Changes to Agent OS runtime, v1 schema/bootstrap, API/Admin shell, integration infrastructure, root docs, or shared config must fail closed to their owning checks. Package manifests, workflows, and classifier changes run the full matrix once before the dependency/selector change is trusted.
+Task scope contains only files written during the current task. Completed commits and unchanged local work are not reclassified. Package manifests, workflows, and selector changes still request the full CI matrix.
 
 Open Notebook scope, Compose smoke, full serial integration, and Windows/macOS packaging remain path-owned checks for ordinary pull requests. The reusable quality workflow also runs the full matrix for package-manifest or selector changes, `main`, manual, and release callers.

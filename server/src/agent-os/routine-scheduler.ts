@@ -46,8 +46,9 @@ export async function scheduleDueLearningRoutines(now = new Date()): Promise<num
             WHERE room.conversation_id=$1 AND room.company_id=$2
               AND room.status='active' AND project.status='active'
               AND EXISTS(
-                SELECT 1 FROM course_members member
-                 WHERE member.course_id=course.id AND member.company_id=course.company_id AND member.role='teacher'
+                SELECT 1 FROM project_memberships member
+                 WHERE member.project_id=course.project_id AND member.company_id=course.company_id
+                   AND member.status='ACTIVE' AND member.role IN ('OWNER','TEACHER')
               )`,
           [routine.channel_id, routine.company_id],
         )

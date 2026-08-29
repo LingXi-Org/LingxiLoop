@@ -58,7 +58,7 @@ after(async () => {
 })
 
 async function seedCompany(companyId = 'co-courses'): Promise<void> {
-  await pool.query(`INSERT INTO companies (id,name,slug,owner_user_id) VALUES ($1,'Course test',$1,$2)`, [companyId, OWNER])
+  await pool.query(`INSERT INTO companies (id,name,slug) VALUES ($1,'Course test',$1)`, [companyId])
   await seedUserMembership(OWNER, companyId, { email: 'owner@test.local', displayName: 'Owner' })
   await pool.query(
     `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
@@ -130,9 +130,9 @@ test('[integration] course invitation replay is idempotent and teacher upgrade n
   assert.equal((await pool.query(`SELECT use_count FROM course_invitations WHERE token_hash=$1`, [learnerInvite.id])).rows[0].use_count, 1)
 
   await inviteAndAccept(course.id, 'teacher')
-  assert.equal((await pool.query(`SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [course.id, LEARNER])).rows[0].role, 'teacher')
+  assert.equal((await pool.query(`SELECT role FROM project_memberships WHERE project_id=$1 AND user_id=$2`, [course.projectId, LEARNER])).rows[0].role, 'TEACHER')
   const downgrade = await inviteAndAccept(course.id, 'learner')
-  assert.equal((await pool.query(`SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`, [course.id, LEARNER])).rows[0].role, 'teacher')
+  assert.equal((await pool.query(`SELECT role FROM project_memberships WHERE project_id=$1 AND user_id=$2`, [course.projectId, LEARNER])).rows[0].role, 'TEACHER')
   assert.equal((await pool.query(`SELECT use_count FROM course_invitations WHERE token_hash=$1`, [downgrade.id])).rows[0].use_count, 0)
 
   await fetch(`${ownerUrl}/api/courses/${course.id}/archive`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses' }, body: '{}' })
@@ -153,9 +153,9 @@ test('[integration] concurrent teacher and learner invitations preserve the teac
   )))
   assert.deepEqual(responses.map((response) => response.status), [200, 200])
   assert.equal((await pool.query(
-    `SELECT role FROM course_members WHERE course_id=$1 AND user_id=$2`,
-    [course.id, LEARNER],
-  )).rows[0].role, 'teacher')
+    `SELECT role FROM project_memberships WHERE project_id=$1 AND user_id=$2`,
+    [course.projectId, LEARNER],
+  )).rows[0].role, 'TEACHER')
 })
 
 test('[integration] removing a member invalidates replay of their consumed course invitation', async () => {
@@ -173,8 +173,8 @@ test('[integration] removing a member invalidates replay of their consumed cours
   )
   assert.equal(replay.status, 410, await replay.text())
   assert.equal((await pool.query(
-    `SELECT 1 FROM course_members WHERE course_id=$1 AND user_id=$2`,
-    [course.id, LEARNER],
+    `SELECT 1 FROM project_memberships WHERE project_id=$1 AND user_id=$2`,
+    [course.projectId, LEARNER],
   )).rowCount, 0)
 
   const visible = await fetch(`${learnerUrl}/api/courses`, { headers: { 'x-company-id': 'co-courses' } })
@@ -193,14 +193,14 @@ test('[integration] concurrent company removals cannot delete every teacher from
     teachers,
   )
   await pool.query(
-    `INSERT INTO company_members (company_id,user_id,role) VALUES
-       ('co-courses',$1,'member'),('co-courses',$2,'member')`,
+    `INSERT INTO company_memberships (company_id,user_id,role) VALUES
+       ('co-courses',$1,'MEMBER'),('co-courses',$2,'MEMBER')`,
     teachers,
   )
   await pool.query(
-    `INSERT INTO course_members (course_id,company_id,user_id,role) VALUES
-       ($1,'co-courses',$2,'teacher'),($1,'co-courses',$3,'teacher')`,
-    [course.id, ...teachers],
+    `INSERT INTO project_memberships (project_id,company_id,user_id,role) VALUES
+       ($1,'co-courses',$2,'TEACHER'),($1,'co-courses',$3,'TEACHER')`,
+    [course.projectId, ...teachers],
   )
   const removeOwnerFromCourse = await fetch(`${ownerUrl}/api/courses/${course.id}/members/${OWNER}`, {
     method: 'DELETE', headers: { 'x-company-id': 'co-courses' },
@@ -213,11 +213,12 @@ test('[integration] concurrent company removals cannot delete every teacher from
   )))
   assert.deepEqual(removals.map((response) => response.status).sort(), [200, 409])
   assert.equal((await pool.query(
-    `SELECT COUNT(*)::int AS count FROM course_members WHERE course_id=$1 AND role='teacher'`,
-    [course.id],
+    `SELECT COUNT(*)::int AS count FROM project_memberships
+      WHERE project_id=$1 AND status='ACTIVE' AND role IN ('OWNER','TEACHER')`,
+    [course.projectId],
   )).rows[0].count, 1)
   assert.equal((await pool.query(
-    `SELECT COUNT(*)::int AS count FROM company_members
+    `SELECT COUNT(*)::int AS count FROM company_memberships
       WHERE company_id='co-courses' AND user_id=ANY($1::text[])`,
     [teachers],
   )).rows[0].count, 1)

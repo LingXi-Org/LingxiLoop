@@ -36,15 +36,15 @@ before(async () => {
 beforeEach(async () => {
   await resetAllTables()
   await pool.query(
-    `INSERT INTO companies (id, name, slug, owner_user_id)
-     VALUES ($1, 'Calendar Owner', 'calendar-owner', $3),
-            ($2, 'Calendar Other', 'calendar-other', $3)`,
-    [COMPANY_ID, OTHER_COMPANY_ID, USER_ID],
+    `INSERT INTO companies (id, name, slug)
+     VALUES ($1, 'Calendar Owner', 'calendar-owner'),
+            ($2, 'Calendar Other', 'calendar-other')`,
+    [COMPANY_ID, OTHER_COMPANY_ID],
   )
   await seedUserMembership(USER_ID, COMPANY_ID)
   await pool.query(
-    `INSERT INTO company_members (company_id, user_id, role)
-     VALUES ($1, $2, 'owner')`,
+    `INSERT INTO company_memberships (company_id, user_id, role)
+     VALUES ($1, $2, 'OWNER')`,
     [OTHER_COMPANY_ID, USER_ID],
   )
   await pool.query(

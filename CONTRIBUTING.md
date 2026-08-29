@@ -36,25 +36,25 @@ deployment, and email integration notes.
 
 ## Before you open a PR
 
-Run the fast local gates selected for your worktree:
+Record the files written in the current task and classify only those paths:
 
 ```bash
-npm run lint:local         # Biome lint for changed files only
-npm run typecheck          # frontend types
-npm run server:typecheck   # server types
-npm run test:local         # changed/sibling/domain-owned unit tests
-npm run guard:architecture # vertical boundaries and single-provider paths
-npm run guard:agent-os     # independent runtime/tool-boundary guard
-npm run guard:llm-tracked  # architecture guard, see below
+node .agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs \
+  --path src/example.ts --path src/example.test.ts
+npm run lint:local -- --path src/example.ts --path src/example.test.ts
+npm run test:local -- --path src/example.ts --path src/example.test.ts
 ```
 
-Use the `lingxiloop-verify-change` classifier to omit unrelated typechecks and
-guards. CI runs full repository lint, `npm test`, production build, Agent Eval,
-Postgres/Redis integration, Compose smoke, and package-layout checks. Do not
-provision those services or repeat that exhaustive matrix locally unless you
-are reproducing its exact failure or explicitly rehearsing a release.
-After committing, pass the same verified base to the fast runners, for example
-`npm run test:local -- --base origin/main`; neither runner guesses a branch.
+Use repeated `--test` values when changed behavior has a non-sibling owning
+test. No-argument fast runners intentionally select nothing, and `--base` is
+reserved for explicit range audits or CI failure reproduction. Completed,
+merged, and previously verified inputs are not retested unless edited again.
+
+The classifier adds full typechecks or global guards only for their canonical
+contract inputs. CI runs repository lint, typechecks, architecture guards,
+`npm test`, production build, Agent Eval, Postgres/Redis integration, Compose
+smoke, and package-layout checks. Do not repeat that matrix locally unless
+reproducing its exact failure or explicitly rehearsing a release.
 
 Biome is configured (`biome.json`) as a **linter only** — it is not a
 formatter here, so it won't reflow existing code. The rule set is a
@@ -62,9 +62,9 @@ pragmatic subset of Biome's recommended rules: correctness and real-bug
 rules are on; noisy or intentional-pattern style rules (and the a11y
 group, tracked as separate follow-up work) are off.
 
-Both TypeScript projects are `strict`. Frontend, server, and worker unit tests
-are selected locally by ownership; CI retains the exhaustive unit and
-integration entry points.
+Both TypeScript projects are `strict`. Local unit selection is limited to
+changed tests, direct siblings, explicit owning tests, and the schema mapping;
+CI retains exhaustive type, unit, and integration entry points.
 
 ## Architecture invariants (enforced in CI)
 

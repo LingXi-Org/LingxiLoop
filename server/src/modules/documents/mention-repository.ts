@@ -11,18 +11,17 @@ export async function findDocumentMentionContext(db: Queryable, args: {
        FROM documents document
        JOIN projects project
          ON project.id=document.project_id AND project.company_id=document.company_id
-       JOIN company_members membership
+       JOIN company_memberships membership
          ON membership.company_id=document.company_id AND membership.user_id=$3
+        AND membership.status='ACTIVE'
        JOIN participants mentioner
          ON mentioner.id=$3 AND mentioner.company_id=document.company_id AND mentioner.departed_at IS NULL
-       LEFT JOIN courses course
-         ON course.project_id=project.id AND course.company_id=project.company_id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id=course.id
-        AND course_member.company_id=course.company_id
-        AND course_member.user_id=$3
+       LEFT JOIN project_memberships course_member
+         ON course_member.project_id=project.id
+        AND course_member.company_id=project.company_id
+        AND course_member.user_id=$3 AND course_member.status='ACTIVE'
       WHERE document.id=$1 AND document.company_id=$2 AND project.status='active'
-        AND (project.is_general=TRUE OR membership.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+        AND (project.is_general=TRUE OR membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       LIMIT 1`,
     [args.documentId, args.companyId, args.mentionerId],
   )
@@ -44,12 +43,10 @@ export async function listMentionableDocumentParticipants(db: Queryable, args: {
          ON document.id=$3 AND document.company_id=participant.company_id
        JOIN projects project
          ON project.id=document.project_id AND project.company_id=document.company_id
-       LEFT JOIN courses course
-         ON course.project_id=project.id AND course.company_id=project.company_id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id=course.id
-        AND course_member.company_id=course.company_id
-        AND course_member.user_id=participant.id
+       LEFT JOIN project_memberships course_member
+         ON course_member.project_id=project.id
+        AND course_member.company_id=project.company_id
+        AND course_member.user_id=participant.id AND course_member.status='ACTIVE'
       WHERE participant.company_id=$1 AND participant.id=ANY($2::text[])
         AND participant.departed_at IS NULL
         AND (participant.kind='agent' OR project.is_general=TRUE OR course_member.user_id IS NOT NULL)`,

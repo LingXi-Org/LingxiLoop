@@ -65,7 +65,7 @@ beforeEach(async () => {
   emittedEvents.length = 0
   sendAttempts = 0
   await pool.query(`INSERT INTO companies (id,name,slug) VALUES ($1,'Reliability','agent-os-reliability')`, [COMPANY])
-  await pool.query(`INSERT INTO company_members(company_id,user_id,role) VALUES($1,$2,'member')`, [COMPANY, HUMAN])
+  await pool.query(`INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,'MEMBER')`, [COMPANY, HUMAN])
   await pool.query(`INSERT INTO projects(id,company_id,name) VALUES($1,$2,'Reliability Workspace')`, [PROJECT, COMPANY])
   await pool.query(
     `INSERT INTO participants (id,company_id,kind,name,role,initial,avatar_bg,status,capabilities)

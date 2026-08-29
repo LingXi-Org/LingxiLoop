@@ -151,7 +151,7 @@ export const isElectron: boolean = typeof window !== 'undefined' && window.lingx
 
 /** True only for an optional handoff-only `app.*` Web client. The primary Web
  *  origin gets the complete product UI. When this is true we surface sign-in,
- *  waitlist, and a desktop hand-off. The `?webonly=1` escape lets localhost dev
+ *  sign-in and a desktop hand-off. The `?webonly=1` escape lets localhost dev
  *  preview the trimmed shell without /etc/hosts trickery. */
 export const isWebAppHost: boolean = (() => {
   if (typeof window === 'undefined') return false

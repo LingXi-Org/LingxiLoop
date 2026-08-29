@@ -51,9 +51,9 @@ async function seedTeacherCourse():Promise<Fixture>{
   for(const [id,name] of [[teacherId,'周老师'],[learnerId,'陈同学'],[adminId,'公司管理员']] as const){
     await pool.query(`INSERT INTO users(id,email,display_name) VALUES($1,$2,$3)`,[id,`${id}@test.local`,name])
   }
-  await pool.query(`INSERT INTO companies(id,name,slug,owner_user_id) VALUES($1,'Pulse 测试公司',$1,$2)`,[companyId,adminId])
-  for(const [id,role] of [[teacherId,'member'],[learnerId,'member'],[adminId,'owner']] as const){
-    await pool.query(`INSERT INTO company_members(company_id,user_id,role) VALUES($1,$2,$3)`,[companyId,id,role])
+  await pool.query(`INSERT INTO companies(id,name,slug) VALUES($1,'Pulse 测试公司',$1)`,[companyId])
+  for(const [id,role] of [[teacherId,'MEMBER'],[learnerId,'MEMBER'],[adminId,'OWNER']] as const){
+    await pool.query(`INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,$3)`,[companyId,id,role])
   }
   for(const [id,name,role] of [[teacherId,'周老师','teacher'],[learnerId,'陈同学','learner'],[adminId,'公司管理员','owner']] as const){
     await pool.query(
@@ -73,9 +73,9 @@ async function seedTeacherCourse():Promise<Fixture>{
     [courseId,companyId,projectId,teacherId],
   )
   await pool.query(
-    `INSERT INTO course_members(course_id,company_id,user_id,role)
-     VALUES($1,$2,$3,'teacher'),($1,$2,$4,'learner')`,
-    [courseId,companyId,teacherId,learnerId],
+    `INSERT INTO project_memberships(project_id,company_id,user_id,role)
+     VALUES($1,$2,$3,'TEACHER'),($1,$2,$4,'STUDENT')`,
+    [projectId,companyId,teacherId,learnerId],
   )
   return {companyId,projectId,courseId,teacherId,learnerId,adminId}
 }

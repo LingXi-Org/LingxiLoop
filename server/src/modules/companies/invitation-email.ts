@@ -42,10 +42,7 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;')
 }
 
-/** HTML body — mirrors the welcome-email layout (table-based, inline
- *  styles, system font stack, sky-blue CTA). Same
- *  visual language so a recipient who later gets the waitlist-approved
- *  welcome email recognises the brand. */
+/** HTML body uses the product's table-based transactional-email layout. */
 function buildInvitationEmailHtml(args: {
   inviterName: string
   companyName: string

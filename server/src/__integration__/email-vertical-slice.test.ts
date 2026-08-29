@@ -36,9 +36,9 @@ before(async () => {
 beforeEach(async () => {
   await resetAllTables()
   await pool.query(
-    `INSERT INTO companies (id, name, slug, owner_user_id)
-     VALUES ($1, 'Email Slice', 'email-slice', $2)`,
-    [COMPANY_ID, USER_ID],
+    `INSERT INTO companies (id, name, slug)
+     VALUES ($1, 'Email Slice', 'email-slice')`,
+    [COMPANY_ID],
   )
   await seedUserMembership(USER_ID, COMPANY_ID)
   await pool.query(
@@ -145,9 +145,9 @@ test('[integration] Agent Email CLI uses one tenant-scoped idempotent domain pat
 test('[integration] email persistence rejects cross-tenant conversations and projects', async () => {
   const otherCompanyId = 'co-email-slice-other'
   await pool.query(
-    `INSERT INTO companies (id, name, slug, owner_user_id)
-     VALUES ($1, 'Other Email Slice', 'other-email-slice', $2)`,
-    [otherCompanyId, USER_ID],
+    `INSERT INTO companies (id, name, slug)
+     VALUES ($1, 'Other Email Slice', 'other-email-slice')`,
+    [otherCompanyId],
   )
   const conversation = await findOrCreateEmailConversation({
     companyId: COMPANY_ID,

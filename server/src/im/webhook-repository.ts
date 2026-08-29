@@ -71,9 +71,10 @@ export async function teacherRoomForWebhook(
   const { rows } = await db.query<TeacherRoomRow>(
     `SELECT room.course_id,room.status,project.status AS course_status,teacher_agent.agent_id,
             EXISTS(
-              SELECT 1 FROM course_members member
-               WHERE member.course_id=room.course_id AND member.company_id=room.company_id
-                 AND member.user_id=$2 AND member.role='teacher'
+              SELECT 1 FROM project_memberships member
+               WHERE member.project_id=course.project_id AND member.company_id=room.company_id
+                 AND member.user_id=$2 AND member.status='ACTIVE'
+                 AND member.role IN ('OWNER','TEACHER')
             ) AS is_teacher
        FROM learning_course_teacher_rooms room
        JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id

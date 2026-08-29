@@ -45,9 +45,10 @@ export async function listVisibleApprovals(
          SELECT 1 FROM learning_course_teacher_rooms room
          JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
          JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-         JOIN course_members teacher
-           ON teacher.course_id=course.id AND teacher.company_id=course.company_id
-           AND teacher.user_id=$2 AND teacher.role='teacher'
+         JOIN project_memberships teacher
+           ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
+          AND teacher.user_id=$2 AND teacher.status='ACTIVE'
+          AND teacher.role IN ('OWNER','TEACHER')
          WHERE room.conversation_id=approval.channel_id AND room.company_id=approval.company_id
            AND room.status='active' AND project.status='active'
        ))
@@ -78,9 +79,10 @@ export async function lockVisibleApproval(
           SELECT 1 FROM learning_course_teacher_rooms room
           JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
           JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-          JOIN course_members teacher
-            ON teacher.course_id=course.id AND teacher.company_id=course.company_id
-            AND teacher.user_id=$3 AND teacher.role='teacher'
+          JOIN project_memberships teacher
+            ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
+           AND teacher.user_id=$3 AND teacher.status='ACTIVE'
+           AND teacher.role IN ('OWNER','TEACHER')
           WHERE room.conversation_id=approval.channel_id AND room.company_id=approval.company_id
             AND room.status='active' AND project.status='active'
         ))

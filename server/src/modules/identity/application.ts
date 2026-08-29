@@ -195,7 +195,6 @@ export class IdentityApplication {
         email: user.email,
         name: user.display_name,
         emailVerified: user.email_verified_at !== null,
-        isAdmin: user.is_admin,
         providers,
       },
       companies,

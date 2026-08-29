@@ -67,7 +67,7 @@ test('production consumers use only public Learning capability surfaces', () => 
     .filter((path) => !relative(serverRoot, path).replaceAll('\\', '/').startsWith('modules/learning/'))
     .flatMap((path) => {
       const source = readFileSync(path, 'utf8')
-      return /(?:from\s+|import\(\s*)['"][^'"]*\/learning\/(?!runtime\.js|public\.js|worker\.js|preset\.js|router\.js)[^'"]+['"]/.test(source)
+      return /(?:from\s+|import\(\s*)['"][^'"]*\/learning\/(?!contracts\.js|runtime\.js|public\.js|worker\.js|preset\.js|router\.js)[^'"]+['"]/.test(source)
         ? [relative(serverRoot, path)]
         : []
     })
@@ -80,7 +80,7 @@ test('the legacy Learning service implementation is deleted', () => {
   assert.doesNotMatch(learningApplicationSource, /learning\/service\.js/)
   const teacher = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(teacher, /from '.\/service\.js'/)
-  assert.match(repository, /WHERE course_id=\$1 AND company_id=\$2 AND role='teacher'/)
+  assert.match(repository, /member\.company_id=\$1 AND course\.id=\$2 AND member\.status='ACTIVE'[\s\S]*member\.role IN \('OWNER','TEACHER'\)/)
   assert.match(repository, /teacher_room\.company_id=\$1 AND teacher_room\.conversation_id=conversation\.id/)
 })
 
@@ -95,7 +95,7 @@ test('Learning routers share one private request and error adapter', () => {
 })
 
 test('native learning schema keeps evidence, projection and delivery ledgers durable', () => {
-  for (const table of ['courses','course_members','learning_course_rooms','learning_objectives','learning_activities',
+  for (const table of ['courses','project_memberships','learning_course_rooms','learning_objectives','learning_activities',
     'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_mastery','learning_mastery_events','learning_notification_deliveries','learning_effects',
     'learning_project_teacher_agents','learning_course_teacher_rooms']) {
     assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
@@ -106,7 +106,7 @@ test('native learning schema keeps evidence, projection and delivery ledgers dur
   assert.match(schema, /idx_learning_effects_pending/)
   assert.match(learningApplicationSource, /enqueueLearningEffect/)
   assert.doesNotMatch(learningApplicationSource, /const provisioning = await Promise\.allSettled/)
-  assert.doesNotMatch(schema, /CREATE TABLE public\.learning_(?:courses|course_memberships)\b/)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.learning_(?:courses|project_memberships)\b/)
 })
 
 test('objective persistence has one tenant-scoped repository path', () => {
@@ -121,14 +121,14 @@ test('activity writes and UI submissions have one tenant-scoped repository path'
   assert.doesNotMatch(service, /UPDATE learning_activities/)
   assert.doesNotMatch(service, /kind: 'ui_submission'/)
   assert.match(repository, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
-  assert.match(repository, /learner\.user_id=\$5 AND learner\.role='learner'/)
+  assert.match(repository, /learner\.user_id=\$5 AND learner\.status='ACTIVE'[\s\S]*learner\.role IN \('STUDENT','OBSERVER'\)/)
 })
 
 test('mission reads and coordinator assignment have one tenant-scoped repository path', () => {
   assert.doesNotMatch(service, /SELECT \* FROM learning_missions WHERE id=/)
   assert.doesNotMatch(service, /SET coordinator_agent_id=\$3/)
   assert.match(repository, /mission\.company_id=\$1 AND mission\.course_id=\$2/)
-  assert.match(repository, /teacher\.user_id=\$4 AND teacher\.role='teacher'/)
+  assert.match(repository, /teacher\.user_id=\$4 AND teacher\.role IN \('OWNER','TEACHER'\)/)
 })
 
 test('mission planning and completion writes live only in application and repository', () => {
@@ -193,7 +193,7 @@ test('Learning dashboard and evidence reads no longer use the legacy service dat
   assert.match(learningApplicationSource, /listLearningEvidenceRecords/)
   assert.match(learningApplicationSource, /countViewerPendingLearningReviews/)
   assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND attempt\.learner_id=\$3/)
-  assert.match(repository, /member\.company_id=\$1 AND member\.course_id=\$2 AND member\.role='learner'/)
+  assert.match(repository, /member\.company_id=\$1 AND course\.id=\$2 AND member\.status='ACTIVE'[\s\S]*member\.role IN \('STUDENT','OBSERVER'\)/)
 })
 
 test('Pulse reporting reads use one explicit tenant-scoped repository', () => {
@@ -204,7 +204,7 @@ test('Pulse reporting reads use one explicit tenant-scoped repository', () => {
   assert.doesNotMatch(teacherAgentSource, /if\(method==='list_rooms'\)return \(await db\.query/)
   assert.match(teacherReportingRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
   assert.match(teacherReportingRepositorySource, /mastery\.company_id=\$1 AND mastery\.course_id=\$2/)
-  assert.match(teacherReportingRepositorySource, /member\.company_id=\$1 AND member\.course_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /member\.company_id=\$1 AND course\.id=\$2 AND member\.status='ACTIVE'/)
   assert.match(teacherReportingRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
 })
 
@@ -227,7 +227,7 @@ test('Pulse runtime scope and turn counts use one tenant-scoped repository', () 
   assert.match(teacherRuntimeRepositorySource, /project_agent\.company_id=\$1 AND project_agent\.agent_id=\$2/)
   assert.match(teacherRuntimeRepositorySource, /approval\.company_id=\$1 AND approval\.agent_id=\$3[\s\S]*approval\.channel_id=\$4/)
   assert.doesNotMatch(teacherRuntimeRepositorySource, /FROM messages/)
-  assert.match(teacherRuntimeRepositorySource, /member\.company_id=\$1 AND member\.course_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /member\.company_id=\$1 AND course\.id=\$2 AND member\.status='ACTIVE'/)
   assert.match(teacherRuntimeRepositorySource, /objective\.company_id=\$1 AND objective\.course_id=\$2/)
   assert.match(teacherRuntimeRepositorySource, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
   assert.match(teacherRuntimeRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
@@ -238,7 +238,7 @@ test('Pulse application orchestration contains no SQL and lifecycle scope is exp
   assert.doesNotMatch(teacherAgentSource, /\b(?:db|pool)\.query\b/)
   assert.match(teacherProvisioningRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
   assert.match(teacherProvisioningRepositorySource, /teacher_room\.company_id=\$1 AND teacher_room\.course_id=\$2/)
-  assert.match(teacherProvisioningRepositorySource, /WHERE company_id=\$1 AND course_id=\$2 AND role='teacher'/)
+  assert.match(teacherProvisioningRepositorySource, /member\.company_id=\$1 AND course\.id=\$2 AND member\.status='ACTIVE'[\s\S]*member\.role IN \('OWNER','TEACHER'\)/)
   assert.match(teacherProvisioningRepositorySource, /approval\.company_id=course\.company_id/)
   assert.match(teacherDigestRepositorySource, /WHERE company_id=\$1 AND id=\$2/)
   assert.match(teacherManagementRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)

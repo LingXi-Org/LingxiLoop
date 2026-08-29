@@ -513,19 +513,6 @@ CREATE TABLE public.agent_workspace (
 );
 
 
---
--- Name: app_settings; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.app_settings (
-    key text NOT NULL,
-    value jsonb NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_by text
-);
-
-
---
 -- Name: audit_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -862,7 +849,7 @@ CREATE TABLE public.companies (
     id text NOT NULL,
     name text NOT NULL,
     slug text NOT NULL,
-    owner_user_id text,
+    plan_id text DEFAULT 'plan-foundation'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     description text DEFAULT ''::text NOT NULL
@@ -878,7 +865,7 @@ CREATE TABLE public.company_invitations (
     company_id text NOT NULL,
     invited_by text NOT NULL,
     email text,
-    role text DEFAULT 'member'::text NOT NULL,
+    role text DEFAULT 'MEMBER'::text NOT NULL,
     note text,
     max_uses integer DEFAULT 1 NOT NULL,
     use_count integer DEFAULT 0 NOT NULL,
@@ -886,19 +873,25 @@ CREATE TABLE public.company_invitations (
     expires_at timestamp with time zone NOT NULL,
     revoked_at timestamp with time zone,
     last_accepted_at timestamp with time zone,
-    last_accepted_by text
+    last_accepted_by text,
+    CONSTRAINT company_invitations_role_check CHECK ((role = ANY (ARRAY['ADMIN'::text, 'MEMBER'::text])))
 );
 
 
 --
--- Name: company_members; Type: TABLE; Schema: public; Owner: -
+-- Name: company_memberships; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.company_members (
+CREATE TABLE public.company_memberships (
+    id text DEFAULT ('cm-'::text || gen_random_uuid()::text) NOT NULL,
     company_id text NOT NULL,
     user_id text NOT NULL,
-    role text DEFAULT 'member'::text NOT NULL,
-    joined_at timestamp with time zone DEFAULT now() NOT NULL
+    role text DEFAULT 'MEMBER'::text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT company_memberships_role_check CHECK ((role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text, 'MEMBER'::text]))),
+    CONSTRAINT company_memberships_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text])))
 );
 
 
@@ -1037,7 +1030,7 @@ CREATE TABLE public.course_invitation_acceptances (
     user_id text NOT NULL,
     role text NOT NULL,
     accepted_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT course_invitation_acceptances_role_check CHECK ((role = ANY (ARRAY['teacher'::text, 'learner'::text])))
+    CONSTRAINT course_invitation_acceptances_role_check CHECK ((role = ANY (ARRAY['TEACHER'::text, 'STUDENT'::text])))
 );
 
 
@@ -1062,22 +1055,25 @@ CREATE TABLE public.course_invitations (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT course_invitations_check CHECK (((use_count >= 0) AND (use_count <= max_uses))),
     CONSTRAINT course_invitations_max_uses_check CHECK (((max_uses >= 1) AND (max_uses <= 100))),
-    CONSTRAINT course_invitations_role_check CHECK ((role = ANY (ARRAY['teacher'::text, 'learner'::text])))
+    CONSTRAINT course_invitations_role_check CHECK ((role = ANY (ARRAY['TEACHER'::text, 'STUDENT'::text])))
 );
 
 
 --
--- Name: course_members; Type: TABLE; Schema: public; Owner: -
+-- Name: project_memberships; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.course_members (
-    course_id text NOT NULL,
+CREATE TABLE public.project_memberships (
+    id text DEFAULT ('pm-'::text || gen_random_uuid()::text) NOT NULL,
     company_id text NOT NULL,
+    project_id text NOT NULL,
     user_id text NOT NULL,
     role text NOT NULL,
-    joined_at timestamp with time zone DEFAULT now() NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT course_members_role_check CHECK ((role = ANY (ARRAY['teacher'::text, 'learner'::text])))
+    CONSTRAINT project_memberships_role_check CHECK ((role = ANY (ARRAY['OWNER'::text, 'TEACHER'::text, 'TA'::text, 'STUDENT'::text, 'OBSERVER'::text]))),
+    CONSTRAINT project_memberships_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text])))
 );
 
 
@@ -1229,6 +1225,17 @@ CREATE TABLE public.email_messages (
     auto_submitted boolean DEFAULT false NOT NULL,
     retry_attempts integer DEFAULT 0 NOT NULL,
     next_retry_at timestamp with time zone
+);
+
+
+--
+-- Name: entitlements; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entitlements (
+    id text NOT NULL,
+    code text NOT NULL,
+    description text DEFAULT ''::text NOT NULL
 );
 
 
@@ -1598,6 +1605,30 @@ CREATE TABLE public.participants (
 );
 
 
+-- Name: plans; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plans (
+    id text NOT NULL,
+    code text NOT NULL,
+    name text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    CONSTRAINT plans_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'ARCHIVED'::text])))
+);
+
+
+--
+-- Name: plan_entitlements; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plan_entitlements (
+    plan_id text NOT NULL,
+    entitlement_id text NOT NULL,
+    value jsonb NOT NULL,
+    CONSTRAINT plan_entitlements_scalar_value_check CHECK ((jsonb_typeof(value) = ANY (ARRAY['boolean'::text, 'number'::text, 'string'::text])))
+);
+
+
 --
 -- Name: project_visits; Type: TABLE; Schema: public; Owner: -
 --
@@ -1616,6 +1647,7 @@ CREATE TABLE public.project_visits (
 CREATE TABLE public.projects (
     id text NOT NULL,
     company_id text NOT NULL,
+    plan_id text,
     name text NOT NULL,
     description text DEFAULT ''::text NOT NULL,
     color text,
@@ -1701,29 +1733,9 @@ CREATE TABLE public.users (
     email_verified_at timestamp with time zone,
     avatar_url text,
     deleted_at timestamp with time zone,
-    is_admin boolean DEFAULT false NOT NULL,
     suspended_at timestamp with time zone,
     suspension_reason text,
     suspended_by text
-);
-
-
---
--- Name: waitlist; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.waitlist (
-    id text NOT NULL,
-    provider text NOT NULL,
-    provider_id text NOT NULL,
-    email text NOT NULL,
-    display_name text NOT NULL,
-    avatar_url text,
-    status text DEFAULT 'pending'::text NOT NULL,
-    note text,
-    requested_at timestamp with time zone DEFAULT now() NOT NULL,
-    decided_at timestamp with time zone,
-    decided_by text
 );
 
 
@@ -1968,15 +1980,6 @@ ALTER TABLE ONLY public.agent_workspace
     ADD CONSTRAINT agent_workspace_pkey PRIMARY KEY (agent_id, path);
 
 
---
--- Name: app_settings app_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.app_settings
-    ADD CONSTRAINT app_settings_pkey PRIMARY KEY (key);
-
-
---
 -- Name: audit_events audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2137,11 +2140,27 @@ ALTER TABLE ONLY public.company_invitations
 
 
 --
--- Name: company_members company_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: company_memberships company_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.company_members
-    ADD CONSTRAINT company_members_pkey PRIMARY KEY (company_id, user_id);
+ALTER TABLE ONLY public.company_memberships
+    ADD CONSTRAINT company_memberships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: company_memberships company_memberships_company_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_memberships
+    ADD CONSTRAINT company_memberships_company_id_user_id_key UNIQUE (company_id, user_id);
+
+
+--
+-- Name: company_memberships company_memberships_user_id_company_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_memberships
+    ADD CONSTRAINT company_memberships_user_id_company_id_key UNIQUE (user_id, company_id);
 
 
 --
@@ -2225,11 +2244,35 @@ ALTER TABLE ONLY public.course_invitations
 
 
 --
--- Name: course_members course_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_memberships project_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.course_members
-    ADD CONSTRAINT course_members_pkey PRIMARY KEY (course_id, user_id);
+ALTER TABLE ONLY public.project_memberships
+    ADD CONSTRAINT project_memberships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: project_memberships project_memberships_project_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_memberships
+    ADD CONSTRAINT project_memberships_project_id_user_id_key UNIQUE (project_id, user_id);
+
+
+--
+-- Name: project_memberships project_memberships_user_id_project_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_memberships
+    ADD CONSTRAINT project_memberships_user_id_project_id_key UNIQUE (user_id, project_id);
+
+
+--
+-- Name: project_memberships project_memberships_company_id_project_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_memberships
+    ADD CONSTRAINT project_memberships_company_id_project_id_user_id_key UNIQUE (company_id, project_id, user_id);
 
 
 --
@@ -2318,6 +2361,22 @@ ALTER TABLE ONLY public.email_contacts
 
 ALTER TABLE ONLY public.email_messages
     ADD CONSTRAINT email_messages_pkey PRIMARY KEY (message_id);
+
+
+--
+-- Name: entitlements entitlements_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entitlements
+    ADD CONSTRAINT entitlements_code_key UNIQUE (code);
+
+
+--
+-- Name: entitlements entitlements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entitlements
+    ADD CONSTRAINT entitlements_pkey PRIMARY KEY (id);
 
 
 --
@@ -2512,6 +2571,29 @@ ALTER TABLE ONLY public.participants
     ADD CONSTRAINT participants_pkey PRIMARY KEY (id, company_id);
 
 
+-- Name: plan_entitlements plan_entitlements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plan_entitlements
+    ADD CONSTRAINT plan_entitlements_pkey PRIMARY KEY (plan_id, entitlement_id);
+
+
+--
+-- Name: plans plans_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plans
+    ADD CONSTRAINT plans_code_key UNIQUE (code);
+
+
+--
+-- Name: plans plans_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plans
+    ADD CONSTRAINT plans_pkey PRIMARY KEY (id);
+
+
 --
 -- Name: project_visits project_visits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
@@ -2576,23 +2658,6 @@ ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
---
--- Name: waitlist waitlist_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.waitlist
-    ADD CONSTRAINT waitlist_pkey PRIMARY KEY (id);
-
-
---
--- Name: waitlist waitlist_provider_provider_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.waitlist
-    ADD CONSTRAINT waitlist_provider_provider_id_key UNIQUE (provider, provider_id);
-
-
---
 -- Name: ws_tickets ws_tickets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3120,10 +3185,17 @@ CREATE INDEX idx_course_invitations_email ON public.course_invitations USING btr
 
 
 --
--- Name: idx_course_members_user; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_project_memberships_company_user_role; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_course_members_user ON public.course_members USING btree (company_id, user_id, role);
+CREATE INDEX idx_project_memberships_company_user_role ON public.project_memberships USING btree (company_id, user_id, role) WHERE (status = 'ACTIVE'::text);
+
+
+--
+-- Name: idx_project_memberships_project_role; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_project_memberships_project_role ON public.project_memberships USING btree (company_id, project_id, role) WHERE (status = 'ACTIVE'::text);
 
 
 --
@@ -3490,35 +3562,12 @@ CREATE INDEX idx_users_deleted_at ON public.users USING btree (deleted_at) WHERE
 CREATE INDEX idx_users_email ON public.users USING btree (lower(email));
 
 
---
--- Name: idx_users_is_admin; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_users_is_admin ON public.users USING btree (is_admin) WHERE (is_admin = true);
-
-
---
 -- Name: idx_users_suspended; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_users_suspended ON public.users USING btree (suspended_at) WHERE (suspended_at IS NOT NULL);
 
 
---
--- Name: idx_waitlist_email; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_waitlist_email ON public.waitlist USING btree (lower(email));
-
-
---
--- Name: idx_waitlist_status; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_waitlist_status ON public.waitlist USING btree (status, requested_at);
-
-
---
 -- Name: idx_workspace_embed_hnsw; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3974,11 +4023,27 @@ ALTER TABLE ONLY public.company_invitations
 
 
 --
--- Name: company_members company_members_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: companies companies_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.company_members
-    ADD CONSTRAINT company_members_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT companies_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: company_memberships company_memberships_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_memberships
+    ADD CONSTRAINT company_memberships_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: company_memberships company_memberships_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_memberships
+    ADD CONSTRAINT company_memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -4070,19 +4135,19 @@ ALTER TABLE ONLY public.course_invitations
 
 
 --
--- Name: course_members course_members_company_id_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_memberships project_memberships_company_id_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.course_members
-    ADD CONSTRAINT course_members_company_id_user_id_fkey FOREIGN KEY (company_id, user_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.project_memberships
+    ADD CONSTRAINT project_memberships_company_id_user_id_fkey FOREIGN KEY (company_id, user_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE;
 
 
 --
--- Name: course_members course_members_course_id_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_memberships project_memberships_project_id_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.course_members
-    ADD CONSTRAINT course_members_course_id_company_id_fkey FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.project_memberships
+    ADD CONSTRAINT project_memberships_project_id_company_id_fkey FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE;
 
 
 --
@@ -4373,6 +4438,21 @@ ALTER TABLE ONLY public.knowledge_sources
     ADD CONSTRAINT knowledge_sources_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
 
 
+-- Name: plan_entitlements plan_entitlements_entitlement_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plan_entitlements
+    ADD CONSTRAINT plan_entitlements_entitlement_id_fkey FOREIGN KEY (entitlement_id) REFERENCES public.entitlements(id) ON DELETE CASCADE;
+
+
+--
+-- Name: plan_entitlements plan_entitlements_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plan_entitlements
+    ADD CONSTRAINT plan_entitlements_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE CASCADE;
+
+
 --
 -- Name: project_visits project_visits_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
@@ -4387,6 +4467,14 @@ ALTER TABLE ONLY public.project_visits
 
 ALTER TABLE ONLY public.projects
     ADD CONSTRAINT projects_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: projects projects_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE RESTRICT;
 
 
 --
@@ -4507,7 +4595,7 @@ CREATE TABLE public.im_read_receipt_advances (
     CONSTRAINT im_read_receipt_channel_company_fkey
       FOREIGN KEY (channel_id, company_id) REFERENCES public.conversations(id, company_id) ON DELETE CASCADE,
     CONSTRAINT im_read_receipt_reader_company_fkey
-      FOREIGN KEY (company_id, reader_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE
+      FOREIGN KEY (company_id, reader_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_im_read_receipt_range
@@ -4569,7 +4657,7 @@ CREATE TABLE public.learning_course_rooms (
     CONSTRAINT learning_course_rooms_conversation_company_fkey
       FOREIGN KEY (conversation_id, company_id) REFERENCES public.conversations(id, company_id) ON DELETE CASCADE,
     CONSTRAINT learning_course_rooms_creator_company_fkey
-      FOREIGN KEY (company_id, created_by) REFERENCES public.company_members(company_id, user_id) ON DELETE RESTRICT
+      FOREIGN KEY (company_id, created_by) REFERENCES public.company_memberships(company_id, user_id) ON DELETE RESTRICT
 );
 
 CREATE TABLE public.learning_objectives (
@@ -4658,7 +4746,7 @@ CREATE TABLE public.learning_missions (
     CONSTRAINT learning_missions_course_company_fkey
       FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
     CONSTRAINT learning_missions_learner_company_fkey
-      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE,
+      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE,
     CONSTRAINT learning_missions_conversation_company_fkey
       FOREIGN KEY (conversation_id, company_id) REFERENCES public.conversations(id, company_id) ON DELETE CASCADE
 );
@@ -4709,7 +4797,7 @@ CREATE TABLE public.learning_attempts (
     CONSTRAINT learning_attempts_course_company_fkey
       FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
     CONSTRAINT learning_attempts_learner_company_fkey
-      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE
+      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE
 );
 
 ALTER TABLE ONLY public.learning_mission_steps
@@ -4769,7 +4857,7 @@ CREATE TABLE public.learning_mastery (
     CONSTRAINT learning_mastery_course_company_fkey
       FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
     CONSTRAINT learning_mastery_learner_company_fkey
-      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE
+      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_learning_mastery_due
@@ -4810,7 +4898,7 @@ CREATE TABLE public.learning_notification_preferences (
     quiet_end time without time zone,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT learning_notification_preferences_member_company_fkey
-      FOREIGN KEY (company_id, user_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE,
+      FOREIGN KEY (company_id, user_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE,
     CONSTRAINT learning_notification_preferences_course_company_fkey
       FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE
 );
@@ -4844,7 +4932,7 @@ CREATE TABLE public.learning_notification_deliveries (
     CONSTRAINT learning_notification_deliveries_status_check
       CHECK (status = ANY (ARRAY['pending'::text, 'sending'::text, 'sent'::text, 'failed'::text, 'cancelled'::text])),
     CONSTRAINT learning_notification_deliveries_member_company_fkey
-      FOREIGN KEY (company_id, user_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE,
+      FOREIGN KEY (company_id, user_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE,
     CONSTRAINT learning_notification_deliveries_course_company_fkey
       FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE
 );
@@ -4922,7 +5010,7 @@ CREATE TABLE public.company_onboarding_effects (
       (status = 'processing'::text) = (lease_token IS NOT NULL AND lease_expires_at IS NOT NULL)
     ),
     CONSTRAINT company_onboarding_effects_member_fkey
-      FOREIGN KEY (company_id, member_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE,
+      FOREIGN KEY (company_id, member_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE,
     CONSTRAINT company_onboarding_effects_identity_key UNIQUE(company_id, member_id, kind)
 );
 

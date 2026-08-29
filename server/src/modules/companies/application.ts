@@ -1,5 +1,9 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
+import {
+  companyRoleToWire,
+  type CompanyRole,
+} from '../../domain/access/public.js'
 import type {
   CreateCompanyInput,
   CreateInvitationInput,
@@ -72,11 +76,11 @@ export interface CompanyInfrastructure {
 
 const INVITE_TTL_MS = 1000 * 60 * 60 * 24 * 7
 const INVITE_MAX_LINK_USES = 100
-const ADMIN_ROLES = new Set(['owner', 'admin'])
+const ADMIN_ROLES = new Set<CompanyRole>(['OWNER', 'ADMIN'])
 
 function baseInvitation(invitation: Awaited<ReturnType<typeof invitationWithCompany>> & {}) {
   return {
-    role: invitation.role,
+    role: companyRoleToWire(invitation.role),
     email: invitation.email,
     note: invitation.note,
     expiresAt: new Date(invitation.expires_at).toISOString(),
@@ -139,7 +143,7 @@ export class CompanyApplication {
     return company
   }
 
-  async requireAdmin(companyId: string, userId: string): Promise<string> {
+  async requireAdmin(companyId: string, userId: string): Promise<CompanyRole> {
     return this.requireAdminOn(this.db, companyId, userId, false)
   }
 
@@ -148,7 +152,7 @@ export class CompanyApplication {
     companyId: string,
     userId: string,
     lock: boolean,
-  ): Promise<string> {
+  ): Promise<CompanyRole> {
     const role = lock
       ? await memberRole(db, companyId, userId, true)
       : await companyRole(db, companyId, userId)
@@ -192,7 +196,7 @@ export class CompanyApplication {
       await this.requireAdminOn(db, args.companyId, args.userId, true)
       const current = await memberRole(db, args.companyId, args.targetId, true)
       if (!current) throw new CompanyApplicationError('not_found', 'member not found')
-      if (current === 'owner') throw new CompanyApplicationError('conflict', 'the company owner cannot be demoted')
+      if (current === 'OWNER') throw new CompanyApplicationError('conflict', 'the company owner cannot be demoted')
       await setMemberRole(db, args.companyId, args.targetId, args.role)
       await this.infrastructure.auditInTransaction(db, {
         kind: 'company_member_role_update', userId: args.userId, companyId: args.companyId,
@@ -213,7 +217,7 @@ export class CompanyApplication {
         if (await isDepartedCompanyHuman(db, args.companyId, args.targetId)) return
         throw new CompanyApplicationError('not_found', 'member not found')
       }
-      if (role === 'owner') throw new CompanyApplicationError('conflict', 'the company owner cannot be removed')
+      if (role === 'OWNER') throw new CompanyApplicationError('conflict', 'the company owner cannot be removed')
       const courses = await lockTeachingCourses(db, args.companyId, args.targetId)
       for (const course of courses) {
         if (await teacherCount(db, args.companyId, course.id) <= 1) {
@@ -265,7 +269,7 @@ export class CompanyApplication {
     return rows.map((invitation) => ({
       id: invitation.token_hash,
       email: invitation.email,
-      role: invitation.role,
+      role: companyRoleToWire(invitation.role),
       note: invitation.note,
       maxUses: invitation.max_uses,
       useCount: invitation.use_count,

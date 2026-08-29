@@ -9,6 +9,8 @@ const workerBoot = readFileSync(new URL('../worker.ts', import.meta.url), 'utf8'
 const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.url), 'utf8')
 const onboarding = readFileSync(new URL('../modules/companies/onboarding-repository.ts', import.meta.url), 'utf8')
 const canvasReports = readFileSync(new URL('../modules/canvas/reports-repository.ts', import.meta.url), 'utf8')
+const companyRepository = readFileSync(new URL('../modules/companies/repository.ts', import.meta.url), 'utf8')
+const entitlementRepository = readFileSync(new URL('../modules/entitlements/repository.ts', import.meta.url), 'utf8')
 const composeFiles = [
   '../../../docker-compose.mvp.ci.yml',
   '../../../docker-compose.mvp.yml',
@@ -27,6 +29,11 @@ test('v1 schema is a complete bootstrap definition without historical data mutat
     'knowledge_sources',
     'llm_calls',
     'courses',
+    'company_memberships',
+    'project_memberships',
+    'plans',
+    'entitlements',
+    'plan_entitlements',
   ]) {
     assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
   }
@@ -42,6 +49,30 @@ test('v1 schema excludes migration markers and retired host structures', () => {
   assert.doesNotMatch(schema, /\b(?:computer_id|fast_model|pair_token)\b/)
   assert.doesNotMatch(schema, /\b(?:sub2api_user_id|sub2api_api_key|tier)\b/i)
   assert.match(schema, /CREATE TABLE public\.llm_calls[\s\S]*cost_usd[\s\S]*cost_estimated/)
+})
+
+test('domain foundation relations replace legacy product identity and membership structures', () => {
+  for (const retired of ['company_members', 'course_members', 'waitlist', 'app_settings', 'permissions']) {
+    assert.doesNotMatch(schema, new RegExp(`CREATE TABLE public\\.${retired}\\b`))
+  }
+  const users = schema.match(/CREATE TABLE public\.users \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  assert.doesNotMatch(users, /\b(?:is_admin|role|plan|is_teacher|is_pro|is_paid|account_type)\b/i)
+  assert.match(schema, /CREATE TABLE public\.companies \([\s\S]*?plan_id text DEFAULT 'plan-foundation'::text NOT NULL/)
+  assert.doesNotMatch(schema, /owner_user_id/)
+  assert.match(schema, /CREATE TABLE public\.projects \([\s\S]*?company_id text NOT NULL[\s\S]*?plan_id text,/)
+  assert.match(schema, /company_memberships_role_check[\s\S]*?'OWNER'[\s\S]*?'ADMIN'[\s\S]*?'MEMBER'/)
+  assert.match(schema, /project_memberships_role_check[\s\S]*?'OWNER'[\s\S]*?'TEACHER'[\s\S]*?'TA'[\s\S]*?'STUDENT'[\s\S]*?'OBSERVER'/)
+  assert.match(schema, /project_memberships_company_id_user_id_fkey[\s\S]*?REFERENCES public\.company_memberships\(company_id, user_id\) ON DELETE CASCADE/)
+  assert.match(schema, /project_memberships_project_id_company_id_fkey[\s\S]*?REFERENCES public\.projects\(id, company_id\) ON DELETE CASCADE/)
+  assert.match(schema, /project_memberships_company_id_project_id_user_id_key[\s\S]*?UNIQUE \(company_id, project_id, user_id\)/)
+})
+
+test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
+  assert.match(schema, /plans_code_key UNIQUE \(code\)/)
+  assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)
+  assert.match(schema, /plan_entitlements_pkey PRIMARY KEY \(plan_id, entitlement_id\)/)
+  assert.match(schema, /jsonb_typeof\(value\).*?'boolean'.*?'number'.*?'string'/s)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.(?:subscriptions|project_entitlement_overrides)\b/)
 })
 
 test('v1 defaults preserve current capability and Canvas contracts', () => {
@@ -106,7 +137,7 @@ test('learning side effects have fenced tenant-scoped reconciliation identities'
 
 test('company member onboarding has one durable tenant-scoped leased effect', () => {
   assert.match(schema, /CREATE TABLE public\.company_onboarding_effects \([\s\S]*?company_id text NOT NULL[\s\S]*?member_id text NOT NULL/)
-  assert.match(schema, /company_onboarding_effects_member_fkey[\s\S]*?FOREIGN KEY \(company_id, member_id\) REFERENCES public\.company_members\(company_id, user_id\) ON DELETE CASCADE/)
+  assert.match(schema, /company_onboarding_effects_member_fkey[\s\S]*?FOREIGN KEY \(company_id, member_id\) REFERENCES public\.company_memberships\(company_id, user_id\) ON DELETE CASCADE/)
   assert.match(schema, /company_onboarding_effects_lease_check/)
   assert.match(schema, /company_onboarding_effects_identity_key UNIQUE\(company_id, member_id, kind\)/)
   assert.match(schema, /idx_company_onboarding_effects_due/)
@@ -178,4 +209,12 @@ test('production worker has no demo-data or starter-message seed path', () => {
 
 test('Canvas message evidence does not restore the SQL chat data plane', () => {
   assert.doesNotMatch(canvasReports, /\b(?:FROM|JOIN)\s+messages\b/i)
+})
+
+test('fresh-schema company creation uses the Foundation Plan entrypoint', () => {
+  assert.match(companyRepository, /ensureFoundationPlan\(db\)[\s\S]*INSERT INTO companies \(id,name,slug,plan_id\)/)
+  assert.match(companyRepository, /INSERT INTO company_memberships \(company_id,user_id,role\) VALUES \(\$1,\$2,'OWNER'\)/)
+  assert.match(companyRepository, /INSERT INTO project_memberships \(company_id,project_id,user_id,role\)[\s\S]*'OWNER'/)
+  assert.match(entitlementRepository, /FOUNDATION_PLAN[\s\S]*ON CONFLICT \(id\)/)
+  assert.doesNotMatch(schema, /INSERT INTO plans/i)
 })

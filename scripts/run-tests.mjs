@@ -3,21 +3,14 @@
 import { spawn } from 'node:child_process'
 import { existsSync, readdirSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
-import { changedPaths, parseBaseArgument } from './changed-paths.mjs'
+import { changedPaths, parseScopeArguments } from './changed-paths.mjs'
+import { selectLocalTests } from './local-test-selection.mjs'
 
 const roots = [
   resolve('server/src/__tests__'),
   resolve('src'),
   resolve('workers'),
 ]
-
-const architectureTests = {
-  frontend: [
-    'src/api/domain-boundaries.test.ts',
-    'src/lib/frontendArchitecture.test.ts',
-  ],
-  server: ['server/src/__tests__/api-module-boundaries.test.ts'],
-}
 
 function collect(directory) {
   const files = []
@@ -38,61 +31,29 @@ function repositoryPath(value) {
   return normalizePath(relative(process.cwd(), value))
 }
 
-function localTestFiles(allTests, changedPaths) {
-  const byPath = new Map(allTests.map((path) => [repositoryPath(path), path]))
-  const selected = new Set()
-  const addPath = (path) => {
-    const testFile = byPath.get(normalizePath(path))
-    if (testFile) selected.add(testFile)
-  }
-
-  for (const path of changedPaths) {
-    if (path === 'server/src/db/schema.sql' || path === 'server/src/db/bootstrap.ts') {
-      addPath('server/src/__tests__/schema-v1.test.ts')
-    }
-    if (path.endsWith('.test.ts')) addPath(path)
-    if (/\.[cm]?[jt]sx?$/.test(path) && !path.endsWith('.test.ts')) {
-      addPath(path.replace(/\.[cm]?[jt]sx?$/, '.test.ts'))
-    }
-
-    const feature = path.match(/^src\/features\/([^/]+)\//)?.[1]
-    if (feature) {
-      for (const testPath of byPath.keys()) {
-        if (testPath.startsWith(`src/features/${feature}/`)) addPath(testPath)
-      }
-    }
-
-    const serverDomain = path.match(/^server\/src\/(?:modules\/)?([^/]+)\//)?.[1]
-    if (serverDomain) {
-      for (const testPath of byPath.keys()) {
-        if (testPath.startsWith('server/src/__tests__/')
-          && testPath.slice('server/src/__tests__/'.length).startsWith(serverDomain)) addPath(testPath)
-      }
-    }
-  }
-
-  if (changedPaths.some((path) => path.startsWith('src/') && !path.endsWith('.test.ts'))) {
-    for (const path of architectureTests.frontend) addPath(path)
-  }
-  if (changedPaths.some((path) => path.startsWith('server/src/') && !path.includes('/__integration__/'))) {
-    for (const path of architectureTests.server) addPath(path)
-  }
-
-  return [...selected].sort((a, b) => repositoryPath(a).localeCompare(repositoryPath(b), 'en'))
-}
-
 const arguments_ = process.argv.slice(2)
 const localIndex = arguments_.indexOf('--local')
 const local = localIndex >= 0
 if (local) arguments_.splice(localIndex, 1)
-const { base, remaining: testArguments } = parseBaseArgument(arguments_)
+const { base, paths: taskPaths, tests: declaredTests, remaining: testArguments } = parseScopeArguments(
+  arguments_,
+  { allowTests: true },
+)
 if (base && !local) {
   console.error('[test] --base is available only with --local')
   process.exit(2)
 }
+if (taskPaths.length > 0 && !local) {
+  console.error('[test] --path is available only with --local')
+  process.exit(2)
+}
+if (declaredTests.length > 0 && !local) {
+  console.error('[test] --test is available only with --local')
+  process.exit(2)
+}
 
 const allTestFiles = roots.flatMap(collect).sort()
-const explicitTests = testArguments.map((path) => resolve(path))
+const explicitTests = [...declaredTests, ...testArguments].map((path) => resolve(path))
 for (const path of explicitTests) {
   if (!existsSync(path) || !path.endsWith('.test.ts')) {
     console.error(`[test] expected an existing .test.ts file: ${repositoryPath(path)}`)
@@ -104,13 +65,22 @@ for (const path of explicitTests) {
   }
 }
 
-const testFiles = explicitTests.length > 0
-  ? [...new Set(explicitTests)].sort()
-  : local ? localTestFiles(allTestFiles, changedPaths(base)) : allTestFiles
+if (local && !base && taskPaths.length === 0 && explicitTests.length === 0) {
+  console.log('[test:local] no task paths supplied; pass repeated --path/--test values or an explicit --base')
+  process.exit(0)
+}
+
+const testFiles = local
+  ? selectLocalTests(
+    allTestFiles.map(repositoryPath),
+    changedPaths({ base, paths: taskPaths }),
+    explicitTests.map(repositoryPath),
+  ).map(resolve)
+  : explicitTests.length > 0 ? [...new Set(explicitTests)].sort() : allTestFiles
 
 if (testFiles.length === 0) {
   if (local) {
-    console.log('[test:local] no owning unit tests selected; static guards are sufficient for this worktree')
+    console.log('[test:local] no direct unit tests selected; CI owns broader regression coverage')
     process.exit(0)
   }
   console.error('[test] no unit test files found')
@@ -118,7 +88,7 @@ if (testFiles.length === 0) {
 }
 
 if (local) {
-  console.log(`[test:local] running ${testFiles.length} focused file(s)${base ? ` since ${base}` : ''}:`)
+  console.log(`[test:local] running ${testFiles.length} direct file(s)${base ? ` since ${base}` : ''}:`)
   for (const path of testFiles) console.log(`  - ${repositoryPath(path)}`)
 }
 

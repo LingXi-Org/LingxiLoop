@@ -15,7 +15,8 @@ export async function requireCompanyRole(
 ): Promise<{ userId: string; companyId: string; role: string }> {
   const { userId, companyId } = await requireCompany(req)
   const { rows } = await pool.query<{ role: string }>(
-    `SELECT role FROM company_members WHERE company_id = $1 AND user_id = $2 LIMIT 1`,
+    `SELECT LOWER(role) AS role FROM company_memberships
+      WHERE company_id = $1 AND user_id = $2 AND status='ACTIVE' LIMIT 1`,
     [companyId, userId],
   )
   const role = rows[0]?.role ?? 'member'
@@ -33,15 +34,16 @@ export async function requireConversationMember(
   const { rows } = await pool.query<{ project_id: string | null; members: string[]; kind: string; project_allowed: boolean }>(
     `SELECT conversation.project_id,conversation.members,conversation.kind,
             (conversation.project_id IS NULL OR project.is_general=TRUE
-             OR company_member.role IN ('owner','admin')
+             OR company_member.role IN ('OWNER','ADMIN')
              OR course_member.user_id IS NOT NULL) AS project_allowed
        FROM conversations conversation
        LEFT JOIN projects project ON project.id=conversation.project_id
-       JOIN company_members company_member
+       JOIN company_memberships company_member
          ON company_member.company_id=conversation.company_id AND company_member.user_id=$3
-       LEFT JOIN courses course ON course.project_id=project.id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id=course.id AND course_member.user_id=$3
+        AND company_member.status='ACTIVE'
+       LEFT JOIN project_memberships course_member
+         ON course_member.project_id=project.id AND course_member.company_id=conversation.company_id
+        AND course_member.user_id=$3 AND course_member.status='ACTIVE'
       WHERE conversation.id=$1 AND conversation.company_id=$2 LIMIT 1`,
     [conversationId, companyId, userId],
   )
@@ -55,7 +57,8 @@ export async function requireGroupConversation(req: Request & AuthedRequest, con
   const membership = await requireConversationMember(req, conversationId)
   if (membership.kind !== 'group') throw new HttpError(404, 'not found')
   const { rows } = await pool.query<{ role: string }>(
-    `SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2 LIMIT 1`,
+    `SELECT LOWER(role) AS role FROM company_memberships
+      WHERE company_id=$1 AND user_id=$2 AND status='ACTIVE' LIMIT 1`,
     [membership.companyId, membership.userId],
   )
   return { ...membership, role: rows[0]?.role ?? 'member' }
@@ -66,11 +69,13 @@ export async function requireCanvasWorkspace(req: Request & AuthedRequest, canva
   const { rows } = await pool.query<{ conversation_id: string; project_id: string | null }>(
     `SELECT cv.conversation_id,c.project_id FROM canvases cv JOIN conversations c ON c.id=cv.conversation_id
       JOIN projects project ON project.id=c.project_id
-      JOIN company_members company_member ON company_member.company_id=c.company_id AND company_member.user_id=$3
-      LEFT JOIN courses course ON course.project_id=project.id
-      LEFT JOIN course_members course_member ON course_member.course_id=course.id AND course_member.user_id=$3
+      JOIN company_memberships company_member ON company_member.company_id=c.company_id AND company_member.user_id=$3
+        AND company_member.status='ACTIVE'
+      LEFT JOIN project_memberships course_member
+        ON course_member.project_id=project.id AND course_member.company_id=c.company_id
+       AND course_member.user_id=$3 AND course_member.status='ACTIVE'
       WHERE cv.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text])
-        AND (project.is_general=TRUE OR company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+        AND (project.is_general=TRUE OR company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       LIMIT 1`,
     [canvasId, companyId, userId],
   )
@@ -84,11 +89,13 @@ export async function requireCanvasFrameWorkspace(req: Request & AuthedRequest, 
   const { rows } = await pool.query<{ project_id: string | null }>(
     `SELECT c.project_id FROM canvas_frames f JOIN canvases cv ON cv.id=f.canvas_id JOIN conversations c ON c.id=cv.conversation_id
       JOIN projects project ON project.id=c.project_id
-      JOIN company_members company_member ON company_member.company_id=c.company_id AND company_member.user_id=$3
-      LEFT JOIN courses course ON course.project_id=project.id
-      LEFT JOIN course_members course_member ON course_member.course_id=course.id AND course_member.user_id=$3
+      JOIN company_memberships company_member ON company_member.company_id=c.company_id AND company_member.user_id=$3
+        AND company_member.status='ACTIVE'
+      LEFT JOIN project_memberships course_member
+        ON course_member.project_id=project.id AND course_member.company_id=c.company_id
+       AND course_member.user_id=$3 AND course_member.status='ACTIVE'
       WHERE f.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text])
-        AND (project.is_general=TRUE OR company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
+        AND (project.is_general=TRUE OR company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       LIMIT 1`,
     [frameId, companyId, userId],
   )

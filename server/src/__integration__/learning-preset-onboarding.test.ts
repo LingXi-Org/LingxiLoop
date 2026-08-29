@@ -17,10 +17,10 @@ async function seedEmptyWorkspace(): Promise<{ companyId: string; ownerId: strin
     [ownerId, `${ownerId}@test.local`],
   )
   await pool.query(
-    "INSERT INTO companies (id, name, slug, owner_user_id) VALUES ($1, 'Learning Co', $1, $2)",
-    [companyId, ownerId],
+    "INSERT INTO companies (id, name, slug) VALUES ($1, 'Learning Co', $1)",
+    [companyId],
   )
-  await pool.query("INSERT INTO company_members (company_id, user_id, role) VALUES ($1, $2, 'owner')", [companyId, ownerId])
+  await pool.query("INSERT INTO company_memberships (company_id, user_id, role) VALUES ($1, $2, 'OWNER')", [companyId, ownerId])
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status)
      VALUES ($1, $2, 'human', 'Student', 'student', 'S', '#aaa', 'avail')`,

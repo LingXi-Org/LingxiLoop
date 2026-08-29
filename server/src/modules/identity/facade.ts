@@ -3,11 +3,6 @@ import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
 import { mirrorTrustedIdentityAvatar } from './avatar-facade.js'
 import {
-  enqueueWaitlist,
-  isAllowlistedAdmin,
-  isWaitlistEnabled,
-} from '../admin/facade.js'
-import {
   finalizeCompanyStarterWorkspace,
   provisionPersonalCompany,
 } from '../companies/public.js'
@@ -23,7 +18,6 @@ import {
   identityDoneUrl,
   identityErrorUrl,
   identitySuspendedUrl,
-  identityWaitlistUrl,
 } from './oauth-urls.js'
 import { IdentityApplication } from './application.js'
 import { OAuthApplication, oauthIds } from './oauth-application.js'
@@ -38,9 +32,6 @@ import {
 const oauthApplication = new OAuthApplication({
   transaction: (work) => withTransaction(pool, work),
   fetchProfile: fetchIdentityProfile,
-  waitlistEnabled: isWaitlistEnabled,
-  isAllowlistedAdmin,
-  enqueueWaitlist,
   mirrorAvatar: mirrorTrustedIdentityAvatar,
   provisionCompany: provisionPersonalCompany,
   finalizeCompany: finalizeCompanyStarterWorkspace,
@@ -48,7 +39,6 @@ const oauthApplication = new OAuthApplication({
   audit,
   defaultDoneUrl: env.AUTH_DONE_URL,
   doneUrl: identityDoneUrl,
-  waitlistUrl: identityWaitlistUrl,
   suspendedUrl: identitySuspendedUrl,
   ...oauthIds,
 })

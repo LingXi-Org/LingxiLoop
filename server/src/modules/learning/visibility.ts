@@ -28,9 +28,10 @@ export async function canDiscoverPulse(
        FROM learning_project_teacher_agents pulse
        JOIN courses course
          ON course.project_id=pulse.project_id AND course.company_id=pulse.company_id
-       JOIN course_members member
-         ON member.course_id=course.id AND member.company_id=course.company_id
-        AND member.user_id=$3 AND member.role='teacher'
+       JOIN project_memberships member
+         ON member.project_id=course.project_id AND member.company_id=course.company_id
+        AND member.user_id=$3 AND member.status='ACTIVE'
+        AND member.role IN ('OWNER','TEACHER')
       WHERE pulse.agent_id=$1 AND pulse.company_id=$2
       LIMIT 1`,
     [agentId, companyId, userId],
@@ -91,9 +92,10 @@ export async function assertTeacherRoomAccessible(
   }>(
     `SELECT room.status AS room_status,project.status AS project_status,
             EXISTS(
-              SELECT 1 FROM course_members member
-               WHERE member.course_id=course.id AND member.company_id=course.company_id
-                 AND member.user_id=$3 AND member.role='teacher'
+              SELECT 1 FROM project_memberships member
+               WHERE member.project_id=course.project_id AND member.company_id=course.company_id
+                 AND member.user_id=$3 AND member.status='ACTIVE'
+                 AND member.role IN ('OWNER','TEACHER')
             ) AS current_teacher
        FROM learning_course_teacher_rooms room
        JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id

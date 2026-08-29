@@ -6,7 +6,6 @@ import { pool } from './db/pool.js'
 import { startDbGcWorker } from './db-gc.js'
 import { env } from './env.js'
 import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
-import { seedAdmins } from './modules/admin/facade.js'
 import { startCalendarScheduler } from './modules/calendar/index.js'
 import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
 import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
@@ -47,7 +46,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
 ]
 
 async function prepareWorkerData(): Promise<void> {
-  await seedAdmins()
   const { channels, failures } = await reconcileImChannels()
   console.log(`[worker] reconciled ${channels - failures}/${channels} IM channels`)
 }

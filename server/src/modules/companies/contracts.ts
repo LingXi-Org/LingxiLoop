@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { CompanyRole, CompanyRoleWire } from '../../domain/access/public.js'
 
 export const createCompanyRequestSchema = z.object({
   name: z.string().trim().min(1, 'name required').max(80),
@@ -36,7 +37,7 @@ export interface InvitationRow {
   company_id: string
   invited_by: string
   email: string | null
-  role: string
+  role: CompanyRole
   note: string | null
   max_uses: number
   use_count: number
@@ -50,7 +51,7 @@ export interface InvitationRow {
 export interface InvitationPreview {
   status: 'valid' | 'revoked' | 'expired' | 'consumed' | 'wrong_email' | 'already_member' | 'not_found'
   invitation?: {
-    role: string
+    role: CompanyRoleWire
     email: string | null
     note: string | null
     expiresAt: string

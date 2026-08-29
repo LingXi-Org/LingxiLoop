@@ -157,7 +157,7 @@ function onHumanDisconnect(userId: string): Promise<void> {
 
 async function loadMemberships(userId: string): Promise<Set<string>> {
   const { rows } = await pool.query<{ company_id: string }>(
-    `SELECT company_id FROM company_members WHERE user_id = $1`,
+    `SELECT company_id FROM company_memberships WHERE user_id = $1 AND status='ACTIVE'`,
     [userId],
   )
   return new Set(rows.map((r) => r.company_id))
@@ -401,12 +401,13 @@ export function attachWebSocket(httpServer: Server) {
       const { rows } = await pool.query<{ user_id: string }>(
         `SELECT company_member.user_id
            FROM projects project
-           JOIN company_members company_member ON company_member.company_id=project.company_id
-           LEFT JOIN courses course ON course.project_id=project.id
-           LEFT JOIN course_members course_member
-             ON course_member.course_id=course.id AND course_member.user_id=company_member.user_id
+           JOIN company_memberships company_member ON company_member.company_id=project.company_id
+             AND company_member.status='ACTIVE'
+           LEFT JOIN project_memberships course_member
+             ON course_member.project_id=project.id AND course_member.company_id=project.company_id
+            AND course_member.user_id=company_member.user_id AND course_member.status='ACTIVE'
           WHERE project.id=$1 AND project.company_id=$2
-            AND (project.is_general=TRUE OR company_member.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)`,
+            AND (project.is_general=TRUE OR company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)`,
         [workspaceId, companyId],
       )
       projectViewers = new Set(rows.map((row) => row.user_id))

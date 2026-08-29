@@ -52,14 +52,14 @@ beforeEach(async () => {
     [OWNER, MEMBER, SECOND, FOREIGN_MEMBER],
   )
   await pool.query(
-    `INSERT INTO companies (id,name,slug,owner_user_id) VALUES
-       ($1,'Company Slice','company-slice',$3),
-       ($2,'Foreign Company','foreign-company',$4)`,
-    [COMPANY, FOREIGN_COMPANY, OWNER, FOREIGN_MEMBER],
+    `INSERT INTO companies (id,name,slug) VALUES
+       ($1,'Company Slice','company-slice'),
+       ($2,'Foreign Company','foreign-company')`,
+    [COMPANY, FOREIGN_COMPANY],
   )
   await pool.query(
-    `INSERT INTO company_members (company_id,user_id,role) VALUES
-       ($1,$3,'owner'),($1,$4,'member'),($2,$5,'owner')`,
+    `INSERT INTO company_memberships (company_id,user_id,role) VALUES
+       ($1,$3,'OWNER'),($1,$4,'MEMBER'),($2,$5,'OWNER')`,
     [COMPANY, FOREIGN_COMPANY, OWNER, MEMBER, FOREIGN_MEMBER],
   )
 })
@@ -85,7 +85,7 @@ test('[integration] member removal disconnects immediately and retries IM reconc
   await assert.rejects(application.removeMember(input), /reconciliation failed/)
   assert.deepEqual(disconnected, [{ userId: MEMBER, companyId: COMPANY }])
   assert.equal((await pool.query(
-    `SELECT 1 FROM company_members WHERE company_id=$1 AND user_id=$2`, [COMPANY, MEMBER],
+    `SELECT 1 FROM company_memberships WHERE company_id=$1 AND user_id=$2`, [COMPANY, MEMBER],
   )).rowCount, 0)
 
   assert.deepEqual(await application.removeMember(input), { ok: true })
@@ -96,14 +96,15 @@ after(async () => { await teardownAll() })
 
 test('[integration] company creation commits one tenant root and required General workspace', async () => {
   const created = await application.createCompany(SECOND, { name: 'Strict Workspace' }, { ip: null, userAgent: null })
-  const root = await pool.query<{ owner_user_id: string; project_count: number; participant_count: number }>(
-    `SELECT company.owner_user_id,
+  const root = await pool.query<{ owner_count: number; project_count: number; participant_count: number }>(
+    `SELECT (SELECT COUNT(*)::int FROM company_memberships
+              WHERE company_id=company.id AND user_id=$2 AND role='OWNER' AND status='ACTIVE') AS owner_count,
             (SELECT COUNT(*)::int FROM projects WHERE company_id=company.id AND is_general=TRUE) AS project_count,
             (SELECT COUNT(*)::int FROM participants WHERE company_id=company.id AND id=$2) AS participant_count
        FROM companies company WHERE company.id=$1`,
     [created.id, SECOND],
   )
-  assert.equal(root.rows[0]?.owner_user_id, SECOND)
+  assert.equal(root.rows[0]?.owner_count, 1)
   assert.equal(root.rows[0]?.project_count, 1)
   assert.equal(root.rows[0]?.participant_count, 1)
   assert.equal(audits.some((entry) => entry.kind === 'company_create' && entry.companyId === created.id), true)
@@ -118,10 +119,10 @@ test('[integration] company member mutation never crosses tenant ownership', asy
     (error) => error instanceof CompanyApplicationError && error.code === 'not_found',
   )
   const foreign = await pool.query<{ role: string }>(
-    `SELECT role FROM company_members WHERE company_id=$1 AND user_id=$2`,
+    `SELECT role FROM company_memberships WHERE company_id=$1 AND user_id=$2`,
     [FOREIGN_COMPANY, FOREIGN_MEMBER],
   )
-  assert.equal(foreign.rows[0]?.role, 'owner')
+  assert.equal(foreign.rows[0]?.role, 'OWNER')
 })
 
 test('[integration] single-use invitation accepts exactly once under concurrency', async () => {
@@ -149,7 +150,7 @@ test('[integration] single-use invitation accepts exactly once under concurrency
   )
   assert.equal(state.rows[0]?.use_count, 1)
   const memberships = await pool.query<{ user_id: string }>(
-    `SELECT user_id FROM company_members WHERE company_id=$1 AND user_id=ANY($2::text[])`,
+    `SELECT user_id FROM company_memberships WHERE company_id=$1 AND user_id=ANY($2::text[])`,
     [COMPANY, [SECOND, FOREIGN_MEMBER]],
   )
   assert.equal(memberships.rows.length, 1)

@@ -157,18 +157,6 @@ export const env = {
   /** Public base URL used to build company invitation links. */
   INVITE_BASE_URL: required('LINGXILOOP_INVITE_BASE_URL'),
   /**
-   * Comma-separated allow-list of emails that are forced to `is_admin =
-   * true` on every server boot. The bootstrap path so that adding a new
-   * admin doesn't require a SQL session — just add their email here +
-   * redeploy. Removing an email from the env does NOT demote the user
-   * (we never write FALSE from this path); demotion goes through the
-   * admin panel.
-   */
-  ADMIN_EMAILS: (process.env.LINGXILOOP_ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean),
-  /**
    * Real-email feature. When all three core vars are set, agents can send
    * mail (Resend) and receive mail (Cloudflare Email Worker → /webhooks/
    * email/inbound). All three values are required by the native subsystem.

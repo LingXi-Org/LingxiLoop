@@ -3,7 +3,6 @@ import { authMiddleware } from '../auth.js'
 import { errorHandler } from '../http/errors.js'
 import { imRouter } from '../im/router.js'
 import { agentsRouter } from '../modules/agents/router.js'
-import { adminRouter } from '../modules/admin/router.js'
 import { boardsRouter } from '../modules/boards/router.js'
 import { calendarRouter } from '../modules/calendar/router.js'
 import { canvasRouter } from '../modules/canvas/router.js'
@@ -24,7 +23,6 @@ export const api = Router()
 api.use(authMiddleware as never)
 api.use(platformRouter)
 api.use(identityRouter)
-api.use('/admin', adminRouter)
 api.use('/im', imRouter)
 api.use(companiesRouter)
 api.use(canvasRouter)

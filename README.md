@@ -120,25 +120,17 @@ service mounts the Docker socket or shares an Agent execution environment.
 ## Verification
 
 ```powershell
-npm run guard:agent-os
-npm run guard:architecture
-npm run guard:llm-tracked
-npm run guard:brand
-npm run version:check
-npm run lint:local
-npm run server:typecheck
-npm run typecheck
-npm run test:local
+node .agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs --path <changed-file>
+npm run lint:local -- --path <changed-file>
+npm run test:local -- --path <changed-file> --test <non-sibling-owning-test>
 ```
 
-The guards reject retired endpoints and switches, production mock branches,
-provider/storage/transport bypasses, executable Codex/Claude adapters,
-LingxiGraph runtime dependencies, and any model tool surface other than
-`ipython`. They also pin the official shadcn preset `b3bZWXGcRE` as the sole UI
-primitive baseline and reject production Base UI dependencies.
+Pass every file written in the current task with a repeated `--path`. Completed
+commits and unchanged local work are the trusted baseline; no-argument local
+runners intentionally do nothing. The classifier adds a typecheck or global
+guard only when this task changes that check's public or authoritative input.
 
-These are the fast local gates; the change classifier narrows them to the
-domains actually touched. CI owns full lint and unit suites, integration,
+CI owns full lint, types, architecture guards, unit/integration suites,
 production build, Eval, Compose smoke, and packaging checks.
 
 ## Package publishing and production

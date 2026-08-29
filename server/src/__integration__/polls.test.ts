@@ -62,8 +62,8 @@ after(async () => {
 
 async function seedWorld(): Promise<void> {
   await pool.query(
-    `INSERT INTO companies (id, name, slug, owner_user_id) VALUES ($1, 'Polls Co', 'polls-co', $2)`,
-    [COMPANY, ME],
+    `INSERT INTO companies (id, name, slug) VALUES ($1, 'Polls Co', 'polls-co')`,
+    [COMPANY],
   )
   await pool.query(
     `INSERT INTO im_channel_bindings (channel_id, company_id, profile)
@@ -160,9 +160,9 @@ test('[integration] poll identities and reads stay tenant-scoped', async () => {
   const otherCompany = 'c-polls-other'
   const otherConversation = 'co-polls-other'
   await pool.query(
-    `INSERT INTO companies (id,name,slug,owner_user_id)
-     VALUES ($1,'Other Polls Co','other-polls-co',$2)`,
-    [otherCompany, ME],
+    `INSERT INTO companies (id,name,slug)
+     VALUES ($1,'Other Polls Co','other-polls-co')`,
+    [otherCompany],
   )
   await seedUserMembership(ME, otherCompany)
   await pool.query(

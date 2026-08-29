@@ -25,8 +25,10 @@ export async function loadTeacherOverviewRows(
     db.query<DataRow>(
       `WITH totals AS (
         SELECT
-          (SELECT COUNT(*) FROM course_members
-            WHERE company_id=$1 AND course_id=$2 AND role='learner') *
+          (SELECT COUNT(*) FROM project_memberships member
+            JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
+            WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+              AND member.role IN ('STUDENT','OBSERVER')) *
           (SELECT COUNT(*) FROM learning_objectives
             WHERE company_id=$1 AND course_id=$2 AND status<>'archived') AS possible
       ), levels AS (SELECT generate_series(0,4) AS level)
@@ -68,17 +70,19 @@ export async function loadTeacherOverviewRows(
         COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.next_review_at<=NOW())::int AS due_reviews,
         COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.status='needs_review')::int AS needs_review,
         COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='paused')::int AS paused_missions
-      FROM course_members member
+      FROM project_memberships member
       JOIN users user_account ON user_account.id=member.user_id
+      JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
       LEFT JOIN learning_mastery mastery
         ON mastery.company_id=member.company_id
-       AND mastery.course_id=member.course_id
+       AND mastery.course_id=course.id
        AND mastery.learner_id=member.user_id
       LEFT JOIN learning_missions mission
         ON mission.company_id=member.company_id
-       AND mission.course_id=member.course_id
+       AND mission.course_id=course.id
        AND mission.learner_id=member.user_id
-      WHERE member.company_id=$1 AND member.course_id=$2 AND member.role='learner'
+      WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+        AND member.role IN ('STUDENT','OBSERVER')
       GROUP BY member.user_id,user_account.display_name
       HAVING COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.next_review_at<=NOW())>0
           OR COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.status='needs_review')>0
@@ -89,8 +93,10 @@ export async function loadTeacherOverviewRows(
     ),
     db.query<DataRow>(
       `SELECT
-        (SELECT COUNT(*)::int FROM course_members
-          WHERE company_id=$1 AND course_id=$2 AND role='learner') AS learners,
+        (SELECT COUNT(*)::int FROM project_memberships member
+          JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
+          WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+            AND member.role IN ('STUDENT','OBSERVER')) AS learners,
         COUNT(DISTINCT attempt.learner_id)::int AS learners_with_evidence,
         COUNT(DISTINCT attempt.id)::int AS verified_attempts,
         COUNT(DISTINCT mastery.learner_id||':'||mastery.objective_id)
@@ -127,17 +133,19 @@ export async function listTeacherLearnerRows(
       COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.next_review_at<=NOW())::int AS due_reviews,
       COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.status='needs_review')::int AS needs_review,
       COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='paused')::int AS paused_missions
-    FROM course_members member
+    FROM project_memberships member
     JOIN users user_account ON user_account.id=member.user_id
+    JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
     LEFT JOIN learning_mastery mastery
       ON mastery.company_id=member.company_id
-     AND mastery.course_id=member.course_id
+     AND mastery.course_id=course.id
      AND mastery.learner_id=member.user_id
     LEFT JOIN learning_missions mission
       ON mission.company_id=member.company_id
-     AND mission.course_id=member.course_id
+     AND mission.course_id=course.id
      AND mission.learner_id=member.user_id
-    WHERE member.company_id=$1 AND member.course_id=$2 AND member.role='learner'
+    WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+      AND member.role IN ('STUDENT','OBSERVER')
     GROUP BY member.user_id,user_account.display_name,user_account.email
     HAVING NOT $3::boolean
       OR COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.next_review_at<=NOW())>0
@@ -157,10 +165,12 @@ export async function findTeacherLearner(
 ): Promise<DataRow | undefined> {
   const { rows } = await db.query<DataRow>(
     `SELECT user_account.display_name,user_account.email
-       FROM course_members member
+       FROM project_memberships member
        JOIN users user_account ON user_account.id=member.user_id
-      WHERE member.company_id=$1 AND member.course_id=$2
-        AND member.user_id=$3 AND member.role='learner'`,
+       JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
+      WHERE member.company_id=$1 AND course.id=$2
+        AND member.user_id=$3 AND member.status='ACTIVE'
+        AND member.role IN ('STUDENT','OBSERVER')`,
     [scope.companyId, scope.courseId, learnerId],
   )
   return rows[0]

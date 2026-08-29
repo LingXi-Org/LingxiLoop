@@ -38,11 +38,6 @@ Map:
 
 Add behavior tests that would fail for missing tenant predicates, wrong joins, duplicate retries, partial commits, and unsafe deletion. For schema work, verify an empty database initializes completely, a ready v1 database is accepted read-only, and incomplete or legacy schemas are rejected with reset guidance.
 
-Use `$lingxiloop-verify-change` to select the exact set. Database changes normally require:
+Pass only persistence files written in this task to `$lingxiloop-verify-change`. The schema and bootstrap paths select their direct schema unit contract; add another owning test explicitly only when the changed behavior is not represented there. Public type or global guard checks run locally only when their canonical input changed.
 
-```text
-npm run server:typecheck
-npm run test:local
-```
-
-Run the focused v1 schema unit tests when bootstrap or integrity behavior changes. Run Agent OS/LLM guards when the persisted contract belongs to those paths. CI owns the full unit and PostgreSQL/Redis integration suites; do not provision services or run the entire integration directory locally by default. Reproduce only an exact failing integration file when requested.
+CI owns the complete schema bootstrap, tenant-negative, transaction, type, unit, and PostgreSQL/Redis integration evidence. Reproduce only an exact failing integration file when requested.

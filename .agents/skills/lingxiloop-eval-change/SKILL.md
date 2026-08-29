@@ -10,7 +10,7 @@ Build Eval evidence that can detect a regression in the current Agent behavior, 
 ## Workflow
 
 1. Read [references/eval-contracts.md](references/eval-contracts.md) before changing a suite, baseline, runtime observation, persistence, or comparison behavior.
-2. Invoke `$lingxiloop-verify-change` and run its classifier against the intended diff. Confirm Eval paths produce `ci.eval=true`. Accept `ci.evalFocused=true` only when every changed path is Eval-owned. Shared Agent OS, DB, API, Admin shell, or integration-runner files must fail closed to their owning checks; package manifests, workflows, and classifier changes require `ci.fullMatrix=true`.
+2. Invoke `$lingxiloop-verify-change` with only Eval paths written in this task. Confirm they produce `ci.eval=true`; package manifests, workflows, and selector changes still require the CI full matrix.
 3. Choose the lightest truthful execution mode:
    - Use frozen inline observations only to test evaluator, parser, sanitizer, gate, and report semantics.
    - Use the deterministic Agent OS runtime harness for merge-blocking behavior coverage. Exercise the real runtime with `MemoryHostAdapter`, `ScriptedModelDriver`, and a deterministic Kernel/Host seam; do not call external models or networks.
@@ -19,22 +19,13 @@ Build Eval evidence that can detect a regression in the current Agent behavior, 
 5. Update a baseline only after the new behavior is intentionally accepted. Never raise/lower a baseline merely to silence a regression. Compare run, dimension, and Case deltas before accepting it.
 6. Preserve the real trace chain: input, decision, model hop, IPython cell, Host Bridge action, Approval/Canvas activity, and final answer. Use runtime durations when available; do not substitute evaluator compute time.
 7. Sanitize before persistence or report creation. RAG results may retain sourceId, chunkId, marker, title, position, and bounded status/count metadata, but never excerpts or retrieved content. Allowlist ordinary tool results and redact secrets, authorization, message bodies, stdout/stderr, and oversized payloads.
-8. Run focused evidence from the matrix below and report which scopes were intentionally skipped. Expand to owning or full-matrix evidence whenever `$lingxiloop-verify-change` classifies a shared/high-risk path or the user asks for it.
+8. Run direct local evidence and hand the classifier's broader plan to CI. Expand locally only when the user requests an exact rehearsal or CI failure reproduction.
 
 ## Focused verification
 
-Run these for every Eval change:
+Run the task-scoped lint and direct Eval tests selected by `$lingxiloop-verify-change`. Typechecks and Agent OS/LLM guards are local only when this task changes their public or authoritative contract inputs.
 
-```bash
-npm run guard:brand
-npm run guard:agent-os
-npm run guard:llm-tracked
-npm run lint:local
-npm run server:typecheck
-npm run test:eval
-```
-
-Add `npm run typecheck` for the Eval Dashboard. CI owns `npm run eval:check`, Dashboard build, Eval persistence integration, full unit/integration, Compose, vendored Open Notebook, desktop packaging, and the complete matrix. Run a CI-owned command locally only when explicitly requested or reproducing that exact failure.
+CI owns `eval:check`, UI type/build evidence, Eval persistence integration, full unit/integration, global guards, Compose, vendored Open Notebook, desktop packaging, and the complete matrix. Run a CI-owned command locally only when explicitly requested or reproducing that exact failure.
 
 ## Completion bar
 

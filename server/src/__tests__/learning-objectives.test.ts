@@ -39,7 +39,8 @@ test('objective writes carry the tenant and course scope in the authoritative re
   assert.match(statements[0]?.text ?? '', /course\.id=\$2 AND course\.company_id=\$3/)
   assert.deepEqual(statements[1]?.params?.slice(0, 4), ['company-1', 'course-1', 'objective-1', 'teacher-1'])
   assert.match(statements[1]?.text ?? '', /objective\.course_id=\$2 AND objective\.company_id=\$1/)
-  assert.match(statements[1]?.text ?? '', /member\.user_id=\$4 AND member\.role='teacher'/)
+  assert.match(statements[1]?.text ?? '', /member\.user_id=\$4 AND member\.role IN \('OWNER','TEACHER'\)/)
+  assert.match(statements[1]?.text ?? '', /member\.status='ACTIVE'/)
 })
 
 test('objective reads map only rows from the requested tenant and course', async () => {

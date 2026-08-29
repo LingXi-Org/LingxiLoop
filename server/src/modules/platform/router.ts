@@ -83,16 +83,6 @@ platformRouter.get('/og', async (req, res) => {
   }
 })
 
-platformRouter.get('/public/signup-config', async (_req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Cache-Control', 'public, max-age=30')
-  try {
-    res.json(await platformApplication.signupConfig())
-  } catch (error) {
-    res.status(503).json({ error: error instanceof Error ? error.message : 'signup configuration unavailable' })
-  }
-})
-
 platformRouter.get('/metrics', async (req, res) => {
   const expected = process.env.METRICS_BEARER_TOKEN ?? ''
   if (!expected) { res.status(404).send('not found'); return }

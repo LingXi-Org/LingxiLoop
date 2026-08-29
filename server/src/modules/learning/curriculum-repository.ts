@@ -96,9 +96,12 @@ export async function updateLearningObjectiveStatus(
     `UPDATE learning_objectives objective SET status=$5,updated_at=NOW()
       WHERE objective.id=$3 AND objective.course_id=$2 AND objective.company_id=$1
         AND EXISTS(
-          SELECT 1 FROM course_members member
-           WHERE member.course_id=objective.course_id AND member.company_id=objective.company_id
-             AND member.user_id=$4 AND member.role='teacher'
+          SELECT 1 FROM courses course
+          JOIN project_memberships member
+            ON member.project_id=course.project_id AND member.company_id=course.company_id
+           AND member.status='ACTIVE'
+           WHERE course.id=objective.course_id AND course.company_id=objective.company_id
+             AND member.user_id=$4 AND member.role IN ('OWNER','TEACHER')
         )`,
     [args.companyId,args.courseId,args.objectiveId,args.teacherId,args.status],
   )
@@ -259,9 +262,12 @@ export async function publishLearningActivityRecord(
     `UPDATE learning_activities activity
         SET status='published',published_by=$4,published_at=NOW(),updated_at=NOW()
       WHERE activity.company_id=$1 AND activity.course_id=$2 AND activity.id=$3 AND activity.status='draft'
-        AND EXISTS(SELECT 1 FROM course_members member
-          WHERE member.company_id=activity.company_id AND member.course_id=activity.course_id
-            AND member.user_id=$4 AND member.role='teacher')`,
+        AND EXISTS(SELECT 1 FROM courses course
+          JOIN project_memberships member
+            ON member.project_id=course.project_id AND member.company_id=course.company_id
+           AND member.status='ACTIVE'
+          WHERE course.company_id=activity.company_id AND course.id=activity.course_id
+            AND member.user_id=$4 AND member.role IN ('OWNER','TEACHER'))`,
     [args.companyId,args.courseId,args.activityId,args.teacherId],
   )
   return Boolean(result.rowCount)
@@ -274,9 +280,12 @@ export async function closeLearningActivityRecord(
   const result = await db.query(
     `UPDATE learning_activities activity SET status='closed',updated_at=NOW()
       WHERE activity.company_id=$1 AND activity.course_id=$2 AND activity.id=$3 AND activity.status='published'
-        AND EXISTS(SELECT 1 FROM course_members member
-          WHERE member.company_id=activity.company_id AND member.course_id=activity.course_id
-            AND member.user_id=$4 AND member.role='teacher')`,
+        AND EXISTS(SELECT 1 FROM courses course
+          JOIN project_memberships member
+            ON member.project_id=course.project_id AND member.company_id=course.company_id
+           AND member.status='ACTIVE'
+          WHERE course.company_id=activity.company_id AND course.id=activity.course_id
+            AND member.user_id=$4 AND member.role IN ('OWNER','TEACHER'))`,
     [args.companyId,args.courseId,args.activityId,args.teacherId],
   )
   return Boolean(result.rowCount)
@@ -296,9 +305,10 @@ export async function insertLearningActivityAttempt(
        JOIN learning_activities activity
          ON activity.course_id=course.id AND activity.company_id=course.company_id
         AND activity.id=$4 AND activity.status='published'
-       JOIN course_members learner
-         ON learner.course_id=course.id AND learner.company_id=course.company_id
-        AND learner.user_id=$5 AND learner.role='learner'
+       JOIN project_memberships learner
+         ON learner.project_id=course.project_id AND learner.company_id=course.company_id
+        AND learner.user_id=$5 AND learner.status='ACTIVE'
+        AND learner.role IN ('STUDENT','OBSERVER')
       WHERE course.company_id=$2 AND course.id=$3
      ON CONFLICT(company_id,course_id,activity_id,learner_id,client_submission_id)
        WHERE client_submission_id IS NOT NULL

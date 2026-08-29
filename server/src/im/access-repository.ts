@@ -5,7 +5,7 @@ export async function isCompanyMember(
   input: { userId: string; companyId: string },
 ): Promise<boolean> {
   const { rows } = await db.query(
-    `SELECT 1 FROM company_members WHERE user_id=$1 AND company_id=$2`,
+    `SELECT 1 FROM company_memberships WHERE user_id=$1 AND company_id=$2 AND status='ACTIVE'`,
     [input.userId, input.companyId],
   )
   return Boolean(rows[0])

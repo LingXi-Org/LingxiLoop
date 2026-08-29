@@ -6,7 +6,6 @@ import {
   identityDoneUrl,
   identityErrorUrl,
   identitySuspendedUrl,
-  identityWaitlistUrl,
 } from '../modules/identity/oauth-urls.js'
 
 function queryable(
@@ -32,7 +31,7 @@ const profile = {
 
 function dependencies(db: Queryable) {
   const calls = {
-    enqueue: 0,
+    provision: 0,
     mirror: 0,
     finalize: 0,
     session: 0,
@@ -43,17 +42,13 @@ function dependencies(db: Queryable) {
     value: {
       transaction: async <T>(work: (transaction: Queryable) => Promise<T>) => work(db),
       fetchProfile: async () => profile,
-      waitlistEnabled: async () => false,
-      isAllowlistedAdmin: () => false,
-      enqueueWaitlist: async () => { calls.enqueue += 1 },
       mirrorAvatar: async () => { calls.mirror += 1; return 'https://cdn.example/avatar.png' },
-      provisionCompany: async () => false,
+      provisionCompany: async () => { calls.provision += 1; return true },
       finalizeCompany: async () => { calls.finalize += 1 },
       createLoginSession: async () => { calls.session += 1; return { token: 'session-token', expiresAt: new Date(0) } },
       audit: async (input: { kind: string }) => { calls.audit.push(input.kind) },
       defaultDoneUrl: 'https://app.example/',
       doneUrl: identityDoneUrl,
-      waitlistUrl: identityWaitlistUrl,
       suspendedUrl: identitySuspendedUrl,
       userId: () => 'user-new',
       companyId: () => 'company-new',
@@ -66,7 +61,7 @@ function linkedUserDb(): Queryable {
   return queryable((text) => {
     if (/FROM user_identities/.test(text)) return { rows: [{ user_id: 'user-1' }] }
     if (/SELECT suspended_at/.test(text)) return { rows: [{ suspended_at: null, suspension_reason: null }] }
-    if (/FROM company_members/.test(text)) return { rows: [{ company_id: 'company-1' }] }
+    if (/FROM company_memberships/.test(text)) return { rows: [{ company_id: 'company-1' }] }
     return { rows: [], rowCount: 1 }
   })
 }
@@ -88,21 +83,26 @@ test('identity callback fails explicitly when authoritative avatar mirroring fai
   assert.equal(fixture.calls.session, 0)
 })
 
-test('new identities use the explicit waitlist path without creating a product session', async () => {
-  const db = queryable(() => ({ rows: [] }))
+test('invite-first identities still provision a Personal Company before creating a product session', async () => {
+  const db = queryable((text) => {
+    if (/FROM user_identities/.test(text)) return { rows: [] }
+    if (/FROM users WHERE LOWER/.test(text)) return { rows: [] }
+    if (/SELECT suspended_at/.test(text)) return { rows: [{ suspended_at: null, suspension_reason: null }] }
+    if (/FROM company_memberships/.test(text)) return { rows: [{ company_id: 'company-new' }] }
+    return { rows: [], rowCount: 1 }
+  })
   const fixture = dependencies(db)
-  fixture.value.waitlistEnabled = async () => true
   const application = new OAuthApplication(fixture.value)
 
   const result = await application.handleCallback({
     provider: 'lingxi', code: 'code', returnUrl: 'https://app.example/return', ip: '127.0.0.1', userAgent: 'test',
+    inviteToken: 'course-invite-token',
   })
 
-  assert.equal(result, 'https://app.example/return?waitlist=1&email=person%40example.com')
-  assert.equal(fixture.calls.enqueue, 1)
-  assert.deepEqual(fixture.calls.audit, ['signup_waitlisted'])
-  assert.equal(fixture.calls.mirror, 0)
-  assert.equal(fixture.calls.session, 0)
+  assert.equal(result, 'https://app.example/return#token=session-token&companyId=company-new')
+  assert.equal(fixture.calls.provision, 1)
+  assert.equal(fixture.calls.mirror, 1)
+  assert.equal(fixture.calls.session, 1)
 })
 
 test('unique conflicts retry the complete identity transaction before issuing a session', async () => {
@@ -128,9 +128,6 @@ test('unique conflicts retry the complete identity transaction before issuing a 
 })
 
 test('OAuth result URLs expose one canonical signal only', () => {
-  const waitlist = identityWaitlistUrl('https://app.example/return', profile.email)
-  assert.equal(waitlist, 'https://app.example/return?waitlist=1&email=person%40example.com')
-  assert.doesNotMatch(waitlist, /#/)
   assert.equal(identityDoneUrl('https://app.example/', 'secret', 'company-1'), 'https://app.example/#token=secret&companyId=company-1')
   assert.equal(identitySuspendedUrl('https://app.example/', profile.email, 'review'), 'https://app.example/#suspended=1&email=person%40example.com&reason=review')
   assert.equal(identityErrorUrl(null, 'https://app.example/', 'denied'), 'https://app.example/#error=denied')

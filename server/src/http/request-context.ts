@@ -15,7 +15,7 @@ export function requireAuth(req: Request & AuthedRequest): string {
 /**
  * Resolve the active company for an authenticated request.
  *  - Reads `x-company-id` header for the requested tenant
- *  - Verifies the authed user is a member of it (company_members)
+ *  - Verifies the authed user is a member of it (company_memberships)
  *  - Requires an explicit company header
  *  - Throws 403 on any membership mismatch — never trusts the header alone
  *
@@ -30,7 +30,8 @@ export async function requireCompany(req: Request & AuthedRequest): Promise<{ us
   })()
   if (requested) {
     const { rows } = await pool.query(
-      `SELECT 1 FROM company_members WHERE company_id = $1 AND user_id = $2 LIMIT 1`,
+      `SELECT 1 FROM company_memberships
+        WHERE company_id = $1 AND user_id = $2 AND status='ACTIVE' LIMIT 1`,
       [requested, userId],
     )
     if (rows.length === 0) throw new HttpError(403, 'not a member of this company')
@@ -47,7 +48,8 @@ export async function requireCompanyArtifactContext(req: Request & AuthedRequest
     const { rows } = await pool.query<{ id: string }>(
       `SELECT project.id
          FROM projects project
-         JOIN company_members member ON member.company_id=project.company_id AND member.user_id=$2
+         JOIN company_memberships member ON member.company_id=project.company_id AND member.user_id=$2
+          AND member.status='ACTIVE'
         WHERE project.company_id=$1 AND project.is_general=TRUE AND project.status='active'
         ORDER BY project.id LIMIT 1`,
       [companyId, userId],
@@ -97,12 +99,17 @@ export async function requireWorkspace(
     created_by: string; is_general: boolean; status: string; role: string
     course_id: string | null; course_role: 'teacher' | 'learner' | null
   }>(
-    `SELECT p.created_by, p.is_general, p.status, cm.role,
-            course.id AS course_id, course_member.role AS course_role
-       FROM projects p JOIN company_members cm ON cm.company_id = p.company_id AND cm.user_id = $2
+    `SELECT p.created_by, p.is_general, p.status, LOWER(cm.role) AS role,
+            course.id AS course_id,
+            CASE WHEN course_member.role IS NULL THEN NULL
+                 WHEN course_member.role IN ('STUDENT','OBSERVER') THEN 'learner'
+                 ELSE 'teacher' END AS course_role
+       FROM projects p JOIN company_memberships cm ON cm.company_id = p.company_id AND cm.user_id = $2
+        AND cm.status='ACTIVE'
        LEFT JOIN courses course ON course.project_id = p.id AND course.company_id = p.company_id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id = course.id AND course_member.user_id = $2
+       LEFT JOIN project_memberships course_member
+         ON course_member.project_id = p.id AND course_member.company_id=p.company_id
+        AND course_member.user_id = $2 AND course_member.status='ACTIVE'
       WHERE p.id = $1 AND p.company_id = $3 LIMIT 1`, [projectId, userId, companyId],
   )
   const row = rows[0]

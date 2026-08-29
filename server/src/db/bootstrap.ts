@@ -13,20 +13,21 @@ const REQUIRED_V1_RELATIONS = [
   'agent_host_actions', 'agent_log', 'agent_memory_evidence',
   'agent_os_approvals', 'agent_os_session_leases', 'agent_os_sessions',
   'agent_routine_runs', 'agent_routines', 'agent_runs', 'agent_tasks',
-  'agent_triages', 'agent_work_items', 'agent_workspace', 'app_settings',
+  'agent_triages', 'agent_work_items', 'agent_workspace',
   'audit_events', 'board_card_comments', 'board_cards', 'board_columns',
   'board_mention_reads', 'boards', 'calendar_dispatches', 'calendar_events',
   'calendar_reminders', 'canvas_activity', 'canvas_agent_assignments',
   'canvas_assignment_dependencies', 'canvas_assignment_reports',
   'canvas_comments', 'canvas_frames', 'canvas_presence', 'canvases', 'companies',
-  'company_invitations', 'company_members', 'convene_sessions',
+  'company_invitations', 'company_memberships', 'convene_sessions',
   'company_onboarding_effects',
   'convene_transcript', 'convening_info',
   'conversation_mutes', 'conversation_reads', 'conversation_source_exclusions',
   'conversations', 'course_invitation_acceptances', 'course_invitations',
-  'course_members', 'courses', 'document_mention_deliveries', 'document_mentions', 'document_snapshots',
+  'courses', 'document_mention_deliveries', 'document_mentions', 'document_snapshots',
   'document_updates', 'documents', 'email_attachments', 'email_contacts',
-  'email_messages', 'email_sequence_counters', 'eval_cases', 'eval_runs', 'eval_stage_results',
+  'email_messages', 'email_sequence_counters', 'entitlements',
+  'eval_cases', 'eval_runs', 'eval_stage_results',
   'im_channel_bindings', 'im_poll_votes', 'im_polls',
   'im_read_receipt_advances', 'im_send_acceptances', 'knowledge_insight_bindings',
   'knowledge_note_bindings', 'knowledge_notebook_bindings',
@@ -38,9 +39,25 @@ const REQUIRED_V1_RELATIONS = [
   'learning_effects',
   'learning_objective_dependencies', 'learning_objectives',
   'learning_project_teacher_agents', 'llm_calls', 'message_reactions',
-  'participants', 'project_visits', 'projects', 'sessions',
-  'tool_calls', 'user_identities', 'user_preferences', 'users', 'waitlist',
+  'participants', 'plan_entitlements', 'plans', 'project_memberships',
+  'project_visits', 'projects', 'sessions',
+  'tool_calls', 'user_identities', 'user_preferences', 'users',
   'ws_tickets', 'wukong_webhook_receipts',
+] as const
+
+const FORBIDDEN_V1_RELATIONS = [
+  'app_settings', 'company_members', 'course_members', 'permissions', 'waitlist',
+] as const
+
+const FORBIDDEN_V1_COLUMNS = [
+  ['companies', 'owner_user_id'],
+  ['users', 'is_admin'],
+  ['users', 'role'],
+  ['users', 'plan'],
+  ['users', 'is_teacher'],
+  ['users', 'is_pro'],
+  ['users', 'is_paid'],
+  ['users', 'account_type'],
 ] as const
 
 const REQUIRED_V1_COLUMNS = [
@@ -67,6 +84,20 @@ const REQUIRED_V1_COLUMNS = [
   ['learning_effects', 'generation'],
   ['learning_effects', 'queued_payload'],
   ['company_onboarding_effects', 'lease_token'],
+  ['companies', 'plan_id'],
+  ['plans', 'code'],
+  ['plans', 'status'],
+  ['entitlements', 'code'],
+  ['plan_entitlements', 'value'],
+  ['company_memberships', 'id'],
+  ['company_memberships', 'role'],
+  ['company_memberships', 'status'],
+  ['project_memberships', 'id'],
+  ['project_memberships', 'company_id'],
+  ['project_memberships', 'project_id'],
+  ['project_memberships', 'role'],
+  ['project_memberships', 'status'],
+  ['projects', 'plan_id'],
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [
@@ -75,10 +106,18 @@ const REQUIRED_V1_NOT_NULL_COLUMNS = [
   ['calendar_events', 'project_id', null],
   ['document_mention_deliveries', 'recipients', null],
   ['document_mention_deliveries', 'status', "'queued'::text"],
+  ['companies', 'plan_id', "'plan-foundation'::text"],
+  ['company_memberships', 'status', "'ACTIVE'::text"],
+  ['project_memberships', 'status', "'ACTIVE'::text"],
 ] as const
 
 const REQUIRED_V1_PRIMARY_KEYS = [
   ['agent_climate', ['company_id', 'agent_id', 'about_id']],
+  ['company_memberships', ['id']],
+  ['project_memberships', ['id']],
+  ['plans', ['id']],
+  ['entitlements', ['id']],
+  ['plan_entitlements', ['plan_id', 'entitlement_id']],
 ] as const
 
 const REQUIRED_V1_CONSTRAINTS = [
@@ -97,6 +136,29 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['email_attachments', 'email_attachments_message_scope_fkey', 'f'],
   ['email_messages', 'email_messages_conversation_id_fkey', 'f'],
   ['email_sequence_counters', 'email_sequence_counters_conversation_id_fkey', 'f'],
+  ['companies', 'companies_plan_id_fkey', 'f'],
+  ['company_memberships', 'company_memberships_pkey', 'p'],
+  ['company_memberships', 'company_memberships_company_id_fkey', 'f'],
+  ['company_memberships', 'company_memberships_user_id_fkey', 'f'],
+  ['company_memberships', 'company_memberships_role_check', 'c'],
+  ['company_memberships', 'company_memberships_status_check', 'c'],
+  ['company_memberships', 'company_memberships_company_id_user_id_key', 'u'],
+  ['company_memberships', 'company_memberships_user_id_company_id_key', 'u'],
+  ['project_memberships', 'project_memberships_company_id_user_id_fkey', 'f'],
+  ['project_memberships', 'project_memberships_project_id_company_id_fkey', 'f'],
+  ['project_memberships', 'project_memberships_company_id_project_id_user_id_key', 'u'],
+  ['project_memberships', 'project_memberships_project_id_user_id_key', 'u'],
+  ['project_memberships', 'project_memberships_user_id_project_id_key', 'u'],
+  ['project_memberships', 'project_memberships_role_check', 'c'],
+  ['project_memberships', 'project_memberships_status_check', 'c'],
+  ['plans', 'plans_code_key', 'u'],
+  ['plans', 'plans_status_check', 'c'],
+  ['entitlements', 'entitlements_code_key', 'u'],
+  ['plan_entitlements', 'plan_entitlements_pkey', 'p'],
+  ['plan_entitlements', 'plan_entitlements_plan_id_fkey', 'f'],
+  ['plan_entitlements', 'plan_entitlements_entitlement_id_fkey', 'f'],
+  ['plan_entitlements', 'plan_entitlements_scalar_value_check', 'c'],
+  ['projects', 'projects_plan_id_fkey', 'f'],
 ] as const
 
 const FORBIDDEN_V1_CONSTRAINTS = [
@@ -111,6 +173,8 @@ const REQUIRED_V1_INDEXES = [
   'idx_company_onboarding_effects_due',
   'idx_email_messages_convo_seq',
   'idx_email_messages_identity_scope',
+  'idx_project_memberships_company_user_role',
+  'idx_project_memberships_project_role',
   'uniq_email_messages_smtp_id',
 ] as const
 
@@ -146,6 +210,12 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     [REQUIRED_V1_RELATIONS],
   )
   if (relationRows.length > 0) return false
+  const { rows: forbiddenRelationRows } = await client.query<{ name: string }>(
+    `SELECT name FROM unnest($1::text[]) AS forbidden(name)
+      WHERE to_regclass('public.' || forbidden.name) IS NOT NULL`,
+    [FORBIDDEN_V1_RELATIONS],
+  )
+  if (forbiddenRelationRows.length > 0) return false
   const tables = REQUIRED_V1_COLUMNS.map(([table]) => table)
   const columns = REQUIRED_V1_COLUMNS.map(([, column]) => column)
   const { rows: columnRows } = await client.query<{ table_name: string; column_name: string }>(
@@ -160,6 +230,17 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     [tables, columns],
   )
   if (columnRows.length > 0) return false
+  const forbiddenTables = FORBIDDEN_V1_COLUMNS.map(([table]) => table)
+  const forbiddenColumns = FORBIDDEN_V1_COLUMNS.map(([, column]) => column)
+  const { rows: forbiddenColumnRows } = await client.query(
+    `SELECT forbidden.table_name,forbidden.column_name
+       FROM unnest($1::text[],$2::text[]) AS forbidden(table_name,column_name)
+       JOIN information_schema.columns actual
+         ON actual.table_schema='public' AND actual.table_name=forbidden.table_name
+        AND actual.column_name=forbidden.column_name`,
+    [forbiddenTables, forbiddenColumns],
+  )
+  if (forbiddenColumnRows.length > 0) return false
   for (const [tableName, columnName, expectedDefault] of REQUIRED_V1_NOT_NULL_COLUMNS) {
     const { rows } = await client.query<{ is_nullable: string; column_default: string | null }>(
       `SELECT is_nullable, column_default

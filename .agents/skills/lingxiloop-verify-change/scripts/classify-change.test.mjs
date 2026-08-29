@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
-import { parseBaseArgument } from '../../../../scripts/changed-paths.mjs'
+import { parseBaseArgument, parseScopeArguments } from '../../../../scripts/changed-paths.mjs'
 import { buildCiPlan, buildReport, classifyPaths, parseArgs, renderText } from './classify-change.mjs'
 
 const script = fileURLToPath(new URL('./classify-change.mjs', import.meta.url))
@@ -33,18 +33,18 @@ test('classifies docs-only changes without build evidence', () => {
   assert.equal(report.escalations.length, 0)
 })
 
-test('classifies frontend changes with fast local evidence and a CI build', () => {
+test('classifies ordinary frontend changes with direct local evidence and a CI build', () => {
   const report = classifyPaths(['src/components/AppShell.tsx'])
   assert.ok(category(report, 'frontend'))
-  assert.equal(check(report, 'npm run guard:architecture')?.tier, 'required')
+  assert.equal(check(report, 'npm run guard:architecture'), undefined)
   assert.equal(check(report, 'npm run lint:local')?.tier, 'required')
-  assert.equal(check(report, 'npm run typecheck')?.tier, 'required')
+  assert.equal(check(report, 'npm run typecheck'), undefined)
   assert.equal(check(report, 'npm run test:local')?.tier, 'required')
   assert.equal(check(report, 'npm run build')?.tier, 'ci-only')
   assert.equal(check(report, 'npm test'), undefined)
 })
 
-test('classifies Agent OS changes with architecture and ledger guards', () => {
+test('runs Agent OS and LLM guards only for their authoritative contracts', () => {
   const report = classifyPaths([
     'server/src/agent-os/runtime.ts',
     'server/src/__tests__/agent-os-runtime.test.ts',
@@ -52,8 +52,29 @@ test('classifies Agent OS changes with architecture and ledger guards', () => {
   assert.ok(category(report, 'server'))
   assert.ok(category(report, 'agent-os-im-canvas'))
   assert.equal(check(report, 'npm run guard:agent-os')?.tier, 'required')
-  assert.equal(check(report, 'npm run guard:llm-tracked')?.tier, 'required')
+  assert.equal(check(report, 'npm run guard:llm-tracked'), undefined)
+  const modelReport = classifyPaths(['server/src/agent-os/model-driver.ts'])
+  assert.equal(check(modelReport, 'npm run guard:llm-tracked')?.tier, 'required')
   assert.equal(report.escalations.some(({ id }) => id === 'cross-domain'), false)
+})
+
+test('runs global type and architecture checks only for canonical inputs', () => {
+  const ordinaryServer = classifyPaths(['server/src/modules/identity/application.ts'])
+  assert.equal(check(ordinaryServer, 'npm run server:typecheck'), undefined)
+  assert.equal(check(ordinaryServer, 'npm run guard:architecture'), undefined)
+
+  const publicContract = classifyPaths(['server/src/modules/identity/public.ts'])
+  assert.equal(check(publicContract, 'npm run server:typecheck')?.tier, 'required')
+  assert.equal(check(publicContract, 'npm run guard:architecture')?.tier, 'required')
+
+  const frontendContract = classifyPaths(['src/api/contracts.ts'])
+  assert.equal(check(frontendContract, 'npm run typecheck')?.tier, 'required')
+  assert.equal(check(frontendContract, 'npm run guard:architecture'), undefined)
+})
+
+test('content inspection can request the LLM guard without making all server files global gates', () => {
+  const report = classifyPaths(['server/src/modules/example/application.ts'], { llmProviderCall: true })
+  assert.equal(check(report, 'npm run guard:llm-tracked')?.tier, 'required')
 })
 
 test('keeps an Eval stack change on the focused deterministic matrix', () => {
@@ -120,10 +141,11 @@ test('forces the full matrix when CI workflow or classifier inputs change', () =
     }
     assert.ok(report.escalations.some(({ id }) => id === 'ci-full-matrix'), path)
     assert.equal(check(report, 'npm test')?.tier, 'ci-only', path)
-    const classifierSelfTest = check(
-      report,
-      'node --test .agents/skills/lingxiloop-verify-change/scripts/classify-change.test.mjs',
-    )
+    const classifierSelfTest = check(report, [
+      'node --test',
+      '.agents/skills/lingxiloop-verify-change/scripts/classify-change.test.mjs',
+      'scripts/local-test-selection.test.mjs',
+    ].join(' '))
     assert.equal(classifierSelfTest?.tier, path.startsWith('package') ? undefined : 'required', path)
   }
 })
@@ -227,18 +249,38 @@ test('validates CLI options', () => {
     head: 'topic',
     includeWorktree: true,
     format: 'json',
+    paths: [],
   })
+  assert.deepEqual(parseArgs(['--path', 'src/z.ts', '--path', './src/a.ts']), {
+    format: 'text',
+    includeWorktree: false,
+    paths: ['src/a.ts', 'src/z.ts'],
+  })
+  assert.throws(() => parseArgs(['--path', 'src/a.ts', '--base', 'main']), /cannot be combined/)
+  assert.throws(() => parseArgs(['--path', 'C:outside.ts']), /repository-relative/)
   assert.throws(() => parseArgs(['--head', 'topic']), /--head requires --base/)
+  assert.throws(() => parseArgs(['--include-worktree']), /requires --base/)
   assert.throws(() => parseArgs(['--format', 'yaml']), /text or json/)
 })
 
-test('fast local runners require an explicit base and preserve other arguments', () => {
+test('fast local runners parse explicit task paths and tests without a worktree fallback', () => {
   assert.deepEqual(parseBaseArgument(['--base', 'origin/main', 'src/example.test.ts']), {
     base: 'origin/main',
     remaining: ['src/example.test.ts'],
   })
-  assert.throws(() => parseBaseArgument(['--base']), /requires one explicit Git ref/)
+  assert.deepEqual(parseScopeArguments([
+    '--path', 'src/z.ts',
+    '--path', './src/a.ts',
+    '--test', 'src/a.test.ts',
+  ], { allowTests: true }), {
+    base: undefined,
+    paths: ['src/a.ts', 'src/z.ts'],
+    tests: ['src/a.test.ts'],
+    remaining: [],
+  })
+  assert.throws(() => parseBaseArgument(['--base']), /requires a value/)
   assert.throws(() => parseBaseArgument(['--base', 'main', '--base', 'other']), /requires one explicit Git ref/)
+  assert.throws(() => parseScopeArguments(['--base', 'main', '--path', 'src/a.ts']), /cannot be combined/)
 })
 
 test('reports invalid refs without a stack trace', () => {
@@ -248,7 +290,7 @@ test('reports invalid refs without a stack trace', () => {
   assert.doesNotMatch(result.stderr, /\n\s+at /)
 })
 
-test('default CLI mode includes untracked files and emits valid JSON', () => {
+test('default CLI mode selects nothing while explicit paths are task scoped', () => {
   const directory = mkdtempSync(join(tmpdir(), 'lingxiloop-classifier-'))
   try {
     assert.equal(run('git', ['init', '-q'], directory).status, 0)
@@ -259,13 +301,29 @@ test('default CLI mode includes untracked files and emits valid JSON', () => {
     assert.equal(run('git', ['commit', '-q', '-m', 'fixture'], directory).status, 0)
     writeFileSync(join(directory, 'untracked.md'), 'new\n')
 
-    const result = run(process.execPath, [script, '--format', 'json'], directory)
+    const emptyResult = run(process.execPath, [script, '--format', 'json'], directory)
+    assert.equal(emptyResult.status, 0, emptyResult.stderr)
+    const emptyReport = JSON.parse(emptyResult.stdout)
+    assert.equal(emptyReport.version, 5)
+    assert.equal(emptyReport.scope.mode, 'none')
+    assert.deepEqual(emptyReport.paths, [])
+
+    const result = run(process.execPath, [script, '--path', 'untracked.md', '--format', 'json'], directory)
     assert.equal(result.status, 0, result.stderr)
     const report = JSON.parse(result.stdout)
-    assert.equal(report.version, 4)
-    assert.equal(report.scope.mode, 'worktree')
+    assert.equal(report.scope.mode, 'paths')
     assert.deepEqual(report.paths, ['untracked.md'])
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }
+})
+
+test('task-scoped reports attach the same explicit paths to local runners', () => {
+  const report = buildReport(['src/z.ts', 'src/a.ts'], { mode: 'paths' })
+  assert.deepEqual(check(report, 'npm run lint:local')?.args, [
+    '--', '--path', 'src/a.ts', '--path', 'src/z.ts',
+  ])
+  assert.deepEqual(check(report, 'npm run test:local')?.args, [
+    '--', '--path', 'src/a.ts', '--path', 'src/z.ts',
+  ])
 })

@@ -305,10 +305,8 @@ const AUTH_DONE_HTML = `<!doctype html>
   </div>
 <script>
 (() => {
-  // Token must stay in the fragment (out of access logs). Waitlist/error
-  // signals are non-secret and the server prefers query string for them so
-  // they survive cross-origin redirects that drop fragments. Read both so
-  // either shape works.
+  // Token stays in the fragment (out of access logs). The nonce may arrive
+  // through the query string, so read both locations.
   const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
   const queryParams = new URLSearchParams(location.search);
   const params = { get: (k) => hashParams.get(k) ?? queryParams.get(k) };
@@ -333,20 +331,6 @@ const AUTH_DONE_HTML = `<!doctype html>
     hint.style.display = 'none';
     err.style.display = 'block';
     err.textContent = decodeURIComponent(error);
-    return;
-  }
-  // Waitlist gate is on and this email isn't an admin: server enqueued
-  // them instead of minting a session. No token to deep-link, so we
-  // surface the confirmation here in the browser tab the user is already
-  // looking at — same shape as the renderer's WaitlistConfirmedScreen.
-  if (params.get('waitlist') === '1') {
-    const email = params.get('email');
-    h1.textContent = "You're on the waitlist";
-    sub.textContent = email
-      ? 'We saved ' + email + ' and will let you know the moment your account is ready.'
-      : 'We saved your email and will let you know the moment your account is ready.';
-    btn.style.display = 'none';
-    hint.style.display = 'none';
     return;
   }
   if (!token) {

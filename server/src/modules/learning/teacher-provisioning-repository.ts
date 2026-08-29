@@ -236,9 +236,11 @@ export async function listCourseTeacherIds(
   courseId: string,
 ): Promise<string[]> {
   const { rows } = await db.query<{ user_id: string }>(
-    `SELECT user_id FROM course_members
-      WHERE company_id=$1 AND course_id=$2 AND role='teacher'
-      ORDER BY user_id`,
+    `SELECT member.user_id FROM project_memberships member
+       JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
+      WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+        AND member.role IN ('OWNER','TEACHER')
+      ORDER BY member.user_id`,
     [companyId, courseId],
   )
   return rows.map((row) => row.user_id)

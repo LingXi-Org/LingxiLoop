@@ -1,6 +1,6 @@
 # Agent Eval
 
-LingxiLoop Agent Eval is a deterministic regression system with three entry points: a frozen evaluator/harness self-test, a real deterministic Agent OS runtime gate, and an admin dashboard for persisted Agent OS runs. It covers eight product capabilities:
+LingxiLoop Agent Eval is a deterministic regression system with a frozen evaluator/harness self-test, a real deterministic Agent OS runtime gate, and persisted reports produced through trusted CLI/service entry points. It covers eight product capabilities:
 
 1. Agent answer quality;
 2. teaching quality, concept coverage, explanation, and understanding checks;
@@ -41,19 +41,13 @@ npx tsx scripts/run-agent-eval.ts \
   --report artifacts/eval-harness-report.json
 ```
 
-The trusted runtime CLI uses `runtimeScenario` identifiers from its versioned suite. That field is rejected by the Admin/API validator and is not a remote code-execution surface.
+The trusted runtime CLI uses `runtimeScenario` identifiers from its versioned suite. That field is rejected by the generic Eval contract and is not a remote code-execution surface.
 
 Pull-request CI consumes the fail-closed `$lingxiloop-verify-change` classifier. A PR is Eval-focused only when every path is Eval-owned; it then runs focused Eval unit tests, both Eval gates, applicable guards/typechecks, a build when the Dashboard changes, and focused Eval persistence integration. Shared runtime/DB/API/integration paths restore their owning tests, while package manifests, workflows, and classifier changes run the complete matrix before they are trusted. Open Notebook, Compose, full serial integration, and Windows/macOS packaging otherwise run only when their owning paths are classified; `main`, manual, and release callers retain the full matrix. The repository-local `$lingxiloop-eval-change` Skill documents suite/baseline, deterministic/model Eval, trace sanitization, comparison, and verification rules.
 
 ## Run an evaluation
 
-Admins can paste the same payload into **Admin → Agent Eval → 运行评测**, or call the API:
-
-```http
-POST /api/admin/eval/runs
-Authorization: Bearer <admin session token>
-Content-Type: application/json
-```
+Define the suite as versioned JSON and execute it through `scripts/run-agent-eval.ts`. There is intentionally no product Admin HTTP endpoint; Engineering/AgentOps control-plane access is a separate future concern.
 
 ```json
 {
@@ -160,9 +154,7 @@ Answer reference similarity is deterministic lexical F1 (including CJK unigram/b
 
 ## Read reports
 
-- `GET /api/admin/eval/runs?sinceDays=90&suiteKey=agent-regression` returns dashboard KPIs, recent runs, stage averages, previous-version scores, and deltas.
-- `GET /api/admin/eval/runs/:id` returns cases, stage results, findings, metrics, and failure reasons.
-- `GET /api/admin/eval/compare?baseRunId=...&candidateRunId=...` compares two runs from the same suite by target, capability, Case, and failure-category changes.
+The CLI writes sanitized JSON artifacts under `artifacts/`, and Eval persistence retains runs, cases, stage results, findings, metrics, and failure reasons for trusted engineering tooling. Comparisons are performed by the Eval CLI/service using run IDs from the same suite. No product User/Company/Project role grants access to this evidence plane.
 
 The run detail view separates the evaluation pipeline from the real Agent Trace: test input, routing/decisions, model calls, IPython cells, Host Bridge actions, Approval, Canvas workers/handoffs, and final answer. Trace nodes are clickable and show sanitized parameters, results, identities, timestamps, and real Agent-side durations. `EvalStageResult.durationMs` is derived from those Agent observations, never evaluator CPU time.
 

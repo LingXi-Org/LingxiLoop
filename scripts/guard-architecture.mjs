@@ -30,6 +30,77 @@ if (/fallback feed|generic publish provider[\s\S]*GitHub Release/.test(electronU
   violations.push('electron/autoUpdater.cjs: auto-update must document and use one publish provider')
 }
 
+const canonicalPermission = 'server/src/domain/access/permission.ts'
+for (const file of server) {
+  const fileName = name(file)
+  const source = await read(file)
+  if (fileName !== canonicalPermission
+    && /export\s+(?:type\s+PermissionAction|interface\s+Permission(?:Context|Decision|Service))\b/.test(source)) {
+    violations.push(`${fileName}: Permission contracts must be defined only in ${canonicalPermission}`)
+  }
+}
+const canonicalUser = await read(resolve('server/src/domain/identity/user.ts'))
+if (/\b(?:role|plan|isTeacher|isPro|isPaid|accountType|enterprise)\b/i.test(canonicalUser)) {
+  violations.push('server/src/domain/identity/user.ts: User cannot carry product role, plan, or account-type state')
+}
+const canonicalSchema = await readFile(resolve('server/src/db/schema.sql'), 'utf8')
+const usersTable = canonicalSchema.match(/CREATE TABLE public\.users \(([\s\S]*?)\n\);/)?.[1] ?? ''
+if (/\b(?:is_admin|role|plan|is_teacher|is_pro|is_paid|account_type)\b/i.test(usersTable)) {
+  violations.push('server/src/db/schema.sql: users must remain identity and lifecycle only')
+}
+if (/CREATE TABLE public\.permissions\b/.test(canonicalSchema)) {
+  violations.push('server/src/db/schema.sql: Permission is a computed result and cannot be persisted as a table')
+}
+
+// Domain Foundation v1 keeps current authorization behavior temporarily, but
+// freezes every direct Membership-table caller. New product code must wait for
+// the canonical PermissionService resolver instead of inventing another path.
+const legacyMembershipSqlAllowlist = new Set([
+  'server/src/agent-os/approval-repository.ts',
+  'server/src/agent-os/control-repository.ts',
+  'server/src/agent-os/routine-scheduler.ts',
+  'server/src/http/authorization.ts',
+  'server/src/http/request-context.ts',
+  'server/src/im/access-repository.ts',
+  'server/src/im/channels-repository.ts',
+  'server/src/im/webhook-repository.ts',
+  'server/src/modules/agents/repository.ts',
+  'server/src/modules/calendar/repository.ts',
+  'server/src/modules/companies/onboarding-repository.ts',
+  'server/src/modules/companies/repository.ts',
+  'server/src/modules/conversations/repository.ts',
+  'server/src/modules/documents/mention-repository.ts',
+  'server/src/modules/documents/repository.ts',
+  'server/src/modules/email/address-repository.ts',
+  'server/src/modules/email/agent-repository.ts',
+  'server/src/modules/email/repository.ts',
+  'server/src/modules/identity/oauth-repository.ts',
+  'server/src/modules/identity/repository.ts',
+  'server/src/modules/knowledge/repository.ts',
+  'server/src/modules/learning/courses-repository.ts',
+  'server/src/modules/learning/curriculum-repository.ts',
+  'server/src/modules/learning/invitations-repository.ts',
+  'server/src/modules/learning/missions-repository.ts',
+  'server/src/modules/learning/notifications.ts',
+  'server/src/modules/learning/reporting-repository.ts',
+  'server/src/modules/learning/rooms-repository.ts',
+  'server/src/modules/learning/teacher-approval-repository.ts',
+  'server/src/modules/learning/teacher-provisioning-repository.ts',
+  'server/src/modules/learning/teacher-reporting-repository.ts',
+  'server/src/modules/learning/teacher-runtime-repository.ts',
+  'server/src/modules/learning/visibility.ts',
+  'server/src/ws.ts',
+])
+for (const file of server) {
+  const fileName = name(file)
+  if (fileName === 'server/src/db/bootstrap.ts' || fileName.startsWith('server/src/__integration__/')) continue
+  const source = await read(file)
+  if (/\b(?:company_memberships|project_memberships)\b/.test(source)
+    && !legacyMembershipSqlAllowlist.has(fileName)) {
+    violations.push(`${fileName}: direct Membership access is not in the Domain Foundation legacy allowlist`)
+  }
+}
+
 for (const retired of ['src/features/admin', 'src/features/eval']) {
   if ([...frontendNames].some((fileName) => fileName.startsWith(`${retired}/`))) {
     violations.push(`${retired}: retired Admin/Eval frontend must not return; backend contracts remain authoritative`)
@@ -369,12 +440,13 @@ if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(
 // Domains enter this set only after their router/application/repository split
 // is complete. Keeping the assertion here makes a later regression impossible
 // while the remaining domains are migrated deliberately.
-const strictServerDomains = new Set(['admin', 'agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls'])
+const strictServerDomains = new Set(['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls'])
 
 for (const file of server) {
   const source = await read(file)
   const fileName = name(file)
   if (fileName === 'server/src/admin.ts') violations.push(`${fileName}: retired root admin implementation is forbidden`)
+  if (fileName.startsWith('server/src/modules/admin/')) violations.push(`${fileName}: retired product Admin module is forbidden`)
   if (fileName === 'server/src/alert.ts') violations.push(`${fileName}: operational alerts must use alerting.ts`)
   if (fileName === 'server/src/avatar.ts') violations.push(`${fileName}: identity avatar transport must remain inside modules/identity`)
   if (fileName === 'server/src/email.ts') violations.push(`${fileName}: retired root email implementation is forbidden`)
@@ -425,9 +497,6 @@ for (const file of server) {
   if (domainRouter && strictServerDomains.has(domainRouter)) {
     if (/from ['"][^'"]*db\//.test(source) || /\b(?:pool|db)\.query\b/.test(source)) violations.push(`${fileName}: router bypasses its repository`)
     if (/`[^`]*\b(?:SELECT|INSERT|UPDATE|DELETE)\b[^`]*`/is.test(source)) violations.push(`${fileName}: router contains SQL`)
-    if (domainRouter === 'admin' && /from ['"]\.\.\/\.\.\/eval\/(?:contracts|service|repository)\.js['"]/.test(source)) {
-      violations.push(`${fileName}: cross-domain Eval access must use eval/public.ts`)
-    }
   }
   if (/(?:^|\/)(?:repository|[^/]+-repository)\.ts$/.test(fileName) && /from ['"]express['"]|\b(?:Request|Response)\b/.test(source)) {
     violations.push(`${fileName}: repository depends on HTTP`)

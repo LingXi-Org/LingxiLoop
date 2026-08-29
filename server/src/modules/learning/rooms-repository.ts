@@ -1,4 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
+import { projectRoleFromLearningWire, type ProjectRole } from '../../domain/access/public.js'
 
 export async function setLearningCourseMembershipRecord(
   db: Queryable,
@@ -6,49 +7,57 @@ export async function setLearningCourseMembershipRecord(
     companyId: string; courseId: string; userId: string; role: 'teacher'|'learner'; enabled: boolean
   },
 ): Promise<'updated'|'not_found'|'last_teacher'> {
-  const { rows: locked } = await db.query(
-    `SELECT 1 FROM courses WHERE id=$1 AND company_id=$2 FOR UPDATE`,
+  const { rows: locked } = await db.query<{ project_id: string }>(
+    `SELECT project_id FROM courses WHERE id=$1 AND company_id=$2 FOR UPDATE`,
     [args.courseId,args.companyId],
   )
   if (!locked[0]) return 'not_found'
   const { rows: companyMember } = await db.query(
-    `SELECT 1 FROM company_members WHERE company_id=$1 AND user_id=$2`,
+    `SELECT 1 FROM company_memberships WHERE company_id=$1 AND user_id=$2 AND status='ACTIVE'`,
     [args.companyId,args.userId],
   )
   if (!companyMember[0]) return 'not_found'
-  const { rows } = await db.query<{ role: 'teacher'|'learner' }>(
-    `SELECT role FROM course_members WHERE course_id=$1 AND company_id=$2 AND user_id=$3`,
-    [args.courseId,args.companyId,args.userId],
+  const projectId = locked[0].project_id
+  const { rows } = await db.query<{ role: ProjectRole }>(
+    `SELECT role FROM project_memberships
+      WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND status='ACTIVE'`,
+    [projectId,args.companyId,args.userId],
   )
   const current = rows[0]?.role
   if (args.enabled) {
     await db.query(
-      `INSERT INTO course_members(course_id,company_id,user_id,role)
+      `INSERT INTO project_memberships(project_id,company_id,user_id,role)
        VALUES($1,$2,$3,$4)
-       ON CONFLICT(course_id,user_id) DO UPDATE SET role=EXCLUDED.role,updated_at=NOW()`,
-      [args.courseId,args.companyId,args.userId,args.role],
+       ON CONFLICT(user_id,project_id) DO UPDATE SET
+         role=CASE
+           WHEN project_memberships.role='OWNER' THEN 'OWNER'
+           WHEN project_memberships.role='TEACHER' AND EXCLUDED.role='STUDENT' THEN 'TEACHER'
+           ELSE EXCLUDED.role END,
+         status='ACTIVE',updated_at=NOW()`,
+      [projectId,args.companyId,args.userId,projectRoleFromLearningWire(args.role)],
     )
     return 'updated'
   }
   if (args.role === 'teacher') {
-    if (current !== 'teacher') return 'updated'
+    if (current !== 'OWNER' && current !== 'TEACHER') return 'updated'
     const { rows: counts } = await db.query<{ count: number }>(
-      `SELECT COUNT(*)::int AS count FROM course_members
-        WHERE course_id=$1 AND company_id=$2 AND role='teacher'`,
-      [args.courseId,args.companyId],
+      `SELECT COUNT(*)::int AS count FROM project_memberships
+        WHERE project_id=$1 AND company_id=$2 AND status='ACTIVE' AND role IN ('OWNER','TEACHER')`,
+      [projectId,args.companyId],
     )
     if (Number(counts[0]?.count ?? 0) <= 1) return 'last_teacher'
     await db.query(
-      `UPDATE course_members SET role='learner',updated_at=NOW()
-        WHERE course_id=$1 AND company_id=$2 AND user_id=$3 AND role='teacher'`,
-      [args.courseId,args.companyId,args.userId],
+      `UPDATE project_memberships SET role='STUDENT',updated_at=NOW()
+        WHERE project_id=$1 AND company_id=$2 AND user_id=$3
+          AND status='ACTIVE' AND role IN ('OWNER','TEACHER')`,
+      [projectId,args.companyId,args.userId],
     )
     return 'updated'
   }
   await db.query(
-    `DELETE FROM course_members
-      WHERE course_id=$1 AND company_id=$2 AND user_id=$3 AND role='learner'`,
-    [args.courseId,args.companyId,args.userId],
+    `DELETE FROM project_memberships
+      WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND role IN ('STUDENT','OBSERVER')`,
+    [projectId,args.companyId,args.userId],
   )
   return 'updated'
 }

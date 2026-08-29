@@ -39,13 +39,6 @@ Do not add compatibility paths, providers, tools, services, or shared execution 
 
 Add or update the narrowest test that fails for the regression, including negative and recovery cases. Depending on the seam, exercise cancellation, expired/stale fences, concurrent claims, retry after partial failure, duplicate webhook delivery, approval resume, cross-session isolation, and one-final-message behavior.
 
-Run the relevant subset selected by `$lingxiloop-verify-change`; Agent OS changes normally require:
+Pass only the Agent OS files written in this task to `$lingxiloop-verify-change`. Run changed/direct tests and add a non-sibling owning test explicitly when needed. The Agent OS or LLM guard is local only when its authoritative composition, tool, prompt, model, or ledger contract changed; ordinary runtime implementation does not trigger the full guard/type graph.
 
-```text
-npm run guard:agent-os
-npm run guard:llm-tracked
-npm run server:typecheck
-npm run test:local
-```
-
-CI runs the full unit suite, PostgreSQL/Redis integration, production build, and Compose smoke. Do not start services or run those exhaustive commands locally by default. Run one exact integration file only when the user requests a rehearsal or an owning CI failure must be reproduced; report that focused evidence without treating CI-owned checks as a local blocker.
+CI owns the full type, unit, PostgreSQL/Redis integration, build, architecture, and Compose evidence. Reproduce one exact CI failure locally only when requested.

@@ -19,9 +19,7 @@ interface Props {
   /** Override the auto-detected label. Pass when the surrounding copy
    *  already implies "download" so this CTA can read "Get the app" etc. */
   label?: string
-  /** Skip the marketing-site waitlist gate. Default true — most callers
-   *  already represent a viewer with some claim to the product. Set
-   *  false on screens that don't (e.g. anonymous WebLanding). */
+  /** Skip the marketing-site gate. Default true for authenticated surfaces. */
   gateBypass?: boolean
   className?: string
   style?: CSSProperties

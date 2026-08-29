@@ -32,9 +32,9 @@ beforeEach(async () => {
   await resetAllTables()
   objects.clear()
   await pool.query(
-    `INSERT INTO companies (id,name,slug,owner_user_id)
-     VALUES ($1,'Knowledge Slice','knowledge-slice',$3),($2,'Knowledge Other','knowledge-other',$3)`,
-    [COMPANY_ID, OTHER_COMPANY_ID, USER_ID],
+    `INSERT INTO companies (id,name,slug)
+     VALUES ($1,'Knowledge Slice','knowledge-slice'),($2,'Knowledge Other','knowledge-other')`,
+    [COMPANY_ID, OTHER_COMPANY_ID],
   )
   await seedUserMembership(USER_ID, COMPANY_ID)
   await pool.query(

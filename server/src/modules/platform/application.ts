@@ -49,7 +49,6 @@ export interface PlatformInfrastructure {
   openNotebookEnabled(): boolean
   openNotebookHealth(): Promise<void>
   loadOpenGraph(url: string): Promise<unknown>
-  waitlistEnabled(): Promise<boolean>
 }
 
 function timeout<T>(promise: Promise<T>, milliseconds: number, label: string): Promise<T> {
@@ -113,9 +112,5 @@ export class PlatformApplication {
 
   openGraph(url: string): Promise<unknown> {
     return this.infrastructure.loadOpenGraph(url)
-  }
-
-  signupConfig(): Promise<{ waitlist_enabled: boolean }> {
-    return this.infrastructure.waitlistEnabled().then((waitlist_enabled) => ({ waitlist_enabled }))
   }
 }

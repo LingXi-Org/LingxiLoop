@@ -51,9 +51,10 @@ async function candidates(now: Date): Promise<DigestCandidate[]> {
          FROM learning_mastery mastery
          JOIN courses course ON course.id=mastery.course_id AND course.company_id=mastery.company_id
          JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-         JOIN course_members member
-           ON member.course_id=course.id AND member.company_id=course.company_id
-          AND member.user_id=mastery.learner_id AND member.role='learner'
+         JOIN project_memberships member
+           ON member.project_id=course.project_id AND member.company_id=course.company_id
+          AND member.user_id=mastery.learner_id AND member.status='ACTIVE'
+          AND member.role IN ('STUDENT','OBSERVER')
         WHERE project.status='active' AND mastery.next_review_at<=$1
         GROUP BY course.company_id,mastery.learner_id,mastery.course_id,project.name
      ), teacher AS (
@@ -63,8 +64,9 @@ async function candidates(now: Date): Promise<DigestCandidate[]> {
          JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
          JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
          JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-         JOIN course_members member
-           ON member.course_id=course.id AND member.company_id=course.company_id AND member.role='teacher'
+         JOIN project_memberships member
+           ON member.project_id=course.project_id AND member.company_id=course.company_id
+          AND member.status='ACTIVE' AND member.role IN ('OWNER','TEACHER')
         WHERE project.status='active' AND evaluation.status='pending'
         GROUP BY course.company_id,member.user_id,attempt.course_id,project.name
      ) SELECT * FROM learner UNION ALL SELECT * FROM teacher`,

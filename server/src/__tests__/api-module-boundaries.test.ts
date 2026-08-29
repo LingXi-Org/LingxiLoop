@@ -28,8 +28,7 @@ test('the API entrypoint is a composition root, not a business router', async ()
   assert.doesNotMatch(source, /\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
   assert.doesNotMatch(source, /\bpool\.query\b/)
   assert.match(source, /api\.use\(errorHandler\)/)
-  assert.match(source, /import \{ adminRouter \} from '\.\.\/modules\/admin\/router\.js'/)
-  assert.match(source, /api\.use\('\/admin', adminRouter\)/)
+  assert.doesNotMatch(source, /modules\/admin|api\.use\('\/admin'/)
 
   for (const domain of domains) {
     assert.match(source, new RegExp(`import \\{ ${domain}Router \\} from '../modules/${domain}/router\\.js'`))
@@ -51,7 +50,7 @@ test('domain modules expose one native router implementation without forwarding 
 })
 
 test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
-  for (const domain of ['admin', 'agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
+  for (const domain of ['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const applicationFiles = (await readdir(new URL('.', base)))
@@ -120,9 +119,7 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.doesNotMatch(knowledgeRuntime, /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i)
   assert.match(knowledgeIngestionRepository, /Queryable/)
   assert.match(knowledgeIngestionRepository, /FOR UPDATE SKIP LOCKED/)
-  const adminRouter = await readFile(new URL('../modules/admin/router.ts', import.meta.url), 'utf8')
-  assert.doesNotMatch(adminRouter, /from ['"]\.\.\/\.\.\/eval\/(?:contracts|service|repository)\.js['"]/)
-  assert.match(adminRouter, /from ['"]\.\.\/\.\.\/eval\/public\.js['"]/)
+  await assert.rejects(readFile(new URL('../modules/admin/router.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   const pollCallers = await Promise.all([
     '../agent-os/learning-actions.ts',
     '../agents/cli.ts',
@@ -195,7 +192,6 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
     '../modules/learning/notifications.ts',
     '../agents/cli.ts',
     '../agents/cli/email.ts',
-    '../modules/admin/welcome-email.ts',
     '../modules/agents/facade.ts',
     '../modules/messages/facade.ts',
     '../web.ts',
@@ -278,8 +274,6 @@ test('authentication, request context, authorization, and errors have one shared
   const routers = await Promise.all(domains.map((domain) => (
     readFile(new URL(`../modules/${domain}/router.ts`, import.meta.url), 'utf8')
   )))
-  routers.push(await readFile(new URL('../modules/admin/router.ts', import.meta.url), 'utf8'))
-
   for (const boundary of ['requireAuth', 'requireCompany', 'requireWorkspace']) {
     assert.match(context, new RegExp(`export (?:async )?function ${boundary}\\b`))
   }
@@ -296,4 +290,18 @@ test('authentication, request context, authorization, and errors have one shared
     assert.doesNotMatch(router, /\.use\(authMiddleware/)
     assert.doesNotMatch(router, /function safe\b|console\.error\(['"]\[admin-api\]/)
   }
+})
+
+test('retired product Admin and signup configuration surfaces cannot return', async () => {
+  const api = await readFile(new URL('../api/router.ts', import.meta.url), 'utf8')
+  const platform = await readFile(new URL('../modules/platform/router.ts', import.meta.url), 'utf8')
+  const identity = await readFile(new URL('../modules/identity/contracts.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(api, /\/admin|modules\/admin/)
+  assert.doesNotMatch(platform, /signup-config|waitlist/)
+  assert.doesNotMatch(identity, /isAdmin/)
+  const retiredAdminFiles = await readdir(new URL('../modules/admin/', import.meta.url)).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === 'ENOENT') return []
+    throw error
+  })
+  assert.deepEqual(retiredAdminFiles, [])
 })

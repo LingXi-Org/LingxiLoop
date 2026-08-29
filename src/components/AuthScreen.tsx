@@ -87,8 +87,8 @@ export function AuthScreen() {
     }
     // Browser fallback — full-page nav, fragment-on-redirect handled by
     // AuthGate on next mount. Pass the *current* page as `?return=` so
-    // a user signing in from the admin origin lands back there rather than
-    // the server's default app origin. The origin must be in
+    // a user signing in from a configured app origin lands back there rather
+    // than the server's default app origin. The origin must be in
     // LINGXILOOP_AUTH_RETURN_ALLOWLIST or the server
     // will reject it.
     const returnUrl = `${location.origin}${location.pathname}`

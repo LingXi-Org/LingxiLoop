@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+// Data-only public contract used by Company onboarding without loading the
+// Learning runtime (and therefore runtime environment/infrastructure).
+export { STARTER_ROOMS, STARTER_TEAM, type LearningPersonaKey } from './preset.js'
+
 export const createCourseRequestSchema = z.object({
   name: z.string().trim().min(1, 'name required').max(80),
   description: z.string().trim().max(1000).default(''),

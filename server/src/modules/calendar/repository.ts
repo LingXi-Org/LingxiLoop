@@ -87,8 +87,10 @@ function visibilityClause(userParameter: number, companyParameter: number): stri
     OR assignee_id = $${userParameter}
     OR (
       EXISTS (
-        SELECT 1 FROM companies
-         WHERE id = $${companyParameter} AND owner_user_id = $${userParameter}
+        SELECT 1 FROM company_memberships membership
+         WHERE membership.company_id = $${companyParameter}
+           AND membership.user_id = $${userParameter}
+           AND membership.status='ACTIVE' AND membership.role='OWNER'
       )
       AND (
         created_by IN (

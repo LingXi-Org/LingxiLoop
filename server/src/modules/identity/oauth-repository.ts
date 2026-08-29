@@ -44,13 +44,12 @@ export async function insertIdentityUser(
     userId: string
     provider: IdentityProvider
     profile: NormalizedIdentityProfile
-    isAdmin: boolean
   },
 ): Promise<void> {
   await db.query(
-    `INSERT INTO users (id, email, display_name, password_hash, email_verified_at, is_admin)
-     VALUES ($1, $2, $3, NULL, NOW(), $4)`,
-    [input.userId, input.profile.email, input.profile.displayName, input.isAdmin],
+    `INSERT INTO users (id, email, display_name, password_hash, email_verified_at)
+     VALUES ($1, $2, $3, NULL, NOW())`,
+    [input.userId, input.profile.email, input.profile.displayName],
   )
   await db.query(
     `INSERT INTO user_identities (provider, provider_id, user_id, email_lower)
@@ -72,7 +71,8 @@ export async function finalizeIdentityLogin(
   const row = user.rows[0]
   if (!row) throw new Error('identity points to missing or deleted user')
   const company = await db.query<{ company_id: string }>(
-    `SELECT company_id FROM company_members WHERE user_id = $1 ORDER BY joined_at ASC LIMIT 1`,
+    `SELECT company_id FROM company_memberships
+      WHERE user_id = $1 AND status='ACTIVE' ORDER BY created_at ASC LIMIT 1`,
     [userId],
   )
   return {
@@ -91,11 +91,11 @@ export async function updateIdentityAvatar(
   await db.query(
     `UPDATE participants participant
         SET avatar_url = $2
-       FROM company_members member
+       FROM company_memberships member
       WHERE participant.id = $1
         AND participant.kind = 'human'
         AND participant.company_id = member.company_id
-        AND member.user_id = $1`,
+        AND member.user_id = $1 AND member.status='ACTIVE'`,
     [userId, avatarUrl],
   )
 }
