@@ -92,19 +92,7 @@ const MESSAGE_PROJECTION = `
     WHERE reply.quoted_message_id = m.id AND reply.company_id = $2) AS "replyCount"
 `
 
-export async function conversationKind(
-  db: Queryable,
-  companyId: string,
-  conversationId: string,
-): Promise<string | undefined> {
-  const { rows } = await db.query<{ kind: string }>(
-    `SELECT kind FROM conversations WHERE id = $1 AND company_id = $2 LIMIT 1`,
-    [conversationId, companyId],
-  )
-  return rows[0]?.kind
-}
-
-export async function listMessages(
+export async function listEmailMessages(
   db: Queryable,
   input: { companyId: string; conversationId: string; before?: number; limit: number },
 ): Promise<MessageProjectionRow[]> {
@@ -118,6 +106,9 @@ export async function listMessages(
   const { rows } = await db.query<MessageProjectionRow>(
     `SELECT ${MESSAGE_PROJECTION}
        FROM messages m
+       JOIN conversations email_conversation
+         ON email_conversation.id=m.conversation_id AND email_conversation.company_id=m.company_id
+        AND email_conversation.kind='email'
       WHERE m.conversation_id = $1 AND m.company_id = $2${cursor}
       ORDER BY m.sequence DESC
       LIMIT $${params.length}`,
@@ -126,7 +117,7 @@ export async function listMessages(
   return rows
 }
 
-export async function listReplies(
+export async function listEmailReplies(
   db: Queryable,
   companyId: string,
   conversationId: string,
@@ -135,6 +126,9 @@ export async function listReplies(
   const { rows } = await db.query<MessageProjectionRow>(
     `SELECT ${MESSAGE_PROJECTION}
        FROM messages m
+       JOIN conversations email_conversation
+         ON email_conversation.id=m.conversation_id AND email_conversation.company_id=m.company_id
+        AND email_conversation.kind='email'
       WHERE m.conversation_id = $1 AND m.company_id = $2
         AND m.quoted_message_id = $3
       ORDER BY m.sequence ASC`,

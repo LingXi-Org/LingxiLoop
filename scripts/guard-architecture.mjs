@@ -150,6 +150,14 @@ const messagesRouter = await read(resolve('server/src/modules/messages/router.ts
 if (/\/messages\/:id\/reactions/.test(messagesRouter)) {
   violations.push('server/src/modules/messages/router.ts: retired SQL-projection reaction endpoint is forbidden')
 }
+if (/status\(410\)|messagesApplication\.(?:history|replies|kind)\b/.test(messagesRouter)) {
+  violations.push('server/src/modules/messages/router.ts: ordinary REST chat compatibility paths are forbidden')
+}
+const messagesRepository = await read(resolve('server/src/modules/messages/repository.ts'))
+if (/export async function (?:listMessages|listReplies|conversationKind)\b/.test(messagesRepository)
+  || !/email_conversation\.kind='email'/.test(messagesRepository)) {
+  violations.push('server/src/modules/messages/repository.ts: SQL message history must remain explicitly email-only')
+}
 const chatApi = await read(resolve('src/features/chat/api.ts'))
 if (/\/conversations\/.*\/messages\/.*\/replies/.test(chatApi)) {
   violations.push('src/features/chat/api.ts: ordinary thread reads must use WuKongIM history')

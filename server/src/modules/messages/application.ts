@@ -4,9 +4,8 @@ import type { ReactionChangedEvent } from './contracts.js'
 import {
   addWukongReaction,
   aggregateReactions,
-  conversationKind,
-  listMessages,
-  listReplies,
+  listEmailMessages,
+  listEmailReplies,
   lockWukongReaction,
   reactionExists,
   removeReaction,
@@ -42,19 +41,15 @@ export interface MessagesInfrastructure {
 export class MessagesApplication {
   constructor(private readonly infrastructure: MessagesInfrastructure) {}
 
-  kind(companyId: string, conversationId: string): Promise<string | undefined> {
-    return conversationKind(this.infrastructure.db, companyId, conversationId)
-  }
-
-  async history(input: { companyId: string; conversationId: string; before?: number; limit: number }) {
-    const rows = await listMessages(this.infrastructure.db, input)
+  async emailHistory(input: { companyId: string; conversationId: string; before?: number; limit: number }) {
+    const rows = await listEmailMessages(this.infrastructure.db, input)
     rows.reverse()
     await this.freshen(rows)
     return rows
   }
 
-  async replies(companyId: string, conversationId: string, rootId: string) {
-    const rows = await listReplies(this.infrastructure.db, companyId, conversationId, rootId)
+  async emailReplies(companyId: string, conversationId: string, rootId: string) {
+    const rows = await listEmailReplies(this.infrastructure.db, companyId, conversationId, rootId)
     await this.freshen(rows)
     return rows
   }
