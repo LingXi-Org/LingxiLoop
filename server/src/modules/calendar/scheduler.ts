@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { WorkerTaskHandle } from '../../runtime/lifecycle.js'
 import type {
@@ -18,6 +18,7 @@ import {
   listCalendarReminderRecipients,
   markCalendarEventDone,
   markCalendarEventFired,
+  recordCalendarReminderLeg,
   type CalendarEventRow,
 } from './repository.js'
 
@@ -55,7 +56,9 @@ export interface CalendarSchedulerInfrastructure {
     kind: CalendarEventRow['kind']
     assigneeId: string | null
   }): Promise<void>
-  sendReminderEmail(args: { to: string; subject: string; text: string; html: string }): Promise<void>
+  sendReminderEmail(args: {
+    to: string; subject: string; text: string; html: string; idempotencyKey: string
+  }): Promise<void>
 }
 
 function addDays(value: Date, count: number): Date {
@@ -360,6 +363,7 @@ export class CalendarScheduler {
           kind: event.kind,
           assigneeId: event.assignee_id,
         })
+        await recordCalendarReminderLeg(this.infrastructure.db, { id: reminderId, leg: 'toast' })
         deliveredLegs.add('toast')
       } catch (error) {
         errors.push(`toast: ${error instanceof Error ? error.message : String(error)}`)
@@ -377,7 +381,11 @@ export class CalendarScheduler {
             subject: reminderSubject(event, leadMinutes),
             text: reminderText(event, occurrence, leadMinutes),
             html: reminderHtml(event, occurrence, leadMinutes),
+            idempotencyKey: `calendar-reminder/${createHash('sha256')
+              .update(event.company_id).update('\0').update(event.id).update('\0')
+              .update(occurrence.toISOString()).update('\0').update(to.toLowerCase()).digest('hex')}`,
           })
+          await recordCalendarReminderLeg(this.infrastructure.db, { id: reminderId, leg })
           deliveredLegs.add(leg)
         } catch (error) {
           errors.push(`email[${to}]: ${error instanceof Error ? error.message : String(error)}`)

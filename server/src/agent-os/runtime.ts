@@ -393,8 +393,14 @@ export class AgentOSRuntime {
       await this.host.completeWork(work, { status: 'completed', resultText: finalText })
     } catch (error) {
       if (preemptRequested) {
-        if (activeSession) await this.host.saveSession(work, activeSession)
-        await this.event(work, runId, { kind: 'run.preempted', stage: 'cancelled', visibility: 'internal', data: { lane: work.lane } })
+        if (activeSession) await this.host.saveSession(work, activeSession).catch((bookkeepingError: unknown) => {
+          console.error('[agent-os] preemption session save failed', bookkeepingError)
+        })
+        await this.event(work, runId, {
+          kind: 'run.preempted', stage: 'cancelled', visibility: 'internal', data: { lane: work.lane },
+        }).catch((bookkeepingError: unknown) => {
+          console.error('[agent-os] preemption event recording failed', bookkeepingError)
+        })
         await this.host.yieldWork(work)
         return
       }

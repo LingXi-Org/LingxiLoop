@@ -47,6 +47,9 @@ function localTestFiles(allTests, changedPaths) {
   }
 
   for (const path of changedPaths) {
+    if (path === 'server/src/db/schema.sql' || path === 'server/src/db/bootstrap.ts') {
+      addPath('server/src/__tests__/schema-v1.test.ts')
+    }
     if (path.endsWith('.test.ts')) addPath(path)
     if (/\.[cm]?[jt]sx?$/.test(path) && !path.endsWith('.test.ts')) {
       addPath(path.replace(/\.[cm]?[jt]sx?$/, '.test.ts'))

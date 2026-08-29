@@ -472,6 +472,20 @@ export async function completeCalendarReminder(
   )
 }
 
+export async function recordCalendarReminderLeg(
+  db: Queryable,
+  args: { id: string; leg: string },
+): Promise<void> {
+  const result = await db.query(
+    `UPDATE calendar_reminders
+        SET delivered_legs=(SELECT jsonb_agg(DISTINCT value)
+          FROM jsonb_array_elements_text(delivered_legs || to_jsonb($2::text)) AS leg(value))
+      WHERE id=$1 AND status='pending'`,
+    [args.id, args.leg],
+  )
+  if ((result.rowCount ?? 0) !== 1) throw new Error('calendar reminder leg lost its claim fence')
+}
+
 export async function listActiveCalendarEvents(db: Queryable): Promise<CalendarEventRow[]> {
   const { rows } = await db.query<CalendarEventRow>(
     `SELECT ${CALENDAR_SELECT} FROM calendar_events WHERE status = 'active'`,

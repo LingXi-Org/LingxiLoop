@@ -133,6 +133,7 @@ export async function sendCalendarReminderEmail(args: {
   subject: string
   text: string
   html: string
+  idempotencyKey: string
 }): Promise<void> {
   assertEmailProviderConfigured()
   if (!env.EMAIL_DOMAIN) throw new Error('EMAIL_DOMAIN is required')
@@ -143,6 +144,7 @@ export async function sendCalendarReminderEmail(args: {
     text: args.text,
     html: args.html,
     messageId: mintMessageId(),
+    idempotencyKey: args.idempotencyKey,
     autoSubmitted: 'auto-generated',
   })
   if (!result.ok) throw new Error(result.error ?? 'calendar reminder email failed')
