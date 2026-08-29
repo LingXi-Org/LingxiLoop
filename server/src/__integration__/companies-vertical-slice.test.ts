@@ -20,7 +20,7 @@ let nextToken = 0
 const hash = (token: string) => createHash('sha256').update(token).digest('hex')
 const application = new CompanyApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
-  audit: async (entry) => { audits.push({ kind: entry.kind, companyId: entry.companyId }) },
+  auditInTransaction: async (_db, entry) => { audits.push({ kind: entry.kind, companyId: entry.companyId }) },
   installCompany: async () => false,
   finalizeCompany: async () => undefined,
   seedMemberDms: async () => undefined,

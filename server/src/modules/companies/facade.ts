@@ -1,4 +1,4 @@
-import { audit } from '../identity/public.js'
+import { auditInTransaction } from '../identity/public.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
@@ -10,7 +10,7 @@ import { CompanyApplication } from './application.js'
 
 export const companyApplication = new CompanyApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
-  audit,
+  auditInTransaction,
   installCompany: installStarterAgents,
   finalizeCompany: finalizeStarterAgents,
   seedMemberDms,

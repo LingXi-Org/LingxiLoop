@@ -55,7 +55,7 @@ interface AuditInput {
 
 export interface CompanyInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
-  audit(input: AuditInput): Promise<void>
+  auditInTransaction(db: Queryable, input: AuditInput): Promise<void>
   installCompany(db: Queryable, companyId: string): Promise<boolean>
   finalizeCompany(installed: boolean): Promise<void>
   seedMemberDms(args: { companyId: string; memberId: string }): Promise<void>
@@ -117,15 +117,14 @@ export class CompanyApplication {
       try {
         const installed = await this.infrastructure.transaction(async (db) => {
           await insertCompanyRoot(db, { id, name: input.name, slug, userId, projectId })
-          return this.infrastructure.installCompany(db, id)
+          const installed = await this.infrastructure.installCompany(db, id)
+          await this.infrastructure.auditInTransaction(db, {
+            kind: 'company_create', userId, companyId: id, ...auditContext,
+            detail: { name: input.name, slug },
+          })
+          return installed
         })
-        await Promise.allSettled([
-          this.infrastructure.finalizeCompany(installed),
-          this.infrastructure.audit({
-          kind: 'company_create', userId, companyId: id, ...auditContext,
-          detail: { name: input.name, slug },
-          }),
-        ])
+        await this.infrastructure.finalizeCompany(installed).catch(() => undefined)
         return { id, name: input.name, slug, role: 'owner' as const }
       } catch (error) {
         if (!isUniqueViolation(error)) throw error
@@ -156,11 +155,13 @@ export class CompanyApplication {
     auditContext: RequestAuditContext,
   ) {
     await this.requireAdmin(companyId, userId)
-    if (!await updateCompany(this.db, companyId, input)) {
-      throw new CompanyApplicationError('not_found', 'company not found')
-    }
-    await this.infrastructure.audit({
-      kind: 'company_update', userId, companyId, ...auditContext, detail: input,
+    await this.infrastructure.transaction(async (db) => {
+      if (!await updateCompany(db, companyId, input)) {
+        throw new CompanyApplicationError('not_found', 'company not found')
+      }
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'company_update', userId, companyId, ...auditContext, detail: input,
+      })
     })
     const company = await findCompany(this.db, companyId)
     if (!company) throw new CompanyApplicationError('not_found', 'company not found')
@@ -177,13 +178,15 @@ export class CompanyApplication {
   }) {
     await this.requireAdmin(args.companyId, args.userId)
     if (args.targetId === args.userId) throw new CompanyApplicationError('conflict', 'you cannot change your own company role')
-    const current = await memberRole(this.db, args.companyId, args.targetId)
-    if (!current) throw new CompanyApplicationError('not_found', 'member not found')
-    if (current === 'owner') throw new CompanyApplicationError('conflict', 'the company owner cannot be demoted')
-    await setMemberRole(this.db, args.companyId, args.targetId, args.role)
-    await this.infrastructure.audit({
-      kind: 'company_member_role_update', userId: args.userId, companyId: args.companyId,
-      ...args.audit, detail: { targetId: args.targetId, role: args.role },
+    await this.infrastructure.transaction(async (db) => {
+      const current = await memberRole(db, args.companyId, args.targetId, true)
+      if (!current) throw new CompanyApplicationError('not_found', 'member not found')
+      if (current === 'owner') throw new CompanyApplicationError('conflict', 'the company owner cannot be demoted')
+      await setMemberRole(db, args.companyId, args.targetId, args.role)
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'company_member_role_update', userId: args.userId, companyId: args.companyId,
+        ...args.audit, detail: { targetId: args.targetId, role: args.role },
+      })
     })
     return { ok: true as const, userId: args.targetId, role: args.role }
   }
@@ -193,10 +196,10 @@ export class CompanyApplication {
   }) {
     await this.requireAdmin(args.companyId, args.userId)
     if (args.targetId === args.userId) throw new CompanyApplicationError('conflict', 'you cannot remove yourself')
-    const removed = await this.infrastructure.transaction(async (db) => {
+    await this.infrastructure.transaction(async (db) => {
       const role = await memberRole(db, args.companyId, args.targetId, true)
       if (!role) {
-        if (await isDepartedCompanyHuman(db, args.companyId, args.targetId)) return false
+        if (await isDepartedCompanyHuman(db, args.companyId, args.targetId)) return
         throw new CompanyApplicationError('not_found', 'member not found')
       }
       if (role === 'owner') throw new CompanyApplicationError('conflict', 'the company owner cannot be removed')
@@ -207,7 +210,10 @@ export class CompanyApplication {
         }
       }
       await removeMemberState(db, args.companyId, args.targetId)
-      return true
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'company_member_remove', userId: args.userId, companyId: args.companyId,
+        ...args.audit, detail: { targetId: args.targetId },
+      })
     })
     const channels = await listCompanyChannels(this.db, args.companyId)
     // Revoke the cached WebSocket authorization before any external IM call.
@@ -215,10 +221,6 @@ export class CompanyApplication {
     const syncResults = await Promise.allSettled(channels.map((channel) => this.infrastructure.syncChannel({
       channelId: channel.channel_id, channelType: 2, title: channel.title, members: channel.members,
     })))
-    if (removed) await this.infrastructure.audit({
-      kind: 'company_member_remove', userId: args.userId, companyId: args.companyId,
-      ...args.audit, detail: { targetId: args.targetId },
-    })
     const failures = syncResults.filter((result) => result.status === 'rejected')
     if (failures.length > 0) {
       throw new Error(`WuKongIM member revocation reconciliation failed (${failures.length}/${channels.length})`)
@@ -297,10 +299,10 @@ export class CompanyApplication {
         tokenHash, companyId: args.companyId, invitedBy: args.userId, email,
         role: args.input.role, note, maxUses, expiresAt,
       })
-    })
-    await this.infrastructure.audit({
-      kind: 'invitation_create', userId: args.userId, companyId: args.companyId,
-      ...args.audit, detail: { email, role: args.input.role, maxUses, note: note ?? undefined },
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'invitation_create', userId: args.userId, companyId: args.companyId,
+        ...args.audit, detail: { email, role: args.input.role, maxUses, note: note ?? undefined },
+      })
     })
     const url = this.inviteUrl(token)
     let emailDelivery: unknown = null
@@ -331,13 +333,14 @@ export class CompanyApplication {
     companyId: string; userId: string; invitationId: string; audit: RequestAuditContext
   }) {
     await this.requireAdmin(args.companyId, args.userId)
-    const revoked = await revokeInvitation(this.db, args.companyId, args.invitationId)
-    if (revoked) {
-      await this.infrastructure.audit({
+    const revoked = await this.infrastructure.transaction(async (db) => {
+      const revoked = await revokeInvitation(db, args.companyId, args.invitationId)
+      if (revoked) await this.infrastructure.auditInTransaction(db, {
         kind: 'invitation_revoke', userId: args.userId, companyId: args.companyId,
         ...args.audit, detail: { inviteId: args.invitationId },
       })
-    }
+      return revoked
+    })
     return { ok: true as const, revoked }
   }
 
@@ -357,6 +360,10 @@ export class CompanyApplication {
       await insertAcceptedMembership(db, {
         invitation, userId, displayName: user.display_name, avatarUrl: user.avatar_url,
       })
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'invitation_accept', userId, companyId: invitation.company_id, ...auditContext,
+        detail: { invitedBy: invitation.invited_by, role: invitation.role },
+      })
       return { invitation, alreadyMember: false }
     })
     if (!result.alreadyMember) {
@@ -366,12 +373,6 @@ export class CompanyApplication {
     }
     const company = await companyMembershipSummary(this.db, result.invitation.company_id, userId)
     if (!company) throw new CompanyApplicationError('not_found', 'accepted company membership missing')
-    if (!result.alreadyMember) {
-      await this.infrastructure.audit({
-        kind: 'invitation_accept', userId, companyId: result.invitation.company_id, ...auditContext,
-        detail: { invitedBy: result.invitation.invited_by, role: result.invitation.role },
-      })
-    }
     return {
       ok: true as const,
       alreadyMember: result.alreadyMember,
