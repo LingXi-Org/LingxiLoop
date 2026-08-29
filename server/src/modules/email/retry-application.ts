@@ -58,6 +58,7 @@ export class EmailRetryApplication {
   }
 
   private async retry(candidate: EmailRetryCandidate): Promise<void> {
+    if (!candidate.smtpMessageId) throw new Error('retry candidate is missing its authoritative Message-ID')
     const attachments = await this.dependencies.findAttachments(candidate.companyId, candidate.messageId)
     const providerAttachments: NonNullable<SendArgs['attachments']> = []
     for (const attachment of attachments) {

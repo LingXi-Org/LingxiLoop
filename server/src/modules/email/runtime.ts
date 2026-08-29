@@ -202,12 +202,15 @@ export async function completeOutboundEmail(
   companyId: string,
   messageId: string,
   result: ProviderSendResult,
-  fallbackSmtpMessageId: string,
+  authoritativeSmtpMessageId: string,
 ): Promise<void> {
+  if (result.ok && !normalizeMessageId(result.smtpMessageId)) {
+    throw new Error('email provider returned success without a valid Message-ID')
+  }
   await completeOutboundDelivery(pool, companyId, messageId, {
     status: result.ok ? 'sent' : 'failed',
     error: result.error ?? null,
-    smtpMessageId: normalizeMessageId(result.smtpMessageId ?? fallbackSmtpMessageId),
+    smtpMessageId: normalizeMessageId(result.smtpMessageId ?? authoritativeSmtpMessageId),
   })
 }
 
@@ -391,6 +394,9 @@ export async function replyInEmailConversation(args: {
   // Message-ID). The caller still gets the correct transportStatus
   // returned below.
   const finalStatus = sendRes.ok ? 'sent' : 'failed'
+  if (sendRes.ok && !normalizeMessageId(sendRes.smtpMessageId)) {
+    throw new Error('email provider returned success without a valid Message-ID')
+  }
   const finalSmtpId = sendRes.smtpMessageId ?? messageId
   await updateReplyDelivery(pool, {
     companyId: args.companyId,

@@ -213,6 +213,12 @@ const metricsSource = await read(resolve('server/src/metrics.ts'))
 if (/['"]email\.send\.(?:ok|fail)['"]\s*:\s*\{[^}]*labels:\s*\[[^\]]*mock/s.test(metricsSource)) {
   violations.push('server/src/metrics.ts: retired email mock dimension is forbidden')
 }
+const emailProvider = await read(resolve('server/src/modules/email/provider.ts'))
+const emailApplication = await read(resolve('server/src/modules/email/application.ts'))
+const emailRuntime = await read(resolve('server/src/modules/email/runtime.ts'))
+if (/fallbackSmtpMessageId|args\.messageId\s*\?\?\s*mintMessageId/.test(`${emailProvider}\n${emailApplication}\n${emailRuntime}`)) {
+  violations.push('server/src/modules/email: provider success must preserve the authoritative Message-ID without fallback minting')
+}
 
 const evalService = await read(resolve('server/src/eval/service.ts'))
 if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(evalService)) {

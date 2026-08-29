@@ -1,5 +1,4 @@
 import { inc } from '../../metrics.js'
-import { mintMessageId } from './addressing.js'
 
 export interface ProviderSendResult {
   ok: boolean
@@ -17,7 +16,7 @@ export interface SendArgs {
   html?: string
   inReplyTo?: string | null
   references?: string[]
-  messageId?: string | null
+  messageId: string
   idempotencyKey?: string
   autoSubmitted?: 'auto-replied' | 'auto-generated'
   replyTo?: string
@@ -44,15 +43,20 @@ export function assertEmailProviderConfigured(): void {
 }
 
 export async function sendViaProvider(args: SendArgs): Promise<ProviderSendResult> {
-  if (providerOverride) return providerOverride(args)
+  if (!args.messageId.trim()) throw new Error('authoritative Message-ID is required')
+  if (providerOverride) {
+    const result = await providerOverride(args)
+    if (result.ok && !result.smtpMessageId?.trim()) {
+      throw new Error('email provider returned success without Message-ID')
+    }
+    return result
+  }
   const apiKey = process.env.RESEND_API_KEY ?? ''
   if (!apiKey) throw new Error('RESEND_API_KEY is required')
 
   const headers: Record<string, string> = {}
-  if (args.messageId) {
-    headers['Message-ID'] = `<${args.messageId}>`
-    headers['X-LingxiLoop-Message-ID'] = args.messageId
-  }
+  headers['Message-ID'] = `<${args.messageId}>`
+  headers['X-LingxiLoop-Message-ID'] = args.messageId
   if (args.inReplyTo) headers['In-Reply-To'] = `<${args.inReplyTo}>`
   if (args.references?.length) headers.References = args.references.map((reference) => `<${reference}>`).join(' ')
   if (args.autoSubmitted) headers['Auto-Submitted'] = args.autoSubmitted
@@ -136,5 +140,5 @@ export async function sendViaProvider(args: SendArgs): Promise<ProviderSendResul
     auto_submitted: args.autoSubmitted ?? null,
   }))
   inc('email.send.ok')
-  return { ok: true, smtpMessageId: args.messageId ?? mintMessageId(), error: null }
+  return { ok: true, smtpMessageId: args.messageId, error: null }
 }

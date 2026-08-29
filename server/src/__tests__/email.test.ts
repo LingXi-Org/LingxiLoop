@@ -232,6 +232,7 @@ test('email provider is unavailable without configuration or an explicit test se
       to: ['recipient@example.com'],
       subject: 'Unavailable provider',
       text: 'This must not fake success.',
+      messageId: 'unavailable-provider@example.com',
     }), /RESEND_API_KEY is required/)
   } finally {
     if (previous === undefined) delete process.env.RESEND_API_KEY
@@ -242,7 +243,7 @@ test('email provider is unavailable without configuration or an explicit test se
 test('email provider tests use the explicit injected seam', async () => {
   __setEmailProviderOverrideForTesting(async (input) => ({
     ok: true,
-    smtpMessageId: input.messageId ?? 'provider-message-id',
+    smtpMessageId: input.messageId,
     error: null,
   }))
   try {
@@ -254,6 +255,21 @@ test('email provider tests use the explicit injected seam', async () => {
       text: 'Delivered through the test seam.',
       messageId: 'explicit-message-id',
     }), { ok: true, smtpMessageId: 'explicit-message-id', error: null })
+  } finally {
+    __setEmailProviderOverrideForTesting(null)
+  }
+})
+
+test('email provider success without the authoritative Message-ID fails closed', async () => {
+  __setEmailProviderOverrideForTesting(async () => ({ ok: true, smtpMessageId: null, error: null }))
+  try {
+    await assert.rejects(sendViaProvider({
+      from: 'sender@example.com',
+      to: ['recipient@example.com'],
+      subject: 'Invalid provider response',
+      text: 'A success response must preserve the Message-ID.',
+      messageId: 'strict-message-id@example.com',
+    }), /success without Message-ID/)
   } finally {
     __setEmailProviderOverrideForTesting(null)
   }

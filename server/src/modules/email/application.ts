@@ -63,7 +63,7 @@ export interface EmailInfrastructure {
     companyId: string,
     messageId: string,
     result: ProviderSendResult,
-    fallbackSmtpMessageId: string,
+    authoritativeSmtpMessageId: string,
   ): Promise<void>
   findOrCreateConversation(args: {
     companyId: string
