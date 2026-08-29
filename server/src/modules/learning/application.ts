@@ -382,7 +382,9 @@ export class LearningApplication {
     })
     await this.syncStudyRoom(result.courseId)
     await this.infrastructure.syncTeacherRoom(result.companyId, result.courseId)
-    if (result.joinedCompany) await this.infrastructure.seedMemberDms(result.companyId, userId)
+    // Idempotent on every acceptance attempt so a retry repairs a post-commit
+    // onboarding failure even though membership now already exists.
+    await this.infrastructure.seedMemberDms(result.companyId, userId)
     await this.infrastructure.audit({
       kind: 'course_invitation_accept', userId, companyId: result.companyId,
       detail: { courseId: result.courseId, role: result.role },

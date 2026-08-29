@@ -89,13 +89,13 @@ export class KnowledgeApplication {
     if (!await updateProject(this.db, companyId, projectId, patch)) {
       throw new KnowledgeApplicationError('not_found', 'not found')
     }
-    await this.infrastructure.syncNotebookMetadata(projectId)
+    await this.infrastructure.syncNotebookMetadata(projectId).catch(() => undefined)
     return { ok: true as const }
   }
 
   async archiveProject(companyId: string, projectId: string, archive: boolean) {
     await setProjectArchived(this.db, companyId, projectId, archive)
-    await this.infrastructure.syncNotebookMetadata(projectId)
+    await this.infrastructure.syncNotebookMetadata(projectId).catch(() => undefined)
     return { ok: true as const, status: archive ? 'archived' as const : 'active' as const }
   }
 

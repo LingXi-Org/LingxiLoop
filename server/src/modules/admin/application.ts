@@ -43,7 +43,8 @@ export interface AdminInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   adminEmails: readonly string[]
   mirrorAvatar(userId: string, providerUrl: string | null): Promise<string | null>
-  onboardStarterAgents(companyId: string): Promise<void>
+  installStarterAgents(db: Queryable, companyId: string): Promise<boolean>
+  finalizeStarterAgents(installed: boolean): Promise<void>
   sendWaitlistApprovedEmail(input: { email: string; displayName: string }): Promise<void>
   audit(input: {
     kind: 'user_suspend' | 'user_unsuspend'
@@ -132,12 +133,15 @@ export class AdminApplication {
 
       const avatarUrl = await this.infrastructure.mirrorAvatar(userId, row.avatarUrl)
       await attachApprovedAvatar(db, { userId, companyId, displayName: row.displayName, avatarUrl })
+      const installedStarterAgents = companyId
+        ? await this.infrastructure.installStarterAgents(db, companyId)
+        : false
       await markWaitlistApproved(db, waitlistId, decidedBy)
-      return { userId, companyId, email: row.email, displayName: row.displayName }
+      return { userId, companyId, email: row.email, displayName: row.displayName, installedStarterAgents }
     })
 
-    await Promise.all([
-      ...(approved.companyId ? [this.infrastructure.onboardStarterAgents(approved.companyId)] : []),
+    await Promise.allSettled([
+      ...(approved.companyId ? [this.infrastructure.finalizeStarterAgents(approved.installedStarterAgents)] : []),
       this.infrastructure.sendWaitlistApprovedEmail({
         email: approved.email,
         displayName: approved.displayName,

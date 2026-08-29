@@ -118,7 +118,7 @@ export class CompanyApplication {
           await insertCompanyRoot(db, { id, name: input.name, slug, userId, projectId })
           return this.infrastructure.installCompany(db, id)
         })
-        await Promise.all([
+        await Promise.allSettled([
           this.infrastructure.finalizeCompany(installed),
           this.infrastructure.audit({
           kind: 'company_create', userId, companyId: id, ...auditContext,

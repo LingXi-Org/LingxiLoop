@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
+import { tenantEmailIdempotencyKey } from './idempotency.js'
 
 export async function findCompletedOutboundByKey(
   db: Queryable,
@@ -14,7 +15,8 @@ export async function findCompletedOutboundByKey(
   to: string[]
   cc: string[]
 } | null> {
-  const messageId = `m-agent-${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 32)}`
+  const scopedKey = tenantEmailIdempotencyKey(companyId, idempotencyKey)
+  const messageId = `m-agent-${createHash('sha256').update(scopedKey).digest('hex').slice(0, 32)}`
   const { rows } = await db.query<{
     message_id: string
     conversation_id: string

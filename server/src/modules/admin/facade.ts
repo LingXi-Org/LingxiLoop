@@ -3,7 +3,7 @@ import { mirrorIdentityAvatar } from '../../avatar.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
-import { onboardStarterAgents } from '../../onboardCompany.js'
+import { finalizeStarterAgents, installStarterAgents } from '../../onboardCompany.js'
 import { storage } from '../../storage.js'
 import { AdminApplication } from './application.js'
 import type { AppSettingKey, EnqueueWaitlistInput, WaitlistFilter } from './contracts.js'
@@ -14,7 +14,8 @@ export const adminApplication = new AdminApplication({
   transaction: (work) => withTransaction(pool, work),
   adminEmails: env.ADMIN_EMAILS,
   mirrorAvatar: (userId, providerUrl) => mirrorIdentityAvatar(storage, userId, providerUrl),
-  onboardStarterAgents,
+  installStarterAgents,
+  finalizeStarterAgents,
   sendWaitlistApprovedEmail,
   audit,
 })

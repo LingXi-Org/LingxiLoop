@@ -17,7 +17,8 @@ function infrastructure(db: Queryable) {
     transaction: async <T>(work: (transactionDb: Queryable) => Promise<T>) => work(db),
     adminEmails: [] as string[],
     mirrorAvatar: async () => null,
-    onboardStarterAgents: async () => undefined,
+    installStarterAgents: async () => false,
+    finalizeStarterAgents: async () => undefined,
     sendWaitlistApprovedEmail: async () => undefined,
     audit: async () => undefined,
   }

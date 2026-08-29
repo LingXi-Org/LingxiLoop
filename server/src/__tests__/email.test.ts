@@ -25,6 +25,14 @@ import {
   assertEmailProviderConfigured,
   sendViaProvider,
 } from '../modules/email/provider.js'
+import { tenantEmailIdempotencyKey } from '../modules/email/idempotency.js'
+
+test('email idempotency identity is stable within a tenant and distinct across tenants', () => {
+  const first = tenantEmailIdempotencyKey('company-a', 'request-0001')
+  assert.equal(first, tenantEmailIdempotencyKey('company-a', 'request-0001'))
+  assert.notEqual(first, tenantEmailIdempotencyKey('company-b', 'request-0001'))
+  assert.match(first, /^email\/[a-f0-9]{64}$/)
+})
 
 /* ============================== sanitizeSubject ============================ */
 

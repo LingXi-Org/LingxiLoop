@@ -18,6 +18,7 @@ import {
   findUserEmail,
   markEmailConversationRead,
 } from './repository.js'
+import { tenantEmailIdempotencyKey } from './idempotency.js'
 
 type Address = { addr: string; name: string | null }
 type Sender = { email: string; displayName: string }
@@ -129,6 +130,7 @@ export class EmailApplication {
       transportStatus: replay.transportStatus, ...(replay.error ? { error: replay.error } : {}),
       replayed: true, subject: replay.subject, to: replay.to, cc: replay.cc,
     }
+    const idempotencyKey = tenantEmailIdempotencyKey(scope.companyId, input.idempotencyKey)
     const subject = this.infrastructure.sanitizeSubject(input.subject)
     if (!subject) throw new EmailApplicationError('recipient_unresolved', 'subject required')
     const attachments = await this.resolveAttachments(input.attachments)
@@ -150,7 +152,7 @@ export class EmailApplication {
       references: [],
       subject,
       memberIds: [...memberIds],
-      idempotencyKey: input.idempotencyKey,
+      idempotencyKey,
     })
     const from = this.infrastructure.formatAddress(sender.email, sender.displayName)
     const persisted = await this.infrastructure.persist({
@@ -169,7 +171,7 @@ export class EmailApplication {
       body: input.body,
       ...(context ? { autoSubmitted: true } : {}),
       attachments: this.persistedAttachments(attachments),
-      idempotencyKey: input.idempotencyKey,
+      idempotencyKey,
     })
     const result = await this.infrastructure.send({
       from,
@@ -180,7 +182,7 @@ export class EmailApplication {
       subject,
       text: input.body,
       messageId,
-      idempotencyKey: input.idempotencyKey,
+      idempotencyKey,
       ...(context ? { autoSubmitted: context.autoSubmitted } : {}),
       attachments: attachments.map((attachment) => ({
         filename: attachment.filename,
@@ -234,6 +236,7 @@ export class EmailApplication {
       transportStatus: replay.transportStatus, ...(replay.error ? { error: replay.error } : {}),
       replayed: true, subject: replay.subject, to: replay.to, cc: replay.cc,
     }
+    const idempotencyKey = tenantEmailIdempotencyKey(scope.companyId, input.idempotencyKey)
     const target = await findEmailReplyTarget(this.db, scope.companyId, targetId)
     if (!target) throw new EmailApplicationError('message_not_found', 'unknown email message')
     if (!target.members?.includes(scope.userId)) {
@@ -278,7 +281,7 @@ export class EmailApplication {
       body: input.body,
       ...(context ? { autoSubmitted: true } : {}),
       attachments: this.persistedAttachments(attachments),
-      idempotencyKey: input.idempotencyKey,
+      idempotencyKey,
     })
     const result = await this.infrastructure.send({
       from,
@@ -289,7 +292,7 @@ export class EmailApplication {
       inReplyTo: inReplyTo ?? undefined,
       references,
       messageId,
-      idempotencyKey: input.idempotencyKey,
+      idempotencyKey,
       ...(context ? { autoSubmitted: context.autoSubmitted } : {}),
       attachments: attachments.map((attachment) => ({
         filename: attachment.filename,
