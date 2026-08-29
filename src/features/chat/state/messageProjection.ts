@@ -117,12 +117,15 @@ export function fromIm(message: ImEnvelope): Message {
   const approvalId = payload.kind === 'approval' && payload.refs?.approvalId
     ? `approval-${payload.refs.approvalId}`
     : null
+  const handoffId = payload.kind === 'handoff' && payload.refs?.handoffId
+    ? `handoff-${payload.refs.handoffId}`
+    : null
   const pollData = payload.kind === 'poll' && data.poll && typeof data.poll === 'object'
     ? data.poll as Message['poll']
     : payload.kind === 'poll' ? data as unknown as Message['poll'] : undefined
   const createdAt = new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString()
   return fromApi({
-    id: pollClientMessageNumber ?? approvalId ?? (message.messageId || payload.clientMsgNo),
+    id: pollClientMessageNumber ?? approvalId ?? handoffId ?? (message.messageId || payload.clientMsgNo),
     clientId: payload.clientMsgNo,
     conversationId: message.channelId,
     authorId: message.fromUid,
@@ -172,10 +175,13 @@ export function fromImBatch(messages: ImEnvelope[]): Message[] {
     const previousSequence = sequenceOf(previous)
     const nextSequence = sequenceOf(next)
     const latest = (nextSequence ?? 0) >= (previousSequence ?? 0) ? next : previous
+    const earliest = latest === next ? previous : next
     latest.sequence = Math.min(
       previousSequence ?? Number.MAX_SAFE_INTEGER,
       nextSequence ?? Number.MAX_SAFE_INTEGER,
     )
+    latest.createdAt = earliest.createdAt
+    latest.at = earliest.at
     byId.set(next.id, latest)
   }
   return projectThreadMetadata(sortMessagesStable([...byId.values()]))
@@ -220,7 +226,17 @@ export function mergeFetchedMessages(current: Message[] | undefined, incoming: M
   const incomingClientIds = new Set(incoming.map((message) => message.clientId).filter(Boolean))
   const merged = incoming.map((message) => {
     const previous = currentById.get(message.id)
-    return previous?.clientId && !message.clientId ? { ...message, clientId: previous.clientId } : message
+    if (!previous) return message
+    const preservePosition = message.kind === 'approval' || message.kind === 'handoff'
+    return {
+      ...message,
+      ...(!message.clientId && previous.clientId ? { clientId: previous.clientId } : {}),
+      ...(preservePosition ? {
+        sequence: previous.sequence,
+        createdAt: previous.createdAt,
+        at: previous.at,
+      } : {}),
+    }
   })
 
   for (const message of current) {

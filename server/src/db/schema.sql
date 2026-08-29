@@ -3748,14 +3748,6 @@ ALTER TABLE ONLY public.agent_approvals
 
 
 --
--- Name: agent_approvals agent_approvals_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.agent_approvals
-    ADD CONSTRAINT agent_approvals_message_id_fkey FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
-
-
---
 -- Name: agent_events agent_events_run_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3769,22 +3761,6 @@ ALTER TABLE ONLY public.agent_events
 
 ALTER TABLE ONLY public.agent_handoffs
     ADD CONSTRAINT agent_handoffs_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
-
-
---
--- Name: agent_handoffs agent_handoffs_result_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.agent_handoffs
-    ADD CONSTRAINT agent_handoffs_result_message_id_fkey FOREIGN KEY (result_message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
-
-
---
--- Name: agent_handoffs agent_handoffs_source_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.agent_handoffs
-    ADD CONSTRAINT agent_handoffs_source_message_id_fkey FOREIGN KEY (source_message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
 
 
 --

@@ -49,6 +49,14 @@ test('v1 defaults preserve current capability and Canvas contracts', () => {
   assert.match(schema, /CREATE TABLE public\.canvases \([\s\S]*?conversation_id text,/)
 })
 
+test('structured Agent cards store WuKong identities without SQL message foreign keys', () => {
+  for (const constraint of [
+    'agent_approvals_message_id_fkey',
+    'agent_handoffs_source_message_id_fkey',
+    'agent_handoffs_result_message_id_fkey',
+  ]) assert.doesNotMatch(schema, new RegExp(`\\b${constraint}\\b`))
+})
+
 test('tenant-owned reaction and climate rows have no legacy tenant default', () => {
   assert.match(schema, /CREATE TABLE public\.message_reactions \([\s\S]*?company_id text NOT NULL[\s\S]*?\);/)
   assert.match(schema, /CREATE TABLE public\.agent_climate \([\s\S]*?company_id text NOT NULL[\s\S]*?\);/)

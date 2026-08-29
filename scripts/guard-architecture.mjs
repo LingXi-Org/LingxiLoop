@@ -265,10 +265,26 @@ const agentReactBody = agentCli.match(/async function cmdReact\b[\s\S]*?(?=funct
 if (!agentReactBody || !/toggleAgentChannelReaction\s*\(/.test(agentReactBody) || /runTool\s*\(\s*['"]react/.test(agentCli)) {
   violations.push('server/src/agents/cli.ts: Agent reactions must use an explicit channel and the public IM application')
 }
+const schemaSql = await read(resolve('server/src/db/schema.sql'))
 const membershipMessages = await read(resolve('server/src/agents/membership.ts'))
 if (/from ['"][^'"]*(?:db\/|redis\.js)|\b(?:pool|db)\.query\s*\(|conversation_counters|CH_MESSAGE_NEW|INSERT\s+INTO\s+messages/i.test(membershipMessages)
   || !/sendSystemChannelMessage\s*\(/.test(membershipMessages)) {
   violations.push('server/src/agents/membership.ts: membership activity must publish through the public authoritative IM application')
+}
+const coworker = await read(resolve('server/src/agents/coworker.ts'))
+if (/from ['"][^'"]*redis\.js|conversation_counters|\b(?:FROM|JOIN|INSERT INTO|UPDATE|DELETE FROM)\s+messages\b|CH_MESSAGE_NEW|publishMessage/i.test(coworker)
+  || !/sendSystemChannelMessage\s*\(/.test(coworker)
+  || !/clientNonce:\s*`(?:handoff|approval):/.test(coworker)) {
+  violations.push('server/src/agents/coworker.ts: handoff and approval cards must be immutable authoritative IM snapshots')
+}
+for (const retiredConstraint of [
+  'agent_approvals_message_id_fkey',
+  'agent_handoffs_source_message_id_fkey',
+  'agent_handoffs_result_message_id_fkey',
+]) {
+  if (schemaSql.includes(retiredConstraint)) {
+    violations.push(`server/src/db/schema.sql: ${retiredConstraint} must not bind WuKong identities to SQL messages`)
+  }
 }
 const calendarRepository = await read(resolve('server/src/modules/calendar/repository.ts'))
 const calendarScheduler = await read(resolve('server/src/modules/calendar/scheduler.ts'))
