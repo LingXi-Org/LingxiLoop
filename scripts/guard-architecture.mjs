@@ -162,6 +162,7 @@ for (const file of server) {
   const fileName = name(file)
   if (fileName === 'server/src/admin.ts') violations.push(`${fileName}: retired root admin implementation is forbidden`)
   if (fileName === 'server/src/alert.ts') violations.push(`${fileName}: operational alerts must use alerting.ts`)
+  if (fileName === 'server/src/avatar.ts') violations.push(`${fileName}: identity avatar transport must remain inside modules/identity`)
   if (fileName === 'server/src/email.ts') violations.push(`${fileName}: retired root email implementation is forbidden`)
   if (fileName === 'server/src/invitation-email.ts') violations.push(`${fileName}: Companies email capability must remain inside its vertical slice`)
   if (fileName === 'server/src/email-retry.ts' || fileName === 'server/src/email-gc.ts' || fileName === 'server/src/api/inbound-email.ts') {
@@ -220,6 +221,7 @@ for (const file of server) {
     && !new Set([
       'server/src/modules/identity/oidc-infrastructure.ts',
       'server/src/modules/identity/oidc-protocol.ts',
+      'server/src/modules/identity/avatar-infrastructure.ts',
     ]).has(fileName)) {
     violations.push(`${fileName}: LingxiIdentity HTTP bypasses oidc-infrastructure.ts`)
   }

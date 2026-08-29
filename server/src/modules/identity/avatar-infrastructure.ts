@@ -1,4 +1,4 @@
-import type { Storage } from './storage.js'
+import type { Storage } from '../../storage.js'
 
 const AVATAR_MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',

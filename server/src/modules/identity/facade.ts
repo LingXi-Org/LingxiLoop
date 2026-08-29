@@ -1,7 +1,7 @@
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
-import { mirrorIdentityAvatar } from '../../avatar.js'
+import { mirrorTrustedIdentityAvatar } from './avatar-facade.js'
 import {
   enqueueWaitlist,
   isAllowlistedAdmin,
@@ -11,7 +11,6 @@ import {
   finalizeCompanyStarterWorkspace,
   provisionPersonalCompany,
 } from '../companies/public.js'
-import { storage } from '../../storage.js'
 import {
   consumeIdentityState,
   createIdentityState,
@@ -42,7 +41,7 @@ const oauthApplication = new OAuthApplication({
   waitlistEnabled: isWaitlistEnabled,
   isAllowlistedAdmin,
   enqueueWaitlist,
-  mirrorAvatar: (userId, providerUrl) => mirrorIdentityAvatar(storage, userId, providerUrl),
+  mirrorAvatar: mirrorTrustedIdentityAvatar,
   provisionCompany: provisionPersonalCompany,
   finalizeCompany: finalizeCompanyStarterWorkspace,
   createLoginSession,
