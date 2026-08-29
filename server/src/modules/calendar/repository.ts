@@ -367,45 +367,6 @@ export async function findCalendarDirectConversation(
   return rows[0]?.id ?? null
 }
 
-export async function allocateCalendarMessageSequence(
-  db: Queryable,
-  conversationId: string,
-): Promise<number> {
-  const { rows } = await db.query<{ seq: number }>(
-    `INSERT INTO conversation_counters (conversation_id, next_sequence)
-     VALUES ($1, 2)
-     ON CONFLICT (conversation_id)
-     DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
-     RETURNING next_sequence - 1 AS seq`,
-    [conversationId],
-  )
-  if (!rows[0]) throw new Error('calendar message sequence allocation returned no row')
-  return rows[0].seq
-}
-
-export async function insertCalendarSystemMessage(
-  db: Queryable,
-  args: {
-    id: string
-    conversationId: string
-    body: string
-    sequence: number
-    companyId: string
-    authorId: string
-  },
-): Promise<void> {
-  await db.query(
-    `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
-     VALUES ($1,$2,$3,'system',$4,$5,$6)`,
-    [args.id, args.conversationId, args.authorId, args.body, args.sequence, args.companyId],
-  )
-  await db.query(
-    `UPDATE conversations SET updated_at = NOW()
-      WHERE id = $1 AND company_id = $2`,
-    [args.conversationId, args.companyId],
-  )
-}
-
 export async function listCalendarReminderRecipients(
   db: Queryable,
   args: { companyId: string; creatorId: string; assigneeId: string | null },

@@ -1,10 +1,9 @@
 import { pool } from '../../db/pool.js'
-import { withTransaction } from '../../db/transaction.js'
+import { sendSystemChannelMessage } from '../../im/public.js'
 import { sendCalendarReminderEmail } from '../email/index.js'
 import {
   CH_CALENDAR_EVENTS,
   CH_CALENDAR_REMINDER,
-  CH_MESSAGE_NEW,
   publish,
 } from '../../redis.js'
 import { CalendarApplication } from './application.js'
@@ -14,8 +13,23 @@ export { CalendarApplicationError } from './application.js'
 
 const calendarScheduler = new CalendarScheduler({
   db: pool,
-  transaction: (work) => withTransaction(pool, work),
-  publishMessage: (event) => publish(CH_MESSAGE_NEW, event),
+  publishDispatchMessage: async (input) => {
+    const result = await sendSystemChannelMessage({
+      companyId: input.companyId,
+      actorId: input.actorId,
+      channelId: input.channelId,
+      clientNonce: input.clientNonce,
+      payload: {
+        version: 1,
+        kind: 'system',
+        clientMsgNo: input.clientNonce,
+        body: input.body,
+        data: { calendarEventId: input.eventId, scheduledFor: input.scheduledFor },
+      },
+    })
+    if (result.kind !== 'accepted') throw new Error(`calendar IM dispatch failed: ${result.kind}`)
+    return { messageId: result.messageId, sequence: result.sequence }
+  },
   publishCalendar: (event) => publish(CH_CALENDAR_EVENTS, event),
   publishReminder: (event) => publish(CH_CALENDAR_REMINDER, event),
   sendReminderEmail: sendCalendarReminderEmail,

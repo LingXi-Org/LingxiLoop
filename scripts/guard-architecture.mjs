@@ -270,6 +270,13 @@ if (/from ['"][^'"]*(?:db\/|redis\.js)|\b(?:pool|db)\.query\s*\(|conversation_co
   || !/sendSystemChannelMessage\s*\(/.test(membershipMessages)) {
   violations.push('server/src/agents/membership.ts: membership activity must publish through the public authoritative IM application')
 }
+const calendarRepository = await read(resolve('server/src/modules/calendar/repository.ts'))
+const calendarScheduler = await read(resolve('server/src/modules/calendar/scheduler.ts'))
+if (/conversation_counters|INSERT\s+INTO\s+messages/i.test(calendarRepository)
+  || !/publishDispatchMessage\s*\(/.test(calendarScheduler)
+  || !/calendar-dispatch:\$\{createHash\(['"]sha256['"]\)/.test(calendarScheduler)) {
+  violations.push('server/src/modules/calendar: dispatch messages must use stable identities and the authoritative IM application')
+}
 const agentMembershipBody = agentCli.match(/async function cmdLeave\b[\s\S]*?(?=async function cmdReply\b)/)?.[0] ?? ''
 if (!agentMembershipBody || /\bpool\.query\s*\(|UPDATE\s+conversations/i.test(agentMembershipBody)
   || !/leaveAgentConversation\s*\(/.test(agentMembershipBody)

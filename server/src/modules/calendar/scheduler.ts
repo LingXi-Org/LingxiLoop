@@ -7,13 +7,11 @@ import type {
   RecurrenceRule,
 } from './contracts.js'
 import {
-  allocateCalendarMessageSequence,
   calendarConversationMembers,
   claimCalendarDispatch,
   claimCalendarReminder,
   completeCalendarDispatch,
   completeCalendarReminder,
-  insertCalendarSystemMessage,
   listActiveCalendarEvents,
   listCalendarReminderRecipients,
   markCalendarEventDone,
@@ -28,21 +26,15 @@ const CALENDAR_SYSTEM_AUTHOR_ID = 'calendar'
 
 export interface CalendarSchedulerInfrastructure {
   db: Queryable
-  transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
-  publishMessage(event: {
-    type: 'message.new'
-    conversationId: string
+  publishDispatchMessage(input: {
     companyId: string
-    message: {
-      id: string
-      conversationId: string
-      authorId: string
-      kind: 'system'
-      body: string
-      sequence: number
-      at: string
-    }
-  }): Promise<void>
+    channelId: string
+    actorId: string
+    clientNonce: string
+    body: string
+    eventId: string
+    scheduledFor: string
+  }): Promise<{ messageId: string; sequence: number }>
   publishCalendar(event: CalendarChangedEvent): Promise<void>
   publishReminder(event: {
     type: 'calendar.reminder'
@@ -191,48 +183,33 @@ export class CalendarScheduler {
       if (!event.target_conversation_id) throw new Error('targetConversationId is required')
       conversationId = event.target_conversation_id
       const body = dispatchBody(event, scheduledFor)
-      const created = await this.infrastructure.transaction(async (db) => {
-        const members = await calendarConversationMembers(db, {
+      const members = await calendarConversationMembers(this.infrastructure.db, {
           conversationId: conversationId as string,
           companyId: event.company_id,
           projectId: event.project_id,
         })
-        if (!members) throw new Error('target conversation not found')
-        if (!members.includes(event.assignee_id as string)) {
-          throw new Error('assignee is not a target conversation member')
-        }
-        const sequence = await allocateCalendarMessageSequence(db, conversationId as string)
-        const messageId = `m-${randomUUID()}`
-        await insertCalendarSystemMessage(db, {
-          id: messageId,
-          conversationId: conversationId as string,
-          body,
-          sequence,
-          companyId: event.company_id,
-          authorId: CALENDAR_SYSTEM_AUTHOR_ID,
-        })
-        await completeCalendarDispatch(db, {
-          id: dispatchId,
-          status: 'dispatched',
-          conversationId,
-          messageId,
-        })
-        return { messageId, sequence }
-      })
-      await this.infrastructure.publishMessage({
-        type: 'message.new',
-        conversationId,
+      if (!members) throw new Error('target conversation not found')
+      if (!members.includes(event.assignee_id as string)) {
+        throw new Error('assignee is not a target conversation member')
+      }
+      const clientNonce = `calendar-dispatch:${createHash('sha256')
+        .update(`${event.company_id}\0${event.id}\0${scheduledFor.toISOString()}`)
+        .digest('hex')}`
+      const created = await this.infrastructure.publishDispatchMessage({
         companyId: event.company_id,
-        message: {
-          id: created.messageId,
-          conversationId,
-          authorId: CALENDAR_SYSTEM_AUTHOR_ID,
-          kind: 'system',
-          body,
-          sequence: created.sequence,
-          at: new Date().toISOString(),
-        },
-      }).catch(() => undefined)
+        channelId: conversationId,
+        actorId: CALENDAR_SYSTEM_AUTHOR_ID,
+        clientNonce,
+        body,
+        eventId: event.id,
+        scheduledFor: scheduledFor.toISOString(),
+      })
+      await completeCalendarDispatch(this.infrastructure.db, {
+        id: dispatchId,
+        status: 'dispatched',
+        conversationId,
+        messageId: created.messageId,
+      })
       return { status: 'dispatched', messageId: created.messageId, conversationId }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
