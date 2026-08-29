@@ -1,5 +1,5 @@
 import { conversationsApi } from '@/features/conversations/api'
-import { lingxiIm } from '@/lib/im/wukong'
+import { lingxiIm, type ImEnvelope } from '@/lib/im/wukong'
 import { useApp } from '@/stores/app'
 import type { Message } from '@/types'
 import {
@@ -20,7 +20,18 @@ type HistoryActions = Pick<MessagesState,
   'loadConversation' | 'loadOlder' | 'reloadConversation' | 'retryLoad' | 'loadReadReceipts'>
 
 export async function loadThreadReplies(conversationId: string, rootId: string): Promise<Message[]> {
-  const messages = fromImBatch(await lingxiIm.history(conversationId, 200))
+  const pageSize = 200
+  const history: ImEnvelope[] = []
+  let beforeSequence = 0
+  while (true) {
+    const page = await lingxiIm.history(conversationId, pageSize, beforeSequence)
+    history.push(...page)
+    if (page.length < pageSize) break
+    const oldest = Math.min(...page.map((message) => message.messageSeq))
+    if (!Number.isSafeInteger(oldest) || oldest <= 1 || (beforeSequence > 0 && oldest >= beforeSequence)) break
+    beforeSequence = oldest
+  }
+  const messages = fromImBatch(history)
   return messages.filter((message) => message.quotedMessageId === rootId)
 }
 

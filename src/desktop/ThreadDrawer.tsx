@@ -4,8 +4,8 @@
  * Slack-style. Opens via the "N 条回复" link under each bubble.
  *
  * Data flow:
- *   - On mount / rootId change → GET /conversations/:id/messages/:rootId/replies
- *     once, then merge in the main message store's live / optimistic rows.
+ *   - On mount / rootId change → page through authoritative WuKong history,
+ *     then merge in the main message store's live / optimistic rows.
  *   - Composer at the bottom defaults to quoting the root (so any reply
  *     written here joins the same thread). On send we clear local input
  *     but keep the drawer open.

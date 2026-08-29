@@ -138,11 +138,12 @@ export function inc(
 ): void {
   const def = REGISTRY[name]
   if (!def) throw new Error(`metrics.inc: unknown counter ${name}`)
-  // Allow extra labels (future-proof) but emit a warn so we can clean up.
+  // Metric identity is an immutable contract. Reject undeclared labels so a
+  // retired product mode cannot survive as an accidental time-series split.
   if (labels) {
     for (const k of Object.keys(labels)) {
       if (!def.labels.includes(k)) {
-        console.warn(`[metrics] counter ${name} got unexpected label "${k}" (registered: [${def.labels.join(',')}])`)
+        throw new Error(`metrics.inc: counter ${name} got unexpected label "${k}"`)
       }
     }
   }

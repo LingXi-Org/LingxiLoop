@@ -154,6 +154,18 @@ const chatApi = await read(resolve('src/features/chat/api.ts'))
 if (/\/conversations\/.*\/messages\/.*\/replies/.test(chatApi)) {
   violations.push('src/features/chat/api.ts: ordinary thread reads must use WuKongIM history')
 }
+const imMessagesApplication = await read(resolve('server/src/im/messages-application.ts'))
+if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(imMessagesApplication)) {
+  violations.push('server/src/im/messages-application.ts: IM message use cases bypass messages-repository.ts')
+}
+const imRouter = await read(resolve('server/src/im/router.ts'))
+if (/from ['"]\.\/messages-(?:application|repository)\.js['"]/.test(imRouter)) {
+  violations.push('server/src/im/router.ts: IM message routes must use messages-facade.ts')
+}
+const metricsSource = await read(resolve('server/src/metrics.ts'))
+if (/['"]email\.send\.(?:ok|fail)['"]\s*:\s*\{[^}]*labels:\s*\[[^\]]*mock/s.test(metricsSource)) {
+  violations.push('server/src/metrics.ts: retired email mock dimension is forbidden')
+}
 
 const evalService = await read(resolve('server/src/eval/service.ts'))
 if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(evalService)) {

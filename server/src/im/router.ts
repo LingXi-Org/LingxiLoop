@@ -9,7 +9,7 @@ import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
 import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/public.js'
-import { toggleWukongReaction, wukongReactions } from '../modules/messages/public.js'
+import { imMessagesApplication } from './messages-facade.js'
 import {
   listReadReceiptAdvances,
   publishReadReceiptAdvance,
@@ -17,19 +17,6 @@ import {
 } from './read-receipts.js'
 
 export const imRouter = Router()
-
-async function withReactionMetadata<T extends { messageId: string; payload: LingxiMessageV1 }>(
-  companyId: string,
-  conversationId: string,
-  messages: T[],
-): Promise<T[]> {
-  if (messages.length === 0) return messages
-  const reactions = await wukongReactions(companyId, conversationId, messages.map((message) => message.messageId))
-  return messages.map((message) => ({
-    ...message,
-    payload: { ...message.payload, data: { ...(message.payload.data ?? {}), reactions: reactions[message.messageId] ?? [] } },
-  }))
-}
 
 function safe(handler: (req: Request & AuthedRequest, res: Response) => Promise<void>): (req: Request & AuthedRequest, res: Response, next: NextFunction) => void {
   return (req, res, next) => { void handler(req, res).catch(next) }
@@ -169,11 +156,6 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
   await assertTeacherRoomAccessible(channelId,companyId,userId)
-  const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
-      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
-  )
-  if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
   const requestedLimit = Number(req.query.limit ?? 80)
   if (!Number.isSafeInteger(requestedLimit) || requestedLimit <= 0) {
     res.status(400).json({ error: 'limit must be a positive safe integer' })
@@ -185,14 +167,9 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
     res.status(400).json({ error: 'beforeSeq must be a non-negative safe integer' })
     return
   }
-  const messages = await wukongClient().syncMessages(
-    channelId,
-    Number(rows[0].profile.channelType ?? 2),
-    limit,
-    userId,
-    beforeSeq,
-  )
-  res.json(await withReactionMetadata(companyId, channelId, messages))
+  const messages = await imMessagesApplication.history({ companyId, userId, channelId, limit, beforeSequence: beforeSeq })
+  if (!messages) { res.status(404).json({ error: 'channel not found' }); return }
+  res.json(messages)
 }))
 
 imRouter.post('/channels/:id/reactions', safe(async (req, res) => {
@@ -205,18 +182,11 @@ imRouter.post('/channels/:id/reactions', safe(async (req, res) => {
   if (!messageId || !Number.isSafeInteger(messageSeq) || messageSeq <= 0 || !emoji || emoji.length > 32) {
     res.status(400).json({ error: 'messageId, messageSeq, and emoji are required' }); return
   }
-  const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id AND c.company_id=b.company_id
-      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
-  )
-  if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
-  const channelType = Number(rows[0].profile.channelType ?? 2)
-  const window = await wukongClient().syncMessages(channelId, channelType, 80, userId, messageSeq + 1)
-  const target = window.find((message) => message.messageId === messageId && message.messageSeq === messageSeq)
-  if (!target) { res.status(404).json({ error: 'message not found in the authoritative channel history' }); return }
-  res.json(await toggleWukongReaction({
-    companyId, userId, conversationId: channelId, messageId, messageSeq, messageAuthorId: target.fromUid, emoji,
-  }))
+  const result = await imMessagesApplication.toggleReaction({
+    companyId, userId, channelId, messageId, messageSeq, emoji,
+  })
+  if (!result) { res.status(404).json({ error: 'message not found in the authoritative channel history' }); return }
+  res.json(result)
 }))
 
 imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
