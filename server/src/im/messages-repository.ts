@@ -40,6 +40,24 @@ export async function unlockSendAcceptance(
   ])
 }
 
+export async function lockAgentReplyChannel(
+  db: Queryable,
+  input: { companyId: string; channelId: string },
+): Promise<void> {
+  await db.query(`SELECT pg_advisory_lock(hashtextextended($1,0))`, [
+    `im-agent-reply:${input.companyId}:${input.channelId}`,
+  ])
+}
+
+export async function unlockAgentReplyChannel(
+  db: Queryable,
+  input: { companyId: string; channelId: string },
+): Promise<void> {
+  await db.query(`SELECT pg_advisory_unlock(hashtextextended($1,0))`, [
+    `im-agent-reply:${input.companyId}:${input.channelId}`,
+  ])
+}
+
 export async function ensureSendAcceptance(
   db: Queryable,
   input: {

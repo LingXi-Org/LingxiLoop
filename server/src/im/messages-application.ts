@@ -8,9 +8,11 @@ import {
   deferSend,
   ensureSendAcceptance,
   getSendAcceptance,
+  lockAgentReplyChannel,
   lockSendAcceptance,
   sendAcceptanceStatus,
   unlockSendAcceptance,
+  unlockAgentReplyChannel,
 } from './messages-repository.js'
 
 export interface ImReactionAggregate {
@@ -22,7 +24,10 @@ export interface ImReactionAggregate {
 export interface ImMessageEnvelope {
   messageId: string
   messageSeq: number
+  clientMsgNo: string
+  channelId: string
   fromUid: string
+  timestamp: number
   payload: LingxiMessageV1
 }
 
@@ -142,6 +147,73 @@ export class ImMessagesApplication {
     })
   }
 
+  private async acceptMessage(
+    db: Queryable,
+    channelType: number,
+    input: {
+      companyId: string
+      userId: string
+      channelId: string
+      clientNonce: string
+      payload: LingxiMessageV1
+    },
+  ): Promise<
+    | { kind: 'nonce_conflict' }
+    | { kind: 'accepted'; duplicate: boolean; echo: Record<string, unknown> }
+  > {
+    const inputDigest = createHash('sha256')
+      .update(canonicalJson({ channelId: input.channelId, channelType, payload: input.payload }))
+      .digest('hex')
+    const identity = {
+      companyId: input.companyId,
+      userId: input.userId,
+      clientNonce: input.clientNonce,
+    }
+    await lockSendAcceptance(db, identity)
+    try {
+      await ensureSendAcceptance(db, {
+        ...identity,
+        inputDigest,
+        channelId: input.channelId,
+        channelType,
+        payload: input.payload,
+      })
+      const acceptance = await getSendAcceptance(db, identity)
+      if (!acceptance || acceptance.input_digest !== inputDigest) return { kind: 'nonce_conflict' }
+      if (acceptance.status === 'accepted' && acceptance.echo) {
+        return { kind: 'accepted', duplicate: true, echo: acceptance.echo }
+      }
+      try {
+        const sent = await this.infrastructure.sendMessage(
+          input.channelId,
+          channelType,
+          input.userId,
+          input.payload,
+        )
+        const echo = {
+          messageId: sent.messageId,
+          messageSeq: sent.messageSeq,
+          clientMsgNo: input.clientNonce,
+          channelId: input.channelId,
+          channelType,
+          fromUid: input.userId,
+          timestamp: Math.floor(Date.now() / 1000),
+          payload: input.payload,
+        }
+        await acceptSend(db, { ...identity, echo })
+        return { kind: 'accepted', duplicate: false, echo }
+      } catch (error) {
+        await deferSend(db, {
+          ...identity,
+          error: error instanceof Error ? error.message : String(error),
+        })
+        throw error
+      }
+    } finally {
+      await unlockSendAcceptance(db, identity).catch(() => undefined)
+    }
+  }
+
   async acceptUserMessage(input: {
     companyId: string
     userId: string
@@ -155,57 +227,48 @@ export class ImMessagesApplication {
   > {
     const channelType = await this.channelType(input)
     if (channelType === null) return { kind: 'channel_not_found' }
-    const inputDigest = createHash('sha256')
-      .update(canonicalJson({ channelId: input.channelId, channelType, payload: input.payload }))
-      .digest('hex')
+    return this.infrastructure.withConnection((db) => this.acceptMessage(db, channelType, input))
+  }
+
+  async acceptAgentMessage(input: {
+    companyId: string
+    userId: string
+    channelId: string
+    clientNonce: string
+    payload: LingxiMessageV1
+    rejectVerbatimPeerBody?: string
+  }): Promise<
+    | { kind: 'channel_not_found' }
+    | { kind: 'nonce_conflict' }
+    | { kind: 'verbatim_peer'; peer: ImMessageEnvelope }
+    | { kind: 'accepted'; duplicate: boolean; echo: Record<string, unknown> }
+  > {
+    const channelType = await this.channelType(input)
+    if (channelType === null) return { kind: 'channel_not_found' }
     return this.infrastructure.withConnection(async (db) => {
-      const identity = {
-        companyId: input.companyId,
-        userId: input.userId,
-        clientNonce: input.clientNonce,
-      }
-      await lockSendAcceptance(db, identity)
+      const lockIdentity = { companyId: input.companyId, channelId: input.channelId }
+      await lockAgentReplyChannel(db, lockIdentity)
       try {
-        await ensureSendAcceptance(db, {
-          ...identity,
-          inputDigest,
-          channelId: input.channelId,
-          channelType,
-          payload: input.payload,
-        })
-        const acceptance = await getSendAcceptance(db, identity)
-        if (!acceptance || acceptance.input_digest !== inputDigest) return { kind: 'nonce_conflict' }
-        if (acceptance.status === 'accepted' && acceptance.echo) {
-          return { kind: 'accepted', duplicate: true, echo: acceptance.echo }
+        const prior = await getSendAcceptance(db, input)
+        if (prior?.status === 'accepted') {
+          return this.acceptMessage(db, channelType, input)
         }
-        try {
-          const sent = await this.infrastructure.sendMessage(
+        const draft = input.rejectVerbatimPeerBody?.trim()
+        if (draft) {
+          const recent = await this.infrastructure.syncMessages(
             input.channelId,
             channelType,
+            80,
             input.userId,
-            input.payload,
           )
-          const echo = {
-            messageId: sent.messageId,
-            messageSeq: sent.messageSeq,
-            clientMsgNo: input.clientNonce,
-            channelId: input.channelId,
-            channelType,
-            fromUid: input.userId,
-            timestamp: Math.floor(Date.now() / 1000),
-            payload: input.payload,
-          }
-          await acceptSend(db, { ...identity, echo })
-          return { kind: 'accepted', duplicate: false, echo }
-        } catch (error) {
-          await deferSend(db, {
-            ...identity,
-            error: error instanceof Error ? error.message : String(error),
-          })
-          throw error
+          const peer = recent
+            .filter((message) => message.fromUid !== input.userId && message.payload.kind === 'text')
+            .sort((left, right) => right.messageSeq - left.messageSeq)[0]
+          if (peer?.payload.body?.trim() === draft) return { kind: 'verbatim_peer', peer }
         }
+        return this.acceptMessage(db, channelType, input)
       } finally {
-        await unlockSendAcceptance(db, identity).catch(() => undefined)
+        await unlockAgentReplyChannel(db, lockIdentity).catch(() => undefined)
       }
     })
   }

@@ -223,6 +223,15 @@ const agentCli = await read(resolve('server/src/agents/cli.ts'))
 if (/\bfetch\s*\(/.test(agentCli) || !/response_format:\s*['"]b64_json['"]/.test(agentCli)) {
   violations.push('server/src/agents/cli.ts: generated images must use tracked b64_json output and authoritative R2 storage')
 }
+if (/(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+messages\b|conversation_counters|CH_MESSAGE_NEW/i.test(agentCli)) {
+  violations.push('server/src/agents/cli.ts: Agent chat sends must not restore the PostgreSQL/Redis message data plane')
+}
+if (!/from ['"]\.\.\/im\/public\.js['"]/.test(agentCli) || !/sendAgentChannelMessage\s*\(/.test(agentCli)) {
+  violations.push('server/src/agents/cli.ts: Agent chat sends must use the public authoritative IM application')
+}
+if (/`attachments\/\$\{id\}/.test(agentCli)) {
+  violations.push('server/src/agents/cli.ts: R2 attachment keys must be scoped by the trusted company identity')
+}
 
 const evalService = await read(resolve('server/src/eval/service.ts'))
 if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(evalService)) {

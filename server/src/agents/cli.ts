@@ -12,7 +12,8 @@
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { parseMentions } from '../mentions.js'
-import { freshenAttachmentUrl, type StoredAttachment, storage } from '../storage.js'
+import { freshenAttachmentUrl, type StoredAttachment, storage, storageKeyFromPublicUrl } from '../storage.js'
+import { getAgentChannelHistory, sendAgentChannelMessage } from '../im/public.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
 import { stripLoneSurrogates } from './text-safety.js'
@@ -417,7 +418,7 @@ async function cmdToolsLog(parsed: ParsedArgs): Promise<CliResult> {
 
 /* ============== mailbox: inbox / ack / reply ============== */
 
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
 interface InboxQuotedSummary {
   id: string
@@ -912,8 +913,8 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // via the out-of-band `internal` context (see RunCliInternalContext),
   // never as an argv flag. No CLI caller (human or AgentOS process,
   // untrusted caller can set or spoof this. Enforced via a unique index on
-  // messages.idempotency_key: a retried/duplicate-waked send with the SAME
-  // key lands on the SAME row instead of inserting a second message.
+  // The IM acceptance ledger binds this key to one WuKong client message
+  // identity, so a retried/duplicate-waked send resolves to the same message.
   const idempotencyKey = internal.idempotencyKey?.trim() || null
   if (!convoId || (!body && !hasAttachFlag)) {
     return err('usage: reply <convo_id> "<body>" [--quote <msg_id>] [--attach <url> | --generate-image "<prompt>" [--size square|wide|tall] | --attach-text "<filename>" "<content>" | --attach-bytes "<filename>" --bytes-b64 "<base64>" [--bytes-mime "<mime>"]]')
@@ -927,30 +928,60 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   if (!cv[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
   const companyId = cv[0].company_id
 
+  if (cv[0].kind === 'email') {
+    if (!body) return err('email replies require a non-empty body')
+    try {
+      const { replyInEmailConversation } = await import('../modules/email/index.js')
+      const result = await replyInEmailConversation({
+        conversationId: convoId, companyId, authorId: me, body, autoSubmitted: true,
+      })
+      if (result.transportStatus !== 'sent') {
+        return err(`email reply persisted as failed: ${result.error} · ${result.messageId}`, 1)
+      }
+      return ok(`replied via email · ${result.messageId}`, [{
+        event: 'message.posted', command: 'reply', medium: 'email',
+        conversationId: convoId, messageId: result.messageId, authorId: me,
+        companyId, visibleToUser: true, transportStatus: result.transportStatus,
+      }])
+    } catch (error) {
+      return err(`email auto-promote failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  const channelHistory = await getAgentChannelHistory({ companyId, agentId: me, channelId: convoId })
+  if (!channelHistory) return err(`unknown authoritative channel ${convoId}`)
+  const history = [...channelHistory].sort((left, right) => left.messageSeq - right.messageSeq)
+  const clientNonce = idempotencyKey
+    ? `agent-reply:${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 48)}`
+    : `agent-reply:${randomUUID()}`
+  const { rows: mentionTargets } = await pool.query<{ id: string; name: string }>(
+    `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
+    [companyId, cv[0].members],
+  )
+  const participantNames = new Map(mentionTargets.map((participant) => [participant.id, participant.name]))
+
   // ─── Idempotent replay short-circuit ───────────────────────────────
   // Skips every gate below (anti-monologue, freshness, verbatim-dup) —
   // those are draft-time decision gates and don't apply to a message we
   // already sent. Scoped to plain chat sends; the email auto-promote
   // path below has its own (out-of-scope-for-#7) transport semantics.
-  if (idempotencyKey && cv[0].kind !== 'email') {
-    const { rows: replayed } = await pool.query<{
-      id: string; sequence: number; attachment: unknown; quoted_message_id: string | null
-    }>(`SELECT id, sequence, attachment, quoted_message_id FROM messages WHERE idempotency_key = $1`, [idempotencyKey])
-    if (replayed[0]) {
-      const attachmentNote = replayed[0].attachment ? ` · attached` : ''
-      const quoteNote = replayed[0].quoted_message_id ? ` · quoted ${replayed[0].quoted_message_id}` : ''
-      return ok(`sent (${replayed[0].id}, seq ${replayed[0].sequence})${attachmentNote}${quoteNote} [replayed]`, [{
+  if (idempotencyKey) {
+    const replayed = history.find((message) => message.clientMsgNo === clientNonce)
+    if (replayed) {
+      const attachmentNote = replayed.payload.kind === 'attachment' ? ' · attached' : ''
+      const quoteNote = replayed.payload.replyToClientMsgNo ? ` · quoted ${replayed.payload.replyToClientMsgNo}` : ''
+      return ok(`sent (${replayed.messageId}, seq ${replayed.messageSeq})${attachmentNote}${quoteNote} [replayed]`, [{
         event: 'message.posted',
         command: 'reply',
         medium: 'chat',
         conversationId: convoId,
-        messageId: replayed[0].id,
-        sequence: replayed[0].sequence,
+        messageId: replayed.messageId,
+        sequence: replayed.messageSeq,
         authorId: me,
         companyId,
         visibleToUser: true,
-        attachment: Boolean(replayed[0].attachment),
-        quotedMessageId: replayed[0].quoted_message_id,
+        attachment: replayed.payload.kind === 'attachment',
+        quotedMessageId: replayed.payload.replyToClientMsgNo,
         replayed: true,
       }])
     }
@@ -980,14 +1011,11 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // mindedly continuing to monologue.
   const monologueBypass = Boolean(parsed.flags.continue || parsed.flags.also)
   if (!monologueBypass && cv[0].members.length > 2) {
-    const { rows: lastMsg } = await pool.query<{ author_id: string; created_at: string }>(
-      `SELECT author_id, created_at FROM messages
-         WHERE conversation_id = $1
-         ORDER BY sequence DESC LIMIT 1`,
-      [convoId],
-    )
-    if (lastMsg[0] && lastMsg[0].author_id === me) {
-      const ageMs = Date.now() - new Date(lastMsg[0].created_at).getTime()
+    const lastMessage = history.at(-1)
+    if (lastMessage?.fromUid === me) {
+      const sentAt = lastMessage.timestamp > 10_000_000_000
+        ? lastMessage.timestamp : lastMessage.timestamp * 1000
+      const ageMs = Date.now() - sentAt
       const MIN_GAP_MS = 10 * 60 * 1000
       if (ageMs < MIN_GAP_MS) {
         const ageSec = Math.max(1, Math.round(ageMs / 1000))
@@ -1000,41 +1028,6 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
           `Override only if it's truly urgent: rerun with --continue.`
         )
       }
-    }
-  }
-
-  // Email conversations: auto-promote into a real email reply rather than
-  // writing a plain text message. The agent's LLM was previously expected
-  // to know to call `lingxiloop email reply <message_id>` for email threads —
-  // unreliable, and the external recipient never saw the reply when it
-  // forgot. This converges both reply surfaces (chat + email) on the
-  // sendViaProvider path. autoSubmitted=true because every CLI reply is
-  // agent-driven by construction.
-  if (cv[0].kind === 'email') {
-    if (!body) {
-      return err('email replies require a non-empty body')
-    }
-    try {
-      const { replyInEmailConversation } = await import('../modules/email/index.js')
-      const result = await replyInEmailConversation({
-        conversationId: convoId, companyId, authorId: me, body, autoSubmitted: true,
-      })
-      if (result.transportStatus !== 'sent') {
-        return err(`email reply persisted as failed: ${result.error} · ${result.messageId}`, 1)
-      }
-      return ok(`replied via email · ${result.messageId}`, [{
-        event: 'message.posted',
-        command: 'reply',
-        medium: 'email',
-        conversationId: convoId,
-        messageId: result.messageId,
-        authorId: me,
-        companyId,
-        visibleToUser: true,
-        transportStatus: result.transportStatus,
-      }])
-    } catch (e) {
-      return err(`email auto-promote failed: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
@@ -1088,21 +1081,15 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // Saga was HELD at 17:30 drafting "2", yielded — banking the token —
     // and a NEW turn's preemptive --send-anyway consumed it at 17:34,
     // shipping a stale "6" past Nova's 6 and Iris's 7 sight unseen.)
-    const { rows: newer } = await pool.query<{
-      sequence: number; author_id: string; author_name: string | null; body: string
-    }>(
-      `SELECT m.sequence, m.author_id, m.body,
-              COALESCE(p.name, u.display_name) AS author_name
-         FROM messages m
-         LEFT JOIN participants p ON p.id = m.author_id
-         LEFT JOIN users u ON u.id = m.author_id
-        WHERE m.conversation_id = $1
-          AND m.author_id <> $2
-          AND m.sequence > $3
-        ORDER BY m.sequence ASC
-        LIMIT 8`,
-      [convoId, me, heldAck.heldUpToSeq],
-    )
+    const newer = history
+      .filter((message) => message.fromUid !== me && message.messageSeq > heldAck.heldUpToSeq!)
+      .slice(0, 8)
+      .map((message) => ({
+        sequence: message.messageSeq,
+        author_id: message.fromUid,
+        author_name: participantNames.get(message.fromUid) ?? null,
+        body: message.payload.body ?? '',
+      }))
     if (newer.length > 0) {
       sendAnywayArmed = false
       const maxHeldSeq = newer[newer.length - 1].sequence
@@ -1150,21 +1137,15 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // as before — the wake brief re-establishes the cursor at turn start.
     const baseline = await getSeen(me, convoId)
     if (baseline > 0) {
-      const { rows: newer } = await pool.query<{
-        sequence: number; author_id: string; author_name: string | null; body: string
-      }>(
-        `SELECT m.sequence, m.author_id, m.body,
-                COALESCE(p.name, u.display_name) AS author_name
-           FROM messages m
-           LEFT JOIN participants p ON p.id = m.author_id
-           LEFT JOIN users u ON u.id = m.author_id
-          WHERE m.conversation_id = $1
-            AND m.author_id <> $2
-            AND m.sequence > $3
-          ORDER BY m.sequence ASC
-          LIMIT 8`,
-        [convoId, me, baseline],
-      )
+      const newer = history
+        .filter((message) => message.fromUid !== me && message.messageSeq > baseline)
+        .slice(0, 8)
+        .map((message) => ({
+          sequence: message.messageSeq,
+          author_id: message.fromUid,
+          author_name: participantNames.get(message.fromUid) ?? null,
+          body: message.payload.body ?? '',
+        }))
       if (newer.length > 0) {
         // Shown ⇒ seen: advance the cursor past what this envelope shows so a
         // considered re-send passes instead of re-holding on the same rows —
@@ -1214,25 +1195,21 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // only the immediately-prior dup is.
     const draftBodyTrimmed = body.trim()
     if (draftBodyTrimmed.length > 0) {
-      const { rows: lastPeer } = await pool.query<{ sequence: number; author_id: string; author_name: string | null; body: string }>(
-        `SELECT m.sequence, m.author_id, m.body,
-                COALESCE(p.name, u.display_name) AS author_name
-           FROM messages m
-           LEFT JOIN participants p ON p.id = m.author_id
-           LEFT JOIN users u ON u.id = m.author_id
-          WHERE m.conversation_id = $1
-            AND m.author_id <> $2
-            AND m.kind = 'text'
-          ORDER BY m.sequence DESC
-          LIMIT 1`,
-        [convoId, me],
-      )
-      if (lastPeer.length > 0 && lastPeer[0].body.trim() === draftBodyTrimmed) {
+      const lastPeerMessage = [...history].reverse().find((message) => (
+        message.fromUid !== me && message.payload.kind === 'text'
+      ))
+      const lastPeer = lastPeerMessage ? {
+        sequence: lastPeerMessage.messageSeq,
+        author_id: lastPeerMessage.fromUid,
+        author_name: participantNames.get(lastPeerMessage.fromUid) ?? null,
+        body: lastPeerMessage.payload.body ?? '',
+      } : null
+      if (lastPeer && lastPeer.body.trim() === draftBodyTrimmed) {
         // Advance baseline past this peer post so re-attempt with NEW content
         // doesn't HOLD on the same row again.
-        await recordSeen(me, convoId, lastPeer[0].sequence)
-        await recordHold(me, replyHoldScope, lastPeer[0].sequence)
-        const peer = lastPeer[0]
+        await recordSeen(me, convoId, lastPeer.sequence)
+        await recordHold(me, replyHoldScope, lastPeer.sequence)
+        const peer = lastPeer
         return err(
           `HELD — your draft is VERBATIM IDENTICAL to the most recent peer post in ${convoId}:\n` +
           `  [seq=${peer.sequence}] ${peer.author_name || peer.author_id}: ${peer.body.replace(/\s+/g, ' ').slice(0, 200)}\n\n` +
@@ -1248,34 +1225,14 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // delete race), the agent should know its quote pointer is bad so it can
   // fix the call rather than ship a silently-quoteless reply.
   let resolvedQuotedId: string | null = null
-  let quotedSummary: { id: string; authorId: string; authorName: string; body: string; sequence: number } | null = null
   if (quotedMessageId) {
-    // Resolve the quoted author's DISPLAY NAME, not just the id. The author can
-    // be an agent/human in `participants` OR a human keyed in `users` (their
-    // user id), so we COALESCE across both — otherwise the quote card shows a
-    // raw id like `u-f92aa4ac-...` instead of the person's name.
-    const { rows: qr } = await pool.query<{
-      id: string; author_id: string; author_name: string | null; body: string; sequence: number
-    }>(
-      `SELECT m.id, m.author_id, m.body, m.sequence,
-              COALESCE(p.name, u.display_name) AS author_name
-         FROM messages m
-         LEFT JOIN participants p ON p.id = m.author_id
-         LEFT JOIN users u ON u.id = m.author_id
-        WHERE m.id = $1 AND m.conversation_id = $2`,
-      [quotedMessageId, convoId],
-    )
-    if (!qr[0]) {
+    const quoted = history.find((message) => (
+      message.messageId === quotedMessageId || message.clientMsgNo === quotedMessageId
+    ))
+    if (!quoted) {
       return err(`--quote target ${quotedMessageId} not found in ${convoId}`)
     }
-    resolvedQuotedId = qr[0].id
-    quotedSummary = {
-      id: qr[0].id,
-      authorId: qr[0].author_id,
-      authorName: qr[0].author_name || qr[0].author_id,
-      body: qr[0].body.slice(0, 240),
-      sequence: qr[0].sequence,
-    }
+    resolvedQuotedId = quoted.messageId
   }
 
   // Optional attachment in three flavors:
@@ -1316,7 +1273,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // as the body and uses --attach-text to mark it as an attachment.
     const content = String(parsed.flags['attach-text-content'] ?? body)
     if (!filename || !content) return err('--attach-text requires a filename and content')
-    attachment = await saveTextAttachment(filename, content)
+    attachment = await saveTextAttachment(companyId, filename, content)
   } else if (parsed.flags['attach-bytes']) {
     const filename = String(parsed.flags['attach-bytes']).trim().slice(0, 200)
     const b64 = String(parsed.flags['bytes-b64'] ?? '').trim()
@@ -1325,14 +1282,18 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       : undefined
     if (!filename || !b64) return err('--attach-bytes requires a filename and --bytes-b64 "<base64>"')
     try {
-      attachment = await saveBytesAttachment(filename, b64, mime)
+      attachment = await saveBytesAttachment(companyId, filename, b64, mime)
     } catch (e) {
       return err(`attach-bytes failed: ${e instanceof Error ? e.message : String(e)}`)
     }
   } else if (parsed.flags.attach) {
     const url = String(parsed.flags.attach)
+    const key = storageKeyFromPublicUrl(url)
+    if (!key || !key.startsWith(`attachments/${companyId}/`)) {
+      return err('--attach must reference an attachment already stored in this workspace R2 prefix')
+    }
     const name = parsed.flags['attach-name'] ? String(parsed.flags['attach-name']) : url.split('/').pop() ?? 'attachment'
-    attachment = { url, name, kind: 'img' }
+    attachment = { url: await storage.publicUrl(key), key, name, kind: 'img' }
   }
 
   // If the body was consumed as the text-file content (no separate
@@ -1341,142 +1302,42 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   const consumedAsTextContent =
     parsed.flags['attach-text'] && !parsed.flags['attach-text-content']
   const finalBody = consumedAsTextContent ? '' : body
-  const { rows: mentionTargets } = await pool.query<{ id: string; name: string }>(
-    `SELECT id, name FROM participants WHERE company_id = $1 AND id = ANY($2::text[])`,
-    [companyId, cv[0].members],
-  )
   const { mentionedIds, mentionAll } = parseMentions(finalBody, mentionTargets)
 
-  // Atomically claim next sequence + check verbatim-dup + INSERT, all in
-  // ONE transaction. The conversation_counters UPSERT takes a row-level
-  // lock (ON CONFLICT DO UPDATE), and that lock stays held until COMMIT —
-  // serializing every concurrent lingxiloop-reply to the same convo through
-  // this critical section. While we hold the lock, we re-check the last
-  // peer message body against our draft (committed visibility — we'll
-  // see any peer INSERT that committed before our sequence claim).
-  // If verbatim-dup, ROLLBACK and return HELD. This closes the TOCTOU
-  // race that the pre-INSERT verbatim check has — two agents 2s apart
-  // both passing read-phase, then both writing.
-  const messageId = `m-${randomUUID()}`
-  let sequence: number
-  const txClient = await pool.connect()
-  try {
-    await txClient.query('BEGIN')
-    const { rows: seqRow } = await txClient.query<{ seq: number }>(
-      `INSERT INTO conversation_counters (conversation_id, next_sequence)
-       VALUES ($1, 2)
-       ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
-       RETURNING next_sequence - 1 AS seq`,
-      [convoId],
+  const sendResult = await sendAgentChannelMessage({
+    companyId,
+    agentId: me,
+    channelId: convoId,
+    clientNonce,
+    payload: {
+      version: 1,
+      kind: attachment ? 'attachment' : 'text',
+      clientMsgNo: clientNonce,
+      ...(finalBody ? { body: finalBody } : {}),
+      ...(resolvedQuotedId ? { replyToClientMsgNo: resolvedQuotedId } : {}),
+      data: {
+        ...(attachment ?? {}),
+        mentionedIds,
+        mentionAll,
+      },
+    },
+  })
+  if (sendResult.kind === 'channel_not_found') return err(`unknown authoritative channel ${convoId}`)
+  if (sendResult.kind === 'nonce_conflict') return err('reply idempotency key was reused with different content')
+  if (sendResult.kind === 'verbatim_peer') {
+    const peer = sendResult.peer
+    await recordSeen(me, convoId, peer.messageSeq)
+    await recordHold(me, replyHoldScope, peer.messageSeq)
+    return err(
+      `HELD — your draft became VERBATIM IDENTICAL to the most recent peer post while sending:\n` +
+      `  [seq=${peer.messageSeq}] ${participantNames.get(peer.fromUid) ?? peer.fromUid}: ${(peer.payload.body ?? '').replace(/\s+/g, ' ').slice(0, 200)}\n\n` +
+      `They beat you to it. Re-read the room and choose a different contribution or stay silent.`,
+      2,
     )
-    sequence = seqRow[0]?.seq ?? 1
-    // Atomic verbatim-dup re-check inside the lock: if a peer INSERT
-    // committed during our compose+pre-INSERT window, we see it now.
-    // The pre-INSERT check above is still useful — it short-circuits
-    // most cases and shows the held content; this one closes the race.
-    //
-    // NOTE: this check IGNORES --send-anyway and the 2-member-DM bypass.
-    // Posting content verbatim-identical to the immediately-prior peer
-    // message has NO legitimate use case — even in a DM, repeating the
-    // other party's last sentence verbatim is noise. The other preflight
-    // gate (the seq-baseline seen-cursor) IS bypassable by --send-anyway
-    // (the agent may legitimately answer a specific @-mention despite
-    // post-baseline side-traffic), but verbatim-content-dup is a hard no.
-    // T9 showed an agent using --send-anyway to force a verbatim dup that
-    // it had explicitly internalized as a "standing close play"; the
-    // server has to enforce.
-    // NOTE: this is deliberately NOT gated on !monologueBypass. --continue / --also
-    // is a "follow up on MY OWN messages" intent; it must never let an agent post a
-    // verbatim duplicate of a PEER's immediately-prior message. (Observed 2026-07-26:
-    // ethan was correctly HELD on "4", then re-sent with --continue and the dup landed
-    // next to olivia's "4" — because the old `!monologueBypass` here let it through,
-    // contradicting this check's own "verbatim-dup is a hard no, the server enforces"
-    // contract.) The peer-only query below already exempts genuine self-monologue: a
-    // real follow-up isn't verbatim-identical to a recent PEER post, so it still passes.
-    if (cv[0].members.length > 2) {
-      const draftBodyTrimmed = body.trim()
-      if (draftBodyTrimmed.length > 0) {
-        const { rows: lastPeer } = await txClient.query<{ sequence: number; author_id: string; body: string }>(
-          `SELECT sequence, author_id, body FROM messages
-            WHERE conversation_id = $1 AND author_id <> $2 AND kind = 'text'
-            ORDER BY sequence DESC LIMIT 1`,
-          [convoId, me],
-        )
-        if (lastPeer.length > 0 && lastPeer[0].body.trim() === draftBodyTrimmed) {
-          await txClient.query('ROLLBACK')
-          await recordSeen(me, convoId, lastPeer[0].sequence)
-          await recordHold(me, replyHoldScope, lastPeer[0].sequence)
-          return err(
-            `HELD — verbatim duplicate of the immediately-prior peer post in ${convoId}:\n` +
-            `  [seq=${lastPeer[0].sequence}] ${lastPeer[0].author_id}: ${lastPeer[0].body.replace(/\s+/g, ' ').slice(0, 200)}\n\n` +
-            `They posted the exact same content${sendAnywayFlag ? ' (and --send-anyway does NOT bypass this check — verbatim-dup is never legitimate)' : ''}. Real teammates don't immediately repeat the same word. Pick the NEXT item, a different angle, or stay silent if their post already covers what you wanted.`,
-            2,
-          )
-        }
-      }
-    }
-    const { rows: inserted } = await txClient.query<{ id: string }>(
-      `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, attachment, quoted_message_id, company_id, idempotency_key, mentioned_ids, mention_all)
-       VALUES ($1,$2,$3,'text',$4,$5,$6::jsonb,$7,$8,$9,$10::jsonb,$11)
-       ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
-       RETURNING id`,
-      [messageId, convoId, me, finalBody, sequence, attachment ? JSON.stringify(attachment) : null, resolvedQuotedId, companyId, idempotencyKey, JSON.stringify(mentionedIds), mentionAll],
-    )
-    if (idempotencyKey && inserted.length === 0) {
-      // Lost a genuine concurrent race against another execution of the SAME
-      // idempotency key (both passed the pre-check above before either
-      // committed). Don't consume the sequence number we claimed — roll
-      // back and hand back the winner's row as a replay, same as the
-      // pre-check short-circuit above.
-      await txClient.query('ROLLBACK')
-      const { rows: winner } = await pool.query<{
-        id: string; sequence: number; attachment: unknown; quoted_message_id: string | null
-      }>(`SELECT id, sequence, attachment, quoted_message_id FROM messages WHERE idempotency_key = $1`, [idempotencyKey])
-      const w = winner[0]
-      if (!w) throw new Error(`idempotency conflict on ${idempotencyKey} but no row found after rollback`)
-      const attachmentNote = w.attachment ? ` · attached` : ''
-      const quoteNote = w.quoted_message_id ? ` · quoted ${w.quoted_message_id}` : ''
-      return ok(`sent (${w.id}, seq ${w.sequence})${attachmentNote}${quoteNote} [replayed]`, [{
-        event: 'message.posted', command: 'reply', medium: 'chat',
-        conversationId: convoId, messageId: w.id, sequence: w.sequence,
-        authorId: me, companyId, visibleToUser: true,
-        attachment: Boolean(w.attachment), quotedMessageId: w.quoted_message_id, replayed: true,
-      }])
-    }
-    await txClient.query('COMMIT')
-  } catch (e) {
-    await txClient.query('ROLLBACK').catch(() => { /* already failed */ })
-    throw e
-  } finally {
-    txClient.release()
   }
-  await pool.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [convoId])
+  const { messageId, sequence } = sendResult
 
-  // Posting auto-acks me on this conversation (I clearly saw the messages I'm replying to).
-  // Structured Host Bridge batches defer this side effect until every
-  // action succeeds; runAgentTurn then advances only to the inbox messages
-  // that Graph actually consumed.
-  if (!internal.deferReadCursor) {
-    // Anchor the cursor to the message we actually inserted instead of NOW():
-    // using wall-clock time can skip a peer message committed between our
-    // INSERT and this ack, and leaves last_read_message_id stale so a later
-    // monotonic markConversationRead() cannot repair the cursor.
-    await pool.query(
-      `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at, last_read_message_id)
-       SELECT $1, $2, created_at, id FROM messages WHERE id = $3
-       ON CONFLICT (user_id, conversation_id) DO UPDATE SET
-         last_read_at = CASE
-           WHEN ROW(EXCLUDED.last_read_at, EXCLUDED.last_read_message_id)
-              > ROW(conversation_reads.last_read_at, conversation_reads.last_read_message_id)
-           THEN EXCLUDED.last_read_at ELSE conversation_reads.last_read_at END,
-         last_read_message_id = CASE
-           WHEN ROW(EXCLUDED.last_read_at, EXCLUDED.last_read_message_id)
-              > ROW(conversation_reads.last_read_at, conversation_reads.last_read_message_id)
-           THEN EXCLUDED.last_read_message_id ELSE conversation_reads.last_read_message_id END`,
-      [me, convoId, messageId],
-    )
-  }
-  // Advance the Redis "seen" boundary to my own just-inserted seq, so the
+  // Advance the Redis "seen" boundary to the authoritative WuKong sequence, so the
   // freshness preflight on my NEXT lingxiloop reply compares against the post-
   // insertion state (peer messages with seq <= mine are "things I obviously
   // saw"; only seq > mine would trip a HOLD). Pure Redis side-effect — does
@@ -1487,30 +1348,6 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // override, so a hold acknowledged-but-unused must not arm a later
   // preemptive --send-anyway in this conversation.
   void clearHold(me, replyHoldScope)
-  // Broadcast — frontend, scheduler, etc. all listen on CH_MESSAGE_NEW
-  const { CH_MESSAGE_NEW, publish } = await import('../redis.js')
-  await publish(CH_MESSAGE_NEW, {
-    type: 'message.new',
-    conversationId: convoId,
-    companyId,
-    message: {
-      id: messageId, conversationId: convoId, authorId: me,
-      kind: 'text', body: finalBody, sequence, at: new Date().toISOString(),
-      attachment: attachment ?? undefined,
-      quotedMessageId: resolvedQuotedId ?? undefined,
-      quoted: quotedSummary ? {
-        id: quotedSummary.id,
-        authorId: quotedSummary.authorId,
-        authorName: quotedSummary.authorName,
-        kind: 'text',
-        body: quotedSummary.body,
-        sequence: quotedSummary.sequence,
-      } : undefined,
-      mentionedIds,
-      mentionAll,
-    },
-  })
-
   const attachmentNote = attachment
     ? ` · attached ${attachment.kind} "${attachment.name}"`
     : ''
@@ -1531,8 +1368,8 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
 }
 
 /* ─── Image / file generation helpers ───────────────────────────────────
- * Both helpers return an AgentAttachment ready to drop into the messages
- * row. They go through the authoritative R2 storage abstraction.
+ * Both helpers return an AgentAttachment ready for the authoritative WuKong
+ * payload. They go through the authoritative R2 storage abstraction.
  *
  * Failure mode: throw — the caller wraps in a try/catch and returns
  * a CLI error so the agent's bash() call exits non-zero and the agent
@@ -1569,7 +1406,7 @@ async function generateAndUploadImage(opts: {
   const buf = Buffer.from(b64, 'base64')
   const { randomUUID } = await import('node:crypto')
   const id = randomUUID().replace(/-/g, '')
-  const key = `attachments/${id}.png`
+  const key = `attachments/${opts.tenant}/${id}.png`
   const url = await storage.put(key, buf, 'image/png')
   // Slug the prompt into a friendly filename for the bubble caption.
   const slug = opts.prompt
@@ -1642,6 +1479,7 @@ async function cmdImage(parsed: ParsedArgs): Promise<CliResult> {
  *  zip, audio, binary blob the agent fetched) flows through here. The
  *  agent provides the bytes as base64 and optionally a mime hint. */
 async function saveBytesAttachment(
+  companyId: string,
   filename: string,
   base64: string,
   mimeHint?: string,
@@ -1666,7 +1504,7 @@ async function saveBytesAttachment(
 
   const { randomUUID } = await import('node:crypto')
   const id = randomUUID().replace(/-/g, '')
-  const key = `attachments/${id}.${ext}`
+  const key = `attachments/${companyId}/${id}.${ext}`
   const url = await storage.put(key, buf, mime)
   return { url, key, name: filename, kind, mime, size: buf.length }
 }
@@ -2054,6 +1892,7 @@ const { cmdEmail } = createEmailCommand({
   loadEmailAttachmentFromPath,
 })
 async function saveTextAttachment(
+  companyId: string,
   filename: string,
   content: string,
 ): Promise<{ url: string; name: string; kind: 'file'; mime: string; size: number; key: string }> {
@@ -2075,7 +1914,7 @@ async function saveTextAttachment(
   const buf = Buffer.from(content, 'utf8')
   const { randomUUID } = await import('node:crypto')
   const id = randomUUID().replace(/-/g, '')
-  const key = `attachments/${id}.${ext}`
+  const key = `attachments/${companyId}/${id}.${ext}`
   const url = await storage.put(key, buf, mime)
   return { url, key, name: filename, kind: 'file', mime, size: buf.length }
 }
