@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { consumeSuspendedFragment, SuspendedScreen } from '@/features/admin/components/SuspendedScreen'
-import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/features/admin/components/WaitlistConfirmedScreen'
+import { consumeSuspendedFragment, consumeWaitlistFragment, SuspendedScreen, WaitlistConfirmedScreen } from '@/auth/AuthStateScreens'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
@@ -19,21 +18,10 @@ import { bootParticipants } from '@/features/agents/state'
 import { usePrefs } from '@/stores/preferences'
 import { useUiCommand } from '@/stores/uiCommands'
 
-const AdminApp = lazy(() => import('@/features/admin/components/AdminApp').then((module) => ({ default: module.AdminApp })))
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
 
 function SurfaceFallback() {
-  return <div className="fixed inset-0 grid place-items-center text-sm text-ink-400">Loading…</div>
-}
-
-/** True iff this browser tab is for the admin panel. An optional `admin.*`
- *  hostname or the `/admin` path prefix triggers it. We check both so dev can hit
- *  http://localhost:5180/admin/ without DNS work. */
-function isAdminContext(): boolean {
-  if (typeof location === 'undefined') return false
-  if (location.hostname.startsWith('admin.')) return true
-  if (location.pathname.startsWith('/admin')) return true
-  return false
+  return <div className="fixed inset-0 grid place-items-center bg-background text-sm text-muted-foreground">Loading…</div>
 }
 
 function AuthedApp() {
@@ -74,7 +62,7 @@ function AuthedApp() {
 
   return (
     <>
-      <DesktopApp />
+      <Suspense fallback={<SurfaceFallback />}><DesktopApp /></Suspense>
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}
@@ -131,19 +119,6 @@ export function App() {
 
   if (suspended) {
     return <SuspendedScreen email={suspended.email} reason={suspended.reason} />
-  }
-
-  // Admin panel runs in its own shell — different sidebar, different
-  // routes, no chat stores. It still goes through AuthGate so the user
-  // signs in via the same OAuth flow before reaching it.
-  if (isAdminContext()) {
-    return (
-      <AuthGate>
-        <ErrorBoundary>
-          <Suspense fallback={<SurfaceFallback />}><AdminApp /></Suspense>
-        </ErrorBoundary>
-      </AuthGate>
-    )
   }
 
   if (inviteToken) {

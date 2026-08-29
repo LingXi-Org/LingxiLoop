@@ -19,6 +19,33 @@ const frontend = await filesUnder('src')
 const server = await filesUnder('server/src')
 const read = async (file) => readFile(file, 'utf8')
 const name = (file) => relative(process.cwd(), file).replaceAll('\\', '/')
+const frontendNames = new Set(frontend.map(name))
+
+for (const retired of ['src/features/admin', 'src/features/eval']) {
+  if ([...frontendNames].some((fileName) => fileName.startsWith(`${retired}/`))) {
+    violations.push(`${retired}: retired Admin/Eval frontend must not return; backend contracts remain authoritative`)
+  }
+}
+
+const canonicalConversationFiles = new Set([
+  'src/desktop/ThreadDrawer.tsx',
+  'src/im/ConversationHeader.tsx',
+  'src/features/chat/components/ChatComposer.tsx',
+  'src/features/chat/components/ComposerMenus.tsx',
+  'src/features/chat/components/ComposerEmojiPopover.tsx',
+])
+const retiredConversationTokens = /\b(?:sand|ink|skype|coral|sky2)-|\b(?:bg-panel|bg-raised|border-hairline|bg-paper|bg-cloud)\b/
+for (const file of frontend) {
+  const fileName = name(file)
+  if (!canonicalConversationFiles.has(fileName)) continue
+  const source = await read(file)
+  if (/<button\b|<select\b|<textarea\b|role=['"](?:dialog|switch)['"]/.test(source)) {
+    violations.push(`${fileName}: main conversation UI must compose canonical shadcn primitives`)
+  }
+  if (retiredConversationTokens.test(source)) {
+    violations.push(`${fileName}: main conversation UI must use canonical semantic Luma tokens`)
+  }
+}
 
 const productionFrontend = (await Promise.all(frontend.map(read))).join('\n')
 const frontendTheme = await readFile(resolve('src/styles/globals.css'), 'utf8')

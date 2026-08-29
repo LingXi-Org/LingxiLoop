@@ -12,38 +12,23 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   for (const path of [
     '../auth/api.ts', '../auth/contracts.ts',
     '../features/platform/api.ts', '../features/platform/contracts.ts',
-    '../features/admin/api.ts', '../features/admin/contracts.ts', '../features/admin/state.ts',
-    '../features/eval/api.ts', '../features/eval/contracts.ts', '../features/eval/state.ts',
   ]) await access(new URL(path, import.meta.url))
 
   const platformSources = await Promise.all([
-    './core/http.ts', '../features/admin/api.ts', '../auth/api.ts',
+    './core/http.ts', '../auth/api.ts',
     '../features/platform/api.ts', '../features/conversations/api.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(platformSources.join('\n'), /lingxiloop\.serverUrl|setServerOrigin|platformApi|filesApi|observabilityApi/)
-  assert.match(platformSources[3], /export const uploadsApi =/)
-  assert.match(platformSources[4], /search:/)
-  assert.doesNotMatch(platformSources[4], /platformApi/)
+  assert.match(platformSources[2], /export const uploadsApi =/)
+  assert.match(platformSources[3], /search:/)
+  assert.doesNotMatch(platformSources[3], /platformApi/)
 
   await assert.rejects(access(new URL('../admin/api.ts', import.meta.url)))
   await assert.rejects(access(new URL('../admin/AdminApp.tsx', import.meta.url)))
-  const adminApi = await readFile(new URL('../features/admin/api.ts', import.meta.url), 'utf8')
-  const evalApi = await readFile(new URL('../features/eval/api.ts', import.meta.url), 'utf8')
-  const evalState = await readFile(new URL('../features/eval/state.ts', import.meta.url), 'utf8')
-  const evalPage = await readFile(new URL('../features/eval/components/EvalPage.tsx', import.meta.url), 'utf8')
-  const adminCss = await readFile(new URL('../features/admin/admin.css', import.meta.url), 'utf8')
-  const evalCss = await readFile(new URL('../features/eval/eval.css', import.meta.url), 'utf8')
-  assert.doesNotMatch(adminApi, /Eval|\/eval/)
-  assert.doesNotMatch(evalApi, /Admin(?:User|Settings|Waitlist|Stats)|adminApi/)
-  assert.match(evalState, /create<EvalState>/)
-  assert.match(evalState, /evalApi\.dashboard/)
-  assert.match(evalPage, /<Dialog open=\{open\}/)
-  assert.match(evalPage, /<Sheet open/)
-  assert.match(evalPage, /<Textarea/)
-  assert.match(evalPage, /toastAction\(evalApi\.createRun/)
-  assert.doesNotMatch(evalPage, /<(?:button|select|textarea)\b|eval-overlay|eval-dialog-overlay/)
-  assert.doesNotMatch(`${adminCss}\n${evalCss}`, /var\(--(?:paper|cloud|ink-|skype|sky-|coral|avail|thinking|gold)/)
-  assert.doesNotMatch(adminCss, /\.(?:btn-primary|btn-ghost|admin-select|admin-switch|admin-toggle|admin-tab)\b/)
+  await assert.rejects(access(new URL('../features/admin/api.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../features/admin/components/AdminApp.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../features/eval/api.ts', import.meta.url)))
+  await assert.rejects(access(new URL('../features/eval/components/EvalPage.tsx', import.meta.url)))
 
   const consumers = await Promise.all([
     '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../features/boards/state.ts',

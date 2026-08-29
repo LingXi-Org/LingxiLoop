@@ -20,6 +20,7 @@ import { messagesApi } from '@/features/chat/api'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@/components/ui/button'
 import { Composer } from '@/desktop/ChatPane'
 import { LingxiAssistantRuntimeProvider } from '@/im/assistantRuntime'
 import type { Message } from '@/types'
@@ -127,37 +128,39 @@ export function ThreadDrawer() {
   return (
     <LingxiAssistantRuntimeProvider messages={runtimeMessages}>
       <aside
-        className="border-l border-ink-100 overflow-hidden relative flex flex-col"
-        style={{ background: 'linear-gradient(180deg, #FBFDFE, #F4F8FC)' }}
+        className="relative flex flex-col overflow-hidden border-s border-border bg-background"
       >
-      <header className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-ink-100">
+      <header className="flex items-center justify-between border-b border-border px-4 pb-3 pt-4">
         <div>
-          <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-400">主题</div>
-          <div className="text-[13px] text-ink-700 font-semibold mt-0.5">
+          <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground">主题</div>
+          <div className="mt-0.5 text-[13px] font-semibold text-foreground">
             {visibleReplies.length} {visibleReplies.length === 1 ? "回复" : "回复"}
           </div>
         </div>
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={close}
           aria-label="关闭线程"
-          className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-cloud hover:text-ink-900 transition"
-        >×</button>
+          className="text-muted-foreground"
+        >×</Button>
       </header>
 
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 px-4 py-4">
         {/* Root message — small visual treatment to distinguish from replies. */}
-        <div className="rounded-lg border border-ink-100 bg-paper px-3 py-2.5">
+        <div className="rounded-3xl border border-border bg-card px-3 py-2.5">
           <ThreadMessage messageId={root.id} />
         </div>
-        <div className="text-[10.5px] font-bold uppercase tracking-wider text-ink-400 pt-1 border-t border-ink-100 -mb-2">
+        <div className="-mb-2 border-t border-border pt-1 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">
           回复
         </div>
 
         {loading && <ResourceSkeleton variant="list" count={3} compact label="正在加载回复" />}
-        {err && <div className="text-[12px] text-coral-deep">{err}</div>}
+        {err && <div className="text-[12px] text-destructive">{err}</div>}
         {!loading && !err && visibleReplies.length === 0 && (
-          <div className="text-[12px] text-ink-400 italic">尚未回复 - 成为第一个。</div>
+          <div className="text-[12px] italic text-muted-foreground">尚未回复 - 成为第一个。</div>
         )}
         {visibleReplies.map((message) => (
           <ThreadMessage key={message.clientId ?? message.id} messageId={message.id} />
@@ -165,9 +168,9 @@ export function ThreadDrawer() {
         </div>
       </ScrollArea>
 
-      <div className="border-t border-ink-100 bg-cloud px-3 py-3">
-        <div className="text-[10.5px] text-ink-400 mb-1.5">
-          回复 <span className="text-skype-deep font-semibold">{rootAuthor?.name ?? root.authorId}</span>
+      <div className="border-t border-border bg-muted/40 px-3 py-3">
+        <div className="mb-1.5 text-[10.5px] text-muted-foreground">
+          回复 <span className="font-semibold text-primary">{rootAuthor?.name ?? root.authorId}</span>
         </div>
         <Composer
           convoId={openThread.convoId}

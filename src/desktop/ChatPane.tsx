@@ -8,6 +8,8 @@ import { ICanvas, ISearch } from '@/components/icons'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { AgentTypingIndicator } from '@/components/messages/AgentTypingIndicator'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { MessageList } from '@/im/MessageList'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
@@ -138,20 +140,17 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
             />
           </svg>
         </div>
-        <div className="font-display font-medium text-[15px] tracking-tight text-ink-700">
+        <div className="text-[15px] font-medium tracking-tight text-foreground">
           无法加载消息
         </div>
-        <div className="text-[12.5px] text-ink-500 leading-relaxed break-words">
+        <div className="break-words text-[12.5px] leading-relaxed text-muted-foreground">
           {message}
         </div>
-        <button
+        <Button
+          type="button"
           onClick={handleRetry}
           disabled={retrying}
-          className="mt-1 h-[30px] px-3.5 rounded-full font-semibold text-[12px] text-white inline-flex items-center gap-1.5 transition disabled:cursor-not-allowed"
-          style={{
-            background: retrying ? 'var(--ink-300)' : 'var(--skype)',
-            boxShadow: retrying ? 'none' : '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
-          }}
+          className="mt-1 h-8 rounded-4xl px-3.5 text-xs"
         >
           {retrying ? (
             <>
@@ -169,7 +168,7 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
               重试
             </>
           )}
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -516,24 +515,28 @@ export function ChatPane({
         }}
         actions={(
           <>
-            {c.kind === 'group' && onOpenGroupContext && <button
+            {c.kind === 'group' && onOpenGroupContext && <Button
               type="button"
+              variant="ghost"
+              size="icon-lg"
               onClick={onOpenGroupContext}
               title="打开知识库和 Canvas"
               aria-label="打开群聊上下文"
-              className="grid size-10 place-items-center rounded-full text-ink-secondary transition hover:bg-raised hover:text-ink"
+              className="text-muted-foreground"
             >
               <ICanvas className="size-[18px]" />
-            </button>}
-            <button
+            </Button>}
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-lg"
               onClick={() => setSearchOpen((value) => !value)}
               title="搜索当前会话"
               aria-label="搜索当前会话"
-              className={cn('grid size-10 place-items-center rounded-full transition', searchOpen ? 'bg-raised text-accent' : 'text-ink-secondary hover:bg-raised hover:text-ink')}
+              className={cn(searchOpen ? 'bg-muted text-primary' : 'text-muted-foreground')}
             >
               <ISearch className="size-[18px]" />
-            </button>
+            </Button>
           </>
         )}
       />
@@ -544,10 +547,10 @@ export function ChatPane({
       <div data-chat-auxiliary="true">
         <ConversationActivity conversationId={convoId} />
         {searchOpen && (
-          <div className="chat-find-toolbar flex items-center gap-2 border-b border-hairline bg-panel px-5 py-2">
-          <div className="flex flex-1 items-center gap-2 rounded-lg bg-raised/70 px-3 py-1.5 text-[13px] text-ink-secondary focus-within:ring-1 focus-within:ring-accent">
+          <div className="chat-find-toolbar flex items-center gap-2 border-b border-border bg-background px-5 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-3xl bg-muted px-3 py-1 text-[13px] text-muted-foreground focus-within:ring-1 focus-within:ring-ring">
             <ISearch className="w-3.5 h-3.5" strokeWidth={2} />
-            <input
+            <Input
               ref={searchInputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -560,47 +563,53 @@ export function ChatPane({
                 if (e.key === 'ArrowDown') { e.preventDefault(); setMatchIdx((i) => (i + 1) % n) }
               }}
               placeholder="搜索当前会话…"
-              className="flex-1 min-w-0 bg-transparent outline-none text-ink-900 placeholder:text-ink-300"
+              className="h-8 min-w-0 flex-1 border-0 bg-transparent px-0 text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
             />
-            <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-300">
+            <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
               {findMatches.length === 0
                 ? (searchQuery.trim() ? '无匹配' : '')
                 : `${matchIdx + 1} / ${findMatches.length}`}
             </span>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-lg"
             onClick={() => setMatchIdx((i) => (i - 1 + findMatches.length) % Math.max(1, findMatches.length))}
             disabled={findMatches.length === 0}
             title="上一个匹配项（Shift+Enter / ↑）"
-            className="size-10 rounded-[8px] grid shrink-0 place-items-center text-ink-500 hover:bg-sky2-50 hover:text-skype-deep transition disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-500"
+            className="shrink-0 text-muted-foreground hover:text-primary"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <polyline points="18 15 12 9 6 15" />
             </svg>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-lg"
             onClick={() => setMatchIdx((i) => (i + 1) % Math.max(1, findMatches.length))}
             disabled={findMatches.length === 0}
             title="下一个匹配项（Enter / ↓）"
-            className="size-10 rounded-[8px] grid shrink-0 place-items-center text-ink-500 hover:bg-sky2-50 hover:text-skype-deep transition disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-500"
+            className="shrink-0 text-muted-foreground hover:text-primary"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <polyline points="6 9 12 15 18 9" />
             </svg>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-lg"
             onClick={() => { setSearchOpen(false); setSearchQuery('') }}
             title="关闭（Esc）"
-            className="size-10 rounded-[8px] grid shrink-0 place-items-center text-ink-500 hover:bg-sky2-50 transition"
+            className="shrink-0 text-muted-foreground"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="w-4 h-4">
               <line x1="6" y1="6" x2="18" y2="18" />
               <line x1="18" y1="6" x2="6" y2="18" />
             </svg>
-          </button>
+          </Button>
           </div>
         )}
       </div>

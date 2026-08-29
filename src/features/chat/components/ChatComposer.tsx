@@ -6,6 +6,8 @@ import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
 import type { RichInputHandle } from '@/components/RichInput'
 import { ComposerSurface } from '@/im/Composer'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { isImeComposing } from '@/lib/keyboard'
 import { findSkypeByShortcode } from '@/lib/skypeEmojis'
@@ -535,9 +537,9 @@ export function Composer({
       )}
       <div className={cn(
         'chat-composer mx-auto min-h-[88px] max-w-[900px] rounded-3xl px-3 pb-3 pt-3 transition',
-        // In thread mode the parent drawer footer is already bg-cloud, so use
-        // bg-paper inside for visual separation from the surrounding panel.
-        isThread ? 'bg-paper' : '',
+        // In thread mode the parent drawer footer uses a muted surface, so the
+        // canonical card token keeps the composer visually distinct.
+        isThread ? 'bg-card' : '',
       )}
       >
         <ComposerAttachment
@@ -547,27 +549,30 @@ export function Composer({
           onRemove={() => setAttachment(null)}
         />
         {showReplyingPill && (
-          <div className="openmaus-reply-preview mb-2 flex min-w-0 items-center gap-2 rounded-xl py-1.5 ps-2.5 pe-1.5">
-            <div className="h-4 w-0.5 shrink-0 rounded bg-skype" />
+          <div className="openmaus-reply-preview mb-2 flex min-w-0 items-center gap-2 rounded-3xl bg-muted py-1.5 ps-2.5 pe-1.5">
+            <div className="h-4 w-0.5 shrink-0 rounded bg-primary" />
             <div className="min-w-0 flex flex-1 items-center gap-2">
-              <div className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-skype-deep">
+              <div className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-primary">
                 回复 {byId[replyingToMsg?.authorId ?? '']?.name ?? replyingToMsg?.authorId ?? '…'}
               </div>
-              <span className="shrink-0 text-[10px] text-ink-300" aria-hidden>·</span>
+              <span className="shrink-0 text-[10px] text-muted-foreground" aria-hidden>·</span>
               <div
-                className="min-w-0 flex-1 truncate text-[12px] text-ink-500"
+                className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground"
               >
                 {replyingToMsg
                   ? <PreviewText body={replyingToMsg.body.slice(0, 140).replace(/\n/g, ' ')} />
                   : '（正在加载…）'}
               </div>
             </div>
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
               onClick={() => setReplyingTo(convoId, null)}
-              className="grid size-10 shrink-0 place-items-center self-center rounded-md text-ink-500 transition hover:bg-cloud hover:text-ink-900"
+              className="shrink-0 self-center text-muted-foreground"
               aria-label="取消回复"
               title="取消回复（Esc）"
-            >×</button>
+            >×</Button>
           </div>
         )}
         <ComposerEditor
@@ -588,7 +593,7 @@ export function Composer({
             return {
               name: participant.id === meId ? 'you' : participant.name,
               initial: participant.initial || participant.name.charAt(0).toUpperCase(),
-              avatarBg: typeof participant.avatarBg === 'string' ? participant.avatarBg : 'var(--ink-300)',
+              avatarBg: typeof participant.avatarBg === 'string' ? participant.avatarBg : 'var(--muted-foreground)',
               kind: participant.kind,
               avatarUrl: participant.kind === 'agent'
                 ? staticBloubAvatarUrl(participant)
@@ -607,7 +612,7 @@ export function Composer({
           onCommandHover={setSlashIndex}
           onCommandPick={runSlashCommand}
         />
-        <div className="mt-2 flex items-center gap-1 text-ink-300">
+        <div className="mt-2 flex items-center gap-1 text-muted-foreground">
           <input
             ref={fileRef}
             type="file"
@@ -618,44 +623,47 @@ export function Composer({
             className="hidden"
             onChange={onPickFile}
           />
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
             onClick={() => fileRef.current?.click()}
-            className="grid size-10 place-items-center rounded-[9px] transition hover:bg-sky2-50 hover:text-skype-deep"
+            className="hover:text-primary"
             title="添加附件"
-          ><IClip className="w-[17px] h-[17px]" /></button>
-          <button
+          ><IClip className="size-4" /></Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
             onMouseDown={(e) => e.preventDefault()}
             onClick={openMentionByButton}
-            className="grid size-10 place-items-center rounded-[9px] transition hover:bg-sky2-50 hover:text-skype-deep"
+            className="hover:text-primary"
             title="提及成员"
-          ><IAt className="w-[17px] h-[17px]" /></button>
-          <div className="relative">
-            <button
-              onClick={() => setEmojiOpen((v) => !v)}
-              className={cn(
-                'grid size-10 place-items-center rounded-[9px] transition hover:bg-sky2-50 hover:text-skype-deep',
-                emojiOpen && 'bg-sky2-50 text-skype-deep',
-              )}
-              title="表情"
-            ><ISmile className="w-[17px] h-[17px]" /></button>
-            {emojiOpen && (
+          ><IAt className="size-4" /></Button>
+          <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-lg"
+                className={cn('hover:text-primary', emojiOpen && 'bg-muted text-primary')}
+                title="表情"
+              ><ISmile className="size-4" /></Button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="start" className="w-auto p-2">
               <ComposerEmojiPopover
                 onPick={(e) => { insertAtCursor(e); setEmojiOpen(false) }}
-                onClose={() => setEmojiOpen(false)}
               />
-            )}
-          </div>
-          <button
+            </PopoverContent>
+          </Popover>
+          <Button
+            type="button"
             onClick={send}
             disabled={!canSend}
-            className="ml-auto inline-flex min-h-10 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white transition disabled:cursor-not-allowed"
-            style={{
-              background: canSend ? 'var(--skype)' : 'var(--ink-200)',
-              boxShadow: canSend ? '0 4px 12px -3px rgba(0, 168, 240, 0.5)' : 'none',
-            }}
+            className="ms-auto min-h-10 rounded-4xl px-3.5 text-xs"
           >
             发送 <ISend className="w-3.5 h-3.5" strokeWidth={2} />
-          </button>
+          </Button>
         </div>
       </div>
     </ComposerSurface>

@@ -14,6 +14,7 @@ import { ReadReceiptStatus } from './ReadReceiptStatus'
 import { SystemRow } from './SystemMessageRow'
 import { Message, MessageAvatar, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { Button } from '@/components/ui/button'
 
 interface MessageMenuItem {
   label: string
@@ -115,9 +116,12 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
         </MessageAvatar>
       ) : !isMine ? (
         <MessageAvatar className={cn('!overflow-visible !rounded-none !bg-transparent', !groupStart && 'invisible pointer-events-none', shell.avatarAlignment === 'top' && '!self-start !translate-y-0')}>
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
             onClick={onAvatarClick}
-            className="cursor-pointer rounded-full transition hover:opacity-80 active:scale-95"
+            className="cursor-pointer rounded-full p-0 hover:bg-transparent hover:opacity-80"
             title={`Show ${author.name}'s info`}
           >
             <Avatar
@@ -128,7 +132,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
               mode="chat"
               className={cn('chat-message-avatar', avatarActivity && `bloub-activity-${avatarActivity}`)}
             />
-          </button>
+          </Button>
         </MessageAvatar>
       ) : (
         <MessageAvatar className={cn('!overflow-visible !rounded-none !bg-transparent', !groupStart && 'invisible pointer-events-none', shell.avatarAlignment === 'top' && '!self-start !translate-y-0')}>
@@ -149,9 +153,9 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
           openMaus ? 'items-baseline' : 'items-center',
           isMine && 'justify-end',
         )}>
-          {groupStart && <span className="font-bold text-[13.5px] text-ink-900">{author.name}</span>}
+          {groupStart && <span className="text-[13.5px] font-bold text-foreground">{author.name}</span>}
           {groupStart && isHuman && !isMine && <HumanBadge />}
-          {!isStreaming && <span className={cn('text-[10.5px] text-ink-300 tabular-nums', isHuman && 'ml-auto')}>{msg.at}</span>}
+          {!isStreaming && <span className={cn('text-[10.5px] text-muted-foreground tabular-nums', isHuman && 'ms-auto')}>{msg.at}</span>}
         </MessageHeader>}
 
         {!isStreaming && shell.quote && <QuoteCard message={msg} />}
@@ -167,33 +171,40 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
           // use. Retry re-runs sendUserMessage with the original body /
           // attachment / quote; Dismiss just drops the bubble locally
           // so it stops clogging the bottom of the conversation.
-          <div className="mt-1 flex items-center gap-2 text-[11px] text-coral-deep">
+          <div className="mt-1 flex items-center gap-2 text-[11px] text-destructive">
             <span>{openMaus ? '发送失败' : "发送失败"}</span>
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="xs"
               onClick={(e) => { e.stopPropagation(); void retryFailedMessage(msg.conversationId, msg.id) }}
-              className="font-semibold underline underline-offset-2 hover:text-coral-700"
-            >{openMaus ? '重试' : "重试"}</button>
-            <span className="text-ink-300">·</span>
-            <button
+              className="h-auto p-0 font-semibold text-destructive"
+            >{openMaus ? '重试' : "重试"}</Button>
+            <span className="text-muted-foreground">·</span>
+            <Button
               type="button"
+              variant="link"
+              size="xs"
               onClick={(e) => { e.stopPropagation(); discardFailedMessage(msg.conversationId, msg.id) }}
-              className="font-semibold underline underline-offset-2 hover:text-coral-700"
-            >{openMaus ? '移除' : "驳回"}</button>
+              className="h-auto p-0 font-semibold text-destructive"
+            >{openMaus ? '移除' : "驳回"}</Button>
           </div>
         )}
 
         {!isStreaming && !openMaus && (msg.replyCount ?? 0) > 0 && (
-          <button
+          <Button
+            type="button"
+            variant="link"
+            size="xs"
             onClick={() => openThreadView(msg.conversationId, msg.id)}
-            className="mt-1 text-[11.5px] text-skype-deep hover:underline flex items-center gap-1"
+            className="mt-1 h-auto gap-1 p-0 text-[11.5px] text-primary"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 17 4 12 9 7" />
               <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
             </svg>
             {msg.replyCount} {msg.replyCount === 1 ? "回复" : "回复"}
-          </button>
+          </Button>
         )}
 
         {!hasTextBubble && bubbleReactions && <div className="mt-2 flex flex-wrap items-center gap-1">{bubbleReactions}</div>}
