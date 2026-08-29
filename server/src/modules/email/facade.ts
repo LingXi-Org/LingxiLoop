@@ -21,10 +21,15 @@ import { storage } from '../../storage.js'
 import type { Storage } from '../../storage.js'
 import { EmailApplication } from './application.js'
 import { InboundEmailApplication } from './inbound-application.js'
-import { createInboundEmailHttpRouter } from './inbound-router.js'
 import { inc } from '../../metrics.js'
 import { notifyOperationalAlert } from '../../alerting.js'
 import { AgentEmailApplication } from './agent-application.js'
+import { ResendInboundApplication } from './resend-inbound-application.js'
+import {
+  retrieveResendInboundEmail,
+  verifyResendWebhook,
+} from './resend-inbound-infrastructure.js'
+import { createResendInboundRouter } from './resend-inbound-router.js'
 import type {
   AgentEmailCommandIdentity,
   AgentEmailContact,
@@ -33,7 +38,10 @@ import type {
   AgentEmailThreadView,
   EmailScope,
   OutboundAttachmentInput,
+  InboundEmailPayload,
 } from './contracts.js'
+import type { ResendWebhookHeaders } from './resend-inbound-application.js'
+import type { ResendEmailReceivedEvent } from './contracts.js'
 
 export const emailApplication = new EmailApplication(pool, {
   assertAvailable: assertEmailProviderConfigured,
@@ -111,22 +119,39 @@ export function replyToAgentEmail(
   return agentEmailApplication.reply(scope, messageId, input, identity)
 }
 
-export function createInboundEmailRouter(dependencies: { storage: Pick<Storage, 'put'> }) {
-  const application = new InboundEmailApplication(pool, {
+export function createResendInboundEmailRouter(dependencies: {
+  storage: Pick<Storage, 'put'>
+  apiKey?: string
+  webhookSecret?: string
+  fetcher?: typeof fetch
+  verify?: (rawBody: Buffer, headers: ResendWebhookHeaders) => ResendEmailReceivedEvent | { type: string }
+  retrieve?: (emailId: string) => Promise<InboundEmailPayload>
+}) {
+  const deliveryApplication = new InboundEmailApplication(pool, {
     storage: dependencies.storage,
     findOrCreateConversation: (input) => findOrCreateEmailConversation(input),
     persistMessage: (input) => persistEmailMessage(input),
     metric: (name, labels) => inc(name, labels),
     alert: notifyOperationalAlert,
   })
-  return createInboundEmailHttpRouter({
-    application,
-    secret: env.EMAIL_INBOUND_HMAC_SECRET,
+  const application = new ResendInboundApplication({
+    verify: dependencies.verify ?? ((rawBody, headers) => verifyResendWebhook(
+      rawBody,
+      headers,
+      dependencies.webhookSecret ?? env.RESEND_WEBHOOK_SECRET,
+    )),
+    retrieve: dependencies.retrieve ?? ((emailId) => retrieveResendInboundEmail(
+      emailId,
+      dependencies.apiKey ?? env.RESEND_API_KEY,
+      dependencies.fetcher,
+    )),
+    deliver: (payload) => deliveryApplication.deliver(payload),
     metric: (name) => inc(name),
   })
+  return createResendInboundRouter(application)
 }
 
-export const inboundEmailRouter = createInboundEmailRouter({ storage })
+export const resendInboundEmailRouter = createResendInboundEmailRouter({ storage })
 
 export async function sendCalendarReminderEmail(args: {
   to: string

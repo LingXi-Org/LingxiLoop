@@ -11,8 +11,6 @@ import {
   InboundEmailApplicationError,
   type InboundEmailInfrastructure,
 } from '../modules/email/inbound-application.js'
-import { verifyInboundEmailSignature } from '../modules/email/inbound-router.js'
-import { createHmac } from 'node:crypto'
 
 const payload: InboundEmailPayload = {
   messageId: 'inbound-1@example.com',
@@ -119,16 +117,6 @@ test('attachment bytes must match signed payload metadata', async () => {
     /attachment size mismatch/,
   )
   assert.equal(infra.persisted.length, 0)
-})
-
-test('inbound HMAC verification requires one canonical 256-bit hex signature', () => {
-  const raw = Buffer.from('{"ok":true}')
-  const secret = 'secret'
-  const signature = createHmac('sha256', secret).update(raw).digest('hex')
-  assert.equal(verifyInboundEmailSignature(raw, `sha256=${signature}`, secret), true)
-  assert.equal(verifyInboundEmailSignature(raw, signature.slice(0, -1), secret), false)
-  assert.equal(verifyInboundEmailSignature(raw, `${signature.slice(0, -1)}z`, secret), false)
-  assert.equal(verifyInboundEmailSignature(raw, signature, 'wrong'), false)
 })
 
 test('inbound contract rejects partial payloads instead of filling production defaults', () => {

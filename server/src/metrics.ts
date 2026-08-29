@@ -80,7 +80,7 @@ const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
   'email.inbound.delivered':             { help: 'Inbound emails persisted to at least one recipient.', labels: ['auto_submitted'] },
   'email.inbound.dedup':                 { help: 'Inbound deliveries deduplicated by smtp_message_id.', labels: [] },
   'email.inbound.no_recipient':          { help: 'Inbound deliveries dropped — no resolved recipient.', labels: [] },
-  'email.inbound.bad_signature':         { help: 'Inbound POSTs rejected for HMAC mismatch.', labels: [] },
+  'email.inbound.bad_signature':         { help: 'Inbound POSTs rejected for provider signature mismatch.', labels: [] },
   'email.inbound.attachment_upload_fail':{ help: 'Inbound attachments that failed to upload to storage.', labels: [] },
   'email.retry.ok':                      { help: 'Retry-worker resends that succeeded.', labels: [] },
   'email.retry.fail':                    { help: 'Retry-worker resends that failed (will try again).', labels: [] },

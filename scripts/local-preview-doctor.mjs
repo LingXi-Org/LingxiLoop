@@ -22,8 +22,8 @@ const required = [
   'R2_PUBLIC_BASE',
   'R2_URL_SIGNING_SECRET',
   'RESEND_API_KEY',
+  'RESEND_WEBHOOK_SECRET',
   'EMAIL_DOMAIN',
-  'EMAIL_INBOUND_HMAC_SECRET',
 ]
 
 const missing = required.filter((name) => {

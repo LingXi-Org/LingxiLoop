@@ -165,13 +165,12 @@ export const env = {
    *   EMAIL_DOMAIN              — root domain that hosts agent addresses,
    *                               e.g. "loop.lingxilearn.cn". Per-agent address is
    *                               <participantId>.<companySlug>@<EMAIL_DOMAIN>.
-   *   EMAIL_INBOUND_HMAC_SECRET — shared secret with the CF Email Worker.
-   *                               Worker signs the JSON body; server verifies
-   *                               with timing-safe HMAC-SHA256 compare.
+   *   RESEND_WEBHOOK_SECRET     — endpoint-specific Resend/Svix signing
+   *                               secret for the `email.received` webhook.
    */
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? '',
+  RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET ?? '',
   EMAIL_DOMAIN: (process.env.EMAIL_DOMAIN ?? '').toLowerCase().replace(/^\.+|\.+$/g, ''),
-  EMAIL_INBOUND_HMAC_SECRET: process.env.EMAIL_INBOUND_HMAC_SECRET ?? '',
   /** Interval between outbound retry-loop ticks. Defaults to 60s; set to
    *  0 to disable retry entirely (failed sends stay failed forever). The
    *  loop uses SKIP LOCKED so multiple replicas can run it concurrently. */

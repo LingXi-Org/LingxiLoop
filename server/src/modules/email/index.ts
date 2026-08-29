@@ -1,9 +1,9 @@
 export {
-  createInboundEmailRouter,
+  createResendInboundEmailRouter,
   emailApplication,
   getAgentEmailIdentity,
   getAgentEmailThread,
-  inboundEmailRouter,
+  resendInboundEmailRouter,
   isAgentEmailAddressingConfigured,
   listAgentEmailContacts,
   listAgentEmailInbox,

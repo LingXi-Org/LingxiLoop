@@ -13,10 +13,12 @@
  * uses its own connection / transaction lifecycle that we must not
  * subsume).
  */
-import { createHmac, randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
+import { Webhook } from 'svix'
 import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import type { InboundEmailPayload } from '../modules/email/contracts.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 import { installStorageProvider, type Storage, type StorageObject } from '../storage.js'
 
@@ -161,13 +163,24 @@ export async function resetAllTables(): Promise<void> {
   await pool.query(`TRUNCATE TABLE ${TABLES_TO_WIPE.join(', ')} CASCADE`)
 }
 
-/** Compute the HMAC signature the inbound webhook expects. Mirrors the
- *  cloudflare worker's `hmacHex` exactly so a test payload looks like
- *  it came off the wire. */
-export function signInboundPayload(body: string): string {
-  const secret = env.EMAIL_INBOUND_HMAC_SECRET
-  if (!secret) throw new Error('EMAIL_INBOUND_HMAC_SECRET not set in test env')
-  return `sha256=${createHmac('sha256', secret).update(body).digest('hex')}`
+export function signInboundPayload(body: string): Record<string, string> {
+  const secret = env.RESEND_WEBHOOK_SECRET
+  if (!secret) throw new Error('RESEND_WEBHOOK_SECRET not set in test env')
+  const id = `msg_${randomUUID()}`
+  const timestamp = new Date()
+  return {
+    'svix-id': id,
+    'svix-timestamp': String(Math.floor(timestamp.getTime() / 1000)),
+    'svix-signature': new Webhook(secret).sign(id, timestamp, body),
+  }
+}
+
+const inboundFixtures = new Map<string, InboundEmailPayload>()
+
+export function registerInboundFixture(payload: InboundEmailPayload): string {
+  const emailId = randomUUID()
+  inboundFixtures.set(emailId, payload)
+  return emailId
 }
 
 /** Insert the minimum scaffolding an email row needs: one company + one
@@ -229,12 +242,19 @@ export async function buildTestApp(storageProvider?: Pick<Storage, 'put'>): Prom
   const expressMod = await import('express')
   const express = expressMod.default
   const app = express()
-  const { createInboundEmailRouter, inboundEmailRouter } = await import('../modules/email/index.js')
-  // Match the production mount path: web.ts mounts inboundEmailRouter
+  const { createResendInboundEmailRouter, resendInboundEmailRouter } = await import('../modules/email/index.js')
+  // Match the production mount path: web.ts mounts resendInboundEmailRouter
   // at /webhooks/email — see server/src/web.ts.
   app.use(
     '/webhooks/email',
-    storageProvider ? createInboundEmailRouter({ storage: storageProvider }) : inboundEmailRouter,
+    storageProvider ? createResendInboundEmailRouter({
+      storage: storageProvider,
+      retrieve: async (emailId) => {
+        const payload = inboundFixtures.get(emailId)
+        if (!payload) throw new Error(`missing inbound fixture: ${emailId}`)
+        return payload
+      },
+    }) : resendInboundEmailRouter,
   )
   return app
 }

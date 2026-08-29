@@ -92,6 +92,12 @@ Open `http://localhost:5180` and choose LingxiIdentity. The local identity
 page confirms the email and display name, then returns through the normal
 `/api/auth/callback/lingxi` endpoint. `.env.local` is ignored by Git.
 
+For Resend Receiving on a local computer, run `npm run dev:email:tunnel` in
+a second terminal. In the Resend development webhook, select only
+`email.received` and set Endpoint to the HTTPS URL printed by cloudflared plus
+`/webhooks/email/resend`. Copy that webhook's `whsec_...` value into
+`RESEND_WEBHOOK_SECRET`; it is not the Resend API key.
+
 For the packaged MVP topology, copy `.env.example` to `.env`, provide the
 required secrets, and start the runtime:
 

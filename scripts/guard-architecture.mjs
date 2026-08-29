@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises'
+import { access, readdir, readFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 
 async function filesUnder(root) {
@@ -199,7 +199,7 @@ for (const file of server) {
   }
   if (/\bnew\s+OpenAI\s*\(/.test(source) && fileName !== 'server/src/llm-client.ts') violations.push(`${fileName}: OpenAI construction bypasses llm-client.ts`)
   if (/\bnew\s+S3Client\s*\(/.test(source) && fileName !== 'server/src/storage.ts') violations.push(`${fileName}: object storage construction bypasses storage.ts`)
-  if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|SUB2API|DEEPSEEK_API_KEY|DISCORD_ALERT_WEBHOOK_URL/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)
+  if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|EMAIL_INBOUND_HMAC_SECRET|SUB2API|DEEPSEEK_API_KEY|DISCORD_ALERT_WEBHOOK_URL/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)
   if (/agent-gender|agent-avatar|generateAndPersistAvatar|visualSignatureFor|cmdAvatar\b|\/avatar\/generate/.test(source)) violations.push(`${fileName}: agent portraits are retired; agents use Bloub`)
   if (/participants\.avatar/.test(source)) violations.push(`${fileName}: retired participant avatar event is forbidden`)
   if (/\/devtools\//.test(source) || /api\.post\(['"]\/uploads['"]/.test(source) || /sources\/upload['"]/.test(source)) violations.push(`${fileName}: retired endpoint is forbidden`)
@@ -253,6 +253,13 @@ for (const file of server) {
       violations.push(`${fileName}: application bypasses its repository`)
     }
   }
+}
+
+try {
+  await access(resolve('workers/email-gate/src/index.ts'))
+  violations.push('workers/email-gate: retired Cloudflare inbound data plane must not return')
+} catch {
+  // Expected: Resend Receiving is the only inbound email provider.
 }
 
 const authSource = await read(resolve('server/src/auth.ts'))

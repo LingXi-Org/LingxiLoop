@@ -69,6 +69,16 @@ export type ReplyEmailInput = z.infer<typeof replyEmailRequestSchema>
 export type OutboundAttachmentInput = z.infer<typeof outboundAttachmentSchema>
 export type InboundEmailPayload = z.infer<typeof inboundEmailPayloadSchema>
 
+export const resendEmailReceivedEventSchema = z.object({
+  type: z.literal('email.received'),
+  created_at: z.string().min(1),
+  data: z.object({
+    email_id: z.string().uuid(),
+  }).passthrough(),
+}).passthrough()
+
+export type ResendEmailReceivedEvent = z.infer<typeof resendEmailReceivedEventSchema>
+
 export interface EmailScope {
   userId: string
   companyId: string

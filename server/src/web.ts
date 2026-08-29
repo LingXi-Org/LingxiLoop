@@ -11,7 +11,7 @@ import { attachWebSocket, resetHumanPresenceOnBoot } from './ws.js'
 import { bootDocumentBus } from './modules/documents/public.js'
 import { pool } from './db/pool.js'
 import { redis, sub } from './redis.js'
-import { inboundEmailRouter } from './modules/email/index.js'
+import { resendInboundEmailRouter } from './modules/email/index.js'
 import { agentOSControlRouter } from './agent-os/control-plane.js'
 import { wukongWebhookRouter } from './im/webhook.js'
 import { wukongClient } from './im/wukong.js'
@@ -57,7 +57,7 @@ export async function startWebProcess(): Promise<ServiceHandle> {
   // `verify` hook that captures rawBody for HMAC validation. Once it
   // parses, body-parser flips req._body=true so the generic parser below
   // becomes a no-op for these requests.
-  app.use('/webhooks/email', inboundEmailRouter)
+  app.use('/webhooks/email', resendInboundEmailRouter)
   app.use('/webhooks/wukong', wukongWebhookRouter)
 
   // Bumped from 256kb to 32mb because the upload endpoint takes base64-encoded
