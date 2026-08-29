@@ -143,30 +143,6 @@ export async function listReplies(
   return rows
 }
 
-export interface ReactionTarget extends QueryResultRow {
-  conversation_id: string
-  author_id: string
-  members: string[]
-}
-
-export async function lockReactionTarget(
-  db: Queryable,
-  companyId: string,
-  messageId: string,
-): Promise<ReactionTarget | undefined> {
-  const { rows } = await db.query<ReactionTarget>(
-    `SELECT message.conversation_id, message.author_id, conversation.members
-       FROM messages message
-       JOIN conversations conversation
-         ON conversation.id = message.conversation_id
-        AND conversation.company_id = message.company_id
-      WHERE message.id = $1 AND message.company_id = $2
-      FOR UPDATE OF message`,
-    [messageId, companyId],
-  )
-  return rows[0]
-}
-
 export async function reactionExists(
   db: Queryable,
   companyId: string,
@@ -193,21 +169,6 @@ export async function removeReaction(
   await db.query(
     `DELETE FROM message_reactions
       WHERE message_id = $1 AND user_id = $2 AND emoji = $3 AND company_id = $4`,
-    [messageId, userId, emoji, companyId],
-  )
-}
-
-export async function addReaction(
-  db: Queryable,
-  companyId: string,
-  messageId: string,
-  userId: string,
-  emoji: string,
-): Promise<void> {
-  await db.query(
-    `INSERT INTO message_reactions (message_id, user_id, emoji, company_id)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT DO NOTHING`,
     [messageId, userId, emoji, companyId],
   )
 }

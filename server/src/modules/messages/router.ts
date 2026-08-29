@@ -3,11 +3,9 @@ import { safe } from '../../http/async-handler.js'
 import { requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import { assertProjectWritable, requireCompany } from '../../http/request-context.js'
-import { MessageApplicationError } from './application.js'
 import {
   emailReplyRequestSchema,
   messageHistoryQuerySchema,
-  reactionRequestSchema,
 } from './contracts.js'
 import { messagesApplication } from './facade.js'
 
@@ -78,23 +76,4 @@ messagesRouter.get('/conversations/:id/messages/:rootId/replies', safe(async (re
     conversationId,
     String(req.params.rootId),
   ))
-}))
-
-messagesRouter.post('/messages/:id/reactions', safe(async (req, res) => {
-  const { userId, companyId } = await requireCompany(req)
-  const parsed = reactionRequestSchema.safeParse(req.body ?? {})
-  if (!parsed.success) badRequest(parsed)
-  try {
-    res.json(await messagesApplication.toggleReaction({
-      companyId,
-      userId,
-      messageId: String(req.params.id),
-      emoji: parsed.data.emoji,
-    }))
-  } catch (error) {
-    if (error instanceof MessageApplicationError && error.code === 'message_not_found') {
-      throw new HttpError(404, error.message)
-    }
-    throw error
-  }
 }))

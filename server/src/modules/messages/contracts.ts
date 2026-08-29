@@ -9,10 +9,6 @@ export const emailReplyRequestSchema = z.object({
   body: z.string().trim().min(1),
 }).strict()
 
-export const reactionRequestSchema = z.object({
-  emoji: z.string().trim().min(1).max(32),
-}).strict()
-
 export interface ReactionPayload {
   emoji: string
   count: number
