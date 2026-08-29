@@ -7,7 +7,8 @@
  */
 import { useState } from 'react'
 import { GetDesktopAppLink } from '@/components/GetDesktopAppLink'
-import './auth-state.css'
+import { Button } from '@/components/ui/button'
+import '../auth-state.css'
 
 interface CarriedWaitlist { email: string | null }
 
@@ -40,12 +41,12 @@ export function WaitlistConfirmedScreen({ email }: { email: string | null }) {
           我们保存了 <span className="lingxiloop-waitlist-email">{email ?? 'your email'}</span> 会让你知道
           当您的帐户准备就绪时。无需采取进一步行动。
         </div>
-        <div style={{ marginBottom: 24, fontSize: 12.5, color: 'var(--ink-400)', fontStyle: 'italic' }}>
+        <div className="mb-6 text-xs italic text-muted-foreground">
           想要抢占先机吗？ <GetDesktopAppLink variant="text" /> — 一旦获得批准，您只需在工作区中单击一下即可。
         </div>
-        <button className="lingxiloop-auth-state-button" onClick={() => setDismissed(true)}>
+        <Button className="lingxiloop-auth-state-button" onClick={() => setDismissed(true)}>
           完成
-        </button>
+        </Button>
       </div>
     </div>
   )

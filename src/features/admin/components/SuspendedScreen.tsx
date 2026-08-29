@@ -14,7 +14,8 @@
  * the next time they try to sign in.
  */
 import { useState } from 'react'
-import './auth-state.css'
+import { Button } from '@/components/ui/button'
+import '../auth-state.css'
 
 interface CarriedSuspension { email: string | null; reason: string | null }
 
@@ -57,9 +58,9 @@ export function SuspendedScreen({ email, reason }: { email: string | null; reaso
           如果您认为这是一个错误，请回复我们发送给您的最新消息，或者
           联系您的工作区所有者。
         </div>
-        <button className="lingxiloop-auth-state-button" onClick={() => setDismissed(true)}>
+        <Button className="lingxiloop-auth-state-button" onClick={() => setDismissed(true)}>
           完成
-        </button>
+        </Button>
       </div>
     </div>
   )

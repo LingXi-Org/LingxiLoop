@@ -7,7 +7,7 @@
  *   - No left-edge accent bars on rows / cards (reads as AI slop).
  *     We use horizontal dividers + faint row tone on hover instead.
  *   - Grid-based tables so columns line up even when text wraps.
- *   - Toggles and buttons match the muted, paper-like feel of the
+ *   - Toggles and buttons use the preset's muted surface treatment.
  *     main app rather than fighting it with admin-dashboard chrome.
  */
 
@@ -20,8 +20,8 @@
   height: 100vh;
   display: grid;
   grid-template-columns: 232px 1fr;
-  background: var(--paper);
-  color: var(--ink-900);
+  background: var(--background);
+  color: var(--foreground);
   font-family: inherit;
 }
 
@@ -29,8 +29,8 @@
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
-  background: var(--cloud);
-  border-right: 1px solid var(--ink-100);
+  background: var(--card);
+  border-right: 1px solid var(--muted);
   overflow-y: auto;
 }
 
@@ -42,7 +42,7 @@
   padding: 0 8px;
 }
 .admin-brand-title { font-weight: 700; font-size: 14px; }
-.admin-brand-sub   { font-size: 11px; color: var(--ink-500); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.admin-brand-sub   { font-size: 11px; color: var(--muted-foreground); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
 
 .admin-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 .admin-nav-link {
@@ -50,13 +50,13 @@
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 14px;
-  color: var(--ink-700);
+  color: var(--foreground);
   text-decoration: none;
   transition: background-color 0.12s, color 0.12s;
 }
-.admin-nav-link:hover { background: rgba(0, 168, 240, 0.06); color: var(--ink-900); }
-.admin-nav-link.is-active { background: rgba(0, 168, 240, 0.12); color: var(--skype-ink); font-weight: 600; }
-.admin-sidebar-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--ink-100); }
+.admin-nav-link:hover { background: color-mix(in oklch, var(--primary) 6%, transparent); color: var(--foreground); }
+.admin-nav-link.is-active { background: color-mix(in oklch, var(--primary) 12%, transparent); color: var(--primary); font-weight: 600; }
+.admin-sidebar-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--muted); }
 
 .admin-main { padding: 32px 40px; overflow: auto; }
 
@@ -66,48 +66,13 @@
   margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
 }
 .admin-h1   { font-size: 22px; font-weight: 700; margin: 0; }
-.admin-sub  { font-size: 13px; color: var(--ink-500); margin-top: 4px; }
+.admin-sub  { font-size: 13px; color: var(--muted-foreground); margin-top: 4px; }
 .admin-filters { display: flex; gap: 8px; }
-
-.admin-input, .admin-select {
-  border: 1px solid var(--ink-200);
-  border-radius: 8px;
-  padding: 7px 10px;
-  font-size: 13px;
-  background: var(--cloud);
-  color: var(--ink-900);
-  outline: none;
-  transition: border-color 0.12s;
-}
-.admin-input:focus, .admin-select:focus { border-color: var(--skype); }
-.admin-input { min-width: 220px; }
-
-/* Custom chevron — the native UA arrow on macOS/Chrome sits flush
- * against the right border with no padding, which reads as a bug. We
- * suppress it with `appearance: none` and paint our own caret with
- * generous right padding so the icon and the text both get breathing
- * room. Size variant overrides the offsets to stay proportional. */
-.admin-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  padding-right: 30px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none'><path d='M3 4.5L6 7.5L9 4.5' stroke='%23808890' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px 12px;
-}
-.admin-select-sm {
-  padding: 4px 24px 4px 8px;
-  font-size: 12px;
-  background-position: right 7px center;
-  background-size: 10px 10px;
-}
 
 /* ===== Tables ===== */
 .admin-table {
-  background: var(--cloud);
-  border: 1px solid var(--ink-100);
+  background: var(--card);
+  border: 1px solid var(--muted);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -120,36 +85,36 @@
   font-size: 13px;
 }
 .admin-thead {
-  background: var(--paper);
+  background: var(--background);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--ink-500);
+  color: var(--muted-foreground);
 }
-.admin-row { border-top: 1px solid var(--ink-100); cursor: pointer; transition: background-color 0.1s; }
-.admin-row:hover { background: rgba(0, 168, 240, 0.04); }
-.admin-empty { color: var(--ink-500); justify-content: center; cursor: default; }
+.admin-row { border-top: 1px solid var(--muted); cursor: pointer; transition: background-color 0.1s; }
+.admin-row:hover { background: color-mix(in oklch, var(--primary) 4%, transparent); }
+.admin-empty { color: var(--muted-foreground); justify-content: center; cursor: default; }
 .admin-empty:hover { background: transparent; }
 
 .admin-cell-user       { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .admin-cell-user-text  { display: flex; flex-direction: column; min-width: 0; }
 .admin-cell-user-name  { font-weight: 600; }
-.admin-cell-user-email { font-size: 12px; color: var(--ink-500); margin-top: 1px; }
-.admin-cell-mono       { font-family: ui-monospace, SF Mono, monospace; font-size: 12px; color: var(--ink-500); }
+.admin-cell-user-email { font-size: 12px; color: var(--muted-foreground); margin-top: 1px; }
+.admin-cell-mono       { font-family: ui-monospace, SF Mono, monospace; font-size: 12px; color: var(--muted-foreground); }
 .admin-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  background: var(--ink-100);
+  background: var(--muted);
   flex-shrink: 0;
   display: block;
 }
 
 .admin-row-detail {
-  border-top: 1px solid var(--ink-100);
-  background: var(--paper);
+  border-top: 1px solid var(--muted);
+  background: var(--background);
   padding: 16px 24px;
 }
 .admin-detail-grid {
@@ -158,41 +123,41 @@
   gap: 16px 24px;
 }
 .admin-detail-field { display: flex; flex-direction: column; }
-.admin-detail-label { font-size: 11px; text-transform: uppercase; color: var(--ink-500); margin-bottom: 4px; letter-spacing: 0.04em; }
+.admin-detail-label { font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 4px; letter-spacing: 0.04em; }
 .admin-detail-companies { grid-column: 1 / -1; margin-top: 8px; }
 .admin-detail-actions   { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 8px; }
 
 /* ===== Suspended user — row highlight + detail card ===== */
-.admin-row-suspended { background: rgba(255, 122, 107, 0.04); }
-.admin-row-suspended:hover { background: rgba(255, 122, 107, 0.08); }
+.admin-row-suspended { background: color-mix(in oklch, var(--destructive) 4%, transparent); }
+.admin-row-suspended:hover { background: color-mix(in oklch, var(--destructive) 8%, transparent); }
 .admin-detail-suspended {
   grid-column: 1 / -1;
-  background: var(--coral-soft);
-  border: 1px solid rgba(255, 122, 107, 0.3);
+  background: color-mix(in oklch, var(--destructive) 12%, transparent);
+  border: 1px solid color-mix(in oklch, var(--destructive) 30%, transparent);
   border-radius: 10px;
   padding: 12px 14px;
 }
-.admin-detail-suspended .admin-detail-label { color: var(--coral-deep); margin-bottom: 6px; }
+.admin-detail-suspended .admin-detail-label { color: var(--destructive); margin-bottom: 6px; }
 .admin-detail-suspended-meta {
-  font-size: 12px; color: var(--coral-deep); margin-bottom: 6px;
+  font-size: 12px; color: var(--destructive); margin-bottom: 6px;
 }
 .admin-detail-suspended-reason {
-  font-size: 13px; color: var(--ink-900); line-height: 1.5;
+  font-size: 13px; color: var(--foreground); line-height: 1.5;
   white-space: pre-wrap; word-break: break-word;
 }
 .admin-btn-danger {
-  color: var(--coral-deep);
-  border-color: rgba(255, 122, 107, 0.4);
+  color: var(--destructive);
+  border-color: color-mix(in oklch, var(--destructive) 40%, transparent);
 }
 .admin-btn-danger:hover:not(:disabled) {
-  background: rgba(255, 122, 107, 0.08);
+  background: color-mix(in oklch, var(--destructive) 8%, transparent);
 }
 .admin-detail-company {
   display: flex; justify-content: space-between; align-items: center;
   padding: 8px 12px;
-  border: 1px solid var(--ink-100);
+  border: 1px solid var(--muted);
   border-radius: 8px;
-  background: var(--cloud);
+  background: var(--card);
   margin-top: 6px;
   font-size: 13px;
 }
@@ -202,14 +167,7 @@
   grid-template-columns: 2.4fr 0.8fr 1fr 1fr 1.4fr;
 }
 .admin-row-actions { display: flex; gap: 8px; }
-.admin-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
-.admin-tab {
-  background: transparent; border: none; padding: 6px 12px; border-radius: 8px;
-  font-size: 13px; color: var(--ink-500); cursor: pointer; text-transform: capitalize;
-}
-.admin-tab:hover { background: var(--ink-100); }
-.admin-tab.is-active { background: var(--ink-900); color: var(--cloud); font-weight: 600; }
-.admin-note { font-size: 11px; color: var(--coral-deep); margin-top: 3px; font-style: italic; }
+.admin-note { font-size: 11px; color: var(--destructive); margin-top: 3px; font-style: italic; }
 
 /* ===== Pills, buttons, toggles ===== */
 .admin-pill {
@@ -218,71 +176,26 @@
   font-weight: 600;
   padding: 1px 7px;
   border-radius: 999px;
-  background: var(--ink-100);
-  color: var(--ink-700);
+  background: var(--muted);
+  color: var(--foreground);
   line-height: 1.5;
 }
-.admin-pill-warn { background: var(--coral-soft); color: var(--coral-deep); }
-.admin-pill-soft { background: var(--ink-100); color: var(--ink-500); font-weight: 500; }
-.admin-pill-google { background: rgba(66, 133, 244, 0.12); color: #1a73e8; }
-.admin-pill-github { background: var(--ink-100); color: var(--ink-900); }
-
-.admin-toggle {
-  background: var(--ink-100);
-  border: none;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-500);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.admin-toggle:hover:not(:disabled) { background: var(--ink-200); }
-.admin-toggle.is-on {
-  background: var(--gold);
-  color: var(--ink-900);
-}
-.admin-toggle.is-on:hover:not(:disabled) { background: var(--gold-deep); color: var(--cloud); }
-.admin-toggle:disabled { cursor: not-allowed; opacity: 0.5; }
-
-.btn-primary, .btn-ghost, .btn {
-  border: none;
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background-color 0.12s, color 0.12s;
-}
-.btn-primary { background: var(--skype); color: white; }
-.btn-primary:hover:not(:disabled) { background: var(--skype-deep); }
-.btn-primary:disabled { background: var(--ink-200); cursor: not-allowed; }
-.btn-ghost { background: transparent; color: var(--ink-700); border: 1px solid var(--ink-200); }
-.btn-ghost:hover:not(:disabled) { background: var(--ink-100); }
-.btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn { background: var(--skype); color: white; }
+.admin-pill-warn { background: color-mix(in oklch, var(--destructive) 12%, transparent); color: var(--destructive); }
+.admin-pill-soft { background: var(--muted); color: var(--muted-foreground); font-weight: 500; }
+.admin-pill-google { background: color-mix(in oklch, var(--primary) 12%, transparent); color: var(--primary); }
+.admin-pill-github { background: var(--muted); color: var(--foreground); }
 
 .admin-pager {
   display: flex; justify-content: space-between; align-items: center;
   margin-top: 12px; padding: 0 4px;
-  font-size: 12px; color: var(--ink-500);
+  font-size: 12px; color: var(--muted-foreground);
 }
 .admin-pager-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.admin-pager-num {
-  min-width: 30px; padding: 5px 9px; border-radius: 8px;
-  border: 1px solid var(--ink-100); background: var(--cloud);
-  color: var(--ink-500); font-size: 12px; font-weight: 600; cursor: pointer;
-}
-.admin-pager-num:hover:not(:disabled) { background: var(--ink-100); color: var(--ink-900); }
-.admin-pager-num.is-active { background: var(--ink-900); border-color: var(--ink-900); color: var(--cloud); }
-.admin-pager-num:disabled { opacity: 0.55; cursor: default; }
-.admin-pager-ellipsis { color: var(--ink-300); padding: 0 2px; align-self: center; }
+.admin-pager-ellipsis { color: var(--muted-foreground); padding: 0 2px; align-self: center; }
 
 .admin-banner-err {
-  background: var(--coral-soft);
-  color: var(--coral-deep);
+  background: color-mix(in oklch, var(--destructive) 12%, transparent);
+  color: var(--destructive);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 13px;
@@ -294,36 +207,13 @@
 .admin-setting {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 20px;
-  border: 1px solid var(--ink-100);
+  border: 1px solid var(--muted);
   border-radius: 10px;
-  background: var(--cloud);
+  background: var(--card);
   gap: 24px;
 }
 .admin-setting-title { font-weight: 600; margin-bottom: 4px; }
-.admin-setting-desc  { font-size: 13px; color: var(--ink-500); line-height: 1.5; max-width: 600px; }
-
-.admin-switch {
-  position: relative;
-  width: 44px; height: 24px;
-  border-radius: 999px;
-  background: var(--ink-200);
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.18s;
-  flex-shrink: 0;
-}
-.admin-switch:disabled { opacity: 0.5; cursor: not-allowed; }
-.admin-switch.is-on { background: var(--skype); }
-.admin-switch-thumb {
-  position: absolute;
-  top: 2px; left: 2px;
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  background: white;
-  transition: transform 0.18s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.admin-switch.is-on .admin-switch-thumb { transform: translateX(20px); }
+.admin-setting-desc  { font-size: 13px; color: var(--muted-foreground); line-height: 1.5; max-width: 600px; }
 
 /* ===== Mobile topbar (hidden on desktop) ===== */
 .admin-topbar { display: none; }
@@ -344,8 +234,8 @@
     align-items: center;
     gap: 12px;
     padding: 0 14px;
-    background: var(--cloud);
-    border-bottom: 1px solid var(--ink-100);
+    background: var(--card);
+    border-bottom: 1px solid var(--muted);
     height: 52px;
     position: sticky;
     top: 0;
@@ -361,9 +251,9 @@
   .admin-topbar-spacer { flex: 1; }
   .admin-topbar-burger {
     width: 36px; height: 36px;
-    border: 1px solid var(--ink-100);
+    border: 1px solid var(--muted);
     border-radius: 8px;
-    background: var(--paper);
+    background: var(--background);
     display: inline-flex;
     flex-direction: column;
     align-items: center;
@@ -375,7 +265,7 @@
   .admin-topbar-burger span {
     display: block;
     width: 18px; height: 2px;
-    background: var(--ink-700);
+    background: var(--foreground);
     border-radius: 2px;
   }
 
@@ -422,13 +312,13 @@
     align-items: stretch;
     gap: 6px;
     padding: 14px;
-    background: var(--cloud);
-    border: 1px solid var(--ink-100);
-    border-top: 1px solid var(--ink-100);
+    background: var(--card);
+    border: 1px solid var(--muted);
+    border-top: 1px solid var(--muted);
     border-radius: 12px;
     margin-bottom: 10px;
   }
-  .admin-row.admin-row-suspended { background: rgba(255, 122, 107, 0.06); border-color: rgba(255, 122, 107, 0.3); }
+  .admin-row.admin-row-suspended { background: color-mix(in oklch, var(--destructive) 6%, transparent); border-color: color-mix(in oklch, var(--destructive) 30%, transparent); }
   .admin-row > div[data-label] {
     display: flex;
     align-items: center;
@@ -441,7 +331,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--ink-500);
+    color: var(--muted-foreground);
     font-weight: 600;
     flex-shrink: 0;
   }
@@ -471,7 +361,6 @@
     align-items: stretch;
     gap: 12px;
   }
-  .admin-setting .admin-switch { align-self: flex-end; }
 
   .admin-pager {
     flex-direction: column;
@@ -480,7 +369,6 @@
     text-align: center;
   }
   .admin-pager-btns { justify-content: center; }
-  .btn-primary, .btn-ghost, .btn { padding: 8px 14px; }
 }
 
 @media (max-width: 480px) {

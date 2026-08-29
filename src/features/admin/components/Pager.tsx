@@ -3,6 +3,8 @@
  * offset terms (0-based). Renders first/last + a window around the current
  * page with ellipses, plus Prev/Next. Hidden when there's only one page.
  */
+import { Button } from '@/components/ui/button'
+
 export function Pager({ total, pageSize, offset, loading, onPage }: {
   total: number
   pageSize: number
@@ -38,21 +40,22 @@ export function Pager({ total, pageSize, offset, loading, onPage }: {
     <div className="admin-pager">
       <span>{offset + 1}–{Math.min(offset + pageSize, total)} 的 {total}</span>
       <div className="admin-pager-btns">
-        <button className="btn-ghost" disabled={current === 0 || loading} onClick={() => go(current - 1)}>上一页</button>
+        <Button variant="outline" size="sm" disabled={current === 0 || loading} onClick={() => go(current - 1)}>上一页</Button>
         {cells.map((c, i) => c === 'gap'
           ? <span key={`gap-${i}`} className="admin-pager-ellipsis">…</span>
           : (
-            <button
+            <Button
+              variant={c === current ? 'default' : 'ghost'}
+              size="icon-sm"
               key={c}
-              className={`admin-pager-num${c === current ? ' is-active' : ''}`}
               disabled={loading}
               aria-current={c === current ? 'page' : undefined}
               onClick={() => go(c)}
             >
               {c + 1}
-            </button>
+            </Button>
           ))}
-        <button className="btn-ghost" disabled={current >= pages - 1 || loading} onClick={() => go(current + 1)}>下一页</button>
+        <Button variant="outline" size="sm" disabled={current >= pages - 1 || loading} onClick={() => go(current + 1)}>下一页</Button>
       </div>
     </div>
   )

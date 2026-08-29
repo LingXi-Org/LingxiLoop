@@ -4,7 +4,11 @@
  * a fast double-click doesn't race the server.
  */
 import { useEffect, useState } from 'react'
-import { adminApi, type AdminSettings } from './api'
+import { Switch } from '@/components/ui/switch'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { adminApi } from '../api'
+import type { AdminSettings } from '../contracts'
 
 export function SettingsPage() {
   const [s, setS] = useState<AdminSettings | null>(null)
@@ -19,9 +23,23 @@ export function SettingsPage() {
 
   const flip = async (key: keyof AdminSettings) => {
     if (!s || busyKey) return
+    const nextValue = !s[key]
+    const label = key === 'waitlist_enabled' ? '候补名单' : '暂停注册'
+    if (!await confirmSensitiveAction({
+      title: `${nextValue ? '启用' : '停用'}${label}？`,
+      description: nextValue
+        ? `${label}将立即对新的注册请求生效。`
+        : `${label}将立即停止对新的注册请求生效。`,
+      confirmLabel: `${nextValue ? '启用' : '停用'}${label}`,
+      tone: 'warning',
+    })) return
     setBusyKey(key); setErr(null)
     try {
-      const next = await adminApi.setSettings({ [key]: !s[key] })
+      const next = await toastAction(adminApi.setSettings({ [key]: nextValue }), {
+        loading: `正在更新${label}`,
+        success: `${label}已${nextValue ? '启用' : '停用'}`,
+        error: `${label}更新失败`,
+      })
       setS(next)
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e))
@@ -70,14 +88,12 @@ function SettingRow({ title, desc, on, busy, disabled, onToggle }: {
         <div className="admin-setting-title">{title}</div>
         <div className="admin-setting-desc">{desc}</div>
       </div>
-      <button
-        className={`admin-switch${on ? ' is-on' : ''}`}
-        onClick={onToggle}
+      <Switch
+        checked={on}
+        onCheckedChange={onToggle}
         disabled={disabled || busy}
-        aria-pressed={on}
-      >
-        <span className="admin-switch-thumb" />
-      </button>
+        aria-label={title}
+      />
     </div>
   )
 }

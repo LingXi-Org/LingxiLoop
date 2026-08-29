@@ -4,29 +4,29 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--paper);
+  background: var(--background);
 }
 
 .lingxiloop-waitlist-card {
   max-width: 460px;
   text-align: center;
-  background: var(--cloud);
+  background: var(--card);
   padding: 40px 32px;
   border-radius: 16px;
-  border: 1px solid var(--ink-100);
+  border: 1px solid var(--muted);
 }
 
 .lingxiloop-waitlist-emoji { font-size: 48px; margin-bottom: 16px; }
 .lingxiloop-waitlist-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-.lingxiloop-waitlist-sub { font-size: 14px; color: var(--ink-500); line-height: 1.6; }
-.lingxiloop-waitlist-email { font-weight: 600; color: var(--ink-900); }
+.lingxiloop-waitlist-sub { font-size: 14px; color: var(--muted-foreground); line-height: 1.6; }
+.lingxiloop-waitlist-email { font-weight: 600; color: var(--foreground); }
 
 .lingxiloop-auth-state-button {
   border-radius: 8px;
   padding: 7px 14px;
-  border: 1px solid var(--ink-200);
+  border: 1px solid var(--border);
   background: transparent;
-  color: var(--ink-700);
+  color: var(--foreground);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -34,12 +34,12 @@
   transition: background-color 0.12s, color 0.12s;
 }
 
-.lingxiloop-auth-state-button:hover { background: var(--ink-100); }
+.lingxiloop-auth-state-button:hover { background: var(--muted); }
 
 .lingxiloop-suspended-reason {
   text-align: left;
-  background: var(--paper);
-  border: 1px solid var(--ink-100);
+  background: var(--background);
+  border: 1px solid var(--muted);
   border-radius: 10px;
   padding: 12px 14px;
   margin: 4px 0 0;
@@ -50,13 +50,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--ink-500);
+  color: var(--muted-foreground);
   margin-bottom: 4px;
 }
 
 .lingxiloop-suspended-reason-body {
   font-size: 14px;
-  color: var(--ink-900);
+  color: var(--foreground);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;

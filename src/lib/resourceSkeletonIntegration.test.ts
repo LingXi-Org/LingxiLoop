@@ -40,8 +40,8 @@ test('global resource surfaces render Skeletons instead of plain initial loading
     '../features/learning/components/LearningCenter.tsx',
     '../components/LinkPreview.tsx',
     '../components/messages/MessageBusinessParts.tsx',
-    '../admin/UsersPage.tsx',
-    '../admin/WaitlistPage.tsx',
+    '../features/admin/components/UsersPage.tsx',
+    '../features/admin/components/WaitlistPage.tsx',
   ]
   for (const path of surfaces) {
     const source = read(path)

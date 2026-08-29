@@ -1,17 +1,44 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import {
-  adminApi,
-  type EvalCaseDetail,
-  type EvalComparison,
-  type EvalCreateRunRequest,
-  type EvalDashboardPayload,
-  type EvalDashboardRun,
-  type EvalRunDetail,
-  type EvalStageName,
-  type EvalStageResult,
-  type EvalStageStatus,
-  type EvalTraceEvent,
-} from './api'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { Textarea } from '@/components/ui/textarea'
+import { toastAction } from '@/lib/actionToast'
+import { evalApi } from '../api'
+import { useEvalState } from '../state'
+import type {
+  EvalCaseDetail,
+  EvalComparison,
+  EvalCreateRunRequest,
+  EvalDashboardPayload,
+  EvalDashboardRun,
+  EvalRunDetail,
+  EvalStageName,
+  EvalStageResult,
+  EvalStageStatus,
+  EvalTraceEvent,
+} from '../contracts'
 
 const STAGES: Array<{ key: EvalStageName; label: string; short: string }> = [
   { key: 'ingest', label: '轨迹采集', short: '采集' },
@@ -106,49 +133,25 @@ function summaryPipeline(run: EvalDashboardRun): Array<{ stage: EvalStageName; s
 }
 
 export function EvalPage() {
-  const [data, setData] = useState<EvalDashboardPayload | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [sinceDays, setSinceDays] = useState(90)
-  const [suiteFilter, setSuiteFilter] = useState('')
-  const [refreshKey, setRefreshKey] = useState(0)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [detail, setDetail] = useState<EvalRunDetail | null>(null)
-  const [detailError, setDetailError] = useState<string | null>(null)
+  const data = useEvalState((state) => state.data)
+  const loading = useEvalState((state) => state.loading)
+  const refreshing = useEvalState((state) => state.refreshing)
+  const error = useEvalState((state) => state.error)
+  const sinceDays = useEvalState((state) => state.sinceDays)
+  const suiteFilter = useEvalState((state) => state.suiteFilter)
+  const selectedId = useEvalState((state) => state.selectedId)
+  const detail = useEvalState((state) => state.detail)
+  const detailError = useEvalState((state) => state.detailError)
+  const setSinceDays = useEvalState((state) => state.setSinceDays)
+  const setSuiteFilter = useEvalState((state) => state.setSuiteFilter)
+  const loadDashboard = useEvalState((state) => state.loadDashboard)
+  const refreshDashboard = useEvalState((state) => state.refreshDashboard)
+  const selectRun = useEvalState((state) => state.selectRun)
   const [createOpen, setCreateOpen] = useState(false)
 
   useEffect(() => {
-    let cancelled = false
-    if (!data) setLoading(true)
-    setError(null)
-    adminApi.evalDashboard({ sinceDays, suiteKey: suiteFilter || undefined, limit: 120 })
-      .then((payload) => { if (!cancelled) setData(payload) })
-      .catch((reason) => { if (!cancelled) setError(errorMessage(reason)) })
-      .finally(() => { if (!cancelled) { setLoading(false); setRefreshing(false) } })
-    return () => { cancelled = true }
-  }, [sinceDays, suiteFilter, refreshKey])
-
-  useEffect(() => {
-    if (!selectedId) { setDetail(null); setDetailError(null); return }
-    let cancelled = false
-    setDetail(null); setDetailError(null)
-    adminApi.evalRun(selectedId)
-      .then((payload) => { if (!cancelled) setDetail(payload) })
-      .catch((reason) => { if (!cancelled) setDetailError(errorMessage(reason)) })
-    return () => { cancelled = true }
-  }, [selectedId])
-
-  useEffect(() => {
-    if (!selectedId && !createOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      if (createOpen) setCreateOpen(false)
-      else setSelectedId(null)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedId, createOpen])
+    void loadDashboard()
+  }, [sinceDays, suiteFilter, loadDashboard])
 
   const suites = useMemo(() => {
     const names = new Map<string, string>()
@@ -157,8 +160,6 @@ export function EvalPage() {
   }, [data])
   const trendSuite = suiteFilter || data?.runs[0]?.suiteKey || ''
   const trendRuns = (data?.runs ?? []).filter((run) => run.suiteKey === trendSuite)
-
-  const refresh = () => { setRefreshing(true); setRefreshKey((value) => value + 1) }
 
   return (
     <div className="admin-page eval-page">
@@ -169,27 +170,35 @@ export function EvalPage() {
           <div className="admin-sub">回答、教学、RAG、工具、Approval、安全、任务与多 Agent 的确定性回归评测</div>
         </div>
         <div className="eval-head-actions">
-          <button className="btn-ghost" disabled={refreshing} onClick={refresh}>{refreshing ? '刷新中…' : '刷新'}</button>
-          <button className="btn-primary" onClick={() => setCreateOpen(true)}>运行评测</button>
+          <Button variant="outline" disabled={refreshing} onClick={() => void refreshDashboard()}>
+            {refreshing ? '刷新中…' : '刷新'}
+          </Button>
+          <Button onClick={() => setCreateOpen(true)}>运行评测</Button>
         </div>
       </header>
 
       <div className="eval-filterbar">
         <label>
           <span>套件</span>
-          <select className="admin-select admin-select-sm" value={suiteFilter} onChange={(event) => setSuiteFilter(event.target.value)}>
-            <option value="">全部套件</option>
-            {suites.map(([key, name]) => <option key={key} value={key}>{name}</option>)}
-          </select>
+          <Select value={suiteFilter || '__all__'} onValueChange={(value) => setSuiteFilter(value === '__all__' ? '' : value)}>
+            <SelectTrigger size="sm" className="min-w-36"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">全部套件</SelectItem>
+              {suites.map(([key, name]) => <SelectItem key={key} value={key}>{name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
         <label>
           <span>时间范围</span>
-          <select className="admin-select admin-select-sm" value={sinceDays} onChange={(event) => setSinceDays(Number(event.target.value))}>
-            <option value={7}>最近 7 天</option>
-            <option value={30}>最近 30 天</option>
-            <option value={90}>最近 90 天</option>
-            <option value={365}>最近 1 年</option>
-          </select>
+          <Select value={String(sinceDays)} onValueChange={(value) => setSinceDays(Number(value))}>
+            <SelectTrigger size="sm" className="min-w-32"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">最近 7 天</SelectItem>
+              <SelectItem value="30">最近 30 天</SelectItem>
+              <SelectItem value="90">最近 90 天</SelectItem>
+              <SelectItem value="365">最近 1 年</SelectItem>
+            </SelectContent>
+          </Select>
         </label>
         <div className="eval-filter-note">结果不可变 · 缺失阶段不会被当作通过</div>
       </div>
@@ -197,21 +206,21 @@ export function EvalPage() {
       {error && <div className="admin-banner-err">{error}</div>}
       {loading && !data ? <EvalSkeleton /> : data && <>
         <section className="eval-kpis" aria-label="评测概览">
-          <Kpi label="运行次数" value={String(data.summary.totalRuns)} note={`${data.summary.suites} 个评测套件`} tone="ink" />
-          <Kpi label="通过率" value={fmtPercent(data.summary.passRate)} note={`${data.summary.failedRuns} 次未通过`} tone={data.summary.failedRuns ? 'coral' : 'green'} />
-          <Kpi label="平均得分" value={fmtPercent(data.summary.averageScore, 1)} note="仅统计已观测检查项" tone="sky" />
+          <Kpi label="运行次数" value={String(data.summary.totalRuns)} note={`${data.summary.suites} 个评测套件`} tone="muted" />
+          <Kpi label="通过率" value={fmtPercent(data.summary.passRate)} note={`${data.summary.failedRuns} 次未通过`} tone={data.summary.failedRuns ? 'destructive' : 'primary'} />
+          <Kpi label="平均得分" value={fmtPercent(data.summary.averageScore, 1)} note="仅统计已观测检查项" tone="primary" />
           <Kpi label="最新变化" value={data.runs[0]?.scoreDelta === null || data.runs[0]?.scoreDelta === undefined
             ? '—' : `${data.runs[0].scoreDelta >= 0 ? '+' : ''}${(data.runs[0].scoreDelta * 100).toFixed(1)}pp`}
             note={data.runs[0] ? `${data.runs[0].suiteName} · ${data.runs[0].version}` : '暂无基线'}
-            tone={(data.runs[0]?.scoreDelta ?? 0) < 0 ? 'coral' : 'green'} />
+            tone={(data.runs[0]?.scoreDelta ?? 0) < 0 ? 'destructive' : 'primary'} />
           <Kpi label="平均延迟" value={data.summary.averageLatencyMs === null ? '—' : `${Math.round(data.summary.averageLatencyMs)}ms`}
-            note="真实 Agent 端到端耗时" tone="sky" />
+            note="真实 Agent 端到端耗时" tone="primary" />
           <Kpi label="Token" value={data.summary.totalTokens.toLocaleString('zh-CN')}
-            note={`${data.runs.reduce((sum, run) => sum + (run.summary.resources?.modelCalls ?? 0), 0)} 次模型调用`} tone="ink" />
+            note={`${data.runs.reduce((sum, run) => sum + (run.summary.resources?.modelCalls ?? 0), 0)} 次模型调用`} tone="muted" />
           <Kpi label="累计成本" value={`$${data.summary.totalCostUsd.toFixed(4)}`}
-            note="所选运行范围" tone="coral" />
+            note="所选运行范围" tone="destructive" />
           <Kpi label="工具调用" value={data.runs.reduce((sum, run) => sum + (run.summary.resources?.toolCalls ?? 0), 0).toLocaleString('zh-CN')}
-            note="Host Bridge 与兼容工具轨迹" tone="ink" />
+            note="Host Bridge 与兼容工具轨迹" tone="muted" />
         </section>
 
         <section className="eval-overview-grid">
@@ -233,21 +242,22 @@ export function EvalPage() {
           {data.runs.length === 0
             ? <EmptyEval onCreate={() => setCreateOpen(true)} />
             : <div className="eval-run-list">
-                {data.runs.map((run) => <RunCard key={run.id} run={run} onOpen={() => setSelectedId(run.id)} />)}
+                {data.runs.map((run) => <RunCard key={run.id} run={run} onOpen={() => void selectRun(run.id)} />)}
               </div>}
         </section>
       </>}
 
-      {selectedId && <RunDetailDrawer detail={detail} error={detailError} onClose={() => setSelectedId(null)} />}
-      {createOpen && <CreateRunDialog
-        onClose={() => setCreateOpen(false)}
-        onCreated={(id) => { setCreateOpen(false); refresh(); setSelectedId(id) }}
-      />}
+      {selectedId && <RunDetailDrawer detail={detail} error={detailError} onClose={() => void selectRun(null)} />}
+      <CreateRunDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={(id) => { setCreateOpen(false); void refreshDashboard(); void selectRun(id) }}
+      />
     </div>
   )
 }
 
-function Kpi({ label, value, note, tone }: { label: string; value: string; note: string; tone: 'ink' | 'sky' | 'green' | 'coral' }) {
+function Kpi({ label, value, note, tone }: { label: string; value: string; note: string; tone: 'muted' | 'primary' | 'destructive' }) {
   return <div className={`eval-kpi eval-kpi-${tone}`}>
     <div className="eval-kpi-label">{label}</div>
     <div className="eval-kpi-value">{value}</div>
@@ -331,7 +341,7 @@ function ComparisonPanel({ runs }: { runs: EvalDashboardRun[] }) {
     if (!baseId || !candidateId || baseId === candidateId) { setComparison(null); return }
     let cancelled = false
     setError(null)
-    adminApi.evalComparison(baseId, candidateId)
+    evalApi.comparison(baseId, candidateId)
       .then((payload) => { if (!cancelled) setComparison(payload) })
       .catch((reason) => { if (!cancelled) setError(errorMessage(reason)) })
     return () => { cancelled = true }
@@ -340,13 +350,23 @@ function ComparisonPanel({ runs }: { runs: EvalDashboardRun[] }) {
     <div className="eval-section-head"><div><h2>版本对比</h2><p>按 Commit、Prompt、模型、能力与 Case 定位提升或退化。</p></div></div>
     {comparable.length < 2 ? <div className="eval-compare-empty">同一套件至少需要两次运行才能比较。</div> : <>
       <div className="eval-compare-selectors">
-        <label><span>基线</span><select value={baseId} onChange={(event) => setBaseId(event.target.value)}>
-          {comparable.filter((run) => run.id !== candidateId).map((run) => <option value={run.id} key={run.id}>{run.version} · {fmtDate(run.createdAt)}</option>)}
-        </select></label>
+        <label><span>基线</span><Select value={baseId} onValueChange={setBaseId}>
+          <SelectTrigger><SelectValue placeholder="选择基线" /></SelectTrigger>
+          <SelectContent>
+            {comparable.filter((run) => run.id !== candidateId).map((run) => (
+              <SelectItem value={run.id} key={run.id}>{run.version} · {fmtDate(run.createdAt)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select></label>
         <span>→</span>
-        <label><span>候选</span><select value={candidateId} onChange={(event) => setCandidateId(event.target.value)}>
-          {comparable.filter((run) => run.id !== baseId).map((run) => <option value={run.id} key={run.id}>{run.version} · {fmtDate(run.createdAt)}</option>)}
-        </select></label>
+        <label><span>候选</span><Select value={candidateId} onValueChange={setCandidateId}>
+          <SelectTrigger><SelectValue placeholder="选择候选" /></SelectTrigger>
+          <SelectContent>
+            {comparable.filter((run) => run.id !== baseId).map((run) => (
+              <SelectItem value={run.id} key={run.id}>{run.version} · {fmtDate(run.createdAt)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select></label>
       </div>
       {error && <div className="admin-banner-err">{error}</div>}
       {comparison && <ComparisonResult comparison={comparison} />}
@@ -392,12 +412,12 @@ function MiniPipeline({ stages, compact = false, onSelect, selected }: {
       const meta = STAGES.find((item) => item.key === stage.stage) ?? { label: stage.stage, short: stage.stage }
       return <div className="eval-pipeline-step-wrap" key={stage.stage}>
         {index > 0 && <div className={`eval-pipeline-link eval-pipeline-link-${stage.status}`} />}
-        {onSelect ? <button className={`eval-pipeline-step eval-pipeline-step-${stage.status}${selected === stage.stage ? ' is-selected' : ''}`}
+        {onSelect ? <Button variant="ghost" className={`eval-pipeline-step eval-pipeline-step-${stage.status}${selected === stage.stage ? ' is-selected' : ''}`}
           title={`${meta.label}: ${fmtPercent(stage.score, 1)}`} onClick={() => onSelect(stage.stage)}>
           <span className="eval-pipeline-icon">{stage.status === 'pass' ? '✓' : stage.status === 'skipped' ? '–' : '!'}</span>
           <span className="eval-pipeline-label">{meta.short}</span>
           {!compact && <strong>{fmtPercent(stage.score)}</strong>}
-        </button> : <div className={`eval-pipeline-step eval-pipeline-step-${stage.status}`} title={`${meta.label}: ${fmtPercent(stage.score, 1)}`}>
+        </Button> : <div className={`eval-pipeline-step eval-pipeline-step-${stage.status}`} title={`${meta.label}: ${fmtPercent(stage.score, 1)}`}>
           <span className="eval-pipeline-icon">{stage.status === 'pass' ? '✓' : stage.status === 'skipped' ? '–' : '!'}</span>
           <span className="eval-pipeline-label">{meta.short}</span>
           {!compact && <strong>{fmtPercent(stage.score)}</strong>}
@@ -408,7 +428,7 @@ function MiniPipeline({ stages, compact = false, onSelect, selected }: {
 }
 
 function RunCard({ run, onOpen }: { run: EvalDashboardRun; onOpen: () => void }) {
-  return <button className="eval-run-card" onClick={onOpen}>
+  return <Button variant="ghost" className="eval-run-card" onClick={onOpen}>
     <div className="eval-run-card-top">
       <div className={`eval-run-state eval-run-state-${run.status}`}><span />{run.status === 'pass' ? '通过' : run.status === 'error' ? '异常' : '未通过'}</div>
       <div className="eval-run-title"><strong>{run.suiteName}</strong><span>{run.version}</span></div>
@@ -420,19 +440,22 @@ function RunCard({ run, onOpen }: { run: EvalDashboardRun; onOpen: () => void })
     </div>
     <MiniPipeline stages={summaryPipeline(run)} compact />
     <div className="eval-run-card-foot"><span>{run.passedCases}/{run.caseCount} 用例通过</span><span>{run.failedCases + run.errorCases ? `${run.failedCases + run.errorCases} 个失败用例待查看` : '所有门控正常'}</span><span className="eval-open-detail">查看详情 →</span></div>
-  </button>
+  </Button>
 }
 
 function RunDetailDrawer({ detail, error, onClose }: { detail: EvalRunDetail | null; error: string | null; onClose: () => void }) {
   const [caseId, setCaseId] = useState<string | null>(null)
   useEffect(() => { setCaseId(detail?.cases[0]?.id ?? null) }, [detail?.id])
   const selected = detail?.cases.find((item) => item.id === caseId) ?? detail?.cases[0]
-  return <div className="eval-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-    <aside className="eval-drawer" aria-label="评测运行详情">
-      <div className="eval-drawer-head">
-        <div><span>运行详情</span><h2>{detail?.suiteName ?? '正在加载…'}</h2>{detail && <p>{detail.version} · {fmtDate(detail.createdAt)}</p>}</div>
-        <button onClick={onClose} aria-label="关闭">×</button>
-      </div>
+  return <Sheet open onOpenChange={(open) => { if (!open) onClose() }}>
+    <SheetContent className="eval-drawer w-full overflow-y-auto sm:max-w-4xl" aria-label="评测运行详情">
+      <SheetHeader className="eval-drawer-head">
+        <div>
+          <span>运行详情</span>
+          <SheetTitle>{detail?.suiteName ?? '正在加载…'}</SheetTitle>
+          <SheetDescription>{detail ? `${detail.version} · ${fmtDate(detail.createdAt)}` : '正在加载评测运行详情'}</SheetDescription>
+        </div>
+      </SheetHeader>
       {error ? <div className="admin-banner-err">{error}</div> : !detail ? <EvalSkeleton compact /> : <>
         <div className="eval-detail-target"><span>Commit <code>{detail.target.commitSha?.slice(0, 12) ?? '—'}</code></span>
           <span>Prompt <code>{detail.target.promptVersion ?? '—'}</code></span><span>模型 <code>{detail.target.model ?? '—'}</code></span></div>
@@ -445,14 +468,14 @@ function RunDetailDrawer({ detail, error, onClose }: { detail: EvalRunDetail | n
           <div><span>模型 / IPython</span><strong>{detail.summary.resources.modelCalls} / {detail.summary.resources.ipythonCells}</strong></div>
         </div>
         <div className="eval-case-tabs">
-          {detail.cases.map((item) => <button key={item.id} className={item.id === selected?.id ? 'is-active' : ''} onClick={() => setCaseId(item.id)}>
+          {detail.cases.map((item) => <Button variant="ghost" key={item.id} className={item.id === selected?.id ? 'is-active' : ''} onClick={() => setCaseId(item.id)}>
             <span className={`eval-case-dot eval-case-dot-${item.status}`} />{item.name}<strong>{fmtPercent(item.score)}</strong>
-          </button>)}
+          </Button>)}
         </div>
         {selected && <CaseDetail item={selected} />}
       </>}
-    </aside>
-  </div>
+    </SheetContent>
+  </Sheet>
 }
 
 function CaseDetail({ item }: { item: EvalCaseDetail }) {
@@ -484,11 +507,11 @@ function TraceTimeline({ trace }: { trace: EvalTraceEvent[] }) {
     <div className="eval-trace-flow">
       {trace.map((event, index) => <div className="eval-trace-node-wrap" key={event.id}>
         {index > 0 && <i />}
-        <button className={`eval-trace-node eval-trace-node-${event.status}${selected?.id === event.id ? ' is-selected' : ''}`}
+        <Button variant="ghost" className={`eval-trace-node eval-trace-node-${event.status}${selected?.id === event.id ? ' is-selected' : ''}`}
           onClick={() => setSelectedId(event.id)} title={event.label}>
           <span>{traceIcon(event.kind)}</span><strong>{event.label}</strong>
           <small>{event.durationMs === undefined ? event.kind : formatDuration(event.durationMs)}</small>
-        </button>
+        </Button>
       </div>)}
     </div>
     {selected && <div className="eval-trace-inspector">
@@ -525,11 +548,11 @@ function prettyJson(value: unknown): string {
 function StageDisclosure({ stage, open, onToggle }: { stage: EvalStageResult; open: boolean; onToggle: () => void }) {
   const meta = STAGES.find((item) => item.key === stage.stage)
   return <div className={`eval-disclosure eval-disclosure-${stage.status}`}>
-    <button onClick={onToggle} aria-expanded={open}>
+    <Button variant="ghost" onClick={onToggle} aria-expanded={open}>
       <span className="eval-disclosure-icon">{stage.status === 'pass' ? '✓' : stage.status === 'skipped' ? '–' : '!'}</span>
       <span><strong>{meta?.label ?? stage.stage}</strong><small>{stage.failureReason ?? `${stage.findings.filter((item) => item.status === 'pass').length} 项检查通过`} · 真实耗时 {formatDuration(stage.durationMs)}</small></span>
       <span>{fmtPercent(stage.score, 1)}</span><b>{open ? '−' : '+'}</b>
-    </button>
+    </Button>
     {open && <div className="eval-findings">
       {stage.findings.map((item, index) => <div key={`${item.checkId}-${index}`} className={`eval-finding eval-finding-${item.status}`}>
         <span>{item.status === 'pass' ? '✓' : item.status === 'not_observed' ? '○' : '×'}</span>
@@ -542,38 +565,79 @@ function StageDisclosure({ stage, open, onToggle }: { stage: EvalStageResult; op
   </div>
 }
 
-function CreateRunDialog({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+function CreateRunDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onCreated: (id: string) => void
+}) {
   const [value, setValue] = useState(() => JSON.stringify(RUN_TEMPLATE, null, 2))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    if (!open) return
+    setValue(JSON.stringify(RUN_TEMPLATE, null, 2))
+    setError(null)
+  }, [open])
   const submit = async () => {
     setError(null)
     let parsed: EvalCreateRunRequest
     try { parsed = JSON.parse(value) as EvalCreateRunRequest } catch (reason) { setError(`JSON 格式错误：${errorMessage(reason)}`); return }
     setSubmitting(true)
     try {
-      const created = await adminApi.createEvalRun(parsed)
+      const created = await toastAction(evalApi.createRun(parsed), {
+        loading: '正在运行 Agent Eval',
+        success: 'Agent Eval 已完成并写入不可变报告',
+        error: 'Agent Eval 运行失败',
+      })
       onCreated(created.id)
     } catch (reason) {
       setError(errorMessage(reason))
     } finally { setSubmitting(false) }
   }
-  return <div className="eval-overlay eval-dialog-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget && !submitting) onClose() }}>
-    <div className="eval-dialog" role="dialog" aria-modal="true" aria-label="运行 Agent Eval">
-      <div className="eval-dialog-head"><div><span>NEW EVAL RUN</span><h2>运行评测套件</h2><p>粘贴观测 JSON，或填写 Agent OS runId 自动回填真实轨迹。</p></div><button onClick={onClose} disabled={submitting}>×</button></div>
+  return <Dialog open={open} onOpenChange={(next) => { if (!submitting) onOpenChange(next) }}>
+    <DialogContent
+      className="max-h-[calc(100vh-2rem)] overflow-hidden sm:max-w-4xl"
+      onEscapeKeyDown={(event) => { if (submitting) event.preventDefault() }}
+      onInteractOutside={(event) => { if (submitting) event.preventDefault() }}
+    >
+      <DialogHeader>
+        <span className="text-xs font-medium tracking-widest text-muted-foreground">NEW EVAL RUN</span>
+        <DialogTitle>运行评测套件</DialogTitle>
+        <DialogDescription>粘贴观测 JSON，或填写 Agent OS runId 自动回填真实轨迹。</DialogDescription>
+      </DialogHeader>
       <div className="eval-dialog-help"><span>支持的层</span>{DIMENSIONS.map((dimension) => <code key={dimension}>{dimension}</code>)}<em>期望值只进入评测器，不会发送给 Agent。</em></div>
       {error && <div className="admin-banner-err">{error}</div>}
-      <textarea className="eval-json-input" value={value} onChange={(event) => setValue(event.target.value)} spellCheck={false} aria-label="Eval run JSON" />
-      <div className="eval-dialog-foot"><span>最多 100 个用例；报告写入后不可变。</span><div><button className="btn-ghost" onClick={onClose} disabled={submitting}>取消</button><button className="btn-primary" onClick={() => void submit()} disabled={submitting}>{submitting ? '评测中…' : '开始运行'}</button></div></div>
-    </div>
-  </div>
+      <Textarea
+        className="eval-json-input min-h-80 resize-none font-mono"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        spellCheck={false}
+        aria-label="Eval run JSON"
+      />
+      <DialogFooter className="items-center sm:justify-between">
+        <span className="text-xs text-muted-foreground">最多 100 个用例；报告写入后不可变。</span>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>取消</Button>
+          <Button onClick={() => void submit()} disabled={submitting}>{submitting ? '评测中…' : '开始运行'}</Button>
+        </div>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 }
 
 function EmptyEval({ onCreate }: { onCreate: () => void }) {
-  return <div className="eval-empty"><div>◎</div><h3>还没有评测运行</h3><p>从一个 Agent OS runId 开始，系统会自动采集输入、模型、IPython、Host Bridge、Approval、Canvas 与最终回答轨迹。</p><button className="btn-primary" onClick={onCreate}>运行第一次评测</button></div>
+  return <div className="eval-empty"><div>◎</div><h3>还没有评测运行</h3><p>从一个 Agent OS runId 开始，系统会自动采集输入、模型、IPython、Host Bridge、Approval、Canvas 与最终回答轨迹。</p><Button onClick={onCreate}>运行第一次评测</Button></div>
 }
 
 function EvalSkeleton({ compact = false }: { compact?: boolean }) {
-  return <div className={`eval-skeleton${compact ? ' is-compact' : ''}`}><span /><span /><span /><span /></div>
+  return <ResourceSkeleton
+    variant={compact ? 'detail' : 'cards'}
+    count={compact ? 1 : 4}
+    label={compact ? '正在加载评测详情' : '正在加载评测运行'}
+  />
 }
-import './eval.css'
+import '../eval.css'

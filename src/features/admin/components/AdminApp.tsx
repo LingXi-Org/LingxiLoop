@@ -15,11 +15,12 @@
  * the basePath is `/admin`.
  */
 import { useEffect, useState } from 'react'
-import './admin.css'
+import '../admin.css'
 import { CloudLogo } from '@/components/Avatar'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/stores/auth'
-import { type AdminStats, adminApi } from './api'
-import { EvalPage } from './EvalPage'
+import { useAdminState } from '../state'
+import { EvalPage } from '@/features/eval'
 import { SettingsPage } from './SettingsPage'
 import { UsersPage } from './UsersPage'
 import { WaitlistPage } from './WaitlistPage'
@@ -54,9 +55,12 @@ function hrefFor(target: Route): string {
 export function AdminApp() {
   const user = useAuth((s) => s.user)
   const clear = useAuth((s) => s.clear)
+  const verified = useAdminState((state) => state.verification)
+  const stats = useAdminState((state) => state.stats)
+  const verify = useAdminState((state) => state.verify)
+  const refreshStats = useAdminState((state) => state.refreshStats)
+  const resetAdmin = useAdminState((state) => state.reset)
   const [route, setRoute] = useState<Route>(parseRoute)
-  const [verified, setVerified] = useState<'checking' | 'admin' | 'denied'>('checking')
-  const [stats, setStats] = useState<AdminStats | null>(null)
   // Mobile nav drawer. Auto-closes after each navigation so a phone
   // user doesn't have to dismiss it manually after picking a route.
   const [navOpen, setNavOpen] = useState(false)
@@ -74,17 +78,18 @@ export function AdminApp() {
   // refresh, AND so the failure mode (network / 403) shows a real error
   // instead of silently rendering an empty panel.
   useEffect(() => {
-    let cancelled = false
-    adminApi.me()
-      .then(() => { if (!cancelled) setVerified('admin') })
-      .catch(() => { if (!cancelled) setVerified('denied') })
-    return () => { cancelled = true }
-  }, [user?.id])
+    void verify()
+  }, [user?.id, verify])
 
   useEffect(() => {
     if (verified !== 'admin') return
-    void adminApi.stats().then(setStats).catch(() => { /* swallow */ })
-  }, [verified, route])
+    void refreshStats()
+  }, [verified, route, refreshStats])
+
+  const signOut = () => {
+    resetAdmin()
+    clear()
+  }
 
   if (verified === 'checking') {
     return <FullScreenNote tone="muted">正在检查管理员访问权限...</FullScreenNote>
@@ -96,9 +101,9 @@ export function AdminApp() {
         <div style={{ fontSize: 14, opacity: 0.7, marginBottom: 16 }}>
           登录身份 <code>{user?.email ?? '(unknown)'}</code>.
         </div>
-        <button className="btn" onClick={() => { clear() }}>
+        <Button onClick={signOut}>
           退出并切换帐户
-        </button>
+        </Button>
       </FullScreenNote>
     )
   }
@@ -106,9 +111,9 @@ export function AdminApp() {
   return (
     <div className={`admin-shell${navOpen ? ' nav-open' : ''}`}>
       <header className="admin-topbar">
-        <button className="admin-topbar-burger" onClick={() => setNavOpen((v) => !v)} aria-label="切换导航">
+        <Button variant="ghost" size="icon" className="admin-topbar-burger" onClick={() => setNavOpen((v) => !v)} aria-label="切换导航">
           <span /><span /><span />
-        </button>
+        </Button>
         <div className="admin-topbar-brand">
           <CloudLogo size={24} />
           <span>库莫拉管理员</span>
@@ -131,14 +136,14 @@ export function AdminApp() {
           <NavLink current={route} target="settings"      label="设置" />
         </nav>
         <div className="admin-sidebar-foot">
-          <button className="btn-ghost" onClick={() => { clear() }}>退出登录</button>
+          <Button variant="ghost" onClick={signOut}>退出登录</Button>
         </div>
       </aside>
       <main className="admin-main">
         {route === 'users'         && <UsersPage stats={stats} />}
         {route === 'waitlist'      && <WaitlistPage onChanged={() => {
           // Refresh stats so the sidebar badge clears immediately.
-          void adminApi.stats().then(setStats).catch(() => {})
+          void refreshStats()
         }} />}
         {route === 'eval'          && <EvalPage />}
         {route === 'settings'      && <SettingsPage />}
@@ -177,12 +182,8 @@ function NavLink({ current, target, label, badge, highlight }: {
 
 function FullScreenNote({ children, tone }: { children: React.ReactNode; tone: 'muted' | 'warn' }) {
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 24, color: tone === 'warn' ? 'var(--coral-deep)' : 'var(--ink-500)',
-      background: 'var(--paper)', fontFamily: 'inherit',
-    }}>
-      <div style={{ textAlign: 'center', maxWidth: 420 }}>{children}</div>
+    <div className={`flex min-h-screen items-center justify-center bg-background p-6 ${tone === 'warn' ? 'text-destructive' : 'text-muted-foreground'}`}>
+      <div className="max-w-[420px] text-center">{children}</div>
     </div>
   )
 }

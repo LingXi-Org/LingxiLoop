@@ -45,8 +45,9 @@ test('production code never uses native alert, confirm, or prompt', () => {
   assert.deepEqual(nativeDialogUsers, [], `native browser dialog found in: ${nativeDialogUsers.join(', ')}`)
 
   for (const path of [
-    '../admin/UsersPage.tsx',
-    '../admin/WaitlistPage.tsx',
+    '../features/admin/components/UsersPage.tsx',
+    '../features/admin/components/WaitlistPage.tsx',
+    '../features/admin/components/SettingsPage.tsx',
     '../features/canvas/components/CanvasView.tsx',
     '../features/documents/components/DocumentEditor.tsx',
     '../features/calendar/components/EventEditor.tsx',
@@ -72,6 +73,7 @@ test('approval decisions and user-triggered tasks publish through the global Toa
   assert.match(read('../features/calendar/components/EventEditor.tsx'), /toastAction\(runNow/)
   assert.match(read('../features/calendar/components/CalendarEventPeekContent.tsx'), /toastAction\(runEventNow/)
   assert.match(read('../features/email/components/EmailComposer.tsx'), /toastAction\(Promise\.resolve\(sendPromise\)/)
+  assert.match(read('../features/eval/components/EvalPage.tsx'), /toastAction\(evalApi\.createRun/)
   assert.match(read('../lib/actionToast.ts'), /toast\.promise\(/)
   assert.match(read('../lib/actionToast.ts'), /\.unwrap\(\)/)
 })

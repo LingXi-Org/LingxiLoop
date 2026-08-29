@@ -5,7 +5,10 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
-import { type AdminWaitlistEntry, adminApi } from './api'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { adminApi } from '../api'
+import type { AdminWaitlistEntry } from '../contracts'
 import { Pager } from './Pager'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
@@ -99,27 +102,23 @@ export function WaitlistPage({ onChanged }: { onChanged: () => void }) {
           <Input
             type="search"
             placeholder="电子邮件、姓名、提供商、注释"
-            className="admin-input"
+            className="min-w-56"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
       </header>
 
-      <div className="admin-tabs">
-        {(['pending', 'approved', 'rejected'] as Tab[]).map((t) => (
-          <button key={t}
-            className={`admin-tab${tab === t ? ' is-active' : ''}`}
-            onClick={() => setTab(t)}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>
+        <TabsList>
+          <TabsTrigger value="pending">待处理</TabsTrigger>
+          <TabsTrigger value="approved">已批准</TabsTrigger>
+          <TabsTrigger value="rejected">已拒绝</TabsTrigger>
+        </TabsList>
+        <TabsContent value={tab}>
+        {err && <div className="admin-banner-err">{err}</div>}
 
-      {err && <div className="admin-banner-err">{err}</div>}
-
-      <div className="admin-table">
+        <div className="admin-table">
         <div className="admin-thead admin-thead-waitlist">
           <div>用户</div>
           <div>提供商</div>
@@ -155,18 +154,18 @@ export function WaitlistPage({ onChanged }: { onChanged: () => void }) {
             <div className="admin-row-actions">
               {tab === 'pending' ? (
                 <>
-                  <button className="btn-primary"
+                  <Button
                     disabled={busyId === entry.id}
                     onClick={() => approve(entry)}
                   >
                     {busyId === entry.id ? '…' : "批准"}
-                  </button>
-                  <button className="btn-ghost"
+                  </Button>
+                  <Button variant="destructive"
                     disabled={busyId === entry.id}
                     onClick={() => reject(entry)}
                   >
                     拒绝
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <span className="admin-sub">{entry.status}</span>
@@ -174,9 +173,11 @@ export function WaitlistPage({ onChanged }: { onChanged: () => void }) {
             </div>
           </div>
         ))}
-      </div>
+        </div>
 
-      <Pager total={total} pageSize={PAGE} offset={offset} loading={loading} onPage={(o) => void load(o)} />
+        <Pager total={total} pageSize={PAGE} offset={offset} loading={loading} onPage={(o) => void load(o)} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

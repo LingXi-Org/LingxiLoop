@@ -3,8 +3,11 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/stores/auth'
-import { type AdminStats, type AdminUser, type AdminUserDetail, adminApi } from './api'
+import { adminApi } from '../api'
+import type { AdminStats, AdminUser, AdminUserDetail } from '../contracts'
 import { Pager } from './Pager'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { notifyAction, toastAction } from '@/lib/actionToast'
@@ -117,7 +120,7 @@ export function UsersPage({ stats }: { stats: AdminStats | null }) {
         </div>
         <div className="admin-filters">
           <Input
-            type="search" placeholder="电子邮件或姓名" className="admin-input"
+            type="search" placeholder="电子邮件或姓名" className="min-w-56"
             value={q} onChange={(e) => setQ(e.target.value)}
           />
         </div>
@@ -196,14 +199,16 @@ function UserRow({ u, expanded, onToggleExpand, onAdminToggle, onSuspendToggle, 
           </div>
         </div>
         <div onClick={(e) => e.stopPropagation()} data-label="Admin">
-          <button
-            className={`admin-toggle ${u.isAdmin ? 'is-on' : ''}`}
-            onClick={onAdminToggle}
+          <div className="flex items-center gap-2">
+          <Switch
+            checked={u.isAdmin}
+            onCheckedChange={onAdminToggle}
             disabled={isMe && u.isAdmin}
             title={isMe && u.isAdmin ? "无法删除您自己的管理员" : ''}
-          >
-            {u.isAdmin ? "管理员" : '—'}
-          </button>
+            aria-label={`${u.name} 管理员权限`}
+          />
+          <span className="text-xs text-muted-foreground">{u.isAdmin ? '管理员' : '普通用户'}</span>
+          </div>
         </div>
         <div data-label="Companies">{u.companyCount}</div>
         <div className="admin-cell-mono" data-label="Joined">{fmtDate(u.createdAt)}</div>
@@ -233,14 +238,14 @@ function UserRow({ u, expanded, onToggleExpand, onAdminToggle, onSuspendToggle, 
                 </div>
               )}
               <div className="admin-detail-actions">
-                <button
-                  className={`btn-ghost ${detail.suspended ? '' : 'admin-btn-danger'}`}
+                <Button
+                  variant={detail.suspended ? 'outline' : 'destructive'}
                   onClick={handleSuspendClick}
                   disabled={isMe && !detail.suspended}
                   title={isMe && !detail.suspended ? "你不能暂停自己" : ''}
                 >
                   {detail.suspended ? "取消暂停" : "暂停帐户"}
-                </button>
+                </Button>
               </div>
               <div className="admin-detail-companies">
                 <div className="admin-detail-label">公司（{detail.companies.length})</div>

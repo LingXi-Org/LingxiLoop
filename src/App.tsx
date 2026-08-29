@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
-import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
+import { consumeSuspendedFragment, SuspendedScreen } from '@/features/admin/components/SuspendedScreen'
+import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/features/admin/components/WaitlistConfirmedScreen'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
@@ -19,7 +19,7 @@ import { bootParticipants } from '@/features/agents/state'
 import { usePrefs } from '@/stores/preferences'
 import { useUiCommand } from '@/stores/uiCommands'
 
-const AdminApp = lazy(() => import('@/admin/AdminApp').then((module) => ({ default: module.AdminApp })))
+const AdminApp = lazy(() => import('@/features/admin/components/AdminApp').then((module) => ({ default: module.AdminApp })))
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
 
 function SurfaceFallback() {
