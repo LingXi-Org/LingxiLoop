@@ -57,6 +57,8 @@ const REQUIRED_V1_COLUMNS = [
   ['im_polls', 'published_revision'],
   ['im_polls', 'request_fingerprint'],
   ['learning_effects', 'effect_key'],
+  ['learning_effects', 'generation'],
+  ['learning_effects', 'queued_payload'],
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [

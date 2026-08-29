@@ -361,13 +361,14 @@ export class CompanyApplication {
     const tokenHash = this.infrastructure.hashInvitationToken(token)
     const result = await this.infrastructure.transaction(async (db) => {
       const invitation = await lockInvitation(db, tokenHash)
-      this.assertInvitationAcceptable(invitation, user.email)
+      if (!invitation) throw new CompanyApplicationError('not_found', 'invitation not found')
       if (!await lockCompany(db, invitation.company_id)) {
         throw new CompanyApplicationError('not_found', 'company not found')
       }
       if (await isCompanyMember(db, invitation.company_id, userId)) {
         return { invitation, alreadyMember: true }
       }
+      this.assertInvitationAcceptable(invitation, user.email)
       await insertAcceptedMembership(db, {
         invitation, userId, displayName: user.display_name, avatarUrl: user.avatar_url,
       })
@@ -377,11 +378,11 @@ export class CompanyApplication {
       })
       return { invitation, alreadyMember: false }
     })
-    if (!result.alreadyMember) {
-      await this.infrastructure.seedMemberDms({
-        companyId: result.invitation.company_id, memberId: userId,
-      })
-    }
+    // Idempotent on every acceptance attempt. A retry after the membership
+    // commit repairs onboarding even when a single-use invitation is consumed.
+    await this.infrastructure.seedMemberDms({
+      companyId: result.invitation.company_id, memberId: userId,
+    })
     const company = await companyMembershipSummary(this.db, result.invitation.company_id, userId)
     if (!company) throw new CompanyApplicationError('not_found', 'accepted company membership missing')
     return {

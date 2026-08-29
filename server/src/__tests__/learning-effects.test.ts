@@ -18,7 +18,7 @@ test('expired processing learning effects are reclaimed with a fresh fence', asy
   assert.match(sql, /FOR UPDATE SKIP LOCKED/)
 })
 
-test('re-enqueued learning effects supersede stale leases by tenant-scoped effect identity', async () => {
+test('re-enqueued learning effects queue the latest generation without stealing an active lease', async () => {
   let sql = ''
   let values: unknown[] | undefined
   const db: Queryable = {
@@ -33,8 +33,21 @@ test('re-enqueued learning effects supersede stale leases by tenant-scoped effec
     effectKey: 'user-a', payload: { userId: 'user-a' },
   })
   assert.match(sql, /ON CONFLICT\(company_id,course_id,kind,effect_key\) DO UPDATE/)
-  assert.match(sql, /id=EXCLUDED\.id[\s\S]*status='pending'[\s\S]*lease_token=NULL/)
+  assert.match(sql, /queued_payload=CASE WHEN learning_effects\.status='processing'/)
+  assert.match(sql, /status=CASE WHEN learning_effects\.status='processing' THEN learning_effects\.status/)
+  assert.match(sql, /lease_token=CASE WHEN learning_effects\.status='processing' THEN learning_effects\.lease_token/)
+  assert.doesNotMatch(sql, /id=EXCLUDED\.id/)
   assert.deepEqual(values?.slice(1, 5), ['co-a', 'course-a', 'member_access.revoke', 'user-a'])
+})
+
+test('effect completion is fenced and promotes a queued generation instead of completing it', async () => {
+  const repository = readFileSync(new URL('../modules/learning/effects-repository.ts', import.meta.url), 'utf8')
+  const worker = readFileSync(new URL('../modules/learning/worker.ts', import.meta.url), 'utf8')
+  assert.match(repository, /status=CASE WHEN queued_payload IS NULL THEN 'completed' ELSE 'pending' END/)
+  assert.match(repository, /WHERE id=\$1 AND lease_token=\$2 AND generation=\$3/)
+  assert.match(repository, /lease lost before completion/)
+  assert.match(worker, /claimLearningEffects\(pool, 1\)/)
+  assert.match(worker, /renewLearningEffectLease\(pool, effect\)/)
 })
 
 test('course creation writes its audit in the creation transaction', () => {

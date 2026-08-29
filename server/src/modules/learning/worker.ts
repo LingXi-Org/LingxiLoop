@@ -5,18 +5,30 @@ import {
   claimLearningEffects,
   completeLearningEffect,
   failLearningEffect,
+  renewLearningEffectLease,
 } from './effects-repository.js'
 
 export { startLearningNotificationScheduler } from './notifications.js'
 
 export async function runLearningEffects(): Promise<void> {
-  const effects = await claimLearningEffects(pool)
-  for (const effect of effects) {
+  for (let processed = 0; processed < 20; processed += 1) {
+    const [effect] = await claimLearningEffects(pool, 1)
+    if (!effect) return
+    let leaseLost = false
+    const heartbeat = setInterval(() => {
+      void renewLearningEffectLease(pool, effect)
+        .then((renewed) => { if (!renewed) leaseLost = true })
+        .catch(() => { /* completion remains the authoritative fence */ })
+    }, 30_000)
+    heartbeat.unref?.()
     try {
       await learningApplication.runEffect(effect)
+      if (leaseLost) throw new Error(`learning effect lease lost during execution: ${effect.id}:${effect.generation}`)
       await completeLearningEffect(pool, effect)
     } catch (error) {
       await failLearningEffect(pool, effect, error instanceof Error ? error.message : String(error))
+    } finally {
+      clearInterval(heartbeat)
     }
   }
 }

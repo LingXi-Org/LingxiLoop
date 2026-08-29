@@ -84,9 +84,12 @@ test('document mentions use a durable tenant-scoped delivery ledger', () => {
 
 test('learning side effects have fenced tenant-scoped reconciliation identities', () => {
   assert.match(schema, /CREATE TABLE public\.learning_effects \([\s\S]*?effect_key text DEFAULT 'singleton'::text NOT NULL/)
+  assert.match(schema, /queued_payload jsonb,[\s\S]*?generation integer DEFAULT 1 NOT NULL/)
+  assert.match(schema, /learning_effects_generation_check/)
   assert.match(schema, /learning_effects_effect_identity_key UNIQUE\(company_id, course_id, kind, effect_key\)/)
   assert.match(schema, /'member_access\.revoke'::text, 'member_onboarding\.seed'::text/)
   assert.match(bootstrap, /\['learning_effects', 'effect_key'\]/)
+  assert.match(bootstrap, /\['learning_effects', 'generation'\]/)
   assert.match(bootstrap, /\['learning_effects', 'learning_effects_effect_identity_key', 'u'\]/)
 })
 
