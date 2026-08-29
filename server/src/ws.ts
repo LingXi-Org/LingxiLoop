@@ -7,11 +7,9 @@ import {
   CH_BOARDS, CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
   CH_IM_READ_RECEIPTS,
   publish,
-  type DocMentionEvent,
 } from './redis.js'
-import { wukongClient } from './im/wukong.js'
 import { env } from './env.js'
-import { consumeWsTicket } from './auth.js'
+import { consumeWsTicket } from './modules/identity/public.js'
 import { pool } from './db/pool.js'
 import { setStatus } from './status.js'
 import {
@@ -19,8 +17,11 @@ import {
   unsubscribe as docUnsubscribe,
   applyLocalUpdate as docApplyLocalUpdate,
   broadcastAwareness as docBroadcastAwareness,
+  documentCollaborationCompanyFor,
+  notifyDocumentMention,
+  projectDocumentIds,
   type DocSubscriber,
-} from './documents/rooms.js'
+} from './modules/documents/public.js'
 import { randomUUID } from 'node:crypto'
 
 interface AuthedSocket {
@@ -53,7 +54,7 @@ export function disconnectUserFromCompany(userId: string, companyId: string): vo
   for (const client of clients) {
     if (client.userId !== userId || !client.companies.has(companyId)) continue
     client.companies.delete(companyId)
-    try { client.ws.close(4403, 'company membership removed') } catch { /* best effort */ }
+    client.ws.close(4403, 'company membership removed')
   }
 }
 
@@ -61,13 +62,13 @@ export function disconnectUserFromCompany(userId: string, companyId: string): vo
  * removed. The socket remains connected for the user's other workspaces, but
  * every room in the removed Project is detached before the API confirms the
  * removal, so an already-open tab cannot keep receiving document updates. */
-export async function revokeUserProjectDocumentSubscriptions(userId: string, projectId: string): Promise<void> {
-  const { rows } = await pool.query<{ id: string }>(
-    `SELECT id FROM documents WHERE project_id=$1`,
-    [projectId],
-  )
-  if (rows.length === 0) return
-  const projectDocuments = new Set(rows.map((row) => row.id))
+export async function revokeUserProjectDocumentSubscriptions(
+  userId: string,
+  companyId: string,
+  projectId: string,
+): Promise<void> {
+  const projectDocuments = new Set(await projectDocumentIds(companyId, projectId))
+  if (projectDocuments.size === 0) return
   for (const client of clients) {
     if (client.userId !== userId) continue
     for (const documentId of projectDocuments) {
@@ -101,8 +102,7 @@ const humanConnections = new Map<string, number>()
  *  Agents are handled by their own runtime lease + the GET /participants
  *  auto-expiry, so we leave their status alone here. */
 export async function resetHumanPresenceOnBoot(): Promise<void> {
-  try {
-    const { rows } = await pool.query<{ id: string; company_id: string; status_updated_at: Date }>(
+  const { rows } = await pool.query<{ id: string; company_id: string; status_updated_at: Date }>(
       `UPDATE participants
           SET status = 'resting',
               status_updated_at = NOW()
@@ -112,37 +112,14 @@ export async function resetHumanPresenceOnBoot(): Promise<void> {
     if (rows.length > 0) {
       console.log(`[ws] demoted ${rows.length} stale 'avail' human(s) to 'resting' on boot`)
     }
-    // Broadcast each transition so any already-connected clients in a
-    // multi-instance setup see the reset. We fire publishes in
-    // parallel and bound the whole batch with a hard timeout: the
-    // old code was a sequential `for await publish` that hung
-    // server.listen() at first deploy when the table was full of
-    // pre-feature stale rows. Failures are swallowed (Promise.race
-    // against a timeout) — at boot there are typically zero connected
-    // clients anyway, so the publish is best-effort.
-    if (rows.length === 0) return
-    const PUBLISH_BATCH_TIMEOUT_MS = 10_000
-    const broadcastAll = Promise.allSettled(rows.map((r) =>
-      publish(CH_STATUS, {
+  if (rows.length === 0) return
+  await Promise.allSettled(rows.map((r) => publish(CH_STATUS, {
         type: 'participants.status',
         participantId: r.id,
         status: 'resting',
         statusUpdatedAt: r.status_updated_at.toISOString(),
         companyId: r.company_id,
-      }),
-    ))
-    await Promise.race([
-      broadcastAll,
-      new Promise<void>((resolve) =>
-        setTimeout(() => {
-          console.warn(`[ws] resetHumanPresenceOnBoot publishes still pending after ${PUBLISH_BATCH_TIMEOUT_MS}ms — continuing without them`)
-          resolve()
-        }, PUBLISH_BATCH_TIMEOUT_MS),
-      ),
-    ])
-  } catch (e) {
-    console.warn('[ws] resetHumanPresenceOnBoot failed', e)
-  }
+  })))
 }
 
 async function onHumanConnect(userId: string): Promise<void> {
@@ -177,21 +154,7 @@ async function loadMemberships(userId: string): Promise<Set<string>> {
  *  Returns null when the doc doesn't exist OR the caller can't see it —
  *  same opaque posture the chat handlers use to avoid leaking existence. */
 async function docCompanyFor(documentId: string, userId: string, writable = false): Promise<string | null> {
-  const { rows } = await pool.query<{ company_id: string }>(
-    `SELECT d.company_id
-       FROM documents d
-       JOIN projects project ON project.id=d.project_id
-       JOIN company_members m ON m.company_id = d.company_id AND m.user_id = $2
-       LEFT JOIN courses course ON course.project_id=project.id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id=course.id AND course_member.user_id=$2
-      WHERE d.id = $1
-        AND (project.is_general=TRUE OR m.role IN ('owner','admin') OR course_member.user_id IS NOT NULL)
-        AND ($3::boolean=FALSE OR project.status='active')
-      LIMIT 1`,
-    [documentId, userId, writable],
-  )
-  return rows[0]?.company_id ?? null
+  return documentCollaborationCompanyFor(documentId, userId, writable)
 }
 
 function sendJson(ws: WebSocket, payload: unknown): void {
@@ -282,221 +245,11 @@ async function handleDocFrame(c: AuthedSocket, msg: Record<string, unknown>): Pr
     if (requestedIds.length === 0) return
     const companyId = await docCompanyFor(documentId, c.userId)
     if (!companyId) return
-    await processDocMention({
+    await notifyDocumentMention({
       documentId, companyId, mentionerId: c.userId, requestedIds,
     })
     return
   }
-}
-
-/** Persist + fan out one or more @-mentions inside a doc. Filters the
- *  caller-supplied list against tenant membership (so a stale client
- *  can't notify someone in a different company) and dedups against the
- *  most recent mention-row for the same (doc, mentioner, mentioned)
- *  tuple — we don't want a noisily editing user spamming the
- *  recipient. For mentioned AGENTS, also writes an `agent_log` row so
- *  the agent's history surfaces the mention. */
-async function processDocMention(args: {
-  documentId: string
-  companyId: string
-  mentionerId: string
-  requestedIds: string[]
-}): Promise<void> {
-  const { documentId, companyId, mentionerId, requestedIds } = args
-
-  // Resolve the mentioned ids that actually belong to this tenant.
-  // Match against `participants` (covers both humans + agents).
-  const { rows: validRows } = await pool.query<{ id: string; kind: string; name: string }>(
-    `SELECT participant.id,participant.kind,participant.name
-       FROM participants participant
-       JOIN documents document ON document.id=$3 AND document.company_id=participant.company_id
-       JOIN projects project ON project.id=document.project_id
-       LEFT JOIN courses course ON course.project_id=project.id
-       LEFT JOIN course_members course_member
-         ON course_member.course_id=course.id AND course_member.user_id=participant.id
-      WHERE participant.company_id=$1 AND participant.id=ANY($2::text[])
-        AND (participant.kind='agent' OR project.is_general=TRUE OR course_member.user_id IS NOT NULL)`,
-    [companyId, requestedIds, documentId],
-  )
-  if (validRows.length === 0) return
-
-  // Doc metadata for the broadcast payload — title + the conversation
-  // (if any) the doc is pinned to. The pinned convo is the preferred
-  // surface for the agent-wake chat ping; falling back to a 1:1 DM
-  // when the doc isn't pinned avoids dragging unrelated members into
-  // a chat noise loop.
-  const { rows: docRows } = await pool.query<{ title: string; conversation_id: string | null; project_id: string }>(
-    `SELECT title,conversation_id,project_id FROM documents WHERE id=$1 AND company_id=$2`,
-    [documentId, companyId],
-  )
-  const documentTitle = docRows[0]?.title ?? 'Untitled'
-  const pinnedConversationId = docRows[0]?.conversation_id ?? null
-
-  // Mentioner display name (humans live in `users`, agents in
-  // `participants`). Fall back to the id if neither has a name.
-  const mentionerName = await resolveDisplayName(mentionerId, companyId)
-
-  // Dedup against the last 60 seconds. We don't try for global
-  // uniqueness — that would falsely block legitimate re-mentions hours
-  // later — just enough to absorb the editor's per-keystroke chatter.
-  const freshIds: string[] = []
-  for (const row of validRows) {
-    const { rows: recent } = await pool.query<{ id: string }>(
-      `SELECT id FROM document_mentions
-        WHERE document_id = $1 AND mentioner_id = $2 AND mentioned_id = $3
-          AND created_at > NOW() - INTERVAL '60 seconds'
-        LIMIT 1`,
-      [documentId, mentionerId, row.id],
-    )
-    if (recent[0]) continue
-    freshIds.push(row.id)
-    await pool.query(
-      `INSERT INTO document_mentions
-        (id, document_id, company_id, mentioner_id, mentioned_id)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [`dm_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
-       documentId, companyId, mentionerId, row.id],
-    )
-    // Agents: drop an agent_log breadcrumb so the mention surfaces in
-    // `lingxiloop log`. Humans don't have this surface; the toast is
-    // their notification.
-    if (row.kind === 'agent') {
-      await pool.query(
-        `INSERT INTO agent_log (id, agent_id, company_id, kind, body, ref)
-         VALUES ($1, $2, $3, 'doc_mention', $4, $5::jsonb)`,
-        [
-          `log_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
-          row.id, companyId,
-          `${mentionerName} @-mentioned you in doc "${documentTitle}"`,
-          JSON.stringify({ documentId, mentionerId }),
-        ],
-      ).catch((e) => console.warn('[doc.mention] agent_log insert failed', e))
-
-      // Also post a WuKong text message authored by the mentioner so the
-      // post-commit webhook deterministically wakes the mentioned agent.
-      try {
-        await postDocMentionWake({
-          companyId,
-          mentionerId,
-          mentionerName,
-          agentId: row.id,
-          agentName: row.name,
-          documentId,
-          documentTitle,
-          pinnedConversationId,
-        })
-      } catch (e) {
-        console.warn(`[doc.mention] wake post for ${row.id} failed`, e)
-      }
-    }
-  }
-  if (freshIds.length === 0) return
-
-  const event: DocMentionEvent = {
-    type: 'doc.mention',
-    companyId,
-    documentId,
-    documentTitle,
-    mentionerId,
-    mentionerName,
-    mentionedIds: freshIds,
-    workspaceId: docRows[0]?.project_id,
-  }
-  await publish(CH_DOC_MENTION, event)
-}
-
-/** Post a WuKong message that wakes the mentioned agent with enough context
- *  to act. The post-commit webhook is the sole work-enqueue boundary.
- *
- *  Conversation selection — first match wins:
- *    1. The doc's pinned `conversation_id`, IF the agent is a member.
- *    2. An existing 1:1 DM between mentioner + agent.
- *    3. A freshly-created DM (idempotent — same shape as the auto-DM
- *       created on agent onboarding).
- *
- *  Body is plain prose — looks like a regular nudge to the agent's
- *  inbox parser, but carries the doc id verbatim so the agent's tool
- *  loop can call `lingxiloop doc read <id>` without guessing. */
-async function postDocMentionWake(args: {
-  companyId: string
-  mentionerId: string
-  mentionerName: string
-  agentId: string
-  agentName: string
-  documentId: string
-  documentTitle: string
-  pinnedConversationId: string | null
-}): Promise<void> {
-  const {
-    companyId, mentionerId, agentId, agentName,
-    documentId, documentTitle, pinnedConversationId,
-  } = args
-
-  // 1) Try the pinned WuKong channel if both mentioner + agent are members.
-  let conversationId: string | null = null
-  if (pinnedConversationId) {
-    const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
-      `SELECT profile FROM im_channel_bindings WHERE channel_id = $1 AND company_id = $2`,
-      [pinnedConversationId, companyId],
-    )
-    const members = Array.isArray(rows[0]?.profile.members) ? rows[0].profile.members.map(String) : []
-    if (members.includes(mentionerId) && members.includes(agentId)) {
-      conversationId = pinnedConversationId
-    }
-  }
-
-  // 2) Existing DM (same 2-member query the /conversations/direct
-  //    handler uses — single source of truth for the dedup shape).
-  if (!conversationId) {
-    const { rows } = await pool.query<{ channel_id: string }>(
-      `SELECT channel_id FROM im_channel_bindings
-        WHERE company_id = $3 AND profile->>'kind' = 'direct'
-          AND profile->'members' @> to_jsonb(ARRAY[$1::text])
-          AND profile->'members' @> to_jsonb(ARRAY[$2::text])
-          AND jsonb_array_length(profile->'members') = 2
-        ORDER BY updated_at DESC LIMIT 1`,
-      [mentionerId, agentId, companyId],
-    )
-    if (rows[0]) conversationId = rows[0].channel_id
-  }
-
-  // 3) Create one.
-  if (!conversationId) {
-    const fresh = `direct-${agentId}-${randomUUID().slice(0, 6)}`
-    const profile = { channelId: fresh, channelType: 2 as const, kind: 'direct' as const, title: agentName, members: [mentionerId, agentId] }
-    await wukongClient().upsertChannel(profile)
-    await pool.query(
-      `INSERT INTO im_channel_bindings (channel_id, company_id, profile)
-       VALUES ($1,$2,$3::jsonb) ON CONFLICT (channel_id) DO NOTHING`,
-      [fresh, companyId, JSON.stringify(profile)],
-    )
-    conversationId = fresh
-  }
-
-  const body = `@${agentId} heads-up — I mentioned you in the document "${documentTitle}". Please read document ${documentId}.`
-  await wukongClient().sendMessage(conversationId, 2, mentionerId, {
-    version: 1, kind: 'text', clientMsgNo: `doc-mention-${randomUUID()}`, body,
-    refs: { documentId }, data: { mentionedIds: [agentId], mentionAll: false },
-  })
-}
-
-/** Display-name lookup for the mention payload. Tries users first
- *  (humans live there), falls back to participants (covers agents and
- *  is also a backstop for humans that haven't logged in yet), finally
- *  defaults to the raw id. Best-effort — the renderer will fall back
- *  to its own participant store if the name comes back blank. */
-async function resolveDisplayName(id: string, companyId: string): Promise<string> {
-  try {
-    const { rows } = await pool.query<{ name: string }>(
-      `SELECT name FROM users WHERE id = $1 LIMIT 1`, [id],
-    )
-    if (rows[0]?.name) return rows[0].name
-  } catch { /* table may not exist in legacy schemas — fall through */ }
-  const { rows } = await pool.query<{ name: string }>(
-    `SELECT name FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
-    [id, companyId],
-  )
-  return rows[0]?.name ?? id
 }
 
 export function attachWebSocket(httpServer: Server) {
@@ -603,9 +356,9 @@ export function attachWebSocket(httpServer: Server) {
     if (channel === 'lingxiloop:doc.update' || channel === 'lingxiloop:doc.awareness') return
     if (channel === CH_DOC_ACCESS_REVOKED) {
       try {
-        const event = JSON.parse(payload) as { userId?: string; workspaceId?: string }
-        if (event.userId && event.workspaceId) {
-          await revokeUserProjectDocumentSubscriptions(event.userId, event.workspaceId)
+        const event = JSON.parse(payload) as { userId?: string; companyId?: string; workspaceId?: string }
+        if (event.userId && event.companyId && event.workspaceId) {
+          await revokeUserProjectDocumentSubscriptions(event.userId, event.companyId, event.workspaceId)
         }
       } catch { /* malformed — drop */ }
       return

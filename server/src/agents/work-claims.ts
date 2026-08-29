@@ -8,10 +8,11 @@ function key(scopeKey: string): string { return `lingxiloop:work-claims:${scopeK
 function field(taskType: WorkTaskType, subject: string): string { return `${taskType}::${normalizeWorkSubject(subject)}` }
 function parse(raw: string | null): WorklogEntry | null {
   if (!raw) return null
-  try {
-    const value = JSON.parse(raw) as WorklogEntry
-    return typeof value.agentId === 'string' && typeof value.startedAt === 'number' ? value : null
-  } catch { return null }
+  const value = JSON.parse(raw) as WorklogEntry
+  if (typeof value.agentId !== 'string' || typeof value.startedAt !== 'number') {
+    throw new Error('invalid work-claim state')
+  }
+  return value
 }
 
 export const workClaims = {
@@ -20,8 +21,7 @@ export const workClaims = {
     const redisKey = key(args.scopeKey)
     const redisField = field(args.taskType, args.subject)
     const entry: WorklogEntry = { agentId: args.agentId, taskType: args.taskType, subject: args.subject, startedAt: Date.now() }
-    try {
-      if (await redis.hsetnx(redisKey, redisField, JSON.stringify(entry))) {
+    if (await redis.hsetnx(redisKey, redisField, JSON.stringify(entry))) {
         await redis.expire(redisKey, ttl)
         return { accepted: true }
       }
@@ -33,15 +33,12 @@ export const workClaims = {
           return { accepted: true }
         }
       }
-      return { accepted: false, existing: existing ?? { ...entry, agentId: '<unknown>' } }
-    } catch { return { accepted: true } }
+    return { accepted: false, existing: existing ?? { ...entry, agentId: '<unknown>' } }
   },
   async releaseWork(args: { scopeKey: string; agentId: string; taskType: WorkTaskType; subject: string }): Promise<void> {
     const redisKey = key(args.scopeKey)
     const redisField = field(args.taskType, args.subject)
-    try {
-      const existing = parse(await redis.hget(redisKey, redisField))
-      if (existing?.agentId === args.agentId) await redis.hdel(redisKey, redisField)
-    } catch { /* TTL is the recovery path. */ }
+    const existing = parse(await redis.hget(redisKey, redisField))
+    if (existing?.agentId === args.agentId) await redis.hdel(redisKey, redisField)
   },
 }

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { consumeSuspendedFragment, SuspendedScreen } from '@/admin/SuspendedScreen'
-import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/admin/WaitlistConfirmedScreen'
+import { consumeSuspendedFragment, SuspendedScreen } from '@/features/admin/components/SuspendedScreen'
+import { consumeWaitlistFragment, WaitlistConfirmedScreen } from '@/features/admin/components/WaitlistConfirmedScreen'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
@@ -8,20 +8,18 @@ import {
   consumeInviteFromUrl,
   getPendingInvite,
   InviteAcceptScreen,
-} from '@/components/InviteAcceptScreen'
+} from '@/features/companies/components/InviteAcceptScreen'
 import { NotificationToasts } from '@/components/NotificationToasts'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
-import { seedMockIm } from '@/dev/mockIm'
-import { isMockImDevelopment } from '@/lib/devMode'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { bootConversations, isMuted, useConversations } from '@/stores/conversations'
-import { bootMessagesStream, useMessages } from '@/stores/messages'
-import { bootParticipants } from '@/stores/participants'
+import { bootConversations, isMuted, useConversations } from '@/features/conversations/store'
+import { bootMessagesStream, useMessages } from '@/features/chat/state/messages'
+import { bootParticipants } from '@/features/agents/state'
 import { usePrefs } from '@/stores/preferences'
 import { useUiCommand } from '@/stores/uiCommands'
 
-const AdminApp = lazy(() => import('@/admin/AdminApp').then((module) => ({ default: module.AdminApp })))
+const AdminApp = lazy(() => import('@/features/admin/components/AdminApp').then((module) => ({ default: module.AdminApp })))
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
 
 function SurfaceFallback() {
@@ -38,7 +36,7 @@ function isAdminContext(): boolean {
   return false
 }
 
-function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
+function AuthedApp() {
   const convoId = useApp((s) => s.selectedConversationId)
   const hasDockUnread = useConversations((s) =>
     s.list.some((c) => !isMuted(c) && (c.unread ?? 0) > 0),
@@ -49,12 +47,11 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
   const [updaterOpen, setUpdaterOpen] = useState(false)
   const uiCommand = useUiCommand()
   useEffect(() => {
-    if (mockMode) return
     bootMessagesStream()
     bootParticipants()
     bootConversations()
     void usePrefs.getState().load()
-  }, [mockMode])
+  }, [])
 
   useEffect(() => {
     window.lingxiloop?.dock?.setUnreadDot(hasDockUnread)
@@ -67,10 +64,9 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
   // Lazy-load messages when selected. The visible-range receipt path marks
   // only messages the user has actually seen.
   useEffect(() => {
-    if (mockMode) return
     if (!convoId || !selectedConvoExists) return
     void useMessages.getState().loadConversation(convoId)
-  }, [convoId, selectedConvoExists, mockMode])
+  }, [convoId, selectedConvoExists])
 
   useEffect(() => {
     if (uiCommand?.type === 'open-updater') setUpdaterOpen(true)
@@ -82,27 +78,16 @@ function AuthedApp({ mockMode = false }: { mockMode?: boolean }) {
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}
-      {!mockMode && <NotificationToasts />}
-      {!mockMode && <UpdateBanner onOpen={() => setUpdaterOpen(true)} />}
-      {!mockMode && <UpdaterDialog open={updaterOpen} onClose={() => setUpdaterOpen(false)} />}
+      <NotificationToasts />
+      <UpdateBanner onOpen={() => setUpdaterOpen(true)} />
+      <UpdaterDialog open={updaterOpen} onClose={() => setUpdaterOpen(false)} />
     </>
   )
 }
 
 export function App() {
-  // Local Vite development opens straight into a deterministic IM workspace.
-  // `?api=1` remains available for explicitly testing the real auth/API stack.
-  if (isMockImDevelopment() && !isAdminContext()) {
-    seedMockIm()
-    return (
-      <ErrorBoundary>
-        <AuthedApp mockMode />
-      </ErrorBoundary>
-    )
-  }
-
-  // Waitlist landing — handleCallback redirects here with `#waitlist=1`
-  // when a brand-new OAuth visitor hit the gate. Consume the fragment
+  // Waitlist landing — handleCallback redirects here with `?waitlist=1`
+  // when a brand-new OAuth visitor hit the gate. Consume the query marker
   // once so refresh doesn't pin them on this screen forever. State is
   // read-only — the screen's dismiss button calls location.reload() to
   // fall back into the normal flow.

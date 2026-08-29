@@ -3,7 +3,7 @@ import { useRef, useState } from 'react'
 import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from '@/components/ui/attachment'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { inferAttachmentPreview } from '@/lib/attachmentPreview'
-import { useKnowledgeSources } from '@/stores/knowledgeSources'
+import { useKnowledgeSources } from '@/features/knowledge/state'
 import { AttachmentViewer } from '../AttachmentViewer'
 import { ImageViewer } from '../ImageViewer'
 import { IFigma, IFile } from '../icons'
@@ -65,6 +65,6 @@ export function AttachmentCard() {
   </>
 
   return <Attachment state={state} data-message-surface="card" data-card-variant="interactive" className="mt-2 w-[min(580px,78vw)]">
-    {fileMedia}{metadata}<AttachmentTrigger render={<a href={attachment.url} download={attachment.name} target="_blank" rel="noopener noreferrer" aria-label={`下载 ${attachment.name}`} />} />
+    {fileMedia}{metadata}<AttachmentTrigger asChild><a href={attachment.url} download={attachment.name} target="_blank" rel="noopener noreferrer" aria-label={`下载 ${attachment.name}`} /></AttachmentTrigger>
   </Attachment>
 }

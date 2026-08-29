@@ -222,9 +222,8 @@ function OverflowIndicator({
   if (variant === "inline") {
     return (
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
-          render={(
-            <button
+        <PopoverTrigger asChild>
+          <button
             type="button"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -235,10 +234,9 @@ function OverflowIndicator({
               "hover:bg-muted",
               "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
             )}
-            />
-          )}
-        >
-          <span className="text-muted-foreground">+{count} more</span>
+          >
+            <span className="text-muted-foreground">+{count} more</span>
+          </button>
         </PopoverTrigger>
         <PopoverContent
           side="top"
@@ -246,7 +244,7 @@ function OverflowIndicator({
           className="w-80 p-1"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          initialFocus={false}
+          onOpenAutoFocus={(event) => event.preventDefault()}
         >
           {popoverContent}
         </PopoverContent>
@@ -257,9 +255,8 @@ function OverflowIndicator({
   // Default variant
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={(
-          <button
+      <PopoverTrigger asChild>
+        <button
           type="button"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
@@ -270,12 +267,11 @@ function OverflowIndicator({
             "hover:border-foreground/25 hover:bg-muted/50",
             "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
           )}
-          />
-        )}
-      >
-        <span className="text-muted-foreground text-sm tabular-nums">
-          +{count} more sources
-        </span>
+        >
+          <span className="text-muted-foreground text-sm tabular-nums">
+            +{count} more sources
+          </span>
+        </button>
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
@@ -283,7 +279,7 @@ function OverflowIndicator({
         className="w-80 p-1"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        initialFocus={false}
+        onOpenAutoFocus={(event) => event.preventDefault()}
       >
         {popoverContent}
       </PopoverContent>
@@ -371,9 +367,8 @@ function StackedCitations({
   return (
     <div ref={containerRef} onBlur={handleBlur} className="inline-flex">
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
-          render={(
-            <button
+        <PopoverTrigger asChild>
+          <button
             type="button"
             data-tool-ui-id={id}
             data-slot="citation-list"
@@ -393,9 +388,7 @@ function StackedCitations({
               "focus-visible:ring-ring focus-visible:ring-2",
               className,
             )}
-            />
-          )}
-        >
+          >
             <div className="flex items-center">
               {visibleCitations.map((citation, index) => {
                 const TypeIcon =
@@ -441,6 +434,7 @@ function StackedCitations({
             <span className="text-muted-foreground text-sm tabular-nums">
               {citations.length} source{citations.length !== 1 && "s"}
             </span>
+          </button>
         </PopoverTrigger>
         <PopoverContent
           side="bottom"
@@ -449,7 +443,7 @@ function StackedCitations({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onBlur={handleBlur}
-          initialFocus={false}
+          onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <div className="flex max-h-72 flex-col overflow-y-auto">
             {citations.map((citation) => (

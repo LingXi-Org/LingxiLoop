@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
+import { ZodError } from 'zod'
 import { env } from '../env.js'
 
 export class HttpError extends Error {
@@ -6,6 +7,13 @@ export class HttpError extends Error {
 }
 
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
+  if (err instanceof ZodError) {
+    res.status(400).json({
+      error: 'invalid request',
+      issues: err.issues.map((issue) => ({ path: issue.path, message: issue.message })),
+    })
+    return
+  }
   if (err instanceof HttpError) {
     res.status(err.status).json({ error: err.message })
     return

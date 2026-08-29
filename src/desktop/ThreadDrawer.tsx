@@ -13,10 +13,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ThreadPrimitive } from '@assistant-ui/react'
 import { useSurface } from '@/stores/surface'
-import { useMessages } from '@/stores/messages'
-import { useParticipants } from '@/stores/participants'
+import { useMessages } from '@/features/chat/state/messages'
+import { useParticipants } from '@/features/agents/state'
 import type { ApiMessage } from '@/api/contracts'
-import { messagesApi } from '@/api/messages'
+import { messagesApi } from '@/features/chat/api'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -47,6 +47,7 @@ function apiToMessage(m: ApiMessage): Message {
     kind: m.kind,
     body: m.body,
     at: m.at ?? '',
+    createdAt: m.createdAt,
     reactions: m.reactions && m.reactions.length > 0 ? m.reactions : undefined,
     tool: raw.tool ?? undefined,
     attachment: raw.attachment ?? undefined,

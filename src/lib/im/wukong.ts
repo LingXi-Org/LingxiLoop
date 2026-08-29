@@ -1,10 +1,7 @@
 import { getServerOrigin } from '@/api/core/http'
 import WKSDK, { MessageContent, type WKEvent, type Message as WKMessage } from 'wukongimjssdk'
 import { lingxiApiFetch } from '@/api/transport'
-import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
-import { isEmptyHistoryDetail, isInternalAgentStatus } from './historyErrors'
-
-export { isInternalAgentStatus } from './historyErrors'
+import { getActiveCompanyId, getAuthToken, getMeId } from '@/stores/auth'
 
 export const LINGXI_MESSAGE_CONTENT_TYPE = 1000
 
@@ -89,6 +86,11 @@ function fromSdk(message: WKMessage): ImEnvelope {
 export class LingxiImClient {
   private readonly sdk = WKSDK.shared()
   private started = false
+  private boundUid: string | null = null
+  private boundCompanyId: string | null = null
+  private boundAuthToken: string | null = null
+  private connectingKey: string | null = null
+  private connectPromise: Promise<void> | null = null
   private listeners = new Set<(message: ImEnvelope) => void>()
   private eventListeners = new Set<(event: ImStreamEvent) => void>()
   private workspaceChannels = new Set<string>()
@@ -125,18 +127,53 @@ export class LingxiImClient {
   }
 
   async connect(): Promise<void> {
-    if (this.started && this.sdk.connectManager.connected()) return
-    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/bootstrap`, { headers: authHeaders() })
-    if (!response.ok) throw new Error(`IM bootstrap failed: ${response.status}`)
-    const bootstrap = await response.json() as Bootstrap
-    this.sdk.config.uid = bootstrap.uid
-    this.sdk.config.token = bootstrap.token
-    this.sdk.config.addr = bootstrap.wsUrl
-    this.sdk.connect()
-    this.started = true
+    const uid = getMeId()
+    const companyId = getActiveCompanyId()
+    const authToken = getAuthToken()
+    if (!uid || !companyId || !authToken) throw new Error('IM connection requires an authenticated workspace')
+    const key = `${uid}:${companyId}:${authToken}`
+    if (this.started
+      && this.boundUid === uid
+      && this.boundCompanyId === companyId
+      && this.boundAuthToken === authToken) return
+    if (this.connectPromise) {
+      if (this.connectingKey === key) return this.connectPromise
+      try { await this.connectPromise } catch { /* A newer identity retries below. */ }
+      return this.connect()
+    }
+
+    this.connectingKey = key
+    this.connectPromise = (async () => {
+      if (this.started) this.sdk.disconnect()
+      const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/bootstrap`, { headers: authHeaders() })
+      if (!response.ok) throw new Error(`IM bootstrap failed: ${response.status}`)
+      const bootstrap = await response.json() as Bootstrap
+      if (getMeId() !== uid || getActiveCompanyId() !== companyId || getAuthToken() !== authToken) {
+        throw new Error('IM identity changed during bootstrap')
+      }
+      this.sdk.config.uid = bootstrap.uid
+      this.sdk.config.token = bootstrap.token
+      this.sdk.config.addr = bootstrap.wsUrl
+      this.sdk.connect()
+      this.started = true
+      this.boundUid = uid
+      this.boundCompanyId = companyId
+      this.boundAuthToken = authToken
+    })().finally(() => {
+      this.connectPromise = null
+      this.connectingKey = null
+    })
+    return this.connectPromise
   }
 
-  disconnect(): void { this.sdk.disconnect(); this.started = false }
+  disconnect(): void {
+    this.sdk.disconnect()
+    this.started = false
+    this.boundUid = null
+    this.boundCompanyId = null
+    this.boundAuthToken = null
+    this.workspaceChannels.clear()
+  }
 
   setWorkspaceChannels(channelIds: Iterable<string>): void {
     this.workspaceChannels = new Set(channelIds)
@@ -152,21 +189,12 @@ export class LingxiImClient {
     return () => this.eventListeners.delete(listener)
   }
 
-  async history(channelId: string, limit = 80): Promise<ImEnvelope[]> {
-    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?limit=${limit}`, { headers: authHeaders() })
-    if (!response.ok) {
-      const detail = await response.text().catch(() => '')
-      // Older API deployments can forward WuKongIM's empty-channel result as
-      // a 500. It is not a failed transcript: the channel simply has no sync
-      // state yet. Keep genuine server failures visible by requiring an
-      // explicit empty/not-found marker in the response body.
-      if (response.status === 500 && isEmptyHistoryDetail(detail)) return []
-      throw new Error(`IM history failed: ${response.status}`)
-    }
-    const messages = await response.json() as ImEnvelope[]
-    // Older servers persisted the ephemeral run-start preview. Hide those
-    // legacy transport records without suppressing genuine tool activity.
-    return messages.filter((message) => !isInternalAgentStatus(message))
+  async history(channelId: string, limit = 80, beforeMessageSeq = 0): Promise<ImEnvelope[]> {
+    const query = new URLSearchParams({ limit: String(limit) })
+    if (beforeMessageSeq > 0) query.set('beforeSeq', String(beforeMessageSeq))
+    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?${query}`, { headers: authHeaders() })
+    if (!response.ok) throw new Error(`IM history failed: ${response.status}`)
+    return response.json() as Promise<ImEnvelope[]>
   }
 
   async send(channelId: string, payload: LingxiMessageV1, channelType = 2): Promise<ImEnvelope> {

@@ -11,7 +11,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Toaster } from '@/components/ui/toast'
+import { Toaster } from '@/components/ui/sonner'
 import { Input } from '@/components/ui/input'
 import {
   subscribeSensitiveActions,

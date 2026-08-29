@@ -64,7 +64,7 @@ Content-Type: application/json
   "target": {
     "commitSha": "<git sha>",
     "promptVersion": "coach.v3",
-    "model": "deepseek-chat"
+    "model": "gpt-5-mini"
   },
   "passThreshold": 0.8,
   "cases": [

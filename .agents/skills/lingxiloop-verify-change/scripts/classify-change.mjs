@@ -23,6 +23,12 @@ function isEvalPath(path) {
     || path.startsWith('.agents/skills/lingxiloop-eval-change/')
 }
 
+function isExecutableEvalPath(path) {
+  return isEvalPath(path)
+    && !path.endsWith('.md')
+    && !path.startsWith('.agents/skills/')
+}
+
 function isCiSelectorPath(path) {
   return path.startsWith('.github/workflows/')
     || path.startsWith('.agents/skills/lingxiloop-verify-change/')
@@ -139,6 +145,7 @@ function addCheck(checks, command, tier, reason, cwd = '.') {
 export function buildCiPlan(inputPaths) {
   const paths = uniqueSorted(inputPaths)
   const evalChanged = paths.some(isEvalPath)
+  const evalRuntime = paths.some(isExecutableEvalPath)
   // Fail closed: only Eval-owned files can prove a focused Eval change.
   // Shared runtime, DB, API, package and CI files may contain unrelated
   // hunks, so path classification alone must never exempt their owning tests.
@@ -167,6 +174,7 @@ export function buildCiPlan(inputPaths) {
     || path === 'server/src/__integration__/_helpers.ts')
   return {
     eval: evalChanged,
+    evalRuntime,
     evalFocused,
     fullMatrix,
     evalPersistence,
@@ -196,33 +204,46 @@ function selectChecks(paths, categoryIds, escalations, ci) {
     addCheck(checks, 'npm run guard:brand', 'required', 'The brand guard scans every tracked and untracked text path.')
   }
 
-  if (has('eval')) {
-    addCheck(checks, 'npm run lint', 'required', 'Eval TypeScript, scripts, fixtures, and Dashboard changes must satisfy Biome.')
+  if (has('frontend') || has('server') || has('workers')) {
+    addCheck(checks, 'npm run guard:architecture', 'required', 'Production code must preserve vertical boundaries and single-authority paths.')
+  }
+
+  if (paths.some(isCiSelectorPath)) {
+    addCheck(
+      checks,
+      'node --test .agents/skills/lingxiloop-verify-change/scripts/classify-change.test.mjs',
+      'required',
+      'The verification selector changed; run its small deterministic contract suite locally.',
+    )
+  }
+
+  if (has('eval') && ci.evalRuntime) {
+    addCheck(checks, 'npm run lint:local', 'required', 'Changed Eval files must satisfy Biome without scanning the repository.')
     addCheck(checks, 'npm run server:typecheck', 'required', 'Eval contracts, runtime observation, and persistence are server typed.')
     addCheck(checks, 'npm run test:eval', 'required', 'Run focused evaluator, trace, harness, and deterministic Agent runtime tests.')
-    addCheck(checks, 'npm run eval:check', 'required', 'Run frozen-harness self-test plus the current Agent OS deterministic regression gate.')
+    addCheck(checks, 'npm run eval:check', 'ci-only', 'CI owns the full frozen-harness and Agent OS deterministic regression gate.')
     addCheck(checks, 'npm run guard:agent-os', 'required', 'The runtime Eval must continue through the strict Agent OS and IPython boundary.')
     if (ci.evalPersistence) {
-      addCheck(checks, 'npm run test:integration:eval', 'required', 'Eval persistence changed; run only its PostgreSQL/Redis integration contract.')
+      addCheck(checks, 'npm run test:integration:eval', 'ci-only', 'CI owns the PostgreSQL/Redis Eval persistence contract.')
     }
     if (ci.dashboard) {
       addCheck(checks, 'npm run typecheck', 'required', 'The Eval Dashboard is part of the frontend TypeScript graph.')
-      addCheck(checks, 'npm run build', 'required', 'Bundle the changed Eval Dashboard surface.')
+      addCheck(checks, 'npm run build', 'ci-only', 'CI bundles the changed Eval Dashboard surface.')
     }
   }
 
   if (has('frontend')) {
-    addCheck(checks, 'npm run lint', 'required', 'Frontend TypeScript and React changes must satisfy Biome.')
+    addCheck(checks, 'npm run lint:local', 'required', 'Changed frontend files must satisfy Biome without scanning the repository.')
     addCheck(checks, 'npm run typecheck', 'required', 'Frontend types or bundler inputs changed.')
-    if (!ci.evalFocused) addCheck(checks, 'npm test', 'recommended', 'Run owning frontend tests and shared unit coverage.')
-    if (!ci.evalFocused) addCheck(checks, 'npm run build', 'recommended', 'Confirm Vite can build the changed frontend surface.')
+    if (!ci.evalFocused) addCheck(checks, 'npm run test:local', 'required', 'Run changed, sibling, feature-owned, and frontend architecture unit tests only.')
+    if (!ci.evalFocused) addCheck(checks, 'npm run build', 'ci-only', 'CI confirms the complete Vite production bundle.')
   }
 
   if (has('server')) {
-    addCheck(checks, 'npm run lint', 'required', 'Server TypeScript and scripts must satisfy Biome.')
+    addCheck(checks, 'npm run lint:local', 'required', 'Changed server files must satisfy Biome without scanning the repository.')
     addCheck(checks, 'npm run server:typecheck', 'required', 'Server runtime types changed.')
-    if (!ci.evalFocused) addCheck(checks, 'npm test', 'required', 'Server behavior needs executable regression evidence.')
-    addCheck(checks, 'npm run guard:llm-tracked', 'recommended', 'Inspect whether the server diff can add or bypass a cloud LLM call.')
+    if (!ci.evalFocused) addCheck(checks, 'npm run test:local', 'required', 'Run changed, sibling, domain-owned, and server architecture unit tests only.')
+    addCheck(checks, 'npm run guard:llm-tracked', 'required', 'Server cloud LLM calls must remain behind the universal ledger boundary.')
   }
 
   if (has('agent-os-im-canvas')) {
@@ -230,8 +251,8 @@ function selectChecks(paths, categoryIds, escalations, ci) {
     addCheck(checks, 'npm run guard:llm-tracked', 'required', 'Agent runtime LLM usage must remain in the universal ledger.')
     addCheck(checks, 'npm run server:typecheck', 'required', 'Agent OS, IM, Canvas, or Host Bridge types changed.')
     if (!ci.evalFocused) {
-      addCheck(checks, 'npm test', 'required', 'Run Agent OS, IM, Canvas, and adjacent unit regressions.')
-      addCheck(checks, 'npm run test:integration', 'recommended', 'Durable work, IM, Canvas, and recovery contracts have integration coverage.')
+      addCheck(checks, 'npm run test:local', 'required', 'Run only the owning Agent OS, IM, Canvas, and architecture unit regressions.')
+      addCheck(checks, 'npm run test:integration', 'ci-only', 'CI owns durable work, IM, Canvas, and recovery integration coverage.')
       addCheck(checks, 'npm run mvp:ci:smoke', 'ci-only', 'The isolated Compose smoke proves WuKong, durable work, IPython, and final reply together.')
     }
   }
@@ -239,14 +260,14 @@ function selectChecks(paths, categoryIds, escalations, ci) {
   if (has('database-tenant')) {
     addCheck(checks, 'npm run server:typecheck', 'required', 'Persistence and tenant contracts are server typed.')
     if (!ci.evalFocused) {
-      addCheck(checks, 'npm test', 'required', 'Schema bootstrap and tenant behavior need unit regression evidence.')
-      addCheck(checks, 'npm run test:integration', 'required', 'Schema, transaction, authorization, and tenant isolation require PostgreSQL/Redis evidence.')
+      addCheck(checks, 'npm run test:local', 'required', 'Run only owning schema, tenant, and architecture unit regressions.')
+      addCheck(checks, 'npm run test:integration', 'ci-only', 'CI owns schema, transaction, authorization, and tenant-isolation integration evidence.')
     }
   }
 
   if (has('workers')) {
-    addCheck(checks, 'npm run lint', 'required', 'Worker TypeScript must satisfy repository lint rules.')
-    addCheck(checks, 'npm test', 'required', 'The root test runner owns worker tests.')
+    addCheck(checks, 'npm run lint:local', 'required', 'Changed Worker files must satisfy Biome without scanning the repository.')
+    addCheck(checks, 'npm run test:local', 'required', 'Run changed and worker-owned unit tests only.')
     const workerNames = new Set(paths
       .filter((path) => path.startsWith('workers/'))
       .map((path) => path.split('/')[1])
@@ -261,19 +282,17 @@ function selectChecks(paths, categoryIds, escalations, ci) {
       addCheck(
         checks,
         'python -m pytest -q tests/test_lingxiloop_native_scope.py',
-        'required',
-        'The vendored Open Notebook integration must preserve LingxiLoop-native scope isolation.',
+        'ci-only',
+        'CI verifies the vendored Open Notebook native-scope contract in its provisioned Python environment.',
         'third_party/open-notebook',
       )
     }
   }
 
   if (has('build-release')) {
-    addCheck(checks, 'npm run lint', 'required', 'Build and release scripts must satisfy repository lint rules.')
+    addCheck(checks, 'npm run lint:local', 'required', 'Changed build and release files must satisfy Biome without scanning the repository.')
     if (!ci.evalFocused) {
-      addCheck(checks, 'npm run typecheck', 'recommended', 'Build inputs may affect the frontend TypeScript graph.')
-      addCheck(checks, 'npm run server:typecheck', 'recommended', 'Server packaging inputs may affect the server TypeScript graph.')
-      addCheck(checks, 'npm run build', 'required', 'Build, dependency, or packaging inputs changed.')
+      addCheck(checks, 'npm run build', 'ci-only', 'CI owns full build, dependency, and packaging verification.')
     }
     if (paths.some((path) => ['VERSION', 'package.json', 'package-lock.json'].includes(path))) {
       addCheck(checks, 'npm run version:check', 'required', 'VERSION, package manifest, and lockfile must agree.')
@@ -287,18 +306,12 @@ function selectChecks(paths, categoryIds, escalations, ci) {
     }
   }
 
-  if (escalations.some(({ id }) => id === 'full-ci-approximation')) {
+  if (escalations.some(({ id }) => id === 'ci-full-matrix')) {
     for (const [command, reason] of [
-      ['npm run guard:agent-os', 'A high-risk diff warrants the architecture guard even when path classification is incomplete.'],
-      ['npm run guard:llm-tracked', 'A high-risk diff warrants a universal LLM ledger check.'],
-      ['npm run version:check', 'A high-risk diff warrants the version contract check.'],
-      ['npm run lint', 'A high-risk diff warrants repository lint.'],
-      ['npm run typecheck', 'A high-risk diff warrants frontend typecheck.'],
-      ['npm run server:typecheck', 'A high-risk diff warrants server typecheck.'],
-      ['npm test', 'A high-risk diff warrants the full local unit suite.'],
-      ['npm run build', 'A high-risk diff warrants a production frontend build.'],
-      ['npm run test:integration', 'Run the service-backed integration suite when PostgreSQL and Redis are available.'],
-    ]) addCheck(checks, command, 'recommended', reason)
+      ['npm test', 'CI runs the full unit suite for a high-risk or verification-selector diff.'],
+      ['npm run build', 'CI runs the production build for a high-risk or verification-selector diff.'],
+      ['npm run test:integration', 'CI runs the service-backed integration suite for a high-risk or verification-selector diff.'],
+    ]) addCheck(checks, command, 'ci-only', reason)
   }
 
   return [...checks.values()]
@@ -375,8 +388,8 @@ export function classifyPaths(inputPaths) {
 
   if (escalations.some(({ id }) => ['ci-selector-change', 'v1-schema-bootstrap', 'build-release-surface', 'vendored-source', 'cross-domain'].includes(id))) {
     escalations.push({
-      id: 'full-ci-approximation',
-      reason: 'Run the applicable full local quality matrix and leave unavailable platform/service checks to CI.',
+      id: 'ci-full-matrix',
+      reason: 'CI must run the exhaustive matrix; local verification remains limited to fast static checks and focused owning tests.',
       paths,
     })
   }
@@ -397,7 +410,7 @@ export function classifyPaths(inputPaths) {
 export function buildReport(paths, scope) {
   const classified = classifyPaths(paths)
   return {
-    version: 3,
+    version: 4,
     scope,
     paths: classified.paths,
     categories: classified.categories,

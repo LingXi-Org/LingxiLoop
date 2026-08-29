@@ -2,17 +2,25 @@
 @import "tw-animate-css";
 @import "tw-shimmer";
 @import "./typeset.css";
+@import "./chat.css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
 @config "../../tailwind.config.ts";
 
 :root {
-  --skype: #00A8F0;
-  --skype-deep: #0078C8;
-  --skype-ink: #003B6F;
-  --sky-50: #F2FAFE;
-  --sky-100: #E1F3FD;
-  --sky-200: #C2E6FB;
-  --sky-300: #8FD3F7;
-  --sky-glow: #4FC2F4;
+  /* Product aliases derive from the canonical shadcn/Luma tokens below.
+   * They remain only while feature CSS is migrated to semantic utilities. */
+  --skype: var(--primary);
+  --skype-deep: color-mix(in srgb, var(--primary) 82%, var(--foreground));
+  --skype-ink: var(--primary-foreground);
+  --sky-50: color-mix(in srgb, var(--primary) 6%, var(--background));
+  --sky-100: color-mix(in srgb, var(--primary) 12%, var(--background));
+  --sky-200: color-mix(in srgb, var(--primary) 22%, var(--background));
+  --sky-300: color-mix(in srgb, var(--primary) 68%, var(--background));
+  --sky-glow: color-mix(in srgb, var(--primary) 72%, var(--background));
   /* Aliases matching the Tailwind palette name ("sky2"). Components refer to
    * both spellings; an undefined var() here doesn't just miss a color — it
    * invalidates the whole shorthand it appears in (a `border: 1.5px solid
@@ -22,194 +30,99 @@
   --sky2-200: var(--sky-200);
   --sky2-300: var(--sky-300);
   --sky2-glow: var(--sky-glow);
-  --coral: #FF7A6B;
-  --coral-soft: #FFD9D2;
-  --coral-deep: #C84E3F;
-  --gold: #F4B740;
-  --gold-deep: #BA8418;
-  /* Whisper accent — a refined dusty iris / wisteria purple. Clearly
-   * reads as PURPLE (not gray, not candy), more sophisticated than the
-   * original electric #7C5CFF candy violet. Sits as the "private /
-   * intimate" register opposite the brand sky-blue and the warm coral. */
-  --whisper: #7B6CB0;
-  --whisper-deep: #4E3F8C;
-  --whisper-50: #F7F5FB;
-  --whisper-100: #ECE7F5;
-  --whisper-200: #D2C9E9;
-  --avail: #6EC56A;
-  --working: #F4B740;
-  /* Thinking = agent is mid-compute / about to act. Sits in the same
-   * purple register as --whisper but a touch more saturated so the small
-   * status dot still reads ACTIVE (not the muted resting gray). */
-  --thinking: #8A78C8;
-  --waiting: #FF7A6B;
-  --resting: #B8C4D1;
-  --ink-900: #0A1B2E;
-  --ink-700: #233A53;
-  --ink-500: #5B7186;
-  --ink-300: #94A8BC;
-  --ink-200: #C5D2DE;
-  --ink-100: #E5ECF2;
-  --paper: #FAFCFE;
-  --cloud: #FFFFFF;
+  --coral: var(--destructive);
+  --coral-soft: color-mix(in srgb, var(--destructive) 18%, var(--background));
+  --coral-deep: color-mix(in srgb, var(--destructive) 78%, var(--foreground));
+  --gold: var(--chart-1);
+  --gold-deep: color-mix(in srgb, var(--chart-1) 78%, var(--foreground));
+  --whisper: var(--secondary-foreground);
+  --whisper-deep: color-mix(in srgb, var(--secondary-foreground) 84%, var(--foreground));
+  --whisper-50: var(--secondary);
+  --whisper-100: color-mix(in srgb, var(--secondary) 78%, var(--foreground));
+  --whisper-200: var(--border);
+  --avail: var(--primary);
+  --working: var(--chart-1);
+  --thinking: var(--chart-2);
+  --waiting: var(--destructive);
+  --resting: var(--muted-foreground);
+  --ink-900: var(--foreground);
+  --ink-700: color-mix(in srgb, var(--foreground) 86%, transparent);
+  --ink-500: var(--muted-foreground);
+  --ink-300: color-mix(in srgb, var(--muted-foreground) 68%, transparent);
+  --ink-200: color-mix(in srgb, var(--border) 82%, transparent);
+  --ink-100: var(--border);
+  --paper: var(--background);
+  --cloud: var(--card);
 
-  --app: #F4F5F7;
-  --panel: #FFFFFF;
-  --card: #F3F4F6;
-  --raised: #EFF6FD;
-  --raised-hover: #E2EFFC;
-  --inset: #F3F6F9;
-  --hairline: rgba(15, 23, 42, 0.11);
-  --ink: #111318;
-  --ink-secondary: #626873;
-  --brand-im-blue: #1084fe;
-  --brand-bubble-surface: #EEEEEE;
-  --brand-bubble-border: rgba(20, 20, 20, 0.10);
-  --brand-bubble-ink: #141414;
-  --brand-bubble-muted: rgba(20, 20, 20, 0.60);
-  --bubble-agent: #F1F2F4;
-  --accent: #4682f6;
-  --accent-ink: #FFFFFF;
-  --selection-bg: rgba(59, 130, 246, 0.22);
-  --code-bg: #E9EBEF;
-  --canvas-bg: #EEF1F5;
-  --canvas-dot: rgba(70, 83, 104, 0.2);
-  --canvas-surface: #FFFFFF;
-  --canvas-surface-muted: #F7F8FA;
-  --canvas-frame-border: rgba(15, 23, 42, 0.12);
-  --canvas-shadow: 0 12px 35px rgba(25, 35, 60, 0.16);
-  --canvas-vignette: linear-gradient(180deg, transparent 55%, rgba(59, 130, 246, 0.08));
+  --app: var(--background);
+  --panel: var(--card);
+  --raised: var(--muted);
+  --raised-hover: var(--accent);
+  --inset: color-mix(in srgb, var(--muted) 60%, var(--background));
+  --hairline: var(--border);
+  --ink: var(--foreground);
+  --ink-secondary: var(--muted-foreground);
+  --brand-im-blue: var(--primary);
+  --brand-bubble-surface: var(--muted);
+  --brand-bubble-border: var(--border);
+  --brand-bubble-ink: var(--foreground);
+  --brand-bubble-muted: var(--muted-foreground);
+  --bubble-agent: var(--muted);
+  --accent-ink: var(--primary-foreground);
+  --selection-bg: color-mix(in srgb, var(--primary) 22%, transparent);
+  --code-bg: var(--muted);
+  --canvas-bg: var(--background);
+  --canvas-dot: color-mix(in srgb, var(--muted-foreground) 20%, transparent);
+  --canvas-surface: var(--card);
+  --canvas-surface-muted: var(--muted);
+  --canvas-frame-border: var(--border);
+  --canvas-shadow: 0 12px 35px color-mix(in srgb, var(--foreground) 16%, transparent);
+  --canvas-vignette: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--primary) 8%, transparent));
 
   /* Shared detail-panel theme contract. Component structure remains untouched;
      these aliases connect its semantic tokens to LingxiLoop's existing theme. */
-  --background: var(--panel);
-  --foreground: var(--ink);
-  --border: var(--hairline);
-  --input: var(--hairline);
-  --ring: var(--accent);
-  --primary: #4682f6;
-  --primary-foreground: var(--panel);
-  --secondary: var(--card);
-  --secondary-foreground: var(--ink);
-  --muted: var(--raised);
-  --muted-foreground: var(--ink-secondary);
-  --card-foreground: var(--ink);
-  --popover: var(--panel);
-  --popover-foreground: var(--ink);
-  --accent-foreground: #ffffff;
-  --destructive: #dc2626;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --ring: oklch(0.723 0.014 214.4);
+  --primary: oklch(0.527 0.154 150.069);
+  --primary-foreground: oklch(0.982 0.018 155.826);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --card-foreground: oklch(0.148 0.004 228.8);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.148 0.004 228.8);
+  --accent-foreground: oklch(0.218 0.008 223.9);
+  --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: #ffffff;
-  --sidebar: var(--panel);
-  --sidebar-foreground: var(--ink);
-  --sidebar-border: var(--hairline);
-  --sidebar-ring: var(--accent);
+  --sidebar: oklch(0.987 0.002 197.1);
+  --sidebar-foreground: oklch(0.148 0.004 228.8);
+  --sidebar-border: oklch(0.925 0.005 214.3);
+  --sidebar-ring: oklch(0.723 0.014 214.4);
 
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
   --safe-left: env(safe-area-inset-left);
   --safe-right: env(safe-area-inset-right);
-
-}
-
-:root[data-theme='dark'] {
-  --skype: #60A5FA;
-  --skype-deep: #93C5FD;
-  --skype-ink: #DBEAFE;
-  --sky-50: #182236;
-  --sky-100: #1D2B43;
-  --sky-200: #29466D;
-  --sky-300: #3B82F6;
-  --sky-glow: #60A5FA;
-  --coral-soft: #422824;
-  --coral-deep: #FDA197;
-  --gold-deep: #F4C760;
-  --whisper-50: #201D2D;
-  --whisper-100: #29243C;
-  --whisper-200: #453B65;
-  --whisper-deep: #C4B5FD;
-  --ink-900: #F4F5F7;
-  --ink-700: #E0E3E8;
-  --ink-500: #A7ADB7;
-  --ink-300: #777F8C;
-  --ink-200: #434A55;
-  --ink-100: #2C313A;
-  --paper: #111317;
-  --cloud: #17191E;
-  --resting: #68707D;
-
-  --app: #0D0F12;
-  --panel: #14161A;
-  --card: #1C1F25;
-  --raised: #202A36;
-  --raised-hover: #29384A;
-  --inset: #11161D;
-  --hairline: rgba(255, 255, 255, 0.1);
-  --ink: #F5F6F8;
-  --ink-secondary: #A7ADB7;
-  --brand-bubble-surface: #262626;
-  --brand-bubble-border: rgba(252, 252, 252, 0.10);
-  --brand-bubble-ink: #FCFCFC;
-  --brand-bubble-muted: rgba(252, 252, 252, 0.60);
-  --bubble-agent: #22252B;
-  --accent: #4682f6;
-  --accent-ink: #0B1220;
-  --selection-bg: rgba(96, 165, 250, 0.28);
-  --code-bg: #111318;
-  --canvas-bg: #101318;
-  --canvas-dot: rgba(190, 202, 222, 0.18);
-  --canvas-surface: #1A1D23;
-  --canvas-surface-muted: #20242B;
-  --canvas-frame-border: rgba(255, 255, 255, 0.12);
-  --canvas-shadow: 0 14px 38px rgba(0, 0, 0, 0.42);
-  --canvas-vignette: linear-gradient(180deg, transparent 48%, rgba(0, 0, 0, 0.38));
-}
-
-/* assistant-ui Elements and Tool UI semantic theme. */
-.assistant-ui-scope {
-  color-scheme: light;
+  --chart-1: oklch(0.837 0.128 66.29);
+  --chart-2: oklch(0.705 0.213 47.604);
+  --chart-3: oklch(0.646 0.222 41.116);
+  --chart-4: oklch(0.553 0.195 38.402);
+  --chart-5: oklch(0.47 0.157 37.304);
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #4682f6;
-  --primary-foreground: #ffffff;
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: #4682f6;
-  --accent-foreground: #ffffff;
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: #4682f6;
+  --sidebar-primary: oklch(0.627 0.194 149.214);
+  --sidebar-primary-foreground: oklch(0.982 0.018 155.826);
+  --sidebar-accent: oklch(0.963 0.002 197.1);
+  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+
 }
 
-:root[data-theme='dark'] .assistant-ui-scope {
-  color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: #4682f6;
-  --primary-foreground: #ffffff;
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: #4682f6;
-  --accent-foreground: #ffffff;
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: #4682f6;
+/* assistant-ui inherits the same canonical Luma tokens as every feature. */
+.assistant-ui-scope {
+  color-scheme: inherit;
 }
 
 :root[data-theme='dark'] .assistant-ui-scope .shimmer { --shimmer-color: white; }
@@ -580,37 +493,14 @@ body {
 }
 .auth-provider-lingxi:hover { background: #0068ad; }
 
-/* Desktop conversation shell — intentionally scoped so the existing mobile,
-   auth, admin and notification surfaces retain their current visual system. */
+/* Desktop product aliases are compositions of the canonical Luma tokens. */
 .desktop-openmaus {
-  --im-chat-surface: #070707;
-  --im-nav-surface: #111111;
-  --im-detail-surface: #111111;
-  --im-elevated-surface: #181818;
-  --im-divider: #fcfcfc0d;
-  --im-divider-weak: #fcfcfc1a;
-  --app: #070707;
-  --panel: #111111;
-  --card: #181818;
-  --raised: #7777772c;
-  --raised-hover: #7777774a;
-  --inset: #181818;
-  --hairline: var(--im-divider-weak);
-  --ink: #fcfcfc;
-  --ink-secondary: #fcfcfc99;
-  --accent: #4682f6;
-  --accent-ink: #ffffff;
-  --selection-bg: rgba(16, 132, 254, 0.28);
-  --bubble-agent: #262626;
-  --code-bg: #191919;
-  --background: var(--im-elevated-surface);
-  --foreground: var(--ink);
-  --border: var(--im-divider);
-  --input: var(--im-divider-weak);
-  --secondary: var(--raised);
-  --muted: var(--raised);
-  --sidebar: var(--im-detail-surface);
-  --sidebar-border: var(--im-divider);
+  --im-chat-surface: var(--background);
+  --im-nav-surface: var(--sidebar);
+  --im-detail-surface: var(--sidebar);
+  --im-elevated-surface: var(--card);
+  --im-divider: var(--border);
+  --im-divider-weak: color-mix(in srgb, var(--border) 72%, transparent);
 
   /* Canvas is part of the same product surface, not a separate blackboard.
      These semantic aliases follow the surrounding panel/card palette in both
@@ -623,67 +513,9 @@ body {
   --canvas-shadow: 0 16px 34px -24px color-mix(in srgb, var(--ink) 44%, transparent), 0 1px 2px color-mix(in srgb, var(--ink) 12%, transparent);
   --canvas-vignette: linear-gradient(180deg, transparent 70%, color-mix(in srgb, var(--accent) 5%, transparent));
 
-  /* Compatibility aliases used by the existing rich-message components. */
-  --skype: #1084fe;
-  --skype-deep: #459ffe;
-  --skype-ink: #dbeafe;
-  --sky-50: rgba(16, 132, 254, 0.08);
-  --sky-100: rgba(16, 132, 254, 0.14);
-  --sky-200: rgba(69, 159, 254, 0.24);
-  --sky-300: #459ffe;
-  --sky2-50: var(--sky-50);
-  --sky2-100: var(--sky-100);
-  --sky2-200: var(--sky-200);
-  --sky2-300: var(--sky-300);
-  --paper: #070707;
-  --cloud: #262626;
-  --ink-900: #fcfcfc;
-  --ink-700: rgba(252, 252, 252, 0.86);
-  --ink-500: rgba(252, 252, 252, 0.6);
-  --ink-300: rgba(252, 252, 252, 0.38);
-  --ink-200: rgba(252, 252, 252, 0.22);
-  --ink-100: rgba(252, 252, 252, 0.12);
-
   color: var(--ink);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-
-:root[data-theme='light'] .desktop-openmaus {
-  --im-chat-surface: #fcfcfc;
-  --im-nav-surface: #f7f7f7;
-  --im-detail-surface: #f7f7f7;
-  --im-elevated-surface: #fcfcfc;
-  --im-divider: #1414140d;
-  --im-divider-weak: #1414141a;
-  --app: #fcfcfc;
-  --panel: #f7f7f7;
-  --card: #eeeeee;
-  --raised: #77777717;
-  --raised-hover: #7777772c;
-  --inset: #f7f7f7;
-  --hairline: var(--im-divider-weak);
-  --ink: #141414;
-  --ink-secondary: #14141499;
-  --accent-ink: #ffffff;
-  --selection-bg: rgba(16, 132, 254, 0.2);
-  --bubble-agent: #eeeeee;
-  --code-bg: #eeeeee;
-  --paper: #fcfcfc;
-  --cloud: #f7f7f7;
-  --ink-900: #141414;
-  --ink-700: #141414d1;
-  --ink-500: #14141499;
-  --ink-300: #14141466;
-  --ink-200: #14141426;
-  --ink-100: #1414141a;
-  --background: var(--im-elevated-surface);
-  --border: var(--im-divider);
-  --input: var(--im-divider-weak);
-  --secondary: var(--raised);
-  --muted: var(--raised);
-  --sidebar: var(--im-detail-surface);
-  --sidebar-border: var(--im-divider);
 }
 
 .desktop-openmaus .chat-surface {
@@ -1353,107 +1185,6 @@ body {
   to   { transform: scaleX(0); }
 }
 
-/* ChatPane empty-state loader — three breathing dots that lift and fade
- * in sequence. The stagger lives in inline animation-delay so each dot
- * shares the same keyframes but offsets its phase. */
-@keyframes lingxiloop-pulse-dot {
-  0%, 80%, 100% { transform: translateY(0) scale(0.85); opacity: 0.35; }
-  40%           { transform: translateY(-6px) scale(1); opacity: 1; }
-}
-
-/* Soft halo around the loader — slow, ambient pulse so the empty state
- * doesn't feel inert while the dots animate above it. */
-@keyframes lingxiloop-halo {
-  0%, 100% { transform: scale(0.9); opacity: 0.35; }
-  50%      { transform: scale(1.05); opacity: 0.7; }
-}
-
-/* Empty-state container — gentle fade + lift on mount so loading/error
- * panels don't pop in jarringly when a conversation is first opened. */
-@keyframes lingxiloop-empty-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Empty-conversation hero — gentle Y wave for the floating chat bubbles.
- * Three bubbles share the same keyframes but offset their phase via
- * animation-delay so the cluster reads as a "drifting cloud" rather than
- * a synchronized pulse. Translation is small (4-5px) on purpose — at
- * larger amplitudes it starts feeling like a loader. */
-@keyframes lingxiloop-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-5px); }
-}
-
-/* Cute-cloud bob for the empty-state hero — a four-stop circuit that
- * mixes a gentle X sway with a Y lift so the cumulus puff reads as
- * WEIGHTLESS (lazily floating in a breeze), not as a metronome. The
- * rotation is tiny on purpose — anything past ~1.5° starts looking like
- * a logo animation. */
-@keyframes lingxiloop-cloud-bob {
-  0%, 100% { transform: translate(0, 0)     rotate(0deg); }
-  25%      { transform: translate(2px, -4px) rotate(0.6deg); }
-  50%      { transform: translate(0, -6px)   rotate(0deg); }
-  75%      { transform: translate(-2px, -3px) rotate(-0.6deg); }
-}
-.lingxiloop-cloud-float {
-  animation: lingxiloop-cloud-bob 9.5s ease-in-out infinite;
-  transform-origin: center 68%;
-  will-change: transform;
-}
-
-/* Hover reaction for the empty-state cloud button — pure CSS so it
- * stays smooth even when the React tree isn't repainting. JUST scale,
- * no rotation: rotation was reading as "the cloud shakes its head"
- * instead of "the cloud notices you and puffs up a tiny bit". Pure
- * uniform scale is the cleaner / more elegant signal. Amplitude kept
- * tiny (1.03 ≈ +7px at 240 px wide) so the motion is FELT but never
- * looks like a big jump. */
-.lingxiloop-cloud-poke:hover  { transform: scale(1.03); }
-.lingxiloop-cloud-poke:active { transform: scale(0.985); }
-
-/* Eye-blink keyframe — asymmetric timing modeled on real eyelid
- * biology: fast snap shut, brief hold closed, slower open. A symmetric
- * fade (the previous 60 ms ease-out in both directions) reads as a
- * "flash" — both ends moving at the same speed feels like a strobe.
- * Real blinks have the eyelid accelerating shut and decelerating open,
- * with the closed phase being the briefest part. 220 ms total = 62 ms
- * close, 53 ms held closed, 105 ms open. */
-@keyframes lingxiloop-eye-blink {
-  0%   { opacity: 0; }     /* eyes open (rest) */
-  28%  { opacity: 1; }     /* fully closed (fast snap shut) */
-  52%  { opacity: 1; }     /* briefly held closed */
-  100% { opacity: 0; }     /* eyes back open (slower opening phase) */
-}
-
-/* Click "pop" keyframe — happy spring-jump for the cloud, retuned for
- * a softer, jellier (Q 弹) feel. Two changes from the previous version:
- *   (1) amplitudes halved across the board (translateY -7 instead of
- *       -14, scale 1.04 instead of 1.08, rotate ±2° instead of ±5°)
- *       so the motion is FELT but not BIG.
- *   (2) added an extra micro-rebound frame around 82% (tiny lift +
- *       1.005 scale + 0.2° tilt) before the rest pose. This is the
- *       damped second oscillation that turns a single-bounce into the
- *       jelly-wobble that reads as "Q 弹". `both` fill-mode in the
- *       inline animation prop holds the final state through the React
- *       state-clear window so it doesn't snap mid-frame. */
-@keyframes lingxiloop-cloud-pop {
-  0%   { transform: translateY(0)     scale(1)     rotate(0deg); }
-  18%  { transform: translateY(-7px)  scale(1.04)  rotate(-2deg); }   /* apex */
-  40%  { transform: translateY(-2px)  scale(1.02)  rotate(1deg); }
-  62%  { transform: translateY(2px)   scale(0.985) rotate(-0.5deg); } /* squash */
-  82%  { transform: translateY(-1px)  scale(1.005) rotate(0.2deg); }  /* micro-rebound */
-  100% { transform: translateY(0)     scale(1)     rotate(0deg); }
-}
-
-/* Sparkle twinkle for the gold ★ accents on the empty-state hero —
- * shrinks + dims at the trough so the stars feel like they're "breathing"
- * rather than flashing. Paired with a soft text-shadow on the element. */
-@keyframes lingxiloop-twinkle {
-  0%, 100% { transform: scale(1);   opacity: 0.95; }
-  50%      { transform: scale(1.25); opacity: 0.45; }
-}
-
 /* Click-on-quote → scroll + brief flash on the jumped-to bubble. The
  * LingxiImMessage carries `id="m-<id>"`; QuoteCard adds this class for
  * ~1.4s after a jump so the user can spot which message was quoted. */
@@ -1604,546 +1335,97 @@ input, textarea { font: inherit; }
   color: var(--ink-900);
 }
 
-/* OpenMausBot-inspired conversation skin. These classes deliberately sit on
- * existing LingxiLoop components: message schema, parsers and send flow stay
- * untouched while semantic surfaces switch cleanly between light and dark. */
-.chat-surface { background: var(--im-chat-surface, var(--panel)); color: var(--ink); }
-.chat-composer-shell { background: var(--panel); border-color: var(--hairline); }
+.dark {
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --primary: oklch(0.448 0.119 151.328);
+  --primary-foreground: oklch(0.982 0.018 155.826);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.275 0.011 216.9);
+  --accent-foreground: oklch(0.987 0.002 197.1);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.56 0.021 213.5);
+  --chart-1: oklch(0.837 0.128 66.29);
+  --chart-2: oklch(0.705 0.213 47.604);
+  --chart-3: oklch(0.646 0.222 41.116);
+  --chart-4: oklch(0.553 0.195 38.402);
+  --chart-5: oklch(0.47 0.157 37.304);
+  --sidebar: oklch(0.218 0.008 223.9);
+  --sidebar-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-primary: oklch(0.723 0.219 149.579);
+  --sidebar-primary-foreground: oklch(0.982 0.018 155.826);
+  --sidebar-accent: oklch(0.275 0.011 216.9);
+  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
 
-/* ============== Shared IM shell ============== */
-.desktop-im-grid {
-  position: relative;
-  background: var(--app);
-}
-
-/* Grok-inspired transcript runs: keep identity once per short author run and
-   visually seam only the inner bubble corners. Specialized cards remain
-   standalone and never receive these modifiers. */
-.message-bubble-agent.message-bubble-continued-from { border-top-left-radius: 6px; }
-.message-bubble-agent.message-bubble-continued-to { border-bottom-left-radius: 6px; }
-
-::highlight(lingxi-find-match) {
-  color: inherit;
-  background: color-mix(in srgb, var(--gold) 32%, transparent);
-}
-::highlight(lingxi-find-current) {
-  color: inherit;
-  background: color-mix(in srgb, var(--gold) 72%, transparent);
-  text-decoration: underline 1px color-mix(in srgb, var(--ink-900) 55%, transparent);
-}
-.find-row-match { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 46%, transparent); }
-.find-row-current { box-shadow: inset 0 0 0 2px var(--gold), 0 10px 30px -24px var(--gold); }
-[data-find-highlights="true"] .find-row-match,
-[data-find-highlights="true"] .find-row-current { box-shadow: none; }
-.desktop-detail-panel-host {
-  height: 100%;
-  background: var(--im-detail-surface);
-  color: var(--ink);
-}
-/* Grok's workspace chrome is a deliberately separate surface from the
-   transcript: base for chat, subtle for chrome, elevated for preview content.
-   Keep the detail-panel structure untouched and apply that hierarchy only to
-   the group workspace mounted inside it. */
-.desktop-openmaus [data-context-layout='flat-stacked'] {
-  background: var(--im-detail-surface);
-  color: var(--ink);
-}
-.desktop-openmaus [data-context-layout='flat-stacked'] > div {
-  background: var(--im-detail-surface);
-}
-.desktop-openmaus [data-context-layout='flat-stacked'] > div:last-child {
-  border-top: 1px solid var(--im-divider);
-}
-.desktop-openmaus [data-context-layout='flat-stacked'] button[aria-label='打开完整 Canvas'] {
-  background: var(--im-elevated-surface) !important;
-  box-shadow: inset 0 0 0 1px var(--im-divider);
-}
-.desktop-openmaus [data-context-layout='flat-stacked'] .canvas-preview {
-  background-color: var(--im-elevated-surface);
-}
-.desktop-openmaus .knowledge-source-panel[data-source-layout='flat'] {
-  background: var(--im-detail-surface);
-}
-.desktop-openmaus .knowledge-source-panel[data-source-layout='flat'] article:hover {
-  background: var(--raised);
-}
-.desktop-panel-resize-handle {
-  z-index: 30;
-  background: var(--im-divider);
-  cursor: col-resize;
-}
-.desktop-panel-resize-handle > div {
-  opacity: 0;
-  transform: scaleY(.72);
-  background: var(--accent);
-  transition: opacity 140ms ease, transform 140ms ease;
-}
-.desktop-panel-resize-handle:hover > div,
-.desktop-panel-resize-handle:active > div,
-.desktop-panel-resize-handle:focus-visible > div {
-  opacity: 1;
-  transform: scaleY(1);
-}
-.im-conversation-header,
-.im-composer-surface {
-  -webkit-font-smoothing: antialiased;
-}
-.im-profile [data-avatar] {
-  transform: translateZ(0);
 }
 
-.chat-composer {
-  /* OpenMaus Composer: one quiet raised surface with a very light keyline. */
-  background: color-mix(in srgb, var(--raised) 60%, transparent);
-  border: 1px solid color-mix(in srgb, var(--hairline) 40%, transparent);
-  border-radius: 24px;
-  box-shadow: none;
-}
-.chat-composer .rich-input:focus,
-.chat-composer .rich-input:focus-visible { outline: none; }
-.openmaus-reply-preview,
-.openmaus-quote-card {
-  background: color-mix(in srgb, var(--inset) 84%, transparent);
-  border: 1px solid color-mix(in srgb, var(--hairline) 65%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
-}
-.openmaus-quote-card:hover {
-  background: color-mix(in srgb, var(--raised) 72%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 38%, var(--hairline));
-}
-.email-composer-row {
-  border-bottom: 1px solid var(--hairline);
-}
-.email-composer-row:focus-within {
-  background: color-mix(in srgb, var(--raised) 45%, transparent);
-}
-.email-composer-body:focus {
-  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-.email-composer-body::selection,
-.email-composer-sheet input::selection {
-  background: color-mix(in srgb, var(--accent) 45%, transparent);
-  color: var(--ink);
-}
-.message-bubble {
-  border: 1px solid var(--hairline);
-  border-radius: 16px;
-  line-height: 1.62;
-}
-.message-bubble-agent { background: var(--bubble-agent); color: var(--ink); }
+@theme inline {
+  --font-sans: 'Inter Variable', sans-serif;
+  --font-heading: 'Geist Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 
-@keyframes attachment-viewer-in { from { opacity: 0; transform: translateY(-8px) scale(.985); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) {
-  .desktop-panel-resize-handle > div { transition: none; }
-  .attachment-viewer { animation: none; }
 }
 
-.attachment-viewer-backdrop {
-  position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 18px;
-  background: color-mix(in srgb, #000 72%, transparent); backdrop-filter: blur(10px);
-}
-.attachment-viewer-shell {
-  display: flex; width: min(1080px, 100%); height: min(860px, calc(100vh - 36px)); min-height: 0; flex-direction: column;
-  overflow: hidden; border: 1px solid var(--hairline); border-radius: 18px; background: var(--panel); color: var(--ink-900);
-  box-shadow: 0 34px 100px -36px rgba(0, 0, 0, .8); animation: attachment-viewer-in 170ms cubic-bezier(.22, 1, .36, 1) both;
-}
-.attachment-viewer-shell > header { display: flex; min-height: 56px; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--hairline); padding: 9px 12px 9px 16px; }
-.attachment-viewer-shell > header strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
-.attachment-viewer-actions { display: flex; align-items: center; gap: 6px; }
-.attachment-viewer-actions a, .attachment-viewer-actions button, .pdf-preview-toolbar button, .attachment-preview-state a, .attachment-preview-state button { border-radius: 9px; background: var(--raised); padding: 7px 10px; color: var(--ink-600); font-size: 11px; text-decoration: none; }
-.attachment-viewer-actions button { display: grid; width: 34px; height: 34px; place-items: center; padding: 0; font-size: 21px; }
-.attachment-viewer-body { min-height: 0; flex: 1; overflow: auto; background: var(--im-chat-surface); }
-.pdf-preview-toolbar { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; border-bottom: 1px solid var(--hairline); background: var(--panel); padding: 7px 14px; color: var(--ink-500); font-size: 11px; }
-.pdf-preview-body { padding: 24px; }
-.pdf-preview-page { position: relative; width: fit-content; min-width: min(720px, 100%); max-width: 100%; margin: 0 auto 20px; background: #fff; box-shadow: 0 15px 42px -30px #000; }
-.pdf-preview-page canvas { display: block; max-width: 100%; height: auto !important; margin: auto; background: #fff; }
-.pdf-preview-page > span { position: absolute; right: 7px; bottom: 7px; border-radius: 6px; background: rgba(0,0,0,.62); padding: 2px 6px; color: #fff; font-size: 9px; }
-.text-preview-body { padding: clamp(16px, 3vw, 34px); }
-.plain-attachment-preview, .json-attachment-preview, .markdown-attachment-preview {
-  min-height: 100%; margin: 0 auto; max-width: 900px; border-radius: 16px; background: var(--panel);
-  box-shadow: 0 1px 0 var(--hairline), 0 18px 60px -54px rgba(15, 23, 42, .58);
-}
-.plain-attachment-preview { overflow-wrap: anywhere; white-space: pre-wrap; padding: clamp(16px, 3vw, 30px); color: var(--ink-700); font: 12px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace; }
-.markdown-attachment-preview { padding: clamp(20px, 4vw, 44px); }
-.markdown-attachment-image-placeholder { display: inline-flex; border-radius: 7px; background: var(--raised); padding: 3px 8px; color: var(--ink-500); font-size: 11px; }
-.json-attachment-preview { overflow: hidden; --json-key: #2867a7; --json-string: #16805b; --json-number: #9b5c13; --json-boolean: #7455b7; --json-null: #7a6471; }
-.json-attachment-preview pre { min-height: 100%; overflow: auto; padding: clamp(16px, 3vw, 30px); color: var(--ink-700); font: 12px/1.72 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 2; }
-.json-attachment-preview [data-json-token="key"] { color: var(--json-key); }
-.json-attachment-preview [data-json-token="string"] { color: var(--json-string); }
-.json-attachment-preview [data-json-token="number"] { color: var(--json-number); }
-.json-attachment-preview [data-json-token="boolean"] { color: var(--json-boolean); font-weight: 600; }
-.json-attachment-preview [data-json-token="null"] { color: var(--json-null); font-style: italic; }
-.json-preview-warning { border-bottom: 1px solid var(--hairline); background: color-mix(in srgb, var(--coral-soft) 42%, var(--panel)); padding: 9px 14px; color: var(--coral-deep); font-size: 11px; }
-:root[data-theme='dark'] .plain-attachment-preview, :root[data-theme='dark'] .json-attachment-preview, :root[data-theme='dark'] .markdown-attachment-preview { box-shadow: 0 1px 0 var(--hairline), 0 22px 70px -54px #000; }
-:root[data-theme='dark'] .json-attachment-preview { --json-key: #82b9f2; --json-string: #73d3aa; --json-number: #edb869; --json-boolean: #b9a1f4; --json-null: #b2a0ac; }
-.video-preview-body { display: grid; place-items: center; padding: 22px; background: #080808; }
-.video-preview-body video { max-width: 100%; max-height: 100%; border-radius: 12px; }
-.attachment-preview-state { display: flex; min-height: 220px; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 28px; color: var(--ink-400); text-align: center; font-size: 12px; }
-.attachment-preview-state strong { color: var(--ink-700); font-size: 14px; }
-@media (max-width: 767px) {
-  .attachment-viewer-backdrop { padding: 0; }
-  .attachment-viewer-shell { width: 100%; height: 100%; max-height: none; border: 0; border-radius: 0; }
-  .pdf-preview-body { padding: 12px; }
-  .pdf-preview-page { min-width: 100%; margin-bottom: 12px; }
-}
-@media (prefers-reduced-motion: reduce) { .attachment-viewer-shell { animation: none; } }
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
 
-.lingxiloop-code { background: var(--code-bg); }
-:root[data-theme='dark'] .lingxiloop-code .hljs-string,
-:root[data-theme='dark'] .lingxiloop-code .hljs-regexp { color: #FDA197; }
-:root[data-theme='dark'] .lingxiloop-code .hljs-comment,
-:root[data-theme='dark'] .lingxiloop-code .hljs-quote { color: #7F8793; }
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-rise { animation: none !important; }
-}
-
-/* Skype emoticon CSS sprite animation. Each instance is a span sized
- * to `size` × `size`; the sprite is a vertical strip of N frames at
- * `size` × (size*N). steps(N) walks one frame per tick; one cycle =
- * `--skype-cycle-dur` (default ~50ms/frame so a 50-frame loop runs
- * 2.5s, which roughly matches the original Skype tempo). */
-/* The frame strip animates via `transform: translateY` on a pseudo-element —
-   NOT `background-position`. On iOS WKWebView a background-position step
-   animation silently degrades to a smooth scroll when an ancestor sits on a
-   composited layer (the chat page rides a framer-motion translateX for its
-   push transition + swipe-back, so it stays composited at rest). That made the
-   emoji "scroll top-to-bottom" the moment you opened a conversation. Transform
-   animations are composited and honor `steps()` regardless of any ancestor. */
-@keyframes skype-emoji-cycle {
-  to { transform: translateY(var(--skype-cycle-y)); }
-}
-.skype-emoji-anim {
-  display: inline-block;
-  vertical-align: text-bottom;
-  position: relative;
-  overflow: hidden;
-  user-select: none;
-}
-.skype-emoji-anim::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: calc(100% * var(--skype-cycle-frames, 1));
-  background-image: var(--skype-url);
-  background-size: 100% auto;
-  background-repeat: no-repeat;
-  animation: skype-emoji-cycle var(--skype-cycle-dur, 2s) steps(var(--skype-cycle-frames, 1)) infinite;
-  will-change: transform;
-}
-
-/* TipTap uses Typeset for typography. Only editor-specific behavior stays here. */
-.tiptap p:empty::before { content: ''; display: inline-block; }
-.tiptap .tableWrapper { overflow-x: auto; }
-.tiptap .selectedCell { background: rgba(0, 168, 240, 0.1); }
-.tiptap img {
-  display: block;
-  max-width: min(100%, 720px);
-  max-height: 520px;
-  object-fit: contain;
-  border: 1px solid #e7e5e4;
-  border-radius: 12px;
-  background: #fafaf9;
-  box-shadow: 0 12px 28px rgba(28, 25, 23, 0.08);
-}
-.tiptap img.ProseMirror-selectednode {
-  outline: 3px solid rgba(0, 168, 240, 0.28);
-  outline-offset: 3px;
-}
-.tiptap .mention {
-  display: inline-block;
-  background: rgba(0, 168, 240, 0.12);
-  color: var(--skype-deep);
-  padding: 0 6px;
-  border-radius: 6px;
-  font-weight: 500;
-  white-space: nowrap;
-  font-size: 0.94em;
-  font-family: 'Manrope', system-ui, sans-serif;
-}
-/* TipTap placeholder for empty first paragraph. */
-.tiptap p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  color: #a8a29e;
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
-/* === Remote collaboration carets (TipTap v3 CollaborationCaret) ===
- *
- * Each peer's caret is a 1px vertical bar tinted with their awareness
- * color, plus a floating label with their display name. Selectors
- * cover both the v3 (`collaboration-carets__*`) and legacy v2
- * (`collaboration-cursor__*`) class names so we're robust to a future
- * package downgrade or upstream rename. */
-.collaboration-carets__caret,
-.collaboration-cursor__caret {
-  position: relative;
-  border-left: 1px solid;
-  border-right: 1px solid;
-  margin-left: -1px;
-  margin-right: -1px;
-  word-break: normal;
-  pointer-events: none;
-}
-.collaboration-carets__label,
-.collaboration-cursor__label {
-  position: absolute;
-  top: -1.45em;
-  left: -1px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
-  color: #fff;
-  padding: 1px 6px;
-  border-radius: 4px 4px 4px 0;
-  white-space: nowrap;
-  font-family: 'Manrope', system-ui, sans-serif;
-  user-select: none;
-}
-input:focus, textarea:focus, button:focus { outline: none; }
-
-/* Reaction micro-interactions: instant optimistic feedback plus a tiny,
- * contained sparkle so reacting feels tactile without disturbing message
- * layout. */
-.reaction-control {
-  position: relative;
-  overflow: visible;
-  transform: translateZ(0);
-  will-change: transform;
-  transition:
-    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease,
-    box-shadow 180ms ease,
-    opacity 180ms ease;
-}
-.reaction-control:hover {
-  transform: translateY(-1px) scale(1.035);
-}
-.reaction-control:active {
-  transform: translateY(0) scale(0.94);
-}
-.reaction-pill {
-  animation: lingxiloop-reaction-pill-in 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.reaction-pill[data-mine="true"] {
-  box-shadow: 0 7px 18px -14px rgba(0, 120, 200, 0.55);
-}
-.reaction-pill[data-mine="true"] .reaction-emoji {
-  animation: lingxiloop-reaction-emoji-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.reaction-count {
-  display: inline-block;
-  min-width: 0.65em;
-  text-align: left;
-  animation: lingxiloop-reaction-count-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.reaction-burst {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 38px;
-  height: 38px;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 1;
-}
-.reaction-burst::before {
-  content: '';
-  position: absolute;
-  inset: 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(244, 183, 64, 0.55);
-  animation: lingxiloop-reaction-ring 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.reaction-burst span {
-  position: absolute;
-  left: 17px;
-  top: 17px;
-  width: 4px;
-  height: 4px;
-  border-radius: 999px;
-  opacity: 0;
-  background: var(--gold);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75);
-  animation: lingxiloop-reaction-spark 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.reaction-burst span:nth-child(1) { --spark-x: -14px; --spark-y: -10px; background: var(--gold); }
-.reaction-burst span:nth-child(2) { --spark-x:  13px; --spark-y: -11px; background: var(--coral); animation-delay: 22ms; }
-.reaction-burst span:nth-child(3) { --spark-x: -10px; --spark-y:  13px; background: var(--sky-glow); animation-delay: 38ms; }
-.reaction-burst span:nth-child(4) { --spark-x:  12px; --spark-y:  10px; background: var(--whisper); animation-delay: 54ms; }
-
-@keyframes lingxiloop-reaction-pill-in {
-  from { opacity: 0; transform: translateY(4px) scale(0.86); }
-  62%  { opacity: 1; transform: translateY(-1px) scale(1.045); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes lingxiloop-reaction-emoji-pop {
-  from { transform: rotate(-7deg) scale(0.72); filter: saturate(0.9); }
-  65%  { transform: rotate(4deg) scale(1.12); filter: saturate(1.08); }
-  to   { transform: rotate(0deg) scale(1); filter: saturate(1); }
-}
-@keyframes lingxiloop-reaction-count-in {
-  from { opacity: 0; transform: translateY(3px) scale(0.9); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes lingxiloop-reaction-ring {
-  from { opacity: 0.6; transform: scale(0.55); }
-  to   { opacity: 0; transform: scale(1.8); }
-}
-@keyframes lingxiloop-reaction-spark {
-  0%   { opacity: 0; transform: translate(0, 0) scale(0.35); }
-  20%  { opacity: 1; }
-  100% { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(0.85); }
-}
-
-/* Bloub's SVG engine animates the expression and silhouette; this small
-   compositor-only float keeps that motion legible at chat-avatar sizes where
-   a one-unit SVG change would otherwise resolve to a fraction of a pixel. */
-.bloub-avatar-alive {
-  animation: bloub-avatar-float var(--bloub-float-duration, 3.6s) ease-in-out
-    var(--bloub-float-delay, 0s) infinite;
-  transform-box: fill-box;
-  transform-origin: center;
-  will-change: transform;
-}
-
-/* The active chat avatar gets a deliberately stronger, quicker bounce while
-   an agent is thinking or its answer is arriving. The child Bloub keeps its
-   organic morph; this wrapper adds the readable messaging-app motion cue. */
-.agent-avatar-thinking,
-.agent-avatar-working {
-  transform-origin: 50% 72%;
-  will-change: transform;
-}
-.chat-message-avatar .bloub-avatar-alive {
-  animation-name: chat-message-avatar-float;
-  animation-duration: 2.45s;
-}
-.agent-avatar-thinking { animation: agent-avatar-thinking 760ms cubic-bezier(.34, 0, .18, 1) infinite; }
-.agent-avatar-working { animation: agent-avatar-streaming 520ms cubic-bezier(.28, 0, .2, 1) infinite; }
-
-@keyframes chat-message-avatar-float {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(-1.2deg) scale(1); }
-  44% { transform: translate3d(0, calc(0px - var(--bloub-float-lift, 2px) - 2px), 0) rotate(1.5deg) scale(1.05); }
-  72% { transform: translate3d(0, -1px, 0) rotate(.35deg) scale(1.018); }
-}
-
-@keyframes agent-avatar-thinking {
-  0%, 100% { transform: translateY(0) scale(1); }
-  40% { transform: translateY(-7px) scale(1.1, .92) rotate(-1.5deg); }
-  64% { transform: translateY(2px) scale(.95, 1.075) rotate(1deg); }
-}
-@keyframes agent-avatar-streaming {
-  0%, 100% { transform: translateY(0) scale(1); }
-  46% { transform: translateY(-8px) scale(1.12, .9) rotate(-2deg); }
-  72% { transform: translateY(2px) scale(.94, 1.085) rotate(1.25deg); }
-}
-
-.thinking-card {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 22px;
-  padding: 1px 2px;
-  color: var(--ink-400);
-  font-size: 11.5px;
-  font-weight: 520;
-  letter-spacing: .015em;
-}
-.thinking-card-dots { display: inline-flex; align-items: center; gap: 3px; }
-.thinking-card-dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--skype); animation: thinking-dot 1.05s ease-in-out infinite; }
-.thinking-card-dots i:nth-child(2) { animation-delay: 130ms; }
-.thinking-card-dots i:nth-child(3) { animation-delay: 260ms; }
-.streaming-caret {
-  display: inline-block;
-  width: 2px;
-  height: 1.05em;
-  margin-left: 3px;
-  border-radius: 2px;
-  vertical-align: -.14em;
-  background: var(--skype-deep);
-  animation: streaming-caret 760ms steps(1, end) infinite;
-}
-@keyframes thinking-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-3px); opacity: 1; } }
-@keyframes streaming-caret { 0%, 48% { opacity: 1; } 49%, 100% { opacity: 0; } }
-
-@keyframes bloub-avatar-float {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.7deg) scale(1); }
-  48% { transform: translate3d(0, calc(0px - var(--bloub-float-lift, 1px)), 0) rotate(0.7deg) scale(1.025); }
-  72% { transform: translate3d(0, -0.4px, 0) rotate(0.15deg) scale(1.01); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bloub-avatar-alive {
-    animation: none !important;
-    transform: none !important;
-    will-change: auto !important;
   }
-  .agent-avatar-thinking,
-  .agent-avatar-working,
-  .thinking-card-dots i,
-  .streaming-caret {
-    animation: none !important;
+  body {
+    @apply bg-background text-foreground;
+
   }
-  .lingxiloop-cloud-float,
-  .lingxiloop-cloud-poke,
-  .lingxiloop-cloud-poke img {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    will-change: auto !important;
+  html {
+    @apply font-sans;
+
   }
 
-  .reaction-control {
-    transition: none !important;
-    transform: none !important;
-  }
-  .reaction-pill,
-  .reaction-pill[data-mine="true"] .reaction-emoji,
-  .reaction-count,
-  .reaction-burst,
-  .reaction-burst::before,
-  .reaction-burst span {
-    animation: none !important;
-  }
-  .reaction-burst {
-    display: none;
-  }
-}
-@keyframes agent-typing-dot {
-  0%, 60%, 100% { opacity: .28; transform: translateY(0); }
-  30% { opacity: 1; transform: translateY(-2px); }
-}
-
-.agent-typing-indicator {
-  background: var(--im-chat-surface, var(--panel));
-}
-
-.agent-typing-dots {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: 4px;
-}
-
-.agent-typing-dots > i {
-  width: 3px;
-  height: 3px;
-  border-radius: 999px;
-  background: currentColor;
-  animation: agent-typing-dot 1.2s ease-in-out infinite;
-}
-
-.agent-typing-dots > i:nth-child(2) { animation-delay: .15s; }
-.agent-typing-dots > i:nth-child(3) { animation-delay: .3s; }
-
-@media (prefers-reduced-motion: reduce) {
-  .agent-typing-dots > i { animation: none; }
 }

@@ -9,25 +9,11 @@ export const CANVAS_ACTIVITY_KINDS = [
 export type CanvasActivityKind = typeof CANVAS_ACTIVITY_KINDS[number]
 
 const CANONICAL_ACTIVITY_KINDS = new Set<string>(CANVAS_ACTIVITY_KINDS)
-const LEGACY_ACTIVITY_KIND: Record<string, CanvasActivityKind> = {
-  'frame.created': 'frame_created',
-  'frame.updated': 'frame_updated',
-  'frame.content_appended': 'frame_updated',
-  'frame.deleted': 'frame_deleted',
-  'comment.created': 'comment_created',
-  'agent.status': 'agent_status',
-  'agent.steered': 'assignment_updated',
-  'assignment.created': 'assignment_created',
-  'assignment.restarted': 'assignment_updated',
-  'assignment.steered': 'assignment_updated',
-  'assignment.completed': 'task_completed',
-  'assignment.failed': 'task_failed',
-  'assignment.cancelled': 'task_cancelled',
-}
 
-export function normalizeCanvasActivityKind(action: string): CanvasActivityKind {
-  const normalized = LEGACY_ACTIVITY_KIND[action] ?? action
-  return CANONICAL_ACTIVITY_KINDS.has(normalized)
-    ? normalized as CanvasActivityKind
-    : 'workspace_updated'
+/** Parse the immutable v1 Canvas activity contract without legacy aliases. */
+export function parseCanvasActivityKind(action: string): CanvasActivityKind {
+  if (!CANONICAL_ACTIVITY_KINDS.has(action)) {
+    throw new Error(`unsupported Canvas activity kind: ${action}`)
+  }
+  return action as CanvasActivityKind
 }

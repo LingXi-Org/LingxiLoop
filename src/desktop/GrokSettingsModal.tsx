@@ -1,191 +1,196 @@
 import {
-  BarChart3 as IconChartBar,
-  Check as IconCheck,
-  DownloadCloud as IconCloudDownload,
-  ExternalLink as IconExternalLink,
-  GitBranch as IconGitBranch,
-  RefreshCw as IconRefresh,
-  Settings as IconSettings,
-  X as IconX,
-} from 'lucide-react'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Avatar } from '@/components/Avatar'
+  CloudDownloadIcon,
+  RefreshCwIcon,
+  Settings02Icon,
+} from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { type ReactNode, useState } from 'react'
+import { Avatar as ParticipantAvatar } from '@/components/Avatar'
+import { useUpdater } from '@/components/UpdaterDialog'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { useParticipants } from '@/features/agents/state'
+import { toastAction } from '@/lib/actionToast'
 import { useAuth } from '@/stores/auth'
-import { useParticipants } from '@/stores/participants'
+import { useSoundStore } from '@/stores/sound'
 import { useTheme } from '@/stores/theme'
-import type { Participant } from '@/types'
 
-type SettingsSectionId = 'general' | 'router' | 'usage' | 'beta'
+type SettingsSectionId = 'general' | 'updates'
 
 const SETTINGS_SECTIONS = [
-  { id: 'general', label: 'General', icon: IconSettings },
-  { id: 'router', label: 'Router', icon: IconGitBranch },
-  { id: 'usage', label: 'Usage & Billing', icon: IconChartBar },
-  { id: 'beta', label: 'Updates', icon: IconCloudDownload },
+  { id: 'general', label: 'General', icon: Settings02Icon },
+  { id: 'updates', label: 'Updates', icon: CloudDownloadIcon },
 ] as const
-
-const ROUTER_PROVIDERS = [
-  { id: 'cursor', label: 'Cursor', description: 'Use your signed-in Cursor account and its hosted agent models.' },
-  { id: 'claude-code', label: 'Claude Code', description: "Use Anthropic's Claude Code provider for agent requests." },
-  { id: 'codex', label: 'Codex', description: "Use OpenAI's Codex provider for agent requests." },
-  { id: 'openrouter', label: 'OpenRouter', description: 'Use models and billing from your OpenRouter account.' },
-] as const
-
-function DemoSwitch({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) {
-  return (
-    <button type="button" className="sand-settings-switch" data-checked={checked || undefined} role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)}>
-      <span />
-    </button>
-  )
-}
 
 function SettingsRow({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
   return (
-    <div className="sand-settings-row">
-      <div className="sand-settings-copy"><strong>{title}</strong><span className="sand-settings-field__hint">{hint}</span></div>
-      <div className="sand-settings-control">{children}</div>
+    <div className="flex items-center justify-between gap-6 rounded-3xl border border-border bg-card px-4 py-3">
+      <div className="min-w-0">
+        <strong className="block text-sm font-medium text-foreground">{title}</strong>
+        <span className="block text-xs text-muted-foreground">{hint}</span>
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  )
+}
+
+function AccountCard() {
+  const authUser = useAuth((state) => state.user)
+  const participant = useParticipants((state) => authUser?.id ? state.byId[authUser.id] : undefined)
+  const initial = (authUser?.name ?? 'U').trim().charAt(0).toUpperCase() || 'U'
+
+  return (
+    <div className="flex items-center gap-3 rounded-3xl border border-border bg-card p-4">
+      {participant ? (
+        <ParticipantAvatar p={participant} size={36} showStatus={false} />
+      ) : (
+        <Avatar className="size-9">
+          <AvatarFallback>{initial}</AvatarFallback>
+        </Avatar>
+      )}
+      <div className="min-w-0 flex-1">
+        <strong className="block truncate text-sm text-foreground">{authUser?.name ?? 'LingxiLoop User'}</strong>
+        <span className="block truncate text-xs text-muted-foreground">{authUser?.email ?? 'Signed in'}</span>
+      </div>
     </div>
   )
 }
 
 function GeneralPanel() {
-  const authUser = useAuth((state) => state.user)
-  const me = useParticipants((state) => authUser?.id ? state.byId[authUser.id] : undefined)
-  const theme = useTheme((state) => state.theme)
-  const toggleTheme = useTheme((state) => state.toggleTheme)
-  const [notifications, setNotifications] = useState(true)
-  const [launchAtLogin, setLaunchAtLogin] = useState(false)
-  const [sound, setSound] = useState(true)
-  const fallback = useMemo<Participant>(() => ({
-    id: authUser?.id ?? 'me', kind: 'human', name: authUser?.name ?? 'User',
-    initial: (authUser?.name ?? 'U').charAt(0), avatarBg: '#1084fe', status: 'avail',
-  }), [authUser?.id, authUser?.name])
+  const { theme, setTheme } = useTheme()
+  const muted = useSoundStore((state) => state.muted)
+  const setMuted = useSoundStore((state) => state.setMuted)
 
   return (
-    <div className="sand-settings-general">
-      <section>
-        <h3>Account</h3>
-        <div className="sand-account-card">
-          <div className="sand-account-card__avatar"><Avatar p={me ?? fallback} size={36} showStatus={false} /></div>
-          <div className="sand-account-card__body"><strong>{authUser?.name ?? 'LingxiLoop User'}</strong><span>{authUser?.email ?? 'Signed in'}</span></div>
-          <button type="button">Manage account <IconExternalLink size={13} strokeWidth={1.7} /></button>
-        </div>
+    <div className="space-y-5">
+      <section className="space-y-2">
+        <h3 className="font-heading text-sm font-medium text-foreground">Account</h3>
+        <AccountCard />
       </section>
-      <section>
-        <h3>App</h3>
-        <div className="sand-settings-stack">
-          <SettingsRow title="Appearance" hint="Choose how LingxiLoop looks on this device.">
-            <button type="button" className="ui-select-trigger" onClick={toggleTheme}>{theme === 'dark' ? 'Dark' : 'Light'}</button>
-          </SettingsRow>
-          <SettingsRow title="Language" hint="Language used throughout the app."><button type="button" className="ui-select-trigger">English</button></SettingsRow>
-          <SettingsRow title="Desktop notifications" hint="Show notifications for new messages and completed work."><DemoSwitch checked={notifications} onChange={setNotifications} label="Desktop notifications" /></SettingsRow>
-          <SettingsRow title="Launch at login" hint="Open LingxiLoop when you sign in to this computer."><DemoSwitch checked={launchAtLogin} onChange={setLaunchAtLogin} label="Launch at login" /></SettingsRow>
-          <SettingsRow title="Sounds" hint="Play subtle sounds for messages and agent activity."><DemoSwitch checked={sound} onChange={setSound} label="Sounds" /></SettingsRow>
-        </div>
+      <section className="space-y-2">
+        <h3 className="font-heading text-sm font-medium text-foreground">App</h3>
+        <SettingsRow title="Appearance" hint="Choose how LingxiLoop looks on this device.">
+          <Select value={theme} onValueChange={(value) => setTheme(value === 'light' ? 'light' : 'dark')}>
+            <SelectTrigger size="sm" aria-label="Appearance"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light">Light</SelectItem>
+              <SelectItem value="dark">Dark</SelectItem>
+            </SelectContent>
+          </Select>
+        </SettingsRow>
+        <SettingsRow title="Language" hint="Language used throughout the app.">
+          <Badge variant="secondary">English</Badge>
+        </SettingsRow>
+        <SettingsRow title="Sounds" hint="Play emoticon sounds on this device.">
+          <Switch
+            aria-label="Sounds"
+            checked={!muted}
+            onCheckedChange={(checked) => setMuted(!checked)}
+          />
+        </SettingsRow>
       </section>
-    </div>
-  )
-}
-
-function RouterPanel() {
-  const [provider, setProvider] = useState<(typeof ROUTER_PROVIDERS)[number]['id']>('cursor')
-  return (
-    <div className="sand-router-section">
-      <div className="sand-settings-intro"><strong>Agent router</strong><span>Choose which provider handles new agent requests.</span></div>
-      <div className="sand-router-provider-list">
-        {ROUTER_PROVIDERS.map((item) => (
-          <button key={item.id} type="button" className="sand-router-provider" data-active={provider === item.id || undefined} onClick={() => setProvider(item.id)}>
-            <span className="sand-router-provider__radio">{provider === item.id && <span />}</span>
-            <span className="sand-router-provider__copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-            {provider === item.id && <IconCheck size={17} strokeWidth={1.8} />}
-          </button>
-        ))}
-      </div>
-      <SettingsRow title="Default model" hint="Used when a conversation does not select a model."><button type="button" className="ui-select-trigger">Auto</button></SettingsRow>
-    </div>
-  )
-}
-
-function UsageMeter({ label, percent, note }: { label: string; percent: number; note: string }) {
-  return (
-    <div className="sand-usage-meter">
-      <div className="sand-usage-meter__header"><strong>{label}</strong><small>{note}</small></div>
-      <span className="sand-usage-meter__track"><span className="sand-usage-meter__fill" style={{ width: `${percent}%` }} /></span>
-      <small>{percent}% used</small>
-    </div>
-  )
-}
-
-function UsagePanel() {
-  return (
-    <div className="sand-usage-section">
-      <div><h3>Current plan</h3><div className="sand-usage-state"><span><strong>Max</strong><small>Renews Sep 18, 2026</small></span><button type="button">Manage plan</button></div></div>
-      <div><h3>Included usage</h3><UsageMeter label="Weekly agent usage" percent={42} note="Resets in 4 days" /><UsageMeter label="On-demand usage" percent={18} note="US$9.20 remaining" /></div>
-      <div className="sand-provider-usage-card"><strong>Provider usage</strong><span>Usage from external providers is managed by the connected provider account.</span></div>
     </div>
   )
 }
 
 function UpdatesPanel() {
-  const [automatic, setAutomatic] = useState(true)
-  const [checking, setChecking] = useState(false)
-  const [checked, setChecked] = useState(false)
-  const check = () => {
-    setChecking(true); setChecked(false)
-    window.setTimeout(() => { setChecking(false); setChecked(true) }, 650)
+  const { appInfo, status, check } = useUpdater()
+  const checking = status.status === 'checking'
+  const supported = appInfo?.autoUpdateSupported === true
+  const statusText = status.status === 'update-available'
+    ? `Version ${status.version ?? 'new'} is available`
+    : status.status === 'update-downloaded'
+      ? `Version ${status.version ?? 'new'} is ready to install`
+      : status.status === 'error'
+        ? status.detail ?? 'Update check failed'
+        : supported
+          ? 'LingxiLoop is up to date'
+          : 'Updates are managed by your installation channel'
+
+  const checkForUpdates = () => {
+    void toastAction(check(), {
+      loading: 'Checking for updates…',
+      success: 'Update check finished',
+      error: 'Update check failed',
+    })
   }
+
   return (
-    <div className="sand-settings-beta-stack">
-      <div className="sand-settings-uptodate-banner"><strong>LingxiLoop is up to date</strong><span>Version 0.1.0-beta</span>{checked && <span>Last checked just now</span>}<button type="button" className="sand-settings-force-refresh" onClick={check} disabled={checking}><IconRefresh size={14} strokeWidth={1.7} /> {checking ? 'Checking…' : 'Check for updates'}</button></div>
-      <SettingsRow title="Automatic updates" hint="Download and install updates when the app is closed."><DemoSwitch checked={automatic} onChange={setAutomatic} label="Automatic updates" /></SettingsRow>
-      <SettingsRow title="Release channel" hint="Receive stable product updates."><button type="button" className="ui-select-trigger">Stable</button></SettingsRow>
+    <div className="space-y-4">
+      <div className="rounded-3xl border border-border bg-card p-4">
+        <strong className="block text-sm text-foreground">{statusText}</strong>
+        <span className="mt-1 block text-xs text-muted-foreground">
+          Current version {appInfo?.version ?? '—'}
+        </span>
+        <Button
+          className="mt-4"
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!supported || checking}
+          onClick={checkForUpdates}
+        >
+          <HugeiconsIcon icon={RefreshCwIcon} strokeWidth={2} data-icon="inline-start" />
+          {checking ? 'Checking…' : 'Check for updates'}
+        </Button>
+      </div>
+      <SettingsRow title="Release channel" hint="LingxiLoop ships through one stable release channel.">
+        <Badge variant="secondary">Stable</Badge>
+      </SettingsRow>
     </div>
   )
 }
 
-function renderPanel(section: SettingsSectionId) {
-  if (section === 'router') return <RouterPanel />
-  if (section === 'usage') return <UsagePanel />
-  if (section === 'beta') return <UpdatesPanel />
-  return <GeneralPanel />
-}
-
 export function GrokSettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>('general')
-  useEffect(() => {
-    if (!isOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); onClose() }
-    }
-    window.addEventListener('keydown', onKeyDown, true)
-    return () => window.removeEventListener('keydown', onKeyDown, true)
-  }, [isOpen, onClose])
-  if (!isOpen) return null
-  const active = SETTINGS_SECTIONS.find((section) => section.id === activeSection) ?? SETTINGS_SECTIONS[0]
-  const panelId = `sand-settings-panel-${active.id}`
-  const headingId = `${panelId}-heading`
+
   return (
-    <div className="grok-settings-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}>
-      <div className="sand-settings-dialog" role="dialog" aria-modal="true" aria-label="LingxiLoop settings" onMouseDown={(event) => event.stopPropagation()}>
-        <div className="sand-settings-layout">
-          <nav aria-label="Settings sections" className="sand-settings-nav">
-            {SETTINGS_SECTIONS.map((section) => {
-              const Icon = section.icon
-              const selected = section.id === active.id
-              return (
-                <button aria-controls={selected ? panelId : undefined} aria-current={selected ? 'page' : undefined} className="sand-settings-nav__item" data-active={selected || undefined} key={section.id} onClick={() => setActiveSection(section.id)} type="button">
-                  <Icon size={17} strokeWidth={1.55} /><span>{section.label}</span>
-                </button>
-              )
-            })}
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <DialogHeader className="border-b border-border px-6 py-5 pr-16">
+          <DialogTitle>LingxiLoop settings</DialogTitle>
+          <DialogDescription>Manage real device and application preferences.</DialogDescription>
+        </DialogHeader>
+        <div className="grid min-h-[28rem] grid-cols-[12rem_1fr]">
+          <nav className="space-y-1 border-r border-border bg-muted/40 p-3" aria-label="Settings sections">
+            {SETTINGS_SECTIONS.map((section) => (
+              <Button
+                key={section.id}
+                type="button"
+                variant={activeSection === section.id ? 'secondary' : 'ghost'}
+                className="w-full justify-start"
+                aria-current={activeSection === section.id ? 'page' : undefined}
+                onClick={() => setActiveSection(section.id)}
+              >
+                <HugeiconsIcon icon={section.icon} strokeWidth={2} data-icon="inline-start" />
+                {section.label}
+              </Button>
+            ))}
           </nav>
-          <section aria-labelledby={headingId} className="sand-settings-panel" id={panelId}>
-            <button type="button" aria-label="Close" className="sand-settings-panel__close" onClick={onClose}><IconX size={18} strokeWidth={1.65} /></button>
-            <h2 id={headingId}>{active.label}</h2>
-            <div className="sand-settings-panel__body">{renderPanel(active.id)}</div>
+          <section className="min-w-0 overflow-y-auto p-6">
+            <h2 className="mb-4 font-heading text-base font-medium text-foreground">
+              {activeSection === 'general' ? 'General' : 'Updates'}
+            </h2>
+            {activeSection === 'general' ? <GeneralPanel /> : <UpdatesPanel />}
           </section>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

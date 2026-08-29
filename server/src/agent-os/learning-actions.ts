@@ -27,7 +27,7 @@ import {
   updateKnowledgeInsight,
   updateKnowledgeSourceForAgent,
   unlinkKnowledgeSourceForAgent,
-} from '../knowledge/agent-knowledge.js'
+} from '../modules/knowledge/public.js'
 import {
   addCanvasWorkspaceAgents,
   appendCanvasFrameContent,
@@ -41,7 +41,7 @@ import {
   startCanvasWorkspace,
   updateCanvasFrame,
   type CanvasMemberInput,
-} from '../canvas/service.js'
+} from '../modules/canvas/index.js'
 import { readResearch, searchResearch } from './research.js'
 import { recallMemories, verifyExplicitMemory, writeExplicitMemory } from './memory-service.js'
 import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1, MemoryScopeType } from './types.js'
@@ -58,9 +58,13 @@ import {
   recordAttempt,
   startMission,
   updateMissionStep,
-} from '../learning/service.js'
-import type { LearningActivityType, LearningEvaluationMode, LearningStepStatus, LearningStepType } from '../learning/types.js'
-import { executeTeacherAction, teacherActionRequiresApproval } from '../learning/teacher-agent.js'
+  executeTeacherAction,
+  teacherActionRequiresApproval,
+  type LearningActivityType,
+  type LearningEvaluationMode,
+  type LearningStepStatus,
+  type LearningStepType,
+} from '../modules/learning/runtime.js'
 
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
@@ -89,9 +93,16 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
   if (method === 'get_mission') {
     const missionId = textArg(args, 'missionId', false)
     if (!missionId) return { ok: true, value: context.activeMission ?? null }
-    return { ok: true, value: await getMission(missionId, context.course.id) }
+    if (!context.learnerId) throw new Error('current learning room has no learner scope')
+    return {
+      ok: true,
+      value: await getMission(missionId, work.companyId, context.course.id, context.learnerId, work.channelId),
+    }
   }
-  if (method === 'get_activity') return { ok: true, value: await getActivity(textArg(args, 'activityId'), context.course.id) }
+  if (method === 'get_activity') return {
+    ok: true,
+    value: await getActivity(textArg(args, 'activityId'), work.companyId, context.course.id),
+  }
   if (method === 'start_mission') return { ok: true, value: await startMission(work, {
     goal: textArg(args, 'goal'), successCriteria: textArg(args, 'successCriteria'),
     ...(typeof args.missionKind === 'string' ? { missionKind: args.missionKind as 'study'|'research'|'project' } : {}),
@@ -120,10 +131,17 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
       ...(item.targetLevel !== undefined ? { targetLevel: Number(item.targetLevel) } : {}),
       ...(Array.isArray(item.prerequisiteIds) ? { prerequisiteIds: item.prerequisiteIds.map(String) } : {}),
     })) : []
-    return { ok: true, value: await createObjectives({ courseId: context.course.id, actorId: work.agentId, actorKind: 'agent', objectives }) }
+    return { ok: true, value: await createObjectives({
+      companyId: work.companyId,
+      courseId: context.course.id,
+      actorId: work.agentId,
+      actorKind: 'agent',
+      objectives,
+    }) }
   }
   if (method === 'draft_activity') return { ok: true, value: await draftActivity({
-    courseId: context.course.id, actorId: work.agentId, title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),
+    companyId: work.companyId, courseId: context.course.id, actorId: work.agentId, actorKind: 'agent',
+    title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),
     type: textArg(args, 'type') as LearningActivityType,
     ...(typeof args.evaluationMode === 'string' ? { evaluationMode: args.evaluationMode as LearningEvaluationMode } : {}),
     ...(args.targetLevel !== undefined ? { targetLevel: Number(args.targetLevel) } : {}),
@@ -339,15 +357,15 @@ async function executeRoutine(work: AgentWorkItem, method: string, args: Record<
 }
 
 async function executePoll(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
-  const { castVote, closePoll, createPoll } = await import('../polls.js')
+  const { pollApplication } = await import('../modules/polls/index.js')
   if (method === 'create') {
     const rawOptions = Array.isArray(args.options) ? args.options.map(String) : []
     return {
       ok: true,
-      value: await createPoll({
+      value: await pollApplication.create({
         conversationId: textArg(args, 'channelId', false) || work.channelId,
         companyId: work.companyId,
-        authorId: work.agentId,
+        actorId: work.agentId,
         question: textArg(args, 'question'),
         mode: args.mode === 'multi' ? 'multi' : 'single',
         options: rawOptions,
@@ -361,28 +379,15 @@ async function executePoll(work: AgentWorkItem, method: string, args: Record<str
     const optionIds = Array.isArray(args.optionIds) ? args.optionIds.map(String) : []
     return {
       ok: true,
-      value: await castVote({
-        messageId, companyId: work.companyId, voterParticipantId: work.agentId,
+      value: await pollApplication.vote({
+        messageId, companyId: work.companyId, actorId: work.agentId,
         voterKind: 'agent', optionIds,
       }),
     }
   }
-  if (method === 'close') return { ok: true, value: await closePoll({ messageId, companyId: work.companyId, actorId: work.agentId, reason: 'manual' }) }
+  if (method === 'close') return { ok: true, value: await pollApplication.close({ messageId, companyId: work.companyId, actorId: work.agentId, reason: 'manual' }) }
   if (method === 'show') {
-    const { rows } = await pool.query(
-      `SELECT p.*, COALESCE(v.tallies, '[]'::jsonb) AS tallies
-         FROM im_polls p
-         LEFT JOIN LATERAL (
-           SELECT jsonb_agg(jsonb_build_object('optionId', option_id, 'count', count, 'voterIds', voter_ids)) AS tallies
-             FROM (SELECT option_id, COUNT(*)::int AS count,
-                          array_agg(voter_participant_id ORDER BY voter_participant_id) AS voter_ids
-                     FROM im_poll_votes WHERE poll_client_msg_no=p.poll_client_msg_no GROUP BY option_id) x
-         ) v ON TRUE
-        WHERE p.poll_client_msg_no=$1 AND p.company_id=$2`,
-      [messageId, work.companyId],
-    )
-    if (!rows[0]) throw new Error('poll not found')
-    return { ok: true, value: rows[0] }
+    return { ok: true, value: await pollApplication.show(work.companyId, messageId) }
   }
   throw new Error(`unsupported poll action: ${method}`)
 }
@@ -429,7 +434,7 @@ async function executeCanvas(
     const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
       `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [work.channelId, work.companyId],
     )
-    await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card).catch(() => undefined)
+    await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card)
     return { ok: true, value: snapshot, directive: { type: 'defer_to_canvas', canvasId: snapshot.id } }
   }
   if (method === 'add_agents') {
@@ -527,7 +532,7 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   const [namespace, method] = action.action.split('.')
   if (!namespace || !method) throw new Error('action must use namespace.method')
   if (namespace === 'teacher') return { ok: true, value: await executeTeacherAction(work, method, args) }
-  const learningContext = await loadLearningTurnContext(work).catch(() => null)
+  const learningContext = await loadLearningTurnContext(work)
   if (learningContext?.activeMission?.status === 'planning') {
     const planningAllowed = new Set([
       'learning.current', 'learning.get_learner_state', 'learning.list_objectives',

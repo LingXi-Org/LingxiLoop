@@ -3,7 +3,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import type { ComponentProps } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
-import { Card, cardClassName } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export type MessageSurfaceVariant = "bubble" | "inset" | "overlay" | "status";
@@ -26,16 +26,26 @@ export function MessageSurface({ asChild, status, variant, className, ...props }
 }
 
 export function CardSurface({ asChild, status, variant = "default", interactive, className, ...props }: SurfaceProps & { variant?: CardSurfaceVariant; interactive?: boolean }) {
-  const Component = asChild ? Slot : Card;
-  return <Component
+  const surfaceClassName = cn(
+    interactive && "transition focus-within:ring-3 focus-within:ring-ring/30",
+    className,
+  );
+  if (asChild) {
+    const { children, ...childProps } = props;
+    return <Card
+      data-message-surface="card"
+      data-card-variant={variant}
+      data-card-status={status}
+      className={surfaceClassName}
+    >
+      <Slot {...childProps}>{children}</Slot>
+    </Card>;
+  }
+  return <Card
     data-message-surface="card"
     data-card-variant={variant}
     data-card-status={status}
-    className={cn(
-      asChild && cardClassName,
-      interactive && "transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky2-200",
-      className,
-    )}
+    className={surfaceClassName}
     {...props}
   />;
 }

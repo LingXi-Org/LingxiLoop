@@ -1,23 +1,24 @@
 import { useAuiState } from '@assistant-ui/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { emailApi } from '@/api/email'
+import { emailApi } from '@/features/email/api'
 import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from '@/components/ui/attachment'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
-import { cn, parseBlocks, parseBody } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { parseBlocks, parseBody } from '@/lib/messageTokens'
 import { useApp } from '@/stores/app'
-import { useEmailComposer } from '@/stores/emailComposer'
+import { useEmailComposer } from '@/features/email/state'
 import { useSurface } from '@/stores/surface'
-import { useBoards } from '@/stores/boards'
-import { useCalendar } from '@/stores/calendar'
-import { useCanvas } from '@/stores/canvas'
-import { useDocuments } from '@/stores/documents'
-import { useParticipants } from '@/stores/participants'
+import { useBoards } from '@/features/boards/state'
+import { useCalendar } from '@/features/calendar/state'
+import { useCanvas } from '@/features/canvas/state'
+import { CanvasPreview } from '@/features/canvas/components/CanvasPreview'
+import { useDocuments } from '@/features/documents/state'
+import { useParticipants } from '@/features/agents/state'
 import type { Message } from '@/types'
-import { CanvasPreview } from '../CanvasPreview'
 import { IBoard, ICalendar, IFile, IMail } from '../icons'
 import { RichBody } from './MessageBody'
 
@@ -666,7 +667,7 @@ function EmailAttachmentRow({ att }: { att: NonNullable<NonNullable<Message['ema
         </AttachmentDescription>
       </AttachmentContent>
       {att.url ? (
-        <AttachmentTrigger render={<a href={att.url} target="_blank" rel="noreferrer noopener" download={att.filename} aria-label={`下载 ${att.filename}`} />} />
+        <AttachmentTrigger asChild><a href={att.url} target="_blank" rel="noreferrer noopener" download={att.filename} aria-label={`下载 ${att.filename}`} /></AttachmentTrigger>
       ) : null}
     </Attachment>
   )

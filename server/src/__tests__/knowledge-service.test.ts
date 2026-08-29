@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import type { Queryable } from '../db/queryable.js'
 import {
   KNOWLEDGE_ATTACHMENT_MIMES,
   MAX_SOURCE_BYTES,
   isKnowledgeAttachmentMime,
   openNotebookEnabled,
   validateKnowledgeUrl,
-} from '../knowledge/service.js'
+} from '../modules/knowledge/policy.js'
+import { findKnowledgeRetrievalProject } from '../modules/knowledge/retrieval-repository.js'
 
 test('native Open Notebook ingestion accepts the supported attachment contract', () => {
   const previous = process.env.OPEN_NOTEBOOK_ENABLED
@@ -39,4 +41,19 @@ test('knowledge URL validator rejects local, credentialed, and non-http targets'
 
 test('native ingestion preserves the public upload limit', () => {
   assert.equal(MAX_SOURCE_BYTES, 25 * 1024 * 1024)
+})
+
+test('knowledge retrieval resolves a group workspace with the trusted tenant identity', async () => {
+  const calls: Array<{ text: string; params: readonly unknown[] }> = []
+  const db: Queryable = {
+    query: async (text, params = []) => {
+      calls.push({ text, params })
+      return { rows: [{ project_id: 'project-1' }], rowCount: 1 } as never
+    },
+  }
+
+  assert.equal(await findKnowledgeRetrievalProject(db, 'company-1', 'conversation-1'), 'project-1')
+  assert.equal(calls.length, 1)
+  assert.match(calls[0]!.text, /id=\$1 AND company_id=\$2 AND kind='group'/)
+  assert.deepEqual(calls[0]!.params, ['conversation-1', 'company-1'])
 })

@@ -1,0 +1,377 @@
+/**
+ * Admin panel styles. Self-contained so the panel doesn't inherit
+ * stray rules from the main app's component CSS. Imports the same
+ * CSS variables from globals.css for color tokens.
+ *
+ * Design rules:
+ *   - No left-edge accent bars on rows / cards (reads as AI slop).
+ *     We use horizontal dividers + faint row tone on hover instead.
+ *   - Grid-based tables so columns line up even when text wraps.
+ *   - Toggles and buttons use the preset's muted surface treatment.
+ *     main app rather than fighting it with admin-dashboard chrome.
+ */
+
+/* The app sets `body { overflow: hidden }` so the chat shell can manage
+ * its own scroll regions. The admin panel needs the opposite: a long
+ * user table must scroll. We fix the shell to viewport height and let
+ * `.admin-main` scroll internally — the sidebar stays put without
+ * needing `position: sticky`. */
+.admin-shell {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: inherit;
+}
+
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  background: var(--card);
+  border-right: 1px solid var(--muted);
+  overflow-y: auto;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 0 8px;
+}
+.admin-brand-title { font-weight: 700; font-size: 14px; }
+.admin-brand-sub   { font-size: 11px; color: var(--muted-foreground); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+
+.admin-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.admin-nav-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color 0.12s, color 0.12s;
+}
+.admin-nav-link:hover { background: color-mix(in oklch, var(--primary) 6%, transparent); color: var(--foreground); }
+.admin-nav-link.is-active { background: color-mix(in oklch, var(--primary) 12%, transparent); color: var(--primary); font-weight: 600; }
+.admin-sidebar-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--muted); }
+
+.admin-main { padding: 32px 40px; overflow: auto; }
+
+.admin-page { max-width: 1180px; margin: 0 auto; }
+.admin-page-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+}
+.admin-h1   { font-size: 22px; font-weight: 700; margin: 0; }
+.admin-sub  { font-size: 13px; color: var(--muted-foreground); margin-top: 4px; }
+.admin-filters { display: flex; gap: 8px; }
+
+/* ===== Tables ===== */
+.admin-table {
+  background: var(--card);
+  border: 1px solid var(--muted);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.admin-thead, .admin-row {
+  display: grid;
+  grid-template-columns: 2.2fr 0.8fr 0.7fr 0.6fr 0.9fr 0.9fr;
+  gap: 12px;
+  padding: 10px 16px;
+  align-items: center;
+  font-size: 13px;
+}
+.admin-thead {
+  background: var(--background);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+}
+.admin-row { border-top: 1px solid var(--muted); cursor: pointer; transition: background-color 0.1s; }
+.admin-row:hover { background: color-mix(in oklch, var(--primary) 4%, transparent); }
+.admin-empty { color: var(--muted-foreground); justify-content: center; cursor: default; }
+.admin-empty:hover { background: transparent; }
+
+.admin-cell-user       { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.admin-cell-user-text  { display: flex; flex-direction: column; min-width: 0; }
+.admin-cell-user-name  { font-weight: 600; }
+.admin-cell-user-email { font-size: 12px; color: var(--muted-foreground); margin-top: 1px; }
+.admin-cell-mono       { font-family: ui-monospace, SF Mono, monospace; font-size: 12px; color: var(--muted-foreground); }
+.admin-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--muted);
+  flex-shrink: 0;
+  display: block;
+}
+
+.admin-row-detail {
+  border-top: 1px solid var(--muted);
+  background: var(--background);
+  padding: 16px 24px;
+}
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 24px;
+}
+.admin-detail-field { display: flex; flex-direction: column; }
+.admin-detail-label { font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 4px; letter-spacing: 0.04em; }
+.admin-detail-companies { grid-column: 1 / -1; margin-top: 8px; }
+.admin-detail-actions   { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 8px; }
+
+/* ===== Suspended user — row highlight + detail card ===== */
+.admin-row-suspended { background: color-mix(in oklch, var(--destructive) 4%, transparent); }
+.admin-row-suspended:hover { background: color-mix(in oklch, var(--destructive) 8%, transparent); }
+.admin-detail-suspended {
+  grid-column: 1 / -1;
+  background: color-mix(in oklch, var(--destructive) 12%, transparent);
+  border: 1px solid color-mix(in oklch, var(--destructive) 30%, transparent);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.admin-detail-suspended .admin-detail-label { color: var(--destructive); margin-bottom: 6px; }
+.admin-detail-suspended-meta {
+  font-size: 12px; color: var(--destructive); margin-bottom: 6px;
+}
+.admin-detail-suspended-reason {
+  font-size: 13px; color: var(--foreground); line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word;
+}
+.admin-btn-danger {
+  color: var(--destructive);
+  border-color: color-mix(in oklch, var(--destructive) 40%, transparent);
+}
+.admin-btn-danger:hover:not(:disabled) {
+  background: color-mix(in oklch, var(--destructive) 8%, transparent);
+}
+.admin-detail-company {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  background: var(--card);
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+/* ===== Waitlist table variant ===== */
+.admin-thead-waitlist, .admin-row-waitlist {
+  grid-template-columns: 2.4fr 0.8fr 1fr 1fr 1.4fr;
+}
+.admin-row-actions { display: flex; gap: 8px; }
+.admin-note { font-size: 11px; color: var(--destructive); margin-top: 3px; font-style: italic; }
+
+/* ===== Pills, buttons, toggles ===== */
+.admin-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--foreground);
+  line-height: 1.5;
+}
+.admin-pill-warn { background: color-mix(in oklch, var(--destructive) 12%, transparent); color: var(--destructive); }
+.admin-pill-soft { background: var(--muted); color: var(--muted-foreground); font-weight: 500; }
+.admin-pill-google { background: color-mix(in oklch, var(--primary) 12%, transparent); color: var(--primary); }
+.admin-pill-github { background: var(--muted); color: var(--foreground); }
+
+.admin-pager {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 12px; padding: 0 4px;
+  font-size: 12px; color: var(--muted-foreground);
+}
+.admin-pager-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.admin-pager-ellipsis { color: var(--muted-foreground); padding: 0 2px; align-self: center; }
+
+.admin-banner-err {
+  background: color-mix(in oklch, var(--destructive) 12%, transparent);
+  color: var(--destructive);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ===== Settings ===== */
+.admin-settings { display: flex; flex-direction: column; gap: 8px; }
+.admin-setting {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border: 1px solid var(--muted);
+  border-radius: 10px;
+  background: var(--card);
+  gap: 24px;
+}
+.admin-setting-title { font-weight: 600; margin-bottom: 4px; }
+.admin-setting-desc  { font-size: 13px; color: var(--muted-foreground); line-height: 1.5; max-width: 600px; }
+
+/* ===== Mobile topbar (hidden on desktop) ===== */
+.admin-topbar { display: none; }
+.admin-nav-scrim { display: none; }
+
+/* ===== Mobile / tablet ===== */
+@media (max-width: 900px) {
+  /* The desktop layout fixes the sidebar at 232px; on phones we hide
+   * it behind a burger and slide it in as a drawer so the table gets
+   * the full viewport. The scrim catches taps outside the drawer. */
+  .admin-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52px 1fr;
+  }
+
+  .admin-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    background: var(--card);
+    border-bottom: 1px solid var(--muted);
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .admin-topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .admin-topbar-spacer { flex: 1; }
+  .admin-topbar-burger {
+    width: 36px; height: 36px;
+    border: 1px solid var(--muted);
+    border-radius: 8px;
+    background: var(--background);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .admin-topbar-burger span {
+    display: block;
+    width: 18px; height: 2px;
+    background: var(--foreground);
+    border-radius: 2px;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 260px;
+    z-index: 40;
+    transform: translateX(-100%);
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: none;
+  }
+  .admin-shell.nav-open .admin-sidebar {
+    transform: translateX(0);
+    box-shadow: 0 12px 40px -8px rgba(10, 30, 60, 0.25);
+  }
+  .admin-shell.nav-open .admin-nav-scrim {
+    display: block;
+    position: fixed;
+    inset: 52px 0 0 0;
+    background: rgba(10, 30, 60, 0.32);
+    z-index: 35;
+  }
+
+  .admin-main { padding: 16px 14px; }
+  .admin-page-head { margin-bottom: 16px; }
+  .admin-h1 { font-size: 19px; }
+  .admin-filters { width: 100%; flex-wrap: wrap; }
+  .admin-input { min-width: 0; flex: 1 1 200px; }
+
+  /* Tables → cards. Each row stacks; the grid header is hidden and
+   * each cell gets its column label rendered alongside the value via
+   * a `data-label` attribute. */
+  .admin-table {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .admin-thead { display: none; }
+  .admin-row, .admin-row-waitlist {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 14px;
+    background: var(--card);
+    border: 1px solid var(--muted);
+    border-top: 1px solid var(--muted);
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+  .admin-row.admin-row-suspended { background: color-mix(in oklch, var(--destructive) 6%, transparent); border-color: color-mix(in oklch, var(--destructive) 30%, transparent); }
+  .admin-row > div[data-label] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+  }
+  .admin-row > div[data-label]::before {
+    content: attr(data-label);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted-foreground);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .admin-cell-user { gap: 12px; }
+  .admin-cell-user-text { flex: 1; min-width: 0; }
+  .admin-cell-user-email { word-break: break-all; }
+  .admin-row > div[data-label] .admin-cell-mono,
+  .admin-row > div[data-label].admin-cell-mono { text-align: right; word-break: break-all; }
+  .admin-row-actions {
+    display: flex !important;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .admin-row-detail { padding: 12px 14px; }
+  .admin-detail-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+  }
+  .admin-detail-companies, .admin-detail-actions { grid-column: 1 / -1; }
+
+  /* Settings rows wrap so the long description doesn't squeeze the
+   * switch off the right edge. */
+  .admin-setting {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin-pager {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    text-align: center;
+  }
+  .admin-pager-btns { justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .admin-main { padding: 12px 10px; }
+  .admin-detail-grid { grid-template-columns: 1fr; }
+}

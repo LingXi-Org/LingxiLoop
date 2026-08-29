@@ -1,17 +1,13 @@
-import { platformApi } from '@/api/platform'
+import { authApi } from '@/auth/api'
 import { getServerOrigin } from '@/api/core/http'
 /**
- * Sign-in screen — OAuth only (Google + GitHub). No password forms, no
+ * Sign-in screen — LingxiIdentity only. No password forms, no
  * signup, no forgot. Provider buttons trigger a full-page redirect to
  * /api/auth/start/<provider> on the configured server origin (relative
  * URL goes through the Vite proxy in dev; baked-in absolute URL in
  * packaged builds). The provider returns to /auth/done with a fragment
  * the AuthGate consumes on next mount.
  *
- * Server switcher: dev iteration constantly toggles between Local Dev
- * and Production; we surface that here (not buried in devtools) because
- * picking the server is a sign-in-time decision — the auth token is
- * per-server.
  */
 import { useState, useEffect } from 'react'
 import { isElectron } from '@/lib/runtime'
@@ -59,9 +55,8 @@ export function AuthScreen() {
   function go(provider: 'lingxi') {
     setBusy(provider); setErr(null)
     if (isElectron && window.lingxiloop?.auth) {
-      // Open the user's real browser (Safari / Chrome) so they see the
-      // provider's authentic URL bar and so Google's embedded-webview
-      // bans don't bite us. We pass `?return=http://127.0.0.1:47823/auth/done`
+      // Open the user's real browser so they see LingxiIdentity's authentic
+      // URL bar. We pass `?return=http://127.0.0.1:47823/auth/done`
       // — the loopback HTTP server in main.cjs serves a styled
       // "Signed in" page that POSTs the fragment back to the main
       // process, which IPCs the renderer (see AuthGate's onToken).
@@ -84,7 +79,7 @@ export function AuthScreen() {
           if (nonce) ret += `?n=${encodeURIComponent(nonce)}`
         } catch { /* no arm available → fall through unarmed; token will be rejected, user retries */ }
         void auth.openExternal(
-          `${origin}/api/auth/start/${provider}?return=${encodeURIComponent(ret)}`,
+          authApi.startUrl({ returnUrl: ret }),
         )
       })()
       return
@@ -95,8 +90,8 @@ export function AuthScreen() {
     // the server's default app origin. The origin must be in
     // LINGXILOOP_AUTH_RETURN_ALLOWLIST or the server
     // will reject it.
-    const ret = encodeURIComponent(`${location.origin}${location.pathname}`)
-    location.assign(`${platformApi.authStartUrl(provider)}?return=${ret}`)
+    const returnUrl = `${location.origin}${location.pathname}`
+    location.assign(authApi.startUrl({ returnUrl }))
   }
 
   return (

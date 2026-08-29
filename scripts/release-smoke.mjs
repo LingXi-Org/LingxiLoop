@@ -7,19 +7,16 @@
  *   LINGXILOOP_SMOKE_COMPANY_ID  tenant whose real API surface is exercised
  *   LINGXILOOP_SMOKE_BASE        deployed public origin
  * Optional:
- *   LINGXILOOP_SMOKE_REQUIRE_SHIPPING defaults to Y; set to N only for the
- *                                 pre-deploy compatibility baseline
  *   LINGXILOOP_SMOKE_EXPECTED_SHA     require /api/meta to match this commit
  *   LINGXILOOP_SMOKE_EXPECTED_VERSION require /api/meta to match this version
  *
  * This intentionally checks more than "the load balancer returns 401": it
- * proves authentication, tenant selection, the core conversation read path,
- * and the shipping/readback path all survive the deployed schema + runtime. */
+ * proves authentication, tenant selection and the core conversation read path
+ * all survive the deployed schema + runtime. */
 
 const base = (process.env.LINGXILOOP_SMOKE_BASE || '').replace(/\/+$/, '')
 const token = process.env.LINGXILOOP_SMOKE_TOKEN
 const companyId = process.env.LINGXILOOP_SMOKE_COMPANY_ID
-const requireShipping = (process.env.LINGXILOOP_SMOKE_REQUIRE_SHIPPING || 'Y').toUpperCase() !== 'N'
 const expectedSha = process.env.LINGXILOOP_SMOKE_EXPECTED_SHA
 const expectedVersion = process.env.LINGXILOOP_SMOKE_EXPECTED_VERSION
 
@@ -110,18 +107,7 @@ try {
     })
   })
 
-  let shipping = null
-  if (requireShipping) {
-    shipping = await request('/api/shipping/overview')
-    if (!Array.isArray(shipping?.features) || !Array.isArray(shipping?.friction) || !Array.isArray(shipping?.dueReadbacks)) {
-      throw new Error('/api/shipping/overview returned an invalid contract')
-    }
-  }
-
-  const shippingSummary = shipping
-    ? ` shipping_features=${shipping.features.length} due_readbacks=${shipping.dueReadbacks.length}`
-    : ' shipping=baseline-skipped'
-  console.log(`Smoke passed: company=${companyId} conversations=${conversations.length}${shippingSummary}`)
+  console.log(`Smoke passed: company=${companyId} conversations=${conversations.length}`)
 } catch (error) {
   console.error(`Smoke failed: ${error instanceof Error ? error.message : String(error)}`)
   process.exit(1)

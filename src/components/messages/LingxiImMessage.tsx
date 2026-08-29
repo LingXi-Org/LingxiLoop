@@ -4,7 +4,7 @@ import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { cn } from '@/lib/utils'
 import { useConversationUi } from '@/stores/conversationUi'
 import { useSurface } from '@/stores/surface'
-import { discardFailedMessage, retryFailedMessage, toggleReaction } from '@/stores/messages'
+import { discardFailedMessage, retryFailedMessage, toggleReaction } from '@/features/chat/state/messages'
 import { Avatar } from '../Avatar'
 import { HumanBadge } from '../HumanBadge'
 import { LingxiMessageParts } from './LingxiMessageParts'
@@ -71,9 +71,9 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
   const reactionEntries = Array.from(
     new Map((msg.reactions ?? []).map((reaction) => [reaction.emoji, reaction])).values(),
   )
-  const bubbleReactions = !isStreaming && shell.reactions && reactionEntries.length > 0 ? <>
-    {reactionEntries.map((reaction) => <ReactionPill key={reaction.emoji} msgId={msg.id} reaction={reaction} />)}
-  </> : undefined
+  const bubbleReactions = !isStreaming && shell.reactions && reactionEntries.length > 0
+    ? reactionEntries.map((reaction) => <ReactionPill key={reaction.emoji} msgId={msg.id} reaction={reaction} />)
+    : undefined
   const hasTextBubble = Boolean(msg.body) && shell.bubble
   return (
     <MessagePrimitive.Root
@@ -90,29 +90,31 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
       style={animate ? { animationDelay: `${delay}ms` } : undefined}
     >
       <ContextMenu>
-      <ContextMenuTrigger render={<Message
+      <ContextMenuTrigger asChild>
+      <Message
         align={isMine ? 'end' : 'start'}
         className={cn(!isMine && 'gap-3')}
         data-message-continuation={!groupStart ? 'true' : 'false'}
-      onContextMenuCapture={(event) => {
-        const target = event.target as HTMLElement
-        if (target.closest('a, button, input, textarea, video, audio, [contenteditable="true"]') || window.getSelection()?.toString()) event.stopPropagation()
-      }}
-      />}>
+        onContextMenuCapture={(event) => {
+          const target = event.target as HTMLElement
+          if (target.closest('a, button, input, textarea, video, audio, [contenteditable="true"]') || window.getSelection()?.toString()) event.stopPropagation()
+        }}
+      >
       {!groupStart ? (
         <MessageAvatar className="!w-12" aria-hidden="true" />
       ) : openMaus ? (
-        <MessageAvatar className={cn(!groupStart && 'invisible', shell.avatarAlignment === 'top' && '!self-start !translate-y-0')}>
+        <MessageAvatar className={cn('!overflow-visible !rounded-none !bg-transparent', !groupStart && 'invisible', shell.avatarAlignment === 'top' && '!self-start !translate-y-0')}>
           <Avatar
             p={author}
             size={48}
             ringColor="transparent"
             statusOverride={avatarActivity}
-            className={cn('chat-message-avatar', avatarActivity && `agent-avatar-${avatarActivity}`)}
+            mode="chat"
+            className={cn('chat-message-avatar', avatarActivity && `bloub-activity-${avatarActivity}`)}
           />
         </MessageAvatar>
       ) : !isMine ? (
-        <MessageAvatar className={cn(!groupStart && 'invisible pointer-events-none', shell.avatarAlignment === 'top' && '!self-start !translate-y-0')}>
+        <MessageAvatar className={cn('!overflow-visible !rounded-none !bg-transparent', !groupStart && 'invisible pointer-events-none', shell.avatarAlignment === 'top' && '!self-start !translate-y-0')}>
           <button
             onClick={onAvatarClick}
             className="cursor-pointer rounded-full transition hover:opacity-80 active:scale-95"
@@ -123,16 +125,18 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
               size={48}
               ringColor="transparent"
               statusOverride={avatarActivity}
-              className={cn('chat-message-avatar', avatarActivity && `agent-avatar-${avatarActivity}`)}
+              mode="chat"
+              className={cn('chat-message-avatar', avatarActivity && `bloub-activity-${avatarActivity}`)}
             />
           </button>
         </MessageAvatar>
       ) : (
-        <MessageAvatar className={cn(!groupStart && 'invisible pointer-events-none', shell.avatarAlignment === 'top' && '!self-start !translate-y-0')}>
+        <MessageAvatar className={cn('!overflow-visible !rounded-none !bg-transparent', !groupStart && 'invisible pointer-events-none', shell.avatarAlignment === 'top' && '!self-start !translate-y-0')}>
           <Avatar
             p={author}
             size={48}
             ringColor="transparent"
+            mode="chat"
             className="chat-message-avatar"
           />
         </MessageAvatar>
@@ -195,6 +199,7 @@ function LingxiImMessageImpl({ delay = 0, animate = true, openMaus = false }: Li
         {!hasTextBubble && bubbleReactions && <div className="mt-2 flex flex-wrap items-center gap-1">{bubbleReactions}</div>}
         </MessageFooter>
       </MessageContent>
+      </Message>
       </ContextMenuTrigger>
       <ContextMenuContent aria-label="消息操作"><MessageMenuItems items={actionItems} /></ContextMenuContent>
       </ContextMenu>

@@ -9,13 +9,13 @@ import {
 } from '@/components/ui/command'
 import type { CommandAction } from '@/lib/commands'
 import { useApp } from '@/stores/app'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 import { useTheme } from '@/stores/theme'
 import { useUiCommands } from '@/stores/uiCommands'
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const conversations = useConversations((state) => state.list)
-  const toggleTheme = useTheme((state) => state.toggleTheme)
+  const { toggleTheme } = useTheme()
   const actions = useMemo<CommandAction[]>(() => {
     const dispatch = useUiCommands.getState().dispatch
     return [

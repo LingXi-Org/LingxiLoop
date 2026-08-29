@@ -45,7 +45,7 @@ Run the relevant subset selected by `$lingxiloop-verify-change`; Agent OS change
 npm run guard:agent-os
 npm run guard:llm-tracked
 npm run server:typecheck
-npm test
+npm run test:local
 ```
 
-Run `npm run test:integration` when PostgreSQL/Redis behavior, durable work, IM, Canvas, or Host Actions change. Leave Compose smoke to CI unless the isolated stack is available or the user requests a full rehearsal. Report unrun evidence explicitly.
+CI runs the full unit suite, PostgreSQL/Redis integration, production build, and Compose smoke. Do not start services or run those exhaustive commands locally by default. Run one exact integration file only when the user requests a rehearsal or an owning CI failure must be reproduced; report that focused evidence without treating CI-owned checks as a local blocker.

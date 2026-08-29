@@ -4,9 +4,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useMe } from '@/stores/auth'
-import { useConversations } from '@/stores/conversations'
-import { useMessages } from '@/stores/messages'
-import { useParticipants } from '@/stores/participants'
+import { useConversations } from '@/features/conversations/store'
+import { useMessages } from '@/features/chat/state/messages'
+import { useParticipants } from '@/features/agents/state'
 import type { ImReadReceiptAdvance } from '@/types'
 
 const EMPTY_READ_RECEIPTS: readonly ImReadReceiptAdvance[] = []
@@ -48,12 +48,10 @@ export function ReadReceiptStatus() {
 
   return (
     <Popover>
-      <PopoverTrigger
-        render={(
-          <button type="button" className="mt-1 text-[10px] text-ink-300 underline-offset-2 hover:text-skype-deep hover:underline" />
-        )}
-      >
-        {confirmations.length} 人已读
+      <PopoverTrigger asChild>
+        <button type="button" className="mt-1 text-[10px] text-ink-300 underline-offset-2 hover:text-skype-deep hover:underline">
+          {confirmations.length} 人已读
+        </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 p-2" aria-label="已读成员">
         <p className="px-2 pb-1.5 text-[11px] font-semibold text-ink-500">实际确认时间</p>

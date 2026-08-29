@@ -13,6 +13,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  canonicalMessageId,
   recipientAccepted,
   readArrayHeader,
   toBase64,
@@ -122,6 +123,14 @@ test('getHeader returns first match', () => {
     { key: 'x-foo', value: 'second' },
   ]
   assert.equal(getHeader(headers, 'X-Foo'), 'first')
+})
+
+test('canonicalMessageId prefers the exact LingxiLoop identity over provider rewrites', () => {
+  assert.equal(canonicalMessageId(
+    [{ key: 'X-LingxiLoop-Message-ID', value: '<native@loop.example>' }],
+    'provider-rewrite@amazonses.com',
+  ), 'native@loop.example')
+  assert.equal(canonicalMessageId(undefined, '<external@example.com>'), 'external@example.com')
 })
 
 /* ============================== attachment caps =========================== */

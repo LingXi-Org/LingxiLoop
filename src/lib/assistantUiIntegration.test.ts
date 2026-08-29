@@ -11,6 +11,8 @@ const contentParts = read('../components/messages/MessageContentParts.tsx')
 const toolParts = read('../components/messages/MessageToolParts.tsx')
 const mediaParts = read('../components/messages/MessageMediaParts.tsx')
 const message = read('../components/messages/LingxiImMessage.tsx')
+const avatar = read('../components/Avatar.tsx')
+const bloubAvatar = read('../components/BloubAvatar.tsx')
 const reactions = read('../components/messages/MessageReactions.tsx')
 const quote = read('../components/messages/MessageQuote.tsx')
 const system = read('../components/messages/SystemMessageRow.tsx')
@@ -21,30 +23,31 @@ const cardPrimitive = read('../components/ui/card.tsx')
 const contextMenuPrimitive = read('../components/ui/context-menu.tsx')
 const dropdownMenuPrimitive = read('../components/ui/dropdown-menu.tsx')
 const scrollAreaPrimitive = read('../components/ui/scroll-area.tsx')
-const canvasView = read('../components/CanvasView.tsx')
-const groupCreator = read('../components/GroupCreator.tsx')
+const canvasView = read('../features/canvas/components/CanvasView.tsx')
+const groupCreator = read('../features/conversations/components/GroupCreator.tsx')
 const dialog = read('../components/ui/dialog.tsx')
 const contextMenu = `${message}\n${canvasView}`
 const textareaPrimitive = read('../components/ui/textarea.tsx')
 const inputPrimitive = read('../components/ui/input.tsx')
 const inputGroupPrimitive = read('../components/ui/input-group.tsx')
-const canvasFrameContent = read('../components/CanvasFrameContent.tsx')
+const canvasFrameContent = read('../features/canvas/components/CanvasFrameContent.tsx')
 const attachmentPrimitive = read('../components/ui/attachment.tsx')
 const attachmentCard = read('../components/messages/MessageAttachmentCard.tsx')
-const emailComposer = read('../components/EmailComposer.tsx')
+const emailComposer = read('../features/email/components/EmailComposer.tsx')
 const drawerPrimitive = read('../components/ui/drawer.tsx')
-const globalStyles = read('../styles/globals.css')
-const desktopChat = read('../desktop/ChatPane.tsx')
+const chatStyles = read('../styles/chat.css')
+const globalStyles = read('../styles/globals.css') + chatStyles
+const composerAttachment = read('../features/chat/components/ComposerAttachment.tsx')
 const markdown = read('../components/assistant-ui/markdown-text.tsx')
 const typesetRenderer = read('../components/Typeset.tsx')
 const typesetStyles = read('../styles/typeset.css')
 const messageBody = read('../components/messages/MessageBody.tsx')
 const attachmentViewer = read('../components/AttachmentViewer.tsx')
-const documentEditor = read('../components/DocumentEditor.tsx')
+const documentEditor = read('../features/documents/components/DocumentEditor.tsx')
 const updaterDialog = read('../components/UpdaterDialog.tsx')
 const reasoning = read('../components/assistant-ui/elements/reasoning-panel.tsx')
 const surfaces = read('../components/assistant-ui/elements/surfaces.tsx')
-const styles = read('../styles/globals.css')
+const styles = globalStyles
 const businessParts = read('../components/messages/MessageBusinessParts.tsx')
 const groupContext = read('../components/GroupContextContent.tsx')
 const poll = read('../components/PollBubble.tsx')
@@ -55,7 +58,6 @@ const codeBlock = read('../components/tool-ui/code-block/code-block.tsx')
 const promptKitTool = read('../components/prompt-kit/tool.tsx')
 const readReceiptStatus = read('../components/messages/ReadReceiptStatus.tsx')
 const threadDrawer = read('../desktop/ThreadDrawer.tsx')
-const mockLearningImFixtures = read('../dev/mockLearningImFixtures.ts')
 
 test('optional Zustand collections use stable empty snapshots', () => {
   assert.match(readReceiptStatus, /const EMPTY_READ_RECEIPTS/)
@@ -155,44 +157,39 @@ test('media uses the shared Attachment composition and malformed payload rendere
   assert.match(mediaParts, /return <AttachmentCard \/>/)
   assert.doesNotMatch(mediaParts, /ToolUIImage|<Audio|<Video/)
   for (const slot of ['attachment', 'attachment-media', 'attachment-content', 'attachment-title', 'attachment-description', 'attachment-actions', 'attachment-action', 'attachment-group']) assert.ok(attachmentPrimitive.includes(`data-slot="${slot}"`))
-  assert.match(attachmentPrimitive, /slot: "attachment-trigger"/)
+  assert.match(attachmentPrimitive, /data-slot="attachment-trigger"/)
+  assert.match(attachmentPrimitive, /const Comp = asChild \? Slot\.Root : "button"/)
   assert.match(attachmentPrimitive, /scroll-fade-x/)
   assert.match(attachmentPrimitive, /scrollbar-none/)
   assert.match(attachmentCard, /<AttachmentMedia/)
   assert.match(attachmentCard, /<AttachmentContent/)
   assert.match(attachmentCard, /<AttachmentTrigger/)
   assert.match(emailComposer, /<AttachmentGroup/)
-  assert.match(desktopChat, /<Attachment size="sm"/)
+  assert.match(composerAttachment, /<Attachment size="sm"/)
   assert.match(businessParts, /function EmailAttachmentRow[\s\S]*?<Attachment size="xs"/)
   assert.match(codeBlock, /getDocumentTheme\(\) \?\? getSystemTheme\(\)/)
   assert.match(codeBlock, /resolvedTheme === "dark"/)
   assert.doesNotMatch(parts, /malformed|fallback/i)
 })
 
-test('email composer uses the official Base UI controlled Drawer composition', () => {
+test('email composer uses the official Luma Vaul controlled Drawer composition', () => {
   for (const slot of [
     'drawer',
     'drawer-trigger',
     'drawer-close',
     'drawer-portal',
     'drawer-overlay',
-    'drawer-viewport',
-    'drawer-popup',
     'drawer-content',
-    'drawer-swipe-handle',
     'drawer-header',
     'drawer-footer',
     'drawer-title',
     'drawer-description',
   ]) assert.ok(drawerPrimitive.includes(`data-slot="${slot}"`), `missing ${slot}`)
-  assert.match(drawerPrimitive, /Drawer as DrawerPrimitive.*@base-ui\/react\/drawer/)
-  assert.match(drawerPrimitive, /DrawerPrimitive\.Backdrop/)
-  assert.match(drawerPrimitive, /DrawerPrimitive\.Viewport/)
-  assert.match(drawerPrimitive, /DrawerPrimitive\.Popup/)
+  assert.match(drawerPrimitive, /Drawer as DrawerPrimitive.*from "vaul"/)
+  assert.match(drawerPrimitive, /DrawerPrimitive\.Overlay/)
   assert.match(drawerPrimitive, /DrawerPrimitive\.Content/)
-  assert.match(drawerPrimitive, /data-swipe-axis=\{swipeAxis\}/)
-  assert.match(drawerPrimitive, /data-\[swipe-direction=right\]:right-0/)
-  assert.match(emailComposer, /<Drawer open=\{open\} onOpenChange=[\s\S]*?swipeDirection="right"/)
+  assert.match(drawerPrimitive, /data-\[vaul-drawer-direction=right\]:right-0/)
+  assert.match(emailComposer, /<Drawer open=\{open\} onOpenChange=[\s\S]*?direction="right"/)
   assert.match(emailComposer, /<DrawerContent/)
   assert.match(emailComposer, /<DrawerHeader/)
   assert.match(emailComposer, /<DrawerTitle/)
@@ -246,13 +243,6 @@ test('native tool activity uses localized service presentation without exposing 
   assert.doesNotMatch(activity, /ProgressTracker/)
 })
 
-test('the mock tool gallery exposes every localized service scope in one conversation', () => {
-  assert.match(mockLearningImFixtures, /MOCK_TOOL_GALLERY_ROOM_ID/)
-  for (const toolName of ['web.search', 'code.test', 'knowledge.search', 'figma.inspect', 'email.send', 'workflow.run']) {
-    assert.ok(mockLearningImFixtures.includes(toolName), `missing ${toolName}`)
-  }
-})
-
 test('message surfaces expose stable visual variants without owning message protocol decisions', () => {
   for (const variant of ['bubble', 'inset', 'overlay', 'status']) assert.ok(surfaces.includes(`"${variant}"`))
   for (const variant of ['default', 'interactive', 'destructive', 'parchment', 'media']) assert.ok(surfaces.includes(`"${variant}"`))
@@ -264,7 +254,7 @@ test('message surfaces expose stable visual variants without owning message prot
   }
   assert.match(cardPrimitive, /data-size=\{size\}/)
   assert.match(cardPrimitive, /--card-spacing/)
-  assert.match(surfaces, /const Component = asChild \? Slot : Card/)
+  assert.match(surfaces, /if \(asChild\)[\s\S]*?<Card[\s\S]*?<Slot \{\.\.\.childProps\}>\{children\}<\/Slot>/)
   assert.match(businessParts, /<CardSurface asChild variant="interactive" interactive/)
   assert.match(groupContext, /<CardSurface asChild variant="interactive" interactive/)
   assert.match(bubble, /<MessageSurface/)
@@ -282,20 +272,25 @@ test('message surfaces expose stable visual variants without owning message prot
   assert.match(messagePrimitive, /data-align=\{align\}/)
   assert.match(messagePrimitive, /group-has-data-\[slot=message-footer\]\/message:-translate-y-8/)
   const avatarSlot = messagePrimitive.slice(messagePrimitive.indexOf('function MessageAvatar'), messagePrimitive.indexOf('function MessageContent'))
-  assert.doesNotMatch(avatarSlot, /overflow-hidden|rounded-full|bg-muted|min-w-8/)
+  assert.match(avatarSlot, /overflow-hidden rounded-full bg-muted/)
+  assert.match(message, /!overflow-visible !rounded-none !bg-transparent/)
   assert.match(message, /size=\{48\}/)
   assert.match(message, /ringColor="transparent"/)
   assert.match(message, /chat-message-avatar/)
+  assert.match(message, /mode="chat"/)
+  assert.match(avatar, /mode = 'neutral'/)
+  assert.match(bloubAvatar, /mode === 'chat' \? getBloubState\(participant, status\) : 'idle'/)
+  assert.match(bloubAvatar, /mode === 'chat' && animated/)
   assert.match(styles, /\.chat-message-avatar \.bloub-avatar-alive/)
   assert.match(styles, /@keyframes chat-message-avatar-float/)
   assert.doesNotMatch(bubble, /rounded-(?:l|r|t|b|tl|tr|bl|br)-(?:2xl|md)/)
 })
 
-test('desktop right-click actions use the shared Base UI context menu', () => {
+test('desktop right-click actions use the shared Luma Radix context menu', () => {
   for (const slot of ['context-menu', 'context-menu-trigger', 'context-menu-content', 'context-menu-item', 'context-menu-sub', 'context-menu-sub-content', 'context-menu-separator']) {
     assert.ok(contextMenuPrimitive.includes(`data-slot="${slot}"`))
   }
-  assert.match(contextMenuPrimitive, /@base-ui\/react\/context-menu/)
+  assert.match(contextMenuPrimitive, /ContextMenu as ContextMenuPrimitive.*from "radix-ui"/)
   assert.match(contextMenuPrimitive, /data-\[variant=destructive\]/)
   assert.match(contextMenu, /<ContextMenuTrigger/)
   assert.match(contextMenu, /<ContextMenuSubTrigger/)
@@ -303,17 +298,17 @@ test('desktop right-click actions use the shared Base UI context menu', () => {
   assert.doesNotMatch(contextMenu, /dispatchEvent\(new MouseEvent\('contextmenu'/)
 })
 
-test('Canvas editors retain the base-nova Textarea contract', () => {
+test('Canvas editors retain the Luma Textarea contract', () => {
   assert.match(textareaPrimitive, /data-slot="textarea"/)
-  for (const token of ['field-sizing-content', 'rounded-lg', 'border-input', 'focus-visible:border-ring', 'focus-visible:ring-3', 'aria-invalid:border-destructive', 'dark:bg-input/30']) {
+  for (const token of ['field-sizing-content', 'rounded-2xl', 'border-transparent', 'bg-input/50', 'focus-visible:border-ring', 'focus-visible:ring-3', 'aria-invalid:border-destructive']) {
     assert.ok(textareaPrimitive.includes(token))
   }
 })
 
-test('text inputs and grouped controls retain the base-nova contracts', () => {
-  assert.match(inputPrimitive, /@base-ui\/react\/input/)
+test('text inputs and grouped controls retain the Luma contracts', () => {
+  assert.match(inputPrimitive, /React\.ComponentProps<"input">/)
   assert.match(inputPrimitive, /data-slot="input"/)
-  for (const token of ['rounded-lg', 'border-input', 'focus-visible:border-ring', 'focus-visible:ring-3', 'aria-invalid:border-destructive', 'dark:bg-input/30']) assert.ok(inputPrimitive.includes(token))
+  for (const token of ['rounded-3xl', 'border-transparent', 'bg-input/50', 'focus-visible:border-ring', 'focus-visible:ring-3', 'aria-invalid:border-destructive']) assert.ok(inputPrimitive.includes(token))
   for (const slot of ['input-group', 'input-group-addon', 'input-group-control']) assert.ok(inputGroupPrimitive.includes(`data-slot="${slot}"`))
   assert.match(inputGroupPrimitive, /has-\[\[data-slot=input-group-control\]:focus-visible\]:ring-3/)
 })
@@ -356,27 +351,26 @@ test('all rendered prose uses the official Typeset styling contract', () => {
   ]) assert.ok(!globalStyles.includes(legacySelector), `legacy typography remains: ${legacySelector}`)
 })
 
-test('global menus expose the complete Base UI dropdown composition', () => {
+test('global menus expose the complete Luma Radix dropdown composition', () => {
   for (const slot of ['dropdown-menu', 'dropdown-menu-trigger', 'dropdown-menu-content', 'dropdown-menu-group', 'dropdown-menu-label', 'dropdown-menu-item', 'dropdown-menu-sub', 'dropdown-menu-sub-content', 'dropdown-menu-checkbox-item', 'dropdown-menu-radio-group', 'dropdown-menu-radio-item', 'dropdown-menu-separator', 'dropdown-menu-shortcut']) {
     assert.ok(dropdownMenuPrimitive.includes(`data-slot="${slot}"`))
   }
-  assert.match(dropdownMenuPrimitive, /@base-ui\/react\/menu/)
-  assert.match(dropdownMenuPrimitive, /cn-menu-target cn-menu-translucent/)
+  assert.match(dropdownMenuPrimitive, /DropdownMenu as DropdownMenuPrimitive.*from "radix-ui"/)
+  assert.match(dropdownMenuPrimitive, /rounded-3xl bg-popover/)
   assert.match(dropdownMenuPrimitive, /variant\?: "default" \| "destructive"/)
 })
 
-test('group creation uses the shared Base UI Dialog instead of a handwritten overlay', () => {
-  assert.match(dialog, /@base-ui\/react\/dialog/)
+test('group creation uses the shared Luma Radix Dialog instead of a handwritten overlay', () => {
+  assert.match(dialog, /Dialog as DialogPrimitive.*from "radix-ui"/)
   assert.match(groupCreator, /<Dialog open/)
   assert.match(groupCreator, /<DialogContent/)
   assert.match(groupCreator, /<DialogTitle/)
   assert.match(groupCreator, /<DialogDescription/)
   assert.doesNotMatch(groupCreator, /fixed inset-0 z-50 grid place-items-center/)
-  assert.doesNotMatch(dialog, /@radix-ui\/react-dialog/)
 })
 
-test('scrolling surfaces use the base-nova Scroll Area contract', () => {
-  assert.match(scrollAreaPrimitive, /@base-ui\/react\/scroll-area/)
+test('scrolling surfaces use the Luma Radix Scroll Area contract', () => {
+  assert.match(scrollAreaPrimitive, /ScrollArea as ScrollAreaPrimitive.*from "radix-ui"/)
   for (const slot of ['scroll-area', 'scroll-area-viewport', 'scroll-area-scrollbar', 'scroll-area-thumb']) {
     assert.ok(scrollAreaPrimitive.includes(`data-slot="${slot}"`))
   }

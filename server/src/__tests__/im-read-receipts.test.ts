@@ -52,7 +52,8 @@ test('Agent context and explicit chat.history advance receipts only after histor
 
 test('recordReadReceiptAdvance ignores repeats and appends exact intervals', async () => {
   process.env.LINGXILOOP_RUNTIME_CLIENT = 'http'
-  process.env.DEEPSEEK_API_KEY ||= 'unit-test-key'
+  process.env.OPENAI_API_KEY ||= 'unit-test-key'
+  process.env.OPENAI_EMBEDDING_MODEL ||= 'text-embedding-3-small'
   const { recordReadReceiptAdvance } = await import('../im/read-receipts.js')
   let current = 0
   const rows: Array<Record<string, unknown>> = []

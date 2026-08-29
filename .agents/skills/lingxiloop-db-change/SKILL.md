@@ -42,8 +42,7 @@ Use `$lingxiloop-verify-change` to select the exact set. Database changes normal
 
 ```text
 npm run server:typecheck
-npm test
-npm run test:integration
+npm run test:local
 ```
 
-Run the focused v1 schema tests when bootstrap or integrity behavior changes. Run Agent OS/LLM guards when the persisted contract belongs to those paths. If PostgreSQL, Redis, extensions, or production-sized data are unavailable, report that limitation and the CI or staging evidence still required.
+Run the focused v1 schema unit tests when bootstrap or integrity behavior changes. Run Agent OS/LLM guards when the persisted contract belongs to those paths. CI owns the full unit and PostgreSQL/Redis integration suites; do not provision services or run the entire integration directory locally by default. Reproduce only an exact failing integration file when requested.

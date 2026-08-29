@@ -2,7 +2,7 @@ import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type PDFPagePr
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { filesApi } from '@/api/files'
+import { uploadsApi } from '@/features/platform/api'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
 import type { Message } from '@/types'
@@ -12,9 +12,10 @@ GlobalWorkerOptions.workerSrc ||= pdfWorkerUrl
 
 type Attachment = NonNullable<Message['attachment']>
 
-async function freshUrl(url: string): Promise<string> {
-  if (/^(data:|blob:)/i.test(url) || url.startsWith('/')) return url
-  try { return (await filesApi.refreshUploadUrl(url)).url } catch { return url }
+async function freshUrl(attachment: Attachment): Promise<string> {
+  if (/^(data:|blob:)/i.test(attachment.url) || attachment.url.startsWith('/')) return attachment.url
+  if (!attachment.key) throw new Error('attachment storage key is missing')
+  return (await uploadsApi.refreshUploadUrl({ key: attachment.key })).url
 }
 
 function ViewerShell({ name, url, onClose, children }: { name: string; url: string; onClose: () => void; children: React.ReactNode }) {
@@ -32,7 +33,7 @@ function PdfPage({ pageNumber, document, scale, onVisible }: { pageNumber: numbe
   const hostRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [visible, setVisible] = useState(pageNumber <= 2)
-  const [ratio, setRatio] = useState(1.414)
+  const [ratio, setRatio] = useState(Math.SQRT2)
   useEffect(() => {
     const host = hostRef.current
     if (!host || !('IntersectionObserver' in window)) { setVisible(true); return }
@@ -163,7 +164,7 @@ export function AttachmentViewer({ attachment, kind, onClose }: { attachment: At
   useEffect(() => {
     let active = true
     if (!attachment.url) { setError('附件没有可用的下载地址'); return }
-    void freshUrl(attachment.url).then((value) => { if (active) setUrl(value) }).catch(() => { if (active) setError('无法刷新附件地址') })
+    void freshUrl(attachment).then((value) => { if (active) setUrl(value) }).catch(() => { if (active) setError('无法刷新附件地址') })
     return () => { active = false }
   }, [attachment.url])
   if (typeof document === 'undefined') return null

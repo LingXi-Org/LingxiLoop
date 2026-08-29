@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
-import { nextTeacherDigestRun } from '../learning/teacher-agent.js'
+import { nextTeacherDigestRun } from '../modules/learning/runtime.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 
 type Schedule = {

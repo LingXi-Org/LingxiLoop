@@ -13,13 +13,8 @@
  *   - Redis is OUTSIDE the DB transaction graph — no row locks, no contention
  *     with the inbox query. Atomic Lua keeps the monotonic update race-free.
  *   - TTL=10min auto-cleans; no schema change, no migration, no growth.
- *
- * Why fail-open:
- *   - This is a coordination signal, not a correctness invariant. If Redis is
- *     down or returns an error, the worst case is a duplicate-number collision
- *     (the bug we're trying to *reduce*, not eliminate) — never a daemon hang
- *     or a lost message. The previous design failed CLOSED (synchronous DB
- *     contention could stall a turn forever); this one explicitly fails open.
+ * Redis is a required coordination dependency. Redis failures propagate to
+ * the caller so freshness guarantees cannot silently disappear.
  */
 import { redis } from '../redis.js'
 
@@ -46,37 +41,20 @@ return 0
 
 /** Record that this agent has been SHOWN messages up to (at least) `seq` in
  *  this conversation. Idempotent / monotonic: never regresses, always
- *  refreshes TTL on a higher-or-equal advance. Fire-and-forget; failures are
- *  logged but never thrown (the caller is on a turn hot path). */
+ *  refreshes TTL on a higher-or-equal advance. */
 export async function recordSeen(agentId: string, conversationId: string, seq: number): Promise<void> {
   if (!agentId || !conversationId) return
   if (!Number.isFinite(seq) || seq <= 0) return
-  try {
-    await redis.eval(MONOTONIC_SET_SCRIPT, 1, key(agentId, conversationId), String(seq), String(TTL_SECONDS))
-  } catch (err) {
-    console.warn(
-      `[seen-boundary] recordSeen(${agentId}, ${conversationId}, ${seq}) failed — fail-open`,
-      err instanceof Error ? err.message : err,
-    )
-  }
+  await redis.eval(MONOTONIC_SET_SCRIPT, 1, key(agentId, conversationId), String(seq), String(TTL_SECONDS))
 }
 
 /** Read the high-water seq this agent has been SHOWN in this conversation.
- *  Returns 0 if unset, expired, or Redis error (FAIL-OPEN — treat the agent
- *  as "no boundary tracked" so the preflight is skipped, not stalled). */
+ *  Returns 0 only when the key is unset or expired. */
 export async function getSeen(agentId: string, conversationId: string): Promise<number> {
   if (!agentId || !conversationId) return 0
-  try {
-    const v = await redis.get(key(agentId, conversationId))
-    const n = v ? Number(v) : 0
-    return Number.isFinite(n) && n > 0 ? n : 0
-  } catch (err) {
-    console.warn(
-      `[seen-boundary] getSeen(${agentId}, ${conversationId}) failed — fail-open`,
-      err instanceof Error ? err.message : err,
-    )
-    return 0
-  }
+  const v = await redis.get(key(agentId, conversationId))
+  const n = v ? Number(v) : 0
+  return Number.isFinite(n) && n > 0 ? n : 0
 }
 
 // ─── Compose anchor (turn-start timestamp) ────────────────────────────────
@@ -92,8 +70,7 @@ export async function getSeen(agentId: string, conversationId: string): Promise<
 // timestamp, INDEPENDENT of any subsequent glance/messages calls. The
 // preflight queries `messages.created_at > anchor` — so anything a peer
 // posted while we were composing trips a HOLD even if we later glanced and
-// "absorbed" it into the seen-baseline. Same Redis-only fail-open
-// semantics as seen-baseline.
+// "absorbed" it into the seen-baseline.
 //
 // Lifecycle: daemon writes at turn START; cli.cmdReply reads on preflight;
 // cleared on successful post (or TTL — same 10min as seen).
@@ -106,48 +83,27 @@ function anchorKey(agentId: string, conversationId: string): string {
 
 /** Stamp the moment this agent's current compose started, for the freshness
  *  preflight to compare against at post time. OVERWRITES — every turn START
- *  is a fresh anchor (unlike `recordSeen`, which is monotonic). Pure Redis,
- *  fail-open. */
+ *  is a fresh anchor (unlike `recordSeen`, which is monotonic). */
 export async function recordComposeAnchor(agentId: string, conversationId: string, tsMs: number): Promise<void> {
   if (!agentId || !conversationId) return
   if (!Number.isFinite(tsMs) || tsMs <= 0) return
-  try {
-    await redis.set(anchorKey(agentId, conversationId), String(Math.floor(tsMs)), 'EX', TTL_SECONDS)
-  } catch (err) {
-    console.warn(
-      `[seen-boundary] recordComposeAnchor(${agentId}, ${conversationId}, ${tsMs}) failed — fail-open`,
-      err instanceof Error ? err.message : err,
-    )
-  }
+  await redis.set(anchorKey(agentId, conversationId), String(Math.floor(tsMs)), 'EX', TTL_SECONDS)
 }
 
-/** Read the compose anchor (unix-ms) for this agent+convo. Returns 0 if
- *  unset / expired / Redis error → preflight falls through to the seen-
- *  baseline path (FAIL-OPEN, same posture as `getSeen`). */
+/** Read the compose anchor (unix-ms) for this agent+convo. Returns 0 when
+ *  unset or expired, which selects the seen-baseline path. */
 export async function getComposeAnchor(agentId: string, conversationId: string): Promise<number> {
   if (!agentId || !conversationId) return 0
-  try {
-    const v = await redis.get(anchorKey(agentId, conversationId))
-    const n = v ? Number(v) : 0
-    return Number.isFinite(n) && n > 0 ? n : 0
-  } catch (err) {
-    console.warn(
-      `[seen-boundary] getComposeAnchor(${agentId}, ${conversationId}) failed — fail-open`,
-      err instanceof Error ? err.message : err,
-    )
-    return 0
-  }
+  const v = await redis.get(anchorKey(agentId, conversationId))
+  const n = v ? Number(v) : 0
+  return Number.isFinite(n) && n > 0 ? n : 0
 }
 
 /** Clear the compose anchor after the agent successfully posts in this
  *  conversation. TTL handles the leak case if this never runs. */
 export async function clearComposeAnchor(agentId: string, conversationId: string): Promise<void> {
   if (!agentId || !conversationId) return
-  try {
-    await redis.del(anchorKey(agentId, conversationId))
-  } catch {
-    /* fail-open — TTL will reclaim it */
-  }
+  await redis.del(anchorKey(agentId, conversationId))
 }
 
 // ─── Hold token (HELD-acknowledgement gate for override flags) ────────────
@@ -205,20 +161,19 @@ return false
 
 /** What a consumed hold token acknowledges. */
 export interface HoldAcknowledgement {
-  /** A token existed (or Redis failed open) — the override flag is armed. */
+  /** A token existed, so the override flag is armed. */
   armed: boolean
   /** The highest peer `messages.sequence` the HELD envelope showed the agent,
    *  when the recording gate knew it (reply preflight). null = armed without
-   *  state info (doc/calendar title scopes, legacy token, Redis fail-open) —
-   *  the caller can't staleness-check and honors the flag as before. */
+   *  state info (doc/calendar title scopes) — the caller cannot perform a
+   *  sequence staleness check. */
   heldUpToSeq: number | null
 }
 
 /** Record that a HELD envelope was just shown to this agent for `scope`
  *  (e.g. `reply:<convoId>`, `doc-create:<normalized title>`). For reply
  *  scopes pass `heldUpToSeq` — the max peer sequence the envelope showed —
- *  so consumption can verify the acknowledgement is still current. Fire-
- *  and-forget; failures are logged, never thrown. */
+ *  so consumption can verify the acknowledgement is still current. */
 export async function recordHold(agentId: string, scope: string, heldUpToSeq?: number): Promise<void> {
   if (!agentId || !scope) return
   // 'seq:<n>' when the gate knew the shown high-water seq; bare '1' when it
@@ -227,37 +182,20 @@ export async function recordHold(agentId: string, scope: string, heldUpToSeq?: n
   const value = Number.isFinite(heldUpToSeq) && (heldUpToSeq as number) > 0
     ? `seq:${Math.floor(heldUpToSeq as number)}`
     : '1'
-  try {
-    await redis.set(holdKey(agentId, scope), value, 'EX', HOLD_TTL_SECONDS)
-  } catch (err) {
-    console.warn(
-      `[seen-boundary] recordHold(${agentId}, ${scope}) failed — fail-open`,
-      err instanceof Error ? err.message : err,
-    )
-  }
+  await redis.set(holdKey(agentId, scope), value, 'EX', HOLD_TTL_SECONDS)
 }
 
 /** Consume (read + delete) the hold token for this agent+scope. `armed`
  *  says whether the agent has actually been shown a HELD envelope it can
  *  now acknowledge; `heldUpToSeq` is the state that envelope showed (when
- *  recorded with one). FAIL-OPEN to armed on Redis error: an infra hiccup
- *  must degrade to today's behavior (flag honored), never to blocked
- *  work. */
+ *  recorded with one). Redis failures reject the command. */
 export async function consumeHold(agentId: string, scope: string): Promise<HoldAcknowledgement> {
   if (!agentId || !scope) return { armed: false, heldUpToSeq: null }
-  try {
-    const r = await redis.eval(CONSUME_SCRIPT, 1, holdKey(agentId, scope))
-    if (typeof r !== 'string' && typeof r !== 'number') return { armed: false, heldUpToSeq: null }
-    const m = /^seq:(\d+)$/.exec(String(r))
-    const seq = m ? Number(m[1]) : NaN
-    return { armed: true, heldUpToSeq: Number.isFinite(seq) && seq > 0 ? seq : null }
-  } catch (err) {
-    console.warn(
-      `[seen-boundary] consumeHold(${agentId}, ${scope}) failed — fail-open (honoring override)`,
-      err instanceof Error ? err.message : err,
-    )
-    return { armed: true, heldUpToSeq: null }
-  }
+  const r = await redis.eval(CONSUME_SCRIPT, 1, holdKey(agentId, scope))
+  if (typeof r !== 'string' && typeof r !== 'number') return { armed: false, heldUpToSeq: null }
+  const m = /^seq:(\d+)$/.exec(String(r))
+  const seq = m ? Number(m[1]) : NaN
+  return { armed: true, heldUpToSeq: Number.isFinite(seq) && seq > 0 ? seq : null }
 }
 
 /** Drop a lingering hold token after the agent successfully committed
@@ -265,9 +203,5 @@ export async function consumeHold(agentId: string, scope: string): Promise<HoldA
  *  preemptive bypass. TTL covers the leak case. */
 export async function clearHold(agentId: string, scope: string): Promise<void> {
   if (!agentId || !scope) return
-  try {
-    await redis.del(holdKey(agentId, scope))
-  } catch {
-    /* fail-open — TTL will reclaim it */
-  }
+  await redis.del(holdKey(agentId, scope))
 }

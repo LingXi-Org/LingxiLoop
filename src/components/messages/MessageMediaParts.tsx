@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { CitationList } from '@/components/tool-ui/citation'
 import { MessageDraft } from '@/components/tool-ui/message-draft'
-import { useKnowledgeSources } from '@/stores/knowledgeSources'
-import type { KnowledgeCitation, Message } from '@/types'
+import { useKnowledgeSources } from '@/features/knowledge/state'
+import type { KnowledgeCitation } from '@/features/knowledge/contracts'
+import type { Message } from '@/types'
 import { EmailCard } from './MessageBusinessParts'
 import { AttachmentCard } from './MessageAttachmentCard'
 

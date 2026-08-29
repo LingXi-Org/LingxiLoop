@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { test } from 'node:test'
-import { DeepSeekChatDriver, ModelAdapterError } from '../agent-os/model-driver.js'
+import { OpenAIChatDriver, ModelAdapterError } from '../agent-os/model-driver.js'
 
 async function withGateway(
   events: unknown[],
   run: (baseURL: string, requestBodies: Record<string, unknown>[]) => Promise<void>,
-  fallbackResponse?: unknown,
 ): Promise<void> {
   const requestBodies: Record<string, unknown>[] = []
   const server = createServer((request, response) => {
@@ -15,11 +14,6 @@ async function withGateway(
     request.on('end', () => {
       const requestBody = JSON.parse(Buffer.concat(body).toString()) as Record<string, unknown>
       requestBodies.push(requestBody)
-      if (requestBody.stream === false) {
-        response.writeHead(200, { 'content-type': 'application/json' })
-        response.end(JSON.stringify(fallbackResponse))
-        return
-      }
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       for (const event of events) response.write(`data: ${JSON.stringify(event)}\n\n`)
       response.end('data: [DONE]\n\n')
@@ -35,13 +29,13 @@ async function withGateway(
   }
 }
 
-test('OpenAI-compatible stream parses complete message envelopes and marks missing usage', async () => {
+test('OpenAI stream parses native deltas and marks missing usage', async () => {
   const events = [{
-    id: 'chatcmpl-compatible', object: 'chat.completion.chunk', created: 1, model: 'compatible',
-    choices: [{ index: 0, message: { role: 'assistant', content: 'Gateway reply' }, finish_reason: 'stop' }],
+    id: 'chatcmpl-native', object: 'chat.completion.chunk', created: 1, model: 'native-test-model',
+    choices: [{ index: 0, delta: { role: 'assistant', content: 'Gateway reply' }, finish_reason: 'stop' }],
   }]
   await withGateway(events, async (baseURL, requestBodies) => {
-    const driver = new DeepSeekChatDriver('compatible', { apiKey: 'test', baseURL })
+    const driver = new OpenAIChatDriver('native-test-model', { apiKey: 'test', baseURL })
     const result = await driver.run({ instructions: 'System prompt', items: [{ role: 'user', content: 'Hello' }] })
     assert.equal(result.text, 'Gateway reply')
     assert.deepEqual(result.output, [{ role: 'assistant', content: 'Gateway reply' }])
@@ -52,13 +46,13 @@ test('OpenAI-compatible stream parses complete message envelopes and marks missi
   })
 })
 
-test('empty compatible stream throws an explicit adapter error with parse diagnostics', async () => {
+test('empty native stream throws an explicit adapter error with parse diagnostics', async () => {
   const events = [{
-    id: 'chatcmpl-empty', object: 'chat.completion.chunk', created: 1, model: 'compatible',
+    id: 'chatcmpl-empty', object: 'chat.completion.chunk', created: 1, model: 'native-test-model',
     choices: [{ index: 0, delta: { role: 'assistant' }, finish_reason: 'stop' }],
   }]
   await withGateway(events, async (baseURL, requestBodies) => {
-    const driver = new DeepSeekChatDriver('compatible', { apiKey: 'test', baseURL })
+    const driver = new OpenAIChatDriver('native-test-model', { apiKey: 'test', baseURL })
     await assert.rejects(
       driver.run({ instructions: 'System prompt', items: [{ role: 'user', content: 'Hello' }] }),
       (error: unknown) => {
@@ -67,31 +61,22 @@ test('empty compatible stream throws an explicit adapter error with parse diagno
         assert.equal(error.diagnostics.chunkCount, 1)
         assert.deepEqual(error.diagnostics.finishReasons, ['stop'])
         assert.match(error.diagnostics.chunkShapes[0] ?? '', /deltaKeys/)
-        assert.deepEqual(requestBodies.map((body) => body.stream), [true, false])
+        assert.deepEqual(requestBodies.map((body) => body.stream), [true])
         return true
       },
     )
-  }, {
-    id: 'fallback-empty', object: 'chat.completion', created: 1, model: 'compatible',
-    choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: '' } }],
   })
 })
 
-test('empty stream falls back to a non-streaming compatible response', async () => {
+test('empty stream fails without issuing an alternate request', async () => {
   await withGateway([], async (baseURL, requestBodies) => {
-    const deltas: string[] = []
-    const result = await new DeepSeekChatDriver('compatible', { apiKey: 'test', baseURL }).run({
-      instructions: 'System prompt',
-      items: [{ role: 'user', content: 'Hello' }],
-      onTextDelta: (delta) => { deltas.push(delta) },
-    })
-    assert.equal(result.text, 'Recovered reply')
-    assert.deepEqual(deltas, ['Recovered reply'])
-    assert.deepEqual(result.usage, { inputTokens: 12, outputTokens: 3, available: true })
-    assert.deepEqual(requestBodies.map((body) => body.stream), [true, false])
-  }, {
-    id: 'fallback', object: 'chat.completion', created: 1, model: 'compatible',
-    choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'Recovered reply' } }],
-    usage: { prompt_tokens: 12, completion_tokens: 3, total_tokens: 15 },
+    await assert.rejects(
+      new OpenAIChatDriver('native-test-model', { apiKey: 'test', baseURL }).run({
+        instructions: 'System prompt',
+        items: [{ role: 'user', content: 'Hello' }],
+      }),
+      ModelAdapterError,
+    )
+    assert.deepEqual(requestBodies.map((body) => body.stream), [true])
   })
 })

@@ -181,7 +181,7 @@ CREATE TABLE public.agent_autonomy_rules (
 CREATE TABLE public.agent_climate (
     agent_id text NOT NULL,
     about_id text NOT NULL,
-    company_id text DEFAULT 'personal'::text NOT NULL,
+    company_id text NOT NULL,
     affinity real DEFAULT 0 NOT NULL,
     trust real DEFAULT 0 NOT NULL,
     last_note text DEFAULT ''::text NOT NULL,
@@ -402,7 +402,6 @@ CREATE TABLE public.agent_runs (
     input_message_ids jsonb DEFAULT '[]'::jsonb NOT NULL,
     inbox_count integer DEFAULT 0 NOT NULL,
     tool_call_count integer DEFAULT 0 NOT NULL,
-    token_count integer DEFAULT 0 NOT NULL,
     fingerprint text,
     started_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -411,8 +410,6 @@ CREATE TABLE public.agent_runs (
     cached_input_tokens integer DEFAULT 0 NOT NULL,
     cache_creation_tokens integer DEFAULT 0 NOT NULL,
     output_tokens integer DEFAULT 0 NOT NULL,
-    cost_usd double precision DEFAULT 0 NOT NULL,
-    cost_estimated boolean DEFAULT true NOT NULL,
     model text,
     reasoning_runtime text,
     external_runtime_run_id text
@@ -452,8 +449,6 @@ CREATE TABLE public.agent_triages (
     cached_input_tokens integer DEFAULT 0 NOT NULL,
     cache_creation_tokens integer DEFAULT 0 NOT NULL,
     output_tokens integer DEFAULT 0 NOT NULL,
-    cost_usd double precision DEFAULT 0 NOT NULL,
-    cost_estimated boolean DEFAULT true NOT NULL,
     measured boolean DEFAULT true NOT NULL,
     run_id text,
     created_at timestamp with time zone DEFAULT now() NOT NULL
@@ -650,7 +645,10 @@ CREATE TABLE public.calendar_dispatches (
     status text DEFAULT 'dispatched'::text NOT NULL,
     conversation_id text,
     message_id text,
-    error text
+    error text,
+    claimed_at timestamp with time zone DEFAULT now() NOT NULL,
+    attempt_count integer DEFAULT 1 NOT NULL,
+    CONSTRAINT calendar_dispatches_attempt_count_check CHECK (attempt_count > 0)
 );
 
 
@@ -679,7 +677,13 @@ CREATE TABLE public.calendar_events (
     reminder_minutes_before integer,
     reminder_channel text,
     is_private boolean DEFAULT false NOT NULL,
-    project_id text
+    project_id text NOT NULL,
+    CONSTRAINT calendar_events_kind_check CHECK (kind = ANY (ARRAY['personal'::text, 'agent_task'::text])),
+    CONSTRAINT calendar_events_status_check CHECK (status = ANY (ARRAY['active'::text, 'paused'::text, 'done'::text, 'cancelled'::text])),
+    CONSTRAINT calendar_events_agent_task_check CHECK (kind <> 'agent_task'::text OR (assignee_id IS NOT NULL AND target_conversation_id IS NOT NULL)),
+    CONSTRAINT calendar_events_reminder_check CHECK ((reminder_minutes_before IS NULL) = (reminder_channel IS NULL)),
+    CONSTRAINT calendar_events_reminder_minutes_check CHECK (reminder_minutes_before IS NULL OR (reminder_minutes_before >= 0 AND reminder_minutes_before <= 20160)),
+    CONSTRAINT calendar_events_reminder_channel_check CHECK (reminder_channel IS NULL OR reminder_channel = ANY (ARRAY['toast'::text, 'email'::text, 'both'::text]))
 );
 
 
@@ -695,8 +699,12 @@ CREATE TABLE public.calendar_reminders (
     fired_at timestamp with time zone DEFAULT now() NOT NULL,
     channel text NOT NULL,
     recipients jsonb DEFAULT '[]'::jsonb NOT NULL,
+    delivered_legs jsonb DEFAULT '[]'::jsonb NOT NULL,
     status text DEFAULT 'sent'::text NOT NULL,
-    error text
+    error text,
+    claimed_at timestamp with time zone DEFAULT now() NOT NULL,
+    attempt_count integer DEFAULT 1 NOT NULL,
+    CONSTRAINT calendar_reminders_attempt_count_check CHECK (attempt_count > 0)
 );
 
 
@@ -713,7 +721,14 @@ CREATE TABLE public.canvas_activity (
     action text NOT NULL,
     detail jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT canvas_activity_actor_kind_check CHECK ((actor_kind = ANY (ARRAY['user'::text, 'agent'::text])))
+    CONSTRAINT canvas_activity_actor_kind_check CHECK ((actor_kind = ANY (ARRAY['user'::text, 'agent'::text]))),
+    CONSTRAINT canvas_activity_action_check CHECK ((action = ANY (ARRAY[
+      'workspace_started'::text, 'workspace_updated'::text,
+      'frame_created'::text, 'frame_updated'::text, 'frame_deleted'::text,
+      'comment_created'::text, 'agent_status'::text,
+      'assignment_created'::text, 'assignment_updated'::text,
+      'handoff'::text, 'task_completed'::text, 'task_failed'::text, 'task_cancelled'::text
+    ])))
 );
 
 
@@ -831,7 +846,7 @@ CREATE TABLE public.canvases (
     goal text DEFAULT ''::text NOT NULL,
     initiator_agent_id text,
     status text DEFAULT 'active'::text NOT NULL,
-    origin text DEFAULT 'legacy'::text NOT NULL,
+    origin text NOT NULL,
     summary text,
     completed_at timestamp with time zone,
     project_id text,
@@ -850,11 +865,6 @@ CREATE TABLE public.companies (
     owner_user_id text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    starter_seeded_at timestamp with time zone,
-    starter_dms_seeded_at timestamp with time zone,
-    all_hands_conversation_id text,
-    all_hands_seeded_at timestamp with time zone,
-    starter_preset_version integer DEFAULT 0 NOT NULL,
     description text DEFAULT ''::text NOT NULL
 );
 
@@ -1336,12 +1346,15 @@ CREATE TABLE public.im_polls (
     channel_type integer DEFAULT 2 NOT NULL,
     company_id text NOT NULL,
     author_id text NOT NULL,
+    request_fingerprint text NOT NULL,
     poll jsonb NOT NULL,
     revision bigint DEFAULT 1 NOT NULL,
+    published_revision bigint DEFAULT 0 NOT NULL,
     wukong_message_id text,
     wukong_message_seq bigint,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT im_polls_revision_check CHECK (published_revision >= 0 AND published_revision <= revision)
 );
 
 
@@ -1483,56 +1496,59 @@ CREATE TABLE public.knowledge_sources (
 
 
 --
+-- Name: document_mention_deliveries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.document_mention_deliveries (
+    id text NOT NULL,
+    company_id text NOT NULL,
+    document_id text NOT NULL,
+    project_id text NOT NULL,
+    mentioner_id text NOT NULL,
+    mentioner_name text NOT NULL,
+    document_title text NOT NULL,
+    recipients jsonb NOT NULL,
+    status text DEFAULT 'queued'::text NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    available_at timestamp with time zone DEFAULT now() NOT NULL,
+    leased_until timestamp with time zone,
+    leased_by text,
+    last_error text,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT document_mention_deliveries_recipients_check CHECK (((jsonb_typeof(recipients) = 'array'::text) AND (jsonb_array_length(recipients) > 0))),
+    CONSTRAINT document_mention_deliveries_status_check CHECK ((status = ANY (ARRAY['queued'::text, 'processing'::text, 'completed'::text, 'failed'::text])))
+);
+
+
+--
 -- Name: llm_calls; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.llm_calls (
     id text NOT NULL,
-    company_id text,
+    company_id text NOT NULL,
     agent_id text,
     run_id text,
     conversation_id text,
     purpose text NOT NULL,
-    source text DEFAULT 'cloud'::text NOT NULL,
+    source text NOT NULL,
     model text NOT NULL,
     input_tokens integer DEFAULT 0 NOT NULL,
     cached_input_tokens integer DEFAULT 0 NOT NULL,
-    cache_creation_tokens integer DEFAULT 0 NOT NULL,
     output_tokens integer DEFAULT 0 NOT NULL,
-    reasoning_tokens integer DEFAULT 0 NOT NULL,
-    cost_usd double precision DEFAULT 0 NOT NULL,
+    cost_usd numeric(14,8) DEFAULT 0 NOT NULL,
     cost_estimated boolean DEFAULT true NOT NULL,
-    measured boolean DEFAULT true NOT NULL,
-    latency_ms integer,
-    status text DEFAULT 'ok'::text NOT NULL,
+    measured boolean DEFAULT false NOT NULL,
+    latency_ms integer DEFAULT 0 NOT NULL,
+    status text NOT NULL,
     error text,
-    extras jsonb,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: llm_calls_rollup; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.llm_calls_rollup (
-    bucket_hour timestamp with time zone NOT NULL,
-    company_id text,
-    agent_id text,
-    purpose text NOT NULL,
-    model text NOT NULL,
-    source text NOT NULL,
-    calls bigint DEFAULT 0 NOT NULL,
-    ok_calls bigint DEFAULT 0 NOT NULL,
-    failed_calls bigint DEFAULT 0 NOT NULL,
-    rate_limited_calls bigint DEFAULT 0 NOT NULL,
-    input_tokens bigint DEFAULT 0 NOT NULL,
-    cached_input_tokens bigint DEFAULT 0 NOT NULL,
-    cache_creation_tokens bigint DEFAULT 0 NOT NULL,
-    output_tokens bigint DEFAULT 0 NOT NULL,
-    reasoning_tokens bigint DEFAULT 0 NOT NULL,
-    cost_usd double precision DEFAULT 0 NOT NULL,
-    cost_estimated boolean DEFAULT true NOT NULL
+    extras jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT llm_calls_source_check CHECK (source = ANY (ARRAY['product'::text, 'agent-os'::text, 'eval'::text])),
+    CONSTRAINT llm_calls_status_check CHECK (status = ANY (ARRAY['succeeded'::text, 'failed'::text])),
+    CONSTRAINT llm_calls_tokens_check CHECK (input_tokens >= 0 AND cached_input_tokens >= 0 AND output_tokens >= 0 AND latency_ms >= 0 AND cost_usd >= 0)
 );
 
 
@@ -1545,7 +1561,7 @@ CREATE TABLE public.message_reactions (
     user_id text NOT NULL,
     emoji text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    company_id text
+    company_id text NOT NULL
 );
 
 
@@ -1597,7 +1613,8 @@ CREATE TABLE public.participants (
     avatar_url text,
     preset_key text,
     company_id text NOT NULL,
-    email text
+    email text,
+    CONSTRAINT participants_agent_bloub_only CHECK (((kind <> 'agent'::text) OR (avatar_url IS NULL)))
 );
 
 
@@ -1661,189 +1678,6 @@ CREATE TABLE public.sessions (
 
 
 --
--- Name: shipping_events; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.shipping_events (
-    id text NOT NULL,
-    company_id text NOT NULL,
-    feature_id text,
-    actor_id text,
-    kind text NOT NULL,
-    data jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: shipping_features; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.shipping_features (
-    id text NOT NULL,
-    company_id text NOT NULL,
-    project_id text,
-    conversation_id text,
-    document_id text,
-    board_card_id text,
-    title text NOT NULL,
-    problem text DEFAULT ''::text NOT NULL,
-    desired_outcome text DEFAULT ''::text NOT NULL,
-    contract_summary text DEFAULT ''::text NOT NULL,
-    status text DEFAULT 'draft'::text NOT NULL,
-    priority text DEFAULT 'medium'::text NOT NULL,
-    risk_level text DEFAULT 'medium'::text NOT NULL,
-    release_target text,
-    builder_ids jsonb DEFAULT '[]'::jsonb NOT NULL,
-    created_by text NOT NULL,
-    updated_by text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    archived_at timestamp with time zone,
-    CONSTRAINT shipping_features_priority_check CHECK ((priority = ANY (ARRAY['critical'::text, 'high'::text, 'medium'::text, 'low'::text]))),
-    CONSTRAINT shipping_features_risk_check CHECK ((risk_level = ANY (ARRAY['critical'::text, 'high'::text, 'medium'::text, 'low'::text]))),
-    CONSTRAINT shipping_features_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'contract'::text, 'building'::text, 'verifying'::text, 'ready'::text, 'releasing'::text, 'watching'::text, 'learned'::text, 'paused'::text, 'archived'::text])))
-);
-
-
---
--- Name: shipping_friction_reports; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.shipping_friction_reports (
-    id text NOT NULL,
-    company_id text NOT NULL,
-    feature_id text,
-    conversation_id text,
-    message_id text,
-    reporter_id text,
-    source text DEFAULT 'manual'::text NOT NULL,
-    title text NOT NULL,
-    description text DEFAULT ''::text NOT NULL,
-    severity text DEFAULT 'medium'::text NOT NULL,
-    frequency text DEFAULT 'once'::text NOT NULL,
-    status text DEFAULT 'open'::text NOT NULL,
-    evidence jsonb DEFAULT '[]'::jsonb NOT NULL,
-    occurrence_count integer DEFAULT 1 NOT NULL,
-    first_seen_at timestamp with time zone DEFAULT now() NOT NULL,
-    last_seen_at timestamp with time zone DEFAULT now() NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    source_key text,
-    CONSTRAINT shipping_friction_frequency_check CHECK ((frequency = ANY (ARRAY['once'::text, 'occasional'::text, 'frequent'::text, 'constant'::text]))),
-    CONSTRAINT shipping_friction_severity_check CHECK ((severity = ANY (ARRAY['critical'::text, 'high'::text, 'medium'::text, 'low'::text]))),
-    CONSTRAINT shipping_friction_status_check CHECK ((status = ANY (ARRAY['open'::text, 'triaged'::text, 'planned'::text, 'resolved'::text, 'dismissed'::text])))
-);
-
-
---
--- Name: shipping_invariants; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.shipping_invariants (
-    id text NOT NULL,
-    feature_id text NOT NULL,
-    title text NOT NULL,
-    description text DEFAULT ''::text NOT NULL,
-    kind text DEFAULT 'behavior'::text NOT NULL,
-    required boolean DEFAULT true NOT NULL,
-    "position" double precision DEFAULT 0 NOT NULL,
-    created_by text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT shipping_invariants_kind_check CHECK ((kind = ANY (ARRAY['behavior'::text, 'architecture'::text, 'data'::text, 'security'::text, 'performance'::text, 'ux'::text, 'operability'::text])))
-);
-
-
---
--- Name: shipping_regressions; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.shipping_regressions (
-    id text NOT NULL,
-    feature_id text NOT NULL,
-    invariant_id text,
-    source_verification_id text,
-    title text NOT NULL,
-    kind text DEFAULT 'automated'::text NOT NULL,
-    command text,
-    expected text DEFAULT ''::text NOT NULL,
-    status text DEFAULT 'active'::text NOT NULL,
-    last_result text,
-    last_evidence jsonb DEFAULT '[]'::jsonb NOT NULL,
-    last_run_at timestamp with time zone,
-    created_by text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT shipping_regressions_kind_check CHECK ((kind = ANY (ARRAY['automated'::text, 'benchmark'::text, 'manual_replay'::text, 'monitor'::text]))),
-    CONSTRAINT shipping_regressions_status_check CHECK ((status = ANY (ARRAY['active'::text, 'passing'::text, 'failing'::text, 'disabled'::text])))
-);
-
-
---
--- Name: shipping_releases; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.shipping_releases (
-    id text NOT NULL,
-    feature_id text NOT NULL,
-    environment text NOT NULL,
-    status text DEFAULT 'planned'::text NOT NULL,
-    version text,
-    commit_sha text,
-    started_by text,
-    approved_by text,
-    release_notes text DEFAULT ''::text NOT NULL,
-    rollback_plan text DEFAULT ''::text NOT NULL,
-    known_gaps jsonb DEFAULT '[]'::jsonb NOT NULL,
-    baseline jsonb DEFAULT '[]'::jsonb NOT NULL,
-    smoke_evidence jsonb DEFAULT '[]'::jsonb NOT NULL,
-    readback_due_at timestamp with time zone,
-    readback_status text DEFAULT 'pending'::text NOT NULL,
-    readback_evidence jsonb DEFAULT '[]'::jsonb NOT NULL,
-    started_at timestamp with time zone,
-    completed_at timestamp with time zone,
-    rolled_back_at timestamp with time zone,
-    rollback_reason text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT shipping_releases_environment_check CHECK ((environment = ANY (ARRAY['development'::text, 'staging'::text, 'canary'::text, 'production'::text]))),
-    CONSTRAINT shipping_releases_readback_check CHECK ((readback_status = ANY (ARRAY['pending'::text, 'passed'::text, 'failed'::text, 'overdue'::text]))),
-    CONSTRAINT shipping_releases_status_check CHECK ((status = ANY (ARRAY['planned'::text, 'approved'::text, 'running'::text, 'succeeded'::text, 'failed'::text, 'rolled_back'::text])))
-);
-
-
---
--- Name: shipping_verifications; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.shipping_verifications (
-    id text NOT NULL,
-    feature_id text NOT NULL,
-    invariant_id text,
-    title text NOT NULL,
-    description text DEFAULT ''::text NOT NULL,
-    method text DEFAULT 'user_path'::text NOT NULL,
-    required boolean DEFAULT true NOT NULL,
-    status text DEFAULT 'pending'::text NOT NULL,
-    owner_id text,
-    verified_by_id text,
-    builder_ids jsonb DEFAULT '[]'::jsonb NOT NULL,
-    evidence jsonb DEFAULT '[]'::jsonb NOT NULL,
-    notes text DEFAULT ''::text NOT NULL,
-    "position" double precision DEFAULT 0 NOT NULL,
-    due_at timestamp with time zone,
-    completed_at timestamp with time zone,
-    created_by text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT shipping_verifications_method_check CHECK ((method = ANY (ARRAY['user_path'::text, 'property'::text, 'trace'::text, 'data_reconciliation'::text, 'design_qa'::text, 'security'::text, 'performance'::text, 'release_note'::text]))),
-    CONSTRAINT shipping_verifications_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'running'::text, 'passed'::text, 'failed'::text, 'waived'::text]))),
-    CONSTRAINT shipping_verifier_not_builder CHECK (((verified_by_id IS NULL) OR (NOT (builder_ids ? verified_by_id))))
-);
-
-
---
 -- Name: tool_calls; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1901,9 +1735,6 @@ CREATE TABLE public.users (
     last_login_at timestamp with time zone,
     email_verified_at timestamp with time zone,
     avatar_url text,
-    tier text DEFAULT 'free'::text NOT NULL,
-    sub2api_user_id bigint,
-    sub2api_api_key text,
     deleted_at timestamp with time zone,
     is_admin boolean DEFAULT false NOT NULL,
     suspended_at timestamp with time zone,
@@ -2017,7 +1848,7 @@ ALTER TABLE ONLY public.agent_autonomy_rules
 --
 
 ALTER TABLE ONLY public.agent_climate
-    ADD CONSTRAINT agent_climate_pkey PRIMARY KEY (agent_id, about_id);
+    ADD CONSTRAINT agent_climate_pkey PRIMARY KEY (company_id, agent_id, about_id);
 
 
 --
@@ -2469,6 +2300,14 @@ ALTER TABLE ONLY public.document_mentions
 
 
 --
+-- Name: document_mention_deliveries document_mention_deliveries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.document_mention_deliveries
+    ADD CONSTRAINT document_mention_deliveries_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: document_snapshots document_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2746,62 +2585,6 @@ ALTER TABLE ONLY public.projects
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT sessions_pkey PRIMARY KEY (token_hash);
-
-
---
--- Name: shipping_events shipping_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_events
-    ADD CONSTRAINT shipping_events_pkey PRIMARY KEY (id);
-
-
---
--- Name: shipping_features shipping_features_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_features
-    ADD CONSTRAINT shipping_features_pkey PRIMARY KEY (id);
-
-
---
--- Name: shipping_friction_reports shipping_friction_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_friction_reports
-    ADD CONSTRAINT shipping_friction_reports_pkey PRIMARY KEY (id);
-
-
---
--- Name: shipping_invariants shipping_invariants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_invariants
-    ADD CONSTRAINT shipping_invariants_pkey PRIMARY KEY (id);
-
-
---
--- Name: shipping_regressions shipping_regressions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_regressions
-    ADD CONSTRAINT shipping_regressions_pkey PRIMARY KEY (id);
-
-
---
--- Name: shipping_releases shipping_releases_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_releases
-    ADD CONSTRAINT shipping_releases_pkey PRIMARY KEY (id);
-
-
---
--- Name: shipping_verifications shipping_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_verifications
-    ADD CONSTRAINT shipping_verifications_pkey PRIMARY KEY (id);
 
 
 --
@@ -3416,6 +3199,20 @@ CREATE INDEX idx_document_mentions_recipient ON public.document_mentions USING b
 
 
 --
+-- Name: idx_document_mention_deliveries_due; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_document_mention_deliveries_due ON public.document_mention_deliveries USING btree (available_at, created_at) WHERE (status = ANY (ARRAY['queued'::text, 'processing'::text]));
+
+
+--
+-- Name: idx_document_mention_deliveries_company; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_document_mention_deliveries_company ON public.document_mention_deliveries USING btree (company_id, created_at DESC);
+
+
+--
 -- Name: idx_document_updates_doc; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3598,38 +3395,10 @@ CREATE INDEX idx_knowledge_sources_project ON public.knowledge_sources USING btr
 
 
 --
--- Name: idx_llm_calls_agent_created; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_llm_calls_company_created; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_llm_calls_agent_created ON public.llm_calls USING btree (agent_id, created_at DESC) WHERE (agent_id IS NOT NULL);
-
-
---
--- Name: idx_llm_calls_company_purpose_created; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_calls_company_purpose_created ON public.llm_calls USING btree (company_id, purpose, created_at DESC);
-
-
---
--- Name: idx_llm_calls_created; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_calls_created ON public.llm_calls USING btree (created_at);
-
-
---
--- Name: idx_llm_calls_created_brin; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_calls_created_brin ON public.llm_calls USING brin (created_at);
-
-
---
--- Name: idx_llm_calls_model_purpose_created; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_calls_model_purpose_created ON public.llm_calls USING btree (model, purpose, created_at DESC);
+CREATE INDEX idx_llm_calls_company_created ON public.llm_calls USING btree (company_id, created_at DESC);
 
 
 --
@@ -3637,20 +3406,6 @@ CREATE INDEX idx_llm_calls_model_purpose_created ON public.llm_calls USING btree
 --
 
 CREATE INDEX idx_llm_calls_run_created ON public.llm_calls USING btree (run_id, created_at) WHERE (run_id IS NOT NULL);
-
-
---
--- Name: idx_llm_rollup_bucket; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_llm_rollup_bucket ON public.llm_calls_rollup USING btree (bucket_hour DESC);
-
-
---
--- Name: idx_llm_rollup_key; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_llm_rollup_key ON public.llm_calls_rollup USING btree (bucket_hour, company_id, agent_id, purpose, model, source) NULLS NOT DISTINCT;
 
 
 --
@@ -3787,90 +3542,6 @@ CREATE INDEX idx_sessions_user ON public.sessions USING btree (user_id);
 
 
 --
--- Name: idx_shipping_events_feature; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_events_feature ON public.shipping_events USING btree (feature_id, created_at);
-
-
---
--- Name: idx_shipping_features_company_status; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_features_company_status ON public.shipping_features USING btree (company_id, status, updated_at DESC);
-
-
---
--- Name: idx_shipping_features_project; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_features_project ON public.shipping_features USING btree (project_id, updated_at DESC) WHERE (project_id IS NOT NULL);
-
-
---
--- Name: idx_shipping_friction_company; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_friction_company ON public.shipping_friction_reports USING btree (company_id, status, severity, last_seen_at DESC);
-
-
---
--- Name: idx_shipping_friction_source_key; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_shipping_friction_source_key ON public.shipping_friction_reports USING btree (company_id, source_key) WHERE (source_key IS NOT NULL);
-
-
---
--- Name: idx_shipping_invariants_feature; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_invariants_feature ON public.shipping_invariants USING btree (feature_id, "position");
-
-
---
--- Name: idx_shipping_regressions_feature; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_regressions_feature ON public.shipping_regressions USING btree (feature_id, status, updated_at DESC);
-
-
---
--- Name: idx_shipping_regressions_source_verification; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_shipping_regressions_source_verification ON public.shipping_regressions USING btree (source_verification_id) WHERE (source_verification_id IS NOT NULL);
-
-
---
--- Name: idx_shipping_releases_feature; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_releases_feature ON public.shipping_releases USING btree (feature_id, created_at DESC);
-
-
---
--- Name: idx_shipping_releases_readback; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_releases_readback ON public.shipping_releases USING btree (readback_status, readback_due_at) WHERE ((status = 'succeeded'::text) AND (environment = 'production'::text));
-
-
---
--- Name: idx_shipping_verifications_feature; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_verifications_feature ON public.shipping_verifications USING btree (feature_id, "position");
-
-
---
--- Name: idx_shipping_verifications_owner; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_shipping_verifications_owner ON public.shipping_verifications USING btree (owner_id, status, updated_at DESC) WHERE (owner_id IS NOT NULL);
-
-
---
 -- Name: idx_tool_calls_agent; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4000,7 +3671,7 @@ CREATE UNIQUE INDEX uniq_calendar_reminders_slot ON public.calendar_reminders US
 -- Name: uniq_email_messages_smtp_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX uniq_email_messages_smtp_id ON public.email_messages USING btree (lower(smtp_message_id)) WHERE (smtp_message_id IS NOT NULL);
+CREATE UNIQUE INDEX uniq_email_messages_smtp_id ON public.email_messages USING btree (company_id, lower(smtp_message_id)) WHERE (smtp_message_id IS NOT NULL);
 
 
 --
@@ -4411,13 +4082,6 @@ ALTER TABLE ONLY public.canvases
 
 
 --
--- Name: companies companies_all_hands_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.companies
-    ADD CONSTRAINT companies_all_hands_conversation_id_fkey FOREIGN KEY (all_hands_conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
-
-
 --
 -- Name: company_invitations company_invitations_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
@@ -4568,6 +4232,30 @@ ALTER TABLE ONLY public.courses
 
 ALTER TABLE ONLY public.document_mentions
     ADD CONSTRAINT document_mentions_document_id_fkey FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE CASCADE;
+
+
+--
+-- Name: document_mention_deliveries document_mention_deliveries_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.document_mention_deliveries
+    ADD CONSTRAINT document_mention_deliveries_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: document_mention_deliveries document_mention_deliveries_document_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.document_mention_deliveries
+    ADD CONSTRAINT document_mention_deliveries_document_id_fkey FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE CASCADE;
+
+
+--
+-- Name: document_mention_deliveries document_mention_deliveries_project_id_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.document_mention_deliveries
+    ADD CONSTRAINT document_mention_deliveries_project_id_company_id_fkey FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE;
 
 
 --
@@ -4763,6 +4451,14 @@ ALTER TABLE ONLY public.knowledge_source_chat_sessions
 
 
 --
+-- Name: llm_calls llm_calls_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.llm_calls
+    ADD CONSTRAINT llm_calls_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
 -- Name: knowledge_source_chat_sessions knowledge_source_chat_sessions_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4856,142 +4552,6 @@ ALTER TABLE ONLY public.projects
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_events shipping_events_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_events
-    ADD CONSTRAINT shipping_events_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_events shipping_events_feature_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_events
-    ADD CONSTRAINT shipping_events_feature_id_fkey FOREIGN KEY (feature_id) REFERENCES public.shipping_features(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_features shipping_features_board_card_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_features
-    ADD CONSTRAINT shipping_features_board_card_id_fkey FOREIGN KEY (board_card_id) REFERENCES public.board_cards(id) ON DELETE SET NULL;
-
-
---
--- Name: shipping_features shipping_features_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_features
-    ADD CONSTRAINT shipping_features_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_features shipping_features_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_features
-    ADD CONSTRAINT shipping_features_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
-
-
---
--- Name: shipping_features shipping_features_document_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_features
-    ADD CONSTRAINT shipping_features_document_id_fkey FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE SET NULL;
-
-
---
--- Name: shipping_features shipping_features_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_features
-    ADD CONSTRAINT shipping_features_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE SET NULL;
-
-
---
--- Name: shipping_friction_reports shipping_friction_reports_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_friction_reports
-    ADD CONSTRAINT shipping_friction_reports_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_friction_reports shipping_friction_reports_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_friction_reports
-    ADD CONSTRAINT shipping_friction_reports_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
-
-
---
--- Name: shipping_friction_reports shipping_friction_reports_feature_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_friction_reports
-    ADD CONSTRAINT shipping_friction_reports_feature_id_fkey FOREIGN KEY (feature_id) REFERENCES public.shipping_features(id) ON DELETE SET NULL;
-
-
---
--- Name: shipping_invariants shipping_invariants_feature_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_invariants
-    ADD CONSTRAINT shipping_invariants_feature_id_fkey FOREIGN KEY (feature_id) REFERENCES public.shipping_features(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_regressions shipping_regressions_feature_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_regressions
-    ADD CONSTRAINT shipping_regressions_feature_id_fkey FOREIGN KEY (feature_id) REFERENCES public.shipping_features(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_regressions shipping_regressions_invariant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_regressions
-    ADD CONSTRAINT shipping_regressions_invariant_id_fkey FOREIGN KEY (invariant_id) REFERENCES public.shipping_invariants(id) ON DELETE SET NULL;
-
-
---
--- Name: shipping_regressions shipping_regressions_source_verification_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_regressions
-    ADD CONSTRAINT shipping_regressions_source_verification_id_fkey FOREIGN KEY (source_verification_id) REFERENCES public.shipping_verifications(id) ON DELETE SET NULL;
-
-
---
--- Name: shipping_releases shipping_releases_feature_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_releases
-    ADD CONSTRAINT shipping_releases_feature_id_fkey FOREIGN KEY (feature_id) REFERENCES public.shipping_features(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_verifications shipping_verifications_feature_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_verifications
-    ADD CONSTRAINT shipping_verifications_feature_id_fkey FOREIGN KEY (feature_id) REFERENCES public.shipping_features(id) ON DELETE CASCADE;
-
-
---
--- Name: shipping_verifications shipping_verifications_invariant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shipping_verifications
-    ADD CONSTRAINT shipping_verifications_invariant_id_fkey FOREIGN KEY (invariant_id) REFERENCES public.shipping_invariants(id) ON DELETE SET NULL;
 
 
 --
@@ -5304,6 +4864,7 @@ CREATE TABLE public.learning_attempts (
     assistance text DEFAULT 'none'::text NOT NULL,
     evidence jsonb NOT NULL,
     status text DEFAULT 'submitted'::text NOT NULL,
+    client_submission_id text,
     submitted_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT learning_attempts_single_source_check CHECK (num_nonnulls(activity_id, mission_step_id) = 1),
     CONSTRAINT learning_attempts_assistance_check
@@ -5322,6 +4883,10 @@ ALTER TABLE ONLY public.learning_mission_steps
 
 CREATE INDEX idx_learning_attempts_learner
     ON public.learning_attempts USING btree (company_id, course_id, learner_id, submitted_at DESC);
+
+CREATE UNIQUE INDEX uniq_learning_activity_submission
+    ON public.learning_attempts USING btree (company_id, course_id, activity_id, learner_id, client_submission_id)
+    WHERE client_submission_id IS NOT NULL;
 
 CREATE TABLE public.learning_evaluations (
     id text PRIMARY KEY,
@@ -5457,6 +5022,46 @@ CREATE UNIQUE INDEX uq_learning_deliveries_course
     WHERE (course_id IS NOT NULL);
 CREATE INDEX idx_learning_notification_pending
     ON public.learning_notification_deliveries USING btree (status, available_at, created_at)
+    WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]));
+
+CREATE TABLE public.learning_effects (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    course_id text NOT NULL,
+    kind text NOT NULL,
+    effect_key text DEFAULT 'singleton'::text NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    queued_payload jsonb,
+    generation integer DEFAULT 1 NOT NULL,
+    queued_generation integer,
+    status text DEFAULT 'pending'::text NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    available_at timestamp with time zone DEFAULT now() NOT NULL,
+    lease_token text,
+    lease_expires_at timestamp with time zone,
+    error text,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT learning_effects_kind_check CHECK (kind = ANY (ARRAY[
+      'study_room.sync'::text, 'teacher_room.sync'::text, 'teacher_agent.welcome'::text,
+      'notebook.ensure'::text, 'course_metadata.sync'::text, 'course_archive.sync'::text,
+      'member_access.revoke'::text, 'member_onboarding.seed'::text
+    ])),
+    CONSTRAINT learning_effects_status_check CHECK (status = ANY (ARRAY[
+      'pending'::text, 'processing'::text, 'completed'::text, 'failed'::text
+    ])),
+    CONSTRAINT learning_effects_course_company_fkey
+      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT learning_effects_attempts_check CHECK (attempts >= 0),
+    CONSTRAINT learning_effects_generation_check CHECK (
+      generation > 0 AND (queued_generation IS NULL OR queued_generation > generation)
+    ),
+    CONSTRAINT learning_effects_effect_identity_key UNIQUE(company_id, course_id, kind, effect_key)
+);
+
+CREATE INDEX idx_learning_effects_pending
+    ON public.learning_effects USING btree (status, available_at, created_at)
     WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]));
 
 

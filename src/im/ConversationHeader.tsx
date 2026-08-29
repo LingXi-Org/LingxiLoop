@@ -1,12 +1,12 @@
 import { type ReactNode, useState } from 'react'
-import { conversationsApi } from '@/api/conversations'
+import { conversationsApi } from '@/features/conversations/api'
 import { AvatarStack } from '@/components/Avatar'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
-import { useConversations } from '@/stores/conversations'
-import { useParticipants } from '@/stores/participants'
+import { useConversations } from '@/features/conversations/store'
+import { useParticipants } from '@/features/agents/state'
 import type { Participant } from '@/types'
 
 export function ConversationHeader({

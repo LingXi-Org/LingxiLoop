@@ -36,7 +36,7 @@ interface InboundAttachment {
   contentBase64: string
   /** True when the source attachment was rejected — present only as
    *  metadata so the user still sees "[filename] (skipped — too large)". */
-  truncated?: boolean
+  truncated: boolean
 }
 
 interface InboundPayload {
@@ -126,6 +126,15 @@ export function getHeader(headers: { key: string; value: string }[] | undefined,
   return undefined
 }
 
+export function canonicalMessageId(
+  headers: { key: string; value: string }[] | undefined,
+  parsedMessageId: string | undefined,
+): string {
+  return (getHeader(headers, 'X-LingxiLoop-Message-ID') ?? parsedMessageId ?? '')
+    .trim()
+    .replace(/^<+|>+$/g, '')
+}
+
 export default {
   async email(message: ForwardableEmailMessage, env: Env, ctx: ExecutionContext): Promise<void> {
     if (!recipientAccepted(message.to, env)) {
@@ -177,6 +186,7 @@ export default {
       attachments.push({
         filename, mimeType, sizeBytes: raw.byteLength,
         contentBase64: toBase64(raw),
+        truncated: false,
       })
       totalAttachmentBytes += raw.byteLength
     }
@@ -188,7 +198,7 @@ export default {
     const autoSubmittedRaw = (getHeader(parsed.headers, 'Auto-Submitted') ?? '').trim().toLowerCase()
     const autoSubmitted = autoSubmittedRaw && autoSubmittedRaw !== 'no' ? autoSubmittedRaw : null
     const payload: InboundPayload = {
-      messageId: (parsed.messageId ?? '').replace(/^<+|>+$/g, ''),
+      messageId: canonicalMessageId(parsed.headers, parsed.messageId),
       inReplyTo: parsed.inReplyTo ? parsed.inReplyTo.replace(/^<+|>+$/g, '') : null,
       references: readArrayHeader(referencesHeader),
       from: parsed.from ? fmtAddress(parsed.from) : message.from,

@@ -15,7 +15,7 @@ Operators provide `.env.secrets`; CI uploads only `.release.next.env`, Compose
 and deployment scripts.
 
 LingxiLoop v1 requires an empty PostgreSQL database. The release has no schema
-upgrade, compatibility ALTER, or data backfill path: discard pre-v1 development
+upgrade, transitional ALTER, or data backfill path: discard pre-v1 development
 databases and create a new database. For an external database, run
 `npm run db:bootstrap`; the supplied Compose topology runs the same bootstrap
 before Web startup. Seed data is created separately by the background Worker
@@ -27,12 +27,13 @@ the complete marked v1 schema; an unmarked or partial database fails closed.
 Operators then verify `/api/meta`, dependency health, authenticated channel
 access and the release version. Web, Worker, and Agent OS processes never
 execute DDL. Web and Worker use the same server image but have separate Compose
-services, commands, restart policies, and replica counts. Rollback reuses the
-complete v1 schema with the previous digest manifest; it does not attempt an
-in-place schema downgrade.
+services, commands, restart policies, and replica counts. Rollback restores the
+database snapshot paired with the previous digest manifest; it never reuses a
+database written by another release or attempts an in-place schema downgrade.
 
-When all four core `R2_*` secrets are configured, the production deployment
-also reconciles the bucket CORS policy before application cutover. The
+All six `R2_*` values are mandatory: endpoint, bucket, access key, secret key,
+public base URL and URL-signing secret. The production deployment reconciles
+the bucket CORS policy before application cutover. The
 deployment image applies the policy and reads it back, requiring presigned
 `PUT` permission for the production web origin plus the Electron renderer
 origin (`app://lingxiloop`).

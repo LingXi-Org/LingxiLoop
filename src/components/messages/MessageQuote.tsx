@@ -1,5 +1,5 @@
 import { useConversationUi } from '@/stores/conversationUi'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { Message } from '@/types'
 
 export function QuoteCard({ message }: { message: Message }) {

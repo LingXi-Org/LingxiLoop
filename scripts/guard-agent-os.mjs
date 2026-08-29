@@ -20,7 +20,7 @@ const activeFiles = [
   join(root, 'server/src/web.ts'),
   join(root, 'server/src/im/router.ts'),
   join(root, 'src/lib/im/wukong.ts'),
-  join(root, 'src/stores/messages.ts'),
+  ...sourceFiles(join(root, 'src/features/chat/state')).filter((path) => !path.includes('.test.')),
 ]
 
 for (const retiredPath of [
@@ -64,9 +64,13 @@ const controlPlane = readFileSync(join(root, 'server/src/agent-os/control-plane.
 // Keep the architecture guard deterministic across Windows and POSIX worktrees.
 const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8').replaceAll('\r\n', '\n')
 const promptAssembly = readFileSync(join(root, 'server/src/agent-os/prompt-assembly.ts'), 'utf8')
-const canvasService = readFileSync(join(root, 'server/src/canvas/service.ts'), 'utf8')
+const canvasDomain = sourceFiles(join(root, 'server/src/modules/canvas'))
+  .filter((path) => !path.includes('.test.'))
+  .map((path) => readFileSync(path, 'utf8'))
+  .join('\n')
 const schema = readFileSync(join(root, 'server/src/db/schema.sql'), 'utf8')
-const teacherAgent = readFileSync(join(root, 'server/src/learning/teacher-agent.ts'), 'utf8')
+const teacherAgent = readFileSync(join(root, 'server/src/modules/learning/teacher-agent-application.ts'), 'utf8')
+const teacherProvisioningRepository = readFileSync(join(root, 'server/src/modules/learning/teacher-provisioning-repository.ts'), 'utf8')
 if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
   failures.push('learning must exist only as a capability-gated loop.learning Host Bridge namespace')
 }
@@ -79,8 +83,8 @@ if (!runtime.includes("allowedNamespaces: ['teacher', 'turn']")
   failures.push('Pulse IPython must expose only teacher/turn and use a dedicated transient contract')
 }
 if (!teacherAgent.includes("PULSE_CAPABILITIES = ['teacher_admin']")
-  || !teacherAgent.includes("JSON.stringify(['ipython'])")
-  || /loop\.learning/.test(teacherAgent)) {
+  || !teacherProvisioningRepository.includes("JSON.stringify(['ipython'])")
+  || /loop\.learning/.test(`${teacherAgent}\n${teacherProvisioningRepository}`)) {
   failures.push('Pulse identity must remain product-managed with tools=[ipython] and no learner SDK')
 }
 if (!controlPlane.includes("namespace === 'teacher'") || !controlPlane.includes('teacher_managed')) {
@@ -103,12 +107,12 @@ if (/classifyAgent|agentName.*(?:match|test)|(?:match|test).*agentName/.test(pro
 if (!promptAssembly.includes('executionRole') || !runtime.includes("work.reason === 'canvas_summary'")) {
   failures.push('task-scoped execution roles and reporter phase must remain explicit')
 }
-if (!actions.includes('submit_report') || !canvasService.includes('assertCanvasWorkReportReady')
-  || !canvasService.includes('learning_report_v1')) {
+if (!actions.includes('submit_report') || !canvasDomain.includes('assertCanvasWorkReportReady')
+  || !canvasDomain.includes('learning_report_v1')) {
   failures.push('Canvas completion must be gated by a persisted structured report')
 }
 if (!schema.includes('canvas_assignment_verifier_not_self_check')
-  || !canvasService.includes('builder and verifier must be different agents')) {
+  || !canvasDomain.includes('builder and verifier must be different agents')) {
   failures.push('builder/verifier separation must be enforced by Host and database')
 }
 if (!schema.includes('progress_fingerprint') || !controlPlane.includes('no_progress_count')) {
@@ -116,14 +120,14 @@ if (!schema.includes('progress_fingerprint') || !controlPlane.includes('no_progr
 }
 const currentProductSurface = [
   readFileSync(join(root, 'server/src/api/router.ts'), 'utf8'),
-  readFileSync(join(root, 'server/src/modules/conversations/service.ts'), 'utf8'),
+  readFileSync(join(root, 'server/src/modules/conversations/router.ts'), 'utf8'),
   readFileSync(join(root, 'src/api/contracts.ts'), 'utf8'),
   readFileSync(join(root, 'src/types.ts'), 'utf8'),
 ].join('\n')
 if (/peek\/agent-chats|ApiWhisper|whisper-link|kind\s*===?\s*['"]whisper['"]/.test(currentProductSurface)) {
   failures.push('retired Whispers/agent-side-channel product path must not return')
 }
-for (const path of [...activeFiles, ...sourceFiles(join(root, 'server/src/learning'))]) {
+for (const path of [...activeFiles, ...sourceFiles(join(root, 'server/src/modules/learning'))]) {
   const source = readFileSync(path, 'utf8')
   if (/\bAgentBus\b|agent[_-]?bus/i.test(source)) failures.push(`${relative(root, path).replaceAll('\\', '/')}: AgentBus is forbidden`)
 }

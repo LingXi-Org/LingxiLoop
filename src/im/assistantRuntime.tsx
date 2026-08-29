@@ -1,8 +1,8 @@
 import { AssistantRuntimeProvider, ThreadPrimitive, useExternalStoreRuntime } from '@assistant-ui/react'
 import { useCallback, useMemo, type ReactNode } from 'react'
-import { agentsApi } from '@/api/agents'
+import { agentsApi } from '@/features/agents/api'
 import { useMe } from '@/stores/auth'
-import { useParticipants } from '@/stores/participants'
+import { useParticipants } from '@/features/agents/state'
 import type { Message } from '@/types'
 import { createLingxiAssistantMessage } from './assistantMessage'
 

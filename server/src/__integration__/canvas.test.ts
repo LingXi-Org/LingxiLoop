@@ -2,12 +2,12 @@ import assert from 'node:assert/strict'
 import { after, before, beforeEach, test } from 'node:test'
 import { executeLearningAction } from '../agent-os/learning-actions.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
-import { handoffCanvasWork, stopCanvasAssignment } from '../canvas/service.js'
+import { handoffCanvasWork, stopCanvasAssignment } from '../modules/canvas/index.js'
 import { pool } from '../db/pool.js'
-import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, teardownAll } from './_helpers.js'
+import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })
-beforeEach(async () => { await resetAllTables() })
+beforeEach(async () => { installFakeWukong(); await resetAllTables() })
 after(async () => { await teardownAll() })
 
 function action(work: AgentWorkItem, name: string, args: Record<string, unknown>, index: number): HostAction {

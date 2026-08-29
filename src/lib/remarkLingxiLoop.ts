@@ -21,7 +21,7 @@
  */
 import { visit, SKIP } from 'unist-util-visit'
 import type { Root, RootContent, Text } from 'mdast'
-import { parseBody, type RichToken } from './utils'
+import { parseBody, type RichToken } from './messageTokens'
 
 /** A custom mdast node that mdast-util-to-hast renders as `<hName …>` because of
  *  `data.hName` / `data.hProperties`. react-markdown then routes it to our

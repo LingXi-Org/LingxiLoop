@@ -1,3 +1,5 @@
+import type { ParticipantKind, Status } from '@/types'
+
 /** Runtime detection for the supported Electron and Web surfaces. */
 
 export interface NotificationPushPayload {
@@ -11,14 +13,13 @@ export interface NotificationPushPayload {
   conversationId: string
   authorId: string
   authorName: string
-  authorAvatarUrl?: string | null
-  /** Single uppercase letter used in the avatar fallback when no
-   *  portrait URL is available — mirrors the convo-list avatar style. */
-  authorInitial?: string
-  /** CSS background (color or gradient) for the avatar fallback —
-   *  pulled from `participant.avatarBg`. Each agent has a stable color
-   *  so the fallback always reads as "Bram's avatar", not a blank disc. */
-  authorAvatarBg?: string
+  authorKind: ParticipantKind | null
+  authorRole: string | null
+  authorStatus: Status | null
+  /** Human profile image only. Agents are rendered through Bloub. */
+  authorAvatarUrl: string | null
+  /** Human-only fallback label for the official Avatar primitive. */
+  authorInitial: string | null
   conversationTitle: string
   body: string
   at: number

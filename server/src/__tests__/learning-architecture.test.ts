@@ -1,32 +1,258 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { dirname, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url), 'utf8')
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
-const service = readFileSync(new URL('../learning/service.ts', import.meta.url), 'utf8')
+const legacyLearningUrl = new URL('../learning/', import.meta.url)
+const legacyServiceUrl = new URL('../learning/service.ts', import.meta.url)
+const service = existsSync(legacyServiceUrl) ? readFileSync(legacyServiceUrl, 'utf8') : ''
+const learningModuleUrl = new URL('../modules/learning/', import.meta.url)
+const repository = readdirSync(learningModuleUrl)
+  .filter((name) => name.endsWith('-repository.ts'))
+  .map((name) => readFileSync(new URL(name, learningModuleUrl), 'utf8'))
+  .join('\n')
+const learningApplicationSource = readdirSync(learningModuleUrl)
+  .filter((name) => name.endsWith('application.ts'))
+  .map((name) => readFileSync(new URL(name, learningModuleUrl), 'utf8'))
+  .join('\n')
+const learningRuntimeSource = readFileSync(new URL('../modules/learning/runtime.ts', import.meta.url), 'utf8')
+const learningRouterSource = readFileSync(new URL('../modules/learning/router.ts', import.meta.url), 'utf8')
+const classroomRouterSource = readFileSync(new URL('../modules/learning/classroom-router.ts', import.meta.url), 'utf8')
+const learningHttpAdapterSource = readFileSync(new URL('../modules/learning/http-adapter.ts', import.meta.url), 'utf8')
+const teacherAgentSource = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
+const teacherApprovalRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-approval-repository.ts', import.meta.url),
+  'utf8',
+)
+const teacherReportingRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-reporting-repository.ts', import.meta.url),
+  'utf8',
+)
+const teacherRuntimeRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-runtime-repository.ts', import.meta.url),
+  'utf8',
+)
+const teacherProvisioningRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-provisioning-repository.ts', import.meta.url),
+  'utf8',
+)
+const teacherDigestRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-digest-repository.ts', import.meta.url),
+  'utf8',
+)
+const teacherManagementRepositorySource = readFileSync(
+  new URL('../modules/learning/teacher-management-repository.ts', import.meta.url),
+  'utf8',
+)
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
+
+function productionTypeScriptFiles(root: string): string[] {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(root, entry.name)
+    if (entry.isDirectory()) {
+      if (entry.name === '__tests__' || entry.name === '__integration__' || entry.name === 'learning') return []
+      return productionTypeScriptFiles(path)
+    }
+    return entry.isFile() && entry.name.endsWith('.ts') ? [path] : []
+  })
+}
+
+test('production consumers use only public Learning capability surfaces', () => {
+  const serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+  const violations = productionTypeScriptFiles(serverRoot)
+    .filter((path) => !relative(serverRoot, path).replaceAll('\\', '/').startsWith('modules/learning/'))
+    .flatMap((path) => {
+      const source = readFileSync(path, 'utf8')
+      return /(?:from\s+|import\(\s*)['"][^'"]*\/learning\/(?!runtime\.js|public\.js|worker\.js|preset\.js|router\.js)[^'"]+['"]/.test(source)
+        ? [relative(serverRoot, path)]
+        : []
+    })
+  assert.deepEqual(violations, [])
+})
+
+test('the legacy Learning service implementation is deleted', () => {
+  assert.equal(existsSync(legacyLearningUrl), false)
+  assert.equal(existsSync(legacyServiceUrl), false)
+  assert.doesNotMatch(learningApplicationSource, /learning\/service\.js/)
+  const teacher = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(teacher, /from '.\/service\.js'/)
+  assert.match(repository, /WHERE course_id=\$1 AND company_id=\$2 AND role='teacher'/)
+  assert.match(repository, /teacher_room\.company_id=\$1 AND teacher_room\.conversation_id=conversation\.id/)
+})
+
+test('Learning routers share one private request and error adapter', () => {
+  for (const router of [learningRouterSource, classroomRouterSource]) {
+    assert.match(router, /from '.\/http-adapter\.js'/)
+    assert.doesNotMatch(router, /function (?:parse|mapLearningError|respond)\b/)
+  }
+  assert.match(learningHttpAdapterSource, /export function parseLearningRequest/)
+  assert.match(learningHttpAdapterSource, /function mapLearningError/)
+  assert.match(learningHttpAdapterSource, /export async function respondWithLearning/)
+})
 
 test('native learning schema keeps evidence, projection and delivery ledgers durable', () => {
   for (const table of ['courses','course_members','learning_course_rooms','learning_objectives','learning_activities',
-    'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_mastery','learning_mastery_events','learning_notification_deliveries',
+    'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_mastery','learning_mastery_events','learning_notification_deliveries','learning_effects',
     'learning_project_teacher_agents','learning_course_teacher_rooms']) {
     assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
   }
   assert.match(schema, /num_nonnulls\(activity_id, mission_step_id\) = 1/)
   assert.match(schema, /UNIQUE \(course_id, learner_id, conversation_id, trigger_client_msg_no\)/)
   assert.match(schema, /uq_learning_deliveries_course/)
+  assert.match(schema, /idx_learning_effects_pending/)
+  assert.match(learningApplicationSource, /enqueueLearningEffect/)
+  assert.doesNotMatch(learningApplicationSource, /const provisioning = await Promise\.allSettled/)
   assert.doesNotMatch(schema, /CREATE TABLE public\.learning_(?:courses|course_memberships)\b/)
 })
 
+test('objective persistence has one tenant-scoped repository path', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_objectives/)
+  assert.doesNotMatch(service, /UPDATE learning_objectives SET status/)
+  assert.match(repository, /course\.id=\$2 AND course\.company_id=\$3/)
+  assert.match(repository, /objective\.course_id=\$2 AND objective\.company_id=\$1/)
+})
+
+test('activity writes and UI submissions have one tenant-scoped repository path', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_activities/)
+  assert.doesNotMatch(service, /UPDATE learning_activities/)
+  assert.doesNotMatch(service, /kind: 'ui_submission'/)
+  assert.match(repository, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
+  assert.match(repository, /learner\.user_id=\$5 AND learner\.role='learner'/)
+})
+
+test('mission reads and coordinator assignment have one tenant-scoped repository path', () => {
+  assert.doesNotMatch(service, /SELECT \* FROM learning_missions WHERE id=/)
+  assert.doesNotMatch(service, /SET coordinator_agent_id=\$3/)
+  assert.match(repository, /mission\.company_id=\$1 AND mission\.course_id=\$2/)
+  assert.match(repository, /teacher\.user_id=\$4 AND teacher\.role='teacher'/)
+})
+
+test('mission planning and completion writes live only in application and repository', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_mission_steps/)
+  assert.doesNotMatch(service, /UPDATE learning_mission_steps/)
+  assert.doesNotMatch(service, /SET status='completed',completed_at=/)
+  assert.match(learningApplicationSource, /lockLearningMission/)
+  assert.match(repository, /mission\.company_id=\$1 AND mission\.course_id=\$2 AND mission\.conversation_id=\$3/)
+})
+
+test('mission start uses the public vertical slice instead of the legacy service', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_missions/)
+  assert.doesNotMatch(service, /mission-coordinator-/)
+  assert.doesNotMatch(learningRuntimeSource, /startMission,[\s\S]*from '..\/..\/learning\/service\.js'/)
+  assert.match(learningApplicationSource, /startLearningMission/)
+  assert.match(learningApplicationSource, /infrastructure\.syncMessages/)
+  assert.match(repository, /ON CONFLICT\(course_id,learner_id,conversation_id,trigger_client_msg_no\)/)
+})
+
+test('Agent OS attempt recording uses the tenant-scoped Learning vertical slice', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_attempts/)
+  assert.doesNotMatch(learningRuntimeSource, /recordAttempt,[\s\S]*from '..\/..\/learning\/service\.js'/)
+  assert.match(learningApplicationSource, /recordLearningAttempt/)
+  assert.match(repository, /mission\.conversation_id=\$4 AND mission\.learner_id=\$5/)
+  assert.match(repository, /document\.company_id=\$2 AND document\.project_id=\$3/)
+  assert.match(repository, /canvas\.company_id=\$2 AND canvas\.project_id=\$3/)
+})
+
+test('Agent OS turn context uses repository reads without legacy fallback handling', () => {
+  assert.doesNotMatch(service, /loadLearningTurnContext/)
+  assert.doesNotMatch(learningRuntimeSource, /loadLearningTurnContext,[\s\S]*from '..\/..\/learning\/service\.js'/)
+  assert.match(learningApplicationSource, /loadLearningContext/)
+  assert.doesNotMatch(learningApplicationSource, /try \{ room = await findLearningRoomState[\s\S]*catch/)
+  assert.match(repository, /mastery\.company_id=\$1 AND mastery\.course_id=\$2/)
+  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+})
+
+test('Agent OS evaluation proposals use the tenant-scoped Learning vertical slice', () => {
+  assert.doesNotMatch(service, /INSERT INTO learning_evaluations/)
+  assert.doesNotMatch(learningRuntimeSource, /proposeEvaluation,[\s\S]*from '..\/..\/learning\/service\.js'/)
+  assert.match(learningApplicationSource, /proposeLearningEvaluation/)
+  assert.match(repository, /attempt\.id=\$1 AND attempt\.company_id=\$2 AND attempt\.course_id=\$3/)
+  assert.match(repository, /source\.company_id=\$3 AND course\.id=\$4/)
+  assert.match(repository, /event\.company_id=\$1 AND event\.course_id=\$2/)
+})
+
+test('teacher evaluation review shares the same repository and mastery projection boundary', () => {
+  const teacher = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(service, /\breviewEvaluation\b|INSERT INTO learning_mastery|UPDATE learning_evaluations/)
+  assert.doesNotMatch(teacher, /\breviewEvaluation\b/)
+  assert.match(teacher, /reviewLearningEvaluation/)
+  assert.match(learningApplicationSource, /reviewLearningEvaluation/)
+  assert.match(repository, /attempt\.company_id=\$2 AND attempt\.course_id=\$3/)
+  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND evaluation\.status='pending'/)
+})
+
+test('Learning dashboard and evidence reads no longer use the legacy service data plane', () => {
+  for (const legacyRead of ['learningDashboard','courseProgress','listEvidence','listEvaluationQueue']) {
+    assert.doesNotMatch(service, new RegExp(`\\b${legacyRead}\\b`))
+    assert.doesNotMatch(learningApplicationSource, new RegExp(`from '../../learning/service\\.js'[\\s\\S]*\\b${legacyRead}\\b`))
+  }
+  assert.match(learningApplicationSource, /listLearningEvidenceRecords/)
+  assert.match(learningApplicationSource, /countViewerPendingLearningReviews/)
+  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND attempt\.learner_id=\$3/)
+  assert.match(repository, /member\.company_id=\$1 AND member\.course_id=\$2 AND member\.role='learner'/)
+})
+
+test('Pulse reporting reads use one explicit tenant-scoped repository', () => {
+  assert.match(teacherAgentSource, /from '.\/teacher-reporting-repository\.js'/)
+  assert.doesNotMatch(teacherAgentSource, /if\(method==='list_objectives'\)return \(await db\.query/)
+  assert.doesNotMatch(teacherAgentSource, /if\(method==='list_activities'\)return \(await db\.query/)
+  assert.doesNotMatch(teacherAgentSource, /if\(method==='list_reviews'\)return \(await db\.query/)
+  assert.doesNotMatch(teacherAgentSource, /if\(method==='list_rooms'\)return \(await db\.query/)
+  assert.match(teacherReportingRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /mastery\.company_id=\$1 AND mastery\.course_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /member\.company_id=\$1 AND member\.course_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
+})
+
+test('Pulse approval snapshots and freshness use one tenant-scoped repository', () => {
+  assert.match(teacherAgentSource, /from '.\/teacher-approval-repository\.js'/)
+  assert.doesNotMatch(teacherAgentSource, /SELECT objective\.updated_at AS value/)
+  assert.doesNotMatch(teacherAgentSource, /SELECT activity\.updated_at AS value/)
+  assert.match(teacherApprovalRepositorySource, /objective\.company_id=\$1 AND objective\.id=\$3/)
+  assert.match(teacherApprovalRepositorySource, /activity\.company_id=\$1 AND activity\.id=\$3/)
+  assert.match(teacherApprovalRepositorySource, /course\.company_id=\$1 AND course\.id=\$3/)
+  assert.match(teacherApprovalRepositorySource, /member\.company_id=\$1 AND teacher_room\.conversation_id=\$2/)
+  assert.match(teacherApprovalRepositorySource, /attempt\.company_id=\$1 AND teacher_room\.conversation_id=\$2/)
+})
+
+test('Pulse runtime scope and turn counts use one tenant-scoped repository', () => {
+  assert.match(teacherAgentSource, /from '.\/teacher-runtime-repository\.js'/)
+  assert.doesNotMatch(teacherAgentSource, /SELECT message\.author_id/)
+  assert.doesNotMatch(teacherAgentSource, /AS pending_reviews/)
+  assert.match(teacherAgentSource, /wukongClient\(\)\.syncMessages\(work\.channelId, 2, 80, work\.agentId\)/)
+  assert.match(teacherRuntimeRepositorySource, /project_agent\.company_id=\$1 AND project_agent\.agent_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /approval\.company_id=\$1 AND approval\.agent_id=\$3[\s\S]*approval\.channel_id=\$4/)
+  assert.doesNotMatch(teacherRuntimeRepositorySource, /FROM messages/)
+  assert.match(teacherRuntimeRepositorySource, /member\.company_id=\$1 AND member\.course_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /objective\.company_id=\$1 AND objective\.course_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+})
+
+test('Pulse application orchestration contains no SQL and lifecycle scope is explicit', () => {
+  assert.doesNotMatch(teacherAgentSource, /\b(?:SELECT|INSERT INTO|UPDATE|DELETE FROM)\b/)
+  assert.doesNotMatch(teacherAgentSource, /\b(?:db|pool)\.query\b/)
+  assert.match(teacherProvisioningRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
+  assert.match(teacherProvisioningRepositorySource, /teacher_room\.company_id=\$1 AND teacher_room\.course_id=\$2/)
+  assert.match(teacherProvisioningRepositorySource, /WHERE company_id=\$1 AND course_id=\$2 AND role='teacher'/)
+  assert.match(teacherProvisioningRepositorySource, /approval\.company_id=course\.company_id/)
+  assert.match(teacherDigestRepositorySource, /WHERE company_id=\$1 AND id=\$2/)
+  assert.match(teacherManagementRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
+  assert.match(learningApplicationSource, /ensureTeacherAgent\(scope\.companyId, courseId, db\)/)
+  assert.match(learningApplicationSource, /syncTeacherRoom\(effect\.companyId, effect\.courseId\)/)
+})
+
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
-  const teacher=readFileSync(new URL('../learning/teacher-agent.ts',import.meta.url),'utf8')
+  const teacher=readFileSync(new URL('../modules/learning/teacher-agent-application.ts',import.meta.url),'utf8')
   const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')
   assert.match(teacher,/PULSE_CAPABILITIES = \['teacher_admin'\]/)
-  assert.match(teacher,/JSON\.stringify\(\['ipython'\]\)/)
-  assert.match(teacher,/learning_project_teacher_agents/)
-  assert.match(teacher,/learning_course_teacher_rooms/)
+  assert.match(teacherProvisioningRepositorySource,/JSON\.stringify\(\['ipython'\]\)/)
+  assert.match(teacherProvisioningRepositorySource,/learning_project_teacher_agents/)
+  assert.match(teacherProvisioningRepositorySource,/learning_course_teacher_rooms/)
   assert.match(runtime,/allowedNamespaces: \['teacher', 'turn'\]/)
   assert.match(kernel,/allowedNamespaces/)
   assert.match(control,/Pulse may only call teacher\.\* and turn\.\*/)
@@ -43,7 +269,7 @@ test('learning remains an IPython namespace with transient per-turn context', ()
   assert.match(actions, /if \(method === 'ask'\)/)
   assert.match(actions, /kind: 'questionnaire'/)
   assert.match(actions, /'chat\.ask', 'polls\.create', 'polls\.show'/)
-  assert.match(service, /finishMissionPlanning/)
-  assert.match(service, /s\.type='check'/)
-  assert.match(service, /s\.type='reflect'/)
+  assert.match(learningApplicationSource, /finishLearningMissionPlanning/)
+  assert.match(learningApplicationSource, /summary\.checks < 1/)
+  assert.match(learningApplicationSource, /summary\.reflections < 1/)
 })

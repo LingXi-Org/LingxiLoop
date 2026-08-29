@@ -31,7 +31,7 @@ RUN npm run build
 FROM python:3.12-slim-trixie AS backend-builder
 
 # Install build dependencies (uv downloads pre-built wheels for most packages)
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
@@ -70,12 +70,12 @@ FROM python:3.12-slim-trixie AS runtime-base
 
 # Install only runtime system dependencies (no build tools)
 # Add Node.js 22.x LTS for running the frontend
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
     ffmpeg \
     supervisor \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get -o Acquire::Retries=5 install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv using the official method

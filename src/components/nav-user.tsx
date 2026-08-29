@@ -1,7 +1,7 @@
 "use client"
 
-import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, CreditCardIcon, LogOutIcon, SparklesIcon } from "lucide-react"
-import { platformApi } from "@/api/platform"
+import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
+import { authApi } from '@/auth/api'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -22,13 +22,12 @@ export function NavUser({ user }: {
   const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || "我"
   const signOut = () => {
     useAuth.getState().clear()
-    void platformApi.authLogout().catch(() => undefined)
+    void authApi.logout().catch(() => undefined)
   }
-  const openSettings = (tab: 'Profile' | 'Usage' | 'Preferences') => {
+  const openSettings = (tab: 'Profile' | 'Preferences') => {
     useApp.getState().setView('me')
     useUiCommands.getState().dispatch(
-      tab === 'Usage' ? 'open-settings-usage'
-        : tab === 'Preferences' ? 'open-settings-preferences'
+      tab === 'Preferences' ? 'open-settings-preferences'
           : 'open-settings-profile',
     )
   }
@@ -45,9 +44,11 @@ export function NavUser({ user }: {
   </>
 
   return <DropdownMenu>
-    <DropdownMenuTrigger render={<button type="button" className="flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors hover:bg-muted aria-expanded:bg-muted" aria-label="打开账户菜单" />}>
-      {identity}
-      <ChevronsUpDownIcon className="ml-auto size-4" />
+    <DropdownMenuTrigger asChild>
+      <button type="button" className="flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors hover:bg-muted aria-expanded:bg-muted" aria-label="打开账户菜单">
+        {identity}
+        <ChevronsUpDownIcon className="ml-auto size-4" />
+      </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent className="min-w-64 rounded-lg" side="right" align="end" sideOffset={8}>
       <DropdownMenuGroup>
@@ -57,12 +58,7 @@ export function NavUser({ user }: {
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
-        <DropdownMenuItem onClick={() => openSettings('Usage')}><SparklesIcon />Upgrade to Pro</DropdownMenuItem>
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
         <DropdownMenuItem onClick={() => openSettings('Profile')}><BadgeCheckIcon />Account</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => openSettings('Usage')}><CreditCardIcon />Billing</DropdownMenuItem>
         <DropdownMenuItem onClick={() => openSettings('Preferences')}><BellIcon />Notifications</DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />

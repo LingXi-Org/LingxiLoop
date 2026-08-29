@@ -3,7 +3,7 @@ import http from 'node:http'
 import { parseAgentOSConcurrency } from './concurrency-config.js'
 import { HttpHostAdapter } from './host-adapter.js'
 import { KernelManager } from './kernel-manager.js'
-import { DeepSeekChatDriver } from './model-driver.js'
+import { OpenAIChatDriver } from './model-driver.js'
 import { AgentOSRuntime } from './runtime.js'
 
 function required(name: string): string {
@@ -19,9 +19,9 @@ const host = new HttpHostAdapter({
   serviceToken: required('AGENT_OS_SERVICE_TOKEN'),
   workerId,
 })
-const model = new DeepSeekChatDriver(process.env.DEEPSEEK_MODEL ?? 'deepseek-chat', {
-  apiKey: required('DEEPSEEK_API_KEY'),
-  baseURL: process.env.DEEPSEEK_BASE_URL?.trim() || 'https://api.deepseek.com/v1',
+const model = new OpenAIChatDriver(required('OPENAI_MODEL'), {
+  apiKey: required('OPENAI_API_KEY'),
+  baseURL: process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1',
 })
 const kernels = new KernelManager({ execute: (work, action) => host.executeAction(work, action) })
 const runtime = new AgentOSRuntime(host, model, kernels)

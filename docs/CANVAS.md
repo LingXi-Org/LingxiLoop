@@ -45,6 +45,18 @@ Canvas introduces no collaboration container, MCP service, Docker runtime,
 Screen/X11 session, browser profile, or shared filesystem. Agent OS kernels and
 their Agent Homes remain isolated exactly as before.
 
+The server implementation is one vertical slice under `server/src/modules/canvas`:
+`contracts.ts` owns Zod and event/DTO contracts, `router.ts` maps authenticated
+HTTP requests, `application.ts` owns validation, transactions and publication,
+and `repository.ts` owns every parameterized query and lock primitive. Agent OS
+and integration callers import only the public `index.ts`; the former
+`server/src/canvas/service.ts` path does not exist.
+
+The browser implementation is co-located under `src/features/canvas`: API,
+contracts, Zustand state, Canvas-only reducers and business components share
+one feature boundary. HTTP still uses the shared transport and realtime still
+uses the single shared WebSocket client.
+
 The interaction and data model were independently designed after studying
 Doop's public architecture: stable identity colors, presence, task timelines,
 ghost work frames, editor highlights, and a unified realtime event layer. No

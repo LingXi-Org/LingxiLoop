@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { Layout } from 'react-resizable-panels'
-import { CanvasView } from '@/components/CanvasView'
+import { CanvasView } from '@/features/canvas/components/CanvasView'
 import { CommandPalette } from '@/components/CommandPalette'
-import { EmailComposer } from '@/components/EmailComposer'
+import { EmailComposer } from '@/features/email/components/EmailComposer'
 import { GroupContextContent } from '@/components/GroupContextContent'
-import { LearningCenter } from '@/components/LearningCenter'
+import { LearningCenter } from '@/features/learning/components/LearningCenter'
 import {
   Drawer,
   DrawerClose,
@@ -17,22 +17,22 @@ import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
-import { useConversations } from '@/stores/conversations'
+import { useConversations } from '@/features/conversations/store'
 import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
 import { useUiCommand } from '@/stores/uiCommands'
 import type { ViewKey } from '@/types'
 import { IconX } from '@tabler/icons-react'
-import { AgentsView } from './AgentsView'
-import { BoardPeekPane } from './BoardPeekPane'
-import { BoardsView } from './BoardsView'
-import { CalendarPeekPane } from './CalendarPeekPane'
-import { CalendarView } from './CalendarView'
+import { AgentsView } from '@/features/agents/components/AgentsView'
+import { BoardPeekPane } from '@/features/boards/components/BoardPeekPane'
+import { BoardsView } from '@/features/boards/components/BoardsView'
+import { CalendarPeekPane } from '@/features/calendar/components/CalendarPeekPane'
+import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { ChatPane } from './ChatPane'
-import { CompanyCourseManagement } from './CompanyCourseManagement'
-import { ConversationsPane } from './ConversationsPane'
-import { DocumentPeekPane } from './DocumentPeekPane'
-import { DocumentsView } from './DocumentsView'
+import { CompanyCourseManagement } from '@/features/companies/components/CompanyCourseManagement'
+import { ConversationsPane } from '@/features/conversations/components/ConversationsPane'
+import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPane'
+import { DocumentsView } from '@/features/documents/components/DocumentsView'
 import { InfoPane } from './InfoPane'
 import { MeView } from './MeView'
 import { ServerRail } from './ServerRail'
@@ -74,7 +74,7 @@ function persistPanelLayout(storageKey: string, layout: Layout): void {
   } catch { /* private browsing can deny storage access */ }
 }
 
-function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsTab: 'Profile' | 'Usage' | 'Preferences' }) {
+function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsTab: 'Profile' | 'Preferences' }) {
   if (view === 'agents') return <AgentsView />
   if (view === 'canvas') return <CanvasView />
   if (view === 'boards') return <BoardsView />
@@ -88,7 +88,7 @@ function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsT
 /** The desktop shell is always a pure two-column IM surface. Every page-like
  * destination opens above it in the shared Base UI Drawer. */
 export function DesktopApp() {
-  const theme = useTheme((state) => state.theme)
+  const { theme } = useTheme()
   const view = useApp((state) => state.view)
   const surface = useSurface((state) => state.surface)
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
@@ -102,7 +102,7 @@ export function DesktopApp() {
   const groupContext = selectedConversation?.kind === 'group' ? selectedConversation : null
   const [groupDrawerOpen, setGroupDrawerOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [settingsTab, setSettingsTab] = useState<'Profile' | 'Usage' | 'Preferences'>('Profile')
+  const [settingsTab, setSettingsTab] = useState<'Profile' | 'Preferences'>('Profile')
   const uiCommand = useUiCommand()
   const [defaultLayout] = useState(() => loadPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, TWO_PANEL_DEFAULT_LAYOUT))
 
@@ -114,7 +114,6 @@ export function DesktopApp() {
 
   useEffect(() => {
     if (uiCommand?.type === 'open-settings-profile') setSettingsTab('Profile')
-    else if (uiCommand?.type === 'open-settings-usage') setSettingsTab('Usage')
     else if (uiCommand?.type === 'open-settings-preferences') setSettingsTab('Preferences')
   }, [uiCommand])
 
@@ -190,7 +189,7 @@ export function DesktopApp() {
         </ResizablePanel>
       </ResizablePanelGroup>
 
-      <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} swipeDirection="right">
+      <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} direction="right">
         <DrawerContent className="w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]">
           <DrawerHeader className="border-b border-hairline p-4">
             <div className="flex items-center justify-between gap-4">
@@ -198,8 +197,10 @@ export function DesktopApp() {
                 <DrawerTitle className="truncate">{drawerTitle}</DrawerTitle>
                 <DrawerDescription className="sr-only">{drawerTitle}</DrawerDescription>
               </div>
-              <DrawerClose render={<button type="button" className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted" aria-label="关闭" />}>
-                <IconX className="size-4" />
+              <DrawerClose asChild>
+                <button type="button" className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted" aria-label="关闭">
+                  <IconX className="size-4" />
+                </button>
               </DrawerClose>
             </div>
           </DrawerHeader>

@@ -72,9 +72,5 @@ server/uploads/
 .release.previous.env
 *.tsbuildinfo
 
-# tsc emissions of vite.config.ts (build artifacts)
-vite.config.js
-vite.config.d.ts
-*.tsbuildinfo
 docs/HANDOFF.md
 android/app/google-services.json

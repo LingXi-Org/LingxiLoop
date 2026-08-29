@@ -5,9 +5,9 @@ import { PreviewText } from '@/components/PreviewText'
 import { participantRoleZh } from '@/lib/participantRole'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
-import { isMuted } from '@/stores/conversations'
-import { useMessages } from '@/stores/messages'
-import { useParticipants } from '@/stores/participants'
+import { isMuted } from '@/features/conversations/store'
+import { useMessages } from '@/features/chat/state/messages'
+import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
 
 let lastRosterBackfillAt = 0

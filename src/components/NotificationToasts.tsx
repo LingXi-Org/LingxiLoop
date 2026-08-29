@@ -19,8 +19,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ws } from '@/api/core/realtime'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
-import { useConversations, isMuted } from '@/stores/conversations'
-import { useParticipants } from '@/stores/participants'
+import { isMuted, useConversations } from '@/features/conversations/store'
+import { useParticipants } from '@/features/agents/state'
 import { isElectron } from '@/lib/runtime'
 import { playNotificationChime } from '@/lib/chime'
 import { Avatar } from './Avatar'
@@ -90,6 +90,7 @@ export function NotificationToasts() {
   // always reads fresh state without resubscribing on every render.
   const meRef = useRef(meId)
   const focusRef = useRef({ selectedId, view })
+  const seenMentionDeliveriesRef = useRef(new Set<string>())
   useEffect(() => { meRef.current = meId }, [meId])
   useEffect(() => { focusRef.current = { selectedId, view } }, [selectedId, view])
 
@@ -158,9 +159,13 @@ export function NotificationToasts() {
           conversationId: e.conversationId,
           authorId: m.authorId,
           authorName: author?.name ?? m.authorId,
-          authorAvatarUrl: author?.avatarUrl ?? null,
-          authorInitial: author?.initial ?? (author?.name ?? m.authorId).charAt(0).toUpperCase(),
-          authorAvatarBg: author?.avatarBg,
+          authorKind: author?.kind ?? null,
+          authorRole: author?.role ?? null,
+          authorStatus: author?.status ?? null,
+          authorAvatarUrl: author?.kind === 'human' ? author.avatarUrl ?? null : null,
+          authorInitial: author?.kind === 'human'
+            ? author.initial || author.name.charAt(0).toUpperCase()
+            : null,
           conversationTitle: title,
           body: m.body || '(empty)',
           at,
@@ -211,6 +216,15 @@ export function NotificationToasts() {
       if (e.mentionerId === meRef.current) return
       // Only fire when the current user is on the mentioned list.
       if (!e.mentionedIds.includes(meRef.current ?? '')) return
+      // Delivery retries intentionally reuse the same durable id. Suppress a
+      // replay before it can increment a toast or ring the notification chime.
+      const seenDeliveries = seenMentionDeliveriesRef.current
+      if (seenDeliveries.has(e.deliveryId)) return
+      seenDeliveries.add(e.deliveryId)
+      if (seenDeliveries.size > 256) {
+        const oldest = seenDeliveries.values().next().value
+        if (oldest) seenDeliveries.delete(oldest)
+      }
       const at = Date.now()
       setToasts((prev) => {
         const idx = prev.findIndex((t) => t.kind === 'doc.mention' && t.documentId === e.documentId)
@@ -316,7 +330,7 @@ export function NotificationToasts() {
       setView('documents')
       // Lazy-import to avoid pulling the documents store into every
       // boot path even when the user never visits the docs view.
-      void import('@/stores/documents').then(({ useDocuments }) => {
+      void import('@/features/documents/state').then(({ useDocuments }) => {
         useDocuments.getState().select(t.documentId!)
       })
     } else if (t.kind === 'calendar.reminder') {

@@ -7,8 +7,8 @@ import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import { wukongClient } from './wukong.js'
 import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
-import { assertTeacherApprovalFresh } from '../learning/teacher-agent.js'
-import { assertTeacherRoomAccessible, isTeacherRoom } from '../learning/visibility.js'
+import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
+import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/public.js'
 import {
   listReadReceiptAdvances,
   publishReadReceiptAdvance,
@@ -35,7 +35,8 @@ async function identity(req: Request & AuthedRequest): Promise<{ userId: string;
 }
 
 function userImToken(uid: string): string {
-  const secret = process.env.WUKONG_USER_TOKEN_SECRET ?? process.env.AGENT_OS_SERVICE_TOKEN ?? 'dev-wukong-user-token-secret'
+  const secret = process.env.WUKONG_USER_TOKEN_SECRET?.trim() || process.env.AGENT_OS_SERVICE_TOKEN?.trim()
+  if (!secret) throw new Error('WUKONG_USER_TOKEN_SECRET or AGENT_OS_SERVICE_TOKEN is required')
   return createHmac('sha256', secret).update(`wukong-user:${uid}`).digest('base64url')
 }
 
@@ -60,11 +61,25 @@ imRouter.post('/refresh', safe(async (req, res) => {
 
 imRouter.get('/channels', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
+  const projectId = String(req.headers['x-project-id'] ?? '').trim()
+  if (!projectId) { res.status(400).json({ error: 'x-project-id required' }); return }
   const { rows } = await pool.query<{
     channel_id: string; profile: Record<string, unknown>; leader_agent_id: string | null; preset_key: string | null
-  }>(`SELECT b.channel_id, b.profile, b.leader_agent_id, b.preset_key
-        FROM im_channel_bindings b JOIN conversations c ON c.id = b.channel_id
-       WHERE b.company_id=$1 AND c.members @> to_jsonb(ARRAY[$2::text])
+    kind: string; title: string; members: string[]; muted: boolean; muted_until: string | null
+  }>(`SELECT b.channel_id, b.profile, b.leader_agent_id, b.preset_key,c.kind,c.members,
+              CASE WHEN c.kind='direct' THEN COALESCE(other_participant.name,c.title) ELSE c.title END AS title,
+              (mute.user_id IS NOT NULL AND (mute.muted_until IS NULL OR mute.muted_until>NOW())) AS muted,
+              mute.muted_until
+         FROM im_channel_bindings b JOIN conversations c ON c.id = b.channel_id
+         LEFT JOIN conversation_mutes mute ON mute.conversation_id=c.id AND mute.user_id=$2
+         LEFT JOIN LATERAL (
+           SELECT participant.name
+             FROM jsonb_array_elements_text(c.members) WITH ORDINALITY AS member(id,ord)
+             JOIN participants participant ON participant.id=member.id AND participant.company_id=c.company_id
+            WHERE member.id<>$2 ORDER BY member.ord LIMIT 1
+         ) other_participant ON c.kind='direct'
+       WHERE b.company_id=$1 AND c.company_id=$1 AND c.project_id=$3
+         AND c.members @> to_jsonb(ARRAY[$2::text])
          AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=b.channel_id)
            OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr
              JOIN courses course ON course.id=tr.course_id AND course.company_id=tr.company_id
@@ -73,7 +88,7 @@ imRouter.get('/channels', safe(async (req, res) => {
                AND cm.user_id=$2 AND cm.role='teacher'
              WHERE tr.conversation_id=b.channel_id AND tr.company_id=b.company_id
                AND tr.status='active' AND project.status='active'))
-       ORDER BY b.created_at`, [companyId, userId])
+       ORDER BY (b.profile->>'pinned')::boolean DESC,b.created_at`, [companyId, userId, projectId])
   const conversations = await wukongClient().listConversations(userId)
   const state = new Map(conversations.map((item) => [`${item.channelId}:${item.channelType}`, item]))
   res.json(rows.map((row) => {
@@ -82,15 +97,15 @@ imRouter.get('/channels', safe(async (req, res) => {
     const last = im?.lastMessage
     return ({
     id: row.channel_id,
-    kind: row.profile.kind === 'direct' ? 'direct' : 'group',
-    title: String(row.profile.title ?? row.channel_id),
+    kind: row.kind === 'direct' ? 'direct' : 'group',
+    title: row.title,
     subtitle: null,
     topic: typeof row.profile.topic === 'string' ? row.profile.topic : null,
-    members: Array.isArray(row.profile.members) ? row.profile.members.map(String) : [],
+    members: row.members,
     leaderId: row.leader_agent_id,
     pinned: row.profile.pinned === true,
-    muted: false,
-    mutedUntil: null,
+    muted: row.muted,
+    mutedUntil: row.muted_until,
     tag: row.preset_key ? 'team' : null,
     pulledBy: null,
     createdAt: typeof row.profile.createdAt === 'string' ? row.profile.createdAt : new Date(0).toISOString(),
@@ -145,8 +160,24 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
       WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
   )
   if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
-  const limit = Math.max(1, Math.min(200, Number(req.query.limit ?? 80)))
-  res.json(await wukongClient().syncMessages(channelId, Number(rows[0].profile.channelType ?? 2), limit, userId))
+  const requestedLimit = Number(req.query.limit ?? 80)
+  if (!Number.isSafeInteger(requestedLimit) || requestedLimit <= 0) {
+    res.status(400).json({ error: 'limit must be a positive safe integer' })
+    return
+  }
+  const limit = Math.min(200, requestedLimit)
+  const beforeSeq = req.query.beforeSeq === undefined ? 0 : Number(req.query.beforeSeq)
+  if (!Number.isSafeInteger(beforeSeq) || beforeSeq < 0) {
+    res.status(400).json({ error: 'beforeSeq must be a non-negative safe integer' })
+    return
+  }
+  res.json(await wukongClient().syncMessages(
+    channelId,
+    Number(rows[0].profile.channelType ?? 2),
+    limit,
+    userId,
+    beforeSeq,
+  ))
 }))
 
 imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {

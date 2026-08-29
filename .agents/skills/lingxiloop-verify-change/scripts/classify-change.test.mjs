@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
+import { parseBaseArgument } from '../../../../scripts/changed-paths.mjs'
 import { buildCiPlan, buildReport, classifyPaths, parseArgs, renderText } from './classify-change.mjs'
 
 const script = fileURLToPath(new URL('./classify-change.mjs', import.meta.url))
@@ -32,11 +33,15 @@ test('classifies docs-only changes without build evidence', () => {
   assert.equal(report.escalations.length, 0)
 })
 
-test('classifies frontend changes with typecheck and build evidence', () => {
+test('classifies frontend changes with fast local evidence and a CI build', () => {
   const report = classifyPaths(['src/components/AppShell.tsx'])
   assert.ok(category(report, 'frontend'))
+  assert.equal(check(report, 'npm run guard:architecture')?.tier, 'required')
+  assert.equal(check(report, 'npm run lint:local')?.tier, 'required')
   assert.equal(check(report, 'npm run typecheck')?.tier, 'required')
-  assert.equal(check(report, 'npm run build')?.tier, 'recommended')
+  assert.equal(check(report, 'npm run test:local')?.tier, 'required')
+  assert.equal(check(report, 'npm run build')?.tier, 'ci-only')
+  assert.equal(check(report, 'npm test'), undefined)
 })
 
 test('classifies Agent OS changes with architecture and ledger guards', () => {
@@ -63,17 +68,18 @@ test('keeps an Eval stack change on the focused deterministic matrix', () => {
   const report = classifyPaths(paths)
   assert.ok(category(report, 'eval'))
   assert.equal(report.ci.evalFocused, true)
+  assert.equal(report.ci.evalRuntime, true)
   assert.equal(report.ci.fullMatrix, false)
   assert.equal(report.ci.integration, 'eval')
   assert.equal(report.ci.dashboard, true)
   assert.equal(report.ci.compose, false)
   assert.equal(report.ci.desktop, false)
   assert.equal(check(report, 'npm run test:eval')?.tier, 'required')
-  assert.equal(check(report, 'npm run eval:check')?.tier, 'required')
-  assert.equal(check(report, 'npm run test:integration:eval')?.tier, 'required')
+  assert.equal(check(report, 'npm run test:integration:eval')?.tier, 'ci-only')
+  assert.equal(check(report, 'npm run eval:check')?.tier, 'ci-only')
   assert.equal(check(report, 'npm run test:integration'), undefined)
   assert.equal(check(report, 'npm test'), undefined)
-  assert.equal(report.escalations.some(({ id }) => id === 'full-ci-approximation'), false)
+  assert.equal(report.escalations.some(({ id }) => id === 'ci-full-matrix'), false)
 })
 
 test('fails closed when an Eval diff also changes shared or high-risk files', () => {
@@ -112,7 +118,13 @@ test('forces the full matrix when CI workflow or classifier inputs change', () =
     if (!path.startsWith('package')) {
       assert.ok(report.escalations.some(({ id }) => id === 'ci-selector-change'), path)
     }
-    assert.ok(report.escalations.some(({ id }) => id === 'full-ci-approximation'), path)
+    assert.ok(report.escalations.some(({ id }) => id === 'ci-full-matrix'), path)
+    assert.equal(check(report, 'npm test')?.tier, 'ci-only', path)
+    const classifierSelfTest = check(
+      report,
+      'node --test .agents/skills/lingxiloop-verify-change/scripts/classify-change.test.mjs',
+    )
+    assert.equal(classifierSelfTest?.tier, path.startsWith('package') ? undefined : 'required', path)
   }
 })
 
@@ -130,12 +142,48 @@ test('maps heavy CI jobs only to their owning paths', () => {
   assert.equal(buildCiPlan(['.github/workflows/_quality.yml']).fullMatrix, true)
 })
 
-test('escalates the reset-only v1 schema bootstrap to the full CI approximation', () => {
+test('treats Eval guidance as documentation without running Eval locally', () => {
+  const report = classifyPaths(['.agents/skills/lingxiloop-eval-change/SKILL.md'])
+  assert.equal(report.ci.eval, true)
+  assert.equal(report.ci.evalRuntime, false)
+  assert.equal(check(report, 'npm run test:eval'), undefined)
+  assert.equal(check(report, 'npm run server:typecheck'), undefined)
+  assert.equal(check(report, 'npm run guard:agent-os'), undefined)
+})
+
+test('never promotes exhaustive checks into the default local gate', () => {
+  const scenarios = [
+    ['src/components/AppShell.tsx'],
+    ['server/src/api/router.ts'],
+    ['server/src/agent-os/runtime.ts'],
+    ['server/src/db/schema.sql'],
+    ['eval/suites/smoke.v1.json', 'server/src/__integration__/eval.test.ts'],
+    ['.agents/skills/lingxiloop-verify-change/scripts/classify-change.mjs'],
+  ]
+  const exhaustiveCommands = new Set([
+    'npm test',
+    'npm run build',
+    'npm run eval:check',
+    'npm run test:integration',
+    'npm run test:integration:eval',
+    'npm run mvp:ci:smoke',
+  ])
+
+  for (const paths of scenarios) {
+    const report = classifyPaths(paths)
+    for (const item of report.checks) {
+      if (exhaustiveCommands.has(item.command)) assert.equal(item.tier, 'ci-only', `${paths}: ${item.command}`)
+    }
+  }
+})
+
+test('escalates the reset-only v1 schema bootstrap to the CI full matrix', () => {
   const report = classifyPaths(['server/src/db/schema.sql'])
   assert.ok(category(report, 'database-tenant'))
   assert.ok(report.escalations.some(({ id }) => id === 'v1-schema-bootstrap'))
-  assert.ok(report.escalations.some(({ id }) => id === 'full-ci-approximation'))
-  assert.equal(check(report, 'npm run test:integration')?.tier, 'required')
+  assert.ok(report.escalations.some(({ id }) => id === 'ci-full-matrix'))
+  assert.equal(check(report, 'npm run test:local')?.tier, 'required')
+  assert.equal(check(report, 'npm run test:integration')?.tier, 'ci-only')
 })
 
 test('selects vendor-specific checks', () => {
@@ -146,7 +194,7 @@ test('selects vendor-specific checks', () => {
   assert.ok(category(report, 'vendored'))
   assert.equal(check(report, 'npm run guard:openbot-vendor'), undefined)
   const nativeScope = check(report, 'python -m pytest -q tests/test_lingxiloop_native_scope.py')
-  assert.equal(nativeScope?.tier, 'required')
+  assert.equal(nativeScope?.tier, 'ci-only')
   assert.equal(nativeScope?.cwd, 'third_party/open-notebook')
 })
 
@@ -184,6 +232,15 @@ test('validates CLI options', () => {
   assert.throws(() => parseArgs(['--format', 'yaml']), /text or json/)
 })
 
+test('fast local runners require an explicit base and preserve other arguments', () => {
+  assert.deepEqual(parseBaseArgument(['--base', 'origin/main', 'src/example.test.ts']), {
+    base: 'origin/main',
+    remaining: ['src/example.test.ts'],
+  })
+  assert.throws(() => parseBaseArgument(['--base']), /requires one explicit Git ref/)
+  assert.throws(() => parseBaseArgument(['--base', 'main', '--base', 'other']), /requires one explicit Git ref/)
+})
+
 test('reports invalid refs without a stack trace', () => {
   const result = run(process.execPath, [script, '--base', 'definitely-missing-ref'], process.cwd())
   assert.equal(result.status, 2)
@@ -205,7 +262,7 @@ test('default CLI mode includes untracked files and emits valid JSON', () => {
     const result = run(process.execPath, [script, '--format', 'json'], directory)
     assert.equal(result.status, 0, result.stderr)
     const report = JSON.parse(result.stdout)
-    assert.equal(report.version, 3)
+    assert.equal(report.version, 4)
     assert.equal(report.scope.mode, 'worktree')
     assert.deepEqual(report.paths, ['untracked.md'])
   } finally {

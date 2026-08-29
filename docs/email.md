@@ -39,8 +39,9 @@ start a thread.
   In-Reply-To / References, writes to `messages` (kind=`email`) +
   `email_messages`, and publishes `CH_MESSAGE_NEW` so the recipient agent
   wakes through the existing scheduler.
-- **Outbound**: Resend's HTTP API. Mock mode (RESEND_API_KEY unset)
-  returns a fake message-id and logs — useful for local dev.
+- **Outbound**: Resend's HTTP API. If `RESEND_API_KEY` is absent, outbound
+  mail is explicitly unavailable; production never fabricates delivery or a
+  provider message id.
 
 ## Storage model
 
@@ -173,13 +174,14 @@ Covers what unit tests can't:
   with `next_retry_at=NULL` after the last step, inbound/sent rows
   correctly ignored.
 
-The runner forces `RESEND_API_KEY=''` (mock mode) so a developer's real
-key in `.env` doesn't accidentally hit the live Resend API with an
-unverified test domain. Tests use `node:test` + `tsx` — no new framework.
+The default suite leaves `RESEND_API_KEY` unset and injects a test-only
+provider function for outbound cases. The seam is explicit per test and reset
+after use; the production provider remains fail-closed and never manufactures
+success. Tests use `node:test` + `tsx` — no new framework.
 
 ### Live Resend (`RESEND_LIVE_TEST=1`)
 
-Opt-in tier that exercises the real Resend HTTP path against the magic
+Opt-in integration test that exercises the real Resend HTTP path against the magic
 sink addresses Resend provides for testing:
 
 | Address | Behavior |
@@ -205,7 +207,7 @@ register as `skipped` rather than running. Sends carry a
 `[LINGXILOOP-LIVE-TEST]` subject prefix so they're identifiable in the
 Resend dashboard.
 
-What live tests catch that mock-mode tests don't:
+What live tests add beyond injected-provider integration:
 
 - Real HTTP path to `api.resend.com` (TLS, headers, response parsing)
 - Resend's validation of `From` / `Reply-To` / `In-Reply-To` /
@@ -218,14 +220,13 @@ webhook, not in the same request).
 
 ## Local dev (no real DNS)
 
-You don't need a real domain to develop. Two paths:
+You can develop the rest of the product without a real mail domain, but
+outbound mail remains unavailable until Resend is configured. To exercise the
+inbound contract locally, use the signed fixture/curl recipe in
+`workers/email-gate/README.md`; it enters through the same HMAC-verified
+webhook as the deployed worker.
 
-- **Mock mode**: leave `RESEND_API_KEY` blank. `lingxiloop email send` will
-  log + return a fake id. Inbound is harder — there's no good local
-  Email Worker emulator. Use the curl recipe in
-  `workers/email-gate/README.md` to fire mock inbound deliveries.
-
-- **Tunneled real mode**: `cloudflared tunnel --url http://localhost:5181`,
+For a real end-to-end path, run `cloudflared tunnel --url http://localhost:5181`,
   point the worker's `LINGXILOOP_INBOUND_URL` at the tunnel, deploy the worker.
   Real mail to your test domain hits your laptop.
 

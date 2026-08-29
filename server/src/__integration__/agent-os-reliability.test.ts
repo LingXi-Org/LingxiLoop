@@ -189,7 +189,8 @@ test('[integration] durable lanes and watchdog preempt lower-lane work without l
   await sweepAgentWorkWatchdog(new Date())
   assert.equal((await pool.query(`SELECT preempt_requested_at IS NOT NULL AS requested FROM agent_work_items WHERE id=$1`, [activeId])).rows[0]?.requested, true)
   await pool.query(`UPDATE agent_work_items SET preempt_grace_expires_at=NOW()-INTERVAL '1 second' WHERE id=$1`, [activeId])
-  await sweepAgentWorkWatchdog(new Date())
+  const databaseNow = (await pool.query<{ now: Date }>(`SELECT NOW() AS now`)).rows[0].now
+  await sweepAgentWorkWatchdog(databaseNow)
   const fenced = (await pool.query<{ status: string; fence: string; preemptions: number }>(`SELECT status,fence,preemptions FROM agent_work_items WHERE id=$1`, [activeId])).rows[0]
   assert.equal(fenced.status, 'queued')
   assert.equal(Number(fenced.fence), 2)

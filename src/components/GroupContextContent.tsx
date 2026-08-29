@@ -1,11 +1,11 @@
 import { IconLayoutDashboard, IconPlus } from '@tabler/icons-react'
 import { type ReactNode, useEffect, useState } from 'react'
 import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
-import { CanvasPreview } from '@/components/CanvasPreview'
+import { CanvasPreview } from '@/features/canvas/components/CanvasPreview'
 import { Button } from '@/components/ui/button'
 import { SourcePanel } from '@/components/WorkspaceChrome'
 import { useSurface } from '@/stores/surface'
-import { useCanvas } from '@/stores/canvas'
+import { useCanvas } from '@/features/canvas/state'
 
 export function GroupCanvasPanel({ conversationId, flat = false, toolbar }: { conversationId: string; flat?: boolean; toolbar?: ReactNode }) {
   const workspaces = useCanvas((state) => state.workspaces)

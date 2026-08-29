@@ -1,13 +1,9 @@
-import type { CanvasActivityKind } from '@/lib/canvasEventKinds'
-
-export type { CanvasActivityKind } from '@/lib/canvasEventKinds'
+import type { CanvasAssignmentStatus, CanvasWorkspaceStatus } from '@/features/canvas/contracts'
 
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
 export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge' | 'learning' | 'teacher_admin'
-
-export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed'
 
 export interface WorkspaceSummary {
   id: string
@@ -30,51 +26,15 @@ export interface WorkspaceSummary {
   canManage: boolean
 }
 
-export interface KnowledgeSource {
-  id: string
-  kind: 'file' | 'url' | 'text'
-  title: string
-  mimeType: string | null
-  sizeBytes: number
-  originalUrl: string | null
-  originalFileUrl?: string | null
-  status: KnowledgeSourceStatus
-  stage: string
-  error: string | null
-  isTruncated: boolean
-  createdBy: string
-  createdAt: string
-  updatedAt: string
-  chunkCount?: number
-  extractedText?: string | null
-  /** Present for sources automatically ingested from a chat attachment. */
-  originClientMsgNo?: string | null
-}
-
-export interface KnowledgeCitation {
-  sourceId: string
-  sourceTitle: string
-  chunkId: string
-  excerpt: string
-  sourceUrl?: string
-  position: number
-  marker: string
-}
-
-export interface ConversationSourceSelection {
-  conversationId: string
-  sources: Array<{ sourceId: string; title: string; status: KnowledgeSourceStatus; enabled: boolean }>
-}
-
 export interface Participant {
   id: string
   kind: ParticipantKind
   name: string
   role?: string
   initial: string
-  /** linear-gradient or any css background — fallback when avatarUrl is empty */
+  /** Human fallback background; agents use the deterministic Bloub renderer. */
   avatarBg: string
-  /** AI-generated portrait URL (preferred over avatarBg when set) */
+  /** Human profile image. Agent values are always null and ignored by the renderer. */
   avatarUrl?: string | null
   status: Status
   statusUpdatedAt?: string
@@ -281,7 +241,15 @@ export interface Message {
   sequence?: number
   kind: MessageKind
   body: string
-  citations?: KnowledgeCitation[]
+  citations?: Array<{
+    sourceId: string
+    sourceTitle: string
+    chunkId: string
+    excerpt: string
+    sourceUrl?: string
+    position: number
+    marker: string
+  }>
   /** Structured mention metadata resolved against the conversation roster. */
   mentionedIds?: string[]
   mentionAll?: boolean
@@ -289,8 +257,8 @@ export interface Message {
    * persisted final message without briefly rendering both. */
   runId?: string
   at: string
-  /** Canonical timestamp used for transcript grouping. Legacy/mock rows may omit it. */
-  createdAt?: string
+  /** Canonical timestamp used for transcript grouping. */
+  createdAt: string
   reactions?: ReactionEntry[]
   /** for tool messages */
   tool?: {
@@ -306,6 +274,7 @@ export interface Message {
     /** kind 'img' renders inline; others render as a file card */
     kind: 'img' | 'pdf' | 'file' | 'fig'
     url: string
+    key?: string
     mime?: string
     size?: number
   }
@@ -318,6 +287,7 @@ export interface Message {
   /** Per-option aggregated tallies for kind === 'poll'. Empty array for
    *  any other message kind. Updated in place by `poll.updated` WS events. */
   pollTallies?: PollTally[]
+  pollRevision?: number
   /** Agent-authored clarification flow. The learner response is posted as a
    * normal quoted message so the asking Agent is deterministically woken. */
   questionnaire?: QuestionnairePayload
@@ -370,246 +340,6 @@ export interface ImReadReceiptAdvance {
 }
 
 export interface ViewKey {
-  view: 'sources' | 'conversations' | 'mail' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'shipping' | 'observability' | 'me' | 'library' | 'learning' | 'management'
+  view: 'sources' | 'conversations' | 'mail' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'observability' | 'me' | 'library' | 'learning' | 'management'
 }
 
-/* ============== Shared Canvas ======================================== */
-
-export type CanvasFrameType = 'html' | 'markdown' | 'document' | 'image' | 'artifact'
-
-export interface CanvasFrame {
-  id: string
-  canvasId: string
-  type: CanvasFrameType
-  title: string
-  x: number
-  y: number
-  width: number
-  height: number
-  content: string
-  data: Record<string, unknown>
-  revision: number
-  createdBy: string
-  updatedBy: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CanvasPresence {
-  participantId: string
-  participantKind: 'user' | 'agent'
-  status: string
-  frameId: string | null
-  color?: string | null
-  cursorX?: number | null
-  cursorY?: number | null
-  lastSeenAt: string
-}
-
-export type CanvasWorkspaceStatus = 'active' | 'summarizing' | 'completed' | 'stopped' | 'failed'
-export type CanvasAssignmentStatus = 'queued' | 'blocked' | 'working' | 'waiting' | 'completed' | 'failed' | 'cancelled'
-export type AgentExecutionRole = 'coordinator' | 'specialist' | 'verifier' | 'reporter'
-export type CanvasAssignmentExecutionRole = 'specialist' | 'verifier'
-export interface CanvasAssignmentReport {
-  id:string;canvasId:string;assignmentId:string|null;authorAgentId:string;executionRole:Exclude<AgentExecutionRole,'coordinator'>
-  schemaVersion:'learning_report_v1';finding:string;evidenceRefs:Array<{kind:'frame'|'message'|'document'|'source'|'attempt'|'report';id:string}>
-  confidence:number;unresolved:string[];nextStep:string|null;verifiesReportId:string|null;disconfirmingChecks:string[]
-  verdict:'supported'|'rejected'|'inconclusive'|null;consumedReportIds:string[];conflictResolution:unknown[];createdAt:string
-}
-
-export interface CanvasAgentAssignment {
-  id: string
-  canvasId: string
-  agentId: string
-  assignment: string
-  color: string
-  status: CanvasAssignmentStatus
-  workArea: { x: number; y: number; width: number; height: number }
-  activeFrameId: string | null
-  cursor: { x: number; y: number } | null
-  workId: string | null
-  dependsOnAgentIds: string[]
-  executionRole: CanvasAssignmentExecutionRole
-  verifiesAssignmentId: string | null
-  progressFingerprint?: string | null
-  noProgressCount?: number
-  result: string | null
-  error: string | null
-  startedAt: string | null
-  completedAt: string | null
-  updatedAt: string
-}
-
-export interface CanvasWorkspaceSummary {
-  id: string
-  title: string
-  goal: string
-  conversationId: string | null
-  initiatorAgentId: string | null
-  status: CanvasWorkspaceStatus
-  origin: string
-  frameCount: number
-  assignmentCount: number
-  updatedAt: string
-  createdAt: string
-}
-
-export interface CanvasComment {
-  id: string
-  canvasId: string
-  frameId: string | null
-  authorId: string
-  authorKind: 'user' | 'agent'
-  body: string
-  createdAt: string
-}
-
-export interface CanvasActivity {
-  id: string
-  canvasId: string
-  frameId: string | null
-  actorId: string
-  actorKind: 'user' | 'agent'
-  action: CanvasActivityKind
-  detail: Record<string, unknown>
-  createdAt: string
-}
-
-export interface CanvasSnapshot {
-  id: string
-  title: string
-  companyId: string
-  conversationId: string | null
-  triggerClientMsgNo: string | null
-  goal: string
-  initiatorAgentId: string | null
-  status: CanvasWorkspaceStatus
-  origin: string
-  summary: string | null
-  createdBy: string
-  createdAt: string
-  updatedAt: string
-  frames: CanvasFrame[]
-  assignments: CanvasAgentAssignment[]
-  presence: CanvasPresence[]
-  comments: CanvasComment[]
-  activity: CanvasActivity[]
-  reports: CanvasAssignmentReport[]
-}
-
-/* ============== Calendar (AI-native shared schedule) ============== */
-
-/** Minimal recurrence rule — mirrors the server-side shape in
- *  `server/src/calendar.ts`. We keep this client-side type narrow on
- *  purpose: anything not expressible here is rejected at the form layer
- *  rather than silently dropped on save. */
-export interface RecurrenceRule {
-  freq: 'daily' | 'weekly' | 'monthly' | 'yearly'
-  interval: number
-  /** 0=Sun … 6=Sat. Only used when freq='weekly'. */
-  byweekday?: number[]
-  /** Inclusive ISO timestamp upper bound for the series. */
-  until?: string | null
-  /** Hard cap on total firings. */
-  count?: number | null
-}
-
-export type CalendarEventKind = 'personal' | 'agent_task'
-export type CalendarEventStatus = 'active' | 'paused' | 'done' | 'cancelled'
-export type CalendarReminderChannel = 'toast' | 'email' | 'both'
-
-export interface CalendarEvent {
-  id: string
-  companyId: string
-  createdBy: string
-  kind: CalendarEventKind
-  title: string
-  description: string | null
-  /** Participant id (agent or human) that this event "fires at" — only
-   *  meaningful when kind='agent_task'. Personal events ignore it. */
-  assigneeId: string | null
-  /** Conversation the dispatch message lands in on each firing. Null =
-   *  scheduler will fall back to the creator↔assignee DM if it exists. */
-  targetConversationId: string | null
-  /** The body posted on each occurrence (rendered as a system message). */
-  agentPrompt: string | null
-  startAt: string
-  endAt: string | null
-  allDay: boolean
-  recurrence: RecurrenceRule | null
-  status: CalendarEventStatus
-  lastFiredAt: string | null
-  /** Pre-event heads-up: notify N minutes before each occurrence. Null
-   *  means no reminder. Paired with `reminderChannel`. */
-  reminderMinutesBefore: number | null
-  reminderChannel: CalendarReminderChannel | null
-  /** When true, only the row's `createdBy` and `assigneeId` can see it.
-   *  The company owner additionally sees private rows where either side
-   *  is an agent (workspace-supervision affordance). Default false. */
-  isPrivate: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CalendarDispatch {
-  id: string
-  eventId: string
-  scheduledFor: string
-  dispatchedAt: string
-  status: string
-  conversationId: string | null
-  messageId: string | null
-  error: string | null
-}
-
-/* ============== Kanban boards ============== */
-
-export interface BoardSummary {
-  id: string
-  title: string
-  description: string | null
-  createdBy: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface BoardColumn {
-  id: string
-  title: string
-  position: number
-  createdAt: string
-}
-
-export interface BoardCard {
-  id: string
-  boardId: string
-  columnId: string
-  title: string
-  description: string | null
-  position: number
-  assigneeId: string | null
-  mentions: string[]
-  commentCount: number
-  createdBy: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface BoardCardComment {
-  id: string
-  authorId: string
-  body: string
-  mentions: string[]
-  createdAt: string
-}
-
-export interface BoardSnapshot extends BoardSummary {
-  columns: BoardColumn[]
-  cards: BoardCard[]
-}
-
-export interface BoardCardLookup {
-  board: BoardSummary
-  column: BoardColumn
-  card: BoardCard
-}

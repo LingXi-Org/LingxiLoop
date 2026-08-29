@@ -1,4 +1,4 @@
-import { platformApi } from '@/api/platform'
+import { authApi } from '@/auth/api'
 /**
  * AuthGate — wraps the entire app and decides whether to show the
  * sign-in screen or the real UI based on the auth store.
@@ -71,7 +71,7 @@ export function AuthGate({ children, unauthFallback }: AuthGateProps) {
     if (!token) { markReady(); return }
     void (async () => {
       try {
-        const r = await platformApi.authMe()
+        const r = await authApi.me()
         if (cancelled) return
         setMe(r.user, r.companies, r.activeCompanyId)
         setServerCapabilities(r.serverCapabilities)

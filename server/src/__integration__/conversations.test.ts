@@ -10,6 +10,7 @@ import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll,
+  installFakeWukong,
 } from './_helpers.js'
 import { pool } from '../db/pool.js'
 
@@ -20,6 +21,7 @@ let baseUrl = ''
 
 before(async () => {
   await ensureSchemaOnce()
+  installFakeWukong()
   const app = await buildApiTestApp(ME_USER_ID)
   await new Promise<void>((resolve) => {
     server = createServer(app).listen(0, () => {
@@ -38,7 +40,7 @@ after(async () => {
   await teardownAll(server)
 })
 
-async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string; conversationId: string }> {
+async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string; projectId: string; conversationId: string }> {
   const companyId = 'c-direct-title'
   const conversationId = 'direct-ada-yetone'
   const projectId = 'general-c-direct-title'
@@ -65,28 +67,24 @@ async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string
      VALUES ($1, 'direct', 'Yetone', $2::jsonb, 'human', $3, $4)`,
     [conversationId, JSON.stringify([OTHER_USER_ID, ME_USER_ID]), companyId, projectId],
   )
-  return { companyId, conversationId }
+  return { companyId, projectId, conversationId }
 }
 
-test('[integration] GET /conversations returns the other member as a direct title', async () => {
-  const { companyId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
+test('[integration] retired GET /conversations has no compatibility data plane', async () => {
+  const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
 
   const res = await fetch(`${baseUrl}/api/conversations`, {
-    headers: { 'x-company-id': companyId },
+    headers: { 'x-company-id': companyId, 'x-project-id': projectId },
   })
   const raw = await res.text()
-  assert.equal(res.status, 200, raw)
-  const rows = JSON.parse(raw) as Array<{ id: string; title: string }>
-  const direct = rows.find((r) => r.id === conversationId)
-
-  assert.equal(direct?.title, 'Ada')
+  assert.equal(res.status, 404, `${conversationId}: ${raw}`)
 })
 
 test('[integration] GET /search uses the same perspective-specific direct title', async () => {
-  const { companyId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
+  const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
 
   const res = await fetch(`${baseUrl}/api/search?q=${encodeURIComponent('Ada')}`, {
-    headers: { 'x-company-id': companyId },
+    headers: { 'x-company-id': companyId, 'x-project-id': projectId },
   })
   const raw = await res.text()
   assert.equal(res.status, 200, raw)
@@ -124,25 +122,130 @@ test('[integration] new group binds to the current workspace immediately', async
   const res = await fetch(`${baseUrl}/api/conversations`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
+    body: JSON.stringify({ clientRequestId: 'group-current-0001', title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
   })
   assert.equal(res.status, 201)
   const body = await res.json() as { id: string; projectId: string }
   assert.equal(body.projectId, currentId)
   const stored = await pool.query<{ project_id: string }>(`SELECT project_id FROM conversations WHERE id=$1`, [body.id])
   assert.equal(stored.rows[0]?.project_id, currentId)
+  const binding = await pool.query<{ profile: { members: string[] } }>(
+    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`,
+    [body.id, companyId],
+  )
+  assert.deepEqual(binding.rows[0]?.profile.members.sort(), [ME_USER_ID, agentId].sort())
+
+  const duplicate = await fetch(`${baseUrl}/api/conversations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({ clientRequestId: 'group-current-0001', title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
+  })
+  assert.equal(duplicate.status, 200)
+  assert.equal((await duplicate.json() as { id: string; created: boolean }).id, body.id)
+  const count = await pool.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM conversations WHERE id=$1`, [body.id])
+  assert.equal(count.rows[0]?.count, '1')
 })
 
-test('[integration] new group falls back to General when no current workspace is supplied', async () => {
-  const { companyId, agentId, generalId } = await seedGroupCreationFixture()
+test('[integration] Agent metadata commands share the locked Conversations domain path', async () => {
+  const { companyId, agentId, currentId } = await seedGroupCreationFixture()
+  const created = await fetch(`${baseUrl}/api/conversations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({
+      clientRequestId: 'agent-metadata-0001',
+      title: 'Original title',
+      members: [agentId],
+      leaderId: agentId,
+      workspaceId: currentId,
+    }),
+  })
+  assert.equal(created.status, 201)
+  const conversationId = (await created.json() as { id: string }).id
+  const { runCli } = await import('../agents/cli.js')
+
+  const renamed = await runCli([
+    'rename', conversationId, 'Canonical title',
+    '--if-equals', 'Original title', '--as', agentId,
+  ])
+  assert.equal(renamed.ok, true, renamed.text)
+  assert.equal(renamed.sideEffects?.length, 1)
+
+  const noOp = await runCli(['rename', conversationId, 'Canonical title', '--as', agentId])
+  assert.equal(noOp.ok, true, noOp.text)
+  assert.match(noOp.text, /no-op/)
+  assert.equal(noOp.sideEffects?.length ?? 0, 0)
+
+  const stale = await runCli([
+    'rename', conversationId, 'Conflicting title',
+    '--if-equals', 'Original title', '--as', agentId,
+  ])
+  assert.equal(stale.ok, false)
+  assert.match(stale.text, /stale: current title is "Canonical title"/)
+
+  const topic = await runCli(['topic-set', conversationId, 'One domain path', '--as', agentId])
+  assert.equal(topic.ok, true, topic.text)
+  assert.equal(topic.sideEffects?.length, 1)
+  const read = await runCli(['topic', conversationId, '--as', agentId])
+  assert.equal(read.text, 'One domain path')
+
+  const stored = await pool.query<{ title: string; topic: string }>(
+    `SELECT title, topic FROM conversations WHERE id = $1 AND company_id = $2`,
+    [conversationId, companyId],
+  )
+  assert.deepEqual(stored.rows, [{ title: 'Canonical title', topic: 'One domain path' }])
+})
+
+test('[integration] Agent mute seals the read cursor in the same domain transaction', async () => {
+  const { companyId, agentId, currentId } = await seedGroupCreationFixture()
+  const created = await fetch(`${baseUrl}/api/conversations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    body: JSON.stringify({
+      clientRequestId: 'agent-delivery-0001',
+      title: 'Delivery group',
+      members: [agentId],
+      leaderId: agentId,
+      workspaceId: currentId,
+    }),
+  })
+  assert.equal(created.status, 201)
+  const conversationId = (await created.json() as { id: string }).id
+  const { runCli } = await import('../agents/cli.js')
+
+  const muted = await runCli(['mute', conversationId, '--for', '30m', '--as', agentId])
+  assert.equal(muted.ok, true, muted.text)
+  const persisted = await pool.query<{ muted: boolean; read: boolean }>(
+    `SELECT
+       EXISTS(SELECT 1 FROM conversation_mutes
+         WHERE user_id = $1 AND conversation_id = $2) AS muted,
+       EXISTS(SELECT 1 FROM conversation_reads
+         WHERE user_id = $1 AND conversation_id = $2) AS read`,
+    [agentId, conversationId],
+  )
+  assert.deepEqual(persisted.rows, [{ muted: true, read: true }])
+
+  const listed = await runCli(['mute', 'list', '--json', '--as', agentId])
+  assert.equal(listed.ok, true, listed.text)
+  assert.equal((JSON.parse(listed.text) as Array<{ id: string }>)[0]?.id, conversationId)
+
+  const followed = await runCli(['follow', conversationId, '--as', agentId])
+  assert.match(followed.text, /^Following/)
+  const alreadyFollowing = await runCli(['follow', conversationId, '--as', agentId])
+  assert.match(alreadyFollowing.text, /was not muted/)
+  assert.equal((await pool.query(
+    `SELECT 1 FROM conversation_mutes WHERE user_id = $1 AND conversation_id = $2`,
+    [agentId, conversationId],
+  )).rowCount, 0)
+})
+
+test('[integration] new group rejects a missing current workspace', async () => {
+  const { companyId, agentId } = await seedGroupCreationFixture()
   const res = await fetch(`${baseUrl}/api/conversations`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ title: 'General group', members: [agentId], leaderId: agentId }),
+    body: JSON.stringify({ clientRequestId: 'group-missing-0001', title: 'General group', members: [agentId], leaderId: agentId }),
   })
-  assert.equal(res.status, 201)
-  const body = await res.json() as { id: string; projectId: string }
-  assert.equal(body.projectId, generalId)
-  const stored = await pool.query<{ project_id: string }>(`SELECT project_id FROM conversations WHERE id=$1`, [body.id])
-  assert.equal(stored.rows[0]?.project_id, generalId)
+  assert.equal(res.status, 400)
+  const body = await res.json() as { error: string }
+  assert.match(body.error, /workspaceId required/)
 })

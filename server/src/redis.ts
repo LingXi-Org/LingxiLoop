@@ -198,15 +198,6 @@ export interface StatusEvent extends TenantTagged {
   statusUpdatedAt?: string
 }
 
-/** Fired when an agent's avatar gets (re-)generated. Clients patch their
- *  local participants store so the new portrait appears without waiting
- *  for the periodic refresh tick. */
-export interface AvatarEvent extends TenantTagged {
-  type: 'participants.avatar'
-  participantId: string
-  avatarUrl: string
-}
-
 /** Fired when a human accepts an invite (or is otherwise newly mirrored
  *  into a company's `participants`). Existing members upsert their local
  *  byId map so the newcomer shows up in member chips / conversation
@@ -359,6 +350,7 @@ export interface DocAwarenessEvent extends TenantTagged {
  *  in `mentionedIds`. */
 export interface DocMentionEvent extends TenantTagged {
   type: 'doc.mention'
+  deliveryId: string
   documentId: string
   documentTitle: string
   mentionerId: string
@@ -418,6 +410,7 @@ export interface PollUpdatedEvent extends TenantTagged {
   type: 'poll.updated'
   conversationId: string
   messageId: string
+  revision: number
   /** Poll payload as stored on messages.poll — includes closedAt when this
    *  event marks the poll as closed. */
   poll: {
@@ -474,7 +467,7 @@ export interface DocAccessRevokedEvent extends TenantTagged {
 }
 
 export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
-  | StatusEvent | AvatarEvent | ParticipantAddedEvent | ReactionsEvent
+  | StatusEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
   | BoardEvent | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
   | CalendarEventChangedEvent

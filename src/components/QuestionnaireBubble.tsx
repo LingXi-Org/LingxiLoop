@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useAuiState } from '@assistant-ui/react'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
-import { sendUserMessage, useMessages } from '@/stores/messages'
+import { sendUserMessage, useMessages } from '@/features/chat/state/messages'
 import { useMe } from '@/stores/auth'
 import type { Message, QuestionnaireItemPayload } from '@/types'
 import {

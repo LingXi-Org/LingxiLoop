@@ -19,6 +19,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { NotificationPushPayload } from '@/lib/runtime'
+import { BloubAvatar } from '@/components/BloubAvatar'
+import {
+  Avatar as AvatarPrimitive,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar'
 
 // Match wails-gui's tight slide-and-fade (toast_window_assets/toast.html
 // — `transition: opacity 180ms ease-out, transform 180ms ease-out` +
@@ -221,41 +227,30 @@ export function NotificationWindow() {
   )
 }
 
-/**
- * Avatar that mirrors the conversation-list look: portrait when we have
- * one, otherwise the agent's stable color block with their initial. The
- * notification BrowserWindow is a separate renderer (different page from
- * the main app's React tree), so it can't reach into the participants
- * store directly — the main app passes `authorInitial` + `authorAvatarBg`
- * with every push so this fallback is consistent with the convo list.
- */
 function AuthorAvatar({ toast }: { toast: Toast }) {
-  const [imgBroke, setImgBroke] = useState(false)
-  // Reset on every URL change so a fresh toast (possibly reusing this
-  // component slot) gets a clean shot at <img>. Without this, a single
-  // load failure would stick imgBroke=true across subsequent toasts.
-  useEffect(() => { setImgBroke(false) }, [toast.authorAvatarUrl])
-  const hasImg = !!toast.authorAvatarUrl && !imgBroke
-  const initial = (toast.authorInitial ?? toast.authorName.charAt(0) ?? '?').toUpperCase()
+  if (toast.authorKind === 'agent') {
+    return (
+      <BloubAvatar
+        participant={{
+          id: toast.authorId,
+          name: toast.authorName,
+          role: toast.authorRole ?? undefined,
+          status: toast.authorStatus ?? 'avail',
+        }}
+        status={toast.authorStatus ?? 'avail'}
+        size={32}
+        animated={false}
+        mode="neutral"
+      />
+    )
+  }
+
+  const initial = ((toast.authorInitial ?? toast.authorName.charAt(0)) || '?').toUpperCase()
   return (
-    <div
-      className="w-8 h-8 rounded-full shrink-0 grid place-items-center font-display font-medium text-white text-[13px] overflow-hidden relative"
-      style={{
-        background: hasImg ? 'transparent' : (toast.authorAvatarBg ?? 'var(--ink-300)'),
-        letterSpacing: '-0.02em',
-      }}
-    >
-      {hasImg ? (
-        <img
-          src={toast.authorAvatarUrl!}
-          alt={toast.authorName}
-          className="absolute inset-0 w-full h-full object-cover"
-          onError={() => setImgBroke(true)}
-        />
-      ) : (
-        <span>{initial}</span>
-      )}
-    </div>
+    <AvatarPrimitive>
+      {toast.authorAvatarUrl ? <AvatarImage src={toast.authorAvatarUrl} alt={toast.authorName} /> : null}
+      <AvatarFallback>{initial}</AvatarFallback>
+    </AvatarPrimitive>
   )
 }
 
@@ -333,7 +328,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
             {toast.unreadCount !== undefined && toast.unreadCount > 1 && (
               <span
                 // Matches the canonical unread chip in the conversation list
-                // (ConversationsPane.tsx:289-300) — solid coral + white digit,
+                // (features/conversations/components/ConversationsPane.tsx) — solid coral + white digit,
                 // tabular nums, fixed 18px circle. Earlier soft-coral variant
                 // looked like a foreign dialect of the same color family.
                 className="ml-auto inline-grid place-items-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold shrink-0 tabular-nums"

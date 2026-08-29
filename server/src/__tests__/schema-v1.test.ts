@@ -4,7 +4,7 @@ import test from 'node:test'
 
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const bootstrap = readFileSync(new URL('../db/bootstrap.ts', import.meta.url), 'utf8')
-const serverBoot = readFileSync(new URL('../index.ts', import.meta.url), 'utf8')
+const serverBoot = readFileSync(new URL('../web.ts', import.meta.url), 'utf8')
 const seed = readFileSync(new URL('../seed.ts', import.meta.url), 'utf8')
 const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.url), 'utf8')
 const onboarding = readFileSync(new URL('../onboardCompany.ts', import.meta.url), 'utf8')
@@ -20,10 +20,12 @@ test('v1 schema is a complete bootstrap definition without historical data mutat
     'participants',
     'conversations',
     'messages',
+    'message_reactions',
+    'agent_climate',
     'agent_work_items',
     'knowledge_sources',
-    'courses',
     'llm_calls',
+    'courses',
   ]) {
     assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
   }
@@ -37,12 +39,58 @@ test('v1 schema excludes migration markers and retired host structures', () => {
   assert.doesNotMatch(schema, /CREATE TABLE public\.agent_memory\b/)
   assert.doesNotMatch(schema, /CREATE TABLE public\.(?:computers|computer_events|lingxigraph_steering_receipts)\b/)
   assert.doesNotMatch(schema, /\b(?:computer_id|fast_model|pair_token)\b/)
+  assert.doesNotMatch(schema, /\b(?:sub2api_user_id|sub2api_api_key|tier)\b/i)
+  assert.match(schema, /CREATE TABLE public\.llm_calls[\s\S]*cost_usd[\s\S]*cost_estimated/)
 })
 
 test('v1 defaults preserve current capability and Canvas contracts', () => {
   assert.match(schema, /capabilities jsonb DEFAULT '\["canvas", "web", "files", "email", "documents"\]'::jsonb NOT NULL/)
   assert.doesNotMatch(schema, /capabilities jsonb DEFAULT '[^']*knowledge/)
   assert.match(schema, /CREATE TABLE public\.canvases \([\s\S]*?conversation_id text,/)
+})
+
+test('tenant-owned reaction and climate rows have no legacy tenant default', () => {
+  assert.match(schema, /CREATE TABLE public\.message_reactions \([\s\S]*?company_id text NOT NULL[\s\S]*?\);/)
+  assert.match(schema, /CREATE TABLE public\.agent_climate \([\s\S]*?company_id text NOT NULL[\s\S]*?\);/)
+  assert.match(schema, /agent_climate_pkey PRIMARY KEY \(company_id, agent_id, about_id\)/)
+  assert.doesNotMatch(schema, /company_id text DEFAULT 'personal'::text/)
+  assert.match(bootstrap, /REQUIRED_V1_NOT_NULL_COLUMNS/)
+  assert.match(bootstrap, /REQUIRED_V1_PRIMARY_KEYS/)
+})
+
+test('calendar rows require one workspace and coherent native event fields', () => {
+  assert.match(schema, /CREATE TABLE public\.calendar_events \([\s\S]*?project_id text NOT NULL[\s\S]*?\);/)
+  for (const constraint of [
+    'calendar_events_kind_check',
+    'calendar_events_status_check',
+    'calendar_events_agent_task_check',
+    'calendar_events_reminder_check',
+    'calendar_events_reminder_minutes_check',
+    'calendar_events_reminder_channel_check',
+  ]) {
+    assert.match(schema, new RegExp(`CONSTRAINT ${constraint}\\b`))
+  }
+  assert.match(bootstrap, /\['calendar_events', 'project_id'\]/)
+})
+
+test('document mentions use a durable tenant-scoped delivery ledger', () => {
+  assert.match(schema, /CREATE TABLE public\.document_mention_deliveries \([\s\S]*?company_id text NOT NULL[\s\S]*?recipients jsonb NOT NULL[\s\S]*?status text DEFAULT 'queued'/)
+  assert.match(schema, /document_mention_deliveries_status_check/)
+  assert.match(schema, /idx_document_mention_deliveries_due/)
+  assert.match(schema, /document_mention_deliveries_project_id_company_id_fkey/)
+  assert.match(bootstrap, /'document_mention_deliveries'/)
+  assert.match(bootstrap, /\['document_mention_deliveries', 'status', "'queued'::text"\]/)
+})
+
+test('learning side effects have fenced tenant-scoped reconciliation identities', () => {
+  assert.match(schema, /CREATE TABLE public\.learning_effects \([\s\S]*?effect_key text DEFAULT 'singleton'::text NOT NULL/)
+  assert.match(schema, /queued_payload jsonb,[\s\S]*?generation integer DEFAULT 1 NOT NULL/)
+  assert.match(schema, /learning_effects_generation_check/)
+  assert.match(schema, /learning_effects_effect_identity_key UNIQUE\(company_id, course_id, kind, effect_key\)/)
+  assert.match(schema, /'member_access\.revoke'::text, 'member_onboarding\.seed'::text/)
+  assert.match(bootstrap, /\['learning_effects', 'effect_key'\]/)
+  assert.match(bootstrap, /\['learning_effects', 'generation'\]/)
+  assert.match(bootstrap, /\['learning_effects', 'learning_effects_effect_identity_key', 'u'\]/)
 })
 
 test('bootstrap only reuses a complete marked v1 schema and rejects every unmarked non-empty schema', () => {
@@ -53,6 +101,27 @@ test('bootstrap only reuses a complete marked v1 schema and rejects every unmark
   assert.match(schema, /COMMENT ON SCHEMA public IS 'LingxiLoop schema v1';/)
   assert.match(executableBootstrap, /schemaMarker\(client\)[\s\S]*V1_SCHEMA_MARKER/)
   assert.doesNotMatch(executableBootstrap, /advisory|backfill|lock_timeout|ALTER TABLE/i)
+})
+
+test('bootstrap completeness tracks every canonical v1 relation and the LLM ledger invariants', () => {
+  const tables = [...schema.matchAll(/^CREATE TABLE public\.([a-z0-9_]+)\b/gm)]
+    .map((match) => match[1]!)
+  assert.ok(tables.length > 100, 'canonical v1 relation inventory unexpectedly shrank')
+  for (const table of tables) assert.match(bootstrap, new RegExp(`'${table}'`), table)
+  for (const object of [
+    'llm_calls_pkey',
+    'llm_calls_company_id_fkey',
+    'llm_calls_source_check',
+    'llm_calls_status_check',
+    'llm_calls_tokens_check',
+    'idx_llm_calls_company_created',
+    'idx_llm_calls_run_created',
+    'participants_agent_bloub_only',
+  ]) {
+    assert.match(bootstrap, new RegExp(`'${object}'`), object)
+  }
+  assert.match(bootstrap, /REQUIRED_V1_CONSTRAINTS/)
+  assert.match(bootstrap, /REQUIRED_V1_INDEXES/)
 })
 
 test('every Compose runtime gates Web startup on the v1 bootstrap service', () => {

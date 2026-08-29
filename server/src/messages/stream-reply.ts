@@ -20,34 +20,23 @@ export function splitReplyChunks(body: string, baseSize = 24, intervalMs = 20, m
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
-/** Best-effort presentation stream. The caller always follows this with the
- * authoritative message.new, so any publish failure safely collapses to the
- * already-persisted full message. */
+/** Publish the complete presentation stream. Transport failures propagate. */
 export async function replayReplyStream(
   base: Omit<MessageDeltaEvent, 'type' | 'delta' | 'done'>,
   body: string,
   publishEvent: PublishEvent = defaultPublish,
 ): Promise<boolean> {
-  try {
-    await publishEvent(MESSAGE_DELTA_CHANNEL, { ...base, type: 'message.delta', delta: '', done: false })
-    for (const chunk of splitReplyChunks(body)) {
-      await delay(20)
-      await publishEvent(MESSAGE_DELTA_CHANNEL, { ...base, type: 'message.delta', delta: chunk, done: false })
-    }
-    return true
-  } catch (error) {
-    console.warn('[reply-stream] falling back to complete message', error)
-    return false
+  await publishEvent(MESSAGE_DELTA_CHANNEL, { ...base, type: 'message.delta', delta: '', done: false })
+  for (const chunk of splitReplyChunks(body)) {
+    await delay(20)
+    await publishEvent(MESSAGE_DELTA_CHANNEL, { ...base, type: 'message.delta', delta: chunk, done: false })
   }
+  return true
 }
 
 export async function finishReplyStream(
   base: Omit<MessageDeltaEvent, 'type' | 'delta' | 'done'>,
   publishEvent: PublishEvent = defaultPublish,
 ): Promise<void> {
-  try {
-    await publishEvent(MESSAGE_DELTA_CHANNEL, { ...base, type: 'message.delta', delta: '', done: true })
-  } catch (error) {
-    console.warn('[reply-stream] completion event failed', error)
-  }
+  await publishEvent(MESSAGE_DELTA_CHANNEL, { ...base, type: 'message.delta', delta: '', done: true })
 }

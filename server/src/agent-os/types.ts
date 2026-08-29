@@ -116,9 +116,9 @@ export interface AgentContext {
   /** Degraded attachment ingestion detail for the triggering message. */
   knowledgeIngestionFailure?: string
   /** Fresh course state for this turn only. Never frozen into PromptContext/session. */
-  learningContext?: import('../learning/types.js').LearningTurnContext
+  learningContext?: import('../modules/learning/runtime.js').LearningTurnContext
   /** Fresh teacher-room state for Pulse only. Never frozen into PromptContext/session. */
-  teacherContext?: import('../learning/types.js').TeacherTurnContext
+  teacherContext?: import('../modules/learning/runtime.js').TeacherTurnContext
   summary?: string
   learnerId?: string
   promptContextCandidate?: PromptContextV1

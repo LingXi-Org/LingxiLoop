@@ -7,9 +7,9 @@ const skeleton = read('../components/ui/skeleton.tsx')
 const resourceSkeleton = read('../components/ResourceSkeleton.tsx')
 const resourceSkill = read('../../.agents/skills/lingxiloop-resource-loading/SKILL.md')
 
-test('Skeleton remains byte-shaped like the official base-nova primitive', () => {
+test('Skeleton remains byte-shaped like the official Luma primitive', () => {
   assert.match(skeleton, /data-slot="skeleton"/)
-  assert.match(skeleton, /animate-pulse rounded-md bg-muted/)
+  assert.match(skeleton, /animate-pulse rounded-2xl bg-muted/)
   assert.match(skeleton, /React\.ComponentProps<"div">/)
   assert.doesNotMatch(skeleton, /variant|loading|spinner/i)
 })
@@ -27,27 +27,34 @@ test('shared resource placeholders cover every global layout shape accessibly', 
 
 test('global resource surfaces render Skeletons instead of plain initial loading text', () => {
   const surfaces = [
-    '../desktop/DocumentsView.tsx',
-    '../desktop/BoardsView.tsx',
-    '../desktop/CalendarView.tsx',
+    '../features/documents/components/DocumentsView.tsx',
+    '../features/boards/components/BoardsView.tsx',
+    '../features/boards/components/BoardCardDialog.tsx',
+    '../features/calendar/components/CalendarView.tsx',
+    '../features/calendar/components/CalendarEventPeekContent.tsx',
     '../components/WorkspaceChrome.tsx',
     '../components/WorkspacePicker.tsx',
-    '../components/ArtifactPeekContent.tsx',
+    '../features/boards/components/BoardPeekContent.tsx',
     '../components/AttachmentViewer.tsx',
-    '../components/DocumentEditor.tsx',
-    '../components/LearningCenter.tsx',
+    '../features/documents/components/DocumentEditor.tsx',
+    '../features/learning/components/LearningCenter.tsx',
     '../components/LinkPreview.tsx',
     '../components/messages/MessageBusinessParts.tsx',
-    '../admin/UsersPage.tsx',
-    '../admin/WaitlistPage.tsx',
-    '../admin/ObservabilityPage.tsx',
+    '../features/admin/components/UsersPage.tsx',
+    '../features/admin/components/WaitlistPage.tsx',
   ]
   for (const path of surfaces) {
     const source = read(path)
-    assert.match(source, /<(?:ResourceSkeleton|Skeleton)\b/, `${path} has no Skeleton pending branch`)
+    assert.match(source, /<(?:ResourceSkeleton|Skeleton|PeekLoading)\b/, `${path} has no Skeleton pending branch`)
   }
   assert.match(read('../components/LinkPreview.tsx'), /if \(!loaded\) return <ResourceSkeleton/)
   assert.doesNotMatch(read('../components/LinkPreview.tsx'), /render NOTHING \(no skeleton\)/)
+  const linkPreview = read('../components/LinkPreview.tsx')
+  assert.match(linkPreview, /messagesApi\.getLinkPreview/)
+  assert.match(linkPreview, /role="alert"/)
+  assert.match(linkPreview, /链接预览加载失败/)
+  assert.match(linkPreview, /setRetryRevision/)
+  assert.doesNotMatch(linkPreview, /@\/api\/core\/http/)
 })
 
 test('repository skill requires Skeletons for all future asynchronous resources', () => {

@@ -13,9 +13,9 @@
  * `useResolvedCardId` is best-effort against in-memory board snapshots.
  */
 import { useEffect, useMemo } from 'react'
-import { useCalendar } from '@/stores/calendar'
-import { useDocuments } from '@/stores/documents'
-import { useBoards } from '@/stores/boards'
+import { useCalendar } from '@/features/calendar/state'
+import { useDocuments } from '@/features/documents/state'
+import { useBoards } from '@/features/boards/state'
 
 /** If `id` is an unambiguous prefix of exactly one item's id, return that full
  *  id; otherwise return `id` unchanged. Exact match always wins. */

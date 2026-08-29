@@ -16,7 +16,7 @@
  *      Prometheus (scrape interval re-derives rates).
  *
  * Exposition: GET /api/metrics?token=<METRICS_BEARER_TOKEN> returns
- * Prom-compatible text. Endpoint is 404 when the env var is unset so we
+ * Prometheus text. Endpoint is 404 when the env var is unset so we
  * don't accidentally expose internal counts in unauthenticated deploys.
  */
 
@@ -37,6 +37,7 @@ export type CounterName =
   | 'email.gc.failed'
   | 'db.gc.deleted'
   | 'db.gc.failed'
+  | 'boards.events.publish_failed'
   | 'knowledge.source.processed'
   | 'knowledge.source.processing_ms'
   | 'knowledge.notebook.provisioned'
@@ -46,7 +47,7 @@ export type CounterName =
   | 'knowledge.retrieval.hits'
   | 'knowledge.retrieval.errors'
   | 'knowledge.retrieval.latency_ms'
-  | 'knowledge.retrieval.generic_fallback'
+  | 'knowledge.retrieval.miss'
   | 'learning.mission.created'
   | 'learning.mission.deduplicated'
   | 'learning.mission.planning_completed'
@@ -74,8 +75,8 @@ interface CounterDef {
 /** All known counters. The `help` text becomes `# HELP <name> ...` in
  *  the exposition; the label list constrains what callers may pass. */
 const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
-  'email.send.ok':                       { help: 'Outbound emails accepted by the provider.', labels: ['mock'] },
-  'email.send.fail':                     { help: 'Outbound emails the provider rejected.', labels: ['mock'] },
+  'email.send.ok':                       { help: 'Outbound emails accepted by the provider.', labels: [] },
+  'email.send.fail':                     { help: 'Outbound emails the provider rejected.', labels: [] },
   'email.inbound.delivered':             { help: 'Inbound emails persisted to at least one recipient.', labels: ['auto_submitted'] },
   'email.inbound.dedup':                 { help: 'Inbound deliveries deduplicated by smtp_message_id.', labels: [] },
   'email.inbound.no_recipient':          { help: 'Inbound deliveries dropped — no resolved recipient.', labels: [] },
@@ -88,6 +89,7 @@ const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
   'email.gc.failed':                     { help: 'GC delete attempts that failed at the storage layer.', labels: [] },
   'db.gc.deleted':                       { help: 'Rows deleted by the DB retention sweep.', labels: ['table'] },
   'db.gc.failed':                        { help: 'DB retention sweeps that failed (per table, will retry).', labels: ['table'] },
+  'boards.events.publish_failed':        { help: 'Board realtime projection publications that failed.', labels: ['kind'] },
   'knowledge.source.processed':          { help: 'Knowledge-source processing attempts by outcome.', labels: ['status'] },
   'knowledge.source.processing_ms':      { help: 'Cumulative knowledge-source processing milliseconds.', labels: [] },
   'knowledge.notebook.provisioned':      { help: 'Project notebooks provisioned in Open Notebook.', labels: [] },
@@ -97,7 +99,7 @@ const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
   'knowledge.retrieval.hits':            { help: 'Knowledge chunks injected into Agent turns.', labels: [] },
   'knowledge.retrieval.errors':          { help: 'Open Notebook retrieval requests that failed.', labels: [] },
   'knowledge.retrieval.latency_ms':      { help: 'Cumulative Open Notebook retrieval latency in milliseconds.', labels: [] },
-  'knowledge.retrieval.generic_fallback':{ help: 'Agent turns with ready sources but no sufficient retrieval hit.', labels: [] },
+  'knowledge.retrieval.miss':            { help: 'Agent turns with ready sources but no sufficient retrieval hit.', labels: [] },
   'learning.mission.created':             { help: 'Learning Missions created.', labels: ['mode'] },
   'learning.mission.deduplicated':        { help: 'Duplicate Mission creation attempts returned the existing Mission.', labels: [] },
   'learning.mission.planning_completed':  { help: 'Mission boards that passed the explicit planning gate.', labels: ['mode'] },

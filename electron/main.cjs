@@ -1501,10 +1501,15 @@ function makeDevPayload(sample) {
   const at = Date.now()
   return {
     id: `dev-${at}-${Math.random().toString(36).slice(2, 8)}`,
+    messageId: `dev-message-${at}-${devSampleIdx}`,
     conversationId: `dev-${sample.authorId}`,
     authorId: sample.authorId,
     authorName: sample.authorName,
+    authorKind: 'agent',
+    authorRole: null,
+    authorStatus: 'avail',
     authorAvatarUrl: null,
+    authorInitial: null,
     conversationTitle: sample.conversationTitle,
     body: sample.body,
     at,

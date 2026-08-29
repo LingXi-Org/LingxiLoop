@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { BarChart3Icon, PlusIcon, XIcon } from 'lucide-react'
-import { messagesApi } from '@/api/messages'
+import { messagesApi } from '@/features/chat/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -42,6 +42,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const questionRef = useRef<HTMLInputElement | null>(null)
+  const requestIdRef = useRef<string | null>(null)
 
   useEffect(() => { questionRef.current?.focus() }, [])
   useEffect(() => {
@@ -59,13 +60,18 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
     if (!canSubmit) { setError('请输入问题和至少两个选项。'); return }
     setSubmitting(true)
     setError(null)
+    requestIdRef.current ??= crypto.randomUUID()
     void messagesApi.createPoll({
+      clientRequestId: requestIdRef.current,
       conversationId,
       question: question.trim(),
       mode,
       options: cleanedOptions,
       expiresInMinutes: expireToMinutes(expire),
-    }).then(onSubmitted).catch((reason) => {
+    }).then(() => {
+      requestIdRef.current = null
+      onSubmitted()
+    }).catch((reason) => {
       setError(reason instanceof Error ? reason.message : '创建投票失败')
       setSubmitting(false)
     })

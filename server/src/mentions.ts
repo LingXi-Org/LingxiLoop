@@ -66,7 +66,7 @@ export function parseMentions(input: string, targets: MentionTarget[]): ParsedMe
     // preceding Chinese character as part of an identifier would miss it.
     if (prev && (/[A-Za-z0-9_]/.test(prev) || prev === '@')) continue
     const tail = text.slice(i + 1).join('').toLocaleLowerCase()
-    const broadcast = ['everyone', 'all'].find((token) => tail.startsWith(token))
+    const broadcast = tail.startsWith('all') ? 'all' : undefined
     if (broadcast) {
       const after = text[i + 1 + broadcast.length]
       if (!after || !WORD.test(after)) {

@@ -1,28 +1,12 @@
-import type { ServerCapabilities } from '@/api/contracts'
+import type { AuthCompany, AuthUser, ServerCapabilities } from '@/auth/contracts'
+export type { AuthCompany, AuthUser } from '@/auth/contracts'
 /**
  * Auth state — token + current user + active company. Token persists in
  * localStorage so reloads stay signed in. Every API request reads the
  * current token from this store through the shared HTTP transport.
  */
 import { create } from 'zustand'
-export interface AuthCompany {
-  id: string
-  name: string
-  slug: string
-  role: string
-  /** Plan tier of the active company (owner's tier). */
-  tier?: 'free' | 'pro' | 'max' | string
-}
-
-export interface AuthUser {
-  id: string
-  email: string
-  name: string
-  emailVerified?: boolean
-  /** Verified identity providers linked to this account. */
-  providers?: string[]
-}
-
+import { runAuthTeardown } from './authTeardown'
 interface AuthState {
   token: string | null
   user: AuthUser | null
@@ -53,6 +37,8 @@ export const useAuth = create<AuthState>((set) => ({
   ready: false,
   serverCapabilities: null,
   setSession(token, user, companyId) {
+    const previousUserId = useAuth.getState().user?.id
+    if (previousUserId && previousUserId !== user.id) runAuthTeardown()
     localStorage.setItem(TOKEN_KEY, token)
     if (companyId) localStorage.setItem(COMPANY_KEY, companyId)
     set({ token, user, activeCompanyId: companyId, ready: true })
@@ -90,9 +76,9 @@ export const useAuth = create<AuthState>((set) => ({
     // outlive the AuthedApp remount, so a key-change alone doesn't
     // clear them.
     void Promise.all([
-      import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-      import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
+      import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
+      import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
+      import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
   /** Append a freshly-created company to the user's set and switch to it. */
@@ -105,13 +91,14 @@ export const useAuth = create<AuthState>((set) => ({
     // one's data while the first listXXX() is in flight.
     if (prevId && prevId !== c.id) {
       void Promise.all([
-        import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-        import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-        import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
+        import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
+        import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
+        import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
       ])
     }
   },
   clear() {
+    runAuthTeardown()
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(COMPANY_KEY)
     set({ token: null, user: null, companies: [], activeCompanyId: null, ready: true, serverCapabilities: null })
@@ -119,12 +106,13 @@ export const useAuth = create<AuthState>((set) => ({
     // linger; clear them so the next sign-in doesn't briefly render a
     // dead URL.createObjectURL pointing at a freed blob.
     void import('@/lib/avatarCache').then(({ clearAvatarCache }) => clearAvatarCache())
+    void import('@/lib/im/wukong').then(({ lingxiIm }) => lingxiIm.disconnect())
     void import('@/api/core/realtime').then(({ ws }) => ws.close())
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([
-      import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-      import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
+      import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
+      import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
+      import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
   markReady() {
