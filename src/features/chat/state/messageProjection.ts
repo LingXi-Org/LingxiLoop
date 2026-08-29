@@ -178,7 +178,38 @@ export function fromImBatch(messages: ImEnvelope[]): Message[] {
     )
     byId.set(next.id, latest)
   }
-  return sortMessagesStable([...byId.values()])
+  return projectThreadMetadata(sortMessagesStable([...byId.values()]))
+}
+
+export function projectThreadMetadata(messages: Message[]): Message[] {
+  const roots = new Map<string, Message>()
+  for (const message of messages) {
+    roots.set(message.id, message)
+    if (message.clientId) roots.set(message.clientId, message)
+  }
+  const replyCounts = new Map<string, number>()
+  const normalized = messages.map((message) => {
+    if (!message.quotedMessageId) return message
+    const root = roots.get(message.quotedMessageId)
+    if (!root) return message
+    replyCounts.set(root.id, (replyCounts.get(root.id) ?? 0) + 1)
+    const rootSequence = root.sequence
+    return {
+      ...message,
+      quotedMessageId: root.id,
+      quoted: message.quoted ?? (rootSequence === undefined ? undefined : {
+        id: root.id,
+        authorId: root.authorId,
+        kind: root.kind,
+        body: (root.body ?? '').slice(0, 240),
+        sequence: rootSequence,
+      }),
+    }
+  })
+  return normalized.map((message) => {
+    const replyCount = replyCounts.get(message.id)
+    return replyCount === undefined ? message : { ...message, replyCount }
+  })
 }
 
 export function mergeFetchedMessages(current: Message[] | undefined, incoming: Message[]): Message[] {
@@ -198,5 +229,5 @@ export function mergeFetchedMessages(current: Message[] | undefined, incoming: M
     merged.push(message)
   }
 
-  return sortMessagesStable(merged)
+  return projectThreadMetadata(sortMessagesStable(merged))
 }

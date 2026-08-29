@@ -1,6 +1,5 @@
 
 import { http } from '@/api/core/http'
-import type { ApiMessage } from '@/api/contracts'
 
 export interface LinkPreviewMetadata {
   url: string
@@ -13,10 +12,6 @@ export interface LinkPreviewMetadata {
 }
 
 export const messagesApi = {
-  getReplies: (conversationId: string, rootId: string) =>
-    http<ApiMessage[]>(
-      `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(rootId)}/replies`,
-    ),
   createPoll: (args: {
     clientRequestId: string
     conversationId: string

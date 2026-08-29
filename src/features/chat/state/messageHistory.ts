@@ -19,6 +19,11 @@ import {
 type HistoryActions = Pick<MessagesState,
   'loadConversation' | 'loadOlder' | 'reloadConversation' | 'retryLoad' | 'loadReadReceipts'>
 
+export async function loadThreadReplies(conversationId: string, rootId: string): Promise<Message[]> {
+  const messages = fromImBatch(await lingxiIm.history(conversationId, 200))
+  return messages.filter((message) => message.quotedMessageId === rootId)
+}
+
 function durableRange(messages: Message[]): { from: number; to: number } | null {
   const sequences = messages
     .map((message) => message.sequence)

@@ -12,3 +12,4 @@ export {
 } from './messageState'
 export { markMessagesVisibleThrough } from './readReceipts'
 export { toggleReaction } from './reactionCommands'
+export { loadThreadReplies } from './messageHistory'

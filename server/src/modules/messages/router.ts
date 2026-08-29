@@ -70,7 +70,11 @@ messagesRouter.post('/conversations/:id/messages', safe(async (req, res) => {
 
 messagesRouter.get('/conversations/:id/messages/:rootId/replies', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const { companyId } = await requireConversationMember(req, conversationId)
+  const { companyId, kind } = await requireConversationMember(req, conversationId)
+  if (kind !== 'email') {
+    res.status(410).json({ error: 'REST thread reads are retired; use WuKongIM', transport: 'wukongim' })
+    return
+  }
   res.json(await messagesApplication.replies(
     companyId,
     conversationId,

@@ -54,12 +54,14 @@ export async function toggleReaction(messageId: string, emoji: string): Promise<
   const target = Object.entries(useMessages.getState().byConvo)
     .flatMap(([conversationId, messages]) => messages.map((message) => ({ conversationId, message })))
     .find(({ message }) => message.id === messageId)
-  if (!target || !Number.isSafeInteger(target.message.sequence) || target.message.sequence <= 0) return
+  if (!target) return
+  const messageSequence = target.message.sequence
+  if (!Number.isSafeInteger(messageSequence) || messageSequence === undefined || messageSequence <= 0) return
   const previous = patchMessageReactions(messageId, (reactions) => (
     optimisticToggleReactions(reactions, emoji)
   ))
   try {
-    const response = await messagesApi.toggleReaction(target.conversationId, messageId, target.message.sequence, emoji)
+    const response = await messagesApi.toggleReaction(target.conversationId, messageId, messageSequence, emoji)
     const incoming = deriveMineForReactions(response.reactions)
     patchMessageReactions(messageId, (reactions) => mergeReactionOrder(reactions, incoming))
   } catch (error) {

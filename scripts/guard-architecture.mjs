@@ -150,6 +150,10 @@ const messagesRouter = await read(resolve('server/src/modules/messages/router.ts
 if (/\/messages\/:id\/reactions/.test(messagesRouter)) {
   violations.push('server/src/modules/messages/router.ts: retired SQL-projection reaction endpoint is forbidden')
 }
+const chatApi = await read(resolve('src/features/chat/api.ts'))
+if (/\/conversations\/.*\/messages\/.*\/replies/.test(chatApi)) {
+  violations.push('src/features/chat/api.ts: ordinary thread reads must use WuKongIM history')
+}
 
 const evalService = await read(resolve('server/src/eval/service.ts'))
 if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(evalService)) {

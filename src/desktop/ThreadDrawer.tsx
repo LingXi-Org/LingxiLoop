@@ -13,10 +13,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ThreadPrimitive } from '@assistant-ui/react'
 import { useSurface } from '@/stores/surface'
-import { useMessages } from '@/features/chat/state/messages'
+import { loadThreadReplies, useMessages } from '@/features/chat/state/messages'
 import { useParticipants } from '@/features/agents/state'
-import type { ApiMessage } from '@/api/contracts'
-import { messagesApi } from '@/features/chat/api'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -31,32 +29,6 @@ const THREAD_MESSAGE_COMPONENTS = { Message: () => <LingxiImMessage animate={fal
 
 function ThreadMessage({ messageId }: { messageId: string }) {
   return <ThreadPrimitive.Unstable_MessageById messageId={messageId} components={THREAD_MESSAGE_COMPONENTS} />
-}
-
-function apiToMessage(m: ApiMessage): Message {
-  const raw = m as unknown as {
-    tool?: Message['tool']
-    attachment?: Message['attachment']
-    quotedMessageId?: string | null
-    quoted?: Message['quoted'] | null
-    replyCount?: number | null
-  }
-  return {
-    id: m.id,
-    conversationId: m.conversationId,
-    authorId: m.authorId,
-    kind: m.kind,
-    body: m.body,
-    at: m.at ?? '',
-    createdAt: m.createdAt,
-    reactions: m.reactions && m.reactions.length > 0 ? m.reactions : undefined,
-    tool: raw.tool ?? undefined,
-    attachment: raw.attachment ?? undefined,
-    quotedMessageId: raw.quotedMessageId ?? undefined,
-    quoted: raw.quoted ?? undefined,
-    replyCount: raw.replyCount ?? undefined,
-    sequence: m.sequence,
-  }
 }
 
 export function ThreadDrawer() {
@@ -108,10 +80,10 @@ export function ThreadDrawer() {
     if (!openThread) return
     let cancelled = false
     setLoading(true); setErr(null)
-    messagesApi.getReplies(openThread.convoId, openThread.rootId)
+    loadThreadReplies(openThread.convoId, openThread.rootId)
       .then((rows) => {
         if (cancelled) return
-        setReplies(rows.map(apiToMessage))
+        setReplies(rows)
       })
       .catch((e) => {
         if (cancelled) return
