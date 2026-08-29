@@ -10,6 +10,7 @@ import {
 } from '@/features/companies/components/InviteAcceptScreen'
 import { NotificationToasts } from '@/components/NotificationToasts'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { bootConversations, isMuted, useConversations } from '@/features/conversations/store'
@@ -71,7 +72,7 @@ function AuthedApp() {
   }, [uiCommand])
 
   return (
-    <>
+    <TooltipProvider delayDuration={120}>
       <Suspense fallback={<SurfaceFallback />}><DesktopApp /></Suspense>
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
@@ -79,7 +80,7 @@ function AuthedApp() {
       <NotificationToasts />
       <UpdateBanner onOpen={() => setUpdaterOpen(true)} />
       <UpdaterDialog open={updaterOpen} onClose={() => setUpdaterOpen(false)} />
-    </>
+    </TooltipProvider>
   )
 }
 
