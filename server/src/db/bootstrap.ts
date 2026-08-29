@@ -20,6 +20,7 @@ const REQUIRED_V1_RELATIONS = [
   'canvas_assignment_dependencies', 'canvas_assignment_reports',
   'canvas_comments', 'canvas_frames', 'canvas_presence', 'canvases', 'companies',
   'company_invitations', 'company_members', 'convene_sessions',
+  'company_onboarding_effects',
   'convene_transcript', 'convening_info', 'conversation_counters',
   'conversation_mutes', 'conversation_reads', 'conversation_source_exclusions',
   'conversations', 'course_invitation_acceptances', 'course_invitations',
@@ -59,6 +60,7 @@ const REQUIRED_V1_COLUMNS = [
   ['learning_effects', 'effect_key'],
   ['learning_effects', 'generation'],
   ['learning_effects', 'queued_payload'],
+  ['company_onboarding_effects', 'lease_token'],
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [
@@ -83,6 +85,9 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['document_mention_deliveries', 'document_mention_deliveries_recipients_check', 'c'],
   ['document_mention_deliveries', 'document_mention_deliveries_status_check', 'c'],
   ['learning_effects', 'learning_effects_effect_identity_key', 'u'],
+  ['company_onboarding_effects', 'company_onboarding_effects_identity_key', 'u'],
+  ['company_onboarding_effects', 'company_onboarding_effects_member_fkey', 'f'],
+  ['company_onboarding_effects', 'company_onboarding_effects_lease_check', 'c'],
 ] as const
 
 const REQUIRED_V1_INDEXES = [
@@ -90,6 +95,7 @@ const REQUIRED_V1_INDEXES = [
   'idx_llm_calls_run_created',
   'idx_document_mention_deliveries_due',
   'idx_document_mention_deliveries_company',
+  'idx_company_onboarding_effects_due',
   'uniq_email_messages_smtp_id',
 ] as const
 

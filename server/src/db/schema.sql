@@ -5064,6 +5064,37 @@ CREATE INDEX idx_learning_effects_pending
     ON public.learning_effects USING btree (status, available_at, created_at)
     WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]));
 
+CREATE TABLE public.company_onboarding_effects (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    member_id text NOT NULL,
+    kind text DEFAULT 'member_directs.seed'::text NOT NULL,
+    status text DEFAULT 'pending'::text NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    available_at timestamp with time zone DEFAULT now() NOT NULL,
+    lease_token text,
+    lease_expires_at timestamp with time zone,
+    error text,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT company_onboarding_effects_kind_check CHECK (kind = 'member_directs.seed'::text),
+    CONSTRAINT company_onboarding_effects_status_check CHECK (status = ANY (ARRAY[
+      'pending'::text, 'processing'::text, 'completed'::text, 'failed'::text
+    ])),
+    CONSTRAINT company_onboarding_effects_attempts_check CHECK (attempts >= 0),
+    CONSTRAINT company_onboarding_effects_lease_check CHECK (
+      (status = 'processing'::text) = (lease_token IS NOT NULL AND lease_expires_at IS NOT NULL)
+    ),
+    CONSTRAINT company_onboarding_effects_member_fkey
+      FOREIGN KEY (company_id, member_id) REFERENCES public.company_members(company_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT company_onboarding_effects_identity_key UNIQUE(company_id, member_id, kind)
+);
+
+CREATE INDEX idx_company_onboarding_effects_due
+    ON public.company_onboarding_effects USING btree (status, available_at, created_at)
+    WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text, 'processing'::text]));
+
 
 -- Written last so a failed or partial bootstrap is never accepted as v1.
 COMMENT ON SCHEMA public IS 'LingxiLoop schema v1';

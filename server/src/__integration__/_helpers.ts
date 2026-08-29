@@ -73,6 +73,8 @@ const TABLES_TO_WIPE: readonly string[] = [
   'eval_runs',
   'course_invitation_acceptances',
   'course_invitations',
+  'company_onboarding_effects',
+  'learning_effects',
   'learning_notification_deliveries',
   'learning_notification_preferences',
   'learning_mastery_events',

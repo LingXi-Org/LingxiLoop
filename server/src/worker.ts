@@ -4,6 +4,7 @@ import { startAgentWorkWatchdog } from './agent-os/work-watchdog.js'
 import { startStaleAgentRunSweeper } from './agents/observability.js'
 import { seedAdmins } from './modules/admin/facade.js'
 import { startCalendarScheduler } from './modules/calendar/index.js'
+import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
 import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
 import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
 import { startDbGcWorker } from './db-gc.js'
@@ -29,6 +30,7 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'learning-routines', concurrency: 'queue-claim', start: () => startLearningRoutineScheduler() },
   { name: 'learning-notifications', concurrency: 'queue-claim', start: () => startLearningNotificationScheduler() },
   { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },
+  { name: 'company-onboarding-effects', concurrency: 'queue-claim', start: () => startCompanyOnboardingEffectWorker() },
   { name: 'im-channel-reconciliation', concurrency: 'idempotent', start: () => startImChannelReconciliation() },
   { name: 'agent-work-watchdog', concurrency: 'idempotent', start: () => startAgentWorkWatchdog() },
   { name: 'memory-synthesis', concurrency: 'idempotent', start: () => startMemorySynthesisScheduler() },

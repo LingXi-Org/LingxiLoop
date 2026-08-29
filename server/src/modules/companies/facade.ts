@@ -6,7 +6,6 @@ import { generateInvitationToken, hashInvitationToken } from '../../http/invitat
 import { wukongClient } from '../../im/wukong.js'
 import { CompanyApplication } from './application.js'
 import { sendInvitationEmail } from './invitation-email.js'
-import { seedMemberDirectConversations } from '../conversations/public.js'
 import { companyOnboardingApplication } from './onboarding-facade.js'
 
 export const companyApplication = new CompanyApplication(pool, {
@@ -14,7 +13,6 @@ export const companyApplication = new CompanyApplication(pool, {
   auditInTransaction,
   installCompany: (db, companyId) => companyOnboardingApplication.install(db, companyId),
   finalizeCompany: (installed) => companyOnboardingApplication.finalize(installed),
-  seedMemberDms: seedMemberDirectConversations,
   syncChannel: async (channel) => { await wukongClient().upsertChannel(channel) },
   disconnectUser: async (userId, companyId) => {
     const { disconnectUserFromCompany } = await import('../../ws.js')

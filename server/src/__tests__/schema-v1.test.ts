@@ -93,6 +93,17 @@ test('learning side effects have fenced tenant-scoped reconciliation identities'
   assert.match(bootstrap, /\['learning_effects', 'learning_effects_effect_identity_key', 'u'\]/)
 })
 
+test('company member onboarding has one durable tenant-scoped leased effect', () => {
+  assert.match(schema, /CREATE TABLE public\.company_onboarding_effects \([\s\S]*?company_id text NOT NULL[\s\S]*?member_id text NOT NULL/)
+  assert.match(schema, /company_onboarding_effects_member_fkey[\s\S]*?FOREIGN KEY \(company_id, member_id\) REFERENCES public\.company_members\(company_id, user_id\) ON DELETE CASCADE/)
+  assert.match(schema, /company_onboarding_effects_lease_check/)
+  assert.match(schema, /company_onboarding_effects_identity_key UNIQUE\(company_id, member_id, kind\)/)
+  assert.match(schema, /idx_company_onboarding_effects_due/)
+  assert.match(bootstrap, /'company_onboarding_effects'/)
+  assert.match(bootstrap, /\['company_onboarding_effects', 'company_onboarding_effects_member_fkey', 'f'\]/)
+  assert.match(bootstrap, /'idx_company_onboarding_effects_due'/)
+})
+
 test('bootstrap only reuses a complete marked v1 schema and rejects every unmarked non-empty schema', () => {
   const executableBootstrap = bootstrap
     .replace(/\/\*[\s\S]*?\*\//g, '')

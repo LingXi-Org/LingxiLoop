@@ -16,8 +16,6 @@ const FOREIGN_COMPANY = 'co-company-foreign'
 const audits: Array<{ kind: string; companyId: string }> = []
 const disconnected: Array<{ userId: string; companyId: string }> = []
 let syncFailuresRemaining = 0
-let seedFailuresRemaining = 0
-let seedCalls = 0
 let nextToken = 0
 const hash = (token: string) => createHash('sha256').update(token).digest('hex')
 const application = new CompanyApplication(pool, {
@@ -25,13 +23,6 @@ const application = new CompanyApplication(pool, {
   auditInTransaction: async (_db, entry) => { audits.push({ kind: entry.kind, companyId: entry.companyId }) },
   installCompany: async () => false,
   finalizeCompany: async () => undefined,
-  seedMemberDms: async () => {
-    seedCalls += 1
-    if (seedFailuresRemaining > 0) {
-      seedFailuresRemaining -= 1
-      throw new Error('DM seed unavailable')
-    }
-  },
   syncChannel: async () => {
     if (syncFailuresRemaining > 0) {
       syncFailuresRemaining -= 1
@@ -51,8 +42,6 @@ beforeEach(async () => {
   audits.length = 0
   disconnected.length = 0
   syncFailuresRemaining = 0
-  seedFailuresRemaining = 0
-  seedCalls = 0
   nextToken = 0
   await pool.query(
     `INSERT INTO users (id,email,display_name,avatar_url) VALUES
@@ -184,21 +173,22 @@ test('[integration] invitation replay is idempotent without double-counting usag
   assert.equal(state.rows[0]?.use_count, 1)
 })
 
-test('[integration] consumed single-use invitation retries idempotent DM onboarding', async () => {
+test('[integration] invitation acceptance atomically enqueues one durable member onboarding effect', async () => {
   const invitation = await application.createInvitation({
     companyId: COMPANY,
     userId: OWNER,
     input: { role: 'member', maxUses: 1 },
     audit: { ip: null, userAgent: null },
   })
-  seedFailuresRemaining = 1
-  await assert.rejects(
-    application.acceptInvitation(invitation.token, SECOND, { ip: null, userAgent: null }),
-    /DM seed unavailable/,
-  )
+  const accepted = await application.acceptInvitation(invitation.token, SECOND, { ip: null, userAgent: null })
+  assert.equal(accepted.alreadyMember, false)
   const retry = await application.acceptInvitation(invitation.token, SECOND, { ip: null, userAgent: null })
   assert.equal(retry.alreadyMember, true)
-  assert.equal(seedCalls, 2)
+  const effects = await pool.query<{ status: string; member_id: string }>(
+    `SELECT status,member_id FROM company_onboarding_effects WHERE company_id=$1 AND member_id=$2`,
+    [COMPANY, SECOND],
+  )
+  assert.deepEqual(effects.rows, [{ status: 'pending', member_id: SECOND }])
   const state = await pool.query<{ use_count: number }>(
     `SELECT use_count FROM company_invitations WHERE token_hash=$1`,
     [hash(invitation.token)],

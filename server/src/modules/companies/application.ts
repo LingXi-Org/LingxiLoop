@@ -37,6 +37,7 @@ import {
   teacherCount,
   updateCompany,
 } from './repository.js'
+import { enqueueMemberOnboardingEffect } from './effects-repository.js'
 
 export type CompanyErrorCode = 'not_found' | 'forbidden' | 'conflict' | 'gone' | 'unauthorized'
 
@@ -58,7 +59,6 @@ export interface CompanyInfrastructure {
   auditInTransaction(db: Queryable, input: AuditInput): Promise<void>
   installCompany(db: Queryable, companyId: string): Promise<boolean>
   finalizeCompany(installed: boolean): Promise<void>
-  seedMemberDms(args: { companyId: string; memberId: string }): Promise<void>
   syncChannel(args: { channelId: string; channelType: 2; title: string; members: string[] }): Promise<void>
   disconnectUser(userId: string, companyId: string): Promise<void>
   generateInvitationToken(): string
@@ -366,6 +366,7 @@ export class CompanyApplication {
         throw new CompanyApplicationError('not_found', 'company not found')
       }
       if (await isCompanyMember(db, invitation.company_id, userId)) {
+        await enqueueMemberOnboardingEffect(db, invitation.company_id, userId)
         return { invitation, alreadyMember: true }
       }
       this.assertInvitationAcceptable(invitation, user.email)
@@ -376,12 +377,8 @@ export class CompanyApplication {
         kind: 'invitation_accept', userId, companyId: invitation.company_id, ...auditContext,
         detail: { invitedBy: invitation.invited_by, role: invitation.role },
       })
+      await enqueueMemberOnboardingEffect(db, invitation.company_id, userId)
       return { invitation, alreadyMember: false }
-    })
-    // Idempotent on every acceptance attempt. A retry after the membership
-    // commit repairs onboarding even when a single-use invitation is consumed.
-    await this.infrastructure.seedMemberDms({
-      companyId: result.invitation.company_id, memberId: userId,
     })
     const company = await companyMembershipSummary(this.db, result.invitation.company_id, userId)
     if (!company) throw new CompanyApplicationError('not_found', 'accepted company membership missing')
