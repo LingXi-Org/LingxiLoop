@@ -5,6 +5,7 @@ export interface CompanyOnboardingInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   invalidatePersonas(): void
   reconcileChannels(): Promise<{ channels: number; failures: number }>
+  reportReconciliationFailure(message: string): void
 }
 
 export class CompanyOnboardingApplication {
@@ -16,10 +17,15 @@ export class CompanyOnboardingApplication {
 
   async finalize(installed: boolean): Promise<void> {
     if (installed) this.infrastructure.invalidatePersonas()
-    const reconciliation = await this.infrastructure.reconcileChannels()
-    if (reconciliation.failures > 0) {
-      throw new Error(
+    try {
+      const reconciliation = await this.infrastructure.reconcileChannels()
+      if (reconciliation.failures === 0) return
+      this.infrastructure.reportReconciliationFailure(
         `WuKongIM learning channel reconciliation failed (${reconciliation.failures}/${reconciliation.channels})`,
+      )
+    } catch (error) {
+      this.infrastructure.reportReconciliationFailure(
+        `WuKongIM learning channel reconciliation failed (${error instanceof Error ? error.message : String(error)})`,
       )
     }
   }

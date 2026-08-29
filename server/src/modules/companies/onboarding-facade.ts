@@ -8,4 +8,7 @@ export const companyOnboardingApplication = new CompanyOnboardingApplication({
   transaction: (work) => withTransaction(pool, work),
   invalidatePersonas: invalidatePersonaCache,
   reconcileChannels: reconcileImChannels,
+  reportReconciliationFailure: (message) => {
+    console.warn(`[companies] ${message}; durable bindings await Worker reconciliation`)
+  },
 })
