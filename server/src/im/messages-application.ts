@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import type { Queryable } from '../db/queryable.js'
+import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
 import {
   acceptSend,
   channelProfileForMember,
@@ -51,6 +52,14 @@ export interface ImMessagesInfrastructure {
     userId: string,
     payload: LingxiMessageV1,
   ): Promise<{ messageId: string; messageSeq: number }>
+  setUnread(userId: string, channelId: string, channelType: number, unread: number): Promise<void>
+  recordReadReceipt(input: {
+    companyId: string
+    channelId: string
+    readerId: string
+    readThroughSeq: number
+  }): Promise<ReadReceiptAdvance | null>
+  publishReadReceipt(advance: ReadReceiptAdvance): Promise<void>
 }
 
 function canonicalJson(value: unknown): string {
@@ -203,5 +212,41 @@ export class ImMessagesApplication {
 
   sendStatus(input: { companyId: string; userId: string; clientNonce: string }) {
     return sendAcceptanceStatus(this.infrastructure.db, input)
+  }
+
+  async markRead(input: {
+    companyId: string
+    userId: string
+    channelId: string
+    readThroughSeq: number
+  }): Promise<
+    | { kind: 'channel_not_found' }
+    | { kind: 'cursor_ahead'; latestSeq: number }
+    | { kind: 'recorded'; latestSeq: number; receipt: ReadReceiptAdvance | null }
+  > {
+    const channelType = await this.channelType(input)
+    if (channelType === null) return { kind: 'channel_not_found' }
+    const latestRows = await this.infrastructure.syncMessages(
+      input.channelId,
+      channelType,
+      200,
+      input.userId,
+    )
+    const latestSeq = latestRows.reduce((max, message) => Math.max(max, message.messageSeq), 0)
+    if (input.readThroughSeq > latestSeq) return { kind: 'cursor_ahead', latestSeq }
+    await this.infrastructure.setUnread(
+      input.userId,
+      input.channelId,
+      channelType,
+      latestSeq - input.readThroughSeq,
+    )
+    const receipt = await this.infrastructure.recordReadReceipt({
+      companyId: input.companyId,
+      channelId: input.channelId,
+      readerId: input.userId,
+      readThroughSeq: input.readThroughSeq,
+    })
+    if (receipt) await this.infrastructure.publishReadReceipt(receipt)
+    return { kind: 'recorded', latestSeq, receipt }
   }
 }

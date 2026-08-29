@@ -14,8 +14,6 @@ import { imMessagesApplication } from './messages-facade.js'
 import {
   isReadReceiptChannelMember,
   listReadReceiptAdvances,
-  publishReadReceiptAdvance,
-  recordReadReceiptAdvance,
 } from './read-receipts.js'
 
 export const imRouter = Router()
@@ -136,31 +134,19 @@ imRouter.post('/channels/:id/read', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
   await assertTeacherRoomAccessible(channelId,companyId,userId)
-  const { rows } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
-      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
-  )
-  if (!rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
-  const channelType = Number(rows[0].profile.channelType ?? 2)
   const body = req.body && typeof req.body === 'object' ? req.body as Record<string, unknown> : {}
   const readThroughSeq = Number(body.readThroughSeq)
   if (!Number.isSafeInteger(readThroughSeq) || readThroughSeq <= 0) {
     res.status(400).json({ error: 'readThroughSeq must be a positive safe integer' })
     return
   }
-  // WuKong's sync cursor is authoritative. A one-item pull is not a stable
-  // high-water mark on every server version, so derive it from the same
-  // bounded history window the transcript uses before accepting a receipt.
-  const latestRows = await wukongClient().syncMessages(channelId, channelType, 200, userId)
-  const latestSeq = latestRows.reduce((max, message) => Math.max(max, message.messageSeq), 0)
-  if (readThroughSeq > latestSeq) {
-    res.status(400).json({ error: 'readThroughSeq exceeds latest channel sequence', latestSeq })
+  const result = await imMessagesApplication.markRead({ companyId, userId, channelId, readThroughSeq })
+  if (result.kind === 'channel_not_found') { res.status(404).json({ error: 'channel not found' }); return }
+  if (result.kind === 'cursor_ahead') {
+    res.status(400).json({ error: 'readThroughSeq exceeds latest channel sequence', latestSeq: result.latestSeq })
     return
   }
-  await wukongClient().setUnread(userId, channelId, channelType, latestSeq - readThroughSeq)
-  const receipt = await recordReadReceiptAdvance({ companyId, channelId, readerId: userId, readThroughSeq })
-  if (receipt) await publishReadReceiptAdvance(receipt)
-  res.json({ ok: true, latestSeq, receipt })
+  res.json({ ok: true, latestSeq: result.latestSeq, receipt: result.receipt })
 }))
 
 imRouter.get('/channels/:id/read-receipts', safe(async (req, res) => {
