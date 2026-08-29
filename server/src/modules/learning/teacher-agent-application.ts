@@ -1,33 +1,24 @@
 /** Pulse application orchestration. Persistence is owned by teacher-* repositories. */
 import { createHash } from 'node:crypto'
-import { audit } from '../identity/public.js'
-import type { Queryable } from '../../db/queryable.js'
-import { wukongClient } from '../../im/wukong.js'
-import type { ImChannelProfile } from '../../im/types.js'
-import { inc } from '../../metrics.js'
 import type { AgentWorkItem, HostAction } from '../../agent-os/types.js'
+import type { Queryable } from '../../db/queryable.js'
+import type { ImChannelProfile } from '../../im/types.js'
+import { wukongClient } from '../../im/wukong.js'
+import { inc } from '../../metrics.js'
+import { audit, auditInTransaction } from '../identity/public.js'
+import { ProjectLifecycleApplication } from '../projects/public.js'
 import {
   bindLearningCourseRoom,
   closeLearningActivity,
   createLearningActivity,
   createLearningObjectives,
   publishLearningActivity,
-  reviewLearningEvaluation,
   requireLearningCourseRole,
+  reviewLearningEvaluation,
   setLearningCourseMembership,
   setLearningObjectiveStatus,
 } from './application.js'
-import {
-  findTeacherAttemptDetail,
-  findTeacherLearner,
-  listTeacherActivities,
-  listTeacherBindableRooms,
-  listTeacherLearnerRows,
-  listTeacherObjectives,
-  listTeacherReviews,
-  loadTeacherLearnerDetailRows,
-  loadTeacherOverviewRows,
-} from './teacher-reporting-repository.js'
+import { projectLifecycleProjection } from './project-lifecycle-projection.js'
 import {
   findTeacherActivityApprovalTarget,
   findTeacherActivityApprovalVersion,
@@ -41,17 +32,11 @@ import {
   findTeacherObjectiveApprovalVersion,
 } from './teacher-approval-repository.js'
 import {
-  findTeacherApprovalTriggerAuthor,
-  findTeacherDigestSchedule,
-  findTeacherScopeBinding,
-  findTeacherTurnCounts,
-  pauseTeacherDigestForMissingTeacher,
-} from './teacher-runtime-repository.js'
-import {
   calculateTeacherDigestRun,
   pauseTeacherDigest,
   upsertTeacherDigest,
 } from './teacher-digest-repository.js'
+import { updateTeacherCourseMetadata } from './teacher-management-repository.js'
 import {
   activateTeacherRoomRoutine,
   closeTeacherRoomState,
@@ -67,9 +52,23 @@ import {
   updateTeacherRoomMembers,
 } from './teacher-provisioning-repository.js'
 import {
-  setTeacherCourseStatus,
-  updateTeacherCourseMetadata,
-} from './teacher-management-repository.js'
+  findTeacherAttemptDetail,
+  findTeacherLearner,
+  listTeacherActivities,
+  listTeacherBindableRooms,
+  listTeacherLearnerRows,
+  listTeacherObjectives,
+  listTeacherReviews,
+  loadTeacherLearnerDetailRows,
+  loadTeacherOverviewRows,
+} from './teacher-reporting-repository.js'
+import {
+  findTeacherApprovalTriggerAuthor,
+  findTeacherDigestSchedule,
+  findTeacherScopeBinding,
+  findTeacherTurnCounts,
+  pauseTeacherDigestForMissingTeacher,
+} from './teacher-runtime-repository.js'
 import type {
   LearningActivityType,
   LearningEvaluationMode,
@@ -85,7 +84,7 @@ const PULSE_PROMPT = `You are Pulse, the product-managed Project teacher operati
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 const APPROVAL_METHODS = new Set([
   'publish_objective', 'publish_activity', 'close_activity', 'archive_objective',
-  'set_course_status', 'set_teacher_membership', 'review_evaluation', 'override_mastery',
+  'transition_course', 'set_teacher_membership', 'review_evaluation', 'override_mastery',
 ])
 const WRITE_METHODS = new Set([
   'draft_objectives', 'draft_activity', 'update_course', 'set_learner_membership',
@@ -140,7 +139,7 @@ interface TeacherScope {
   projectName: string
   courseId: string
   courseTitle: string
-  courseStatus: 'active' | 'archived'
+  courseStatus: 'ACTIVE' | 'ARCHIVED'
   roomId: string
   roomStatus: 'active' | 'closed'
   agentId: string
@@ -166,7 +165,7 @@ async function resolveTeacherTriggerAuthor(work: AgentWorkItem, db: Queryable): 
 export async function resolveTeacherScope(work: AgentWorkItem, db: Queryable): Promise<TeacherScope> {
   const row = await findTeacherScopeBinding(db, work.companyId, work.agentId, work.channelId)
   if (!row) { inc('learning.teacher_agent.authorization_denied', { reason: 'scope' }); throw new Error('teacher Agent is not registered for this room') }
-  if (row.room_status !== 'active' || row.course_status === 'archived') throw new Error('teacher room is closed')
+  if (row.room_status !== 'active') throw new Error('teacher room is closed')
   if(work.reason==='routine'&&!row.has_teacher){
     await pauseTeacherDigestForMissingTeacher(db,work.companyId,work.agentId,work.channelId)
     throw new Error('teacher digest paused because the course has no teacher')
@@ -406,7 +405,7 @@ export async function describeTeacherAction(work:AgentWorkItem,action:HostAction
     if(!target)throw new Error('activity is outside the current course')
     currentState=target.status;currentVersion=versionToken(target.updatedAt);entityLabel=target.label??undefined
   }
-  else if(method==='set_course_status'){
+  else if(method==='transition_course'){
     entityId=scope.courseId;entityLabel=scope.courseTitle
     const target=await findTeacherCourseApprovalTarget(db,scope.companyId,scope.courseId)
     currentState=target?.status;currentVersion=versionToken(target?.updatedAt)
@@ -424,7 +423,7 @@ export async function describeTeacherAction(work:AgentWorkItem,action:HostAction
   }
   const operationLabel:Record<string,string>={
     publish_objective:'发布学习目标',archive_objective:'归档学习目标',publish_activity:'发布学习活动',close_activity:'关闭学习活动',
-    set_course_status:String(args.status)==='archived'?'归档课程':'启用课程',
+    transition_course:{END:'结束课程',ENTER_READ_ONLY:'进入只读',ARCHIVE:'归档课程'}[String(args.command)]??'推进课程生命周期',
     set_teacher_membership:args.enabled===false?'移除教师身份':'授予教师身份',
     review_evaluation:args.decision==='reject'?'退回学习评价':'采纳学习评价',override_mastery:'人工调整掌握等级',
   }
@@ -439,7 +438,7 @@ export async function assertTeacherApprovalFresh(input:{channelId:string;company
   const method=input.action.slice('teacher.'.length);let current=''
   if(method.includes('objective'))current=versionToken(await findTeacherObjectiveApprovalVersion(db,input.companyId,input.channelId,entityId))
   else if(method.includes('activity'))current=versionToken(await findTeacherActivityApprovalVersion(db,input.companyId,input.channelId,entityId))
-  else if(method==='set_course_status')current=versionToken(await findTeacherCourseApprovalVersion(db,input.companyId,input.channelId,entityId))
+  else if(method==='transition_course')current=versionToken(await findTeacherCourseApprovalVersion(db,input.companyId,input.channelId,entityId))
   else if(method==='set_teacher_membership')current=String(await findTeacherMembershipApprovalVersion(db,input.companyId,input.channelId,entityId))
   else current=String(await findTeacherEvaluationApprovalVersion(db,input.companyId,input.channelId,entityId)??'')
   if(!current||current!==expected)throw new Error('approval is stale because the target changed; request a fresh approval')
@@ -493,14 +492,14 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   if(method==='archive_objective'){await setLearningObjectiveStatus(db,{companyId:scope.companyId,courseId:scope.courseId,objectiveId:textArg(args,'objectiveId','objective_id'),teacherId:scope.teacherId,status:'archived'});return {ok:true}}
   if(method==='publish_activity'){await publishLearningActivity(transaction,{companyId:scope.companyId,courseId:scope.courseId,activityId:textArg(args,'activityId','activity_id'),teacherId:scope.teacherId});return {ok:true}}
   if(method==='close_activity'){await closeLearningActivity(db,{companyId:scope.companyId,courseId:scope.courseId,activityId:textArg(args,'activityId','activity_id'),teacherId:scope.teacherId});return {ok:true}}
-  if(method==='set_course_status'){
-    const status=textArg(args,'status')
-    if(!['active','archived'].includes(status))throw new Error('status must be active or archived')
-    const courseStatus=status as 'active'|'archived'
-    const updated=await setTeacherCourseStatus(db,scope.companyId,scope.courseId,courseStatus)
-    if(courseStatus==='archived')await closeTeacherRoomForCourse(scope.companyId,scope.courseId,db,transaction)
-    else await reactivateTeacherRoomForCourse(scope.companyId,scope.courseId,db,transaction)
-    return updated
+  if(method==='transition_course'){
+    const command=textArg(args,'command')
+    if(!['END','ENTER_READ_ONLY','ARCHIVE'].includes(command))throw new Error('command must be END, ENTER_READ_ONLY, or ARCHIVE')
+    const lifecycle=new ProjectLifecycleApplication({transaction,auditInTransaction,projectLifecycleProjection})
+    return lifecycle.executeInTransaction(db,{
+      actorUserId:scope.teacherId,companyId:scope.companyId,projectId:scope.projectId,
+      command:command as 'END'|'ENTER_READ_ONLY'|'ARCHIVE',
+    })
   }
   if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);await setLearningCourseMembership(db,transaction,{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,userId,role:'teacher',enabled});await syncTeacherRoomMembers(scope.companyId,scope.courseId,db,transaction);return {ok:true}}
   if(method==='review_evaluation'||method==='override_mastery'){await reviewLearningEvaluation(db,transaction,inc,{companyId:scope.companyId,courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:method==='override_mastery'?'accept':optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason'),...(args.overrideLevel!==undefined||args.override_level!==undefined?{overrideLevel:Number(args.overrideLevel??args.override_level)}:{})});return {ok:true}}

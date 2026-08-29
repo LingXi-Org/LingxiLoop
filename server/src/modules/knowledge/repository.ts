@@ -72,7 +72,7 @@ interface CreatedProjectRow extends Record<string, unknown> {
   name: string
   description: string
   color: string | null
-  status: 'active'
+  status: 'ACTIVE'
   createdBy: string
   isDefault: boolean
   createdAt: string
@@ -84,8 +84,8 @@ export async function insertPersonalLearningProject(db: Queryable, args: {
   id: string; companyId: string; userId: string; name: string; description: string; color: string | null
 }) {
   const { rows } = await db.query<CreatedProjectRow>(
-    `INSERT INTO projects (id,company_id,kind,name,description,color,created_by,is_default)
-     VALUES ($1,$2,'PERSONAL_LEARNING',$3,$4,$5,$6,FALSE)
+    `INSERT INTO projects (id,company_id,kind,name,description,color,status,created_by,is_default)
+     VALUES ($1,$2,'PERSONAL_LEARNING',$3,$4,$5,'ACTIVE',$6,FALSE)
      RETURNING id,company_id AS "companyId",kind,plan_id AS "planId",name,description,color,status,
                created_by AS "createdBy",is_default AS "isDefault",created_at AS "createdAt",
                updated_at AS "updatedAt",archived_at AS "archivedAt"`,
@@ -118,14 +118,6 @@ export async function updateProject(
     values,
   )
   return (result.rowCount ?? 0) > 0
-}
-
-export async function setProjectArchived(db: Queryable, companyId: string, projectId: string, archive: boolean): Promise<void> {
-  await db.query(
-    `UPDATE projects SET status=$3,archived_at=CASE WHEN $3='archived' THEN NOW() ELSE NULL END,updated_at=NOW()
-      WHERE id=$1 AND company_id=$2`,
-    [projectId, companyId, archive ? 'archived' : 'active'],
-  )
 }
 
 export async function recordProjectVisit(db: Queryable, companyId: string, projectId: string, userId: string): Promise<void> {

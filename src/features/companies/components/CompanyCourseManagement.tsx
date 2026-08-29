@@ -1,21 +1,22 @@
-import { Button } from '@/components/ui/button'
 import { IconArchive, IconBook2, IconCopy, IconPlus, IconTrash, IconUsers } from '@tabler/icons-react'
 import { useCallback, useEffect, useState } from 'react'
-import { companiesApi } from '@/features/companies/api'
-import type { ApiCourse, ApiCourseInvitation, ApiCourseMember } from '@/features/learning/contracts'
-import type { ApiCompanyMember, ApiCompanyProfile } from '@/features/companies/contracts'
-import { learningApi } from '@/features/learning/api'
-import { knowledgeApi } from '@/features/knowledge/api'
-import { InvitePeopleModal } from './InvitePeopleModal'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { companiesApi } from '@/features/companies/api'
+import type { ApiCompanyMember, ApiCompanyProfile } from '@/features/companies/contracts'
+import { useConversations } from '@/features/conversations/store'
+import { knowledgeApi } from '@/features/knowledge/api'
+import { learningApi } from '@/features/learning/api'
+import type { ApiCourse, ApiCourseInvitation, ApiCourseMember } from '@/features/learning/contracts'
+import { projectLifecycleApi } from '@/features/projects/api'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { useConversations } from '@/features/conversations/store'
+import { InvitePeopleModal } from './InvitePeopleModal'
 
 type Tab = 'courses' | 'organization' | 'projects'
 
@@ -38,7 +39,7 @@ export function CompanyCourseManagement() {
   const [error, setError] = useState<string | null>(null)
   const [createdLink, setCreatedLink] = useState<string | null>(null)
   const [companyInviteOpen, setCompanyInviteOpen] = useState(false)
-  const canCreateCourse = isAdmin || courses.some((course) => course.status === 'active' && course.courseRole === 'teacher')
+  const canCreateCourse = isAdmin || courses.some((course) => course.status === 'ACTIVE' && course.courseRole === 'teacher')
 
   const load = useCallback(async () => {
     if (!companyId) return
@@ -130,22 +131,27 @@ export function CompanyCourseManagement() {
     } catch { /* toast owns the visible error state */ }
   }
 
-  const toggleCourseArchiveWithConfirmation = async () => {
+  const advanceCourseLifecycleWithConfirmation = async () => {
     if (!selectedCourse) return
-    const archiving = selectedCourse.status !== 'archived'
+    const next = selectedCourse.status === 'ACTIVE'
+      ? { label: '结束课程', description: `“${selectedCourse.name}”将停止新邀请、新活动和新 Case。`, run: projectLifecycleApi.end }
+      : selectedCourse.status === 'COURSE_ENDED'
+        ? { label: '进入只读', description: `“${selectedCourse.name}”将仅允许读取、导出和生命周期操作。`, run: projectLifecycleApi.enterReadOnly }
+        : selectedCourse.status === 'READ_ONLY'
+          ? { label: '归档课程', description: `“${selectedCourse.name}”将归档，历史内容继续保留。`, run: projectLifecycleApi.archive }
+          : null
+    if (!next) return
     if (!await confirmSensitiveAction({
-      title: archiving ? '归档课程？' : '恢复课程？',
-      description: archiving
-        ? `“${selectedCourse.name}”将停止活跃教学流程，但历史内容仍会保留。`
-        : `“${selectedCourse.name}”将重新进入活跃状态。`,
-      confirmLabel: archiving ? '归档课程' : '恢复课程',
-      tone: archiving ? 'destructive' : 'warning',
+      title: `${next.label}？`,
+      description: next.description,
+      confirmLabel: next.label,
+      tone: selectedCourse.status === 'READ_ONLY' ? 'destructive' : 'warning',
     })) return
     try {
-      await toastAction(learningApi.archiveCourse(selectedCourse.id, archiving), {
-        loading: archiving ? '正在归档课程' : '正在恢复课程',
-        success: archiving ? '课程已归档' : '课程已恢复',
-        error: archiving ? '归档课程失败' : '恢复课程失败',
+      await toastAction(next.run(selectedCourse.projectId), {
+        loading: `正在${next.label}`,
+        success: `${next.label}成功`,
+        error: `${next.label}失败`,
       })
       setSelectedCourse(null)
       await load()
@@ -203,10 +209,10 @@ export function CompanyCourseManagement() {
           <section className="rounded-2xl border border-hairline bg-panel p-5">
             {!selectedCourse && <div className="grid h-52 place-items-center text-[12px] text-ink-secondary">选择一门课程查看详情</div>}
             {selectedCourse && <div className="space-y-5">
-              <div className="flex items-center justify-between"><div><h2 className="text-[18px] font-semibold">{selectedCourse.name}</h2><p className="text-[11px] text-ink-secondary">Project: {selectedCourse.projectId}</p></div>{selectedCourse.canManage && <Button className={`${button} bg-raised`} onClick={() => void toggleCourseArchiveWithConfirmation()}><IconArchive size={15}/></Button>}</div>
+              <div className="flex items-center justify-between"><div><h2 className="text-[18px] font-semibold">{selectedCourse.name}</h2><p className="text-[11px] text-ink-secondary">Project: {selectedCourse.projectId}</p></div>{selectedCourse.canManage && ['ACTIVE', 'COURSE_ENDED', 'READ_ONLY'].includes(selectedCourse.status) && <Button className={`${button} bg-raised`} onClick={() => void advanceCourseLifecycleWithConfirmation()}><IconArchive size={15}/></Button>}</div>
               {selectedCourse.canManage && <>
                 <div><h3 className="mb-2 text-[12px] font-semibold">课程成员</h3><div className="space-y-2">{courseMembers.map((member) => <div key={member.id} className="flex items-center gap-2 rounded-xl bg-raised p-2"><span className="min-w-0 flex-1"><b className="block truncate text-[12px]">{member.name}</b><small className="text-[10px] text-ink-secondary">{member.email}</small></span><Select value={member.role} onValueChange={async (role) => { await learningApi.updateCourseMember(selectedCourse.id, member.id, role as 'teacher' | 'learner'); await openCourse(selectedCourse) }}><SelectTrigger className="w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="teacher">teacher</SelectItem><SelectItem value="learner">learner</SelectItem></SelectContent></Select><Button aria-label="移除" onClick={() => void removeCourseMemberWithConfirmation(member)}><IconTrash size={14}/></Button></div>)}</div></div>
-                {selectedCourse.status === 'active' && <form onSubmit={createInvite} className="space-y-2 border-t border-hairline pt-4"><h3 className="text-[12px] font-semibold">创建课程邀请</h3><Input className={field} name="email" type="email" placeholder="限制邮箱（可选）"/><div className="grid grid-cols-3 gap-2"><Select name="role" defaultValue="learner"><SelectTrigger className={field}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="learner">learner</SelectItem><SelectItem value="teacher">teacher</SelectItem></SelectContent></Select><Input className={field} name="expiresInDays" type="number" min="1" max="30" defaultValue="7" title="有效天数"/><Input className={field} name="maxUses" type="number" min="1" max="100" defaultValue="1" title="使用次数"/></div><Input className={field} name="note" placeholder="备注（可选）"/><Button disabled={busy} className={`${button} w-full bg-accent text-white`}>生成邀请链接</Button></form>}
+                {selectedCourse.status === 'ACTIVE' && <form onSubmit={createInvite} className="space-y-2 border-t border-hairline pt-4"><h3 className="text-[12px] font-semibold">创建课程邀请</h3><Input className={field} name="email" type="email" placeholder="限制邮箱（可选）"/><div className="grid grid-cols-3 gap-2"><Select name="role" defaultValue="learner"><SelectTrigger className={field}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="learner">learner</SelectItem><SelectItem value="teacher">teacher</SelectItem></SelectContent></Select><Input className={field} name="expiresInDays" type="number" min="1" max="30" defaultValue="7" title="有效天数"/><Input className={field} name="maxUses" type="number" min="1" max="100" defaultValue="1" title="使用次数"/></div><Input className={field} name="note" placeholder="备注（可选）"/><Button disabled={busy} className={`${button} w-full bg-accent text-white`}>生成邀请链接</Button></form>}
                 {createdLink && <Button className="flex w-full items-center gap-2 rounded-xl bg-raised p-3 text-left text-[11px]" onClick={() => void navigator.clipboard.writeText(createdLink)}><IconCopy size={15}/><span className="min-w-0 flex-1 truncate">{createdLink}</span></Button>}
                 <div className="space-y-1">{invitations.map((invitation) => <div key={invitation.id} className="flex items-center gap-2 py-1 text-[10px] text-ink-secondary"><span className="flex-1">{invitation.email ?? '公开链接'} · {invitation.role} · {invitation.useCount}/{invitation.maxUses}</span><span>{invitation.status}</span>{invitation.status === 'active' && <Button onClick={() => void revokeCourseInvitationWithConfirmation(invitation)}>撤销</Button>}</div>)}</div>
               </>}

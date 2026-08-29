@@ -45,7 +45,7 @@ export async function scheduleDueLearningRoutines(now = new Date()): Promise<num
              JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
              JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
             WHERE room.conversation_id=$1 AND room.company_id=$2
-              AND room.status='active' AND project.status='active'
+              AND room.status='active' AND project.status='ACTIVE'
             LIMIT 1`,
           [routine.channel_id, routine.company_id],
         )

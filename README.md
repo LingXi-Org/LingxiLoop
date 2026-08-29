@@ -37,6 +37,10 @@ not the usage authority.
 IPython variables survive across turns while
 the kernel lives; durable state must be written to Agent Home or a typed
 `loop.*` learning service. WuKongIM is the only authoritative message store.
+Project lifecycle changes are typed Host Bridge commands, not arbitrary status
+writes. Pulse requests `END`, `ENTER_READ_ONLY`, or `ARCHIVE` through approval;
+execution rechecks the human principal and calls the Project application use
+case in the approval transaction.
 
 Poll creation requires a stable client request identity. PostgreSQL stores the
 tenant-scoped voting projection and its last published revision; the Worker

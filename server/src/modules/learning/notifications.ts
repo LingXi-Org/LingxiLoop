@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../../db/pool.js'
 import { env } from '../../env.js'
-import { formatAddress, mintMessageId, sendViaProvider } from '../email/index.js'
 import { inc } from '../../metrics.js'
-import { findNotificationPreferences } from './repository.js'
 import type { WorkerTaskHandle } from '../../runtime/lifecycle.js'
+import { formatAddress, mintMessageId, sendViaProvider } from '../email/index.js'
+import { findNotificationPreferences } from './repository.js'
 
 type DigestKind = 'review_due' | 'grading_queue'
 type DeliveryChannel = 'in_app' | 'email'
@@ -55,7 +55,7 @@ async function candidates(now: Date): Promise<DigestCandidate[]> {
            ON member.project_id=course.project_id AND member.company_id=course.company_id
           AND member.user_id=mastery.learner_id AND member.status='ACTIVE'
           AND member.role IN ('STUDENT','OBSERVER')
-        WHERE project.status='active' AND mastery.next_review_at<=$1
+        WHERE project.status='ACTIVE' AND mastery.next_review_at<=$1
         GROUP BY course.company_id,mastery.learner_id,mastery.course_id,project.name
      ), teacher AS (
        SELECT course.company_id,member.user_id,attempt.course_id,project.name AS course_title,
@@ -67,7 +67,7 @@ async function candidates(now: Date): Promise<DigestCandidate[]> {
          JOIN project_memberships member
            ON member.project_id=course.project_id AND member.company_id=course.company_id
           AND member.status='ACTIVE' AND member.role IN ('OWNER','TEACHER')
-        WHERE project.status='active' AND evaluation.status='pending'
+        WHERE project.status='ACTIVE' AND evaluation.status='pending'
         GROUP BY course.company_id,member.user_id,attempt.course_id,project.name
      ) SELECT * FROM learner UNION ALL SELECT * FROM teacher`,
     [now],

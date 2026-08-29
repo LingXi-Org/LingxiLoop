@@ -859,7 +859,7 @@ CREATE TABLE public.companies (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     description text DEFAULT ''::text NOT NULL,
     CONSTRAINT companies_type_check CHECK ((type = ANY (ARRAY['PERSONAL'::text, 'EDUCATION'::text]))),
-    CONSTRAINT companies_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text]))),
+    CONSTRAINT companies_status_check CHECK ((status = ANY (ARRAY['TRIAL'::text, 'ACTIVE'::text, 'USER_DELETION_PENDING'::text, 'GRACE_PERIOD'::text, 'READ_ONLY'::text, 'OFFBOARDED'::text, 'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text]))),
     CONSTRAINT companies_personal_owner_check CHECK ((((type = 'PERSONAL'::text) AND (personal_owner_user_id IS NOT NULL)) OR ((type = 'EDUCATION'::text) AND (personal_owner_user_id IS NULL))))
 );
 
@@ -1660,13 +1660,14 @@ CREATE TABLE public.projects (
     name text NOT NULL,
     description text DEFAULT ''::text NOT NULL,
     color text,
-    status text DEFAULT 'active'::text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     archived_at timestamp with time zone,
     created_by text,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     is_default boolean DEFAULT false NOT NULL,
-    CONSTRAINT projects_kind_check CHECK ((kind = ANY (ARRAY['PERSONAL_LEARNING'::text, 'TEACHING'::text, 'INSTITUTIONAL_COURSE'::text])))
+    CONSTRAINT projects_kind_check CHECK ((kind = ANY (ARRAY['PERSONAL_LEARNING'::text, 'TEACHING'::text, 'INSTITUTIONAL_COURSE'::text]))),
+    CONSTRAINT projects_status_check CHECK ((status = ANY (ARRAY['CREATED'::text, 'DRAFT'::text, 'ACTIVE'::text, 'COURSE_ENDED'::text, 'READ_ONLY'::text, 'TRANSFER_PENDING'::text, 'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text])))
 );
 
 

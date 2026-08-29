@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
-import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
+import { createServer } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
@@ -170,9 +170,9 @@ test('[integration] Pulse provisioning and lifecycle reject a foreign tenant sco
 test('[integration] archive and restore retain the same Pulse identity and teacher room',async()=>{
   const fixture=await seedTeacherCourse()
   const first=await ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
-  await pool.query(`UPDATE projects SET status='archived',archived_at=NOW() WHERE id=$1`,[fixture.projectId])
+  await pool.query(`UPDATE projects SET status='ARCHIVED',archived_at=NOW() WHERE id=$1`,[fixture.projectId])
   await closeTeacherRoomForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
-  await pool.query(`UPDATE projects SET status='active',archived_at=NULL WHERE id=$1`,[fixture.projectId])
+  await pool.query(`UPDATE projects SET status='ACTIVE',archived_at=NULL WHERE id=$1`,[fixture.projectId])
   await reactivateTeacherRoomForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
   const second=await ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
   assert.equal(second.agentId,first.agentId)
@@ -229,7 +229,7 @@ test('[integration] teacher digest calculation keeps local wall-clock time acros
 })
 
 test('[integration] only critical teacher operations cross the approval boundary',()=>{
-  for(const method of ['publish_objective','publish_activity','close_activity','archive_objective','set_course_status','set_teacher_membership','review_evaluation','override_mastery']){
+  for(const method of ['publish_objective','publish_activity','close_activity','archive_objective','transition_course','set_teacher_membership','review_evaluation','override_mastery']){
     assert.equal(teacherActionRequiresApproval(`teacher.${method}`),true,method)
   }
   for(const method of ['overview','get_learner','get_attempt','draft_objectives','draft_activity','update_course','set_learner_membership','set_room_binding','configure_digest']){

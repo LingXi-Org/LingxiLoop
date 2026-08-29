@@ -82,7 +82,7 @@ function assertCompletePersonalContext(row: PersonalContextRow): void {
     || row.company_membership_status !== 'ACTIVE'
     || !row.project_id
     || row.project_kind !== 'PERSONAL_LEARNING'
-    || row.project_status !== 'active'
+    || row.project_status !== 'ACTIVE'
     || row.project_plan_id !== null
     || row.project_role !== 'OWNER'
     || row.project_membership_status !== 'ACTIVE'
@@ -121,8 +121,8 @@ export async function provisionPersonalWorkspace(
     [companyId, user.id],
   )
   await db.query(
-    `INSERT INTO projects (id,company_id,kind,plan_id,name,description,color,created_by,is_default)
-     VALUES ($1,$2,'PERSONAL_LEARNING',NULL,'我的学习','个人学习的默认空间','#64748b',$3,TRUE)`,
+    `INSERT INTO projects (id,company_id,kind,plan_id,name,description,color,status,created_by,is_default)
+     VALUES ($1,$2,'PERSONAL_LEARNING',NULL,'我的学习','个人学习的默认空间','#64748b','ACTIVE',$3,TRUE)`,
     [projectId, companyId, user.id],
   )
   await db.query(

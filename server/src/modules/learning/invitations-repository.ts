@@ -1,7 +1,7 @@
 import type { Queryable } from '../../db/queryable.js'
 import {
-  projectRoleFromLearningWire,
   type CompanyRole,
+  projectRoleFromLearningWire,
 } from '../../domain/access/public.js'
 
 export async function listCourseInvitations(db: Queryable, courseId: string, companyId: string) {
@@ -77,7 +77,7 @@ export async function courseInvitationPreview(db: Queryable, tokenHash: string) 
     course_id: string; company_id: string; email: string | null; role: string; note: string | null
     max_uses: number; use_count: number; expires_at: string; revoked_at: string | null
     course_name: string; project_id: string; project_status: string; room_id: string | null
-    company_name: string; company_slug: string; inviter_name: string | null
+    company_name: string; company_slug: string; company_status: string; inviter_name: string | null
   }>(
     `SELECT invitation.course_id,invitation.company_id,invitation.email,
             CASE WHEN invitation.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS role,
@@ -85,7 +85,7 @@ export async function courseInvitationPreview(db: Queryable, tokenHash: string) 
             invitation.max_uses,invitation.use_count,invitation.expires_at,invitation.revoked_at,
             project.name AS course_name,project.id AS project_id,project.status AS project_status,
             course.study_room_conversation_id AS room_id,company.name AS company_name,
-            company.slug AS company_slug,user_account.display_name AS inviter_name
+            company.slug AS company_slug,company.status AS company_status,user_account.display_name AS inviter_name
        FROM course_invitations invitation
        JOIN courses course ON course.id=invitation.course_id AND course.company_id=invitation.company_id
        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
@@ -127,7 +127,7 @@ export interface LockedCourseInvitation {
   company_id: string; course_id: string; email: string | null; role: 'teacher' | 'learner'
   max_uses: number; use_count: number; expires_at: string; revoked_at: string | null
   project_id: string; project_status: string; room_id: string | null; course_name: string
-  company_name: string; company_slug: string
+  company_name: string; company_slug: string; company_status: import('../../domain/public.js').CompanyStatus
 }
 
 export async function lockCourseInvitation(db: Queryable, tokenHash: string, userId: string): Promise<LockedCourseInvitation | null> {
@@ -137,7 +137,8 @@ export async function lockCourseInvitation(db: Queryable, tokenHash: string, use
             CASE WHEN invitation.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS role,
             invitation.max_uses,invitation.use_count,invitation.expires_at,invitation.revoked_at,
             course.project_id,project.status AS project_status,course.study_room_conversation_id AS room_id,
-            project.name AS course_name,company.name AS company_name,company.slug AS company_slug
+            project.name AS course_name,company.name AS company_name,company.slug AS company_slug,
+            company.status AS company_status
        FROM course_invitations invitation
        JOIN courses course ON course.id=invitation.course_id AND course.company_id=invitation.company_id
        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id

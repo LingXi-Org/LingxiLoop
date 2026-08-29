@@ -1,18 +1,18 @@
 import type { Queryable } from '../../db/queryable.js'
 import {
-  companyRoleFromWire,
-  companyRoleToWire,
   type CompanyRole,
   type CompanyRoleWire,
+  companyRoleFromWire,
+  companyRoleToWire,
 } from '../../domain/access/public.js'
 import type { InvitationRow } from './contracts.js'
 
 export function listCompanies(db: Queryable, userId: string) {
   return db.query(
-    `SELECT company.id,company.name,company.slug,company.created_at AS "createdAt",LOWER(membership.role) AS role
+    `SELECT company.id,company.name,company.slug,company.status,company.created_at AS "createdAt",LOWER(membership.role) AS role
        FROM companies company
        JOIN company_memberships membership ON membership.company_id=company.id AND membership.user_id=$1
-      WHERE membership.status='ACTIVE' AND company.status='ACTIVE'
+      WHERE membership.status='ACTIVE' AND company.status<>'DELETED'
       ORDER BY membership.created_at ASC`,
     [userId],
   ).then((result) => result.rows)
@@ -28,9 +28,9 @@ export async function findUser(db: Queryable, userId: string) {
 
 export async function findCompanyForMember(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query<{
-    id: string; name: string; slug: string; description: string; role: string; createdAt: string
+    id: string; name: string; slug: string; description: string; role: string; status: string; createdAt: string
   }>(
-    `SELECT company.id,company.name,company.slug,company.description,LOWER(membership.role) AS role,
+    `SELECT company.id,company.name,company.slug,company.description,company.status,LOWER(membership.role) AS role,
             company.created_at AS "createdAt"
        FROM companies company
        JOIN company_memberships membership ON membership.company_id=company.id
@@ -127,7 +127,7 @@ export async function lockTeachingCourses(db: Queryable, companyId: string, user
        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
       WHERE membership.company_id=$1 AND membership.user_id=$2
         AND membership.status='ACTIVE' AND membership.role IN ('OWNER','TEACHER')
-        AND project.status='active'
+        AND project.status='ACTIVE'
       ORDER BY course.id
       FOR UPDATE OF course`,
     [companyId, userId],
@@ -221,9 +221,12 @@ export async function isCompanyMember(db: Queryable, companyId: string, userId: 
   return Boolean(rows[0])
 }
 
-export async function lockCompany(db: Queryable, companyId: string): Promise<boolean> {
-  const { rows } = await db.query(`SELECT 1 FROM companies WHERE id=$1 FOR UPDATE`, [companyId])
-  return Boolean(rows[0])
+export async function lockCompany(db: Queryable, companyId: string) {
+  const { rows } = await db.query<{ status: import('../../domain/public.js').CompanyStatus }>(
+    `SELECT status FROM companies WHERE id=$1 FOR UPDATE`,
+    [companyId],
+  )
+  return rows[0]?.status ?? null
 }
 
 export async function listInvitations(db: Queryable, companyId: string) {
@@ -334,8 +337,10 @@ export async function insertAcceptedMembership(db: Queryable, args: {
 }
 
 export async function companyMembershipSummary(db: Queryable, companyId: string, userId: string) {
-  const { rows } = await db.query<{ name: string; slug: string; role: CompanyRole }>(
-    `SELECT company.name,company.slug,membership.role
+  const { rows } = await db.query<{
+    name: string; slug: string; role: CompanyRole; status: import('../../domain/public.js').CompanyStatus
+  }>(
+    `SELECT company.name,company.slug,company.status,membership.role
        FROM companies company
        JOIN company_memberships membership ON membership.company_id=company.id AND membership.user_id=$2
       WHERE company.id=$1 AND membership.status='ACTIVE'`,

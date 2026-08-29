@@ -57,6 +57,15 @@ if (!/\bkind text NOT NULL\b/.test(projectTable)
   || !/projects_kind_check[\s\S]*PERSONAL_LEARNING[\s\S]*TEACHING[\s\S]*INSTITUTIONAL_COURSE/.test(projectTable)) {
   violations.push('server/src/db/schema.sql: every Project must have one canonical ProjectKind')
 }
+if (!/\bstatus text DEFAULT 'ACTIVE'::text NOT NULL\b/.test(projectTable)
+  || !/projects_status_check[\s\S]*CREATED[\s\S]*DRAFT[\s\S]*ACTIVE[\s\S]*COURSE_ENDED[\s\S]*READ_ONLY[\s\S]*TRANSFER_PENDING[\s\S]*RETENTION[\s\S]*ARCHIVED[\s\S]*DELETED/.test(projectTable)) {
+  violations.push('server/src/db/schema.sql: Project lifecycle must use the canonical uppercase status contract')
+}
+const companyTable = canonicalSchema.match(/CREATE TABLE public\.companies \(([\s\S]*?)\n\);/)?.[1] ?? ''
+if (!/companies_status_check[\s\S]*TRIAL[\s\S]*USER_DELETION_PENDING[\s\S]*GRACE_PERIOD[\s\S]*OFFBOARDED[\s\S]*RETENTION[\s\S]*ARCHIVED[\s\S]*DELETED/.test(companyTable)
+  || /companies_status_check[^\n]*SUSPENDED/.test(companyTable)) {
+  violations.push('server/src/db/schema.sql: Company lifecycle must use typed Personal/Education states without SUSPENDED')
+}
 if (/\bis_general\b/.test(canonicalSchema) || !/\bis_default boolean DEFAULT false NOT NULL\b/.test(projectTable)) {
   violations.push('server/src/db/schema.sql: is_default is the only default-Project marker')
 }
@@ -66,6 +75,8 @@ const controlledProjectWriters = new Set([
   'server/src/modules/knowledge/repository.ts',
   'server/src/modules/learning/courses-repository.ts',
 ])
+const projectLifecycleWriter = 'server/src/modules/projects/repository.ts'
+const companyLifecycleWriter = 'server/src/modules/companies/lifecycle-repository.ts'
 for (const file of [...server, ...frontend]) {
   const fileName = name(file)
   const source = await read(file)
@@ -90,9 +101,24 @@ for (const file of [...server, ...frontend]) {
     if (!/(?:^|,)\s*kind\s*(?:,|$)/i.test(insert[1] ?? '')) {
       violations.push(`${fileName}: every Project INSERT must write an explicit canonical kind`)
     }
+    if (!/(?:^|,)\s*status\s*(?:,|$)/i.test(insert[1] ?? '')) {
+      violations.push(`${fileName}: every production Project INSERT must write an explicit lifecycle status`)
+    }
   }
   if (/UPDATE\s+projects\s+SET[\s\S]{0,300}\bkind\s*=/i.test(source)) {
     violations.push(`${fileName}: ProjectKind is immutable outside a future transfer workflow`)
+  }
+  if (fileName !== projectLifecycleWriter
+    && /UPDATE\s+projects(?:\s+\w+)?\s+SET[\s\S]{0,240}\bstatus\s*=/i.test(source)) {
+    violations.push(`${fileName}: Project status writes must use the Projects lifecycle application`)
+  }
+  if (fileName !== companyLifecycleWriter
+    && /UPDATE\s+companies(?:\s+\w+)?\s+SET[\s\S]{0,240}\bstatus\s*=/i.test(source)) {
+    violations.push(`${fileName}: Company status writes must use the Companies lifecycle application`)
+  }
+  if (/\.patch\(\s*['"]\/projects\/:id['"]/.test(source)
+    || /archive(?:Project|Course)RequestSchema|\/courses\/:id\/archive/.test(source)) {
+    violations.push(`${fileName}: generic Project status mutation and legacy Course archive routes are forbidden`)
   }
 }
 
@@ -511,7 +537,7 @@ if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(
 // Domains enter this set only after their router/application/repository split
 // is complete. Keeping the assertion here makes a later regression impossible
 // while the remaining domains are migrated deliberately.
-const strictServerDomains = new Set(['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls'])
+const strictServerDomains = new Set(['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls', 'projects'])
 
 for (const file of server) {
   const source = await read(file)

@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 // Data-only public contract used by Company onboarding without loading the
 // Learning runtime (and therefore runtime environment/infrastructure).
-export { STARTER_ROOMS, STARTER_TEAM, type LearningPersonaKey } from './preset.js'
+export { type LearningPersonaKey, STARTER_ROOMS, STARTER_TEAM } from './preset.js'
 
 export const createCourseRequestSchema = z.object({
   name: z.string().trim().min(1, 'name required').max(80),
@@ -16,7 +16,6 @@ export const updateCourseRequestSchema = z.object({
   color: z.string().max(200).optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'nothing to update')
 
-export const archiveCourseRequestSchema = z.object({ archive: z.boolean().default(true) }).strict()
 export const updateCourseMemberRequestSchema = z.object({ role: z.enum(['teacher', 'learner']) }).strict()
 
 export const createCourseInvitationRequestSchema = z.object({

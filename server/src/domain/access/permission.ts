@@ -1,11 +1,19 @@
-import type { CompanyRole, MembershipStatus, ProjectRole } from './role.js'
-import type { ProjectKind } from '../project/project.js'
+import type { ProjectKind, ProjectStatus } from '../project/project.js'
 import type { CompanyStatus, CompanyType } from '../tenancy/company.js'
+import type { CompanyRole, MembershipStatus, ProjectRole } from './role.js'
 
 export const PERMISSION_ACTIONS = [
   'company:list',
   'company:read',
   'company:update',
+  'company:activate',
+  'company:request_user_deletion',
+  'company:enter_grace_period',
+  'company:enter_read_only',
+  'company:offboard',
+  'company:enter_retention',
+  'company:archive',
+  'company:delete',
   'company_member:list',
   'company_member:update',
   'company_member:remove',
@@ -16,11 +24,17 @@ export const PERMISSION_ACTIONS = [
   'project:read',
   'project:create_personal_learning',
   'project:update',
+  'project:activate',
+  'project:end',
+  'project:enter_read_only',
+  'project:request_transfer',
+  'project:cancel_transfer',
+  'project:enter_retention',
   'project:archive',
+  'project:delete',
   'course:create',
   'course:read',
   'course:update',
-  'course:archive',
   'project_member:list',
   'project_member:add',
   'project_member:update',
@@ -111,6 +125,7 @@ export type PermissionReason =
   | 'ACTOR_INACTIVE'
   | 'COMPANY_NOT_FOUND'
   | 'COMPANY_INACTIVE'
+  | 'COMPANY_STATE_DENIED'
   | 'PROJECT_NOT_FOUND'
   | 'COMPANY_MEMBERSHIP_REQUIRED'
   | 'COMPANY_MEMBERSHIP_INACTIVE'
@@ -131,6 +146,15 @@ export interface ResolvedEntitlements {
   has(code: EntitlementCode): boolean
 }
 
+export type ResourceAccessMode =
+  | 'MANAGER_ONLY'
+  | 'READ_WRITE'
+  | 'CLOSE_OUT'
+  | 'READ_ONLY'
+  | 'TRANSFER_PENDING'
+  | 'RETENTION'
+  | 'DENY'
+
 export interface ResolvedAccessContext {
   actorUserId: string
   company: {
@@ -145,7 +169,7 @@ export interface ResolvedAccessContext {
   project?: {
     id: string
     kind: ProjectKind
-    status: 'active' | 'archived'
+    status: ProjectStatus
   }
   projectMembership?: {
     role: ProjectRole

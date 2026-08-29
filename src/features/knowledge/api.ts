@@ -1,12 +1,13 @@
 
 import { http } from '@/api/core/http'
 import { putPresignedFile } from '@/api/transport'
+import { uploadsApi } from '@/features/platform/api'
+import { projectLifecycleApi } from '@/features/projects/api'
+import type { WorkspaceSummary } from '@/types'
 import type {
   ConversationSourceSelection,
   KnowledgeSource,
 } from './contracts'
-import { uploadsApi } from '@/features/platform/api'
-import type { WorkspaceSummary } from '@/types'
 
 const sourceRequestKeys = new Map<string, string>()
 function sourceRequestKey(fingerprint: string): string {
@@ -20,10 +21,7 @@ export const knowledgeApi = {
   openProject: (id: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}/open`, { method: 'POST' }),
   createProject: (input: { name: string; description?: string; color?: string }) =>
     http<WorkspaceSummary>('/projects', { method: 'POST', body: JSON.stringify(input) }),
-  archiveProject: (id: string, archive = true) =>
-    http<{ ok: boolean; status: string }>(`/projects/${encodeURIComponent(id)}/archive`, {
-      method: 'POST', body: JSON.stringify({ archive }),
-    }),
+  archiveProject: projectLifecycleApi.archive,
   listSources: (conversationId: string) => http<KnowledgeSource[]>(`/conversations/${encodeURIComponent(conversationId)}/sources`),
   getSource: (conversationId: string, sourceId: string) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`),
   addTextSource: async (conversationId: string, input: { title?: string; text: string }) => {

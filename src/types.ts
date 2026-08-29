@@ -6,6 +6,16 @@ export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
 export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge' | 'learning' | 'teacher_admin'
 
 export type ProjectKind = 'PERSONAL_LEARNING' | 'TEACHING' | 'INSTITUTIONAL_COURSE'
+export type ProjectStatus =
+  | 'CREATED'
+  | 'DRAFT'
+  | 'ACTIVE'
+  | 'COURSE_ENDED'
+  | 'READ_ONLY'
+  | 'TRANSFER_PENDING'
+  | 'RETENTION'
+  | 'ARCHIVED'
+  | 'DELETED'
 
 export interface WorkspaceSummary {
   id: string
@@ -15,7 +25,7 @@ export interface WorkspaceSummary {
   name: string
   description: string
   color: string | null
-  status: 'active' | 'archived'
+  status: ProjectStatus
   createdBy: string
   isDefault: boolean
   createdAt: string

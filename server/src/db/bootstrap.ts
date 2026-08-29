@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import type { PoolClient } from 'pg'
-import { pool } from './pool.js'
 import { ensurePersonalFreePlan } from '../modules/entitlements/public.js'
+import { pool } from './pool.js'
 
 const V1_SCHEMA_URL = new URL('./schema.sql', import.meta.url)
 const V1_SCHEMA_MARKER = 'LingxiLoop schema v1'
@@ -106,6 +106,7 @@ const REQUIRED_V1_COLUMNS = [
   ['project_memberships', 'status'],
   ['projects', 'plan_id'],
   ['projects', 'kind'],
+  ['projects', 'status'],
   ['projects', 'is_default'],
 ] as const
 
@@ -121,6 +122,7 @@ const REQUIRED_V1_NOT_NULL_COLUMNS = [
   ['company_memberships', 'status', "'ACTIVE'::text"],
   ['project_memberships', 'status', "'ACTIVE'::text"],
   ['projects', 'kind', null],
+  ['projects', 'status', "'ACTIVE'::text"],
   ['projects', 'is_default', 'false'],
 ] as const
 
@@ -179,6 +181,7 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['plan_entitlements', 'plan_entitlements_scalar_value_check', 'c'],
   ['projects', 'projects_plan_id_fkey', 'f'],
   ['projects', 'projects_kind_check', 'c'],
+  ['projects', 'projects_status_check', 'c'],
 ] as const
 
 const FORBIDDEN_V1_CONSTRAINTS = [

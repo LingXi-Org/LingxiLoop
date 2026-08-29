@@ -1,5 +1,6 @@
 import { type Request, Router } from 'express'
 import type { AuthedRequest } from '../../auth.js'
+import type { CompanyLifecycleCommand } from '../../domain/public.js'
 import { safe } from '../../http/async-handler.js'
 import { HttpError } from '../../http/errors.js'
 import { requireAuth } from '../../http/request-context.js'
@@ -9,7 +10,8 @@ import {
   updateCompanyRequestSchema,
   updateMemberRoleRequestSchema,
 } from './contracts.js'
-import { companyApplication } from './facade.js'
+import { companyApplication, companyLifecycleApplication } from './facade.js'
+import { CompanyLifecycleError } from './lifecycle-application.js'
 
 export const companiesRouter = Router()
 
@@ -35,6 +37,21 @@ function auditContext(req: Request & AuthedRequest) {
   }
 }
 
+function executeLifecycle(command: CompanyLifecycleCommand) {
+  return safe(async (req, res) => {
+    try {
+      res.json(await companyLifecycleApplication.execute({
+        actorUserId: requireAuth(req),
+        companyId: String(req.params.id),
+        command,
+      }))
+    } catch (error) {
+      if (!(error instanceof CompanyLifecycleError)) throw error
+      throw new HttpError(409, error.message)
+    }
+  })
+}
+
 companiesRouter.get('/companies', safe(async (req, res) => {
   res.json(await companyApplication.companies(requireAuth(req)))
 }))
@@ -52,6 +69,15 @@ companiesRouter.patch('/companies/:id', safe(async (req, res) => {
     ))
   } catch (error) { mapCompanyError(error) }
 }))
+
+companiesRouter.post('/companies/:id/activate', executeLifecycle('ACTIVATE'))
+companiesRouter.post('/companies/:id/request-user-deletion', executeLifecycle('REQUEST_USER_DELETION'))
+companiesRouter.post('/companies/:id/enter-grace-period', executeLifecycle('ENTER_GRACE_PERIOD'))
+companiesRouter.post('/companies/:id/enter-read-only', executeLifecycle('ENTER_READ_ONLY'))
+companiesRouter.post('/companies/:id/offboard', executeLifecycle('OFFBOARD'))
+companiesRouter.post('/companies/:id/enter-retention', executeLifecycle('ENTER_RETENTION'))
+companiesRouter.post('/companies/:id/archive', executeLifecycle('ARCHIVE'))
+companiesRouter.delete('/companies/:id', executeLifecycle('DELETE'))
 
 companiesRouter.get('/companies/:id/members', safe(async (req, res) => {
   try { res.json(await companyApplication.members(String(req.params.id), requireAuth(req))) }

@@ -81,7 +81,7 @@ test('[integration] personal_owner_user_id never substitutes for an ACTIVE OWNER
   assert.equal(company.rows[0]?.personal_owner_user_id, owner.userId)
 })
 
-test('[integration] inactive memberships and suspended Companies fail closed', async () => {
+test('[integration] inactive memberships and deleted Companies fail closed', async () => {
   const context = await personal('permission-inactive')
   await pool.query(
     `UPDATE company_memberships SET status='SUSPENDED' WHERE company_id=$1 AND user_id=$2`,
@@ -112,13 +112,13 @@ test('[integration] inactive memberships and suspended Companies fail closed', a
     `UPDATE project_memberships SET status='ACTIVE' WHERE project_id=$1 AND user_id=$2`,
     [context.projectId, context.userId],
   )
-  await pool.query(`UPDATE companies SET status='SUSPENDED' WHERE id=$1`, [context.companyId])
-  const companySuspended = await permissionService.can({
+  await pool.query(`UPDATE companies SET status='DELETED' WHERE id=$1`, [context.companyId])
+  const companyDeleted = await permissionService.can({
     actorUserId: context.userId,
     action: 'project:read',
     projectId: context.projectId,
   })
-  assert.equal(companySuspended.reason, 'COMPANY_INACTIVE')
+  assert.equal(companyDeleted.reason, 'COMPANY_STATE_DENIED')
 })
 
 test('[integration] Project Role and effective Entitlement must both allow the action', async () => {
@@ -193,7 +193,7 @@ test('[integration] Project Role and effective Entitlement must both allow the a
 
 test('[integration] archived Projects remain readable and deny writes', async () => {
   const context = await personal('permission-archived')
-  await pool.query(`UPDATE projects SET status='archived' WHERE id=$1`, [context.projectId])
+  await pool.query(`UPDATE projects SET status='ARCHIVED' WHERE id=$1`, [context.projectId])
   const read = await permissionService.can({
     actorUserId: context.userId,
     action: 'project:read',

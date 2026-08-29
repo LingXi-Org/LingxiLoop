@@ -6,7 +6,6 @@ import { requireAuth, requireCompany, requireWorkspace } from '../../http/reques
 import { permissionService } from '../access/public.js'
 import { KnowledgeApplicationError } from './application.js'
 import {
-  archiveProjectRequestSchema,
   createProjectRequestSchema,
   createSourceRequestSchema,
   moveConversationRequestSchema,
@@ -70,14 +69,6 @@ knowledgeRouter.put('/projects/:id', safe(async (req, res) => {
   const input = parse(updateProjectRequestSchema.safeParse(req.body ?? {}))
   try { res.json(await knowledgeApplication.editProject(workspace, input)) }
   catch (error) { mapKnowledgeError(error) }
-}))
-
-knowledgeRouter.post('/projects/:id/archive', safe(async (req, res) => {
-  const projectId = String(req.params.id)
-  const workspace = await requireWorkspace(req, projectId, 'project:archive')
-  if (workspace.isDefault) throw new HttpError(400, 'the default Project cannot be archived')
-  const input = parse(archiveProjectRequestSchema.safeParse(req.body ?? {}))
-  res.json(await knowledgeApplication.archiveProject(workspace, input.archive))
 }))
 
 knowledgeRouter.post('/projects/:id/open', safe(async (req, res) => {

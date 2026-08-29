@@ -1,6 +1,6 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { LearningMission, LearningMissionStep } from './types.js'
 import type { LearningAgentRoomScope } from './contracts.js'
+import type { LearningMission, LearningMissionStep } from './types.js'
 
 interface LearningMissionRow {
   id: string; course_id: string; learner_id: string; conversation_id: string; trigger_client_msg_no: string
@@ -132,7 +132,7 @@ export interface LearningRoomState {
   courseId: string
   projectId: string
   courseTitle: string
-  courseStatus: 'active' | 'archived'
+  courseStatus: 'ACTIVE' | 'ARCHIVED'
   purpose: 'study' | 'lab' | 'discussion'
 }
 
@@ -150,7 +150,7 @@ export async function findLearningRoomState(
        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
        LEFT JOIN learning_course_rooms room
          ON room.course_id=course.id AND room.company_id=course.company_id AND room.conversation_id=$1
-      WHERE course.company_id=$2 AND project.status='active'
+      WHERE course.company_id=$2 AND project.status='ACTIVE'
         AND (course.study_room_conversation_id=$1 OR room.conversation_id=$1)
       LIMIT 1`,
     [scope.channelId,scope.companyId],

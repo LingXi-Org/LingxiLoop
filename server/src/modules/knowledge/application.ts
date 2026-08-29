@@ -4,18 +4,17 @@ import { projectKindBelongsToCompanyType } from '../../domain/public.js'
 import { createPermissionService } from '../access/public.js'
 import type { CreateSourceInput, KnowledgeScope, PresignSourceInput, ProjectPatch } from './contracts.js'
 import {
+  enqueueSourceJob,
   findSource,
   insertPersonalLearningProject,
-  lockProjectCompanyType,
   insertSource,
-  enqueueSourceJob,
   listConversationSources,
   listProjects,
   listSources,
+  lockProjectCompanyType,
   moveConversation,
   recordProjectVisit,
   replaceSourceExclusions,
-  setProjectArchived,
   updateProject,
 } from './repository.js'
 
@@ -131,20 +130,6 @@ export class KnowledgeApplication {
     })
     await this.infrastructure.syncNotebookMetadata(scope.projectId).catch(() => undefined)
     return { ok: true as const }
-  }
-
-  async archiveProject(scope: KnowledgeScope, archive: boolean) {
-    await this.infrastructure.transaction(async (db) => {
-      await createPermissionService(db, { lockDependencies: true }).assertCan({
-        actorUserId: scope.userId,
-        action: 'project:archive',
-        companyId: scope.companyId,
-        projectId: scope.projectId,
-      })
-      await setProjectArchived(db, scope.companyId, scope.projectId, archive)
-    })
-    await this.infrastructure.syncNotebookMetadata(scope.projectId).catch(() => undefined)
-    return { ok: true as const, status: archive ? 'archived' as const : 'active' as const }
   }
 
   async openProject(companyId: string, projectId: string, userId: string) {

@@ -10,6 +10,7 @@ import type {
   RequestAuditContext,
   UpdateCompanyInput,
 } from './contracts.js'
+import { enqueueMemberOnboardingEffect } from './effects-repository.js'
 import {
   companyMembershipSummary,
   emailAlreadyMember,
@@ -20,8 +21,8 @@ import {
   insertInvitation,
   invitationEmailContext,
   invitationWithCompany,
-  isDepartedCompanyHuman,
   isCompanyMember,
+  isDepartedCompanyHuman,
   listCompanies,
   listCompanyChannels,
   listInvitations,
@@ -37,7 +38,6 @@ import {
   teacherCount,
   updateCompany,
 } from './repository.js'
-import { enqueueMemberOnboardingEffect } from './effects-repository.js'
 
 export type CompanyErrorCode = 'not_found' | 'forbidden' | 'conflict' | 'gone' | 'unauthorized'
 
@@ -324,8 +324,12 @@ export class CompanyApplication {
     const result = await this.infrastructure.transaction(async (db) => {
       const invitation = await lockInvitation(db, tokenHash)
       if (!invitation) throw new CompanyApplicationError('not_found', 'invitation not found')
-      if (!await lockCompany(db, invitation.company_id)) {
+      const companyStatus = await lockCompany(db, invitation.company_id)
+      if (!companyStatus) {
         throw new CompanyApplicationError('not_found', 'company not found')
+      }
+      if (companyStatus !== 'ACTIVE' && companyStatus !== 'TRIAL') {
+        throw new CompanyApplicationError('gone', 'company is not accepting memberships')
       }
       if (await isCompanyMember(db, invitation.company_id, userId)) {
         await enqueueMemberOnboardingEffect(db, invitation.company_id, userId)

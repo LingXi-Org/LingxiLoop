@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto'
+import type { Queryable } from '../../db/queryable.js'
 import { projectKindBelongsToCompanyType } from '../../domain/public.js'
 import type { PermissionAction } from '../access/public.js'
 import { createPermissionService } from '../access/public.js'
-import type { Queryable } from '../../db/queryable.js'
 import type {
   BindCourseRoomInput,
   CreateActivityInput,
@@ -18,51 +18,6 @@ import type {
   UpdateCourseInput,
 } from './contracts.js'
 import {
-  changeCourseMember,
-  companyMembershipRole,
-  courseInvitationPreview,
-  courseManager,
-  courseMembershipRole,
-  courseRole,
-  countViewerPendingLearningReviews,
-  findCourse,
-  findNotificationPreferences,
-  findVerifiedUser,
-  insertTeachingCourse,
-  insertCourseInvitation,
-  invitationViewer,
-  joinInvitationCompany,
-  listCourseInvitations,
-  listCourseMembers,
-  listCourses,
-  listDeliveries,
-  listDueLearningMastery,
-  listLearningCourseProgress,
-  listLearningCourseSummaries,
-  listLearningEvidenceRecords,
-  listLearningObjectives,
-  listLearningActivities,
-  listProjectChannels,
-  listPendingLearningEvaluationRecords,
-  listViewerLearningMastery,
-  lockCourseInvitation,
-  priorCourseAcceptance,
-  recordCourseAcceptance,
-  removeMemberFromProjectChannels,
-  revokeCourseInvitation,
-  setCourseArchived,
-  studyRoomState,
-  syncStudyRoomMembers,
-  updateCourseMetadata,
-  upsertNotificationPreferences,
-  upsertAcceptedCourseMembership,
-} from './repository.js'
-import { enqueueLearningEffect } from './effects-repository.js'
-import type { LearningEffect } from './effects-repository.js'
-import { LearningApplicationError } from './errors.js'
-import { reviewLearningEvaluation } from './evaluation-application.js'
-import { assignLearningMissionCoordinator, listVisibleLearningMissions } from './missions-application.js'
-import {
   closeLearningActivity,
   createLearningActivity,
   createLearningObjectives,
@@ -70,10 +25,69 @@ import {
   setLearningObjectiveStatus,
   submitLearningActivity,
 } from './curriculum-application.js'
+import type { LearningEffect } from './effects-repository.js'
+import { enqueueLearningEffect } from './effects-repository.js'
+import { LearningApplicationError } from './errors.js'
+import { reviewLearningEvaluation } from './evaluation-application.js'
 import { bindLearningCourseRoom } from './membership-application.js'
+import { assignLearningMissionCoordinator, listVisibleLearningMissions } from './missions-application.js'
+import {
+  changeCourseMember,
+  companyMembershipRole,
+  countViewerPendingLearningReviews,
+  courseInvitationPreview,
+  courseManager,
+  courseMembershipRole,
+  courseRole,
+  findCourse,
+  findNotificationPreferences,
+  findVerifiedUser,
+  insertCourseInvitation,
+  insertTeachingCourse,
+  invitationViewer,
+  joinInvitationCompany,
+  listCourseInvitations,
+  listCourseMembers,
+  listCourses,
+  listDeliveries,
+  listDueLearningMastery,
+  listLearningActivities,
+  listLearningCourseProgress,
+  listLearningCourseSummaries,
+  listLearningEvidenceRecords,
+  listLearningObjectives,
+  listPendingLearningEvaluationRecords,
+  listProjectChannels,
+  listViewerLearningMastery,
+  lockCourseInvitation,
+  priorCourseAcceptance,
+  recordCourseAcceptance,
+  removeMemberFromProjectChannels,
+  revokeCourseInvitation,
+  studyRoomState,
+  syncStudyRoomMembers,
+  updateCourseMetadata,
+  upsertAcceptedCourseMembership,
+  upsertNotificationPreferences,
+} from './repository.js'
 
+export {
+  closeLearningActivity,
+  createLearningActivity,
+  createLearningObjectives,
+  publishLearningActivity,
+  setLearningObjectiveStatus,
+  submitLearningActivity,
+} from './curriculum-application.js'
 export { LearningApplicationError } from './errors.js'
 export { proposeLearningEvaluation, reviewLearningEvaluation } from './evaluation-application.js'
+export type { LearningTransaction } from './membership-application.js'
+export {
+  bindLearningCourseRoom,
+  requireLearningCourseRole,
+  setLearningCourseMembership,
+} from './membership-application.js'
+export type { LearningMissionInfrastructure } from './missions-application.js'
 export {
   addLearningMissionSteps,
   assignLearningMissionCoordinator,
@@ -87,21 +101,6 @@ export {
   startLearningMission,
   updateLearningMissionStep,
 } from './missions-application.js'
-export type { LearningMissionInfrastructure } from './missions-application.js'
-export {
-  closeLearningActivity,
-  createLearningActivity,
-  createLearningObjectives,
-  publishLearningActivity,
-  setLearningObjectiveStatus,
-  submitLearningActivity,
-} from './curriculum-application.js'
-export {
-  bindLearningCourseRoom,
-  requireLearningCourseRole,
-  setLearningCourseMembership,
-} from './membership-application.js'
-export type { LearningTransaction } from './membership-application.js'
 
 export interface LearningInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
@@ -247,7 +246,7 @@ export class LearningApplication {
     })
     return {
       id: courseId, companyId: scope.companyId, projectId, projectKind: 'TEACHING' as const, name: input.name,
-      description: input.description, color: input.color, status: 'active',
+      description: input.description, color: input.color, status: 'ACTIVE',
       createdBy: scope.userId, studyRoomId: roomId, courseRole: 'teacher', memberCount: 1,
       canManage: true, knowledgeState: 'pending' as const,
     }
@@ -281,24 +280,6 @@ export class LearningApplication {
       })
     })
     return { ok: true as const }
-  }
-
-  async archiveCourse(userId: string, courseId: string, archive: boolean) {
-    await this.infrastructure.transaction(async (db) => {
-      const manager = await this.manager(userId, courseId, 'course:archive', db, true)
-      await setCourseArchived(db, manager.companyId, manager.projectId, archive)
-      await this.infrastructure.auditInTransaction(db, {
-        kind: archive ? 'course_archive' : 'course_unarchive', userId, companyId: manager.companyId,
-        detail: { courseId },
-      })
-      await enqueueLearningEffect(db, {
-        companyId: manager.companyId,
-        courseId,
-        kind: 'course_archive.sync',
-        payload: { projectId: manager.projectId, archive },
-      })
-    })
-    return { ok: true as const, status: archive ? 'archived' : 'active' }
   }
 
   async members(userId: string, courseId: string) {
@@ -397,7 +378,9 @@ export class LearningApplication {
     let status = invitation.revoked_at ? 'revoked'
       : new Date(invitation.expires_at).getTime() < Date.now() ? 'expired'
         : invitation.use_count >= invitation.max_uses ? 'consumed'
-          : invitation.project_status !== 'active' ? 'archived' : 'valid'
+          : invitation.project_status !== 'ACTIVE'
+            || (invitation.company_status !== 'ACTIVE' && invitation.company_status !== 'TRIAL')
+            ? 'archived' : 'valid'
     if (viewerId) {
       const viewer = await invitationViewer(this.db, viewerId, invitation.course_id)
       if (viewer?.role && (viewer.role === 'teacher' || invitation.role === viewer.role)) status = 'already_member'
@@ -431,7 +414,10 @@ export class LearningApplication {
       if (new Date(invitation.expires_at).getTime() < Date.now()) {
         throw new LearningApplicationError('gone', 'invitation expired')
       }
-      if (invitation.project_status !== 'active') throw new LearningApplicationError('gone', 'course archived')
+      if (invitation.project_status !== 'ACTIVE') throw new LearningApplicationError('gone', 'course archived')
+      if (invitation.company_status !== 'ACTIVE' && invitation.company_status !== 'TRIAL') {
+        throw new LearningApplicationError('gone', 'company is not accepting memberships')
+      }
       if (invitation.email && invitation.email !== user.email.toLowerCase()) {
         throw new LearningApplicationError('forbidden', `this invitation is reserved for ${invitation.email}`)
       }
@@ -475,6 +461,7 @@ export class LearningApplication {
       return {
         companyId: invitation.company_id, companyName: invitation.company_name,
         companySlug: invitation.company_slug, companyRole: companyRole ?? 'member',
+        companyStatus: invitation.company_status,
         courseId: invitation.course_id, courseName: invitation.course_name,
         projectId: invitation.project_id, roomId: invitation.room_id, role,
         alreadyMember: Boolean(existingRole) && !changesRole, joinedCompany,
@@ -483,7 +470,8 @@ export class LearningApplication {
     return {
       ok: true as const, alreadyMember: result.alreadyMember, joinedCompany: result.joinedCompany,
       company: {
-        id: result.companyId, name: result.companyName, slug: result.companySlug, role: result.companyRole,
+        id: result.companyId, name: result.companyName, slug: result.companySlug,
+        role: result.companyRole, status: result.companyStatus,
       },
       course: {
         id: result.courseId, name: result.courseName, projectId: result.projectId,

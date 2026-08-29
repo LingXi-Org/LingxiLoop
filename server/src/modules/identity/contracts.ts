@@ -40,6 +40,7 @@ export interface IdentityCompanyPayload {
   name: string
   slug: string
   role: string
+  status: import('../../domain/public.js').CompanyStatus
 }
 
 export interface IdentityMePayload {

@@ -119,7 +119,7 @@ export async function findDefaultConversationWorkspacePolicy(
   const { rows } = await db.query<{ project_id: string; project_status: string }>(
     `SELECT id AS project_id,status AS project_status
        FROM projects
-      WHERE company_id=$1 AND is_default=TRUE AND status='active'
+      WHERE company_id=$1 AND is_default=TRUE AND status='ACTIVE'
       LIMIT 1`,
     [companyId],
   )
@@ -481,7 +481,7 @@ export async function searchWorkspaceDirectory(
               AND teacher.user_id=$2 AND teacher.status='ACTIVE'
               AND teacher.role IN ('OWNER','TEACHER')
             WHERE room.conversation_id=conversation.id AND room.company_id=conversation.company_id
-              AND room.status='active' AND course_project.status='active'))
+              AND room.status='active' AND course_project.status='ACTIVE'))
         AND (conversation.title ILIKE $3 ESCAPE '\\' OR conversation.topic ILIKE $3 ESCAPE '\\')
       ORDER BY CASE WHEN lower(conversation.title)=lower($4) THEN 0 WHEN conversation.title ILIKE $5 ESCAPE '\\' THEN 1 ELSE 2 END,
                conversation.updated_at DESC LIMIT 8`, common)

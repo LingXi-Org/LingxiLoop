@@ -13,7 +13,7 @@ test('course responses are strict and never receive production mock defaults', (
 
   const course = {
     id: 'course-contract', companyId: 'company-contract', projectId: 'project-contract', name: 'Contract course',
-    description: '', color: '#5266d6', status: 'active' as const, createdBy: 'user-1', studyRoomId: null,
+    description: '', color: '#5266d6', status: 'ACTIVE' as const, createdBy: 'user-1', studyRoomId: null,
     projectKind: 'TEACHING' as const,
     courseRole: 'teacher' as const, memberCount: 8, canManage: true,
   }

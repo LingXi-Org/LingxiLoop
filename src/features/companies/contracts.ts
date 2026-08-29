@@ -4,6 +4,7 @@ export interface CompanySummary {
   slug: string
   createdAt: string
   role: string
+  status: import('@/auth/contracts').CompanyStatus
 }
 
 export type ApiInvitationStatus = 'active' | 'revoked' | 'expired' | 'consumed'
@@ -61,7 +62,7 @@ export interface ApiInvitationPreview {
 export interface ApiInvitationAccept {
   ok: true
   alreadyMember: boolean
-  company: { id: string; name: string; slug: string; role: string }
+  company: { id: string; name: string; slug: string; role: string; status: import('@/auth/contracts').CompanyStatus }
 }
 
 export interface ApiCompanyProfile {
@@ -70,6 +71,7 @@ export interface ApiCompanyProfile {
   slug: string
   description: string
   role: 'owner' | 'admin' | 'member'
+  status: import('@/auth/contracts').CompanyStatus
   createdAt: string
 }
 

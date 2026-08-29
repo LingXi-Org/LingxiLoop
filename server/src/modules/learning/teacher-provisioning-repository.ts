@@ -50,7 +50,7 @@ export async function findTeacherProvisioningCourse(
        FROM courses course
        JOIN projects project
          ON project.id=course.project_id AND project.company_id=course.company_id
-      WHERE course.company_id=$1 AND course.id=$2 AND project.status='active'
+      WHERE course.company_id=$1 AND course.id=$2 AND project.status='ACTIVE'
       LIMIT 1`,
     [companyId, courseId],
   )
@@ -307,7 +307,7 @@ export async function reactivateTeacherRoomState(
          ON project.id=course.project_id AND project.company_id=course.company_id
       WHERE teacher_room.company_id=$1 AND teacher_room.course_id=$2
         AND teacher_room.course_id=course.id AND teacher_room.company_id=course.company_id
-        AND project.status='active'
+        AND project.status='ACTIVE'
       RETURNING teacher_room.conversation_id`,
     [companyId, courseId],
   )

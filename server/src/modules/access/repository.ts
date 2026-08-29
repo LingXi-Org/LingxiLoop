@@ -8,6 +8,7 @@ import type {
   PlanStatus,
   ProjectKind,
   ProjectRole,
+  ProjectStatus,
 } from '../../domain/public.js'
 
 export interface ActorRecord {
@@ -28,7 +29,7 @@ export interface ProjectRecord {
   companyId: string
   kind: ProjectKind
   planId: string | null
-  status: 'active' | 'archived'
+  status: ProjectStatus
 }
 
 export interface MembershipRecord<Role> {
@@ -74,7 +75,7 @@ interface ProjectRow {
   company_id: string
   kind: ProjectKind
   plan_id: string | null
-  status: 'active' | 'archived'
+  status: ProjectStatus
 }
 
 interface MembershipRow<Role> {

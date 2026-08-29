@@ -6,7 +6,7 @@ export interface TeacherScopeBindingRow {
   project_name: string
   course_id: string
   course_title: string
-  course_status: 'active' | 'archived'
+  course_status: 'ACTIVE' | 'ARCHIVED'
   room_id: string
   room_status: 'active' | 'closed'
   agent_id: string

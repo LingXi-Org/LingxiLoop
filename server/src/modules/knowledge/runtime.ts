@@ -1,16 +1,19 @@
-import type { Queryable } from '../../db/queryable.js'
 import { pool } from '../../db/pool.js'
+import type { Queryable } from '../../db/queryable.js'
 import { withTransaction } from '../../db/transaction.js'
 import { inc } from '../../metrics.js'
-import { storage } from '../../storage.js'
 import type { WorkerTaskHandle } from '../../runtime/lifecycle.js'
+import { storage } from '../../storage.js'
 import {
+  type AttachmentKnowledgeJobInput,
   cancelIngestionJob,
   claimIngestionJob,
   completeIngestion,
   findIngestionSource,
   findTenantSourceAssets,
+  type IngestionSourceRow,
   insertAttachmentKnowledgeJob,
+  type KnowledgeSourceStatus,
   listReferencedStorageKeys,
   markExternalSource,
   recordExternalRetryCommand,
@@ -19,16 +22,7 @@ import {
   requeueIngestion,
   resetIngestionAttempts,
   softDeleteTenantSource,
-  type AttachmentKnowledgeJobInput,
-  type IngestionSourceRow,
-  type KnowledgeSourceStatus,
 } from './ingestion-repository.js'
-import {
-  openNotebookClient,
-  OpenNotebookError,
-  type OpenNotebookSearchHit,
-  type OpenNotebookSource,
-} from './provider.js'
 import {
   acquireNotebookLock,
   findKnowledgeProject,
@@ -38,13 +32,19 @@ import {
   markNotebookReady,
   releaseNotebookLock,
 } from './notebook-repository.js'
-import { findKnowledgeRetrievalProject, listKnowledgeRetrievalSources } from './retrieval-repository.js'
 import {
   MAX_SOURCE_BYTES,
   openNotebookEnabled,
   validateKnowledgeUrl,
 } from './policy.js'
+import {
+  OpenNotebookError,
+  type OpenNotebookSearchHit,
+  type OpenNotebookSource,
+  openNotebookClient,
+} from './provider.js'
 import { enqueueSourceJob } from './repository.js'
+import { findKnowledgeRetrievalProject, listKnowledgeRetrievalSources } from './retrieval-repository.js'
 
 const LEASE_MS = 2 * 60_000
 const MAX_ATTEMPTS = 5
@@ -111,7 +111,7 @@ export async function syncProjectNotebookMetadata(projectId: string): Promise<vo
   await openNotebookClient.updateNotebook(id, {
     name: project.name,
     description: project.description?.trim() ?? '',
-    archived: project.status === 'archived',
+    archived: project.status === 'ARCHIVED',
   })
 }
 

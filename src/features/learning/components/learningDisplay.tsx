@@ -10,6 +10,8 @@ export type LearningSection =
 
 const STATUS_LABELS: Record<string, string> = {
   draft: '草稿', active: '进行中', published: '已发布', closed: '已关闭', archived: '已归档',
+  CREATED: '已创建', DRAFT: '草稿', ACTIVE: '进行中', COURSE_ENDED: '已结课', READ_ONLY: '只读',
+  TRANSFER_PENDING: '转移中', RETENTION: '保留期', ARCHIVED: '已归档', DELETED: '已删除',
   open: '待开始', in_progress: '进行中', completed: '已完成', cancelled: '已取消', pending: '待审核',
   accepted: '已采纳', rejected: '已退回', verified: '已验证', learning: '学习中', needs_review: '待复核',
   sent: '已送达', failed: '投递失败',

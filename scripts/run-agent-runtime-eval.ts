@@ -419,7 +419,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     }
     runtimeContext.teacherContext = {
       agent: { id: item.agentId, name: 'Pulse', projectId: 'project-eval' },
-      course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'active' },
+      course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'ACTIVE' },
       room: { id: item.channelId, status: 'active' },
       trigger: { mode: 'teacher', teacherId: 'eval-teacher' },
       counts: { learners: 4, objectives: 2, activities: 1, pendingReviews: 0 },
@@ -448,7 +448,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   } else if (scenario === 'planning-gate') {
     input = 'Start the retrieval mission now.'
     runtimeContext.learningContext = {
-      course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'active' },
+      course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'ACTIVE' },
       roomPurpose: 'study',
       actorRole: 'learner',
       learnerId: 'eval-learner',

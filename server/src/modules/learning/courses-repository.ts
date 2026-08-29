@@ -1,5 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
-import { projectRoleFromLearningWire, type ProjectRole } from '../../domain/access/public.js'
+import { type ProjectRole, projectRoleFromLearningWire } from '../../domain/access/public.js'
 import type { CourseManager, CreateCourseInput, UpdateCourseInput } from './contracts.js'
 
 export async function listCourses(db: Queryable, companyId: string, userId: string) {
@@ -33,8 +33,8 @@ export async function insertTeachingCourse(db: Queryable, args: {
   companyId: string; userId: string; projectId: string; courseId: string; roomId: string; input: CreateCourseInput
 }): Promise<void> {
   await db.query(
-    `INSERT INTO projects (id,company_id,kind,name,description,color,created_by,is_default)
-     VALUES ($1,$2,'TEACHING',$3,$4,$5,$6,FALSE)`,
+    `INSERT INTO projects (id,company_id,kind,name,description,color,status,created_by,is_default)
+     VALUES ($1,$2,'TEACHING',$3,$4,$5,'ACTIVE',$6,FALSE)`,
     [args.projectId, args.companyId, args.input.name, args.input.description, args.input.color, args.userId],
   )
   await db.query(
@@ -151,19 +151,6 @@ export async function updateCourseMetadata(db: Queryable, args: {
       [args.courseId, args.companyId, `Pulse · ${args.patch.name}`.slice(0, 80)],
     )
   }
-}
-
-export async function setCourseArchived(
-  db: Queryable,
-  companyId: string,
-  projectId: string,
-  archive: boolean,
-): Promise<void> {
-  await db.query(
-    `UPDATE projects SET status=$3,archived_at=CASE WHEN $3='archived' THEN NOW() ELSE NULL END,updated_at=NOW()
-      WHERE id=$1 AND company_id=$2`,
-    [projectId, companyId, archive ? 'archived' : 'active'],
-  )
 }
 
 export async function listCourseMembers(db: Queryable, courseId: string, companyId: string) {

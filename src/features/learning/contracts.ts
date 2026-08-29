@@ -1,5 +1,5 @@
 import type { ApiInvitationPreviewStatus } from '@/features/companies/contracts'
-import type { ProjectKind } from '@/types'
+import type { ProjectKind, ProjectStatus } from '@/types'
 
 export interface ApiCourse {
   id: string
@@ -9,7 +9,7 @@ export interface ApiCourse {
   name: string
   description: string
   color: string
-  status: 'active' | 'archived'
+  status: ProjectStatus
   createdBy: string
   studyRoomId: string | null
   companyRole?: 'owner' | 'admin' | 'member'
@@ -67,7 +67,7 @@ export interface ApiCourseInvitationAccept {
   ok: true
   alreadyMember: boolean
   joinedCompany: boolean
-  company: { id: string; name: string; slug: string; role: string }
+  company: { id: string; name: string; slug: string; role: string; status: import('@/auth/contracts').CompanyStatus }
   course: { id: string; name: string; projectId: string; studyRoomId: string | null; role: 'teacher' | 'learner' }
 }
 
@@ -80,7 +80,7 @@ export interface LearningCourse {
   projectKind: ProjectKind
   title: string
   description: string
-  status: 'active' | 'archived'
+  status: ProjectStatus
   courseRole: LearningRole
   roomCount: number
   objectiveCount: number

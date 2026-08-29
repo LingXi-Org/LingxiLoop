@@ -47,7 +47,7 @@ export async function workspaceChannels(
             AND course_member.user_id=$2 AND course_member.status='ACTIVE'
             AND course_member.role IN ('OWNER','TEACHER')
           WHERE room.conversation_id=binding.channel_id AND room.company_id=binding.company_id
-            AND room.status='active' AND project.status='active'
+            AND room.status='active' AND project.status='ACTIVE'
         ))
       ORDER BY (binding.profile->>'pinned')::boolean DESC,binding.created_at`,
     [input.companyId, input.userId, input.projectId],

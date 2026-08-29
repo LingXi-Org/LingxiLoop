@@ -5,6 +5,7 @@ import type {
   PermissionReason,
   PermissionRequest,
   ResolvedAccessContext,
+  ResourceAccessMode,
 } from './contracts.js'
 import type { ResourceRecord } from './repository.js'
 
@@ -41,6 +42,14 @@ export const PERMISSION_POLICIES = {
   'company:list': { scope: 'company', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
   'company:read': { scope: 'company', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
   'company:update': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
+  'company:activate': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
+  'company:request_user_deletion': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
+  'company:enter_grace_period': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
+  'company:enter_read_only': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
+  'company:offboard': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
+  'company:enter_retention': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
+  'company:archive': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
+  'company:delete': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
   'company_member:list': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
   'company_member:update': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
   'company_member:remove': { scope: 'company', companyRoles: COMPANY_MANAGERS, resource: 'none' },
@@ -53,11 +62,17 @@ export const PERMISSION_POLICIES = {
     scope: 'company', entitlement: 'project.core', companyRoles: COMPANY_MANAGERS, resource: 'none',
   },
   'project:update': projectManage('project.core'),
+  'project:activate': projectManage('project.core'),
+  'project:end': projectManage('project.core'),
+  'project:enter_read_only': projectManage('project.core'),
+  'project:request_transfer': projectManage('project.core'),
+  'project:cancel_transfer': projectManage('project.core'),
+  'project:enter_retention': projectManage('project.core'),
   'project:archive': projectManage('project.core'),
+  'project:delete': projectManage('project.core'),
   'course:create': { scope: 'company', entitlement: 'learning.core', companyRoles: COMPANY_MANAGERS, resource: 'none' },
   'course:read': projectRead('learning.core'),
   'course:update': projectManage('learning.core'),
-  'course:archive': projectManage('learning.core'),
   'project_member:list': {
     scope: 'project', entitlement: 'project.members.manage', projectRoles: PROJECT_LISTERS, resource: 'none',
   },
@@ -108,7 +123,9 @@ export const PERMISSION_POLICIES = {
 } as const satisfies Record<PermissionAction, PermissionPolicy>
 
 export const PROJECT_WRITE_ACTIONS = new Set<PermissionAction>([
-  'project:update', 'project:archive', 'course:update', 'course:archive',
+  'project:update', 'project:activate', 'project:end', 'project:enter_read_only',
+  'project:request_transfer', 'project:cancel_transfer', 'project:enter_retention',
+  'project:archive', 'project:delete', 'course:update',
   'project_member:add', 'project_member:update', 'project_member:remove',
   'project_invitation:create', 'project_invitation:revoke',
   'learning:manage', 'learning:submit', 'learning:review', 'learning:preference',
@@ -117,6 +134,180 @@ export const PROJECT_WRITE_ACTIONS = new Set<PermissionAction>([
   'poll:create', 'poll:vote', 'poll:close', 'email:write', 'attachment:write',
   'agent_autonomy:write', 'agent_memory:write', 'agent_approval:resolve', 'agent_run:control',
 ])
+
+const READ_ACTIONS = new Set<PermissionAction>([
+  'company:list', 'company:read', 'company_member:list', 'company_invitation:list',
+  'project:list', 'project:read', 'course:read', 'project_member:list', 'project_invitation:list',
+  'learning:read', 'knowledge:read', 'conversation:read', 'document:read', 'board:read',
+  'calendar:read', 'canvas:read', 'poll:read', 'email:read', 'agent:read',
+  'agent_autonomy:read', 'agent_memory:read', 'agent_approval:list',
+])
+
+const COMPANY_LIFECYCLE_ACTIONS = new Set<PermissionAction>([
+  'company:activate', 'company:request_user_deletion', 'company:enter_grace_period',
+  'company:enter_read_only', 'company:offboard', 'company:enter_retention',
+  'company:archive', 'company:delete',
+])
+
+const PROJECT_LIFECYCLE_ACTIONS = new Set<PermissionAction>([
+  'project:activate', 'project:end', 'project:enter_read_only', 'project:request_transfer',
+  'project:cancel_transfer', 'project:enter_retention', 'project:archive', 'project:delete',
+])
+
+const GROWTH_ACTIONS = new Set<PermissionAction>([
+  'company_invitation:create', 'project:create_personal_learning', 'course:create',
+  'project_member:add', 'project_invitation:create',
+])
+
+const TRANSFER_FROZEN_ACTIONS = new Set<PermissionAction>([
+  'project:update', 'project:archive', 'project:delete', 'course:update',
+  'project_member:add', 'project_member:update', 'project_member:remove',
+  'project_invitation:create', 'project_invitation:revoke',
+])
+
+const CLOSE_OUT_ACTIONS = new Set<PermissionAction>([
+  'learning:review', 'agent_approval:resolve',
+])
+
+export function resourceAccessMode(context: ResolvedAccessContext): ResourceAccessMode {
+  const companyMode = companyAccessMode(context.company.status)
+  if (!context.project) return companyMode
+  const projectMode = projectAccessMode(context.project.status)
+  const priority: Record<ResourceAccessMode, number> = {
+    READ_WRITE: 0,
+    TRANSFER_PENDING: 1,
+    MANAGER_ONLY: 2,
+    CLOSE_OUT: 3,
+    READ_ONLY: 4,
+    RETENTION: 5,
+    DENY: 6,
+  }
+  return priority[companyMode] >= priority[projectMode] ? companyMode : projectMode
+}
+
+function projectAccessMode(
+  status: NonNullable<ResolvedAccessContext['project']>['status'],
+): ResourceAccessMode {
+  switch (status) {
+    case 'CREATED':
+    case 'DRAFT':
+      return 'MANAGER_ONLY'
+    case 'ACTIVE':
+      return 'READ_WRITE'
+    case 'COURSE_ENDED':
+      return 'CLOSE_OUT'
+    case 'READ_ONLY':
+    case 'ARCHIVED':
+      return 'READ_ONLY'
+    case 'TRANSFER_PENDING':
+      return 'TRANSFER_PENDING'
+    case 'RETENTION':
+      return 'RETENTION'
+    case 'DELETED':
+      return 'DENY'
+  }
+}
+
+function companyAccessMode(status: ResolvedAccessContext['company']['status']): ResourceAccessMode {
+  switch (status) {
+    case 'TRIAL':
+    case 'ACTIVE':
+    case 'GRACE_PERIOD':
+      return 'READ_WRITE'
+    case 'READ_ONLY':
+      return 'READ_ONLY'
+    case 'USER_DELETION_PENDING':
+    case 'OFFBOARDED':
+    case 'RETENTION':
+      return 'RETENTION'
+    case 'DELETED':
+      return 'DENY'
+    case 'ARCHIVED':
+      return 'READ_ONLY'
+  }
+}
+
+function isContextManager(context: ResolvedAccessContext): boolean {
+  return context.companyMembership.role === 'OWNER'
+    || context.companyMembership.role === 'ADMIN'
+    || context.projectMembership?.role === 'OWNER'
+    || context.projectMembership?.role === 'TEACHER'
+}
+
+function evaluateResourceAccessMode(
+  request: PermissionRequest,
+  context: ResolvedAccessContext,
+): PermissionReason {
+  if (context.company.status === 'GRACE_PERIOD' && GROWTH_ACTIONS.has(request.action)) {
+    return 'COMPANY_STATE_DENIED'
+  }
+  const lifecycle = COMPANY_LIFECYCLE_ACTIONS.has(request.action) || PROJECT_LIFECYCLE_ACTIONS.has(request.action)
+  const companyDecision = evaluateCompanyAccessMode(
+    companyAccessMode(context.company.status), request, context, lifecycle,
+  )
+  if (companyDecision !== 'ALLOWED') return companyDecision
+  if (!context.project) return 'ALLOWED'
+  return evaluateProjectAccessMode(projectAccessMode(context.project.status), request, context, lifecycle)
+}
+
+function evaluateCompanyAccessMode(
+  mode: ResourceAccessMode,
+  request: PermissionRequest,
+  context: ResolvedAccessContext,
+  lifecycle: boolean,
+): PermissionReason {
+  switch (mode) {
+    case 'READ_WRITE':
+      return 'ALLOWED'
+    case 'READ_ONLY':
+      return READ_ACTIONS.has(request.action) || lifecycle
+        ? 'ALLOWED'
+        : 'COMPANY_STATE_DENIED'
+    case 'RETENTION':
+      if (!isContextManager(context)) return 'COMPANY_STATE_DENIED'
+      return READ_ACTIONS.has(request.action) || lifecycle
+        ? 'ALLOWED'
+        : 'COMPANY_STATE_DENIED'
+    case 'DENY':
+      return 'COMPANY_STATE_DENIED'
+    case 'MANAGER_ONLY':
+    case 'CLOSE_OUT':
+    case 'TRANSFER_PENDING':
+      return 'COMPANY_STATE_DENIED'
+  }
+}
+
+function evaluateProjectAccessMode(
+  mode: ResourceAccessMode,
+  request: PermissionRequest,
+  context: ResolvedAccessContext,
+  lifecycle: boolean,
+): PermissionReason {
+  switch (mode) {
+    case 'READ_WRITE':
+      return 'ALLOWED'
+    case 'MANAGER_ONLY':
+      return isContextManager(context) ? 'ALLOWED' : 'PROJECT_STATE_DENIED'
+    case 'CLOSE_OUT':
+      return READ_ACTIONS.has(request.action) || CLOSE_OUT_ACTIONS.has(request.action) || lifecycle
+        ? 'ALLOWED'
+        : 'PROJECT_STATE_DENIED'
+    case 'READ_ONLY':
+      if (context.project?.status === 'ARCHIVED'
+        && context.project.kind === 'INSTITUTIONAL_COURSE'
+        && !isContextManager(context)) return 'PROJECT_STATE_DENIED'
+      return READ_ACTIONS.has(request.action) || lifecycle ? 'ALLOWED' : 'PROJECT_STATE_DENIED'
+    case 'TRANSFER_PENDING':
+      return TRANSFER_FROZEN_ACTIONS.has(request.action) || request.action === 'project:request_transfer'
+        ? 'PROJECT_STATE_DENIED'
+        : 'ALLOWED'
+    case 'RETENTION':
+      if (!isContextManager(context)) return 'PROJECT_STATE_DENIED'
+      return READ_ACTIONS.has(request.action) || lifecycle ? 'ALLOWED' : 'PROJECT_STATE_DENIED'
+    case 'DENY':
+      return 'PROJECT_STATE_DENIED'
+  }
+}
 
 export function evaluatePolicy(
   request: PermissionRequest,
@@ -131,15 +322,14 @@ export function evaluatePolicy(
   } else {
     const membership = context.projectMembership
     if (!membership || !policy.projectRoles?.includes(membership.role)) return 'ROLE_NOT_ALLOWED'
-    if ((request.action === 'project:update' || request.action === 'project:archive')
+    if ((request.action === 'project:update' || PROJECT_LIFECYCLE_ACTIONS.has(request.action))
       && context.project?.kind === 'PERSONAL_LEARNING' && membership.role !== 'OWNER') {
       return 'ROLE_NOT_ALLOWED'
     }
   }
 
-  if (context.project?.status === 'archived' && PROJECT_WRITE_ACTIONS.has(request.action)) {
-    return 'PROJECT_STATE_DENIED'
-  }
+  const accessModeDecision = evaluateResourceAccessMode(request, context)
+  if (accessModeDecision !== 'ALLOWED') return accessModeDecision
   if (request.action === 'canvas:write' && resource?.status && resource.status !== 'active') {
     return 'RESOURCE_STATE_DENIED'
   }

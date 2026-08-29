@@ -13,7 +13,7 @@ export async function findDocumentMentionContext(db: Queryable, args: {
          ON project.id=document.project_id AND project.company_id=document.company_id
        JOIN participants mentioner
          ON mentioner.id=$3 AND mentioner.company_id=document.company_id AND mentioner.departed_at IS NULL
-      WHERE document.id=$1 AND document.company_id=$2 AND project.status='active'
+      WHERE document.id=$1 AND document.company_id=$2 AND project.status='ACTIVE'
       LIMIT 1`,
     [args.documentId, args.companyId, args.mentionerId],
   )

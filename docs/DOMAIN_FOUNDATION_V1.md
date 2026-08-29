@@ -13,7 +13,7 @@ User
  └─ ProjectMembership ──> Project ──> Company
                               └─ optional Plan override
 
-User + active Memberships + scoped Roles + effective Entitlements + Context
+User + active Memberships + scoped Roles + effective Entitlements + Resource State + Policy
   └─ PermissionDecision
 ```
 
@@ -26,8 +26,14 @@ User + active Memberships + scoped Roles + effective Entitlements + Context
 - Every Company has a Plan. A Project inherits it unless `projects.plan_id`
   selects another Plan. Domain Foundation v1 has no Subscription or billing
   lifecycle.
-- Permission is a computed decision contract, never a database row. The first
-  resolver is intentionally deferred.
+- Permission is a computed decision contract, never a database row. The
+  context-scoped resolver is the only product-plane authorization path.
+- Project lifecycle is selected by `ProjectKind`; Company lifecycle is selected
+  by `CompanyType`. All lifecycle values are uppercase SQL/wire values and all
+  transitions run through command use cases with conditional updates and audit.
+- Permission maps Company and Project lifecycle to `MANAGER_ONLY`,
+  `READ_WRITE`, `CLOSE_OUT`, `READ_ONLY`, `TRANSFER_PENDING`, `RETENTION`, or
+  `DENY`. Business modules do not interpret lifecycle state independently.
 
 ## Existing-callsite impact inventory
 
@@ -48,15 +54,21 @@ The only global privilege flag was the retired product `users.is_admin`; the
 old `/api/admin` and waitlist product control plane is removed independently of
 the retained Eval, audit, metrics, health, Agent Run, and Tool Call evidence.
 
-## Deferred work
+## Current lifecycle cutover
 
 Personal Context provisioning is now the only user-creation lifecycle: a new
-User receives one `PERSONAL` Company on `PERSONAL_FREE`, an active OWNER
-CompanyMembership, the default Project “我的学习”, and an active OWNER
+User receives one `PERSONAL` Company on `PERSONAL_FREE`, an `ACTIVE` OWNER
+CompanyMembership, the default Project “我的学习”, and an `ACTIVE` OWNER
 ProjectMembership in the same transaction. The database is reset-only, so
 there is no historical-user migration, compatibility bridge, or shared
 Personal Company.
 
-ProjectKind, Teacher Free, Education lifecycle, seats, payments, a Permission
-resolver, context-scoped learning state, and organization management UI remain
-deferred.
+`PERSONAL_LEARNING`, `TEACHING`, and `INSTITUTIONAL_COURSE` now have distinct
+state machines. Personal and Education Companies likewise have distinct
+lifecycle contracts; the former generic Company `SUSPENDED` state no longer
+exists. Safety suspension remains a User/Policy concern. Generic status PATCH,
+Course-level archive mutation, and unarchive-by-boolean are forbidden.
+
+Teacher Free, seats, payments, context-scoped learning state, evidence/event
+projections, and organization management UI remain deferred to their ordered
+milestones.

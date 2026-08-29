@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import {
-  loadLearningContext,
   bindLearningCourseRoom,
+  loadLearningContext,
   proposeLearningEvaluation,
   recordLearningAttempt,
   reviewLearningEvaluation,
@@ -14,12 +14,12 @@ import {
   completeLearningMissionRecord,
   findLearningMission,
   findLearningRoomState,
-  listLearningMissions,
-  lockLearningMission,
-  updateLearningMissionStepRecord,
-  updateLearningMissionCoordinator,
   listLearningEvidenceRecords,
+  listLearningMissions,
   listPendingLearningEvaluationRecords,
+  lockLearningMission,
+  updateLearningMissionCoordinator,
+  updateLearningMissionStepRecord,
 } from '../modules/learning/repository.js'
 
 function queryable(
@@ -27,10 +27,50 @@ function queryable(
 ): Queryable {
   return {
     query: async (text, params) => {
-      const result = handler(text, params)
+      const result = accessFixture(text, params) ?? handler(text, params)
       return { rows: result.rows ?? [], rowCount: result.rowCount ?? result.rows?.length ?? 0 } as never
     },
   }
+}
+
+function accessFixture(
+  text: string,
+  params: readonly unknown[] | undefined,
+): { rows: unknown[]; rowCount?: number } | null {
+  if (/SELECT id,deleted_at,suspended_at FROM users/.test(text)) {
+    return { rows: [{ id: params?.[0], deleted_at: null, suspended_at: null }] }
+  }
+  if (/NULL::text AS resource_status FROM courses WHERE id=\$1/.test(text)) {
+    return { rows: [{
+      company_id: 'company-1', project_id: 'project-1', created_by: 'teacher-1',
+      conversation_members: null, leader_id: null, resource_status: null,
+    }] }
+  }
+  if (/SELECT id,company_id,kind,plan_id,status FROM projects/.test(text)) {
+    return { rows: [{
+      id: 'project-1', company_id: 'company-1', kind: 'TEACHING', plan_id: null, status: 'ACTIVE',
+    }] }
+  }
+  if (/SELECT id,type,status,plan_id FROM companies/.test(text)) {
+    return { rows: [{ id: 'company-1', type: 'PERSONAL', status: 'ACTIVE', plan_id: 'plan-1' }] }
+  }
+  if (/SELECT role,status FROM company_memberships/.test(text)) {
+    return { rows: [{ role: 'MEMBER', status: 'ACTIVE' }] }
+  }
+  if (/SELECT role,status FROM project_memberships/.test(text)) {
+    const userId = String(params?.[2] ?? '')
+    return { rows: [{ role: userId.includes('teacher') ? 'TEACHER' : 'STUDENT', status: 'ACTIVE' }] }
+  }
+  if (/SELECT id,code,status FROM plans/.test(text)) {
+    return { rows: [{ id: 'plan-1', code: 'PERSONAL_FREE', status: 'ACTIVE' }] }
+  }
+  if (/FROM plan_entitlements/.test(text)) {
+    return { rows: [
+      { code: 'project.core', value: true },
+      { code: 'learning.core', value: true },
+    ] }
+  }
+  return null
 }
 
 const missionRow = {
@@ -103,7 +143,7 @@ test('runtime room resolution and mission lock retain tenant, course and convers
     calls.push({ text, params })
     if (text.includes('FROM courses course')) return { rows: [{
       company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
-      status: 'active', purpose: 'study',
+      status: 'ACTIVE', purpose: 'study',
     }] }
     return { rows: [{ exists: 1 }] }
   })
@@ -351,7 +391,7 @@ test('membership management refuses to remove the final tenant-scoped teacher', 
   const db = queryable((text) => {
     if (text.includes('FROM courses course JOIN projects project')) return { rows: [{
       company_id: 'company-1', company_role: 'member', course_role: 'teacher',
-      project_id: 'project-1', status: 'active',
+      project_id: 'project-1', status: 'ACTIVE',
     }] }
     if (text.includes('SELECT project_id FROM courses')) return { rows: [{ project_id: 'project-1' }] }
     if (text.includes('SELECT 1 FROM company_memberships')) return { rows: [{ exists: 1 }] }
@@ -371,7 +411,7 @@ test('room binding authorizes the manager and persists one tenant-scoped project
   const db = queryable((text, params) => {
     if (text.includes('FROM courses course JOIN projects project')) return { rows: [{
       company_id: 'company-1', company_role: 'member', course_role: 'teacher',
-      project_id: 'project-1', status: 'active',
+      project_id: 'project-1', status: 'ACTIVE',
     }] }
     if (text.includes('INSERT INTO learning_course_rooms')) {
       bindingValues = params

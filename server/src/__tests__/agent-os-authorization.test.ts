@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { Queryable } from '../db/queryable.js'
-import { ForbiddenError } from '../modules/access/public.js'
 import { assertHostActionPermission } from '../agent-os/authorization.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
+import type { Queryable } from '../db/queryable.js'
+import { ForbiddenError } from '../modules/access/public.js'
 
 const work: AgentWorkItem = {
   id: 'work',
@@ -45,7 +45,7 @@ function accessDb(projectMembership = true): { db: Queryable; calls: string[] } 
       if (/FROM projects WHERE id=\$1/.test(sql)) {
         return { rows: [{
           id: 'project', company_id: 'company', kind: 'PERSONAL_LEARNING',
-          plan_id: null, status: 'active',
+          plan_id: null, status: 'ACTIVE',
         }], rowCount: 1 } as never
       }
       if (/FROM companies WHERE id=\$1/.test(sql)) {

@@ -14,6 +14,11 @@ run ledger and are not published to learners. Model deltas are ephemeral
 previews; the durable final response is a normal `LingxiMessageV1` message and
 always wins over previews.
 
+Approval-gated Project lifecycle requests carry a typed command rather than a
+target status. Resolution rechecks the human authorization principal, invokes
+the Project application transition, and records both the transition audit and
+durable Learning projection intent in the same transaction.
+
 The browser consumes committed messages and stream events from WuKongIM. A
 committed message immediately reconciles the matching optimistic row and clears
 the same run's ephemeral preview; a missed terminal stream event therefore

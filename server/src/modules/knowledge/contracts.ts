@@ -12,8 +12,6 @@ export const updateProjectRequestSchema = z.object({
   color: z.string().max(200).nullable().optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'nothing to update')
 
-export const archiveProjectRequestSchema = z.object({ archive: z.boolean().default(true) }).strict()
-
 export const createSourceRequestSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('text'), idempotencyKey: z.string().trim().min(8).max(200), title: z.string().trim().max(200).optional(), text: z.string().trim().min(1) }).strict(),
   z.object({ kind: z.literal('url'), idempotencyKey: z.string().trim().min(8).max(200), title: z.string().trim().max(200).optional(), url: z.string().trim().url() }).strict(),

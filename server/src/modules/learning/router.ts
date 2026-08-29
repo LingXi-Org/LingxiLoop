@@ -5,7 +5,6 @@ import type { PermissionAction } from '../access/public.js'
 import { permissionService } from '../access/public.js'
 import { classroomRouter } from './classroom-router.js'
 import {
-  archiveCourseRequestSchema,
   createCourseInvitationRequestSchema,
   createCourseRequestSchema,
   updateCourseMemberRequestSchema,
@@ -56,13 +55,6 @@ learningRouter.patch('/courses/:id', safe(async (req, res) => {
   const { userId } = await requireCoursePermission(req, courseId, 'course:update')
   const input = parse(updateCourseRequestSchema.safeParse(req.body ?? {}))
   res.json(await respond(() => learningApplication.updateCourse(userId, courseId, input)))
-}))
-
-learningRouter.post('/courses/:id/archive', safe(async (req, res) => {
-  const courseId = String(req.params.id)
-  const { userId } = await requireCoursePermission(req, courseId, 'course:archive')
-  const input = parse(archiveCourseRequestSchema.safeParse(req.body ?? {}))
-  res.json(await respond(() => learningApplication.archiveCourse(userId, courseId, input.archive)))
 }))
 
 learningRouter.get('/courses/:id/members', safe(async (req, res) => {

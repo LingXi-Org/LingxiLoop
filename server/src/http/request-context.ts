@@ -42,7 +42,7 @@ export async function requireCompanyArtifactContext(
   if (!projectId) {
     const { rows } = await pool.query<{ id: string }>(
       `SELECT id FROM projects
-        WHERE company_id=$1 AND is_default=TRUE AND status='active'
+        WHERE company_id=$1 AND is_default=TRUE AND status='ACTIVE'
         ORDER BY id LIMIT 1`,
       [companyId],
     )

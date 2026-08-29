@@ -37,22 +37,3 @@ export async function updateTeacherCourseMetadata(
   }
   return rows[0]
 }
-
-export async function setTeacherCourseStatus(
-  db: Queryable,
-  companyId: string,
-  courseId: string,
-  status: 'active' | 'archived',
-): Promise<DataRow | undefined> {
-  const { rows } = await db.query<DataRow>(
-    `UPDATE projects project
-        SET status=$3,updated_at=NOW(),
-            archived_at=CASE WHEN $3='archived' THEN NOW() ELSE NULL END
-       FROM courses course
-      WHERE course.company_id=$1 AND course.id=$2
-        AND course.project_id=project.id AND course.company_id=project.company_id
-      RETURNING project.*`,
-    [companyId, courseId, status],
-  )
-  return rows[0]
-}

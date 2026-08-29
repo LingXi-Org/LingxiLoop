@@ -40,3 +40,9 @@ work id, cell ids are deterministic, and sink operations receive the same
 idempotency key on crash recovery. Approval resumes only
 that action and injects its synthetic result into the loop; the original cell
 is never replayed.
+
+Pulse cannot set a Course/Project status directly. Its approval-gated
+`transition_course` action accepts only `END`, `ENTER_READ_ONLY`, or `ARCHIVE`;
+the Host re-evaluates the authorizing teacher and delegates to the same
+conditional Project lifecycle application used by HTTP. Invalid jumps and
+repeated side effects therefore fail closed at the domain boundary.

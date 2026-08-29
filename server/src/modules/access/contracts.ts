@@ -8,5 +8,6 @@ export type {
   PermissionService,
   ResolvedAccessContext,
   ResolvedEntitlements,
+  ResourceAccessMode,
 } from '../../domain/access/permission.js'
 export { ENTITLEMENT_CODES, PERMISSION_ACTIONS } from '../../domain/access/permission.js'

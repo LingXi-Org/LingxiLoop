@@ -354,7 +354,7 @@ test('[integration] closing a poll blocks further votes; only author can close',
 test('[integration] archived course conversations reject poll create, vote, and close writes', async () => {
   await pool.query(
     `INSERT INTO projects (id,company_id,kind,name,description,color,created_by,is_default,status)
-     VALUES ('poll-course-project',$1,'INSTITUTIONAL_COURSE','Poll course','','#123456',$2,FALSE,'active')`,
+     VALUES ('poll-course-project',$1,'INSTITUTIONAL_COURSE','Poll course','','#123456',$2,FALSE,'ACTIVE')`,
     [COMPANY, ME],
   )
   await pool.query(`UPDATE conversations SET project_id='poll-course-project' WHERE id=$1`, [CONVO])
@@ -362,7 +362,7 @@ test('[integration] archived course conversations reject poll create, vote, and 
     conversationId: CONVO, question: 'Before archive?', mode: 'single', options: ['Yes', 'No'],
   })
   assert.equal(created.status, 201)
-  await pool.query(`UPDATE projects SET status='archived',archived_at=NOW() WHERE id='poll-course-project'`)
+  await pool.query(`UPDATE projects SET status='ARCHIVED',archived_at=NOW() WHERE id='poll-course-project'`)
 
   const createBlocked = await createPollViaHttp({
     conversationId: CONVO, question: 'After archive?', mode: 'single', options: ['Yes', 'No'],

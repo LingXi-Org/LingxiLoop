@@ -16,7 +16,6 @@ export interface WebhookMemberRow {
 export interface TeacherRoomRow {
   course_id: string
   status: 'active' | 'closed'
-  course_status: string
   agent_id: string
   is_teacher: boolean
 }
@@ -69,7 +68,7 @@ export async function teacherRoomForWebhook(
   input: { channelId: string; authorId: string; companyId: string },
 ): Promise<TeacherRoomRow | null> {
   const { rows } = await db.query<TeacherRoomRow>(
-    `SELECT room.course_id,room.status,project.status AS course_status,teacher_agent.agent_id,
+    `SELECT room.course_id,room.status,teacher_agent.agent_id,
             EXISTS(
               SELECT 1 FROM project_memberships member
                WHERE member.project_id=course.project_id AND member.company_id=room.company_id
@@ -78,7 +77,6 @@ export async function teacherRoomForWebhook(
             ) AS is_teacher
        FROM learning_course_teacher_rooms room
        JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
-       JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
        JOIN learning_project_teacher_agents teacher_agent
          ON teacher_agent.project_id=course.project_id AND teacher_agent.company_id=course.company_id
       WHERE room.conversation_id=$1 AND room.company_id=$3`,

@@ -90,8 +90,8 @@ export class WukongWebhookApplication {
         companyId: binding.company_id,
       })
       if (teacherRoom) {
-        if (teacherRoom.status !== 'active' || teacherRoom.course_status === 'archived') {
-          throw new Error('archived teacher room is read-only')
+        if (teacherRoom.status !== 'active') {
+          throw new Error('teacher room is read-only')
         }
         const author = members.find((member) => member.id === input.fromUid)
         if (author?.kind === 'human' && !teacherRoom.is_teacher) {

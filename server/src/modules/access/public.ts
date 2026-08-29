@@ -12,6 +12,7 @@ export type {
   PermissionService,
   ResolvedAccessContext,
   ResolvedEntitlements,
+  ResourceAccessMode,
 } from './contracts.js'
 export { ENTITLEMENT_CODES, PERMISSION_ACTIONS } from './contracts.js'
 export { ForbiddenError } from './errors.js'

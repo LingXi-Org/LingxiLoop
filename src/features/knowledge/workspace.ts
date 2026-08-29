@@ -1,9 +1,9 @@
-import { knowledgeApi } from './api'
 import { create } from 'zustand'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
 import { getActiveCompanyId } from '@/stores/auth'
 import type { WorkspaceSummary } from '@/types'
+import { knowledgeApi } from './api'
 
 interface WorkspaceState {
   list: WorkspaceSummary[]
@@ -25,12 +25,12 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
       const companyId = getActiveCompanyId()
       const list = await knowledgeApi.listProjects()
       const stored = getWorkspaceSession()
-      const restoredProjectId = stored?.companyId === companyId && list.some((workspace) => workspace.id === stored.projectId && workspace.status === 'active')
+      const restoredProjectId = stored?.companyId === companyId && list.some((workspace) => workspace.id === stored.projectId && workspace.status !== 'DELETED')
         ? stored.projectId : null
       // The default Project is the authority for the initial IM surface. A
       // fresh browser has no stored selection, but project-scoped endpoints
       // must never be called without this context.
-      const selectedId = restoredProjectId ?? list.find((workspace) => workspace.isDefault && workspace.status === 'active')?.id ?? null
+      const selectedId = restoredProjectId ?? list.find((workspace) => workspace.isDefault && workspace.status !== 'DELETED')?.id ?? null
       if (selectedId && companyId) setWorkspaceSession({ companyId, projectId: selectedId })
       else if (stored) setWorkspaceSession(null)
       set({ list, selectedId, loaded: true, loading: false })
@@ -40,7 +40,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   },
   select: async (projectId) => {
     const workspace = get().list.find((item) => item.id === projectId)
-    if (!workspace || workspace.status !== 'active') throw new Error('工作区不可用')
+    if (!workspace || workspace.status === 'DELETED') throw new Error('工作区不可用')
     const companyId = getActiveCompanyId()
     if (!companyId) throw new Error('未选择组织')
     setWorkspaceSession({ companyId, projectId })

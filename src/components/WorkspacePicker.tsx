@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/button'
 import { useEffect, useMemo, useState } from 'react'
 import { IPlus, ISearch } from '@/components/icons'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
-import { useAuth } from '@/stores/auth'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useWorkspace } from '@/features/knowledge/workspace'
+import { useAuth } from '@/stores/auth'
 
 function relativeTime(raw: string | null): string {
   if (!raw) return '尚未访问'
@@ -34,7 +34,7 @@ export function WorkspacePicker() {
 
   useEffect(() => { void load() }, [activeCompanyId, load])
   const visible = useMemo(() => list.filter((workspace) =>
-    (showArchived ? workspace.status === 'archived' : workspace.status === 'active') &&
+    (showArchived ? workspace.status === 'ARCHIVED' : workspace.status !== 'ARCHIVED' && workspace.status !== 'DELETED') &&
     `${workspace.name} ${workspace.description}`.toLowerCase().includes(query.trim().toLowerCase()),
   ), [list, query, showArchived])
 
@@ -83,11 +83,11 @@ export function WorkspacePicker() {
             : visible.length === 0 ? <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-hairline bg-panel/40 text-sm text-ink-secondary">没有符合条件的工作区</div>
               : <ItemGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visible.map((workspace) => (
-                  <Item key={workspace.id} role="button" tabIndex={workspace.status === 'archived' ? undefined : 0} aria-disabled={workspace.status === 'archived' || undefined} onClick={() => { if (workspace.status !== 'archived') void select(workspace.id) }} onKeyDown={(event) => { if (workspace.status === 'archived' || (event.key !== 'Enter' && event.key !== ' ')) return; event.preventDefault(); void select(workspace.id) }} className="group min-h-52 cursor-pointer content-start rounded-2xl border-hairline bg-panel p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg aria-disabled:cursor-default aria-disabled:opacity-70 aria-disabled:hover:translate-y-0">
+                  <Item key={workspace.id} role="button" tabIndex={0} onClick={() => void select(workspace.id)} onKeyDown={(event) => { if (event.key !== 'Enter' && event.key !== ' ') return; event.preventDefault(); void select(workspace.id) }} className="group min-h-52 cursor-pointer content-start rounded-2xl border-hairline bg-panel p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg">
                     <div className="flex items-start justify-between gap-3">
                       <span className="grid size-11 place-items-center rounded-xl text-lg font-bold text-white" style={{ background: workspace.color ?? '#5266d6' }}>{workspace.name.slice(0, 1).toUpperCase()}</span>
                       {workspace.isDefault && <span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-ink-secondary">默认</span>}
-                      {workspace.status === 'archived' && <span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-ink-secondary">已归档</span>}
+                      {workspace.status === 'ARCHIVED' && <span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-ink-secondary">已归档</span>}
                     </div>
                     <ItemContent className="basis-full gap-1"><ItemTitle className="mt-5 block w-full truncate text-lg font-semibold text-ink group-hover:text-accent">{workspace.name}</ItemTitle>
                     <ItemDescription className="line-clamp-2 min-h-10 text-xs leading-5 text-ink-secondary">{workspace.description || '空白工作区，等待你的第一份资料或第一次对话。'}</ItemDescription></ItemContent>

@@ -17,6 +17,7 @@ import { messagesRouter } from '../modules/messages/router.js'
 import { observabilityRouter } from '../modules/observability/router.js'
 import { platformRouter } from '../modules/platform/router.js'
 import { pollsRouter } from '../modules/polls/router.js'
+import { projectsRouter } from '../modules/projects/router.js'
 
 export const api = Router()
 
@@ -25,6 +26,7 @@ api.use(platformRouter)
 api.use(identityRouter)
 api.use('/im', imRouter)
 api.use(companiesRouter)
+api.use(projectsRouter)
 api.use(canvasRouter)
 api.use(learningRouter)
 api.use(knowledgeRouter)

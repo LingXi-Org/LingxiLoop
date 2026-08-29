@@ -37,7 +37,6 @@ export async function resolveAccessContext(
 
   const company = await repository.company(authoritativeCompanyId)
   if (!company) return denied('COMPANY_NOT_FOUND')
-  if (company.status !== 'ACTIVE') return denied('COMPANY_INACTIVE')
 
   const companyMembership = await repository.companyMembership(company.id, request.actorUserId)
   if (!companyMembership) return denied('COMPANY_MEMBERSHIP_REQUIRED')

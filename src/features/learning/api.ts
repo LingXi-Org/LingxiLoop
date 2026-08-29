@@ -1,12 +1,11 @@
 import { http } from '@/api/core/http'
-import { normalizeCourseContract } from './courseContract'
 import type {
   ApiCourse,
-  ApiCourseMember,
   ApiCourseInvitation,
-  ApiCourseInvitationWithToken,
-  ApiCourseInvitationPreview,
   ApiCourseInvitationAccept,
+  ApiCourseInvitationPreview,
+  ApiCourseInvitationWithToken,
+  ApiCourseMember,
   LearningActivity,
   LearningDashboard,
   LearningDelivery,
@@ -18,6 +17,7 @@ import type {
   LearningReview,
   TeacherAgentSummary,
 } from './contracts'
+import { normalizeCourseContract } from './courseContract'
 
 export const learningApi = {
   listCourses: async () => (await http<ApiCourse[]>('/courses')).map(normalizeCourseContract),
@@ -26,8 +26,6 @@ export const learningApi = {
     http<ApiCourse>('/courses', { method: 'POST', body: JSON.stringify(input) }),
   updateCourse: (courseId: string, input: { name?: string; description?: string; color?: string }) =>
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
-  archiveCourse: (courseId: string, archive = true) =>
-    http<{ ok: true; status: 'active' | 'archived' }>(`/courses/${encodeURIComponent(courseId)}/archive`, { method: 'POST', body: JSON.stringify({ archive }) }),
   listCourseMembers: (courseId: string) =>
     http<ApiCourseMember[]>(`/courses/${encodeURIComponent(courseId)}/members`),
   updateCourseMember: (courseId: string, userId: string, role: 'teacher' | 'learner') =>
