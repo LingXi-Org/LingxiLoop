@@ -18,8 +18,8 @@ import { Webhook } from 'svix'
 import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import type { InboundEmailPayload } from '../modules/email/contracts.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
+import type { InboundEmailPayload } from '../modules/email/contracts.js'
 import { installStorageProvider, type Storage, type StorageObject } from '../storage.js'
 
 const storageObjects = new Map<string, { body: Buffer; mime: string; modifiedAt: number }>()
@@ -130,11 +130,10 @@ const TABLES_TO_WIPE: readonly string[] = [
   'calendar_events',
   'email_attachments',
   'email_messages',
+  'email_sequence_counters',
   'email_contacts',
   'message_reactions',
   'conversation_reads',
-  'conversation_counters',
-  'messages',
   'conversations',
   'agent_climate',
   'agent_workspace',

@@ -172,8 +172,8 @@ export interface QuestionnairePayload {
   submitLabel?: string
 }
 
-/** Headers + transport status for a single email message. Populated by the
- *  server's `/conversations/:id/messages` LEFT JOIN against `email_messages`,
+/** Headers + transport status for a single email message. Projected directly by
+ *  the server's `/conversations/:id/messages` email query,
  *  so it's only present when `Message.kind === 'email'`. */
 export interface EmailFields {
   subject: string
@@ -181,7 +181,7 @@ export interface EmailFields {
   from: string
   to: string[]
   cc: string[]
-  /** 'in'  = arrived from outside via the Cloudflare Email Worker;
+  /** 'in'  = arrived from outside via Resend Receiving;
    *  'out' = sent by an agent / human in this workspace. */
   direction: 'in' | 'out'
   /** 'queued' | 'sent' | 'failed' | 'received' — drives the bubble's

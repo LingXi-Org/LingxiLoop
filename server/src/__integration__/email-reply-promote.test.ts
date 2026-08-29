@@ -79,19 +79,17 @@ test('[integration] POST /conversations/:id/messages in an email convo auto-prom
   const payload = await res.json() as { id: string; transportStatus: string }
   assert.equal(payload.transportStatus, 'sent')
 
-  // The new row must be kind='email', direction='out', author=ME, and
+  // The new row must be direction='out', author=ME, and
   // its from_addr must derive from a minted participants.email — NOT a
   // text message.
   const { rows } = await pool.query<{
-    kind: string; direction: string; from_addr: string; auto_submitted: boolean; conversation_id: string;
+    direction: string; from_addr: string; auto_submitted: boolean; conversation_id: string;
   }>(
-    `SELECT m.kind, em.direction, em.from_addr, em.auto_submitted, em.conversation_id
-       FROM messages m JOIN email_messages em ON em.message_id = m.id
-      WHERE m.id = $1`,
+    `SELECT direction, from_addr, auto_submitted, conversation_id
+       FROM email_messages WHERE message_id = $1`,
     [payload.id],
   )
   assert.equal(rows.length, 1)
-  assert.equal(rows[0].kind, 'email', 'auto-promote must write a kind=email row, not kind=text')
   assert.equal(rows[0].direction, 'out')
   assert.equal(rows[0].auto_submitted, false, 'human-driven HTTP reply: autoSubmitted should be false')
   assert.equal(rows[0].conversation_id, conversationId)
@@ -193,11 +191,10 @@ test('[integration] lingxiloop reply CLI on an email convo uses the injected pro
 
   // An outbound email_messages row was written for the agent.
   const { rows: outbound } = await pool.query<{ direction: string; transport_status: string; body: string; auto_submitted: boolean | null }>(
-    `SELECT em.direction, em.transport_status, m.body, em.auto_submitted
-       FROM email_messages em
-       JOIN messages m ON m.id = em.message_id
-      WHERE em.conversation_id = $1 AND m.author_id = $2
-      ORDER BY em.created_at DESC`,
+    `SELECT direction, transport_status, body, auto_submitted
+       FROM email_messages
+      WHERE conversation_id = $1 AND author_id = $2
+      ORDER BY created_at DESC`,
     [conversationId, agentId],
   )
   assert.equal(outbound.length, 1, 'exactly one outbound row for the agent')
@@ -207,13 +204,6 @@ test('[integration] lingxiloop reply CLI on an email convo uses the injected pro
   // CLI path stamps autoSubmitted=true → RFC 3834 Auto-Submitted header.
   assert.equal(outbound[0].auto_submitted, true, 'agent CLI replies are auto-submitted=true')
 
-  // The corresponding messages-table row was written as kind='email' (not 'text').
-  const { rows: msgRows } = await pool.query<{ kind: string }>(
-    `SELECT kind FROM messages WHERE conversation_id = $1 AND author_id = $2`,
-    [conversationId, agentId],
-  )
-  assert.equal(msgRows.length, 1)
-  assert.equal(msgRows[0].kind, 'email', 'messages row mirrors the email shape, not a plain text row')
 })
 
 test('[integration] lingxiloop reply CLI on a non-email convo writes a plain text row (no auto-promote)', async () => {
@@ -237,13 +227,6 @@ test('[integration] lingxiloop reply CLI on a non-email convo writes a plain tex
     `SELECT 1 FROM email_messages WHERE conversation_id = $1`, [convId],
   )
   assert.equal(emailRows.length, 0, 'no email_messages row for a direct-kind convo')
-  const { rows: msgRows } = await pool.query<{ kind: string; body: string }>(
-    `SELECT kind, body FROM messages WHERE conversation_id = $1 AND author_id = $2`,
-    [convId, agentId],
-  )
-  assert.equal(msgRows.length, 1)
-  assert.equal(msgRows[0].kind, 'text')
-  assert.equal(msgRows[0].body, 'plain chat reply')
 })
 
 test('[integration] non-email conversation POST is retired in favor of WuKongIM', async () => {
@@ -263,11 +246,9 @@ test('[integration] non-email conversation POST is retired in favor of WuKongIM'
     headers: { 'content-type': 'application/json', 'x-company-id': companyId, 'x-project-id': projectId },
     body: JSON.stringify({ body: 'just a chat message' }),
   })
-  assert.equal(res.status, 410)
-  const payload = await res.json() as { error: string; transport: string }
-  assert.equal(payload.transport, 'wukongim')
+  assert.equal(res.status, 404)
   const { rows } = await pool.query<{ n: number }>(
-    `SELECT COUNT(*)::int AS n FROM messages WHERE conversation_id = $1`,
+    `SELECT COUNT(*)::int AS n FROM email_messages WHERE conversation_id = $1`,
     [convId],
   )
   assert.equal(rows[0]?.n, 0)

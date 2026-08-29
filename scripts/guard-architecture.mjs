@@ -279,16 +279,19 @@ for (const file of server) {
   const fileName = name(file)
   if (fileName.includes('/__integration__/')) continue
   const source = await read(file)
-  if (/\bconversation_counters\b/.test(source)
+  if (/\bconversation_counters\b/.test(source)) {
+    violations.push(`${fileName}: generic SQL conversation sequence counters are forbidden`)
+  }
+  if (/\bemail_sequence_counters\b/.test(source)
     && !new Set(['server/src/db/bootstrap.ts', 'server/src/modules/email/message-repository.ts']).has(fileName)) {
-    violations.push(`${fileName}: SQL conversation sequence counters are reserved for the email projection`)
+    violations.push(`${fileName}: email sequence counters must stay inside the email persistence boundary`)
   }
   if (/\bpoll_votes\b/.test(source)) {
     violations.push(`${fileName}: legacy SQL-message poll votes are forbidden; use im_poll_votes`)
   }
 }
-if (/CREATE TABLE public\.poll_votes\b|poll_votes_message_id_fkey/.test(schemaSql)) {
-  violations.push('server/src/db/schema.sql: legacy SQL-message poll projection must not return')
+if (/CREATE TABLE public\.(?:messages|poll_votes)\b|poll_votes_message_id_fkey|\bconversation_counters\b/.test(schemaSql)) {
+  violations.push('server/src/db/schema.sql: generic SQL chat storage and counters must not return')
 }
 for (const observabilityFile of [
   'server/src/agents/observability.ts',

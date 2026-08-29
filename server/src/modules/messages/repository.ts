@@ -23,32 +23,29 @@ export interface MessageProjectionRow extends QueryResultRow {
 }
 
 const MESSAGE_PROJECTION = `
-  m.id, m.conversation_id AS "conversationId",
-  m.author_id AS "authorId", m.kind, m.body, m.sequence,
-  m.mentioned_ids AS "mentionedIds", m.mention_all AS "mentionAll",
-  m.tool, m.attachment, m.poll, m.handoff, m.approval,
+  email.message_id AS id, email.conversation_id AS "conversationId",
+  email.author_id AS "authorId", 'email'::text AS kind, email.body, email.sequence,
+  '[]'::jsonb AS "mentionedIds", FALSE AS "mentionAll",
+  NULL::jsonb AS tool, NULL::jsonb AS attachment, NULL::jsonb AS poll,
+  NULL::jsonb AS handoff, NULL::jsonb AS approval,
   '[]'::jsonb AS "pollTallies",
-  m.quoted_message_id AS "quotedMessageId", m.created_at AS "createdAt",
-  (
-    SELECT jsonb_build_object(
-      'subject', email.subject, 'from', email.from_addr, 'to', email.to_addrs,
-      'cc', email.cc_addrs, 'direction', email.direction,
-      'transportStatus', email.transport_status,
-      'transportError', email.transport_error,
-      'smtpMessageId', email.smtp_message_id, 'inReplyTo', email.in_reply_to,
-      'hasHtml', email.html IS NOT NULL, 'autoSubmitted', email.auto_submitted,
-      'attachments', COALESCE((
-        SELECT jsonb_agg(jsonb_build_object(
-          'id', attachment.id, 'filename', attachment.filename,
-          'mimeType', attachment.mime_type, 'sizeBytes', attachment.size_bytes,
-          'storageKey', attachment.storage_key, 'truncated', attachment.truncated
-        ) ORDER BY attachment.created_at)
-          FROM email_attachments attachment
-         WHERE attachment.message_id = m.id AND attachment.company_id = $2
-      ), '[]'::jsonb)
-    )
-      FROM email_messages email
-     WHERE email.message_id = m.id AND email.company_id = $2
+  NULL::text AS "quotedMessageId", email.created_at AS "createdAt",
+  jsonb_build_object(
+    'subject', email.subject, 'from', email.from_addr, 'to', email.to_addrs,
+    'cc', email.cc_addrs, 'direction', email.direction,
+    'transportStatus', email.transport_status,
+    'transportError', email.transport_error,
+    'smtpMessageId', email.smtp_message_id, 'inReplyTo', email.in_reply_to,
+    'hasHtml', email.html IS NOT NULL, 'autoSubmitted', email.auto_submitted,
+    'attachments', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object(
+        'id', attachment.id, 'filename', attachment.filename,
+        'mimeType', attachment.mime_type, 'sizeBytes', attachment.size_bytes,
+        'storageKey', attachment.storage_key, 'truncated', attachment.truncated
+      ) ORDER BY attachment.created_at)
+        FROM email_attachments attachment
+       WHERE attachment.message_id = email.message_id AND attachment.company_id = $2
+    ), '[]'::jsonb)
   ) AS "email",
   COALESCE((
     SELECT jsonb_agg(jsonb_build_object(
@@ -58,27 +55,13 @@ const MESSAGE_PROJECTION = `
         SELECT emoji, COUNT(*)::int AS count,
                array_agg(user_id ORDER BY user_id) AS users
           FROM message_reactions
-         WHERE message_id = m.id AND company_id = $2
+         WHERE message_id = email.message_id AND company_id = $2
          GROUP BY emoji
          ORDER BY count DESC, emoji ASC
       ) reaction
   ), '[]'::jsonb) AS reactions,
-  (
-    SELECT jsonb_build_object(
-      'id', quoted.id, 'authorId', quoted.author_id,
-      'authorName', COALESCE(participant.name, author.display_name, quoted.author_id),
-      'kind', quoted.kind, 'body', LEFT(quoted.body, 240), 'sequence', quoted.sequence
-    )
-      FROM messages quoted
-      LEFT JOIN participants participant
-        ON participant.id = quoted.author_id AND participant.company_id = $2
-      LEFT JOIN users author ON author.id = quoted.author_id
-     WHERE quoted.id = m.quoted_message_id
-       AND quoted.conversation_id = m.conversation_id
-       AND quoted.company_id = $2
-  ) AS quoted,
-  (SELECT COUNT(*)::int FROM messages reply
-    WHERE reply.quoted_message_id = m.id AND reply.company_id = $2) AS "replyCount"
+  NULL::jsonb AS quoted,
+  0::int AS "replyCount"
 `
 
 export async function listEmailMessages(
@@ -89,39 +72,19 @@ export async function listEmailMessages(
   let cursor = ''
   if (input.before !== undefined) {
     params.push(input.before)
-    cursor = ` AND m.sequence < $${params.length}`
+    cursor = ` AND email.sequence < $${params.length}`
   }
   params.push(input.limit)
   const { rows } = await db.query<MessageProjectionRow>(
     `SELECT ${MESSAGE_PROJECTION}
-       FROM messages m
+       FROM email_messages email
        JOIN conversations email_conversation
-         ON email_conversation.id=m.conversation_id AND email_conversation.company_id=m.company_id
+         ON email_conversation.id=email.conversation_id AND email_conversation.company_id=email.company_id
         AND email_conversation.kind='email'
-      WHERE m.conversation_id = $1 AND m.company_id = $2${cursor}
-      ORDER BY m.sequence DESC
+      WHERE email.conversation_id = $1 AND email.company_id = $2${cursor}
+      ORDER BY email.sequence DESC
       LIMIT $${params.length}`,
     params,
-  )
-  return rows
-}
-
-export async function listEmailReplies(
-  db: Queryable,
-  companyId: string,
-  conversationId: string,
-  rootId: string,
-): Promise<MessageProjectionRow[]> {
-  const { rows } = await db.query<MessageProjectionRow>(
-    `SELECT ${MESSAGE_PROJECTION}
-       FROM messages m
-       JOIN conversations email_conversation
-         ON email_conversation.id=m.conversation_id AND email_conversation.company_id=m.company_id
-        AND email_conversation.kind='email'
-      WHERE m.conversation_id = $1 AND m.company_id = $2
-        AND m.quoted_message_id = $3
-      ORDER BY m.sequence ASC`,
-    [conversationId, companyId, rootId],
   )
   return rows
 }

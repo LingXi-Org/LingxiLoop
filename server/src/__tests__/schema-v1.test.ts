@@ -20,7 +20,7 @@ test('v1 schema is a complete bootstrap definition without historical data mutat
     'companies',
     'participants',
     'conversations',
-    'messages',
+    'email_messages',
     'message_reactions',
     'agent_climate',
     'agent_work_items',
@@ -167,6 +167,13 @@ test('runtime startup contains no historical data backfill path', () => {
 test('production worker has no demo-data or starter-message seed path', () => {
   assert.doesNotMatch(workerBoot, /seedIfEmpty|seed\.js/)
   assert.doesNotMatch(schema, /CREATE TABLE public\.poll_votes\b/)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.messages\b/)
+  assert.doesNotMatch(schema, /\bconversation_counters\b/)
+  assert.match(schema, /CREATE TABLE public\.email_messages \([\s\S]*?author_id text NOT NULL[\s\S]*?body text NOT NULL[\s\S]*?sequence integer NOT NULL/)
+  assert.match(schema, /CREATE TABLE public\.email_sequence_counters\b/)
+  assert.match(schema, /email_sequence_counters_pkey PRIMARY KEY \(conversation_id, company_id\)/)
+  assert.match(schema, /email_messages_conversation_id_fkey FOREIGN KEY \(conversation_id, company_id\) REFERENCES public\.conversations\(id, company_id\)/)
+  assert.match(schema, /email_attachments_message_scope_fkey FOREIGN KEY \(message_id, company_id, conversation_id\) REFERENCES public\.email_messages\(message_id, company_id, conversation_id\)/)
 })
 
 test('Canvas message evidence does not restore the SQL chat data plane', () => {

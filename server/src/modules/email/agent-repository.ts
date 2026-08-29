@@ -131,22 +131,20 @@ export async function listAgentEmailThreads(
      last_message AS (
        SELECT DISTINCT ON (email.conversation_id)
               email.conversation_id, email.subject, email.from_addr,
-              message.body, message.created_at AS at
+              email.body, email.created_at AS at
          FROM email_messages email
-         JOIN messages message ON message.id = email.message_id
         WHERE email.company_id = $1
         ORDER BY email.conversation_id, email.created_at DESC
      ),
      unread AS (
-       SELECT message.conversation_id, COUNT(*)::int AS count
-         FROM messages message
+       SELECT email.conversation_id, COUNT(*)::int AS count
+         FROM email_messages email
          LEFT JOIN conversation_reads reading
-           ON reading.conversation_id = message.conversation_id AND reading.user_id = $2
-        WHERE message.kind = 'email'
-          AND message.company_id = $1
-          AND message.author_id <> $2
-          AND (reading.last_read_at IS NULL OR message.created_at > reading.last_read_at)
-        GROUP BY message.conversation_id
+           ON reading.conversation_id = email.conversation_id AND reading.user_id = $2
+        WHERE email.company_id = $1
+          AND email.author_id <> $2
+          AND (reading.last_read_at IS NULL OR email.created_at > reading.last_read_at)
+        GROUP BY email.conversation_id
      )
      SELECT thread.id AS conversation_id, thread.title, thread.updated_at::text,
             COALESCE(unread.count, 0) AS unread_count,
@@ -208,15 +206,12 @@ export async function listAgentEmailThreadMessages(
     direction: 'in' | 'out'
     transport_status: string
   }>(
-    `SELECT message.id, message.created_at::text, message.body,
+    `SELECT email.message_id AS id, email.created_at::text, email.body,
             email.from_addr, email.to_addrs, email.cc_addrs, email.subject,
             email.smtp_message_id, email.in_reply_to, email.direction, email.transport_status
-       FROM messages message
-       JOIN email_messages email
-         ON email.message_id = message.id
-        AND email.company_id = message.company_id
-      WHERE message.conversation_id = $1 AND message.company_id = $2
-      ORDER BY message.sequence DESC
+       FROM email_messages email
+      WHERE email.conversation_id = $1 AND email.company_id = $2
+      ORDER BY email.sequence DESC
       LIMIT $3`,
     [conversationId, companyId, limit],
   )

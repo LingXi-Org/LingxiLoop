@@ -21,12 +21,12 @@ const REQUIRED_V1_RELATIONS = [
   'canvas_comments', 'canvas_frames', 'canvas_presence', 'canvases', 'companies',
   'company_invitations', 'company_members', 'convene_sessions',
   'company_onboarding_effects',
-  'convene_transcript', 'convening_info', 'conversation_counters',
+  'convene_transcript', 'convening_info',
   'conversation_mutes', 'conversation_reads', 'conversation_source_exclusions',
   'conversations', 'course_invitation_acceptances', 'course_invitations',
   'course_members', 'courses', 'document_mention_deliveries', 'document_mentions', 'document_snapshots',
   'document_updates', 'documents', 'email_attachments', 'email_contacts',
-  'email_messages', 'eval_cases', 'eval_runs', 'eval_stage_results',
+  'email_messages', 'email_sequence_counters', 'eval_cases', 'eval_runs', 'eval_stage_results',
   'im_channel_bindings', 'im_poll_votes', 'im_polls',
   'im_read_receipt_advances', 'im_send_acceptances', 'knowledge_insight_bindings',
   'knowledge_note_bindings', 'knowledge_notebook_bindings',
@@ -37,7 +37,7 @@ const REQUIRED_V1_RELATIONS = [
   'learning_notification_deliveries', 'learning_notification_preferences',
   'learning_effects',
   'learning_objective_dependencies', 'learning_objectives',
-  'learning_project_teacher_agents', 'llm_calls', 'message_reactions', 'messages',
+  'learning_project_teacher_agents', 'llm_calls', 'message_reactions',
   'participants', 'project_visits', 'projects', 'sessions',
   'tool_calls', 'user_identities', 'user_preferences', 'users', 'waitlist',
   'ws_tickets', 'wukong_webhook_receipts',
@@ -57,6 +57,10 @@ const REQUIRED_V1_COLUMNS = [
   ['calendar_events', 'project_id'],
   ['document_mention_deliveries', 'recipients'],
   ['document_mention_deliveries', 'status'],
+  ['email_messages', 'author_id'],
+  ['email_messages', 'body'],
+  ['email_messages', 'sequence'],
+  ['email_sequence_counters', 'company_id'],
   ['im_polls', 'published_revision'],
   ['im_polls', 'request_fingerprint'],
   ['learning_effects', 'effect_key'],
@@ -90,6 +94,9 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['company_onboarding_effects', 'company_onboarding_effects_identity_key', 'u'],
   ['company_onboarding_effects', 'company_onboarding_effects_member_fkey', 'f'],
   ['company_onboarding_effects', 'company_onboarding_effects_lease_check', 'c'],
+  ['email_attachments', 'email_attachments_message_scope_fkey', 'f'],
+  ['email_messages', 'email_messages_conversation_id_fkey', 'f'],
+  ['email_sequence_counters', 'email_sequence_counters_conversation_id_fkey', 'f'],
 ] as const
 
 const FORBIDDEN_V1_CONSTRAINTS = [
@@ -102,6 +109,8 @@ const REQUIRED_V1_INDEXES = [
   'idx_document_mention_deliveries_due',
   'idx_document_mention_deliveries_company',
   'idx_company_onboarding_effects_due',
+  'idx_email_messages_convo_seq',
+  'idx_email_messages_identity_scope',
   'uniq_email_messages_smtp_id',
 ] as const
 

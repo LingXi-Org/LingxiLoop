@@ -6,16 +6,17 @@
  * same code path — these tests exercise the HTTP surface and the
  * vote-change / multi-choice / expiration semantics.
  */
-import { test, before, beforeEach, after } from 'node:test'
+
 import assert from 'node:assert/strict'
 import { createHash, randomUUID } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
+import { after, before, beforeEach, test } from 'node:test'
+import { pool } from '../db/pool.js'
+import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
+import { pollApplication } from '../modules/polls/index.js'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll,
 } from './_helpers.js'
-import { pool } from '../db/pool.js'
-import { pollApplication } from '../modules/polls/index.js'
-import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 
 const ME = 'u-me'
 const PEER = 'u-peer'
@@ -128,8 +129,6 @@ test('[integration] POST /polls creates a poll message with structured payload',
     `SELECT poll FROM im_polls WHERE poll_client_msg_no = $1`, [body.messageId],
   )
   assert.equal(rows[0].poll.question, 'Lunch?')
-  const legacy = await pool.query(`SELECT 1 FROM messages WHERE id=$1`, [body.messageId])
-  assert.equal(legacy.rowCount, 0)
 })
 
 test('[integration] poll creation is idempotent per tenant request identity', async () => {

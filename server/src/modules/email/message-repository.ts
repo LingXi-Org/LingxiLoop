@@ -9,8 +9,8 @@ export async function findPersistedEmailMessage(
 ): Promise<{ sequence: number } | null> {
   const { rows } = await db.query<{ sequence: number }>(
     `SELECT sequence
-       FROM messages
-      WHERE id = $1 AND company_id = $2 AND conversation_id = $3`,
+       FROM email_messages
+      WHERE message_id = $1 AND company_id = $2 AND conversation_id = $3`,
     [messageId, companyId, conversationId],
   )
   return rows[0] ?? null
@@ -28,12 +28,12 @@ export async function persistEmailProjection(
   },
 ): Promise<number> {
   const counter = await db.query<{ sequence: number }>(
-    `INSERT INTO conversation_counters (conversation_id, next_sequence)
-     SELECT conversation.id, 2
+    `INSERT INTO email_sequence_counters (conversation_id, company_id, next_sequence)
+     SELECT conversation.id, conversation.company_id, 2
        FROM conversations conversation
-      WHERE conversation.id = $1 AND conversation.company_id = $2
-     ON CONFLICT (conversation_id)
-     DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
+      WHERE conversation.id = $1 AND conversation.company_id = $2 AND conversation.kind = 'email'
+     ON CONFLICT (conversation_id, company_id)
+     DO UPDATE SET next_sequence = email_sequence_counters.next_sequence + 1
      RETURNING next_sequence - 1 AS sequence`,
     [input.conversationId, input.companyId],
   )
@@ -42,30 +42,28 @@ export async function persistEmailProjection(
     throw new Error(`email conversation ${input.conversationId} does not belong to ${input.companyId}`)
   }
 
-  await db.query(
-    `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, company_id)
-     VALUES ($1, $2, $3, 'email', $4, $5, $6)`,
-    [messageId, input.conversationId, input.authorId, input.body, sequence, input.companyId],
-  )
   const nextRetryAt = input.direction === 'out' && input.transportStatus === 'failed'
     ? new Date(Date.now() + 60_000)
     : null
   await db.query(
     `INSERT INTO email_messages (
-        message_id, conversation_id, company_id, direction, transport_status,
+        message_id, conversation_id, company_id, author_id, body, sequence, direction, transport_status,
         transport_error, smtp_message_id, in_reply_to, references_chain,
         subject, from_addr, to_addrs, cc_addrs, bcc_addrs, html, raw_size_bytes,
         auto_submitted, next_retry_at
      ) VALUES (
-        $1, $2, $3, $4, $5,
-        $6, $7, $8, $9::jsonb,
-        $10, $11, $12::jsonb, $13::jsonb, $14::jsonb, $15, $16,
-        $17, $18
+        $1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12::jsonb,
+        $13, $14, $15::jsonb, $16::jsonb, $17::jsonb, $18, $19,
+        $20, $21
      )`,
     [
       messageId,
       input.conversationId,
       input.companyId,
+      input.authorId,
+      input.body,
+      sequence,
       input.direction,
       input.transportStatus,
       input.transportError ?? null,

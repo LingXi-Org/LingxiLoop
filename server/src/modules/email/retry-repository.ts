@@ -25,11 +25,8 @@ export async function claimDueEmailRetries(
     `SELECT email.message_id, email.conversation_id, email.company_id,
             email.smtp_message_id, email.in_reply_to, email.references_chain,
             email.subject, email.from_addr, email.to_addrs, email.cc_addrs,
-            message.body, email.auto_submitted, email.retry_attempts
+            email.body, email.auto_submitted, email.retry_attempts
        FROM email_messages email
-       JOIN messages message
-         ON message.id = email.message_id
-        AND message.company_id = email.company_id
       WHERE email.direction = 'out'
         AND email.transport_status = 'failed'
         AND email.next_retry_at IS NOT NULL

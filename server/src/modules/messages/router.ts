@@ -44,14 +44,3 @@ messagesRouter.post('/conversations/:id/messages', safe(async (req, res) => {
     error: result.error,
   })
 }))
-
-messagesRouter.get('/conversations/:id/messages/:rootId/replies', safe(async (req, res) => {
-  const conversationId = String(req.params.id)
-  const { companyId, kind } = await requireConversationMember(req, conversationId)
-  if (kind !== 'email') throw new HttpError(404, 'not found')
-  res.json(await messagesApplication.emailReplies(
-    companyId,
-    conversationId,
-    String(req.params.rootId),
-  ))
-}))

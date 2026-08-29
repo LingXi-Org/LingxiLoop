@@ -5,12 +5,11 @@ import {
   addWukongReaction,
   aggregateReactions,
   listEmailMessages,
-  listEmailReplies,
   lockWukongReaction,
-  reactionExists,
-  removeReaction,
-  reactionsForWukongMessages,
   type MessageProjectionRow,
+  reactionExists,
+  reactionsForWukongMessages,
+  removeReaction,
 } from './repository.js'
 
 export type MessageErrorCode = 'storage_attachment_invalid'
@@ -44,12 +43,6 @@ export class MessagesApplication {
   async emailHistory(input: { companyId: string; conversationId: string; before?: number; limit: number }) {
     const rows = await listEmailMessages(this.infrastructure.db, input)
     rows.reverse()
-    await this.freshen(rows)
-    return rows
-  }
-
-  async emailReplies(companyId: string, conversationId: string, rootId: string) {
-    const rows = await listEmailReplies(this.infrastructure.db, companyId, conversationId, rootId)
     await this.freshen(rows)
     return rows
   }

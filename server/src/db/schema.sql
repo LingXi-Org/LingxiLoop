@@ -958,11 +958,12 @@ CREATE TABLE public.convening_info (
 
 
 --
--- Name: conversation_counters; Type: TABLE; Schema: public; Owner: -
+-- Name: email_sequence_counters; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.conversation_counters (
+CREATE TABLE public.email_sequence_counters (
     conversation_id text NOT NULL,
+    company_id text NOT NULL,
     next_sequence integer DEFAULT 1 NOT NULL
 );
 
@@ -1208,6 +1209,9 @@ CREATE TABLE public.email_messages (
     message_id text NOT NULL,
     conversation_id text NOT NULL,
     company_id text NOT NULL,
+    author_id text NOT NULL,
+    body text NOT NULL,
+    sequence integer NOT NULL,
     direction text NOT NULL,
     transport_status text NOT NULL,
     transport_error text,
@@ -1564,32 +1568,6 @@ CREATE TABLE public.message_reactions (
     company_id text NOT NULL,
     conversation_id text,
     message_seq bigint
-);
-
-
---
--- Name: messages; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.messages (
-    id text NOT NULL,
-    conversation_id text NOT NULL,
-    author_id text NOT NULL,
-    kind text NOT NULL,
-    body text NOT NULL,
-    sequence integer NOT NULL,
-    reactions jsonb,
-    tool jsonb,
-    attachment jsonb,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    quoted_message_id text,
-    mentioned_ids jsonb DEFAULT '[]'::jsonb NOT NULL,
-    mention_all boolean DEFAULT false NOT NULL,
-    idempotency_key text,
-    company_id text,
-    poll jsonb,
-    handoff jsonb,
-    approval jsonb
 );
 
 
@@ -2191,11 +2169,11 @@ ALTER TABLE ONLY public.convening_info
 
 
 --
--- Name: conversation_counters conversation_counters_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: email_sequence_counters email_sequence_counters_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.conversation_counters
-    ADD CONSTRAINT conversation_counters_pkey PRIMARY KEY (conversation_id);
+ALTER TABLE ONLY public.email_sequence_counters
+    ADD CONSTRAINT email_sequence_counters_pkey PRIMARY KEY (conversation_id, company_id);
 
 
 --
@@ -2524,14 +2502,6 @@ ALTER TABLE ONLY public.llm_calls
 
 ALTER TABLE ONLY public.message_reactions
     ADD CONSTRAINT message_reactions_pkey PRIMARY KEY (message_id, user_id, emoji);
-
-
---
--- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
 
 
 --
@@ -3255,6 +3225,20 @@ CREATE INDEX idx_email_messages_conv ON public.email_messages USING btree (conve
 
 
 --
+-- Name: idx_email_messages_convo_seq; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_email_messages_convo_seq ON public.email_messages USING btree (company_id, conversation_id, sequence);
+
+
+--
+-- Name: idx_email_messages_identity_scope; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_email_messages_identity_scope ON public.email_messages USING btree (message_id, company_id, conversation_id);
+
+
+--
 -- Name: idx_email_messages_retry_due; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3385,48 +3369,6 @@ CREATE INDEX idx_llm_calls_company_created ON public.llm_calls USING btree (comp
 --
 
 CREATE INDEX idx_llm_calls_run_created ON public.llm_calls USING btree (run_id, created_at) WHERE (run_id IS NOT NULL);
-
-
---
--- Name: idx_messages_author_created; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_messages_author_created ON public.messages USING btree (author_id, created_at DESC);
-
-
---
--- Name: idx_messages_company; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_messages_company ON public.messages USING btree (company_id, created_at DESC);
-
-
---
--- Name: idx_messages_convo_created; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_messages_convo_created ON public.messages USING btree (conversation_id, created_at);
-
-
---
--- Name: idx_messages_convo_seq; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_messages_convo_seq ON public.messages USING btree (conversation_id, sequence);
-
-
---
--- Name: idx_messages_idempotency_key; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_messages_idempotency_key ON public.messages USING btree (idempotency_key) WHERE (idempotency_key IS NOT NULL);
-
-
---
--- Name: idx_messages_quoted; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_messages_quoted ON public.messages USING btree (quoted_message_id);
 
 
 --
@@ -4064,11 +4006,11 @@ ALTER TABLE ONLY public.convening_info
 
 
 --
--- Name: conversation_counters conversation_counters_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: email_sequence_counters email_sequence_counters_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.conversation_counters
-    ADD CONSTRAINT conversation_counters_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.email_sequence_counters
+    ADD CONSTRAINT email_sequence_counters_conversation_id_fkey FOREIGN KEY (conversation_id, company_id) REFERENCES public.conversations(id, company_id) ON DELETE CASCADE;
 
 
 --
@@ -4232,19 +4174,11 @@ ALTER TABLE ONLY public.documents
 
 
 --
--- Name: email_attachments email_attachments_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: email_attachments email_attachments_message_scope_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.email_attachments
-    ADD CONSTRAINT email_attachments_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
-
-
---
--- Name: email_attachments email_attachments_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.email_attachments
-    ADD CONSTRAINT email_attachments_message_id_fkey FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE;
+    ADD CONSTRAINT email_attachments_message_scope_fkey FOREIGN KEY (message_id, company_id, conversation_id) REFERENCES public.email_messages(message_id, company_id, conversation_id) ON DELETE CASCADE;
 
 
 --
@@ -4252,15 +4186,7 @@ ALTER TABLE ONLY public.email_attachments
 --
 
 ALTER TABLE ONLY public.email_messages
-    ADD CONSTRAINT email_messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
-
-
---
--- Name: email_messages email_messages_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.email_messages
-    ADD CONSTRAINT email_messages_message_id_fkey FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE;
+    ADD CONSTRAINT email_messages_conversation_id_fkey FOREIGN KEY (conversation_id, company_id) REFERENCES public.conversations(id, company_id) ON DELETE CASCADE;
 
 
 --
@@ -4445,14 +4371,6 @@ ALTER TABLE ONLY public.knowledge_sources
 
 ALTER TABLE ONLY public.knowledge_sources
     ADD CONSTRAINT knowledge_sources_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
-
-
---
--- Name: messages messages_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
 
 
 --

@@ -38,8 +38,8 @@ start a thread.
   server verifies the raw request with the endpoint-specific Svix secret,
   retrieves the complete email and attachments through the Receiving API,
   resolves recipients to agents, and threads against
-  In-Reply-To / References, writes to `messages` (kind=`email`) +
-  `email_messages`, and publishes `CH_MESSAGE_NEW` so the recipient agent
+  In-Reply-To / References, writes one authoritative `email_messages` row,
+  and publishes `CH_MESSAGE_NEW` so the recipient agent
   wakes through the existing scheduler.
 - **Outbound**: Resend's HTTP API. If `RESEND_API_KEY` is absent, outbound
   mail is explicitly unavailable; production never fabricates delivery or a
@@ -48,13 +48,12 @@ start a thread.
 ## Storage model
 
 - One **conversation** per email thread (`conversations.kind = 'email'`).
-- One **message** per individual email (`messages.kind = 'email'`).
-- One companion **email_messages** row keyed by the messages.id, storing
-  the SMTP-level fields: `smtp_message_id` (RFC 5322 Message-ID without
+- One **email_messages** row per individual email, storing author, body,
+  thread sequence and the SMTP-level fields: `smtp_message_id` (RFC 5322 Message-ID without
   brackets), `in_reply_to`, `references_chain`, `direction` (`in`/`out`),
   `transport_status` (`queued`/`sent`/`failed`/`received`), `subject`,
   `from_addr`, `to_addrs`, `cc_addrs`. The `/conversations/:id/messages`
-  endpoint LEFT-JOINs this and emits a typed `email` field on each
+  endpoint projects this authoritative row into a typed `email` field on each
   message — the renderer never has to reason about JSONB shapes.
 - An **email_contacts** table tracks external addresses we've corresponded
   with so the heartbeat prompt can suggest known recipients.

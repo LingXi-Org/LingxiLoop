@@ -68,7 +68,7 @@ export async function getSeen(agentId: string, conversationId: string): Promise<
 //
 // The compose anchor pins the "world state when THIS turn started" by
 // timestamp, INDEPENDENT of any subsequent glance/messages calls. The
-// preflight queries `messages.created_at > anchor` — so anything a peer
+// preflight compares authoritative WuKong sequence/time — so anything a peer
 // posted while we were composing trips a HOLD even if we later glanced and
 // "absorbed" it into the seen-baseline.
 //
@@ -163,7 +163,7 @@ return false
 export interface HoldAcknowledgement {
   /** A token existed, so the override flag is armed. */
   armed: boolean
-  /** The highest peer `messages.sequence` the HELD envelope showed the agent,
+  /** The highest peer WuKong sequence the HELD envelope showed the agent,
    *  when the recording gate knew it (reply preflight). null = armed without
    *  state info (doc/calendar title scopes) — the caller cannot perform a
    *  sequence staleness check. */

@@ -35,7 +35,7 @@ import {
   findPersistedEmailMessage,
   persistEmailProjection,
 } from './message-repository.js'
-import { sendViaProvider, type ProviderSendResult } from './provider.js'
+import { type ProviderSendResult, sendViaProvider } from './provider.js'
 
 export async function ensureParticipantAddress(participantId: string, companyId: string): Promise<{
   participantId: string
@@ -98,14 +98,14 @@ export async function findUserInCompanyByAuthEmail(
   return normalized ? findCompanyUserByAuthEmail(pool, companyId, normalized) : null
 }
 
-/** Insert one row into the messages + email_messages pair, atomically
+/** Insert one authoritative email_messages row atomically,
  *  bumping the conversation sequence and publishing the wake event so
  *  every recipient agent's pod gets a chance to react.
  *
  *  This is the SHARED write path for both directions — outbound (CLI:
  *  `lingxiloop email send/reply`) and inbound (webhook). Centralizing it
  *  keeps the threading invariants in one spot:
- *    - one messages.id per email message; same id is the email_messages PK
+ *    - one tenant-scoped email_messages identity per individual email
  *    - the conversation already exists; caller decides which one
  *    - smtp_message_id is unique within a company (set per direction)
  *    - in_reply_to / references_chain are bracket-less, lowercased
