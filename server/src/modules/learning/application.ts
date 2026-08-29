@@ -41,6 +41,7 @@ import {
   listLearningEvidenceRecords,
   listLearningObjectives,
   listLearningActivities,
+  listProjectChannels,
   listPendingLearningEvaluationRecords,
   listViewerLearningMastery,
   lockCourseInvitation,
@@ -103,7 +104,6 @@ export type { LearningTransaction } from './membership-application.js'
 
 export interface LearningInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
-  audit(event: { kind: string; userId: string; companyId: string; detail: Record<string, unknown> }): Promise<void>
   auditInTransaction(db: Queryable, event: {
     kind: string; userId: string; companyId: string; detail: Record<string, unknown>
   }): Promise<void>
@@ -116,7 +116,9 @@ export interface LearningInfrastructure {
   syncNotebook(projectId: string): Promise<void>
   syncChannel(channel: { channelId: string; title: string; members: string[]; leaderAgentId?: string }): Promise<void>
   revokeDocumentSubscriptions(userId: string, companyId: string, projectId: string): Promise<void>
-  publishDocumentAccessRevoked(event: { companyId: string; workspaceId: string; userId: string }): Promise<void>
+  publishDocumentAccessRevoked(event: {
+    eventId: string; companyId: string; workspaceId: string; userId: string
+  }): Promise<void>
   seedMemberDms(companyId: string, userId: string): Promise<void>
   generateInvitationToken(): string
   hashInvitationToken(token: string): string
@@ -135,7 +137,7 @@ export class LearningApplication {
 
   courses(scope: LearningScope) { return listCourses(this.db, scope.companyId, scope.userId) }
 
-  async runEffect(effect: LearningEffect, effectDb?: Queryable): Promise<void> {
+  async runEffect(effect: LearningEffect): Promise<void> {
     const payload = effect.payload
     switch (effect.kind) {
       case 'study_room.sync':
@@ -153,28 +155,60 @@ export class LearningApplication {
         await this.infrastructure.ensureNotebook(projectId, effect.companyId)
         return
       }
-      case 'course_create.audit': {
-        if (!effectDb) throw new Error('audit effect requires its claimed transaction')
-        await this.infrastructure.auditInTransaction(effectDb, {
-          kind: 'course_create', companyId: effect.companyId,
-          userId: String(payload.userId ?? ''),
-          detail: { courseId: effect.courseId, projectId: payload.projectId, name: payload.name },
+      case 'course_metadata.sync': {
+        const projectId = String(payload.projectId ?? '')
+        if (!projectId) throw new Error('course metadata sync requires projectId')
+        if (payload.studyRoom === true) await this.syncStudyRoom(effect.courseId)
+        await this.infrastructure.syncNotebook(projectId)
+        return
+      }
+      case 'course_archive.sync': {
+        const projectId = String(payload.projectId ?? '')
+        if (!projectId || typeof payload.archive !== 'boolean') {
+          throw new Error('course archive sync requires projectId and archive state')
+        }
+        if (payload.archive) await this.infrastructure.closeTeacherRoom(effect.companyId, effect.courseId)
+        else await this.infrastructure.reactivateTeacherRoom(effect.companyId, effect.courseId)
+        await this.infrastructure.syncNotebook(projectId)
+        return
+      }
+      case 'member_access.revoke': {
+        const projectId = String(payload.projectId ?? '')
+        const userId = String(payload.userId ?? '')
+        if (!projectId || !userId) throw new Error('member access revocation requires projectId and userId')
+        const channels = await listProjectChannels(this.db, {
+          companyId: effect.companyId, projectId,
         })
+        await Promise.all(channels.map((channel) => this.infrastructure.syncChannel({
+          channelId: channel.id, title: channel.title, members: channel.members,
+        })))
+        await this.infrastructure.revokeDocumentSubscriptions(userId, effect.companyId, projectId)
+        await this.infrastructure.publishDocumentAccessRevoked({
+          eventId: effect.id, companyId: effect.companyId, workspaceId: projectId, userId,
+        })
+        await this.syncStudyRoom(effect.courseId)
+        await this.infrastructure.syncTeacherRoom(effect.companyId, effect.courseId)
+        return
+      }
+      case 'member_onboarding.seed': {
+        const userId = String(payload.userId ?? '')
+        if (!userId) throw new Error('member onboarding requires userId')
+        await this.infrastructure.seedMemberDms(effect.companyId, userId)
         return
       }
     }
   }
 
   async createCourse(scope: LearningScope, input: CreateCourseInput) {
-    const permission = await canCreateCourse(this.db, scope.companyId, scope.userId)
-    if (!permission) throw new LearningApplicationError('forbidden', 'not a member of this company')
-    if (!privilegedRoles.has(permission.company_role) && !permission.is_teacher) {
-      throw new LearningApplicationError('forbidden', 'only a company admin or existing teacher can create courses')
-    }
     const projectId = `p-${randomUUID().slice(0, 10)}`
     const courseId = `course-${randomUUID().slice(0, 12)}`
     const roomId = `course-room-${randomUUID().slice(0, 12)}`
     await this.infrastructure.transaction(async (db) => {
+      const permission = await canCreateCourse(db, scope.companyId, scope.userId, true)
+      if (!permission) throw new LearningApplicationError('forbidden', 'not a member of this company')
+      if (!privilegedRoles.has(permission.company_role) && !permission.is_teacher) {
+        throw new LearningApplicationError('forbidden', 'only a company admin or existing teacher can create courses')
+      }
       await insertCourse(db, { ...scope, projectId, courseId, roomId, input })
       const teacher = await this.infrastructure.ensureTeacherAgent(scope.companyId, courseId, db)
       const effects = [
@@ -182,13 +216,16 @@ export class LearningApplication {
         { kind: 'teacher_room.sync' as const },
         ...(teacher.created ? [{ kind: 'teacher_agent.welcome' as const }] : []),
         { kind: 'notebook.ensure' as const, payload: { projectId } },
-        { kind: 'course_create.audit' as const, payload: { userId: scope.userId, projectId, name: input.name } },
       ]
       for (const effect of effects) {
         await enqueueLearningEffect(db, {
           companyId: scope.companyId, courseId, kind: effect.kind, payload: effect.payload,
         })
       }
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'course_create', companyId: scope.companyId, userId: scope.userId,
+        detail: { courseId, projectId, name: input.name },
+      })
     })
     return {
       id: courseId, companyId: scope.companyId, projectId, name: input.name,
@@ -205,26 +242,37 @@ export class LearningApplication {
   }
 
   async updateCourse(userId: string, courseId: string, patch: UpdateCourseInput) {
-    const manager = await this.manager(userId, courseId, true)
-    await updateCourseMetadata(this.db, { courseId, companyId: manager.companyId, projectId: manager.projectId, patch })
-    if (patch.name !== undefined) await this.syncStudyRoom(courseId)
-    await this.infrastructure.syncNotebook(manager.projectId)
-    await this.infrastructure.audit({
-      kind: 'course_update', userId, companyId: manager.companyId,
-      detail: { courseId, ...patch },
+    await this.infrastructure.transaction(async (db) => {
+      const manager = await this.manager(userId, courseId, true, undefined, db, true)
+      await updateCourseMetadata(db, { courseId, companyId: manager.companyId, projectId: manager.projectId, patch })
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'course_update', userId, companyId: manager.companyId,
+        detail: { courseId, ...patch },
+      })
+      await enqueueLearningEffect(db, {
+        companyId: manager.companyId,
+        courseId,
+        kind: 'course_metadata.sync',
+        payload: { projectId: manager.projectId, studyRoom: patch.name !== undefined },
+      })
     })
     return { ok: true as const }
   }
 
   async archiveCourse(userId: string, courseId: string, archive: boolean) {
-    const manager = await this.manager(userId, courseId)
-    await setCourseArchived(this.db, manager.companyId, manager.projectId, archive)
-    if (archive) await this.infrastructure.closeTeacherRoom(manager.companyId, courseId)
-    else await this.infrastructure.reactivateTeacherRoom(manager.companyId, courseId)
-    await this.infrastructure.syncNotebook(manager.projectId)
-    await this.infrastructure.audit({
-      kind: archive ? 'course_archive' : 'course_unarchive', userId, companyId: manager.companyId,
-      detail: { courseId },
+    await this.infrastructure.transaction(async (db) => {
+      const manager = await this.manager(userId, courseId, false, undefined, db, true)
+      await setCourseArchived(db, manager.companyId, manager.projectId, archive)
+      await this.infrastructure.auditInTransaction(db, {
+        kind: archive ? 'course_archive' : 'course_unarchive', userId, companyId: manager.companyId,
+        detail: { courseId },
+      })
+      await enqueueLearningEffect(db, {
+        companyId: manager.companyId,
+        courseId,
+        kind: 'course_archive.sync',
+        payload: { projectId: manager.projectId, archive },
+      })
     })
     return { ok: true as const, status: archive ? 'archived' : 'active' }
   }
@@ -235,45 +283,45 @@ export class LearningApplication {
   }
 
   async updateMember(userId: string, courseId: string, targetId: string, role: 'teacher' | 'learner') {
-    const manager = await this.manager(userId, courseId, true)
-    const outcome = await this.infrastructure.transaction((db) => changeCourseMember(db, {
-      courseId, companyId: manager.companyId, userId: targetId, role,
-    }))
-    this.assertMemberChange(outcome)
-    await this.infrastructure.syncTeacherRoom(manager.companyId, courseId)
-    await this.infrastructure.audit({
-      kind: 'course_member_role_update', userId, companyId: manager.companyId,
-      detail: { courseId, targetId, role },
+    await this.infrastructure.transaction(async (db) => {
+      const manager = await this.manager(userId, courseId, true, undefined, db, true)
+      const outcome = await changeCourseMember(db, {
+        courseId, companyId: manager.companyId, userId: targetId, role,
+      })
+      this.assertMemberChange(outcome)
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'course_member_role_update', userId, companyId: manager.companyId,
+        detail: { courseId, targetId, role },
+      })
+      await enqueueLearningEffect(db, {
+        companyId: manager.companyId, courseId, kind: 'teacher_room.sync',
+      })
     })
     return { ok: true as const, userId: targetId, role }
   }
 
   async removeMember(userId: string, courseId: string, targetId: string) {
-    const manager = await this.manager(userId, courseId, true)
-    const channels = await this.infrastructure.transaction(async (db) => {
+    await this.infrastructure.transaction(async (db) => {
+      const manager = await this.manager(userId, courseId, true, undefined, db, true)
       const outcome = await changeCourseMember(db, {
         courseId, companyId: manager.companyId, userId: targetId, role: null,
       })
       this.assertMemberChange(outcome)
-      return removeMemberFromProjectChannels(db, {
+      await removeMemberFromProjectChannels(db, {
         companyId: manager.companyId, projectId: manager.projectId, userId: targetId,
       })
-    })
-    await Promise.all([
-      ...channels.map((channel) => this.infrastructure.syncChannel({
-        channelId: channel.id, title: channel.title, members: channel.members,
-      })),
-      this.infrastructure.revokeDocumentSubscriptions(targetId, manager.companyId, manager.projectId),
-      this.infrastructure.publishDocumentAccessRevoked({
-        companyId: manager.companyId, workspaceId: manager.projectId, userId: targetId,
-      }),
-      this.syncStudyRoom(courseId),
-      this.infrastructure.syncTeacherRoom(manager.companyId, courseId),
-      this.infrastructure.audit({
+      await this.infrastructure.auditInTransaction(db, {
         kind: 'course_member_remove', userId, companyId: manager.companyId,
         detail: { courseId, targetId },
-      }),
-    ])
+      })
+      await enqueueLearningEffect(db, {
+        companyId: manager.companyId,
+        courseId,
+        kind: 'member_access.revoke',
+        effectKey: targetId,
+        payload: { projectId: manager.projectId, userId: targetId },
+      })
+    })
     return { ok: true as const }
   }
 
@@ -283,19 +331,23 @@ export class LearningApplication {
   }
 
   async createInvitation(userId: string, courseId: string, input: CreateCourseInvitationInput) {
-    const manager = await this.manager(userId, courseId, true, 'archived courses cannot issue invitations')
     const token = this.infrastructure.generateInvitationToken()
     const tokenHash = this.infrastructure.hashInvitationToken(token)
     const expiresAt = new Date(Date.now() + input.expiresInDays * 86_400_000)
     const email = input.email?.toLowerCase() || null
     const note = input.note || null
-    await this.infrastructure.transaction((db) => insertCourseInvitation(db, {
-      tokenHash, courseId, companyId: manager.companyId, userId, email,
-      role: input.role, note, maxUses: input.maxUses, expiresAt,
-    }))
-    await this.infrastructure.audit({
-      kind: 'course_invitation_create', userId, companyId: manager.companyId,
-      detail: { courseId, email, role: input.role, maxUses: input.maxUses, expiresInDays: input.expiresInDays },
+    await this.infrastructure.transaction(async (db) => {
+      const manager = await this.manager(
+        userId, courseId, true, 'archived courses cannot issue invitations', db, true,
+      )
+      await insertCourseInvitation(db, {
+        tokenHash, courseId, companyId: manager.companyId, userId, email,
+        role: input.role, note, maxUses: input.maxUses, expiresAt,
+      })
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'course_invitation_create', userId, companyId: manager.companyId,
+        detail: { courseId, email, role: input.role, maxUses: input.maxUses, expiresInDays: input.expiresInDays },
+      })
     })
     return {
       id: tokenHash, token, url: this.infrastructure.invitationUrl(token), email, role: input.role,
@@ -305,11 +357,14 @@ export class LearningApplication {
   }
 
   async revokeInvitation(userId: string, courseId: string, invitationId: string) {
-    const manager = await this.manager(userId, courseId)
-    const revoked = await revokeCourseInvitation(this.db, courseId, manager.companyId, invitationId)
-    if (revoked) await this.infrastructure.audit({
-      kind: 'course_invitation_revoke', userId, companyId: manager.companyId,
-      detail: { courseId, invitationId },
+    const revoked = await this.infrastructure.transaction(async (db) => {
+      const manager = await this.manager(userId, courseId, false, undefined, db, true)
+      const revoked = await revokeCourseInvitation(db, courseId, manager.companyId, invitationId)
+      if (revoked) await this.infrastructure.auditInTransaction(db, {
+        kind: 'course_invitation_revoke', userId, companyId: manager.companyId,
+        detail: { courseId, invitationId },
+      })
+      return revoked
     })
     return { ok: true as const, revoked }
   }
@@ -378,6 +433,23 @@ export class LearningApplication {
       }
       if (changesRole) role = await upsertAcceptedCourseMembership(db, { invitation, userId, role })
       if (changesRole) await recordCourseAcceptance(db, { tokenHash, userId, role })
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'course_invitation_accept', userId, companyId: invitation.company_id,
+        detail: { courseId: invitation.course_id, role },
+      })
+      await enqueueLearningEffect(db, {
+        companyId: invitation.company_id, courseId: invitation.course_id, kind: 'study_room.sync',
+      })
+      await enqueueLearningEffect(db, {
+        companyId: invitation.company_id, courseId: invitation.course_id, kind: 'teacher_room.sync',
+      })
+      await enqueueLearningEffect(db, {
+        companyId: invitation.company_id,
+        courseId: invitation.course_id,
+        kind: 'member_onboarding.seed',
+        effectKey: userId,
+        payload: { userId },
+      })
       return {
         companyId: invitation.company_id, companyName: invitation.company_name,
         companySlug: invitation.company_slug, companyRole: companyRole ?? 'member',
@@ -385,15 +457,6 @@ export class LearningApplication {
         projectId: invitation.project_id, roomId: invitation.room_id, role,
         alreadyMember: Boolean(existingRole) && !changesRole, joinedCompany,
       }
-    })
-    await this.syncStudyRoom(result.courseId)
-    await this.infrastructure.syncTeacherRoom(result.companyId, result.courseId)
-    // Idempotent on every acceptance attempt so a retry repairs a post-commit
-    // onboarding failure even though membership now already exists.
-    await this.infrastructure.seedMemberDms(result.companyId, userId)
-    await this.infrastructure.audit({
-      kind: 'course_invitation_accept', userId, companyId: result.companyId,
-      detail: { courseId: result.courseId, role: result.role },
     })
     return {
       ok: true as const, alreadyMember: result.alreadyMember, joinedCompany: result.joinedCompany,
@@ -620,8 +683,15 @@ export class LearningApplication {
 
   deliveries(scope: LearningScope) { return listDeliveries(this.db, scope.companyId, scope.userId) }
 
-  private async manager(userId: string, courseId: string, active = false, archivedMessage = 'archived courses are read-only') {
-    const manager = await courseManager(this.db, courseId, userId)
+  private async manager(
+    userId: string,
+    courseId: string,
+    active = false,
+    archivedMessage = 'archived courses are read-only',
+    db: Queryable = this.db,
+    lock = false,
+  ) {
+    const manager = await courseManager(db, courseId, userId, lock)
     if (!manager) throw new LearningApplicationError('not_found', 'course not found')
     if (!privilegedRoles.has(manager.companyRole) && manager.courseRole !== 'teacher') {
       throw new LearningApplicationError('forbidden', 'this action requires a course teacher or company admin')

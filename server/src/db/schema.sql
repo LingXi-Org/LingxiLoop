@@ -5029,6 +5029,7 @@ CREATE TABLE public.learning_effects (
     company_id text NOT NULL,
     course_id text NOT NULL,
     kind text NOT NULL,
+    effect_key text DEFAULT 'singleton'::text NOT NULL,
     payload jsonb DEFAULT '{}'::jsonb NOT NULL,
     status text DEFAULT 'pending'::text NOT NULL,
     attempts integer DEFAULT 0 NOT NULL,
@@ -5041,7 +5042,8 @@ CREATE TABLE public.learning_effects (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT learning_effects_kind_check CHECK (kind = ANY (ARRAY[
       'study_room.sync'::text, 'teacher_room.sync'::text, 'teacher_agent.welcome'::text,
-      'notebook.ensure'::text, 'course_create.audit'::text
+      'notebook.ensure'::text, 'course_metadata.sync'::text, 'course_archive.sync'::text,
+      'member_access.revoke'::text, 'member_onboarding.seed'::text
     ])),
     CONSTRAINT learning_effects_status_check CHECK (status = ANY (ARRAY[
       'pending'::text, 'processing'::text, 'completed'::text, 'failed'::text
@@ -5049,7 +5051,7 @@ CREATE TABLE public.learning_effects (
     CONSTRAINT learning_effects_course_company_fkey
       FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
     CONSTRAINT learning_effects_attempts_check CHECK (attempts >= 0),
-    UNIQUE(company_id, course_id, kind)
+    CONSTRAINT learning_effects_effect_identity_key UNIQUE(company_id, course_id, kind, effect_key)
 );
 
 CREATE INDEX idx_learning_effects_pending

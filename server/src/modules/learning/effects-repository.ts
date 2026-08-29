@@ -6,7 +6,10 @@ export const LEARNING_EFFECT_KINDS = [
   'teacher_room.sync',
   'teacher_agent.welcome',
   'notebook.ensure',
-  'course_create.audit',
+  'course_metadata.sync',
+  'course_archive.sync',
+  'member_access.revoke',
+  'member_onboarding.seed',
 ] as const
 
 export type LearningEffectKind = typeof LEARNING_EFFECT_KINDS[number]
@@ -23,12 +26,24 @@ export interface LearningEffect {
 
 export async function enqueueLearningEffect(
   db: Queryable,
-  input: { companyId: string; courseId: string; kind: LearningEffectKind; payload?: Record<string, unknown> },
+  input: {
+    companyId: string
+    courseId: string
+    kind: LearningEffectKind
+    effectKey?: string
+    payload?: Record<string, unknown>
+  },
 ): Promise<void> {
   await db.query(
-    `INSERT INTO learning_effects(id,company_id,course_id,kind,payload)
-     VALUES($1,$2,$3,$4,$5::jsonb) ON CONFLICT(company_id,course_id,kind) DO NOTHING`,
-    [randomUUID(), input.companyId, input.courseId, input.kind, JSON.stringify(input.payload ?? {})],
+    `INSERT INTO learning_effects(id,company_id,course_id,kind,effect_key,payload)
+     VALUES($1,$2,$3,$4,$5,$6::jsonb)
+     ON CONFLICT(company_id,course_id,kind,effect_key) DO UPDATE SET
+       id=EXCLUDED.id,payload=EXCLUDED.payload,status='pending',attempts=0,available_at=NOW(),
+       lease_token=NULL,lease_expires_at=NULL,error=NULL,completed_at=NULL,updated_at=NOW()`,
+    [
+      randomUUID(), input.companyId, input.courseId, input.kind, input.effectKey ?? 'singleton',
+      JSON.stringify(input.payload ?? {}),
+    ],
   )
 }
 

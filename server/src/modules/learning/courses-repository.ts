@@ -22,7 +22,7 @@ export async function listCourses(db: Queryable, companyId: string, userId: stri
   return rows
 }
 
-export async function canCreateCourse(db: Queryable, companyId: string, userId: string) {
+export async function canCreateCourse(db: Queryable, companyId: string, userId: string, lock = false) {
   const { rows } = await db.query<{ company_role: string; is_teacher: boolean }>(
     `SELECT company_member.role AS company_role,
             EXISTS (SELECT 1 FROM course_members course_member
@@ -31,10 +31,24 @@ export async function canCreateCourse(db: Queryable, companyId: string, userId: 
              WHERE course_member.company_id=$1 AND course_member.user_id=$2
                AND course_member.role='teacher' AND project.status='active') AS is_teacher
        FROM company_members company_member
-      WHERE company_member.company_id=$1 AND company_member.user_id=$2`,
+      WHERE company_member.company_id=$1 AND company_member.user_id=$2
+      ${lock ? 'FOR UPDATE OF company_member' : ''}`,
     [companyId, userId],
   )
-  return rows[0] ?? null
+  const permission = rows[0] ?? null
+  if (permission && lock && permission.company_role !== 'owner' && permission.company_role !== 'admin') {
+    const teacher = await db.query(
+      `SELECT 1 FROM course_members course_member
+        JOIN courses course ON course.id=course_member.course_id AND course.company_id=course_member.company_id
+        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       WHERE course_member.company_id=$1 AND course_member.user_id=$2
+         AND course_member.role='teacher' AND project.status='active'
+       ORDER BY course_member.course_id LIMIT 1 FOR UPDATE OF course_member`,
+      [companyId, userId],
+    )
+    permission.is_teacher = Boolean(teacher.rows[0])
+  }
+  return permission
 }
 
 export async function insertCourse(db: Queryable, args: {
@@ -93,7 +107,12 @@ export async function findCourse(db: Queryable, courseId: string, companyId: str
   return rows[0] ?? null
 }
 
-export async function courseManager(db: Queryable, courseId: string, userId: string): Promise<CourseManager | null> {
+export async function courseManager(
+  db: Queryable,
+  courseId: string,
+  userId: string,
+  lock = false,
+): Promise<CourseManager | null> {
   const { rows } = await db.query<{
     company_id: string; company_role: string; course_role: string | null; project_id: string; status: string
   }>(
@@ -103,13 +122,22 @@ export async function courseManager(db: Queryable, courseId: string, userId: str
        JOIN company_members company_member ON company_member.company_id=course.company_id AND company_member.user_id=$2
        LEFT JOIN course_members course_member
          ON course_member.course_id=course.id AND course_member.company_id=course.company_id AND course_member.user_id=$2
-      WHERE course.id=$1`,
+      WHERE course.id=$1${lock ? ' FOR UPDATE OF course,project,company_member' : ''}`,
     [courseId, userId],
   )
   const row = rows[0]
+  let courseRole = row?.course_role ?? null
+  if (row && lock && row.company_role !== 'owner' && row.company_role !== 'admin') {
+    const lockedRole = await db.query<{ role: string }>(
+      `SELECT role FROM course_members
+        WHERE course_id=$1 AND company_id=$2 AND user_id=$3 FOR UPDATE`,
+      [courseId, row.company_id, userId],
+    )
+    courseRole = lockedRole.rows[0]?.role ?? null
+  }
   return row ? {
     userId, companyId: row.company_id, companyRole: row.company_role,
-    courseRole: row.course_role, projectId: row.project_id, status: row.status,
+    courseRole, projectId: row.project_id, status: row.status,
   } : null
 }
 
@@ -234,3 +262,15 @@ export async function removeMemberFromProjectChannels(db: Queryable, args: {
   return rows
 }
 
+export async function listProjectChannels(db: Queryable, args: {
+  companyId: string; projectId: string
+}) {
+  const { rows } = await db.query<{ id: string; title: string; members: string[] }>(
+    `SELECT conversation.id,conversation.title,conversation.members
+       FROM conversations conversation
+      WHERE conversation.company_id=$1 AND conversation.project_id=$2
+      ORDER BY conversation.id`,
+    [args.companyId, args.projectId],
+  )
+  return rows
+}

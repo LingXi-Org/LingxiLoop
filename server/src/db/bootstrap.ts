@@ -56,6 +56,7 @@ const REQUIRED_V1_COLUMNS = [
   ['document_mention_deliveries', 'status'],
   ['im_polls', 'published_revision'],
   ['im_polls', 'request_fingerprint'],
+  ['learning_effects', 'effect_key'],
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [
@@ -79,6 +80,7 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['participants', 'participants_agent_bloub_only', 'c'],
   ['document_mention_deliveries', 'document_mention_deliveries_recipients_check', 'c'],
   ['document_mention_deliveries', 'document_mention_deliveries_status_check', 'c'],
+  ['learning_effects', 'learning_effects_effect_identity_key', 'u'],
 ] as const
 
 const REQUIRED_V1_INDEXES = [
