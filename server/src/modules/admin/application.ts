@@ -17,6 +17,7 @@ import {
   insertCompanyOwner,
   insertPersonalCompany,
   isAdmin,
+  lockAdmin,
   listUserCompanies,
   listUsers,
   listWaitlistRows,
@@ -46,8 +47,8 @@ export interface AdminInfrastructure {
   installStarterAgents(db: Queryable, companyId: string): Promise<boolean>
   finalizeStarterAgents(installed: boolean): Promise<void>
   sendWaitlistApprovedEmail(input: { email: string; displayName: string }): Promise<void>
-  audit(input: {
-    kind: 'user_suspend' | 'user_unsuspend'
+  auditInTransaction(db: Queryable, input: {
+    kind: string
     userId: string
     detail: Record<string, unknown>
   }): Promise<void>
@@ -78,8 +79,15 @@ export class AdminApplication {
     return readSettings(this.db)
   }
 
-  async setSetting(key: AppSettingKey, value: boolean, updatedBy: string): Promise<void> {
-    await writeSetting(this.db, key, value, updatedBy)
+  async setSettings(updates: ReadonlyArray<readonly [AppSettingKey, boolean]>, updatedBy: string): Promise<void> {
+    await this.infrastructure.transaction(async (db) => {
+      await this.requireAdminOn(db, updatedBy)
+      for (const [key, value] of updates) await writeSetting(db, key, value, updatedBy)
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'admin_settings_update', userId: updatedBy,
+        detail: { updates: Object.fromEntries(updates) },
+      })
+    })
   }
 
   async isWaitlistEnabled(): Promise<boolean> {
@@ -96,6 +104,7 @@ export class AdminApplication {
 
   async approveWaitlist(waitlistId: string, decidedBy: string) {
     const approved = await this.infrastructure.transaction(async (db) => {
+      await this.requireAdminOn(db, decidedBy)
       const row = await lockWaitlistRow(db, waitlistId)
       if (!row) throw new AdminApplicationError(404, 'waitlist entry not found')
       if (row.status !== 'pending') throw new AdminApplicationError(409, `already ${row.status}`)
@@ -137,6 +146,10 @@ export class AdminApplication {
         ? await this.infrastructure.installStarterAgents(db, companyId)
         : false
       await markWaitlistApproved(db, waitlistId, decidedBy)
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'waitlist_approve', userId: decidedBy,
+        detail: { waitlistId, approvedUserId: userId, companyId },
+      })
       return { userId, companyId, email: row.email, displayName: row.displayName, installedStarterAgents }
     })
 
@@ -151,9 +164,15 @@ export class AdminApplication {
   }
 
   async rejectWaitlist(waitlistId: string, decidedBy: string, note: string | null): Promise<void> {
-    if (!await rejectPendingWaitlist(this.db, waitlistId, decidedBy, note)) {
-      throw new AdminApplicationError(404, 'no pending waitlist entry')
-    }
+    await this.infrastructure.transaction(async (db) => {
+      await this.requireAdminOn(db, decidedBy)
+      if (!await rejectPendingWaitlist(db, waitlistId, decidedBy, note)) {
+        throw new AdminApplicationError(404, 'no pending waitlist entry')
+      }
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'waitlist_reject', userId: decidedBy, detail: { waitlistId, note },
+      })
+    })
   }
 
   async users(actorId: string | undefined, input: z.infer<typeof adminUserListQuerySchema>) {
@@ -173,55 +192,68 @@ export class AdminApplication {
     userId: string,
     patch: z.infer<typeof adminUserPatchSchema>,
   ) {
-    const adminId = await this.authorize(actorId)
-    if (patch.isAdmin !== undefined) {
-      if (userId === adminId && !patch.isAdmin) {
-        throw new AdminApplicationError(409, 'cannot demote yourself')
-      }
-      if (!await setAdmin(this.db, userId, patch.isAdmin)) {
-        throw new AdminApplicationError(404, 'user not found')
-      }
-    }
-    if (patch.suspended !== undefined) {
-      if (patch.suspended) {
-        await this.suspendUser({
-          userId,
-          adminId,
-          reason: patch.suspensionReason?.trim() || null,
+    if (!actorId) throw new AdminApplicationError(401, 'authentication required')
+    const user = await this.infrastructure.transaction(async (db) => {
+      const adminId = await this.requireAdminOn(db, actorId)
+      if (patch.isAdmin !== undefined) {
+        if (userId === adminId && !patch.isAdmin) {
+          throw new AdminApplicationError(409, 'cannot demote yourself')
+        }
+        if (!await setAdmin(db, userId, patch.isAdmin)) {
+          throw new AdminApplicationError(404, 'user not found')
+        }
+        await this.infrastructure.auditInTransaction(db, {
+          kind: patch.isAdmin ? 'user_admin_grant' : 'user_admin_revoke',
+          userId: adminId,
+          detail: { targetUserId: userId },
         })
-      } else {
-        await this.unsuspendUser({ userId, adminId })
       }
-    }
-    const user = await findUser(this.db, userId)
+      if (patch.suspended !== undefined) {
+        if (patch.suspended) {
+          await this.suspendUserOn(db, {
+            userId, adminId, reason: patch.suspensionReason?.trim() || null,
+          })
+        } else {
+          await this.unsuspendUserOn(db, { userId, adminId })
+        }
+      }
+      return findUser(db, userId)
+    })
     if (!user) throw new AdminApplicationError(404, 'user not found')
     return user
   }
 
-  async suspendUser(input: { userId: string; adminId: string; reason: string | null }): Promise<void> {
+  private async suspendUserOn(
+    db: Queryable,
+    input: { userId: string; adminId: string; reason: string | null },
+  ): Promise<void> {
     if (input.userId === input.adminId) throw new AdminApplicationError(409, 'cannot suspend yourself')
-    await this.infrastructure.transaction(async (db) => {
-      const status = await suspendUserRecord(db, input)
-      if (status === 'missing') throw new AdminApplicationError(404, 'user not found')
-      if (status === 'already-suspended') throw new AdminApplicationError(409, 'user is already suspended')
-      await revokeUserSessions(db, input.userId)
-    })
-    await this.infrastructure.audit({
-      kind: 'user_suspend',
-      userId: input.adminId,
+    const status = await suspendUserRecord(db, input)
+    if (status === 'missing') throw new AdminApplicationError(404, 'user not found')
+    if (status === 'already-suspended') throw new AdminApplicationError(409, 'user is already suspended')
+    await revokeUserSessions(db, input.userId)
+    await this.infrastructure.auditInTransaction(db, {
+      kind: 'user_suspend', userId: input.adminId,
       detail: { targetUserId: input.userId, reason: input.reason ?? undefined },
     })
   }
 
-  async unsuspendUser(input: { userId: string; adminId: string }): Promise<void> {
-    const status = await unsuspendUserRecord(this.db, input.userId)
+  private async unsuspendUserOn(
+    db: Queryable,
+    input: { userId: string; adminId: string },
+  ): Promise<void> {
+    const status = await unsuspendUserRecord(db, input.userId)
     if (status === 'missing') throw new AdminApplicationError(404, 'user not found')
     if (status === 'active') return
-    await this.infrastructure.audit({
-      kind: 'user_unsuspend',
-      userId: input.adminId,
+    await this.infrastructure.auditInTransaction(db, {
+      kind: 'user_unsuspend', userId: input.adminId,
       detail: { targetUserId: input.userId },
     })
+  }
+
+  private async requireAdminOn(db: Queryable, userId: string): Promise<string> {
+    if (!await lockAdmin(db, userId)) throw new AdminApplicationError(403, 'admin only')
+    return userId
   }
 
   async stats(actorId: string | undefined) {

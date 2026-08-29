@@ -49,6 +49,14 @@ export async function isAdmin(db: Queryable, userId: string): Promise<boolean> {
   return rows[0]?.is_admin === true
 }
 
+export async function lockAdmin(db: Queryable, userId: string): Promise<boolean> {
+  const { rows } = await db.query<{ is_admin: boolean }>(
+    'SELECT is_admin FROM users WHERE id=$1 FOR UPDATE',
+    [userId],
+  )
+  return rows[0]?.is_admin === true
+}
+
 export async function listUsers(
   db: Queryable,
   input: { q: string; limit: number; offset: number },

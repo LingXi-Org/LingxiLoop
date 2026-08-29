@@ -1,4 +1,4 @@
-import { audit } from '../identity/public.js'
+import { auditInTransaction } from '../identity/public.js'
 import { mirrorIdentityAvatar } from '../../avatar.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
@@ -17,7 +17,7 @@ export const adminApplication = new AdminApplication({
   installStarterAgents,
   finalizeStarterAgents,
   sendWaitlistApprovedEmail,
-  audit,
+  auditInTransaction,
 })
 
 export async function seedAdmins(): Promise<void> {
@@ -33,8 +33,11 @@ export function getSettings() {
   return adminApplication.getSettings()
 }
 
-export function setSetting(key: AppSettingKey, value: boolean, updatedBy: string): Promise<void> {
-  return adminApplication.setSetting(key, value, updatedBy)
+export function setSettings(
+  updates: ReadonlyArray<readonly [AppSettingKey, boolean]>,
+  updatedBy: string,
+): Promise<void> {
+  return adminApplication.setSettings(updates, updatedBy)
 }
 
 export function isWaitlistEnabled(): Promise<boolean> {

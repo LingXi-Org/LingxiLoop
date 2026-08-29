@@ -60,6 +60,7 @@ export interface IdentityInfrastructure {
   }): Promise<string>
   errorUrl(base: string | null, error: string): string
   audit(input: AuditInput): Promise<void>
+  auditInTransaction(db: Queryable, input: AuditInput): Promise<void>
   deleteSession(token: string): Promise<void>
   createWsTicket(userId: string): Promise<{ ticket: string; expiresAt: Date }>
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
@@ -157,20 +158,19 @@ export class IdentityApplication {
     userId: string,
     metadata: IdentityRequestMetadata,
   ): Promise<{ ok: true }> {
-    const email = await this.infrastructure.transaction(async (db) => {
+    await this.infrastructure.transaction(async (db) => {
       const activeEmail = await findActiveAccountEmail(db, userId)
       if (!activeEmail) {
         throw new IdentityApplicationError('account_not_found', 'account already deleted or not found')
       }
       await scrubAccount(db, userId)
-      return activeEmail
-    })
-    await this.infrastructure.audit({
-      kind: 'account_deleted',
-      userId,
-      ip: metadata.ip,
-      userAgent: metadata.userAgent,
-      detail: { email },
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'account_deleted',
+        userId,
+        ip: metadata.ip,
+        userAgent: metadata.userAgent,
+        detail: { email: activeEmail },
+      })
     })
     return { ok: true }
   }

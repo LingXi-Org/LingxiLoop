@@ -30,7 +30,7 @@ import {
   getSettings,
   listWaitlist,
   rejectWaitlist,
-  setSetting,
+  setSettings,
 } from './facade.js'
 
 export const adminRouter = Router()
@@ -68,7 +68,7 @@ adminRouter.put('/settings', safe(async (req, res) => {
   if (typeof body.waitlist_enabled === 'boolean') updates.push(['waitlist_enabled', body.waitlist_enabled])
   if (typeof body.signups_paused === 'boolean')   updates.push(['signups_paused',   body.signups_paused])
   if (updates.length === 0) throw new HttpError(400, 'no settings to update')
-  for (const [k, v] of updates) await setSetting(k, v, uid)
+  await setSettings(updates, uid)
   res.json(await getSettings())
 }))
 

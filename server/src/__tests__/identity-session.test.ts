@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import { SessionApplication } from '../modules/identity/session-application.js'
@@ -151,4 +152,13 @@ test('expired and suspended sessions never slide forward', async () => {
     transaction: async (work) => work(suspendedDb),
   }).resolveSession('suspended'), null)
   assert.equal(suspendedQueries.length, 1)
+})
+
+test('account scrubbing and deletion audit commit in one identity transaction', () => {
+  const source = readFileSync(new URL('../modules/identity/application.ts', import.meta.url), 'utf8')
+  assert.match(
+    source,
+    /transaction\(async \(db\) => \{[\s\S]{0,600}scrubAccount\(db, userId\)[\s\S]{0,300}auditInTransaction\(db, \{[\s\S]{0,100}kind: 'account_deleted'/,
+  )
+  assert.doesNotMatch(source, /scrubAccount\(db, userId\)[\s\S]{0,800}infrastructure\.audit\(\{[\s\S]{0,100}account_deleted/)
 })

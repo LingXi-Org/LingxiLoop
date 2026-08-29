@@ -28,6 +28,7 @@ import { IdentityApplication } from './application.js'
 import { OAuthApplication, oauthIds } from './oauth-application.js'
 import {
   audit,
+  auditInTransaction,
   createLoginSession,
   createWsTicket,
   deleteSession,
@@ -60,6 +61,7 @@ export const identityApplication = new IdentityApplication(pool, {
   handleCallback: (args) => oauthApplication.handleCallback(args),
   errorUrl: (base, error) => identityErrorUrl(base, env.AUTH_DONE_URL, error),
   audit,
+  auditInTransaction,
   deleteSession,
   createWsTicket,
   transaction: (work) => withTransaction(pool, work),

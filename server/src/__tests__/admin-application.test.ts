@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import { AdminApplication, AdminApplicationError } from '../modules/admin/application.js'
@@ -20,7 +21,7 @@ function infrastructure(db: Queryable) {
     installStarterAgents: async () => false,
     finalizeStarterAgents: async () => undefined,
     sendWaitlistApprovedEmail: async () => undefined,
-    audit: async () => undefined,
+    auditInTransaction: async () => undefined,
   }
 }
 
@@ -56,4 +57,15 @@ test('admin application prevents self-demotion before issuing a mutation', async
       return true
     },
   )
+})
+
+test('admin security mutations and audit events share one application transaction', () => {
+  const source = readFileSync(new URL('../modules/admin/application.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(source, /infrastructure\.audit\(/)
+  for (const kind of [
+    'admin_settings_update', 'waitlist_approve', 'waitlist_reject',
+    'user_admin_grant', 'user_suspend', 'user_unsuspend',
+  ]) {
+    assert.match(source, new RegExp(`auditInTransaction\\(db, \\{[\\s\\S]{0,120}kind: (?:[^\\n]*\\? )?'${kind}'`))
+  }
 })
