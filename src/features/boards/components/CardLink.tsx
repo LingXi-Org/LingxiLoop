@@ -1,15 +1,11 @@
 import { useEffect, useRef } from 'react'
+import { IBoard } from '@/components/icons'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
-import { useBoards } from '../state'
-import { useResolvedCardId } from '@/lib/useArtifactId'
-import { IBoard } from '@/components/icons'
 import type { BoardCardLookup } from '../contracts'
+import { useBoards } from '../state'
 
-export function CardLink({ id: rawId }: { id: string }) {
-  // Resolve a git-style short id to the full card id (best-effort: cards are
-  // only loaded per opened board, so an unopened board's card stays short).
-  const id = useResolvedCardId(rawId)
+export function CardLink({ id }: { id: string }) {
   const setView = useApp((s) => s.setView)
   const view = useApp((s) => s.view)
   const openBoardPeek = useSurface((s) => s.openBoardPeek)

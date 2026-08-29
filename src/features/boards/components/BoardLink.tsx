@@ -1,13 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { IBoard } from '@/components/icons'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { useBoards } from '../state'
-import { useResolvedBoardId } from '@/lib/useArtifactId'
-import { IBoard } from '@/components/icons'
 
-export function BoardLink({ id: rawId }: { id: string }) {
-  // Resolve a git-style short id (e.g. `board-ab12`) to the full board id.
-  const id = useResolvedBoardId(rawId)
+export function BoardLink({ id }: { id: string }) {
   const setView = useApp((s) => s.setView)
   const view = useApp((s) => s.view)
   const openBoardPeek = useSurface((s) => s.openBoardPeek)

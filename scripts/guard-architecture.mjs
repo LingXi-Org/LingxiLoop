@@ -21,6 +21,14 @@ const read = async (file) => readFile(file, 'utf8')
 const name = (file) => relative(process.cwd(), file).replaceAll('\\', '/')
 const frontendNames = new Set(frontend.map(name))
 const serverNames = new Set(server.map(name))
+const electronMain = await read(resolve('electron/main.cjs'))
+const electronUpdater = await read(resolve('electron/autoUpdater.cjs'))
+if (/remote-debugging-port|registerDevShortcuts|DEV_SAMPLES|globalShortcut/.test(electronMain)) {
+  violations.push('electron/main.cjs: device-level DevTools and synthetic notification paths are forbidden')
+}
+if (/fallback feed|generic publish provider[\s\S]*GitHub Release/.test(electronUpdater)) {
+  violations.push('electron/autoUpdater.cjs: auto-update must document and use one publish provider')
+}
 
 for (const retired of ['src/features/admin', 'src/features/eval']) {
   if ([...frontendNames].some((fileName) => fileName.startsWith(`${retired}/`))) {
@@ -90,6 +98,7 @@ for (const [label, pattern] of [
   ['retired agent portrait path', /agents?\/[^'"`]*avatar\/generate|generateAgentAvatar|AI生成的肖像|AI portrait/],
   ['retired agent notification signature', /authorAvatarBg/],
   ['retired participant avatar event', /participants\.avatar/],
+  ['artifact id compatibility shim', /useArtifactId|useResolved(?:Board|Card|Calendar|Document)Id/],
 ]) if (pattern.test(productionFrontend)) violations.push(`frontend: ${label} is forbidden`)
 
 const fetchAllowlist = new Set([

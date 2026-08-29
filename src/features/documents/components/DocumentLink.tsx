@@ -1,13 +1,10 @@
 import { useEffect } from 'react'
+import { IFile } from '@/components/icons'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { useDocuments } from '../state'
-import { useResolvedDocumentId } from '@/lib/useArtifactId'
-import { IFile } from '@/components/icons'
 
-export function DocumentLink({ id: rawId }: { id: string }) {
-  // Resolve a git-style short id (e.g. `doc_ab12`) to the full document id.
-  const id = useResolvedDocumentId(rawId)
+export function DocumentLink({ id }: { id: string }) {
   const setView = useApp((s) => s.setView)
   const view = useApp((s) => s.view)
   const openDocumentPeek = useSurface((s) => s.openDocumentPeek)

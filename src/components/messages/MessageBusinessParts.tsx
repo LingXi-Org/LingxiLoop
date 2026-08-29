@@ -1,24 +1,23 @@
 import { useAuiState } from '@assistant-ui/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { emailApi } from '@/features/email/api'
 import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from '@/components/ui/attachment'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import type { LingxiImMessageCustom } from '@/im/assistantMessage'
-import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
-import { cn } from '@/lib/utils'
-import { parseBlocks, parseBody } from '@/lib/messageTokens'
-import { useApp } from '@/stores/app'
-import { useEmailComposer } from '@/features/email/state'
-import { useSurface } from '@/stores/surface'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useParticipants } from '@/features/agents/state'
 import { useBoards } from '@/features/boards/state'
 import { useCalendar } from '@/features/calendar/state'
-import { useCanvas } from '@/features/canvas/state'
 import { CanvasPreview } from '@/features/canvas/components/CanvasPreview'
+import { useCanvas } from '@/features/canvas/state'
 import { useDocuments } from '@/features/documents/state'
-import { useParticipants } from '@/features/agents/state'
+import { emailApi } from '@/features/email/api'
+import { useEmailComposer } from '@/features/email/state'
+import type { LingxiImMessageCustom } from '@/im/assistantMessage'
+import { parseBlocks, parseBody } from '@/lib/messageTokens'
+import { cn } from '@/lib/utils'
+import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import type { Message } from '@/types'
 import { IBoard, ICalendar, IFile, IMail } from '../icons'
 import { RichBody } from './MessageBody'
@@ -79,8 +78,7 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString()
 }
 
-function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conversationId: string }) {
-  const id = useResolvedDocumentId(rawId) // git-style short-id → full id
+function DocumentArtifactCard({ id, conversationId }: { id: string; conversationId: string }) {
   const loaded = useDocuments((s) => s.loaded)
   const loadDocuments = useDocuments((s) => s.load)
   const selectDocument = useDocuments((s) => s.select)
@@ -190,8 +188,7 @@ export function CanvasWorkspaceCard() {
 }
 
 
-function BoardArtifactCard({ id: rawId }: { id: string }) {
-  const id = useResolvedBoardId(rawId) // git-style short-id → full id
+function BoardArtifactCard({ id }: { id: string }) {
   const loadList = useBoards((s) => s.loadList)
   const loadingList = useBoards((s) => s.loadingList)
   const list = useBoards((s) => s.list)
@@ -283,8 +280,7 @@ function BoardArtifactCard({ id: rawId }: { id: string }) {
   )
 }
 
-function CardArtifactCard({ id: rawId }: { id: string }) {
-  const id = useResolvedCardId(rawId) // git-style short-id → full id (best-effort for cards)
+function CardArtifactCard({ id }: { id: string }) {
   const lookup = useBoards((s) => s.cardLookups[id])
   const loadingCardId = useBoards((s) => s.loadingCardId)
   const loadCard = useBoards((s) => s.loadCard)
@@ -378,8 +374,7 @@ function CardArtifactCard({ id: rawId }: { id: string }) {
   )
 }
 
-function CalendarArtifactCard({ id: rawId }: { id: string }) {
-  const id = useResolvedCalendarId(rawId) // git-style short-id → full event id
+function CalendarArtifactCard({ id }: { id: string }) {
   const loadingEventId = useCalendar((s) => s.loadingEventId)
   const loadEvent = useCalendar((s) => s.loadEvent)
   const event = useCalendar((s) => s.events.find((e) => e.id === id) ?? null)

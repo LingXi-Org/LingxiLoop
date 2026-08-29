@@ -3,9 +3,7 @@
  * LingxiLoop auto-update — ported from alma's auto-updater.ts.
  *
  * Pulls the latest-mac.yml / latest.yml / latest-linux.yml from the
- * `generic` publish provider configured in package.json (github.com/LingXi-Org/LingxiLoop/releases,
- * R2-backed), with the GitHub Release as a fallback feed if the generic
- * one ever 404s. The flow:
+ * single GitHub publish provider configured in package.json. The flow:
  *
  *   1. Boot the main window, schedule an initial check 3s later.
  *   2. Periodic check every 30 minutes.
@@ -300,6 +298,4 @@ module.exports = {
   setBeforeInstallHandler,
   isSupported,
   getAppInfo,
-  // for tests / debug
-  _internal: { getUpdater, initialStatus },
 }

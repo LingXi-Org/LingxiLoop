@@ -1,13 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { ICalendar } from '@/components/icons'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { useCalendar } from '../state'
-import { useResolvedCalendarId } from '@/lib/useArtifactId'
-import { ICalendar } from '@/components/icons'
 
-export function CalendarLink({ id: rawId }: { id: string }) {
-  // Resolve a git-style short id (e.g. `ce-d53fa1f5`) to the full event id.
-  const id = useResolvedCalendarId(rawId)
+export function CalendarLink({ id }: { id: string }) {
   const setView = useApp((s) => s.setView)
   const view = useApp((s) => s.view)
   const openCalendarEventPeek = useSurface((s) => s.openCalendarEventPeek)
