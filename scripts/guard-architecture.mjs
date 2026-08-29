@@ -28,7 +28,11 @@ for (const retired of ['src/features/admin', 'src/features/eval']) {
 }
 
 const canonicalConversationFiles = new Set([
+  'src/components/AttachmentViewer.tsx',
+  'src/components/Avatar.tsx',
+  'src/components/ImageViewer.tsx',
   'src/components/RichInput.tsx',
+  'src/components/ScrollToLatestButton.tsx',
   'src/desktop/ChatPane.tsx',
   'src/desktop/ThreadDrawer.tsx',
   'src/im/Composer.tsx',

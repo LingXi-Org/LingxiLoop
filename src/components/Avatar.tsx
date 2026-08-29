@@ -149,7 +149,7 @@ export function AvatarStack({ ps, size = 28, max = 4 }: { ps: Participant[]; siz
       ))}
       {overflow > 0 && (
         <div
-          className="absolute top-0 grid place-items-center rounded-xl bg-raised text-[10px] font-bold text-ink-secondary"
+          className="absolute top-0 grid place-items-center rounded-xl bg-muted text-[10px] font-bold text-muted-foreground"
           style={{
             width: size, height: size,
             left: visible.length * step,

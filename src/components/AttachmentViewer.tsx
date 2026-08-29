@@ -1,9 +1,10 @@
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { uploadsApi } from '@/features/platform/api'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
 import type { Message } from '@/types'
 import { TypesetMarkdown } from './Typeset'
@@ -19,13 +20,18 @@ async function freshUrl(attachment: Attachment): Promise<string> {
 }
 
 function ViewerShell({ name, url, onClose, children }: { name: string; url: string; onClose: () => void; children: React.ReactNode }) {
-  return createPortal(
-    <div className="attachment-viewer-backdrop" role="dialog" aria-modal="true" aria-label={`预览 ${name}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section className="attachment-viewer-shell">
-        <header><strong className="min-w-0 truncate">{name}</strong><div className="attachment-viewer-actions"><a href={url} download={name} target="_blank" rel="noreferrer">下载</a><button type="button" onClick={onClose} aria-label="关闭预览">×</button></div></header>
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="flex h-[min(90vh,900px)] max-w-[min(94vw,1200px)] flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="flex-row items-center justify-between border-b px-5 py-4 pr-16">
+          <DialogTitle className="min-w-0 truncate">{name}</DialogTitle>
+          <Button asChild variant="outline" size="sm">
+            <a href={url} download={name} target="_blank" rel="noreferrer">下载</a>
+          </Button>
+        </DialogHeader>
         {children}
-      </section>
-    </div>, document.body,
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -93,7 +99,7 @@ function PdfViewer({ attachment, url, onClose }: { attachment: Attachment; url: 
     return () => document.removeEventListener('keydown', onKey, true)
   }, [onClose])
   return <ViewerShell name={attachment.name} url={url} onClose={onClose}>
-    <div className="pdf-preview-toolbar"><button type="button" onClick={() => setScale((value) => Math.max(.5, value - .25))}>−</button><span>{Math.round(scale * 100)}%</span><button type="button" onClick={() => setScale((value) => Math.min(4, value + .25))}>＋</button><span className="ml-auto">{pdfDocument ? `${currentPage} / ${pdfDocument.numPages}` : ''}</span></div>
+    <div className="pdf-preview-toolbar"><Button type="button" variant="outline" size="icon-sm" onClick={() => setScale((value) => Math.max(.5, value - .25))}>−</Button><span>{Math.round(scale * 100)}%</span><Button type="button" variant="outline" size="icon-sm" onClick={() => setScale((value) => Math.min(4, value + .25))}>＋</Button><span className="ml-auto">{pdfDocument ? `${currentPage} / ${pdfDocument.numPages}` : ''}</span></div>
     <div className="attachment-viewer-body pdf-preview-body">{error ? <PreviewError message={error} url={url} name={attachment.name} /> : !pdfDocument ? <PreviewLoading /> : Array.from({ length: pdfDocument.numPages }, (_, index) => <PdfPage key={index + 1} pageNumber={index + 1} document={pdfDocument} scale={scale} onVisible={onVisible} />)}</div>
   </ViewerShell>
 }
@@ -146,7 +152,7 @@ function TextViewer({ attachment, url, onClose }: { attachment: Attachment; url:
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); onClose() } }
     document.addEventListener('keydown', onKey, true); return () => document.removeEventListener('keydown', onKey, true)
   }, [onClose])
-  return <ViewerShell name={attachment.name} url={url} onClose={onClose}><div className="attachment-viewer-body text-preview-body">{state.status === 'ready' ? <TextDocument name={attachment.name} source={state.text ?? ''} /> : state.status === 'error' ? <div className="attachment-preview-state" role="alert"><strong>无法显示预览</strong><span>{state.message}</span><button type="button" onClick={() => setAttempt((value) => value + 1)}>重试</button></div> : <PreviewLoading />}</div></ViewerShell>
+  return <ViewerShell name={attachment.name} url={url} onClose={onClose}><div className="attachment-viewer-body text-preview-body">{state.status === 'ready' ? <TextDocument name={attachment.name} source={state.text ?? ''} /> : state.status === 'error' ? <div className="attachment-preview-state" role="alert"><strong>无法显示预览</strong><span>{state.message}</span><Button type="button" variant="outline" onClick={() => setAttempt((value) => value + 1)}>重试</Button></div> : <PreviewLoading />}</div></ViewerShell>
 }
 
 function VideoViewer({ attachment, url, onClose }: { attachment: Attachment; url: string; onClose: () => void }) {
