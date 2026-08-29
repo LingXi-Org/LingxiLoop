@@ -104,6 +104,9 @@ export type { LearningTransaction } from './membership-application.js'
 export interface LearningInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   audit(event: { kind: string; userId: string; companyId: string; detail: Record<string, unknown> }): Promise<void>
+  auditInTransaction(db: Queryable, event: {
+    kind: string; userId: string; companyId: string; detail: Record<string, unknown>
+  }): Promise<void>
   ensureTeacherAgent(companyId: string, courseId: string, db: Queryable): Promise<{ created: boolean }>
   syncTeacherRoom(companyId: string, courseId: string): Promise<void>
   welcomeTeacherAgent(companyId: string, courseId: string): Promise<void>
@@ -132,7 +135,7 @@ export class LearningApplication {
 
   courses(scope: LearningScope) { return listCourses(this.db, scope.companyId, scope.userId) }
 
-  async runEffect(effect: LearningEffect): Promise<void> {
+  async runEffect(effect: LearningEffect, effectDb?: Queryable): Promise<void> {
     const payload = effect.payload
     switch (effect.kind) {
       case 'study_room.sync':
@@ -150,12 +153,15 @@ export class LearningApplication {
         await this.infrastructure.ensureNotebook(projectId, effect.companyId)
         return
       }
-      case 'course_create.audit':
-        await this.infrastructure.audit({
+      case 'course_create.audit': {
+        if (!effectDb) throw new Error('audit effect requires its claimed transaction')
+        await this.infrastructure.auditInTransaction(effectDb, {
           kind: 'course_create', companyId: effect.companyId,
           userId: String(payload.userId ?? ''),
           detail: { courseId: effect.courseId, projectId: payload.projectId, name: payload.name },
         })
+        return
+      }
     }
   }
 

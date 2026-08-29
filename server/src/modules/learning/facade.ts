@@ -1,4 +1,4 @@
-import { audit, gravatarUrlForEmail } from '../identity/public.js'
+import { audit, auditInTransaction, gravatarUrlForEmail } from '../identity/public.js'
 import { pool } from '../../db/pool.js'
 import type { Queryable } from '../../db/queryable.js'
 import { withTransaction } from '../../db/transaction.js'
@@ -27,6 +27,7 @@ function teacherTransaction(db: Queryable) {
 export const learningApplication = new LearningApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
   audit: async (event) => { await audit(event) },
+  auditInTransaction: async (db, event) => { await auditInTransaction(db, event) },
   ensureTeacherAgent: (companyId, courseId, db) => ensureTeacherAgentForCourse(companyId, courseId, db, teacherTransaction(db)),
   syncTeacherRoom: (companyId, courseId) => syncTeacherRoomMembers(companyId, courseId, pool, teacherTransaction(pool)),
   welcomeTeacherAgent: (companyId, courseId) => sendTeacherAgentWelcome(companyId, courseId, pool),

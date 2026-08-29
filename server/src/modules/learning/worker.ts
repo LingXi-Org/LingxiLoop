@@ -1,5 +1,6 @@
 import type { WorkerTaskHandle } from '../../runtime/lifecycle.js'
 import { pool } from '../../db/pool.js'
+import { withTransaction } from '../../db/transaction.js'
 import { learningApplication } from './facade.js'
 import {
   claimLearningEffects,
@@ -13,8 +14,15 @@ export async function runLearningEffects(): Promise<void> {
   const effects = await claimLearningEffects(pool)
   for (const effect of effects) {
     try {
-      await learningApplication.runEffect(effect)
-      await completeLearningEffect(pool, effect)
+      if (effect.kind === 'course_create.audit') {
+        await withTransaction(pool, async (db) => {
+          await learningApplication.runEffect(effect, db)
+          await completeLearningEffect(db, effect)
+        })
+      } else {
+        await learningApplication.runEffect(effect)
+        await completeLearningEffect(pool, effect)
+      }
     } catch (error) {
       await failLearningEffect(pool, effect, error instanceof Error ? error.message : String(error))
     }

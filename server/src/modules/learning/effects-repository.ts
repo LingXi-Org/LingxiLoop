@@ -40,8 +40,8 @@ export async function claimLearningEffects(db: Queryable, limit = 20): Promise<L
   }>(
     `WITH candidates AS (
        SELECT id FROM learning_effects
-        WHERE status IN ('pending','failed') AND available_at<=NOW()
-          AND (lease_expires_at IS NULL OR lease_expires_at<NOW())
+        WHERE (status IN ('pending','failed') AND available_at<=NOW())
+           OR (status='processing' AND lease_expires_at<NOW())
         ORDER BY available_at,created_at FOR UPDATE SKIP LOCKED LIMIT $1
      )
      UPDATE learning_effects effect SET status='processing',attempts=effect.attempts+1,
