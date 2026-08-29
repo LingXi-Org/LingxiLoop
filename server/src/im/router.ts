@@ -5,10 +5,11 @@ import { pool } from '../db/pool.js'
 import { executeActionWithLedger } from '../agent-os/control-plane.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import { wukongClient } from './wukong.js'
-import type { ImChannelProfile } from './types.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
-import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/public.js'
+import { assertTeacherRoomAccessible } from '../modules/learning/public.js'
+import { imAccessApplication } from './access-facade.js'
+import { imChannelsApplication } from './channels-facade.js'
 import { imMessagesApplication } from './messages-facade.js'
 import {
   isReadReceiptChannelMember,
@@ -28,11 +29,9 @@ async function identity(req: Request & AuthedRequest): Promise<{ userId: string;
   const companyId = String(req.headers['x-company-id'] ?? '').trim()
   if (!userId) throw Object.assign(new Error('authentication required'), { status: 401 })
   if (!companyId) throw Object.assign(new Error('x-company-id required'), { status: 400 })
-  const { rows } = await pool.query(
-    `SELECT 1 FROM company_members WHERE user_id=$1 AND company_id=$2`,
-    [userId, companyId],
-  )
-  if (!rows[0]) throw Object.assign(new Error('not a company member'), { status: 403 })
+  if (!await imAccessApplication.authorize({ userId, companyId })) {
+    throw Object.assign(new Error('not a company member'), { status: 403 })
+  }
   return { userId, companyId }
 }
 
@@ -56,92 +55,7 @@ imRouter.get('/channels', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const projectId = String(req.headers['x-project-id'] ?? '').trim()
   if (!projectId) { res.status(400).json({ error: 'x-project-id required' }); return }
-  const { rows } = await pool.query<{
-    channel_id: string; profile: Record<string, unknown>; leader_agent_id: string | null; preset_key: string | null
-    kind: string; title: string; members: string[]; muted: boolean; muted_until: string | null
-  }>(`SELECT b.channel_id, b.profile, b.leader_agent_id, b.preset_key,c.kind,c.members,
-              CASE WHEN c.kind='direct' THEN COALESCE(other_participant.name,c.title) ELSE c.title END AS title,
-              (mute.user_id IS NOT NULL AND (mute.muted_until IS NULL OR mute.muted_until>NOW())) AS muted,
-              mute.muted_until
-         FROM im_channel_bindings b JOIN conversations c ON c.id = b.channel_id
-         LEFT JOIN conversation_mutes mute ON mute.conversation_id=c.id AND mute.user_id=$2
-         LEFT JOIN LATERAL (
-           SELECT participant.name
-             FROM jsonb_array_elements_text(c.members) WITH ORDINALITY AS member(id,ord)
-             JOIN participants participant ON participant.id=member.id AND participant.company_id=c.company_id
-            WHERE member.id<>$2 ORDER BY member.ord LIMIT 1
-         ) other_participant ON c.kind='direct'
-       WHERE b.company_id=$1 AND c.company_id=$1 AND c.project_id=$3
-         AND c.members @> to_jsonb(ARRAY[$2::text])
-         AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=b.channel_id)
-           OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr
-             JOIN courses course ON course.id=tr.course_id AND course.company_id=tr.company_id
-             JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-             JOIN course_members cm ON cm.course_id=course.id AND cm.company_id=course.company_id
-               AND cm.user_id=$2 AND cm.role='teacher'
-             WHERE tr.conversation_id=b.channel_id AND tr.company_id=b.company_id
-               AND tr.status='active' AND project.status='active'))
-       ORDER BY (b.profile->>'pinned')::boolean DESC,b.created_at`, [companyId, userId, projectId])
-  const conversations = await wukongClient().listConversations(userId)
-  const state = new Map(conversations.map((item) => [`${item.channelId}:${item.channelType}`, item]))
-  res.json(rows.map((row) => {
-    const channelType = Number(row.profile.channelType ?? 2)
-    const im = state.get(`${row.channel_id}:${channelType}`)
-    const last = im?.lastMessage
-    return ({
-    id: row.channel_id,
-    kind: row.kind === 'direct' ? 'direct' : 'group',
-    title: row.title,
-    subtitle: null,
-    topic: typeof row.profile.topic === 'string' ? row.profile.topic : null,
-    members: row.members,
-    leaderId: row.leader_agent_id,
-    pinned: row.profile.pinned === true,
-    muted: row.muted,
-    mutedUntil: row.muted_until,
-    tag: row.preset_key ? 'team' : null,
-    pulledBy: null,
-    createdAt: typeof row.profile.createdAt === 'string' ? row.profile.createdAt : new Date(0).toISOString(),
-    updatedAt: last ? new Date(last.timestamp * 1000).toISOString() : typeof row.profile.updatedAt === 'string' ? row.profile.updatedAt : new Date(0).toISOString(),
-    unreadCount: im?.unread ?? 0,
-    lastMessage: last ? {
-      id: last.messageId || last.clientMsgNo, authorId: last.fromUid, kind: last.payload.kind,
-      body: last.payload.body ?? '', createdAt: new Date(last.timestamp * 1000).toISOString(),
-    } : null,
-    presetKey: row.preset_key,
-  }) }))
-}))
-
-imRouter.post('/channels', safe(async (req, res) => {
-  const { companyId } = await identity(req)
-  const profile = req.body as ImChannelProfile
-  if (!profile.channelId || !profile.title || !Array.isArray(profile.members)) {
-    res.status(400).json({ error: 'channelId, title and members required' }); return
-  }
-  const protectedIds=[...profile.members.map(String),...(profile.leaderAgentId?[String(profile.leaderAgentId)]:[])]
-  const {rows:protectedAgents}=await pool.query(
-    `SELECT 1 FROM learning_project_teacher_agents WHERE company_id=$1 AND agent_id=ANY($2::text[]) LIMIT 1`,
-    [companyId,protectedIds],
-  )
-  if(protectedAgents[0]){res.status(403).json({error:'Pulse rooms are provisioned only by the learning control plane'});return}
-  if (await isTeacherRoom(profile.channelId, companyId)) {
-    res.status(403).json({ error: 'teacher rooms are provisioned only by the learning control plane' }); return
-  }
-  const { rows: conversations } = await pool.query(
-    `SELECT 1 FROM conversations WHERE id=$1 AND company_id=$2`,
-    [profile.channelId, companyId],
-  )
-  if (!conversations[0]) { res.status(404).json({ error: 'conversation not found in workspace' }); return }
-  await wukongClient().upsertChannel(profile)
-  await pool.query(
-    `INSERT INTO im_channel_bindings (channel_id, company_id, profile, leader_agent_id, preset_key)
-     VALUES ($1,$2,$3::jsonb,$4,$5)
-     ON CONFLICT (channel_id) DO UPDATE SET profile=EXCLUDED.profile, leader_agent_id=EXCLUDED.leader_agent_id,
-       preset_key=EXCLUDED.preset_key, updated_at=NOW()
-     WHERE im_channel_bindings.company_id=EXCLUDED.company_id`,
-    [profile.channelId, companyId, JSON.stringify(profile), profile.leaderAgentId ?? null, profile.presetKey ?? null],
-  )
-  res.status(201).json({ ok: true, channelId: profile.channelId })
+  res.json(await imChannelsApplication.list({ companyId, userId, projectId }))
 }))
 
 imRouter.get('/channels/:id/messages', safe(async (req, res) => {

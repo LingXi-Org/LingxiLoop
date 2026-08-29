@@ -158,12 +158,21 @@ const imMessagesApplication = await read(resolve('server/src/im/messages-applica
 if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(imMessagesApplication)) {
   violations.push('server/src/im/messages-application.ts: IM message use cases bypass messages-repository.ts')
 }
+for (const capability of ['access', 'channels']) {
+  const application = await read(resolve(`server/src/im/${capability}-application.ts`))
+  if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(application)) {
+    violations.push(`server/src/im/${capability}-application.ts: IM ${capability} use cases bypass their repository`)
+  }
+}
 const imRouter = await read(resolve('server/src/im/router.ts'))
-if (/from ['"]\.\/messages-(?:application|repository)\.js['"]/.test(imRouter)) {
-  violations.push('server/src/im/router.ts: IM message routes must use messages-facade.ts')
+if (/from ['"]\.\/(?:access|channels|messages)-(?:application|repository)\.js['"]/.test(imRouter)) {
+  violations.push('server/src/im/router.ts: IM routes must use capability facades')
 }
 if (/im_send_acceptances/.test(imRouter)) {
   violations.push('server/src/im/router.ts: IM send acceptance persistence must stay in messages-repository.ts')
+}
+if (/\.post\(['"]\/channels['"]/.test(imRouter)) {
+  violations.push('server/src/im/router.ts: retired client-side channel creation endpoint is forbidden')
 }
 const readReceiptFacade = await read(resolve('server/src/im/read-receipts.ts'))
 const readReceiptApplication = await read(resolve('server/src/im/read-receipts-application.ts'))
