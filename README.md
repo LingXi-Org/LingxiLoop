@@ -74,6 +74,24 @@ unsigned-read, or presigned-GET product path. `db:bootstrap` only initializes
 the immutable schema, while Web and Worker assert the complete R2 contract
 before becoming ready.
 
+### Local production-contract preview
+
+The preview runs the real Web, API, Worker and Agent OS paths. Only
+LingxiIdentity is replaced by a loopback-only OIDC server implementing the
+same discovery, authorization-code, token and userinfo protocol used in
+production. PostgreSQL, Redis, WuKongIM, R2 and email remain authoritative.
+
+```powershell
+Copy-Item .env.local.example .env.local
+# Fill OPENAI_*, R2_* and email values in .env.local.
+npm run dev:bootstrap
+npm run dev:preview
+```
+
+Open `http://localhost:5180` and choose LingxiIdentity. The local identity
+page confirms the email and display name, then returns through the normal
+`/api/auth/callback/lingxi` endpoint. `.env.local` is ignored by Git.
+
 For the packaged MVP topology, copy `.env.example` to `.env`, provide the
 required secrets, and start the runtime:
 

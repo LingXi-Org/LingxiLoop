@@ -17,6 +17,12 @@
   "scripts": {
     "dev": "vite --port 5180 --strictPort",
     "dev:all": "concurrently -k -n web,api,worker -c blue,magenta,yellow \"npm:dev\" \"npm:server:dev\" \"npm:worker:dev\"",
+    "mock:identity": "node scripts/local-identity-mock.mjs",
+    "mock:identity:smoke": "node scripts/local-identity-smoke.mjs",
+    "dev:doctor": "cross-env DOTENV_CONFIG_PATH=.env.local node scripts/local-preview-doctor.mjs",
+    "predev:preview": "npm run dev:doctor",
+    "dev:preview": "cross-env DOTENV_CONFIG_PATH=.env.local concurrently -k -n identity,web,api,worker,agent-os -c green,blue,magenta,yellow,cyan \"npm:mock:identity\" \"npm:dev\" \"npm:server:dev\" \"npm:worker:dev\" \"npm:agent-os:start\"",
+    "dev:bootstrap": "cross-env DOTENV_CONFIG_PATH=.env.local npm run db:bootstrap",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview --host --port 5180",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
