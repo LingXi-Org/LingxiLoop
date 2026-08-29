@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ws } from '@/api/core/realtime'
 import { AvatarMini } from '@/components/Avatar'
@@ -313,7 +314,7 @@ function CanvasHeader({ onBack, onFocusFrame }: {
   const snapshot = useCanvas((state) => state.snapshot)
   return <header className="canvas-header canvas-main-header absolute inset-x-0 top-0 z-30 flex items-center gap-4 border-b border-hairline px-3 backdrop-blur-xl">
     <div className="flex min-w-0 shrink-0 items-center gap-2">
-      {onBack && <button type="button" onClick={onBack} aria-label="返回对话" className="grid size-9 place-items-center rounded-full text-ink-secondary hover:bg-raised"><IBack className="size-5" /></button>}
+      {onBack && <Button type="button" onClick={onBack} aria-label="返回对话" className="grid size-9 place-items-center rounded-full text-ink-secondary hover:bg-raised"><IBack className="size-5" /></Button>}
       <div className="min-w-0 max-w-64"><div className="truncate text-[14px] font-semibold text-ink">{snapshot?.title ?? '画布'}</div><div className="truncate text-[9px] text-ink-secondary">{snapshot ? `${snapshot.goal} · ${snapshot.reports.length} 份结构化报告${snapshot.reports.some((report) => report.executionRole === 'reporter') ? ' · 已完成汇总' : ''}` : '共同工作的可视空间'}</div></div>
     </div>
     <CanvasTimeline onFocusFrame={onFocusFrame} />
@@ -362,7 +363,7 @@ function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => v
     timeline.scrollBy({ left: direction * Math.max(180, timeline.clientWidth * 0.72), behavior: 'smooth' })
   }
   return <div className="canvas-timeline-shell relative min-w-0 flex-1">
-    {scrollState.left && <button type="button" aria-label="向左移动工作时间轴" onClick={() => scrollTimeline(-1)} className="canvas-timeline-scroll-button is-left"><svg viewBox="0 0 20 20" aria-hidden><path d="m12.5 5-5 5 5 5" /></svg></button>}
+    {scrollState.left && <Button type="button" aria-label="向左移动工作时间轴" onClick={() => scrollTimeline(-1)} className="canvas-timeline-scroll-button is-left"><svg viewBox="0 0 20 20" aria-hidden><path d="m12.5 5-5 5 5 5" /></svg></Button>}
     <div ref={timelineRef} className={`canvas-work-timeline min-w-0 overflow-x-auto py-2 ${scrollState.overflowing ? 'px-8' : 'px-2'}`} onWheel={(event) => {
       if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
       event.currentTarget.scrollLeft += event.deltaY
@@ -371,13 +372,13 @@ function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => v
         const participant = byId[assignment.agentId]
         const activeFrameId = snapshot.frames.some((frame) => frame.id === assignment.activeFrameId && frame.type !== 'artifact') ? assignment.activeFrameId : null
         const progress = latestAssignmentProgress(snapshot, assignment)
-        return <button key={assignment.id} type="button" disabled={!activeFrameId} onClick={() => activeFrameId && onFocusFrame(activeFrameId)} className="canvas-timeline-item group relative flex max-w-52 items-center gap-2 px-3 text-left disabled:cursor-default">
+        return <Button key={assignment.id} type="button" disabled={!activeFrameId} onClick={() => activeFrameId && onFocusFrame(activeFrameId)} className="canvas-timeline-item group relative flex max-w-52 items-center gap-2 px-3 text-left disabled:cursor-default">
           <span className="canvas-timeline-node relative z-10 grid size-7 shrink-0 place-items-center">{participant ? <AvatarMini p={participant} size={26} statusOverride={assignment.status === 'blocked' || assignment.status === 'waiting' ? 'thinking' : isCanvasAssignmentActive(assignment.status) ? 'working' : 'avail'} /> : <span className="text-[9px] font-bold" style={{ color: assignment.color }}>{assignment.agentId.slice(0, 1).toUpperCase()}</span>}</span>
             <span className="min-w-0"><span className="flex items-center gap-1 truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? assignment.agentId}<span className="rounded bg-raised px-1 py-0.5 text-[7px] uppercase text-ink-secondary">{assignment.executionRole}</span></span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}{snapshot.reports.some((report)=>report.assignmentId===assignment.id)?' · 已提交报告':''}</span></span>
-        </button>
+        </Button>
       })}
     </div></div>
-    {scrollState.right && <button type="button" aria-label="向右移动工作时间轴" onClick={() => scrollTimeline(1)} className="canvas-timeline-scroll-button is-right"><svg viewBox="0 0 20 20" aria-hidden><path d="m7.5 5 5 5-5 5" /></svg></button>}
+    {scrollState.right && <Button type="button" aria-label="向右移动工作时间轴" onClick={() => scrollTimeline(1)} className="canvas-timeline-scroll-button is-right"><svg viewBox="0 0 20 20" aria-hidden><path d="m7.5 5 5 5-5 5" /></svg></Button>}
   </div>
 }
 
@@ -647,7 +648,7 @@ function FrameCard({ frame, assignment, status, selected, zoom, allowActivation 
         </div>
         : <CanvasFrameContent frame={frame} />}
     </div>
-    <button type="button" aria-label="调整卡片大小" onPointerDown={beginResize} onClick={(event) => event.stopPropagation()} className="canvas-frame-resize-handle absolute bottom-0 right-0 size-5 cursor-nwse-resize rounded-tl before:absolute before:bottom-1 before:right-1 before:size-2 before:border-b before:border-r" />
+    <Button type="button" aria-label="调整卡片大小" onPointerDown={beginResize} onClick={(event) => event.stopPropagation()} className="canvas-frame-resize-handle absolute bottom-0 right-0 size-5 cursor-nwse-resize rounded-tl before:absolute before:bottom-1 before:right-1 before:size-2 before:border-b before:border-r" />
   </article>
 }
 
@@ -767,16 +768,16 @@ function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame;
     <div className="flex items-center gap-3">
       {participant ? <AvatarMini p={participant} size={34} /> : <span className="grid size-9 place-items-center rounded-full bg-accent/10 text-sm font-bold text-accent">评</span>}
       <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">反馈给 {participant?.name ?? '智能体'}</div><div className="truncate text-[10px] text-ink-secondary">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</div></div>
-      <button type="button" onClick={() => { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() }} aria-label="关闭反馈" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</button>
+      <Button type="button" onClick={() => { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() }} aria-label="关闭反馈" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</Button>
     </div>
     {!assignment && <div className="mt-3 flex flex-wrap gap-2">{snapshot.assignments.map((item) => {
       const agent = byId[item.agentId]
-      return <button key={item.agentId} type="button" onClick={() => setAgentId(item.agentId)} className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold ${agentId === item.agentId ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? item.agentId}</button>
+      return <Button key={item.agentId} type="button" onClick={() => setAgentId(item.agentId)} className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold ${agentId === item.agentId ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? item.agentId}</Button>
     })}</div>}
     {comments.length > 0 && <div className="mt-3 space-y-1.5">{comments.map((comment) => <div key={comment.id} className="rounded-lg bg-inset px-2.5 py-2 text-[10px] leading-4 text-ink-secondary">{comment.body}</div>)}</div>}
     <Textarea autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="canvas-panel-input mt-3 resize-none text-xs" />
     {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
-    <div className="mt-3 flex justify-end"><button type="submit" disabled={!agentId || !body.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />发送反馈</button></div>
+    <div className="mt-3 flex justify-end"><Button type="submit" disabled={!agentId || !body.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />发送反馈</Button></div>
   </form>
 }
 
@@ -803,11 +804,11 @@ function CanvasAgentDialog({ onClose }: { onClose: () => void }) {
   }
 
   return <div className="canvas-dialog-layer absolute inset-0 z-[70] grid place-items-center p-4" onPointerDown={onClose}><form onSubmit={submit} onPointerDown={(event) => event.stopPropagation()} className="canvas-mini-dialog w-full max-w-md rounded-2xl border border-hairline p-4 shadow-2xl backdrop-blur-xl">
-    <div className="flex items-center justify-between"><div><div className="text-sm font-semibold text-ink">在画布中新增工作</div><div className="mt-0.5 text-[10px] text-ink-secondary">选择智能体，并通过 @ 对话把任务加入当前画布。</div></div><button type="button" onClick={onClose} aria-label="关闭对话" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</button></div>
-    <div className="mt-4 flex flex-wrap gap-2">{agents.map((agent) => <button key={agent.id} type="button" onClick={() => setAgentId(agent.id)} className={`flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold ${agentId === agent.id ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}><AvatarMini p={agent} size={24} />@{agent.name}</button>)}</div>
+    <div className="flex items-center justify-between"><div><div className="text-sm font-semibold text-ink">在画布中新增工作</div><div className="mt-0.5 text-[10px] text-ink-secondary">选择智能体，并通过 @ 对话把任务加入当前画布。</div></div><Button type="button" onClick={onClose} aria-label="关闭对话" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</Button></div>
+    <div className="mt-4 flex flex-wrap gap-2">{agents.map((agent) => <Button key={agent.id} type="button" onClick={() => setAgentId(agent.id)} className={`flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold ${agentId === agent.id ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}><AvatarMini p={agent} size={24} />@{agent.name}</Button>)}</div>
     <Textarea autoFocus value={assignment} onChange={(event) => setAssignment(event.target.value)} rows={4} placeholder="描述希望智能体在这块画布中新增的工作…" className="canvas-panel-input mt-4 resize-none text-xs" />
     {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
-    <div className="mt-3 flex justify-end"><button type="submit" disabled={!agentId || !assignment.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />@ 智能体并新增工作</button></div>
+    <div className="mt-3 flex justify-end"><Button type="submit" disabled={!agentId || !assignment.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />@ 智能体并新增工作</Button></div>
   </form></div>
 }
 

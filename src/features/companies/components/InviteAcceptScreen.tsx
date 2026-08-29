@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { companiesApi } from '@/features/companies/api'
 import { learningApi } from '@/features/learning/api'
 import { authApi } from '@/auth/api'
@@ -268,11 +269,11 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
               <b className="not-italic text-ink-900">{inv.email}</b>，但您登录的身份为{' '}
               <b className="not-italic text-ink-900">{user?.email}</b>。注销并使用正确的电子邮件重新登录。
             </p>
-            <button
+            <Button
               onClick={() => { useAuth.getState().clear() }}
               className="px-4 py-2 rounded-[10px] text-[13px] font-semibold transition"
               style={{ background: 'var(--ink-700)', color: 'white' }}
-            >退出登录</button>
+            >退出登录</Button>
           </div>
         )}
 
@@ -315,7 +316,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
               <SignInToAccept token={token_} />
             ) : (
               <>
-                <button
+                <Button
                   onClick={() => void accept()}
                   disabled={busy}
                   className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition disabled:opacity-60"
@@ -323,11 +324,11 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
                     background: 'var(--skype)',
                     boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
                   }}
-                >{busy ? '正在加入…' : `以 ${inv.role} 身份加入 ${companyName}`}</button>
-                <button
+                >{busy ? '正在加入…' : `以 ${inv.role} 身份加入 ${companyName}`}</Button>
+                <Button
                   onClick={() => { clearPendingInvite(); onDone() }}
                   className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic"
-                >暂不</button>
+                >暂不</Button>
               </>
             )}
 
@@ -377,20 +378,20 @@ function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
         </p>
       </div>
       <div className="w-full flex flex-col gap-2.5">
-        <button
+        <Button
           onClick={tryOpenDesktopApp}
           className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition"
           style={{
             background: 'var(--skype)',
             boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
           }}
-        >在 LingxiLoop 应用程序中打开</button>
+        >在 LingxiLoop 应用程序中打开</Button>
         <GetDesktopAppLink variant="button-secondary" />
         {!isWebAppHost && (
-          <button
+          <Button
             onClick={onContinueInBrowser}
             className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-          >在浏览器中继续</button>
+          >在浏览器中继续</Button>
         )}
       </div>
     </div>
@@ -414,19 +415,19 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
         从您上次停下的地方继续 - 在此设备上或您安装了 LingxiLoop 的任何地方。
       </p>
       <div className="w-full flex flex-col gap-2.5">
-        <button
+        <Button
           onClick={tryOpenDesktopApp}
           className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition"
           style={{
             background: 'var(--skype)',
             boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
           }}
-        >在LingxiLoop桌面中打开</button>
+        >在LingxiLoop桌面中打开</Button>
         <GetDesktopAppLink variant="button-secondary" />
-        <button
+        <Button
           onClick={onSwitchInBrowser}
           className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-        >在浏览器中继续</button>
+        >在浏览器中继续</Button>
       </div>
     </div>
   )
@@ -439,11 +440,11 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
       <h1 className="font-display text-[20px] text-ink-900">{title}</h1>
       <p className="text-[13px] text-ink-500 font-display italic leading-relaxed">{body}</p>
       {tokenStr && onDismiss && (
-        <button
+        <Button
           onClick={onDismiss}
           className="px-4 py-2 rounded-[10px] text-[12.5px] font-semibold text-ink-700 transition"
           style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
-        >继续LingxiLoop</button>
+        >继续LingxiLoop</Button>
       )}
     </div>
   )
@@ -502,14 +503,14 @@ function SignInToAccept({ token }: { token: string }) {
         登录以接受此邀请
       </div>
       {error && <div role="alert" className="rounded-lg bg-coral-soft px-3 py-2 text-center text-[12px] text-coral-deep">{error}</div>}
-      <button
+      <Button
         type="button"
         onClick={() => go('lingxi')}
         disabled={busy !== null}
         className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
       >
         {busy === 'lingxi' ? '正在跳转…' : '使用 LingxiIdentity 继续'}
-      </button>
+      </Button>
       <div className="text-[10.5px] text-ink-300 text-center font-display italic">
         我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
       </div>

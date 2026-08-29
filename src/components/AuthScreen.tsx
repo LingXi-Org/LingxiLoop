@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { authApi } from '@/auth/api'
 import { getServerOrigin } from '@/api/core/http'
 /**
@@ -109,14 +110,14 @@ export function AuthScreen() {
           </div>
         </div>
         <div className="w-full flex flex-col gap-3">
-          <button
+          <Button
             type="button"
             onClick={() => go('lingxi')}
             disabled={busy !== null}
             className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
           >
             {busy === 'lingxi' ? '正在跳转…' : '使用 LingxiIdentity 继续'}
-          </button>
+          </Button>
         </div>
         {err && (
           <div className="text-[12px] text-red-600 text-center max-w-full break-words">

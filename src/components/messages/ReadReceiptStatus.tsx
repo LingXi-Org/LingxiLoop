@@ -62,7 +62,7 @@ export function ReadReceiptStatus() {
             if (!participant) return null
             return (
               <div key={`${receipt.readerId}:${receipt.readThroughSeq}`} className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted">
-                <Avatar p={participant} size={24} showStatus={false} ringColor="var(--popover)" />
+                <Avatar p={participant} size={24} ringColor="var(--popover)" />
                 <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground">{participant.name}</span>
                 <time className="shrink-0 text-[10px] tabular-nums text-muted-foreground" dateTime={receipt.readAt}>
                   {new Date(receipt.readAt).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}

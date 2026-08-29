@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * In-app notification toasts. Shown when a new message arrives while the
  * window is NOT focused (or the user is viewing a different conversation).
@@ -375,7 +376,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
   }, [hovered, toast.at, onDismiss])
 
   return (
-    <button
+    <Button
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -416,7 +417,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
             <ICalendar className="w-4 h-4" />
           </div>
         ) : author ? (
-          <Avatar p={author} size={32} ringColor="var(--cloud)" showStatus={false} />
+          <Avatar p={author} size={32} ringColor="var(--cloud)" />
         ) : (
           <div className="w-8 h-8 rounded-full bg-ink-100 shrink-0" />
         )}
@@ -462,6 +463,6 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
           animation: hovered ? 'none' : `lingxiloop-toast-drain ${AUTO_DISMISS_MS}ms linear forwards`,
         }}
       />
-    </button>
+    </Button>
   )
 }

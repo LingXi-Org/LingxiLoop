@@ -117,6 +117,8 @@
   --sidebar-primary-foreground: oklch(0.982 0.018 155.826);
   --sidebar-accent: oklch(0.963 0.002 197.1);
   --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+  --card: oklch(1 0 0);
+  --accent: oklch(0.963 0.002 197.1);
 
 }
 
@@ -496,11 +498,11 @@ body {
 /* Desktop product aliases are compositions of the canonical Luma tokens. */
 .desktop-openmaus {
   --im-chat-surface: var(--background);
-  --im-nav-surface: var(--sidebar);
+  --im-nav-surface: var(--accent);
   --im-detail-surface: var(--sidebar);
   --im-elevated-surface: var(--card);
-  --im-divider: var(--border);
-  --im-divider-weak: color-mix(in srgb, var(--border) 72%, transparent);
+  --im-divider: color-mix(in srgb, var(--border) 52%, transparent);
+  --im-divider-weak: color-mix(in srgb, var(--border) 38%, transparent);
 
   /* Canvas is part of the same product surface, not a separate blackboard.
      These semantic aliases follow the surrounding panel/card palette in both
@@ -519,19 +521,19 @@ body {
 }
 
 .desktop-openmaus .chat-surface {
-  background: var(--im-chat-surface);
+  background: var(--card);
 }
 
 .desktop-openmaus .im-conversations-sidebar {
-  border-color: var(--im-divider);
-  background: var(--im-nav-surface);
+  border-color: var(--border);
+  background: var(--card);
   container-name: im-conversations-sidebar;
   container-type: inline-size;
 }
 
 .desktop-openmaus .server-rail {
-  border-color: var(--im-divider);
-  background: color-mix(in srgb, var(--im-nav-surface) 88%, var(--app));
+  border-color: transparent;
+  background: var(--accent);
 }
 
 .desktop-openmaus .server-rail-scroll {
@@ -724,34 +726,6 @@ body {
   font-size: 10.5px;
 }
 
-.grok-top-menu-trigger {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--ink-secondary);
-  transition: background-color 110ms ease, color 110ms ease;
-}
-.grok-top-menu-trigger:hover,
-.grok-top-menu-trigger[aria-expanded='true'] {
-  background: var(--raised);
-  color: var(--ink);
-}
-.grok-top-menu {
-  border-radius: 9px;
-  border-color: var(--im-divider-weak);
-  background: var(--im-elevated-surface);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, .22), 0 2px 7px rgba(0, 0, 0, .1);
-}
-.grok-top-menu-label {
-  padding: 7px 9px 5px;
-  color: var(--ink-secondary);
-  font-size: 11px;
-  font-weight: 560;
-}
 .context-empty-action {
   min-width: 0;
   border-radius: 8px;
@@ -1103,17 +1077,20 @@ body {
   .sand-settings-switch > span { transition: none; }
 }
 
-.desktop-openmaus .im-conversation-header,
-.desktop-openmaus .im-composer-surface {
-  border-color: var(--im-divider);
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
+.desktop-openmaus .im-conversation-header {
+  border-color: var(--im-divider-weak);
+  background: var(--card);
 }
 
-.desktop-openmaus ::selection { background: var(--selection-bg); color: var(--ink); }
+.desktop-openmaus .im-composer-surface {
+  background: transparent;
+}
+
+.desktop-openmaus ::selection { background: color-mix(in srgb, var(--primary) 18%, transparent); color: var(--foreground); }
 .desktop-openmaus ::-webkit-scrollbar { width: 8px; height: 8px; }
-.desktop-openmaus ::-webkit-scrollbar-thumb { background: var(--raised-hover); border-radius: 4px; }
+.desktop-openmaus ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: var(--radius-sm); }
 .desktop-openmaus ::-webkit-scrollbar-track { background: transparent; }
-.desktop-openmaus :focus-visible { outline-color: color-mix(in srgb, var(--accent) 72%, transparent); }
+.desktop-openmaus :focus-visible { outline-color: var(--ring); }
 .omb-drag { -webkit-app-region: drag; user-select: none; }
 .omb-no-drag, .omb-no-drag * { -webkit-app-region: no-drag; }
 .desktop-openmaus[data-electron='true'] .omb-titlebar-safe {
@@ -1319,7 +1296,7 @@ input, textarea { font: inherit; }
  * only when the editor has zero content. */
 .rich-input:empty::before {
   content: attr(data-placeholder);
-  color: var(--ink-300);
+  color: var(--muted-foreground);
   pointer-events: none;
   white-space: pre-wrap;
 }
@@ -1327,12 +1304,12 @@ input, textarea { font: inherit; }
   outline: none;
   word-break: break-word;
   overflow-wrap: anywhere;
-  caret-color: var(--accent);
+  caret-color: var(--primary);
 }
 .rich-input::selection,
 .rich-input *::selection {
-  background: color-mix(in srgb, var(--accent) 45%, transparent);
-  color: var(--ink-900);
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  color: var(--foreground);
 }
 
 .dark {

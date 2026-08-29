@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useEffect } from 'react'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
@@ -51,13 +52,13 @@ export function DocumentPeekPane() {
           <div className="mt-1 text-[12px] text-ink-500 leading-relaxed">
             此工件可能已被删除或移出此工作区。
           </div>
-          <button
+          <Button
             type="button"
             onClick={closeDocumentPeek}
             className="mt-4 h-8 px-3 rounded-[8px] text-[12px] font-semibold text-ink-600 border border-ink-100 hover:bg-sky2-50 transition"
           >
             关闭
-          </button>
+          </Button>
         </div>
       </aside>
     )

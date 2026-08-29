@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 "use client";
 
 import type * as React from "react";
@@ -190,13 +191,13 @@ function SourceAttribution({
 
   if (hasClickableUrl && hasSource) {
     return (
-      <button
+      <Button
         type="button"
         onClick={onSourceClick}
         className="focus-visible:ring-ring flex w-full items-center gap-3 text-left hover:opacity-80 focus-visible:ring-2 focus-visible:outline-none"
       >
         {content}
-      </button>
+      </Button>
     );
   }
 

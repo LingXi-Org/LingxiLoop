@@ -52,7 +52,6 @@ const businessParts = read('../components/messages/MessageBusinessParts.tsx')
 const groupContext = read('../components/GroupContextContent.tsx')
 const poll = read('../components/PollBubble.tsx')
 const questionnaire = read('../components/QuestionnaireBubble.tsx')
-const questionnairePrimitive = read('../components/ui/questionnaire.tsx')
 const optionList = read('../components/tool-ui/option-list/option-list.tsx')
 const codeBlock = read('../components/tool-ui/code-block/code-block.tsx')
 const promptKitTool = read('../components/prompt-kit/tool.tsx')
@@ -140,15 +139,15 @@ test('approval is single-flight and feeds assistant-ui addResult into the native
   assert.match(runtime, /agentsApi\.resolveApproval/)
 })
 
-test('questions and polls share the accessible base-nova Questionnaire contract', () => {
-  assert.match(questionnairePrimitive, /@shadcn\/react\/questionnaire/)
-  for (const slot of ['questionnaire', 'questionnaire-progress', 'questionnaire-item', 'questionnaire-title', 'questionnaire-description', 'questionnaire-choices', 'questionnaire-choice', 'questionnaire-choice-input', 'questionnaire-choice-label', 'questionnaire-choice-shortcut', 'questionnaire-input', 'questionnaire-error', 'questionnaire-actions', 'questionnaire-previous', 'questionnaire-skip', 'questionnaire-next', 'questionnaire-submit']) {
-    assert.ok(questionnairePrimitive.includes(`data-slot="${slot}"`))
+test('questions and polls import the accessible shadcn Questionnaire primitive directly', () => {
+  for (const component of [questionnaire, poll]) {
+    assert.match(component, /from '@shadcn\/react\/questionnaire'/)
+    assert.match(component, /<Questionnaire\.Root/)
   }
   assert.match(questionnaire, /sendUserMessage\(message\.conversationId, body, null, message\.id\)/)
   assert.match(questionnaire, /shortcuts="letters"/)
-  assert.match(questionnaire, /<QuestionnaireSkip>/)
-  assert.match(poll, /<Questionnaire/)
+  assert.match(questionnaire, /<Questionnaire\.Skip>/)
+  assert.match(poll, /<Questionnaire\.Choice/)
   assert.match(poll, /messagesApi\.castPollVote/)
   assert.match(poll, /VoterStack/)
 })
@@ -235,7 +234,7 @@ test('native tool activity uses localized service presentation without exposing 
   assert.match(message, /shell\.avatarAlignment === 'top' && '!self-start !translate-y-0'/)
   assert.match(assistantMessage, /tool: \{ \.\.\.STRUCTURED_PRESENTATION,[^\n]*avatarAlignment: 'top'/)
   assert.match(promptKitTool, /<CollapsibleTrigger asChild>/)
-  assert.match(promptKitTool, /<button\s+type="button"/)
+  assert.match(promptKitTool, /<Button\s+type="button"/)
   assert.match(promptKitTool, />执行参数</)
   assert.match(promptKitTool, />执行结果</)
   assert.match(promptKitTool, />错误信息</)

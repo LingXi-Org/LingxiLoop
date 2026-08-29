@@ -1,8 +1,8 @@
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useEffect, useState } from 'react'
 import type { Layout } from 'react-resizable-panels'
-import { CanvasView } from '@/features/canvas/components/CanvasView'
 import { CommandPalette } from '@/components/CommandPalette'
-import { EmailComposer } from '@/features/email/components/EmailComposer'
 import { GroupContextContent } from '@/components/GroupContextContent'
 import { LearningCenter } from '@/features/learning/components/LearningCenter'
 import {
@@ -13,47 +13,40 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer'
-import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
+import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
 import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
 import { useUiCommand } from '@/stores/uiCommands'
 import type { ViewKey } from '@/types'
 import { IconX } from '@tabler/icons-react'
-import { AgentsView } from '@/features/agents/components/AgentsView'
 import { BoardPeekPane } from '@/features/boards/components/BoardPeekPane'
 import { BoardsView } from '@/features/boards/components/BoardsView'
-import { CalendarPeekPane } from '@/features/calendar/components/CalendarPeekPane'
-import { CalendarView } from '@/features/calendar/components/CalendarView'
+import { AgentsView } from '@/features/agents/components/AgentsView'
 import { ChatPane } from './ChatPane'
-import { CompanyCourseManagement } from '@/features/companies/components/CompanyCourseManagement'
-import { ConversationsPane } from '@/features/conversations/components/ConversationsPane'
+import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
 import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPane'
 import { DocumentsView } from '@/features/documents/components/DocumentsView'
 import { InfoPane } from './InfoPane'
 import { MeView } from './MeView'
-import { ServerRail } from './ServerRail'
+import { companyColor, initials, ServerRail } from './ServerRail'
 import { ThreadDrawer } from './ThreadDrawer'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 
 const DRAWER_TITLES: Partial<Record<ViewKey['view'], string>> = {
-  agents: '智能体',
-  canvas: 'Canvas',
-  library: '资料库',
+  agents: 'Agent 群组',
   documents: '文档',
   boards: '看板',
-  calendar: '日历',
   learning: '学习',
-  management: '组织与课程',
   me: '设置',
 }
 
-const DESKTOP_TWO_PANEL_LAYOUT_KEY = 'lingxiloop:desktop-layout:two-panel'
-const LEFT_COLUMN_MIN = 256
-const LEFT_COLUMN_MAX = 424
+const DESKTOP_TWO_PANEL_LAYOUT_KEY = 'lingxiloop:desktop-layout:two-panel:v3'
+const LEFT_COLUMN_MIN = 280
+const LEFT_COLUMN_MAX = 420
 const MIDDLE_COLUMN_MIN = 320
 const TWO_PANEL_DEFAULT_LAYOUT: Layout = { conversations: 25, conversation: 75 }
 
@@ -76,11 +69,8 @@ function persistPanelLayout(storageKey: string, layout: Layout): void {
 
 function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsTab: 'Profile' | 'Preferences' }) {
   if (view === 'agents') return <AgentsView />
-  if (view === 'canvas') return <CanvasView />
   if (view === 'boards') return <BoardsView />
-  if (view === 'calendar') return <CalendarView />
   if (view === 'learning') return <LearningCenter />
-  if (view === 'management') return <CompanyCourseManagement />
   if (view === 'me') return <MeView initialTab={settingsTab} />
   return <DocumentsView />
 }
@@ -89,14 +79,13 @@ function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsT
  * destination opens above it in the shared Base UI Drawer. */
 export function DesktopApp() {
   const { theme } = useTheme()
+  const activeCompany = useAuth((state) => state.companies.find((company) => company.id === state.activeCompanyId) ?? state.companies[0])
   const view = useApp((state) => state.view)
   const surface = useSurface((state) => state.surface)
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
   const openThread = surface?.kind === 'thread' ? surface : null
   const documentId = surface?.kind === 'document' ? surface.documentId : null
   const boardId = surface?.kind === 'board' ? surface.boardId : null
-  const calendarEventId = surface?.kind === 'calendar' ? surface.eventId : null
-  const canvasId = surface?.kind === 'canvas' ? surface.canvasId : null
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const groupContext = selectedConversation?.kind === 'group' ? selectedConversation : null
@@ -146,7 +135,7 @@ export function DesktopApp() {
   }, [commandPaletteOpen, selectedConversationId, view])
 
   const pageViewOpen = view !== 'conversations'
-  const drawerOpen = pageViewOpen || Boolean(infoParticipantId || openThread || documentId || boardId || calendarEventId || canvasId || (groupContext && groupDrawerOpen))
+  const drawerOpen = pageViewOpen || Boolean(infoParticipantId || openThread || documentId || boardId || (groupContext && groupDrawerOpen))
   let drawerTitle = DRAWER_TITLES[view] ?? '会话详情'
   let drawerContent: React.ReactNode = pageViewOpen ? <WorkspacePage view={view} settingsTab={settingsTab} /> : null
 
@@ -154,8 +143,6 @@ export function DesktopApp() {
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
   else if (boardId) { drawerTitle = '看板'; drawerContent = <BoardPeekPane /> }
-  else if (calendarEventId) { drawerTitle = '日历事件'; drawerContent = <CalendarPeekPane /> }
-  else if (canvasId) { drawerTitle = 'Canvas'; drawerContent = <CanvasView canvasId={canvasId} /> }
   else if (groupContext && groupDrawerOpen) { drawerTitle = '群聊资料'; drawerContent = <GroupContextContent conversationId={groupContext.id} /> }
 
   const closeDrawer = () => {
@@ -164,30 +151,46 @@ export function DesktopApp() {
     else if (openThread) surfaces.closeThreadView()
     else if (documentId) surfaces.closeDocumentPeek()
     else if (boardId) surfaces.closeBoardPeek()
-    else if (calendarEventId) surfaces.closeCalendarEventPeek()
-    else if (canvasId) surfaces.closeCanvasPeek()
     else if (pageViewOpen) useApp.getState().setView('conversations')
     else setGroupDrawerOpen(false)
   }
 
   return (
-    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-app" data-electron={isElectron ? 'true' : 'false'} data-platform={platform}>
+    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-accent" data-electron={isElectron ? 'true' : 'false'} data-platform={platform}>
       <ServerRail />
-      <ResizablePanelGroup
-        id="desktop-two-panel-layout"
-        orientation="horizontal"
-        className="desktop-im-grid min-h-0 min-w-0 flex-1"
-        defaultLayout={defaultLayout}
-        onLayoutChanged={(layout, meta) => { if (meta.isUserInteraction) persistPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, layout) }}
-      >
-        <ResizablePanel id="conversations" defaultSize="25%" minSize={LEFT_COLUMN_MIN} maxSize={LEFT_COLUMN_MAX} className="min-h-0 min-w-0">
-          <ConversationsPane />
-        </ResizablePanel>
-        <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
-        <ResizablePanel id="conversation" defaultSize="75%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
-          <ChatPane onOpenGroupContext={groupContext ? () => setGroupDrawerOpen(true) : undefined} />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-accent">
+        <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground">
+          <Avatar size="sm" className="!size-3 rounded-sm">
+            <AvatarFallback
+              className="rounded-sm text-[5px] font-semibold text-white"
+              style={activeCompany ? { background: companyColor(activeCompany) } : undefined}
+            >
+              {initials(activeCompany?.name ?? 'LingxiLoop')}
+            </AvatarFallback>
+          </Avatar>
+          <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeCompany?.name ?? 'LingxiLoop'}</span>
+        </div>
+        <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-card text-card-foreground shadow-sm">
+          <ResizablePanelGroup
+            id="desktop-two-panel-layout"
+            orientation="horizontal"
+            className="desktop-im-grid min-h-0 min-w-0"
+            defaultLayout={defaultLayout}
+            onLayoutChanged={(layout, meta) => { if (meta.isUserInteraction) persistPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, layout) }}
+          >
+            <ResizablePanel id="conversations" defaultSize="25%" minSize={LEFT_COLUMN_MIN} maxSize={LEFT_COLUMN_MAX} className="min-h-0 min-w-0">
+              <div className="flex h-full min-h-0 flex-col bg-card">
+                <ConversationsPane />
+                <SidebarUserFooter />
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
+            <ResizablePanel id="conversation" defaultSize="75%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
+              <ChatPane />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+      </div>
 
       <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} direction="right">
         <DrawerContent className="w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]">
@@ -198,9 +201,9 @@ export function DesktopApp() {
                 <DrawerDescription className="sr-only">{drawerTitle}</DrawerDescription>
               </div>
               <DrawerClose asChild>
-                <button type="button" className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted" aria-label="关闭">
+                <Button type="button" className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted" aria-label="关闭">
                   <IconX className="size-4" />
-                </button>
+                </Button>
               </DrawerClose>
             </div>
           </DrawerHeader>
@@ -208,8 +211,6 @@ export function DesktopApp() {
         </DrawerContent>
       </Drawer>
 
-      <EmailComposer />
-      <SourceDetailOverlay />
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
     </div>
   )

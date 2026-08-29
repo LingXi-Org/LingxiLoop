@@ -2,12 +2,6 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { consumeSuspendedFragment, consumeWaitlistFragment, SuspendedScreen, WaitlistConfirmedScreen } from '@/auth/AuthStateScreens'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import {
-  clearPendingInvite,
-  consumeInviteFromUrl,
-  getPendingInvite,
-  InviteAcceptScreen,
-} from '@/features/companies/components/InviteAcceptScreen'
 import { NotificationToasts } from '@/components/NotificationToasts'
 import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -105,45 +99,12 @@ export function App() {
   const userId = useAuth((s) => s.user?.id ?? null)
   const companyId = useAuth((s) => s.activeCompanyId)
 
-  // Invite-link handling — runs BEFORE the rest of the shell so the
-  // accept page is the user's first impression when they open a link. The
-  // token can ride in via URL (fresh click) or localStorage (resumed
-  // after an OAuth round-trip). The state is unset on done so the user
-  // lands in the freshly-joined workspace. We do NOT support lingxiloop://
-  // deep links: invite URLs are always https://<web>/invite/<token>, so
-  // the OS hands them to the default browser — Electron picks up the new
-  // workspace on its next /auth/me refresh.
-  const [inviteToken, setInviteToken] = useState<string | null>(() => {
-    const fromUrl = consumeInviteFromUrl()
-    if (fromUrl) {
-      // Scrub the URL immediately so a refresh doesn't re-fire the same
-      // flow; the token stays in component state.
-      fromUrl.clear()
-      return fromUrl.token
-    }
-    return getPendingInvite()
-  })
-
   if (waitlist) {
     return <WaitlistConfirmedScreen email={waitlist.email} />
   }
 
   if (suspended) {
     return <SuspendedScreen email={suspended.email} reason={suspended.reason} />
-  }
-
-  if (inviteToken) {
-    const screen = (
-      <InviteAcceptScreen
-        token={inviteToken}
-        onDone={() => { clearPendingInvite(); setInviteToken(null) }}
-      />
-    )
-    return (
-      <AuthGate unauthFallback={screen}>
-        {screen}
-      </AuthGate>
-    )
   }
 
   return (

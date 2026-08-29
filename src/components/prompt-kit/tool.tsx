@@ -1,6 +1,6 @@
 "use client"
 
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Collapsible,
   CollapsibleContent,
@@ -108,7 +108,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <button
+          <Button
             type="button"
             aria-label={isOpen ? `收起${toolPart.type}` : `展开${toolPart.type}`}
             onClick={(event) => {
@@ -123,7 +123,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
               {getStateBadge()}
             </div>
             <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", isOpen && "rotate-180")} />
-          </button>
+          </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className={cn("border-border border-t", "data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden")}>
           <div className="bg-background space-y-3 p-3">

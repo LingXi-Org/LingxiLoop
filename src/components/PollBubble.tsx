@@ -8,17 +8,7 @@ import { useParticipants } from '@/features/agents/state'
 import type { PollTally } from '@/types'
 import { Avatar } from './Avatar'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
-import {
-  Questionnaire,
-  QuestionnaireActions,
-  QuestionnaireChoice,
-  QuestionnaireChoiceDescription,
-  QuestionnaireChoices,
-  QuestionnaireError,
-  QuestionnaireItem,
-  QuestionnaireSubmit,
-  QuestionnaireTitle,
-} from './ui/questionnaire'
+import { Questionnaire } from '@shadcn/react/questionnaire'
 
 interface Props { zh?: boolean }
 
@@ -77,7 +67,7 @@ export function PollBubble({ zh: _zh = false }: Props) {
   }
 
   return (
-    <Questionnaire key={formKey} items={itemDefinitions} shortcuts="letters" onSubmit={submit} className="mt-2 max-w-xl">
+    <Questionnaire.Root key={formKey} items={itemDefinitions} shortcuts="letters" onSubmit={submit} className="mt-2 max-w-xl">
       <Card data-poll-state={isClosed ? 'closed' : 'open'} className="w-full" size="sm">
         <CardHeader className="grid-cols-[1fr_auto]">
           <div className="flex min-w-0 items-center gap-2">
@@ -94,31 +84,32 @@ export function PollBubble({ zh: _zh = false }: Props) {
           </span>
         </CardHeader>
         <CardContent>
-          <QuestionnaireItem name="poll_vote" required={!isClosed} multiple={poll.mode === 'multi'}>
-            <QuestionnaireTitle>{poll.question}</QuestionnaireTitle>
-            <QuestionnaireChoices>
+          <Questionnaire.Item name="poll_vote" required={!isClosed} multiple={poll.mode === 'multi'}>
+            <Questionnaire.Title>{poll.question}</Questionnaire.Title>
+            <Questionnaire.Choices className="grid gap-3">
               {poll.options.map((option) => {
                 const tally = tallyByOption.get(option.id)
                 const count = tally?.count ?? 0
                 const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0
                 return (
-                  <QuestionnaireChoice
+                  <Questionnaire.Choice
                     key={option.id}
                     value={option.id}
                     defaultChecked={myVotes.has(option.id)}
                     disabled={isClosed || submitting}
+                    className="rounded-md border border-input p-3"
                   >
-                    <span>{option.text}</span>
-                    <QuestionnaireChoiceDescription className="flex items-center justify-between gap-3">
+                    <Questionnaire.ChoiceLabel>{option.text}</Questionnaire.ChoiceLabel>
+                    <span className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                       <span>{count} 票 · {percentage}%</span>
                       {tally?.voterIds.length ? <VoterStack voterIds={tally.voterIds} /> : null}
-                    </QuestionnaireChoiceDescription>
-                  </QuestionnaireChoice>
+                    </span>
+                  </Questionnaire.Choice>
                 )
               })}
-            </QuestionnaireChoices>
-            <QuestionnaireError>请选择至少一个选项。</QuestionnaireError>
-          </QuestionnaireItem>
+            </Questionnaire.Choices>
+            <Questionnaire.Error>请选择至少一个选项。</Questionnaire.Error>
+          </Questionnaire.Item>
         </CardContent>
         <CardFooter className="justify-between gap-3">
           <span className="text-xs text-muted-foreground tabular-nums">
@@ -126,15 +117,15 @@ export function PollBubble({ zh: _zh = false }: Props) {
             {error ? <span className="ml-2 text-destructive">{error}</span> : null}
           </span>
           {!isClosed ? (
-            <QuestionnaireActions className="min-h-0 w-auto grid-cols-[auto]">
-              <QuestionnaireSubmit className="col-start-1" size="sm" disabled={submitting}>
+            <div className="flex">
+              <Questionnaire.Submit className="col-start-1" disabled={submitting}>
                 {submitting ? '提交中…' : (myVotes.size ? '更新投票' : '提交投票')}
-              </QuestionnaireSubmit>
-            </QuestionnaireActions>
+              </Questionnaire.Submit>
+            </div>
           ) : null}
         </CardFooter>
       </Card>
-    </Questionnaire>
+    </Questionnaire.Root>
   )
 }
 
@@ -148,7 +139,7 @@ function VoterStack({ voterIds }: { voterIds: string[] }) {
         const participant = byId[id]
         return participant ? (
           <span key={id} className="inline-flex rounded-full ring-1 ring-card" title={participant.name}>
-            <Avatar p={participant} size={16} showStatus={false} ringColor="var(--card)" />
+            <Avatar p={participant} size={16} ringColor="var(--card)" />
           </span>
         ) : <span key={id} className="size-4 rounded-full bg-muted ring-1 ring-card" title={id} />
       })}

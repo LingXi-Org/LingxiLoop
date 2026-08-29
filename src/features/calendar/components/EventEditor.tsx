@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * Modal for creating + editing a calendar event. Drives the AI-native
  * "schedule a task for an agent" flow: title + start time + assignee +
@@ -6,9 +7,9 @@
  */
 import { useMemo, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
-import { DateTimePicker } from '@/components/DateTimePicker'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toastAction } from '@/lib/actionToast'
@@ -40,7 +41,7 @@ interface Props {
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-/** Format a JS Date into `YYYY-MM-DDTHH:mm` for `<input type=datetime-local>`. */
+/** Format a JS Date into the local date-time control value. */
 function toLocalInput(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
@@ -249,7 +250,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
           <Field label="种类" hint="智能体任务触发提示；个人只是一个时间标记。">
             <div className="flex gap-2">
               {(['agent_task', 'personal'] as const).map((k) => (
-                <button
+                <Button
                   key={k}
                   type="button"
                   onClick={() => setKind(k)}
@@ -259,44 +260,42 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     color: kind === k ? 'white' : 'var(--ink-700)',
                     border: '1.5px solid ' + (kind === k ? 'var(--skype)' : 'var(--ink-100)'),
                   }}
-                >{k === 'agent_task' ? "智能体任务" : "个人"}</button>
+                >{k === 'agent_task' ? "智能体任务" : "个人"}</Button>
               ))}
             </div>
           </Field>
 
           <Field label="当">
             <label className="flex items-center gap-2 text-[13px] text-ink-700 mb-2 cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={allDay}
-                onChange={(e) => setAllDay(e.target.checked)}
+                onCheckedChange={(checked) => setAllDay(checked === true)}
               />
               全天
             </label>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <div className="text-[10px] uppercase tracking-wider text-ink-400 mb-1">开始</div>
-                <DateTimePicker
-                  mode={allDay ? 'date' : 'datetime'}
-                  value={startAt}
+                <Input
+                  type={allDay ? 'date' : 'datetime-local'}
+                  value={allDay ? startAt.slice(0, 10) : startAt}
                   // All-day saves T00:00; otherwise the picker emits its
                   // normal HH:mm. We round-trip through the same value
                   // shape regardless of mode so the submit logic stays put.
-                  onChange={(v) => setStartAt(allDay ? `${v.slice(0, 10)}T00:00` : v)}
+                  onChange={(event) => setStartAt(allDay ? `${event.target.value.slice(0, 10)}T00:00` : event.target.value)}
                 />
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wider text-ink-400 mb-1">
                   结束 <span className="normal-case text-ink-300">— 可选</span>
                 </div>
-                <DateTimePicker
-                  mode={allDay ? 'date' : 'datetime'}
-                  value={endAt}
+                <Input
+                  type={allDay ? 'date' : 'datetime-local'}
+                  value={allDay && endAt ? endAt.slice(0, 10) : endAt}
                   placeholder="—"
-                  allowClear
-                  onChange={(v) => {
-                    if (!v) { setEndAt(''); return }
-                    setEndAt(allDay ? `${v.slice(0, 10)}T23:59` : v)
+                  onChange={(event) => {
+                    if (!event.target.value) { setEndAt(''); return }
+                    setEndAt(allDay ? `${event.target.value.slice(0, 10)}T23:59` : event.target.value)
                   }}
                 />
               </div>
@@ -305,10 +304,9 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
           <Field label="重复" hint="离开去参加一次性活动。">
             <label className="flex items-center gap-2 text-[13px] text-ink-700 mb-2 cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={recurEnabled}
-                onChange={(e) => setRecurEnabled(e.target.checked)}
+                onCheckedChange={(checked) => setRecurEnabled(checked === true)}
               />
               重复出现
             </label>
@@ -338,7 +336,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                     {WEEKDAY_LABELS.map((label, idx) => {
                       const on = (recur.byweekday ?? []).includes(idx)
                       return (
-                        <button
+                        <Button
                           type="button"
                           key={idx}
                           onClick={() => {
@@ -353,7 +351,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                             color: on ? 'white' : 'var(--ink-600)',
                             border: '1.5px solid ' + (on ? 'var(--skype)' : 'var(--ink-100)'),
                           }}
-                        >{label}</button>
+                        >{label}</Button>
                       )
                     })}
                   </div>
@@ -362,14 +360,13 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                   <div className="text-[11.5px] text-ink-500 flex items-center gap-1.5">
                     <span>直到</span>
                     <div style={{ width: 180 }}>
-                      <DateTimePicker
-                        mode="date"
-                        value={recur.until ? `${recur.until.slice(0, 10)}T00:00` : ''}
-                        allowClear
+                      <Input
+                        type="date"
+                        value={recur.until ? recur.until.slice(0, 10) : ''}
                         placeholder="从来没有"
-                        onChange={(v) => setRecur({
+                        onChange={(event) => setRecur({
                           ...recur,
-                          until: v ? new Date(`${v.slice(0, 10)}T00:00:00`).toISOString() : null,
+                          until: event.target.value ? new Date(`${event.target.value.slice(0, 10)}T00:00:00`).toISOString() : null,
                         })}
                       />
                     </div>
@@ -393,10 +390,9 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
           <Field label="提醒" hint="在每次发生之前向您（以及任何人工受让人）发出警告。">
             <label className="flex items-center gap-2 text-[13px] text-ink-700 mb-2 cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={reminderEnabled}
-                onChange={(e) => setReminderEnabled(e.target.checked)}
+                onCheckedChange={(checked) => setReminderEnabled(checked === true)}
               />
               之前提醒我
             </label>
@@ -408,7 +404,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                       const on = reminderMinutes === m
                       const label = m < 60 ? `${m}m` : m < 1440 ? `${m / 60}h` : `${m / 1440}d`
                       return (
-                        <button
+                        <Button
                           key={m}
                           type="button"
                           onClick={() => setReminderMinutes(m)}
@@ -418,7 +414,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                             color: on ? 'white' : 'var(--ink-700)',
                             border: '1.5px solid ' + (on ? 'var(--skype)' : 'var(--ink-100)'),
                           }}
-                        >{label}</button>
+                        >{label}</Button>
                       )
                     })}
                   </div>
@@ -436,7 +432,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                   {(['toast', 'email', 'both'] as const).map((ch) => {
                     const on = reminderChannel === ch
                     return (
-                      <button
+                      <Button
                         key={ch}
                         type="button"
                         onClick={() => setReminderChannel(ch)}
@@ -446,7 +442,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                           color: on ? 'white' : 'var(--ink-700)',
                           border: '1.5px solid ' + (on ? 'var(--skype)' : 'var(--ink-100)'),
                         }}
-                      >{ch === 'toast' ? "吐司" : ch === 'email' ? "电子邮件" : "两者"}</button>
+                      >{ch === 'toast' ? "吐司" : ch === 'email' ? "电子邮件" : "两者"}</Button>
                     )
                   })}
                 </div>
@@ -461,7 +457,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                   {candidates.map((p) => {
                     const on = assigneeId === p.id
                     return (
-                      <button
+                      <Button
                         type="button"
                         key={p.id}
                         onClick={() => setAssigneeId(p.id)}
@@ -471,7 +467,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                           border: `1.5px solid ${on ? 'var(--sky2-300)' : 'var(--ink-100)'}`,
                         }}
                       >
-                        <Avatar p={p} size={28} ringColor="var(--paper)" showStatus={false} />
+                        <Avatar p={p} size={28} ringColor="var(--paper)" />
                         <div className="flex-1 min-w-0">
                           <div className="text-[13px] font-semibold text-ink-900 truncate">{p.name}</div>
                           <div className="text-[11px] text-ink-500 truncate">
@@ -481,7 +477,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                         {on && (
                           <span className="text-[12px] text-skype-deep font-semibold">✓</span>
                         )}
-                      </button>
+                      </Button>
                     )
                   })}
                   {candidates.length === 0 && (
@@ -516,10 +512,9 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
           <Field label="隐私" hint="私人事件仅对创建者和受让人显示。工作区所有者仍然可以查看涉及智能体的私人事件以进行监督。默认：与工作区中的每个人共享。">
             <label className="flex items-center gap-2 text-[13px] text-ink-700 cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isPrivate}
-                onChange={(e) => setIsPrivate(e.target.checked)}
+                onCheckedChange={(checked) => setIsPrivate(checked === true)}
               />
               <span>🔒 私人 — 从共享日历中隐藏</span>
             </label>
@@ -542,30 +537,30 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
         <DialogFooter className="shrink-0 flex-row items-center gap-2 border-t border-ink-100 bg-paper px-6 py-4 sm:justify-start">
           {canDelete && (
-            <button
+            <Button
               onClick={onDelete}
               disabled={busy}
               className="px-3 py-2 rounded-[9px] text-[12.5px] font-semibold text-coral-deep bg-cloud hover:bg-coral-soft transition"
               style={{ border: '1px solid var(--ink-100)' }}
-            >删除</button>
+            >删除</Button>
           )}
           {isEdit && event!.kind === 'agent_task' && event!.status === 'active' && (
-            <button
+            <Button
               onClick={onRunNow}
               disabled={busy}
               className="px-3 py-2 rounded-[9px] text-[12.5px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-100 transition"
               style={{ border: '1px solid var(--ink-100)' }}
               title="立即触发此事件，无需等待下一个预定时间"
-            >立即运行</button>
+            >立即运行</Button>
           )}
           <div className="flex-1" />
-          <button
+          <Button
             onClick={onClose}
             disabled={busy}
             className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >取消</button>
-          <button
+          >取消</Button>
+          <Button
             onClick={submit}
             disabled={busy}
             className="px-5 py-2 rounded-[9px] text-[12.5px] font-semibold text-white transition disabled:opacity-50"
@@ -573,7 +568,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               background: 'var(--skype)',
               boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
             }}
-          >{busy ? "正在保存..." : isEdit ? "保存" : "时间表"}</button>
+          >{busy ? "正在保存..." : isEdit ? "保存" : "时间表"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -130,7 +130,7 @@ export function ThreadDrawer() {
       <aside
         className="relative flex flex-col overflow-hidden border-s border-border bg-background"
       >
-      <header className="flex items-center justify-between border-b border-border px-4 pb-3 pt-4">
+      <header className="mx-2 mt-2 flex min-h-12 items-center justify-between rounded-2xl border border-sidebar-border bg-sidebar-accent/40 px-3 py-2 text-sidebar-foreground shadow-sm backdrop-blur-xl">
         <div>
           <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground">主题</div>
           <div className="mt-0.5 text-[13px] font-semibold text-foreground">

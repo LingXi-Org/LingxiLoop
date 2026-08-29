@@ -112,7 +112,7 @@ function TeacherToday({
       {teacherAgent && (
         <Card>
           <CardContent className="flex flex-wrap items-center gap-4">
-            {teacherParticipant && <Avatar p={teacherParticipant} size={48} showStatus={false} animated={false} />}
+            {teacherParticipant && <Avatar p={teacherParticipant} size={48} animated={false} />}
             <div className="min-w-0 flex-1 basis-56 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-heading text-base font-medium">{teacherAgent.displayName}</h3>

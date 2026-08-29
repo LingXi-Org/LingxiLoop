@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import Collaboration from '@tiptap/extension-collaboration'
 // TipTap v3 collaboration uses the Caret extension with @tiptap/y-tiptap.
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
@@ -194,7 +195,7 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
           <PresenceStrip session={session} synced={synced} />
         </div>
         {isPeek && onOpenFull ? (
-          <button
+          <Button
             type="button"
             onClick={onOpenFull}
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:text-skype-deep hover:bg-sky2-100 transition"
@@ -206,10 +207,10 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
               <path d="M20 4l-9 9" />
               <path d="M20 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4" />
             </svg>
-          </button>
+          </Button>
         ) : null}
         {isPeek && onClose ? (
-          <button
+          <Button
             type="button"
             onClick={onClose}
             className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-400 hover:text-ink-900 hover:bg-ink-100/70 transition"
@@ -219,9 +220,9 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             type="button"
             onClick={async () => {
               if (!await confirmSensitiveAction({
@@ -237,7 +238,7 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
             className="text-xs leading-none text-stone-500 hover:text-red-600 transition-colors"
           >
             删除
-          </button>
+          </Button>
         )}
       </header>
       <CollaborativeEditor
@@ -427,77 +428,77 @@ function Toolbar({ editor, disabled }: ToolbarProps) {
   )
   return (
     <div className="border-b border-stone-100 px-3 py-1.5 bg-stone-50/60 flex items-center gap-0.5 flex-wrap">
-      <button
+      <Button
         type="button" className={btn(editor.isActive('bold'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleBold().run()}
         title="粗体 (⌘B)"
-      ><IBold className="w-4 h-4" /></button>
-      <button
+      ><IBold className="w-4 h-4" /></Button>
+      <Button
         type="button" className={btn(editor.isActive('italic'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         title="斜体 (⌘I)"
-      ><IItalic className="w-4 h-4" /></button>
-      <button
+      ><IItalic className="w-4 h-4" /></Button>
+      <Button
         type="button" className={btn(editor.isActive('strike'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleStrike().run()}
         title="删除线"
-      ><IStrike className="w-4 h-4" /></button>
+      ><IStrike className="w-4 h-4" /></Button>
       <ToolbarSep />
-      <button
+      <Button
         type="button" className={btn(editor.isActive('heading', { level: 1 }))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         title="标题 1"
-      ><IH1 className="w-4 h-4" /></button>
-      <button
+      ><IH1 className="w-4 h-4" /></Button>
+      <Button
         type="button" className={btn(editor.isActive('heading', { level: 2 }))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         title="标题 2"
-      ><IH2 className="w-4 h-4" /></button>
-      <button
+      ><IH2 className="w-4 h-4" /></Button>
+      <Button
         type="button" className={btn(editor.isActive('heading', { level: 3 }))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         title="标题 3"
-      ><IH3 className="w-4 h-4" /></button>
+      ><IH3 className="w-4 h-4" /></Button>
       <ToolbarSep />
-      <button
+      <Button
         type="button" className={btn(editor.isActive('bulletList'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         title="项目符号列表"
-      ><IList className="w-4 h-4" /></button>
-      <button
+      ><IList className="w-4 h-4" /></Button>
+      <Button
         type="button" className={btn(editor.isActive('orderedList'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         title="有序列表"
-      ><IListOrdered className="w-4 h-4" /></button>
-      <button
+      ><IListOrdered className="w-4 h-4" /></Button>
+      <Button
         type="button" className={btn(editor.isActive('blockquote'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         title="引用"
-      ><IQuote className="w-4 h-4" /></button>
+      ><IQuote className="w-4 h-4" /></Button>
       <ToolbarSep />
-      <button
+      <Button
         type="button" className={btn(editor.isActive('code'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleCode().run()}
         title="内联代码"
-      ><ICode className="w-4 h-4" /></button>
-      <button
+      ><ICode className="w-4 h-4" /></Button>
+      <Button
         type="button" className={btn(editor.isActive('codeBlock'))} disabled={disabled}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         title="代码块"
-      ><ICodeBlock className="w-4 h-4" /></button>
+      ><ICodeBlock className="w-4 h-4" /></Button>
       <LinkButton editor={editor} disabled={disabled} />
       <ImageButton editor={editor} disabled={disabled} />
       <ToolbarSep />
-      <button
+      <Button
         type="button" className={btn(false)} disabled={disabled || !editor.can().undo()}
         onClick={() => editor.chain().focus().undo().run()}
         title="撤消 (⌘Z)"
-      ><IUndo className="w-4 h-4" /></button>
-      <button
+      ><IUndo className="w-4 h-4" /></Button>
+      <Button
         type="button" className={btn(false)} disabled={disabled || !editor.can().redo()}
         onClick={() => editor.chain().focus().redo().run()}
         title="重做 (⌘⇧Z)"
-      ><IRedo className="w-4 h-4" /></button>
+      ><IRedo className="w-4 h-4" /></Button>
     </div>
   )
 }
@@ -551,7 +552,7 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
           if (file) void uploadAndInsert(file)
         }}
       />
-      <button
+      <Button
         type="button"
         disabled={disabled || uploading}
         onClick={(event) => {
@@ -575,7 +576,7 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
         title={uploading ? "上传图片" : "插入图像"}
       >
         <IImage className="w-4 h-4" />
-      </button>
+      </Button>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -587,8 +588,8 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
             <Input value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} placeholder="替代文本（可选）" aria-label="图片替代文本" />
           </div>
           <DialogFooter>
-            <button type="button" className="rounded-md px-3 py-2 text-sm" onClick={() => setDialogOpen(false)}>取消</button>
-            <button type="button" className="rounded-md bg-skype px-3 py-2 text-sm font-semibold text-white" onClick={() => {
+            <Button type="button" className="rounded-md px-3 py-2 text-sm" onClick={() => setDialogOpen(false)}>取消</Button>
+            <Button type="button" className="rounded-md bg-skype px-3 py-2 text-sm font-semibold text-white" onClick={() => {
               const url = imageUrl.trim()
               if (!url || !isSafeImageUrl(url)) {
                 notifyAction({ title: '图片地址无效', description: '请使用 http(s) URL 或应用内 /path。', type: 'warning' })
@@ -597,7 +598,7 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
               const alt = imageAlt.trim()
               insertImage(alt ? { src: url, alt } : { src: url })
               setDialogOpen(false)
-            }}>插入</button>
+            }}>插入</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -611,24 +612,24 @@ function LinkButton({ editor, disabled }: { editor: Editor; disabled: boolean })
   const [linkUrl, setLinkUrl] = useState('')
   return (
     <>
-      <button type="button" disabled={disabled} onClick={() => {
+      <Button type="button" disabled={disabled} onClick={() => {
         setLinkUrl((editor.getAttributes('link').href as string | undefined) ?? '')
         setDialogOpen(true)
       }} className={cn('w-8 h-8 grid place-items-center rounded-md transition-colors', disabled ? 'text-stone-300' : (isActive ? 'bg-skype/15 text-skype-deep' : 'text-stone-600 hover:bg-stone-100'))} title="链接">
         <ILink className="w-4 h-4" />
-      </button>
+      </Button>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>设置链接</DialogTitle><DialogDescription>留空并保存可移除当前链接。</DialogDescription></DialogHeader>
           <Input value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} placeholder="https://…" aria-label="链接地址" />
           <DialogFooter>
-            <button type="button" className="rounded-md px-3 py-2 text-sm" onClick={() => setDialogOpen(false)}>取消</button>
-            <button type="button" className="rounded-md bg-skype px-3 py-2 text-sm font-semibold text-white" onClick={() => {
+            <Button type="button" className="rounded-md px-3 py-2 text-sm" onClick={() => setDialogOpen(false)}>取消</Button>
+            <Button type="button" className="rounded-md bg-skype px-3 py-2 text-sm font-semibold text-white" onClick={() => {
               const url = linkUrl.trim()
               if (!url) editor.chain().focus().extendMarkRange('link').unsetLink().run()
               else editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
               setDialogOpen(false)
-            }}>保存</button>
+            }}>保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

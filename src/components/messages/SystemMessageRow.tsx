@@ -49,6 +49,6 @@ export function SystemRow({ msg, delay = 0, animate = true, openMaus = false }: 
 
 function SystemActor({ participant, onClick, disabled = false }: { participant: Participant; onClick: () => void; disabled?: boolean }) {
   return <Button type="button" variant="link" size="xs" onClick={onClick} disabled={disabled || participant.kind !== 'agent'} className="h-auto gap-1.5 p-0 font-semibold text-muted-foreground hover:text-primary disabled:cursor-default">
-    <Avatar p={participant} size={16} ringColor="var(--background)" showStatus={false} />{participant.name}
+    <Avatar p={participant} size={16} ringColor="var(--background)" />{participant.name}
   </Button>
 }

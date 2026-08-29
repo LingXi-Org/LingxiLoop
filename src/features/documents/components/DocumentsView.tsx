@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useEffect } from 'react'
 import { useDocuments } from '../state'
 import { DocumentEditor } from './DocumentEditor'
@@ -6,6 +7,7 @@ import { useParticipants } from '@/features/agents/state'
 import { cn } from '@/lib/utils'
 import { IPlus } from '@/components/icons'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
 
 export function DocumentsView() {
   const list = useDocuments((s) => s.list)
@@ -40,7 +42,7 @@ export function DocumentsView() {
       <aside className="border-r border-ink-100 bg-white flex flex-col min-h-0">
         <header className="px-4 py-3 flex items-center justify-between border-b border-ink-100">
           <h2 className="font-display text-sm font-medium text-stone-800">文档</h2>
-          <button
+          <Button
             type="button"
             onClick={handleCreate}
             className="w-7 h-7 rounded-lg grid place-items-center text-skype-deep hover:bg-skype/10 transition-colors"
@@ -48,7 +50,7 @@ export function DocumentsView() {
             aria-label="新文件"
           >
             <IPlus className="w-4 h-4" />
-          </button>
+          </Button>
         </header>
         <div className="flex-1 overflow-y-auto py-2">
           {!loaded && (
@@ -59,29 +61,38 @@ export function DocumentsView() {
               尚无文档。创建一个——人类和智能体都可以实时编辑。
             </div>
           )}
-          {list.map((d) => {
+          <ItemGroup className="gap-0">{list.map((d) => {
             const author = byId[d.createdBy]
             const authorName = author?.name ?? (d.createdBy === me?.id ? 'You' : d.createdBy)
             const active = d.id === selectedId
             return (
-              <button
+              <Item
                 key={d.id}
-                type="button"
+                role="button"
+                tabIndex={0}
+                size="xs"
                 onClick={() => select(d.id)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  event.preventDefault(); select(d.id)
+                }}
+                aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'w-full text-left px-4 py-2.5 transition-colors block',
+                  'cursor-pointer rounded-none border-0 px-4 py-2.5',
                   active
                     ? 'bg-skype/10 text-skype-deep'
                     : 'hover:bg-stone-50 text-stone-700',
                 )}
               >
-                <div className="text-sm font-medium truncate">{d.title || 'Untitled'}</div>
-                <div className="text-[11px] text-stone-400 mt-0.5">
+                <ItemContent className="min-w-0">
+                <ItemTitle className="block w-full truncate text-sm font-medium">{d.title || 'Untitled'}</ItemTitle>
+                <ItemDescription className="line-clamp-1 text-[11px] text-stone-400">
                   {authorName} · {timeAgo(d.updatedAt)}
-                </div>
-              </button>
+                </ItemDescription>
+                </ItemContent>
+              </Item>
             )
-          })}
+          })}</ItemGroup>
         </div>
       </aside>
       <main className="min-h-0 overflow-hidden bg-white">

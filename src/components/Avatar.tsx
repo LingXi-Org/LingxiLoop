@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react'
 import { AVATAR_IMG_LOADING, useAvatarImg, useCachedAvatarSrc } from '@/lib/avatarCache'
 import { cn } from '@/lib/utils'
-import { statusColor } from '@/lib/participantStatus'
 import { useAuth } from '@/stores/auth'
 import type { Participant } from '@/types'
 import { BloubAvatar } from './BloubAvatar'
@@ -9,7 +8,6 @@ import { BloubAvatar } from './BloubAvatar'
 interface Props {
   p: Participant
   size?: number
-  showStatus?: boolean
   statusOverride?: string
   ringColor?: string
   className?: string
@@ -32,8 +30,7 @@ function useResolvedAvatarStatus(p: Participant, statusOverride?: string) {
   return statusOverride ?? ownStatus
 }
 
-export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringColor = 'var(--paper)', className, animated = true, mode = 'neutral' }: Props) {
-  const dotSize = Math.max(10, Math.round(size * 0.27))
+export function Avatar({ p, size = 44, statusOverride, ringColor = 'var(--paper)', className, animated = true, mode = 'neutral' }: Props) {
   const fontSize = Math.round(size * 0.36)
   const status = useResolvedAvatarStatus(p, statusOverride)
   // Route human images through the local cache so they survive re-mounts.
@@ -66,19 +63,6 @@ export function Avatar({ p, size = 44, showStatus = true, statusOverride, ringCo
         />
       ) : (
         <span style={{ letterSpacing: '-0.02em' }}>{p.initial}</span>
-      )}
-      {showStatus && (
-        <span
-          className="absolute rounded-full z-[1]"
-          style={{
-            width: dotSize,
-            height: dotSize,
-            background: statusColor(status),
-            boxShadow: `0 0 0 ${Math.max(2, dotSize / 5)}px ${ringColor}`,
-            bottom: -1,
-            right: -1,
-          }}
-        />
       )}
     </div>
   )

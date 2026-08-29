@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AvatarMini } from '@/components/Avatar'
 import { IAt, IBoard, IMore, IPlus, ITrash } from '@/components/icons'
-import { ResizeHandle } from '@/components/ResizeHandle'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
-import { useResizableWidth } from '@/lib/useResizableWidth'
 import { cn } from '@/lib/utils'
 import { useBoards } from '../state'
 import { useParticipants } from '@/features/agents/state'
@@ -42,14 +40,12 @@ export function BoardsView() {
   // Same shape as ConversationsLayout — `minmax(0, 1fr)` is critical:
   // a plain `1fr` track expands to fit its widest child, which would
   // make the canvas's horizontal overflow never trigger.
-  const { width, onResizeStart } = useResizableWidth('sidebar:boards', 280, { min: 220, max: 480 })
-
   return (
     <div
       className="h-full grid"
-      style={{ gridTemplateColumns: `${width}px minmax(0, 1fr)` }}
+      style={{ gridTemplateColumns: '280px minmax(0, 1fr)' }}
     >
-      <BoardsSidebar onResizeStart={onResizeStart} />
+      <BoardsSidebar />
       {selectedId
         ? <BoardCanvas boardId={selectedId} />
         : loadingList
@@ -61,7 +57,7 @@ export function BoardsView() {
 
 /* ============== Sidebar ============== */
 
-function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent) => void }) {
+function BoardsSidebar() {
   const list = useBoards((s) => s.list)
   const loadingList = useBoards((s) => s.loadingList)
   const selectedId = useBoards((s) => s.selectedId)
@@ -86,7 +82,6 @@ function BoardsSidebar({ onResizeStart }: { onResizeStart: (e: React.MouseEvent)
 
   return (
     <aside className="relative h-full overflow-y-auto border-e border-border bg-muted/30">
-      <ResizeHandle onMouseDown={onResizeStart} />
       <div className="px-4 py-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">看板</h2>
         <Button

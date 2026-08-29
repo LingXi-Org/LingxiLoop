@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
 interface Props { children: ReactNode }
@@ -36,19 +37,19 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.error.message || String(this.state.error)}
             </pre>
             <div className="flex gap-2 justify-center">
-              <button
+              <Button
                 onClick={() => this.setState({ error: null, resetKey: this.state.resetKey + 1 })}
                 className="py-2 px-4 rounded-[10px] text-[13px] font-semibold text-white"
                 style={{
                   background: 'linear-gradient(135deg, var(--skype), var(--skype-deep))',
                   boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.45)',
                 }}
-              >重置视图</button>
-              <button
+              >重置视图</Button>
+              <Button
                 onClick={() => window.location.reload()}
                 className="py-2 px-4 rounded-[10px] text-[13px] font-semibold text-ink-700 bg-cloud"
                 style={{ border: '1px solid var(--ink-100)' }}
-              >重新加载</button>
+              >重新加载</Button>
             </div>
           </div>
         </div>

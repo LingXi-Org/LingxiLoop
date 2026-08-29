@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * Modal for creating a new group conversation. User picks a title and a set of
  * teammates (active agents + other humans). Yetone is auto-included.
@@ -138,7 +139,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
             {candidates.map((p) => {
               const on = picked.has(p.id)
               return (
-                <button
+                <Button
                   key={p.id}
                   type="button"
                   onClick={() => toggle(p.id)}
@@ -148,7 +149,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
                     border: `1.5px solid ${on ? 'var(--sky2-300)' : 'var(--ink-100)'}`,
                   }}
                 >
-                  <Avatar p={p} size={32} ringColor="var(--paper)" showStatus={false} />
+                  <Avatar p={p} size={32} ringColor="var(--paper)" />
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-semibold text-ink-900 truncate">{p.name}</div>
                     <div className="text-[11px] text-ink-500 truncate">
@@ -163,7 +164,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
                       border: on ? '1.5px solid var(--skype)' : '1.5px solid var(--ink-200)',
                     }}
                   >{on ? '✓' : ''}</span>
-                </button>
+                </Button>
               )
             })}
             {candidates.length === 0 && (
@@ -181,7 +182,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
             {leaderCandidates.map((p) => {
               const on = leaderId === p.id
               return (
-                <button
+                <Button
                   key={p.id}
                   type="button"
                   onClick={() => setLeaderId(p.id)}
@@ -191,10 +192,10 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
                     border: `1.5px solid ${on ? 'var(--skype)' : 'var(--ink-100)'}`,
                   }}
                 >
-                  <Avatar p={p} size={30} ringColor="var(--paper)" showStatus={false} />
+                  <Avatar p={p} size={30} ringColor="var(--paper)" />
                   <span className="flex-1 text-[13px] font-semibold text-ink-900">{p.name}</span>
                   <span className="text-[10px] font-bold tracking-wider text-skype-deep">{on ? '负责人' : '设为负责人'}</span>
-                </button>
+                </Button>
               )
             })}
             {leaderCandidates.length === 0 && (
@@ -212,14 +213,14 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
         </div>
 
         <div className="px-6 py-4 border-t border-ink-100 flex items-center gap-2 bg-paper shrink-0">
-          <button
+          <Button
             onClick={onClose}
             disabled={busy}
             className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >取消</button>
+          >取消</Button>
           <div className="flex-1" />
-          <button
+          <Button
             onClick={submit}
             disabled={!canSubmit}
             className="px-5 py-2 rounded-[9px] text-[12.5px] font-semibold text-white transition disabled:opacity-50"
@@ -227,7 +228,7 @@ export function GroupCreator({ onClose, initialPicked }: Props) {
               background: 'var(--skype)',
               boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
             }}
-          >{busy ? "正在创建…" : `创建群聊${picked.size > 0 ? `（${picked.size + 1} 人）` : ''}`}</button>
+          >{busy ? "正在创建…" : `创建群聊${picked.size > 0 ? `（${picked.size + 1} 人）` : ''}`}</Button>
         </div>
       </DialogContent>
     </Dialog>

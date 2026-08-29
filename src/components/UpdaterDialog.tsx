@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * UpdaterDialog — UI shell for the auto-update flow.
  *
@@ -170,19 +171,19 @@ export function UpdateBanner({ forceOpen, onOpen }: BannerProps) {
           </div>
         )}
       </div>
-      <button
+      <Button
         onClick={onOpen}
         className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold text-white transition shrink-0"
         style={{ background: 'var(--skype)' }}
       >
         {isDownloaded ? "重新启动" : isDownloading ? "查看" : "更新"}
-      </button>
+      </Button>
       {!isDownloading && (
-        <button
+        <Button
           onClick={() => setDismissed(true)}
           className="w-6 h-6 rounded-[6px] grid place-items-center text-ink-400 hover:text-ink-700 hover:bg-cloud transition text-[14px] shrink-0"
           aria-label="驳回"
-        >×</button>
+        >×</Button>
       )}
       </div>
     </div>
@@ -322,55 +323,55 @@ export function UpdaterDialog({ open, onClose }: DialogProps) {
         </div>
 
         <div className="px-6 py-4 flex items-center gap-2 border-t border-ink-100 bg-cloud">
-          <button
+          <Button
             onClick={onClose}
             className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 hover:bg-paper transition"
             style={{ border: '1px solid var(--ink-100)' }}
           >
             {kind === 'update-downloaded' ? "稍后" : "关闭"}
-          </button>
+          </Button>
           <div className="flex-1" />
 
           {(kind === 'idle' || kind === 'update-not-available' || kind === 'error') && !isUnsupported && (
-            <button
+            <Button
               onClick={() => void check()}
               className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-white transition"
               style={{ background: 'var(--skype)' }}
-            >再次检查</button>
+            >再次检查</Button>
           )}
           {kind === 'checking' && (
-            <button
+            <Button
               disabled
               className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-white opacity-60"
               style={{ background: 'var(--skype)' }}
-            >正在检查...</button>
+            >正在检查...</Button>
           )}
           {kind === 'update-available' && (
-            <button
+            <Button
               onClick={() => void download()}
               className="px-5 py-2 rounded-[9px] text-[12.5px] font-semibold text-white transition"
               style={{
                 background: 'var(--skype)',
                 boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
               }}
-            >下载</button>
+            >下载</Button>
           )}
           {kind === 'downloading' && (
-            <button
+            <Button
               disabled
               className="px-5 py-2 rounded-[9px] text-[12.5px] font-semibold text-white opacity-60"
               style={{ background: 'var(--skype)' }}
-            >正在下载...</button>
+            >正在下载...</Button>
           )}
           {kind === 'update-downloaded' && (
-            <button
+            <Button
               onClick={() => void install()}
               className="px-5 py-2 rounded-[9px] text-[12.5px] font-semibold text-white transition"
               style={{
                 background: 'var(--skype)',
                 boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
               }}
-            >立即重新启动</button>
+            >立即重新启动</Button>
           )}
         </div>
       </div>

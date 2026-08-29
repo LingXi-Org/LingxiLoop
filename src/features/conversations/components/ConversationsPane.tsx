@@ -1,5 +1,7 @@
 import type React from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import { Cancel01Icon, SearchIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { Virtuoso } from 'react-virtuoso'
 import type { ConversationSearchResults } from '../contracts'
 import { conversationsApi } from '@/features/conversations/api'
@@ -7,8 +9,10 @@ import { Avatar } from '@/components/Avatar'
 import { GroupCreator } from '@/features/conversations/components/GroupCreator'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { NavUser } from '@/components/nav-user'
-import { IAgent, ICanvas, IDoc, IMail, IPlus, ISettings } from '@/components/icons'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { Button } from '@/components/ui/button'
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
+import { SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { ConversationListItemContent } from '@/im/ConversationList'
 import { toastAction } from '@/lib/actionToast'
@@ -17,15 +21,8 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { isMuted, useConversations } from '@/features/conversations/store'
-import { useEmailComposer } from '@/features/email/state'
 import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
-
-const SearchIcon = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className} aria-hidden>
-    <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-  </svg>
-)
 
 interface ConversationMenuItem {
   label: string
@@ -36,6 +33,11 @@ interface ConversationMenuItem {
   disabled?: boolean
   submenu?: ConversationMenuItem[]
 }
+
+const ConversationItemGroup = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <ItemGroup ref={ref} className={cn('!gap-0', className)} {...props} />,
+)
+ConversationItemGroup.displayName = 'ConversationItemGroup'
 
 function ConversationMenuItems({ items }: { items: ConversationMenuItem[] }) {
   return items.map((item, index) => {
@@ -54,16 +56,24 @@ function ConversationRow({ conversation, selected, items }: {
   return (
     <ContextMenu>
     <ContextMenuTrigger asChild>
-      <button
-        type="button"
+      <Item
+        role="button"
+        tabIndex={0}
+        size="xs"
+        aria-current={selected ? 'page' : undefined}
         onClick={() => select(conversation.id)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return
+          event.preventDefault()
+          select(conversation.id)
+        }}
         className={cn(
-          'group flex w-full items-center gap-2 rounded-xl px-[9px] py-[9px] text-left transition-colors',
-          selected ? 'bg-[var(--brand-im-blue)] text-white' : 'text-ink hover:bg-raised/70',
+          'group cursor-pointer flex-nowrap gap-2.5 rounded-xl border-0 px-2 py-1.5 text-left shadow-none',
+          selected ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
         )}
       >
-        <ConversationListItemContent conversation={conversation} variant="desktop" selected={selected} />
-      </button>
+        <ConversationListItemContent conversation={conversation} variant="desktop" />
+      </Item>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
     </ContextMenu>
@@ -88,26 +98,33 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
   }
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-6 backdrop-blur-sm" onMouseDown={onClose}>
-      <div className="flex max-h-[70vh] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-hairline bg-card shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="border-b border-hairline px-5 py-4">
-          <h2 className="text-[16px] font-semibold text-ink">添加群成员</h2>
-          <p className="mt-1 text-[12px] text-ink-secondary">选择要加入“{conversation.title}”的成员。</p>
+      <div className="flex max-h-[70vh] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="border-b border-border px-5 py-4">
+          <h2 className="text-base font-semibold text-foreground">添加群成员</h2>
+          <p className="mt-1 text-xs text-muted-foreground">选择要加入“{conversation.title}”的成员。</p>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-2">
-          {candidates.length === 0 && <p className="px-3 py-8 text-center text-[13px] text-ink-secondary">所有成员都已在群聊中</p>}
-          {candidates.map((p) => (
-            <button key={p.id} type="button" disabled={busy !== null} onClick={() => void add(p)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-raised disabled:opacity-50">
-              <Avatar p={p} size={34} ringColor="var(--card)" showStatus={false} />
-              <span className="min-w-0 flex-1 truncate text-[14px] text-ink">{p.name}</span>
-              <span className="text-[12px] text-accent">{busy === p.id ? '添加中…' : '添加'}</span>
-            </button>
-          ))}
+          {candidates.length === 0 && <p className="px-3 py-8 text-center text-sm text-muted-foreground">所有成员都已在群聊中</p>}
+          <ItemGroup className="gap-1">{candidates.map((p) => (
+            <Item key={p.id} role="button" tabIndex={busy === null ? 0 : undefined} size="sm" aria-disabled={busy !== null || undefined} onClick={() => { if (busy === null) void add(p) }} onKeyDown={(event) => { if (busy !== null || (event.key !== 'Enter' && event.key !== ' ')) return; event.preventDefault(); void add(p) }} className="cursor-pointer flex-nowrap rounded-xl hover:bg-muted aria-disabled:pointer-events-none aria-disabled:opacity-50">
+              <Avatar p={p} size={34} ringColor="var(--card)" />
+              <ItemContent className="min-w-0"><ItemTitle className="block w-full truncate text-sm text-foreground">{p.name}</ItemTitle></ItemContent>
+              <span className="text-xs text-primary">{busy === p.id ? '添加中…' : '添加'}</span>
+            </Item>
+          ))}</ItemGroup>
           {error && <p className="m-3 rounded-lg bg-red-500/10 px-3 py-2 text-[12px] text-red-400">{error}</p>}
         </div>
-        <div className="border-t border-hairline p-3 text-right"><button type="button" onClick={onClose} className="rounded-full bg-raised px-4 py-2 text-[13px] text-ink hover:bg-raised-hover">完成</button></div>
+        <div className="border-t border-border p-3 text-right"><Button type="button" onClick={onClose} size="sm">完成</Button></div>
       </div>
     </div>
   )
+}
+
+export function SidebarUserFooter() {
+  const authUser = useAuth((s) => s.user)
+  const authParticipant = useParticipants((s) => authUser ? s.byId[authUser.id] : undefined)
+  if (!authUser) return null
+  return <div data-slot="sidebar-footer" className="shrink-0 border-t border-[var(--im-divider-weak)] bg-card p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></div>
 }
 
 export function ConversationsPane() {
@@ -117,11 +134,9 @@ export function ConversationsPane() {
   const selected = useApp((s) => s.selectedConversationId)
   const select = useApp((s) => s.selectConversation)
   const authUser = useAuth((s) => s.user)
-  const authParticipant = useParticipants((s) => authUser ? s.byId[authUser.id] : undefined)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ConversationSearchResults | null>(null)
   const [searching, setSearching] = useState(false)
-  const [launcherOpen, setLauncherOpen] = useState(false)
   const [creating, setCreating] = useState<string[] | null>(null)
   const [addingMembers, setAddingMembers] = useState<Conversation | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -152,17 +167,18 @@ export function ConversationsPane() {
   }, [query])
 
   const conversations = useMemo(() => {
-    const visible = list
+    const visible = list.filter((conversation) => conversation.kind === 'direct')
     return [...visible.filter((c) => c.pinned), ...visible.filter((c) => !c.pinned)]
   }, [list])
 
   const resultRows = useMemo(() => {
     if (!results) return [] as Array<{ id: string; title: string; preview: string }>
+    const directIds = new Set(list.filter((conversation) => conversation.kind === 'direct').map((conversation) => conversation.id))
     const unique = new Map<string, { id: string; title: string; preview: string }>()
-    for (const room of [...results.rooms, ...results.groups]) unique.set(room.id, { id: room.id, title: room.title, preview: room.projectName ?? '会话' })
-    for (const message of results.messages) unique.set(message.conversationId, { id: message.conversationId, title: message.conversationTitle, preview: `${message.authorName ?? '成员'}：${message.snippet}` })
+    for (const room of results.rooms) if (directIds.has(room.id)) unique.set(room.id, { id: room.id, title: room.title, preview: room.projectName ?? '私信' })
+    for (const message of results.messages) if (directIds.has(message.conversationId)) unique.set(message.conversationId, { id: message.conversationId, title: message.conversationTitle, preview: `${message.authorName ?? '成员'}：${message.snippet}` })
     return [...unique.values()]
-  }, [results])
+  }, [list, results])
 
   const conversationMenuItems = (conversation: Conversation): ConversationMenuItem[] => {
     const items: ConversationMenuItem[] = [
@@ -196,67 +212,60 @@ export function ConversationsPane() {
   }
 
   return (
-    <aside className="im-conversations-sidebar relative flex h-full min-h-0 flex-col border-r border-hairline bg-panel text-ink">
-      <div className="desktop-window-toolbar omb-drag flex h-16 shrink-0 items-center gap-2.5 px-[13px] py-2">
-        <div className="relative omb-no-drag">
-          <button type="button" aria-expanded={launcherOpen} aria-haspopup="menu" onClick={() => setLauncherOpen((open) => !open)} className="grok-top-menu-trigger" aria-label="打开主菜单">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-          </button>
-          {launcherOpen && (
-            <>
-              <button type="button" aria-label="关闭主菜单" className="fixed inset-0 z-30 cursor-default" onClick={() => setLauncherOpen(false)} />
-              <div className="app-menu-surface grok-top-menu absolute left-0 top-full z-40 mt-1 min-w-[216px] overflow-hidden p-1" role="menu" aria-label="LingxiLoop">
-                <div className="grok-top-menu-label">LingxiLoop</div>
-                <button type="button" onClick={() => { setLauncherOpen(false); setCreating([]) }} className="app-menu-item"><span className="app-menu-icon"><IPlus /></span>新建群聊</button>
-                <button type="button" onClick={() => { setLauncherOpen(false); useEmailComposer.getState().openComposeNew() }} className="app-menu-item"><span className="app-menu-icon"><IMail /></span>写邮件</button>
-                <div className="my-1 h-px bg-hairline" />
-                {([
-                  ['learning', '学习', IDoc],
-                  ['agents', '智能体', IAgent],
-                  ['canvas', 'Canvas', ICanvas],
-                  ['library', '资料库', IDoc],
-                ] as const).map(([key, label, Icon]) => (
-                  <button key={key} type="button" onClick={() => { useApp.getState().setView(key); setLauncherOpen(false) }} className="app-menu-item">
-                    <span className="app-menu-icon"><Icon /></span>{label}
-                  </button>
-                ))}
-                <div className="my-1 h-px bg-hairline" />
-                <button type="button" onClick={() => { useApp.getState().setView('me'); setLauncherOpen(false) }} className="app-menu-item"><span className="app-menu-icon"><ISettings /></span>设置</button>
-              </div>
-            </>
-          )}
-        </div>
-        <InputGroup className="omb-no-drag h-11 flex-1 rounded-[22px]">
-          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索" aria-label="搜索会话和消息" className="h-10 px-3 text-[15px]" />
-          <InputGroupAddon><SearchIcon className="size-5" /></InputGroupAddon>
-          {query && <InputGroupAddon align="inline-end"><button type="button" onClick={() => setQuery('')} className="text-xs hover:text-foreground" aria-label="清除搜索">×</button></InputGroupAddon>}
+    <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card text-card-foreground">
+      <SidebarHeader className="desktop-window-toolbar omb-drag h-12 shrink-0 p-2">
+        <InputGroup className="omb-no-drag h-8 rounded-xl border-transparent bg-input/50 shadow-none">
+          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="Find conversation" aria-label="搜索会话和消息" className="h-8 px-2 text-sm" />
+          <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4 opacity-50" /></InputGroupAddon>
+          {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
         </InputGroup>
-      </div>
+      </SidebarHeader>
 
-      <div className="min-h-0 flex-1 px-2">
+      <SidebarContent className="gap-0 px-2 pb-2 pt-0.5">
         {query.trim() ? (
           <div className="h-full overflow-y-auto">
             {searching && <ResourceSkeleton variant="list" count={4} compact label="正在搜索会话" />}
-            {!searching && resultRows.length === 0 && <p className="px-3 py-5 text-[13px] text-ink-secondary">没有找到匹配结果</p>}
-            {resultRows.map((row) => <button key={row.id} type="button" onClick={() => { select(row.id); setQuery('') }} className="w-full rounded-xl px-3 py-3 text-left hover:bg-raised"><span className="block truncate text-[14px] font-semibold text-ink">{row.title}</span><span className="mt-0.5 block truncate text-[12px] text-ink-secondary">{row.preview}</span></button>)}
+            {!searching && resultRows.length === 0 && <p className="px-3 py-5 text-sm text-muted-foreground">没有找到匹配结果</p>}
+            <ItemGroup className="!gap-0">
+              {resultRows.map((row) => (
+                <Item
+                  key={row.id}
+                  role="button"
+                  tabIndex={0}
+                  size="xs"
+                  onClick={() => { select(row.id); setQuery('') }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return
+                    event.preventDefault()
+                    select(row.id)
+                    setQuery('')
+                  }}
+                  className="cursor-pointer gap-1.5 rounded-xl border-0 bg-transparent px-1.5 py-1 shadow-none hover:bg-sidebar-accent"
+                >
+                  <ItemContent className="min-w-0">
+                    <ItemTitle className="block w-full truncate text-sm font-medium text-sidebar-foreground">{row.title}</ItemTitle>
+                    <ItemDescription className="line-clamp-1 text-xs text-muted-foreground">{row.preview}</ItemDescription>
+                  </ItemContent>
+                </Item>
+              ))}
+            </ItemGroup>
           </div>
         ) : (
-          <div className="relative h-full">
-          {error && conversations.length > 0 && <div role="alert" className="absolute inset-x-2 top-2 z-10 flex items-center gap-2 rounded-xl border border-red-400/30 bg-card/95 px-3 py-2 text-[12px] text-red-500 shadow-sm backdrop-blur"><span className="min-w-0 flex-1 truncate">刷新失败：{error}</span><button type="button" className="font-semibold text-accent" onClick={() => void useConversations.getState().reload()}>重试</button></div>}
+          <div className="relative min-h-0 flex-1">
+          {error && conversations.length > 0 && <div role="alert" className="absolute inset-x-2 top-2 z-10 flex items-center gap-2 rounded-xl border border-destructive/30 bg-background/95 px-3 py-2 text-xs text-destructive shadow-sm"><span className="min-w-0 flex-1 truncate">刷新失败：{error}</span><Button type="button" variant="ghost" size="sm" onClick={() => void useConversations.getState().reload()}>重试</Button></div>}
           <Virtuoso
             className="h-full"
             data={conversations}
             computeItemKey={(_, conversation) => conversation.id}
-            defaultItemHeight={72}
+            defaultItemHeight={60}
             increaseViewportBy={{ top: 500, bottom: 500 }}
-            components={{ EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-[13px] font-semibold text-ink">会话加载失败</p><p className="mt-1 text-[12px] text-ink-secondary">{error}</p><button type="button" className="mt-3 rounded-full bg-accent px-4 py-2 text-[12px] font-semibold text-white" onClick={() => void useConversations.getState().load()}>重试</button></div> : loaded ? <p className="px-3 py-8 text-center text-[13px] text-ink-secondary">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
+            components={{ List: ConversationItemGroup, EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-sm font-medium text-foreground">会话加载失败</p><p className="mt-1 text-xs text-muted-foreground">{error}</p><Button type="button" size="sm" className="mt-3" onClick={() => void useConversations.getState().load()}>重试</Button></div> : loaded ? <p className="px-3 py-8 text-center text-sm text-muted-foreground">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
             itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} />}
           />
           </div>
         )}
-      </div>
+      </SidebarContent>
 
-      {authUser && <div className="shrink-0 border-t border-sidebar-border p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></div>}
       {creating && <GroupCreator initialPicked={creating} onClose={() => setCreating(null)} />}
       {addingMembers && <AddMembersDialog conversation={addingMembers} onClose={() => setAddingMembers(null)} />}
     </aside>

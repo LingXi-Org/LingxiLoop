@@ -1,8 +1,10 @@
+import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
 import { agentsApi } from '../api'
 import type { AgentInput } from '../contracts'
 import { Avatar } from '@/components/Avatar'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '../state'
@@ -86,7 +88,7 @@ export function AgentEditor({ agent, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 border-b border-ink-100 flex items-center gap-3 shrink-0">
-          <Avatar p={previewParticipant} size={48} showStatus={false} animated={false} />
+          <Avatar p={previewParticipant} size={48} animated={false} />
           <div className="flex-1">
             <h2 className="font-display font-medium text-[20px] tracking-tight">
               {editing ? `编辑 ${agent!.name}` : "新建智能体"}
@@ -95,11 +97,11 @@ export function AgentEditor({ agent, onClose }: Props) {
               {editing ? "调整该队友的行为方式。" : "从头开始​​定义一个新队友。"}
             </div>
           </div>
-          <button
+          <Button
             onClick={onClose}
             className="w-8 h-8 rounded-full grid place-items-center text-ink-500 hover:bg-sky2-50 hover:text-ink-900 transition"
             aria-label="关闭"
-          >×</button>
+          >×</Button>
         </div>
 
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
@@ -171,13 +173,12 @@ export function AgentEditor({ agent, onClose }: Props) {
                       background: checked ? 'var(--sky2-50)' : 'var(--cloud)',
                     }}
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={checked}
-                      onChange={() => setCapabilities((current) => checked
+                      onCheckedChange={() => setCapabilities((current) => checked
                         ? current.filter((capability) => capability !== option.id)
                         : [...current, option.id])}
-                      className="mt-0.5 accent-[var(--skype)]"
+                      className="mt-0.5"
                     />
                     <span>
                       <span className="block text-[12.5px] font-semibold text-ink-900">{option.label}</span>
@@ -194,7 +195,7 @@ export function AgentEditor({ agent, onClose }: Props) {
 
           <Field label="Bloub 头像" hint="智能体统一使用确定性的 Bloub 身份；颜色、形状与表情由身份和状态驱动。">
             <div className="flex items-center gap-3 rounded-[12px] border border-ink-100 bg-white px-4 py-3">
-              <Avatar p={previewParticipant} size={72} showStatus={false} animated={false} />
+              <Avatar p={previewParticipant} size={72} animated={false} />
               <div className="text-[12.5px] leading-5 text-ink-500">无需上传或生成图片；同一智能体在聊天、成员列表和管理界面保持一致。</div>
             </div>
           </Field>
@@ -207,13 +208,13 @@ export function AgentEditor({ agent, onClose }: Props) {
         </div>
 
         <div className="px-6 py-4 border-t border-ink-100 flex items-center gap-2 bg-paper shrink-0">
-          <button
+          <Button
             onClick={onClose}
             className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >取消</button>
+          >取消</Button>
           <div className="flex-1" />
-          <button
+          <Button
             onClick={submit}
             disabled={busy || !name.trim() || !systemPrompt.trim()}
             className="px-5 py-2 rounded-[9px] text-[12.5px] font-semibold text-white transition disabled:opacity-50"
@@ -223,7 +224,7 @@ export function AgentEditor({ agent, onClose }: Props) {
             }}
           >
             {busy ? "正在保存..." : (editing ? "保存更改" : "创建智能体")}
-          </button>
+          </Button>
         </div>
       </div>
 

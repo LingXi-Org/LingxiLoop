@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * Modal for inviting humans to a company workspace.
  *
@@ -19,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { companiesApi } from '@/features/companies/api'
 import type { ApiInvitation, ApiInvitationWithToken } from '@/features/companies/contracts'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
@@ -128,7 +130,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
             {(['link', 'email'] as const).map((t) => {
               const on = tab === t
               return (
-                <button
+                <Button
                   key={t}
                   type="button"
                   onClick={() => { setTab(t); setCreated(null); setFormErr(null) }}
@@ -139,7 +141,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                   }}
                 >
                   {t === 'link' ? "邀请链接" : "通过电子邮件"}
-                </button>
+                </Button>
               )
             })}
           </div>
@@ -168,11 +170,10 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
               {emailCapable && (
                 <label className="flex items-start gap-2.5 cursor-pointer select-none rounded-[10px] px-3 py-2.5 transition"
                        style={{ background: 'var(--paper)', border: '1px solid var(--ink-100)' }}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={sendEmail}
-                    onChange={(e) => setSendEmail(e.target.checked)}
-                    className="mt-0.5 accent-[color:var(--skype)] w-[15px] h-[15px] cursor-pointer"
+                    onCheckedChange={(checked) => setSendEmail(checked === true)}
+                    className="mt-0.5"
                   />
                   <span className="flex-1 min-w-0">
                     <span className="block text-[12.5px] font-semibold text-ink-800">
@@ -203,7 +204,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                 {(['member', 'admin'] as const).map((r) => {
                   const on = role === r
                   return (
-                    <button
+                    <Button
                       key={r}
                       type="button"
                       onClick={() => setRole(r)}
@@ -215,7 +216,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
                       }}
                     >
                       {r === 'member' ? "会员" : "管理员"}
-                    </button>
+                    </Button>
                   )
                 })}
               </div>
@@ -246,7 +247,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
           {created && <CreatedInviteCard invite={created} onDone={() => setCreated(null)} />}
 
           <div>
-            <button
+            <Button
               onClick={submit}
               disabled={busy}
               className="w-full py-2.5 rounded-[10px] text-[13px] font-semibold text-white transition disabled:opacity-50"
@@ -258,7 +259,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
               {busy ? "正在创建..."
                 : tab === 'email' ? "创建电子邮件邀请"
                 : "创建邀请链接"}
-            </button>
+            </Button>
           </div>
 
           {/* Existing invitations */}
@@ -303,11 +304,11 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
             邀请将在 7 天后过期。
           </div>
           <div className="flex-1" />
-          <button
+          <Button
             onClick={onClose}
             className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >完成</button>
+          >完成</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -355,17 +356,17 @@ function CreatedInviteCard({ invite, onDone }: { invite: ApiInvitationWithToken;
           style={{ background: 'var(--paper)', border: '1px solid var(--ink-100)', color: 'var(--ink-700)' }}
           onFocus={(e) => e.currentTarget.select()}
         />
-        <button
+        <Button
           onClick={copy}
           className="px-3 py-2 rounded-[8px] text-[12px] font-semibold text-white transition"
           style={{ background: copied ? 'var(--leaf-700, #2d8c72)' : 'var(--ink-700)' }}
-        >{copied ? "已复制" : "复制"}</button>
+        >{copied ? "已复制" : "复制"}</Button>
       </div>
       <div className="flex justify-end">
-        <button
+        <Button
           onClick={onDone}
           className="text-[11.5px] text-ink-400 hover:text-ink-700 transition"
-        >驳回</button>
+        >驳回</Button>
       </div>
     </div>
   )
@@ -418,11 +419,11 @@ function InvitationRow({
       {inv.status === 'active' && !historical && onRevoke && (
         <div className="flex items-center gap-1.5">
           <CopyLinkButton inviteId={inv.id} />
-          <button
+          <Button
             onClick={onRevoke}
             className="px-2 py-1.5 text-[11.5px] font-semibold rounded-[8px] transition"
             style={{ color: 'var(--coral-deep)', border: '1px solid var(--ink-100)' }}
-          >撤销</button>
+          >撤销</Button>
         </div>
       )}
     </div>
@@ -444,12 +445,12 @@ function CopyLinkButton({ inviteId }: { inviteId: string }) {
     } catch { /* swallow */ }
   }
   return (
-    <button
+    <Button
       onClick={onClick}
       title="复制邀请参考（无法重新获取原始链接 - 如果您丢失了邀请，请发出新的邀请）"
       className="px-2 py-1.5 text-[11.5px] font-semibold rounded-[8px] transition"
       style={{ color: 'var(--ink-500)', border: '1px solid var(--ink-100)' }}
-    >{copied ? "已复制" : "复制参考"}</button>
+    >{copied ? "已复制" : "复制参考"}</Button>
   )
 }
 

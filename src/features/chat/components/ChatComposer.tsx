@@ -1,16 +1,16 @@
 import { uploadsApi } from '@/features/platform/api'
 import type { ApiAttachment } from '@/api/contracts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { IAt, IClip, ISend, ISmile } from '@/components/icons'
+import { IClip, ISend } from '@/components/icons'
+import { IconMicrophone } from '@tabler/icons-react'
 import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
 import type { RichInputHandle } from '@/components/RichInput'
 import { ComposerSurface } from '@/im/Composer'
 import { Button } from '@/components/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Input } from '@/components/ui/input'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { isImeComposing } from '@/lib/keyboard'
-import { findSkypeByShortcode } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
 import { getActiveCompanyId, useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
@@ -23,7 +23,6 @@ import type { Participant } from '@/types'
 import { readComposerDraftTexts, saveComposerDraftText } from '../drafts'
 import { ComposerAttachment } from './ComposerAttachment'
 import { ComposerEditor } from './ComposerEditor'
-import { ComposerEmojiPopover } from './ComposerEmojiPopover'
 import type { ComposerCommand, MentionEntry } from './ComposerMenus'
 import { sendComposerMessage } from '../sendComposerMessage'
 import { useTypingEmitter } from '../useTypingEmitter'
@@ -309,35 +308,6 @@ export function Composer({
     if (f) await upload(f)
   }
 
-  /** Insert raw text at the current caret. Skype shortcodes get a
-   *  dedicated path so they materialize as an inline `<img>` rather
-   *  than literal text — the visible composer keeps parity with the
-   *  rendered message bubble. RichInput emits onChange after the
-   *  insert, which re-runs setDraft + the mention detector. */
-  const insertAtCursor = (text: string) => {
-    const editor = editorRef.current
-    if (!editor) return
-    const skype = text.startsWith('(') ? findSkypeByShortcode(text) : undefined
-    if (skype) editor.insertSkype(skype.key)
-    else editor.insertText(text)
-  }
-
-  /** Toolbar shortcut for mentions. Preserve the editor selection (the
-   * button prevents mousedown blur) and insert an inline separator when the
-   * caret follows prose, so contenteditable never needs to create a DIV/BR
-   * wrapper to establish a mention boundary. */
-  const openMentionByButton = () => {
-    const editor = editorRef.current
-    if (!editor) return
-    const caret = editor.getCaretOffset()
-    const value = editor.getValue()
-    const previous = caret > 0 ? value[caret - 1] : ''
-    editor.insertText(previous && !/\s/.test(previous) ? ' @' : '@')
-    requestAnimationFrame(() => editor.focus())
-  }
-
-  const [emojiOpen, setEmojiOpen] = useState(false)
-
   // Drive the typing indicator off the current draft text. Returns a
   // `finalize()` callback so we can flush a `done:true` the instant the
   // user hits send rather than waiting for the 2 s idle timer.
@@ -505,7 +475,6 @@ export function Composer({
     if (lastSyncedScopeRef.current === scopeKey) return
     lastSyncedScopeRef.current = scopeKey
     setMention(null)
-    setEmojiOpen(false)
     // Pull the just-loaded draft text for this scope (read via ref so
     // the effect doesn't re-fire on every keystroke) and hydrate the
     // contenteditable DOM.
@@ -536,10 +505,8 @@ export function Composer({
         />
       )}
       <div className={cn(
-        'chat-composer mx-auto min-h-[88px] max-w-[900px] rounded-3xl px-3 pb-3 pt-3 transition',
-        // In thread mode the parent drawer footer uses a muted surface, so the
-        // canonical card token keeps the composer visually distinct.
-        isThread ? 'bg-card' : '',
+        'chat-composer mx-auto w-full max-w-[900px] px-1 pb-1 pt-2 transition',
+        isThread ? 'px-0' : '',
       )}
       >
         <ComposerAttachment
@@ -575,45 +542,8 @@ export function Composer({
             >×</Button>
           </div>
         )}
-        <ComposerEditor
-          editorRef={editorRef}
-          draft={draft}
-          placeholder={placeholder ?? '输入消息，使用 @ 提及成员，或拖入文件作为附件'}
-          onChange={(value, caret) => {
-            setDraft(value)
-            updateMention(value, caret)
-            updateSlash(value, caret)
-          }}
-          onKeyDown={onKeyDown}
-          onPaste={onPaste}
-          onBlur={() => setTimeout(() => setMention(null), 120)}
-          resolveMention={(id) => {
-            const participant = byId[id]
-            if (!participant) return null
-            return {
-              name: participant.id === meId ? 'you' : participant.name,
-              initial: participant.initial || participant.name.charAt(0).toUpperCase(),
-              avatarBg: typeof participant.avatarBg === 'string' ? participant.avatarBg : 'var(--muted-foreground)',
-              kind: participant.kind,
-              avatarUrl: participant.kind === 'agent'
-                ? staticBloubAvatarUrl(participant)
-                : typeof participant.avatarUrl === 'string' ? participant.avatarUrl : undefined,
-            }
-          }}
-          mention={mention}
-          mentionEntries={filteredMentions}
-          mentionIndex={mentionIndex}
-          onMentionHover={setMentionIndex}
-          onMentionPick={insertMention}
-          commandOpen={slashOpen}
-          commandQuery={slashQuery}
-          commands={filteredSlashCommands}
-          commandIndex={slashIndex}
-          onCommandHover={setSlashIndex}
-          onCommandPick={runSlashCommand}
-        />
-        <div className="mt-2 flex items-center gap-1 text-muted-foreground">
-          <input
+        <div className="flex w-full items-end gap-1.5 rounded-full border border-border/45 !bg-transparent p-1.5 text-muted-foreground shadow-sm focus-within:border-ring/70 focus-within:ring-2 focus-within:ring-ring/15">
+          <Input
             ref={fileRef}
             type="file"
             // No `accept` — let the user pick anything; the server enforces
@@ -628,41 +558,60 @@ export function Composer({
             variant="ghost"
             size="icon-lg"
             onClick={() => fileRef.current?.click()}
-            className="hover:text-primary"
+            className="size-[38px] shrink-0 rounded-full hover:bg-muted hover:text-foreground"
             title="添加附件"
           ><IClip className="size-4" /></Button>
+          <div className="min-w-0 flex-1 self-center px-1 py-2">
+            <ComposerEditor
+              editorRef={editorRef}
+              draft={draft}
+              placeholder={placeholder ?? 'Message LingXi…'}
+              onChange={(value, caret) => {
+                setDraft(value)
+                updateMention(value, caret)
+                updateSlash(value, caret)
+              }}
+              onKeyDown={onKeyDown}
+              onPaste={onPaste}
+              onBlur={() => setTimeout(() => setMention(null), 120)}
+              resolveMention={(id) => {
+                const participant = byId[id]
+                if (!participant) return null
+                return {
+                  name: participant.id === meId ? 'you' : participant.name,
+                  initial: participant.initial || participant.name.charAt(0).toUpperCase(),
+                  avatarBg: typeof participant.avatarBg === 'string' ? participant.avatarBg : 'var(--muted-foreground)',
+                  kind: participant.kind,
+                  avatarUrl: participant.kind === 'agent'
+                    ? staticBloubAvatarUrl(participant)
+                    : typeof participant.avatarUrl === 'string' ? participant.avatarUrl : undefined,
+                }
+              }}
+              mention={mention}
+              mentionEntries={filteredMentions}
+              mentionIndex={mentionIndex}
+              onMentionHover={setMentionIndex}
+              onMentionPick={insertMention}
+              commandOpen={slashOpen}
+              commandQuery={slashQuery}
+              commands={filteredSlashCommands}
+              commandIndex={slashIndex}
+              onCommandHover={setSlashIndex}
+              onCommandPick={runSlashCommand}
+            />
+          </div>
+          <Button type="button" variant="ghost" size="icon-lg" disabled className="size-[38px] shrink-0 rounded-full disabled:opacity-50" aria-label="语音输入暂未开放" title="语音输入暂未开放">
+            <IconMicrophone className="size-[18px]" />
+          </Button>
           <Button
             type="button"
-            variant="ghost"
             size="icon-lg"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={openMentionByButton}
-            className="hover:text-primary"
-            title="提及成员"
-          ><IAt className="size-4" /></Button>
-          <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-lg"
-                className={cn('hover:text-primary', emojiOpen && 'bg-muted text-primary')}
-                title="表情"
-              ><ISmile className="size-4" /></Button>
-            </PopoverTrigger>
-            <PopoverContent side="top" align="start" className="w-auto p-2">
-              <ComposerEmojiPopover
-                onPick={(e) => { insertAtCursor(e); setEmojiOpen(false) }}
-              />
-            </PopoverContent>
-          </Popover>
-          <Button
-            type="button"
             onClick={send}
             disabled={!canSend}
-            className="ms-auto min-h-10 rounded-4xl px-3.5 text-xs"
+            className="size-[38px] shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-none hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+            aria-label="发送"
           >
-            发送 <ISend className="w-3.5 h-3.5" strokeWidth={2} />
+            <ISend className="size-[18px]" strokeWidth={1.9} />
           </Button>
         </div>
       </div>

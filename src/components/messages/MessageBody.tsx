@@ -38,7 +38,6 @@ function MentionChip({ id }: { id: string }) {
         <Avatar
           p={EVERYONE_BLOUB_PARTICIPANT}
           size={18}
-          showStatus={false}
           animated={false}
           ringColor="transparent"
         />
@@ -81,7 +80,7 @@ function MentionChip({ id }: { id: string }) {
         )}
         style={{ verticalAlign: '-0.15em' }}
       >
-        <Avatar p={p} size={16} ringColor="var(--background)" showStatus={false} />
+        <Avatar p={p} size={16} ringColor="var(--background)" />
         {/* Wrap the label in its own inline-flex box so the parent chip's
          *  \`items-center\` aligns the avatar's geometric center with the
          *  label's geometric center — not with the label's default line
@@ -109,7 +108,7 @@ function MentionChip({ id }: { id: string }) {
 function MentionCard({ p }: { p: Participant }) {
   return (
       <div className="flex min-w-60 max-w-72 items-start gap-3 rounded-2xl bg-popover p-3 text-popover-foreground">
-        <Avatar p={p} size={44} ringColor="var(--popover)" showStatus={false} />
+        <Avatar p={p} size={44} ringColor="var(--popover)" />
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold text-foreground">{p.name}</div>
           {p.bio && (
@@ -233,7 +232,7 @@ function MessagePeekCard({ msg, author }: { msg: Message; author: Participant | 
   return (
       <div className="w-72 rounded-2xl bg-popover px-3.5 py-2.5 text-popover-foreground">
         <div className="flex items-center gap-2 mb-1.5">
-          {author ? <Avatar p={author} size={20} ringColor="var(--popover)" showStatus={false} /> : null}
+          {author ? <Avatar p={author} size={20} ringColor="var(--popover)" /> : null}
           <div className="min-w-0 flex-1 flex items-baseline gap-2">
             <span className="truncate text-[12.5px] font-semibold text-foreground">{author?.name ?? msg.authorId}</span>
           </div>

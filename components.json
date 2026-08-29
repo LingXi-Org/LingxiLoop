@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "radix-luma",
+  "style": "base-luma",
   "rsc": false,
   "tsx": true,
   "tailwind": {
@@ -11,6 +11,7 @@
     "prefix": ""
   },
   "iconLibrary": "hugeicons",
+  "rtl": false,
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
@@ -18,7 +19,6 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "rtl": false,
   "menuColor": "default",
   "menuAccent": "subtle",
   "registries": {

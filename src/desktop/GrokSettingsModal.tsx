@@ -58,7 +58,7 @@ function AccountCard() {
   return (
     <div className="flex items-center gap-3 rounded-3xl border border-border bg-card p-4">
       {participant ? (
-        <ParticipantAvatar p={participant} size={36} showStatus={false} />
+        <ParticipantAvatar p={participant} size={36} />
       ) : (
         <Avatar className="size-9">
           <AvatarFallback>{initial}</AvatarFallback>

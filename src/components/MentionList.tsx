@@ -14,6 +14,7 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import type { Participant } from '@/types'
 import { Avatar } from './Avatar'
 import { cn } from '@/lib/utils'
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
 
 export interface MentionListHandle {
   onKeyDown: (props: { event: KeyboardEvent }) => boolean
@@ -66,10 +67,11 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
   }
 
   return (
-    <div className="rounded-lg bg-white border border-stone-200 shadow-lg overflow-hidden min-w-[220px] max-h-[280px] overflow-y-auto py-1">
+    <ItemGroup className="min-w-[220px] max-h-[280px] gap-0 overflow-y-auto rounded-lg border border-stone-200 bg-white py-1 shadow-lg">
       {items.map((p, i) => (
-        <button
-          type="button"
+        <Item
+          role="option"
+          aria-selected={i === selectedIndex}
           key={p.id}
           // Capture click before TipTap clears the suggestion popup on
           // blur (mouseDown fires before blur; click fires after, by
@@ -80,22 +82,22 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
           }}
           onMouseEnter={() => setSelectedIndex(i)}
           className={cn(
-            'w-full flex items-center gap-2.5 px-3 py-1.5 text-left text-sm transition-colors',
+            'flex-nowrap rounded-none border-0 px-3 py-1.5 text-left text-sm',
             i === selectedIndex
               ? 'bg-skype/10 text-skype-deep'
               : 'text-stone-700 hover:bg-stone-50',
           )}
         >
-          <Avatar p={p} size={24} showStatus={false} animated={false} />
-          <div className="min-w-0 flex-1">
-            <div className="truncate font-medium leading-tight">{p.name}</div>
-            <div className="truncate text-[11px] text-stone-400 leading-tight">
+          <ItemMedia><Avatar p={p} size={24} animated={false} /></ItemMedia>
+          <ItemContent className="min-w-0">
+            <ItemTitle className="block w-full truncate font-medium leading-tight">{p.name}</ItemTitle>
+            <ItemDescription className="line-clamp-1 text-[11px] leading-tight text-stone-400">
               {p.kind === 'agent' ? "智能体" : "成员"}{p.role ? ` · ${p.role}` : ''}
-            </div>
-          </div>
-        </button>
+            </ItemDescription>
+          </ItemContent>
+        </Item>
       ))}
-    </div>
+    </ItemGroup>
   )
 })
 

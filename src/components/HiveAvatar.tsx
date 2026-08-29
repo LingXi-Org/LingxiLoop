@@ -77,17 +77,16 @@ interface Props {
   /** container diameter in px */
   size?: number
   ringColor?: string
-  showStatusOnSingle?: boolean
 }
 
-export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', showStatusOnSingle = true }: Props) {
+export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)' }: Props) {
   if (ps.length === 0) {
     return <div className="rounded-full" style={{ width: size, height: size, background: 'var(--ink-100)' }} />
   }
 
   // Single member: just render the regular avatar.
   if (ps.length === 1) {
-    return <SingleTile p={ps[0]} size={size} ringColor={ringColor} showStatus={showStatusOnSingle} />
+    return <SingleTile p={ps[0]} size={size} ringColor={ringColor} />
   }
 
   const max = 6
@@ -170,7 +169,7 @@ function Tile({ p, container, cx, cy, d, ringColor }: {
       style={tileStyle(container, cx, cy, d, ringColor)}
       className="grid place-items-center"
     >
-      <Avatar p={p} size={px} ringColor={ringColor} showStatus={false} />
+      <Avatar p={p} size={px} ringColor={ringColor} />
     </div>
   )
 }
@@ -198,11 +197,10 @@ function OverflowTile({ n, container, cx, cy, d, ringColor }: {
   )
 }
 
-function SingleTile({ p, size, ringColor, showStatus }: {
+function SingleTile({ p, size, ringColor }: {
   p: Participant
   size: number
   ringColor: string
-  showStatus: boolean
 }) {
-  return <Avatar p={p} size={size} ringColor={ringColor} showStatus={showStatus} />
+  return <Avatar p={p} size={size} ringColor={ringColor} />
 }

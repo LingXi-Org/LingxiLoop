@@ -6,7 +6,7 @@ import { type AuthCompany, useAuth } from '@/stores/auth'
 import { WorkspaceCreateDialog } from '@/features/companies/components/WorkspaceCreateDialog'
 import { IconPlus } from '@tabler/icons-react'
 
-function initials(name: string): string {
+export function initials(name: string): string {
   const value = name.trim()
   if (!value) return '·'
   const words = value.split(/\s+/).filter(Boolean)
@@ -15,7 +15,7 @@ function initials(name: string): string {
     : Array.from(value).slice(0, 2).join('').toUpperCase()
 }
 
-function companyColor(company: AuthCompany): string {
+export function companyColor(company: AuthCompany): string {
   let hash = 0
   for (const char of company.id) hash = ((hash << 5) - hash + char.charCodeAt(0)) | 0
   return `hsl(${Math.abs(hash) % 360} 58% 48%)`
@@ -34,19 +34,21 @@ function RailItem({ company, active, onSelect }: {
           onClick={onSelect}
           aria-label={`切换到${company.name}`}
           aria-current={active ? 'page' : undefined}
-          className="group relative flex h-12 w-full shrink-0 items-center justify-center"
+          className="group relative flex h-11 w-full shrink-0 items-center justify-center"
         >
           <span
             aria-hidden
             className={cn(
-              'absolute left-0 w-1 rounded-r-full bg-ink transition-[height] duration-200',
-              active ? 'h-9' : 'h-2 group-hover:h-5',
+              'absolute start-0 bg-sidebar-primary transition-[width,height,border-radius] duration-200',
+              active
+                ? 'h-9 w-1 rounded-e-full shadow-[0_0_0_2px_color-mix(in_srgb,var(--sidebar-primary)_14%,transparent)]'
+                : 'size-2 rounded-full shadow-[0_0_0_2px_color-mix(in_srgb,var(--sidebar-primary)_12%,transparent)] group-hover:h-5 group-hover:w-1 group-hover:rounded-e-full',
             )}
           />
           <span
             className={cn(
-              'grid size-12 place-items-center overflow-hidden rounded-3xl text-[13px] font-bold tracking-tight text-white shadow-sm transition-[border-radius,transform] duration-200 group-hover:rounded-2xl group-active:scale-95',
-              active && 'rounded-2xl ring-2 ring-accent ring-offset-2 ring-offset-[var(--im-nav-surface)]',
+              'grid size-9 place-items-center overflow-hidden rounded-lg text-xs font-medium tracking-tight text-white shadow-none transition-[background-color,transform] duration-150 group-active:scale-95',
+              active && 'ring-2 ring-ring ring-offset-2 ring-offset-accent',
             )}
             style={{ background: companyColor(company) }}
           >
@@ -70,8 +72,8 @@ function RailGroup({ label, companies, activeId, onSelect }: {
 }) {
   if (companies.length === 0) return null
   return (
-    <section aria-label={label} className="flex w-full flex-col items-center gap-2">
-      <div className="h-px w-8 bg-hairline" />
+    <section aria-label={label} className="flex w-full flex-col items-center gap-4">
+      <div className="h-px w-full bg-[var(--im-divider)]" />
       <span className="sr-only">{label}</span>
       {companies.map((company) => (
         <RailItem key={company.id} company={company} active={company.id === activeId} onSelect={() => onSelect(company.id)} />
@@ -89,6 +91,7 @@ export function ServerRail() {
     personal: companies.filter((company) => company.role === 'owner' || company.role === 'admin'),
     courses: companies.filter((company) => company.role !== 'owner' && company.role !== 'admin'),
   }), [companies])
+  const orderedCompanies = useMemo(() => [...groups.personal, ...groups.courses], [groups])
 
   const select = (id: string) => {
     if (id === activeId) return
@@ -99,25 +102,24 @@ export function ServerRail() {
 
   return (
     <TooltipProvider delayDuration={120}>
-      <nav aria-label="工作区" className="server-rail flex h-full w-[72px] shrink-0 flex-col items-center overflow-hidden border-r border-hairline bg-[var(--im-nav-surface)] py-3">
-        <div className="mb-2 grid size-12 shrink-0 place-items-center rounded-2xl bg-accent text-base font-black text-white" aria-label="LingxiLoop">L</div>
-        <div className="server-rail-scroll flex min-h-0 w-full flex-1 flex-col items-center gap-3 overflow-y-auto overflow-x-hidden pb-3">
-          <RailGroup label="个人工作区" companies={groups.personal} activeId={activeId} onSelect={select} />
-          <RailGroup label="加入的课程工作区" companies={groups.courses} activeId={activeId} onSelect={select} />
+      <nav aria-label="工作区" className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-accent pb-2 pt-[26px] text-accent-foreground">
+        <div className="mb-[6px] grid size-9 shrink-0 translate-x-px place-items-center rounded-lg bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground" aria-label="LingxiLoop">L</div>
+        <div className="server-rail-scroll flex min-h-0 w-full translate-x-px flex-1 flex-col items-center gap-4 overflow-y-auto overflow-x-hidden pb-3">
+          <RailGroup label="工作区" companies={orderedCompanies} activeId={activeId} onSelect={select} />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label="创建工作区"
+                onClick={() => setCreateOpen(true)}
+                className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-transparent text-accent-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <IconPlus size={20} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>创建工作区</TooltipContent>
+          </Tooltip>
         </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label="创建工作区"
-              onClick={() => setCreateOpen(true)}
-              className="mt-2 grid size-11 shrink-0 place-items-center rounded-2xl border border-hairline bg-panel text-ink-secondary transition hover:rounded-xl hover:bg-raised hover:text-ink"
-            >
-              <IconPlus size={20} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={10}>创建工作区</TooltipContent>
-        </Tooltip>
       </nav>
       <WorkspaceCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
     </TooltipProvider>

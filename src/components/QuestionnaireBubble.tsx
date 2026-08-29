@@ -4,23 +4,7 @@ import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { sendUserMessage, useMessages } from '@/features/chat/state/messages'
 import { useMe } from '@/stores/auth'
 import type { Message, QuestionnaireItemPayload } from '@/types'
-import {
-  Questionnaire,
-  QuestionnaireActions,
-  QuestionnaireChoice,
-  QuestionnaireChoiceDescription,
-  QuestionnaireChoices,
-  QuestionnaireDescription,
-  QuestionnaireError,
-  QuestionnaireInput,
-  QuestionnaireItem,
-  QuestionnaireNext,
-  QuestionnairePrevious,
-  QuestionnaireProgress,
-  QuestionnaireSkip,
-  QuestionnaireSubmit,
-  QuestionnaireTitle,
-} from '@/components/ui/questionnaire'
+import { Questionnaire } from '@shadcn/react/questionnaire'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 const EMPTY_MESSAGES: readonly Message[] = []
@@ -74,53 +58,53 @@ export function QuestionnaireBubble() {
   }
 
   return (
-    <Questionnaire items={itemDefinitions} shortcuts="letters" onSubmit={submit} className="mt-2 max-w-xl">
+    <Questionnaire.Root items={itemDefinitions} shortcuts="letters" onSubmit={submit} className="mt-2 max-w-xl">
       <Card data-questionnaire-state="pending" className="w-full" size="sm">
         <CardHeader className="has-data-[slot=questionnaire-progress]:grid-cols-[1fr_auto]">
           <CardTitle>{questionnaire.title ?? 'Agent 提问'}</CardTitle>
-          <QuestionnaireProgress aria-label="提问进度" className="col-start-2 row-start-1" />
+          <Questionnaire.Progress aria-label="提问进度" className="col-start-2 row-start-1" />
         </CardHeader>
         <CardContent>
           {questionnaire.items.map((item) => (
-            <QuestionnaireItem
+            <Questionnaire.Item
               key={item.name}
               name={item.name}
               required={item.required}
               multiple={item.multiple}
             >
-              <QuestionnaireTitle>{item.prompt}</QuestionnaireTitle>
-              {item.description ? <QuestionnaireDescription>{item.description}</QuestionnaireDescription> : null}
-              <QuestionnaireChoices>
+              <Questionnaire.Title>{item.prompt}</Questionnaire.Title>
+              {item.description ? <Questionnaire.Description>{item.description}</Questionnaire.Description> : null}
+              <Questionnaire.Choices className="grid gap-3">
                 {item.choices.map((choice) => (
-                  <QuestionnaireChoice key={choice.value} value={choice.value} disabled={choice.disabled}>
-                    <span>{choice.label}</span>
+                  <Questionnaire.Choice key={choice.value} value={choice.value} disabled={choice.disabled} className="rounded-md border border-input p-3">
+                    <Questionnaire.ChoiceLabel>{choice.label}</Questionnaire.ChoiceLabel>
                     {choice.description ? (
-                      <QuestionnaireChoiceDescription>{choice.description}</QuestionnaireChoiceDescription>
+                      <span className="block text-sm text-muted-foreground">{choice.description}</span>
                     ) : null}
-                  </QuestionnaireChoice>
+                  </Questionnaire.Choice>
                 ))}
                 {item.input ? (
-                  <QuestionnaireInput
+                  <Questionnaire.Input
                     aria-label={item.input.label}
                     placeholder={item.input.placeholder ?? '输入其他答案…'}
                   />
                 ) : null}
-              </QuestionnaireChoices>
-              <QuestionnaireError>{item.required ? '请选择或填写一个答案。' : '请选择答案，或使用“跳过”。'}</QuestionnaireError>
-            </QuestionnaireItem>
+              </Questionnaire.Choices>
+              <Questionnaire.Error>{item.required ? '请选择或填写一个答案。' : '请选择答案，或使用“跳过”。'}</Questionnaire.Error>
+            </Questionnaire.Item>
           ))}
         </CardContent>
         <CardFooter>
-          <QuestionnaireActions>
-            <QuestionnairePrevious>上一步</QuestionnairePrevious>
-            <QuestionnaireSkip>跳过</QuestionnaireSkip>
-            <QuestionnaireNext>下一步</QuestionnaireNext>
-            <QuestionnaireSubmit disabled={submitting}>
+          <div className="flex w-full items-center justify-end gap-2">
+            <Questionnaire.Previous>上一步</Questionnaire.Previous>
+            <Questionnaire.Skip>跳过</Questionnaire.Skip>
+            <Questionnaire.Next>下一步</Questionnaire.Next>
+            <Questionnaire.Submit disabled={submitting}>
               {submitting ? '发送中…' : (questionnaire.submitLabel ?? '发送回答')}
-            </QuestionnaireSubmit>
-          </QuestionnaireActions>
+            </Questionnaire.Submit>
+          </div>
         </CardFooter>
       </Card>
-    </Questionnaire>
+    </Questionnaire.Root>
   )
 }

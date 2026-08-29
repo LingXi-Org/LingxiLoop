@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * EmailComposer — slide-in drawer for writing real email.
  *
@@ -148,15 +149,15 @@ function PillField({
             className="inline-flex items-center gap-1 rounded-full border border-sky2-100 bg-sky2-50 py-0.5 pl-1 pr-1.5 text-[12px] text-skype-deep"
           >
             {e.participant && (
-              <Avatar p={e.participant} size={18} ringColor="var(--raised)" showStatus={false} />
+              <Avatar p={e.participant} size={18} ringColor="var(--raised)" />
             )}
             <span className="leading-none">{e.display}</span>
-            <button
+            <Button
               type="button"
               onClick={(ev) => { ev.stopPropagation(); onChange(entries.filter((x) => x.raw !== e.raw)) }}
               className="ml-0.5 text-ink-300 hover:text-coral-deep leading-none"
               aria-label={`Remove ${e.display}`}
-            >×</button>
+            >×</Button>
           </span>
         ))}
         <Input
@@ -176,20 +177,20 @@ function PillField({
           className="app-menu-surface absolute left-[72px] right-3 top-full z-10 mt-1 max-h-[220px] overflow-y-auto p-1"
         >
           {suggestions.map((p) => (
-            <button
+            <Button
               key={p.id}
               type="button"
               // mousedown not click — onBlur fires before click, eating the event.
               onMouseDown={(e) => { e.preventDefault(); commit(p.id) }}
               className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition hover:bg-raised"
             >
-              <Avatar p={p} size={30} ringColor="var(--card)" showStatus={false} />
+              <Avatar p={p} size={30} ringColor="var(--card)" />
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-semibold text-ink-900 truncate">{p.name}</div>
                 <div className="text-[11px] text-ink-500 truncate font-mono">{p.email ?? p.id}</div>
               </div>
               <span className="text-[9.5px] font-bold text-ink-300 uppercase tracking-wider">{p.kind}</span>
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -434,11 +435,11 @@ export function EmailComposer() {
             </DrawerDescription>
           </div>
           <DrawerClose asChild>
-            <button
+            <Button
               type="button"
               className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-lg leading-none text-ink-secondary transition hover:bg-raised hover:text-ink"
               aria-label="关闭邮件编辑器"
-            >×</button>
+            >×</Button>
           </DrawerClose>
         </DrawerHeader>
 
@@ -461,11 +462,11 @@ export function EmailComposer() {
           />
         ) : (
           <div className="email-composer-row px-4 py-2 text-right">
-            <button
+            <Button
               type="button"
               onClick={() => setShowCc(true)}
               className="text-[11px] text-skype-deep hover:underline"
-            >+ 抄送</button>
+            >+ 抄送</Button>
           </div>
         ))}
         {!isReply && (
@@ -542,30 +543,30 @@ export function EmailComposer() {
             onChange={onFilePick}
             className="hidden"
           />
-          <button
+          <Button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={sending}
             className="rounded-xl border border-hairline bg-raised px-3 py-2 text-[12px] font-semibold text-ink transition hover:border-sky2-200 hover:text-skype-deep disabled:opacity-50"
             title="附加文件"
-          >📎 附上</button>
+          >📎 附上</Button>
           <span className="text-[11px] text-ink-300 mr-auto">
             来自 <span className="font-mono text-ink-500">{me?.email ?? '(no auth email)'}</span>
           </span>
-          <button
+          <Button
             type="button"
             onClick={close}
             disabled={sending}
             className="rounded-xl px-3 py-2 text-[12px] font-semibold text-ink-secondary transition hover:bg-raised hover:text-ink disabled:opacity-50"
-          >取消</button>
-          <button
+          >取消</Button>
+          <Button
             type="button"
             onClick={submit}
             disabled={sending}
             className={cn(
               'rounded-xl bg-accent px-4 py-2 text-[12px] font-semibold text-white transition hover:brightness-110 disabled:opacity-50',
             )}
-          >{sending ? "正在发送..." : isReply ? "发送回复" : "发送"}</button>
+          >{sending ? "正在发送..." : isReply ? "发送回复" : "发送"}</Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

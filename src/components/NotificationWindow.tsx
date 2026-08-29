@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * Renderer for the dedicated Electron notification BrowserWindow.
  *
@@ -299,7 +300,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
       {/* Close (×) — appears on hover. stopPropagation so the click
           dismisses without also triggering the toast's main onClick
           (which would focus the convo + dismiss). */}
-      <button
+      <Button
         type="button"
         onClick={(e) => { e.stopPropagation(); onDismiss() }}
         aria-label="驳回"
@@ -314,7 +315,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
           transitionDuration: '120ms',
           fontSize: 14, lineHeight: 1, fontWeight: 600,
         }}
-      >×</button>
+      >×</Button>
       <div className="flex items-start gap-2.5 pr-5">
         <AuthorAvatar toast={toast} />
         <div className="min-w-0 flex-1">

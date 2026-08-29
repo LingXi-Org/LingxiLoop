@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useEffect, useRef, useState } from 'react'
 import { AvatarMini } from '@/components/Avatar'
 import { PeekHeader, PeekLoading, PeekUnavailable, formatShortDate } from '@/components/ArtifactPeekPrimitives'
@@ -161,7 +162,7 @@ export function CalendarEventPeekContent({
           创建于 {formatShortDate(event.createdAt)} · 更新于 {formatShortDate(event.updatedAt)}
         </div>
         {event.kind === 'agent_task' && (
-          <button
+          <Button
             type="button"
             onClick={async () => {
               if (busy) return
@@ -181,14 +182,14 @@ export function CalendarEventPeekContent({
             }}
             disabled={busy !== null}
             className="py-1.5 px-3 text-[12px] font-semibold rounded-full bg-sky2-50 text-skype-deep border border-sky2-100 active:bg-sky2-100 transition disabled:opacity-60"
-          >{busy === 'run' ? '正在运行…' : '立即运行'}</button>
+          >{busy === 'run' ? '正在运行…' : '立即运行'}</Button>
         )}
-        <button
+        <Button
           type="button"
           onClick={() => setEditing(true)}
           className="py-1.5 px-3 text-[12px] font-semibold rounded-full bg-cloud text-ink-700 border border-ink-100 active:bg-sky2-50 transition"
-        >编辑</button>
-        <button
+        >编辑</Button>
+        <Button
           type="button"
           onClick={async () => {
             if (busy) return
@@ -213,7 +214,7 @@ export function CalendarEventPeekContent({
           }}
           disabled={busy !== null}
           className="py-1.5 px-3 text-[12px] font-semibold rounded-full text-coral-deep border border-coral-soft active:bg-coral-soft/40 transition disabled:opacity-60"
-        >删除</button>
+        >删除</Button>
       </div>
       {editing && <EventEditor event={event} onClose={() => setEditing(false)} />}
     </div>

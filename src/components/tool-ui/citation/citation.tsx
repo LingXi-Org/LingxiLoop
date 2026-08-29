@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 "use client";
 
 import type { LucideIcon } from "lucide-react";
@@ -147,7 +148,7 @@ export function Citation(props: CitationProps) {
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button
+          <Button
             type="button"
             aria-label={title}
             data-tool-ui-id={id}
@@ -166,7 +167,7 @@ export function Citation(props: CitationProps) {
           >
             {iconElement}
             <span className="text-muted-foreground">{domain}</span>
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent
           side="top"

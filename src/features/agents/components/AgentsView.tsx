@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { agentsApi } from '../api'
 import { conversationsApi } from '@/features/conversations/api'
 import { useState } from 'react'
@@ -47,7 +48,7 @@ function AgentCard({ p, onEdit, onDelete }: {
       style={{ border: '1px solid var(--ink-100)' }}>
       {/* Hover actions: edit / delete */}
       <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
-        <button
+        <Button
           onClick={() => onEdit(p)}
           className="w-7 h-7 rounded-full grid place-items-center bg-cloud hover:bg-sky2-50 text-ink-500 hover:text-skype-deep transition"
           style={{ border: '1px solid var(--ink-100)' }}
@@ -55,8 +56,8 @@ function AgentCard({ p, onEdit, onDelete }: {
           aria-label="编辑智能体"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => onDelete(p)}
           className="w-7 h-7 rounded-full grid place-items-center bg-cloud hover:bg-coral-soft text-ink-500 hover:text-coral-deep transition"
           style={{ border: '1px solid var(--ink-100)' }}
@@ -64,7 +65,7 @@ function AgentCard({ p, onEdit, onDelete }: {
           aria-label="场外智能体"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        </button>
+        </Button>
       </div>
 
       <div className="flex items-start gap-3.5 mb-3">
@@ -106,17 +107,17 @@ function AgentCard({ p, onEdit, onDelete }: {
       </div>
 
       <div className="flex gap-2 mt-auto">
-        <button
+        <Button
           onClick={openChat}
           disabled={openingChat}
           className="flex-1 py-2 px-3 bg-skype text-white rounded-[9px] text-[12px] font-semibold transition disabled:opacity-60"
           style={{ boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.4)' }}>
           {openingChat ? "开幕..." : "聊天"}
-        </button>
-        <button className="flex-1 py-2 px-3 bg-cloud text-ink-700 rounded-[9px] text-[12px] font-semibold hover:border-whisper-200 hover:text-whisper-deep transition"
+        </Button>
+        <Button className="flex-1 py-2 px-3 bg-cloud text-ink-700 rounded-[9px] text-[12px] font-semibold hover:border-whisper-200 hover:text-whisper-deep transition"
           style={{ border: '1px solid var(--ink-100)' }}>
           私聊
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -124,7 +125,7 @@ function AgentCard({ p, onEdit, onDelete }: {
 
 function HireCard({ onClick }: { onClick: () => void }) {
   return (
-    <button
+    <Button
       onClick={onClick}
       className="rounded-[16px] p-5 grid place-items-center text-center min-h-[280px] cursor-pointer transition hover:bg-sky2-50 active:scale-[0.99]"
       style={{
@@ -142,7 +143,7 @@ function HireCard({ onClick }: { onClick: () => void }) {
           定义一个 ID，一个名字，以及他们说话的风格。
         </div>
       </div>
-    </button>
+    </Button>
   )
 }
 
@@ -187,18 +188,18 @@ function ConfirmOffboard({ p, onCancel, onConfirmed }: {
           <div className="text-[12.5px] text-coral-deep bg-coral-soft py-2 px-3 rounded-lg mb-3">{err}</div>
         )}
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={onCancel}
             disabled={busy}
             className="flex-1 py-2 px-3 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
             style={{ border: '1px solid var(--ink-100)' }}
-          >取消</button>
-          <button
+          >取消</Button>
+          <Button
             onClick={submit}
             disabled={busy}
             className="flex-1 py-2 px-3 rounded-[9px] text-[12.5px] font-semibold text-white transition disabled:opacity-50"
             style={{ background: 'var(--coral-deep)' }}
-          >{busy ? "下机……" : `Off-board ${p.name}`}</button>
+          >{busy ? "下机……" : `Off-board ${p.name}`}</Button>
         </div>
       </div>
     </div>
@@ -219,7 +220,7 @@ function FormerAgentCard({ p, onRehire }: { p: Participant; onRehire: (p: Partic
         <div className="font-bold text-[14px] text-ink-700 truncate">{p.name}</div>
         <div className="text-[11px] text-ink-500 italic font-display">{p.role} · {departed}</div>
       </div>
-      <button
+      <Button
         onClick={() => onRehire(p)}
         className="px-3 py-1.5 rounded-[8px] text-[11.5px] font-semibold text-skype-deep bg-cloud hover:bg-sky2-50 transition inline-flex items-center gap-1"
         style={{ border: '1px solid var(--sky2-200)' }}
@@ -227,7 +228,7 @@ function FormerAgentCard({ p, onRehire }: { p: Participant; onRehire: (p: Partic
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg>
         重新雇用
-      </button>
+      </Button>
     </div>
   )
 }
@@ -269,7 +270,7 @@ export function AgentsView() {
               智能体可以独立工作并相互协作。当他们需要打电话时，他们会给你打电话。
             </div>
           </div>
-          <button
+          <Button
             onClick={openCreate}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[10px] text-[12.5px] font-semibold text-white transition"
             style={{
@@ -279,7 +280,7 @@ export function AgentsView() {
           >
             <IPlus className="w-4 h-4" strokeWidth={2.5} />
             新智能体
-          </button>
+          </Button>
         </div>
 
         <div className="flex gap-3 mb-6 text-[11px]">

@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 "use client";
 
 import type { LucideIcon } from "lucide-react";
@@ -223,7 +224,7 @@ function OverflowIndicator({
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button
+          <Button
             type="button"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -236,7 +237,7 @@ function OverflowIndicator({
             )}
           >
             <span className="text-muted-foreground">+{count} more</span>
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent
           side="top"
@@ -256,7 +257,7 @@ function OverflowIndicator({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Button
           type="button"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
@@ -271,7 +272,7 @@ function OverflowIndicator({
           <span className="text-muted-foreground text-sm tabular-nums">
             +{count} more sources
           </span>
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
@@ -296,7 +297,7 @@ function OverflowItem({ citation, onClick }: OverflowItemProps) {
   const TypeIcon = TYPE_ICONS[citation.type ?? "webpage"] ?? Globe;
 
   return (
-    <button
+    <Button
       type="button"
       onClick={onClick}
       className="group hover:bg-muted focus-visible:bg-muted flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors focus-visible:outline-none"
@@ -325,7 +326,7 @@ function OverflowItem({ citation, onClick }: OverflowItemProps) {
         </p>
       </div>
       <ExternalLink className="text-muted-foreground mt-0.5 size-3.5 shrink-0 self-start opacity-0 transition-opacity group-hover:opacity-100" />
-    </button>
+    </Button>
   );
 }
 
@@ -368,7 +369,7 @@ function StackedCitations({
     <div ref={containerRef} onBlur={handleBlur} className="inline-flex">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button
+          <Button
             type="button"
             data-tool-ui-id={id}
             data-slot="citation-list"
@@ -434,7 +435,7 @@ function StackedCitations({
             <span className="text-muted-foreground text-sm tabular-nums">
               {citations.length} source{citations.length !== 1 && "s"}
             </span>
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent
           side="bottom"

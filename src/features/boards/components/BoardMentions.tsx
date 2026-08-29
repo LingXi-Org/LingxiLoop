@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useMemo, useRef, useState } from 'react'
 import { AvatarMini } from '@/components/Avatar'
 import { BoardLink } from '@/features/boards/components/BoardLink'
@@ -297,7 +298,7 @@ export function MentionInput(props: {
       {open && matches.length > 0 && (
         <div className="app-menu-surface absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto p-1">
           {matches.map((p, i) => (
-            <button
+            <Button
               key={p.id}
               type="button"
               onMouseDown={(e) => { e.preventDefault(); insertMention(p) }}
@@ -311,7 +312,7 @@ export function MentionInput(props: {
               <span className="font-medium text-ink-800">{p.name}</span>
               <span className="text-xs text-ink-400">@{p.id}</span>
               <span className="ml-auto text-[10px] uppercase tracking-wide text-ink-300">{p.kind}</span>
-            </button>
+            </Button>
           ))}
         </div>
       )}

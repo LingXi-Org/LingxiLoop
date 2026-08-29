@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 "use client"
 
 import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
@@ -45,10 +46,10 @@ export function NavUser({ user }: {
 
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <button type="button" className="flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors hover:bg-muted aria-expanded:bg-muted" aria-label="打开账户菜单">
+      <Button type="button" variant="ghost" className="h-14 w-full justify-start gap-2 rounded-xl px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground" aria-label="打开账户菜单">
         {identity}
-        <ChevronsUpDownIcon className="ml-auto size-4" />
-      </button>
+        <ChevronsUpDownIcon className="ms-auto size-4" />
+      </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent className="min-w-64 rounded-lg" side="right" align="end" sideOffset={8}>
       <DropdownMenuGroup>

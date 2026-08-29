@@ -1,8 +1,10 @@
+import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
 import { agentsApi } from '@/features/agents/api'
 import { authApi } from '@/auth/api'
 import { Avatar } from '@/components/Avatar'
 import { Textarea } from '@/components/ui/textarea'
+import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
@@ -88,13 +90,13 @@ function ProfileTab() {
               退出登录会清除本地凭据，并在服务器端撤销当前会话。
             </div>
           </div>
-          <button
+          <Button
             type="button"
             onClick={signOut}
             className="shrink-0 h-9 px-4 rounded-[8px] bg-ink-800 hover:bg-ink-900 text-white text-[13px] font-display transition-colors"
           >
             退出登录
-          </button>
+          </Button>
         </div>
       </Section>
 
@@ -135,14 +137,14 @@ function AboutSection() {
               : '此版本不支持自动更新，可打开更新窗口查看详情。'}
           </div>
         </div>
-        <button
+        <Button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('lingxiloop:open-updater'))}
           className="shrink-0 h-9 px-4 rounded-[8px] text-[13px] font-display transition-colors text-white"
           style={{ background: 'var(--skype)' }}
         >
           检查更新
-        </button>
+        </Button>
       </div>
     </Section>
   )
@@ -173,7 +175,7 @@ function TrustTab() {
               <div key={a.id} className="bg-cloud rounded-[12px] p-4 grid grid-cols-[184px_minmax(0,1fr)] items-center gap-5"
                 style={{ border: '1px solid var(--ink-100)' }}>
                 <div className="flex items-center gap-4 min-w-0">
-                  <Avatar p={a} size={36} showStatus={false} />
+                  <Avatar p={a} size={36} />
                   <div className="min-w-0">
                     <div className="font-bold text-[13.5px] text-ink-900 truncate">{a.name}</div>
                     <div className="font-display italic text-[11.5px] text-ink-500 truncate">{a.role}</div>
@@ -184,9 +186,9 @@ function TrustTab() {
                     <span>自主行动阈值</span>
                     <span className="font-mono text-[11px] font-semibold text-ink-700">{trust.toFixed(2)}</span>
                   </div>
-                  <input type="range" min={0} max={1} step={0.01} value={trust}
-                    onChange={(e) => setAutonomy(a.id, parseFloat(e.target.value))}
-                    className="w-full accent-whisper" />
+                  <Slider min={0} max={1} step={0.01} value={[trust]}
+                    onValueChange={([value]) => setAutonomy(a.id, value ?? trust)}
+                    className="w-full" />
                 </div>
               </div>
             )
@@ -210,7 +212,7 @@ function TrustTab() {
                   {rule.mode === 'allow' ? '允许' : rule.mode === 'ask' ? '每次询问' : '拒绝'} · {rule.source === 'explicit_user' ? '用户明确设置' : '已学习'}
                 </div>
               </div>
-              <button type="button" onClick={async () => {
+              <Button type="button" onClick={async () => {
                 if (!await confirmSensitiveAction({
                   title: '撤销自治规则？',
                   description: `撤销后，${byId[rule.agentId]?.name ?? rule.agentId} 的 ${rule.scope}.${rule.operation} 操作将恢复默认审批策略。`,
@@ -223,7 +225,7 @@ function TrustTab() {
                 } catch { /* toast owns the visible error state */ }
               }} className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">
                 撤销
-              </button>
+              </Button>
             </div>
           ))}
           {rules.length === 0 && <div className="rounded-xl border border-dashed border-ink-100 px-6 py-7 text-center text-[12px] text-ink-400">还没有明确的自治规则。</div>}
@@ -238,7 +240,7 @@ function TrustTab() {
               <div key={a.id} className="bg-cloud rounded-[12px] p-4"
                 style={{ border: '1px solid var(--ink-100)' }}>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <Avatar p={a} size={28} showStatus={false} />
+                  <Avatar p={a} size={28} />
                   <div className="font-bold text-[13px] text-ink-900">{a.name}</div>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 text-center">
@@ -365,13 +367,13 @@ function MemoryTab() {
               <div className="mt-3 flex gap-2">
                 {isEditing ? (
                   <>
-                    <button type="button" onClick={() => void agentsApi.updateLearnedMemory({ agentId: item.agentId, path: item.path, body: draft }).then(() => { setEditing(null); load() })} className="rounded-lg bg-skype px-3 py-1.5 text-[11px] font-semibold text-white">保存</button>
-                    <button type="button" onClick={() => setEditing(null)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-ink-500 hover:bg-raised">取消</button>
+                    <Button type="button" onClick={() => void agentsApi.updateLearnedMemory({ agentId: item.agentId, path: item.path, body: draft }).then(() => { setEditing(null); load() })} className="rounded-lg bg-skype px-3 py-1.5 text-[11px] font-semibold text-white">保存</Button>
+                    <Button type="button" onClick={() => setEditing(null)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-ink-500 hover:bg-raised">取消</Button>
                   </>
                 ) : (
                   <>
-                    <button type="button" onClick={() => { setEditing(key); setDraft(item.body) }} className="rounded-lg border border-ink-100 px-3 py-1.5 text-[11px] font-semibold text-ink-600 hover:bg-raised">编辑</button>
-                    <button type="button" onClick={() => void agentsApi.forgetLearnedMemory(item.agentId, item.path).then(load)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">忘记</button>
+                    <Button type="button" onClick={() => { setEditing(key); setDraft(item.body) }} className="rounded-lg border border-ink-100 px-3 py-1.5 text-[11px] font-semibold text-ink-600 hover:bg-raised">编辑</Button>
+                    <Button type="button" onClick={() => void agentsApi.forgetLearnedMemory(item.agentId, item.path).then(load)} className="rounded-lg px-3 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral-soft/30">忘记</Button>
                   </>
                 )}
               </div>
@@ -391,7 +393,7 @@ export function MeView({ initialTab = 'Profile' }: { initialTab?: 'Profile' | 'P
     <main className="overflow-y-auto p-8 pt-6"
       style={{ background: 'linear-gradient(180deg, transparent, var(--paper))' }}>
       <div className="max-w-[1100px] mx-auto">
-        <button type="button" onClick={() => useApp.getState().setView('conversations')} className="mb-4 rounded-lg px-3 py-2 text-[13px] text-ink-600 hover:bg-cloud">← 返回对话</button>
+        <Button type="button" onClick={() => useApp.getState().setView('conversations')} className="mb-4 rounded-lg px-3 py-2 text-[13px] text-ink-600 hover:bg-cloud">← 返回对话</Button>
         <div className="mb-6">
           <h1 className="font-display font-medium text-[36px] tracking-tight text-ink-900 mb-1" style={{ letterSpacing: '-0.025em' }}>
             个人中心
@@ -403,7 +405,7 @@ export function MeView({ initialTab = 'Profile' }: { initialTab?: 'Profile' | 'P
 
         <div className="flex gap-1 mb-7 border-b border-ink-100">
           {tabs.map((t, i) => (
-            <button
+            <Button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
@@ -412,7 +414,7 @@ export function MeView({ initialTab = 'Profile' }: { initialTab?: 'Profile' | 'P
                 tab === t ? 'border-skype text-skype-deep' : 'border-transparent text-ink-500 hover:text-ink-700',
               )}>
               {({ Profile: '个人资料', Memory: '记忆', 'Trust & autonomy': '信任与自主权', Preferences: '偏好设置' } as Record<Tab, string>)[t]}
-            </button>
+            </Button>
           ))}
         </div>
 

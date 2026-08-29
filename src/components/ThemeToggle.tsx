@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/stores/theme'
 
@@ -12,7 +13,7 @@ export function ThemeToggle({ className, showLabel = false, onToggle }: Props) {
   const next = theme === 'dark' ? 'light' : 'dark'
 
   return (
-    <button
+    <Button
       type="button"
       aria-label={`切换到${next === 'light' ? '浅色' : '深色'}主题`}
       title={`切换到${next === 'light' ? '浅色' : '深色'}主题`}
@@ -24,7 +25,7 @@ export function ThemeToggle({ className, showLabel = false, onToggle }: Props) {
     >
       <span className={showLabel ? 'app-menu-icon' : undefined}>{theme === 'dark' ? <SunIcon /> : <MoonIcon />}</span>
       {showLabel && <span>{theme === 'dark' ? '浅色主题' : '深色主题'}</span>}
-    </button>
+    </Button>
   )
 }
 

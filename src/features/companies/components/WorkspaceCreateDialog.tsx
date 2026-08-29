@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -55,10 +56,10 @@ export function WorkspaceCreateDialog({ open, onOpenChange }: {
             disabled={busy}
           />
           <DialogFooter>
-            <button type="button" className="rounded-lg px-4 py-2 text-sm hover:bg-muted" onClick={() => onOpenChange(false)} disabled={busy}>取消</button>
-            <button type="submit" className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-50" disabled={!name.trim() || busy}>
+            <Button type="button" className="rounded-lg px-4 py-2 text-sm hover:bg-muted" onClick={() => onOpenChange(false)} disabled={busy}>取消</Button>
+            <Button type="submit" className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-50" disabled={!name.trim() || busy}>
               {busy ? '创建中…' : '创建'}
-            </button>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

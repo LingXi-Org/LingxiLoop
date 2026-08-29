@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import type { ReactNode } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 
@@ -46,7 +47,7 @@ export function PeekHeader({
           {meta && <div className="mt-1 truncate text-[11.5px] text-ink-500">{meta}</div>}
         </div>
         {onOpenFull && (
-          <button
+          <Button
             type="button"
             onClick={onOpenFull}
             className="h-8 w-8 rounded-[8px] grid place-items-center text-ink-500 hover:text-skype-deep hover:bg-sky2-100 transition"
@@ -54,9 +55,9 @@ export function PeekHeader({
             aria-label="打开完整工作区"
           >
             <OpenFullIcon />
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="button"
           onClick={onClose}
           className="h-8 w-8 rounded-[8px] grid place-items-center text-ink-400 hover:text-ink-900 hover:bg-ink-100/70 transition"
@@ -64,7 +65,7 @@ export function PeekHeader({
           aria-label="关闭"
         >
           <CloseIcon />
-        </button>
+        </Button>
       </div>
     </header>
   )
@@ -98,13 +99,13 @@ export function PeekUnavailable({
         </div>
         <div className="mt-3 text-[14px] font-semibold text-ink-900">{title}</div>
         <div className="mt-1 text-[12px] text-ink-500 leading-relaxed">{detail}</div>
-        <button
+        <Button
           type="button"
           onClick={onClose}
           className="mt-4 h-8 px-3 rounded-[8px] text-[12px] font-semibold text-ink-600 border border-ink-100 hover:bg-sky2-50 transition"
         >
           关闭
-        </button>
+        </Button>
       </div>
     </div>
   )

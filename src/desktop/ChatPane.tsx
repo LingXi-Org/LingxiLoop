@@ -4,7 +4,7 @@ import type { CoworkerActivity } from '@/features/agents/contracts'
 import { type MutableRefObject, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 import { ws } from '@/api/core/realtime'
-import { ICanvas, ISearch } from '@/components/icons'
+import { ISearch } from '@/components/icons'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { AgentTypingIndicator } from '@/components/messages/AgentTypingIndicator'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
@@ -19,7 +19,6 @@ import { cn } from '@/lib/utils'
 import { projectFindMatches } from '@/lib/transcriptExperience'
 import { useApp } from '@/stores/app'
 import { useConversationUi } from '@/stores/conversationUi'
-import { useSurface } from '@/stores/surface'
 import { useUiCommand } from '@/stores/uiCommands'
 import { useConversations } from '@/features/conversations/store'
 import type { MessagesState } from '@/features/chat/state/messages'
@@ -163,7 +162,7 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
 function OpenMausEmptyConversationState() {
   const total = useConversations((s) => s.list.length)
   return (
-    <main className="chat-surface omb-titlebar-safe omb-drag grid h-full min-w-0 place-items-center">
+    <main className="chat-surface omb-titlebar-safe omb-drag grid h-full min-w-0 place-items-center bg-background">
       <div className="omb-no-drag flex max-w-sm flex-col items-center gap-3 px-8 text-center">
         <img src="/logo.png" alt="" className="size-14 rounded-2xl opacity-90" draggable={false} />
         <h1 className="text-[17px] font-semibold text-foreground">选择一个会话开始交流</h1>
@@ -218,7 +217,7 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
   const active = [...latestByRun.values()].reverse()
     .find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')
   return (
-    <div className="border-b border-border bg-background px-5 py-2" role="status" aria-label="Agent 最近活动">
+    <div className="border-b border-[var(--im-divider-weak)] bg-background px-5 py-2" role="status" aria-label="Agent 最近活动">
       <div className="mx-auto flex max-w-[900px] items-center gap-3 overflow-hidden">
         <span className={`size-2 shrink-0 rounded-full ${active ? 'animate-pulse bg-[var(--working)]' : 'bg-[var(--avail)]'}`} />
         <span className="shrink-0 text-[11px] font-semibold text-muted-foreground">
@@ -238,10 +237,8 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
 
 export function ChatPane({
   onBackToConversations,
-  onOpenGroupContext,
 }: {
   onBackToConversations?: () => void
-  onOpenGroupContext?: () => void
 } = {}) {
   const convoId = useApp((s) => s.selectedConversationId)
   const uiCommand = useUiCommand()
@@ -490,41 +487,11 @@ export function ChatPane({
 
   return (
     <main
-      className="chat-surface grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)_auto_auto] overflow-hidden"
+      className="chat-surface grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)_auto_auto] overflow-hidden bg-background"
     >
       <ConversationHeader
         conversationId={convoId}
         onBack={onBackToConversations}
-        onOpenDetails={() => {
-          const participantId = c.members.find((id) => byId[id]?.kind === 'agent')
-          if (participantId) useSurface.getState().openAgentInfo(participantId)
-        }}
-        actions={(
-          <>
-            {c.kind === 'group' && onOpenGroupContext && <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              onClick={onOpenGroupContext}
-              title="打开知识库和 Canvas"
-              aria-label="打开群聊上下文"
-              className="text-muted-foreground"
-            >
-              <ICanvas className="size-[18px]" />
-            </Button>}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              onClick={() => setSearchOpen((value) => !value)}
-              title="搜索当前会话"
-              aria-label="搜索当前会话"
-              className={cn(searchOpen ? 'bg-muted text-primary' : 'text-muted-foreground')}
-            >
-              <ISearch className="size-[18px]" />
-            </Button>
-          </>
-        )}
       />
       {/* Keep optional chrome in one stable grid cell. ConversationActivity
           returns null when there are no events; rendering it as a top-level
@@ -533,7 +500,7 @@ export function ChatPane({
       <div data-chat-auxiliary="true">
         <ConversationActivity conversationId={convoId} />
         {searchOpen && (
-          <div className="chat-find-toolbar flex items-center gap-2 border-b border-border bg-background px-5 py-2">
+          <div className="chat-find-toolbar mx-2 mt-2 flex items-center gap-2 rounded-xl border border-border/40 bg-muted/30 px-2 py-1.5 text-foreground">
           <div className="flex flex-1 items-center gap-2 rounded-3xl bg-muted px-3 py-1 text-[13px] text-muted-foreground focus-within:ring-1 focus-within:ring-ring">
             <ISearch className="w-3.5 h-3.5" strokeWidth={2} />
             <Input

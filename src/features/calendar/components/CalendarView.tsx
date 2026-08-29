@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * Calendar — macOS-Calendar-style scheduling surface. Three view modes
  * (Day / Week / Month) share one toolbar; each one supports:
@@ -299,7 +300,7 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
                 </div>
                 <div className="flex flex-col gap-0.5 overflow-hidden">
                   {items.slice(0, 3).map((it, i) => (
-                    <button
+                    <Button
                       key={`${it.event.id}-${i}`}
                       onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => { e.stopPropagation(); onEdit(it.event) }}
@@ -312,7 +313,7 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
                       title={`${formatTime(it.occurrence)} · ${it.event.title}`}
                     >
                       <span className="opacity-70">{formatTime(it.occurrence)}</span> {it.event.title}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </CalendarMenu>
@@ -519,7 +520,7 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
                 const top = (startMins / 60) * HOUR_HEIGHT
                 const height = (durMin / 60) * HOUR_HEIGHT
                 return (
-                  <button
+                  <Button
                     key={`${occ.event.id}-${i}`}
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={() => onEdit(occ.event)}
@@ -538,7 +539,7 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
                         {formatTime(s)}{e ? `–${formatTime(e)}` : ''}
                       </div>
                     )}
-                  </button>
+                  </Button>
                 )
               })}
             </CalendarMenu>
@@ -623,12 +624,12 @@ export function CalendarView() {
           <h1 className="text-lg font-semibold text-ink-900">日历</h1>
 
           <div className="flex items-center gap-1 ml-3">
-            <button onClick={goPrev}
-              className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100">‹</button>
-            <button onClick={goToday}
-              className="px-2 h-7 rounded-md text-xs font-medium text-ink-700 hover:bg-ink-100">今天</button>
-            <button onClick={goNext}
-              className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100">›</button>
+            <Button onClick={goPrev}
+              className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100">‹</Button>
+            <Button onClick={goToday}
+              className="px-2 h-7 rounded-md text-xs font-medium text-ink-700 hover:bg-ink-100">今天</Button>
+            <Button onClick={goNext}
+              className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100">›</Button>
             <span className="ml-2 text-sm text-ink-700 font-medium">{headerLabel}</span>
           </div>
 
@@ -639,7 +640,7 @@ export function CalendarView() {
             className="inline-flex items-center gap-0.5 rounded-full border border-ink-100 bg-cloud p-0.5 shadow-[0_1px_0_rgba(255,255,255,0.95)_inset,0_8px_20px_-18px_rgba(26,78,120,0.4)]"
           >
             {(['day', 'week', 'month'] as const).map((m) => (
-              <button
+              <Button
                 key={m}
                 onClick={() => setMode(m)}
                 className={cn(
@@ -648,11 +649,11 @@ export function CalendarView() {
                     ? 'bg-sky2-50 text-skype-deep ring-1 ring-inset ring-sky2-100'
                     : 'text-ink-500 hover:text-skype-deep hover:bg-sky2-50/60',
                 )}
-              >{m}</button>
+              >{m}</Button>
             ))}
           </div>
 
-          <button
+          <Button
             onClick={() => openNew()}
             className="inline-flex items-center gap-1.5 px-3.5 h-8 rounded-full text-[12.5px] font-semibold text-white transition active:scale-[0.985]"
             style={{
@@ -662,7 +663,7 @@ export function CalendarView() {
           >
             <IPlus className="w-4 h-4" strokeWidth={2.5} />
             新
-          </button>
+          </Button>
         </div>
 
         {mode === 'month' && <MonthGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} />}
@@ -685,10 +686,10 @@ export function CalendarView() {
           {loaded && agenda.length === 0 && (
             <div className="px-1 py-6 text-center">
               <div className="text-sm text-ink-500 mb-2">未来 30 天内没有任何安排。</div>
-              <button
+              <Button
                 onClick={() => openNew()}
                 className="text-xs text-skype font-medium hover:underline"
-              >安排一些事情 →</button>
+              >安排一些事情 →</Button>
             </div>
           )}
           {agenda.map((it, idx) => {
@@ -723,10 +724,10 @@ export function CalendarView() {
                         </>
                       )}
                     </div>
-                    <button
+                    <Button
                       onClick={() => openEdit(it.event)}
                       className="text-left text-sm font-medium text-ink-900 hover:text-skype-deep block w-full truncate"
-                    >{it.event.title}</button>
+                    >{it.event.title}</Button>
                     {it.event.kind === 'agent_task' && assignee && (
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <Avatar p={assignee} size={18} />
@@ -741,7 +742,7 @@ export function CalendarView() {
                   </div>
                   <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                     {it.event.kind === 'agent_task' && (
-                      <button
+                      <Button
                         title="立即运行"
                         onClick={async () => {
                           try {
@@ -754,10 +755,10 @@ export function CalendarView() {
                           } catch (err) { console.warn('[calendar] run-now failed', err) }
                         }}
                         className="text-[10px] text-skype-deep px-1.5 py-0.5 rounded hover:bg-sky2-100"
-                      >立即运行</button>
+                      >立即运行</Button>
                     )}
                     {(it.event.createdBy === meId) && (
-                      <button
+                      <Button
                         title="删除事件"
                         onClick={async () => {
                           if (!await confirmSensitiveAction({
@@ -771,7 +772,7 @@ export function CalendarView() {
                           } catch (err) { console.warn('[calendar] delete failed', err) }
                         }}
                         className="text-ink-400 hover:text-coral-deep p-0.5 rounded"
-                      ><ITrash className="w-3 h-3" /></button>
+                      ><ITrash className="w-3 h-3" /></Button>
                     )}
                   </div>
                 </div>

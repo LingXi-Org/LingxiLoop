@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { conversationsApi } from '@/features/conversations/api'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { useRef, useState } from 'react'
@@ -93,11 +94,11 @@ export function ParticipantProfile({
       <div
         className="absolute inset-x-0 top-0 z-20 flex h-14 items-center border-b border-hairline bg-panel/88 px-2 backdrop-blur-xl"
       >
-        <button type="button" onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-secondary hover:bg-raised" aria-label="关闭资料">
+        <Button type="button" onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-secondary hover:bg-raised" aria-label="关闭资料">
           <span className="text-xl leading-none">×</span>
-        </button>
+        </Button>
         <motion.div style={{ opacity: compactOpacity }} className="ml-1 flex min-w-0 items-center gap-2.5">
-          <Avatar p={participant} size={32} ringColor="var(--panel)" showStatus={false} />
+          <Avatar p={participant} size={32} ringColor="var(--panel)" />
           <span className="min-w-0">
             <span className="block truncate text-[14px] font-semibold text-ink">{participant.name}</span>
             <span className="block truncate text-[10px] text-ink-secondary">{participant.role ?? (isAgent ? 'Agent' : 'Member')}</span>
@@ -130,17 +131,17 @@ export function ParticipantProfile({
           {isManaged ? (
             <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">Pulse 仅在学习中心的共享教师室中使用，不支持私聊、召开群组或邮件。</div>
           ) : isSelf ? (
-            <button type="button" onClick={() => { setView('me'); onClose() }} className="w-full rounded-xl bg-raised px-4 py-3 text-[13px] font-semibold text-accent hover:bg-raised-hover">打开我的设置</button>
+            <Button type="button" onClick={() => { setView('me'); onClose() }} className="w-full rounded-xl bg-raised px-4 py-3 text-[13px] font-semibold text-accent hover:bg-raised-hover">打开我的设置</Button>
           ) : (
             <div className={cn('grid gap-2', isAgent ? 'grid-cols-3' : 'grid-cols-1')}>
-              <button type="button" onClick={() => void startDM()} disabled={opening} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-accent px-3 text-[12px] font-semibold text-white shadow-soft transition active:scale-[0.97] disabled:opacity-50">
+              <Button type="button" onClick={() => void startDM()} disabled={opening} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-accent px-3 text-[12px] font-semibold text-white shadow-soft transition active:scale-[0.97] disabled:opacity-50">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                 {opening ? '打开中…' : '消息'}
-              </button>
+              </Button>
               {isAgent && (
                 <>
-                  <button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-skype-ink px-3 text-[12px] font-semibold text-white transition active:scale-[0.97]"><IDirectChat className="size-4" />私聊</button>
-                  <button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-panel px-3 text-[12px] font-semibold text-ink transition active:scale-[0.97]"><IConvene className="size-4" />召开</button>
+                  <Button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-skype-ink px-3 text-[12px] font-semibold text-white transition active:scale-[0.97]"><IDirectChat className="size-4" />私聊</Button>
+                  <Button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-panel px-3 text-[12px] font-semibold text-ink transition active:scale-[0.97]"><IConvene className="size-4" />召开</Button>
                 </>
               )}
             </div>
@@ -149,11 +150,11 @@ export function ParticipantProfile({
 
         {participant.email && (
           <ProfileSection title="Email">
-            <button type="button" onClick={() => void copyEmail()} className="flex w-full items-center gap-2.5 rounded-xl bg-raised px-3 py-2.5 text-left font-mono text-[12px] text-ink">
+            <Button type="button" onClick={() => void copyEmail()} className="flex w-full items-center gap-2.5 rounded-xl bg-raised px-3 py-2.5 text-left font-mono text-[12px] text-ink">
               <IMail className="size-4 shrink-0 text-accent" />
               <span className="min-w-0 flex-1 truncate">{participant.email}</span>
               <span className={cn('text-[9px] font-bold uppercase tracking-wider', copied ? 'text-avail' : 'text-ink-secondary')}>{copied ? '已复制' : '复制'}</span>
-            </button>
+            </Button>
           </ProfileSection>
         )}
 

@@ -62,7 +62,7 @@ export function ComposerMentionMenu({ query, entries, activeIndex, onHover, onPi
         if (entry.kind === 'all') {
           return (
             <Button key="__all" variant="ghost" type="button" onMouseEnter={() => onHover(index)} onClick={() => onPick(entry)} className={cn('app-menu-item h-auto w-full justify-start', active && 'is-active bg-muted')}>
-              <Avatar p={EVERYONE_BLOUB_PARTICIPANT} size={28} ringColor="transparent" showStatus={false} animated={false} />
+              <Avatar p={EVERYONE_BLOUB_PARTICIPANT} size={28} ringColor="transparent" animated={false} />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[12.5px] font-semibold text-foreground">所有人</div>
                 <div className="truncate text-[10.5px] text-muted-foreground">通知会话中的全部成员</div>
@@ -73,7 +73,7 @@ export function ComposerMentionMenu({ query, entries, activeIndex, onHover, onPi
         const participant = entry.p
         return (
           <Button key={participant.id} variant="ghost" type="button" onMouseEnter={() => onHover(index)} onClick={() => onPick(entry)} className={cn('app-menu-item h-auto w-full justify-start', active && 'is-active bg-muted')}>
-            <Avatar p={participant} size={26} ringColor="transparent" showStatus={false} animated={false} />
+            <Avatar p={participant} size={26} ringColor="transparent" animated={false} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[12.5px] font-semibold text-foreground">{participant.name}</div>
               <div className="truncate text-[10.5px] text-muted-foreground">@{participant.id}</div>

@@ -75,11 +75,9 @@ export function ConversationAvatar({
 export function ConversationListItemContent({
   conversation,
   variant = 'desktop',
-  selected = false,
 }: {
   conversation: Conversation
   variant?: 'desktop' | 'mobile'
-  selected?: boolean
 }) {
   // Zustand's external-store selector must return a stable snapshot when no
   // one is typing. A fresh `[]` here causes an infinite render loop in React.
@@ -99,29 +97,27 @@ export function ConversationListItemContent({
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
   const isMobile = variant === 'mobile'
-  const isDirectAgent = conversation.kind === 'direct' && conversation.members.some((id) => id !== meId && byId[id]?.kind === 'agent')
-
   return (
     <>
-      <ConversationAvatar conversation={conversation} size={isMobile || !isDirectAgent ? 48 : 54} variant={variant} />
+      <ConversationAvatar conversation={conversation} size={48} variant={variant} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
-          {conversation.pinned && !isMobile && <span className={cn('text-[9px]', selected ? 'text-primary-foreground/70' : 'text-muted-foreground')} aria-label="已置顶">◆</span>}
-          <span className={cn('truncate text-[16px] font-semibold', selected ? 'text-primary-foreground' : muted ? 'text-muted-foreground' : 'text-foreground')}>
+          {conversation.pinned && !isMobile && <span className="text-[9px] text-muted-foreground" aria-label="已置顶">◆</span>}
+          <span className={cn('truncate font-semibold', isMobile ? 'text-[16px]' : 'text-[15px]', muted ? 'text-muted-foreground' : 'text-foreground')}>
             {conversation.title}
           </span>
-          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className={cn('shrink-0 text-[10px] font-normal', selected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>{role}</span>)}
-          {muted && <span className={cn('shrink-0 text-[11px]', selected ? 'text-primary-foreground/70' : 'text-muted-foreground')} aria-label="已静音">⌁</span>}
+          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[9px] font-normal text-muted-foreground">{role}</span>)}
+          {muted && <span className="shrink-0 text-[10px] text-muted-foreground" aria-label="已静音">⌁</span>}
           {conversation.tag === 'fresh-pulled' && <span className="rounded bg-secondary px-1.5 py-0.5 text-[8px] font-bold text-secondary-foreground">NEW</span>}
         </span>
-        <span className={cn('mt-0.5 block truncate text-[14px]', selected ? 'text-primary-foreground/75' : typingNames.length > 0 ? 'text-primary' : 'text-muted-foreground')}>
+        <span className={cn('mt-0.5 block truncate', isMobile ? 'text-[14px]' : 'text-[13px]', typingNames.length > 0 ? 'text-primary' : 'text-muted-foreground')}>
           {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1 self-center">
-        <span className={cn('text-[12px] tabular-nums', selected ? 'text-primary-foreground/75' : 'text-muted-foreground')}>{conversation.lastAt}</span>
+        <span className={cn('tabular-nums text-muted-foreground', isMobile ? 'text-[12px]' : 'text-[11px]')}>{conversation.lastAt}</span>
         {(conversation.unread ?? 0) > 0 && (
-          <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold leading-5', selected ? 'bg-primary-foreground text-primary' : muted ? 'bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground')}>
+          <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold leading-5', muted ? 'bg-muted text-muted-foreground' : 'bg-foreground text-background')}>
             {conversation.unread! > 99 ? '99+' : conversation.unread}
           </span>
         )}
