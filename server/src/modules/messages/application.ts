@@ -9,6 +9,7 @@ import {
   listMessages,
   listReplies,
   lockReactionTarget,
+  lockWukongReaction,
   reactionExists,
   removeReaction,
   type MessageProjectionRow,
@@ -116,9 +117,7 @@ export class MessagesApplication {
     companyId: string; userId: string; conversationId: string; messageId: string; messageSeq: number; messageAuthorId: string; emoji: string
   }) {
     const changed = await this.infrastructure.transaction(async (db) => {
-      await db.query(`SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, [
-        `wukong-reaction:${input.companyId}:${input.messageId}:${input.userId}:${input.emoji}`,
-      ])
+      await lockWukongReaction(db, input.companyId, input.messageId, input.userId, input.emoji)
       const removed = await reactionExists(db, input.companyId, input.messageId, input.userId, input.emoji)
       if (removed) await removeReaction(db, input.companyId, input.messageId, input.userId, input.emoji)
       else await addWukongReaction(db, input)

@@ -224,6 +224,18 @@ export async function addWukongReaction(
   )
 }
 
+export async function lockWukongReaction(
+  db: Queryable,
+  companyId: string,
+  messageId: string,
+  userId: string,
+  emoji: string,
+): Promise<void> {
+  await db.query(`SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, [
+    `wukong-reaction:${companyId}:${messageId}:${userId}:${emoji}`,
+  ])
+}
+
 export async function aggregateReactions(
   db: Queryable,
   companyId: string,
