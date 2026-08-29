@@ -63,8 +63,8 @@ async function seedTeacherCourse():Promise<Fixture>{
     )
   }
   await pool.query(
-    `INSERT INTO projects(id,company_id,name,description,color,created_by,is_general)
-     VALUES($1,$2,'研究实验室','教师智能体集成测试','#7756D8',$3,FALSE)`,
+    `INSERT INTO projects(id,company_id,kind,name,description,color,created_by,is_default)
+     VALUES($1,$2,'INSTITUTIONAL_COURSE','研究实验室','教师智能体集成测试','#7756D8',$3,FALSE)`,
     [projectId,companyId,teacherId],
   )
   await pool.query(

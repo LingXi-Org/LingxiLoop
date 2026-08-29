@@ -33,8 +33,7 @@ export async function requireConversationMember(
   const { userId, companyId } = await requireCompany(req)
   const { rows } = await pool.query<{ project_id: string | null; members: string[]; kind: string; project_allowed: boolean }>(
     `SELECT conversation.project_id,conversation.members,conversation.kind,
-            (conversation.project_id IS NULL OR project.is_general=TRUE
-             OR company_member.role IN ('OWNER','ADMIN')
+            (conversation.project_id IS NULL OR company_member.role IN ('OWNER','ADMIN')
              OR course_member.user_id IS NOT NULL) AS project_allowed
        FROM conversations conversation
        LEFT JOIN projects project ON project.id=conversation.project_id
@@ -75,7 +74,7 @@ export async function requireCanvasWorkspace(req: Request & AuthedRequest, canva
         ON course_member.project_id=project.id AND course_member.company_id=c.company_id
        AND course_member.user_id=$3 AND course_member.status='ACTIVE'
       WHERE cv.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text])
-        AND (project.is_general=TRUE OR company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
+        AND (company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       LIMIT 1`,
     [canvasId, companyId, userId],
   )
@@ -95,7 +94,7 @@ export async function requireCanvasFrameWorkspace(req: Request & AuthedRequest, 
         ON course_member.project_id=project.id AND course_member.company_id=c.company_id
        AND course_member.user_id=$3 AND course_member.status='ACTIVE'
       WHERE f.id=$1 AND cv.company_id=$2 AND c.kind='group' AND c.members @> to_jsonb(ARRAY[$3::text])
-        AND (project.is_general=TRUE OR company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
+        AND (company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       LIMIT 1`,
     [frameId, companyId, userId],
   )

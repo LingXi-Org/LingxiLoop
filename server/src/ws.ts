@@ -48,7 +48,7 @@ const clients = new Set<AuthedSocket>()
 
 /** Force clients to refresh membership state after an administrator removes a
  * user. A reconnect obtains a fresh ticket and company set, so stale sockets
- * cannot keep receiving General workspace events from the removed company. */
+ * cannot keep receiving default Project events from the removed company. */
 export function disconnectUserFromCompany(userId: string, companyId: string): void {
   for (const client of clients) {
     if (client.userId !== userId || !client.companies.has(companyId)) continue
@@ -407,7 +407,7 @@ export function attachWebSocket(httpServer: Server) {
              ON course_member.project_id=project.id AND course_member.company_id=project.company_id
             AND course_member.user_id=company_member.user_id AND course_member.status='ACTIVE'
           WHERE project.id=$1 AND project.company_id=$2
-            AND (project.is_general=TRUE OR company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)`,
+            AND (company_member.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)`,
         [workspaceId, companyId],
       )
       projectViewers = new Set(rows.map((row) => row.user_id))

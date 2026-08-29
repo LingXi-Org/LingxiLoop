@@ -39,6 +39,7 @@ test('[integration] Personal Workspace provisioning creates one complete inherit
     company_membership_status: string
     project_id: string
     project_name: string
+    project_kind: string
     project_plan_id: string | null
     project_role: string
     project_membership_status: string
@@ -46,13 +47,14 @@ test('[integration] Personal Workspace provisioning creates one complete inherit
     `SELECT company.id AS company_id,company.type AS company_type,company.status AS company_status,
             plan.code AS plan_code,company_member.role AS company_role,
             company_member.status AS company_membership_status,
-            project.id AS project_id,project.name AS project_name,project.plan_id AS project_plan_id,
+            project.id AS project_id,project.name AS project_name,project.kind AS project_kind,
+            project.plan_id AS project_plan_id,
             project_member.role AS project_role,project_member.status AS project_membership_status
        FROM companies company
        JOIN plans plan ON plan.id=company.plan_id
        JOIN company_memberships company_member
          ON company_member.company_id=company.id AND company_member.user_id=$1
-       JOIN projects project ON project.company_id=company.id AND project.is_general=TRUE
+       JOIN projects project ON project.company_id=company.id AND project.is_default=TRUE
        JOIN project_memberships project_member
          ON project_member.company_id=company.id AND project_member.project_id=project.id
         AND project_member.user_id=$1
@@ -68,6 +70,7 @@ test('[integration] Personal Workspace provisioning creates one complete inherit
     company_membership_status: 'ACTIVE',
     project_id: created.projectId,
     project_name: '我的学习',
+    project_kind: 'PERSONAL_LEARNING',
     project_plan_id: null,
     project_role: 'OWNER',
     project_membership_status: 'ACTIVE',
@@ -97,7 +100,8 @@ test('[integration] sequential and concurrent retries keep exactly one Personal 
        (SELECT COUNT(*)::int FROM companies WHERE personal_owner_user_id=$1) AS companies,
        (SELECT COUNT(*)::int FROM company_memberships WHERE user_id=$1) AS company_memberships,
        (SELECT COUNT(*)::int FROM projects project JOIN companies company ON company.id=project.company_id
-         WHERE company.personal_owner_user_id=$1 AND project.is_general=TRUE) AS projects,
+         WHERE company.personal_owner_user_id=$1 AND project.is_default=TRUE
+           AND project.kind='PERSONAL_LEARNING') AS projects,
        (SELECT COUNT(*)::int FROM project_memberships WHERE user_id=$1) AS project_memberships`,
     [USER_ID],
   )

@@ -64,7 +64,7 @@ export async function createEmailConversation(
      SELECT $1, 'email', $2, $3::jsonb, $4,
             COALESCE(
               (SELECT project.id FROM projects project WHERE project.id = $5 AND project.company_id = $4),
-              (SELECT project.id FROM projects project WHERE project.company_id = $4 AND project.is_general = TRUE LIMIT 1)
+              (SELECT project.id FROM projects project WHERE project.company_id = $4 AND project.is_default = TRUE LIMIT 1)
             ),
             $2
       WHERE $5::text IS NULL

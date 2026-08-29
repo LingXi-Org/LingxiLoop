@@ -86,7 +86,7 @@ export function WorkspacePicker() {
                   <Item key={workspace.id} role="button" tabIndex={workspace.status === 'archived' ? undefined : 0} aria-disabled={workspace.status === 'archived' || undefined} onClick={() => { if (workspace.status !== 'archived') void select(workspace.id) }} onKeyDown={(event) => { if (workspace.status === 'archived' || (event.key !== 'Enter' && event.key !== ' ')) return; event.preventDefault(); void select(workspace.id) }} className="group min-h-52 cursor-pointer content-start rounded-2xl border-hairline bg-panel p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg aria-disabled:cursor-default aria-disabled:opacity-70 aria-disabled:hover:translate-y-0">
                     <div className="flex items-start justify-between gap-3">
                       <span className="grid size-11 place-items-center rounded-xl text-lg font-bold text-white" style={{ background: workspace.color ?? '#5266d6' }}>{workspace.name.slice(0, 1).toUpperCase()}</span>
-                      {workspace.isGeneral && <span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-ink-secondary">通用</span>}
+                      {workspace.isDefault && <span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-ink-secondary">默认</span>}
                       {workspace.status === 'archived' && <span className="rounded-full bg-raised px-2 py-1 text-[10px] font-semibold text-ink-secondary">已归档</span>}
                     </div>
                     <ItemContent className="basis-full gap-1"><ItemTitle className="mt-5 block w-full truncate text-lg font-semibold text-ink group-hover:text-accent">{workspace.name}</ItemTitle>

@@ -213,11 +213,11 @@ export async function seedCompanyWithAgent(opts?: {
      ON CONFLICT DO NOTHING`,
     [companyId],
   )
-  // Mirror production onboarding: every company needs its General workspace.
+  // Integration-only Education fixture with an explicit Institutional Course Project.
   await pool.query(
-    `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
-     SELECT $2, $1, '通用工作区', '测试公司的默认工作区', '#667085', 'test-owner', TRUE
-      WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
+    `INSERT INTO projects (id, company_id, kind, name, description, color, created_by, is_default)
+     SELECT $2, $1, 'INSTITUTIONAL_COURSE', '学校课程', '测试公司的默认课程空间', '#667085', 'test-owner', TRUE
+      WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_default=TRUE)`,
     [companyId, projectId],
   )
   await pool.query(

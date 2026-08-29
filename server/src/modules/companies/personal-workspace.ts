@@ -22,6 +22,7 @@ interface PersonalContextRow {
   company_role: string | null
   company_membership_status: string | null
   project_id: string | null
+  project_kind: string | null
   project_status: string | null
   project_plan_id: string | null
   project_role: string | null
@@ -54,14 +55,15 @@ async function findPersonalContext(db: Queryable, userId: string): Promise<Perso
     `SELECT company.id AS company_id,company.status AS company_status,plan.code AS company_plan_code,
             plan.status AS company_plan_status,
             company_member.role AS company_role,company_member.status AS company_membership_status,
-            project.id AS project_id,project.status AS project_status,project.plan_id AS project_plan_id,
+            project.id AS project_id,project.kind AS project_kind,
+            project.status AS project_status,project.plan_id AS project_plan_id,
             project_member.role AS project_role,project_member.status AS project_membership_status
        FROM companies company
        JOIN plans plan ON plan.id=company.plan_id
        LEFT JOIN company_memberships company_member
          ON company_member.company_id=company.id AND company_member.user_id=$1
        LEFT JOIN projects project
-         ON project.company_id=company.id AND project.is_general=TRUE
+         ON project.company_id=company.id AND project.is_default=TRUE
        LEFT JOIN project_memberships project_member
          ON project_member.company_id=company.id AND project_member.project_id=project.id
         AND project_member.user_id=$1
@@ -79,6 +81,7 @@ function assertCompletePersonalContext(row: PersonalContextRow): void {
     || row.company_role !== 'OWNER'
     || row.company_membership_status !== 'ACTIVE'
     || !row.project_id
+    || row.project_kind !== 'PERSONAL_LEARNING'
     || row.project_status !== 'active'
     || row.project_plan_id !== null
     || row.project_role !== 'OWNER'
@@ -118,8 +121,8 @@ export async function provisionPersonalWorkspace(
     [companyId, user.id],
   )
   await db.query(
-    `INSERT INTO projects (id,company_id,plan_id,name,description,color,created_by,is_general)
-     VALUES ($1,$2,NULL,'我的学习','个人学习的默认空间','#64748b',$3,TRUE)`,
+    `INSERT INTO projects (id,company_id,kind,plan_id,name,description,color,created_by,is_default)
+     VALUES ($1,$2,'PERSONAL_LEARNING',NULL,'我的学习','个人学习的默认空间','#64748b',$3,TRUE)`,
     [projectId, companyId, user.id],
   )
   await db.query(

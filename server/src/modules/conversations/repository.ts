@@ -112,14 +112,14 @@ export async function findConversationWorkspacePolicy(
   return row ? { projectStatus: row.project_status, courseId: row.course_id } : null
 }
 
-export async function findGeneralConversationWorkspacePolicy(
+export async function findDefaultConversationWorkspacePolicy(
   db: Queryable,
   companyId: string,
 ): Promise<(WorkspacePolicy & { projectId: string }) | null> {
   const { rows } = await db.query<{ project_id: string; project_status: string }>(
     `SELECT id AS project_id,status AS project_status
        FROM projects
-      WHERE company_id=$1 AND is_general=TRUE AND status='active'
+      WHERE company_id=$1 AND is_default=TRUE AND status='active'
       LIMIT 1`,
     [companyId],
   )
@@ -432,7 +432,7 @@ export async function searchWorkspaceDirectory(
           LEFT JOIN project_memberships member ON member.project_id=project.id AND member.company_id=project.company_id
             AND member.user_id=participant.id AND member.status='ACTIVE'
           WHERE project.id=$6 AND project.company_id=$1
-            AND (project.is_general=TRUE OR member.user_id IS NOT NULL)))
+            AND member.user_id IS NOT NULL))
         AND (participant.name ILIKE $3 ESCAPE '\\' OR participant.role ILIKE $3 ESCAPE '\\' OR participant.id ILIKE $3 ESCAPE '\\')
       ORDER BY CASE WHEN lower(participant.name)=lower($4) THEN 0 WHEN participant.name ILIKE $5 ESCAPE '\\' THEN 1 ELSE 2 END,
                CASE participant.kind WHEN 'agent' THEN 0 ELSE 1 END,participant.name

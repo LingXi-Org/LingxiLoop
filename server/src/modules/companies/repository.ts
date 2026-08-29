@@ -79,7 +79,7 @@ export function listMembers(db: Queryable, companyId: string) {
     `SELECT user_account.id,user_account.display_name AS name,user_account.email,LOWER(membership.role) AS role,
             membership.created_at AS "joinedAt",
             COALESCE(jsonb_agg(jsonb_build_object(
-              'courseId',course.id,'name',project.name,'role',
+              'courseId',course.id,'projectKind',project.kind,'name',project.name,'role',
               CASE WHEN project_member.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END
             )) FILTER (WHERE course.id IS NOT NULL),'[]'::jsonb) AS courses
        FROM company_memberships membership

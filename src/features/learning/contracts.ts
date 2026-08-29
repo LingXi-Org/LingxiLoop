@@ -1,9 +1,11 @@
 import type { ApiInvitationPreviewStatus } from '@/features/companies/contracts'
+import type { ProjectKind } from '@/types'
 
 export interface ApiCourse {
   id: string
   companyId: string
   projectId: string
+  projectKind: ProjectKind
   name: string
   description: string
   color: string
@@ -75,6 +77,7 @@ export interface LearningCourse {
   id: string
   companyId: string
   projectId: string
+  projectKind: ProjectKind
   title: string
   description: string
   status: 'active' | 'archived'

@@ -66,7 +66,11 @@ beforeEach(async () => {
   sendAttempts = 0
   await pool.query(`INSERT INTO companies (id,name,slug,type,plan_id) VALUES ($1,'Reliability','agent-os-reliability','EDUCATION','plan-personal-free')`, [COMPANY])
   await pool.query(`INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,'MEMBER')`, [COMPANY, HUMAN])
-  await pool.query(`INSERT INTO projects(id,company_id,name) VALUES($1,$2,'Reliability Workspace')`, [PROJECT, COMPANY])
+  await pool.query(
+    `INSERT INTO projects(id,company_id,kind,name)
+     VALUES($1,$2,'INSTITUTIONAL_COURSE','Reliability Workspace')`,
+    [PROJECT, COMPANY],
+  )
   await pool.query(
     `INSERT INTO participants (id,company_id,kind,name,role,initial,avatar_bg,status,capabilities)
      VALUES ($1,$3,'agent','Nova','coach','N','#6d5dfc','avail','["web"]'::jsonb),

@@ -3,7 +3,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
 import { WebSocket, type RawData } from 'ws'
 import * as Y from 'yjs'
-import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
+import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, teardownAll } from './_helpers.js'
 import { createWsTicket } from '../modules/identity/public.js'
 import { pool } from '../db/pool.js'
 import { applyLocalUpdate } from '../modules/documents/public.js'
@@ -58,11 +58,23 @@ after(async () => {
 })
 
 async function seedCompany(companyId = 'co-courses'): Promise<void> {
-  await pool.query(`INSERT INTO companies (id,name,slug,type,plan_id) VALUES ($1,'Course test',$1,'EDUCATION','plan-personal-free')`, [companyId])
-  await seedUserMembership(OWNER, companyId, { email: 'owner@test.local', displayName: 'Owner' })
   await pool.query(
-    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
-     VALUES ($1,$2,'General','','#64748b',$3,TRUE)`,
+    `INSERT INTO users(id,email,display_name,email_verified_at)
+     VALUES($1,'owner@test.local','Owner',NOW()) ON CONFLICT(id) DO NOTHING`,
+    [OWNER],
+  )
+  await pool.query(
+    `INSERT INTO companies (id,name,slug,type,personal_owner_user_id,plan_id)
+     VALUES ($1,'Course test',$1,'PERSONAL',$2,'plan-personal-free')`,
+    [companyId, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,'OWNER')`,
+    [companyId, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO projects (id,company_id,kind,name,description,color,created_by,is_default)
+     VALUES ($1,$2,'PERSONAL_LEARNING','我的学习','','#64748b',$3,TRUE)`,
     [`general-${companyId}`, companyId, OWNER],
   )
   await pool.query(`INSERT INTO users (id,email,display_name,email_verified_at) VALUES ($1,$2,'Learner',NOW())`, [LEARNER, 'learner@test.local'])
@@ -75,7 +87,7 @@ async function createCourse(name: string, companyId = 'co-courses') {
   })
   const raw = await response.text()
   assert.equal(response.status, 201, raw)
-  return JSON.parse(raw) as { id: string; projectId: string; studyRoomId: string }
+  return JSON.parse(raw) as { id: string; projectId: string; projectKind: string; studyRoomId: string }
 }
 
 async function createInvitation(
@@ -105,6 +117,8 @@ test('[integration] learner sees only enrolled courses and receives opaque 404 f
   await seedCompany()
   const first = await createCourse('Physics')
   const second = await createCourse('Chemistry')
+  assert.equal(first.projectKind, 'TEACHING')
+  assert.equal(second.projectKind, 'TEACHING')
   await inviteAndAccept(first.id, 'learner')
   await pool.query(
     `INSERT INTO documents (id,company_id,project_id,title,created_by) VALUES
@@ -119,6 +133,33 @@ test('[integration] learner sees only enrolled courses and receives opaque 404 f
   assert.deepEqual((await allowed.json() as { documents: Array<{ id: string }> }).documents.map((document) => document.id), ['doc-first'])
   const denied = await fetch(`${learnerUrl}/api/documents/doc-second`, { headers: { 'x-company-id': 'co-courses', 'x-project-id': second.projectId } })
   assert.equal(denied.status, 404)
+})
+
+test('[integration] Education Company cannot use the Teaching creation entrypoint', async () => {
+  await pool.query(
+    `INSERT INTO users(id,email,display_name,email_verified_at)
+     VALUES($1,'owner@test.local','Owner',NOW())`,
+    [OWNER],
+  )
+  await pool.query(
+    `INSERT INTO companies(id,name,slug,type,plan_id)
+     VALUES('co-education-course','Education','education-course','EDUCATION','plan-personal-free')`,
+  )
+  await pool.query(
+    `INSERT INTO company_memberships(company_id,user_id,role)
+     VALUES('co-education-course',$1,'OWNER')`,
+    [OWNER],
+  )
+  const response = await fetch(`${ownerUrl}/api/courses`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': 'co-education-course' },
+    body: JSON.stringify({ name: 'Institutional course' }),
+  })
+  assert.equal(response.status, 403)
+  assert.equal(
+    (await pool.query(`SELECT COUNT(*)::int AS count FROM projects WHERE company_id='co-education-course'`)).rows[0].count,
+    0,
+  )
 })
 
 test('[integration] course invitation replay is idempotent and teacher upgrade never downgrades', async () => {

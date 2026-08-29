@@ -1653,6 +1653,7 @@ CREATE TABLE public.project_visits (
 CREATE TABLE public.projects (
     id text NOT NULL,
     company_id text NOT NULL,
+    kind text NOT NULL,
     plan_id text,
     name text NOT NULL,
     description text DEFAULT ''::text NOT NULL,
@@ -1662,7 +1663,8 @@ CREATE TABLE public.projects (
     archived_at timestamp with time zone,
     created_by text,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    is_general boolean DEFAULT false NOT NULL
+    is_default boolean DEFAULT false NOT NULL,
+    CONSTRAINT projects_kind_check CHECK ((kind = ANY (ARRAY['PERSONAL_LEARNING'::text, 'TEACHING'::text, 'INSTITUTIONAL_COURSE'::text])))
 );
 
 
@@ -3506,10 +3508,10 @@ CREATE UNIQUE INDEX idx_projects_id_company ON public.projects USING btree (id, 
 
 
 --
--- Name: idx_projects_one_general; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_projects_one_default; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_projects_one_general ON public.projects USING btree (company_id) WHERE (is_general = true);
+CREATE UNIQUE INDEX idx_projects_one_default ON public.projects USING btree (company_id) WHERE (is_default = true);
 
 
 --

@@ -17,7 +17,7 @@ import {
   findConversationForUpdate,
   findAgentConversationContext,
   findConversationWorkspacePolicy,
-  findGeneralConversationWorkspacePolicy,
+  findDefaultConversationWorkspacePolicy,
   findDirectConversation,
   hasManagedPulse,
   listCourseHumanIds,
@@ -235,8 +235,8 @@ export class ConversationsApplication {
     scope: Omit<ConversationScope, 'projectId'>,
     agentId: string,
   ): Promise<{ id: string; created: boolean }> {
-    const workspace = await findGeneralConversationWorkspacePolicy(this.db, scope.companyId)
-    if (!workspace) throw new ConversationApplicationError('not_found', 'active general workspace not found')
+    const workspace = await findDefaultConversationWorkspacePolicy(this.db, scope.companyId)
+    if (!workspace) throw new ConversationApplicationError('not_found', 'active default Project not found')
     return this.openDirect({ ...scope, projectId: workspace.projectId }, workspace, agentId)
   }
 
@@ -245,8 +245,8 @@ export class ConversationsApplication {
    * retries repair bindings and WuKong synchronization instead of creating a
    * second conversation data plane. */
   async seedMemberDirects(scope: Omit<ConversationScope, 'projectId'>): Promise<void> {
-    const workspace = await findGeneralConversationWorkspacePolicy(this.db, scope.companyId)
-    if (!workspace) throw new ConversationApplicationError('not_found', 'active general workspace not found')
+    const workspace = await findDefaultConversationWorkspacePolicy(this.db, scope.companyId)
+    if (!workspace) throw new ConversationApplicationError('not_found', 'active default Project not found')
     const participantIds = await listActiveCompanyParticipantIds(this.db, scope.companyId)
     if (!participantIds.includes(scope.userId)) {
       throw new ConversationApplicationError('not_found', 'active company participant not found')

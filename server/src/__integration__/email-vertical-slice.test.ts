@@ -42,8 +42,8 @@ beforeEach(async () => {
   )
   await seedUserMembership(USER_ID, COMPANY_ID)
   await pool.query(
-    `INSERT INTO projects (id, company_id, name, created_by, is_general)
-     VALUES ($1, $2, 'General', $3, TRUE)`,
+    `INSERT INTO projects (id, company_id, kind, name, created_by, is_default)
+     VALUES ($1, $2, 'INSTITUTIONAL_COURSE', 'Course', $3, TRUE)`,
     [PROJECT_ID, COMPANY_ID, USER_ID],
   )
 })

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { projectKindBelongsToCompanyType } from '../../domain/public.js'
 import type { Queryable } from '../../db/queryable.js'
 import type {
   BindCourseRoomInput,
@@ -27,7 +28,7 @@ import {
   findCourse,
   findNotificationPreferences,
   findVerifiedUser,
-  insertCourse,
+  insertTeachingCourse,
   insertCourseInvitation,
   invitationViewer,
   joinInvitationCompany,
@@ -206,10 +207,13 @@ export class LearningApplication {
     await this.infrastructure.transaction(async (db) => {
       const permission = await canCreateCourse(db, scope.companyId, scope.userId, true)
       if (!permission) throw new LearningApplicationError('forbidden', 'not a member of this company')
+      if (!projectKindBelongsToCompanyType('TEACHING', permission.company_type)) {
+        throw new LearningApplicationError('forbidden', 'Teaching Projects require a Personal Company')
+      }
       if (!privilegedRoles.has(permission.company_role) && !permission.is_teacher) {
         throw new LearningApplicationError('forbidden', 'only a company admin or existing teacher can create courses')
       }
-      await insertCourse(db, { ...scope, projectId, courseId, roomId, input })
+      await insertTeachingCourse(db, { ...scope, projectId, courseId, roomId, input })
       const teacher = await this.infrastructure.ensureTeacherAgent(scope.companyId, courseId, db)
       const effects = [
         { kind: 'study_room.sync' as const },
@@ -228,7 +232,7 @@ export class LearningApplication {
       })
     })
     return {
-      id: courseId, companyId: scope.companyId, projectId, name: input.name,
+      id: courseId, companyId: scope.companyId, projectId, projectKind: 'TEACHING' as const, name: input.name,
       description: input.description, color: input.color, status: 'active',
       createdBy: scope.userId, studyRoomId: roomId, courseRole: 'teacher', memberCount: 1,
       canManage: true, knowledgeState: 'pending' as const,

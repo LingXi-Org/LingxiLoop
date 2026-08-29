@@ -6,7 +6,8 @@ export async function listCourses(db: Queryable, companyId: string, userId: stri
   const { rows } = await db.query(
     `SELECT course.id,course.company_id AS "companyId",course.created_by AS "createdBy",
             course.study_room_conversation_id AS "studyRoomId",course.created_at AS "createdAt",
-            project.id AS "projectId",project.name,project.description,project.color,project.status,
+            project.id AS "projectId",project.kind AS "projectKind",
+            project.name,project.description,project.color,project.status,
             project.created_at AS "projectCreatedAt",project.updated_at AS "updatedAt",
             LOWER(company_member.role) AS "companyRole",
             CASE WHEN course_member.role IS NULL THEN NULL
@@ -30,8 +31,9 @@ export async function listCourses(db: Queryable, companyId: string, userId: stri
 }
 
 export async function canCreateCourse(db: Queryable, companyId: string, userId: string, lock = false) {
-  const { rows } = await db.query<{ company_role: string; is_teacher: boolean }>(
+  const { rows } = await db.query<{ company_role: string; company_type: 'PERSONAL' | 'EDUCATION'; is_teacher: boolean }>(
     `SELECT LOWER(company_member.role) AS company_role,
+            company.type AS company_type,
             EXISTS (SELECT 1 FROM project_memberships course_member
               JOIN courses course ON course.project_id=course_member.project_id AND course.company_id=course_member.company_id
               JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
@@ -39,8 +41,9 @@ export async function canCreateCourse(db: Queryable, companyId: string, userId: 
                AND course_member.status='ACTIVE' AND course_member.role IN ('OWNER','TEACHER')
                AND project.status='active') AS is_teacher
        FROM company_memberships company_member
+       JOIN companies company ON company.id=company_member.company_id AND company.status='ACTIVE'
       WHERE company_member.company_id=$1 AND company_member.user_id=$2 AND company_member.status='ACTIVE'
-      ${lock ? 'FOR UPDATE OF company_member' : ''}`,
+      ${lock ? 'FOR UPDATE OF company_member,company' : ''}`,
     [companyId, userId],
   )
   const permission = rows[0] ?? null
@@ -60,12 +63,12 @@ export async function canCreateCourse(db: Queryable, companyId: string, userId: 
   return permission
 }
 
-export async function insertCourse(db: Queryable, args: {
+export async function insertTeachingCourse(db: Queryable, args: {
   companyId: string; userId: string; projectId: string; courseId: string; roomId: string; input: CreateCourseInput
 }): Promise<void> {
   await db.query(
-    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
-     VALUES ($1,$2,$3,$4,$5,$6,FALSE)`,
+    `INSERT INTO projects (id,company_id,kind,name,description,color,created_by,is_default)
+     VALUES ($1,$2,'TEACHING',$3,$4,$5,$6,FALSE)`,
     [args.projectId, args.companyId, args.input.name, args.input.description, args.input.color, args.userId],
   )
   await db.query(
@@ -101,6 +104,7 @@ export async function findCourse(db: Queryable, courseId: string, companyId: str
     `SELECT course.id,course.company_id AS "companyId",course.project_id AS "projectId",
             course.created_by AS "createdBy",course.study_room_conversation_id AS "studyRoomId",
             project.name,project.description,project.color,project.status,
+            project.kind AS "projectKind",
             LOWER(company_member.role) AS "companyRole",
             CASE WHEN course_member.role IS NULL THEN NULL
                  WHEN course_member.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS "courseRole",

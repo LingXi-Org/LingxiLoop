@@ -50,7 +50,11 @@ knowledgeRouter.get('/projects', safe(async (req, res) => {
 knowledgeRouter.post('/projects', safe(async (req, res) => {
   const identity = await requireCompanyRole(req)
   const input = parse(createProjectRequestSchema.safeParse(req.body ?? {}))
-  res.status(201).json(await knowledgeApplication.createProject({ ...identity, ...input }))
+  try {
+    res.status(201).json(await knowledgeApplication.createPersonalLearningProject({ ...identity, ...input }))
+  } catch (error) {
+    mapKnowledgeError(error)
+  }
 }))
 
 knowledgeRouter.put('/projects/:id', safe(async (req, res) => {
@@ -68,7 +72,7 @@ knowledgeRouter.put('/projects/:id', safe(async (req, res) => {
 knowledgeRouter.post('/projects/:id/archive', safe(async (req, res) => {
   const projectId = String(req.params.id)
   const workspace = await requireWorkspace(req, projectId)
-  if (workspace.isGeneral) throw new HttpError(400, 'the General workspace cannot be archived')
+  if (workspace.isDefault) throw new HttpError(400, 'the default Project cannot be archived')
   if (!PRIVILEGED_ROLES.has(workspace.role) && workspace.courseRole !== 'teacher') {
     throw new HttpError(403, 'only a course teacher or company admin can archive it')
   }

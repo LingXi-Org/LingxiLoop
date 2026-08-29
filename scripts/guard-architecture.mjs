@@ -52,6 +52,50 @@ if (/CREATE TABLE public\.permissions\b/.test(canonicalSchema)) {
   violations.push('server/src/db/schema.sql: Permission is a computed result and cannot be persisted as a table')
 }
 
+const projectTable = canonicalSchema.match(/CREATE TABLE public\.projects \(([\s\S]*?)\n\);/)?.[1] ?? ''
+if (!/\bkind text NOT NULL\b/.test(projectTable)
+  || !/projects_kind_check[\s\S]*PERSONAL_LEARNING[\s\S]*TEACHING[\s\S]*INSTITUTIONAL_COURSE/.test(projectTable)) {
+  violations.push('server/src/db/schema.sql: every Project must have one canonical ProjectKind')
+}
+if (/\bis_general\b/.test(canonicalSchema) || !/\bis_default boolean DEFAULT false NOT NULL\b/.test(projectTable)) {
+  violations.push('server/src/db/schema.sql: is_default is the only default-Project marker')
+}
+
+const controlledProjectWriters = new Set([
+  'server/src/modules/companies/personal-workspace.ts',
+  'server/src/modules/knowledge/repository.ts',
+  'server/src/modules/learning/courses-repository.ts',
+])
+for (const file of [...server, ...frontend]) {
+  const fileName = name(file)
+  const source = await read(file)
+  if (fileName.includes('/__integration__/')) continue
+  if (fileName !== 'server/src/db/bootstrap.ts' && /\b(?:is_general|isGeneral)\b/.test(source)) {
+    violations.push(`${fileName}: retired general-Project semantics are forbidden; use is_default only for default selection`)
+  }
+  if (/\binferProjectKind\b|\bproject\.kind\s*\?\?|\bprojectKind\s*\?\?/.test(source)) {
+    violations.push(`${fileName}: ProjectKind must come directly from project.kind without inference or fallback`)
+  }
+  if (/(?:isDefault|is_default|courseId|course_id|companyName|company\.name|\brole)\b\s*(?:===?|\?|&&|\|\|)[^\n]{0,100}\b(?:PERSONAL_LEARNING|TEACHING|INSTITUTIONAL_COURSE)\b/.test(source)) {
+    violations.push(`${fileName}: default, Course, Company name, and role context cannot infer ProjectKind`)
+  }
+  if (/\bis_default\s*=\s*TRUE\s+OR\b|\bOR\s+[^\n]*\bis_default\s*=\s*TRUE\b/i.test(source)) {
+    violations.push(`${fileName}: is_default cannot grant Project access or imply ProjectKind`)
+  }
+  const projectInserts = [...source.matchAll(/INSERT\s+INTO\s+projects\s*\(([^)]*)\)/gi)]
+  if (projectInserts.length > 0 && !controlledProjectWriters.has(fileName)) {
+    violations.push(`${fileName}: Project creation must use a controlled Project use case`)
+  }
+  for (const insert of projectInserts) {
+    if (!/(?:^|,)\s*kind\s*(?:,|$)/i.test(insert[1] ?? '')) {
+      violations.push(`${fileName}: every Project INSERT must write an explicit canonical kind`)
+    }
+  }
+  if (/UPDATE\s+projects\s+SET[\s\S]{0,300}\bkind\s*=/i.test(source)) {
+    violations.push(`${fileName}: ProjectKind is immutable outside a future transfer workflow`)
+  }
+}
+
 // Domain Foundation v1 keeps current authorization behavior temporarily, but
 // freezes every direct Membership-table caller. New product code must wait for
 // the canonical PermissionService resolver instead of inventing another path.
@@ -67,6 +111,7 @@ const legacyMembershipSqlAllowlist = new Set([
   'server/src/modules/agents/repository.ts',
   'server/src/modules/calendar/repository.ts',
   'server/src/modules/companies/onboarding-repository.ts',
+  'server/src/modules/companies/personal-workspace.ts',
   'server/src/modules/companies/repository.ts',
   'server/src/modules/conversations/repository.ts',
   'server/src/modules/documents/mention-repository.ts',

@@ -51,6 +51,7 @@ const FORBIDDEN_V1_RELATIONS = [
 
 const FORBIDDEN_V1_COLUMNS = [
   ['companies', 'owner_user_id'],
+  ['projects', 'is_general'],
   ['users', 'is_admin'],
   ['users', 'role'],
   ['users', 'plan'],
@@ -101,6 +102,8 @@ const REQUIRED_V1_COLUMNS = [
   ['project_memberships', 'role'],
   ['project_memberships', 'status'],
   ['projects', 'plan_id'],
+  ['projects', 'kind'],
+  ['projects', 'is_default'],
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [
@@ -114,6 +117,8 @@ const REQUIRED_V1_NOT_NULL_COLUMNS = [
   ['companies', 'status', "'ACTIVE'::text"],
   ['company_memberships', 'status', "'ACTIVE'::text"],
   ['project_memberships', 'status', "'ACTIVE'::text"],
+  ['projects', 'kind', null],
+  ['projects', 'is_default', 'false'],
 ] as const
 
 const REQUIRED_V1_PRIMARY_KEYS = [
@@ -168,6 +173,7 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['plan_entitlements', 'plan_entitlements_entitlement_id_fkey', 'f'],
   ['plan_entitlements', 'plan_entitlements_scalar_value_check', 'c'],
   ['projects', 'projects_plan_id_fkey', 'f'],
+  ['projects', 'projects_kind_check', 'c'],
 ] as const
 
 const FORBIDDEN_V1_CONSTRAINTS = [
@@ -185,6 +191,7 @@ const REQUIRED_V1_INDEXES = [
   'idx_project_memberships_company_user_role',
   'idx_project_memberships_project_role',
   'idx_companies_personal_owner',
+  'idx_projects_one_default',
   'uniq_email_messages_smtp_id',
 ] as const
 

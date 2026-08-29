@@ -75,7 +75,7 @@ const testFiles = local
     allTestFiles.map(repositoryPath),
     changedPaths({ base, paths: taskPaths }),
     explicitTests.map(repositoryPath),
-  ).map(resolve)
+  ).map((path) => resolve(path))
   : explicitTests.length > 0 ? [...new Set(explicitTests)].sort() : allTestFiles
 
 if (testFiles.length === 0) {

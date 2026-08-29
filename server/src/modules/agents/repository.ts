@@ -84,7 +84,7 @@ export async function listParticipants(db: Queryable, scope: ParticipantScope) {
                 ON member.project_id=project.id AND member.company_id=project.company_id
                AND member.user_id=participant.id AND member.status='ACTIVE'
              WHERE project.id=$2 AND project.company_id=participant.company_id
-               AND (project.is_general=TRUE OR member.user_id IS NOT NULL)))
+               AND member.user_id IS NOT NULL))
       ORDER BY participant.kind DESC,participant.name`,
     [scope.companyId, scope.projectId, scope.userId],
   )

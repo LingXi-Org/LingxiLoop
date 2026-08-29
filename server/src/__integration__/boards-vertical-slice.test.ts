@@ -46,8 +46,9 @@ beforeEach(async () => {
     [COMPANY, OTHER_COMPANY, USER],
   )
   await pool.query(
-    `INSERT INTO projects (id,company_id,name,color,created_by,is_general) VALUES
-       ($1,$2,'Board Project','#000',$5,FALSE),($3,$4,'Other Project','#111',$5,FALSE)`,
+    `INSERT INTO projects (id,company_id,kind,name,color,created_by,is_default) VALUES
+       ($1,$2,'INSTITUTIONAL_COURSE','Board Project','#000',$5,FALSE),
+       ($3,$4,'INSTITUTIONAL_COURSE','Other Project','#111',$5,FALSE)`,
     [PROJECT, COMPANY, OTHER_PROJECT, OTHER_COMPANY, USER],
   )
   await pool.query(

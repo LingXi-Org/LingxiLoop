@@ -1,9 +1,11 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
+import { projectKindBelongsToCompanyType } from '../../domain/public.js'
 import type { CreateSourceInput, KnowledgeScope, PresignSourceInput, ProjectPatch } from './contracts.js'
 import {
   findSource,
-  insertProject,
+  insertPersonalLearningProject,
+  lockProjectCompanyType,
   insertSource,
   enqueueSourceJob,
   listConversationSources,
@@ -67,11 +69,18 @@ export class KnowledgeApplication {
     return listProjects(this.db, companyId, userId)
   }
 
-  async createProject(args: {
+  async createPersonalLearningProject(args: {
     companyId: string; userId: string; name: string; description: string; color?: string | null
   }) {
     const id = `p-${randomUUID().slice(0, 10)}`
-    await insertProject(this.db, { ...args, id, color: args.color ?? null })
+    const project = await this.infrastructure.transaction(async (db) => {
+      const companyType = await lockProjectCompanyType(db, args.companyId)
+      if (!companyType) throw new KnowledgeApplicationError('not_found', 'company not found')
+      if (!projectKindBelongsToCompanyType('PERSONAL_LEARNING', companyType)) {
+        throw new KnowledgeApplicationError('forbidden', 'Personal Learning Projects require a Personal Company')
+      }
+      return insertPersonalLearningProject(db, { ...args, id, color: args.color ?? null })
+    })
     let knowledgeState: 'disabled' | 'ready' | 'failed' = 'disabled'
     if (this.infrastructure.notebookEnabled()) {
       try {
@@ -81,8 +90,18 @@ export class KnowledgeApplication {
         knowledgeState = 'failed'
       }
     }
-    return { id, name: args.name, description: args.description, color: args.color ?? null,
-      status: 'active' as const, knowledgeState }
+    return {
+      ...project,
+      lastVisitedAt: null,
+      sourceCount: 0,
+      conversationCount: 0,
+      documentCount: 0,
+      boardCount: 0,
+      calendarEventCount: 0,
+      canvasCount: 0,
+      canManage: true,
+      knowledgeState,
+    }
   }
 
   async editProject(companyId: string, projectId: string, patch: ProjectPatch) {

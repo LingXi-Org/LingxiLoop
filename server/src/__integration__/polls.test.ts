@@ -353,8 +353,8 @@ test('[integration] closing a poll blocks further votes; only author can close',
 
 test('[integration] archived course conversations reject poll create, vote, and close writes', async () => {
   await pool.query(
-    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general,status)
-     VALUES ('poll-course-project',$1,'Poll course','','#123456',$2,FALSE,'active')`,
+    `INSERT INTO projects (id,company_id,kind,name,description,color,created_by,is_default,status)
+     VALUES ('poll-course-project',$1,'INSTITUTIONAL_COURSE','Poll course','','#123456',$2,FALSE,'active')`,
     [COMPANY, ME],
   )
   await pool.query(`UPDATE conversations SET project_id='poll-course-project' WHERE id=$1`, [CONVO])

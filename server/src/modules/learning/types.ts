@@ -15,6 +15,7 @@ export interface LearningCourseSummary {
   id: string
   companyId: string
   projectId: string
+  projectKind: import('../../domain/public.js').ProjectKind
   title: string
   description: string
   status: LearningCourseStatus

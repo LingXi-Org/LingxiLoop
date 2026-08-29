@@ -63,7 +63,7 @@ export async function findDocumentCollaborationCompany(
         AND course_member.company_id=project.company_id
         AND course_member.user_id=$2 AND course_member.status='ACTIVE'
       WHERE document.id=$1
-        AND (project.is_general=TRUE OR membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
+        AND (membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
         AND ($3::boolean=FALSE OR project.status='active')
       LIMIT 1`,
     [args.documentId, args.userId, args.writable],

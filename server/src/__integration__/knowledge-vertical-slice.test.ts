@@ -39,16 +39,24 @@ beforeEach(async () => {
   )
   await seedUserMembership(USER_ID, COMPANY_ID)
   await pool.query(
-    `INSERT INTO projects (id,company_id,name,color,created_by,is_general)
-     VALUES ($1,$2,'Knowledge Project','#000',$5,FALSE),($3,$4,'Other Project','#111',$5,FALSE)`,
+    `INSERT INTO projects (id,company_id,kind,name,color,created_by,is_default)
+     VALUES ($1,$2,'INSTITUTIONAL_COURSE','Knowledge Project','#000',$5,FALSE),
+            ($3,$4,'INSTITUTIONAL_COURSE','Other Project','#111',$5,FALSE)`,
     [PROJECT_ID, COMPANY_ID, OTHER_PROJECT_ID, OTHER_COMPANY_ID, USER_ID],
   )
 })
 after(async () => { await teardownAll() })
 
 test('[integration] knowledge source creation keeps explicit tenant and project ownership', async () => {
-  const projects = await application.projects(COMPANY_ID, USER_ID) as Array<{ id: string }>
+  const projects = await application.projects(COMPANY_ID, USER_ID) as Array<{
+    id: string; companyId: string; kind: string; planId: string | null
+  }>
   assert.equal(projects.some((project) => project.id === PROJECT_ID), true)
+  assert.deepEqual(
+    projects.find((project) => project.id === PROJECT_ID),
+    { ...projects.find((project) => project.id === PROJECT_ID)!, companyId: COMPANY_ID,
+      kind: 'INSTITUTIONAL_COURSE', planId: null },
+  )
   const created = await application.createSource(
     { userId: USER_ID, companyId: COMPANY_ID, projectId: PROJECT_ID },
     null,
@@ -67,6 +75,38 @@ test('[integration] knowledge source creation keeps explicit tenant and project 
   await assert.rejects(
     application.source({ companyId: OTHER_COMPANY_ID, projectId: OTHER_PROJECT_ID }, created.id),
     (error) => error instanceof KnowledgeApplicationError && error.code === 'not_found',
+  )
+})
+
+test('[integration] Project creation fixes kind from the use case and enforces CompanyType', async () => {
+  const personalCompanyId = 'co-knowledge-personal'
+  await pool.query(
+    `INSERT INTO companies(id,name,slug,type,personal_owner_user_id,plan_id)
+     VALUES($1,'Personal Learning','knowledge-personal','PERSONAL',$2,'plan-personal-free')`,
+    [personalCompanyId, USER_ID],
+  )
+  await pool.query(
+    `INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,'OWNER')`,
+    [personalCompanyId, USER_ID],
+  )
+  const created = await application.createPersonalLearningProject({
+    companyId: personalCompanyId,
+    userId: USER_ID,
+    name: '考研数学',
+    description: '个人学习空间',
+  })
+  assert.equal(created.kind, 'PERSONAL_LEARNING')
+  assert.equal(created.companyId, personalCompanyId)
+  assert.equal(created.planId, null)
+  assert.equal(created.isDefault, false)
+  await assert.rejects(
+    application.createPersonalLearningProject({
+      companyId: COMPANY_ID,
+      userId: USER_ID,
+      name: 'Invalid',
+      description: '',
+    }),
+    (error) => error instanceof KnowledgeApplicationError && error.code === 'forbidden',
   )
 })
 

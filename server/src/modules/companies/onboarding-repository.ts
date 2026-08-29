@@ -49,11 +49,15 @@ async function seedLearningPreset(
   ownerId: string,
 ): Promise<void> {
   const { rows: workspaces } = await db.query<{ id: string }>(
-    `SELECT id FROM projects WHERE company_id=$1 AND is_general=TRUE LIMIT 1`,
+    `SELECT project.id FROM projects project
+       JOIN companies company ON company.id=project.company_id
+      WHERE project.company_id=$1 AND project.is_default=TRUE
+        AND project.kind='PERSONAL_LEARNING' AND company.type='PERSONAL'
+      LIMIT 1`,
     [companyId],
   )
   const projectId = workspaces[0]?.id
-  if (!projectId) throw new Error('general workspace must exist before starter onboarding')
+  if (!projectId) throw new Error('Personal Learning default Project must exist before starter onboarding')
   const agentIds = new Map<LearningPersonaKey, string>()
   for (const agent of STARTER_TEAM) {
     const id = await uniqueId(db, agent.id)
@@ -152,15 +156,11 @@ export async function installStarterAgents(db: Queryable, companyId: string): Pr
   )
 
   await db.query(
-    `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
-     SELECT $2, $1, '通用工作区', '未指定工作区的会话与资料', '#667085', $3, TRUE
-      WHERE NOT EXISTS (SELECT 1 FROM projects WHERE company_id=$1 AND is_general=TRUE)`,
-    [companyId, `general-${randomUUID().slice(0, 18)}`, ownerId],
-  )
-  await db.query(
     `INSERT INTO project_memberships (project_id,company_id,user_id,role)
      SELECT project.id,project.company_id,$2,'OWNER' FROM projects project
-      WHERE project.company_id=$1 AND project.is_general=TRUE
+      JOIN companies company ON company.id=project.company_id
+      WHERE project.company_id=$1 AND project.is_default=TRUE
+        AND project.kind='PERSONAL_LEARNING' AND company.type='PERSONAL'
      ON CONFLICT (user_id,project_id) DO NOTHING`,
     [companyId, ownerId],
   )

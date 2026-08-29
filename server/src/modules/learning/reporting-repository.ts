@@ -3,7 +3,8 @@ import type { LearningNotificationPreferences, NotificationPreferencesInput } fr
 
 export async function listLearningCourseSummaries(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query(
-    `SELECT course.id,course.company_id,course.project_id,project.name AS title,project.description,
+    `SELECT course.id,course.company_id,course.project_id,project.kind AS "projectKind",
+            project.name AS title,project.description,
             project.status,
             CASE WHEN member.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS course_role,
             ((course.study_room_conversation_id IS NOT NULL)::int

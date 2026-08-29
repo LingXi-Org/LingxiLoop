@@ -58,8 +58,8 @@ async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string
     displayName: 'Ada',
   })
   await pool.query(
-    `INSERT INTO projects (id, company_id, name, color, created_by, is_general)
-     VALUES ($1, $2, 'General', '#667085', $3, TRUE)`,
+    `INSERT INTO projects (id, company_id, kind, name, color, created_by, is_default)
+     VALUES ($1, $2, 'INSTITUTIONAL_COURSE', 'Course', '#667085', $3, TRUE)`,
     [projectId, companyId, ME_USER_ID],
   )
   await pool.query(
@@ -110,8 +110,9 @@ async function seedGroupCreationFixture(): Promise<{ companyId: string; agentId:
     [agentId, companyId],
   )
   await pool.query(
-    `INSERT INTO projects (id, company_id, name, color, created_by, is_general)
-     VALUES ($1,$3,'General','#000',$4,TRUE), ($2,$3,'Current','#111',$4,FALSE)`,
+    `INSERT INTO projects (id, company_id, kind, name, color, created_by, is_default)
+     VALUES ($1,$3,'INSTITUTIONAL_COURSE','Default Course','#000',$4,TRUE),
+            ($2,$3,'INSTITUTIONAL_COURSE','Current Course','#111',$4,FALSE)`,
     [generalId, currentId, companyId, ME_USER_ID],
   )
   return { companyId, agentId, generalId, currentId }

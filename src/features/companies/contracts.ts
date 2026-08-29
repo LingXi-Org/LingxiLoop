@@ -79,5 +79,5 @@ export interface ApiCompanyMember {
   email: string
   role: 'owner' | 'admin' | 'member'
   joinedAt: string
-  courses: Array<{ courseId: string; name: string; role: 'teacher' | 'learner' }>
+  courses: Array<{ courseId: string; projectKind: import('@/types').ProjectKind; name: string; role: 'teacher' | 'learner' }>
 }

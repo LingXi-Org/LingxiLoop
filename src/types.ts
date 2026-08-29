@@ -5,14 +5,19 @@ export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
 export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge' | 'learning' | 'teacher_admin'
 
+export type ProjectKind = 'PERSONAL_LEARNING' | 'TEACHING' | 'INSTITUTIONAL_COURSE'
+
 export interface WorkspaceSummary {
   id: string
+  companyId: string
+  kind: ProjectKind
+  planId: string | null
   name: string
   description: string
   color: string | null
   status: 'active' | 'archived'
   createdBy: string
-  isGeneral: boolean
+  isDefault: boolean
   createdAt: string
   updatedAt: string
   archivedAt: string | null

@@ -21,7 +21,7 @@ export async function findDocumentMentionContext(db: Queryable, args: {
         AND course_member.company_id=project.company_id
         AND course_member.user_id=$3 AND course_member.status='ACTIVE'
       WHERE document.id=$1 AND document.company_id=$2 AND project.status='active'
-        AND (project.is_general=TRUE OR membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
+        AND (membership.role IN ('OWNER','ADMIN') OR course_member.user_id IS NOT NULL)
       LIMIT 1`,
     [args.documentId, args.companyId, args.mentionerId],
   )
@@ -49,7 +49,7 @@ export async function listMentionableDocumentParticipants(db: Queryable, args: {
         AND course_member.user_id=participant.id AND course_member.status='ACTIVE'
       WHERE participant.company_id=$1 AND participant.id=ANY($2::text[])
         AND participant.departed_at IS NULL
-        AND (participant.kind='agent' OR project.is_general=TRUE OR course_member.user_id IS NOT NULL)`,
+        AND (participant.kind='agent' OR course_member.user_id IS NOT NULL)`,
     [args.companyId, args.participantIds, args.documentId],
   )
   return rows

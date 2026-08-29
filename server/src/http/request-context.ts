@@ -1,6 +1,7 @@
 import type { Request } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
+import type { ProjectKind } from '../domain/public.js'
 import { pollApplication } from '../modules/polls/index.js'
 import { HttpError } from './errors.js'
 import { PRIVILEGED_ROLES } from './roles.js'
@@ -50,13 +51,13 @@ export async function requireCompanyArtifactContext(req: Request & AuthedRequest
          FROM projects project
          JOIN company_memberships member ON member.company_id=project.company_id AND member.user_id=$2
           AND member.status='ACTIVE'
-        WHERE project.company_id=$1 AND project.is_general=TRUE AND project.status='active'
+        WHERE project.company_id=$1 AND project.is_default=TRUE AND project.status='active'
         ORDER BY project.id LIMIT 1`,
       [companyId, userId],
     )
     projectId = rows[0]?.id ?? ''
   }
-  if (!projectId) throw new HttpError(409, 'company has no active general project')
+  if (!projectId) throw new HttpError(409, 'company has no active default Project')
   const workspace = await requireWorkspace(req, projectId)
   if (writable && workspace.projectStatus !== 'active') throw new HttpError(409, 'archived courses are read-only')
   return { userId: workspace.userId, companyId: workspace.companyId, projectId: workspace.projectId }
@@ -87,7 +88,7 @@ export async function requireWorkspace(
   explicitProjectId?: string,
 ): Promise<{
   userId: string; companyId: string; projectId: string; role: string
-  projectCreatedBy: string; isGeneral: boolean; projectStatus: string
+  projectCreatedBy: string; projectKind: ProjectKind; isDefault: boolean; projectStatus: string
   courseId: string | null; courseRole: 'teacher' | 'learner' | null
 }> {
   const { userId, companyId } = await requireCompany(req)
@@ -96,33 +97,33 @@ export async function requireWorkspace(
   if (!projectId) throw new HttpError(400, 'x-project-id is required inside a knowledge workspace')
   if (explicitProjectId && header && header !== explicitProjectId) throw new HttpError(409, 'workspace header does not match route')
   const { rows } = await pool.query<{
-    created_by: string; is_general: boolean; status: string; role: string
+    created_by: string; kind: ProjectKind; is_default: boolean; status: string; role: string
+    project_member_user_id: string | null
     course_id: string | null; course_role: 'teacher' | 'learner' | null
   }>(
-    `SELECT p.created_by, p.is_general, p.status, LOWER(cm.role) AS role,
-            course.id AS course_id,
-            CASE WHEN course_member.role IS NULL THEN NULL
-                 WHEN course_member.role IN ('STUDENT','OBSERVER') THEN 'learner'
+    `SELECT p.created_by,p.kind,p.is_default,p.status,LOWER(cm.role) AS role,
+            project_member.user_id AS project_member_user_id,course.id AS course_id,
+            CASE WHEN course.id IS NULL OR project_member.role IS NULL THEN NULL
+                 WHEN project_member.role IN ('STUDENT','OBSERVER') THEN 'learner'
                  ELSE 'teacher' END AS course_role
        FROM projects p JOIN company_memberships cm ON cm.company_id = p.company_id AND cm.user_id = $2
         AND cm.status='ACTIVE'
        LEFT JOIN courses course ON course.project_id = p.id AND course.company_id = p.company_id
-       LEFT JOIN project_memberships course_member
-         ON course_member.project_id = p.id AND course_member.company_id=p.company_id
-        AND course_member.user_id = $2 AND course_member.status='ACTIVE'
+       LEFT JOIN project_memberships project_member
+         ON project_member.project_id = p.id AND project_member.company_id=p.company_id
+        AND project_member.user_id = $2 AND project_member.status='ACTIVE'
       WHERE p.id = $1 AND p.company_id = $3 LIMIT 1`, [projectId, userId, companyId],
   )
   const row = rows[0]
   if (!row || (
-    !row.is_general
-    && !PRIVILEGED_ROLES.has(row.role)
-    && (!row.course_id || !row.course_role)
+    !PRIVILEGED_ROLES.has(row.role)
+    && !row.project_member_user_id
   )) {
     throw new HttpError(404, 'workspace not found')
   }
   return {
     userId, companyId, projectId, role: row.role,
-    projectCreatedBy: row.created_by, isGeneral: row.is_general,
+    projectCreatedBy: row.created_by, projectKind: row.kind, isDefault: row.is_default,
     projectStatus: row.status, courseId: row.course_id, courseRole: row.course_role,
   }
 }
