@@ -232,6 +232,12 @@ if (!/from ['"]\.\.\/im\/public\.js['"]/.test(agentCli) || !/sendAgentChannelMes
 if (/`attachments\/\$\{id\}/.test(agentCli)) {
   violations.push('server/src/agents/cli.ts: R2 attachment keys must be scoped by the trusted company identity')
 }
+for (const [command, nextCommand] of [['Messages', 'Thread'], ['Glance', 'Ack']]) {
+  const body = agentCli.match(new RegExp(`async function cmd${command}\\b[\\s\\S]*?(?=async function cmd${nextCommand}\\b)`))?.[0] ?? ''
+  if (!body || /FROM\s+messages\b|JOIN\s+messages\b/i.test(body) || !/getAgentChannelHistory\s*\(/.test(body)) {
+    violations.push(`server/src/agents/cli.ts: cmd${command} must read authoritative WuKong history through im/public.ts`)
+  }
+}
 
 const evalService = await read(resolve('server/src/eval/service.ts'))
 if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(evalService)) {

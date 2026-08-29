@@ -144,6 +144,29 @@ function renderAttachment(att: StoredAttachment | null | undefined): string | nu
   return `    ↳ [${att.kind}] ${att.name}${size} → ${att.url}`
 }
 
+function attachmentFromImData(companyId: string, data: Record<string, unknown> | undefined): StoredAttachment | null {
+  if (!data) return null
+  const kind = ['img', 'pdf', 'file', 'fig'].includes(String(data.kind))
+    ? data.kind as StoredAttachment['kind']
+    : null
+  const name = typeof data.name === 'string' ? data.name : null
+  const key = typeof data.key === 'string' ? data.key : null
+  if (!kind || !name || !key?.startsWith(`attachments/${companyId}/`)) return null
+  return {
+    kind,
+    name,
+    key,
+    url: typeof data.url === 'string' ? data.url : '',
+    ...(typeof data.mime === 'string' ? { mime: data.mime } : {}),
+    ...(typeof data.size === 'number' ? { size: data.size } : {}),
+  }
+}
+
+function imTimestamp(timestamp: number): string {
+  const milliseconds = timestamp > 10_000_000_000 ? timestamp : timestamp * 1000
+  return new Date(milliseconds).toISOString()
+}
+
 /* ============== commands ============== */
 
 const cmdHelp = createHelpCommand(ok)
@@ -216,54 +239,68 @@ async function cmdMembers(parsed: ParsedArgs): Promise<CliResult> {
 async function cmdMessages(parsed: ParsedArgs): Promise<CliResult> {
   const id = parsed.positional[0]
   if (!id) return err('usage: messages <conversation_id> [--tail N] [--thread <root_id>]')
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
   const tail = Math.min(200, Math.max(1, Number(parsed.flags.tail ?? 20)))
   // `--thread <root_id>` filters to direct replies of one message. Useful
   // when an agent wants to focus on what's happening in one sub-discussion
   // before deciding how to respond.
   const threadRootId = parsed.flags.thread ? String(parsed.flags.thread) : null
-  const params: unknown[] = [id]
-  let whereExtra = ''
-  if (threadRootId) {
-    params.push(threadRootId)
-    whereExtra = `AND quoted_message_id = $2`
-  }
-  params.push(tail)
-  const limitParam = `$${params.length}`
-  const { rows } = await pool.query<{
-    id: string; author_id: string; kind: string; body: string; sequence: number;
-    created_at: string; attachment: StoredAttachment | null;
-    poll: InboxPollPayload | null;
-    quoted_message_id: string | null;
-    quoted: { id: string; authorId: string; authorName: string; body: string } | null;
-  }>(
-    `SELECT
-        id, author_id, kind, body, sequence, created_at, attachment, poll,
-        quoted_message_id,
-        (
-          SELECT jsonb_build_object(
-            'id', qm.id,
-            'authorId', qm.author_id,
-            'authorName', qm.author_id,
-            'body', LEFT(qm.body, 240)
-          )
-            FROM messages qm
-           WHERE qm.id = messages.quoted_message_id
-             AND qm.conversation_id = messages.conversation_id
-        ) AS quoted
-       FROM messages WHERE conversation_id = $1
-       ${whereExtra}
-       ORDER BY sequence DESC LIMIT ${limitParam}`,
-    params,
-  )
-  for (const row of rows) await freshenRowAttachment(row)
-  const inOrder = rows.reverse()
+  const authoritative = await getAgentChannelHistory({ companyId, agentId: me, channelId: id, limit: 200 })
+  if (!authoritative) return err(`unknown authoritative channel ${id}`)
+  const ordered = [...authoritative].sort((left, right) => left.messageSeq - right.messageSeq)
+  const threadRoot = threadRootId
+    ? ordered.find((message) => message.messageId === threadRootId || message.clientMsgNo === threadRootId)
+    : undefined
+  const threadTargets = new Set([
+    threadRootId,
+    threadRoot?.messageId,
+    threadRoot?.clientMsgNo,
+  ].filter((value): value is string => Boolean(value)))
+  const selected = ordered
+    .filter((message) => !threadRootId || threadTargets.has(message.payload.replyToClientMsgNo ?? ''))
+    .slice(-tail)
+  const authorIds = [...new Set(ordered.map((message) => message.fromUid))]
+  const { rows: authors } = authorIds.length > 0
+    ? await pool.query<{ id: string; name: string }>(
+      `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
+      [companyId, authorIds],
+    )
+    : { rows: [] }
+  const authorNames = new Map(authors.map((author) => [author.id, author.name]))
+  const inOrder = await Promise.all(selected.map(async (message) => {
+    const quotedId = message.payload.replyToClientMsgNo ?? null
+    const quotedMessage = quotedId
+      ? ordered.find((candidate) => candidate.messageId === quotedId || candidate.clientMsgNo === quotedId)
+      : undefined
+    const attachment = attachmentFromImData(companyId, message.payload.data)
+    return {
+      id: message.messageId,
+      author_id: message.fromUid,
+      author_name: authorNames.get(message.fromUid) ?? message.fromUid,
+      kind: message.payload.kind,
+      body: message.payload.body ?? '',
+      sequence: message.messageSeq,
+      created_at: imTimestamp(message.timestamp),
+      attachment: attachment ? await freshenAttachmentUrl(attachment) : null,
+      poll: message.payload.data?.poll as InboxPollPayload | undefined ?? null,
+      quoted_message_id: quotedId,
+      quoted: quotedMessage ? {
+        id: quotedMessage.messageId,
+        authorId: quotedMessage.fromUid,
+        authorName: authorNames.get(quotedMessage.fromUid) ?? quotedMessage.fromUid,
+        body: quotedMessage.payload.body ?? '',
+      } : null,
+    }
+  }))
   // Advance the Redis "seen" boundary — `lingxiloop messages` just showed
   // the agent these rows, so the highest seq here counts as "what I've
   // seen" for the freshness preflight on its next `lingxiloop reply`. Without
   // this, the agent's typical flow `messages → reply` would HOLD on the
   // very tail it just fetched. Redis coordination is monotonic and required.
   if (inOrder.length > 0) {
-    await recordSeen(resolveAs(parsed), id, inOrder[inOrder.length - 1].sequence)
+    await recordSeen(me, id, inOrder[inOrder.length - 1].sequence)
   }
   if (parsed.flags.json) return ok(JSON.stringify(inOrder, null, 2))
   if (inOrder.length === 0) {
@@ -277,7 +314,7 @@ async function cmdMessages(parsed: ParsedArgs): Promise<CliResult> {
   const lines = [header, '']
   for (const m of inOrder) {
     const t = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    const body = m.kind === 'tool' ? `[tool call]` : m.body.slice(0, 280).replace(/\n/g, ' \\n ')
+    const body = m.body.slice(0, 280).replace(/\n/g, ' \\n ')
     lines.push(`  [${m.id}] [${t}] ${m.author_id.padEnd(8)} #${String(m.sequence).padStart(3, ' ')}  ${body}`)
     if (m.quoted_message_id) {
       if (m.quoted) {
@@ -609,31 +646,32 @@ async function cmdInbox(parsed: ParsedArgs): Promise<CliResult> {
  *  on it, pick a different angle) instead of blurting the same thing. */
 async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
   const convoId = (typeof parsed.flags['conversation'] === 'string' ? parsed.flags['conversation'] : null)
     ?? parsed.positional[0]
   if (!convoId) return err('usage: glance --conversation <id>  (or: glance <id>)')
 
-  interface RecentRow {
-    id: string
-    author_id: string
-    author_name: string
-    kind: string
-    body: string
-    created_at: string
-    sequence: number
-  }
-  const { rows } = await pool.query<RecentRow>(
-    `SELECT m.id, m.author_id, COALESCE(p.name, m.author_id) AS author_name,
-            m.kind, m.body, m.created_at, m.sequence
-       FROM messages m
-       JOIN conversations c ON c.id = m.conversation_id
-       LEFT JOIN participants p ON p.id = m.author_id AND p.company_id = c.company_id
-      WHERE m.conversation_id = $1
-      ORDER BY m.created_at DESC
-      LIMIT 12`,
-    [convoId],
-  )
-  const recent = rows.reverse()
+  const authoritative = await getAgentChannelHistory({ companyId, agentId: me, channelId: convoId, limit: 12 })
+  if (!authoritative) return err(`unknown authoritative channel ${convoId}`)
+  const ordered = [...authoritative].sort((left, right) => left.messageSeq - right.messageSeq)
+  const authorIds = [...new Set(ordered.map((message) => message.fromUid))]
+  const { rows: authors } = authorIds.length > 0
+    ? await pool.query<{ id: string; name: string }>(
+      `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
+      [companyId, authorIds],
+    )
+    : { rows: [] }
+  const authorNames = new Map(authors.map((author) => [author.id, author.name]))
+  const recent = ordered.map((message) => ({
+    id: message.messageId,
+    author_id: message.fromUid,
+    author_name: authorNames.get(message.fromUid) ?? message.fromUid,
+    kind: message.payload.kind,
+    body: message.payload.body ?? '',
+    created_at: imTimestamp(message.timestamp),
+    sequence: message.messageSeq,
+  }))
 
   // Advance the Redis "seen" boundary — glance just showed the agent
   // these messages, so they count as "seen" for the freshness preflight
@@ -666,11 +704,9 @@ async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
     for (const m of recent) {
       const t = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       const tag = m.author_id === me ? '▸ME' : '   '
-      const body = m.kind === 'tool'
-        ? '[tool call]'
-        : m.kind === 'system'
-          ? '[system]'
-          : m.body.slice(0, 200).replace(/\n/g, ' \\n ')
+      const body = m.kind === 'system'
+        ? '[system]'
+        : m.body.slice(0, 200).replace(/\n/g, ' \\n ')
       lines.push(`  [${m.id}] ${tag} ${t}  ${m.author_name}: ${body}`)
     }
   }
