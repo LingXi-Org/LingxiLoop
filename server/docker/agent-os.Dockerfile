@@ -1,7 +1,7 @@
 ARG NODE_BASE_IMAGE=docker.m.daocloud.io/library/node:20-bookworm-slim
 ARG APT_MIRROR=http://mirrors.aliyun.com
 ARG NPM_REGISTRY=https://registry.npmmirror.com
-ARG PYPI_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+ARG PYPI_INDEX_URL=https://pypi.org/simple
 FROM ${NODE_BASE_IMAGE}
 
 ARG APT_MIRROR
