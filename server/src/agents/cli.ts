@@ -1532,8 +1532,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
 
 /* ─── Image / file generation helpers ───────────────────────────────────
  * Both helpers return an AgentAttachment ready to drop into the messages
- * row. They go through the storage abstraction so URLs are signed when R2
- * + signing is active (production), or local paths in dev.
+ * row. They go through the authoritative R2 storage abstraction.
  *
  * Failure mode: throw — the caller wraps in a try/catch and returns
  * a CLI error so the agent's bash() call exits non-zero and the agent
@@ -1562,19 +1561,12 @@ async function generateAndUploadImage(opts: {
     prompt: opts.prompt,
     size,
     n: 1,
+    response_format: 'b64_json',
   })
   const first = r.data?.[0]
   const b64 = first?.b64_json
-  const remoteUrl = first?.url
-  let buf: Buffer
-  if (b64) {
-    buf = Buffer.from(b64, 'base64')
-  } else if (remoteUrl) {
-    const fetched = await fetch(remoteUrl)
-    buf = Buffer.from(await fetched.arrayBuffer())
-  } else {
-    throw new Error('image API returned no data')
-  }
+  if (!b64) throw new Error('image provider returned no b64_json data')
+  const buf = Buffer.from(b64, 'base64')
   const { randomUUID } = await import('node:crypto')
   const id = randomUUID().replace(/-/g, '')
   const key = `attachments/${id}.png`
