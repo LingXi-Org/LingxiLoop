@@ -140,7 +140,18 @@ export class CompanyApplication {
   }
 
   async requireAdmin(companyId: string, userId: string): Promise<string> {
-    const role = await companyRole(this.db, companyId, userId)
+    return this.requireAdminOn(this.db, companyId, userId, false)
+  }
+
+  private async requireAdminOn(
+    db: Queryable,
+    companyId: string,
+    userId: string,
+    lock: boolean,
+  ): Promise<string> {
+    const role = lock
+      ? await memberRole(db, companyId, userId, true)
+      : await companyRole(db, companyId, userId)
     if (!role) throw new CompanyApplicationError('forbidden', 'not a member of this company')
     if (!ADMIN_ROLES.has(role)) {
       throw new CompanyApplicationError('forbidden', 'only owners and admins can manage this workspace')
@@ -154,8 +165,8 @@ export class CompanyApplication {
     input: UpdateCompanyInput,
     auditContext: RequestAuditContext,
   ) {
-    await this.requireAdmin(companyId, userId)
     await this.infrastructure.transaction(async (db) => {
+      await this.requireAdminOn(db, companyId, userId, true)
       if (!await updateCompany(db, companyId, input)) {
         throw new CompanyApplicationError('not_found', 'company not found')
       }
@@ -176,9 +187,9 @@ export class CompanyApplication {
   async changeMemberRole(args: {
     companyId: string; userId: string; targetId: string; role: 'admin' | 'member'; audit: RequestAuditContext
   }) {
-    await this.requireAdmin(args.companyId, args.userId)
     if (args.targetId === args.userId) throw new CompanyApplicationError('conflict', 'you cannot change your own company role')
     await this.infrastructure.transaction(async (db) => {
+      await this.requireAdminOn(db, args.companyId, args.userId, true)
       const current = await memberRole(db, args.companyId, args.targetId, true)
       if (!current) throw new CompanyApplicationError('not_found', 'member not found')
       if (current === 'owner') throw new CompanyApplicationError('conflict', 'the company owner cannot be demoted')
@@ -194,9 +205,9 @@ export class CompanyApplication {
   async removeMember(args: {
     companyId: string; userId: string; targetId: string; audit: RequestAuditContext
   }) {
-    await this.requireAdmin(args.companyId, args.userId)
     if (args.targetId === args.userId) throw new CompanyApplicationError('conflict', 'you cannot remove yourself')
     await this.infrastructure.transaction(async (db) => {
+      await this.requireAdminOn(db, args.companyId, args.userId, true)
       const role = await memberRole(db, args.companyId, args.targetId, true)
       if (!role) {
         if (await isDepartedCompanyHuman(db, args.companyId, args.targetId)) return
@@ -278,7 +289,6 @@ export class CompanyApplication {
   async createInvitation(args: {
     companyId: string; userId: string; input: CreateInvitationInput; audit: RequestAuditContext
   }) {
-    await this.requireAdmin(args.companyId, args.userId)
     const email = args.input.email?.toLowerCase() ?? null
     const maxUses = email
       ? 1
@@ -288,6 +298,7 @@ export class CompanyApplication {
     const tokenHash = this.infrastructure.hashInvitationToken(token)
     const expiresAt = new Date(Date.now() + INVITE_TTL_MS)
     await this.infrastructure.transaction(async (db) => {
+      await this.requireAdminOn(db, args.companyId, args.userId, true)
       if (!await lockCompany(db, args.companyId)) throw new CompanyApplicationError('not_found', 'company not found')
       if (email) {
         if (await emailAlreadyMember(db, args.companyId, email)) {
@@ -332,8 +343,8 @@ export class CompanyApplication {
   async revokeInvitation(args: {
     companyId: string; userId: string; invitationId: string; audit: RequestAuditContext
   }) {
-    await this.requireAdmin(args.companyId, args.userId)
     const revoked = await this.infrastructure.transaction(async (db) => {
+      await this.requireAdminOn(db, args.companyId, args.userId, true)
       const revoked = await revokeInvitation(db, args.companyId, args.invitationId)
       if (revoked) await this.infrastructure.auditInTransaction(db, {
         kind: 'invitation_revoke', userId: args.userId, companyId: args.companyId,
