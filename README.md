@@ -150,12 +150,11 @@ Web replica count never creates more scheduler, retry, sweeper or GC loops.
 | `server/src/modules/` | HTTP domain slices and their public domain facades |
 | `server/src/modules/documents/` | Document HTTP/collaboration boundary and durable, lease-claimed mention delivery |
 | `server/src/agents/` | Typed learning-domain services used by the Host Bridge |
-| `server/src/eval/` | Deterministic answer, RAG, tool, and multi-Agent evaluation pipeline |
+| `server/src/eval/` | Backend-only deterministic Eval contracts, persistence and pipeline; V1 ships no Eval frontend |
 | `eval/suites/` + `eval/baselines/` | Versioned golden Eval datasets and merge-gating baselines |
 | `scripts/run-agent-eval.ts` | Frozen evaluator/harness self-test and baseline reporter |
 | `scripts/run-agent-runtime-eval.ts` | Deterministic current Agent OS runtime regression gate |
 | `src/lib/im/` | Browser-side WuKongIM SDK wrapper |
-| `src/admin/EvalPage.tsx` | Eval run pipeline, failure drill-down, and version comparison dashboard |
 | `.agents/skills/lingxiloop-eval-change/` | Eval suite, baseline, trace-safety, comparison, and focused-CI workflow |
 | `scripts/guard-agent-os.mjs` | CI guard for the independent runtime boundary |
 | `scripts/guard-architecture.mjs` | CI guard for single-path frontend/backend boundaries |

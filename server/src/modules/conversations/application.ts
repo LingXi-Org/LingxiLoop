@@ -21,6 +21,7 @@ import {
   findDirectConversation,
   hasManagedPulse,
   listCourseHumanIds,
+  listActiveCompanyParticipantIds,
   listActiveConversationMutes,
   listParticipants,
   participantAllowedInProject,
@@ -225,6 +226,23 @@ export class ConversationsApplication {
     const workspace = await findGeneralConversationWorkspacePolicy(this.db, scope.companyId)
     if (!workspace) throw new ConversationApplicationError('not_found', 'active general workspace not found')
     return this.openDirect({ ...scope, projectId: workspace.projectId }, workspace, agentId)
+  }
+
+  /** Create the complete direct-conversation bundle for a newly joined member.
+   * Reuses the same deterministic, tenant-scoped path as an interactive DM so
+   * retries repair bindings and WuKong synchronization instead of creating a
+   * second conversation data plane. */
+  async seedMemberDirects(scope: Omit<ConversationScope, 'projectId'>): Promise<void> {
+    const workspace = await findGeneralConversationWorkspacePolicy(this.db, scope.companyId)
+    if (!workspace) throw new ConversationApplicationError('not_found', 'active general workspace not found')
+    const participantIds = await listActiveCompanyParticipantIds(this.db, scope.companyId)
+    if (!participantIds.includes(scope.userId)) {
+      throw new ConversationApplicationError('not_found', 'active company participant not found')
+    }
+    for (const participantId of participantIds) {
+      if (participantId === scope.userId) continue
+      await this.openDirect({ ...scope, projectId: workspace.projectId }, workspace, participantId)
+    }
   }
 
   async authorizeDocumentShare(

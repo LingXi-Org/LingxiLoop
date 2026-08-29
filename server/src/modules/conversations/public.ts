@@ -7,6 +7,16 @@ export function openDirectConversationForNewAgent(args: {
   return conversationsApplication.openDirectForNewAgent(args, agentId)
 }
 
+export function seedMemberDirectConversations(args: {
+  companyId: string
+  memberId: string
+}): Promise<void> {
+  return conversationsApplication.seedMemberDirects({
+    companyId: args.companyId,
+    userId: args.memberId,
+  })
+}
+
 export function openDirectConversationForDocumentMention(args: {
   companyId: string
   projectId: string

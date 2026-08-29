@@ -40,6 +40,19 @@ export async function listParticipants(
   return rows
 }
 
+export async function listActiveCompanyParticipantIds(
+  db: Queryable,
+  companyId: string,
+): Promise<string[]> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id FROM participants
+      WHERE company_id=$1 AND departed_at IS NULL
+      ORDER BY id`,
+    [companyId],
+  )
+  return rows.map((row) => row.id)
+}
+
 export async function hasManagedPulse(db: Queryable, companyId: string, ids: string[]): Promise<boolean> {
   const { rows } = await db.query(
     `SELECT 1 FROM learning_project_teacher_agents

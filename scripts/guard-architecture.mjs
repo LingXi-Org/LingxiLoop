@@ -162,10 +162,15 @@ for (const file of server) {
   const fileName = name(file)
   if (fileName === 'server/src/admin.ts') violations.push(`${fileName}: retired root admin implementation is forbidden`)
   if (fileName === 'server/src/email.ts') violations.push(`${fileName}: retired root email implementation is forbidden`)
+  if (fileName === 'server/src/invitation-email.ts') violations.push(`${fileName}: Companies email capability must remain inside its vertical slice`)
   if (fileName === 'server/src/email-retry.ts' || fileName === 'server/src/email-gc.ts' || fileName === 'server/src/api/inbound-email.ts') {
     violations.push(`${fileName}: retired root Email capability is forbidden`)
   }
   if (fileName === 'server/src/oauth.ts') violations.push(`${fileName}: retired root OAuth implementation is forbidden`)
+  if (fileName === 'server/src/onboardCompany.ts'
+    && /\bseedMemberDms\b|\bconversation_counters\b/i.test(source)) {
+    violations.push(`${fileName}: member conversation onboarding must use modules/conversations/public.ts`)
+  }
   if (fileName === 'server/src/documents/rooms.ts' || fileName === 'server/src/documents/markdown.ts') {
     violations.push(`${fileName}: retired root Documents capability is forbidden`)
   }

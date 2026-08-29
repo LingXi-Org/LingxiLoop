@@ -11,8 +11,8 @@
  *                 looping with us.
  *
  */
-import { env } from './env.js'
-import { formatAddress, mintMessageId, sendViaProvider } from './modules/email/index.js'
+import { env } from '../../env.js'
+import { formatAddress, mintMessageId, sendViaProvider } from '../email/index.js'
 
 export interface InvitationEmailDelivery {
   ok: true
