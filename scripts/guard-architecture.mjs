@@ -179,6 +179,13 @@ const readReceiptApplication = await read(resolve('server/src/im/read-receipts-a
 if (/`[^`]*\b(?:SELECT|INSERT|UPDATE|DELETE)\b[^`]*`/is.test(`${readReceiptFacade}\n${readReceiptApplication}`)) {
   violations.push('server/src/im/read-receipts: SQL must stay in read-receipts-repository.ts')
 }
+const agentControlApplication = await read(resolve('server/src/agent-os/control-application.ts'))
+if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(agentControlApplication)) {
+  violations.push('server/src/agent-os/control-application.ts: Agent control use cases bypass control-repository.ts')
+}
+if (/agent-os\/(?:control-application|control-repository)\.js/.test(imRouter)) {
+  violations.push('server/src/im/router.ts: Agent OS access must use agent-os/public.ts')
+}
 const metricsSource = await read(resolve('server/src/metrics.ts'))
 if (/['"]email\.send\.(?:ok|fail)['"]\s*:\s*\{[^}]*labels:\s*\[[^\]]*mock/s.test(metricsSource)) {
   violations.push('server/src/metrics.ts: retired email mock dimension is forbidden')

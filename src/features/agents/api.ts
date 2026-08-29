@@ -17,7 +17,7 @@ export const agentsApi = {
     }),
   steerAgentRun: (agentId: string, channelId: string, text: string) =>
     http<{ ok: boolean; workId: string; steerId: string }>('/im/runs/steer', {
-      method: 'POST', body: JSON.stringify({ agentId, channelId, text }),
+      method: 'POST', body: JSON.stringify({ agentId, channelId, text, clientRequestId: crypto.randomUUID() }),
     }),
   createAgent: (input: AgentInput) =>
     http<{ id: string }>('/agents', { method: 'POST', body: JSON.stringify(input) }),

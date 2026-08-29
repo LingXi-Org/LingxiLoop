@@ -1,8 +1,9 @@
-import { createHmac, randomUUID } from 'node:crypto'
+import { createHmac } from 'node:crypto'
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
 import { executeActionWithLedger } from '../agent-os/control-plane.js'
+import { agentControlApplication } from '../agent-os/public.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import { wukongClient } from './wukong.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
@@ -315,76 +316,24 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
 
 imRouter.get('/routines', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
-  const { rows } = await pool.query(
-    `SELECT routine.*
-       FROM agent_routines routine
-       JOIN conversations conversation ON conversation.id=routine.channel_id AND conversation.company_id=routine.company_id
-      WHERE routine.company_id=$1 AND conversation.members @> to_jsonb(ARRAY[$2::text])
-        AND (
-          NOT EXISTS (SELECT 1 FROM learning_course_teacher_rooms room WHERE room.conversation_id=routine.channel_id AND room.company_id=routine.company_id)
-          OR EXISTS (
-            SELECT 1 FROM learning_course_teacher_rooms room
-              JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
-              JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-              JOIN course_members teacher ON teacher.course_id=course.id AND teacher.company_id=course.company_id
-               AND teacher.user_id=$2 AND teacher.role='teacher'
-             WHERE room.conversation_id=routine.channel_id AND room.company_id=routine.company_id
-               AND room.status='active' AND project.status='active'
-          )
-        )
-      ORDER BY routine.created_at DESC`,
-    [companyId, userId],
-  )
-  res.json(rows)
+  res.json(await agentControlApplication.listRoutines({ companyId, userId }))
 }))
 
 imRouter.post('/routines/:id/pause', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
-  const { rows: allowed } = await pool.query<{ channel_id: string }>(
-    `SELECT routine.channel_id
-       FROM agent_routines routine
-       JOIN conversations conversation ON conversation.id=routine.channel_id AND conversation.company_id=routine.company_id
-      WHERE routine.id=$1 AND routine.company_id=$2
-        AND conversation.members @> to_jsonb(ARRAY[$3::text])`,
-    [req.params.id, companyId, userId],
-  )
-  if (!allowed[0]) { res.status(404).json({ error: 'routine not found' }); return }
-  await assertTeacherRoomAccessible(allowed[0].channel_id, companyId, userId)
-  const { rows } = await pool.query(`UPDATE agent_routines SET status='paused', updated_at=NOW() WHERE id=$1 AND company_id=$2 RETURNING *`, [req.params.id, companyId])
-  if (!rows[0]) { res.status(404).json({ error: 'routine not found' }); return }
-  res.json(rows[0])
+  const routine = await agentControlApplication.pauseRoutine({ routineId: String(req.params.id), companyId, userId })
+  if (!routine) { res.status(404).json({ error: 'routine not found' }); return }
+  res.json(routine)
 }))
-
-async function activeWorkForControl(companyId: string, userId: string, agentId: string, channelId: string): Promise<string | null> {
-  const { rows } = await pool.query<{ id: string }>(
-    `SELECT w.id FROM agent_work_items w
-      JOIN im_channel_bindings b ON b.channel_id=w.channel_id AND b.company_id=w.company_id
-      JOIN conversations c ON c.id=w.channel_id
-     WHERE w.company_id=$1 AND c.members @> to_jsonb(ARRAY[$2::text]) AND w.agent_id=$3 AND w.channel_id=$4 AND w.status='leased'
-     ORDER BY w.updated_at DESC LIMIT 1`,
-    [companyId, userId, agentId, channelId],
-  )
-  return rows[0]?.id ?? null
-}
 
 imRouter.post('/runs/stop', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const agentId = String(req.body?.agentId ?? '').trim()
   const channelId = String(req.body?.channelId ?? '').trim()
   if (!agentId || !channelId) { res.status(400).json({ error: 'agentId and channelId required' }); return }
-  await assertTeacherRoomAccessible(channelId, companyId, userId)
-  const workId = await activeWorkForControl(companyId, userId, agentId, channelId)
-  if (!workId) { res.status(404).json({ error: 'no active run' }); return }
-  await pool.query(`UPDATE agent_work_items SET cancel_requested_at=NOW(), updated_at=NOW() WHERE id=$1`, [workId])
-  const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [channelId, companyId],
-  )
-  await wukongClient().sendMessage(channelId, Number(bindings[0]?.profile.channelType ?? 2), userId, {
-    version: 1, kind: 'tool_activity', clientMsgNo: `stop-${workId}-${randomUUID()}`,
-    body: 'Learner requested Stop', refs: { workId, agentId },
-    data: { stage: 'cancel_requested', suppressAgentWake: true },
-  })
-  res.json({ ok: true, workId })
+  const result = await agentControlApplication.stop({ companyId, userId, agentId, channelId })
+  if (!result) { res.status(404).json({ error: 'no active run' }); return }
+  res.json({ ok: true, workId: result.workId })
 }))
 
 imRouter.post('/runs/steer', safe(async (req, res) => {
@@ -392,22 +341,12 @@ imRouter.post('/runs/steer', safe(async (req, res) => {
   const agentId = String(req.body?.agentId ?? '').trim()
   const channelId = String(req.body?.channelId ?? '').trim()
   const text = String(req.body?.text ?? '').trim().slice(0, 4_000)
-  if (!agentId || !channelId || !text) { res.status(400).json({ error: 'agentId, channelId and text required' }); return }
-  await assertTeacherRoomAccessible(channelId, companyId, userId)
-  const workId = await activeWorkForControl(companyId, userId, agentId, channelId)
-  if (!workId) { res.status(404).json({ error: 'no active run' }); return }
-  const steer = { id: randomUUID(), text, createdAt: new Date().toISOString() }
-  await pool.query(
-    `UPDATE agent_work_items SET steer_inputs=steer_inputs || $2::jsonb, updated_at=NOW() WHERE id=$1`,
-    [workId, JSON.stringify([steer])],
-  )
-  const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [channelId, companyId],
-  )
-  await wukongClient().sendMessage(channelId, Number(bindings[0]?.profile.channelType ?? 2), userId, {
-    version: 1, kind: 'tool_activity', clientMsgNo: `steer-${workId}-${steer.id}`,
-    body: 'Learner steered the active run', refs: { workId, agentId },
-    data: { stage: 'steered', steerId: steer.id, suppressAgentWake: true },
-  })
-  res.json({ ok: true, workId, steerId: steer.id })
+  const clientRequestId = String(req.body?.clientRequestId ?? '').trim()
+  if (!agentId || !channelId || !text || !clientRequestId || clientRequestId.length > 80) {
+    res.status(400).json({ error: 'agentId, channelId, text and clientRequestId required' }); return
+  }
+  const result = await agentControlApplication.steer({ companyId, userId, agentId, channelId, text, clientRequestId })
+  if (!result) { res.status(404).json({ error: 'no active run' }); return }
+  if (result.kind === 'conflict') { res.status(409).json({ error: 'clientRequestId was reused with different text' }); return }
+  res.json({ ok: true, workId: result.workId, steerId: result.steerId })
 }))
