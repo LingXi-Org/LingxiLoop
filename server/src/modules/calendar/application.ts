@@ -239,7 +239,7 @@ export class CalendarApplication {
   async runNow(scope: CalendarScope, eventId: string): Promise<CalendarDispatchResult> {
     const event = await this.requireVisible(scope, eventId)
     const result = await this.dispatcher.dispatch(event, new Date())
-    await this.changed(scope, eventId, 'event.dispatched')
+    await this.changed(scope, eventId, 'event.dispatched').catch(() => undefined)
     return result
   }
 

@@ -17,6 +17,7 @@ import {
   findConversationForUpdate,
   findAgentConversationContext,
   findConversationWorkspacePolicy,
+  findGeneralConversationWorkspacePolicy,
   findDirectConversation,
   hasManagedPulse,
   listCourseHumanIds,
@@ -209,6 +210,15 @@ export class ConversationsApplication {
       throw new ConversationApplicationError('workspace_read_only', 'workspace is read-only')
     }
     return this.openDirect(scope, workspace, agentId)
+  }
+
+  async openDirectForNewAgent(
+    scope: Omit<ConversationScope, 'projectId'>,
+    agentId: string,
+  ): Promise<{ id: string; created: boolean }> {
+    const workspace = await findGeneralConversationWorkspacePolicy(this.db, scope.companyId)
+    if (!workspace) throw new ConversationApplicationError('not_found', 'active general workspace not found')
+    return this.openDirect({ ...scope, projectId: workspace.projectId }, workspace, agentId)
   }
 
   async authorizeDocumentShare(

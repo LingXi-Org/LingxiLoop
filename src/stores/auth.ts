@@ -6,6 +6,7 @@ export type { AuthCompany, AuthUser } from '@/auth/contracts'
  * current token from this store through the shared HTTP transport.
  */
 import { create } from 'zustand'
+import { runAuthTeardown } from './authTeardown'
 interface AuthState {
   token: string | null
   user: AuthUser | null
@@ -36,6 +37,8 @@ export const useAuth = create<AuthState>((set) => ({
   ready: false,
   serverCapabilities: null,
   setSession(token, user, companyId) {
+    const previousUserId = useAuth.getState().user?.id
+    if (previousUserId && previousUserId !== user.id) runAuthTeardown()
     localStorage.setItem(TOKEN_KEY, token)
     if (companyId) localStorage.setItem(COMPANY_KEY, companyId)
     set({ token, user, activeCompanyId: companyId, ready: true })
@@ -95,6 +98,7 @@ export const useAuth = create<AuthState>((set) => ({
     }
   },
   clear() {
+    runAuthTeardown()
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(COMPANY_KEY)
     set({ token: null, user: null, companies: [], activeCompanyId: null, ready: true, serverCapabilities: null })

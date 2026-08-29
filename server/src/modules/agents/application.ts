@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import type { Queryable } from '../../db/queryable.js'
 import type { AgentScope, CreateAgentInput, ParticipantScope, UpdateAgentInput } from './contracts.js'
@@ -28,6 +27,7 @@ export interface AgentInfrastructure {
   invalidatePersona(agentId?: string): void
   assertNotManaged(agentId: string, companyId: string): Promise<void>
   assertVisible(agentId: string, companyId: string, userId: string): Promise<void>
+  openDirectForAgent(scope: AgentScope, agentId: string): Promise<{ id: string; created: boolean }>
 }
 
 export class AgentApplication {
@@ -46,9 +46,9 @@ export class AgentApplication {
 
   async create(scope: AgentScope, input: CreateAgentInput) {
     const id = await this.uniqueId(input.name)
-    const directId = `direct-${id}-${randomUUID().slice(0, 6)}`
     try {
-      await this.infra.transaction((db) => insertAgent(db, { id, scope, input, directId }))
+      await this.infra.transaction((db) => insertAgent(db, { id, scope, input }))
+      await this.infra.openDirectForAgent(scope, id)
     } catch (error) {
       if (error instanceof Error && /duplicate key|participants_agent_id_unique/.test(error.message)) {
         throw new AgentApplicationError('conflict', 'agent id collision — please retry')

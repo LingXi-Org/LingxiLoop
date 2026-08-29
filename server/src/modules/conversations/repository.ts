@@ -97,6 +97,21 @@ export async function findConversationWorkspacePolicy(
   return row ? { projectStatus: row.project_status, courseId: row.course_id } : null
 }
 
+export async function findGeneralConversationWorkspacePolicy(
+  db: Queryable,
+  companyId: string,
+): Promise<(WorkspacePolicy & { projectId: string }) | null> {
+  const { rows } = await db.query<{ project_id: string; project_status: string }>(
+    `SELECT id AS project_id,status AS project_status
+       FROM projects
+      WHERE company_id=$1 AND is_general=TRUE AND status='active'
+      LIMIT 1`,
+    [companyId],
+  )
+  const row = rows[0]
+  return row ? { projectId: row.project_id, projectStatus: row.project_status, courseId: null } : null
+}
+
 export async function findConversationForUpdate(
   db: Queryable,
   companyId: string,

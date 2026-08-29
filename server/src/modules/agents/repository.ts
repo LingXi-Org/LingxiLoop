@@ -60,7 +60,7 @@ export async function agentIdExists(db: Queryable, id: string): Promise<boolean>
 }
 
 export async function insertAgent(db: Queryable, args: {
-  id: string; scope: AgentScope; input: CreateAgentInput; directId: string
+  id: string; scope: AgentScope; input: CreateAgentInput
 }): Promise<void> {
   const initial = args.input.name.charAt(0).toUpperCase()
   await db.query(
@@ -77,12 +77,6 @@ export async function insertAgent(db: Queryable, args: {
      VALUES ($1,'IDENTITY.md',$2,$3,NOW()),($1,'SOUL.md',$4,$3,NOW())`,
     [args.id, identity, args.scope.companyId, soul],
   )
-  await db.query(
-    `INSERT INTO conversations (id,kind,title,subtitle,members,pinned,tag,company_id)
-     VALUES ($1,'direct',$2,NULL,$3::jsonb,FALSE,NULL,$4)`,
-    [args.directId, args.input.name, JSON.stringify([args.scope.userId, args.id]), args.scope.companyId],
-  )
-  await db.query(`INSERT INTO conversation_counters (conversation_id,next_sequence) VALUES ($1,1)`, [args.directId])
 }
 
 export async function findAgent(db: Queryable, companyId: string, id: string) {

@@ -1,5 +1,12 @@
 import { conversationsApplication } from './facade.js'
 
+export function openDirectConversationForNewAgent(args: {
+  companyId: string
+  userId: string
+}, agentId: string): Promise<{ id: string; created: boolean }> {
+  return conversationsApplication.openDirectForNewAgent(args, agentId)
+}
+
 export function openDirectConversationForDocumentMention(args: {
   companyId: string
   projectId: string

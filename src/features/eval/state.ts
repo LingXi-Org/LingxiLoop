@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { registerAuthTeardown } from '@/stores/authTeardown'
 import { evalApi } from './api'
 import type { EvalDashboardPayload, EvalRunDetail } from './contracts'
 
@@ -96,3 +97,5 @@ export const useEvalState = create<EvalState>((set, get) => ({
     })
   },
 }))
+
+registerAuthTeardown(() => useEvalState.getState().reset())

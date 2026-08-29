@@ -56,10 +56,10 @@ export function AdminApp() {
   const user = useAuth((s) => s.user)
   const clear = useAuth((s) => s.clear)
   const verified = useAdminState((state) => state.verification)
+  const verifiedUserId = useAdminState((state) => state.verifiedUserId)
   const stats = useAdminState((state) => state.stats)
   const verify = useAdminState((state) => state.verify)
   const refreshStats = useAdminState((state) => state.refreshStats)
-  const resetAdmin = useAdminState((state) => state.reset)
   const [route, setRoute] = useState<Route>(parseRoute)
   // Mobile nav drawer. Auto-closes after each navigation so a phone
   // user doesn't have to dismiss it manually after picking a route.
@@ -78,7 +78,7 @@ export function AdminApp() {
   // refresh, AND so the failure mode (network / 403) shows a real error
   // instead of silently rendering an empty panel.
   useEffect(() => {
-    void verify()
+    if (user?.id) void verify(user.id)
   }, [user?.id, verify])
 
   useEffect(() => {
@@ -86,15 +86,14 @@ export function AdminApp() {
     void refreshStats()
   }, [verified, route, refreshStats])
 
-  const signOut = () => {
-    resetAdmin()
-    clear()
-  }
+  const signOut = () => clear()
 
-  if (verified === 'checking') {
+  const visibleVerification = verifiedUserId === user?.id ? verified : 'checking'
+
+  if (visibleVerification === 'checking') {
     return <FullScreenNote tone="muted">正在检查管理员访问权限...</FullScreenNote>
   }
-  if (verified === 'denied') {
+  if (visibleVerification === 'denied') {
     return (
       <FullScreenNote tone="warn">
         <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>未授权</div>

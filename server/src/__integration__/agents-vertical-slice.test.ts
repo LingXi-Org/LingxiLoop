@@ -3,11 +3,22 @@ import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { AgentApplication, AgentApplicationError } from '../modules/agents/application.js'
+import { ConversationsApplication } from '../modules/conversations/application.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => { await resetAllTables() })
 after(async () => { await teardownAll() })
+
+const conversations = new ConversationsApplication(pool, {
+  transaction: (work) => withTransaction(pool, work),
+  syncChannel: async () => undefined,
+  publishUpdated: async () => undefined,
+  publishTyping: async () => undefined,
+  isTeacherRoom: async () => false,
+  postMembershipMessage: async () => undefined,
+  clearReplyHold: async () => undefined,
+})
 
 const application = new AgentApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
@@ -15,6 +26,7 @@ const application = new AgentApplication(pool, {
   invalidatePersona: () => undefined,
   assertNotManaged: async () => undefined,
   assertVisible: async () => undefined,
+  openDirectForAgent: (scope, agentId) => conversations.openDirectForNewAgent(scope, agentId),
 }, 60_000)
 
 async function fixture() {
@@ -42,11 +54,18 @@ test('[integration] agent creation atomically seeds strict identity, Bloub persi
     `SELECT path FROM agent_workspace WHERE agent_id=$1 AND company_id=$2 ORDER BY path`, [created.id, companyId],
   )
   assert.deepEqual(workspace.map((row) => row.path), ['IDENTITY.md', 'SOUL.md'])
-  const { rows: directs } = await pool.query<{ members: string[] }>(
-    `SELECT members FROM conversations WHERE company_id=$1 AND kind='direct' AND members@>to_jsonb(ARRAY[$2::text])`,
+  const { rows: directs } = await pool.query<{ id: string; members: string[]; project_id: string }>(
+    `SELECT id,members,project_id FROM conversations
+      WHERE company_id=$1 AND kind='direct' AND members@>to_jsonb(ARRAY[$2::text])`,
     [companyId, created.id],
   )
   assert.deepEqual(directs[0]?.members.sort(), ['test-owner', created.id].sort())
+  assert.equal(directs[0]?.project_id, projectId)
+  const { rows: bindings } = await pool.query(
+    `SELECT 1 FROM im_channel_bindings WHERE company_id=$1 AND channel_id=$2`,
+    [companyId, directs[0]?.id],
+  )
+  assert.equal(bindings.length, 1)
 
   const participants = await application.participants({ companyId, projectId, userId: 'test-owner' })
   const agent = participants.find((participant) => participant.id === created.id)
