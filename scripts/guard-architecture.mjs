@@ -162,6 +162,14 @@ const imRouter = await read(resolve('server/src/im/router.ts'))
 if (/from ['"]\.\/messages-(?:application|repository)\.js['"]/.test(imRouter)) {
   violations.push('server/src/im/router.ts: IM message routes must use messages-facade.ts')
 }
+if (/im_send_acceptances/.test(imRouter)) {
+  violations.push('server/src/im/router.ts: IM send acceptance persistence must stay in messages-repository.ts')
+}
+const readReceiptFacade = await read(resolve('server/src/im/read-receipts.ts'))
+const readReceiptApplication = await read(resolve('server/src/im/read-receipts-application.ts'))
+if (/`[^`]*\b(?:SELECT|INSERT|UPDATE|DELETE)\b[^`]*`/is.test(`${readReceiptFacade}\n${readReceiptApplication}`)) {
+  violations.push('server/src/im/read-receipts: SQL must stay in read-receipts-repository.ts')
+}
 const metricsSource = await read(resolve('server/src/metrics.ts'))
 if (/['"]email\.send\.(?:ok|fail)['"]\s*:\s*\{[^}]*labels:\s*\[[^\]]*mock/s.test(metricsSource)) {
   violations.push('server/src/metrics.ts: retired email mock dimension is forbidden')

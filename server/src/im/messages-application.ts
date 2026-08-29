@@ -1,6 +1,16 @@
+import { createHash } from 'node:crypto'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import type { Queryable } from '../db/queryable.js'
-import { channelProfileForMember } from './messages-repository.js'
+import {
+  acceptSend,
+  channelProfileForMember,
+  deferSend,
+  ensureSendAcceptance,
+  getSendAcceptance,
+  lockSendAcceptance,
+  sendAcceptanceStatus,
+  unlockSendAcceptance,
+} from './messages-repository.js'
 
 export interface ImReactionAggregate {
   emoji: string
@@ -17,6 +27,7 @@ export interface ImMessageEnvelope {
 
 export interface ImMessagesInfrastructure {
   db: Queryable
+  withConnection<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   syncMessages(
     channelId: string,
     channelType: number,
@@ -34,6 +45,21 @@ export interface ImMessagesInfrastructure {
     messageAuthorId: string
     emoji: string
   }): Promise<{ reactions: ImReactionAggregate[] }>
+  sendMessage(
+    channelId: string,
+    channelType: number,
+    userId: string,
+    payload: LingxiMessageV1,
+  ): Promise<{ messageId: string; messageSeq: number }>
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(',')}}`
+  }
+  return JSON.stringify(value)
 }
 
 export class ImMessagesApplication {
@@ -105,5 +131,77 @@ export class ImMessagesApplication {
       messageAuthorId: target.fromUid,
       emoji: input.emoji,
     })
+  }
+
+  async acceptUserMessage(input: {
+    companyId: string
+    userId: string
+    channelId: string
+    clientNonce: string
+    payload: LingxiMessageV1
+  }): Promise<
+    | { kind: 'channel_not_found' }
+    | { kind: 'nonce_conflict' }
+    | { kind: 'accepted'; duplicate: boolean; echo: Record<string, unknown> }
+  > {
+    const channelType = await this.channelType(input)
+    if (channelType === null) return { kind: 'channel_not_found' }
+    const inputDigest = createHash('sha256')
+      .update(canonicalJson({ channelId: input.channelId, channelType, payload: input.payload }))
+      .digest('hex')
+    return this.infrastructure.withConnection(async (db) => {
+      const identity = {
+        companyId: input.companyId,
+        userId: input.userId,
+        clientNonce: input.clientNonce,
+      }
+      await lockSendAcceptance(db, identity)
+      try {
+        await ensureSendAcceptance(db, {
+          ...identity,
+          inputDigest,
+          channelId: input.channelId,
+          channelType,
+          payload: input.payload,
+        })
+        const acceptance = await getSendAcceptance(db, identity)
+        if (!acceptance || acceptance.input_digest !== inputDigest) return { kind: 'nonce_conflict' }
+        if (acceptance.status === 'accepted' && acceptance.echo) {
+          return { kind: 'accepted', duplicate: true, echo: acceptance.echo }
+        }
+        try {
+          const sent = await this.infrastructure.sendMessage(
+            input.channelId,
+            channelType,
+            input.userId,
+            input.payload,
+          )
+          const echo = {
+            messageId: sent.messageId,
+            messageSeq: sent.messageSeq,
+            clientMsgNo: input.clientNonce,
+            channelId: input.channelId,
+            channelType,
+            fromUid: input.userId,
+            timestamp: Math.floor(Date.now() / 1000),
+            payload: input.payload,
+          }
+          await acceptSend(db, { ...identity, echo })
+          return { kind: 'accepted', duplicate: false, echo }
+        } catch (error) {
+          await deferSend(db, {
+            ...identity,
+            error: error instanceof Error ? error.message : String(error),
+          })
+          throw error
+        }
+      } finally {
+        await unlockSendAcceptance(db, identity).catch(() => undefined)
+      }
+    })
+  }
+
+  sendStatus(input: { companyId: string; userId: string; clientNonce: string }) {
+    return sendAcceptanceStatus(this.infrastructure.db, input)
   }
 }

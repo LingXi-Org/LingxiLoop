@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomUUID } from 'node:crypto'
+import { createHmac, randomUUID } from 'node:crypto'
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { pool } from '../db/pool.js'
@@ -11,6 +11,7 @@ import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
 import { assertTeacherRoomAccessible, isTeacherRoom } from '../modules/learning/public.js'
 import { imMessagesApplication } from './messages-facade.js'
 import {
+  isReadReceiptChannelMember,
   listReadReceiptAdvances,
   publishReadReceiptAdvance,
   recordReadReceiptAdvance,
@@ -39,15 +40,6 @@ function userImToken(uid: string): string {
   const secret = process.env.WUKONG_USER_TOKEN_SECRET?.trim() || process.env.AGENT_OS_SERVICE_TOKEN?.trim()
   if (!secret) throw new Error('WUKONG_USER_TOKEN_SECRET or AGENT_OS_SERVICE_TOKEN is required')
   return createHmac('sha256', secret).update(`wukong-user:${uid}`).digest('base64url')
-}
-
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
-  if (value && typeof value === 'object') {
-    const record = value as Record<string, unknown>
-    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(',')}}`
-  }
-  return JSON.stringify(value)
 }
 
 imRouter.get('/bootstrap', safe(async (req, res) => {
@@ -209,66 +201,21 @@ imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
   if (!['text', 'attachment'].includes(payload.kind) || (!payload.body?.trim() && payload.kind !== 'attachment')) {
     res.status(400).json({ error: 'invalid user message payload' }); return
   }
-  const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT b.profile FROM im_channel_bindings b JOIN conversations c ON c.id=b.channel_id
-      WHERE b.channel_id=$1 AND b.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])`, [channelId, companyId, userId],
-  )
-  const members = Array.isArray(bindings[0]?.profile.members) ? bindings[0].profile.members.map(String) : []
-  if (!bindings[0]) { res.status(404).json({ error: 'channel not found' }); return }
-  if (!members.includes(userId)) { res.status(403).json({ error: 'not a channel member' }); return }
-  const channelType = Number(bindings[0].profile.channelType ?? 2)
-  const inputDigest = createHash('sha256').update(canonicalJson({ channelId, channelType, payload })).digest('hex')
-  const client = await pool.connect()
-  try {
-    await client.query(`SELECT pg_advisory_lock(hashtextextended($1,0))`, [`im-send:${companyId}:${userId}:${clientNonce}`])
-    await client.query(
-      `INSERT INTO im_send_acceptances(company_id,user_id,client_nonce,input_digest,channel_id,channel_type,payload)
-       VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) ON CONFLICT(company_id,user_id,client_nonce) DO NOTHING`,
-      [companyId, userId, clientNonce, inputDigest, channelId, channelType, JSON.stringify(payload)],
-    )
-    const { rows } = await client.query<{ input_digest: string; status: string; echo: Record<string, unknown> | null }>(
-      `SELECT input_digest,status,echo FROM im_send_acceptances WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
-      [companyId, userId, clientNonce],
-    )
-    const acceptance = rows[0]
-    if (!acceptance || acceptance.input_digest !== inputDigest) { res.status(409).json({ error: 'clientNonce was reused with different input' }); return }
-    if (acceptance.status === 'accepted' && acceptance.echo) { res.json({ status: 'accepted', echo: acceptance.echo, duplicate: true }); return }
-    try {
-      const sent = await wukongClient().sendMessage(channelId, channelType, userId, payload)
-      const echo = {
-        messageId: sent.messageId, messageSeq: sent.messageSeq, clientMsgNo: clientNonce,
-        channelId, channelType, fromUid: userId, timestamp: Math.floor(Date.now() / 1000), payload,
-      }
-      await client.query(
-        `UPDATE im_send_acceptances SET status='accepted',echo=$4::jsonb,error=NULL,updated_at=NOW()
-          WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
-        [companyId, userId, clientNonce, JSON.stringify(echo)],
-      )
-      res.status(202).json({ status: 'accepted', echo })
-    } catch (error) {
-      await client.query(
-        `UPDATE im_send_acceptances SET status='pending',error=$4,updated_at=NOW()
-          WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
-        [companyId, userId, clientNonce, error instanceof Error ? error.message : String(error)],
-      )
-      throw error
-    }
-  } finally {
-    await client.query(`SELECT pg_advisory_unlock(hashtextextended($1,0))`, [`im-send:${companyId}:${userId}:${clientNonce}`]).catch(() => undefined)
-    client.release()
-  }
+  const result = await imMessagesApplication.acceptUserMessage({
+    companyId, userId, channelId, clientNonce, payload,
+  })
+  if (result.kind === 'channel_not_found') { res.status(404).json({ error: 'channel not found' }); return }
+  if (result.kind === 'nonce_conflict') { res.status(409).json({ error: 'clientNonce was reused with different input' }); return }
+  res.status(result.duplicate ? 200 : 202).json({ status: 'accepted', echo: result.echo, ...(result.duplicate ? { duplicate: true } : {}) })
 }))
 
 imRouter.get('/sends/:clientNonce', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
-  const { rows } = await pool.query(
-    `SELECT a.status,a.echo,a.error,a.channel_id AS "channelId",a.updated_at AS "updatedAt"
-       FROM im_send_acceptances a JOIN conversations c ON c.id=a.channel_id
-      WHERE a.company_id=$1 AND a.user_id=$2 AND a.client_nonce=$3 AND c.members @> to_jsonb(ARRAY[$2::text])`,
-    [companyId, userId, String(req.params.clientNonce)],
-  )
-  if (!rows[0]) { res.status(404).json({ error: 'send acceptance not found' }); return }
-  res.json(rows[0])
+  const status = await imMessagesApplication.sendStatus({
+    companyId, userId, clientNonce: String(req.params.clientNonce),
+  })
+  if (!status) { res.status(404).json({ error: 'send acceptance not found' }); return }
+  res.json(status)
 }))
 
 imRouter.post('/channels/:id/read', safe(async (req, res) => {
@@ -306,12 +253,9 @@ imRouter.get('/channels/:id/read-receipts', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
   await assertTeacherRoomAccessible(channelId, companyId, userId)
-  const member = await pool.query(
-    `SELECT 1 FROM conversations
-      WHERE id=$1 AND company_id=$2 AND members @> to_jsonb(ARRAY[$3::text])`,
-    [channelId, companyId, userId],
-  )
-  if (!member.rows[0]) { res.status(404).json({ error: 'channel not found' }); return }
+  if (!await isReadReceiptChannelMember({ companyId, channelId, userId })) {
+    res.status(404).json({ error: 'channel not found' }); return
+  }
   const fromSeq = Number(req.query.fromSeq)
   const toSeq = Number(req.query.toSeq)
   if (!Number.isSafeInteger(fromSeq) || fromSeq <= 0 || !Number.isSafeInteger(toSeq) || toSeq < fromSeq) {
