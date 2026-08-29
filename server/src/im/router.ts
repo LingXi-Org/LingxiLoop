@@ -328,7 +328,10 @@ imRouter.post('/channels/:id/read', safe(async (req, res) => {
     res.status(400).json({ error: 'readThroughSeq must be a positive safe integer' })
     return
   }
-  const latestRows = await wukongClient().syncMessages(channelId, channelType, 1, userId)
+  // WuKong's sync cursor is authoritative. A one-item pull is not a stable
+  // high-water mark on every server version, so derive it from the same
+  // bounded history window the transcript uses before accepting a receipt.
+  const latestRows = await wukongClient().syncMessages(channelId, channelType, 200, userId)
   const latestSeq = latestRows.reduce((max, message) => Math.max(max, message.messageSeq), 0)
   if (readThroughSeq > latestSeq) {
     res.status(400).json({ error: 'readThroughSeq exceeds latest channel sequence', latestSeq })
