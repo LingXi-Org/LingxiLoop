@@ -196,7 +196,13 @@ export class ConversationsApplication {
       })
       return { created, profile }
     })
-    await this.infrastructure.syncChannel(result.profile)
+    // The binding committed above is the durable synchronization intent.
+    // The Worker continuously reconciles it to WuKongIM, so a transient IM
+    // outage must not turn a persisted Agent/direct conversation into a 500.
+    await this.infrastructure.syncChannel(result.profile).catch((error: unknown) => {
+      console.warn('[conversations] committed direct channel awaits reconciliation:',
+        error instanceof Error ? error.message : String(error))
+    })
     return { id: result.profile.channelId, created: result.created }
   }
 

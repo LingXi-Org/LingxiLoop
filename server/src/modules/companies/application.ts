@@ -20,6 +20,7 @@ import {
   insertInvitation,
   invitationEmailContext,
   invitationWithCompany,
+  isDepartedCompanyHuman,
   isCompanyMember,
   listCompanies,
   listCompanyChannels,
@@ -192,9 +193,12 @@ export class CompanyApplication {
   }) {
     await this.requireAdmin(args.companyId, args.userId)
     if (args.targetId === args.userId) throw new CompanyApplicationError('conflict', 'you cannot remove yourself')
-    await this.infrastructure.transaction(async (db) => {
+    const removed = await this.infrastructure.transaction(async (db) => {
       const role = await memberRole(db, args.companyId, args.targetId, true)
-      if (!role) throw new CompanyApplicationError('not_found', 'member not found')
+      if (!role) {
+        if (await isDepartedCompanyHuman(db, args.companyId, args.targetId)) return false
+        throw new CompanyApplicationError('not_found', 'member not found')
+      }
       if (role === 'owner') throw new CompanyApplicationError('conflict', 'the company owner cannot be removed')
       const courses = await lockTeachingCourses(db, args.companyId, args.targetId)
       for (const course of courses) {
@@ -203,16 +207,22 @@ export class CompanyApplication {
         }
       }
       await removeMemberState(db, args.companyId, args.targetId)
+      return true
     })
     const channels = await listCompanyChannels(this.db, args.companyId)
-    await Promise.all(channels.map((channel) => this.infrastructure.syncChannel({
+    // Revoke the cached WebSocket authorization before any external IM call.
+    await this.infrastructure.disconnectUser(args.targetId, args.companyId)
+    const syncResults = await Promise.allSettled(channels.map((channel) => this.infrastructure.syncChannel({
       channelId: channel.channel_id, channelType: 2, title: channel.title, members: channel.members,
     })))
-    await this.infrastructure.disconnectUser(args.targetId, args.companyId)
-    await this.infrastructure.audit({
+    if (removed) await this.infrastructure.audit({
       kind: 'company_member_remove', userId: args.userId, companyId: args.companyId,
       ...args.audit, detail: { targetId: args.targetId },
     })
+    const failures = syncResults.filter((result) => result.status === 'rejected')
+    if (failures.length > 0) {
+      throw new Error(`WuKongIM member revocation reconciliation failed (${failures.length}/${channels.length})`)
+    }
     return { ok: true as const }
   }
 

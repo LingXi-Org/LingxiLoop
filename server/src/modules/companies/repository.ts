@@ -181,6 +181,15 @@ export async function removeMemberState(db: Queryable, companyId: string, userId
   )
 }
 
+export async function isDepartedCompanyHuman(db: Queryable, companyId: string, userId: string): Promise<boolean> {
+  const result = await db.query(
+    `SELECT 1 FROM participants
+      WHERE company_id=$1 AND id=$2 AND kind='human' AND departed_at IS NOT NULL`,
+    [companyId, userId],
+  )
+  return (result.rowCount ?? 0) > 0
+}
+
 export async function listCompanyChannels(db: Queryable, companyId: string) {
   const { rows } = await db.query<{ channel_id: string; title: string; members: string[] }>(
     `SELECT binding.channel_id,COALESCE(binding.profile->>'title',binding.channel_id) AS title,

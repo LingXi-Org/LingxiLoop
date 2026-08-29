@@ -15,7 +15,7 @@ import { randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { invalidatePersonaCache } from './agents/personas.js'
 import { pool } from './db/pool.js'
-import { reconcileLearningChannels } from './im/reconcile.js'
+import { reconcileImChannels } from './im/reconcile.js'
 import {
   STARTER_ROOMS as CANONICAL_STARTER_ROOMS,
   STARTER_TEAM as CANONICAL_STARTER_TEAM,
@@ -164,7 +164,7 @@ export async function installStarterAgents(db: QueryClient, companyId: string): 
 
 export async function finalizeStarterAgents(installed: boolean): Promise<void> {
   if (installed) invalidatePersonaCache()
-  const reconciliation = await reconcileLearningChannels()
+  const reconciliation = await reconcileImChannels()
   if (reconciliation.failures > 0) {
     throw new Error(`WuKongIM learning channel reconciliation failed (${reconciliation.failures}/${reconciliation.channels})`)
   }

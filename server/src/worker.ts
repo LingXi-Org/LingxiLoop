@@ -9,7 +9,7 @@ import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.j
 import { startDbGcWorker } from './db-gc.js'
 import { pool } from './db/pool.js'
 import { env } from './env.js'
-import { reconcileLearningChannels } from './im/reconcile.js'
+import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
 import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowledge/worker.js'
 import { startLearningEffectWorker, startLearningNotificationScheduler } from './modules/learning/worker.js'
 import { startPollExpirationSweeper } from './modules/polls/index.js'
@@ -29,6 +29,7 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'learning-routines', concurrency: 'queue-claim', start: () => startLearningRoutineScheduler() },
   { name: 'learning-notifications', concurrency: 'queue-claim', start: () => startLearningNotificationScheduler() },
   { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },
+  { name: 'im-channel-reconciliation', concurrency: 'idempotent', start: () => startImChannelReconciliation() },
   { name: 'agent-work-watchdog', concurrency: 'idempotent', start: () => startAgentWorkWatchdog() },
   { name: 'memory-synthesis', concurrency: 'idempotent', start: () => startMemorySynthesisScheduler() },
   { name: 'email-retry', concurrency: 'queue-claim', start: () => startEmailRetryWorker() },
@@ -47,8 +48,8 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
 async function prepareWorkerData(): Promise<void> {
   await seedIfEmpty()
   await seedAdmins()
-  const { channels, failures } = await reconcileLearningChannels()
-  console.log(`[worker] reconciled ${channels - failures}/${channels} learning channels`)
+  const { channels, failures } = await reconcileImChannels()
+  console.log(`[worker] reconciled ${channels - failures}/${channels} IM channels`)
 }
 
 export interface WorkerProcessOptions {

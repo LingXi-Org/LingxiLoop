@@ -14,6 +14,8 @@ const COMPANY = 'co-company-slice'
 const FOREIGN_COMPANY = 'co-company-foreign'
 
 const audits: Array<{ kind: string; companyId: string }> = []
+const disconnected: Array<{ userId: string; companyId: string }> = []
+let syncFailuresRemaining = 0
 let nextToken = 0
 const hash = (token: string) => createHash('sha256').update(token).digest('hex')
 const application = new CompanyApplication(pool, {
@@ -22,8 +24,13 @@ const application = new CompanyApplication(pool, {
   installCompany: async () => false,
   finalizeCompany: async () => undefined,
   seedMemberDms: async () => undefined,
-  syncChannel: async () => undefined,
-  disconnectUser: async () => undefined,
+  syncChannel: async () => {
+    if (syncFailuresRemaining > 0) {
+      syncFailuresRemaining -= 1
+      throw new Error('WuKong unavailable')
+    }
+  },
+  disconnectUser: async (userId, companyId) => { disconnected.push({ userId, companyId }) },
   generateInvitationToken: () => `company-test-token-${nextToken += 1}`,
   hashInvitationToken: hash,
   invitationBaseUrl: 'https://loop.invalid',
@@ -34,6 +41,8 @@ before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => {
   await resetAllTables()
   audits.length = 0
+  disconnected.length = 0
+  syncFailuresRemaining = 0
   nextToken = 0
   await pool.query(
     `INSERT INTO users (id,email,display_name,avatar_url) VALUES
@@ -54,6 +63,35 @@ beforeEach(async () => {
        ($1,$3,'owner'),($1,$4,'member'),($2,$5,'owner')`,
     [COMPANY, FOREIGN_COMPANY, OWNER, MEMBER, FOREIGN_MEMBER],
   )
+})
+
+test('[integration] member removal disconnects immediately and retries IM reconciliation idempotently', async () => {
+  await pool.query(
+    `INSERT INTO participants (id,company_id,kind,name,initial,avatar_bg,status)
+     VALUES ($1,$2,'human','Member','M','#667085','avail')`,
+    [MEMBER, COMPANY],
+  )
+  await pool.query(
+    `INSERT INTO conversations (id,company_id,project_id,kind,title,members)
+     VALUES ('member-room',$1,NULL,'group','Member room',$2::jsonb)`,
+    [COMPANY, JSON.stringify([OWNER, MEMBER])],
+  )
+  await pool.query(
+    `INSERT INTO im_channel_bindings(channel_id,company_id,profile)
+     VALUES ('member-room',$1,$2::jsonb)`,
+    [COMPANY, JSON.stringify({ channelId: 'member-room', channelType: 2, title: 'Member room', members: [OWNER, MEMBER] })],
+  )
+  syncFailuresRemaining = 1
+  const input = { companyId: COMPANY, userId: OWNER, targetId: MEMBER, audit: { ip: null, userAgent: null } }
+  await assert.rejects(application.removeMember(input), /reconciliation failed/)
+  assert.deepEqual(disconnected, [{ userId: MEMBER, companyId: COMPANY }])
+  assert.equal((await pool.query(
+    `SELECT 1 FROM company_members WHERE company_id=$1 AND user_id=$2`, [COMPANY, MEMBER],
+  )).rowCount, 0)
+
+  assert.deepEqual(await application.removeMember(input), { ok: true })
+  assert.equal(disconnected.length, 2)
+  assert.equal(audits.filter((entry) => entry.kind === 'company_member_remove').length, 1)
 })
 after(async () => { await teardownAll() })
 

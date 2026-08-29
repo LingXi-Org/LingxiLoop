@@ -57,10 +57,22 @@ $env:OPENAI_BASE_URL = 'https://api.openai.com/v1'
 $env:OPENAI_MODEL = 'gpt-5-mini'
 $env:OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small'
 $env:AGENT_OS_SERVICE_TOKEN = 'replace-with-a-long-random-secret'
+$env:LINGXILOOP_INVITE_BASE_URL = 'http://localhost:5180'
+$env:R2_ENDPOINT = 'https://<account-id>.r2.cloudflarestorage.com'
+$env:R2_BUCKET = '<bucket>'
+$env:R2_ACCESS_KEY_ID = '<access-key>'
+$env:R2_SECRET_ACCESS_KEY = '<secret-key>'
+$env:R2_PUBLIC_BASE = 'https://<r2-gateway-host>'
+$env:R2_URL_SIGNING_SECRET = 'replace-with-a-long-random-secret'
 npm run db:bootstrap
 npm run dev:all
 npm run agent-os:start
 ```
+
+R2 is mandatory in local runtime too: there is no disk, Base64-upload,
+unsigned-read, or presigned-GET product path. `db:bootstrap` only initializes
+the immutable schema, while Web and Worker assert the complete R2 contract
+before becoming ready.
 
 For the packaged MVP topology, copy `.env.example` to `.env`, provide the
 required secrets, and start the runtime:
