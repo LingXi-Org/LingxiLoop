@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { clearOidcDiscoveryCacheForTest, discoverOidc, normalizeOidcProfile } from '../oidc.js'
+import {
+  clearOidcDiscoveryCacheForTest,
+  discoverOidc,
+  normalizeOidcProfile,
+} from '../modules/identity/oidc-protocol.js'
 
 test('OIDC discovery uses issuer metadata and caches it', async (t) => {
   clearOidcDiscoveryCacheForTest()

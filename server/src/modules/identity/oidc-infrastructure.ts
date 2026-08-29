@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { env } from '../../env.js'
 import { isAllowedReturnUrl } from '../../oauth-return-url.js'
-import { discoverOidc, normalizeOidcProfile, type OidcProfile } from '../../oidc.js'
 import { redis } from '../../redis.js'
 import type { IdentityProvider, NormalizedIdentityProfile } from './contracts.js'
+import { discoverOidc, normalizeOidcProfile, type OidcProfile } from './oidc-protocol.js'
 
 interface ProviderConfig {
   authorizeUrl: string

@@ -1,3 +1,5 @@
+import type { NormalizedIdentityProfile } from './contracts.js'
+
 export interface OidcDiscovery {
   issuer: string
   authorization_endpoint: string
@@ -14,21 +16,12 @@ export interface OidcProfile {
   picture?: unknown
 }
 
-export interface NormalizedOidcProfile {
-  providerId: string
-  email: string
-  displayName: string
-  avatarUrl: string | null
-}
+let discoveryCache: { issuer: string; value: OidcDiscovery } | null = null
 
-let cached: { issuer: string; value: OidcDiscovery } | null = null
-
-/** Resolve provider endpoints through standard OIDC discovery. */
 export async function discoverOidc(issuerValue: string): Promise<OidcDiscovery> {
   const issuer = issuerValue.replace(/\/+$/, '')
   if (!issuer) throw new Error('LingxiIdentity issuer is not configured')
-  if (cached?.issuer === issuer) return cached.value
-
+  if (discoveryCache?.issuer === issuer) return discoveryCache.value
   const response = await fetch(`${issuer}/.well-known/openid-configuration`, {
     headers: { accept: 'application/json' },
   })
@@ -44,20 +37,20 @@ export async function discoverOidc(issuerValue: string): Promise<OidcDiscovery> 
     }
   }
   const discovered = value as OidcDiscovery
-  cached = { issuer, value: discovered }
+  discoveryCache = { issuer, value: discovered }
   return discovered
 }
 
-export function normalizeOidcProfile(profile: OidcProfile): NormalizedOidcProfile {
-  const sub = typeof profile.sub === 'string' ? profile.sub.trim() : ''
+export function normalizeOidcProfile(profile: OidcProfile): NormalizedIdentityProfile {
+  const providerId = typeof profile.sub === 'string' ? profile.sub.trim() : ''
   const email = typeof profile.email === 'string' ? profile.email.trim().toLowerCase() : ''
-  if (!sub) throw new Error('LingxiIdentity account has no subject')
+  if (!providerId) throw new Error('LingxiIdentity account has no subject')
   if (!email || profile.email_verified !== true) {
     throw new Error('LingxiIdentity account has no verified email')
   }
   const name = typeof profile.name === 'string' ? profile.name.trim() : ''
   return {
-    providerId: sub,
+    providerId,
     email,
     displayName: name || email.split('@')[0]!,
     avatarUrl: typeof profile.picture === 'string' && profile.picture ? profile.picture : null,
@@ -65,5 +58,5 @@ export function normalizeOidcProfile(profile: OidcProfile): NormalizedOidcProfil
 }
 
 export function clearOidcDiscoveryCacheForTest(): void {
-  cached = null
+  discoveryCache = null
 }

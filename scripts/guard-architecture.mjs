@@ -167,6 +167,7 @@ for (const file of server) {
     violations.push(`${fileName}: retired root Email capability is forbidden`)
   }
   if (fileName === 'server/src/oauth.ts') violations.push(`${fileName}: retired root OAuth implementation is forbidden`)
+  if (fileName === 'server/src/oidc.ts') violations.push(`${fileName}: LingxiIdentity HTTP must remain inside its infrastructure entrypoint`)
   if (fileName === 'server/src/onboardCompany.ts') {
     violations.push(`${fileName}: company onboarding must remain inside modules/companies`)
   }
@@ -215,7 +216,10 @@ for (const file of server) {
   }
   const owningDomain = fileName.match(/^server\/src\/modules\/([^/]+)\//)?.[1]
   if (owningDomain === 'identity' && /\bfetch\s*\(/.test(source)
-    && fileName !== 'server/src/modules/identity/oidc-infrastructure.ts') {
+    && !new Set([
+      'server/src/modules/identity/oidc-infrastructure.ts',
+      'server/src/modules/identity/oidc-protocol.ts',
+    ]).has(fileName)) {
     violations.push(`${fileName}: LingxiIdentity HTTP bypasses oidc-infrastructure.ts`)
   }
   if (owningDomain === 'knowledge' && /\bfetch\s*\(/.test(source)
