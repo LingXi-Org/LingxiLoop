@@ -99,3 +99,50 @@ test('agent inbox reads and clears only tenant-authorized WuKong conversations',
   assert.deepEqual(clearedChannels, ['allowed'])
   assert.deepEqual(cleared, ['allowed'])
 })
+
+test('agent search pages authoritative history and excludes unauthorized channels', async () => {
+  const db = {
+    async query(sql: string) {
+      if (sql.includes('FROM conversations conversation')) {
+        return { rows: [{ channelId: 'allowed', title: 'Allowed', kind: 'group', topic: null, channelType: 2 }] }
+      }
+      throw new Error(`unexpected SQL: ${sql}`)
+    },
+  } as unknown as Queryable
+  const synced: Array<{ channelId: string; before: number }> = []
+  const infrastructure = {
+    db,
+    withConnection: async <T>(work: (connection: Queryable) => Promise<T>) => work(db),
+    syncMessages: async (channelId: string, _channelType: number, _limit: number, _userId: string, before = 0) => {
+      synced.push({ channelId, before })
+      if (channelId !== 'allowed') throw new Error('unauthorized channel was synchronized')
+      if (before > 0) return [{
+        messageId: 'match', messageSeq: 1, clientMsgNo: 'match-client', channelId, fromUid: 'peer', timestamp: 1,
+        payload: { version: 1 as const, kind: 'text' as const, clientMsgNo: 'match-client', body: 'Needle' },
+      }]
+      return Array.from({ length: 200 }, (_, index) => ({
+        messageId: `page-${index + 2}`, messageSeq: index + 2, clientMsgNo: `client-${index + 2}`,
+        channelId, fromUid: 'peer', timestamp: index + 2,
+        payload: { version: 1 as const, kind: 'text' as const, clientMsgNo: `client-${index + 2}`, body: 'haystack' },
+      }))
+    },
+    listConversations: async () => [
+      { channelId: 'allowed', channelType: 2, unread: 0, activeAt: 2, lastMessage: null },
+      { channelId: 'other-tenant', channelType: 2, unread: 0, activeAt: 1, lastMessage: null },
+    ],
+    clearUnread: async () => undefined,
+    reactions: async () => ({}),
+    toggleReaction: async () => ({ reactions: [] }),
+    sendMessage: async () => ({ messageId: 'sent', messageSeq: 8 }),
+    setUnread: async () => undefined,
+    recordReadReceipt: async () => null,
+    publishReadReceipt: async () => undefined,
+  } satisfies ImMessagesInfrastructure
+
+  const results = await new ImMessagesApplication(infrastructure).search({
+    companyId: 'company', userId: 'agent', query: 'needle', limit: 10,
+  })
+
+  assert.deepEqual(results.map((result) => result.message.messageId), ['match'])
+  assert.deepEqual(synced, [{ channelId: 'allowed', before: 0 }, { channelId: 'allowed', before: 2 }])
+})

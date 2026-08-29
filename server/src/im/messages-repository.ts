@@ -16,7 +16,7 @@ export interface ImMemberChannelRow {
 
 export async function memberChannels(
   db: Queryable,
-  input: { companyId: string; userId: string; channelIds: string[] },
+  input: { companyId: string; userId: string; channelIds: string[]; projectId?: string },
 ): Promise<ImMemberChannelRow[]> {
   if (input.channelIds.length === 0) return []
   const { rows } = await db.query<ImMemberChannelRow>(
@@ -27,8 +27,9 @@ export async function memberChannels(
          ON binding.channel_id=conversation.id AND binding.company_id=conversation.company_id
       WHERE conversation.company_id=$1
         AND conversation.id=ANY($2::text[])
-        AND conversation.members @> to_jsonb(ARRAY[$3::text])`,
-    [input.companyId, input.channelIds, input.userId],
+        AND conversation.members @> to_jsonb(ARRAY[$3::text])
+        AND ($4::text IS NULL OR conversation.project_id=$4)`,
+    [input.companyId, input.channelIds, input.userId, input.projectId ?? null],
   )
   return rows
 }

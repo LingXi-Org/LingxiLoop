@@ -16,7 +16,6 @@ import { normalizeWorkSubject, type WorkTaskType } from '../work-claims.js'
 interface RunCliInternalContext {
   idempotencyKey?: string
   projectId?: string
-  deferReadCursor?: boolean
 }
 
 interface CalendarCommandDependencies {

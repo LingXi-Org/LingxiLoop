@@ -58,6 +58,34 @@ export function getAgentInbox(input: { companyId: string; agentId: string; limit
   })
 }
 
+export function searchMemberMessages(input: {
+  companyId: string
+  userId: string
+  query: string
+  channelId?: string
+  projectId?: string
+  limit?: number
+}) {
+  return imMessagesApplication.search({
+    companyId: input.companyId,
+    userId: input.userId,
+    query: input.query,
+    channelId: input.channelId,
+    projectId: input.projectId,
+    limit: input.limit ?? 10,
+  })
+}
+
+export function searchAgentMessages(input: {
+  companyId: string
+  agentId: string
+  query: string
+  channelId?: string
+  limit?: number
+}) {
+  return searchMemberMessages({ ...input, userId: input.agentId })
+}
+
 export function clearAgentChannelUnread(input: { companyId: string; agentId: string; channelId: string }) {
   return imMessagesApplication.clearChannelUnread({
     companyId: input.companyId,
@@ -68,4 +96,36 @@ export function clearAgentChannelUnread(input: { companyId: string; agentId: str
 
 export function clearAllAgentUnread(input: { companyId: string; agentId: string }) {
   return imMessagesApplication.clearAllUnread({ companyId: input.companyId, userId: input.agentId })
+}
+
+export async function toggleAgentChannelReaction(input: {
+  companyId: string
+  agentId: string
+  channelId: string
+  messageId: string
+  emoji: string
+}): Promise<
+  | { kind: 'channel_not_found' }
+  | { kind: 'message_not_found' }
+  | { kind: 'updated'; reactions: Array<{ emoji: string; count: number; users: string[] }> }
+> {
+  const history = await imMessagesApplication.history({
+    companyId: input.companyId,
+    userId: input.agentId,
+    channelId: input.channelId,
+    limit: 200,
+    beforeSequence: 0,
+  })
+  if (!history) return { kind: 'channel_not_found' }
+  const message = history.find((candidate) => candidate.messageId === input.messageId)
+  if (!message) return { kind: 'message_not_found' }
+  const result = await imMessagesApplication.toggleReaction({
+    companyId: input.companyId,
+    userId: input.agentId,
+    channelId: input.channelId,
+    messageId: message.messageId,
+    messageSeq: message.messageSeq,
+    emoji: input.emoji,
+  })
+  return result ? { kind: 'updated', reactions: result.reactions } : { kind: 'message_not_found' }
 }

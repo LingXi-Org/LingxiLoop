@@ -211,7 +211,7 @@ export function createHelpCommand(ok: (text: string) => CliResult) {
     skills search <query>                            search SkillHub (requires SKILLHUB_URL)
     skills install <skill_id>                        install from SkillHub
     skills delete <name>                             remove a skill
-    react <message_id> <emoji>                       toggle an emoji reaction on any message
+    react <conversation_id> <message_id> <emoji>     toggle an emoji reaction in one channel
     palette "<brief>"                                generate a 5-color hex palette
     image generate "<prompt>" [--size square|wide|tall]
                                                      generate an image (gpt-image-2), upload to storage,
@@ -228,7 +228,7 @@ export function createHelpCommand(ok: (text: string) => CliResult) {
     lingxiloop workspace edit drafts/v3.md "warmth" "Sunday-morning warmth"
     lingxiloop dm bram "hero copy" "Want to align before iris paints v4"
     lingxiloop pull-group "Aurora launch" --members iris,bram,nova --leader iris --reason "Shipping next week" --say "Kickoff?"
-    lingxiloop react msg-abc123 🌤️
+    lingxiloop react direct-sage-39e016 msg-abc123 🌤️
     lingxiloop image generate "a quiet bauhaus poster, ochre and cobalt" --size wide
     lingxiloop tasks list --as bram --status open
     lingxiloop calendar create "Follow up with Wei on hero v3" --at 2026-05-25T15:00:00Z --assignee iris --prompt "DM wei and ask if v3 landed"     # one-shot self-schedule

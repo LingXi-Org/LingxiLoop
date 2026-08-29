@@ -26,7 +26,6 @@ import { type ParsedArgs, unescapeChat } from '../cli-parse.js'
 interface RunCliInternalContext {
   idempotencyKey?: string
   projectId?: string
-  deferReadCursor?: boolean
 }
 
 interface BoardCommandDependencies {

@@ -226,6 +226,9 @@ if (/\bfetch\s*\(/.test(agentCli) || !/response_format:\s*['"]b64_json['"]/.test
 if (/(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+messages\b|conversation_counters|CH_MESSAGE_NEW/i.test(agentCli)) {
   violations.push('server/src/agents/cli.ts: Agent chat sends must not restore the PostgreSQL/Redis message data plane')
 }
+if (/FROM\s+messages\b|JOIN\s+messages\b|conversation_reads/i.test(agentCli)) {
+  violations.push('server/src/agents/cli.ts: Agent chat reads and unread state must remain authoritative in WuKong')
+}
 if (!/from ['"]\.\.\/im\/public\.js['"]/.test(agentCli) || !/sendAgentChannelMessage\s*\(/.test(agentCli)) {
   violations.push('server/src/agents/cli.ts: Agent chat sends must use the public authoritative IM application')
 }
@@ -245,6 +248,23 @@ if (!agentInboxBody || /FROM\s+messages\b|JOIN\s+messages\b|conversation_reads/i
 }
 if (!agentAckBody || /conversation_reads/i.test(agentAckBody) || !/clear(?:AgentChannel|AllAgent)Unread\s*\(/.test(agentAckBody)) {
   violations.push('server/src/agents/cli.ts: Agent ack must clear authoritative WuKong unread state through im/public.ts')
+}
+const agentSearchBody = agentCli.match(/async function cmdSearch\b[\s\S]*?(?=async function cmdToolsLog\b)/)?.[0] ?? ''
+if (!agentSearchBody || !/searchAgentMessages\s*\(/.test(agentSearchBody)) {
+  violations.push('server/src/agents/cli.ts: Agent message search must use paged WuKong history through im/public.ts')
+}
+const agentReactBody = agentCli.match(/async function cmdReact\b[\s\S]*?(?=function buildToolArgs\b)/)?.[0] ?? ''
+if (!agentReactBody || !/toggleAgentChannelReaction\s*\(/.test(agentReactBody) || /runTool\s*\(\s*['"]react/.test(agentCli)) {
+  violations.push('server/src/agents/cli.ts: Agent reactions must use an explicit channel and the public IM application')
+}
+const conversationsRepository = await read(resolve('server/src/modules/conversations/repository.ts'))
+const conversationsApplication = await read(resolve('server/src/modules/conversations/application.ts'))
+if (/FROM\s+messages\b|JOIN\s+messages\b/i.test(conversationsRepository)) {
+  violations.push('server/src/modules/conversations/repository.ts: conversation search must not restore the SQL message data plane')
+}
+const conversationSearchBody = conversationsApplication.match(/async search\b[\s\S]*?(?=private async simpleProfileMutation\b)/)?.[0] ?? ''
+if (!conversationSearchBody || !/infrastructure\.searchMessages\s*\(/.test(conversationSearchBody)) {
+  violations.push('server/src/modules/conversations/application.ts: message search must use the public authoritative IM capability')
 }
 
 const evalService = await read(resolve('server/src/eval/service.ts'))

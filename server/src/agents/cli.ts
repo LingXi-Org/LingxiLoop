@@ -18,7 +18,9 @@ import {
   clearAllAgentUnread,
   getAgentChannelHistory,
   getAgentInbox,
+  searchAgentMessages,
   sendAgentChannelMessage,
+  toggleAgentChannelReaction,
 } from '../im/public.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
@@ -135,12 +137,6 @@ async function releaseTenantWork(
     taskType,
     subject,
   })
-}
-
-/** Re-sign one row's attachment from its canonical storage key. */
-async function freshenRowAttachment(row: { id: string; attachment: StoredAttachment | null }): Promise<void> {
-  if (!row.attachment) return
-  row.attachment = await freshenAttachmentUrl(row.attachment)
 }
 
 /** One-line, agent-readable summary of an attachment. */
@@ -394,27 +390,35 @@ async function cmdConvening(parsed: ParsedArgs): Promise<CliResult> {
 async function cmdSearch(parsed: ParsedArgs): Promise<CliResult> {
   const query = parsed.positional[0]
   if (!query) return err('usage: search <query> [--in <convo_id>] [--limit N]')
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
   const inConvo = parsed.flags.in ? String(parsed.flags.in) : null
   const limit = Math.min(50, Math.max(1, Number(parsed.flags.limit ?? 10)))
-  const params: unknown[] = [`%${query}%`]
-  let whereExtra = ''
-  if (inConvo) {
-    params.push(inConvo)
-    whereExtra = `AND m.conversation_id = $2`
-  }
-  params.push(limit)
-  const limitParam = `$${params.length}`
-  const { rows } = await pool.query<{
-    id: string; conversation_id: string; author_id: string; body: string;
-    created_at: string; attachment: StoredAttachment | null
-  }>(
-    `SELECT m.id, m.conversation_id, m.author_id, m.body, m.created_at, m.attachment
-       FROM messages m
-      WHERE m.body ILIKE $1 ${whereExtra}
-      ORDER BY m.created_at DESC LIMIT ${limitParam}`,
-    params,
-  )
-  for (const row of rows) await freshenRowAttachment(row)
+  const matches = await searchAgentMessages({
+    companyId,
+    agentId: me,
+    query,
+    ...(inConvo ? { channelId: inConvo } : {}),
+    limit,
+  })
+  const authorIds = [...new Set(matches.map((match) => match.message.fromUid))]
+  const { rows: authors } = authorIds.length > 0
+    ? await pool.query<{ id: string; name: string }>(
+      `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
+      [companyId, authorIds],
+    )
+    : { rows: [] }
+  const names = new Map(authors.map((author) => [author.id, author.name]))
+  const rows = matches.map((match) => ({
+    id: match.message.messageId,
+    conversation_id: match.channelId,
+    conversation_title: match.title,
+    author_id: match.message.fromUid,
+    author_name: names.get(match.message.fromUid) ?? match.message.fromUid,
+    body: match.message.payload.body ?? '',
+    created_at: imTimestamp(match.message.timestamp),
+  }))
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
   if (rows.length === 0) return ok(`(no matches for "${query}"${inConvo ? ` in ${inConvo}` : ''})`)
   const lines = [`${rows.length} match(es) for "${query}":`, '']
@@ -423,8 +427,6 @@ async function cmdSearch(parsed: ParsedArgs): Promise<CliResult> {
     const idx = m.body.toLowerCase().indexOf(query.toLowerCase())
     const slice = m.body.slice(Math.max(0, idx - 20), idx + 100).replace(/\n/g, ' \\n ')
     lines.push(`  · [${t}] ${m.conversation_id} ${m.author_id}: …${slice}…`)
-    const att = renderAttachment(m.attachment)
-    if (att) lines.push(att)
   }
   return ok(lines.join('\n'))
 }
@@ -662,7 +664,7 @@ async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
   // Advance the Redis "seen" boundary — glance just showed the agent
   // these messages, so they count as "seen" for the freshness preflight
   // on its next `lingxiloop reply`. Same required Redis path as
-  // cmdMessages — never touches conversation_reads.last_read_at.
+  // cmdMessages reads only WuKong history and advances this coordination cursor.
   if (recent.length > 0) {
     await recordSeen(me, convoId, recent[recent.length - 1].sequence)
   }
@@ -1030,7 +1032,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
           `you already posted in ${convoId} ${ageSec}s ago and nobody has replied yet — ` +
           `you can't post again until someone else speaks. ` +
           `If you have more to say, fold it into your next message when someone responds. ` +
-          `Right now: react on the relevant message (lingxiloop react <message_id> 👀 / ✅ / 🎯), ` +
+          `Right now: react on the relevant message (lingxiloop react ${convoId} <message_id> 👀 / ✅ / 🎯), ` +
           `or set_turn_status done and step back. ` +
           `Override only if it's truly urgent: rerun with --continue.`
         )
@@ -1348,8 +1350,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // freshness preflight on my NEXT lingxiloop reply compares against the post-
   // insertion state (peer messages with seq <= mine are "things I obviously
   // saw"; only seq > mine would trip a HOLD). Pure Redis side-effect — does
-  // NOT touch conversation_reads.last_read_at or anything else loadInbox
-  // depends on.
+  // does not mutate the authoritative WuKong unread state.
   await recordSeen(me, convoId, sequence)
   // Drop any lingering hold token: this send committed WITHOUT the
   // override, so a hold acknowledged-but-unused must not arm a later
@@ -2018,16 +2019,19 @@ async function cmdAutonomy(parsed: ParsedArgs): Promise<CliResult> {
   if (!conversationId || !scope || !operation || !['allow', 'ask', 'deny'].includes(mode)) {
     return err('usage: autonomy remember <conversation_id> <scope> <operation> <allow|ask|deny>')
   }
-  const human = await pool.query<{ user_id: string }>(
-    `SELECT m.author_id AS user_id
-       FROM messages m
-       JOIN conversations c ON c.id = m.conversation_id AND c.company_id = $2
-       JOIN participants p ON p.id = m.author_id AND p.company_id = $2 AND p.kind = 'human'
-      WHERE m.conversation_id = $1
-      ORDER BY m.sequence DESC LIMIT 1`,
-    [conversationId, companyId],
-  )
-  const userId = human.rows[0]?.user_id
+  const history = await getAgentChannelHistory({ companyId, agentId: me, channelId: conversationId, limit: 200 })
+  if (!history) return err(`unknown authoritative channel ${conversationId}`)
+  const authorIds = [...new Set(history.map((message) => message.fromUid))]
+  const { rows: humans } = authorIds.length > 0
+    ? await pool.query<{ id: string }>(
+      `SELECT id FROM participants WHERE company_id=$1 AND kind='human' AND id=ANY($2::text[])`,
+      [companyId, authorIds],
+    )
+    : { rows: [] }
+  const humanIds = new Set(humans.map((human) => human.id))
+  const userId = [...history]
+    .sort((left, right) => right.messageSeq - left.messageSeq)
+    .find((message) => humanIds.has(message.fromUid))?.fromUid
   if (!userId) return err('autonomy rules require an explicit human instruction in this conversation')
   const rule = await upsertAutonomyRule({
     companyId,
@@ -2553,16 +2557,34 @@ const { cmdBoard, cmdClaim, cmdCard } = createBoardCommands({
   agentCompany,
   resolveCliProjectId,
 })
+async function cmdReact(parsed: ParsedArgs): Promise<CliResult> {
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
+  const channelId = parsed.positional[0]
+  const messageId = parsed.positional[1]
+  const emoji = parsed.positional[2]
+  if (!channelId || !messageId || !emoji) return err('usage: react <conversation_id> <message_id> <emoji>')
+  const result = await toggleAgentChannelReaction({ companyId, agentId: me, channelId, messageId, emoji })
+  if (result.kind === 'channel_not_found') return err(`unknown authoritative channel ${channelId}`)
+  if (result.kind === 'message_not_found') return err(`message ${messageId} not found in ${channelId}`)
+  const aggregate = result.reactions.find((reaction) => reaction.emoji === emoji)
+  const action = aggregate?.users.includes(me) ? 'added' : 'removed'
+  return ok(`${action} ${emoji} on ${messageId}`, [{
+    event: 'reaction.updated',
+    command: 'react',
+    visibleToUser: true,
+    actorId: me,
+    conversationId: channelId,
+    messageId,
+    emoji,
+    action,
+  }])
+}
 function buildToolArgs(toolName: string, parsed: ParsedArgs): { argsJson: string } | { error: string } {
   const pos = parsed.positional
   const f = parsed.flags
   switch (toolName) {
-    case 'react': {
-      const messageId = pos[0]
-      const emoji = pos[1]
-      if (!messageId || !emoji) return { error: 'usage: react <message_id> <emoji>' }
-      return { argsJson: JSON.stringify({ message_id: messageId, emoji }) }
-    }
     case 'dm_with': {
       const partnerId = pos[0]
       const topic = pos[1] ?? (f.topic ? String(f.topic) : '')
@@ -2643,16 +2665,6 @@ function cliToolSideEffects(toolName: string, output: unknown, agentId: string):
   if (!output || typeof output !== 'object' || Array.isArray(output)) return undefined
   const o = output as Record<string, unknown>
   switch (toolName) {
-    case 'react':
-      return [{
-        event: 'reaction.updated',
-        command: 'react',
-        visibleToUser: true,
-        actorId: agentId,
-        messageId: String(o.messageId ?? ''),
-        emoji: String(o.emoji ?? ''),
-        action: String(o.action ?? ''),
-      }]
     case 'dm_with':
       return [{
         event: 'conversation.created',
@@ -2690,10 +2702,6 @@ export interface RunCliInternalContext {
   idempotencyKey?: string
   /** Workspace inherited from the Agent OS trigger conversation. */
   projectId?: string
-  /** Trusted structured-action path only: persist the reply without
-   *  advancing conversation_reads. The turn coordinator owns the cursor
-   *  after the complete action batch succeeds. */
-  deferReadCursor?: boolean
 }
 
 /**
@@ -2870,7 +2878,7 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'kanban':              return await cmdBoard(parsed, internal)
       case 'card':                return await cmdCard(parsed, internal)
       case 'doc':                 return await cmdDoc(parsed, internal)
-      case 'react':               return await runTool('react', parsed, internal)
+      case 'react':               return await cmdReact(parsed)
       case 'dm':                  return await runTool('dm_with', parsed)
       case 'pull-group':          return await runTool('pull_group', parsed)
       case 'palette':             return await runTool('palette', parsed)

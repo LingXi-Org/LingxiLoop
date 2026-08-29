@@ -19,7 +19,6 @@ import type { CliResult, CliSideEffect } from '../cli-result.js'
 interface RunCliInternalContext {
   idempotencyKey?: string
   projectId?: string
-  deferReadCursor?: boolean
 }
 
 interface LoadedEmailAttachment {

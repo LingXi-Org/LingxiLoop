@@ -26,7 +26,7 @@ import {
   listParticipants,
   participantAllowedInProject,
   markConversationReadNow,
-  searchWorkspace,
+  searchWorkspaceDirectory,
   setMute,
   updateConversation,
   upsertBinding,
@@ -67,6 +67,18 @@ export interface ConversationInfrastructure {
     participantId: string
   }): Promise<void>
   clearReplyHold(agentId: string, conversationId: string): Promise<void>
+  searchMessages(input: {
+    companyId: string
+    userId: string
+    projectId: string
+    query: string
+    limit: number
+  }): Promise<Array<{
+    channelId: string
+    title: string
+    kind: string
+    message: { messageId: string; fromUid: string; timestamp: number; payload: { body?: string } }
+  }>>
 }
 
 function deterministicId(prefix: string, ...parts: string[]): string {
@@ -502,7 +514,34 @@ export class ConversationsApplication {
 
   async search(scope: ConversationScope, raw: string) {
     if (!raw) return { participants: [], rooms: [], groups: [], messages: [] }
-    const buckets = await searchWorkspace(this.db, { ...scope, raw })
+    const [directory, messageMatches] = await Promise.all([
+      searchWorkspaceDirectory(this.db, { ...scope, raw }),
+      this.infrastructure.searchMessages({
+        companyId: scope.companyId,
+        userId: scope.userId,
+        projectId: scope.projectId,
+        query: raw,
+        limit: 15,
+      }),
+    ])
+    const authors = await listParticipants(
+      this.db,
+      scope.companyId,
+      [...new Set(messageMatches.map((match) => match.message.fromUid))],
+    )
+    const authorNames = new Map(authors.map((author) => [author.id, author.name]))
+    const buckets: SearchBuckets = { ...directory, messages: messageMatches.map((match) => ({
+      id: match.message.messageId,
+      conversationId: match.channelId,
+      conversationTitle: match.title,
+      conversationKind: match.kind,
+      authorId: match.message.fromUid,
+      authorName: authorNames.get(match.message.fromUid) ?? match.message.fromUid,
+      body: match.message.payload.body ?? '',
+      createdAt: new Date(match.message.timestamp > 10_000_000_000
+        ? match.message.timestamp
+        : match.message.timestamp * 1000).toISOString(),
+    })) }
     return this.withSnippets(buckets, raw)
   }
 

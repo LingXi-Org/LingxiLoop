@@ -19,6 +19,7 @@ const conversations = new ConversationsApplication(pool, {
   isTeacherRoom: async () => false,
   postMembershipMessage: async () => undefined,
   clearReplyHold: async () => undefined,
+  searchMessages: async () => [],
 })
 
 const application = new AgentApplication(pool, {

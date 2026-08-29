@@ -178,6 +178,65 @@ export class ImMessagesApplication {
       .slice(-Math.min(200, Math.max(1, input.limit)))
   }
 
+  async search(input: {
+    companyId: string
+    userId: string
+    query: string
+    channelId?: string
+    projectId?: string
+    limit: number
+  }): Promise<Array<{
+    channelId: string
+    title: string
+    kind: string
+    message: ImMessageEnvelope
+  }>> {
+    const query = input.query.trim().toLocaleLowerCase()
+    if (!query) return []
+    const conversations = (await this.infrastructure.listConversations(input.userId))
+      .filter((conversation) => !input.channelId || conversation.channelId === input.channelId)
+      .sort((left, right) => right.activeAt - left.activeAt)
+    const metadata = await memberChannels(this.infrastructure.db, {
+      companyId: input.companyId,
+      userId: input.userId,
+      channelIds: input.channelId ? [input.channelId] : conversations.map((conversation) => conversation.channelId),
+      projectId: input.projectId,
+    })
+    const metadataById = new Map(metadata.map((channel) => [channel.channelId, channel]))
+    const matches: Array<{ channelId: string; title: string; kind: string; message: ImMessageEnvelope }> = []
+    for (const conversation of conversations) {
+      const channel = metadataById.get(conversation.channelId)
+      if (!channel || channel.channelType !== conversation.channelType) continue
+      let beforeSequence = 0
+      const seenCursors = new Set<number>()
+      const seenMessages = new Set<string>()
+      while (true) {
+        const page = await this.infrastructure.syncMessages(
+          conversation.channelId,
+          conversation.channelType,
+          200,
+          input.userId,
+          beforeSequence,
+        )
+        for (const message of page) {
+          if (seenMessages.has(message.messageId)) continue
+          seenMessages.add(message.messageId)
+          if ((message.payload.body ?? '').toLocaleLowerCase().includes(query)) {
+            matches.push({ channelId: conversation.channelId, title: channel.title, kind: channel.kind, message })
+          }
+        }
+        if (page.length < 200) break
+        const next = Math.min(...page.map((message) => message.messageSeq).filter((sequence) => sequence > 0))
+        if (!Number.isSafeInteger(next) || next <= 0 || seenCursors.has(next)) break
+        seenCursors.add(next)
+        beforeSequence = next
+      }
+    }
+    return matches
+      .sort((left, right) => right.message.timestamp - left.message.timestamp || right.message.messageSeq - left.message.messageSeq)
+      .slice(0, Math.min(50, Math.max(1, input.limit)))
+  }
+
   async clearChannelUnread(input: { companyId: string; userId: string; channelId: string }): Promise<boolean> {
     const channelType = await this.channelType(input)
     if (channelType === null) return false

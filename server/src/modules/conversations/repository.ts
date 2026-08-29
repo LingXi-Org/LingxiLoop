@@ -1,6 +1,6 @@
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
-import type { SearchBuckets, WorkspacePolicy } from './contracts.js'
+import type { WorkspacePolicy } from './contracts.js'
 
 export interface ParticipantRow {
   id: string
@@ -400,10 +400,14 @@ export async function participantAllowedInProject(
   return Boolean(rows[0])
 }
 
-export async function searchWorkspace(
+export async function searchWorkspaceDirectory(
   db: Queryable,
   args: { companyId: string; projectId: string; userId: string; raw: string },
-): Promise<SearchBuckets> {
+): Promise<{
+  participants: Array<Record<string, unknown>>
+  rooms: Array<Record<string, unknown>>
+  groups: Array<Record<string, unknown>>
+}> {
   const escaped = args.raw.replace(/[\\%_]/g, (character) => `\\${character}`)
   const contains = `%${escaped}%`
   const exact = escaped
@@ -481,39 +485,8 @@ export async function searchWorkspace(
         AND (conversation.title ILIKE $3 ESCAPE '\\' OR conversation.topic ILIKE $3 ESCAPE '\\')
       ORDER BY CASE WHEN lower(conversation.title)=lower($4) THEN 0 WHEN conversation.title ILIKE $5 ESCAPE '\\' THEN 1 ELSE 2 END,
                conversation.updated_at DESC LIMIT 8`, common)
-  const messagesPromise = db.query(
-    `SELECT message.id,message.conversation_id AS "conversationId",
-            CASE WHEN conversation.kind='direct' THEN COALESCE(other_participant.name,conversation.title) ELSE conversation.title END AS "conversationTitle",
-            conversation.kind AS "conversationKind",message.author_id AS "authorId",
-            author.name AS "authorName",message.body,message.created_at AS "createdAt"
-       FROM messages message
-       JOIN conversations conversation ON conversation.id=message.conversation_id AND conversation.company_id=$1
-       LEFT JOIN participants author ON author.id=message.author_id AND author.company_id=conversation.company_id
-       LEFT JOIN LATERAL (
-         SELECT participant.name
-           FROM jsonb_array_elements_text(conversation.members) WITH ORDINALITY AS member(id,ord)
-           JOIN participants participant ON participant.id=member.id AND participant.company_id=conversation.company_id
-          WHERE member.id<>$2 ORDER BY member.ord LIMIT 1
-       ) other_participant ON TRUE
-      WHERE conversation.project_id=$4 AND conversation.members @> to_jsonb(ARRAY[$2::text])
-        AND (NOT EXISTS (
-          SELECT 1 FROM learning_course_teacher_rooms room
-           WHERE room.conversation_id=conversation.id AND room.company_id=conversation.company_id)
-          OR EXISTS (
-            SELECT 1 FROM learning_course_teacher_rooms room
-            JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
-            JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-            JOIN course_members teacher ON teacher.course_id=course.id AND teacher.company_id=course.company_id
-              AND teacher.user_id=$2 AND teacher.role='teacher'
-            WHERE room.conversation_id=conversation.id AND room.company_id=conversation.company_id
-              AND room.status='active' AND project.status='active'))
-        AND message.kind='text' AND message.body ILIKE $3 ESCAPE '\\'
-      ORDER BY message.created_at DESC LIMIT 15`,
-    [args.companyId, args.userId, contains, args.projectId],
-  )
-  const [participants, rooms, groups, messages] = await Promise.all([
-    participantsPromise, roomsPromise, groupsPromise, messagesPromise,
+  const [participants, rooms, groups] = await Promise.all([
+    participantsPromise, roomsPromise, groupsPromise,
   ])
-  return { participants: participants.rows, rooms: rooms.rows, groups: groups.rows,
-    messages: messages.rows as Array<Record<string, unknown> & { body: string }> }
+  return { participants: participants.rows, rooms: rooms.rows, groups: groups.rows }
 }
