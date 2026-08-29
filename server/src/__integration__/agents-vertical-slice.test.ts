@@ -3,6 +3,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { AgentApplication, AgentApplicationError } from '../modules/agents/application.js'
+import { ParticipantPresenceApplication } from '../modules/agents/presence-application.js'
 import { ConversationsApplication } from '../modules/conversations/application.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
@@ -97,6 +98,36 @@ test('[integration] lifecycle is tenant scoped and refuses to offboard a group l
     application.update({ companyId: other.companyId, userId: 'test-owner' }, created.id, { name: 'Cross tenant' }),
     (error: unknown) => error instanceof AgentApplicationError && error.code === 'not_found',
   )
+})
+
+test('[integration] human presence never updates the same participant id in another tenant', async () => {
+  const first = await seedCompanyWithAgent()
+  const second = await seedCompanyWithAgent()
+  const userId = 'shared-presence-user'
+  await seedUserMembership(userId, first.companyId)
+  await seedUserMembership(userId, second.companyId)
+  await pool.query(
+    `UPDATE participants SET status='resting' WHERE id=$1 AND company_id=ANY($2::text[])`,
+    [userId, [first.companyId, second.companyId]],
+  )
+  const events: string[] = []
+  const presence = new ParticipantPresenceApplication(pool, {
+    publish: async (event) => { events.push(event.companyId) },
+  })
+
+  await presence.setHumanPresence({
+    companyIds: [first.companyId], participantId: userId, status: 'avail',
+  })
+
+  const { rows } = await pool.query<{ company_id: string; status: string }>(
+    `SELECT company_id,status FROM participants WHERE id=$1 ORDER BY company_id`,
+    [userId],
+  )
+  assert.deepEqual(rows, [
+    { company_id: first.companyId, status: 'avail' },
+    { company_id: second.companyId, status: 'resting' },
+  ].sort((a, b) => a.company_id.localeCompare(b.company_id)))
+  assert.deepEqual(events, [first.companyId])
 })
 
 test('[integration] Agent CLI directory is tenant scoped through the Agents public facade', async () => {

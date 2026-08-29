@@ -6,12 +6,11 @@ import {
   CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
   CH_BOARDS, CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
   CH_IM_READ_RECEIPTS,
-  publish,
 } from './redis.js'
 import { env } from './env.js'
 import { consumeWsTicket } from './modules/identity/public.js'
+import { participantPresenceApplication } from './modules/agents/index.js'
 import { pool } from './db/pool.js'
-import { setStatus } from './status.js'
 import {
   subscribe as docSubscribe,
   unsubscribe as docUnsubscribe,
@@ -102,43 +101,57 @@ const humanConnections = new Map<string, number>()
  *  Agents are handled by their own runtime lease + the GET /participants
  *  auto-expiry, so we leave their status alone here. */
 export async function resetHumanPresenceOnBoot(): Promise<void> {
-  const { rows } = await pool.query<{ id: string; company_id: string; status_updated_at: Date }>(
-      `UPDATE participants
-          SET status = 'resting',
-              status_updated_at = NOW()
-        WHERE kind = 'human' AND status = 'avail'
-        RETURNING id, company_id, status_updated_at`,
-    )
-    if (rows.length > 0) {
-      console.log(`[ws] demoted ${rows.length} stale 'avail' human(s) to 'resting' on boot`)
-    }
-  if (rows.length === 0) return
-  await Promise.allSettled(rows.map((r) => publish(CH_STATUS, {
-        type: 'participants.status',
-        participantId: r.id,
-        status: 'resting',
-        statusUpdatedAt: r.status_updated_at.toISOString(),
-        companyId: r.company_id,
-  })))
-}
-
-async function onHumanConnect(userId: string): Promise<void> {
-  const cur = humanConnections.get(userId) ?? 0
-  humanConnections.set(userId, cur + 1)
-  if (cur === 0) {
-    try { await setStatus(userId, 'avail') }
-    catch (e) { console.warn(`[ws] setStatus(avail) failed for ${userId}`, e) }
+  const result = await participantPresenceApplication.resetOnBoot()
+  if (result.updated > 0) {
+    console.log(`[ws] demoted ${result.updated} stale 'avail' human(s) to 'resting' on boot`)
+  }
+  if (result.publishFailures > 0) {
+    console.warn(`[ws] ${result.publishFailures} presence reset event(s) await client refresh`)
   }
 }
 
-async function onHumanDisconnect(userId: string): Promise<void> {
+const humanPresenceTransitions = new Map<string, Promise<void>>()
+
+function queueHumanPresenceTransition(userId: string, work: () => Promise<void>): Promise<void> {
+  const previous = humanPresenceTransitions.get(userId) ?? Promise.resolve()
+  const next = previous.catch(() => undefined).then(work)
+  humanPresenceTransitions.set(userId, next)
+  void next.finally(() => {
+    if (humanPresenceTransitions.get(userId) === next) humanPresenceTransitions.delete(userId)
+  }).catch(() => undefined)
+  return next
+}
+
+function onHumanConnect(userId: string, companies: ReadonlySet<string>): Promise<void> {
+  const cur = humanConnections.get(userId) ?? 0
+  humanConnections.set(userId, cur + 1)
+  if (cur !== 0) return Promise.resolve()
+  return queueHumanPresenceTransition(userId, async () => {
+    try {
+      await participantPresenceApplication.setHumanPresence({
+        companyIds: [...companies], participantId: userId, status: 'avail',
+      })
+    } catch (e) { console.warn(`[ws] set human presence avail failed for ${userId}`, e) }
+  })
+}
+
+function onHumanDisconnect(userId: string): Promise<void> {
   const cur = humanConnections.get(userId) ?? 0
   if (cur <= 1) {
     humanConnections.delete(userId)
-    try { await setStatus(userId, 'resting') }
-    catch (e) { console.warn(`[ws] setStatus(resting) failed for ${userId}`, e) }
+    return queueHumanPresenceTransition(userId, async () => {
+      if (humanConnections.has(userId)) return
+      try {
+        const companies = await loadMemberships(userId)
+        if (humanConnections.has(userId)) return
+        await participantPresenceApplication.setHumanPresence({
+          companyIds: [...companies], participantId: userId, status: 'resting',
+        })
+      } catch (e) { console.warn(`[ws] set human presence resting failed for ${userId}`, e) }
+    })
   } else {
     humanConnections.set(userId, cur - 1)
+    return Promise.resolve()
   }
 }
 
@@ -295,7 +308,7 @@ export function attachWebSocket(httpServer: Server) {
     // server's only signal that the socket is still alive end-to-end.
     ws.on('pong', () => { c.isAlive = true })
     console.log(`[ws] client connected (${ip}, user=${session.userId}, companies=${companies.size}) · total ${clients.size}`)
-    void onHumanConnect(session.userId)
+    void onHumanConnect(session.userId, companies)
 
     // Single-fire disconnect handler — both 'close' and 'error' route
     // through here so we never double-decrement the connection counter.

@@ -5,3 +5,4 @@ export {
   listAgentCliParticipants,
   listAgentCliStatuses,
 } from './facade.js'
+export { participantPresenceApplication } from './presence-facade.js'

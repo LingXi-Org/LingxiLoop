@@ -1,5 +1,39 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { AgentScope, CreateAgentInput, ParticipantScope, UpdateAgentInput } from './contracts.js'
+import type { AgentScope, CreateAgentInput, ParticipantScope, ParticipantStatus, UpdateAgentInput } from './contracts.js'
+
+export interface ParticipantStatusRow {
+  id: string
+  company_id: string
+  status_updated_at: Date
+}
+
+export async function updateHumanPresence(
+  db: Queryable,
+  companyIds: readonly string[],
+  participantId: string,
+  status: Extract<ParticipantStatus, 'avail' | 'resting'>,
+): Promise<ParticipantStatusRow[]> {
+  if (companyIds.length === 0) return []
+  const { rows } = await db.query<ParticipantStatusRow>(
+    `UPDATE participants
+        SET status=$3,status_updated_at=NOW()
+      WHERE company_id=ANY($1::text[]) AND id=$2
+        AND kind='human' AND departed_at IS NULL
+      RETURNING id,company_id,status_updated_at`,
+    [companyIds, participantId, status],
+  )
+  return rows
+}
+
+export async function resetAvailableHumanPresence(db: Queryable): Promise<ParticipantStatusRow[]> {
+  const { rows } = await db.query<ParticipantStatusRow>(
+    `UPDATE participants
+        SET status='resting',status_updated_at=NOW()
+      WHERE kind='human' AND departed_at IS NULL AND status='avail'
+      RETURNING id,company_id,status_updated_at`,
+  )
+  return rows
+}
 
 export async function releaseExpiredAgentStatus(db: Queryable, companyId: string, leaseMs: number): Promise<void> {
   await db.query(

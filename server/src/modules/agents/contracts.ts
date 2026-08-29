@@ -22,3 +22,6 @@ export type CreateAgentInput = z.infer<typeof createAgentRequestSchema>
 export type UpdateAgentInput = z.infer<typeof updateAgentRequestSchema>
 export interface AgentScope { userId: string; companyId: string }
 export interface ParticipantScope extends AgentScope { projectId: string }
+
+export const BUSY_STATUS_LEASE_MS = 90_000
+export type ParticipantStatus = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'

@@ -4,7 +4,7 @@ import { withTransaction } from '../../db/transaction.js'
 import { computeAgentAddress } from '../email/index.js'
 import { assertNotManagedPulse, assertPulseVisible } from '../learning/public.js'
 import { openDirectConversationForNewAgent } from '../conversations/public.js'
-import { BUSY_STATUS_LEASE_MS } from '../../status.js'
+import { BUSY_STATUS_LEASE_MS } from './contracts.js'
 import { AgentApplication } from './application.js'
 import { AgentDirectoryApplication } from './directory-application.js'
 

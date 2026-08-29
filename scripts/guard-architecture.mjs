@@ -170,6 +170,7 @@ for (const file of server) {
   }
   if (fileName === 'server/src/oauth.ts') violations.push(`${fileName}: retired root OAuth implementation is forbidden`)
   if (fileName === 'server/src/oidc.ts') violations.push(`${fileName}: LingxiIdentity HTTP must remain inside its infrastructure entrypoint`)
+  if (fileName === 'server/src/status.ts') violations.push(`${fileName}: participant presence must remain inside the Agents vertical slice`)
   if (fileName === 'server/src/onboardCompany.ts') {
     violations.push(`${fileName}: company onboarding must remain inside modules/companies`)
   }
