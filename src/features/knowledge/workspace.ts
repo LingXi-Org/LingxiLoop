@@ -25,9 +25,14 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
       const companyId = getActiveCompanyId()
       const list = await knowledgeApi.listProjects()
       const stored = getWorkspaceSession()
-      const selectedId = stored?.companyId === companyId && list.some((workspace) => workspace.id === stored.projectId && workspace.status === 'active')
+      const restoredProjectId = stored?.companyId === companyId && list.some((workspace) => workspace.id === stored.projectId && workspace.status === 'active')
         ? stored.projectId : null
-      if (!selectedId && stored) setWorkspaceSession(null)
+      // The general project is the authority for the initial IM surface. A
+      // fresh browser has no stored selection, but project-scoped endpoints
+      // must never be called without this context.
+      const selectedId = restoredProjectId ?? list.find((workspace) => workspace.isGeneral && workspace.status === 'active')?.id ?? null
+      if (selectedId && companyId) setWorkspaceSession({ companyId, projectId: selectedId })
+      else if (stored) setWorkspaceSession(null)
       set({ list, selectedId, loaded: true, loading: false })
     } catch (error) {
       set({ error: error instanceof Error ? error.message : String(error), loaded: true, loading: false })

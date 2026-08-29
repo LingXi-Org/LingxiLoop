@@ -15,6 +15,7 @@ import { useAuth } from '@/stores/auth'
 import { bootConversations, isMuted, useConversations } from '@/features/conversations/store'
 import { bootMessagesStream, useMessages } from '@/features/chat/state/messages'
 import { bootParticipants } from '@/features/agents/state'
+import { useWorkspace } from '@/features/knowledge/workspace'
 import { usePrefs } from '@/stores/preferences'
 import { useUiCommand } from '@/stores/uiCommands'
 
@@ -35,10 +36,19 @@ function AuthedApp() {
   const [updaterOpen, setUpdaterOpen] = useState(false)
   const uiCommand = useUiCommand()
   useEffect(() => {
-    bootMessagesStream()
-    bootParticipants()
-    bootConversations()
+    let disposed = false
+    void (async () => {
+      // IM conversations are project-scoped. Establish the authoritative
+      // general-project selection before any IM request can be issued for a
+      // new browser session or after an account/company switch.
+      await useWorkspace.getState().load()
+      if (disposed) return
+      bootMessagesStream()
+      bootParticipants()
+      bootConversations()
+    })()
     void usePrefs.getState().load()
+    return () => { disposed = true }
   }, [])
 
   useEffect(() => {

@@ -5,6 +5,7 @@ import test from 'node:test'
 test('shared entry keeps notification, analytics, and app surfaces behind dynamic boundaries', () => {
   const main = readFileSync(new URL('../main.tsx', import.meta.url), 'utf8')
   const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8')
+  const workspace = readFileSync(new URL('../features/knowledge/workspace.ts', import.meta.url), 'utf8')
   const authStates = readFileSync(new URL('../auth/AuthStateScreens.tsx', import.meta.url), 'utf8')
 
   assert.match(main, /import\('\.\/components\/NotificationWindow'\)/)
@@ -14,6 +15,8 @@ test('shared entry keeps notification, analytics, and app surfaces behind dynami
   assert.match(app, /lazy\(\(\) => import\('@\/desktop\/DesktopApp'\)/)
   assert.doesNotMatch(app, /AdminApp|isAdminContext|features\/admin|features\/eval/)
   assert.doesNotMatch(app, /@\/mobile\/|MobileApp/)
+  assert.match(workspace, /workspace\.isGeneral && workspace\.status === 'active'/)
+  assert.match(app, /await useWorkspace\.getState\(\)\.load\(\)[\s\S]*bootMessagesStream\(\)[\s\S]*bootParticipants\(\)[\s\S]*bootConversations\(\)/)
   assert.match(authStates, /from '@\/components\/ui\/card'/)
   assert.match(authStates, /from '@\/components\/ui\/button'/)
 })
