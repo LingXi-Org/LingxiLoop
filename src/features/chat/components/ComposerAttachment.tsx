@@ -40,9 +40,9 @@ export function ComposerAttachment({
         </AttachmentActions>
       </Attachment>
     )}
-    {uploading && <div className="mb-2 text-[11.5px] text-ink-500">正在上传…</div>}
+    {uploading && <div className="mb-2 text-[11.5px] text-muted-foreground">正在上传…</div>}
     {error && (
-      <div className="mb-2 inline-block max-w-full truncate rounded-md bg-coral-soft px-2 py-1 text-[11.5px] text-coral-deep">
+      <div className="mb-2 inline-block max-w-full truncate rounded-2xl bg-destructive/10 px-2 py-1 text-[11.5px] text-destructive">
         {error}
       </div>
     )}

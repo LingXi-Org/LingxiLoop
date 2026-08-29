@@ -9,7 +9,7 @@ export function ComposerSurface({ children, className, ...props }: ComposerSurfa
   return (
     <div
       className={cn(
-        'im-composer-surface chat-composer-shell shrink-0 bg-panel/95 backdrop-blur-xl',
+        'im-composer-surface chat-composer-shell shrink-0 bg-background/95 backdrop-blur-xl',
         'px-5 pb-4 pt-2',
         className,
       )}

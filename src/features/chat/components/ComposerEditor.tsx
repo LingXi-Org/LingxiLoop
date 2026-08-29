@@ -55,7 +55,7 @@ export function ComposerEditor({
         defaultValue={draft}
         placeholder={placeholder}
         ariaLabel="消息输入框"
-        className="rich-input w-full whitespace-pre-wrap bg-transparent text-[14px] leading-[1.5] text-ink-900"
+        className="rich-input w-full whitespace-pre-wrap bg-transparent text-[14px] leading-[1.5] text-foreground"
         style={{ minHeight: '1.5em' }}
         maxHeight={200}
         onChange={onChange}

@@ -45,25 +45,25 @@ export function ConversationAvatar({
   if (conversation.tag === 'fresh-pulled') {
     return (
       <span
-        className="grid shrink-0 place-items-center rounded-full font-semibold text-white"
-        style={{ width: size, height: size, background: 'conic-gradient(from 0deg, #B57BFF, var(--coral), #6B7BE6, var(--gold), #B57BFF)' }}
+        className="grid shrink-0 place-items-center rounded-full bg-primary font-semibold text-primary-foreground"
+        style={{ width: size, height: size }}
       >⌘</span>
     )
   }
 
   if (conversation.kind === 'group' || members.length > 1) {
     if (members.length === 0) {
-      return <span className="grid shrink-0 place-items-center rounded-full bg-raised text-ink-secondary" style={{ width: size, height: size }}>群</span>
+      return <span className="grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground" style={{ width: size, height: size }}>群</span>
     }
     return variant === 'mobile'
-      ? <HiveAvatar ps={members} size={size} ringColor="var(--panel)" />
+      ? <HiveAvatar ps={members} size={size} ringColor="var(--card)" />
       : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} />
   }
 
   const person = members[0] ?? conversation.members.map((id) => byId[id]).find(Boolean)
-  if (person) return <Avatar p={person} size={size} ringColor="var(--panel)" />
+  if (person) return <Avatar p={person} size={size} ringColor="var(--card)" />
   return (
-    <span className="grid shrink-0 place-items-center rounded-full bg-raised font-semibold text-ink" style={{ width: size, height: size }}>
+    <span className="grid shrink-0 place-items-center rounded-full bg-muted font-semibold text-foreground" style={{ width: size, height: size }}>
       {conversation.kind === 'email' ? '邮' : conversation.title.charAt(0).toUpperCase()}
     </span>
   )
@@ -106,22 +106,22 @@ export function ConversationListItemContent({
       <ConversationAvatar conversation={conversation} size={isMobile || !isDirectAgent ? 48 : 54} variant={variant} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
-          {conversation.pinned && !isMobile && <span className={cn('text-[9px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已置顶">◆</span>}
-          <span className={cn('truncate text-[16px] font-semibold', selected ? 'text-white' : muted ? 'text-ink-secondary' : 'text-ink')}>
+          {conversation.pinned && !isMobile && <span className={cn('text-[9px]', selected ? 'text-primary-foreground/70' : 'text-muted-foreground')} aria-label="已置顶">◆</span>}
+          <span className={cn('truncate text-[16px] font-semibold', selected ? 'text-primary-foreground' : muted ? 'text-muted-foreground' : 'text-foreground')}>
             {conversation.title}
           </span>
-          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className={cn('shrink-0 text-[10px] font-normal', selected ? 'text-white/70' : 'text-ink-secondary')}>{role}</span>)}
-          {muted && <span className={cn('shrink-0 text-[11px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已静音">⌁</span>}
-          {conversation.tag === 'fresh-pulled' && <span className="rounded bg-gold/20 px-1.5 py-0.5 text-[8px] font-bold text-gold-deep">NEW</span>}
+          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className={cn('shrink-0 text-[10px] font-normal', selected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>{role}</span>)}
+          {muted && <span className={cn('shrink-0 text-[11px]', selected ? 'text-primary-foreground/70' : 'text-muted-foreground')} aria-label="已静音">⌁</span>}
+          {conversation.tag === 'fresh-pulled' && <span className="rounded bg-secondary px-1.5 py-0.5 text-[8px] font-bold text-secondary-foreground">NEW</span>}
         </span>
-        <span className={cn('mt-0.5 block truncate text-[14px]', selected ? 'text-white/75' : typingNames.length > 0 ? 'text-accent' : 'text-ink-secondary')}>
+        <span className={cn('mt-0.5 block truncate text-[14px]', selected ? 'text-primary-foreground/75' : typingNames.length > 0 ? 'text-primary' : 'text-muted-foreground')}>
           {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1 self-center">
-        <span className={cn('text-[12px] tabular-nums', selected ? 'text-white/75' : 'text-ink-secondary')}>{conversation.lastAt}</span>
+        <span className={cn('text-[12px] tabular-nums', selected ? 'text-primary-foreground/75' : 'text-muted-foreground')}>{conversation.lastAt}</span>
         {(conversation.unread ?? 0) > 0 && (
-          <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold leading-5', selected ? 'bg-white text-accent' : muted ? 'bg-raised text-ink-secondary' : 'bg-accent text-white')}>
+          <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold leading-5', selected ? 'bg-primary-foreground text-primary' : muted ? 'bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground')}>
             {conversation.unread! > 99 ? '99+' : conversation.unread}
           </span>
         )}

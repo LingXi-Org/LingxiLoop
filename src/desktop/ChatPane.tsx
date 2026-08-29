@@ -10,6 +10,7 @@ import { AgentTypingIndicator } from '@/components/messages/AgentTypingIndicator
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { MessageList } from '@/im/MessageList'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
@@ -85,10 +86,8 @@ function ThreadLoader() {
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className="w-[7px] h-[7px] rounded-full"
+                className="size-2 rounded-full bg-primary shadow-sm"
                 style={{
-                  background: 'var(--skype)',
-                  boxShadow: '0 1px 4px rgba(0, 168, 240, 0.45)',
                   animation: 'lingxiloop-pulse-dot 1.2s ease-in-out infinite',
                   animationDelay: `${i * 160}ms`,
                 }}
@@ -96,7 +95,7 @@ function ThreadLoader() {
             ))}
           </div>
         </div>
-        <div className="font-display italic text-[13px] text-ink-500 tracking-tight">
+        <div className="text-[13px] italic tracking-tight text-muted-foreground">
           正在加载消息…
         </div>
       </div>
@@ -116,21 +115,8 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
       className="grid place-items-center py-12 px-6"
       style={{ animation: 'lingxiloop-empty-in 280ms ease-out both' }}
     >
-      <div
-        className="flex flex-col items-center text-center max-w-[340px] gap-3 rounded-2xl px-6 py-6 backdrop-blur-sm"
-        style={{
-          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 217, 210, 0.18))',
-          border: '1px solid rgba(255, 122, 107, 0.18)',
-          boxShadow: '0 12px 32px -16px rgba(200, 78, 63, 0.25)',
-        }}
-      >
-        <div
-          className="w-10 h-10 rounded-full grid place-items-center"
-          style={{
-            background: 'rgba(255, 122, 107, 0.12)',
-            color: 'var(--coral-deep)',
-          }}
-        >
+      <Card className="flex max-w-[340px] flex-col items-center gap-3 rounded-3xl border-destructive/20 bg-card px-6 py-6 text-center">
+        <div className="grid size-10 place-items-center rounded-full bg-destructive/10 text-destructive">
           <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px]" aria-hidden>
             <path d="M12 8.5v4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             <circle cx="12" cy="16.2" r="1" fill="currentColor" />
@@ -169,7 +155,7 @@ function ThreadError({ message, onRetry }: { message: string; onRetry: () => voi
             </>
           )}
         </Button>
-      </div>
+      </Card>
     </div>
   )
 }
@@ -180,8 +166,8 @@ function OpenMausEmptyConversationState() {
     <main className="chat-surface omb-titlebar-safe omb-drag grid h-full min-w-0 place-items-center">
       <div className="omb-no-drag flex max-w-sm flex-col items-center gap-3 px-8 text-center">
         <img src="/logo.png" alt="" className="size-14 rounded-2xl opacity-90" draggable={false} />
-        <h1 className="text-[17px] font-semibold text-ink">选择一个会话开始交流</h1>
-        <p className="text-[13px] leading-6 text-ink-secondary">
+        <h1 className="text-[17px] font-semibold text-foreground">选择一个会话开始交流</h1>
+        <p className="text-[13px] leading-6 text-muted-foreground">
           {total > 0 ? `左侧共有 ${total} 个会话。你也可以搜索消息，或新建群聊。` : '新消息和 Agent 的实时进度会显示在这里。'}
         </p>
       </div>
@@ -232,15 +218,15 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
   const active = [...latestByRun.values()].reverse()
     .find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')
   return (
-    <div className="border-b border-hairline bg-panel px-5 py-2" role="status" aria-label="Agent 最近活动">
+    <div className="border-b border-border bg-background px-5 py-2" role="status" aria-label="Agent 最近活动">
       <div className="mx-auto flex max-w-[900px] items-center gap-3 overflow-hidden">
         <span className={`size-2 shrink-0 rounded-full ${active ? 'animate-pulse bg-[var(--working)]' : 'bg-[var(--avail)]'}`} />
-        <span className="shrink-0 text-[11px] font-semibold text-ink-secondary">
+        <span className="shrink-0 text-[11px] font-semibold text-muted-foreground">
           {active ? `${active.agentName}${active.runStatus === 'waiting_for_human' ? ' 正在等待你' : ' 正在工作'}` : '最近活动'}
         </span>
         <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
           {visible.map((event) => (
-            <span key={event.id} className="max-w-[240px] truncate rounded-full bg-raised px-2.5 py-1 text-[10.5px] text-ink-500" title={event.title}>
+            <span key={event.id} className="max-w-[240px] truncate rounded-full bg-muted px-2.5 py-1 text-[10.5px] text-muted-foreground" title={event.title}>
               {/completed/.test(event.kind) ? '✓' : /failed/.test(event.kind) ? '!' : '●'} {event.title}
             </span>
           ))}
@@ -648,14 +634,14 @@ export function ChatPane({
               Header: () => (
                 <div className="mx-auto flex w-full max-w-[900px] flex-col gap-2 px-5 pt-6">
                   {hasMoreOlder ? (
-                    <div className="self-center py-1 px-2.5 rounded-full text-[10.5px] font-medium text-ink-400">
+                    <div className="self-center rounded-full px-2.5 py-1 text-[10.5px] font-medium text-muted-foreground">
                       {loadingOlder ? '正在加载更早的消息…' : ' '}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3 text-ink-300 text-[11px] font-bold tracking-[0.08em] uppercase">
-                      <span className="flex-1 h-px bg-gradient-to-r from-transparent via-ink-100 to-transparent" />
+                    <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                      <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
                       会话开始
-                      <span className="flex-1 h-px bg-gradient-to-r from-transparent via-ink-100 to-transparent" />
+                      <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
                     </div>
                   )}
                 </div>

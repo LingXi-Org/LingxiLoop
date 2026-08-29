@@ -28,16 +28,24 @@ for (const retired of ['src/features/admin', 'src/features/eval']) {
 }
 
 const canonicalConversationFiles = new Set([
+  'src/components/RichInput.tsx',
+  'src/desktop/ChatPane.tsx',
   'src/desktop/ThreadDrawer.tsx',
+  'src/im/Composer.tsx',
   'src/im/ConversationHeader.tsx',
+  'src/im/ConversationList.tsx',
+  'src/im/MessageList.tsx',
   'src/features/chat/components/ChatComposer.tsx',
   'src/features/chat/components/ComposerMenus.tsx',
   'src/features/chat/components/ComposerEmojiPopover.tsx',
 ])
-const retiredConversationTokens = /\b(?:sand|ink|skype|coral|sky2)-|\b(?:bg-panel|bg-raised|border-hairline|bg-paper|bg-cloud)\b/
+const retiredConversationTokens = /\b(?:text|bg|border|ring|from|via|to)-(?:sand|ink|skype|coral|sky2)-|\b(?:bg-panel|bg-raised|border-hairline|bg-paper|bg-cloud)\b|--(?:sand|ink|coral|sky2|skype-deep)\b/
 for (const file of frontend) {
   const fileName = name(file)
-  if (!canonicalConversationFiles.has(fileName)) continue
+  const isConversationSlice = canonicalConversationFiles.has(fileName)
+    || fileName.startsWith('src/features/chat/')
+    || fileName.startsWith('src/components/messages/')
+  if (!isConversationSlice) continue
   const source = await read(file)
   if (/<button\b|<select\b|<textarea\b|role=['"](?:dialog|switch)['"]/.test(source)) {
     violations.push(`${fileName}: main conversation UI must compose canonical shadcn primitives`)

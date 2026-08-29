@@ -27,7 +27,7 @@ export function AgentTypingIndicator({
       aria-live="polite"
       aria-label={label}
     >
-      <span className="whitespace-nowrap text-[12px] font-medium text-ink-secondary">
+      <span className="whitespace-nowrap text-[12px] font-medium text-muted-foreground">
         {label}
         <span className="agent-typing-dots" aria-hidden="true"><i /><i /><i /></span>
       </span>

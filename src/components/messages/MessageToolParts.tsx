@@ -51,7 +51,7 @@ export function ApprovalPart({ message, addResult }: { message: Message; addResu
   }
   return <div className="mt-2 max-w-[620px]" data-card-status={approval.status === 'rejected' ? 'failed' : approval.status}>
     <ApprovalCard id={`approval-card-${approval.id}`} role="decision" title={approvalTitle(approval)} description={approval.summary} variant={approval.kind.includes('destructive') || approval.kind.includes('irreversible') ? 'destructive' : 'default'} metadata={[{ key: '状态', value: approval.status }, { key: '请求时间', value: new Date(approval.requestedAt).toLocaleString() }]} confirmLabel={busy === 'approved' ? '处理中…' : '批准'} cancelLabel={busy === 'denied' ? '处理中…' : '拒绝'} choice={pending ? undefined : approval.status === 'approved' ? 'approved' : 'denied'} onConfirm={() => resolve('approved')} onCancel={() => resolve('denied')} />
-    {(error || approval.error) && <p role="alert" className="mt-1 text-[11px] text-coral-deep">{error ?? approval.error}</p>}
+    {(error || approval.error) && <p role="alert" className="mt-1 text-[11px] text-destructive">{error ?? approval.error}</p>}
   </div>
 }
 

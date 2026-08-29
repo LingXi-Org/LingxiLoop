@@ -5,6 +5,7 @@ import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from '@/components/ui/attachment'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { useResolvedBoardId, useResolvedCalendarId, useResolvedCardId, useResolvedDocumentId } from '@/lib/useArtifactId'
 import { cn } from '@/lib/utils'
@@ -104,23 +105,24 @@ function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conve
   if (!loaded && !doc) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载文档卡片" />
 
   return (
-    <button
+    <Button
+      variant="outline"
       type="button"
       onClick={open}
-      className="mt-2 group block w-full max-w-[min(100%,580px)] text-left rounded-[12px] border border-ink-100 bg-cloud overflow-hidden transition hover:border-sky2-200 hover:shadow-[0_16px_34px_-22px_rgba(0,80,140,0.42)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky2-300"
+      className="mt-2 h-auto w-full max-w-[min(100%,580px)] justify-start overflow-hidden rounded-3xl border-border bg-card p-0 text-left hover:border-primary/30"
       aria-label={`Open document ${title}`}
     >
       <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] gap-3 px-3 py-3 items-center">
         <div
-          className="relative w-[52px] h-[64px] rounded-[9px] bg-white border border-sky2-100 shadow-[0_10px_24px_-20px_rgba(0,80,140,0.35)] overflow-hidden"
+          className="relative h-16 w-[52px] overflow-hidden rounded-2xl border border-border bg-background shadow-sm"
           aria-hidden
         >
-          <div className="h-2 bg-gradient-to-r from-skype via-sky2-200 to-coral-soft" />
+          <div className="h-2 bg-gradient-to-r from-primary via-primary/40 to-secondary" />
           <div className="px-2.5 py-2 space-y-1.5">
-            <span className="block h-1.5 rounded-full bg-ink-100 w-7" />
-            <span className="block h-1 rounded-full bg-sky2-100 w-8" />
-            <span className="block h-1 rounded-full bg-sky2-100 w-5" />
-            <span className="block h-1 rounded-full bg-coral-soft/70 w-7" />
+            <span className="block h-1.5 w-7 rounded-full bg-muted" />
+            <span className="block h-1 w-8 rounded-full bg-primary/10" />
+            <span className="block h-1 w-5 rounded-full bg-primary/10" />
+            <span className="block h-1 w-7 rounded-full bg-secondary" />
           </div>
           <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-md grid place-items-center bg-skype text-white shadow-sm">
             <IFile className="w-3 h-3" strokeWidth={1.8} />
@@ -129,32 +131,32 @@ function DocumentArtifactCard({ id: rawId, conversationId }: { id: string; conve
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">文件</span>
-            <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-            <span className="text-[10.5px] text-ink-400 truncate">{id}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">文件</span>
+            <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
+            <span className="truncate text-[10.5px] text-muted-foreground">{id}</span>
           </div>
-          <div className="mt-1 text-[14px] font-semibold text-ink-900 truncate">{title}</div>
-          <div className="mt-1 flex items-center gap-1.5 min-w-0 text-[11.5px] text-ink-500">
+          <div className="mt-1 truncate text-sm font-semibold text-foreground">{title}</div>
+          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11.5px] text-muted-foreground">
             {author && <span className="truncate">{author}</span>}
-            {author && updated && <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />}
+            {author && updated && <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />}
             {updated && <span className="shrink-0">已更新 {updated}</span>}
             {isPinnedHere && (
               <>
-                <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-                <span className="shrink-0 text-gold-deep">在此对话中</span>
+                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
+                <span className="shrink-0 text-secondary-foreground">在此对话中</span>
               </>
             )}
           </div>
         </div>
 
-        <div className="ml-1 h-8 px-3 rounded-full bg-sky2-50 text-skype-deep text-[11.5px] font-semibold inline-flex items-center gap-1.5 transition group-hover:bg-skype group-hover:text-white">
+        <div className="ms-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary/10 px-3 text-[11.5px] font-semibold text-primary">
           打开
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </div>
       </div>
-    </button>
+    </Button>
   )
 }
 
@@ -181,9 +183,9 @@ export function CanvasWorkspaceCard() {
     else openCanvasPeek(canvas.canvasId)
   }
   return <CardSurface asChild variant="interactive" interactive className="mt-1 w-full max-w-[min(100%,580px)] gap-0 py-0 text-left [--card-spacing:0px]">
-    <button type="button" onClick={open} aria-label={`打开 ${canvas.title} Canvas`}>
+    <Button type="button" variant="ghost" className="h-auto w-full p-0" onClick={open} aria-label={`打开 ${canvas.title} Canvas`}>
       <CanvasPreview snapshot={live} title={canvas.title} frameCount={frameCount} />
-    </button>
+    </Button>
   </CardSurface>
 }
 
@@ -230,53 +232,54 @@ function BoardArtifactCard({ id: rawId }: { id: string }) {
   if (isBoardPending) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载看板卡片" />
 
   return (
-    <button
+    <Button
+      variant="outline"
       type="button"
       onClick={open}
-      className="mt-2 group block w-full max-w-[min(100%,580px)] text-left rounded-[12px] border border-ink-100 bg-cloud overflow-hidden transition hover:border-sky2-200 hover:shadow-[0_16px_34px_-24px_rgba(0,80,140,0.24)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky2-200"
+      className="mt-2 h-auto w-full max-w-[min(100%,580px)] justify-start overflow-hidden rounded-3xl border-border bg-card p-0 text-left hover:border-primary/30"
       aria-label={`Open board ${title}`}
     >
       <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] gap-3 px-3 py-3 items-center">
-        <div className="relative w-[52px] h-[64px] rounded-[9px] bg-white border border-sky2-100 shadow-[0_10px_24px_-22px_rgba(0,80,140,0.22)] overflow-hidden" aria-hidden>
-          <div className="h-2 bg-gradient-to-r from-sky2-200 via-sky2-100 to-sky2-100" />
+        <div className="relative h-16 w-[52px] overflow-hidden rounded-2xl border border-border bg-background shadow-sm" aria-hidden>
+          <div className="h-2 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/10" />
           <div className="grid grid-cols-3 gap-1 px-2 py-2 h-[46px]">
-            <span className="rounded bg-sky2-100" />
-            <span className="rounded bg-sky2-100" />
-            <span className="rounded bg-ink-100" />
+            <span className="rounded bg-primary/10" />
+            <span className="rounded bg-primary/10" />
+            <span className="rounded bg-muted" />
           </div>
-          <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-md grid place-items-center bg-skype-deep text-white shadow-sm">
+          <div className="absolute bottom-1.5 right-1.5 grid size-5 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
             <IBoard className="w-3 h-3" strokeWidth={1.8} />
           </div>
         </div>
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">看板</span>
-            <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-            <span className="text-[10.5px] text-ink-400 truncate">{id}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">看板</span>
+            <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
+            <span className="truncate text-[10.5px] text-muted-foreground">{id}</span>
           </div>
-          <div className="mt-1 text-[14px] font-semibold text-ink-900 truncate">{title}</div>
-          <div className="mt-1 flex items-center gap-1.5 min-w-0 text-[11.5px] text-ink-500">
+          <div className="mt-1 truncate text-sm font-semibold text-foreground">{title}</div>
+          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11.5px] text-muted-foreground">
             {columns !== null && <span>{columns} 列</span>}
-            {columns !== null && cards !== null && <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />}
+            {columns !== null && cards !== null && <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />}
             {cards !== null && <span>{cards} 卡</span>}
             {updated && (
               <>
-                <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
+                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
                 <span className="shrink-0">已更新 {timeAgo(updated)}</span>
               </>
             )}
           </div>
         </div>
 
-        <div className="ml-1 h-8 px-3 rounded-full bg-sky2-50 text-skype-deep text-[11.5px] font-semibold inline-flex items-center gap-1.5 transition group-hover:bg-skype-deep group-hover:text-white">
+        <div className="ms-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary/10 px-3 text-[11.5px] font-semibold text-primary">
           打开
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </div>
       </div>
-    </button>
+    </Button>
   )
 }
 
@@ -320,57 +323,58 @@ function CardArtifactCard({ id: rawId }: { id: string }) {
   if (!card && !failed) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载看板任务" />
 
   return (
-    <button
+    <Button
+      variant="outline"
       type="button"
       onClick={open}
-      className="mt-2 group block w-full max-w-[min(100%,580px)] text-left rounded-[12px] border border-ink-100 bg-cloud overflow-hidden transition hover:border-sky2-200 hover:shadow-[0_16px_34px_-24px_rgba(0,80,140,0.24)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky2-200"
+      className="mt-2 h-auto w-full max-w-[min(100%,580px)] justify-start overflow-hidden rounded-3xl border-border bg-card p-0 text-left hover:border-primary/30"
       aria-label={`Open card ${title}`}
     >
       <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] gap-3 px-3 py-3 items-center">
-        <div className="relative w-[52px] h-[64px] rounded-[9px] bg-white border border-sky2-100 shadow-[0_10px_24px_-22px_rgba(0,80,140,0.22)] overflow-hidden" aria-hidden>
-          <div className="h-2 bg-gradient-to-r from-sky2-200 via-sky2-100 to-cloud" />
+        <div className="relative h-16 w-[52px] overflow-hidden rounded-2xl border border-border bg-background shadow-sm" aria-hidden>
+          <div className="h-2 bg-gradient-to-r from-primary/40 via-primary/20 to-card" />
           <div className="px-2 py-2 space-y-1.5">
-            <span className="block h-1.5 rounded-full bg-ink-200 w-8" />
-            <span className="block h-1 rounded-full bg-sky2-100 w-7" />
-            <span className="block h-1 rounded-full bg-sky2-100 w-6" />
+            <span className="block h-1.5 w-8 rounded-full bg-muted" />
+            <span className="block h-1 w-7 rounded-full bg-primary/10" />
+            <span className="block h-1 w-6 rounded-full bg-primary/10" />
           </div>
-          <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-md grid place-items-center bg-skype-deep text-white shadow-sm">
+          <div className="absolute bottom-1.5 right-1.5 grid size-5 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
             <IBoard className="w-3 h-3" strokeWidth={1.8} />
           </div>
         </div>
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">看板卡</span>
-            <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-            <span className="text-[10.5px] text-ink-400 truncate">{id}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">看板卡</span>
+            <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
+            <span className="truncate text-[10.5px] text-muted-foreground">{id}</span>
           </div>
-          <div className="mt-1 text-[14px] font-semibold text-ink-900 truncate">{title}</div>
-          <div className="mt-1 flex items-center gap-1.5 min-w-0 text-[11.5px] text-ink-500">
+          <div className="mt-1 truncate text-sm font-semibold text-foreground">{title}</div>
+          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11.5px] text-muted-foreground">
             <span className="truncate">{location}</span>
             {assignee && (
               <>
-                <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
+                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
                 <span className="truncate">{assignee}</span>
               </>
             )}
             {updated && (
               <>
-                <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
+                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
                 <span className="shrink-0">已更新 {updated}</span>
               </>
             )}
           </div>
         </div>
 
-        <div className="ml-1 h-8 px-3 rounded-full bg-sky2-50 text-skype-deep text-[11.5px] font-semibold inline-flex items-center gap-1.5 transition group-hover:bg-skype-deep group-hover:text-white">
+        <div className="ms-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary/10 px-3 text-[11.5px] font-semibold text-primary">
           看
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </div>
       </div>
-    </button>
+    </Button>
   )
 }
 
@@ -401,19 +405,20 @@ function CalendarArtifactCard({ id: rawId }: { id: string }) {
   if (!event && !failed) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载日历事件" />
 
   return (
-    <button
+    <Button
+      variant="outline"
       type="button"
       onClick={() => openCalendarEventPeek(id)}
-      className="mt-2 group block w-full max-w-[min(100%,580px)] text-left rounded-[12px] border border-ink-100 bg-cloud overflow-hidden transition hover:border-sky2-200 hover:shadow-[0_16px_34px_-24px_rgba(0,168,240,0.20)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky2-200"
+      className="mt-2 h-auto w-full max-w-[min(100%,580px)] justify-start overflow-hidden rounded-3xl border-border bg-card p-0 text-left hover:border-primary/30"
       aria-label={`Open calendar event ${title}`}
     >
       <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] gap-3 px-3 py-3 items-center">
-        <div className="relative w-[52px] h-[64px] rounded-[9px] bg-white border border-sky2-100 shadow-[0_10px_24px_-22px_rgba(0,168,240,0.18)] overflow-hidden" aria-hidden>
-          <div className="h-2 bg-gradient-to-r from-sky2-200 via-sky2-100 to-cloud" />
+        <div className="relative h-16 w-[52px] overflow-hidden rounded-2xl border border-border bg-background shadow-sm" aria-hidden>
+          <div className="h-2 bg-gradient-to-r from-primary/40 via-primary/20 to-card" />
           <div className="px-2 py-2">
-            <span className="block text-[18px] leading-none font-semibold text-skype-deep">{start?.getDate() ?? '-'}</span>
-            <span className="mt-1 block h-1 rounded-full bg-sky2-100 w-8" />
-            <span className="mt-1.5 block h-1 rounded-full bg-ink-100 w-6" />
+            <span className="block text-lg font-semibold leading-none text-primary">{start?.getDate() ?? '-'}</span>
+            <span className="mt-1 block h-1 w-8 rounded-full bg-primary/10" />
+            <span className="mt-1.5 block h-1 w-6 rounded-full bg-muted" />
           </div>
           <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-md grid place-items-center bg-skype text-white shadow-sm">
             <ICalendar className="w-3 h-3" strokeWidth={1.8} />
@@ -422,36 +427,36 @@ function CalendarArtifactCard({ id: rawId }: { id: string }) {
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-skype-deep">日历</span>
-            <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
-            <span className="text-[10.5px] text-ink-400 truncate">{id}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">日历</span>
+            <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
+            <span className="truncate text-[10.5px] text-muted-foreground">{id}</span>
           </div>
-          <div className="mt-1 text-[14px] font-semibold text-ink-900 truncate">{title}</div>
-          <div className="mt-1 flex items-center gap-1.5 min-w-0 text-[11.5px] text-ink-500">
+          <div className="mt-1 truncate text-sm font-semibold text-foreground">{title}</div>
+          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11.5px] text-muted-foreground">
             {startLabel && <span className="truncate">{startLabel}</span>}
             {event?.kind === 'agent_task' && assignee && (
               <>
-                <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
+                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
                 <span className="truncate">为 {assignee}</span>
               </>
             )}
             {event?.status && (
               <>
-                <span className="w-1 h-1 rounded-full bg-ink-200 shrink-0" />
+                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
                 <span className="shrink-0 capitalize">{event.status}</span>
               </>
             )}
           </div>
         </div>
 
-        <div className="ml-1 h-8 px-3 rounded-full bg-sky2-50 text-skype-deep text-[11.5px] font-semibold inline-flex items-center gap-1.5 transition group-hover:bg-skype group-hover:text-white">
+        <div className="ms-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary/10 px-3 text-[11.5px] font-semibold text-primary">
           打开
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </div>
       </div>
-    </button>
+    </Button>
   )
 }
 
@@ -513,24 +518,11 @@ export function EmailCard() {
   const isOut = e.direction === 'out'
   const isFailed = e.transportStatus === 'failed'
   const isQueued = e.transportStatus === 'queued'
-  // Parchment palette — distinct from the chat coral / sky bubble pair so
-  // an email reads as "different artifact, takes more attention" without
-  // being loud about it.
-  const ringColor = isFailed
-    ? 'rgba(196, 60, 50, 0.55)'
+  const directionTone = isFailed
+    ? 'bg-destructive/10 text-destructive'
     : isOut
-      ? 'rgba(0, 168, 240, 0.35)'
-      : 'rgba(120, 110, 95, 0.30)'
-  const dirChipBg = isFailed
-    ? 'var(--coral-soft)'
-    : isOut
-      ? 'var(--sky-100, #E1F3FD)'
-      : '#F4EEDD'
-  const dirChipColor = isFailed
-    ? '#B23A2A'
-    : isOut
-      ? 'var(--skype-deep)'
-      : '#7A6A3F'
+      ? 'bg-primary/10 text-primary'
+      : 'bg-secondary text-secondary-foreground'
   const recipients = [
     ...e.to.map((t) => ({ label: "至", value: t })),
     ...e.cc.map((c) => ({ label: "抄送", value: c })),
@@ -539,61 +531,56 @@ export function EmailCard() {
     <CardSurface
       variant={isFailed ? 'destructive' : 'parchment'}
       status={isFailed ? 'failed' : isQueued ? 'pending' : 'success'}
-      className="mt-1 max-w-[min(100%,640px)] overflow-hidden"
-      style={{
-        background: 'linear-gradient(180deg, #FBF8F0, #F4EEDD)',
-        border: `1px solid ${ringColor}`,
-        borderRadius: '14px',
-        boxShadow: '0 1px 0 rgba(0,0,0,0.02), 0 8px 20px -16px rgba(60, 50, 30, 0.18)',
-      }}
+      className={cn('mt-1 max-w-[min(100%,640px)] overflow-hidden rounded-3xl border bg-card shadow-sm', isFailed ? 'border-destructive/30' : isOut ? 'border-primary/30' : 'border-border')}
     >
-      <div className="px-4 pt-3 pb-2 border-b border-[rgba(120,110,95,0.18)]">
+      <div className="border-b border-border px-4 pb-2 pt-3">
         <div className="flex items-center gap-2 mb-1.5">
           <span
-            className="inline-flex items-center gap-1 text-[10px] font-bold py-0.5 px-1.5 rounded uppercase tracking-wider"
-            style={{ background: dirChipBg, color: dirChipColor }}
+            className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider', directionTone)}
           >
             <IMail className="w-3 h-3" strokeWidth={2} />
             {isFailed ? "失败" : isQueued ? "已排队" : isOut ? "已发送" : "已收到"}
           </span>
           {e.hasHtml && (
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               type="button"
               onClick={() => setShowHtml((v) => !v)}
               className={cn(
                 'text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded transition',
                 showHtml
-                  ? 'bg-[#7A6A3F] text-[#FBF8F0]'
-                  : 'text-ink-400 hover:text-ink-700 hover:bg-[rgba(120,110,95,0.10)]',
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
               aria-pressed={showHtml}
               title={showHtml ? "隐藏 HTML 版本" : "显示HTML版本"}
             >
               {showHtml ? "简单" : 'html'}
-            </button>
+            </Button>
           )}
           {e.smtpMessageId && (
             <span
-              className="ml-auto text-[10px] text-ink-300 font-mono truncate max-w-[180px]"
+              className="ms-auto max-w-[180px] truncate font-mono text-[10px] text-muted-foreground"
               title={e.smtpMessageId}
             >
               {e.smtpMessageId}
             </span>
           )}
         </div>
-        <div className="font-display font-medium text-[16px] leading-snug text-ink-900 break-words">
-          {e.subject || <span className="text-ink-400 italic">（无主题）</span>}
+        <div className="break-words text-base font-medium leading-snug text-foreground">
+          {e.subject || <span className="italic text-muted-foreground">（无主题）</span>}
         </div>
       </div>
-      <div className="px-4 py-2.5 text-[11.5px] text-ink-500 space-y-0.5 border-b border-[rgba(120,110,95,0.18)]">
+      <div className="space-y-0.5 border-b border-border px-4 py-2.5 text-[11.5px] text-muted-foreground">
         <div className="flex gap-2">
-          <span className="font-semibold w-7 shrink-0 text-ink-300 uppercase tracking-wider text-[10px] pt-0.5">来自</span>
-          <span className="text-ink-700 break-all">{e.from}</span>
+          <span className="w-7 shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">来自</span>
+          <span className="break-all text-foreground">{e.from}</span>
         </div>
         {recipients.length > 0 && recipients.map((r, i) => (
           <div key={i} className="flex gap-2">
-            <span className="font-semibold w-7 shrink-0 text-ink-300 uppercase tracking-wider text-[10px] pt-0.5">{r.label}</span>
-            <span className="text-ink-700 break-all">{r.value}</span>
+            <span className="w-7 shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{r.label}</span>
+            <span className="break-all text-foreground">{r.value}</span>
           </div>
         ))}
       </div>
@@ -603,7 +590,7 @@ export function EmailCard() {
             <div className="space-y-3 px-3 py-4" role="status" aria-label="正在加载邮件 HTML 内容"><Skeleton className="h-3 w-2/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-5/6" /><Skeleton className="h-24 w-full rounded-xl" /></div>
           )}
           {htmlError && (
-            <div className="px-3 py-3 text-[12px] text-coral-deep">
+            <div className="px-3 py-3 text-xs text-destructive">
               无法加载 html: {htmlError}
             </div>
           )}
@@ -612,12 +599,12 @@ export function EmailCard() {
           )}
         </div>
       ) : (
-        <div className="px-4 py-3 text-[14px] leading-[1.55] text-ink-700 break-words">
+        <div className="break-words px-4 py-3 text-sm leading-[1.55] text-foreground">
           <RichBody body={msg.body} conversationId={msg.conversationId} />
         </div>
       )}
       {e.attachments && e.attachments.length > 0 && (
-        <div className="px-4 py-2.5 border-t border-[rgba(120,110,95,0.18)] space-y-1">
+        <div className="space-y-1 border-t border-border px-4 py-2.5">
           {e.attachments.map((a) => (
             <EmailAttachmentRow key={a.id} att={a} />
           ))}
@@ -625,21 +612,22 @@ export function EmailCard() {
       )}
       {isFailed && e.transportError && (
         <div
-          className="px-4 py-2 text-[11.5px] text-coral-deep border-t border-[rgba(196,60,50,0.25)]"
-          style={{ background: 'rgba(196, 60, 50, 0.06)' }}
+          className="border-t border-destructive/20 bg-destructive/10 px-4 py-2 text-[11.5px] text-destructive"
         >
           发送失败： {e.transportError}
         </div>
       )}
-      <div className="flex items-center gap-2 px-4 py-2 border-t border-[rgba(120,110,95,0.18)]">
-        <button
+      <div className="flex items-center gap-2 border-t border-border px-4 py-2">
+        <Button
+          variant="outline"
+          size="sm"
           type="button"
           onClick={() => openComposeReply(msg.id)}
-          className="inline-flex items-center gap-1.5 py-1.5 px-3 text-[11.5px] font-semibold text-ink-700 bg-cloud border border-ink-100 rounded-[7px] hover:border-sky2-200 hover:text-skype-deep transition"
+          className="text-[11.5px]"
         >
           <IMail className="w-3.5 h-3.5" strokeWidth={2} />
           回复
-        </button>
+        </Button>
       </div>
     </CardSurface>
   )
