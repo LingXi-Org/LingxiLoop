@@ -183,8 +183,15 @@ const agentControlApplication = await read(resolve('server/src/agent-os/control-
 if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(agentControlApplication)) {
   violations.push('server/src/agent-os/control-application.ts: Agent control use cases bypass control-repository.ts')
 }
-if (/agent-os\/(?:control-application|control-repository)\.js/.test(imRouter)) {
+const agentApprovalApplication = await read(resolve('server/src/agent-os/approval-application.ts'))
+if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(agentApprovalApplication)) {
+  violations.push('server/src/agent-os/approval-application.ts: Agent approval use cases bypass approval-repository.ts')
+}
+if (/agent-os\/(?:approval|control)-(?:application|repository)\.js/.test(imRouter)) {
   violations.push('server/src/im/router.ts: Agent OS access must use agent-os/public.ts')
+}
+if (/from ['"][^'"]*db\/|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(imRouter)) {
+  violations.push('server/src/im/router.ts: IM router must not own SQL or database infrastructure')
 }
 const metricsSource = await read(resolve('server/src/metrics.ts'))
 if (/['"]email\.send\.(?:ok|fail)['"]\s*:\s*\{[^}]*labels:\s*\[[^\]]*mock/s.test(metricsSource)) {

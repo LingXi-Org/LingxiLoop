@@ -1,13 +1,9 @@
 import { createHmac } from 'node:crypto'
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import type { AuthedRequest } from '../auth.js'
-import { pool } from '../db/pool.js'
-import { executeActionWithLedger } from '../agent-os/control-plane.js'
-import { agentControlApplication } from '../agent-os/public.js'
-import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
+import { agentApprovalApplication, agentControlApplication } from '../agent-os/public.js'
 import { wukongClient } from './wukong.js'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
-import { assertTeacherApprovalFresh } from '../modules/learning/runtime.js'
 import { assertTeacherRoomAccessible } from '../modules/learning/public.js'
 import { imAccessApplication } from './access-facade.js'
 import { imChannelsApplication } from './channels-facade.js'
@@ -169,149 +165,19 @@ imRouter.get('/channels/:id/read-receipts', safe(async (req, res) => {
 
 imRouter.get('/approvals', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
-  const { rows } = await pool.query(
-    `SELECT a.* FROM agent_os_approvals a JOIN conversations c ON c.id=a.channel_id
-      WHERE a.company_id=$1 AND c.members @> to_jsonb(ARRAY[$2::text])
-        AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=a.channel_id)
-          OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr
-            JOIN courses course ON course.id=tr.course_id AND course.company_id=tr.company_id
-            JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-            JOIN course_members cm ON cm.course_id=course.id AND cm.company_id=course.company_id
-              AND cm.user_id=$2 AND cm.role='teacher'
-            WHERE tr.conversation_id=a.channel_id AND tr.company_id=a.company_id
-              AND tr.status='active' AND project.status='active'))
-      ORDER BY a.requested_at DESC LIMIT 100`,
-    [companyId, userId],
-  )
-  res.json(rows)
+  res.json(await agentApprovalApplication.list({ companyId, userId }))
 }))
 
 imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const approved = req.body?.approved === true
-  const client = await pool.connect()
-  let approval: {
-    id: string; agent_id: string; channel_id: string; work_id: string; idempotency_key: string
-    action: string; args: unknown; status: string; run_id: string; cell_id: string; call_index: number
-    summary: string; requested_at: string; requested_by: string | null; scope: Record<string,unknown>; preview: Record<string,unknown>
-  }
-  try {
-    await client.query('BEGIN')
-    const { rows } = await client.query<typeof approval>(
-      `SELECT a.id, a.agent_id, a.channel_id, a.work_id, a.idempotency_key, a.action, a.args, a.status,
-              a.summary,a.requested_at,a.requested_by,a.scope,a.preview,
-              h.run_id, h.cell_id, h.call_index
-         FROM agent_os_approvals a
-         JOIN agent_host_actions h ON h.idempotency_key = a.idempotency_key
-         JOIN conversations c ON c.id = a.channel_id
-        WHERE a.id=$1 AND a.company_id=$2 AND c.members @> to_jsonb(ARRAY[$3::text])
-          AND (NOT EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr WHERE tr.conversation_id=a.channel_id)
-            OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms tr
-              JOIN courses course ON course.id=tr.course_id AND course.company_id=tr.company_id
-              JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-              JOIN course_members cm ON cm.course_id=course.id AND cm.company_id=course.company_id
-                AND cm.user_id=$3 AND cm.role='teacher'
-              WHERE tr.conversation_id=a.channel_id AND tr.company_id=a.company_id
-                AND tr.status='active' AND project.status='active'))
-        FOR UPDATE OF a`, [req.params.id, companyId, userId],
-    )
-    if (!rows[0]) { await client.query('ROLLBACK'); res.status(404).json({ error: 'approval not found' }); return }
-    approval = rows[0]
-    const requestedStatus = approved ? 'approved' : 'rejected'
-    if (approval.status !== 'pending' && approval.status !== requestedStatus) {
-      await client.query('ROLLBACK'); res.status(409).json({ error: `approval already ${approval.status}` }); return
-    }
-    const approvalTtlMs=Math.max(60_000,Number(process.env.AGENT_OS_APPROVAL_TTL_MS??24*60*60_000))
-    if(approval.status==='pending'&&approved&&Date.now()-new Date(approval.requested_at).getTime()>approvalTtlMs){
-      const message='approval expired; request a fresh operation preview'
-      await client.query(`UPDATE agent_os_approvals SET status='expired',resolved_at=NOW(),resolved_by=$2,error=$3 WHERE id=$1`,[approval.id,userId,message])
-      await client.query('COMMIT')
-      res.status(409).json({error:message,status:'expired'})
-      return
-    }
-    if (approval.status === 'pending' && approved && approval.action.startsWith('teacher.')) {
-      try {
-        await assertTeacherApprovalFresh({ channelId: approval.channel_id, companyId, action: approval.action, preview: approval.preview ?? {} }, client)
-      } catch (error) {
-        const message=error instanceof Error?error.message:String(error)
-        await client.query(`UPDATE agent_os_approvals SET status='expired',resolved_at=NOW(),resolved_by=$2,error=$3 WHERE id=$1`,[approval.id,userId,message])
-        await client.query('COMMIT')
-        res.status(409).json({error:message,status:'expired'})
-        return
-      }
-    }
-    if (approval.status === 'pending') {
-      await client.query(
-        `UPDATE agent_os_approvals SET status=$2, resolved_at=NOW(), resolved_by=$3 WHERE id=$1`,
-        [approval.id, requestedStatus, userId],
-      )
-    }
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => undefined)
-    throw error
-  } finally { client.release() }
-
-  let result: unknown = { approved: false }
-  let error: string | null = null
-  const {rows:source}=await pool.query<{
-    company_id:string;agent_id:string;channel_id:string;thread_root_client_msg_no:string|null;trigger_client_msg_no:string;
-    reason:AgentWorkItem['reason'];fence:string;execution_role:AgentWorkItem['executionRole']
-  }>(`SELECT company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,fence,execution_role FROM agent_work_items WHERE id=$1`,[approval.work_id])
-  if(!source[0]) throw new Error('approval source work missing')
-  const sourceExecutionRole=source[0].execution_role
-  if (approved) {
-    const work: AgentWorkItem = {
-      id: approval.work_id, companyId: source[0].company_id, agentId: source[0].agent_id,
-      channelId: source[0].channel_id, triggerClientMsgNo: `approval:${approval.id}`,
-      reason: 'resume', lane: 'approval', fence: Number(source[0].fence), leaseToken: 'approval-resolution',
-      executionRole: source[0].execution_role,
-      ...(source[0].thread_root_client_msg_no ? { threadRootClientMsgNo: source[0].thread_root_client_msg_no } : {}),
-    }
-    const action: HostAction = {
-      runId: approval.run_id, cellId: approval.cell_id, callIndex: approval.call_index,
-      action: approval.action, args: approval.args, idempotencyKey: approval.idempotency_key,
-    }
-    const executed = await executeActionWithLedger(work, action, true)
-    result = executed.value
-    error = executed.error ?? null
-    await pool.query(`UPDATE agent_os_approvals SET result=$2::jsonb, error=$3 WHERE id=$1`, [approval.id, result === undefined ? null : JSON.stringify(result), error])
-  }
-  const { rows: channelRows } = await pool.query<{ profile: Record<string, unknown> }>(
-    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`,
-    [approval.channel_id, companyId],
-  )
-  await wukongClient().sendMessage(
-    approval.channel_id,
-    Number(channelRows[0]?.profile.channelType ?? 2),
-    approval.agent_id,
-    {
-      version: 1, kind: 'approval', clientMsgNo: `approval-${approval.id}:resolved`,
-      body: approved ? 'Approval granted' : 'Approval denied',
-      refs: { approvalId: approval.id, agentId: approval.agent_id },
-      data: {
-        id: approval.id, agentId: approval.agent_id,
-        kind: approval.action.startsWith('email.') ? 'external_communication' : String(approval.scope?.risk??'sensitive_or_destructive_action'),
-        summary: approval.summary,
-        status: approved ? 'approved' : 'rejected', payload: { action: approval.action, args: approval.args },
-        requestedAt: approval.requested_at, resolvedAt: new Date().toISOString(), resolvedBy: userId,
-        requestedBy: approval.requested_by, scope: approval.scope, preview: approval.preview, error,
-        suppressAgentWake: true,
-      },
-    },
-  ).catch(() => undefined)
-  // Resolution is itself replayable: a crash after the decision commit (or
-  // after the approved side effect) can safely repeat this request. The Host
-  // Action ledger and its sink key recover the action, while this stable work
-  // id recovers the continuation without creating a second run.
-  const resumeId = `resume-${approval.id}`
-  await pool.query(
-    `INSERT INTO agent_work_items (id, company_id, agent_id, channel_id, trigger_client_msg_no, reason, priority,execution_role)
-     VALUES ($1,$2,$3,$4,$5,'resume',200,$6)
-     ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING`,
-    [resumeId, companyId, approval.agent_id, approval.channel_id, `approval:${approval.id}`,sourceExecutionRole],
-  )
-  res.json({ ok: error === null, approved, result, error })
+  const result = await agentApprovalApplication.resolve({
+    approvalId: String(req.params.id), companyId, userId, approved,
+  })
+  if (result.kind === 'not_found') { res.status(404).json({ error: 'approval not found' }); return }
+  if (result.kind === 'conflict') { res.status(409).json({ error: `approval already ${result.status}` }); return }
+  if (result.kind === 'expired') { res.status(409).json({ error: result.error, status: 'expired' }); return }
+  res.json({ ok: result.ok, approved: result.approved, result: result.result, error: result.error })
 }))
 
 imRouter.get('/routines', safe(async (req, res) => {

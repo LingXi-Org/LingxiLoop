@@ -15,12 +15,23 @@ function required(name: string): string {
   }
   return v
 }
+function numberAtLeast(name: string, fallback: number, minimum: number): number {
+  const raw = process.env[name]?.trim()
+  if (!raw) return fallback
+  const value = Number(raw)
+  if (!Number.isFinite(value) || value < minimum) {
+    console.error(`[env] ${name} must be a finite number >= ${minimum}`)
+    process.exit(1)
+  }
+  return value
+}
 const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || 'gpt-5-mini'
 export const env = {
   PORT: Number(process.env.PORT ?? 5181),
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   APP_VERSION: process.env.LINGXILOOP_VERSION?.trim() || '0.0.0-dev',
   COMMIT_SHA: process.env.LINGXILOOP_COMMIT_SHA?.trim() || 'dev',
+  AGENT_OS_APPROVAL_TTL_MS: numberAtLeast('AGENT_OS_APPROVAL_TTL_MS', 24 * 60 * 60_000, 60_000),
   DATABASE_URL: required('DATABASE_URL'),
   REDIS_URL: required('REDIS_URL'),
   OPENAI_API_KEY: required('OPENAI_API_KEY'),
