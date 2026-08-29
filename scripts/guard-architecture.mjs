@@ -196,6 +196,19 @@ if (/from ['"][^'"]*db\/|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|U
 if (/\b(?:process\.env|wukongClient\s*\()/.test(imRouter)) {
   violations.push('server/src/im/router.ts: IM router must use session and capability facades')
 }
+const wukongWebhookRouter = await read(resolve('server/src/im/webhook.ts'))
+const wukongWebhookApplication = await read(resolve('server/src/im/webhook-application.ts'))
+if (/from ['"][^'"]*db\/|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b|wukongClient\s*\(/i.test(wukongWebhookRouter)) {
+  violations.push('server/src/im/webhook.ts: WuKong webhook router must only verify, parse, and map HTTP')
+}
+if (/from ['"][^'"]*db\/(?:pool|transaction)\.js['"]|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(wukongWebhookApplication)) {
+  violations.push('server/src/im/webhook-application.ts: WuKong webhook use cases bypass webhook-repository.ts')
+}
+for (const configFile of ['.env.example', '.env.local.example', 'docker-compose.mvp.yml', 'docker-compose.mvp.ci.yml', 'docker-compose.production.yml']) {
+  if (/WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL/.test(await read(resolve(configFile)))) {
+    violations.push(`${configFile}: unsigned WuKong webhook fallback is forbidden`)
+  }
+}
 const metricsSource = await read(resolve('server/src/metrics.ts'))
 if (/['"]email\.send\.(?:ok|fail)['"]\s*:\s*\{[^}]*labels:\s*\[[^\]]*mock/s.test(metricsSource)) {
   violations.push('server/src/metrics.ts: retired email mock dimension is forbidden')
@@ -257,7 +270,7 @@ for (const file of server) {
   }
   if (/\bnew\s+OpenAI\s*\(/.test(source) && fileName !== 'server/src/llm-client.ts') violations.push(`${fileName}: OpenAI construction bypasses llm-client.ts`)
   if (/\bnew\s+S3Client\s*\(/.test(source) && fileName !== 'server/src/storage.ts') violations.push(`${fileName}: object storage construction bypasses storage.ts`)
-  if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|EMAIL_INBOUND_HMAC_SECRET|SUB2API|DEEPSEEK_API_KEY|DISCORD_ALERT_WEBHOOK_URL/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)
+  if (/x-lingxiloop-dev-mode|EMAIL_MOCK_FAIL_RATE|EMAIL_INBOUND_HMAC_SECRET|WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL|SUB2API|DEEPSEEK_API_KEY|DISCORD_ALERT_WEBHOOK_URL/.test(source)) violations.push(`${fileName}: retired production switch is forbidden`)
   if (/agent-gender|agent-avatar|generateAndPersistAvatar|visualSignatureFor|cmdAvatar\b|\/avatar\/generate/.test(source)) violations.push(`${fileName}: agent portraits are retired; agents use Bloub`)
   if (/participants\.avatar/.test(source)) violations.push(`${fileName}: retired participant avatar event is forbidden`)
   if (/\/devtools\//.test(source) || /api\.post\(['"]\/uploads['"]/.test(source) || /sources\/upload['"]/.test(source)) violations.push(`${fileName}: retired endpoint is forbidden`)

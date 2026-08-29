@@ -189,7 +189,6 @@ services:
       WUKONG_WS_URL: ws://localhost:5200
       WUKONG_API_TOKEN: ci-wukong-api-token
       WUKONG_WEBHOOK_SECRET: ci-wukong-webhook-secret
-      WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
       OPEN_NOTEBOOK_ENABLED: "true"
       OPEN_NOTEBOOK_URL: http://open-notebook:5055
       OPEN_NOTEBOOK_PASSWORD: ci-open-notebook-password

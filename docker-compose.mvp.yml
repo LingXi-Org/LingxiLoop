@@ -157,7 +157,6 @@ services:
       WUKONG_API_TOKEN: ${WUKONG_API_TOKEN:-dev-wukong-api-token}
       WUKONG_WEBHOOK_SECRET: ${WUKONG_WEBHOOK_SECRET:-dev-wukong-webhook-secret}
       WUKONG_USER_TOKEN_SECRET: ${WUKONG_USER_TOKEN_SECRET:?WUKONG_USER_TOKEN_SECRET is required in .env}
-      WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
       OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required in .env}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
