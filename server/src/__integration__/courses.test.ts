@@ -58,7 +58,7 @@ after(async () => {
 })
 
 async function seedCompany(companyId = 'co-courses'): Promise<void> {
-  await pool.query(`INSERT INTO companies (id,name,slug) VALUES ($1,'Course test',$1)`, [companyId])
+  await pool.query(`INSERT INTO companies (id,name,slug,type,plan_id) VALUES ($1,'Course test',$1,'EDUCATION','plan-personal-free')`, [companyId])
   await seedUserMembership(OWNER, companyId, { email: 'owner@test.local', displayName: 'Owner' })
   await pool.query(
     `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
-import { FOUNDATION_PLAN } from '../domain/entitlement/public.js'
+import { PERSONAL_FREE_PLAN } from '../domain/entitlement/public.js'
 import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 const USER = 'u-domain-foundation'
@@ -28,9 +28,9 @@ beforeEach(async () => {
     [USER, SECOND_USER],
   )
   await pool.query(
-    `INSERT INTO companies (id,name,slug) VALUES
-       ($1,'Domain A','domain-a'),
-       ($2,'Domain B','domain-b')`,
+    `INSERT INTO companies (id,name,slug,type,plan_id) VALUES
+       ($1,'Domain A','domain-a','EDUCATION','plan-personal-free'),
+       ($2,'Domain B','domain-b','EDUCATION','plan-personal-free')`,
     [COMPANY_A, COMPANY_B],
   )
   await pool.query(
@@ -133,16 +133,16 @@ test('[integration] plans support inheritance and only scalar entitlement values
     `SELECT plan_id FROM companies WHERE id=$1`,
     [COMPANY_A],
   )
-  assert.equal(company.rows[0]?.plan_id, FOUNDATION_PLAN.id)
+  assert.equal(company.rows[0]?.plan_id, PERSONAL_FREE_PLAN.id)
 
-  await pool.query(`UPDATE projects SET plan_id=$1 WHERE id=$2`, [FOUNDATION_PLAN.id, PROJECT_A_TEACHER])
+  await pool.query(`UPDATE projects SET plan_id=$1 WHERE id=$2`, [PERSONAL_FREE_PLAN.id, PROJECT_A_TEACHER])
   const projects = await pool.query<{ id: string; plan_id: string | null }>(
     `SELECT id,plan_id FROM projects WHERE id IN ($1,$2) ORDER BY id`,
     [PROJECT_A_STUDENT, PROJECT_A_TEACHER],
   )
   assert.deepEqual(projects.rows, [
     { id: PROJECT_A_STUDENT, plan_id: null },
-    { id: PROJECT_A_TEACHER, plan_id: FOUNDATION_PLAN.id },
+    { id: PROJECT_A_TEACHER, plan_id: PERSONAL_FREE_PLAN.id },
   ])
 
   await pool.query(
@@ -154,14 +154,14 @@ test('[integration] plans support inheritance and only scalar entitlement values
     `INSERT INTO plan_entitlements (plan_id,entitlement_id,value) VALUES
        ($1,'ent-domain-enabled','true'::jsonb),
        ($1,'ent-domain-limit','20'::jsonb)`,
-    [FOUNDATION_PLAN.id],
+    [PERSONAL_FREE_PLAN.id],
   )
   const values = await pool.query<{ code: string; kind: string }>(
     `SELECT entitlement.code,jsonb_typeof(link.value) AS kind
        FROM plan_entitlements link
        JOIN entitlements entitlement ON entitlement.id=link.entitlement_id
       WHERE link.plan_id=$1 ORDER BY entitlement.code`,
-    [FOUNDATION_PLAN.id],
+    [PERSONAL_FREE_PLAN.id],
   )
   assert.deepEqual(values.rows, [
     { code: 'domain.enabled', kind: 'boolean' },
@@ -176,7 +176,7 @@ test('[integration] plans support inheritance and only scalar entitlement values
     pool.query(
       `INSERT INTO plan_entitlements (plan_id,entitlement_id,value)
        VALUES ($1,'ent-domain-invalid',$2::jsonb)`,
-      [FOUNDATION_PLAN.id, JSON.stringify({ enabled: true })],
+      [PERSONAL_FREE_PLAN.id, JSON.stringify({ enabled: true })],
     ),
     (error) => pgCode(error) === '23514',
   )

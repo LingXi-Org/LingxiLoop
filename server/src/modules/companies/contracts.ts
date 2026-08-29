@@ -1,10 +1,6 @@
 import { z } from 'zod'
 import type { CompanyRole, CompanyRoleWire } from '../../domain/access/public.js'
 
-export const createCompanyRequestSchema = z.object({
-  name: z.string().trim().min(1, 'name required').max(80),
-}).strict()
-
 export const updateCompanyRequestSchema = z.object({
   name: z.string().trim().min(1, 'name required').max(80).optional(),
   description: z.string().trim().max(1000).optional(),
@@ -23,7 +19,6 @@ export const createInvitationRequestSchema = z.object({
   sendEmail: z.boolean().optional(),
 }).strict()
 
-export type CreateCompanyInput = z.infer<typeof createCompanyRequestSchema>
 export type UpdateCompanyInput = z.infer<typeof updateCompanyRequestSchema>
 export type CreateInvitationInput = z.infer<typeof createInvitationRequestSchema>
 

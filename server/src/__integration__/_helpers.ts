@@ -18,7 +18,7 @@ import { Webhook } from 'svix'
 import { assertV1SchemaReady } from '../db/bootstrap.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import { ensureFoundationPlan } from '../modules/entitlements/public.js'
+import { ensurePersonalFreePlan } from '../modules/entitlements/public.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 import type { InboundEmailPayload } from '../modules/email/contracts.js'
 import { installStorageProvider, type Storage, type StorageObject } from '../storage.js'
@@ -164,7 +164,7 @@ export async function resetAllTables(): Promise<void> {
   await ensureSchemaOnce()
   storageObjects.clear()
   await pool.query(`TRUNCATE TABLE ${TABLES_TO_WIPE.join(', ')} CASCADE`)
-  await ensureFoundationPlan(pool)
+  await ensurePersonalFreePlan(pool)
 }
 
 export function signInboundPayload(body: string): Record<string, string> {
@@ -203,8 +203,8 @@ export async function seedCompanyWithAgent(opts?: {
      ON CONFLICT (id) DO NOTHING`,
   )
   await pool.query(
-    `INSERT INTO companies (id, name, slug)
-     VALUES ($1, $2, $3)
+    `INSERT INTO companies (id, name, slug, type, plan_id)
+     VALUES ($1, $2, $3, 'EDUCATION', 'plan-personal-free')
      ON CONFLICT DO NOTHING`,
     [companyId, `Test ${companyId}`, companyId],
   )

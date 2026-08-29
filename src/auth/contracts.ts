@@ -20,7 +20,7 @@ export interface ServerCapabilities {
 export interface AuthMeResponse {
   user: AuthUser & { emailVerified: boolean; providers: string[] }
   companies: AuthCompany[]
-  activeCompanyId: string | null
+  activeCompanyId: string
   serverCapabilities: ServerCapabilities
 }
 

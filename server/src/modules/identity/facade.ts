@@ -3,8 +3,8 @@ import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
 import { mirrorTrustedIdentityAvatar } from './avatar-facade.js'
 import {
-  finalizeCompanyStarterWorkspace,
-  provisionPersonalCompany,
+  onboardCompanyStarterWorkspace,
+  provisionPersonalWorkspace,
 } from '../companies/public.js'
 import {
   consumeIdentityState,
@@ -33,8 +33,12 @@ const oauthApplication = new OAuthApplication({
   transaction: (work) => withTransaction(pool, work),
   fetchProfile: fetchIdentityProfile,
   mirrorAvatar: mirrorTrustedIdentityAvatar,
-  provisionCompany: provisionPersonalCompany,
-  finalizeCompany: finalizeCompanyStarterWorkspace,
+  provisionWorkspace: provisionPersonalWorkspace,
+  finalizeWorkspace: async (companyId) => {
+    await onboardCompanyStarterWorkspace(companyId).catch((error: unknown) => {
+      console.warn(`[identity] Personal Workspace onboarding deferred: ${error instanceof Error ? error.message : String(error)}`)
+    })
+  },
   createLoginSession,
   audit,
   defaultDoneUrl: env.AUTH_DONE_URL,

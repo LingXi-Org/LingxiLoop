@@ -3,16 +3,17 @@ import { createHash } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
+import { withTransaction } from '../db/transaction.js'
+import { provisionPersonalWorkspace } from '../modules/companies/public.js'
 import {
   buildApiTestApp,
   ensureSchemaOnce,
   resetAllTables,
-  seedUserMembership,
   teardownAll,
 } from './_helpers.js'
 
 const USER_ID = 'u-identity-slice'
-const COMPANY_ID = 'co-identity-slice'
+let companyId = ''
 let server: Server
 let baseUrl = ''
 
@@ -30,19 +31,24 @@ before(async () => {
 
 beforeEach(async () => {
   await resetAllTables()
-  await pool.query(
-    `INSERT INTO companies (id, name, slug)
-     VALUES ($1, 'Identity Slice', 'identity-slice')`,
-    [COMPANY_ID],
-  )
-  await seedUserMembership(USER_ID, COMPANY_ID, {
-    email: 'identity@example.com',
-    displayName: 'Identity User',
+  const provisioned = await withTransaction(pool, async (db) => {
+    await db.query(
+      `INSERT INTO users (id,email,display_name,email_verified_at)
+       VALUES ($1,'identity@example.com','Identity User',NOW())`,
+      [USER_ID],
+    )
+    await db.query(
+      `INSERT INTO user_identities (provider, provider_id, user_id, email_lower)
+       VALUES ('lingxi', 'identity-provider-user', $1, 'identity@example.com')`,
+      [USER_ID],
+    )
+    return provisionPersonalWorkspace(db, USER_ID)
   })
+  companyId = provisioned.companyId
   await pool.query(
-    `INSERT INTO user_identities (provider, provider_id, user_id, email_lower)
-     VALUES ('lingxi', 'identity-provider-user', $1, 'identity@example.com')`,
-    [USER_ID],
+    `INSERT INTO participants (id,kind,name,initial,avatar_bg,status,company_id)
+     VALUES ($1,'human','Identity User','I','#FF8870','avail',$2)`,
+    [USER_ID, companyId],
   )
 })
 
@@ -53,13 +59,17 @@ test('[integration] identity snapshot is assembled by the application boundary',
   assert.equal(response.status, 200)
   const payload = await response.json() as {
     user: { id: string; providers: string[] }
-    companies: Array<{ id: string; role: string }>
-    activeCompanyId: string | null
+    companies: Array<{ id: string; name: string; slug: string; role: string }>
+    activeCompanyId: string
   }
   assert.equal(payload.user.id, USER_ID)
   assert.deepEqual(payload.user.providers, ['lingxi'])
-  assert.deepEqual(payload.companies, [{ id: COMPANY_ID, name: 'Identity Slice', slug: 'identity-slice', role: 'owner' }])
-  assert.equal(payload.activeCompanyId, COMPANY_ID)
+  assert.equal(payload.companies.length, 1)
+  assert.equal(payload.companies[0]?.id, companyId)
+  assert.equal(payload.companies[0]?.name, "Identity User's workspace")
+  assert.match(payload.companies[0]?.slug ?? '', /^identity-/)
+  assert.equal(payload.companies[0]?.role, 'owner')
+  assert.equal(payload.activeCompanyId, companyId)
 })
 
 test('[integration] account deletion atomically scrubs identity and access rows', async () => {
@@ -89,7 +99,7 @@ test('[integration] account deletion atomically scrubs identity and access rows'
   }
   const participant = await pool.query<{ departed_at: Date | null }>(
     `SELECT departed_at FROM participants WHERE id = $1 AND company_id = $2`,
-    [USER_ID, COMPANY_ID],
+    [USER_ID, companyId],
   )
   assert.ok(participant.rows[0]?.departed_at)
 })

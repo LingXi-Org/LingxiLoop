@@ -12,10 +12,6 @@ import type {
 export const companiesApi = {
   listCompanies: () =>
     http<CompanySummary[]>('/companies'),
-  createCompany: (name: string) =>
-    http<{ id: string; name: string; slug: string; role: string }>('/companies', {
-      method: 'POST', body: JSON.stringify({ name }),
-    }),
   getCompany: (companyId: string) => http<ApiCompanyProfile>(`/companies/${encodeURIComponent(companyId)}`),
   updateCompany: (companyId: string, input: { name?: string; description?: string }) =>
     http<ApiCompanyProfile>(`/companies/${encodeURIComponent(companyId)}`, { method: 'PATCH', body: JSON.stringify(input) }),

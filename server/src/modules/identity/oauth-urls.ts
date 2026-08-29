@@ -1,6 +1,5 @@
-export function identityDoneUrl(base: string, token: string, companyId: string | null): string {
-  const fragment = new URLSearchParams({ token })
-  if (companyId) fragment.set('companyId', companyId)
+export function identityDoneUrl(base: string, token: string, companyId: string): string {
+  const fragment = new URLSearchParams({ token, companyId })
   return `${base}#${fragment.toString()}`
 }
 

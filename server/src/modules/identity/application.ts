@@ -189,6 +189,10 @@ export class IdentityApplication {
     if (!user) {
       throw new IdentityApplicationError('session_user_missing', 'session points to missing user')
     }
+    const personalCompany = companies.find((company) => company.type === 'PERSONAL')
+    if (!personalCompany) {
+      throw new IdentityApplicationError('session_user_missing', 'Personal Context invariant violated')
+    }
     return {
       user: {
         id: user.id,
@@ -197,8 +201,8 @@ export class IdentityApplication {
         emailVerified: user.email_verified_at !== null,
         providers,
       },
-      companies,
-      activeCompanyId: companies[0]?.id ?? null,
+      companies: companies.map(({ type: _type, ...company }) => company),
+      activeCompanyId: personalCompany.id,
       serverCapabilities: { invitationEmail: this.infrastructure.invitationEmailEnabled },
     }
   }

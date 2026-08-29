@@ -19,7 +19,7 @@ before(ensureSchemaOnce)
 beforeEach(async () => {
   await resetAllTables()
   await pool.query(
-    `INSERT INTO companies (id,name,slug) VALUES ($1,'Document mention',$1)`,
+    `INSERT INTO companies (id,name,slug,type,plan_id) VALUES ($1,'Document mention',$1,'EDUCATION','plan-personal-free')`,
     [COMPANY],
   )
   await seedUserMembership(MENTIONER, COMPANY, { displayName: 'Lee' })

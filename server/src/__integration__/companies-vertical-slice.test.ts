@@ -21,8 +21,6 @@ const hash = (token: string) => createHash('sha256').update(token).digest('hex')
 const application = new CompanyApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
   auditInTransaction: async (_db, entry) => { audits.push({ kind: entry.kind, companyId: entry.companyId }) },
-  installCompany: async () => false,
-  finalizeCompany: async () => undefined,
   syncChannel: async () => {
     if (syncFailuresRemaining > 0) {
       syncFailuresRemaining -= 1
@@ -52,9 +50,9 @@ beforeEach(async () => {
     [OWNER, MEMBER, SECOND, FOREIGN_MEMBER],
   )
   await pool.query(
-    `INSERT INTO companies (id,name,slug) VALUES
-       ($1,'Company Slice','company-slice'),
-       ($2,'Foreign Company','foreign-company')`,
+    `INSERT INTO companies (id,name,slug,type,plan_id) VALUES
+       ($1,'Company Slice','company-slice','EDUCATION','plan-personal-free'),
+       ($2,'Foreign Company','foreign-company','EDUCATION','plan-personal-free')`,
     [COMPANY, FOREIGN_COMPANY],
   )
   await pool.query(
@@ -93,22 +91,6 @@ test('[integration] member removal disconnects immediately and retries IM reconc
   assert.equal(audits.filter((entry) => entry.kind === 'company_member_remove').length, 1)
 })
 after(async () => { await teardownAll() })
-
-test('[integration] company creation commits one tenant root and required General workspace', async () => {
-  const created = await application.createCompany(SECOND, { name: 'Strict Workspace' }, { ip: null, userAgent: null })
-  const root = await pool.query<{ owner_count: number; project_count: number; participant_count: number }>(
-    `SELECT (SELECT COUNT(*)::int FROM company_memberships
-              WHERE company_id=company.id AND user_id=$2 AND role='OWNER' AND status='ACTIVE') AS owner_count,
-            (SELECT COUNT(*)::int FROM projects WHERE company_id=company.id AND is_general=TRUE) AS project_count,
-            (SELECT COUNT(*)::int FROM participants WHERE company_id=company.id AND id=$2) AS participant_count
-       FROM companies company WHERE company.id=$1`,
-    [created.id, SECOND],
-  )
-  assert.equal(root.rows[0]?.owner_count, 1)
-  assert.equal(root.rows[0]?.project_count, 1)
-  assert.equal(root.rows[0]?.participant_count, 1)
-  assert.equal(audits.some((entry) => entry.kind === 'company_create' && entry.companyId === created.id), true)
-})
 
 test('[integration] company member mutation never crosses tenant ownership', async () => {
   await assert.rejects(

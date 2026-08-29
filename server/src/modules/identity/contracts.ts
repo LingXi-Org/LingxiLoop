@@ -45,6 +45,6 @@ export interface IdentityCompanyPayload {
 export interface IdentityMePayload {
   user: IdentityUserPayload
   companies: IdentityCompanyPayload[]
-  activeCompanyId: string | null
+  activeCompanyId: string
   serverCapabilities: { invitationEmail: boolean }
 }

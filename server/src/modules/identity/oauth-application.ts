@@ -16,19 +16,18 @@ interface CompletionResult {
   userId: string
   email: string
   displayName: string
-  companyId: string | null
-  installedCompany: boolean
+  companyId: string
 }
 
 interface OAuthApplicationDependencies {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   fetchProfile(provider: IdentityProvider, code: string): Promise<NormalizedIdentityProfile>
   mirrorAvatar(userId: string, providerUrl: string | null): Promise<string | null>
-  provisionCompany(
+  provisionWorkspace(
     db: Queryable,
-    input: { id: string; name: string; slug: string; userId: string; projectId: string },
-  ): Promise<boolean>
-  finalizeCompany(installed: boolean): Promise<void>
+    userId: string,
+  ): Promise<{ companyId: string; projectId: string; created: boolean }>
+  finalizeWorkspace(companyId: string): Promise<void>
   createLoginSession(
     userId: string,
     options: { ip?: string; ua?: string },
@@ -36,11 +35,9 @@ interface OAuthApplicationDependencies {
   ): Promise<{ token: string; expiresAt: Date }>
   audit(input: AuditInput): Promise<void>
   defaultDoneUrl: string
-  doneUrl(base: string, token: string, companyId: string | null): string
+  doneUrl(base: string, token: string, companyId: string): string
   suspendedUrl(base: string, email: string, reason: string | null): string
   userId(): string
-  companyId(): string
-  projectId(): string
 }
 
 class SuspendedIdentityError extends Error {
@@ -51,15 +48,6 @@ class SuspendedIdentityError extends Error {
 
 function isUniqueViolation(error: unknown): boolean {
   return Boolean(error && typeof error === 'object' && 'code' in error && error.code === '23505')
-}
-
-function personalSlug(email: string, companyId: string): string {
-  const base = (email.split('@')[0] || 'workspace')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 30) || 'workspace'
-  return `${base}-${companyId.replace(/^co-/, '').slice(0, 8)}`
 }
 
 export class OAuthApplication {
@@ -78,7 +66,7 @@ export class OAuthApplication {
       const result = await this.completeIdentity(args.provider, profile)
       const avatarUrl = await this.dependencies.mirrorAvatar(result.userId, profile.avatarUrl)
       await this.dependencies.transaction((db) => updateIdentityAvatar(db, result.userId, avatarUrl))
-      if (result.companyId) await this.dependencies.finalizeCompany(result.installedCompany)
+      await this.dependencies.finalizeWorkspace(result.companyId)
       const { token } = await this.dependencies.createLoginSession(
         result.userId,
         { ip: args.ip ?? undefined, ua: args.userAgent ?? undefined },
@@ -122,7 +110,7 @@ export class OAuthApplication {
       try {
         const result = await this.dependencies.transaction<CompletionResult>(async (db) => {
           const linkedUserId = await findLinkedIdentityUser(db, provider, profile.providerId)
-          if (linkedUserId) return this.finalize(db, linkedUserId, profile, false)
+          if (linkedUserId) return this.finalize(db, linkedUserId, profile)
 
           const emailUserId = await findActiveUserByEmail(db, profile.email)
           if (emailUserId) {
@@ -132,20 +120,13 @@ export class OAuthApplication {
               userId: emailUserId,
               email: profile.email,
             })
-            return this.finalize(db, authoritativeUserId, profile, false)
+            return this.finalize(db, authoritativeUserId, profile)
           }
 
           const userId = this.dependencies.userId()
           await insertIdentityUser(db, { userId, provider, profile })
-          const companyId = this.dependencies.companyId()
-          const installedCompany = await this.dependencies.provisionCompany(db, {
-            id: companyId,
-            name: `${profile.displayName}'s workspace`,
-            slug: personalSlug(profile.email, companyId),
-            userId,
-            projectId: this.dependencies.projectId(),
-          })
-          return this.finalize(db, userId, profile, installedCompany)
+          await this.dependencies.provisionWorkspace(db, userId)
+          return this.finalize(db, userId, profile)
         })
         return result
       } catch (error) {
@@ -159,7 +140,6 @@ export class OAuthApplication {
     db: Queryable,
     userId: string,
     profile: NormalizedIdentityProfile,
-    installedCompany: boolean,
   ): Promise<CompletionResult> {
     const finalized = await finalizeIdentityLogin(db, userId)
     if (finalized.suspendedAt) {
@@ -171,13 +151,10 @@ export class OAuthApplication {
       email: profile.email,
       displayName: profile.displayName,
       companyId: finalized.companyId,
-      installedCompany,
     }
   }
 }
 
 export const oauthIds = {
   userId: () => `u-${randomUUID().slice(0, 12)}`,
-  companyId: () => `co-${randomUUID().slice(0, 10)}`,
-  projectId: () => `general-${randomUUID().slice(0, 18)}`,
 }

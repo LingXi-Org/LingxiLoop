@@ -12,6 +12,7 @@ export interface IdentityCompanyRow {
   name: string
   slug: string
   role: string
+  type: 'PERSONAL' | 'EDUCATION'
 }
 
 export async function findIdentityUser(db: Queryable, userId: string): Promise<IdentityUserRow | null> {
@@ -27,11 +28,11 @@ export async function findIdentityUser(db: Queryable, userId: string): Promise<I
 
 export async function listIdentityCompanies(db: Queryable, userId: string): Promise<IdentityCompanyRow[]> {
   const { rows } = await db.query<IdentityCompanyRow>(
-    `SELECT company.id, company.name, company.slug, LOWER(member.role) AS role
+    `SELECT company.id, company.name, company.slug, LOWER(member.role) AS role, company.type
        FROM company_memberships member
        JOIN companies company ON company.id = member.company_id
-      WHERE member.user_id = $1 AND member.status='ACTIVE'
-      ORDER BY member.created_at ASC`,
+      WHERE member.user_id = $1 AND member.status='ACTIVE' AND company.status='ACTIVE'
+      ORDER BY CASE company.type WHEN 'PERSONAL' THEN 0 ELSE 1 END, member.created_at ASC`,
     [userId],
   )
   return rows

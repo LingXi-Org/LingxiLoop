@@ -7,10 +7,10 @@ export interface Plan {
   status: PlanStatus
 }
 
-export const FOUNDATION_PLAN = {
-  id: 'plan-foundation',
-  code: 'FOUNDATION',
-  name: 'Foundation',
+export const PERSONAL_FREE_PLAN = {
+  id: 'plan-personal-free',
+  code: 'PERSONAL_FREE',
+  name: 'Personal Free',
   status: 'ACTIVE',
 } as const satisfies Plan
 

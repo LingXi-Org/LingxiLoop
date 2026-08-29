@@ -50,7 +50,13 @@ the retained Eval, audit, metrics, health, Agent Run, and Tool Call evidence.
 
 ## Deferred work
 
-Personal Company migration for historical users, CompanyType, ProjectKind,
-Teacher Free, Education lifecycle, seats, payments, a Permission resolver,
-context-scoped learning state, and Workspace UI changes are not part of this
-foundation.
+Personal Context provisioning is now the only user-creation lifecycle: a new
+User receives one `PERSONAL` Company on `PERSONAL_FREE`, an active OWNER
+CompanyMembership, the default Project “我的学习”, and an active OWNER
+ProjectMembership in the same transaction. The database is reset-only, so
+there is no historical-user migration, compatibility bridge, or shared
+Personal Company.
+
+ProjectKind, Teacher Free, Education lifecycle, seats, payments, a Permission
+resolver, context-scoped learning state, and organization management UI remain
+deferred.

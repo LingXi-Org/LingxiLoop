@@ -5,7 +5,6 @@ import {
   type CompanyRole,
   type CompanyRoleWire,
 } from '../../domain/access/public.js'
-import { ensureFoundationPlan } from '../entitlements/public.js'
 import type { InvitationRow } from './contracts.js'
 
 export function listCompanies(db: Queryable, userId: string) {
@@ -13,42 +12,10 @@ export function listCompanies(db: Queryable, userId: string) {
     `SELECT company.id,company.name,company.slug,company.created_at AS "createdAt",LOWER(membership.role) AS role
        FROM companies company
        JOIN company_memberships membership ON membership.company_id=company.id AND membership.user_id=$1
-      WHERE membership.status='ACTIVE'
+      WHERE membership.status='ACTIVE' AND company.status='ACTIVE'
       ORDER BY membership.created_at ASC`,
     [userId],
   ).then((result) => result.rows)
-}
-
-export async function insertCompanyRoot(db: Queryable, args: {
-  id: string; name: string; slug: string; userId: string; projectId: string
-}): Promise<void> {
-  const planId = await ensureFoundationPlan(db)
-  await db.query(
-    `INSERT INTO companies (id,name,slug,plan_id) VALUES ($1,$2,$3,$4)`,
-    [args.id, args.name, args.slug, planId],
-  )
-  await db.query(
-    `INSERT INTO company_memberships (company_id,user_id,role) VALUES ($1,$2,'OWNER')`,
-    [args.id, args.userId],
-  )
-  await db.query(
-    `INSERT INTO projects (id,company_id,name,description,color,created_by,is_general)
-     VALUES ($1,$2,'通用工作区','默认工作区与未归类内容','#64748b',$3,TRUE)`,
-    [args.projectId, args.id, args.userId],
-  )
-  await db.query(
-    `INSERT INTO project_memberships (company_id,project_id,user_id,role)
-     VALUES ($1,$2,$3,'OWNER')`,
-    [args.id, args.projectId, args.userId],
-  )
-  const user = await findUser(db, args.userId)
-  if (!user) throw new Error('session points to missing user')
-  await db.query(
-    `INSERT INTO participants (id,kind,name,role,initial,avatar_bg,avatar_url,status,company_id)
-     VALUES ($1,'human',$2,NULL,$3,'#FF8870',$4,'avail',$5)
-     ON CONFLICT (id,company_id) DO NOTHING`,
-    [args.userId, user.display_name, user.display_name.charAt(0).toUpperCase(), user.avatar_url, args.id],
-  )
 }
 
 export async function findUser(db: Queryable, userId: string) {

@@ -1,5 +1,5 @@
-export { ensureFoundationPlan } from './repository.js'
-export { FOUNDATION_PLAN } from '../../domain/entitlement/public.js'
+export { ensurePersonalFreePlan } from './repository.js'
+export { PERSONAL_FREE_PLAN } from '../../domain/entitlement/public.js'
 export type {
   Entitlement,
   EntitlementValue,

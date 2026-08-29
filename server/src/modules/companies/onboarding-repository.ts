@@ -133,6 +133,24 @@ export async function installStarterAgents(db: Queryable, companyId: string): Pr
   const ownerId = owner.rows[0]?.user_id ?? null
   if (!ownerId) throw new Error(`company ${companyId} has no owner`)
 
+  const ownerAccount = await db.query<{
+    display_name: string
+    avatar_url: string | null
+  }>(
+    `SELECT display_name,avatar_url FROM users WHERE id=$1 AND deleted_at IS NULL`,
+    [ownerId],
+  )
+  const ownerProfile = ownerAccount.rows[0]
+  if (!ownerProfile) throw new Error(`company ${companyId} owner is missing or deleted`)
+  await db.query(
+    `INSERT INTO participants (id,kind,name,role,initial,avatar_bg,avatar_url,status,company_id)
+     VALUES ($1,'human',$2,NULL,$3,'#FF8870',$4,'avail',$5)
+     ON CONFLICT (id,company_id) DO UPDATE SET
+       name=EXCLUDED.name,initial=EXCLUDED.initial,avatar_url=EXCLUDED.avatar_url,
+       status='avail',departed_at=NULL`,
+    [ownerId, ownerProfile.display_name, ownerProfile.display_name.charAt(0).toUpperCase(), ownerProfile.avatar_url, companyId],
+  )
+
   await db.query(
     `INSERT INTO projects (id, company_id, name, description, color, created_by, is_general)
      SELECT $2, $1, '通用工作区', '未指定工作区的会话与资料', '#667085', $3, TRUE

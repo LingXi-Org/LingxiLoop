@@ -18,10 +18,9 @@ interface AuthState {
    *  default to a safe value (usually: hide optional UI). */
   serverCapabilities: ServerCapabilities | null
   setSession: (token: string, user: AuthUser, companyId: string | null) => void
-  setMe: (user: AuthUser, companies: AuthCompany[], activeCompanyId: string | null) => void
+  setMe: (user: AuthUser, companies: AuthCompany[], activeCompanyId: string) => void
   setServerCapabilities: (caps: ServerCapabilities) => void
   setActiveCompany: (id: string) => void
-  addCompany: (c: AuthCompany) => void
   clear: () => void
   markReady: () => void
 }
@@ -80,22 +79,6 @@ export const useAuth = create<AuthState>((set) => ({
       import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
       import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
-  },
-  /** Append a freshly-created company to the user's set and switch to it. */
-  addCompany(c) {
-    const prevId = useAuth.getState().activeCompanyId
-    set((s) => ({ companies: [...s.companies, c], activeCompanyId: c.id }))
-    localStorage.setItem(COMPANY_KEY, c.id)
-    // If this is a SWITCH (we already had a company), wipe library
-    // stores too so the new workspace doesn't render the previous
-    // one's data while the first listXXX() is in flight.
-    if (prevId && prevId !== c.id) {
-      void Promise.all([
-        import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
-        import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
-        import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
-      ])
-    }
   },
   clear() {
     runAuthTeardown()

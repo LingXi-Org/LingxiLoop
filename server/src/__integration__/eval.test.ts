@@ -11,7 +11,7 @@ const RUN = 'run-eval-integration'
 before(ensureSchemaOnce)
 beforeEach(async () => {
   await resetAllTables()
-  await pool.query(`INSERT INTO companies(id,name,slug) VALUES($1,'Eval Integration','eval-integration')`, [COMPANY])
+  await pool.query(`INSERT INTO companies(id,name,slug,type,plan_id) VALUES($1,'Eval Integration','eval-integration','EDUCATION','plan-personal-free')`, [COMPANY])
   await pool.query(
     `INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status)
      VALUES($1,$2,'agent','Eval Agent','tester','E','#0078c8','avail')`,

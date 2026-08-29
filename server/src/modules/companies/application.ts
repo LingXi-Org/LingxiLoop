@@ -1,11 +1,9 @@
-import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import {
   companyRoleToWire,
   type CompanyRole,
 } from '../../domain/access/public.js'
 import type {
-  CreateCompanyInput,
   CreateInvitationInput,
   InvitationPreview,
   InvitationRow,
@@ -20,7 +18,6 @@ import {
   findCompanyForMember,
   findUser,
   insertAcceptedMembership,
-  insertCompanyRoot,
   insertInvitation,
   invitationEmailContext,
   invitationWithCompany,
@@ -61,8 +58,6 @@ interface AuditInput {
 export interface CompanyInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   auditInTransaction(db: Queryable, input: AuditInput): Promise<void>
-  installCompany(db: Queryable, companyId: string): Promise<boolean>
-  finalizeCompany(installed: boolean): Promise<void>
   syncChannel(args: { channelId: string; channelType: 2; title: string; members: string[] }): Promise<void>
   disconnectUser(userId: string, companyId: string): Promise<void>
   generateInvitationToken(): string
@@ -95,47 +90,10 @@ function baseInvitation(invitation: Awaited<ReturnType<typeof invitationWithComp
   }
 }
 
-function isUniqueViolation(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505'
-}
-
 export class CompanyApplication {
   constructor(private readonly db: Queryable, private readonly infrastructure: CompanyInfrastructure) {}
 
   companies(userId: string) { return listCompanies(this.db, userId) }
-
-  async provisionPersonalCompany(
-    db: Queryable,
-    input: { id: string; name: string; slug: string; userId: string; projectId: string },
-  ): Promise<boolean> {
-    await insertCompanyRoot(db, input)
-    return this.infrastructure.installCompany(db, input.id)
-  }
-
-  async createCompany(userId: string, input: CreateCompanyInput, auditContext: RequestAuditContext) {
-    const baseSlug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'company'
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const id = `co-${randomUUID().slice(0, 10)}`
-      const slug = attempt === 0 ? baseSlug : `${baseSlug}-${randomUUID().slice(0, 4)}`
-      const projectId = `general-${createHash('md5').update(id).digest('hex').slice(0, 16)}`
-      try {
-        const installed = await this.infrastructure.transaction(async (db) => {
-          await insertCompanyRoot(db, { id, name: input.name, slug, userId, projectId })
-          const installed = await this.infrastructure.installCompany(db, id)
-          await this.infrastructure.auditInTransaction(db, {
-            kind: 'company_create', userId, companyId: id, ...auditContext,
-            detail: { name: input.name, slug },
-          })
-          return installed
-        })
-        await this.infrastructure.finalizeCompany(installed).catch(() => undefined)
-        return { id, name: input.name, slug, role: 'owner' as const }
-      } catch (error) {
-        if (!isUniqueViolation(error)) throw error
-      }
-    }
-    throw new CompanyApplicationError('conflict', 'failed to create company after retries')
-  }
 
   async company(companyId: string, userId: string) {
     const company = await findCompanyForMember(this.db, companyId, userId)

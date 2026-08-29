@@ -10,6 +10,7 @@ const embeddings = readFileSync(new URL('../agents/embeddings.ts', import.meta.u
 const onboarding = readFileSync(new URL('../modules/companies/onboarding-repository.ts', import.meta.url), 'utf8')
 const canvasReports = readFileSync(new URL('../modules/canvas/reports-repository.ts', import.meta.url), 'utf8')
 const companyRepository = readFileSync(new URL('../modules/companies/repository.ts', import.meta.url), 'utf8')
+const personalWorkspace = readFileSync(new URL('../modules/companies/personal-workspace.ts', import.meta.url), 'utf8')
 const entitlementRepository = readFileSync(new URL('../modules/entitlements/repository.ts', import.meta.url), 'utf8')
 const composeFiles = [
   '../../../docker-compose.mvp.ci.yml',
@@ -57,8 +58,13 @@ test('domain foundation relations replace legacy product identity and membership
   }
   const users = schema.match(/CREATE TABLE public\.users \(([\s\S]*?)\n\);/)?.[1] ?? ''
   assert.doesNotMatch(users, /\b(?:is_admin|role|plan|is_teacher|is_pro|is_paid|account_type)\b/i)
-  assert.match(schema, /CREATE TABLE public\.companies \([\s\S]*?plan_id text DEFAULT 'plan-foundation'::text NOT NULL/)
-  assert.doesNotMatch(schema, /owner_user_id/)
+  assert.match(schema, /CREATE TABLE public\.companies \([\s\S]*?type text NOT NULL[\s\S]*?status text DEFAULT 'ACTIVE'::text NOT NULL[\s\S]*?personal_owner_user_id text,[\s\S]*?plan_id text NOT NULL/)
+  assert.match(schema, /companies_type_check[\s\S]*?'PERSONAL'[\s\S]*?'EDUCATION'/)
+  assert.match(schema, /companies_status_check[\s\S]*?'ACTIVE'[\s\S]*?'SUSPENDED'/)
+  assert.match(schema, /companies_personal_owner_check/)
+  assert.match(schema, /idx_companies_personal_owner[\s\S]*?personal_owner_user_id[\s\S]*?type = 'PERSONAL'/)
+  assert.match(schema, /companies_personal_owner_user_id_fkey[\s\S]*?REFERENCES public\.users\(id\) ON DELETE RESTRICT/)
+  assert.doesNotMatch(schema, /\bowner_user_id\b/)
   assert.match(schema, /CREATE TABLE public\.projects \([\s\S]*?company_id text NOT NULL[\s\S]*?plan_id text,/)
   assert.match(schema, /company_memberships_role_check[\s\S]*?'OWNER'[\s\S]*?'ADMIN'[\s\S]*?'MEMBER'/)
   assert.match(schema, /project_memberships_role_check[\s\S]*?'OWNER'[\s\S]*?'TEACHER'[\s\S]*?'TA'[\s\S]*?'STUDENT'[\s\S]*?'OBSERVER'/)
@@ -211,10 +217,10 @@ test('Canvas message evidence does not restore the SQL chat data plane', () => {
   assert.doesNotMatch(canvasReports, /\b(?:FROM|JOIN)\s+messages\b/i)
 })
 
-test('fresh-schema company creation uses the Foundation Plan entrypoint', () => {
-  assert.match(companyRepository, /ensureFoundationPlan\(db\)[\s\S]*INSERT INTO companies \(id,name,slug,plan_id\)/)
-  assert.match(companyRepository, /INSERT INTO company_memberships \(company_id,user_id,role\) VALUES \(\$1,\$2,'OWNER'\)/)
-  assert.match(companyRepository, /INSERT INTO project_memberships \(company_id,project_id,user_id,role\)[\s\S]*'OWNER'/)
-  assert.match(entitlementRepository, /FOUNDATION_PLAN[\s\S]*ON CONFLICT \(id\)/)
+test('fresh users receive one Personal Free context through the canonical provisioning entrypoint', () => {
+  assert.match(personalWorkspace, /SELECT id,email,display_name FROM users[\s\S]*FOR UPDATE/)
+  assert.match(personalWorkspace, /ensurePersonalFreePlan\(db\)[\s\S]*INSERT INTO companies[\s\S]*'PERSONAL'[\s\S]*INSERT INTO company_memberships[\s\S]*'OWNER'[\s\S]*'我的学习'[\s\S]*INSERT INTO project_memberships[\s\S]*'OWNER'/)
+  assert.match(entitlementRepository, /PERSONAL_FREE_PLAN[\s\S]*ON CONFLICT \(id\)/)
   assert.doesNotMatch(schema, /INSERT INTO plans/i)
+  assert.doesNotMatch(companyRepository, /INSERT INTO companies/)
 })

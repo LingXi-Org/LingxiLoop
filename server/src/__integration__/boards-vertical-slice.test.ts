@@ -36,8 +36,9 @@ beforeEach(async () => {
     [USER],
   )
   await pool.query(
-    `INSERT INTO companies (id,name,slug) VALUES
-       ($1,'Board Slice','board-slice'),($2,'Board Other','board-other')`,
+    `INSERT INTO companies (id,name,slug,type,plan_id) VALUES
+       ($1,'Board Slice','board-slice','EDUCATION','plan-personal-free'),
+       ($2,'Board Other','board-other','EDUCATION','plan-personal-free')`,
     [COMPANY, OTHER_COMPANY],
   )
   await pool.query(

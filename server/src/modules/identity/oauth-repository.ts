@@ -61,7 +61,7 @@ export async function insertIdentityUser(
 export async function finalizeIdentityLogin(
   db: Queryable,
   userId: string,
-): Promise<{ companyId: string | null; suspendedAt: Date | string | null; suspensionReason: string | null }> {
+): Promise<{ companyId: string; suspendedAt: Date | string | null; suspensionReason: string | null }> {
   const user = await db.query<{ suspended_at: Date | string | null; suspension_reason: string | null }>(
     `SELECT suspended_at, suspension_reason
        FROM users
@@ -71,12 +71,19 @@ export async function finalizeIdentityLogin(
   const row = user.rows[0]
   if (!row) throw new Error('identity points to missing or deleted user')
   const company = await db.query<{ company_id: string }>(
-    `SELECT company_id FROM company_memberships
-      WHERE user_id = $1 AND status='ACTIVE' ORDER BY created_at ASC LIMIT 1`,
+    `SELECT company.id AS company_id
+       FROM companies company
+       JOIN company_memberships membership
+         ON membership.company_id=company.id AND membership.user_id=$1
+      WHERE company.type='PERSONAL' AND company.status='ACTIVE'
+        AND company.personal_owner_user_id=$1
+        AND membership.role='OWNER' AND membership.status='ACTIVE'`,
     [userId],
   )
+  const companyId = company.rows[0]?.company_id
+  if (!companyId) throw new Error(`Personal Context invariant violated for user ${userId}`)
   return {
-    companyId: company.rows[0]?.company_id ?? null,
+    companyId,
     suspendedAt: row.suspended_at,
     suspensionReason: row.suspension_reason,
   }

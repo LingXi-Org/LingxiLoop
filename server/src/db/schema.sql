@@ -849,10 +849,16 @@ CREATE TABLE public.companies (
     id text NOT NULL,
     name text NOT NULL,
     slug text NOT NULL,
-    plan_id text DEFAULT 'plan-foundation'::text NOT NULL,
+    type text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    personal_owner_user_id text,
+    plan_id text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    description text DEFAULT ''::text NOT NULL
+    description text DEFAULT ''::text NOT NULL,
+    CONSTRAINT companies_type_check CHECK ((type = ANY (ARRAY['PERSONAL'::text, 'EDUCATION'::text]))),
+    CONSTRAINT companies_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text]))),
+    CONSTRAINT companies_personal_owner_check CHECK ((((type = 'PERSONAL'::text) AND (personal_owner_user_id IS NOT NULL)) OR ((type = 'EDUCATION'::text) AND (personal_owner_user_id IS NULL))))
 );
 
 
@@ -3507,6 +3513,13 @@ CREATE UNIQUE INDEX idx_projects_one_general ON public.projects USING btree (com
 
 
 --
+-- Name: idx_companies_personal_owner; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_companies_personal_owner ON public.companies USING btree (personal_owner_user_id) WHERE (type = 'PERSONAL'::text);
+
+
+--
 -- Name: idx_sessions_expires; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4028,6 +4041,14 @@ ALTER TABLE ONLY public.company_invitations
 
 ALTER TABLE ONLY public.companies
     ADD CONSTRAINT companies_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: companies companies_personal_owner_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT companies_personal_owner_user_id_fkey FOREIGN KEY (personal_owner_user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
 
 
 --

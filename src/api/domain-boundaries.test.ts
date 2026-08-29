@@ -188,11 +188,12 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   await assert.rejects(access(new URL('./knowledge.ts', import.meta.url)))
   await assert.rejects(access(new URL('../stores/knowledgeSources.ts', import.meta.url)))
 
-  for (const file of ['api.ts', 'contracts.ts', 'components/InvitePeopleModal.tsx', 'components/WorkspaceCreateDialog.tsx']) {
+  for (const file of ['api.ts', 'contracts.ts', 'components/InvitePeopleModal.tsx']) {
     await access(new URL(`../features/companies/${file}`, import.meta.url))
   }
   await assert.rejects(access(new URL('./companies.ts', import.meta.url)))
   await assert.rejects(access(new URL('../components/CompanySwitcher.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../features/companies/components/WorkspaceCreateDialog.tsx', import.meta.url)))
   const companySources = await Promise.all([
     '../features/companies/components/InvitePeopleModal.tsx',
     '../features/companies/components/CompanyCourseManagement.tsx',

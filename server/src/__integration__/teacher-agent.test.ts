@@ -51,7 +51,7 @@ async function seedTeacherCourse():Promise<Fixture>{
   for(const [id,name] of [[teacherId,'周老师'],[learnerId,'陈同学'],[adminId,'公司管理员']] as const){
     await pool.query(`INSERT INTO users(id,email,display_name) VALUES($1,$2,$3)`,[id,`${id}@test.local`,name])
   }
-  await pool.query(`INSERT INTO companies(id,name,slug) VALUES($1,'Pulse 测试公司',$1)`,[companyId])
+  await pool.query(`INSERT INTO companies(id,name,slug,type,plan_id) VALUES($1,'Pulse 测试公司',$1,'EDUCATION','plan-personal-free')`,[companyId])
   for(const [id,role] of [[teacherId,'MEMBER'],[learnerId,'MEMBER'],[adminId,'OWNER']] as const){
     await pool.query(`INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,$3)`,[companyId,id,role])
   }

@@ -17,7 +17,7 @@ async function seedEmptyWorkspace(): Promise<{ companyId: string; ownerId: strin
     [ownerId, `${ownerId}@test.local`],
   )
   await pool.query(
-    "INSERT INTO companies (id, name, slug) VALUES ($1, 'Learning Co', $1)",
+    "INSERT INTO companies (id, name, slug, type, plan_id) VALUES ($1, 'Learning Co', $1, 'EDUCATION', 'plan-personal-free')",
     [companyId],
   )
   await pool.query("INSERT INTO company_memberships (company_id, user_id, role) VALUES ($1, $2, 'OWNER')", [companyId, ownerId])

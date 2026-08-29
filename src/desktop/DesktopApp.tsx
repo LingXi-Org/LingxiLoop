@@ -16,8 +16,8 @@ import {
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
-import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
+import { useWorkspace } from '@/features/knowledge/workspace'
 import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
 import { useUiCommand } from '@/stores/uiCommands'
@@ -32,7 +32,6 @@ import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPa
 import { DocumentsView } from '@/features/documents/components/DocumentsView'
 import { InfoPane } from './InfoPane'
 import { MeView } from './MeView'
-import { companyColor, initials, ServerRail } from './ServerRail'
 import { ThreadDrawer } from './ThreadDrawer'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 
@@ -79,7 +78,9 @@ function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsT
  * destination opens above it in the shared Base UI Drawer. */
 export function DesktopApp() {
   const { theme } = useTheme()
-  const activeCompany = useAuth((state) => state.companies.find((company) => company.id === state.activeCompanyId) ?? state.companies[0])
+  const activeProjectName = useWorkspace((state) => (
+    state.list.find((project) => project.id === state.selectedId)?.name ?? '我的学习'
+  ))
   const view = useApp((state) => state.view)
   const surface = useSurface((state) => state.surface)
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
@@ -157,18 +158,16 @@ export function DesktopApp() {
 
   return (
     <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-accent" data-electron={isElectron ? 'true' : 'false'} data-platform={platform}>
-      <ServerRail />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-accent">
         <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground">
           <Avatar size="sm" className="!size-3 rounded-sm">
             <AvatarFallback
-              className="rounded-sm text-[5px] font-semibold text-white"
-              style={activeCompany ? { background: companyColor(activeCompany) } : undefined}
+              className="rounded-sm bg-sidebar-primary text-[5px] font-semibold text-sidebar-primary-foreground"
             >
-              {initials(activeCompany?.name ?? 'LingxiLoop')}
+              学
             </AvatarFallback>
           </Avatar>
-          <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeCompany?.name ?? 'LingxiLoop'}</span>
+          <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
         </div>
         <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-card text-card-foreground shadow-sm">
           <ResizablePanelGroup

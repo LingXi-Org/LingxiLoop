@@ -5,7 +5,6 @@ import { HttpError } from '../../http/errors.js'
 import { requireAuth } from '../../http/request-context.js'
 import { CompanyApplicationError } from './application.js'
 import {
-  createCompanyRequestSchema,
   createInvitationRequestSchema,
   updateCompanyRequestSchema,
   updateMemberRoleRequestSchema,
@@ -38,13 +37,6 @@ function auditContext(req: Request & AuthedRequest) {
 
 companiesRouter.get('/companies', safe(async (req, res) => {
   res.json(await companyApplication.companies(requireAuth(req)))
-}))
-
-companiesRouter.post('/companies', safe(async (req, res) => {
-  const input = parse(createCompanyRequestSchema.safeParse(req.body ?? {}))
-  try {
-    res.status(201).json(await companyApplication.createCompany(requireAuth(req), input, auditContext(req)))
-  } catch (error) { mapCompanyError(error) }
 }))
 
 companiesRouter.get('/companies/:id', safe(async (req, res) => {

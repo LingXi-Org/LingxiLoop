@@ -36,9 +36,9 @@ before(async () => {
 beforeEach(async () => {
   await resetAllTables()
   await pool.query(
-    `INSERT INTO companies (id, name, slug)
-     VALUES ($1, 'Calendar Owner', 'calendar-owner'),
-            ($2, 'Calendar Other', 'calendar-other')`,
+    `INSERT INTO companies (id, name, slug, type, plan_id)
+     VALUES ($1, 'Calendar Owner', 'calendar-owner', 'EDUCATION', 'plan-personal-free'),
+            ($2, 'Calendar Other', 'calendar-other', 'EDUCATION', 'plan-personal-free')`,
     [COMPANY_ID, OTHER_COMPANY_ID],
   )
   await seedUserMembership(USER_ID, COMPANY_ID)

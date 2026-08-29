@@ -45,8 +45,8 @@ async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string
   const conversationId = 'direct-ada-yetone'
   const projectId = 'general-c-direct-title'
   await pool.query(
-    `INSERT INTO companies (id, name, slug)
-     VALUES ($1, 'Direct Title Co', 'direct-title-co')`,
+    `INSERT INTO companies (id, name, slug, type, plan_id)
+     VALUES ($1, 'Direct Title Co', 'direct-title-co', 'EDUCATION', 'plan-personal-free')`,
     [companyId],
   )
   await seedUserMembership(ME_USER_ID, companyId, {
@@ -100,7 +100,7 @@ async function seedGroupCreationFixture(): Promise<{ companyId: string; agentId:
   const generalId = 'p-general'
   const currentId = 'p-current'
   await pool.query(
-    `INSERT INTO companies (id, name, slug) VALUES ($1, 'Workspace Co', 'workspace-co')`,
+    `INSERT INTO companies (id, name, slug, type, plan_id) VALUES ($1, 'Workspace Co', 'workspace-co', 'EDUCATION', 'plan-personal-free')`,
     [companyId],
   )
   await seedUserMembership(ME_USER_ID, companyId)

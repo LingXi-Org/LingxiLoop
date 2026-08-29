@@ -43,16 +43,17 @@ function dependencies(db: Queryable) {
       transaction: async <T>(work: (transaction: Queryable) => Promise<T>) => work(db),
       fetchProfile: async () => profile,
       mirrorAvatar: async () => { calls.mirror += 1; return 'https://cdn.example/avatar.png' },
-      provisionCompany: async () => { calls.provision += 1; return true },
-      finalizeCompany: async () => { calls.finalize += 1 },
+      provisionWorkspace: async () => {
+        calls.provision += 1
+        return { companyId: 'company-new', projectId: 'project-new', created: true }
+      },
+      finalizeWorkspace: async () => { calls.finalize += 1 },
       createLoginSession: async () => { calls.session += 1; return { token: 'session-token', expiresAt: new Date(0) } },
       audit: async (input: { kind: string }) => { calls.audit.push(input.kind) },
       defaultDoneUrl: 'https://app.example/',
       doneUrl: identityDoneUrl,
       suspendedUrl: identitySuspendedUrl,
       userId: () => 'user-new',
-      companyId: () => 'company-new',
-      projectId: () => 'project-new',
     },
   }
 }
@@ -61,7 +62,7 @@ function linkedUserDb(): Queryable {
   return queryable((text) => {
     if (/FROM user_identities/.test(text)) return { rows: [{ user_id: 'user-1' }] }
     if (/SELECT suspended_at/.test(text)) return { rows: [{ suspended_at: null, suspension_reason: null }] }
-    if (/FROM company_memberships/.test(text)) return { rows: [{ company_id: 'company-1' }] }
+    if (/JOIN company_memberships/.test(text)) return { rows: [{ company_id: 'company-1' }] }
     return { rows: [], rowCount: 1 }
   })
 }
@@ -88,7 +89,7 @@ test('invite-first identities still provision a Personal Company before creating
     if (/FROM user_identities/.test(text)) return { rows: [] }
     if (/FROM users WHERE LOWER/.test(text)) return { rows: [] }
     if (/SELECT suspended_at/.test(text)) return { rows: [{ suspended_at: null, suspension_reason: null }] }
-    if (/FROM company_memberships/.test(text)) return { rows: [{ company_id: 'company-new' }] }
+    if (/JOIN company_memberships/.test(text)) return { rows: [{ company_id: 'company-new' }] }
     return { rows: [], rowCount: 1 }
   })
   const fixture = dependencies(db)
