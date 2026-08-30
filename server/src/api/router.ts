@@ -8,6 +8,7 @@ import { calendarRouter } from '../modules/calendar/router.js'
 import { canvasRouter } from '../modules/canvas/router.js'
 import { companiesRouter } from '../modules/companies/router.js'
 import { conversationsRouter } from '../modules/conversations/router.js'
+import { contextThreadsRouter } from '../modules/context-threads/router.js'
 import { documentsRouter } from '../modules/documents/router.js'
 import { emailRouter } from '../modules/email/router.js'
 import { identityRouter } from '../modules/identity/router.js'
@@ -32,6 +33,7 @@ api.use(learningRouter)
 api.use(knowledgeRouter)
 api.use(agentsRouter)
 api.use(conversationsRouter)
+api.use(contextThreadsRouter)
 api.use(messagesRouter)
 api.use(pollsRouter)
 api.use(emailRouter)

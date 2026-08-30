@@ -1,6 +1,7 @@
 import type { Queryable } from '../../db/queryable.js'
 import { ContextScopedPermissionService, type PermissionServiceOptions } from './application.js'
 import type { PermissionRequest, PermissionService, ResolvedAccessContext } from './contracts.js'
+import { AccessRepository } from './repository.js'
 
 export type {
   EntitlementCode,
@@ -22,6 +23,13 @@ export function createPermissionService(
   options?: PermissionServiceOptions,
 ): ContextScopedPermissionService {
   return new ContextScopedPermissionService(db, options)
+}
+
+export function isActiveProjectStudent(
+  db: Queryable,
+  input: { companyId: string; projectId: string; userId: string },
+): Promise<boolean> {
+  return new AccessRepository(db).isActiveProjectStudent(input.companyId, input.projectId, input.userId)
 }
 
 export const permissionService: PermissionService = {
