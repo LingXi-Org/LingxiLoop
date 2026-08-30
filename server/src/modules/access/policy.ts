@@ -1,4 +1,10 @@
-import type { CompanyRole, ProjectRole } from '../../domain/public.js'
+import {
+  companyStatusBelongsToType,
+  projectKindBelongsToCompanyType,
+  projectStatusBelongsToKind,
+  type CompanyRole,
+  type ProjectRole,
+} from '../../domain/public.js'
 import type {
   EntitlementCode,
   PermissionAction,
@@ -170,9 +176,9 @@ const CLOSE_OUT_ACTIONS = new Set<PermissionAction>([
 ])
 
 export function resourceAccessMode(context: ResolvedAccessContext): ResourceAccessMode {
-  const companyMode = companyAccessMode(context.company.status)
+  const companyMode = companyAccessMode(context.company)
   if (!context.project) return companyMode
-  const projectMode = projectAccessMode(context.project.status)
+  const projectMode = projectAccessMode(context.project, context.company.type)
   const priority: Record<ResourceAccessMode, number> = {
     READ_WRITE: 0,
     TRANSFER_PENDING: 1,
@@ -186,9 +192,11 @@ export function resourceAccessMode(context: ResolvedAccessContext): ResourceAcce
 }
 
 function projectAccessMode(
-  status: NonNullable<ResolvedAccessContext['project']>['status'],
+  project: NonNullable<ResolvedAccessContext['project']>,
+  companyType: ResolvedAccessContext['company']['type'],
 ): ResourceAccessMode {
-  switch (status) {
+  if (!projectContextIsValid(project, companyType)) return 'DENY'
+  switch (project.status) {
     case 'CREATED':
     case 'DRAFT':
       return 'MANAGER_ONLY'
@@ -208,8 +216,9 @@ function projectAccessMode(
   }
 }
 
-function companyAccessMode(status: ResolvedAccessContext['company']['status']): ResourceAccessMode {
-  switch (status) {
+function companyAccessMode(company: ResolvedAccessContext['company']): ResourceAccessMode {
+  if (!companyContextIsValid(company)) return 'DENY'
+  switch (company.status) {
     case 'TRIAL':
     case 'ACTIVE':
     case 'GRACE_PERIOD':
@@ -227,11 +236,42 @@ function companyAccessMode(status: ResolvedAccessContext['company']['status']): 
   }
 }
 
+function companyContextIsValid(company: ResolvedAccessContext['company']): boolean {
+  switch (company.type) {
+    case 'PERSONAL':
+    case 'EDUCATION':
+      return companyStatusBelongsToType(company.type, company.status)
+    default:
+      return false
+  }
+}
+
+function projectContextIsValid(
+  project: NonNullable<ResolvedAccessContext['project']>,
+  companyType: ResolvedAccessContext['company']['type'],
+): boolean {
+  switch (project.kind) {
+    case 'PERSONAL_LEARNING':
+    case 'TEACHING':
+    case 'INSTITUTIONAL_COURSE':
+      return projectStatusBelongsToKind(project.kind, project.status)
+        && projectKindBelongsToCompanyType(project.kind, companyType)
+    default:
+      return false
+  }
+}
+
 function isContextManager(context: ResolvedAccessContext): boolean {
   return context.companyMembership.role === 'OWNER'
     || context.companyMembership.role === 'ADMIN'
     || context.projectMembership?.role === 'OWNER'
     || context.projectMembership?.role === 'TEACHER'
+}
+
+function isCompanyManagerOrProjectOwner(context: ResolvedAccessContext): boolean {
+  return context.companyMembership.role === 'OWNER'
+    || context.companyMembership.role === 'ADMIN'
+    || context.projectMembership?.role === 'OWNER'
 }
 
 function evaluateResourceAccessMode(
@@ -243,11 +283,13 @@ function evaluateResourceAccessMode(
   }
   const lifecycle = COMPANY_LIFECYCLE_ACTIONS.has(request.action) || PROJECT_LIFECYCLE_ACTIONS.has(request.action)
   const companyDecision = evaluateCompanyAccessMode(
-    companyAccessMode(context.company.status), request, context, lifecycle,
+    companyAccessMode(context.company), request, context, lifecycle,
   )
   if (companyDecision !== 'ALLOWED') return companyDecision
   if (!context.project) return 'ALLOWED'
-  return evaluateProjectAccessMode(projectAccessMode(context.project.status), request, context, lifecycle)
+  return evaluateProjectAccessMode(
+    projectAccessMode(context.project, context.company.type), request, context, lifecycle,
+  )
 }
 
 function evaluateCompanyAccessMode(
@@ -264,7 +306,7 @@ function evaluateCompanyAccessMode(
         ? 'ALLOWED'
         : 'COMPANY_STATE_DENIED'
     case 'RETENTION':
-      if (!isContextManager(context)) return 'COMPANY_STATE_DENIED'
+      if (!isCompanyManagerOrProjectOwner(context)) return 'COMPANY_STATE_DENIED'
       return READ_ACTIONS.has(request.action) || lifecycle
         ? 'ALLOWED'
         : 'COMPANY_STATE_DENIED'
@@ -295,14 +337,14 @@ function evaluateProjectAccessMode(
     case 'READ_ONLY':
       if (context.project?.status === 'ARCHIVED'
         && context.project.kind === 'INSTITUTIONAL_COURSE'
-        && !isContextManager(context)) return 'PROJECT_STATE_DENIED'
+        && !isCompanyManagerOrProjectOwner(context)) return 'PROJECT_STATE_DENIED'
       return READ_ACTIONS.has(request.action) || lifecycle ? 'ALLOWED' : 'PROJECT_STATE_DENIED'
     case 'TRANSFER_PENDING':
       return TRANSFER_FROZEN_ACTIONS.has(request.action)
         ? 'PROJECT_STATE_DENIED'
         : 'ALLOWED'
     case 'RETENTION':
-      if (!isContextManager(context)) return 'PROJECT_STATE_DENIED'
+      if (!isCompanyManagerOrProjectOwner(context)) return 'PROJECT_STATE_DENIED'
       return READ_ACTIONS.has(request.action) || lifecycle ? 'ALLOWED' : 'PROJECT_STATE_DENIED'
     case 'DENY':
       return 'PROJECT_STATE_DENIED'
