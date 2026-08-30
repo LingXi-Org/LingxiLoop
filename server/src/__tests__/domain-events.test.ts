@@ -56,14 +56,14 @@ function transactionDb(existing?: ReturnType<typeof row>) {
 test('domain mutation and event append share one caller-owned transaction', async () => {
   const fixture = transactionDb()
   const order: string[] = []
-  const result = await commitDomainEvent(fixture.transaction, input, async () => {
+  const result = await commitDomainEvent(fixture.transaction, async () => {
     order.push('mutation')
     return { caseId: 'case-1' }
-  })
+  }, () => input)
   order.push('event')
 
   assert.deepEqual(result.result, { caseId: 'case-1' })
-  assert.equal(result.event.sequence, 7)
+  assert.equal(result.event?.sequence, 7)
   assert.deepEqual(order, ['mutation', 'event'])
   assert.match(fixture.calls[0]!.text, /pg_advisory_xact_lock/)
   assert.match(fixture.calls[2]!.text, /COALESCE\(MAX\(prior\.aggregate_sequence\),0\)\+1/)

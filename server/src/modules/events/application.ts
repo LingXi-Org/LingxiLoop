@@ -137,12 +137,13 @@ export function appendDomainEvent<TType extends string, TPayload extends JsonObj
 
 export function commitDomainEvent<TResult, TType extends string, TPayload extends JsonObject>(
   transaction: DomainEventTransaction,
-  input: AppendDomainEventInput<TType, TPayload>,
   mutation: (db: Queryable) => Promise<TResult>,
-): Promise<{ result: TResult; event: DomainEventEnvelope<TType, TPayload> }> {
+  eventForResult: (result: TResult) => AppendDomainEventInput<TType, TPayload> | null,
+): Promise<{ result: TResult; event: DomainEventEnvelope<TType, TPayload> | null }> {
   return transaction(async (db) => {
     const result = await mutation(db)
-    const event = await appendDomainEventInTransaction(db, input)
+    const input = eventForResult(result)
+    const event = input ? await appendDomainEventInTransaction(db, input) : null
     return { result, event }
   })
 }

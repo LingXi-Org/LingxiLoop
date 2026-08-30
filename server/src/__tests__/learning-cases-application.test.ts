@@ -66,9 +66,39 @@ function fixture(options: FixtureOptions = {}) {
   const audits: Array<{ kind: string; userId: string; companyId: string; detail: Record<string, unknown> }> = []
   const listParams: Array<readonly unknown[] | undefined> = []
   const accessSql: string[] = []
+  const domainEvents: Array<{ eventType: string; payload: Record<string, unknown> }> = []
   const currentCase = caseRow({ status: options.caseStatus, version: options.caseVersion })
   const db: Queryable = {
     query: async (sql, params) => {
+      if (/pg_advisory_xact_lock/.test(sql)) {
+        events.push('event_lock')
+        return { rows: [], rowCount: 0 } as never
+      }
+      if (/FROM domain_events WHERE company_id/.test(sql)) {
+        events.push('event_idempotency_read')
+        return { rows: [], rowCount: 0 } as never
+      }
+      if (/INSERT INTO domain_events/.test(sql)) {
+        events.push('event_append')
+        const payload = JSON.parse(String(params?.[10])) as Record<string, unknown>
+        domainEvents.push({ eventType: String(params?.[5]), payload })
+        return { rows: [{
+          id: String(params?.[0]),
+          company_id: String(params?.[1]),
+          project_id: params?.[2] as string | null,
+          aggregate_type: String(params?.[3]),
+          aggregate_id: String(params?.[4]),
+          aggregate_sequence: 1,
+          sequence: domainEvents.length,
+          event_type: String(params?.[5]),
+          schema_version: Number(params?.[6]),
+          idempotency_key: String(params?.[7]),
+          actor_type: String(params?.[8]),
+          actor_id: params?.[9] as string | null,
+          payload,
+          occurred_at: '2026-08-30T01:03:00.000Z',
+        }], rowCount: 1 } as never
+      }
       if (/FROM users WHERE/.test(sql)) {
         accessSql.push(sql)
         return { rows: [{ id: String(params?.[0]), deleted_at: null, suspended_at: null }], rowCount: 1 } as never
@@ -185,6 +215,7 @@ function fixture(options: FixtureOptions = {}) {
     application: new LearningCasesApplication(db, infrastructure),
     accessSql,
     audits,
+    domainEvents,
     events,
     listParams,
   }
@@ -237,7 +268,19 @@ test('Case creation locks permission dependencies and audits only a newly create
       learnerId: 'learner-1', knowledgeUnitId: 'unit-1',
     },
   }])
-  assert.deepEqual(created.events, ['begin', 'case_insert', 'audit', 'commit'])
+  assert.deepEqual(created.events, [
+    'begin', 'case_insert', 'audit', 'event_lock', 'event_idempotency_read', 'event_append', 'commit',
+  ])
+  assert.deepEqual(created.domainEvents, [{
+    eventType: 'LEARNING_CASE.DETECTED',
+    payload: {
+      caseId: result.learningCase.id,
+      learnerId: 'learner-1',
+      knowledgeUnitId: 'unit-1',
+      status: 'DETECTED',
+      version: 1,
+    },
+  }])
 
   const existing = fixture({ insertOutcome: 'existing' })
   const replay = await existing.application.createCase({
@@ -248,6 +291,7 @@ test('Case creation locks permission dependencies and audits only a newly create
     id: 'case-existing', created: false,
   })
   assert.deepEqual(existing.audits, [])
+  assert.deepEqual(existing.domainEvents, [])
 })
 
 test('Case action idempotency returns an exact replay and rejects key reuse', async () => {
@@ -271,6 +315,7 @@ test('Case action idempotency returns an exact replay and rejects key reuse', as
   assert.deepEqual(exact.events.filter((event) => [
     'case_lock', 'idempotency_read', 'links_validate', 'case_update', 'action_append', 'audit',
   ].includes(event)), ['case_lock', 'idempotency_read'])
+  assert.deepEqual(exact.domainEvents, [])
 
   const reused = fixture({ caseVersion: 5, priorAction })
   await assert.rejects(
@@ -304,7 +349,25 @@ test('Case actions reject stale versions, increment APPLIED actions, and preserv
     to: intervention.toStatus,
     version: intervention.caseVersion,
   }, { result: 'APPLIED', from: 'IN_PROGRESS', to: 'IN_PROGRESS', version: 4 })
-  assert.deepEqual(applied.events.slice(-4), ['case_update', 'action_append', 'audit', 'commit'])
+  assert.deepEqual(applied.events.slice(-7), [
+    'case_update', 'action_append', 'audit', 'event_lock', 'event_idempotency_read', 'event_append', 'commit',
+  ])
+  assert.deepEqual(applied.domainEvents, [{
+    eventType: 'LEARNING_CASE.ACTION_APPLIED',
+    payload: {
+      caseId: 'case-1',
+      actionId: intervention.id,
+      kind: 'INTERVENE',
+      result: 'APPLIED',
+      fromStatus: 'IN_PROGRESS',
+      toStatus: 'IN_PROGRESS',
+      caseVersion: 4,
+      activityId: null,
+      missionId: null,
+      attemptId: null,
+      evaluationId: null,
+    },
+  }])
 
   const already = fixture({ caseStatus: 'IN_PROGRESS', caseVersion: 4 })
   const diagnosedResult = await already.application.applyAction({
@@ -318,7 +381,9 @@ test('Case actions reject stale versions, increment APPLIED actions, and preserv
   assert.equal(diagnosed.reason, '')
   assert.equal(diagnosedResult.replayed, false)
   assert.equal(already.events.includes('case_update'), false)
-  assert.deepEqual(already.events.slice(-3), ['action_append', 'audit', 'commit'])
+  assert.deepEqual(already.events.slice(-6), [
+    'action_append', 'audit', 'event_lock', 'event_idempotency_read', 'event_append', 'commit',
+  ])
 })
 
 test('Case action audit failure occurs after append and rolls the owning transaction back', async () => {

@@ -6,6 +6,8 @@ import {
   transitionLearningCase,
 } from '../../domain/public.js'
 import { createPermissionService, type ResolvedAccessContext } from '../access/public.js'
+import { commitDomainEvent } from '../events/public.js'
+import { learningCaseActionAppliedEvent, learningCaseDetectedEvent } from './case-events.js'
 import {
   appendLearningCaseAction,
   findLearningCaseActionByIdempotencyKey,
@@ -161,7 +163,7 @@ export class LearningCasesApplication {
     if (summary.length > 10_000) {
       throw new LearningApplicationError('invalid', 'summary exceeds 10000 characters')
     }
-    return this.infrastructure.transaction(async (db) => {
+    const { result } = await commitDomainEvent(this.infrastructure.transaction.bind(this.infrastructure), async (db) => {
       const context = await createPermissionService(db, { lockDependencies: true }).assertCan({
         actorUserId: input.actorUserId,
         action: 'learning:manage',
@@ -193,7 +195,12 @@ export class LearningCasesApplication {
         })
       }
       return result
-    })
+    }, (result) => result.created ? learningCaseDetectedEvent({
+      companyId: input.companyId,
+      actorUserId: input.actorUserId,
+      learningCase: result.learningCase,
+    }) : null)
+    return result
   }
 
   async applyAction(
@@ -205,7 +212,7 @@ export class LearningCasesApplication {
     if (!Number.isInteger(input.expectedVersion) || input.expectedVersion < 1) {
       throw new LearningApplicationError('invalid', 'expectedVersion must be a positive integer')
     }
-    return this.infrastructure.transaction(async (db) => {
+    const { result } = await commitDomainEvent(this.infrastructure.transaction.bind(this.infrastructure), async (db) => {
       const context = await createPermissionService(db, { lockDependencies: true }).assertCan({
         actorUserId: input.actorUserId,
         action: ACTION_PERMISSIONS[input.kind],
@@ -305,6 +312,12 @@ export class LearningCasesApplication {
         },
       })
       return { action, replayed: false }
-    })
+    }, (result) => result.replayed ? null : learningCaseActionAppliedEvent({
+      companyId: input.companyId,
+      projectId: input.projectId,
+      actorUserId: input.actorUserId,
+      action: result.action,
+    }))
+    return result
   }
 }
