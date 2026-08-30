@@ -218,6 +218,7 @@ export async function seedCompanyWithAgent(opts?: {
      ON CONFLICT DO NOTHING`,
     [companyId],
   )
+  await seedActiveEducationSeat(companyId, 'test-owner')
   // Integration-only Education fixture with an explicit Institutional Course Project.
   await pool.query(
     `INSERT INTO projects (id, company_id, kind, name, description, color, created_by, is_default)
@@ -326,6 +327,7 @@ export async function seedUserMembership(userId: string, companyId: string, opts
      ON CONFLICT DO NOTHING`,
     [companyId, userId],
   )
+  await seedActiveEducationSeat(companyId, userId)
   // Mirror what production onboarding does: a human is also a participant
   // in the company. We leave participants.email NULL so ensureParticipantAddress
   // lazy-mints `<userId>.<slug>@<EMAIL_DOMAIN>` on first access (matches
@@ -335,6 +337,22 @@ export async function seedUserMembership(userId: string, companyId: string, opts
      VALUES ($1, $2, 'human', $3, 'owner', $4, '#abcdef', 'avail')
      ON CONFLICT DO NOTHING`,
     [userId, companyId, displayName, displayName.slice(0, 1).toUpperCase()],
+  )
+}
+
+async function seedActiveEducationSeat(companyId: string, userId: string): Promise<void> {
+  const contractId = `test-contract-${companyId}`
+  await pool.query(
+    `INSERT INTO education_contracts
+       (id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
+     VALUES ($1,$2,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',100)
+     ON CONFLICT (id) DO NOTHING`,
+    [contractId, companyId],
+  )
+  await pool.query(
+    `INSERT INTO organization_seats (id,company_id,contract_id,user_id,status)
+     VALUES ($1,$2,$3,$4,'ACTIVE') ON CONFLICT (id) DO NOTHING`,
+    [`test-seat-${companyId}-${userId}`, companyId, contractId, userId],
   )
 }
 

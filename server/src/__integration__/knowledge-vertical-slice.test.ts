@@ -45,6 +45,11 @@ beforeEach(async () => {
             ($3,$4,'INSTITUTIONAL_COURSE','Other Project','#111',$5,FALSE)`,
     [PROJECT_ID, COMPANY_ID, OTHER_PROJECT_ID, OTHER_COMPANY_ID, USER_ID],
   )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [COMPANY_ID, PROJECT_ID, USER_ID],
+  )
 })
 after(async () => { await teardownAll() })
 

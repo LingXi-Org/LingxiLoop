@@ -3,6 +3,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { LearningApplicationError } from '../modules/learning/application.js'
 import { learningApplication } from '../modules/learning/facade.js'
+import { ensureTeacherPlans } from '../modules/entitlements/public.js'
 import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 const TEACHER = 'u-activity-import-teacher'
@@ -12,6 +13,7 @@ const PROJECT = 'project-activity-import'
 before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => {
   await resetAllTables()
+  await ensureTeacherPlans(pool)
   await pool.query(
     `INSERT INTO users(id,email,display_name)
      VALUES ($1,'activity-import@test.local','Activity Import Teacher')`,

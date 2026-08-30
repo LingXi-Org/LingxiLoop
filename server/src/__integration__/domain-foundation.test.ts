@@ -208,7 +208,7 @@ test('[integration] plans support inheritance and only scalar entitlement values
     `SELECT entitlement.code,jsonb_typeof(link.value) AS kind
        FROM plan_entitlements link
        JOIN entitlements entitlement ON entitlement.id=link.entitlement_id
-      WHERE link.plan_id=$1 ORDER BY entitlement.code`,
+      WHERE link.plan_id=$1 AND entitlement.code LIKE 'domain.%' ORDER BY entitlement.code`,
     [PERSONAL_FREE_PLAN.id],
   )
   assert.deepEqual(values.rows, [

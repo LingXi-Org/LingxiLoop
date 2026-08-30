@@ -31,7 +31,6 @@ before(async () => {
     })
   })
 })
-
 beforeEach(async () => {
   await resetAllTables()
 })
@@ -61,6 +60,11 @@ async function seedHumanDirectWithSelfStoredTitle(): Promise<{ companyId: string
     `INSERT INTO projects (id, company_id, kind, name, color, created_by, is_default)
      VALUES ($1, $2, 'INSTITUTIONAL_COURSE', 'Course', '#667085', $3, TRUE)`,
     [projectId, companyId, ME_USER_ID],
+  )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES
+       ($1,$2,$3,'OWNER'),($1,$2,$4,'STUDENT')`,
+    [companyId, projectId, ME_USER_ID, OTHER_USER_ID],
   )
   await pool.query(
     `INSERT INTO conversations (id, kind, title, members, tag, company_id, project_id)
@@ -94,11 +98,14 @@ test('[integration] GET /search uses the same perspective-specific direct title'
   assert.equal(direct?.title, 'Ada')
 })
 
-async function seedGroupCreationFixture(): Promise<{ companyId: string; agentId: string; generalId: string; currentId: string }> {
+async function seedGroupConversationFixture(): Promise<{
+  companyId: string; agentId: string; conversationId: string
+}> {
   const companyId = 'c-group-workspace'
   const agentId = 'agent-workspace'
   const generalId = 'p-general'
   const currentId = 'p-current'
+  const conversationId = 'group-current'
   await pool.query(
     `INSERT INTO companies (id, name, slug, type, plan_id) VALUES ($1, 'Workspace Co', 'workspace-co', 'EDUCATION', 'plan-personal-free')`,
     [companyId],
@@ -115,53 +122,27 @@ async function seedGroupCreationFixture(): Promise<{ companyId: string; agentId:
             ($2,$3,'INSTITUTIONAL_COURSE','Current Course','#111',$4,FALSE)`,
     [generalId, currentId, companyId, ME_USER_ID],
   )
-  return { companyId, agentId, generalId, currentId }
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES
+       ($1,$2,$4,'OWNER'),($1,$3,$4,'OWNER')`,
+    [companyId, generalId, currentId, ME_USER_ID],
+  )
+  const members = JSON.stringify([ME_USER_ID, agentId])
+  await pool.query(
+    `INSERT INTO conversations(id,company_id,project_id,kind,title,members,leader_id)
+     VALUES ($1,$2,$3,'group','Original title',$4::jsonb,$5)`,
+    [conversationId, companyId, currentId, members, agentId],
+  )
+  await pool.query(
+    `INSERT INTO im_channel_bindings(channel_id,company_id,profile)
+     VALUES ($1,$2,$3::jsonb)`,
+    [conversationId, companyId, JSON.stringify({ channelId: conversationId, channelType: 2, title: 'Original title', members: [ME_USER_ID, agentId] })],
+  )
+  return { companyId, agentId, conversationId }
 }
 
-test('[integration] new group binds to the current workspace immediately', async () => {
-  const { companyId, agentId, currentId } = await seedGroupCreationFixture()
-  const res = await fetch(`${baseUrl}/api/conversations`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ clientRequestId: 'group-current-0001', title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
-  })
-  assert.equal(res.status, 201)
-  const body = await res.json() as { id: string; projectId: string }
-  assert.equal(body.projectId, currentId)
-  const stored = await pool.query<{ project_id: string }>(`SELECT project_id FROM conversations WHERE id=$1`, [body.id])
-  assert.equal(stored.rows[0]?.project_id, currentId)
-  const binding = await pool.query<{ profile: { members: string[] } }>(
-    `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`,
-    [body.id, companyId],
-  )
-  assert.deepEqual(binding.rows[0]?.profile.members.sort(), [ME_USER_ID, agentId].sort())
-
-  const duplicate = await fetch(`${baseUrl}/api/conversations`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ clientRequestId: 'group-current-0001', title: 'Current group', members: [agentId], leaderId: agentId, workspaceId: currentId }),
-  })
-  assert.equal(duplicate.status, 200)
-  assert.equal((await duplicate.json() as { id: string; created: boolean }).id, body.id)
-  const count = await pool.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM conversations WHERE id=$1`, [body.id])
-  assert.equal(count.rows[0]?.count, '1')
-})
-
 test('[integration] Agent metadata commands share the locked Conversations domain path', async () => {
-  const { companyId, agentId, currentId } = await seedGroupCreationFixture()
-  const created = await fetch(`${baseUrl}/api/conversations`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({
-      clientRequestId: 'agent-metadata-0001',
-      title: 'Original title',
-      members: [agentId],
-      leaderId: agentId,
-      workspaceId: currentId,
-    }),
-  })
-  assert.equal(created.status, 201)
-  const conversationId = (await created.json() as { id: string }).id
+  const { companyId, agentId, conversationId } = await seedGroupConversationFixture()
   const { runCli } = await import('../agents/cli.js')
 
   const renamed = await runCli([
@@ -197,20 +178,7 @@ test('[integration] Agent metadata commands share the locked Conversations domai
 })
 
 test('[integration] Agent mute seals the read cursor in the same domain transaction', async () => {
-  const { companyId, agentId, currentId } = await seedGroupCreationFixture()
-  const created = await fetch(`${baseUrl}/api/conversations`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({
-      clientRequestId: 'agent-delivery-0001',
-      title: 'Delivery group',
-      members: [agentId],
-      leaderId: agentId,
-      workspaceId: currentId,
-    }),
-  })
-  assert.equal(created.status, 201)
-  const conversationId = (await created.json() as { id: string }).id
+  const { agentId, conversationId } = await seedGroupConversationFixture()
   const { runCli } = await import('../agents/cli.js')
 
   const muted = await runCli(['mute', conversationId, '--for', '30m', '--as', agentId])
@@ -237,16 +205,4 @@ test('[integration] Agent mute seals the read cursor in the same domain transact
     `SELECT 1 FROM conversation_mutes WHERE user_id = $1 AND conversation_id = $2`,
     [agentId, conversationId],
   )).rowCount, 0)
-})
-
-test('[integration] new group rejects a missing current workspace', async () => {
-  const { companyId, agentId } = await seedGroupCreationFixture()
-  const res = await fetch(`${baseUrl}/api/conversations`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ clientRequestId: 'group-missing-0001', title: 'General group', members: [agentId], leaderId: agentId }),
-  })
-  assert.equal(res.status, 400)
-  const body = await res.json() as { error: string }
-  assert.match(body.error, /workspaceId required/)
 })

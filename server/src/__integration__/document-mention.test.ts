@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
+import { ForbiddenError } from '../modules/access/public.js'
 import { DocumentMentionApplication } from '../modules/documents/mention-application.js'
 import {
   claimDocumentMentionDelivery,
@@ -27,6 +28,11 @@ beforeEach(async () => {
     `INSERT INTO projects (id,company_id,kind,name,description,color,created_by,is_default)
      VALUES ($1,$2,'INSTITUTIONAL_COURSE','Course','','#64748b',$3,TRUE)`,
     [PROJECT, COMPANY, MENTIONER],
+  )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [COMPANY, PROJECT, MENTIONER],
   )
   await pool.query(
     `INSERT INTO participants (id,company_id,kind,name,initial,avatar_bg,status)
@@ -55,8 +61,10 @@ test('[integration] concurrent document mentions converge on one durable deliver
     requestedIds: [AGENT],
   }
 
-  const crossTenant = await application.notify({ ...input, companyId: 'another-company' })
-  assert.deepEqual(crossTenant, { deliveryId: null, mentionedIds: [] })
+  await assert.rejects(
+    application.notify({ ...input, companyId: 'another-company' }),
+    (error) => error instanceof ForbiddenError && error.status === 404,
+  )
 
   const results = await Promise.all([application.notify(input), application.notify(input)])
   assert.equal(results.filter((result) => result.deliveryId).length, 1)

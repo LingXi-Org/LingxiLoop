@@ -16,7 +16,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { __setEmailProviderOverrideForTesting, findOrCreateEmailConversation, persistEmailMessage } from '../modules/email/index.js'
 import {
-  buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent,
+  buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent,
   seedUserMembership, teardownAll,
 } from './_helpers.js'
 
@@ -38,6 +38,7 @@ before(async () => {
 
 beforeEach(async () => {
   await resetAllTables()
+  installFakeWukong()
   __setEmailProviderOverrideForTesting(async () => ({ ok: true, smtpMessageId: `provider-${Date.now()}`, error: null }))
 })
 
@@ -49,8 +50,13 @@ after(async () => {
 /** Stand up an email conversation with one inbound row from an external
  *  sender to ME_USER_ID, so a reply has somewhere to thread under. */
 async function seedEmailConvoWithInbound(): Promise<{ companyId: string; conversationId: string; agentId: string }> {
-  const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId, agentEmail } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [companyId, projectId, ME_USER_ID],
+  )
   const conv = await findOrCreateEmailConversation({
     companyId, inReplyTo: null, references: [],
     subject: 'project status', memberIds: [ME_USER_ID, agentId],
@@ -135,8 +141,13 @@ test('[integration] reply continues the thread when the latest row is our own ou
   // throw "no remaining recipients". The reply should instead continue
   // the thread to the same recipients we just addressed.
   const { findOrCreateEmailConversation, persistEmailMessage } = await import('../modules/email/index.js')
-  const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId, agentEmail } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [companyId, projectId, ME_USER_ID],
+  )
 
   // Seed an outbound row from ME to the agent — no inbound replies yet.
   const conv = await findOrCreateEmailConversation({
@@ -206,17 +217,27 @@ test('[integration] lingxiloop reply CLI on an email convo uses the injected pro
 
 })
 
-test('[integration] lingxiloop reply CLI on a non-email convo writes a plain text row (no auto-promote)', async () => {
+test('[integration] lingxiloop reply CLI on a domain discussion does not auto-promote to email', async () => {
   // Mirror of the HTTP-side regression test. A direct chat reply
   // through the CLI must NOT accidentally trigger the email path.
   const { runCli } = await import('../agents/cli.js')
-  const { companyId, agentId } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [companyId, projectId, ME_USER_ID],
+  )
   const convId = `direct-cli-${Date.now()}`
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, members, company_id, topic)
-       VALUES ($1, 'direct', $2, $3::jsonb, $4, $5)`,
-    [convId, ME_USER_ID, JSON.stringify([ME_USER_ID, agentId]), companyId, 'direct'],
+    `INSERT INTO conversations (id, kind, title, members, company_id, project_id, topic)
+       VALUES ($1, 'group', $2, $3::jsonb, $4, $5, $6)`,
+    [convId, 'Domain discussion', JSON.stringify([ME_USER_ID, agentId]), companyId, projectId, 'discussion'],
+  )
+  await pool.query(
+    `INSERT INTO im_channel_bindings(channel_id,company_id,profile)
+     VALUES ($1,$2,$3::jsonb)`,
+    [convId, companyId, JSON.stringify({ channelId: convId, channelType: 2, title: 'Domain discussion', members: [ME_USER_ID, agentId] })],
   )
 
   const res = await runCli(['--as', agentId, 'reply', convId, 'plain chat reply'])

@@ -26,7 +26,8 @@ test('[integration] canvas.* shares durable frames without sharing Agent executi
   const { agentId: targetAgentId } = await seedCompanyWithAgent({ companyId, agentId: 'canvas-target' })
   const work: AgentWorkItem = {
     id: 'canvas-work', fence: 1, companyId, agentId, channelId: 'canvas-channel',
-    triggerClientMsgNo: 'canvas-trigger', reason: 'message', executionRole:'coordinator',lane: 'learner', leaseToken: 'test-lease',
+    authorizationUserId: 'test-owner', triggerClientMsgNo: 'canvas-trigger', reason: 'message',
+    executionRole:'coordinator',lane: 'learner', leaseToken: 'test-lease',
   }
 
   await pool.query(`UPDATE participants SET capabilities='["canvas"]'::jsonb WHERE id=ANY($1::text[]) AND company_id=$2`, [[agentId, targetAgentId], companyId])
