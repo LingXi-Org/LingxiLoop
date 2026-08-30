@@ -40,6 +40,19 @@ import {
   listToolCalls,
   participantNames,
 } from './cli/repository.js'
+import {
+  createAgentTask,
+  deleteSkillFiles,
+  deleteWorkspaceFile,
+  listAgentTasks,
+  listWorkspaceContents,
+  listWorkspaceFiles,
+  readWorkspaceFile,
+  updateAgentTaskStatus,
+  updateWorkspaceFile,
+  workspaceFileExists,
+  writeWorkspaceFile,
+} from './cli/workspace-repository.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
 import { stripLoneSurrogates } from './text-safety.js'
@@ -1414,12 +1427,9 @@ async function cmdSkills(parsed: ParsedArgs): Promise<CliResult> {
     // No sub-path → load the SKILL.md entry-point. With a sub-path,
     // load that bundled file (e.g. `scripts/extract.py`).
     const fullPath = subPath ? `skills/${name}/${subPath}` : `skills/${name}/SKILL.md`
-    const { rows } = await pool.query<{ body: string }>(
-      `SELECT body FROM agent_workspace WHERE agent_id = $1 AND path = $2 LIMIT 1`,
-      [me, fullPath],
-    )
-    if (!rows[0]) return err(`no such file: ${fullPath}`)
-    return ok(rows[0].body)
+    const file = await readWorkspaceFile(pool, me, fullPath)
+    if (!file) return err(`no such file: ${fullPath}`)
+    return ok(file.body)
   }
 
   if (op === 'create') {
@@ -1434,11 +1444,9 @@ async function cmdSkills(parsed: ParsedArgs): Promise<CliResult> {
     if (description.length > 1024) return err('description must be ≤ 1024 characters')
 
     const path = `skills/${name}/SKILL.md`
-    const { rows: existing } = await pool.query<{ path: string }>(
-      `SELECT path FROM agent_workspace WHERE agent_id = $1 AND path = $2 LIMIT 1`,
-      [me, path],
-    )
-    if (existing[0]) return err(`skill "${name}" already exists — use \`lingxiloop workspace edit ${path}\` to modify it, or \`lingxiloop skills delete ${name}\` first`)
+    if (await workspaceFileExists(pool, me, path)) {
+      return err(`skill "${name}" already exists — use \`lingxiloop workspace edit ${path}\` to modify it, or \`lingxiloop skills delete ${name}\` first`)
+    }
 
     const body = `---
 name: ${name}
@@ -1452,11 +1460,7 @@ step-by-step, examples, edge cases. Keep this file under ~500 lines —
 move long reference material into \`references/\` files and load them
 on demand via \`lingxiloop skills read ${name} references/<file>\`._
 `
-    await pool.query(
-      `INSERT INTO agent_workspace (agent_id, path, body, company_id, updated_at)
-       VALUES ($1, $2, $3, $4, NOW())`,
-      [me, path, body, await agentCompany(me)],
-    )
+    await writeWorkspaceFile(pool, { agentId: me, path, body, companyId: await agentCompany(me) })
     return ok(
       `created skill "${name}" at ${path}\n\n` +
       `flesh it out: lingxiloop workspace edit ${path} "<old>" "<new>"\n` +
@@ -1475,18 +1479,14 @@ on demand via \`lingxiloop skills read ${name} references/<file>\`._
   if (op === 'delete') {
     const name = parsed.positional[1]
     if (!name) return err('usage: skills delete <name>')
-    const r = await pool.query(
-      `DELETE FROM agent_workspace
-        WHERE agent_id = $1 AND (path = $2 OR path LIKE $3)`,
-      [me, `skills/${name}/SKILL.md`, `skills/${name}/%`],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no such skill: ${name}`)
-    return ok(`deleted skill "${name}" (${r.rowCount} files removed)`, [{
+    const fileCount = await deleteSkillFiles(pool, me, name)
+    if (fileCount === 0) return err(`no such skill: ${name}`)
+    return ok(`deleted skill "${name}" (${fileCount} files removed)`, [{
       event: 'skill.deleted',
       command: 'skills delete',
       agentId: me,
       skillName: name,
-      fileCount: r.rowCount ?? 0,
+      fileCount,
     }])
   }
 
@@ -2153,10 +2153,7 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
   // (agent_id is globally unique) so they don't need it.
   const tenant = await agentCompany(me)
   if (op === 'ls') {
-    const { rows } = await pool.query<{ path: string; updated_at: string }>(
-      `SELECT path, updated_at FROM agent_workspace WHERE agent_id = $1 ORDER BY path ASC`,
-      [me],
-    )
+    const rows = await listWorkspaceFiles(pool, me)
     if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
     if (rows.length === 0) return ok(`(${me}'s workspace is empty)`)
     return ok([
@@ -2168,22 +2165,15 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
   if (op === 'read') {
     const path = parsed.positional[1]
     if (!path) return err('usage: workspace read <path> [--as id]')
-    const { rows } = await pool.query<{ body: string; updated_at: string }>(
-      `SELECT body, updated_at FROM agent_workspace WHERE agent_id = $1 AND path = $2`,
-      [me, path],
-    )
-    if (!rows[0]) return err(`no file at ${path} in ${me}'s workspace`)
-    return ok(rows[0].body)
+    const file = await readWorkspaceFile(pool, me, path)
+    if (!file) return err(`no file at ${path} in ${me}'s workspace`)
+    return ok(file.body)
   }
   if (op === 'write') {
     const path = parsed.positional[1]
     const body = parsed.positional.slice(2).join(' ')
     if (!path || !body) return err('usage: workspace write <path> <body> [--as id]')
-    await pool.query(
-      `INSERT INTO agent_workspace (agent_id, path, body, company_id, updated_at) VALUES ($1, $2, $3, $4, NOW())
-       ON CONFLICT (agent_id, path) DO UPDATE SET body = EXCLUDED.body, company_id = EXCLUDED.company_id, updated_at = NOW()`,
-      [me, path, body, tenant],
-    )
+    await writeWorkspaceFile(pool, { agentId: me, path, body, companyId: tenant })
     return ok(`wrote ${path} (${body.length} chars)`, [{
       event: 'workspace.file_written',
       command: 'workspace write',
@@ -2196,8 +2186,7 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
   if (op === 'delete') {
     const path = parsed.positional[1]
     if (!path) return err('usage: workspace delete <path> [--as id]')
-    const r = await pool.query(`DELETE FROM agent_workspace WHERE agent_id = $1 AND path = $2`, [me, path])
-    if ((r.rowCount ?? 0) === 0) return err(`no file at ${path}`)
+    if (await deleteWorkspaceFile(pool, me, path) === 0) return err(`no file at ${path}`)
     return ok(`deleted ${path}`, [{
       event: 'workspace.file_deleted',
       command: 'workspace delete',
@@ -2211,19 +2200,14 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
     const oldStr = parsed.positional[2]
     const newStr = parsed.positional[3] ?? ''
     if (!path || oldStr === undefined) return err('usage: workspace edit <path> <old> <new> [--as id]')
-    const { rows } = await pool.query<{ body: string }>(
-      `SELECT body FROM agent_workspace WHERE agent_id = $1 AND path = $2`, [me, path],
-    )
-    if (!rows[0]) return err(`no file at ${path}`)
-    const body = rows[0].body
+    const file = await readWorkspaceFile(pool, me, path)
+    if (!file) return err(`no file at ${path}`)
+    const body = file.body
     const occurrences = body.split(oldStr).length - 1
     if (occurrences === 0) return err(`old string not found in ${path}`)
     if (occurrences > 1 && !parsed.flags.all) return err(`old string appears ${occurrences} times in ${path} — pass --all or include more context to make it unique`)
     const next = parsed.flags.all ? body.split(oldStr).join(newStr) : body.replace(oldStr, newStr)
-    await pool.query(
-      `UPDATE agent_workspace SET body = $3, updated_at = NOW() WHERE agent_id = $1 AND path = $2`,
-      [me, path, next],
-    )
+    await updateWorkspaceFile(pool, me, path, next)
     return ok(`edited ${path} (${occurrences} replacement${occurrences === 1 ? '' : 's'})`, [{
       event: 'workspace.file_updated',
       command: 'workspace edit',
@@ -2239,9 +2223,7 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
     if (!pattern) return err('usage: workspace grep <pattern> [--as id]')
     let re: RegExp
     try { re = new RegExp(pattern, parsed.flags.i ? 'gi' : 'g') } catch { return err(`bad regex: ${pattern}`) }
-    const { rows } = await pool.query<{ path: string; body: string }>(
-      `SELECT path, body FROM agent_workspace WHERE agent_id = $1 ORDER BY path ASC`, [me],
-    )
+    const rows = await listWorkspaceContents(pool, me)
     const hits: string[] = []
     for (const r of rows) {
       const lines = r.body.split('\n')
@@ -2262,17 +2244,7 @@ async function cmdTasks(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (op === 'list') {
-    const params: unknown[] = [me]
-    let where = `agent_id = $1`
-    if (parsed.flags.status) { params.push(String(parsed.flags.status)); where += ` AND status = $${params.length}` }
-    const { rows } = await pool.query<{
-      id: string; title: string; status: string; due_at: string | null;
-      created_at: string; updated_at: string
-    }>(
-      `SELECT id, title, status, due_at, created_at, updated_at
-         FROM agent_tasks WHERE ${where} ORDER BY status ASC, updated_at DESC`,
-      params,
-    )
+    const rows = await listAgentTasks(pool, me, parsed.flags.status ? String(parsed.flags.status) : undefined)
     if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
     if (rows.length === 0) return ok(`(no tasks for ${me})`)
     return ok([
@@ -2285,10 +2257,7 @@ async function cmdTasks(parsed: ParsedArgs): Promise<CliResult> {
     const title = parsed.positional.slice(1).join(' ')
     if (!title) return err('usage: tasks add <title> [--as id]')
     const id = `task-${randomUUID().slice(0, 12)}`
-    await pool.query(
-      `INSERT INTO agent_tasks (id, agent_id, title) VALUES ($1, $2, $3)`,
-      [id, me, title],
-    )
+    await createAgentTask(pool, id, me, title)
     return ok(`added task ${id}: ${title}`, [{
       event: 'task.created',
       command: 'tasks add',
@@ -2305,11 +2274,7 @@ async function cmdTasks(parsed: ParsedArgs): Promise<CliResult> {
     const status = parsed.positional[2]
     if (!id || !status) return err('usage: tasks set <task_id> <status>')
     if (!['open', 'doing', 'done', 'dropped'].includes(status)) return err(`bad status: ${status}`)
-    const r = await pool.query(
-      `UPDATE agent_tasks SET status = $3, updated_at = NOW() WHERE id = $1 AND agent_id = $2`,
-      [id, me, status],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no task ${id} for ${me}`)
+    if (await updateAgentTaskStatus(pool, id, me, status) === 0) return err(`no task ${id} for ${me}`)
     return ok(`task ${id} → ${status}`, [{
       event: 'task.status_changed',
       command: 'tasks set',
