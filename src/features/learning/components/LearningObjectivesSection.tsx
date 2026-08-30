@@ -33,11 +33,11 @@ export function LearningObjectivesSection({
               <p className="text-xs text-muted-foreground">
                 目标等级 L{objective.targetLevel} · 先修 {objective.prerequisiteIds.length || '无'} · {statusLabel(objective.status)}
               </p>
-              {perspective === 'teacher' && objective.status === 'draft' && (
+              {perspective === 'teacher' && objective.status === 'DRAFT' && course.courseId && (
                 <Button
                   size="sm"
                   onClick={() => void learningApi
-                    .setObjectiveStatus(course.id, objective.id, 'published')
+                    .setObjectiveStatus(course.courseId!, objective.id, 'PUBLISHED')
                     .then(onChanged)
                     .catch(onError)}
                 >

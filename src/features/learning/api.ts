@@ -47,20 +47,23 @@ export const learningApi = {
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/rooms/${encodeURIComponent(conversationId)}`, {
       method: 'PUT', body: JSON.stringify({ purpose }),
     }),
-  listObjectives: (courseId: string) =>
-    http<LearningObjective[]>(`/courses/${encodeURIComponent(courseId)}/objectives`),
+  listKnowledgeUnits: (projectId: string) =>
+    http<LearningObjective[]>(`/projects/${encodeURIComponent(projectId)}/learning/knowledge-units`),
   createObjectives: (courseId: string, objectives: Array<{
     title: string; successCriteria: string; targetLevel?: number; prerequisiteIds?: string[]
   }>) => http<LearningObjective[]>(`/courses/${encodeURIComponent(courseId)}/objectives`, {
     method: 'POST', body: JSON.stringify({ objectives }),
   }),
-  setObjectiveStatus: (courseId: string, objectiveId: string, status: 'draft' | 'published' | 'archived') =>
+  setObjectiveStatus: (courseId: string, objectiveId: string, status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED') =>
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/objectives/${encodeURIComponent(objectiveId)}/status`, {
       method: 'POST', body: JSON.stringify({ status }),
     }),
-  listActivities: (courseId: string) =>
-    http<LearningActivity[]>(`/courses/${encodeURIComponent(courseId)}/activities`),
-  createActivity: (courseId: string, input: Omit<LearningActivity, 'id' | 'courseId' | 'status'>) =>
+  listActivities: (projectId: string) =>
+    http<LearningActivity[]>(`/projects/${encodeURIComponent(projectId)}/learning/activities`),
+  createActivity: (courseId: string, input: {
+    title: string; instructions: string; type: LearningActivity['kind']; evaluationMode: LearningActivity['evaluationMode'];
+    targetLevel: number; rubric: unknown[]; objectiveIds: string[]; dueAt?: string
+  }) =>
     http<LearningActivity>(`/courses/${encodeURIComponent(courseId)}/activities`, {
       method: 'POST', body: JSON.stringify(input),
     }),
@@ -70,32 +73,32 @@ export const learningApi = {
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/close`, { method: 'POST' }),
   submitActivity: (() => {
     const keys = new Map<string, string>()
-    return async (courseId: string, activityId: string, answer: string, assistance: 'none' | 'hint' | 'guided' = 'none') => {
-      const fingerprint = JSON.stringify([courseId, activityId, answer, assistance])
+    return async (projectId: string, activityId: string, answer: string, assistance: 'NONE' | 'HINT' | 'GUIDED' = 'NONE') => {
+      const fingerprint = JSON.stringify([projectId, activityId, answer, assistance])
       const idempotencyKey = keys.get(fingerprint) ?? crypto.randomUUID()
       keys.set(fingerprint, idempotencyKey)
-      const result = await http<{ attemptId: string }>(`/courses/${encodeURIComponent(courseId)}/activities/${encodeURIComponent(activityId)}/submit`, {
+      const result = await http<{ attemptId: string }>(`/projects/${encodeURIComponent(projectId)}/learning/activities/${encodeURIComponent(activityId)}/submit`, {
         method: 'POST', body: JSON.stringify({ answer, assistance, idempotencyKey }),
       })
       keys.delete(fingerprint)
       return result
     }
   })(),
-  listMissions: (courseId: string) =>
-    http<LearningMission[]>(`/courses/${encodeURIComponent(courseId)}/missions`),
+  listMissions: (projectId: string) =>
+    http<LearningMission[]>(`/projects/${encodeURIComponent(projectId)}/learning/missions`),
   setMissionCoordinator: (courseId: string, missionId: string, agentId: string) =>
     http<LearningMission>(`/courses/${encodeURIComponent(courseId)}/missions/${encodeURIComponent(missionId)}/coordinator`, {
       method: 'PATCH', body: JSON.stringify({ agentId }),
     }),
-  listEvidence: (courseId: string, learnerId?: string) =>
-    http<LearningEvidence[]>(`/courses/${encodeURIComponent(courseId)}/evidence${learnerId ? `?learnerId=${encodeURIComponent(learnerId)}` : ''}`),
-  listReviews: (courseId: string) =>
-    http<LearningReview[]>(`/courses/${encodeURIComponent(courseId)}/reviews`),
-  getCourseProgress: (courseId: string) =>
-    http<LearningProgress[]>(`/courses/${encodeURIComponent(courseId)}/progress`),
-  reviewEvaluation: (courseId: string, evaluationId: string, input: {
-    decision: 'accept' | 'reject'; reason: string; overrideLevel?: number
-  }) => http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/reviews/${encodeURIComponent(evaluationId)}`, {
+  listEvidence: (projectId: string, learnerId?: string) =>
+    http<LearningEvidence[]>(`/projects/${encodeURIComponent(projectId)}/learning/evidence${learnerId ? `?learnerId=${encodeURIComponent(learnerId)}` : ''}`),
+  listReviews: (projectId: string) =>
+    http<LearningReview[]>(`/projects/${encodeURIComponent(projectId)}/learning/reviews`),
+  getProjectProgress: (projectId: string) =>
+    http<LearningProgress[]>(`/projects/${encodeURIComponent(projectId)}/learning/progress`),
+  reviewEvaluation: (projectId: string, evaluationId: string, input: {
+    decision: 'accept' | 'reject'; reason: string
+  }) => http<{ ok: true }>(`/projects/${encodeURIComponent(projectId)}/learning/reviews/${encodeURIComponent(evaluationId)}`, {
     method: 'POST', body: JSON.stringify(input),
   }),
   getNotificationPreferences: (courseId?: string) =>

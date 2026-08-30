@@ -33,26 +33,26 @@ export function LearningActivitiesSection({
                 </div>
                 <p className="text-sm leading-5 text-muted-foreground">{activity.instructions}</p>
                 <p className="text-xs text-muted-foreground">
-                  {ACTIVITY_TYPE_LABELS[activity.type] ?? activity.type} · L{activity.targetLevel} ·{' '}
+                  {ACTIVITY_TYPE_LABELS[activity.kind] ?? activity.kind} · L{activity.targetLevel} ·{' '}
                   {EVALUATION_MODE_LABELS[activity.evaluationMode] ?? activity.evaluationMode}
                 </p>
               </div>
               {perspective === 'teacher' && (
                 <div className="flex gap-3">
-                  {activity.status === 'draft' && (
-                    <Button size="sm" onClick={() => void learningApi.publishActivity(course.id, activity.id).then(onChanged).catch(onError)}>
+                  {activity.status === 'DRAFT' && course.courseId && (
+                    <Button size="sm" onClick={() => void learningApi.publishActivity(course.courseId!, activity.id).then(onChanged).catch(onError)}>
                       发布
                     </Button>
                   )}
-                  {activity.status === 'published' && (
-                    <Button size="sm" variant="secondary" onClick={() => void learningApi.closeActivity(course.id, activity.id).then(onChanged).catch(onError)}>
+                  {activity.status === 'PUBLISHED' && course.courseId && (
+                    <Button size="sm" variant="secondary" onClick={() => void learningApi.closeActivity(course.courseId!, activity.id).then(onChanged).catch(onError)}>
                       关闭
                     </Button>
                   )}
                 </div>
               )}
             </div>
-            {perspective === 'learner' && activity.status === 'published' && (
+            {perspective === 'learner' && activity.status === 'PUBLISHED' && (
               <div className="mt-4 space-y-3">
                 <Textarea
                   value={answers[activity.id] ?? ''}
@@ -62,7 +62,7 @@ export function LearningActivitiesSection({
                 />
                 <Button
                   onClick={() => void learningApi
-                    .submitActivity(course.id, activity.id, answers[activity.id] ?? '')
+                    .submitActivity(course.projectId, activity.id, answers[activity.id] ?? '')
                     .then(async () => {
                       setAnswers((current) => ({ ...current, [activity.id]: '' }))
                       await onChanged()

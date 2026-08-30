@@ -318,7 +318,8 @@ export interface Message {
   }
   learningMission?: {
     missionId: string
-    courseId: string
+    projectId: string
+    courseId?: string
     goal: string
     successCriteria: string
     status: string

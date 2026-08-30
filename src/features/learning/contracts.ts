@@ -74,53 +74,48 @@ export interface ApiCourseInvitationAccept {
 export type LearningRole = 'teacher' | 'learner'
 
 export interface LearningCourse {
-  id: string
-  companyId: string
   projectId: string
+  courseId?: string
   projectKind: ProjectKind
   title: string
   description: string
   status: ProjectStatus
-  courseRole: LearningRole
-  roomCount: number
-  objectiveCount: number
+  perspective: LearningRole
   learnerCount: number
-  createdAt: string
-  updatedAt: string
 }
 
 export interface LearningObjective {
   id: string
-  courseId: string
+  projectId: string
   title: string
   successCriteria: string
   targetLevel: 1 | 2 | 3 | 4
   position: number
-  status: 'draft' | 'published' | 'archived'
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
   prerequisiteIds: string[]
 }
 
 export interface LearningActivity {
   id: string
-  courseId: string
+  projectId: string
   title: string
   instructions: string
-  type: 'lesson' | 'practice' | 'assessment' | 'project' | 'review'
-  status: 'draft' | 'published' | 'closed'
-  evaluationMode: 'agent_formative' | 'teacher_required'
+  kind: 'LESSON' | 'PRACTICE' | 'ASSESSMENT' | 'PROJECT' | 'REVIEW'
+  status: 'DRAFT' | 'PUBLISHED' | 'CLOSED'
+  evaluationMode: 'AGENT_FORMATIVE' | 'TEACHER_REQUIRED'
   targetLevel: 1 | 2 | 3 | 4
   rubric: unknown[]
-  objectiveIds: string[]
+  knowledgeUnitIds: string[]
   dueAt?: string
 }
 
 export interface LearningMissionStep {
   id: string
-  type: 'learn' | 'practice' | 'check' | 'reflect'
+  kind: 'LEARN' | 'PRACTICE' | 'CHECK' | 'REFLECT'
   description: string
   successCriteria: string
-  objectiveId?: string
-  status: 'open' | 'in_progress' | 'completed' | 'cancelled'
+  knowledgeUnitId?: string
+  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
   position: number
   outcome?: string
   completionReportId?: string
@@ -129,16 +124,17 @@ export interface LearningMissionStep {
 
 export interface LearningMission {
   id: string
-  courseId: string
+  projectId: string
+  courseId?: string
   learnerId: string
   conversationId: string
   triggerClientMsgNo: string
   goal: string
   successCriteria: string
-  missionKind: 'study' | 'research' | 'project'
+  kind: 'STUDY' | 'RESEARCH' | 'PROJECT'
   coordinatorAgentId: string
   coordinatorName?: string
-  status: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled'
+  status: 'PLANNING' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'CANCELLED'
   steps: LearningMissionStep[]
   createdAt: string
   updatedAt: string
@@ -148,7 +144,7 @@ export interface LearningEvidence {
   id: string
   activity_id: string | null
   mission_step_id: string | null
-  assistance: 'none' | 'hint' | 'guided'
+  assistance: 'NONE' | 'HINT' | 'GUIDED'
   status: string
   evidence: unknown
   created_at: string
@@ -184,15 +180,15 @@ export interface LearningProgress {
   display_name: string
   email: string
   average_level: number
-  verified_objectives: number
-  due_objectives: number
+  verified_knowledge_units: number
+  due_knowledge_units: number
   attempts: number
 }
 
 export interface LearningDashboard {
-  courses: LearningCourse[]
-  due: Array<{ course_id: string; objective_id: string; title: string; level: number; status: string; next_review_at: string }>
-  mastery: Array<{ course_id: string; objective_id: string; title: string; level: number; status: string; next_review_at: string | null; review_interval_days: number }>
+  projects: LearningCourse[]
+  due: Array<{ projectId: string; knowledgeUnitId: string; title: string; level: number; status: string; nextReviewAt: string }>
+  states: Array<{ projectId: string; knowledgeUnitId: string; title: string; level: number; status: string; nextReviewAt: string | null; reviewIntervalDays: number }>
   pendingReviews: number
 }
 

@@ -35,7 +35,7 @@ test('converts every Lingxi MessageKind into assistant-ui parts without hiding p
     message('handoff', { handoff: { id: 'h', fromAgentId: 'agent', toAgentId: 'agent-2', title: 'Handoff', status: 'working', sharedPaths: [], browserTargets: [] } }),
     message('approval', { approval: { id: 'a', agentId: 'agent', kind: 'course_management', summary: 'Publish', status: 'pending', payload: {}, requestedAt: '2026-08-26T10:00:00.000Z' } }),
     message('canvas', { canvas: { canvasId: 'canvas', title: 'Canvas', goal: 'Goal', status: 'active', members: [], frameCount: 0 } }),
-    message('learning_mission', { learningMission: { missionId: 'mission', courseId: 'course', goal: 'Goal', successCriteria: 'Done', status: 'active' } }),
+    message('learning_mission', { learningMission: { missionId: 'mission', projectId: 'project', goal: 'Goal', successCriteria: 'Done', status: 'ACTIVE' } }),
   ]
   const expected = ['text', 'tool-call', 'file', 'reasoning', 'text', 'data', 'data', 'data', 'data', 'tool-call', 'data', 'data']
   messages.forEach((item, index) => {

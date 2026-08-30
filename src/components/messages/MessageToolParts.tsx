@@ -86,6 +86,6 @@ export function HandoffPart({ message }: { message: Message }) {
 export function LearningMissionPart({ message }: { message: Message }) {
   const mission = message.learningMission
   if (!mission) throw new Error('Learning mission message is missing its native payload')
-  const status = mission.status === 'completed' ? 'completed' : mission.status === 'cancelled' ? 'cancelled' : 'in_progress'
-  return <Plan id={`plan-learning-${mission.missionId}`} role="composite" className="mt-2 max-w-[620px]" title={mission.goal} description="学习任务" todos={[{ id: `${mission.missionId}-success`, label: mission.successCriteria, description: `课程 ${mission.courseId}`, status }]} receipt={status === 'completed' ? { outcome: 'success', summary: '学习任务已完成', at: message.createdAt ?? new Date().toISOString() } : undefined} />
+  const status = mission.status === 'COMPLETED' ? 'completed' : mission.status === 'CANCELLED' ? 'cancelled' : 'in_progress'
+  return <Plan id={`plan-learning-${mission.missionId}`} role="composite" className="mt-2 max-w-[620px]" title={mission.goal} description="学习任务" todos={[{ id: `${mission.missionId}-success`, label: mission.successCriteria, description: `项目 ${mission.projectId}`, status }]} receipt={status === 'completed' ? { outcome: 'success', summary: '学习任务已完成', at: message.createdAt ?? new Date().toISOString() } : undefined} />
 }

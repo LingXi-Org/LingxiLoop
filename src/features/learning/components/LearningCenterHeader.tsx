@@ -7,16 +7,16 @@ import type { LearningSection } from './learningDisplay'
 interface LearningCenterHeaderProps {
   course: LearningCourse
   courses: LearningCourse[]
-  courseId: string
+  projectId: string
   perspective: LearningRole
   section: LearningSection
   reviewCount: number
-  onCourseChange(courseId: string): void
+  onProjectChange(projectId: string): void
   onSectionChange(section: LearningSection): void
 }
 
 export function LearningCenterHeader({
-  course, courses, courseId, perspective, section, reviewCount, onCourseChange, onSectionChange,
+  course, courses, projectId, perspective, section, reviewCount, onProjectChange, onSectionChange,
 }: LearningCenterHeaderProps) {
   const sections: Array<[LearningSection, string]> = perspective === 'teacher'
     ? [
@@ -35,12 +35,12 @@ export function LearningCenterHeader({
           <p className="text-xs font-medium text-primary">学习</p>
           <h1 className="truncate font-heading text-lg font-medium">{course.title}</h1>
         </div>
-        <Select value={courseId} onValueChange={onCourseChange}>
+        <Select value={projectId} onValueChange={onProjectChange}>
           <SelectTrigger aria-label="选择课程" className="min-w-0 flex-1 md:max-w-52 md:flex-none">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {courses.map((item) => <SelectItem key={item.id} value={item.id}>{item.title}</SelectItem>)}
+            {courses.map((item) => <SelectItem key={item.projectId} value={item.projectId}>{item.title}</SelectItem>)}
           </SelectContent>
         </Select>
         <Badge variant="secondary">{perspective === 'teacher' ? '教师' : '学习者'}</Badge>

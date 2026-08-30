@@ -17,11 +17,9 @@ export function LearningReviewsSection({ course, reviews, progress, onChanged, o
   const participantsById = useParticipants((state) => state.byId)
 
   const review = (item: LearningReview, decision: 'accept' | 'reject') => {
-    const acceptsLevelFour = decision === 'accept' && item.demonstrated_level === 4
-    return learningApi.reviewEvaluation(course.id, item.id, {
+    return learningApi.reviewEvaluation(course.projectId, item.id, {
       decision,
       reason: decision === 'accept' ? '教师确认评价与证据一致' : '证据不足，需要补充',
-      ...(acceptsLevelFour ? { overrideLevel: 4 as const } : {}),
     }).then(onChanged).catch(onError)
   }
 

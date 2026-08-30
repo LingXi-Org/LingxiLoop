@@ -82,7 +82,7 @@ export function TeacherComposer({ course, objectives, onChanged }: {
         <CardContent className="space-y-3">
           <Input value={objectiveTitle} onChange={(event) => setObjectiveTitle(event.target.value)} placeholder="目标标题" />
           <Textarea value={criteria} onChange={(event) => setCriteria(event.target.value)} placeholder="可检查的成功标准" className="min-h-20" />
-          <Button onClick={() => void learningApi.createObjectives(course.id, [{ title: objectiveTitle, successCriteria: criteria, targetLevel: 3 }]).then(async () => {
+          <Button disabled={!course.courseId} onClick={() => course.courseId && void learningApi.createObjectives(course.courseId, [{ title: objectiveTitle, successCriteria: criteria, targetLevel: 3 }]).then(async () => {
             setObjectiveTitle(''); setCriteria(''); await onChanged()
           }).catch((reason) => setError(String(reason)))}>保存目标</Button>
         </CardContent>
@@ -92,8 +92,8 @@ export function TeacherComposer({ course, objectives, onChanged }: {
         <CardContent className="space-y-3">
           <Input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="活动标题" />
           <Textarea value={instructions} onChange={(event) => setInstructions(event.target.value)} placeholder="学习者任务说明" className="min-h-20" />
-          <Button onClick={() => void learningApi.createActivity(course.id, {
-            title: activityTitle, instructions, type: 'practice', evaluationMode: 'agent_formative',
+          <Button disabled={!course.courseId} onClick={() => course.courseId && void learningApi.createActivity(course.courseId, {
+            title: activityTitle, instructions, type: 'PRACTICE', evaluationMode: 'AGENT_FORMATIVE',
             targetLevel: 3, rubric: [], objectiveIds: objectives[0] ? [objectives[0].id] : [],
           }).then(async () => {
             setActivityTitle(''); setInstructions(''); await onChanged()

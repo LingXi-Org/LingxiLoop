@@ -29,22 +29,22 @@ interface LearningTodaySectionProps {
 }
 
 export function LearningTodaySection(props: LearningTodaySectionProps) {
-  return props.course.courseRole === 'teacher'
+  return props.course.perspective === 'teacher'
     ? <TeacherToday {...props} />
     : <LearnerToday {...props} />
 }
 
 function LearnerToday({ course, dashboard, objectives, activities, missions }: LearningTodaySectionProps) {
-  const due = dashboard.due.filter((item) => item.course_id === course.id)
+  const due = dashboard.due.filter((item) => item.projectId === course.projectId)
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="到期复习" value={due.length} />
         <StatCard label="目标" value={objectives.length} />
-        <StatCard label="已发布活动" value={activities.filter((item) => item.status === 'published').length} />
+        <StatCard label="已发布活动" value={activities.filter((item) => item.status === 'PUBLISHED').length} />
       </div>
       {missions.map((mission) => {
-        const completed = mission.steps.filter((step) => step.status === 'completed').length
+        const completed = mission.steps.filter((step) => step.status === 'COMPLETED').length
         return (
           <Card key={mission.id} size="sm">
             <CardHeader>
@@ -54,7 +54,7 @@ function LearnerToday({ course, dashboard, objectives, activities, missions }: L
                   <CardTitle>{mission.goal}</CardTitle>
                   <CardDescription>成功标准：{mission.successCriteria}</CardDescription>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {MISSION_KIND_LABELS[mission.missionKind] ?? mission.missionKind} · 负责人 {mission.coordinatorName ?? mission.coordinatorAgentId}
+                    {MISSION_KIND_LABELS[mission.kind] ?? mission.kind} · 负责人 {mission.coordinatorName ?? mission.coordinatorAgentId}
                   </p>
                 </div>
                 <Badge variant="secondary">{statusLabel(mission.status)} · 已完成 {completed}/{mission.steps.length}</Badge>
@@ -64,11 +64,11 @@ function LearnerToday({ course, dashboard, objectives, activities, missions }: L
               {mission.steps.map((step) => (
                 <div key={step.id} className="flex items-start gap-3 rounded-3xl bg-muted px-3 py-2.5">
                   <span className="grid size-5 shrink-0 place-items-center rounded-full bg-secondary text-xs font-medium text-secondary-foreground">
-                    {step.status === 'completed' ? '✓' : step.position + 1}
+                    {step.status === 'COMPLETED' ? '✓' : step.position + 1}
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{step.description}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{STEP_TYPE_LABELS[step.type] ?? step.type} · {step.successCriteria}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{STEP_TYPE_LABELS[step.kind] ?? step.kind} · {step.successCriteria}</p>
                   </div>
                 </div>
               ))}
@@ -77,7 +77,7 @@ function LearnerToday({ course, dashboard, objectives, activities, missions }: L
         )
       })}
       {due.map((item) => (
-        <Card key={item.objective_id} size="sm">
+        <Card key={item.knowledgeUnitId} size="sm">
           <CardContent className="flex items-center justify-between gap-3">
             <div>
               <h3 className="font-heading text-sm font-medium">{item.title}</h3>
@@ -148,7 +148,7 @@ function TeacherToday({
               <div key={item.user_id} className="flex items-center justify-between gap-3 py-3">
                 <div>
                   <p className="text-sm font-medium">{item.display_name ?? item.email ?? item.user_id}</p>
-                  <p className="text-xs text-muted-foreground">{item.attempts} 次尝试 · {item.due_objectives} 项到期</p>
+                  <p className="text-xs text-muted-foreground">{item.attempts} 次尝试 · {item.due_knowledge_units} 项到期</p>
                 </div>
                 <MasteryBadge level={Math.round(item.average_level)} />
               </div>
@@ -164,11 +164,11 @@ function TeacherToday({
               <div key={mission.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div>
                   <p className="text-sm font-medium">{mission.goal}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{MISSION_KIND_LABELS[mission.missionKind] ?? mission.missionKind} · 当前负责人 {mission.coordinatorName ?? mission.coordinatorAgentId}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{MISSION_KIND_LABELS[mission.kind] ?? mission.kind} · 当前负责人 {mission.coordinatorName ?? mission.coordinatorAgentId}</p>
                 </div>
                 <Select
                   value={mission.coordinatorAgentId}
-                  onValueChange={(agentId) => void learningApi.setMissionCoordinator(course.id, mission.id, agentId).then(onChanged).catch(onError)}
+                  onValueChange={(agentId) => course.courseId && void learningApi.setMissionCoordinator(course.courseId, mission.id, agentId).then(onChanged).catch(onError)}
                 >
                   <SelectTrigger aria-label={`调整“${mission.goal}”的负责人`} size="sm"><SelectValue /></SelectTrigger>
                   <SelectContent>{coordinators.map((agent) => <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>)}</SelectContent>

@@ -54,7 +54,7 @@ export function LearningNotificationsSection({
         </div>
         <Button
           onClick={() => void learningApi.setNotificationPreferences({
-            courseId: course.id,
+            ...(course.courseId ? { courseId: course.courseId } : {}),
             inAppEnabled: preferences.in_app_enabled,
             emailEnabled: preferences.email_enabled,
             timezone: preferences.timezone,

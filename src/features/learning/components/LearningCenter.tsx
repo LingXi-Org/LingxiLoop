@@ -15,12 +15,12 @@ import type { LearningSection } from './learningDisplay'
 export function LearningCenter() {
   const [section, setSection] = useState<LearningSection>('today')
   const {
-    dashboard, courseId, setCourseId, objectives, activities, evidence, missions, reviews, progress,
+    dashboard, projectId, setProjectId, objectives, activities, evidence, missions, reviews, progress,
     teacherAgent, answers, setAnswers, notificationPrefs, setNotificationPrefs, deliveries,
-    error, setError, loadDashboard, refreshCourse,
+    error, setError, loadDashboard, refreshProject,
   } = useLearningCenter()
-  const course = dashboard?.courses.find((item) => item.id === courseId)
-  const perspective = course?.courseRole ?? 'learner'
+  const course = dashboard?.projects.find((item) => item.projectId === projectId)
+  const perspective = course?.perspective ?? 'learner'
 
   useEffect(() => {
     const inaccessible = (perspective === 'teacher' && section === 'evidence')
@@ -29,10 +29,10 @@ export function LearningCenter() {
   }, [perspective, section])
 
   const mastery = useMemo(() => new Map(
-    (dashboard?.mastery ?? [])
-      .filter((item) => item.course_id === courseId)
-      .map((item) => [item.objective_id, item.level]),
-  ), [courseId, dashboard?.mastery])
+    (dashboard?.states ?? [])
+      .filter((item) => item.projectId === projectId)
+      .map((item) => [item.knowledgeUnitId, item.level]),
+  ), [dashboard?.states, projectId])
 
   const onError = (reason: unknown) => setError(reason instanceof Error ? reason.message : String(reason))
 
@@ -41,19 +41,19 @@ export function LearningCenter() {
       ? <div className="grid h-full place-items-center text-sm text-muted-foreground">{error}</div>
       : <ResourceSkeleton variant="detail" className="h-full" label="正在加载学习中心" />
   }
-  if (dashboard.courses.length === 0) return <Onboarding onCreated={loadDashboard} />
+  if (dashboard.projects.length === 0) return <Onboarding onCreated={loadDashboard} />
   if (!course) return null
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
       <LearningCenterHeader
         course={course}
-        courses={dashboard.courses}
-        courseId={courseId}
+        courses={dashboard.projects}
+        projectId={projectId}
         perspective={perspective}
         section={section}
         reviewCount={reviews.length}
-        onCourseChange={setCourseId}
+        onProjectChange={setProjectId}
         onSectionChange={setSection}
       />
       <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6">
@@ -69,7 +69,7 @@ export function LearningCenter() {
               reviews={reviews}
               progress={progress}
               teacherAgent={teacherAgent}
-              onChanged={refreshCourse}
+              onChanged={refreshProject}
               onError={onError}
             />
           )}
@@ -79,7 +79,7 @@ export function LearningCenter() {
               objectives={objectives}
               perspective={perspective}
               mastery={mastery}
-              onChanged={refreshCourse}
+              onChanged={refreshProject}
               onError={onError}
             />
           )}
@@ -90,13 +90,13 @@ export function LearningCenter() {
               perspective={perspective}
               answers={answers}
               setAnswers={setAnswers}
-              onChanged={refreshCourse}
+              onChanged={refreshProject}
               onError={onError}
             />
           )}
           {section === 'evidence' && <LearningEvidenceSection evidence={evidence} />}
           {section === 'reviews' && (
-            <LearningReviewsSection course={course} reviews={reviews} progress={progress} onChanged={refreshCourse} onError={onError} />
+            <LearningReviewsSection course={course} reviews={reviews} progress={progress} onChanged={refreshProject} onError={onError} />
           )}
           {section === 'notifications' && (
             <LearningNotificationsSection

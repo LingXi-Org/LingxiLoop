@@ -25,7 +25,7 @@ const defaultPreferences: LearningNotificationPreferences = {
 
 export function useLearningCenter() {
   const [dashboard, setDashboard] = useState<LearningDashboard | null>(null)
-  const [courseId, setCourseId] = useState('')
+  const [projectId, setProjectId] = useState('')
   const [objectives, setObjectives] = useState<LearningObjective[]>([])
   const [activities, setActivities] = useState<LearningActivity[]>([])
   const [evidence, setEvidence] = useState<LearningEvidence[]>([])
@@ -41,16 +41,17 @@ export function useLearningCenter() {
   const loadDashboard = useCallback(async () => {
     const next = await learningApi.getDashboard()
     setDashboard(next)
-    setCourseId((current) => current || next.courses[0]?.id || '')
+    setProjectId((current) => current || next.projects[0]?.projectId || '')
   }, [])
 
-  const loadCourse = useCallback(async (id: string) => {
+  const loadProject = useCallback(async (id: string) => {
     if (!id) return
+    const current = dashboard?.projects.find((project) => project.projectId === id)
     const [nextObjectives, nextActivities, nextEvidence, nextMissions, prefs, nextDeliveries] =
       await Promise.all([
-        learningApi.listObjectives(id), learningApi.listActivities(id),
+        learningApi.listKnowledgeUnits(id), learningApi.listActivities(id),
         learningApi.listEvidence(id), learningApi.listMissions(id),
-        learningApi.getNotificationPreferences(id), learningApi.listDeliveries(),
+        learningApi.getNotificationPreferences(current?.courseId), learningApi.listDeliveries(),
       ])
     setObjectives(nextObjectives)
     setActivities(nextActivities)
@@ -58,10 +59,9 @@ export function useLearningCenter() {
     setMissions(nextMissions)
     setNotificationPrefs(prefs)
     setDeliveries(nextDeliveries)
-    const current = dashboard?.courses.find((course) => course.id === id)
-    if (current?.courseRole === 'teacher') {
+    if (current?.perspective === 'teacher' && current.courseId) {
       const [nextReviews, nextProgress, nextTeacherAgent] = await Promise.all([
-        learningApi.listReviews(id), learningApi.getCourseProgress(id), learningApi.getTeacherAgent(id),
+        learningApi.listReviews(id), learningApi.getProjectProgress(id), learningApi.getTeacherAgent(current.courseId),
       ])
       setReviews(nextReviews)
       setProgress(nextProgress)
@@ -71,25 +71,25 @@ export function useLearningCenter() {
       setProgress([])
       setTeacherAgent(null)
     }
-  }, [dashboard?.courses])
+  }, [dashboard?.projects])
 
   useEffect(() => {
     void loadDashboard().catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)))
   }, [loadDashboard])
 
   useEffect(() => {
-    const refresh = () => void loadDashboard().then(() => loadCourse(courseId)).catch((reason) => setError(String(reason)))
+    const refresh = () => void loadDashboard().then(() => loadProject(projectId)).catch((reason) => setError(String(reason)))
     window.addEventListener('lingxiloop:learning-updated', refresh)
     return () => window.removeEventListener('lingxiloop:learning-updated', refresh)
-  }, [courseId, loadCourse, loadDashboard])
+  }, [projectId, loadDashboard, loadProject])
 
   useEffect(() => {
-    void loadCourse(courseId).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)))
-  }, [courseId, loadCourse])
+    void loadProject(projectId).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)))
+  }, [projectId, loadProject])
 
   return {
-    dashboard, courseId, setCourseId, objectives, activities, evidence, missions, reviews, progress,
+    dashboard, projectId, setProjectId, objectives, activities, evidence, missions, reviews, progress,
     teacherAgent, answers, setAnswers, notificationPrefs, setNotificationPrefs, deliveries,
-    error, setError, loadDashboard, refreshCourse: () => loadCourse(courseId),
+    error, setError, loadDashboard, refreshProject: () => loadProject(projectId),
   }
 }

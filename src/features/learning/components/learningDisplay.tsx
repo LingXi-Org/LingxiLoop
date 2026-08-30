@@ -9,28 +9,27 @@ export type LearningSection =
   | 'notifications'
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: '草稿', active: '进行中', published: '已发布', closed: '已关闭', archived: '已归档',
   CREATED: '已创建', DRAFT: '草稿', ACTIVE: '进行中', COURSE_ENDED: '已结课', READ_ONLY: '只读',
   TRANSFER_PENDING: '转移中', RETENTION: '保留期', ARCHIVED: '已归档', DELETED: '已删除',
-  open: '待开始', in_progress: '进行中', completed: '已完成', cancelled: '已取消', pending: '待审核',
-  accepted: '已采纳', rejected: '已退回', verified: '已验证', learning: '学习中', needs_review: '待复核',
+  OPEN: '待开始', IN_PROGRESS: '进行中', COMPLETED: '已完成', CANCELLED: '已取消', PENDING: '待审核',
+  ACCEPTED: '已采纳', REJECTED: '已退回', VERIFIED: '已验证', LEARNING: '学习中', NEEDS_REVIEW: '待复核',
   sent: '已送达', failed: '投递失败',
 }
 
 export const MISSION_KIND_LABELS: Record<string, string> = {
-  study: '持续学习', project: '迁移项目', research: '资料研读', review: '复习巩固',
+  STUDY: '持续学习', PROJECT: '迁移项目', RESEARCH: '资料研读', REVIEW: '复习巩固',
 }
 
 export const STEP_TYPE_LABELS: Record<string, string> = {
-  learn: '理解', practice: '练习', check: '检查', reflect: '反思',
+  LEARN: '理解', PRACTICE: '练习', CHECK: '检查', REFLECT: '反思',
 }
 
 export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
-  lesson: '课程讲解', practice: '练习', assessment: '考核', project: '项目', review: '复习',
+  LESSON: '课程讲解', PRACTICE: '练习', ASSESSMENT: '考核', PROJECT: '项目', REVIEW: '复习',
 }
 
 export const EVALUATION_MODE_LABELS: Record<string, string> = {
-  agent_formative: '智能体形成性评价', teacher_required: '教师审核',
+  AGENT_FORMATIVE: '智能体形成性评价', TEACHER_REQUIRED: '教师审核',
 }
 
 export const WEEKDAY_LABELS: Record<string, string> = {
@@ -39,7 +38,7 @@ export const WEEKDAY_LABELS: Record<string, string> = {
 }
 
 export const ASSISTANCE_LABELS: Record<string, string> = {
-  none: '独立完成', hint: '使用提示', guided: '引导下完成',
+  NONE: '独立完成', HINT: '使用提示', GUIDED: '引导下完成',
 }
 
 export const DELIVERY_CHANNEL_LABELS: Record<string, string> = {
