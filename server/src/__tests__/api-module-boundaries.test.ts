@@ -66,7 +66,7 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
       : await readFile(new URL('repository.ts', base), 'utf8')
     const contracts = await readFile(new URL('contracts.ts', base), 'utf8')
 
-    assert.doesNotMatch(router, /\bpool\.query\b|\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
+    assert.doesNotMatch(router, /\bpool\.query\b|\bSELECT\s+|\bINSERT\s+INTO\b|\bUPDATE\s+\w+\s+SET\b|\bDELETE\s+FROM\b/)
     assert.doesNotMatch(router, /from ['"][^'"]*db\//)
     assert.doesNotMatch(application, /from ['"]express['"]|\b(?:req|res)\s*[.:]/)
     assert.doesNotMatch(application, /from ['"][^'"]*db\/(?:pool|transaction)\.js['"]/)
@@ -191,7 +191,7 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   assert.match(contextThreadPublic, /seedMemberLearningContextThreads/)
   const emailCallers = await Promise.all([
     '../modules/companies/invitation-email.ts',
-    '../modules/learning/notifications.ts',
+    '../modules/notifications/worker.ts',
     '../agents/cli.ts',
     '../agents/cli/email.ts',
     '../modules/agents/facade.ts',

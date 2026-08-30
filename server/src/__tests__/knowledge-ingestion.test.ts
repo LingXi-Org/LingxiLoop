@@ -41,6 +41,7 @@ test('deferred wake is tenant-owned, idempotent, and records its terminal releas
       wake_thread_root_client_msg_no: null,
       wake_released_at: null,
       company_id: 'company-1',
+      authorization_user_id: 'human-1',
     },
   ], [], []])
 
@@ -48,7 +49,7 @@ test('deferred wake is tenant-owned, idempotent, and records its terminal releas
   assert.match(calls[0]!.text, /JOIN knowledge_sources source ON source\.id=job\.source_id/)
   assert.match(calls[0]!.text, /FOR UPDATE OF job/)
   assert.deepEqual(calls[1]!.params.slice(1), [
-    'company-1', 'agent-1', 'conversation-1', null, 'message-1', 'knowledge_ready',
+    'company-1', 'human-1', 'agent-1', 'conversation-1', null, 'message-1', 'knowledge_ready',
   ])
   assert.match(calls[2]!.text, /wake_released_at=NOW\(\)/)
 
@@ -60,6 +61,7 @@ test('deferred wake is tenant-owned, idempotent, and records its terminal releas
       wake_thread_root_client_msg_no: null,
       wake_released_at: '2026-01-01T00:00:00Z',
       company_id: 'company-1',
+      authorization_user_id: 'human-1',
     },
   ]])
   assert.equal(await releaseDeferredWakeState(alreadyReleased.db, 'source-1'), 'none')

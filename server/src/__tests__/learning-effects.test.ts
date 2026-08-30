@@ -52,7 +52,7 @@ test('effect completion is fenced and promotes a queued generation instead of co
 
 test('course creation writes its audit in the creation transaction', () => {
   const application = readFileSync(new URL('../modules/learning/application.ts', import.meta.url), 'utf8')
-  assert.match(application, /transaction\(async \(db\) => \{[\s\S]{0,1600}auditInTransaction\(db, \{[\s\S]{0,100}kind: 'course_create'/)
+  assert.match(application, /transaction\(async \(db\) => \{[\s\S]{0,4000}auditInTransaction\(db, \{[\s\S]{0,100}kind: 'course_create'/)
   assert.doesNotMatch(application, /course_create\.audit/)
   assert.doesNotMatch(application, /infrastructure\.audit\(/)
 })

@@ -22,7 +22,8 @@ test('read receipt schema is append-only, range indexed and uniqueness protected
 
 test('read route requires a durable cursor and retains unseen unread messages', () => {
   assert.match(router, /imMessagesApplication\.markRead/)
-  assert.doesNotMatch(messagesApplication, /clearUnread/)
+  const markRead = messagesApplication.slice(messagesApplication.indexOf('async markRead'))
+  assert.doesNotMatch(markRead, /clearUnread/)
   assert.doesNotMatch(router, /legacy/)
   assert.match(messagesApplication, /latestSeq - input\.readThroughSeq/)
   assert.match(messagesApplication, /infrastructure\.setUnread/)

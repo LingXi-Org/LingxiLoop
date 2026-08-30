@@ -11,6 +11,37 @@ function mentionDb(delivery?: { attempts?: number }) {
   const db: Queryable = {
     query: async (text, params = []) => {
       calls.push({ text, params })
+      if (/FROM users WHERE id=\$1/.test(text)) {
+        return { rows: [{ id: 'human-1', deleted_at: null, suspended_at: null }], rowCount: 1 } as never
+      }
+      if (/FROM documents document/.test(text)) {
+        return { rows: [{
+          company_id: 'company-1', project_id: 'project-1', created_by: 'human-1',
+          conversation_members: ['human-1', 'human-2', 'agent-1'], leader_id: null,
+          resource_status: null,
+        }], rowCount: 1 } as never
+      }
+      if (/FROM projects WHERE id=\$1/.test(text)) {
+        return { rows: [{
+          id: 'project-1', company_id: 'company-1', kind: 'PERSONAL_LEARNING',
+          plan_id: null, status: 'ACTIVE',
+        }], rowCount: 1 } as never
+      }
+      if (/FROM companies WHERE id=\$1/.test(text)) {
+        return { rows: [{ id: 'company-1', type: 'PERSONAL', status: 'ACTIVE', plan_id: 'plan-1' }], rowCount: 1 } as never
+      }
+      if (/FROM company_memberships/.test(text)) {
+        return { rows: [{ role: 'OWNER', status: 'ACTIVE' }], rowCount: 1 } as never
+      }
+      if (/FROM project_memberships/.test(text)) {
+        return { rows: [{ role: 'OWNER', status: 'ACTIVE' }], rowCount: 1 } as never
+      }
+      if (/FROM plans WHERE id=\$1/.test(text)) {
+        return { rows: [{ id: 'plan-1', code: 'personal-free', status: 'ACTIVE' }], rowCount: 1 } as never
+      }
+      if (/FROM plan_entitlements/.test(text)) {
+        return { rows: [{ code: 'conversation.core', value: true }], rowCount: 1 } as never
+      }
       if (/SELECT document\.title AS document_title/.test(text)) {
         return { rows: [{
           document_title: 'Launch notes', project_id: 'project-1', mentioner_name: 'Lee',
