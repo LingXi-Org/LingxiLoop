@@ -5,76 +5,63 @@ import type { PermissionAction } from '../access/public.js'
 import { createPermissionService, resolvePlanEntitlements } from '../access/public.js'
 import { ensureTeacherPlans } from '../entitlements/public.js'
 import { appendDomainEventInTransaction } from '../events/public.js'
+import { importProjectLearningActivities } from './activity-import-application.js'
 import type {
-  BindCourseRoomInput,
   AddInstitutionalCourseMemberInput,
+  BindCourseRoomInput,
   CreateActivityInput,
   CreateCourseInput,
-  CreateProjectInvitationInput,
   CreateObjectivesInput,
-  LearningScope,
+  CreateProjectInvitationInput,
   LearningActivityImportInput,
+  LearningScope,
   MissionCoordinatorInput,
   ObjectiveStatusInput,
   ReviewEvaluationInput,
   SubmitActivityInput,
   UpdateCourseInput,
 } from './contracts.js'
-import { importProjectLearningActivities } from './activity-import-application.js'
 import {
   closeLearningActivity,
-  submitProjectLearningActivity,
   createLearningActivity,
   createLearningObjectives,
   publishLearningActivity,
   setLearningObjectiveStatus,
   submitLearningActivity,
+  submitProjectLearningActivity,
 } from './curriculum-application.js'
+import { runLearningEffect } from './effect-application.js'
 import type { LearningEffect } from './effects-repository.js'
 import { enqueueLearningEffect } from './effects-repository.js'
 import { LearningApplicationError } from './errors.js'
 import { reviewLearningEvaluation, reviewProjectLearningEvaluation } from './evaluation-application.js'
+import { LearningInvitationApplication } from './invitation-application.js'
 import { bindLearningCourseRoom } from './membership-application.js'
 import { assignLearningMissionCoordinator, listVisibleLearningMissions } from './missions-application.js'
 import {
-  changeCourseMember,
   addInstitutionalCourseMember,
-  companyMembershipRole,
-  countActiveProjectStudents,
-  countViewerPendingLearningReviews,
+  changeCourseMember,
   countActiveTeachingProjects,
+  countViewerPendingLearningReviews,
   courseManager,
-  courseMembershipRole,
   courseRole,
   findCourse,
-  findVerifiedUser,
-  insertAcceptedStudentMembership,
-  insertProjectInvitation,
   insertCourse,
-  invitationViewer,
-  joinInvitationCompany,
-  listProjectInvitations,
   listCourseMembers,
   listCourses,
   listDueLearningStates,
   listLearningActivities,
+  listLearningEvidenceRecords,
   listLearningMissions,
-  listProjectLearningActivities,
-  listProjectLearningKnowledgeUnits,
+  listLearningObjectives,
   listLearningProjectProgress,
   listLearningProjectSummaries,
-  listLearningEvidenceRecords,
-  listLearningObjectives,
   listPendingLearningEvaluationRecords,
-  listProjectChannels,
+  listProjectLearningActivities,
+  listProjectLearningKnowledgeUnits,
   listViewerLearningStates,
-  lockProjectInvitation,
-  priorProjectAcceptance,
-  projectInvitationPreview,
-  recordProjectAcceptance,
   removeMemberFromProjectChannels,
   requireLearningCourseProjectScope,
-  revokeProjectInvitation,
   studyRoomState,
   syncStudyRoomMembers,
   updateCourseMetadata,
@@ -147,7 +134,11 @@ export interface LearningInfrastructure {
 }
 
 export class LearningApplication {
-  constructor(private readonly db: Queryable, private readonly infrastructure: LearningInfrastructure) {}
+  private readonly invitationApplication: LearningInvitationApplication
+
+  constructor(private readonly db: Queryable, private readonly infrastructure: LearningInfrastructure) {
+    this.invitationApplication = new LearningInvitationApplication(db, infrastructure)
+  }
 
   async courses(scope: LearningScope) {
     await createPermissionService(this.db).assertCan({
@@ -170,65 +161,10 @@ export class LearningApplication {
   }
 
   async runEffect(effect: LearningEffect): Promise<void> {
-    const payload = effect.payload
-    switch (effect.kind) {
-      case 'study_room.sync':
-        await this.syncStudyRoom(effect.companyId, effect.courseId)
-        return
-      case 'teacher_room.sync':
-        await this.infrastructure.syncTeacherRoom(effect.companyId, effect.courseId)
-        return
-      case 'teacher_agent.welcome':
-        await this.infrastructure.welcomeTeacherAgent(effect.companyId, effect.courseId)
-        return
-      case 'notebook.ensure': {
-        const projectId = String(payload.projectId ?? '')
-        if (!projectId) throw new Error('notebook effect requires projectId')
-        await this.infrastructure.ensureNotebook(projectId, effect.companyId)
-        return
-      }
-      case 'course_metadata.sync': {
-        const projectId = String(payload.projectId ?? '')
-        if (!projectId) throw new Error('course metadata sync requires projectId')
-        if (payload.studyRoom === true) await this.syncStudyRoom(effect.companyId, effect.courseId)
-        await this.infrastructure.syncNotebook(projectId)
-        return
-      }
-      case 'course_archive.sync': {
-        const projectId = String(payload.projectId ?? '')
-        if (!projectId || typeof payload.archive !== 'boolean') {
-          throw new Error('course archive sync requires projectId and archive state')
-        }
-        if (payload.archive) await this.infrastructure.closeTeacherRoom(effect.companyId, effect.courseId)
-        else await this.infrastructure.reactivateTeacherRoom(effect.companyId, effect.courseId)
-        await this.infrastructure.syncNotebook(projectId)
-        return
-      }
-      case 'member_access.revoke': {
-        const projectId = String(payload.projectId ?? '')
-        const userId = String(payload.userId ?? '')
-        if (!projectId || !userId) throw new Error('member access revocation requires projectId and userId')
-        const channels = await listProjectChannels(this.db, {
-          companyId: effect.companyId, projectId,
-        })
-        await Promise.all(channels.map((channel) => this.infrastructure.syncChannel({
-          channelId: channel.id, title: channel.title, members: channel.members,
-        })))
-        await this.infrastructure.revokeDocumentSubscriptions(userId, effect.companyId, projectId)
-        await this.infrastructure.publishDocumentAccessRevoked({
-          eventId: effect.id, companyId: effect.companyId, workspaceId: projectId, userId,
-        })
-        await this.syncStudyRoom(effect.companyId, effect.courseId)
-        await this.infrastructure.syncTeacherRoom(effect.companyId, effect.courseId)
-        return
-      }
-      case 'member_onboarding.seed': {
-        const userId = String(payload.userId ?? '')
-        if (!userId) throw new Error('member onboarding requires userId')
-        await this.infrastructure.seedMemberDms(effect.companyId, userId)
-        return
-      }
-    }
+    await runLearningEffect(this.db, {
+      ...this.infrastructure,
+      syncStudyRoom: (companyId, courseId) => this.syncStudyRoom(companyId, courseId),
+    }, effect)
   }
 
   async createCourse(scope: LearningScope, input: CreateCourseInput) {
@@ -460,157 +396,23 @@ export class LearningApplication {
   }
 
   invitations(scope: LearningScope & { projectId: string }) {
-    return listProjectInvitations(this.db, scope.projectId, scope.companyId)
+    return this.invitationApplication.list(scope)
   }
 
   async createInvitation(scope: LearningScope & { projectId: string }, input: CreateProjectInvitationInput) {
-    const token = this.infrastructure.generateInvitationToken()
-    const tokenHash = this.infrastructure.hashInvitationToken(token)
-    const expiresAt = new Date(Date.now() + input.expiresInDays * 86_400_000)
-    const email = input.email?.toLowerCase() || null
-    const note = input.note || null
-    await this.infrastructure.transaction(async (db) => {
-      const created = await insertProjectInvitation(db, {
-        tokenHash, projectId: scope.projectId, companyId: scope.companyId, userId: scope.userId,
-        email, note, maxUses: input.maxUses, expiresAt,
-      })
-      if (!created) throw new LearningApplicationError('not_found', 'Teaching Project not found')
-      await this.infrastructure.auditInTransaction(db, {
-        kind: 'project_invitation_create', userId: scope.userId, companyId: scope.companyId,
-        detail: { projectId: scope.projectId, email, maxUses: input.maxUses, expiresInDays: input.expiresInDays },
-      })
-    })
-    return {
-      id: tokenHash, token, url: this.infrastructure.invitationUrl(token), email, role: 'learner' as const,
-      note, maxUses: input.maxUses, useCount: 0, createdAt: new Date().toISOString(),
-      expiresAt: expiresAt.toISOString(), status: 'active',
-    }
+    return this.invitationApplication.create(scope, input)
   }
 
   async revokeInvitation(scope: LearningScope & { projectId: string }, invitationId: string) {
-    const revoked = await this.infrastructure.transaction(async (db) => {
-      const revoked = await revokeProjectInvitation(db, scope.projectId, scope.companyId, invitationId)
-      if (revoked) await this.infrastructure.auditInTransaction(db, {
-        kind: 'project_invitation_revoke', userId: scope.userId, companyId: scope.companyId,
-        detail: { projectId: scope.projectId, invitationId },
-      })
-      return revoked
-    })
-    return { ok: true as const, revoked }
+    return this.invitationApplication.revoke(scope, invitationId)
   }
 
   async invitationPreview(token: string, viewerId?: string) {
-    const invitation = await projectInvitationPreview(this.db, this.infrastructure.hashInvitationToken(token))
-    if (!invitation) return { status: 'not_found', kind: 'project' as const }
-    let status = invitation.revoked_at ? 'revoked'
-      : new Date(invitation.expires_at).getTime() < Date.now() ? 'expired'
-        : invitation.use_count >= invitation.max_uses ? 'consumed'
-          : invitation.project_status !== 'ACTIVE'
-            || (invitation.company_status !== 'ACTIVE' && invitation.company_status !== 'TRIAL')
-            ? 'archived' : 'valid'
-    if (viewerId) {
-      const viewer = await invitationViewer(this.db, viewerId, invitation.course_id)
-      if (viewer?.role) status = 'already_member'
-      else if (invitation.email && viewer?.email.toLowerCase() !== invitation.email) status = 'wrong_email'
-    }
-    return {
-      kind: 'project' as const, status,
-      invitation: {
-        role: 'learner' as const, email: invitation.email, note: invitation.note,
-        expiresAt: new Date(invitation.expires_at).toISOString(), inviterName: invitation.inviter_name,
-        company: { id: invitation.company_id, name: invitation.company_name, slug: invitation.company_slug },
-        course: {
-          id: invitation.course_id, name: invitation.course_name, projectId: invitation.project_id,
-          studyRoomId: invitation.room_id,
-        },
-      },
-    }
+    return this.invitationApplication.preview(token, viewerId)
   }
 
   async acceptInvitation(userId: string, token: string) {
-    const tokenHash = this.infrastructure.hashInvitationToken(token)
-    const user = await findVerifiedUser(this.db, userId)
-    if (!user) throw new LearningApplicationError('unauthorized', 'session points to missing user')
-    if (!user.email_verified_at) {
-      throw new LearningApplicationError('forbidden', 'a verified email is required to accept a Project invitation')
-    }
-    const result = await this.infrastructure.transaction(async (db) => {
-      const invitation = await lockProjectInvitation(db, tokenHash, userId)
-      if (!invitation) throw new LearningApplicationError('not_found', 'invitation not found')
-      if (invitation.revoked_at) throw new LearningApplicationError('gone', 'invitation revoked')
-      if (new Date(invitation.expires_at).getTime() < Date.now()) {
-        throw new LearningApplicationError('gone', 'invitation expired')
-      }
-      if (invitation.project_status !== 'ACTIVE') throw new LearningApplicationError('gone', 'course archived')
-      if (invitation.company_status !== 'ACTIVE' && invitation.company_status !== 'TRIAL') {
-        throw new LearningApplicationError('gone', 'company is not accepting memberships')
-      }
-      if (invitation.email && invitation.email !== user.email.toLowerCase()) {
-        throw new LearningApplicationError('forbidden', `this invitation is reserved for ${invitation.email}`)
-      }
-      const prior = await priorProjectAcceptance(db, tokenHash, userId)
-      const companyRole = await companyMembershipRole(db, invitation.company_id, userId)
-      const joinedCompany = !companyRole
-      if (joinedCompany) await joinInvitationCompany(db, {
-        companyId: invitation.company_id, userId, displayName: user.display_name,
-        avatarUrl: user.avatar_url ?? this.infrastructure.avatarForEmail(user.email),
-      })
-      const existingRole = await courseMembershipRole(db, invitation.course_id, userId)
-      if (prior && !existingRole) {
-        throw new LearningApplicationError('gone', 'this invitation was already accepted and no longer grants course access')
-      }
-      const addsStudent = !prior && !existingRole
-      if (addsStudent && invitation.use_count >= invitation.max_uses) {
-        throw new LearningApplicationError('gone', 'invitation already used')
-      }
-      if (addsStudent) {
-        const entitlements = await resolvePlanEntitlements(db, invitation.project_plan_id)
-        const studentLimit = entitlements.number('teacher.student_limit')
-        if (studentLimit !== null
-          && await countActiveProjectStudents(db, invitation.company_id, invitation.project_id) >= studentLimit) {
-          throw new LearningApplicationError('forbidden', 'Teacher Free Student limit reached')
-        }
-        await insertAcceptedStudentMembership(db, { invitation, userId })
-        await recordProjectAcceptance(db, { tokenHash, userId })
-      }
-      const role = existingRole ?? 'learner'
-      await this.infrastructure.auditInTransaction(db, {
-        kind: 'project_invitation_accept', userId, companyId: invitation.company_id,
-        detail: { courseId: invitation.course_id, role },
-      })
-      await enqueueLearningEffect(db, {
-        companyId: invitation.company_id, courseId: invitation.course_id, kind: 'study_room.sync',
-      })
-      await enqueueLearningEffect(db, {
-        companyId: invitation.company_id, courseId: invitation.course_id, kind: 'teacher_room.sync',
-      })
-      await enqueueLearningEffect(db, {
-        companyId: invitation.company_id,
-        courseId: invitation.course_id,
-        kind: 'member_onboarding.seed',
-        effectKey: userId,
-        payload: { userId },
-      })
-      return {
-        companyId: invitation.company_id, companyName: invitation.company_name,
-        companySlug: invitation.company_slug, companyRole: companyRole ?? 'member',
-        companyStatus: invitation.company_status,
-        courseId: invitation.course_id, courseName: invitation.course_name,
-        projectId: invitation.project_id, roomId: invitation.room_id, role,
-        alreadyMember: Boolean(existingRole), joinedCompany,
-      }
-    })
-    return {
-      ok: true as const, alreadyMember: result.alreadyMember, joinedCompany: result.joinedCompany,
-      company: {
-        id: result.companyId, name: result.companyName, slug: result.companySlug,
-        role: result.companyRole, status: result.companyStatus,
-      },
-      course: {
-        id: result.courseId, name: result.courseName, projectId: result.projectId,
-        studyRoomId: result.roomId, role: result.role,
-      },
-    }
+    return this.invitationApplication.accept(userId, token)
   }
 
   dashboard(scope: LearningScope) {
