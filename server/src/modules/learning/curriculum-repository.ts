@@ -9,15 +9,6 @@ import type {
 export * from './activities-repository.js'
 export * from './project-scope-repository.js'
 
-export async function listDeliveries(db: Queryable, companyId: string, userId: string) {
-  const { rows } = await db.query(
-    `SELECT * FROM learning_notification_deliveries
-      WHERE company_id=$1 AND user_id=$2 ORDER BY created_at DESC LIMIT 100`,
-    [companyId, userId],
-  )
-  return rows
-}
-
 interface KnowledgeUnitWrite {
   id: string
   companyId: string

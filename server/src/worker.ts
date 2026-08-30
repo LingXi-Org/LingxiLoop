@@ -11,7 +11,8 @@ import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.j
 import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
 import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
 import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowledge/worker.js'
-import { startLearningEffectWorker, startLearningNotificationScheduler } from './modules/learning/worker.js'
+import { startLearningEffectWorker } from './modules/learning/worker.js'
+import { startNotificationScheduler } from './modules/notifications/public.js'
 import { startPollExpirationSweeper } from './modules/polls/index.js'
 import { redis, sub } from './redis.js'
 import { Lifecycle, type ServiceHandle, startWorkerTasks, type WorkerTaskDefinition } from './runtime/lifecycle.js'
@@ -26,7 +27,7 @@ import { initializeNativeStorage } from './storage.js'
  */
 export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'learning-routines', concurrency: 'queue-claim', start: () => startLearningRoutineScheduler() },
-  { name: 'learning-notifications', concurrency: 'queue-claim', start: () => startLearningNotificationScheduler() },
+  { name: 'notifications', concurrency: 'queue-claim', start: () => startNotificationScheduler() },
   { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },
   { name: 'company-onboarding-effects', concurrency: 'queue-claim', start: () => startCompanyOnboardingEffectWorker() },
   { name: 'im-channel-reconciliation', concurrency: 'idempotent', start: () => startImChannelReconciliation() },

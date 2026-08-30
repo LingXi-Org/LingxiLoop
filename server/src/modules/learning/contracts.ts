@@ -56,16 +56,6 @@ export const reviewEvaluationRequestSchema = z.object({
   decision: z.enum(['accept', 'reject']),
   reason: z.string().trim().min(1),
 }).strict()
-export const notificationPreferencesRequestSchema = z.object({
-  courseId: z.string().optional(),
-  inAppEnabled: z.boolean(),
-  emailEnabled: z.boolean(),
-  timezone: z.string().trim().min(1),
-  preferredTime: z.string().trim().min(1),
-  quietStart: z.string().optional(),
-  quietEnd: z.string().optional(),
-}).strict()
-
 export type CreateCourseInput = z.infer<typeof createCourseRequestSchema>
 export type UpdateCourseInput = z.infer<typeof updateCourseRequestSchema>
 export type CreateCourseInvitationInput = z.infer<typeof createCourseInvitationRequestSchema>
@@ -76,7 +66,6 @@ export type CreateActivityInput = z.infer<typeof createActivityRequestSchema>
 export type SubmitActivityInput = z.infer<typeof submitActivityRequestSchema>
 export type MissionCoordinatorInput = z.infer<typeof missionCoordinatorRequestSchema>
 export type ReviewEvaluationInput = z.infer<typeof reviewEvaluationRequestSchema>
-export type NotificationPreferencesInput = z.infer<typeof notificationPreferencesRequestSchema>
 
 export interface CreateLearningObjectivesCommand extends CreateObjectivesInput {
   companyId: string
@@ -174,17 +163,6 @@ export interface ProposeLearningEvaluationCommand extends LearningAgentRoomScope
 }
 
 export interface LearningScope { userId: string; companyId: string }
-export interface LearningNotificationPreferences {
-  company_id: string
-  user_id: string
-  course_id: string | null
-  in_app_enabled: boolean
-  email_enabled: boolean
-  timezone: string
-  preferred_time: string
-  quiet_start: string | null
-  quiet_end: string | null
-}
 export interface CourseManager extends LearningScope {
   companyRole: string
   courseRole: string | null

@@ -352,6 +352,7 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['notification_preferences', 'notification_preferences_push_unavailable_check', 'c'],
   ['notification_preferences', 'notification_preferences_member_company_fkey', 'f'],
   ['notification_preferences', 'notification_preferences_project_company_fkey', 'f'],
+  ['notification_preferences', 'notification_preferences_member_project_fkey', 'f'],
   ['notification_deliveries', 'notification_deliveries_identity_key', 'u'],
   ['notification_deliveries', 'notification_deliveries_recipient_project_fkey', 'f'],
   ['notification_deliveries', 'notification_deliveries_channel_check', 'c'],

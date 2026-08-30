@@ -22,7 +22,7 @@ export function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
     try {
       const course = await learningApi.createCourse({ name: title })
       await learningApi.setNotificationPreferences({
-        courseId: course.id, timezone, preferredTime: '19:00', quietStart, quietEnd,
+        projectId: course.projectId, timezone, dailyTime: '19:00', weeklyDay: 1, quietStart, quietEnd,
         inAppEnabled: true, emailEnabled: false,
       })
       await onCreated()

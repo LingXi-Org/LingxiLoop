@@ -11,7 +11,6 @@ import type {
   CreateObjectivesInput,
   LearningScope,
   MissionCoordinatorInput,
-  NotificationPreferencesInput,
   ObjectiveStatusInput,
   ReviewEvaluationInput,
   SubmitActivityInput,
@@ -41,7 +40,6 @@ import {
   courseMembershipRole,
   courseRole,
   findCourse,
-  findNotificationPreferences,
   findVerifiedUser,
   insertCourseInvitation,
   insertTeachingCourse,
@@ -50,7 +48,6 @@ import {
   listCourseInvitations,
   listCourseMembers,
   listCourses,
-  listDeliveries,
   listDueLearningStates,
   listLearningActivities,
   listLearningMissions,
@@ -73,7 +70,6 @@ import {
   syncStudyRoomMembers,
   updateCourseMetadata,
   upsertAcceptedCourseMembership,
-  upsertNotificationPreferences,
 } from './repository.js'
 
 export {
@@ -795,37 +791,6 @@ export class LearningApplication {
     ))
     return { ok: true as const }
   }
-
-  notificationPreferences(scope: LearningScope, courseId?: string) {
-    return this.classroom(async () => await findNotificationPreferences(
-      this.db, scope.companyId, scope.userId, courseId,
-    ) ?? {
-      company_id: scope.companyId,
-      user_id: scope.userId,
-      course_id: courseId ?? null,
-      in_app_enabled: true,
-      email_enabled: false,
-      timezone: 'Asia/Shanghai',
-      preferred_time: '19:00',
-      quiet_start: null,
-      quiet_end: null,
-    })
-  }
-
-  async setNotificationPreferences(scope: LearningScope, input: NotificationPreferencesInput) {
-    if (input.courseId) {
-      await createPermissionService(this.db).assertCan({
-        actorUserId: scope.userId,
-        action: 'learning:preference',
-        companyId: scope.companyId,
-        resource: { type: 'course', id: input.courseId },
-      })
-    }
-    await upsertNotificationPreferences(this.db, { id: randomUUID(), ...scope, ...input })
-    return this.notificationPreferences(scope, input.courseId)
-  }
-
-  deliveries(scope: LearningScope) { return listDeliveries(this.db, scope.companyId, scope.userId) }
 
   private async manager(
     userId: string,

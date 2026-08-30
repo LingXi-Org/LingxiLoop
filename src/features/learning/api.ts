@@ -101,13 +101,13 @@ export const learningApi = {
   }) => http<{ ok: true }>(`/projects/${encodeURIComponent(projectId)}/learning/reviews/${encodeURIComponent(evaluationId)}`, {
     method: 'POST', body: JSON.stringify(input),
   }),
-  getNotificationPreferences: (courseId?: string) =>
-    http<LearningNotificationPreferences>(`/learning/notification-preferences${courseId ? `?courseId=${encodeURIComponent(courseId)}` : ''}`),
+  getNotificationPreferences: (projectId?: string) =>
+    http<LearningNotificationPreferences>(`/notification-preferences${projectId ? `?projectId=${encodeURIComponent(projectId)}` : ''}`),
   setNotificationPreferences: (input: {
-    courseId?: string; inAppEnabled: boolean; emailEnabled: boolean; timezone: string;
-    preferredTime: string; quietStart?: string; quietEnd?: string
-  }) => http<LearningNotificationPreferences>('/learning/notification-preferences', {
+    projectId?: string; inAppEnabled: boolean; emailEnabled: boolean; timezone: string;
+    dailyTime: string; weeklyDay: number; quietStart: string | null; quietEnd: string | null
+  }) => http<LearningNotificationPreferences>('/notification-preferences', {
     method: 'PUT', body: JSON.stringify(input),
   }),
-  listDeliveries: () => http<LearningDelivery[]>('/learning/deliveries'),
+  listDeliveries: () => http<LearningDelivery[]>('/notification-deliveries'),
 }

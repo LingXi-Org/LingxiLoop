@@ -13,7 +13,7 @@ const STATUS_LABELS: Record<string, string> = {
   TRANSFER_PENDING: '转移中', RETENTION: '保留期', ARCHIVED: '已归档', DELETED: '已删除',
   OPEN: '待开始', IN_PROGRESS: '进行中', COMPLETED: '已完成', CANCELLED: '已取消', PENDING: '待审核',
   ACCEPTED: '已采纳', REJECTED: '已退回', VERIFIED: '已验证', LEARNING: '学习中', NEEDS_REVIEW: '待复核',
-  sent: '已送达', failed: '投递失败',
+  SENT: '已送达', SENDING: '发送中', FAILED: '投递失败',
 }
 
 export const MISSION_KIND_LABELS: Record<string, string> = {
@@ -42,7 +42,7 @@ export const ASSISTANCE_LABELS: Record<string, string> = {
 }
 
 export const DELIVERY_CHANNEL_LABELS: Record<string, string> = {
-  in_app: '应用内', email: '邮件',
+  IN_APP: '应用内', EMAIL: '邮件',
 }
 
 export function statusLabel(value: unknown): string {

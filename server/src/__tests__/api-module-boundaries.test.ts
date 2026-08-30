@@ -12,6 +12,7 @@ const domains = [
   'agents',
   'conversations',
   'messages',
+  'notifications',
   'polls',
   'email',
   'observability',
@@ -50,7 +51,7 @@ test('domain modules expose one native router implementation without forwarding 
 })
 
 test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
-  for (const domain of ['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls']) {
+  for (const domain of ['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'notifications', 'observability', 'platform', 'polls']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const applicationFiles = (await readdir(new URL('.', base)))

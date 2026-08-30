@@ -8,8 +8,6 @@ import {
   renewLearningEffectLease,
 } from './effects-repository.js'
 
-export { startLearningNotificationScheduler } from './notifications.js'
-
 export async function runLearningEffects(): Promise<void> {
   for (let processed = 0; processed < 20; processed += 1) {
     const [effect] = await claimLearningEffects(pool, 1)

@@ -114,14 +114,13 @@ test('native learning schema keeps evidence, projection and delivery ledgers dur
   for (const table of ['courses','project_memberships','learning_course_rooms','learning_knowledge_units',
     'learning_knowledge_unit_dependencies','learning_activities','learning_activity_knowledge_units',
     'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_states',
-    'learning_cases','learning_case_actions','learning_notification_deliveries','learning_effects',
+    'learning_cases','learning_case_actions','learning_effects',
     'learning_project_teacher_agents','learning_course_teacher_rooms']) {
     assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
   }
   assert.match(schema, /num_nonnulls\(activity_id, mission_step_id\) = 1/)
   assert.match(schema, /UNIQUE \(company_id, project_id, learner_id, conversation_id, trigger_client_msg_no\)/)
   assert.match(schema, /PRIMARY KEY \(project_id, user_id, knowledge_unit_id\)/)
-  assert.match(schema, /uq_learning_deliveries_course/)
   assert.match(schema, /idx_learning_effects_pending/)
   assert.match(learningApplicationSource, /enqueueLearningEffect/)
   assert.doesNotMatch(learningApplicationSource, /const provisioning = await Promise\.allSettled/)

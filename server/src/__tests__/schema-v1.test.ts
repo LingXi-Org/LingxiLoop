@@ -310,6 +310,7 @@ test('M10 notifications route bounded event-derived Intent into canonical Delive
 
   assert.match(preferences, /push_enabled boolean DEFAULT false NOT NULL/)
   assert.match(preferences, /notification_preferences_push_unavailable_check CHECK \(push_enabled = false\)/)
+  assert.match(preferences, /notification_preferences_member_project_fkey[\s\S]*?project_memberships\(company_id, project_id, user_id\)/)
   assert.match(deliveries, /'IN_APP'.*'EMAIL'.*'PUSH'/s)
   assert.match(deliveries, /'PENDING'.*'SENDING'.*'SENT'.*'FAILED'.*'CANCELLED'/s)
   assert.match(deliveries, /UNIQUE \(company_id, project_id, recipient_user_id, channel, policy, window_key\)/)

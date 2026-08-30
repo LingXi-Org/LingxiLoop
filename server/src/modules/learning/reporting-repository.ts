@@ -1,5 +1,4 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { LearningNotificationPreferences, NotificationPreferencesInput } from './contracts.js'
 
 export async function listLearningProjectSummaries(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query(
@@ -178,60 +177,6 @@ export async function listLearningProjectProgress(db: Queryable, companyId: stri
   return rows
 }
 
-export async function findNotificationPreferences(
-  db: Queryable,
-  companyId: string,
-  userId: string,
-  courseId?: string,
-): Promise<LearningNotificationPreferences | null> {
-  const { rows } = await db.query<LearningNotificationPreferences>(
-    `SELECT company_id,user_id,course_id,in_app_enabled,email_enabled,timezone,
-            preferred_time::text,quiet_start::text,quiet_end::text
-       FROM learning_notification_preferences
-      WHERE company_id=$1 AND user_id=$2
-        AND (course_id IS NOT DISTINCT FROM $3 OR ($3::text IS NOT NULL AND course_id IS NULL))
-      ORDER BY course_id NULLS LAST LIMIT 1`,
-    [companyId, userId, courseId ?? null],
-  )
-  return rows[0] ?? null
-}
-
-export async function upsertNotificationPreferences(
-  db: Queryable,
-  args: LearningScopeNotificationPreferences,
-): Promise<void> {
-  if (args.courseId) {
-    await db.query(
-      `INSERT INTO learning_notification_preferences
-         (id,company_id,user_id,course_id,in_app_enabled,email_enabled,timezone,preferred_time,quiet_start,quiet_end)
-       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       ON CONFLICT(company_id,user_id,course_id) WHERE course_id IS NOT NULL DO UPDATE SET
-         in_app_enabled=EXCLUDED.in_app_enabled,email_enabled=EXCLUDED.email_enabled,
-         timezone=EXCLUDED.timezone,preferred_time=EXCLUDED.preferred_time,
-         quiet_start=EXCLUDED.quiet_start,quiet_end=EXCLUDED.quiet_end,updated_at=NOW()`,
-      [args.id,args.companyId,args.userId,args.courseId,args.inAppEnabled,args.emailEnabled,args.timezone,
-        args.preferredTime,args.quietStart ?? null,args.quietEnd ?? null],
-    )
-    return
-  }
-  await db.query(
-    `INSERT INTO learning_notification_preferences
-       (id,company_id,user_id,course_id,in_app_enabled,email_enabled,timezone,preferred_time,quiet_start,quiet_end)
-     VALUES($1,$2,$3,NULL,$4,$5,$6,$7,$8,$9)
-     ON CONFLICT(company_id,user_id) WHERE course_id IS NULL DO UPDATE SET
-       in_app_enabled=EXCLUDED.in_app_enabled,email_enabled=EXCLUDED.email_enabled,
-       timezone=EXCLUDED.timezone,preferred_time=EXCLUDED.preferred_time,
-       quiet_start=EXCLUDED.quiet_start,quiet_end=EXCLUDED.quiet_end,updated_at=NOW()`,
-    [args.id,args.companyId,args.userId,args.inAppEnabled,args.emailEnabled,args.timezone,
-      args.preferredTime,args.quietStart ?? null,args.quietEnd ?? null],
-  )
-}
-
-interface LearningScopeNotificationPreferences extends NotificationPreferencesInput {
-  id: string
-  companyId: string
-  userId: string
-}
 
 export async function studyRoomState(db: Queryable, companyId: string, courseId: string) {
   const { rows } = await db.query<{

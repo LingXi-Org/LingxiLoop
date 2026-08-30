@@ -195,23 +195,26 @@ export interface LearningDashboard {
 export interface LearningNotificationPreferences {
   company_id?: string
   user_id?: string
-  course_id: string | null
+  project_id: string | null
   in_app_enabled: boolean
   email_enabled: boolean
+  push_enabled: false
   timezone: string
-  preferred_time: string
+  daily_time: string
+  weekly_day: number
   quiet_start: string | null
   quiet_end: string | null
 }
 
 export interface LearningDelivery {
   id: string
-  kind: string
-  channel: 'in_app' | 'email'
-  status: 'pending' | 'processing' | 'sent' | 'failed'
-  digest_date: string | null
+  project_id: string
+  channel: 'IN_APP' | 'EMAIL'
+  policy: 'IMMEDIATE' | 'DAILY' | 'WEEKLY' | 'FORMAL'
+  summary: string
+  link_path: string
+  status: 'PENDING' | 'SENDING' | 'SENT' | 'FAILED' | 'CANCELLED'
   sent_at?: string | null
-  last_error?: string | null
   created_at?: string
 }
 

@@ -14,11 +14,13 @@ import type {
 } from '../contracts'
 
 const defaultPreferences: LearningNotificationPreferences = {
-  course_id: null,
+  project_id: null,
   in_app_enabled: true,
   email_enabled: false,
+  push_enabled: false,
   timezone: 'Asia/Shanghai',
-  preferred_time: '19:00',
+  daily_time: '19:00',
+  weekly_day: 1,
   quiet_start: null,
   quiet_end: null,
 }
@@ -51,7 +53,7 @@ export function useLearningCenter() {
       await Promise.all([
         learningApi.listKnowledgeUnits(id), learningApi.listActivities(id),
         learningApi.listEvidence(id), learningApi.listMissions(id),
-        learningApi.getNotificationPreferences(current?.courseId), learningApi.listDeliveries(),
+        learningApi.getNotificationPreferences(id), learningApi.listDeliveries(),
       ])
     setObjectives(nextObjectives)
     setActivities(nextActivities)

@@ -8,7 +8,6 @@ import {
   createActivityRequestSchema,
   createObjectivesRequestSchema,
   missionCoordinatorRequestSchema,
-  notificationPreferencesRequestSchema,
   objectiveStatusRequestSchema,
   reviewEvaluationRequestSchema,
   submitActivityRequestSchema,
@@ -222,23 +221,4 @@ classroomRouter.post('/courses/:courseId/reviews/:evaluationId', safe(async (req
   res.json(await respond(() => learningApplication.review(
     scope, String(req.params.courseId), String(req.params.evaluationId), input,
   )))
-}))
-
-classroomRouter.get('/learning/notification-preferences', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  const courseId = typeof req.query.courseId === 'string' ? req.query.courseId : undefined
-  if (courseId) await requireCoursePermission(req, courseId, 'learning:preference')
-  res.json(await respond(() => learningApplication.notificationPreferences(scope, courseId)))
-}))
-
-classroomRouter.put('/learning/notification-preferences', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  const input = parse(notificationPreferencesRequestSchema.safeParse(req.body ?? {}))
-  if (input.courseId) await requireCoursePermission(req, input.courseId, 'learning:preference')
-  res.json(await respond(() => learningApplication.setNotificationPreferences(scope, input)))
-}))
-
-classroomRouter.get('/learning/deliveries', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  res.json(await learningApplication.deliveries(scope))
 }))

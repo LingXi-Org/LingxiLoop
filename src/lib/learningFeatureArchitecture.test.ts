@@ -48,3 +48,11 @@ test('Learning feature composes official primitives without native equivalents',
   assert.match(source, /@\/components\/ui\/select/)
   assert.match(source, /@\/components\/ui\/checkbox/)
 })
+
+test('notification settings expose four policies and keep Push explicitly unavailable', () => {
+  const source = read('LearningNotificationsSection.tsx')
+  assert.match(source, /即时、每日、每周和正式通知/)
+  assert.match(source, /Push 通知/)
+  assert.match(source, /暂不支持/)
+  assert.doesNotMatch(source, /pushEnabled|deviceToken|apiKey/)
+})

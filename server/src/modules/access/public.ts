@@ -32,6 +32,13 @@ export function isActiveProjectStudent(
   return new AccessRepository(db).isActiveProjectStudent(input.companyId, input.projectId, input.userId)
 }
 
+export function isActiveProjectMember(
+  db: Queryable,
+  input: { companyId: string; projectId: string; userId: string },
+): Promise<boolean> {
+  return new AccessRepository(db).isActiveProjectMember(input.companyId, input.projectId, input.userId)
+}
+
 export const permissionService: PermissionService = {
   async can(request: PermissionRequest) {
     const { pool } = await import('../../db/pool.js')

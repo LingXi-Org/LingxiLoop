@@ -5383,7 +5383,10 @@ CREATE TABLE public.notification_preferences (
     CONSTRAINT notification_preferences_member_company_fkey
       FOREIGN KEY (company_id, user_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE,
     CONSTRAINT notification_preferences_project_company_fkey
-      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT notification_preferences_member_project_fkey
+      FOREIGN KEY (company_id, project_id, user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX uq_notification_preferences_global

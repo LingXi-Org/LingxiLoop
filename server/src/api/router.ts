@@ -15,6 +15,7 @@ import { identityRouter } from '../modules/identity/router.js'
 import { knowledgeRouter } from '../modules/knowledge/router.js'
 import { learningRouter } from '../modules/learning/router.js'
 import { messagesRouter } from '../modules/messages/router.js'
+import { notificationsRouter } from '../modules/notifications/router.js'
 import { observabilityRouter } from '../modules/observability/router.js'
 import { platformRouter } from '../modules/platform/router.js'
 import { pollsRouter } from '../modules/polls/router.js'
@@ -35,6 +36,7 @@ api.use(agentsRouter)
 api.use(conversationsRouter)
 api.use(contextThreadsRouter)
 api.use(messagesRouter)
+api.use(notificationsRouter)
 api.use(pollsRouter)
 api.use(emailRouter)
 api.use(observabilityRouter)

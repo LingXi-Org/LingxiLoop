@@ -56,6 +56,7 @@ export type CounterName =
   | 'learning.state.changed'
   | 'learning.review.due'
   | 'learning.notification.delivered'
+  | 'notification.delivered'
   | 'learning.authorization.denied'
   | 'learning.teacher_agent.authorization_denied'
   | 'learning.teacher_agent.provisioned'
@@ -108,6 +109,7 @@ const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
   'learning.state.changed':               { help: 'Deterministic LearningState projection changes.', labels: ['status'] },
   'learning.review.due':                  { help: 'LearningState reviews found due by the digest scheduler.', labels: [] },
   'learning.notification.delivered':      { help: 'Learning digest delivery results.', labels: ['channel', 'status'] },
+  'notification.delivered':               { help: 'Notification delivery results.', labels: ['channel', 'status'] },
   'learning.authorization.denied':        { help: 'Learning course authorization denials.', labels: ['role'] },
   'learning.teacher_agent.authorization_denied': { help: 'Teacher-agent authorization denials.', labels: ['reason'] },
   'learning.teacher_agent.provisioned':   { help: 'Project-scoped Pulse teacher agents provisioned.', labels: [] },

@@ -123,6 +123,16 @@ export class AccessRepository {
     return Boolean(rows[0])
   }
 
+  async isActiveProjectMember(companyId: string, projectId: string, userId: string): Promise<boolean> {
+    const { rows } = await this.db.query(
+      `SELECT 1 FROM project_memberships
+        WHERE company_id=$1 AND project_id=$2 AND user_id=$3
+          AND status='ACTIVE'${this.lockClause}`,
+      [companyId, projectId, userId],
+    )
+    return Boolean(rows[0])
+  }
+
   async actor(id: string): Promise<ActorRecord | null> {
     const { rows } = await this.db.query<ActorRow>(
       `SELECT id,deleted_at,suspended_at FROM users WHERE id=$1${this.lockClause}`,
