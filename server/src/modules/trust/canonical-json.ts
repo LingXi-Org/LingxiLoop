@@ -4,6 +4,7 @@ function normalize(value: unknown): unknown {
     if (!Number.isFinite(value)) throw new Error('Trust snapshot contains a non-finite number')
     return value
   }
+  if (value instanceof Date) return value.toISOString()
   if (Array.isArray(value)) return value.map(normalize)
   if (typeof value === 'object') {
     return Object.fromEntries(Object.entries(value as Record<string, unknown>)

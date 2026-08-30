@@ -159,6 +159,7 @@ export class TrustApplication {
       }
       const payloadHash = createHash('sha256').update(canonical).digest('hex')
       const signature = this.infrastructure.sign(canonical)
+      const normalizedPayload = JSON.parse(canonical) as Record<string, unknown>
       await createEvidenceRecordInTransaction(db, {
         id: snapshotEvidenceId,
         companyId,
@@ -171,7 +172,7 @@ export class TrustApplication {
       })
       await insertTrustSnapshot(db, {
         id, companyId, projectId, audienceLevel: context.audienceLevel,
-        payload, payloadHash, signature, evidenceId: snapshotEvidenceId, actorUserId,
+        payload: normalizedPayload, payloadHash, signature, evidenceId: snapshotEvidenceId, actorUserId,
       })
       await appendDomainEventInTransaction(db, {
         companyId,
@@ -188,7 +189,7 @@ export class TrustApplication {
         companyId,
         detail: { projectId, snapshotId: id, evidenceId: snapshotEvidenceId, payloadHash },
       })
-      return { id, evidenceId: snapshotEvidenceId, payloadHash, signature, payload }
+      return { id, evidenceId: snapshotEvidenceId, payloadHash, signature, payload: normalizedPayload }
     })
   }
 

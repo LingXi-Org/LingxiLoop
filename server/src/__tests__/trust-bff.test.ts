@@ -40,6 +40,10 @@ test('Trust access caps Teachers at L2 and Education leaders at L3', () => {
 test('signed snapshots use canonical JSON, hash, signature and immutable Evidence identity', () => {
   assert.equal(canonicalJson({ z: 1, a: { y: 2, x: 3 } }), '{"a":{"x":3,"y":2},"z":1}')
   assert.equal(canonicalJson({ 'ä': 1, z: 2 }), '{"z":2,"ä":1}')
+  assert.equal(
+    canonicalJson({ at: new Date('2026-08-30T00:00:00.000Z') }),
+    '{"at":"2026-08-30T00:00:00.000Z"}',
+  )
   assert.match(schema, /CREATE TABLE public\.trust_snapshots/)
   assert.match(schema, /trust_snapshots_immutable/)
   assert.match(schema, /trust_snapshots_evidence_fkey/)
