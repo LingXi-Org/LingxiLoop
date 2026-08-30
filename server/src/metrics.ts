@@ -53,7 +53,7 @@ export type CounterName =
   | 'learning.mission.planning_completed'
   | 'learning.attempt.accepted'
   | 'learning.evaluation.proposed'
-  | 'learning.mastery.changed'
+  | 'learning.state.changed'
   | 'learning.review.due'
   | 'learning.notification.delivered'
   | 'learning.authorization.denied'
@@ -105,8 +105,8 @@ const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
   'learning.mission.planning_completed':  { help: 'Mission boards that passed the explicit planning gate.', labels: ['mode'] },
   'learning.attempt.accepted':            { help: 'Host-verified learning attempts accepted.', labels: ['source'] },
   'learning.evaluation.proposed':         { help: 'Learning evaluations proposed by status.', labels: ['status'] },
-  'learning.mastery.changed':             { help: 'Deterministic mastery projection changes.', labels: ['status'] },
-  'learning.review.due':                  { help: 'Mastery reviews found due by the digest scheduler.', labels: [] },
+  'learning.state.changed':               { help: 'Deterministic LearningState projection changes.', labels: ['status'] },
+  'learning.review.due':                  { help: 'LearningState reviews found due by the digest scheduler.', labels: [] },
   'learning.notification.delivered':      { help: 'Learning digest delivery results.', labels: ['channel', 'status'] },
   'learning.authorization.denied':        { help: 'Learning course authorization denials.', labels: ['role'] },
   'learning.teacher_agent.authorization_denied': { help: 'Teacher-agent authorization denials.', labels: ['reason'] },

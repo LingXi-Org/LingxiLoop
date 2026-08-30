@@ -111,7 +111,7 @@ export interface LearningMission {
   updatedAt: string
 }
 
-export interface MasteryProjectionInput {
+export interface LearningStateProjectionInput {
   previousLevel: number
   previousIndependentEvidenceCount: number
   demonstratedLevel: number
@@ -125,7 +125,7 @@ export interface MasteryProjectionInput {
   evidenceDistinct?: boolean
 }
 
-export interface MasteryProjectionDecision {
+export interface LearningStateProjectionDecision {
   accepted: boolean
   pendingTeacher: boolean
   candidateLevel: number
