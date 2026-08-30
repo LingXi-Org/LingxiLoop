@@ -2651,7 +2651,7 @@ ALTER TABLE ONLY public.llm_calls
 --
 
 ALTER TABLE ONLY public.message_reactions
-    ADD CONSTRAINT message_reactions_pkey PRIMARY KEY (message_id, user_id, emoji);
+    ADD CONSTRAINT message_reactions_pkey PRIMARY KEY (company_id, message_id, user_id, emoji);
 
 
 --
@@ -4407,9 +4407,9 @@ ALTER TABLE ONLY public.context_threads
     FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE;
 
 ALTER TABLE ONLY public.context_threads
-    ADD CONSTRAINT context_threads_creator_project_fkey
-    FOREIGN KEY (company_id, project_id, created_by)
-    REFERENCES public.project_memberships(company_id, project_id, user_id);
+    ADD CONSTRAINT context_threads_creator_participant_fkey
+    FOREIGN KEY (created_by, company_id)
+    REFERENCES public.participants(id, company_id);
 
 ALTER TABLE ONLY public.context_threads
     ADD CONSTRAINT context_threads_channel_company_fkey

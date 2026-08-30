@@ -280,7 +280,7 @@ test('M9 ContextThread owns domain participation while WuKong remains the messag
   assert.match(threads, /'LEARNING'.*'TEACHER_TAKEOVER'.*'INTERVENTION'.*'CASE_DISCUSSION'.*'TEACHER_OPERATIONS'/s)
   assert.match(threads, /UNIQUE \(company_id, project_id, context_type, context_id\)/)
   assert.match(schema, /context_threads_channel_company_fkey[\s\S]*?im_channel_bindings\(channel_id, company_id\)/)
-  assert.match(schema, /context_threads_creator_project_fkey[\s\S]*?project_memberships\(company_id, project_id, user_id\)/)
+  assert.match(schema, /context_threads_creator_participant_fkey[\s\S]*?participants\(id, company_id\)/)
 
   assert.match(participants, /PRIMARY KEY \(thread_id, participant_id\)/)
   assert.match(schema, /context_thread_participants_thread_fkey[\s\S]*?context_threads\(id, company_id, project_id\)/)
@@ -486,6 +486,10 @@ test('structured Agent cards store WuKong identities without SQL message foreign
 
 test('tenant-owned reaction and climate rows have no legacy tenant default', () => {
   assert.match(schema, /CREATE TABLE public\.message_reactions \([\s\S]*?company_id text NOT NULL[\s\S]*?\);/)
+  assert.match(
+    schema,
+    /message_reactions_pkey PRIMARY KEY \(company_id, message_id, user_id, emoji\)/,
+  )
   assert.match(schema, /CREATE TABLE public\.agent_climate \([\s\S]*?company_id text NOT NULL[\s\S]*?\);/)
   assert.match(schema, /agent_climate_pkey PRIMARY KEY \(company_id, agent_id, about_id\)/)
   assert.doesNotMatch(schema, /company_id text DEFAULT 'personal'::text/)

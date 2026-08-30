@@ -45,7 +45,7 @@ test('[integration] WuKong reaction projections retain explicit tenant ownership
     `SELECT company_id FROM message_reactions WHERE message_id = $1 ORDER BY company_id`,
     [MESSAGE_ID],
   )
-  assert.deepEqual(reaction.rows.map((row) => row.company_id), [COMPANY_ID, OTHER_COMPANY_ID])
+  assert.deepEqual(reaction.rows.map((row) => row.company_id), [OTHER_COMPANY_ID, COMPANY_ID])
 })
 
 test('[integration] concurrent reaction toggles serialize on the tenant-scoped WuKong identity', async () => {

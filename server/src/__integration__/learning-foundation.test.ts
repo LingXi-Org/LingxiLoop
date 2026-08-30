@@ -52,6 +52,11 @@ async function seedPersonalProject(suffix: string): Promise<PersonalProjectFixtu
     [companyId,userId],
   )
   await pool.query(
+    `INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status)
+     VALUES($1,$2,'human',$3,$4,'#667085','avail')`,
+    [userId,companyId,`Learner ${suffix}`,suffix.slice(0,1).toUpperCase()],
+  )
+  await pool.query(
     `INSERT INTO projects(id,company_id,kind,name,created_by,is_default)
      VALUES($1,$2,'PERSONAL_LEARNING',$3,$4,TRUE)`,
     [projectId,companyId,`Learning ${suffix}`,userId],
@@ -102,6 +107,7 @@ async function seedLearningGraph(suffix: string): Promise<LearningGraph> {
   const attemptId = `attempt-${suffix}`
   const evaluationId = `evaluation-${suffix}`
   const caseId = `case-${suffix}`
+  const evidenceId = `evidence-${suffix}`
 
   await pool.query(
     `INSERT INTO learning_knowledge_units
@@ -134,10 +140,16 @@ async function seedLearningGraph(suffix: string): Promise<LearningGraph> {
     [missionStepId,fixture.companyId,fixture.projectId,missionId,knowledgeUnitId],
   )
   await pool.query(
+    `INSERT INTO evidence_records
+       (id,company_id,project_id,level,derivation,kind,subject_user_id,data,created_by_type,created_by_id)
+     VALUES($1,$2,$3,'L1','OBSERVED','learning_attempt',$4,$5::jsonb,'USER',$4)`,
+    [evidenceId,fixture.companyId,fixture.projectId,fixture.userId,JSON.stringify({ answer: 'x=2' })],
+  )
+  await pool.query(
     `INSERT INTO learning_attempts
-       (id,company_id,project_id,learner_id,activity_id,assistance,evidence,client_submission_id)
-     VALUES($1,$2,$3,$4,$5,'NONE','{"answer":"x=2"}'::jsonb,$6)`,
-    [attemptId,fixture.companyId,fixture.projectId,fixture.userId,activityId,`submission-${suffix}`],
+       (id,company_id,project_id,learner_id,activity_id,assistance,evidence_id,client_submission_id)
+     VALUES($1,$2,$3,$4,$5,'NONE',$6,$7)`,
+    [attemptId,fixture.companyId,fixture.projectId,fixture.userId,activityId,evidenceId,`submission-${suffix}`],
   )
   await pool.query(
     `INSERT INTO learning_evaluations
@@ -255,8 +267,8 @@ test('[integration] same-company wrong-project learning links fail closed', asyn
 
   await expectConstraint(pool.query(
     `INSERT INTO learning_attempts
-       (id,company_id,project_id,learner_id,activity_id,evidence)
-     VALUES('wrong-project-attempt',$1,$2,$3,$4,'{}'::jsonb)`,
+       (id,company_id,project_id,learner_id,activity_id,evidence_id)
+      VALUES('wrong-project-attempt',$1,$2,$3,$4,'wrong-project-evidence')`,
     [graph.companyId,other.projectId,graph.userId,graph.activityId],
   ), '23503', 'learning_attempts_activity_fkey')
 
@@ -283,8 +295,8 @@ test('[integration] cross-tenant learning links, duplicate open cases and action
 
   await expectConstraint(pool.query(
     `INSERT INTO learning_attempts
-       (id,company_id,project_id,learner_id,activity_id,evidence)
-     VALUES('cross-tenant-attempt',$1,$2,$3,$4,'{}'::jsonb)`,
+       (id,company_id,project_id,learner_id,activity_id,evidence_id)
+      VALUES('cross-tenant-attempt',$1,$2,$3,$4,'cross-tenant-evidence')`,
     [other.companyId,other.projectId,other.userId,graph.activityId],
   ), '23503', 'learning_attempts_activity_fkey')
 

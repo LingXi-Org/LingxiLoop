@@ -407,7 +407,7 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['context_threads', 'context_threads_channel_key', 'u'],
   ['context_threads', 'context_threads_context_type_check', 'c'],
   ['context_threads', 'context_threads_project_company_fkey', 'f'],
-  ['context_threads', 'context_threads_creator_project_fkey', 'f'],
+  ['context_threads', 'context_threads_creator_participant_fkey', 'f'],
   ['context_threads', 'context_threads_channel_company_fkey', 'f'],
   ['context_thread_participants', 'context_thread_participants_thread_fkey', 'f'],
   ['context_thread_participants', 'context_thread_participants_participant_fkey', 'f'],
