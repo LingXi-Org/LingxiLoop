@@ -4,7 +4,7 @@ import { createPermissionService } from '../modules/access/public.js'
 import type { AgentWorkItem, HostAction } from './types.js'
 
 const LEARNING_READ_METHODS = new Set([
-  'current', 'get_learner_state', 'list_objectives', 'list_due', 'get_mission', 'get_activity',
+  'current', 'get_learner_state', 'list_knowledge_units', 'list_due', 'get_mission', 'get_activity',
 ])
 const KNOWLEDGE_READ_METHODS = new Set([
   'list_sources', 'get_source', 'search', 'ask', 'list_notes', 'get_note', 'list_insights',

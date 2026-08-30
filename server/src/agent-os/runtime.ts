@@ -65,7 +65,7 @@ export function knowledgeContextContract(): string {
 }
 
 export function learningContextContract(): string {
-  return `Agent OS learning policy: loop.learning is the only education control-plane namespace and is accessed inside IPython. The Host fixes tenant, course, room and learner scope from the current durable work item. Read current(), list_objectives(), get_mission(), get_learner_state(), list_due(), and get_activity(activityId=...). Start sustained goals with start_mission(goal=..., successCriteria=..., missionKind="study|research|project"); Host selects the unique coordinator (Nova, Scout, or Forge) and does not accept an arbitrary agent ID. Add learn/practice/check/reflect items and call finish_planning. Planning blocks execution and finalization. Complete a step only with update_step(..., outcome=..., sourceReportId=... or attemptId=...). Private chats, Lab and discussion rooms never auto-create Missions; explicit learner requests may opt in. Evidence must be Host-verifiable learner work. L3+, downgrade, and transfer evaluations require sourceReportId; independent verification is supplied with verifierReportId, and L4 always waits for a teacher. Never treat agent-authored output alone as learner evidence.`
+  return `Agent OS learning policy: loop.learning is the only education control-plane namespace and is accessed inside IPython. The Host fixes company, Project, conversation and learner scope from the current durable work item; Course exists only as optional teaching metadata. Read current(), list_knowledge_units(), get_mission(), get_learner_state(), list_due(), and get_activity(activityId=...). Draft the Project graph with draft_knowledge_units(knowledgeUnits=[...]) and activities with kind and knowledgeUnitIds. Start sustained goals with start_mission(goal=..., successCriteria=..., missionKind="STUDY|RESEARCH|PROJECT"); Host selects the unique coordinator (Nova, Scout, or Forge) and does not accept an arbitrary agent ID. All enum values are exact uppercase closed values; lowercase values are invalid. Add steps with kind="LEARN|PRACTICE|CHECK|REFLECT" and optional knowledgeUnitId, then call finish_planning. Planning blocks execution and finalization. Complete a step only with update_step(..., status="COMPLETED", outcome=..., sourceReportId=... or attemptId=...). Personal project conversations participate directly without a Course; Lab and discussion conversations require an explicit learner request before creating a Mission. Evidence must be Host-verifiable learner work. L3+, downgrade, and transfer evaluations require sourceReportId; independent verification is supplied with verifierReportId, and L4 always waits for a teacher. Never treat agent-authored output alone as learner evidence.`
 }
 
 export function teacherContextContract(): string {
@@ -259,7 +259,7 @@ export class AgentOSRuntime {
           const steers = steerQueue.splice(0)
           session.history.push({ role: 'user', content: `Highest-priority human steering:\n${steers.map((item) => item.text).join('\n')}` })
         }
-        // grok-prompts-style dynamic suffix: course state is re-rendered for
+        // grok-prompts-style dynamic suffix: Project learning state is re-rendered for
         // every model turn and never frozen into the cache-stable prefix.
         const liveContext = hop === 0 ? context : await this.host.loadContext(work)
         const dynamicLearningItems = learningItems(liveContext)
@@ -298,7 +298,7 @@ export class AgentOSRuntime {
         })
         const calls = turn.output.filter((item): item is Extract<ModelItem, { type: 'function_call' }> => 'type' in item && item.type === 'function_call')
         if (calls.length === 0) {
-          if (liveContext.learningContext?.activeMission?.status === 'planning') {
+          if (liveContext.learningContext?.activeMission?.status === 'PLANNING') {
             session.history.push({
               role: 'user',
               content: 'Planning gate: a Mission is still in planning. Do not answer or execute yet. Complete its concrete check/reflect task board with loop.learning.add_steps(...), then call loop.learning.finish_planning(...).',

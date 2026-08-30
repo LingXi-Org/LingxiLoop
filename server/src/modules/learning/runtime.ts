@@ -4,47 +4,86 @@
  * This is the only Agent OS/IM entry point into Learning application use cases.
  * Persistence remains private to capability repositories behind this surface.
  */
-export function createObjectives(input: CreateLearningObjectivesCommand) {
-  return createLearningObjectives(pool, (work) => withTransaction(pool, work), input)
+import type { AgentWorkItem, HostAction } from '../../agent-os/types.js'
+import { pool } from '../../db/pool.js'
+import type { Queryable } from '../../db/queryable.js'
+import { withTransaction } from '../../db/transaction.js'
+import { wukongClient } from '../../im/wukong.js'
+import { inc } from '../../metrics.js'
+import {
+  addLearningMissionSteps,
+  completeLearningMission,
+  finishLearningMissionPlanning,
+  loadLearningContext,
+  preferredLearningMissionCoordinator,
+  proposeLearningEvaluation,
+  recordLearningAttempt,
+  startLearningMission,
+  updateLearningMissionStep,
+} from './application.js'
+import type {
+  AddLearningMissionStepInput,
+  CreateLearningKnowledgeUnitsCommand,
+  CreateProjectLearningActivityCommand,
+} from './contracts.js'
+import {
+  closeProjectLearningActivity,
+  createLearningKnowledgeUnits,
+  createProjectLearningActivity,
+  publishProjectLearningActivity,
+  submitProjectLearningActivity,
+} from './curriculum-application.js'
+import { findLearningMission, findVisibleProjectLearningActivity } from './repository.js'
+import {
+  assertTeacherApprovalFresh as assertTeacherApprovalFreshApplication,
+  describeTeacherAction as describeTeacherActionApplication,
+  executeTeacherAction as executeTeacherActionApplication,
+  loadTeacherTurnContext as loadTeacherTurnContextApplication,
+  nextTeacherDigestRun as nextTeacherDigestRunApplication,
+} from './teacher-agent-application.js'
+
+export function createKnowledgeUnits(input: CreateLearningKnowledgeUnitsCommand) {
+  return createLearningKnowledgeUnits(pool, (work) => withTransaction(pool, work), input)
 }
 
-export function setObjectiveStatus(input: {
-  companyId: string
-  courseId: string
-  objectiveId: string
-  teacherId: string
-  status: 'draft' | 'published' | 'archived'
-}) {
-  return setLearningObjectiveStatus(pool, input)
+export function draftActivity(input: CreateProjectLearningActivityCommand) {
+  return createProjectLearningActivity(pool, (work) => withTransaction(pool, work), input)
 }
 
-export function draftActivity(input: CreateLearningActivityCommand) {
-  return createLearningActivity(pool, (work) => withTransaction(pool, work), input)
-}
-
-export async function getActivity(activityId: string, companyId: string, courseId: string) {
-  const activity = await findVisibleLearningActivity(pool, companyId, courseId, activityId)
+export async function getActivity(activityId: string, companyId: string, projectId: string) {
+  const activity = await findVisibleProjectLearningActivity(pool, companyId, projectId, activityId)
   if (!activity) throw new Error('activity not found')
   return activity
 }
 
 export function publishActivity(input: {
-  companyId: string; courseId: string; activityId: string; teacherId: string
+  companyId: string
+  projectId: string
+  activityId: string
+  teacherId: string
 }) {
-  return publishLearningActivity((work) => withTransaction(pool, work), input)
+  return publishProjectLearningActivity((work) => withTransaction(pool, work), input)
 }
 
 export function closeActivity(input: {
-  companyId: string; courseId: string; activityId: string; teacherId: string
+  companyId: string
+  projectId: string
+  activityId: string
+  teacherId: string
 }) {
-  return closeLearningActivity(pool, input)
+  return closeProjectLearningActivity(pool, input)
 }
 
 export function submitActivity(input: {
-  companyId: string; courseId: string; activityId: string; learnerId: string
-  answer: string; assistance?: 'none'|'hint'|'guided'; idempotencyKey: string
+  companyId: string
+  projectId: string
+  activityId: string
+  learnerId: string
+  answer: string
+  assistance?: 'NONE'|'HINT'|'GUIDED'
+  idempotencyKey: string
 }) {
-  return submitLearningActivity(pool, input)
+  return submitProjectLearningActivity(pool, input)
 }
 
 type RuntimeRoomScope = { companyId: string; channelId: string }
@@ -70,8 +109,12 @@ export async function finishMissionPlanning(work: RuntimeRoomScope, missionId: s
 export function updateMissionStep(
   work: RuntimeRoomScope,
   input: {
-    missionId: string; stepId: string; status: 'open'|'in_progress'|'completed'|'cancelled'
-    outcome?: string; sourceReportId?: string; attemptId?: string
+    missionId: string
+    stepId: string
+    status: 'OPEN'|'IN_PROGRESS'|'COMPLETED'|'CANCELLED'
+    outcome?: string
+    sourceReportId?: string
+    attemptId?: string
   },
 ) {
   return updateLearningMissionStep(pool, (run) => withTransaction(pool, run), work, input)
@@ -82,7 +125,6 @@ export function completeMission(work: RuntimeRoomScope, missionId: string) {
 }
 
 export { teacherActionRequiresApproval } from './teacher-agent-application.js'
-
 export type {
   LearningActivityType,
   LearningEvaluationMode,
@@ -91,43 +133,6 @@ export type {
   LearningTurnContext,
   TeacherTurnContext,
 } from './types.js'
-import { pool } from '../../db/pool.js'
-import type { Queryable } from '../../db/queryable.js'
-import { withTransaction } from '../../db/transaction.js'
-import { wukongClient } from '../../im/wukong.js'
-import { inc } from '../../metrics.js'
-import {
-  addLearningMissionSteps,
-  closeLearningActivity,
-  completeLearningMission,
-  createLearningActivity,
-  createLearningObjectives,
-  finishLearningMissionPlanning,
-  loadLearningContext,
-  publishLearningActivity,
-  preferredLearningMissionCoordinator,
-  proposeLearningEvaluation,
-  recordLearningAttempt,
-  setLearningObjectiveStatus,
-  submitLearningActivity,
-  startLearningMission,
-  updateLearningMissionStep,
-} from './application.js'
-import type {
-  AddLearningMissionStepInput,
-  CreateLearningActivityCommand,
-  CreateLearningObjectivesCommand,
-} from './contracts.js'
-import { findLearningMission, findVisibleLearningActivity } from './repository.js'
-import type { AgentWorkItem } from '../../agent-os/types.js'
-import type { HostAction } from '../../agent-os/types.js'
-import {
-  assertTeacherApprovalFresh as assertTeacherApprovalFreshApplication,
-  describeTeacherAction as describeTeacherActionApplication,
-  executeTeacherAction as executeTeacherActionApplication,
-  loadTeacherTurnContext as loadTeacherTurnContextApplication,
-  nextTeacherDigestRun as nextTeacherDigestRunApplication,
-} from './teacher-agent-application.js'
 
 function teacherTransaction(db: Queryable) {
   return <T>(work: (client: Queryable) => Promise<T>): Promise<T> => db === pool
@@ -160,7 +165,11 @@ export function executeTeacherAction(
 }
 
 export function nextTeacherDigestRun(
-  schedule: { frequency: 'daily'|'weekly'; localTime: string; weekday?: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday' },
+  schedule: {
+    frequency: 'daily'|'weekly'
+    localTime: string
+    weekday?: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday'
+  },
   timezone: string,
   from: Date,
   db: Queryable = pool,
@@ -171,7 +180,10 @@ export function nextTeacherDigestRun(
 export const preferredCoordinatorPreset = preferredLearningMissionCoordinator
 
 async function syncLearningMessages(input: {
-  channelId: string; channelType: number; limit: number; loginUid: string
+  channelId: string
+  channelType: number
+  limit: number
+  loginUid: string
 }) {
   const messages = await wukongClient().syncMessages(
     input.channelId, input.channelType, input.limit, input.loginUid,
@@ -186,28 +198,42 @@ async function syncLearningMessages(input: {
 export function startMission(
   work: AgentWorkItem,
   input: {
-    goal: string; successCriteria: string; missionKind?: 'study'|'research'|'project'
-    sourceClientMsgNo?: string; explicit?: boolean
+    goal: string
+    successCriteria: string
+    missionKind?: 'STUDY'|'RESEARCH'|'PROJECT'
+    sourceClientMsgNo?: string
+    explicit?: boolean
   },
 ) {
   return startLearningMission(pool, (run) => withTransaction(pool, run), {
     syncMessages: syncLearningMessages,
-    publishMission: async ({ channelId, channelType, senderId, mission, courseId }) => {
+    publishMission: async ({ channelId, channelType, senderId, mission, projectId, courseId }) => {
       await wukongClient().sendMessage(channelId, channelType, senderId, {
-        version: 1, kind: 'learning_mission', clientMsgNo: `learning-mission-${mission.id}`,
-        body: mission.goal, refs: { agentId: senderId },
+        version: 1,
+        kind: 'learning_mission',
+        clientMsgNo: `learning-mission-${mission.id}`,
+        body: mission.goal,
+        refs: { agentId: senderId },
         data: {
-          missionId: mission.id, courseId, goal: mission.goal,
-          successCriteria: mission.successCriteria, missionKind: mission.missionKind,
-          coordinatorAgentId: mission.coordinatorAgentId, status: mission.status,
+          missionId: mission.id,
+          projectId,
+          ...(courseId ? { courseId } : {}),
+          goal: mission.goal,
+          successCriteria: mission.successCriteria,
+          kind: mission.kind,
+          coordinatorAgentId: mission.coordinatorAgentId,
+          status: mission.status,
           suppressAgentWake: true,
         },
       })
     },
     metric: inc,
   }, {
-    workId: work.id, companyId: work.companyId, agentId: work.agentId,
-    channelId: work.channelId, triggerClientMsgNo: work.triggerClientMsgNo,
+    workId: work.id,
+    companyId: work.companyId,
+    agentId: work.agentId,
+    channelId: work.channelId,
+    triggerClientMsgNo: work.triggerClientMsgNo,
     ...(work.threadRootClientMsgNo ? { threadRootClientMsgNo: work.threadRootClientMsgNo } : {}),
     ...input,
   })
@@ -216,21 +242,30 @@ export function startMission(
 export function recordAttempt(
   work: AgentWorkItem,
   input: {
-    activityId?: string; missionStepId?: string; evidenceClientMsgNos?: string[]
-    documentIds?: string[]; canvasFrameIds?: string[]; assistance?: 'none'|'hint'|'guided'
+    activityId?: string
+    missionStepId?: string
+    evidenceClientMsgNos?: string[]
+    documentIds?: string[]
+    canvasFrameIds?: string[]
+    assistance?: 'NONE'|'HINT'|'GUIDED'
   },
 ) {
   return recordLearningAttempt(pool, (run) => withTransaction(pool, run), {
     syncMessages: syncLearningMessages,
     metric: inc,
   }, {
-    companyId: work.companyId, channelId: work.channelId, agentId: work.agentId, ...input,
+    companyId: work.companyId,
+    channelId: work.channelId,
+    agentId: work.agentId,
+    ...input,
   })
 }
 
 export function loadLearningTurnContext(work: AgentWorkItem, actorId?: string) {
   return loadLearningContext(pool, { syncMessages: syncLearningMessages }, {
-    companyId: work.companyId, channelId: work.channelId, agentId: work.agentId,
+    companyId: work.companyId,
+    channelId: work.channelId,
+    agentId: work.agentId,
     triggerClientMsgNo: work.triggerClientMsgNo,
     ...(actorId ? { actorId } : {}),
   })
@@ -239,23 +274,31 @@ export function loadLearningTurnContext(work: AgentWorkItem, actorId?: string) {
 export function proposeEvaluation(
   work: AgentWorkItem,
   input: {
-    attemptId: string; demonstratedLevel: number; confidence: number; rubricResults?: unknown[]
-    feedback?: string; sourceReportId?: string; verifierReportId?: string
+    attemptId: string
+    demonstratedLevel: number
+    confidence: number
+    rubricResults?: unknown[]
+    feedback?: string
+    sourceReportId?: string
+    verifierReportId?: string
   },
 ) {
   return proposeLearningEvaluation(pool, (run) => withTransaction(pool, run), inc, {
-    companyId: work.companyId, channelId: work.channelId, agentId: work.agentId, ...input,
+    companyId: work.companyId,
+    channelId: work.channelId,
+    agentId: work.agentId,
+    ...input,
   })
 }
 
 export async function getMission(
   missionId: string,
   companyId: string,
-  courseId: string,
+  projectId: string,
   learnerId: string,
   conversationId: string,
 ) {
-  const mission = await findLearningMission(pool, companyId, courseId, missionId)
+  const mission = await findLearningMission(pool, companyId, projectId, missionId)
   if (!mission || mission.learnerId !== learnerId || mission.conversationId !== conversationId) {
     throw new Error('mission not found')
   }

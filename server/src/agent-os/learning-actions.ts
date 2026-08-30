@@ -48,7 +48,7 @@ import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1, Memo
 import {
   addMissionSteps,
   completeMission,
-  createObjectives,
+  createKnowledgeUnits,
   draftActivity,
   finishMissionPlanning,
   getActivity,
@@ -89,11 +89,28 @@ function textArg(args: Record<string, unknown>, name: string, required = true): 
   return value
 }
 
+function closedArg<const T extends string>(
+  args: Record<string, unknown>,
+  name: string,
+  allowed: readonly T[],
+): T {
+  const value = textArg(args, name)
+  if (!allowed.includes(value as T)) throw new Error(`${name} must be one of ${allowed.join(', ')}`)
+  return value as T
+}
+
+const MISSION_KINDS = ['STUDY','RESEARCH','PROJECT'] as const
+const STEP_KINDS = ['LEARN','PRACTICE','CHECK','REFLECT'] as const
+const STEP_STATUSES = ['OPEN','IN_PROGRESS','COMPLETED','CANCELLED'] as const
+const ACTIVITY_KINDS = ['LESSON','PRACTICE','ASSESSMENT','PROJECT','REVIEW'] as const
+const EVALUATION_MODES = ['AGENT_FORMATIVE','TEACHER_REQUIRED'] as const
+const ASSISTANCE_LEVELS = ['NONE','HINT','GUIDED'] as const
+
 async function executeEducation(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
   const context = await loadLearningTurnContext(work)
-  if (!context) throw new Error('current conversation is not bound to a learning course')
+  if (!context) throw new Error('current conversation is not bound to a project')
   if (method === 'current' || method === 'get_learner_state') return { ok: true, value: context }
-  if (method === 'list_objectives') return { ok: true, value: context.objectives }
+  if (method === 'list_knowledge_units') return { ok: true, value: context.knowledgeUnits }
   if (method === 'list_due') return { ok: true, value: context.due }
   if (method === 'get_mission') {
     const missionId = textArg(args, 'missionId', false)
@@ -101,57 +118,65 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
     if (!context.learnerId) throw new Error('current learning room has no learner scope')
     return {
       ok: true,
-      value: await getMission(missionId, work.companyId, context.course.id, context.learnerId, work.channelId),
+      value: await getMission(missionId, work.companyId, context.project.id, context.learnerId, work.channelId),
     }
   }
   if (method === 'get_activity') return {
     ok: true,
-    value: await getActivity(textArg(args, 'activityId'), work.companyId, context.course.id),
+    value: await getActivity(textArg(args, 'activityId'), work.companyId, context.project.id),
   }
   if (method === 'start_mission') return { ok: true, value: await startMission(work, {
     goal: textArg(args, 'goal'), successCriteria: textArg(args, 'successCriteria'),
-    ...(typeof args.missionKind === 'string' ? { missionKind: args.missionKind as 'study'|'research'|'project' } : {}),
+    ...(typeof args.missionKind === 'string'
+      ? { missionKind: closedArg(args, 'missionKind', MISSION_KINDS) }
+      : {}),
     ...(typeof args.sourceClientMsgNo === 'string' ? { sourceClientMsgNo: args.sourceClientMsgNo } : {}),
     ...(args.explicit === true ? { explicit: true } : {}),
   }) }
   if (method === 'add_steps') {
     const steps = Array.isArray(args.steps) ? args.steps.map((item) => record(item)).map((item) => ({
-      type: textArg(item, 'type') as LearningStepType,
+      kind: closedArg(item, 'kind', STEP_KINDS) as LearningStepType,
       description: textArg(item, 'description'), successCriteria: textArg(item, 'successCriteria'),
-      ...(typeof item.objectiveId === 'string' ? { objectiveId: item.objectiveId } : {}),
+      ...(typeof item.knowledgeUnitId === 'string' ? { knowledgeUnitId: item.knowledgeUnitId } : {}),
     })) : []
     return { ok: true, value: await addMissionSteps(work, textArg(args, 'missionId'), steps) }
   }
   if (method === 'finish_planning') return { ok: true, value: await finishMissionPlanning(work, textArg(args, 'missionId')) }
   if (method === 'update_step') return { ok: true, value: await updateMissionStep(work, {
-    missionId: textArg(args, 'missionId'), stepId: textArg(args, 'stepId'), status: textArg(args, 'status') as LearningStepStatus,
+    missionId: textArg(args, 'missionId'), stepId: textArg(args, 'stepId'),
+    status: closedArg(args, 'status', STEP_STATUSES) as LearningStepStatus,
     ...(typeof args.outcome === 'string' ? { outcome: args.outcome } : {}),
     ...(typeof args.sourceReportId==='string'?{sourceReportId:args.sourceReportId}:{}),
     ...(typeof args.attemptId==='string'?{attemptId:args.attemptId}:{}),
   }) }
   if (method === 'complete_mission') return { ok: true, value: await completeMission(work, textArg(args, 'missionId')) }
-  if (method === 'draft_objectives') {
-    const objectives = Array.isArray(args.objectives) ? args.objectives.map((item) => record(item)).map((item) => ({
+  if (method === 'draft_knowledge_units') {
+    const knowledgeUnits = Array.isArray(args.knowledgeUnits)
+      ? args.knowledgeUnits.map((item) => record(item)).map((item) => ({
       title: textArg(item, 'title'), successCriteria: textArg(item, 'successCriteria'),
       ...(item.targetLevel !== undefined ? { targetLevel: Number(item.targetLevel) } : {}),
-      ...(Array.isArray(item.prerequisiteIds) ? { prerequisiteIds: item.prerequisiteIds.map(String) } : {}),
+      ...(Array.isArray(item.prerequisiteKnowledgeUnitIds)
+        ? { prerequisiteKnowledgeUnitIds: item.prerequisiteKnowledgeUnitIds.map(String) }
+        : {}),
     })) : []
-    return { ok: true, value: await createObjectives({
+    return { ok: true, value: await createKnowledgeUnits({
       companyId: work.companyId,
-      courseId: context.course.id,
+      projectId: context.project.id,
       actorId: work.agentId,
       actorKind: 'agent',
-      objectives,
+      knowledgeUnits,
     }) }
   }
   if (method === 'draft_activity') return { ok: true, value: await draftActivity({
-    companyId: work.companyId, courseId: context.course.id, actorId: work.agentId, actorKind: 'agent',
+    companyId: work.companyId, projectId: context.project.id, actorId: work.agentId, actorKind: 'agent',
     title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),
-    type: textArg(args, 'type') as LearningActivityType,
-    ...(typeof args.evaluationMode === 'string' ? { evaluationMode: args.evaluationMode as LearningEvaluationMode } : {}),
+    kind: closedArg(args, 'kind', ACTIVITY_KINDS) as LearningActivityType,
+    ...(typeof args.evaluationMode === 'string'
+      ? { evaluationMode: closedArg(args, 'evaluationMode', EVALUATION_MODES) as LearningEvaluationMode }
+      : {}),
     ...(args.targetLevel !== undefined ? { targetLevel: Number(args.targetLevel) } : {}),
     ...(Array.isArray(args.rubric) ? { rubric: args.rubric } : {}),
-    ...(Array.isArray(args.objectiveIds) ? { objectiveIds: args.objectiveIds.map(String) } : {}),
+    ...(Array.isArray(args.knowledgeUnitIds) ? { knowledgeUnitIds: args.knowledgeUnitIds.map(String) } : {}),
     ...(typeof args.dueAt === 'string' ? { dueAt: args.dueAt } : {}),
   }) }
   if (method === 'record_attempt') return { ok: true, value: await recordAttempt(work, {
@@ -160,7 +185,9 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
     evidenceClientMsgNos: Array.isArray(args.evidenceClientMsgNos) ? args.evidenceClientMsgNos.map(String) : [],
     documentIds: Array.isArray(args.documentIds) ? args.documentIds.map(String) : [],
     canvasFrameIds: Array.isArray(args.canvasFrameIds) ? args.canvasFrameIds.map(String) : [],
-    assistance: args.assistance === 'hint' || args.assistance === 'guided' ? args.assistance : 'none',
+    assistance: args.assistance === undefined
+      ? 'NONE'
+      : closedArg(args, 'assistance', ASSISTANCE_LEVELS),
   }) }
   if (method === 'propose_evaluation') return { ok: true, value: await proposeEvaluation(work, {
     attemptId: textArg(args, 'attemptId'), demonstratedLevel: Number(args.demonstratedLevel), confidence: Number(args.confidence),
@@ -541,9 +568,9 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (!namespace || !method) throw new Error('action must use namespace.method')
   if (namespace === 'teacher') return { ok: true, value: await executeTeacherAction(work, method, args) }
   const learningContext = await loadLearningTurnContext(work)
-  if (learningContext?.activeMission?.status === 'planning') {
+  if (learningContext?.activeMission?.status === 'PLANNING') {
     const planningAllowed = new Set([
-      'learning.current', 'learning.get_learner_state', 'learning.list_objectives',
+      'learning.current', 'learning.get_learner_state', 'learning.list_knowledge_units',
       'learning.list_due', 'learning.get_mission', 'learning.get_activity',
       'learning.add_steps', 'learning.finish_planning',
       'knowledge.list_sources', 'knowledge.get_source', 'knowledge.search',
