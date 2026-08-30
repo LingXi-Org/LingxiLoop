@@ -43,7 +43,7 @@ export function DocumentsView() {
 
   const documentItems = (
     <>
-      {!loaded && <div className="space-y-2 p-2" aria-label="正在加载文档"><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /></div>}
+      {!loaded && <div className="space-y-2 p-2" role="status" aria-label="正在加载文档"><span className="sr-only">正在加载文档</span><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /></div>}
       {loaded && list.length === 0 && (
         <Empty className="border-0 px-4 py-8">
           <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle className="text-base">尚无文档</EmptyTitle><EmptyDescription>人类和智能体都可以实时协作编辑。</EmptyDescription></EmptyHeader>
@@ -97,7 +97,7 @@ export function DocumentsView() {
         </aside>
         <div className="min-h-0 overflow-hidden bg-card">
           {!loaded ? (
-            <div className="grid h-full gap-4 p-6" aria-label="正在加载文档内容"><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-full min-h-64 rounded-4xl" /></div>
+            <div className="grid h-full gap-4 p-6" role="status" aria-label="正在加载文档内容"><span className="sr-only">正在加载文档内容</span><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-full min-h-64 rounded-4xl" /></div>
           ) : selectedId ? (
             <DocumentEditor documentId={selectedId} />
           ) : (

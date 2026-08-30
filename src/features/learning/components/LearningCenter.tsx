@@ -39,7 +39,7 @@ export function LearningCenter({ workspaceId, allowOnboarding = false }: { works
   if (!dashboard) {
     return error
       ? <div className="h-full overflow-y-auto p-6"><Alert variant="destructive"><AlertTitle>学习中心暂不可用</AlertTitle><AlertDescription>{error}</AlertDescription></Alert></div>
-      : <div className="grid h-full gap-4 p-6" aria-label="正在加载学习中心"><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-48 rounded-4xl" /><Skeleton className="h-48 rounded-4xl" /></div>
+      : <div className="grid h-full gap-4 p-6" role="status" aria-label="正在加载学习中心"><span className="sr-only">正在加载学习中心</span><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-48 rounded-4xl" /><Skeleton className="h-48 rounded-4xl" /></div>
   }
   if (dashboard.projects.length === 0 || (!course && allowOnboarding)) return <Onboarding onCreated={loadDashboard} />
   if (!course) return <Empty className="h-full border-0"><EmptyHeader><EmptyTitle>课程暂不可用</EmptyTitle><EmptyDescription>当前课程尚未加入学习中心，或你已失去访问权限。</EmptyDescription></EmptyHeader></Empty>

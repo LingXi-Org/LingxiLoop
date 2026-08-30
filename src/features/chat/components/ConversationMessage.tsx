@@ -8,7 +8,7 @@ import {
   type ReasoningMessagePartProps,
   type SourceMessagePartProps,
 } from '@assistant-ui/react'
-import { Copy01Icon, Share08Icon, SmilePlusIcon } from '@hugeicons/core-free-icons'
+import { Copy01Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useState } from 'react'
 import { Avatar } from '@/components/Avatar'
@@ -81,17 +81,20 @@ function MessageActions({
   const [showReactions, setShowReactions] = useState(false)
   return (
     <ActionBarPrimitive.Root className={cn(
-      'absolute -top-3 end-0 z-30 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-0.5 text-popover-foreground opacity-0 invisible shadow-md transition-opacity group-hover/message:visible group-hover/message:opacity-100 focus-within:visible focus-within:opacity-100',
-    )} role="toolbar" aria-label="消息操作">
+      'absolute -top-3 end-0 z-30 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-0.5 text-popover-foreground opacity-0 invisible shadow-md transition-opacity group-hover/message:visible group-hover/message:opacity-100',
+    )} role="toolbar" aria-label="消息操作" onMouseLeave={() => setShowReactions(false)}>
       <Button
         type="button"
         variant="ghost"
         size="icon-xs"
         className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
         aria-label="回复"
-        onClick={() => aui.composer.setQuote({ messageId, text })}
+        onClick={(event) => {
+          aui.thread.composer().setQuote({ messageId, text })
+          event.currentTarget.blur()
+        }}
       >
-        <HugeiconsIcon icon={Share08Icon} strokeWidth={2} />
+        <HugeiconsIcon icon={ReplyIcon} strokeWidth={2} />
       </Button>
       <div className="relative">
         <Button
@@ -118,7 +121,7 @@ function MessageActions({
                 aria-label={`使用 ${emoji} 回应`}
                 onClick={() => {
                   setShowReactions(false)
-                  void chatTransport.toggleReaction(metadata.conversationId, metadata.clientMessageId, emoji)
+                  void chatTransport.toggleReaction(metadata.conversationId, messageId, emoji)
                 }}
               >
                 <TwEmoji emoji={emoji} size={18} />
@@ -128,7 +131,7 @@ function MessageActions({
         )}
       </div>
       <ActionBarPrimitive.Copy asChild>
-        <Button type="button" variant="ghost" size="icon-xs" className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground" aria-label="复制">
+        <Button type="button" variant="ghost" size="icon-xs" className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground" aria-label="复制" onClick={(event) => event.currentTarget.blur()}>
           <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />
         </Button>
       </ActionBarPrimitive.Copy>
@@ -136,7 +139,7 @@ function MessageActions({
   )
 }
 
-function Reactions({ metadata }: { metadata: LingxiMessageMetadata }) {
+function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; messageId: string }) {
   if (metadata.reactions.length === 0) return null
   return (
     <div className={cn('mt-1 flex flex-wrap gap-1', metadata.isMine ? 'justify-end' : 'justify-start')}>
@@ -155,7 +158,7 @@ function Reactions({ metadata }: { metadata: LingxiMessageMetadata }) {
               : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground',
           )}
           aria-label={`${reaction.emoji} ${reaction.count} 个反应`}
-          onClick={() => void chatTransport.toggleReaction(metadata.conversationId, metadata.clientMessageId, reaction.emoji)}
+          onClick={() => void chatTransport.toggleReaction(metadata.conversationId, messageId, reaction.emoji)}
         >
           <TwEmoji emoji={reaction.emoji} size={16} />
           <span className="text-xs font-medium">{reaction.count}</span>
@@ -172,6 +175,7 @@ export function ConversationMessage() {
     .map((part) => part.text)
     .join('\n'))
   const createdAt = useAuiState((state) => state.message.createdAt)
+  const messageId = useAuiState((state) => state.message.id)
   const participant = useParticipants((state) => state.byId[custom.senderId])
   const groupPosition = custom.groupStart
     ? custom.groupEnd ? 'single' : 'start'
@@ -242,7 +246,7 @@ export function ConversationMessage() {
             </MessagePrimitive.Error>
           </div>
         </div>
-        <Reactions metadata={custom} />
+        <Reactions metadata={custom} messageId={messageId} />
         <div className={cn('mt-0.5 flex items-center gap-2 px-1 text-[10px] text-muted-foreground', custom.isMine && 'justify-end')}>
           {custom.groupEnd && <time>{createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>}
           {custom.isMine && custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}

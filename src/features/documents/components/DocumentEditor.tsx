@@ -179,7 +179,7 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
     </div>
   )
   if (!user || !session) return (
-    <div className="grid h-full gap-4 p-6" aria-label="正在加载文档编辑器"><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-full min-h-64 rounded-4xl" /></div>
+    <div className="grid h-full gap-4 p-6" role="status" aria-label="正在加载文档编辑器"><span className="sr-only">正在加载文档编辑器</span><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-full min-h-64 rounded-4xl" /></div>
   )
 
   const commitTitle = async () => {

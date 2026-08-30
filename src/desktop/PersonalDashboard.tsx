@@ -6,6 +6,7 @@ import {
   Mail01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { useEffect, useRef, useState } from 'react'
 import type { Layout, LayoutChangedMeta } from 'react-resizable-panels'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
@@ -23,6 +24,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { CompanyCourseManagement } from '@/features/companies/components/CompanyCourseManagement'
 import { SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
@@ -90,20 +92,37 @@ export function PersonalDashboard({
   const workspaces = useWorkspace((state) => state.list)
   const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
   const selectWorkspace = useWorkspace((state) => state.select)
+  const [pagePending, setPagePending] = useState(false)
+  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scopes = getDashboardScopes(workspaces)
   const activeWorkspace = scopes.visible.find((workspace) => workspace.id === selectedWorkspaceId)
     ?? scopes.courses[0]
     ?? scopes.personal
   const personalPage = activeWorkspace?.id === scopes.personal?.id
 
-  const openView = (next: DashboardView) => useApp.getState().setView(next)
+  useEffect(() => () => {
+    if (transitionTimer.current) clearTimeout(transitionTimer.current)
+  }, [])
+
+  const openView = (next: DashboardView) => {
+    if (next === view) return
+    if (transitionTimer.current) clearTimeout(transitionTimer.current)
+    setPagePending(true)
+    useApp.getState().setView(next)
+    transitionTimer.current = setTimeout(() => {
+      setPagePending(false)
+      transitionTimer.current = null
+    }, 120)
+  }
   const openWorkspacePage = (workspaceId: string) => {
     if (workspaceId === selectedWorkspaceId) return
     const targetIsPersonal = workspaceId === scopes.personal?.id
     const nextView = targetIsPersonal && view === 'courses' ? 'learning' : view
+    if (transitionTimer.current) clearTimeout(transitionTimer.current)
+    setPagePending(true)
     const selection = selectWorkspace(workspaceId)
-    openView(nextView)
-    void selection.catch(() => undefined)
+    useApp.getState().setView(nextView)
+    void selection.catch(() => undefined).finally(() => setPagePending(false))
   }
 
   return (
@@ -174,7 +193,19 @@ export function PersonalDashboard({
         <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整看板侧边栏宽度" title="拖动调整侧边栏宽度，双击恢复默认" />
         <ResizablePanel id="conversation" defaultSize="75%" minSize={320} className="min-h-0 min-w-0">
           <SidebarInset className="@container/dashboard-content h-full min-h-0 min-w-0 overflow-hidden bg-card text-card-foreground">
-            {activeWorkspace && (
+            {pagePending ? (
+              <div className="flex h-full min-h-0 flex-col" role="status" aria-label="正在切换看板页面">
+                <span className="sr-only">正在切换看板页面</span>
+                <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--im-divider-weak)] px-4">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-8 w-24 rounded-xl" />
+                </div>
+                <div className="grid min-h-0 flex-1 gap-4 p-4 @min-[48rem]/dashboard-content:grid-cols-[minmax(0,1.4fr)_minmax(16rem,.6fr)] @min-[48rem]/dashboard-content:p-6">
+                  <div className="space-y-4"><Skeleton className="h-10 w-full rounded-xl" /><Skeleton className="h-44 w-full rounded-4xl" /><Skeleton className="h-44 w-full rounded-4xl" /></div>
+                  <div className="space-y-4"><Skeleton className="h-28 w-full rounded-4xl" /><Skeleton className="h-52 w-full rounded-4xl" /></div>
+                </div>
+              </div>
+            ) : activeWorkspace && (
               <DashboardPage
                 key={activeWorkspace.id}
                 view={view}

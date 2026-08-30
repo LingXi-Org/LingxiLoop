@@ -208,7 +208,8 @@ export function CompanyCourseManagement({ projectId }: { projectId: string }) {
           {error && <Alert variant="destructive"><AlertTitle>课程管理暂不可用</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
 
           {loading && courses.length === 0 ? (
-            <div className="grid gap-4 @min-[48rem]/course:grid-cols-2">
+            <div className="grid gap-4 @min-[48rem]/course:grid-cols-2" role="status" aria-label="正在加载课程">
+              <span className="sr-only">正在加载课程</span>
               {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-40 rounded-4xl" />)}
             </div>
           ) : (

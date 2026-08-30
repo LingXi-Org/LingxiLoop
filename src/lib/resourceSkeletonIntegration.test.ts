@@ -27,6 +27,8 @@ test('shared resource placeholders cover every global layout shape accessibly', 
 
 test('global resource surfaces render Skeletons instead of plain initial loading text', () => {
   const surfaces = [
+    '../desktop/PersonalDashboard.tsx',
+    '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/documents/components/DocumentsView.tsx',
     '../features/calendar/components/CalendarView.tsx',
     '../features/calendar/components/CalendarEventPeekContent.tsx',
@@ -41,6 +43,16 @@ test('global resource surfaces render Skeletons instead of plain initial loading
     const source = read(path)
     assert.match(source, /<(?:ResourceSkeleton|Skeleton|PeekLoading)\b/, `${path} has no Skeleton pending branch`)
   }
+  for (const path of [
+    '../desktop/PersonalDashboard.tsx',
+    '../features/companies/components/CompanyCourseManagement.tsx',
+    '../features/documents/components/DocumentsView.tsx',
+    '../features/documents/components/DocumentEditor.tsx',
+    '../features/calendar/components/CalendarView.tsx',
+    '../features/learning/components/LearningCenter.tsx',
+  ]) assert.match(read(path), /role="status"/, `${path} has no accessible busy state`)
+  assert.match(read('../desktop/PersonalDashboard.tsx'), /pagePending[\s\S]*正在切换看板页面/)
+  assert.match(read('../features/calendar/components/CalendarView.tsx'), /!loaded \?[\s\S]*正在加载日历/)
   assert.match(read('../components/LinkPreview.tsx'), /if \(!loaded\) return <ResourceSkeleton/)
   assert.doesNotMatch(read('../components/LinkPreview.tsx'), /render NOTHING \(no skeleton\)/)
   const linkPreview = read('../components/LinkPreview.tsx')

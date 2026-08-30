@@ -707,7 +707,20 @@ export function CalendarView() {
         </Tabs>
       </div>
 
-      <div className="grid min-h-0 flex-1 @min-[48rem]/calendar:grid-cols-[minmax(0,1fr)_320px]">
+      {!loaded ? (
+        <div className="grid min-h-0 flex-1 @min-[48rem]/calendar:grid-cols-[minmax(0,1fr)_320px]" role="status" aria-label="正在加载日历">
+          <span className="sr-only">正在加载日历</span>
+          <div className="grid min-h-0 grid-cols-7 gap-px bg-border/60 p-px">
+            {Array.from({ length: 35 }, (_, index) => <Skeleton key={index} className="min-h-20 rounded-none bg-card @min-[48rem]/calendar:min-h-28" />)}
+          </div>
+          <aside className="hidden min-h-0 space-y-3 border-s border-[var(--im-divider)] p-3 @min-[48rem]/calendar:block">
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="h-24 rounded-2xl" />
+            <Skeleton className="h-24 rounded-2xl" />
+            <Skeleton className="h-24 rounded-2xl" />
+          </aside>
+        </div>
+      ) : <div className="grid min-h-0 flex-1 @min-[48rem]/calendar:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-h-0 flex-col">
           {mode === 'month' && <MonthGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} />}
           {mode === 'week' && <TimeGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} dayCount={7} />}
@@ -717,7 +730,7 @@ export function CalendarView() {
           <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--im-divider-weak)] px-3"><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} className="size-4 text-muted-foreground" /><h2 className="text-sm font-medium">即将推出</h2><span className="ms-auto text-xs text-muted-foreground">{agenda.length} 项</span></div>
           {agendaContent}
         </aside>
-      </div>
+      </div>}
 
       <Sheet open={agendaOpen} onOpenChange={setAgendaOpen}>
         <SheetContent side="right" className="w-[min(92vw,360px)] p-0 sm:max-w-[360px]">

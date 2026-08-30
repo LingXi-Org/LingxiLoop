@@ -91,9 +91,27 @@ test('uses chatcn hover actions and reaction pill states', async ({ page }) => {
   const bubbleBox = await bubble.boundingBox()
   expect(after?.y).toBeLessThan(bubbleBox?.y ?? Number.POSITIVE_INFINITY)
   expect(Math.abs((after?.x ?? 0) + (after?.width ?? 0) - ((bubbleBox?.x ?? 0) + (bubbleBox?.width ?? 0)))).toBeLessThan(1)
+  await quote.click()
+  await expect(page.locator('.chat-composer')).toContainText('This is the middle of a compact message cluster.')
+  await page.getByRole('button', { name: '取消回复' }).click()
+  await message.hover()
+  await page.evaluate(() => {
+    Object.defineProperty(navigator.clipboard, 'writeText', {
+      configurable: true,
+      value: async (value: string) => {
+        Object.assign(window, { __copiedMessage: value })
+      },
+    })
+  })
+  await copy.click()
+  await expect.poll(() => page.evaluate(() => (window as typeof window & { __copiedMessage?: string }).__copiedMessage ?? '')).toContain('This is the middle of a compact message cluster.')
+  await message.hover()
   await emoji.click()
   await expect(page.getByRole('listbox', { name: '选择消息表情' })).toBeVisible()
   await expect(page.getByRole('option', { name: '使用 🔥 回应' })).toBeVisible()
+  await page.locator('.chat-composer').hover()
+  await expect(toolbar).toBeHidden()
+  await expect(page.getByRole('listbox', { name: '选择消息表情' })).toBeHidden()
 })
 
 test('composer focus has no selection ring or outline', async ({ page }) => {
