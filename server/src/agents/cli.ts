@@ -11,8 +11,6 @@
 
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import { parseMentions } from '../mentions.js'
-import { freshenAttachmentUrl, type StoredAttachment, storage, storageKeyFromPublicUrl } from '../storage.js'
 import {
   clearAgentChannelUnread,
   clearAllAgentUnread,
@@ -22,18 +20,29 @@ import {
   sendAgentChannelMessage,
   toggleAgentChannelReaction,
 } from '../im/public.js'
-import type { CliResult, CliSideEffect } from './cli-result.js'
+import { parseMentions } from '../mentions.js'
 import { addAgentConversationMember, leaveAgentConversation } from '../modules/conversations/public.js'
-import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
-import { stripLoneSurrogates } from './text-safety.js'
+import { freshenAttachmentUrl, type StoredAttachment, storage, storageKeyFromPublicUrl } from '../storage.js'
 import { createBoardCommands } from './cli/board.js'
 import { createCalendarCommand } from './cli/calendar.js'
 import { createConversationDeliveryCommands } from './cli/conversation-delivery.js'
 import { createConversationMetadataCommands } from './cli/conversation-metadata.js'
+import { createDocumentCommand } from './cli/document.js'
 import { createEmailCommand } from './cli/email.js'
 import { createHelpCommand } from './cli/help.js'
-import { createDocumentCommand } from './cli/document.js'
 import { createParticipantDirectoryCommands } from './cli/participant-directory.js'
+import {
+  agentCompanyId,
+  findConvening,
+  listAgentConversations,
+  listConversationMembers,
+  listParticipantIdentities,
+  listToolCalls,
+  participantNames,
+} from './cli/repository.js'
+import type { CliResult, CliSideEffect } from './cli-result.js'
+import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
+import { stripLoneSurrogates } from './text-safety.js'
 
 // Every CLI result flows through ok()/err(), so scrubbing lone UTF-16 surrogates
 // here means CLI output (read by agents as tool results) can never carry a split
@@ -58,10 +67,7 @@ function err(text: string, code = 1): CliResult {
  *  `participants(id) WHERE kind='agent'` + server-side slugify on
  *  /agents POST), so id-only lookup returns the single correct row. */
 async function agentCompany(agentId: string): Promise<string> {
-  const { rows } = await pool.query<{ company_id: string | null }>(
-    `SELECT company_id FROM participants WHERE id = $1 LIMIT 1`, [agentId],
-  )
-  const companyId = rows[0]?.company_id
+  const companyId = await agentCompanyId(pool, agentId)
   if (!companyId) throw new Error(`agent ${agentId} has no company`)
   return companyId
 }
@@ -76,6 +82,7 @@ export { tokenize }
 // import). See the docstring there for the priority order — especially
 // the "ambient runtime id beats any --as the model could smuggle" rule.
 import { resolveAs } from './cli-identity.js'
+import { clearHold, consumeHold, getSeen, recordHold, recordSeen } from './seen-boundary.js'
 import type { WorklogEntry, WorkTaskType } from './work-claims.js'
 /* ============== Worklog plumbing ==============
  *
@@ -89,7 +96,6 @@ import type { WorklogEntry, WorkTaskType } from './work-claims.js'
  * duplicate work cannot be admitted through an alternate path.
  */
 import { workClaims as worklogClient } from './work-claims.js'
-import { clearHold, consumeHold, getSeen, recordHold, recordSeen } from './seen-boundary.js'
 
 function tenantScopeKey(companyId: string): string {
   return `tenant:${companyId}`
@@ -177,23 +183,7 @@ const { cmdParticipants, cmdStatus, cmdWhoami } = createParticipantDirectoryComm
 
 async function cmdConversations(parsed: ParsedArgs, kindFilter?: 'group' | 'direct'): Promise<CliResult> {
   const me = resolveAs(parsed)
-  const params: unknown[] = [me]
-  let kindWhere = ''
-  if (kindFilter) {
-    params.push(kindFilter)
-    kindWhere = `AND kind = $2`
-  }
-  const { rows } = await pool.query<{
-    id: string; kind: string; title: string; subtitle: string | null;
-    members: string[]; tag: string | null;
-    updated_at: string; pulled_by: { agentId?: string } | null
-  }>(
-    `SELECT id, kind, title, subtitle, members, tag, updated_at, pulled_by
-       FROM conversations
-      WHERE members @> to_jsonb(ARRAY[$1::text]) ${kindWhere}
-      ORDER BY updated_at DESC`,
-    params,
-  )
+  const rows = await listAgentConversations(pool, me, kindFilter)
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
   if (rows.length === 0) return ok(`(no conversations for ${me})`)
 
@@ -214,18 +204,8 @@ async function cmdConversations(parsed: ParsedArgs, kindFilter?: 'group' | 'dire
 async function cmdMembers(parsed: ParsedArgs): Promise<CliResult> {
   const id = parsed.positional[0]
   if (!id) return err('usage: members <conversation_id>')
-  const { rows } = await pool.query<{ members: string[] }>(
-    `SELECT members FROM conversations WHERE id = $1`,
-    [id],
-  )
-  if (!rows[0]) return err(`unknown conversation: ${id}`)
-  const memberIds = rows[0].members
-  const { rows: peeps } = await pool.query<{
-    id: string; name: string; kind: string; role: string | null; status: string
-  }>(
-    `SELECT id, name, kind, role, status FROM participants WHERE id = ANY($1::text[])`,
-    [memberIds],
-  )
+  const peeps = await listConversationMembers(pool, id)
+  if (!peeps) return err(`unknown conversation: ${id}`)
   if (parsed.flags.json) return ok(JSON.stringify(peeps, null, 2))
   const memberLines: string[] = []
   for (const p of peeps) {
@@ -265,13 +245,7 @@ async function cmdMessages(parsed: ParsedArgs): Promise<CliResult> {
     .filter((message) => !threadRootId || threadTargets.has(message.payload.replyToClientMsgNo ?? ''))
     .slice(-tail)
   const authorIds = [...new Set(ordered.map((message) => message.fromUid))]
-  const { rows: authors } = authorIds.length > 0
-    ? await pool.query<{ id: string; name: string }>(
-      `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
-      [companyId, authorIds],
-    )
-    : { rows: [] }
-  const authorNames = new Map(authors.map((author) => [author.id, author.name]))
+  const authorNames = await participantNames(pool, companyId, authorIds)
   const inOrder = await Promise.all(selected.map(async (message) => {
     const quotedId = message.payload.replyToClientMsgNo ?? null
     const quotedMessage = quotedId
@@ -357,16 +331,7 @@ async function cmdThread(parsed: ParsedArgs): Promise<CliResult> {
 async function cmdConvening(parsed: ParsedArgs): Promise<CliResult> {
   const id = parsed.positional[0]
   if (!id) return err('usage: convening <conversation_id>')
-  const { rows } = await pool.query<{
-    pulled_by_id: string; pulled_at: string; headline_lead: string; headline_tail: string;
-    subhead: string; who_and_why: unknown; reasoning: unknown; status: string
-  }>(
-    `SELECT pulled_by_id, pulled_at, headline_lead, headline_tail, subhead,
-            who_and_why, reasoning, status
-       FROM convening_info WHERE conversation_id = $1`,
-    [id],
-  )
-  const c = rows[0]
+  const c = await findConvening(pool, id)
   if (!c) return err(`no convening info for ${id}`)
   if (parsed.flags.json) return ok(JSON.stringify(c, null, 2))
   const reasoning = Array.isArray(c.reasoning) ? c.reasoning.map((r, i) => `  ${i + 1}. ${r}`).join('\n') : ''
@@ -404,13 +369,7 @@ async function cmdSearch(parsed: ParsedArgs): Promise<CliResult> {
     limit,
   })
   const authorIds = [...new Set(matches.map((match) => match.message.fromUid))]
-  const { rows: authors } = authorIds.length > 0
-    ? await pool.query<{ id: string; name: string }>(
-      `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
-      [companyId, authorIds],
-    )
-    : { rows: [] }
-  const names = new Map(authors.map((author) => [author.id, author.name]))
+  const names = await participantNames(pool, companyId, authorIds)
   const rows = matches.map((match) => ({
     id: match.message.messageId,
     conversation_id: match.channelId,
@@ -435,20 +394,7 @@ async function cmdSearch(parsed: ParsedArgs): Promise<CliResult> {
 async function cmdToolsLog(parsed: ParsedArgs): Promise<CliResult> {
   const agent = parsed.flags.agent ? String(parsed.flags.agent) : null
   const limit = Math.min(50, Math.max(1, Number(parsed.flags.limit ?? 15)))
-  const params: unknown[] = []
-  let where = ''
-  if (agent) { params.push(agent); where = `WHERE agent_id = $1` }
-  params.push(limit)
-  const limitParam = `$${params.length}`
-  const { rows } = await pool.query<{
-    id: string; agent_id: string; name: string; status: string; duration_ms: number | null;
-    args: unknown; created_at: string
-  }>(
-    `SELECT id, agent_id, name, status, duration_ms, args, created_at
-       FROM tool_calls ${where}
-       ORDER BY created_at DESC LIMIT ${limitParam}`,
-    params,
-  )
+  const rows = await listToolCalls(pool, agent, limit)
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
   if (rows.length === 0) return ok(`(no tool calls)`)
   return ok([
@@ -536,13 +482,7 @@ async function loadInbox(agentId: string): Promise<InboxItem[]> {
     entry.message.fromUid,
     entry.quotedMessage?.fromUid,
   ].filter((value): value is string => Boolean(value))))]
-  const { rows: participants } = participantIds.length > 0
-    ? await pool.query<{ id: string; name: string }>(
-      `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
-      [companyId, participantIds],
-    )
-    : { rows: [] }
-  const names = new Map(participants.map((participant) => [participant.id, participant.name]))
+  const names = await participantNames(pool, companyId, participantIds)
   return Promise.all(entries.map(async (entry): Promise<InboxItem> => {
     const message = entry.message
     const quoted = entry.quotedMessage
@@ -645,13 +585,7 @@ async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
   if (!authoritative) return err(`unknown authoritative channel ${convoId}`)
   const ordered = [...authoritative].sort((left, right) => left.messageSeq - right.messageSeq)
   const authorIds = [...new Set(ordered.map((message) => message.fromUid))]
-  const { rows: authors } = authorIds.length > 0
-    ? await pool.query<{ id: string; name: string }>(
-      `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
-      [companyId, authorIds],
-    )
-    : { rows: [] }
-  const authorNames = new Map(authors.map((author) => [author.id, author.name]))
+  const authorNames = await participantNames(pool, companyId, authorIds)
   const recent = ordered.map((message) => ({
     id: message.messageId,
     author_id: message.fromUid,
@@ -835,11 +769,8 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   const clientNonce = idempotencyKey
     ? `agent-reply:${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 48)}`
     : `agent-reply:${randomUUID()}`
-  const { rows: mentionTargets } = await pool.query<{ id: string; name: string }>(
-    `SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
-    [companyId, cv[0].members],
-  )
-  const participantNames = new Map(mentionTargets.map((participant) => [participant.id, participant.name]))
+  const mentionTargets = await listParticipantIdentities(pool, companyId, cv[0].members)
+  const participantNameById = new Map(mentionTargets.map((participant) => [participant.id, participant.name]))
 
   // ─── Idempotent replay short-circuit ───────────────────────────────
   // Skips every gate below (anti-monologue, freshness, verbatim-dup) —
@@ -968,7 +899,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       .map((message) => ({
         sequence: message.messageSeq,
         author_id: message.fromUid,
-        author_name: participantNames.get(message.fromUid) ?? null,
+        author_name: participantNameById.get(message.fromUid) ?? null,
         body: message.payload.body ?? '',
       }))
     if (newer.length > 0) {
@@ -1024,7 +955,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
         .map((message) => ({
           sequence: message.messageSeq,
           author_id: message.fromUid,
-          author_name: participantNames.get(message.fromUid) ?? null,
+          author_name: participantNameById.get(message.fromUid) ?? null,
           body: message.payload.body ?? '',
         }))
       if (newer.length > 0) {
@@ -1082,7 +1013,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       const lastPeer = lastPeerMessage ? {
         sequence: lastPeerMessage.messageSeq,
         author_id: lastPeerMessage.fromUid,
-        author_name: participantNames.get(lastPeerMessage.fromUid) ?? null,
+        author_name: participantNameById.get(lastPeerMessage.fromUid) ?? null,
         body: lastPeerMessage.payload.body ?? '',
       } : null
       if (lastPeer && lastPeer.body.trim() === draftBodyTrimmed) {
@@ -1211,7 +1142,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     await recordHold(me, replyHoldScope, peer.messageSeq)
     return err(
       `HELD — your draft became VERBATIM IDENTICAL to the most recent peer post while sending:\n` +
-      `  [seq=${peer.messageSeq}] ${participantNames.get(peer.fromUid) ?? peer.fromUid}: ${(peer.payload.body ?? '').replace(/\s+/g, ' ').slice(0, 200)}\n\n` +
+      `  [seq=${peer.messageSeq}] ${participantNameById.get(peer.fromUid) ?? peer.fromUid}: ${(peer.payload.body ?? '').replace(/\s+/g, ' ').slice(0, 200)}\n\n` +
       `They beat you to it. Re-read the room and choose a different contribution or stay silent.`,
       2,
     )
