@@ -38,6 +38,10 @@ The M8 evidence-foundation cutover is reset-only as well. It introduces the
 canonical L1/L2 Evidence, provenance-link, and human-reviewed Claim relations;
 databases created before these relations exist must be dropped and recreated.
 
+The M9 ContextThread cutover is reset-only. It adds authoritative
+`context_threads` and `context_thread_participants` relations; environments
+created before this cutover must reset before startup.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

@@ -1694,6 +1694,53 @@ CREATE TABLE public.projects (
 
 
 --
+-- Name: context_threads; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.context_threads (
+    id text NOT NULL,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    context_type text NOT NULL,
+    context_id text NOT NULL,
+    channel_id text NOT NULL,
+    created_by text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT context_threads_pkey PRIMARY KEY (id),
+    CONSTRAINT context_threads_scope_key UNIQUE (company_id, project_id, context_type, context_id),
+    CONSTRAINT context_threads_id_scope_key UNIQUE (id, company_id, project_id),
+    CONSTRAINT context_threads_channel_key UNIQUE (channel_id),
+    CONSTRAINT context_threads_context_type_check CHECK (
+        context_type = ANY (ARRAY[
+            'LEARNING'::text,
+            'TEACHER_TAKEOVER'::text,
+            'INTERVENTION'::text,
+            'CASE_DISCUSSION'::text,
+            'TEACHER_OPERATIONS'::text
+        ])
+    ),
+    CONSTRAINT context_threads_context_id_check CHECK (char_length(context_id) BETWEEN 1 AND 200)
+);
+
+
+--
+-- Name: context_thread_participants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.context_thread_participants (
+    thread_id text NOT NULL,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    participant_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT context_thread_participants_pkey PRIMARY KEY (thread_id, participant_id)
+);
+
+CREATE INDEX idx_context_thread_participants_principal
+    ON public.context_thread_participants USING btree (company_id, project_id, participant_id);
+
+
+--
 -- Name: sessions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2458,6 +2505,9 @@ ALTER TABLE ONLY public.eval_stage_results
 
 ALTER TABLE ONLY public.im_channel_bindings
     ADD CONSTRAINT im_channel_bindings_pkey PRIMARY KEY (channel_id);
+
+ALTER TABLE ONLY public.im_channel_bindings
+    ADD CONSTRAINT im_channel_bindings_channel_company_key UNIQUE (channel_id, company_id);
 
 
 --
@@ -4340,6 +4390,35 @@ ALTER TABLE ONLY public.eval_stage_results
 
 ALTER TABLE ONLY public.im_channel_bindings
     ADD CONSTRAINT im_channel_bindings_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: context_threads context_threads foreign keys; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.context_threads
+    ADD CONSTRAINT context_threads_project_company_fkey
+    FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.context_threads
+    ADD CONSTRAINT context_threads_creator_project_fkey
+    FOREIGN KEY (company_id, project_id, created_by)
+    REFERENCES public.project_memberships(company_id, project_id, user_id);
+
+ALTER TABLE ONLY public.context_threads
+    ADD CONSTRAINT context_threads_channel_company_fkey
+    FOREIGN KEY (channel_id, company_id)
+    REFERENCES public.im_channel_bindings(channel_id, company_id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.context_thread_participants
+    ADD CONSTRAINT context_thread_participants_thread_fkey
+    FOREIGN KEY (thread_id, company_id, project_id)
+    REFERENCES public.context_threads(id, company_id, project_id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.context_thread_participants
+    ADD CONSTRAINT context_thread_participants_participant_fkey
+    FOREIGN KEY (participant_id, company_id)
+    REFERENCES public.participants(id, company_id) ON DELETE RESTRICT;
 
 
 --

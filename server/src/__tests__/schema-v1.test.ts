@@ -269,6 +269,28 @@ test('M8 Evidence keeps L1/L2 facts canonical and inferred Claims reviewable', (
   assert.match(bootstrap, /'idx_evidence_claims_review'/)
 })
 
+test('M9 ContextThread owns domain participation while WuKong remains the message store', () => {
+  const threads = schema.match(/CREATE TABLE public\.context_threads \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  const participants = schema.match(
+    /CREATE TABLE public\.context_thread_participants \(([\s\S]*?)\n\);/,
+  )?.[1] ?? ''
+
+  assert.match(threads, /company_id text NOT NULL[\s\S]*project_id text NOT NULL/)
+  assert.match(threads, /context_type text NOT NULL[\s\S]*context_id text NOT NULL/)
+  assert.match(threads, /'LEARNING'.*'TEACHER_TAKEOVER'.*'INTERVENTION'.*'CASE_DISCUSSION'.*'TEACHER_OPERATIONS'/s)
+  assert.match(threads, /UNIQUE \(company_id, project_id, context_type, context_id\)/)
+  assert.match(schema, /context_threads_channel_company_fkey[\s\S]*?im_channel_bindings\(channel_id, company_id\)/)
+  assert.match(schema, /context_threads_creator_project_fkey[\s\S]*?project_memberships\(company_id, project_id, user_id\)/)
+
+  assert.match(participants, /PRIMARY KEY \(thread_id, participant_id\)/)
+  assert.match(schema, /context_thread_participants_thread_fkey[\s\S]*?context_threads\(id, company_id, project_id\)/)
+  assert.match(schema, /context_thread_participants_participant_fkey[\s\S]*?participants\(id, company_id\)/)
+  assert.doesNotMatch(threads, /\b(?:message|body|content|payload)\b/)
+  assert.doesNotMatch(participants, /\b(?:message|body|content|payload)\b/)
+  assert.match(bootstrap, /'context_thread_participants', 'context_threads'/)
+  assert.match(bootstrap, /'idx_context_thread_participants_principal'/)
+})
+
 test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
   assert.match(schema, /plans_code_key UNIQUE \(code\)/)
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)
