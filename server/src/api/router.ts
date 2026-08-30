@@ -22,6 +22,7 @@ import { platformRouter } from '../modules/platform/router.js'
 import { pollsRouter } from '../modules/polls/router.js'
 import { projectsRouter } from '../modules/projects/router.js'
 import { projectTransfersRouter } from '../modules/transfers/router.js'
+import { trustRouter } from '../modules/trust/router.js'
 
 export const api = Router()
 
@@ -33,6 +34,7 @@ api.use(companiesRouter)
 api.use(educationRouter)
 api.use(projectsRouter)
 api.use(projectTransfersRouter)
+api.use(trustRouter)
 api.use(canvasRouter)
 api.use(learningRouter)
 api.use(knowledgeRouter)

@@ -78,6 +78,9 @@ export const PERMISSION_ACTIONS = [
   'agent_approval:list',
   'agent_approval:resolve',
   'agent_run:control',
+  'trust:read_l2',
+  'trust:read_l3_company',
+  'trust:read_l3_project',
 ] as const
 
 export type PermissionAction = typeof PERMISSION_ACTIONS[number]

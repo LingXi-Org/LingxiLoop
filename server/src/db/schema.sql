@@ -5309,6 +5309,49 @@ CREATE INDEX idx_evidence_claims_review
     ON public.evidence_claims USING btree (company_id, project_id, status, created_at)
     WHERE (status = 'PENDING'::text);
 
+CREATE TABLE public.trust_snapshots (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    audience_level text NOT NULL,
+    dataset_release text NOT NULL,
+    payload jsonb NOT NULL,
+    payload_hash text NOT NULL,
+    signature text NOT NULL,
+    signing_key_id text NOT NULL,
+    evidence_id text NOT NULL,
+    created_by text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT trust_snapshots_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT trust_snapshots_audience_check CHECK (audience_level IN ('L2','L3')),
+    CONSTRAINT trust_snapshots_payload_check CHECK (jsonb_typeof(payload)='object' AND octet_length(payload::text)<=1048576),
+    CONSTRAINT trust_snapshots_hash_check CHECK (payload_hash ~ '^[0-9a-f]{64}$'),
+    CONSTRAINT trust_snapshots_signature_check CHECK (signature ~ '^[0-9a-f]{64}$'),
+    CONSTRAINT trust_snapshots_project_fkey
+      FOREIGN KEY (project_id,company_id) REFERENCES public.projects(id,company_id) ON DELETE RESTRICT,
+    CONSTRAINT trust_snapshots_evidence_fkey
+      FOREIGN KEY (company_id,project_id,evidence_id)
+      REFERENCES public.evidence_records(company_id,project_id,id) ON DELETE RESTRICT,
+    CONSTRAINT trust_snapshots_creator_fkey
+      FOREIGN KEY (company_id,created_by)
+      REFERENCES public.company_memberships(company_id,user_id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_trust_snapshots_project_created
+    ON public.trust_snapshots USING btree (company_id,project_id,created_at DESC,id);
+
+CREATE FUNCTION public.reject_trust_snapshot_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'trust snapshots are immutable';
+END;
+$$;
+
+CREATE TRIGGER trust_snapshots_immutable
+    BEFORE UPDATE OR DELETE ON public.trust_snapshots
+    FOR EACH ROW EXECUTE FUNCTION public.reject_trust_snapshot_mutation();
+
 CREATE TABLE public.evidence_claim_evidence (
     company_id text NOT NULL,
     project_id text NOT NULL,

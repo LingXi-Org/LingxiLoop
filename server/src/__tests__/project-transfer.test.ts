@@ -60,13 +60,14 @@ test('readiness is fail-closed on live Contract policy, version, legal basis, Me
 
 test('completion covers every mutable direct Project tenant table and preserves historical ledgers', () => {
   const projectOwned = [...schema.matchAll(/CREATE TABLE public\.([a-z0-9_]+) \(([\s\S]*?)\n\);/g)]
-    .filter(([, name, body]) => name !== 'projects' && name !== 'domain_events'
+    .filter(([, name, body]) => name !== 'projects' && name !== 'domain_events' && name !== 'trust_snapshots'
       && /\bcompany_id\b/.test(body ?? '') && /\bproject_id\b/.test(body ?? ''))
     .map(([, name]) => name)
     .sort()
   assert.deepEqual([...PROJECT_TRANSFER_MUTABLE_TABLES].sort(), projectOwned)
   assert.match(repository, /UPDATE projects SET company_id=\$3,kind='INSTITUTIONAL_COURSE',plan_id=NULL,[\s\S]{0,120}status='ACTIVE'/)
   assert.doesNotMatch(repository, /UPDATE (?:domain_events|audit_events|agent_runs|llm_calls|users|subscriptions)/)
+  assert.doesNotMatch(repository, /UPDATE trust_snapshots/)
   assert.doesNotMatch(repository, /INSERT INTO (?:projects|users)/)
   assert.match(schema, /domain_events_project_company_fkey\s+FOREIGN KEY \(project_id\) REFERENCES public\.projects\(id\)/)
   assert.match(schema, /attention_items_source_event_fkey\s+FOREIGN KEY \(source_event_sequence\)/)

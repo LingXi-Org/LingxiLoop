@@ -131,6 +131,13 @@ export const PERMISSION_POLICIES = {
   'agent_approval:list': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'member' },
   'agent_approval:resolve': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'member' },
   'agent_run:control': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'member' },
+  'trust:read_l2': projectManage('learning.core'),
+  'trust:read_l3_company': {
+    scope: 'company', entitlement: 'learning.core', companyRoles: COMPANY_MANAGERS, resource: 'none',
+  },
+  'trust:read_l3_project': {
+    scope: 'project', entitlement: 'learning.core', projectRoles: PROJECT_OWNERS, resource: 'none',
+  },
 } as const satisfies Record<PermissionAction, PermissionPolicy>
 
 export const PROJECT_WRITE_ACTIONS = new Set<PermissionAction>([
@@ -152,6 +159,7 @@ const READ_ACTIONS = new Set<PermissionAction>([
   'learning:read', 'knowledge:read', 'conversation:read', 'document:read', 'board:read',
   'calendar:read', 'canvas:read', 'poll:read', 'email:read', 'agent:read',
   'agent_autonomy:read', 'agent_memory:read', 'agent_approval:list',
+  'trust:read_l2', 'trust:read_l3_company', 'trust:read_l3_project',
 ])
 
 const COMPANY_LIFECYCLE_ACTIONS = new Set<PermissionAction>([

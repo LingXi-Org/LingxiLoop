@@ -425,6 +425,16 @@ test('Organization and Course Knowledge share one canonical source through expli
   assert.match(bootstrap, /'knowledge_source_bindings_scope_check'/)
 })
 
+test('signed Trust snapshots are bounded, Evidence-backed and immutable', () => {
+  assert.match(schema, /CREATE TABLE public\.trust_snapshots/)
+  assert.match(schema, /trust_snapshots_audience_check[\s\S]*'L2'.*'L3'/s)
+  assert.match(schema, /trust_snapshots_payload_check[\s\S]*1048576/)
+  assert.match(schema, /trust_snapshots_evidence_fkey/)
+  assert.match(schema, /CREATE TRIGGER trust_snapshots_immutable/)
+  assert.match(bootstrap, /'trust_snapshots'/)
+  assert.match(bootstrap, /'idx_trust_snapshots_project_created'/)
+})
+
 test('durable Agent work preserves a human authorization principal', () => {
   assert.match(schema, /CREATE TABLE public\.agent_work_items \([\s\S]*?authorization_user_id text,/)
   assert.match(schema, /agent_work_items_authorization_user_id_fkey[\s\S]*?REFERENCES public\.users\(id\) ON DELETE RESTRICT/)

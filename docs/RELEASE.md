@@ -79,6 +79,10 @@ and Course bindings over one canonical ingested source; it does not copy source
 content, chunks, or Learning State. Environments created before this cutover
 must reset before startup.
 
+The M24 Trust BFF cutover is reset-only. Signed Trust snapshots are immutable,
+tenant-scoped records backed by canonical Evidence; existing environments must
+reset before snapshot creation is enabled.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.
