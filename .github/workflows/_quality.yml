@@ -288,3 +288,45 @@ jobs:
         run: npx electron-builder --dir --${{ matrix.target }} --x64 --publish never
       - name: Verify Electron file layout
         run: node scripts/verify-desktop-package.mjs release
+
+  release-gate:
+    name: Release Definition of Done
+    if: always()
+    needs:
+      - classify
+      - static
+      - teacher-playwright
+      - server-integration
+      - agent-os-compose-smoke
+      - desktop-directory-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Require every selected gate and the complete release matrix
+        env:
+          FULL_MATRIX: ${{ needs.classify.outputs.full }}
+          STATIC_RESULT: ${{ needs.static.result }}
+          PLAYWRIGHT_RESULT: ${{ needs.teacher-playwright.result }}
+          INTEGRATION_RESULT: ${{ needs.server-integration.result }}
+          COMPOSE_RESULT: ${{ needs.agent-os-compose-smoke.result }}
+          DESKTOP_RESULT: ${{ needs.desktop-directory-smoke.result }}
+        shell: bash
+        run: |
+          results=(
+            "$STATIC_RESULT"
+            "$PLAYWRIGHT_RESULT"
+            "$INTEGRATION_RESULT"
+            "$COMPOSE_RESULT"
+            "$DESKTOP_RESULT"
+          )
+          for result in "${results[@]}"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "::error::a selected quality gate ended with $result"
+              exit 1
+            fi
+            if [[ "$FULL_MATRIX" == "true" && "$result" != "success" ]]; then
+              echo "::error::the release matrix requires every quality gate; found $result"
+              exit 1
+            fi
+          done
+          echo "Release Definition of Done satisfied."
