@@ -122,6 +122,12 @@ for (const file of [...server, ...frontend]) {
     || /archive(?:Project|Course)RequestSchema|\/courses\/:id\/archive/.test(source)) {
     violations.push(`${fileName}: generic Project status mutation and legacy Course archive routes are forbidden`)
   }
+  if (/\b(?:learning_profiles?|globalLearningProfile|global_learning_profile)\b/i.test(source)) {
+    violations.push(`${fileName}: Learning state must be Project-scoped; global Learning profiles are forbidden`)
+  }
+}
+if (/\b(?:learning_profiles?|global_learning_profile)\b/i.test(canonicalSchema)) {
+  violations.push('server/src/db/schema.sql: global Learning profiles are forbidden')
 }
 
 // Membership SQL is owned by Access or by narrow persistence/lifecycle projections.
@@ -223,6 +229,9 @@ for (const file of frontend) {
   const source = await read(file)
   if (/engineering-control-plane|ENGINEERING_L4/.test(source)) {
     violations.push(`${name(file)}: frontend cannot import the L4 Engineering Control Plane`)
+  }
+  if (/\/agent-os\b|agentOSControl|agent_work_items|agent_host_actions/.test(source)) {
+    violations.push(`${name(file)}: frontend cannot access AgentOS control or persistence surfaces`)
   }
 }
 
@@ -382,6 +391,10 @@ if (/im_send_acceptances/.test(imRouter)) {
 if (/\.post\(['"]\/channels['"]/.test(imRouter)) {
   violations.push('server/src/im/router.ts: retired client-side channel creation endpoint is forbidden')
 }
+const conversationRouter = await read(resolve('server/src/modules/conversations/router.ts'))
+if (/\.post\(\s*['"]\/(?:conversations|channels|groups|direct-messages)['"]/.test(`${imRouter}\n${conversationRouter}`)) {
+  violations.push('server: generic P2P or group conversation creation endpoints are forbidden')
+}
 const readReceiptFacade = await read(resolve('server/src/im/read-receipts.ts'))
 const readReceiptApplication = await read(resolve('server/src/im/read-receipts-application.ts'))
 if (/`[^`]*\b(?:SELECT|INSERT|UPDATE|DELETE)\b[^`]*`/is.test(`${readReceiptFacade}\n${readReceiptApplication}`)) {
@@ -400,6 +413,12 @@ if (/agent-os\/(?:approval|control)-(?:application|repository)\.js/.test(imRoute
 }
 if (/from ['"][^'"]*db\/|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(imRouter)) {
   violations.push('server/src/im/router.ts: IM router must not own SQL or database infrastructure')
+}
+for (const file of server.filter((candidate) => name(candidate).endsWith('-application.ts'))) {
+  const source = await read(file)
+  if (/\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(source)) {
+    violations.push(`${name(file)}: Application may orchestrate only; SQL belongs in a Repository`)
+  }
 }
 if (/\b(?:process\.env|wukongClient\s*\()/.test(imRouter)) {
   violations.push('server/src/im/router.ts: IM router must use session and capability facades')
@@ -420,6 +439,22 @@ for (const configFile of ['.env.example', '.env.local.example', 'docker-compose.
 const metricsSource = await read(resolve('server/src/metrics.ts'))
 if (/['"]email\.send\.(?:ok|fail)['"]\s*:\s*\{[^}]*labels:\s*\[[^\]]*mock/s.test(metricsSource)) {
   violations.push('server/src/metrics.ts: retired email mock dimension is forbidden')
+}
+const trustKpiContract = await read(resolve('server/src/modules/trust/contracts.ts'))
+for (const field of [
+  'value', 'threshold', 'numerator', 'denominator', 'window', 'source',
+  'dataset', 'release', 'updatedAt', 'evidenceId',
+]) {
+  if (!new RegExp(`\\b${field}\\b`).test(trustKpiContract)) {
+    violations.push(`server/src/modules/trust/contracts.ts: Trust KPI is missing provenance field ${field}`)
+  }
+}
+const enterprisePorts = await read(resolve('server/src/modules/enterprise/integration-ports.ts'))
+const enterpriseCards = await read(resolve('src/features/education/components/EnterpriseIntegrationCapabilities.tsx'))
+if (/\b(?:provision|send|configure|deploy|activate)\s*\(/i.test(enterprisePorts)
+  || !/status: 'AVAILABLE' \| 'NOT_SUPPORTED'/.test(enterprisePorts)
+  || !/disabled/.test(enterpriseCards) || !/暂不支持/.test(enterpriseCards)) {
+  violations.push('Enterprise provider capabilities must remain availability-only and visibly unavailable before activation')
 }
 const emailProvider = await read(resolve('server/src/modules/email/provider.ts'))
 const emailApplication = await read(resolve('server/src/modules/email/application.ts'))
