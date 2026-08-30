@@ -9,6 +9,7 @@ import {
   insertProjectLearningActivityAttempt,
   publishProjectLearningActivityRecord,
 } from '../modules/learning/repository.js'
+import { submitProjectLearningActivity } from '../modules/learning/activities-application.js'
 
 function queryable(
   handler: (text: string, params: readonly unknown[] | undefined) => { rows?: unknown[]; rowCount?: number },
@@ -143,4 +144,59 @@ test('UI submission binds a published activity and learner to one project', asyn
   assert.match(statement, /activity\.status='PUBLISHED'/)
   assert.doesNotMatch(statement, /project_memberships/)
   assert.match(statement, /ON CONFLICT\(company_id,project_id,activity_id,learner_id,client_submission_id\)/)
+})
+
+test('Assessment submission appends a bounded business event in the same transaction', async () => {
+  const calls: string[] = []
+  let eventPayload: Record<string, unknown> | undefined
+  const db = queryable((text, params) => {
+    calls.push(text)
+    if (text.includes('FROM users WHERE')) {
+      return { rows: [{ id: 'learner-1', deleted_at: null, suspended_at: null }] }
+    }
+    if (text.includes('FROM companies WHERE')) {
+      return { rows: [{ id: 'company-1', type: 'PERSONAL', status: 'ACTIVE', plan_id: 'plan-1' }] }
+    }
+    if (text.includes('FROM projects WHERE id=$1')) {
+      return { rows: [{
+        id: 'project-1', company_id: 'company-1', kind: 'PERSONAL_LEARNING', plan_id: 'plan-1',
+        status: 'ACTIVE', created_by: 'learner-1', conversation_members: null, leader_id: null,
+        resource_status: 'ACTIVE',
+      }] }
+    }
+    if (text.includes('FROM company_memberships')) return { rows: [{ role: 'OWNER', status: 'ACTIVE' }] }
+    if (text.includes('FROM project_memberships')) return { rows: [{ role: 'OWNER', status: 'ACTIVE' }] }
+    if (text.includes('FROM plans WHERE')) {
+      return { rows: [{ id: 'plan-1', code: 'PERSONAL_FREE', status: 'ACTIVE' }] }
+    }
+    if (text.includes('FROM plan_entitlements')) return { rows: [{ code: 'learning.core', value: true }] }
+    if (text.includes('INSERT INTO learning_attempts')) return { rows: [{ id: 'attempt-1' }] }
+    if (text.includes('pg_advisory_xact_lock')) return {}
+    if (text.includes('FROM domain_events WHERE')) return {}
+    if (text.includes('INSERT INTO domain_events')) {
+      eventPayload = JSON.parse(String(params?.[10])) as Record<string, unknown>
+      return { rows: [{
+        id: 'event-1', company_id: 'company-1', project_id: 'project-1',
+        aggregate_type: 'ASSESSMENT_ATTEMPT', aggregate_id: 'attempt-1',
+        sequence: 1, aggregate_sequence: 1, event_type: 'ASSESSMENT.ATTEMPT_SUBMITTED',
+        schema_version: 1, idempotency_key: 'assessment-attempt:attempt-1:submitted',
+        actor_type: 'USER', actor_id: 'learner-1', payload: eventPayload,
+        occurred_at: '2026-08-30T01:00:00.000Z',
+      }] }
+    }
+    throw new Error(`unexpected query: ${text}`)
+  })
+
+  const result = await submitProjectLearningActivity(async (work) => work(db), {
+    companyId: 'company-1', projectId: 'project-1', activityId: 'activity-1',
+    learnerId: 'learner-1', answer: 'private answer text', assistance: 'HINT',
+    idempotencyKey: 'submission-1',
+  })
+
+  assert.deepEqual(result, { attemptId: 'attempt-1' })
+  assert.deepEqual(eventPayload, {
+    attemptId: 'attempt-1', activityId: 'activity-1', learnerId: 'learner-1', assistance: 'HINT',
+  })
+  assert.ok(calls.findIndex((text) => text.includes('INSERT INTO learning_attempts'))
+    < calls.findIndex((text) => text.includes('INSERT INTO domain_events')))
 })

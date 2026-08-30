@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
+import { commitDomainEvent } from '../events/public.js'
+import { assessmentAttemptSubmittedEvent } from './activity-events.js'
 import type {
   CreateLearningActivityCommand,
   CreateProjectLearningActivityCommand,
@@ -197,7 +199,7 @@ export async function closeLearningActivity(
   return closeProjectLearningActivity(db, { ...input, projectId: project.projectId })
 }
 
-export async function submitProjectLearningActivity(
+async function submitProjectLearningActivityInTransaction(
   db: Queryable,
   input: {
     companyId: string
@@ -208,7 +210,7 @@ export async function submitProjectLearningActivity(
     assistance?: 'NONE'|'HINT'|'GUIDED'
     idempotencyKey: string
   },
-): Promise<{ attemptId: string }> {
+): Promise<{ attemptId: string; assistance: 'NONE'|'HINT'|'GUIDED' }> {
   await assertProjectPermission(db, {
     companyId: input.companyId,
     projectId: input.projectId,
@@ -216,22 +218,48 @@ export async function submitProjectLearningActivity(
     action: 'learning:submit',
   })
   const attemptId = randomUUID()
+  const assistance = input.assistance ?? 'NONE'
   const acceptedId = await insertProjectLearningActivityAttempt(db, {
     id: attemptId,
     companyId: input.companyId,
     projectId: input.projectId,
     activityId: input.activityId,
     learnerId: input.learnerId,
-    assistance: input.assistance ?? 'NONE',
+    assistance,
     answer: learningText(input.answer, 'answer', 100_000),
     idempotencyKey: input.idempotencyKey,
   })
   if (!acceptedId) throw new LearningApplicationError('not_found', 'published activity not found')
-  return { attemptId: acceptedId }
+  return { attemptId: acceptedId, assistance }
+}
+
+export async function submitProjectLearningActivity(
+  transaction: LearningTransaction,
+  input: {
+    companyId: string
+    projectId: string
+    activityId: string
+    learnerId: string
+    answer: string
+    assistance?: 'NONE'|'HINT'|'GUIDED'
+    idempotencyKey: string
+  },
+): Promise<{ attemptId: string }> {
+  const { result } = await commitDomainEvent(transaction, (db) => (
+    submitProjectLearningActivityInTransaction(db, input)
+  ), (attempt) => assessmentAttemptSubmittedEvent({
+    companyId: input.companyId,
+    projectId: input.projectId,
+    activityId: input.activityId,
+    learnerId: input.learnerId,
+    attemptId: attempt.attemptId,
+    assistance: attempt.assistance,
+  }))
+  return { attemptId: result.attemptId }
 }
 
 export async function submitLearningActivity(
-  db: Queryable,
+  transaction: LearningTransaction,
   input: {
     companyId: string
     courseId: string
@@ -242,6 +270,20 @@ export async function submitLearningActivity(
     idempotencyKey: string
   },
 ): Promise<{ attemptId: string }> {
-  const project = await requireLearningCourseProjectScope(db, input.companyId, input.courseId)
-  return submitProjectLearningActivity(db, { ...input, projectId: project.projectId })
+  const { result } = await commitDomainEvent(transaction, async (db) => {
+    const project = await requireLearningCourseProjectScope(db, input.companyId, input.courseId)
+    const attempt = await submitProjectLearningActivityInTransaction(db, {
+      ...input,
+      projectId: project.projectId,
+    })
+    return { ...attempt, projectId: project.projectId }
+  }, (attempt) => assessmentAttemptSubmittedEvent({
+    companyId: input.companyId,
+    projectId: attempt.projectId,
+    activityId: input.activityId,
+    learnerId: input.learnerId,
+    attemptId: attempt.attemptId,
+    assistance: attempt.assistance,
+  }))
+  return { attemptId: result.attemptId }
 }

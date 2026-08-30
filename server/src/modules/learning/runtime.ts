@@ -83,7 +83,7 @@ export function submitActivity(input: {
   assistance?: 'NONE'|'HINT'|'GUIDED'
   idempotencyKey: string
 }) {
-  return submitProjectLearningActivity(pool, input)
+  return submitProjectLearningActivity((work) => withTransaction(pool, work), input)
 }
 
 type RuntimeRoomScope = { companyId: string; channelId: string }

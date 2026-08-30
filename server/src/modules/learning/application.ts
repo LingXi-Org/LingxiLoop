@@ -642,9 +642,11 @@ export class LearningApplication {
 
   async submitActivity(scope: LearningScope, courseId: string, activityId: string, input: SubmitActivityInput) {
     await this.assertCourseScope(scope, courseId, 'learning:submit')
-    const result = await this.classroom(() => submitLearningActivity(this.db, {
+    const result = await this.classroom(() => submitLearningActivity(
+      (work) => this.infrastructure.transaction(work), {
       companyId: scope.companyId, courseId, activityId, learnerId: scope.userId, ...input,
-    }))
+      },
+    ))
     this.infrastructure.metric('learning.attempt.accepted', { source: 'ui' })
     return result
   }
@@ -655,9 +657,11 @@ export class LearningApplication {
     activityId: string,
     input: SubmitActivityInput,
   ) {
-    const result = await this.classroom(() => submitProjectLearningActivity(this.db, {
+    const result = await this.classroom(() => submitProjectLearningActivity(
+      (work) => this.infrastructure.transaction(work), {
       companyId: scope.companyId, projectId, activityId, learnerId: scope.userId, ...input,
-    }))
+      },
+    ))
     this.infrastructure.metric('learning.attempt.accepted', { source: 'ui' })
     return result
   }

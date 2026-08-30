@@ -19,7 +19,8 @@ test('Project learning facts expose the minimal read, submit and review surface'
 test('Project learning application methods consume trusted Project facts directly', () => {
   assert.match(application, /listProjectLearningKnowledgeUnits\(this\.db, scope\.companyId, projectId\)/)
   assert.match(application, /listProjectLearningActivities\(this\.db, scope\.companyId, projectId, canManage\.allowed\)/)
-  assert.match(application, /submitProjectLearningActivity\(this\.db/)
+  assert.match(application, /submitProjectLearningActivity\(/)
+  assert.match(application, /this\.infrastructure\.transaction\(work\)/)
   assert.match(application, /listLearningMissions\(this\.db/)
   assert.match(application, /reviewProjectLearningEvaluation\(/)
 })
