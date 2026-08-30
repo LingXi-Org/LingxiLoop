@@ -298,7 +298,7 @@ function evaluateProjectAccessMode(
         && !isContextManager(context)) return 'PROJECT_STATE_DENIED'
       return READ_ACTIONS.has(request.action) || lifecycle ? 'ALLOWED' : 'PROJECT_STATE_DENIED'
     case 'TRANSFER_PENDING':
-      return TRANSFER_FROZEN_ACTIONS.has(request.action) || request.action === 'project:request_transfer'
+      return TRANSFER_FROZEN_ACTIONS.has(request.action)
         ? 'PROJECT_STATE_DENIED'
         : 'ALLOWED'
     case 'RETENTION':

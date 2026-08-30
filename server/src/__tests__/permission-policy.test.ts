@@ -90,6 +90,10 @@ test('close-out, transfer, read-only, and retention policies fail closed by acti
     context('TRANSFER_PENDING'), null,
   ), 'PROJECT_STATE_DENIED')
   assert.equal(evaluatePolicy(
+    { actorUserId: 'owner', action: 'project:request_transfer', projectId: 'project' },
+    context('TRANSFER_PENDING'), null,
+  ), 'ALLOWED')
+  assert.equal(evaluatePolicy(
     { actorUserId: 'student', action: 'learning:submit', projectId: 'project' },
     context('TRANSFER_PENDING', 'STUDENT'), null,
   ), 'ALLOWED')
