@@ -7,16 +7,17 @@ import {
   proposeLearningEvaluation,
   recordLearningAttempt,
   reviewLearningEvaluation,
+  reviewProjectLearningEvaluation,
   setLearningCourseMembership,
   startLearningMission,
 } from '../modules/learning/application.js'
 import {
   completeLearningMissionRecord,
+  countPendingLearningEvaluations,
   findLearningMission,
   findLearningRoomState,
-  listLearningEvidenceRecords,
   listLearningMissions,
-  listPendingLearningEvaluationRecords,
+  learningStateContext,
   lockLearningMission,
   updateLearningMissionCoordinator,
   updateLearningMissionStepRecord,
@@ -47,8 +48,18 @@ function accessFixture(
     }] }
   }
   if (/SELECT id,company_id,kind,plan_id,status FROM projects/.test(text)) {
+    const personal = params?.[0] === 'personal-project'
     return { rows: [{
-      id: 'project-1', company_id: 'company-1', kind: 'TEACHING', plan_id: null, status: 'ACTIVE',
+      id: personal ? 'personal-project' : 'project-1', company_id: 'company-1',
+      kind: personal ? 'PERSONAL_LEARNING' : 'TEACHING', plan_id: null, status: 'ACTIVE',
+    }] }
+  }
+  if (/NULL::text AS leader_id,status AS resource_status FROM projects WHERE id=\$1/.test(text)) {
+    const personal = params?.[0] === 'personal-project'
+    return { rows: [{
+      company_id: 'company-1', project_id: personal ? 'personal-project' : 'project-1',
+      created_by: personal ? 'personal-owner' : 'teacher-1', conversation_members: null,
+      leader_id: null, resource_status: 'ACTIVE',
     }] }
   }
   if (/SELECT id,type,status,plan_id FROM companies/.test(text)) {
@@ -59,7 +70,12 @@ function accessFixture(
   }
   if (/SELECT role,status FROM project_memberships/.test(text)) {
     const userId = String(params?.[2] ?? '')
-    return { rows: [{ role: userId.includes('teacher') ? 'TEACHER' : 'STUDENT', status: 'ACTIVE' }] }
+    const projectId = String(params?.[1] ?? '')
+    return { rows: [{
+      role: projectId === 'personal-project' ? 'OWNER'
+        : userId.includes('teacher') ? 'TEACHER' : 'STUDENT',
+      status: 'ACTIVE',
+    }] }
   }
   if (/SELECT id,code,status FROM plans/.test(text)) {
     return { rows: [{ id: 'plan-1', code: 'PERSONAL_FREE', status: 'ACTIVE' }] }
@@ -74,28 +90,28 @@ function accessFixture(
 }
 
 const missionRow = {
-  id: 'mission-1', course_id: 'course-1', learner_id: 'learner-1', conversation_id: 'room-1',
+  id: 'mission-1', project_id: 'project-1', learner_id: 'learner-1', conversation_id: 'room-1',
   trigger_client_msg_no: 'message-1', goal: 'Understand leases', success_criteria: 'Explain fencing',
-  status: 'active', mission_kind: 'study', coordinator_agent_id: 'nova',
+  status: 'ACTIVE', kind: 'STUDY', coordinator_agent_id: 'nova',
   created_at: '2026-01-01T00:00:00.000Z', updated_at: '2026-01-01T00:00:00.000Z',
 }
 
-test('mission lookup binds mission and step reads to the same tenant and course', async () => {
+test('mission lookup binds mission and step reads to the same tenant and project', async () => {
   const calls: Array<{ text: string; params: readonly unknown[] | undefined }> = []
   const db = queryable((text, params) => {
     calls.push({ text, params })
     return text.includes('FROM learning_mission_steps') ? { rows: [{
-      id: 'step-1', mission_id: 'mission-1', type: 'check', description: 'Explain',
-      success_criteria: 'Correct invariant', objective_id: null, status: 'open', position: 0,
+      id: 'step-1', mission_id: 'mission-1', kind: 'CHECK', description: 'Explain',
+      success_criteria: 'Correct invariant', knowledge_unit_id: null, status: 'OPEN', position: 0,
       outcome: null, completion_report_id: null, completion_attempt_id: null,
     }] } : { rows: [missionRow] }
   })
 
-  const mission = await findLearningMission(db, 'company-1', 'course-1', 'mission-1')
+  const mission = await findLearningMission(db, 'company-1', 'project-1', 'mission-1')
 
-  assert.deepEqual(calls[0]?.params, ['company-1','course-1','mission-1'])
-  assert.deepEqual(calls[1]?.params, ['company-1','course-1',['mission-1']])
-  assert.match(calls[1]?.text ?? '', /mission\.company_id=\$1 AND mission\.course_id=\$2/)
+  assert.deepEqual(calls[0]?.params, ['company-1','project-1','mission-1'])
+  assert.deepEqual(calls[1]?.params, ['company-1','project-1',['mission-1']])
+  assert.match(calls[1]?.text ?? '', /step\.company_id=\$1 AND step\.project_id=\$2/)
   assert.equal(mission?.steps[0]?.id, 'step-1')
 })
 
@@ -104,12 +120,12 @@ test('mission list batches steps and preserves learner visibility scope', async 
   const db = queryable((text, params) => {
     calls++
     if (text.includes('FROM learning_mission_steps')) return { rows: [] }
-    assert.deepEqual(params, ['company-1','course-1',false,'learner-1'])
+    assert.deepEqual(params, ['company-1','project-1',false,'learner-1'])
     return { rows: [missionRow] }
   })
 
   const missions = await listLearningMissions(db, {
-    companyId: 'company-1', courseId: 'course-1', userId: 'learner-1', includeAllLearners: false,
+    companyId: 'company-1', projectId: 'project-1', userId: 'learner-1', includeAllLearners: false,
   })
 
   assert.equal(calls, 2)
@@ -126,39 +142,39 @@ test('coordinator update atomically authorizes teacher and eligible room agent',
   })
 
   const updated = await updateLearningMissionCoordinator(db, {
-    companyId: 'company-1', courseId: 'course-1', missionId: 'mission-1',
-    teacherId: 'teacher-1', agentId: 'nova',
+    companyId: 'company-1', projectId: 'project-1', missionId: 'mission-1',
+    agentId: 'nova',
   })
 
   assert.equal(updated, true)
-  assert.deepEqual(values, ['company-1','course-1','mission-1','teacher-1','nova'])
+  assert.deepEqual(values, ['company-1','project-1','mission-1','nova'])
   assert.match(statement, /conversation\.members \? agent\.id/)
-  assert.match(statement, /teacher\.user_id=\$4 AND teacher\.role IN \('OWNER','TEACHER'\)/)
-  assert.match(statement, /teacher\.status='ACTIVE'/)
+  assert.doesNotMatch(statement, /project_memberships|manager\.role/)
 })
 
-test('runtime room resolution and mission lock retain tenant, course and conversation predicates', async () => {
+test('runtime room resolution and mission lock retain tenant, project and conversation predicates', async () => {
   const calls: Array<{ text: string; params: readonly unknown[] | undefined }> = []
   const db = queryable((text, params) => {
     calls.push({ text, params })
-    if (text.includes('FROM courses course')) return { rows: [{
-      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
-      status: 'ACTIVE', purpose: 'study',
+    if (text.includes('FROM conversations conversation')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1',
+      project_kind: 'TEACHING', project_title: 'Course', project_status: 'ACTIVE', purpose: 'study',
     }] }
     return { rows: [{ exists: 1 }] }
   })
 
   const room = await findLearningRoomState(db, { companyId: 'company-1', channelId: 'room-1' })
   const locked = await lockLearningMission(db, {
-    companyId: 'company-1', channelId: 'room-1', courseId: 'course-1', missionId: 'mission-1',
-    statuses: ['active','paused'],
+    companyId: 'company-1', channelId: 'room-1', projectId: 'project-1', missionId: 'mission-1',
+    statuses: ['ACTIVE','PAUSED'],
   })
 
   assert.equal(room?.courseId, 'course-1')
   assert.equal(locked, true)
   assert.deepEqual(calls[0]?.params, ['room-1','company-1'])
-  assert.deepEqual(calls[1]?.params, ['company-1','course-1','room-1','mission-1',['active','paused']])
-  assert.match(calls[1]?.text ?? '', /company_id=\$1 AND course_id=\$2 AND conversation_id=\$3/)
+  assert.match(calls[0]?.text ?? '', /project\.kind IN \('TEACHING','INSTITUTIONAL_COURSE'\)/)
+  assert.deepEqual(calls[1]?.params, ['company-1','project-1','room-1','mission-1',['ACTIVE','PAUSED']])
+  assert.match(calls[1]?.text ?? '', /company_id=\$1 AND project_id=\$2 AND conversation_id=\$3/)
 })
 
 test('step completion binds evidence to the mission tenant and learner', async () => {
@@ -171,13 +187,13 @@ test('step completion binds evidence to the mission tenant and learner', async (
   })
 
   const updated = await updateLearningMissionStepRecord(db, {
-    companyId: 'company-1', courseId: 'course-1', channelId: 'room-1', missionId: 'mission-1',
-    stepId: 'step-1', status: 'completed', outcome: 'verified', attemptId: 'attempt-1',
+    companyId: 'company-1', projectId: 'project-1', channelId: 'room-1', missionId: 'mission-1',
+    stepId: 'step-1', status: 'COMPLETED', outcome: 'verified', attemptId: 'attempt-1',
   })
 
   assert.equal(updated, true)
-  assert.deepEqual(values?.slice(0, 6), ['company-1','course-1','room-1','mission-1','step-1','completed'])
-  assert.match(statement, /mission\.company_id=\$1 AND mission\.course_id=\$2 AND mission\.conversation_id=\$3/)
+  assert.deepEqual(values?.slice(0, 6), ['company-1','project-1','room-1','mission-1','step-1','COMPLETED'])
+  assert.match(statement, /step\.company_id=\$1 AND step\.project_id=\$2/)
   assert.match(statement, /attempt\.learner_id=mission\.learner_id/)
 })
 
@@ -188,35 +204,41 @@ test('mission completion updates only active or paused state', async () => {
     return { rowCount: 1 }
   })
 
-  assert.equal(await completeLearningMissionRecord(db, 'mission-1'), true)
-  assert.match(statement, /status IN \('active','paused'\)/)
+  assert.equal(await completeLearningMissionRecord(db, {
+    companyId: 'company-1', projectId: 'project-1', missionId: 'mission-1',
+  }), true)
+  assert.match(statement, /status IN \('ACTIVE','PAUSED'\)/)
 })
 
-test('mission start validates human learner evidence and publishes the committed mission', async () => {
+test('Personal mission start needs no Course and publishes the committed project Mission', async () => {
   const statements: string[] = []
   const db = queryable((text) => {
     statements.push(text)
-    if (text.includes('FROM courses course') && text.includes('learning_course_rooms')) return { rows: [{
-      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
-      status: 'active', purpose: 'study',
+    if (text.includes('FROM conversations conversation')) return { rows: [{
+      company_id: 'company-1', course_id: null, project_id: 'personal-project',
+      project_kind: 'PERSONAL_LEARNING', project_title: 'My Learning', project_status: 'ACTIVE', purpose: 'study',
     }] }
     if (text.includes('FROM im_channel_bindings')) return { rows: [{ channel_type: 2 }] }
     if (text.includes('FROM project_memberships')) return { rows: [{ role: 'learner' }] }
     if (text.includes('FROM participants participant')) return { rows: [{ id: 'nova' }] }
     if (text.includes('INSERT INTO learning_missions')) return { rows: [{ id: 'mission-1', inserted: true }] }
     if (text.includes('INSERT INTO agent_work_items')) return { rowCount: 1 }
-    if (text.includes('FROM learning_missions mission')) return { rows: [missionRow] }
+    if (text.includes('FROM learning_missions mission')) return { rows: [{
+      ...missionRow, project_id: 'personal-project',
+    }] }
     if (text.includes('FROM learning_mission_steps')) return { rows: [] }
     throw new Error(`unexpected query: ${text}`)
   })
-  const published: string[] = []
+  const published: Array<{ missionId: string; projectId: string; courseId?: string }> = []
   const metrics: string[] = []
 
   const mission = await startLearningMission(db, async (work) => work(db), {
     syncMessages: async () => [{
       clientMsgNo: 'message-1', fromUid: 'learner-1', authoredByAgent: false,
     }],
-    publishMission: async ({ mission: committed }) => { published.push(committed.id) },
+    publishMission: async ({ mission: committed, projectId, courseId }) => {
+      published.push({ missionId: committed.id, projectId, ...(courseId ? { courseId } : {}) })
+    },
     metric: (name) => { metrics.push(name) },
   }, {
     workId: 'work-1', companyId: 'company-1', channelId: 'room-1', agentId: 'agent-1',
@@ -224,18 +246,18 @@ test('mission start validates human learner evidence and publishes the committed
   })
 
   assert.equal(mission.id, 'mission-1')
-  assert.deepEqual(published, ['mission-1'])
+  assert.deepEqual(published, [{ missionId: 'mission-1', projectId: 'personal-project' }])
   assert.deepEqual(metrics, ['learning.mission.created'])
   assert.equal(statements.filter((text) => text.includes('INSERT INTO learning_missions')).length, 1)
   assert.equal(statements.filter((text) => text.includes('INSERT INTO agent_work_items')).length, 1)
 })
 
-test('Agent OS attempt recording binds message evidence to one course learner', async () => {
+test('Agent OS attempt recording binds message evidence to one project learner', async () => {
   let insertedValues: readonly unknown[] | undefined
   const db = queryable((text, params) => {
-    if (text.includes('FROM courses course') && text.includes('learning_course_rooms')) return { rows: [{
-      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
-      status: 'active', purpose: 'study',
+    if (text.includes('FROM conversations conversation')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1',
+      project_kind: 'TEACHING', project_title: 'Course', project_status: 'ACTIVE', purpose: 'study',
     }] }
     if (text.includes('FROM im_channel_bindings')) return { rows: [{ channel_type: 2 }] }
     if (text.includes('FROM project_memberships')) return { rows: [{ role: 'learner' }] }
@@ -254,35 +276,35 @@ test('Agent OS attempt recording binds message evidence to one course learner', 
     metric: (name) => { metrics.push(name) },
   }, {
     companyId: 'company-1', channelId: 'room-1', agentId: 'agent-1',
-    activityId: 'activity-1', evidenceClientMsgNos: ['message-1'], assistance: 'hint',
+    activityId: 'activity-1', evidenceClientMsgNos: ['message-1'], assistance: 'HINT',
   })
 
   assert.equal(attempt.learnerId, 'learner-1')
   assert.deepEqual(insertedValues?.slice(1, 8), [
-    'course-1','company-1','room-1','learner-1','activity-1',null,'hint',
+    'company-1','project-1','room-1','learner-1','activity-1',null,'HINT',
   ])
   assert.deepEqual(metrics, ['learning.attempt.accepted'])
 })
 
-test('learning turn context binds mastery and active mission reads to the room tenant', async () => {
+test('learning turn context binds state and active mission reads to the room project', async () => {
   const db = queryable((text, params) => {
-    if (text.includes('FROM courses course') && text.includes('learning_course_rooms')) return { rows: [{
-      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
-      status: 'active', purpose: 'study',
+    if (text.includes('FROM conversations conversation')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1',
+      project_kind: 'TEACHING', project_title: 'Course', project_status: 'ACTIVE', purpose: 'study',
     }] }
     if (text.includes('FROM project_memberships')) return { rows: [{ role: 'learner' }] }
-    if (text.includes('FROM learning_objectives objective')) return { rows: [{
-      id: 'objective-1', course_id: 'course-1', title: 'Leases', success_criteria: 'Explain fencing',
-      target_level: 3, position: 0, status: 'published', prerequisite_ids: [],
+    if (text.includes('FROM learning_knowledge_units unit')) return { rows: [{
+      id: 'unit-1', project_id: 'project-1', title: 'Leases', success_criteria: 'Explain fencing',
+      target_level: 3, position: 0, status: 'PUBLISHED', prerequisite_knowledge_unit_ids: [],
     }] }
-    if (text.includes('FROM learning_mastery mastery')) {
-      assert.deepEqual(params, ['company-1','course-1','learner-1'])
+    if (text.includes('FROM learning_states state')) {
+      assert.deepEqual(params, ['company-1','project-1','learner-1'])
       return { rows: [{
-        objective_id: 'objective-1', level: 2, status: 'learning', next_review_at: null,
+        knowledge_unit_id: 'unit-1', level: 2, status: 'LEARNING', next_review_at: null,
       }] }
     }
     if (text.includes('SELECT mission.id FROM learning_missions')) {
-      assert.deepEqual(params, ['company-1','course-1','learner-1','room-1'])
+      assert.deepEqual(params, ['company-1','project-1','learner-1','room-1'])
       return { rows: [] }
     }
     throw new Error(`unexpected query: ${text}`)
@@ -296,31 +318,100 @@ test('learning turn context binds mastery and active mission reads to the room t
   })
 
   assert.equal(context?.learnerId, 'learner-1')
-  assert.equal(context?.objectives[0]?.masteryLevel, 2)
+  assert.equal(context?.knowledgeUnits[0]?.level, 2)
+  assert.equal(context?.project.id, 'project-1')
   assert.equal(context?.pendingTeacherReviews, 0)
 })
 
-test('agent evaluation proposal commits the ledger row before returning accepted mastery', async () => {
+test('Personal project context needs no Course and hard-bounds every model-visible collection', async () => {
+  const long = 'x'.repeat(12_000)
+  const units = Array.from({ length: 25 }, (_, index) => ({
+    id: `unit-${index}-${long}`,
+    project_id: 'personal-project',
+    title: long,
+    success_criteria: long,
+    target_level: 3,
+    position: index,
+    status: 'PUBLISHED',
+    prerequisite_knowledge_unit_ids: Array.from({ length: 20 }, (__, prerequisite) => (
+      `prerequisite-${prerequisite}-${long}`
+    )),
+  }))
+  const steps = Array.from({ length: 20 }, (_, index) => ({
+    id: `step-${index}-${long}`,
+    mission_id: 'mission-personal',
+    kind: index % 2 ? 'CHECK' : 'REFLECT',
+    description: long,
+    success_criteria: long,
+    knowledge_unit_id: `unit-${index}-${long}`,
+    status: 'OPEN',
+    position: index,
+    outcome: long,
+    completion_report_id: `report-${long}`,
+    completion_attempt_id: `attempt-${long}`,
+  }))
+  const db = queryable((text) => {
+    if (text.includes('FROM conversations conversation')) return { rows: [{
+      company_id: 'company-1', course_id: null, project_id: 'personal-project',
+      project_kind: 'PERSONAL_LEARNING', project_title: long, project_status: 'ACTIVE', purpose: 'study',
+    }] }
+    if (text.includes('FROM learning_knowledge_units unit')) return { rows: units }
+    if (text.includes('FROM learning_states state')) return { rows: [] }
+    if (text.includes('SELECT mission.id FROM learning_missions')) return { rows: [{ id: 'mission-personal' }] }
+    if (text.includes('FROM learning_mission_steps')) return { rows: steps }
+    if (text.includes('FROM learning_missions mission')) return { rows: [{
+      ...missionRow,
+      id: 'mission-personal',
+      project_id: 'personal-project',
+      goal: long,
+      success_criteria: long,
+      trigger_client_msg_no: long,
+      coordinator_agent_id: long,
+    }] }
+    throw new Error(`unexpected query: ${text}`)
+  })
+
+  const context = await loadLearningContext(db, {
+    syncMessages: async () => { throw new Error('explicit actor must not sync messages') },
+  }, {
+    companyId: 'company-1', channelId: 'personal-room', agentId: 'nova',
+    triggerClientMsgNo: 'message-1', actorId: 'personal-owner',
+  })
+
+  assert.equal(context?.courseId, undefined)
+  assert.equal(context?.actorRole, 'learner')
+  assert.equal(context?.knowledgeUnits.length, 10)
+  assert.equal(context?.knowledgeUnits[0]?.title.length, 160)
+  assert.equal(context?.knowledgeUnits[0]?.successCriteria.length, 320)
+  assert.equal(context?.knowledgeUnits[0]?.prerequisiteKnowledgeUnitIds.length, 6)
+  assert.equal(context?.activeMission?.steps.length, 10)
+  assert.equal(context?.activeMission?.goal.length, 400)
+  assert.ok(JSON.stringify(context).length < 32_000)
+})
+
+test('agent evaluation proposal commits its project state after the evaluation ledger row', async () => {
   const statements: string[] = []
   const db = queryable((text) => {
     statements.push(text)
-    if (text.includes('FROM courses course') && text.includes('learning_course_rooms')) return { rows: [{
-      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1', title: 'Course',
-      status: 'active', purpose: 'study',
+    if (text.includes('FROM conversations conversation')) return { rows: [{
+      company_id: 'company-1', course_id: 'course-1', project_id: 'project-1',
+      project_kind: 'TEACHING', project_title: 'Course', project_status: 'ACTIVE', purpose: 'study',
     }] }
     if (text.includes('FROM learning_attempts attempt') && text.includes('activity.evaluation_mode')) return { rows: [{
-      learner_id: 'learner-1', assistance: 'none', activity_id: 'activity-1',
-      activity_type: 'practice', evaluation_mode: 'agent_formative', target_level: 2,
-      objective_ids: ['objective-1'],
+      learner_id: 'learner-1', assistance: 'NONE', activity_id: 'activity-1',
+      activity_type: 'PRACTICE', evaluation_mode: 'AGENT_FORMATIVE', target_level: 2,
+      knowledge_unit_ids: ['unit-1'],
     }] }
-    if (text.includes('SELECT mastery.level FROM learning_mastery')) return { rows: [] }
+    if (text.includes('SELECT state.level FROM learning_states')) return { rows: [] }
     if (text.includes('INSERT INTO learning_evaluations')) return { rowCount: 1 }
-    if (text.includes('SELECT DISTINCT COALESCE')) return { rows: [] }
-    if (text.includes('SELECT COALESCE(attempt.activity_id')) return { rows: [{ evidence_key: 'activity-1' }] }
-    if (text.includes('FROM learning_mastery mastery') && text.includes('FOR UPDATE')) return { rows: [] }
-    if (text.includes('INSERT INTO learning_mastery')) return { rowCount: 1 }
-    if (text.includes('INSERT INTO learning_mastery_events')) return { rowCount: 1 }
-    if (text.includes("UPDATE learning_attempts SET status='evaluated'")) return { rowCount: 1 }
+    if (text.includes('pg_advisory_xact_lock')) return { rows: [] }
+    if (text.includes('FROM learning_states state') && text.includes('FOR UPDATE')) return { rows: [] }
+    if (text.includes('SELECT DISTINCT CASE')) return { rows: [] }
+    if (text.includes('SELECT CASE') && text.includes('AS evidence_key')) {
+      return { rows: [{ evidence_key: 'ACTIVITY:activity-1' }] }
+    }
+    if (text.includes('INSERT INTO learning_states')) return { rowCount: 1 }
+    if (text.includes("UPDATE learning_attempts SET status='EVALUATED'")) return { rowCount: 1 }
     throw new Error(`unexpected query: ${text}`)
   })
   const metrics: string[] = []
@@ -332,29 +423,34 @@ test('agent evaluation proposal commits the ledger row before returning accepted
     demonstratedLevel: 2, confidence: 0.9,
   })
 
-  assert.equal(result.status, 'accepted')
+  assert.equal(result.status, 'ACCEPTED')
   assert.equal(result.decisions.length, 1)
   assert.ok(statements.findIndex((text) => text.includes('INSERT INTO learning_evaluations'))
-    < statements.findIndex((text) => text.includes('INSERT INTO learning_mastery')))
+    < statements.findIndex((text) => text.includes('INSERT INTO learning_states')))
+  assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='EVALUATED'")))
+  assert.ok(statements.every((text) => !text.includes('learning_mastery')))
   assert.ok(metrics.includes('learning.evaluation.proposed'))
 })
 
-test('teacher override reviews and projects mastery in one tenant-scoped transaction', async () => {
+test('accepted teacher override projects state and evaluates the attempt in one project transaction', async () => {
   const statements: string[] = []
   const db = queryable((text) => {
     statements.push(text)
-    if (text.includes('FROM project_memberships')) return { rows: [{ role: 'teacher' }] }
+    if (text.includes('FROM courses course') && text.includes('JOIN projects project')) return { rows: [{
+      course_id: 'course-1', company_id: 'company-1', project_id: 'project-1',
+      project_kind: 'TEACHING', project_status: 'ACTIVE',
+    }] }
     if (text.includes('FROM learning_evaluations evaluation') && text.includes('FOR UPDATE')) return { rows: [{
       attempt_id: 'attempt-1', demonstrated_level: 3, confidence: 0.8, learner_id: 'learner-1',
-      assistance: 'none', activity_type: 'project', target_level: 3, objective_ids: ['objective-1'],
+      assistance: 'NONE', activity_type: 'PROJECT', target_level: 3, knowledge_unit_ids: ['unit-1'],
     }] }
     if (text.includes('UPDATE learning_evaluations evaluation')) return { rowCount: 1 }
-    if (text.includes('FROM learning_mastery mastery') && text.includes('FOR UPDATE')) return { rows: [{
+    if (text.includes('pg_advisory_xact_lock')) return { rows: [] }
+    if (text.includes('FROM learning_states state') && text.includes('FOR UPDATE')) return { rows: [{
       level: 2, independent_evidence_count: 1, review_interval_days: 3,
     }] }
-    if (text.includes('INSERT INTO learning_mastery')) return { rowCount: 1 }
-    if (text.includes('INSERT INTO learning_mastery_events')) return { rowCount: 1 }
-    if (text.includes("UPDATE learning_attempts SET status='evaluated'")) return { rowCount: 1 }
+    if (text.includes('INSERT INTO learning_states')) return { rowCount: 1 }
+    if (text.includes("UPDATE learning_attempts SET status='EVALUATED'")) return { rowCount: 1 }
     throw new Error(`unexpected query: ${text}`)
   })
 
@@ -364,27 +460,54 @@ test('teacher override reviews and projects mastery in one tenant-scoped transac
   })
 
   assert.ok(statements.findIndex((text) => text.includes('UPDATE learning_evaluations evaluation'))
-    < statements.findIndex((text) => text.includes('INSERT INTO learning_mastery')))
-  assert.ok(statements.some((text) => text.includes("kind,reason,actor_id")))
-  assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='evaluated'")))
+    < statements.findIndex((text) => text.includes('INSERT INTO learning_states')))
+  assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='EVALUATED'")))
+  assert.ok(statements.every((text) => !text.includes('learning_mastery')))
 })
 
-test('evidence and pending review reads carry explicit tenant and course scope', async () => {
+test('Personal owner can reject a project evaluation and still finalize the attempt', async () => {
+  const calls: Array<{ text: string; params: readonly unknown[] | undefined }> = []
+  const db = queryable((text, params) => {
+    calls.push({ text, params })
+    if (text.includes('FROM learning_evaluations evaluation') && text.includes('FOR UPDATE')) return { rows: [{
+      attempt_id: 'attempt-1', demonstrated_level: 2, confidence: 0.8, learner_id: 'learner-1',
+      assistance: 'NONE', activity_type: 'PRACTICE', target_level: 2, knowledge_unit_ids: ['unit-1'],
+    }] }
+    if (text.includes('UPDATE learning_evaluations evaluation')) return { rowCount: 1 }
+    if (text.includes("UPDATE learning_attempts SET status='EVALUATED'")) return { rowCount: 1 }
+    throw new Error(`unexpected query: ${text}`)
+  })
+
+  await reviewProjectLearningEvaluation(db, async (work) => work(db), () => undefined, {
+    companyId: 'company-1', projectId: 'personal-project', evaluationId: 'evaluation-1',
+    reviewerId: 'personal-owner', decision: 'reject', reason: 'Evidence does not satisfy the rubric',
+  })
+
+  const review = calls.find((call) => call.text.includes('UPDATE learning_evaluations evaluation'))
+  assert.deepEqual(review?.params, [
+    'company-1','personal-project','evaluation-1','REJECTED','Evidence does not satisfy the rubric','personal-owner',
+  ])
+  assert.ok(calls.some((call) => call.text.includes("UPDATE learning_attempts SET status='EVALUATED'")))
+  assert.ok(calls.every((call) => !call.text.includes('INSERT INTO learning_states')))
+  assert.ok(calls.every((call) => !call.text.includes('learning_mastery')))
+})
+
+test('learning state and pending review reads carry explicit tenant and project scope', async () => {
   const calls: Array<{ text: string; params: readonly unknown[] | undefined }> = []
   const db = queryable((text, params) => {
     calls.push({ text, params })
     return { rows: [] }
   })
 
-  await listLearningEvidenceRecords(db, {
-    companyId: 'company-1', courseId: 'course-1', learnerId: 'learner-1',
+  await learningStateContext(db, {
+    companyId: 'company-1', projectId: 'project-1', userId: 'learner-1',
   })
-  await listPendingLearningEvaluationRecords(db, 'company-1', 'course-1')
+  await countPendingLearningEvaluations(db, 'company-1', 'project-1')
 
-  assert.deepEqual(calls[0]?.params, ['company-1','course-1','learner-1'])
-  assert.match(calls[0]?.text ?? '', /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
-  assert.deepEqual(calls[1]?.params, ['company-1','course-1'])
-  assert.match(calls[1]?.text ?? '', /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+  assert.deepEqual(calls[0]?.params, ['company-1','project-1','learner-1'])
+  assert.match(calls[0]?.text ?? '', /state\.company_id=\$1 AND state\.project_id=\$2 AND state\.user_id=\$3/)
+  assert.deepEqual(calls[1]?.params, ['company-1','project-1'])
+  assert.match(calls[1]?.text ?? '', /evaluation\.company_id=\$1 AND evaluation\.project_id=\$2/)
 })
 
 test('membership management refuses to remove the final tenant-scoped teacher', async () => {
