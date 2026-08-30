@@ -1,5 +1,13 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { LearningActivity, LearningActivityType, LearningObjective, LearningObjectiveStatus } from './types.js'
+import { requireLearningCourseProjectScope } from './project-scope-repository.js'
+import type {
+  LearningKnowledgeUnit,
+  LearningKnowledgeUnitStatus,
+  LearningObjective,
+} from './types.js'
+
+export * from './activities-repository.js'
+export * from './project-scope-repository.js'
 
 export async function listDeliveries(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query(
@@ -10,45 +18,125 @@ export async function listDeliveries(db: Queryable, companyId: string, userId: s
   return rows
 }
 
+interface KnowledgeUnitWrite {
+  id: string
+  companyId: string
+  projectId: string
+  actorId: string
+  title: string
+  successCriteria: string
+  targetLevel: 1 | 2 | 3 | 4
+  position: number
+}
+
+export async function insertLearningKnowledgeUnit(db: Queryable, args: KnowledgeUnitWrite): Promise<void> {
+  const result = await db.query(
+    `INSERT INTO learning_knowledge_units
+       (id,company_id,project_id,title,success_criteria,target_level,position,status,created_by)
+     SELECT $1,project.company_id,project.id,$4,$5,$6,$7,'DRAFT',$8
+       FROM projects project WHERE project.company_id=$2 AND project.id=$3`,
+    [args.id,args.companyId,args.projectId,args.title,args.successCriteria,args.targetLevel,args.position,args.actorId],
+  )
+  if (!result.rowCount) throw new Error('project not found')
+}
+
 export async function insertLearningObjective(
   db: Queryable,
-  args: {
-    id: string
-    companyId: string
-    courseId: string
-    actorId: string
-    title: string
-    successCriteria: string
-    targetLevel: 1 | 2 | 3 | 4
-    position: number
-  },
+  args: Omit<KnowledgeUnitWrite, 'projectId'> & { courseId: string },
+): Promise<void> {
+  const project = await requireLearningCourseProjectScope(db, args.companyId, args.courseId)
+  await insertLearningKnowledgeUnit(db, { ...args, projectId: project.projectId })
+}
+
+export async function insertLearningKnowledgeUnitDependency(
+  db: Queryable,
+  args: { companyId: string; projectId: string; knowledgeUnitId: string; prerequisiteKnowledgeUnitId: string },
 ): Promise<void> {
   const result = await db.query(
-    `INSERT INTO learning_objectives
-       (id,course_id,company_id,title,success_criteria,target_level,position,status,created_by)
-     SELECT $1,course.id,course.company_id,$4,$5,$6,$7,'draft',$8
-       FROM courses course WHERE course.id=$2 AND course.company_id=$3`,
-    [args.id,args.courseId,args.companyId,args.title,args.successCriteria,args.targetLevel,args.position,args.actorId],
+    `INSERT INTO learning_knowledge_unit_dependencies
+       (company_id,project_id,knowledge_unit_id,prerequisite_knowledge_unit_id)
+     SELECT unit.company_id,unit.project_id,unit.id,prerequisite.id
+       FROM learning_knowledge_units unit
+       JOIN learning_knowledge_units prerequisite
+         ON prerequisite.company_id=unit.company_id AND prerequisite.project_id=unit.project_id
+        AND prerequisite.id=$4
+      WHERE unit.company_id=$1 AND unit.project_id=$2 AND unit.id=$3
+     ON CONFLICT(company_id,project_id,knowledge_unit_id,prerequisite_knowledge_unit_id)
+     DO UPDATE SET prerequisite_knowledge_unit_id=EXCLUDED.prerequisite_knowledge_unit_id`,
+    [args.companyId,args.projectId,args.knowledgeUnitId,args.prerequisiteKnowledgeUnitId],
   )
-  if (!result.rowCount) throw new Error('course not found')
+  if (!result.rowCount) throw new Error('prerequisite knowledge unit not found in the current project')
 }
 
 export async function insertLearningObjectiveDependency(
   db: Queryable,
   args: { companyId: string; courseId: string; objectiveId: string; prerequisiteId: string },
 ): Promise<void> {
-  const result = await db.query(
-    `INSERT INTO learning_objective_dependencies(objective_id,prerequisite_objective_id)
-     SELECT objective.id,prerequisite.id
-       FROM learning_objectives objective
-       JOIN learning_objectives prerequisite
-         ON prerequisite.id=$4 AND prerequisite.course_id=objective.course_id
-        AND prerequisite.company_id=objective.company_id
-      WHERE objective.id=$1 AND objective.course_id=$2 AND objective.company_id=$3
-     ON CONFLICT DO NOTHING`,
-    [args.objectiveId,args.courseId,args.companyId,args.prerequisiteId],
+  const project = await requireLearningCourseProjectScope(db, args.companyId, args.courseId)
+  await insertLearningKnowledgeUnitDependency(db, {
+    companyId: args.companyId,
+    projectId: project.projectId,
+    knowledgeUnitId: args.objectiveId,
+    prerequisiteKnowledgeUnitId: args.prerequisiteId,
+  })
+}
+
+interface LearningKnowledgeUnitRow {
+  id: string
+  project_id: string
+  title: string
+  success_criteria: string
+  target_level: 1 | 2 | 3 | 4
+  position: number
+  status: LearningKnowledgeUnitStatus
+  prerequisite_knowledge_unit_ids: string[]
+}
+
+function mapLearningKnowledgeUnit(row: LearningKnowledgeUnitRow): LearningKnowledgeUnit {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    title: row.title,
+    successCriteria: row.success_criteria,
+    targetLevel: row.target_level,
+    position: Number(row.position),
+    status: row.status,
+    prerequisiteKnowledgeUnitIds: row.prerequisite_knowledge_unit_ids,
+  }
+}
+
+export async function listProjectLearningKnowledgeUnits(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+): Promise<LearningKnowledgeUnit[]> {
+  const { rows } = await db.query<LearningKnowledgeUnitRow>(
+    `SELECT unit.id,unit.project_id,unit.title,unit.success_criteria,unit.target_level,unit.position,unit.status,
+            COALESCE(array_agg(dependency.prerequisite_knowledge_unit_id)
+              FILTER (WHERE dependency.prerequisite_knowledge_unit_id IS NOT NULL),'{}')
+              AS prerequisite_knowledge_unit_ids
+       FROM learning_knowledge_units unit
+       LEFT JOIN learning_knowledge_unit_dependencies dependency
+         ON dependency.company_id=unit.company_id AND dependency.project_id=unit.project_id
+        AND dependency.knowledge_unit_id=unit.id
+      WHERE unit.company_id=$1 AND unit.project_id=$2
+      GROUP BY unit.id ORDER BY unit.position,unit.created_at`,
+    [companyId, projectId],
   )
-  if (!result.rowCount) throw new Error('prerequisite objective not found in the current course')
+  return rows.map(mapLearningKnowledgeUnit)
+}
+
+function projectObjective(unit: LearningKnowledgeUnit, courseId: string): LearningObjective {
+  return {
+    id: unit.id,
+    courseId,
+    title: unit.title,
+    successCriteria: unit.successCriteria,
+    targetLevel: unit.targetLevel,
+    position: unit.position,
+    status: unit.status,
+    prerequisiteIds: unit.prerequisiteKnowledgeUnitIds,
+  }
 }
 
 export async function listLearningObjectives(
@@ -56,30 +144,27 @@ export async function listLearningObjectives(
   companyId: string,
   courseId: string,
 ): Promise<LearningObjective[]> {
-  const { rows } = await db.query<{
-    id: string; course_id: string; title: string; success_criteria: string; target_level: 1|2|3|4
-    position: number; status: LearningObjectiveStatus; prerequisite_ids: string[]
-  }>(
-    `SELECT objective.id,objective.course_id,objective.title,objective.success_criteria,
-            objective.target_level,objective.position,objective.status,
-            COALESCE(array_agg(dependency.prerequisite_objective_id)
-              FILTER (WHERE dependency.prerequisite_objective_id IS NOT NULL),'{}') AS prerequisite_ids
-       FROM learning_objectives objective
-       LEFT JOIN learning_objective_dependencies dependency ON dependency.objective_id=objective.id
-      WHERE objective.course_id=$2 AND objective.company_id=$1
-      GROUP BY objective.id ORDER BY objective.position,objective.created_at`,
-    [companyId, courseId],
+  const project = await requireLearningCourseProjectScope(db, companyId, courseId)
+  return (await listProjectLearningKnowledgeUnits(db, companyId, project.projectId))
+    .map((unit) => projectObjective(unit, courseId))
+}
+
+export async function updateLearningKnowledgeUnitStatus(
+  db: Queryable,
+  args: {
+    companyId: string
+    projectId: string
+    knowledgeUnitId: string
+    teacherId: string
+    status: LearningKnowledgeUnitStatus
+  },
+): Promise<boolean> {
+  const result = await db.query(
+    `UPDATE learning_knowledge_units unit SET status=$4,updated_at=NOW()
+      WHERE unit.company_id=$1 AND unit.project_id=$2 AND unit.id=$3`,
+    [args.companyId,args.projectId,args.knowledgeUnitId,args.status],
   )
-  return rows.map((row) => ({
-    id: row.id,
-    courseId: row.course_id,
-    title: row.title,
-    successCriteria: row.success_criteria,
-    targetLevel: row.target_level,
-    position: Number(row.position),
-    status: row.status,
-    prerequisiteIds: row.prerequisite_ids,
-  }))
+  return Boolean(result.rowCount)
 }
 
 export async function updateLearningObjectiveStatus(
@@ -89,53 +174,32 @@ export async function updateLearningObjectiveStatus(
     courseId: string
     objectiveId: string
     teacherId: string
-    status: LearningObjectiveStatus
+    status: LearningKnowledgeUnitStatus
   },
 ): Promise<boolean> {
-  const result = await db.query(
-    `UPDATE learning_objectives objective SET status=$5,updated_at=NOW()
-      WHERE objective.id=$3 AND objective.course_id=$2 AND objective.company_id=$1
-        AND EXISTS(
-          SELECT 1 FROM courses course
-          JOIN project_memberships member
-            ON member.project_id=course.project_id AND member.company_id=course.company_id
-           AND member.status='ACTIVE'
-           WHERE course.id=objective.course_id AND course.company_id=objective.company_id
-             AND member.user_id=$4 AND member.role IN ('OWNER','TEACHER')
-        )`,
-    [args.companyId,args.courseId,args.objectiveId,args.teacherId,args.status],
+  const project = await requireLearningCourseProjectScope(db, args.companyId, args.courseId)
+  return updateLearningKnowledgeUnitStatus(db, {
+    companyId: args.companyId,
+    projectId: project.projectId,
+    knowledgeUnitId: args.objectiveId,
+    teacherId: args.teacherId,
+    status: args.status,
+  })
+}
+
+export async function countProjectLearningKnowledgeUnits(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+  knowledgeUnitIds: string[],
+): Promise<number> {
+  if (!knowledgeUnitIds.length) return 0
+  const { rows } = await db.query<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM learning_knowledge_units
+      WHERE company_id=$1 AND project_id=$2 AND id=ANY($3::text[])`,
+    [companyId,projectId,knowledgeUnitIds],
   )
-  return Boolean(result.rowCount)
-}
-
-interface LearningActivityRow {
-  id: string
-  course_id: string
-  title: string
-  instructions: string
-  type: LearningActivity['type']
-  status: LearningActivity['status']
-  evaluation_mode: LearningActivity['evaluationMode']
-  target_level: 1 | 2 | 3 | 4
-  rubric: unknown[]
-  objective_ids: string[]
-  due_at: string | null
-}
-
-function mapLearningActivity(row: LearningActivityRow): LearningActivity {
-  return {
-    id: row.id,
-    courseId: row.course_id,
-    title: row.title,
-    instructions: row.instructions,
-    type: row.type,
-    status: row.status,
-    evaluationMode: row.evaluation_mode,
-    targetLevel: row.target_level,
-    rubric: Array.isArray(row.rubric) ? row.rubric : [],
-    objectiveIds: Array.isArray(row.objective_ids) ? row.objective_ids.map(String) : [],
-    ...(row.due_at ? { dueAt: String(row.due_at) } : {}),
-  }
+  return Number(rows[0]?.count ?? 0)
 }
 
 export async function countCourseObjectives(
@@ -144,96 +208,26 @@ export async function countCourseObjectives(
   courseId: string,
   objectiveIds: string[],
 ): Promise<number> {
-  if (!objectiveIds.length) return 0
+  const project = await requireLearningCourseProjectScope(db, companyId, courseId)
+  return countProjectLearningKnowledgeUnits(db, companyId, project.projectId, objectiveIds)
+}
+
+export async function countPublishedProjectLearningKnowledgeUnits(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+  knowledgeUnitIds: string[],
+): Promise<number> {
+  if (!knowledgeUnitIds.length) return 0
   const { rows } = await db.query<{ count: number }>(
-    `SELECT COUNT(*)::int AS count FROM learning_objectives
-      WHERE company_id=$1 AND course_id=$2 AND id=ANY($3::text[])`,
-    [companyId,courseId,objectiveIds],
+    `SELECT COUNT(*)::int AS count FROM (
+       SELECT id FROM learning_knowledge_units
+        WHERE company_id=$1 AND project_id=$2 AND status='PUBLISHED' AND id=ANY($3::text[])
+        FOR SHARE
+     ) locked_unit`,
+    [companyId,projectId,knowledgeUnitIds],
   )
   return Number(rows[0]?.count ?? 0)
-}
-
-export async function insertLearningActivity(
-  db: Queryable,
-  args: {
-    id: string; companyId: string; courseId: string; actorId: string; title: string; instructions: string
-    type: LearningActivityType; evaluationMode: LearningActivity['evaluationMode']; targetLevel: 1|2|3|4
-    rubric: unknown[]; objectiveIds: string[]; dueAt?: string
-  },
-): Promise<void> {
-  const result = await db.query(
-    `INSERT INTO learning_activities
-       (id,course_id,company_id,title,instructions,type,evaluation_mode,target_level,rubric,objective_ids,due_at,created_by)
-     SELECT $1,course.id,course.company_id,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12
-       FROM courses course WHERE course.id=$2 AND course.company_id=$3`,
-    [args.id,args.courseId,args.companyId,args.title,args.instructions,args.type,args.evaluationMode,args.targetLevel,
-      JSON.stringify(args.rubric),JSON.stringify(args.objectiveIds),args.dueAt ?? null,args.actorId],
-  )
-  if (!result.rowCount) throw new Error('course not found')
-}
-
-export async function findLearningActivity(
-  db: Queryable,
-  companyId: string,
-  courseId: string,
-  activityId: string,
-): Promise<LearningActivity | null> {
-  const { rows } = await db.query<LearningActivityRow>(
-    `SELECT id,course_id,title,instructions,type,status,evaluation_mode,target_level,rubric,objective_ids,due_at
-       FROM learning_activities WHERE company_id=$1 AND course_id=$2 AND id=$3`,
-    [companyId,courseId,activityId],
-  )
-  return rows[0] ? mapLearningActivity(rows[0]) : null
-}
-
-export async function findVisibleLearningActivity(
-  db: Queryable,
-  companyId: string,
-  courseId: string,
-  activityId: string,
-): Promise<LearningActivity | null> {
-  const { rows } = await db.query<LearningActivityRow>(
-    `SELECT id,course_id,title,instructions,type,status,evaluation_mode,target_level,rubric,objective_ids,due_at
-       FROM learning_activities
-      WHERE company_id=$1 AND course_id=$2 AND id=$3 AND status IN ('published','closed')`,
-    [companyId,courseId,activityId],
-  )
-  return rows[0] ? mapLearningActivity(rows[0]) : null
-}
-
-export async function listLearningActivities(
-  db: Queryable,
-  companyId: string,
-  courseId: string,
-  includeDrafts: boolean,
-): Promise<LearningActivity[]> {
-  const { rows } = await db.query<LearningActivityRow>(
-    `SELECT id,course_id,title,instructions,type,status,evaluation_mode,target_level,rubric,objective_ids,due_at
-       FROM learning_activities
-      WHERE company_id=$1 AND course_id=$2 AND ($3::boolean OR status IN ('published','closed'))
-      ORDER BY created_at DESC`,
-    [companyId,courseId,includeDrafts],
-  )
-  return rows.map(mapLearningActivity)
-}
-
-export async function lockLearningActivityForPublish(
-  db: Queryable,
-  companyId: string,
-  courseId: string,
-  activityId: string,
-): Promise<Pick<LearningActivity, 'type' | 'rubric' | 'objectiveIds'> | null> {
-  const { rows } = await db.query<Pick<LearningActivityRow, 'type' | 'rubric' | 'objective_ids'>>(
-    `SELECT type,rubric,objective_ids FROM learning_activities
-      WHERE company_id=$1 AND course_id=$2 AND id=$3 AND status='draft' FOR UPDATE`,
-    [companyId,courseId,activityId],
-  )
-  const row = rows[0]
-  return row ? {
-    type: row.type,
-    rubric: Array.isArray(row.rubric) ? row.rubric : [],
-    objectiveIds: Array.isArray(row.objective_ids) ? row.objective_ids.map(String) : [],
-  } : null
 }
 
 export async function countPublishedCourseObjectives(
@@ -242,80 +236,6 @@ export async function countPublishedCourseObjectives(
   courseId: string,
   objectiveIds: string[],
 ): Promise<number> {
-  if (!objectiveIds.length) return 0
-  const { rows } = await db.query<{ count: number }>(
-    `SELECT COUNT(*)::int AS count FROM (
-       SELECT id FROM learning_objectives
-        WHERE company_id=$1 AND course_id=$2 AND status='published' AND id=ANY($3::text[])
-        FOR SHARE
-     ) locked_objective`,
-    [companyId,courseId,objectiveIds],
-  )
-  return Number(rows[0]?.count ?? 0)
-}
-
-export async function publishLearningActivityRecord(
-  db: Queryable,
-  args: { companyId: string; courseId: string; activityId: string; teacherId: string },
-): Promise<boolean> {
-  const result = await db.query(
-    `UPDATE learning_activities activity
-        SET status='published',published_by=$4,published_at=NOW(),updated_at=NOW()
-      WHERE activity.company_id=$1 AND activity.course_id=$2 AND activity.id=$3 AND activity.status='draft'
-        AND EXISTS(SELECT 1 FROM courses course
-          JOIN project_memberships member
-            ON member.project_id=course.project_id AND member.company_id=course.company_id
-           AND member.status='ACTIVE'
-          WHERE course.company_id=activity.company_id AND course.id=activity.course_id
-            AND member.user_id=$4 AND member.role IN ('OWNER','TEACHER'))`,
-    [args.companyId,args.courseId,args.activityId,args.teacherId],
-  )
-  return Boolean(result.rowCount)
-}
-
-export async function closeLearningActivityRecord(
-  db: Queryable,
-  args: { companyId: string; courseId: string; activityId: string; teacherId: string },
-): Promise<boolean> {
-  const result = await db.query(
-    `UPDATE learning_activities activity SET status='closed',updated_at=NOW()
-      WHERE activity.company_id=$1 AND activity.course_id=$2 AND activity.id=$3 AND activity.status='published'
-        AND EXISTS(SELECT 1 FROM courses course
-          JOIN project_memberships member
-            ON member.project_id=course.project_id AND member.company_id=course.company_id
-           AND member.status='ACTIVE'
-          WHERE course.company_id=activity.company_id AND course.id=activity.course_id
-            AND member.user_id=$4 AND member.role IN ('OWNER','TEACHER'))`,
-    [args.companyId,args.courseId,args.activityId,args.teacherId],
-  )
-  return Boolean(result.rowCount)
-}
-
-export async function insertLearningActivityAttempt(
-  db: Queryable,
-  args: {
-    id: string; companyId: string; courseId: string; activityId: string; learnerId: string
-    assistance: 'none'|'hint'|'guided'; answer: string; idempotencyKey: string
-  },
-): Promise<string | null> {
-  const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO learning_attempts(id,course_id,company_id,learner_id,activity_id,assistance,evidence,client_submission_id)
-     SELECT $1,course.id,course.company_id,$5,activity.id,$6,$7::jsonb,$8
-       FROM courses course
-       JOIN learning_activities activity
-         ON activity.course_id=course.id AND activity.company_id=course.company_id
-        AND activity.id=$4 AND activity.status='published'
-       JOIN project_memberships learner
-         ON learner.project_id=course.project_id AND learner.company_id=course.company_id
-        AND learner.user_id=$5 AND learner.status='ACTIVE'
-        AND learner.role IN ('STUDENT','OBSERVER')
-      WHERE course.company_id=$2 AND course.id=$3
-     ON CONFLICT(company_id,course_id,activity_id,learner_id,client_submission_id)
-       WHERE client_submission_id IS NOT NULL
-     DO UPDATE SET id=learning_attempts.id
-     RETURNING id`,
-    [args.id,args.companyId,args.courseId,args.activityId,args.learnerId,args.assistance,
-      JSON.stringify({ kind: 'ui_submission', submittedBy: args.learnerId, answer: args.answer }),args.idempotencyKey],
-  )
-  return rows[0]?.id ?? null
+  const project = await requireLearningCourseProjectScope(db, companyId, courseId)
+  return countPublishedProjectLearningKnowledgeUnits(db, companyId, project.projectId, objectiveIds)
 }
