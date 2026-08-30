@@ -237,6 +237,24 @@ test('ordinary teachers remain managers in MANAGER_ONLY Project contexts', () =>
   ), 'ALLOWED')
 })
 
+test('Personal Project owners can submit learning without becoming teaching-course learners', () => {
+  assert.equal(evaluatePolicy(
+    { actorUserId: 'owner', action: 'learning:submit', projectId: 'project' },
+    ownerContext,
+    null,
+  ), 'ALLOWED')
+
+  const teachingOwner: ResolvedAccessContext = {
+    ...ownerContext,
+    project: { ...ownerContext.project!, kind: 'TEACHING' },
+  }
+  assert.equal(evaluatePolicy(
+    { actorUserId: 'owner', action: 'learning:submit', projectId: 'project' },
+    teachingOwner,
+    null,
+  ), 'ROLE_NOT_ALLOWED')
+})
+
 test('Company and Project lifecycle restrictions are both enforced', () => {
   const context: ResolvedAccessContext = {
     ...ownerContext,

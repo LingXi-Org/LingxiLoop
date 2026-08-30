@@ -363,7 +363,12 @@ export function evaluatePolicy(
     if (!policy.companyRoles?.includes(context.companyMembership.role)) return 'ROLE_NOT_ALLOWED'
   } else {
     const membership = context.projectMembership
-    if (!membership || !policy.projectRoles?.includes(membership.role)) return 'ROLE_NOT_ALLOWED'
+    const personalOwnerCanLearn = request.action === 'learning:submit'
+      && context.project?.kind === 'PERSONAL_LEARNING'
+      && membership?.role === 'OWNER'
+    if (!membership || (!policy.projectRoles?.includes(membership.role) && !personalOwnerCanLearn)) {
+      return 'ROLE_NOT_ALLOWED'
+    }
     if ((request.action === 'project:update' || PROJECT_LIFECYCLE_ACTIONS.has(request.action))
       && context.project?.kind === 'PERSONAL_LEARNING' && membership.role !== 'OWNER') {
       return 'ROLE_NOT_ALLOWED'
