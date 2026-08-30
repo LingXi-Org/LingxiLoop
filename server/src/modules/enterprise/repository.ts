@@ -103,7 +103,11 @@ export async function upsertGovernancePolicy(db: Queryable, input: {
     `INSERT INTO governance_policies
        (id,company_id,kind,policy_version,config,created_by,updated_by)
      SELECT $1,$2,$3,$4,$5::jsonb,$6,$6 FROM companies company
-      WHERE company.id=$2 AND company.type='EDUCATION' AND $7::bigint=0
+      WHERE company.id=$2 AND company.type='EDUCATION'
+        AND ($7::bigint=0 OR EXISTS(
+          SELECT 1 FROM governance_policies policy
+           WHERE policy.company_id=$2 AND policy.kind=$3
+        ))
      ON CONFLICT (company_id,kind) DO UPDATE SET
        policy_version=EXCLUDED.policy_version,
        config=EXCLUDED.config,

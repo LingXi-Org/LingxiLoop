@@ -27,6 +27,24 @@ beforeEach(async () => {
        ($1,$3,'ADMIN','ACTIVE'),($2,$3,'ADMIN','ACTIVE')`,
     [COMPANY,OTHER_COMPANY,ADMIN],
   )
+  await pool.query(
+    `INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status) VALUES
+       ($3,$1,'human','Enterprise Admin','E','#667085','avail'),
+       ($3,$2,'human','Enterprise Admin','E','#667085','avail')`,
+    [COMPANY, OTHER_COMPANY, ADMIN],
+  )
+  await pool.query(
+    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit) VALUES
+       ('contract-enterprise',$1,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1),
+       ('contract-enterprise-other',$2,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1)`,
+    [COMPANY, OTHER_COMPANY],
+  )
+  await pool.query(
+    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status) VALUES
+       ('seat-enterprise',$1,'contract-enterprise',$3,'ACTIVE'),
+       ('seat-enterprise-other',$2,'contract-enterprise-other',$3,'ACTIVE')`,
+    [COMPANY, OTHER_COMPANY, ADMIN],
+  )
 })
 after(async () => { await teardownAll() })
 

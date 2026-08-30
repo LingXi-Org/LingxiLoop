@@ -60,6 +60,19 @@ beforeEach(async () => {
        ($1,$3,'OWNER'),($1,$4,'MEMBER'),($2,$5,'OWNER')`,
     [COMPANY, FOREIGN_COMPANY, OWNER, MEMBER, FOREIGN_MEMBER],
   )
+  await pool.query(
+    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit) VALUES
+       ('contract-company-slice',$1,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',4),
+       ('contract-company-foreign',$2,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1)`,
+    [COMPANY, FOREIGN_COMPANY],
+  )
+  await pool.query(
+    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status) VALUES
+       ('seat-company-owner',$1,'contract-company-slice',$3,'ACTIVE'),
+       ('seat-company-member',$1,'contract-company-slice',$4,'ACTIVE'),
+       ('seat-company-foreign',$2,'contract-company-foreign',$5,'ACTIVE')`,
+    [COMPANY, FOREIGN_COMPANY, OWNER, MEMBER, FOREIGN_MEMBER],
+  )
 })
 
 test('[integration] member removal disconnects immediately and retries IM reconciliation idempotently', async () => {

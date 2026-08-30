@@ -148,6 +148,7 @@ export async function teacherCount(db: Queryable, companyId: string, courseId: s
 }
 
 export async function removeMemberState(db: Queryable, companyId: string, userId: string): Promise<void> {
+  await db.query(`DELETE FROM organization_seats WHERE company_id=$1 AND user_id=$2`, [companyId, userId])
   await db.query(`DELETE FROM company_memberships WHERE company_id=$1 AND user_id=$2`, [companyId, userId])
   await db.query(
     `UPDATE participants SET departed_at=NOW(),status='offboarded'

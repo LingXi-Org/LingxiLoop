@@ -207,18 +207,17 @@ test('[integration] only a current course teacher can discover Pulse or open its
   assert.equal(teacherSummary.status,200)
   assert.equal((await teacherSummary.json() as {agentId:string}).agentId,pulse.agentId)
   assert.equal((await apiRequest(fixture.learnerId,fixture.companyId,path)).status,403)
-  assert.equal((await apiRequest(fixture.adminId,fixture.companyId,path)).status,403)
+  assert.equal((await apiRequest(fixture.adminId,fixture.companyId,path)).status,404)
 
   const teacherParticipants=await apiRequest(fixture.teacherId,fixture.companyId,'/api/participants',fixture.projectId)
   const learnerParticipants=await apiRequest(fixture.learnerId,fixture.companyId,'/api/participants',fixture.projectId)
   const adminParticipants=await apiRequest(fixture.adminId,fixture.companyId,'/api/participants',fixture.projectId)
   assert.equal(teacherParticipants.status,200)
   assert.equal(learnerParticipants.status,200)
-  assert.equal(adminParticipants.status,200)
+  assert.equal(adminParticipants.status,404)
   const ids=async(response:Response)=>(await response.json() as Array<{id:string}>).map((item)=>item.id)
   assert.ok((await ids(teacherParticipants)).includes(pulse.agentId))
   assert.equal((await ids(learnerParticipants)).includes(pulse.agentId),false)
-  assert.equal((await ids(adminParticipants)).includes(pulse.agentId),false)
 
   const learnerRoom=await apiRequest(
     fixture.learnerId,

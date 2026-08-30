@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { type ProjectKind, projectKindBelongsToCompanyType } from '../../domain/public.js'
-import type { PermissionAction } from '../access/public.js'
+import { ForbiddenError, type PermissionAction } from '../access/public.js'
 import { createPermissionService, resolvePlanEntitlements } from '../access/public.js'
 import { ensureTeacherPlans } from '../entitlements/public.js'
 import { appendDomainEventInTransaction } from '../events/public.js'
@@ -371,7 +371,7 @@ export class LearningApplication {
   }
 
   async removeMember(userId: string, courseId: string, targetId: string) {
-    await this.infrastructure.transaction(async (db) => {
+    const revokedScope = await this.infrastructure.transaction(async (db) => {
       const manager = await this.manager(userId, courseId, 'project_member:remove', db, true)
       const outcome = await changeCourseMember(db, {
         courseId, companyId: manager.companyId, userId: targetId, role: null,
@@ -391,7 +391,13 @@ export class LearningApplication {
         effectKey: targetId,
         payload: { projectId: manager.projectId, userId: targetId },
       })
+      return { companyId: manager.companyId, projectId: manager.projectId }
     })
+    await this.infrastructure.revokeDocumentSubscriptions(
+      targetId,
+      revokedScope.companyId,
+      revokedScope.projectId,
+    )
     return { ok: true as const }
   }
 
@@ -766,6 +772,9 @@ export class LearningApplication {
     try { return await work() }
     catch (error) {
       if (error instanceof LearningApplicationError) throw error
+      if (error instanceof ForbiddenError) {
+        throw new LearningApplicationError(error.status === 404 ? 'not_found' : 'forbidden', error.message)
+      }
       if (!(error instanceof Error)) throw error
       if (/not found|not provisioned/.test(error.message)) {
         throw new LearningApplicationError('not_found', error.message)

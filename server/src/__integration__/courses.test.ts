@@ -64,6 +64,11 @@ async function seedCompany(companyId = 'co-courses'): Promise<void> {
     [OWNER],
   )
   await pool.query(
+    `INSERT INTO users (id,email,display_name,email_verified_at)
+     VALUES ($1,'learner@test.local','Learner',NOW()) ON CONFLICT(id) DO NOTHING`,
+    [LEARNER],
+  )
+  await pool.query(
     `INSERT INTO companies (id,name,slug,type,personal_owner_user_id,plan_id)
      VALUES ($1,'Course test',$1,'PERSONAL',$2,'plan-personal-free')`,
     [companyId, OWNER],
@@ -73,11 +78,21 @@ async function seedCompany(companyId = 'co-courses'): Promise<void> {
     [companyId, OWNER],
   )
   await pool.query(
+    `INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status) VALUES
+       ($1,$3,'human','Owner','O','#667085','avail'),
+       ($2,$3,'human','Learner','L','#667085','avail')`,
+    [OWNER, LEARNER, companyId],
+  )
+  await pool.query(
     `INSERT INTO projects (id,company_id,kind,name,description,color,created_by,is_default)
      VALUES ($1,$2,'PERSONAL_LEARNING','我的学习','','#64748b',$3,TRUE)`,
     [`general-${companyId}`, companyId, OWNER],
   )
-  await pool.query(`INSERT INTO users (id,email,display_name,email_verified_at) VALUES ($1,$2,'Learner',NOW())`, [LEARNER, 'learner@test.local'])
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [companyId, `general-${companyId}`, OWNER],
+  )
 }
 
 async function createCourse(name: string, companyId = 'co-courses') {
@@ -149,6 +164,16 @@ test('[integration] Education Company cannot use the Teaching creation entrypoin
      VALUES('co-education-course',$1,'OWNER')`,
     [OWNER],
   )
+  await pool.query(
+    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
+     VALUES('contract-education-course','co-education-course','plan-personal-free','ACTIVE',
+       NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1)`,
+  )
+  await pool.query(
+    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status)
+     VALUES('seat-education-course','co-education-course','contract-education-course',$1,'ACTIVE')`,
+    [OWNER],
+  )
   const response = await fetch(`${ownerUrl}/api/courses`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-company-id': 'co-education-course' },
@@ -174,9 +199,26 @@ test('[integration] Project invitation replay is idempotent and never grants or 
   assert.equal((await pool.query(`SELECT role FROM project_memberships WHERE project_id=$1 AND user_id=$2`, [course.projectId, LEARNER])).rows[0].role, 'TEACHER')
   assert.equal((await pool.query(`SELECT use_count FROM project_invitations WHERE token_hash=$1`, [teacherInvite.id])).rows[0].use_count, 0)
 
-  await fetch(`${ownerUrl}/api/courses/${course.id}/archive`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses' }, body: '{}' })
+  const ended = await fetch(`${ownerUrl}/api/projects/${course.projectId}/end`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId },
+    body: '{}',
+  })
+  assert.equal(ended.status, 200, await ended.text())
+  const readOnly = await fetch(`${ownerUrl}/api/projects/${course.projectId}/enter-read-only`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId },
+    body: '{}',
+  })
+  assert.equal(readOnly.status, 200, await readOnly.text())
+  const archived = await fetch(`${ownerUrl}/api/projects/${course.projectId}/archive`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId },
+    body: '{}',
+  })
+  assert.equal(archived.status, 200, await archived.text())
   const write = await fetch(`${learnerUrl}/api/documents`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId }, body: JSON.stringify({ title: 'Blocked' }) })
-  assert.equal(write.status, 409)
+  assert.equal(write.status, 403)
 })
 
 test('[integration] concurrent Project invitations converge on one Student membership', async () => {
