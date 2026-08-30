@@ -7,6 +7,8 @@ const crypto = require('node:crypto')
 const { pathToFileURL } = require('node:url')
 const autoUpdater = require('./autoUpdater.cjs')
 const { createAuthNonceGuard } = require('./authNonce.cjs')
+const { registerRendererScheme, rendererFile } = require('./rendererProtocol.cjs')
+const { DEFAULT_WINDOW_STATE, createWindowStateStore } = require('./windowState.cjs')
 
 const isDev = !app.isPackaged
 const DEV_URL = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5180'
@@ -36,61 +38,20 @@ const DEV_URL = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5180'
 // one) work. `supportFetchAPI: true` enables fetch() against same-scheme
 // URLs — the renderer's own JS doesn't need it currently, but leaving it
 // on costs nothing and avoids a future foot-gun.
-protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
-])
+registerRendererScheme(protocol)
 
 /** Resolve the on-disk path for an `app://lingxiloop/<request-path>` URL.
  *  Strips leading slashes from the URL path and joins under the packaged
  *  dist directory. Rejects anything that resolves OUTSIDE dist (path
  *  traversal guard), including requests for any other renderer host. */
-function appProtocolFile(reqUrl) {
-  const u = new URL(reqUrl)
-  if (u.hostname !== 'lingxiloop') return null
-  const distRoot = path.join(__dirname, '..', 'dist')
-  let rel = decodeURIComponent(u.pathname).replace(/^\/+/, '')
-  if (!rel || rel === 'index.html') rel = 'index.html'
-  const resolved = path.normalize(path.join(distRoot, rel))
-  if (!resolved.startsWith(distRoot)) return null
-  return resolved
-}
-
 /** Persistent main-window geometry. Saved on every resize/move/close and
  *  restored on launch — so users get the size + position they had last,
  *  and first-run gets a sensible non-fullscreen default. */
-const WINDOW_STATE_PATH = () => path.join(app.getPath('userData'), 'window-state.json')
-const DEFAULT_WINDOW_STATE = { width: 1480, height: 920, fullscreen: false, maximized: false }
-
-function readWindowState() {
-  try {
-    const raw = fs.readFileSync(WINDOW_STATE_PATH(), 'utf8')
-    const parsed = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) return null
-    return parsed
-  } catch { return null }
-}
-
-function writeWindowState(state) {
-  try { fs.writeFileSync(WINDOW_STATE_PATH(), JSON.stringify(state)) }
-  catch (e) { console.warn('[window-state] save failed', e?.message || e) }
-}
-
-/** Returns `{ x, y, width, height }` if the saved rect intersects a
- *  currently-connected display by at least ~80px on each axis, or null
- *  if the saved position is offscreen (monitor disconnected, etc.). */
-function visibleRect(saved) {
-  if (!saved || typeof saved.x !== 'number' || typeof saved.y !== 'number'
-      || typeof saved.width !== 'number' || typeof saved.height !== 'number') return null
-  const r = { x: saved.x, y: saved.y, width: saved.width, height: saved.height }
-  const displays = screen.getAllDisplays()
-  for (const d of displays) {
-    const wa = d.workArea
-    const interW = Math.min(r.x + r.width, wa.x + wa.width) - Math.max(r.x, wa.x)
-    const interH = Math.min(r.y + r.height, wa.y + wa.height) - Math.max(r.y, wa.y)
-    if (interW >= 80 && interH >= 80) return r
-  }
-  return null
-}
+const windowStateStore = createWindowStateStore({
+  fs,
+  filePath: () => path.join(app.getPath('userData'), 'window-state.json'),
+  displays: () => screen.getAllDisplays(),
+})
 
 // ============== OAuth loopback: http://127.0.0.1:47823/auth/done ==============
 // Sign-in opens the system browser; after the provider redirects to
@@ -959,8 +920,8 @@ function attachDisplayListeners() {
 }
 
 function createWindow() {
-  const saved = readWindowState() ?? DEFAULT_WINDOW_STATE
-  const rect = visibleRect(saved)
+  const saved = windowStateStore.read() ?? DEFAULT_WINDOW_STATE
+  const rect = windowStateStore.visibleRect(saved)
   // Cap initial size to fit comfortably inside the primary display's
   // work area — 90% of work area, with the configured default as the
   // upper ceiling. Without this, the 1480×920 default would exceed
@@ -1047,7 +1008,7 @@ function createWindow() {
   const persistState = () => {
     if (!mainWindow || mainWindow.isDestroyed()) return
     const bounds = mainWindow.getNormalBounds()
-    writeWindowState({
+    windowStateStore.write({
       x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
       fullscreen: mainWindow.isFullScreen(),
       maximized: mainWindow.isMaximized(),
@@ -1373,9 +1334,9 @@ app.whenReady().then(() => {
   // API (Electron 25+) — gives us a streaming Response back so the
   // renderer never blocks on whole-bundle buffering. Anything we
   // can't resolve gets a 404. The handler ONLY serves packaged dist
-  // content; appProtocolFile() rejects path-traversal attempts.
+  // content; rendererFile() rejects path-traversal attempts.
   protocol.handle('app', async (request) => {
-    const file = appProtocolFile(request.url)
+    const file = rendererFile(request.url, path.join(__dirname, '..', 'dist'))
     if (!file) return new Response('not found', { status: 404 })
     try {
       return await net.fetch(pathToFileURL(file).toString())
