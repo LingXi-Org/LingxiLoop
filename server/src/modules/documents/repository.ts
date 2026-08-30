@@ -128,3 +128,18 @@ export async function deleteDocument(
   )
   return Boolean(rowCount)
 }
+
+export async function deleteDocumentCreatedBy(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+  documentId: string,
+  creatorId: string,
+): Promise<boolean> {
+  const { rowCount } = await db.query(
+    `DELETE FROM documents
+      WHERE id = $1 AND company_id = $2 AND project_id = $3 AND created_by = $4`,
+    [documentId, companyId, projectId, creatorId],
+  )
+  return Boolean(rowCount)
+}

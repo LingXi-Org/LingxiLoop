@@ -12,6 +12,7 @@ import type {
 import {
   conversationExists,
   deleteDocument,
+  deleteDocumentCreatedBy,
   findDocument,
   insertDocument,
   listDocuments,
@@ -193,6 +194,20 @@ export class DocumentsApplication {
     })
     if (!await deleteDocument(this.db, scope.companyId, scope.projectId, documentId)) {
       throw new DocumentApplicationError('document_not_found', 'not found')
+    }
+    await this.changed(scope, documentId, 'document.deleted')
+    return { ok: true }
+  }
+
+  async deleteForAgent(scope: DocumentScope, documentId: string): Promise<{ ok: true }> {
+    if (!await deleteDocumentCreatedBy(
+      this.db,
+      scope.companyId,
+      scope.projectId,
+      documentId,
+      scope.userId,
+    )) {
+      throw new DocumentApplicationError('delete_forbidden', 'only the creator can delete this document')
     }
     await this.changed(scope, documentId, 'document.deleted')
     return { ok: true }

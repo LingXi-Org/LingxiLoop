@@ -29,7 +29,7 @@ export const listRecentAgentDocumentCreations = documentsApplication.listRecentC
 export const readAgentDocument = documentsApplication.readForAgent.bind(documentsApplication)
 export const editAgentDocument = documentsApplication.editForAgent.bind(documentsApplication)
 export const renameAgentDocument = documentsApplication.rename.bind(documentsApplication)
-export const deleteAgentDocument = documentsApplication.delete.bind(documentsApplication)
+export const deleteAgentDocument = documentsApplication.deleteForAgent.bind(documentsApplication)
 
 export {
   isAnchoredImagePlacement,
