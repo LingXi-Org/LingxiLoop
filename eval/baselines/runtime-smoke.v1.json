@@ -20,6 +20,9 @@
       "runtime-dynamic-rag": 1,
       "runtime-approval-boundary": 1,
       "runtime-pulse-approval-boundary": 1,
+      "runtime-forbidden-inferred-percentage": 1,
+      "runtime-attention-dedupe": 1,
+      "runtime-teacher-override": 1,
       "runtime-learning-planning-gate": 1,
       "runtime-canvas-report-gate": 1
     }
@@ -38,6 +41,9 @@
     "runtime-dynamic-rag": 1,
     "runtime-approval-boundary": 1,
     "runtime-pulse-approval-boundary": 1,
+    "runtime-forbidden-inferred-percentage": 1,
+    "runtime-attention-dedupe": 1,
+    "runtime-teacher-override": 1,
     "runtime-learning-planning-gate": 1,
     "runtime-canvas-report-gate": 1
   }

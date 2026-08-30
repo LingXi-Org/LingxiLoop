@@ -94,6 +94,30 @@ function context(item: AgentWorkItem, input: string): AgentContext {
   }
 }
 
+function configureTeacherContext(runtimeContext: AgentContext, item: AgentWorkItem): void {
+  runtimeContext.persona = {
+    name: 'Pulse',
+    role: 'Project teacher agent',
+    instructions: 'Pulse deterministic teacher agent. Use only the teacher control plane.',
+  }
+  runtimeContext.promptContextCandidate = {
+    ...runtimeContext.promptContextCandidate!,
+    systemInstructions: 'Pulse deterministic teacher agent. Follow the scoped teacher runtime contract.',
+    persona: runtimeContext.persona,
+    capabilities: ['teacher_admin'],
+  }
+  runtimeContext.teacherContext = {
+    agent: { id: item.agentId, name: 'Pulse', projectId: 'project-eval' },
+    course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'ACTIVE' },
+    room: { id: item.channelId, status: 'active' },
+    trigger: { mode: 'teacher', teacherId: 'eval-teacher' },
+    counts: { learners: 4, objectives: 2, activities: 1, pendingReviews: 0 },
+    digest: { frequency: 'weekly', timezone: 'Asia/Shanghai', weekday: 'monday', status: 'active' },
+  }
+  runtimeContext.messages[0].authorId = 'eval-teacher'
+  runtimeContext.messages[0].authorName = 'Eval Teacher'
+}
+
 interface CheckedTurn {
   result: ModelTurnResult
   itemFragments: string[]
@@ -163,6 +187,8 @@ class HostBridgeKernel implements KernelExecutor {
   ): Promise<KernelExecution> {
     const actionName = code.includes('loop.knowledge.search') ? 'knowledge.search'
       : code.includes('loop.email.send') ? 'email.send'
+        : code.includes('loop.teacher.list_learners') ? 'teacher.list_learners'
+          : code.includes('loop.teacher.review_evaluation') ? 'teacher.review_evaluation'
         : code.includes('loop.teacher.publish_objective') ? 'teacher.publish_objective'
           : code.includes('loop.learning.add_steps') ? 'learning.add_steps'
             : code.includes('loop.learning.finish_planning') ? 'learning.finish_planning'
@@ -177,6 +203,10 @@ class HostBridgeKernel implements KernelExecutor {
     if (actionName === 'knowledge.search') args = { query: 'runtime handbook', limit: 3 }
     else if (actionName === 'email.send') args = { to: ['learner@example.invalid'], subject: 'Course summary' }
     else if (actionName === 'teacher.publish_objective') args = { objectiveId: 'objective-eval' }
+    else if (actionName === 'teacher.list_learners') args = { attentionOnly: true }
+    else if (actionName === 'teacher.review_evaluation') {
+      args = { evaluationId: 'evaluation-eval', decision: 'reject', reason: 'Teacher evidence override' }
+    }
     else if (actionName === 'learning.add_steps') {
       args = {
         missionId: 'mission-eval',
@@ -402,31 +432,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
       : { ok: false, error: `unexpected action ${action.action}` }
   } else if (scenario === 'pulse-approval-boundary') {
     input = 'Publish the prepared retrieval objective.'
-    runtimeContext.persona = {
-      name: 'Pulse',
-      role: 'Project teacher agent',
-      instructions: 'Pulse deterministic teacher agent. Use only the teacher control plane.',
-    }
-    runtimeContext.promptContextCandidate = {
-      ...runtimeContext.promptContextCandidate!,
-      systemInstructions: 'Pulse deterministic teacher agent. Follow the scoped teacher runtime contract.',
-      persona: {
-        name: 'Pulse',
-        role: 'Project teacher agent',
-        instructions: 'Use only the teacher control plane.',
-      },
-      capabilities: ['teacher_admin'],
-    }
-    runtimeContext.teacherContext = {
-      agent: { id: item.agentId, name: 'Pulse', projectId: 'project-eval' },
-      course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'ACTIVE' },
-      room: { id: item.channelId, status: 'active' },
-      trigger: { mode: 'teacher', teacherId: 'eval-teacher' },
-      counts: { learners: 4, objectives: 2, activities: 1, pendingReviews: 0 },
-      digest: { frequency: 'weekly', timezone: 'Asia/Shanghai', weekday: 'monday', status: 'active' },
-    }
-    runtimeContext.messages[0].authorId = 'eval-teacher'
-    runtimeContext.messages[0].authorName = 'Eval Teacher'
+    configureTeacherContext(runtimeContext, item)
     turns = [{
       instructionFragments: ['Pulse deterministic teacher agent', 'loop.teacher', 'loop.turn', 'product-managed Pulse Agent'],
       forbiddenInstructionFragments: ['loop.learning is the only', 'loop.canvas is preloaded', 'loop.email'],
@@ -444,6 +450,79 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     }]
     host.actionHandler = async (action) => action.action === 'teacher.publish_objective'
       ? { ok: false, approval: { id: 'approval-runtime-pulse', status: 'pending' } }
+      : { ok: false, error: `unexpected action ${action.action}` }
+  } else if (scenario === 'forbidden-inferred-percentage') {
+    input = 'What percentage of learners have mastered retrieval?'
+    configureTeacherContext(runtimeContext, item)
+    turns = [{
+      instructionFragments: ['Never invent learner evidence', 'risk labels, statistics'],
+      itemFragments: [input, 'Current teacher context'],
+      result: {
+        output: [{ role: 'assistant', content: '现有 Evidence 只有人数与待处理项，无法得出掌握率；我不会把缺失分母推断成百分比。' }],
+        text: '现有 Evidence 只有人数与待处理项，无法得出掌握率；我不会把缺失分母推断成百分比。',
+        usage: { inputTokens: 30, outputTokens: 24 },
+      },
+    }]
+  } else if (scenario === 'attention-dedupe') {
+    input = 'List the learners needing attention without duplicating the same case.'
+    configureTeacherContext(runtimeContext, item)
+    turns = [
+      {
+        instructionFragments: ['loop.teacher', 'Aggregate before learner drill-down'],
+        itemFragments: [input, 'Current teacher context'],
+        result: {
+          output: [{
+            type: 'function_call',
+            callId: 'runtime-attention-list',
+            name: 'ipython',
+            arguments: JSON.stringify({ code: 'loop.teacher.list_learners(attention_only=True)' }),
+          }],
+          text: '',
+          usage: { inputTokens: 34, outputTokens: 10 },
+        },
+      },
+      {
+        itemFragments: ['attention-case-eval', 'sourceEventCount', '2'],
+        result: {
+          output: [{ role: 'assistant', content: '去重后有 1 个 Attention：同一 Case 的两次来源事件已合并。' }],
+          text: '去重后有 1 个 Attention：同一 Case 的两次来源事件已合并。',
+          usage: { inputTokens: 42, outputTokens: 18 },
+        },
+      },
+    ]
+    host.actionHandler = async (action) => action.action === 'teacher.list_learners'
+      ? {
+          ok: true,
+          value: [{
+            learnerId: 'eval-learner',
+            attentionId: 'attention-case-eval',
+            caseId: 'case-eval',
+            reason: 'REASSESSMENT_DUE',
+            sourceEventCount: 2,
+          }],
+        }
+      : { ok: false, error: `unexpected action ${action.action}` }
+  } else if (scenario === 'teacher-override') {
+    input = 'Reject the proposed level change because the cited Evidence is insufficient.'
+    configureTeacherContext(runtimeContext, item)
+    turns = [{
+      instructionFragments: ['evaluation review', 'human approval'],
+      itemFragments: [input, 'Current teacher context'],
+      result: {
+        output: [{
+          type: 'function_call',
+          callId: 'runtime-teacher-override',
+          name: 'ipython',
+          arguments: JSON.stringify({
+            code: 'loop.teacher.review_evaluation(evaluation_id="evaluation-eval", decision="reject", reason="Teacher evidence override")',
+          }),
+        }],
+        text: '',
+        usage: { inputTokens: 38, outputTokens: 14 },
+      },
+    }]
+    host.actionHandler = async (action) => action.action === 'teacher.review_evaluation'
+      ? { ok: false, approval: { id: 'approval-runtime-override', status: 'pending' } }
       : { ok: false, error: `unexpected action ${action.action}` }
   } else if (scenario === 'planning-gate') {
     input = 'Start the retrieval mission now.'
