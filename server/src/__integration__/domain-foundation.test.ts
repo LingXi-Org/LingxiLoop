@@ -18,6 +18,12 @@ function pgCode(error: unknown): string | undefined {
     : undefined
 }
 
+function pgConstraint(error: unknown): string | undefined {
+  return typeof error === 'object' && error !== null && 'constraint' in error
+    ? String(error.constraint)
+    : undefined
+}
+
 before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => {
   await resetAllTables()
@@ -98,6 +104,48 @@ test('[integration] duplicate and cross-company project memberships fail closed'
     ),
     (error) => pgCode(error) === '23503',
   )
+})
+
+test('[integration] company types and project kinds reject statuses from other lifecycles', async () => {
+  for (const invalid of [
+    {
+      id: 'co-domain-invalid-personal', slug: 'domain-invalid-personal',
+      type: 'PERSONAL', status: 'TRIAL', personalOwnerUserId: USER,
+    },
+    {
+      id: 'co-domain-invalid-education', slug: 'domain-invalid-education',
+      type: 'EDUCATION', status: 'USER_DELETION_PENDING', personalOwnerUserId: null,
+    },
+  ]) {
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO companies (id,name,slug,type,status,personal_owner_user_id,plan_id)
+         VALUES ($1,'Invalid lifecycle',$2,$3,$4,$5,$6)`,
+        [
+          invalid.id, invalid.slug, invalid.type, invalid.status,
+          invalid.personalOwnerUserId, PERSONAL_FREE_PLAN.id,
+        ],
+      ),
+      (error) => pgCode(error) === '23514'
+        && pgConstraint(error) === 'companies_type_status_check',
+    )
+  }
+
+  for (const invalid of [
+    { id: 'project-domain-invalid-personal', kind: 'PERSONAL_LEARNING', status: 'DRAFT' },
+    { id: 'project-domain-invalid-teaching', kind: 'TEACHING', status: 'RETENTION' },
+    { id: 'project-domain-invalid-institutional', kind: 'INSTITUTIONAL_COURSE', status: 'TRANSFER_PENDING' },
+  ]) {
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO projects (id,company_id,kind,name,status,created_by)
+         VALUES ($1,$2,$3,'Invalid lifecycle',$4,$5)`,
+        [invalid.id, COMPANY_A, invalid.kind, invalid.status, USER],
+      ),
+      (error) => pgCode(error) === '23514'
+        && pgConstraint(error) === 'projects_kind_status_check',
+    )
+  }
 })
 
 test('[integration] membership deletion cascades toward space state and never toward User', async () => {

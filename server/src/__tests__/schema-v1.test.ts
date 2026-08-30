@@ -61,6 +61,10 @@ test('domain foundation relations replace legacy product identity and membership
   assert.match(schema, /CREATE TABLE public\.companies \([\s\S]*?type text NOT NULL[\s\S]*?status text DEFAULT 'ACTIVE'::text NOT NULL[\s\S]*?personal_owner_user_id text,[\s\S]*?plan_id text NOT NULL/)
   assert.match(schema, /companies_type_check[\s\S]*?'PERSONAL'[\s\S]*?'EDUCATION'/)
   assert.match(schema, /companies_status_check[\s\S]*?'TRIAL'[\s\S]*?'USER_DELETION_PENDING'[\s\S]*?'GRACE_PERIOD'[\s\S]*?'OFFBOARDED'[\s\S]*?'RETENTION'[\s\S]*?'ARCHIVED'[\s\S]*?'DELETED'/)
+  assert.match(
+    schema,
+    /companies_type_status_check CHECK \(\s*\(type = 'PERSONAL'::text AND status = ANY \(ARRAY\[\s*'ACTIVE'::text, 'USER_DELETION_PENDING'::text, 'DELETED'::text\s*\]\)\)\s*OR \(type = 'EDUCATION'::text AND status = ANY \(ARRAY\[\s*'TRIAL'::text, 'ACTIVE'::text, 'GRACE_PERIOD'::text, 'READ_ONLY'::text,\s*'OFFBOARDED'::text, 'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text\s*\]\)\)\s*\)/,
+  )
   assert.doesNotMatch(schema, /companies_status_check[^\n]*'SUSPENDED'/)
   assert.match(schema, /companies_personal_owner_check/)
   assert.match(schema, /idx_companies_personal_owner[\s\S]*?personal_owner_user_id[\s\S]*?type = 'PERSONAL'/)
@@ -69,6 +73,10 @@ test('domain foundation relations replace legacy product identity and membership
   assert.match(schema, /CREATE TABLE public\.projects \([\s\S]*?company_id text NOT NULL[\s\S]*?kind text NOT NULL[\s\S]*?plan_id text,/)
   assert.match(schema, /projects_kind_check[\s\S]*?'PERSONAL_LEARNING'[\s\S]*?'TEACHING'[\s\S]*?'INSTITUTIONAL_COURSE'/)
   assert.match(schema, /projects_status_check[\s\S]*?'CREATED'[\s\S]*?'DRAFT'[\s\S]*?'ACTIVE'[\s\S]*?'COURSE_ENDED'[\s\S]*?'READ_ONLY'[\s\S]*?'TRANSFER_PENDING'[\s\S]*?'RETENTION'[\s\S]*?'ARCHIVED'[\s\S]*?'DELETED'/)
+  assert.match(
+    schema,
+    /projects_kind_status_check CHECK \(\s*\(kind = 'PERSONAL_LEARNING'::text AND status = ANY \(ARRAY\[\s*'CREATED'::text, 'ACTIVE'::text, 'ARCHIVED'::text, 'DELETED'::text\s*\]\)\)\s*OR \(kind = 'TEACHING'::text AND status = ANY \(ARRAY\[\s*'DRAFT'::text, 'ACTIVE'::text, 'COURSE_ENDED'::text, 'READ_ONLY'::text,\s*'TRANSFER_PENDING'::text, 'ARCHIVED'::text\s*\]\)\)\s*OR \(kind = 'INSTITUTIONAL_COURSE'::text AND status = ANY \(ARRAY\[\s*'DRAFT'::text, 'ACTIVE'::text, 'COURSE_ENDED'::text, 'READ_ONLY'::text,\s*'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text\s*\]\)\)\s*\)/,
+  )
   assert.match(schema, /is_default boolean DEFAULT false NOT NULL/)
   assert.match(schema, /idx_projects_one_default[\s\S]*?WHERE \(is_default = true\)/)
   assert.doesNotMatch(schema, /\bis_general\b/)
@@ -78,6 +86,8 @@ test('domain foundation relations replace legacy product identity and membership
   assert.match(bootstrap, /\['projects', 'is_general'\]/)
   assert.match(bootstrap, /\['projects', 'projects_kind_check', 'c'\]/)
   assert.match(bootstrap, /\['projects', 'projects_status_check', 'c'\]/)
+  assert.match(bootstrap, /\['companies', 'companies_type_status_check', 'c'\]/)
+  assert.match(bootstrap, /\['projects', 'projects_kind_status_check', 'c'\]/)
   assert.match(bootstrap, /'idx_projects_one_default'/)
   assert.match(schema, /company_memberships_role_check[\s\S]*?'OWNER'[\s\S]*?'ADMIN'[\s\S]*?'MEMBER'/)
   assert.match(schema, /project_memberships_role_check[\s\S]*?'OWNER'[\s\S]*?'TEACHER'[\s\S]*?'TA'[\s\S]*?'STUDENT'[\s\S]*?'OBSERVER'/)

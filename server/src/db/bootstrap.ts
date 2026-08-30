@@ -157,6 +157,7 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['companies', 'companies_personal_owner_user_id_fkey', 'f'],
   ['companies', 'companies_type_check', 'c'],
   ['companies', 'companies_status_check', 'c'],
+  ['companies', 'companies_type_status_check', 'c'],
   ['companies', 'companies_personal_owner_check', 'c'],
   ['company_memberships', 'company_memberships_pkey', 'p'],
   ['company_memberships', 'company_memberships_company_id_fkey', 'f'],
@@ -182,6 +183,7 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['projects', 'projects_plan_id_fkey', 'f'],
   ['projects', 'projects_kind_check', 'c'],
   ['projects', 'projects_status_check', 'c'],
+  ['projects', 'projects_kind_status_check', 'c'],
 ] as const
 
 const FORBIDDEN_V1_CONSTRAINTS = [

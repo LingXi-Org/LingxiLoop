@@ -860,6 +860,15 @@ CREATE TABLE public.companies (
     description text DEFAULT ''::text NOT NULL,
     CONSTRAINT companies_type_check CHECK ((type = ANY (ARRAY['PERSONAL'::text, 'EDUCATION'::text]))),
     CONSTRAINT companies_status_check CHECK ((status = ANY (ARRAY['TRIAL'::text, 'ACTIVE'::text, 'USER_DELETION_PENDING'::text, 'GRACE_PERIOD'::text, 'READ_ONLY'::text, 'OFFBOARDED'::text, 'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text]))),
+    CONSTRAINT companies_type_status_check CHECK (
+        (type = 'PERSONAL'::text AND status = ANY (ARRAY[
+            'ACTIVE'::text, 'USER_DELETION_PENDING'::text, 'DELETED'::text
+        ]))
+        OR (type = 'EDUCATION'::text AND status = ANY (ARRAY[
+            'TRIAL'::text, 'ACTIVE'::text, 'GRACE_PERIOD'::text, 'READ_ONLY'::text,
+            'OFFBOARDED'::text, 'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text
+        ]))
+    ),
     CONSTRAINT companies_personal_owner_check CHECK ((((type = 'PERSONAL'::text) AND (personal_owner_user_id IS NOT NULL)) OR ((type = 'EDUCATION'::text) AND (personal_owner_user_id IS NULL))))
 );
 
@@ -1667,7 +1676,20 @@ CREATE TABLE public.projects (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     is_default boolean DEFAULT false NOT NULL,
     CONSTRAINT projects_kind_check CHECK ((kind = ANY (ARRAY['PERSONAL_LEARNING'::text, 'TEACHING'::text, 'INSTITUTIONAL_COURSE'::text]))),
-    CONSTRAINT projects_status_check CHECK ((status = ANY (ARRAY['CREATED'::text, 'DRAFT'::text, 'ACTIVE'::text, 'COURSE_ENDED'::text, 'READ_ONLY'::text, 'TRANSFER_PENDING'::text, 'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text])))
+    CONSTRAINT projects_status_check CHECK ((status = ANY (ARRAY['CREATED'::text, 'DRAFT'::text, 'ACTIVE'::text, 'COURSE_ENDED'::text, 'READ_ONLY'::text, 'TRANSFER_PENDING'::text, 'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text]))),
+    CONSTRAINT projects_kind_status_check CHECK (
+        (kind = 'PERSONAL_LEARNING'::text AND status = ANY (ARRAY[
+            'CREATED'::text, 'ACTIVE'::text, 'ARCHIVED'::text, 'DELETED'::text
+        ]))
+        OR (kind = 'TEACHING'::text AND status = ANY (ARRAY[
+            'DRAFT'::text, 'ACTIVE'::text, 'COURSE_ENDED'::text, 'READ_ONLY'::text,
+            'TRANSFER_PENDING'::text, 'ARCHIVED'::text
+        ]))
+        OR (kind = 'INSTITUTIONAL_COURSE'::text AND status = ANY (ARRAY[
+            'DRAFT'::text, 'ACTIVE'::text, 'COURSE_ENDED'::text, 'READ_ONLY'::text,
+            'RETENTION'::text, 'ARCHIVED'::text, 'DELETED'::text
+        ]))
+    )
 );
 
 
