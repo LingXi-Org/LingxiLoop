@@ -29,6 +29,11 @@ Back up any database that must be preserved, then drop and recreate it from the
 current `server/src/db/schema.sql`; even a previously marked v1 database must be
 reset if it predates this cutover.
 
+The M7 event-foundation cutover is also reset-only. A database created before
+`domain_events` gained its identity cursor, aggregate sequence, bounded payload
+constraints, and append-only trigger must be dropped and recreated; no runtime
+upgrade or backfill path exists.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

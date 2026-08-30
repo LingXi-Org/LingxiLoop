@@ -26,7 +26,7 @@ const REQUIRED_V1_RELATIONS = [
   'conversation_mutes', 'conversation_reads', 'conversation_source_exclusions',
   'conversations', 'course_invitation_acceptances', 'course_invitations',
   'courses', 'document_mention_deliveries', 'document_mentions', 'document_snapshots',
-  'document_updates', 'documents', 'email_attachments', 'email_contacts',
+  'document_updates', 'documents', 'domain_events', 'email_attachments', 'email_contacts',
   'email_messages', 'email_sequence_counters', 'entitlements',
   'eval_cases', 'eval_runs', 'eval_stage_results',
   'im_channel_bindings', 'im_poll_votes', 'im_polls',
@@ -91,6 +91,12 @@ const REQUIRED_V1_COLUMNS = [
   ['calendar_events', 'project_id'],
   ['document_mention_deliveries', 'recipients'],
   ['document_mention_deliveries', 'status'],
+  ['domain_events', 'sequence'],
+  ['domain_events', 'aggregate_sequence'],
+  ['domain_events', 'schema_version'],
+  ['domain_events', 'idempotency_key'],
+  ['domain_events', 'actor_type'],
+  ['domain_events', 'payload'],
   ['email_messages', 'author_id'],
   ['email_messages', 'body'],
   ['email_messages', 'sequence'],
@@ -159,6 +165,12 @@ const REQUIRED_V1_NOT_NULL_COLUMNS = [
   ['calendar_events', 'project_id', null],
   ['document_mention_deliveries', 'recipients', null],
   ['document_mention_deliveries', 'status', "'queued'::text"],
+  ['domain_events', 'company_id', null],
+  ['domain_events', 'aggregate_sequence', null],
+  ['domain_events', 'schema_version', '1'],
+  ['domain_events', 'idempotency_key', null],
+  ['domain_events', 'actor_type', null],
+  ['domain_events', 'payload', null],
   ['learning_activities', 'company_id', null],
   ['learning_activities', 'project_id', null],
   ['learning_activities', 'status', "'DRAFT'::text"],
@@ -221,6 +233,10 @@ const REQUIRED_V1_PRIMARY_KEYS = [
   ['plan_entitlements', ['plan_id', 'entitlement_id']],
 ] as const
 
+const REQUIRED_V1_IDENTITY_COLUMNS = [
+  ['domain_events', 'sequence', 'ALWAYS'],
+] as const
+
 const REQUIRED_V1_CONSTRAINTS = [
   ['agent_work_items', 'agent_work_items_authorization_user_id_fkey', 'f'],
   ['llm_calls', 'llm_calls_pkey', 'p'],
@@ -232,6 +248,16 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['canvases', 'canvases_authorization_user_id_fkey', 'f'],
   ['document_mention_deliveries', 'document_mention_deliveries_recipients_check', 'c'],
   ['document_mention_deliveries', 'document_mention_deliveries_status_check', 'c'],
+  ['domain_events', 'domain_events_idempotency_key', 'u'],
+  ['domain_events', 'domain_events_sequence_key', 'u'],
+  ['domain_events', 'domain_events_aggregate_sequence_key', 'u'],
+  ['domain_events', 'domain_events_project_company_fkey', 'f'],
+  ['domain_events', 'domain_events_actor_company_fkey', 'f'],
+  ['domain_events', 'domain_events_identity_check', 'c'],
+  ['domain_events', 'domain_events_aggregate_sequence_check', 'c'],
+  ['domain_events', 'domain_events_schema_version_check', 'c'],
+  ['domain_events', 'domain_events_actor_check', 'c'],
+  ['domain_events', 'domain_events_payload_check', 'c'],
   ['learning_activities', 'learning_activities_scope_key', 'u'],
   ['learning_activities', 'learning_activities_project_company_fkey', 'f'],
   ['learning_activity_knowledge_units', 'learning_activity_knowledge_units_activity_fkey', 'f'],
@@ -319,11 +345,17 @@ const FORBIDDEN_V1_CONSTRAINTS = [
   ['message_reactions', 'message_reactions_message_id_fkey'],
 ] as const
 
+const REQUIRED_V1_TRIGGERS = [
+  ['domain_events', 'domain_events_append_only'],
+] as const
+
 const REQUIRED_V1_INDEXES = [
   'idx_llm_calls_company_created',
   'idx_llm_calls_run_created',
   'idx_document_mention_deliveries_due',
   'idx_document_mention_deliveries_company',
+  'idx_domain_events_company_cursor',
+  'idx_domain_events_project_cursor',
   'idx_company_onboarding_effects_due',
   'idx_conversations_id_company_project',
   'idx_email_messages_convo_seq',
@@ -425,6 +457,15 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     )
     if (rows[0]?.is_nullable !== 'NO' || rows[0].column_default !== expectedDefault) return false
   }
+  for (const [tableName, columnName, identityGeneration] of REQUIRED_V1_IDENTITY_COLUMNS) {
+    const { rows } = await client.query<{ is_identity: string; identity_generation: string | null }>(
+      `SELECT is_identity,identity_generation
+         FROM information_schema.columns
+        WHERE table_schema='public' AND table_name=$1 AND column_name=$2`,
+      [tableName, columnName],
+    )
+    if (rows[0]?.is_identity !== 'YES' || rows[0].identity_generation !== identityGeneration) return false
+  }
   for (const [tableName, expectedColumns] of REQUIRED_V1_PRIMARY_KEYS) {
     const { rows } = await client.query<{ columns: string[] }>(
       `SELECT json_agg(key_column.column_name ORDER BY key_column.ordinal_position) AS columns
@@ -458,6 +499,19 @@ async function v1SchemaReady(client: Queryable): Promise<boolean> {
     [constraintTables, constraintNames, constraintTypes],
   )
   if (constraintRows.length > 0) return false
+  for (const [tableName, triggerName] of REQUIRED_V1_TRIGGERS) {
+    const { rows } = await client.query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM pg_trigger trigger_info
+         JOIN pg_class owning_table ON owning_table.oid=trigger_info.tgrelid
+         JOIN pg_namespace owning_schema ON owning_schema.oid=owning_table.relnamespace
+         WHERE owning_schema.nspname='public' AND owning_table.relname=$1
+           AND trigger_info.tgname=$2 AND NOT trigger_info.tgisinternal
+       ) AS exists`,
+      [tableName, triggerName],
+    )
+    if (!rows[0]?.exists) return false
+  }
   for (const [tableName, constraintName] of FORBIDDEN_V1_CONSTRAINTS) {
     const { rows } = await client.query<{ exists: boolean }>(
       `SELECT EXISTS (

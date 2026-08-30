@@ -5216,6 +5216,65 @@ CREATE INDEX idx_learning_effects_pending
     ON public.learning_effects USING btree (status, available_at, created_at)
     WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]));
 
+CREATE TABLE public.domain_events (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text,
+    aggregate_type text NOT NULL,
+    aggregate_id text NOT NULL,
+    sequence bigint GENERATED ALWAYS AS IDENTITY,
+    aggregate_sequence bigint NOT NULL,
+    event_type text NOT NULL,
+    schema_version integer DEFAULT 1 NOT NULL,
+    idempotency_key text NOT NULL,
+    actor_type text NOT NULL,
+    actor_id text,
+    payload jsonb NOT NULL,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT domain_events_idempotency_key UNIQUE (company_id, idempotency_key),
+    CONSTRAINT domain_events_sequence_key UNIQUE (sequence),
+    CONSTRAINT domain_events_aggregate_sequence_key
+      UNIQUE (company_id, aggregate_type, aggregate_id, aggregate_sequence),
+    CONSTRAINT domain_events_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE RESTRICT,
+    CONSTRAINT domain_events_actor_company_fkey
+      FOREIGN KEY (actor_id, company_id) REFERENCES public.participants(id, company_id) ON DELETE RESTRICT,
+    CONSTRAINT domain_events_identity_check CHECK (
+      char_length(aggregate_type) BETWEEN 1 AND 100
+      AND char_length(aggregate_id) BETWEEN 1 AND 200
+      AND char_length(event_type) BETWEEN 1 AND 160
+      AND char_length(idempotency_key) BETWEEN 1 AND 200
+    ),
+    CONSTRAINT domain_events_aggregate_sequence_check CHECK (aggregate_sequence >= 1),
+    CONSTRAINT domain_events_schema_version_check CHECK (schema_version >= 1),
+    CONSTRAINT domain_events_actor_check CHECK (
+      (actor_type = 'SYSTEM' AND actor_id IS NULL)
+      OR (actor_type IN ('USER', 'AGENT') AND actor_id IS NOT NULL)
+    ),
+    CONSTRAINT domain_events_payload_check CHECK (
+      jsonb_typeof(payload) = 'object' AND octet_length(payload::text) <= 32768
+    )
+);
+
+CREATE INDEX idx_domain_events_company_cursor
+    ON public.domain_events USING btree (company_id, sequence);
+
+CREATE INDEX idx_domain_events_project_cursor
+    ON public.domain_events USING btree (company_id, project_id, sequence)
+    WHERE (project_id IS NOT NULL);
+
+CREATE FUNCTION public.reject_domain_event_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'domain_events is append-only';
+END;
+$$;
+
+CREATE TRIGGER domain_events_append_only
+    BEFORE UPDATE OR DELETE ON public.domain_events
+    FOR EACH ROW EXECUTE FUNCTION public.reject_domain_event_mutation();
+
 CREATE TABLE public.company_onboarding_effects (
     id text PRIMARY KEY,
     company_id text NOT NULL,

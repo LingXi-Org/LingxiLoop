@@ -203,6 +203,23 @@ test('LearningCase persistence matches the uppercase lifecycle and durable retry
   assert.match(bootstrap, /\['learning_case_actions', 'learning_case_actions_transition_check', 'c'\]/)
 })
 
+test('M7 domain events are bounded, ordered, tenant-owned and database append-only', () => {
+  const events = schema.match(/CREATE TABLE public\.domain_events \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  assert.match(events, /company_id text NOT NULL/)
+  assert.match(events, /project_id text,/)
+  assert.match(events, /sequence bigint GENERATED ALWAYS AS IDENTITY/)
+  assert.match(events, /aggregate_sequence bigint NOT NULL/)
+  assert.match(events, /UNIQUE \(company_id, aggregate_type, aggregate_id, aggregate_sequence\)/)
+  assert.match(events, /UNIQUE \(company_id, idempotency_key\)/)
+  assert.match(events, /jsonb_typeof\(payload\) = 'object'/)
+  assert.match(events, /octet_length\(payload::text\) <= 32768/)
+  assert.match(schema, /CREATE TRIGGER domain_events_append_only[\s\S]*?BEFORE UPDATE OR DELETE/)
+  assert.match(bootstrap, /\['domain_events', 'sequence', 'ALWAYS'\]/)
+  assert.match(bootstrap, /\['domain_events', 'domain_events_append_only'\]/)
+  assert.match(bootstrap, /'idx_domain_events_company_cursor'/)
+  assert.match(bootstrap, /'idx_domain_events_project_cursor'/)
+})
+
 test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
   assert.match(schema, /plans_code_key UNIQUE \(code\)/)
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)
