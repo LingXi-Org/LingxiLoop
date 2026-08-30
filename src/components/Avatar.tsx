@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { AVATAR_IMG_LOADING, useAvatarImg, useCachedAvatarSrc } from '@/lib/avatarCache'
 import { cn } from '@/lib/utils'
+import { resolveUserAvatarUrl } from '@/lib/userAvatar'
 import { useAuth } from '@/stores/auth'
 import type { Participant } from '@/types'
 import { BloubAvatar } from './BloubAvatar'
@@ -37,7 +38,7 @@ export function Avatar({ p, size = 44, statusOverride, ringColor = 'var(--paper)
   // Agent image URLs are intentionally ignored: their single source of
   // visual identity is the deterministic Bloub renderer. Human cache entries
   // are still invalidated by participant avatar events and the refresh ticker.
-  const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : p.avatarUrl)
+  const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : resolveUserAvatarUrl(p.avatarUrl))
   // Bounded retry so one transient load failure doesn't permanently fall
   // back to the initial letter (see useAvatarImg).
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
@@ -84,7 +85,7 @@ export function AvatarMini({
   mode?: 'chat' | 'neutral'
 }) {
   const status = useResolvedAvatarStatus(p, statusOverride)
-  const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : p.avatarUrl)
+  const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : resolveUserAvatarUrl(p.avatarUrl))
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
   return (
     <div

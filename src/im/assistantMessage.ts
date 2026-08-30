@@ -57,7 +57,18 @@ const MESSAGE_PRESENTATION = {
 const ASSISTANT_NATIVE_KINDS = new Set<MessageKind>(['thought', 'tool', 'handoff', 'approval', 'canvas', 'learning_mission'])
 
 function messageRole(message: Message, sender?: Participant): ThreadMessageLike['role'] {
-  if (message.kind === 'system') return 'system'
+  // assistant-ui reserves the system role for exactly one text part. Rich
+  // system events (Teacher Briefing, citations, artifacts) need native data
+  // parts, so expose those as assistant messages while preserving their
+  // product identity in metadata.senderKind and metadata.originalKind.
+  if (message.kind === 'system') {
+    const hasStructuredParts = Boolean(
+      message.teacherBriefing
+      || message.citations?.length
+      || hasArtifactReferences(message),
+    )
+    return hasStructuredParts ? 'assistant' : 'system'
+  }
   if (sender?.kind === 'agent' || (!sender && ASSISTANT_NATIVE_KINDS.has(message.kind))) return 'assistant'
   return 'user'
 }
@@ -75,7 +86,9 @@ type ContentBuilder = (context: ContentBuilderContext) => void
 
 const MESSAGE_CONTENT_BUILDERS = {
   text: ({ pushBody }) => pushBody(),
-  system: ({ message, pushBody }) => { if (!message.teacherBriefing) pushBody() },
+  system: ({ message, content }) => {
+    if (!message.teacherBriefing) content.push({ type: 'text', text: message.body })
+  },
   thought: ({ message, content }) => { content.push({ type: 'reasoning', text: message.body }) },
   tool: ({ message, content, pushBody }) => {
     pushBody()
@@ -114,7 +127,7 @@ const MESSAGE_CONTENT_BUILDERS = {
 } satisfies Record<MessageKind, ContentBuilder>
 
 function hasArtifactReferences(message: Message): boolean {
-  return /\b(?:doc_[A-Za-z0-9]+|board-[A-Za-z0-9-]+|card-[A-Za-z0-9-]+|ce-[A-Za-z0-9-]+)\b/.test(`${message.body}\n${message.tool?.arg ?? ''}\n${message.tool?.detail ?? ''}`)
+  return /\b(?:doc_[A-Za-z0-9]+|ce-[A-Za-z0-9-]+)\b/.test(`${message.body}\n${message.tool?.arg ?? ''}\n${message.tool?.detail ?? ''}`)
 }
 
 function firstUrlInBody(body: string): string | null {

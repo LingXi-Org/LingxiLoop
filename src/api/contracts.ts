@@ -71,13 +71,6 @@ export type WsEvent =
   | { type: 'group.pulled'; conversationId: string; pulledById: string }
   | { type: 'conversation.updated'; conversationId: string; patch: { topic?: string | null; title?: string; leaderId?: string | null } }
   | { type: 'convene'; sessionId: string; conversationId: string; kind: 'started' | 'transcript' | 'ended' | 'tile'; data?: unknown }
-  | { type: 'board.changed'; kind:
-        | 'board.created' | 'board.updated' | 'board.deleted'
-        | 'column.created' | 'column.updated' | 'column.deleted'
-        | 'card.created' | 'card.updated' | 'card.moved' | 'card.deleted'
-        | 'comment.created' | 'comment.deleted'
-      boardId: string; cardId?: string; columnId?: string; commentId?: string
-      mentions?: string[]; actorId?: string }
   | { type: 'doc.sync'; documentId: string; stateB64: string; originId: string }
   | { type: 'doc.update'; documentId: string; updateB64: string; originId: string }
   | { type: 'doc.awareness'; documentId: string; updateB64: string; originId: string }

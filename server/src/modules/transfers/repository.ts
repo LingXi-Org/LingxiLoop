@@ -197,7 +197,7 @@ export async function resolveProjectTransfer(db: Queryable, input: {
 }
 
 const PROJECT_OWNED_TABLES = [
-  'boards', 'calendar_events', 'canvases', 'conversations', 'project_invitations',
+  'calendar_events', 'canvases', 'conversations', 'project_invitations',
   'project_memberships', 'courses', 'documents', 'knowledge_note_bindings',
   'knowledge_notebook_bindings', 'knowledge_source_chat_sessions', 'knowledge_sources',
   'knowledge_source_bindings',

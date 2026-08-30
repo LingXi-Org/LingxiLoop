@@ -98,7 +98,12 @@ export function ThreadDrawer() {
   const rootAuthor = byId[root.authorId]
 
   return (
-    <LingxiAssistantRuntimeProvider messages={runtimeMessages}>
+    <LingxiAssistantRuntimeProvider
+      key={`${openThread.convoId}:${openThread.rootId}`}
+      messages={runtimeMessages}
+      conversationId={openThread.convoId}
+      replyingToId={openThread.rootId}
+    >
       <aside
         className="relative flex flex-col overflow-hidden border-s border-border bg-background"
       >

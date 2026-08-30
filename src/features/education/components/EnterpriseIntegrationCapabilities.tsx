@@ -37,10 +37,10 @@ export function EnterpriseIntegrationCapabilities() {
   return <section aria-labelledby="enterprise-integrations-title" className="space-y-3">
     <div>
       <h2 id="enterprise-integrations-title" className="text-[14px] font-semibold">Enterprise 能力</h2>
-      <p className="mt-1 text-[11px] text-ink-secondary">供应商未选定前，这些入口不会收集凭据、发送数据或模拟激活成功。</p>
+      <p className="mt-1 text-xs text-muted-foreground">供应商未选定前，这些入口不会收集凭据、发送数据或模拟激活成功。</p>
     </div>
     <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
-      {capabilities.map((capability) => <Card key={capability.id} data-capability={capability.id} className="bg-panel shadow-none">
+      {capabilities.map((capability) => <Card key={capability.id} data-capability={capability.id}>
         <CardHeader>
           <div className="flex items-start justify-between gap-3"><CardTitle>{capability.title}</CardTitle><Badge variant="secondary">暂不支持</Badge></div>
           <CardDescription>{capability.description}</CardDescription>

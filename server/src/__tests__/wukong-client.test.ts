@@ -61,6 +61,30 @@ test('WuKong adapter syncs channel history and decodes Lingxi payloads', async (
   assert.equal(messages[0]?.clientMsgNo, 'client-9')
 })
 
+test('WuKong history repairs authoritative membership once before retrying', async () => {
+  const calls: Array<{ url: string; body: Record<string, unknown> }> = []
+  globalThis.fetch = async (input, init) => {
+    const url = String(input)
+    calls.push({ url, body: JSON.parse(String(init?.body)) as Record<string, unknown> })
+    if (calls.length === 1) {
+      return new Response('{"msg":"internal/message: valid channel membership required","status":400}', { status: 400 })
+    }
+    return new Response(url.endsWith('/channel/messagesync') ? '{"messages":[]}' : '{}', { status: 200 })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  const profile = { channelId: 'study', channelType: 2 as const, title: 'Study Room', members: ['student', 'nova'] }
+
+  assert.deepEqual(await client.syncMessages('study', 2, 80, 'student', 0, profile), [])
+  assert.deepEqual(calls.map(({ url }) => url), [
+    'http://wk/channel/messagesync',
+    'http://wk/channel',
+    'http://wk/channel/messagesync',
+  ])
+  assert.deepEqual(calls[1]?.body, {
+    channel_id: 'study', channel_type: 2, large: 0, reset: 1, subscribers: ['student', 'nova'],
+  })
+})
+
 test('WuKong history rejects invalid pagination before making a provider request', async () => {
   let called = false
   globalThis.fetch = async () => { called = true; return new Response('{}') }

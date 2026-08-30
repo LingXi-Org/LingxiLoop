@@ -8,9 +8,11 @@ import { useAuth } from '@/stores/auth'
 import { useMessages } from '@/features/chat/state/messages'
 import { useParticipants } from '@/features/agents/state'
 import { lingxiIm } from '@/lib/im/wukong'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
 
 interface ConversationsState {
   list: Conversation[]
+  projectId: string | null
   loaded: boolean
   loading: boolean
   error: string | null
@@ -19,6 +21,15 @@ interface ConversationsState {
   setLeader: (id: string, leaderId: string) => Promise<void>
   setTitle: (id: string, title: string) => Promise<void>
   setTopic: (id: string, topic: string | null) => Promise<void>
+}
+
+let requestEpoch = 0
+
+function reconcileConversationSelection(conversations: Conversation[]): void {
+  const active = useApp.getState().selectedConversationId
+  if (active && conversations.some((conversation) => conversation.id === active)) return
+  const fallback = conversations[0]
+  useApp.setState({ selectedConversationId: fallback?.id ?? null })
 }
 
 function timeFromIso(iso?: string): string {
@@ -185,33 +196,44 @@ export function isMuted(c: Pick<Conversation, 'muted' | 'mutedUntil'>): boolean 
 
 export const useConversations = create<ConversationsState>((set) => ({
   list: [],
+  projectId: null,
   loaded: false,
   loading: false,
   error: null,
   async load() {
+    const projectId = getWorkspaceSession()?.projectId ?? null
+    const epoch = ++requestEpoch
     // Clear stale data immediately so a workspace switch never shows the
     // previous tenant's conversations during the loading window.
-    set({ list: [], loaded: false, loading: true, error: null })
+    set({ list: [], projectId, loaded: false, loading: true, error: null })
     lingxiIm.setWorkspaceChannels([])
     try {
       const list = await conversationsApi.getConversations()
+      if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
       const conversations = list.map(fromApi)
       lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations, loaded: true, loading: false, error: null })
+      reconcileConversationSelection(conversations)
       refreshActiveMessagesIfSidebarMoved(conversations)
     } catch (error) {
+      if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
       set({ loading: false, error: error instanceof Error ? error.message : String(error) })
     }
   },
   async reload() {
+    const projectId = getWorkspaceSession()?.projectId ?? null
+    const epoch = ++requestEpoch
     set({ loading: true, error: null })
     try {
       const list = await conversationsApi.getConversations()
+      if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
       const conversations = list.map(fromApi)
       lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
-      set({ list: conversations, loaded: true, loading: false, error: null })
+      set({ list: conversations, projectId, loaded: true, loading: false, error: null })
+      reconcileConversationSelection(conversations)
       refreshActiveMessagesIfSidebarMoved(conversations)
     } catch (error) {
+      if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
       // A refresh failure keeps the last safe projection visible, but is
       // explicit so the shell can render a retry affordance.
       set({ loading: false, error: error instanceof Error ? error.message : String(error) })

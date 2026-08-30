@@ -70,13 +70,12 @@ export const useAuth = create<AuthState>((set) => ({
     // — and this is the natural place to handle it.
     void import('@/api/core/realtime').then(({ ws }) => ws.reconnect())
     // Wipe library stores so the Library tab doesn't briefly render the
-    // previous workspace's documents / boards / calendar before the
+    // previous workspace's documents or calendar before the
     // next listXXX() lands. These stores are global singletons that
     // outlive the AuthedApp remount, so a key-change alone doesn't
     // clear them.
     void Promise.all([
       import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
       import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
@@ -94,7 +93,6 @@ export const useAuth = create<AuthState>((set) => ({
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([
       import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('../features/boards/state').then(({ useBoards }) => useBoards.getState().reset()),
       import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },

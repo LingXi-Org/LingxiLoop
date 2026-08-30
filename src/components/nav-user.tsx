@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 "use client"
 
-import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
+import { ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
 import { authApi } from '@/auth/api'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -14,28 +14,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/stores/auth"
-import { useApp } from "@/stores/app"
-import { useUiCommands } from "@/stores/uiCommands"
+import { resolveUserAvatarUrl } from '@/lib/userAvatar'
 
 export function NavUser({ user }: {
   user: { name: string; email: string; avatar?: string | null }
 }) {
   const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || "我"
+  const avatarUrl = resolveUserAvatarUrl(user.avatar)
   const signOut = () => {
     useAuth.getState().clear()
     void authApi.logout().catch(() => undefined)
   }
-  const openSettings = (tab: 'Profile' | 'Preferences') => {
-    useApp.getState().setView('me')
-    useUiCommands.getState().dispatch(
-      tab === 'Preferences' ? 'open-settings-preferences'
-          : 'open-settings-profile',
-    )
-  }
 
   const identity = <>
     <Avatar className="rounded-lg">
-      {user.avatar ? <AvatarImage className="rounded-lg" src={user.avatar} alt={user.name} /> : null}
+      <AvatarImage className="rounded-lg" src={avatarUrl} alt={user.name} />
       <AvatarFallback className="rounded-lg">{fallback}</AvatarFallback>
     </Avatar>
     <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
@@ -56,11 +49,6 @@ export function NavUser({ user }: {
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">{identity}</div>
         </DropdownMenuLabel>
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
-        <DropdownMenuItem onClick={() => openSettings('Profile')}><BadgeCheckIcon />Account</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => openSettings('Preferences')}><BellIcon />Notifications</DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <DropdownMenuItem onClick={signOut}><LogOutIcon />Log out</DropdownMenuItem>

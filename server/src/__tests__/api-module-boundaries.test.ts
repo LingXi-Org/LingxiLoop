@@ -16,7 +16,6 @@ const domains = [
   'polls',
   'email',
   'observability',
-  'boards',
   'calendar',
   'documents',
 ] as const
@@ -51,7 +50,7 @@ test('domain modules expose one native router implementation without forwarding 
 })
 
 test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
-  for (const domain of ['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'notifications', 'observability', 'platform', 'polls']) {
+  for (const domain of ['agents', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'notifications', 'observability', 'platform', 'polls']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const applicationFiles = (await readdir(new URL('.', base)))
@@ -266,6 +265,16 @@ test('retired observability HTTP views cannot return', async () => {
   assert.doesNotMatch(application, /\bruns\(|\brunEvents\(/)
   assert.doesNotMatch(repository, /\blistRuns\b|\blistRunEvents\b|\brunExists\b/)
   assert.doesNotMatch(contracts, /runQuerySchema/)
+})
+
+test('retired boards capability has no HTTP module or canonical schema relations', async () => {
+  const router = await readFile(new URL('../api/router.ts', import.meta.url), 'utf8')
+  const schema = await readFile(new URL('../db/schema.sql', import.meta.url), 'utf8')
+  const cli = await readFile(new URL('../agents/cli.ts', import.meta.url), 'utf8')
+  await assert.rejects(readFile(new URL('../modules/boards/router.ts', import.meta.url), 'utf8'))
+  assert.doesNotMatch(router, /boardsRouter|modules\/boards/)
+  assert.doesNotMatch(schema, /public\.(?:boards|board_cards|board_columns|board_card_comments|board_mention_reads)\b/)
+  assert.doesNotMatch(cli, /createBoardCommands|cmdBoard|cmdCard|case 'kanban'/)
 })
 
 test('authentication, request context, authorization, and errors have one shared boundary', async () => {

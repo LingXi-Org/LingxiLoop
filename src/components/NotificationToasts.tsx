@@ -328,7 +328,7 @@ export function NotificationToasts() {
     // is already visible-but-unfocused this brings it forward.
     try { window.focus() } catch { /* ignore */ }
     if (t.kind === 'doc.mention' && t.documentId) {
-      setView('documents')
+      setView('library')
       // Lazy-import to avoid pulling the documents store into every
       // boot path even when the user never visits the docs view.
       void import('@/features/documents/state').then(({ useDocuments }) => {

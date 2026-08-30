@@ -1,7 +1,9 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { LearningCourse, LearningRole } from '../contracts'
+import { CourseAvatar } from './CourseAvatar'
 import type { LearningSection } from './learningDisplay'
 
 interface LearningCenterHeaderProps {
@@ -30,36 +32,37 @@ export function LearningCenterHeader({
       ]
 
   return (
-    <header className="shrink-0 border-b border-border bg-card px-4 py-3 md:px-6">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
-        <div className="min-w-0 basis-full md:basis-auto md:flex-1">
-          <p className="text-xs font-medium text-primary">学习</p>
-          <h1 className="truncate font-heading text-lg font-medium">{course.title}</h1>
+    <header className="shrink-0 bg-card">
+      <div className="flex h-12 items-center gap-3 border-b border-[var(--im-divider-weak)] px-4 md:px-6">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <CourseAvatar courseId={course.courseId ?? course.projectId} title={course.title} />
+          <h1 className="truncate font-heading text-sm font-medium">{course.title}</h1>
         </div>
+        <Badge variant="secondary">{perspective === 'teacher' ? '教师' : '学习者'}</Badge>
+        {perspective === 'teacher' && <Button type="button" size="sm" variant="secondary" onClick={onOpenTrust}>Trust Board</Button>}
+      </div>
+      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--im-divider-weak)] px-4 py-2 md:px-6">
         <Select value={projectId} onValueChange={onProjectChange}>
-          <SelectTrigger aria-label="选择课程" className="min-w-0 flex-1 md:max-w-52 md:flex-none">
+          <SelectTrigger aria-label="选择课程" className="min-w-44 flex-1 md:max-w-52 md:flex-none">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {courses.map((item) => <SelectItem key={item.projectId} value={item.projectId}>{item.title}</SelectItem>)}
+            {courses.map((item) => (
+              <SelectItem key={item.projectId} value={item.projectId}>
+                <span className="flex items-center gap-2">
+                  <CourseAvatar courseId={item.courseId ?? item.projectId} title={item.title} size="sm" />
+                  <span>{item.title}</span>
+                </span>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        <Badge variant="secondary">{perspective === 'teacher' ? '教师' : '学习者'}</Badge>
-        {perspective === 'teacher' && <Button type="button" variant="secondary" onClick={onOpenTrust}>Trust Board</Button>}
+        <Tabs value={section} onValueChange={(value) => onSectionChange(value as LearningSection)} className="min-w-0 flex-1">
+          <TabsList variant="line" aria-label="学习中心分区" className="max-w-full justify-start overflow-x-auto">
+            {sections.map(([key, label]) => <TabsTrigger key={key} value={key}>{label}</TabsTrigger>)}
+          </TabsList>
+        </Tabs>
       </div>
-      <nav aria-label="学习中心分区" className="mx-auto mt-3 flex max-w-6xl gap-1 overflow-x-auto">
-        {sections.map(([key, label]) => (
-          <Button
-            key={key}
-            size="sm"
-            variant={section === key ? 'default' : 'ghost'}
-            aria-current={section === key ? 'page' : undefined}
-            onClick={() => onSectionChange(key)}
-          >
-            {label}
-          </Button>
-        ))}
-      </nav>
     </header>
   )
 }

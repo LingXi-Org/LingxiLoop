@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { MessageList } from '@/im/MessageList'
+import { LingxiAssistantRuntimeProvider } from '@/im/assistantRuntime'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { applyFindHighlights, clearFindHighlights } from '@/lib/findHighlights'
 import { cn } from '@/lib/utils'
@@ -243,6 +244,7 @@ export function ChatPane({
   onOpenGroupContext?: () => void
 } = {}) {
   const convoId = useApp((s) => s.selectedConversationId)
+  const replyingToId = useConversationUi((s) => convoId ? s.replyingTo[convoId] ?? null : null)
   const uiCommand = useUiCommand()
   // Atomic selectors — primitive / stable refs
   const byConvo = useMessages((s) => (convoId ? s.byConvo[convoId] : undefined))
@@ -488,6 +490,7 @@ export function ChatPane({
   }
 
   return (
+    <LingxiAssistantRuntimeProvider key={convoId} messages={list} conversationId={convoId} replyingToId={replyingToId}>
     <main
       className="chat-surface grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)_auto_auto] overflow-hidden bg-background"
     >
@@ -650,5 +653,6 @@ export function ChatPane({
       <AgentTypingIndicator agents={typingAgents} className="mx-auto max-w-[900px]" />
       <Composer convoId={convoId} />
     </main>
+    </LingxiAssistantRuntimeProvider>
   )
 }

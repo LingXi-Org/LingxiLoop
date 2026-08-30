@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Avatar } from '@/components/Avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,7 +13,7 @@ import type {
   LearningProgress, LearningReview, TeacherAgentSummary,
 } from '../contracts'
 import { TeacherComposer } from './LearningSetup'
-import { MasteryBadge, MISSION_KIND_LABELS, STEP_TYPE_LABELS, WEEKDAY_LABELS, statusLabel } from './learningDisplay'
+import { MasteryBadge, MISSION_KIND_LABELS, STEP_TYPE_LABELS, statusLabel, WEEKDAY_LABELS } from './learningDisplay'
 
 interface LearningTodaySectionProps {
   course: LearningCourse
@@ -112,7 +112,12 @@ function TeacherToday({
       {teacherAgent && (
         <Card>
           <CardContent className="flex flex-wrap items-center gap-4">
-            {teacherParticipant && <Avatar p={teacherParticipant} size={48} animated={false} />}
+            {teacherParticipant && (
+              <Avatar className="size-12">
+                <AvatarImage src={teacherParticipant.avatarUrl ?? undefined} alt="" />
+                <AvatarFallback>{teacherParticipant.name.slice(0, 1).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            )}
             <div className="min-w-0 flex-1 basis-56 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-heading text-base font-medium">{teacherAgent.displayName}</h3>
@@ -130,7 +135,7 @@ function TeacherToday({
                 selectConversation(teacherAgent.roomId)
               }).catch(onError)}
             >
-              打开共享教师室
+              打开课题组
             </Button>
           </CardContent>
         </Card>

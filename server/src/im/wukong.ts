@@ -29,6 +29,12 @@ function isEmptyChannelDetail(detail: string): boolean {
   return /not[\s_-]*found|no[\s_-]*messages?|channel[^\r\n]{0,40}(?:missing|does not exist)|不存在|未找到|没有消息|无消息/i.test(detail)
 }
 
+function isMissingChannelMembership(error: unknown): boolean {
+  return error instanceof Error
+    && /WuKongIM \/channel\/messagesync returned 400:/i.test(error.message)
+    && /valid channel membership required/i.test(error.message)
+}
+
 export class WukongClient {
   constructor(readonly config: WukongConfig) {}
 
@@ -178,28 +184,35 @@ export class WukongClient {
     limit = 80,
     loginUid = '',
     beforeMessageSeq = 0,
+    repairProfile?: ImChannelProfile,
   ): Promise<ImMessage[]> {
     if (!Number.isSafeInteger(limit) || limit <= 0) throw new Error('message sync limit must be a positive safe integer')
     if (!Number.isSafeInteger(beforeMessageSeq) || beforeMessageSeq < 0) {
       throw new Error('message sync cursor must be a non-negative safe integer')
     }
+    const requestMessages = () => this.request<unknown>('/channel/messagesync', {
+      method: 'POST', body: JSON.stringify({
+        login_uid: loginUid,
+        channel_id: channelId,
+        channel_type: channelType,
+        start_message_seq: 0,
+        end_message_seq: beforeMessageSeq,
+        limit,
+        pull_mode: 1,
+      }),
+    })
     let value: unknown
     try {
-      value = await this.request<unknown>('/channel/messagesync', {
-        method: 'POST', body: JSON.stringify({
-          login_uid: loginUid,
-          channel_id: channelId,
-          channel_type: channelType,
-          start_message_seq: 0,
-          end_message_seq: beforeMessageSeq,
-          limit,
-          pull_mode: 1,
-        }),
-      })
+      value = await requestMessages()
     } catch (error) {
-      // An empty channel has no sync state yet; expose it as an empty history.
-      if (isEmptyChannelResult(error)) return []
-      throw error
+      if (repairProfile && isMissingChannelMembership(error)) {
+        await this.upsertChannel(repairProfile)
+        value = await requestMessages()
+      } else {
+        // An empty channel has no sync state yet; expose it as an empty history.
+        if (isEmptyChannelResult(error)) return []
+        throw error
+      }
     }
     const root = jsonRecord(value)
     const list = Array.isArray(value) ? value : Array.isArray(root.messages) ? root.messages : []

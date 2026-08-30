@@ -1,44 +1,97 @@
-import { uploadsApi } from '@/features/platform/api'
-import type { ApiAttachment } from '@/api/contracts'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { IClip, ISend, ISmile } from '@/components/icons'
-import { IconMicrophone } from '@tabler/icons-react'
-import { PollComposer } from '@/components/PollComposer'
+import {
+  AttachmentPrimitive,
+  ComposerPrimitive,
+  useAuiState,
+} from '@assistant-ui/react'
+import { useEffect, useRef } from 'react'
+import { ArrowUp02Icon, Attachment01Icon, Cancel01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { PreviewText } from '@/components/PreviewText'
-import type { RichInputHandle } from '@/components/RichInput'
-import { ComposerSurface } from '@/im/Composer'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
-import { isImeComposing } from '@/lib/keyboard'
-import { findSkypeByShortcode } from '@/lib/skypeEmojis'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { ComposerSurface } from '@/im/Composer'
 import { cn } from '@/lib/utils'
-import { getActiveCompanyId, useMe } from '@/stores/auth'
-import { useConversations } from '@/features/conversations/store'
 import { useConversationUi } from '@/stores/conversationUi'
+import { useUiCommand } from '@/stores/uiCommands'
 import { useMessages } from '../state/messages'
 import { useParticipants } from '@/features/agents/state'
-import { useSurface } from '@/stores/surface'
-import { useUiCommand } from '@/stores/uiCommands'
-import type { Participant } from '@/types'
-import { readComposerDraftTexts, saveComposerDraftText } from '../drafts'
-import { ComposerAttachment } from './ComposerAttachment'
-import { ComposerEditor } from './ComposerEditor'
-import { ComposerEmojiPopover } from './ComposerEmojiPopover'
-import type { ComposerCommand, MentionEntry } from './ComposerMenus'
-import { sendComposerMessage } from '../sendComposerMessage'
 import { useTypingEmitter } from '../useTypingEmitter'
 
-type ComposerDraftState = {
-  text: string
-  attachment: ApiAttachment | null
-}
+function NativeComposer({
+  convoId,
+  isThread,
+  placeholder,
+}: {
+  convoId: string
+  isThread: boolean
+  placeholder?: string
+}) {
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const text = useAuiState((state) => state.composer.text)
+  const attachmentCount = useAuiState((state) => state.composer.attachments.length)
+  const uiCommand = useUiCommand()
+  const finalizeTyping = useTypingEmitter(convoId, isThread ? '' : text)
 
-const EMPTY_COMPOSER_DRAFT: ComposerDraftState = { text: '', attachment: null }
+  useEffect(() => {
+    if (uiCommand?.type !== 'focus-composer') return
+    inputRef.current?.focus()
+  }, [uiCommand])
 
-function resolveDraftText(next: string | ((prev: string) => string), prev: string) {
-  return typeof next === 'function' ? next(prev) : next
+  return (
+    <ComposerPrimitive.Root
+      className="chat-composer flex min-h-12 w-full flex-col rounded-2xl border border-border bg-input/50"
+      onSubmit={finalizeTyping}
+    >
+      <div className="flex flex-wrap gap-2 px-3 pt-3 empty:hidden">
+        <ComposerPrimitive.Attachments>
+          {() => (
+          <AttachmentPrimitive.Root className="flex max-w-full items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs">
+            <AttachmentPrimitive.unstable_Thumb className="size-8 shrink-0 rounded-lg bg-muted" />
+            <span className="min-w-0 flex-1 truncate"><AttachmentPrimitive.Name /></span>
+            <AttachmentPrimitive.Remove asChild>
+              <Button type="button" variant="ghost" size="icon-xs" aria-label="移除附件">
+                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+              </Button>
+            </AttachmentPrimitive.Remove>
+          </AttachmentPrimitive.Root>
+          )}
+        </ComposerPrimitive.Attachments>
+      </div>
+      <div className="flex items-end gap-1 p-1.5">
+        {attachmentCount === 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ComposerPrimitive.AddAttachment asChild>
+                <Button type="button" variant="ghost" size="icon-sm" aria-label="添加附件">
+                  <HugeiconsIcon icon={Attachment01Icon} strokeWidth={2} />
+                </Button>
+              </ComposerPrimitive.AddAttachment>
+            </TooltipTrigger>
+            <TooltipContent side="top">添加附件</TooltipContent>
+          </Tooltip>
+        )}
+        <ComposerPrimitive.Input
+          ref={inputRef}
+          autoFocus
+          rows={1}
+          submitMode="enter"
+          unstable_insertNewlineOnTouchEnter
+          placeholder={placeholder ?? 'Message LingXi…'}
+          className="max-h-40 min-h-9 min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+        />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <ComposerPrimitive.Send asChild>
+              <Button type="submit" size="icon-sm" aria-label="发送">
+                <HugeiconsIcon icon={ArrowUp02Icon} strokeWidth={2} />
+              </Button>
+            </ComposerPrimitive.Send>
+          </TooltipTrigger>
+          <TooltipContent side="top">发送</TooltipContent>
+        </Tooltip>
+      </div>
+    </ComposerPrimitive.Root>
+  )
 }
 
 export function Composer({
@@ -47,602 +100,35 @@ export function Composer({
   placeholder,
 }: {
   convoId: string
-  // When set, this composer sends thread replies rooted at `threadRootId`
-  // instead of top-level messages. Drafts are scoped under a separate key so
-  // the main chat composer keeps its own in-flight text, the global "replyingTo"
-  // pill is suppressed (the thread drawer shows its own header), and the typing
-  // indicator is not broadcast (Slack-parity: thread typing stays in the thread).
   threadRootId?: string | null
   placeholder?: string
 }) {
   const isThread = threadRootId !== null
-  // Draft scope key — distinct namespace for thread mode so swapping between
-  // the main composer and a thread drawer doesn't share text.
-  const scopeKey = isThread ? `${convoId}::thread::${threadRootId}` : convoId
-  const meId = useMe()
-  const companyId = getActiveCompanyId()
-  const [draftsByScope, setDraftsByScope] = useState<Record<string, ComposerDraftState>>(() =>
-    Object.fromEntries(Object.entries(readComposerDraftTexts(companyId, meId)).map(([scope, text]) => [
-      scope,
-      { text, attachment: null },
-    ])),
+  const replyingToId = useConversationUi((state) => state.replyingTo[convoId])
+  const setReplyingTo = useConversationUi((state) => state.setReplyingTo)
+  const replyingToMessage = useMessages((state) =>
+    replyingToId ? (state.byConvo[convoId] ?? []).find((message) => message.id === replyingToId) : undefined,
   )
-  const [uploadingByScope, setUploadingByScope] = useState<Record<string, boolean>>({})
-  const [uploadErrorsByScope, setUploadErrorsByScope] = useState<Record<string, string>>({})
-  const editorRef = useRef<RichInputHandle>(null)
-  const uiCommand = useUiCommand()
-  const fileRef = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    if (uiCommand?.type === 'focus-composer') {
-      const surface = useSurface.getState().surface
-      const thread = surface?.kind === 'thread' ? surface : null
-      if ((isThread && thread?.rootId === threadRootId) || (!isThread && !thread)) editorRef.current?.focus()
-    }
-  }, [isThread, threadRootId, uiCommand])
-  // Per-scope "have we hydrated the editor DOM yet?" map. Switching scope
-  // pulls the saved draft text out of `draftsByScope` and pushes it into the
-  // contenteditable; without this guard the editor would re-sync on every
-  // keystroke (because draftsByScope changes) and stomp the user's caret.
-  const lastSyncedScopeRef = useRef<string>('')
-  const draftsRef = useRef(draftsByScope)
-  draftsRef.current = draftsByScope
-
-  const currentDraft = draftsByScope[scopeKey] ?? EMPTY_COMPOSER_DRAFT
-  const draft = currentDraft.text
-  const attachment = currentDraft.attachment
-  const uploading = Boolean(uploadingByScope[scopeKey])
-  const uploadError = uploadErrorsByScope[scopeKey] ?? null
-
-  useEffect(() => {
-    saveComposerDraftText(companyId, meId, scopeKey, draft)
-  }, [companyId, draft, meId, scopeKey])
-
-  const updateComposerDraft = useCallback((
-    targetScope: string,
-    updater: (current: ComposerDraftState) => ComposerDraftState,
-  ) => {
-    setDraftsByScope((prev) => {
-      const current = prev[targetScope] ?? EMPTY_COMPOSER_DRAFT
-      const next = updater(current)
-      if (next.text === current.text && next.attachment === current.attachment) return prev
-      if (next.text === '' && next.attachment === null) {
-        if (!prev[targetScope]) return prev
-        const copy = { ...prev }
-        delete copy[targetScope]
-        return copy
-      }
-      return { ...prev, [targetScope]: next }
-    })
-  }, [])
-
-  const setDraft = useCallback((nextText: string | ((prev: string) => string)) => {
-    updateComposerDraft(scopeKey, (current) => ({
-      ...current,
-      text: resolveDraftText(nextText, current.text),
-    }))
-  }, [scopeKey, updateComposerDraft])
-
-  const setAttachmentForScope = useCallback((targetScope: string, nextAttachment: ApiAttachment | null) => {
-    updateComposerDraft(targetScope, (current) => ({
-      ...current,
-      attachment: nextAttachment,
-    }))
-  }, [updateComposerDraft])
-
-  const setAttachment = useCallback((nextAttachment: ApiAttachment | null) => {
-    setAttachmentForScope(scopeKey, nextAttachment)
-  }, [scopeKey, setAttachmentForScope])
-
-  const clearComposerDraft = useCallback(() => {
-    updateComposerDraft(scopeKey, () => EMPTY_COMPOSER_DRAFT)
-  }, [scopeKey, updateComposerDraft])
-
-  const setUploadingForScope = useCallback((targetScope: string, nextUploading: boolean) => {
-    setUploadingByScope((prev) => {
-      if (Boolean(prev[targetScope]) === nextUploading) return prev
-      const copy = { ...prev }
-      if (nextUploading) copy[targetScope] = true
-      else delete copy[targetScope]
-      return copy
-    })
-  }, [])
-
-  const setUploadErrorForScope = useCallback((targetScope: string, nextError: string | null) => {
-    setUploadErrorsByScope((prev) => {
-      if ((prev[targetScope] ?? null) === nextError) return prev
-      const copy = { ...prev }
-      if (nextError) copy[targetScope] = nextError
-      else delete copy[targetScope]
-      return copy
-    })
-  }, [])
-
-  // Reply state — read the quoted message id for THIS convo. The store
-  // keeps a per-convo map so flipping rooms preserves each room's draft.
-  // In thread mode the quoted id is fixed to threadRootId (every reply in the
-  // drawer roots at the thread head); the global per-convo replyingTo is ignored.
-  const globalReplyingToId = useConversationUi((s) => s.replyingTo[convoId])
-  const setReplyingTo = useConversationUi((s) => s.setReplyingTo)
-  const replyingToId = isThread ? threadRootId : globalReplyingToId
-  // The "Replying to X" pill inside the composer is for the global compose path.
-  // In thread mode the parent drawer renders its own header, so we suppress it here.
-  const showReplyingPill = !isThread && Boolean(replyingToId)
-  const replyingToMsg = useMessages((s) =>
-    replyingToId ? (s.byConvo[convoId] ?? []).find((m) => m.id === replyingToId) : undefined,
+  const author = useParticipants((state) =>
+    replyingToMessage ? state.byId[replyingToMessage.authorId] : undefined,
   )
-
-  // @-mention state. When the user types `@<query>` immediately before the
-  // cursor, we open a picker showing matching members of the current convo.
-  const conversation = useConversations((s) => s.list.find((x) => x.id === convoId))
-  const byId = useParticipants((s) => s.byId)
-  const memberPool = useMemo<Participant[]>(() => {
-    if (!conversation) return []
-    return conversation.members
-      .map((id) => byId[id])
-      .filter((p): p is Participant => Boolean(p) && p.id !== meId)
-  }, [conversation, byId, meId])
-  const [mention, setMention] = useState<{ start: number; query: string } | null>(null)
-  const [mentionIndex, setMentionIndex] = useState(0)
-  // Picker shows the broadcast token `@all` alongside individual members.
-  // Tagged union so insert / keyboard nav can tell them apart without a
-  // sentinel id collision (a participant could theoretically be named "all").
-  const filteredMentions = useMemo<MentionEntry[]>(() => {
-    if (!mention) return []
-    const q = mention.query.toLowerCase()
-    const out: MentionEntry[] = []
-    // `@all` surfaces whenever there's at least one other addressee and the
-    // user's query is a prefix of "all" (so "@al" still surfaces it).
-    if (memberPool.length > 0 && (q === '' || 'all'.startsWith(q))) {
-      out.push({ kind: 'all' })
-    }
-    for (const p of memberPool) {
-      if (p.id.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)) {
-        out.push({ kind: 'participant', p })
-        if (out.length >= 7) break
-      }
-    }
-    return out
-  }, [mention, memberPool])
-
-  // Recompute mention state whenever the draft or selection changes.
-  const updateMention = (text: string, caret: number) => {
-    // Find the most recent unescaped `@` before the caret with no space after.
-    const slice = text.slice(0, caret)
-    const at = slice.lastIndexOf('@')
-    if (at < 0) { setMention(null); return }
-    const before = at === 0 ? '' : text[at - 1]
-    // Valid boundary before the new `@`:
-    //  - start of string, or
-    //  - whitespace, or
-    //  - immediately after another mention's `@<id>` token. The browser
-    //    inserts a typed `@` between a contenteditable=false chip and
-    //    its trailing space (Blink/WebKit quirk), so the new `@` ends
-    //    up with a letter to its left — but it's actually a brand-new
-    //    mention start. We detect that case by checking whether the
-    //    text up to the new `@` ends in `@<id>`.
-    const followsMentionChip = /@[A-Za-z][\w-]*$/.test(text.slice(0, at))
-    if (before && !/\s/.test(before) && !followsMentionChip) { setMention(null); return }
-    const after = slice.slice(at + 1)
-    if (/\s/.test(after)) { setMention(null); return }                  // already typed a space
-    if (after.length > 30) { setMention(null); return }                 // too long, probably not a mention
-    // Only reset the picker's highlighted index when the mention
-    // context actually changes (different anchor or different query
-    // text). RichInput emits change events on every keyup, including
-    // arrow keys used to navigate the picker — without this guard,
-    // pressing ArrowDown moves the index then immediately resets it
-    // back to 0 on the same key's emitChange, making it look like
-    // the picker "snaps back up" on every keystroke.
-    if (!mention || mention.start !== at || mention.query !== after) {
-      setMention({ start: at, query: after })
-      setMentionIndex(0)
-    }
-  }
-
-  const insertMention = (entry: MentionEntry) => {
-    if (!mention) return
-    const before = draft.slice(0, mention.start)
-    const after = draft.slice(mention.start + 1 + mention.query.length)
-    const token = entry.kind === 'all' ? 'all' : entry.p.id
-    // Smart separator: if `before` doesn't already end in whitespace,
-    // prepend one — happens when the new mention immediately follows
-    // a previous mention chip (the browser inserts the typed `@`
-    // between the chip and its trailing space, leaving `before` as
-    // "@previd"). Without this we'd serialize "@alice@bob  ", which
-    // inflates to two chips squashed against each other.
-    const sep = before && !/\s$/.test(before) ? ' ' : ''
-    const insert = `${sep}@${token} `
-    // Collapse any accidental double-trailing-space from sandwiching
-    // the new mention next to an existing one.
-    const next = `${before}${insert}${after}`.replace(/ {2,}$/, ' ')
-    const nextCaret = before.length + insert.length
-    setMention(null)
-    // setValue reflows the editor's DOM with the new text. Caret lands
-    // at the end of the field — accepting this trade-off for the mid-
-    // sentence insertion case keeps the composer rewrite small. Most
-    // mentions are at the tail of a message anyway.
-    editorRef.current?.setValue(next, nextCaret)
-    requestAnimationFrame(() => editorRef.current?.focus())
-  }
-
-  const upload = async (file: File, targetScope = scopeKey) => {
-    setUploadingForScope(targetScope, true)
-    setUploadErrorForScope(targetScope, null)
-    try {
-      const a = await uploadsApi.uploadFile(file)
-      setAttachmentForScope(targetScope, a)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.warn('[upload] failed', msg)
-      setUploadErrorForScope(targetScope, msg)
-      // Auto-clear after a few seconds so the composer doesn't carry
-      // stale error chrome into the next message.
-      window.setTimeout(() => setUploadErrorForScope(targetScope, null), 4500)
-    } finally {
-      setUploadingForScope(targetScope, false)
-    }
-  }
-
-  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]
-    e.target.value = ''
-    if (f) await upload(f)
-  }
-
-  const onPaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    const items = e.clipboardData?.items
-    if (!items) return
-    for (const it of items) {
-      if (it.kind === 'file') {
-        const f = it.getAsFile()
-        // Paste path: still images-only. Pasting an arbitrary file is
-        // unusual outside of clipboard hijack attacks; keep this narrow.
-        if (f && f.type.startsWith('image/')) {
-          e.preventDefault()
-          await upload(f)
-          return
-        }
-      }
-    }
-  }
-
-  const onDrop = async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const f = e.dataTransfer.files?.[0]
-    if (f) await upload(f)
-  }
-
-  // Drive the typing indicator off the current draft text. Returns a
-  // `finalize()` callback so we can flush a `done:true` the instant the
-  // user hits send rather than waiting for the 2 s idle timer.
-  // Thread typing stays inside the thread (Slack-parity) — pass empty text to
-  // keep the emitter inert when in thread mode.
-  const finalizeTyping = useTypingEmitter(convoId, isThread ? '' : draft)
-
-  // Slash command picker. Mirrors the @mention picker: opens when the
-  // draft is `/` (optionally followed by query chars) at the start of the
-  // line, navigated by arrow keys, accepted with Enter/Tab. Currently
-  // hosts a single command — `poll` — but the picker is shaped as a list
-  // so future commands (`/dm`, `/topic`, …) drop in without restructuring.
-  const [slashOpen, setSlashOpen] = useState(false)
-  const [slashQuery, setSlashQuery] = useState('')
-  const [slashIndex, setSlashIndex] = useState(0)
-  const [pollComposerOpen, setPollComposerOpen] = useState(false)
-  const [emojiOpen, setEmojiOpen] = useState(false)
-  const openPollComposer = useCallback(() => {
-    setPollComposerOpen(true)
-    setSlashOpen(false)
-    clearComposerDraft()
-    editorRef.current?.setValue('')
-  }, [clearComposerDraft])
-  const closePollComposer = useCallback(() => {
-    setPollComposerOpen(false)
-    requestAnimationFrame(() => editorRef.current?.focus())
-  }, [])
-
-  const slashCommands = useMemo<ComposerCommand[]>(() => [
-    {
-      id: 'poll',
-      label: 'Poll',
-      hint: '发起一次投票，agents 和人都能参与',
-      keywords: ['poll', 'vote', '投票', 'p'],
-      run: () => openPollComposer(),
-    },
-  ], [openPollComposer])
-
-  const filteredSlashCommands = useMemo(() => {
-    if (!slashOpen) return [] as ComposerCommand[]
-    const q = slashQuery.toLowerCase()
-    if (!q) return slashCommands
-    return slashCommands.filter((c) =>
-      c.id.startsWith(q) || c.keywords.some((k) => k.toLowerCase().startsWith(q)),
-    )
-  }, [slashOpen, slashQuery, slashCommands])
-
-  /** Detect whether the current draft+caret state should open / refresh /
-   *  close the slash picker. Rule: `/` (then optional [a-zA-Z一-鿿])
-   *  must start at column 0 and continue uninterrupted up to the caret.
-   *  A space, newline, or any non-word char closes the picker — the user
-   *  has clearly moved past command mode. */
-  const updateSlash = useCallback((text: string, caret: number) => {
-    if (text === '') { setSlashOpen(false); return }
-    if (text[0] !== '/') { setSlashOpen(false); return }
-    const slice = text.slice(0, caret)
-    if (slice.indexOf('\n') !== -1) { setSlashOpen(false); return }
-    if (/\s/.test(slice)) { setSlashOpen(false); return }
-    const query = slice.slice(1)
-    if (!slashOpen || slashQuery !== query) {
-      setSlashOpen(true)
-      setSlashQuery(query)
-      setSlashIndex(0)
-    }
-  }, [slashOpen, slashQuery])
-
-  const runSlashCommand = useCallback((cmd: ComposerCommand) => {
-    cmd.run()
-    setSlashOpen(false)
-    setSlashQuery('')
-    setSlashIndex(0)
-  }, [])
-
-  const send = () => {
-    const v = draft.trim()
-    if (v === '/poll' && !isThread) {
-      openPollComposer()
-      return
-    }
-    if (!v && !attachment) return
-    finalizeTyping()
-    if (!meId) {
-      void sendComposerMessage({ conversationId: convoId, text: v, attachment, replyingToId: replyingToId ?? null })
-      return
-    }
-    void sendComposerMessage({ conversationId: convoId, text: v, attachment, replyingToId: replyingToId ?? null })
-    clearComposerDraft()
-    editorRef.current?.setValue('')
-    if (!isThread) setReplyingTo(convoId, null)
-    editorRef.current?.focus()
-  }
-
-  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (isImeComposing(e)) return
-
-    // Mention picker keyboard nav takes priority when open
-    if (mention && filteredMentions.length > 0) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionIndex((i) => (i + 1) % filteredMentions.length); return }
-      if (e.key === 'ArrowUp') { e.preventDefault(); setMentionIndex((i) => (i - 1 + filteredMentions.length) % filteredMentions.length); return }
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault()
-        insertMention(filteredMentions[mentionIndex])
-        return
-      }
-      if (e.key === 'Escape') { e.preventDefault(); setMention(null); return }
-    }
-    // Slash command picker — same nav contract as the mention picker.
-    if (slashOpen && filteredSlashCommands.length > 0) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); setSlashIndex((i) => (i + 1) % filteredSlashCommands.length); return }
-      if (e.key === 'ArrowUp') { e.preventDefault(); setSlashIndex((i) => (i - 1 + filteredSlashCommands.length) % filteredSlashCommands.length); return }
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault()
-        runSlashCommand(filteredSlashCommands[slashIndex])
-        return
-      }
-      if (e.key === 'Escape') { e.preventDefault(); setSlashOpen(false); return }
-    }
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      send()
-    }
-    // Escape with an empty draft clears the active reply. Non-empty drafts
-    // ignore Escape — losing both the reply target AND text on one keystroke
-    // would be the kind of footgun that punishes long messages.
-    // In thread mode the root is implicit and uncancellable, so skip this.
-    if (!isThread && e.key === 'Escape' && replyingToId && draft.trim() === '') {
-      e.preventDefault()
-      setReplyingTo(convoId, null)
-    }
-    // @ keystroke fallback. Typing `@` immediately after a mention chip
-    // (or any other contenteditable=false atom) can hit a browser
-    // timing quirk where `input` and `selectionchange` both fire with
-    // the caret state from BEFORE the `@` was inserted — so
-    // updateMention sees the old text and the picker never opens.
-    // After the keystroke is committed, force-read the editor and
-    // run the detector again. requestAnimationFrame is enough to land
-    // after the browser's text insertion has settled.
-    if (e.key === '@' && !e.defaultPrevented) {
-      requestAnimationFrame(() => {
-        const editor = editorRef.current
-        if (!editor) return
-        updateMention(editor.getValue(), editor.getCaretOffset())
-      })
-    }
-    // Same fallback for `/` — the contenteditable race that bit @-mention
-    // detection bites slash detection too. Re-read after the keystroke
-    // settles so a `/` typed at position 0 reliably opens the picker.
-    if (e.key === '/' && !e.defaultPrevented) {
-      requestAnimationFrame(() => {
-        const editor = editorRef.current
-        if (!editor) return
-        updateSlash(editor.getValue(), editor.getCaretOffset())
-      })
-    }
-  }
-
-  // Hitting the reply icon on a bubble should drop the cursor straight into
-  // the composer — otherwise the user has to click into the editor before
-  // typing, which defeats the point of the affordance.
-  useEffect(() => {
-    if (!replyingToId) return
-    requestAnimationFrame(() => editorRef.current?.focus())
-  }, [replyingToId])
-
-  useEffect(() => {
-    if (lastSyncedScopeRef.current === scopeKey) return
-    lastSyncedScopeRef.current = scopeKey
-    setMention(null)
-    setEmojiOpen(false)
-    // Pull the just-loaded draft text for this scope (read via ref so
-    // the effect doesn't re-fire on every keystroke) and hydrate the
-    // contenteditable DOM.
-    const latest = draftsRef.current[scopeKey]?.text ?? ''
-    editorRef.current?.setValue(latest)
-    requestAnimationFrame(() => editorRef.current?.focus())
-  }, [scopeKey])
-
-  const canSend = (draft.trim().length > 0 || attachment !== null) && !uploading
 
   return (
-    <ComposerSurface className={isThread ? 'border-0 bg-transparent !p-0' : undefined}
-      // Composer wrapper is FULLY transparent — the parent <main>'s radial
-      // washes (sky from top-left, coral from bottom-right) bleed through
-      // uninterrupted, so there's no longer a hard boundary where the
-      // thread's background ends and a different composer-bg begins.
-      onDragOver={(e) => { e.preventDefault() }}
-      onDrop={onDrop}>
-      {!isThread && (
-        <div className="mx-auto max-w-[900px] px-1 pb-1">
-        </div>
-      )}
-      {pollComposerOpen && !isThread && (
-        <PollComposer
-          conversationId={convoId}
-          onSubmitted={closePollComposer}
-          onCancel={closePollComposer}
-        />
-      )}
-      <div className={cn(
-        'chat-composer mx-auto w-full max-w-[900px] px-1 pb-1 pt-2 transition',
-        isThread ? 'px-0' : '',
-      )}
-      >
-        <ComposerAttachment
-          attachment={attachment}
-          uploading={uploading}
-          error={uploadError}
-          onRemove={() => setAttachment(null)}
-        />
-        {showReplyingPill && (
-          <div className="openmaus-reply-preview mb-2 flex min-w-0 items-center gap-2 rounded-3xl bg-muted py-1.5 ps-2.5 pe-1.5">
-            <div className="h-4 w-0.5 shrink-0 rounded bg-primary" />
-            <div className="min-w-0 flex flex-1 items-center gap-2">
-              <div className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-primary">
-                回复 {byId[replyingToMsg?.authorId ?? '']?.name ?? replyingToMsg?.authorId ?? '…'}
-              </div>
-              <span className="shrink-0 text-[10px] text-muted-foreground" aria-hidden>·</span>
-              <div
-                className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground"
-              >
-                {replyingToMsg
-                  ? <PreviewText body={replyingToMsg.body.slice(0, 140).replace(/\n/g, ' ')} />
-                  : '（正在加载…）'}
-              </div>
+    <ComposerSurface className={isThread ? 'border-0 bg-transparent !p-0' : undefined}>
+      <div className={cn('mx-auto w-full max-w-[900px] px-1 pb-1 pt-2', isThread && 'px-0')}>
+        {!isThread && replyingToId && (
+          <div className="mb-2 flex min-w-0 items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs">
+            <div className="h-4 w-0.5 shrink-0 rounded-full bg-primary" />
+            <div className="min-w-0 flex-1 truncate text-muted-foreground">
+              <span className="me-2 font-medium text-foreground">回复 {author?.name ?? replyingToMessage?.authorId ?? '…'}</span>
+              {replyingToMessage ? <PreviewText body={replyingToMessage.body.slice(0, 140).replace(/\n/g, ' ')} /> : '正在加载…'}
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              onClick={() => setReplyingTo(convoId, null)}
-              className="shrink-0 self-center text-muted-foreground"
-              aria-label="取消回复"
-              title="取消回复（Esc）"
-            >×</Button>
+            <Button type="button" variant="ghost" size="icon-xs" onClick={() => setReplyingTo(convoId, null)} aria-label="取消回复">
+              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+            </Button>
           </div>
         )}
-        <div className="flex w-full items-end gap-1.5 rounded-full border border-border/45 !bg-transparent p-1.5 text-muted-foreground shadow-sm focus-within:border-ring/70 focus-within:ring-2 focus-within:ring-ring/15">
-          <Input
-            ref={fileRef}
-            type="file"
-            // No `accept` — let the user pick anything; the server enforces
-            // the mime whitelist. Browser-side accept is only a hint anyway
-            // (you can still pick any file via drag-drop), so we lean on
-            // the server for the actual policy and surface its error.
-            className="hidden"
-            onChange={onPickFile}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-lg"
-            onClick={() => fileRef.current?.click()}
-            className="size-[38px] shrink-0 rounded-full hover:bg-muted hover:text-foreground"
-            title="添加附件"
-          ><IClip className="size-4" /></Button>
-          <div className="min-w-0 flex-1 self-center px-1 py-2">
-            <ComposerEditor
-              editorRef={editorRef}
-              draft={draft}
-              placeholder={placeholder ?? 'Message LingXi…'}
-              onChange={(value, caret) => {
-                setDraft(value)
-                updateMention(value, caret)
-                updateSlash(value, caret)
-              }}
-              onKeyDown={onKeyDown}
-              onPaste={onPaste}
-              onBlur={() => setTimeout(() => setMention(null), 120)}
-              resolveMention={(id) => {
-                const participant = byId[id]
-                if (!participant) return null
-                return {
-                  name: participant.id === meId ? 'you' : participant.name,
-                  initial: participant.initial || participant.name.charAt(0).toUpperCase(),
-                  avatarBg: typeof participant.avatarBg === 'string' ? participant.avatarBg : 'var(--muted-foreground)',
-                  kind: participant.kind,
-                  avatarUrl: participant.kind === 'agent'
-                    ? staticBloubAvatarUrl(participant)
-                    : typeof participant.avatarUrl === 'string' ? participant.avatarUrl : undefined,
-                }
-              }}
-              mention={mention}
-              mentionEntries={filteredMentions}
-              mentionIndex={mentionIndex}
-              onMentionHover={setMentionIndex}
-              onMentionPick={insertMention}
-              commandOpen={slashOpen}
-              commandQuery={slashQuery}
-              commands={filteredSlashCommands}
-              commandIndex={slashIndex}
-              onCommandHover={setSlashIndex}
-              onCommandPick={runSlashCommand}
-            />
-          </div>
-          <Button type="button" variant="ghost" size="icon-lg" disabled className="size-[38px] shrink-0 rounded-full disabled:opacity-50" aria-label="语音输入暂未开放" title="语音输入暂未开放">
-            <IconMicrophone className="size-[18px]" />
-          </Button>
-          <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-lg"
-                className={cn('size-[38px] shrink-0 rounded-full', emojiOpen && 'bg-muted text-foreground')}
-                aria-label="选择表情"
-                title="表情"
-              >
-                <ISmile className="size-[18px]" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="top" align="end" className="w-auto p-2">
-              <ComposerEmojiPopover onPick={(text) => {
-                const editor = editorRef.current
-                if (!editor) return
-                const skype = text.startsWith('(') ? findSkypeByShortcode(text) : undefined
-                if (skype) editor.insertSkype(skype.key)
-                else editor.insertText(text)
-                setEmojiOpen(false)
-              }} />
-            </PopoverContent>
-          </Popover>
-          <Button
-            type="button"
-            size="icon-lg"
-            onClick={send}
-            disabled={!canSend}
-            className="size-[38px] shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-none hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
-            aria-label="发送"
-          >
-            <ISend className="size-[18px]" strokeWidth={1.9} />
-          </Button>
-        </div>
+        <NativeComposer convoId={convoId} isThread={isThread} placeholder={placeholder} />
       </div>
     </ComposerSurface>
   )

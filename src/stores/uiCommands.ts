@@ -6,8 +6,6 @@ export type UiCommand =
   | 'find-chat'
   | 'focus-composer'
   | 'open-updater'
-  | 'open-settings-profile'
-  | 'open-settings-preferences'
 
 interface UiCommandState {
   command: { type: UiCommand; sequence: number } | null

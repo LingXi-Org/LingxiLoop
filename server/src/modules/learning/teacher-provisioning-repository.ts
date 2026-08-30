@@ -112,13 +112,16 @@ export async function persistTeacherProvisioning(
   )
   const teacherIds = await listCourseTeacherIds(db, input.companyId, input.courseId)
   const members = [...teacherIds, input.agentId]
-  const title = `教师室｜${input.courseTitle}`.slice(0, 80)
+  const title = `课题组｜${input.courseTitle}`.slice(0, 80)
   const { rowCount } = await db.query(
     `INSERT INTO conversations(
       id,preset_key,kind,title,subtitle,topic,members,leader_id,pinned,tag,company_id,project_id
     ) VALUES(
       $1,$2,'group',$3,$4,'课程管理、学情汇总与教师审批',$5::jsonb,$6,TRUE,'teacher',$7,$8
-    ) ON CONFLICT(id) DO NOTHING`,
+    ) ON CONFLICT(id) DO UPDATE SET
+      title=EXCLUDED.title,subtitle=EXCLUDED.subtitle,topic=EXCLUDED.topic,
+      members=EXCLUDED.members,leader_id=EXCLUDED.leader_id,pinned=TRUE,
+      tag='teacher',project_id=EXCLUDED.project_id,updated_at=NOW()`,
     [
       input.roomId,
       `teacher-room:${input.courseId}`,

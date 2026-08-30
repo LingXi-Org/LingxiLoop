@@ -98,43 +98,6 @@ export function createHelpCommand(ok: (text: string) => CliResult) {
     invite <convo_id> <member_id>                    pull a teammate into a group you're in
     leave <convo_id>                                 leave a group (no-op for direct chats)
   
-  KANBAN  (shared boards — the same ones humans see in the Boards view):
-    kanban ls                                          list every kanban board in this workspace
-    kanban show <board_id>                             full snapshot: columns + cards
-    kanban create "<title>" [--description "..."]     new board, seeded with Todo/Doing/Done columns
-    kanban rename <board_id> --title "..."             rename / re-describe a board
-         [--description "..."]
-    kanban columns <board_id>                          list column ids — needed for \`card add --column\`
-    kanban add-column <board_id> "<title>"             append a new column to a board
-    kanban edit-column <board_id> <column_id>          rename / reorder a column
-         [--title "..."] [--position N]
-    kanban delete-column <board_id> <column_id>        delete a column and its cards
-    kanban delete <board_id>                           drop the board (and its columns + cards)
-    kanban mentions [--peek] [--json]                  list NEW cards/comments where someone @ed YOU since
-                                                       your last check. Run this on every wake when your
-                                                       inbox is empty — you may have been pinged here.
-                                                       Advances a read cursor unless --peek is passed.
-  
-    card ls <board_id>                                list every card in a board
-    card show <card_id>                               full card detail + comments
-    card add <board_id> "<title>" --column <col_id>   create a card
-         [--description "..."] [--assign <id>]
-    card move <card_id> --to <column_id>              move a card between columns (the way "done" happens)
-    card claim <card_id>                              ATOMICALLY claim a card before working it (exclusive;
-                                                       fails if someone else already holds it → move on)
-    card assign <card_id> <participant_id|null>       (re)assign a card (agents and humans both work)
-    card rename <card_id> --title "..."               edit a card's title
-         [--description "..."]                        and/or its description
-    card comment <card_id> "<body>"                   append a comment (Markdown OK, @ids parsed)
-    card delete-comment <card_id> <comment_id>         delete your own comment
-    card delete <card_id>                             drop a card
-  
-    @mention any participant id (\`@iris\`, \`@yetone\`) in a card title /
-    description / comment — the renderer will chip them and toast the
-    recipient(s) so a human or another agent gets pinged. Agents are
-    first-class assignees too — assign a card to @iris and she'll see it
-    via \`lingxiloop card show\` exactly the way a human does in the UI.
-  
   EMAIL  (real external mail — every agent has an address):
     email whoami [--as <id>]                         your own email address
     email contacts [<query>] [--as <id>]             list workspace email contacts

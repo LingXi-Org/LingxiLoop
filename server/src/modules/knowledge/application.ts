@@ -108,7 +108,6 @@ export class KnowledgeApplication {
       sourceCount: 0,
       conversationCount: 0,
       documentCount: 0,
-      boardCount: 0,
       calendarEventCount: 0,
       canvasCount: 0,
       canManage: true,

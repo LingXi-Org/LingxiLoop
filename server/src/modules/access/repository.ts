@@ -340,21 +340,6 @@ function resourceQuery(resource: PermissionResource): {
         params: [resource.id],
         lockTarget: 'document',
       }
-    case 'board':
-      return {
-        sql: `SELECT company_id,project_id,created_by,NULL::jsonb AS conversation_members,
-                     NULL::text AS leader_id,NULL::text AS resource_status FROM boards WHERE id=$1`,
-        params: [resource.id],
-        lockTarget: 'boards',
-      }
-    case 'board_card':
-      return {
-        sql: `SELECT board.company_id,board.project_id,card.created_by,NULL::jsonb AS conversation_members,
-                     NULL::text AS leader_id,NULL::text AS resource_status
-                FROM board_cards card JOIN boards board ON board.id=card.board_id WHERE card.id=$1`,
-        params: [resource.id],
-        lockTarget: 'card',
-      }
     case 'calendar_event':
       return {
         sql: `SELECT company_id,project_id,created_by,NULL::jsonb AS conversation_members,

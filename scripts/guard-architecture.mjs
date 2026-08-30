@@ -317,13 +317,6 @@ const rootRouter = await read(resolve('server/src/api/router.ts'))
 if (/\b(?:pool|sql|query)\b|\b(?:SELECT|INSERT|UPDATE|DELETE)\b/i.test(rootRouter)) violations.push('server/src/api/router.ts: composition root contains persistence or business logic')
 if (/^export\s+\{.+\}\s+from/m.test(rootRouter)) violations.push('server/src/api/router.ts: composition root must not export domain capabilities')
 
-const boardCli = await read(resolve('server/src/agents/cli/board.ts'))
-if (/from ['"][^'"]*db\/|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is.test(boardCli)) {
-  violations.push('server/src/agents/cli/board.ts: Agent Board actions bypass modules/boards/public.ts')
-}
-if (/from ['"][^'"]*redis\.js['"]|enqueueAgentWork|modules\/boards\/(?:application|contracts|facade|repository)\.js/.test(boardCli)) {
-  violations.push('server/src/agents/cli/board.ts: Agent Board actions bypass the public domain facade')
-}
 const emailCli = await read(resolve('server/src/agents/cli/email.ts'))
 if (/from ['"][^'"]*db\/|\bpool\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is.test(emailCli)) {
   violations.push('server/src/agents/cli/email.ts: Agent Email actions bypass modules/email/index.ts')
@@ -610,7 +603,7 @@ if (/from ['"][^'"]*db\//.test(evalService) || /\b(?:pool|client|db)\.query\s*\(
 // Domains enter this set only after their router/application/repository split
 // is complete. Keeping the assertion here makes a later regression impossible
 // while the remaining domains are migrated deliberately.
-const strictServerDomains = new Set(['agents', 'boards', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls', 'projects'])
+const strictServerDomains = new Set(['agents', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'observability', 'platform', 'polls', 'projects'])
 
 for (const file of server) {
   const source = await read(file)

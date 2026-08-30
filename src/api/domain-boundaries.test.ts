@@ -31,7 +31,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   await assert.rejects(access(new URL('../features/eval/components/EvalPage.tsx', import.meta.url)))
 
   const consumers = await Promise.all([
-    '../features/chat/state/messages.ts', '../features/conversations/store.ts', '../features/boards/state.ts',
+    '../features/chat/state/messages.ts', '../features/conversations/store.ts',
     '../features/calendar/state.ts', '../features/canvas/state.ts', '../features/documents/state.ts',
     '../features/knowledge/state.ts', '../features/agents/state.ts',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
@@ -201,31 +201,6 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(companySources.join('\n'), /api\/companies|components\/InvitePeopleModal/)
 
-  for (const file of [
-    'api.ts', 'contracts.ts', 'state.ts',
-    'components/BoardsView.tsx', 'components/BoardCardDialog.tsx',
-    'components/BoardPeekPane.tsx', 'components/BoardPeekContent.tsx',
-  ]) {
-    await access(new URL(`../features/boards/${file}`, import.meta.url))
-  }
-  await assert.rejects(access(new URL('./boards.ts', import.meta.url)))
-  await assert.rejects(access(new URL('../stores/boards.ts', import.meta.url)))
-  await assert.rejects(access(new URL('../components/ArtifactPeekContent.tsx', import.meta.url)))
-  const boardState = await readFile(new URL('../features/boards/state.ts', import.meta.url), 'utf8')
-  assert.doesNotMatch(boardState, /api\/boards|stores\/boards/)
-  assert.match(boardState, /loadingCommentCardIds: Set<string>/)
-  assert.match(boardState, /commentErrors: Record<string, string>/)
-  assert.match(boardState, /kind\.startsWith\('comment\.'\)/)
-  const boardsView = await readFile(new URL('../features/boards/components/BoardsView.tsx', import.meta.url), 'utf8')
-  const boardCardDialog = await readFile(new URL('../features/boards/components/BoardCardDialog.tsx', import.meta.url), 'utf8')
-  assert.ok(boardsView.length < 24_000, 'BoardsView must remain a board orchestration shell')
-  assert.ok(boardCardDialog.length < 20_000, 'card editing must remain a bounded business composition')
-  assert.match(boardsView, /<BoardCardDialog/)
-  for (const primitive of ['Dialog', 'Popover', 'Command', 'Button', 'ScrollArea']) {
-    assert.match(boardCardDialog, new RegExp(`<${primitive}\\b`), `card editing must compose ${primitive}`)
-  }
-  assert.doesNotMatch(boardCardDialog, /fixed inset-0|role="listbox"|<button\b|\b(?:ink|cloud|skype|coral)-/)
-
   for (const file of ['api.ts', 'contracts.ts', 'courseContract.ts', 'components/LearningCenter.tsx']) {
     await access(new URL(`../features/learning/${file}`, import.meta.url))
   }
@@ -236,7 +211,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   await access(new URL('../features/knowledge/workspace.ts', import.meta.url))
   await assert.rejects(access(new URL('../stores/workspace.ts', import.meta.url)))
 
-  for (const file of ['api.ts', 'contracts.ts', 'state.ts', 'components/AgentEditor.tsx', 'components/AgentsView.tsx']) {
+  for (const file of ['api.ts', 'contracts.ts', 'state.ts', 'components/AgentEditor.tsx']) {
     await access(new URL(`../features/agents/${file}`, import.meta.url))
   }
   await assert.rejects(access(new URL('./agents.ts', import.meta.url)))
@@ -247,7 +222,6 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
     '../features/agents/api.ts',
     '../features/agents/state.ts',
     '../features/agents/components/AgentEditor.tsx',
-    '../features/agents/components/AgentsView.tsx',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(agentSources.join('\n'), /api\/agents|stores\/participants|components\/AgentEditor|desktop\/AgentsView/)
 })

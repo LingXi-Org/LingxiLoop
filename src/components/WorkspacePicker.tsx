@@ -91,7 +91,7 @@ export function WorkspacePicker() {
                     </div>
                     <ItemContent className="basis-full gap-1"><ItemTitle className="mt-5 block w-full truncate text-lg font-semibold text-ink group-hover:text-accent">{workspace.name}</ItemTitle>
                     <ItemDescription className="line-clamp-2 min-h-10 text-xs leading-5 text-ink-secondary">{workspace.description || '空白工作区，等待你的第一份资料或第一次对话。'}</ItemDescription></ItemContent>
-                    <div className="mt-5 flex items-center gap-3 border-t border-hairline pt-4 text-[11px] text-ink-secondary"><span>{workspace.sourceCount} 来源</span><span>{workspace.conversationCount} 对话</span><span>{workspace.documentCount + workspace.boardCount + workspace.calendarEventCount + workspace.canvasCount} 工件</span><span className="ml-auto">{relativeTime(workspace.lastVisitedAt ?? workspace.updatedAt)}</span></div>
+                    <div className="mt-5 flex items-center gap-3 border-t border-hairline pt-4 text-[11px] text-ink-secondary"><span>{workspace.sourceCount} 来源</span><span>{workspace.conversationCount} 对话</span><span>{workspace.documentCount + workspace.calendarEventCount + workspace.canvasCount} 工件</span><span className="ml-auto">{relativeTime(workspace.lastVisitedAt ?? workspace.updatedAt)}</span></div>
                   </Item>
                 ))}
               </ItemGroup>}

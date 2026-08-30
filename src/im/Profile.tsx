@@ -131,10 +131,8 @@ export function ParticipantProfile({
 
         <ProfileSection title="Actions">
           {isManaged ? (
-            <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">Pulse 仅在学习中心的共享教师室中使用，不支持私聊、召开群组或邮件。</div>
-          ) : isSelf ? (
-            <Button type="button" onClick={() => { setView('me'); onClose() }} className="w-full rounded-xl bg-raised px-4 py-3 text-[13px] font-semibold text-accent hover:bg-raised-hover">打开我的设置</Button>
-          ) : isAgent ? (
+            <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">Pulse 仅在学习中心的课题组中使用，不支持私聊、召开群组或邮件。</div>
+          ) : isSelf ? null : isAgent ? (
             <div className="grid gap-2">
               <Button type="button" onClick={() => void openLearningThread()} disabled={opening || !projectId} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-accent px-3 text-[12px] font-semibold text-white shadow-soft transition active:scale-[0.97] disabled:opacity-50">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>

@@ -35,7 +35,6 @@ export interface WorkspaceSummary {
   sourceCount: number
   conversationCount: number
   documentCount: number
-  boardCount: number
   calendarEventCount: number
   canvasCount: number
   canManage: boolean
@@ -367,6 +366,6 @@ export interface ImReadReceiptAdvance {
 }
 
 export interface ViewKey {
-  view: 'sources' | 'conversations' | 'mail' | 'agents' | 'canvas' | 'boards' | 'calendar' | 'documents' | 'observability' | 'me' | 'library' | 'learning' | 'management' | 'trust'
+  view: 'conversations' | 'mail' | 'calendar' | 'library' | 'learning' | 'courses' | 'trust'
 }
 

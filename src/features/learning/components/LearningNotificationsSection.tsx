@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { useApp } from '@/stores/app'
 import { learningApi } from '../api'
@@ -36,26 +37,26 @@ export function LearningNotificationsSection({
           {([
             ['in_app_enabled', '应用内'], ['email_enabled', '邮件'],
           ] as const).map(([key, label]) => (
-            <label key={key} className="flex items-center justify-between gap-3 rounded-3xl bg-muted px-3 py-3 text-sm font-medium">
+            <FieldLabel key={key} className="flex items-center justify-between gap-3 rounded-md bg-muted px-3 py-3 font-medium">
               <span>{label}</span>
               <Checkbox checked={preferences[key]} onCheckedChange={(checked) => update(key, checked === true)} />
-            </label>
+            </FieldLabel>
           ))}
-          <PreferenceField label="时区">
+          <Field><FieldLabel>时区</FieldLabel>
             <Input value={preferences.timezone} onChange={(event) => update('timezone', event.target.value)} />
-          </PreferenceField>
-          <PreferenceField label="每日 / 每周发送时间">
+          </Field>
+          <Field><FieldLabel>每日 / 每周发送时间</FieldLabel>
             <Input type="time" value={preferences.daily_time.slice(0, 5)} onChange={(event) => update('daily_time', event.target.value)} />
-          </PreferenceField>
-          <PreferenceField label="每周发送日（1=周一，7=周日）">
+          </Field>
+          <Field><FieldLabel>每周发送日（1=周一，7=周日）</FieldLabel>
             <Input type="number" min={1} max={7} value={preferences.weekly_day} onChange={(event) => update('weekly_day', Number(event.target.value))} />
-          </PreferenceField>
-          <PreferenceField label="安静时段开始">
+          </Field>
+          <Field><FieldLabel>安静时段开始</FieldLabel>
             <Input type="time" value={(preferences.quiet_start ?? '').slice(0, 5)} onChange={(event) => update('quiet_start', event.target.value || null)} />
-          </PreferenceField>
-          <PreferenceField label="安静时段结束">
+          </Field>
+          <Field><FieldLabel>安静时段结束</FieldLabel>
             <Input type="time" value={(preferences.quiet_end ?? '').slice(0, 5)} onChange={(event) => update('quiet_end', event.target.value || null)} />
-          </PreferenceField>
+          </Field>
         </div>
         <div className="rounded-3xl border bg-muted/40 px-4 py-3">
           <p className="text-sm font-medium">Push 通知</p>
@@ -102,8 +103,4 @@ export function LearningNotificationsSection({
       </CardContent>
     </Card>
   )
-}
-
-function PreferenceField({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="grid gap-2 text-sm font-medium">{label}{children}</label>
 }

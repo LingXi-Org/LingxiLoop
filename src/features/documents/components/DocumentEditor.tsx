@@ -1,4 +1,24 @@
-import { Button } from '@/components/ui/button'
+import {
+  ArrowUpRight01Icon,
+  Cancel01Icon,
+  CodeIcon,
+  Delete02Icon,
+  Heading01Icon,
+  Heading02Icon,
+  Heading03Icon,
+  Image01Icon,
+  LeftToRightListBulletIcon,
+  LeftToRightListNumberIcon,
+  Link01Icon,
+  QuoteDownIcon,
+  RedoIcon,
+  SourceCodeIcon,
+  StrikethroughIcon,
+  TextBoldIcon,
+  TextItalicIcon,
+  UndoIcon,
+} from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import Collaboration from '@tiptap/extension-collaboration'
 // TipTap v3 collaboration uses the Caret extension with @tiptap/y-tiptap.
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
@@ -11,16 +31,18 @@ import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
 import { ws } from '@/api/core/realtime'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { uploadsApi } from '@/features/platform/api'
-import {
-  IBold, ICode, ICodeBlock, IH1, IH2, IH3,IImage, IItalic, ILink,
-  IList, IListOrdered, IQuote, IRedo,IStrike, IUndo,
-} from '@/components/EditorIcons'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { notifyAction, toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
-import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { buildMentionExtension } from '@/lib/mentionExtension'
 import { cn } from '@/lib/utils'
 import { openDocument, type YDocSession } from '@/lib/yjsClient'
@@ -152,12 +174,12 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
   }, [documentId, user])
 
   if (!doc) return (
-    <div className="h-full flex items-center justify-center text-stone-400 text-sm">
+    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
       未找到文档。
     </div>
   )
   if (!user || !session) return (
-    <ResourceSkeleton variant="detail" className="h-full" label="正在加载文档编辑器" />
+    <div className="grid h-full gap-4 p-6" aria-label="正在加载文档编辑器"><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-full min-h-64 rounded-4xl" /></div>
   )
 
   const commitTitle = async () => {
@@ -172,11 +194,11 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
   const isPeek = variant === 'peek'
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="flex h-full flex-col bg-card text-card-foreground">
       <header
         className={cn(
-          'border-b border-stone-200 flex items-center gap-2.5 min-w-0',
-          isPeek ? 'px-4 py-3 bg-gradient-to-b from-white to-sky2-50/35' : 'px-6 py-3',
+          'flex min-w-0 items-center gap-2.5 border-b border-[var(--im-divider-weak)]',
+          isPeek ? 'px-4 py-3' : 'h-12 px-4',
         )}
       >
         <Input
@@ -185,8 +207,8 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
           onBlur={commitTitle}
           onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
           className={cn(
-            'flex-1 min-w-0 bg-transparent font-medium text-stone-900 focus:outline-none',
-            isPeek ? 'text-[16px] leading-[1.35]' : 'text-xl',
+            'min-w-0 flex-1 border-transparent bg-transparent font-medium shadow-none focus-visible:border-ring',
+            isPeek ? 'text-base' : 'text-sm',
           )}
           placeholder="无标题"
           aria-label="文档标题"
@@ -198,28 +220,24 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
           <Button
             type="button"
             onClick={onOpenFull}
-            className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-500 hover:text-skype-deep hover:bg-sky2-100 transition"
+            variant="ghost"
+            size="icon-sm"
             title="在文档中打开"
             aria-label="在文档中打开"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <path d="M14 4h6v6" />
-              <path d="M20 4l-9 9" />
-              <path d="M20 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4" />
-            </svg>
+            <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={2} />
           </Button>
         ) : null}
         {isPeek && onClose ? (
           <Button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-[8px] grid place-items-center text-ink-400 hover:text-ink-900 hover:bg-ink-100/70 transition"
+            variant="ghost"
+            size="icon-sm"
             title="关闭文档"
             aria-label="关闭文档"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
+            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
           </Button>
         ) : (
           <Button
@@ -235,9 +253,10 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
                 await toastAction(remove(doc.id), { loading: '正在删除文档', success: '文档已删除', error: '删除文档失败' })
               } catch { /* toast owns the visible error state */ }
             }}
-            className="text-xs leading-none text-stone-500 hover:text-red-600 transition-colors"
+            variant="destructive"
+            size="sm"
           >
-            删除
+            <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} data-icon="inline-start" />删除
           </Button>
         )}
       </header>
@@ -416,95 +435,82 @@ interface ToolbarProps { editor: Editor | null; disabled: boolean }
 
 function Toolbar({ editor, disabled }: ToolbarProps) {
   if (!editor) {
-    return <div className="border-b border-stone-100 px-4 py-2 h-[42px] bg-stone-50/60" />
+    return <div className="h-[42px] border-b border-[var(--im-divider-weak)] bg-muted/30 px-4 py-2" />
   }
-  const btn = (active: boolean) => cn(
-    'w-8 h-8 grid place-items-center rounded-md transition-colors',
-    disabled ? 'text-stone-300' : (
-      active
-        ? 'bg-skype/15 text-skype-deep'
-        : 'text-stone-600 hover:bg-stone-100'
-    ),
-  )
   return (
-    <div className="border-b border-stone-100 px-3 py-1.5 bg-stone-50/60 flex items-center gap-0.5 flex-wrap">
+    <TooltipProvider>
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--im-divider-weak)] bg-muted/30 px-3 py-1.5">
       <Button
-        type="button" className={btn(editor.isActive('bold'))} disabled={disabled}
+        type="button" variant={editor.isActive('bold') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled}
         onClick={() => editor.chain().focus().toggleBold().run()}
         title="粗体 (⌘B)"
-      ><IBold className="w-4 h-4" /></Button>
+      ><HugeiconsIcon icon={TextBoldIcon} strokeWidth={2} /></Button>
       <Button
-        type="button" className={btn(editor.isActive('italic'))} disabled={disabled}
+        type="button" variant={editor.isActive('italic') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         title="斜体 (⌘I)"
-      ><IItalic className="w-4 h-4" /></Button>
+      ><HugeiconsIcon icon={TextItalicIcon} strokeWidth={2} /></Button>
       <Button
-        type="button" className={btn(editor.isActive('strike'))} disabled={disabled}
+        type="button" variant={editor.isActive('strike') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled}
         onClick={() => editor.chain().focus().toggleStrike().run()}
         title="删除线"
-      ><IStrike className="w-4 h-4" /></Button>
-      <ToolbarSep />
+      ><HugeiconsIcon icon={StrikethroughIcon} strokeWidth={2} /></Button>
+      <Separator orientation="vertical" className="mx-1 h-5" />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button type="button" variant={editor.isActive('heading') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled} aria-label="标题层级">
+            <HugeiconsIcon icon={Heading01Icon} strokeWidth={2} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}><HugeiconsIcon icon={Heading01Icon} strokeWidth={2} />标题 1</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><HugeiconsIcon icon={Heading02Icon} strokeWidth={2} />标题 2</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}><HugeiconsIcon icon={Heading03Icon} strokeWidth={2} />标题 3</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Separator orientation="vertical" className="mx-1 h-5" />
       <Button
-        type="button" className={btn(editor.isActive('heading', { level: 1 }))} disabled={disabled}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        title="标题 1"
-      ><IH1 className="w-4 h-4" /></Button>
-      <Button
-        type="button" className={btn(editor.isActive('heading', { level: 2 }))} disabled={disabled}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        title="标题 2"
-      ><IH2 className="w-4 h-4" /></Button>
-      <Button
-        type="button" className={btn(editor.isActive('heading', { level: 3 }))} disabled={disabled}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        title="标题 3"
-      ><IH3 className="w-4 h-4" /></Button>
-      <ToolbarSep />
-      <Button
-        type="button" className={btn(editor.isActive('bulletList'))} disabled={disabled}
+        type="button" variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         title="项目符号列表"
-      ><IList className="w-4 h-4" /></Button>
+      ><HugeiconsIcon icon={LeftToRightListBulletIcon} strokeWidth={2} /></Button>
       <Button
-        type="button" className={btn(editor.isActive('orderedList'))} disabled={disabled}
+        type="button" variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         title="有序列表"
-      ><IListOrdered className="w-4 h-4" /></Button>
+      ><HugeiconsIcon icon={LeftToRightListNumberIcon} strokeWidth={2} /></Button>
       <Button
-        type="button" className={btn(editor.isActive('blockquote'))} disabled={disabled}
+        type="button" variant={editor.isActive('blockquote') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         title="引用"
-      ><IQuote className="w-4 h-4" /></Button>
-      <ToolbarSep />
+      ><HugeiconsIcon icon={QuoteDownIcon} strokeWidth={2} /></Button>
+      <Separator orientation="vertical" className="mx-1 h-5" />
       <Button
-        type="button" className={btn(editor.isActive('code'))} disabled={disabled}
+        type="button" variant={editor.isActive('code') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled}
         onClick={() => editor.chain().focus().toggleCode().run()}
         title="内联代码"
-      ><ICode className="w-4 h-4" /></Button>
+      ><HugeiconsIcon icon={CodeIcon} strokeWidth={2} /></Button>
       <Button
-        type="button" className={btn(editor.isActive('codeBlock'))} disabled={disabled}
+        type="button" variant={editor.isActive('codeBlock') ? 'secondary' : 'ghost'} size="icon-sm" disabled={disabled}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         title="代码块"
-      ><ICodeBlock className="w-4 h-4" /></Button>
+      ><HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} /></Button>
       <LinkButton editor={editor} disabled={disabled} />
       <ImageButton editor={editor} disabled={disabled} />
-      <ToolbarSep />
+      <Separator orientation="vertical" className="mx-1 h-5" />
       <Button
-        type="button" className={btn(false)} disabled={disabled || !editor.can().undo()}
+        type="button" variant="ghost" size="icon-sm" disabled={disabled || !editor.can().undo()}
         onClick={() => editor.chain().focus().undo().run()}
         title="撤消 (⌘Z)"
-      ><IUndo className="w-4 h-4" /></Button>
+      ><HugeiconsIcon icon={UndoIcon} strokeWidth={2} /></Button>
       <Button
-        type="button" className={btn(false)} disabled={disabled || !editor.can().redo()}
+        type="button" variant="ghost" size="icon-sm" disabled={disabled || !editor.can().redo()}
         onClick={() => editor.chain().focus().redo().run()}
         title="重做 (⌘⇧Z)"
-      ><IRedo className="w-4 h-4" /></Button>
-    </div>
+      ><HugeiconsIcon icon={RedoIcon} strokeWidth={2} /></Button>
+      </div>
+    </TooltipProvider>
   )
-}
-
-function ToolbarSep() {
-  return <span className="w-px h-5 bg-stone-200 mx-1" />
 }
 
 function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }) {
@@ -552,44 +558,41 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
           if (file) void uploadAndInsert(file)
         }}
       />
-      <Button
-        type="button"
-        disabled={disabled || uploading}
-        onClick={(event) => {
-          if (event.altKey) {
-            const existing = editor.getAttributes('image') as { src?: string; alt?: string }
-            setImageUrl(existing.src ?? '')
-            setImageAlt(existing.alt ?? '')
-            setDialogOpen(true)
-            return
-          }
-          fileRef.current?.click()
-        }}
-        className={cn(
-          'w-8 h-8 grid place-items-center rounded-md transition-colors',
-          disabled || uploading ? 'text-stone-300' : (
-            editor.isActive('image')
-              ? 'bg-skype/15 text-skype-deep'
-              : 'text-stone-600 hover:bg-stone-100'
-          ),
-        )}
-        title={uploading ? "上传图片" : "插入图像"}
-      >
-        <IImage className="w-4 h-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            disabled={disabled || uploading}
+            onClick={(event) => {
+              if (event.altKey) {
+                const existing = editor.getAttributes('image') as { src?: string; alt?: string }
+                setImageUrl(existing.src ?? '')
+                setImageAlt(existing.alt ?? '')
+                setDialogOpen(true)
+                return
+              }
+              fileRef.current?.click()
+            }}
+            variant={editor.isActive('image') ? 'secondary' : 'ghost'}
+            size="icon-sm"
+            aria-label={uploading ? '正在上传图片' : '插入图像'}
+          >
+            <HugeiconsIcon icon={Image01Icon} strokeWidth={2} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{uploading ? '正在上传图片' : '插入图像；按住 Alt 可使用图片地址'}</TooltipContent>
+      </Tooltip>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>插入图片地址</DialogTitle>
             <DialogDescription>使用 HTTPS 地址或应用内绝对路径。</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-3">
-            <Input value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="https://…" aria-label="图片地址" />
-            <Input value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} placeholder="替代文本（可选）" aria-label="图片替代文本" />
-          </div>
+          <Field><FieldLabel htmlFor="document-image-url">图片地址</FieldLabel><Input id="document-image-url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="https://…" /></Field>
+          <Field><FieldLabel htmlFor="document-image-alt">替代文本（可选）</FieldLabel><Input id="document-image-alt" value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} /></Field>
           <DialogFooter>
-            <Button type="button" className="rounded-md px-3 py-2 text-sm" onClick={() => setDialogOpen(false)}>取消</Button>
-            <Button type="button" className="rounded-md bg-skype px-3 py-2 text-sm font-semibold text-white" onClick={() => {
+            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>取消</Button>
+            <Button type="button" onClick={() => {
               const url = imageUrl.trim()
               if (!url || !isSafeImageUrl(url)) {
                 notifyAction({ title: '图片地址无效', description: '请使用 http(s) URL 或应用内 /path。', type: 'warning' })
@@ -612,19 +615,24 @@ function LinkButton({ editor, disabled }: { editor: Editor; disabled: boolean })
   const [linkUrl, setLinkUrl] = useState('')
   return (
     <>
-      <Button type="button" disabled={disabled} onClick={() => {
-        setLinkUrl((editor.getAttributes('link').href as string | undefined) ?? '')
-        setDialogOpen(true)
-      }} className={cn('w-8 h-8 grid place-items-center rounded-md transition-colors', disabled ? 'text-stone-300' : (isActive ? 'bg-skype/15 text-skype-deep' : 'text-stone-600 hover:bg-stone-100'))} title="链接">
-        <ILink className="w-4 h-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button type="button" disabled={disabled} onClick={() => {
+            setLinkUrl((editor.getAttributes('link').href as string | undefined) ?? '')
+            setDialogOpen(true)
+          }} variant={isActive ? 'secondary' : 'ghost'} size="icon-sm" aria-label="设置链接">
+            <HugeiconsIcon icon={Link01Icon} strokeWidth={2} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>设置链接</TooltipContent>
+      </Tooltip>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>设置链接</DialogTitle><DialogDescription>留空并保存可移除当前链接。</DialogDescription></DialogHeader>
-          <Input value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} placeholder="https://…" aria-label="链接地址" />
+          <Field><FieldLabel htmlFor="document-link-url">链接地址</FieldLabel><Input id="document-link-url" value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} placeholder="https://…" /></Field>
           <DialogFooter>
-            <Button type="button" className="rounded-md px-3 py-2 text-sm" onClick={() => setDialogOpen(false)}>取消</Button>
-            <Button type="button" className="rounded-md bg-skype px-3 py-2 text-sm font-semibold text-white" onClick={() => {
+            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>取消</Button>
+            <Button type="button" onClick={() => {
               const url = linkUrl.trim()
               if (!url) editor.chain().focus().extendMarkRange('link').unsetLink().run()
               else editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
@@ -663,24 +671,21 @@ function PresenceStrip({ session, synced }: { session: YDocSession; synced: bool
   // ascent/descent (16.5px for 12px Manrope), not line-height, so it
   // centers on a different baseline than the 12px-tall Delete button.
   // As a block, height = leading-none line-height = 12px = same box.
-  if (!synced) return <span className="block text-xs leading-none text-stone-400">正在同步...</span>
-  if (peers.length === 0) return <span className="block text-xs leading-none text-stone-400">只有你</span>
+  if (!synced) return <span className="block text-xs leading-none text-muted-foreground">正在同步...</span>
+  if (peers.length === 0) return <span className="block text-xs leading-none text-muted-foreground">只有你</span>
   return (
     <div className="flex items-center -space-x-1.5">
       {peers.slice(0, 6).map((p) => (
-        <div
+        <Avatar
           key={p.clientId}
           title={p.name}
-          className="w-6 h-6 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-medium"
-          style={{ background: p.color }}
+          className="size-6 border-2 border-card"
         >
-          {p.name.slice(0, 1).toUpperCase()}
-        </div>
+          <AvatarFallback className="text-[10px] font-medium text-primary-foreground" style={{ background: p.color }}>{p.name.slice(0, 1).toUpperCase()}</AvatarFallback>
+        </Avatar>
       ))}
       {peers.length > 6 && (
-        <div className="w-6 h-6 rounded-full bg-stone-200 text-stone-600 text-[10px] flex items-center justify-center font-medium border-2 border-white">
-          +{peers.length - 6}
-        </div>
+        <Avatar className="size-6 border-2 border-card"><AvatarFallback className="bg-muted text-[10px] font-medium text-muted-foreground">+{peers.length - 6}</AvatarFallback></Avatar>
       )}
     </div>
   )

@@ -6,7 +6,6 @@ import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useParticipants } from '@/features/agents/state'
-import { useBoards } from '@/features/boards/state'
 import { useCalendar } from '@/features/calendar/state'
 import { CanvasPreview } from '@/features/canvas/components/CanvasPreview'
 import { useCanvas } from '@/features/canvas/state'
@@ -16,13 +15,12 @@ import { useEmailComposer } from '@/features/email/state'
 import type { LingxiImMessageCustom } from '@/im/assistantMessage'
 import { parseBlocks, parseBody } from '@/lib/messageTokens'
 import { cn } from '@/lib/utils'
-import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import type { Message } from '@/types'
-import { IBoard, ICalendar, IFile, IMail } from '../icons'
+import { ICalendar, IFile, IMail } from '../icons'
 import { RichBody } from './MessageBody'
 
-type ArtifactRef = { type: 'document' | 'board' | 'card' | 'calendar'; id: string }
+type ArtifactRef = { type: 'document' | 'calendar'; id: string }
 
 function artifactKey(ref: ArtifactRef): string {
   return `${ref.type}:${ref.id}`
@@ -37,7 +35,7 @@ function artifactRefsFromBody(body: string): ArtifactRef[] {
   for (const block of parseBlocks(body)) {
     if (block.kind !== 'prose') continue
     for (const token of parseBody(block.text)) {
-      if (token.kind === 'document' || token.kind === 'board' || token.kind === 'card' || token.kind === 'calendar') {
+      if (token.kind === 'document' || token.kind === 'calendar') {
         addArtifactRef(out, { type: token.kind, id: token.id })
       }
     }
@@ -47,13 +45,11 @@ function artifactRefsFromBody(body: string): ArtifactRef[] {
 
 function artifactRefsFromPlainText(text: string): ArtifactRef[] {
   const out = new Map<string, ArtifactRef>()
-  const re = /\b(doc_[A-Za-z0-9]+|board-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*|card-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*|ce-[A-Za-z0-9-]+)\b/g
+  const re = /\b(doc_[A-Za-z0-9]+|ce-[A-Za-z0-9-]+)\b/g
   let m: RegExpExecArray | null
   while ((m = re.exec(text)) !== null) {
     const id = m[0]
     if (id.startsWith('doc_')) addArtifactRef(out, { type: 'document', id })
-    else if (id.startsWith('board-')) addArtifactRef(out, { type: 'board', id })
-    else if (id.startsWith('card-')) addArtifactRef(out, { type: 'card', id })
     else if (id.startsWith('ce-')) addArtifactRef(out, { type: 'calendar', id })
   }
   return Array.from(out.values())
@@ -161,7 +157,6 @@ function DocumentArtifactCard({ id, conversationId }: { id: string; conversation
 export function CanvasWorkspaceCard() {
   const { message: msg } = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
   const openCanvasPeek = useSurface((state) => state.openCanvasPeek)
-  const setView = useApp((state) => state.setView)
   const load = useCanvas((state) => state.load)
   const loadPreview = useCanvas((state) => state.loadPreview)
   const canvasId = msg.canvas?.canvasId
@@ -177,8 +172,7 @@ export function CanvasWorkspaceCard() {
   const frameCount = live?.frames.filter((frame) => frame.type !== 'artifact').length ?? liveCard?.frameIds.length ?? canvas.frameCount
   const open = () => {
     void load(canvas.canvasId)
-    if (window.innerWidth < 768) setView('canvas')
-    else openCanvasPeek(canvas.canvasId)
+    openCanvasPeek(canvas.canvasId)
   }
   return <CardSurface asChild variant="interactive" interactive className="mt-1 w-full max-w-[min(100%,580px)] gap-0 py-0 text-left [--card-spacing:0px]">
     <Button type="button" variant="ghost" className="h-auto w-full p-0" onClick={open} aria-label={`打开 ${canvas.title} Canvas`}>
@@ -187,192 +181,6 @@ export function CanvasWorkspaceCard() {
   </CardSurface>
 }
 
-
-function BoardArtifactCard({ id }: { id: string }) {
-  const loadList = useBoards((s) => s.loadList)
-  const loadingList = useBoards((s) => s.loadingList)
-  const list = useBoards((s) => s.list)
-  const loadBoard = useBoards((s) => s.loadBoard)
-  const loadingBoardId = useBoards((s) => s.loadingBoardId)
-  const snapshot = useBoards((s) => s.snapshots[id])
-  const selectBoard = useBoards((s) => s.selectBoard)
-  const openBoardPeek = useSurface((s) => s.openBoardPeek)
-  const summary = list.find((b) => b.id === id) ?? null
-  const didRequestList = useRef(false)
-  const requestedBoardId = useRef<string | null>(null)
-
-  useEffect(() => {
-    if (!summary && !loadingList && !didRequestList.current) {
-      didRequestList.current = true
-      void loadList().catch(() => { /* stale or missing board reference */ })
-    }
-  }, [loadList, loadingList, summary])
-
-  useEffect(() => {
-    if (!snapshot && loadingBoardId !== id && requestedBoardId.current !== id) {
-      requestedBoardId.current = id
-      void loadBoard(id).catch(() => { /* handled by unavailable card state */ })
-    }
-  }, [id, loadBoard, loadingBoardId, snapshot])
-
-  const isBoardPending = !snapshot && (loadingBoardId === id || requestedBoardId.current !== id)
-  const title = snapshot?.title?.trim() || summary?.title?.trim() || (isBoardPending ? 'Opening board...' : 'Board unavailable')
-  const updated = snapshot?.updatedAt || summary?.updatedAt
-  const columns = snapshot?.columns.length ?? null
-  const cards = snapshot?.cards.length ?? null
-
-  const open = () => {
-    selectBoard(id)
-    openBoardPeek(id)
-  }
-
-  if (isBoardPending) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载看板卡片" />
-
-  return (
-    <Button
-      variant="outline"
-      type="button"
-      onClick={open}
-      className="mt-2 h-auto w-full max-w-[min(100%,580px)] justify-start overflow-hidden rounded-3xl border-border bg-card p-0 text-left hover:border-primary/30"
-      aria-label={`Open board ${title}`}
-    >
-      <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] gap-3 px-3 py-3 items-center">
-        <div className="relative h-16 w-[52px] overflow-hidden rounded-2xl border border-border bg-background shadow-sm" aria-hidden>
-          <div className="h-2 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/10" />
-          <div className="grid grid-cols-3 gap-1 px-2 py-2 h-[46px]">
-            <span className="rounded bg-primary/10" />
-            <span className="rounded bg-primary/10" />
-            <span className="rounded bg-muted" />
-          </div>
-          <div className="absolute bottom-1.5 right-1.5 grid size-5 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
-            <IBoard className="w-3 h-3" strokeWidth={1.8} />
-          </div>
-        </div>
-
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">看板</span>
-            <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
-            <span className="truncate text-[10.5px] text-muted-foreground">{id}</span>
-          </div>
-          <div className="mt-1 truncate text-sm font-semibold text-foreground">{title}</div>
-          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11.5px] text-muted-foreground">
-            {columns !== null && <span>{columns} 列</span>}
-            {columns !== null && cards !== null && <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />}
-            {cards !== null && <span>{cards} 卡</span>}
-            {updated && (
-              <>
-                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
-                <span className="shrink-0">已更新 {timeAgo(updated)}</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="ms-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary/10 px-3 text-[11.5px] font-semibold text-primary">
-          打开
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </div>
-      </div>
-    </Button>
-  )
-}
-
-function CardArtifactCard({ id }: { id: string }) {
-  const lookup = useBoards((s) => s.cardLookups[id])
-  const loadingCardId = useBoards((s) => s.loadingCardId)
-  const loadCard = useBoards((s) => s.loadCard)
-  const selectBoard = useBoards((s) => s.selectBoard)
-  const openBoardPeek = useSurface((s) => s.openBoardPeek)
-  const byId = useParticipants((s) => s.byId)
-  const [failed, setFailed] = useState(false)
-  const didRequestCard = useRef(false)
-
-  useEffect(() => {
-    if (lookup || failed || loadingCardId === id || didRequestCard.current) return
-    didRequestCard.current = true
-    void loadCard(id).catch(() => setFailed(true))
-  }, [failed, id, loadCard, loadingCardId, lookup])
-
-  const card = lookup?.card ?? null
-  const assignee = card?.assigneeId ? byId[card.assigneeId]?.name ?? card.assigneeId : null
-  const title = card?.title.trim() || (failed ? 'Card unavailable' : 'Opening card...')
-  const updated = card?.updatedAt ? timeAgo(card.updatedAt) : null
-  const location = lookup ? `${lookup.board.title} -> ${lookup.column.title}` : id
-
-  const open = () => {
-    if (lookup) {
-      selectBoard(lookup.board.id)
-      openBoardPeek(lookup.board.id, id)
-      return
-    }
-    void loadCard(id)
-      .then((resolved) => {
-        selectBoard(resolved.board.id)
-        openBoardPeek(resolved.board.id, id)
-      })
-      .catch(() => setFailed(true))
-  }
-
-  if (!card && !failed) return <ResourceSkeleton variant="cards" count={1} className="mt-2 max-w-[580px]" label="正在加载看板任务" />
-
-  return (
-    <Button
-      variant="outline"
-      type="button"
-      onClick={open}
-      className="mt-2 h-auto w-full max-w-[min(100%,580px)] justify-start overflow-hidden rounded-3xl border-border bg-card p-0 text-left hover:border-primary/30"
-      aria-label={`Open card ${title}`}
-    >
-      <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] gap-3 px-3 py-3 items-center">
-        <div className="relative h-16 w-[52px] overflow-hidden rounded-2xl border border-border bg-background shadow-sm" aria-hidden>
-          <div className="h-2 bg-gradient-to-r from-primary/40 via-primary/20 to-card" />
-          <div className="px-2 py-2 space-y-1.5">
-            <span className="block h-1.5 w-8 rounded-full bg-muted" />
-            <span className="block h-1 w-7 rounded-full bg-primary/10" />
-            <span className="block h-1 w-6 rounded-full bg-primary/10" />
-          </div>
-          <div className="absolute bottom-1.5 right-1.5 grid size-5 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
-            <IBoard className="w-3 h-3" strokeWidth={1.8} />
-          </div>
-        </div>
-
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">看板卡</span>
-            <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
-            <span className="truncate text-[10.5px] text-muted-foreground">{id}</span>
-          </div>
-          <div className="mt-1 truncate text-sm font-semibold text-foreground">{title}</div>
-          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11.5px] text-muted-foreground">
-            <span className="truncate">{location}</span>
-            {assignee && (
-              <>
-                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
-                <span className="truncate">{assignee}</span>
-              </>
-            )}
-            {updated && (
-              <>
-                <span className="size-1 shrink-0 rounded-full bg-muted-foreground/30" />
-                <span className="shrink-0">已更新 {updated}</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="ms-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary/10 px-3 text-[11.5px] font-semibold text-primary">
-          看
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </div>
-      </div>
-    </Button>
-  )
-}
 
 function CalendarArtifactCard({ id }: { id: string }) {
   const loadingEventId = useCalendar((s) => s.loadingEventId)
@@ -467,11 +275,7 @@ export function MessageArtifactParts() {
       {refs.map((ref) => (
         ref.type === 'document'
           ? <DocumentArtifactCard key={artifactKey(ref)} id={ref.id} conversationId={message.conversationId} />
-          : ref.type === 'board'
-            ? <BoardArtifactCard key={artifactKey(ref)} id={ref.id} />
-            : ref.type === 'card'
-              ? <CardArtifactCard key={artifactKey(ref)} id={ref.id} />
-              : <CalendarArtifactCard key={artifactKey(ref)} id={ref.id} />
+          : <CalendarArtifactCard key={artifactKey(ref)} id={ref.id} />
       ))}
     </div>
   )

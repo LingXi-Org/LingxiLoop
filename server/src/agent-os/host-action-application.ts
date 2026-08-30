@@ -31,7 +31,6 @@ import type { AgentWorkItem, HostAction, HostActionResult } from './types.js'
 const ACTION_CAPABILITIES: Record<string, string> = {
   files: 'files',
   documents: 'documents',
-  boards: 'documents',
   calendar: 'calendar',
   research: 'web',
   canvas: 'canvas',

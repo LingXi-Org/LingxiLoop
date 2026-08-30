@@ -84,15 +84,6 @@ function productPermission(work: AgentWorkItem, action: HostAction): ProductPerm
         resource: documentId ? { type: 'document', id: documentId } : conversation(work.channelId),
       }
     }
-    case 'boards': {
-      const cardId = text(args, 'cardId')
-      const boardId = text(args, 'boardId')
-      return {
-        action: method.startsWith('list') || method === 'get' ? 'board:read' : 'board:write',
-        resource: cardId ? { type: 'board_card', id: cardId }
-          : boardId ? { type: 'board', id: boardId } : conversation(work.channelId),
-      }
-    }
     case 'calendar': {
       const eventId = text(args, 'eventId', 'id')
       return {

@@ -38,7 +38,6 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
                    WHERE binding.company_id=source.company_id AND binding.source_id=source.id
                      AND binding.scope_type='COURSE' AND binding.project_id=project.id))) AS "sourceCount",
             (SELECT COUNT(*)::int FROM documents WHERE project_id=project.id AND company_id=project.company_id) AS "documentCount",
-            (SELECT COUNT(*)::int FROM boards WHERE project_id=project.id AND company_id=project.company_id) AS "boardCount",
             (SELECT COUNT(*)::int FROM calendar_events WHERE project_id=project.id AND company_id=project.company_id) AS "calendarEventCount",
             (SELECT COUNT(*)::int FROM canvases WHERE project_id=project.id AND company_id=project.company_id) AS "canvasCount",
             (course_member.role IN ('OWNER','TEACHER')) AS "canManage",

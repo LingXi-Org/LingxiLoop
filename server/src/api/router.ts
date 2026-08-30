@@ -3,7 +3,6 @@ import { authMiddleware } from '../auth.js'
 import { errorHandler } from '../http/errors.js'
 import { imRouter } from '../im/router.js'
 import { agentsRouter } from '../modules/agents/router.js'
-import { boardsRouter } from '../modules/boards/router.js'
 import { calendarRouter } from '../modules/calendar/router.js'
 import { canvasRouter } from '../modules/canvas/router.js'
 import { companiesRouter } from '../modules/companies/router.js'
@@ -48,7 +47,6 @@ api.use(notificationsRouter)
 api.use(pollsRouter)
 api.use(emailRouter)
 api.use(observabilityRouter)
-api.use(boardsRouter)
 api.use(calendarRouter)
 api.use(documentsRouter)
 api.use(errorHandler)

@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Cancel01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useState } from 'react'
-import type { Layout } from 'react-resizable-panels'
+import type { Layout, LayoutChangedMeta } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
 import { GroupContextContent } from '@/components/GroupContextContent'
-import { LearningCenter } from '@/features/learning/components/LearningCenter'
-import { TrustBoard } from '@/features/trust/components/TrustBoard'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
   Drawer,
   DrawerClose,
@@ -14,36 +14,21 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
+import { useConversations } from '@/features/conversations/store'
+import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPane'
+import { useWorkspace } from '@/features/knowledge/workspace'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
-import { useConversations } from '@/features/conversations/store'
-import { useWorkspace } from '@/features/knowledge/workspace'
 import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
-import { useUiCommand } from '@/stores/uiCommands'
-import type { ViewKey } from '@/types'
-import { IconX } from '@tabler/icons-react'
-import { BoardPeekPane } from '@/features/boards/components/BoardPeekPane'
-import { BoardsView } from '@/features/boards/components/BoardsView'
-import { AgentsView } from '@/features/agents/components/AgentsView'
 import { ChatPane } from './ChatPane'
-import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
-import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPane'
-import { DocumentsView } from '@/features/documents/components/DocumentsView'
 import { InfoPane } from './InfoPane'
-import { MeView } from './MeView'
+import { PersonalDashboard } from './PersonalDashboard'
 import { ThreadDrawer } from './ThreadDrawer'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
-
-const DRAWER_TITLES: Partial<Record<ViewKey['view'], string>> = {
-  agents: 'Agent 群组',
-  documents: '文档',
-  boards: '看板',
-  learning: '学习',
-  trust: 'Trust Board',
-  me: '设置',
-}
+import { WorkspaceRail } from './WorkspaceRail'
 
 const DESKTOP_TWO_PANEL_LAYOUT_KEY = 'lingxiloop:desktop-layout:two-panel:v3'
 const LEFT_COLUMN_MIN = 280
@@ -68,17 +53,8 @@ function persistPanelLayout(storageKey: string, layout: Layout): void {
   } catch { /* private browsing can deny storage access */ }
 }
 
-function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsTab: 'Profile' | 'Preferences' }) {
-  if (view === 'agents') return <AgentsView />
-  if (view === 'boards') return <BoardsView />
-  if (view === 'learning') return <LearningCenter />
-  if (view === 'trust') return <TrustBoard />
-  if (view === 'me') return <MeView initialTab={settingsTab} />
-  return <DocumentsView />
-}
-
-/** The desktop shell is always a pure two-column IM surface. Every page-like
- * destination opens above it in the shared Base UI Drawer. */
+/** The desktop shell switches between the two-column IM surface and the
+ * personal dashboard. Object details continue to use the shared Drawer. */
 export function DesktopApp() {
   const { theme } = useTheme()
   const activeProjectName = useWorkspace((state) => (
@@ -89,15 +65,12 @@ export function DesktopApp() {
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
   const openThread = surface?.kind === 'thread' ? surface : null
   const documentId = surface?.kind === 'document' ? surface.documentId : null
-  const boardId = surface?.kind === 'board' ? surface.boardId : null
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const groupContext = selectedConversation?.kind === 'group' ? selectedConversation : null
   const [groupDrawerOpen, setGroupDrawerOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [settingsTab, setSettingsTab] = useState<'Profile' | 'Preferences'>('Profile')
-  const uiCommand = useUiCommand()
-  const [defaultLayout] = useState(() => loadPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, TWO_PANEL_DEFAULT_LAYOUT))
+  const [panelLayout, setPanelLayout] = useState(() => loadPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, TWO_PANEL_DEFAULT_LAYOUT))
 
   useEffect(() => {
     window.lingxiloop?.windowChrome?.setTheme(theme)
@@ -105,10 +78,6 @@ export function DesktopApp() {
 
   useEffect(() => { setGroupDrawerOpen(false) }, [groupContext?.id])
 
-  useEffect(() => {
-    if (uiCommand?.type === 'open-settings-profile') setSettingsTab('Profile')
-    else if (uiCommand?.type === 'open-settings-preferences') setSettingsTab('Preferences')
-  }, [uiCommand])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -138,15 +107,19 @@ export function DesktopApp() {
     return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [commandPaletteOpen, selectedConversationId, view])
 
-  const pageViewOpen = view !== 'conversations'
-  const drawerOpen = pageViewOpen || Boolean(infoParticipantId || openThread || documentId || boardId || (groupContext && groupDrawerOpen))
-  let drawerTitle = DRAWER_TITLES[view] ?? '会话详情'
-  let drawerContent: React.ReactNode = pageViewOpen ? <WorkspacePage view={view} settingsTab={settingsTab} /> : null
+  const dashboardOpen = view !== 'conversations'
+  const handleSidebarLayoutChanged = (layout: Layout, meta: LayoutChangedMeta) => {
+    if (!meta.isUserInteraction) return
+    setPanelLayout(layout)
+    persistPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, layout)
+  }
+  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || (groupContext && groupDrawerOpen))
+  let drawerTitle = '会话详情'
+  let drawerContent: React.ReactNode = null
 
   if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
-  else if (boardId) { drawerTitle = '看板'; drawerContent = <BoardPeekPane /> }
   else if (groupContext && groupDrawerOpen) { drawerTitle = '群聊资料'; drawerContent = <GroupContextContent conversationId={groupContext.id} /> }
 
   const closeDrawer = () => {
@@ -154,13 +127,16 @@ export function DesktopApp() {
     if (infoParticipantId) surfaces.closeAgentInfo()
     else if (openThread) surfaces.closeThreadView()
     else if (documentId) surfaces.closeDocumentPeek()
-    else if (boardId) surfaces.closeBoardPeek()
-    else if (pageViewOpen) useApp.getState().setView('conversations')
     else setGroupDrawerOpen(false)
   }
 
   return (
     <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-accent" data-electron={isElectron ? 'true' : 'false'} data-platform={platform}>
+      <WorkspaceRail
+        dashboardActive={dashboardOpen}
+        onOpenDashboard={() => useApp.getState().setView('learning')}
+        onOpenWorkspace={() => useApp.getState().setView('conversations')}
+      />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-accent">
         <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground">
           <Avatar size="sm" className="!size-3 rounded-sm">
@@ -173,12 +149,18 @@ export function DesktopApp() {
           <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
         </div>
         <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-card text-card-foreground shadow-sm">
-          <ResizablePanelGroup
+          {dashboardOpen ? (
+            <PersonalDashboard
+              view={view}
+              defaultLayout={panelLayout}
+              onLayoutChanged={handleSidebarLayoutChanged}
+            />
+          ) : <ResizablePanelGroup
             id="desktop-two-panel-layout"
             orientation="horizontal"
             className="desktop-im-grid min-h-0 min-w-0"
-            defaultLayout={defaultLayout}
-            onLayoutChanged={(layout, meta) => { if (meta.isUserInteraction) persistPanelLayout(DESKTOP_TWO_PANEL_LAYOUT_KEY, layout) }}
+            defaultLayout={panelLayout}
+            onLayoutChanged={handleSidebarLayoutChanged}
           >
             <ResizablePanel id="conversations" defaultSize="25%" minSize={LEFT_COLUMN_MIN} maxSize={LEFT_COLUMN_MAX} className="min-h-0 min-w-0">
               <div className="flex h-full min-h-0 flex-col bg-card">
@@ -190,7 +172,7 @@ export function DesktopApp() {
             <ResizablePanel id="conversation" defaultSize="75%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
               <ChatPane onOpenGroupContext={groupContext ? () => setGroupDrawerOpen(true) : undefined} />
             </ResizablePanel>
-          </ResizablePanelGroup>
+          </ResizablePanelGroup>}
         </div>
       </div>
 
@@ -204,7 +186,7 @@ export function DesktopApp() {
               </div>
               <DrawerClose asChild>
                 <Button type="button" className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted" aria-label="关闭">
-                  <IconX className="size-4" />
+                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
                 </Button>
               </DrawerClose>
             </div>

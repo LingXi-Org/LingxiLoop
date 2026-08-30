@@ -15,7 +15,7 @@ export function CalendarPeekPane() {
   }
 
   return (
-    <aside className="min-w-0 h-full border-l border-ink-100 bg-cloud overflow-hidden">
+    <aside className="h-full min-w-0 overflow-hidden border-s border-[var(--im-divider)] bg-card">
       <CalendarEventPeekContent
         eventId={eventId}
         onClose={closeCalendarEventPeek}

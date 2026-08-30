@@ -97,9 +97,19 @@ test('projects Teacher Briefing, Attention, and Evidence as native assistant-ui 
   const converted = createLingxiAssistantMessage(briefing, 0, [briefing], participants, 'me')
   assert.ok(Array.isArray(converted.content))
   const content = converted.content as Exclude<typeof converted.content, string>
+  assert.equal(converted.role, 'assistant')
   assert.deepEqual(content.map((part) => part.type === 'data' ? part.name : part.type), [
     'lingxi_teacher_briefing', 'lingxi_attention', 'lingxi_evidence',
   ])
   assert.ok(converted.metadata?.custom)
   assert.equal((converted.metadata.custom as unknown as LingxiImMessageCustom).presentation.variant, 'standard')
+})
+
+test('keeps plain and empty system events within the assistant-ui single-text-part contract', () => {
+  for (const body of ['member joined', '']) {
+    const system = message('system', { id: `system-${body.length}`, body })
+    const converted = createLingxiAssistantMessage(system, 0, [system], participants, 'me')
+    assert.equal(converted.role, 'system')
+    assert.deepEqual(converted.content, [{ type: 'text', text: body }])
+  }
 })

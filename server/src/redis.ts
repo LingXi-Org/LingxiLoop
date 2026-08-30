@@ -39,7 +39,6 @@ export const CH_POLLS = 'lingxiloop:polls'
 export const CH_GROUP_PULLED = 'lingxiloop:group.pulled'
 export const CH_CONVO_UPDATED = 'lingxiloop:convo.updated'
 export const CH_CONVENE = 'lingxiloop:convene'
-export const CH_BOARDS = 'lingxiloop:boards'
 export const CH_DOCS = 'lingxiloop:docs'
 /** Shared Canvas mutations and presence. Frame state stays in Postgres; this
  * channel only carries the small realtime delta to connected workspace peers. */
@@ -263,27 +262,6 @@ export interface ConveneEvent extends TenantTagged {
  *  refetch — e.g. an optimistic drag-drop that already moved the card.
  *  Mention targets are echoed too so the notification toaster can chime
  *  for the recipient without diffing the card body. */
-export interface BoardEvent extends TenantTagged {
-  type: 'board.changed'
-  /** what changed. Coarse — the renderer refetches on any of these. */
-  kind:
-    | 'board.created' | 'board.updated' | 'board.deleted'
-    | 'column.created' | 'column.updated' | 'column.deleted'
-    | 'card.created' | 'card.updated' | 'card.moved' | 'card.deleted'
-    | 'comment.created' | 'comment.deleted'
-  boardId: string
-  cardId?: string
-  columnId?: string
-  commentId?: string
-  /** Parsed @-mentions in the changed entity (card title/description or
-   *  comment body). Frontends watch this for "I was just @-mentioned"
-   *  toasts even when the user isn't actively viewing the board. */
-  mentions?: string[]
-  /** Actor who triggered the change — used to suppress self-notifications. */
-  actorId?: string
-  workspaceId?: string
-}
-
 /** Document metadata/listing changed. Content sync still uses the CRDT
  *  doc channels below; this event only tells clients to refresh the
  *  document index so newly-created agent docs appear immediately. */
@@ -469,7 +447,7 @@ export interface DocAccessRevokedEvent extends TenantTagged {
 export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
   | StatusEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
-  | BoardEvent | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
+  | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
   | CalendarEventChangedEvent
   | PollUpdatedEvent
   | DocAccessRevokedEvent

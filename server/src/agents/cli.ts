@@ -23,7 +23,6 @@ import {
 import { parseMentions } from '../mentions.js'
 import { addAgentConversationMember, leaveAgentConversation } from '../modules/conversations/public.js'
 import { freshenAttachmentUrl, type StoredAttachment, storage, storageKeyFromPublicUrl } from '../storage.js'
-import { createBoardCommands } from './cli/board.js'
 import { createCalendarCommand } from './cli/calendar.js'
 import { createConversationDeliveryCommands } from './cli/conversation-delivery.js'
 import { createConversationMetadataCommands } from './cli/conversation-metadata.js'
@@ -2261,12 +2260,6 @@ const { cmdCalendar } = createCalendarCommand({
   tryClaimTenantWork,
   releaseTenantWork,
 })
-const { cmdBoard, cmdClaim, cmdCard } = createBoardCommands({
-  ok,
-  err,
-  agentCompany,
-  resolveCliProjectId,
-})
 async function cmdReact(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
@@ -2469,15 +2462,6 @@ export async function runStructuredLearningAction(
       const value = stringValue(method === 'rename' ? 'title' : 'body', method !== 'read' && method !== 'delete')
       if (value) positional.push(value)
     }
-  } else if (namespace === 'boards') {
-    const isCard = method.startsWith('card-')
-    command = isCard ? 'card' : 'kanban'
-    const operation = method.replace(/^card-/, '')
-    positional.push(operation === 'list' ? 'ls' : operation)
-    const id = stringValue(isCard ? 'cardId' : 'boardId', false)
-    const title = stringValue('title', false)
-    if (id) positional.push(id)
-    if (title) positional.push(title)
   } else if (namespace === 'calendar') {
     command = 'calendar'; positional.push(method)
   } else if (namespace === 'polls') {
@@ -2502,8 +2486,6 @@ export async function runStructuredLearningAction(
       case 'skills': return await cmdSkills(parsed)
       case 'workspace': return await cmdWorkspace(parsed)
       case 'doc': return await cmdDoc(parsed, internal)
-      case 'kanban': return await cmdBoard(parsed, internal)
-      case 'card': return await cmdCard(parsed, internal)
       case 'calendar': return await cmdCalendar(parsed, internal)
       case 'poll': return await cmdPoll(parsed, internal)
       case 'email': return await cmdEmail(parsed, internal)
@@ -2579,13 +2561,6 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'email':               return await cmdEmail(parsed, internal)
       case 'poll':                return await cmdPoll(parsed, internal)
       // ====== other actions (each wraps a tool implementation) ======
-      // `kanban` is the canonical verb for the shared boards feature.
-      // `card` for the cards inside them. No CJK aliases — easier to
-      // type in any keyboard mode.
-      case 'claim':               return await cmdClaim(parsed, 'claim')
-      case 'unclaim':             return await cmdClaim(parsed, 'unclaim')
-      case 'kanban':              return await cmdBoard(parsed, internal)
-      case 'card':                return await cmdCard(parsed, internal)
       case 'doc':                 return await cmdDoc(parsed, internal)
       case 'react':               return await cmdReact(parsed)
       case 'dm':                  return await runTool('dm_with', parsed)

@@ -12,6 +12,31 @@ async function readImStyles(): Promise<string> {
   return files.join('\n')
 }
 
+test('native shadcn configuration and dashboard primitives retain preset b3bZWXGcRE tokens', async () => {
+  const config = JSON.parse(await readFile(new URL('../../components.json', import.meta.url), 'utf8')) as {
+    style: string
+    iconLibrary: string
+    menuColor: string
+    menuAccent: string
+    tailwind: { baseColor: string; cssVariables: boolean }
+  }
+  assert.deepEqual(config, {
+    ...config,
+    style: 'base-luma',
+    iconLibrary: 'hugeicons',
+    menuColor: 'default',
+    menuAccent: 'subtle',
+    tailwind: { ...config.tailwind, baseColor: 'mist', cssVariables: true },
+  })
+
+  const nativeSources = await Promise.all(
+    ['avatar', 'button', 'card', 'drawer', 'empty', 'field', 'input-group', 'label', 'resizable', 'sidebar', 'tabs', 'tooltip'].map((name) => (
+      readFile(new URL(`../components/ui/${name}.tsx`, import.meta.url), 'utf8')
+    )),
+  )
+  assert.doesNotMatch(nativeSources.join('\n'), /(?:bg|text|border|ring)-(?:white|black|gray|slate|zinc|stone|red|blue|green)-|#[0-9a-f]{3,8}/i)
+})
+
 test('text, poll, artifact, handoff, and approval receive native IM presentation metadata', () => {
   const participant: Participant = { id: 'agent', kind: 'agent', name: 'Agent', initial: 'A', avatarBg: '#000', status: 'avail' }
   for (const kind of ['text', 'poll', 'tool', 'handoff', 'approval'] as const) {
@@ -53,8 +78,16 @@ test('the desktop Web/Electron surface composes the shared IM core without Teleg
     assert.match(desktop, new RegExp(`<${component}\\b`))
   }
   assert.match(composer, /<ComposerSurface\b/)
+  assert.match(composer, /<ComposerPrimitive\.Root\b/)
+  assert.match(composer, /<ComposerPrimitive\.Input\b/)
+  assert.match(composer, /<ComposerPrimitive\.AddAttachment\b/)
+  assert.match(composer, /<ComposerPrimitive\.Send\b/)
+  assert.match(composer, /<Tooltip\b/)
+  assert.match(composer, /@hugeicons\/core-free-icons/)
+  assert.doesNotMatch(composer, /@tabler\/icons-react|IClip|ISend|ISmile/)
   assert.match(desktopProfile, /<ParticipantProfile\b/)
   assert.match(desktopList, /<ConversationListItemContent\b/)
+  assert.match(desktopShell, /<PersonalDashboard[\s\S]*?view=\{view\}/)
   assert.match(desktopShell, /<Drawer open=\{drawerOpen\}/)
   assert.match(desktopShell, /direction="right"/)
   assert.match(desktopShell, /selectedConversation\?\.kind === 'group'/)
@@ -101,8 +134,9 @@ test('self messages align right and render the restored user identity', async ()
   assert.doesNotMatch(message, /max-w-\[(?:70|84)%\]/)
 })
 
-test('desktop keeps one persisted two-panel IM layout and opens pages in the Luma Drawer', async () => {
+test('desktop keeps one persisted two-panel IM layout and replaces it with the shadcn personal dashboard', async () => {
   const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
+  const dashboard = await readFile(new URL('../desktop/PersonalDashboard.tsx', import.meta.url), 'utf8')
   const resizable = await readFile(new URL('../components/ui/resizable.tsx', import.meta.url), 'utf8')
   const css = await readImStyles()
   assert.match(shell, /DESKTOP_TWO_PANEL_LAYOUT_KEY/)
@@ -112,10 +146,20 @@ test('desktop keeps one persisted two-panel IM layout and opens pages in the Lum
   assert.match(shell, /onLayoutChanged=/)
   assert.match(shell, /id="conversations"[\s\S]*?id="conversation"/)
   assert.doesNotMatch(shell, /id="detail"/)
+  assert.match(shell, /dashboardOpen \? \([\s\S]*?<PersonalDashboard/)
+  assert.doesNotMatch(shell, /<Tabs|<TabsList|<TabsTrigger/)
+  assert.match(dashboard, /<SidebarProvider[\s\S]*?<Sidebar[\s\S]*?collapsible="none"[\s\S]*?<SidebarInset/)
+  assert.match(dashboard, /'--sidebar-width': '100%'/)
+  assert.match(dashboard, /<ResizablePanel id="conversations"[\s\S]*?minSize=\{280\}[\s\S]*?maxSize=\{420\}/)
+  assert.match(dashboard, /<ResizableHandle[\s\S]*?aria-label="调整看板侧边栏宽度"/)
+  assert.match(shell, /defaultLayout=\{panelLayout\}[\s\S]*?onLayoutChanged=\{handleSidebarLayoutChanged\}/)
+  assert.match(shell, /<PersonalDashboard[\s\S]*?defaultLayout=\{panelLayout\}[\s\S]*?onLayoutChanged=\{handleSidebarLayoutChanged\}/)
+  assert.doesNotMatch(dashboard, /<Tabs|<TabsList|<TabsTrigger/)
   assert.match(shell, /<Drawer open=\{drawerOpen\}[\s\S]*?direction="right"/)
   assert.match(shell, /<DrawerTitle/)
   assert.match(shell, /<DrawerDescription/)
-  assert.match(shell, /<DrawerDescription className="sr-only">/)
+  assert.match(shell, /const drawerOpen = Boolean\(infoParticipantId/)
+  assert.doesNotMatch(shell, /pageViewOpen|DRAWER_TITLES/)
   assert.doesNotMatch(shell, /关闭后返回当前会话，不改变两栏 IM 布局/)
   assert.match(resizable, /ResizablePrimitive\.Group/)
   assert.match(resizable, /ResizablePrimitive\.Panel/)
@@ -128,6 +172,66 @@ test('desktop keeps one persisted two-panel IM layout and opens pages in the Lum
   assert.doesNotMatch(css, /\.desktop-openmaus\s*\{[^}]*--(?:background|foreground|card|border|input|primary|secondary|muted|accent|sidebar):/s)
 })
 
+test('personal dashboard exposes the shadcn sidebar destinations in product order', async () => {
+  const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
+  const dashboard = await readFile(new URL('../desktop/PersonalDashboard.tsx', import.meta.url), 'utf8')
+  const renderedMenu = dashboard.slice(dashboard.indexOf('<SidebarMenu>'), dashboard.indexOf('</SidebarMenu>'))
+  assert.match(renderedMenu, /我的学习[\s\S]*?课程分组[\s\S]*?DASHBOARD_ITEMS\.slice\(1\)/)
+  assert.match(dashboard, /value: 'mail'[\s\S]*?value: 'calendar'[\s\S]*?value: 'library'[\s\S]*?value: 'trust'/)
+  assert.match(dashboard, /value: 'courses'[\s\S]*?value: 'projects'[\s\S]*?value: 'organization'/)
+  assert.match(dashboard, /adminOnly: true/)
+  assert.match(dashboard, /<SidebarUserFooter \/>/)
+  assert.match(dashboard, /<SidebarMenuButton isActive=/)
+  assert.doesNotMatch(dashboard, /boards|agents|canvas|sources|observability|performance|management/)
+  assert.match(shell, /onOpenDashboard=\{\(\) => useApp\.getState\(\)\.setView\('learning'\)\}/)
+})
+
+test('dashboard chrome uses shadcn primitives, Hugeicons, and semantic preset tokens', async () => {
+  const paths = [
+    '../desktop/PersonalDashboard.tsx',
+    '../features/companies/components/CompanyCourseManagement.tsx',
+    '../features/companies/components/InvitePeopleModal.tsx',
+    '../features/calendar/components/CalendarView.tsx',
+    '../features/calendar/components/EventEditor.tsx',
+    '../features/documents/components/DocumentsView.tsx',
+    '../features/documents/components/DocumentEditor.tsx',
+    '../features/learning/components/LearningCenter.tsx',
+    '../features/trust/components/TrustBoard.tsx',
+  ]
+  const sources = await Promise.all(paths.map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
+  const dashboardChrome = sources.join('\n')
+  assert.doesNotMatch(dashboardChrome, /@tabler\/icons-react|@\/components\/icons|@\/components\/Avatar/)
+  assert.doesNotMatch(dashboardChrome, /(?:bg|text|border)-(?:white|stone|ink|cloud|app|panel|raised)(?:\b|[-/])/)
+  assert.doesNotMatch(dashboardChrome, /shadow-(?:pop|panel|card)|boxShadow:/)
+  assert.doesNotMatch(dashboardChrome, /function\s+(?:Field|PageHeader|DashboardCard)\b/)
+  assert.doesNotMatch(dashboardChrome, /<(?:button|input|textarea|select)\b/)
+  assert.match(dashboardChrome, /@hugeicons\/core-free-icons/)
+  const documentEditor = sources[6] ?? ''
+  assert.match(documentEditor, /<DropdownMenu[\s\S]*?<Tooltip[\s\S]*?<Dialog[\s\S]*?<Field/)
+  assert.match(sources[3] ?? '', /@min-\[48rem\][\s\S]*?<Sheet/)
+  assert.match(sources[4] ?? '', /<Dialog open[\s\S]*?<FieldGroup/)
+})
+
+test('desktop restores the Luma project workspace rail without restoring company switching', async () => {
+  const shell = await readFile(new URL('../desktop/DesktopApp.tsx', import.meta.url), 'utf8')
+  const rail = await readFile(new URL('../desktop/WorkspaceRail.tsx', import.meta.url), 'utf8')
+
+  assert.match(shell, /<WorkspaceRail[\s\S]*?dashboardActive=\{dashboardOpen\}/)
+  assert.match(rail, /useWorkspace\(\(state\) => state\.list\)/)
+  assert.match(rail, /useWorkspace\(\(state\) => state\.selectedId\)/)
+  assert.match(rail, /await select\(id\)/)
+  assert.match(rail, /w-16/)
+  assert.match(rail, /bg-accent/)
+  assert.match(rail, /aria-label="打开本人看板"/)
+  assert.match(rail, /workspace\.kind === 'INSTITUTIONAL_COURSE'/)
+  assert.match(rail, /workspace\.kind === 'PERSONAL_LEARNING' && workspace\.isDefault/)
+  assert.match(rail, /workspace\.kind === 'TEACHING' && workspace\.createdBy === meId/)
+  assert.match(rail, /left\.index - right\.index/)
+  assert.match(rail, /<WorkspaceRailGroup workspaces=\{enterprise\}[\s\S]*?<WorkspaceRailGroup workspaces=\{personal\}/)
+  assert.match(rail, /<RailDivider \/>/)
+  assert.doesNotMatch(rail, /useAuth|setActiveCompany|AuthCompany|WorkspaceCreateDialog/)
+})
+
 test('desktop conversation column ends with the sidebar-07 account menu instead of the personal center', async () => {
   const list = await readFile(new URL('../features/conversations/components/ConversationsPane.tsx', import.meta.url), 'utf8')
   const conversationList = await readFile(new URL('../im/ConversationList.tsx', import.meta.url), 'utf8')
@@ -136,12 +240,10 @@ test('desktop conversation column ends with the sidebar-07 account menu instead 
   assert.match(list, /<NavUser user=\{\{ name: authUser\.name, email: authUser\.email, avatar: authParticipant\?\.avatarUrl \}\}/)
   assert.doesNotMatch(list.slice(list.indexOf('{authUser &&')), /setView\('me'\)/)
   assert.match(user, /<DropdownMenuContent[\s\S]*?side="right"/)
-  assert.match(user, /Account[\s\S]*?Notifications[\s\S]*?Log out/)
+  assert.match(user, /Log out/)
   assert.match(user, /aria-label="打开账户菜单"/)
   assert.match(user, /authApi\.logout/)
-  assert.match(user, /openSettings\('Profile'\)[^\n]*Account/)
-  assert.doesNotMatch(user, /Billing|Upgrade to Pro|openSettings\('Usage'\)/)
-  assert.match(user, /openSettings\('Preferences'\)[^\n]*Notifications/)
+  assert.doesNotMatch(user, /Account|Notifications|openSettings|setView\('me'\)|Billing|Upgrade to Pro/)
   assert.match(conversationList, /<ConversationAvatar conversation=\{conversation\} size=\{48\}/)
   assert.doesNotMatch(conversationList, /size=\{54\}/)
   assert.doesNotMatch(user, /size=\{54\}|size-13\.5/)
@@ -220,7 +322,7 @@ test('Canvas bubble and full view share the Card surface and preview theme', asy
   const canvasView = await readFile(new URL('../features/canvas/components/CanvasView.tsx', import.meta.url), 'utf8')
   const canvasPreview = await readFile(new URL('../features/canvas/components/CanvasPreview.tsx', import.meta.url), 'utf8')
   const card = await readFile(new URL('../components/ui/card.tsx', import.meta.url), 'utf8')
-  const canvasCard = business.slice(business.indexOf('export function CanvasWorkspaceCard'), business.indexOf('function BoardArtifactCard'))
+  const canvasCard = business.slice(business.indexOf('export function CanvasWorkspaceCard'), business.indexOf('function CalendarArtifactCard'))
   const full = `${css.slice(css.indexOf('.canvas-shell,'), css.indexOf('.canvas-work-timeline {'))}\n${css.slice(css.indexOf('.canvas-frame-card {'), css.indexOf('.canvas-inline-editor,'))}`
   assert.match(card, /data-slot="card"/)
   assert.match(card, /ring-1 ring-foreground\/5/)

@@ -69,7 +69,7 @@ import {
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
   'routines.create', 'routines.activate',
-  'documents.delete', 'boards.delete', 'calendar.delete',
+  'documents.delete', 'calendar.delete',
   'knowledge.update_source', 'knowledge.set_source_enabled', 'knowledge.unlink_source', 'knowledge.delete_source',
   'knowledge.update_note', 'knowledge.delete_note', 'knowledge.update_insight', 'knowledge.delete_insight',
 ])
@@ -618,7 +618,7 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
     } }
     throw new Error(`unsupported memory action: ${method}`)
   }
-  const projectId = new Set(['email', 'documents', 'boards', 'calendar']).has(namespace)
+  const projectId = new Set(['email', 'documents', 'calendar']).has(namespace)
     ? (await pool.query<{ project_id: string }>(
       `SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2`,
       [work.channelId, work.companyId],

@@ -1,28 +1,19 @@
-import { Button } from '@/components/ui/button'
-/**
- * Modal for inviting humans to a company workspace.
- *
- * Two flows surfaced from the same modal:
- *   1. **Shareable link** — mint a long-lived multi-use invite the owner
- *      can paste into Slack / iMessage / wherever. No email required.
- *   2. **By email**       — mint a single-use invite locked to a specific
- *      address. The owner copies the link and sends it themselves
- *      (we don't run an SMTP relay).
- *
- * Below the form, a live list of existing invitations with copy / revoke
- * affordances so the owner can audit who they've invited.
- *
- * Only company owners/admins reach this screen — the backend enforces it
- * with 403 on every endpoint, and the UI hides the entry points for
- * regular members.
- */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { companiesApi } from '@/features/companies/api'
 import type { ApiInvitation, ApiInvitationWithToken } from '@/features/companies/contracts'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { useAuth } from '@/stores/auth'
@@ -33,37 +24,29 @@ interface Props {
   onClose: () => void
 }
 
-type Tab = 'link' | 'email'
+type InviteMode = 'link' | 'email'
 
 export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
-  const [tab, setTab] = useState<Tab>('link')
+  const [mode, setMode] = useState<InviteMode>('link')
   const [list, setList] = useState<ApiInvitation[]>([])
   const [loadingList, setLoadingList] = useState(true)
   const [listErr, setListErr] = useState<string | null>(null)
-
-  // Form state
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'member' | 'admin'>('member')
   const [note, setNote] = useState('')
-  // Email-tab checkbox: ask the server to send the invite as an email on
-  // the inviter's behalf. Only meaningful on the email tab (a shareable
-  // link has no recipient). Default ON when the server has outbound
-  // email configured; the checkbox is hidden entirely otherwise.
   const [sendEmail, setSendEmail] = useState(true)
   const [busy, setBusy] = useState(false)
   const [formErr, setFormErr] = useState<string | null>(null)
-  const emailCapable = useAuth((s) => s.serverCapabilities?.invitationEmail === true)
-  /** The just-created invite, kept around so the owner can copy the URL.
-   *  Cleared on tab switch or on close. */
   const [created, setCreated] = useState<ApiInvitationWithToken | null>(null)
+  const emailCapable = useAuth((state) => state.serverCapabilities?.invitationEmail === true)
 
   const reload = useCallback(async () => {
-    setLoadingList(true); setListErr(null)
+    setLoadingList(true)
+    setListErr(null)
     try {
-      const rows = await companiesApi.listInvitations(companyId)
-      setList(rows)
-    } catch (e) {
-      setListErr(e instanceof Error ? e.message : String(e))
+      setList(await companiesApi.listInvitations(companyId))
+    } catch (error) {
+      setListErr(error instanceof Error ? error.message : String(error))
     } finally {
       setLoadingList(false)
     }
@@ -72,23 +55,33 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
   useEffect(() => { void reload() }, [reload])
 
   const submit = async () => {
-    setFormErr(null); setCreated(null)
-    if (tab === 'email') {
-      const trimmed = email.trim()
-      if (!trimmed) { setFormErr('add an email'); return }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { setFormErr('invalid email'); return }
+    setFormErr(null)
+    setCreated(null)
+    const trimmedEmail = email.trim()
+    if (mode === 'email' && !trimmedEmail) {
+      setFormErr('请输入电子邮件地址。')
+      return
+    }
+    if (mode === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setFormErr('请输入有效的电子邮件地址。')
+      return
     }
     setBusy(true)
     try {
-      const payload = tab === 'email'
-        ? { email: email.trim(), role, note: note.trim() || null, sendEmail: emailCapable && sendEmail }
+      const payload = mode === 'email'
+        ? { email: trimmedEmail, role, note: note.trim() || null, sendEmail: emailCapable && sendEmail }
         : { multiUse: true, role, note: note.trim() || null }
-      const inv = await companiesApi.createInvitation(companyId, payload)
-      setCreated(inv)
-      setEmail(''); setNote('')
+      const invitation = await toastAction(companiesApi.createInvitation(companyId, payload), {
+        loading: '正在创建邀请',
+        success: mode === 'email' ? '电子邮件邀请已创建' : '邀请链接已创建',
+        error: '创建邀请失败',
+      })
+      setCreated(invitation)
+      setEmail('')
+      setNote('')
       void reload()
-    } catch (e) {
-      setFormErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      setFormErr(error instanceof Error ? error.message : String(error))
     } finally {
       setBusy(false)
     }
@@ -102,214 +95,113 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
       tone: 'destructive',
     })) return
     try {
-      await toastAction(companiesApi.revokeInvitation(companyId, id), { loading: '正在撤销邀请', success: '邀请已撤销', error: '撤销邀请失败' })
+      await toastAction(companiesApi.revokeInvitation(companyId, id), {
+        loading: '正在撤销邀请', success: '邀请已撤销', error: '撤销邀请失败',
+      })
       void reload()
-    } catch (e) {
-      setListErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      setListErr(error instanceof Error ? error.message : String(error))
     }
   }
 
-  const activeInvitations = useMemo(() => list.filter((i) => i.status === 'active'), [list])
-  const historicalInvitations = useMemo(() => list.filter((i) => i.status !== 'active'), [list])
+  const activeInvitations = useMemo(() => list.filter((invitation) => invitation.status === 'active'), [list])
+  const historicalInvitations = useMemo(() => list.filter((invitation) => invitation.status !== 'active'), [list])
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-h-[88vh] max-w-[600px] gap-0 overflow-hidden bg-cloud p-0 shadow-pop">
-        <DialogHeader className="shrink-0 border-b border-ink-100 px-6 py-5 pr-14">
-          <DialogTitle className="font-display text-[20px] font-medium tracking-tight">
-            邀请参加 {companyName}
-          </DialogTitle>
-          <DialogDescription className="mt-0.5 font-display text-[12.5px] italic text-ink-500">
-            将人员添加到此工作区。通过电子邮件分享链接或邀请。
-          </DialogDescription>
+    <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose() }}>
+      <DialogContent className="max-h-[88vh] max-w-[600px] gap-0 overflow-hidden bg-card p-0" showCloseButton={!busy}>
+        <DialogHeader className="border-b border-[var(--im-divider-weak)] px-6 py-5 pe-14">
+          <DialogTitle>邀请参加 {companyName}</DialogTitle>
+          <DialogDescription>通过可分享链接或电子邮件将人员添加到此工作区。</DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0 space-y-5">
-          {/* Tabs */}
-          <div className="inline-flex rounded-[10px] p-0.5 bg-paper" style={{ border: '1px solid var(--ink-100)' }}>
-            {(['link', 'email'] as const).map((t) => {
-              const on = tab === t
-              return (
-                <Button
-                  key={t}
-                  type="button"
-                  onClick={() => { setTab(t); setCreated(null); setFormErr(null) }}
-                  className="px-3 py-1.5 text-[12.5px] font-semibold rounded-[8px] transition"
-                  style={{
-                    background: on ? 'var(--skype)' : 'transparent',
-                    color: on ? 'white' : 'var(--ink-500)',
-                  }}
-                >
-                  {t === 'link' ? "邀请链接" : "通过电子邮件"}
-                </Button>
-              )
-            })}
-          </div>
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
+          <Tabs value={mode} onValueChange={(value) => {
+            setMode(value as InviteMode)
+            setCreated(null)
+            setFormErr(null)
+          }}>
+            <TabsList>
+              <TabsTrigger value="link">邀请链接</TabsTrigger>
+              <TabsTrigger value="email">通过电子邮件</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-          {/* Form */}
-          {tab === 'email' && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">
-                  电子邮件
-                </label>
-                <div className="text-[11.5px] text-ink-300 mb-1.5 font-display italic">
-                  一次性使用，锁定到该地址。他们必须使用同一电子邮件登录才能兑换。
+          <FieldGroup>
+            {mode === 'email' ? (
+              <Field>
+                <FieldLabel htmlFor="invite-email">电子邮件</FieldLabel>
+                <FieldDescription>一次性使用并锁定到该地址，对方需使用相同地址登录。</FieldDescription>
+                <Input id="invite-email" type="email" autoFocus autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="teammate@example.com" />
+              </Field>
+            ) : (
+              <Alert><AlertDescription>知道链接的任何人都可以加入。链接将在 7 天后过期，并可随时撤销。</AlertDescription></Alert>
+            )}
+
+            {mode === 'email' && emailCapable && (
+              <Field orientation="horizontal">
+                <Checkbox id="send-invite-email" checked={sendEmail} onCheckedChange={(checked) => setSendEmail(checked === true)} />
+                <div>
+                  <FieldLabel htmlFor="send-invite-email">通过电子邮件发送邀请</FieldLabel>
+                  <FieldDescription>取消选择后，你可以自行复制和分享邀请链接。</FieldDescription>
                 </div>
-                <Input
-                  type="email"
-                  autoFocus
-                  autoComplete="off"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="teammate@example.com"
-                  className="ip-input"
-                />
-              </div>
+              </Field>
+            )}
 
-              {emailCapable && (
-                <label className="flex items-start gap-2.5 cursor-pointer select-none rounded-[10px] px-3 py-2.5 transition"
-                       style={{ background: 'var(--paper)', border: '1px solid var(--ink-100)' }}>
-                  <Checkbox
-                    checked={sendEmail}
-                    onCheckedChange={(checked) => setSendEmail(checked === true)}
-                    className="mt-0.5"
-                  />
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-[12.5px] font-semibold text-ink-800">
-                      通过电子邮件将此邀请发送给他们
-                    </span>
-                    <span className="block text-[11.5px] text-ink-400 font-display italic mt-0.5 leading-snug">
-                      我们将发送一条短信 <b className="not-italic text-ink-600">LingxiLoop 邀请</b>，其中会显示你的名字。
-                      回复将发送至您的收件箱。如果您愿意自己分享链接，请取消选中。
-                    </span>
-                  </span>
-                </label>
-              )}
+            <div className="grid grid-cols-2 gap-3">
+              <Field>
+                <FieldLabel>角色</FieldLabel>
+                <Select value={role} onValueChange={(value) => setRole(value as typeof role)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="member">成员</SelectItem>
+                    <SelectItem value="admin">管理员</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="invite-note">备注（可选）</FieldLabel>
+                <Input id="invite-note" maxLength={120} value={note} onChange={(event) => setNote(event.target.value)} placeholder="这个邀请用于什么？" />
+              </Field>
             </div>
-          )}
+          </FieldGroup>
 
-          {tab === 'link' && (
-            <div className="rounded-[10px] p-3 text-[12px] text-ink-500 font-display italic" style={{ background: 'var(--paper)', border: '1px dashed var(--ink-200)' }}>
-              知道链接的任何人都可以加入。将此用于小型团队 - 该链接将在 7 天后过期，并且可以随时撤销。
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">
-                角色
-              </label>
-              <div className="flex gap-1.5">
-                {(['member', 'admin'] as const).map((r) => {
-                  const on = role === r
-                  return (
-                    <Button
-                      key={r}
-                      type="button"
-                      onClick={() => setRole(r)}
-                      className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold transition"
-                      style={{
-                        background: on ? 'var(--ink-700)' : 'var(--paper)',
-                        color: on ? 'white' : 'var(--ink-500)',
-                        border: '1px solid var(--ink-100)',
-                      }}
-                    >
-                      {r === 'member' ? "会员" : "管理员"}
-                    </Button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider uppercase text-ink-500 mb-1">
-                注意
-                <span className="ml-1.5 text-ink-300 normal-case font-medium tracking-normal">— 可选</span>
-              </label>
-              <Input
-                type="text"
-                maxLength={120}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="这个邀请有什么用？"
-                className="ip-input"
-              />
-            </div>
-          </div>
-
-          {formErr && (
-            <div className="text-[12.5px] text-coral-deep bg-coral-soft py-2 px-3 rounded-lg">
-              {formErr}
-            </div>
-          )}
-
+          {formErr && <Alert variant="destructive"><AlertDescription>{formErr}</AlertDescription></Alert>}
           {created && <CreatedInviteCard invite={created} onDone={() => setCreated(null)} />}
+          <Button className="w-full" onClick={submit} disabled={busy}>
+            {busy ? '正在创建…' : mode === 'email' ? '创建电子邮件邀请' : '创建邀请链接'}
+          </Button>
 
-          <div>
-            <Button
-              onClick={submit}
-              disabled={busy}
-              className="w-full py-2.5 rounded-[10px] text-[13px] font-semibold text-white transition disabled:opacity-50"
-              style={{
-                background: 'var(--skype)',
-                boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
-              }}
-            >
-              {busy ? "正在创建..."
-                : tab === 'email' ? "创建电子邮件邀请"
-                : "创建邀请链接"}
-            </Button>
-          </div>
-
-          {/* Existing invitations */}
-          <div className="pt-2">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-[12.5px] font-bold tracking-wide uppercase text-ink-500">
-                待处理的邀请
-              </h3>
-              <span className="text-[11px] text-ink-300">{activeInvitations.length}</span>
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-medium">待处理的邀请</h3>
+              <Badge variant="secondary">{activeInvitations.length}</Badge>
             </div>
-            {loadingList && (
-              <ResourceSkeleton variant="list" count={3} compact label="正在加载邀请" />
-            )}
+            {loadingList && <div className="space-y-2"><Skeleton className="h-16" /><Skeleton className="h-16" /></div>}
             {!loadingList && activeInvitations.length === 0 && (
-              <div className="text-[12.5px] text-ink-400 italic font-display py-3">没有待处理的邀请。</div>
+              <Empty className="border"><EmptyHeader><EmptyTitle>没有待处理的邀请</EmptyTitle><EmptyDescription>创建的新邀请会显示在这里。</EmptyDescription></EmptyHeader></Empty>
             )}
-            <div className="flex flex-col gap-1.5">
-              {activeInvitations.map((inv) => (
-                <InvitationRow key={inv.id} inv={inv} onRevoke={() => void revoke(inv.id)} />
+            <ItemGroup>
+              {activeInvitations.map((invitation) => (
+                <InvitationRow key={invitation.id} invitation={invitation} onRevoke={() => void revoke(invitation.id)} />
               ))}
-            </div>
+            </ItemGroup>
             {historicalInvitations.length > 0 && (
-              <details className="mt-3">
-                <summary className="text-[11.5px] text-ink-400 cursor-pointer font-display italic hover:text-ink-600">
-                  显示 {historicalInvitations.length} 过去的邀请{historicalInvitations.length === 1 ? '' : 's'}
-                </summary>
-                <div className="flex flex-col gap-1.5 mt-2">
-                  {historicalInvitations.map((inv) => (
-                    <InvitationRow key={inv.id} inv={inv} historical />
-                  ))}
-                </div>
+              <details>
+                <summary className="cursor-pointer text-sm text-muted-foreground">显示 {historicalInvitations.length} 条历史邀请</summary>
+                <ItemGroup className="mt-2 opacity-70">
+                  {historicalInvitations.map((invitation) => <InvitationRow key={invitation.id} invitation={invitation} historical />)}
+                </ItemGroup>
               </details>
             )}
-            {listErr && (
-              <div className="text-[12.5px] text-coral-deep mt-2">{listErr}</div>
-            )}
-          </div>
+            {listErr && <Alert variant="destructive"><AlertDescription>{listErr}</AlertDescription></Alert>}
+          </section>
         </div>
 
-        <div className="px-6 py-4 border-t border-ink-100 flex items-center gap-2 bg-paper shrink-0">
-          <div className="text-[11.5px] text-ink-300 italic font-display">
-            邀请将在 7 天后过期。
-          </div>
-          <div className="flex-1" />
-          <Button
-            onClick={onClose}
-            className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold text-ink-700 bg-cloud hover:bg-sky2-50 transition"
-            style={{ border: '1px solid var(--ink-100)' }}
-          >完成</Button>
-        </div>
+        <DialogFooter className="border-t border-[var(--im-divider-weak)] bg-card px-6 py-4">
+          <span className="me-auto text-xs text-muted-foreground">邀请将在 7 天后过期。</span>
+          <Button variant="outline" onClick={onClose} disabled={busy}>完成</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
@@ -322,147 +214,63 @@ function CreatedInviteCard({ invite, onDone }: { invite: ApiInvitationWithToken;
       await navigator.clipboard.writeText(invite.url)
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
-    } catch { /* swallow */ }
+    } catch { /* Clipboard availability is surfaced by the unchanged button state. */ }
   }
-  const delivery = invite.emailDelivery
-  const headline = delivery?.ok
-    ? 'Invite sent'
-    : 'Invite ready to share'
   return (
-    <div
-      className="rounded-[12px] p-4 space-y-2"
-      style={{
-        background: 'linear-gradient(135deg, var(--sky-50), var(--paper))',
-        border: '1.5px solid var(--sky2-300)',
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <span className="w-5 h-5 rounded-full grid place-items-center text-white text-[11px] font-bold"
-              style={{ background: 'var(--skype)' }}>✓</span>
-        <div className="text-[13px] font-semibold text-ink-900">{headline}</div>
-      </div>
-      <div className="text-[11.5px] text-ink-500 italic font-display">
-        {invite.email
-          ? delivery?.ok
-            ? <>电子邮件已发送至 <b className="not-italic text-ink-700">{invite.email}</b>。下面的链接与我们发送的链接相同 - 如果您想将它们推送到另一个频道，请复制该链接。</>
-            : <>锁定至 <b className="not-italic text-ink-700">{invite.email}</b> — 他们必须使用该电子邮件登录。</>
-          : <>知道此链接的任何人都可以作为 {invite.role}.</>}
-      </div>
-      <div className="flex items-stretch gap-2">
-        <Input
-          readOnly
-          value={invite.url}
-          className="flex-1 px-3 py-2 text-[12px] rounded-[8px] font-mono"
-          style={{ background: 'var(--paper)', border: '1px solid var(--ink-100)', color: 'var(--ink-700)' }}
-          onFocus={(e) => e.currentTarget.select()}
-        />
-        <Button
-          onClick={copy}
-          className="px-3 py-2 rounded-[8px] text-[12px] font-semibold text-white transition"
-          style={{ background: copied ? 'var(--leaf-700, #2d8c72)' : 'var(--ink-700)' }}
-        >{copied ? "已复制" : "复制"}</Button>
-      </div>
-      <div className="flex justify-end">
-        <Button
-          onClick={onDone}
-          className="text-[11.5px] text-ink-400 hover:text-ink-700 transition"
-        >驳回</Button>
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{invite.emailDelivery?.ok ? '邀请已发送' : '邀请已可分享'}</CardTitle>
+        <CardDescription>{invite.email ? `该邀请仅限 ${invite.email} 使用。` : `知道链接的任何人都可以作为 ${invite.role} 加入。`}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex gap-2">
+        <Input readOnly value={invite.url} className="font-mono" onFocus={(event) => event.currentTarget.select()} />
+        <Button variant="secondary" onClick={copy}>{copied ? '已复制' : '复制'}</Button>
+        <Button variant="ghost" onClick={onDone}>关闭</Button>
+      </CardContent>
+    </Card>
   )
 }
 
-function InvitationRow({
-  inv,
-  onRevoke,
-  historical,
-}: {
-  inv: ApiInvitation
-  onRevoke?: () => void
-  historical?: boolean
-}) {
-  const expiresDistance = useMemo(() => relativeFrom(inv.expiresAt), [inv.expiresAt])
-  const statusLabel: Record<typeof inv.status, { label: string; bg: string; fg: string }> = {
-    active:   { label: inv.email ? 'awaiting' : 'shareable', bg: 'var(--sky-50)', fg: 'var(--sky2-700, #2466a5)' },
-    revoked:  { label: "已撤销", bg: 'var(--cloud)', fg: 'var(--ink-400)' },
-    expired:  { label: "已过期\n使用", bg: 'var(--cloud)', fg: 'var(--ink-400)' },
-    consumed: { label: 'used',    bg: 'var(--cloud)', fg: 'var(--ink-400)' },
-  }
-  const pill = statusLabel[inv.status]
+function InvitationRow({ invitation, onRevoke, historical }: { invitation: ApiInvitation; onRevoke?: () => void; historical?: boolean }) {
   return (
-    <div
-      className="rounded-[10px] p-2.5 flex items-center gap-3"
-      style={{ background: 'var(--paper)', border: '1px solid var(--ink-100)', opacity: historical ? 0.7 : 1 }}
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="text-[13px] font-semibold text-ink-900 truncate">
-            {inv.email ?? <span className="text-ink-500 italic font-display">可分享链接</span>}
-          </div>
-          <span
-            className="px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-            style={{ background: pill.bg, color: pill.fg }}
-          >{pill.label}</span>
-          <span className="text-[10.5px] text-ink-400 uppercase tracking-wider font-bold">{inv.role}</span>
-        </div>
-        <div className="text-[11px] text-ink-400 mt-0.5 font-display italic flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-          {!inv.email && (
-            <span>{inv.useCount}/{inv.maxUses} used</span>
-          )}
-          {inv.status === 'active' && <span>· 过期 {expiresDistance}</span>}
-          {inv.status === 'consumed' && inv.lastAcceptedAt && (
-            <span>·最后接受 {relativeFrom(inv.lastAcceptedAt)}</span>
-          )}
-          {inv.note && <span>· {inv.note}</span>}
-        </div>
-      </div>
-      {inv.status === 'active' && !historical && onRevoke && (
-        <div className="flex items-center gap-1.5">
-          <CopyLinkButton inviteId={inv.id} />
-          <Button
-            onClick={onRevoke}
-            className="px-2 py-1.5 text-[11.5px] font-semibold rounded-[8px] transition"
-            style={{ color: 'var(--coral-deep)', border: '1px solid var(--ink-100)' }}
-          >撤销</Button>
-        </div>
+    <Item variant="outline">
+      <ItemContent>
+        <ItemTitle>{invitation.email ?? '可分享链接'} <Badge variant={invitation.status === 'active' ? 'secondary' : 'outline'}>{invitation.status}</Badge> <Badge variant="outline">{invitation.role}</Badge></ItemTitle>
+        <ItemDescription>
+          {!invitation.email && `${invitation.useCount}/${invitation.maxUses} 已使用 · `}
+          {invitation.status === 'active' ? `${relativeFrom(invitation.expiresAt)}后过期` : invitation.note ?? '历史邀请'}
+        </ItemDescription>
+      </ItemContent>
+      {invitation.status === 'active' && !historical && onRevoke && (
+        <ItemActions>
+          <CopyLinkButton inviteId={invitation.id} />
+          <Button variant="destructive" size="sm" onClick={onRevoke}>撤销</Button>
+        </ItemActions>
       )}
-    </div>
+    </Item>
   )
 }
 
-/** The raw token is only ever returned from the create endpoint. After
- *  that the list endpoint only echoes the hash, so we can't show a
- *  copy-able URL for previously-issued invites — instead this button
- *  copies the invite's hash id as a debugging hint. (UX-wise we accept
- *  this limitation; the alternative is keeping plaintext tokens in DB,
- *  which we will not.) */
 function CopyLinkButton({ inviteId }: { inviteId: string }) {
   const [copied, setCopied] = useState(false)
-  const onClick = async () => {
+  const copy = async () => {
     try {
       await navigator.clipboard.writeText(inviteId)
-      setCopied(true); setTimeout(() => setCopied(false), 1200)
-    } catch { /* swallow */ }
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1200)
+    } catch { /* Clipboard availability is surfaced by the unchanged button state. */ }
   }
-  return (
-    <Button
-      onClick={onClick}
-      title="复制邀请参考（无法重新获取原始链接 - 如果您丢失了邀请，请发出新的邀请）"
-      className="px-2 py-1.5 text-[11.5px] font-semibold rounded-[8px] transition"
-      style={{ color: 'var(--ink-500)', border: '1px solid var(--ink-100)' }}
-    >{copied ? "已复制" : "复制参考"}</Button>
-  )
+  return <Button variant="outline" size="sm" onClick={copy} title="复制邀请参考">{copied ? '已复制' : '复制参考'}</Button>
 }
 
 function relativeFrom(iso: string): string {
-  const ms = new Date(iso).getTime() - Date.now()
-  const abs = Math.abs(ms)
-  const past = ms < 0
-  const minute = 60_000, hour = 60 * minute, day = 24 * hour
-  const fmt = (n: number, unit: string) => `${n}${unit}${past ? ' ago' : ''}`
-  if (abs < hour) return fmt(Math.max(1, Math.round(abs / minute)), 'm')
-  if (abs < day) return fmt(Math.round(abs / hour), 'h')
-  if (abs < 7 * day) return fmt(Math.round(abs / day), 'd')
-  const w = Math.round(abs / (7 * day))
-  return fmt(w, 'w')
+  const milliseconds = new Date(iso).getTime() - Date.now()
+  const absolute = Math.abs(milliseconds)
+  const minute = 60_000
+  const hour = 60 * minute
+  const day = 24 * hour
+  if (absolute < hour) return `${Math.max(1, Math.round(absolute / minute))} 分钟`
+  if (absolute < day) return `${Math.round(absolute / hour)} 小时`
+  if (absolute < 7 * day) return `${Math.round(absolute / day)} 天`
+  return `${Math.round(absolute / (7 * day))} 周`
 }

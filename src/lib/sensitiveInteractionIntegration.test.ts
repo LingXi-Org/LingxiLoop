@@ -51,13 +51,10 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../features/calendar/components/CalendarEventPeekContent.tsx',
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
-    '../features/boards/components/BoardsView.tsx',
-    '../features/boards/components/BoardCardDialog.tsx',
     '../features/calendar/components/CalendarView.tsx',
     '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
     '../features/trust/components/TrustBoard.tsx',
-    '../desktop/MeView.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
 
@@ -81,20 +78,22 @@ test('approval decisions and user-triggered tasks publish through the global Toa
   assert.match(read('../lib/actionToast.ts'), /\.unwrap\(\)/)
 })
 
+test('dashboard role changes and destructive actions confirm before mutation and preserve Toast lifecycle', () => {
+  const courses = read('../features/companies/components/CompanyCourseManagement.tsx')
+  const invitations = read('../features/companies/components/InvitePeopleModal.tsx')
+  assert.match(courses, /const updateCourseMemberRole[\s\S]*?confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.updateCourseMember/)
+  assert.match(courses, /const updateCompanyMemberRole[\s\S]*?confirmSensitiveAction\([\s\S]*?toastAction\(companiesApi\.updateCompanyMember/)
+  assert.match(courses, /toastAction\(learningApi\.createCourse/)
+  assert.match(courses, /toastAction\(companiesApi\.updateCompany/)
+  assert.match(invitations, /confirmSensitiveAction\([\s\S]*?toastAction\(companiesApi\.revokeInvitation/)
+  assert.match(invitations, /toastAction\(companiesApi\.createInvitation/)
+})
+
 test('calendar editing uses the controlled Base UI Dialog without a handwritten modal shell', () => {
   const editor = read('../features/calendar/components/EventEditor.tsx')
   assert.match(editor, /<Dialog open onOpenChange=/)
   assert.match(editor, /<DialogContent[\s\S]*?<DialogTitle[\s\S]*?<DialogDescription/)
   assert.doesNotMatch(editor, /fixed inset-0|addEventListener\(['"]keydown/)
-})
-
-test('board card editing composes the official Dialog and keeps deletion behind Alert Dialog', () => {
-  const editor = read('../features/boards/components/BoardCardDialog.tsx')
-  assert.match(editor, /<Dialog open onOpenChange=/)
-  assert.match(editor, /<DialogContent[\s\S]*?<DialogTitle[\s\S]*?<DialogDescription/)
-  assert.match(editor, /confirmSensitiveAction\(/)
-  assert.match(editor, /toastAction\(deleteCard/)
-  assert.doesNotMatch(editor, /fixed inset-0|addEventListener\(['"]keydown|<button\b/)
 })
 
 test('repository skill requires Alert Dialog and Toast for future sensitive work', () => {

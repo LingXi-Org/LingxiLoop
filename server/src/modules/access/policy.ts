@@ -107,8 +107,6 @@ export const PERMISSION_POLICIES = {
   'document:read': projectRead('conversation.core', 'member'),
   'document:write': projectWrite('conversation.core', 'member'),
   'document:delete': projectWrite('conversation.core', 'creator_or_manager'),
-  'board:read': projectRead('conversation.core'),
-  'board:write': projectWrite('conversation.core'),
   'calendar:read': projectRead('conversation.core'),
   'calendar:write': projectWrite('conversation.core', 'creator_or_manager'),
   'canvas:read': projectRead('conversation.core', 'member'),
@@ -148,7 +146,7 @@ export const PROJECT_WRITE_ACTIONS = new Set<PermissionAction>([
   'project_invitation:create', 'project_invitation:revoke',
   'learning:manage', 'learning:submit', 'learning:review', 'learning:preference',
   'knowledge:write', 'knowledge:manage', 'conversation:write', 'conversation:manage',
-  'document:write', 'document:delete', 'board:write', 'calendar:write', 'canvas:write',
+  'document:write', 'document:delete', 'calendar:write', 'canvas:write',
   'poll:create', 'poll:vote', 'poll:close', 'email:write', 'attachment:write',
   'agent_autonomy:write', 'agent_memory:write', 'agent_approval:resolve', 'agent_run:control',
 ])
@@ -156,7 +154,7 @@ export const PROJECT_WRITE_ACTIONS = new Set<PermissionAction>([
 const READ_ACTIONS = new Set<PermissionAction>([
   'company:list', 'company:read', 'company_member:list', 'company_invitation:list',
   'project:list', 'project:read', 'course:read', 'project_member:list', 'project_invitation:list',
-  'learning:read', 'knowledge:read', 'conversation:read', 'document:read', 'board:read',
+  'learning:read', 'knowledge:read', 'conversation:read', 'document:read',
   'calendar:read', 'canvas:read', 'poll:read', 'email:read', 'agent:read',
   'agent_autonomy:read', 'agent_memory:read', 'agent_approval:list',
   'trust:read_l2', 'trust:read_l3_company', 'trust:read_l3_project',

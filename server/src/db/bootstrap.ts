@@ -16,8 +16,7 @@ const REQUIRED_V1_RELATIONS = [
   'agent_routine_runs', 'agent_routines', 'agent_runs', 'agent_tasks',
   'agent_triages', 'agent_work_items', 'agent_workspace',
   'attention_items', 'attention_projection_events', 'audit_events',
-  'board_card_comments', 'board_cards', 'board_columns',
-  'board_mention_reads', 'boards', 'calendar_dispatches', 'calendar_events',
+  'calendar_dispatches', 'calendar_events',
   'calendar_reminders', 'canvas_activity', 'canvas_agent_assignments',
   'canvas_assignment_dependencies', 'canvas_assignment_reports',
   'canvas_comments', 'canvas_frames', 'canvas_presence', 'canvases', 'companies',
@@ -59,6 +58,7 @@ const REQUIRED_V1_RELATIONS = [
 
 const FORBIDDEN_V1_RELATIONS = [
   'app_settings', 'company_members', 'course_members', 'learning_mastery',
+  'board_card_comments', 'board_cards', 'board_columns', 'board_mention_reads', 'boards',
   'learning_mastery_events', 'learning_objective_dependencies',
   'learning_objectives', 'learning_notification_deliveries',
   'learning_notification_preferences', 'course_invitation_acceptances', 'course_invitations',

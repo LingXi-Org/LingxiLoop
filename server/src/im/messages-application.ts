@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import type { LingxiMessageV1 } from '../agent-os/types.js'
 import type { Queryable } from '../db/queryable.js'
 import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
+import type { ImChannelProfile } from './types.js'
 import {
   acceptSend,
   channelProfileForCompany,
@@ -42,6 +43,7 @@ export interface ImMessagesInfrastructure {
     limit: number,
     userId: string,
     beforeSequence?: number,
+    repairProfile?: ImChannelProfile,
   ): Promise<ImMessageEnvelope[]>
   listConversations(userId: string): Promise<Array<{
     channelId: string
@@ -101,14 +103,23 @@ export class ImMessagesApplication {
     limit: number
     beforeSequence: number
   }): Promise<ImMessageEnvelope[] | null> {
-    const channelType = await this.channelType(input)
-    if (channelType === null) return null
+    const profile = await channelProfileForMember(this.infrastructure.db, input)
+    if (!profile) return null
+    const channelType: 1 | 2 = Number(profile.channelType) === 1 ? 1 : 2
     const messages = await this.infrastructure.syncMessages(
       input.channelId,
       channelType,
       input.limit,
       input.userId,
       input.beforeSequence,
+      {
+        channelId: input.channelId,
+        channelType,
+        title: typeof profile.title === 'string' ? profile.title : input.channelId,
+        members: Array.isArray(profile.members)
+          ? profile.members.filter((member): member is string => typeof member === 'string')
+          : [],
+      },
     )
     if (messages.length === 0) return messages
     const reactions = await this.infrastructure.reactions(

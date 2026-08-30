@@ -1,27 +1,27 @@
-import type React from 'react'
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { Cancel01Icon, SearchIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import type React from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
-import type { ConversationSearchResults } from '../contracts'
-import { conversationsApi } from '@/features/conversations/api'
 import { Avatar } from '@/components/Avatar'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { NavUser } from '@/components/nav-user'
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
-import { SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
+import { SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
+import { useParticipants } from '@/features/agents/state'
+import { conversationsApi } from '@/features/conversations/api'
+import { isMuted, useConversations } from '@/features/conversations/store'
 import { ConversationListItemContent } from '@/im/ConversationList'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { isMuted, useConversations } from '@/features/conversations/store'
-import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
+import type { ConversationSearchResults } from '../contracts'
 
 interface ConversationMenuItem {
   label: string
@@ -37,6 +37,37 @@ const ConversationItemGroup = forwardRef<HTMLDivElement, React.HTMLAttributes<HT
   ({ className, ...props }, ref) => <ItemGroup ref={ref} className={cn('!gap-0', className)} {...props} />,
 )
 ConversationItemGroup.displayName = 'ConversationItemGroup'
+
+const ConversationListRow = forwardRef<HTMLDivElement, {
+  children: React.ReactNode
+  selected?: boolean
+  onSelect: () => void
+} & Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'>>(
+  ({ children, selected = false, onSelect, className, ...props }, ref) => (
+    <Item
+      ref={ref}
+      role="button"
+      tabIndex={0}
+      size="xs"
+      aria-current={selected ? 'page' : undefined}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        onSelect()
+      }}
+      className={cn(
+        'group h-15 min-h-15 max-h-15 cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 px-2 py-1.5 text-left shadow-none',
+        selected ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </Item>
+  ),
+)
+ConversationListRow.displayName = 'ConversationListRow'
 
 function ConversationMenuItems({ items }: { items: ConversationMenuItem[] }) {
   return items.map((item, index) => {
@@ -55,24 +86,9 @@ function ConversationRow({ conversation, selected, items }: {
   return (
     <ContextMenu>
     <ContextMenuTrigger asChild>
-      <Item
-        role="button"
-        tabIndex={0}
-        size="xs"
-        aria-current={selected ? 'page' : undefined}
-        onClick={() => select(conversation.id)}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' && event.key !== ' ') return
-          event.preventDefault()
-          select(conversation.id)
-        }}
-        className={cn(
-          'group cursor-pointer flex-nowrap gap-2.5 rounded-xl border-0 px-2 py-1.5 text-left shadow-none',
-          selected ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-        )}
-      >
+      <ConversationListRow selected={selected} onSelect={() => select(conversation.id)}>
         <ConversationListItemContent conversation={conversation} variant="desktop" />
-      </Item>
+      </ConversationListRow>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
     </ContextMenu>
@@ -123,7 +139,7 @@ export function SidebarUserFooter() {
   const authUser = useAuth((s) => s.user)
   const authParticipant = useParticipants((s) => authUser ? s.byId[authUser.id] : undefined)
   if (!authUser) return null
-  return <div data-slot="sidebar-footer" className="shrink-0 border-t border-[var(--im-divider-weak)] bg-card p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></div>
+  return <SidebarFooter className="shrink-0 border-t border-[var(--im-divider-weak)] bg-card p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></SidebarFooter>
 }
 
 export function ConversationsPane() {
@@ -161,16 +177,17 @@ export function ConversationsPane() {
   }, [query])
 
   const conversations = useMemo(() => {
-    const visible = list.filter((conversation) => conversation.kind === 'direct')
+    const visible = list.filter((conversation) => conversation.kind !== 'email')
     return [...visible.filter((c) => c.pinned), ...visible.filter((c) => !c.pinned)]
   }, [list])
 
   const resultRows = useMemo(() => {
     if (!results) return [] as Array<{ id: string; title: string; preview: string }>
-    const directIds = new Set(list.filter((conversation) => conversation.kind === 'direct').map((conversation) => conversation.id))
+    const visibleIds = new Set(list.filter((conversation) => conversation.kind !== 'email').map((conversation) => conversation.id))
     const unique = new Map<string, { id: string; title: string; preview: string }>()
-    for (const room of results.rooms) if (directIds.has(room.id)) unique.set(room.id, { id: room.id, title: room.title, preview: room.projectName ?? '私信' })
-    for (const message of results.messages) if (directIds.has(message.conversationId)) unique.set(message.conversationId, { id: message.conversationId, title: message.conversationTitle, preview: `${message.authorName ?? '成员'}：${message.snippet}` })
+    for (const room of results.rooms) if (visibleIds.has(room.id)) unique.set(room.id, { id: room.id, title: room.title, preview: room.projectName ?? '私信' })
+    for (const group of results.groups) if (visibleIds.has(group.id)) unique.set(group.id, { id: group.id, title: group.title, preview: group.projectName ?? '群聊' })
+    for (const message of results.messages) if (visibleIds.has(message.conversationId)) unique.set(message.conversationId, { id: message.conversationId, title: message.conversationTitle, preview: `${message.authorName ?? '成员'}：${message.snippet}` })
     return [...unique.values()]
   }, [list, results])
 
@@ -179,7 +196,7 @@ export function ConversationsPane() {
       { label: conversation.pinned ? '取消置顶' : '置顶会话', onSelect: () => void conversationsApi.togglePin(conversation.id, !conversation.pinned).then(() => useConversations.getState().reload()) },
       { label: isMuted(conversation) ? '取消静音' : '静音会话', onSelect: () => void conversationsApi.setMute(conversation.id, !isMuted(conversation), null).then(() => useConversations.getState().reload()) },
     ]
-    if (conversation.kind === 'group') {
+    if (conversation.kind === 'group' && conversation.tag !== 'teacher') {
       items.push({ label: '添加成员…', onSelect: () => setAddingMembers(conversation) })
       items.push({
         label: '退出群聊',
@@ -219,25 +236,12 @@ export function ConversationsPane() {
             {!searching && resultRows.length === 0 && <p className="px-3 py-5 text-sm text-muted-foreground">没有找到匹配结果</p>}
             <ItemGroup className="!gap-0">
               {resultRows.map((row) => (
-                <Item
-                  key={row.id}
-                  role="button"
-                  tabIndex={0}
-                  size="xs"
-                  onClick={() => { select(row.id); setQuery('') }}
-                  onKeyDown={(event) => {
-                    if (event.key !== 'Enter' && event.key !== ' ') return
-                    event.preventDefault()
-                    select(row.id)
-                    setQuery('')
-                  }}
-                  className="cursor-pointer gap-1.5 rounded-xl border-0 bg-transparent px-1.5 py-1 shadow-none hover:bg-sidebar-accent"
-                >
+                <ConversationListRow key={row.id} selected={selected === row.id} onSelect={() => { select(row.id); setQuery('') }}>
                   <ItemContent className="min-w-0">
                     <ItemTitle className="block w-full truncate text-sm font-medium text-sidebar-foreground">{row.title}</ItemTitle>
                     <ItemDescription className="line-clamp-1 text-xs text-muted-foreground">{row.preview}</ItemDescription>
                   </ItemContent>
-                </Item>
+                </ConversationListRow>
               ))}
             </ItemGroup>
           </div>

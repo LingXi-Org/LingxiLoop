@@ -30,10 +30,10 @@ export function EducationIntegrationCapabilities() {
   return <section aria-labelledby="education-integrations-title" className="space-y-3">
     <div>
       <h2 id="education-integrations-title" className="text-[14px] font-semibold">外部能力</h2>
-      <p className="mt-1 text-[11px] text-ink-secondary">这些入口仅展示规划状态，不会收集密钥或模拟配置成功。</p>
+      <p className="mt-1 text-xs text-muted-foreground">这些入口仅展示规划状态，不会收集密钥或模拟配置成功。</p>
     </div>
     <div className="grid gap-3 md:grid-cols-3">
-      {capabilities.map((capability) => <Card key={capability.id} data-capability={capability.id} className="bg-panel shadow-none">
+      {capabilities.map((capability) => <Card key={capability.id} data-capability={capability.id}>
         <CardHeader>
           <div className="flex items-start justify-between gap-3"><CardTitle>{capability.title}</CardTitle><Badge variant="secondary">暂未开放</Badge></div>
           <CardDescription>{capability.description}</CardDescription>

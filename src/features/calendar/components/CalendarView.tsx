@@ -1,4 +1,15 @@
-import { Button } from '@/components/ui/button'
+import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Calendar03Icon,
+  Clock01Icon,
+  Delete02Icon,
+  LockIcon,
+  PlusSignIcon,
+  RepeatIcon,
+  Task01Icon,
+} from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 /**
  * Calendar — macOS-Calendar-style scheduling surface. Three view modes
  * (Day / Week / Month) share one toolbar; each one supports:
@@ -17,20 +28,24 @@ import { Button } from '@/components/ui/button'
  * 30-minute snap (SLOT_MINUTES). Selections never collapse below one slot
  * so a click without drag still produces a valid range.
  */
-import { cloneElement, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react'
-import { Avatar } from '@/components/Avatar'
-import { EventEditor, type EventEditorPrefill } from './EventEditor'
-import { ICalendar, IClock, IPlus, IRepeat, ITrash } from '@/components/icons'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
-import { ContextMenu as ContextMenuRoot, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { cloneElement, type ReactElement, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { ContextMenuContent, ContextMenuItem, ContextMenu as ContextMenuRoot, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Item, ItemActions, ItemContent, ItemGroup } from '@/components/ui/item'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useParticipants } from '@/features/agents/state'
+import { useConversations } from '@/features/conversations/store'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
-import { useCalendar } from '../state'
-import { useConversations } from '@/features/conversations/store'
-import { useParticipants } from '@/features/agents/state'
 import type { CalendarEvent, RecurrenceRule } from '../contracts'
+import { useCalendar } from '../state'
+import { EventEditor, type EventEditorPrefill } from './EventEditor'
 
 interface AgendaItem {
   event: CalendarEvent
@@ -247,12 +262,12 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
 
   return (
     <>
-      <div className="grid grid-cols-7 px-4 pt-3 text-[11px] uppercase tracking-wide text-ink-400 select-none">
+      <div className="grid grid-cols-7 px-4 pt-3 text-[11px] uppercase tracking-wide text-muted-foreground select-none">
         {WEEK.map((d) => <div key={d} className="px-2 py-1">{d}</div>)}
       </div>
       <div className="flex-1 min-h-0 overflow-auto px-4 pb-4">
         <div
-          className="grid grid-cols-7 gap-px bg-ink-100 rounded-lg overflow-hidden select-none"
+          className="grid grid-cols-7 gap-px overflow-hidden rounded-2xl bg-border select-none"
           style={{ gridAutoRows: 'minmax(96px, 1fr)' }}
         >
           {days.map((d, idx) => {
@@ -269,9 +284,9 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
                 key={k}
                 trigger={<div
                 className={cn(
-                  'bg-cloud p-1.5 min-h-0 flex flex-col gap-1 text-xs cursor-pointer relative',
+                  'relative flex min-h-0 cursor-pointer flex-col gap-1 bg-card p-1.5 text-xs',
                   !isCurMonth && 'opacity-40',
-                  inSelection && 'bg-sky2-50',
+                  inSelection && 'bg-sidebar-accent',
                 )}
                 onMouseDown={(e) => {
                   if (e.button !== 0) return
@@ -292,10 +307,10 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
                 <div className="flex items-center justify-between">
                   <span className={cn(
                     'inline-grid place-items-center w-5 h-5 rounded-full text-[11px] font-semibold',
-                    isToday ? 'bg-skype text-white' : 'text-ink-600',
+                    isToday ? 'bg-primary text-primary-foreground' : 'text-foreground',
                   )}>{d.getDate()}</span>
                   {items.length > 3 && (
-                    <span className="text-[10px] text-ink-400">+{items.length - 3}</span>
+                    <span className="text-[10px] text-muted-foreground">+{items.length - 3}</span>
                   )}
                 </div>
                 <div className="flex flex-col gap-0.5 overflow-hidden">
@@ -307,8 +322,8 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
                       className={cn(
                         'cal-event-chip text-left truncate rounded-sm px-1 py-0.5 text-[11px] font-medium transition',
                         it.event.kind === 'agent_task'
-                          ? 'bg-sky2-100 text-skype-deep hover:bg-sky2-200'
-                          : 'bg-ink-100 text-ink-700 hover:bg-ink-200',
+                          ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                          : 'bg-muted text-foreground hover:bg-sidebar-accent',
                       )}
                       title={`${formatTime(it.occurrence)} · ${it.event.title}`}
                     >
@@ -411,18 +426,18 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
       <div className="flex-1 min-h-0 overflow-auto">
         {/* Day header row (sticky) */}
         <div
-          className="grid border-b border-ink-100 select-none sticky top-0 z-20 bg-cloud"
+          className="sticky top-0 z-20 grid border-b border-[var(--im-divider-weak)] bg-card select-none"
           style={{ gridTemplateColumns: `56px repeat(${dayCount}, 1fr)` }}
         >
           <div />
           {days.map((d, i) => {
             const isToday = sameDay(d, new Date())
             return (
-              <div key={i} className="px-2 py-2 text-center border-l border-ink-100">
-                <div className="text-[10px] uppercase tracking-wider text-ink-400">{WEEK[d.getDay()]}</div>
+              <div key={i} className="border-s border-[var(--im-divider-weak)] px-2 py-2 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{WEEK[d.getDay()]}</div>
                 <div className={cn(
                   'mt-0.5 text-base font-semibold',
-                  isToday ? 'text-skype' : 'text-ink-900',
+                  isToday ? 'text-primary' : 'text-foreground',
                 )}>{d.getDate()}</div>
               </div>
             )
@@ -437,11 +452,11 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
             {Array.from({ length: 24 }, (_, h) => (
               <div
                 key={h}
-                className="text-[10px] text-ink-400 pr-2 text-right relative"
+                className="relative pe-2 text-end text-[10px] text-muted-foreground"
                 style={{ height: HOUR_HEIGHT }}
               >
                 {h === 0 ? '' : (
-                  <span className="absolute right-2 -top-1.5 bg-cloud px-0.5">{String(h).padStart(2, '0')}:00</span>
+                  <span className="absolute end-2 -top-1.5 bg-card px-0.5">{String(h).padStart(2, '0')}:00</span>
                 )}
               </div>
             ))}
@@ -452,7 +467,7 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
               key={dayIdx}
               trigger={<div
               ref={(el: HTMLDivElement | null) => { colRefs.current[dayIdx] = el }}
-              className="relative border-l border-ink-100 cursor-cell"
+              className="relative cursor-cell border-s border-[var(--im-divider-weak)]"
               onMouseDown={(e) => {
                 if (e.button !== 0) return
                 if ((e.target as HTMLElement).closest('.cal-event-block')) return
@@ -475,11 +490,11 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
               {Array.from({ length: 24 }, (_, h) => (
                 <div key={h}>
                   <div
-                    className="absolute left-0 right-0 border-t border-ink-100"
+                    className="absolute inset-x-0 border-t border-[var(--im-divider-weak)]"
                     style={{ top: h * HOUR_HEIGHT }}
                   />
                   <div
-                    className="absolute left-0 right-0 border-t border-ink-100 opacity-50"
+                    className="absolute inset-x-0 border-t border-[var(--im-divider-weak)] opacity-50"
                     style={{ top: h * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
                   />
                 </div>
@@ -492,10 +507,10 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
                 const height = ((hi - lo) / 60) * HOUR_HEIGHT
                 return (
                   <div
-                    className="absolute left-1 right-1 rounded-md bg-skype/25 border-2 border-skype pointer-events-none"
+                    className="pointer-events-none absolute inset-x-1 rounded-xl border-2 border-primary bg-primary/15"
                     style={{ top, height }}
                   >
-                    <div className="text-[10px] font-semibold text-skype-deep px-1 pt-0.5">
+                    <div className="px-1 pt-0.5 text-[10px] font-semibold text-primary">
                       {String(Math.floor(lo / 60)).padStart(2, '0')}:{String(lo % 60).padStart(2, '0')}–
                       {String(Math.floor(hi / 60)).padStart(2, '0')}:{String(hi % 60).padStart(2, '0')}
                     </div>
@@ -527,8 +542,8 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
                     className={cn(
                       'cal-event-block absolute left-1 right-1 rounded-md px-2 py-1 text-left text-[11px] font-medium overflow-hidden transition',
                       occ.event.kind === 'agent_task'
-                        ? 'bg-sky2-100 text-skype-deep hover:bg-sky2-200 border border-sky2-300'
-                        : 'bg-ink-100 text-ink-700 hover:bg-ink-200 border border-ink-200',
+                        ? 'border border-primary/30 bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        : 'border border-border bg-muted text-foreground hover:bg-sidebar-accent',
                     )}
                     style={{ top, height }}
                     title={occ.event.title}
@@ -556,6 +571,7 @@ export function CalendarView() {
   const [mode, setMode] = useState<ViewMode>('week')
   const [cursor, setCursor] = useState<Date>(() => new Date())
   const [editing, setEditing] = useState<EditingState>(null)
+  const [agendaOpen, setAgendaOpen] = useState(false)
 
   const events = useCalendar((s) => s.events)
   const loaded = useCalendar((s) => s.loaded)
@@ -616,171 +632,99 @@ export function CalendarView() {
   const openEdit = (e: CalendarEvent) => setEditing({ mode: 'edit', event: e })
   const openNew = (prefill?: EventEditorPrefill) => setEditing({ mode: 'new', prefill })
 
+  const agendaContent = (
+    <div className="min-h-0 flex-1 overflow-auto p-2">
+      {!loaded && <div className="space-y-2" aria-label="正在加载日历事件"><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /></div>}
+      {loaded && agenda.length === 0 && (
+        <Empty className="border-0 px-4 py-8">
+          <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle className="text-base">未来 30 天没有安排</EmptyTitle><EmptyDescription>创建事件或智能体任务后会显示在这里。</EmptyDescription></EmptyHeader>
+          <EmptyContent><Button type="button" variant="outline" size="sm" onClick={() => openNew()}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} data-icon="inline-start" />安排事件</Button></EmptyContent>
+        </Empty>
+      )}
+      <ItemGroup className="gap-2">{agenda.map((item, index) => {
+        const assignee = item.event.assigneeId ? byId[item.event.assigneeId] : null
+        const day = sameDay(item.occurrence, new Date())
+          ? 'Today'
+          : sameDay(item.occurrence, new Date(Date.now() + DAY_MS))
+            ? 'Tomorrow'
+            : formatDateLong(item.occurrence)
+        return (
+          <Item key={`${item.event.id}-${index}`} variant="outline" size="sm" className="group">
+            <ItemContent className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                <span>{day}</span><span>·</span><span>{formatTime(item.occurrence)}</span>
+                {item.isRecurring && <><span>·</span><span className="inline-flex items-center gap-1"><HugeiconsIcon icon={RepeatIcon} strokeWidth={2} className="size-3" />{describeRecurrence(item.event.recurrence)}</span></>}
+                {item.event.isPrivate && <><span>·</span><HugeiconsIcon icon={LockIcon} strokeWidth={2} className="size-3" aria-label="私人事件" /></>}
+              </div>
+              <Button type="button" variant="link" className="h-auto w-full justify-start truncate p-0 text-start text-foreground" onClick={() => { openEdit(item.event); setAgendaOpen(false) }}>{item.event.title}</Button>
+              {item.event.kind === 'agent_task' && assignee && (
+                <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                  <Avatar className="size-5"><AvatarImage src={assignee.avatarUrl} alt={assignee.name} /><AvatarFallback>{assignee.name.slice(0, 1)}</AvatarFallback></Avatar>
+                  <span className="text-xs text-foreground">→ {assignee.name}</span>
+                  {item.event.targetConversationId && convosById[item.event.targetConversationId] && <span className="truncate text-xs text-muted-foreground">在 #{convosById[item.event.targetConversationId]}</span>}
+                </div>
+              )}
+            </ItemContent>
+            <ItemActions className="opacity-100 @min-[48rem]/calendar:opacity-0 @min-[48rem]/calendar:group-focus-within:opacity-100 @min-[48rem]/calendar:group-hover:opacity-100">
+              {item.event.kind === 'agent_task' && (
+                <Button type="button" size="xs" variant="secondary" onClick={async () => {
+                  try {
+                    await toastAction(runNow(item.event.id), { loading: '正在运行日历任务', success: '任务已触发', error: '任务触发失败', description: item.event.title })
+                  } catch (error) { console.warn('[calendar] run-now failed', error) }
+                }}><HugeiconsIcon icon={Task01Icon} strokeWidth={2} data-icon="inline-start" />运行</Button>
+              )}
+              {item.event.createdBy === meId && (
+                <Button type="button" size="icon-xs" variant="destructive" aria-label={`删除 ${item.event.title}`} onClick={async () => {
+                  if (!await confirmSensitiveAction({ title: '删除日历事件？', description: `“${item.event.title}”将被永久删除。`, confirmLabel: '删除事件', tone: 'destructive' })) return
+                  try {
+                    await toastAction(remove(item.event.id), { loading: '正在删除事件', success: '事件已删除', error: '删除事件失败' })
+                  } catch (error) { console.warn('[calendar] delete failed', error) }
+                }}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} /></Button>
+              )}
+            </ItemActions>
+          </Item>
+        )
+      })}</ItemGroup>
+    </div>
+  )
+
   return (
-    <div className="h-full min-h-0 grid" style={{ gridTemplateColumns: '1fr 340px' }}>
-      <div className="flex flex-col min-h-0">
-        <div className="px-6 py-3 border-b border-ink-100 flex items-center gap-3 shrink-0">
-          <ICalendar className="w-5 h-5 text-skype" />
-          <h1 className="text-lg font-semibold text-ink-900">日历</h1>
-
-          <div className="flex items-center gap-1 ml-3">
-            <Button onClick={goPrev}
-              className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100">‹</Button>
-            <Button onClick={goToday}
-              className="px-2 h-7 rounded-md text-xs font-medium text-ink-700 hover:bg-ink-100">今天</Button>
-            <Button onClick={goNext}
-              className="w-7 h-7 rounded-md grid place-items-center text-ink-500 hover:bg-ink-100">›</Button>
-            <span className="ml-2 text-sm text-ink-700 font-medium">{headerLabel}</span>
-          </div>
-
-          <div className="flex-1" />
-
-          {/* View switcher — segmented control (cloud pill) */}
-          <div
-            className="inline-flex items-center gap-0.5 rounded-full border border-ink-100 bg-cloud p-0.5 shadow-[0_1px_0_rgba(255,255,255,0.95)_inset,0_8px_20px_-18px_rgba(26,78,120,0.4)]"
-          >
-            {(['day', 'week', 'month'] as const).map((m) => (
-              <Button
-                key={m}
-                onClick={() => setMode(m)}
-                className={cn(
-                  'px-3 h-7 rounded-full text-[12px] font-semibold capitalize transition leading-none',
-                  mode === m
-                    ? 'bg-sky2-50 text-skype-deep ring-1 ring-inset ring-sky2-100'
-                    : 'text-ink-500 hover:text-skype-deep hover:bg-sky2-50/60',
-                )}
-              >{m}</Button>
-            ))}
-          </div>
-
-          <Button
-            onClick={() => openNew()}
-            className="inline-flex items-center gap-1.5 px-3.5 h-8 rounded-full text-[12.5px] font-semibold text-white transition active:scale-[0.985]"
-            style={{
-              background: 'var(--skype)',
-              boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
-            }}
-          >
-            <IPlus className="w-4 h-4" strokeWidth={2.5} />
-            新
-          </Button>
+    <div className="@container/calendar flex h-full min-h-0 flex-col bg-card text-card-foreground">
+      <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--im-divider-weak)] px-4">
+        <div className="flex min-w-0 items-center gap-2"><HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} className="size-4 text-muted-foreground" /><h1 className="font-heading text-sm font-medium">日历</h1><span className="hidden truncate text-sm text-muted-foreground @min-[42rem]/calendar:inline">{headerLabel}</span></div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button type="button" size="sm" variant="outline" className="@min-[48rem]/calendar:hidden" onClick={() => setAgendaOpen(true)}><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} data-icon="inline-start" />即将推出</Button>
+          <Button type="button" size="sm" onClick={() => openNew()}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} data-icon="inline-start" />新事件</Button>
         </div>
-
-        {mode === 'month' && <MonthGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} />}
-        {mode === 'week' && <TimeGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} dayCount={7} />}
-        {mode === 'day' && <TimeGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} dayCount={1} />}
+      </header>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--im-divider-weak)] px-3 py-2">
+        <Button type="button" variant="ghost" size="icon-sm" aria-label="上一时间段" onClick={goPrev}><HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} /></Button>
+        <Button type="button" variant="outline" size="sm" onClick={goToday}>今天</Button>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label="下一时间段" onClick={goNext}><HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} /></Button>
+        <span className="min-w-0 flex-1 truncate text-sm font-medium @min-[42rem]/calendar:hidden">{headerLabel}</span>
+        <Tabs value={mode} onValueChange={(value) => setMode(value as ViewMode)}>
+          <TabsList aria-label="日历视图"><TabsTrigger value="day">day</TabsTrigger><TabsTrigger value="week">week</TabsTrigger><TabsTrigger value="month">month</TabsTrigger></TabsList>
+        </Tabs>
       </div>
 
-      {/* Agenda side panel — unchanged across modes. */}
-      <aside className="border-l border-ink-100 flex flex-col min-h-0">
-        <div className="px-4 py-4 border-b border-ink-100 flex items-center gap-2 shrink-0">
-          <IClock className="w-4 h-4 text-ink-500" />
-          <h2 className="text-sm font-semibold text-ink-700">即将推出</h2>
-          <div className="flex-1" />
-          <span className="text-xs text-ink-400">{agenda.length} 项目{agenda.length === 1 ? '' : 's'}</span>
+      <div className="grid min-h-0 flex-1 @min-[48rem]/calendar:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-h-0 flex-col">
+          {mode === 'month' && <MonthGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} />}
+          {mode === 'week' && <TimeGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} dayCount={7} />}
+          {mode === 'day' && <TimeGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} dayCount={1} />}
         </div>
-        <div className="flex-1 min-h-0 overflow-auto px-3 py-2 space-y-2">
-          {!loaded && (
-            <ResourceSkeleton variant="list" count={4} compact label="正在加载日历事件" />
-          )}
-          {loaded && agenda.length === 0 && (
-            <div className="px-1 py-6 text-center">
-              <div className="text-sm text-ink-500 mb-2">未来 30 天内没有任何安排。</div>
-              <Button
-                onClick={() => openNew()}
-                className="text-xs text-skype font-medium hover:underline"
-              >安排一些事情 →</Button>
-            </div>
-          )}
-          {agenda.map((it, idx) => {
-            const assignee = it.event.assigneeId ? byId[it.event.assigneeId] : null
-            const day = sameDay(it.occurrence, new Date())
-              ? 'Today'
-              : sameDay(it.occurrence, new Date(Date.now() + DAY_MS))
-                ? 'Tomorrow'
-                : formatDateLong(it.occurrence)
-            return (
-              <div key={`${it.event.id}-${idx}`}
-                className="group bg-cloud rounded-lg border border-ink-100 hover:border-ink-200 hover:shadow-soft transition p-3">
-                <div className="flex items-start gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 text-[11px] text-ink-500 mb-1">
-                      <span>{day}</span>
-                      <span className="opacity-50">·</span>
-                      <span>{formatTime(it.occurrence)}</span>
-                      {it.isRecurring && (
-                        <>
-                          <span className="opacity-50">·</span>
-                          <span className="inline-flex items-center gap-0.5 text-skype-deep">
-                            <IRepeat className="w-3 h-3" />
-                            {describeRecurrence(it.event.recurrence)}
-                          </span>
-                        </>
-                      )}
-                      {it.event.isPrivate && (
-                        <>
-                          <span className="opacity-50">·</span>
-                          <span title="私人事件——只有创建者和受让人才能看到。工作区所有者还可以查看涉及智能体的私人事件。">🔒</span>
-                        </>
-                      )}
-                    </div>
-                    <Button
-                      onClick={() => openEdit(it.event)}
-                      className="text-left text-sm font-medium text-ink-900 hover:text-skype-deep block w-full truncate"
-                    >{it.event.title}</Button>
-                    {it.event.kind === 'agent_task' && assignee && (
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <Avatar p={assignee} size={18} />
-                        <span className="text-xs text-ink-600">→ {assignee.name}</span>
-                        {it.event.targetConversationId && convosById[it.event.targetConversationId] && (
-                          <span className="text-xs text-ink-400 truncate">
-                            在 #{convosById[it.event.targetConversationId]}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {it.event.kind === 'agent_task' && (
-                      <Button
-                        title="立即运行"
-                        onClick={async () => {
-                          try {
-                            await toastAction(runNow(it.event.id), {
-                              loading: '正在运行日历任务',
-                              success: '任务已触发',
-                              error: '任务触发失败',
-                              description: it.event.title,
-                            })
-                          } catch (err) { console.warn('[calendar] run-now failed', err) }
-                        }}
-                        className="text-[10px] text-skype-deep px-1.5 py-0.5 rounded hover:bg-sky2-100"
-                      >立即运行</Button>
-                    )}
-                    {(it.event.createdBy === meId) && (
-                      <Button
-                        title="删除事件"
-                        onClick={async () => {
-                          if (!await confirmSensitiveAction({
-                            title: '删除日历事件？',
-                            description: `“${it.event.title}”将被永久删除。`,
-                            confirmLabel: '删除事件',
-                            tone: 'destructive',
-                          })) return
-                          try {
-                            await toastAction(remove(it.event.id), { loading: '正在删除事件', success: '事件已删除', error: '删除事件失败' })
-                          } catch (err) { console.warn('[calendar] delete failed', err) }
-                        }}
-                        className="text-ink-400 hover:text-coral-deep p-0.5 rounded"
-                      ><ITrash className="w-3 h-3" /></Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </aside>
+        <aside className="hidden min-h-0 border-s border-[var(--im-divider)] bg-card @min-[48rem]/calendar:flex @min-[48rem]/calendar:flex-col">
+          <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--im-divider-weak)] px-3"><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} className="size-4 text-muted-foreground" /><h2 className="text-sm font-medium">即将推出</h2><span className="ms-auto text-xs text-muted-foreground">{agenda.length} 项</span></div>
+          {agendaContent}
+        </aside>
+      </div>
+
+      <Sheet open={agendaOpen} onOpenChange={setAgendaOpen}>
+        <SheetContent side="right" className="w-[min(92vw,360px)] p-0 sm:max-w-[360px]">
+          <SheetHeader className="border-b border-[var(--im-divider-weak)] px-4 py-3 text-start"><SheetTitle>即将推出</SheetTitle><SheetDescription>未来 30 天 · {agenda.length} 项</SheetDescription></SheetHeader>
+          {agendaContent}
+        </SheetContent>
+      </Sheet>
 
       {editing && (
         <EventEditor

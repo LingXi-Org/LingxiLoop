@@ -6,7 +6,7 @@
  * LingxiLoop-specific tokens that no Markdown engine knows about, so they keep
  * rendering as their rich components:
  *   - `@<id>`                     → mention chip (avatar + hovercard)
- *   - `doc_… / board-… / card-… / ce-…` → live artifact link cards
+ *   - `doc_… / ce-…`             → live artifact link cards
  *   - unicode emoji               → Twemoji
  *   - Skype `(shortcode)`         → animated Skype emoji
  *
@@ -39,8 +39,6 @@ function tokenToNode(t: RichToken): RootContent {
     case 'mention': return customEl('cmention', { cid: t.id })
     case 'msgref': return customEl('cmsgref', { cn: String(t.n) })
     case 'document': return customEl('cartifact', { ckind: 'document', cid: t.id })
-    case 'board': return customEl('cartifact', { ckind: 'board', cid: t.id })
-    case 'card': return customEl('cartifact', { ckind: 'card', cid: t.id })
     case 'calendar': return customEl('cartifact', { ckind: 'calendar', cid: t.id })
     case 'emoji': return customEl('cemoji', { cchar: t.value })
     case 'skype': return customEl('cskype', { cname: t.name })

@@ -37,7 +37,6 @@ export type CounterName =
   | 'email.gc.failed'
   | 'db.gc.deleted'
   | 'db.gc.failed'
-  | 'boards.events.publish_failed'
   | 'knowledge.source.processed'
   | 'knowledge.source.processing_ms'
   | 'knowledge.notebook.provisioned'
@@ -90,7 +89,6 @@ const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
   'email.gc.failed':                     { help: 'GC delete attempts that failed at the storage layer.', labels: [] },
   'db.gc.deleted':                       { help: 'Rows deleted by the DB retention sweep.', labels: ['table'] },
   'db.gc.failed':                        { help: 'DB retention sweeps that failed (per table, will retry).', labels: ['table'] },
-  'boards.events.publish_failed':        { help: 'Board realtime projection publications that failed.', labels: ['kind'] },
   'knowledge.source.processed':          { help: 'Knowledge-source processing attempts by outcome.', labels: ['status'] },
   'knowledge.source.processing_ms':      { help: 'Cumulative knowledge-source processing milliseconds.', labels: [] },
   'knowledge.notebook.provisioned':      { help: 'Project notebooks provisioned in Open Notebook.', labels: [] },

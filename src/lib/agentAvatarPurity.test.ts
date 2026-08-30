@@ -26,7 +26,7 @@ test('agent identity has one Bloub rendering path and no portrait generation sur
   assert.doesNotMatch(production, /avatar\/generate|generateAndPersistAvatar|agent-gender|agent-avatar|visualSignatureFor|cmdAvatar\b|AVATAR_PALETTE|defaultAvatarBg/)
   assert.match(editor, /<Field label="Bloub 头像"/)
   assert.match(editor, /<Avatar p=\{previewParticipant\}/)
-  assert.match(avatar, /p\.kind === 'agent' \? null : p\.avatarUrl/)
+  assert.match(avatar, /p\.kind === 'agent' \? null : resolveUserAvatarUrl\(p\.avatarUrl\)/)
   assert.match(notification, /toast\.authorKind === 'agent'/)
   assert.match(notification, /<BloubAvatar/)
   assert.doesNotMatch(`${notification}\n${runtime}`, /authorAvatarBg|stable color block/)

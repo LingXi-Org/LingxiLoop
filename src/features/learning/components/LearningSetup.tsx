@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useApp } from '@/stores/app'
@@ -45,10 +46,10 @@ export function Onboarding({ onCreated }: { onCreated: () => Promise<void> }) {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
-            <Field label="课程名称" className="md:col-span-2"><Input value={title} onChange={(event) => setTitle(event.target.value)} /></Field>
-            <Field label="时区" className="md:col-span-2"><Input value={timezone} onChange={(event) => setTimezone(event.target.value)} /></Field>
-            <Field label="安静时段开始"><Input type="time" value={quietStart} onChange={(event) => setQuietStart(event.target.value)} /></Field>
-            <Field label="安静时段结束"><Input type="time" value={quietEnd} onChange={(event) => setQuietEnd(event.target.value)} /></Field>
+            <Field className="md:col-span-2"><FieldLabel>课程名称</FieldLabel><Input value={title} onChange={(event) => setTitle(event.target.value)} /></Field>
+            <Field className="md:col-span-2"><FieldLabel>时区</FieldLabel><Input value={timezone} onChange={(event) => setTimezone(event.target.value)} /></Field>
+            <Field><FieldLabel>安静时段开始</FieldLabel><Input type="time" value={quietStart} onChange={(event) => setQuietStart(event.target.value)} /></Field>
+            <Field><FieldLabel>安静时段结束</FieldLabel><Input type="time" value={quietEnd} onChange={(event) => setQuietEnd(event.target.value)} /></Field>
           </div>
           {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -75,7 +76,7 @@ export function TeacherComposer({ course, objectives, onChanged }: {
     <div className="grid gap-4 xl:grid-cols-2">
       <Card size="sm" className="xl:col-span-2">
         <CardHeader><CardTitle>课程成员</CardTitle><CardDescription>教师与学习者统一通过 canonical Course 邀请和成员管理维护。</CardDescription></CardHeader>
-        <CardContent><Button variant="secondary" onClick={() => useApp.getState().setView('management')}>打开课程管理</Button></CardContent>
+        <CardContent><Button variant="secondary" onClick={() => useApp.getState().setView('courses')}>打开课程管理</Button></CardContent>
       </Card>
       <Card size="sm">
         <CardHeader><CardTitle>新增学习目标</CardTitle></CardHeader>
@@ -103,8 +104,4 @@ export function TeacherComposer({ course, objectives, onChanged }: {
       {error && <Alert variant="destructive" className="xl:col-span-2"><AlertDescription>{error}</AlertDescription></Alert>}
     </div>
   )
-}
-
-function Field({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
-  return <label className={`grid gap-2 text-sm font-medium ${className ?? ''}`}>{label}{children}</label>
 }

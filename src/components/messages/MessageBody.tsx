@@ -11,9 +11,7 @@ import { useMessages } from '@/features/chat/state/messages'
 import { useParticipants } from '@/features/agents/state'
 import type { Message, Participant } from '@/types'
 import { Avatar } from '../Avatar'
-import { BoardLink } from '@/features/boards/components/BoardLink'
 import { CalendarLink } from '@/features/calendar/components/CalendarLink'
-import { CardLink } from '@/features/boards/components/CardLink'
 import { DocumentLink } from '@/features/documents/components/DocumentLink'
 import { SkypeEmoji } from '../SkypeEmoji'
 import { TwEmoji } from '../TwEmoji'
@@ -165,8 +163,6 @@ function codeText(node: unknown, children: ReactNode): string {
 function artifactLinkForCode(value: string): ReactNode | null {
   const v = value.trim()
   if (/^doc_[A-Za-z0-9]+$/.test(v)) return <DocumentLink id={v} />
-  if (/^board-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/.test(v)) return <BoardLink id={v} />
-  if (/^card-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/.test(v)) return <CardLink id={v} />
   if (/^ce-[A-Za-z0-9-]+$/.test(v)) return <CalendarLink id={v} />
   return null
 }
@@ -251,8 +247,6 @@ const lingxiloopMarkdownComponents = {
     const id = nodeProp(node, 'cid')
     switch (nodeProp(node, 'ckind')) {
       case 'document': return <DocumentLink id={id} />
-      case 'board': return <BoardLink id={id} />
-      case 'card': return <CardLink id={id} />
       case 'calendar': return <CalendarLink id={id} />
       default: return <>{id}</>
     }

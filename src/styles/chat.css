@@ -86,16 +86,8 @@
   transform: translateZ(0);
 }
 
-.chat-composer {
-  /* OpenMaus Composer: one quiet raised surface with a very light keyline. */
-  background: color-mix(in srgb, var(--raised) 60%, transparent);
-  border: 1px solid color-mix(in srgb, var(--hairline) 40%, transparent);
-  border-radius: 24px;
-  box-shadow: none;
-}
 .chat-composer .rich-input:focus,
 .chat-composer .rich-input:focus-visible { outline: none; }
-.openmaus-reply-preview,
 .openmaus-quote-card {
   background: color-mix(in srgb, var(--inset) 84%, transparent);
   border: 1px solid color-mix(in srgb, var(--hairline) 65%, transparent);

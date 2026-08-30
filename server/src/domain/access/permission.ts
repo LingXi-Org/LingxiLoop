@@ -56,8 +56,6 @@ export const PERMISSION_ACTIONS = [
   'document:read',
   'document:write',
   'document:delete',
-  'board:read',
-  'board:write',
   'calendar:read',
   'calendar:write',
   'canvas:read',
@@ -109,8 +107,6 @@ export type PermissionResource =
   | { type: 'poll'; id: string }
   | { type: 'knowledge_source'; id: string }
   | { type: 'document'; id: string }
-  | { type: 'board'; id: string }
-  | { type: 'board_card'; id: string }
   | { type: 'calendar_event'; id: string }
   | { type: 'canvas'; id: string }
   | { type: 'canvas_frame'; id: string }

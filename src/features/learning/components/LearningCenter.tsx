@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useLearningCenter } from '../hooks/useLearningCenter'
 import { LearningActivitiesSection } from './LearningActivitiesSection'
 import { LearningCenterHeader } from './LearningCenterHeader'
@@ -37,14 +37,14 @@ export function LearningCenter() {
   const onError = (reason: unknown) => setError(reason instanceof Error ? reason.message : String(reason))
   if (!dashboard) {
     return error
-      ? <div className="grid h-full place-items-center text-sm text-muted-foreground">{error}</div>
-      : <ResourceSkeleton variant="detail" className="h-full" label="正在加载学习中心" />
+      ? <div className="h-full overflow-y-auto p-6"><Alert variant="destructive"><AlertTitle>学习中心暂不可用</AlertTitle><AlertDescription>{error}</AlertDescription></Alert></div>
+      : <div className="grid h-full gap-4 p-6" aria-label="正在加载学习中心"><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-48 rounded-4xl" /><Skeleton className="h-48 rounded-4xl" /></div>
   }
   if (dashboard.projects.length === 0) return <Onboarding onCreated={loadDashboard} />
   if (!course) return null
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
+    <div className="flex h-full min-h-0 flex-col bg-card text-card-foreground">
       <LearningCenterHeader
         course={course}
         courses={dashboard.projects}
@@ -56,7 +56,7 @@ export function LearningCenter() {
         onSectionChange={setSection}
         onOpenTrust={openTrust}
       />
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6">
         <div className="mx-auto max-w-6xl space-y-4">
           {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
           {section === 'today' && (
@@ -108,7 +108,7 @@ export function LearningCenter() {
             />
           )}
         </div>
-      </main>
+      </div>
     </div>
   )
 }

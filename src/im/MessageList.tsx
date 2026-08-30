@@ -4,7 +4,6 @@ import type React from 'react'
 import { Virtuoso, type ListRange, type VirtuosoHandle } from 'react-virtuoso'
 import type { Message } from '@/types'
 import { markMessagesVisibleThrough } from '@/features/chat/state/messages'
-import { LingxiAssistantRuntimeProvider } from './assistantRuntime'
 
 interface MessageListProps {
   messages: Message[]
@@ -74,7 +73,6 @@ export function MessageList({
   }, [])
 
   return (
-    <LingxiAssistantRuntimeProvider messages={messages}>
       <Virtuoso
         ref={virtuosoRef}
         className={className}
@@ -99,6 +97,5 @@ export function MessageList({
         defaultItemHeight={defaultItemHeight}
         increaseViewportBy={increaseViewportBy}
       />
-    </LingxiAssistantRuntimeProvider>
   )
 }
