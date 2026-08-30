@@ -21,6 +21,8 @@ LingxiLoop Worker — schedulers, queue claims, retry, notification and GC
 Agent OS — stateless model loop, sessions, compaction, stop/steer
   └─ isolated persistent IPython kernel per Agent OS session
        └─ typed loop SDK → approved Host Bridge actions through LingxiLoop Web
+Independent Engineering Control Plane
+  └─ typed, bounded L4 port → existing run/tool/RAG/LLM/Eval/Safety/Metrics/Log authorities
 ```
 
 The model receives exactly one tool:
@@ -41,6 +43,11 @@ Project lifecycle changes are typed Host Bridge commands, not arbitrary status
 writes. Pulse requests `END`, `ENTER_READ_ONLY`, or `ARCHIVE` through approval;
 execution rechecks the human principal and calls the Project application use
 case in the approval transaction.
+
+Raw L4 engineering data is not a product API and is never authorized through
+User, CompanyRole, ProjectRole, or Permission. Only a separately deployed
+Engineering Control Plane may implement the bounded port; the port does not
+create a second telemetry store.
 
 Poll creation requires a stable client request identity. PostgreSQL stores the
 tenant-scoped voting projection and its last published revision; the Worker

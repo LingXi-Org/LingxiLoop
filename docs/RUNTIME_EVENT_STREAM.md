@@ -14,6 +14,11 @@ run ledger and are not published to learners. Model deltas are ephemeral
 previews; the durable final response is a normal `LingxiMessageV1` message and
 always wins over previews.
 
+Raw L4 run, tool, RAG, LLM, Eval, Safety, Metric and Log records remain in their
+own authoritative ledgers. Product HTTP and frontend surfaces cannot read them;
+an independently deployed Engineering Control Plane can consume bounded pages
+only through `server/src/engineering-control-plane/public.ts`.
+
 Approval-gated Project lifecycle requests carry a typed command rather than a
 target status. Resolution rechecks the human authorization principal, invokes
 the Project application transition, and records both the transition audit and

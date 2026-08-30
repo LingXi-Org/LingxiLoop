@@ -210,6 +210,22 @@ for (const retired of ['src/features/admin', 'src/features/eval']) {
   }
 }
 
+for (const file of server) {
+  const fileName = name(file)
+  if (fileName.startsWith('server/src/engineering-control-plane/')) continue
+  const source = await read(file)
+  if (/engineering-control-plane\/(?:public|port)/.test(source)
+    && fileName !== 'server/src/bin/engineering-control-plane.ts') {
+    violations.push(`${fileName}: L4 Engineering Control Plane port is independent-deployment only`)
+  }
+}
+for (const file of frontend) {
+  const source = await read(file)
+  if (/engineering-control-plane|ENGINEERING_L4/.test(source)) {
+    violations.push(`${name(file)}: frontend cannot import the L4 Engineering Control Plane`)
+  }
+}
+
 const canonicalConversationFiles = new Set([
   'src/components/AttachmentViewer.tsx',
   'src/components/Avatar.tsx',
