@@ -96,6 +96,113 @@ test('domain foundation relations replace legacy product identity and membership
   assert.match(schema, /project_memberships_company_id_project_id_user_id_key[\s\S]*?UNIQUE \(company_id, project_id, user_id\)/)
 })
 
+test('M6 learning facts are project-owned without a course compatibility layer', () => {
+  const table = (name: string) => schema.match(
+    new RegExp(`CREATE TABLE public\\.${name} \\(([\\s\\S]*?)\\n\\);`),
+  )?.[1] ?? ''
+
+  for (const retired of [
+    'learning_objectives',
+    'learning_objective_dependencies',
+    'learning_mastery',
+    'learning_mastery_events',
+  ]) {
+    assert.doesNotMatch(schema, new RegExp(`CREATE (?:TABLE|VIEW) public\\.${retired}\\b`))
+    assert.match(bootstrap, new RegExp(`'${retired}'`))
+  }
+
+  for (const relation of [
+    'learning_knowledge_units',
+    'learning_knowledge_unit_dependencies',
+    'learning_activity_knowledge_units',
+    'learning_states',
+    'learning_cases',
+    'learning_case_actions',
+  ]) {
+    assert.match(schema, new RegExp(`CREATE TABLE public\\.${relation}\\b`))
+    assert.match(bootstrap, new RegExp(`'${relation}'`))
+  }
+
+  const courses = table('courses')
+  assert.doesNotMatch(courses, /\b(?:kind|status)\b/)
+  assert.match(schema, /courses_project_id_key UNIQUE \(project_id\)/)
+
+  const activities = table('learning_activities')
+  assert.match(activities, /company_id text NOT NULL[\s\S]*project_id text NOT NULL/)
+  assert.match(activities, /kind text NOT NULL/)
+  assert.doesNotMatch(activities, /\b(?:course_id|objective_ids|type)\b/)
+  assert.match(activities, /'LESSON'.*'PRACTICE'.*'ASSESSMENT'.*'PROJECT'.*'REVIEW'/s)
+  assert.match(activities, /'DRAFT'.*'PUBLISHED'.*'CLOSED'/s)
+  assert.match(activities, /'AGENT_FORMATIVE'.*'TEACHER_REQUIRED'/s)
+  assert.match(schema, /learning_activity_knowledge_units_activity_fkey[\s\S]*?FOREIGN KEY \(company_id, project_id, activity_id\)[\s\S]*?learning_activities\(company_id, project_id, id\)/)
+  assert.match(schema, /learning_activity_knowledge_units_unit_fkey[\s\S]*?FOREIGN KEY \(company_id, project_id, knowledge_unit_id\)[\s\S]*?learning_knowledge_units\(company_id, project_id, id\)/)
+
+  assert.match(schema, /learning_knowledge_unit_dependencies_unit_fkey[\s\S]*?FOREIGN KEY \(company_id, project_id, knowledge_unit_id\)/)
+  assert.match(schema, /learning_knowledge_unit_dependencies_prerequisite_fkey[\s\S]*?FOREIGN KEY \(company_id, project_id, prerequisite_knowledge_unit_id\)/)
+  assert.match(schema, /learning_knowledge_unit_dependencies_not_self_check/)
+
+  const states = table('learning_states')
+  assert.match(states, /learning_states_pkey PRIMARY KEY \(project_id, user_id, knowledge_unit_id\)/)
+  assert.match(states, /learning_states_project_member_fkey[\s\S]*?FOREIGN KEY \(company_id, project_id, user_id\)[\s\S]*?project_memberships\(company_id, project_id, user_id\)/)
+  assert.match(states, /learning_states_knowledge_unit_fkey[\s\S]*?FOREIGN KEY \(company_id, project_id, knowledge_unit_id\)[\s\S]*?learning_knowledge_units\(company_id, project_id, id\)/)
+  assert.match(states, /'LEARNING'.*'VERIFIED'.*'NEEDS_REVIEW'/s)
+
+  for (const relation of [
+    'learning_missions',
+    'learning_mission_steps',
+    'learning_attempts',
+    'learning_evaluations',
+  ]) {
+    const definition = table(relation)
+    assert.match(definition, /company_id text NOT NULL[\s\S]*project_id text NOT NULL/)
+    assert.doesNotMatch(definition, /\bcourse_id\b/)
+  }
+  assert.match(schema, /learning_missions_conversation_project_fkey[\s\S]*?FOREIGN KEY \(conversation_id, company_id, project_id\)/)
+  assert.match(schema, /learning_mission_steps_unit_fkey[\s\S]*?FOREIGN KEY \(company_id, project_id, knowledge_unit_id\)/)
+  assert.match(schema, /learning_evaluations_attempt_fkey[\s\S]*?FOREIGN KEY \(company_id, project_id, attempt_id\)/)
+
+  const attempts = table('learning_attempts')
+  assert.match(attempts, /learning_attempts_single_source_check CHECK \(num_nonnulls\(activity_id, mission_step_id\) = 1\)/)
+  for (const constraint of ['learning_attempts_activity_fkey', 'learning_attempts_mission_step_fkey']) {
+    const foreignKey = attempts.match(new RegExp(`CONSTRAINT ${constraint}([\\s\\S]*?)(?:,\\n|$)`))?.[1] ?? ''
+    assert.match(foreignKey, /FOREIGN KEY \(company_id, project_id,/)
+    assert.doesNotMatch(foreignKey, /ON DELETE SET NULL/)
+  }
+  assert.match(schema, /uniq_learning_activity_submission[\s\S]*?company_id, project_id, activity_id, learner_id, client_submission_id/)
+  assert.match(schema, /uniq_learning_mission_step_submission[\s\S]*?company_id, project_id, mission_step_id, learner_id, client_submission_id/)
+})
+
+test('LearningCase persistence matches the uppercase lifecycle and durable retry contract', () => {
+  const cases = schema.match(/CREATE TABLE public\.learning_cases \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  const actions = schema.match(/CREATE TABLE public\.learning_case_actions \(([\s\S]*?)\n\);/)?.[1] ?? ''
+
+  assert.match(cases, /company_id text NOT NULL[\s\S]*project_id text NOT NULL[\s\S]*user_id text NOT NULL[\s\S]*knowledge_unit_id text NOT NULL/)
+  assert.match(cases, /reason text NOT NULL/)
+  assert.match(cases, /version bigint DEFAULT 1 NOT NULL/)
+  assert.match(cases, /'DETECTED'.*'IN_PROGRESS'.*'ESCALATED'.*'RESOLVED'.*'CLOSED'/s)
+  assert.match(schema, /CREATE UNIQUE INDEX uniq_learning_cases_open[\s\S]*?\(project_id, user_id, knowledge_unit_id\)[\s\S]*?WHERE \(status <> 'CLOSED'::text\)/)
+
+  assert.match(actions, /kind text NOT NULL[\s\S]*result text NOT NULL/)
+  assert.match(actions, /idempotency_key text NOT NULL/)
+  assert.match(actions, /'DIAGNOSE'.*'INTERVENE'.*'REASSESS'.*'ESCALATE'.*'OVERRIDE'.*'CLOSE'/s)
+  assert.match(actions, /'APPLIED'.*'ALREADY_APPLIED'/s)
+  assert.doesNotMatch(actions, /'INVALID'/)
+  assert.match(actions, /learning_case_actions_transition_check/)
+  assert.match(actions, /kind = 'DIAGNOSE'.*from_status = 'DETECTED'.*to_status = 'IN_PROGRESS'/s)
+  assert.match(actions, /kind = 'CLOSE'.*from_status = 'RESOLVED'.*to_status = 'CLOSED'/s)
+  assert.doesNotMatch(actions, /updated_at/)
+  assert.match(actions, /learning_case_actions_idempotency_key UNIQUE \(company_id, project_id, idempotency_key\)/)
+  for (const link of ['activity', 'mission', 'attempt', 'evaluation']) {
+    assert.match(actions, new RegExp(
+      `learning_case_actions_${link}_fkey[\\s\\S]*?FOREIGN KEY \\(company_id, project_id, ${link}_id\\)`,
+    ))
+  }
+  assert.match(bootstrap, /\['learning_states', \['project_id', 'user_id', 'knowledge_unit_id'\]\]/)
+  assert.match(bootstrap, /'uniq_learning_cases_open'/)
+  assert.match(bootstrap, /\['learning_case_actions', 'learning_case_actions_idempotency_key', 'u'\]/)
+  assert.match(bootstrap, /\['learning_case_actions', 'learning_case_actions_transition_check', 'c'\]/)
+})
+
 test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
   assert.match(schema, /plans_code_key UNIQUE \(code\)/)
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)

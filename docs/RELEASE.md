@@ -21,6 +21,14 @@ databases and create a new database. For an external database, run
 before Web startup. Seed data is created separately by the background Worker
 after the schema exists.
 
+The M6 learning-foundation cutover is reset-only and destructive. It replaces
+the course-owned objective/mastery tables with project-owned knowledge units,
+learning states, activities, missions, evidence and LearningCase ledgers. There
+are no compatibility relations, triggers, retained legacy tables or dual writes.
+Back up any database that must be preserved, then drop and recreate it from the
+current `server/src/db/schema.sql`; even a previously marked v1 database must be
+reset if it predates this cutover.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

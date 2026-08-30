@@ -4708,160 +4708,232 @@ CREATE TABLE public.learning_course_rooms (
       FOREIGN KEY (company_id, created_by) REFERENCES public.company_memberships(company_id, user_id) ON DELETE RESTRICT
 );
 
-CREATE TABLE public.learning_objectives (
+CREATE TABLE public.learning_knowledge_units (
     id text PRIMARY KEY,
-    course_id text NOT NULL,
     company_id text NOT NULL,
+    project_id text NOT NULL,
     title text NOT NULL,
     success_criteria text NOT NULL,
     target_level integer DEFAULT 3 NOT NULL,
     position double precision DEFAULT 0 NOT NULL,
-    status text DEFAULT 'draft'::text NOT NULL,
+    status text DEFAULT 'DRAFT'::text NOT NULL,
     created_by text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    UNIQUE (id, course_id),
-    CONSTRAINT learning_objectives_target_level_check CHECK ((target_level >= 1) AND (target_level <= 4)),
-    CONSTRAINT learning_objectives_status_check
-      CHECK (status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])),
-    CONSTRAINT learning_objectives_course_company_fkey
-      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE
+    CONSTRAINT learning_knowledge_units_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT learning_knowledge_units_target_level_check CHECK ((target_level >= 1) AND (target_level <= 4)),
+    CONSTRAINT learning_knowledge_units_status_check
+      CHECK (status = ANY (ARRAY['DRAFT'::text, 'PUBLISHED'::text, 'ARCHIVED'::text])),
+    CONSTRAINT learning_knowledge_units_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_learning_objectives_course
-    ON public.learning_objectives USING btree (company_id, course_id, status, position);
+CREATE INDEX idx_learning_knowledge_units_project
+    ON public.learning_knowledge_units USING btree (company_id, project_id, status, position);
 
-CREATE TABLE public.learning_objective_dependencies (
-    objective_id text NOT NULL REFERENCES public.learning_objectives(id) ON DELETE CASCADE,
-    prerequisite_objective_id text NOT NULL REFERENCES public.learning_objectives(id) ON DELETE CASCADE,
-    PRIMARY KEY (objective_id, prerequisite_objective_id),
-    CONSTRAINT learning_objective_dependencies_not_self_check CHECK (objective_id <> prerequisite_objective_id)
+CREATE TABLE public.learning_knowledge_unit_dependencies (
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    knowledge_unit_id text NOT NULL,
+    prerequisite_knowledge_unit_id text NOT NULL,
+    CONSTRAINT learning_knowledge_unit_dependencies_pkey
+      PRIMARY KEY (company_id, project_id, knowledge_unit_id, prerequisite_knowledge_unit_id),
+    CONSTRAINT learning_knowledge_unit_dependencies_not_self_check
+      CHECK (knowledge_unit_id <> prerequisite_knowledge_unit_id),
+    CONSTRAINT learning_knowledge_unit_dependencies_unit_fkey
+      FOREIGN KEY (company_id, project_id, knowledge_unit_id)
+      REFERENCES public.learning_knowledge_units(company_id, project_id, id) ON DELETE CASCADE,
+    CONSTRAINT learning_knowledge_unit_dependencies_prerequisite_fkey
+      FOREIGN KEY (company_id, project_id, prerequisite_knowledge_unit_id)
+      REFERENCES public.learning_knowledge_units(company_id, project_id, id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_learning_knowledge_unit_dependencies_prerequisite
+    ON public.learning_knowledge_unit_dependencies
+    USING btree (company_id, project_id, prerequisite_knowledge_unit_id, knowledge_unit_id);
 
 CREATE TABLE public.learning_activities (
     id text PRIMARY KEY,
-    course_id text NOT NULL,
     company_id text NOT NULL,
+    project_id text NOT NULL,
     title text NOT NULL,
     instructions text NOT NULL,
-    type text NOT NULL,
-    status text DEFAULT 'draft'::text NOT NULL,
-    evaluation_mode text DEFAULT 'teacher_required'::text NOT NULL,
+    kind text NOT NULL,
+    status text DEFAULT 'DRAFT'::text NOT NULL,
+    evaluation_mode text DEFAULT 'TEACHER_REQUIRED'::text NOT NULL,
     target_level integer DEFAULT 2 NOT NULL,
     rubric jsonb DEFAULT '[]'::jsonb NOT NULL,
-    objective_ids jsonb DEFAULT '[]'::jsonb NOT NULL,
     due_at timestamp with time zone,
     created_by text NOT NULL,
     published_by text,
     published_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT learning_activities_type_check
-      CHECK (type = ANY (ARRAY['lesson'::text, 'practice'::text, 'assessment'::text, 'project'::text, 'review'::text])),
+    CONSTRAINT learning_activities_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT learning_activities_kind_check
+      CHECK (kind = ANY (ARRAY['LESSON'::text, 'PRACTICE'::text, 'ASSESSMENT'::text, 'PROJECT'::text, 'REVIEW'::text])),
     CONSTRAINT learning_activities_status_check
-      CHECK (status = ANY (ARRAY['draft'::text, 'published'::text, 'closed'::text])),
+      CHECK (status = ANY (ARRAY['DRAFT'::text, 'PUBLISHED'::text, 'CLOSED'::text])),
     CONSTRAINT learning_activities_evaluation_mode_check
-      CHECK (evaluation_mode = ANY (ARRAY['agent_formative'::text, 'teacher_required'::text])),
+      CHECK (evaluation_mode = ANY (ARRAY['AGENT_FORMATIVE'::text, 'TEACHER_REQUIRED'::text])),
     CONSTRAINT learning_activities_target_level_check CHECK ((target_level >= 1) AND (target_level <= 4)),
-    CONSTRAINT learning_activities_course_company_fkey
-      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE
+    CONSTRAINT learning_activities_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_learning_activities_course
-    ON public.learning_activities USING btree (company_id, course_id, status, due_at);
+CREATE INDEX idx_learning_activities_project
+    ON public.learning_activities USING btree (company_id, project_id, status, due_at);
+
+CREATE TABLE public.learning_activity_knowledge_units (
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    activity_id text NOT NULL,
+    knowledge_unit_id text NOT NULL,
+    CONSTRAINT learning_activity_knowledge_units_pkey
+      PRIMARY KEY (company_id, project_id, activity_id, knowledge_unit_id),
+    CONSTRAINT learning_activity_knowledge_units_activity_fkey
+      FOREIGN KEY (company_id, project_id, activity_id)
+      REFERENCES public.learning_activities(company_id, project_id, id) ON DELETE CASCADE,
+    CONSTRAINT learning_activity_knowledge_units_unit_fkey
+      FOREIGN KEY (company_id, project_id, knowledge_unit_id)
+      REFERENCES public.learning_knowledge_units(company_id, project_id, id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_learning_activity_knowledge_units_unit
+    ON public.learning_activity_knowledge_units
+    USING btree (company_id, project_id, knowledge_unit_id, activity_id);
+
+CREATE UNIQUE INDEX idx_conversations_id_company_project
+    ON public.conversations USING btree (id, company_id, project_id);
 
 CREATE TABLE public.learning_missions (
     id text PRIMARY KEY,
-    course_id text NOT NULL,
     company_id text NOT NULL,
+    project_id text NOT NULL,
     learner_id text NOT NULL,
     conversation_id text NOT NULL,
     trigger_client_msg_no text NOT NULL,
     goal text NOT NULL,
     success_criteria text NOT NULL,
-    mission_kind text DEFAULT 'study'::text NOT NULL,
+    kind text DEFAULT 'STUDY'::text NOT NULL,
     coordinator_agent_id text,
-    status text DEFAULT 'planning'::text NOT NULL,
+    status text DEFAULT 'PLANNING'::text NOT NULL,
     created_by text NOT NULL,
     completed_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    UNIQUE (course_id, learner_id, conversation_id, trigger_client_msg_no),
+    CONSTRAINT learning_missions_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT learning_missions_idempotency_key
+      UNIQUE (company_id, project_id, learner_id, conversation_id, trigger_client_msg_no),
     CONSTRAINT learning_missions_kind_check
-      CHECK (mission_kind = ANY (ARRAY['study'::text, 'research'::text, 'project'::text])),
+      CHECK (kind = ANY (ARRAY['STUDY'::text, 'RESEARCH'::text, 'PROJECT'::text])),
     CONSTRAINT learning_missions_status_check
-      CHECK (status = ANY (ARRAY['planning'::text, 'active'::text, 'paused'::text, 'completed'::text, 'cancelled'::text])),
-    CONSTRAINT learning_missions_course_company_fkey
-      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
-    CONSTRAINT learning_missions_learner_company_fkey
-      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE,
-    CONSTRAINT learning_missions_conversation_company_fkey
-      FOREIGN KEY (conversation_id, company_id) REFERENCES public.conversations(id, company_id) ON DELETE CASCADE
+      CHECK (status = ANY (ARRAY['PLANNING'::text, 'ACTIVE'::text, 'PAUSED'::text, 'COMPLETED'::text, 'CANCELLED'::text])),
+    CONSTRAINT learning_missions_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT learning_missions_learner_project_fkey
+      FOREIGN KEY (company_id, project_id, learner_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT learning_missions_conversation_project_fkey
+      FOREIGN KEY (conversation_id, company_id, project_id)
+      REFERENCES public.conversations(id, company_id, project_id) ON DELETE CASCADE,
+    CONSTRAINT learning_missions_coordinator_company_fkey
+      FOREIGN KEY (coordinator_agent_id, company_id)
+      REFERENCES public.participants(id, company_id)
+      ON DELETE SET NULL (coordinator_agent_id)
 );
 
 CREATE INDEX idx_learning_missions_learner
-    ON public.learning_missions USING btree (company_id, course_id, learner_id, status, updated_at DESC);
+    ON public.learning_missions USING btree (company_id, project_id, learner_id, status, updated_at DESC);
 
 CREATE TABLE public.learning_mission_steps (
     id text PRIMARY KEY,
-    mission_id text NOT NULL REFERENCES public.learning_missions(id) ON DELETE CASCADE,
-    type text NOT NULL,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    mission_id text NOT NULL,
+    kind text NOT NULL,
     description text NOT NULL,
     success_criteria text NOT NULL,
-    objective_id text REFERENCES public.learning_objectives(id) ON DELETE SET NULL,
-    status text DEFAULT 'open'::text NOT NULL,
+    knowledge_unit_id text,
+    status text DEFAULT 'OPEN'::text NOT NULL,
     position double precision DEFAULT 0 NOT NULL,
     outcome text,
     completion_report_id text REFERENCES public.canvas_assignment_reports(id) ON DELETE SET NULL,
     completion_attempt_id text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT learning_mission_steps_type_check
-      CHECK (type = ANY (ARRAY['learn'::text, 'practice'::text, 'check'::text, 'reflect'::text])),
+    CONSTRAINT learning_mission_steps_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT learning_mission_steps_kind_check
+      CHECK (kind = ANY (ARRAY['LEARN'::text, 'PRACTICE'::text, 'CHECK'::text, 'REFLECT'::text])),
     CONSTRAINT learning_mission_steps_status_check
-      CHECK (status = ANY (ARRAY['open'::text, 'in_progress'::text, 'completed'::text, 'cancelled'::text]))
+      CHECK (status = ANY (ARRAY['OPEN'::text, 'IN_PROGRESS'::text, 'COMPLETED'::text, 'CANCELLED'::text])),
+    CONSTRAINT learning_mission_steps_mission_fkey
+      FOREIGN KEY (company_id, project_id, mission_id)
+      REFERENCES public.learning_missions(company_id, project_id, id) ON DELETE CASCADE,
+    CONSTRAINT learning_mission_steps_unit_fkey
+      FOREIGN KEY (company_id, project_id, knowledge_unit_id)
+      REFERENCES public.learning_knowledge_units(company_id, project_id, id)
+      ON DELETE SET NULL (knowledge_unit_id)
 );
 
 CREATE INDEX idx_learning_mission_steps
-    ON public.learning_mission_steps USING btree (mission_id, position);
+    ON public.learning_mission_steps USING btree (company_id, project_id, mission_id, position);
 
 CREATE TABLE public.learning_attempts (
     id text PRIMARY KEY,
-    course_id text NOT NULL,
     company_id text NOT NULL,
+    project_id text NOT NULL,
     learner_id text NOT NULL,
-    activity_id text REFERENCES public.learning_activities(id) ON DELETE SET NULL,
-    mission_step_id text REFERENCES public.learning_mission_steps(id) ON DELETE SET NULL,
-    assistance text DEFAULT 'none'::text NOT NULL,
+    activity_id text,
+    mission_step_id text,
+    assistance text DEFAULT 'NONE'::text NOT NULL,
     evidence jsonb NOT NULL,
-    status text DEFAULT 'submitted'::text NOT NULL,
+    status text DEFAULT 'SUBMITTED'::text NOT NULL,
     client_submission_id text,
     submitted_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT learning_attempts_scope_key UNIQUE (company_id, project_id, id),
     CONSTRAINT learning_attempts_single_source_check CHECK (num_nonnulls(activity_id, mission_step_id) = 1),
     CONSTRAINT learning_attempts_assistance_check
-      CHECK (assistance = ANY (ARRAY['none'::text, 'hint'::text, 'guided'::text])),
+      CHECK (assistance = ANY (ARRAY['NONE'::text, 'HINT'::text, 'GUIDED'::text])),
     CONSTRAINT learning_attempts_status_check
-      CHECK (status = ANY (ARRAY['submitted'::text, 'evaluated'::text, 'rejected'::text])),
-    CONSTRAINT learning_attempts_course_company_fkey
-      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
-    CONSTRAINT learning_attempts_learner_company_fkey
-      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE
+      CHECK (status = ANY (ARRAY['SUBMITTED'::text, 'EVALUATED'::text, 'REJECTED'::text])),
+    CONSTRAINT learning_attempts_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT learning_attempts_learner_project_fkey
+      FOREIGN KEY (company_id, project_id, learner_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT learning_attempts_activity_fkey
+      FOREIGN KEY (company_id, project_id, activity_id)
+      REFERENCES public.learning_activities(company_id, project_id, id),
+    CONSTRAINT learning_attempts_mission_step_fkey
+      FOREIGN KEY (company_id, project_id, mission_step_id)
+      REFERENCES public.learning_mission_steps(company_id, project_id, id)
 );
 
 ALTER TABLE ONLY public.learning_mission_steps
-    ADD CONSTRAINT learning_step_completion_attempt_fkey
-    FOREIGN KEY (completion_attempt_id) REFERENCES public.learning_attempts(id) ON DELETE SET NULL;
+    ADD CONSTRAINT learning_mission_steps_completion_attempt_fkey
+    FOREIGN KEY (company_id, project_id, completion_attempt_id)
+    REFERENCES public.learning_attempts(company_id, project_id, id)
+    ON DELETE SET NULL (completion_attempt_id);
 
 CREATE INDEX idx_learning_attempts_learner
-    ON public.learning_attempts USING btree (company_id, course_id, learner_id, submitted_at DESC);
+    ON public.learning_attempts USING btree (company_id, project_id, learner_id, submitted_at DESC);
 
 CREATE UNIQUE INDEX uniq_learning_activity_submission
-    ON public.learning_attempts USING btree (company_id, course_id, activity_id, learner_id, client_submission_id)
-    WHERE client_submission_id IS NOT NULL;
+    ON public.learning_attempts
+    USING btree (company_id, project_id, activity_id, learner_id, client_submission_id)
+    WHERE (activity_id IS NOT NULL AND client_submission_id IS NOT NULL);
+
+CREATE UNIQUE INDEX uniq_learning_mission_step_submission
+    ON public.learning_attempts
+    USING btree (company_id, project_id, mission_step_id, learner_id, client_submission_id)
+    WHERE (mission_step_id IS NOT NULL AND client_submission_id IS NOT NULL);
 
 CREATE TABLE public.learning_evaluations (
     id text PRIMARY KEY,
-    attempt_id text NOT NULL REFERENCES public.learning_attempts(id) ON DELETE CASCADE,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    attempt_id text NOT NULL,
     demonstrated_level integer NOT NULL,
     confidence double precision NOT NULL,
     rubric_results jsonb DEFAULT '[]'::jsonb NOT NULL,
@@ -4870,68 +4942,177 @@ CREATE TABLE public.learning_evaluations (
     evaluator_kind text NOT NULL,
     source_report_id text REFERENCES public.canvas_assignment_reports(id) ON DELETE SET NULL,
     verifier_report_id text REFERENCES public.canvas_assignment_reports(id) ON DELETE SET NULL,
-    status text DEFAULT 'pending'::text NOT NULL,
+    status text DEFAULT 'PENDING'::text NOT NULL,
     review_reason text,
     reviewed_by text,
     reviewed_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT learning_evaluations_scope_key UNIQUE (company_id, project_id, id),
     CONSTRAINT learning_evaluations_level_check CHECK ((demonstrated_level >= 0) AND (demonstrated_level <= 4)),
     CONSTRAINT learning_evaluations_confidence_check CHECK ((confidence >= 0) AND (confidence <= 1)),
     CONSTRAINT learning_evaluations_evaluator_kind_check
-      CHECK (evaluator_kind = ANY (ARRAY['agent'::text, 'teacher'::text])),
+      CHECK (evaluator_kind = ANY (ARRAY['AGENT'::text, 'TEACHER'::text])),
     CONSTRAINT learning_evaluations_status_check
-      CHECK (status = ANY (ARRAY['pending'::text, 'accepted'::text, 'rejected'::text]))
+      CHECK (status = ANY (ARRAY['PENDING'::text, 'ACCEPTED'::text, 'REJECTED'::text])),
+    CONSTRAINT learning_evaluations_attempt_fkey
+      FOREIGN KEY (company_id, project_id, attempt_id)
+      REFERENCES public.learning_attempts(company_id, project_id, id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_learning_evaluations_review
-    ON public.learning_evaluations USING btree (status, created_at) WHERE (status = 'pending'::text);
+    ON public.learning_evaluations USING btree (company_id, project_id, status, created_at)
+    WHERE (status = 'PENDING'::text);
 
-CREATE TABLE public.learning_mastery (
-    course_id text NOT NULL,
+CREATE TABLE public.learning_states (
+    project_id text NOT NULL,
+    user_id text NOT NULL,
+    knowledge_unit_id text NOT NULL,
     company_id text NOT NULL,
-    learner_id text NOT NULL,
-    objective_id text NOT NULL REFERENCES public.learning_objectives(id) ON DELETE CASCADE,
     level integer DEFAULT 0 NOT NULL,
-    status text DEFAULT 'learning'::text NOT NULL,
+    status text DEFAULT 'LEARNING'::text NOT NULL,
     independent_evidence_count integer DEFAULT 0 NOT NULL,
     review_interval_days integer DEFAULT 1 NOT NULL,
     next_review_at timestamp with time zone,
+    last_evidence_at timestamp with time zone,
     version bigint DEFAULT 1 NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    PRIMARY KEY (course_id, learner_id, objective_id),
-    CONSTRAINT learning_mastery_level_check CHECK ((level >= 0) AND (level <= 4)),
-    CONSTRAINT learning_mastery_status_check
-      CHECK (status = ANY (ARRAY['learning'::text, 'verified'::text, 'needs_review'::text])),
-    CONSTRAINT learning_mastery_course_company_fkey
-      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE,
-    CONSTRAINT learning_mastery_learner_company_fkey
-      FOREIGN KEY (company_id, learner_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE
+    CONSTRAINT learning_states_pkey PRIMARY KEY (project_id, user_id, knowledge_unit_id),
+    CONSTRAINT learning_states_level_check CHECK ((level >= 0) AND (level <= 4)),
+    CONSTRAINT learning_states_status_check
+      CHECK (status = ANY (ARRAY['LEARNING'::text, 'VERIFIED'::text, 'NEEDS_REVIEW'::text])),
+    CONSTRAINT learning_states_evidence_count_check CHECK (independent_evidence_count >= 0),
+    CONSTRAINT learning_states_review_interval_check CHECK (review_interval_days >= 1),
+    CONSTRAINT learning_states_version_check CHECK (version >= 1),
+    CONSTRAINT learning_states_project_member_fkey
+      FOREIGN KEY (company_id, project_id, user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT learning_states_knowledge_unit_fkey
+      FOREIGN KEY (company_id, project_id, knowledge_unit_id)
+      REFERENCES public.learning_knowledge_units(company_id, project_id, id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_learning_mastery_due
-    ON public.learning_mastery USING btree (company_id, learner_id, next_review_at) WHERE (next_review_at IS NOT NULL);
+CREATE INDEX idx_learning_states_due
+    ON public.learning_states USING btree (company_id, project_id, user_id, next_review_at)
+    WHERE (next_review_at IS NOT NULL);
 
-CREATE TABLE public.learning_mastery_events (
+CREATE TABLE public.learning_cases (
     id text PRIMARY KEY,
-    course_id text NOT NULL,
     company_id text NOT NULL,
-    learner_id text NOT NULL,
-    objective_id text NOT NULL REFERENCES public.learning_objectives(id) ON DELETE CASCADE,
-    evaluation_id text REFERENCES public.learning_evaluations(id) ON DELETE SET NULL,
-    previous_level integer NOT NULL,
-    next_level integer NOT NULL,
-    kind text NOT NULL,
+    project_id text NOT NULL,
+    user_id text NOT NULL,
+    knowledge_unit_id text NOT NULL,
+    status text DEFAULT 'DETECTED'::text NOT NULL,
     reason text NOT NULL,
-    actor_id text NOT NULL,
+    summary text DEFAULT ''::text NOT NULL,
+    version bigint DEFAULT 1 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT learning_mastery_events_kind_check
-      CHECK (kind = ANY (ARRAY['evidence'::text, 'teacher_override'::text, 'review_flag'::text])),
-    CONSTRAINT learning_mastery_events_course_company_fkey
-      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    resolved_at timestamp with time zone,
+    closed_at timestamp with time zone,
+    CONSTRAINT learning_cases_scope_key
+      UNIQUE (company_id, project_id, user_id, knowledge_unit_id, id),
+    CONSTRAINT learning_cases_status_check
+      CHECK (status = ANY (ARRAY['DETECTED'::text, 'IN_PROGRESS'::text, 'ESCALATED'::text, 'RESOLVED'::text, 'CLOSED'::text])),
+    CONSTRAINT learning_cases_reason_check CHECK ((char_length(reason) >= 1) AND (char_length(reason) <= 2000)),
+    CONSTRAINT learning_cases_summary_check CHECK (char_length(summary) <= 10000),
+    CONSTRAINT learning_cases_version_check CHECK (version >= 1),
+    CONSTRAINT learning_cases_project_member_fkey
+      FOREIGN KEY (company_id, project_id, user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT learning_cases_knowledge_unit_fkey
+      FOREIGN KEY (company_id, project_id, knowledge_unit_id)
+      REFERENCES public.learning_knowledge_units(company_id, project_id, id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_learning_mastery_events
-    ON public.learning_mastery_events USING btree (company_id, course_id, learner_id, objective_id, created_at DESC);
+CREATE UNIQUE INDEX uniq_learning_cases_open
+    ON public.learning_cases USING btree (project_id, user_id, knowledge_unit_id)
+    WHERE (status <> 'CLOSED'::text);
+
+CREATE INDEX idx_learning_cases_project_status
+    ON public.learning_cases USING btree (company_id, project_id, status, updated_at DESC);
+
+CREATE TABLE public.learning_case_actions (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    case_id text NOT NULL,
+    user_id text NOT NULL,
+    knowledge_unit_id text NOT NULL,
+    kind text NOT NULL,
+    result text NOT NULL,
+    from_status text NOT NULL,
+    to_status text NOT NULL,
+    case_version bigint NOT NULL,
+    idempotency_key text NOT NULL,
+    actor_id text NOT NULL,
+    reason text DEFAULT ''::text NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    activity_id text,
+    mission_id text,
+    attempt_id text,
+    evaluation_id text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT learning_case_actions_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT learning_case_actions_idempotency_key UNIQUE (company_id, project_id, idempotency_key),
+    CONSTRAINT learning_case_actions_kind_check
+      CHECK (kind = ANY (ARRAY['DIAGNOSE'::text, 'INTERVENE'::text, 'REASSESS'::text, 'ESCALATE'::text, 'OVERRIDE'::text, 'CLOSE'::text])),
+    CONSTRAINT learning_case_actions_result_check
+      CHECK (result = ANY (ARRAY['APPLIED'::text, 'ALREADY_APPLIED'::text])),
+    CONSTRAINT learning_case_actions_from_status_check
+      CHECK (from_status = ANY (ARRAY['DETECTED'::text, 'IN_PROGRESS'::text, 'ESCALATED'::text, 'RESOLVED'::text, 'CLOSED'::text])),
+    CONSTRAINT learning_case_actions_to_status_check
+      CHECK (to_status = ANY (ARRAY['DETECTED'::text, 'IN_PROGRESS'::text, 'ESCALATED'::text, 'RESOLVED'::text, 'CLOSED'::text])),
+    CONSTRAINT learning_case_actions_transition_check CHECK (
+      (kind = 'DIAGNOSE'::text AND (
+        (result = 'APPLIED'::text AND from_status = 'DETECTED'::text AND to_status = 'IN_PROGRESS'::text)
+        OR (result = 'ALREADY_APPLIED'::text AND from_status = 'IN_PROGRESS'::text AND to_status = 'IN_PROGRESS'::text)
+      ))
+      OR (kind = 'INTERVENE'::text AND result = 'APPLIED'::text AND (
+        (from_status = 'IN_PROGRESS'::text AND to_status = 'IN_PROGRESS'::text)
+        OR (from_status = 'ESCALATED'::text AND to_status = 'ESCALATED'::text)
+      ))
+      OR (kind = 'REASSESS'::text AND result = 'APPLIED'::text
+        AND from_status = ANY (ARRAY['IN_PROGRESS'::text, 'ESCALATED'::text])
+        AND to_status = 'RESOLVED'::text)
+      OR (kind = 'ESCALATE'::text AND (
+        (result = 'APPLIED'::text
+          AND from_status = ANY (ARRAY['DETECTED'::text, 'IN_PROGRESS'::text])
+          AND to_status = 'ESCALATED'::text)
+        OR (result = 'ALREADY_APPLIED'::text
+          AND from_status = 'ESCALATED'::text AND to_status = 'ESCALATED'::text)
+      ))
+      OR (kind = 'OVERRIDE'::text AND result = 'APPLIED'::text
+        AND from_status = ANY (ARRAY['DETECTED'::text, 'IN_PROGRESS'::text, 'ESCALATED'::text])
+        AND to_status = 'RESOLVED'::text)
+      OR (kind = 'CLOSE'::text AND (
+        (result = 'APPLIED'::text AND from_status = 'RESOLVED'::text AND to_status = 'CLOSED'::text)
+        OR (result = 'ALREADY_APPLIED'::text AND from_status = 'CLOSED'::text AND to_status = 'CLOSED'::text)
+      ))
+    ),
+    CONSTRAINT learning_case_actions_version_check CHECK (case_version >= 1),
+    CONSTRAINT learning_case_actions_case_fkey
+      FOREIGN KEY (company_id, project_id, user_id, knowledge_unit_id, case_id)
+      REFERENCES public.learning_cases(company_id, project_id, user_id, knowledge_unit_id, id) ON DELETE CASCADE,
+    CONSTRAINT learning_case_actions_activity_fkey
+      FOREIGN KEY (company_id, project_id, activity_id)
+      REFERENCES public.learning_activities(company_id, project_id, id)
+      ON DELETE SET NULL (activity_id),
+    CONSTRAINT learning_case_actions_mission_fkey
+      FOREIGN KEY (company_id, project_id, mission_id)
+      REFERENCES public.learning_missions(company_id, project_id, id)
+      ON DELETE SET NULL (mission_id),
+    CONSTRAINT learning_case_actions_attempt_fkey
+      FOREIGN KEY (company_id, project_id, attempt_id)
+      REFERENCES public.learning_attempts(company_id, project_id, id)
+      ON DELETE SET NULL (attempt_id),
+    CONSTRAINT learning_case_actions_evaluation_fkey
+      FOREIGN KEY (company_id, project_id, evaluation_id)
+      REFERENCES public.learning_evaluations(company_id, project_id, id)
+      ON DELETE SET NULL (evaluation_id)
+);
+
+CREATE INDEX idx_learning_case_actions_case
+    ON public.learning_case_actions USING btree (company_id, project_id, case_id, created_at, id);
 
 CREATE TABLE public.learning_notification_preferences (
     id text PRIMARY KEY,
