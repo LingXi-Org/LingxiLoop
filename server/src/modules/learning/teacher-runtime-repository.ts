@@ -75,9 +75,9 @@ export async function findTeacherApprovalTriggerAuthor(
 ): Promise<string | undefined> {
   const { rows } = await db.query<{ actor_id: string | null }>(
     `SELECT COALESCE(approval.resolved_by,approval.requested_by) AS actor_id
-       FROM agent_os_approvals approval
+       FROM approvals approval
       WHERE approval.id=$2 AND approval.company_id=$1 AND approval.agent_id=$3
-        AND approval.channel_id=$4`,
+        AND approval.channel_id=$4 AND approval.source='AGENT_OS'`,
     [input.companyId, input.approvalId, input.agentId, input.channelId],
   )
   return rows[0]?.actor_id || undefined

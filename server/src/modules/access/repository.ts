@@ -371,10 +371,10 @@ function resourceQuery(resource: PermissionResource): {
       return {
         sql: `SELECT approval.company_id,conversation.project_id,NULL::text AS created_by,
                      conversation.members AS conversation_members,conversation.leader_id,approval.status AS resource_status
-                FROM agent_os_approvals approval
+                FROM approvals approval
                 LEFT JOIN conversations conversation ON conversation.id=approval.channel_id
                  AND conversation.company_id=approval.company_id
-               WHERE approval.id=$1`,
+               WHERE approval.id=$1 AND approval.source='AGENT_OS'`,
         params: [resource.id],
         lockTarget: 'approval',
       }

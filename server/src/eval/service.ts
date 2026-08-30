@@ -232,7 +232,9 @@ function buildAgentTrace(args: {
     kind: 'approval',
     label: `Approval · ${approval.action}`,
     action: approval.action,
-    status: approval.status === 'pending' ? 'pending' : approval.status === 'approved' ? 'completed' : 'failed',
+    status: approval.status === 'PENDING' || approval.status === 'APPROVED'
+      ? 'pending'
+      : approval.status === 'EXECUTED' ? 'completed' : 'failed',
     startedAt: approval.requested_at,
     finishedAt: approval.resolved_at ?? undefined,
     durationMs: elapsedMs(approval.requested_at, approval.resolved_at),
@@ -305,7 +307,9 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
   const approvals: EvalApprovalObservation[] = approvalRows.map((row) => ({
     id: row.id,
     action: row.action,
-    status: row.status === 'approved' || row.status === 'rejected' || row.status === 'pending' ? row.status : 'failed',
+    status: row.status === 'PENDING' ? 'pending'
+      : row.status === 'APPROVED' || row.status === 'EXECUTED' ? 'approved'
+      : row.status === 'REJECTED' ? 'rejected' : 'failed',
     requestedAt: row.requested_at,
     ...(row.resolved_at ? { resolvedAt: row.resolved_at } : {}),
   }))

@@ -42,6 +42,13 @@ export const imReadReceiptsQuerySchema = z.object({
 })
 
 export const approvalResolutionRequestSchema = z.object({ approved: z.boolean() }).strict()
+export const approvalSupersedeRequestSchema = z.object({
+  args: z.record(z.string(), z.unknown()),
+  summary: z.string().trim().min(1).max(500).optional(),
+}).strict().refine((value) => JSON.stringify(value.args).length <= 64 * 1024, {
+  message: 'approval arguments exceed 64 KiB',
+  path: ['args'],
+})
 
 export const agentRunControlRequestSchema = z.object({
   agentId: z.string().trim().min(1),

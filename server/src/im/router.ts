@@ -14,6 +14,7 @@ import {
   agentRunControlRequestSchema,
   agentRunSteerRequestSchema,
   approvalResolutionRequestSchema,
+  approvalSupersedeRequestSchema,
   imHistoryQuerySchema,
   imReactionRequestSchema,
   imReadReceiptsQuerySchema,
@@ -181,8 +182,19 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
   })
   if (result.kind === 'not_found') { res.status(404).json({ error: 'approval not found' }); return }
   if (result.kind === 'conflict') { res.status(409).json({ error: `approval already ${result.status}` }); return }
-  if (result.kind === 'expired') { res.status(409).json({ error: result.error, status: 'expired' }); return }
+  if (result.kind === 'cancelled') { res.status(409).json({ error: result.error, status: 'CANCELLED' }); return }
   res.json({ ok: result.ok, approved: result.approved, result: result.result, error: result.error })
+}))
+
+imRouter.post('/approvals/:id/supersede', safe(async (req, res) => {
+  const { userId, companyId } = await identity(req)
+  const { args, summary } = requestInput(approvalSupersedeRequestSchema, req.body)
+  const result = await agentApprovalApplication.supersede({
+    approvalId: String(req.params.id), companyId, userId, args, ...(summary ? { summary } : {}),
+  })
+  if (result.kind === 'not_found') { res.status(404).json({ error: 'approval not found' }); return }
+  if (result.kind === 'conflict') { res.status(409).json({ error: `approval already ${result.status}` }); return }
+  res.status(201).json({ approvalId: result.approvalId, supersedesApprovalId: String(req.params.id) })
 }))
 
 imRouter.get('/routines', safe(async (req, res) => {

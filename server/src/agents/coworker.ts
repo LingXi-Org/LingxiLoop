@@ -4,7 +4,7 @@ import { sendSystemChannelMessage } from '../im/public.js'
 
 export type HandoffStatus = 'pending' | 'accepted' | 'working' | 'completed' | 'blocked'
 export type ApprovalKind = 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action'
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'expired'
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'EXECUTED'
 
 export interface HandoffSnapshot {
   id: string
@@ -326,10 +326,10 @@ export async function consumeApprovedAction(args: {
 }): Promise<{ approved: boolean; approvalId?: string }> {
   const hash = payloadHash(args.payload)
   const { rows } = await pool.query<{ id: string }>(
-    `UPDATE agent_approvals SET consumed_at = NOW()
+    `UPDATE approvals SET status='EXECUTED',consumed_at=NOW(),executed_at=NOW()
      WHERE id = $1 AND company_id = $2 AND agent_id = $3
-       AND conversation_id = $4 AND run_id = $5 AND action_key = $6
-       AND payload_hash = $7 AND status = 'approved' AND consumed_at IS NULL
+       AND source='COWORKER' AND channel_id = $4 AND run_id = $5 AND action_key = $6
+       AND payload_hash = $7 AND status = 'APPROVED' AND consumed_at IS NULL
      RETURNING id`, [args.approvalId, args.companyId, args.agentId, args.conversationId, args.runId, args.actionKey, hash],
   )
   return rows[0] ? { approved: true, approvalId: rows[0].id } : { approved: false }
@@ -354,10 +354,10 @@ export async function requestApproval(args: {
   const existing = await pool.query<{
     id: string; message_id: string | null; requested_at: string; status: ApprovalStatus
   }>(
-    `SELECT a.id, a.message_id, a.requested_at, a.status FROM agent_approvals a
-     WHERE a.company_id = $1 AND a.agent_id = $2 AND a.conversation_id = $3
+    `SELECT a.id, a.message_id, a.requested_at, a.status FROM approvals a
+     WHERE a.company_id = $1 AND a.agent_id = $2 AND a.channel_id = $3 AND a.source='COWORKER'
        AND a.run_id IS NOT DISTINCT FROM $4 AND a.action_key IS NOT DISTINCT FROM $5
-       AND a.payload_hash = $6 AND a.status = 'pending'
+       AND a.payload_hash = $6 AND a.status = 'PENDING'
      ORDER BY requested_at DESC LIMIT 1`, [args.companyId, args.agentId, args.conversationId, args.runId ?? null, args.actionKey ?? null, hash],
   )
   if (existing.rows[0]) {
@@ -377,7 +377,7 @@ export async function requestApproval(args: {
       suppressAgentWake: true,
     })
     if (existing.rows[0].message_id !== message.id) {
-      await pool.query(`UPDATE agent_approvals SET message_id=$2 WHERE id=$1 AND company_id=$3`, [snapshot.id, message.id, args.companyId])
+      await pool.query(`UPDATE approvals SET message_id=$2 WHERE id=$1 AND company_id=$3`, [snapshot.id, message.id, args.companyId])
     }
     return { ...snapshot, messageId: message.id }
   }
@@ -385,13 +385,13 @@ export async function requestApproval(args: {
   const requestedAt = new Date().toISOString()
   const snapshot: ApprovalSnapshot = {
     id, agentId: args.agentId, kind: args.kind, summary: args.summary,
-    status: 'pending', payload: args.payload, requestedAt,
+    status: 'PENDING', payload: args.payload, requestedAt,
   }
   await pool.query(
-    `INSERT INTO agent_approvals (
-       id, company_id, agent_id, conversation_id, run_id, kind, summary, payload, payload_hash,
+    `INSERT INTO approvals (
+       id, company_id, agent_id, channel_id, source, run_id, kind, summary, payload, payload_hash,
        action_key, action_index, blocked_action, remaining_actions, input_scope_key
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12::jsonb,$13::jsonb,$14)`,
+     ) VALUES ($1,$2,$3,$4,'COWORKER',$5,$6,$7,$8::jsonb,$9,$10,$11,$12::jsonb,$13::jsonb,$14)`,
     [id, args.companyId, args.agentId, args.conversationId, args.runId ?? null,
       args.kind, args.summary.trim(), JSON.stringify(args.payload), hash,
       args.actionKey ?? null, args.actionIndex ?? null, args.blockedAction ? JSON.stringify(args.blockedAction) : null,
@@ -407,7 +407,7 @@ export async function requestApproval(args: {
       approval: snapshot,
       suppressAgentWake: true,
     })
-  await pool.query(`UPDATE agent_approvals SET message_id = $2 WHERE id = $1 AND company_id=$3`, [id, message.id, args.companyId])
+  await pool.query(`UPDATE approvals SET message_id = $2 WHERE id = $1 AND company_id=$3`, [id, message.id, args.companyId])
   return { ...snapshot, messageId: message.id }
 }
 
@@ -418,11 +418,11 @@ export async function claimApprovedContinuation(approvalId: string): Promise<App
     action_key: string | null; action_index: number | null; payload: Record<string, unknown>; blocked_action: Record<string, unknown> | null;
     remaining_actions: Record<string, unknown>[] | null; input_scope_key: string | null
   }>(
-    `UPDATE agent_approvals
-        SET continuation_status = 'running', resumed_at = NOW()
-      WHERE id = $1 AND status = 'approved' AND consumed_at IS NULL
-        AND continuation_status = 'pending'
-      RETURNING id, company_id, agent_id, conversation_id, run_id, action_key, action_index,
+    `UPDATE approvals
+        SET continuation_status = 'RUNNING', resumed_at = NOW()
+      WHERE id = $1 AND source='COWORKER' AND status = 'APPROVED' AND consumed_at IS NULL
+        AND continuation_status = 'PENDING'
+      RETURNING id, company_id, agent_id, channel_id AS conversation_id, run_id, action_key, action_index,
         payload, blocked_action, remaining_actions, input_scope_key`,
     [approvalId],
   )
@@ -437,16 +437,16 @@ export async function claimApprovedContinuation(approvalId: string): Promise<App
   }
 }
 
-export async function finishApprovedContinuation(approvalId: string, status: 'completed' | 'failed'): Promise<void> {
-  await pool.query(`UPDATE agent_approvals SET continuation_status = $2 WHERE id = $1`, [approvalId, status])
+export async function finishApprovedContinuation(approvalId: string, status: 'COMPLETED' | 'FAILED'): Promise<void> {
+  await pool.query(`UPDATE approvals SET continuation_status = $2 WHERE id = $1 AND source='COWORKER'`, [approvalId, status])
 }
 
 export async function resolveApproval(args: {
-  companyId: string; userId: string; approvalId: string; decision: 'approved' | 'rejected'
+  companyId: string; userId: string; approvalId: string; decision: 'APPROVED' | 'REJECTED'
 }): Promise<ApprovalSnapshot & { conversationId: string; messageId: string }> {
   const current = await pool.query<{ conversation_id: string }>(
-    `SELECT conversation_id FROM agent_approvals
-     WHERE id = $1 AND company_id = $2 LIMIT 1`,
+    `SELECT channel_id AS conversation_id FROM approvals
+     WHERE id = $1 AND company_id = $2 AND source='COWORKER' LIMIT 1`,
     [args.approvalId, args.companyId],
   )
   if (!current.rows[0]) throw new Error('approval not found')
@@ -456,9 +456,9 @@ export async function resolveApproval(args: {
     run_id: string | null; summary: string; payload: Record<string, unknown>; requested_at: string;
     resolved_at: string; resolved_by: string; status: ApprovalStatus
   }>(
-    `UPDATE agent_approvals SET status = $4, resolved_at = NOW(), resolved_by = $3
-     WHERE id = $1 AND company_id = $2 AND status = 'pending'
-     RETURNING id, agent_id, conversation_id, message_id, run_id, kind, summary, payload, requested_at,
+    `UPDATE approvals SET status = $4, resolved_at = NOW(), resolved_by = $3
+     WHERE id = $1 AND company_id = $2 AND source='COWORKER' AND status = 'PENDING'
+     RETURNING id, agent_id, channel_id AS conversation_id, message_id, run_id, kind, summary, payload, requested_at,
                resolved_at, resolved_by, status`,
     [args.approvalId, args.companyId, args.userId, args.decision],
   )
@@ -467,9 +467,9 @@ export async function resolveApproval(args: {
     run_id: string | null; summary: string; payload: Record<string, unknown>; requested_at: string;
     resolved_at: string; resolved_by: string; status: ApprovalStatus
   }>(
-    `SELECT id,agent_id,conversation_id,message_id,run_id,kind,summary,payload,requested_at,
+    `SELECT id,agent_id,channel_id AS conversation_id,message_id,run_id,kind,summary,payload,requested_at,
             resolved_at,resolved_by,status
-       FROM agent_approvals WHERE id=$1 AND company_id=$2`,
+       FROM approvals WHERE id=$1 AND company_id=$2 AND source='COWORKER'`,
     [args.approvalId, args.companyId],
   )).rows[0]
   if (!row || row.status !== args.decision || !row.resolved_at || !row.resolved_by) {
@@ -492,13 +492,13 @@ export async function resolveApproval(args: {
     suppressAgentWake: true,
   })
   await pool.query(
-    `UPDATE agent_approvals SET message_id=$2 WHERE id=$1 AND company_id=$3`,
+    `UPDATE approvals SET message_id=$2 WHERE id=$1 AND company_id=$3`,
     [row.id, message.id, args.companyId],
   )
   // Do not create a fresh wake-up. An approved continuation resumes the
   // suspended run using this exact approval/action identity; rejection
   // terminally completes that same run without executing the blocked action.
-  if (row.run_id && args.decision === 'rejected') {
+  if (row.run_id && args.decision === 'REJECTED') {
     await pool.query(
       `UPDATE agent_runs
        SET status = 'completed', finished_at = COALESCE(finished_at, NOW()), updated_at = NOW(),
@@ -506,7 +506,7 @@ export async function resolveApproval(args: {
        WHERE id = $1 AND status = 'waiting_for_human'`,
       [row.run_id, 'Human rejected approval; blocked action was not executed'],
     )
-    await pool.query(`UPDATE agent_approvals SET continuation_status = 'rejected' WHERE id = $1`, [row.id])
+    await pool.query(`UPDATE approvals SET continuation_status = 'REJECTED' WHERE id = $1`, [row.id])
   }
   return { ...snapshot, conversationId: row.conversation_id, messageId: message.id }
 }
@@ -519,11 +519,11 @@ export async function listApprovals(companyId: string, status?: ApprovalStatus):
     filter = ` AND a.status = $2`
   }
   const { rows } = await pool.query(
-    `SELECT a.id, a.agent_id AS "agentId", a.conversation_id AS "conversationId",
+    `SELECT a.id, a.agent_id AS "agentId", a.channel_id AS "conversationId",
        a.run_id AS "runId", a.message_id AS "messageId", a.kind, a.summary, a.payload,
        a.status, a.requested_at AS "requestedAt", a.resolved_at AS "resolvedAt",
        a.resolved_by AS "resolvedBy", a.consumed_at AS "consumedAt"
-     FROM agent_approvals a WHERE a.company_id = $1${filter}
+     FROM approvals a WHERE a.company_id = $1 AND a.source='COWORKER'${filter}
      ORDER BY a.requested_at DESC LIMIT 100`, params,
   )
   return rows

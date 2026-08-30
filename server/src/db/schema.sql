@@ -112,32 +112,52 @@ CREATE TABLE public.agent_action_executions (
 
 
 --
--- Name: agent_approvals; Type: TABLE; Schema: public; Owner: -
+-- Name: approvals; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.agent_approvals (
+CREATE TABLE public.approvals (
     id text NOT NULL,
     company_id text NOT NULL,
     agent_id text NOT NULL,
-    conversation_id text NOT NULL,
+    channel_id text NOT NULL,
+    source text NOT NULL,
+    work_id text,
+    authorization_user_id text,
+    idempotency_key text,
+    action text,
+    args jsonb DEFAULT '{}'::jsonb NOT NULL,
     run_id text,
     message_id text,
-    kind text NOT NULL,
+    kind text,
     summary text NOT NULL,
     payload jsonb DEFAULT '{}'::jsonb NOT NULL,
-    payload_hash text NOT NULL,
+    payload_hash text,
     action_key text,
     action_index integer,
     blocked_action jsonb,
     remaining_actions jsonb DEFAULT '[]'::jsonb NOT NULL,
     input_scope_key text,
-    continuation_status text DEFAULT 'pending'::text NOT NULL,
+    continuation_status text DEFAULT 'PENDING'::text NOT NULL,
     resumed_at timestamp with time zone,
-    status text DEFAULT 'pending'::text NOT NULL,
+    status text DEFAULT 'PENDING'::text NOT NULL,
     requested_at timestamp with time zone DEFAULT now() NOT NULL,
+    requested_by text,
+    scope jsonb DEFAULT '{}'::jsonb NOT NULL,
+    preview jsonb DEFAULT '{}'::jsonb NOT NULL,
+    expires_at timestamp with time zone,
     resolved_at timestamp with time zone,
     resolved_by text,
-    consumed_at timestamp with time zone
+    cancel_reason text,
+    supersedes_approval_id text,
+    executed_at timestamp with time zone,
+    result jsonb,
+    error text,
+    consumed_at timestamp with time zone,
+    CONSTRAINT approvals_source_check CHECK (source = ANY (ARRAY['COWORKER'::text, 'AGENT_OS'::text])),
+    CONSTRAINT approvals_status_check CHECK (status = ANY (ARRAY['PENDING'::text, 'APPROVED'::text, 'REJECTED'::text, 'CANCELLED'::text, 'EXECUTED'::text])),
+    CONSTRAINT approvals_continuation_status_check CHECK (continuation_status = ANY (ARRAY['PENDING'::text, 'RUNNING'::text, 'COMPLETED'::text, 'FAILED'::text, 'REJECTED'::text])),
+    CONSTRAINT approvals_cancel_reason_check CHECK (((status = 'CANCELLED'::text) AND (cancel_reason IS NOT NULL)) OR ((status <> 'CANCELLED'::text) AND (cancel_reason IS NULL))),
+    CONSTRAINT approvals_source_fields_check CHECK (((source = 'AGENT_OS'::text) AND (work_id IS NOT NULL) AND (authorization_user_id IS NOT NULL) AND (idempotency_key IS NOT NULL) AND (action IS NOT NULL) AND (expires_at IS NOT NULL)) OR ((source = 'COWORKER'::text) AND (payload_hash IS NOT NULL) AND (kind IS NOT NULL)))
 );
 
 
@@ -287,29 +307,6 @@ CREATE TABLE public.agent_memory_evidence (
     available_at timestamp with time zone DEFAULT (now() + '00:00:15'::interval) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     processed_at timestamp with time zone,
-    error text
-);
-
-
---
--- Name: agent_os_approvals; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.agent_os_approvals (
-    id text NOT NULL,
-    company_id text NOT NULL,
-    agent_id text NOT NULL,
-    channel_id text NOT NULL,
-    work_id text NOT NULL,
-    idempotency_key text NOT NULL,
-    action text NOT NULL,
-    args jsonb DEFAULT '{}'::jsonb NOT NULL,
-    summary text NOT NULL,
-    status text DEFAULT 'pending'::text NOT NULL,
-    requested_at timestamp with time zone DEFAULT now() NOT NULL,
-    resolved_at timestamp with time zone,
-    resolved_by text,
-    result jsonb,
     error text
 );
 
@@ -1880,11 +1877,11 @@ ALTER TABLE ONLY public.agent_action_executions
 
 
 --
--- Name: agent_approvals agent_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: approvals approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.agent_approvals
-    ADD CONSTRAINT agent_approvals_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_pkey PRIMARY KEY (id);
 
 
 --
@@ -1968,19 +1965,19 @@ ALTER TABLE ONLY public.agent_memory_evidence
 
 
 --
--- Name: agent_os_approvals agent_os_approvals_idempotency_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: approvals approvals_idempotency_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.agent_os_approvals
-    ADD CONSTRAINT agent_os_approvals_idempotency_key_key UNIQUE (idempotency_key);
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_idempotency_key_key UNIQUE (idempotency_key);
 
 
 --
--- Name: agent_os_approvals agent_os_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: approvals approvals_supersedes_approval_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.agent_os_approvals
-    ADD CONSTRAINT agent_os_approvals_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_supersedes_approval_id_key UNIQUE (supersedes_approval_id);
 
 
 --
@@ -2775,17 +2772,17 @@ CREATE INDEX idx_agent_action_executions_scope ON public.agent_action_executions
 
 
 --
--- Name: idx_agent_approvals_gate; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_approvals_gate; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_agent_approvals_gate ON public.agent_approvals USING btree (agent_id, payload_hash, status, consumed_at);
+CREATE INDEX idx_approvals_gate ON public.approvals USING btree (agent_id, payload_hash, status, consumed_at);
 
 
 --
--- Name: idx_agent_approvals_pending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_approvals_pending; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_agent_approvals_pending ON public.agent_approvals USING btree (company_id, status, requested_at DESC);
+CREATE INDEX idx_approvals_pending ON public.approvals USING btree (company_id, status, requested_at DESC);
 
 
 --
@@ -2898,13 +2895,6 @@ CREATE INDEX idx_agent_log_created ON public.agent_log USING btree (created_at);
 --
 
 CREATE INDEX idx_agent_memory_evidence_pending ON public.agent_memory_evidence USING btree (company_id, agent_id, status, available_at, created_at);
-
-
---
--- Name: idx_agent_os_approvals_pending; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_agent_os_approvals_pending ON public.agent_os_approvals USING btree (company_id, status, requested_at DESC);
 
 
 --
@@ -3795,11 +3785,11 @@ CREATE TRIGGER trg_touch_workspace AFTER INSERT OR DELETE OR UPDATE ON public.kn
 
 
 --
--- Name: agent_approvals agent_approvals_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: approvals approvals_channel_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.agent_approvals
-    ADD CONSTRAINT agent_approvals_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_channel_id_fkey FOREIGN KEY (channel_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
 
 
 --
@@ -3835,19 +3825,25 @@ ALTER TABLE ONLY public.agent_memory_evidence
 
 
 --
--- Name: agent_os_approvals agent_os_approvals_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: approvals approvals_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.agent_os_approvals
-    ADD CONSTRAINT agent_os_approvals_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
 
 
 --
--- Name: agent_os_approvals agent_os_approvals_work_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: approvals approvals_work_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.agent_os_approvals
-    ADD CONSTRAINT agent_os_approvals_work_id_fkey FOREIGN KEY (work_id) REFERENCES public.agent_work_items(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_work_id_fkey FOREIGN KEY (work_id) REFERENCES public.agent_work_items(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_authorization_user_id_fkey FOREIGN KEY (authorization_user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_supersedes_approval_id_fkey FOREIGN KEY (supersedes_approval_id) REFERENCES public.approvals(id) ON DELETE RESTRICT;
 
 
 --
@@ -4721,11 +4717,6 @@ ALTER TABLE public.agent_work_items
 ALTER TABLE ONLY public.agent_work_items
     ADD CONSTRAINT agent_work_execution_role_check
     CHECK (execution_role = ANY (ARRAY['coordinator'::text, 'specialist'::text, 'verifier'::text, 'reporter'::text]));
-
-ALTER TABLE public.agent_os_approvals
-    ADD COLUMN requested_by text,
-    ADD COLUMN scope jsonb DEFAULT '{}'::jsonb NOT NULL,
-    ADD COLUMN preview jsonb DEFAULT '{}'::jsonb NOT NULL;
 
 CREATE TABLE public.im_read_receipt_advances (
     company_id text NOT NULL,

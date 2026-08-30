@@ -172,7 +172,7 @@ export interface HostActionResult {
   error?: string
   approval?: {
     id: string
-    status: 'pending'
+    status: 'PENDING'
   }
   directive?: { type: 'defer_to_canvas'; canvasId: string }
 }

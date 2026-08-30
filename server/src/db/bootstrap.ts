@@ -9,10 +9,10 @@ const V1_SCHEMA_MARKER = 'LingxiLoop schema v1'
 type Queryable = Pick<PoolClient, 'query'>
 
 const REQUIRED_V1_RELATIONS = [
-  'agent_action_executions', 'agent_approvals', 'agent_autonomy',
+  'agent_action_executions', 'agent_autonomy',
   'agent_autonomy_rules', 'agent_climate', 'agent_events', 'agent_handoffs',
   'agent_host_actions', 'agent_log', 'agent_memory_evidence',
-  'agent_os_approvals', 'agent_os_session_leases', 'agent_os_sessions',
+  'agent_os_session_leases', 'agent_os_sessions', 'approvals',
   'agent_routine_runs', 'agent_routines', 'agent_runs', 'agent_tasks',
   'agent_triages', 'agent_work_items', 'agent_workspace',
   'attention_items', 'attention_projection_events', 'audit_events',
@@ -56,7 +56,7 @@ const FORBIDDEN_V1_RELATIONS = [
   'learning_mastery_events', 'learning_objective_dependencies',
   'learning_objectives', 'learning_notification_deliveries',
   'learning_notification_preferences', 'course_invitation_acceptances', 'course_invitations',
-  'permissions', 'waitlist',
+  'permissions', 'waitlist', 'agent_approvals', 'agent_os_approvals',
 ] as const
 
 const FORBIDDEN_V1_COLUMNS = [
@@ -89,7 +89,9 @@ const FORBIDDEN_V1_COLUMNS = [
 const REQUIRED_V1_COLUMNS = [
   ['agent_work_items', 'execution_role'],
   ['agent_work_items', 'authorization_user_id'],
-  ['agent_os_approvals', 'scope'],
+  ['approvals', 'scope'],
+  ['approvals', 'authorization_user_id'],
+  ['approvals', 'supersedes_approval_id'],
   ['canvas_agent_assignments', 'verifies_assignment_id'],
   ['canvas_assignment_reports', 'evidence_id'],
   ['canvas_assignment_reports', 'source_evidence_ids'],

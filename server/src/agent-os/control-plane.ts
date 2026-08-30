@@ -18,6 +18,7 @@ import {
 } from '../modules/learning/runtime.js'
 import { recordLlmCall } from '../llm-ledger.js'
 import { assertHostActionPermission } from './authorization.js'
+import { env } from '../env.js'
 
 export const agentOSControlRouter = Router()
 
@@ -283,8 +284,9 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
     : null
   const { rows: approvals } = approvalId
     ? await pool.query<{ id: string; status: string; result: unknown; error: string | null }>(
-      `SELECT id, status, result, error FROM agent_os_approvals
-        WHERE id=$1 AND agent_id=$2 AND channel_id=$3 AND status IN ('approved','rejected')
+      `SELECT id, status, result, error FROM approvals
+        WHERE id=$1 AND agent_id=$2 AND channel_id=$3 AND source='AGENT_OS'
+          AND status IN ('EXECUTED','REJECTED')
         LIMIT 1`, [approvalId, work.agentId, work.channelId],
     )
     : { rows: [] }
@@ -311,7 +313,7 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
     } } : {}),
     ...(approvals[0] ? { pendingApproval: {
       approvalId: approvals[0].id,
-      approved: approvals[0].status === 'approved',
+      approved: approvals[0].status === 'EXECUTED',
       result: approvals[0].result,
       error: approvals[0].error ?? undefined,
     } } : {}),
@@ -422,7 +424,7 @@ async function actionFromLedger(client: PoolClient, key: string, action: HostAct
     return stored?.__hostActionResult ? { ok: true, value: stored.value, ...(stored.directive ? { directive: stored.directive } : {}) } : { ok: true, value: row.result }
   }
   if (row.status === 'failed') return { ok: false, error: row.error ?? 'action failed' }
-  if (row.status === 'awaiting_approval' && row.approval_id) return { ok: false, approval: { id: row.approval_id, status: 'pending' } }
+  if (row.status === 'awaiting_approval' && row.approval_id) return { ok: false, approval: { id: row.approval_id, status: 'PENDING' } }
   return null
 }
 
@@ -482,7 +484,8 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
     const { rows: actionable } = approved
       ? await client.query<{ id: string;progress_fingerprint:string|null;no_progress_count:number }>(
         `SELECT w.id,w.progress_fingerprint,w.no_progress_count FROM agent_work_items w
-          JOIN agent_os_approvals a ON a.work_id=w.id AND a.idempotency_key=$2 AND a.status='approved'
+          JOIN approvals a ON a.work_id=w.id AND a.idempotency_key=$2
+           AND a.source='AGENT_OS' AND a.status='APPROVED'
          WHERE w.id=$1 AND w.company_id=$3 AND w.agent_id=$4 AND w.channel_id=$5`,
         [work.id, action.idempotencyKey, work.companyId, work.agentId, work.channelId],
       )
@@ -541,19 +544,23 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
       const teacherApproval = await describeTeacherAction(work, action, client)
       const approvalId = randomUUID()
       await client.query(
-        `INSERT INTO agent_os_approvals
-           (id, company_id, agent_id, channel_id, work_id, idempotency_key, action, args, summary, requested_by, scope, preview)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11::jsonb,$12::jsonb)
+        `INSERT INTO approvals
+           (id, company_id, agent_id, channel_id, source, work_id, authorization_user_id,
+            idempotency_key, action, args, summary, requested_by, scope, preview, expires_at)
+         VALUES ($1,$2,$3,$4,'AGENT_OS',$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb,$13::jsonb,
+                 NOW()+($14::bigint*INTERVAL '1 millisecond'))
          ON CONFLICT (idempotency_key) DO NOTHING`,
-        [approvalId, work.companyId, work.agentId, work.channelId, work.id, action.idempotencyKey,
-          action.action, JSON.stringify(action.args), teacherApproval?.summary ?? `${work.agentId} requests ${action.action}`,
-          teacherApproval?.requestedBy ?? null, JSON.stringify(teacherApproval?.scope ?? {}), JSON.stringify(teacherApproval?.preview ?? {})],
+        [approvalId, work.companyId, work.agentId, work.channelId, work.id, work.authorizationUserId,
+          action.idempotencyKey, action.action, JSON.stringify(action.args),
+          teacherApproval?.summary ?? `${work.agentId} requests ${action.action}`,
+          teacherApproval?.requestedBy ?? null, JSON.stringify(teacherApproval?.scope ?? {}),
+          JSON.stringify(teacherApproval?.preview ?? {}), env.AGENT_OS_APPROVAL_TTL_MS],
       )
-      const { rows } = await client.query<{ id: string }>(`SELECT id FROM agent_os_approvals WHERE idempotency_key=$1`, [action.idempotencyKey])
+      const { rows } = await client.query<{ id: string }>(`SELECT id FROM approvals WHERE idempotency_key=$1`, [action.idempotencyKey])
       await client.query(`UPDATE agent_host_actions SET status='awaiting_approval', approval_id=$2, updated_at=NOW() WHERE idempotency_key=$1`, [action.idempotencyKey, rows[0].id])
       await client.query('COMMIT')
       transactionOpen = false
-      return { ok: false, approval: { id: rows[0].id, status: 'pending' } }
+      return { ok: false, approval: { id: rows[0].id, status: 'PENDING' } }
     }
     await client.query(
       `UPDATE agent_host_actions SET status='pending', error=NULL, updated_at=NOW() WHERE idempotency_key=$1`,
@@ -669,7 +676,7 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
       status: string; requested_at: string; resolved_at: string | null; resolved_by: string | null
       requested_by:string|null;scope:Record<string,unknown>;preview:Record<string,unknown>
     }>(`SELECT id, agent_id, action, args, summary, status, requested_at, resolved_at, resolved_by,requested_by,scope,preview
-          FROM agent_os_approvals WHERE id=$1 AND company_id=$2`, [approvalId, work.companyId])
+          FROM approvals WHERE id=$1 AND company_id=$2 AND source='AGENT_OS'`, [approvalId, work.companyId])
     const approval = approvals[0]
     if (approval) {
       await wukongClient().sendMessage(work.channelId, channelType, work.agentId, {

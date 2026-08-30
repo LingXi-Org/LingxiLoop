@@ -350,10 +350,10 @@ export async function findTeacherAgentSummaryRow(
     `SELECT project_agent.agent_id,participant.name,course.project_id,
             teacher_room.conversation_id,teacher_room.status AS room_status,
             course.company_id,
-            (SELECT COUNT(*)::int FROM agent_os_approvals approval
+            (SELECT COUNT(*)::int FROM approvals approval
               WHERE approval.company_id=course.company_id
                 AND approval.channel_id=teacher_room.conversation_id
-                AND approval.status='pending') AS pending
+                AND approval.source='AGENT_OS' AND approval.status='PENDING') AS pending
        FROM courses course
        JOIN learning_project_teacher_agents project_agent
          ON project_agent.project_id=course.project_id

@@ -2,6 +2,7 @@ import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { env } from '../env.js'
 import { assertTeacherApprovalFresh, assertTeacherRoomAccessible } from '../modules/learning/public.js'
+import { describeTeacherAction } from '../modules/learning/runtime.js'
 import { wukongClient } from '../im/wukong.js'
 import { executeActionWithLedger } from './control-plane.js'
 import { AgentApprovalApplication } from './approval-application.js'
@@ -19,6 +20,7 @@ export const agentApprovalApplication = new AgentApprovalApplication({
   approvalTtlMs: env.AGENT_OS_APPROVAL_TTL_MS,
   transaction: (work) => withTransaction(pool, work),
   assertTeacherApprovalFresh,
+  describeApprovalAction: describeTeacherAction,
   executeAction: executeActionWithLedger,
   sendMessage: (...args) => wukongClient().sendMessage(...args),
 })

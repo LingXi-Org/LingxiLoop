@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../db/queryable.js'
 import type { HostAction, AgentWorkItem, LingxiMessageV1 } from './types.js'
 import { createPermissionService } from '../modules/access/public.js'
@@ -5,12 +6,13 @@ import { assertHostActionPermission } from './authorization.js'
 import {
   approvalChannelType,
   approvalWorkSource,
+  cancelApproval,
   decideApproval,
   enqueueApprovalResume,
-  expireApproval,
   listVisibleApprovals,
   lockVisibleApproval,
   recordApprovalResult,
+  supersedeApproval,
   type ApprovalResolutionRow,
 } from './approval-repository.js'
 
@@ -22,6 +24,16 @@ export interface AgentApprovalInfrastructure {
     input: { channelId: string; companyId: string; action: string; preview: Record<string, unknown> },
     db: Queryable,
   ): Promise<void>
+  describeApprovalAction(
+    work: AgentWorkItem,
+    action: HostAction,
+    db: Queryable,
+  ): Promise<{
+    summary: string
+    requestedBy: string | null
+    scope: Record<string, unknown>
+    preview: Record<string, unknown>
+  } | undefined>
   executeAction(work: AgentWorkItem, action: HostAction, approved: boolean): Promise<{ value?: unknown; error?: string }>
   sendMessage(channelId: string, channelType: number, fromUid: string, payload: LingxiMessageV1): Promise<unknown>
 }
@@ -29,7 +41,7 @@ export interface AgentApprovalInfrastructure {
 type Decision =
   | { kind: 'not_found' }
   | { kind: 'conflict'; status: string }
-  | { kind: 'expired'; error: string }
+  | { kind: 'cancelled'; error: string }
   | { kind: 'decided'; approval: ApprovalResolutionRow }
 
 export class AgentApprovalApplication {
@@ -83,17 +95,20 @@ export class AgentApprovalApplication {
           resource: { type: 'approval', id: input.approvalId },
         })
       }
-      const requestedStatus = input.approved ? 'approved' : 'rejected'
-      if (approval.status !== 'pending' && approval.status !== requestedStatus) {
+      const requestedStatus = input.approved ? 'APPROVED' : 'REJECTED'
+      const recoveringApprovedExecution = input.approved && approval.status === 'APPROVED'
+      if (approval.status !== 'PENDING' && !recoveringApprovedExecution) {
         return { kind: 'conflict', status: approval.status }
       }
-      if (approval.status === 'pending' && input.approved
-        && Date.now() - new Date(approval.requested_at).getTime() > this.infrastructure.approvalTtlMs) {
+      const expiresAt = approval.expires_at
+        ? new Date(approval.expires_at).getTime()
+        : new Date(approval.requested_at).getTime() + this.infrastructure.approvalTtlMs
+      if (!recoveringApprovedExecution && input.approved && Date.now() > expiresAt) {
         const error = 'approval expired; request a fresh operation preview'
-        await expireApproval(db, { approvalId: approval.id, userId: input.userId, error })
-        return { kind: 'expired', error }
+        await cancelApproval(db, { approvalId: approval.id, userId: input.userId, reason: error })
+        return { kind: 'cancelled', error }
       }
-      if (approval.status === 'pending' && input.approved && approval.action.startsWith('teacher.')) {
+      if (!recoveringApprovedExecution && input.approved && approval.action.startsWith('teacher.')) {
         try {
           await this.infrastructure.assertTeacherApprovalFresh({
             channelId: approval.channel_id,
@@ -103,17 +118,17 @@ export class AgentApprovalApplication {
           }, db)
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
-          await expireApproval(db, { approvalId: approval.id, userId: input.userId, error: message })
-          return { kind: 'expired', error: message }
+          await cancelApproval(db, { approvalId: approval.id, userId: input.userId, reason: message })
+          return { kind: 'cancelled', error: message }
         }
       }
-      if (approval.status === 'pending' && input.approved) {
+      if (input.approved) {
         const source = await approvalWorkSource(db, approval.work_id)
-        if (!source?.authorization_user_id) throw new Error('approval source authorization principal missing')
+        if (!source) throw new Error('approval source work missing')
         await assertHostActionPermission(db, {
           id: approval.work_id,
           companyId: source.company_id,
-          authorizationUserId: source.authorization_user_id,
+          authorizationUserId: approval.authorization_user_id,
           agentId: source.agent_id,
           channelId: source.channel_id,
           triggerClientMsgNo: `approval:${approval.id}`,
@@ -131,7 +146,7 @@ export class AgentApprovalApplication {
           idempotencyKey: approval.idempotency_key,
         })
       }
-      if (approval.status === 'pending') {
+      if (!recoveringApprovedExecution) {
         await decideApproval(db, {
           approvalId: approval.id,
           status: requestedStatus,
@@ -150,7 +165,7 @@ export class AgentApprovalApplication {
   }): Promise<
     | { kind: 'not_found' }
     | { kind: 'conflict'; status: string }
-    | { kind: 'expired'; error: string }
+    | { kind: 'cancelled'; error: string }
     | { kind: 'resolved'; ok: boolean; approved: boolean; result: unknown; error: string | null }
   > {
     const decision = await this.decide(input)
@@ -164,7 +179,7 @@ export class AgentApprovalApplication {
       const work: AgentWorkItem = {
         id: approval.work_id,
         companyId: source.company_id,
-        ...(source.authorization_user_id ? { authorizationUserId: source.authorization_user_id } : {}),
+        authorizationUserId: approval.authorization_user_id,
         agentId: source.agent_id,
         channelId: source.channel_id,
         triggerClientMsgNo: `approval:${approval.id}`,
@@ -211,7 +226,7 @@ export class AgentApprovalApplication {
           ? 'external_communication'
           : String(approval.scope?.risk ?? 'sensitive_or_destructive_action'),
         summary: approval.summary,
-        status: input.approved ? 'approved' : 'rejected',
+        status: input.approved ? 'EXECUTED' : 'REJECTED',
         payload: { action: approval.action, args: approval.args },
         requestedAt: approval.requested_at,
         resolvedAt: new Date().toISOString(),
@@ -232,7 +247,7 @@ export class AgentApprovalApplication {
       agentId: approval.agent_id,
       channelId: approval.channel_id,
       executionRole: source.execution_role,
-      authorizationUserId: source.authorization_user_id,
+      authorizationUserId: approval.authorization_user_id,
     })
     return {
       kind: 'resolved',
@@ -241,5 +256,106 @@ export class AgentApprovalApplication {
       result,
       error: actionError,
     }
+  }
+
+  async supersede(input: {
+    approvalId: string
+    companyId: string
+    userId: string
+    args: Record<string, unknown>
+    summary?: string
+  }): Promise<
+    | { kind: 'not_found' }
+    | { kind: 'conflict'; status: string }
+    | { kind: 'superseded'; approvalId: string }
+  > {
+    const replacement = await this.infrastructure.transaction(async (db) => {
+      const permissions = createPermissionService(db, { lockDependencies: true })
+      await permissions.assertCan({
+        actorUserId: input.userId,
+        action: 'agent_approval:resolve',
+        companyId: input.companyId,
+        resource: { type: 'approval', id: input.approvalId },
+      })
+      const approval = await lockVisibleApproval(db, input)
+      if (!approval) return { kind: 'not_found' as const }
+      if (approval.status !== 'PENDING') {
+        return { kind: 'conflict' as const, status: approval.status }
+      }
+      if (approval.action.startsWith('teacher.')) {
+        await permissions.assertCan({
+          actorUserId: input.userId,
+          action: 'learning:manage',
+          companyId: input.companyId,
+          resource: { type: 'approval', id: input.approvalId },
+        })
+      }
+      const source = await approvalWorkSource(db, approval.work_id)
+      if (!source) throw new Error('approval source work missing')
+      const work: AgentWorkItem = {
+        id: approval.work_id,
+        companyId: source.company_id,
+        authorizationUserId: input.userId,
+        agentId: source.agent_id,
+        channelId: source.channel_id,
+        triggerClientMsgNo: `approval:${approval.id}:modified`,
+        reason: 'resume',
+        lane: 'approval',
+        fence: Number(source.fence),
+        leaseToken: 'approval-replacement',
+        executionRole: source.execution_role,
+      }
+      const action: HostAction = {
+        runId: approval.run_id,
+        cellId: approval.cell_id,
+        callIndex: approval.call_index,
+        action: approval.action,
+        args: input.args,
+        idempotencyKey: approval.idempotency_key,
+      }
+      await assertHostActionPermission(db, work, action)
+      const metadata = await this.infrastructure.describeApprovalAction(work, action, db)
+      const approvalId = randomUUID()
+      const next = await supersedeApproval(db, {
+        approval,
+        approvalId,
+        authorizationUserId: input.userId,
+        args: input.args,
+        summary: metadata?.summary ?? input.summary?.trim() ?? approval.summary,
+        requestedBy: metadata?.requestedBy ?? input.userId,
+        scope: metadata?.scope ?? approval.scope,
+        preview: metadata?.preview ?? {},
+        expiresAt: new Date(Date.now() + this.infrastructure.approvalTtlMs).toISOString(),
+      })
+      return { kind: 'superseded' as const, approval: next }
+    })
+    if (replacement.kind !== 'superseded') return replacement
+    const approval = replacement.approval
+    const channelType = await approvalChannelType(this.infrastructure.db, {
+      channelId: approval.channel_id,
+      companyId: input.companyId,
+    })
+    await this.infrastructure.sendMessage(approval.channel_id, channelType, approval.agent_id, {
+      version: 1,
+      kind: 'approval',
+      clientMsgNo: `approval-${approval.id}`,
+      body: approval.summary,
+      refs: { approvalId: approval.id, agentId: approval.agent_id },
+      data: {
+        id: approval.id,
+        agentId: approval.agent_id,
+        kind: String(approval.scope?.risk ?? 'sensitive_or_destructive_action'),
+        summary: approval.summary,
+        status: 'PENDING',
+        payload: { action: approval.action, args: approval.args },
+        requestedAt: approval.requested_at,
+        requestedBy: approval.requested_by,
+        scope: approval.scope,
+        preview: approval.preview,
+        supersedesApprovalId: input.approvalId,
+        suppressAgentWake: true,
+      },
+    })
+    return { kind: 'superseded', approvalId: approval.id }
   }
 }

@@ -382,6 +382,17 @@ test('durable Agent work preserves a human authorization principal', () => {
   assert.match(bootstrap, /\['canvases', 'authorization_user_id'\]/)
 })
 
+test('Approval is one immutable, resumable domain with canonical states', () => {
+  assert.match(schema, /CREATE TABLE public\.approvals \([\s\S]*?source text NOT NULL/)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.(?:agent_approvals|agent_os_approvals)\b/)
+  assert.match(schema, /approvals_status_check[\s\S]*?'PENDING'[\s\S]*?'APPROVED'[\s\S]*?'REJECTED'[\s\S]*?'CANCELLED'[\s\S]*?'EXECUTED'/)
+  assert.match(schema, /approvals_cancel_reason_check/)
+  assert.match(schema, /supersedes_approval_id text/)
+  assert.match(schema, /approvals_supersedes_approval_id_key UNIQUE \(supersedes_approval_id\)/)
+  assert.match(schema, /authorization_user_id text/)
+  assert.match(bootstrap, /FORBIDDEN_V1_RELATIONS[\s\S]*?'agent_approvals'[\s\S]*?'agent_os_approvals'/)
+})
+
 test('v1 defaults preserve current capability and Canvas contracts', () => {
   assert.match(schema, /capabilities jsonb DEFAULT '\["canvas", "web", "files", "email", "documents"\]'::jsonb NOT NULL/)
   assert.doesNotMatch(schema, /capabilities jsonb DEFAULT '[^']*knowledge/)

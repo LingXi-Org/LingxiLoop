@@ -58,6 +58,11 @@ The M13 Teacher Briefing cutover is reset-only. It adds meaningful Project
 visit watermarks plus durable Briefing and Briefing-to-Attention relations;
 environments created before this cutover must reset before Worker startup.
 
+The M14 Approval cutover is reset-only. It replaces `agent_approvals` and
+`agent_os_approvals` with one canonical `approvals` relation and uppercase
+lifecycle states; environments created before this cutover must reset before
+Web or Agent OS startup.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

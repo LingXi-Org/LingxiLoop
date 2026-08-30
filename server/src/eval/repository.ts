@@ -171,7 +171,7 @@ export async function listHostActions(db: Queryable, runId: string): Promise<Hos
 export async function listApprovals(db: Queryable, runId: string): Promise<ApprovalRow[]> {
   const { rows } = await db.query<ApprovalRow>(
     `SELECT a.id,a.action,a.status,a.requested_at,a.resolved_at
-     FROM agent_os_approvals a JOIN agent_host_actions h ON h.approval_id=a.id
+     FROM approvals a JOIN agent_host_actions h ON h.approval_id=a.id
      WHERE h.run_id=$1 ORDER BY a.requested_at ASC`,
     [runId],
   )
