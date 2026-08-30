@@ -200,6 +200,7 @@ const PROJECT_OWNED_TABLES = [
   'boards', 'calendar_events', 'canvases', 'conversations', 'project_invitations',
   'project_memberships', 'courses', 'documents', 'knowledge_note_bindings',
   'knowledge_notebook_bindings', 'knowledge_source_chat_sessions', 'knowledge_sources',
+  'knowledge_source_bindings',
   'document_mention_deliveries', 'project_visits', 'context_threads',
   'context_thread_participants', 'learning_project_teacher_agents',
   'learning_knowledge_units', 'learning_knowledge_unit_dependencies', 'learning_activities',

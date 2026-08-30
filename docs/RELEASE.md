@@ -74,6 +74,11 @@ tenant-owned children in one transaction; historical Event, Audit, and L4
 ledgers keep their original tenant provenance. Environments created before this
 cutover must reset before startup; there is no in-place ownership backfill.
 
+The M22 knowledge-scope cutover is reset-only. It adds explicit Organization
+and Course bindings over one canonical ingested source; it does not copy source
+content, chunks, or Learning State. Environments created before this cutover
+must reset before startup.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

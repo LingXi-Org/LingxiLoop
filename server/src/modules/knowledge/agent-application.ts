@@ -9,6 +9,7 @@ import {
   findAgentInsightBinding,
   findAgentKnowledgeSource,
   findAgentNoteExternalId,
+  findOwnedAgentSource,
   findAgentProjectId,
   findAgentSourceChat,
   findAgentSourceExternalId,
@@ -229,6 +230,13 @@ async function resolveSource(work: AgentWorkItem, sourceId: string): Promise<{ p
   return { projectId, externalId }
 }
 
+async function resolveOwnedSource(work: AgentWorkItem, sourceId: string): Promise<{ projectId: string; externalId: string }> {
+  const { projectId } = await projectScope(work)
+  const source = await findOwnedAgentSource(db, { sourceId, companyId: work.companyId, projectId })
+  if (!source?.externalSourceId) throw new Error('ready owned source not found in this workspace')
+  return { projectId, externalId: source.externalSourceId }
+}
+
 async function upsertInsightBindings(work: AgentWorkItem, sourceId: string, insights: OpenNotebookInsight[]) {
   return upsertAgentInsightBindings(db, {
     companyId: work.companyId,
@@ -248,7 +256,7 @@ async function listKnowledgeInsights(work: AgentWorkItem, sourceId: string): Pro
 }
 
 async function createKnowledgeInsight(work: AgentWorkItem, sourceId: string, transformationName: string): Promise<unknown> {
-  const source = await resolveSource(work, sourceId)
+  const source = await resolveOwnedSource(work, sourceId)
   const wanted = transformationName.trim().toLocaleLowerCase()
   const transformation = (await provider.listTransformations()).find((item) =>
     item.name.toLocaleLowerCase() === wanted || item.title.toLocaleLowerCase() === wanted,
@@ -312,7 +320,7 @@ async function retryKnowledgeSourceForAgent(work: AgentWorkItem, sourceId: strin
 }
 
 async function updateKnowledgeSourceForAgent(work: AgentWorkItem, sourceId: string, input: { title?: string; topics?: string[] }): Promise<unknown> {
-  const source = await resolveSource(work, sourceId)
+  const source = await resolveOwnedSource(work, sourceId)
   const upstream = await provider.updateSource(source.externalId, input)
   await updateAgentSourceTitle(db, {
     sourceId, companyId: work.companyId, projectId: source.projectId, title: input.title ?? null,
@@ -331,10 +339,9 @@ async function setKnowledgeSourceEnabled(work: AgentWorkItem, sourceId: string, 
 
 async function unlinkKnowledgeSourceForAgent(work: AgentWorkItem, sourceId: string): Promise<{ unlinked: boolean }> {
   const { projectId, notebookId } = await projectScope(work)
-  const externalId = await findAgentSourceExternalId(db, { sourceId, companyId: work.companyId, projectId })
-  const source = await findAgentKnowledgeSource(db, { sourceId, companyId: work.companyId, projectId })
+  const source = await findOwnedAgentSource(db, { sourceId, companyId: work.companyId, projectId })
   if (!source) throw new Error('source not found in this workspace')
-  if (externalId) await provider.unlinkSource(notebookId, externalId)
+  if (source.externalSourceId) await provider.unlinkSource(notebookId, source.externalSourceId)
   if (!await softDeleteAgentSource(db, { sourceId, companyId: work.companyId, projectId })) {
     throw new Error('source not found in this workspace')
   }

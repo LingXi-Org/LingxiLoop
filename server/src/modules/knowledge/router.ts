@@ -13,7 +13,7 @@ import {
   sourceSelectionRequestSchema,
   updateProjectRequestSchema,
 } from './contracts.js'
-import { knowledgeApplication } from './facade.js'
+import { knowledgeApplication, organizationKnowledgeApplication } from './facade.js'
 
 export const knowledgeRouter = Router()
 
@@ -85,15 +85,35 @@ knowledgeRouter.get('/projects/:id/sources', safe(async (req, res) => {
 knowledgeRouter.get('/projects/:id/sources/:sourceId', safe(async (req, res) => {
   requireKnowledge()
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
-  await permissionService.assertCan({
-    actorUserId: workspace.userId,
-    action: 'knowledge:read',
-    companyId: workspace.companyId,
-    projectId: workspace.projectId,
-    resource: { type: 'knowledge_source', id: String(req.params.sourceId) },
-  })
   try { res.json(await knowledgeApplication.source(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
+}))
+
+knowledgeRouter.get('/organization-knowledge/sources', safe(async (req, res) => {
+  const scope = await requireCompany(req)
+  try { res.json(await organizationKnowledgeApplication.list(scope.userId, scope.companyId)) }
+  catch (error) { mapKnowledgeError(error) }
+}))
+
+knowledgeRouter.put('/organization-knowledge/sources/:sourceId', safe(async (req, res) => {
+  const scope = await requireCompany(req)
+  try {
+    res.json(await organizationKnowledgeApplication.promote(
+      scope.userId, scope.companyId, String(req.params.sourceId),
+    ))
+  } catch (error) { mapKnowledgeError(error) }
+}))
+
+knowledgeRouter.put('/projects/:id/organization-knowledge/:sourceId', safe(async (req, res) => {
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:manage')
+  try {
+    res.json(await organizationKnowledgeApplication.attach(
+      workspace.userId,
+      workspace.companyId,
+      workspace.projectId,
+      String(req.params.sourceId),
+    ))
+  } catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.post('/projects/:id/sources', safe(async (req, res) => {

@@ -12,6 +12,8 @@ import { createKnowledgeAgentApplication } from './agent-application.js'
 import { KnowledgeApplication } from './application.js'
 import { openNotebookClient } from './provider.js'
 import { MAX_SOURCE_BYTES, openNotebookEnabled } from './policy.js'
+import { auditInTransaction } from '../identity/public.js'
+import { OrganizationKnowledgeApplication } from './organization-application.js'
 
 export const knowledgeApplication = new KnowledgeApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
@@ -31,4 +33,9 @@ export const knowledgeApplication = new KnowledgeApplication(pool, {
 export const knowledgeAgentApplication = createKnowledgeAgentApplication(pool, {
   storage,
   provider: openNotebookClient,
+})
+
+export const organizationKnowledgeApplication = new OrganizationKnowledgeApplication({
+  transaction: (work) => withTransaction(pool, work),
+  auditInTransaction,
 })

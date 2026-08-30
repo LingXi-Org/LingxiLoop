@@ -33,7 +33,11 @@ export async function listKnowledgeRetrievalSources(
        FROM knowledge_sources source
        LEFT JOIN conversation_source_exclusions exclusion
          ON exclusion.source_id=source.id AND exclusion.conversation_id=$1
-      WHERE source.company_id=$2 AND source.project_id=$3 AND source.status='ready'
+      WHERE source.company_id=$2 AND source.status='ready' AND (
+        source.project_id=$3 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$3))
         AND source.deleted_at IS NULL AND source.external_source_id IS NOT NULL`,
     [input.conversationId,input.companyId,input.projectId],
   )

@@ -413,6 +413,18 @@ test('Project Transfer persists dual confirmation, policy snapshot, and one term
   assert.match(bootstrap, /'idx_project_transfers_status'/)
 })
 
+test('Organization and Course Knowledge share one canonical source through explicit scoped bindings', () => {
+  assert.match(schema, /knowledge_sources_scope_key UNIQUE \(id, company_id\)/)
+  assert.match(schema, /CREATE TABLE public\.knowledge_source_bindings/)
+  assert.match(schema, /knowledge_source_bindings_scope_check[\s\S]*'ORGANIZATION'[\s\S]*project_id IS NULL[\s\S]*'COURSE'[\s\S]*project_id IS NOT NULL/)
+  assert.match(schema, /knowledge_source_bindings_source_fkey[\s\S]*knowledge_sources\(id,company_id\)/)
+  assert.match(schema, /knowledge_source_bindings_project_fkey[\s\S]*projects\(id,company_id\)/)
+  assert.match(schema, /uniq_organization_knowledge_source/)
+  assert.match(schema, /uniq_course_knowledge_source/)
+  assert.match(bootstrap, /'knowledge_source_bindings'/)
+  assert.match(bootstrap, /'knowledge_source_bindings_scope_check'/)
+})
+
 test('durable Agent work preserves a human authorization principal', () => {
   assert.match(schema, /CREATE TABLE public\.agent_work_items \([\s\S]*?authorization_user_id text,/)
   assert.match(schema, /agent_work_items_authorization_user_id_fkey[\s\S]*?REFERENCES public\.users\(id\) ON DELETE RESTRICT/)

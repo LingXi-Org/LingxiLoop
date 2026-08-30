@@ -31,7 +31,12 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
             project.created_at AS "createdAt",project.updated_at AS "updatedAt",
             project.archived_at AS "archivedAt",visit.visited_at AS "lastVisitedAt",
             (SELECT COUNT(*)::int FROM conversations WHERE project_id=project.id AND company_id=project.company_id) AS "conversationCount",
-            (SELECT COUNT(*)::int FROM knowledge_sources WHERE project_id=project.id AND company_id=project.company_id AND deleted_at IS NULL) AS "sourceCount",
+            (SELECT COUNT(*)::int FROM knowledge_sources source
+              WHERE source.company_id=project.company_id AND source.deleted_at IS NULL AND (
+                source.project_id=project.id OR EXISTS (
+                  SELECT 1 FROM knowledge_source_bindings binding
+                   WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+                     AND binding.scope_type='COURSE' AND binding.project_id=project.id))) AS "sourceCount",
             (SELECT COUNT(*)::int FROM documents WHERE project_id=project.id AND company_id=project.company_id) AS "documentCount",
             (SELECT COUNT(*)::int FROM boards WHERE project_id=project.id AND company_id=project.company_id) AS "boardCount",
             (SELECT COUNT(*)::int FROM calendar_events WHERE project_id=project.id AND company_id=project.company_id) AS "calendarEventCount",
@@ -124,7 +129,11 @@ export async function updateProject(
 export async function listSources(db: Queryable, companyId: string, projectId: string) {
   const { rows } = await db.query(
     `SELECT ${SOURCE_LIST_SELECT} FROM knowledge_sources source
-      WHERE source.company_id=$1 AND source.project_id=$2 AND source.deleted_at IS NULL
+      WHERE source.company_id=$1 AND source.deleted_at IS NULL AND (
+        source.project_id=$2 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$2))
       ORDER BY source.created_at DESC`,
     [companyId, projectId],
   )
@@ -140,7 +149,11 @@ export async function listConversationSources(
        FROM knowledge_sources source
        LEFT JOIN conversation_source_exclusions exclusion
          ON exclusion.source_id=source.id AND exclusion.conversation_id=$3
-      WHERE source.company_id=$1 AND source.project_id=$2 AND source.deleted_at IS NULL
+      WHERE source.company_id=$1 AND source.deleted_at IS NULL AND (
+        source.project_id=$2 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$2))
       ORDER BY source.created_at DESC`,
     [args.companyId, args.projectId, args.conversationId],
   )
@@ -155,7 +168,11 @@ export async function findSource(
 ): Promise<KnowledgeSourceRow | null> {
   const { rows } = await db.query<KnowledgeSourceRow>(
     `SELECT ${SOURCE_DETAIL_SELECT} FROM knowledge_sources source
-      WHERE source.id=$1 AND source.company_id=$2 AND source.project_id=$3 AND source.deleted_at IS NULL`,
+      WHERE source.id=$1 AND source.company_id=$2 AND source.deleted_at IS NULL AND (
+        source.project_id=$3 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$3))`,
     [sourceId, companyId, projectId],
   )
   return rows[0] ?? null
@@ -207,7 +224,11 @@ export async function replaceSourceExclusions(
      SELECT $1,source.id,$4 FROM knowledge_sources source
      JOIN conversations conversation
        ON conversation.id=$1 AND conversation.company_id=$2 AND conversation.project_id=$3
-      WHERE source.company_id=$2 AND source.project_id=$3 AND source.id=ANY($5::text[]) AND source.deleted_at IS NULL
+      WHERE source.company_id=$2 AND source.id=ANY($5::text[]) AND source.deleted_at IS NULL AND (
+        source.project_id=$3 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$3))
      RETURNING source_id AS id`,
     [args.conversationId, args.companyId, args.projectId, args.userId, args.sourceIds],
   )

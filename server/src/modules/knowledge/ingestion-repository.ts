@@ -282,6 +282,21 @@ export async function findTenantSourceAssets(db: Queryable, args: {
   return row ? { externalSourceId: row.external_source_id, storageKey: row.storage_key } : null
 }
 
+export async function findVisibleSourceExternalId(db: Queryable, args: {
+  sourceId: string; companyId: string; projectId: string
+}): Promise<string | null> {
+  const { rows } = await db.query<{ external_source_id: string | null }>(
+    `SELECT source.external_source_id FROM knowledge_sources source
+      WHERE source.id=$1 AND source.company_id=$2 AND source.deleted_at IS NULL AND (
+        source.project_id=$3 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$3))`,
+    [args.sourceId, args.companyId, args.projectId],
+  )
+  return rows[0]?.external_source_id ?? null
+}
+
 export async function resetIngestionAttempts(db: Queryable, sourceId: string): Promise<void> {
   await db.query(`UPDATE knowledge_source_jobs SET attempts=0, updated_at=NOW() WHERE source_id=$1`, [sourceId])
 }

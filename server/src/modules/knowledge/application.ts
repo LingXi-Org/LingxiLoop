@@ -166,7 +166,6 @@ export class KnowledgeApplication {
   async source(scope: KnowledgeScope, sourceId: string) {
     await createPermissionService(this.db).assertCan({
       actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
-      resource: { type: 'knowledge_source', id: sourceId },
     })
     const source = await findSource(this.db, scope.companyId, scope.projectId, sourceId)
     if (!source) throw new KnowledgeApplicationError('not_found', 'source not found')

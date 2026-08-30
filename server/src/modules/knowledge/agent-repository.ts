@@ -31,7 +31,11 @@ export async function listAgentKnowledgeSources(
        FROM knowledge_sources source
        LEFT JOIN conversation_source_exclusions exclusion
          ON exclusion.source_id=source.id AND exclusion.conversation_id=$1
-      WHERE source.company_id=$2 AND source.project_id=$3 AND source.deleted_at IS NULL
+      WHERE source.company_id=$2 AND source.deleted_at IS NULL AND (
+        source.project_id=$3 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$3))
       ORDER BY source.created_at DESC`,
     [input.conversationId, input.companyId, input.projectId],
   )
@@ -43,11 +47,16 @@ export async function findAgentKnowledgeSource(
   input: { sourceId: string; companyId: string; projectId: string },
 ): Promise<Record<string, unknown> | null> {
   const { rows } = await db.query(
-    `SELECT id,title,kind,mime_type AS "mimeType",size_bytes AS "sizeBytes",original_url AS "originalUrl",
-            status,stage,error,created_at AS "createdAt",updated_at AS "updatedAt",
-            external_source_id AS "externalSourceId"
-       FROM knowledge_sources
-      WHERE id=$1 AND company_id=$2 AND project_id=$3 AND deleted_at IS NULL`,
+    `SELECT source.id,source.title,source.kind,source.mime_type AS "mimeType",
+            source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",
+            source.status,source.stage,source.error,source.created_at AS "createdAt",
+            source.updated_at AS "updatedAt",source.external_source_id AS "externalSourceId"
+       FROM knowledge_sources source
+      WHERE source.id=$1 AND source.company_id=$2 AND source.deleted_at IS NULL AND (
+        source.project_id=$3 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$3))`,
     [input.sourceId, input.companyId, input.projectId],
   )
   return rows[0] as Record<string, unknown> | undefined ?? null
@@ -115,11 +124,27 @@ export async function findAgentSourceExternalId(
   input: { sourceId: string; companyId: string; projectId: string },
 ): Promise<string | null> {
   const { rows } = await db.query<{ external_source_id: string | null }>(
+    `SELECT source.external_source_id FROM knowledge_sources source
+      WHERE source.id=$1 AND source.company_id=$2 AND source.deleted_at IS NULL AND (
+        source.project_id=$3 OR EXISTS (
+          SELECT 1 FROM knowledge_source_bindings binding
+           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+             AND binding.scope_type='COURSE' AND binding.project_id=$3))`,
+    [input.sourceId,input.companyId,input.projectId],
+  )
+  return rows[0]?.external_source_id ?? null
+}
+
+export async function findOwnedAgentSource(
+  db: Queryable,
+  input: { sourceId: string; companyId: string; projectId: string },
+): Promise<{ externalSourceId: string | null } | null> {
+  const { rows } = await db.query<{ external_source_id: string | null }>(
     `SELECT external_source_id FROM knowledge_sources
       WHERE id=$1 AND company_id=$2 AND project_id=$3 AND deleted_at IS NULL`,
     [input.sourceId,input.companyId,input.projectId],
   )
-  return rows[0]?.external_source_id ?? null
+  return rows[0] ? { externalSourceId: rows[0].external_source_id } : null
 }
 
 export async function upsertAgentInsightBindings(db: Queryable, input: {
@@ -149,7 +174,8 @@ export async function findAgentInsightBinding(db: Queryable, input: {
        FROM knowledge_insight_bindings insight
        JOIN knowledge_sources source
          ON source.id=insight.source_id AND source.company_id=insight.company_id
-      WHERE insight.id=$1 AND insight.company_id=$2 AND source.project_id=$3 AND source.deleted_at IS NULL`,
+      WHERE insight.id=$1 AND insight.company_id=$2 AND source.project_id=$3
+        AND source.deleted_at IS NULL`,
     [input.insightId,input.companyId,input.projectId],
   )
   return rows[0] ? { externalId: rows[0].external_insight_id, sourceId: rows[0].source_id } : null
@@ -213,7 +239,11 @@ export async function setAgentSourceExcluded(db: Queryable, input: {
         USING conversations conversation,knowledge_sources source
        WHERE exclusion.conversation_id=$1 AND exclusion.source_id=$2
          AND conversation.id=exclusion.conversation_id AND conversation.company_id=$3 AND conversation.project_id=$4
-         AND source.id=exclusion.source_id AND source.company_id=$3 AND source.project_id=$4`,
+         AND source.id=exclusion.source_id AND source.company_id=$3 AND (
+           source.project_id=$4 OR EXISTS (
+             SELECT 1 FROM knowledge_source_bindings binding
+              WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+                AND binding.scope_type='COURSE' AND binding.project_id=$4))`,
       [input.conversationId,input.sourceId,input.companyId,input.projectId],
     )
     return
@@ -221,7 +251,11 @@ export async function setAgentSourceExcluded(db: Queryable, input: {
   await db.query(
     `INSERT INTO conversation_source_exclusions (conversation_id,source_id,created_by)
      SELECT conversation.id,source.id,$5 FROM conversations conversation
-     JOIN knowledge_sources source ON source.id=$2 AND source.company_id=$3 AND source.project_id=$4 AND source.deleted_at IS NULL
+     JOIN knowledge_sources source ON source.id=$2 AND source.company_id=$3 AND source.deleted_at IS NULL
+      AND (source.project_id=$4 OR EXISTS (
+        SELECT 1 FROM knowledge_source_bindings binding
+         WHERE binding.company_id=source.company_id AND binding.source_id=source.id
+           AND binding.scope_type='COURSE' AND binding.project_id=$4))
       WHERE conversation.id=$1 AND conversation.company_id=$3 AND conversation.project_id=$4
      ON CONFLICT (conversation_id,source_id) DO NOTHING`,
     [input.conversationId,input.sourceId,input.companyId,input.projectId,input.agentId],

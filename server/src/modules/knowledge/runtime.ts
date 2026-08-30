@@ -11,6 +11,7 @@ import {
   completeIngestion,
   findIngestionSource,
   findTenantSourceAssets,
+  findVisibleSourceExternalId,
   type IngestionSourceRow,
   insertAttachmentKnowledgeJob,
   type KnowledgeSourceStatus,
@@ -369,7 +370,7 @@ export async function deleteKnowledgeSource(sourceId: string, companyId: string,
 }
 
 export async function getKnowledgeSourceText(sourceId: string, companyId: string, projectId: string): Promise<string | null> {
-  const source = await findTenantSourceAssets(pool, { sourceId, companyId, projectId })
-  if (!source?.externalSourceId) return null
-  return (await openNotebookClient.getSource(source.externalSourceId)).full_text ?? null
+  const externalSourceId = await findVisibleSourceExternalId(pool, { sourceId, companyId, projectId })
+  if (!externalSourceId) return null
+  return (await openNotebookClient.getSource(externalSourceId)).full_text ?? null
 }

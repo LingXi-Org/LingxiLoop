@@ -4951,6 +4951,37 @@ CREATE TABLE public.project_transfers (
 CREATE INDEX idx_project_transfers_status
     ON public.project_transfers USING btree (status, updated_at, id);
 
+ALTER TABLE ONLY public.knowledge_sources
+    ADD CONSTRAINT knowledge_sources_scope_key UNIQUE (id, company_id);
+
+CREATE TABLE public.knowledge_source_bindings (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    source_id text NOT NULL,
+    scope_type text NOT NULL,
+    project_id text,
+    created_by text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT knowledge_source_bindings_scope_check CHECK (
+      (scope_type='ORGANIZATION' AND project_id IS NULL)
+      OR (scope_type='COURSE' AND project_id IS NOT NULL)
+    ),
+    CONSTRAINT knowledge_source_bindings_source_fkey
+      FOREIGN KEY (source_id,company_id) REFERENCES public.knowledge_sources(id,company_id) ON DELETE CASCADE,
+    CONSTRAINT knowledge_source_bindings_project_fkey
+      FOREIGN KEY (project_id,company_id) REFERENCES public.projects(id,company_id) ON DELETE CASCADE,
+    CONSTRAINT knowledge_source_bindings_creator_fkey
+      FOREIGN KEY (company_id,created_by) REFERENCES public.company_memberships(company_id,user_id) ON DELETE RESTRICT
+);
+
+CREATE UNIQUE INDEX uniq_organization_knowledge_source
+    ON public.knowledge_source_bindings USING btree (company_id,source_id)
+    WHERE scope_type='ORGANIZATION';
+
+CREATE UNIQUE INDEX uniq_course_knowledge_source
+    ON public.knowledge_source_bindings USING btree (company_id,project_id,source_id)
+    WHERE scope_type='COURSE';
+
 CREATE INDEX idx_learning_knowledge_units_project
     ON public.learning_knowledge_units USING btree (company_id, project_id, status, position);
 
