@@ -858,6 +858,9 @@ export async function bootstrapV1Schema(): Promise<'created' | 'ready'> {
     }
     const schema = await readFile(V1_SCHEMA_URL, 'utf8')
     await client.query(schema)
+    // pg_dump deliberately clears search_path in schema.sql. Restore the
+    // application connection contract before writing canonical reference data.
+    await client.query('SET search_path TO public')
     await ensurePersonalPlans(client)
     return 'created'
   } finally {

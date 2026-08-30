@@ -151,6 +151,7 @@ services:
     environment:
       DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
       REDIS_URL: redis://redis:6379
+      WUKONG_USER_TOKEN_SECRET: ci-wukong-user-token-secret
       OPENAI_API_KEY: sk-smoke-test-not-a-real-key
       OPENAI_EMBEDDING_MODEL: text-embedding-3-small
       LINGXILOOP_INVITE_BASE_URL: http://localhost:5181
@@ -189,6 +190,7 @@ services:
       WUKONG_WS_URL: ws://localhost:5200
       WUKONG_API_TOKEN: ci-wukong-api-token
       WUKONG_WEBHOOK_SECRET: ci-wukong-webhook-secret
+      WUKONG_USER_TOKEN_SECRET: ci-wukong-user-token-secret
       OPEN_NOTEBOOK_ENABLED: "true"
       OPEN_NOTEBOOK_URL: http://open-notebook:5055
       OPEN_NOTEBOOK_PASSWORD: ci-open-notebook-password

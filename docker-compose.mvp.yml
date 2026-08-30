@@ -125,8 +125,11 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
+      REDIS_URL: redis://redis:6379
+      WUKONG_USER_TOKEN_SECRET: ${WUKONG_USER_TOKEN_SECRET:?WUKONG_USER_TOKEN_SECRET is required in .env}
       OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required in .env}
       OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
+      LINGXILOOP_INVITE_BASE_URL: ${LINGXILOOP_INVITE_BASE_URL:?LINGXILOOP_INVITE_BASE_URL is required}
     networks: [lingxiloop-mvp]
     logging: *quiet-logging
 

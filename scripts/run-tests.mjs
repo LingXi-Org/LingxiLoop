@@ -106,6 +106,7 @@ const child = spawn(
       // developers or CI to expose a real production credential.
       OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'unit-test-key',
       OPENAI_EMBEDDING_MODEL: process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small',
+      WUKONG_USER_TOKEN_SECRET: process.env.WUKONG_USER_TOKEN_SECRET || 'unit-test-wukong-user-token-secret',
       DATABASE_URL: process.env.DATABASE_URL || 'postgres://unit-tests@127.0.0.1:5432/lingxiloop',
       REDIS_URL: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       R2_ENDPOINT: process.env.R2_ENDPOINT || 'http://127.0.0.1:9000',
