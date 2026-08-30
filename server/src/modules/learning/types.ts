@@ -1,15 +1,18 @@
 export type LearningCourseStatus = import('../../domain/public.js').ProjectStatus
 export type LearningRole = 'teacher' | 'learner'
 export type LearningRoomPurpose = 'study' | 'lab' | 'discussion'
-export type LearningObjectiveStatus = 'draft' | 'published' | 'archived'
-export type LearningActivityType = 'lesson' | 'practice' | 'assessment' | 'project' | 'review'
-export type LearningActivityStatus = 'draft' | 'published' | 'closed'
-export type LearningEvaluationMode = 'agent_formative' | 'teacher_required'
-export type LearningMissionStatus = 'planning' | 'active' | 'paused' | 'completed' | 'cancelled'
-export type LearningMissionKind = 'study' | 'research' | 'project'
-export type LearningStepType = 'learn' | 'practice' | 'check' | 'reflect'
-export type LearningStepStatus = 'open' | 'in_progress' | 'completed' | 'cancelled'
-export type LearningAssistance = 'none' | 'hint' | 'guided'
+export type LearningKnowledgeUnitStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+/** Teaching-only response projection of a LearningKnowledgeUnit status. */
+export type LearningObjectiveStatus = LearningKnowledgeUnitStatus
+export type LearningActivityType = 'LESSON' | 'PRACTICE' | 'ASSESSMENT' | 'PROJECT' | 'REVIEW'
+export type LearningActivityStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
+export type LearningEvaluationMode = 'AGENT_FORMATIVE' | 'TEACHER_REQUIRED'
+export type LearningMissionStatus = 'PLANNING' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'CANCELLED'
+export type LearningMissionKind = 'STUDY' | 'RESEARCH' | 'PROJECT'
+export type LearningStepType = 'LEARN' | 'PRACTICE' | 'CHECK' | 'REFLECT'
+export type LearningStepStatus = 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+export type LearningAssistance = 'NONE' | 'HINT' | 'GUIDED'
+export type LearningStateStatus = 'LEARNING' | 'VERIFIED' | 'NEEDS_REVIEW'
 
 export interface LearningCourseSummary {
   id: string
@@ -27,6 +30,18 @@ export interface LearningCourseSummary {
   updatedAt: string
 }
 
+export interface LearningKnowledgeUnit {
+  id: string
+  projectId: string
+  title: string
+  successCriteria: string
+  targetLevel: 1 | 2 | 3 | 4
+  position: number
+  status: LearningKnowledgeUnitStatus
+  prerequisiteKnowledgeUnitIds: string[]
+}
+
+/** Course-addressed teaching projection. Core learning code uses LearningKnowledgeUnit. */
 export interface LearningObjective {
   id: string
   courseId: string
@@ -39,6 +54,21 @@ export interface LearningObjective {
 }
 
 export interface LearningActivity {
+  id: string
+  projectId: string
+  title: string
+  instructions: string
+  kind: LearningActivityType
+  status: LearningActivityStatus
+  evaluationMode: LearningEvaluationMode
+  targetLevel: 1 | 2 | 3 | 4
+  rubric: unknown[]
+  knowledgeUnitIds: string[]
+  dueAt?: string
+}
+
+/** Course-addressed teaching projection of a project-scoped LearningActivity. */
+export interface LearningCourseActivity {
   id: string
   courseId: string
   title: string
@@ -54,10 +84,10 @@ export interface LearningActivity {
 
 export interface LearningMissionStep {
   id: string
-  type: LearningStepType
+  kind: LearningStepType
   description: string
   successCriteria: string
-  objectiveId?: string
+  knowledgeUnitId?: string
   status: LearningStepStatus
   position: number
   outcome?: string
@@ -67,13 +97,13 @@ export interface LearningMissionStep {
 
 export interface LearningMission {
   id: string
-  courseId: string
+  projectId: string
   learnerId: string
   conversationId: string
   triggerClientMsgNo: string
   goal: string
   successCriteria: string
-  missionKind: LearningMissionKind
+  kind: LearningMissionKind
   coordinatorAgentId: string
   status: LearningMissionStatus
   steps: LearningMissionStep[]
@@ -89,7 +119,7 @@ export interface MasteryProjectionInput {
   confidence: number
   activityType: LearningActivityType
   activityTargetLevel: number
-  evaluatorKind: 'agent' | 'teacher'
+  evaluatorKind: 'AGENT' | 'TEACHER'
   teacherConfirmed: boolean
   /** False when this evidence comes from an activity/step already counted. */
   evidenceDistinct?: boolean
@@ -106,13 +136,23 @@ export interface MasteryProjectionDecision {
 }
 
 export interface LearningTurnContext {
-  course: Pick<LearningCourseSummary, 'id' | 'projectId' | 'title' | 'status'>
+  project: {
+    id: string
+    kind: import('../../domain/public.js').ProjectKind
+    title: string
+    status: import('../../domain/public.js').ProjectStatus
+  }
+  courseId?: string
   roomPurpose: LearningRoomPurpose
   actorRole?: LearningRole
   learnerId?: string
   activeMission?: LearningMission
-  objectives: Array<LearningObjective & { masteryLevel: number; masteryStatus: string; nextReviewAt?: string }>
-  due: Array<{ objectiveId: string; title: string; level: number; nextReviewAt: string }>
+  knowledgeUnits: Array<LearningKnowledgeUnit & {
+    level: number
+    stateStatus: LearningStateStatus
+    nextReviewAt?: string
+  }>
+  due: Array<{ knowledgeUnitId: string; title: string; level: number; nextReviewAt: string }>
   pendingTeacherReviews: number
 }
 

@@ -35,12 +35,12 @@ export const createObjectivesRequestSchema = z.object({
     prerequisiteIds: z.array(z.string()).optional(),
   }).strict()).min(1),
 }).strict()
-export const objectiveStatusRequestSchema = z.object({ status: z.enum(['draft', 'published', 'archived']) }).strict()
+export const objectiveStatusRequestSchema = z.object({ status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']) }).strict()
 export const createActivityRequestSchema = z.object({
   title: z.string().trim().min(1),
   instructions: z.string().trim().min(1),
-  type: z.enum(['lesson', 'practice', 'assessment', 'project', 'review']),
-  evaluationMode: z.enum(['agent_formative', 'teacher_required']).default('teacher_required'),
+  type: z.enum(['LESSON', 'PRACTICE', 'ASSESSMENT', 'PROJECT', 'REVIEW']),
+  evaluationMode: z.enum(['AGENT_FORMATIVE', 'TEACHER_REQUIRED']).default('TEACHER_REQUIRED'),
   targetLevel: z.coerce.number().int().min(1).max(4).default(2),
   rubric: z.array(z.unknown()).default([]),
   objectiveIds: z.array(z.string()).default([]),
@@ -49,7 +49,7 @@ export const createActivityRequestSchema = z.object({
 export const submitActivityRequestSchema = z.object({
   idempotencyKey: z.string().trim().min(8).max(200),
   answer: z.string().trim().min(1),
-  assistance: z.enum(['none', 'hint', 'guided']).default('none'),
+  assistance: z.enum(['NONE', 'HINT', 'GUIDED']).default('NONE'),
 }).strict()
 export const missionCoordinatorRequestSchema = z.object({ agentId: z.string().trim().min(1) }).strict()
 export const reviewEvaluationRequestSchema = z.object({
@@ -86,6 +86,19 @@ export interface CreateLearningObjectivesCommand extends CreateObjectivesInput {
   actorKind: 'agent' | 'teacher'
 }
 
+export interface CreateLearningKnowledgeUnitsCommand {
+  companyId: string
+  projectId: string
+  actorId: string
+  actorKind: 'agent' | 'teacher'
+  knowledgeUnits: Array<{
+    title: string
+    successCriteria: string
+    targetLevel?: number
+    prerequisiteKnowledgeUnitIds?: string[]
+  }>
+}
+
 export interface CreateLearningActivityCommand {
   companyId: string
   courseId: string
@@ -93,11 +106,26 @@ export interface CreateLearningActivityCommand {
   actorKind: 'agent' | 'teacher'
   title: string
   instructions: string
-  type: 'lesson' | 'practice' | 'assessment' | 'project' | 'review'
-  evaluationMode?: 'agent_formative' | 'teacher_required'
+  type: 'LESSON' | 'PRACTICE' | 'ASSESSMENT' | 'PROJECT' | 'REVIEW'
+  evaluationMode?: 'AGENT_FORMATIVE' | 'TEACHER_REQUIRED'
   targetLevel?: number
   rubric?: unknown[]
   objectiveIds?: string[]
+  dueAt?: string
+}
+
+export interface CreateProjectLearningActivityCommand {
+  companyId: string
+  projectId: string
+  actorId: string
+  actorKind: 'agent' | 'teacher'
+  title: string
+  instructions: string
+  kind: 'LESSON' | 'PRACTICE' | 'ASSESSMENT' | 'PROJECT' | 'REVIEW'
+  evaluationMode?: 'AGENT_FORMATIVE' | 'TEACHER_REQUIRED'
+  targetLevel?: number
+  rubric?: unknown[]
+  knowledgeUnitIds?: string[]
   dueAt?: string
 }
 
@@ -107,10 +135,10 @@ export interface LearningAgentRoomScope {
 }
 
 export interface AddLearningMissionStepInput {
-  type: 'learn' | 'practice' | 'check' | 'reflect'
+  kind: 'LEARN' | 'PRACTICE' | 'CHECK' | 'REFLECT'
   description: string
   successCriteria: string
-  objectiveId?: string
+  knowledgeUnitId?: string
 }
 
 export interface StartLearningMissionCommand extends LearningAgentRoomScope {
@@ -120,7 +148,7 @@ export interface StartLearningMissionCommand extends LearningAgentRoomScope {
   threadRootClientMsgNo?: string
   goal: string
   successCriteria: string
-  missionKind?: 'study' | 'research' | 'project'
+  missionKind?: 'STUDY' | 'RESEARCH' | 'PROJECT'
   sourceClientMsgNo?: string
   explicit?: boolean
 }
@@ -132,7 +160,7 @@ export interface RecordLearningAttemptCommand extends LearningAgentRoomScope {
   evidenceClientMsgNos?: string[]
   documentIds?: string[]
   canvasFrameIds?: string[]
-  assistance?: 'none' | 'hint' | 'guided'
+  assistance?: 'NONE' | 'HINT' | 'GUIDED'
 }
 
 export interface ProposeLearningEvaluationCommand extends LearningAgentRoomScope {
