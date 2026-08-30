@@ -239,16 +239,14 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   const learnerMessage = triggerMessage?.authorKind === 'human' ? triggerMessage : [...messages].reverse().find((message) => message.authorKind === 'human')
   const { rows: workspaceRows } = await pool.query<{ kind: string; source_count: number; ingestion_failure: string | null; is_learning: boolean }>(
     `SELECT c.kind,
-            (SELECT COUNT(*)::int FROM knowledge_sources s WHERE s.project_id = c.project_id AND s.status = 'ready' AND s.deleted_at IS NULL) AS source_count,
+            (SELECT COUNT(*)::int FROM knowledge_sources s WHERE s.company_id=c.company_id AND s.project_id=c.project_id AND s.status='ready' AND s.deleted_at IS NULL) AS source_count,
             (SELECT COALESCE(j.wake_error, s.error) FROM knowledge_sources s
                LEFT JOIN knowledge_source_jobs j ON j.source_id=s.id
-              WHERE s.company_id=c.company_id AND s.origin_client_msg_no=$3 AND s.deleted_at IS NULL
+              WHERE s.company_id=c.company_id AND s.project_id=c.project_id AND s.origin_client_msg_no=$3 AND s.deleted_at IS NULL
               ORDER BY s.created_at DESC LIMIT 1) AS ingestion_failure,
             EXISTS(
-              SELECT 1 FROM courses course
-              LEFT JOIN learning_course_rooms room ON room.course_id=course.id AND room.company_id=course.company_id
-              WHERE course.company_id=c.company_id
-                AND (course.study_room_conversation_id=c.id OR room.conversation_id=c.id)
+              SELECT 1 FROM projects project
+              WHERE project.id=c.project_id AND project.company_id=c.company_id AND project.lifecycle_state <> 'DELETED'
             ) AS is_learning
        FROM conversations c WHERE c.id = $1 AND c.company_id = $2 LIMIT 1`,
     [work.channelId, work.companyId, work.triggerClientMsgNo],
@@ -497,20 +495,19 @@ export async function executeActionWithLedger(work: AgentWorkItem, action: HostA
     const replay = await actionFromLedger(client, action.idempotencyKey, action)
     if (replay && !(approved && replay.approval)) { await client.query('COMMIT'); return replay }
     const {rows:stateRows}=await client.query<{state:unknown}>(
-      `SELECT jsonb_build_object(
-        'mission',(SELECT jsonb_agg(jsonb_build_array(m.id,m.status,m.updated_at)) FROM learning_missions m WHERE m.conversation_id=$1 AND m.status IN ('planning','active','paused')),
-        'steps',(SELECT jsonb_agg(jsonb_build_array(s.id,s.status,s.updated_at)) FROM learning_mission_steps s JOIN learning_missions m ON m.id=s.mission_id WHERE m.conversation_id=$1 AND m.status IN ('planning','active','paused')),
+      `WITH scope AS (
+        SELECT project_id FROM conversations WHERE id=$1 AND company_id=$3
+      ) SELECT jsonb_build_object(
+        'mission',(SELECT jsonb_agg(jsonb_build_array(m.id,m.status,m.updated_at)) FROM learning_missions m WHERE m.company_id=$3 AND m.project_id=(SELECT project_id FROM scope) AND m.conversation_id=$1 AND m.status IN ('PLANNING','ACTIVE','PAUSED')),
+        'steps',(SELECT jsonb_agg(jsonb_build_array(s.id,s.status,s.updated_at)) FROM learning_mission_steps s JOIN learning_missions m ON m.company_id=s.company_id AND m.project_id=s.project_id AND m.id=s.mission_id WHERE m.company_id=$3 AND m.project_id=(SELECT project_id FROM scope) AND m.conversation_id=$1 AND m.status IN ('PLANNING','ACTIVE','PAUSED')),
         'assignments',(SELECT jsonb_agg(jsonb_build_array(a.id,a.status,a.updated_at)) FROM canvas_agent_assignments a WHERE a.canvas_id=$2),
         'reports',(SELECT jsonb_agg(r.id ORDER BY r.created_at) FROM canvas_assignment_reports r WHERE r.canvas_id=$2),
         'evidence',(
           SELECT jsonb_agg(jsonb_build_array(attempt.id,attempt.status,attempt.submitted_at))
             FROM learning_attempts attempt
-            JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
-            JOIN conversations conversation
-              ON conversation.project_id=course.project_id AND conversation.company_id=course.company_id
-           WHERE conversation.id=$1
+           WHERE attempt.company_id=$3 AND attempt.project_id=(SELECT project_id FROM scope)
         )
-      ) AS state`,[work.channelId,work.canvasId??null],
+      ) AS state`,[work.channelId,work.canvasId??null,work.companyId],
     )
     const fingerprint=hash(canonicalJson(stateRows[0]?.state??{}))
     const {rows:lastActions}=await client.query<{action:string;args:unknown}>(

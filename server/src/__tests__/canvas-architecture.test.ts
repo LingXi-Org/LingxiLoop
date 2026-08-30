@@ -26,6 +26,9 @@ test('Canvas report evidence is validated in one tenant-scoped repository query'
 
   assert.match(repository, /jsonb_to_recordset\(\$3::jsonb\)/)
   assert.match(repository, /canvas\.company_id=\$2/)
+  assert.match(repository, /canvas\.project_id=attempt\.project_id/)
+  assert.match(repository, /attempt\.company_id=\$2/)
+  assert.doesNotMatch(repository, /attempt\.course_id/)
   assert.equal((application.match(/missingEvidenceRefs\(/g) ?? []).length, 1)
   assert.doesNotMatch(application, /for \(const ref of input\.refs\) \{[^}]*await/s)
 })
