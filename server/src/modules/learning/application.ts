@@ -50,19 +50,20 @@ import {
   listCourseMembers,
   listCourses,
   listDeliveries,
-  listDueLearningMastery,
+  listDueLearningStates,
   listLearningActivities,
-  listLearningCourseProgress,
-  listLearningCourseSummaries,
+  listLearningProjectProgress,
+  listLearningProjectSummaries,
   listLearningEvidenceRecords,
   listLearningObjectives,
   listPendingLearningEvaluationRecords,
   listProjectChannels,
-  listViewerLearningMastery,
+  listViewerLearningStates,
   lockCourseInvitation,
   priorCourseAcceptance,
   recordCourseAcceptance,
   removeMemberFromProjectChannels,
+  requireLearningCourseProjectScope,
   revokeCourseInvitation,
   studyRoomState,
   syncStudyRoomMembers,
@@ -159,7 +160,7 @@ export class LearningApplication {
     const payload = effect.payload
     switch (effect.kind) {
       case 'study_room.sync':
-        await this.syncStudyRoom(effect.courseId)
+        await this.syncStudyRoom(effect.companyId, effect.courseId)
         return
       case 'teacher_room.sync':
         await this.infrastructure.syncTeacherRoom(effect.companyId, effect.courseId)
@@ -176,7 +177,7 @@ export class LearningApplication {
       case 'course_metadata.sync': {
         const projectId = String(payload.projectId ?? '')
         if (!projectId) throw new Error('course metadata sync requires projectId')
-        if (payload.studyRoom === true) await this.syncStudyRoom(effect.courseId)
+        if (payload.studyRoom === true) await this.syncStudyRoom(effect.companyId, effect.courseId)
         await this.infrastructure.syncNotebook(projectId)
         return
       }
@@ -204,7 +205,7 @@ export class LearningApplication {
         await this.infrastructure.publishDocumentAccessRevoked({
           eventId: effect.id, companyId: effect.companyId, workspaceId: projectId, userId,
         })
-        await this.syncStudyRoom(effect.courseId)
+        await this.syncStudyRoom(effect.companyId, effect.courseId)
         await this.infrastructure.syncTeacherRoom(effect.companyId, effect.courseId)
         return
       }
@@ -486,20 +487,33 @@ export class LearningApplication {
 
   dashboard(scope: LearningScope) {
     return this.classroom(async () => {
-      const [courseRows, due, pendingReviews, mastery] = await Promise.all([
-        listLearningCourseSummaries(this.db, scope.companyId, scope.userId),
-        listDueLearningMastery(this.db, scope.companyId, scope.userId),
-        countViewerPendingLearningReviews(this.db, scope.companyId, scope.userId),
-        listViewerLearningMastery(this.db, scope.companyId, scope.userId),
+      const candidates = await listLearningProjectSummaries(this.db, scope.companyId, scope.userId)
+      const permissions = createPermissionService(this.db)
+      const decisions = await Promise.all(candidates.map((row) => permissions.can({
+        actorUserId: scope.userId,
+        action: 'learning:read',
+        companyId: scope.companyId,
+        projectId: String(row.project_id),
+        resource: { type: 'project', id: String(row.project_id) },
+      })))
+      const allowedRows = candidates.filter((_row, index) => decisions[index]?.allowed)
+      const projectIds = allowedRows.map((row) => String(row.project_id))
+      const [due, pendingReviews, states] = await Promise.all([
+        listDueLearningStates(this.db, scope.companyId, scope.userId, projectIds),
+        countViewerPendingLearningReviews(this.db, scope.companyId, scope.userId, projectIds),
+        listViewerLearningStates(this.db, scope.companyId, scope.userId, projectIds),
       ])
-      const courses = courseRows.map((row) => ({
-        id: row.id, companyId: row.company_id, projectId: row.project_id, title: row.title,
-        description: row.description, status: row.status, courseRole: row.course_role,
-        roomCount: Number(row.room_count), objectiveCount: Number(row.objective_count),
-        learnerCount: Number(row.learner_count), createdAt: String(row.created_at),
-        updatedAt: String(row.updated_at),
+      const projects = allowedRows.map((row) => ({
+        projectId: String(row.project_id),
+        projectKind: row.project_kind,
+        ...(row.course_id ? { courseId: String(row.course_id) } : {}),
+        title: row.title,
+        description: row.description,
+        status: row.status,
+        perspective: row.perspective,
+        learnerCount: Number(row.learner_count),
       }))
-      return { courses, due, mastery, pendingReviews }
+      return { projects, due, states, pendingReviews }
     })
   }
 
@@ -634,8 +648,9 @@ export class LearningApplication {
         companyId: scope.companyId,
         resource: { type: 'course', id: courseId },
       })
+      const project = await requireLearningCourseProjectScope(this.db, scope.companyId, courseId)
       return listLearningEvidenceRecords(this.db, {
-        companyId: scope.companyId, courseId, learnerId,
+        companyId: scope.companyId, projectId: project.projectId, learnerId,
       })
     })
   }
@@ -649,7 +664,8 @@ export class LearningApplication {
         companyId: scope.companyId,
         resource: { type: 'course', id: courseId },
       })
-      return listPendingLearningEvaluationRecords(this.db, scope.companyId, courseId)
+      const project = await requireLearningCourseProjectScope(this.db, scope.companyId, courseId)
+      return listPendingLearningEvaluationRecords(this.db, scope.companyId, project.projectId)
     })
   }
 
@@ -662,7 +678,8 @@ export class LearningApplication {
         companyId: scope.companyId,
         resource: { type: 'course', id: courseId },
       })
-      return listLearningCourseProgress(this.db, scope.companyId, courseId)
+      const project = await requireLearningCourseProjectScope(this.db, scope.companyId, courseId)
+      return listLearningProjectProgress(this.db, scope.companyId, project.projectId)
     })
   }
 
@@ -755,8 +772,8 @@ export class LearningApplication {
     }
   }
 
-  private async syncStudyRoom(courseId: string): Promise<void> {
-    const state = await studyRoomState(this.db, courseId)
+  private async syncStudyRoom(companyId: string, courseId: string): Promise<void> {
+    const state = await studyRoomState(this.db, companyId, courseId)
     if (!state?.room_id) return
     const members = await syncStudyRoomMembers(this.db, {
       courseId, companyId: state.company_id, roomId: state.room_id,

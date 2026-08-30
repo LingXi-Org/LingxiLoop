@@ -1,48 +1,49 @@
 import type { Queryable } from '../../db/queryable.js'
 import type { LearningNotificationPreferences, NotificationPreferencesInput } from './contracts.js'
 
-export async function listLearningCourseSummaries(db: Queryable, companyId: string, userId: string) {
+export async function listLearningProjectSummaries(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query(
-    `SELECT course.id,course.company_id,course.project_id,project.kind AS "projectKind",
-            project.name AS title,project.description,
-            project.status,
-            CASE WHEN member.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS course_role,
-            ((course.study_room_conversation_id IS NOT NULL)::int
-              + (SELECT COUNT(*)::int FROM learning_course_rooms room
-                  WHERE room.course_id=course.id AND room.company_id=course.company_id)) AS room_count,
-            (SELECT COUNT(*)::int FROM learning_objectives objective
-              WHERE objective.course_id=course.id AND objective.company_id=course.company_id
-                AND objective.status<>'archived') AS objective_count,
+    `SELECT project.id AS project_id,project.company_id,project.kind AS project_kind,
+            course.id AS course_id,project.name AS title,project.description,project.status,
+            CASE WHEN project.kind='PERSONAL_LEARNING' AND member.role='OWNER' THEN 'learner'
+                 WHEN member.role IN ('STUDENT','OBSERVER') THEN 'learner'
+                 ELSE 'teacher' END AS perspective,
             (SELECT COUNT(*)::int FROM project_memberships learner
-              WHERE learner.project_id=course.project_id AND learner.company_id=course.company_id
+              WHERE learner.project_id=project.id AND learner.company_id=project.company_id
                 AND learner.status='ACTIVE' AND learner.role IN ('STUDENT','OBSERVER')) AS learner_count,
-            course.created_at,project.updated_at
-       FROM courses course
-       JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-       JOIN project_memberships member ON member.project_id=course.project_id
-         AND member.company_id=course.company_id AND member.user_id=$2 AND member.status='ACTIVE'
+            project.created_at,project.updated_at
+       FROM projects project
+       LEFT JOIN courses course ON course.project_id=project.id AND course.company_id=project.company_id
+         AND project.kind IN ('TEACHING','INSTITUTIONAL_COURSE')
+       JOIN project_memberships member ON member.project_id=project.id
+         AND member.company_id=project.company_id AND member.user_id=$2 AND member.status='ACTIVE'
        JOIN company_memberships company_member ON company_member.company_id=member.company_id
          AND company_member.user_id=member.user_id AND company_member.status='ACTIVE'
-      WHERE course.company_id=$1 ORDER BY project.status,project.updated_at DESC`,
+      WHERE project.company_id=$1 AND project.status<>'DELETED'
+      ORDER BY project.status,project.updated_at DESC LIMIT 100`,
     [companyId,userId],
   )
   return rows
 }
 
-export async function listDueLearningMastery(db: Queryable, companyId: string, userId: string) {
+export async function listDueLearningStates(
+  db: Queryable,
+  companyId: string,
+  userId: string,
+  projectIds: string[],
+) {
+  if (!projectIds.length) return []
   const { rows } = await db.query(
-    `SELECT mastery.course_id,mastery.objective_id,objective.title,mastery.level,
-            mastery.status,mastery.next_review_at
-       FROM learning_mastery mastery
-       JOIN learning_objectives objective ON objective.id=mastery.objective_id
-         AND objective.company_id=mastery.company_id AND objective.course_id=mastery.course_id
-       JOIN courses course ON course.id=mastery.course_id AND course.company_id=mastery.company_id
-       JOIN project_memberships member ON member.project_id=course.project_id
-         AND member.company_id=mastery.company_id AND member.user_id=mastery.learner_id
-         AND member.status='ACTIVE' AND member.role IN ('STUDENT','OBSERVER')
-      WHERE mastery.company_id=$1 AND mastery.learner_id=$2 AND mastery.next_review_at<=NOW()
-      ORDER BY mastery.next_review_at LIMIT 50`,
-    [companyId,userId],
+    `SELECT state.project_id AS "projectId",state.knowledge_unit_id AS "knowledgeUnitId",
+            unit.title,state.level,state.status,state.next_review_at AS "nextReviewAt"
+       FROM learning_states state
+       JOIN learning_knowledge_units unit
+         ON unit.id=state.knowledge_unit_id AND unit.company_id=state.company_id
+        AND unit.project_id=state.project_id
+      WHERE state.company_id=$1 AND state.user_id=$2 AND state.project_id=ANY($3::text[])
+        AND state.next_review_at<=NOW()
+      ORDER BY state.next_review_at LIMIT 50`,
+    [companyId,userId,projectIds],
   )
   return rows
 }
@@ -51,41 +52,50 @@ export async function countViewerPendingLearningReviews(
   db: Queryable,
   companyId: string,
   userId: string,
+  projectIds: string[],
 ): Promise<number> {
+  if (!projectIds.length) return 0
   const { rows } = await db.query<{ count: number }>(
     `SELECT COUNT(*)::int AS count
        FROM learning_evaluations evaluation
-       JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
-       JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
-       JOIN project_memberships member ON member.project_id=course.project_id
-         AND member.company_id=attempt.company_id AND member.user_id=$2
+       JOIN learning_attempts attempt
+         ON attempt.id=evaluation.attempt_id AND attempt.company_id=evaluation.company_id
+        AND attempt.project_id=evaluation.project_id
+       JOIN project_memberships member ON member.project_id=attempt.project_id
+         AND member.company_id=evaluation.company_id AND member.user_id=$2
         AND member.status='ACTIVE' AND member.role IN ('OWNER','TEACHER')
-      WHERE attempt.company_id=$1 AND evaluation.status='pending'`,
-    [companyId,userId],
+      WHERE evaluation.company_id=$1 AND evaluation.project_id=ANY($3::text[])
+        AND evaluation.status='PENDING'`,
+    [companyId,userId,projectIds],
   )
   return Number(rows[0]?.count ?? 0)
 }
 
-export async function listViewerLearningMastery(db: Queryable, companyId: string, userId: string) {
+export async function listViewerLearningStates(
+  db: Queryable,
+  companyId: string,
+  userId: string,
+  projectIds: string[],
+) {
+  if (!projectIds.length) return []
   const { rows } = await db.query(
-    `SELECT mastery.course_id,mastery.objective_id,objective.title,mastery.level,
-            mastery.status,mastery.next_review_at,mastery.review_interval_days
-       FROM learning_mastery mastery
-       JOIN learning_objectives objective ON objective.id=mastery.objective_id
-         AND objective.company_id=mastery.company_id AND objective.course_id=mastery.course_id
-       JOIN courses course ON course.id=mastery.course_id AND course.company_id=mastery.company_id
-       JOIN project_memberships member ON member.project_id=course.project_id
-         AND member.company_id=mastery.company_id AND member.user_id=mastery.learner_id
-         AND member.status='ACTIVE' AND member.role IN ('STUDENT','OBSERVER')
-      WHERE mastery.company_id=$1 AND mastery.learner_id=$2 ORDER BY objective.position`,
-    [companyId,userId],
+    `SELECT state.project_id AS "projectId",state.knowledge_unit_id AS "knowledgeUnitId",
+            unit.title,state.level,state.status,state.next_review_at AS "nextReviewAt",
+            state.review_interval_days AS "reviewIntervalDays"
+       FROM learning_states state
+       JOIN learning_knowledge_units unit
+         ON unit.id=state.knowledge_unit_id AND unit.company_id=state.company_id
+        AND unit.project_id=state.project_id
+      WHERE state.company_id=$1 AND state.user_id=$2 AND state.project_id=ANY($3::text[])
+      ORDER BY state.project_id,unit.position`,
+    [companyId,userId,projectIds],
   )
   return rows
 }
 
 export async function listLearningEvidenceRecords(
   db: Queryable,
-  args: { companyId: string; courseId: string; learnerId: string },
+  args: { companyId: string; projectId: string; learnerId: string },
 ) {
   const { rows } = await db.query(
     `SELECT attempt.id,attempt.activity_id,attempt.mission_step_id,attempt.assistance,attempt.status,
@@ -93,10 +103,12 @@ export async function listLearningEvidenceRecords(
             evaluation.demonstrated_level,evaluation.confidence,evaluation.rubric_results,
             evaluation.feedback,evaluation.status AS evaluation_status
        FROM learning_attempts attempt
-       LEFT JOIN learning_evaluations evaluation ON evaluation.attempt_id=attempt.id
-      WHERE attempt.company_id=$1 AND attempt.course_id=$2 AND attempt.learner_id=$3
+       LEFT JOIN learning_evaluations evaluation
+         ON evaluation.attempt_id=attempt.id AND evaluation.company_id=attempt.company_id
+        AND evaluation.project_id=attempt.project_id
+      WHERE attempt.company_id=$1 AND attempt.project_id=$2 AND attempt.learner_id=$3
       ORDER BY attempt.submitted_at DESC LIMIT 200`,
-    [args.companyId,args.courseId,args.learnerId],
+    [args.companyId,args.projectId,args.learnerId],
   )
   return rows
 }
@@ -104,7 +116,7 @@ export async function listLearningEvidenceRecords(
 export async function listPendingLearningEvaluationRecords(
   db: Queryable,
   companyId: string,
-  courseId: string,
+  projectId: string,
 ) {
   const { rows } = await db.query(
     `SELECT evaluation.id,evaluation.attempt_id,evaluation.demonstrated_level,evaluation.confidence,
@@ -114,47 +126,48 @@ export async function listPendingLearningEvaluationRecords(
             verifier.verdict AS verifier_verdict,attempt.learner_id,attempt.activity_id,
             attempt.assistance,attempt.evidence,activity.title AS activity_title
        FROM learning_evaluations evaluation
-       JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
+       JOIN learning_attempts attempt
+         ON attempt.id=evaluation.attempt_id AND attempt.company_id=evaluation.company_id
+        AND attempt.project_id=evaluation.project_id
        LEFT JOIN learning_activities activity ON activity.id=attempt.activity_id
-         AND activity.company_id=attempt.company_id AND activity.course_id=attempt.course_id
+         AND activity.company_id=attempt.company_id AND activity.project_id=attempt.project_id
        LEFT JOIN canvas_assignment_reports source ON source.id=evaluation.source_report_id
          AND source.company_id=attempt.company_id
        LEFT JOIN canvas_assignment_reports verifier ON verifier.id=evaluation.verifier_report_id
          AND verifier.company_id=attempt.company_id
-      WHERE attempt.company_id=$1 AND attempt.course_id=$2 AND evaluation.status='pending'
+      WHERE evaluation.company_id=$1 AND evaluation.project_id=$2 AND evaluation.status='PENDING'
       ORDER BY evaluation.created_at ASC`,
-    [companyId,courseId],
+    [companyId,projectId],
   )
   return rows
 }
 
-export async function listLearningCourseProgress(db: Queryable, companyId: string, courseId: string) {
+export async function listLearningProjectProgress(db: Queryable, companyId: string, projectId: string) {
   const { rows } = await db.query(
     `SELECT member.user_id,user_account.display_name,user_account.email,
-            COALESCE(mastery_summary.average_level,0)::float AS average_level,
-            COALESCE(mastery_summary.verified_objectives,0)::int AS verified_objectives,
-            COALESCE(mastery_summary.due_objectives,0)::int AS due_objectives,
+            COALESCE(state_summary.average_level,0)::float AS average_level,
+            COALESCE(state_summary.verified_units,0)::int AS verified_knowledge_units,
+            COALESCE(state_summary.due_units,0)::int AS due_knowledge_units,
             COALESCE(attempt_summary.attempts,0)::int AS attempts
        FROM project_memberships member
        JOIN users user_account ON user_account.id=member.user_id
-       JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
        LEFT JOIN LATERAL (
-         SELECT AVG(mastery.level) AS average_level,
-                COUNT(*) FILTER(WHERE mastery.level>=3) AS verified_objectives,
-                COUNT(*) FILTER(WHERE mastery.next_review_at<=NOW()) AS due_objectives
-           FROM learning_mastery mastery
-          WHERE mastery.company_id=member.company_id AND mastery.course_id=course.id
-            AND mastery.learner_id=member.user_id
-       ) mastery_summary ON TRUE
+         SELECT AVG(state.level) AS average_level,
+                COUNT(*) FILTER(WHERE state.level>=3) AS verified_units,
+                COUNT(*) FILTER(WHERE state.next_review_at<=NOW()) AS due_units
+           FROM learning_states state
+          WHERE state.company_id=member.company_id AND state.project_id=member.project_id
+            AND state.user_id=member.user_id
+       ) state_summary ON TRUE
        LEFT JOIN LATERAL (
          SELECT COUNT(*) AS attempts FROM learning_attempts attempt
-          WHERE attempt.company_id=member.company_id AND attempt.course_id=course.id
+          WHERE attempt.company_id=member.company_id AND attempt.project_id=member.project_id
             AND attempt.learner_id=member.user_id
        ) attempt_summary ON TRUE
-      WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+      WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
         AND member.role IN ('STUDENT','OBSERVER')
       ORDER BY user_account.display_name`,
-    [companyId,courseId],
+    [companyId,projectId],
   )
   return rows
 }
@@ -214,7 +227,7 @@ interface LearningScopeNotificationPreferences extends NotificationPreferencesIn
   userId: string
 }
 
-export async function studyRoomState(db: Queryable, courseId: string) {
+export async function studyRoomState(db: Queryable, companyId: string, courseId: string) {
   const { rows } = await db.query<{
     room_id: string | null; company_id: string; title: string; topic: string | null; leader_id: string | null
   }>(
@@ -223,8 +236,8 @@ export async function studyRoomState(db: Queryable, courseId: string) {
        FROM courses course
        LEFT JOIN conversations conversation
          ON conversation.id=course.study_room_conversation_id AND conversation.company_id=course.company_id
-      WHERE course.id=$1`,
-    [courseId],
+      WHERE course.id=$1 AND course.company_id=$2`,
+    [courseId,companyId],
   )
   return rows[0] ?? null
 }
