@@ -7,6 +7,7 @@ import { startDbGcWorker } from './db-gc.js'
 import { env } from './env.js'
 import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
 import { startCalendarScheduler } from './modules/calendar/index.js'
+import { startAttentionProjectionWorker } from './modules/attention/public.js'
 import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
 import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
 import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
@@ -26,6 +27,7 @@ import { initializeNativeStorage } from './storage.js'
  * - idempotent: duplicate ticks converge on the same durable state;
  */
 export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
+  { name: 'attention-projection', concurrency: 'database-lock', start: () => startAttentionProjectionWorker() },
   { name: 'learning-routines', concurrency: 'queue-claim', start: () => startLearningRoutineScheduler() },
   { name: 'notifications', concurrency: 'queue-claim', start: () => startNotificationScheduler() },
   { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },

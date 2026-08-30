@@ -29,9 +29,9 @@ test('Pulse overview reads Project-scoped LearningState facts', async () => {
   assert.ok(calls.every((call) => call.params?.[0] === scope.companyId && call.params?.[1] === scope.projectId))
   const sql = calls.map((call) => call.sql).join('\n')
   assert.match(sql, /learning_states/)
-  assert.match(sql, /state\.status='NEEDS_REVIEW'/)
-  assert.match(sql, /mission\.status='PAUSED'/)
+  assert.match(sql, /attention_items/)
   assert.match(sql, /evaluation\.status='PENDING'/)
+  assert.doesNotMatch(sql, /state\.status='NEEDS_REVIEW'|mission\.status='PAUSED'/)
   assert.doesNotMatch(sql, /learning_mastery|learning_objectives|attempt\.course_id/)
 })
 

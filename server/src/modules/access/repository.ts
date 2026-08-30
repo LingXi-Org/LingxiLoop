@@ -135,6 +135,17 @@ export class AccessRepository {
     return Boolean(rows[0])
   }
 
+  async activeProjectTeacherIds(companyId: string, projectId: string): Promise<string[]> {
+    const { rows } = await this.db.query<{ user_id: string }>(
+      `SELECT user_id FROM project_memberships
+        WHERE company_id=$1 AND project_id=$2 AND status='ACTIVE'
+          AND role IN ('OWNER','TEACHER')
+        ORDER BY user_id${this.lockClause}`,
+      [companyId, projectId],
+    )
+    return rows.map((row) => row.user_id)
+  }
+
   async actor(id: string): Promise<ActorRecord | null> {
     const { rows } = await this.db.query<ActorRow>(
       `SELECT id,deleted_at,suspended_at FROM users WHERE id=$1${this.lockClause}`,

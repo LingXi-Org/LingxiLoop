@@ -4,6 +4,7 @@ export interface TeacherReportingScope {
   companyId: string
   projectId: string
   courseId: string
+  teacherUserId?: string
 }
 
 type DataRow = Record<string, unknown>
@@ -68,27 +69,20 @@ export async function loadTeacherOverviewRows(
       [scope.companyId, scope.projectId, windowDays],
     ),
     db.query<DataRow>(
-      `SELECT member.user_id,user_account.display_name,
-        COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())::int AS due_reviews,
-        COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')::int AS needs_review,
-        COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')::int AS paused_missions
-      FROM project_memberships member
-      JOIN users user_account ON user_account.id=member.user_id
-      LEFT JOIN learning_states state
-        ON state.company_id=member.company_id AND state.project_id=member.project_id
-       AND state.user_id=member.user_id
-      LEFT JOIN learning_missions mission
-        ON mission.company_id=member.company_id AND mission.project_id=member.project_id
-       AND mission.learner_id=member.user_id
-      WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
-        AND member.role IN ('STUDENT','OBSERVER')
-      GROUP BY member.user_id,user_account.display_name
-      HAVING COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())>0
-          OR COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')>0
-          OR COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')>0
-      ORDER BY needs_review DESC,due_reviews DESC
+      `SELECT attention.learner_user_id AS user_id,user_account.display_name,
+              jsonb_agg(DISTINCT attention.reason ORDER BY attention.reason) AS attention_reasons,
+              MAX(attention.rank_score)::int AS rank_score,
+              MIN(attention.expected_minutes)::int AS expected_minutes
+         FROM attention_items attention
+         JOIN users user_account ON user_account.id=attention.learner_user_id
+        WHERE attention.company_id=$1 AND attention.project_id=$2
+          AND (attention.status IN ('OPEN','ACKNOWLEDGED')
+            OR (attention.status='DEFERRED' AND attention.deferred_until<=NOW()))
+          AND ($3::text IS NULL OR attention.teacher_user_id=$3)
+        GROUP BY attention.learner_user_id,user_account.display_name
+        ORDER BY rank_score DESC,attention.learner_user_id
       LIMIT 20`,
-      [scope.companyId, scope.projectId],
+      [scope.companyId, scope.projectId, scope.teacherUserId ?? null],
     ),
     db.query<DataRow>(
       `SELECT
@@ -129,7 +123,9 @@ export async function listTeacherLearnerRows(
       COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.level>=3)::int AS verified_knowledge_units,
       COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())::int AS due_reviews,
       COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')::int AS needs_review,
-      COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')::int AS paused_missions
+      COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')::int AS paused_missions,
+      COALESCE(jsonb_agg(DISTINCT attention.reason ORDER BY attention.reason)
+        FILTER(WHERE attention.id IS NOT NULL),'[]'::jsonb) AS attention_reasons
     FROM project_memberships member
     JOIN users user_account ON user_account.id=member.user_id
     LEFT JOIN learning_states state
@@ -137,17 +133,20 @@ export async function listTeacherLearnerRows(
      AND state.user_id=member.user_id
     LEFT JOIN learning_missions mission
       ON mission.company_id=member.company_id AND mission.project_id=member.project_id
-     AND mission.learner_id=member.user_id
+       AND mission.learner_id=member.user_id
+    LEFT JOIN attention_items attention
+      ON attention.company_id=member.company_id AND attention.project_id=member.project_id
+     AND attention.learner_user_id=member.user_id
+     AND (attention.status IN ('OPEN','ACKNOWLEDGED')
+       OR (attention.status='DEFERRED' AND attention.deferred_until<=NOW()))
+     AND ($4::text IS NULL OR attention.teacher_user_id=$4)
     WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
       AND member.role IN ('STUDENT','OBSERVER')
     GROUP BY member.user_id,user_account.display_name,user_account.email
-    HAVING NOT $3::boolean
-      OR COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())>0
-      OR COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')>0
-      OR COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')>0
+    HAVING NOT $3::boolean OR COUNT(DISTINCT attention.id)>0
     ORDER BY needs_review DESC,due_reviews DESC,user_account.display_name
     LIMIT 100`,
-    [scope.companyId, scope.projectId, attentionOnly],
+    [scope.companyId, scope.projectId, attentionOnly, scope.teacherUserId ?? null],
   )
   return rows
 }

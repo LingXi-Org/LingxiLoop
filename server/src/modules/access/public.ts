@@ -45,6 +45,13 @@ export function isActiveProjectMember(
   return new AccessRepository(db).isActiveProjectMember(input.companyId, input.projectId, input.userId)
 }
 
+export function listActiveProjectTeacherIds(
+  db: Queryable,
+  input: { companyId: string; projectId: string },
+): Promise<string[]> {
+  return new AccessRepository(db).activeProjectTeacherIds(input.companyId, input.projectId)
+}
+
 export async function resolvePlanEntitlements(db: Queryable, planId: string): Promise<ResolvedEntitlements> {
   const result = await resolveEntitlements(new AccessRepository(db), planId)
   if (!result.allowed) throw new Error(`Plan entitlement resolution failed: ${result.reason}`)

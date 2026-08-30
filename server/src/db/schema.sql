@@ -5502,6 +5502,7 @@ CREATE TABLE public.domain_events (
     occurred_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT domain_events_idempotency_key UNIQUE (company_id, idempotency_key),
     CONSTRAINT domain_events_sequence_key UNIQUE (sequence),
+    CONSTRAINT domain_events_project_sequence_key UNIQUE (company_id, project_id, sequence),
     CONSTRAINT domain_events_aggregate_sequence_key
       UNIQUE (company_id, aggregate_type, aggregate_id, aggregate_sequence),
     CONSTRAINT domain_events_project_company_fkey
@@ -5523,6 +5524,79 @@ CREATE TABLE public.domain_events (
     CONSTRAINT domain_events_payload_check CHECK (
       jsonb_typeof(payload) = 'object' AND octet_length(payload::text) <= 32768
     )
+);
+
+CREATE TABLE public.attention_items (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    teacher_user_id text NOT NULL,
+    case_id text NOT NULL,
+    learner_user_id text NOT NULL,
+    knowledge_unit_id text NOT NULL,
+    reason text NOT NULL,
+    status text DEFAULT 'OPEN'::text NOT NULL,
+    source_event_sequence bigint NOT NULL,
+    rule_version text NOT NULL,
+    rank_score integer NOT NULL,
+    expected_minutes integer NOT NULL,
+    occurrence_count integer DEFAULT 1 NOT NULL,
+    version bigint DEFAULT 1 NOT NULL,
+    deferred_until timestamp with time zone,
+    resolution_reason text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    resolved_at timestamp with time zone,
+    CONSTRAINT attention_items_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT attention_items_reason_check
+      CHECK (reason = ANY (ARRAY['CASE_DETECTED'::text, 'CASE_ESCALATED'::text])),
+    CONSTRAINT attention_items_status_check
+      CHECK (status = ANY (ARRAY['OPEN'::text, 'ACKNOWLEDGED'::text, 'DEFERRED'::text,
+                                  'RESOLVED'::text, 'DISMISSED'::text])),
+    CONSTRAINT attention_items_rank_check CHECK (rank_score >= 0),
+    CONSTRAINT attention_items_expected_minutes_check CHECK (expected_minutes BETWEEN 1 AND 10080),
+    CONSTRAINT attention_items_occurrence_count_check CHECK (occurrence_count >= 1),
+    CONSTRAINT attention_items_version_check CHECK (version >= 1),
+    CONSTRAINT attention_items_rule_version_check CHECK (char_length(rule_version) BETWEEN 1 AND 100),
+    CONSTRAINT attention_items_resolution_reason_check
+      CHECK (resolution_reason IS NULL OR char_length(resolution_reason) BETWEEN 1 AND 500),
+    CONSTRAINT attention_items_deferred_check CHECK (
+      (status = 'DEFERRED'::text AND deferred_until IS NOT NULL)
+      OR (status <> 'DEFERRED'::text AND deferred_until IS NULL)
+    ),
+    CONSTRAINT attention_items_resolved_check CHECK (
+      (status IN ('RESOLVED'::text, 'DISMISSED'::text) AND resolved_at IS NOT NULL)
+      OR (status NOT IN ('RESOLVED'::text, 'DISMISSED'::text) AND resolved_at IS NULL)
+    ),
+    CONSTRAINT attention_items_case_fkey
+      FOREIGN KEY (company_id, project_id, learner_user_id, knowledge_unit_id, case_id)
+      REFERENCES public.learning_cases(company_id, project_id, user_id, knowledge_unit_id, id) ON DELETE CASCADE,
+    CONSTRAINT attention_items_teacher_fkey
+      FOREIGN KEY (company_id, project_id, teacher_user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT attention_items_source_event_fkey
+      FOREIGN KEY (company_id, project_id, source_event_sequence)
+      REFERENCES public.domain_events(company_id, project_id, sequence) ON DELETE RESTRICT
+);
+
+CREATE UNIQUE INDEX uniq_attention_items_open
+    ON public.attention_items USING btree (company_id, project_id, teacher_user_id, case_id, reason)
+    WHERE (status IN ('OPEN'::text, 'ACKNOWLEDGED'::text, 'DEFERRED'::text));
+
+CREATE INDEX idx_attention_items_teacher_rank
+    ON public.attention_items USING btree
+      (company_id, project_id, teacher_user_id, status, rank_score DESC, source_event_sequence);
+
+CREATE TABLE public.attention_projection_events (
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    source_event_sequence bigint NOT NULL,
+    processed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT attention_projection_events_pkey
+      PRIMARY KEY (company_id, project_id, source_event_sequence),
+    CONSTRAINT attention_projection_events_source_fkey
+      FOREIGN KEY (company_id, project_id, source_event_sequence)
+      REFERENCES public.domain_events(company_id, project_id, sequence) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_domain_events_company_cursor

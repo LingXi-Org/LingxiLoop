@@ -293,32 +293,23 @@ async function overview(scope:TeacherScope,windowDays:number,db:Queryable):Promi
   const days=Math.max(1,Math.min(90,Math.trunc(windowDays||30)))
   const {distribution,missions,activity,attention,coverage}=await loadTeacherOverviewRows(
     db,
-    {companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId},
+    {companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId,teacherUserId:scope.teacherId},
     days,
   )
   inc('learning.teacher_agent.summary_generated')
-  const attentionWithReasons=attention.map((item)=>{
-    const row=object(item);const reasons:string[]=[]
-    if(Number(row.due_reviews)>0)reasons.push('due_review')
-    if(Number(row.needs_review)>0)reasons.push('needs_review')
-    if(Number(row.paused_missions)>0)reasons.push('paused_mission')
-    return {...row,reasons}
-  })
+  const attentionWithReasons=attention.map((item)=>{const row=object(item);return {...row,reasons:Array.isArray(row.attention_reasons)?row.attention_reasons:[]}})
   return {generatedAt:new Date().toISOString(),windowDays:days,course:{id:scope.courseId,title:scope.courseTitle},stateDistribution:distribution,missions,activity:activity[0]??{},evidenceCoverage:coverage[0]??{},attention:attentionWithReasons}
 }
 
 async function listLearners(scope:TeacherScope,attentionOnly:boolean,db:Queryable):Promise<unknown[]>{
   const rows=await listTeacherLearnerRows(
     db,
-    {companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId},
+    {companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId,teacherUserId:scope.teacherId},
     attentionOnly,
   )
   return rows.map((item)=>{
-    const row=object(item);const attentionReasons:string[]=[]
-    if(Number(row.due_reviews)>0)attentionReasons.push('due_review')
-    if(Number(row.needs_review)>0)attentionReasons.push('needs_review')
-    if(Number(row.paused_missions)>0)attentionReasons.push('paused_mission')
-    return {...row,attentionReasons}
+    const row=object(item)
+    return {...row,attentionReasons:Array.isArray(row.attention_reasons)?row.attention_reasons:[]}
   })
 }
 

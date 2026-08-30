@@ -331,6 +331,21 @@ test('M11 ProjectInvite grants only Student membership and retires Course invita
   assert.match(bootstrap, /'course_invitation_acceptances'.*'course_invitations'/s)
 })
 
+test('M12 Attention Items are event-projected, teacher-scoped, ranked, and uniquely open', () => {
+  const items = schema.match(/CREATE TABLE public\.attention_items \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  assert.match(items, /'OPEN'.*'ACKNOWLEDGED'.*'DEFERRED'.*'RESOLVED'.*'DISMISSED'/s)
+  assert.match(items, /source_event_sequence bigint NOT NULL/)
+  assert.match(items, /rule_version text NOT NULL/)
+  assert.match(items, /rank_score integer NOT NULL/)
+  assert.match(items, /expected_minutes integer NOT NULL/)
+  assert.match(items, /attention_items_case_fkey[\s\S]*learning_cases\(company_id, project_id, user_id, knowledge_unit_id, id\)/)
+  assert.match(items, /attention_items_teacher_fkey[\s\S]*project_memberships\(company_id, project_id, user_id\)/)
+  assert.match(schema, /uniq_attention_items_open[\s\S]*teacher_user_id, case_id, reason[\s\S]*'OPEN'.*'ACKNOWLEDGED'.*'DEFERRED'/s)
+  assert.match(schema, /CREATE TABLE public\.attention_projection_events/)
+  assert.match(bootstrap, /'attention_items', 'attention_projection_events'/)
+  assert.match(workerBoot, /attention-projection.*database-lock/)
+})
+
 test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
   assert.match(schema, /plans_code_key UNIQUE \(code\)/)
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)
