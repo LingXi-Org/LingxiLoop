@@ -229,7 +229,7 @@ test('[integration] teacher digest calculation keeps local wall-clock time acros
 })
 
 test('[integration] only critical teacher operations cross the approval boundary',()=>{
-  for(const method of ['publish_objective','publish_activity','close_activity','archive_objective','transition_course','set_teacher_membership','review_evaluation','override_mastery']){
+  for(const method of ['publish_objective','publish_activity','close_activity','archive_objective','transition_course','set_teacher_membership','review_evaluation']){
     assert.equal(teacherActionRequiresApproval(`teacher.${method}`),true,method)
   }
   for(const method of ['overview','get_learner','get_attempt','draft_objectives','draft_activity','update_course','set_learner_membership','set_room_binding','configure_digest']){

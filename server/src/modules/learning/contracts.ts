@@ -55,7 +55,6 @@ export const missionCoordinatorRequestSchema = z.object({ agentId: z.string().tr
 export const reviewEvaluationRequestSchema = z.object({
   decision: z.enum(['accept', 'reject']),
   reason: z.string().trim().min(1),
-  overrideLevel: z.coerce.number().int().min(1).max(4).optional(),
 }).strict()
 export const notificationPreferencesRequestSchema = z.object({
   courseId: z.string().optional(),

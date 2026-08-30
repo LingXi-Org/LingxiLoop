@@ -211,40 +211,6 @@ export async function proposeLearningEvaluation(
   return { evaluationId, status, decisions }
 }
 
-async function applyReviewerLearningOverride(
-  db: Queryable,
-  metric: LearningMetric,
-  input: {
-    companyId: string
-    projectId: string
-    userId: string
-    knowledgeUnitId: string
-    nextLevel: number
-    activityType: LearningActivityType
-  },
-): Promise<void> {
-  const level = Math.trunc(input.nextLevel)
-  if (level < 0 || level > 4) {
-    throw new LearningApplicationError('invalid', 'overrideLevel must be between 0 and 4')
-  }
-  if (level === 4 && !['PROJECT', 'ASSESSMENT'].includes(input.activityType)) {
-    throw new LearningApplicationError('invalid', 'level 4 override requires project or assessment evidence')
-  }
-  const previous = await lockLearningState(db, input)
-  const reviewIntervalDays = level < previous.level ? 1 : REVIEW_INTERVAL_BY_LEVEL[level] ?? 1
-  const status = level >= 3 ? 'VERIFIED' : 'LEARNING'
-  if (!await upsertLearningState(db, {
-    ...input,
-    level,
-    status,
-    independentEvidenceCount: previous.independentEvidenceCount,
-    reviewIntervalDays,
-  })) {
-    throw new LearningApplicationError('not_found', 'learning state scope not found')
-  }
-  metric('learning.state.changed', { status })
-}
-
 export async function reviewProjectLearningEvaluation(
   _db: Queryable,
   transaction: LearningTransaction,
@@ -255,7 +221,6 @@ export async function reviewProjectLearningEvaluation(
     evaluationId: string
     reviewerId: string
     decision: 'accept' | 'reject'
-    overrideLevel?: number
     reason: string
   },
 ): Promise<void> {
@@ -286,35 +251,21 @@ export async function reviewProjectLearningEvaluation(
       throw new LearningApplicationError('conflict', 'evaluation review state changed')
     }
     if (accepted) {
-      const level = input.overrideLevel === undefined
-        ? evaluation.demonstratedLevel
-        : Math.trunc(Number(input.overrideLevel))
       for (const knowledgeUnitId of evaluation.knowledgeUnitIds) {
-        if (input.overrideLevel !== undefined) {
-          await applyReviewerLearningOverride(client, metric, {
-            companyId: input.companyId,
-            projectId: input.projectId,
-            userId: evaluation.userId,
-            knowledgeUnitId,
-            nextLevel: level,
-            activityType: evaluation.activityType ?? 'PRACTICE',
-          })
-        } else {
-          await applyLearningEvaluationToState(client, metric, {
-            companyId: input.companyId,
-            projectId: input.projectId,
-            userId: evaluation.userId,
-            knowledgeUnitId,
-            evaluationId: input.evaluationId,
-            demonstratedLevel: level,
-            confidence: Math.max(0.7, evaluation.confidence),
-            assistance: evaluation.assistance,
-            activityType: evaluation.activityType ?? 'PRACTICE',
-            activityTargetLevel: Math.max(level, evaluation.targetLevel),
-            evaluatorKind: 'TEACHER',
-            teacherConfirmed: true,
-          })
-        }
+        await applyLearningEvaluationToState(client, metric, {
+          companyId: input.companyId,
+          projectId: input.projectId,
+          userId: evaluation.userId,
+          knowledgeUnitId,
+          evaluationId: input.evaluationId,
+          demonstratedLevel: evaluation.demonstratedLevel,
+          confidence: Math.max(0.7, evaluation.confidence),
+          assistance: evaluation.assistance,
+          activityType: evaluation.activityType ?? 'PRACTICE',
+          activityTargetLevel: Math.max(evaluation.demonstratedLevel, evaluation.targetLevel),
+          evaluatorKind: 'TEACHER',
+          teacherConfirmed: true,
+        })
       }
     }
     if (!await markLearningAttemptEvaluated(client, {
@@ -336,7 +287,6 @@ export async function reviewLearningEvaluation(
     evaluationId: string
     teacherId: string
     decision: 'accept' | 'reject'
-    overrideLevel?: number
     reason: string
   },
 ): Promise<void> {
@@ -348,6 +298,5 @@ export async function reviewLearningEvaluation(
     reviewerId: input.teacherId,
     decision: input.decision,
     reason: input.reason,
-    ...(input.overrideLevel === undefined ? {} : { overrideLevel: input.overrideLevel }),
   })
 }

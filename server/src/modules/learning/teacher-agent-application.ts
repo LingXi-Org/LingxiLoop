@@ -84,7 +84,7 @@ const PULSE_PROMPT = `You are Pulse, the product-managed Project teacher operati
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 const APPROVAL_METHODS = new Set([
   'publish_objective', 'publish_activity', 'close_activity', 'archive_objective',
-  'transition_course', 'set_teacher_membership', 'review_evaluation', 'override_mastery',
+  'transition_course', 'set_teacher_membership', 'review_evaluation',
 ])
 const WRITE_METHODS = new Set([
   'draft_objectives', 'draft_activity', 'update_course', 'set_learner_membership',
@@ -425,10 +425,10 @@ export async function describeTeacherAction(work:AgentWorkItem,action:HostAction
     publish_objective:'发布学习目标',archive_objective:'归档学习目标',publish_activity:'发布学习活动',close_activity:'关闭学习活动',
     transition_course:{END:'结束课程',ENTER_READ_ONLY:'进入只读',ARCHIVE:'归档课程'}[String(args.command)]??'推进课程生命周期',
     set_teacher_membership:args.enabled===false?'移除教师身份':'授予教师身份',
-    review_evaluation:args.decision==='reject'?'退回学习评价':'采纳学习评价',override_mastery:'人工调整掌握等级',
+    review_evaluation:args.decision==='reject'?'退回学习评价':'采纳学习评价',
   }
   return {requestedBy:scope.teacherId,summary:`${operationLabel[method]??'确认关键变更'}“${entityLabel??'当前对象'}”`,
-    scope:{projectId:scope.projectId,courseId:scope.courseId,roomId:scope.roomId,risk:method.includes('evaluation')||method==='override_mastery'?'learning_evaluation':'course_management'},
+    scope:{projectId:scope.projectId,courseId:scope.courseId,roomId:scope.roomId,risk:method.includes('evaluation')?'learning_evaluation':'course_management'},
     preview:{method,entityId,entityLabel,currentState,currentVersion,args}}
 }
 
@@ -502,6 +502,6 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
     })
   }
   if(method==='set_teacher_membership'){const userId=textArg(args,'userId','user_id');const enabled=boolArg(args);await setLearningCourseMembership(db,transaction,{companyId:scope.companyId,courseId:scope.courseId,managerId:scope.teacherId,userId,role:'teacher',enabled});await syncTeacherRoomMembers(scope.companyId,scope.courseId,db,transaction);return {ok:true}}
-  if(method==='review_evaluation'||method==='override_mastery'){await reviewLearningEvaluation(db,transaction,inc,{companyId:scope.companyId,courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:method==='override_mastery'?'accept':optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason'),...(args.overrideLevel!==undefined||args.override_level!==undefined?{overrideLevel:Number(args.overrideLevel??args.override_level)}:{})});return {ok:true}}
+  if(method==='review_evaluation'){await reviewLearningEvaluation(db,transaction,inc,{companyId:scope.companyId,courseId:scope.courseId,evaluationId:textArg(args,'evaluationId','evaluation_id'),teacherId:scope.teacherId,decision:optionalText(args,'decision')==='reject'?'reject':'accept',reason:textArg(args,'reason')});return {ok:true}}
   throw new Error(`unsupported teacher action: ${method}`)
 }

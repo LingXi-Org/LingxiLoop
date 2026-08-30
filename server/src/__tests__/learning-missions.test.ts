@@ -6,7 +6,6 @@ import {
   loadLearningContext,
   proposeLearningEvaluation,
   recordLearningAttempt,
-  reviewLearningEvaluation,
   reviewProjectLearningEvaluation,
   setLearningCourseMembership,
   startLearningMission,
@@ -430,39 +429,6 @@ test('agent evaluation proposal commits its project state after the evaluation l
   assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='EVALUATED'")))
   assert.ok(statements.every((text) => !text.includes('learning_mastery')))
   assert.ok(metrics.includes('learning.evaluation.proposed'))
-})
-
-test('accepted teacher override projects state and evaluates the attempt in one project transaction', async () => {
-  const statements: string[] = []
-  const db = queryable((text) => {
-    statements.push(text)
-    if (text.includes('FROM courses course') && text.includes('JOIN projects project')) return { rows: [{
-      course_id: 'course-1', company_id: 'company-1', project_id: 'project-1',
-      project_kind: 'TEACHING', project_status: 'ACTIVE',
-    }] }
-    if (text.includes('FROM learning_evaluations evaluation') && text.includes('FOR UPDATE')) return { rows: [{
-      attempt_id: 'attempt-1', demonstrated_level: 3, confidence: 0.8, learner_id: 'learner-1',
-      assistance: 'NONE', activity_type: 'PROJECT', target_level: 3, knowledge_unit_ids: ['unit-1'],
-    }] }
-    if (text.includes('UPDATE learning_evaluations evaluation')) return { rowCount: 1 }
-    if (text.includes('pg_advisory_xact_lock')) return { rows: [] }
-    if (text.includes('FROM learning_states state') && text.includes('FOR UPDATE')) return { rows: [{
-      level: 2, independent_evidence_count: 1, review_interval_days: 3,
-    }] }
-    if (text.includes('INSERT INTO learning_states')) return { rowCount: 1 }
-    if (text.includes("UPDATE learning_attempts SET status='EVALUATED'")) return { rowCount: 1 }
-    throw new Error(`unexpected query: ${text}`)
-  })
-
-  await reviewLearningEvaluation(db, async (work) => work(db), () => undefined, {
-    companyId: 'company-1', courseId: 'course-1', evaluationId: 'evaluation-1',
-    teacherId: 'teacher-1', decision: 'accept', overrideLevel: 4, reason: 'Verified project transfer',
-  })
-
-  assert.ok(statements.findIndex((text) => text.includes('UPDATE learning_evaluations evaluation'))
-    < statements.findIndex((text) => text.includes('INSERT INTO learning_states')))
-  assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='EVALUATED'")))
-  assert.ok(statements.every((text) => !text.includes('learning_mastery')))
 })
 
 test('Personal owner can reject a project evaluation and still finalize the attempt', async () => {
