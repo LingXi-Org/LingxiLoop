@@ -133,7 +133,7 @@ test('UI submission binds a published activity and learner to one project', asyn
 
   const inserted = await insertProjectLearningActivityAttempt(db, {
     id: 'attempt-1', companyId: 'company-1', projectId: 'project-1', activityId: 'activity-1',
-    learnerId: 'learner-1', assistance: 'NONE', answer: 'evidence', idempotencyKey: 'submission-1',
+    learnerId: 'learner-1', assistance: 'NONE', evidenceId: 'evidence-1', idempotencyKey: 'submission-1',
   })
 
   assert.equal(inserted, 'attempt-1')
@@ -142,6 +142,7 @@ test('UI submission binds a published activity and learner to one project', asyn
   ])
   assert.match(statement, /activity\.company_id=\$2 AND activity\.project_id=\$3/)
   assert.match(statement, /activity\.status='PUBLISHED'/)
+  assert.match(statement, /assistance,evidence_id,client_submission_id/)
   assert.doesNotMatch(statement, /project_memberships/)
   assert.match(statement, /ON CONFLICT\(company_id,project_id,activity_id,learner_id,client_submission_id\)/)
 })
@@ -149,6 +150,7 @@ test('UI submission binds a published activity and learner to one project', asyn
 test('Assessment submission appends a bounded business event in the same transaction', async () => {
   const calls: string[] = []
   let eventPayload: Record<string, unknown> | undefined
+  let evidenceRow: Record<string, unknown> | undefined
   const db = queryable((text, params) => {
     calls.push(text)
     if (text.includes('FROM users WHERE')) {
@@ -170,7 +172,22 @@ test('Assessment submission appends a bounded business event in the same transac
       return { rows: [{ id: 'plan-1', code: 'PERSONAL_FREE', status: 'ACTIVE' }] }
     }
     if (text.includes('FROM plan_entitlements')) return { rows: [{ code: 'learning.core', value: true }] }
+    if (text.includes('SELECT * FROM evidence_records')) {
+      return { rows: evidenceRow ? [evidenceRow] : [] }
+    }
+    if (text.includes('INSERT INTO evidence_records')) {
+      const data = JSON.parse(String(params?.[7])) as Record<string, unknown>
+      evidenceRow = {
+        id: String(params?.[0]), company_id: 'company-1', project_id: 'project-1',
+        level: 'L1', derivation: 'OBSERVED', kind: 'LEARNER_SUBMISSION',
+        subject_user_id: 'learner-1', data, created_by_type: 'USER', created_by_id: 'learner-1',
+        created_at: '2026-08-30T00:59:00.000Z',
+      }
+      return { rows: [evidenceRow] }
+    }
     if (text.includes('INSERT INTO learning_attempts')) return { rows: [{ id: 'attempt-1' }] }
+    if (text.includes('SELECT 1 FROM learning_attempts')) return { rows: [{ '?column?': 1 }] }
+    if (text.includes('INSERT INTO evidence_links')) return { rowCount: 1 }
     if (text.includes('pg_advisory_xact_lock')) return {}
     if (text.includes('FROM domain_events WHERE')) return {}
     if (text.includes('INSERT INTO domain_events')) {
@@ -194,9 +211,11 @@ test('Assessment submission appends a bounded business event in the same transac
   })
 
   assert.deepEqual(result, { attemptId: 'attempt-1' })
+  assert.deepEqual(evidenceRow?.data, { answer: 'private answer text' })
   assert.deepEqual(eventPayload, {
     attemptId: 'attempt-1', activityId: 'activity-1', learnerId: 'learner-1', assistance: 'HINT',
   })
   assert.ok(calls.findIndex((text) => text.includes('INSERT INTO learning_attempts'))
     < calls.findIndex((text) => text.includes('INSERT INTO domain_events')))
+  assert.equal(calls.some((text) => /learning_attempts[\s\S]*\bevidence\b/.test(text)), false)
 })

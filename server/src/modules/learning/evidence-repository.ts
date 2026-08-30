@@ -44,13 +44,13 @@ export async function insertAgentLearningAttempt(
     activityId?: string
     missionStepId?: string
     assistance: LearningAssistance
-    evidence: Record<string, unknown>
+    evidenceId: string
   },
 ): Promise<boolean> {
   const result = await db.query(
     `INSERT INTO learning_attempts
-       (id,company_id,project_id,learner_id,activity_id,mission_step_id,assistance,evidence)
-     SELECT $1,project.company_id,project.id,$5,activity.id,step.id,$8,$9::jsonb
+       (id,company_id,project_id,learner_id,activity_id,mission_step_id,assistance,evidence_id)
+     SELECT $1,project.company_id,project.id,$5,activity.id,step.id,$8,$9
        FROM projects project
        LEFT JOIN learning_activities activity
          ON activity.id=$6 AND activity.company_id=project.company_id AND activity.project_id=project.id
@@ -64,7 +64,7 @@ export async function insertAgentLearningAttempt(
         AND (($6::text IS NOT NULL AND activity.id IS NOT NULL AND $7::text IS NULL)
           OR ($7::text IS NOT NULL AND mission.id IS NOT NULL AND $6::text IS NULL))`,
     [args.id,args.companyId,args.projectId,args.channelId,args.learnerId,args.activityId ?? null,
-      args.missionStepId ?? null,args.assistance,JSON.stringify(args.evidence)],
+      args.missionStepId ?? null,args.assistance,args.evidenceId],
   )
   return Boolean(result.rowCount)
 }

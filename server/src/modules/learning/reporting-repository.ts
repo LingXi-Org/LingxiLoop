@@ -99,13 +99,16 @@ export async function listLearningEvidenceRecords(
 ) {
   const { rows } = await db.query(
     `SELECT attempt.id,attempt.activity_id,attempt.mission_step_id,attempt.assistance,attempt.status,
-            attempt.evidence,attempt.submitted_at AS created_at,evaluation.id AS evaluation_id,
+            evidence.data AS evidence,attempt.submitted_at AS created_at,evaluation.id AS evaluation_id,
             evaluation.demonstrated_level,evaluation.confidence,evaluation.rubric_results,
             evaluation.feedback,evaluation.status AS evaluation_status
        FROM learning_attempts attempt
        LEFT JOIN learning_evaluations evaluation
          ON evaluation.attempt_id=attempt.id AND evaluation.company_id=attempt.company_id
         AND evaluation.project_id=attempt.project_id
+       JOIN evidence_records evidence
+         ON evidence.id=attempt.evidence_id AND evidence.company_id=attempt.company_id
+        AND evidence.project_id=attempt.project_id
       WHERE attempt.company_id=$1 AND attempt.project_id=$2 AND attempt.learner_id=$3
       ORDER BY attempt.submitted_at DESC LIMIT 200`,
     [args.companyId,args.projectId,args.learnerId],
@@ -124,11 +127,14 @@ export async function listPendingLearningEvaluationRecords(
             evaluation.source_report_id,evaluation.verifier_report_id,
             source.author_agent_id AS builder_agent_id,verifier.author_agent_id AS verifier_agent_id,
             verifier.verdict AS verifier_verdict,attempt.learner_id,attempt.activity_id,
-            attempt.assistance,attempt.evidence,activity.title AS activity_title
+            attempt.assistance,evidence.data AS evidence,activity.title AS activity_title
        FROM learning_evaluations evaluation
        JOIN learning_attempts attempt
          ON attempt.id=evaluation.attempt_id AND attempt.company_id=evaluation.company_id
         AND attempt.project_id=evaluation.project_id
+       JOIN evidence_records evidence
+         ON evidence.id=attempt.evidence_id AND evidence.company_id=attempt.company_id
+        AND evidence.project_id=attempt.project_id
        LEFT JOIN learning_activities activity ON activity.id=attempt.activity_id
          AND activity.company_id=attempt.company_id AND activity.project_id=attempt.project_id
        LEFT JOIN canvas_assignment_reports source ON source.id=evaluation.source_report_id

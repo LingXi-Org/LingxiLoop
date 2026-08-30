@@ -1,6 +1,7 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
+import { createEvidenceRecordInTransaction, createEvidenceWithLinksInTransaction } from '../evidence/public.js'
 import { commitDomainEvent } from '../events/public.js'
 import { assessmentAttemptSubmittedEvent } from './activity-events.js'
 import type {
@@ -218,6 +219,21 @@ async function submitProjectLearningActivityInTransaction(
     action: 'learning:submit',
   })
   const attemptId = randomUUID()
+  const evidenceId = `evidence-${createHash('sha256').update(JSON.stringify([
+    input.companyId, input.projectId, input.activityId, input.learnerId, input.idempotencyKey,
+  ])).digest('hex')}`
+  const evidenceInput = {
+    id: evidenceId,
+    companyId: input.companyId,
+    projectId: input.projectId,
+    level: 'L1' as const,
+    derivation: 'OBSERVED' as const,
+    kind: 'LEARNER_SUBMISSION',
+    subjectUserId: input.learnerId,
+    data: { answer: learningText(input.answer, 'answer', 100_000) },
+    createdBy: { type: 'USER' as const, id: input.learnerId },
+  }
+  await createEvidenceRecordInTransaction(db, evidenceInput)
   const assistance = input.assistance ?? 'NONE'
   const acceptedId = await insertProjectLearningActivityAttempt(db, {
     id: attemptId,
@@ -226,10 +242,13 @@ async function submitProjectLearningActivityInTransaction(
     activityId: input.activityId,
     learnerId: input.learnerId,
     assistance,
-    answer: learningText(input.answer, 'answer', 100_000),
+    evidenceId,
     idempotencyKey: input.idempotencyKey,
   })
   if (!acceptedId) throw new LearningApplicationError('not_found', 'published activity not found')
+  await createEvidenceWithLinksInTransaction(db, evidenceInput, [{
+    relation: 'SOURCE', targetLevel: 'L1', targetKind: 'LEARNING_ATTEMPT', targetId: acceptedId,
+  }])
   return { attemptId: acceptedId, assistance }
 }
 

@@ -4887,7 +4887,7 @@ CREATE TABLE public.learning_attempts (
     activity_id text,
     mission_step_id text,
     assistance text DEFAULT 'NONE'::text NOT NULL,
-    evidence jsonb NOT NULL,
+    evidence_id text NOT NULL,
     status text DEFAULT 'SUBMITTED'::text NOT NULL,
     client_submission_id text,
     submitted_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -5068,6 +5068,11 @@ CREATE TABLE public.evidence_claim_evidence (
       FOREIGN KEY (company_id, project_id, evidence_id)
       REFERENCES public.evidence_records(company_id, project_id, id) ON DELETE CASCADE
 );
+
+ALTER TABLE ONLY public.learning_attempts
+    ADD CONSTRAINT learning_attempts_evidence_fkey
+    FOREIGN KEY (company_id, project_id, evidence_id)
+    REFERENCES public.evidence_records(company_id, project_id, id);
 
 CREATE TABLE public.learning_states (
     project_id text NOT NULL,

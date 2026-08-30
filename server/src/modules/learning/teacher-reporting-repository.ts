@@ -222,18 +222,21 @@ export async function findTeacherAttemptDetail(
 ): Promise<DataRow | undefined> {
   const { rows } = await db.query<DataRow>(
     `SELECT attempt.id,attempt.learner_id,attempt.activity_id,attempt.mission_step_id,
-            attempt.assistance,attempt.status,attempt.submitted_at,attempt.evidence,
+            attempt.assistance,attempt.status,attempt.submitted_at,evidence.data AS evidence,
             COALESCE(jsonb_agg(jsonb_build_object(
               'id',evaluation.id,'level',evaluation.demonstrated_level,
               'confidence',evaluation.confidence,'status',evaluation.status,
               'feedback',evaluation.feedback
             )) FILTER(WHERE evaluation.id IS NOT NULL),'[]'::jsonb) AS evaluations
        FROM learning_attempts attempt
+       JOIN evidence_records evidence
+         ON evidence.id=attempt.evidence_id AND evidence.company_id=attempt.company_id
+        AND evidence.project_id=attempt.project_id
        LEFT JOIN learning_evaluations evaluation
          ON evaluation.company_id=attempt.company_id AND evaluation.project_id=attempt.project_id
         AND evaluation.attempt_id=attempt.id
       WHERE attempt.id=$3 AND attempt.company_id=$1 AND attempt.project_id=$2
-      GROUP BY attempt.id`,
+      GROUP BY attempt.id,evidence.id`,
     [scope.companyId, scope.projectId, attemptId],
   )
   return rows[0]

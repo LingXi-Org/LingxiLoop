@@ -286,7 +286,7 @@ interface ActivityAttemptWrite {
   activityId: string
   learnerId: string
   assistance: 'NONE'|'HINT'|'GUIDED'
-  answer: string
+  evidenceId: string
   idempotencyKey: string
 }
 
@@ -296,8 +296,8 @@ export async function insertProjectLearningActivityAttempt(
 ): Promise<string | null> {
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO learning_attempts
-       (id,company_id,project_id,learner_id,activity_id,assistance,evidence,client_submission_id)
-     SELECT $1,activity.company_id,activity.project_id,$5,activity.id,$6,$7::jsonb,$8
+       (id,company_id,project_id,learner_id,activity_id,assistance,evidence_id,client_submission_id)
+     SELECT $1,activity.company_id,activity.project_id,$5,activity.id,$6,$7,$8
        FROM learning_activities activity
       WHERE activity.company_id=$2 AND activity.project_id=$3 AND activity.id=$4
         AND activity.status='PUBLISHED'
@@ -306,7 +306,7 @@ export async function insertProjectLearningActivityAttempt(
      DO UPDATE SET id=learning_attempts.id
      RETURNING id`,
     [args.id,args.companyId,args.projectId,args.activityId,args.learnerId,args.assistance,
-      JSON.stringify({ kind: 'UI_SUBMISSION', submittedBy: args.learnerId, answer: args.answer }),args.idempotencyKey],
+      args.evidenceId,args.idempotencyKey],
   )
   return rows[0]?.id ?? null
 }

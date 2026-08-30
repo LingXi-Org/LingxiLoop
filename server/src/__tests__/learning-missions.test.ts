@@ -253,6 +253,7 @@ test('Personal mission start needs no Course and publishes the committed project
 
 test('Agent OS attempt recording binds message evidence to one project learner', async () => {
   let insertedValues: readonly unknown[] | undefined
+  let evidenceRow: Record<string, unknown> | undefined
   const db = queryable((text, params) => {
     if (text.includes('FROM conversations conversation')) return { rows: [{
       company_id: 'company-1', course_id: 'course-1', project_id: 'project-1',
@@ -260,10 +261,25 @@ test('Agent OS attempt recording binds message evidence to one project learner',
     }] }
     if (text.includes('FROM im_channel_bindings')) return { rows: [{ channel_type: 2 }] }
     if (text.includes('FROM project_memberships')) return { rows: [{ role: 'learner' }] }
+    if (text.includes('SELECT * FROM evidence_records')) {
+      return { rows: evidenceRow ? [evidenceRow] : [] }
+    }
+    if (text.includes('INSERT INTO evidence_records')) {
+      evidenceRow = {
+        id: String(params?.[0]), company_id: 'company-1', project_id: 'project-1',
+        level: 'L1', derivation: 'OBSERVED', kind: 'HOST_REFERENCES',
+        subject_user_id: 'learner-1', data: JSON.parse(String(params?.[7])) as Record<string, unknown>,
+        created_by_type: 'AGENT', created_by_id: 'agent-1',
+        created_at: '2026-08-30T01:00:00.000Z',
+      }
+      return { rows: [evidenceRow] }
+    }
     if (text.includes('INSERT INTO learning_attempts')) {
       insertedValues = params
       return { rowCount: 1 }
     }
+    if (text.includes('SELECT 1 FROM learning_attempts')) return { rows: [{ '?column?': 1 }] }
+    if (text.includes('INSERT INTO evidence_links')) return { rowCount: 1 }
     throw new Error(`unexpected query: ${text}`)
   })
   const metrics: string[] = []
@@ -282,6 +298,9 @@ test('Agent OS attempt recording binds message evidence to one project learner',
   assert.deepEqual(insertedValues?.slice(1, 8), [
     'company-1','project-1','room-1','learner-1','activity-1',null,'HINT',
   ])
+  assert.deepEqual(evidenceRow?.data, {
+    conversationId: 'room-1', clientMsgNos: ['message-1'], documents: [], canvasFrames: [],
+  })
   assert.deepEqual(metrics, ['learning.attempt.accepted'])
 })
 

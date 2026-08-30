@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
+import { createEvidenceRecordInTransaction, createEvidenceWithLinksInTransaction } from '../evidence/public.js'
 import type {
   LearningAgentRoomScope,
   LearningScope,
@@ -320,6 +321,23 @@ export async function recordLearningAttempt(
     }
     const learnerId = [...learnerIds][0]
     const id = randomUUID()
+    const evidenceInput = {
+      id: `evidence-${randomUUID()}`,
+      companyId: room.companyId,
+      projectId: room.projectId,
+      level: 'L1' as const,
+      derivation: 'OBSERVED' as const,
+      kind: 'HOST_REFERENCES',
+      subjectUserId: learnerId,
+      data: {
+        conversationId: input.channelId,
+        clientMsgNos: refs,
+        documents,
+        canvasFrames,
+      },
+      createdBy: { type: 'AGENT' as const, id: input.agentId },
+    }
+    await createEvidenceRecordInTransaction(client, evidenceInput)
     const inserted = await insertAgentLearningAttempt(client, {
       id,
       companyId: room.companyId,
@@ -329,17 +347,14 @@ export async function recordLearningAttempt(
       ...(input.activityId ? { activityId: input.activityId } : {}),
       ...(input.missionStepId ? { missionStepId: input.missionStepId } : {}),
       assistance: input.assistance ?? 'NONE',
-      evidence: {
-        kind: 'HOST_REFERENCES',
-        conversationId: input.channelId,
-        clientMsgNos: refs,
-        documents,
-        canvasFrames,
-      },
+      evidenceId: evidenceInput.id,
     })
     if (!inserted) {
       throw new LearningApplicationError('not_found', 'published activity or mission step is outside the current project')
     }
+    await createEvidenceWithLinksInTransaction(client, evidenceInput, [{
+      relation: 'SOURCE', targetLevel: 'L1', targetKind: 'LEARNING_ATTEMPT', targetId: id,
+    }])
     return { id, learnerId }
   })
   infrastructure.metric('learning.attempt.accepted', { source: 'message' })
