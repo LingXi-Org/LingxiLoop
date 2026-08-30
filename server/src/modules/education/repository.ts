@@ -1,7 +1,23 @@
 import type { Queryable } from '../../db/queryable.js'
+import type { CompanyStatus, ProjectKind, ProjectStatus } from '../../domain/public.js'
 import type { CreateEducationCompanyInput } from './contracts.js'
 
 export interface EducationCoreIds { companyId: string; contractId: string; seatId: string }
+
+interface DueContractRow {
+  id: string
+  company_id: string
+  company_status: CompanyStatus
+  ends_at: Date
+}
+
+export interface ExpiredEducationContract {
+  contractId: string
+  companyId: string
+  previousCompanyStatus: CompanyStatus
+  projects: Array<{ id: string; kind: ProjectKind; status: ProjectStatus }>
+  endsAt: Date
+}
 
 export async function insertEducationCore(db: Queryable, input: CreateEducationCompanyInput & EducationCoreIds & { creatorUserId: string }): Promise<boolean> {
   const { rows: users } = await db.query<{ display_name: string; avatar_url: string | null }>(
@@ -45,4 +61,45 @@ export async function insertEducationCore(db: Queryable, input: CreateEducationC
     [input.seatId, input.companyId, input.contractId, input.creatorUserId],
   )
   return company.rowCount === 1
+}
+
+export async function expireNextDueEducationContract(
+  db: Queryable,
+  now: Date,
+): Promise<ExpiredEducationContract | null> {
+  const { rows } = await db.query<DueContractRow>(
+    `SELECT contract.id,contract.company_id,contract.ends_at,company.status AS company_status
+       FROM education_contracts contract
+       JOIN companies company ON company.id=contract.company_id AND company.type='EDUCATION'
+      WHERE contract.status IN ('TRIAL','ACTIVE') AND contract.ends_at <= $1
+        AND company.status<>'DELETED'
+      ORDER BY contract.ends_at,contract.id
+      LIMIT 1 FOR UPDATE OF contract,company SKIP LOCKED`,
+    [now],
+  )
+  const contract = rows[0]
+  if (!contract) return null
+
+  const contractUpdate = await db.query(
+    `UPDATE education_contracts SET status='EXPIRED',version=version+1,updated_at=$2
+      WHERE id=$1 AND company_id=$3 AND status IN ('TRIAL','ACTIVE') AND ends_at <= $2`,
+    [contract.id, now, contract.company_id],
+  )
+  if (contractUpdate.rowCount !== 1) {
+    throw new Error('Education Contract expiry changed concurrently')
+  }
+
+  const { rows: projects } = await db.query<{ id: string; kind: ProjectKind; status: ProjectStatus }>(
+    `SELECT id,kind,status FROM projects
+      WHERE company_id=$1 AND kind='INSTITUTIONAL_COURSE' AND status='ACTIVE'
+      ORDER BY id FOR UPDATE`,
+    [contract.company_id],
+  )
+  return {
+    contractId: contract.id,
+    companyId: contract.company_id,
+    previousCompanyStatus: contract.company_status,
+    projects,
+    endsAt: contract.ends_at,
+  }
 }

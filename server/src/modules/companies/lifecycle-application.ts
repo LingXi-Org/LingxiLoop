@@ -2,6 +2,7 @@ import type { Queryable } from '../../db/queryable.js'
 import {
   type CompanyLifecycleCommand,
   type CompanyStatus,
+  type CompanyType,
   transitionCompany,
 } from '../../domain/public.js'
 import { createPermissionService } from '../access/public.js'
@@ -13,7 +14,7 @@ export interface CompanyLifecycleInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   auditInTransaction(db: Queryable, event: {
     kind: string
-    userId: string
+    userId?: string
     companyId: string
     detail: Record<string, unknown>
   }): Promise<void>
@@ -44,28 +45,42 @@ export class CompanyLifecycleApplication {
         action: COMMAND_ACTIONS[input.command],
         companyId: input.companyId,
       })
-      const transition = transitionCompany(context.company.type, context.company.status, input.command)
-      if (transition.outcome === 'INVALID') {
-        throw new CompanyLifecycleError(
-          `${context.company.type} Company cannot execute ${input.command} from ${context.company.status}`,
-        )
-      }
-      if (transition.outcome === 'ALREADY_APPLIED') {
-        return { ok: true, status: transition.to, applied: false }
-      }
-      const updated = await updateCompanyLifecycleStatus(db, {
-        companyId: context.company.id,
-        expected: transition.from,
-        next: transition.to,
+      return this.executeSystemInTransaction(db, {
+        ...input,
+        type: context.company.type,
+        status: context.company.status,
       })
-      if (!updated) throw new CompanyLifecycleError('Company lifecycle changed concurrently')
-      await this.infrastructure.auditInTransaction(db, {
-        kind: 'company_lifecycle_transition',
-        userId: input.actorUserId,
-        companyId: context.company.id,
-        detail: { command: input.command, from: transition.from, to: transition.to },
-      })
-      return { ok: true, status: transition.to, applied: true }
     })
+  }
+
+  async executeSystemInTransaction(db: Queryable, input: {
+    actorUserId?: string
+    companyId: string
+    type: CompanyType
+    status: CompanyStatus
+    command: CompanyLifecycleCommand
+  }): Promise<{ ok: true; status: CompanyStatus; applied: boolean }> {
+    const transition = transitionCompany(input.type, input.status, input.command)
+    if (transition.outcome === 'INVALID') {
+      throw new CompanyLifecycleError(
+        `${input.type} Company cannot execute ${input.command} from ${input.status}`,
+      )
+    }
+    if (transition.outcome === 'ALREADY_APPLIED') {
+      return { ok: true, status: transition.to, applied: false }
+    }
+    const updated = await updateCompanyLifecycleStatus(db, {
+      companyId: input.companyId,
+      expected: transition.from,
+      next: transition.to,
+    })
+    if (!updated) throw new CompanyLifecycleError('Company lifecycle changed concurrently')
+    await this.infrastructure.auditInTransaction(db, {
+      kind: 'company_lifecycle_transition',
+      userId: input.actorUserId,
+      companyId: input.companyId,
+      detail: { command: input.command, from: transition.from, to: transition.to },
+    })
+    return { ok: true, status: transition.to, applied: true }
   }
 }

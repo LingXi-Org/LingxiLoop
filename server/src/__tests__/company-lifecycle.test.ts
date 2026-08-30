@@ -32,6 +32,9 @@ test('Education Company follows contract offboarding and retention in order', ()
   assert.deepEqual(transitionCompany('EDUCATION', 'ACTIVE', 'OFFBOARD'), {
     outcome: 'INVALID', from: 'ACTIVE', to: null,
   })
+  assert.deepEqual(transitionCompany('EDUCATION', 'TRIAL', 'ENTER_GRACE_PERIOD'), {
+    outcome: 'APPLIED', from: 'TRIAL', to: 'GRACE_PERIOD',
+  })
 })
 
 test('Company SUSPENDED is not part of the lifecycle contract', () => {

@@ -11,6 +11,7 @@ import { startAttentionProjectionWorker } from './modules/attention/public.js'
 import { startTeacherBriefingWorker } from './modules/briefings/public.js'
 import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
 import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
+import { startEducationContractExpiryWorker } from './modules/education/public.js'
 import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
 import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowledge/worker.js'
 import { startLearningEffectWorker } from './modules/learning/worker.js'
@@ -40,6 +41,7 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'email-retry', concurrency: 'queue-claim', start: () => startEmailRetryWorker() },
   { name: 'email-storage-gc', concurrency: 'idempotent', start: () => startEmailGcWorker() },
   { name: 'document-mention-delivery', concurrency: 'queue-claim', start: () => startDocumentMentionDeliveryWorker() },
+  { name: 'education-contract-expiry', concurrency: 'queue-claim', start: () => startEducationContractExpiryWorker() },
   { name: 'database-gc', concurrency: 'idempotent', start: () => startDbGcWorker() },
   { name: 'knowledge-ingestion', concurrency: 'queue-claim', start: () => startKnowledgeWorker() },
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },

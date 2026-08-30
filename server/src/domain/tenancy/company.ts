@@ -65,7 +65,9 @@ function companyTransitionTarget(
       return status === 'ACTIVE' ? 'USER_DELETION_PENDING' : status === 'USER_DELETION_PENDING' ? status : null
     case 'ENTER_GRACE_PERIOD':
       if (type !== 'EDUCATION') return null
-      return status === 'ACTIVE' ? 'GRACE_PERIOD' : status === 'GRACE_PERIOD' ? status : null
+      return status === 'TRIAL' || status === 'ACTIVE'
+        ? 'GRACE_PERIOD'
+        : status === 'GRACE_PERIOD' ? status : null
     case 'ENTER_READ_ONLY':
       if (type !== 'EDUCATION') return null
       return status === 'GRACE_PERIOD' ? 'READ_ONLY' : status === 'READ_ONLY' ? status : null

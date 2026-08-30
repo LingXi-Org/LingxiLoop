@@ -1,6 +1,7 @@
 import type { Queryable } from '../../db/queryable.js'
 import {
   type ProjectLifecycleCommand,
+  type ProjectKind,
   type ProjectStatus,
   transitionProject,
 } from '../../domain/public.js'
@@ -19,7 +20,7 @@ export interface ProjectLifecycleInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   auditInTransaction(db: Queryable, event: {
     kind: string
-    userId: string
+    userId?: string
     companyId: string
     detail: Record<string, unknown>
   }): Promise<void>
@@ -66,19 +67,34 @@ export class ProjectLifecycleApplication {
     })
     const project = context.project
     if (!project) throw new ProjectLifecycleError('concurrent_change', 'Project context disappeared')
-    const transition = transitionProject(project.kind, project.status, input.command)
+    return this.executeSystemInTransaction(db, {
+      ...input,
+      kind: project.kind,
+      status: project.status,
+    })
+  }
+
+  async executeSystemInTransaction(db: Queryable, input: {
+    actorUserId?: string
+    companyId: string
+    projectId: string
+    kind: ProjectKind
+    status: ProjectStatus
+    command: ProjectLifecycleCommand
+  }): Promise<{ ok: true; status: ProjectStatus; applied: boolean }> {
+    const transition = transitionProject(input.kind, input.status, input.command)
     if (transition.outcome === 'INVALID') {
       throw new ProjectLifecycleError(
         'invalid_transition',
-        `${project.kind} Project cannot execute ${input.command} from ${project.status}`,
+        `${input.kind} Project cannot execute ${input.command} from ${input.status}`,
       )
     }
     if (transition.outcome === 'ALREADY_APPLIED') {
       return { ok: true, status: transition.to, applied: false }
     }
     const updated = await updateProjectLifecycleStatus(db, {
-      projectId: project.id,
-      companyId: context.company.id,
+      projectId: input.projectId,
+      companyId: input.companyId,
       expected: transition.from,
       next: transition.to,
     })
@@ -86,17 +102,17 @@ export class ProjectLifecycleApplication {
       throw new ProjectLifecycleError('concurrent_change', 'Project lifecycle changed concurrently')
     }
     await this.infrastructure.projectLifecycleProjection(db, {
-      companyId: context.company.id,
-      projectId: project.id,
+      companyId: input.companyId,
+      projectId: input.projectId,
       status: transition.to,
     })
     await this.infrastructure.auditInTransaction(db, {
       kind: 'project_lifecycle_transition',
       userId: input.actorUserId,
-      companyId: context.company.id,
+      companyId: input.companyId,
       detail: {
-        projectId: project.id,
-        projectKind: project.kind,
+        projectId: input.projectId,
+        projectKind: input.kind,
         command: input.command,
         from: transition.from,
         to: transition.to,

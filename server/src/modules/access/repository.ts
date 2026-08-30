@@ -191,18 +191,24 @@ export class AccessRepository {
     return rows[0] ?? null
   }
 
-  async activeOrganizationSeatPlanId(companyId: string, userId: string): Promise<string | null> {
+  async activeOrganizationSeatPlanId(
+    companyId: string,
+    userId: string,
+    companyStatus: CompanyStatus,
+  ): Promise<string | null> {
     const { rows } = await this.db.query<OrganizationSeatPlanRow>(
       `SELECT contract.plan_id
          FROM organization_seats seat
          JOIN education_contracts contract ON contract.id=seat.contract_id
           AND contract.company_id=seat.company_id
         WHERE seat.company_id=$1 AND seat.user_id=$2 AND seat.status='ACTIVE'
-          AND contract.status IN ('TRIAL','ACTIVE')
-          AND contract.starts_at <= CURRENT_TIMESTAMP AND contract.ends_at > CURRENT_TIMESTAMP${
+          AND ((contract.status IN ('TRIAL','ACTIVE')
+                AND contract.starts_at <= CURRENT_TIMESTAMP AND contract.ends_at > CURRENT_TIMESTAMP)
+            OR (contract.status='EXPIRED'
+                AND $3 IN ('GRACE_PERIOD','READ_ONLY','OFFBOARDED','RETENTION','ARCHIVED')))${
             this.lockDependencies ? ' FOR UPDATE OF seat,contract' : ''
           }`,
-      [companyId, userId],
+      [companyId, userId, companyStatus],
     )
     return rows[0]?.plan_id ?? null
   }

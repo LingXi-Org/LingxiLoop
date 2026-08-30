@@ -19,6 +19,9 @@ test('Education lifecycle updates only its Company and leaves Personal context o
       if (/FROM company_memberships/.test(sql)) {
         return { rows: [{ role: 'ADMIN', status: 'ACTIVE' }], rowCount: 1 } as never
       }
+      if (/FROM organization_seats/.test(sql)) {
+        return { rows: [{ plan_id: 'education-plan' }], rowCount: 1 } as never
+      }
       if (/FROM plans WHERE/.test(sql)) {
         return { rows: [{ id: 'education-plan', code: 'EDUCATION', status: 'ACTIVE' }], rowCount: 1 } as never
       }

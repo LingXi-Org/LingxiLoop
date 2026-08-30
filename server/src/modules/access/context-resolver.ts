@@ -50,7 +50,11 @@ export async function resolveAccessContext(
 
   let companyPlanId = company.planId
   if (company.type === 'EDUCATION') {
-    const organizationPlanId = await repository.activeOrganizationSeatPlanId(company.id, request.actorUserId)
+    const organizationPlanId = await repository.activeOrganizationSeatPlanId(
+      company.id,
+      request.actorUserId,
+      company.status,
+    )
     if (!organizationPlanId) return denied('ORGANIZATION_SEAT_REQUIRED')
     companyPlanId = organizationPlanId
   }
