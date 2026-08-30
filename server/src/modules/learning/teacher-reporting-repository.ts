@@ -2,6 +2,7 @@ import type { Queryable } from '../../db/queryable.js'
 
 export interface TeacherReportingScope {
   companyId: string
+  projectId: string
   courseId: string
 }
 
@@ -26,89 +27,85 @@ export async function loadTeacherOverviewRows(
       `WITH totals AS (
         SELECT
           (SELECT COUNT(*) FROM project_memberships member
-            JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
-            WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+            WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
               AND member.role IN ('STUDENT','OBSERVER')) *
-          (SELECT COUNT(*) FROM learning_objectives
-            WHERE company_id=$1 AND course_id=$2 AND status<>'archived') AS possible
+          (SELECT COUNT(*) FROM learning_knowledge_units
+            WHERE company_id=$1 AND project_id=$2 AND status<>'ARCHIVED') AS possible
       ), levels AS (SELECT generate_series(0,4) AS level)
       SELECT levels.level,
         CASE WHEN levels.level=0
-          THEN GREATEST(totals.possible-COUNT(mastery.objective_id) FILTER(WHERE mastery.level<>0),0)::int
-          ELSE COUNT(mastery.objective_id) FILTER(WHERE mastery.level=levels.level)::int
-        END AS objective_states
+          THEN GREATEST(totals.possible-COUNT(state.knowledge_unit_id) FILTER(WHERE state.level<>0),0)::int
+          ELSE COUNT(state.knowledge_unit_id) FILTER(WHERE state.level=levels.level)::int
+        END AS knowledge_unit_states
       FROM levels CROSS JOIN totals
-      LEFT JOIN learning_mastery mastery
-        ON mastery.company_id=$1 AND mastery.course_id=$2
+      LEFT JOIN learning_states state
+        ON state.company_id=$1 AND state.project_id=$2
       GROUP BY levels.level,totals.possible
       ORDER BY levels.level`,
-      [scope.companyId, scope.courseId],
+      [scope.companyId, scope.projectId],
     ),
     db.query<DataRow>(
       `SELECT status,COUNT(*)::int AS count
          FROM learning_missions
-        WHERE company_id=$1 AND course_id=$2
+        WHERE company_id=$1 AND project_id=$2
         GROUP BY status
         ORDER BY status`,
-      [scope.companyId, scope.courseId],
+      [scope.companyId, scope.projectId],
     ),
     db.query<DataRow>(
       `SELECT
         COUNT(DISTINCT attempt.id) FILTER(
           WHERE attempt.submitted_at>=NOW()-($3::int*INTERVAL '1 day')
         )::int AS attempts,
-        COUNT(DISTINCT evaluation.id) FILTER(WHERE evaluation.status='pending')::int AS pending_reviews,
-        COUNT(DISTINCT evaluation.id) FILTER(WHERE evaluation.status='accepted')::int AS accepted_evaluations,
-        COUNT(DISTINCT evaluation.id) FILTER(WHERE evaluation.status='rejected')::int AS rejected_evaluations
+        COUNT(DISTINCT evaluation.id) FILTER(WHERE evaluation.status='PENDING')::int AS pending_reviews,
+        COUNT(DISTINCT evaluation.id) FILTER(WHERE evaluation.status='ACCEPTED')::int AS accepted_evaluations,
+        COUNT(DISTINCT evaluation.id) FILTER(WHERE evaluation.status='REJECTED')::int AS rejected_evaluations
       FROM learning_attempts attempt
-      LEFT JOIN learning_evaluations evaluation ON evaluation.attempt_id=attempt.id
-      WHERE attempt.company_id=$1 AND attempt.course_id=$2`,
-      [scope.companyId, scope.courseId, windowDays],
+      LEFT JOIN learning_evaluations evaluation
+        ON evaluation.company_id=attempt.company_id AND evaluation.project_id=attempt.project_id
+       AND evaluation.attempt_id=attempt.id
+      WHERE attempt.company_id=$1 AND attempt.project_id=$2`,
+      [scope.companyId, scope.projectId, windowDays],
     ),
     db.query<DataRow>(
       `SELECT member.user_id,user_account.display_name,
-        COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.next_review_at<=NOW())::int AS due_reviews,
-        COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.status='needs_review')::int AS needs_review,
-        COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='paused')::int AS paused_missions
+        COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())::int AS due_reviews,
+        COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')::int AS needs_review,
+        COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')::int AS paused_missions
       FROM project_memberships member
       JOIN users user_account ON user_account.id=member.user_id
-      JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
-      LEFT JOIN learning_mastery mastery
-        ON mastery.company_id=member.company_id
-       AND mastery.course_id=course.id
-       AND mastery.learner_id=member.user_id
+      LEFT JOIN learning_states state
+        ON state.company_id=member.company_id AND state.project_id=member.project_id
+       AND state.user_id=member.user_id
       LEFT JOIN learning_missions mission
-        ON mission.company_id=member.company_id
-       AND mission.course_id=course.id
+        ON mission.company_id=member.company_id AND mission.project_id=member.project_id
        AND mission.learner_id=member.user_id
-      WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+      WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
         AND member.role IN ('STUDENT','OBSERVER')
       GROUP BY member.user_id,user_account.display_name
-      HAVING COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.next_review_at<=NOW())>0
-          OR COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.status='needs_review')>0
-          OR COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='paused')>0
+      HAVING COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())>0
+          OR COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')>0
+          OR COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')>0
       ORDER BY needs_review DESC,due_reviews DESC
       LIMIT 20`,
-      [scope.companyId, scope.courseId],
+      [scope.companyId, scope.projectId],
     ),
     db.query<DataRow>(
       `SELECT
         (SELECT COUNT(*)::int FROM project_memberships member
-          JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
-          WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+          WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
             AND member.role IN ('STUDENT','OBSERVER')) AS learners,
         COUNT(DISTINCT attempt.learner_id)::int AS learners_with_evidence,
         COUNT(DISTINCT attempt.id)::int AS verified_attempts,
-        COUNT(DISTINCT mastery.learner_id||':'||mastery.objective_id)
-          FILTER(WHERE mastery.next_review_at<=NOW())::int AS due_reviews
+        COUNT(DISTINCT state.user_id||':'||state.knowledge_unit_id)
+          FILTER(WHERE state.next_review_at<=NOW())::int AS due_reviews
       FROM learning_attempts attempt
-      FULL JOIN learning_mastery mastery
-        ON mastery.company_id=attempt.company_id
-       AND mastery.course_id=attempt.course_id
-       AND mastery.learner_id=attempt.learner_id
-      WHERE COALESCE(attempt.company_id,mastery.company_id)=$1
-        AND COALESCE(attempt.course_id,mastery.course_id)=$2`,
-      [scope.companyId, scope.courseId],
+      FULL JOIN learning_states state
+        ON state.company_id=attempt.company_id AND state.project_id=attempt.project_id
+       AND state.user_id=attempt.learner_id
+      WHERE COALESCE(attempt.company_id,state.company_id)=$1
+        AND COALESCE(attempt.project_id,state.project_id)=$2`,
+      [scope.companyId, scope.projectId],
     ),
   ])
 
@@ -128,32 +125,29 @@ export async function listTeacherLearnerRows(
 ): Promise<DataRow[]> {
   const { rows } = await db.query<DataRow>(
     `SELECT member.user_id,user_account.display_name,user_account.email,
-      COALESCE(AVG(mastery.level),0)::float AS average_level,
-      COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.level>=3)::int AS verified_objectives,
-      COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.next_review_at<=NOW())::int AS due_reviews,
-      COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.status='needs_review')::int AS needs_review,
-      COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='paused')::int AS paused_missions
+      COALESCE(AVG(state.level),0)::float AS average_level,
+      COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.level>=3)::int AS verified_knowledge_units,
+      COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())::int AS due_reviews,
+      COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')::int AS needs_review,
+      COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')::int AS paused_missions
     FROM project_memberships member
     JOIN users user_account ON user_account.id=member.user_id
-    JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
-    LEFT JOIN learning_mastery mastery
-      ON mastery.company_id=member.company_id
-     AND mastery.course_id=course.id
-     AND mastery.learner_id=member.user_id
+    LEFT JOIN learning_states state
+      ON state.company_id=member.company_id AND state.project_id=member.project_id
+     AND state.user_id=member.user_id
     LEFT JOIN learning_missions mission
-      ON mission.company_id=member.company_id
-     AND mission.course_id=course.id
+      ON mission.company_id=member.company_id AND mission.project_id=member.project_id
      AND mission.learner_id=member.user_id
-    WHERE member.company_id=$1 AND course.id=$2 AND member.status='ACTIVE'
+    WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
       AND member.role IN ('STUDENT','OBSERVER')
     GROUP BY member.user_id,user_account.display_name,user_account.email
     HAVING NOT $3::boolean
-      OR COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.next_review_at<=NOW())>0
-      OR COUNT(DISTINCT mastery.objective_id) FILTER(WHERE mastery.status='needs_review')>0
-      OR COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='paused')>0
+      OR COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())>0
+      OR COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')>0
+      OR COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')>0
     ORDER BY needs_review DESC,due_reviews DESC,user_account.display_name
     LIMIT 100`,
-    [scope.companyId, scope.courseId, attentionOnly],
+    [scope.companyId, scope.projectId, attentionOnly],
   )
   return rows
 }
@@ -167,11 +161,10 @@ export async function findTeacherLearner(
     `SELECT user_account.display_name,user_account.email
        FROM project_memberships member
        JOIN users user_account ON user_account.id=member.user_id
-       JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
-      WHERE member.company_id=$1 AND course.id=$2
+      WHERE member.company_id=$1 AND member.project_id=$2
         AND member.user_id=$3 AND member.status='ACTIVE'
         AND member.role IN ('STUDENT','OBSERVER')`,
-    [scope.companyId, scope.courseId, learnerId],
+    [scope.companyId, scope.projectId, learnerId],
   )
   return rows[0]
 }
@@ -180,28 +173,27 @@ export async function loadTeacherLearnerDetailRows(
   db: Queryable,
   scope: TeacherReportingScope,
   learnerId: string,
-): Promise<{ mastery: DataRow[]; missions: DataRow[]; attempts: DataRow[] }> {
-  const [mastery, missions, attempts] = await Promise.all([
+): Promise<{ states: DataRow[]; missions: DataRow[]; attempts: DataRow[] }> {
+  const [states, missions, attempts] = await Promise.all([
     db.query<DataRow>(
-      `SELECT mastery.objective_id,objective.title,mastery.level,mastery.status,
-              mastery.next_review_at,mastery.review_interval_days
-         FROM learning_mastery mastery
-         JOIN learning_objectives objective
-           ON objective.id=mastery.objective_id
-          AND objective.company_id=mastery.company_id
-          AND objective.course_id=mastery.course_id
-        WHERE mastery.company_id=$1 AND mastery.course_id=$2 AND mastery.learner_id=$3
-        ORDER BY objective.position
+      `SELECT state.knowledge_unit_id,unit.title,state.level,state.status,
+              state.next_review_at,state.review_interval_days
+         FROM learning_states state
+         JOIN learning_knowledge_units unit
+           ON unit.id=state.knowledge_unit_id AND unit.company_id=state.company_id
+          AND unit.project_id=state.project_id
+        WHERE state.company_id=$1 AND state.project_id=$2 AND state.user_id=$3
+        ORDER BY unit.position
         LIMIT 100`,
-      [scope.companyId, scope.courseId, learnerId],
+      [scope.companyId, scope.projectId, learnerId],
     ),
     db.query<DataRow>(
       `SELECT id,goal,success_criteria,status,updated_at
          FROM learning_missions
-        WHERE company_id=$1 AND course_id=$2 AND learner_id=$3
+        WHERE company_id=$1 AND project_id=$2 AND learner_id=$3
         ORDER BY updated_at DESC
         LIMIT 20`,
-      [scope.companyId, scope.courseId, learnerId],
+      [scope.companyId, scope.projectId, learnerId],
     ),
     db.query<DataRow>(
       `SELECT attempt.id,attempt.activity_id,attempt.mission_step_id,attempt.assistance,
@@ -210,16 +202,17 @@ export async function loadTeacherLearnerDetailRows(
          FROM learning_attempts attempt
          LEFT JOIN LATERAL (
            SELECT * FROM learning_evaluations candidate
-            WHERE candidate.attempt_id=attempt.id
+            WHERE candidate.company_id=attempt.company_id AND candidate.project_id=attempt.project_id
+              AND candidate.attempt_id=attempt.id
             ORDER BY candidate.created_at DESC LIMIT 1
          ) evaluation ON TRUE
-        WHERE attempt.company_id=$1 AND attempt.course_id=$2 AND attempt.learner_id=$3
+        WHERE attempt.company_id=$1 AND attempt.project_id=$2 AND attempt.learner_id=$3
         ORDER BY attempt.submitted_at DESC
         LIMIT 20`,
-      [scope.companyId, scope.courseId, learnerId],
+      [scope.companyId, scope.projectId, learnerId],
     ),
   ])
-  return { mastery: mastery.rows, missions: missions.rows, attempts: attempts.rows }
+  return { states: states.rows, missions: missions.rows, attempts: attempts.rows }
 }
 
 export async function findTeacherAttemptDetail(
@@ -236,10 +229,12 @@ export async function findTeacherAttemptDetail(
               'feedback',evaluation.feedback
             )) FILTER(WHERE evaluation.id IS NOT NULL),'[]'::jsonb) AS evaluations
        FROM learning_attempts attempt
-       LEFT JOIN learning_evaluations evaluation ON evaluation.attempt_id=attempt.id
-      WHERE attempt.id=$3 AND attempt.company_id=$1 AND attempt.course_id=$2
+       LEFT JOIN learning_evaluations evaluation
+         ON evaluation.company_id=attempt.company_id AND evaluation.project_id=attempt.project_id
+        AND evaluation.attempt_id=attempt.id
+      WHERE attempt.id=$3 AND attempt.company_id=$1 AND attempt.project_id=$2
       GROUP BY attempt.id`,
-    [scope.companyId, scope.courseId, attemptId],
+    [scope.companyId, scope.projectId, attemptId],
   )
   return rows[0]
 }
@@ -249,15 +244,17 @@ export async function listTeacherObjectives(
   scope: TeacherReportingScope,
 ): Promise<DataRow[]> {
   const { rows } = await db.query<DataRow>(
-    `SELECT objective.*,
-      COALESCE(jsonb_agg(dependency.prerequisite_objective_id)
-        FILTER(WHERE dependency.prerequisite_objective_id IS NOT NULL),'[]'::jsonb) AS prerequisite_ids
-     FROM learning_objectives objective
-     LEFT JOIN learning_objective_dependencies dependency ON dependency.objective_id=objective.id
-    WHERE objective.company_id=$1 AND objective.course_id=$2
-    GROUP BY objective.id
-    ORDER BY objective.position`,
-    [scope.companyId, scope.courseId],
+    `SELECT unit.*,
+      COALESCE(jsonb_agg(dependency.prerequisite_knowledge_unit_id)
+        FILTER(WHERE dependency.prerequisite_knowledge_unit_id IS NOT NULL),'[]'::jsonb) AS prerequisite_ids
+     FROM learning_knowledge_units unit
+     LEFT JOIN learning_knowledge_unit_dependencies dependency
+       ON dependency.company_id=unit.company_id AND dependency.project_id=unit.project_id
+      AND dependency.knowledge_unit_id=unit.id
+    WHERE unit.company_id=$1 AND unit.project_id=$2
+    GROUP BY unit.id
+    ORDER BY unit.position`,
+    [scope.companyId, scope.projectId],
   )
   return rows
 }
@@ -268,9 +265,9 @@ export async function listTeacherActivities(
 ): Promise<DataRow[]> {
   const { rows } = await db.query<DataRow>(
     `SELECT * FROM learning_activities
-      WHERE company_id=$1 AND course_id=$2
+      WHERE company_id=$1 AND project_id=$2
       ORDER BY created_at DESC`,
-    [scope.companyId, scope.courseId],
+    [scope.companyId, scope.projectId],
   )
   return rows
 }
@@ -282,11 +279,13 @@ export async function listTeacherReviews(
   const { rows } = await db.query<DataRow>(
     `SELECT evaluation.*,attempt.learner_id,attempt.activity_id
        FROM learning_evaluations evaluation
-       JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
-      WHERE attempt.company_id=$1 AND attempt.course_id=$2 AND evaluation.status='pending'
+       JOIN learning_attempts attempt
+         ON attempt.company_id=evaluation.company_id AND attempt.project_id=evaluation.project_id
+        AND attempt.id=evaluation.attempt_id
+      WHERE attempt.company_id=$1 AND attempt.project_id=$2 AND evaluation.status='PENDING'
       ORDER BY evaluation.created_at
       LIMIT 100`,
-    [scope.companyId, scope.courseId],
+    [scope.companyId, scope.projectId],
   )
   return rows
 }

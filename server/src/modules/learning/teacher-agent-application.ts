@@ -293,7 +293,7 @@ async function overview(scope:TeacherScope,windowDays:number,db:Queryable):Promi
   const days=Math.max(1,Math.min(90,Math.trunc(windowDays||30)))
   const {distribution,missions,activity,attention,coverage}=await loadTeacherOverviewRows(
     db,
-    {companyId:scope.companyId,courseId:scope.courseId},
+    {companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId},
     days,
   )
   inc('learning.teacher_agent.summary_generated')
@@ -304,13 +304,13 @@ async function overview(scope:TeacherScope,windowDays:number,db:Queryable):Promi
     if(Number(row.paused_missions)>0)reasons.push('paused_mission')
     return {...row,reasons}
   })
-  return {generatedAt:new Date().toISOString(),windowDays:days,course:{id:scope.courseId,title:scope.courseTitle},masteryDistribution:distribution,missions,activity:activity[0]??{},evidenceCoverage:coverage[0]??{},attention:attentionWithReasons}
+  return {generatedAt:new Date().toISOString(),windowDays:days,course:{id:scope.courseId,title:scope.courseTitle},stateDistribution:distribution,missions,activity:activity[0]??{},evidenceCoverage:coverage[0]??{},attention:attentionWithReasons}
 }
 
 async function listLearners(scope:TeacherScope,attentionOnly:boolean,db:Queryable):Promise<unknown[]>{
   const rows=await listTeacherLearnerRows(
     db,
-    {companyId:scope.companyId,courseId:scope.courseId},
+    {companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId},
     attentionOnly,
   )
   return rows.map((item)=>{
@@ -323,7 +323,7 @@ async function listLearners(scope:TeacherScope,attentionOnly:boolean,db:Queryabl
 }
 
 async function learnerDetail(scope:TeacherScope,learnerId:string,db:Queryable):Promise<unknown>{
-  const reportingScope={companyId:scope.companyId,courseId:scope.courseId}
+  const reportingScope={companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId}
   const member=await findTeacherLearner(db,reportingScope,learnerId)
   if(!member)throw new Error('learner is outside the current course')
   const detail=await loadTeacherLearnerDetailRows(db,reportingScope,learnerId)
@@ -334,7 +334,7 @@ async function learnerDetail(scope:TeacherScope,learnerId:string,db:Queryable):P
 async function attemptDetail(scope:TeacherScope,attemptId:string,db:Queryable):Promise<unknown>{
   const attempt=await findTeacherAttemptDetail(
     db,
-    {companyId:scope.companyId,courseId:scope.courseId},
+    {companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId},
     attemptId,
   )
   if(!attempt)throw new Error('attempt is outside the current course')
@@ -454,7 +454,7 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   if(method==='list_learners')return listLearners(scope,args.attentionOnly===true||args.attention_only===true,db)
   if(method==='get_learner')return learnerDetail(scope,textArg(args,'learnerId','learner_id'),db)
   if(method==='get_attempt')return attemptDetail(scope,textArg(args,'attemptId','attempt_id'),db)
-  const reportingScope={companyId:scope.companyId,courseId:scope.courseId}
+  const reportingScope={companyId:scope.companyId,projectId:scope.projectId,courseId:scope.courseId}
   if(method==='list_objectives')return listTeacherObjectives(db,reportingScope)
   if(method==='list_activities')return listTeacherActivities(db,reportingScope)
   if(method==='list_reviews')return listTeacherReviews(db,reportingScope)
@@ -476,7 +476,7 @@ export async function executeTeacherAction(work:AgentWorkItem,method:string,args
   }
   if(method==='draft_activity'){
     const objectiveIds=args.objectiveIds??args.objective_ids
-    return createLearningActivity(db,transaction,{companyId:scope.companyId,courseId:scope.courseId,actorId:scope.teacherId,actorKind:'teacher',title:textArg(args,'title'),instructions:textArg(args,'instructions'),type:textArg(args,'type') as LearningActivityType,evaluationMode:(optionalText(args,'evaluationMode','evaluation_mode')??'teacher_required') as LearningEvaluationMode,targetLevel:Number(args.targetLevel??args.target_level??2),rubric:Array.isArray(args.rubric)?args.rubric:[],objectiveIds:Array.isArray(objectiveIds)?objectiveIds.map(String):[],...(optionalText(args,'dueAt','due_at')?{dueAt:optionalText(args,'dueAt','due_at')}:{})})
+    return createLearningActivity(db,transaction,{companyId:scope.companyId,courseId:scope.courseId,actorId:scope.teacherId,actorKind:'teacher',title:textArg(args,'title'),instructions:textArg(args,'instructions'),type:textArg(args,'type') as LearningActivityType,evaluationMode:(optionalText(args,'evaluationMode','evaluation_mode')??'TEACHER_REQUIRED') as LearningEvaluationMode,targetLevel:Number(args.targetLevel??args.target_level??2),rubric:Array.isArray(args.rubric)?args.rubric:[],objectiveIds:Array.isArray(objectiveIds)?objectiveIds.map(String):[],...(optionalText(args,'dueAt','due_at')?{dueAt:optionalText(args,'dueAt','due_at')}:{})})
   }
   if(method==='update_course'){
     const title=optionalText(args,'title');const description=optionalText(args,'description')

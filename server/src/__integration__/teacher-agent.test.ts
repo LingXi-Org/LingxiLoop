@@ -248,51 +248,51 @@ test('[integration] Pulse reporting repository cannot cross tenant course bounda
   const foreignAttempt=`attempt-${randomUUID()}`
 
   await pool.query(
-    `INSERT INTO learning_objectives(
-      id,course_id,company_id,title,success_criteria,target_level,position,status,created_by
+    `INSERT INTO learning_knowledge_units(
+      id,project_id,company_id,title,success_criteria,target_level,position,status,created_by
     ) VALUES
-      ($1,$2,$3,'本租户目标','完成本租户目标',3,1,'published',$4),
-      ($5,$6,$7,'外租户目标','完成外租户目标',3,1,'published',$8)`,
+      ($1,$2,$3,'本租户目标','完成本租户目标',3,1,'PUBLISHED',$4),
+      ($5,$6,$7,'外租户目标','完成外租户目标',3,1,'PUBLISHED',$8)`,
     [
-      ownObjective,own.courseId,own.companyId,own.teacherId,
-      foreignObjective,foreign.courseId,foreign.companyId,foreign.teacherId,
+      ownObjective,own.projectId,own.companyId,own.teacherId,
+      foreignObjective,foreign.projectId,foreign.companyId,foreign.teacherId,
     ],
   )
   await pool.query(
     `INSERT INTO learning_activities(
-      id,course_id,company_id,title,instructions,type,status,evaluation_mode,target_level,created_by
+      id,project_id,company_id,title,instructions,kind,status,evaluation_mode,target_level,created_by
     ) VALUES
-      ($1,$2,$3,'本租户活动','完成活动','practice','published','teacher_required',2,$4),
-      ($5,$6,$7,'外租户活动','完成活动','practice','published','teacher_required',2,$8)`,
+      ($1,$2,$3,'本租户活动','完成活动','PRACTICE','PUBLISHED','TEACHER_REQUIRED',2,$4),
+      ($5,$6,$7,'外租户活动','完成活动','PRACTICE','PUBLISHED','TEACHER_REQUIRED',2,$8)`,
     [
-      ownActivity,own.courseId,own.companyId,own.teacherId,
-      foreignActivity,foreign.courseId,foreign.companyId,foreign.teacherId,
+      ownActivity,own.projectId,own.companyId,own.teacherId,
+      foreignActivity,foreign.projectId,foreign.companyId,foreign.teacherId,
     ],
   )
   await pool.query(
     `INSERT INTO learning_attempts(
-      id,course_id,company_id,learner_id,activity_id,assistance,evidence,status
+      id,project_id,company_id,learner_id,activity_id,assistance,evidence,status
     ) VALUES
-      ($1,$2,$3,$4,$5,'none','[]'::jsonb,'submitted'),
-      ($6,$7,$8,$9,$10,'none','[]'::jsonb,'submitted')`,
+      ($1,$2,$3,$4,$5,'NONE','[]'::jsonb,'SUBMITTED'),
+      ($6,$7,$8,$9,$10,'NONE','[]'::jsonb,'SUBMITTED')`,
     [
-      ownAttempt,own.courseId,own.companyId,own.learnerId,ownActivity,
-      foreignAttempt,foreign.courseId,foreign.companyId,foreign.learnerId,foreignActivity,
+      ownAttempt,own.projectId,own.companyId,own.learnerId,ownActivity,
+      foreignAttempt,foreign.projectId,foreign.companyId,foreign.learnerId,foreignActivity,
     ],
   )
   await pool.query(
-    `INSERT INTO learning_mastery(
-      course_id,company_id,learner_id,objective_id,level,status,independent_evidence_count
+    `INSERT INTO learning_states(
+      project_id,company_id,user_id,knowledge_unit_id,level,status,independent_evidence_count
     ) VALUES
-      ($1,$2,$3,$4,3,'verified',2),
-      ($5,$6,$7,$8,4,'verified',3)`,
+      ($1,$2,$3,$4,3,'VERIFIED',2),
+      ($5,$6,$7,$8,4,'VERIFIED',3)`,
     [
-      own.courseId,own.companyId,own.learnerId,ownObjective,
-      foreign.courseId,foreign.companyId,foreign.learnerId,foreignObjective,
+      own.projectId,own.companyId,own.learnerId,ownObjective,
+      foreign.projectId,foreign.companyId,foreign.learnerId,foreignObjective,
     ],
   )
 
-  const scope={companyId:own.companyId,courseId:own.courseId}
+  const scope={companyId:own.companyId,projectId:own.projectId,courseId:own.courseId}
   const learners=await listTeacherLearnerRows(pool,scope,false)
   assert.deepEqual(learners.map((row)=>row.user_id),[own.learnerId])
   const objectives=await listTeacherObjectives(pool,scope)
