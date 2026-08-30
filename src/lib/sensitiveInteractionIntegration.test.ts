@@ -56,6 +56,7 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../features/calendar/components/CalendarView.tsx',
     '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
+    '../features/trust/components/TrustBoard.tsx',
     '../desktop/MeView.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
@@ -73,6 +74,9 @@ test('approval decisions and user-triggered tasks publish through the global Toa
   assert.match(read('../features/calendar/components/EventEditor.tsx'), /toastAction\(runNow/)
   assert.match(read('../features/calendar/components/CalendarEventPeekContent.tsx'), /toastAction\(runEventNow/)
   assert.match(read('../features/email/components/EmailComposer.tsx'), /toastAction\(Promise\.resolve\(sendPromise\)/)
+  const trust = read('../features/trust/components/TrustBoard.tsx')
+  assert.match(trust, /confirmSensitiveAction\(/)
+  assert.match(trust, /toastAction\(trustApi\.createSnapshot/)
   assert.match(read('../lib/actionToast.ts'), /toast\.promise\(/)
   assert.match(read('../lib/actionToast.ts'), /\.unwrap\(\)/)
 })

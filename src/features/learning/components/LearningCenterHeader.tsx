@@ -13,10 +13,11 @@ interface LearningCenterHeaderProps {
   reviewCount: number
   onProjectChange(projectId: string): void
   onSectionChange(section: LearningSection): void
+  onOpenTrust(): void
 }
 
 export function LearningCenterHeader({
-  course, courses, projectId, perspective, section, reviewCount, onProjectChange, onSectionChange,
+  course, courses, projectId, perspective, section, reviewCount, onProjectChange, onSectionChange, onOpenTrust,
 }: LearningCenterHeaderProps) {
   const sections: Array<[LearningSection, string]> = perspective === 'teacher'
     ? [
@@ -44,6 +45,7 @@ export function LearningCenterHeader({
           </SelectContent>
         </Select>
         <Badge variant="secondary">{perspective === 'teacher' ? '教师' : '学习者'}</Badge>
+        {perspective === 'teacher' && <Button type="button" variant="secondary" onClick={onOpenTrust}>Trust Board</Button>}
       </div>
       <nav aria-label="学习中心分区" className="mx-auto mt-3 flex max-w-6xl gap-1 overflow-x-auto">
         {sections.map(([key, label]) => (

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useApp } from '@/stores/app'
 import { useLearningCenter } from '../hooks/useLearningCenter'
 import { LearningActivitiesSection } from './LearningActivitiesSection'
 import { LearningCenterHeader } from './LearningCenterHeader'
@@ -35,6 +36,7 @@ export function LearningCenter() {
   ), [dashboard?.states, projectId])
 
   const onError = (reason: unknown) => setError(reason instanceof Error ? reason.message : String(reason))
+  const openTrust = () => useApp.getState().openTrust(projectId)
 
   if (!dashboard) {
     return error
@@ -55,6 +57,7 @@ export function LearningCenter() {
         reviewCount={reviews.length}
         onProjectChange={setProjectId}
         onSectionChange={setSection}
+        onOpenTrust={openTrust}
       />
       <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6">
         <div className="mx-auto max-w-6xl space-y-4">

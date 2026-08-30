@@ -5,6 +5,7 @@ import type { Layout } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
 import { GroupContextContent } from '@/components/GroupContextContent'
 import { LearningCenter } from '@/features/learning/components/LearningCenter'
+import { TrustBoard } from '@/features/trust/components/TrustBoard'
 import {
   Drawer,
   DrawerClose,
@@ -40,6 +41,7 @@ const DRAWER_TITLES: Partial<Record<ViewKey['view'], string>> = {
   documents: '文档',
   boards: '看板',
   learning: '学习',
+  trust: 'Trust Board',
   me: '设置',
 }
 
@@ -70,6 +72,7 @@ function WorkspacePage({ view, settingsTab }: { view: ViewKey['view']; settingsT
   if (view === 'agents') return <AgentsView />
   if (view === 'boards') return <BoardsView />
   if (view === 'learning') return <LearningCenter />
+  if (view === 'trust') return <TrustBoard />
   if (view === 'me') return <MeView initialTab={settingsTab} />
   return <DocumentsView />
 }

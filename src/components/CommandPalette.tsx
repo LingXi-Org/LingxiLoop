@@ -25,6 +25,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'agents', label: '打开智能体', keywords: 'agents', run: () => useApp.getState().setView('agents') },
       { id: 'canvas', label: '打开 Canvas', keywords: 'canvas', run: () => useApp.getState().setView('canvas') },
       { id: 'library', label: '打开资料库', keywords: 'library documents', run: () => useApp.getState().setView('library') },
+      { id: 'trust', label: '打开 Trust Board', keywords: 'trust evidence eval kpi', run: () => useApp.getState().openTrust() },
       { id: 'settings', label: '打开设置', keywords: 'settings preferences', run: () => useApp.getState().setView('me') },
       { id: 'theme', label: '切换浅色 / 深色模式', keywords: 'theme light dark', run: toggleTheme },
       ...conversations.slice(0, 8).map((conversation, index) => ({
