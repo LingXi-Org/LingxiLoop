@@ -4,7 +4,7 @@ import type { CoworkerActivity } from '@/features/agents/contracts'
 import { type MutableRefObject, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 import { ws } from '@/api/core/realtime'
-import { ISearch } from '@/components/icons'
+import { ICanvas, ISearch } from '@/components/icons'
 import { LingxiImMessage } from '@/components/messages/LingxiImMessage'
 import { AgentTypingIndicator } from '@/components/messages/AgentTypingIndicator'
 import { ScrollToLatestButton } from '@/components/ScrollToLatestButton'
@@ -237,8 +237,10 @@ function ConversationActivity({ conversationId }: { conversationId: string }) {
 
 export function ChatPane({
   onBackToConversations,
+  onOpenGroupContext,
 }: {
   onBackToConversations?: () => void
+  onOpenGroupContext?: () => void
 } = {}) {
   const convoId = useApp((s) => s.selectedConversationId)
   const uiCommand = useUiCommand()
@@ -492,6 +494,19 @@ export function ChatPane({
       <ConversationHeader
         conversationId={convoId}
         onBack={onBackToConversations}
+        actions={c.kind === 'group' && onOpenGroupContext ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
+            onClick={onOpenGroupContext}
+            title="打开知识库和 Canvas"
+            aria-label="打开群聊上下文"
+            className="text-muted-foreground"
+          >
+            <ICanvas className="size-[18px]" />
+          </Button>
+        ) : undefined}
       />
       {/* Keep optional chrome in one stable grid cell. ConversationActivity
           returns null when there are no events; rendering it as a top-level

@@ -1,7 +1,7 @@
 import { uploadsApi } from '@/features/platform/api'
 import type { ApiAttachment } from '@/api/contracts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { IClip, ISend } from '@/components/icons'
+import { IClip, ISend, ISmile } from '@/components/icons'
 import { IconMicrophone } from '@tabler/icons-react'
 import { PollComposer } from '@/components/PollComposer'
 import { PreviewText } from '@/components/PreviewText'
@@ -9,8 +9,10 @@ import type { RichInputHandle } from '@/components/RichInput'
 import { ComposerSurface } from '@/im/Composer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { staticBloubAvatarUrl } from '@/lib/bloub/staticAvatar'
 import { isImeComposing } from '@/lib/keyboard'
+import { findSkypeByShortcode } from '@/lib/skypeEmojis'
 import { cn } from '@/lib/utils'
 import { getActiveCompanyId, useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
@@ -23,6 +25,7 @@ import type { Participant } from '@/types'
 import { readComposerDraftTexts, saveComposerDraftText } from '../drafts'
 import { ComposerAttachment } from './ComposerAttachment'
 import { ComposerEditor } from './ComposerEditor'
+import { ComposerEmojiPopover } from './ComposerEmojiPopover'
 import type { ComposerCommand, MentionEntry } from './ComposerMenus'
 import { sendComposerMessage } from '../sendComposerMessage'
 import { useTypingEmitter } from '../useTypingEmitter'
@@ -324,6 +327,7 @@ export function Composer({
   const [slashQuery, setSlashQuery] = useState('')
   const [slashIndex, setSlashIndex] = useState(0)
   const [pollComposerOpen, setPollComposerOpen] = useState(false)
+  const [emojiOpen, setEmojiOpen] = useState(false)
   const openPollComposer = useCallback(() => {
     setPollComposerOpen(true)
     setSlashOpen(false)
@@ -475,6 +479,7 @@ export function Composer({
     if (lastSyncedScopeRef.current === scopeKey) return
     lastSyncedScopeRef.current = scopeKey
     setMention(null)
+    setEmojiOpen(false)
     // Pull the just-loaded draft text for this scope (read via ref so
     // the effect doesn't re-fire on every keystroke) and hydrate the
     // contenteditable DOM.
@@ -603,6 +608,30 @@ export function Composer({
           <Button type="button" variant="ghost" size="icon-lg" disabled className="size-[38px] shrink-0 rounded-full disabled:opacity-50" aria-label="语音输入暂未开放" title="语音输入暂未开放">
             <IconMicrophone className="size-[18px]" />
           </Button>
+          <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-lg"
+                className={cn('size-[38px] shrink-0 rounded-full', emojiOpen && 'bg-muted text-foreground')}
+                aria-label="选择表情"
+                title="表情"
+              >
+                <ISmile className="size-[18px]" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="end" className="w-auto p-2">
+              <ComposerEmojiPopover onPick={(text) => {
+                const editor = editorRef.current
+                if (!editor) return
+                const skype = text.startsWith('(') ? findSkypeByShortcode(text) : undefined
+                if (skype) editor.insertSkype(skype.key)
+                else editor.insertText(text)
+                setEmojiOpen(false)
+              }} />
+            </PopoverContent>
+          </Popover>
           <Button
             type="button"
             size="icon-lg"

@@ -2,15 +2,18 @@ import { Button } from '@/components/ui/button'
 import { useConversations } from '@/features/conversations/store'
 import { ConversationAvatar } from '@/im/ConversationList'
 import { cn } from '@/lib/utils'
+import type { ReactNode } from 'react'
 
 export function ConversationHeader({
   conversationId,
   variant = 'desktop',
   onBack,
+  actions,
 }: {
   conversationId: string
   variant?: 'desktop' | 'mobile'
   onBack?: () => void
+  actions?: ReactNode
 }) {
   const conversation = useConversations((state) => state.list.find((item) => item.id === conversationId))
   if (!conversation) return null
@@ -43,6 +46,7 @@ export function ConversationHeader({
         <ConversationAvatar conversation={conversation} size={mobile ? 28 : 30} variant={variant} />
         <span className="truncate text-sm font-medium text-foreground">{conversation.title}</span>
       </div>
+      {actions && <div className="omb-no-drag ms-auto flex items-center gap-1">{actions}</div>}
     </header>
   )
 }

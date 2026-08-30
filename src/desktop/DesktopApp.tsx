@@ -188,7 +188,7 @@ export function DesktopApp() {
             </ResizablePanel>
             <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
             <ResizablePanel id="conversation" defaultSize="75%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
-              <ChatPane />
+              <ChatPane onOpenGroupContext={groupContext ? () => setGroupDrawerOpen(true) : undefined} />
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>

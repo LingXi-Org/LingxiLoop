@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useApp } from '@/stores/app'
 import { learningApi } from '../api'
 import type {
   LearningActivity,
@@ -39,6 +40,7 @@ export function useLearningCenter() {
   const [notificationPrefs, setNotificationPrefs] = useState(defaultPreferences)
   const [deliveries, setDeliveries] = useState<LearningDelivery[]>([])
   const [error, setError] = useState('')
+  const openTrust = useCallback(() => useApp.getState().openTrust(projectId), [projectId])
 
   const loadDashboard = useCallback(async () => {
     const next = await learningApi.getDashboard()
@@ -92,6 +94,6 @@ export function useLearningCenter() {
   return {
     dashboard, projectId, setProjectId, objectives, activities, evidence, missions, reviews, progress,
     teacherAgent, answers, setAnswers, notificationPrefs, setNotificationPrefs, deliveries,
-    error, setError, loadDashboard, refreshProject: () => loadProject(projectId),
+    error, setError, loadDashboard, openTrust, refreshProject: () => loadProject(projectId),
   }
 }

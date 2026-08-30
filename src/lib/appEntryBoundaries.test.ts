@@ -17,7 +17,7 @@ test('shared entry keeps notification, analytics, and app surfaces behind dynami
   assert.doesNotMatch(app, /@\/mobile\/|MobileApp/)
   assert.match(app, /import \{ TooltipProvider \} from '@\/components\/ui\/tooltip'/)
   assert.match(app, /<TooltipProvider delayDuration=\{120\}>[\s\S]*<DesktopApp \/>[\s\S]*<\/TooltipProvider>/)
-  assert.match(workspace, /workspace\.isDefault && workspace\.status === 'active'/)
+  assert.match(workspace, /workspace\.isDefault && workspace\.status !== 'DELETED'/)
   assert.match(app, /await useWorkspace\.getState\(\)\.load\(\)[\s\S]*bootMessagesStream\(\)[\s\S]*bootParticipants\(\)[\s\S]*bootConversations\(\)/)
   assert.match(authStates, /from '@\/components\/ui\/card'/)
   assert.match(authStates, /from '@\/components\/ui\/button'/)

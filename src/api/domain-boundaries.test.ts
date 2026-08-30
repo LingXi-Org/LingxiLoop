@@ -232,7 +232,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   await assert.rejects(access(new URL('./learning.ts', import.meta.url)))
   await assert.rejects(access(new URL('./courseContract.ts', import.meta.url)))
   const learningApi = await readFile(new URL('../features/learning/api.ts', import.meta.url), 'utf8')
-  assert.doesNotMatch(learningApi, /listProjects|createProject|openProject|archiveProject/)
+  assert.doesNotMatch(learningApi, /\b(?:listProjects|createProject|openProject|archiveProject)\s*:/)
   await access(new URL('../features/knowledge/workspace.ts', import.meta.url))
   await assert.rejects(access(new URL('../stores/workspace.ts', import.meta.url)))
 

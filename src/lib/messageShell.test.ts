@@ -123,8 +123,8 @@ test('desktop keeps one persisted two-panel IM layout and opens pages in the Lum
   assert.doesNotMatch(shell, /setPointerCapture|onPointerMove|im-floating-context/)
   assert.match(css, /\.desktop-panel-resize-handle > div[\s\S]*?opacity: 0/)
   assert.match(css, /\.desktop-panel-resize-handle:hover > div[\s\S]*?opacity: 1/)
-  assert.match(css, /--im-divider: var\(--border\)/)
-  assert.match(css, /--im-divider-weak: color-mix\(in srgb, var\(--border\) 72%, transparent\)/)
+  assert.match(css, /--im-divider: color-mix\(in srgb, var\(--border\) 52%, transparent\)/)
+  assert.match(css, /--im-divider-weak: color-mix\(in srgb, var\(--border\) 38%, transparent\)/)
   assert.doesNotMatch(css, /\.desktop-openmaus\s*\{[^}]*--(?:background|foreground|card|border|input|primary|secondary|muted|accent|sidebar):/s)
 })
 
@@ -142,7 +142,8 @@ test('desktop conversation column ends with the sidebar-07 account menu instead 
   assert.match(user, /openSettings\('Profile'\)[^\n]*Account/)
   assert.doesNotMatch(user, /Billing|Upgrade to Pro|openSettings\('Usage'\)/)
   assert.match(user, /openSettings\('Preferences'\)[^\n]*Notifications/)
-  assert.match(conversationList, /isDirectAgent[\s\S]*?isMobile \|\| !isDirectAgent \? 48 : 54/)
+  assert.match(conversationList, /<ConversationAvatar conversation=\{conversation\} size=\{48\}/)
+  assert.doesNotMatch(conversationList, /size=\{54\}/)
   assert.doesNotMatch(user, /size=\{54\}|size-13\.5/)
   assert.match(avatar, /Avatar as AvatarPrimitive.*from "radix-ui"/)
 })
@@ -193,7 +194,7 @@ test('reply text and composer surface do not restore the removed outer rules', a
 
 test('Coworker cards use semantic light/dark tokens and expose the shared shell marker', async () => {
   const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
-  const parts = await readFile(new URL('../components/messages/LingxiMessageParts.tsx', import.meta.url), 'utf8')
+  const parts = await readFile(new URL('../components/messages/MessageToolParts.tsx', import.meta.url), 'utf8')
   const activity = await readFile(new URL('../desktop/ChatPane.tsx', import.meta.url), 'utf8')
   const css = await readImStyles()
 
@@ -205,9 +206,10 @@ test('Coworker cards use semantic light/dark tokens and expose the shared shell 
 
   const coworkerSource = `${parts.slice(parts.indexOf('function HandoffPart'), parts.indexOf('function LearningMissionPart'))}\n${activity.slice(activity.indexOf('function ConversationActivity'), activity.indexOf('export function ChatPane'))}`
   assert.doesNotMatch(coworkerSource, /bg-sky-50|text-skype-deep|bg-gold\/10|text-gold-deep|bg-white|text-black/)
-  assert.match(coworkerSource, /border-hairline/)
-  assert.match(coworkerSource, /bg-panel/)
-  assert.match(coworkerSource, /bg-raised/)
+  assert.match(coworkerSource, /<ProgressTracker/)
+  assert.match(coworkerSource, /border-\[var\(--im-divider-weak\)\]/)
+  assert.match(coworkerSource, /bg-background/)
+  assert.match(coworkerSource, /bg-muted/)
 })
 
 test('Canvas bubble and full view share the Card surface and preview theme', async () => {
@@ -269,7 +271,7 @@ test('approval is a native Tool UI decision inside the shared attachment host', 
   assert.match(message, /shell\.attachmentHost && 'message-attachment-host'/)
   assert.match(approvalPart, /<ApprovalCard/)
   assert.match(approvalPart, /role="decision"/)
-  assert.match(approvalPart, /addResult\(\{ decision \}\)/)
+  assert.match(approvalPart, /addResult\(\{ decision, persisted: true \}\)/)
   assert.match(approvalPart, /confirmLabel=/)
   assert.match(approvalPart, /cancelLabel=/)
   assert.match(approval, /data-slot="approval-card"/)
@@ -299,7 +301,7 @@ test('self messages restore the user avatar and author name', async () => {
   const message = await readFile(new URL('../components/messages/LingxiImMessage.tsx', import.meta.url), 'utf8')
   assert.doesNotMatch(message, /isMine && 'hidden'/)
   assert.match(message, /\) : \(\s*<MessageAvatar/)
-  assert.match(message, /\{groupStart && <span className="font-bold[^>]*>\{author\.name\}<\/span>\}/)
+  assert.match(message, /\{groupStart && <span className="[^"]*font-bold[^"]*">\{author\.name\}<\/span>\}/)
   assert.match(message, /className=\{cn\(!isMine && 'gap-3'\)\}/)
 })
 

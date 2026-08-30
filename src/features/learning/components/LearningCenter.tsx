@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { useApp } from '@/stores/app'
 import { useLearningCenter } from '../hooks/useLearningCenter'
 import { LearningActivitiesSection } from './LearningActivitiesSection'
 import { LearningCenterHeader } from './LearningCenterHeader'
@@ -18,7 +17,7 @@ export function LearningCenter() {
   const {
     dashboard, projectId, setProjectId, objectives, activities, evidence, missions, reviews, progress,
     teacherAgent, answers, setAnswers, notificationPrefs, setNotificationPrefs, deliveries,
-    error, setError, loadDashboard, refreshProject,
+    error, setError, loadDashboard, openTrust, refreshProject,
   } = useLearningCenter()
   const course = dashboard?.projects.find((item) => item.projectId === projectId)
   const perspective = course?.perspective ?? 'learner'
@@ -36,8 +35,6 @@ export function LearningCenter() {
   ), [dashboard?.states, projectId])
 
   const onError = (reason: unknown) => setError(reason instanceof Error ? reason.message : String(reason))
-  const openTrust = () => useApp.getState().openTrust(projectId)
-
   if (!dashboard) {
     return error
       ? <div className="grid h-full place-items-center text-sm text-muted-foreground">{error}</div>
