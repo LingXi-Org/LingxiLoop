@@ -234,14 +234,8 @@ export async function completeProjectTransferOwnership(
        SELECT id FROM canvases WHERE project_id=$1 AND company_id=$2
      ), source_scope AS MATERIALIZED (
        SELECT id FROM knowledge_sources WHERE project_id=$1 AND company_id=$2
-     ), participant_copy AS (
-       INSERT INTO participants
-         (id,kind,name,role,initial,avatar_bg,status,bio,tools,system_prompt,capabilities,
-          updated_at,departed_at,status_updated_at,avatar_url,preset_key,company_id,email)
-       SELECT participant.id,participant.kind,participant.name,participant.role,participant.initial,
-              participant.avatar_bg,participant.status,participant.bio,participant.tools,
-              participant.system_prompt,participant.capabilities,NOW(),participant.departed_at,
-              participant.status_updated_at,participant.avatar_url,participant.preset_key,$3,participant.email
+     ), participant_scope AS MATERIALIZED (
+       SELECT participant.id,participant.kind
          FROM participants participant
         WHERE participant.company_id=$2 AND (
           EXISTS (SELECT 1 FROM project_memberships member
@@ -285,7 +279,23 @@ export async function completeProjectTransferOwnership(
           OR EXISTS (SELECT 1 FROM conversations conversation
                       WHERE conversation.project_id=$1 AND conversation.company_id=$2
                         AND (conversation.leader_id=participant.id OR conversation.members ? participant.id))
-        ) ON CONFLICT (id,company_id) DO NOTHING RETURNING 1
+         )
+     ), participant_copy AS (
+       INSERT INTO participants
+         (id,kind,name,role,initial,avatar_bg,status,bio,tools,system_prompt,capabilities,
+          updated_at,departed_at,status_updated_at,avatar_url,preset_key,company_id,email)
+       SELECT participant.id,participant.kind,participant.name,participant.role,participant.initial,
+              participant.avatar_bg,participant.status,participant.bio,participant.tools,
+              participant.system_prompt,participant.capabilities,NOW(),participant.departed_at,
+              participant.status_updated_at,participant.avatar_url,participant.preset_key,$3,participant.email
+         FROM participants participant
+         JOIN participant_scope scope ON scope.id=participant.id AND scope.kind='human'
+        WHERE participant.company_id=$2
+       ON CONFLICT (id,company_id) DO NOTHING RETURNING 1
+     ), participant_move AS (
+       UPDATE participants SET company_id=$3,updated_at=NOW()
+        WHERE company_id=$2 AND kind='agent' AND id IN (SELECT id FROM participant_scope)
+       RETURNING 1
      ), indirect_convene AS (
        UPDATE convene_sessions SET company_id=$3 WHERE company_id=$2
         AND conversation_id IN (SELECT id FROM conversation_scope) RETURNING 1

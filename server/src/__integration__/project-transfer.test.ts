@@ -3,6 +3,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { ProjectTransferError } from '../modules/transfers/public.js'
 import { projectTransferApplication } from '../modules/transfers/facade.js'
+import { ensureTeacherPlans } from '../modules/entitlements/public.js'
 import { ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 const TEACHER = 'u-transfer-teacher'
@@ -16,6 +17,7 @@ const CONTRACT = 'contract-transfer-target'
 before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => {
   await resetAllTables()
+  await ensureTeacherPlans(pool)
   await pool.query(
     `INSERT INTO users(id,email,display_name) VALUES
        ($1,'transfer-teacher@test.local','Transfer Teacher'),
@@ -185,10 +187,7 @@ test('[integration] dual-confirmed transfer rechecks changed members and preserv
   )).rows, [{ channel_id: 'conversation-transfer', company_id: TARGET }])
   assert.deepEqual((await pool.query(
     `SELECT id,company_id FROM participants WHERE id='agent-transfer-pulse' ORDER BY company_id`,
-  )).rows, [
-    { id: 'agent-transfer-pulse', company_id: SOURCE },
-    { id: 'agent-transfer-pulse', company_id: TARGET },
-  ])
+  )).rows, [{ id: 'agent-transfer-pulse', company_id: TARGET }])
   const { rows: events } = await pool.query<{ company_id: string; event_type: string }>(
     `SELECT company_id,event_type FROM domain_events
       WHERE project_id=$1 AND event_type LIKE 'PROJECT_TRANSFER.%'
