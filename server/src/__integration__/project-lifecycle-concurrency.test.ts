@@ -236,6 +236,16 @@ test('[integration] Education Company lifecycle leaves the owned Personal Contex
      VALUES ($1,$2,'OWNER','ACTIVE')`,
     [EDUCATION_COMPANY, PERSONAL_ISOLATION_OWNER],
   )
+  await pool.query(
+    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
+     VALUES ('contract-education-lifecycle',$1,$2,'ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1)`,
+    [EDUCATION_COMPANY, EDUCATION_PLAN],
+  )
+  await pool.query(
+    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status)
+     VALUES ('seat-education-lifecycle',$1,'contract-education-lifecycle',$2,'ACTIVE')`,
+    [EDUCATION_COMPANY, PERSONAL_ISOLATION_OWNER],
+  )
 
   const beforeTransition = await personalContextSnapshot({
     companyId: personal.companyId,

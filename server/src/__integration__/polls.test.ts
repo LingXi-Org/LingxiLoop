@@ -22,6 +22,7 @@ const ME = 'u-me'
 const PEER = 'u-peer'
 const AGENT = 'a-aurora'
 const COMPANY = 'c-polls'
+const PROJECT = 'project-polls'
 const CONVO = 'co-polls'
 let server: Server
 let baseUrl = ''
@@ -73,14 +74,36 @@ async function seedWorld(): Promise<void> {
   await seedUserMembership(ME, COMPANY)
   await seedUserMembership(PEER, COMPANY, { displayName: 'Peer', email: 'peer@test.local' })
   await pool.query(
+    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
+     VALUES ('contract-polls',$1,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',2)`,
+    [COMPANY],
+  )
+  await pool.query(
+    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status) VALUES
+       ('seat-polls-me',$1,'contract-polls',$2,'ACTIVE'),
+       ('seat-polls-peer',$1,'contract-polls',$3,'ACTIVE')`,
+    [COMPANY, ME, PEER],
+  )
+  await pool.query(
+    `INSERT INTO projects(id,company_id,kind,name,status,created_by)
+     VALUES ($1,$2,'INSTITUTIONAL_COURSE','Polls Project','ACTIVE',$3)`,
+    [PROJECT, COMPANY, ME],
+  )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES
+       ($1,$2,$3,'OWNER','ACTIVE'),
+       ($1,$2,$4,'STUDENT','ACTIVE')`,
+    [COMPANY, PROJECT, ME, PEER],
+  )
+  await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, system_prompt)
      VALUES ($1, $2, 'agent', 'Aurora', 'agent', 'A', '#abcdef', 'avail', 'a test agent prompt')`,
     [AGENT, COMPANY],
   )
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, members, tag, company_id)
-     VALUES ($1, 'group', 'Polls Group', $2::jsonb, 'group', $3)`,
-    [CONVO, JSON.stringify([ME, PEER, AGENT]), COMPANY],
+    `INSERT INTO conversations (id, kind, title, members, tag, company_id, project_id)
+     VALUES ($1, 'group', 'Polls Group', $2::jsonb, 'group', $3, $4)`,
+    [CONVO, JSON.stringify([ME, PEER, AGENT]), COMPANY, PROJECT],
   )
 }
 
@@ -357,6 +380,11 @@ test('[integration] archived course conversations reject poll create, vote, and 
      VALUES ('poll-course-project',$1,'INSTITUTIONAL_COURSE','Poll course','','#123456',$2,FALSE,'ACTIVE')`,
     [COMPANY, ME],
   )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role,status)
+     VALUES ($1,'poll-course-project',$2,'OWNER','ACTIVE')`,
+    [COMPANY, ME],
+  )
   await pool.query(`UPDATE conversations SET project_id='poll-course-project' WHERE id=$1`, [CONVO])
   const created = await createPollViaHttp({
     conversationId: CONVO, question: 'Before archive?', mode: 'single', options: ['Yes', 'No'],
@@ -367,11 +395,11 @@ test('[integration] archived course conversations reject poll create, vote, and 
   const createBlocked = await createPollViaHttp({
     conversationId: CONVO, question: 'After archive?', mode: 'single', options: ['Yes', 'No'],
   })
-  assert.equal(createBlocked.status, 409)
+  assert.equal(createBlocked.status, 403)
   const voteBlocked = await voteViaHttp(created.body.messageId, [created.body.poll.options[0].id])
-  assert.equal(voteBlocked.status, 409)
+  assert.equal(voteBlocked.status, 403)
   const closeBlocked = await closeViaHttp(created.body.messageId)
-  assert.equal(closeBlocked.status, 409)
+  assert.equal(closeBlocked.status, 403)
 })
 
 test('[integration] sweepExpiredPolls auto-closes polls past expiresAt', async () => {

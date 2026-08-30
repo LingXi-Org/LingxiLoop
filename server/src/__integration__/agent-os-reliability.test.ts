@@ -36,6 +36,10 @@ class IdempotentWukong extends WukongClient {
   override async emitEvent(args: Parameters<WukongClient['emitEvent']>[0]): Promise<void> {
     emittedEvents.push(structuredClone(args))
   }
+
+  override async syncMessages(): Promise<never[]> {
+    return []
+  }
 }
 
 before(async () => {
@@ -64,8 +68,23 @@ beforeEach(async () => {
   persistedClientMessages.clear()
   emittedEvents.length = 0
   sendAttempts = 0
+  await pool.query(
+    `INSERT INTO users (id,email,display_name) VALUES ($1,'learner@reliability.test','Learner')`,
+    [HUMAN],
+  )
   await pool.query(`INSERT INTO companies (id,name,slug,type,plan_id) VALUES ($1,'Reliability','agent-os-reliability','EDUCATION','plan-personal-free')`, [COMPANY])
   await pool.query(`INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,'MEMBER')`, [COMPANY, HUMAN])
+  await pool.query(
+    `INSERT INTO education_contracts
+       (id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
+     VALUES ('contract-agent-os-reliability',$1,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1)`,
+    [COMPANY],
+  )
+  await pool.query(
+    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status)
+     VALUES ('seat-agent-os-reliability',$1,'contract-agent-os-reliability',$2,'ACTIVE')`,
+    [COMPANY, HUMAN],
+  )
   await pool.query(
     `INSERT INTO projects(id,company_id,kind,name)
      VALUES($1,$2,'INSTITUTIONAL_COURSE','Reliability Workspace')`,
@@ -76,6 +95,11 @@ beforeEach(async () => {
      VALUES ($1,$3,'agent','Nova','coach','N','#6d5dfc','avail','["web"]'::jsonb),
             ($2,$3,'human','Learner','learner','L','#0078c8','avail','[]'::jsonb)`,
     [AGENT, HUMAN, COMPANY],
+  )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role,status)
+     VALUES ($1,$2,$3,'STUDENT','ACTIVE')`,
+    [COMPANY, PROJECT, HUMAN],
   )
   await pool.query(
     `INSERT INTO conversations(id,kind,title,members,company_id,project_id)
@@ -256,12 +280,13 @@ test('[integration] user send acceptance replays one nonce and rejects digest re
 test('[integration] pending Host Action reuses its sink id after a post-side-effect crash', async () => {
   const work: AgentWorkItem = {
     id: `work-${randomUUID()}`, fence: 1, companyId: COMPANY, agentId: AGENT, channelId: CHANNEL,
-    triggerClientMsgNo: 'trigger-host-action', reason: 'message', executionRole:'coordinator',lane: 'learner', leaseToken: 'unused-direct-call',
+    authorizationUserId: HUMAN, triggerClientMsgNo: 'trigger-host-action', reason: 'message',
+    executionRole:'coordinator',lane: 'learner', leaseToken: 'unused-direct-call',
   }
   await pool.query(
-    `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at)
-     VALUES ($1,$2,$3,$4,$5,$6,'leased',$7,$8,NOW()+INTERVAL '1 minute')`,
-    [work.id, COMPANY, AGENT, CHANNEL, work.triggerClientMsgNo, work.reason, work.fence, createHash('sha256').update(work.leaseToken).digest('hex')],
+    `INSERT INTO agent_work_items (id,company_id,authorization_user_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'leased',$8,$9,NOW()+INTERVAL '1 minute')`,
+    [work.id, COMPANY, HUMAN, AGENT, CHANNEL, work.triggerClientMsgNo, work.reason, work.fence, createHash('sha256').update(work.leaseToken).digest('hex')],
   )
   const action: HostAction = {
     runId: work.id, cellId: 'hop-1-call-1', callIndex: 0, action: 'chat.send', args: { body: 'Exactly once' },

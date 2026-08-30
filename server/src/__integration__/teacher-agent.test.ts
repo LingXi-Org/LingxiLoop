@@ -55,6 +55,19 @@ async function seedTeacherCourse():Promise<Fixture>{
   for(const [id,role] of [[teacherId,'MEMBER'],[learnerId,'MEMBER'],[adminId,'OWNER']] as const){
     await pool.query(`INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,$3)`,[companyId,id,role])
   }
+  const contractId=`contract-${suffix}`
+  await pool.query(
+    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
+     VALUES ($1,$2,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',3)`,
+    [contractId,companyId],
+  )
+  for(const id of [teacherId,learnerId,adminId]){
+    await pool.query(
+      `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status)
+       VALUES ($1,$2,$3,$4,'ACTIVE')`,
+      [`seat-${id}`,companyId,contractId,id],
+    )
+  }
   for(const [id,name,role] of [[teacherId,'周老师','teacher'],[learnerId,'陈同学','learner'],[adminId,'公司管理员','owner']] as const){
     await pool.query(
       `INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status)
@@ -246,6 +259,8 @@ test('[integration] Pulse reporting repository cannot cross tenant course bounda
   const foreignActivity=`activity-${randomUUID()}`
   const ownAttempt=`attempt-${randomUUID()}`
   const foreignAttempt=`attempt-${randomUUID()}`
+  const ownEvidence=`evidence-${randomUUID()}`
+  const foreignEvidence=`evidence-${randomUUID()}`
 
   await pool.query(
     `INSERT INTO learning_knowledge_units(
@@ -270,14 +285,25 @@ test('[integration] Pulse reporting repository cannot cross tenant course bounda
     ],
   )
   await pool.query(
-    `INSERT INTO learning_attempts(
-      id,project_id,company_id,learner_id,activity_id,assistance,evidence,status
+    `INSERT INTO evidence_records(
+      id,project_id,company_id,level,derivation,kind,subject_user_id,data,created_by_type,created_by_id
     ) VALUES
-      ($1,$2,$3,$4,$5,'NONE','[]'::jsonb,'SUBMITTED'),
-      ($6,$7,$8,$9,$10,'NONE','[]'::jsonb,'SUBMITTED')`,
+      ($1,$2,$3,'L1','OBSERVED','learning_attempt',$4,'{}'::jsonb,'USER',$5),
+      ($6,$7,$8,'L1','OBSERVED','learning_attempt',$9,'{}'::jsonb,'USER',$10)`,
     [
-      ownAttempt,own.projectId,own.companyId,own.learnerId,ownActivity,
-      foreignAttempt,foreign.projectId,foreign.companyId,foreign.learnerId,foreignActivity,
+      ownEvidence,own.projectId,own.companyId,own.learnerId,own.teacherId,
+      foreignEvidence,foreign.projectId,foreign.companyId,foreign.learnerId,foreign.teacherId,
+    ],
+  )
+  await pool.query(
+    `INSERT INTO learning_attempts(
+      id,project_id,company_id,learner_id,activity_id,assistance,evidence_id,status
+    ) VALUES
+      ($1,$2,$3,$4,$5,'NONE',$6,'SUBMITTED'),
+      ($7,$8,$9,$10,$11,'NONE',$12,'SUBMITTED')`,
+    [
+      ownAttempt,own.projectId,own.companyId,own.learnerId,ownActivity,ownEvidence,
+      foreignAttempt,foreign.projectId,foreign.companyId,foreign.learnerId,foreignActivity,foreignEvidence,
     ],
   )
   await pool.query(
@@ -312,15 +338,15 @@ test('[integration] Pulse approval freshness binds the target room to the truste
   const ownObjective=`objective-${randomUUID()}`
   const foreignObjective=`objective-${randomUUID()}`
   const {rows}=await pool.query<{id:string;updated_at:Date}>(
-    `INSERT INTO learning_objectives(
-      id,course_id,company_id,title,success_criteria,target_level,position,status,created_by
+    `INSERT INTO learning_knowledge_units(
+      id,project_id,company_id,title,success_criteria,target_level,position,status,created_by
     ) VALUES
-      ($1,$2,$3,'本租户审批目标','完成目标',3,1,'draft',$4),
-      ($5,$6,$7,'外租户审批目标','完成目标',3,1,'draft',$8)
+      ($1,$2,$3,'本租户审批目标','完成目标',3,1,'DRAFT',$4),
+      ($5,$6,$7,'外租户审批目标','完成目标',3,1,'DRAFT',$8)
     RETURNING id,updated_at`,
     [
-      ownObjective,own.courseId,own.companyId,own.teacherId,
-      foreignObjective,foreign.courseId,foreign.companyId,foreign.teacherId,
+      ownObjective,own.projectId,own.companyId,own.teacherId,
+      foreignObjective,foreign.projectId,foreign.companyId,foreign.teacherId,
     ],
   )
   const versions=new Map(rows.map((row)=>[row.id,row.updated_at.toISOString()]))
