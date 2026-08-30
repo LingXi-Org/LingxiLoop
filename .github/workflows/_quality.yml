@@ -211,6 +211,7 @@ jobs:
       OPENAI_API_KEY: integration-test-key
       OPENAI_EMBEDDING_MODEL: text-embedding-3-small
       LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
+      WUKONG_USER_TOKEN_SECRET: integration-test-wukong-user-token-secret
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
