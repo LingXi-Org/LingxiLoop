@@ -14,8 +14,10 @@ export async function findTeacherObjectiveApprovalTarget(
 ): Promise<VersionedTeacherTarget | undefined> {
   const { rows } = await db.query<{ status: string; updated_at: unknown; label: string | null }>(
     `SELECT objective.status,objective.updated_at,objective.title AS label
-       FROM learning_objectives objective
-      WHERE objective.company_id=$1 AND objective.course_id=$2 AND objective.id=$3`,
+       FROM courses course
+       JOIN learning_knowledge_units objective
+         ON objective.company_id=course.company_id AND objective.project_id=course.project_id
+      WHERE course.company_id=$1 AND course.id=$2 AND objective.id=$3`,
     [companyId, courseId, objectiveId],
   )
   const row = rows[0]
@@ -30,8 +32,10 @@ export async function findTeacherActivityApprovalTarget(
 ): Promise<VersionedTeacherTarget | undefined> {
   const { rows } = await db.query<{ status: string; updated_at: unknown; label: string | null }>(
     `SELECT activity.status,activity.updated_at,activity.title AS label
-       FROM learning_activities activity
-      WHERE activity.company_id=$1 AND activity.course_id=$2 AND activity.id=$3`,
+       FROM courses course
+       JOIN learning_activities activity
+         ON activity.company_id=course.company_id AND activity.project_id=course.project_id
+      WHERE course.company_id=$1 AND course.id=$2 AND activity.id=$3`,
     [companyId, courseId, activityId],
   )
   const row = rows[0]
@@ -86,12 +90,16 @@ export async function findTeacherEvaluationApprovalTarget(
   const { rows } = await db.query<{ status: string; label: string | null }>(
     `SELECT evaluation.status,activity.title AS label
        FROM learning_evaluations evaluation
-       JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
+       JOIN learning_attempts attempt
+         ON attempt.company_id=evaluation.company_id AND attempt.project_id=evaluation.project_id
+        AND attempt.id=evaluation.attempt_id
+       JOIN courses course
+         ON course.company_id=attempt.company_id AND course.project_id=attempt.project_id
        LEFT JOIN learning_activities activity
          ON activity.id=attempt.activity_id
         AND activity.company_id=attempt.company_id
-        AND activity.course_id=attempt.course_id
-      WHERE evaluation.id=$3 AND attempt.company_id=$1 AND attempt.course_id=$2`,
+        AND activity.project_id=attempt.project_id
+      WHERE evaluation.id=$3 AND course.company_id=$1 AND course.id=$2`,
     [companyId, courseId, evaluationId],
   )
   return rows[0]
@@ -105,10 +113,11 @@ export async function findTeacherObjectiveApprovalVersion(
 ): Promise<unknown> {
   const { rows } = await db.query<{ value: unknown }>(
     `SELECT objective.updated_at AS value
-       FROM learning_objectives objective
+       FROM learning_knowledge_units objective
+       JOIN courses course
+         ON course.company_id=objective.company_id AND course.project_id=objective.project_id
        JOIN learning_course_teacher_rooms teacher_room
-         ON teacher_room.company_id=objective.company_id
-        AND teacher_room.course_id=objective.course_id
+         ON teacher_room.company_id=course.company_id AND teacher_room.course_id=course.id
       WHERE objective.company_id=$1 AND objective.id=$3
         AND teacher_room.conversation_id=$2`,
     [companyId, channelId, objectiveId],
@@ -125,9 +134,10 @@ export async function findTeacherActivityApprovalVersion(
   const { rows } = await db.query<{ value: unknown }>(
     `SELECT activity.updated_at AS value
        FROM learning_activities activity
+       JOIN courses course
+         ON course.company_id=activity.company_id AND course.project_id=activity.project_id
        JOIN learning_course_teacher_rooms teacher_room
-         ON teacher_room.company_id=activity.company_id
-        AND teacher_room.course_id=activity.course_id
+         ON teacher_room.company_id=course.company_id AND teacher_room.course_id=course.id
       WHERE activity.company_id=$1 AND activity.id=$3
         AND teacher_room.conversation_id=$2`,
     [companyId, channelId, activityId],
@@ -185,10 +195,13 @@ export async function findTeacherEvaluationApprovalVersion(
   const { rows } = await db.query<{ value: unknown }>(
     `SELECT evaluation.status AS value
        FROM learning_evaluations evaluation
-       JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
+       JOIN learning_attempts attempt
+         ON attempt.company_id=evaluation.company_id AND attempt.project_id=evaluation.project_id
+        AND attempt.id=evaluation.attempt_id
+       JOIN courses course
+         ON course.company_id=attempt.company_id AND course.project_id=attempt.project_id
        JOIN learning_course_teacher_rooms teacher_room
-         ON teacher_room.company_id=attempt.company_id
-        AND teacher_room.course_id=attempt.course_id
+         ON teacher_room.company_id=course.company_id AND teacher_room.course_id=course.id
       WHERE attempt.company_id=$1 AND teacher_room.conversation_id=$2
         AND evaluation.id=$3`,
     [companyId, channelId, evaluationId],

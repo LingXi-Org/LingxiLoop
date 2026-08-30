@@ -352,7 +352,7 @@ test('[integration] Pulse runtime scope and counts reject foreign tenant state',
     undefined,
   )
   assert.deepEqual(
-    await findTeacherTurnCounts(pool,own.companyId,foreign.courseId),
+    await findTeacherTurnCounts(pool,own.companyId,foreign.projectId),
     {learners:0,objectives:0,activities:0,pending_reviews:0},
   )
 })

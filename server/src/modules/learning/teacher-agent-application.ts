@@ -199,7 +199,7 @@ export async function loadTeacherTurnContext(work: AgentWorkItem, db: Queryable)
   let scope:TeacherScope
   try { scope=await resolveTeacherScope(work,db) } catch { return undefined }
   const [counts,digest]=await Promise.all([
-    findTeacherTurnCounts(db,scope.companyId,scope.courseId),
+    findTeacherTurnCounts(db,scope.companyId,scope.projectId),
     digestSchedule(scope,db),
   ])
   return {
