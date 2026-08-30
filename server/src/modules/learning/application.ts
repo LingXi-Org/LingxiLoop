@@ -1,11 +1,13 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
-import { projectKindBelongsToCompanyType } from '../../domain/public.js'
+import { type ProjectKind, projectKindBelongsToCompanyType } from '../../domain/public.js'
 import type { PermissionAction } from '../access/public.js'
 import { createPermissionService, resolvePlanEntitlements } from '../access/public.js'
 import { ensureTeacherPlans } from '../entitlements/public.js'
+import { appendDomainEventInTransaction } from '../events/public.js'
 import type {
   BindCourseRoomInput,
+  AddInstitutionalCourseMemberInput,
   CreateActivityInput,
   CreateCourseInput,
   CreateProjectInvitationInput,
@@ -34,6 +36,7 @@ import { bindLearningCourseRoom } from './membership-application.js'
 import { assignLearningMissionCoordinator, listVisibleLearningMissions } from './missions-application.js'
 import {
   changeCourseMember,
+  addInstitutionalCourseMember,
   companyMembershipRole,
   countActiveProjectStudents,
   countViewerPendingLearningReviews,
@@ -45,7 +48,7 @@ import {
   findVerifiedUser,
   insertAcceptedStudentMembership,
   insertProjectInvitation,
-  insertTeachingCourse,
+  insertCourse,
   invitationViewer,
   joinInvitationCompany,
   listProjectInvitations,
@@ -227,6 +230,18 @@ export class LearningApplication {
   }
 
   async createCourse(scope: LearningScope, input: CreateCourseInput) {
+    return this.createCourseForKind(scope, input, 'TEACHING')
+  }
+
+  async createInstitutionalCourse(scope: LearningScope, input: CreateCourseInput) {
+    return this.createCourseForKind(scope, input, 'INSTITUTIONAL_COURSE')
+  }
+
+  private async createCourseForKind(
+    scope: LearningScope,
+    input: CreateCourseInput,
+    projectKind: Extract<ProjectKind, 'TEACHING' | 'INSTITUTIONAL_COURSE'>,
+  ) {
     const projectId = `p-${randomUUID().slice(0, 10)}`
     const courseId = `course-${randomUUID().slice(0, 12)}`
     const roomId = `course-room-${randomUUID().slice(0, 12)}`
@@ -236,16 +251,47 @@ export class LearningApplication {
         action: 'course:create',
         companyId: scope.companyId,
       })
-      if (!projectKindBelongsToCompanyType('TEACHING', context.company.type)) {
-        throw new LearningApplicationError('forbidden', 'Teaching Projects require a Personal Company')
+      if (!projectKindBelongsToCompanyType(projectKind, context.company.type)) {
+        throw new LearningApplicationError('forbidden', `${projectKind} is not valid for this Company`)
       }
-      const { teacherFreePlanId } = await ensureTeacherPlans(db)
-      const entitlements = await resolvePlanEntitlements(db, teacherFreePlanId)
-      const projectLimit = entitlements.number('teacher.project_limit')
-      if (projectLimit !== null && await countActiveTeachingProjects(db, scope.companyId) >= projectLimit) {
-        throw new LearningApplicationError('forbidden', 'Teacher Free Project limit reached')
+      let planId: string | null = null
+      if (projectKind === 'TEACHING') {
+        const { teacherFreePlanId } = await ensureTeacherPlans(db)
+        const entitlements = await resolvePlanEntitlements(db, teacherFreePlanId)
+        const projectLimit = entitlements.number('teacher.project_limit')
+        if (projectLimit !== null && await countActiveTeachingProjects(db, scope.companyId) >= projectLimit) {
+          throw new LearningApplicationError('forbidden', 'Teacher Free Project limit reached')
+        }
+        planId = teacherFreePlanId
       }
-      await insertTeachingCourse(db, { ...scope, projectId, courseId, roomId, planId: teacherFreePlanId, input })
+      await insertCourse(db, { ...scope, projectId, courseId, roomId, kind: projectKind, planId, input })
+      const creationKey = `project-created:${projectId}`
+      await appendDomainEventInTransaction(db, {
+        companyId: scope.companyId,
+        projectId,
+        aggregateType: 'PROJECT',
+        aggregateId: projectId,
+        idempotencyKey: creationKey,
+        actor: { type: 'USER', id: scope.userId },
+        event: {
+          eventType: 'PROJECT.CREATED',
+          schemaVersion: 1,
+          payload: { courseId, kind: projectKind, status: 'ACTIVE' },
+        },
+      })
+      await appendDomainEventInTransaction(db, {
+        companyId: scope.companyId,
+        projectId,
+        aggregateType: 'PROJECT_MEMBERSHIP',
+        aggregateId: `${projectId}:${scope.userId}`,
+        idempotencyKey: `${creationKey}:owner`,
+        actor: { type: 'USER', id: scope.userId },
+        event: {
+          eventType: 'PROJECT_MEMBERSHIP.ASSIGNED',
+          schemaVersion: 1,
+          payload: { userId: scope.userId, role: 'OWNER', source: 'COURSE_CREATION' },
+        },
+      })
       const teacher = await this.infrastructure.ensureTeacherAgent(scope.companyId, courseId, db)
       await this.infrastructure.bindTeacherOperationsContext(db, {
         companyId: scope.companyId,
@@ -267,11 +313,11 @@ export class LearningApplication {
       }
       await this.infrastructure.auditInTransaction(db, {
         kind: 'course_create', companyId: scope.companyId, userId: scope.userId,
-        detail: { courseId, projectId, name: input.name },
+        detail: { courseId, projectId, projectKind, name: input.name },
       })
     })
     return {
-      id: courseId, companyId: scope.companyId, projectId, projectKind: 'TEACHING' as const, name: input.name,
+      id: courseId, companyId: scope.companyId, projectId, projectKind, name: input.name,
       description: input.description, color: input.color, status: 'ACTIVE',
       createdBy: scope.userId, studyRoomId: roomId, courseRole: 'teacher', memberCount: 1,
       canManage: true, knowledgeState: 'pending' as const,
@@ -329,6 +375,61 @@ export class LearningApplication {
       })
     })
     return { ok: true as const, userId: targetId, role }
+  }
+
+  async addInstitutionalMember(
+    userId: string,
+    courseId: string,
+    targetId: string,
+    input: AddInstitutionalCourseMemberInput,
+  ) {
+    await this.infrastructure.transaction(async (db) => {
+      const manager = await this.manager(userId, courseId, 'project_member:add', db, true)
+      const added = await addInstitutionalCourseMember(db, {
+        courseId,
+        companyId: manager.companyId,
+        userId: targetId,
+        role: input.role,
+      })
+      if (!added || added.role !== input.role) {
+        throw new LearningApplicationError(
+          'conflict',
+          'Institutional Course member requires an active School Membership and a new Project Role',
+        )
+      }
+      await appendDomainEventInTransaction(db, {
+        companyId: manager.companyId,
+        projectId: added.projectId,
+        aggregateType: 'PROJECT_MEMBERSHIP',
+        aggregateId: `${added.projectId}:${targetId}`,
+        idempotencyKey: `institutional-course-member:${input.idempotencyKey}`,
+        actor: { type: 'USER', id: userId },
+        event: {
+          eventType: 'PROJECT_MEMBERSHIP.ASSIGNED',
+          schemaVersion: 1,
+          payload: { userId: targetId, role: input.role, source: 'INSTITUTIONAL_COURSE' },
+        },
+      })
+      if (added.added) {
+        await this.infrastructure.auditInTransaction(db, {
+          kind: 'institutional_course_member_add',
+          userId,
+          companyId: manager.companyId,
+          detail: { courseId, projectId: added.projectId, targetId, role: input.role },
+        })
+        for (const kind of ['study_room.sync', 'teacher_room.sync'] as const) {
+          await enqueueLearningEffect(db, { companyId: manager.companyId, courseId, kind })
+        }
+        await enqueueLearningEffect(db, {
+          companyId: manager.companyId,
+          courseId,
+          kind: 'member_onboarding.seed',
+          effectKey: targetId,
+          payload: { userId: targetId },
+        })
+      }
+    })
+    return { ok: true as const, userId: targetId, role: input.role }
   }
 
   async removeMember(userId: string, courseId: string, targetId: string) {

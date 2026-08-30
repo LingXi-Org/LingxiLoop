@@ -6,6 +6,7 @@ import { permissionService } from '../access/public.js'
 import { classroomRouter } from './classroom-router.js'
 import { learningCasesRouter } from './cases-router.js'
 import {
+  addInstitutionalCourseMemberRequestSchema,
   createProjectInvitationRequestSchema,
   createCourseRequestSchema,
   updateCourseMemberRequestSchema,
@@ -46,6 +47,13 @@ learningRouter.post('/courses', safe(async (req, res) => {
   res.status(201).json(await respond(() => learningApplication.createCourse(scope, input)))
 }))
 
+learningRouter.post('/institutional-courses', safe(async (req, res) => {
+  const scope = await requireCompany(req)
+  await permissionService.assertCan({ actorUserId: scope.userId, action: 'course:create', companyId: scope.companyId })
+  const input = parse(createCourseRequestSchema.safeParse(req.body ?? {}))
+  res.status(201).json(await respond(() => learningApplication.createInstitutionalCourse(scope, input)))
+}))
+
 learningRouter.get('/courses/:id', safe(async (req, res) => {
   const courseId = String(req.params.id)
   const scope = await requireCoursePermission(req, courseId, 'course:read')
@@ -71,6 +79,18 @@ learningRouter.patch('/courses/:id/members/:userId', safe(async (req, res) => {
   const input = parse(updateCourseMemberRequestSchema.safeParse(req.body ?? {}))
   res.json(await respond(() => learningApplication.updateMember(
     userId, courseId, String(req.params.userId), input.role,
+  )))
+}))
+
+learningRouter.put('/courses/:id/members/:userId', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'project_member:add')
+  const input = parse(addInstitutionalCourseMemberRequestSchema.safeParse(req.body ?? {}))
+  res.status(201).json(await respond(() => learningApplication.addInstitutionalMember(
+    userId,
+    courseId,
+    String(req.params.userId),
+    input,
   )))
 }))
 

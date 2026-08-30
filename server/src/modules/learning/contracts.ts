@@ -18,6 +18,11 @@ export const updateCourseRequestSchema = z.object({
 
 export const updateCourseMemberRequestSchema = z.object({ role: z.enum(['teacher', 'learner']) }).strict()
 
+export const addInstitutionalCourseMemberRequestSchema = z.object({
+  role: z.enum(['TEACHER', 'TA', 'STUDENT', 'OBSERVER']),
+  idempotencyKey: z.string().trim().min(8).max(200),
+}).strict()
+
 export const createProjectInvitationRequestSchema = z.object({
   email: z.string().trim().email('invalid email').nullable().optional(),
   note: z.string().trim().max(280).nullable().optional(),
@@ -57,6 +62,7 @@ export const reviewEvaluationRequestSchema = z.object({
 }).strict()
 export type CreateCourseInput = z.infer<typeof createCourseRequestSchema>
 export type UpdateCourseInput = z.infer<typeof updateCourseRequestSchema>
+export type AddInstitutionalCourseMemberInput = z.infer<typeof addInstitutionalCourseMemberRequestSchema>
 export type CreateProjectInvitationInput = z.infer<typeof createProjectInvitationRequestSchema>
 export type BindCourseRoomInput = z.infer<typeof bindCourseRoomRequestSchema>
 export type CreateObjectivesInput = z.infer<typeof createObjectivesRequestSchema>

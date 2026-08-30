@@ -1,5 +1,6 @@
 import type { Queryable } from '../../db/queryable.js'
 import { type ProjectRole, projectRoleFromLearningWire } from '../../domain/access/public.js'
+import type { ProjectKind } from '../../domain/public.js'
 import type { CourseManager, CreateCourseInput, UpdateCourseInput } from './contracts.js'
 
 export async function listCourses(db: Queryable, companyId: string, userId: string) {
@@ -29,14 +30,15 @@ export async function listCourses(db: Queryable, companyId: string, userId: stri
   return rows
 }
 
-export async function insertTeachingCourse(db: Queryable, args: {
+export async function insertCourse(db: Queryable, args: {
   companyId: string; userId: string; projectId: string; courseId: string; roomId: string
-  planId: string; input: CreateCourseInput
+  kind: Extract<ProjectKind, 'TEACHING' | 'INSTITUTIONAL_COURSE'>
+  planId: string | null; input: CreateCourseInput
 }): Promise<void> {
   await db.query(
     `INSERT INTO projects (id,company_id,kind,plan_id,name,description,color,status,created_by,is_default)
-     VALUES ($1,$2,'TEACHING',$3,$4,$5,$6,'ACTIVE',$7,FALSE)`,
-    [args.projectId, args.companyId, args.planId, args.input.name, args.input.description,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'ACTIVE',$8,FALSE)`,
+    [args.projectId, args.companyId, args.kind, args.planId, args.input.name, args.input.description,
       args.input.color, args.userId],
   )
   await db.query(
@@ -65,6 +67,43 @@ export async function insertTeachingCourse(db: Queryable, args: {
     `UPDATE courses SET study_room_conversation_id=$2 WHERE id=$1 AND company_id=$3`,
     [args.courseId, args.roomId, args.companyId],
   )
+}
+
+export async function addInstitutionalCourseMember(db: Queryable, args: {
+  companyId: string
+  courseId: string
+  userId: string
+  role: Exclude<ProjectRole, 'OWNER'>
+}): Promise<{ projectId: string; role: ProjectRole; added: boolean } | null> {
+  const { rows } = await db.query<{ project_id: string }>(
+    `INSERT INTO project_memberships(project_id,company_id,user_id,role,status)
+     SELECT course.project_id,course.company_id,membership.user_id,$4,'ACTIVE'
+       FROM courses course
+       JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       JOIN company_memberships membership ON membership.company_id=course.company_id
+        AND membership.user_id=$3 AND membership.status='ACTIVE'
+      WHERE course.id=$2 AND course.company_id=$1
+        AND project.kind='INSTITUTIONAL_COURSE' AND project.status IN ('DRAFT','ACTIVE')
+     ON CONFLICT (project_id,user_id) DO NOTHING
+     RETURNING project_id`,
+    [args.companyId, args.courseId, args.userId, args.role],
+  )
+  if (rows[0]) return { projectId: rows[0].project_id, role: args.role, added: true }
+  const { rows: existing } = await db.query<{ project_id: string; role: ProjectRole }>(
+    `SELECT project_member.project_id,project_member.role
+       FROM courses course
+       JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+       JOIN company_memberships membership ON membership.company_id=course.company_id
+        AND membership.user_id=$3 AND membership.status='ACTIVE'
+       JOIN project_memberships project_member ON project_member.project_id=course.project_id
+        AND project_member.company_id=course.company_id AND project_member.user_id=membership.user_id
+        AND project_member.status='ACTIVE'
+      WHERE course.id=$2 AND course.company_id=$1 AND project.kind='INSTITUTIONAL_COURSE'`,
+    [args.companyId, args.courseId, args.userId],
+  )
+  return existing[0]
+    ? { projectId: existing[0].project_id, role: existing[0].role, added: false }
+    : null
 }
 
 export async function countActiveTeachingProjects(db: Queryable, companyId: string): Promise<number> {
@@ -168,6 +207,7 @@ export async function listCourseMembers(db: Queryable, courseId: string, company
   const { rows } = await db.query(
     `SELECT user_account.id,user_account.display_name AS name,user_account.email,
             CASE WHEN course_member.role IN ('STUDENT','OBSERVER') THEN 'learner' ELSE 'teacher' END AS role,
+            course_member.role AS "projectRole",
             course_member.created_at AS "joinedAt"
        FROM project_memberships course_member JOIN users user_account ON user_account.id=course_member.user_id
        JOIN courses course ON course.project_id=course_member.project_id AND course.company_id=course_member.company_id
