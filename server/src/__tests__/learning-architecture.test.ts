@@ -15,14 +15,30 @@ const repository = readdirSync(learningModuleUrl)
   .filter((name) => name.endsWith('-repository.ts'))
   .map((name) => readFileSync(new URL(name, learningModuleUrl), 'utf8'))
   .join('\n')
+const missionRepositorySource = readFileSync(new URL('../modules/learning/missions-repository.ts', import.meta.url), 'utf8')
+const evidenceRepositorySource = readFileSync(new URL('../modules/learning/evidence-repository.ts', import.meta.url), 'utf8')
+const curriculumRepositorySource = readFileSync(new URL('../modules/learning/curriculum-repository.ts', import.meta.url), 'utf8')
 const learningApplicationSource = readdirSync(learningModuleUrl)
   .filter((name) => name.endsWith('application.ts'))
   .map((name) => readFileSync(new URL(name, learningModuleUrl), 'utf8'))
   .join('\n')
+const missionApplicationSource = [
+  readFileSync(new URL('../modules/learning/missions-application.ts', import.meta.url), 'utf8'),
+  readFileSync(new URL('../modules/learning/mission-lifecycle-application.ts', import.meta.url), 'utf8'),
+].join('\n')
 const learningRuntimeSource = readFileSync(new URL('../modules/learning/runtime.ts', import.meta.url), 'utf8')
 const learningRouterSource = readFileSync(new URL('../modules/learning/router.ts', import.meta.url), 'utf8')
 const classroomRouterSource = readFileSync(new URL('../modules/learning/classroom-router.ts', import.meta.url), 'utf8')
 const learningHttpAdapterSource = readFileSync(new URL('../modules/learning/http-adapter.ts', import.meta.url), 'utf8')
+const evaluationApplicationSource = readFileSync(
+  new URL('../modules/learning/evaluation-application.ts', import.meta.url),
+  'utf8',
+)
+const learningStateSource = readFileSync(new URL('../modules/learning/learning-state.ts', import.meta.url), 'utf8')
+const learningStateRepositorySource = readFileSync(
+  new URL('../modules/learning/learning-state-repository.ts', import.meta.url),
+  'utf8',
+)
 const teacherAgentSource = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
 const teacherApprovalRepositorySource = readFileSync(
   new URL('../modules/learning/teacher-approval-repository.ts', import.meta.url),
@@ -95,105 +111,136 @@ test('Learning routers share one private request and error adapter', () => {
 })
 
 test('native learning schema keeps evidence, projection and delivery ledgers durable', () => {
-  for (const table of ['courses','project_memberships','learning_course_rooms','learning_objectives','learning_activities',
-    'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_mastery','learning_mastery_events','learning_notification_deliveries','learning_effects',
+  for (const table of ['courses','project_memberships','learning_course_rooms','learning_knowledge_units',
+    'learning_knowledge_unit_dependencies','learning_activities','learning_activity_knowledge_units',
+    'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_states',
+    'learning_cases','learning_case_actions','learning_notification_deliveries','learning_effects',
     'learning_project_teacher_agents','learning_course_teacher_rooms']) {
     assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
   }
   assert.match(schema, /num_nonnulls\(activity_id, mission_step_id\) = 1/)
-  assert.match(schema, /UNIQUE \(course_id, learner_id, conversation_id, trigger_client_msg_no\)/)
+  assert.match(schema, /UNIQUE \(company_id, project_id, learner_id, conversation_id, trigger_client_msg_no\)/)
+  assert.match(schema, /PRIMARY KEY \(project_id, user_id, knowledge_unit_id\)/)
   assert.match(schema, /uq_learning_deliveries_course/)
   assert.match(schema, /idx_learning_effects_pending/)
   assert.match(learningApplicationSource, /enqueueLearningEffect/)
   assert.doesNotMatch(learningApplicationSource, /const provisioning = await Promise\.allSettled/)
-  assert.doesNotMatch(schema, /CREATE TABLE public\.learning_(?:courses|project_memberships)\b/)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.learning_(?:courses|project_memberships|objectives|mastery|mastery_events)\b/)
 })
 
-test('objective persistence has one tenant-scoped repository path', () => {
+test('knowledge-unit persistence has one tenant and project scoped repository path', () => {
   assert.doesNotMatch(service, /INSERT INTO learning_objectives/)
   assert.doesNotMatch(service, /UPDATE learning_objectives SET status/)
-  assert.match(repository, /course\.id=\$2 AND course\.company_id=\$3/)
-  assert.match(repository, /objective\.course_id=\$2 AND objective\.company_id=\$1/)
+  assert.doesNotMatch(curriculumRepositorySource, /\blearning_objectives\b/)
+  assert.match(repository, /unit\.company_id=\$1 AND unit\.project_id=\$2/)
+  assert.match(repository, /learning_knowledge_unit_dependencies/)
+})
+
+test('production runtime has no legacy learning fact table or Attempt Course dependency', () => {
+  const serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+  const violations = productionTypeScriptFiles(serverRoot)
+    .filter((path) => relative(serverRoot, path).replaceAll('\\', '/') !== 'db/bootstrap.ts')
+    .flatMap((path) => {
+      const source = readFileSync(path, 'utf8')
+      return /\blearning_(?:objectives|mastery|mastery_events)\b|\battempt\.course_id\b/.test(source)
+        ? [relative(serverRoot, path)]
+        : []
+    })
+  assert.deepEqual(violations, [])
 })
 
 test('activity writes and UI submissions have one tenant-scoped repository path', () => {
   assert.doesNotMatch(service, /INSERT INTO learning_activities/)
   assert.doesNotMatch(service, /UPDATE learning_activities/)
   assert.doesNotMatch(service, /kind: 'ui_submission'/)
-  assert.match(repository, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
-  assert.match(repository, /learner\.user_id=\$5 AND learner\.status='ACTIVE'[\s\S]*learner\.role IN \('STUDENT','OBSERVER'\)/)
+  assert.match(repository, /activity\.company_id=\$1 AND activity\.project_id=\$2/)
+  assert.match(repository, /learning_activity_knowledge_units/)
 })
 
 test('mission reads and coordinator assignment have one tenant-scoped repository path', () => {
   assert.doesNotMatch(service, /SELECT \* FROM learning_missions WHERE id=/)
   assert.doesNotMatch(service, /SET coordinator_agent_id=\$3/)
-  assert.match(repository, /mission\.company_id=\$1 AND mission\.course_id=\$2/)
-  assert.match(repository, /teacher\.user_id=\$4 AND teacher\.role IN \('OWNER','TEACHER'\)/)
+  assert.match(missionRepositorySource, /mission\.company_id=\$1 AND mission\.project_id=\$2/)
+  assert.match(missionApplicationSource, /assignLearningMissionCoordinator[\s\S]*action: 'learning:manage'/)
+  assert.doesNotMatch(missionRepositorySource, /project_memberships|\brole IN \(/)
 })
 
 test('mission planning and completion writes live only in application and repository', () => {
   assert.doesNotMatch(service, /INSERT INTO learning_mission_steps/)
   assert.doesNotMatch(service, /UPDATE learning_mission_steps/)
   assert.doesNotMatch(service, /SET status='completed',completed_at=/)
-  assert.match(learningApplicationSource, /lockLearningMission/)
-  assert.match(repository, /mission\.company_id=\$1 AND mission\.course_id=\$2 AND mission\.conversation_id=\$3/)
+  assert.match(missionApplicationSource, /lockLearningMission/)
+  assert.match(missionRepositorySource, /company_id=\$1 AND project_id=\$2 AND conversation_id=\$3/)
 })
 
 test('mission start uses the public vertical slice instead of the legacy service', () => {
   assert.doesNotMatch(service, /INSERT INTO learning_missions/)
   assert.doesNotMatch(service, /mission-coordinator-/)
   assert.doesNotMatch(learningRuntimeSource, /startMission,[\s\S]*from '..\/..\/learning\/service\.js'/)
-  assert.match(learningApplicationSource, /startLearningMission/)
-  assert.match(learningApplicationSource, /infrastructure\.syncMessages/)
-  assert.match(repository, /ON CONFLICT\(course_id,learner_id,conversation_id,trigger_client_msg_no\)/)
+  assert.match(missionApplicationSource, /startLearningMission/)
+  assert.match(missionApplicationSource, /infrastructure\.syncMessages/)
+  assert.match(missionRepositorySource, /ON CONFLICT\(company_id,project_id,learner_id,conversation_id,trigger_client_msg_no\)/)
 })
 
 test('Agent OS attempt recording uses the tenant-scoped Learning vertical slice', () => {
   assert.doesNotMatch(service, /INSERT INTO learning_attempts/)
   assert.doesNotMatch(learningRuntimeSource, /recordAttempt,[\s\S]*from '..\/..\/learning\/service\.js'/)
-  assert.match(learningApplicationSource, /recordLearningAttempt/)
-  assert.match(repository, /mission\.conversation_id=\$4 AND mission\.learner_id=\$5/)
-  assert.match(repository, /document\.company_id=\$2 AND document\.project_id=\$3/)
-  assert.match(repository, /canvas\.company_id=\$2 AND canvas\.project_id=\$3/)
+  assert.match(missionApplicationSource, /recordLearningAttempt/)
+  assert.match(evidenceRepositorySource, /mission\.conversation_id=\$4 AND mission\.learner_id=\$5/)
+  assert.match(evidenceRepositorySource, /document\.company_id=\$2 AND document\.project_id=\$3/)
+  assert.match(evidenceRepositorySource, /canvas\.company_id=\$2 AND canvas\.project_id=\$3/)
 })
 
 test('Agent OS turn context uses repository reads without legacy fallback handling', () => {
   assert.doesNotMatch(service, /loadLearningTurnContext/)
   assert.doesNotMatch(learningRuntimeSource, /loadLearningTurnContext,[\s\S]*from '..\/..\/learning\/service\.js'/)
-  assert.match(learningApplicationSource, /loadLearningContext/)
-  assert.doesNotMatch(learningApplicationSource, /try \{ room = await findLearningRoomState[\s\S]*catch/)
-  assert.match(repository, /mastery\.company_id=\$1 AND mastery\.course_id=\$2/)
-  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+  assert.match(missionApplicationSource, /loadLearningContext/)
+  assert.doesNotMatch(missionApplicationSource, /try \{ room = await findLearningRoomState[\s\S]*catch/)
+  assert.match(evidenceRepositorySource, /state\.company_id=\$1 AND state\.project_id=\$2 AND state\.user_id=\$3/)
+  assert.match(evidenceRepositorySource, /evaluation\.company_id=\$1 AND evaluation\.project_id=\$2/)
+  assert.match(missionApplicationSource, /units\.slice\(0, 10\)/)
+  assert.match(missionApplicationSource, /mission\.steps\.slice\(0, 10\)/)
 })
 
 test('Agent OS evaluation proposals use the tenant-scoped Learning vertical slice', () => {
   assert.doesNotMatch(service, /INSERT INTO learning_evaluations/)
   assert.doesNotMatch(learningRuntimeSource, /proposeEvaluation,[\s\S]*from '..\/..\/learning\/service\.js'/)
   assert.match(learningApplicationSource, /proposeLearningEvaluation/)
-  assert.match(repository, /attempt\.id=\$1 AND attempt\.company_id=\$2 AND attempt\.course_id=\$3/)
-  assert.match(repository, /source\.company_id=\$3 AND course\.id=\$4/)
-  assert.match(repository, /event\.company_id=\$1 AND event\.course_id=\$2/)
+  assert.match(repository, /attempt\.id=\$1 AND attempt\.company_id=\$2 AND attempt\.project_id=\$3/)
+  assert.match(repository, /source\.id=\$1 AND source\.company_id=\$3/)
+  assert.match(repository, /canvas\.project_id=\$4/)
+  assert.match(learningStateRepositorySource, /evaluation\.company_id=\$1 AND evaluation\.project_id=\$2/)
+  assert.match(learningStateRepositorySource, /evaluation\.id<>\$5/)
+  assert.match(learningStateRepositorySource, /learning_activity_knowledge_units activity_unit/)
 })
 
-test('teacher evaluation review shares the same repository and mastery projection boundary', () => {
+test('teacher evaluation review shares the same repository and LearningState projection boundary', () => {
   const teacher = readFileSync(new URL('../modules/learning/teacher-agent-application.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(service, /\breviewEvaluation\b|INSERT INTO learning_mastery|UPDATE learning_evaluations/)
   assert.doesNotMatch(teacher, /\breviewEvaluation\b/)
   assert.match(teacher, /reviewLearningEvaluation/)
   assert.match(learningApplicationSource, /reviewLearningEvaluation/)
-  assert.match(repository, /attempt\.company_id=\$2 AND attempt\.course_id=\$3/)
-  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND evaluation\.status='pending'/)
+  assert.match(evaluationApplicationSource, /reviewProjectLearningEvaluation/)
+  assert.match(evaluationApplicationSource, /resource: \{ type: 'project', id: input\.projectId \}/)
+  assert.match(evaluationApplicationSource, /requireLearningCourseProjectScope[\s\S]*reviewProjectLearningEvaluation/)
+  assert.match(learningStateRepositorySource, /evaluation\.company_id=\$2 AND evaluation\.project_id=\$3/)
+  assert.match(learningStateRepositorySource, /evaluation\.status='PENDING'/)
+  assert.match(learningStateRepositorySource, /SET status='EVALUATED'/)
+  assert.match(learningStateRepositorySource, /version=learning_states\.version\+1/)
+  assert.doesNotMatch(learningStateRepositorySource, /learning_mastery|learning_mastery_events/)
+  assert.match(learningStateSource, /projectLearningState/)
+  assert.doesNotMatch(learningStateSource, /projectMastery|mastery policy/)
 })
 
-test('Learning dashboard and evidence reads no longer use the legacy service data plane', () => {
+test('Learning project evidence reads no longer use the legacy service data plane', () => {
   for (const legacyRead of ['learningDashboard','courseProgress','listEvidence','listEvaluationQueue']) {
     assert.doesNotMatch(service, new RegExp(`\\b${legacyRead}\\b`))
     assert.doesNotMatch(learningApplicationSource, new RegExp(`from '../../learning/service\\.js'[\\s\\S]*\\b${legacyRead}\\b`))
   }
-  assert.match(learningApplicationSource, /listLearningEvidenceRecords/)
-  assert.match(learningApplicationSource, /countViewerPendingLearningReviews/)
-  assert.match(repository, /attempt\.company_id=\$1 AND attempt\.course_id=\$2 AND attempt\.learner_id=\$3/)
-  assert.match(repository, /member\.company_id=\$1 AND course\.id=\$2 AND member\.status='ACTIVE'[\s\S]*member\.role IN \('STUDENT','OBSERVER'\)/)
+  assert.match(missionApplicationSource, /learningStateContext/)
+  assert.match(missionApplicationSource, /countPendingLearningEvaluations/)
+  assert.match(evidenceRepositorySource, /state\.company_id=\$1 AND state\.project_id=\$2 AND state\.user_id=\$3/)
+  assert.match(evidenceRepositorySource, /evaluation\.company_id=\$1 AND evaluation\.project_id=\$2/)
 })
 
 test('Pulse reporting reads use one explicit tenant-scoped repository', () => {
@@ -202,10 +249,11 @@ test('Pulse reporting reads use one explicit tenant-scoped repository', () => {
   assert.doesNotMatch(teacherAgentSource, /if\(method==='list_activities'\)return \(await db\.query/)
   assert.doesNotMatch(teacherAgentSource, /if\(method==='list_reviews'\)return \(await db\.query/)
   assert.doesNotMatch(teacherAgentSource, /if\(method==='list_rooms'\)return \(await db\.query/)
-  assert.match(teacherReportingRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
-  assert.match(teacherReportingRepositorySource, /mastery\.company_id=\$1 AND mastery\.course_id=\$2/)
-  assert.match(teacherReportingRepositorySource, /member\.company_id=\$1 AND course\.id=\$2 AND member\.status='ACTIVE'/)
+  assert.match(teacherReportingRepositorySource, /attempt\.company_id=\$1 AND attempt\.project_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /state\.company_id=\$1 AND state\.project_id=\$2/)
+  assert.match(teacherReportingRepositorySource, /member\.company_id=\$1 AND member\.project_id=\$2 AND member\.status='ACTIVE'/)
   assert.match(teacherReportingRepositorySource, /course\.company_id=\$1 AND course\.id=\$2/)
+  assert.doesNotMatch(teacherReportingRepositorySource, /learning_mastery|learning_objectives|attempt\.course_id/)
 })
 
 test('Pulse approval snapshots and freshness use one tenant-scoped repository', () => {
@@ -216,7 +264,8 @@ test('Pulse approval snapshots and freshness use one tenant-scoped repository', 
   assert.match(teacherApprovalRepositorySource, /activity\.company_id=\$1 AND activity\.id=\$3/)
   assert.match(teacherApprovalRepositorySource, /course\.company_id=\$1 AND course\.id=\$3/)
   assert.match(teacherApprovalRepositorySource, /member\.company_id=\$1 AND teacher_room\.conversation_id=\$2/)
-  assert.match(teacherApprovalRepositorySource, /attempt\.company_id=\$1 AND teacher_room\.conversation_id=\$2/)
+  assert.match(teacherApprovalRepositorySource, /course\.company_id=attempt\.company_id AND course\.project_id=attempt\.project_id/)
+  assert.match(teacherApprovalRepositorySource, /attempt\.company_id=evaluation\.company_id AND attempt\.project_id=evaluation\.project_id/)
 })
 
 test('Pulse runtime scope and turn counts use one tenant-scoped repository', () => {
@@ -227,10 +276,11 @@ test('Pulse runtime scope and turn counts use one tenant-scoped repository', () 
   assert.match(teacherRuntimeRepositorySource, /project_agent\.company_id=\$1 AND project_agent\.agent_id=\$2/)
   assert.match(teacherRuntimeRepositorySource, /approval\.company_id=\$1 AND approval\.agent_id=\$3[\s\S]*approval\.channel_id=\$4/)
   assert.doesNotMatch(teacherRuntimeRepositorySource, /FROM messages/)
-  assert.match(teacherRuntimeRepositorySource, /member\.company_id=\$1 AND course\.id=\$2 AND member\.status='ACTIVE'/)
-  assert.match(teacherRuntimeRepositorySource, /objective\.company_id=\$1 AND objective\.course_id=\$2/)
-  assert.match(teacherRuntimeRepositorySource, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
-  assert.match(teacherRuntimeRepositorySource, /attempt\.company_id=\$1 AND attempt\.course_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /member\.company_id=\$1 AND member\.project_id=\$2 AND member\.status='ACTIVE'/)
+  assert.match(teacherRuntimeRepositorySource, /objective\.company_id=\$1 AND objective\.project_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /activity\.company_id=\$1 AND activity\.project_id=\$2/)
+  assert.match(teacherRuntimeRepositorySource, /attempt\.company_id=\$1 AND attempt\.project_id=\$2/)
+  assert.doesNotMatch(teacherRuntimeRepositorySource, /learning_objectives|attempt\.course_id/)
 })
 
 test('Pulse application orchestration contains no SQL and lifecycle scope is explicit', () => {
@@ -269,7 +319,16 @@ test('learning remains an IPython namespace with transient per-turn context', ()
   assert.match(actions, /if \(method === 'ask'\)/)
   assert.match(actions, /kind: 'questionnaire'/)
   assert.match(actions, /'chat\.ask', 'polls\.create', 'polls\.show'/)
-  assert.match(learningApplicationSource, /finishLearningMissionPlanning/)
-  assert.match(learningApplicationSource, /summary\.checks < 1/)
-  assert.match(learningApplicationSource, /summary\.reflections < 1/)
+  assert.match(actions, /method === 'list_knowledge_units'/)
+  assert.match(actions, /method === 'draft_knowledge_units'/)
+  assert.match(actions, /closedArg/)
+  assert.doesNotMatch(actions, /list_objectives|draft_objectives|\.toUpperCase\(/)
+  assert.match(runtime, /list_knowledge_units\(\)/)
+  assert.match(runtime, /draft_knowledge_units\(knowledgeUnits=/)
+  assert.match(runtime, /All enum values are exact uppercase closed values; lowercase values are invalid/)
+  assert.match(runtime, /Personal project conversations participate directly without a Course/)
+  assert.doesNotMatch(runtime.match(/export function learningContextContract[\s\S]*?\n\}/)?.[0] ?? '', /list_objectives|draft_objectives/)
+  assert.match(missionApplicationSource, /finishLearningMissionPlanning/)
+  assert.match(missionApplicationSource, /summary\.checks < 1/)
+  assert.match(missionApplicationSource, /summary\.reflections < 1/)
 })
