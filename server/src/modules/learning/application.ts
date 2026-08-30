@@ -80,7 +80,11 @@ export {
   submitLearningActivity,
 } from './curriculum-application.js'
 export { LearningApplicationError } from './errors.js'
-export { proposeLearningEvaluation, reviewLearningEvaluation } from './evaluation-application.js'
+export {
+  proposeLearningEvaluation,
+  reviewLearningEvaluation,
+  reviewProjectLearningEvaluation,
+} from './evaluation-application.js'
 export type { LearningTransaction } from './membership-application.js'
 export {
   bindLearningCourseRoom,
@@ -519,7 +523,7 @@ export class LearningApplication {
     await this.assertCourseScope(scope, courseId, 'learning:read')
     const role = await courseRole(this.db, courseId, scope.companyId, scope.userId)
     const objectives = await this.classroom(() => listLearningObjectives(this.db, scope.companyId, courseId))
-    return role === 'teacher' ? objectives : objectives.filter((objective) => objective.status === 'published')
+    return role === 'teacher' ? objectives : objectives.filter((objective) => objective.status === 'PUBLISHED')
   }
 
   async createObjectives(scope: LearningScope, courseId: string, input: CreateObjectivesInput) {

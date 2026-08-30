@@ -1,53 +1,67 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
-import { projectMastery } from './mastery.js'
-import type { LearningActivityType, LearningAssistance, MasteryProjectionDecision } from './types.js'
 import type { LearningAgentRoomScope, ProposeLearningEvaluationCommand } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
+import { projectLearningState } from './learning-state.js'
+import { requireLearningCourseProjectScope } from './project-scope-repository.js'
 import {
   findLearningEvaluationAttempt,
   findLearningRoomState,
   independentLearningEvidenceKeys,
   insertLearningEvaluation,
-  insertLearningMasteryEvent,
   learningEvaluationEvidenceKey,
-  learningMasteryLevels,
-  lockLearningMastery,
+  learningStateLevels,
+  lockLearningState,
   lockPendingLearningEvaluation,
   markLearningAttemptEvaluated,
   reviewLearningEvaluationRecord,
-  upsertLearningMastery,
+  upsertLearningState,
   verifyIndependentLearningReport,
 } from './repository.js'
+import type {
+  LearningActivityType,
+  LearningAssistance,
+  LearningStateProjectionDecision,
+} from './types.js'
 
 type LearningTransaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
 type LearningMetric = (
-  name: 'learning.mastery.changed' | 'learning.evaluation.proposed',
+  name: 'learning.state.changed' | 'learning.evaluation.proposed',
   labels?: Record<string, string>,
 ) => void
 const REVIEW_INTERVAL_BY_LEVEL = [1, 1, 3, 7, 21] as const
 
 async function requireLearningRoomState(db: Queryable, scope: LearningAgentRoomScope) {
   const room = await findLearningRoomState(db, scope)
-  if (!room) throw new LearningApplicationError('not_found', 'current conversation is not bound to a learning course')
+  if (!room) {
+    throw new LearningApplicationError('not_found', 'current conversation is not bound to a learning project')
+  }
   return room
 }
 
-async function applyLearningEvaluationToMastery(
+async function applyLearningEvaluationToState(
   db: Queryable,
   metric: LearningMetric,
   input: {
-    companyId: string; courseId: string; learnerId: string; objectiveId: string; evaluationId: string
-    demonstratedLevel: number; confidence: number; assistance: LearningAssistance
-    activityType: LearningActivityType; activityTargetLevel: number
-    evaluatorKind: 'agent'|'teacher'; teacherConfirmed: boolean; actorId: string
+    companyId: string
+    projectId: string
+    userId: string
+    knowledgeUnitId: string
+    evaluationId: string
+    demonstratedLevel: number
+    confidence: number
+    assistance: LearningAssistance
+    activityType: LearningActivityType
+    activityTargetLevel: number
+    evaluatorKind: 'AGENT' | 'TEACHER'
+    teacherConfirmed: boolean
   },
-): Promise<MasteryProjectionDecision> {
+): Promise<LearningStateProjectionDecision> {
+  const previous = await lockLearningState(db, input)
   const priorKeys = new Set(await independentLearningEvidenceKeys(db, input))
   const currentKey = await learningEvaluationEvidenceKey(db, input)
-  const previous = await lockLearningMastery(db, input)
-  const decision = projectMastery({
+  const decision = projectLearningState({
     previousLevel: previous.level,
     previousIndependentEvidenceCount: priorKeys.size,
     demonstratedLevel: input.demonstratedLevel,
@@ -67,23 +81,22 @@ async function applyLearningEvaluationToMastery(
       baseInterval,
       previous.reviewIntervalDays * (decision.nextLevel > previous.level ? 1 : 2),
     ))
-  const status = decision.needsReview ? 'needs_review' : decision.nextLevel >= 3 ? 'verified' : 'learning'
-  await upsertLearningMastery(db, {
+  const status = decision.needsReview
+    ? 'NEEDS_REVIEW'
+    : decision.nextLevel >= 3
+      ? 'VERIFIED'
+      : 'LEARNING'
+  if (!await upsertLearningState(db, {
     ...input,
     level: decision.nextLevel,
     status,
     independentEvidenceCount: decision.nextIndependentEvidenceCount,
     reviewIntervalDays,
-  })
-  await insertLearningMasteryEvent(db, {
-    id: randomUUID(), ...input,
-    previousLevel: previous.level,
-    nextLevel: decision.nextLevel,
-    kind: decision.needsReview ? 'review_flag' : 'evidence',
-    reason: decision.reason,
-  })
+  })) {
+    throw new LearningApplicationError('not_found', 'learning state scope not found')
+  }
   if (decision.nextLevel !== previous.level || decision.needsReview) {
-    metric('learning.mastery.changed', { status })
+    metric('learning.state.changed', { status })
   }
   return decision
 }
@@ -93,7 +106,11 @@ export async function proposeLearningEvaluation(
   transaction: LearningTransaction,
   metric: LearningMetric,
   input: ProposeLearningEvaluationCommand,
-): Promise<{ evaluationId: string; status: 'accepted'|'pending'; decisions: MasteryProjectionDecision[] }> {
+): Promise<{
+  evaluationId: string
+  status: 'ACCEPTED' | 'PENDING'
+  decisions: LearningStateProjectionDecision[]
+}> {
   const confidence = Number(input.confidence)
   if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
     throw new LearningApplicationError('invalid', 'confidence must be between 0 and 1')
@@ -104,14 +121,18 @@ export async function proposeLearningEvaluation(
   }
   const room = await requireLearningRoomState(db, input)
   const attempt = await findLearningEvaluationAttempt(db, {
-    companyId: room.companyId, courseId: room.courseId, attemptId: input.attemptId,
+    companyId: room.companyId,
+    projectId: room.projectId,
+    attemptId: input.attemptId,
   })
   if (!attempt) throw new LearningApplicationError('not_found', 'attempt not found')
-  const masteryLevels = await learningMasteryLevels(db, {
-    companyId: room.companyId, courseId: room.courseId,
-    learnerId: attempt.learnerId, objectiveIds: attempt.objectiveIds,
+  const stateLevels = await learningStateLevels(db, {
+    companyId: room.companyId,
+    projectId: room.projectId,
+    userId: attempt.learnerId,
+    knowledgeUnitIds: attempt.knowledgeUnitIds,
   })
-  const suggestedDowngrade = masteryLevels.some((level) => level > demonstratedLevel)
+  const suggestedDowngrade = stateLevels.some((level) => level > demonstratedLevel)
   let verified = false
   if (demonstratedLevel >= 3 || suggestedDowngrade) {
     if (!input.sourceReportId) {
@@ -122,8 +143,10 @@ export async function proposeLearningEvaluation(
     }
     if (input.verifierReportId) {
       const verdict = await verifyIndependentLearningReport(db, {
-        companyId: room.companyId, courseId: room.courseId,
-        sourceReportId: input.sourceReportId, verifierReportId: input.verifierReportId,
+        companyId: room.companyId,
+        projectId: room.projectId,
+        sourceReportId: input.sourceReportId,
+        verifierReportId: input.verifierReportId,
       })
       if (verdict === null) {
         throw new LearningApplicationError(
@@ -134,35 +157,53 @@ export async function proposeLearningEvaluation(
       verified = verdict === 'supported'
     }
   }
-  const teacherRequired = attempt.evaluationMode !== 'agent_formative'
+  const teacherRequired = attempt.evaluationMode !== 'AGENT_FORMATIVE'
     || demonstratedLevel >= 4
     || confidence < 0.7
     || suggestedDowngrade
     || (demonstratedLevel >= 3 && !verified)
-  const status: 'accepted'|'pending' = teacherRequired ? 'pending' : 'accepted'
+  const status: 'ACCEPTED' | 'PENDING' = teacherRequired ? 'PENDING' : 'ACCEPTED'
   const evaluationId = randomUUID()
   const decisions = await transaction(async (client) => {
     if (!await insertLearningEvaluation(client, {
-      id: evaluationId, companyId: room.companyId, courseId: room.courseId,
-      attemptId: input.attemptId, demonstratedLevel, confidence,
-      rubricResults: input.rubricResults ?? [], feedback: input.feedback?.trim() ?? '',
-      evaluatorId: input.agentId, status,
+      id: evaluationId,
+      companyId: room.companyId,
+      projectId: room.projectId,
+      attemptId: input.attemptId,
+      demonstratedLevel,
+      confidence,
+      rubricResults: input.rubricResults ?? [],
+      feedback: input.feedback?.trim() ?? '',
+      evaluatorId: input.agentId,
+      status,
       ...(input.sourceReportId ? { sourceReportId: input.sourceReportId } : {}),
       ...(input.verifierReportId ? { verifierReportId: input.verifierReportId } : {}),
-    })) throw new LearningApplicationError('not_found', 'attempt not found')
-    const projected: MasteryProjectionDecision[] = []
-    if (status === 'accepted') {
-      for (const objectiveId of attempt.objectiveIds) {
-        projected.push(await applyLearningEvaluationToMastery(client, metric, {
-          companyId: room.companyId, courseId: room.courseId, learnerId: attempt.learnerId,
-          objectiveId, evaluationId, demonstratedLevel, confidence, assistance: attempt.assistance,
-          activityType: attempt.activityType ?? 'practice', activityTargetLevel: attempt.targetLevel,
-          evaluatorKind: 'agent', teacherConfirmed: false, actorId: input.agentId,
+    })) {
+      throw new LearningApplicationError('not_found', 'attempt not found')
+    }
+    const projected: LearningStateProjectionDecision[] = []
+    if (status === 'ACCEPTED') {
+      for (const knowledgeUnitId of attempt.knowledgeUnitIds) {
+        projected.push(await applyLearningEvaluationToState(client, metric, {
+          companyId: room.companyId,
+          projectId: room.projectId,
+          userId: attempt.learnerId,
+          knowledgeUnitId,
+          evaluationId,
+          demonstratedLevel,
+          confidence,
+          assistance: attempt.assistance,
+          activityType: attempt.activityType ?? 'PRACTICE',
+          activityTargetLevel: attempt.targetLevel,
+          evaluatorKind: 'AGENT',
+          teacherConfirmed: false,
         }))
       }
-      await markLearningAttemptEvaluated(client, {
-        companyId: room.companyId, courseId: room.courseId, attemptId: input.attemptId,
-      })
+      if (!await markLearningAttemptEvaluated(client, {
+        companyId: room.companyId,
+        projectId: room.projectId,
+        attemptId: input.attemptId,
+      })) throw new LearningApplicationError('not_found', 'attempt not found')
     }
     return projected
   })
@@ -170,89 +211,143 @@ export async function proposeLearningEvaluation(
   return { evaluationId, status, decisions }
 }
 
-async function applyTeacherLearningOverride(
+async function applyReviewerLearningOverride(
   db: Queryable,
   metric: LearningMetric,
   input: {
-    companyId: string; courseId: string; learnerId: string; objectiveId: string; evaluationId: string
-    nextLevel: number; reason: string; teacherId: string; activityType: LearningActivityType
+    companyId: string
+    projectId: string
+    userId: string
+    knowledgeUnitId: string
+    nextLevel: number
+    activityType: LearningActivityType
   },
 ): Promise<void> {
   const level = Math.trunc(input.nextLevel)
   if (level < 0 || level > 4) {
     throw new LearningApplicationError('invalid', 'overrideLevel must be between 0 and 4')
   }
-  if (level === 4 && !['project','assessment'].includes(input.activityType)) {
+  if (level === 4 && !['PROJECT', 'ASSESSMENT'].includes(input.activityType)) {
     throw new LearningApplicationError('invalid', 'level 4 override requires project or assessment evidence')
   }
-  const previous = await lockLearningMastery(db, input)
+  const previous = await lockLearningState(db, input)
   const reviewIntervalDays = level < previous.level ? 1 : REVIEW_INTERVAL_BY_LEVEL[level] ?? 1
-  const status = level >= 3 ? 'verified' : 'learning'
-  await upsertLearningMastery(db, {
+  const status = level >= 3 ? 'VERIFIED' : 'LEARNING'
+  if (!await upsertLearningState(db, {
     ...input,
     level,
     status,
     independentEvidenceCount: previous.independentEvidenceCount,
     reviewIntervalDays,
-  })
-  await insertLearningMasteryEvent(db, {
-    id: randomUUID(), ...input,
-    actorId: input.teacherId,
-    previousLevel: previous.level,
-    nextLevel: level,
-    kind: 'teacher_override',
-  })
-  metric('learning.mastery.changed', { status })
+  })) {
+    throw new LearningApplicationError('not_found', 'learning state scope not found')
+  }
+  metric('learning.state.changed', { status })
 }
 
+export async function reviewProjectLearningEvaluation(
+  _db: Queryable,
+  transaction: LearningTransaction,
+  metric: LearningMetric,
+  input: {
+    companyId: string
+    projectId: string
+    evaluationId: string
+    reviewerId: string
+    decision: 'accept' | 'reject'
+    overrideLevel?: number
+    reason: string
+  },
+): Promise<void> {
+  const reason = input.reason.trim()
+  if (!reason) throw new LearningApplicationError('invalid', 'review reason is required')
+  await transaction(async (client) => {
+    await createPermissionService(client).assertCan({
+      actorUserId: input.reviewerId,
+      action: 'learning:review',
+      companyId: input.companyId,
+      resource: { type: 'project', id: input.projectId },
+    })
+    const evaluation = await lockPendingLearningEvaluation(client, {
+      companyId: input.companyId,
+      projectId: input.projectId,
+      evaluationId: input.evaluationId,
+    })
+    if (!evaluation) throw new LearningApplicationError('not_found', 'pending evaluation not found')
+    const accepted = input.decision === 'accept'
+    if (!await reviewLearningEvaluationRecord(client, {
+      companyId: input.companyId,
+      projectId: input.projectId,
+      evaluationId: input.evaluationId,
+      reviewerId: input.reviewerId,
+      status: accepted ? 'ACCEPTED' : 'REJECTED',
+      reason,
+    })) {
+      throw new LearningApplicationError('conflict', 'evaluation review state changed')
+    }
+    if (accepted) {
+      const level = input.overrideLevel === undefined
+        ? evaluation.demonstratedLevel
+        : Math.trunc(Number(input.overrideLevel))
+      for (const knowledgeUnitId of evaluation.knowledgeUnitIds) {
+        if (input.overrideLevel !== undefined) {
+          await applyReviewerLearningOverride(client, metric, {
+            companyId: input.companyId,
+            projectId: input.projectId,
+            userId: evaluation.userId,
+            knowledgeUnitId,
+            nextLevel: level,
+            activityType: evaluation.activityType ?? 'PRACTICE',
+          })
+        } else {
+          await applyLearningEvaluationToState(client, metric, {
+            companyId: input.companyId,
+            projectId: input.projectId,
+            userId: evaluation.userId,
+            knowledgeUnitId,
+            evaluationId: input.evaluationId,
+            demonstratedLevel: level,
+            confidence: Math.max(0.7, evaluation.confidence),
+            assistance: evaluation.assistance,
+            activityType: evaluation.activityType ?? 'PRACTICE',
+            activityTargetLevel: Math.max(level, evaluation.targetLevel),
+            evaluatorKind: 'TEACHER',
+            teacherConfirmed: true,
+          })
+        }
+      }
+    }
+    if (!await markLearningAttemptEvaluated(client, {
+      companyId: input.companyId,
+      projectId: input.projectId,
+      attemptId: evaluation.attemptId,
+    })) throw new LearningApplicationError('not_found', 'attempt not found')
+  })
+}
+
+/** Teaching-only address adapter. Canonical evaluation review is Project-scoped. */
 export async function reviewLearningEvaluation(
   db: Queryable,
   transaction: LearningTransaction,
   metric: LearningMetric,
   input: {
-    companyId: string; courseId: string; evaluationId: string; teacherId: string
-    decision: 'accept'|'reject'; overrideLevel?: number; reason: string
+    companyId: string
+    courseId: string
+    evaluationId: string
+    teacherId: string
+    decision: 'accept' | 'reject'
+    overrideLevel?: number
+    reason: string
   },
 ): Promise<void> {
-  await createPermissionService(db).assertCan({
-    actorUserId: input.teacherId,
-    action: 'learning:review',
+  const project = await requireLearningCourseProjectScope(db, input.companyId, input.courseId)
+  await reviewProjectLearningEvaluation(db, transaction, metric, {
     companyId: input.companyId,
-    resource: { type: 'course', id: input.courseId },
-  })
-  const reason = input.reason.trim()
-  if (!reason) throw new LearningApplicationError('invalid', 'review reason is required')
-  await transaction(async (client) => {
-    const evaluation = await lockPendingLearningEvaluation(client, input)
-    if (!evaluation) throw new LearningApplicationError('not_found', 'pending evaluation not found')
-    const accepted = input.decision === 'accept'
-    if (!await reviewLearningEvaluationRecord(client, {
-      ...input, status: accepted ? 'accepted' : 'rejected', reason,
-    })) throw new LearningApplicationError('conflict', 'evaluation review state changed')
-    if (!accepted) return
-    const level = input.overrideLevel === undefined
-      ? evaluation.demonstratedLevel
-      : Math.trunc(Number(input.overrideLevel))
-    for (const objectiveId of evaluation.objectiveIds) {
-      if (input.overrideLevel !== undefined) {
-        await applyTeacherLearningOverride(client, metric, {
-          companyId: input.companyId, courseId: input.courseId, learnerId: evaluation.learnerId,
-          objectiveId, evaluationId: input.evaluationId, nextLevel: level, reason,
-          teacherId: input.teacherId, activityType: evaluation.activityType ?? 'practice',
-        })
-      } else {
-        await applyLearningEvaluationToMastery(client, metric, {
-          companyId: input.companyId, courseId: input.courseId, learnerId: evaluation.learnerId,
-          objectiveId, evaluationId: input.evaluationId, demonstratedLevel: level,
-          confidence: Math.max(0.7, evaluation.confidence), assistance: evaluation.assistance,
-          activityType: evaluation.activityType ?? 'practice',
-          activityTargetLevel: Math.max(level, evaluation.targetLevel),
-          evaluatorKind: 'teacher', teacherConfirmed: true, actorId: input.teacherId,
-        })
-      }
-    }
-    await markLearningAttemptEvaluated(client, {
-      companyId: input.companyId, courseId: input.courseId, attemptId: evaluation.attemptId,
-    })
+    projectId: project.projectId,
+    evaluationId: input.evaluationId,
+    reviewerId: input.teacherId,
+    decision: input.decision,
+    reason: input.reason,
+    ...(input.overrideLevel === undefined ? {} : { overrideLevel: input.overrideLevel }),
   })
 }
