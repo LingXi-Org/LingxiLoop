@@ -18,6 +18,14 @@ export type { Entitlement, EntitlementValue, Plan, PlanEntitlement, PlanStatus }
 export { PERSONAL_FREE_PLAN } from './entitlement/public.js'
 export type { User } from './identity/user.js'
 export {
+  LEARNING_CASE_ACTION_KINDS,
+  LEARNING_CASE_STATUSES,
+  type LearningCaseActionKind,
+  type LearningCaseStatus,
+  type LearningCaseTransition,
+  transitionLearningCase,
+} from './learning/public.js'
+export {
   type LifecycleTransition,
   PROJECT_KINDS,
   PROJECT_LIFECYCLE_COMMANDS,
