@@ -113,3 +113,38 @@ export async function listToolCalls(db: Queryable, agentId: string | null, limit
   )
   return rows
 }
+
+export async function findConversationScope(db: Queryable, conversationId: string) {
+  const { rows } = await db.query<{ members: string[]; company_id: string; kind: string }>(
+    `SELECT members,company_id,kind FROM conversations WHERE id=$1`,
+    [conversationId],
+  )
+  return rows[0] ?? null
+}
+
+export async function humanParticipantIds(
+  db: Queryable,
+  companyId: string,
+  participantIds: string[],
+): Promise<Set<string>> {
+  if (participantIds.length === 0) return new Set()
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id FROM participants WHERE company_id=$1 AND kind='human' AND id=ANY($2::text[])`,
+    [companyId, participantIds],
+  )
+  return new Set(rows.map((row) => row.id))
+}
+
+export async function findAvailableProjectId(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+): Promise<string | null> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id FROM projects
+      WHERE company_id=$1 AND status IN ('ACTIVE','TRANSFER_PENDING') AND id=$2
+      LIMIT 1`,
+    [companyId, projectId],
+  )
+  return rows[0]?.id ?? null
+}

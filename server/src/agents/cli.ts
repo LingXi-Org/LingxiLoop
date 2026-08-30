@@ -45,7 +45,10 @@ import {
 import { createParticipantDirectoryCommands } from './cli/participant-directory.js'
 import {
   agentCompanyId,
+  findAvailableProjectId,
   findConvening,
+  findConversationScope,
+  humanParticipantIds,
   listAgentConversations,
   listConversationMembers,
   listParticipantIdentities,
@@ -761,14 +764,12 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   }
 
   // Verify the agent is a member of the conversation
-  const { rows: cv } = await pool.query<{ members: string[]; company_id: string; kind: string }>(
-    `SELECT members, company_id, kind FROM conversations WHERE id = $1`, [convoId],
-  )
-  if (!cv[0]) return err(`unknown conversation ${convoId}`)
-  if (!cv[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  const companyId = cv[0].company_id
+  const conversation = await findConversationScope(pool, convoId)
+  if (!conversation) return err(`unknown conversation ${convoId}`)
+  if (!conversation.members.includes(me)) return err(`${me} is not a member of ${convoId}`)
+  const companyId = conversation.company_id
 
-  if (cv[0].kind === 'email') {
+  if (conversation.kind === 'email') {
     if (!body) return err('email replies require a non-empty body')
     try {
       const { replyInEmailConversation } = await import('../modules/email/index.js')
@@ -794,7 +795,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   const clientNonce = idempotencyKey
     ? `agent-reply:${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 48)}`
     : `agent-reply:${randomUUID()}`
-  const mentionTargets = await listParticipantIdentities(pool, companyId, cv[0].members)
+  const mentionTargets = await listParticipantIdentities(pool, companyId, conversation.members)
   const participantNameById = new Map(mentionTargets.map((participant) => [participant.id, participant.name]))
 
   // ─── Idempotent replay short-circuit ───────────────────────────────
@@ -847,7 +848,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // forces the agent to commit deliberately rather than absent-
   // mindedly continuing to monologue.
   const monologueBypass = Boolean(parsed.flags.continue || parsed.flags.also)
-  if (!monologueBypass && cv[0].members.length > 2) {
+  if (!monologueBypass && conversation.members.length > 2) {
     const lastMessage = history.at(-1)
     if (lastMessage?.fromUid === me) {
       const sentAt = lastMessage.timestamp > 10_000_000_000
@@ -905,7 +906,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // the agent a HELD envelope for this conversation.
   const sendAnywayFlag = Boolean(parsed.flags['send-anyway'])
   const replyHoldScope = `reply:${convoId}`
-  const preflightApplies = !monologueBypass && cv[0].members.length > 2
+  const preflightApplies = !monologueBypass && conversation.members.length > 2
   const heldAck = sendAnywayFlag
     ? await consumeHold(me, replyHoldScope)
     : { armed: false, heldUpToSeq: null }
@@ -1837,13 +1838,7 @@ async function cmdAutonomy(parsed: ParsedArgs): Promise<CliResult> {
   const history = await getAgentChannelHistory({ companyId, agentId: me, channelId: conversationId, limit: 200 })
   if (!history) return err(`unknown authoritative channel ${conversationId}`)
   const authorIds = [...new Set(history.map((message) => message.fromUid))]
-  const { rows: humans } = authorIds.length > 0
-    ? await pool.query<{ id: string }>(
-      `SELECT id FROM participants WHERE company_id=$1 AND kind='human' AND id=ANY($2::text[])`,
-      [companyId, authorIds],
-    )
-    : { rows: [] }
-  const humanIds = new Set(humans.map((human) => human.id))
+  const humanIds = await humanParticipantIds(pool, companyId, authorIds)
   const userId = [...history]
     .sort((left, right) => right.messageSeq - left.messageSeq)
     .find((message) => humanIds.has(message.fromUid))?.fromUid
@@ -2253,15 +2248,9 @@ async function cmdTasks(parsed: ParsedArgs): Promise<CliResult> {
 /** Resolve the explicit workspace inherited from an Agent OS turn. */
 async function resolveCliProjectId(companyId: string, requested?: string): Promise<string> {
   if (!requested) throw new Error('projectId is required')
-  const { rows } = await pool.query<{ id: string }>(
-    `SELECT id FROM projects
-      WHERE company_id=$1 AND status IN ('ACTIVE','TRANSFER_PENDING')
-        AND id=$2
-      LIMIT 1`,
-    [companyId, requested],
-  )
-  if (!rows[0]) throw new Error('knowledge workspace is unavailable')
-  return rows[0].id
+  const projectId = await findAvailableProjectId(pool, companyId, requested)
+  if (!projectId) throw new Error('knowledge workspace is unavailable')
+  return projectId
 }
 
 const { cmdCalendar } = createCalendarCommand({

@@ -416,7 +416,7 @@ if (/from ['"][^'"]*db\/|\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|U
 }
 for (const file of server.filter((candidate) => name(candidate).endsWith('-application.ts'))) {
   const source = await read(file)
-  if (/\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(source)) {
+  if (/\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE)\b|`\s*WITH\s+[a-z_]\w*\s+AS\s*\(/i.test(source)) {
     violations.push(`${name(file)}: Application may orchestrate only; SQL belongs in a Repository`)
   }
 }
@@ -463,6 +463,18 @@ if (/fallbackSmtpMessageId|args\.messageId\s*\?\?\s*mintMessageId/.test(`${email
   violations.push('server/src/modules/email: provider success must preserve the authoritative Message-ID without fallback minting')
 }
 const agentCli = await read(resolve('server/src/agents/cli.ts'))
+for (const file of server.filter((candidate) => {
+  const fileName = name(candidate)
+  return fileName === 'server/src/agents/cli.ts'
+    || (fileName.startsWith('server/src/agents/cli/')
+      && !fileName.endsWith('/repository.ts')
+      && !fileName.endsWith('-repository.ts'))
+})) {
+  const source = await read(file)
+  if (/\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE)\b|`\s*WITH\s+[a-z_]\w*\s+AS\s*\(/i.test(source)) {
+    violations.push(`${name(file)}: Agent CLI commands may orchestrate only; SQL belongs in a Repository`)
+  }
+}
 if (/\bfetch\s*\(/.test(agentCli) || !/response_format:\s*['"]b64_json['"]/.test(agentCli)) {
   violations.push('server/src/agents/cli.ts: generated images must use tracked b64_json output and authoritative R2 storage')
 }
