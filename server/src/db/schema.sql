@@ -4914,6 +4914,43 @@ CREATE UNIQUE INDEX uniq_organization_seats_live_member
     ON public.organization_seats USING btree (company_id, user_id)
     WHERE status IN ('ACTIVE'::text, 'SUSPENDED'::text);
 
+CREATE TABLE public.project_transfers (
+    id text PRIMARY KEY,
+    project_id text NOT NULL,
+    source_company_id text NOT NULL,
+    target_company_id text NOT NULL,
+    status text DEFAULT 'PENDING'::text NOT NULL,
+    requested_by text NOT NULL,
+    teacher_confirmed_by text,
+    teacher_confirmed_at timestamp with time zone,
+    education_confirmed_by text,
+    education_confirmed_at timestamp with time zone,
+    policy_snapshot jsonb DEFAULT '{}'::jsonb NOT NULL,
+    resolution_reason text,
+    version bigint DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    completed_at timestamp with time zone,
+    CONSTRAINT project_transfers_project_key UNIQUE (project_id),
+    CONSTRAINT project_transfers_project_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE RESTRICT,
+    CONSTRAINT project_transfers_source_company_fkey FOREIGN KEY (source_company_id) REFERENCES public.companies(id) ON DELETE RESTRICT,
+    CONSTRAINT project_transfers_target_company_fkey FOREIGN KEY (target_company_id) REFERENCES public.companies(id) ON DELETE RESTRICT,
+    CONSTRAINT project_transfers_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES public.users(id) ON DELETE RESTRICT,
+    CONSTRAINT project_transfers_teacher_confirmed_by_fkey FOREIGN KEY (teacher_confirmed_by) REFERENCES public.users(id) ON DELETE RESTRICT,
+    CONSTRAINT project_transfers_education_confirmed_by_fkey FOREIGN KEY (education_confirmed_by) REFERENCES public.users(id) ON DELETE RESTRICT,
+    CONSTRAINT project_transfers_status_check CHECK (status = ANY (ARRAY['PENDING'::text, 'READY'::text, 'REJECTED'::text, 'CANCELLED'::text, 'COMPLETED'::text])),
+    CONSTRAINT project_transfers_company_check CHECK (source_company_id <> target_company_id),
+    CONSTRAINT project_transfers_policy_check CHECK (jsonb_typeof(policy_snapshot) = 'object'),
+    CONSTRAINT project_transfers_teacher_confirmation_check CHECK ((teacher_confirmed_by IS NULL) = (teacher_confirmed_at IS NULL)),
+    CONSTRAINT project_transfers_education_confirmation_check CHECK ((education_confirmed_by IS NULL) = (education_confirmed_at IS NULL)),
+    CONSTRAINT project_transfers_resolution_check CHECK ((status IN ('REJECTED','CANCELLED')) = (resolution_reason IS NOT NULL)),
+    CONSTRAINT project_transfers_completion_check CHECK ((status = 'COMPLETED') = (completed_at IS NOT NULL)),
+    CONSTRAINT project_transfers_version_check CHECK (version >= 1)
+);
+
+CREATE INDEX idx_project_transfers_status
+    ON public.project_transfers USING btree (status, updated_at, id);
+
 CREATE INDEX idx_learning_knowledge_units_project
     ON public.learning_knowledge_units USING btree (company_id, project_id, status, position);
 

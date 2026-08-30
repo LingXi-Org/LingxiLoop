@@ -94,3 +94,5 @@ verification rejects server/runtime source and environment files.
 M18 adds canonical Education Contract and Organization Seat relations. M19 atomically expires due contracts, enters Company grace, and ends active Institutional Courses while preserving independent Membership and Seat assignments for close-out. Education entitlements require an active Seat backed by an in-period contract or its expired contract during Company grace. This is a reset-only schema cutover: reset and bootstrap the database; no migration or dual-write path is provided.
 
 M20 adds a dedicated Institutional Course creation use case for Education Companies. Course roles are assigned only to existing School Memberships; role assignment neither creates a User nor allocates a Seat.
+
+M21 adds the reset-only Project Transfer relation for dual confirmation and policy snapshots. Reset and bootstrap the database before exercising Transfer; no migration path is provided.

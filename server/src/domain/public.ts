@@ -71,4 +71,14 @@ export {
   transitionCompany,
 } from './tenancy/company.js'
 export type { CompanyMembership } from './tenancy/company-membership.js'
+export {
+  PROJECT_TRANSFER_STATUSES,
+  projectTransferConditionsReady,
+  transitionProjectTransfer,
+} from './transfer/public.js'
+export type {
+  ProjectTransferCommand,
+  ProjectTransferStatus,
+  ProjectTransferTransition,
+} from './transfer/public.js'
 

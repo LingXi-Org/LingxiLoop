@@ -400,6 +400,19 @@ test('Education contracts and organization seats are scoped and independent from
   assert.match(bootstrap, /'organization_seats'/)
 })
 
+test('Project Transfer persists dual confirmation, policy snapshot, and one terminal outcome', () => {
+  assert.match(schema, /CREATE TABLE public\.project_transfers/)
+  assert.match(schema, /project_transfers_status_check[\s\S]*'PENDING'.*'READY'.*'REJECTED'.*'CANCELLED'.*'COMPLETED'/s)
+  assert.match(schema, /teacher_confirmed_by text,[\s\S]*education_confirmed_by text,/)
+  assert.match(schema, /project_transfers_project_key UNIQUE \(project_id\)/)
+  assert.match(schema, /project_transfers_company_check CHECK \(source_company_id <> target_company_id\)/)
+  assert.match(schema, /project_transfers_policy_check CHECK \(jsonb_typeof\(policy_snapshot\) = 'object'\)/)
+  assert.match(schema, /project_transfers_resolution_check/)
+  assert.match(schema, /project_transfers_completion_check/)
+  assert.match(bootstrap, /'project_transfers'/)
+  assert.match(bootstrap, /'idx_project_transfers_status'/)
+})
+
 test('durable Agent work preserves a human authorization principal', () => {
   assert.match(schema, /CREATE TABLE public\.agent_work_items \([\s\S]*?authorization_user_id text,/)
   assert.match(schema, /agent_work_items_authorization_user_id_fkey[\s\S]*?REFERENCES public\.users\(id\) ON DELETE RESTRICT/)
