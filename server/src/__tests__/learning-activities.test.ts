@@ -2,11 +2,12 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import {
-  closeLearningActivityRecord,
+  closeProjectLearningActivityRecord,
   findLearningActivity,
-  insertLearningActivity,
-  insertLearningActivityAttempt,
-  publishLearningActivityRecord,
+  findProjectLearningActivity,
+  insertProjectLearningActivity,
+  insertProjectLearningActivityAttempt,
+  publishProjectLearningActivityRecord,
 } from '../modules/learning/repository.js'
 
 function queryable(
@@ -20,50 +21,107 @@ function queryable(
   }
 }
 
-test('activity creation and lookup use explicit tenant and course scope', async () => {
+const activityRow = {
+  id: 'activity-1',
+  project_id: 'project-1',
+  title: 'Lease lab',
+  instructions: 'Run it',
+  kind: 'PRACTICE',
+  status: 'DRAFT',
+  evaluation_mode: 'TEACHER_REQUIRED',
+  target_level: 2,
+  rubric: [],
+  knowledge_unit_ids: ['unit-1'],
+  due_at: null,
+}
+
+test('activity creation atomically validates project units and writes normalized links', async () => {
+  let statement = ''
+  let values: readonly unknown[] | undefined
+  const db = queryable((text, params) => {
+    statement = text
+    values = params
+    return { rows: [{ id: 'activity-1' }] }
+  })
+
+  await insertProjectLearningActivity(db, {
+    id: 'activity-1', companyId: 'company-1', projectId: 'project-1', actorId: 'agent-1',
+    title: 'Lease lab', instructions: 'Run it', kind: 'PRACTICE', evaluationMode: 'TEACHER_REQUIRED',
+    targetLevel: 2, rubric: [], knowledgeUnitIds: ['unit-1'],
+  })
+
+  assert.deepEqual(values?.slice(0, 3), ['activity-1','company-1','project-1'])
+  assert.deepEqual(values?.slice(5, 8), ['PRACTICE','TEACHER_REQUIRED',2])
+  assert.deepEqual(values?.[10], ['unit-1'])
+  assert.match(statement, /project\.company_id=\$2 AND project\.id=\$3/)
+  assert.match(statement, /unit\.company_id=project\.company_id AND unit\.project_id=project\.id/)
+  assert.match(statement, /INSERT INTO learning_activity_knowledge_units\(company_id,project_id,activity_id,knowledge_unit_id\)/)
+  assert.doesNotMatch(statement, /objective_ids|course_id/)
+})
+
+test('project activity reads use normalized knowledge-unit links', async () => {
+  let statement = ''
+  const db = queryable((text, params) => {
+    statement = text
+    assert.deepEqual(params, ['company-1','project-1','activity-1'])
+    return { rows: [activityRow] }
+  })
+
+  const activity = await findProjectLearningActivity(db, 'company-1', 'project-1', 'activity-1')
+
+  assert.deepEqual(activity, {
+    id: 'activity-1', projectId: 'project-1', title: 'Lease lab', instructions: 'Run it',
+    kind: 'PRACTICE', status: 'DRAFT', evaluationMode: 'TEACHER_REQUIRED', targetLevel: 2,
+    rubric: [], knowledgeUnitIds: ['unit-1'],
+  })
+  assert.match(statement, /link\.company_id=activity\.company_id AND link\.project_id=activity\.project_id/)
+  assert.match(statement, /activity\.company_id=\$1 AND activity\.project_id=\$2/)
+})
+
+test('Course activity lookup resolves Project scope then returns only the teaching projection', async () => {
   const calls: Array<{ text: string; params: readonly unknown[] | undefined }> = []
   const db = queryable((text, params) => {
     calls.push({ text, params })
-    if (text.includes('SELECT id,course_id')) return { rows: [{
-      id: 'activity-1', course_id: 'course-1', title: 'Lease lab', instructions: 'Run it', type: 'practice',
-      status: 'draft', evaluation_mode: 'teacher_required', target_level: 2, rubric: [],
-      objective_ids: ['objective-1'], due_at: null,
+    if (text.includes('FROM courses course')) return { rows: [{
+      course_id: 'course-1', company_id: 'company-1', project_id: 'project-1',
+      project_kind: 'TEACHING', project_status: 'ACTIVE',
     }] }
-    return { rowCount: 1 }
+    return { rows: [activityRow] }
   })
 
-  await insertLearningActivity(db, {
-    id: 'activity-1', companyId: 'company-1', courseId: 'course-1', actorId: 'agent-1',
-    title: 'Lease lab', instructions: 'Run it', type: 'practice', evaluationMode: 'teacher_required',
-    targetLevel: 2, rubric: [], objectiveIds: ['objective-1'],
-  })
   const activity = await findLearningActivity(db, 'company-1', 'course-1', 'activity-1')
 
-  assert.deepEqual(calls[0]?.params?.slice(1, 3), ['course-1', 'company-1'])
-  assert.match(calls[0]?.text ?? '', /course\.id=\$2 AND course\.company_id=\$3/)
-  assert.deepEqual(calls[1]?.params, ['company-1', 'course-1', 'activity-1'])
-  assert.equal(activity?.objectiveIds[0], 'objective-1')
+  assert.deepEqual(calls[0]?.params, ['company-1','course-1'])
+  assert.deepEqual(calls[1]?.params, ['company-1','project-1','activity-1'])
+  assert.deepEqual(activity, {
+    id: 'activity-1', courseId: 'course-1', title: 'Lease lab', instructions: 'Run it',
+    type: 'PRACTICE', status: 'DRAFT', evaluationMode: 'TEACHER_REQUIRED', targetLevel: 2,
+    rubric: [], objectiveIds: ['unit-1'],
+  })
 })
 
-test('publish and close writes authorize the teacher inside the tenant-scoped update', async () => {
+test('publish and close persistence stays in the permission-resolved project scope', async () => {
   const calls: string[] = []
   const db = queryable((text) => {
     calls.push(text)
     return { rowCount: 1 }
   })
-  const input = { companyId: 'company-1', courseId: 'course-1', activityId: 'activity-1', teacherId: 'teacher-1' }
+  const input = {
+    companyId: 'company-1', projectId: 'project-1', activityId: 'activity-1', teacherId: 'teacher-1',
+  }
 
-  assert.equal(await publishLearningActivityRecord(db, input), true)
-  assert.equal(await closeLearningActivityRecord(db, input), true)
+  assert.equal(await publishProjectLearningActivityRecord(db, input), true)
+  assert.equal(await closeProjectLearningActivityRecord(db, input), true)
 
   for (const statement of calls) {
-    assert.match(statement, /activity\.company_id=\$1 AND activity\.course_id=\$2/)
-    assert.match(statement, /member\.user_id=\$4 AND member\.role IN \('OWNER','TEACHER'\)/)
-    assert.match(statement, /member\.status='ACTIVE'/)
+    assert.match(statement, /activity\.company_id=\$1 AND activity\.project_id=\$2/)
+    assert.doesNotMatch(statement, /project_memberships/)
   }
+  assert.match(calls[0] ?? '', /status='PUBLISHED'/)
+  assert.match(calls[1] ?? '', /status='CLOSED'/)
 })
 
-test('UI submission is one authoritative insert that binds published activity and learner membership', async () => {
+test('UI submission binds a published activity and learner to one project', async () => {
   let statement = ''
   let values: readonly unknown[] | undefined
   const db = queryable((text, params) => {
@@ -72,14 +130,17 @@ test('UI submission is one authoritative insert that binds published activity an
     return { rows: [{ id: 'attempt-1' }], rowCount: 1 }
   })
 
-  const inserted = await insertLearningActivityAttempt(db, {
-    id: 'attempt-1', companyId: 'company-1', courseId: 'course-1', activityId: 'activity-1',
-    learnerId: 'learner-1', assistance: 'none', answer: 'evidence', idempotencyKey: 'submission-1',
+  const inserted = await insertProjectLearningActivityAttempt(db, {
+    id: 'attempt-1', companyId: 'company-1', projectId: 'project-1', activityId: 'activity-1',
+    learnerId: 'learner-1', assistance: 'NONE', answer: 'evidence', idempotencyKey: 'submission-1',
   })
 
   assert.equal(inserted, 'attempt-1')
-  assert.deepEqual(values?.slice(0, 5), ['attempt-1','company-1','course-1','activity-1','learner-1'])
-  assert.match(statement, /activity\.status='published'/)
-  assert.match(statement, /learner\.user_id=\$5 AND learner\.status='ACTIVE'/)
-  assert.match(statement, /learner\.role IN \('STUDENT','OBSERVER'\)/)
+  assert.deepEqual(values?.slice(0, 6), [
+    'attempt-1','company-1','project-1','activity-1','learner-1','NONE',
+  ])
+  assert.match(statement, /activity\.company_id=\$2 AND activity\.project_id=\$3/)
+  assert.match(statement, /activity\.status='PUBLISHED'/)
+  assert.doesNotMatch(statement, /project_memberships/)
+  assert.match(statement, /ON CONFLICT\(company_id,project_id,activity_id,learner_id,client_submission_id\)/)
 })
