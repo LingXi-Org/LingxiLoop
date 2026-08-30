@@ -3,8 +3,8 @@ import { spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 import { parseBaseArgument, parseScopeArguments } from '../../../../scripts/changed-paths.mjs'
 import { buildCiPlan, buildReport, classifyPaths, parseArgs, renderText } from './classify-change.mjs'
 
@@ -42,6 +42,14 @@ test('classifies ordinary frontend changes with direct local evidence and a CI b
   assert.equal(check(report, 'npm run test:local')?.tier, 'required')
   assert.equal(check(report, 'npm run build')?.tier, 'ci-only')
   assert.equal(check(report, 'npm test'), undefined)
+})
+
+test('classifies Playwright specs and fixtures as frontend build inputs', () => {
+  const report = classifyPaths(['e2e/teacher-flow.spec.ts', 'e2e/teacher-flow.tsx', 'playwright.config.ts'])
+  assert.ok(category(report, 'frontend'))
+  assert.equal(report.ci.frontend, true)
+  assert.equal(report.ci.build, true)
+  assert.equal(check(report, 'npm run typecheck')?.tier, 'required')
 })
 
 test('runs Agent OS and LLM guards only for their authoritative contracts', () => {

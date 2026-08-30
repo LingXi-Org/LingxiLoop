@@ -24,6 +24,7 @@ node_modules
 dist
 dist-ssr
 /artifacts/eval-*.json
+/artifacts/playwright/
 
 # Python bytecode cache
 __pycache__/

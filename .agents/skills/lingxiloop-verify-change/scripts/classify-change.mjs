@@ -51,6 +51,8 @@ const biomePath = /\.(?:cjs|css|js|json|jsonc|jsx|mjs|ts|tsx)$/
 
 function isFrontendTypeContract(path) {
   return ['package.json', 'package-lock.json', 'tsconfig.json', 'tsconfig.node.json', 'vite.config.ts'].includes(path)
+    || path === 'playwright.config.ts'
+    || /^e2e\/.+\.[cm]?[jt]sx?$/.test(path)
     || (path.startsWith('src/') && path.endsWith('.d.ts'))
     || ['src/App.tsx', 'src/main.tsx', 'src/types.ts', 'src/api/contracts.ts', 'src/api/index.ts'].includes(path)
     || /^src\/.+\/(?:contracts|public|index)\.tsx?$/.test(path)
@@ -147,9 +149,10 @@ const CATEGORY_DEFINITIONS = [
     id: 'frontend',
     reason: 'Browser, website, assets, or frontend build inputs changed.',
     matches: (path) => path.startsWith('src/')
+      || path.startsWith('e2e/')
       || path.startsWith('public/')
       || path.startsWith('website/')
-      || ['index.html', 'vite.config.ts', 'tailwind.config.ts', 'postcss.config.js'].includes(path),
+      || ['index.html', 'playwright.config.ts', 'vite.config.ts', 'tailwind.config.ts', 'postcss.config.js'].includes(path),
   },
   {
     id: 'server',

@@ -48,6 +48,7 @@
     "test:integration:eval": "node server/run-integration-tests.mjs --file eval.test.ts",
     "test:integration:resend": "node server/run-integration-tests.mjs --file resend-live.test.ts",
     "test:eval": "node --import tsx --test server/src/__tests__/eval-evaluator.test.ts server/src/__tests__/eval-trace-harness.test.ts",
+    "test:e2e": "playwright test",
     "eval:harness": "tsx scripts/run-agent-eval.ts --suite eval/suites/smoke.v1.json --baseline eval/baselines/smoke.v1.json --report artifacts/eval-harness-report.json",
     "eval:runtime": "tsx scripts/run-agent-runtime-eval.ts --suite eval/suites/runtime-smoke.v1.json --baseline eval/baselines/runtime-smoke.v1.json --report artifacts/eval-runtime-smoke-report.json",
     "eval:check": "npm run eval:harness && npm run eval:runtime",
@@ -150,6 +151,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.8",
+    "@playwright/test": "^1.62.1",
     "@types/express": "^5.0.6",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.18",

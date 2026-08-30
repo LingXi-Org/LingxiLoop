@@ -159,6 +159,22 @@ jobs:
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.build == 'true'
         run: npm run build
 
+  teacher-playwright:
+    name: Teacher Project Playwright
+    needs: classify
+    if: needs.classify.outputs.full == 'true' || needs.classify.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
   server-integration:
     name: Server integration (focused when eligible)
     needs: classify
