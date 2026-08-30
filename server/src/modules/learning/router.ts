@@ -4,6 +4,7 @@ import { requireAuth, requireCompany } from '../../http/request-context.js'
 import type { PermissionAction } from '../access/public.js'
 import { permissionService } from '../access/public.js'
 import { classroomRouter } from './classroom-router.js'
+import { learningCasesRouter } from './cases-router.js'
 import {
   createCourseInvitationRequestSchema,
   createCourseRequestSchema,
@@ -31,6 +32,7 @@ async function requireCoursePermission(
 }
 
 learningRouter.use(classroomRouter)
+learningRouter.use(learningCasesRouter)
 
 learningRouter.get('/courses', safe(async (req, res) => {
   const scope = await requireCompany(req)

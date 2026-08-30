@@ -17,6 +17,7 @@ import { seedMemberDirectConversations } from '../conversations/public.js'
 import { CH_DOC_ACCESS_REVOKED, publish } from '../../redis.js'
 import { LearningApplication } from './application.js'
 import { inc } from '../../metrics.js'
+import { LearningCasesApplication } from './cases-application.js'
 
 function teacherTransaction(db: Queryable) {
   return <T>(work: (client: Queryable) => Promise<T>): Promise<T> => db === pool
@@ -59,4 +60,9 @@ export const learningApplication = new LearningApplication(pool, {
     return getTeacherAgentSummary(companyId, courseId, userId, pool)
   },
   metric: inc,
+})
+
+export const learningCasesApplication = new LearningCasesApplication(pool, {
+  transaction: (work) => withTransaction(pool, work),
+  auditInTransaction: async (db, event) => { await auditInTransaction(db, event) },
 })
