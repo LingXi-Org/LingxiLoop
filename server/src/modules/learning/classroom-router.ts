@@ -33,9 +33,81 @@ async function requireCoursePermission(
   return scope
 }
 
+async function requireProjectPermission(
+  req: Parameters<typeof requireCompany>[0],
+  projectId: string,
+  action: PermissionAction,
+) {
+  const scope = await requireCompany(req)
+  await permissionService.assertCan({
+    actorUserId: scope.userId,
+    action,
+    companyId: scope.companyId,
+    resource: { type: 'project', id: projectId },
+  })
+  return scope
+}
+
 classroomRouter.get('/learning/dashboard', safe(async (req, res) => {
   const scope = await requireCompany(req)
   res.json(await respond(() => learningApplication.dashboard(scope)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/knowledge-units', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:read')
+  res.json(await respond(() => learningApplication.projectKnowledgeUnits(scope, projectId)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/activities', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:read')
+  res.json(await respond(() => learningApplication.projectActivities(scope, projectId)))
+}))
+
+classroomRouter.post('/projects/:projectId/learning/activities/:activityId/submit', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:submit')
+  const input = parse(submitActivityRequestSchema.safeParse(req.body ?? {}))
+  res.status(201).json(await respond(() => learningApplication.submitProjectActivity(
+    scope, projectId, String(req.params.activityId), input,
+  )))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/missions', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:read')
+  res.json(await respond(() => learningApplication.projectMissions(scope, projectId)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/evidence', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const learnerId = typeof req.query.learnerId === 'string' ? req.query.learnerId : undefined
+  const scope = await requireProjectPermission(
+    req, projectId, learnerId ? 'learning:review' : 'learning:read',
+  )
+  res.json(await respond(() => learningApplication.projectEvidence(scope, projectId, learnerId)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/reviews', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:review')
+  res.json(await respond(() => learningApplication.projectReviews(scope, projectId)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/progress', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:review')
+  res.json(await respond(() => learningApplication.projectProgress(scope, projectId)))
+}))
+
+classroomRouter.post('/projects/:projectId/learning/reviews/:evaluationId', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:review')
+  const input = parse(reviewEvaluationRequestSchema.safeParse(req.body ?? {}))
+  res.json(await respond(() => learningApplication.reviewProject(
+    scope, projectId, String(req.params.evaluationId), input,
+  )))
 }))
 
 classroomRouter.get('/courses/:courseId/teacher-agent', safe(async (req, res) => {

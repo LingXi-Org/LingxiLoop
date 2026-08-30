@@ -19,6 +19,7 @@ import type {
 } from './contracts.js'
 import {
   closeLearningActivity,
+  submitProjectLearningActivity,
   createLearningActivity,
   createLearningObjectives,
   publishLearningActivity,
@@ -28,7 +29,7 @@ import {
 import type { LearningEffect } from './effects-repository.js'
 import { enqueueLearningEffect } from './effects-repository.js'
 import { LearningApplicationError } from './errors.js'
-import { reviewLearningEvaluation } from './evaluation-application.js'
+import { reviewLearningEvaluation, reviewProjectLearningEvaluation } from './evaluation-application.js'
 import { bindLearningCourseRoom } from './membership-application.js'
 import { assignLearningMissionCoordinator, listVisibleLearningMissions } from './missions-application.js'
 import {
@@ -52,6 +53,9 @@ import {
   listDeliveries,
   listDueLearningStates,
   listLearningActivities,
+  listLearningMissions,
+  listProjectLearningActivities,
+  listProjectLearningKnowledgeUnits,
   listLearningProjectProgress,
   listLearningProjectSummaries,
   listLearningEvidenceRecords,
@@ -540,6 +544,20 @@ export class LearningApplication {
     return role === 'teacher' ? objectives : objectives.filter((objective) => objective.status === 'PUBLISHED')
   }
 
+  async projectKnowledgeUnits(scope: LearningScope, projectId: string) {
+    const permission = createPermissionService(this.db)
+    await permission.assertCan({
+      actorUserId: scope.userId, action: 'learning:read', companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    const canManage = await permission.can({
+      actorUserId: scope.userId, action: 'learning:manage', companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    const units = await this.classroom(() => listProjectLearningKnowledgeUnits(this.db, scope.companyId, projectId))
+    return canManage.allowed ? units : units.filter((unit) => unit.status === 'PUBLISHED')
+  }
+
   async createObjectives(scope: LearningScope, courseId: string, input: CreateObjectivesInput) {
     await this.assertCourseScope(scope, courseId, 'learning:manage')
     return this.classroom(() => createLearningObjectives(this.db, (work) => this.infrastructure.transaction(work), {
@@ -569,6 +587,19 @@ export class LearningApplication {
     await this.assertCourseScope(scope, courseId, 'learning:read')
     const role = await courseRole(this.db, courseId, scope.companyId, scope.userId)
     return listLearningActivities(this.db, scope.companyId, courseId, role === 'teacher')
+  }
+
+  async projectActivities(scope: LearningScope, projectId: string) {
+    const permission = createPermissionService(this.db)
+    await permission.assertCan({
+      actorUserId: scope.userId, action: 'learning:read', companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    const canManage = await permission.can({
+      actorUserId: scope.userId, action: 'learning:manage', companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    return listProjectLearningActivities(this.db, scope.companyId, projectId, canManage.allowed)
   }
 
   async createActivity(scope: LearningScope, courseId: string, input: CreateActivityInput) {
@@ -618,9 +649,37 @@ export class LearningApplication {
     return result
   }
 
+  async submitProjectActivity(
+    scope: LearningScope,
+    projectId: string,
+    activityId: string,
+    input: SubmitActivityInput,
+  ) {
+    const result = await this.classroom(() => submitProjectLearningActivity(this.db, {
+      companyId: scope.companyId, projectId, activityId, learnerId: scope.userId, ...input,
+    }))
+    this.infrastructure.metric('learning.attempt.accepted', { source: 'ui' })
+    return result
+  }
+
   async missions(scope: LearningScope, courseId: string) {
     await this.assertCourseScope(scope, courseId, 'learning:read')
     return this.classroom(() => listVisibleLearningMissions(this.db, scope, courseId))
+  }
+
+  async projectMissions(scope: LearningScope, projectId: string) {
+    const permission = createPermissionService(this.db)
+    await permission.assertCan({
+      actorUserId: scope.userId, action: 'learning:read', companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    const canManage = await permission.can({
+      actorUserId: scope.userId, action: 'learning:manage', companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    return this.classroom(() => listLearningMissions(this.db, {
+      companyId: scope.companyId, projectId, userId: scope.userId, includeAllLearners: canManage.allowed,
+    }))
   }
 
   async setMissionCoordinator(
@@ -655,6 +714,18 @@ export class LearningApplication {
     })
   }
 
+  async projectEvidence(scope: LearningScope, projectId: string, learnerId = scope.userId) {
+    await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId,
+      action: learnerId === scope.userId ? 'learning:read' : 'learning:review',
+      companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    return this.classroom(() => listLearningEvidenceRecords(this.db, {
+      companyId: scope.companyId, projectId, learnerId,
+    }))
+  }
+
   async reviews(scope: LearningScope, courseId: string) {
     await this.assertCourseScope(scope, courseId, 'learning:review')
     return this.classroom(async () => {
@@ -667,6 +738,14 @@ export class LearningApplication {
       const project = await requireLearningCourseProjectScope(this.db, scope.companyId, courseId)
       return listPendingLearningEvaluationRecords(this.db, scope.companyId, project.projectId)
     })
+  }
+
+  async projectReviews(scope: LearningScope, projectId: string) {
+    await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId, action: 'learning:review', companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    return this.classroom(() => listPendingLearningEvaluationRecords(this.db, scope.companyId, projectId))
   }
 
   async progress(scope: LearningScope, courseId: string) {
@@ -683,6 +762,14 @@ export class LearningApplication {
     })
   }
 
+  async projectProgress(scope: LearningScope, projectId: string) {
+    await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId, action: 'learning:review', companyId: scope.companyId,
+      resource: { type: 'project', id: projectId },
+    })
+    return this.classroom(() => listLearningProjectProgress(this.db, scope.companyId, projectId))
+  }
+
   async review(scope: LearningScope, courseId: string, evaluationId: string, input: ReviewEvaluationInput) {
     await this.assertCourseScope(scope, courseId, 'learning:review')
     return this.classroom(async () => {
@@ -691,6 +778,18 @@ export class LearningApplication {
       })
       return { ok: true as const }
     })
+  }
+
+  async reviewProject(scope: LearningScope, projectId: string, evaluationId: string, input: ReviewEvaluationInput) {
+    await this.classroom(() => reviewProjectLearningEvaluation(
+      this.db,
+      this.infrastructure.transaction,
+      this.infrastructure.metric,
+      {
+        companyId: scope.companyId, projectId, evaluationId, reviewerId: scope.userId, ...input,
+      },
+    ))
+    return { ok: true as const }
   }
 
   notificationPreferences(scope: LearningScope, courseId?: string) {
