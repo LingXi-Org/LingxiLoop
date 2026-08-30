@@ -74,17 +74,6 @@ async function seedWorld(): Promise<void> {
   await seedUserMembership(ME, COMPANY)
   await seedUserMembership(PEER, COMPANY, { displayName: 'Peer', email: 'peer@test.local' })
   await pool.query(
-    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
-     VALUES ('contract-polls',$1,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',2)`,
-    [COMPANY],
-  )
-  await pool.query(
-    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status) VALUES
-       ('seat-polls-me',$1,'contract-polls',$2,'ACTIVE'),
-       ('seat-polls-peer',$1,'contract-polls',$3,'ACTIVE')`,
-    [COMPANY, ME, PEER],
-  )
-  await pool.query(
     `INSERT INTO projects(id,company_id,kind,name,status,created_by)
      VALUES ($1,$2,'INSTITUTIONAL_COURSE','Polls Project','ACTIVE',$3)`,
     [PROJECT, COMPANY, ME],

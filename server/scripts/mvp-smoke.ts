@@ -2,10 +2,12 @@
 import { createHmac, randomUUID } from 'node:crypto'
 import { pool } from '../src/db/pool.js'
 import { withTransaction } from '../src/db/transaction.js'
-import { provisionPersonalWorkspace } from '../src/modules/companies/public.js'
+import {
+  onboardCompanyStarterWorkspace,
+  provisionPersonalWorkspace,
+} from '../src/modules/companies/public.js'
 import { reconcileLearningChannels } from '../src/im/reconcile.js'
 import { wukongClient } from '../src/im/wukong.js'
-import { onboardStarterAgents } from '../src/onboardCompany.js'
 import type { LingxiMessageV1 } from '../src/agent-os/types.js'
 
 const BASE_URL = process.env.MVP_SMOKE_BASE_URL ?? 'http://localhost:5181'
@@ -36,7 +38,7 @@ async function seed(): Promise<{ channelId: string; agentId: string }> {
     return provisionPersonalWorkspace(db, userId)
   })
   companyId = provisioned.companyId
-  await onboardStarterAgents(companyId)
+  await onboardCompanyStarterWorkspace(companyId)
   const synced = await reconcileLearningChannels()
   if (synced.failures > 0) throw new Error(`WuKong reconciliation had ${synced.failures} failures`)
   const { rows } = await pool.query<{ channel_id: string; leader_agent_id: string }>(

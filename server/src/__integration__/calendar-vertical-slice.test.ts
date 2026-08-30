@@ -48,16 +48,14 @@ beforeEach(async () => {
     [OTHER_COMPANY_ID, USER_ID],
   )
   await pool.query(
-    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit) VALUES
-       ('contract-calendar-owner',$1,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1),
-       ('contract-calendar-other',$2,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1)`,
-    [COMPANY_ID, OTHER_COMPANY_ID],
+    `INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
+     VALUES ('contract-calendar-other',$1,'plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',1)`,
+    [OTHER_COMPANY_ID],
   )
   await pool.query(
-    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status) VALUES
-       ('seat-calendar-owner',$1,'contract-calendar-owner',$3,'ACTIVE'),
-       ('seat-calendar-other',$2,'contract-calendar-other',$3,'ACTIVE')`,
-    [COMPANY_ID, OTHER_COMPANY_ID, USER_ID],
+    `INSERT INTO organization_seats(id,company_id,contract_id,user_id,status)
+     VALUES ('seat-calendar-other',$1,'contract-calendar-other',$2,'ACTIVE')`,
+    [OTHER_COMPANY_ID, USER_ID],
   )
   await pool.query(
     `INSERT INTO projects (id, company_id, kind, name, created_by, is_default)
