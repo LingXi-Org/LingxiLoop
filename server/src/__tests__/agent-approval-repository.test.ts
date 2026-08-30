@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import type { Queryable } from '../db/queryable.js'
 import {
+  type ApprovalResolutionRow,
   cancelApproval,
   recordApprovalResult,
   supersedeApproval,
-  type ApprovalResolutionRow,
 } from '../agent-os/approval-repository.js'
+import type { Queryable } from '../db/queryable.js'
 
 function queryable(
   handler: (text: string, params: readonly unknown[]) => { rows?: unknown[]; rowCount?: number },
@@ -95,12 +95,19 @@ test('modification cancels the displayed request and creates one new action iden
 
 test('approved crash recovery re-authorizes the persisted principal behind the action ledger', () => {
   const application = readFileSync(new URL('../agent-os/approval-application.ts', import.meta.url), 'utf8')
-  const controlPlane = readFileSync(new URL('../agent-os/control-plane.ts', import.meta.url), 'utf8')
+  const hostActionApplication = readFileSync(
+    new URL('../agent-os/host-action-application.ts', import.meta.url),
+    'utf8',
+  )
+  const hostActionRepository = readFileSync(
+    new URL('../agent-os/host-action-repository.ts', import.meta.url),
+    'utf8',
+  )
 
   assert.match(application, /recoveringApprovedExecution = input\.approved && approval\.status === 'APPROVED'/)
   assert.match(application, /authorizationUserId: approval\.authorization_user_id/)
   assert.match(application, /assertHostActionPermission\(db,[\s\S]*?approval\.authorization_user_id/)
-  assert.match(controlPlane, /pg_advisory_lock\(hashtextextended\(\$1, 0\)\)[\s\S]*?action\.idempotencyKey/)
-  assert.match(controlPlane, /const replay = await actionFromLedger/)
-  assert.match(controlPlane, /a\.status='APPROVED'/)
+  assert.match(hostActionRepository, /pg_advisory_lock\(hashtextextended\(\$1, 0\)\)[\s\S]*?idempotencyKey/)
+  assert.match(hostActionApplication, /const replay = await actionFromLedger/)
+  assert.match(hostActionRepository, /a\.status='APPROVED'/)
 })

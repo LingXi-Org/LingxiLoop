@@ -60,7 +60,8 @@ if (!/MODEL_TOOLS[^\n]*Object\.freeze\(\[IPYTHON_TOOL\]\)/.test(tool)) {
 
 const kernel = readFileSync(join(root, 'server/agent-os/kernel_runner.py'), 'utf8')
 const actions = readFileSync(join(root, 'server/src/agent-os/learning-actions.ts'), 'utf8')
-const controlPlane = readFileSync(join(root, 'server/src/agent-os/control-plane.ts'), 'utf8')
+const hostActionApplication = readFileSync(join(root, 'server/src/agent-os/host-action-application.ts'), 'utf8')
+const hostActionRepository = readFileSync(join(root, 'server/src/agent-os/host-action-repository.ts'), 'utf8')
 // Keep the architecture guard deterministic across Windows and POSIX worktrees.
 const runtime = readFileSync(join(root, 'server/src/agent-os/runtime.ts'), 'utf8').replaceAll('\r\n', '\n')
 const promptAssembly = readFileSync(join(root, 'server/src/agent-os/prompt-assembly.ts'), 'utf8')
@@ -72,11 +73,11 @@ const schema = readFileSync(join(root, 'server/src/db/schema.sql'), 'utf8')
 const authorization = readFileSync(join(root, 'server/src/agent-os/authorization.ts'), 'utf8')
 const teacherAgent = readFileSync(join(root, 'server/src/modules/learning/teacher-agent-application.ts'), 'utf8')
 const teacherProvisioningRepository = readFileSync(join(root, 'server/src/modules/learning/teacher-provisioning-repository.ts'), 'utf8')
-if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(controlPlane)) {
+if (!/"learning"/.test(kernel) || !/namespace === 'learning'/.test(actions) || !/learning: 'learning'/.test(hostActionApplication)) {
   failures.push('learning must exist only as a capability-gated loop.learning Host Bridge namespace')
 }
 if (!/"teacher"/.test(kernel) || !/allowedNamespaces/.test(kernel)
-  || !/namespace === 'teacher'/.test(actions) || !/teacher: 'teacher_admin'/.test(controlPlane)) {
+  || !/namespace === 'teacher'/.test(actions) || !/teacher: 'teacher_admin'/.test(hostActionApplication)) {
   failures.push('Pulse must be capability-gated through the loop.teacher Host Bridge namespace')
 }
 if (!runtime.includes("allowedNamespaces: ['teacher', 'turn']")
@@ -88,7 +89,8 @@ if (!teacherAgent.includes("PULSE_CAPABILITIES = ['teacher_admin']")
   || /loop\.learning/.test(`${teacherAgent}\n${teacherProvisioningRepository}`)) {
   failures.push('Pulse identity must remain product-managed with tools=[ipython] and no learner SDK')
 }
-if (!controlPlane.includes("namespace === 'teacher'") || !controlPlane.includes('teacher_managed')) {
+if (!hostActionApplication.includes("namespace === 'teacher'")
+  || !hostActionApplication.includes('teacher_managed')) {
   failures.push('ordinary agents must be deterministically blocked from teacher.*')
 }
 for (const table of ['learning_project_teacher_agents','learning_course_teacher_rooms']) {
@@ -116,7 +118,7 @@ if (!schema.includes('canvas_assignment_verifier_not_self_check')
   || !canvasDomain.includes('builder and verifier must be different agents')) {
   failures.push('builder/verifier separation must be enforced by Host and database')
 }
-if (!schema.includes('progress_fingerprint') || !controlPlane.includes('no_progress_count')) {
+if (!schema.includes('progress_fingerprint') || !hostActionRepository.includes('no_progress_count')) {
   failures.push('durable no-progress detection must remain enabled')
 }
 if (!/CREATE TABLE public\.agent_work_items[\s\S]*authorization_user_id text/.test(schema)
@@ -125,8 +127,8 @@ if (!/CREATE TABLE public\.agent_work_items[\s\S]*authorization_user_id text/.te
   || !schema.includes('canvases_authorization_user_id_fkey')) {
   failures.push('durable Agent work and Canvas work must persist a human authorization principal')
 }
-const permissionCheck = controlPlane.indexOf('await assertHostActionPermission(client, work, action)')
-const hostLedgerInsert = controlPlane.indexOf('INSERT INTO agent_host_actions', permissionCheck)
+const permissionCheck = hostActionApplication.indexOf('await assertHostActionPermission(client, work, action)')
+const hostLedgerInsert = hostActionApplication.indexOf('await insertHostAction(client, work.id, action)', permissionCheck)
 if (permissionCheck < 0 || hostLedgerInsert < 0 || permissionCheck > hostLedgerInsert) {
   failures.push('Host Actions must re-authorize immediately before the final durable action boundary')
 }

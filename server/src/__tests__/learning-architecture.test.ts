@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url), 'utf8')
@@ -298,15 +298,18 @@ test('Pulse application orchestration contains no SQL and lifecycle scope is exp
 
 test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restricted',()=>{
   const teacher=readFileSync(new URL('../modules/learning/teacher-agent-application.ts',import.meta.url),'utf8')
-  const control=readFileSync(new URL('../agent-os/control-plane.ts',import.meta.url),'utf8')
+  const hostAction=readFileSync(new URL('../agent-os/host-action-application.ts',import.meta.url),'utf8')
+  const hostActionRepository=readFileSync(new URL('../agent-os/host-action-repository.ts',import.meta.url),'utf8')
   assert.match(teacher,/PULSE_CAPABILITIES = \['teacher_admin'\]/)
   assert.match(teacherProvisioningRepositorySource,/JSON\.stringify\(\['ipython'\]\)/)
   assert.match(teacherProvisioningRepositorySource,/learning_project_teacher_agents/)
   assert.match(teacherProvisioningRepositorySource,/learning_course_teacher_rooms/)
   assert.match(runtime,/allowedNamespaces: \['teacher', 'turn'\]/)
   assert.match(kernel,/allowedNamespaces/)
-  assert.match(control,/Pulse may only call teacher\.\* and turn\.\*/)
-  assert.match(control,/teacher\.\* is reserved for the product-managed Pulse Agent/)
+  assert.match(hostAction,/Pulse may only call teacher\.\* and turn\.\*/)
+  assert.match(hostAction,/teacher\.\* is reserved for the product-managed Pulse Agent/)
+  assert.doesNotMatch(hostAction,/\b(?:SELECT|INSERT INTO|UPDATE|DELETE FROM)\b/)
+  assert.match(hostActionRepository,/SELECT p\.capabilities/)
 })
 
 test('learning remains an IPython namespace with transient per-turn context', () => {

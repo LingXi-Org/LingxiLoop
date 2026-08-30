@@ -1,24 +1,18 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import { type NextFunction, type Request, type Response, Router } from 'express'
-import type { PoolClient } from 'pg'
-import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../modules/canvas/index.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
-import { wukongClient } from '../im/wukong.js'
 import { advanceAgentReadReceipt } from '../im/read-receipts.js'
-import { actionRequiresApproval, executeLearningAction } from './learning-actions.js'
-import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
-import { roleAllowsAction } from './role-policy.js'
-import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1 } from './types.js'
-import { retrieveKnowledge } from '../modules/knowledge/public.js'
-import {
-  describeTeacherAction,
-  loadLearningTurnContext,
-  loadTeacherTurnContext,
-} from '../modules/learning/runtime.js'
+import { wukongClient } from '../im/wukong.js'
 import { recordLlmCall } from '../llm-ledger.js'
-import { assertHostActionPermission } from './authorization.js'
-import { env } from '../env.js'
+import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../modules/canvas/index.js'
+import { retrieveKnowledge } from '../modules/knowledge/public.js'
+import { loadLearningTurnContext, loadTeacherTurnContext } from '../modules/learning/public.js'
+import { executeActionWithLedger } from './host-action-application.js'
+import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
+import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, LingxiMessageV1 } from './types.js'
+
+export { executeActionWithLedger } from './host-action-application.js'
 
 export const agentOSControlRouter = Router()
 
@@ -398,197 +392,6 @@ agentOSControlRouter.put('/sessions', safe(async (req, res) => {
   if (!saved[0]) { res.status(409).json({ error: 'Agent OS session revision conflict' }); return }
   res.json({ ok: true, revision: Number(saved[0].revision) })
 }))
-
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
-  if (value && typeof value === 'object') {
-    const record = value as Record<string, unknown>
-    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(',')}}`
-  }
-  return JSON.stringify(value) ?? 'null'
-}
-
-async function actionFromLedger(client: PoolClient, key: string, action: HostAction): Promise<HostActionResult | null> {
-  const { rows } = await client.query<{
-    status: string; result: unknown; error: string | null; approval_id: string | null; action: string; args: unknown
-  }>(
-    `SELECT status, result, error, approval_id, action, args FROM agent_host_actions WHERE idempotency_key=$1`, [key],
-  )
-  const row = rows[0]
-  if (!row) return null
-  if (row.action !== action.action || canonicalJson(row.args) !== canonicalJson(action.args)) {
-    throw new Error('Host Action idempotency key was reused for a different action')
-  }
-  if (row.status === 'succeeded') {
-    const stored = row.result as { __hostActionResult?: boolean; value?: unknown; directive?: HostActionResult['directive'] } | null
-    return stored?.__hostActionResult ? { ok: true, value: stored.value, ...(stored.directive ? { directive: stored.directive } : {}) } : { ok: true, value: row.result }
-  }
-  if (row.status === 'failed') return { ok: false, error: row.error ?? 'action failed' }
-  if (row.status === 'awaiting_approval' && row.approval_id) return { ok: false, approval: { id: row.approval_id, status: 'PENDING' } }
-  return null
-}
-
-const ACTION_CAPABILITIES: Record<string, string> = {
-  files: 'files', documents: 'documents', boards: 'documents', calendar: 'calendar',
-  research: 'web', canvas: 'canvas', email: 'email', knowledge: 'knowledge', learning: 'learning', teacher: 'teacher_admin',
-}
-
-async function assertActionAllowed(work: AgentWorkItem, action: HostAction): Promise<void> {
-  if (!/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(action.action)) throw new Error('invalid Host Action name')
-  if (!Number.isInteger(action.callIndex) || action.callIndex < 0) throw new Error('invalid Host Action callIndex')
-  if (action.idempotencyKey !== `${action.runId}:${action.cellId}:${action.callIndex}`) throw new Error('invalid Host Action idempotency key')
-  if (action.runId !== work.id) throw new Error('Host Action run identity must equal its durable work id')
-  if (JSON.stringify(action.args).length > 64 * 1024) throw new Error('Host Action arguments exceed 64 KiB')
-  const { rows } = await pool.query<{ capabilities: string[] | null; teacher_managed: boolean }>(
-    `SELECT p.capabilities,
-            EXISTS(SELECT 1 FROM learning_project_teacher_agents pta WHERE pta.company_id=p.company_id AND pta.agent_id=p.id) AS teacher_managed
-       FROM participants p
-      WHERE p.id=$1 AND p.company_id=$2 AND p.kind='agent' AND p.departed_at IS NULL`,
-    [work.agentId, work.companyId],
-  )
-  if (!rows[0]) throw new Error('Agent identity is not active in this tenant')
-  const namespace = action.action.split('.')[0]
-  if (rows[0].teacher_managed && namespace !== 'teacher' && namespace !== 'turn') {
-    throw new Error(`Pulse may only call teacher.* and turn.*; ${action.action} is unavailable`)
-  }
-  if (!rows[0].teacher_managed && namespace === 'teacher') throw new Error('teacher.* is reserved for the product-managed Pulse Agent')
-  if (rows[0].teacher_managed && work.executionRole !== 'coordinator') throw new Error('Pulse work must use the coordinator execution role')
-  const required = ACTION_CAPABILITIES[namespace]
-  if (required && !(rows[0].capabilities ?? []).includes(required)) throw new Error(`Agent lacks ${required} capability`)
-  if(!roleAllowsAction(work.executionRole,action.action)) throw new Error(`${work.executionRole} execution role cannot call ${action.action}`)
-}
-
-export async function executeActionWithLedger(work: AgentWorkItem, action: HostAction, approved = false): Promise<HostActionResult> {
-  await assertActionAllowed(work, action)
-  const client = await pool.connect()
-  let transactionOpen = false
-  try {
-    // Keep the work fence for the whole side-effect execution. Stop takes the
-    // same lock before committing cancellation, so once Stop returns an old
-    // lease cannot begin another Host Action.
-    if (work.canvasId) {
-      // Canvas actions share this workspace fence; workspace Stop takes its
-      // exclusive counterpart before changing durable state.
-      await client.query(`SELECT pg_advisory_lock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${work.canvasId}`])
-    }
-    await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [`agent-work:${work.id}`])
-    // Serialize one stable action key across API replicas. If this process
-    // crashes, Postgres releases the lock and the retry reuses the same sink
-    // idempotency key derived from work/hop/call.
-    await client.query(`SELECT pg_advisory_lock(hashtextextended($1, 0))`, [action.idempotencyKey])
-    await client.query('BEGIN')
-    transactionOpen = true
-    // Revalidate every work item after the advisory locks have been acquired.
-    // The HTTP entry check may have succeeded before a lease expiry/reclaim;
-    // this fence prevents that stale request from executing a side effect.
-    const { rows: actionable } = approved
-      ? await client.query<{ id: string;progress_fingerprint:string|null;no_progress_count:number }>(
-        `SELECT w.id,w.progress_fingerprint,w.no_progress_count FROM agent_work_items w
-          JOIN approvals a ON a.work_id=w.id AND a.idempotency_key=$2
-           AND a.source='AGENT_OS' AND a.status='APPROVED'
-         WHERE w.id=$1 AND w.company_id=$3 AND w.agent_id=$4 AND w.channel_id=$5`,
-        [work.id, action.idempotencyKey, work.companyId, work.agentId, work.channelId],
-      )
-      : await client.query<{ id: string;progress_fingerprint:string|null;no_progress_count:number }>(
-        `SELECT id,progress_fingerprint,no_progress_count FROM agent_work_items WHERE id=$1 AND fence=$2 AND lease_token_hash=$3
-          AND status='leased' AND lease_expires_at > NOW() AND cancel_requested_at IS NULL`,
-        [work.id, work.fence, hash(work.leaseToken)],
-      )
-    if (!actionable[0]) throw Object.assign(new Error('work was stopped or lease was replaced'), { status: 409 })
-    const replay = await actionFromLedger(client, action.idempotencyKey, action)
-    if (replay && !(approved && replay.approval)) { await client.query('COMMIT'); return replay }
-    const {rows:stateRows}=await client.query<{state:unknown}>(
-      `WITH scope AS (
-        SELECT project_id FROM conversations WHERE id=$1 AND company_id=$3
-      ) SELECT jsonb_build_object(
-        'mission',(SELECT jsonb_agg(jsonb_build_array(m.id,m.status,m.updated_at)) FROM learning_missions m WHERE m.company_id=$3 AND m.project_id=(SELECT project_id FROM scope) AND m.conversation_id=$1 AND m.status IN ('PLANNING','ACTIVE','PAUSED')),
-        'steps',(SELECT jsonb_agg(jsonb_build_array(s.id,s.status,s.updated_at)) FROM learning_mission_steps s JOIN learning_missions m ON m.company_id=s.company_id AND m.project_id=s.project_id AND m.id=s.mission_id WHERE m.company_id=$3 AND m.project_id=(SELECT project_id FROM scope) AND m.conversation_id=$1 AND m.status IN ('PLANNING','ACTIVE','PAUSED')),
-        'assignments',(SELECT jsonb_agg(jsonb_build_array(a.id,a.status,a.updated_at)) FROM canvas_agent_assignments a WHERE a.canvas_id=$2),
-        'reports',(SELECT jsonb_agg(r.id ORDER BY r.created_at) FROM canvas_assignment_reports r WHERE r.canvas_id=$2),
-        'evidence',(
-          SELECT jsonb_agg(jsonb_build_array(attempt.id,attempt.status,attempt.submitted_at))
-            FROM learning_attempts attempt
-           WHERE attempt.company_id=$3 AND attempt.project_id=(SELECT project_id FROM scope)
-        )
-      ) AS state`,[work.channelId,work.canvasId??null,work.companyId],
-    )
-    const fingerprint=hash(canonicalJson(stateRows[0]?.state??{}))
-    const {rows:lastActions}=await client.query<{action:string;args:unknown}>(
-      `SELECT action,args FROM agent_host_actions WHERE work_id=$1 AND status='succeeded' ORDER BY created_at DESC LIMIT 1`,[work.id],
-    )
-    const repeated=actionable[0].progress_fingerprint===fingerprint&&lastActions[0]?.action===action.action&&canonicalJson(lastActions[0]?.args)===canonicalJson(action.args)
-    const noProgressCount=repeated?Number(actionable[0].no_progress_count??0)+1:0
-    await client.query(`UPDATE agent_work_items SET progress_fingerprint=$2,no_progress_count=$3 WHERE id=$1`,[work.id,fingerprint,noProgressCount])
-    const stallSensitive=new Set(['canvas.get','canvas.start_workspace','canvas.add_agents','canvas.handoff','learning.start_mission','learning.add_steps'])
-    if (noProgressCount>=2&&stallSensitive.has(action.action)) {
-      const error=noProgressCount>=3
-        ? `no-progress guard blocked repeated ${action.action}: synthesize persisted reports, state the unresolved gap, or ask one focused learner question`
-        : `no-progress warning for repeated ${action.action}: no durable Mission, assignment, report, or evidence state changed`
-      await client.query(
-        `INSERT INTO agent_host_actions(idempotency_key,work_id,run_id,cell_id,call_index,action,args,status,error)
-         VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,'failed',$8) ON CONFLICT(idempotency_key) DO NOTHING`,
-        [action.idempotencyKey,work.id,action.runId,action.cellId,action.callIndex,action.action,JSON.stringify(action.args),error],
-      )
-      await client.query('COMMIT');transactionOpen=false
-      return {ok:false,error}
-    }
-    await assertHostActionPermission(client, work, action)
-    await client.query(
-      `INSERT INTO agent_host_actions
-         (idempotency_key, work_id, run_id, cell_id, call_index, action, args)
-       VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)
-       ON CONFLICT (idempotency_key) DO NOTHING`,
-      [action.idempotencyKey, work.id, action.runId, action.cellId, action.callIndex, action.action, JSON.stringify(action.args)],
-    )
-    if (!approved && actionRequiresApproval(action.action)) {
-      const teacherApproval = await describeTeacherAction(work, action, client)
-      const approvalId = randomUUID()
-      await client.query(
-        `INSERT INTO approvals
-           (id, company_id, agent_id, channel_id, source, work_id, authorization_user_id,
-            idempotency_key, action, args, summary, requested_by, scope, preview, expires_at)
-         VALUES ($1,$2,$3,$4,'AGENT_OS',$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb,$13::jsonb,
-                 NOW()+($14::bigint*INTERVAL '1 millisecond'))
-         ON CONFLICT (idempotency_key) DO NOTHING`,
-        [approvalId, work.companyId, work.agentId, work.channelId, work.id, work.authorizationUserId,
-          action.idempotencyKey, action.action, JSON.stringify(action.args),
-          teacherApproval?.summary ?? `${work.agentId} requests ${action.action}`,
-          teacherApproval?.requestedBy ?? null, JSON.stringify(teacherApproval?.scope ?? {}),
-          JSON.stringify(teacherApproval?.preview ?? {}), env.AGENT_OS_APPROVAL_TTL_MS],
-      )
-      const { rows } = await client.query<{ id: string }>(`SELECT id FROM approvals WHERE idempotency_key=$1`, [action.idempotencyKey])
-      await client.query(`UPDATE agent_host_actions SET status='awaiting_approval', approval_id=$2, updated_at=NOW() WHERE idempotency_key=$1`, [action.idempotencyKey, rows[0].id])
-      await client.query('COMMIT')
-      transactionOpen = false
-      return { ok: false, approval: { id: rows[0].id, status: 'PENDING' } }
-    }
-    await client.query(
-      `UPDATE agent_host_actions SET status='pending', error=NULL, updated_at=NOW() WHERE idempotency_key=$1`,
-      [action.idempotencyKey],
-    )
-    await client.query('COMMIT')
-    transactionOpen = false
-
-    let result: HostActionResult
-    try { result = await executeLearningAction(work, action) }
-    catch (error) { result = { ok: false, error: error instanceof Error ? error.message : String(error) } }
-    await client.query(
-      `UPDATE agent_host_actions SET status=$2, result=$3::jsonb, error=$4, updated_at=NOW() WHERE idempotency_key=$1`,
-      [action.idempotencyKey, result.ok ? 'succeeded' : 'failed', result.ok
-        ? JSON.stringify({ __hostActionResult: true, value: result.value ?? null, ...(result.directive ? { directive: result.directive } : {}) })
-        : null, result.error ?? null],
-    )
-    return result
-  } catch (error) {
-    if (transactionOpen) await client.query('ROLLBACK').catch(() => undefined)
-    throw error
-  } finally {
-    await client.query(`SELECT pg_advisory_unlock(hashtextextended($1, 0))`, [action.idempotencyKey]).catch(() => undefined)
-    if (work.canvasId) await client.query(`SELECT pg_advisory_unlock_shared(hashtextextended($1, 0))`, [`canvas-workspace:${work.canvasId}`]).catch(() => undefined)
-    await client.query(`SELECT pg_advisory_unlock(hashtextextended($1, 0))`, [`agent-work:${work.id}`]).catch(() => undefined)
-    client.release()
-  }
-}
 
 agentOSControlRouter.post('/work/:id/actions', safe(async (req, res) => {
   const { work } = await requireLease(req, true)

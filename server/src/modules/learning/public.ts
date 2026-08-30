@@ -2,7 +2,12 @@
 
 export { type LearningPersonaKey, STARTER_ROOMS, STARTER_TEAM } from './preset.js'
 export { projectLifecycleProjection } from './project-lifecycle-projection.js'
-export { assertTeacherApprovalFresh } from './runtime.js'
+export {
+  assertTeacherApprovalFresh,
+  describeTeacherAction,
+  loadLearningTurnContext,
+  loadTeacherTurnContext,
+} from './runtime.js'
 export {
   assertNotManagedPulse,
   assertPulseVisible,
