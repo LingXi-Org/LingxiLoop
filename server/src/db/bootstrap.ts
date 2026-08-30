@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import type { PoolClient } from 'pg'
-import { ensurePersonalFreePlan } from '../modules/entitlements/public.js'
+import { ensurePersonalPlans } from '../modules/entitlements/public.js'
 import { pool } from './pool.js'
 
 const V1_SCHEMA_URL = new URL('./schema.sql', import.meta.url)
@@ -46,6 +46,7 @@ const REQUIRED_V1_RELATIONS = [
   'notification_preferences',
   'participants', 'plan_entitlements', 'plans', 'project_memberships',
   'project_invitation_acceptances', 'project_invitations', 'project_visits', 'projects', 'sessions',
+  'subscription_usage_ledger', 'subscriptions',
   'teacher_briefing_attention_items', 'teacher_briefings',
   'tool_calls', 'user_identities', 'user_preferences', 'users',
   'ws_tickets', 'wukong_webhook_receipts',
@@ -129,6 +130,14 @@ const REQUIRED_V1_COLUMNS = [
   ['teacher_briefings', 'client_msg_no'],
   ['teacher_briefings', 'channel_id'],
   ['teacher_briefings', 'sender_agent_id'],
+  ['subscriptions', 'subscriber_user_id'],
+  ['subscriptions', 'plan_id'],
+  ['subscriptions', 'status'],
+  ['subscriptions', 'version'],
+  ['subscription_usage_ledger', 'subscription_id'],
+  ['subscription_usage_ledger', 'metric_code'],
+  ['subscription_usage_ledger', 'quantity'],
+  ['subscription_usage_ledger', 'idempotency_key'],
   ['agent_climate', 'company_id'],
   ['calendar_events', 'project_id'],
   ['document_mention_deliveries', 'recipients'],
@@ -746,7 +755,7 @@ export async function bootstrapV1Schema(): Promise<'created' | 'ready'> {
     }
     const schema = await readFile(V1_SCHEMA_URL, 'utf8')
     await client.query(schema)
-    await ensurePersonalFreePlan(client)
+    await ensurePersonalPlans(client)
     return 'created'
   } finally {
     client.release()

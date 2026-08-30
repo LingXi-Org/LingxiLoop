@@ -2,6 +2,7 @@ import type { Queryable } from '../../db/queryable.js'
 import { ENTITLEMENT_CODES } from '../../domain/access/public.js'
 import {
   PERSONAL_FREE_PLAN,
+  PERSONAL_PLUS_PLAN,
   TEACHER_FREE_PLAN,
   TEACHER_PRO_PLAN,
   type EntitlementValue,
@@ -54,6 +55,19 @@ async function ensurePlan(
 /** Ensure the non-billing base Plan and its boolean capabilities exist in the owning transaction. */
 export async function ensurePersonalFreePlan(db: Queryable): Promise<string> {
   return ensurePlan(db, PERSONAL_FREE_PLAN, new Map(CAPABILITY_CODES.map((code) => [code, true])))
+}
+
+/** Personal Plus starts with the core capability set; quotas and experiments must be supplied as Entitlements later. */
+export async function ensurePersonalPlans(db: Queryable): Promise<{ personalFreePlanId: string; personalPlusPlanId: string }> {
+  const values = new Map(CAPABILITY_CODES.map((code) => [code, true] as const))
+  return {
+    personalFreePlanId: await ensurePlan(db, PERSONAL_FREE_PLAN, values),
+    personalPlusPlanId: await ensurePlan(db, PERSONAL_PLUS_PLAN, values),
+  }
+}
+
+export async function setCompanyPlan(db: Queryable, companyId: string, planId: string, now: string): Promise<void> {
+  await db.query(`UPDATE companies SET plan_id=$2,updated_at=$3 WHERE id=$1`, [companyId, planId, now])
 }
 
 export async function ensureTeacherPlans(db: Queryable): Promise<{

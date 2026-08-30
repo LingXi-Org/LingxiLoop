@@ -13,6 +13,7 @@ import { useAuth } from '@/stores/auth'
 import { useParticipants } from '@/features/agents/state'
 import { usePrefs } from '@/stores/preferences'
 import { useSoundStore } from '@/stores/sound'
+import { SubscriptionUnavailableCard } from '@/features/subscriptions/SubscriptionUnavailableCard'
 
 const tabs = ['Profile', 'Memory', 'Trust & autonomy', 'Preferences'] as const
 type Tab = (typeof tabs)[number]
@@ -99,6 +100,8 @@ function ProfileTab() {
           </Button>
         </div>
       </Section>
+
+      <Section title="↳ 订阅"><SubscriptionUnavailableCard /></Section>
 
       <AboutSection />
     </div>

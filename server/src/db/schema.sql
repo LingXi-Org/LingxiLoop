@@ -4126,7 +4126,6 @@ ALTER TABLE ONLY public.company_invitations
 ALTER TABLE ONLY public.companies
     ADD CONSTRAINT companies_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE RESTRICT;
 
-
 --
 -- Name: companies companies_personal_owner_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
@@ -4815,6 +4814,60 @@ CREATE TABLE public.learning_knowledge_units (
     CONSTRAINT learning_knowledge_units_project_company_fkey
       FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE
 );
+
+
+-- Personal subscription identity and provider-independent lifecycle.
+CREATE TABLE public.subscriptions (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    subscriber_user_id text NOT NULL,
+    plan_id text NOT NULL,
+    status text DEFAULT 'PENDING'::text NOT NULL,
+    provider_subscription_id text,
+    current_period_end timestamp with time zone,
+    version bigint DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    cancelled_at timestamp with time zone,
+    CONSTRAINT subscriptions_scope_key UNIQUE (id, company_id),
+    CONSTRAINT subscriptions_provider_key UNIQUE (provider_subscription_id),
+    CONSTRAINT subscriptions_status_check CHECK (status = ANY (ARRAY[
+      'PENDING'::text, 'ACTIVE'::text, 'PAST_DUE'::text, 'CANCELLED'::text, 'EXPIRED'::text
+    ])),
+    CONSTRAINT subscriptions_version_check CHECK (version >= 1),
+    CONSTRAINT subscriptions_cancelled_at_check CHECK ((status = 'CANCELLED') = (cancelled_at IS NOT NULL))
+);
+
+CREATE UNIQUE INDEX uniq_subscriptions_live_company
+    ON public.subscriptions USING btree (company_id)
+    WHERE status = ANY (ARRAY['PENDING'::text, 'ACTIVE'::text, 'PAST_DUE'::text]);
+
+CREATE TABLE public.subscription_usage_ledger (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    subscription_id text NOT NULL,
+    metric_code text NOT NULL,
+    quantity bigint NOT NULL,
+    idempotency_key text NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    occurred_at timestamp with time zone NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT subscription_usage_ledger_idempotency_key UNIQUE (company_id, idempotency_key),
+    CONSTRAINT subscription_usage_ledger_subscription_fkey
+      FOREIGN KEY (subscription_id, company_id) REFERENCES public.subscriptions(id, company_id) ON DELETE RESTRICT,
+    CONSTRAINT subscription_usage_ledger_metric_check CHECK (char_length(metric_code) BETWEEN 1 AND 100),
+    CONSTRAINT subscription_usage_ledger_quantity_check CHECK (quantity > 0),
+    CONSTRAINT subscription_usage_ledger_metadata_check CHECK (jsonb_typeof(metadata) = 'object')
+);
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT subscriptions_company_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT subscriptions_subscriber_fkey FOREIGN KEY (subscriber_user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT subscriptions_plan_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE RESTRICT;
 
 CREATE INDEX idx_learning_knowledge_units_project
     ON public.learning_knowledge_units USING btree (company_id, project_id, status, position);

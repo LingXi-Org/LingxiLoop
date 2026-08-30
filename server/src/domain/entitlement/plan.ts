@@ -14,6 +14,13 @@ export const PERSONAL_FREE_PLAN = {
   status: 'ACTIVE',
 } as const satisfies Plan
 
+export const PERSONAL_PLUS_PLAN = {
+  id: 'plan-personal-plus',
+  code: 'PERSONAL_PLUS',
+  name: 'Personal Plus',
+  status: 'ACTIVE',
+} as const satisfies Plan
+
 export const TEACHER_FREE_PLAN = {
   id: 'plan-teacher-free',
   code: 'TEACHER_FREE',

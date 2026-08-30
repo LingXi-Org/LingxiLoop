@@ -369,9 +369,20 @@ test('Plan and Entitlement are independent and accept JSON scalar values only', 
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)
   assert.match(schema, /plan_entitlements_pkey PRIMARY KEY \(plan_id, entitlement_id\)/)
   assert.match(schema, /jsonb_typeof\(value\).*?'boolean'.*?'number'.*?'string'/s)
-  assert.doesNotMatch(schema, /CREATE TABLE public\.(?:subscriptions|project_entitlement_overrides)\b/)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.project_entitlement_overrides\b/)
   assert.match(entitlementRepository, /ENTITLEMENT_CODES/)
   assert.match(entitlementRepository, /JSON\.stringify\(value\)/)
+})
+
+test('Personal Plus subscriptions and usage are canonical, scoped, and append-only', () => {
+  assert.match(schema, /CREATE TABLE public\.subscriptions/)
+  assert.match(schema, /subscriptions_status_check[\s\S]*'PENDING'.*'ACTIVE'.*'PAST_DUE'.*'CANCELLED'.*'EXPIRED'/s)
+  assert.match(schema, /uniq_subscriptions_live_company[\s\S]*company_id[\s\S]*'PENDING'.*'ACTIVE'.*'PAST_DUE'/s)
+  assert.match(schema, /CREATE TABLE public\.subscription_usage_ledger/)
+  assert.match(schema, /subscription_usage_ledger_idempotency_key UNIQUE \(company_id, idempotency_key\)/)
+  assert.match(schema, /subscription_usage_ledger_subscription_fkey[\s\S]*subscriptions\(id, company_id\)/)
+  assert.match(schema, /subscription_usage_ledger_quantity_check CHECK \(quantity > 0\)/)
+  assert.match(bootstrap, /'subscription_usage_ledger', 'subscriptions'/)
 })
 
 test('durable Agent work preserves a human authorization principal', () => {

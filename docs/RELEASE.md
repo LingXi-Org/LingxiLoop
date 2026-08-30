@@ -63,6 +63,10 @@ The M14 Approval cutover is reset-only. It replaces `agent_approvals` and
 lifecycle states; environments created before this cutover must reset before
 Web or Agent OS startup.
 
+The M17 Personal Plus cutover is reset-only. It adds canonical personal
+subscriptions and the append-only subscription usage ledger; environments
+created before this cutover must reset before startup.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.
