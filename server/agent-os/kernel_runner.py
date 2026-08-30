@@ -6,8 +6,6 @@ for a matching host_result. The parent process owns authorization, approvals,
 idempotency and durable state.
 """
 
-from __future__ import annotations
-
 import asyncio
 import builtins
 import contextlib
@@ -25,6 +23,7 @@ import uuid
 from typing import Any
 
 from IPython.core.interactiveshell import InteractiveShell
+from teacher_sdk import TeacherSDK
 
 
 MAX_STREAM_CHARS = int(os.environ.get("LINGXILOOP_KERNEL_MAX_OUTPUT_CHARS", "64000"))
@@ -139,7 +138,7 @@ class LoopBridge:
             if name in self.__dict__:
                 delattr(self, name)
         for name in allowed:
-            setattr(self, name, Namespace(self, name))
+            setattr(self, name, TeacherSDK(self) if name == "teacher" else Namespace(self, name))
 
     def call(self, action: str, args: dict[str, Any]) -> Any:
         index = self.call_index

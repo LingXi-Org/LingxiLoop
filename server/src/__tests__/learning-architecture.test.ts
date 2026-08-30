@@ -65,6 +65,7 @@ const teacherManagementRepositorySource = readFileSync(
   'utf8',
 )
 const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
+const teacherSdk = readFileSync(new URL('../../agent-os/teacher_sdk.py', import.meta.url), 'utf8')
 
 function productionTypeScriptFiles(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
@@ -206,7 +207,7 @@ test('Agent OS evaluation proposals use the tenant-scoped Learning vertical slic
   assert.doesNotMatch(learningRuntimeSource, /proposeEvaluation,[\s\S]*from '..\/..\/learning\/service\.js'/)
   assert.match(learningApplicationSource, /proposeLearningEvaluation/)
   assert.match(repository, /attempt\.id=\$1 AND attempt\.company_id=\$2 AND attempt\.project_id=\$3/)
-  assert.match(repository, /source\.id=\$1 AND source\.company_id=\$3/)
+  assert.match(repository, /source_evidence\.id=\$1 AND source_evidence\.company_id=\$3 AND source_evidence\.project_id=\$4/)
   assert.match(repository, /canvas\.project_id=\$4/)
   assert.match(learningStateRepositorySource, /evaluation\.company_id=\$1 AND evaluation\.project_id=\$2/)
   assert.match(learningStateRepositorySource, /evaluation\.id<>\$5/)
@@ -330,4 +331,27 @@ test('learning remains an IPython namespace with transient per-turn context', ()
   assert.match(missionApplicationSource, /finishLearningMissionPlanning/)
   assert.match(missionApplicationSource, /summary\.checks < 1/)
   assert.match(missionApplicationSource, /summary\.reflections < 1/)
+})
+
+test('Pulse exposes a closed typed loop.teacher SDK through the Host Action boundary', () => {
+  const teacherSdkBody = teacherSdk.split('class TeacherSDK:')[1] ?? ''
+  const methods = [...teacherSdkBody.matchAll(/^ {4}def ([a-z_]+)\(/gm)]
+    .map((match) => match[1])
+    .filter((method) => method !== '__init__' && method !== '_call')
+    .sort()
+  assert.deepEqual(methods, [
+    'archive_objective', 'close_activity', 'configure_digest', 'current',
+    'draft_activity', 'draft_objectives', 'get_attempt', 'get_digest_schedule',
+    'get_learner', 'list_activities', 'list_learners', 'list_objectives',
+    'list_reviews', 'list_rooms', 'overview', 'publish_activity',
+    'publish_objective', 'review_evaluation', 'set_learner_membership',
+    'set_room_binding', 'set_teacher_membership', 'transition_course', 'update_course',
+  ])
+  assert.match(teacherSdk, /class TeacherSDK:/)
+  assert.match(teacherSdk, /class ObjectiveDraft\(TypedDict\):/)
+  assert.match(teacherSdk, /ActivityType = Literal\["LESSON", "PRACTICE", "ASSESSMENT", "PROJECT", "REVIEW"\]/)
+  assert.match(teacherSdk, /Literal\["END", "ENTER_READ_ONLY", "ARCHIVE"\]/)
+  assert.doesNotMatch(teacherSdk, /__getattr__|company_id|project_id|course_id|room_id/)
+  assert.match(kernel, /TeacherSDK\(self\) if name == "teacher" else Namespace/)
+  assert.match(actions, /if \(namespace === 'teacher'\) return \{ ok: true, value: await executeTeacherAction/)
 })
