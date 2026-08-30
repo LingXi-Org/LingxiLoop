@@ -4,8 +4,8 @@
   "description": "Where agent teams gather",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#E6F3FB",
-  "theme_color": "#00A8F0",
+  "background_color": "#E0FFE2",
+  "theme_color": "#2E803E",
   "orientation": "portrait",
   "icons": [
     {

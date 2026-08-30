@@ -1,4 +1,7 @@
-import type { FindMatch } from './transcriptExperience'
+export interface FindMatch {
+  messageId: string
+  occurrence: number
+}
 
 const MATCH_NAME = 'lingxi-find-match'
 const CURRENT_NAME = 'lingxi-find-current'

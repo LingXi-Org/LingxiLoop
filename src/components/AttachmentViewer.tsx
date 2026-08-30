@@ -5,13 +5,12 @@ import { uploadsApi } from '@/features/platform/api'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
-import type { Message } from '@/types'
+import { type AttachmentPreviewDescriptor, type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
 import { TypesetMarkdown } from './Typeset'
 
 GlobalWorkerOptions.workerSrc ||= pdfWorkerUrl
 
-type Attachment = NonNullable<Message['attachment']>
+type Attachment = AttachmentPreviewDescriptor
 
 async function freshUrl(attachment: Attachment): Promise<string> {
   if (/^(data:|blob:)/i.test(attachment.url) || attachment.url.startsWith('/')) return attachment.url

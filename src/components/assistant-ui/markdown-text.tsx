@@ -9,6 +9,7 @@ const MarkdownTextImpl = () => (
     remarkPlugins={[remarkGfm]}
     className="typeset typeset-chat"
     data-typeset-preset="chat"
+    data-find-content
     defer
   />
 )

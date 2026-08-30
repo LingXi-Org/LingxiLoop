@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useApp } from '@/stores/app'
 import { learningApi } from '../api'
 import type {
   LearningActivity,
@@ -26,9 +25,9 @@ const defaultPreferences: LearningNotificationPreferences = {
   quiet_end: null,
 }
 
-export function useLearningCenter() {
+export function useLearningCenter(lockedProjectId?: string) {
   const [dashboard, setDashboard] = useState<LearningDashboard | null>(null)
-  const [projectId, setProjectId] = useState('')
+  const [projectId, setProjectId] = useState(lockedProjectId ?? '')
   const [objectives, setObjectives] = useState<LearningObjective[]>([])
   const [activities, setActivities] = useState<LearningActivity[]>([])
   const [evidence, setEvidence] = useState<LearningEvidence[]>([])
@@ -40,13 +39,20 @@ export function useLearningCenter() {
   const [notificationPrefs, setNotificationPrefs] = useState(defaultPreferences)
   const [deliveries, setDeliveries] = useState<LearningDelivery[]>([])
   const [error, setError] = useState('')
-  const openTrust = useCallback(() => useApp.getState().openTrust(projectId), [projectId])
 
   const loadDashboard = useCallback(async () => {
     const next = await learningApi.getDashboard()
     setDashboard(next)
-    setProjectId((current) => current || next.projects[0]?.projectId || '')
-  }, [])
+    setProjectId((current) => {
+      if (lockedProjectId) return lockedProjectId
+      if (next.projects.some((project) => project.projectId === current)) return current
+      return next.projects[0]?.projectId || ''
+    })
+  }, [lockedProjectId])
+
+  useEffect(() => {
+    if (lockedProjectId) setProjectId(lockedProjectId)
+  }, [lockedProjectId])
 
   const loadProject = useCallback(async (id: string) => {
     if (!id) return
@@ -94,6 +100,6 @@ export function useLearningCenter() {
   return {
     dashboard, projectId, setProjectId, objectives, activities, evidence, missions, reviews, progress,
     teacherAgent, answers, setAnswers, notificationPrefs, setNotificationPrefs, deliveries,
-    error, setError, loadDashboard, openTrust, refreshProject: () => loadProject(projectId),
+    error, setError, loadDashboard, refreshProject: () => loadProject(projectId),
   }
 }

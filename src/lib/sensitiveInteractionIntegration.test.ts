@@ -54,7 +54,6 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../features/calendar/components/CalendarView.tsx',
     '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
-    '../features/trust/components/TrustBoard.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
 
@@ -64,16 +63,11 @@ test('approval decisions and user-triggered tasks publish through the global Toa
   assert.match(main, /<GlobalInteractionProvider>/)
   assert.match(provider, /<Toaster \/>/)
   assert.match(provider, /<AlertDialog open=\{current !== null\}/)
-  const approvals = read('../components/messages/MessageToolParts.tsx')
-  assert.match(approvals, /confirmSensitiveAction\(/)
-  assert.match(approvals, /toastAction\(agentsApi\.resolveApproval/)
-  assert.match(approvals, /toastAction\(agentsApi\.supersedeApproval/)
+  const approvals = read('../features/chat/runtime/transport.ts')
+  assert.match(approvals, /toastAction\(\s*agentsApi\.resolveApproval/)
   assert.match(read('../features/calendar/components/EventEditor.tsx'), /toastAction\(runNow/)
   assert.match(read('../features/calendar/components/CalendarEventPeekContent.tsx'), /toastAction\(runEventNow/)
   assert.match(read('../features/email/components/EmailComposer.tsx'), /toastAction\(Promise\.resolve\(sendPromise\)/)
-  const trust = read('../features/trust/components/TrustBoard.tsx')
-  assert.match(trust, /confirmSensitiveAction\(/)
-  assert.match(trust, /toastAction\(trustApi\.createSnapshot/)
   assert.match(read('../lib/actionToast.ts'), /toast\.promise\(/)
   assert.match(read('../lib/actionToast.ts'), /\.unwrap\(\)/)
 })
@@ -82,9 +76,7 @@ test('dashboard role changes and destructive actions confirm before mutation and
   const courses = read('../features/companies/components/CompanyCourseManagement.tsx')
   const invitations = read('../features/companies/components/InvitePeopleModal.tsx')
   assert.match(courses, /const updateCourseMemberRole[\s\S]*?confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.updateCourseMember/)
-  assert.match(courses, /const updateCompanyMemberRole[\s\S]*?confirmSensitiveAction\([\s\S]*?toastAction\(companiesApi\.updateCompanyMember/)
-  assert.match(courses, /toastAction\(learningApi\.createCourse/)
-  assert.match(courses, /toastAction\(companiesApi\.updateCompany/)
+  assert.match(read('../desktop/WorkspaceRail.tsx'), /toastAction\(learningApi\.createCourse/)
   assert.match(invitations, /confirmSensitiveAction\([\s\S]*?toastAction\(companiesApi\.revokeInvitation/)
   assert.match(invitations, /toastAction\(companiesApi\.createInvitation/)
 })

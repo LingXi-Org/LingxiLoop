@@ -5,9 +5,9 @@ import { ws } from '@/api/core/realtime'
 import type { Conversation } from '@/types'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { useMessages } from '@/features/chat/state/messages'
+import { chatTransport } from '@/features/chat/runtime'
+import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { useParticipants } from '@/features/agents/state'
-import { lingxiIm } from '@/lib/im/wukong'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 
 interface ConversationsState {
@@ -171,13 +171,13 @@ function refreshActiveMessagesIfSidebarMoved(conversations: Conversation[]): voi
   const lastMessageId = activeConvo?.lastMessageId
   if (!lastMessageId) return
 
-  const messages = useMessages.getState()
-  if (messages.loading.has(active)) return
-  const cached = messages.byConvo[active]
-  if (!cached && !messages.loaded.has(active)) return
+  const messages = useChatThreadStore.getState().conversations[active]
+  if (messages?.isLoading) return
+  const cached = messages?.messages
+  if (!cached && !messages?.loaded) return
   if (cached?.some((m) => m.id === lastMessageId)) return
 
-  void messages.reloadConversation(active)
+  void chatTransport.reloadConversation(active)
 }
 
 /**
@@ -206,12 +206,12 @@ export const useConversations = create<ConversationsState>((set) => ({
     // Clear stale data immediately so a workspace switch never shows the
     // previous tenant's conversations during the loading window.
     set({ list: [], projectId, loaded: false, loading: true, error: null })
-    lingxiIm.setWorkspaceChannels([])
+    chatTransport.setWorkspaceChannels([])
     try {
       const list = await conversationsApi.getConversations()
       if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
       const conversations = list.map(fromApi)
-      lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
+      chatTransport.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations, loaded: true, loading: false, error: null })
       reconcileConversationSelection(conversations)
       refreshActiveMessagesIfSidebarMoved(conversations)
@@ -228,7 +228,7 @@ export const useConversations = create<ConversationsState>((set) => ({
       const list = await conversationsApi.getConversations()
       if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
       const conversations = list.map(fromApi)
-      lingxiIm.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
+      chatTransport.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations, projectId, loaded: true, loading: false, error: null })
       reconcileConversationSelection(conversations)
       refreshActiveMessagesIfSidebarMoved(conversations)

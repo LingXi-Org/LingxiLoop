@@ -1,7 +1,9 @@
 import { create } from 'zustand'
-import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useParticipants } from '@/features/agents/state'
+import { useCalendar } from '@/features/calendar/state'
 import { useConversations } from '@/features/conversations/store'
+import { useDocuments } from '@/features/documents/state'
+import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
 import { getActiveCompanyId } from '@/stores/auth'
 import type { WorkspaceSummary } from '@/types'
@@ -48,6 +50,8 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     setWorkspaceSession({ companyId, projectId })
     set({ selectedId: projectId })
     useApp.getState().selectConversation(null)
+    useCalendar.getState().reset()
+    useDocuments.getState().reset()
     await Promise.all([
       knowledgeApi.openProject(projectId),
       useParticipants.getState().load(),

@@ -6,13 +6,11 @@ import { participantRoleZh } from '@/lib/participantRole'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
 import { isMuted } from '@/features/conversations/store'
-import { useMessages } from '@/features/chat/state/messages'
+import { useConversationPresence } from '@/features/chat/runtime'
 import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
 
 let lastRosterBackfillAt = 0
-const EMPTY_TYPING_IDS: string[] = []
-
 function backfillRosterOnce() {
   const now = Date.now()
   if (now - lastRosterBackfillAt < 8000) return
@@ -81,7 +79,7 @@ export function ConversationListItemContent({
 }) {
   // Zustand's external-store selector must return a stable snapshot when no
   // one is typing. A fresh `[]` here causes an infinite render loop in React.
-  const typingIds = useMessages((state) => state.typing[conversation.id] ?? EMPTY_TYPING_IDS)
+  const { typingAgentIds: typingIds } = useConversationPresence(conversation.id)
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const muted = isMuted(conversation)

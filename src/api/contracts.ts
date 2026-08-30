@@ -1,7 +1,4 @@
-import type {
-  Message,
-  Status,
-} from '@/types'
+import type { Status } from '@/types'
 import type {
   CanvasActivity,
   CanvasAgentAssignment,
@@ -14,9 +11,15 @@ import type { DocumentChangedEvent } from '@/features/documents/contracts'
 import type { CoworkerActivity } from '@/features/agents/contracts'
 
 
-export interface ApiMessage extends Message {
+export interface ApiMessage {
+  id: string
+  conversationId: string
+  authorId: string
+  kind: string
+  body: string
   sequence: number
   createdAt: string
+  mentionedIds?: string[]
   reactions?: Array<{ emoji: string; count: number; mine?: boolean; users?: string[] }>
 }
 

@@ -7,9 +7,9 @@ import {
   CommandList,
   CommandShortcut,
 } from '@/components/ui/command'
+import { useConversations } from '@/features/conversations/store'
 import type { CommandAction } from '@/lib/commands'
 import { useApp } from '@/stores/app'
-import { useConversations } from '@/features/conversations/store'
 import { useTheme } from '@/stores/theme'
 import { useUiCommands } from '@/stores/uiCommands'
 
@@ -23,7 +23,6 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'find-chat', label: '搜索当前对话', keywords: 'find chat', shortcut: '⌘ F', run: () => dispatch('find-chat') },
       { id: 'focus-composer', label: '聚焦消息输入框', keywords: 'focus composer input', run: () => dispatch('focus-composer') },
       { id: 'library', label: '打开资料库', keywords: 'library documents', run: () => useApp.getState().setView('library') },
-      { id: 'trust', label: '打开 Trust Board', keywords: 'trust evidence eval kpi', run: () => useApp.getState().openTrust() },
       { id: 'theme', label: '切换浅色 / 深色模式', keywords: 'theme light dark', run: toggleTheme },
       ...conversations.slice(0, 8).map((conversation, index) => ({
         id: `conversation-${conversation.id}`,

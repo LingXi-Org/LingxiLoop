@@ -8,7 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { bootConversations, isMuted, useConversations } from '@/features/conversations/store'
-import { bootMessagesStream, useMessages } from '@/features/chat/state/messages'
+import { chatTransport } from '@/features/chat/runtime'
 import { bootParticipants } from '@/features/agents/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { usePrefs } from '@/stores/preferences'
@@ -38,7 +38,7 @@ function AuthedApp() {
       // new browser session or after an account/company switch.
       await useWorkspace.getState().load()
       if (disposed) return
-      bootMessagesStream()
+      chatTransport.boot()
       bootParticipants()
       bootConversations()
     })()
@@ -58,7 +58,7 @@ function AuthedApp() {
   // only messages the user has actually seen.
   useEffect(() => {
     if (!convoId || !selectedConvoExists) return
-    void useMessages.getState().loadConversation(convoId)
+    void chatTransport.loadConversation(convoId)
   }, [convoId, selectedConvoExists])
 
   useEffect(() => {

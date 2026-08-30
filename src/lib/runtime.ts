@@ -1,27 +1,11 @@
-import type { ParticipantKind, Status } from '@/types'
+import type { SerializableThreadMessageSnapshot } from '@/features/chat/runtime'
 
 /** Runtime detection for the supported Electron and Web surfaces. */
 
 export interface NotificationPushPayload {
   id: string
-  /** Underlying message id — used by the notification renderer to
-   *  dedupe identical pushes (e.g. if the WS bus delivers the same
-   *  message.new twice during a flaky reconnect). The toast `id`
-   *  carries a timestamp suffix so React keys stay unique across
-   *  re-pushes, but `messageId` is the actual identity. */
-  messageId: string
-  conversationId: string
-  authorId: string
-  authorName: string
-  authorKind: ParticipantKind | null
-  authorRole: string | null
-  authorStatus: Status | null
-  /** Human profile image only. Agents are rendered through Bloub. */
-  authorAvatarUrl: string | null
-  /** Human-only fallback label for the official Avatar primitive. */
-  authorInitial: string | null
+  message: SerializableThreadMessageSnapshot
   conversationTitle: string
-  body: string
   at: number
   /** Conversation-level unread count snapshot at push time. Shown on
    *  the toast only when > 1 — single new messages don't get decorated

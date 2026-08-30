@@ -48,6 +48,19 @@ const MAX_TOASTS = 5
 
 type Toast = NotificationPushPayload
 
+function toastMetadata(toast: Toast) {
+  return toast.message.metadata
+}
+
+function toastBody(toast: Toast): string {
+  return toast.message.content
+    .filter((part): part is Extract<(typeof toast.message.content)[number], { type: 'text' | 'reasoning' }> => (
+      part.type === 'text' || part.type === 'reasoning'
+    ))
+    .map((part) => part.text)
+    .join('\n') || '(empty)'
+}
+
 export function NotificationWindow() {
   const [toasts, setToasts] = useState<Toast[]>([])
 
@@ -93,7 +106,7 @@ export function NotificationWindow() {
         // twice — you'd otherwise see three identical Bram cards stacked.
         // toast.id includes a timestamp so React keys stay unique, but
         // messageId is the real identity.
-        if (p.messageId && prev.some((t) => t.messageId === p.messageId)) {
+        if (prev.some((t) => t.message.id === p.message.id)) {
           return prev
         }
         // Append at the BOTTOM. Older toasts stay anchored at the top;
@@ -157,7 +170,7 @@ export function NotificationWindow() {
 
   const dismiss = (id: string) => setToasts((prev) => prev.filter((t) => t.id !== id))
   const onClick = (t: Toast) => {
-    window.lingxiloop?.notify?.focusConvo(t.conversationId)
+    window.lingxiloop?.notify?.focusConvo(toastMetadata(t).conversationId)
     dismiss(t.id)
   }
 
@@ -229,16 +242,16 @@ export function NotificationWindow() {
 }
 
 function AuthorAvatar({ toast }: { toast: Toast }) {
-  if (toast.authorKind === 'agent') {
+  const metadata = toastMetadata(toast)
+  if (metadata.senderKind === 'agent') {
     return (
       <BloubAvatar
         participant={{
-          id: toast.authorId,
-          name: toast.authorName,
-          role: toast.authorRole ?? undefined,
-          status: toast.authorStatus ?? 'avail',
+          id: metadata.senderId,
+          name: metadata.senderName,
+          status: 'avail',
         }}
-        status={toast.authorStatus ?? 'avail'}
+        status="avail"
         size={32}
         animated={false}
         mode="neutral"
@@ -246,16 +259,17 @@ function AuthorAvatar({ toast }: { toast: Toast }) {
     )
   }
 
-  const initial = ((toast.authorInitial ?? toast.authorName.charAt(0)) || '?').toUpperCase()
+  const initial = (metadata.senderName.charAt(0) || '?').toUpperCase()
   return (
     <AvatarPrimitive>
-      {toast.authorAvatarUrl ? <AvatarImage src={toast.authorAvatarUrl} alt={toast.authorName} /> : null}
+      {metadata.senderAvatarUrl ? <AvatarImage src={metadata.senderAvatarUrl} alt={metadata.senderName} /> : null}
       <AvatarFallback>{initial}</AvatarFallback>
     </AvatarPrimitive>
   )
 }
 
 function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () => void; onDismiss: () => void }) {
+  const metadata = toastMetadata(toast)
   const [hovered, setHovered] = useState(false)
   useEffect(() => {
     if (hovered) return
@@ -321,7 +335,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="text-[12.5px] font-semibold text-ink-900 truncate">
-              {toast.authorName}
+              {metadata.senderName}
             </span>
             <span className="text-[10.5px] text-ink-300 italic font-display truncate">
               {toast.conversationTitle}
@@ -347,7 +361,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
               overflow: 'hidden',
             }}
           >
-            {toast.body}
+            {toastBody(toast)}
           </div>
         </div>
       </div>

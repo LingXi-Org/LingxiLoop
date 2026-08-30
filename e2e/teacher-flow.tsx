@@ -1,100 +1,167 @@
-import { useState } from 'react'
+import {
+  AssistantRuntimeProvider,
+  ThreadPrimitive,
+  type AppendMessage,
+  type ExternalStoreAdapter,
+  type ThreadMessage,
+  useExternalStoreRuntime,
+} from '@assistant-ui/react'
+import { useCallback, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { AppThemeProvider } from '@/components/AppThemeProvider'
 import { GlobalInteractionProvider } from '@/components/GlobalInteractionProvider'
-import { ApprovalPart } from '@/components/messages/MessageToolParts'
-import {
-  AttentionCardsPart,
-  BriefingMessagePart,
-  EvidenceSheetPart,
-} from '@/components/messages/TeacherMessageParts'
 import { Button } from '@/components/ui/button'
-import { EnterpriseIntegrationCapabilities } from '@/features/education/components/EnterpriseIntegrationCapabilities'
-import type { Message } from '@/types'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { ConversationComposer } from '@/features/chat/components/ConversationComposer'
+import { ConversationMessage } from '@/features/chat/components/ConversationMessage'
+import { useParticipants } from '@/features/agents/state'
+import { useConversations } from '@/features/conversations/store'
+import type { LingxiMessageMetadata } from '@/features/chat/runtime'
+import '@/styles/globals.css'
 import './styles.css'
 
-const briefingMessage: Message = {
-  id: 'briefing-e2e',
-  conversationId: 'teacher-room-e2e',
-  authorId: 'pulse-e2e',
-  kind: 'system',
-  body: 'Retrieval Studio 本周有新的学习证据与复测事项。',
-  at: '09:00',
-  createdAt: '2026-08-30T01:00:00.000Z',
-  teacherBriefing: {
-    briefingId: 'briefing-e2e',
-    windowStartSequence: 40,
-    windowEndSequence: 48,
-    statistics: { eventCount: 8, assessmentSubmitted: 3, caseUpdated: 2, attentionCount: 1 },
-    attentionItemIds: ['attention-e2e-1'],
-  },
+const conversationId = 'assistant-ui-e2e'
+const scout = {
+  id: 'scout-e2e', kind: 'agent' as const, name: 'Scout', initial: 'S',
+  avatarBg: '#6366f1', status: 'avail' as const, role: 'researcher',
+}
+const human = {
+  id: 'human-e2e', kind: 'human' as const, name: 'Ada', initial: 'A',
+  avatarBg: '#0f766e', status: 'avail' as const,
 }
 
-function approvalMessage(id: string, summary: string): Message {
+useParticipants.setState({ byId: { [scout.id]: scout, [human.id]: human }, loaded: true })
+useConversations.setState({
+  list: [{
+    id: conversationId, kind: 'group', title: 'Assistant UI Fixture', members: [human.id, scout.id],
+    leaderId: scout.id, lastAt: 'now', preview: '',
+  }],
+  loaded: true,
+})
+
+function metadata(id: string, sender: typeof scout | typeof human, isMine = false): LingxiMessageMetadata {
   return {
-    id,
-    conversationId: 'teacher-room-e2e',
-    authorId: 'pulse-e2e',
-    kind: 'approval',
-    body: summary,
-    at: '09:01',
-    createdAt: '2026-08-30T01:01:00.000Z',
-    approval: {
-      id,
-      agentId: 'pulse-e2e',
-      kind: 'learning_evaluation',
-      summary,
-      status: 'PENDING',
-      payload: { args: { evaluationId: 'evaluation-e2e', decision: 'reject' } },
-      requestedAt: '2026-08-30T01:01:00.000Z',
-    },
+    schema: 'lingxiloop.thread-message.v1', conversationId, clientMessageId: id, sequence: null,
+    senderId: sender.id, senderName: sender.name, senderKind: sender.kind, senderAvatarUrl: null,
+    isMine, delivery: 'sent', messageKind: 'text', runId: null, quotedMessageId: null,
+    quote: null, reactions: [], receipts: [], replyCount: 0, threadRootId: null,
+    groupStart: true, groupEnd: true, continuedFromPrevious: false, continuedToNext: false,
   }
 }
 
-function TeacherProjectFixture() {
-  const [entered, setEntered] = useState(false)
-  const [receipts, setReceipts] = useState<string[]>([])
-  const record = (id: string) => (result: { decision: 'approved' | 'denied'; persisted: true }) => {
-    setReceipts((current) => [...current, `${id}:${result.decision}`])
-  }
+const initialMessages: ThreadMessage[] = [
+  {
+    id: 'welcome', role: 'assistant', createdAt: new Date(),
+    content: [{ type: 'text', text: 'Welcome to the assistant-ui conversation fixture.' }],
+    status: { type: 'complete', reason: 'stop' },
+    metadata: { custom: { ...metadata('welcome', scout), groupEnd: false, continuedToNext: true } },
+  },
+  {
+    id: 'cluster-middle', role: 'assistant', createdAt: new Date(),
+    content: [{ type: 'text', text: 'This is the middle of a compact message cluster.' }],
+    status: { type: 'complete', reason: 'stop' },
+    metadata: { custom: {
+      ...metadata('cluster-middle', scout),
+      reactions: [
+        { emoji: '🔥', count: 2, mine: true, userIds: [human.id, scout.id] },
+        { emoji: '👍', count: 1, mine: false, userIds: [scout.id] },
+      ],
+      groupStart: false,
+      groupEnd: false,
+      continuedFromPrevious: true,
+      continuedToNext: true,
+    } },
+  },
+  {
+    id: 'cluster-end', role: 'assistant', createdAt: new Date(),
+    content: [{ type: 'text', text: 'This closes the compact message cluster.' }],
+    status: { type: 'complete', reason: 'stop' },
+    metadata: { custom: { ...metadata('cluster-end', scout), groupStart: false, groupEnd: false, continuedFromPrevious: true, continuedToNext: true } },
+  },
+  {
+    id: 'approval', role: 'assistant', createdAt: new Date(),
+    content: [{
+      type: 'tool-call', toolCallId: 'approval:e2e', toolName: 'approval-card',
+      args: { id: 'approval-e2e', title: 'Approve fixture action', description: 'Rendered by Tool UI', confirmLabel: '批准', cancelLabel: '拒绝' },
+      argsText: '{}',
+    }],
+    status: { type: 'requires-action', reason: 'tool-calls' },
+    metadata: { custom: { ...metadata('approval', scout), messageKind: 'approval', groupStart: false, continuedFromPrevious: true } },
+  },
+  {
+    id: 'mine-start', role: 'user', createdAt: new Date(),
+    content: [{ type: 'text', text: 'My first clustered message.' }],
+    metadata: { custom: { ...metadata('mine-start', human, true), groupEnd: false, continuedToNext: true } },
+  },
+  {
+    id: 'mine-end', role: 'user', createdAt: new Date(),
+    content: [{ type: 'text', text: 'My second clustered message.' }],
+    metadata: { custom: { ...metadata('mine-end', human, true), groupStart: false, continuedFromPrevious: true } },
+  },
+]
 
-  if (!entered) {
-    return <main className="mx-auto grid min-h-screen max-w-5xl place-items-center p-8">
-      <section className="w-full max-w-xl rounded-3xl border bg-card p-8 shadow-sm">
-        <p className="text-sm text-muted-foreground">Teacher Projects</p>
-        <h1 className="mt-2 text-2xl font-semibold">Retrieval Studio</h1>
-        <Button className="mt-6" onClick={() => setEntered(true)}>进入 Project</Button>
-      </section>
-    </main>
-  }
-
-  return <main data-product-surface="teacher-project" className="mx-auto min-h-screen max-w-6xl space-y-8 p-8">
-    <header>
-      <p className="text-sm text-muted-foreground">Teacher Project</p>
-      <h1 className="text-2xl font-semibold">Retrieval Studio</h1>
-    </header>
-    <section aria-label="Project Briefing" className="space-y-2">
-      <BriefingMessagePart message={briefingMessage} />
-      <AttentionCardsPart message={briefingMessage} />
-      <EvidenceSheetPart message={briefingMessage} />
-    </section>
-    <section aria-labelledby="approval-heading" className="space-y-4">
-      <h2 id="approval-heading" className="text-lg font-semibold">待审批教学操作</h2>
-      {[
-        ['modify-approval', '修改学习评价建议'],
-        ['approve-approval', '批准学习评价建议'],
-        ['reject-approval', '拒绝学习评价建议'],
-      ].map(([id, summary]) => <div key={id} data-testid={id}>
-        <ApprovalPart message={approvalMessage(id, summary)} addResult={record(id)} />
-      </div>)}
-      <output aria-label="审批回执">{receipts.join(',')}</output>
-    </section>
-    <EnterpriseIntegrationCapabilities />
-  </main>
+function FixtureThread() {
+  const [messages, setMessages] = useState(initialMessages)
+  const [running, setRunning] = useState(false)
+  const onNew = useCallback(async (append: AppendMessage) => {
+    const userId = `user-${crypto.randomUUID()}`
+    const previewId = `preview-${crypto.randomUUID()}`
+    setMessages((current) => [...current, {
+      id: userId, role: 'user', content: append.content, attachments: append.attachments ?? [], createdAt: new Date(),
+      metadata: { custom: metadata(userId, human, true) },
+    }, {
+      id: previewId, role: 'assistant', content: [{ type: 'text', text: 'Streaming', status: { type: 'running' } }],
+      status: { type: 'running' }, createdAt: new Date(), metadata: { custom: metadata(previewId, scout) },
+    }])
+    setRunning(true)
+    window.setTimeout(() => {
+      setMessages((current) => current.map((message) => message.id === previewId ? {
+        ...message,
+        content: [{ type: 'text', text: 'Streaming complete', status: { type: 'complete' } }],
+        status: { type: 'complete', reason: 'stop' },
+      } as ThreadMessage : message))
+      setRunning(false)
+    }, 250)
+  }, [])
+  const adapter = useMemo<ExternalStoreAdapter<ThreadMessage>>(() => ({
+    messages,
+    isRunning: running,
+    onNew,
+    onCancel: async () => setRunning(false),
+    onAddToolResult: ({ toolCallId, result }) => setMessages((current) => current.map((message) => ({
+      ...message,
+      content: message.content.map((part) => part.type === 'tool-call' && part.toolCallId === toolCallId
+        ? { ...part, result }
+        : part),
+      status: message.id === 'approval' ? { type: 'complete', reason: 'stop' } : message.status,
+    }) as ThreadMessage)),
+  }), [messages, onNew, running])
+  const runtime = useExternalStoreRuntime(adapter)
+  return (
+    <AssistantRuntimeProvider runtime={runtime}>
+      <ThreadPrimitive.Root className="flex h-screen flex-col bg-background text-foreground">
+        <ThreadPrimitive.Viewport data-chat-viewport className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <ThreadPrimitive.Messages components={{ Message: ConversationMessage }} />
+          <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto bg-background pt-4">
+            <ConversationComposer conversationId={conversationId} />
+          </ThreadPrimitive.ViewportFooter>
+          <ThreadPrimitive.ScrollToBottom asChild>
+            <Button type="button" variant="outline" size="icon" className="absolute bottom-24 end-5 z-10 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible" aria-label="滚动到底部">
+              <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
+            </Button>
+          </ThreadPrimitive.ScrollToBottom>
+        </ThreadPrimitive.Viewport>
+      </ThreadPrimitive.Root>
+    </AssistantRuntimeProvider>
+  )
 }
 
 createRoot(document.getElementById('root')!).render(
   <AppThemeProvider>
-    <GlobalInteractionProvider><TeacherProjectFixture /></GlobalInteractionProvider>
+    <GlobalInteractionProvider>
+      <TooltipProvider><FixtureThread /></TooltipProvider>
+    </GlobalInteractionProvider>
   </AppThemeProvider>,
 )

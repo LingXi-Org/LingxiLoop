@@ -40,9 +40,10 @@ import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
 import { useEmailComposer } from '../state'
-import { useMessages } from '@/features/chat/state/messages'
+import { chatTransport } from '@/features/chat/runtime'
+import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { useParticipants } from '@/features/agents/state'
-import type { Message, Participant } from '@/types'
+import type { Participant } from '@/types'
 import { Avatar } from '@/components/Avatar'
 import { IMail } from '@/components/icons'
 
@@ -233,12 +234,20 @@ export function EmailComposer() {
   // Reply context: when we're replying, find the original message in any
   // loaded conversation so the drawer can show "Re: <subject> · from <addr>".
   // No fetch — if it's not loaded, the preview just falls back to the id.
-  const replyOriginal: Message | null = useMemo(() => {
+  const replyOriginal: { email: { subject: string; from: string } } | null = useMemo(() => {
     if (!isReply) return null
-    const byConvo = useMessages.getState().byConvo
-    for (const list of Object.values(byConvo)) {
-      const hit = list.find((m) => m.id === compose.replyToMessageId)
-      if (hit) return hit
+    const conversations = useChatThreadStore.getState().conversations
+    for (const state of Object.values(conversations)) {
+      const hit = state.messages.find((message) => message.id === compose.replyToMessageId)
+      const email = hit?.content.find((part) => part.type === 'tool-call' && part.toolName === 'message-draft')
+      if (email?.type === 'tool-call') {
+        return {
+          email: {
+            subject: typeof email.args.subject === 'string' ? email.args.subject : '',
+            from: typeof email.args.from === 'string' ? email.args.from : '',
+          },
+        }
+      }
     }
     return null
   }, [isReply, compose])
@@ -383,7 +392,7 @@ export function EmailComposer() {
       // bubble appears immediately. The WS pubsub will also deliver the
       // `message.new` event but a hard reload is simpler than racing it.
       await useConversations.getState().reload()
-      await useMessages.getState().reloadConversation(result.conversationId)
+      await chatTransport.reloadConversation(result.conversationId)
       setView('conversations')
       select(result.conversationId)
       close()

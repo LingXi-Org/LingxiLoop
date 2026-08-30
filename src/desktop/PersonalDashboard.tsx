@@ -1,20 +1,15 @@
 import {
   BookOpen01Icon,
-  Building03Icon,
   Calendar03Icon,
   DashboardSquare01Icon,
-  File01Icon,
   Folder01Icon,
   Mail01Icon,
-  School01Icon,
-  Shield01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useState } from 'react'
 import type { Layout, LayoutChangedMeta } from 'react-resizable-panels'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Sidebar,
   SidebarContent,
@@ -26,23 +21,18 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarProvider,
 } from '@/components/ui/sidebar'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
-import {
-  CompanyCourseManagement,
-  type CourseManagementSection,
-} from '@/features/companies/components/CompanyCourseManagement'
+import { CompanyCourseManagement } from '@/features/companies/components/CompanyCourseManagement'
 import { SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
 import { DocumentsView } from '@/features/documents/components/DocumentsView'
+import { useWorkspace } from '@/features/knowledge/workspace'
+import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
 import { LearningCenter } from '@/features/learning/components/LearningCenter'
-import { TrustBoard } from '@/features/trust/components/TrustBoard'
 import { useApp } from '@/stores/app'
-import { useAuth } from '@/stores/auth'
 import type { ViewKey } from '@/types'
+import { getDashboardScopes } from './dashboardScope'
 
 type DashboardView = Exclude<ViewKey['view'], 'conversations'>
 
@@ -55,18 +45,6 @@ const DASHBOARD_ITEMS: Array<{
   { value: 'mail', label: '邮件', icon: Mail01Icon },
   { value: 'calendar', label: '日历', icon: Calendar03Icon },
   { value: 'library', label: '资料库', icon: Folder01Icon },
-  { value: 'trust', label: 'Trust', icon: Shield01Icon },
-]
-
-const COURSE_ITEMS: Array<{
-  value: CourseManagementSection
-  label: string
-  icon: typeof BookOpen01Icon
-  adminOnly?: boolean
-}> = [
-  { value: 'courses', label: '课程', icon: BookOpen01Icon },
-  { value: 'projects', label: 'Projects', icon: File01Icon, adminOnly: true },
-  { value: 'organization', label: '组织', icon: Building03Icon, adminOnly: true },
 ]
 
 function MailPage() {
@@ -88,15 +66,15 @@ function MailPage() {
   )
 }
 
-function DashboardPage({ view, courseSection }: {
+function DashboardPage({ view, workspaceId, personal }: {
   view: DashboardView
-  courseSection: CourseManagementSection
+  workspaceId: string
+  personal: boolean
 }) {
-  if (view === 'learning') return <LearningCenter />
-  if (view === 'courses') return <CompanyCourseManagement section={courseSection} />
+  if (view === 'learning') return <LearningCenter workspaceId={workspaceId} allowOnboarding={personal} />
+  if (view === 'courses') return <CompanyCourseManagement projectId={workspaceId} />
   if (view === 'mail') return <MailPage />
   if (view === 'calendar') return <CalendarView />
-  if (view === 'trust') return <TrustBoard />
   return <DocumentsView />
 }
 
@@ -109,18 +87,23 @@ export function PersonalDashboard({
   defaultLayout: Layout
   onLayoutChanged: (layout: Layout, meta: LayoutChangedMeta) => void
 }) {
-  const companyRole = useAuth((state) => state.companies.find((company) => company.id === state.activeCompanyId)?.role ?? 'member')
-  const isAdmin = companyRole === 'owner' || companyRole === 'admin'
-  const [courseSection, setCourseSection] = useState<CourseManagementSection>('courses')
-
-  useEffect(() => {
-    if (!isAdmin && courseSection !== 'courses') setCourseSection('courses')
-  }, [courseSection, isAdmin])
+  const workspaces = useWorkspace((state) => state.list)
+  const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
+  const selectWorkspace = useWorkspace((state) => state.select)
+  const scopes = getDashboardScopes(workspaces)
+  const activeWorkspace = scopes.visible.find((workspace) => workspace.id === selectedWorkspaceId)
+    ?? scopes.courses[0]
+    ?? scopes.personal
+  const personalPage = activeWorkspace?.id === scopes.personal?.id
 
   const openView = (next: DashboardView) => useApp.getState().setView(next)
-  const openCourseSection = (next: CourseManagementSection) => {
-    setCourseSection(next)
-    openView('courses')
+  const openWorkspacePage = (workspaceId: string) => {
+    if (workspaceId === selectedWorkspaceId) return
+    const targetIsPersonal = workspaceId === scopes.personal?.id
+    const nextView = targetIsPersonal && view === 'courses' ? 'learning' : view
+    const selection = selectWorkspace(workspaceId)
+    openView(nextView)
+    void selection.catch(() => undefined)
   }
 
   return (
@@ -138,52 +121,41 @@ export function PersonalDashboard({
         <ResizablePanel id="conversations" defaultSize="25%" minSize={280} maxSize={420} className="min-h-0 min-w-0">
           <Sidebar collapsible="none" className="w-full shrink-0 bg-card text-card-foreground">
         <SidebarHeader className="omb-drag h-12 shrink-0 justify-center p-2">
-          <div className="flex min-w-0 items-center gap-2 px-2">
-            <Avatar className="size-8 rounded-xl">
-              <AvatarFallback className="rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-                <HugeiconsIcon icon={School01Icon} strokeWidth={2} className="size-4" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">本人看板</p>
-              <p className="truncate text-xs text-muted-foreground">学习与工作空间</p>
-            </div>
-          </div>
+          <Select value={activeWorkspace?.id} onValueChange={openWorkspacePage}>
+            <SelectTrigger aria-label="切换个人学习区或课程" className="omb-no-drag h-8 w-full bg-input/50 shadow-none">
+              <SelectValue placeholder="选择学习空间" />
+            </SelectTrigger>
+            <SelectContent>
+              {scopes.personal && (
+                <SelectItem value={scopes.personal.id}>
+                  <span className="flex items-center gap-2"><CourseAvatar courseId={scopes.personal.id} title={scopes.personal.name} size="sm" /><span>个人学习区</span></span>
+                </SelectItem>
+              )}
+              {scopes.courses.map((workspace) => (
+                <SelectItem key={workspace.id} value={workspace.id}>
+                  <span className="flex items-center gap-2"><CourseAvatar courseId={workspace.id} title={workspace.name} size="sm" /><span>{workspace.name}</span></span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </SidebarHeader>
         <SidebarContent className="gap-1 px-2 pb-2 pt-0.5">
           <SidebarGroup className="p-0">
-            <SidebarGroupLabel>看板</SidebarGroupLabel>
+            <SidebarGroupLabel>{personalPage ? '个人学习区' : activeWorkspace?.name ?? '课程'}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton isActive={view === 'learning'} onClick={() => openView('learning')}>
                     <HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={2} />
-                    <span>我的学习</span>
+                    <span>{personalPage ? '我的学习' : '课程首页'}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={view === 'courses'} onClick={() => openCourseSection('courses')}>
+                {!personalPage && <SidebarMenuItem>
+                  <SidebarMenuButton isActive={view === 'courses'} onClick={() => openView('courses')}>
                     <HugeiconsIcon icon={BookOpen01Icon} strokeWidth={2} />
-                    <span>课程分组</span>
+                    <span>课程</span>
                   </SidebarMenuButton>
-                  <SidebarMenuSub>
-                    {COURSE_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) => (
-                      <SidebarMenuSubItem key={item.value}>
-                        <SidebarMenuSubButton
-                          href={`#dashboard-${item.value}`}
-                          isActive={view === 'courses' && courseSection === item.value}
-                          onClick={(event) => {
-                            event.preventDefault()
-                            openCourseSection(item.value)
-                          }}
-                        >
-                          <HugeiconsIcon icon={item.icon} strokeWidth={2} />
-                          <span>{item.label}</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </SidebarMenuItem>
+                </SidebarMenuItem>}
                 {DASHBOARD_ITEMS.slice(1).map((item) => (
                   <SidebarMenuItem key={item.value}>
                     <SidebarMenuButton isActive={view === item.value} onClick={() => openView(item.value)}>
@@ -202,7 +174,14 @@ export function PersonalDashboard({
         <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整看板侧边栏宽度" title="拖动调整侧边栏宽度，双击恢复默认" />
         <ResizablePanel id="conversation" defaultSize="75%" minSize={320} className="min-h-0 min-w-0">
           <SidebarInset className="@container/dashboard-content h-full min-h-0 min-w-0 overflow-hidden bg-card text-card-foreground">
-            <DashboardPage view={view} courseSection={courseSection} />
+            {activeWorkspace && (
+              <DashboardPage
+                key={activeWorkspace.id}
+                view={view}
+                workspaceId={activeWorkspace.id}
+                personal={personalPage}
+              />
+            )}
           </SidebarInset>
         </ResizablePanel>
       </ResizablePanelGroup>

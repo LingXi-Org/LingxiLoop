@@ -37,7 +37,7 @@ import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
 import { setWorkspaceSession } from '@/lib/workspaceSession'
 import { isElectron, isWebAppHost } from '@/lib/runtime'
-import { CloudLogo } from '@/components/Avatar'
+import { ProductLogo } from '@/components/Avatar'
 import { GetDesktopAppLink } from '@/components/GetDesktopAppLink'
 import { WindowDragStrip } from '@/components/WindowDragStrip'
 
@@ -200,7 +200,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           boxShadow: '0 30px 60px -30px rgba(10, 30, 60, 0.20), 0 0 0 1px rgba(0, 80, 140, 0.04)',
         }}
       >
-        <CloudLogo size={56} rounded />
+        <ProductLogo size={56} rounded />
 
         {joinedCompany && (
           <JoinedSuccessBlock

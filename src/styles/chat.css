@@ -88,6 +88,25 @@
 
 .chat-composer .rich-input:focus,
 .chat-composer .rich-input:focus-visible { outline: none; }
+.chat-composer .aui-lexical-editor,
+.chat-composer .aui-lexical-editor:focus-within,
+.chat-composer .aui-lexical-input,
+.chat-composer .aui-lexical-input:focus,
+.chat-composer .aui-lexical-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+.chat-composer .rich-input::selection,
+.chat-composer .rich-input *::selection {
+  background: transparent;
+  color: inherit;
+}
+.chat-composer .aui-lexical-input::selection,
+.chat-composer .aui-lexical-input *::selection {
+  background: transparent;
+  color: inherit;
+}
 .openmaus-quote-card {
   background: color-mix(in srgb, var(--inset) 84%, transparent);
   border: 1px solid color-mix(in srgb, var(--hairline) 65%, transparent);
@@ -473,15 +492,6 @@ input:focus, textarea:focus, button:focus { outline: none; }
   .streaming-caret {
     animation: none !important;
   }
-  .lingxiloop-cloud-float,
-  .lingxiloop-cloud-poke,
-  .lingxiloop-cloud-poke img {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    will-change: auto !important;
-  }
-
   .reaction-control {
     transition: none !important;
     transform: none !important;

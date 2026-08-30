@@ -22,6 +22,12 @@ import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { isMuted, useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/features/agents/state'
+import {
+  chatTransport,
+  getLingxiMessageMetadata,
+  messageText,
+  serializeThreadMessage,
+} from '@/features/chat/runtime'
 import { isElectron } from '@/lib/runtime'
 import { playNotificationChime } from '@/lib/chime'
 import { Avatar } from './Avatar'
@@ -109,18 +115,17 @@ export function NotificationToasts() {
   }, [])
 
   useEffect(() => {
-    const off = ws.on((e) => {
-      if (e.type !== 'message.new') return
-      const m = e.message
+    const offMessage = chatTransport.subscribeMessages((message) => {
+      const metadata = getLingxiMessageMetadata(message)
       // Never toast our own messages.
-      if (m.authorId === meRef.current) return
+      if (metadata.senderId === meRef.current) return
 
       // Skip system rows (joined / left / kicked / etc.) — their body is a
       // structured JSON payload, not prose. The convo already renders them
       // as centered italic context lines; popping a toast that shows the
       // raw JSON (with an authorId that's actually the subject, not a
       // sender) is worse than silent.
-      if (m.kind === 'system') return
+      if (metadata.senderKind === 'system') return
 
       // Notifications fire ONLY when the app is NOT in the foreground.
       // When the user is actively looking at the app, the new message
@@ -132,14 +137,12 @@ export function NotificationToasts() {
       // The WS bridge fans out CH_MESSAGE_NEW for every message in the
       // user's company, including conversations they are not a member of.
       // Those must never produce toast notifications.
-      const convo = useConversations.getState().list.find((c) => c.id === e.conversationId)
+      const convo = useConversations.getState().list.find((c) => c.id === metadata.conversationId)
       if (!convo) return
-      // Exact @mentions are directed alerts: they intentionally bypass the
-      // room mute. The in-app notification path applies the same structured rule.
-      const mentionedMe = Boolean(meRef.current && m.mentionedIds?.includes(meRef.current))
-      if (isMuted(convo) && !mentionedMe) return
+      if (isMuted(convo)) return
       const title = convo.title
       const at = Date.now()
+      const body = messageText(message) || '(empty)'
       // The conversation list comes from the API; `unread` is the
       // server's snapshot at last poll. The just-arrived message bumps
       // that by one in spirit, so add 1 here. Snapshot, not subscribed —
@@ -153,22 +156,10 @@ export function NotificationToasts() {
       // together instead of the bell preceding the toast by ~300ms.
       const bridge = window.lingxiloop?.notify
       if (isElectron && bridge) {
-        const author = useParticipants.getState().byId[m.authorId]
         bridge.push({
-          id: `toast-${m.id}-${at}`,
-          messageId: m.id,
-          conversationId: e.conversationId,
-          authorId: m.authorId,
-          authorName: author?.name ?? m.authorId,
-          authorKind: author?.kind ?? null,
-          authorRole: author?.role ?? null,
-          authorStatus: author?.status ?? null,
-          authorAvatarUrl: author?.kind === 'human' ? author.avatarUrl ?? null : null,
-          authorInitial: author?.kind === 'human'
-            ? author.initial || author.name.charAt(0).toUpperCase()
-            : null,
+          id: `toast-${message.id}-${at}`,
+          message: serializeThreadMessage(message),
           conversationTitle: title,
-          body: m.body || '(empty)',
           at,
           unreadCount,
         })
@@ -180,22 +171,22 @@ export function NotificationToasts() {
       // here because the browser path has no separate notif window to
       // own the bell.
       setToasts((prev) => {
-        const idx = prev.findIndex((t) => t.kind === 'message' && t.conversationId === e.conversationId)
+        const idx = prev.findIndex((t) => t.kind === 'message' && t.conversationId === metadata.conversationId)
         if (idx >= 0) {
           const next = prev.slice()
           next[idx] = {
-            ...next[idx], authorId: m.authorId, body: m.body || '(empty)',
+            ...next[idx], authorId: metadata.senderId, body,
             at, count: next[idx].count + 1, conversationTitle: title,
           }
           return next
         }
         queueMicrotask(playNotificationChime)
         const fresh: Toast = {
-          id: `toast-${m.id}-${at}`,
+          id: `toast-${message.id}-${at}`,
           kind: 'message',
-          conversationId: e.conversationId,
-          authorId: m.authorId,
-          body: m.body || '(empty)',
+          conversationId: metadata.conversationId,
+          authorId: metadata.senderId,
+          body,
           conversationTitle: title,
           at, count: 1,
         }
@@ -313,7 +304,7 @@ export function NotificationToasts() {
     })
 
     return () => {
-      off()
+      offMessage()
       offMention()
       offReminder()
       offFocus?.()

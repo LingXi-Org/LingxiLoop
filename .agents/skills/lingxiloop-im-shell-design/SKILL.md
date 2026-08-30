@@ -65,6 +65,11 @@ Never hard-code light colors such as white, stone, slate, or gray for these shel
 ## Workspace rail
 
 - Keep the product Logo visually separate from workspace switching.
+- The only canonical static product artwork is `assets/lingxiloop-logo.svg`. Web, website, PWA, Electron, Dock/taskbar, and tray assets must be generated from it; do not add a parallel Logo source or restore the retired layered icon sources.
+- The rail Logo uses `src/components/BrandAvatar.tsx` with `src/assets/lingxiloop.avatar.json`; never replace it with a letter, static fallback mark, workspace Avatar, or unrelated icon.
+- The dynamic rail Avatar keeps the canonical SVG frame behind every expression: the 135° `#e0ffe2` → `#ebffc7` gradient, 18% corner radius, and clipped overflow. Do not render the procedural body on a transparent rail background.
+- Preserve the brand interaction contract: `brand-idle` keeps `upward-side-glance` and lets the avatar runtime own its randomized 3.4–6.2s blink timeline, a click holds `sleepy-squint` for 700ms, and four clicks within 1.5s hold `angry-brows` for 2.5s. Enter idle and angry through 420ms `smooth` timeline steps so every change interpolates from the currently painted frame. During the angry interval, play `brand-angry-shake` so the runtime continuously renders the expression's source `motion.body: shake`; do not replace it with a CSS approximation. The brand reaction must not prevent the existing dashboard action.
+- Repeated clicks while `sleepy-squint` is already visible only extend its hold timer. Do not re-emit the same expression or transition through `upward-side-glance`, because that creates an idle flash between closed-eye holds.
 - The rail starts at the established desktop titlebar offset (`pt-[26px]`). The Logo is `size-9`; the Logo-to-workspace divider is a full-width 1px line using `--im-divider`.
 - The divider position is a shared alignment datum with the top chrome. If Logo size, top offset, or header height changes, recompute the line rather than nudging elements independently.
 - Workspace rows use an 11px-high interaction lane (`h-11`) with a `size-9` workspace mark. The mark is centered with the existing one-pixel optical adjustment.
@@ -116,4 +121,5 @@ Before handing off a shell change:
 - confirm `components.json` still matches `base-luma`, `mist`, `hugeicons`, and `subtle`;
 - check narrow and wide desktop widths, the 280px and 420px conversation-column bounds, dark mode, and keyboard focus on the resize handle;
 - verify the Logo/divider, search/header, first workspace, and first conversation as one alignment system;
+- run `npm run guard:brand` after changing any Logo, icon, favicon, avatar definition, workspace-rail brand interaction, or brand generation script;
 - run the repository's changed-file lint and the verification checks selected by `lingxiloop-verify-change`.

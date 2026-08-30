@@ -1,5 +1,13 @@
 # Third-Party Notices
 
+## Bible Strong Avatar
+
+The dynamic LingxiLoop product avatar uses `@bible-strong/avatar-react` and
+`@bible-strong/avatar-core` version 0.1.0:
+https://github.com/smontlouis/bible-strong-avatar-lab
+
+AGPL-3.0-only, Copyright (c) Stéphane Montlouis-Calixte and contributors.
+
 ## Open Notebook
 
 LingxiLoop's native knowledge engine vendors Open Notebook from commit

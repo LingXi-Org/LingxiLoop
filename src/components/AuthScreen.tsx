@@ -12,7 +12,7 @@ import { getServerOrigin } from '@/api/core/http'
  */
 import { useState, useEffect } from 'react'
 import { isElectron } from '@/lib/runtime'
-import { CloudLogo } from './Avatar'
+import { ProductLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
 
 export function AuthScreen() {
@@ -102,7 +102,7 @@ export function AuthScreen() {
     >
       <WindowDragStrip />
       <div className="w-[320px] flex flex-col items-center gap-8">
-        <CloudLogo size={64} rounded />
+        <ProductLogo size={64} rounded />
         <div className="text-center">
           <div className="font-display text-[22px] text-ink-900">欢迎使用LingxiLoop</div>
           <div className="font-display italic text-[13px] text-ink-400 mt-1">

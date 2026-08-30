@@ -25,6 +25,7 @@ import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
 import { ChatPane } from './ChatPane'
+import { getDefaultDashboardWorkspace } from './dashboardScope'
 import { InfoPane } from './InfoPane'
 import { PersonalDashboard } from './PersonalDashboard'
 import { ThreadDrawer } from './ThreadDrawer'
@@ -57,9 +58,12 @@ function persistPanelLayout(storageKey: string, layout: Layout): void {
  * personal dashboard. Object details continue to use the shared Drawer. */
 export function DesktopApp() {
   const { theme } = useTheme()
-  const activeProjectName = useWorkspace((state) => (
-    state.list.find((project) => project.id === state.selectedId)?.name ?? '我的学习'
-  ))
+  const workspaces = useWorkspace((state) => state.list)
+  const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
+  const activeWorkspace = workspaces.find((project) => project.id === selectedWorkspaceId)
+  const activeProjectName = activeWorkspace?.kind === 'PERSONAL_LEARNING' && activeWorkspace.isDefault
+    ? '个人学习区'
+    : activeWorkspace?.name ?? '个人学习区'
   const view = useApp((state) => state.view)
   const surface = useSurface((state) => state.surface)
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
@@ -108,6 +112,14 @@ export function DesktopApp() {
   }, [commandPaletteOpen, selectedConversationId, view])
 
   const dashboardOpen = view !== 'conversations'
+  const openDashboard = () => {
+    const target = getDefaultDashboardWorkspace(workspaces, selectedWorkspaceId)
+    const selection = target && target.id !== selectedWorkspaceId
+      ? useWorkspace.getState().select(target.id)
+      : null
+    useApp.getState().setView('learning')
+    void selection?.catch(() => undefined)
+  }
   const handleSidebarLayoutChanged = (layout: Layout, meta: LayoutChangedMeta) => {
     if (!meta.isUserInteraction) return
     setPanelLayout(layout)
@@ -134,7 +146,7 @@ export function DesktopApp() {
     <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-accent" data-electron={isElectron ? 'true' : 'false'} data-platform={platform}>
       <WorkspaceRail
         dashboardActive={dashboardOpen}
-        onOpenDashboard={() => useApp.getState().setView('learning')}
+        onOpenDashboard={openDashboard}
         onOpenWorkspace={() => useApp.getState().setView('conversations')}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-accent">
