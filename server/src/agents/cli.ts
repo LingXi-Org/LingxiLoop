@@ -30,6 +30,18 @@ import { createConversationMetadataCommands } from './cli/conversation-metadata.
 import { createDocumentCommand } from './cli/document.js'
 import { createEmailCommand } from './cli/email.js'
 import { createHelpCommand } from './cli/help.js'
+import {
+  addAgentLog,
+  deleteClimate,
+  deleteMemoryFile,
+  findClimate,
+  listAgentLog,
+  listClimate,
+  listMemoryFiles,
+  saveMemoryFile,
+  toggleMemoryPin,
+  upsertClimate,
+} from './cli/memory-repository.js'
 import { createParticipantDirectoryCommands } from './cli/participant-directory.js'
 import {
   agentCompanyId,
@@ -1880,29 +1892,13 @@ async function cmdMemory(parsed: ParsedArgs): Promise<CliResult> {
   const op = parsed.positional[0]
   const me = resolveAs(parsed)
   if (op === 'list') {
-    const params: unknown[] = [me]
-    let where = `agent_id = $1 AND path LIKE 'memory/%'`
-    if (parsed.flags.about) {
-      params.push(String(parsed.flags.about))
-      where += ` AND meta->>'about' = $${params.length}`
-    }
-    if (parsed.flags.kind) {
-      const k = normalizeMemoryKind(parsed.flags.kind)
-      params.push(`memory/${k}/%`)
-      where += ` AND path LIKE $${params.length}`
-    }
     const limit = Math.min(100, Math.max(1, Number(parsed.flags.limit ?? 20)))
-    params.push(limit)
-    const limitParam = `$${params.length}`
-    const { rows } = await pool.query<{
-      path: string; body: string; meta: Record<string, unknown> | null; updated_at: string
-    }>(
-      `SELECT path, body, meta, updated_at
-         FROM agent_workspace WHERE ${where}
-         ORDER BY COALESCE((meta->>'pinned')::boolean, false) DESC, updated_at DESC
-         LIMIT ${limitParam}`,
-      params,
-    )
+    const rows = await listMemoryFiles(pool, {
+      agentId: me,
+      about: parsed.flags.about ? String(parsed.flags.about) : undefined,
+      kind: parsed.flags.kind ? normalizeMemoryKind(parsed.flags.kind) : undefined,
+      limit,
+    })
     // Path segment encodes the kind; file stem is the id (sans `.md`).
     const parsed_rows = rows.map((r) => {
       const segs = r.path.split('/')
@@ -1937,15 +1933,13 @@ async function cmdMemory(parsed: ParsedArgs): Promise<CliResult> {
     // and vector atomically. Provider failures fail the command explicitly.
     const { embedText } = await import('./embeddings.js')
     const embedding = await embedText(body, { companyId: tenant, agentId: me })
-    await pool.query(
-      `INSERT INTO agent_workspace (agent_id, path, body, meta, embedding, company_id, updated_at)
-       VALUES ($1, $2, $3, $4::jsonb, $5::vector, $6, NOW())`,
-      [me, path, body, JSON.stringify(meta), embedding, tenant],
-    )
-    await pool.query(
-      `INSERT INTO agent_log (id, agent_id, kind, body, ref) VALUES ($1, $2, 'note', $3, $4::jsonb)`,
-      [`log-${randomUUID().slice(0, 12)}`, me, `noted: ${body.slice(0, 120)}`, JSON.stringify({ memoryId: id, path })],
-    )
+    await saveMemoryFile(pool, { agentId: me, path, body, meta, embedding, companyId: tenant })
+    await addAgentLog(pool, {
+      id: `log-${randomUUID().slice(0, 12)}`,
+      agentId: me,
+      body: `noted: ${body.slice(0, 120)}`,
+      ref: { memoryId: id, path },
+    })
     return ok(`saved memory ${id}`, [{
       event: 'memory.written',
       command: 'memory note',
@@ -1962,31 +1956,20 @@ async function cmdMemory(parsed: ParsedArgs): Promise<CliResult> {
     // Toggle the `pinned` flag in meta JSONB. `||` on jsonb merges keys
     // (right-hand side wins), so we read+rewrite by setting just that
     // key and let Postgres handle the rest.
-    const r = await pool.query<{ meta: Record<string, unknown> }>(
-      `UPDATE agent_workspace
-          SET meta = COALESCE(meta, '{}'::jsonb)
-                   || jsonb_build_object('pinned', NOT COALESCE((meta->>'pinned')::boolean, false))
-        WHERE agent_id = $1 AND path LIKE $2
-        RETURNING meta`,
-      [me, `memory/%/${id}.md`],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no memory ${id} for ${me}`)
-    return ok(`pinned: ${r.rows[0].meta?.pinned}`, [{
+    const meta = await toggleMemoryPin(pool, me, id)
+    if (!meta) return err(`no memory ${id} for ${me}`)
+    return ok(`pinned: ${meta.pinned}`, [{
       event: 'memory.pinned',
       command: 'memory pin',
       memoryId: id,
       agentId: me,
-      pinned: Boolean(r.rows[0].meta?.pinned),
+      pinned: Boolean(meta.pinned),
     }])
   }
   if (op === 'delete') {
     const id = parsed.positional[1]
     if (!id) return err('usage: memory delete <id>')
-    const r = await pool.query(
-      `DELETE FROM agent_workspace WHERE agent_id = $1 AND path LIKE $2`,
-      [me, `memory/%/${id}.md`],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no memory ${id} for ${me}`)
+    if (await deleteMemoryFile(pool, me, id) === 0) return err(`no memory ${id} for ${me}`)
     return ok(`deleted ${id}`, [{
       event: 'memory.deleted',
       command: 'memory delete',
@@ -2013,17 +1996,7 @@ async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
 
   if (op === 'read') {
     const about = parsed.positional[1]
-    const params: unknown[] = [companyId, me]
-    let where = `company_id = $1 AND agent_id = $2`
-    if (about) { params.push(about); where += ` AND about_id = $${params.length}` }
-    const { rows } = await pool.query<{
-      about_id: string; affinity: number; trust: number; last_note: string; updated_at: string
-    }>(
-      `SELECT about_id, affinity, trust, last_note, updated_at
-         FROM agent_climate WHERE ${where}
-         ORDER BY updated_at DESC LIMIT 50`,
-      params,
-    )
+    const rows = await listClimate(pool, { companyId, agentId: me, aboutId: about })
     if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
     if (rows.length === 0) {
       return ok(about
@@ -2051,35 +2024,27 @@ async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
     const affinityFlag = parsed.flags.affinity
     const trustFlag = parsed.flags.trust
     // Read prior so we can seed the deltas if the agent didn't supply them.
-    const { rows: prior } = await pool.query<{
-      affinity: number; trust: number; history: unknown
-    }>(
-      `SELECT affinity, trust, history FROM agent_climate
-        WHERE company_id = $1 AND agent_id = $2 AND about_id = $3`,
-      [companyId, me, aboutId],
-    )
-    const prevAffinity = prior[0]?.affinity ?? 0
-    const prevTrust = prior[0]?.trust ?? 0
+    const prior = await findClimate(pool, companyId, me, aboutId)
+    const prevAffinity = prior?.affinity ?? 0
+    const prevTrust = prior?.trust ?? 0
     const nextAffinity = affinityFlag !== undefined ? clamp01(affinityFlag) : prevAffinity
     const nextTrust    = trustFlag    !== undefined ? clamp01(trustFlag)    : prevTrust
     // Append a small history entry. Cap history length so it doesn't grow
     // unbounded — keep only the last 20 notes.
-    const prevHistory = Array.isArray(prior[0]?.history) ? prior[0]!.history as Array<unknown> : []
+    const prevHistory = Array.isArray(prior?.history) ? prior.history : []
     const newHistory = [
       ...prevHistory.slice(-19),
       { at: new Date().toISOString(), affinity: nextAffinity, trust: nextTrust, note: note.slice(0, 400) },
     ]
-    await pool.query(
-      `INSERT INTO agent_climate (company_id, agent_id, about_id, affinity, trust, last_note, history, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, NOW())
-       ON CONFLICT (company_id, agent_id, about_id) DO UPDATE
-         SET affinity = EXCLUDED.affinity,
-             trust    = EXCLUDED.trust,
-             last_note = EXCLUDED.last_note,
-             history   = EXCLUDED.history,
-             updated_at = NOW()`,
-      [companyId, me, aboutId, nextAffinity, nextTrust, note.slice(0, 400), JSON.stringify(newHistory)],
-    )
+    await upsertClimate(pool, {
+      companyId,
+      agentId: me,
+      aboutId,
+      affinity: nextAffinity,
+      trust: nextTrust,
+      note: note.slice(0, 400),
+      history: newHistory,
+    })
     return ok(`climate updated: ${me} → ${aboutId}  affinity=${nextAffinity.toFixed(2)}  trust=${nextTrust.toFixed(2)}`, [{
       event: 'climate.updated',
       command: 'climate note',
@@ -2093,11 +2058,9 @@ async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
   if (op === 'forget') {
     const aboutId = parsed.positional[1]
     if (!aboutId) return err('usage: climate forget <about_id>')
-    const r = await pool.query(
-      `DELETE FROM agent_climate WHERE company_id = $1 AND agent_id = $2 AND about_id = $3`,
-      [companyId, me, aboutId],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no climate to forget for ${me} → ${aboutId}`)
+    if (await deleteClimate(pool, companyId, me, aboutId) === 0) {
+      return err(`no climate to forget for ${me} → ${aboutId}`)
+    }
     return ok(`forgot climate ${me} → ${aboutId}`, [{
       event: 'climate.deleted',
       command: 'climate forget',
@@ -2116,22 +2079,12 @@ async function cmdLog(parsed: ParsedArgs): Promise<CliResult> {
     const body = parsed.positional[1]
     if (!body) return err('usage: log note <body> [--as id]')
     const id = `log-${randomUUID().slice(0, 12)}`
-    await pool.query(
-      `INSERT INTO agent_log (id, agent_id, kind, body) VALUES ($1, $2, 'note', $3)`,
-      [id, me, body],
-    )
+    await addAgentLog(pool, { id, agentId: me, body })
     return ok(`logged ${id}`)
   }
   // list (default)
   const limit = Math.min(100, Math.max(1, Number(parsed.flags.limit ?? 30)))
-  const { rows } = await pool.query<{
-    id: string; kind: string; body: string; ref: unknown; created_at: string
-  }>(
-    `SELECT id, kind, body, ref, created_at
-       FROM agent_log WHERE agent_id = $1
-       ORDER BY created_at DESC LIMIT $2`,
-    [me, limit],
-  )
+  const rows = await listAgentLog(pool, me, limit)
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
   if (rows.length === 0) return ok(`(no log entries for ${me})`)
   return ok([
